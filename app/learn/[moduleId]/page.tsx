@@ -1,6 +1,10 @@
-import { getModule } from '@/data/modules';
+import { modules, getModule } from '@/data/modules';
 import ModulePage from '@/components/ModulePage';
 import { notFound } from 'next/navigation';
+
+export function generateStaticParams() {
+  return modules.map((m) => ({ moduleId: m.id }));
+}
 
 export default async function Page({
   params,

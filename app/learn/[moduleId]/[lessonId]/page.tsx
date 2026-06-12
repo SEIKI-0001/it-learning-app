@@ -1,6 +1,12 @@
-import { getModule, getLesson } from '@/data/modules';
+import { modules, getModule } from '@/data/modules';
 import LessonPage from '@/components/LessonPage';
 import { notFound } from 'next/navigation';
+
+export function generateStaticParams() {
+  return modules.flatMap((m) =>
+    m.lessons.map((l) => ({ moduleId: m.id, lessonId: l.id }))
+  );
+}
 
 export default async function Page({
   params,
