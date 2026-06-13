@@ -6,8 +6,8 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'IT Career Kickstart',
-  description: 'IT未経験からキャリアスタートへ — 楽しく学べるIT基礎学習アプリ',
+  title: '基本情報クエスト | FE Quest',
+  description: '1日3分、基本情報を冒険に変える。IT未経験でもOKのRPG風学習クエスト。',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
