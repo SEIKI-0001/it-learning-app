@@ -23,6 +23,13 @@ jobs:
 
       - run: npm ci
 
+      # Ubuntuランナーには日本語フォントが無いため導入する（無いと画像が文字化けする）。
+      - name: 日本語フォントを導入
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -f
+
       # 画像をプレビューとして生成（成果物として残し、Actions画面からDLして確認できる）。
       - name: プレビュー画像を生成
         run: npm run richmenu:preview
