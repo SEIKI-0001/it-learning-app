@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase
         .from("user_answers")
-        .select("question_id, selected_choice, is_correct, answered_at, tag")
+        .select("question_id, selected_choice, is_correct, answered_at, tag, topic_id")
         .eq("user_id", userId)
         .order("answered_at", { ascending: true }),
     ]);
@@ -72,6 +72,7 @@ export async function POST(request: Request) {
       isCorrect: Boolean(a.is_correct),
       answeredAt: (a.answered_at as string) ?? new Date().toISOString(),
       tag: (a.tag as string) ?? "",
+      topicId: (a.topic_id as string | null) ?? undefined,
     }));
 
     appState = {

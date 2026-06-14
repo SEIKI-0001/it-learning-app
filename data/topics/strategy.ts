@@ -14,6 +14,7 @@ export const strategyTopics: Topic[] = [
       "自社の「強み・弱み」と、外の世界の「機会・脅威」を整理して戦略を考える方法を学びます。",
     estimatedMinutes: 7,
     difficulty: 2,
+    importance: 2,
     tags: ["経営戦略", "SWOT分析"],
     prerequisites: [],
 

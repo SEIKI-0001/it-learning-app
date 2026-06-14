@@ -1,16 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Topic } from "@/types/content";
-import { FIELD_LABELS } from "@/types/content";
+import { FIELD_LABELS, IMPORTANCE_LABELS } from "@/types/content";
 import { getAllTopics, getTopic } from "@/lib/content";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
+import AddToReviewButton from "@/components/learn/AddToReviewButton";
+import BottomNav from "@/components/BottomNav";
 
-// トピック詳細ページ（表示のみ / Server Component）。
-// 参考書 → 図解理解 → 確認問題 → 解説 → 復習 の流れをそのまま縦に並べる。
-// 確認問題は <details> で答えを開閉するだけ（クライアント状態は持たない）。
-
-// 既存トピックはビルド時に静的生成する（既存ページと同じく Static にする）。
+// トピック詳細。理解カード → 確認問題 → 解説 → 復習 → 参考書キーワード → 過去問分野 の順。
+// 既存トピックはビルド時に静的生成する。
 export function generateStaticParams() {
   return getAllTopics().map((t) => ({ id: t.id }));
 }
@@ -31,11 +30,11 @@ export default async function TopicDetailPage({
   if (!topic) notFound();
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-16">
+    <main className="min-h-screen bg-gray-50 pb-24">
       {/* ヘッダー */}
       <div className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-5 text-white">
         <div className="mx-auto w-full max-w-md">
-          <Link href="/topic" className="text-sm font-medium text-white/80">
+          <Link href="/topics" className="text-sm font-medium text-white/80">
             ← トピック一覧
           </Link>
           <p className="mt-2 text-xs font-semibold text-white/80">
@@ -46,6 +45,9 @@ export default async function TopicDetailPage({
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-white/20 px-2.5 py-1 font-semibold">
               ⏱️ 目安 {topic.estimatedMinutes}分
+            </span>
+            <span className="rounded-full bg-white/20 px-2.5 py-1 font-semibold">
+              重要度：{IMPORTANCE_LABELS[topic.importance]}
             </span>
             <span className="rounded-full bg-white/20 px-2.5 py-1 font-semibold">
               難易度：{DIFFICULTY_LABEL[topic.difficulty]}
@@ -124,9 +126,12 @@ export default async function TopicDetailPage({
               {topic.reviewPrompt.answer}
             </p>
           </details>
+          <div className="mt-4">
+            <AddToReviewButton topicId={topic.id} />
+          </div>
         </Section>
 
-        {/* ⑤ 参考書で探すキーワード */}
+        {/* ⑤ 参考書で探すキーワード（関連キーワード） */}
         <Section emoji="📚" title="参考書で探すキーワード">
           <p className="mb-3 text-xs text-gray-500">
             章番号ではなく、索引でこの言葉を引いてみてください。
@@ -152,8 +157,8 @@ export default async function TopicDetailPage({
           </ul>
         </Section>
 
-        {/* ⑥ 過去問道場で解くべき分野 */}
-        <Section emoji="🎯" title="過去問道場で解くべき分野">
+        {/* ⑥ 過去問道場で解くべき分野（関連する過去問分野） */}
+        <Section emoji="🎯" title="関連する過去問分野">
           <ul className="space-y-2">
             {topic.kakomonFields.map((f, i) => (
               <li
@@ -169,6 +174,8 @@ export default async function TopicDetailPage({
           </ul>
         </Section>
       </div>
+
+      <BottomNav />
     </main>
   );
 }

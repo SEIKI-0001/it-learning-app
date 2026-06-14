@@ -108,3 +108,28 @@ alter table public.user_progress enable row level security;
 alter table public.user_answers  enable row level security;
 alter table public.user_feedback enable row level security;
 alter table public.line_sessions enable row level security;
+
+-- ============================================================================
+-- ITパスポート学習コーチ への移行（加算マイグレーション）
+-- ----------------------------------------------------------------------------
+-- 既存の 7日版テーブルは壊さず、列の追加のみで拡張する。
+-- 何度実行しても安全なように ADD COLUMN IF NOT EXISTS を使う。
+-- 旧列(current_day / completed_days)はそのまま残す（後方互換）。
+-- ============================================================================
+
+-- user_profiles: 試験予定日・学習可能時間・苦手分野・学習スタイルを追加
+alter table public.user_profiles add column if not exists exam_date        date;
+alter table public.user_profiles add column if not exists weekday_minutes  integer;
+alter table public.user_profiles add column if not exists holiday_minutes  integer;
+alter table public.user_profiles add column if not exists weak_fields      text[] not null default '{}';
+alter table public.user_profiles add column if not exists study_style      text;
+
+-- user_progress: トピック単位の進捗（完了トピック・習熟度・復習キュー）を追加
+alter table public.user_progress add column if not exists completed_topics text[] not null default '{}';
+alter table public.user_progress add column if not exists topic_mastery    jsonb  not null default '{}';
+alter table public.user_progress add column if not exists review_queue     jsonb  not null default '[]';
+-- current_day は 7日固定ロジックの名残。新規行のデフォルトは1のまま（参照しない）。
+
+-- user_answers: どのトピックの確認問題かを記録（旧 day_no は互換のため残す）
+alter table public.user_answers  add column if not exists topic_id text;
+create index if not exists user_answers_topic_id_idx on public.user_answers(topic_id);
