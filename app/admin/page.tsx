@@ -5,43 +5,52 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { resetAppState } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
-import { getLevelName } from "@/lib/game";
 
-// プロトタイプ検証用の簡易管理画面（本番管理画面ではありません）。
-// TODO(本番公開前): この画面と /api/admin/summary は現在「認証なし」で誰でも閲覧できる。
-// 個人の回答・フィードバックを含むため、本番公開前には必ず認証/認可を追加すること
-// （例: Basic 認証 / Vercel パスワード保護 / 管理者ロール）。
+// 検証用の簡易管理画面（ITパスポート学習コーチ）。
+// アクセス制御は proxy.ts の Basic 認証で前段に実施（ADMIN_PASSWORD）。
+// 7日固定モデル(Day funnel / current_day)の指標は撤去済み。
+
+type TopicMastery = {
+  topicId: string;
+  title: string;
+  fieldLabel: string;
+  learners: number;
+  avgMastery: number;
+};
 
 type Summary = {
   ok: boolean;
-  funnel: {
+  overview: {
     totalUsers: number;
-    day1Started: number;
-    day1Completed: number;
-    day3Reached: number;
-    day7Completed: number;
+    examDateUsers: number;
+    todayStudyUsers: number;
+    todayAnswers: number;
+    reviewQueueUsers: number;
   };
   accuracy: { averageAccuracy: number; correctAnswers: number; totalAnswers: number };
+  topicMastery: TopicMastery[];
+  weakFields: { field: string; label: string; count: number }[];
   weakTagRanking: { tag: string; count: number }[];
+  recentAnswers: {
+    userId: string;
+    displayName: string;
+    topicId: string | null;
+    topicTitle: string | null;
+    isCorrect: boolean;
+    answeredAt: string;
+  }[];
   users: {
     userId: string;
     lineUserId: string;
     displayName: string | null;
-    currentDay: number;
+    examDate: string | null;
+    completedTopics: number;
+    reviewQueue: number;
     exp: number;
     level: number;
-    completedDays: number[];
+    streakCount: number;
+    lastPlayedAt: string | null;
     createdAt: string;
-  }[];
-  feedback: {
-    user_id: string;
-    day_no: number | null;
-    q1_service: string | null;
-    q2_tedious: string | null;
-    q3_unclear: string | null;
-    q4_onemore: string | null;
-    q5_easier: string | null;
-    created_at: string;
   }[];
 };
 
@@ -82,17 +91,20 @@ export default function AdminPage() {
     router.push("/");
   }
 
-  const localTotal = state?.answers.length ?? 0;
-  const localCorrect = state?.answers.filter((a) => a.isCorrect).length ?? 0;
-  const localAccuracy = localTotal > 0 ? Math.round((localCorrect / localTotal) * 100) : 0;
+  // この端末(localStorage)の指標
+  const mastValues = state ? Object.values(state.progress.topicMastery) : [];
+  const localAvgMastery =
+    mastValues.length > 0
+      ? Math.round(mastValues.reduce((s, v) => s + v, 0) / mastValues.length)
+      : 0;
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto w-full max-w-md">
         <div className="mb-1 flex items-center justify-between">
           <h1 className="text-xl font-extrabold text-gray-800">管理ビュー（検証用）</h1>
-          <Link href="/map" className="text-sm font-medium text-indigo-500">
-            マップへ →
+          <Link href="/" className="text-sm font-medium text-indigo-500">
+            ダッシュボードへ →
           </Link>
         </div>
         <p className="mb-6 text-xs text-gray-400">
@@ -119,14 +131,14 @@ export default function AdminPage() {
 
           {summary && summary.ok && (
             <div className="space-y-4">
-              {/* ファネル */}
+              {/* 概況 */}
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { label: "総ユーザー数", value: summary.funnel.totalUsers },
-                  { label: "Day1 開始", value: summary.funnel.day1Started },
-                  { label: "Day1 完了", value: summary.funnel.day1Completed },
-                  { label: "Day3 到達", value: summary.funnel.day3Reached },
-                  { label: "Day7 完了", value: summary.funnel.day7Completed },
+                  { label: "登録ユーザー数", value: summary.overview.totalUsers },
+                  { label: "試験日 登録済み", value: summary.overview.examDateUsers },
+                  { label: "今日の学習ユーザー", value: summary.overview.todayStudyUsers },
+                  { label: "今日の回答数", value: summary.overview.todayAnswers },
+                  { label: "復習キュー保有", value: summary.overview.reviewQueueUsers },
                   { label: "平均正答率", value: `${summary.accuracy.averageAccuracy}%` },
                 ].map((c) => (
                   <div key={c.label} className="rounded-2xl bg-white p-4 shadow-sm">
@@ -136,9 +148,48 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {/* 苦手タグランキング */}
+              {/* トピック別 習熟度 */}
               <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <h3 className="text-sm font-bold text-gray-700">苦手タグランキング</h3>
+                <h3 className="mb-3 text-sm font-bold text-gray-700">トピック別の習熟度</h3>
+                <ul className="space-y-2.5">
+                  {summary.topicMastery.map((t) => (
+                    <li key={t.topicId}>
+                      <div className="mb-1 flex items-center justify-between text-xs">
+                        <span className="text-gray-700">
+                          {t.title}
+                          <span className="ml-1 text-gray-400">({t.fieldLabel})</span>
+                        </span>
+                        <span className="text-gray-500">
+                          {t.avgMastery}%・{t.learners}人
+                        </span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div
+                          className="h-full rounded-full bg-indigo-500"
+                          style={{ width: `${t.avgMastery}%` }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* 苦手分野（申告） */}
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-700">苦手分野（オンボーディング申告）</h3>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  {summary.weakFields.map((w) => (
+                    <div key={w.field} className="rounded-xl bg-gray-50 p-3">
+                      <p className="text-lg font-extrabold text-gray-800">{w.count}</p>
+                      <p className="text-xs text-gray-500">{w.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 苦手タグ（不正解の多い順） */}
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-700">苦手タグ（不正解が多い順）</h3>
                 {summary.weakTagRanking.length === 0 ? (
                   <p className="mt-2 text-xs text-gray-400">データなし</p>
                 ) : (
@@ -155,10 +206,42 @@ export default function AdminPage() {
                 )}
               </div>
 
-              {/* ユーザー別 */}
+              {/* 回答履歴（直近30件） */}
               <div className="rounded-2xl bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-700">
-                  ユーザー別（{summary.users.length}人）
+                  回答履歴（直近 {summary.recentAnswers.length} 件）
+                </h3>
+                {summary.recentAnswers.length === 0 ? (
+                  <p className="mt-2 text-xs text-gray-400">まだありません</p>
+                ) : (
+                  <ul className="mt-3 space-y-1.5">
+                    {summary.recentAnswers.map((a, i) => (
+                      <li
+                        key={`${a.userId}-${i}`}
+                        className="flex items-center justify-between gap-2 text-xs"
+                      >
+                        <span className="truncate text-gray-600">
+                          {a.displayName}・{a.topicTitle ?? "—"}
+                        </span>
+                        <span className="shrink-0 text-gray-400">
+                          {a.isCorrect ? "⭕️" : "❌"}{" "}
+                          {new Date(a.answeredAt).toLocaleString("ja-JP", {
+                            month: "numeric",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* LINE経由ユーザーの進捗 */}
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-700">
+                  LINE経由ユーザーの進捗（{summary.users.length}人）
                 </h3>
                 {summary.users.length === 0 ? (
                   <p className="mt-2 text-xs text-gray-400">まだユーザーがいません</p>
@@ -168,10 +251,11 @@ export default function AdminPage() {
                       <thead>
                         <tr className="border-b border-gray-100 text-gray-400">
                           <th className="py-1 text-left font-medium">User</th>
-                          <th className="py-1 text-right font-medium">Day</th>
-                          <th className="py-1 text-right font-medium">Lv</th>
-                          <th className="py-1 text-right font-medium">EXP</th>
-                          <th className="py-1 text-right font-medium">完了</th>
+                          <th className="py-1 text-right font-medium">試験日</th>
+                          <th className="py-1 text-right font-medium">学習</th>
+                          <th className="py-1 text-right font-medium">復習</th>
+                          <th className="py-1 text-right font-medium">🔥</th>
+                          <th className="py-1 text-right font-medium">最終</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -180,42 +264,27 @@ export default function AdminPage() {
                             <td className="py-1.5 text-left font-mono text-gray-600">
                               {u.displayName ?? u.lineUserId.slice(0, 8)}
                             </td>
-                            <td className="py-1.5 text-right text-gray-700">{u.currentDay}</td>
-                            <td className="py-1.5 text-right text-gray-700">{u.level}</td>
-                            <td className="py-1.5 text-right text-gray-700">{u.exp}</td>
-                            <td className="py-1.5 text-right text-gray-500">
-                              {u.completedDays.length > 0 ? u.completedDays.join(",") : "—"}
+                            <td className="py-1.5 text-right text-gray-700">
+                              {u.examDate ?? "—"}
+                            </td>
+                            <td className="py-1.5 text-right text-gray-700">
+                              {u.completedTopics}
+                            </td>
+                            <td className="py-1.5 text-right text-gray-700">{u.reviewQueue}</td>
+                            <td className="py-1.5 text-right text-gray-500">{u.streakCount}</td>
+                            <td className="py-1.5 text-right text-gray-400">
+                              {u.lastPlayedAt
+                                ? new Date(u.lastPlayedAt).toLocaleDateString("ja-JP", {
+                                    month: "numeric",
+                                    day: "numeric",
+                                  })
+                                : "—"}
                             </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                )}
-              </div>
-
-              {/* フィードバック一覧 */}
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <h3 className="text-sm font-bold text-gray-700">
-                  フィードバック（{summary.feedback.length}件）
-                </h3>
-                {summary.feedback.length === 0 ? (
-                  <p className="mt-2 text-xs text-gray-400">まだありません</p>
-                ) : (
-                  <ul className="mt-3 space-y-3">
-                    {summary.feedback.map((f, i) => (
-                      <li key={i} className="rounded-xl bg-gray-50 p-3 text-xs text-gray-700">
-                        <p className="mb-1 text-gray-400">
-                          Day{f.day_no ?? "?"}・{new Date(f.created_at).toLocaleString("ja-JP")}
-                        </p>
-                        {f.q1_service && <p>① {f.q1_service}</p>}
-                        {f.q2_tedious && <p>② {f.q2_tedious}</p>}
-                        {f.q3_unclear && <p>③ {f.q3_unclear}</p>}
-                        {f.q4_onemore && <p>④ もう1日: {f.q4_onemore}</p>}
-                        {f.q5_easier && <p>⑤ 楽そう: {f.q5_easier}</p>}
-                      </li>
-                    ))}
-                  </ul>
                 )}
               </div>
             </div>
@@ -236,21 +305,17 @@ export default function AdminPage() {
           ) : (
             <dl className="divide-y divide-gray-100 overflow-hidden rounded-2xl bg-white shadow-sm">
               {[
-                { label: "現在のDay", value: String(state.progress.currentDay) },
+                { label: "試験予定日", value: state.profile?.examDate ?? "未設定" },
                 {
-                  label: "完了済みDay",
-                  value:
-                    state.progress.completedDays.length > 0
-                      ? state.progress.completedDays.join(", ")
-                      : "なし",
+                  label: "学習済みトピック",
+                  value: `${state.progress.completedTopics.length} 件`,
                 },
-                { label: "EXP", value: String(state.progress.exp) },
+                { label: "平均習熟度", value: `${localAvgMastery}%` },
                 {
-                  label: "レベル",
-                  value: `Lv.${state.progress.level}（${getLevelName(state.progress.level)}）`,
+                  label: "復習キュー",
+                  value: `${state.progress.reviewQueue.length} 件`,
                 },
-                { label: "総回答数", value: String(localTotal) },
-                { label: "正答率", value: `${localAccuracy}%（${localCorrect}/${localTotal}）` },
+                { label: "連続学習日数", value: `${state.progress.streakCount} 日` },
                 {
                   label: "苦手タグ",
                   value:
