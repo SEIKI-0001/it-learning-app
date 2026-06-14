@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "richmenu:preview": "node scripts/richmenu/richmenu-image.mjs",
+    "richmenu:setup": "node scripts/richmenu/setup-richmenu.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",
@@ -21,6 +23,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "sharp": "0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
