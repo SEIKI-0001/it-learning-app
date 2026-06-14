@@ -11,25 +11,6 @@ import type { TopicField } from "@/types/content";
 export type ChoiceKey = "A" | "B" | "C" | "D";
 
 // ---------------------------------------------------------------------------
-// 旧 FE Quest 用の出題型(互換のため保持。新UIからは参照しない)
-// ---------------------------------------------------------------------------
-export type Question = {
-  id: string;
-  dayNo: number;
-  theme: string;
-  stageName: string;
-  questionText: string;
-  choices: {
-    key: ChoiceKey;
-    text: string;
-  }[];
-  correctChoice: ChoiceKey;
-  explanation: string;
-  tag: string;
-  difficulty: 1 | 2 | 3;
-};
-
-// ---------------------------------------------------------------------------
 // ユーザープロフィール(オンボーディングで取得 → AIプランナーへ渡す)
 // ---------------------------------------------------------------------------
 
@@ -129,21 +110,4 @@ export type TodayMenu = {
   items: TodayMenuItem[]; // 学習トピック
   reviewItems: ReviewItem[]; // 復習対象(問題)
   message: string; // 一言メッセージ
-};
-
-// ---------------------------------------------------------------------------
-// 旧 FE Quest の結果サマリー(互換のため保持。新UIからは参照しない)
-// ---------------------------------------------------------------------------
-export type QuestResult = {
-  dayNo: number;
-  stageName: string;
-  correctCount: number;
-  totalCount: number;
-  expGained: number;
-  level: number;
-  levelName: string;
-  leveledUp: boolean;
-  weakTagsThisRound: string[];
-  isBoss: boolean;
-  allDaysCleared: boolean;
 };
