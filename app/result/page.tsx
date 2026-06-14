@@ -17,10 +17,18 @@ import {
 } from "@/lib/game";
 import { LAST_DAY, getStage } from "@/data/stages";
 import ResultSummary from "@/components/ResultSummary";
+import FeedbackForm from "@/components/FeedbackForm";
+import {
+  getUserId,
+  saveAnswersToDb,
+  saveProgressToDb,
+} from "@/lib/userSession";
 
 export default function ResultPage() {
   const router = useRouter();
   const [result, setResult] = useState<QuestResult | null | undefined>(undefined);
+  // フィードバック表示用（Day1 / Day7 完了直後 かつ LINE 連携済みユーザーのみ）
+  const [feedback, setFeedback] = useState<{ userId: string; dayNo: number } | null>(null);
   const processed = useRef(false);
 
   useEffect(() => {
@@ -47,6 +55,19 @@ export default function ResultPage() {
         const newState: AppState = completeQuest(state, pending.answers);
         saveAppState(newState);
 
+        // user_id があれば（LINE経由）Supabase にも進捗・回答を保存する。
+        const userId = getUserId();
+        if (userId) {
+          saveProgressToDb(userId, newState.progress);
+          saveAnswersToDb(userId, pending.dayNo, pending.answers);
+          // Day1 / Day7 完了直後はフィードバックを表示する。
+          if (pending.dayNo === 1 || pending.dayNo === LAST_DAY) {
+            // 直前のクエスト完了に紐づく1回限りの表示（外部ストアとの同期）
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setFeedback({ userId, dayNo: pending.dayNo });
+          }
+        }
+
         const stage = getStage(Math.min(pending.dayNo, LAST_DAY));
         const summary: QuestResult = {
           dayNo: pending.dayNo,
@@ -65,7 +86,6 @@ export default function ResultPage() {
         window.sessionStorage.setItem(LAST_RESULT_KEY, JSON.stringify(summary));
         window.sessionStorage.removeItem(PENDING_KEY);
         // 直前のクエスト結果を1度だけ集計する処理（外部ストアとの同期）
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setResult(summary);
         return;
       } catch {
@@ -100,6 +120,10 @@ export default function ResultPage() {
     <main className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto w-full max-w-md">
         <ResultSummary result={result} />
+
+        {feedback && (
+          <FeedbackForm userId={feedback.userId} dayNo={feedback.dayNo} />
+        )}
 
         <button
           type="button"
