@@ -91,6 +91,7 @@ export function completeQuest(state: AppState, newAnswers: UserAnswer[]): AppSta
     profile: state.profile,
     answers: allAnswers,
     progress: {
+      ...state.progress, // 新フィールド(completedTopics 等)を保持
       level: newLevel,
       exp: newExp,
       currentDay: nextDay,

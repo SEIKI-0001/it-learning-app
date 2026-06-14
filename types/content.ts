@@ -15,6 +15,16 @@ import type { ChoiceKey } from "@/types";
 /** 難易度（1=やさしい / 2=ふつう / 3=ややむずかしい） */
 export type Difficulty = 1 | 2 | 3;
 
+/** 重要度（1=低 / 2=中 / 3=高）。学習の優先度づけに使う。 */
+export type Importance = 1 | 2 | 3;
+
+/** 重要度の表示名 */
+export const IMPORTANCE_LABELS: Record<Importance, string> = {
+  1: "低",
+  2: "中",
+  3: "高",
+};
+
 /** ITパスポートの3分野 */
 export type TopicField = "technology" | "management" | "strategy";
 
@@ -118,6 +128,7 @@ export type Topic = {
   summary: string; // 一覧表示用の短い説明
   estimatedMinutes: number; // 目安の所要時間
   difficulty: Difficulty;
+  importance: Importance; // 重要度(出題頻度・基礎性。学習の優先度づけに使う)
   tags: string[]; // 苦手タグと対応づける語（例: "セキュリティ"）
   prerequisites: string[]; // 先に学ぶと良いトピックの id（無ければ空配列）
 

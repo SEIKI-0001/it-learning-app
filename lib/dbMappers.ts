@@ -1,7 +1,10 @@
-import type { UserProfile, UserProgress } from "@/types";
+import type { ReviewItem, StudyStyle, UserProfile, UserProgress } from "@/types";
+import type { TopicField } from "@/types/content";
 
 // DB（snake_case の行）と アプリ内の型（camelCase）の相互変換。
 // サーバー側 API Route からのみ使用する。
+// 7日版からの後方互換: 旧列(current_day / completed_days)も読み書きするが、
+// 新ロジックはトピック単位の列(completed_topics / topic_mastery / review_queue)を使う。
 
 export type ProgressRow = {
   user_id: string;
@@ -12,6 +15,10 @@ export type ProgressRow = {
   streak_count: number;
   weak_tags: string[] | null;
   last_played_at: string | null;
+  // 新(トピック単位)
+  completed_topics: string[] | null;
+  topic_mastery: Record<string, number> | null;
+  review_queue: ReviewItem[] | null;
 };
 
 export type ProfileRow = {
@@ -20,30 +27,46 @@ export type ProfileRow = {
   daily_minutes: string | null;
   exam_plan: string | null;
   confidence: number | null;
+  // 新(ITパスポート学習コーチ)
+  exam_date: string | null;
+  weekday_minutes: number | null;
+  holiday_minutes: number | null;
+  weak_fields: string[] | null;
+  study_style: string | null;
 };
 
 export function progressRowToProgress(row: ProgressRow): UserProgress {
   return {
     level: row.level,
     exp: row.exp,
-    currentDay: row.current_day,
-    completedDays: row.completed_days ?? [],
     streakCount: row.streak_count,
     weakTags: row.weak_tags ?? [],
     lastPlayedAt: row.last_played_at ?? undefined,
+    completedTopics: row.completed_topics ?? [],
+    topicMastery: row.topic_mastery ?? {},
+    reviewQueue: row.review_queue ?? [],
+    // 旧版互換
+    currentDay: row.current_day ?? 1,
+    completedDays: row.completed_days ?? [],
   };
 }
 
-export function progressToRow(userId: string, p: UserProgress): ProgressRow & { updated_at: string } {
+export function progressToRow(
+  userId: string,
+  p: UserProgress,
+): ProgressRow & { updated_at: string } {
   return {
     user_id: userId,
-    current_day: p.currentDay,
+    current_day: p.currentDay ?? 1,
     exp: p.exp,
     level: p.level,
-    completed_days: p.completedDays,
+    completed_days: p.completedDays ?? [],
     streak_count: p.streakCount,
     weak_tags: p.weakTags,
     last_played_at: p.lastPlayedAt ?? null,
+    completed_topics: p.completedTopics ?? [],
+    topic_mastery: p.topicMastery ?? {},
+    review_queue: p.reviewQueue ?? [],
     updated_at: new Date().toISOString(),
   };
 }
@@ -54,16 +77,29 @@ export function profileRowToProfile(row: ProfileRow): UserProfile {
     dailyMinutes: row.daily_minutes ?? "",
     examPlan: row.exam_plan ?? "",
     confidence: row.confidence ?? 0,
+    examDate: row.exam_date ?? undefined,
+    weekdayMinutes: row.weekday_minutes ?? undefined,
+    holidayMinutes: row.holiday_minutes ?? undefined,
+    weakFields: (row.weak_fields ?? undefined) as TopicField[] | undefined,
+    studyStyle: (row.study_style ?? undefined) as StudyStyle | undefined,
   };
 }
 
-export function profileToRow(userId: string, p: UserProfile): ProfileRow & { updated_at: string } {
+export function profileToRow(
+  userId: string,
+  p: UserProfile,
+): ProfileRow & { updated_at: string } {
   return {
     user_id: userId,
     it_experience: p.itExperience,
     daily_minutes: p.dailyMinutes,
     exam_plan: p.examPlan,
     confidence: p.confidence,
+    exam_date: p.examDate ?? null,
+    weekday_minutes: p.weekdayMinutes ?? null,
+    holiday_minutes: p.holidayMinutes ?? null,
+    weak_fields: p.weakFields ?? null,
+    study_style: p.studyStyle ?? null,
     updated_at: new Date().toISOString(),
   };
 }

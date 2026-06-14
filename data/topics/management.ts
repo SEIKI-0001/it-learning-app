@@ -14,6 +14,7 @@ export const managementTopics: Topic[] = [
       "「期限のある特別な仕事＝プロジェクト」と、その出来を見る3つの観点QCDを学びます。",
     estimatedMinutes: 7,
     difficulty: 2,
+    importance: 2,
     tags: ["プロジェクトマネジメント", "QCD"],
     prerequisites: [],
 

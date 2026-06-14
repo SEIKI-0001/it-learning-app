@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     selected_choice: a.selectedChoice,
     is_correct: a.isCorrect,
     tag: a.tag,
+    topic_id: a.topicId ?? null,
     answered_at: a.answeredAt,
   }));
 

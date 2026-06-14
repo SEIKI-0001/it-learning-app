@@ -4,7 +4,7 @@ import type { Topic } from "@/types/content";
 // テクノロジ系トピック
 // ----------------------------------------------------------------------------
 // 解説は IT未経験者が読んでも拒否反応が出ないよう、専門用語を先に出さず、
-// 身近なたとえを添える（FE Quest の解説トーンを踏襲）。
+// 身近なたとえを添える（ITパスポート学習コーチの解説トーン）。
 // ここはコンテンツの「作り込み基準」を示す代表トピック。以降の量産テンプレを兼ねる。
 // ============================================================================
 
@@ -19,6 +19,7 @@ export const technologyTopics: Topic[] = [
       "コンピュータが「0と1」で情報を表すしくみと、ビット・バイトという量の単位を学びます。",
     estimatedMinutes: 8,
     difficulty: 1,
+    importance: 2,
     tags: ["2進数", "基礎理論", "データ量"],
     prerequisites: [],
 
@@ -137,6 +138,7 @@ export const technologyTopics: Topic[] = [
       "インターネット上の「住所」であるIPアドレスと、文字の住所を変換するDNSのしくみを学びます。",
     estimatedMinutes: 9,
     difficulty: 2,
+    importance: 3,
     tags: ["ネットワーク", "IPアドレス", "DNS"],
     prerequisites: [],
 
@@ -240,6 +242,7 @@ export const technologyTopics: Topic[] = [
       "情報を守るうえで土台になる「機密性・完全性・可用性」という3つの考え方を学びます。",
     estimatedMinutes: 8,
     difficulty: 2,
+    importance: 3,
     tags: ["セキュリティ", "CIA", "情報管理"],
     prerequisites: [],
 
