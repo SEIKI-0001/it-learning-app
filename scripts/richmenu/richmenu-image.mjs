@@ -20,7 +20,8 @@ export const RICH_MENU_SIZE = { width: 2500, height: 1686 };
 const COL_W = RICH_MENU_SIZE.width / 2; // 1250
 const ROW_H = RICH_MENU_SIZE.height / 2; // 843
 
-const FONT = "Hiragino Sans, Hiragino Kaku Gothic ProN, sans-serif";
+// macOS は Hiragino、Linux(CI) は Noto CJK を使う。CI 側で fonts-noto-cjk の導入が必要。
+const FONT = "Hiragino Sans, Noto Sans CJK JP, Noto Sans JP, sans-serif";
 
 /**
  * 4 ボタンの定義。`text` は LINE の message アクションで送る文言で、
