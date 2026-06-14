@@ -42,3 +42,13 @@ next-env.d.ts
 
 # rich menu generated preview
 /scripts/richmenu/richmenu-preview.png
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+!.env.example
