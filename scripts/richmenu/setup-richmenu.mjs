@@ -1,5 +1,5 @@
 /**
- * FE Quest の LINE リッチメニューを登録・公開するセットアップスクリプト。
+ * ITパスポート学習コーチ の LINE リッチメニューを登録・公開するセットアップスクリプト。
  *
  * 行うこと:
  *   1. richmenu-image.mjs で 2500x1686 の PNG を生成
@@ -8,7 +8,7 @@
  *   4. 画像をアップロード
  *   5. 全ユーザーのデフォルトリッチメニューに設定
  *
- * 各エリアは message アクションで「はじめる / 今日 / 進捗 / ヘルプ」を送るだけなので、
+ * 各エリアは message アクションで「今日 / 復習 / 進捗 / ヘルプ」を送るだけなので、
  * タップ時の挙動は既存の webhook（buildReplyText）がそのまま処理する。
  * → リッチメニュー追加によって既存のテキスト応答仕様は一切変えていない。
  *
@@ -29,7 +29,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const API = "https://api.line.me/v2/bot";
 const API_DATA = "https://api-data.line.me/v2/bot";
 
-const RICH_MENU_NAME = "FE Quest Main Menu";
+const RICH_MENU_NAME = "IP Coach Main Menu";
 
 /** .env.local があれば、未設定の環境変数だけ取り込む（依存追加なしの簡易ローダー）。 */
 function loadEnvLocal() {
@@ -144,7 +144,7 @@ async function main() {
   await lineFetch(`${API}/user/all/richmenu/${richMenuId}`, { method: "POST" }, token);
 
   console.log("\n✅ 完了。LINE のトーク画面下部にメニューが表示されます。");
-  console.log("   タップすると『はじめる/今日/進捗/ヘルプ』が送信され、既存の応答が返ります。");
+  console.log("   タップすると『今日/復習/進捗/ヘルプ』が送信され、webhook の応答が返ります。");
 }
 
 main().catch((e) => {

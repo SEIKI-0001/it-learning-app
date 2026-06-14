@@ -1,8 +1,8 @@
 /**
- * FE Quest の LINE リッチメニュー画像を生成する。
+ * ITパスポート学習コーチ の LINE リッチメニュー画像を生成する。
  *
  * - サイズは LINE 推奨の 2500x1686（フルサイズ）。
- * - 2x2 グリッドで「はじめる / 今日 / 進捗 / ヘルプ」の 4 ボタンを配置する。
+ * - 2x2 グリッドで「今日 / 復習 / 進捗 / ヘルプ」の 4 ボタンを配置する。
  * - 絵文字はカラー描画できない環境があるため、アイコンは SVG のベクターで自作する。
  * - 日本語ラベルは Hiragino Sans で描画（macOS / sharp の librsvg で描画確認済み）。
  *
@@ -28,32 +28,33 @@ const FONT = "Hiragino Sans, Noto Sans CJK JP, Noto Sans JP, sans-serif";
  * webhook（buildReplyText）が認識する語と一致させること。
  */
 export const BUTTONS = [
-  { key: "start", text: "はじめる", title: "はじめる", sub: "最初の設定をする", accent: "#34d399", icon: starIcon },
-  { key: "today", text: "今日", title: "今日のクエスト", sub: "1日3分で挑戦", accent: "#fbbf24", icon: swordIcon },
-  { key: "map", text: "進捗", title: "進捗マップ", sub: "冒険の進み具合", accent: "#38bdf8", icon: pinIcon },
+  { key: "today", text: "今日", title: "今日の学習", sub: "今日やることを見る", accent: "#fbbf24", icon: bookIcon },
+  { key: "review", text: "復習", title: "復習", sub: "間違い・苦手を克服", accent: "#fb923c", icon: refreshIcon },
+  { key: "progress", text: "進捗", title: "進捗", sub: "学習の進み具合", accent: "#38bdf8", icon: pinIcon },
   { key: "help", text: "ヘルプ", title: "ヘルプ", sub: "使い方を見る", accent: "#c4b5fd", icon: questionIcon },
 ];
 
-/** 4 点スパークル（はじめる）。 */
-function starIcon(cx, cy, color) {
-  const R = 115;
-  const r = 40;
-  const pts = [
-    [cx, cy - R], [cx + r, cy - r], [cx + R, cy], [cx + r, cy + r],
-    [cx, cy + R], [cx - r, cy + r], [cx - R, cy], [cx - r, cy - r],
-  ].map((p) => p.join(",")).join(" ");
-  return `<polygon points="${pts}" fill="${color}"/>
-    <circle cx="${cx + 150}" cy="${cy - 90}" r="20" fill="${color}"/>
-    <circle cx="${cx - 140}" cy="${cy + 90}" r="14" fill="${color}"/>`;
+/** 開いた本（今日の学習）。 */
+function bookIcon(cx, cy, color) {
+  return `
+    <path d="M ${cx} ${cy - 95}
+             C ${cx - 40} ${cy - 120}, ${cx - 120} ${cy - 110}, ${cx - 135} ${cy - 85}
+             L ${cx - 135} ${cy + 95}
+             C ${cx - 120} ${cy + 70}, ${cx - 40} ${cy + 60}, ${cx} ${cy + 85} Z" fill="${color}"/>
+    <path d="M ${cx} ${cy - 95}
+             C ${cx + 40} ${cy - 120}, ${cx + 120} ${cy - 110}, ${cx + 135} ${cy - 85}
+             L ${cx + 135} ${cy + 95}
+             C ${cx + 120} ${cy + 70}, ${cx + 40} ${cy + 60}, ${cx} ${cy + 85} Z" fill="${color}" fill-opacity="0.7"/>`;
 }
 
-/** 直立した剣（今日）。 */
-function swordIcon(cx, cy, color) {
+/** 円を描く矢印（復習＝繰り返し）。 */
+function refreshIcon(cx, cy, color) {
+  const R = 105;
   return `
-    <polygon points="${cx},${cy - 130} ${cx + 16},${cy - 105} ${cx + 16},${cy + 35} ${cx - 16},${cy + 35} ${cx - 16},${cy - 105}" fill="${color}"/>
-    <rect x="${cx - 78}" y="${cy + 35}" width="156" height="24" rx="8" fill="${color}"/>
-    <rect x="${cx - 13}" y="${cy + 59}" width="26" height="62" rx="6" fill="${color}"/>
-    <circle cx="${cx}" cy="${cy + 130}" r="18" fill="${color}"/>`;
+    <path d="M ${cx - R} ${cy}
+             A ${R} ${R} 0 1 1 ${cx + R * 0.7} ${cy + R * 0.7}"
+          fill="none" stroke="${color}" stroke-width="26" stroke-linecap="round"/>
+    <polygon points="${cx - R - 28},${cy - 20} ${cx - R + 28},${cy - 20} ${cx - R},${cy + 34}" fill="${color}"/>`;
 }
 
 /** マップピン（進捗）。 */
