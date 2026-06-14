@@ -1,0 +1,40 @@
+name: LINE リッチメニュー公開
+
+# 手動実行のみ（自動では絶対に走らない）。
+# GitHub の Actions タブ → このワークフロー → "Run workflow" から実行する。
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "送信せず内容確認だけにする（チェックすると公開しない）"
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # 画像をプレビューとして生成（成果物として残し、Actions画面からDLして確認できる）。
+      - name: プレビュー画像を生成
+        run: npm run richmenu:preview
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: richmenu-preview
+          path: scripts/richmenu/richmenu-preview.png
+
+      # 実際に LINE へ公開（全友だちのデフォルトメニューに設定）。
+      # dry_run をチェックした場合は送信せず内容確認だけで終わる。
+      - name: リッチメニューを公開
+        env:
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: node scripts/richmenu/setup-richmenu.mjs ${{ inputs.dry_run && '--dry-run' || '' }}
