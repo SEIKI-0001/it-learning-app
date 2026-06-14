@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { UserProfile } from "@/types";
-import { initializeAppState } from "@/lib/storage";
+import { initializeAppState, saveAppState } from "@/lib/storage";
+import {
+  getUserId,
+  readTokenFromUrl,
+  resolveToken,
+  saveProfileToDb,
+  saveProgressToDb,
+  setUserId,
+} from "@/lib/userSession";
 
 type OptionGroup = {
   key: keyof Omit<UserProfile, "confidence">;
@@ -50,6 +58,21 @@ export default function OnboardingPage() {
     confidence: 2,
   });
 
+  // LINE 経由（?t=トークン）の場合はユーザーを解決して user_id を保存する。
+  // すでにオンボーディング済み（DBにプロフィールあり）ならマップへ送る。
+  useEffect(() => {
+    const token = readTokenFromUrl();
+    if (!token) return;
+    void resolveToken(token).then((resolved) => {
+      if (!resolved?.userId) return;
+      setUserId(resolved.userId);
+      if (resolved.appState?.profile) {
+        saveAppState(resolved.appState);
+        router.replace("/map");
+      }
+    });
+  }, [router]);
+
   const ready =
     profile.itExperience && profile.dailyMinutes && profile.examPlan;
 
@@ -64,7 +87,15 @@ export default function OnboardingPage() {
       examPlan: profile.examPlan ?? "undecided",
       confidence: profile.confidence ?? 2,
     };
-    initializeAppState(full);
+    const initial = initializeAppState(full);
+
+    // user_id があれば（LINE経由）プロフィールと初期進捗をDBにも保存する。
+    const userId = getUserId();
+    if (userId) {
+      saveProfileToDb(userId, full);
+      saveProgressToDb(userId, initial.progress);
+    }
+
     router.push("/map");
   }
 
