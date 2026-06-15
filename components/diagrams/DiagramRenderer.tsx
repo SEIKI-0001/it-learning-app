@@ -3,6 +3,9 @@ import type {
   ComparisonDiagram,
   DiagramSpec,
   FlowDiagram,
+  LayerDiagram,
+  MatrixDiagram,
+  RelationshipDiagram,
 } from "@/types/content";
 
 // ============================================================================
@@ -19,6 +22,12 @@ export default function DiagramRenderer({ spec }: { spec: DiagramSpec }) {
       return <ComparisonView spec={spec} />;
     case "flow":
       return <FlowView spec={spec} />;
+    case "matrix":
+      return <MatrixView spec={spec} />;
+    case "layers":
+      return <LayerView spec={spec} />;
+    case "relationship":
+      return <RelationshipView spec={spec} />;
     default: {
       // 将来 type が増えたときに描画漏れを型レベルで検知する。
       const _exhaustive: never = spec;
@@ -153,6 +162,144 @@ function FlowView({ spec }: { spec: FlowDiagram }) {
           </li>
         ))}
       </ol>
+    </DiagramFrame>
+  );
+}
+
+/** matrix: 2軸で整理する。SWOTなど「どのマスか」が大事な概念向け。 */
+function MatrixView({ spec }: { spec: MatrixDiagram }) {
+  return (
+    <DiagramFrame title={spec.title}>
+      <div className="space-y-3">
+        {spec.rows.map((row) => (
+          <div key={row}>
+            <p className="mb-1.5 text-xs font-bold text-gray-500">{row}</p>
+            <div
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: `repeat(${spec.columns.length}, minmax(0, 1fr))`,
+              }}
+            >
+              {spec.columns.map((column) => {
+                const cell = spec.cells.find(
+                  (candidate) =>
+                    candidate.row === row && candidate.column === column,
+                );
+                return (
+                  <div
+                    key={`${row}-${column}`}
+                    className="min-h-28 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-100"
+                  >
+                    <p className="text-[11px] font-bold text-gray-500">
+                      {column}
+                    </p>
+                    {cell ? (
+                      <>
+                        <p className="mt-1 text-sm font-extrabold text-gray-800">
+                          {cell.emoji && (
+                            <span className="mr-1" aria-hidden>
+                              {cell.emoji}
+                            </span>
+                          )}
+                          {cell.title}
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-gray-600">
+                          {cell.body}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="mt-2 text-xs text-gray-400">-</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </DiagramFrame>
+  );
+}
+
+/** layers: 上下の積み重なりを見せる。OSやクラウドの責任範囲向け。 */
+function LayerView({ spec }: { spec: LayerDiagram }) {
+  return (
+    <DiagramFrame title={spec.title}>
+      <ol className="space-y-2">
+        {spec.layers.map((layer, i) => (
+          <li key={i}>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+              <p className="text-sm font-extrabold text-gray-800">
+                {layer.emoji && (
+                  <span className="mr-1.5" aria-hidden>
+                    {layer.emoji}
+                  </span>
+                )}
+                {layer.title}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-gray-600">
+                {layer.body}
+              </p>
+            </div>
+            {i < spec.layers.length - 1 && (
+              <div className="flex justify-center py-1 text-gray-300" aria-hidden>
+                ↓
+              </div>
+            )}
+          </li>
+        ))}
+      </ol>
+    </DiagramFrame>
+  );
+}
+
+/** relationship: ノードとリンクで「何が何を参照するか」を見せる。 */
+function RelationshipView({ spec }: { spec: RelationshipDiagram }) {
+  const nodeById = new Map(spec.nodes.map((node) => [node.id, node]));
+
+  return (
+    <DiagramFrame title={spec.title}>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {spec.nodes.map((node) => (
+          <div
+            key={node.id}
+            className="rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-100"
+          >
+            <p className="text-sm font-extrabold text-gray-800">
+              {node.emoji && (
+                <span className="mr-1.5" aria-hidden>
+                  {node.emoji}
+                </span>
+              )}
+              {node.label}
+            </p>
+            {node.body && (
+              <p className="mt-1 text-xs leading-relaxed text-gray-600">
+                {node.body}
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+      {spec.links.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {spec.links.map((link, i) => (
+            <li
+              key={`${link.from}-${link.to}-${i}`}
+              className="rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold leading-relaxed text-indigo-800"
+            >
+              {nodeById.get(link.from)?.label ?? link.from}
+              <span aria-hidden> → </span>
+              {nodeById.get(link.to)?.label ?? link.to}
+              {link.label && (
+                <span className="ml-1 font-medium text-indigo-900/70">
+                  {link.label}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </DiagramFrame>
   );
 }

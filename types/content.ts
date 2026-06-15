@@ -63,8 +63,97 @@ export type FlowDiagram = {
   steps: { label: string; description?: string }[];
 };
 
+/** 2軸で整理する図解（例: SWOTの内外 × プラス/マイナス） */
+export type MatrixDiagram = {
+  type: "matrix";
+  title?: string;
+  columns: string[];
+  rows: string[];
+  cells: {
+    row: string;
+    column: string;
+    emoji?: string;
+    title: string;
+    body: string;
+  }[];
+};
+
+/** 上下に積み重なる構造を見せる図解（例: ハードウェア → OS → アプリ） */
+export type LayerDiagram = {
+  type: "layers";
+  title?: string;
+  layers: { emoji?: string; title: string; body: string }[];
+};
+
+/** ノード同士のつながりを見せる図解（例: 主キーと外部キー） */
+export type RelationshipDiagram = {
+  type: "relationship";
+  title?: string;
+  nodes: { id: string; emoji?: string; label: string; body?: string }[];
+  links: { from: string; to: string; label?: string }[];
+};
+
 /** 図解仕様（描画可能な構造化データ）。type で描画方法が決まる判別共用体。 */
-export type DiagramSpec = CardsDiagram | ComparisonDiagram | FlowDiagram;
+export type DiagramSpec =
+  | CardsDiagram
+  | ComparisonDiagram
+  | FlowDiagram
+  | MatrixDiagram
+  | LayerDiagram
+  | RelationshipDiagram;
+
+// ---------------------------------------------------------------------------
+// 視覚理解パーツ。装飾ではなく、導入直後に「見て・少し触って」理解するためのデータ。
+// 既存トピックには optional として追加するため、後方互換を保つ。
+// ---------------------------------------------------------------------------
+
+export type IllustrationSpec = {
+  type: "analogyScene";
+  title: string;
+  caption?: string;
+  items: { emoji?: string; title: string; body: string }[];
+};
+
+export type InteractiveSpec = {
+  type: "tapReveal";
+  title: string;
+  prompt?: string;
+  items: { emoji?: string; label: string; title: string; body: string }[];
+};
+
+export type AnimationSpec = {
+  type: "stepFlow";
+  title: string;
+  caption?: string;
+  steps: { emoji?: string; label: string; body: string }[];
+};
+
+export type ClassificationMiniGame = {
+  type: "classification";
+  title: string;
+  prompt: string;
+  buckets: { id: string; label: string; description?: string }[];
+  cards: { label: string; belongsTo: string; explanation: string }[];
+};
+
+export type MatchingMiniGame = {
+  type: "matching";
+  title: string;
+  prompt: string;
+  pairs: { left: string; right: string; explanation: string }[];
+};
+
+export type MiniGameSpec = ClassificationMiniGame | MatchingMiniGame;
+
+export type VisualLearningSpec = {
+  title?: string;
+  lead?: string;
+  diagram?: DiagramSpec;
+  illustration?: IllustrationSpec;
+  interactive?: InteractiveSpec;
+  animation?: AnimationSpec;
+  miniGame?: MiniGameSpec;
+};
 
 // ---------------------------------------------------------------------------
 // コンテンツの構成パーツ
@@ -155,6 +244,7 @@ export type Topic = {
   examFrequency?: ExamFrequency;
   reviewPriority?: ReviewPriority;
   beginnerTrapLevel?: BeginnerTrapLevel;
+  visualLearning?: VisualLearningSpec;
 
   conceptCard: ConceptCard; // 参考書 → 図解理解 の「図解理解」
   checkQuestions: CheckQuestion[]; // 確認問題

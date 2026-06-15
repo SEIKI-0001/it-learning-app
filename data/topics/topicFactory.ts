@@ -9,6 +9,7 @@ import type {
   ReviewPriority,
   Topic,
   TopicField,
+  VisualLearningSpec,
 } from "@/types/content";
 
 const CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
@@ -46,6 +47,7 @@ export type CompactTopic = {
   examFrequency?: ExamFrequency;
   reviewPriority?: ReviewPriority;
   beginnerTrapLevel?: BeginnerTrapLevel;
+  visualLearning?: VisualLearningSpec;
   detail?: string;
   diagram?: DiagramSpec;
   reviewQuestion?: string;
@@ -115,6 +117,7 @@ export function createCompactTopic(topic: CompactTopic): Topic {
     examFrequency: topic.examFrequency ?? "medium",
     reviewPriority: topic.reviewPriority ?? "medium",
     beginnerTrapLevel: topic.beginnerTrapLevel ?? "medium",
+    visualLearning: topic.visualLearning,
     conceptCard: {
       heading: `${topic.title}をイメージでつかむ`,
       body: topic.body,
