@@ -86,6 +86,12 @@ export type CheckQuestion = {
   correctChoice: ChoiceKey;
   explanation: string;
   difficulty: Difficulty;
+  /** 選択肢ごとの補足。誤答復習で「なぜ違うか」を返すために使う。 */
+  choiceExplanations?: Partial<Record<ChoiceKey, string>>;
+  /** AIコーチが近いトピックへ誘導するときに使う。 */
+  relatedTopicIds?: string[];
+  /** 誤答分析・直前復習向けのタグ。 */
+  reviewTags?: string[];
 };
 
 /** 図解付き解説（確認問題のあとに読む、理解を固めるパート） */
@@ -116,6 +122,15 @@ export type KakomonField = {
   note?: string;
 };
 
+/** 試験での出やすさ */
+export type ExamFrequency = "low" | "medium" | "high";
+
+/** 復習で優先する度合い */
+export type ReviewPriority = "low" | "medium" | "high";
+
+/** 初心者がつまずきやすい度合い */
+export type BeginnerTrapLevel = "low" | "medium" | "high";
+
 // ---------------------------------------------------------------------------
 // トピック（コンテンツライブラリの最小単位）
 // ---------------------------------------------------------------------------
@@ -131,6 +146,15 @@ export type Topic = {
   importance: Importance; // 重要度(出題頻度・基礎性。学習の優先度づけに使う)
   tags: string[]; // 苦手タグと対応づける語（例: "セキュリティ"）
   prerequisites: string[]; // 先に学ぶと良いトピックの id（無ければ空配列）
+  nextTopicIds?: string[]; // 次に学ぶとつながりやすいトピック id
+  relatedTerms?: string[]; // 関連用語（用語集・復習導線用）
+  commonMistakes?: string[]; // 間違いやすいポイント
+  examPoint?: string; // 試験でどう問われるか
+  reviewKeywords?: string[]; // 復習検索・想起用キーワード
+  lineSummary?: string; // LINE 1通で返しやすい短い要約
+  examFrequency?: ExamFrequency;
+  reviewPriority?: ReviewPriority;
+  beginnerTrapLevel?: BeginnerTrapLevel;
 
   conceptCard: ConceptCard; // 参考書 → 図解理解 の「図解理解」
   checkQuestions: CheckQuestion[]; // 確認問題
@@ -138,4 +162,21 @@ export type Topic = {
   reviewPrompt: ReviewPrompt; // 復習
   referenceHints: ReferenceHint[]; // 参考書で探すキーワード
   kakomonFields: KakomonField[]; // 過去問道場で解くべき分野
+};
+
+/** ITパスポート頻出用語の用語集エントリ */
+export type GlossaryTerm = {
+  id: string;
+  term: string;
+  reading?: string;
+  field?: TopicField;
+  category: string;
+  oneLine: string;
+  beginnerExplanation: string;
+  analogy: string;
+  examPoint: string;
+  relatedTerms: string[];
+  confusedWith: string[];
+  reviewTags: string[];
+  quiz: CheckQuestion;
 };
