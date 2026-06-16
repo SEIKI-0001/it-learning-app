@@ -50,6 +50,7 @@ export type CompactTopic = {
   beginnerTrapLevel?: BeginnerTrapLevel;
   heroDiagram?: HeroDiagramSpec;
   visualLearning?: VisualLearningSpec;
+  miniGameId?: string;
   detail?: string;
   diagram?: DiagramSpec;
   reviewQuestion?: string;
@@ -121,6 +122,7 @@ export function createCompactTopic(topic: CompactTopic): Topic {
     beginnerTrapLevel: topic.beginnerTrapLevel ?? "medium",
     heroDiagram: topic.heroDiagram ?? topic.visualLearning?.heroDiagram,
     visualLearning: topic.visualLearning,
+    miniGameId: topic.miniGameId,
     conceptCard: {
       heading: `${topic.title}をイメージでつかむ`,
       body: topic.body,
