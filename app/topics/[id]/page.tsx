@@ -9,6 +9,7 @@ import DiagramCard from "@/components/diagrams/DiagramCard";
 import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
 import AddToReviewButton from "@/components/learn/AddToReviewButton";
 import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
+import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
 import BottomNav from "@/components/BottomNav";
 
 // トピック詳細。理解カード → 確認問題 → 解説 → 復習 → 参考書キーワード → 過去問分野 の順。
@@ -34,6 +35,9 @@ export default async function TopicDetailPage({
 
   const diagrams = getDiagramsForTopic(topic);
   const miniGame = getMiniGameForTopic(topic.miniGameId);
+  // 難テーマ（DNS / SQL / 認証・認可）は、操作できる理解パートを
+  // トピック内に直接埋め込み、別ページ（/minigames）への遷移を主導線にしない。
+  const processDemo = topic.processDemo;
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -63,11 +67,17 @@ export default async function TopicDetailPage({
       </div>
 
       <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7">
-        {/* ① 視覚理解パーツ（MVP対象トピックのみ） */}
-        <VisualLearningSection visualLearning={topic.visualLearning} />
+        {/* 難テーマ: 操作できる理解パートをページ内で完結（別ページ遷移なし） */}
+        {processDemo && <ProcessDemoSection demo={processDemo} />}
 
-        {/* ② 概念カード（図解理解） */}
-        <Section emoji="💡" title="まずはイメージをつかむ">
+        {/* 通常トピック: 従来の固定構成（視覚理解→概念→図解→ミニゲーム導線） */}
+        {!processDemo && (
+          <>
+            {/* ① 視覚理解パーツ（MVP対象トピックのみ） */}
+            <VisualLearningSection visualLearning={topic.visualLearning} />
+
+            {/* ② 概念カード（図解理解） */}
+            <Section emoji="💡" title="まずはイメージをつかむ">
           <h3 className="text-base font-bold text-gray-800">
             {topic.conceptCard.heading}
           </h3>
@@ -122,6 +132,8 @@ export default async function TopicDetailPage({
               </div>
             </Link>
           </Section>
+        )}
+          </>
         )}
 
         {/* ③ 確認問題 */}

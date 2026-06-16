@@ -401,6 +401,105 @@ export type VisualLearningSpec = {
 };
 
 // ---------------------------------------------------------------------------
+// プロセスデモ（ProcessDemo）: 理解が難しいテーマ（DNS / SQL / 認証・認可）を
+//   「利用者目線の操作 → 裏側の処理ステップ → 用語対応 → 試験ポイント」まで
+//   1ページ内で完結させるための、操作できる理解パート。
+//   ミニゲーム（別ページ）に頼らず、トピック詳細ページに直接埋め込む。
+//   図解と同じく「構造化データ＋レンダラ」方式で、描画は
+//   components/learn/ProcessDemoSection が担う。
+// ---------------------------------------------------------------------------
+
+/** 処理の主体（ブラウザ / DNSサーバー / Webサーバー / DB など） */
+export type ProcessActor = {
+  id: string;
+  label: string; // 例: "ブラウザ"
+  emoji?: string;
+};
+
+/**
+ * 裏側の処理1ステップ。「誰が・何を受け取り・何をして・何を返すか」を持つ。
+ * input / output で「何がどこに渡されたか」を視覚化できるようにする。
+ */
+export type ProcessStep = {
+  id: string;
+  actorId: string; // どの主体の処理か（actors の id）
+  title: string; // 1〜2文の見出し
+  input?: string; // 受け取るもの（前の主体から渡された値）
+  action?: string; // 何をするか（補足）
+  output?: string; // 次へ渡す／返すもの
+  toActorId?: string; // output を渡す相手（省略時は次のステップの主体）
+  term?: string; // 試験用語ラベル（DNS / SQL / 認証 / 認可 など）
+  highlight?: boolean; // 特に強調したいステップ（例: 認可で失敗）
+};
+
+/** 結果の意味あい（ラベルでも分かるよう、色だけに依存しない） */
+export type ProcessOutcomeTone = "ok" | "blocked" | "info";
+
+/**
+ * 1つの処理フロー（シナリオ）。
+ * DNS / SQL は単一シナリオ、認証・認可は状態×操作で複数シナリオを持つ。
+ */
+export type ProcessScenario = {
+  id: string;
+  label: string; // シナリオ選択ボタンの表示名
+  /** rolePicker 画面で、どの選択の組み合わせに対応するか（kind=rolePicker のとき） */
+  selection?: Record<string, string>;
+  steps: ProcessStep[];
+  outcomeLabel: string; // 結果（例: "管理画面を表示" / "アクセスを拒否"）
+  outcomeTone: ProcessOutcomeTone;
+  takeaway?: string; // このシナリオの学習ポイント（強調表示）
+};
+
+/** 利用者が最初に触る「画面イメージ」。kind で描画方法が決まる。 */
+export type ProcessScreen =
+  | {
+      kind: "browserBar";
+      url: string;
+      buttonLabel: string;
+    }
+  | {
+      kind: "searchForm";
+      fields: { label: string; value: string }[];
+      buttonLabel: string;
+    }
+  | {
+      kind: "rolePicker";
+      groups: {
+        id: string;
+        label: string;
+        options: { id: string; label: string }[];
+      }[];
+      buttonLabel: string;
+    };
+
+/** ITパスポート用語との対応（用語 → 意味 → このデモでの現れ方） */
+export type ProcessTermMapping = {
+  term: string;
+  meaning: string;
+  inThisDemo: string;
+};
+
+/** 軽いミニ理解チェック（1問）。結果ではなく内部状態を問う形にする。 */
+export type ProcessMiniCheck = {
+  question: string;
+  choices: string[];
+  correctIndex: number;
+  explanation: string;
+};
+
+export type ProcessDemoSpec = {
+  title: string;
+  lead: string; // 何が分かるページか
+  userScenario: string; // 利用者目線の入口（問いかけ）
+  screen: ProcessScreen; // 画面上での操作
+  actors: ProcessActor[];
+  scenarios: ProcessScenario[]; // 裏側の処理ステップ（1つ以上）
+  termMappings: ProcessTermMapping[]; // 用語対応
+  examPoints: string[]; // 試験での問われ方
+  miniCheck?: ProcessMiniCheck; // ミニ理解チェック
+};
+
+// ---------------------------------------------------------------------------
 // コンテンツの構成パーツ
 // ---------------------------------------------------------------------------
 
@@ -491,6 +590,7 @@ export type Topic = {
   beginnerTrapLevel?: BeginnerTrapLevel;
   heroDiagram?: HeroDiagramSpec;
   visualLearning?: VisualLearningSpec;
+  processDemo?: ProcessDemoSpec; // 操作できる理解パート。設定された難テーマは専用構成で表示
   diagramIds?: string[]; // 図解レジストリ（data/diagrams）の id 参照。「図で理解」セクションに表示
   miniGameId?: string; // ミニゲームレジストリ（data/minigames）の id 参照。「操作して理解する」セクションに表示
 

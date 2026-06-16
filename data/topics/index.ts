@@ -3,6 +3,7 @@ import { technologyTopics as baseTechnologyTopics } from "./technology";
 import { managementTopics as baseManagementTopics } from "./management";
 import { strategyTopics as baseStrategyTopics } from "./strategy";
 import { topicVisualLearning } from "./visualLearning";
+import { topicProcessDemo } from "./processDemo";
 
 // ============================================================================
 // コンテンツライブラリの集約点。
@@ -18,6 +19,7 @@ function attachVisualLearning(list: Topic[]): Topic[] {
       ...topic,
       heroDiagram: topic.heroDiagram ?? visualLearning?.heroDiagram,
       visualLearning,
+      processDemo: topic.processDemo ?? topicProcessDemo[topic.id],
     };
   });
 }
