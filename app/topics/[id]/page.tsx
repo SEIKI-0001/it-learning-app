@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Topic } from "@/types/content";
 import { FIELD_LABELS, IMPORTANCE_LABELS } from "@/types/content";
-import { getAllTopics, getTopic } from "@/lib/content";
+import { getAllTopics, getDiagramsForTopic, getTopic } from "@/lib/content";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
+import DiagramCard from "@/components/diagrams/DiagramCard";
 import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
 import AddToReviewButton from "@/components/learn/AddToReviewButton";
 import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
@@ -29,6 +30,8 @@ export default async function TopicDetailPage({
   const { id } = await params;
   const topic = getTopic(id);
   if (!topic) notFound();
+
+  const diagrams = getDiagramsForTopic(topic);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -80,6 +83,19 @@ export default async function TopicDetailPage({
             </div>
           )}
         </Section>
+
+        {/* ②.5 図で理解（図解レジストリから diagramIds で呼び出す） */}
+        {diagrams.length > 0 && (
+          <Section emoji="📊" title="図で理解">
+            <ul className="space-y-4">
+              {diagrams.map((d) => (
+                <li key={d.id}>
+                  <DiagramCard diagram={d} showHeading={false} />
+                </li>
+              ))}
+            </ul>
+          </Section>
+        )}
 
         {/* ③ 確認問題 */}
         <Section emoji="✏️" title="確認問題">

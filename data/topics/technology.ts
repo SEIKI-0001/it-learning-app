@@ -23,6 +23,7 @@ const coreTechnologyTopics: Topic[] = [
     importance: 2,
     tags: ["2進数", "基礎理論", "データ量"],
     prerequisites: [],
+    diagramIds: ["diag-cpu-memory-storage"],
 
     conceptCard: {
       heading: "コンピュータは「0と1」だけで動いている",
@@ -142,6 +143,7 @@ const coreTechnologyTopics: Topic[] = [
     importance: 3,
     tags: ["ネットワーク", "IPアドレス", "DNS"],
     prerequisites: [],
+    diagramIds: ["diag-network-flow"],
 
     conceptCard: {
       heading: "ネットの「住所」と「電話帳」",
@@ -246,6 +248,12 @@ const coreTechnologyTopics: Topic[] = [
     importance: 3,
     tags: ["セキュリティ", "CIA", "情報管理"],
     prerequisites: [],
+    diagramIds: [
+      "diag-sec-cia-3",
+      "diag-authn-authz",
+      "diag-crypto-hash-sign",
+      "diag-backup-redundancy",
+    ],
 
     conceptCard: {
       heading: "情報を守る3つの柱",
