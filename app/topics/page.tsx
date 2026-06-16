@@ -45,12 +45,20 @@ export default function TopicsPage() {
           <p className="mt-1 text-sm text-white/90">
             ストラテジ・マネジメント・テクノロジの3分野を、図解つきで学べます。
           </p>
-          <Link
-            href="/diagrams"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1.5 text-sm font-bold text-white transition active:scale-[0.98]"
-          >
-            <span aria-hidden>📊</span> 図解いちらんを見る
-          </Link>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/diagrams"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1.5 text-sm font-bold text-white transition active:scale-[0.98]"
+            >
+              <span aria-hidden>📊</span> 図解いちらん
+            </Link>
+            <Link
+              href="/minigames"
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-1.5 text-sm font-bold text-white transition active:scale-[0.98]"
+            >
+              <span aria-hidden>🎮</span> ミニゲーム
+            </Link>
+          </div>
         </div>
       </header>
 

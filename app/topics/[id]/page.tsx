@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Topic } from "@/types/content";
 import { FIELD_LABELS, IMPORTANCE_LABELS } from "@/types/content";
 import { getAllTopics, getDiagramsForTopic, getTopic } from "@/lib/content";
+import { getMiniGameForTopic } from "@/lib/minigames";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import DiagramCard from "@/components/diagrams/DiagramCard";
 import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
@@ -32,6 +33,7 @@ export default async function TopicDetailPage({
   if (!topic) notFound();
 
   const diagrams = getDiagramsForTopic(topic);
+  const miniGame = getMiniGameForTopic(topic.miniGameId);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -94,6 +96,31 @@ export default async function TopicDetailPage({
                 </li>
               ))}
             </ul>
+          </Section>
+        )}
+
+        {/* ②.7 ミニゲームで理解する（miniGameId が設定されたトピックのみ） */}
+        {miniGame && (
+          <Section emoji="🎮" title="操作して理解する">
+            <Link
+              href={`/minigames/${miniGame.id}`}
+              className="block rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-4 transition active:scale-[0.99]"
+            >
+              <p className="text-base font-extrabold text-gray-800">
+                {miniGame.title}
+              </p>
+              <p className="mt-1 text-sm leading-snug text-gray-600">
+                {miniGame.description}
+              </p>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs text-gray-400">
+                  ⏱️ 約{miniGame.estimatedMinutes}分
+                </span>
+                <span className="rounded-full bg-indigo-600 px-3.5 py-1.5 text-sm font-bold text-white">
+                  ▶ 遊んでみる
+                </span>
+              </div>
+            </Link>
           </Section>
         )}
 
