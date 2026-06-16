@@ -161,6 +161,99 @@ export type BalanceDiagram = {
   tradeoffs?: string[];
 };
 
+export type HeroDiagramType =
+  | "flow"
+  | "role-map"
+  | "compare"
+  | "relation"
+  | "matrix"
+  | "cycle";
+
+export type HeroDiagramTone =
+  | "sky"
+  | "indigo"
+  | "emerald"
+  | "amber"
+  | "rose"
+  | "violet"
+  | "slate";
+
+export type HeroDiagramNode = {
+  id: string;
+  label: string;
+  caption?: string;
+  badge?: string;
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramLane = {
+  id: string;
+  label: string;
+  caption?: string;
+  items?: string[];
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramGroup = {
+  id: string;
+  label: string;
+  caption?: string;
+  items: string[];
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramStep = {
+  from?: string;
+  to?: string;
+  label: string;
+  caption?: string;
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramLink = {
+  from: string;
+  to: string;
+  label?: string;
+};
+
+export type HeroDiagramMatrix = {
+  columns: string[];
+  rows: string[];
+  cells: {
+    row: string;
+    column: string;
+    label: string;
+    caption?: string;
+    tone?: HeroDiagramTone;
+  }[];
+};
+
+export type HeroDiagramCycleStep = {
+  label: string;
+  caption?: string;
+  tone?: HeroDiagramTone;
+};
+
+/** 導入直後に全体像を一枚で見せる理解用インフォグラフィック。 */
+export type HeroDiagramSpec = {
+  type: "heroDiagram";
+  diagramType: HeroDiagramType;
+  title: string;
+  subtitle?: string;
+  canvasLabel?: string;
+  nodes?: HeroDiagramNode[];
+  lanes?: HeroDiagramLane[];
+  groups?: HeroDiagramGroup[];
+  steps?: HeroDiagramStep[];
+  links?: HeroDiagramLink[];
+  matrix?: HeroDiagramMatrix;
+  cycle?: {
+    center?: string;
+    steps: HeroDiagramCycleStep[];
+  };
+  insight?: string;
+};
+
 /** 図解仕様（描画可能な構造化データ）。type で描画方法が決まる判別共用体。 */
 export type DiagramSpec =
   | CardsDiagram
@@ -220,6 +313,7 @@ export type MiniGameSpec = ClassificationMiniGame | MatchingMiniGame;
 export type VisualLearningSpec = {
   title?: string;
   lead?: string;
+  heroDiagram?: HeroDiagramSpec;
   diagram?: DiagramSpec;
   illustration?: IllustrationSpec;
   interactive?: InteractiveSpec;
@@ -316,6 +410,7 @@ export type Topic = {
   examFrequency?: ExamFrequency;
   reviewPriority?: ReviewPriority;
   beginnerTrapLevel?: BeginnerTrapLevel;
+  heroDiagram?: HeroDiagramSpec;
   visualLearning?: VisualLearningSpec;
 
   conceptCard: ConceptCard; // 参考書 → 図解理解 の「図解理解」

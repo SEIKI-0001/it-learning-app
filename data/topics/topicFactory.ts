@@ -5,6 +5,7 @@ import type {
   DiagramSpec,
   Difficulty,
   ExamFrequency,
+  HeroDiagramSpec,
   Importance,
   ReviewPriority,
   Topic,
@@ -47,6 +48,7 @@ export type CompactTopic = {
   examFrequency?: ExamFrequency;
   reviewPriority?: ReviewPriority;
   beginnerTrapLevel?: BeginnerTrapLevel;
+  heroDiagram?: HeroDiagramSpec;
   visualLearning?: VisualLearningSpec;
   detail?: string;
   diagram?: DiagramSpec;
@@ -117,6 +119,7 @@ export function createCompactTopic(topic: CompactTopic): Topic {
     examFrequency: topic.examFrequency ?? "medium",
     reviewPriority: topic.reviewPriority ?? "medium",
     beginnerTrapLevel: topic.beginnerTrapLevel ?? "medium",
+    heroDiagram: topic.heroDiagram ?? topic.visualLearning?.heroDiagram,
     visualLearning: topic.visualLearning,
     conceptCard: {
       heading: `${topic.title}をイメージでつかむ`,

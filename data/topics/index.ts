@@ -11,10 +11,15 @@ import { topicVisualLearning } from "./visualLearning";
 // ============================================================================
 
 function attachVisualLearning(list: Topic[]): Topic[] {
-  return list.map((topic) => ({
-    ...topic,
-    visualLearning: topic.visualLearning ?? topicVisualLearning[topic.id],
-  }));
+  return list.map((topic) => {
+    const visualLearning = topic.visualLearning ?? topicVisualLearning[topic.id];
+
+    return {
+      ...topic,
+      heroDiagram: topic.heroDiagram ?? visualLearning?.heroDiagram,
+      visualLearning,
+    };
+  });
 }
 
 export const technologyTopics: Topic[] = attachVisualLearning(baseTechnologyTopics);

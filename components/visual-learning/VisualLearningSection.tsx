@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
+import HeroDiagramRenderer from "@/components/visual-learning/HeroDiagramRenderer";
 import type {
   AnimationSpec,
   ClassificationMiniGame,
@@ -32,6 +33,9 @@ export default function VisualLearningSection({
       )}
 
       <div className="mt-5 space-y-5">
+        {visualLearning.heroDiagram && (
+          <HeroDiagramRenderer spec={visualLearning.heroDiagram} />
+        )}
         {visualLearning.diagram && (
           <div>
             <DiagramRenderer spec={visualLearning.diagram} />
