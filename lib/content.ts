@@ -1,6 +1,12 @@
-import type { CheckQuestion, Topic, TopicField } from "@/types/content";
+import type {
+  CheckQuestion,
+  LearningDiagram,
+  Topic,
+  TopicField,
+} from "@/types/content";
 import type { ReviewItem, UserProgress } from "@/types";
 import { topics, taxonomy, type FieldTaxonomy } from "@/data/topics";
+import { diagrams, diagramRegistry, diagramsByField } from "@/data/diagrams";
 
 // ============================================================================
 // コンテンツライブラリの取得ヘルパー（純粋関数）。
@@ -127,6 +133,41 @@ export function getReviewItemsForUser(
 /** 分野→中分類の taxonomy を返す */
 export function getTaxonomy(): FieldTaxonomy[] {
   return taxonomy;
+}
+
+// ---------------------------------------------------------------------------
+// 図解（LearningDiagram）の取得ヘルパー。
+// UI 側は図解データを直接 import せず、必ずここ経由で参照する（content.ts と同方針）。
+// ---------------------------------------------------------------------------
+
+/** すべての図解を返す */
+export function getAllDiagrams(): LearningDiagram[] {
+  return diagrams;
+}
+
+/** id で図解を1件取得（無ければ undefined） */
+export function getDiagram(id: string): LearningDiagram | undefined {
+  return diagramRegistry[id];
+}
+
+/** 分野で図解を取得 */
+export function getDiagramsByField(field: TopicField): LearningDiagram[] {
+  return diagramsByField(field);
+}
+
+/**
+ * トピックに紐づく図解を、diagramIds の順で取得する。
+ * 存在しない id は黙って除外する（データ修正中でも画面が壊れないように）。
+ */
+export function getDiagramsForTopic(topic: Topic): LearningDiagram[] {
+  return (topic.diagramIds ?? [])
+    .map((id) => diagramRegistry[id])
+    .filter((d): d is LearningDiagram => d !== undefined);
+}
+
+/** 図解の総数 */
+export function getDiagramCount(): number {
+  return diagrams.length;
 }
 
 /** トピックの総数 */

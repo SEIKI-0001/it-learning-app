@@ -17,6 +17,7 @@ export const strategyTopics: Topic[] = [
     importance: 2,
     tags: ["経営戦略", "SWOT分析"],
     prerequisites: [],
+    diagramIds: ["diag-swot", "diag-3c", "diag-breakeven"],
 
     conceptCard: {
       heading: "自分の内側と、外の世界を分けて見る",
