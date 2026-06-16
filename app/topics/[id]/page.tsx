@@ -7,6 +7,7 @@ import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import DiagramCard from "@/components/diagrams/DiagramCard";
 import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
 import AddToReviewButton from "@/components/learn/AddToReviewButton";
+import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
 import BottomNav from "@/components/BottomNav";
 
 // トピック詳細。理解カード → 確認問題 → 解説 → 復習 → 参考書キーワード → 過去問分野 の順。
@@ -60,7 +61,10 @@ export default async function TopicDetailPage({
       </div>
 
       <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7">
-        {/* ① 概念カード（図解理解） */}
+        {/* ① 視覚理解パーツ（MVP対象トピックのみ） */}
+        <VisualLearningSection visualLearning={topic.visualLearning} />
+
+        {/* ② 概念カード（図解理解） */}
         <Section emoji="💡" title="まずはイメージをつかむ">
           <h3 className="text-base font-bold text-gray-800">
             {topic.conceptCard.heading}
@@ -80,7 +84,7 @@ export default async function TopicDetailPage({
           )}
         </Section>
 
-        {/* ①.5 図で理解（図解レジストリから diagramIds で呼び出す） */}
+        {/* ②.5 図で理解（図解レジストリから diagramIds で呼び出す） */}
         {diagrams.length > 0 && (
           <Section emoji="📊" title="図で理解">
             <ul className="space-y-4">
@@ -93,7 +97,7 @@ export default async function TopicDetailPage({
           </Section>
         )}
 
-        {/* ② 確認問題 */}
+        {/* ③ 確認問題 */}
         <Section emoji="✏️" title="確認問題">
           <ul className="space-y-4">
             {topic.checkQuestions.map((q, i) => (
@@ -104,7 +108,7 @@ export default async function TopicDetailPage({
           </ul>
         </Section>
 
-        {/* ③ 図解付き解説 */}
+        {/* ④ 図解付き解説 */}
         <Section emoji="📘" title="解説で理解を固める">
           <p className="text-sm leading-relaxed text-gray-700">
             {topic.explanation.body}
@@ -132,7 +136,7 @@ export default async function TopicDetailPage({
           )}
         </Section>
 
-        {/* ④ 復習プロンプト */}
+        {/* ⑤ 復習プロンプト */}
         <Section emoji="🔁" title="あとで思い出すための復習">
           <details className="rounded-xl border border-gray-200 bg-white px-4 py-3">
             <summary className="cursor-pointer text-sm font-bold text-gray-800">
@@ -147,7 +151,7 @@ export default async function TopicDetailPage({
           </div>
         </Section>
 
-        {/* ⑤ 参考書で探すキーワード（関連キーワード） */}
+        {/* ⑥ 参考書で探すキーワード（関連キーワード） */}
         <Section emoji="📚" title="参考書で探すキーワード">
           <p className="mb-3 text-xs text-gray-500">
             章番号ではなく、索引でこの言葉を引いてみてください。
@@ -173,7 +177,7 @@ export default async function TopicDetailPage({
           </ul>
         </Section>
 
-        {/* ⑥ 過去問道場で解くべき分野（関連する過去問分野） */}
+        {/* ⑦ 過去問道場で解くべき分野（関連する過去問分野） */}
         <Section emoji="🎯" title="関連する過去問分野">
           <ul className="space-y-2">
             {topic.kakomonFields.map((f, i) => (

@@ -1,10 +1,12 @@
 import type {
   CheckQuestion,
+  GlossaryTerm,
   LearningDiagram,
   Topic,
   TopicField,
 } from "@/types/content";
 import type { ReviewItem, UserProgress } from "@/types";
+import { glossaryTerms } from "@/data/glossary";
 import { topics, taxonomy, type FieldTaxonomy } from "@/data/topics";
 import { diagrams, diagramRegistry, diagramsByField } from "@/data/diagrams";
 
@@ -173,4 +175,29 @@ export function getDiagramCount(): number {
 /** トピックの総数 */
 export function getTopicCount(): number {
   return topics.length;
+}
+
+/** すべての用語集エントリを返す */
+export function getAllGlossaryTerms(): GlossaryTerm[] {
+  return glossaryTerms;
+}
+
+/** id で用語集エントリを1件取得（無ければ undefined） */
+export function getGlossaryTerm(id: string): GlossaryTerm | undefined {
+  return glossaryTerms.find((term) => term.id === id);
+}
+
+/** 用語名で用語集エントリを1件取得（完全一致） */
+export function getGlossaryTermByName(name: string): GlossaryTerm | undefined {
+  return glossaryTerms.find((term) => term.term === name);
+}
+
+/** タグで用語集エントリを取得 */
+export function getGlossaryTermsByTag(tag: string): GlossaryTerm[] {
+  return glossaryTerms.filter((term) => term.reviewTags.includes(tag));
+}
+
+/** 用語集の総数 */
+export function getGlossaryTermCount(): number {
+  return glossaryTerms.length;
 }

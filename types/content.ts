@@ -63,6 +63,200 @@ export type FlowDiagram = {
   steps: { label: string; description?: string }[];
 };
 
+/** 2軸で整理する図解（例: SWOTの内外 × プラス/マイナス） */
+export type MatrixDiagram = {
+  type: "matrix";
+  title?: string;
+  columns: string[];
+  rows: string[];
+  cells: {
+    row: string;
+    column: string;
+    emoji?: string;
+    title: string;
+    body: string;
+  }[];
+};
+
+/** 上下に積み重なる構造を見せる図解（例: ハードウェア → OS → アプリ） */
+export type LayerDiagram = {
+  type: "layers";
+  title?: string;
+  layers: { emoji?: string; title: string; body: string }[];
+};
+
+/** ノード同士のつながりを見せる図解（例: 主キーと外部キー） */
+export type RelationshipDiagram = {
+  type: "relationship";
+  title?: string;
+  nodes: { id: string; emoji?: string; label: string; body?: string }[];
+  links: { from: string; to: string; label?: string }[];
+};
+
+/** 役割を持つ要素同士の受け渡しを見せる図解（例: 保存→読み出し→処理） */
+export type MechanismFlowDiagram = {
+  type: "mechanismFlow";
+  title?: string;
+  actors: {
+    id: string;
+    label: string;
+    role: string;
+    detail?: string;
+  }[];
+  steps: {
+    from: string;
+    to: string;
+    label: string;
+    body?: string;
+  }[];
+};
+
+/** 役割の違いと境界を見せる図解（例: OSがアプリと機械の間に入る） */
+export type RoleMapDiagram = {
+  type: "roleMap";
+  title?: string;
+  roles: {
+    id: string;
+    label: string;
+    responsibility: string;
+    handles: string[];
+    notFor?: string;
+  }[];
+  handoffs?: { from: string; to: string; label: string }[];
+};
+
+/** テーブルのキーと参照関係を見せる図解（例: 主キー・外部キー） */
+export type TableRelationDiagram = {
+  type: "tableRelation";
+  title?: string;
+  tables: {
+    id: string;
+    name: string;
+    caption?: string;
+    columns: {
+      name: string;
+      keyType?: "primary" | "foreign" | "normal";
+      references?: string;
+    }[];
+  }[];
+  relations: {
+    fromTable: string;
+    fromColumn: string;
+    toTable: string;
+    toColumn: string;
+    label?: string;
+  }[];
+};
+
+/** 3要素のバランス関係を見せる図解（例: QCD） */
+export type BalanceDiagram = {
+  type: "balance";
+  title?: string;
+  center: string;
+  factors: {
+    label: string;
+    body: string;
+    ifOverdone?: string;
+  }[];
+  tradeoffs?: string[];
+};
+
+export type HeroDiagramType =
+  | "flow"
+  | "role-map"
+  | "compare"
+  | "relation"
+  | "matrix"
+  | "cycle";
+
+export type HeroDiagramTone =
+  | "sky"
+  | "indigo"
+  | "emerald"
+  | "amber"
+  | "rose"
+  | "violet"
+  | "slate";
+
+export type HeroDiagramNode = {
+  id: string;
+  label: string;
+  caption?: string;
+  badge?: string;
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramLane = {
+  id: string;
+  label: string;
+  caption?: string;
+  items?: string[];
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramGroup = {
+  id: string;
+  label: string;
+  caption?: string;
+  items: string[];
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramStep = {
+  from?: string;
+  to?: string;
+  label: string;
+  caption?: string;
+  tone?: HeroDiagramTone;
+};
+
+export type HeroDiagramLink = {
+  from: string;
+  to: string;
+  label?: string;
+};
+
+export type HeroDiagramMatrix = {
+  columns: string[];
+  rows: string[];
+  cells: {
+    row: string;
+    column: string;
+    label: string;
+    caption?: string;
+    tone?: HeroDiagramTone;
+  }[];
+};
+
+export type HeroDiagramCycleStep = {
+  label: string;
+  caption?: string;
+  tone?: HeroDiagramTone;
+};
+
+/** 導入直後に全体像を一枚で見せる理解用インフォグラフィック。 */
+export type HeroDiagramSpec = {
+  type: "heroDiagram";
+  diagramType: HeroDiagramType;
+  title: string;
+  subtitle?: string;
+  canvasLabel?: string;
+  nodes?: HeroDiagramNode[];
+  lanes?: HeroDiagramLane[];
+  groups?: HeroDiagramGroup[];
+  steps?: HeroDiagramStep[];
+  links?: HeroDiagramLink[];
+  matrix?: HeroDiagramMatrix;
+  cycle?: {
+    center?: string;
+    steps: HeroDiagramCycleStep[];
+  };
+  insight?: string;
+};
+
+// --- 図解レジストリ（LearningDiagram）向けの追加図解タイプ ---------------------
+// 既存の matrix/layers などとは判別子（type）が重複しないため共存できる。
+
 /**
  * 2×2 のマトリクス図解（例: SWOT 分析）。
  * cells は左上→右上→左下→右下 の順で4つ。軸ラベルは [手前, 奥] の意味。
@@ -120,6 +314,13 @@ export type DiagramSpec =
   | CardsDiagram
   | ComparisonDiagram
   | FlowDiagram
+  | MatrixDiagram
+  | LayerDiagram
+  | RelationshipDiagram
+  | MechanismFlowDiagram
+  | RoleMapDiagram
+  | TableRelationDiagram
+  | BalanceDiagram
   | QuadrantDiagram
   | CycleDiagram
   | NestedDiagram
@@ -146,6 +347,60 @@ export type LearningDiagram = {
 };
 
 // ---------------------------------------------------------------------------
+// 視覚理解パーツ。装飾ではなく、導入直後に「見て・少し触って」理解するためのデータ。
+// 既存トピックには optional として追加するため、後方互換を保つ。
+// ---------------------------------------------------------------------------
+
+export type IllustrationSpec = {
+  type: "analogyScene";
+  title: string;
+  caption?: string;
+  items: { emoji?: string; title: string; body: string }[];
+};
+
+export type InteractiveSpec = {
+  type: "tapReveal";
+  title: string;
+  prompt?: string;
+  items: { emoji?: string; label: string; title: string; body: string }[];
+};
+
+export type AnimationSpec = {
+  type: "stepFlow";
+  title: string;
+  caption?: string;
+  steps: { emoji?: string; label: string; body: string }[];
+};
+
+export type ClassificationMiniGame = {
+  type: "classification";
+  title: string;
+  prompt: string;
+  buckets: { id: string; label: string; description?: string }[];
+  cards: { label: string; belongsTo: string; explanation: string }[];
+};
+
+export type MatchingMiniGame = {
+  type: "matching";
+  title: string;
+  prompt: string;
+  pairs: { left: string; right: string; explanation: string }[];
+};
+
+export type MiniGameSpec = ClassificationMiniGame | MatchingMiniGame;
+
+export type VisualLearningSpec = {
+  title?: string;
+  lead?: string;
+  heroDiagram?: HeroDiagramSpec;
+  diagram?: DiagramSpec;
+  illustration?: IllustrationSpec;
+  interactive?: InteractiveSpec;
+  animation?: AnimationSpec;
+  miniGame?: MiniGameSpec;
+};
+
+// ---------------------------------------------------------------------------
 // コンテンツの構成パーツ
 // ---------------------------------------------------------------------------
 
@@ -165,6 +420,12 @@ export type CheckQuestion = {
   correctChoice: ChoiceKey;
   explanation: string;
   difficulty: Difficulty;
+  /** 選択肢ごとの補足。誤答復習で「なぜ違うか」を返すために使う。 */
+  choiceExplanations?: Partial<Record<ChoiceKey, string>>;
+  /** AIコーチが近いトピックへ誘導するときに使う。 */
+  relatedTopicIds?: string[];
+  /** 誤答分析・直前復習向けのタグ。 */
+  reviewTags?: string[];
 };
 
 /** 図解付き解説（確認問題のあとに読む、理解を固めるパート） */
@@ -195,6 +456,15 @@ export type KakomonField = {
   note?: string;
 };
 
+/** 試験での出やすさ */
+export type ExamFrequency = "low" | "medium" | "high";
+
+/** 復習で優先する度合い */
+export type ReviewPriority = "low" | "medium" | "high";
+
+/** 初心者がつまずきやすい度合い */
+export type BeginnerTrapLevel = "low" | "medium" | "high";
+
 // ---------------------------------------------------------------------------
 // トピック（コンテンツライブラリの最小単位）
 // ---------------------------------------------------------------------------
@@ -210,12 +480,40 @@ export type Topic = {
   importance: Importance; // 重要度(出題頻度・基礎性。学習の優先度づけに使う)
   tags: string[]; // 苦手タグと対応づける語（例: "セキュリティ"）
   prerequisites: string[]; // 先に学ぶと良いトピックの id（無ければ空配列）
-
+  nextTopicIds?: string[]; // 次に学ぶとつながりやすいトピック id
+  relatedTerms?: string[]; // 関連用語（用語集・復習導線用）
+  commonMistakes?: string[]; // 間違いやすいポイント
+  examPoint?: string; // 試験でどう問われるか
+  reviewKeywords?: string[]; // 復習検索・想起用キーワード
+  lineSummary?: string; // LINE 1通で返しやすい短い要約
+  examFrequency?: ExamFrequency;
+  reviewPriority?: ReviewPriority;
+  beginnerTrapLevel?: BeginnerTrapLevel;
+  heroDiagram?: HeroDiagramSpec;
+  visualLearning?: VisualLearningSpec;
   diagramIds?: string[]; // 図解レジストリ（data/diagrams）の id 参照。「図で理解」セクションに表示
+
   conceptCard: ConceptCard; // 参考書 → 図解理解 の「図解理解」
   checkQuestions: CheckQuestion[]; // 確認問題
   explanation: Explanation; // 図解付き解説
   reviewPrompt: ReviewPrompt; // 復習
   referenceHints: ReferenceHint[]; // 参考書で探すキーワード
   kakomonFields: KakomonField[]; // 過去問道場で解くべき分野
+};
+
+/** ITパスポート頻出用語の用語集エントリ */
+export type GlossaryTerm = {
+  id: string;
+  term: string;
+  reading?: string;
+  field?: TopicField;
+  category: string;
+  oneLine: string;
+  beginnerExplanation: string;
+  analogy: string;
+  examPoint: string;
+  relatedTerms: string[];
+  confusedWith: string[];
+  reviewTags: string[];
+  quiz: CheckQuestion;
 };
