@@ -93,6 +93,74 @@ export type RelationshipDiagram = {
   links: { from: string; to: string; label?: string }[];
 };
 
+/** 役割を持つ要素同士の受け渡しを見せる図解（例: 保存→読み出し→処理） */
+export type MechanismFlowDiagram = {
+  type: "mechanismFlow";
+  title?: string;
+  actors: {
+    id: string;
+    label: string;
+    role: string;
+    detail?: string;
+  }[];
+  steps: {
+    from: string;
+    to: string;
+    label: string;
+    body?: string;
+  }[];
+};
+
+/** 役割の違いと境界を見せる図解（例: OSがアプリと機械の間に入る） */
+export type RoleMapDiagram = {
+  type: "roleMap";
+  title?: string;
+  roles: {
+    id: string;
+    label: string;
+    responsibility: string;
+    handles: string[];
+    notFor?: string;
+  }[];
+  handoffs?: { from: string; to: string; label: string }[];
+};
+
+/** テーブルのキーと参照関係を見せる図解（例: 主キー・外部キー） */
+export type TableRelationDiagram = {
+  type: "tableRelation";
+  title?: string;
+  tables: {
+    id: string;
+    name: string;
+    caption?: string;
+    columns: {
+      name: string;
+      keyType?: "primary" | "foreign" | "normal";
+      references?: string;
+    }[];
+  }[];
+  relations: {
+    fromTable: string;
+    fromColumn: string;
+    toTable: string;
+    toColumn: string;
+    label?: string;
+  }[];
+};
+
+/** 3要素のバランス関係を見せる図解（例: QCD） */
+export type BalanceDiagram = {
+  type: "balance";
+  title?: string;
+  center: string;
+  factors: {
+    label: string;
+    body: string;
+    ifOverdone?: string;
+  }[];
+  tradeoffs?: string[];
+};
+
 /** 図解仕様（描画可能な構造化データ）。type で描画方法が決まる判別共用体。 */
 export type DiagramSpec =
   | CardsDiagram
@@ -100,7 +168,11 @@ export type DiagramSpec =
   | FlowDiagram
   | MatrixDiagram
   | LayerDiagram
-  | RelationshipDiagram;
+  | RelationshipDiagram
+  | MechanismFlowDiagram
+  | RoleMapDiagram
+  | TableRelationDiagram
+  | BalanceDiagram;
 
 // ---------------------------------------------------------------------------
 // 視覚理解パーツ。装飾ではなく、導入直後に「見て・少し触って」理解するためのデータ。

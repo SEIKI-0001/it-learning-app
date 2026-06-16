@@ -22,8 +22,8 @@ export default function VisualLearningSection({
   return (
     <section className="-mx-4 bg-white px-4 py-5 ring-1 ring-gray-200 sm:mx-0">
       <h2 className="flex items-center gap-2 text-lg font-extrabold text-gray-900">
-        <span aria-hidden>👀</span>
-        {visualLearning.title ?? "まずは見て理解する"}
+        <span aria-hidden>▣</span>
+        {visualLearning.title ?? "まず図で理解する"}
       </h2>
       {visualLearning.lead && (
         <p className="mt-2 text-sm leading-relaxed text-gray-600">
@@ -32,13 +32,13 @@ export default function VisualLearningSection({
       )}
 
       <div className="mt-5 space-y-5">
-        {visualLearning.illustration && (
-          <IllustrationView spec={visualLearning.illustration} />
-        )}
         {visualLearning.diagram && (
           <div>
             <DiagramRenderer spec={visualLearning.diagram} />
           </div>
+        )}
+        {visualLearning.illustration && (
+          <IllustrationView spec={visualLearning.illustration} />
         )}
         {visualLearning.interactive && (
           <TapRevealView spec={visualLearning.interactive} />
