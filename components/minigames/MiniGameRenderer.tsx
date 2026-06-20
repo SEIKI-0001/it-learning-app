@@ -2,8 +2,6 @@
 
 import type { MiniGame } from "@/types/minigame";
 import { FIELD_LABELS } from "@/types/content";
-import SqlTreasureGame from "./SqlTreasureGame";
-import AuthAuthorizationGame from "./AuthAuthorizationGame";
 import NetworkRouteGame from "./NetworkRouteGame";
 
 // ミニゲーム共通の枠。
@@ -48,12 +46,6 @@ export default function MiniGameRenderer({ game }: { game: MiniGame }) {
       </div>
 
       {/* ゲーム本体 */}
-      {game.content.kind === "sql-treasure" && (
-        <SqlTreasureGame meta={game} content={game.content} />
-      )}
-      {game.content.kind === "auth-authorization" && (
-        <AuthAuthorizationGame meta={game} content={game.content} />
-      )}
       {game.content.kind === "network-route" && (
         <NetworkRouteGame meta={game} content={game.content} />
       )}

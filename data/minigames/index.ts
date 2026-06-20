@@ -1,6 +1,4 @@
 import type { MiniGame } from "@/types/minigame";
-import { sqlTreasureGame } from "./sqlTreasure";
-import { authGateGame } from "./authGate";
 import { networkRouteGame } from "./networkRoute";
 
 // ============================================================================
@@ -11,13 +9,9 @@ import { networkRouteGame } from "./networkRoute";
 // ============================================================================
 
 /** すべてのミニゲーム（表示順） */
-export const miniGames: MiniGame[] = [
-  sqlTreasureGame,
-  authGateGame,
-  networkRouteGame,
-];
+export const miniGames: MiniGame[] = [networkRouteGame];
 
-export { sqlTreasureGame, authGateGame, networkRouteGame };
+export { networkRouteGame };
 
 /** id → ミニゲーム の索引。重複 id があれば開発時に気づけるよう警告する。 */
 export const miniGameRegistry: Record<string, MiniGame> = (() => {

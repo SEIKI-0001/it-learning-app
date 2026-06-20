@@ -12,66 +12,10 @@
 import type { Difficulty, TopicField } from "@/types/content";
 
 /** ミニゲームの種類（content の判別子と一致させる） */
-export type MiniGameKind =
-  | "sql-treasure"
-  | "auth-authorization"
-  | "network-route";
+export type MiniGameKind = "network-route";
 
 // ---------------------------------------------------------------------------
-// 1. SQL宝探し: 小さなテーブルから、条件に合う行をタップで選ぶ。
-// ---------------------------------------------------------------------------
-
-/** テーブル1問分（1ラウンド）。クリア後に別問題へ進めるよう配列で持つ。 */
-export type SqlRound = {
-  id: string;
-  /** 今日のミッション（例: 部署が営業部で、売上が100以上の人を選ぼう） */
-  mission: string;
-  table: {
-    name: string; // 例: "employees"
-    columns: { key: string; label: string }[]; // 表示順
-    rows: { id: number; values: (string | number)[] }[]; // columns と同じ並び
-  };
-  /** 正解の行 id（順不同） */
-  correctRowIds: number[];
-  /** 条件の説明（誤答時に「どの条件を見落としたか」を出すために使う） */
-  conditions: string[];
-  /** SQLで書くとどうなるか */
-  sql: string;
-  /** このラウンドの解説（短く） */
-  explanation: string;
-};
-
-export type SqlTreasureContent = {
-  kind: "sql-treasure";
-  rounds: SqlRound[];
-};
-
-// ---------------------------------------------------------------------------
-// 2. 認証・認可ゲート: 「人」と「行動」を見て、許可/拒否を判定する。
-// ---------------------------------------------------------------------------
-
-/** 判定の理由カテゴリ。解説で「認証の問題か認可の問題か」を示す。 */
-export type AuthReason = "authentication" | "authorization" | "ok";
-
-export type AuthCase = {
-  id: string;
-  person: string; // 例: "Aさん"
-  personDesc: string; // 例: "ログイン済み・一般ユーザー"
-  action: string; // 例: "管理画面を見る"
-  /** 正解（許可できるか） */
-  allowed: boolean;
-  /** なぜそうなるか（認証/認可/問題なし） */
-  reason: AuthReason;
-  explanation: string;
-};
-
-export type AuthAuthorizationContent = {
-  kind: "auth-authorization";
-  cases: AuthCase[];
-};
-
-// ---------------------------------------------------------------------------
-// 3. 通信ルートをつなげ: 通信の順番をカード並べ替えで完成させる。
+// 通信ルートをつなげ: 通信の順番をカード並べ替えで完成させる。
 // ---------------------------------------------------------------------------
 
 export type NetworkStep = {
@@ -92,13 +36,10 @@ export type NetworkRouteContent = {
 // ミニゲーム本体（共通メタ + 種類別コンテンツ）
 // ---------------------------------------------------------------------------
 
-export type MiniGameContent =
-  | SqlTreasureContent
-  | AuthAuthorizationContent
-  | NetworkRouteContent;
+export type MiniGameContent = NetworkRouteContent;
 
 export type MiniGame = {
-  /** ルートにも使う識別子（例: "sql-treasure"） */
+  /** ルートにも使う識別子（例: "network-route"） */
   id: string;
   title: string;
   field: TopicField;

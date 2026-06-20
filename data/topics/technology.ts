@@ -540,7 +540,6 @@ const additionalTechnologyTopics: Topic[] = [
   }),
   createCompactTopic({
     id: "tech-database-sql",
-    miniGameId: "sql-treasure",
     field: "technology",
     category: "技術要素（データベース）",
     title: "データベースとSQL",
@@ -735,7 +734,6 @@ const additionalTechnologyTopics: Topic[] = [
   }),
   createCompactTopic({
     id: "tech-auth-authz-mfa",
-    miniGameId: "auth-authorization",
     field: "technology",
     category: "技術要素（セキュリティ）",
     title: "認証・認可・多要素認証",

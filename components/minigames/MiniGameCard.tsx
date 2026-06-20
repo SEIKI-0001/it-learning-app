@@ -12,8 +12,6 @@ const DIFFICULTY_LABEL: Record<MiniGame["difficulty"], string> = {
 };
 
 const ICON: Record<string, string> = {
-  "sql-treasure": "🔍",
-  "auth-authorization": "🔑",
   "network-route": "🔗",
 };
 

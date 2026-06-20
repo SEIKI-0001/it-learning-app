@@ -157,16 +157,6 @@ export function getDiagramsByField(field: TopicField): LearningDiagram[] {
   return diagramsByField(field);
 }
 
-/**
- * トピックに紐づく図解を、diagramIds の順で取得する。
- * 存在しない id は黙って除外する（データ修正中でも画面が壊れないように）。
- */
-export function getDiagramsForTopic(topic: Topic): LearningDiagram[] {
-  return (topic.diagramIds ?? [])
-    .map((id) => diagramRegistry[id])
-    .filter((d): d is LearningDiagram => d !== undefined);
-}
-
 /** 図解の総数 */
 export function getDiagramCount(): number {
   return diagrams.length;
