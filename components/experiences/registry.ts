@@ -14,6 +14,7 @@ import SecurityCiaExperience from "./SecurityCiaExperience";
 import EncryptionHashExperience from "./EncryptionHashExperience";
 import PublicKeyExperience from "./PublicKeyExperience";
 import CommonKeyExperience from "./CommonKeyExperience";
+import AuthExperience from "./AuthExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -40,6 +41,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-encryption-hash": EncryptionHashExperience,
   "tech-public-key-crypto": PublicKeyExperience,
   "tech-common-key-crypto": CommonKeyExperience,
+  "tech-auth-authz-mfa": AuthExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
