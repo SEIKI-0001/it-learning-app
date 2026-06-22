@@ -56,6 +56,12 @@ import DigitalSignatureExperience from "./DigitalSignatureExperience";
 import IsmsRiskExperience from "./IsmsRiskExperience";
 import WirelessMobileExperience from "./WirelessMobileExperience";
 import EmailProtocolExperience from "./EmailProtocolExperience";
+import PpmExperience from "./PpmExperience";
+import ValueChainExperience from "./ValueChainExperience";
+import ManagementSystemsExperience from "./ManagementSystemsExperience";
+import GoalEvaluationExperience from "./GoalEvaluationExperience";
+import FinancialStatementsExperience from "./FinancialStatementsExperience";
+import GenerativeAiDxExperience from "./GenerativeAiDxExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -124,6 +130,12 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-isms-risk": IsmsRiskExperience,
   "tech-wireless-mobile": WirelessMobileExperience,
   "tech-email-protocol": EmailProtocolExperience,
+  "strat-ppm": PpmExperience,
+  "strat-value-chain": ValueChainExperience,
+  "strat-management-systems": ManagementSystemsExperience,
+  "strat-goal-evaluation": GoalEvaluationExperience,
+  "strat-financial-statements": FinancialStatementsExperience,
+  "strat-generative-ai-dx": GenerativeAiDxExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
