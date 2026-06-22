@@ -109,30 +109,106 @@ function MlFlow() {
   );
 }
 
-const TYPES = [
-  { name: "教師あり学習", emoji: "🏷️", desc: "正解ラベル付きデータで学ぶ。予測・分類が得意。", ex: "迷惑メール判定、売上予測" },
-  { name: "教師なし学習", emoji: "🧩", desc: "正解なしで似たものをグループ分け。", ex: "顧客のグループ分け" },
-  { name: "強化学習", emoji: "🎮", desc: "試行錯誤し、良い結果に報酬を与えて上達。", ex: "ゲームAI、ロボット制御" },
-];
-
-function Types() {
+// 教師あり／教師なしは「正解ラベルがあるか」で対比できる、いちばん大事なペア。
+function DataLearning() {
   return (
     <Panel>
-      <SectionTitle step={3}>学習の3タイプ（早見）</SectionTitle>
-      <div className="mt-3 space-y-2.5">
-        {TYPES.map((t) => (
-          <div key={t.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{t.emoji}</span>
-              <span className="text-sm font-extrabold text-gray-800">{t.name}</span>
+      <SectionTitle step={3}>データから学ぶ2タイプ</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        いちばんよく出るのがこの2つ。ちがいは<b className="text-gray-800">「正解（ラベル）が付いているか」</b>だけです。
+      </p>
+
+      {/* 教師あり */}
+      <div className="mt-4 rounded-xl bg-indigo-50 p-3.5 ring-1 ring-indigo-200">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🏷️</span>
+          <span className="text-sm font-extrabold text-indigo-800">教師あり学習</span>
+          <span className="rounded-full bg-indigo-200 px-2 py-0.5 text-[10px] font-bold text-indigo-800">正解あり</span>
+        </div>
+        <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
+          <b>答え付きの問題集</b>で練習するイメージ。「この写真は猫」「このメールは迷惑」と
+          <b>正解をセットで</b>大量に見せ、当てられるようにします。
+        </p>
+        <dl className="mt-2.5 space-y-1 text-xs leading-relaxed text-gray-600">
+          <div><dt className="inline font-bold text-indigo-700">学び方：</dt> 入力と正解のペアから、対応のルールを覚える</div>
+          <div><dt className="inline font-bold text-indigo-700">できること：</dt> 分類（迷惑メールか否か）・予測（来月の売上）</div>
+          <div><dt className="inline font-bold text-indigo-700">見分け方：</dt> 学習データに「正解ラベル」が付いている</div>
+        </dl>
+      </div>
+
+      {/* 教師なし */}
+      <div className="mt-3 rounded-xl bg-emerald-50 p-3.5 ring-1 ring-emerald-200">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🧩</span>
+          <span className="text-sm font-extrabold text-emerald-800">教師なし学習</span>
+          <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">正解なし</span>
+        </div>
+        <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
+          正解は教えず、<b>似たもの同士を自分でグループ分け</b>するイメージ。
+          バラバラのお客さんを、買い物の傾向が近い人ごとにまとめます。
+        </p>
+        <dl className="mt-2.5 space-y-1 text-xs leading-relaxed text-gray-600">
+          <div><dt className="inline font-bold text-emerald-700">学び方：</dt> 正解なしで、データの似ている／離れているを見る</div>
+          <div><dt className="inline font-bold text-emerald-700">できること：</dt> グループ分け（顧客の分類）・傾向の発見</div>
+          <div><dt className="inline font-bold text-emerald-700">見分け方：</dt> 学習データに「正解ラベル」がない</div>
+        </dl>
+      </div>
+
+      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+        💡 ひとことで：<b>正解を教える＝教師あり</b>、<b>教えず仲間分け＝教師なし</b>。
+      </div>
+    </Panel>
+  );
+}
+
+// 強化学習はデータを見るのではなく「やってみて学ぶ」別タイプなので項目を分ける。
+function Reinforcement() {
+  return (
+    <Panel>
+      <SectionTitle step={4}>やってみて学ぶタイプ</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        上の2つは用意したデータから学びました。<b className="text-gray-800">強化学習</b>は、
+        実際に<b className="text-gray-800">行動してみて、その結果から学ぶ</b>のがちがいです。
+      </p>
+
+      <div className="mt-4 rounded-xl bg-violet-50 p-3.5 ring-1 ring-violet-200">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🎮</span>
+          <span className="text-sm font-extrabold text-violet-800">強化学習</span>
+          <span className="rounded-full bg-violet-200 px-2 py-0.5 text-[10px] font-bold text-violet-800">ごほうびで上達</span>
+        </div>
+        <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
+          ゲームで<b>上手な手にはスコア（報酬）</b>、まずい手には減点。
+          試行錯誤をくり返し、<b>報酬が増える行動</b>を自分で見つけて上達します。
+        </p>
+      </div>
+
+      {/* 試行錯誤のループ */}
+      <div className="mt-3 flex items-center justify-center gap-1.5 text-center">
+        {[
+          { e: "🤖", t: "行動する" },
+          { e: "🌍", t: "結果が出る" },
+          { e: "🍬", t: "報酬／減点" },
+          { e: "📈", t: "次に活かす" },
+        ].map((s, i, arr) => (
+          <div key={i} className="flex items-center">
+            <div className="w-[64px] rounded-lg bg-gray-50 px-1 py-2 ring-1 ring-gray-200">
+              <div className="text-xl leading-none">{s.e}</div>
+              <div className="mt-1 text-[10px] font-bold text-gray-600">{s.t}</div>
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-gray-600">{t.desc}</p>
-            <p className="mt-1 text-[11px] text-gray-400">例：{t.ex}</p>
+            {i < arr.length - 1 && <span className="px-0.5 text-gray-300">→</span>}
           </div>
         ))}
       </div>
+      <p className="mt-2 text-center text-[11px] text-gray-400">このループをくり返して、だんだん賢くなる</p>
+
+      <dl className="mt-3 space-y-1 rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600 ring-1 ring-gray-200">
+        <div><dt className="inline font-bold text-violet-700">できること：</dt> ゲームAI・ロボットの制御・自動運転の判断</div>
+        <div><dt className="inline font-bold text-violet-700">見分け方：</dt> 正解データではなく「報酬」で良し悪しを教える</div>
+      </dl>
+
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚠️ AIは<b>魔法ではない</b>。学んだデータに偏りや誤りがあれば、結果も間違えます。
+        ⚠️ AIは<b>魔法ではない</b>。どのタイプも、学ぶデータや報酬の決め方に偏り・誤りがあれば結果も間違えます。
       </div>
     </Panel>
   );
@@ -148,7 +224,8 @@ export default function AiMlExperience() {
 
       <Nested />
       <MlFlow />
-      <Types />
+      <DataLearning />
+      <Reinforcement />
     </div>
   );
 }
