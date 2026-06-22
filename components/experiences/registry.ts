@@ -16,6 +16,7 @@ import PublicKeyExperience from "./PublicKeyExperience";
 import CommonKeyExperience from "./CommonKeyExperience";
 import AuthExperience from "./AuthExperience";
 import MalwareExperience from "./MalwareExperience";
+import FirewallExperience from "./FirewallExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -44,6 +45,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-common-key-crypto": CommonKeyExperience,
   "tech-auth-authz-mfa": AuthExperience,
   "tech-malware-phishing-ransomware": MalwareExperience,
+  "tech-firewall-vpn-zero-trust": FirewallExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
