@@ -33,6 +33,12 @@ import SlaExperience from "./SlaExperience";
 import ItilExperience from "./ItilExperience";
 import SystemAuditExperience from "./SystemAuditExperience";
 import RequirementsExperience from "./RequirementsExperience";
+import BreakEvenExperience from "./BreakEvenExperience";
+import SwotExperience from "./SwotExperience";
+import ThreeCExperience from "./ThreeCExperience";
+import FourPExperience from "./FourPExperience";
+import IntellectualPropertyExperience from "./IntellectualPropertyExperience";
+import BcpExperience from "./BcpExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -78,6 +84,12 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "mgmt-itil": ItilExperience,
   "mgmt-system-audit": SystemAuditExperience,
   "mgmt-requirements-definition": RequirementsExperience,
+  "strat-accounting-break-even": BreakEvenExperience,
+  "strat-swot": SwotExperience,
+  "strat-3c": ThreeCExperience,
+  "strat-marketing-4p": FourPExperience,
+  "strat-intellectual-property": IntellectualPropertyExperience,
+  "strat-bcp": BcpExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
