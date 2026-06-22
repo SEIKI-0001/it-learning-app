@@ -11,40 +11,50 @@ import { Panel, SectionTitle, StepNav } from "./ui";
 // 郵便受けのたとえ：誰でも投函できる（公開鍵）が、開けられるのは持ち主だけ（秘密鍵）。
 // ============================================================================
 
-const PLAINTEXT = "会議は10時";
-
-type Step = { loc: "A" | "wire" | "B"; locked: boolean; html: string };
+type WireDir = "toA" | "toB";
+type Step = {
+  phase: 1 | 2;
+  active: "A" | "B" | null;
+  wire: { item: string; dir: WireDir } | null;
+  html: string;
+};
 
 const STEPS: Step[] = [
   {
-    loc: "B",
-    locked: false,
-    html: "Bさんは鍵を <b>2本ペア</b> でつくり、<b>公開鍵🔓を全員に配り</b>ます。<b>秘密鍵🔑は自分だけ</b>が持ちます。",
+    phase: 1,
+    active: "B",
+    wire: null,
+    html: "【準備①】Bさんが鍵を <b>2本ペア</b> で作成。<b>公開鍵🔓</b>と<b>秘密鍵🔑</b>。秘密鍵は自分だけが保管します。",
   },
   {
-    loc: "A",
-    locked: false,
-    html: "AさんはBさんに秘密のメッセージを送りたい。いまは平文（だれでも読める状態）。",
+    phase: 1,
+    active: null,
+    wire: { item: "🔓 公開鍵", dir: "toA" },
+    html: "【準備②】Bさんが <b>公開鍵🔓を先にAさんへ渡します</b>（公開鍵は誰に渡してもOK）。これで“事前準備”が完了。",
   },
   {
-    loc: "A",
-    locked: true,
-    html: "Aさんは <b>Bさんの公開鍵🔓で暗号化</b>（＝Bの郵便受けに投函）。公開鍵は『閉める専用』です。",
+    phase: 2,
+    active: "A",
+    wire: null,
+    html: "【通信①】Aさんは、受け取った <b>公開鍵で暗号化🔒</b>。平文「会議は10時」→ 暗号文に。",
   },
   {
-    loc: "wire",
-    locked: true,
-    html: "暗号文を送信。途中で😈に盗まれても、<b>公開鍵では開けられない</b>ので中身は読めません。",
+    phase: 2,
+    active: null,
+    wire: { item: "🔒 暗号文", dir: "toB" },
+    html: "【通信②】暗号文を Aさん→Bさん へ送信。途中で😈に盗まれても、<b>公開鍵では開けられない</b>ので安全。",
   },
   {
-    loc: "B",
-    locked: false,
-    html: "Bさんは <b>対の秘密鍵🔑で復号</b>（＝持ち主だけが郵便受けを開ける）。読めた！",
+    phase: 2,
+    active: "B",
+    wire: null,
+    html: "【通信③】Bさんが <b>対の秘密鍵🔑で復号</b>。「会議は10時」が読めた！",
   },
   {
-    loc: "B",
-    locked: false,
-    html: "💡 ポイント：<b>公開鍵で閉めて、対の秘密鍵でしか開かない</b>。だから鍵を安全に配る悩み（鍵配送問題）が起きません。",
+    phase: 2,
+    active: "B",
+    wire: null,
+    html: "💡 2段階がポイント：<b>①先に公開鍵を配る → ②その鍵で暗号通信</b>。秘密鍵は一度も渡さないので安全です。",
   },
 ];
 
@@ -53,9 +63,9 @@ function Flow() {
   const step = STEPS[idx];
 
   const actor = (id: "A" | "B", emo: string, name: string, sub: string) => {
-    const on = step.loc === id;
+    const on = step.active === id;
     return (
-      <div className={`w-[100px] rounded-xl border-2 px-1 py-2.5 text-center transition ${
+      <div className={`w-[90px] flex-none rounded-xl border-2 px-1 py-2.5 text-center transition ${
         on ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100" : "border-gray-200 bg-gray-50"
       }`}>
         <div className="text-2xl leading-none">{emo}</div>
@@ -67,41 +77,33 @@ function Flow() {
 
   return (
     <Panel>
-      <SectionTitle step={2}>送信の流れ（公開鍵で閉めて、秘密鍵で開ける）</SectionTitle>
+      <SectionTitle step={2}>送信の流れ（2段階：鍵を配る → 暗号通信）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        AさんからBさんへ秘密のメッセージを送ります。「次へ」で1歩ずつ。
+        AさんからBさんへ秘密のメッセージを送ります。<b className="text-gray-800">先に公開鍵を渡してから</b>通信する流れを「次へ」で1歩ずつ。
       </p>
 
-      <div className="mt-4 flex items-center justify-center gap-1">
-        {actor("A", "🅰️", "Aさん", "送る人")}
-        <span className="px-0.5 text-center text-[10px] leading-tight text-gray-400">
-          通信路<br />😈
-        </span>
-        {actor("B", "🅱️", "Bさん", "秘密鍵🔑を持つ")}
+      {/* フェーズ表示（2段階） */}
+      <div className="mt-3 flex gap-2 text-center text-[11px] font-bold">
+        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 1 ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
+          ① 事前準備：公開鍵を渡す
+        </div>
+        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 2 ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
+          ② 本番：暗号化して送る
+        </div>
       </div>
 
-      {/* 状態表示：ステップ0は鍵の準備、それ以降はメッセージの状態 */}
-      {idx === 0 ? (
-        <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-center ring-1 ring-gray-200">
-          <div className="text-xs font-bold text-gray-500">鍵の準備</div>
-          <div className="mt-1 text-sm font-bold text-gray-700">
-            🔓 公開鍵 … 全員に配布　/　🔑 秘密鍵 … Bさんだけが保管
+      {/* 通信路でつないだ図 */}
+      <div className="mt-4 flex items-center">
+        {actor("A", "🅰️", "Aさん", "送る人")}
+        <div className="flex-1 px-1 text-center">
+          <div className="h-4 text-[11px] font-bold text-indigo-700">{step.wire ? step.wire.item : ""}</div>
+          <div className={`h-0.5 w-full rounded ${step.wire ? "bg-indigo-500" : "bg-gray-300"}`} />
+          <div className={`mt-1 text-sm tracking-widest ${step.wire ? "text-indigo-600" : "text-gray-400"}`}>
+            {step.wire ? (step.wire.dir === "toA" ? "◀ ◀ ◀" : "▶ ▶ ▶") : "😈"}
           </div>
         </div>
-      ) : (
-        <div
-          className={`mt-3 rounded-xl px-4 py-3 text-center ring-1 ${
-            step.locked ? "bg-indigo-50 ring-indigo-200" : "bg-emerald-50 ring-emerald-200"
-          }`}
-        >
-          <div className="text-xs font-bold text-gray-500">
-            メッセージ（今ある場所：{step.loc === "wire" ? "通信路" : step.loc === "A" ? "Aさん" : "Bさん"}）
-          </div>
-          <div className="mt-1 font-mono text-base font-bold text-gray-800">
-            {step.locked ? "🔒 ＃＄％‥（暗号文・読めない）" : `「${PLAINTEXT}」`}
-          </div>
-        </div>
-      )}
+        {actor("B", "🅱️", "Bさん", "秘密鍵🔑を持つ")}
+      </div>
 
       <p
         className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
