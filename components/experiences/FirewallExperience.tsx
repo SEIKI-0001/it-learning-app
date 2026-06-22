@@ -68,6 +68,8 @@ const WAF_ITEMS: { t: string; ans: "FW" | "WAF"; why: string }[] = [
 
 function WafCompare() {
   const [answers, setAnswers] = useState<Record<number, "FW" | "WAF">>({});
+  const [mode, setMode] = useState<"normal" | "attack">("attack");
+  const wafPass = mode === "normal"; // FWは正規ポート(443)なのでどちらも通過、WAFで攻撃を遮断
   const rows = [
     { k: "守る対象", fw: "ネットワーク全体の出入口", waf: "Webアプリ（HTTP/HTTPSの中身）" },
     { k: "見るところ", fw: "送信元・宛先・ポート番号", waf: "リクエストの中身（何をしようとするか）" },
@@ -86,7 +88,72 @@ function WafCompare() {
         🔎 <b>WAF</b>＝Web受付の持ち物検査（<b>リクエストの中身があやしくないか</b>を見る）
       </div>
 
-      <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-300">
+      {/* 通信経路のどこに置く？ */}
+      <div className="mt-4">
+        <div className="text-sm font-bold text-gray-700">通信経路のどこに置く？</div>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setMode("normal")}
+            className={`rounded-lg py-1.5 text-sm font-bold transition active:scale-95 ${mode === "normal" ? "bg-emerald-600 text-white" : "text-gray-500 ring-1 ring-gray-300"}`}
+          >
+            正規リクエスト
+          </button>
+          <button
+            onClick={() => setMode("attack")}
+            className={`rounded-lg py-1.5 text-sm font-bold transition active:scale-95 ${mode === "attack" ? "bg-rose-500 text-white" : "text-gray-500 ring-1 ring-gray-300"}`}
+          >
+            攻撃リクエスト(SQLi)
+          </button>
+        </div>
+
+        <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+          {/* インターネット */}
+          <div className="mx-auto max-w-[280px] rounded-lg bg-white px-3 py-2 text-center ring-1 ring-gray-200">
+            <span className="text-lg">🌐</span>{" "}
+            <span className="text-sm font-bold text-gray-700">インターネット（外部）</span>
+          </div>
+          <div className="text-center text-[11px] text-gray-400">📨 リクエストが届く ▼</div>
+
+          {/* ファイアウォール（必ず通過：ポート443は許可） */}
+          <div className="mx-auto max-w-[280px] rounded-lg bg-indigo-50 px-3 py-2 text-center ring-2 ring-indigo-300">
+            <div className="text-sm font-extrabold text-indigo-700">🚪 ファイアウォール</div>
+            <div className="text-[11px] text-gray-600">IP・ポートを確認（境界）</div>
+            <div className="mt-1 inline-block rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-bold text-white">
+              ✅ 通過（ポート443は許可）
+            </div>
+          </div>
+          <div className={`text-center text-lg ${wafPass ? "text-emerald-500" : "text-emerald-500"}`}>▼</div>
+
+          {/* WAF（中身を検査：攻撃なら遮断） */}
+          <div className={`mx-auto max-w-[280px] rounded-lg px-3 py-2 text-center ring-2 ${wafPass ? "bg-emerald-50 ring-emerald-300" : "bg-rose-50 ring-rose-300"}`}>
+            <div className={`text-sm font-extrabold ${wafPass ? "text-emerald-700" : "text-rose-700"}`}>🔎 WAF</div>
+            <div className="text-[11px] text-gray-600">HTTP/HTTPSの中身を確認（アプリ直前）</div>
+            <div className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold text-white ${wafPass ? "bg-emerald-500" : "bg-rose-500"}`}>
+              {wafPass ? "✅ 通過（中身は正常）" : "⛔ 遮断（中身が攻撃）"}
+            </div>
+          </div>
+          <div className={`text-center text-lg ${wafPass ? "text-emerald-500" : "text-rose-300"}`}>
+            {wafPass ? "▼" : "✕"}
+          </div>
+
+          {/* Webアプリ */}
+          <div className={`mx-auto max-w-[280px] rounded-lg px-3 py-2 text-center ring-1 ${wafPass ? "bg-white ring-gray-200" : "bg-white ring-gray-200 opacity-60"}`}>
+            <span className="text-lg">🖥️</span>{" "}
+            <span className="text-sm font-bold text-gray-700">Webサーバ／アプリ</span>
+            <div className={`text-[11px] font-bold ${wafPass ? "text-emerald-700" : "text-rose-600"}`}>
+              {wafPass ? "✅ 正常に到達" : "🛡️ 攻撃は届かない（守られた）"}
+            </div>
+          </div>
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-gray-600">
+          {mode === "attack"
+            ? "💡 攻撃でも“ポート443”は許可なので FW は通過。でも中身が攻撃なので、アプリ直前の WAF が遮断します。"
+            : "正規リクエストは FW も WAF も通過して、Webアプリに届きます。"}
+          {" "}並び順は <b>インターネット → FW（境界）→ WAF（アプリ直前）→ アプリ</b>。
+        </p>
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-xl ring-1 ring-gray-300">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-100 text-gray-700">
