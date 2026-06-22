@@ -106,36 +106,64 @@ function Encryption() {
 }
 
 function Hashing() {
-  const [text, setText] = useState("password");
-  const hash = hashHex(text);
+  const [a, setA] = useState("password");
+  const [b, setB] = useState("password");
+  const same = a === b;
+  const fields = [
+    { label: "入力①", value: a, set: setA },
+    { label: "入力②", value: b, set: setB },
+  ];
+
   return (
     <Panel>
       <SectionTitle step={2}>ハッシュ化（戻せない＝一方向）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ハッシュ化は、データを<b className="text-gray-800">ミキサーにかけてスムージー</b>にするような処理。
-        出てくるのは<b className="text-gray-800">固定の長さのハッシュ値</b>で、<b className="text-gray-800">元には戻せません</b>。
-        材料（文字）を少し変えると、味（値）がガラッと変わります。
+        ハッシュ化の大事な性質は、<b className="text-gray-800">同じ入力なら、いつ・何回やっても、必ず同じ値</b>になること。
+        2つの欄に<b className="text-gray-800">同じ文章</b>を入れて、値がそろうか確かめよう。
       </p>
 
-      <div className="mt-3 flex items-center gap-2">
-        <span className="text-sm text-gray-500">文章：</span>
-        <input
-          value={text}
-          maxLength={20}
-          onChange={(e) => setText(e.target.value)}
-          className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-        />
+      <div className="mt-3 space-y-3">
+        {fields.map((f) => {
+          const h = hashHex(f.value);
+          return (
+            <div key={f.label}>
+              <div className="flex items-center gap-2">
+                <span className="w-12 text-xs font-bold text-gray-500">{f.label}</span>
+                <input
+                  value={f.value}
+                  maxLength={20}
+                  onChange={(e) => f.set(e.target.value)}
+                  className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+              <div
+                className={`mt-1 ml-12 rounded-lg px-3 py-2 ring-1 ${
+                  same ? "bg-emerald-50 ring-emerald-300" : "bg-gray-900 ring-gray-700"
+                }`}
+              >
+                <div className={`break-all font-mono text-xs ${same ? "text-emerald-700" : "text-emerald-300"}`}>
+                  {h}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="mt-3 rounded-xl bg-gray-900 px-4 py-3">
-        <div className="text-xs font-bold text-gray-400">🥤 ハッシュ値（スムージー）</div>
-        <div className="mt-1 break-all font-mono text-sm text-emerald-300">{hash}</div>
+      <div
+        className={`mt-3 rounded-xl px-4 py-3 text-center text-sm font-bold ring-1 ${
+          same ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"
+        }`}
+      >
+        {same
+          ? "✅ 入力が同じ → ハッシュ値も完全に一致！（同じ材料なら必ず同じ味）"
+          : "❌ 入力が1文字でも違うと → まったく別の値（似てさえいない）"}
       </div>
 
       <ul className="mt-3 space-y-1.5 text-xs text-gray-600">
-        <li>・<b>コップ1杯ぶん（固定長）</b>：入力が長くても短くても、値の長さは同じ（試しに長文を入れてみて）。</li>
-        <li>・<b>同じ材料→同じ味</b>：同じ入力なら必ず同じ値。1文字変えると味（値）が激変（最後に1字足してみて）。</li>
-        <li>・<b>戻せない</b>：スムージーから果物に戻せないように、ハッシュ値から元の文章は復元できない（パスワード保存・改ざん検知に最適）。</li>
+        <li>・<b>同じ入力なら同じ値</b>：何回やっても結果は変わらない。だから<b>パスワード照合</b>に使える（保存したハッシュと、入力のハッシュが一致すれば本人）。</li>
+        <li>・<b>1文字で激変</b>：少しの違いでまるで別の値に → <b>改ざん検知</b>に使える。</li>
+        <li>・<b>戻せない・固定長</b>：値から元の文章は復元できず、長さはいつも同じ（コップ1杯ぶん）。</li>
       </ul>
     </Panel>
   );
