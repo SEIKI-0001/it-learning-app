@@ -59,11 +59,109 @@ function Firewall() {
   );
 }
 
+const WAF_ITEMS: { t: string; ans: "FW" | "WAF"; why: string }[] = [
+  { t: "使っていないポートへの接続を止める", ans: "FW", why: "通信の出入口（ポート）で判断＝ファイアウォール。" },
+  { t: "入力フォームに不正なSQL文を仕込む攻撃を防ぐ", ans: "WAF", why: "Webアプリの中身を検査＝WAF（SQLインジェクション対策）。" },
+  { t: "許可していないIPアドレスからのアクセスを遮断", ans: "FW", why: "送信元IPで判断＝ファイアウォール。" },
+  { t: "Web入力欄の不正なスクリプト(XSS)を防ぐ", ans: "WAF", why: "Webアプリ特有の攻撃を中身で防ぐ＝WAF。" },
+];
+
+function WafCompare() {
+  const [answers, setAnswers] = useState<Record<number, "FW" | "WAF">>({});
+  const rows = [
+    { k: "守る対象", fw: "ネットワーク全体の出入口", waf: "Webアプリ（HTTP/HTTPSの中身）" },
+    { k: "見るところ", fw: "送信元・宛先・ポート番号", waf: "リクエストの中身（何をしようとするか）" },
+    { k: "防ぐ攻撃の例", fw: "不正な接続・不要ポート", waf: "SQLインジェクション・XSS" },
+  ];
+  return (
+    <Panel>
+      <SectionTitle step={2}>ファイアウォール と WAF のちがい</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        名前が似ていて混同しがち。<b className="text-gray-800">WAF＝Web Application Firewall</b>＝
+        <b className="text-gray-800">Webアプリ専用の門番</b>です。守る“層”がちがいます。
+      </p>
+
+      <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200">
+        🚪 <b>ファイアウォール</b>＝建物の入口の警備員（<b>どこから来た通信か</b>で通す/止める）<br />
+        🔎 <b>WAF</b>＝Web受付の持ち物検査（<b>リクエストの中身があやしくないか</b>を見る）
+      </div>
+
+      <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-300">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-100 text-gray-700">
+              <th className="px-3 py-2 text-left font-bold"> </th>
+              <th className="px-3 py-2 text-center font-bold text-indigo-700">🚪 ファイアウォール</th>
+              <th className="px-3 py-2 text-center font-bold text-emerald-700">🔎 WAF</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={r.k} className={i % 2 ? "bg-gray-50" : "bg-white"}>
+                <td className="px-3 py-2 font-bold text-gray-700">{r.k}</td>
+                <td className="px-3 py-2 text-center text-gray-700">{r.fw}</td>
+                <td className="px-3 py-2 text-center text-gray-700">{r.waf}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-4 mb-1 text-sm font-bold text-gray-700">どっちが止める？</p>
+      <ul className="space-y-2.5">
+        {WAF_ITEMS.map((it, i) => {
+          const chosen = answers[i];
+          const correct = chosen === it.ans;
+          return (
+            <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex-1 text-sm font-bold text-gray-800">{it.t}</span>
+                <div className="flex gap-1.5">
+                  {(["FW", "WAF"] as const).map((opt) => {
+                    const picked = chosen === opt;
+                    const tone = !chosen
+                      ? "text-gray-600 ring-1 ring-gray-300"
+                      : picked
+                        ? opt === it.ans
+                          ? "bg-emerald-500 text-white"
+                          : "bg-rose-500 text-white"
+                        : opt === it.ans
+                          ? "ring-2 ring-emerald-400 text-emerald-700"
+                          : "text-gray-400 ring-1 ring-gray-200";
+                    return (
+                      <button
+                        key={opt}
+                        onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-bold transition active:scale-95 ${tone}`}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {chosen && (
+                <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
+                  {correct ? "⭕ 正解！ " : `❌ 正解は「${it.ans}」。 `}
+                  {it.why}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-2 text-xs leading-relaxed text-gray-500">
+        💡 役割が違うので<b>両方つかう</b>のがふつう。FWを通った正規の通信(ポート443など)に紛れた攻撃を、WAFが中身で止めます。
+      </p>
+    </Panel>
+  );
+}
+
 function Vpn() {
   const [on, setOn] = useState(false);
   return (
     <Panel>
-      <SectionTitle step={2}>VPN（安全な通り道＝暗号トンネル）</SectionTitle>
+      <SectionTitle step={3}>VPN（安全な通り道＝暗号トンネル）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         VPNは、みんなが使う<b className="text-gray-800">公衆回線（インターネット）の上に、暗号化された専用トンネル</b>を作る仕組み。
         外出先から会社へ安全につなげます。あり/なしで比べてみよう。
@@ -120,15 +218,17 @@ export default function FirewallExperience() {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🛡️ 3つの守り方：<b>ファイアウォール＝通信の門番</b>（許可だけ通す）、
-        <b>VPN＝安全な通り道</b>（暗号トンネル）、<b>ゼロトラスト＝何も最初から信じない</b>（毎回確認）。
+        🛡️ 守り方の整理：<b>ファイアウォール＝通信の門番</b>（許可だけ通す）、
+        <b>WAF＝Webアプリの門番</b>（中身を検査）、<b>VPN＝安全な通り道</b>（暗号トンネル）、
+        <b>ゼロトラスト＝何も最初から信じない</b>（毎回確認）。
       </div>
 
       <Firewall />
+      <WafCompare />
       <Vpn />
 
       <Panel>
-        <SectionTitle step={3}>ゼロトラスト（何も信じず、毎回確認）</SectionTitle>
+        <SectionTitle step={4}>ゼロトラスト（何も信じず、毎回確認）</SectionTitle>
         <p className="mt-2 text-sm leading-relaxed text-gray-600">
           昔は「社外は危険・社内は安全」と考えました（境界防御）。でもクラウドやリモートワークで
           <b className="text-gray-800">「社内＝安全」が崩れた</b>ため、新しい考え方が広まりました。
