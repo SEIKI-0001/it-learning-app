@@ -62,6 +62,12 @@ import ManagementSystemsExperience from "./ManagementSystemsExperience";
 import GoalEvaluationExperience from "./GoalEvaluationExperience";
 import FinancialStatementsExperience from "./FinancialStatementsExperience";
 import GenerativeAiDxExperience from "./GenerativeAiDxExperience";
+import CorporateStrategyExperience from "./CorporateStrategyExperience";
+import EbusinessExperience from "./EbusinessExperience";
+import StandardizationExperience from "./StandardizationExperience";
+import LaborLawsExperience from "./LaborLawsExperience";
+import FacilityManagementExperience from "./FacilityManagementExperience";
+import EstimationExperience from "./EstimationExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -136,6 +142,12 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "strat-goal-evaluation": GoalEvaluationExperience,
   "strat-financial-statements": FinancialStatementsExperience,
   "strat-generative-ai-dx": GenerativeAiDxExperience,
+  "strat-corporate-strategy": CorporateStrategyExperience,
+  "strat-ebusiness": EbusinessExperience,
+  "strat-standardization": StandardizationExperience,
+  "strat-labor-laws": LaborLawsExperience,
+  "mgmt-facility-management": FacilityManagementExperience,
+  "mgmt-estimation": EstimationExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
