@@ -143,6 +143,11 @@ function Mfa() {
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
         ※ ポイントは「数」ではなく「<b>種類のちがい</b>」。パスワードを2つ使っても、どちらも知識なので多要素ではありません。
       </p>
+      <div className="mt-2 rounded-xl bg-indigo-50 px-3 py-2.5 text-xs leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        💡 身近な例：銀行ATMの「<b>キャッシュカード＋暗証番号(PIN)</b>」は、
+        <b>カード＝所持</b>・<b>暗証番号＝知識</b>の組み合わせ。つまり<b>それ自体が多要素認証</b>の代表例です。
+        （ここでは PIN を“知識”として分類していますが、実際は「カードとセットで使う」点に注目）
+      </div>
     </Panel>
   );
 }
