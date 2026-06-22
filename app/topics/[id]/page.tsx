@@ -9,6 +9,7 @@ import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
 import AddToReviewButton from "@/components/learn/AddToReviewButton";
 import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
 import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
+import { getTopicExperience } from "@/components/experiences/registry";
 import BottomNav from "@/components/BottomNav";
 
 // トピック詳細。理解カード → 確認問題 → 解説 → 復習 → 参考書キーワード → 過去問分野 の順。
@@ -36,6 +37,9 @@ export default async function TopicDetailPage({
   // 難テーマ（DNS / SQL / 認証・認可）は、操作できる理解パートを
   // トピック内に直接埋め込み、別ページ（/minigames）への遷移を主導線にしない。
   const processDemo = topic.processDemo;
+  // テーマ専用に作り込んだ「体験コンポーネント」があれば、汎用カード図解の
+  // 代わりにそれを描画する（テーマごとに見せ方を最適化するための仕組み）。
+  const Experience = getTopicExperience(topic.id);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -65,11 +69,14 @@ export default async function TopicDetailPage({
       </div>
 
       <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7">
+        {/* テーマ専用の体験コンポーネント（最優先）。固定スタックは描画しない。 */}
+        {Experience && <Experience />}
+
         {/* 難テーマ: 操作できる理解パートをページ内で完結（別ページ遷移なし） */}
-        {processDemo && <ProcessDemoSection demo={processDemo} />}
+        {!Experience && processDemo && <ProcessDemoSection demo={processDemo} />}
 
         {/* 通常トピック: 従来の固定構成（視覚理解→概念→図解→ミニゲーム導線） */}
-        {!processDemo && (
+        {!Experience && !processDemo && (
           <>
             {/* ① 視覚理解パーツ（MVP対象トピックのみ） */}
             <VisualLearningSection visualLearning={topic.visualLearning} />
