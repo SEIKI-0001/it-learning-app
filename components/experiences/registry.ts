@@ -29,6 +29,10 @@ import DevProcessExperience from "./DevProcessExperience";
 import TestingExperience from "./TestingExperience";
 import PdcaExperience from "./PdcaExperience";
 import RiskExperience from "./RiskExperience";
+import SlaExperience from "./SlaExperience";
+import ItilExperience from "./ItilExperience";
+import SystemAuditExperience from "./SystemAuditExperience";
+import RequirementsExperience from "./RequirementsExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -70,6 +74,10 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "mgmt-testing": TestingExperience,
   "mgmt-pdca": PdcaExperience,
   "mgmt-risk-management": RiskExperience,
+  "mgmt-service-sla": SlaExperience,
+  "mgmt-itil": ItilExperience,
+  "mgmt-system-audit": SystemAuditExperience,
+  "mgmt-requirements-definition": RequirementsExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
