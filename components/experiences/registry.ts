@@ -23,6 +23,12 @@ import IotExperience from "./IotExperience";
 import ProgrammingBasicsExperience from "./ProgrammingBasicsExperience";
 import DataUtilizationExperience from "./DataUtilizationExperience";
 import ApiExperience from "./ApiExperience";
+import QcdExperience from "./QcdExperience";
+import WbsGanttExperience from "./WbsGanttExperience";
+import DevProcessExperience from "./DevProcessExperience";
+import TestingExperience from "./TestingExperience";
+import PdcaExperience from "./PdcaExperience";
+import RiskExperience from "./RiskExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -58,6 +64,12 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-programming-basics": ProgrammingBasicsExperience,
   "tech-data-utilization": DataUtilizationExperience,
   "tech-api": ApiExperience,
+  "mgmt-pm-qcd": QcdExperience,
+  "mgmt-wbs-gantt": WbsGanttExperience,
+  "mgmt-development-process": DevProcessExperience,
+  "mgmt-testing": TestingExperience,
+  "mgmt-pdca": PdcaExperience,
+  "mgmt-risk-management": RiskExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
