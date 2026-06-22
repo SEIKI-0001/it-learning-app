@@ -9,6 +9,7 @@ import SqlExperience from "./SqlExperience";
 import NetworkAddressExperience from "./NetworkAddressExperience";
 import LanWanExperience from "./LanWanExperience";
 import InternetProtocolExperience from "./InternetProtocolExperience";
+import HttpsExperience from "./HttpsExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -30,6 +31,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-network-address": NetworkAddressExperience,
   "tech-lan-wan": LanWanExperience,
   "tech-web-internet-basics": InternetProtocolExperience,
+  "tech-http-https": HttpsExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
