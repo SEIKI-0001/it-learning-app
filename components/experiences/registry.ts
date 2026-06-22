@@ -13,6 +13,7 @@ import HttpsExperience from "./HttpsExperience";
 import SecurityCiaExperience from "./SecurityCiaExperience";
 import EncryptionHashExperience from "./EncryptionHashExperience";
 import PublicKeyExperience from "./PublicKeyExperience";
+import CommonKeyExperience from "./CommonKeyExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -38,6 +39,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-security-cia": SecurityCiaExperience,
   "tech-encryption-hash": EncryptionHashExperience,
   "tech-public-key-crypto": PublicKeyExperience,
+  "tech-common-key-crypto": CommonKeyExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
