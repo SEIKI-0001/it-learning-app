@@ -51,6 +51,11 @@ import LogicOperationsExperience from "./LogicOperationsExperience";
 import SpreadsheetExperience from "./SpreadsheetExperience";
 import DataStructureExperience from "./DataStructureExperience";
 import TransactionExperience from "./TransactionExperience";
+import CyberAttacksExperience from "./CyberAttacksExperience";
+import DigitalSignatureExperience from "./DigitalSignatureExperience";
+import IsmsRiskExperience from "./IsmsRiskExperience";
+import WirelessMobileExperience from "./WirelessMobileExperience";
+import EmailProtocolExperience from "./EmailProtocolExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -114,6 +119,11 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-spreadsheet": SpreadsheetExperience,
   "tech-data-structure": DataStructureExperience,
   "tech-transaction": TransactionExperience,
+  "tech-cyber-attacks": CyberAttacksExperience,
+  "tech-digital-signature": DigitalSignatureExperience,
+  "tech-isms-risk": IsmsRiskExperience,
+  "tech-wireless-mobile": WirelessMobileExperience,
+  "tech-email-protocol": EmailProtocolExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
