@@ -6,7 +6,7 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 // 「暗号化とハッシュ化」専用の体験。
 //   ① 暗号化 … 鍵で読めなくする → 鍵で元に戻せる（可逆）
-//   ② ハッシュ化 … データから固定長の「指紋」を作る → 元に戻せない（一方向）
+//   ② ハッシュ化 … データをミキサーにかけ固定長のスムージー(値)に → 元に戻せない（一方向）
 //   ③ くらべて整理
 // 学習用の簡易変換（本物の暗号ではない）で、可逆／不可逆の感覚をつかむ。
 // ============================================================================
@@ -112,8 +112,9 @@ function Hashing() {
     <Panel>
       <SectionTitle step={2}>ハッシュ化（戻せない＝一方向）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ハッシュ化は、データから<b className="text-gray-800">固定の長さの「指紋」</b>を作る処理。
-        <b className="text-gray-800">元には戻せません</b>。文字を変えると指紋がガラッと変わります。
+        ハッシュ化は、データを<b className="text-gray-800">ミキサーにかけてスムージー</b>にするような処理。
+        出てくるのは<b className="text-gray-800">固定の長さのハッシュ値</b>で、<b className="text-gray-800">元には戻せません</b>。
+        材料（文字）を少し変えると、味（値）がガラッと変わります。
       </p>
 
       <div className="mt-3 flex items-center gap-2">
@@ -127,14 +128,14 @@ function Hashing() {
       </div>
 
       <div className="mt-3 rounded-xl bg-gray-900 px-4 py-3">
-        <div className="text-xs font-bold text-gray-400">ハッシュ値（指紋）</div>
+        <div className="text-xs font-bold text-gray-400">🥤 ハッシュ値（スムージー）</div>
         <div className="mt-1 break-all font-mono text-sm text-emerald-300">{hash}</div>
       </div>
 
       <ul className="mt-3 space-y-1.5 text-xs text-gray-600">
-        <li>・<b>固定長</b>：入力が長くても短くても、指紋の長さは同じ（試しに長文を入れてみて）。</li>
-        <li>・<b>同じ入力なら同じ指紋</b>：1文字変えると全く別の値に（試しに最後に1字足してみて）。</li>
-        <li>・<b>戻せない</b>：指紋から元の文章は復元できない（パスワード保存・改ざん検知に最適）。</li>
+        <li>・<b>コップ1杯ぶん（固定長）</b>：入力が長くても短くても、値の長さは同じ（試しに長文を入れてみて）。</li>
+        <li>・<b>同じ材料→同じ味</b>：同じ入力なら必ず同じ値。1文字変えると味（値）が激変（最後に1字足してみて）。</li>
+        <li>・<b>戻せない</b>：スムージーから果物に戻せないように、ハッシュ値から元の文章は復元できない（パスワード保存・改ざん検知に最適）。</li>
       </ul>
     </Panel>
   );
@@ -151,7 +152,7 @@ export default function EncryptionHashExperience() {
     <div className="space-y-5">
       <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔐 ふたつは似て非なるもの。<b>暗号化＝鍵付きの箱</b>（鍵で開けて中身を読める＝戻せる）、
-        <b>ハッシュ化＝指紋を取る</b>（指紋から本人は復元できない＝戻せない）。
+        <b>ハッシュ化＝ミキサー</b>（材料を入れて回すとスムージーに。スムージーから元の果物には戻せない＝戻せない）。
       </div>
 
       <Encryption />
@@ -165,7 +166,7 @@ export default function EncryptionHashExperience() {
               <tr className="bg-gray-100 text-gray-700">
                 <th className="px-3 py-2 text-left font-bold"> </th>
                 <th className="px-3 py-2 text-center font-bold text-indigo-700">🔒 暗号化</th>
-                <th className="px-3 py-2 text-center font-bold text-emerald-700">🔑 ハッシュ化</th>
+                <th className="px-3 py-2 text-center font-bold text-emerald-700">🥤 ハッシュ化</th>
               </tr>
             </thead>
             <tbody>
