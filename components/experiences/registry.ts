@@ -39,6 +39,13 @@ import ThreeCExperience from "./ThreeCExperience";
 import FourPExperience from "./FourPExperience";
 import IntellectualPropertyExperience from "./IntellectualPropertyExperience";
 import BcpExperience from "./BcpExperience";
+import EnterpriseActivitiesExperience from "./EnterpriseActivitiesExperience";
+import ComplianceExperience from "./ComplianceExperience";
+import PrivacyExperience from "./PrivacyExperience";
+import SecurityLawsExperience from "./SecurityLawsExperience";
+import SystemStrategyExperience from "./SystemStrategyExperience";
+import BusinessProcessExperience from "./BusinessProcessExperience";
+import SolutionBusinessExperience from "./SolutionBusinessExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -90,6 +97,13 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "strat-marketing-4p": FourPExperience,
   "strat-intellectual-property": IntellectualPropertyExperience,
   "strat-bcp": BcpExperience,
+  "strat-enterprise-activities": EnterpriseActivitiesExperience,
+  "strat-legal-compliance": ComplianceExperience,
+  "strat-privacy-law": PrivacyExperience,
+  "strat-security-laws": SecurityLawsExperience,
+  "strat-system-strategy": SystemStrategyExperience,
+  "strat-business-process": BusinessProcessExperience,
+  "strat-solution-business": SolutionBusinessExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
