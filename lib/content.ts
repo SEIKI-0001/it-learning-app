@@ -187,6 +187,11 @@ export function getGlossaryTermsByTag(tag: string): GlossaryTerm[] {
   return glossaryTerms.filter((term) => term.reviewTags.includes(tag));
 }
 
+/** 分野で用語集エントリを取得 */
+export function getGlossaryTermsByField(field: TopicField): GlossaryTerm[] {
+  return glossaryTerms.filter((term) => term.field === field);
+}
+
 /** 用語集の総数 */
 export function getGlossaryTermCount(): number {
   return glossaryTerms.length;

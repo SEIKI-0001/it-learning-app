@@ -9,6 +9,7 @@ const ITEMS = [
   { href: "/topics", label: "トピック", emoji: "🗂️" },
   { href: "/review", label: "復習", emoji: "🔁" },
   { href: "/progress", label: "進捗", emoji: "📈" },
+  { href: "/glossary", label: "単語帳", emoji: "📇" },
 ] as const;
 
 export default function BottomNav() {
