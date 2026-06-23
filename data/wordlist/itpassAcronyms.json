@@ -1,0 +1,4247 @@
+[
+  {
+    "id": "kpi",
+    "acronym": "KPI",
+    "fullName": "Key Performance Indicator",
+    "japanese": "重要業績評価指標",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Key",
+        "meaning": "重要"
+      },
+      {
+        "word": "Performance",
+        "meaning": "業績"
+      },
+      {
+        "word": "Indicator",
+        "meaning": "指標"
+      }
+    ],
+    "oneLine": "目標達成までの途中指標を示す。",
+    "examKeywords": [
+      "途中指標",
+      "進捗管理",
+      "評価"
+    ],
+    "confusedWith": [
+      "KGI"
+    ],
+    "differenceAxis": "最終目標の指標か途中の指標か",
+    "trapExplanations": {
+      "KGI": "KGIは最終的なゴールを示す指標で、KPIはその進捗を測る途中指標。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "kgi",
+    "acronym": "KGI",
+    "fullName": "Key Goal Indicator",
+    "japanese": "重要目標達成指標",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Key",
+        "meaning": "重要"
+      },
+      {
+        "word": "Goal",
+        "meaning": "目標"
+      },
+      {
+        "word": "Indicator",
+        "meaning": "指標"
+      }
+    ],
+    "oneLine": "最終的なゴールを示す指標。",
+    "examKeywords": [
+      "最終目標",
+      "ゴール",
+      "達成"
+    ],
+    "confusedWith": [
+      "KPI"
+    ],
+    "differenceAxis": "最終目標の指標か途中の指標か",
+    "trapExplanations": {
+      "KPI": "KPIはゴール達成までの進捗を測る指標。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "crm",
+    "acronym": "CRM",
+    "fullName": "Customer Relationship Management",
+    "japanese": "顧客関係管理",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Customer",
+        "meaning": "顧客"
+      },
+      {
+        "word": "Relationship",
+        "meaning": "関係"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      }
+    ],
+    "oneLine": "顧客との関係を維持・強化して長期的な利益を得る仕組み。",
+    "examKeywords": [
+      "顧客情報",
+      "営業履歴",
+      "満足度"
+    ],
+    "confusedWith": [
+      "SCM",
+      "ERP"
+    ],
+    "differenceAxis": "顧客管理か、供給連鎖管理か、経営資源統合管理か",
+    "trapExplanations": {
+      "SCM": "SCMは調達から販売までの供給プロセス全体を最適化する。",
+      "ERP": "ERPは企業全体の資源を統合管理する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "scm",
+    "acronym": "SCM",
+    "fullName": "Supply Chain Management",
+    "japanese": "サプライチェーン管理",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Supply",
+        "meaning": "供給"
+      },
+      {
+        "word": "Chain",
+        "meaning": "連鎖"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      }
+    ],
+    "oneLine": "調達から製造・販売までの供給連鎖全体を最適化する。",
+    "examKeywords": [
+      "調達",
+      "物流",
+      "在庫"
+    ],
+    "confusedWith": [
+      "CRM",
+      "ERP"
+    ],
+    "differenceAxis": "顧客管理か、供給連鎖管理か、経営資源統合管理か",
+    "trapExplanations": {
+      "CRM": "CRMは顧客情報の管理。",
+      "ERP": "ERPは企業全体の経営資源を統合管理する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "erp",
+    "acronym": "ERP",
+    "fullName": "Enterprise Resource Planning",
+    "japanese": "企業資源計画",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Enterprise",
+        "meaning": "企業"
+      },
+      {
+        "word": "Resource",
+        "meaning": "資源"
+      },
+      {
+        "word": "Planning",
+        "meaning": "計画"
+      }
+    ],
+    "oneLine": "人・物・金・情報など企業の資源を統合管理する仕組み。",
+    "examKeywords": [
+      "統合管理",
+      "会計",
+      "人事",
+      "生産"
+    ],
+    "confusedWith": [
+      "CRM",
+      "SCM"
+    ],
+    "differenceAxis": "顧客管理か、供給連鎖管理か、経営資源統合管理か",
+    "trapExplanations": {
+      "CRM": "CRMは顧客との関係を管理する仕組み。",
+      "SCM": "SCMは供給連鎖全体を最適化する仕組み。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "bcp",
+    "acronym": "BCP",
+    "fullName": "Business Continuity Plan",
+    "japanese": "事業継続計画",
+    "category": "management",
+    "words": [
+      {
+        "word": "Business",
+        "meaning": "事業"
+      },
+      {
+        "word": "Continuity",
+        "meaning": "継続"
+      },
+      {
+        "word": "Plan",
+        "meaning": "計画"
+      }
+    ],
+    "oneLine": "災害や障害が発生しても事業を継続するための計画。",
+    "examKeywords": [
+      "災害",
+      "事業継続",
+      "代替手段"
+    ],
+    "confusedWith": [
+      "DRP",
+      "SLA",
+      "CRM"
+    ],
+    "differenceAxis": "事業継続か、システム復旧か、サービス品質か、顧客管理か",
+    "trapExplanations": {
+      "DRP": "DRPはシステムや業務を復旧させる計画で、BCPは事業継続全体を含む。",
+      "SLA": "SLAはサービス品質についての合意であり、BCPの対象ではない。",
+      "CRM": "CRMは顧客との関係管理であり、災害時の事業継続とは別。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "drp",
+    "acronym": "DRP",
+    "fullName": "Disaster Recovery Plan",
+    "japanese": "災害復旧計画",
+    "category": "management",
+    "words": [
+      {
+        "word": "Disaster",
+        "meaning": "災害"
+      },
+      {
+        "word": "Recovery",
+        "meaning": "復旧"
+      },
+      {
+        "word": "Plan",
+        "meaning": "計画"
+      }
+    ],
+    "oneLine": "災害後にシステムや業務を復旧させるための計画。",
+    "examKeywords": [
+      "復旧",
+      "災害",
+      "システム復旧"
+    ],
+    "confusedWith": [
+      "BCP"
+    ],
+    "differenceAxis": "事業継続かシステム復旧か",
+    "trapExplanations": {
+      "BCP": "BCPは事業全体を止めないようにする計画、DRPはシステムや業務を復旧する計画。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "sla",
+    "acronym": "SLA",
+    "fullName": "Service Level Agreement",
+    "japanese": "サービスレベル合意",
+    "category": "management",
+    "words": [
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      },
+      {
+        "word": "Level",
+        "meaning": "水準"
+      },
+      {
+        "word": "Agreement",
+        "meaning": "合意"
+      }
+    ],
+    "oneLine": "サービス品質に関する合意（稼働率・応答時間など）を定める。",
+    "examKeywords": [
+      "稼働率",
+      "応答時間",
+      "復旧時間",
+      "品質基準"
+    ],
+    "confusedWith": [
+      "SLO",
+      "BCP"
+    ],
+    "differenceAxis": "サービス品質の合意か目標値か事業継続か",
+    "trapExplanations": {
+      "SLO": "SLOはサービス品質の目標値であり、SLAは合意文書。",
+      "BCP": "BCPは災害時の事業継続を定める計画であり、サービス品質とは異なる。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "slo",
+    "acronym": "SLO",
+    "fullName": "Service Level Objective",
+    "japanese": "サービスレベル目標",
+    "category": "management",
+    "words": [
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      },
+      {
+        "word": "Level",
+        "meaning": "水準"
+      },
+      {
+        "word": "Objective",
+        "meaning": "目標"
+      }
+    ],
+    "oneLine": "サービス品質に関する目標値。SLAの中で定義される。",
+    "examKeywords": [
+      "目標値",
+      "目標",
+      "品質"
+    ],
+    "confusedWith": [
+      "SLA"
+    ],
+    "differenceAxis": "合意文書か目標値か",
+    "trapExplanations": {
+      "SLA": "SLAは合意文書で、SLOはその中で規定される品質目標値。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rfi",
+    "acronym": "RFI",
+    "fullName": "Request For Information",
+    "japanese": "情報提供依頼書",
+    "category": "management",
+    "words": [
+      {
+        "word": "Request",
+        "meaning": "依頼"
+      },
+      {
+        "word": "For",
+        "meaning": "〜のための"
+      },
+      {
+        "word": "Information",
+        "meaning": "情報"
+      }
+    ],
+    "oneLine": "提案依頼前にベンダーなどから情報提供を求める文書。",
+    "examKeywords": [
+      "情報提供",
+      "ベンダー",
+      "調達"
+    ],
+    "confusedWith": [
+      "RFP"
+    ],
+    "differenceAxis": "提案依頼か情報提供依頼か",
+    "trapExplanations": {
+      "RFP": "RFPは提案依頼書で、具体的な提案を求める文書。RFIは情報収集が目的。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rfp",
+    "acronym": "RFP",
+    "fullName": "Request For Proposal",
+    "japanese": "提案依頼書",
+    "category": "management",
+    "words": [
+      {
+        "word": "Request",
+        "meaning": "依頼"
+      },
+      {
+        "word": "For",
+        "meaning": "〜のための"
+      },
+      {
+        "word": "Proposal",
+        "meaning": "提案"
+      }
+    ],
+    "oneLine": "システムやサービスの導入に関してベンダーに提案を求める文書。",
+    "examKeywords": [
+      "提案依頼",
+      "調達",
+      "見積"
+    ],
+    "confusedWith": [
+      "RFI"
+    ],
+    "differenceAxis": "提案依頼か情報提供依頼か",
+    "trapExplanations": {
+      "RFI": "RFIは情報提供依頼書で、提案前に情報を収集する文書。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "nda",
+    "acronym": "NDA",
+    "fullName": "Non-Disclosure Agreement",
+    "japanese": "秘密保持契約",
+    "category": "management",
+    "words": [
+      {
+        "word": "Non",
+        "meaning": "非"
+      },
+      {
+        "word": "Disclosure",
+        "meaning": "公開しない"
+      },
+      {
+        "word": "Agreement",
+        "meaning": "契約"
+      }
+    ],
+    "oneLine": "機密情報を第三者に漏らさないように定める契約。",
+    "examKeywords": [
+      "秘密保持",
+      "契約",
+      "機密"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "roi",
+    "acronym": "ROI",
+    "fullName": "Return On Investment",
+    "japanese": "投資利益率",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Return",
+        "meaning": "利益"
+      },
+      {
+        "word": "On",
+        "meaning": "〜に対する"
+      },
+      {
+        "word": "Investment",
+        "meaning": "投資"
+      }
+    ],
+    "oneLine": "投資額に対する利益の割合。",
+    "examKeywords": [
+      "投資",
+      "利益率",
+      "指標"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "swot",
+    "acronym": "SWOT",
+    "fullName": "Strengths, Weaknesses, Opportunities, Threats",
+    "japanese": "SWOT分析",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Strengths",
+        "meaning": "強み"
+      },
+      {
+        "word": "Weaknesses",
+        "meaning": "弱み"
+      },
+      {
+        "word": "Opportunities",
+        "meaning": "機会"
+      },
+      {
+        "word": "Threats",
+        "meaning": "脅威"
+      }
+    ],
+    "oneLine": "企業の強み・弱み・機会・脅威を整理して戦略を立てる分析手法。",
+    "examKeywords": [
+      "強み",
+      "弱み",
+      "機会",
+      "脅威"
+    ],
+    "confusedWith": [
+      "PEST"
+    ],
+    "differenceAxis": "内部環境か外部環境か",
+    "trapExplanations": {
+      "PEST": "PESTは外部環境を政治・経済・社会・技術で分析する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "pest",
+    "acronym": "PEST",
+    "fullName": "Political, Economic, Social, Technological",
+    "japanese": "PEST分析",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Political",
+        "meaning": "政治"
+      },
+      {
+        "word": "Economic",
+        "meaning": "経済"
+      },
+      {
+        "word": "Social",
+        "meaning": "社会"
+      },
+      {
+        "word": "Technological",
+        "meaning": "技術"
+      }
+    ],
+    "oneLine": "政治・経済・社会・技術の外部環境からマクロ的に分析する手法。",
+    "examKeywords": [
+      "政治",
+      "経済",
+      "社会",
+      "技術"
+    ],
+    "confusedWith": [
+      "SWOT"
+    ],
+    "differenceAxis": "内部環境か外部環境か",
+    "trapExplanations": {
+      "SWOT": "SWOTは企業内外の強み・弱み・機会・脅威を整理する手法。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ppm",
+    "acronym": "PPM",
+    "fullName": "Product Portfolio Management",
+    "japanese": "製品ポートフォリオ管理",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Product",
+        "meaning": "製品"
+      },
+      {
+        "word": "Portfolio",
+        "meaning": "事業群"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      }
+    ],
+    "oneLine": "複数の製品や事業への投資配分を最適化するための手法。",
+    "examKeywords": [
+      "製品群",
+      "投資配分",
+      "管理"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "bpr",
+    "acronym": "BPR",
+    "fullName": "Business Process Reengineering",
+    "japanese": "業務プロセス再設計",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Business",
+        "meaning": "業務"
+      },
+      {
+        "word": "Process",
+        "meaning": "プロセス"
+      },
+      {
+        "word": "Reengineering",
+        "meaning": "再設計"
+      }
+    ],
+    "oneLine": "既存の業務プロセスを抜本的に見直し再設計する手法。",
+    "examKeywords": [
+      "業務改革",
+      "再設計",
+      "効率化"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "mbo",
+    "acronym": "MBO",
+    "fullName": "Management Buyout",
+    "japanese": "経営陣買収",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Management",
+        "meaning": "経営陣"
+      },
+      {
+        "word": "Buyout",
+        "meaning": "買収"
+      }
+    ],
+    "oneLine": "経営陣が出資して自社を買収すること。",
+    "examKeywords": [
+      "経営陣",
+      "自社買収",
+      "M&A"
+    ],
+    "confusedWith": [
+      "M&A"
+    ],
+    "differenceAxis": "経営陣が自社を買うか他社との合併・買収か",
+    "trapExplanations": {
+      "M&A": "M&Aは企業同士の合併・買収全般を指し、MBOは経営陣自らが自社を買うこと。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ma",
+    "acronym": "M&A",
+    "fullName": "Mergers and Acquisitions",
+    "japanese": "合併・買収",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Mergers",
+        "meaning": "合併"
+      },
+      {
+        "word": "Acquisitions",
+        "meaning": "買収"
+      }
+    ],
+    "oneLine": "企業同士が合併または買収を行うこと。",
+    "examKeywords": [
+      "合併",
+      "買収",
+      "企業戦略"
+    ],
+    "confusedWith": [
+      "MBO"
+    ],
+    "differenceAxis": "経営陣が自社を買うか他社との合併・買収か",
+    "trapExplanations": {
+      "MBO": "MBOは経営陣による自社買収。M&Aは広く合併や買収を指す。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ux",
+    "acronym": "UX",
+    "fullName": "User Experience",
+    "japanese": "ユーザー体験",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "User",
+        "meaning": "利用者"
+      },
+      {
+        "word": "Experience",
+        "meaning": "体験"
+      }
+    ],
+    "oneLine": "製品・サービスに対する利用者の体験や印象。",
+    "examKeywords": [
+      "体験",
+      "利用者",
+      "満足度"
+    ],
+    "confusedWith": [
+      "UI"
+    ],
+    "differenceAxis": "見た目・操作か体験全体か",
+    "trapExplanations": {
+      "UI": "UIはインターフェースの見た目や操作性、UXは体験全体を指す。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ui",
+    "acronym": "UI",
+    "fullName": "User Interface",
+    "japanese": "ユーザーインターフェース",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "User",
+        "meaning": "利用者"
+      },
+      {
+        "word": "Interface",
+        "meaning": "界面"
+      }
+    ],
+    "oneLine": "システムと利用者がやり取りする画面や操作体系。",
+    "examKeywords": [
+      "画面",
+      "操作",
+      "インターフェース"
+    ],
+    "confusedWith": [
+      "UX"
+    ],
+    "differenceAxis": "見た目・操作か体験全体か",
+    "trapExplanations": {
+      "UX": "UXは全体の体験を指し、UIは操作部分を指す。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "seo",
+    "acronym": "SEO",
+    "fullName": "Search Engine Optimization",
+    "japanese": "検索エンジン最適化",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Search",
+        "meaning": "検索"
+      },
+      {
+        "word": "Engine",
+        "meaning": "エンジン"
+      },
+      {
+        "word": "Optimization",
+        "meaning": "最適化"
+      }
+    ],
+    "oneLine": "検索エンジンでの上位表示を目指す施策。",
+    "examKeywords": [
+      "検索エンジン",
+      "順位",
+      "最適化"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "hrm",
+    "acronym": "HRM",
+    "fullName": "Human Resource Management",
+    "japanese": "人的資源管理",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Human",
+        "meaning": "人"
+      },
+      {
+        "word": "Resource",
+        "meaning": "資源"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      }
+    ],
+    "oneLine": "従業員の採用・育成・評価など人的資源を管理する。",
+    "examKeywords": [
+      "人材",
+      "採用",
+      "育成",
+      "評価"
+    ],
+    "confusedWith": [
+      "HRTech"
+    ],
+    "differenceAxis": "管理業務かテクノロジーの活用か",
+    "trapExplanations": {
+      "HRTech": "HRTechは人事分野にITを活用すること。HRMは管理業務そのもの。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "hrtech",
+    "acronym": "HRTech",
+    "fullName": "Human Resource Technology",
+    "japanese": "人事テクノロジー",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Human",
+        "meaning": "人"
+      },
+      {
+        "word": "Resource",
+        "meaning": "資源"
+      },
+      {
+        "word": "Technology",
+        "meaning": "技術"
+      }
+    ],
+    "oneLine": "人事業務にテクノロジーを活用して効率化を図ること。",
+    "examKeywords": [
+      "人事",
+      "テクノロジー",
+      "効率化"
+    ],
+    "confusedWith": [
+      "HRM",
+      "FinTech",
+      "EdTech"
+    ],
+    "differenceAxis": "人事分野か金融分野か教育分野か",
+    "trapExplanations": {
+      "HRM": "HRMは人事の管理業務そのもの、HRTechは人事業務へITを導入すること。",
+      "FinTech": "FinTechは金融分野でITを活用すること。",
+      "EdTech": "EdTechは教育分野でITを活用すること。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "fintech",
+    "acronym": "FinTech",
+    "fullName": "Finance Technology",
+    "japanese": "金融テクノロジー",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Finance",
+        "meaning": "金融"
+      },
+      {
+        "word": "Technology",
+        "meaning": "技術"
+      }
+    ],
+    "oneLine": "金融分野にITを活用したサービスや技術の総称。",
+    "examKeywords": [
+      "金融",
+      "テクノロジー",
+      "決済"
+    ],
+    "confusedWith": [
+      "HRTech",
+      "EdTech"
+    ],
+    "differenceAxis": "金融分野か人事分野か教育分野か",
+    "trapExplanations": {
+      "HRTech": "HRTechは人事分野にITを活用する。",
+      "EdTech": "EdTechは教育分野にITを活用する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "edtech",
+    "acronym": "EdTech",
+    "fullName": "Education Technology",
+    "japanese": "教育テクノロジー",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Education",
+        "meaning": "教育"
+      },
+      {
+        "word": "Technology",
+        "meaning": "技術"
+      }
+    ],
+    "oneLine": "教育分野にITを活用したサービスや技術。",
+    "examKeywords": [
+      "教育",
+      "テクノロジー",
+      "学習支援"
+    ],
+    "confusedWith": [
+      "HRTech",
+      "FinTech"
+    ],
+    "differenceAxis": "教育分野か金融分野か人事分野か",
+    "trapExplanations": {
+      "HRTech": "HRTechは人事分野でITを活用。",
+      "FinTech": "FinTechは金融分野でITを活用。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ceo",
+    "acronym": "CEO",
+    "fullName": "Chief Executive Officer",
+    "japanese": "最高経営責任者",
+    "category": "management",
+    "words": [
+      {
+        "word": "Chief",
+        "meaning": "最高"
+      },
+      {
+        "word": "Executive",
+        "meaning": "執行"
+      },
+      {
+        "word": "Officer",
+        "meaning": "役員"
+      }
+    ],
+    "oneLine": "会社全体の経営責任を担う最高責任者。",
+    "examKeywords": [
+      "最高経営",
+      "責任",
+      "役職"
+    ],
+    "confusedWith": [
+      "CIO",
+      "CTO",
+      "CFO"
+    ],
+    "differenceAxis": "経営か情報か技術か財務か",
+    "trapExplanations": {
+      "CIO": "CIOは情報戦略を統括する役員。",
+      "CTO": "CTOは技術戦略を統括する役員。",
+      "CFO": "CFOは財務を統括する役員。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cio",
+    "acronym": "CIO",
+    "fullName": "Chief Information Officer",
+    "japanese": "最高情報責任者",
+    "category": "management",
+    "words": [
+      {
+        "word": "Chief",
+        "meaning": "最高"
+      },
+      {
+        "word": "Information",
+        "meaning": "情報"
+      },
+      {
+        "word": "Officer",
+        "meaning": "役員"
+      }
+    ],
+    "oneLine": "企業の情報システムやIT戦略を統括する役員。",
+    "examKeywords": [
+      "情報",
+      "IT戦略",
+      "役員"
+    ],
+    "confusedWith": [
+      "CEO",
+      "CTO",
+      "CFO"
+    ],
+    "differenceAxis": "経営か情報か技術か財務か",
+    "trapExplanations": {
+      "CEO": "CEOは最高経営責任者。",
+      "CTO": "CTOは技術戦略を統括。",
+      "CFO": "CFOは財務を統括。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cto",
+    "acronym": "CTO",
+    "fullName": "Chief Technology Officer",
+    "japanese": "最高技術責任者",
+    "category": "management",
+    "words": [
+      {
+        "word": "Chief",
+        "meaning": "最高"
+      },
+      {
+        "word": "Technology",
+        "meaning": "技術"
+      },
+      {
+        "word": "Officer",
+        "meaning": "役員"
+      }
+    ],
+    "oneLine": "企業の技術戦略や開発を統括する役員。",
+    "examKeywords": [
+      "技術",
+      "開発",
+      "戦略"
+    ],
+    "confusedWith": [
+      "CEO",
+      "CIO",
+      "CFO"
+    ],
+    "differenceAxis": "経営か情報か技術か財務か",
+    "trapExplanations": {
+      "CEO": "CEOは最高経営責任者。",
+      "CIO": "CIOは最高情報責任者。",
+      "CFO": "CFOは最高財務責任者。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cfo",
+    "acronym": "CFO",
+    "fullName": "Chief Financial Officer",
+    "japanese": "最高財務責任者",
+    "category": "management",
+    "words": [
+      {
+        "word": "Chief",
+        "meaning": "最高"
+      },
+      {
+        "word": "Financial",
+        "meaning": "財務"
+      },
+      {
+        "word": "Officer",
+        "meaning": "役員"
+      }
+    ],
+    "oneLine": "企業の財務戦略や資金管理を統括する役員。",
+    "examKeywords": [
+      "財務",
+      "資金",
+      "会計"
+    ],
+    "confusedWith": [
+      "CEO",
+      "CIO",
+      "CTO"
+    ],
+    "differenceAxis": "経営か情報か技術か財務か",
+    "trapExplanations": {
+      "CEO": "CEOは最高経営責任者。",
+      "CIO": "CIOは最高情報責任者。",
+      "CTO": "CTOは最高技術責任者。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ec",
+    "acronym": "EC",
+    "fullName": "Electronic Commerce",
+    "japanese": "電子商取引",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Electronic",
+        "meaning": "電子"
+      },
+      {
+        "word": "Commerce",
+        "meaning": "商取引"
+      }
+    ],
+    "oneLine": "インターネット上で商品やサービスを売買すること。",
+    "examKeywords": [
+      "オンライン販売",
+      "インターネット",
+      "取引"
+    ],
+    "confusedWith": [
+      "O2O",
+      "OMO"
+    ],
+    "differenceAxis": "オンラインとオフラインの関係性",
+    "trapExplanations": {
+      "O2O": "O2Oはオンラインからオフラインへの送客を指す。",
+      "OMO": "OMOはオンラインとオフラインの融合を指す。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "o2o",
+    "acronym": "O2O",
+    "fullName": "Online to Offline",
+    "japanese": "オンラインからオフラインへ",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Online",
+        "meaning": "オンライン"
+      },
+      {
+        "word": "to",
+        "meaning": "から〜へ"
+      },
+      {
+        "word": "Offline",
+        "meaning": "オフライン"
+      }
+    ],
+    "oneLine": "オンラインで集客し実店舗への来店を促す施策。",
+    "examKeywords": [
+      "オンライン集客",
+      "実店舗",
+      "送客"
+    ],
+    "confusedWith": [
+      "OMO",
+      "EC"
+    ],
+    "differenceAxis": "オンラインとオフラインの連携方法",
+    "trapExplanations": {
+      "OMO": "OMOはオンラインとオフラインを融合して顧客体験を最適化する。",
+      "EC": "ECはオンラインのみで取引を完結する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "omo",
+    "acronym": "OMO",
+    "fullName": "Online Merges with Offline",
+    "japanese": "オンラインとオフラインの融合",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Online",
+        "meaning": "オンライン"
+      },
+      {
+        "word": "Merges",
+        "meaning": "融合する"
+      },
+      {
+        "word": "with",
+        "meaning": "〜と"
+      },
+      {
+        "word": "Offline",
+        "meaning": "オフライン"
+      }
+    ],
+    "oneLine": "オンラインとオフラインを融合し全チャネルで顧客体験を最適化する。",
+    "examKeywords": [
+      "融合",
+      "オムニチャネル",
+      "顧客体験"
+    ],
+    "confusedWith": [
+      "O2O",
+      "EC"
+    ],
+    "differenceAxis": "オンラインとオフラインの関係性",
+    "trapExplanations": {
+      "O2O": "O2Oはオンラインからオフラインへ送客する。",
+      "EC": "ECはオンラインのみで取引を完結する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "edi",
+    "acronym": "EDI",
+    "fullName": "Electronic Data Interchange",
+    "japanese": "電子データ交換",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Electronic",
+        "meaning": "電子"
+      },
+      {
+        "word": "Data",
+        "meaning": "データ"
+      },
+      {
+        "word": "Interchange",
+        "meaning": "交換"
+      }
+    ],
+    "oneLine": "標準化された電子データ形式で企業間の取引情報を交換する仕組み。",
+    "examKeywords": [
+      "企業間取引",
+      "標準化",
+      "データ交換"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "eft",
+    "acronym": "EFT",
+    "fullName": "Electronic Funds Transfer",
+    "japanese": "電子資金移動",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Electronic",
+        "meaning": "電子"
+      },
+      {
+        "word": "Funds",
+        "meaning": "資金"
+      },
+      {
+        "word": "Transfer",
+        "meaning": "移動"
+      }
+    ],
+    "oneLine": "電子的に資金を移動・決済する仕組み。",
+    "examKeywords": [
+      "電子決済",
+      "資金移動",
+      "金融"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "nft",
+    "acronym": "NFT",
+    "fullName": "Non-Fungible Token",
+    "japanese": "非代替性トークン",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Non",
+        "meaning": "非"
+      },
+      {
+        "word": "Fungible",
+        "meaning": "代替可能な"
+      },
+      {
+        "word": "Token",
+        "meaning": "トークン"
+      }
+    ],
+    "oneLine": "唯一無二の価値を持つデジタル資産を表すトークン。",
+    "examKeywords": [
+      "デジタル資産",
+      "所有証明",
+      "ブロックチェーン"
+    ],
+    "confusedWith": [
+      "CBDC"
+    ],
+    "differenceAxis": "民間のデジタル資産か中央銀行発行のデジタル通貨か",
+    "trapExplanations": {
+      "CBDC": "CBDCは中央銀行が発行するデジタル通貨であり、NFTは所有権が唯一なデジタル資産。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cbdc",
+    "acronym": "CBDC",
+    "fullName": "Central Bank Digital Currency",
+    "japanese": "中央銀行デジタル通貨",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Central",
+        "meaning": "中央"
+      },
+      {
+        "word": "Bank",
+        "meaning": "銀行"
+      },
+      {
+        "word": "Digital",
+        "meaning": "デジタル"
+      },
+      {
+        "word": "Currency",
+        "meaning": "通貨"
+      }
+    ],
+    "oneLine": "中央銀行が発行するデジタル形式の通貨。",
+    "examKeywords": [
+      "デジタル通貨",
+      "中央銀行",
+      "法定通貨"
+    ],
+    "confusedWith": [
+      "NFT"
+    ],
+    "differenceAxis": "中央銀行発行かブロックチェーン資産か",
+    "trapExplanations": {
+      "NFT": "NFTは唯一無二のデジタル資産、CBDCは中央銀行が発行する法定通貨のデジタル版。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ekyc",
+    "acronym": "eKYC",
+    "fullName": "electronic Know Your Customer",
+    "japanese": "オンライン本人確認",
+    "category": "finance",
+    "words": [
+      {
+        "word": "electronic",
+        "meaning": "電子的な"
+      },
+      {
+        "word": "Know",
+        "meaning": "知る"
+      },
+      {
+        "word": "Your",
+        "meaning": "あなたの"
+      },
+      {
+        "word": "Customer",
+        "meaning": "顧客"
+      }
+    ],
+    "oneLine": "金融取引においてオンラインで本人確認を行う仕組み。",
+    "examKeywords": [
+      "本人確認",
+      "オンライン",
+      "金融"
+    ],
+    "confusedWith": [
+      "AML",
+      "CFT"
+    ],
+    "differenceAxis": "本人確認か資金洗浄対策か",
+    "trapExplanations": {
+      "AML": "AMLはマネーロンダリング対策、eKYCは本人確認の手続き。",
+      "CFT": "CFTはテロ資金供与対策。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "aml",
+    "acronym": "AML",
+    "fullName": "Anti-Money Laundering",
+    "japanese": "マネーロンダリング対策",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Anti",
+        "meaning": "反"
+      },
+      {
+        "word": "Money",
+        "meaning": "資金"
+      },
+      {
+        "word": "Laundering",
+        "meaning": "洗浄"
+      }
+    ],
+    "oneLine": "不正に得た資金を合法的に見せるマネーロンダリングを防止する取り組み。",
+    "examKeywords": [
+      "資金洗浄",
+      "犯罪防止",
+      "金融"
+    ],
+    "confusedWith": [
+      "CFT",
+      "eKYC"
+    ],
+    "differenceAxis": "資金洗浄対策かテロ資金供与対策か本人確認か",
+    "trapExplanations": {
+      "CFT": "CFTはテロ資金供与対策。",
+      "eKYC": "eKYCはオンラインの本人確認。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cft",
+    "acronym": "CFT",
+    "fullName": "Countering the Financing of Terrorism",
+    "japanese": "テロ資金供与対策",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Countering",
+        "meaning": "対策する"
+      },
+      {
+        "word": "the",
+        "meaning": "その"
+      },
+      {
+        "word": "Financing",
+        "meaning": "資金調達"
+      },
+      {
+        "word": "of",
+        "meaning": "〜の"
+      },
+      {
+        "word": "Terrorism",
+        "meaning": "テロ"
+      }
+    ],
+    "oneLine": "テロ活動への資金供与を防ぐための対策。",
+    "examKeywords": [
+      "テロ",
+      "資金供与",
+      "対策"
+    ],
+    "confusedWith": [
+      "AML",
+      "eKYC"
+    ],
+    "differenceAxis": "資金洗浄対策かテロ資金供与対策か本人確認か",
+    "trapExplanations": {
+      "AML": "AMLはマネーロンダリング対策。",
+      "eKYC": "eKYCはオンラインの本人確認。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "api",
+    "acronym": "API",
+    "fullName": "Application Programming Interface",
+    "japanese": "アプリケーションプログラミングインターフェース",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Application",
+        "meaning": "アプリケーション"
+      },
+      {
+        "word": "Programming",
+        "meaning": "プログラミング"
+      },
+      {
+        "word": "Interface",
+        "meaning": "インターフェース"
+      }
+    ],
+    "oneLine": "アプリケーションが他のソフトウェアやサービスとデータや機能をやり取りするための窓口。",
+    "examKeywords": [
+      "連携",
+      "インターフェース",
+      "データ交換"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "dbms",
+    "acronym": "DBMS",
+    "fullName": "Database Management System",
+    "japanese": "データベース管理システム",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Database",
+        "meaning": "データベース"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      },
+      {
+        "word": "System",
+        "meaning": "システム"
+      }
+    ],
+    "oneLine": "データベースを作成・運用・管理するソフトウェア。",
+    "examKeywords": [
+      "管理",
+      "データベース",
+      "ソフトウェア"
+    ],
+    "confusedWith": [
+      "RDBMS"
+    ],
+    "differenceAxis": "関係モデルを扱うかどうか",
+    "trapExplanations": {
+      "RDBMS": "RDBMSは表形式（リレーショナル）データベースを管理するDBMS。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rdbms",
+    "acronym": "RDBMS",
+    "fullName": "Relational Database Management System",
+    "japanese": "リレーショナルデータベース管理システム",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Relational",
+        "meaning": "関係型"
+      },
+      {
+        "word": "Database",
+        "meaning": "データベース"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      },
+      {
+        "word": "System",
+        "meaning": "システム"
+      }
+    ],
+    "oneLine": "表形式のデータを行と列で管理する関係データベース用のDBMS。",
+    "examKeywords": [
+      "表形式",
+      "SQL",
+      "行",
+      "列"
+    ],
+    "confusedWith": [
+      "DBMS"
+    ],
+    "differenceAxis": "関係モデルを扱うかどうか",
+    "trapExplanations": {
+      "DBMS": "DBMSはデータベース全般を管理するソフトウェア。RDBMSは関係モデルに特化。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "sql",
+    "acronym": "SQL",
+    "fullName": "Structured Query Language",
+    "japanese": "構造化問い合わせ言語",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Structured",
+        "meaning": "構造化"
+      },
+      {
+        "word": "Query",
+        "meaning": "問い合わせ"
+      },
+      {
+        "word": "Language",
+        "meaning": "言語"
+      }
+    ],
+    "oneLine": "リレーショナルデータベースを操作するための言語。",
+    "examKeywords": [
+      "データ操作",
+      "問い合わせ",
+      "DDL",
+      "DML"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "dns",
+    "acronym": "DNS",
+    "fullName": "Domain Name System",
+    "japanese": "ドメイン名システム",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Domain",
+        "meaning": "ドメイン"
+      },
+      {
+        "word": "Name",
+        "meaning": "名前"
+      },
+      {
+        "word": "System",
+        "meaning": "システム"
+      }
+    ],
+    "oneLine": "ドメイン名とIPアドレスを対応付ける仕組み。",
+    "examKeywords": [
+      "名前解決",
+      "IPアドレス",
+      "ドメイン"
+    ],
+    "confusedWith": [
+      "DHCP",
+      "NAT"
+    ],
+    "differenceAxis": "名前を変換するかIP配布かアドレス変換か",
+    "trapExplanations": {
+      "DHCP": "DHCPはIPアドレスを自動割り当てする。",
+      "NAT": "NATはプライベートIPとグローバルIPを変換する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "dhcp",
+    "acronym": "DHCP",
+    "fullName": "Dynamic Host Configuration Protocol",
+    "japanese": "動的ホスト設定プロトコル",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Dynamic",
+        "meaning": "動的"
+      },
+      {
+        "word": "Host",
+        "meaning": "ホスト"
+      },
+      {
+        "word": "Configuration",
+        "meaning": "設定"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "規約"
+      }
+    ],
+    "oneLine": "ネットワーク機器へIPアドレスなどを自動割り当てするプロトコル。",
+    "examKeywords": [
+      "IPアドレス",
+      "自動割当",
+      "ネットワーク設定"
+    ],
+    "confusedWith": [
+      "DNS",
+      "NAT"
+    ],
+    "differenceAxis": "名前変換かアドレス割り当てか変換か",
+    "trapExplanations": {
+      "DNS": "DNSはドメイン名とIPアドレスを対応付ける仕組み。",
+      "NAT": "NATはアドレス変換を行う仕組み。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "nat",
+    "acronym": "NAT",
+    "fullName": "Network Address Translation",
+    "japanese": "ネットワークアドレス変換",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Network",
+        "meaning": "ネットワーク"
+      },
+      {
+        "word": "Address",
+        "meaning": "アドレス"
+      },
+      {
+        "word": "Translation",
+        "meaning": "変換"
+      }
+    ],
+    "oneLine": "プライベートIPアドレスとグローバルIPアドレスを相互に変換する仕組み。",
+    "examKeywords": [
+      "アドレス変換",
+      "プライベートIP",
+      "グローバルIP"
+    ],
+    "confusedWith": [
+      "DNS",
+      "DHCP"
+    ],
+    "differenceAxis": "名前変換かアドレス割当か変換か",
+    "trapExplanations": {
+      "DNS": "DNSはドメイン名とIPアドレスの対応付け。",
+      "DHCP": "DHCPはIPアドレスを自動割当する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "lan",
+    "acronym": "LAN",
+    "fullName": "Local Area Network",
+    "japanese": "ローカルエリアネットワーク",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Local",
+        "meaning": "局所"
+      },
+      {
+        "word": "Area",
+        "meaning": "範囲"
+      },
+      {
+        "word": "Network",
+        "meaning": "ネットワーク"
+      }
+    ],
+    "oneLine": "同一建物や敷地内など限られた範囲内のネットワーク。",
+    "examKeywords": [
+      "社内ネットワーク",
+      "狭い範囲",
+      "イーサネット"
+    ],
+    "confusedWith": [
+      "WAN",
+      "MAN"
+    ],
+    "differenceAxis": "範囲の広さ",
+    "trapExplanations": {
+      "WAN": "WANは広域ネットワーク。LANは限定された範囲。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "wan",
+    "acronym": "WAN",
+    "fullName": "Wide Area Network",
+    "japanese": "広域ネットワーク",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Wide",
+        "meaning": "広い"
+      },
+      {
+        "word": "Area",
+        "meaning": "範囲"
+      },
+      {
+        "word": "Network",
+        "meaning": "ネットワーク"
+      }
+    ],
+    "oneLine": "都市や国など広い範囲を結ぶネットワーク。",
+    "examKeywords": [
+      "広域",
+      "インターネット",
+      "回線"
+    ],
+    "confusedWith": [
+      "LAN"
+    ],
+    "differenceAxis": "範囲の広さ",
+    "trapExplanations": {
+      "LAN": "LANは限られた範囲のネットワーク。WANは広域。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "vpn",
+    "acronym": "VPN",
+    "fullName": "Virtual Private Network",
+    "japanese": "仮想専用線",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Virtual",
+        "meaning": "仮想"
+      },
+      {
+        "word": "Private",
+        "meaning": "専用"
+      },
+      {
+        "word": "Network",
+        "meaning": "ネットワーク"
+      }
+    ],
+    "oneLine": "公衆ネットワーク上に暗号化された仮想的な専用線を構築する仕組み。",
+    "examKeywords": [
+      "暗号化",
+      "専用線",
+      "リモートアクセス"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "tcp",
+    "acronym": "TCP",
+    "fullName": "Transmission Control Protocol",
+    "japanese": "伝送制御プロトコル",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Transmission",
+        "meaning": "伝送"
+      },
+      {
+        "word": "Control",
+        "meaning": "制御"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "規約"
+      }
+    ],
+    "oneLine": "信頼性を重視しデータを順序どおりに届けるための通信プロトコル。",
+    "examKeywords": [
+      "信頼性",
+      "コネクション",
+      "順序制御",
+      "再送"
+    ],
+    "confusedWith": [
+      "UDP"
+    ],
+    "differenceAxis": "信頼性重視か速度重視か",
+    "trapExplanations": {
+      "UDP": "UDPは接続を確立せず軽量で速度重視。TCPは信頼性重視。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "udp",
+    "acronym": "UDP",
+    "fullName": "User Datagram Protocol",
+    "japanese": "ユーザデータグラムプロトコル",
+    "category": "technology",
+    "words": [
+      {
+        "word": "User",
+        "meaning": "ユーザ"
+      },
+      {
+        "word": "Datagram",
+        "meaning": "データグラム"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "規約"
+      }
+    ],
+    "oneLine": "接続を確立せず高速にデータを送る通信プロトコル。",
+    "examKeywords": [
+      "速度重視",
+      "コネクションレス",
+      "通信"
+    ],
+    "confusedWith": [
+      "TCP"
+    ],
+    "differenceAxis": "信頼性重視か速度重視か",
+    "trapExplanations": {
+      "TCP": "TCPは信頼性を重視し再送制御を行う。UDPは高速で軽量。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "http",
+    "acronym": "HTTP",
+    "fullName": "Hypertext Transfer Protocol",
+    "japanese": "ハイパーテキスト転送プロトコル",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Hypertext",
+        "meaning": "ハイパーテキスト"
+      },
+      {
+        "word": "Transfer",
+        "meaning": "転送"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "規約"
+      }
+    ],
+    "oneLine": "WebブラウザとWebサーバ間でハイパーテキストを送受信するためのプロトコル。",
+    "examKeywords": [
+      "Web",
+      "通信",
+      "ハイパーテキスト"
+    ],
+    "confusedWith": [
+      "HTTPS"
+    ],
+    "differenceAxis": "暗号化の有無",
+    "trapExplanations": {
+      "HTTPS": "HTTPSはHTTPに暗号化を追加したプロトコル。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "https",
+    "acronym": "HTTPS",
+    "fullName": "Hypertext Transfer Protocol Secure",
+    "japanese": "ハイパーテキスト転送プロトコルセキュア",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Hypertext",
+        "meaning": "ハイパーテキスト"
+      },
+      {
+        "word": "Transfer",
+        "meaning": "転送"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "規約"
+      },
+      {
+        "word": "Secure",
+        "meaning": "安全な"
+      }
+    ],
+    "oneLine": "HTTPにSSL/TLSによる暗号化を追加した安全な通信プロトコル。",
+    "examKeywords": [
+      "暗号化",
+      "SSL",
+      "TLS",
+      "Web"
+    ],
+    "confusedWith": [
+      "HTTP"
+    ],
+    "differenceAxis": "暗号化の有無",
+    "trapExplanations": {
+      "HTTP": "HTTPは暗号化されていない通信プロトコル。HTTPSは暗号化付き。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "saas",
+    "acronym": "SaaS",
+    "fullName": "Software as a Service",
+    "japanese": "ソフトウェア・アズ・ア・サービス",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Software",
+        "meaning": "ソフトウェア"
+      },
+      {
+        "word": "as",
+        "meaning": "〜として"
+      },
+      {
+        "word": "a",
+        "meaning": "1つの"
+      },
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      }
+    ],
+    "oneLine": "インターネット経由でアプリケーションを利用するサービスモデル。",
+    "examKeywords": [
+      "クラウド",
+      "アプリケーション",
+      "利用"
+    ],
+    "confusedWith": [
+      "PaaS",
+      "IaaS"
+    ],
+    "differenceAxis": "利用範囲：アプリか開発基盤かインフラか",
+    "trapExplanations": {
+      "PaaS": "PaaSはアプリ開発・実行環境を提供する。",
+      "IaaS": "IaaSはサーバやストレージなどインフラを提供する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "paas",
+    "acronym": "PaaS",
+    "fullName": "Platform as a Service",
+    "japanese": "プラットフォーム・アズ・ア・サービス",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Platform",
+        "meaning": "基盤"
+      },
+      {
+        "word": "as",
+        "meaning": "〜として"
+      },
+      {
+        "word": "a",
+        "meaning": "1つの"
+      },
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      }
+    ],
+    "oneLine": "アプリケーションの開発・実行環境をクラウドで提供するサービスモデル。",
+    "examKeywords": [
+      "クラウド",
+      "開発基盤",
+      "実行環境"
+    ],
+    "confusedWith": [
+      "SaaS",
+      "IaaS"
+    ],
+    "differenceAxis": "利用範囲：アプリか開発基盤かインフラか",
+    "trapExplanations": {
+      "SaaS": "SaaSはアプリケーションを直接利用するサービス。",
+      "IaaS": "IaaSはサーバやストレージなどインフラを提供する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "iaas",
+    "acronym": "IaaS",
+    "fullName": "Infrastructure as a Service",
+    "japanese": "インフラストラクチャ・アズ・ア・サービス",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Infrastructure",
+        "meaning": "インフラ"
+      },
+      {
+        "word": "as",
+        "meaning": "〜として"
+      },
+      {
+        "word": "a",
+        "meaning": "1つの"
+      },
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      }
+    ],
+    "oneLine": "サーバやストレージ、ネットワークなどの基盤をクラウドで提供するサービスモデル。",
+    "examKeywords": [
+      "クラウド",
+      "サーバ",
+      "ストレージ",
+      "ネットワーク"
+    ],
+    "confusedWith": [
+      "SaaS",
+      "PaaS"
+    ],
+    "differenceAxis": "利用範囲：アプリか開発基盤かインフラか",
+    "trapExplanations": {
+      "SaaS": "SaaSはアプリケーションを提供。",
+      "PaaS": "PaaSは開発・実行環境を提供。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "faas",
+    "acronym": "FaaS",
+    "fullName": "Function as a Service",
+    "japanese": "ファンクション・アズ・ア・サービス",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Function",
+        "meaning": "関数"
+      },
+      {
+        "word": "as",
+        "meaning": "〜として"
+      },
+      {
+        "word": "a",
+        "meaning": "1つの"
+      },
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      }
+    ],
+    "oneLine": "サーバレスコンピューティングの形態。コードを関数単位で実行し必要な分だけ課金される。",
+    "examKeywords": [
+      "サーバレス",
+      "イベント駆動",
+      "課金"
+    ],
+    "confusedWith": [
+      "SaaS",
+      "PaaS",
+      "IaaS"
+    ],
+    "differenceAxis": "提供単位：アプリ、基盤、インフラ、関数単位",
+    "trapExplanations": {
+      "SaaS": "SaaSは完成したアプリを提供。",
+      "PaaS": "PaaSは開発基盤を提供。",
+      "IaaS": "IaaSはインフラを提供。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cdn",
+    "acronym": "CDN",
+    "fullName": "Content Delivery Network",
+    "japanese": "コンテンツ配信ネットワーク",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Content",
+        "meaning": "コンテンツ"
+      },
+      {
+        "word": "Delivery",
+        "meaning": "配信"
+      },
+      {
+        "word": "Network",
+        "meaning": "ネットワーク"
+      }
+    ],
+    "oneLine": "世界中のサーバにコンテンツを分散配置し高速に配信する仕組み。",
+    "examKeywords": [
+      "分散配信",
+      "キャッシュ",
+      "高速"
+    ],
+    "confusedWith": [
+      "SDN"
+    ],
+    "differenceAxis": "コンテンツ配信かネットワーク制御か",
+    "trapExplanations": {
+      "SDN": "SDNはネットワークをソフトウェアで制御する。CDNはコンテンツの高速配信。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "sdn",
+    "acronym": "SDN",
+    "fullName": "Software Defined Networking",
+    "japanese": "ソフトウェア定義ネットワーキング",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Software",
+        "meaning": "ソフトウェア"
+      },
+      {
+        "word": "Defined",
+        "meaning": "定義された"
+      },
+      {
+        "word": "Networking",
+        "meaning": "ネットワーク"
+      }
+    ],
+    "oneLine": "ネットワーク機器の制御をソフトウェアで集中的に行うアーキテクチャ。",
+    "examKeywords": [
+      "集中管理",
+      "仮想化",
+      "ネットワーク制御"
+    ],
+    "confusedWith": [
+      "CDN"
+    ],
+    "differenceAxis": "コンテンツ配信かネットワーク制御か",
+    "trapExplanations": {
+      "CDN": "CDNはコンテンツを高速配信する仕組み。SDNはネットワーク制御をソフトウェアで行う。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ids",
+    "acronym": "IDS",
+    "fullName": "Intrusion Detection System",
+    "japanese": "侵入検知システム",
+    "category": "security",
+    "words": [
+      {
+        "word": "Intrusion",
+        "meaning": "侵入"
+      },
+      {
+        "word": "Detection",
+        "meaning": "検知"
+      },
+      {
+        "word": "System",
+        "meaning": "システム"
+      }
+    ],
+    "oneLine": "不正アクセスや攻撃を監視し検出するシステム。",
+    "examKeywords": [
+      "検知",
+      "不正アクセス",
+      "監視"
+    ],
+    "confusedWith": [
+      "IPS",
+      "WAF"
+    ],
+    "differenceAxis": "検知か防止かWebアプリ保護か",
+    "trapExplanations": {
+      "IPS": "IPSは不正アクセスを検知し自動で遮断する。",
+      "WAF": "WAFはWebアプリケーションへの攻撃を防ぐ。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ips",
+    "acronym": "IPS",
+    "fullName": "Intrusion Prevention System",
+    "japanese": "侵入防止システム",
+    "category": "security",
+    "words": [
+      {
+        "word": "Intrusion",
+        "meaning": "侵入"
+      },
+      {
+        "word": "Prevention",
+        "meaning": "防止"
+      },
+      {
+        "word": "System",
+        "meaning": "システム"
+      }
+    ],
+    "oneLine": "不正アクセスを検知し自動的に遮断するシステム。",
+    "examKeywords": [
+      "防止",
+      "不正アクセス",
+      "遮断"
+    ],
+    "confusedWith": [
+      "IDS",
+      "WAF"
+    ],
+    "differenceAxis": "検知か防止かWebアプリ保護か",
+    "trapExplanations": {
+      "IDS": "IDSは検知のみで対処はしない。",
+      "WAF": "WAFはWebアプリへの攻撃を防ぐ。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "waf",
+    "acronym": "WAF",
+    "fullName": "Web Application Firewall",
+    "japanese": "Webアプリケーションファイアウォール",
+    "category": "security",
+    "words": [
+      {
+        "word": "Web",
+        "meaning": "Web"
+      },
+      {
+        "word": "Application",
+        "meaning": "アプリケーション"
+      },
+      {
+        "word": "Firewall",
+        "meaning": "ファイアウォール"
+      }
+    ],
+    "oneLine": "SQLインジェクションやクロスサイトスクリプティングなどWebアプリへの攻撃を防ぐ。",
+    "examKeywords": [
+      "Webアプリ",
+      "防御",
+      "SQLインジェクション",
+      "XSS"
+    ],
+    "confusedWith": [
+      "IDS",
+      "IPS"
+    ],
+    "differenceAxis": "検知か防止かWebアプリ保護か",
+    "trapExplanations": {
+      "IDS": "IDSは不正アクセスを検知する。",
+      "IPS": "IPSは検知後自動的に遮断する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "mfa",
+    "acronym": "MFA",
+    "fullName": "Multi-Factor Authentication",
+    "japanese": "多要素認証",
+    "category": "security",
+    "words": [
+      {
+        "word": "Multi",
+        "meaning": "複数"
+      },
+      {
+        "word": "Factor",
+        "meaning": "要素"
+      },
+      {
+        "word": "Authentication",
+        "meaning": "認証"
+      }
+    ],
+    "oneLine": "2種類以上の認証要素を組み合わせて本人確認する方法。",
+    "examKeywords": [
+      "多要素",
+      "認証",
+      "本人確認"
+    ],
+    "confusedWith": [
+      "SSO"
+    ],
+    "differenceAxis": "認証要素の数とサインオンの仕組み",
+    "trapExplanations": {
+      "SSO": "SSOは1回の認証で複数サービスを利用できる仕組み。MFAは認証要素の数を増やす。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "sso",
+    "acronym": "SSO",
+    "fullName": "Single Sign-On",
+    "japanese": "シングルサインオン",
+    "category": "security",
+    "words": [
+      {
+        "word": "Single",
+        "meaning": "1回"
+      },
+      {
+        "word": "Sign",
+        "meaning": "サイン"
+      },
+      {
+        "word": "On",
+        "meaning": "オン"
+      }
+    ],
+    "oneLine": "一度の認証で複数のサービスを利用できる仕組み。",
+    "examKeywords": [
+      "1回の認証",
+      "複数サービス",
+      "利便性"
+    ],
+    "confusedWith": [
+      "MFA"
+    ],
+    "differenceAxis": "認証要素の数とサインオンの仕組み",
+    "trapExplanations": {
+      "MFA": "MFAは認証要素を複数組み合わせる方式。SSOは1回の認証で複数サービスを利用できる。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "isms",
+    "acronym": "ISMS",
+    "fullName": "Information Security Management System",
+    "japanese": "情報セキュリティマネジメントシステム",
+    "category": "security",
+    "words": [
+      {
+        "word": "Information",
+        "meaning": "情報"
+      },
+      {
+        "word": "Security",
+        "meaning": "セキュリティ"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      },
+      {
+        "word": "System",
+        "meaning": "システム"
+      }
+    ],
+    "oneLine": "組織の情報セキュリティを継続的に改善・運用する仕組み。",
+    "examKeywords": [
+      "情報セキュリティ",
+      "PDCA",
+      "管理"
+    ],
+    "confusedWith": [
+      "CSIRT"
+    ],
+    "differenceAxis": "組織全体の管理かインシデント対応か",
+    "trapExplanations": {
+      "CSIRT": "CSIRTはインシデント発生時の対応チーム、ISMSは組織のセキュリティ管理システム。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "csirt",
+    "acronym": "CSIRT",
+    "fullName": "Computer Security Incident Response Team",
+    "japanese": "コンピュータセキュリティインシデント対応チーム",
+    "category": "security",
+    "words": [
+      {
+        "word": "Computer",
+        "meaning": "コンピュータ"
+      },
+      {
+        "word": "Security",
+        "meaning": "セキュリティ"
+      },
+      {
+        "word": "Incident",
+        "meaning": "事故"
+      },
+      {
+        "word": "Response",
+        "meaning": "対応"
+      },
+      {
+        "word": "Team",
+        "meaning": "チーム"
+      }
+    ],
+    "oneLine": "情報セキュリティ事故に迅速に対応するための組織内チーム。",
+    "examKeywords": [
+      "インシデント対応",
+      "セキュリティ事故",
+      "チーム"
+    ],
+    "confusedWith": [
+      "SOC",
+      "ISMS"
+    ],
+    "differenceAxis": "監視か対応か管理か",
+    "trapExplanations": {
+      "SOC": "SOCはセキュリティ監視と分析を行う組織。",
+      "ISMS": "ISMSは情報セキュリティ管理の仕組み全体。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "soc",
+    "acronym": "SOC",
+    "fullName": "Security Operations Center",
+    "japanese": "セキュリティオペレーションセンター",
+    "category": "security",
+    "words": [
+      {
+        "word": "Security",
+        "meaning": "セキュリティ"
+      },
+      {
+        "word": "Operations",
+        "meaning": "運用"
+      },
+      {
+        "word": "Center",
+        "meaning": "センター"
+      }
+    ],
+    "oneLine": "組織のネットワークやシステムを監視し脅威を分析する専門組織。",
+    "examKeywords": [
+      "監視",
+      "分析",
+      "セキュリティ"
+    ],
+    "confusedWith": [
+      "CSIRT",
+      "ISMS"
+    ],
+    "differenceAxis": "監視か対応か管理か",
+    "trapExplanations": {
+      "CSIRT": "CSIRTはインシデント発生後の対応チーム。",
+      "ISMS": "ISMSは管理システム全体。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "dmz",
+    "acronym": "DMZ",
+    "fullName": "Demilitarized Zone",
+    "japanese": "非武装地帯",
+    "category": "security",
+    "words": [
+      {
+        "word": "Demilitarized",
+        "meaning": "非武装"
+      },
+      {
+        "word": "Zone",
+        "meaning": "地帯"
+      }
+    ],
+    "oneLine": "内外ネットワークの間に配置し、公開サーバを攻撃から隔離する領域。",
+    "examKeywords": [
+      "隔離",
+      "公開サーバ",
+      "セグメント"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "ai",
+    "acronym": "AI",
+    "fullName": "Artificial Intelligence",
+    "japanese": "人工知能",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Artificial",
+        "meaning": "人工"
+      },
+      {
+        "word": "Intelligence",
+        "meaning": "知能"
+      }
+    ],
+    "oneLine": "人間が行う知的な作業をコンピュータに行わせる技術や研究分野。",
+    "examKeywords": [
+      "機械学習",
+      "推論",
+      "認識",
+      "自動化"
+    ],
+    "confusedWith": [
+      "ML",
+      "DL",
+      "AGI"
+    ],
+    "differenceAxis": "狭い目的のAIか汎用AIか技術手法か",
+    "trapExplanations": {
+      "ML": "MLはAIを実現するための機械学習手法。",
+      "DL": "DLは多層ニューラルネットを用いる学習手法。",
+      "AGI": "AGIは人間並みの汎用知能を持つAIの概念。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ml",
+    "acronym": "ML",
+    "fullName": "Machine Learning",
+    "japanese": "機械学習",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Machine",
+        "meaning": "機械"
+      },
+      {
+        "word": "Learning",
+        "meaning": "学習"
+      }
+    ],
+    "oneLine": "経験データから規則や予測モデルを自動的に学習する技術。",
+    "examKeywords": [
+      "教師あり",
+      "教師なし",
+      "学習",
+      "モデル"
+    ],
+    "confusedWith": [
+      "AI",
+      "DL",
+      "RL"
+    ],
+    "differenceAxis": "学習手法の種類、汎用性",
+    "trapExplanations": {
+      "AI": "AIは知能を持つシステム全般、MLはその実現手段の一つ。",
+      "DL": "DLはMLの中でも深層ニューラルネットを用いる手法。",
+      "RL": "RLは報酬に基づき行動を学習する強化学習。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "dl",
+    "acronym": "DL",
+    "fullName": "Deep Learning",
+    "japanese": "深層学習",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Deep",
+        "meaning": "深層"
+      },
+      {
+        "word": "Learning",
+        "meaning": "学習"
+      }
+    ],
+    "oneLine": "多層のニューラルネットワークによる機械学習手法。",
+    "examKeywords": [
+      "ニューラルネット",
+      "深層",
+      "学習",
+      "AI"
+    ],
+    "confusedWith": [
+      "ML",
+      "AI"
+    ],
+    "differenceAxis": "AI全般かML手法かニューラルネットの深さか",
+    "trapExplanations": {
+      "AI": "AIは広い概念、DLはAIを実現する一種の手法。",
+      "ML": "MLはAIの実現手段の総称で、DLは多層ニューラルネットを用いる特殊なML。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "gan",
+    "acronym": "GAN",
+    "fullName": "Generative Adversarial Network",
+    "japanese": "敵対的生成ネットワーク",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Generative",
+        "meaning": "生成"
+      },
+      {
+        "word": "Adversarial",
+        "meaning": "敵対的"
+      },
+      {
+        "word": "Network",
+        "meaning": "ネットワーク"
+      }
+    ],
+    "oneLine": "生成器と識別器の2つのニューラルネットが競い合ってリアルなデータを生成するモデル。",
+    "examKeywords": [
+      "生成",
+      "敵対的",
+      "ニューラルネット",
+      "画像生成"
+    ],
+    "confusedWith": [
+      "GPT",
+      "LLM"
+    ],
+    "differenceAxis": "生成モデルの構造と用途",
+    "trapExplanations": {
+      "GPT": "GPTは事前学習したトランスフォーマー型モデルで自然言語処理に用いられる。",
+      "LLM": "LLMは大規模な言語モデルで一般化された自然言語処理が可能。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "llm",
+    "acronym": "LLM",
+    "fullName": "Large Language Model",
+    "japanese": "大規模言語モデル",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Large",
+        "meaning": "大規模"
+      },
+      {
+        "word": "Language",
+        "meaning": "言語"
+      },
+      {
+        "word": "Model",
+        "meaning": "モデル"
+      }
+    ],
+    "oneLine": "大量のテキストデータから学習し多様な自然言語タスクを実行できるモデル。",
+    "examKeywords": [
+      "自然言語",
+      "事前学習",
+      "生成AI"
+    ],
+    "confusedWith": [
+      "GPT",
+      "GAN"
+    ],
+    "differenceAxis": "言語モデルの種類と生成方法",
+    "trapExplanations": {
+      "GPT": "GPTはLLMの一種でトランスフォーマーアーキテクチャ。",
+      "GAN": "GANは生成と識別で競合するニューラルネットによる生成モデル。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "gpt",
+    "acronym": "GPT",
+    "fullName": "Generative Pre-trained Transformer",
+    "japanese": "生成事前学習済みトランスフォーマー",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Generative",
+        "meaning": "生成"
+      },
+      {
+        "word": "Pre-trained",
+        "meaning": "事前学習済み"
+      },
+      {
+        "word": "Transformer",
+        "meaning": "トランスフォーマー"
+      }
+    ],
+    "oneLine": "大量のデータで事前学習したトランスフォーマー型の生成AIモデル。",
+    "examKeywords": [
+      "生成AI",
+      "事前学習",
+      "トランスフォーマー"
+    ],
+    "confusedWith": [
+      "LLM",
+      "GAN"
+    ],
+    "differenceAxis": "モデル構造と用途",
+    "trapExplanations": {
+      "LLM": "LLMは大規模言語モデル全般を指す。GPTはその具体的な実装の一つ。",
+      "GAN": "GANは敵対的生成モデルで画像生成などに使われる。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "xai",
+    "acronym": "XAI",
+    "fullName": "Explainable AI",
+    "japanese": "説明可能なAI",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Explainable",
+        "meaning": "説明可能な"
+      },
+      {
+        "word": "AI",
+        "meaning": "人工知能"
+      }
+    ],
+    "oneLine": "AIの推論過程を人が理解できるようにする技術や手法。",
+    "examKeywords": [
+      "説明可能",
+      "透明性",
+      "倫理"
+    ],
+    "confusedWith": [
+      "HITL"
+    ],
+    "differenceAxis": "人による介入か説明性か",
+    "trapExplanations": {
+      "HITL": "HITLは人が判断に関与する仕組み。XAIはAIの内部を説明可能にする手法。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "hitl",
+    "acronym": "HITL",
+    "fullName": "Human-In-The-Loop",
+    "japanese": "人間参加型",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Human",
+        "meaning": "人間"
+      },
+      {
+        "word": "In",
+        "meaning": "〜の中"
+      },
+      {
+        "word": "The",
+        "meaning": "その"
+      },
+      {
+        "word": "Loop",
+        "meaning": "循環"
+      }
+    ],
+    "oneLine": "AIの判断や学習プロセスに人間が介入して補正や決定を行う仕組み。",
+    "examKeywords": [
+      "人間介入",
+      "AI",
+      "補正"
+    ],
+    "confusedWith": [
+      "XAI"
+    ],
+    "differenceAxis": "人による介入か説明性か",
+    "trapExplanations": {
+      "XAI": "XAIはAIの内部推論を説明可能にする。HITLは人が判断に関与する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rpa",
+    "acronym": "RPA",
+    "fullName": "Robotic Process Automation",
+    "japanese": "ロボティックプロセスオートメーション",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Robotic",
+        "meaning": "ロボット化"
+      },
+      {
+        "word": "Process",
+        "meaning": "プロセス"
+      },
+      {
+        "word": "Automation",
+        "meaning": "自動化"
+      }
+    ],
+    "oneLine": "定型的な事務作業をソフトウェアロボットで自動化する技術。",
+    "examKeywords": [
+      "自動化",
+      "定型作業",
+      "効率化"
+    ],
+    "confusedWith": [
+      "AI"
+    ],
+    "differenceAxis": "ロボティック自動化か汎用AIか",
+    "trapExplanations": {
+      "AI": "AIは幅広い知的作業を対象にするが、RPAは定型的作業の自動化。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "iot",
+    "acronym": "IoT",
+    "fullName": "Internet of Things",
+    "japanese": "モノのインターネット",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Internet",
+        "meaning": "インターネット"
+      },
+      {
+        "word": "of",
+        "meaning": "の"
+      },
+      {
+        "word": "Things",
+        "meaning": "モノ"
+      }
+    ],
+    "oneLine": "様々なモノが直接インターネットに接続し情報をやり取りする仕組み。",
+    "examKeywords": [
+      "センサー",
+      "ネットワーク",
+      "自動化"
+    ],
+    "confusedWith": [
+      "M2M"
+    ],
+    "differenceAxis": "広範なモノの接続か機器同士の通信か",
+    "trapExplanations": {
+      "M2M": "M2Mは特定機器間の自動通信。IoTは広くモノがインターネットにつながる。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "m2m",
+    "acronym": "M2M",
+    "fullName": "Machine to Machine",
+    "japanese": "機器間通信",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Machine",
+        "meaning": "機器"
+      },
+      {
+        "word": "to",
+        "meaning": "〜と"
+      },
+      {
+        "word": "Machine",
+        "meaning": "機器"
+      }
+    ],
+    "oneLine": "機器同士が自動的に情報をやり取りする通信。",
+    "examKeywords": [
+      "機器間通信",
+      "自動",
+      "データ交換"
+    ],
+    "confusedWith": [
+      "IoT"
+    ],
+    "differenceAxis": "広範な接続か特定機器間か",
+    "trapExplanations": {
+      "IoT": "IoTは様々なモノがインターネットに接続し情報を交換する。M2Mは特定機器間の通信。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "byod",
+    "acronym": "BYOD",
+    "fullName": "Bring Your Own Device",
+    "japanese": "私物端末の業務利用",
+    "category": "security",
+    "words": [
+      {
+        "word": "Bring",
+        "meaning": "持ち込む"
+      },
+      {
+        "word": "Your",
+        "meaning": "あなたの"
+      },
+      {
+        "word": "Own",
+        "meaning": "自分自身の"
+      },
+      {
+        "word": "Device",
+        "meaning": "端末"
+      }
+    ],
+    "oneLine": "従業員が私物のスマホやPCを業務で利用すること。",
+    "examKeywords": [
+      "私物端末",
+      "セキュリティ",
+      "業務利用"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "poc",
+    "acronym": "PoC",
+    "fullName": "Proof of Concept",
+    "japanese": "概念実証",
+    "category": "management",
+    "words": [
+      {
+        "word": "Proof",
+        "meaning": "証明"
+      },
+      {
+        "word": "of",
+        "meaning": "〜の"
+      },
+      {
+        "word": "Concept",
+        "meaning": "概念"
+      }
+    ],
+    "oneLine": "新しい技術やアイデアが実現可能かどうかを検証すること。",
+    "examKeywords": [
+      "実現可能性",
+      "検証",
+      "試作"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "dfd",
+    "acronym": "DFD",
+    "fullName": "Data Flow Diagram",
+    "japanese": "データフロー図",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Data",
+        "meaning": "データ"
+      },
+      {
+        "word": "Flow",
+        "meaning": "流れ"
+      },
+      {
+        "word": "Diagram",
+        "meaning": "図"
+      }
+    ],
+    "oneLine": "外部、処理、データフロー、データストアの4つの記号でデータの流れを表す図。",
+    "examKeywords": [
+      "データフロー",
+      "図",
+      "モデリング"
+    ],
+    "confusedWith": [
+      "BPMN"
+    ],
+    "differenceAxis": "業務プロセス表記法かデータの流れか",
+    "trapExplanations": {
+      "BPMN": "BPMNは業務プロセスをモデリングする表記法で、DFDはデータの流れを表す。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "bpmn",
+    "acronym": "BPMN",
+    "fullName": "Business Process Model and Notation",
+    "japanese": "業務プロセスモデリング表記法",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Business",
+        "meaning": "業務"
+      },
+      {
+        "word": "Process",
+        "meaning": "プロセス"
+      },
+      {
+        "word": "Model",
+        "meaning": "モデル"
+      },
+      {
+        "word": "and",
+        "meaning": "と"
+      },
+      {
+        "word": "Notation",
+        "meaning": "表記法"
+      }
+    ],
+    "oneLine": "業務プロセスを標準的にモデリングするための表記法。",
+    "examKeywords": [
+      "業務プロセス",
+      "モデリング",
+      "表記法"
+    ],
+    "confusedWith": [
+      "DFD"
+    ],
+    "differenceAxis": "業務プロセス表記法かデータの流れか",
+    "trapExplanations": {
+      "DFD": "DFDはデータの流れを表す図で、BPMNは業務プロセスを表現する表記法。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cad",
+    "acronym": "CAD",
+    "fullName": "Computer Aided Design",
+    "japanese": "コンピュータ支援設計",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Computer",
+        "meaning": "コンピュータ"
+      },
+      {
+        "word": "Aided",
+        "meaning": "支援された"
+      },
+      {
+        "word": "Design",
+        "meaning": "設計"
+      }
+    ],
+    "oneLine": "コンピュータを用いて製品や建築の設計を行うシステム。",
+    "examKeywords": [
+      "設計",
+      "図面",
+      "エンジニアリング"
+    ],
+    "confusedWith": [
+      "CAM"
+    ],
+    "differenceAxis": "設計支援か製造支援か",
+    "trapExplanations": {
+      "CAM": "CAMは設計データを元に工作機械を操作するプログラムを生成するシステム。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cam",
+    "acronym": "CAM",
+    "fullName": "Computer Aided Manufacturing",
+    "japanese": "コンピュータ支援製造",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Computer",
+        "meaning": "コンピュータ"
+      },
+      {
+        "word": "Aided",
+        "meaning": "支援された"
+      },
+      {
+        "word": "Manufacturing",
+        "meaning": "製造"
+      }
+    ],
+    "oneLine": "CADで作成した設計データを使って工作機械を制御するプログラムを生成するシステム。",
+    "examKeywords": [
+      "製造",
+      "工作機械",
+      "設計データ"
+    ],
+    "confusedWith": [
+      "CAD"
+    ],
+    "differenceAxis": "設計支援か製造支援か",
+    "trapExplanations": {
+      "CAD": "CADは設計をコンピュータで行うシステム。CAMは設計データを元に製造を支援するシステム。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "gps",
+    "acronym": "GPS",
+    "fullName": "Global Positioning System",
+    "japanese": "全地球測位システム",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Global",
+        "meaning": "全地球"
+      },
+      {
+        "word": "Positioning",
+        "meaning": "測位"
+      },
+      {
+        "word": "System",
+        "meaning": "システム"
+      }
+    ],
+    "oneLine": "人工衛星からの電波を利用して地球上の位置を測定する仕組み。",
+    "examKeywords": [
+      "衛星",
+      "測位",
+      "位置情報"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "ea",
+    "acronym": "EA",
+    "fullName": "Enterprise Architecture",
+    "japanese": "エンタープライズアーキテクチャ",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Enterprise",
+        "meaning": "企業"
+      },
+      {
+        "word": "Architecture",
+        "meaning": "構造"
+      }
+    ],
+    "oneLine": "企業全体の業務や情報システムを最適化するための全体構造と設計手法。",
+    "examKeywords": [
+      "全体最適",
+      "業務とシステム",
+      "モデル"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part"
+    ]
+  },
+  {
+    "id": "sor",
+    "acronym": "SoR",
+    "fullName": "System of Record",
+    "japanese": "基幹系システム",
+    "category": "technology",
+    "words": [
+      {
+        "word": "System",
+        "meaning": "システム"
+      },
+      {
+        "word": "of",
+        "meaning": "〜の"
+      },
+      {
+        "word": "Record",
+        "meaning": "記録"
+      }
+    ],
+    "oneLine": "トランザクション処理など基幹業務を支えるシステム。",
+    "examKeywords": [
+      "基幹業務",
+      "記録",
+      "トランザクション"
+    ],
+    "confusedWith": [
+      "SoE"
+    ],
+    "differenceAxis": "記録系か顧客接点系か",
+    "trapExplanations": {
+      "SoE": "SoEは顧客との接点を強化するためのシステム。SoRは基幹業務を処理する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "soe",
+    "acronym": "SoE",
+    "fullName": "Systems of Engagement",
+    "japanese": "顧客接点強化システム",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Systems",
+        "meaning": "システム"
+      },
+      {
+        "word": "of",
+        "meaning": "〜の"
+      },
+      {
+        "word": "Engagement",
+        "meaning": "関与"
+      }
+    ],
+    "oneLine": "顧客とのエンゲージメントやコミュニケーションを強化するシステム。",
+    "examKeywords": [
+      "顧客接点",
+      "エンゲージメント",
+      "CRM"
+    ],
+    "confusedWith": [
+      "SoR",
+      "CRM"
+    ],
+    "differenceAxis": "基幹業務か顧客接点か",
+    "trapExplanations": {
+      "SoR": "SoRは基幹業務を処理するシステム。SoEは顧客との関わりを強化する。",
+      "CRM": "CRMも顧客関係管理だがSoEはユーザー体験やコミュニケーション全般を含む。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "agi",
+    "acronym": "AGI",
+    "fullName": "Artificial General Intelligence",
+    "japanese": "汎用人工知能",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Artificial",
+        "meaning": "人工"
+      },
+      {
+        "word": "General",
+        "meaning": "汎用"
+      },
+      {
+        "word": "Intelligence",
+        "meaning": "知能"
+      }
+    ],
+    "oneLine": "人間のように多様なタスクをこなせる汎用的な人工知能の概念。",
+    "examKeywords": [
+      "汎用AI",
+      "人間レベル",
+      "多様なタスク",
+      "AGI",
+      "人間を超える"
+    ],
+    "confusedWith": [
+      "AI",
+      "ANI",
+      "ML"
+    ],
+    "differenceAxis": "汎用目的のAIか特定分野のAIか",
+    "trapExplanations": {
+      "AI": "AIは人工知能全般を指す広い概念であり、AGIはその中でも人間並みの汎用知能を指す。",
+      "ANI": "ANIは特定のタスクに特化した人工知能。",
+      "ML": "MLはAIを実現する機械学習手法であり、AGI自体は概念上の目標を示す。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ani",
+    "acronym": "ANI",
+    "fullName": "Artificial Narrow Intelligence",
+    "japanese": "特化型人工知能",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Artificial",
+        "meaning": "人工"
+      },
+      {
+        "word": "Narrow",
+        "meaning": "狭い"
+      },
+      {
+        "word": "Intelligence",
+        "meaning": "知能"
+      }
+    ],
+    "oneLine": "特定のタスクに特化し、その領域では高い性能を発揮する人工知能。",
+    "examKeywords": [
+      "特化AI",
+      "狭い範囲",
+      "特定タスク",
+      "自動運転",
+      "画像認識",
+      "AlphaGo"
+    ],
+    "confusedWith": [
+      "AGI",
+      "AI"
+    ],
+    "differenceAxis": "特定分野に限られるか汎用的か",
+    "trapExplanations": {
+      "AGI": "AGIは人間のように多様なタスクをこなす汎用的な人工知能概念。",
+      "AI": "AIは人工知能全般を指す広い概念で、ANIはその中で特定の分野に特化したもの。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "aiassistant",
+    "acronym": "AI Assistant",
+    "fullName": "AI Assistant / Virtual Assistant",
+    "japanese": "AIアシスタント",
+    "category": "ai",
+    "words": [
+      {
+        "word": "AI",
+        "meaning": "人工知能"
+      },
+      {
+        "word": "Assistant",
+        "meaning": "助手"
+      }
+    ],
+    "oneLine": "音声やチャットでユーザの依頼を処理する仮想アシスタント。",
+    "examKeywords": [
+      "Siri",
+      "Alexa",
+      "Googleアシスタント",
+      "音声操作",
+      "バーチャルアシスタント",
+      "日常業務"
+    ],
+    "confusedWith": [
+      "Generative AI"
+    ],
+    "differenceAxis": "ユーザ支援特化の対話型AIか生成型か",
+    "trapExplanations": {
+      "Generative AI": "生成AIは新しいコンテンツを生成するAI。AIアシスタントはユーザの依頼をこなす支援が目的で、生成機能は必須ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "genai",
+    "acronym": "Generative AI",
+    "fullName": "Generative Artificial Intelligence",
+    "japanese": "生成AI",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Generative",
+        "meaning": "生成的"
+      },
+      {
+        "word": "Artificial",
+        "meaning": "人工"
+      },
+      {
+        "word": "Intelligence",
+        "meaning": "知能"
+      }
+    ],
+    "oneLine": "ディープラーニングを用いて文章・画像・音楽などの新しいコンテンツを生成するAI。",
+    "examKeywords": [
+      "生成AI",
+      "ディープラーニング",
+      "生成モデル",
+      "プロンプト",
+      "著作権問題",
+      "データ漏洩"
+    ],
+    "confusedWith": [
+      "GAN",
+      "LLM"
+    ],
+    "differenceAxis": "既存データの分析か新しいコンテンツの生成か",
+    "trapExplanations": {
+      "GAN": "GANは生成モデルの一種であり、生成AIを構成する技術。",
+      "LLM": "LLMは大規模言語モデルであり、生成AIの中でテキスト生成に特化した技術。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "multimodalai",
+    "acronym": "Multimodal AI",
+    "fullName": "Multimodal Artificial Intelligence",
+    "japanese": "マルチモーダルAI",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Multimodal",
+        "meaning": "多モーダル"
+      },
+      {
+        "word": "Artificial",
+        "meaning": "人工"
+      },
+      {
+        "word": "Intelligence",
+        "meaning": "知能"
+      }
+    ],
+    "oneLine": "テキスト・音声・画像・センサーなど複数のデータ形式を組み合わせて処理するAI。",
+    "examKeywords": [
+      "マルチモーダル",
+      "複数データ",
+      "テキスト",
+      "画像",
+      "音声",
+      "高精度"
+    ],
+    "confusedWith": [
+      "Generative AI"
+    ],
+    "differenceAxis": "1種類のデータのみか複数種類のデータを統合するか",
+    "trapExplanations": {
+      "Generative AI": "生成AIは新しいコンテンツを生み出すことに焦点を当てる一方、マルチモーダルAIは複数データから理解・生成することに焦点を当てる。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "hallucination",
+    "acronym": "Hallucination",
+    "fullName": "AI Hallucination",
+    "japanese": "ハルシネーション",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Hallucination",
+        "meaning": "幻覚"
+      }
+    ],
+    "oneLine": "生成AIが本当らしく見えるが誤った情報を出力してしまう現象。",
+    "examKeywords": [
+      "ハルシネーション",
+      "誤情報",
+      "生成AI",
+      "外部データ",
+      "RAG",
+      "精度"
+    ],
+    "confusedWith": [
+      "Algorithmic Bias",
+      "Deepfake"
+    ],
+    "differenceAxis": "AIによる誤情報の発生原因か、データの偏りによる不公平か",
+    "trapExplanations": {
+      "Algorithmic Bias": "アルゴリズムのバイアスは訓練データの偏りから不公平な結果が生じる問題で、ハルシネーションは生成AIが正しくない内容を出力する現象。",
+      "Deepfake": "ディープフェイクは意図的に偽画像・動画を作成する技術で、ハルシネーションは生成AIが無意識に誤った情報を生成する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "deepfake",
+    "acronym": "Deepfake",
+    "fullName": "Deepfake",
+    "japanese": "ディープフェイク",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Deep",
+        "meaning": "深層"
+      },
+      {
+        "word": "Fake",
+        "meaning": "偽造"
+      }
+    ],
+    "oneLine": "深層学習を用いて本物そっくりの偽画像・動画・音声を生成する技術。",
+    "examKeywords": [
+      "ディープフェイク",
+      "偽動画",
+      "偽画像",
+      "悪用",
+      "詐欺",
+      "政治"
+    ],
+    "confusedWith": [
+      "Hallucination",
+      "GAN"
+    ],
+    "differenceAxis": "意図的な偽造か偶発的な誤情報か",
+    "trapExplanations": {
+      "Hallucination": "ハルシネーションは生成AIが偶発的に誤った情報を出す現象で、ディープフェイクは意図的に偽データを作る技術。",
+      "GAN": "GANは生成モデルの仕組みであり、ディープフェイクを実現するための手法の一つ。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "algobias",
+    "acronym": "Algorithmic Bias",
+    "fullName": "Algorithmic Bias",
+    "japanese": "アルゴリズムのバイアス",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Algorithmic",
+        "meaning": "アルゴリズムの"
+      },
+      {
+        "word": "Bias",
+        "meaning": "偏り"
+      }
+    ],
+    "oneLine": "訓練データの偏りなどによりAIが特定の属性に対して不公平な判断を行う問題。",
+    "examKeywords": [
+      "バイアス",
+      "不公平",
+      "訓練データ",
+      "差別",
+      "公平性"
+    ],
+    "confusedWith": [
+      "Hallucination"
+    ],
+    "differenceAxis": "データの偏りによる不公平か誤情報か",
+    "trapExplanations": {
+      "Hallucination": "ハルシネーションはAIが誤った内容を生成する現象であり、アルゴリズムのバイアスはデータの偏りから不公平な結果が生じる問題。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "aioptout",
+    "acronym": "AI Opt-Out",
+    "fullName": "AI Service Opt-Out Policy",
+    "japanese": "AIサービスのオプトアウトポリシー",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Opt-Out",
+        "meaning": "提供拒否"
+      },
+      {
+        "word": "Policy",
+        "meaning": "方針"
+      }
+    ],
+    "oneLine": "利用者がAIサービスへの入力データを学習目的で使用されないよう選択できる仕組み。",
+    "examKeywords": [
+      "オプトアウト",
+      "データ保護",
+      "AIサービス",
+      "学習データ",
+      "プライバシー"
+    ],
+    "confusedWith": [],
+    "differenceAxis": "データの利用を拒否できるかどうか",
+    "trapExplanations": {},
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rag",
+    "acronym": "RAG",
+    "fullName": "Retrieval-Augmented Generation",
+    "japanese": "検索拡張型生成",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Retrieval",
+        "meaning": "検索"
+      },
+      {
+        "word": "Augmented",
+        "meaning": "拡張"
+      },
+      {
+        "word": "Generation",
+        "meaning": "生成"
+      }
+    ],
+    "oneLine": "外部データベースから情報を検索し生成モデルに取り込んで出力する手法。",
+    "examKeywords": [
+      "RAG",
+      "検索",
+      "外部データ",
+      "ハルシネーション削減",
+      "生成モデル",
+      "知識ベース"
+    ],
+    "confusedWith": [
+      "Generative AI"
+    ],
+    "differenceAxis": "外部情報を利用するか純粋生成か",
+    "trapExplanations": {
+      "Generative AI": "生成AIは学習済みモデルだけで出力することも多く、RAGは外部情報を検索して生成を補強する技術である。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rl",
+    "acronym": "RL",
+    "fullName": "Reinforcement Learning",
+    "japanese": "強化学習",
+    "category": "ai",
+    "words": [
+      {
+        "word": "Reinforcement",
+        "meaning": "強化"
+      },
+      {
+        "word": "Learning",
+        "meaning": "学習"
+      }
+    ],
+    "oneLine": "報酬に基づき環境との相互作用を通じて最適な行動を学習する機械学習の一分野。",
+    "examKeywords": [
+      "強化学習",
+      "報酬",
+      "エージェント",
+      "環境",
+      "試行錯誤"
+    ],
+    "confusedWith": [
+      "ML",
+      "DL"
+    ],
+    "differenceAxis": "報酬信号の有無や学習の種類",
+    "trapExplanations": {
+      "ML": "MLは機械学習全般を指し、強化学習はその一分野で報酬に基づく。",
+      "DL": "DLは深層ニューラルネットを用いた機械学習手法で、強化学習はエージェントが環境と相互作用して学習する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "slo",
+    "acronym": "SLO",
+    "fullName": "Service Level Objective",
+    "japanese": "サービスレベル目標",
+    "category": "management",
+    "words": [
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      },
+      {
+        "word": "Level",
+        "meaning": "水準"
+      },
+      {
+        "word": "Objective",
+        "meaning": "目標"
+      }
+    ],
+    "oneLine": "サービスレベルの目標値を定める指標であり、SLAを満たすための基準となる。",
+    "examKeywords": [
+      "SLO",
+      "目標値",
+      "稼働率",
+      "応答時間",
+      "可用性"
+    ],
+    "confusedWith": [
+      "SLA",
+      "SLI"
+    ],
+    "differenceAxis": "約束か目標か測定指標か",
+    "trapExplanations": {
+      "SLA": "SLAはサービス提供者と利用者間で合意されたサービス品質の約束。",
+      "SLI": "SLIはサービス品質を測定する具体的な指標。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "sli",
+    "acronym": "SLI",
+    "fullName": "Service Level Indicator",
+    "japanese": "サービスレベル指標",
+    "category": "management",
+    "words": [
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      },
+      {
+        "word": "Level",
+        "meaning": "水準"
+      },
+      {
+        "word": "Indicator",
+        "meaning": "指標"
+      }
+    ],
+    "oneLine": "サービス品質を測定するための具体的な指標で、SLOやSLAを評価する基準となる。",
+    "examKeywords": [
+      "SLI",
+      "指標",
+      "レイテンシ",
+      "エラー率",
+      "スループット"
+    ],
+    "confusedWith": [
+      "SLA",
+      "SLO"
+    ],
+    "differenceAxis": "指標か目標か約束か",
+    "trapExplanations": {
+      "SLA": "SLAはサービス品質の合意であり、SLIはその品質を測定する指標。",
+      "SLO": "SLOはサービス品質の目標値であり、SLIはその品質を測定するための指標。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "zerotrust",
+    "acronym": "Zero Trust",
+    "fullName": "Zero Trust Security Model",
+    "japanese": "ゼロトラスト",
+    "category": "security",
+    "words": [
+      {
+        "word": "Zero",
+        "meaning": "ゼロ"
+      },
+      {
+        "word": "Trust",
+        "meaning": "信頼"
+      }
+    ],
+    "oneLine": "境界を前提とせずすべての通信やユーザーを疑い、アクセスごとに検証を行うセキュリティモデル。",
+    "examKeywords": [
+      "ゼロトラスト",
+      "検証",
+      "最小特権",
+      "境界防御不要",
+      "リモートワーク",
+      "クラウド"
+    ],
+    "confusedWith": [
+      "VPN",
+      "Firewall"
+    ],
+    "differenceAxis": "すべてを信頼しないか境界で守るか",
+    "trapExplanations": {
+      "VPN": "VPNはネットワーク境界間に暗号化トンネルを張るが、ゼロトラストは常に検証を行い境界に頼らない。",
+      "Firewall": "ファイアウォールは内部と外部を分けて外部を防御するが、ゼロトラストは内部通信も含めて全てを検証する。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  }
+]

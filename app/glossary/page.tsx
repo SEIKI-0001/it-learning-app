@@ -2,128 +2,131 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import type { GlossaryTerm, TopicField } from "@/types/content";
-import { FIELD_LABELS } from "@/types/content";
-import { getAllGlossaryTerms } from "@/lib/content";
+import { getAllWords, getWordlistCount } from "@/lib/wordlist";
 import {
-  getGlossaryStatuses,
-  subscribeGlossaryProgress,
-  countKnown,
-  type GlossaryStatusMap,
-} from "@/lib/glossaryProgress";
+  getWordProgressMap,
+  countByStatus,
+  getDueIds,
+  subscribeWordProgress,
+  type WordStatus,
+} from "@/lib/wordlistProgress";
 import BottomNav from "@/components/BottomNav";
 
-// 単語帳のハブ画面。上部に「カードで覚える」導線、下に全用語を分野別に一覧。
-// 「覚えた」状態はローカル(localStorage)から読み、バッジで表示する。
+// 単語帳トップ（ハブ）。ITパスポート英略語の学習状況サマリと学習メニューを置く。
+// 進捗は localStorage（lib/wordlistProgress）からクライアントで読む。
 
-const FIELD_ORDER: TopicField[] = ["technology", "management", "strategy"];
+const ALL_IDS = getAllWords().map((e) => e.id);
+const TOTAL = getWordlistCount();
 
-const FIELD_BADGE: Record<TopicField, string> = {
-  technology: "bg-sky-100 text-sky-700",
-  management: "bg-amber-100 text-amber-700",
-  strategy: "bg-violet-100 text-violet-700",
-};
+const STAT_META: { key: WordStatus | "due"; label: string; color: string }[] = [
+  { key: "new", label: "未学習", color: "text-gray-500" },
+  { key: "learning", label: "学習中", color: "text-amber-600" },
+  { key: "weak", label: "苦手", color: "text-rose-600" },
+  { key: "mastered", label: "定着済み", color: "text-green-600" },
+];
 
-export default function GlossaryPage() {
-  const terms = getAllGlossaryTerms();
-  const [statuses, setStatuses] = useState<GlossaryStatusMap>({});
+export default function WordlistHubPage() {
+  const [counts, setCounts] = useState<Record<WordStatus, number>>({
+    new: TOTAL,
+    learning: 0,
+    weak: 0,
+    mastered: 0,
+  });
+  const [dueCount, setDueCount] = useState(0);
 
-  // ローカル保存はクライアントでのみ読む（SSRでは空＝未操作扱い）。
   useEffect(() => {
-    const load = () => setStatuses(getGlossaryStatuses());
+    const load = () => {
+      const map = getWordProgressMap();
+      setCounts(countByStatus(ALL_IDS, map));
+      setDueCount(getDueIds(ALL_IDS, map).length);
+    };
     load();
-    return subscribeGlossaryProgress(load);
+    return subscribeWordProgress(load);
   }, []);
-
-  const known = countKnown(statuses);
-  const total = terms.length;
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-6 text-white">
         <div className="mx-auto w-full max-w-md">
-          <h1 className="text-2xl font-extrabold">📇 単語帳</h1>
+          <h1 className="text-2xl font-extrabold">📇 英略語 単語帳</h1>
           <p className="mt-1 text-sm text-white/90">
-            ITパスポートの頻出用語{total}語を、カードでサクッと覚えよう。
+            ITパスポートの英略語{TOTAL}語を、意味・正式名称・違いまでまとめて暗記。
           </p>
-
-          <Link
-            href="/glossary/study"
-            className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3.5 text-indigo-700 shadow-sm transition active:scale-[0.99]"
-          >
-            <span className="text-base font-extrabold">カードで覚える ▶</span>
-            <span className="text-xs font-bold text-indigo-400">
-              覚えた {known}/{total}
-            </span>
-          </Link>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7">
-        {FIELD_ORDER.map((field) => {
-          const list = terms.filter((t) => t.field === field);
-          if (list.length === 0) return null;
-          return (
-            <section key={field}>
-              <h2 className="mb-3 text-lg font-extrabold text-gray-800">
-                {FIELD_LABELS[field]}
-              </h2>
-              <ul className="space-y-2">
-                {list.map((t) => (
-                  <GlossaryRow
-                    key={t.id}
-                    term={t}
-                    isKnown={statuses[t.id] === "known"}
-                    fieldBadge={FIELD_BADGE[field]}
-                  />
-                ))}
-              </ul>
-            </section>
-          );
-        })}
+      <div className="mx-auto w-full max-w-md space-y-6 px-4 py-6">
+        {/* 学習状況サマリ */}
+        <section className="rounded-2xl border border-gray-200 bg-white p-4">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-extrabold text-gray-800">学習状況</h2>
+            <span className="text-xs font-bold text-gray-400">
+              全{TOTAL}語
+            </span>
+          </div>
+          <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+            {STAT_META.map((s) => (
+              <div key={s.key} className="rounded-xl bg-gray-50 py-2.5">
+                <p className={`text-xl font-extrabold ${s.color}`}>
+                  {counts[s.key as WordStatus]}
+                </p>
+                <p className="text-[11px] font-bold text-gray-500">{s.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 rounded-xl bg-indigo-50 px-3 py-2.5">
+            <span className="text-xs font-bold text-indigo-500">
+              今日の復習対象
+            </span>
+            <span className="ml-2 text-base font-extrabold text-indigo-700">
+              {dueCount}語
+            </span>
+          </div>
+        </section>
+
+        {/* 学習メニュー */}
+        <section className="space-y-2.5">
+          <Link
+            href="/glossary/study?mode=today"
+            className="flex items-center justify-between rounded-2xl bg-indigo-600 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
+          >
+            <span className="text-base font-extrabold">🔁 今日の復習を始める</span>
+            <span className="text-xs font-bold text-white/80">{dueCount}語</span>
+          </Link>
+          <Link
+            href="/glossary/study?mode=weak"
+            className="flex items-center justify-between rounded-2xl bg-rose-500 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
+          >
+            <span className="text-base font-extrabold">⚡ 苦手だけ復習</span>
+            <span className="text-xs font-bold text-white/80">
+              {counts.weak}語
+            </span>
+          </Link>
+          <Link
+            href="/glossary/study?mode=all"
+            className="flex items-center justify-between rounded-2xl border border-indigo-200 bg-white px-4 py-3.5 text-indigo-700 shadow-sm transition active:scale-[0.99]"
+          >
+            <span className="text-base font-extrabold">📚 すべてから学習</span>
+            <span className="text-xs font-bold text-indigo-400">{TOTAL}語</span>
+          </Link>
+          <Link
+            href="/glossary/quiz?mode=all"
+            className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-gray-700 shadow-sm transition active:scale-[0.99]"
+          >
+            <span className="text-base font-extrabold">✅ 4択確認をする</span>
+            <span className="text-xs font-bold text-gray-400">4択</span>
+          </Link>
+        </section>
+
+        <Link
+          href="/glossary/list"
+          className="block rounded-2xl bg-gray-100 px-4 py-3 text-center text-sm font-extrabold text-gray-600 transition active:scale-[0.99]"
+        >
+          単語一覧を見る →
+        </Link>
       </div>
 
       <BottomNav />
     </main>
-  );
-}
-
-function GlossaryRow({
-  term,
-  isKnown,
-  fieldBadge,
-}: {
-  term: GlossaryTerm;
-  isKnown: boolean;
-  fieldBadge: string;
-}) {
-  return (
-    <li>
-      <Link
-        href={`/glossary/${term.id}`}
-        className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 transition active:scale-[0.99]"
-      >
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-base font-bold text-gray-800">
-              {term.term}
-            </p>
-            <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${fieldBadge}`}
-            >
-              {term.category}
-            </span>
-          </div>
-          <p className="mt-0.5 truncate text-sm text-gray-500">
-            {term.oneLine}
-          </p>
-        </div>
-        {isKnown && (
-          <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
-            ✓ 覚えた
-          </span>
-        )}
-      </Link>
-    </li>
   );
 }
