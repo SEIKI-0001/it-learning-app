@@ -16,6 +16,7 @@ import {
   saveProgressToDb,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import TopicContent from "@/components/learn/TopicContent";
 import BottomNav from "@/components/BottomNav";
 
 // 今日の学習メニュー。固定Dayではなく generateTodayMenu の結果を表示する。
@@ -113,32 +114,31 @@ export default function TodayPage() {
           </section>
         )}
 
-        {/* 今日のテーマ学習 */}
+        {/* 今日のテーマ学習。内容はトピック詳細とまったく同じものを表示する
+            （確認問題だけは下の「今日の学習を完了する」クイズに任せる）。 */}
         {primary ? (
           <section>
             <h2 className="mb-3 text-lg font-extrabold text-gray-800">
               📖 今日のテーマ
             </h2>
-            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
               <p className="text-xs font-semibold text-indigo-500">
                 {FIELD_LABELS[primary.field]}・{primary.category}
               </p>
-              <h3 className="mt-1 text-lg font-extrabold text-gray-800">
+              <h3 className="mt-1 text-xl font-extrabold text-gray-800">
                 {primary.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                {primary.conceptCard.body}
+              <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                {primary.summary}
               </p>
-              <Link
-                href={`/topics/${primary.id}`}
-                className="mt-3 inline-block text-sm font-bold text-indigo-600 underline underline-offset-2"
-              >
-                図解つきの理解カードを見る →
-              </Link>
             </div>
 
-            <h3 className="mb-3 mt-6 text-base font-extrabold text-gray-800">
-              ✏️ 確認問題
+            <div className="mt-6">
+              <TopicContent topic={primary} showCheckQuestions={false} />
+            </div>
+
+            <h3 className="mb-3 mt-8 text-base font-extrabold text-gray-800">
+              ✏️ 今日の確認問題
             </h3>
             {completed ? (
               <div className="rounded-2xl bg-green-50 p-5 text-center">
