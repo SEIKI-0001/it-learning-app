@@ -131,7 +131,17 @@ export default function TopicContent({
           </div>
         )}
       </Section>
+    </div>
+  );
+}
 
+// 「あとで思い出すための復習・参考書で探すキーワード・関連する過去問分野」。
+// today では「今日の学習を完了する」ボタンより下（ページ最下部）に置きたいため、
+// 本文スタック（TopicContent）から切り出して独立コンポーネントにしている。
+// トピック詳細では従来どおり本文の続き（最下部）に並べて表示する。
+export function TopicReviewSections({ topic }: { topic: Topic }) {
+  return (
+    <div className="space-y-8">
       {/* ⑤ 復習プロンプト */}
       <Section emoji="🔁" title="あとで思い出すための復習">
         <details className="rounded-xl border border-gray-200 bg-white px-4 py-3">

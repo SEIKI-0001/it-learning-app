@@ -16,7 +16,9 @@ import {
   saveProgressToDb,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
-import TopicContent from "@/components/learn/TopicContent";
+import TopicContent, {
+  TopicReviewSections,
+} from "@/components/learn/TopicContent";
 import BottomNav from "@/components/BottomNav";
 
 // 今日の学習メニュー。固定Dayではなく generateTodayMenu の結果を表示する。
@@ -174,6 +176,11 @@ export default function TodayPage() {
             ) : (
               <p className="text-sm text-gray-500">このトピックの確認問題は準備中です。</p>
             )}
+
+            {/* 完了ボタンより下：復習・参考書・過去問分野を最下部に表示 */}
+            <div className="mt-10">
+              <TopicReviewSections topic={primary} />
+            </div>
           </section>
         ) : (
           <section className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">

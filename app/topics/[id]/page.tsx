@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import type { Topic } from "@/types/content";
 import { FIELD_LABELS, IMPORTANCE_LABELS } from "@/types/content";
 import { getAllTopics, getTopic } from "@/lib/content";
-import TopicContent from "@/components/learn/TopicContent";
+import TopicContent, {
+  TopicReviewSections,
+} from "@/components/learn/TopicContent";
 import BottomNav from "@/components/BottomNav";
 
 // トピック詳細。理解カード → 確認問題 → 解説 → 復習 → 参考書キーワード → 過去問分野 の順。
@@ -54,8 +56,9 @@ export default async function TopicDetailPage({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-md px-4 py-7">
+      <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7">
         <TopicContent topic={topic} />
+        <TopicReviewSections topic={topic} />
       </div>
 
       <BottomNav />
