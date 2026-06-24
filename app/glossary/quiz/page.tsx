@@ -33,7 +33,7 @@ export default async function WordlistQuizPage({
           </Link>
           <h1 className="mt-2 text-2xl font-extrabold">{MODE_TITLE[mode]}</h1>
           <p className="mt-1 text-sm text-white/90">
-            略語⇄意味・英単語パーツ・混同語の見分けを4択で確認しよう。
+            略語⇄意味・混同語の見分けを4択で確認しよう。
           </p>
         </div>
       </header>

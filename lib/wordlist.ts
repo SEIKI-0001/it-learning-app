@@ -124,12 +124,17 @@ function confusedEntries(entry: WordlistEntry): WordlistEntry[] {
     .filter((e): e is WordlistEntry => Boolean(e));
 }
 
+/** 英単語の分解（"Key=重要 / Performance=業績 / Indicator=指標"）。解説に添える。 */
+function wordBreakdown(entry: WordlistEntry): string {
+  return entry.words.map((w) => `${w.word}=${w.meaning}`).join(" / ");
+}
+
 function baseExplanation(entry: WordlistEntry): string {
   const kw =
     entry.examKeywords.length > 0
       ? ` 試験キーワード: ${entry.examKeywords.join("・")}`
       : "";
-  return `${entry.acronym}（${entry.fullName}）＝${entry.japanese}。${entry.oneLine}${kw}`;
+  return `${entry.acronym}（${entry.fullName}）＝${entry.japanese}。【英単語】${wordBreakdown(entry)}。${entry.oneLine}${kw}`;
 }
 
 function confusionExplanation(entry: WordlistEntry): string {
@@ -139,14 +144,20 @@ function confusionExplanation(entry: WordlistEntry): string {
   const axis = entry.differenceAxis
     ? `見分けるポイント: ${entry.differenceAxis}。`
     : "";
-  return `${entry.acronym}＝${entry.japanese}。${axis}${traps ? ` ${traps}` : ""}`;
+  return `${entry.acronym}（${entry.fullName}）＝${entry.japanese}。【英単語】${wordBreakdown(entry)}。${axis}${traps ? ` ${traps}` : ""}`;
 }
 
-/** このエントリで生成可能な出題形式（confusion は confusedWith が必要）。 */
+/**
+ * このエントリで生成可能な出題形式。
+ * - word_part（「何の略？」）は出題しない（英単語の意味は解説で補う）
+ * - confusion は confusedWith が必要
+ */
 function feasibleTypes(entry: WordlistEntry): WordlistQuestionType[] {
-  return entry.questionTypes.filter((t) =>
-    t === "confusion" ? entry.confusedWith.length > 0 : true,
-  );
+  return entry.questionTypes.filter((t) => {
+    if (t === "word_part") return false;
+    if (t === "confusion") return entry.confusedWith.length > 0;
+    return true;
+  });
 }
 
 function assemble(
