@@ -22,25 +22,27 @@ export default async function WordlistDetailPage({
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-5 text-white">
+      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-3 text-white">
         <div className="mx-auto w-full max-w-md">
-          <Link href="/glossary" className="text-sm font-medium text-white/80">
-            ← 単語帳
-          </Link>
-          <span className="mt-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold">
-            {WORDLIST_CATEGORY_LABELS[entry.category]}
-          </span>
-          <h1 className="mt-2 text-4xl font-black tracking-wide">
+          <div className="flex items-center gap-3">
+            <Link href="/glossary" className="text-sm font-medium text-white/80">
+              ←
+            </Link>
+            <span className="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold">
+              {WORDLIST_CATEGORY_LABELS[entry.category]}
+            </span>
+          </div>
+          <h1 className="mt-2 text-3xl font-black tracking-wide">
             {entry.acronym}
           </h1>
-          <p className="mt-1 text-base font-bold text-white/95">
+          <p className="mt-0.5 text-sm font-bold text-white/95">
             {entry.fullName}
           </p>
-          <p className="text-sm text-white/85">{entry.japanese}</p>
+          <p className="text-xs text-white/85">{entry.japanese}</p>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-6">
+      <div className="mx-auto w-full max-w-md px-4 py-5">
         <WordDetail entry={entry} />
 
         <Link

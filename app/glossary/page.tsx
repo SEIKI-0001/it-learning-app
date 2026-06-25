@@ -46,16 +46,16 @@ export default function WordlistHubPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-6 text-white">
+      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-4 text-white">
         <div className="mx-auto w-full max-w-md">
-          <h1 className="text-2xl font-extrabold">📇 英略語 単語帳</h1>
-          <p className="mt-1 text-sm text-white/90">
+          <h1 className="text-xl font-extrabold">📇 英略語 単語帳</h1>
+          <p className="mt-0.5 text-xs text-white/90">
             ITパスポートの英略語{TOTAL}語を、意味・正式名称・違いまでまとめて暗記。
           </p>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-6 px-4 py-6">
+      <div className="mx-auto w-full max-w-md space-y-6 px-4 py-5">
         {/* 学習状況サマリ */}
         <section className="rounded-2xl border border-gray-200 bg-white p-4">
           <div className="flex items-baseline justify-between">

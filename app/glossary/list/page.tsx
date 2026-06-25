@@ -56,19 +56,19 @@ export default function WordlistListPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-5 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md">
+      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-3 pt-3 text-white">
+        <div className="mx-auto flex w-full max-w-md items-center gap-3">
           <Link href="/glossary" className="text-sm font-medium text-white/80">
-            ← 単語帳
+            ←
           </Link>
-          <h1 className="mt-2 text-2xl font-extrabold">単語一覧</h1>
-          <p className="mt-1 text-sm text-white/90">
-            全{WORDS.length}語。カテゴリや習得状態でしぼり込めます。
-          </p>
+          <h1 className="text-lg font-extrabold">単語一覧</h1>
+          <span className="ml-auto text-xs font-bold text-white/80">
+            全{WORDS.length}語
+          </span>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5">
+      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4">
         {/* カテゴリフィルタ */}
         <div className="flex flex-wrap gap-2">
           <FilterChip

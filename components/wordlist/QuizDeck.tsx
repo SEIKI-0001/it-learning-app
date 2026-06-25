@@ -173,7 +173,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
   return (
     <div>
       {/* 進捗バー */}
-      <div className="mb-3 flex items-center gap-3">
+      <div className="mb-2 flex items-center gap-3">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
           <div
             className="h-full rounded-full bg-indigo-500 transition-all"
@@ -210,7 +210,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
 
         {revealed && (
           <div
-            className={`animate-pop-in mt-4 rounded-2xl p-4 ${
+            className={`animate-pop-in mt-3 rounded-2xl p-3 ${
               isCorrect ? "bg-green-50" : "bg-amber-50"
             }`}
           >

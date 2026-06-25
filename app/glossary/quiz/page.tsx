@@ -26,19 +26,16 @@ export default async function WordlistQuizPage({
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md">
+      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-3 pt-3 text-white">
+        <div className="mx-auto flex w-full max-w-md items-center gap-3">
           <Link href="/glossary" className="text-sm font-medium text-white/80">
-            ← 単語帳
+            ←
           </Link>
-          <h1 className="mt-2 text-2xl font-extrabold">{MODE_TITLE[mode]}</h1>
-          <p className="mt-1 text-sm text-white/90">
-            略語⇄意味・混同語の見分けを4択で確認しよう。
-          </p>
+          <h1 className="text-lg font-extrabold">{MODE_TITLE[mode]}</h1>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-6">
+      <div className="mx-auto w-full max-w-md px-4 py-4">
         <QuizDeck mode={mode} />
       </div>
 
