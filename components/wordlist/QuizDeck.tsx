@@ -185,15 +185,15 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-4">
+      <div className="rounded-2xl border border-gray-200 bg-white p-3">
         <span className="inline-block rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600">
           {TYPE_LABEL[q.type]}
         </span>
-        <p className="mt-2 whitespace-pre-line text-base font-bold leading-relaxed text-gray-800">
+        <p className="mt-1.5 whitespace-pre-line text-base font-bold leading-snug text-gray-800">
           {q.prompt}
         </p>
 
-        <div className="mt-3 space-y-2">
+        <div className="mt-2.5 space-y-2">
           {q.choices.map((c) => (
             <ChoiceButton
               key={c.key}
