@@ -30,11 +30,13 @@ export default function TopicQuiz({
   questions,
   onComplete,
   completeLabel = "完了する",
+  dense = false,
 }: {
   topicId: string;
   questions: CheckQuestion[];
   onComplete: (answers: UserAnswer[]) => void;
   completeLabel?: string;
+  dense?: boolean; // 選択肢の縦幅を詰める(/today)
 }) {
   const shuffled = useMemo(
     () => new Map(questions.map((q) => [q.id, shuffle(q)] as const)),
@@ -77,11 +79,14 @@ export default function TopicQuiz({
         const revealed = sel !== null;
         const isCorrect = sel === sh.correct;
         return (
-          <div key={q.id} className="rounded-2xl border border-gray-200 bg-white p-4">
-            <p className="mb-3 text-sm font-bold text-gray-800">
+          <div
+            key={q.id}
+            className={`rounded-2xl border border-gray-200 bg-white ${dense ? "p-3" : "p-4"}`}
+          >
+            <p className={`text-sm font-bold text-gray-800 ${dense ? "mb-2" : "mb-3"}`}>
               Q{i + 1}. {q.prompt}
             </p>
-            <div className="space-y-2.5">
+            <div className={dense ? "space-y-2" : "space-y-2.5"}>
               {sh.choices.map((c) => (
                 <ChoiceButton
                   key={c.key}
@@ -92,6 +97,7 @@ export default function TopicQuiz({
                   isSelected={sel === c.key}
                   isCorrect={c.key === sh.correct}
                   revealed={revealed}
+                  dense={dense}
                 />
               ))}
             </div>

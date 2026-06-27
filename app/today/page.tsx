@@ -83,38 +83,8 @@ export default function TodayPage() {
 
       <div className="mx-auto w-full max-w-md space-y-7 px-4 py-6">
         <p className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700">
-          {menu.message}
+          「完了」を押して、ストリークを伸ばそう
         </p>
-
-        {/* 復習対象 */}
-        {menu.reviewItems.length > 0 && (
-          <section>
-            <h2 className="mb-3 text-lg font-extrabold text-gray-800">🔁 まずは復習</h2>
-            <ul className="space-y-2.5">
-              {menu.reviewItems.map((r) => {
-                const t = getTopic(r.topicId);
-                if (!t) return null;
-                return (
-                  <li key={r.topicId}>
-                    <Link
-                      href={`/topics/${t.id}`}
-                      className="block rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 transition active:scale-[0.99]"
-                    >
-                      <p className="text-xs font-semibold text-amber-600">{r.reason}</p>
-                      <p className="mt-0.5 text-base font-bold text-gray-800">{t.title}</p>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-            <Link
-              href="/review"
-              className="mt-2 inline-block text-sm font-bold text-indigo-600 underline underline-offset-2"
-            >
-              復習をまとめて解く →
-            </Link>
-          </section>
-        )}
 
         {/* 今日のテーマ学習。内容はトピック詳細とまったく同じものを表示する
             （確認問題だけは下の「今日の学習を完了する」クイズに任せる）。 */}
@@ -172,6 +142,7 @@ export default function TodayPage() {
                 questions={questions}
                 onComplete={handleComplete}
                 completeLabel="今日の学習を完了する"
+                dense
               />
             ) : (
               <p className="text-sm text-gray-500">このトピックの確認問題は準備中です。</p>
