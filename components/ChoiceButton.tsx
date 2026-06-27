@@ -11,6 +11,7 @@ type Props = {
   isSelected: boolean;
   isCorrect: boolean; // この選択肢が正解か
   revealed: boolean; // 回答後（正誤を表示する状態）か
+  dense?: boolean; // 縦幅を詰めた表示（単語帳の4択など）
 };
 
 export default function ChoiceButton({
@@ -21,6 +22,7 @@ export default function ChoiceButton({
   isSelected,
   isCorrect,
   revealed,
+  dense = false,
 }: Props) {
   let tone =
     "border-gray-200 bg-white text-gray-800 active:scale-[0.99] hover:border-indigo-300";
@@ -40,10 +42,14 @@ export default function ChoiceButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-4 text-left text-base font-medium shadow-sm transition ${tone} disabled:cursor-default`}
+      className={`flex w-full items-center gap-3 rounded-2xl border-2 text-left font-medium shadow-sm transition ${
+        dense ? "px-3 py-2.5 text-sm" : "px-4 py-4 text-base"
+      } ${tone} disabled:cursor-default`}
     >
       <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+        className={`flex shrink-0 items-center justify-center rounded-full font-bold ${
+          dense ? "h-7 w-7 text-xs" : "h-8 w-8 text-sm"
+        } ${
           revealed && isCorrect
             ? "bg-green-500 text-white"
             : revealed && isSelected

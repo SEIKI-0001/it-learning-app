@@ -193,7 +193,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
           {q.prompt}
         </p>
 
-        <div className="mt-3 space-y-2.5">
+        <div className="mt-3 space-y-2">
           {q.choices.map((c) => (
             <ChoiceButton
               key={c.key}
@@ -204,6 +204,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
               isSelected={selected === c.key}
               isCorrect={c.key === q.correctKey}
               revealed={revealed}
+              dense
             />
           ))}
         </div>
