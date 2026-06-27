@@ -73,11 +73,11 @@ export default function TodayPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-6 pt-6 text-white">
+      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-4 pt-4 text-white">
         <div className="mx-auto w-full max-w-md">
-          <p className="text-xs font-semibold text-white/80">今日の学習メニュー</p>
-          <h1 className="mt-1 text-2xl font-extrabold">{menu.theme}</h1>
-          <p className="mt-2 text-sm text-white/90">⏱️ 目安 {menu.totalMinutes}分</p>
+          <p className="text-[11px] font-semibold text-white/80">今日の学習メニュー</p>
+          <h1 className="mt-0.5 text-lg font-extrabold leading-tight">{menu.theme}</h1>
+          <p className="mt-1 text-xs text-white/90">⏱️ 目安 {menu.totalMinutes}分</p>
         </div>
       </header>
 
