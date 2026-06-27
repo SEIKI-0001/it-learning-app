@@ -12,6 +12,8 @@ import type { ReviewItem } from "@/types";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import ExpBar from "@/components/ExpBar";
 import BottomNav from "@/components/BottomNav";
+import RankCard from "@/components/progress/RankCard";
+import AchievementStrip from "@/components/progress/AchievementStrip";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
 function daysSince(iso: string | undefined): number | null {
@@ -168,6 +170,9 @@ export default function ProgressPage() {
           <div className="mt-3">
             <ExpBar exp={progress.exp} />
           </div>
+
+          {/* 実績バッジ(バナー内にコンパクト表示) */}
+          <AchievementStrip state={state} />
         </div>
       </header>
 
@@ -178,6 +183,9 @@ export default function ProgressPage() {
           <StatCard label="復習待ち" value={`${reviewCount}`} />
           <StatCard label="累計XP" value={`${progress.exp}`} />
         </div>
+
+        {/* ランク(本人の成長段階) */}
+        <RankCard exp={progress.exp} />
 
         {/* 3分野習熟度 */}
         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
@@ -261,6 +269,23 @@ export default function ProgressPage() {
             </>
           )}
         </section>
+
+        {/* 今週の積み上げは別ページ(週間レポート)へ */}
+        <Link
+          href="/report"
+          className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 transition active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl" aria-hidden>
+              📊
+            </span>
+            <div>
+              <p className="text-base font-extrabold text-gray-800">週間レポート</p>
+              <p className="text-xs text-gray-500">直近7日間の積み上げをみる</p>
+            </div>
+          </div>
+          <span className="text-lg font-extrabold text-emerald-500">→</span>
+        </Link>
       </div>
 
       <BottomNav />
