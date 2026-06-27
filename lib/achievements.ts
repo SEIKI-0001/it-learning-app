@@ -3,6 +3,7 @@
 
 import type { AppState } from "@/types";
 import { getTopic } from "@/lib/content";
+import { getRankStatus } from "@/lib/rank";
 
 export type Achievement = {
   id: string;
@@ -106,11 +107,11 @@ export function evaluateAchievements(state: AppState): Achievement[] {
       earned: reviewCount >= 1,
     },
     {
-      id: "level-2",
-      emoji: "⬆️",
-      label: "Lv.2 到達",
-      description: "レベル2になる",
-      earned: (progress.level ?? 1) >= 2,
+      id: "rank-up",
+      emoji: "🔰",
+      label: "見習いに昇格",
+      description: "ランク「見習い」に到達する",
+      earned: getRankStatus(progress.exp).index >= 1,
     },
     {
       id: "three-fields",

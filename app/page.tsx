@@ -5,7 +5,7 @@ import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
-import { getLevelName } from "@/lib/game";
+import { getRankStatus } from "@/lib/rank";
 import BottomNav from "@/components/BottomNav";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 
@@ -91,6 +91,7 @@ export default function Home() {
   const menu = generateTodayMenu(profile, progress, topics, state.answers);
   const mastery = fieldMastery(progress, topics);
   const completedCount = progress.completedTopics.length;
+  const rank = getRankStatus(progress.exp);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -111,7 +112,7 @@ export default function Home() {
             </div>
             <div className="ml-auto text-right">
               <p className="text-xs text-white/80">
-                Lv.{progress.level}・{getLevelName(progress.level)}
+                {rank.current.emoji} {rank.current.name}
               </p>
               <p className="text-xl font-extrabold">{progress.exp} XP</p>
             </div>

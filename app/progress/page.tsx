@@ -7,12 +7,10 @@ import { useAppState } from "@/lib/useAppState";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
-import { getLevelName } from "@/lib/game";
+import { getRankStatus } from "@/lib/rank";
 import type { ReviewItem } from "@/types";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
-import ExpBar from "@/components/ExpBar";
 import BottomNav from "@/components/BottomNav";
-import RankCard from "@/components/progress/RankCard";
 import AchievementStrip from "@/components/progress/AchievementStrip";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
@@ -104,6 +102,7 @@ export default function ProgressPage() {
   }
 
   const { profile, progress } = state;
+  const rank = getRankStatus(progress.exp);
   const topics = getAllTopics();
   const remaining = daysUntilExam(profile);
   const mastery = fieldMastery(progress, topics);
@@ -162,13 +161,34 @@ export default function ProgressPage() {
                 <span className="font-extrabold">🔥 {progress.streakCount}日</span>
               </p>
               <p>
-                <span className="text-white/70">Lv.{progress.level} </span>
-                <span className="font-extrabold">{getLevelName(progress.level)}</span>
+                <span className="text-white/70">ランク </span>
+                <span className="font-extrabold">
+                  {rank.current.emoji} {rank.current.name}
+                </span>
               </p>
             </div>
           </div>
+
+          {/* ランク進捗(次のランクまで)。EXP/レベル表示はランクに統合した。 */}
           <div className="mt-3">
-            <ExpBar exp={progress.exp} />
+            <div className="mb-1 flex items-center justify-between text-xs text-indigo-100">
+              <span>{rank.isMax ? "最高ランク" : `次は ${rank.next!.emoji} ${rank.next!.name}`}</span>
+              <span className="font-semibold">
+                {rank.isMax ? `${progress.exp} XP（MAX）` : `あと ${rank.remaining} XP`}
+              </span>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-white/25">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-amber-300 to-yellow-400 transition-all duration-500"
+                style={{ width: `${Math.round(rank.ratio * 100)}%` }}
+              />
+            </div>
+            <Link
+              href="/rank"
+              className="mt-1.5 inline-block text-[11px] font-bold text-white/80"
+            >
+              ランクの全体像をみる →
+            </Link>
           </div>
 
           {/* 実績バッジ(バナー内にコンパクト表示) */}
@@ -183,9 +203,6 @@ export default function ProgressPage() {
           <StatCard label="復習待ち" value={`${reviewCount}`} />
           <StatCard label="累計XP" value={`${progress.exp}`} />
         </div>
-
-        {/* ランク(本人の成長段階) */}
-        <RankCard exp={progress.exp} />
 
         {/* 3分野習熟度 */}
         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
