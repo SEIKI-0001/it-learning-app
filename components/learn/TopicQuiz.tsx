@@ -7,8 +7,12 @@ import ChoiceButton from "@/components/ChoiceButton";
 
 // トピックの確認問題を順に解き、結果(UserAnswer[])を onComplete で親へ返す。
 // /today・/review の「解いて進める」体験に使う(表示専用の CheckQuestionCard とは別物)。
+// 正解するたびに小さな達成感が返るよう、ポップ表示・ほめ言葉・連続正解・積み上がりバーで報酬感を出す。
 
 const KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
+
+// 正解した瞬間に返す短いほめ言葉(学習から気をそらさない範囲で表情をつける)。
+const PRAISES = ["ナイス！", "その調子！", "正解！", "いいね！", "バッチリ！", "完璧！"];
 
 type Shuffled = { choices: { key: ChoiceKey; text: string }[]; correct: ChoiceKey };
 
@@ -43,13 +47,31 @@ export default function TopicQuiz({
     [questions],
   );
   const [selections, setSelections] = useState<Record<string, ChoiceKey>>({});
+  const [order, setOrder] = useState<string[]>([]); // 回答した順(連続正解の判定に使う)
   const [done, setDone] = useState(false);
 
+  const total = questions.length;
   const allAnswered = questions.every((q) => selections[q.id] !== undefined);
+
+  const isCorrectOf = (qId: string) => selections[qId] === shuffled.get(qId)?.correct;
+  const correctCount = order.reduce((n, qId) => n + (isCorrectOf(qId) ? 1 : 0), 0);
+
+  // 回答した順に「直近までの連続正解数」を各問へ割り当てる(その問の報酬表示に使う)。
+  const streakAt = useMemo(() => {
+    const map = new Map<string, number>();
+    let run = 0;
+    for (const qId of order) {
+      run = selections[qId] === shuffled.get(qId)?.correct ? run + 1 : 0;
+      map.set(qId, run);
+    }
+    return map;
+    // selections/order が変わるたび再計算
+  }, [order, selections, shuffled]);
 
   function select(qId: string, key: ChoiceKey) {
     if (selections[qId] !== undefined) return; // 二重回答防止
     setSelections((s) => ({ ...s, [qId]: key }));
+    setOrder((o) => (o.includes(qId) ? o : [...o, qId]));
   }
 
   function finish() {
@@ -73,11 +95,47 @@ export default function TopicQuiz({
 
   return (
     <div className="space-y-4">
+      {/* 積み上がりバー: 1問ずつ点灯し、正解が貯まっていくのを可視化する */}
+      <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-gray-100">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-gray-500">解いて進もう</span>
+          <span className="text-xs font-bold text-gray-700">
+            正解{" "}
+            <span
+              key={correctCount}
+              className="inline-block animate-pop-in text-base font-extrabold text-green-600"
+            >
+              {correctCount}
+            </span>
+            <span className="text-gray-400"> / {total}</span>
+          </span>
+        </div>
+        <div className="mt-2 flex gap-1.5">
+          {questions.map((q) => {
+            const answered = selections[q.id] !== undefined;
+            const ok = isCorrectOf(q.id);
+            return (
+              <div
+                key={q.id}
+                className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+                  !answered
+                    ? "bg-gray-200"
+                    : ok
+                      ? "bg-green-500"
+                      : "bg-amber-400"
+                }`}
+              />
+            );
+          })}
+        </div>
+      </div>
+
       {questions.map((q, i) => {
         const sh = shuffled.get(q.id)!;
         const sel = selections[q.id] ?? null;
         const revealed = sel !== null;
         const isCorrect = sel === sh.correct;
+        const streak = streakAt.get(q.id) ?? 0;
         return (
           <div
             key={q.id}
@@ -103,18 +161,34 @@ export default function TopicQuiz({
             </div>
             {revealed && (
               <div
-                className={`mt-4 rounded-2xl p-4 ${
-                  isCorrect ? "bg-green-50" : "bg-amber-50"
+                className={`mt-4 animate-pop-in rounded-2xl p-4 ${
+                  isCorrect
+                    ? "bg-green-50 ring-1 ring-green-200"
+                    : "bg-amber-50 ring-1 ring-amber-200"
                 }`}
               >
-                <p
-                  className={`mb-1 text-sm font-extrabold ${
-                    isCorrect ? "text-green-700" : "text-amber-700"
-                  }`}
-                >
-                  {isCorrect ? "🎉 正解！" : `🌱 正解は「${sh.correct}」`}
-                </p>
-                <p className="text-sm leading-relaxed text-gray-700">
+                <div className="flex items-center gap-2">
+                  {isCorrect ? (
+                    <>
+                      <span className="inline-block animate-pop-in text-xl" aria-hidden>
+                        🎉
+                      </span>
+                      <p className="text-sm font-extrabold text-green-700">
+                        {PRAISES[i % PRAISES.length]}
+                      </p>
+                      {streak >= 2 && (
+                        <span className="ml-auto inline-block animate-pop-in rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-600">
+                          🔥 {streak}連続正解
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm font-extrabold text-amber-700">
+                      🌱 正解は「{sh.correct}」
+                    </p>
+                  )}
+                </div>
+                <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
                   {q.explanation}
                 </p>
               </div>
@@ -122,6 +196,15 @@ export default function TopicQuiz({
           </div>
         );
       })}
+
+      {/* 全問そろったら、完了して進む流れを後押しする一言を出す */}
+      {allAnswered && !done && (
+        <p className="animate-pop-in text-center text-sm font-bold text-green-700">
+          {correctCount === total
+            ? `全問正解！🎯 この勢いで完了しよう`
+            : `${total}問クリア！ あと一押しで完了`}
+        </p>
+      )}
 
       <button
         type="button"

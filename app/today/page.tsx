@@ -26,6 +26,13 @@ export default function TodayPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
   const [completed, setCompleted] = useState(false);
+  // 完了画面で「どれだけ進んだか」を実数で見せるための結果サマリ
+  const [result, setResult] = useState<{
+    correct: number;
+    total: number;
+    gainedExp: number;
+    streak: number;
+  } | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -62,6 +69,12 @@ export default function TodayPage() {
     const next = completeTopicStudy(state, primary.id, tagged);
     saveAppState(next);
     setState(next);
+    setResult({
+      correct: tagged.filter((a) => a.isCorrect).length,
+      total: tagged.length,
+      gainedExp: next.progress.exp - state.progress.exp,
+      streak: next.progress.streakCount,
+    });
     setCompleted(true);
 
     const userId = getUserId();
@@ -113,13 +126,30 @@ export default function TodayPage() {
               ✏️ 今日の確認問題
             </h3>
             {completed ? (
-              <div className="rounded-2xl bg-green-50 p-5 text-center">
-                <p className="text-3xl">🎉</p>
+              <div className="animate-pop-in rounded-2xl bg-green-50 p-5 text-center ring-1 ring-green-200">
+                <p className="text-3xl">{result && result.correct === result.total ? "🏆" : "🎉"}</p>
                 <p className="mt-2 text-base font-extrabold text-green-700">
-                  今日のぶん、おつかれさま！
+                  {result && result.correct === result.total
+                    ? "全問正解！今日のぶん、おつかれさま！"
+                    : "今日のぶん、おつかれさま！"}
                 </p>
-                <p className="mt-1 text-sm text-green-600">
-                  XPとストリークが増えました。
+                {result && (
+                  <>
+                    <p className="mt-1 text-sm font-semibold text-green-600">
+                      {result.total}問中 {result.correct}問正解
+                    </p>
+                    <div className="mt-3 flex justify-center gap-2">
+                      <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-indigo-600 ring-1 ring-indigo-100">
+                        +{result.gainedExp} XP
+                      </span>
+                      <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-orange-600 ring-1 ring-orange-100">
+                        🔥 {result.streak}日連続
+                      </span>
+                    </div>
+                  </>
+                )}
+                <p className="mt-3 text-sm text-green-700">
+                  今日も少し前に進みました。
                 </p>
                 <div className="mt-4 flex flex-col gap-2">
                   <Link
