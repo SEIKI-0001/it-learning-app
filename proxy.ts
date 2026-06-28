@@ -70,10 +70,15 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     },
   });
 
+  // ゲーティング判定は getClaims() で行う。getSession() 経由で期限切れトークンの
+  // リフレッシュ（＝Cookie 更新）は従来どおり行いつつ、署名検証はローカル（非対称鍵）で
+  // 完結するため、ページ遷移ごとの Auth サーバーへの往復（getUser）が無くなる。
+  // ※ここはあくまで画面ゲート用。保存系・AI採点・課金 API は各 Route Handler が
+  //   getInternalUserId()（getUser + DB）で厳格に本人確認するため安全性は維持される。
   let hasSupabaseUser = false;
   try {
-    const { data } = await supabase.auth.getUser();
-    hasSupabaseUser = Boolean(data.user);
+    const { data } = await supabase.auth.getClaims();
+    hasSupabaseUser = Boolean(data?.claims);
   } catch {
     hasSupabaseUser = false;
   }

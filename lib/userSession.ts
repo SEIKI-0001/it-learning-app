@@ -70,6 +70,29 @@ export async function resolveToken(token: string): Promise<ResolveResult | null>
   }
 }
 
+// SPA セッション内で /api/session/state を一度だけ呼ぶためのキャッシュ。
+// ページ遷移ごとに毎回サーバー（getUser + DB）へ問い合わせるのを防ぐ。
+// モジュール変数はクライアントサイド遷移の間は保持されるため、全画面で共有される。
+let sessionRestorePromise: Promise<ResolveResult | null> | null = null;
+
+/**
+ * セッション復元を「このページロード中に一度だけ」実行する。
+ * 2回目以降の呼び出し（＝別ページへの遷移）は最初の結果を再利用し、ネットワークを発生させない。
+ */
+export function restoreFromSessionOnce(): Promise<ResolveResult | null> {
+  if (!sessionRestorePromise) {
+    sessionRestorePromise = restoreFromSession();
+  }
+  return sessionRestorePromise;
+}
+
+/**
+ * セッション復元キャッシュを破棄する（ログイン直後・ログアウト時などの明示的な再検証用）。
+ */
+export function invalidateSessionRestore(): void {
+  sessionRestorePromise = null;
+}
+
 /**
  * 現在のセッション（Google ログイン / LINE 署名 Cookie）から user_id と DB上の AppState を復元する。
  * ?t= が無い直接アクセス時に使う。未ログインなら null。
