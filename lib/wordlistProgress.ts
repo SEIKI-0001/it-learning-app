@@ -1,9 +1,15 @@
 "use client";
 
+import { getUserId } from "@/lib/userSession";
+
 // 英略語の単語帳の学習進捗を localStorage に保存する小さなストア。
 // 既存の単語帳(lib/glossaryProgress)・ミニゲーム(lib/minigameProgress)と同じ方針で、
 // 学習進捗本体(AppState=fequest:appstate)には手を入れず、機能ローカルの別キーに閉じ込める。
-// MVP では localStorage のみ。将来 Supabase に寄せたくなったら Record をそのまま送れる形にしてある。
+//
+// 保存は二重化：必ず localStorage を更新したうえで、user_id があれば（=LINE経由）
+// Supabase にも fire-and-forget で保存する。Supabase 未設定・401・503・失敗でも
+// localStorage は更新済みなので UI は止まらない（フォールバック方針）。
+// 直接アクセス（user_id 無し）は従来どおり localStorage のみで動く。
 
 export type WordStatus = "new" | "learning" | "weak" | "mastered";
 
@@ -48,6 +54,24 @@ function writeAll(map: WordProgressMap): void {
   } catch {
     // 保存に失敗しても学習体験は止めない（フォールバック方針）。
   }
+}
+
+/**
+ * 1件の進捗を Supabase へ保存する（fire-and-forget）。
+ * - user_id が無ければ何もしない（直接アクセスは localStorage のみ）。
+ * - 失敗しても握りつぶす（localStorage は呼び出し前に更新済み）。
+ */
+function saveWordProgressToDb(progress: WordProgress): void {
+  if (typeof window === "undefined") return;
+  const userId = getUserId();
+  if (!userId) return;
+  void fetch("/api/word-progress/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, progress }),
+  }).catch(() => {
+    /* fire-and-forget */
+  });
 }
 
 function emptyProgress(id: string): WordProgress {
@@ -122,6 +146,7 @@ export function recordSelfRating(id: string, rating: SelfRating): WordProgress {
 
   all[id] = next;
   writeAll(all);
+  saveWordProgressToDb(next);
   return next;
 }
 
@@ -157,7 +182,58 @@ export function recordQuizResult(id: string, correct: boolean): WordProgress {
 
   all[id] = next;
   writeAll(all);
+  saveWordProgressToDb(next);
   return next;
+}
+
+/**
+ * Supabase から単語帳進捗を取得し、localStorage にマージ同期する。
+ * - user_id が無ければ（直接アクセス）何もせず false。
+ * - 取得失敗・未設定・401・503 でも false を返すだけで、既存 localStorage は保持。
+ * - マージ方針：localStorage 側にしか無い進捗は消さない。両方にある単語は
+ *   lastReviewedAt が新しい方を採用する（単純マージ）。
+ * - 同期に成功して何か変化があれば true。
+ */
+export async function syncWordProgressFromDb(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  const userId = getUserId();
+  if (!userId) return false;
+
+  try {
+    const res = await fetch("/api/word-progress/list", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) return false;
+
+    const data = (await res.json()) as {
+      ok: boolean;
+      progress?: WordProgressMap;
+    };
+    if (!data.ok || !data.progress) return false;
+
+    const remote = data.progress;
+    const local = readAll();
+    const merged: WordProgressMap = { ...local };
+
+    for (const [id, r] of Object.entries(remote)) {
+      const l = local[id];
+      if (!l) {
+        merged[id] = r;
+      } else {
+        // lastReviewedAt が新しい方を優先（null は 0 扱い）。
+        const lTime = l.lastReviewedAt ?? 0;
+        const rTime = r.lastReviewedAt ?? 0;
+        merged[id] = rTime > lTime ? r : l;
+      }
+    }
+
+    writeAll(merged);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** 状態別の件数。allIds を渡すと未学習(new)も総数から差し引いて数える。 */

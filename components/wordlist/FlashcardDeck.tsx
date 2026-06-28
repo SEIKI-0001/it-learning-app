@@ -9,6 +9,7 @@ import {
   getWeakIds,
   getDueIds,
   recordSelfRating,
+  syncWordProgressFromDb,
   type SelfRating,
 } from "@/lib/wordlistProgress";
 import { CATEGORY_BADGE } from "@/components/wordlist/ui";
@@ -60,12 +61,22 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
   const [results, setResults] = useState<Record<string, SelfRating>>({});
 
   // マウント後に進捗を読んでプール・出題を作る（SSR一致のため）。
+  // 先に Supabase 同期を試み、today/weak 判定に DB の進捗を反映する。
+  // 同期に失敗しても（未設定・直接アクセス含む）localStorage だけで従来どおり動く。
   useEffect(() => {
-    const p = buildPool(mode);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPool(p);
-    setDeck(shuffle(p).slice(0, SESSION_SIZE));
-    setMounted(true);
+    let cancelled = false;
+    async function init() {
+      await syncWordProgressFromDb();
+      if (cancelled) return;
+      const p = buildPool(mode);
+      setPool(p);
+      setDeck(shuffle(p).slice(0, SESSION_SIZE));
+      setMounted(true);
+    }
+    void init();
+    return () => {
+      cancelled = true;
+    };
   }, [mode]);
 
   function startSession(list: WordlistEntry[]) {

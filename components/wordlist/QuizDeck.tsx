@@ -13,6 +13,7 @@ import {
   getWeakIds,
   getDueIds,
   recordQuizResult,
+  syncWordProgressFromDb,
 } from "@/lib/wordlistProgress";
 import ChoiceButton from "@/components/ChoiceButton";
 
@@ -77,9 +78,19 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setQuestions(buildQuestions());
-    setMounted(true);
+    let cancelled = false;
+    async function init() {
+      // 先に Supabase 同期を試みてから出題を生成（weak/today に DB 進捗を反映）。
+      // 失敗しても localStorage だけで従来どおり動く。
+      await syncWordProgressFromDb();
+      if (cancelled) return;
+      setQuestions(buildQuestions());
+      setMounted(true);
+    }
+    void init();
+    return () => {
+      cancelled = true;
+    };
     // mode は固定（ページ遷移で再マウント）。初回のみ生成。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

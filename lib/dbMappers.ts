@@ -1,5 +1,7 @@
 import type { ReviewItem, StudyStyle, UserProfile, UserProgress } from "@/types";
 import type { TopicField } from "@/types/content";
+// 型のみ import（"use client" のランタイムは取り込まれない＝サーバーから安全に参照できる）。
+import type { WordProgress } from "@/lib/wordlistProgress";
 
 // DB（snake_case の行）と アプリ内の型（camelCase）の相互変換。
 // サーバー側 API Route からのみ使用する。
@@ -100,6 +102,62 @@ export function profileToRow(
     holiday_minutes: p.holidayMinutes ?? null,
     weak_fields: p.weakFields ?? null,
     study_style: p.studyStyle ?? null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// user_word_progress : 英略語単語帳の進捗（1ユーザー1単語1行）
+// ---------------------------------------------------------------------------
+// クライアントは epoch ms で進捗を持つが、DB は timestamptz。
+// 行→アプリ では ISO文字列を epoch ms に戻し、アプリ→行 では ISO文字列に変換する。
+
+export type WordProgressRow = {
+  user_id: string;
+  word_id: string;
+  status: string;
+  correct_count: number;
+  wrong_count: number;
+  review_count: number;
+  last_reviewed_at: string | null;
+  next_review_at: string | null;
+  last_self_rating: string | null;
+};
+
+export function wordProgressRowToProgress(row: WordProgressRow): WordProgress {
+  return {
+    acronymId: row.word_id,
+    status: (row.status ?? "new") as WordProgress["status"],
+    correctCount: row.correct_count ?? 0,
+    wrongCount: row.wrong_count ?? 0,
+    reviewCount: row.review_count ?? 0,
+    lastReviewedAt: row.last_reviewed_at
+      ? new Date(row.last_reviewed_at).getTime()
+      : null,
+    nextReviewAt: row.next_review_at
+      ? new Date(row.next_review_at).getTime()
+      : null,
+    lastSelfRating: (row.last_self_rating ??
+      null) as WordProgress["lastSelfRating"],
+  };
+}
+
+export function wordProgressToRow(
+  userId: string,
+  p: WordProgress,
+): WordProgressRow & { updated_at: string } {
+  return {
+    user_id: userId,
+    word_id: p.acronymId,
+    status: p.status,
+    correct_count: p.correctCount,
+    wrong_count: p.wrongCount,
+    review_count: p.reviewCount,
+    last_reviewed_at:
+      p.lastReviewedAt != null ? new Date(p.lastReviewedAt).toISOString() : null,
+    next_review_at:
+      p.nextReviewAt != null ? new Date(p.nextReviewAt).toISOString() : null,
+    last_self_rating: p.lastSelfRating ?? null,
     updated_at: new Date().toISOString(),
   };
 }

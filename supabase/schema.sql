@@ -133,3 +133,36 @@ alter table public.user_progress add column if not exists review_queue     jsonb
 -- user_answers: どのトピックの確認問題かを記録（旧 day_no は互換のため残す）
 alter table public.user_answers  add column if not exists topic_id text;
 create index if not exists user_answers_topic_id_idx on public.user_answers(topic_id);
+
+-- ---------------------------------------------------------------------------
+-- user_word_progress : 英略語単語帳の進捗（1ユーザー1単語1行・UPSERT）
+-- ---------------------------------------------------------------------------
+-- localStorage(fequest:wordlistProgress) と二重保存する。クライアントは epoch ms を
+-- 扱うが、DB は timestamptz（API Route 側で相互変換）。
+--   status           : new / learning / weak / mastered
+--   last_self_rating : remembered / vague / forgot / null
+create table if not exists public.user_word_progress (
+  user_id          uuid not null references public.line_users(id) on delete cascade,
+  word_id          text not null,
+
+  status           text not null default 'new',
+  correct_count    integer not null default 0,
+  wrong_count      integer not null default 0,
+  review_count     integer not null default 0,
+
+  last_reviewed_at timestamptz,
+  next_review_at   timestamptz,
+  last_self_rating text,
+
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+
+  primary key (user_id, word_id)
+);
+create index if not exists user_word_progress_user_id_idx on public.user_word_progress(user_id);
+create index if not exists user_word_progress_status_idx on public.user_word_progress(status);
+create index if not exists user_word_progress_next_review_at_idx on public.user_word_progress(next_review_at);
+create index if not exists user_word_progress_updated_at_idx on public.user_word_progress(updated_at);
+
+-- RLS: 有効化のみ（公開ポリシーなし）。アクセスは service role 経由に限定。
+alter table public.user_word_progress enable row level security;
