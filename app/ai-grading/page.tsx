@@ -2,17 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
-import { getWrittenQuestions } from "@/data/writtenQuestions";
+import { getWrittenQuestion, getWrittenQuestions } from "@/data/writtenQuestions";
 import {
   getUserId,
   readTokenFromUrl,
   resolveToken,
   setUserId,
 } from "@/lib/userSession";
-import type { GradeResult, WrittenGrade } from "@/types/aiGrading";
+import type {
+  GradeResult,
+  GradingRecord,
+  WrittenGrade,
+} from "@/types/aiGrading";
 
 // AI採点ページ。記述問題に回答し、AIが採点・解説する。
 // 無料ユーザーは Gemini（通常採点）、Proユーザーは Claude Sonnet（Pro採点）。
+// 「答える」モードでは未回答の問題を優先して出題し、「復習」モードで回答済みを見直せる。
 // 既存の単語帳などと同じ「グラデ上部バナー＋max-w-md＋BottomNav」の体裁に合わせる。
 
 const QUESTIONS = getWrittenQuestions();
@@ -40,6 +45,13 @@ type GradeMeta = {
   usage: { used: number; limit: number; remaining: number };
 };
 
+// ResultView が実際に使うメタ情報だけの軽量型（履歴の表示にも使う）。
+type ResultMeta = {
+  provider: "gemini" | "claude";
+  model: string;
+  fallback: boolean;
+};
+
 type BillingStatus = {
   plan: "free" | "pro";
   providerLabel: string;
@@ -48,7 +60,35 @@ type BillingStatus = {
   checkoutEnabled: boolean;
 };
 
+type Mode = "answer" | "review";
+
+// 回答済みの集合から、current の次の「未回答」問題のindexを返す。
+// 全問回答済みなら単純に次へ巡回する。
+function pickNextIndex(current: number, answered: Set<string>): number {
+  const n = QUESTIONS.length;
+  for (let step = 1; step <= n; step++) {
+    const i = (current + step) % n;
+    if (!answered.has(QUESTIONS[i].id)) return i;
+  }
+  return (current + 1) % n;
+}
+
+// 最初の未回答問題のindex（無ければ0）。
+function firstUnansweredIndex(answered: Set<string>): number {
+  const i = QUESTIONS.findIndex((q) => !answered.has(q.id));
+  return i === -1 ? 0 : i;
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(
+    d.getMinutes()
+  ).padStart(2, "0")}`;
+}
+
 export default function AiGradingPage() {
+  const [mode, setMode] = useState<Mode>("answer");
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [result, setResult] = useState<GradeResult | null>(null);
@@ -60,9 +100,21 @@ export default function AiGradingPage() {
   const [status, setStatus] = useState<BillingStatus | null>(null);
   const [upgrading, setUpgrading] = useState(false);
 
+  // 採点履歴（復習用）。新しい順。
+  const [records, setRecords] = useState<GradingRecord[]>([]);
+
   const question = QUESTIONS[index];
   const diff = DIFFICULTY_META[question.difficulty] ?? DIFFICULTY_META.normal;
   const canGrade = useMemo(() => answer.trim().length >= 20, [answer]);
+
+  // 回答済みの問題ID集合。
+  const answeredIds = useMemo(
+    () => new Set(records.map((r) => r.questionId)),
+    [records]
+  );
+  const allAnswered =
+    answeredIds.size > 0 && answeredIds.size >= QUESTIONS.length;
+  const isCurrentAnswered = answeredIds.has(question.id);
 
   // プラン・利用状況を読み込む。
   const loadStatus = useCallback(async (uid: string | null) => {
@@ -89,7 +141,28 @@ export default function AiGradingPage() {
     }
   }, []);
 
-  // 起動時に userId を解決（?t= があれば紐づけ）してからプラン状況を取得。
+  // 採点履歴を読み込み、未回答問題を初期表示にする。
+  const loadHistory = useCallback(async (uid: string | null) => {
+    try {
+      const res = await fetch("/api/ai-grading/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: uid }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { ok: true; records: GradingRecord[] }
+        | null;
+      if (data && data.ok && Array.isArray(data.records)) {
+        setRecords(data.records);
+        const answered = new Set(data.records.map((r) => r.questionId));
+        setIndex(firstUnansweredIndex(answered));
+      }
+    } catch {
+      /* 取得失敗時は履歴なし扱い */
+    }
+  }, []);
+
+  // 起動時に userId を解決（?t= があれば紐づけ）してから状況・履歴を取得。
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -104,16 +177,16 @@ export default function AiGradingPage() {
       }
       if (cancelled) return;
       setUid(uid);
-      await loadStatus(uid);
+      await Promise.all([loadStatus(uid), loadHistory(uid)]);
     })();
     return () => {
       cancelled = true;
     };
-  }, [loadStatus]);
+  }, [loadStatus, loadHistory]);
 
-  // 次の問題へ（順番に巡回）。入力・結果はリセットする。
+  // 次の問題へ（未回答を優先して巡回）。入力・結果はリセットする。
   function handleNext() {
-    setIndex((prev) => (prev + 1) % QUESTIONS.length);
+    setIndex((prev) => pickNextIndex(prev, answeredIds));
     setAnswer("");
     setResult(null);
     setMeta(null);
@@ -156,6 +229,18 @@ export default function AiGradingPage() {
       setStatus((prev) =>
         prev ? { ...prev, usage: data.meta.usage, plan: data.meta.plan } : prev
       );
+      // 履歴に追加（＝回答済みになり、次は未回答が出る／復習で見直せる）。
+      const newRecord: GradingRecord = {
+        id: `local-${Date.now()}`,
+        questionId: question.id,
+        category: question.category,
+        userAnswer: answer.trim(),
+        result: data.result,
+        provider: data.meta.provider,
+        model: data.meta.model,
+        createdAt: new Date().toISOString(),
+      };
+      setRecords((prev) => [newRecord, ...prev]);
     } catch {
       setError("採点に失敗しました。時間をおいてもう一度試してください。");
     } finally {
@@ -218,84 +303,229 @@ export default function AiGradingPage() {
           onUpgrade={handleUpgrade}
         />
 
-        {/* 問題カード */}
-        <section className="rounded-2xl border border-gray-200 bg-white p-4">
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
-              {question.category}
-            </span>
-            <span
-              className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${diff.badge}`}
-            >
-              {diff.label}
-            </span>
-            <span className="ml-auto text-[11px] font-bold text-gray-400">
-              第{index + 1}問 / 全{QUESTIONS.length}問
-            </span>
-          </div>
-          <p className="mt-3 text-[15px] font-bold leading-relaxed text-gray-800">
-            {question.question}
-          </p>
-        </section>
+        {/* 答える / 復習 の切り替え */}
+        <ModeTabs mode={mode} reviewCount={records.length} onChange={setMode} />
 
-        {/* 回答入力 */}
-        <section className="space-y-2">
-          <label
-            htmlFor="answer"
-            className="block text-sm font-extrabold text-gray-700"
-          >
-            あなたの回答
-          </label>
-          <textarea
-            id="answer"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            rows={6}
-            placeholder="理由・仕組み・具体例を含めて、自分の言葉で説明してみましょう。"
-            className="w-full resize-y rounded-2xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-          />
-          <p className="text-right text-[11px] font-bold text-gray-400">
-            {answer.trim().length} 文字（20文字以上で採点できます）
-          </p>
-        </section>
+        {mode === "answer" ? (
+          <>
+            {/* 問題カード */}
+            <section className="rounded-2xl border border-gray-200 bg-white p-4">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
+                  {question.category}
+                </span>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${diff.badge}`}
+                >
+                  {diff.label}
+                </span>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                    isCurrentAnswered
+                      ? "bg-gray-100 text-gray-500"
+                      : "bg-emerald-100 text-emerald-700"
+                  }`}
+                >
+                  {isCurrentAnswered ? "回答済み" : "未回答"}
+                </span>
+                <span className="ml-auto text-[11px] font-bold text-gray-400">
+                  回答済み {answeredIds.size} / {QUESTIONS.length} 問
+                </span>
+              </div>
+              <p className="mt-3 text-[15px] font-bold leading-relaxed text-gray-800">
+                {question.question}
+              </p>
+              {allAnswered && (
+                <p className="mt-2 text-[11px] font-bold text-emerald-600">
+                  🎉 全問回答済みです。「復習」タブで見直したり、もう一度挑戦できます。
+                </p>
+              )}
+            </section>
 
-        {/* ボタン */}
-        <div className="flex gap-2.5">
-          <button
-            type="button"
-            onClick={handleGrade}
-            disabled={!canGrade || loading}
-            className="flex-1 rounded-2xl bg-indigo-600 px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition active:scale-[0.99] disabled:bg-gray-300 disabled:text-gray-500"
-          >
-            {loading
-              ? "採点中…"
-              : isPro
-                ? "Claude Sonnetで採点する"
-                : "採点する"}
-          </button>
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={loading}
-            className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-extrabold text-gray-600 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
-          >
-            別の問題
-          </button>
-        </div>
+            {/* 回答入力 */}
+            <section className="space-y-2">
+              <label
+                htmlFor="answer"
+                className="block text-sm font-extrabold text-gray-700"
+              >
+                あなたの回答
+              </label>
+              <textarea
+                id="answer"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                rows={6}
+                placeholder="理由・仕組み・具体例を含めて、自分の言葉で説明してみましょう。"
+                className="w-full resize-y rounded-2xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+              />
+              <p className="text-right text-[11px] font-bold text-gray-400">
+                {answer.trim().length} 文字（20文字以上で採点できます）
+              </p>
+            </section>
 
-        {/* エラー表示 */}
-        {error && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-            {error}
-          </div>
+            {/* ボタン */}
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={handleGrade}
+                disabled={!canGrade || loading}
+                className="flex-1 rounded-2xl bg-indigo-600 px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition active:scale-[0.99] disabled:bg-gray-300 disabled:text-gray-500"
+              >
+                {loading
+                  ? "採点中…"
+                  : isPro
+                    ? "Claude Sonnetで採点する"
+                    : "採点する"}
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={loading}
+                className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-extrabold text-gray-600 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
+              >
+                別の問題
+              </button>
+            </div>
+
+            {/* エラー表示 */}
+            {error && (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                {error}
+              </div>
+            )}
+
+            {/* 採点結果 */}
+            {result && <ResultView result={result} meta={meta} />}
+          </>
+        ) : (
+          <ReviewList records={records} />
         )}
-
-        {/* 採点結果 */}
-        {result && <ResultView result={result} meta={meta} />}
       </div>
 
       <BottomNav />
     </main>
+  );
+}
+
+/** 答える / 復習 の切り替えタブ。 */
+function ModeTabs({
+  mode,
+  reviewCount,
+  onChange,
+}: {
+  mode: Mode;
+  reviewCount: number;
+  onChange: (m: Mode) => void;
+}) {
+  const base =
+    "flex-1 rounded-xl px-4 py-2.5 text-sm font-extrabold transition active:scale-[0.99]";
+  return (
+    <div className="flex gap-2 rounded-2xl border border-gray-200 bg-white p-1.5">
+      <button
+        type="button"
+        onClick={() => onChange("answer")}
+        className={`${base} ${
+          mode === "answer" ? "bg-indigo-600 text-white" : "text-gray-500"
+        }`}
+      >
+        答える
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("review")}
+        className={`${base} ${
+          mode === "review" ? "bg-indigo-600 text-white" : "text-gray-500"
+        }`}
+      >
+        復習{reviewCount > 0 ? `（${reviewCount}）` : ""}
+      </button>
+    </div>
+  );
+}
+
+/** 回答済みの記録一覧（タップで採点結果の詳細を開閉）。 */
+function ReviewList({ records }: { records: GradingRecord[] }) {
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  if (records.length === 0) {
+    return (
+      <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center">
+        <p className="text-sm font-bold text-gray-500">
+          まだ採点した記録がありません。
+        </p>
+        <p className="mt-1 text-xs font-bold text-gray-400">
+          「答える」から記述問題に挑戦すると、ここで見直せます。
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="space-y-3">
+      {records.map((rec) => {
+        const q = getWrittenQuestion(rec.questionId);
+        const gradeMeta = GRADE_META[rec.result.grade] ?? GRADE_META.C;
+        const open = openId === rec.id;
+        return (
+          <div
+            key={rec.id}
+            className="overflow-hidden rounded-2xl border border-gray-200 bg-white"
+          >
+            <button
+              type="button"
+              onClick={() => setOpenId(open ? null : rec.id)}
+              className="flex w-full items-center gap-3 p-4 text-left transition active:scale-[0.99]"
+            >
+              <div
+                className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl ring-1 ${gradeMeta.ring}`}
+              >
+                <span className={`text-lg font-extrabold leading-none ${gradeMeta.text}`}>
+                  {rec.result.grade}
+                </span>
+                <span className="text-[10px] font-bold text-gray-400">
+                  {rec.result.score}点
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                    {rec.category || "AI採点"}
+                  </span>
+                  <span className="text-[10px] font-bold text-gray-400">
+                    {formatDate(rec.createdAt)}
+                  </span>
+                </div>
+                <p className="mt-1 truncate text-sm font-bold text-gray-800">
+                  {q?.question ?? rec.questionId}
+                </p>
+              </div>
+              <span className="shrink-0 text-gray-400">{open ? "▲" : "▼"}</span>
+            </button>
+
+            {open && (
+              <div className="space-y-4 border-t border-gray-100 px-4 pb-4 pt-3">
+                <div className="rounded-2xl bg-gray-50 p-3">
+                  <span className="text-[11px] font-bold text-gray-500">
+                    あなたの回答
+                  </span>
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+                    {rec.userAnswer}
+                  </p>
+                </div>
+                <ResultView
+                  result={rec.result}
+                  meta={{
+                    provider: rec.provider,
+                    model: rec.model,
+                    fallback: false,
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
   );
 }
 
@@ -380,7 +610,7 @@ function ResultView({
   meta,
 }: {
   result: GradeResult;
-  meta: GradeMeta | null;
+  meta: ResultMeta | null;
 }) {
   const gradeMeta = GRADE_META[result.grade] ?? GRADE_META.C;
   const verdict = result.isCorrect

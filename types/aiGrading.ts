@@ -34,3 +34,18 @@ export type GradeResult = {
   modelAnswer: string;
   nextReviewTheme: string;
 };
+
+/** 採点に使われたプロバイダ。 */
+export type GradeProvider = "gemini" | "claude";
+
+/** 保存済みのAI採点記録（履歴・復習用）。DB(ai_grading_records)の1行に対応。 */
+export type GradingRecord = {
+  id: string;
+  questionId: string;
+  category: string;
+  userAnswer: string;
+  result: GradeResult;
+  provider: GradeProvider;
+  model: string;
+  createdAt: string;
+};

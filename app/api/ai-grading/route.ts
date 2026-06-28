@@ -5,6 +5,7 @@ import {
   getModelForProvider,
   GradingError,
 } from "@/lib/ai/gradeWrittenAnswer";
+import { saveGradingRecord } from "@/lib/ai/gradingRecords";
 import { getRequestUserId } from "@/lib/apiUser";
 import { isAuthEnabled } from "@/lib/auth/lineSession";
 import { DAILY_LIMITS, PLAN_PROVIDER } from "@/lib/billing/constants";
@@ -109,6 +110,16 @@ export async function POST(request: Request) {
       model: outcome.model,
       questionId,
       status: "success",
+    });
+
+    // 回答記録を学習記録として保存する（回数ログとは別テーブル）。失敗しても採点結果は返す。
+    await saveGradingRecord({
+      userId,
+      question,
+      userAnswer,
+      result: outcome.result,
+      provider: outcome.provider,
+      model: outcome.model,
     });
 
     const usedAfter = used + 1;

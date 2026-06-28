@@ -218,3 +218,44 @@ alter table public.line_users add column if not exists email        text;
 create unique index if not exists line_users_auth_user_id_key
   on public.line_users(auth_user_id)
   where auth_user_id is not null;
+
+-- ============================================================================
+-- AI採点の回答記録（学習記録）（加算マイグレーション）
+-- ----------------------------------------------------------------------------
+-- 詳細は supabase/migrations/20260628_ai_grading_records.sql を参照。
+-- ai_usage_logs（回数制限・分析用メタログ）とは別に、ユーザーの回答本文と採点結果を
+-- 1採点(成功)1行で残す。選択式の user_answers に対応する AI採点版の学習記録。
+-- ============================================================================
+create table if not exists public.ai_grading_records (
+  id                uuid primary key default gen_random_uuid(),
+  user_id           uuid not null references public.line_users(id) on delete cascade,
+
+  question_id       text not null,
+  category          text,
+  user_answer       text not null,
+
+  score             integer not null,
+  grade             text not null,
+  is_correct        boolean not null,
+
+  summary           text,
+  good_points       text[] not null default '{}',
+  missing_points    text[] not null default '{}',
+  feedback          text,
+  model_answer      text,
+  next_review_theme text,
+
+  provider          text,
+  model             text,
+
+  created_at        timestamptz not null default now()
+);
+create index if not exists ai_grading_records_user_id_idx
+  on public.ai_grading_records(user_id);
+create index if not exists ai_grading_records_user_created_idx
+  on public.ai_grading_records(user_id, created_at);
+create index if not exists ai_grading_records_question_id_idx
+  on public.ai_grading_records(question_id);
+
+-- RLS: 有効化のみ（公開ポリシーなし）。アクセスは service role 経由に限定。
+alter table public.ai_grading_records enable row level security;
