@@ -20,6 +20,16 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## AI採点（Gemini API）
+
+`/ai-grading` では、ITパスポートの記述問題に回答すると Gemini API が採点・解説します。
+
+- **APIキーの取得**: [Google AI Studio](https://aistudio.google.com/apikey) で Gemini APIキーを取得します。
+- **Vercel への設定**: Vercel のプロジェクト設定 → Environment Variables に以下を登録します（`.env.example` 参照）。
+  - `GEMINI_API_KEY`（必須・**サーバー専用**。クライアントへ露出しないこと）
+  - `GEMINI_MODEL`（任意。未設定なら `gemini-3.1-flash-lite`）
+- **ローカル開発**: `.env.local` に同じ値を設定します。`GEMINI_API_KEY` が未設定の場合は、キーワード一致による「ダミー採点」が表示され、画面の動作確認だけは可能です。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
