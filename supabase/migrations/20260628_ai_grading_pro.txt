@@ -1,0 +1,94 @@
+-- ============================================================================
+-- マイグレーション: AI採点 Pro（Claude Sonnet）／課金連携の差分のみ
+-- 作成日: 2026-06-28
+-- ----------------------------------------------------------------------------
+-- 目的:
+--   本番 Supabase へ「今回追加した分だけ」を安全に適用する。
+--   既存テーブル・既存データは一切削除/初期化しない（列追加と新テーブルのみ）。
+--
+-- 安全性:
+--   - すべて IF EXISTS / IF NOT EXISTS / ADD COLUMN IF NOT EXISTS を使用。
+--   - 何度実行しても壊れない（冪等）。トランザクションで全体を包む。
+--   - 既存行への影響: user_profiles.plan は NOT NULL + default 'free' のため、
+--     既存行は自動的に 'free' になる（Postgres 11+ はテーブル書き換えなしで高速）。
+--
+-- 使い方:
+--   Supabase ダッシュボード → SQL Editor にこのファイルの内容を貼り付けて実行。
+--
+-- 前提:
+--   public.line_users が既に存在すること（ai_usage_logs の FK 参照先）。
+--   通常運用済みのプロジェクトなら存在する。万一無い場合はこの SQL より先に
+--   supabase/schema.sql を適用すること。
+-- ============================================================================
+
+begin;
+
+-- gen_random_uuid() を使うため（既に有効でも無害）。
+create extension if not exists pgcrypto;
+
+-- ---------------------------------------------------------------------------
+-- 1) user_profiles: プラン・Stripe 連携情報を追加（列追加のみ）
+--    plan               : 'free'（無料・Gemini採点）/ 'pro'（有料・Claude Sonnet採点）
+--    stripe_customer_id : Stripe customer ID（解約/更新 webhook の紐づけ用）
+--    plan_updated_at    : プラン変更時刻
+-- ---------------------------------------------------------------------------
+alter table if exists public.user_profiles
+  add column if not exists plan text not null default 'free';
+alter table if exists public.user_profiles
+  add column if not exists stripe_customer_id text;
+alter table if exists public.user_profiles
+  add column if not exists plan_updated_at timestamptz;
+
+create index if not exists user_profiles_stripe_customer_id_idx
+  on public.user_profiles(stripe_customer_id);
+
+-- ---------------------------------------------------------------------------
+-- 2) ai_usage_logs: AI採点の利用ログ（1採点1行・追記）。回数制限と分析に使う。
+--    provider : gemini / claude
+--    status   : success / error / rate_limited
+-- ---------------------------------------------------------------------------
+create table if not exists public.ai_usage_logs (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.line_users(id) on delete cascade,
+  provider    text not null,
+  model       text,
+  question_id text,
+  status      text not null default 'success',
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists ai_usage_logs_user_id_idx
+  on public.ai_usage_logs(user_id);
+create index if not exists ai_usage_logs_user_created_idx
+  on public.ai_usage_logs(user_id, created_at);
+
+-- ---------------------------------------------------------------------------
+-- 3) RLS: 有効化のみ（公開ポリシーなし）。アクセスは service role 経由に限定。
+--    ENABLE ROW LEVEL SECURITY は冪等（再実行しても無害）。
+--    ※ 本プロジェクトの既存テーブルと同方針で、公開ポリシーは作らない
+--      （service role は RLS をバイパスするため API Route からは読み書き可能。
+--       anon キーが露出しても DB は直接触れない）。
+-- ---------------------------------------------------------------------------
+alter table public.ai_usage_logs enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- 参考: もし将来 anon/authenticated 向けのポリシーを足す場合は、
+--   PostgreSQL に CREATE POLICY IF NOT EXISTS が無いため、下記の冪等パターンで。
+--   （現状は service role 経由のみのため、ポリシーは作成しない）
+--
+-- do $$
+-- begin
+--   if not exists (
+--     select 1 from pg_policies
+--     where schemaname = 'public'
+--       and tablename  = 'ai_usage_logs'
+--       and policyname  = 'ai_usage_logs_no_public'
+--   ) then
+--     -- 例: 公開アクセスを一切許可しないダミーポリシー
+--     create policy ai_usage_logs_no_public on public.ai_usage_logs
+--       for all using (false) with check (false);
+--   end if;
+-- end $$;
+-- ---------------------------------------------------------------------------
+
+commit;

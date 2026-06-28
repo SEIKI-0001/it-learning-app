@@ -166,3 +166,38 @@ create index if not exists user_word_progress_updated_at_idx on public.user_word
 
 -- RLS: 有効化のみ（公開ポリシーなし）。アクセスは service role 経由に限定。
 alter table public.user_word_progress enable row level security;
+
+-- ============================================================================
+-- AI採点 Pro（有料）／課金連携（加算マイグレーション）
+-- ----------------------------------------------------------------------------
+-- 既存テーブルは壊さず、列の追加と新テーブルのみで拡張する。
+-- 何度実行しても安全なように ADD COLUMN IF NOT EXISTS / IF NOT EXISTS を使う。
+-- ============================================================================
+
+-- user_profiles: 契約プラン（free / pro）と Stripe 連携情報を追加。
+--   plan               : 'free'（無料・Gemini採点）/ 'pro'（有料・Claude Sonnet採点）
+--   stripe_customer_id : Stripe の customer ID（解約/更新の webhook 紐づけ用）
+alter table public.user_profiles add column if not exists plan               text not null default 'free';
+alter table public.user_profiles add column if not exists stripe_customer_id text;
+alter table public.user_profiles add column if not exists plan_updated_at    timestamptz;
+create index if not exists user_profiles_stripe_customer_id_idx on public.user_profiles(stripe_customer_id);
+
+-- ---------------------------------------------------------------------------
+-- ai_usage_logs : AI採点の利用ログ（1採点1行・追記）。回数制限と分析に使う。
+--   provider : gemini / claude
+--   status   : success / error / rate_limited
+-- ---------------------------------------------------------------------------
+create table if not exists public.ai_usage_logs (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references public.line_users(id) on delete cascade,
+  provider    text not null,
+  model       text,
+  question_id text,
+  status      text not null default 'success',
+  created_at  timestamptz not null default now()
+);
+create index if not exists ai_usage_logs_user_id_idx on public.ai_usage_logs(user_id);
+create index if not exists ai_usage_logs_user_created_idx on public.ai_usage_logs(user_id, created_at);
+
+-- RLS: 有効化のみ（公開ポリシーなし）。アクセスは service role 経由に限定。
+alter table public.ai_usage_logs enable row level security;

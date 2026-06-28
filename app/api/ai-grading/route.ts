@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { getWrittenQuestion } from "@/data/writtenQuestions";
 import {
   gradeWrittenAnswer,
+  getModelForProvider,
   GradingError,
 } from "@/lib/ai/gradeWrittenAnswer";
+import { resolveUserId } from "@/lib/apiUser";
+import { DAILY_LIMITS, PLAN_PROVIDER } from "@/lib/billing/constants";
+import { countTodayUsage, getUserPlan, logUsage } from "@/lib/billing/plan";
 
 export const runtime = "nodejs";
 
@@ -11,22 +15,25 @@ const MIN_ANSWER_LENGTH = 20;
 
 /**
  * POST /api/ai-grading
- * 記述問題の回答を AI（Gemini）で採点する。
- * body: { questionId: string, userAnswer: string }
+ * 記述問題の回答を AI で採点する。
+ * body: { questionId: string, userAnswer: string, userId?: string }
  *
- * - userAnswer が空 / 20文字未満: 400（Gemini は呼ばない）
+ * - free ユーザー: Gemini（通常採点） / pro ユーザー: Claude Sonnet（Pro採点）
+ * - userAnswer が空 / 20文字未満: 400（AI は呼ばない）
  * - questionId が存在しない: 404
- * - 採点成功: 200 { ok: true, result: GradeResult }
+ * - 1日の回数上限超過: 429（AI は呼ばない）
+ * - 採点成功: 200 { ok: true, result, meta }
  * - 採点失敗: 502（ユーザーには簡潔なメッセージのみ）
  *
- * APIキーはサーバー側（lib/ai/gradeWrittenAnswer）でのみ使用し、クライアントへ露出しない。
+ * APIキーはサーバー側（lib/ai/*）でのみ使用し、クライアントへ露出しない。
  */
 export async function POST(request: Request) {
-  let body: { questionId?: string; userAnswer?: string } = {};
+  let body: { questionId?: string; userAnswer?: string; userId?: string } = {};
   try {
     body = (await request.json()) as {
       questionId?: string;
       userAnswer?: string;
+      userId?: string;
     };
   } catch {
     return NextResponse.json(
@@ -37,8 +44,9 @@ export async function POST(request: Request) {
 
   const questionId = (body.questionId ?? "").trim();
   const userAnswer = (body.userAnswer ?? "").trim();
+  const userId = resolveUserId(body);
 
-  // 空 / 短すぎる回答は Gemini を呼ばずに弾く。
+  // 空 / 短すぎる回答は AI を呼ばずに弾く。
   if (userAnswer.length < MIN_ANSWER_LENGTH) {
     return NextResponse.json(
       {
@@ -58,9 +66,58 @@ export async function POST(request: Request) {
     );
   }
 
+  // プラン判定 → 利用回数チェック（AI 呼び出し前）。
+  const plan = await getUserPlan(userId);
+  const limit = DAILY_LIMITS[plan];
+  const provider = PLAN_PROVIDER[plan];
+  const used = await countTodayUsage(userId);
+
+  // userId があるとき（＝回数を追跡できるとき）のみ上限を適用する。
+  if (userId && used >= limit) {
+    await logUsage({
+      userId,
+      provider,
+      model: getModelForProvider(provider),
+      questionId,
+      status: "rate_limited",
+    });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: `本日のAI採点の上限（${limit}回）に達しました。明日また挑戦できます。`,
+        meta: { plan, usage: { used, limit, remaining: 0 } },
+      },
+      { status: 429 }
+    );
+  }
+
   try {
-    const result = await gradeWrittenAnswer(question, userAnswer);
-    return NextResponse.json({ ok: true, result });
+    const outcome = await gradeWrittenAnswer(question, userAnswer, { provider });
+
+    await logUsage({
+      userId,
+      provider: outcome.provider,
+      model: outcome.model,
+      questionId,
+      status: "success",
+    });
+
+    const usedAfter = used + 1;
+    return NextResponse.json({
+      ok: true,
+      result: outcome.result,
+      meta: {
+        plan,
+        provider: outcome.provider,
+        model: outcome.model,
+        fallback: outcome.fallback,
+        usage: {
+          used: usedAfter,
+          limit,
+          remaining: Math.max(0, limit - usedAfter),
+        },
+      },
+    });
   } catch (e) {
     // 詳細はサーバーログにだけ残す。
     if (e instanceof GradingError) {
@@ -68,12 +125,20 @@ export async function POST(request: Request) {
     } else {
       console.error("[ai-grading] unexpected error:", e);
     }
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "採点に失敗しました。時間をおいてもう一度試してください。",
-      },
-      { status: 502 }
-    );
+
+    await logUsage({
+      userId,
+      provider,
+      model: getModelForProvider(provider),
+      questionId,
+      status: "error",
+    });
+
+    // Pro（Claude）採点の失敗はその旨を伝える。
+    const error =
+      plan === "pro"
+        ? "Claude採点に失敗しました。時間をおいてもう一度試してください。"
+        : "採点に失敗しました。時間をおいてもう一度試してください。";
+    return NextResponse.json({ ok: false, error }, { status: 502 });
   }
 }
