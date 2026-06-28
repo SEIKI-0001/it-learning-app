@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { resolveUserId } from "@/lib/apiUser";
+import { getRequestUserId } from "@/lib/apiUser";
 
 export const runtime = "nodejs";
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const userId = resolveUserId(body);
+  const userId = await getRequestUserId(body);
   if (!userId) {
     return NextResponse.json(
       {

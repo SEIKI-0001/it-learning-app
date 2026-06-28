@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import type { AppState } from "@/types";
 import { loadAppState, saveAppState } from "@/lib/storage";
-import { readTokenFromUrl, resolveToken, setUserId } from "@/lib/userSession";
+import {
+  readTokenFromUrl,
+  resolveToken,
+  restoreFromSession,
+  setUserId,
+} from "@/lib/userSession";
 
 /**
  * 保存済み AppState をマウント後に読み込むクライアント専用フック。
@@ -22,11 +27,19 @@ export function useAppState() {
     async function init() {
       const token = readTokenFromUrl();
       if (token) {
+        // LINE 経由（?t=）: トークンを解決し user_id と DB 進捗を復元（fq_line Cookie も発行される）。
         const resolved = await resolveToken(token);
         if (resolved?.userId) {
           setUserId(resolved.userId);
           // DB に既存データがあれば localStorage に復元（別端末からの再開に対応）。
           if (resolved.appState) saveAppState(resolved.appState);
+        }
+      } else {
+        // 直接アクセス: Google ログイン / LINE Cookie のセッションから user_id と DB 進捗を復元。
+        const restored = await restoreFromSession();
+        if (restored?.userId) {
+          setUserId(restored.userId);
+          if (restored.appState) saveAppState(restored.appState);
         }
       }
       if (!cancelled) {

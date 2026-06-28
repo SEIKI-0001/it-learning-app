@@ -193,6 +193,16 @@ export default function ProgressPage() {
 
           {/* 実績バッジ(バナー内にコンパクト表示) */}
           <AchievementStrip state={state} />
+
+          {/* アカウント: ログアウト（Google / LINE セッションを破棄して /login へ） */}
+          <div className="mt-3 text-right">
+            <a
+              href="/api/auth/logout"
+              className="text-[11px] font-semibold text-white/70 underline underline-offset-4"
+            >
+              ログアウト
+            </a>
+          </div>
         </div>
       </header>
 

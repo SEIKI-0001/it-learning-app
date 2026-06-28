@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
-import { resolveUserId } from "@/lib/apiUser";
+import { getRequestUserId } from "@/lib/apiUser";
 import {
   wordProgressRowToProgress,
   type WordProgressRow,
@@ -27,9 +27,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid body" }, { status: 400 });
   }
 
-  const userId = resolveUserId(body);
+  const userId = await getRequestUserId(body);
   if (!userId) {
-    return NextResponse.json({ ok: false, error: "userId required" }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
 
   const supabase = getServiceSupabase();

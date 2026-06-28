@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
+import { getRequestUserId } from "@/lib/apiUser";
 
 export const runtime = "nodejs";
 
@@ -13,27 +14,27 @@ type FeedbackAnswers = {
 
 /**
  * POST /api/feedback/save
- * 簡易フィードバック（Day1 / Day7 完了後）を保存する。
- * body: { userId: string, dayNo?: number, feedback: FeedbackAnswers }
+ * 簡易フィードバックを保存する。ユーザーはセッション（Google / LINE Cookie）から解決する。
+ * body: { dayNo?: number, feedback: FeedbackAnswers }（userId は後方互換時のみ参照）
  */
 export async function POST(request: Request) {
-  let userId = "";
   let dayNo: number | null = null;
   let feedback: FeedbackAnswers = {};
+  let body: { userId?: string; dayNo?: number; feedback?: FeedbackAnswers } = {};
   try {
-    const body = (await request.json()) as {
+    body = (await request.json()) as {
       userId?: string;
       dayNo?: number;
       feedback?: FeedbackAnswers;
     };
-    userId = (body.userId ?? "").trim();
     dayNo = body.dayNo ?? null;
     feedback = body.feedback ?? {};
   } catch {
     return NextResponse.json({ ok: false, error: "invalid body" }, { status: 400 });
   }
+  const userId = await getRequestUserId(body);
   if (!userId) {
-    return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
 
   const supabase = getServiceSupabase();

@@ -70,6 +70,22 @@ export async function resolveToken(token: string): Promise<ResolveResult | null>
   }
 }
 
+/**
+ * 現在のセッション（Google ログイン / LINE 署名 Cookie）から user_id と DB上の AppState を復元する。
+ * ?t= が無い直接アクセス時に使う。未ログインなら null。
+ */
+export async function restoreFromSession(): Promise<ResolveResult | null> {
+  try {
+    const res = await fetch("/api/session/state", { method: "GET" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok: boolean } & Partial<ResolveResult>;
+    if (!data.ok || !data.userId) return null;
+    return { userId: data.userId, appState: data.appState ?? null };
+  } catch {
+    return null;
+  }
+}
+
 /** 進捗をDBへ保存（user_id がある場合のみ呼ぶ。失敗してもUIは止めない）。 */
 export function saveProgressToDb(userId: string, progress: UserProgress): void {
   void fetch("/api/progress/save", {

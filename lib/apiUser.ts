@@ -1,13 +1,23 @@
-// API Route 用のユーザー解決処理。
-//
-// 既存設計に合わせ、現状はクライアントから body で送られる userId を採用する。
-// 将来 HttpOnly cookie ベースの認証へ移行する場合は、この関数だけを差し替えれば
-// 各 API Route のユーザー解決経路を一括で切り替えられる（呼び出し側は変更不要）。
+import { getInternalUserId } from "@/lib/auth/currentUser";
+import { isAuthEnabled } from "@/lib/auth/lineSession";
 
-/** body の userId（または将来 cookie）から user_id を解決する。無ければ null。 */
-export function resolveUserId(body: { userId?: string }): string | null {
-  const fromBody = (body.userId ?? "").trim();
-  if (fromBody) return fromBody;
-  // 将来: ここで HttpOnly cookie / セッションから user_id を解決する。
-  return null;
+// API Route 用のユーザー解決処理（共通化）。
+//
+// セッション（Google ログイン / LINE 署名 Cookie）から内部 user_id を解決する。
+// - セッションがあればそれを最優先する。body の userId は信用しない（なりすまし防止）。
+// - 新認証システムが無効（SESSION_SECRET 未設定）の間だけ、後方互換で body.userId を採用する
+//   （段階的ロールアウト。既存 LINE 導線・localStorage 経由の保存を壊さない）。
+// - どちらも無ければ null（＝匿名）。保存系・AI採点は呼び出し側で拒否する。
+
+/** 現在のリクエストの内部 user_id を解決する。匿名なら null。 */
+export async function getRequestUserId(body?: { userId?: string }): Promise<string | null> {
+  const fromSession = await getInternalUserId();
+  if (fromSession) return fromSession;
+
+  // 新認証システムが有効なら body の userId は信用しない（匿名として扱う）。
+  if (isAuthEnabled()) return null;
+
+  // 後方互換（ロールアウト前）: body の userId を採用する。
+  const fromBody = (body?.userId ?? "").trim();
+  return fromBody || null;
 }

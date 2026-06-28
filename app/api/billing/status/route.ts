@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { resolveUserId } from "@/lib/apiUser";
+import { getRequestUserId } from "@/lib/apiUser";
 import {
   DAILY_LIMITS,
   PLAN_PROVIDER,
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     /* body 無しでも free として応答する */
   }
 
-  const userId = resolveUserId(body);
+  const userId = await getRequestUserId(body);
   const plan = await getUserPlan(userId);
   const provider = PLAN_PROVIDER[plan];
   const limit = DAILY_LIMITS[plan];

@@ -1,32 +1,33 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
+import { getRequestUserId } from "@/lib/apiUser";
 import type { UserAnswer } from "@/types";
 
 export const runtime = "nodejs";
 
 /**
  * POST /api/answers/save
- * 回答履歴を追記する。
- * body: { userId: string, dayNo: number, answers: UserAnswer[] }
+ * 回答履歴を追記する。ユーザーはセッション（Google / LINE Cookie）から解決する。
+ * body: { dayNo: number, answers: UserAnswer[] }（userId は後方互換時のみ参照）
  */
 export async function POST(request: Request) {
-  let userId = "";
   let dayNo = 0;
   let answers: UserAnswer[] = [];
+  let body: { userId?: string; dayNo?: number; answers?: UserAnswer[] } = {};
   try {
-    const body = (await request.json()) as {
+    body = (await request.json()) as {
       userId?: string;
       dayNo?: number;
       answers?: UserAnswer[];
     };
-    userId = (body.userId ?? "").trim();
     dayNo = body.dayNo ?? 0;
     answers = body.answers ?? [];
   } catch {
     return NextResponse.json({ ok: false, error: "invalid body" }, { status: 400 });
   }
+  const userId = await getRequestUserId(body);
   if (!userId) {
-    return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
   if (answers.length === 0) {
     return NextResponse.json({ ok: true, inserted: 0 });

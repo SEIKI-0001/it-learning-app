@@ -201,3 +201,20 @@ create index if not exists ai_usage_logs_user_created_idx on public.ai_usage_log
 
 -- RLS: 有効化のみ（公開ポリシーなし）。アクセスは service role 経由に限定。
 alter table public.ai_usage_logs enable row level security;
+
+-- ============================================================================
+-- Google ログイン（Supabase Auth）連携（加算マイグレーション）
+-- ----------------------------------------------------------------------------
+-- 詳細は supabase/migrations/20260628_google_auth.sql を参照。
+-- line_users を「アカウント本体（ハブ）」とし、LINE / Google / メール / Stripe を集約する。
+--   line_user_id : LINE（初回導線）。Google 単独ユーザーは NULL。
+--   auth_user_id : Supabase Auth（Google）の auth.users.id。
+--   email        : Google から取得した表示用メール。
+-- 既存テーブルの外部キーは今まで通り public.line_users.id を指したまま無変更。
+-- ============================================================================
+alter table public.line_users alter column line_user_id drop not null;
+alter table public.line_users add column if not exists auth_user_id uuid;
+alter table public.line_users add column if not exists email        text;
+create unique index if not exists line_users_auth_user_id_key
+  on public.line_users(auth_user_id)
+  where auth_user_id is not null;

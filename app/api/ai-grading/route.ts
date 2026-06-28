@@ -5,7 +5,8 @@ import {
   getModelForProvider,
   GradingError,
 } from "@/lib/ai/gradeWrittenAnswer";
-import { resolveUserId } from "@/lib/apiUser";
+import { getRequestUserId } from "@/lib/apiUser";
+import { isAuthEnabled } from "@/lib/auth/lineSession";
 import { DAILY_LIMITS, PLAN_PROVIDER } from "@/lib/billing/constants";
 import { countTodayUsage, getUserPlan, logUsage } from "@/lib/billing/plan";
 
@@ -44,7 +45,15 @@ export async function POST(request: Request) {
 
   const questionId = (body.questionId ?? "").trim();
   const userAnswer = (body.userAnswer ?? "").trim();
-  const userId = resolveUserId(body);
+  const userId = await getRequestUserId(body);
+
+  // 新認証システム有効時は匿名での AI 採点を禁止（ログイン必須）。
+  if (!userId && isAuthEnabled()) {
+    return NextResponse.json(
+      { ok: false, error: "AI採点を使うにはログインが必要です。" },
+      { status: 401 }
+    );
+  }
 
   // 空 / 短すぎる回答は AI を呼ばずに弾く。
   if (userAnswer.length < MIN_ANSWER_LENGTH) {

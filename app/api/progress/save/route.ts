@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
+import { getRequestUserId } from "@/lib/apiUser";
 import { profileToRow, progressToRow } from "@/lib/dbMappers";
 import type { UserProfile, UserProgress } from "@/types";
 
@@ -7,28 +8,28 @@ export const runtime = "nodejs";
 
 /**
  * POST /api/progress/save
- * 進捗（currentDay, exp, level, completedDays, streakCount, weakTags）と
- * 任意でプロフィールを UPSERT する。
- * body: { userId: string, progress?: UserProgress, profile?: UserProfile }
+ * 進捗と任意でプロフィールを UPSERT する。
+ * ユーザーはセッション（Google / LINE Cookie）から解決する。
+ * body: { progress?: UserProgress, profile?: UserProfile }（userId は後方互換時のみ参照）
  */
 export async function POST(request: Request) {
-  let userId = "";
   let progress: UserProgress | undefined;
   let profile: UserProfile | undefined;
+  let body: { userId?: string; progress?: UserProgress; profile?: UserProfile } = {};
   try {
-    const body = (await request.json()) as {
+    body = (await request.json()) as {
       userId?: string;
       progress?: UserProgress;
       profile?: UserProfile;
     };
-    userId = (body.userId ?? "").trim();
     progress = body.progress;
     profile = body.profile;
   } catch {
     return NextResponse.json({ ok: false, error: "invalid body" }, { status: 400 });
   }
+  const userId = await getRequestUserId(body);
   if (!userId) {
-    return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
 
   const supabase = getServiceSupabase();

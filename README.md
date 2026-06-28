@@ -53,6 +53,34 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - いずれか未設定のときは `/api/billing/checkout` は 503（「準備中」）、`/api/billing/webhook` は 503 を返し、UI 側は Pro 誘導ボタンを「準備中」と表示します。
 - Webhook の登録 URL: `<本番URL>/api/billing/webhook`。購読イベントの例: `checkout.session.completed` / `customer.subscription.updated` / `customer.subscription.deleted`。
 
+## ユーザー管理（Google ログイン + LINE 連携）
+
+Web 利用のアカウント本体を **Google ログイン（Supabase Auth）** に寄せつつ、初回導線・通知は従来どおり **LINE** を使う構成です。学習履歴・復習・単語帳進捗・AI採点 Pro・利用回数制限はすべて同じ内部ユーザーID（`line_users.id`）で扱います。
+
+- **アカウント本体 = `line_users` 行（ハブ）**。複数プロバイダを集約します。
+  - `line_user_id` … LINE（初回導線）。Google 単独ユーザーは NULL。
+  - `auth_user_id` … Supabase Auth（Google）の `auth.users.id`。
+  - `email` … Google から取得。`stripe_customer_id` … 課金（既存）。
+  - 既存テーブルの外部キーは今までどおり `line_users.id` を指したまま無変更。
+- **ユーザー解決の共通化**: サーバー側は `lib/auth/currentUser.ts` の `getInternalUserId()` が唯一の解決口です（Google セッション → `auth_user_id` を `line_users` へ写像 → 無ければ LINE 署名 Cookie）。API は `lib/apiUser.ts` の `getRequestUserId()` 経由でこれを使います。各画面・API に解決処理を散らしません。
+- **紐づけ・復元**:
+  - LINE で始めたユーザーが Google ログインすると、既存ユーザーに Google が紐づきます（`fq_line` Cookie の指す行へ後付け）。
+  - Web 直接アクセスで Google ログインすると、既存の紐づけがあれば同じユーザーを復元、無ければ新規ユーザーを開始します。
+- **全画面ログイン必須**: 未ログインでアプリ画面（`/today` `/review` `/glossary` `/ai-grading` など）へ来ると `proxy.ts` が `/login` へ誘導します。匿名では保存系・AI採点が動きません（API は 401）。
+- **段階的ロールアウト（既存を壊さない）**: 厳格ゲーティング・匿名遮断・LINE 署名 Cookie は `SESSION_SECRET` 設定時のみ有効です。未設定の間は従来どおり素通しします。
+
+### セットアップ手順
+
+1. **DB マイグレーション**: `supabase/migrations/20260628_google_auth.sql`（または `supabase/schema.sql` 末尾）を Supabase の SQL Editor で実行（`line_user_id` を NULL 許容化、`auth_user_id` / `email` 追加）。
+2. **Supabase Auth（Google プロバイダ）を有効化**（ダッシュボード）:
+   - Authentication → Providers → Google を ON にし、Google Cloud の OAuth クライアントID/Secret を登録。
+   - Authentication → URL Configuration の Redirect URLs に `http://localhost:3000/auth/callback` と `https://<本番ドメイン>/auth/callback` を追加。
+   - Google Cloud 側の「承認済みリダイレクトURI」に Supabase の `https://<project-ref>.supabase.co/auth/v1/callback` を登録。
+3. **環境変数**（`.env.example` 参照）:
+   - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`（Google ログインで使用）。
+   - `SESSION_SECRET`（新認証の有効化スイッチ 兼 LINE 署名鍵。`openssl rand -hex 32`）。
+   - `NEXT_PUBLIC_LINE_ADD_FRIEND_URL`（ログインページの「LINEから始める」ボタンのリンク先）。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
