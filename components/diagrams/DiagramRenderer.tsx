@@ -153,37 +153,38 @@ function ComparisonView({ spec }: { spec: ComparisonDiagram }) {
   );
 }
 
-/**
- * flow: 順番に流れる図解。狭い縦カラム（max-w-md）で読みやすいよう、
- * 番号付きのフルワイドカードを上から下へ積み、間を ↓ でつなぐ縦構造にする。
- * （以前は既定で横並び＝折り返してジグザグになり読みにくかった）
- */
+/** flow: 順番に流れる図解。横/縦で矢印の向きを変える。 */
 function FlowView({ spec }: { spec: FlowDiagram }) {
+  const horizontal = spec.direction !== "vertical"; // 既定は横並び
   return (
     <DiagramFrame title={spec.title}>
-      <ol className="flex flex-col">
+      <ol
+        className={
+          horizontal
+            ? "flex flex-wrap items-stretch gap-2"
+            : "flex flex-col gap-2"
+        }
+      >
         {spec.steps.map((step, i) => (
-          <li key={i}>
-            <div className="flex items-start gap-3 rounded-xl bg-indigo-50 px-3 py-2.5">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-                {i + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-indigo-700">{step.label}</p>
-                {step.description && (
-                  <p className="mt-0.5 text-xs leading-relaxed text-indigo-900/70">
-                    {step.description}
-                  </p>
-                )}
-              </div>
+          <li
+            key={i}
+            className={horizontal ? "flex items-center gap-2" : ""}
+          >
+            <div className="rounded-xl bg-indigo-50 px-3 py-2">
+              <p className="text-sm font-bold text-indigo-700">{step.label}</p>
+              {step.description && (
+                <p className="mt-0.5 text-xs text-indigo-900/70">
+                  {step.description}
+                </p>
+              )}
             </div>
             {i < spec.steps.length - 1 && (
-              <div
-                className="flex justify-center py-1 text-indigo-300"
+              <span
+                className="select-none text-indigo-300"
                 aria-hidden
               >
-                ↓
-              </div>
+                {horizontal ? "→" : "↓"}
+              </span>
             )}
           </li>
         ))}
@@ -620,41 +621,30 @@ function QuadrantCell({
   );
 }
 
-/**
- * cycle: 循環。ステップを上から下へ縦に積み、最後に先頭へ戻ることを示す（例: PDCA）。
- * flow と同じ縦構造で、最後のステップから ↺ ラベルへ ↓ でつないで循環を表す。
- */
+/** cycle: 循環。ステップを並べ、最後に先頭へ戻ることを示す（例: PDCA）。 */
 function CycleView({ spec }: { spec: CycleDiagram }) {
   return (
     <DiagramFrame title={spec.title}>
-      <ol className="flex flex-col">
+      <ol className="flex flex-wrap items-stretch gap-2">
         {spec.steps.map((step, i) => (
-          <li key={i}>
-            <div className="flex items-start gap-3 rounded-xl bg-indigo-50 px-3 py-2.5">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
-                {i + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-indigo-700">{step.label}</p>
-                {step.description && (
-                  <p className="mt-0.5 text-xs leading-relaxed text-indigo-900/70">
-                    {step.description}
-                  </p>
-                )}
-              </div>
+          <li key={i} className="flex items-center gap-2">
+            <div className="rounded-xl bg-indigo-50 px-3 py-2">
+              <p className="text-sm font-bold text-indigo-700">{step.label}</p>
+              {step.description && (
+                <p className="mt-0.5 text-xs text-indigo-900/70">
+                  {step.description}
+                </p>
+              )}
             </div>
-            <div
-              className="flex justify-center py-1 text-indigo-300"
-              aria-hidden
-            >
-              ↓
-            </div>
+            <span className="select-none text-indigo-300" aria-hidden>
+              →
+            </span>
           </li>
         ))}
       </ol>
-      <p className="flex items-center justify-center gap-1.5 rounded-xl bg-indigo-50/70 px-3 py-2 text-xs font-semibold text-indigo-600">
+      <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-indigo-600">
         <span aria-hidden>↺</span>
-        {spec.loopLabel ?? "くりかえして改善する（先頭へ戻る）"}
+        {spec.loopLabel ?? "くりかえして改善する"}
       </p>
     </DiagramFrame>
   );
