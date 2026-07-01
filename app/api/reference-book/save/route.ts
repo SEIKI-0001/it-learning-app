@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 /**
  * POST /api/reference-book/save
  * ユーザーの参考書アウトラインを UPSERT する（1ユーザー1冊）。
- * body: { userId?: string, book: ReferenceBook }（ユーザーはセッション Cookie から解決）
+ * body: { userId?: string, book: ReferenceBook }（production ではセッション / fq_line Cookie からのみ解決）
  *
  * Supabase 未設定: 503 / userId なし: 401 / book 不正: 400 / 保存失敗: 500
  */

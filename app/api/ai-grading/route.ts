@@ -14,6 +14,11 @@ import { countTodayUsage, getUserPlan, logUsage } from "@/lib/billing/plan";
 export const runtime = "nodejs";
 
 const MIN_ANSWER_LENGTH = 20;
+const MAX_ANSWER_LENGTH = 2000;
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === "production";
+}
 
 /**
  * POST /api/ai-grading
@@ -48,8 +53,8 @@ export async function POST(request: Request) {
   const userAnswer = (body.userAnswer ?? "").trim();
   const userId = await getRequestUserId(body);
 
-  // 新認証システム有効時は匿名での AI 採点を禁止（ログイン必須）。
-  if (!userId && isAuthEnabled()) {
+  // production では匿名AI採点を禁止。非productionでは既存の auth-enabled ゲートを維持する。
+  if (!userId && (isProduction() || isAuthEnabled())) {
     return NextResponse.json(
       { ok: false, error: "AI採点を使うにはログインが必要です。" },
       { status: 401 }
@@ -63,6 +68,15 @@ export async function POST(request: Request) {
         ok: false,
         error:
           "もう少し詳しく書いてください。理由・仕組み・具体例を含めると採点できます。",
+      },
+      { status: 400 }
+    );
+  }
+  if (userAnswer.length > MAX_ANSWER_LENGTH) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "回答が長すぎます。要点を2,000文字以内にまとめてください。",
       },
       { status: 400 }
     );

@@ -4,10 +4,15 @@ import { loadAppStateForUser } from "@/lib/serverAppState";
 import {
   LINE_SESSION_COOKIE,
   LINE_SESSION_MAX_AGE,
+  isAuthEnabled,
   signLineSession,
 } from "@/lib/auth/lineSession";
 
 export const runtime = "nodejs";
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === "production";
+}
 
 /**
  * POST /api/session/resolve
@@ -16,6 +21,13 @@ export const runtime = "nodejs";
  * （SESSION_SECRET 設定時のみ）。クライアントは user_id を localStorage に保存し保存系に使う。
  */
 export async function POST(request: Request) {
+  if (isProduction() && !isAuthEnabled()) {
+    return NextResponse.json(
+      { ok: false, error: "session not configured" },
+      { status: 503 },
+    );
+  }
+
   let token = "";
   try {
     const body = (await request.json()) as { token?: string };
@@ -44,13 +56,53 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "lookup failed" }, { status: 500 });
   }
   if (!session) {
-    return NextResponse.json({ ok: false, error: "token not found" }, { status: 404 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "token not found",
+        message:
+          "このリンクは期限切れ、または使用済みです。LINEで「今日」または「はじめる」と送って、新しいリンクから開いてください。",
+      },
+      { status: 404 },
+    );
   }
-  if (session.expires_at && new Date(session.expires_at).getTime() < Date.now()) {
-    return NextResponse.json({ ok: false, error: "token expired" }, { status: 410 });
+  const expiresAt = session.expires_at ? new Date(session.expires_at).getTime() : NaN;
+  if (!Number.isFinite(expiresAt) || expiresAt < Date.now()) {
+    await supabase.from("line_sessions").delete().eq("token", token);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "token expired",
+        message:
+          "このリンクは期限切れです。LINEで「今日」または「はじめる」と送って、新しいリンクから開いてください。",
+      },
+      { status: 410 },
+    );
   }
 
   const userId = session.user_id as string;
+  const { data: consumed, error: consumeErr } = await supabase
+    .from("line_sessions")
+    .delete()
+    .eq("token", token)
+    .select("token")
+    .maybeSingle();
+
+  if (consumeErr) {
+    return NextResponse.json({ ok: false, error: "token consume failed" }, { status: 500 });
+  }
+  if (!consumed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "token already used",
+        message:
+          "このリンクはすでに使用済みです。LINEで「今日」または「はじめる」と送って、新しいリンクから開いてください。",
+      },
+      { status: 409 },
+    );
+  }
+
   const appState = await loadAppStateForUser(userId);
 
   const res = NextResponse.json({ ok: true, userId, appState });

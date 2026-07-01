@@ -25,11 +25,13 @@ import { fieldMastery } from "@/lib/study";
  *
  * 必要な環境変数:
  * - LINE_CHANNEL_SECRET / LINE_CHANNEL_ACCESS_TOKEN : 署名検証・返信送信
- * - APP_BASE_URL : 返信に載せる本番URLの基点(未設定ならホストから推定)
+ * - APP_BASE_URL / NEXT_PUBLIC_APP_URL : 返信に載せる本番URLの基点
  * - NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY : ユーザー紐づけ・進捗参照(任意)
  */
 
 export const runtime = "nodejs";
+
+const LINE_SESSION_TOKEN_TTL_MS = 15 * 60 * 1000;
 
 type LineEvent = {
   type: string;
@@ -42,10 +44,20 @@ type LineWebhookBody = {
   events?: LineEvent[];
 };
 
-/** リクエストから本番 URL の基点を決定する。env を優先し、無ければホストから推定。 */
-function resolveBaseUrl(request: Request): string {
-  const fromEnv = process.env.APP_BASE_URL?.trim();
+function isProduction(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+/** リクエストから本番 URL の基点を決定する。production では env を必須にする。 */
+function resolveBaseUrl(request: Request): string | null {
+  const fromEnv = (
+    process.env.APP_BASE_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    ""
+  ).trim();
   if (fromEnv) return fromEnv.replace(/\/+$/, "");
+
+  if (isProduction()) return null;
 
   const proto = request.headers.get("x-forwarded-proto") ?? "https";
   const host = request.headers.get("host");
@@ -83,9 +95,10 @@ async function linkUser(
       return { userId: null, token: null };
     }
     const token = randomUUID();
+    const expiresAt = new Date(Date.now() + LINE_SESSION_TOKEN_TTL_MS).toISOString();
     const { error: sessErr } = await supabase
       .from("line_sessions")
-      .insert({ token, user_id: user.id });
+      .insert({ token, user_id: user.id, expires_at: expiresAt });
     if (sessErr) {
       console.error("line_sessions insert failed", sessErr);
       return { userId: user.id as string, token: null };
@@ -352,6 +365,13 @@ export async function POST(request: Request) {
   const channelSecret = process.env.LINE_CHANNEL_SECRET?.trim();
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
 
+  if (isProduction() && !channelSecret) {
+    return NextResponse.json(
+      { ok: false, error: "line webhook not configured" },
+      { status: 503 },
+    );
+  }
+
   if (channelSecret) {
     const signature = request.headers.get("x-line-signature");
     if (!verifySignature(rawBody, signature, channelSecret)) {
@@ -367,6 +387,13 @@ export async function POST(request: Request) {
   }
 
   const baseUrl = resolveBaseUrl(request);
+  if (!baseUrl) {
+    return NextResponse.json(
+      { ok: false, error: "app url not configured" },
+      { status: 503 },
+    );
+  }
+
   const supabase = getServiceSupabase();
   const events = body.events ?? [];
   const plannedReplies: { replyToken?: string; text: string }[] = [];
@@ -395,7 +422,15 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, replied: Boolean(accessToken), plannedReplies });
+  const response: {
+    ok: true;
+    replied: boolean;
+    plannedReplies?: { replyToken?: string; text: string }[];
+  } = { ok: true, replied: Boolean(accessToken) };
+
+  if (!isProduction()) response.plannedReplies = plannedReplies;
+
+  return NextResponse.json(response);
 }
 
 // 動作確認用（ブラウザで開いて疎通チェックできるように）。
