@@ -99,17 +99,31 @@ export default function Home() {
         <div className="mx-auto w-full max-w-md md:max-w-3xl">
           <div className="flex items-center justify-between">
             <span className="text-lg font-extrabold">ITパスポート学習コーチ</span>
-            <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold">
-              🔥 {progress.streakCount}日連続
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold">
+                🔥 {progress.streakCount}日連続
+              </span>
+              <Link
+                href="/settings"
+                aria-label="設定"
+                className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold transition active:scale-95"
+              >
+                ⚙️
+              </Link>
+            </div>
           </div>
           <div className="mt-4 flex items-end gap-4">
-            <div>
-              <p className="text-xs text-white/80">試験日まで</p>
+            <Link
+              href="/settings"
+              className="text-left transition active:scale-[0.98]"
+            >
+              <p className="text-xs text-white/80">
+                試験日まで<span aria-hidden className="ml-1">✎</span>
+              </p>
               <p className="text-3xl font-extrabold">
                 {remaining === null ? "未設定" : `あと${remaining}日`}
               </p>
-            </div>
+            </Link>
             <div className="ml-auto text-right">
               <p className="text-xs text-white/80">
                 {rank.current.emoji} {rank.current.name}
