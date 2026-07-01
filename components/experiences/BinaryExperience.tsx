@@ -517,8 +517,7 @@ export default function BinaryExperience() {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        😵 最初のつまずき：「2進数なのに <b>2</b> という数字が出てこない！」 — じつはこれが正解。
-        <b>1の次はくり上がって 10</b> になります。まず下のボタンで数えてみましょう。
+        💡 答え：<b>0と1を何桁も並べる</b>と、数・文字・命令をすべて表現できるから。8桁（8ビット）だけで 256通り、16桁なら 65,536通りも表せます。コンピュータはこの組み合わせを毎秒何十億回も処理することで、複雑な計算を実現しています。
       </div>
       <CountingDemo />
       <PlaceValue />
