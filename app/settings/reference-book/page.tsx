@@ -20,6 +20,13 @@ import {
   loadReferenceBookFromDb,
   saveReferenceBookToDb,
 } from "@/lib/referenceBookSync";
+import {
+  BOOK_TYPE_LABELS,
+  listReferenceBookPresets,
+  referenceBookFromPreset,
+  suggestPresetForText,
+  type ReferenceBookPresetSummary,
+} from "@/lib/referenceBookPresets";
 import { getUserId } from "@/lib/userSession";
 import TopicPicker from "@/components/reference/TopicPicker";
 import BottomNav from "@/components/BottomNav";
@@ -168,6 +175,40 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
     setToc("");
   }
 
+  // --- プリセット（登録済みの参考書）の章立てを反映 ---
+  // presetIsEditableTemplate: 反映後はたたき台。ユーザーが自由に編集できる。
+  // doNotOverwriteUserEditedBook: 既に章があるときは上書き確認する。
+  function applyPreset(id: string) {
+    const preset = referenceBookFromPreset(id);
+    if (!preset) return;
+    if (
+      book.chapters.length > 0 &&
+      !window.confirm(
+        `現在の章構成（${book.chapters.length}章）を「${preset.title}」の章立てに置き換えます。よろしいですか？`,
+      )
+    ) {
+      return;
+    }
+    // メタは空欄のみプリセットで補完し、埋まっていればユーザーの入力を尊重する。
+    const next: ReferenceBook = {
+      ...book,
+      title: book.title.trim() || preset.title,
+      publisher: book.publisher?.trim() || preset.publisher,
+      edition: book.edition?.trim() || preset.edition,
+      active: true,
+      chapters: preset.chapters,
+    };
+    update(next);
+    persistToDb(next);
+  }
+
+  // 参考書名などからプリセットを推測（該当があれば反映を提案）。
+  const suggestion = suggestPresetForText(
+    [book.title, book.publisher ?? "", book.edition ?? ""].join(" "),
+  );
+  const showSuggestion =
+    suggestion !== null && book.chapters.length === 0;
+
   return (
     <main className="min-h-screen bg-gray-50 pb-28">
       <div className="mx-auto w-full max-w-md px-4 py-8 md:max-w-2xl">
@@ -240,6 +281,31 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
             />
           </Field>
         </section>
+
+        {/* 参考書名から推測したプリセットの反映提案 */}
+        {showSuggestion && suggestion && (
+          <div className="mt-4 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+            <p className="text-sm font-bold text-amber-800">
+              📚「{suggestion.title}」の章立てが登録されています
+            </p>
+            <p className="mt-1 text-xs text-amber-700">
+              この参考書の章構成（{suggestion.chapterCount}章）を反映できます。反映後は自由に編集できます。
+            </p>
+            <button
+              type="button"
+              onClick={() => applyPreset(suggestion.id)}
+              className="mt-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white"
+            >
+              章立てを反映する
+            </button>
+          </div>
+        )}
+
+        {/* 登録済みの参考書（プリセット）から選ぶ */}
+        <PresetPicker
+          onSelect={applyPreset}
+          selectedTitle={book.title}
+        />
 
         {/* 目次テキスト貼り付け */}
         <section className="mt-5 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-100">
@@ -470,6 +536,89 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
 
       <BottomNav />
     </main>
+  );
+}
+
+function PresetPicker({
+  onSelect,
+  selectedTitle,
+}: {
+  onSelect: (id: string) => void;
+  selectedTitle: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const presets = listReferenceBookPresets();
+  if (presets.length === 0) return null;
+
+  // 種類ごとにまとめて表示（教科書 → ドリル → 問題集）。
+  const groups = presets.reduce<Record<string, ReferenceBookPresetSummary[]>>(
+    (acc, p) => {
+      (acc[p.bookType] ??= []).push(p);
+      return acc;
+    },
+    {},
+  );
+
+  return (
+    <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <span>
+          <span className="block text-sm font-bold text-gray-800">
+            📚 登録済みの参考書から選ぶ
+          </span>
+          <span className="mt-0.5 block text-xs text-gray-500">
+            主要な参考書は章立てが登録済み。選ぶと反映され、あとから編集できます。
+          </span>
+        </span>
+        <span className="ml-2 shrink-0 text-gray-400">{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-3 space-y-4">
+          {Object.entries(groups).map(([type, items]) => (
+            <div key={type}>
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-400">
+                {BOOK_TYPE_LABELS[type as keyof typeof BOOK_TYPE_LABELS] ?? type}
+              </p>
+              <ul className="space-y-2">
+                {items.map((p) => {
+                  const active = p.title === selectedTitle;
+                  return (
+                    <li
+                      key={p.id}
+                      className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-gray-700">
+                          {p.title}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-gray-400">
+                          {[p.publisher, p.edition, `${p.chapterCount}章`]
+                            .filter(Boolean)
+                            .join(" ・ ")}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onSelect(p.id)}
+                        className="shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                        disabled={active}
+                      >
+                        {active ? "反映中" : "反映"}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
