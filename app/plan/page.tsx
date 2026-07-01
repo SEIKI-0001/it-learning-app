@@ -8,9 +8,10 @@ import { ON_TRACK_LABELS } from "@/types/plan";
 import type { ReferenceBook } from "@/types/referenceBook";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
-import { generateLearningPlan, getPhaseDef, STUDY_PHASES } from "@/lib/studyPlanner";
+import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
 import BottomNav from "@/components/BottomNav";
+import RoadmapMap from "@/components/RoadmapMap";
 
 // /plan = 合格までの全体ロードマップ。
 // 計画ロジックは lib/studyPlanner.ts（純粋関数）に閉じ込め、ここは表示だけを担う。
@@ -115,70 +116,12 @@ export default function PlanPage() {
           </p>
         </section>
 
-        {/* 全体ロードマップ */}
+        {/* 全体ロードマップ（すごろく風マップ） */}
         <section>
           <h2 className="mb-3 text-base font-extrabold text-gray-800">
             合格までのロードマップ
           </h2>
-          <ol className="space-y-2.5">
-            {plan.phases.map((p) => {
-              const def = STUDY_PHASES.find((d) => d.id === p.id)!;
-              const isCurrent = p.status === "current";
-              const isDone = p.status === "done";
-              return (
-                <li
-                  key={p.id}
-                  className={`rounded-2xl p-4 shadow-sm ring-1 ${
-                    isCurrent
-                      ? "bg-indigo-50 ring-indigo-300"
-                      : isDone
-                        ? "bg-white ring-gray-100"
-                        : "bg-white ring-gray-100"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <p
-                      className={`flex items-center gap-2 text-sm font-extrabold ${
-                        isCurrent ? "text-indigo-700" : "text-gray-800"
-                      }`}
-                    >
-                      <span className="text-lg" aria-hidden>
-                        {def.emoji}
-                      </span>
-                      {def.title}
-                    </p>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                        isDone
-                          ? "bg-emerald-100 text-emerald-700"
-                          : isCurrent
-                            ? "bg-indigo-600 text-white"
-                            : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      {isDone ? "完了" : isCurrent ? "進行中" : "これから"}
-                    </span>
-                  </div>
-                  {!isDone && (
-                    <p className="mt-1.5 text-xs text-gray-500">{def.summary}</p>
-                  )}
-                  {(isCurrent || isDone) && (
-                    <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                      <div
-                        className={`h-full rounded-full ${isDone ? "bg-emerald-400" : "bg-indigo-500"}`}
-                        style={{ width: `${p.progress}%` }}
-                      />
-                    </div>
-                  )}
-                  {isCurrent && (
-                    <p className="mt-2 text-xs font-semibold text-indigo-600">
-                      👉 {p.hint}
-                    </p>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
+          <RoadmapMap phases={plan.phases} />
         </section>
 
         {/* 今週のゴール */}
