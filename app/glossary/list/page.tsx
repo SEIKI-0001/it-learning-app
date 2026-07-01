@@ -57,7 +57,7 @@ export default function WordlistListPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-3 pt-3 text-white">
-        <div className="mx-auto flex w-full max-w-md items-center gap-3">
+        <div className="mx-auto flex w-full max-w-md items-center gap-3 md:max-w-4xl">
           <Link href="/glossary" className="text-sm font-medium text-white/80">
             ←
           </Link>
@@ -68,7 +68,7 @@ export default function WordlistListPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4">
+      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4 md:max-w-4xl">
         {/* カテゴリフィルタ */}
         <div className="flex flex-wrap gap-2">
           <FilterChip
@@ -104,7 +104,7 @@ export default function WordlistListPage() {
 
         <p className="text-xs font-bold text-gray-400">{list.length}語</p>
 
-        <ul className="space-y-2">
+        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((w) => {
             const st = progress[w.id]?.status ?? "new";
             return (

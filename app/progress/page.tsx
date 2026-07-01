@@ -130,7 +130,7 @@ export default function ProgressPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-4 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-4xl">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-extrabold">進捗</h1>
             <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold">
@@ -206,7 +206,7 @@ export default function ProgressPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4">
+      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4 md:max-w-4xl">
         {/* 数値サマリ */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard label="学習済み" value={`${completedCount}/${topics.length}`} />
@@ -214,6 +214,7 @@ export default function ProgressPage() {
           <StatCard label="累計XP" value={`${progress.exp}`} />
         </div>
 
+        <div className="grid gap-4 md:grid-cols-2">
         {/* 3分野習熟度 */}
         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
           <h2 className="mb-3 text-base font-extrabold text-gray-800">
@@ -313,6 +314,7 @@ export default function ProgressPage() {
           </div>
           <span className="text-lg font-extrabold text-emerald-500">→</span>
         </Link>
+        </div>
       </div>
 
       <BottomNav />

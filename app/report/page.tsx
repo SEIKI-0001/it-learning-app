@@ -27,7 +27,7 @@ export default function ReportPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-emerald-500 to-teal-600 px-4 pb-5 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <Link
             href="/progress"
             className="text-sm font-bold text-white/90"
@@ -41,7 +41,7 @@ export default function ReportPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-5">
         <WeeklyReportCard state={state} />
       </div>
 

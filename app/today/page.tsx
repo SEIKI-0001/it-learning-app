@@ -87,14 +87,14 @@ export default function TodayPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-4 pt-4 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <p className="text-[11px] font-semibold text-white/80">今日の学習メニュー</p>
           <h1 className="mt-0.5 text-lg font-extrabold leading-tight">{menu.theme}</h1>
           <p className="mt-1 text-xs text-white/90">⏱️ 目安 {menu.totalMinutes}分</p>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-7 px-4 py-6">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-7 px-4 py-6">
         <p className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700">
           「完了」を押して、ストリークを伸ばそう
         </p>

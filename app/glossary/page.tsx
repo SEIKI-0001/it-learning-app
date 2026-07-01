@@ -47,7 +47,7 @@ export default function WordlistHubPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-4 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <h1 className="text-xl font-extrabold">📇 英略語 単語帳</h1>
           <p className="mt-0.5 text-xs text-white/90">
             ITパスポートの英略語{TOTAL}語を、意味・正式名称・違いまでまとめて暗記。
@@ -55,7 +55,7 @@ export default function WordlistHubPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-6 px-4 py-5">
+      <div className="mx-auto w-full max-w-md space-y-6 px-4 py-5 md:max-w-2xl">
         {/* 学習状況サマリ */}
         <section className="rounded-2xl border border-gray-200 bg-white p-4">
           <div className="flex items-baseline justify-between">
@@ -85,7 +85,7 @@ export default function WordlistHubPage() {
         </section>
 
         {/* 学習メニュー */}
-        <section className="space-y-2.5">
+        <section className="grid gap-2.5 sm:grid-cols-2">
           <Link
             href="/glossary/study?mode=today"
             className="flex items-center justify-between rounded-2xl bg-indigo-600 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"

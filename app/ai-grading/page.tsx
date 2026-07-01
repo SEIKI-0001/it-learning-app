@@ -286,7 +286,7 @@ export default function AiGradingPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-4 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <h1 className="text-xl font-extrabold">📝 AI採点</h1>
           <p className="mt-0.5 text-xs text-white/90">
             用語を覚えるだけでなく、説明できるかをAIがチェックします
@@ -294,7 +294,7 @@ export default function AiGradingPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-5">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-5 px-4 py-5">
         {/* プラン表示（無料/Pro の出し分け） */}
         <PlanCard
           status={status}

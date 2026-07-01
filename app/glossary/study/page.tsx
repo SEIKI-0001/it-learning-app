@@ -29,7 +29,7 @@ export default async function WordlistStudyPage({
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-2 pt-2 text-white">
-        <div className="mx-auto flex w-full max-w-md items-center gap-3">
+        <div className="mx-auto flex w-full max-w-md md:max-w-2xl items-center gap-3">
           <Link href="/glossary" className="text-sm font-medium text-white/80">
             ←
           </Link>
@@ -37,7 +37,7 @@ export default async function WordlistStudyPage({
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-3">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl px-4 py-3">
         <FlashcardDeck mode={mode} />
       </div>
 

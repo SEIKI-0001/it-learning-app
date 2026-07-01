@@ -88,7 +88,7 @@ export default function ReviewPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 pb-6 pt-6 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <h1 className="text-2xl font-extrabold">復習</h1>
           <p className="mt-1 text-sm text-white/90">
             間違えた問題・苦手分野・復習期限のきたトピックをまとめました。
@@ -96,7 +96,7 @@ export default function ReviewPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-6">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-6">
         {reviewItems.length === 0 ? (
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">
             <p className="text-3xl">✨</p>

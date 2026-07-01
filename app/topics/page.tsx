@@ -40,7 +40,7 @@ export default function TopicsPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-6 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-5xl">
           <h1 className="text-2xl font-extrabold">学習トピック</h1>
           <p className="mt-1 text-sm text-white/90">
             ストラテジ・マネジメント・テクノロジの3分野を、図解つきで学べます。
@@ -48,7 +48,7 @@ export default function TopicsPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7">
+      <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7 md:max-w-5xl">
         {taxonomy.map((group) => {
           const topics = getTopicsByField(group.field);
           if (topics.length === 0) return null;
@@ -57,14 +57,14 @@ export default function TopicsPage() {
               <h2 className="mb-3 text-lg font-extrabold text-gray-800">
                 {FIELD_LABELS[group.field]}
               </h2>
-              <ul className="space-y-2.5">
+              <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                 {topics.map((t) => {
                   const status = statusOf(t, progress);
                   return (
                     <li key={t.id}>
                       <Link
                         href={`/topics/${t.id}`}
-                        className="block rounded-2xl border border-gray-200 bg-white px-4 py-3.5 transition active:scale-[0.99]"
+                        className="block h-full rounded-2xl border border-gray-200 bg-white px-4 py-3.5 transition active:scale-[0.99]"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-xs font-semibold text-indigo-500">

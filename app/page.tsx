@@ -96,7 +96,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-6 pt-6 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-3xl">
           <div className="flex items-center justify-between">
             <span className="text-lg font-extrabold">ITパスポート学習コーチ</span>
             <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold">
@@ -120,7 +120,8 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6">
+      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-3xl">
+        <div className="grid gap-5 md:grid-cols-2">
         {/* 今日やること */}
         <Link
           href="/today"
@@ -154,6 +155,7 @@ export default function Home() {
               `・復習待ち ${progress.reviewQueue.length}`}
           </p>
         </section>
+        </div>
 
         {/* LINE導線 */}
         <p className="px-1 text-center text-xs text-gray-400">

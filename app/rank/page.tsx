@@ -28,7 +28,7 @@ export default function RankPage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-5 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <Link href="/progress" className="text-sm font-bold text-white/90">
             ← 進捗にもどる
           </Link>
@@ -39,7 +39,7 @@ export default function RankPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-5">
         <RankCard exp={state.progress.exp} />
         <p className="px-1 text-xs leading-relaxed text-gray-500">
           ランクは他の人との比較ではなく、これまでの積み上げが見える指標です。

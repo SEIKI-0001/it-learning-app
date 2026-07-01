@@ -23,7 +23,7 @@ export default async function WordlistDetailPage({
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-3 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <div className="flex items-center gap-3">
             <Link href="/glossary" className="text-sm font-medium text-white/80">
               ←
@@ -42,7 +42,7 @@ export default async function WordlistDetailPage({
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 py-5">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl px-4 py-5">
         <WordDetail entry={entry} />
 
         <Link

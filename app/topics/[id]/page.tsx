@@ -33,7 +33,7 @@ export default async function TopicDetailPage({
     <main className="min-h-screen bg-gray-50 pb-24">
       {/* ヘッダー */}
       <div className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md">
+        <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <Link href="/topics" className="text-sm font-medium text-white/80">
             ← トピック一覧
           </Link>
@@ -56,7 +56,7 @@ export default async function TopicDetailPage({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7">
+      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-8 px-4 py-7">
         <TopicContent topic={topic} />
         <TopicReviewSections topic={topic} />
       </div>

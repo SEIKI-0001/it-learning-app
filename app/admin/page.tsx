@@ -100,7 +100,7 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="mx-auto w-full max-w-md">
+      <div className="mx-auto w-full max-w-md md:max-w-5xl">
         <div className="mb-1 flex items-center justify-between">
           <h1 className="text-xl font-extrabold text-gray-800">管理ビュー（検証用）</h1>
           <Link href="/" className="text-sm font-medium text-indigo-500">
