@@ -24,6 +24,8 @@ const STATUS_FILTERS: { key: StatusKey; label: string }[] = [
   { key: "done", label: "理解済み" },
 ];
 
+const FIELD_ORDER: TopicField[] = ["strategy", "management", "technology"];
+
 const FIELD_FILTERS: { key: "all" | TopicField; label: string }[] = [
   { key: "all", label: "全分野" },
   { key: "strategy", label: "ストラテジ" },
@@ -69,9 +71,8 @@ export default function TopicsPage() {
     });
   }, [filteredByField, statusFilter, searchQuery, progress]);
 
-  const fields: TopicField[] = ["strategy", "management", "technology"];
   const groupedTopics = useMemo(() => {
-    return fields.map((field) => ({
+    return FIELD_ORDER.map((field) => ({
       field,
       topics: filteredTopics.filter((t) => t.field === field),
     })).filter((g) => g.topics.length > 0);
@@ -109,13 +110,17 @@ export default function TopicsPage() {
             <input
               type="text"
               placeholder="トピックを検索..."
+              aria-label="トピックを検索"
+              enterKeyHint="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery("")}
+                aria-label="検索をクリア"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 ✕
@@ -128,7 +133,9 @@ export default function TopicsPage() {
             {FIELD_FILTERS.map((f) => (
               <button
                 key={f.key}
+                type="button"
                 onClick={() => setFieldFilter(f.key)}
+                aria-pressed={fieldFilter === f.key}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                   fieldFilter === f.key
                     ? "bg-indigo-500 text-white"
@@ -142,7 +149,9 @@ export default function TopicsPage() {
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.key}
+                type="button"
                 onClick={() => setStatusFilter(f.key)}
+                aria-pressed={statusFilter === f.key}
                 className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
                   statusFilter === f.key
                     ? "bg-violet-500 text-white"

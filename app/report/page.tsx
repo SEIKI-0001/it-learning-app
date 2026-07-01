@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import WeeklyReportCard from "@/components/progress/WeeklyReportCard";
 import BottomNav from "@/components/BottomNav";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // 週間レポート専用ページ。進捗画面からリンクで遷移する(常時表示はしない)。
 export default function ReportPage() {
@@ -17,11 +18,7 @@ export default function ReportPage() {
   }, [state, router]);
 
   if (state === undefined || state === null) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   return (

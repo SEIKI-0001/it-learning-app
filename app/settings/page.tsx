@@ -10,6 +10,7 @@ import { FIELD_LABELS } from "@/types/content";
 import { saveAppState } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
 import { getUserId, saveProfileToDb } from "@/lib/userSession";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // 設定変更。オンボーディングで入力した試験予定日・学習可能時間・理解度・苦手分野・
 // 学習スタイルを、あとから何度でも変更できるようにする。現在値をプリセットして編集し保存する。
@@ -29,11 +30,7 @@ export default function SettingsPage() {
   }, [state, router]);
 
   if (state === undefined) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
   if (state === null || !state.profile) return null;
 

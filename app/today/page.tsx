@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { UserAnswer } from "@/types";
@@ -20,6 +20,7 @@ import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
 import BottomNav from "@/components/BottomNav";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // 今日の学習メニュー。固定Dayではなく generateTodayMenu の結果を表示する。
 export default function TodayPage() {
@@ -38,6 +39,14 @@ export default function TodayPage() {
     if (state === null) router.replace("/onboarding");
   }, [state, router]);
 
+  // 長い問題リストが結果カードに置き換わるため、完了時は結果へスクロールして迷子を防ぐ
+  const resultRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (completed) {
+      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [completed]);
+
   const topics = getAllTopics();
   const plan = useMemo(
     () => (state?.profile ? generateLearningPlan(state, topics) : null),
@@ -46,11 +55,7 @@ export default function TodayPage() {
   const menu = plan?.todayMenu ?? null;
 
   if (state === undefined || state === null || !menu || !plan) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   const learnItem = menu.items.find((i) => i.kind === "learn");
@@ -179,7 +184,10 @@ export default function TodayPage() {
               ✏️ 今日の確認問題
             </h3>
             {completed ? (
-              <div className="animate-pop-in rounded-2xl bg-green-50 p-5 text-center ring-1 ring-green-200">
+              <div
+                ref={resultRef}
+                className="animate-pop-in rounded-2xl bg-green-50 p-5 text-center ring-1 ring-green-200"
+              >
                 <p className="text-3xl">{result && result.correct === result.total ? "🏆" : "🎉"}</p>
                 <p className="mt-2 text-base font-extrabold text-green-700">
                   {result && result.correct === result.total

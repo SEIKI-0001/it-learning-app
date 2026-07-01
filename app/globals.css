@@ -8,6 +8,23 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  /* 各要素が active:scale 等で押下フィードバックを持つため、OS標準のハイライトは消す */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* キーボード操作時のフォーカスを常に見えるようにする */
+:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 視差・アニメーションを減らす設定のユーザーには装飾アニメーションを止める */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake,
+  .animate-pop-in {
+    animation: none;
+  }
 }
 
 @keyframes shake {

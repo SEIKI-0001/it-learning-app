@@ -9,6 +9,7 @@ import { fieldMastery } from "@/lib/study";
 import { getRankStatus } from "@/lib/rank";
 import BottomNav from "@/components/BottomNav";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
+import LoadingScreen from "@/components/LoadingScreen";
 
 function formatMonthDay(iso: string | null): string {
   if (!iso) return "未定";
@@ -25,11 +26,7 @@ export default function Home() {
   const [state] = useAppState();
 
   if (state === undefined) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   // --- 未設定: サービス紹介 ---

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import RankCard from "@/components/progress/RankCard";
 import BottomNav from "@/components/BottomNav";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // ランク全体像の専用ページ。進捗バナーからリンクで遷移する。
 // ランクは累計XPで決まる「本人の成長段階」(他人比較ではない)。
@@ -18,11 +19,7 @@ export default function RankPage() {
   }, [state, router]);
 
   if (state === undefined || state === null) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   return (

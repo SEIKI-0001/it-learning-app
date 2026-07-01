@@ -12,6 +12,7 @@ import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
 import BottomNav from "@/components/BottomNav";
 import RoadmapMap from "@/components/RoadmapMap";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // /plan = 合格までの全体ロードマップ。
 // 計画ロジックは lib/studyPlanner.ts（純粋関数）に閉じ込め、ここは表示だけを担う。
@@ -59,11 +60,7 @@ export default function PlanPage() {
   );
 
   if (state === undefined || state === null || !plan) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   const phaseDef = getPhaseDef(plan.currentPhase);

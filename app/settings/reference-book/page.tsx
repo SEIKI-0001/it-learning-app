@@ -30,6 +30,7 @@ import {
 import { getUserId } from "@/lib/userSession";
 import TopicPicker from "@/components/reference/TopicPicker";
 import BottomNav from "@/components/BottomNav";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // /settings/reference-book = 参考書アウトラインの編集。
 // 参考書名/出版社/版/使用中/章節の追加編集削除並び替え/メモ/キーワード/トピック紐づけ/
@@ -64,11 +65,7 @@ export default function ReferenceBookSettingsPage() {
   }, []);
 
   if (book === undefined) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   return <ReferenceBookEditor initial={book} />;

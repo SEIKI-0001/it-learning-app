@@ -60,8 +60,18 @@ export default function ChoiceButton({
         {choiceKey}
       </span>
       <span className="flex-1 leading-snug">{text}</span>
-      {revealed && isCorrect && <span aria-hidden>⭕️</span>}
-      {revealed && isSelected && !isCorrect && <span aria-hidden>✗</span>}
+      {revealed && isCorrect && (
+        <span>
+          <span aria-hidden>⭕️</span>
+          <span className="sr-only">正解</span>
+        </span>
+      )}
+      {revealed && isSelected && !isCorrect && (
+        <span>
+          <span aria-hidden>✗</span>
+          <span className="sr-only">不正解</span>
+        </span>
+      )}
     </button>
   );
 }

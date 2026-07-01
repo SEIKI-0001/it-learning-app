@@ -18,20 +18,34 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-200 bg-white/95 backdrop-blur">
+    <nav
+      aria-label="メインナビゲーション"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+    >
       <ul className="mx-auto flex w-full max-w-md">
         {ITEMS.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="relative flex-1">
+              {/* アクティブ表示は色だけに頼らず上端バーでも示す */}
+              {active && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-indigo-600"
+                />
+              )}
               <Link
                 href={item.href}
-                className={`flex flex-col items-center gap-0.5 py-2.5 text-xs font-bold transition ${
+                aria-current={active ? "page" : undefined}
+                className={`flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[11px] font-bold tracking-tight transition ${
                   active ? "text-indigo-600" : "text-gray-400"
                 }`}
               >
-                <span className="text-lg" aria-hidden>
+                <span
+                  className={`text-lg transition ${active ? "" : "opacity-70 grayscale-[35%]"}`}
+                  aria-hidden
+                >
                   {item.emoji}
                 </span>
                 {item.label}
