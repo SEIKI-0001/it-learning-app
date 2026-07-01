@@ -4,13 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { UserAnswer } from "@/types";
-import type { ReferenceBook } from "@/types/referenceBook";
 import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
 import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
-import { loadReferenceBook } from "@/lib/referenceBook";
 import { completeTopicStudy } from "@/lib/study";
 import {
   getUserId,
@@ -21,7 +19,6 @@ import TopicQuiz from "@/components/learn/TopicQuiz";
 import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
-import TodayReferenceGuide from "@/components/learn/TodayReferenceGuide";
 import BottomNav from "@/components/BottomNav";
 
 // 今日の学習メニュー。固定Dayではなく generateTodayMenu の結果を表示する。
@@ -37,23 +34,9 @@ export default function TodayPage() {
     streak: number;
   } | null>(null);
 
-  const [book, setBook] = useState<ReferenceBook | null>(null);
-
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [state, router]);
-
-  useEffect(() => {
-    let cancelled = false;
-    function init() {
-      const b = loadReferenceBook();
-      if (!cancelled) setBook(b);
-    }
-    init();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const topics = getAllTopics();
   const plan = useMemo(
@@ -186,11 +169,6 @@ export default function TodayPage() {
               <p className="mt-1 text-sm leading-relaxed text-gray-600">
                 {primary.summary}
               </p>
-            </div>
-
-            {/* 今日の参考書: 紐づく章・節、無ければ探すキーワードにフォールバック */}
-            <div className="mt-4">
-              <TodayReferenceGuide topic={primary} book={book} />
             </div>
 
             <div className="mt-6">

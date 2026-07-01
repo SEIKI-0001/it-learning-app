@@ -87,6 +87,14 @@ export default function TopicsPage() {
           <p className="mt-1 text-sm text-white/90">
             ストラテジ・マネジメント・テクノロジの3分野を、図解つきで学べます。
           </p>
+          <div className="mt-3">
+            <Link
+              href="/syllabus"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/50 px-3 py-1.5 text-xs font-semibold text-white/90 hover:bg-white/10 transition"
+            >
+              📋 シラバス対応表
+            </Link>
+          </div>
         </div>
       </header>
 
