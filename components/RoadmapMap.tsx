@@ -4,11 +4,12 @@ import { useState } from "react";
 import type { PhaseProgress } from "@/types/plan";
 import { STUDY_PHASES } from "@/lib/studyPlanner";
 
-// 合格までのロードマップを「すごろく風の一本道マップ」で見せるコンポーネント。
+// 合格までのロードマップを「ゲームのワールドマップ風」で見せるコンポーネント。
 // - データは plan.phases（PhaseProgress[]）＋ STUDY_PHASES の静的メタのみ。新規データは不要。
-// - 道は SVG のスネーク曲線、チェックポイントは絶対配置のピン。
-//   両者を同じ % 座標系（viewBox 0..100, preserveAspectRatio="none"）に載せて確実に重ねる。
-//   線の太さは vector-effect="non-scaling-stroke" で歪ませない。
+// - 8ノードを上下2段のつづら折り（4→4）に配置し、縦幅を抑える。
+//   コンテナは aspect-[100/62] で viewBox(0 0 100 62) と比率を一致させ、
+//   SVG 地形・道と HTML ピン（%配置）の座標系を確実に重ねる。
+// - 地形（山・森・湖・等高線・コンパス）は絵文字でなく SVG 描画で地図らしく。
 // - ピンをタップすると下から詳細シートが出る（文字はマップに詰め込まない方針）。
 
 type NodeKind = "phase" | "goal";
@@ -22,32 +23,23 @@ type MapNode = {
   status: PhaseProgress["status"] | "goal";
   progress: number;
   hint: string;
-  x: number; // 0..100
+  x: number; // viewBox単位 (0..100)
+  y: number; // viewBox単位 (0..62)
 };
 
-// 7フェーズ＋ゴールの計8ノードを左右に振って配置する。
-const X_POSITIONS = [28, 70, 30, 68, 32, 66, 42, 50];
+const VB_W = 100;
+const VB_H = 62;
 
-// RPG風の地図装飾（山・森・水・城）。ピンと重ならないよう端側に低透明度で散らす。
-// x/y は % 座標、size は px（preserveAspectRatio の歪みを受けない絶対配置）。
-const DECOR: {
-  emoji: string;
-  x: number;
-  y: number;
-  size: number;
-  op: number;
-  rot?: number;
-}[] = [
-  { emoji: "🏔️", x: 12, y: 5, size: 34, op: 0.55, rot: -6 },
-  { emoji: "⛰️", x: 86, y: 8, size: 30, op: 0.5 },
-  { emoji: "🌲", x: 84, y: 22, size: 22, op: 0.55 },
-  { emoji: "🌲", x: 13, y: 26, size: 20, op: 0.5 },
-  { emoji: "🌳", x: 88, y: 38, size: 22, op: 0.5 },
-  { emoji: "🌊", x: 11, y: 48, size: 24, op: 0.45 },
-  { emoji: "🏕️", x: 85, y: 55, size: 22, op: 0.5 },
-  { emoji: "🌲", x: 15, y: 64, size: 20, op: 0.5 },
-  { emoji: "🌳", x: 12, y: 82, size: 22, op: 0.5 },
-  { emoji: "🏰", x: 82, y: 90, size: 30, op: 0.6, rot: 3 },
+// 7フェーズ＋ゴールの計8ノード。上段を左→右、下段を右→左に折り返す。
+const POSITIONS: { x: number; y: number }[] = [
+  { x: 13, y: 17 },
+  { x: 37.7, y: 17 },
+  { x: 62.3, y: 17 },
+  { x: 87, y: 17 },
+  { x: 87, y: 44 },
+  { x: 62.3, y: 44 },
+  { x: 37.7, y: 44 },
+  { x: 13, y: 44 },
 ];
 
 const STATUS_LABEL: Record<string, string> = {
@@ -60,6 +52,7 @@ const STATUS_LABEL: Record<string, string> = {
 function buildNodes(phases: PhaseProgress[]): MapNode[] {
   const phaseNodes: MapNode[] = phases.map((p, i) => {
     const def = STUDY_PHASES.find((d) => d.id === p.id)!;
+    const pos = POSITIONS[i] ?? { x: 50, y: 30 };
     return {
       key: p.id,
       kind: "phase",
@@ -69,11 +62,12 @@ function buildNodes(phases: PhaseProgress[]): MapNode[] {
       status: p.status,
       progress: p.progress,
       hint: p.hint,
-      x: X_POSITIONS[i] ?? 50,
+      ...pos,
     };
   });
 
   const allDone = phases.every((p) => p.status === "done");
+  const goalPos = POSITIONS[phaseNodes.length] ?? { x: 50, y: 44 };
   const goal: MapNode = {
     key: "goal",
     kind: "goal",
@@ -83,84 +77,145 @@ function buildNodes(phases: PhaseProgress[]): MapNode[] {
     status: "goal",
     progress: allDone ? 100 : 0,
     hint: "",
-    x: X_POSITIONS[phaseNodes.length] ?? 50,
+    ...goalPos,
   };
 
   return [...phaseNodes, goal];
 }
 
-function yFor(index: number, total: number): number {
-  return ((index + 0.5) / total) * 100;
+// 2点をつなぐ道のpath。同じ段は緩く弧を描き、段の折り返しは外側にふくらむ。
+function segmentPath(a: MapNode, b: MapNode): string {
+  if (Math.abs(a.y - b.y) < 1) {
+    // 同じ段: 中央の帯に向かってわずかに弧を描く（上段は下へ、下段は上へ）
+    const dip = a.y < VB_H / 2 ? 3 : -3;
+    const dx = b.x - a.x;
+    return `M ${a.x} ${a.y} C ${a.x + dx * 0.35} ${a.y + dip}, ${
+      b.x - dx * 0.35
+    } ${b.y + dip}, ${b.x} ${b.y}`;
+  }
+  // 折り返し: マップの端にふくらむUターン
+  const bulge = a.x > VB_W / 2 ? 11 : -11;
+  return `M ${a.x} ${a.y} C ${a.x + bulge} ${a.y + 5}, ${b.x + bulge} ${
+    b.y - 5
+  }, ${b.x} ${b.y}`;
 }
 
-// 2点間を縦方向のS字カーブでつなぐ cubic path。
-function segmentPath(
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-): string {
-  const my = (y0 + y1) / 2;
-  return `M ${x0} ${y0} C ${x0} ${my}, ${x1} ${my}, ${x1} ${y1}`;
+// 針葉樹（幹＋二段の葉）。translate/scaleで使い回す。
+function Tree({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <rect x="-0.35" y="1.4" width="0.7" height="1.1" rx="0.2" fill="#92400e" />
+      <path d="M0 -2.1 L1.5 0.5 L-1.5 0.5 Z" fill="#16a34a" />
+      <path d="M0 -0.7 L1.9 1.6 L-1.9 1.6 Z" fill="#15803d" />
+    </g>
+  );
 }
 
 export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
   const [selected, setSelected] = useState<MapNode | null>(null);
   const nodes = buildNodes(phases);
-  const total = nodes.length;
-  const height = total * 84;
+  const fullPath = nodes
+    .slice(0, -1)
+    .map((n, i) => segmentPath(n, nodes[i + 1]))
+    .join(" ");
 
   return (
     <div>
-      <div
-        className="relative mx-auto w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 shadow-inner ring-2 ring-amber-800/30"
-        style={{ height }}
-      >
+      <div className="relative mx-auto aspect-[100/62] w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-b from-amber-50 via-orange-50 to-amber-100 shadow-inner ring-2 ring-amber-800/30 md:max-w-xl">
         {/* 宝の地図風の枠 */}
         <div className="pointer-events-none absolute inset-1.5 rounded-2xl border-2 border-dashed border-amber-800/25" />
 
-        {/* RPG風の地図装飾（山・森・水・城） */}
-        {DECOR.map((d, i) => (
-          <span
-            key={i}
-            aria-hidden
-            className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 select-none"
-            style={{
-              top: `${d.y}%`,
-              left: `${d.x}%`,
-              fontSize: d.size,
-              opacity: d.op,
-              transform: `translate(-50%,-50%) rotate(${d.rot ?? 0}deg)`,
-            }}
-          >
-            {d.emoji}
-          </span>
-        ))}
-
-        {/* 道（SVG）— 通ってきた道は焦げ茶の実線、これからの道は破線の足跡風 */}
+        {/* 地形・道（SVG）。コンテナと同比率なのでピン(%)とズレない */}
         <svg
           className="absolute inset-0 h-full w-full"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
+          viewBox={`0 0 ${VB_W} ${VB_H}`}
           aria-hidden
         >
+          {/* --- 地形 --- */}
+          <g opacity="0.6">
+            {/* 山脈（上段の空きスペース） */}
+            <path d="M17 9.5 L23 2.6 L29 9.5 Z" fill="#a8a29e" />
+            <path d="M21.6 4.2 L23 2.6 L24.4 4.2 L23.6 5 L22.9 4.4 Z" fill="#fafaf9" />
+            <path d="M26 9.5 L31 4.4 L36 9.5 Z" fill="#bbaf9f" />
+            <path d="M29.9 5.5 L31 4.4 L32.1 5.5 L31.4 6.2 Z" fill="#fafaf9" />
+            {/* 森（上段右） */}
+            <Tree x={55} y={6.4} s={1.15} />
+            <Tree x={59.5} y={7.4} s={0.9} />
+            <Tree x={51.5} y={7.6} s={0.8} />
+            {/* 湖（中央の帯・左） */}
+            <ellipse cx="17" cy="32.5" rx="7.5" ry="3.1" fill="#7dd3fc" opacity="0.75" />
+            <path
+              d="M12 32.4 q 1.7 -0.9 3.4 0 t 3.4 0"
+              fill="none"
+              stroke="#0284c7"
+              strokeWidth="0.35"
+              opacity="0.55"
+            />
+            {/* 森（中央の帯・右寄り） */}
+            <Tree x={51} y={31.8} s={1.05} />
+            <Tree x={55.5} y={33} s={0.85} />
+            {/* 丘（中央の帯・さらに右） */}
+            <path d="M66 34.5 q 4 -4.6 8 0 Z" fill="#a3b18a" />
+            <path d="M72 34.5 q 3.2 -3.4 6.4 0 Z" fill="#b5c09b" />
+            {/* 下段の木 */}
+            <Tree x={45} y={58.6} s={0.75} />
+            <Tree x={71} y={58.2} s={0.85} />
+          </g>
+
+          {/* 等高線ふうの飾り */}
+          <g fill="none" stroke="#92400e" strokeWidth="0.35" opacity="0.09">
+            <path d="M 33 34 q 4 -1.6 8 0 t 8 0" />
+            <path d="M 60 10.5 q 5 -2 10 0" />
+            <path d="M 8 53 q 5 -2 10 0" />
+            <path d="M 84 55 q 4.5 -1.8 9 0" />
+          </g>
+
+          {/* コンパス（折り返し道の内側。右上だと「いまここ」フラグと重なる） */}
+          <g transform="translate(90.5 30.5)" opacity="0.65">
+            <circle r="3.1" fill="#fffbeb" stroke="#b45309" strokeWidth="0.3" />
+            <path d="M0 -2.4 L0.7 0 L0 2.4 L-0.7 0 Z" fill="#b45309" />
+            <path d="M-2.4 0 L0 -0.7 L2.4 0 L0 0.7 Z" fill="#d6a15e" />
+            <text
+              y="-3.8"
+              textAnchor="middle"
+              fontSize="2.1"
+              fontWeight="bold"
+              fill="#92400e"
+            >
+              N
+            </text>
+          </g>
+
+          {/* --- 道 --- */}
+          {/* 道のふち取り→砂色の道床の2層で「街道」に見せる */}
+          <path
+            d={fullPath}
+            fill="none"
+            stroke="#b45309"
+            strokeWidth="3.6"
+            strokeLinecap="round"
+            opacity="0.28"
+          />
+          <path
+            d={fullPath}
+            fill="none"
+            stroke="#eecf9a"
+            strokeWidth="2.7"
+            strokeLinecap="round"
+          />
+          {/* 進捗の上書き: 通過済みは実線、これからは足あとの点線 */}
           {nodes.slice(0, -1).map((n, i) => {
-            const next = nodes[i + 1];
-            const y0 = yFor(i, total);
-            const y1 = yFor(i + 1, total);
-            // このノードを通過済み（done）なら次への道を色付き。
             const traveled = n.status === "done";
             return (
               <path
                 key={n.key}
-                d={segmentPath(n.x, y0, next.x, y1)}
+                d={segmentPath(n, nodes[i + 1])}
                 fill="none"
-                stroke={traveled ? "#b45309" : "#a1662f"}
-                strokeWidth={traveled ? 5 : 4}
+                stroke={traveled ? "#d97706" : "#92400e"}
+                strokeWidth={traveled ? 1.2 : 0.9}
                 strokeLinecap="round"
-                strokeOpacity={traveled ? 0.9 : 0.55}
-                strokeDasharray={traveled ? "0" : "1 6"}
-                vectorEffect="non-scaling-stroke"
+                strokeOpacity={traveled ? 0.95 : 0.45}
+                strokeDasharray={traveled ? "0" : "0.1 2.3"}
               />
             );
           })}
@@ -168,56 +223,78 @@ export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
 
         {/* チェックポイント（ピン） */}
         {nodes.map((n, i) => {
-          const top = yFor(i, total);
           const isCurrent = n.status === "current";
           const isDone = n.status === "done";
           const isGoal = n.kind === "goal";
 
           const circleCls = isGoal
-            ? "bg-gradient-to-br from-amber-300 to-amber-500 ring-white"
+            ? "bg-gradient-to-b from-amber-300 to-amber-500 ring-white"
             : isDone
-              ? "bg-emerald-500 ring-white"
+              ? "bg-gradient-to-b from-emerald-400 to-emerald-600 ring-white"
               : isCurrent
-                ? "bg-indigo-600 ring-white"
-                : "bg-white ring-white";
-
-          const emojiCls = isDone && !isGoal ? "opacity-0" : "";
+                ? "bg-gradient-to-b from-indigo-500 to-indigo-700 ring-white"
+                : "bg-white/90 ring-amber-800/20";
 
           return (
             <button
               key={n.key}
               type="button"
               onClick={() => setSelected(n)}
-              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center focus:outline-none"
-              style={{ top: `${top}%`, left: `${n.x}%` }}
+              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+              style={{
+                top: `${(n.y / VB_H) * 100}%`,
+                left: `${(n.x / VB_W) * 100}%`,
+              }}
               aria-label={`${n.title}（${STATUS_LABEL[n.status]}）`}
             >
               {isCurrent && (
-                <span className="absolute -top-6 whitespace-nowrap rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                <span className="absolute -top-5 animate-bounce whitespace-nowrap rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow motion-reduce:animate-none">
                   いまここ
                 </span>
               )}
               <span className="relative">
                 {isCurrent && (
-                  <span className="absolute inset-0 animate-ping rounded-full bg-indigo-400 opacity-60" />
+                  <span className="absolute inset-0 animate-ping rounded-full bg-indigo-400 opacity-60 motion-reduce:animate-none" />
                 )}
                 <span
-                  className={`relative flex h-12 w-12 items-center justify-center rounded-full text-xl shadow-md ring-4 transition active:scale-95 ${circleCls} ${
-                    isCurrent ? "scale-110" : ""
-                  } ${n.status === "upcoming" ? "ring-2 ring-amber-800/20" : ""}`}
+                  className={`relative flex items-center justify-center rounded-full shadow-md ring-[3px] transition active:scale-95 ${circleCls} ${
+                    isGoal ? "h-11 w-11 text-xl" : "h-10 w-10 text-lg"
+                  } ${isCurrent ? "scale-110" : ""}`}
                 >
-                  <span className={emojiCls} aria-hidden>
+                  <span
+                    className={n.status === "upcoming" ? "opacity-55 grayscale" : ""}
+                    aria-hidden
+                  >
                     {n.emoji}
                   </span>
-                  {isDone && !isGoal && (
-                    <span className="absolute text-white" aria-hidden>
+                  {/* ステージ番号（ゴール以外） */}
+                  {!isGoal && (
+                    <span
+                      className={`absolute -left-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-extrabold ring-1 ring-white ${
+                        isDone
+                          ? "bg-emerald-600 text-white"
+                          : isCurrent
+                            ? "bg-indigo-600 text-white"
+                            : "bg-amber-900/70 text-amber-50"
+                      }`}
+                      aria-hidden
+                    >
+                      {i + 1}
+                    </span>
+                  )}
+                  {/* クリア済みバッジ */}
+                  {isDone && (
+                    <span
+                      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] text-emerald-600 shadow ring-1 ring-emerald-200"
+                      aria-hidden
+                    >
                       ✓
                     </span>
                   )}
                 </span>
               </span>
               <span
-                className={`mt-1 max-w-[96px] rounded-full bg-white/75 px-1.5 py-0.5 text-center text-[10px] font-bold leading-tight backdrop-blur-[1px] ${
+                className={`mt-1 max-w-[84px] rounded-full bg-white/80 px-1.5 py-0.5 text-center text-[10px] font-bold leading-tight backdrop-blur-[1px] ${
                   isCurrent
                     ? "text-indigo-700"
                     : isGoal
@@ -229,6 +306,15 @@ export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
               >
                 {n.title}
               </span>
+              {/* いま挑戦中のフェーズは達成度ミニバーを常時表示 */}
+              {isCurrent && (
+                <span className="mt-0.5 h-1 w-12 overflow-hidden rounded-full bg-white/80 shadow-inner">
+                  <span
+                    className="block h-full rounded-full bg-indigo-500"
+                    style={{ width: `${n.progress}%` }}
+                  />
+                </span>
+              )}
             </button>
           );
         })}
@@ -245,7 +331,7 @@ export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
           onClick={() => setSelected(null)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl bg-white p-6 pb-8 shadow-xl"
+            className="w-full max-w-md rounded-t-3xl bg-white p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-200" />
