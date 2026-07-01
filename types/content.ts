@@ -574,6 +574,7 @@ export type Topic = {
   category: string; // 中分類（例: "技術要素（セキュリティ）"）
   title: string;
   summary: string; // 一覧表示用の短い説明
+  hookQuestion?: string; // 本文の冒頭に置く「最初に考えてみよう」の問いかけ
   estimatedMinutes: number; // 目安の所要時間
   difficulty: Difficulty;
   importance: Importance; // 重要度(出題頻度・基礎性。学習の優先度づけに使う)

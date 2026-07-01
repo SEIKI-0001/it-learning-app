@@ -27,6 +27,19 @@ export default function TopicContent({
 
   return (
     <div className="space-y-8">
+      {/* 導入: 用語説明の前に「なぜこの概念が必要か」を問いかけて引き込む。 */}
+      {topic.hookQuestion && (
+        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-indigo-100">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-600">
+            <span aria-hidden>🤔</span>
+            最初に考えてみよう
+          </p>
+          <p className="mt-2 text-base font-bold leading-relaxed text-gray-800">
+            {topic.hookQuestion}
+          </p>
+        </section>
+      )}
+
       {/* テーマ専用の体験コンポーネント（最優先）。固定スタックは描画しない。 */}
       {experience && createElement(experience)}
 

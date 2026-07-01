@@ -4,6 +4,7 @@ import { managementTopics as baseManagementTopics } from "./management";
 import { strategyTopics as baseStrategyTopics } from "./strategy";
 import { topicVisualLearning } from "./visualLearning";
 import { topicProcessDemo } from "./processDemo";
+import { hookQuestions } from "./hookQuestions";
 
 // ============================================================================
 // コンテンツライブラリの集約点。
@@ -20,6 +21,7 @@ function attachVisualLearning(list: Topic[]): Topic[] {
       heroDiagram: topic.heroDiagram ?? visualLearning?.heroDiagram,
       visualLearning,
       processDemo: topic.processDemo ?? topicProcessDemo[topic.id],
+      hookQuestion: topic.hookQuestion ?? hookQuestions[topic.id],
     };
   });
 }

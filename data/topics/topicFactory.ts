@@ -32,6 +32,7 @@ export type CompactTopic = {
   category: string;
   title: string;
   summary: string;
+  hookQuestion?: string;
   body: string;
   analogy: string;
   keyPoints: [string, string, string] | string[];
@@ -105,6 +106,7 @@ export function createCompactTopic(topic: CompactTopic): Topic {
     category: topic.category,
     title: topic.title,
     summary: topic.summary,
+    hookQuestion: topic.hookQuestion,
     estimatedMinutes: topic.estimatedMinutes,
     difficulty: topic.difficulty,
     importance,
