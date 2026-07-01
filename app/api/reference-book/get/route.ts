@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 /**
  * POST /api/reference-book/get
  * ユーザーの参考書アウトラインを取得する（1ユーザー1冊）。
- * body: { userId?: string }（実際のユーザーはセッション Cookie から解決）
+ * body: { userId?: string }（production ではセッション / fq_line Cookie からのみ解決）
  * 返却: { ok: true, book: ReferenceBook | null }
  *
  * Supabase 未設定: 503（クライアントは localStorage で継続） / userId なし: 401

@@ -1,8 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { setUserPlan, setUserPlanByCustomer } from "@/lib/billing/plan";
+import { getServiceSupabase } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
+
+const STRIPE_SIGNATURE_TOLERANCE_SECONDS = 300;
 
 /**
  * POST /api/billing/webhook
@@ -41,6 +44,10 @@ export async function POST(request: Request) {
   }
 
   try {
+    const shouldProcess = await reserveStripeWebhookEvent(event);
+    if (!shouldProcess) {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
     await handleEvent(event);
   } catch (e) {
     // 処理に失敗しても 200 以外を返すと Stripe がリトライし続けるため、
@@ -52,6 +59,7 @@ export async function POST(request: Request) {
 }
 
 type StripeEvent = {
+  id?: string;
   type: string;
   data: { object: Record<string, unknown> };
 };
@@ -65,11 +73,14 @@ async function handleEvent(event: StripeEvent): Promise<void> {
       const userId =
         asString(obj.client_reference_id) ?? metadataUserId(obj.metadata);
       const customerId = asString(obj.customer);
-      if (userId) {
-        await setUserPlan(userId, "pro", {
-          stripeCustomerId: customerId ?? undefined,
-        });
+      if (!userId) {
+        console.warn("[billing] checkout completed without user_id");
+        return;
       }
+      if (!(await checkoutSessionCanActivatePro(obj))) return;
+      await setUserPlan(userId, "pro", {
+        stripeCustomerId: customerId ?? undefined,
+      });
       return;
     }
 
@@ -107,6 +118,159 @@ async function handleEvent(event: StripeEvent): Promise<void> {
   }
 }
 
+async function reserveStripeWebhookEvent(event: StripeEvent): Promise<boolean> {
+  const eventId = asString(event.id);
+  if (!eventId) {
+    console.warn("[billing] webhook event without id; idempotency skipped");
+    return true;
+  }
+
+  const supabase = getServiceSupabase();
+  if (!supabase) {
+    console.warn("[billing] Supabase unavailable; webhook idempotency skipped");
+    return true;
+  }
+
+  const { error } = await supabase.from("stripe_webhook_events").insert({
+    event_id: eventId,
+    event_type: event.type,
+  });
+
+  if (!error) return true;
+  if (error.code === "23505") return false;
+
+  console.error("[billing] webhook idempotency insert failed:", error.message);
+  return true;
+}
+
+async function checkoutSessionCanActivatePro(
+  obj: Record<string, unknown>,
+): Promise<boolean> {
+  const mode = asString(obj.mode);
+  if (mode !== "subscription") {
+    console.warn("[billing] checkout completed ignored: mode is not subscription");
+    return false;
+  }
+
+  const paymentStatus = asString(obj.payment_status);
+  const subscriptionId = asString(obj.subscription);
+  if (paymentStatus !== "paid") {
+    if (!subscriptionId) {
+      console.warn("[billing] checkout completed ignored: paid subscription missing");
+      return false;
+    }
+
+    const subscriptionStatus = await fetchStripeSubscriptionStatus(subscriptionId);
+    if (subscriptionStatus === null) {
+      // TODO: Stripe API から subscription が取れない環境では既存のPro反映を優先する。
+      console.warn("[billing] subscription status unavailable; preserving checkout behavior");
+    } else if (subscriptionStatus !== "active" && subscriptionStatus !== "trialing") {
+      console.warn("[billing] checkout completed ignored: subscription is not active");
+      return false;
+    }
+  }
+
+  return validateCheckoutPrice(obj);
+}
+
+async function fetchStripeSubscriptionStatus(
+  subscriptionId: string,
+): Promise<string | null> {
+  const secret = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!secret) return null;
+
+  const subscription = await fetchStripeJson(
+    `/v1/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    secret,
+  );
+  if (!subscription || typeof subscription !== "object") return null;
+  return asString((subscription as Record<string, unknown>).status);
+}
+
+async function validateCheckoutPrice(obj: Record<string, unknown>): Promise<boolean> {
+  const expectedPriceId = process.env.STRIPE_PRICE_ID_PRO?.trim();
+  if (!expectedPriceId) return true;
+
+  const directPriceIds = collectPriceIds(obj);
+  if (directPriceIds.length > 0) {
+    const ok = directPriceIds.includes(expectedPriceId);
+    if (!ok) console.warn("[billing] checkout completed ignored: unexpected price id");
+    return ok;
+  }
+
+  const secret = process.env.STRIPE_SECRET_KEY?.trim();
+  const sessionId = asString(obj.id);
+  if (!secret || !sessionId) {
+    // TODO: payload に line_items が無い場合は Stripe API で Price ID を確認する。
+    console.warn("[billing] checkout price validation skipped: line items unavailable");
+    return true;
+  }
+
+  const lineItems = await fetchStripeJson(
+    `/v1/checkout/sessions/${encodeURIComponent(sessionId)}/line_items?limit=10`,
+    secret,
+  );
+  if (!lineItems || typeof lineItems !== "object") {
+    console.warn("[billing] checkout price validation skipped: Stripe API unavailable");
+    return true;
+  }
+
+  const fetchedPriceIds = collectPriceIds(lineItems as Record<string, unknown>);
+  if (fetchedPriceIds.length === 0) {
+    console.warn("[billing] checkout price validation skipped: no price ids in line items");
+    return true;
+  }
+
+  const ok = fetchedPriceIds.includes(expectedPriceId);
+  if (!ok) console.warn("[billing] checkout completed ignored: unexpected line item price");
+  return ok;
+}
+
+async function fetchStripeJson(path: string, secret: string): Promise<unknown | null> {
+  try {
+    const res = await fetch(`https://api.stripe.com${path}`, {
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      console.error("[billing] stripe api http", res.status, detail.slice(0, 500));
+      return null;
+    }
+    return res.json();
+  } catch (e) {
+    console.error("[billing] stripe api request failed:", e);
+    return null;
+  }
+}
+
+function collectPriceIds(value: Record<string, unknown>): string[] {
+  const ids = new Set<string>();
+
+  function walk(v: unknown): void {
+    if (Array.isArray(v)) {
+      for (const item of v) walk(item);
+      return;
+    }
+    if (!v || typeof v !== "object") return;
+
+    const record = v as Record<string, unknown>;
+    const id = asString(record.id);
+    const object = asString(record.object);
+    if (object === "price" && id) ids.add(id);
+
+    const price = record.price;
+    if (price && typeof price === "object") {
+      const priceId = asString((price as Record<string, unknown>).id);
+      if (priceId) ids.add(priceId);
+    }
+
+    for (const nested of Object.values(record)) walk(nested);
+  }
+
+  walk(value);
+  return [...ids];
+}
+
 function asString(v: unknown): string | null {
   return typeof v === "string" && v ? v : null;
 }
@@ -139,6 +303,13 @@ function verifyStripeSignature(
     else if (key === "v1" && value) v1Signatures.push(value);
   }
   if (!timestamp || v1Signatures.length === 0) return false;
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isInteger(timestampSeconds) || timestampSeconds <= 0) return false;
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (Math.abs(nowSeconds - timestampSeconds) > STRIPE_SIGNATURE_TOLERANCE_SECONDS) {
+    return false;
+  }
 
   const expected = createHmac("sha256", secret)
     .update(`${timestamp}.${rawBody}`)

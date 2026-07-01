@@ -18,6 +18,12 @@ export async function GET(request: Request) {
   const code = url.searchParams.get("code");
   const next = sanitizeNext(url.searchParams.get("next"));
   const base = resolveBaseUrl(request);
+  if (!base) {
+    return NextResponse.json(
+      { ok: false, error: "app url not configured" },
+      { status: 503 },
+    );
+  }
 
   if (!code) {
     return NextResponse.redirect(`${base}/login?error=oauth`);
@@ -46,11 +52,16 @@ function sanitizeNext(next: string | null): string {
   return next;
 }
 
-/** 戻り先の基点 URL。env 優先、無ければ forwarded ヘッダ、最後に request.url。 */
-function resolveBaseUrl(request: Request): string {
+function isProduction(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+/** 戻り先の基点 URL。production では env 必須、development では host fallback を許容。 */
+function resolveBaseUrl(request: Request): string | null {
   const fromEnv =
     process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.APP_BASE_URL?.trim();
   if (fromEnv) return fromEnv.replace(/\/+$/, "");
+  if (isProduction()) return null;
   const proto = request.headers.get("x-forwarded-proto") ?? "https";
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
   if (host) return `${proto}://${host}`;
