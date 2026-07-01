@@ -1,7 +1,5 @@
 import { createElement } from "react";
-import Link from "next/link";
 import type { Topic } from "@/types/content";
-import { getMiniGameForTopic } from "@/lib/minigames";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
 import AddToReviewButton from "@/components/learn/AddToReviewButton";
@@ -20,9 +18,6 @@ export default function TopicContent({
   topic: Topic;
   showCheckQuestions?: boolean;
 }) {
-  const miniGame = getMiniGameForTopic(topic.miniGameId);
-  // 難テーマ（DNS / SQL / 認証・認可）は、操作できる理解パートを
-  // トピック内に直接埋め込み、別ページ（/minigames）への遷移を主導線にしない。
   const processDemo = topic.processDemo;
   // テーマ専用に作り込んだ「体験コンポーネント」があれば、汎用カード図解の
   // 代わりにそれを描画する（テーマごとに見せ方を最適化するための仕組み）。
@@ -63,31 +58,6 @@ export default function TopicContent({
               </div>
             )}
           </Section>
-
-          {/* ②.7 ミニゲームで理解する（miniGameId が設定されたトピックのみ） */}
-          {miniGame && (
-            <Section emoji="🎮" title="操作して理解する">
-              <Link
-                href={`/minigames/${miniGame.id}`}
-                className="block rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-4 transition active:scale-[0.99]"
-              >
-                <p className="text-base font-extrabold text-gray-800">
-                  {miniGame.title}
-                </p>
-                <p className="mt-1 text-sm leading-snug text-gray-600">
-                  {miniGame.description}
-                </p>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">
-                    ⏱️ 約{miniGame.estimatedMinutes}分
-                  </span>
-                  <span className="rounded-full bg-indigo-600 px-3.5 py-1.5 text-sm font-bold text-white">
-                    ▶ 遊んでみる
-                  </span>
-                </div>
-              </Link>
-            </Section>
-          )}
         </>
       )}
 

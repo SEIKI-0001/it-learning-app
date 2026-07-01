@@ -591,8 +591,6 @@ export type Topic = {
   heroDiagram?: HeroDiagramSpec;
   visualLearning?: VisualLearningSpec;
   processDemo?: ProcessDemoSpec; // 操作できる理解パート。設定された難テーマは専用構成で表示
-  diagramIds?: string[]; // 図解レジストリ（data/diagrams）の id 参照。「図で理解」セクションに表示
-  miniGameId?: string; // ミニゲームレジストリ（data/minigames）の id 参照。「操作して理解する」セクションに表示
 
   conceptCard: ConceptCard; // 参考書 → 図解理解 の「図解理解」
   checkQuestions: CheckQuestion[]; // 確認問題

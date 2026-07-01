@@ -18,7 +18,6 @@ const coreManagementTopics: Topic[] = [
     importance: 2,
     tags: ["プロジェクトマネジメント", "QCD"],
     prerequisites: [],
-    diagramIds: ["diag-wbs-gantt", "diag-pdca", "diag-sla"],
 
     conceptCard: {
       heading: "プロジェクトは「期限のある特別な仕事」",
