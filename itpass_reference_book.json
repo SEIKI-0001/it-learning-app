@@ -1,0 +1,2868 @@
+{
+  "schemaVersion": "1.1.0",
+  "generatedAt": "2026-07-01T00:00:00+09:00",
+  "policy": {
+    "presetIsEditableTemplate": true,
+    "doNotOverwriteUserEditedBook": true,
+    "fallbackToReferenceHintsWhenNoPresetOrNoMatch": true,
+    "recommendedMatching": [
+      "topicIds",
+      "keywords",
+      "chapter title",
+      "section title"
+    ],
+    "note": "Webで確認できる章構成をベースにした初期テンプレート。章・節はユーザー編集前提で正規化している。参考書以外に、公式目次が確認できた補助ドリル・問題集も bookType で区別して収録。"
+  },
+  "presets": [
+    {
+      "id": "gihyo-kayanoki-itpass-r08",
+      "matchKeywords": [
+        "かやのき",
+        "栢木",
+        "栢木先生",
+        "ITパスポート教室",
+        "イメージ&クレバー",
+        "令和08年"
+      ],
+      "sourceType": "official_toc_confirmed",
+      "confidence": "high",
+      "verifiedAt": "2026-07-01",
+      "sourceLabel": "技術評論社 自力で合格！ITパスポート 書籍ページ",
+      "sourceNote": "公式ページで令和08年版の書誌情報・目次を確認。章内の節はアプリ向けに学習テーマ単位へ正規化。",
+      "book": {
+        "title": "令和08年 イメージ＆クレバー方式でよくわかる かやのき先生のITパスポート教室",
+        "publisher": "技術評論社",
+        "edition": "令和08年",
+        "active": true,
+        "note": "公式目次をもとにした初期テンプレート。ユーザーが実際の本に合わせて自由に編集する前提。",
+        "updatedAt": "2026-07-01T00:00:00+09:00",
+        "chapters": [
+          {
+            "id": "kayanoki-r08-ch01",
+            "title": "第1章 ハードウェアと基礎理論［テクノロジ系］",
+            "keywords": [
+              "ハードウェア",
+              "基礎理論",
+              "CPU",
+              "メモリ",
+              "2進数",
+              "AI",
+              "統計"
+            ],
+            "topicIds": [
+              "tech-binary-data",
+              "tech-computer-core"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch01-s01",
+                "title": "情報理論・2進数・基数変換・統計",
+                "keywords": [
+                  "2進数",
+                  "基数変換",
+                  "ビット",
+                  "バイト",
+                  "統計"
+                ],
+                "topicIds": [
+                  "tech-binary-data"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch01-s02",
+                "title": "CPU・主記憶・補助記憶・入出力装置",
+                "keywords": [
+                  "CPU",
+                  "メモリ",
+                  "ストレージ",
+                  "主記憶",
+                  "補助記憶",
+                  "入出力装置"
+                ],
+                "topicIds": [
+                  "tech-computer-core"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch01-s03",
+                "title": "AI・データ活用の基礎",
+                "keywords": [
+                  "AI",
+                  "生成AI",
+                  "機械学習",
+                  "データ活用"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch02",
+            "title": "第2章 ソフトウェア［テクノロジ系］",
+            "keywords": [
+              "ソフトウェア",
+              "OS",
+              "ファイル",
+              "バックアップ",
+              "表計算",
+              "UI",
+              "マルチメディア"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch02-s01",
+                "title": "OS・ソフトウェアの役割",
+                "keywords": [
+                  "OS",
+                  "ソフトウェア",
+                  "アプリケーション"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch02-s02",
+                "title": "ファイル管理・バックアップ",
+                "keywords": [
+                  "ファイル管理",
+                  "バックアップ",
+                  "ディレクトリ"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch02-s03",
+                "title": "表計算・関数・ユーザインタフェース",
+                "keywords": [
+                  "表計算",
+                  "相対参照",
+                  "絶対参照",
+                  "関数",
+                  "UI"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch03",
+            "title": "第3章 システム構成［テクノロジ系］",
+            "keywords": [
+              "システム構成",
+              "信頼性",
+              "性能評価",
+              "IoT",
+              "組込みシステム"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch03-s01",
+                "title": "コンピュータの形態・システム構成",
+                "keywords": [
+                  "クライアントサーバ",
+                  "システム構成",
+                  "クラウド"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch03-s02",
+                "title": "信頼性・性能評価",
+                "keywords": [
+                  "稼働率",
+                  "信頼性",
+                  "性能評価",
+                  "RAID"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch03-s03",
+                "title": "IoT・組込み・ソリューション活用",
+                "keywords": [
+                  "IoT",
+                  "組込みシステム",
+                  "ソリューション"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch04",
+            "title": "第4章 ネットワーク［テクノロジ系］",
+            "keywords": [
+              "ネットワーク",
+              "LAN",
+              "WAN",
+              "無線LAN",
+              "プロトコル",
+              "Web",
+              "メール",
+              "DNS"
+            ],
+            "topicIds": [
+              "tech-network-address"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch04-s01",
+                "title": "LAN/WAN・無線LAN・ネットワーク構成",
+                "keywords": [
+                  "LAN",
+                  "WAN",
+                  "無線LAN",
+                  "ルータ",
+                  "スイッチ"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch04-s02",
+                "title": "通信プロトコル・TCP/IP・IPアドレス",
+                "keywords": [
+                  "TCP/IP",
+                  "IPアドレス",
+                  "プロトコル"
+                ],
+                "topicIds": [
+                  "tech-network-address"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch04-s03",
+                "title": "Web・DNS・電子メール・通信サービス",
+                "keywords": [
+                  "Web",
+                  "DNS",
+                  "HTTP",
+                  "メール",
+                  "SMTP",
+                  "POP",
+                  "IMAP"
+                ],
+                "topicIds": [
+                  "tech-network-address"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch05",
+            "title": "第5章 セキュリティ［テクノロジ系］",
+            "keywords": [
+              "情報セキュリティ",
+              "脅威",
+              "サイバー攻撃",
+              "リスク",
+              "認証",
+              "暗号",
+              "デジタル署名"
+            ],
+            "topicIds": [
+              "tech-security-cia"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch05-s01",
+                "title": "情報資産・脅威・サイバー攻撃",
+                "keywords": [
+                  "情報資産",
+                  "脅威",
+                  "マルウェア",
+                  "サイバー攻撃"
+                ],
+                "topicIds": [
+                  "tech-security-cia"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch05-s02",
+                "title": "セキュリティマネジメント・リスク管理",
+                "keywords": [
+                  "CIA",
+                  "機密性",
+                  "完全性",
+                  "可用性",
+                  "リスク管理"
+                ],
+                "topicIds": [
+                  "tech-security-cia"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch05-s03",
+                "title": "認証・ネットワークセキュリティ・暗号・署名",
+                "keywords": [
+                  "認証",
+                  "多要素認証",
+                  "ファイアウォール",
+                  "暗号化",
+                  "デジタル署名",
+                  "認証局"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch06",
+            "title": "第6章 データベース［テクノロジ系］",
+            "keywords": [
+              "データベース",
+              "DBMS",
+              "正規化",
+              "SQL",
+              "トランザクション"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch06-s01",
+                "title": "データベースとデータ操作",
+                "keywords": [
+                  "データベース",
+                  "DBMS",
+                  "SQL"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch06-s02",
+                "title": "データベース設計・正規化",
+                "keywords": [
+                  "主キー",
+                  "外部キー",
+                  "正規化",
+                  "関係データベース"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch06-s03",
+                "title": "抽出・整列・集計・トランザクション",
+                "keywords": [
+                  "SELECT",
+                  "論理演算",
+                  "整列",
+                  "集計",
+                  "トランザクション"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch07",
+            "title": "第7章 アルゴリズムとプログラミング［テクノロジ系］",
+            "keywords": [
+              "アルゴリズム",
+              "データ構造",
+              "擬似言語",
+              "プログラミング言語"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch07-s01",
+                "title": "アルゴリズム・データ構造",
+                "keywords": [
+                  "アルゴリズム",
+                  "フローチャート",
+                  "配列",
+                  "探索",
+                  "整列"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch07-s02",
+                "title": "擬似言語・プログラム言語",
+                "keywords": [
+                  "擬似言語",
+                  "プログラミング言語",
+                  "マークアップ言語"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch08",
+            "title": "第8章 マネジメント［マネジメント系］",
+            "keywords": [
+              "マネジメント",
+              "要件定義",
+              "開発プロセス",
+              "テスト",
+              "プロジェクトマネジメント",
+              "サービスマネジメント",
+              "監査"
+            ],
+            "topicIds": [
+              "mgmt-pm-qcd"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch08-s01",
+                "title": "企画・要件定義・開発・テスト",
+                "keywords": [
+                  "要件定義",
+                  "開発プロセス",
+                  "テスト",
+                  "保守"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch08-s02",
+                "title": "プロジェクトマネジメント・スケジュール管理",
+                "keywords": [
+                  "プロジェクトマネジメント",
+                  "QCD",
+                  "アローダイアグラム"
+                ],
+                "topicIds": [
+                  "mgmt-pm-qcd"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch08-s03",
+                "title": "ITサービスマネジメント・システム監査",
+                "keywords": [
+                  "ITサービスマネジメント",
+                  "SLA",
+                  "サービスデスク",
+                  "システム監査"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch09",
+            "title": "第9章 企業活動と法務［ストラテジ系］",
+            "keywords": [
+              "企業活動",
+              "財務",
+              "損益分岐点",
+              "知的財産",
+              "法務",
+              "標準化",
+              "データ利活用"
+            ],
+            "topicIds": [
+              "strat-enterprise-activities"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch09-s01",
+                "title": "財務諸表・損益分岐点・資産管理",
+                "keywords": [
+                  "財務諸表",
+                  "損益分岐点",
+                  "在庫",
+                  "資産管理"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch09-s02",
+                "title": "知的財産・法務・標準化",
+                "keywords": [
+                  "知的財産権",
+                  "個人情報保護",
+                  "セキュリティ関連法規",
+                  "標準化"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch09-s03",
+                "title": "業務分析・データ利活用",
+                "keywords": [
+                  "業務分析",
+                  "データ利活用",
+                  "問題解決"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-r08-ch10",
+            "title": "第10章 経営戦略とシステム戦略［ストラテジ系］",
+            "keywords": [
+              "経営戦略",
+              "システム戦略",
+              "マーケティング",
+              "技術戦略",
+              "eビジネス",
+              "内部統制",
+              "ビッグデータ"
+            ],
+            "topicIds": [
+              "strat-swot",
+              "strat-3c"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-r08-ch10-s01",
+                "title": "経営戦略・マーケティング・技術戦略",
+                "keywords": [
+                  "SWOT",
+                  "3C",
+                  "マーケティング",
+                  "MOT"
+                ],
+                "topicIds": [
+                  "strat-swot",
+                  "strat-3c"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch10-s02",
+                "title": "情報システム戦略・業務プロセス・eビジネス",
+                "keywords": [
+                  "システム戦略",
+                  "業務プロセス",
+                  "BPR",
+                  "eビジネス"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-r08-ch10-s03",
+                "title": "企業統治・内部統制・業績評価",
+                "keywords": [
+                  "コーポレートガバナンス",
+                  "内部統制",
+                  "KPI",
+                  "BSC"
+                ],
+                "topicIds": []
+              }
+            ]
+          }
+        ]
+      },
+      "sourceUrl": "https://itpassport.gihyo.jp/archives/books/%E6%A0%A2%E6%9C%A8%E5%85%88%E7%94%9F%E3%81%AEit%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88%E6%95%99%E5%AE%A4",
+      "bookType": "textbook"
+    },
+    {
+      "id": "gihyo-kitami-itpass-r08",
+      "matchKeywords": [
+        "キタミ",
+        "きたみ",
+        "キタミ式",
+        "イラストIT塾",
+        "令和08年"
+      ],
+      "sourceType": "official_toc_confirmed",
+      "confidence": "high",
+      "verifiedAt": "2026-07-01",
+      "sourceLabel": "技術評論社 自力で合格！ITパスポート 書籍ページ",
+      "sourceNote": "公式ページで令和08年版の書誌情報・目次を確認。章内の節はアプリ向けに学習テーマ単位へ正規化。",
+      "book": {
+        "title": "キタミ式イラストIT塾 ITパスポート 令和08年",
+        "publisher": "技術評論社",
+        "edition": "令和08年",
+        "active": true,
+        "note": "公式目次をもとにした初期テンプレート。ユーザーが実際の本に合わせて自由に編集する前提。",
+        "updatedAt": "2026-07-01T00:00:00+09:00",
+        "chapters": [
+          {
+            "id": "kitami-r08-ch00",
+            "title": "Chapter0 ITとは何か",
+            "keywords": [
+              "IT",
+              "コンピュータ基礎"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch01",
+            "title": "Chapter1 コンピュータ基礎",
+            "keywords": [
+              "五大装置",
+              "CPU",
+              "メモリ",
+              "補助記憶",
+              "入出力"
+            ],
+            "topicIds": [
+              "tech-computer-core"
+            ],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch02",
+            "title": "Chapter2 デジタルデータ",
+            "keywords": [
+              "2進数",
+              "ビット",
+              "バイト",
+              "文字コード",
+              "マルチメディア"
+            ],
+            "topicIds": [
+              "tech-binary-data"
+            ],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch03",
+            "title": "Chapter3 ファイルとディレクトリ",
+            "keywords": [
+              "ファイル",
+              "ディレクトリ",
+              "パス"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch04",
+            "title": "Chapter4 OSとアプリケーション",
+            "keywords": [
+              "OS",
+              "アプリケーション",
+              "ソフトウェア"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch05",
+            "title": "Chapter5 表計算ソフト",
+            "keywords": [
+              "表計算",
+              "相対参照",
+              "絶対参照",
+              "関数"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch06",
+            "title": "Chapter6 データベース",
+            "keywords": [
+              "DBMS",
+              "関係データベース",
+              "主キー",
+              "外部キー",
+              "トランザクション"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch07",
+            "title": "Chapter7 ネットワーク",
+            "keywords": [
+              "LAN",
+              "WAN",
+              "プロトコル",
+              "TCP/IP",
+              "DNS",
+              "Web",
+              "メール",
+              "AI",
+              "ビッグデータ"
+            ],
+            "topicIds": [
+              "tech-network-address"
+            ],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch08",
+            "title": "Chapter8 セキュリティ",
+            "keywords": [
+              "情報セキュリティ",
+              "認証",
+              "ウイルス",
+              "暗号",
+              "デジタル署名"
+            ],
+            "topicIds": [
+              "tech-security-cia"
+            ],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch09",
+            "title": "Chapter9 システム開発",
+            "keywords": [
+              "システム開発",
+              "開発手法",
+              "業務モデル",
+              "テスト"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch10",
+            "title": "Chapter10 マネジメント",
+            "keywords": [
+              "プロジェクトマネジメント",
+              "アローダイアグラム",
+              "ITサービスマネジメント",
+              "システム監査"
+            ],
+            "topicIds": [
+              "mgmt-pm-qcd"
+            ],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch11",
+            "title": "Chapter11 プログラミング",
+            "keywords": [
+              "プログラミング言語",
+              "変数",
+              "構造化",
+              "アルゴリズム",
+              "擬似言語"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch12",
+            "title": "Chapter12 システム構成と故障対策",
+            "keywords": [
+              "システム構成",
+              "性能指標",
+              "信頼性",
+              "稼働率",
+              "バックアップ"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch13",
+            "title": "Chapter13 企業活動と関連法規",
+            "keywords": [
+              "企業活動",
+              "組織",
+              "EC",
+              "経営戦略",
+              "知的財産",
+              "法務"
+            ],
+            "topicIds": [
+              "strat-enterprise-activities",
+              "strat-swot"
+            ],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch14",
+            "title": "Chapter14 業務改善と分析手法",
+            "keywords": [
+              "PDCA",
+              "グラフ",
+              "QC七つ道具",
+              "分析手法"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          },
+          {
+            "id": "kitami-r08-ch15",
+            "title": "Chapter15 財務会計",
+            "keywords": [
+              "費用",
+              "利益",
+              "在庫",
+              "財務諸表",
+              "損益分岐点"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": []
+          }
+        ]
+      },
+      "sourceUrl": "https://itpassport.gihyo.jp/archives/books/%E3%82%AD%E3%82%BF%E3%83%9F%E5%BC%8F%E3%82%A4%E3%83%A9%E3%82%B9%E3%83%88it%E5%A1%BE-it%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88",
+      "bookType": "textbook"
+    },
+    {
+      "id": "gihyo-gokaku-kyohon-itpass-r08",
+      "matchKeywords": [
+        "合格教本",
+        "岡嶋裕史",
+        "ITパスポート 合格教本",
+        "令和08年"
+      ],
+      "sourceType": "official_toc_confirmed",
+      "confidence": "high",
+      "verifiedAt": "2026-07-01",
+      "sourceLabel": "技術評論社 自力で合格！ITパスポート 書籍ページ",
+      "sourceNote": "公式ページで令和08年版の書誌情報・目次を確認。章内の節はアプリ向けに学習テーマ単位へ正規化。",
+      "book": {
+        "title": "令和08年 ITパスポート 合格教本",
+        "publisher": "技術評論社",
+        "edition": "令和08年",
+        "active": true,
+        "note": "公式目次をもとにした初期テンプレート。ユーザーが実際の本に合わせて自由に編集する前提。",
+        "updatedAt": "2026-07-01T00:00:00+09:00",
+        "chapters": [
+          {
+            "id": "gokaku-r08-ch01",
+            "title": "1章 企業活動",
+            "keywords": [
+              "企業活動",
+              "財務諸表",
+              "損益分岐点",
+              "組織",
+              "PDCA",
+              "AI",
+              "データサイエンス",
+              "法務"
+            ],
+            "topicIds": [
+              "strat-enterprise-activities"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "gokaku-r08-ch01-s01",
+                "title": "会社のお金・財務・在庫",
+                "keywords": [
+                  "損益分岐点",
+                  "財務諸表",
+                  "在庫管理",
+                  "減価償却"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch01-s02",
+                "title": "組織・責任・働き方",
+                "keywords": [
+                  "組織",
+                  "PDCA",
+                  "CSR",
+                  "人材"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch01-s03",
+                "title": "データサイエンスとAI",
+                "keywords": [
+                  "データ活用",
+                  "統計",
+                  "AI",
+                  "生成AI"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch01-s04",
+                "title": "法務・個人情報・標準化",
+                "keywords": [
+                  "知的財産権",
+                  "個人情報保護",
+                  "セキュリティ法規",
+                  "標準化"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "gokaku-r08-ch02",
+            "title": "2章 経営戦略",
+            "keywords": [
+              "経営戦略",
+              "SWOT",
+              "3C",
+              "マーケティング",
+              "IoT",
+              "業務システム",
+              "EC"
+            ],
+            "topicIds": [
+              "strat-swot",
+              "strat-3c"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "gokaku-r08-ch02-s01",
+                "title": "現状分析・経営資源・ポジショニング",
+                "keywords": [
+                  "SWOT",
+                  "3C",
+                  "経営資源"
+                ],
+                "topicIds": [
+                  "strat-swot",
+                  "strat-3c"
+                ]
+              },
+              {
+                "id": "gokaku-r08-ch02-s02",
+                "title": "マーケティング・MOT",
+                "keywords": [
+                  "マーケティング",
+                  "MOT",
+                  "技術経営"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch02-s03",
+                "title": "ITシステム・IoT・社会変化",
+                "keywords": [
+                  "IoT",
+                  "組込み",
+                  "デジタル化"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch02-s04",
+                "title": "業務システム・EC・開発動向",
+                "keywords": [
+                  "EC",
+                  "ERP",
+                  "SCM",
+                  "CRM",
+                  "システム開発"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "gokaku-r08-ch03",
+            "title": "3章 システム開発",
+            "keywords": [
+              "システム開発",
+              "開発手法",
+              "プロジェクトマネジメント",
+              "サービスマネジメント",
+              "監査"
+            ],
+            "topicIds": [
+              "mgmt-pm-qcd"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "gokaku-r08-ch03-s01",
+                "title": "開発プロセス・開発手法",
+                "keywords": [
+                  "システム開発",
+                  "要件定義",
+                  "アジャイル",
+                  "ウォータフォール"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch03-s02",
+                "title": "プロジェクトマネジメント",
+                "keywords": [
+                  "プロジェクトマネジメント",
+                  "スケジュール",
+                  "QCD"
+                ],
+                "topicIds": [
+                  "mgmt-pm-qcd"
+                ]
+              },
+              {
+                "id": "gokaku-r08-ch03-s03",
+                "title": "サービスマネジメント・システム監査",
+                "keywords": [
+                  "サービスマネジメント",
+                  "SLA",
+                  "システム監査"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "gokaku-r08-ch04",
+            "title": "4章 コンピュータのしくみ",
+            "keywords": [
+              "2進数",
+              "情報量",
+              "マルチメディア",
+              "アルゴリズム",
+              "プログラミング",
+              "CPU",
+              "OS",
+              "システム構成"
+            ],
+            "topicIds": [
+              "tech-binary-data",
+              "tech-computer-core"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "gokaku-r08-ch04-s01",
+                "title": "2進数・集合・論理・確率",
+                "keywords": [
+                  "2進数",
+                  "論理演算",
+                  "確率"
+                ],
+                "topicIds": [
+                  "tech-binary-data"
+                ]
+              },
+              {
+                "id": "gokaku-r08-ch04-s02",
+                "title": "情報表現・UI・マルチメディア",
+                "keywords": [
+                  "情報量",
+                  "文字コード",
+                  "画像",
+                  "UI",
+                  "マルチメディア"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch04-s03",
+                "title": "データ構造・アルゴリズム・擬似言語",
+                "keywords": [
+                  "データ構造",
+                  "アルゴリズム",
+                  "擬似言語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch04-s04",
+                "title": "CPU・OS・ファイル・システム信頼性",
+                "keywords": [
+                  "CPU",
+                  "メモリ",
+                  "OS",
+                  "稼働率",
+                  "バックアップ"
+                ],
+                "topicIds": [
+                  "tech-computer-core"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "gokaku-r08-ch05",
+            "title": "5章 ネットワークとセキュリティ",
+            "keywords": [
+              "ネットワーク",
+              "DNS",
+              "メール",
+              "Web",
+              "セキュリティ",
+              "リスク",
+              "暗号",
+              "デジタル署名"
+            ],
+            "topicIds": [
+              "tech-network-address",
+              "tech-security-cia"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "gokaku-r08-ch05-s01",
+                "title": "ネットワーク基本・無線・通信プロトコル",
+                "keywords": [
+                  "ネットワーク",
+                  "無線LAN",
+                  "プロトコル",
+                  "TCP/IP"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch05-s02",
+                "title": "下位層・上位層・DNS・Web・メール",
+                "keywords": [
+                  "DNS",
+                  "Web",
+                  "メール",
+                  "IPアドレス"
+                ],
+                "topicIds": [
+                  "tech-network-address"
+                ]
+              },
+              {
+                "id": "gokaku-r08-ch05-s03",
+                "title": "セキュリティ基本・リスク管理",
+                "keywords": [
+                  "CIA",
+                  "リスク",
+                  "情報セキュリティ"
+                ],
+                "topicIds": [
+                  "tech-security-cia"
+                ]
+              },
+              {
+                "id": "gokaku-r08-ch05-s04",
+                "title": "人的・物理的・技術的対策・暗号",
+                "keywords": [
+                  "人的対策",
+                  "ウイルス",
+                  "暗号化",
+                  "デジタル署名"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "gokaku-r08-ch06",
+            "title": "6章 データベースと表計算ソフト",
+            "keywords": [
+              "データベース",
+              "関係データベース",
+              "バックアップ",
+              "表計算",
+              "関数"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "gokaku-r08-ch06-s01",
+                "title": "関係データベース・データモデル",
+                "keywords": [
+                  "関係データベース",
+                  "主キー",
+                  "外部キー",
+                  "正規化"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch06-s02",
+                "title": "データ保全・バックアップ",
+                "keywords": [
+                  "バックアップ",
+                  "障害対策",
+                  "トランザクション"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "gokaku-r08-ch06-s03",
+                "title": "表計算・相対参照・関数",
+                "keywords": [
+                  "表計算",
+                  "相対参照",
+                  "絶対参照",
+                  "関数"
+                ],
+                "topicIds": []
+              }
+            ]
+          }
+        ]
+      },
+      "sourceUrl": "https://itpassport.gihyo.jp/archives/books/it%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88%E5%90%88%E6%A0%BC%E6%95%99%E6%9C%AC",
+      "bookType": "textbook"
+    },
+    {
+      "id": "gihyo-itpass-saisoku-gokaku-jutsu-rev7",
+      "matchKeywords": [
+        "最速合格術",
+        "西俊明",
+        "1000点満点",
+        "改訂7版",
+        "たこ焼き屋"
+      ],
+      "sourceType": "official_toc_confirmed",
+      "confidence": "high",
+      "verifiedAt": "2026-07-01",
+      "sourceLabel": "技術評論社 自力で合格！ITパスポート 書籍ページ",
+      "sourceUrl": "https://itpassport.gihyo.jp/archives/books/it%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88%E6%9C%80%E9%80%9F%E5%90%88%E6%A0%BC%E8%A1%93",
+      "sourceNote": "公式ページで改訂7版の書誌情報・目次を確認。章構成はストーリー型のため、アプリ向けにテーマ単位へ正規化。",
+      "bookType": "textbook",
+      "book": {
+        "title": "〖改訂7版〗ITパスポート最速合格術～1000点満点を獲得した勉強法の秘密",
+        "publisher": "技術評論社",
+        "edition": "改訂7版",
+        "active": true,
+        "note": "公式目次をもとにした初期テンプレート。ストーリー型参考書のため、章名をそのまま残しつつ、関連キーワードでアプリ内トピックと照合する想定。",
+        "updatedAt": "2026-07-01T00:00:00+09:00",
+        "chapters": [
+          {
+            "id": "saisoku-rev7-ch00",
+            "title": "第0章 勉強前から差をつけるための考え方",
+            "keywords": [
+              "勉強法",
+              "時間管理",
+              "学習戦略",
+              "学習計画"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "saisoku-rev7-ch00-s01",
+                "title": "0-01 効率よく勉強するための戦略とは",
+                "keywords": [
+                  "勉強法",
+                  "学習戦略"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch00-s02",
+                "title": "0-02 合格を勝ち取るための時間管理術",
+                "keywords": [
+                  "時間管理",
+                  "学習時間"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch00-s03",
+                "title": "0-03 最短合格のために、最適な順番で戦略的に学習する",
+                "keywords": [
+                  "学習順序",
+                  "ロードマップ"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "saisoku-rev7-ch01",
+            "title": "第1章 たこ焼き屋の現場をのぞきながら「ストラテジ」を理解する",
+            "keywords": [
+              "ストラテジ",
+              "企業活動",
+              "経営戦略",
+              "経営者",
+              "生産性",
+              "データ活用"
+            ],
+            "topicIds": [
+              "strat-enterprise-activities",
+              "strat-swot",
+              "strat-3c"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "saisoku-rev7-ch01-s01",
+                "title": "1-01 お客様の満足度を高める仕事",
+                "keywords": [
+                  "顧客満足",
+                  "マーケティング",
+                  "企業活動"
+                ],
+                "topicIds": [
+                  "strat-enterprise-activities"
+                ]
+              },
+              {
+                "id": "saisoku-rev7-ch01-s02",
+                "title": "1-02 生産性を高める、たこ焼き屋の秘策",
+                "keywords": [
+                  "生産性",
+                  "業務改善",
+                  "PDCA"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch01-s03",
+                "title": "1-03 データやシステムを活用して企業をよりよい方向に導く",
+                "keywords": [
+                  "データ活用",
+                  "情報システム戦略",
+                  "DX"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch01-s04",
+                "title": "1-04 会社のリーダーである経営者が知っておくべきこと",
+                "keywords": [
+                  "経営戦略",
+                  "経営者",
+                  "SWOT"
+                ],
+                "topicIds": [
+                  "strat-swot"
+                ]
+              },
+              {
+                "id": "saisoku-rev7-ch01-s05",
+                "title": "1-05 経営者の責任がわかれば、株式会社のしくみが見えてくる",
+                "keywords": [
+                  "株式会社",
+                  "企業統治",
+                  "ステークホルダ"
+                ],
+                "topicIds": [
+                  "strat-enterprise-activities"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "saisoku-rev7-ch02",
+            "title": "第2章 プロジェクトの流れをおさえれば「マネジメント」がざっくりわかる",
+            "keywords": [
+              "マネジメント",
+              "システム開発",
+              "プロジェクトマネジメント",
+              "サービスマネジメント",
+              "システム監査"
+            ],
+            "topicIds": [
+              "mgmt-pm-qcd"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "saisoku-rev7-ch02-s01",
+                "title": "2-01 たこ焼き屋ネットショップのシステム開発の流れをおさえる",
+                "keywords": [
+                  "企画",
+                  "要件定義",
+                  "システム開発"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch02-s02",
+                "title": "2-02 お客様の要望に応えつつ、スピーディーに開発するには？",
+                "keywords": [
+                  "アジャイル",
+                  "開発手法"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch02-s03",
+                "title": "2-03 プロジェクトマネージャーになったつもりで仕事を把握しよう",
+                "keywords": [
+                  "プロジェクトマネジメント",
+                  "QCD",
+                  "スケジュール"
+                ],
+                "topicIds": [
+                  "mgmt-pm-qcd"
+                ]
+              },
+              {
+                "id": "saisoku-rev7-ch02-s04",
+                "title": "2-04 稼働した後に安定して運用するには",
+                "keywords": [
+                  "ITサービスマネジメント",
+                  "運用",
+                  "SLA"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch02-s05",
+                "title": "2-05 企業が情報システムを適切に活用しているか調査する",
+                "keywords": [
+                  "システム監査",
+                  "内部統制"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "saisoku-rev7-ch03",
+            "title": "第3章 ネットショップで買い物ができるしくみを把握して「テクノロジ」を攻略する",
+            "keywords": [
+              "テクノロジ",
+              "ネットワーク",
+              "セキュリティ",
+              "コンピュータ構成",
+              "システム構成",
+              "データベース"
+            ],
+            "topicIds": [
+              "tech-network-address",
+              "tech-security-cia",
+              "tech-computer-core"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "saisoku-rev7-ch03-s01",
+                "title": "3-01 世界中どこからでもネットショップにアクセスできるしくみ",
+                "keywords": [
+                  "ネットワーク",
+                  "IPアドレス",
+                  "DNS",
+                  "Web"
+                ],
+                "topicIds": [
+                  "tech-network-address"
+                ]
+              },
+              {
+                "id": "saisoku-rev7-ch03-s02",
+                "title": "3-02 「大事な情報を守りぬく！」情報セキュリティの基礎知識",
+                "keywords": [
+                  "情報セキュリティ",
+                  "CIA",
+                  "脅威"
+                ],
+                "topicIds": [
+                  "tech-security-cia"
+                ]
+              },
+              {
+                "id": "saisoku-rev7-ch03-s03",
+                "title": "3-03 みんなで協力しあって根本的なセキュリティ対策を！",
+                "keywords": [
+                  "セキュリティ対策",
+                  "認証",
+                  "暗号化"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch03-s04",
+                "title": "3-04 スマートフォンやパソコンの中身はどうなっている？",
+                "keywords": [
+                  "CPU",
+                  "メモリ",
+                  "ストレージ",
+                  "ハードウェア"
+                ],
+                "topicIds": [
+                  "tech-computer-core"
+                ]
+              },
+              {
+                "id": "saisoku-rev7-ch03-s05",
+                "title": "3-05 システムが安定して動くための工夫",
+                "keywords": [
+                  "信頼性",
+                  "稼働率",
+                  "バックアップ"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch03-s06",
+                "title": "3-06 多くのデータをどうやって管理すればいい？",
+                "keywords": [
+                  "データベース",
+                  "DBMS",
+                  "主キー",
+                  "正規化"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "saisoku-rev7-ch04",
+            "title": "第4章 最小限の労力で効率的に覚える「ラク短」単語記憶術",
+            "keywords": [
+              "英略語",
+              "カタカナ語",
+              "頻出用語",
+              "暗記"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "saisoku-rev7-ch04-s01",
+                "title": "4-01 ビジネス系の英略語は「C」「E」「B」に注目して覚える",
+                "keywords": [
+                  "英略語",
+                  "ビジネス用語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch04-s02",
+                "title": "4-02 英略語をカテゴリ別にまとめておさえる",
+                "keywords": [
+                  "英略語",
+                  "カテゴリ"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch04-s03",
+                "title": "4-03 意味が想像しにくいカタカナ語を対比して覚える",
+                "keywords": [
+                  "カタカナ語",
+                  "対比"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch04-s04",
+                "title": "4-04 まったく同じなのに意味が異なる3つの用語をおさえる",
+                "keywords": [
+                  "紛らわしい用語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch04-s05",
+                "title": "4-05 バラエティの多い分野の頻出用語を一気に攻略",
+                "keywords": [
+                  "頻出用語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch04-s06",
+                "title": "4-06 3つの重要度に分けて、優先度の高い用語から記憶していく",
+                "keywords": [
+                  "重要度",
+                  "暗記"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "saisoku-rev7-ch05",
+            "title": "第5章 計算問題・アルゴリズム問題「頻出パターン」徹底攻略",
+            "keywords": [
+              "計算問題",
+              "統計",
+              "アルゴリズム",
+              "プログラム",
+              "稼働率",
+              "表計算",
+              "単位"
+            ],
+            "topicIds": [
+              "tech-binary-data"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "saisoku-rev7-ch05-s01",
+                "title": "5-01 「どれぐらい儲かるか／危ないか」をイメージしてお金の計算に強くなる",
+                "keywords": [
+                  "損益分岐点",
+                  "財務"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch05-s02",
+                "title": "5-02 「平均」「偏差値」……よく聞く統計の基礎をおさえる",
+                "keywords": [
+                  "平均",
+                  "偏差値",
+                  "統計"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch05-s03",
+                "title": "5-03 仕事を最も効率的にこなすには",
+                "keywords": [
+                  "アローダイアグラム",
+                  "PERT"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch05-s04",
+                "title": "5-04 コンピュータの中でおこなわれる計算を覗いてみよう",
+                "keywords": [
+                  "2進数",
+                  "基数変換"
+                ],
+                "topicIds": [
+                  "tech-binary-data"
+                ]
+              },
+              {
+                "id": "saisoku-rev7-ch05-s05",
+                "title": "5-05 「場合分け」と「クジ引き」のポイントをサクッとおさえよう",
+                "keywords": [
+                  "場合分け",
+                  "確率"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch05-s06",
+                "title": "5-06 カンタンな数を入れて考えるのが、プログラムのコツ",
+                "keywords": [
+                  "プログラム",
+                  "擬似言語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch05-s07",
+                "title": "5-07 情報システムが問題なく動く確率は？",
+                "keywords": [
+                  "稼働率",
+                  "信頼性"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch05-s08",
+                "title": "5-08 表計算は実際に試してみるのが一番の早道",
+                "keywords": [
+                  "表計算",
+                  "関数"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch05-s09",
+                "title": "5-09 キロ・ミリ・メガ……単位がわかればかんたんに解ける",
+                "keywords": [
+                  "単位",
+                  "ビット",
+                  "バイト"
+                ],
+                "topicIds": [
+                  "tech-binary-data"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "saisoku-rev7-ch06",
+            "title": "第6章 得点を最大限に積み増すための直前＋本番対策",
+            "keywords": [
+              "直前対策",
+              "本番対策",
+              "過去問",
+              "見直し"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "saisoku-rev7-ch06-s01",
+                "title": "6-01 本番で後悔しない直前対策のアドバイス",
+                "keywords": [
+                  "直前対策",
+                  "復習"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "saisoku-rev7-ch06-s02",
+                "title": "6-02 取りこぼしを最小限にする本番対策のポイント",
+                "keywords": [
+                  "本番対策",
+                  "時間配分"
+                ],
+                "topicIds": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gihyo-kayanoki-drill-itpass-r08",
+      "matchKeywords": [
+        "かやのき",
+        "栢木",
+        "書き込み式ドリル",
+        "準拠",
+        "ITパスポート教室",
+        "令和08年"
+      ],
+      "sourceType": "official_toc_confirmed",
+      "confidence": "high",
+      "verifiedAt": "2026-07-01",
+      "sourceLabel": "技術評論社 自力で合格！ITパスポート 書籍ページ",
+      "sourceUrl": "https://itpassport.gihyo.jp/archives/books/%E3%81%8B%E3%82%84%E3%81%AE%E3%81%8D%E5%85%88%E7%94%9F%E3%81%AEit%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88%E6%95%99%E5%AE%A4%E6%BA%96%E6%8B%A0-%E6%9B%B8%E3%81%8D%E8%BE%BC%E3%81%BF%E5%BC%8F",
+      "sourceNote": "公式ページで令和08年版の書誌情報・目次を確認。『ITパスポート教室と章立てが同じ』旨も公式説明にあるため、かやのき先生本と同じ章構成をベースに登録。",
+      "bookType": "workbook",
+      "book": {
+        "title": "令和08年 かやのき先生のITパスポート教室準拠 書き込み式ドリル",
+        "publisher": "技術評論社",
+        "edition": "令和08年",
+        "active": true,
+        "note": "公式目次をもとにした初期テンプレート。『かやのき先生のITパスポート教室』併用の書き込み式ドリルとして扱う。",
+        "updatedAt": "2026-07-01T00:00:00+09:00",
+        "chapters": [
+          {
+            "id": "kayanoki-drill-r08-ch01",
+            "title": "第1章 ハードウェアと基礎理論［テクノロジ系］",
+            "keywords": [
+              "ハードウェア",
+              "基礎理論",
+              "CPU",
+              "メモリ",
+              "2進数",
+              "AI",
+              "統計"
+            ],
+            "topicIds": [
+              "tech-binary-data",
+              "tech-computer-core"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch01-s01",
+                "title": "情報理論・2進数・基数変換・統計",
+                "keywords": [
+                  "2進数",
+                  "基数変換",
+                  "ビット",
+                  "バイト",
+                  "統計"
+                ],
+                "topicIds": [
+                  "tech-binary-data"
+                ]
+              },
+              {
+                "id": "kayanoki-drill-r08-ch01-s02",
+                "title": "CPU・主記憶・補助記憶・入出力装置",
+                "keywords": [
+                  "CPU",
+                  "メモリ",
+                  "ストレージ",
+                  "主記憶",
+                  "補助記憶",
+                  "入出力装置"
+                ],
+                "topicIds": [
+                  "tech-computer-core"
+                ]
+              },
+              {
+                "id": "kayanoki-drill-r08-ch01-s03",
+                "title": "AI・データ活用の基礎",
+                "keywords": [
+                  "AI",
+                  "生成AI",
+                  "機械学習",
+                  "データ活用"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch02",
+            "title": "第2章 ソフトウェア［テクノロジ系］",
+            "keywords": [
+              "ソフトウェア",
+              "OS",
+              "ファイル",
+              "バックアップ",
+              "表計算",
+              "UI",
+              "マルチメディア"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch02-s01",
+                "title": "OS・ソフトウェアの役割",
+                "keywords": [
+                  "OS",
+                  "ソフトウェア",
+                  "アプリケーション"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch02-s02",
+                "title": "ファイル管理・バックアップ",
+                "keywords": [
+                  "ファイル管理",
+                  "バックアップ",
+                  "ディレクトリ"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch02-s03",
+                "title": "表計算・関数・ユーザインタフェース",
+                "keywords": [
+                  "表計算",
+                  "相対参照",
+                  "絶対参照",
+                  "関数",
+                  "UI"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch03",
+            "title": "第3章 システム構成［テクノロジ系］",
+            "keywords": [
+              "システム構成",
+              "信頼性",
+              "性能評価",
+              "IoT",
+              "組込みシステム"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch03-s01",
+                "title": "コンピュータの形態・システム構成",
+                "keywords": [
+                  "クライアントサーバ",
+                  "システム構成",
+                  "クラウド"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch03-s02",
+                "title": "信頼性・性能評価",
+                "keywords": [
+                  "稼働率",
+                  "信頼性",
+                  "性能評価",
+                  "RAID"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch03-s03",
+                "title": "IoT・組込み・ソリューション活用",
+                "keywords": [
+                  "IoT",
+                  "組込みシステム",
+                  "ソリューション"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch04",
+            "title": "第4章 ネットワーク［テクノロジ系］",
+            "keywords": [
+              "ネットワーク",
+              "LAN",
+              "WAN",
+              "無線LAN",
+              "プロトコル",
+              "Web",
+              "メール",
+              "DNS"
+            ],
+            "topicIds": [
+              "tech-network-address"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch04-s01",
+                "title": "LAN/WAN・無線LAN・ネットワーク構成",
+                "keywords": [
+                  "LAN",
+                  "WAN",
+                  "無線LAN",
+                  "ルータ",
+                  "スイッチ"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch04-s02",
+                "title": "通信プロトコル・TCP/IP・IPアドレス",
+                "keywords": [
+                  "TCP/IP",
+                  "IPアドレス",
+                  "プロトコル"
+                ],
+                "topicIds": [
+                  "tech-network-address"
+                ]
+              },
+              {
+                "id": "kayanoki-drill-r08-ch04-s03",
+                "title": "Web・DNS・電子メール・通信サービス",
+                "keywords": [
+                  "Web",
+                  "DNS",
+                  "HTTP",
+                  "メール",
+                  "SMTP",
+                  "POP",
+                  "IMAP"
+                ],
+                "topicIds": [
+                  "tech-network-address"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch05",
+            "title": "第5章 セキュリティ［テクノロジ系］",
+            "keywords": [
+              "情報セキュリティ",
+              "脅威",
+              "サイバー攻撃",
+              "リスク",
+              "認証",
+              "暗号",
+              "デジタル署名"
+            ],
+            "topicIds": [
+              "tech-security-cia"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch05-s01",
+                "title": "情報資産・脅威・サイバー攻撃",
+                "keywords": [
+                  "情報資産",
+                  "脅威",
+                  "マルウェア",
+                  "サイバー攻撃"
+                ],
+                "topicIds": [
+                  "tech-security-cia"
+                ]
+              },
+              {
+                "id": "kayanoki-drill-r08-ch05-s02",
+                "title": "セキュリティマネジメント・リスク管理",
+                "keywords": [
+                  "CIA",
+                  "機密性",
+                  "完全性",
+                  "可用性",
+                  "リスク管理"
+                ],
+                "topicIds": [
+                  "tech-security-cia"
+                ]
+              },
+              {
+                "id": "kayanoki-drill-r08-ch05-s03",
+                "title": "認証・ネットワークセキュリティ・暗号・署名",
+                "keywords": [
+                  "認証",
+                  "多要素認証",
+                  "ファイアウォール",
+                  "暗号化",
+                  "デジタル署名",
+                  "認証局"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch06",
+            "title": "第6章 データベース［テクノロジ系］",
+            "keywords": [
+              "データベース",
+              "DBMS",
+              "正規化",
+              "SQL",
+              "トランザクション"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch06-s01",
+                "title": "データベースとデータ操作",
+                "keywords": [
+                  "データベース",
+                  "DBMS",
+                  "SQL"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch06-s02",
+                "title": "データベース設計・正規化",
+                "keywords": [
+                  "主キー",
+                  "外部キー",
+                  "正規化",
+                  "関係データベース"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch06-s03",
+                "title": "抽出・整列・集計・トランザクション",
+                "keywords": [
+                  "SELECT",
+                  "論理演算",
+                  "整列",
+                  "集計",
+                  "トランザクション"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch07",
+            "title": "第7章 アルゴリズムとプログラミング［テクノロジ系］",
+            "keywords": [
+              "アルゴリズム",
+              "データ構造",
+              "擬似言語",
+              "プログラミング言語"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch07-s01",
+                "title": "アルゴリズム・データ構造",
+                "keywords": [
+                  "アルゴリズム",
+                  "フローチャート",
+                  "配列",
+                  "探索",
+                  "整列"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch07-s02",
+                "title": "擬似言語・プログラム言語",
+                "keywords": [
+                  "擬似言語",
+                  "プログラミング言語",
+                  "マークアップ言語"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch08",
+            "title": "第8章 マネジメント［マネジメント系］",
+            "keywords": [
+              "マネジメント",
+              "要件定義",
+              "開発プロセス",
+              "テスト",
+              "プロジェクトマネジメント",
+              "サービスマネジメント",
+              "監査"
+            ],
+            "topicIds": [
+              "mgmt-pm-qcd"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch08-s01",
+                "title": "企画・要件定義・開発・テスト",
+                "keywords": [
+                  "要件定義",
+                  "開発プロセス",
+                  "テスト",
+                  "保守"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch08-s02",
+                "title": "プロジェクトマネジメント・スケジュール管理",
+                "keywords": [
+                  "プロジェクトマネジメント",
+                  "QCD",
+                  "アローダイアグラム"
+                ],
+                "topicIds": [
+                  "mgmt-pm-qcd"
+                ]
+              },
+              {
+                "id": "kayanoki-drill-r08-ch08-s03",
+                "title": "ITサービスマネジメント・システム監査",
+                "keywords": [
+                  "ITサービスマネジメント",
+                  "SLA",
+                  "サービスデスク",
+                  "システム監査"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch09",
+            "title": "第9章 企業活動と法務［ストラテジ系］",
+            "keywords": [
+              "企業活動",
+              "財務",
+              "損益分岐点",
+              "知的財産",
+              "法務",
+              "標準化",
+              "データ利活用"
+            ],
+            "topicIds": [
+              "strat-enterprise-activities"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch09-s01",
+                "title": "財務諸表・損益分岐点・資産管理",
+                "keywords": [
+                  "財務諸表",
+                  "損益分岐点",
+                  "在庫",
+                  "資産管理"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch09-s02",
+                "title": "知的財産・法務・標準化",
+                "keywords": [
+                  "知的財産権",
+                  "個人情報保護",
+                  "セキュリティ関連法規",
+                  "標準化"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch09-s03",
+                "title": "業務分析・データ利活用",
+                "keywords": [
+                  "業務分析",
+                  "データ利活用",
+                  "問題解決"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "kayanoki-drill-r08-ch10",
+            "title": "第10章 経営戦略とシステム戦略［ストラテジ系］",
+            "keywords": [
+              "経営戦略",
+              "システム戦略",
+              "マーケティング",
+              "技術戦略",
+              "eビジネス",
+              "内部統制",
+              "ビッグデータ"
+            ],
+            "topicIds": [
+              "strat-swot",
+              "strat-3c"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "kayanoki-drill-r08-ch10-s01",
+                "title": "経営戦略・マーケティング・技術戦略",
+                "keywords": [
+                  "SWOT",
+                  "3C",
+                  "マーケティング",
+                  "MOT"
+                ],
+                "topicIds": [
+                  "strat-swot",
+                  "strat-3c"
+                ]
+              },
+              {
+                "id": "kayanoki-drill-r08-ch10-s02",
+                "title": "情報システム戦略・業務プロセス・eビジネス",
+                "keywords": [
+                  "システム戦略",
+                  "業務プロセス",
+                  "BPR",
+                  "eビジネス"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "kayanoki-drill-r08-ch10-s03",
+                "title": "企業統治・内部統制・業績評価",
+                "keywords": [
+                  "コーポレートガバナンス",
+                  "内部統制",
+                  "KPI",
+                  "BSC"
+                ],
+                "topicIds": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gihyo-itpass-pocket-ox",
+      "matchKeywords": [
+        "ポケット",
+        "○×",
+        "問題集",
+        "要点確認これだけ",
+        "近藤孝之"
+      ],
+      "sourceType": "official_toc_confirmed",
+      "confidence": "high",
+      "verifiedAt": "2026-07-01",
+      "sourceLabel": "技術評論社 自力で合格！ITパスポート 書籍ページ",
+      "sourceUrl": "https://itpassport.gihyo.jp/archives/books/it%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88%E3%83%9D%E3%82%B1%E3%83%83%E3%83%88%E2%97%8Bx%E5%95%8F%E9%A1%8C%E9%9B%86",
+      "sourceNote": "公式ページで書誌情報・目次を確認。参考書というよりスキマ時間用の○×問題集のため、補助教材プリセットとして登録。",
+      "bookType": "question_bank",
+      "book": {
+        "title": "要点確認これだけ！ ITパスポート ポケット○×問題集",
+        "publisher": "技術評論社",
+        "edition": "2020年版",
+        "active": true,
+        "note": "公式目次をもとにした初期テンプレート。スキマ時間の確認・復習教材として扱う。",
+        "updatedAt": "2026-07-01T00:00:00+09:00",
+        "chapters": [
+          {
+            "id": "pocket-ox-ch01",
+            "title": "第1章 ストラテジ系企業活動",
+            "keywords": [
+              "ストラテジ",
+              "企業活動",
+              "法務"
+            ],
+            "topicIds": [
+              "strat-enterprise-activities"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch01-s01",
+                "title": "1 企業活動",
+                "keywords": [
+                  "企業活動",
+                  "CSR",
+                  "ステークホルダ"
+                ],
+                "topicIds": [
+                  "strat-enterprise-activities"
+                ]
+              },
+              {
+                "id": "pocket-ox-ch01-s02",
+                "title": "2 法務",
+                "keywords": [
+                  "法務",
+                  "知的財産",
+                  "個人情報保護"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch02",
+            "title": "第2章 ストラテジ系経営戦略",
+            "keywords": [
+              "ストラテジ",
+              "経営戦略",
+              "ビジネスインダストリ"
+            ],
+            "topicIds": [
+              "strat-swot",
+              "strat-3c"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch02-s01",
+                "title": "1 経営戦略",
+                "keywords": [
+                  "経営戦略",
+                  "SWOT",
+                  "3C"
+                ],
+                "topicIds": [
+                  "strat-swot",
+                  "strat-3c"
+                ]
+              },
+              {
+                "id": "pocket-ox-ch02-s02",
+                "title": "2 ビジネスインダストリ",
+                "keywords": [
+                  "ビジネスインダストリ",
+                  "eビジネス",
+                  "IoT"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch03",
+            "title": "第3章 ストラテジ系システム戦略",
+            "keywords": [
+              "システム戦略",
+              "システム企画"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch03-s01",
+                "title": "1 システム戦略とシステム企画",
+                "keywords": [
+                  "システム戦略",
+                  "システム企画",
+                  "業務プロセス"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch04",
+            "title": "第4章 マネジメント系開発技術",
+            "keywords": [
+              "マネジメント",
+              "開発技術"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch04-s01",
+                "title": "1 開発技術",
+                "keywords": [
+                  "システム開発",
+                  "要件定義",
+                  "テスト"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch05",
+            "title": "第5章 マネジメント系プロジェクトマネジメント",
+            "keywords": [
+              "プロジェクトマネジメント",
+              "QCD"
+            ],
+            "topicIds": [
+              "mgmt-pm-qcd"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch05-s01",
+                "title": "1 プロジェクトマネジメント",
+                "keywords": [
+                  "プロジェクトマネジメント",
+                  "QCD",
+                  "スケジュール"
+                ],
+                "topicIds": [
+                  "mgmt-pm-qcd"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch06",
+            "title": "第6章 マネジメント系サービスマネジメント",
+            "keywords": [
+              "サービスマネジメント",
+              "監査"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch06-s01",
+                "title": "1 サービスマネジメントと監査",
+                "keywords": [
+                  "ITサービスマネジメント",
+                  "SLA",
+                  "システム監査"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch07",
+            "title": "第7章 テクノロジ系コンピュータシステム",
+            "keywords": [
+              "コンピュータシステム",
+              "ハードウェア",
+              "ソフトウェア",
+              "マルチメディア",
+              "データベース"
+            ],
+            "topicIds": [
+              "tech-computer-core"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch07-s01",
+                "title": "1 コンピュータとシステムの構成要素",
+                "keywords": [
+                  "CPU",
+                  "メモリ",
+                  "ストレージ",
+                  "システム構成"
+                ],
+                "topicIds": [
+                  "tech-computer-core"
+                ]
+              },
+              {
+                "id": "pocket-ox-ch07-s02",
+                "title": "2 ソフトウェアとハードウェア",
+                "keywords": [
+                  "OS",
+                  "ソフトウェア",
+                  "ハードウェア"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "pocket-ox-ch07-s03",
+                "title": "3 マルチメディアとデータベース",
+                "keywords": [
+                  "マルチメディア",
+                  "データベース",
+                  "DBMS"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch08",
+            "title": "第8章 テクノロジ系ネットワーク",
+            "keywords": [
+              "ネットワーク",
+              "LAN",
+              "WAN",
+              "TCP/IP",
+              "DNS"
+            ],
+            "topicIds": [
+              "tech-network-address"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch08-s01",
+                "title": "1 ネットワーク①",
+                "keywords": [
+                  "LAN",
+                  "WAN",
+                  "ネットワーク構成"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "pocket-ox-ch08-s02",
+                "title": "2 ネットワーク②",
+                "keywords": [
+                  "TCP/IP",
+                  "DNS",
+                  "IPアドレス"
+                ],
+                "topicIds": [
+                  "tech-network-address"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "pocket-ox-ch09",
+            "title": "第9章 テクノロジ系セキュリティ",
+            "keywords": [
+              "セキュリティ",
+              "情報セキュリティ",
+              "暗号",
+              "認証"
+            ],
+            "topicIds": [
+              "tech-security-cia"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "pocket-ox-ch09-s01",
+                "title": "1 セキュリテイ①",
+                "keywords": [
+                  "情報セキュリティ",
+                  "CIA",
+                  "脅威"
+                ],
+                "topicIds": [
+                  "tech-security-cia"
+                ]
+              },
+              {
+                "id": "pocket-ox-ch09-s02",
+                "title": "2 セキュリテイ②",
+                "keywords": [
+                  "暗号化",
+                  "認証",
+                  "デジタル署名"
+                ],
+                "topicIds": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "gihyo-itpass-perfect-learning-r08-1h",
+      "matchKeywords": [
+        "パーフェクトラーニング",
+        "過去問題集",
+        "過去問",
+        "令和08年",
+        "上期",
+        "五十嵐聡"
+      ],
+      "sourceType": "official_toc_confirmed",
+      "confidence": "high",
+      "verifiedAt": "2026-07-01",
+      "sourceLabel": "技術評論社 自力で合格！ITパスポート 書籍ページ",
+      "sourceUrl": "https://itpassport.gihyo.jp/archives/books/it%E3%83%91%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88%E3%83%91%E3%83%BC%E3%83%95%E3%82%A7%E3%82%AF%E3%83%88%E3%83%A9%E3%83%BC%E3%83%8B%E3%83%B3%E3%82%B0%E9%81%8E%E5%8E%BB%E5%95%8F%E9%A1%8C%E9%9B%86",
+      "sourceNote": "公式ページで令和08年上期版の書誌情報・目次を確認。参考書ではなく過去問題集のため、過去問フェーズ用の補助教材プリセットとして登録。",
+      "bookType": "question_bank",
+      "book": {
+        "title": "令和08年〖上期〗 ITパスポート パーフェクトラーニング過去問題集",
+        "publisher": "技術評論社",
+        "edition": "令和08年 上期",
+        "active": true,
+        "note": "公式目次をもとにした初期テンプレート。過去問演習フェーズ用の補助教材として扱う。",
+        "updatedAt": "2026-07-01T00:00:00+09:00",
+        "chapters": [
+          {
+            "id": "perfect-r08-1h-ch00",
+            "title": "巻頭記事",
+            "keywords": [
+              "学習方法",
+              "頻出単語",
+              "新シラバス",
+              "AI",
+              "英略語",
+              "アルゴリズム"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "perfect-r08-1h-ch00-s01",
+                "title": "みんなが知りたい ITパスポート",
+                "keywords": [
+                  "試験概要"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s02",
+                "title": "本書だけで合格する！ 超効果的な学習方法",
+                "keywords": [
+                  "学習方法",
+                  "学習計画"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s03",
+                "title": "2分で判定！ 実力診断〇×クイズ",
+                "keywords": [
+                  "実力診断"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s04",
+                "title": "めっちゃ！ よく出る 単語集 厳選30",
+                "keywords": [
+                  "頻出単語",
+                  "用語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s05",
+                "title": "新シラバスの注目用語",
+                "keywords": [
+                  "新シラバス"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s06",
+                "title": "必出！AI特集",
+                "keywords": [
+                  "AI",
+                  "生成AI"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s07",
+                "title": "そっくり用語攻略クイズ",
+                "keywords": [
+                  "紛らわしい用語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s08",
+                "title": "英字略語暗記シート",
+                "keywords": [
+                  "英略語"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s09",
+                "title": "アルゴリズム問題対策",
+                "keywords": [
+                  "アルゴリズム"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch00-s10",
+                "title": "申込みから当日まで！本試験体験レポート",
+                "keywords": [
+                  "受験準備",
+                  "本番対策"
+                ],
+                "topicIds": []
+              }
+            ]
+          },
+          {
+            "id": "perfect-r08-1h-ch01",
+            "title": "カテゴリ別頻出問題 120",
+            "keywords": [
+              "頻出問題",
+              "ストラテジ",
+              "マネジメント",
+              "テクノロジ"
+            ],
+            "topicIds": [
+              "strat-enterprise-activities",
+              "mgmt-pm-qcd",
+              "tech-security-cia",
+              "tech-network-address"
+            ],
+            "done": false,
+            "sections": [
+              {
+                "id": "perfect-r08-1h-ch01-s01",
+                "title": "ストラテジ系（問題・解答・解説）",
+                "keywords": [
+                  "ストラテジ",
+                  "企業活動",
+                  "経営戦略"
+                ],
+                "topicIds": [
+                  "strat-enterprise-activities",
+                  "strat-swot",
+                  "strat-3c"
+                ]
+              },
+              {
+                "id": "perfect-r08-1h-ch01-s02",
+                "title": "マネジメント系（問題・解答・解説）",
+                "keywords": [
+                  "マネジメント",
+                  "プロジェクトマネジメント",
+                  "サービスマネジメント"
+                ],
+                "topicIds": [
+                  "mgmt-pm-qcd"
+                ]
+              },
+              {
+                "id": "perfect-r08-1h-ch01-s03",
+                "title": "テクノロジ系（問題・解答・解説）",
+                "keywords": [
+                  "テクノロジ",
+                  "ネットワーク",
+                  "セキュリティ",
+                  "データベース"
+                ],
+                "topicIds": [
+                  "tech-network-address",
+                  "tech-security-cia",
+                  "tech-computer-core"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "perfect-r08-1h-ch02",
+            "title": "公開問題＋模擬問題と詳細解説",
+            "keywords": [
+              "公開問題",
+              "模擬問題",
+              "過去問",
+              "解説"
+            ],
+            "topicIds": [],
+            "done": false,
+            "sections": [
+              {
+                "id": "perfect-r08-1h-ch02-s01",
+                "title": "令和7年度 公開（問題・解答・解説）",
+                "keywords": [
+                  "令和7年度",
+                  "公開問題"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch02-s02",
+                "title": "令和6年度 公開（問題・解答・解説）",
+                "keywords": [
+                  "令和6年度",
+                  "公開問題"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch02-s03",
+                "title": "令和5年度 公開（問題・解答・解説）",
+                "keywords": [
+                  "令和5年度",
+                  "公開問題"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch02-s04",
+                "title": "令和4年度 公開（問題・解答・解説）",
+                "keywords": [
+                  "令和4年度",
+                  "公開問題"
+                ],
+                "topicIds": []
+              },
+              {
+                "id": "perfect-r08-1h-ch02-s05",
+                "title": "模擬問題（問題・解答・解説）",
+                "keywords": [
+                  "模擬問題",
+                  "本番形式"
+                ],
+                "topicIds": []
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "notIncludedDueToInsufficientPublicToc": [
+    {
+      "title": "みんなが欲しかった！ITパスポートの教科書＆問題集",
+      "reason": "この調査時点では、信頼できるWeb本文として章・節レベルの目次を十分に取得できなかったため未収録。ユーザー貼り付け・手動編集で対応。",
+      "suggestedMatchKeywords": [
+        "みんなが欲しかった",
+        "TAC",
+        "教科書＆問題集"
+      ]
+    },
+    {
+      "title": "いちばんやさしい ITパスポート 絶対合格の教科書＋出る順問題集",
+      "reason": "この調査時点では、信頼できるWeb本文として章・節レベルの目次を十分に取得できなかったため未収録。ユーザー貼り付け・手動編集で対応。",
+      "suggestedMatchKeywords": [
+        "いちばんやさしい",
+        "絶対合格",
+        "SBクリエイティブ",
+        "高橋京介"
+      ]
+    },
+    {
+      "title": "かんたん合格 ITパスポート教科書",
+      "reason": "この調査時点では、信頼できるWeb本文として章・節レベルの目次を十分に取得できなかったため未収録。ユーザー貼り付け・手動編集で対応。",
+      "suggestedMatchKeywords": [
+        "かんたん合格",
+        "インプレス"
+      ]
+    },
+    {
+      "title": "出るとこだけ！ITパスポート テキスト＆問題集",
+      "reason": "この調査時点では、信頼できるWeb本文として章・節レベルの目次を十分に取得できなかったため未収録。ユーザー貼り付け・手動編集で対応。",
+      "suggestedMatchKeywords": [
+        "出るとこだけ",
+        "翔泳社",
+        "テキスト＆問題集"
+      ]
+    }
+  ]
+}
