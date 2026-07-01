@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 // アプリ下部の固定ナビ。LINEから開く学習画面として、迷わず行き来できるようにする。
 const ITEMS = [
   { href: "/today", label: "今日", emoji: "📖" },
+  { href: "/plan", label: "計画", emoji: "🗺️" },
   { href: "/topics", label: "トピック", emoji: "🗂️" },
   { href: "/review", label: "復習", emoji: "🔁" },
   { href: "/progress", label: "進捗", emoji: "📈" },

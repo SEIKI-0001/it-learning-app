@@ -4,10 +4,18 @@ import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
+import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { fieldMastery } from "@/lib/study";
 import { getRankStatus } from "@/lib/rank";
 import BottomNav from "@/components/BottomNav";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
+
+function formatMonthDay(iso: string | null): string {
+  if (!iso) return "未定";
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return "未定";
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
 
 // ホーム = 学習ダッシュボード。
 // 未設定(初回)なら ITパスポート学習コーチの紹介＋設定導線を表示し、
@@ -92,6 +100,8 @@ export default function Home() {
   const mastery = fieldMastery(progress, topics);
   const completedCount = progress.completedTopics.length;
   const rank = getRankStatus(progress.exp);
+  const plan = generateLearningPlan(state, topics);
+  const phaseDef = getPhaseDef(plan.currentPhase);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -135,6 +145,38 @@ export default function Home() {
       </header>
 
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-3xl">
+        {/* 合格ロードマップ */}
+        <Link
+          href="/plan"
+          className="block rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 p-5 shadow-sm ring-1 ring-indigo-100 transition active:scale-[0.99]"
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-indigo-500">合格ロードマップ</p>
+            <span className="text-xs font-bold text-indigo-600">
+              詳しく見る →
+            </span>
+          </div>
+          <p className="mt-1 text-lg font-extrabold text-gray-800">
+            {phaseDef.emoji} {phaseDef.title}
+            {remaining !== null && (
+              <span className="ml-2 text-sm font-bold text-indigo-600">
+                試験まであと{remaining}日
+              </span>
+            )}
+          </p>
+          <p className="mt-1.5 text-sm font-semibold text-gray-700">
+            🎯 今週のゴール：{plan.weeklyGoal.headline}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            過去問開始目安：
+            {plan.kakomonReady
+              ? "今から始めてOK"
+              : plan.kakomonStartDate
+                ? `${formatMonthDay(plan.kakomonStartDate)}ごろ`
+                : "主要テーマ完了後"}
+          </p>
+        </Link>
+
         <div className="grid gap-5 md:grid-cols-2">
         {/* 今日やること */}
         <Link

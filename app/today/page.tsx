@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { UserAnswer } from "@/types";
+import type { ReferenceBook } from "@/types/referenceBook";
 import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
-import { generateTodayMenu } from "@/lib/aiPlanner";
+import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
+import { loadReferenceBook } from "@/lib/referenceBook";
 import { completeTopicStudy } from "@/lib/study";
 import {
   getUserId,
@@ -19,6 +21,7 @@ import TopicQuiz from "@/components/learn/TopicQuiz";
 import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
+import TodayReferenceGuide from "@/components/learn/TodayReferenceGuide";
 import BottomNav from "@/components/BottomNav";
 
 // 今日の学習メニュー。固定Dayではなく generateTodayMenu の結果を表示する。
@@ -34,20 +37,32 @@ export default function TodayPage() {
     streak: number;
   } | null>(null);
 
+  const [book, setBook] = useState<ReferenceBook | null>(null);
+
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [state, router]);
 
+  useEffect(() => {
+    let cancelled = false;
+    function init() {
+      const b = loadReferenceBook();
+      if (!cancelled) setBook(b);
+    }
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const topics = getAllTopics();
-  const menu = useMemo(
-    () =>
-      state?.profile
-        ? generateTodayMenu(state.profile, state.progress, topics, state.answers)
-        : null,
+  const plan = useMemo(
+    () => (state?.profile ? generateLearningPlan(state, topics) : null),
     [state, topics],
   );
+  const menu = plan?.todayMenu ?? null;
 
-  if (state === undefined || state === null || !menu) {
+  if (state === undefined || state === null || !menu || !plan) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
         読み込み中…
@@ -58,6 +73,12 @@ export default function TodayPage() {
   const learnItem = menu.items.find((i) => i.kind === "learn");
   const primary = learnItem ? getTopic(learnItem.topicId) : undefined;
   const questions = primary ? getQuestionsByTopic(primary.id) : [];
+  const phaseDef = getPhaseDef(plan.currentPhase);
+  // 次に進む予定: トピックの nextTopicIds があればそれ、無ければ今週の重点分野。
+  const nextTopic =
+    primary?.nextTopicIds
+      ?.map((id) => getTopic(id))
+      .find((t) => t && !state.progress.completedTopics.includes(t.id)) ?? undefined;
 
   function handleComplete(answers: UserAnswer[]) {
     if (!state || !primary) return;
@@ -99,6 +120,55 @@ export default function TodayPage() {
           「完了」を押して、ストリークを伸ばそう
         </p>
 
+        {/* 今日の学習ガイド: 現在フェーズ・今日これをやる理由（必須）・ゴール・次の予定 */}
+        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-500">
+              <span aria-hidden>{phaseDef.emoji}</span>
+              いまのフェーズ：{phaseDef.title}
+            </p>
+            <Link
+              href="/plan"
+              className="text-xs font-bold text-indigo-600 underline underline-offset-2"
+            >
+              ロードマップ
+            </Link>
+          </div>
+
+          {/* 今日これをやる理由（必ず表示） */}
+          <div className="mt-3 rounded-xl bg-indigo-50 px-3 py-2.5">
+            <p className="text-xs font-bold text-indigo-600">💡 今日これをやる理由</p>
+            <ul className="mt-1 space-y-1">
+              {plan.todayReasons.map((r, i) => (
+                <li key={i} className="text-sm font-semibold text-indigo-800">
+                  {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl bg-emerald-50 px-3 py-2.5">
+              <p className="text-xs font-bold text-emerald-600">🎯 今日のゴール</p>
+              <p className="mt-0.5 text-sm font-semibold text-emerald-800">
+                {primary
+                  ? "確認問題まで解いて「完了」する"
+                  : "復習で知識を定着させる"}
+              </p>
+            </div>
+            <div className="rounded-xl bg-gray-50 px-3 py-2.5">
+              <p className="text-xs font-bold text-gray-500">⏭️ 次に進む予定</p>
+              <p className="mt-0.5 text-sm font-semibold text-gray-700">
+                {nextTopic
+                  ? nextTopic.title
+                  : plan.weeklyGoal.focusField
+                    ? `${FIELD_LABELS[plan.weeklyGoal.focusField]}の続き`
+                    : "復習・過去問"}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* 今日のテーマ学習。内容はトピック詳細とまったく同じものを表示する
             （確認問題だけは下の「今日の学習を完了する」クイズに任せる）。 */}
         {primary ? (
@@ -116,6 +186,11 @@ export default function TodayPage() {
               <p className="mt-1 text-sm leading-relaxed text-gray-600">
                 {primary.summary}
               </p>
+            </div>
+
+            {/* 今日の参考書: 紐づく章・節、無ければ探すキーワードにフォールバック */}
+            <div className="mt-4">
+              <TodayReferenceGuide topic={primary} book={book} />
             </div>
 
             <div className="mt-6">

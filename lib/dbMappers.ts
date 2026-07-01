@@ -1,5 +1,6 @@
 import type { ReviewItem, StudyStyle, UserProfile, UserProgress } from "@/types";
 import type { TopicField } from "@/types/content";
+import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
 // 型のみ import（"use client" のランタイムは取り込まれない＝サーバーから安全に参照できる）。
 import type { WordProgress } from "@/lib/wordlistProgress";
 
@@ -158,6 +159,51 @@ export function wordProgressToRow(
     next_review_at:
       p.nextReviewAt != null ? new Date(p.nextReviewAt).toISOString() : null,
     last_self_rating: p.lastSelfRating ?? null,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// user_reference_books : ユーザーごとの参考書アウトライン（1ユーザー1冊）
+// ---------------------------------------------------------------------------
+// 章構成は jsonb でまるごと保存する（章・節の可変構造のため列に展開しない）。
+
+export type ReferenceBookRow = {
+  user_id: string;
+  title: string | null;
+  publisher: string | null;
+  edition: string | null;
+  active: boolean | null;
+  note: string | null;
+  chapters: ReferenceChapter[] | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export function referenceBookRowToBook(row: ReferenceBookRow): ReferenceBook {
+  return {
+    title: row.title ?? "",
+    publisher: row.publisher ?? "",
+    edition: row.edition ?? "",
+    active: row.active ?? true,
+    note: row.note ?? "",
+    chapters: row.chapters ?? [],
+    updatedAt: row.updated_at ?? new Date().toISOString(),
+  };
+}
+
+export function referenceBookToRow(
+  userId: string,
+  b: ReferenceBook,
+): ReferenceBookRow & { updated_at: string } {
+  return {
+    user_id: userId,
+    title: b.title || null,
+    publisher: b.publisher || null,
+    edition: b.edition || null,
+    active: b.active,
+    note: b.note || null,
+    chapters: b.chapters ?? [],
     updated_at: new Date().toISOString(),
   };
 }

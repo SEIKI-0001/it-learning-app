@@ -12,6 +12,7 @@ import type { UserProfile, UserProgress } from "@/types";
 import { FIELD_LABELS } from "@/types/content";
 import { getAllTopics, getReviewItemsForUser, getTopic } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
+import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { fieldMastery } from "@/lib/study";
 
 /**
@@ -125,10 +126,44 @@ function helpText(): string {
     "次のことばを送ってください！",
     "・はじめる … 試験日や学習設定をする",
     "・今日 … 今日の学習メニューを見る",
+    "・計画 … 合格までのロードマップを見る",
+    "・今週 … 今週のゴールを見る",
     "・進捗 … 学習の進み具合を見る",
     "・復習 … 復習対象をまとめて確認",
     "・ヘルプ … この案内をもう一度表示",
   ].join("\n");
+}
+
+/** 「計画」「ロードマップ」「今週」: 全体ロードマップ・現在フェーズ・今週のゴールを要約して返す。 */
+function planText(
+  baseUrl: string,
+  token: string | null,
+  profile?: UserProfile,
+  progress?: UserProgress,
+): string {
+  if (!profile || !progress) {
+    return [
+      "学習ロードマップ📅",
+      "(初回設定がまだの場合は『はじめる』を送ってください)",
+      withToken(baseUrl, "/plan", token),
+    ].join("\n");
+  }
+  const plan = generateLearningPlan(
+    { profile, progress, answers: [] },
+    getAllTopics(),
+  );
+  const phase = getPhaseDef(plan.currentPhase);
+  const lines = ["学習ロードマップ📅"];
+  lines.push(
+    plan.daysUntilExam === null
+      ? "試験日は未設定です（設定すると逆算します）。"
+      : `試験まであと${plan.daysUntilExam}日。`,
+  );
+  lines.push(`現在は「${phase.title}」フェーズです。`);
+  lines.push(`今週のゴール：${plan.weeklyGoal.headline}。`);
+  lines.push(`今日やること：${plan.todayMenu.theme}`);
+  lines.push("詳しく見る👇", withToken(baseUrl, "/plan", token));
+  return lines.join("\n");
 }
 
 function startText(baseUrl: string, token: string | null): string {
@@ -251,6 +286,13 @@ function buildReplyText(
   if (text.includes("はじめ") || text.includes("始め") || text.includes("設定")) {
     return startText(baseUrl, token);
   }
+  if (
+    text.includes("計画") ||
+    text.includes("ロードマップ") ||
+    text.includes("今週")
+  ) {
+    return planText(baseUrl, token, profile, progress);
+  }
   if (text.includes("今日") || text.includes("学習") || text.includes("メニュー")) {
     return todayText(baseUrl, token, profile, progress);
   }
@@ -361,6 +403,6 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     message: "ITパスポート学習コーチ LINE webhook endpoint. Use POST for LINE events.",
-    commands: ["はじめる", "今日", "進捗", "復習", "ヘルプ"],
+    commands: ["はじめる", "今日", "計画", "ロードマップ", "今週", "進捗", "復習", "ヘルプ"],
   });
 }
