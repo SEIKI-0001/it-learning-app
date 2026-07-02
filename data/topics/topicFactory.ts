@@ -51,7 +51,6 @@ export type CompactTopic = {
   beginnerTrapLevel?: BeginnerTrapLevel;
   heroDiagram?: HeroDiagramSpec;
   visualLearning?: VisualLearningSpec;
-  detail?: string;
   diagram?: DiagramSpec;
   reviewQuestion?: string;
   reviewAnswer?: string;
@@ -61,6 +60,23 @@ export type CompactTopic = {
   kakomonNote?: string;
   questions: CompactQuestion[];
 };
+
+function trimSentenceEnd(text: string): string {
+  return text.replace(/[。.!！?？]+$/u, "");
+}
+
+function normalizeExamPoint(text: string): string {
+  return trimSentenceEnd(text)
+    .replace(/が問われ(?:る|やすい)$/u, "")
+    .replace(/を問われ(?:る|やすい)$/u, "");
+}
+
+function buildSummaryExplanation(topic: CompactTopic, keyPoints: string[]): string {
+  const mainPoint = trimSentenceEnd(keyPoints[0] ?? topic.summary);
+  const examPoint = normalizeExamPoint(topic.examPoint);
+
+  return `${topic.title}は、まず「${mainPoint}」を押さえるのが近道です。試験では、${examPoint}に注目します。`;
+}
 
 function buildQuestion(
   topic: CompactTopic,
@@ -137,7 +153,7 @@ export function createCompactTopic(topic: CompactTopic): Topic {
     },
     checkQuestions: topic.questions.map((q, i) => buildQuestion(topic, q, i)),
     explanation: {
-      body: topic.detail ?? `${topic.body} ${topic.examPoint}`,
+      body: buildSummaryExplanation(topic, keyPoints),
       keyPoints,
     },
     reviewPrompt: {

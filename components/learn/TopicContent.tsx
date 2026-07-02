@@ -98,7 +98,7 @@ export default function TopicContent({
 export function TopicReviewSections({ topic }: { topic: Topic }) {
   return (
     <div className="space-y-8">
-      {/* ④ 図解付き解説 */}
+      {/* ④ まとめ解説 */}
       <Section emoji="📘" title="解説で理解を固める">
         <p className="text-sm leading-relaxed text-gray-700">
           {topic.explanation.body}
@@ -119,11 +119,6 @@ export function TopicReviewSections({ topic }: { topic: Topic }) {
               ))}
             </ul>
           )}
-        {topic.explanation.diagram && (
-          <div className="mt-4">
-            <DiagramRenderer spec={topic.explanation.diagram} />
-          </div>
-        )}
       </Section>
 
       {/* ⑤ 復習プロンプト */}
