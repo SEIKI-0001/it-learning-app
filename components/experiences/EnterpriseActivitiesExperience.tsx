@@ -5,74 +5,123 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「企業活動とステークホルダ」専用の体験。
-//   ① 自社を中心に、まわりの関係者（ステークホルダ）をタップで確認
+//   ① 自社を中心にした放射図。タップすると「与える⇄受け取る」の交換が見える
 //   ② ステークホルダに含まれる？ 仕分けクイズ（株主だけと思う罠）
 //   ③ CSR（社会的責任）のひとこと
 // ============================================================================
 
-type Holder = { name: string; emoji: string; rel: string };
+type Holder = {
+  name: string;
+  emoji: string;
+  give: string; // 会社 → 相手
+  get: string; // 相手 → 会社
+};
 
 const HOLDERS: Holder[] = [
-  { name: "顧客", emoji: "🙋", rel: "商品やサービスを買ってくれる人" },
-  { name: "株主", emoji: "💰", rel: "会社にお金を出して支える人" },
-  { name: "従業員", emoji: "👷", rel: "会社で働く人" },
-  { name: "取引先", emoji: "🤝", rel: "材料を仕入れたり協力し合う相手" },
-  { name: "地域社会", emoji: "🏘️", rel: "会社がある地域の人々・環境" },
-  { name: "国・行政", emoji: "🏛️", rel: "税金やルールで関わる公的機関" },
+  { name: "顧客", emoji: "🙋", give: "商品・サービス", get: "代金・信頼" },
+  { name: "株主", emoji: "💰", give: "配当・成長", get: "資金（出資）" },
+  { name: "従業員", emoji: "👷", give: "給料・働く場", get: "労働力・アイデア" },
+  { name: "取引先", emoji: "🤝", give: "代金・注文", get: "材料・協力" },
+  { name: "地域社会", emoji: "🏘️", give: "雇用・地域貢献", get: "働く人・活動の場" },
+  { name: "国・行政", emoji: "🏛️", give: "税金", get: "ルール・インフラ" },
+];
+
+// 放射図の配置（%指定、上から時計回りに6方向）
+const POSITIONS = [
+  { left: "50%", top: "0%" },
+  { left: "93%", top: "25%" },
+  { left: "93%", top: "75%" },
+  { left: "50%", top: "100%" },
+  { left: "7%", top: "75%" },
+  { left: "7%", top: "25%" },
 ];
 
 function Hub() {
   const [sel, setSel] = useState<number | null>(null);
+  const h = sel !== null ? HOLDERS[sel] : null;
+
   return (
     <Panel>
       <SectionTitle step={1}>会社は多くの相手とつながっている</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         会社に関わる人や組織を<b className="text-gray-800">ステークホルダ（利害関係者）</b>と呼びます。
-        まわりのカードをタップして、どんな関係か見てみよう。
+        まわりをタップすると、<b className="text-gray-800">おたがいに何をやり取りしているか</b>が見えます。
       </p>
 
-      {/* 中心＝自社 */}
-      <div className="mt-4 flex justify-center">
-        <div className="grid h-16 w-16 place-items-center rounded-full bg-indigo-600 text-center text-xs font-extrabold leading-tight text-white ring-4 ring-indigo-100">
-          🏢<br />自社
-        </div>
-      </div>
+      {/* 放射図: 中心=自社、周囲6ノード */}
+      <div className="relative mx-auto mt-6 h-56 max-w-[300px]">
+        {/* つながりの線（中心から各ノードへ） */}
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          {POSITIONS.map((p, i) => (
+            <line
+              key={i}
+              x1="50"
+              y1="50"
+              x2={parseFloat(p.left)}
+              y2={parseFloat(p.top)}
+              stroke={sel === i ? "#4f46e5" : "#e5e7eb"}
+              strokeWidth={sel === i ? 2.5 : 1.5}
+              strokeDasharray={sel === i ? "none" : "3 3"}
+            />
+          ))}
+        </svg>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {HOLDERS.map((h, i) => {
+        {/* 中心=自社 */}
+        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+          <div className="grid h-16 w-16 place-items-center rounded-full bg-indigo-600 text-center text-xs font-extrabold leading-tight text-white ring-4 ring-indigo-100">
+            🏢
+            <br />
+            自社
+          </div>
+        </div>
+
+        {/* 周囲のステークホルダ */}
+        {HOLDERS.map((holder, i) => {
           const on = sel === i;
           return (
             <button
-              key={h.name}
-              onClick={() => setSel(i)}
-              className={`flex flex-col items-center rounded-xl p-2.5 ring-2 transition active:scale-95 ${
-                on
-                  ? "bg-emerald-500 text-white ring-emerald-500"
-                  : "bg-emerald-50 text-emerald-700 ring-emerald-200"
+              key={holder.name}
+              onClick={() => setSel(on ? null : i)}
+              style={{ left: POSITIONS[i].left, top: POSITIONS[i].top }}
+              className={`absolute z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center ring-2 transition active:scale-95 ${
+                on ? "bg-emerald-500 text-white ring-emerald-500" : "bg-emerald-50 text-emerald-800 ring-emerald-200"
               }`}
             >
-              <span className="text-xl leading-none">{h.emoji}</span>
-              <span className="mt-1 text-[11px] font-extrabold">{h.name}</span>
+              <span className="text-base leading-none">{holder.emoji}</span>
+              <span className="mt-0.5 text-[9px] font-extrabold leading-tight">{holder.name}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="mt-3 min-h-[3.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
-        {sel !== null ? (
-          <>
+      {/* 与える⇄受け取る の表示 */}
+      <div className="mt-4 min-h-[5.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
+        {h ? (
+          <div>
             <div className="text-sm font-extrabold text-gray-800">
-              {HOLDERS[sel].emoji} {HOLDERS[sel].name}
+              {h.emoji} {h.name} とのやり取り
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-gray-700">{HOLDERS[sel].rel}</p>
-          </>
+            <div className="mt-2 space-y-1.5 text-sm">
+              <div className="flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-1.5">
+                <span className="text-xs font-bold text-indigo-500">自社 →</span>
+                <span className="font-semibold text-gray-800">{h.give}</span>
+              </div>
+              <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5">
+                <span className="text-xs font-bold text-emerald-600">→ 自社</span>
+                <span className="font-semibold text-gray-800">{h.get}</span>
+              </div>
+            </div>
+          </div>
         ) : (
-          <span className="text-sm text-gray-400">まわりのカードをタップしてね。</span>
+          <p className="text-sm text-gray-400">
+            まわりの相手をタップしてね。<b>一方通行ではなく「おたがいさま」</b>の関係が見えてきます。
+          </p>
         )}
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 たとえると学校行事も、生徒だけでなく<b>先生・保護者・地域の人</b>に関係します。会社も同じく多くの相手とつながっています。
+        💡 たとえると学校行事も、生徒だけでなく<b>先生・保護者・地域の人</b>に関係します。
+        「ステークホルダ＝株主だけ」ではない点が試験のポイント。
       </div>
     </Panel>
   );
