@@ -7,7 +7,7 @@ import { Panel, SectionTitle } from "./ui";
 // 「プロジェクトとQCD」専用の体験。
 //   ① 通常業務 ⇄ プロジェクトの違い
 //   ② QCDの3観点（品質・費用・納期）
-//   ③ トレードオフ体験：1つを優先すると他が引っ張られる
+//   ③ トレードオフ体験：作戦を選ぶとQCDメーターが動き、しわ寄せが見える
 // ============================================================================
 
 function WhatIsProject() {
@@ -68,63 +68,64 @@ function QcdCards() {
   );
 }
 
-type Pri = "Q" | "C" | "D";
-const TRADEOFF: Record<Pri, { label: string; emoji: string; effect: string }> = {
+type Pri = "Q" | "C" | "D" | "balance";
+const PLANS: Record<Pri, { label: string; emoji: string; q: number; c: number; d: number; effect: string }> = {
   Q: {
     label: "品質を最優先",
     emoji: "⭐",
-    effect: "丁寧に作り込むほど、時間がかかり（納期↑）、人手やお金も増えます（費用↑）。",
+    q: 95,
+    c: 30,
+    d: 35,
+    effect: "丁寧に作り込んだ分、お金と時間を使いすぎ。予算オーバー＆本番に間に合わないかも…",
   },
   C: {
     label: "費用を最優先",
     emoji: "💰",
-    effect: "お金を抑えると、人や時間が足りず品質が落ちやすい（品質↓）。無理に間に合わせると納期も危うい。",
+    q: 35,
+    c: 95,
+    d: 45,
+    effect: "節約した分、人手も材料も足りず出来ばえがボロボロに。急ごしらえで納期もギリギリ…",
   },
   D: {
     label: "納期を最優先",
     emoji: "📅",
-    effect: "急いで仕上げると、確認不足で品質が落ちやすく（品質↓）、人を増やせば費用も増えます（費用↑）。",
+    q: 35,
+    c: 45,
+    d: 95,
+    effect: "急いで仕上げた分、確認不足で出来ばえが雑に。人を急きょ増やしてお金も余計にかかった…",
+  },
+  balance: {
+    label: "バランス重視",
+    emoji: "⚖️",
+    q: 70,
+    c: 70,
+    d: 70,
+    effect: "どれも満点ではないけれど、全部が合格ライン。これがプロジェクトマネジメントの基本です！",
   },
 };
 
+const GAUGES = [
+  { key: "q" as const, emoji: "⭐", name: "品質", sub: "出来ばえ" },
+  { key: "c" as const, emoji: "💰", name: "費用", sub: "予算の余裕" },
+  { key: "d" as const, emoji: "📅", name: "納期", sub: "時間の余裕" },
+];
+
 function Tradeoff() {
   const [pri, setPri] = useState<Pri | null>(null);
-  const corner = (k: Pri, pos: string) => {
-    const on = pri === k;
-    return (
-      <div className={`${pos} flex flex-col items-center`}>
-        <div
-          className={`grid h-14 w-14 place-items-center rounded-full text-xl font-extrabold ring-2 transition ${
-            on ? "bg-indigo-600 text-white ring-indigo-600 scale-110" : "bg-white text-gray-400 ring-gray-300"
-          }`}
-        >
-          {k}
-        </div>
-        <span className={`mt-1 text-[11px] font-bold ${on ? "text-indigo-700" : "text-gray-400"}`}>
-          {k === "Q" ? "品質" : k === "C" ? "費用" : "納期"}
-        </span>
-      </div>
-    );
-  };
+  const plan = pri ? PLANS[pri] : null;
+  const barTone = (v: number) => (v >= 70 ? "bg-emerald-500" : v >= 50 ? "bg-amber-400" : "bg-rose-500");
+  const textTone = (v: number) => (v >= 70 ? "text-emerald-600" : v >= 50 ? "text-amber-600" : "text-rose-600");
+
   return (
     <Panel>
       <SectionTitle step={3}>3つは引っ張り合う（トレードオフ）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        QCDは<b className="text-gray-800">同時に全部を最高にはできません</b>。1つを優先すると、他が犠牲になりがち。試してみよう。
+        文化祭のカフェ企画をあなたが仕切るとしたら？　<b className="text-gray-800">作戦を選んで</b>、
+        3つのメーターがどう動くか見てみよう。
       </p>
 
-      {/* 三角形 */}
-      <div className="mt-4">
-        <div className="flex justify-center">{corner("Q", "")}</div>
-        <div className="mt-1 text-center text-lg text-gray-300">△</div>
-        <div className="flex justify-between px-6">
-          {corner("C", "")}
-          {corner("D", "")}
-        </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-3 gap-1.5">
-        {(["Q", "C", "D"] as Pri[]).map((k) => (
+      <div className="mt-4 grid grid-cols-2 gap-1.5">
+        {(["Q", "C", "D", "balance"] as Pri[]).map((k) => (
           <button
             key={k}
             onClick={() => setPri(k)}
@@ -132,23 +133,57 @@ function Tradeoff() {
               pri === k ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
-            {TRADEOFF[k].emoji} {TRADEOFF[k].label}
+            {PLANS[k].emoji} {PLANS[k].label}
           </button>
         ))}
       </div>
 
-      <div className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200">
-        {pri ? (
+      {/* QCDメーター */}
+      <div className="mt-4 space-y-2.5">
+        {GAUGES.map((g) => {
+          const v = plan ? plan[g.key] : 60;
+          return (
+            <div key={g.key} className="flex items-center gap-2">
+              <div className="w-20 flex-none text-right">
+                <span className="text-sm font-extrabold text-gray-800">
+                  {g.emoji} {g.name}
+                </span>
+                <div className="text-[10px] text-gray-400">{g.sub}</div>
+              </div>
+              <div className="h-5 flex-1 overflow-hidden rounded-full bg-gray-100 ring-1 ring-gray-200">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${plan ? barTone(v) : "bg-gray-300"}`}
+                  style={{ width: `${v}%` }}
+                />
+              </div>
+              <span className={`w-10 flex-none font-mono text-xs font-extrabold ${plan ? textTone(v) : "text-gray-400"}`}>
+                {v}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div
+        className={`mt-3 min-h-[3.5em] rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 ${
+          !plan
+            ? "bg-gray-50 text-gray-400 ring-gray-200"
+            : pri === "balance"
+              ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
+              : "bg-rose-50 text-rose-900 ring-rose-200"
+        }`}
+      >
+        {plan ? (
           <>
-            <b className="text-gray-900">{TRADEOFF[pri].label}</b>すると… {TRADEOFF[pri].effect}
+            <b>{plan.emoji} {plan.label}</b>にすると… {plan.effect}
           </>
         ) : (
-          <span className="text-gray-400">上のボタンを押すと、優先した結果どこにしわ寄せが行くか分かります。</span>
+          <>上の作戦ボタンを押すと、1つを上げたとき他のメーターがどう下がるかが見えます。</>
         )}
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 だから<b>どれか1つに偏らず、3つの釣り合い</b>をとって計画・調整するのが基本です。
+        💡 3つ全部を100にはできない。だから<b>どれか1つに偏らず、3つの釣り合い</b>をとって計画・調整するのが基本です。
       </div>
     </Panel>
   );
