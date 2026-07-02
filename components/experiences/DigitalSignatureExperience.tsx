@@ -1,94 +1,183 @@
 "use client";
 
 import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「ディジタル署名・認証局(CA)」専用の体験。
-//   ① 署名→検証の流れを1歩ずつ（送信者=秘密鍵で署名 / 受信者=公開鍵で検証）。
-//      公開鍵暗号と「鍵の使い方が逆」なことを強調。改ざん検知＋なりすまし防止。
+//   ① 署名検証ラボ：文書の届き方（そのまま/途中で改ざん/なりすまし）を選んで
+//      「検証」ボタン → 指紋（ハッシュ値）の一致/不一致で見破れることを体感。
 //   ② 認証局(CA)＝公開鍵が本物だと保証する第三者。PKIのひとこと。
 //   ③ 暗号化とのちがい（早見表）。
 // ============================================================================
 
-const STEPS: { who: string; emoji: string; title: string; d: string }[] = [
+type Scenario = "ok" | "tamper" | "fake";
+
+const SCENARIOS: {
+  key: Scenario;
+  label: string;
+  sender: string;
+  senderName: string;
+  doc: string;
+  docTone: string;
+  // 署名を山田さんの公開鍵で開いて取り出した指紋 / 届いた文書から計算した指紋
+  sigFp: string;
+  docFp: string;
+  verdict: string;
+  why: string;
+}[] = [
   {
-    who: "送信者",
-    emoji: "✍️",
-    title: "送る文書から「ハッシュ値」を作る",
-    d: "文書全体を計算して短い“指紋”（ハッシュ値）を作ります。文書が1文字でも変わると指紋も変わります。",
+    key: "ok",
+    label: "📮 そのまま届く",
+    sender: "✍️",
+    senderName: "山田さん",
+    doc: "「1万円 支払います」＋署名",
+    docTone: "bg-white ring-gray-300 text-gray-800",
+    sigFp: "A4-9F",
+    docFp: "A4-9F",
+    verdict: "✅ 検証OK！本人が送った・改ざんなし",
+    why: "署名から取り出した指紋と、文書から計算した指紋がピッタリ一致。安心して受け取れます。",
   },
   {
-    who: "送信者",
-    emoji: "🔑",
-    title: "自分の秘密鍵で指紋を暗号化＝署名",
-    d: "指紋を“自分しか持っていない秘密鍵”で暗号化。これがディジタル署名です。文書と一緒に送ります。",
+    key: "tamper",
+    label: "😈 途中で書き換え",
+    sender: "✍️",
+    senderName: "山田さん",
+    doc: "「100万円 支払います」＋署名",
+    docTone: "bg-rose-50 ring-rose-300 text-rose-800",
+    sigFp: "A4-9F",
+    docFp: "7C-21",
+    verdict: "❌ 改ざんを検知！",
+    why: "文書が1文字でも変わると指紋も変わります。署名の中の指紋（元の文書のもの）と合わないので、書き換えがバレました。",
   },
   {
-    who: "受信者",
-    emoji: "🔓",
-    title: "送信者の公開鍵で署名を戻す",
-    d: "誰でも手に入る“送信者の公開鍵”で署名を復号し、送られてきた指紋を取り出します。",
-  },
-  {
-    who: "受信者",
-    emoji: "🔍",
-    title: "自分でも指紋を作って照合",
-    d: "受け取った文書から自分でも指紋を計算し、②の指紋と比べます。一致すれば「本人が送った・改ざんなし」と確認できます。",
+    key: "fake",
+    label: "🎭 別人がなりすまし",
+    sender: "🎭",
+    senderName: "偽の山田さん",
+    doc: "「100万円 支払います」＋偽の署名",
+    docTone: "bg-rose-50 ring-rose-300 text-rose-800",
+    sigFp: "??-??",
+    docFp: "5E-88",
+    verdict: "❌ なりすましを検知！",
+    why: "偽者は山田さんの秘密鍵を持っていません。別の鍵で作った署名は、山田さんの公開鍵では正しく開けず、でたらめな指紋になってバレました。",
   },
 ];
 
-function SignatureFlow() {
-  const [i, setI] = useState(0);
-  const s = STEPS[i];
-  const isSender = s.who === "送信者";
+function SignatureLab() {
+  const [scenario, setScenario] = useState<Scenario>("ok");
+  const [verified, setVerified] = useState(false);
+  const [tried, setTried] = useState<Set<Scenario>>(new Set());
+  const s = SCENARIOS.find((x) => x.key === scenario)!;
+  const match = s.sigFp === s.docFp;
+  const allTried = tried.size === SCENARIOS.length;
+
+  const pick = (key: Scenario) => {
+    setScenario(key);
+    setVerified(false);
+  };
+  const verify = () => {
+    setVerified(true);
+    setTried((prev) => new Set(prev).add(scenario));
+  };
+
   return (
     <Panel>
-      <SectionTitle step={1}>署名→検証を1歩ずつ</SectionTitle>
+      <SectionTitle step={1}>署名検証ラボ ― ニセモノを見破れ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ディジタル署名は<b className="text-gray-800">「本人が送った」＋「途中で書き換えられていない」</b>を
-        証明するしくみ。流れを追ってみましょう。
+        山田さんが「支払います」という文書に<b className="text-gray-800">署名</b>して送ります。
+        あなたは受信者。<b className="text-gray-800">届き方を選んで「検証」</b>してみましょう。
       </p>
 
-      {/* 役割バッジ */}
-      <div className="mt-4 flex items-center justify-between text-xs font-bold">
-        <span className={isSender ? "text-indigo-700" : "text-gray-300"}>✍️ 送信者</span>
-        <span className="text-gray-300">───▶</span>
-        <span className={!isSender ? "text-emerald-700" : "text-gray-300"}>📬 受信者</span>
-      </div>
-
-      {/* 現在ステップ */}
-      <div
-        className={`mt-3 rounded-2xl p-4 ring-2 ${
-          isSender ? "bg-indigo-50 ring-indigo-300" : "bg-emerald-50 ring-emerald-300"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{s.emoji}</span>
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-              isSender ? "bg-indigo-200 text-indigo-800" : "bg-emerald-200 text-emerald-800"
+      {/* 届き方の選択 */}
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        {SCENARIOS.map((x) => (
+          <button
+            key={x.key}
+            onClick={() => pick(x.key)}
+            className={`rounded-lg px-1 py-2 text-[11px] font-bold leading-tight transition active:scale-95 ${
+              scenario === x.key ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
-            {s.who}
-          </span>
-        </div>
-        <div className="mt-2 text-sm font-extrabold text-gray-800">
-          {i + 1}. {s.title}
-        </div>
-        <p className="mt-1 text-sm leading-relaxed text-gray-600">{s.d}</p>
+            {x.label}
+          </button>
+        ))}
       </div>
 
-      <StepNav
-        index={i}
-        total={STEPS.length}
-        onPrev={() => setI((v) => Math.max(0, v - 1))}
-        onNext={() => setI((v) => Math.min(STEPS.length - 1, v + 1))}
-        onReset={() => setI(0)}
-        doneLabel="検証OK ✅"
-      />
+      {/* 配送のようす */}
+      <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+        <div className="flex items-center justify-between text-center">
+          <div className="w-16">
+            <div className="text-2xl">{s.sender}</div>
+            <div className="mt-0.5 text-[10px] font-bold text-gray-500">{s.senderName}</div>
+            <div className="text-[10px] text-gray-400">🔑 秘密鍵で署名</div>
+          </div>
+          <span className="text-gray-300">──▶</span>
+          <div className={`flex-1 rounded-lg px-2 py-2 text-xs font-bold ring-1 ${s.docTone}`}>
+            📨 {s.doc}
+            {scenario === "tamper" && (
+              <div className="mt-0.5 text-[10px] font-medium text-rose-500">
+                😈 途中で「1万円」を書き換えた
+              </div>
+            )}
+          </div>
+          <span className="text-gray-300">──▶</span>
+          <div className="w-16">
+            <div className="text-2xl">📬</div>
+            <div className="mt-0.5 text-[10px] font-bold text-gray-500">あなた</div>
+            <div className="text-[10px] text-gray-400">🔓 公開鍵で検証</div>
+          </div>
+        </div>
+      </div>
 
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      {/* 検証ボタン */}
+      <button
+        onClick={verify}
+        disabled={verified}
+        className="mt-3 w-full rounded-xl bg-indigo-600 py-2.5 text-sm font-bold text-white transition active:scale-[0.98] disabled:opacity-40"
+      >
+        🔍 届いた文書を検証する
+      </button>
+
+      {/* 検証結果 */}
+      {verified && (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-center gap-2 text-center">
+            <div className="flex-1 rounded-xl bg-violet-50 px-2 py-2.5 ring-1 ring-violet-200">
+              <div className="text-[10px] font-bold text-violet-600">署名を公開鍵で開いた指紋</div>
+              <div className="mt-0.5 font-mono text-lg font-extrabold text-violet-700">{s.sigFp}</div>
+            </div>
+            <span className={`text-xl font-extrabold ${match ? "text-emerald-500" : "text-rose-500"}`}>
+              {match ? "＝" : "≠"}
+            </span>
+            <div className="flex-1 rounded-xl bg-sky-50 px-2 py-2.5 ring-1 ring-sky-200">
+              <div className="text-[10px] font-bold text-sky-600">届いた文書から計算した指紋</div>
+              <div className="mt-0.5 font-mono text-lg font-extrabold text-sky-700">{s.docFp}</div>
+            </div>
+          </div>
+          <div
+            className={`rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 ${
+              match ? "bg-emerald-50 text-emerald-900 ring-emerald-200" : "bg-rose-50 text-rose-900 ring-rose-200"
+            }`}
+          >
+            <b>{s.verdict}</b>
+            <p className="mt-1 text-[13px]">{s.why}</p>
+          </div>
+        </div>
+      )}
+
+      {allTried && (
+        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
+          🎉 本物は通し、改ざんもなりすましも見破れた！これがディジタル署名の
+          <b>「改ざん検知」＋「なりすまし防止」</b>です。
+        </div>
+      )}
+
+      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-900 ring-1 ring-sky-200">
+        📌 しくみ：送信者は文書の指紋（<b>ハッシュ値</b>）を<b>自分の秘密鍵</b>で暗号化して添付＝署名。
+        受信者は<b>送信者の公開鍵</b>で署名を開き、自分で計算した指紋と照合します。
+      </div>
+      <div className="mt-2 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ⚠️ <b>暗号化とは鍵の使い方が逆</b>。暗号化は「相手の公開鍵で施錠→相手の秘密鍵で開錠」。
         署名は<b>「自分の秘密鍵で署名→相手が公開鍵で検証」</b>です。
       </div>
@@ -173,7 +262,7 @@ export default function DigitalSignatureExperience() {
         証明するしくみ。<b>秘密鍵で署名→公開鍵で検証</b>が要点です。
       </div>
 
-      <SignatureFlow />
+      <SignatureLab />
       <CaPanel />
       <CompareTable />
     </div>

@@ -5,7 +5,8 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「成長戦略（コアコンピタンス・M&A・アライアンス・アウトソーシング）」専用の体験。
-//   ① 成長の手段を「自前 / 提携 / 買収 / 外注」で対比（タップ）
+//   ① 社長シミュレータ：AI技術がない会社の社長になって手段を選ぶ
+//      → 速さ/費用/自社の力メーター＋結末が変わり、トレードオフを体感
 //   ② 「この手はどれ？」仕分けクイズ
 // ============================================================================
 
@@ -14,8 +15,11 @@ type Way = {
   emo: string;
   name: string;
   tag: string;
-  d: string;
-  tone: string;
+  speed: 1 | 2 | 3; // 手に入る速さ
+  cheap: 1 | 2 | 3; // 費用の安さ
+  keep: 1 | 2 | 3; // 自社の力になる度
+  story: string;
+  point: string;
 };
 
 const WAYS: Way[] = [
@@ -24,72 +28,144 @@ const WAYS: Way[] = [
     emo: "💪",
     name: "コアコンピタンス",
     tag: "自前で強みを磨く",
-    d: "他社にまねできない自社ならではの中核的な強み。これを軸に勝負する。",
-    tone: "bg-emerald-50 ring-emerald-300 text-emerald-900",
+    speed: 1,
+    cheap: 2,
+    keep: 3,
+    story: "自社でAI研究チームを育てて3年。時間はかかったが、他社にまねできない中核的な強みになった。",
+    point: "遅いけれど、まねされない「自社ならではの強み」に育つ。",
   },
   {
     key: "alliance",
     emo: "🤝",
     name: "アライアンス",
     tag: "他社と提携・協力",
-    d: "資本を一つにせず、他社と手を組んで弱みを補い合う。独立は保ったまま協力する。",
-    tone: "bg-sky-50 ring-sky-300 text-sky-900",
+    speed: 2,
+    cheap: 3,
+    keep: 2,
+    story: "AI企業と提携して共同開発。おたがい独立した会社のまま、強みを持ち寄って弱みを補い合えた。",
+    point: "資本は別々のまま協力。ほどよく速く、費用も抑えられる。",
   },
   {
     key: "ma",
     emo: "🏢",
     name: "M&A",
     tag: "他社を買収・合併",
-    d: "他社を買い取ったり一つになったりして、技術や市場を一気に取り込む。",
-    tone: "bg-amber-50 ring-amber-300 text-amber-900",
+    speed: 3,
+    cheap: 1,
+    keep: 3,
+    story: "AI企業をまるごと買収。技術も人材も顧客も一気に手に入ったが、費用は莫大。会社の統合にも苦労した。",
+    point: "最速で丸ごと手に入るが、お金がかかる。会社が「一つになる」のが提携との違い。",
   },
   {
     key: "out",
     emo: "📤",
     name: "アウトソーシング",
     tag: "外部に外注",
-    d: "自社で苦手・非効率な業務を、得意な会社に任せる。自社は強みに集中できる。",
-    tone: "bg-violet-50 ring-violet-300 text-violet-900",
+    speed: 3,
+    cheap: 2,
+    keep: 1,
+    story: "AI開発を外部の専門会社に外注。すぐ完成して自社は本業に集中できたが、ノウハウは自社に残らない。",
+    point: "速くて楽。ただし技術は自社の力にならない。苦手分野を任せるのに向く。",
   },
 ];
 
-function Ways() {
-  const [open, setOpen] = useState<string | null>("core");
-  const active = WAYS.find((w) => w.key === open) ?? null;
+const METERS: { label: string; get: (w: Way) => number }[] = [
+  { label: "⏱️ 手に入る速さ", get: (w) => w.speed },
+  { label: "💸 費用の安さ", get: (w) => w.cheap },
+  { label: "💪 自社の力になる", get: (w) => w.keep },
+];
+
+function Meter({ label, val }: { label: string; val: number }) {
+  const tone = val === 3 ? "bg-emerald-400" : val === 2 ? "bg-amber-400" : "bg-rose-400";
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-28 flex-none text-[11px] font-bold text-gray-600">{label}</span>
+      <div className="flex flex-1 gap-1">
+        {[1, 2, 3].map((n) => (
+          <div
+            key={n}
+            className={`h-3 flex-1 rounded-sm transition-all ${n <= val ? tone : "bg-gray-200"}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CeoSimulator() {
+  const [picked, setPicked] = useState<string | null>(null);
+  const [tried, setTried] = useState<Set<string>>(new Set());
+  const active = WAYS.find((w) => w.key === picked) ?? null;
+  const allTried = tried.size === WAYS.length;
+
+  const pick = (key: string) => {
+    setPicked(key);
+    setTried((prev) => new Set(prev).add(key));
+  };
+
   return (
     <Panel>
-      <SectionTitle step={1}>成長の「手段」を見比べる</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        会社が大きくなる方法は、大きく
-        <b className="text-gray-800">「自前で磨く・他社と組む・買い取る・外に出す」</b>に分かれます。
-        タップして特徴を見ましょう。
-      </p>
+      <SectionTitle step={1}>社長になって、成長の手を選ぶ</SectionTitle>
+      <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        🧑‍💼 あなたはおもちゃ会社の社長。次のヒットには<b>AI技術</b>が必要。でも自社にはない！
+        <b>どうやって手に入れる？</b>
+      </div>
+
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         {WAYS.map((w) => {
-          const picked = open === w.key;
+          const on = picked === w.key;
+          const done = tried.has(w.key);
           return (
             <button
               key={w.key}
-              onClick={() => setOpen(picked ? null : w.key)}
+              onClick={() => pick(w.key)}
               className={`rounded-xl p-3 text-left ring-1 transition active:scale-[0.98] ${
-                picked ? w.tone + " ring-2" : "bg-gray-50 ring-gray-200"
+                on ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 ring-gray-200"
               }`}
             >
-              <div className="text-lg">{w.emo}</div>
-              <div className="mt-0.5 text-[13px] font-extrabold text-gray-800">{w.name}</div>
-              <div className="mt-0.5 text-[10px] font-bold text-gray-400">{w.tag}</div>
+              <div className="text-lg">
+                {w.emo}
+                {done && !on && <span className="ml-1 text-xs">✓</span>}
+              </div>
+              <div className={`mt-0.5 text-[13px] font-extrabold ${on ? "text-white" : "text-gray-800"}`}>
+                {w.name}
+              </div>
+              <div className={`mt-0.5 text-[10px] font-bold ${on ? "text-indigo-100" : "text-gray-400"}`}>
+                {w.tag}
+              </div>
             </button>
           );
         })}
       </div>
-      {active && (
-        <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${active.tone}`}>
-          <div className="text-sm font-extrabold">
-            {active.emo} {active.name}
+
+      {active ? (
+        <div className="mt-3 space-y-2.5">
+          <div className="rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
+            <div className="text-sm font-extrabold text-gray-800">
+              {active.emo} {active.name}を選んだ結果…
+            </div>
+            <p className="mt-1 text-[13px] leading-relaxed text-gray-600">{active.story}</p>
+            <div className="mt-3 space-y-1.5">
+              {METERS.map((m) => (
+                <Meter key={m.label} label={m.label} val={m.get(active)} />
+              ))}
+            </div>
           </div>
-          <p className="mt-1 text-[13px] leading-relaxed">{active.d}</p>
+          <div className="rounded-xl bg-sky-50 px-4 py-2.5 text-xs leading-relaxed text-sky-900 ring-1 ring-sky-200">
+            📌 {active.point}
+          </div>
+        </div>
+      ) : (
+        <p className="mt-3 text-center text-xs text-gray-400">↑ 4つの手をタップして、結果を見比べよう</p>
+      )}
+
+      {allTried && (
+        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
+          🎉 全部試した！ どの手にも<b>一長一短（トレードオフ）</b>があり、唯一の正解はありません。
+          だから試験では「それぞれの特徴」が問われます。
         </div>
       )}
+
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ <b>M&A＝買収・合併（一つになる）</b>と<b>アライアンス＝提携（独立のまま協力）</b>の
         取り違えが定番のひっかけ。
@@ -182,7 +258,7 @@ export default function CorporateStrategyExperience() {
         どれも“どう力を得るか”の違いです。
       </div>
 
-      <Ways />
+      <CeoSimulator />
       <Quiz />
     </div>
   );

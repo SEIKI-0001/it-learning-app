@@ -5,66 +5,168 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「LANとWAN」専用の体験。
-//   ① 広さのイメージ（LAN ⇄ WAN ⇄ LAN の図）＋役割カード
+//   ① 宛先を選んでデータを送る → 通る経路（LAN内で完結 / WAN経由）が光る
 //   ② 比較表（範囲・例・だれが用意・速度）
 //   ③ これはどっち？ 仕分けクイズ（範囲で見分ける練習）
 // ============================================================================
 
-function MapAndRoles() {
+type Dest = "printer" | "office" | "video";
+
+const DESTS: {
+  key: Dest;
+  label: string;
+  usesWan: boolean;
+  remote: { emoji: string; name: string; devices: string } | null;
+  result: string;
+}[] = [
+  {
+    key: "printer",
+    label: "🖨️ 同じ家のプリンタ",
+    usesWan: false,
+    remote: null,
+    result:
+      "家の中のネットワーク（LAN）だけで届いた！ WANは通っていません。近い相手はLAN内で完結するので速い。",
+  },
+  {
+    key: "office",
+    label: "🏢 遠くの会社のサーバ",
+    usesWan: true,
+    remote: { emoji: "🏢", name: "会社（LAN）", devices: "🖥️🗄️" },
+    result:
+      "家のLANを出て、通信会社の回線（WAN）を通り、会社のLANへ届いた！ 離れたLANどうしを結ぶのがWANです。",
+  },
+  {
+    key: "video",
+    label: "🌍 海外の動画サイト",
+    usesWan: true,
+    remote: { emoji: "🌍", name: "動画サイト", devices: "🗄️🎬" },
+    result:
+      "インターネット（世界最大のWAN）を通って海外まで届いた！ どんなに遠くても、WANがLANとLANを結んでくれます。",
+  },
+];
+
+function PacketJourney() {
+  const [dest, setDest] = useState<Dest | null>(null);
+  const [tried, setTried] = useState<Set<Dest>>(new Set());
+  const d = DESTS.find((x) => x.key === dest) ?? null;
+  const triedLan = [...tried].some((k) => !DESTS.find((x) => x.key === k)!.usesWan);
+  const triedWan = [...tried].some((k) => DESTS.find((x) => x.key === k)!.usesWan);
+
+  const send = (key: Dest) => {
+    setDest(key);
+    setTried((prev) => new Set(prev).add(key));
+  };
+
   return (
     <Panel>
-      <SectionTitle step={1}>広さでイメージする</SectionTitle>
+      <SectionTitle step={1}>宛先を選んで、データを送ってみる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ネットワークは<b className="text-gray-800">カバーする範囲の広さ</b>で呼び名が変わります。
+        あなたのスマホ📱から送信します。<b className="text-gray-800">宛先をタップ</b>すると、
+        データがどこを通るかが光ります。
       </p>
 
-      {/* 図 */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        <div className="flex-1 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50 px-2 py-3 text-center">
-          <div className="text-xl">🏠</div>
-          <div className="text-xs font-extrabold text-indigo-700">LAN（家）</div>
-          <div className="text-base">🖥️📱🖨️</div>
+      {/* 宛先選択 */}
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        {DESTS.map((x) => (
+          <button
+            key={x.key}
+            onClick={() => send(x.key)}
+            className={`rounded-lg px-1 py-2 text-[11px] font-bold leading-tight transition active:scale-95 ${
+              dest === x.key ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+
+      {/* 経路の図 */}
+      <div className="mt-3 flex items-stretch justify-center gap-1">
+        {/* 家のLAN */}
+        <div
+          className={`flex-1 rounded-xl border-2 border-dashed px-1.5 py-2.5 text-center transition ${
+            dest ? "border-indigo-400 bg-indigo-50" : "border-gray-300 bg-gray-50"
+          }`}
+        >
+          <div className="text-[11px] font-extrabold text-indigo-700">🏠 家（LAN）</div>
+          <div className="mt-1.5 flex justify-center gap-1 text-base">
+            <span className={dest ? "rounded bg-indigo-200 px-0.5" : ""}>📱</span>
+            <span className={dest === "printer" ? "animate-pulse rounded bg-emerald-200 px-0.5" : ""}>🖨️</span>
+            <span>💻</span>
+          </div>
+          {dest === "printer" && (
+            <div className="mt-1 text-[10px] font-bold text-emerald-600">📱→🖨️ 家の中で完結！</div>
+          )}
         </div>
-        <span className="text-lg font-bold text-sky-500">⇄</span>
-        <div className="flex-1 rounded-full border-2 border-sky-400 bg-sky-50 px-2 py-3 text-center">
-          <div className="text-xl">🌐</div>
-          <div className="text-xs font-extrabold text-sky-700">WAN</div>
-          <div className="text-[10px] text-gray-500">遠くを結ぶ</div>
+
+        {/* WAN */}
+        <div className="flex items-center">
+          <span className={`text-sm font-bold ${d?.usesWan ? "animate-pulse text-sky-500" : "text-gray-200"}`}>⇄</span>
         </div>
-        <span className="text-lg font-bold text-sky-500">⇄</span>
-        <div className="flex-1 rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50 px-2 py-3 text-center">
-          <div className="text-xl">🏢</div>
-          <div className="text-xs font-extrabold text-indigo-700">LAN（会社）</div>
-          <div className="text-base">🖥️🖥️🗄️</div>
+        <div
+          className={`w-[72px] rounded-full border-2 px-1 py-2.5 text-center transition ${
+            d?.usesWan ? "border-sky-400 bg-sky-50" : "border-gray-200 bg-gray-50 opacity-60"
+          }`}
+        >
+          <div className="text-lg">🌐</div>
+          <div className={`text-[10px] font-extrabold ${d?.usesWan ? "text-sky-700" : "text-gray-400"}`}>WAN</div>
+          <div className="text-[9px] leading-tight text-gray-400">通信会社の回線</div>
+        </div>
+        <div className="flex items-center">
+          <span className={`text-sm font-bold ${d?.usesWan ? "animate-pulse text-sky-500" : "text-gray-200"}`}>⇄</span>
+        </div>
+
+        {/* 相手側 */}
+        <div
+          className={`flex-1 rounded-xl border-2 border-dashed px-1.5 py-2.5 text-center transition ${
+            d?.usesWan ? "border-indigo-400 bg-indigo-50" : "border-gray-200 bg-gray-50 opacity-60"
+          }`}
+        >
+          {d?.remote ? (
+            <>
+              <div className="text-[11px] font-extrabold text-indigo-700">
+                {d.remote.emoji} {d.remote.name}
+              </div>
+              <div className="mt-1.5 animate-pulse text-base">{d.remote.devices}</div>
+              <div className="mt-1 text-[10px] font-bold text-emerald-600">届いた！</div>
+            </>
+          ) : (
+            <>
+              <div className="text-[11px] font-extrabold text-gray-400">遠くの相手</div>
+              <div className="mt-1.5 text-base opacity-30">🏢🌍</div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* 役割カード */}
-      <div className="mt-4 space-y-2.5">
-        <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🏠</span>
-            <span className="text-sm font-extrabold text-gray-800">LAN（ラン）</span>
-            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold text-indigo-700">狭い範囲</span>
+      {/* 結果 */}
+      {d && (
+        <div className="mt-3 space-y-2">
+          <div className="flex justify-center">
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                d.usesWan ? "bg-sky-100 text-sky-700" : "bg-emerald-100 text-emerald-700"
+              }`}
+            >
+              {d.usesWan ? "🌐 WANを通った" : "🏠 LAN内で完結（WANは通らない）"}
+            </span>
           </div>
-          <p className="mt-1 text-sm leading-relaxed text-gray-600">
-            <b>Local Area Network</b>。家・学校・会社など<b>限られた範囲</b>。自分たちで作り、速くて安い。Wi-Fi（無線）やLANケーブル（有線）でつなぐ。
+          <p className="rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200">
+            {d.result}
           </p>
         </div>
-        <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🌍</span>
-            <span className="text-sm font-extrabold text-gray-800">WAN（ワン）</span>
-            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-bold text-sky-700">広い範囲</span>
-          </div>
-          <p className="mt-1 text-sm leading-relaxed text-gray-600">
-            <b>Wide Area Network</b>。離れたLANどうしを<b>都市・国・世界規模</b>で結ぶ。通信会社（NTTなど）の回線を借りて使う。インターネットは世界最大のWAN。
-          </p>
+      )}
+
+      {triedLan && triedWan && (
+        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
+          🎉 気づいた？ <b>近い相手＝LANの中だけ</b>、<b>遠い相手＝WANを通る</b>。
+          LAN＝「家の中」、WAN＝「家と家を結ぶ道路網」です。
         </div>
-      </div>
+      )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 ひとことで：<b>LAN＝「家の中」</b>、<b>WAN＝「家と家を結ぶ道路網」</b>。
+        💡 <b>LAN</b>（Local Area Network）＝家・学校・会社など<b>狭い範囲</b>。自分たちで作る。
+        <b>WAN</b>（Wide Area Network）＝離れたLANどうしを結ぶ<b>広い範囲</b>。通信会社の回線を借りる。
       </div>
     </Panel>
   );
@@ -173,7 +275,7 @@ export default function LanWanExperience() {
         スマホ →（家のWi-Fi＝LAN）→ プロバイダ →（インターネット＝WAN）→ 相手、の順でつながっています。
       </div>
 
-      <MapAndRoles />
+      <PacketJourney />
       <CompareTable />
       <SortQuiz />
     </div>

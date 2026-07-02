@@ -5,96 +5,142 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「BCP（事業継続計画）」専用の体験。
-//   ① 災害が起きたとき、BCPあり/なしで何が変わるかをトグルで比較
-//   ② BCPは「前もって備える」計画。事前準備の例
-//   ③ BCPらしい備えはどれ？ 仕分けクイズ
+//   ① 備えを選んでから地震を起こす復旧シミュレータ（備えの有無で結末が変わる）
+//   ② BCPらしい備えはどれ？ 仕分けクイズ
 // ============================================================================
 
-function Compare() {
-  const [hasBcp, setHasBcp] = useState(false);
+const PREPS = [
+  { id: "backup", emoji: "💾", name: "バックアップ", d: "データを別の場所にも保存" },
+  { id: "site", emoji: "🏢", name: "代替拠点", d: "本社がダメでも動ける場所" },
+  { id: "contact", emoji: "📞", name: "連絡手順", d: "誰が・どう連絡し合うか" },
+] as const;
+
+type PrepId = (typeof PREPS)[number]["id"];
+
+const RESULTS: Record<PrepId, { ok: string; ng: string }> = {
+  backup: { ok: "バックアップから即データ復元", ng: "顧客データが消えて復元できない" },
+  site: { ok: "代替拠点とクラウドで営業を再開", ng: "働く場所がなく全業務ストップ" },
+  contact: { ok: "決めた手順どおり全員と連絡・役割分担", ng: "誰に何を頼むか分からず大混乱" },
+};
+
+const VERDICTS = [
+  { days: "…めどが立たない", note: "復旧できず、お客も信用も失う。倒産の危機。", tone: "rose" },
+  { days: "1か月以上", note: "備えが1つだけでは他が足を引っぱる。", tone: "rose" },
+  { days: "約1週間", note: "かなり戻せたが、欠けた備えのぶん遅れた。", tone: "amber" },
+  { days: "たった2日！", note: "決めておいた優先順位どおり、大事な業務から順に再開できた。", tone: "emerald" },
+] as const;
+
+function Lab() {
+  const [on, setOn] = useState<Record<PrepId, boolean>>({
+    backup: false,
+    site: false,
+    contact: false,
+  });
+  const [struck, setStruck] = useState(false);
+  const count = PREPS.filter((p) => on[p.id]).length;
+  const verdict = VERDICTS[count];
+  const verdictTone =
+    verdict.tone === "emerald"
+      ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+      : verdict.tone === "amber"
+        ? "bg-amber-50 text-amber-800 ring-amber-200"
+        : "bg-rose-50 text-rose-800 ring-rose-200";
+
   return (
     <Panel>
-      <SectionTitle step={1}>もし災害が起きたら？</SectionTitle>
+      <SectionTitle step={1}>備えてから、地震を起こしてみる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        大地震でお店のシステムが止まった場面。<b className="text-gray-800">BCPの有無</b>で結果がどう変わるか切り替えてみよう。
+        あなたはお店の店長。<b className="text-gray-800">平常時にどこまで備えるか</b>を選んでから、
+        大地震を起こして結末を見てみよう。
       </p>
 
-      {/* トグル */}
-      <div className="mt-4 grid grid-cols-2 gap-1.5 rounded-xl bg-gray-100 p-1">
-        <button
-          onClick={() => setHasBcp(false)}
-          className={`rounded-lg px-2 py-2 text-sm font-bold transition active:scale-95 ${
-            !hasBcp ? "bg-rose-500 text-white" : "text-gray-500"
-          }`}
-        >
-          😱 BCPなし
-        </button>
-        <button
-          onClick={() => setHasBcp(true)}
-          className={`rounded-lg px-2 py-2 text-sm font-bold transition active:scale-95 ${
-            hasBcp ? "bg-emerald-500 text-white" : "text-gray-500"
-          }`}
-        >
-          😌 BCPあり
-        </button>
+      {/* 備えトグル */}
+      <div className="mt-4 space-y-2">
+        {PREPS.map((p) => {
+          const active = on[p.id];
+          return (
+            <button
+              key={p.id}
+              disabled={struck}
+              onClick={() => setOn((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left ring-2 transition active:scale-[0.98] disabled:active:scale-100 ${
+                active
+                  ? "bg-emerald-50 ring-emerald-400"
+                  : "bg-gray-50 ring-gray-200"
+              } ${struck ? "opacity-70" : ""}`}
+            >
+              <span className="text-2xl leading-none">{p.emoji}</span>
+              <span className="flex-1">
+                <span className="block text-sm font-extrabold text-gray-800">{p.name}</span>
+                <span className="block text-[11px] leading-relaxed text-gray-500">{p.d}</span>
+              </span>
+              <span
+                className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold ${
+                  active ? "bg-emerald-500 text-white" : "bg-gray-200 text-gray-500"
+                }`}
+              >
+                {active ? "備えた" : "なし"}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* 結果 */}
-      <div
-        className={`mt-3 rounded-xl px-4 py-4 ring-1 ${
-          hasBcp ? "bg-emerald-50 ring-emerald-200" : "bg-rose-50 ring-rose-200"
-        }`}
-      >
-        {hasBcp ? (
-          <ul className="space-y-2 text-sm leading-relaxed text-gray-700">
-            <li>✅ バックアップから<b>すぐにデータを復元</b></li>
-            <li>✅ 代わりの拠点・クラウドで<b>営業を再開</b></li>
-            <li>✅ 連絡手順が決まっていて<b>混乱が少ない</b></li>
-            <li className="font-extrabold text-emerald-700">→ 短時間で復旧。お客や信用を失いにくい</li>
+      {/* 地震発生ボタン */}
+      {!struck ? (
+        <button
+          onClick={() => setStruck(true)}
+          className="mt-4 w-full rounded-xl bg-rose-600 py-3 text-base font-extrabold text-white transition active:scale-95"
+        >
+          🌋 大地震発生！
+        </button>
+      ) : (
+        <div className="mt-4 space-y-2">
+          <div className="rounded-xl bg-gray-800 px-4 py-2.5 text-center text-sm font-extrabold text-white">
+            🌋 大地震発生！ システム停止・本社ビル立入禁止…
+          </div>
+          {/* 備えごとの結末 */}
+          <ul className="space-y-1.5">
+            {PREPS.map((p) => {
+              const ok = on[p.id];
+              return (
+                <li
+                  key={p.id}
+                  className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm font-medium ring-1 ${
+                    ok
+                      ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+                      : "bg-rose-50 text-rose-800 ring-rose-200"
+                  }`}
+                >
+                  <span className="flex-none">{ok ? "✅" : "❌"}</span>
+                  <span>
+                    {p.emoji} {ok ? RESULTS[p.id].ok : RESULTS[p.id].ng}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
-        ) : (
-          <ul className="space-y-2 text-sm leading-relaxed text-gray-700">
-            <li>❌ データのバックアップがなく<b>復元できない</b></li>
-            <li>❌ 何をすればいいか決まっておらず<b>現場が混乱</b></li>
-            <li>❌ 営業再開まで<b>何日もかかる</b></li>
-            <li className="font-extrabold text-rose-700">→ 長期停止。お客や信用を失う恐れ</li>
-          </ul>
-        )}
-      </div>
+          {/* 総合結果 */}
+          <div className={`rounded-xl px-4 py-3 text-center ring-1 ${verdictTone}`}>
+            <div className="text-xs font-bold opacity-70">営業再開まで</div>
+            <div className="mt-0.5 text-lg font-extrabold">{verdict.days}</div>
+            <p className="mt-1 text-xs font-medium leading-relaxed">{verdict.note}</p>
+          </div>
+          <button
+            onClick={() => setStruck(false)}
+            className="w-full rounded-xl py-2.5 text-sm font-bold text-gray-600 ring-1 ring-gray-300 transition active:scale-95"
+          >
+            ↺ 備えを選び直してもう一度
+          </button>
+        </div>
+      )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 <b>BCP（事業継続計画）</b>は、こうした「もしも」に備えて
-        <b>重要な仕事を止めない・早く戻す</b>ための計画です。
+        💡 結末を分けたのは<b>起きる前の備え</b>。これを計画としてまとめたものが
+        <b>BCP（事業継続計画）</b>です。災害の<b>あと</b>ではなく<b>前</b>に作ります。
       </div>
-    </Panel>
-  );
-}
-
-function Prepare() {
-  const steps = [
-    { emoji: "💾", t: "バックアップ", d: "データを別の場所にも保存しておく" },
-    { emoji: "🏢", t: "代替拠点", d: "本社が使えなくても動ける場所を決める" },
-    { emoji: "📞", t: "連絡手順", d: "誰が・どう連絡し合うかを決めておく" },
-    { emoji: "📋", t: "優先順位", d: "まず何の業務から戻すかを決めておく" },
-  ];
-  return (
-    <Panel>
-      <SectionTitle step={2}>BCPは「前もって」決めておく</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ポイントは<b className="text-gray-800">事前準備</b>。起きてから慌てるのではなく、平常時に決めておきます。
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {steps.map((s) => (
-          <div key={s.t} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="text-xl">{s.emoji}</div>
-            <div className="mt-1 text-sm font-extrabold text-gray-800">{s.t}</div>
-            <p className="mt-0.5 text-[11px] leading-relaxed text-gray-500">{s.d}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        🚃 たとえると、試験当日に電車が止まったときの<b>別ルートを前もって調べておく</b>のと同じ。
-        BCPは災害<b>後</b>ではなく<b>前</b>に作ります。
+      <div className="mt-2 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
+        🚃 たとえると、試験当日に電車が止まったときの<b>別ルートを前もって調べておく</b>のと同じです。
       </div>
     </Panel>
   );
@@ -111,7 +157,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   return (
     <Panel>
-      <SectionTitle step={3}>BCPの備えとして正しい？</SectionTitle>
+      <SectionTitle step={2}>BCPの備えとして正しい？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {ITEMS.map((it, i) => {
           const chosen = answers[i];
@@ -168,8 +214,7 @@ export default function BcpExperience() {
         カギは「起きる前の備え」です。
       </div>
 
-      <Compare />
-      <Prepare />
+      <Lab />
       <Quiz />
     </div>
   );
