@@ -13,6 +13,7 @@ import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import AchievementStrip from "@/components/progress/AchievementStrip";
 import LoadingScreen from "@/components/LoadingScreen";
+import LogoutLink from "@/components/auth/LogoutLink";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
 function daysSince(iso: string | undefined): number | null {
@@ -191,14 +192,9 @@ export default function ProgressPage() {
           {/* 実績バッジ(バナー内にコンパクト表示) */}
           <AchievementStrip state={state} />
 
-          {/* アカウント: ログアウト（Google / LINE セッションを破棄して /login へ） */}
+          {/* アカウント: ログアウト（ローカルデータ消去 → Google / LINE セッション破棄 → /login） */}
           <div className="mt-3 text-right">
-            <a
-              href="/api/auth/logout"
-              className="text-[11px] font-semibold text-white/70 underline underline-offset-4"
-            >
-              ログアウト
-            </a>
+            <LogoutLink className="text-[11px] font-semibold text-white/70 underline underline-offset-4" />
           </div>
         </div>
       </header>

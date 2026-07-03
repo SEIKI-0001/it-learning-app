@@ -2,13 +2,8 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseServer";
-import {
-  profileRowToProfile,
-  progressRowToProgress,
-  type ProfileRow,
-  type ProgressRow,
-} from "@/lib/dbMappers";
-import type { UserProfile, UserProgress } from "@/types";
+import { loadAppStateForUser } from "@/lib/serverAppState";
+import type { UserAnswer, UserProfile, UserProgress } from "@/types";
 import { FIELD_LABELS } from "@/types/content";
 import { getAllTopics, getReviewItemsForUser, getTopic } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
@@ -110,26 +105,24 @@ async function linkUser(
   }
 }
 
-/** 内部ユーザーの profile / progress を取得（無ければ undefined）。 */
+/**
+ * 内部ユーザーの profile / progress / answers を取得（無ければ undefined / 空配列）。
+ * Web のセッション復元と同じ loadAppStateForUser を使い、回答履歴も含めて読む。
+ * 回答履歴が無いと計画エンジンの正答率ベースの判定（フェーズ・過去問開始）が
+ * Web の /plan と食い違うため、必ず実データで計算する。
+ */
 async function fetchUserState(
   supabase: SupabaseClient | null,
   userId: string | null,
-): Promise<{ profile?: UserProfile; progress?: UserProgress }> {
-  if (!supabase || !userId) return {};
+): Promise<{ profile?: UserProfile; progress?: UserProgress; answers: UserAnswer[] }> {
+  if (!supabase || !userId) return { answers: [] };
   try {
-    const [{ data: progressRow }, { data: profileRow }] = await Promise.all([
-      supabase.from("user_progress").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("user_profiles").select("*").eq("user_id", userId).maybeSingle(),
-    ]);
-    return {
-      profile: profileRow ? profileRowToProfile(profileRow as ProfileRow) : undefined,
-      progress: progressRow
-        ? progressRowToProgress(progressRow as ProgressRow)
-        : undefined,
-    };
+    const state = await loadAppStateForUser(userId);
+    if (!state) return { answers: [] };
+    return { profile: state.profile, progress: state.progress, answers: state.answers };
   } catch (e) {
     console.error("fetchUserState error", e);
-    return {};
+    return { answers: [] };
   }
 }
 
@@ -153,6 +146,7 @@ function planText(
   token: string | null,
   profile?: UserProfile,
   progress?: UserProgress,
+  answers: UserAnswer[] = [],
 ): string {
   if (!profile || !progress) {
     return [
@@ -162,7 +156,7 @@ function planText(
     ].join("\n");
   }
   const plan = generateLearningPlan(
-    { profile, progress, answers: [] },
+    { profile, progress, answers },
     getAllTopics(),
   );
   const phase = getPhaseDef(plan.currentPhase);
@@ -202,6 +196,7 @@ function todayText(
   token: string | null,
   profile?: UserProfile,
   progress?: UserProgress,
+  answers: UserAnswer[] = [],
 ): string {
   if (!profile || !progress) {
     return [
@@ -210,7 +205,7 @@ function todayText(
       withToken(baseUrl, "/today", token),
     ].join("\n");
   }
-  const menu = generateTodayMenu(profile, progress, getAllTopics());
+  const menu = generateTodayMenu(profile, progress, getAllTopics(), answers);
   const lines = [`📖 今日のテーマ：${menu.theme}`, `⏱️ 目安 ${menu.totalMinutes}分`];
   const learn = menu.items.filter((i) => i.kind === "learn");
   if (learn.length > 0) {
@@ -293,6 +288,7 @@ function buildReplyText(
   token: string | null,
   profile?: UserProfile,
   progress?: UserProgress,
+  answers: UserAnswer[] = [],
 ): string {
   const text = rawText.trim();
 
@@ -304,10 +300,10 @@ function buildReplyText(
     text.includes("ロードマップ") ||
     text.includes("今週")
   ) {
-    return planText(baseUrl, token, profile, progress);
+    return planText(baseUrl, token, profile, progress, answers);
   }
   if (text.includes("今日") || text.includes("学習") || text.includes("メニュー")) {
-    return todayText(baseUrl, token, profile, progress);
+    return todayText(baseUrl, token, profile, progress, answers);
   }
   if (text.includes("進捗") || text.includes("状況")) {
     return progressText(baseUrl, token, profile, progress);
@@ -409,13 +405,14 @@ export async function POST(request: Request) {
 
     if (ev.type === "message" && ev.message?.type === "text") {
       const { userId, token } = await linkUser(supabase, ev.source?.userId);
-      const { profile, progress } = await fetchUserState(supabase, userId);
+      const { profile, progress, answers } = await fetchUserState(supabase, userId);
       const text = buildReplyText(
         ev.message.text ?? "",
         baseUrl,
         token,
         profile,
         progress,
+        answers,
       );
       plannedReplies.push({ replyToken: ev.replyToken, text });
       if (accessToken && ev.replyToken) await sendReply(ev.replyToken, text, accessToken);
