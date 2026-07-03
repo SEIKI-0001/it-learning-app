@@ -5,108 +5,241 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「生成AIとDX」専用の体験。
-//   ① 生成AIの用語（プロンプト/ハルシネーション）をタップで理解
-//   ② DX=単なるIT化ではない（電子化との段階比較）
+//   ① AIに聞いてみたラボ … 頼み方を変える→回答の質が変わる＋ハルシネーションを暴く
+//   ② DX階段 … パン屋の施策をタップ→デジタイゼーション/デジタライゼーション/DXのどの段か光る
 //   ③ 生成AIの使い方 適切/不適切クイズ
 // ============================================================================
 
-const TERMS = [
+type Prompt = {
+  id: string;
+  label: string;
+  q: string;
+  a: string;
+  tone: "amber" | "emerald" | "rose";
+  verdict: string;
+  note: string;
+  factCheck?: string;
+};
+
+const PROMPTS: Prompt[] = [
   {
-    emo: "💬",
-    name: "プロンプト",
-    d: "AIへの「指示文・お願いの言葉」。具体的に書くほど、ねらった答えが返りやすい。",
+    id: "vague",
+    label: "😶 あいまいに頼む",
+    q: "なんかいい感じの文章書いて",
+    a: "「いつもお世話になっております。皆様のご健勝をお祈り申し上げます…」",
+    tone: "amber",
+    verdict: "△ 当たりさわりのない回答",
+    note: "指示があいまいだと、AIも何を書けばいいか分からない。この指示文のことをプロンプトと呼びます。",
   },
   {
-    emo: "⚠️",
-    name: "ハルシネーション",
-    d: "AIが事実と違う内容を、もっともらしく自信ありげに出してしまう現象。だから人の確認が必須。",
+    id: "specific",
+    label: "🎯 具体的に頼む",
+    q: "中学生向けに、遠足の持ち物リストを5つ、理由つきで",
+    a: "「①水筒（熱中症対策）②雨がっぱ（急な雨でも両手が空く）③タオル…」",
+    tone: "emerald",
+    verdict: "✅ ねらいどおりの回答",
+    note: "プロンプトが具体的なほど、ねらった答えが返りやすい。相手・目的・形式を伝えるのがコツ。",
   },
   {
-    emo: "📚",
-    name: "学習データ",
-    d: "AIが学んだ元データ。古い・偏った情報で学べば、出力もその影響を受ける。",
+    id: "fact",
+    label: "📅 事実をたずねる",
+    q: "みどり市の花火大会は今年いつ開催？",
+    a: "「みどり市花火大会は毎年8月15日、みどり川河川敷で開催されています！」（自信満々）",
+    tone: "rose",
+    verdict: "😨 もっともらしいけど…？",
+    note: "",
+    factCheck:
+      "実際に調べると…そんな花火大会は存在しませんでした。これがハルシネーション——AIが事実と違う内容を自信ありげに作ってしまう現象。学習データにない・古いことは特に危険。",
   },
 ];
 
-function AiTerms() {
-  const [open, setOpen] = useState<string | null>("ハルシネーション");
+const TONE = {
+  amber: "bg-amber-50 text-amber-900 ring-amber-200",
+  emerald: "bg-emerald-50 text-emerald-900 ring-emerald-200",
+  rose: "bg-rose-50 text-rose-900 ring-rose-200",
+} as const;
+
+function AiLab() {
+  const [sel, setSel] = useState<string | null>(null);
+  const [tried, setTried] = useState<Set<string>>(new Set());
+  const [checked, setChecked] = useState(false);
+  const p = PROMPTS.find((x) => x.id === sel) ?? null;
+
+  const pick = (id: string) => {
+    setSel(id === sel ? null : id);
+    setChecked(false);
+    setTried((prev) => new Set(prev).add(id));
+  };
+  const done = tried.size === PROMPTS.length && checked;
+
   return (
     <Panel>
-      <SectionTitle step={1}>生成AIは「賢いけど時々まちがう」アシスタント</SectionTitle>
+      <SectionTitle step={1}>AIに聞いてみたラボ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        生成AIは、文章・画像・プログラムなどを<b className="text-gray-800">新しく作り出す</b>AIです。
-        まず大事な3つの言葉をタップで確認しましょう。
+        生成AIは文章・画像などを<b className="text-gray-800">新しく作り出す</b>AI。
+        頼み方を変えると答えがどう変わるか、3パターン試してみましょう。
       </p>
-      <div className="mt-3 space-y-2">
-        {TERMS.map((t) => {
-          const picked = open === t.name;
-          return (
-            <button
-              key={t.name}
-              onClick={() => setOpen(picked ? null : t.name)}
-              className={`block w-full rounded-xl p-3 text-left ring-1 transition active:scale-[0.99] ${
-                picked ? "bg-indigo-50 ring-indigo-300" : "bg-gray-50 ring-gray-200"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{t.emo}</span>
-                <span className="text-sm font-extrabold text-gray-800">{t.name}</span>
+
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        {PROMPTS.map((x) => (
+          <button
+            key={x.id}
+            onClick={() => pick(x.id)}
+            className={`rounded-lg px-1 py-2 text-[11px] font-bold leading-tight transition active:scale-95 ${
+              sel === x.id ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+
+      {p ? (
+        <div className="mt-3 space-y-2">
+          {/* あなたの発言 */}
+          <div className="flex justify-end">
+            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-indigo-600 px-3.5 py-2 text-[13px] leading-relaxed text-white">
+              {p.q}
+            </div>
+          </div>
+          {/* AIの回答 */}
+          <div className="flex items-start gap-1.5">
+            <span className="mt-0.5 text-lg">🤖</span>
+            <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-gray-100 px-3.5 py-2 text-[13px] leading-relaxed text-gray-800">
+              {p.a}
+            </div>
+          </div>
+
+          {/* 判定 */}
+          <div className={`rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ring-1 ${TONE[p.tone]}`}>
+            <b>{p.verdict}</b>
+            {p.note && <span> ── {p.note}</span>}
+          </div>
+
+          {/* ハルシネーションの暴き */}
+          {p.factCheck &&
+            (checked ? (
+              <div className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm leading-relaxed text-rose-900 ring-2 ring-rose-300">
+                🚨 {p.factCheck}
               </div>
-              {picked && <p className="mt-2 text-[13px] leading-relaxed text-gray-600">{t.d}</p>}
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-3 rounded-xl bg-rose-50 px-4 py-2.5 text-xs leading-relaxed text-rose-800 ring-1 ring-rose-200">
-        ⚠️ 生成AIの答えは<b>必ずしも正しくない</b>（ハルシネーション）。
-        そのまま使わず、<b>人が事実を確認</b>するのが鉄則。
-      </div>
+            ) : (
+              <button
+                onClick={() => setChecked(true)}
+                className="w-full rounded-xl bg-rose-600 py-2.5 text-sm font-extrabold text-white transition active:scale-95"
+              >
+                🔍 本当か、事実を確認してみる
+              </button>
+            ))}
+        </div>
+      ) : (
+        <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-400 ring-1 ring-gray-200">
+          上の頼み方をタップすると、AIとのやり取りが表示されます。
+        </div>
+      )}
+
+      {done && (
+        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+          💡 分かったこと：<b>①プロンプト次第で答えの質が変わる</b>／<b>②AIは平気で間違える（ハルシネーション）</b>。
+          だから、そのまま使わず<b>人が事実を確認する</b>のが鉄則です。
+        </div>
+      )}
     </Panel>
   );
 }
 
+// ② DX階段 -----------------------------------------------------------------
 const DX_STEPS = [
-  { emo: "📄", name: "デジタイゼーション", d: "紙をPDFにするなど、道具をデジタルに置き換えるだけ。", level: "入口" },
-  { emo: "🔁", name: "デジタライゼーション", d: "業務の流れをデジタルで効率化する（手続きをオンライン化など）。", level: "途中" },
-  { emo: "🚀", name: "DX", d: "デジタルで事業や仕事のしくみそのものを変え、新しい価値を生む。", level: "ゴール" },
+  { emo: "📄", name: "デジタイゼーション", d: "道具をデジタルに置き換えるだけ", level: "入口" },
+  { emo: "🔁", name: "デジタライゼーション", d: "業務の流れをデジタルで効率化", level: "途中" },
+  { emo: "🚀", name: "DX", d: "しくみごと変えて新しい価値を生む", level: "ゴール" },
+];
+
+const MOVES = [
+  { id: "excel", emo: "📄", t: "紙の売上ノートをExcelに置き換えた", stage: 0, why: "道具が紙→デジタルになっただけ。仕事のやり方は同じ。" },
+  { id: "app", emo: "📲", t: "注文〜支払いをアプリで完結できるようにした", stage: 1, why: "業務の流れ（注文・会計）がデジタルで効率化された。" },
+  { id: "subsc", emo: "🥐", t: "購入データで好みを分析し、パン定期便という新事業を開始", stage: 2, why: "データを使って事業そのものを変え、新しい価値を生んだ＝DX。" },
 ];
 
 function DxLadder() {
+  const [sel, setSel] = useState<string | null>(null);
+  const [tried, setTried] = useState<Set<string>>(new Set());
+  const move = MOVES.find((m) => m.id === sel) ?? null;
+
+  const pick = (id: string) => {
+    setSel(id === sel ? null : id);
+    setTried((p) => new Set(p).add(id));
+  };
+
   return (
     <Panel>
-      <SectionTitle step={2}>DXは「紙の電子化」だけではない</SectionTitle>
+      <SectionTitle step={2}>DX階段（パン屋の一手はどの段？）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        DX（デジタルトランスフォーメーション）は、単に紙を電子化することではありません。
-        <b className="text-gray-800">仕事や事業のしくみごと作り変える</b>のがゴールです。
+        DXは単なる「紙の電子化」ではありません。パン屋さんの施策をタップして、
+        <b className="text-gray-800">階段のどの段にあたるか</b>見てみましょう。
       </p>
+
+      {/* 施策カード */}
       <div className="mt-3 space-y-1.5">
-        {DX_STEPS.map((s, i) => (
-          <div key={s.name}>
-            <div
-              className={`rounded-xl px-4 py-2.5 ring-1 ${
-                s.name === "DX"
-                  ? "bg-emerald-50 ring-emerald-300"
-                  : "bg-gray-50 ring-gray-200"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{s.emo}</span>
-                <span className="text-sm font-extrabold text-gray-800">{s.name}</span>
-                <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-gray-500 ring-1 ring-gray-200">
-                  {s.level}
-                </span>
-              </div>
-              <p className="mt-1 text-[12px] leading-relaxed text-gray-600">{s.d}</p>
-            </div>
-            {i < DX_STEPS.length - 1 && (
-              <div className="py-0.5 text-center text-xs text-gray-300">↑ さらに進める</div>
-            )}
-          </div>
+        {MOVES.map((m) => (
+          <button
+            key={m.id}
+            onClick={() => pick(m.id)}
+            className={`block w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-bold transition active:scale-[0.99] ${
+              sel === m.id ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-200"
+            }`}
+          >
+            {m.emo} {m.t}
+          </button>
         ))}
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-gray-500">
-        ※ 「紙をPDFにしただけ」「PCを買い替えただけ」は<b>DXとは言えない</b>のが定番のひっかけ。
-      </p>
+
+      {/* 階段 */}
+      <div className="mt-4 space-y-1">
+        {[...DX_STEPS].reverse().map((s, i) => {
+          const idx = DX_STEPS.length - 1 - i;
+          const lit = move?.stage === idx;
+          return (
+            <div key={s.name} style={{ marginLeft: `${idx * 24}px` }}>
+              <div
+                className={`rounded-xl px-3 py-2 ring-1 transition ${
+                  lit ? "bg-emerald-50 ring-2 ring-emerald-400 shadow-md shadow-emerald-100" : "bg-gray-50 ring-gray-200"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className={lit ? "animate-bounce text-lg" : "text-lg"}>{s.emo}</span>
+                  <span className={`text-sm font-extrabold ${lit ? "text-emerald-800" : "text-gray-700"}`}>
+                    {s.name}
+                  </span>
+                  <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-gray-500 ring-1 ring-gray-200">
+                    {s.level}
+                  </span>
+                </div>
+                <p className={`mt-0.5 text-[11px] leading-relaxed ${lit ? "text-emerald-800" : "text-gray-500"}`}>
+                  {s.d}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 判定理由 */}
+      <div className="mt-3 min-h-[3em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200">
+        {move ? (
+          <>
+            <b className="text-gray-900">{DX_STEPS[move.stage].name}</b> です ── {move.why}
+          </>
+        ) : (
+          <span className="text-gray-400">施策をタップすると、階段のどの段か光ります。</span>
+        )}
+      </div>
+
+      {tried.size === MOVES.length && (
+        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
+          💡 <b>道具の置き換え→流れの効率化→しくみの変革</b>、と段が上がるほどDXに近づきます。
+          「紙をPDFにしただけ」をDXと呼ぶのは定番のひっかけ！
+        </div>
+      )}
     </Panel>
   );
 }
@@ -191,7 +324,7 @@ export default function GenerativeAiDxExperience() {
         DXは<b>電子化だけでなく、しくみごと変えて新しい価値を生む</b>こと。
       </div>
 
-      <AiTerms />
+      <AiLab />
       <DxLadder />
       <Quiz />
     </div>

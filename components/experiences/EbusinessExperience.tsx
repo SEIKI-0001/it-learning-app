@@ -5,99 +5,214 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「e-ビジネス（EC・EDI・フィンテック・シェアリング）」専用の体験。
-//   ① 用語を「誰と誰の取引か」で対比（タップ）
+//   ① 取引マップ … 用語をタップ→「誰と誰の間で・何が流れるか」の線が光る
 //   ② 「これはどれ？」仕分けクイズ
 // ============================================================================
 
+type TermKey = "ec" | "edi" | "fintech" | "sharing";
+
 type Term = {
-  key: string;
+  key: TermKey;
   emo: string;
   name: string;
   who: string;
+  flow: string;
   d: string;
   ex: string;
-  tone: string;
+  chip: string; // 選択中チップの色
+  stroke: string; // SVG線の色
+  badge: string; // 説明バッジの色
 };
 
 const TERMS: Term[] = [
   {
     key: "ec",
     emo: "🛒",
-    name: "EC（電子商取引）",
-    who: "企業 ⇄ 消費者が中心",
-    d: "インターネット上での売買。ネット通販やアプリでの買い物など、主に消費者向けの取引。",
+    name: "EC",
+    who: "企業 → 個人",
+    flow: "商品を販売",
+    d: "インターネット上での売買（電子商取引）。ネット通販など、主に企業が消費者へ売る取引。",
     ex: "例：ネットショップで服を買う",
-    tone: "bg-sky-50 ring-sky-300 text-sky-900",
+    chip: "bg-sky-600 text-white",
+    stroke: "#0284c7",
+    badge: "bg-sky-50 text-sky-900 ring-sky-200",
   },
   {
     key: "edi",
     emo: "🔁",
-    name: "EDI（電子データ交換）",
+    name: "EDI",
     who: "企業 ⇄ 企業",
-    d: "企業どうしが、注文・納品・請求などのデータを決まった形式で電子的にやり取りするしくみ。",
+    flow: "取引データを交換",
+    d: "企業どうしが、注文・納品・請求などのデータを決まった形式で電子的にやり取りするしくみ（電子データ交換）。",
     ex: "例：取引先へ発注データを自動送信",
-    tone: "bg-emerald-50 ring-emerald-300 text-emerald-900",
+    chip: "bg-emerald-600 text-white",
+    stroke: "#059669",
+    badge: "bg-emerald-50 text-emerald-900 ring-emerald-200",
   },
   {
     key: "fintech",
-    emo: "💳",
+    emo: "📱",
     name: "フィンテック",
-    who: "金融 × IT",
-    d: "金融（Finance）とIT（Technology）を組み合わせたサービス。スマホ決済・送金・家計管理など。",
-    ex: "例：スマホのQRコード決済",
-    tone: "bg-violet-50 ring-violet-300 text-violet-900",
+    who: "個人 → 企業（お金）",
+    flow: "支払い・送金をITで",
+    d: "金融（Finance）×IT（Technology）。銀行に行かなくても、スマホで支払い・送金・家計管理ができる。",
+    ex: "例：スマホのQRコード決済で支払う",
+    chip: "bg-violet-600 text-white",
+    stroke: "#7c3aed",
+    badge: "bg-violet-50 text-violet-900 ring-violet-200",
   },
   {
     key: "sharing",
     emo: "🤝",
-    name: "シェアリングエコノミー",
+    name: "シェアリング",
     who: "個人 ⇄ 個人",
-    d: "使っていないモノ・場所・スキルを、個人どうしで貸し借り・共有するしくみ。",
+    flow: "モノ・場所を貸し借り",
+    d: "使っていないモノ・場所・スキルを、個人どうしで貸し借り・共有するしくみ（シェアリングエコノミー）。",
     ex: "例：空き部屋を旅行者に貸す",
-    tone: "bg-amber-50 ring-amber-300 text-amber-900",
+    chip: "bg-amber-500 text-white",
+    stroke: "#d97706",
+    badge: "bg-amber-50 text-amber-900 ring-amber-200",
   },
 ];
 
-function Terms() {
-  const [open, setOpen] = useState<string | null>("edi");
+// マップ上の線。座標は viewBox 0-100 のパーセント。
+const LINES: Record<TermKey, { x1: number; y1: number; x2: number; y2: number }> = {
+  edi: { x1: 22, y1: 20, x2: 78, y2: 20 },
+  ec: { x1: 16, y1: 20, x2: 16, y2: 80 },
+  fintech: { x1: 26, y1: 80, x2: 26, y2: 20 },
+  sharing: { x1: 22, y1: 80, x2: 78, y2: 80 },
+};
+
+// 用語ごとに光るノード。
+const NODES = [
+  { id: "compA", emo: "🏢", label: "企業", x: 20, y: 20 },
+  { id: "compB", emo: "🏭", label: "取引先企業", x: 80, y: 20 },
+  { id: "persA", emo: "🙋", label: "個人", x: 20, y: 80 },
+  { id: "persB", emo: "🙆", label: "個人", x: 80, y: 80 },
+];
+const LIT: Record<TermKey, string[]> = {
+  ec: ["compA", "persA"],
+  edi: ["compA", "compB"],
+  fintech: ["compA", "persA"],
+  sharing: ["persA", "persB"],
+};
+
+// 線の中間に置く「流れているもの」絵文字。
+const MID: Record<TermKey, { x: number; y: number; emo: string }> = {
+  ec: { x: 16, y: 50, emo: "📦" },
+  edi: { x: 50, y: 20, emo: "🔁" },
+  fintech: { x: 26, y: 50, emo: "📱" },
+  sharing: { x: 50, y: 80, emo: "🤝" },
+};
+
+function TradeMap() {
+  const [sel, setSel] = useState<TermKey | null>(null);
+  const [tried, setTried] = useState<Set<TermKey>>(new Set());
+  const term = TERMS.find((t) => t.key === sel) ?? null;
+
+  const pick = (key: TermKey) => {
+    setSel(key === sel ? null : key);
+    setTried((p) => new Set(p).add(key));
+  };
+
   return (
     <Panel>
-      <SectionTitle step={1}>「誰と誰の取引か」で区別する</SectionTitle>
+      <SectionTitle step={1}>取引マップ（誰と誰の間の取引？）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ネットを使った取引も、<b className="text-gray-800">相手が誰か</b>で呼び方が変わります。
-        タップして見比べましょう。
+        ネットの取引は<b className="text-gray-800">相手が誰か＋何が流れるか</b>で呼び名が決まります。
+        用語をタップして、マップのどこが光るか見てみましょう。
       </p>
-      <div className="mt-3 space-y-2">
-        {TERMS.map((t) => {
-          const picked = open === t.key;
+
+      {/* 用語チップ */}
+      <div className="mt-3 grid grid-cols-4 gap-1.5">
+        {TERMS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => pick(t.key)}
+            className={`rounded-lg px-1 py-2 text-[11px] font-bold transition active:scale-95 ${
+              sel === t.key ? t.chip : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            <span className="block text-base">{t.emo}</span>
+            {t.name}
+          </button>
+        ))}
+      </div>
+
+      {/* マップ */}
+      <div className="relative mt-3 h-44 rounded-xl bg-gray-50 ring-1 ring-gray-200">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {(Object.keys(LINES) as TermKey[]).map((key) => {
+            const l = LINES[key];
+            const active = sel === key;
+            const t = TERMS.find((x) => x.key === key)!;
+            return (
+              <line
+                key={key}
+                x1={l.x1}
+                y1={l.y1}
+                x2={l.x2}
+                y2={l.y2}
+                stroke={active ? t.stroke : "#e5e7eb"}
+                strokeWidth={active ? 2.5 : 1.2}
+                strokeDasharray={active ? "" : "3 2"}
+                className={active ? "animate-pulse" : ""}
+                vectorEffect="non-scaling-stroke"
+              />
+            );
+          })}
+        </svg>
+
+        {/* 流れているもの */}
+        {sel && (
+          <span
+            className="absolute -translate-x-1/2 -translate-y-1/2 animate-bounce text-xl"
+            style={{ left: `${MID[sel].x}%`, top: `${MID[sel].y}%` }}
+          >
+            {MID[sel].emo}
+          </span>
+        )}
+
+        {/* ノード */}
+        {NODES.map((n) => {
+          const lit = sel !== null && LIT[sel].includes(n.id);
           return (
-            <button
-              key={t.key}
-              onClick={() => setOpen(picked ? null : t.key)}
-              className={`block w-full rounded-xl p-3 text-left ring-1 transition active:scale-[0.99] ${
-                picked ? t.tone + " ring-2" : "bg-gray-50 ring-gray-200"
+            <div
+              key={n.id}
+              className={`absolute w-[72px] -translate-x-1/2 -translate-y-1/2 rounded-xl border-2 px-1 py-1.5 text-center transition ${
+                lit ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100" : "border-gray-200 bg-white"
               }`}
+              style={{ left: `${n.x}%`, top: `${n.y}%` }}
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-lg">{t.emo}</span>
-                <span className="text-sm font-extrabold text-gray-800">{t.name}</span>
-                <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-gray-500 ring-1 ring-gray-200">
-                  {t.who}
-                </span>
-              </div>
-              {picked && (
-                <div className="mt-2">
-                  <p className="text-[13px] leading-relaxed text-gray-600">{t.d}</p>
-                  <p className="mt-1 text-xs font-medium text-gray-500">{t.ex}</p>
-                </div>
-              )}
-            </button>
+              <div className="text-xl leading-none">{n.emo}</div>
+              <div className="mt-0.5 text-[10px] font-bold text-gray-700">{n.label}</div>
+            </div>
           );
         })}
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-gray-500">
-        ※ <b>EC＝消費者向けの売買</b>／<b>EDI＝企業どうしのデータ交換</b>。この2つの混同に注意。
-      </p>
+
+      {/* 説明 */}
+      {term ? (
+        <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${term.badge}`}>
+          <div className="text-sm font-extrabold">
+            {term.emo} {term.name} ＝ <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs">{term.who}</span>{" "}
+            {term.flow}
+          </div>
+          <p className="mt-1.5 text-[13px] leading-relaxed">{term.d}</p>
+          <p className="mt-1 text-xs opacity-80">{term.ex}</p>
+        </div>
+      ) : (
+        <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-400 ring-1 ring-gray-200">
+          上の用語をタップすると、取引の線が光ります。
+        </div>
+      )}
+
+      {tried.size === TERMS.length && (
+        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
+          💡 4つとも「ネットを使った取引」。違いは<b>相手が誰か＋何が流れるか</b>だけ。特に
+          <b>EC＝企業→個人の売買／EDI＝企業どうしのデータ交換</b>の混同に注意！
+        </div>
+      )}
     </Panel>
   );
 }
@@ -186,7 +301,7 @@ export default function EbusinessExperience() {
         <b>EC＝消費者向け売買／EDI＝企業間データ交換／フィンテック＝金融×IT／シェアリング＝個人間共有</b>。
       </div>
 
-      <Terms />
+      <TradeMap />
       <Quiz />
     </div>
   );

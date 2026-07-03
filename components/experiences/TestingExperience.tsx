@@ -5,43 +5,166 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「テスト」専用の体験。
-//   ① テストの4段階（単体→結合→システム→受入）と目的
+//   ① テスト工程シミュレータ … 4段階をやる/やらない→リリース→すり抜けたバグの結末が変わる
 //   ② V字モデル：設計工程と、対応するテストの組をタップでハイライト
 //   ③ どの段階？ クイズ
 // ============================================================================
 
 const STAGES = [
-  { t: "単体テスト", emoji: "🧩", d: "部品ひとつを単体で確認", food: "材料の味見" },
-  { t: "結合テスト", emoji: "🔗", d: "部品どうしのつながりを確認", food: "具材を合わせた味見" },
-  { t: "システムテスト", emoji: "🖥️", d: "全体がまとまって動くか確認", food: "完成品の試食" },
-  { t: "受入テスト", emoji: "🙆", d: "利用者の目線で要求を満たすか確認", food: "注文者の確認" },
-];
+  {
+    id: "unit",
+    name: "単体テスト",
+    emoji: "🧩",
+    food: "材料の味見",
+    bug: "計算ボタンの部品が誤動作",
+    catchNote: "部品の段階で発見、その場ですぐ修正",
+    missNote: "電卓機能が壊れたまま世に出た",
+  },
+  {
+    id: "integration",
+    name: "結合テスト",
+    emoji: "🔗",
+    food: "合わせ味見",
+    bug: "カートと決済のつなぎ目でエラー",
+    catchNote: "部品をつないだ段階で発見",
+    missNote: "「買えない！」と苦情が殺到",
+  },
+  {
+    id: "system",
+    name: "システムテスト",
+    emoji: "🖥️",
+    food: "完成品の試食",
+    bug: "利用者が増えると全体が極端に遅い",
+    catchNote: "全体を通しで動かして発見",
+    missNote: "公開初日にアクセス集中でダウン",
+  },
+  {
+    id: "accept",
+    name: "受入テスト",
+    emoji: "🙆",
+    food: "注文者の確認",
+    bug: "依頼者が求めた機能と違っていた",
+    catchNote: "利用者目線の最終確認で発見",
+    missNote: "「頼んだものと違う」と作り直しに",
+  },
+] as const;
 
-function Stages() {
+function Simulator() {
+  const [on, setOn] = useState<Record<string, boolean>>({
+    unit: true,
+    integration: true,
+    system: true,
+    accept: true,
+  });
+  const [released, setReleased] = useState(false);
+  const [sawPerfect, setSawPerfect] = useState(false);
+  const [sawMiss, setSawMiss] = useState(false);
+
+  const missedCount = STAGES.filter((s) => !on[s.id]).length;
+  const skippedAll = STAGES.every((s) => !on[s.id]);
+
+  const toggle = (id: string) => {
+    setOn((p) => ({ ...p, [id]: !p[id] }));
+    setReleased(false);
+  };
+  const release = () => {
+    setReleased(true);
+    if (missedCount === 0) setSawPerfect(true);
+    else setSawMiss(true);
+  };
+
   return (
     <Panel>
-      <SectionTitle step={1}>テストは段階を踏む</SectionTitle>
+      <SectionTitle step={1}>テスト工程シミュレータ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        作ったものを<b className="text-gray-800">小さい所から大きい所へ</b>、順に確認します。
+        あなたは開発リーダー。作ったシステムには<b className="text-gray-800">4つのバグ</b>が潜んでいます（まだ誰も知らない）。
+        どのテストを<b className="text-gray-800">やるか・省くか</b>決めてリリースしてみましょう。
       </p>
+
       <div className="mt-4 space-y-1.5">
-        {STAGES.map((s, i) => (
-          <div key={s.t} className="flex items-center gap-2">
-            <span className="w-5 flex-none text-center text-xs font-bold text-gray-400">{i + 1}</span>
-            <div className="flex flex-1 items-center gap-2.5 rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-              <span className="text-lg">{s.emoji}</span>
-              <div className="min-w-0">
-                <div className="text-sm font-extrabold text-gray-800">{s.t}</div>
-                <div className="text-[11px] text-gray-500">{s.d}</div>
+        {STAGES.map((s, i) => {
+          const active = on[s.id];
+          return (
+            <div key={s.id}>
+              <div
+                className={`flex items-center gap-2 rounded-xl px-3 py-2 ring-1 transition ${
+                  active ? "bg-indigo-50 ring-indigo-200" : "bg-gray-50 ring-gray-200"
+                }`}
+              >
+                <span className="text-lg">{s.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <div className={`text-sm font-extrabold ${active ? "text-gray-800" : "text-gray-400"}`}>
+                    {s.name}
+                  </div>
+                  <div className="text-[10px] text-gray-400">🍳 {s.food}</div>
+                </div>
+                <button
+                  onClick={() => toggle(s.id)}
+                  className={`flex-none rounded-lg px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
+                    active ? "bg-indigo-600 text-white" : "bg-white text-gray-500 ring-1 ring-gray-300"
+                  }`}
+                >
+                  {active ? "✓ やる" : "省く"}
+                </button>
               </div>
-              <span className="ml-auto flex-none rounded-full bg-white px-2 py-0.5 text-[10px] text-gray-500 ring-1 ring-gray-200">
-                🍳 {s.food}
-              </span>
+              {released && (
+                <div
+                  className={`mx-2 mt-1 rounded-lg px-3 py-1.5 text-xs font-medium ${
+                    active ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-700"
+                  }`}
+                >
+                  {active ? (
+                    <>✅ 「{s.bug}」をキャッチ！ {s.catchNote}。</>
+                  ) : (
+                    <>💥 「{s.bug}」がすり抜け → {s.missNote}。</>
+                  )}
+                </div>
+              )}
+              {i < STAGES.length - 1 && <div className="text-center text-[10px] leading-3 text-gray-300">▼</div>}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-      <p className="mt-3 text-center text-xs text-gray-400">小さい部品 → つながり → 全体 → 利用者目線</p>
+
+      {!released ? (
+        <button
+          onClick={release}
+          className="mt-3 w-full rounded-xl bg-indigo-600 py-2.5 text-sm font-extrabold text-white transition active:scale-95"
+        >
+          🚀 リリースする！
+        </button>
+      ) : (
+        <div className="mt-3 space-y-2">
+          <div
+            className={`rounded-xl px-4 py-3 text-sm font-bold ring-1 ${
+              missedCount === 0
+                ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+                : "bg-rose-50 text-rose-800 ring-rose-200"
+            }`}
+          >
+            {missedCount === 0 ? (
+              <>🎉 4つのバグをぜんぶ世に出る前に発見！ 安心のリリースです。</>
+            ) : skippedAll ? (
+              <>🔥 ノーテストでリリース…4つのバグが全部本番で爆発。修正は開発中の何倍も高くつきます。</>
+            ) : (
+              <>⚠️ {missedCount}件のバグがリリース後に発覚。世に出てからの修正は、開発中に直すより何倍も高くつきます。</>
+            )}
+          </div>
+          <button
+            onClick={() => setReleased(false)}
+            className="w-full rounded-xl py-2 text-sm font-bold text-gray-600 ring-1 ring-gray-300 transition active:scale-95"
+          >
+            ↺ 選び直してもう一度
+          </button>
+        </div>
+      )}
+
+      {sawPerfect && sawMiss && (
+        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+          💡 気づきましたか？ 段階ごとに<b>見つけられるバグが違う</b>んです。だから
+          <b>単体→結合→システム→受入</b>と、小さい所から大きい所へ順にぜんぶ確認します。
+        </div>
+      )}
     </Panel>
   );
 }
@@ -180,10 +303,10 @@ export default function TestingExperience() {
     <div className="space-y-5">
       <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ✅ テストは<b>単体→結合→システム→受入</b>と段階を踏みます。料理でいうと
-        <b>材料の味見→合わせ味見→完成品の試食→注文者の確認</b>。作る工程と確認は対になっています。
+        <b>材料の味見→合わせ味見→完成品の試食→注文者の確認</b>。省くとどうなるか、まず体験してみましょう。
       </div>
 
-      <Stages />
+      <Simulator />
       <VModel />
       <Quiz />
     </div>

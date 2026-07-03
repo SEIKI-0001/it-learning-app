@@ -5,98 +5,206 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「サイバー攻撃の手口」専用の体験。
-//   ① 代表的な攻撃をタップして特徴をつかむ（標的＝機械か人か で2グループ）
+//   ① 攻撃ラボ … 攻撃を選んで実験用の会社に撃ち込むと、
+//      サーバ/DB/利用者/社員のどこで何が起きるかが攻撃ごとに変わる
 //   ② 「これはどの攻撃？」仕分けクイズ
+//   ③ まとめ
 // ============================================================================
 
+type AttackId = "ddos" | "sqli" | "xss" | "targeted" | "social";
+
 type Attack = {
+  id: AttackId;
   emo: string;
   name: string;
-  tag: string;
-  target: "システムを攻める" | "人をだます";
-  d: string;
+  target: "機械を攻める" | "人をだます";
+  scene: string; // 攻撃者がやること
+  result: string; // 何が起きたか
 };
 
 const ATTACKS: Attack[] = [
   {
+    id: "ddos",
     emo: "🌊",
     name: "DoS / DDoS 攻撃",
-    tag: "大量アクセスで麻痺",
-    target: "システムを攻める",
-    d: "大量のアクセスやデータを一気に送りつけ、サーバをパンクさせてサービスを止める。多数の機器から一斉に行うのがDDoS。",
+    target: "機械を攻める",
+    scene: "世界中の機器から一斉に大量アクセスを送りつける",
+    result: "サーバがパンクしてサービス停止。利用者は誰もつながらない。",
   },
   {
+    id: "sqli",
     emo: "💉",
     name: "SQLインジェクション",
-    tag: "入力欄から不正命令",
-    target: "システムを攻める",
-    d: "入力欄にデータベースへの命令文（SQL）を混ぜて送り込み、本来見えない情報を抜き取ったり書き換えたりする。",
+    target: "機械を攻める",
+    scene: "入力欄に「' OR 1=1 --」などDBへの命令文を混ぜて送る",
+    result: "データベースが命令をうのみにして、会員データが流出。",
   },
   {
+    id: "xss",
     emo: "🪤",
     name: "クロスサイトスクリプティング(XSS)",
-    tag: "罠スクリプトを仕込む",
-    target: "システムを攻める",
-    d: "掲示板などにこっそり悪意のあるスクリプトを書き込み、見に来た他の利用者のブラウザで動かして情報を盗む。",
+    target: "機械を攻める",
+    scene: "掲示板に罠のスクリプトをこっそり書き込んでおく",
+    result: "見に来た利用者のブラウザで罠が動き、その人の情報が盗まれる。",
   },
   {
+    id: "targeted",
     emo: "🎯",
     name: "標的型攻撃",
-    tag: "特定の組織を狙い撃ち",
     target: "人をだます",
-    d: "特定の会社や役所を狙い、業務に関係ありそうなメールを装って添付ファイルやリンクを開かせ、侵入する。",
+    scene: "この会社だけを狙い、取引先を装ったメールで添付を開かせる",
+    result: "社員が添付を開いてしまい、ウイルスが社内に侵入。",
   },
   {
+    id: "social",
     emo: "🎭",
     name: "ソーシャルエンジニアリング",
-    tag: "人の隙をつく",
     target: "人をだます",
-    d: "技術ではなく“人”を狙う。電話で関係者になりすます／背後からパスワード入力をのぞき見る／ゴミ箱の書類をあさる、など。",
+    scene: "「システム部です」と電話し、パスワードを聞き出す",
+    result: "技術を使わず、人の思い込みだけでパスワードが漏れた。",
   },
 ];
 
-function AttackCards() {
-  const [open, setOpen] = useState<string | null>(null);
+// 攻撃ごとの各所の状態
+function nodeState(sel: AttackId | null) {
+  const ok = { tone: "ring-gray-200 bg-white", body: "", hit: false };
+  const s = {
+    server: { ...ok, body: "正常に稼働中" },
+    db: { ...ok, body: "データを保管中" },
+    users: { ...ok, body: "サイトを閲覧中" },
+    staff: { ...ok, body: "ふつうに仕事中" },
+  };
+  const hit = "ring-rose-400 bg-rose-50";
+  switch (sel) {
+    case "ddos":
+      s.server = { tone: hit, body: "🌊🌊🌊 アクセス殺到→💥ダウン", hit: true };
+      s.users = { tone: "ring-amber-300 bg-amber-50", body: "❌ つながらない…", hit: true };
+      break;
+    case "sqli":
+      s.server = { tone: "ring-amber-300 bg-amber-50", body: "入力欄に「' OR 1=1 --」", hit: true };
+      s.db = { tone: hit, body: "📄📄 会員データが流出！", hit: true };
+      break;
+    case "xss":
+      s.server = { tone: "ring-amber-300 bg-amber-50", body: "掲示板に🪤が仕込まれた", hit: true };
+      s.users = { tone: hit, body: "💥 罠が実行→🍪情報流出", hit: true };
+      break;
+    case "targeted":
+      s.staff = { tone: hit, body: "✉️「請求書.zip」開封→🐴侵入", hit: true };
+      break;
+    case "social":
+      s.staff = { tone: hit, body: "📞「システム部です」→🔑漏洩", hit: true };
+      break;
+  }
+  return s;
+}
+
+function AttackLab() {
+  const [sel, setSel] = useState<AttackId | null>(null);
+  const [tried, setTried] = useState<Set<AttackId>>(new Set());
+  const cur = ATTACKS.find((a) => a.id === sel) ?? null;
+  const nodes = nodeState(sel);
+  const allTried = tried.size >= ATTACKS.length;
+
+  const fire = (id: AttackId) => {
+    setSel(id);
+    setTried((p) => new Set(p).add(id));
+  };
+
+  const nodeCard = (emo: string, name: string, st: { tone: string; body: string; hit: boolean }) => (
+    <div className={`rounded-xl p-2 ring-2 transition ${st.tone}`}>
+      <div className="text-[11px] font-extrabold text-gray-800">
+        {emo} {name}
+      </div>
+      <div
+        className={`mt-1 min-h-[2.4em] text-[10px] font-bold leading-snug ${
+          st.hit ? "text-rose-700" : "text-gray-400"
+        } ${st.hit ? "animate-pulse" : ""}`}
+      >
+        {st.body}
+      </div>
+    </div>
+  );
+
   return (
     <Panel>
-      <SectionTitle step={1}>代表的な手口をタップ</SectionTitle>
+      <SectionTitle step={1}>攻撃ラボ ― 撃ってみると違いが分かる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        攻撃は大きく<b className="text-gray-800">「システムを直接攻める」</b>ものと、
-        <b className="text-gray-800">「人をだまして突破口にする」</b>ものに分かれます。
+        実験用の会社に、攻撃者😈として5つの手口を撃ち込んでみよう。
+        <b className="text-gray-800">どこで・何が起きるか</b>が手口ごとに違います。
       </p>
-      <div className="mt-3 space-y-2.5">
+
+      {/* 攻撃の選択 */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
         {ATTACKS.map((a) => {
-          const isOpen = open === a.name;
-          const isHuman = a.target === "人をだます";
+          const on = sel === a.id;
           return (
             <button
-              key={a.name}
-              onClick={() => setOpen(isOpen ? null : a.name)}
-              className={`block w-full rounded-xl p-3 text-left ring-1 transition active:scale-[0.99] ${
-                isOpen ? "bg-indigo-50 ring-indigo-300" : "bg-gray-50 ring-gray-200"
+              key={a.id}
+              onClick={() => fire(a.id)}
+              className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
+                on
+                  ? "bg-indigo-600 text-white"
+                  : tried.has(a.id)
+                    ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200"
+                    : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
               }`}
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xl">{a.emo}</span>
-                <span className="text-sm font-extrabold text-gray-800">{a.name}</span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                    isHuman ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
-                  }`}
-                >
-                  {a.tag}
-                </span>
-                <span className="ml-auto text-[11px] font-bold text-gray-400">
-                  {a.target}
-                </span>
-              </div>
-              {isOpen && (
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">{a.d}</p>
-              )}
+              {a.emo} {a.name.replace("クロスサイトスクリプティング", "")}
+              {tried.has(a.id) && !on && " ✓"}
             </button>
           );
         })}
       </div>
+
+      {/* 実験用の会社 */}
+      <div className="mt-4 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-gray-400">🏢 実験用の会社</span>
+          {cur && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                cur.target === "人をだます" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+              }`}
+            >
+              狙い：{cur.target === "人をだます" ? "🧑 人" : "💻 機械"}
+            </span>
+          )}
+        </div>
+
+        {cur && (
+          <div className="mt-2 rounded-lg bg-white px-2.5 py-1.5 text-center text-[11px] font-bold text-gray-700 ring-1 ring-gray-200">
+            😈 {cur.scene}
+            <span className="mx-1 text-rose-500">──▶</span>
+          </div>
+        )}
+
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          {nodeCard("🌐", "Webサーバ", nodes.server)}
+          {nodeCard("🗄️", "データベース", nodes.db)}
+          {nodeCard("🧑🧑", "サイトの利用者", nodes.users)}
+          {nodeCard("👩‍💼", "社員のPC", nodes.staff)}
+        </div>
+
+        {cur ? (
+          <div className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 ring-1 ring-rose-200">
+            <b>
+              {cur.emo} {cur.name}
+            </b>
+            ：{cur.result}
+          </div>
+        ) : (
+          <p className="mt-2 text-center text-xs text-gray-400">↑ 攻撃を選んで撃ってみよう</p>
+        )}
+      </div>
+
+      {allTried && (
+        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+          💡 <b>気づいた？</b>　<b>DoS・SQLインジェクション・XSSは「機械」を攻める</b>ので仕組み（設定や修正）で防ぎ、
+          <b>標的型・ソーシャルエンジニアリングは「人」をだます</b>のでルールと教育で防ぎます。
+          狙いがどちらかを見分けるのが第一歩。
+        </div>
+      )}
+
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ <b>DoS＝止める</b>／<b>SQLインジェクション＝DBへの不正命令</b>／<b>XSS＝罠スクリプト</b>／
         <b>標的型＝狙い撃ちメール</b>／<b>ソーシャルエンジニアリング＝人をだます</b>。
@@ -192,7 +300,7 @@ export default function CyberAttacksExperience() {
         名前と<b>特徴のキーワード</b>をセットで覚えるのがコツ。
       </div>
 
-      <AttackCards />
+      <AttackLab />
       <AttackQuiz />
 
       <Panel>
