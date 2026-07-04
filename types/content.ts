@@ -531,6 +531,7 @@ export type CheckQuestion = {
 export type Explanation = {
   body: string;
   keyPoints?: string[]; // 押さえどころ（箇条書き）
+  diagram?: DiagramSpec;
 };
 
 /** 復習プロンプト（後日の想起用。問い→想起してほしい内容） */
