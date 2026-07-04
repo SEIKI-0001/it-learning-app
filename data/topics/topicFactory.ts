@@ -34,7 +34,6 @@ export type CompactTopic = {
   summary: string;
   hookQuestion?: string;
   body: string;
-  detail?: string;
   analogy: string;
   keyPoints: [string, string, string] | string[];
   examPoint: string;
