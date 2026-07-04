@@ -12,13 +12,18 @@ import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { completeTopicStudy } from "@/lib/study";
 import {
   getUserId,
+  reportTopicQuizResult,
   saveAnswersToDb,
+  saveDailyTasksToDb,
   saveProgressToDb,
+  todayLocalDate,
 } from "@/lib/userSession";
+import type { DailyStudyTaskInput } from "@/types/studyProgress";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
+import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -46,6 +51,50 @@ export default function TodayPage() {
       resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [completed]);
+
+  // 今日のメニューを daily_study_tasks に保存する（fire-and-forget・1日1回）。
+  // サーバー側で既存タスクは上書きしない（実績や達成度報告の巻き戻しは起きない）。
+  const savedTasksDateRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!state?.profile) return;
+    const userId = getUserId();
+    if (!userId) return; // 匿名は localStorage のみで継続
+    const date = todayLocalDate();
+    if (savedTasksDateRef.current === date) return;
+
+    const p = generateLearningPlan(state, getAllTopics());
+    const m = p.todayMenu;
+    const reason = p.todayReasons.join(" / ") || undefined;
+    const inputs: DailyStudyTaskInput[] = [];
+    // learn item → topic_quiz
+    for (const it of m.items) {
+      inputs.push({
+        taskType: it.kind === "review" ? "review" : "topic_quiz",
+        topicId: it.topicId,
+        title: it.title,
+        estimatedMinutes: it.estimatedMinutes,
+        reason,
+        source: "today_menu",
+      });
+    }
+    // review item → review
+    for (const r of m.reviewItems) {
+      const rt = getTopic(r.topicId);
+      inputs.push({
+        taskType: "review",
+        topicId: r.topicId,
+        title: rt?.title ?? "復習",
+        estimatedMinutes: rt?.estimatedMinutes ?? 3,
+        reason: r.reason || reason,
+        source: "today_menu",
+      });
+    }
+
+    if (inputs.length > 0) {
+      savedTasksDateRef.current = date;
+      saveDailyTasksToDb(userId, date, inputs);
+    }
+  }, [state]);
 
   const topics = getAllTopics();
   const plan = useMemo(
@@ -78,9 +127,11 @@ export default function TodayPage() {
     const next = completeTopicStudy(state, primary.id, tagged);
     saveAppState(next);
     setState(next);
+    const correct = tagged.filter((a) => a.isCorrect).length;
+    const total = tagged.length;
     setResult({
-      correct: tagged.filter((a) => a.isCorrect).length,
-      total: tagged.length,
+      correct,
+      total,
       gainedExp: next.progress.exp - state.progress.exp,
       streak: next.progress.streakCount,
     });
@@ -90,6 +141,10 @@ export default function TodayPage() {
     if (userId) {
       saveProgressToDb(userId, next.progress);
       saveAnswersToDb(userId, 0, tagged);
+      // 理解度（topic_progress）は確認問題結果でのみ更新する。
+      if (total > 0) {
+        reportTopicQuizResult(userId, primary.id, correct, total, todayLocalDate());
+      }
     }
   }
 
@@ -261,6 +316,9 @@ export default function TodayPage() {
             </Link>
           </section>
         )}
+
+        {/* 今日の達成度報告（低入力・1日1回・同日上書き） */}
+        <DailyProgressReport date={todayLocalDate()} />
       </div>
 
       <BottomNav />

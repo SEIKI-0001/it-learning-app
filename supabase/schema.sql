@@ -285,3 +285,73 @@ create table if not exists public.user_reference_books (
 
 -- RLS: 有効化のみ（公開ポリシーなし）。アクセスは service role 経由に限定。
 alter table public.user_reference_books enable row level security;
+
+-- ============================================================================
+-- 到達度判定型・低入力進捗管理 第1弾（加算マイグレーション）
+-- ----------------------------------------------------------------------------
+-- 詳細は supabase/migrations/20260704_study_progress_v1.sql を参照。
+--   daily_study_tasks    : /today のメニューを日次タスクとして保存（重複作成しない）
+--   daily_progress_reports: 1日1回の達成度報告（低入力・同日上書き）
+--   topic_progress       : トピック別ステージ（理解度は確認問題結果でのみ判定）
+-- アクセスは既存方針どおり service role 経由（RLS 有効・公開ポリシー無）。
+-- ============================================================================
+create table if not exists public.daily_study_tasks (
+  task_id                   uuid primary key default gen_random_uuid(),
+  user_id                   uuid not null references public.line_users(id) on delete cascade,
+  date                      date not null,
+  task_type                 text not null,
+  topic_id                  text not null default '',
+  title                     text not null default '',
+  planned_quantity          text,
+  estimated_minutes         integer,
+  status                    text not null default 'pending',
+  completion_source         text not null default 'self_report',
+  estimated_completion_rate integer,
+  reason                    text,
+  source                    text not null default 'today_menu',
+  created_at                timestamptz not null default now(),
+  updated_at                timestamptz not null default now(),
+  constraint daily_study_tasks_unique_per_day
+    unique (user_id, date, task_type, topic_id, title)
+);
+create index if not exists daily_study_tasks_user_date_idx
+  on public.daily_study_tasks(user_id, date);
+create index if not exists daily_study_tasks_user_topic_idx
+  on public.daily_study_tasks(user_id, topic_id);
+alter table public.daily_study_tasks enable row level security;
+
+create table if not exists public.daily_progress_reports (
+  report_id                 uuid primary key default gen_random_uuid(),
+  user_id                   uuid not null references public.line_users(id) on delete cascade,
+  date                      date not null,
+  selected_level            text not null,
+  estimated_completion_rate integer,
+  optional_reason           text,
+  created_at                timestamptz not null default now(),
+  constraint daily_progress_reports_unique_per_day unique (user_id, date)
+);
+create index if not exists daily_progress_reports_user_date_idx
+  on public.daily_progress_reports(user_id, date);
+alter table public.daily_progress_reports enable row level security;
+
+create table if not exists public.topic_progress (
+  id                        uuid primary key default gen_random_uuid(),
+  user_id                   uuid not null references public.line_users(id) on delete cascade,
+  topic_id                  text not null,
+  stage                     text not null default 'not_started',
+  latest_quiz_score         integer,
+  latest_exam_level_score   integer,
+  quiz_attempt_count        integer not null default 0,
+  exam_level_attempt_count  integer not null default 0,
+  consecutive_failed_count  integer not null default 0,
+  last_attempted_at         timestamptz,
+  next_review_at            timestamptz,
+  created_at                timestamptz not null default now(),
+  updated_at                timestamptz not null default now(),
+  constraint topic_progress_unique_per_topic unique (user_id, topic_id)
+);
+create index if not exists topic_progress_user_idx
+  on public.topic_progress(user_id);
+create index if not exists topic_progress_user_stage_idx
+  on public.topic_progress(user_id, stage);
+alter table public.topic_progress enable row level security;

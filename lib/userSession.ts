@@ -1,6 +1,12 @@
 "use client";
 
 import type { AppState, UserAnswer, UserProfile, UserProgress } from "@/types";
+import type {
+  DailyStudyTaskInput,
+  ProgressLevel,
+  ProgressReason,
+  TopicProgressSummary,
+} from "@/types/studyProgress";
 
 // LINE 経由で解決した user_id を localStorage に保存し、以降のDB保存に使う。
 // user_id が無ければ（= 直接アクセス）すべて localStorage だけで動く（フォールバック）。
@@ -176,6 +182,102 @@ export type FeedbackAnswers = {
   q4_onemore?: string;
   q5_easier?: string;
 };
+
+// ---------------------------------------------------------------------------
+// 到達度判定型・低入力進捗管理（daily tasks / progress report / topic progress）
+// ---------------------------------------------------------------------------
+
+/** 端末ローカルのタイムゾーンでの今日の日付（"YYYY-MM-DD"）。 */
+export function todayLocalDate(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * /today の今日のメニューを daily_study_tasks に保存（fire-and-forget）。
+ * 既存タスクは上書きしない（サーバー側 ignoreDuplicates）ので、
+ * 表示のたびに呼んでも重複や実績の巻き戻しは起きない。
+ */
+export function saveDailyTasksToDb(
+  userId: string,
+  date: string,
+  tasks: DailyStudyTaskInput[],
+): void {
+  if (tasks.length === 0) return;
+  void fetch("/api/daily-tasks/upsert", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, date, tasks }),
+  }).catch(() => {
+    /* fire-and-forget */
+  });
+}
+
+/**
+ * 1日1回の達成度報告を保存（同日上書き）。保存可否を返す。
+ * user_id が無い（匿名）場合は false（保存せず UI は継続）。
+ */
+export async function reportDailyProgress(
+  userId: string,
+  date: string,
+  selectedLevel: ProgressLevel,
+  optionalReason: ProgressReason | null,
+): Promise<boolean> {
+  try {
+    const res = await fetch("/api/daily-progress/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, date, selectedLevel, optionalReason }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 確認問題の結果を topic_progress に反映（fire-and-forget）。
+ * 理解度はこの確認問題結果でのみ更新される（自己申告では上げない）。
+ */
+export function reportTopicQuizResult(
+  userId: string,
+  topicId: string,
+  correct: number,
+  total: number,
+  date: string,
+): void {
+  void fetch("/api/topic-progress/quiz-result", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, topicId, correct, total, date }),
+  }).catch(() => {
+    /* fire-and-forget */
+  });
+}
+
+/** /progress の簡易サマリを取得。未ログイン/未設定なら null。 */
+export async function fetchTopicProgressSummary(
+  userId: string,
+): Promise<TopicProgressSummary | null> {
+  try {
+    const res = await fetch("/api/topic-progress/summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      summary?: TopicProgressSummary;
+    };
+    return data.ok && data.summary ? data.summary : null;
+  } catch {
+    return null;
+  }
+}
 
 /** フィードバックをDBへ保存。 */
 export async function saveFeedbackToDb(

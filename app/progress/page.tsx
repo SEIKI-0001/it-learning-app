@@ -13,6 +13,7 @@ import type { ReviewItem } from "@/types";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import AchievementStrip from "@/components/progress/AchievementStrip";
+import TopicStageSummary from "@/components/progress/TopicStageSummary";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutLink from "@/components/auth/LogoutLink";
 
@@ -207,6 +208,9 @@ export default function ProgressPage() {
           <StatCard label="復習待ち" value={`${reviewCount}`} />
           <StatCard label="累計XP" value={`${progress.exp}`} />
         </div>
+
+        {/* 確認問題からみた到達度（基礎理解OK / 要復習 / 苦手） */}
+        <TopicStageSummary />
 
         <div className="grid gap-4 md:grid-cols-2">
         {/* 3分野習熟度 */}
