@@ -29,6 +29,9 @@ export type StudyPhaseDef = {
   emoji: string;
   title: string; // 例: "テーマ別に理解する"
   summary: string; // このフェーズで何をするか（1〜2文）
+  detail: string; // 詳細シートで表示する、学習者向けの丁寧な説明
+  checkpoints: string[]; // このフェーズで意識する具体ポイント
+  completionGoal: string; // 次フェーズへ進む目安
 };
 
 /** フェーズの進み具合（ロードマップ表示用） */

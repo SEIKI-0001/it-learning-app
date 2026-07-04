@@ -5,7 +5,7 @@ import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 import { STUDY_PHASES } from "@/lib/studyPlanner";
 
 // 合格までのロードマップを「ゲームのワールドマップ風」で見せるコンポーネント。
-// - データは plan.phases（PhaseProgress[]）＋ STUDY_PHASES の静的メタのみ。新規データは不要。
+// - データは plan.phases（PhaseProgress[]）＋ STUDY_PHASES の静的メタを使う。
 // - 8ノードを上下2段のつづら折り（4→4）に配置し、縦幅を抑える。
 //   コンテナは aspect-[100/62] で viewBox(0 0 100 62) と比率を一致させ、
 //   SVG 地形・道と HTML ピン（%配置）の座標系を確実に重ねる。
@@ -20,6 +20,9 @@ type MapNode = {
   emoji: string;
   title: string;
   summary: string;
+  detail: string;
+  checkpoints: string[];
+  completionGoal: string;
   status: PhaseProgress["status"] | "goal";
   progress: number;
   hint: string;
@@ -59,6 +62,9 @@ function buildNodes(phases: PhaseProgress[]): MapNode[] {
       emoji: def.emoji,
       title: def.title,
       summary: def.summary,
+      detail: def.detail,
+      checkpoints: def.checkpoints,
+      completionGoal: def.completionGoal,
       status: p.status,
       progress: p.progress,
       hint: p.hint,
@@ -74,6 +80,15 @@ function buildNodes(phases: PhaseProgress[]): MapNode[] {
     emoji: "🎓",
     title: "合格",
     summary: "ここまで来たら本番。積み上げてきた力を出し切りましょう。",
+    detail:
+      "ロードマップの最後は、学んだ知識を本番で落ち着いて使う段階です。知らない問題が出ても焦らず、取れる問題を確実に取り、迷う問題は後回しにして全体の時間を守ります。",
+    checkpoints: [
+      "最初から完璧に解こうとせず、解ける問題を先に進める",
+      "迷った問題には印をつけ、最後に戻る",
+      "直前に見直した頻出テーマと誤答パターンを思い出す",
+    ],
+    completionGoal:
+      "これまで積み上げた学習を、試験時間内で落ち着いて発揮することがゴールです。",
     status: "goal",
     progress: allDone ? 100 : 0,
     hint: "",
@@ -348,7 +363,7 @@ export default function RoadmapMap({
           onClick={() => setSelected(null)}
         >
           <div
-            className="w-full max-w-md rounded-t-3xl bg-white p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] shadow-xl"
+            className="max-h-[86vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-200" />
@@ -379,6 +394,45 @@ export default function RoadmapMap({
             <p className="mt-4 text-sm leading-relaxed text-gray-600">
               {selected.summary}
             </p>
+
+            <div className="mt-4 rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs font-bold text-gray-400">
+                この段階でやること
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-gray-700">
+                {selected.detail}
+              </p>
+            </div>
+
+            {selected.checkpoints.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-bold text-gray-400">
+                  意識するポイント
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {selected.checkpoints.map((checkpoint) => (
+                    <li
+                      key={checkpoint}
+                      className="flex gap-2 text-sm leading-relaxed text-gray-700"
+                    >
+                      <span
+                        aria-hidden
+                        className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600"
+                      >
+                        ✓
+                      </span>
+                      <span>{checkpoint}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {selected.completionGoal && (
+              <p className="mt-4 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-emerald-700">
+                次へ進む目安：{selected.completionGoal}
+              </p>
+            )}
 
             {(selected.status === "done" || selected.status === "current") && (
               <div className="mt-4">
