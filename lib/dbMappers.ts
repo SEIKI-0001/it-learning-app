@@ -1,4 +1,4 @@
-import type { ReviewItem, StudyStyle, UserProfile, UserProgress } from "@/types";
+import type { ReviewItem, StudyStyle, UserProfile, UserProgress, WeeklyPlan } from "@/types";
 import type { TopicField } from "@/types/content";
 import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
 // 型のみ import（"use client" のランタイムは取り込まれない＝サーバーから安全に参照できる）。
@@ -22,6 +22,7 @@ export type ProgressRow = {
   completed_topics: string[] | null;
   topic_mastery: Record<string, number> | null;
   review_queue: ReviewItem[] | null;
+  weekly_plan: WeeklyPlan | null;
 };
 
 export type ProfileRow = {
@@ -32,6 +33,7 @@ export type ProfileRow = {
   confidence: number | null;
   // 新(ITパスポート学習コーチ)
   exam_date: string | null;
+  plan_start_date: string | null;
   weekday_minutes: number | null;
   holiday_minutes: number | null;
   weak_fields: string[] | null;
@@ -48,6 +50,7 @@ export function progressRowToProgress(row: ProgressRow): UserProgress {
     completedTopics: row.completed_topics ?? [],
     topicMastery: row.topic_mastery ?? {},
     reviewQueue: row.review_queue ?? [],
+    weeklyPlan: row.weekly_plan ?? null,
     // 旧版互換
     currentDay: row.current_day ?? 1,
     completedDays: row.completed_days ?? [],
@@ -70,6 +73,7 @@ export function progressToRow(
     completed_topics: p.completedTopics ?? [],
     topic_mastery: p.topicMastery ?? {},
     review_queue: p.reviewQueue ?? [],
+    weekly_plan: p.weeklyPlan ?? null,
     updated_at: new Date().toISOString(),
   };
 }
@@ -81,6 +85,7 @@ export function profileRowToProfile(row: ProfileRow): UserProfile {
     examPlan: row.exam_plan ?? "",
     confidence: row.confidence ?? 0,
     examDate: row.exam_date ?? undefined,
+    planStartDate: row.plan_start_date ?? undefined,
     weekdayMinutes: row.weekday_minutes ?? undefined,
     holidayMinutes: row.holiday_minutes ?? undefined,
     weakFields: (row.weak_fields ?? undefined) as TopicField[] | undefined,
@@ -99,6 +104,7 @@ export function profileToRow(
     exam_plan: p.examPlan,
     confidence: p.confidence,
     exam_date: p.examDate ?? null,
+    plan_start_date: p.planStartDate ?? null,
     weekday_minutes: p.weekdayMinutes ?? null,
     holiday_minutes: p.holidayMinutes ?? null,
     weak_fields: p.weakFields ?? null,

@@ -9,6 +9,7 @@ import { getAllTopics, getReviewItemsForUser, getTopic } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { fieldMastery } from "@/lib/study";
+import { computeProgressSummary } from "@/lib/progressSummary";
 
 /**
  * LINE Messaging API の Webhook 受け口（ITパスポート学習コーチ）。
@@ -229,10 +230,8 @@ function progressText(
     return ["あなたの進捗はこちら📈", withToken(baseUrl, "/progress", token)].join("\n");
   }
   const topics = getAllTopics();
-  const overall =
-    topics.length > 0
-      ? Math.round((progress.completedTopics.length / topics.length) * 100)
-      : 0;
+  const summary = computeProgressSummary(topics, progress);
+  const overall = summary.readinessPct;
   const remaining = daysUntilExam(profile);
   const mastery = fieldMastery(progress, topics);
   const weakest = (Object.keys(mastery) as (keyof typeof mastery)[]).sort(
@@ -240,7 +239,7 @@ function progressText(
   )[0];
 
   const lines = [
-    `📈 全体進捗 ${overall}%（学習済み ${progress.completedTopics.length}/${topics.length}）`,
+    `📈 全体進捗 ${overall}%（学習済み ${summary.completedCount}/${summary.totalCount}）`,
     remaining === null ? "試験日：未設定" : `試験まであと${remaining}日`,
     `🔥 連続学習 ${progress.streakCount}日 / Lv.${progress.level}・${progress.exp}XP`,
   ];

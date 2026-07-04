@@ -44,6 +44,7 @@ export function normalizeAppState(state: AppState): AppState {
       completedTopics: p.completedTopics ?? [],
       topicMastery: p.topicMastery ?? {},
       reviewQueue: p.reviewQueue ?? [],
+      weeklyPlan: p.weeklyPlan ?? null,
       currentDay: p.currentDay ?? 1,
       completedDays: p.completedDays ?? [],
     },
@@ -80,6 +81,7 @@ export function initializeAppState(profile: UserProfile): AppState {
       completedTopics: [],
       topicMastery: {},
       reviewQueue: [],
+      weeklyPlan: null,
       // 旧版互換(新ロジックでは未使用)
       currentDay: 1,
       completedDays: [],

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { PhaseProgress } from "@/types/plan";
+import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 import { STUDY_PHASES } from "@/lib/studyPlanner";
 
 // 合格までのロードマップを「ゲームのワールドマップ風」で見せるコンポーネント。
@@ -111,9 +111,18 @@ function Tree({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   );
 }
 
-export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
+export default function RoadmapMap({
+  phases,
+  expectedPhaseId,
+}: {
+  phases: PhaseProgress[];
+  expectedPhaseId?: StudyPhaseId;
+}) {
   const [selected, setSelected] = useState<MapNode | null>(null);
   const nodes = buildNodes(phases);
+  const currentPhaseId = phases.find((p) => p.status === "current")?.id;
+  // 現在地と違うときだけ「本来ここ」の目印を出す（同じなら煩雑さを避けて出さない）。
+  const showExpected = !!expectedPhaseId && expectedPhaseId !== currentPhaseId;
   const fullPath = nodes
     .slice(0, -1)
     .map((n, i) => segmentPath(n, nodes[i + 1]))
@@ -226,6 +235,7 @@ export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
           const isCurrent = n.status === "current";
           const isDone = n.status === "done";
           const isGoal = n.kind === "goal";
+          const isExpected = showExpected && n.key === expectedPhaseId;
 
           const circleCls = isGoal
             ? "bg-gradient-to-b from-amber-300 to-amber-500 ring-white"
@@ -245,11 +255,18 @@ export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
                 top: `${(n.y / VB_H) * 100}%`,
                 left: `${(n.x / VB_W) * 100}%`,
               }}
-              aria-label={`${n.title}（${STATUS_LABEL[n.status]}）`}
+              aria-label={`${n.title}（${STATUS_LABEL[n.status]}${
+                isExpected ? "・本来の目安" : ""
+              }）`}
             >
               {isCurrent && (
                 <span className="absolute -top-5 animate-bounce whitespace-nowrap rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow motion-reduce:animate-none">
                   いまここ
+                </span>
+              )}
+              {isExpected && (
+                <span className="absolute -top-5 whitespace-nowrap rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white shadow ring-1 ring-white">
+                  📍本来ここ
                 </span>
               )}
               <span className="relative">

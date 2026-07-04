@@ -119,6 +119,8 @@ alter table public.line_sessions enable row level security;
 
 -- user_profiles: 試験予定日・学習可能時間・苦手分野・学習スタイルを追加
 alter table public.user_profiles add column if not exists exam_date        date;
+-- 学習開始日（ロードマップの経過日数の基点。オンボーディングで一度だけ設定）。
+alter table public.user_profiles add column if not exists plan_start_date  date;
 alter table public.user_profiles add column if not exists weekday_minutes  integer;
 alter table public.user_profiles add column if not exists holiday_minutes  integer;
 alter table public.user_profiles add column if not exists weak_fields      text[] not null default '{}';
@@ -128,6 +130,8 @@ alter table public.user_profiles add column if not exists study_style      text;
 alter table public.user_progress add column if not exists completed_topics text[] not null default '{}';
 alter table public.user_progress add column if not exists topic_mastery    jsonb  not null default '{}';
 alter table public.user_progress add column if not exists review_queue     jsonb  not null default '[]';
+-- 今週のタスクリスト（週初めに確定するスナップショット。null=未確定）。
+alter table public.user_progress add column if not exists weekly_plan      jsonb;
 -- current_day は 7日固定ロジックの名残。新規行のデフォルトは1のまま（参照しない）。
 
 -- user_answers: どのトピックの確認問題かを記録（旧 day_no は互換のため残す）

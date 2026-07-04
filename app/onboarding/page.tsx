@@ -57,6 +57,7 @@ export default function OnboardingPage() {
     const full: UserProfile = {
       // 新フィールド
       examDate: examDate || undefined,
+      planStartDate: new Date().toISOString().slice(0, 10), // ロードマップの経過日数の基点
       weekdayMinutes,
       holidayMinutes,
       confidence,

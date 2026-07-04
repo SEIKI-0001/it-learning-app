@@ -13,10 +13,18 @@ import type {
   StudyPhaseDef,
   StudyPhaseId,
   WeeklyGoal,
+  WeeklyItemView,
 } from "@/types/plan";
-import { getAllTopics, getReviewItemsForUser, getTopic } from "@/lib/content";
+import type { WeeklyPlan } from "@/types";
+import {
+  getAllTopics,
+  getRecommendedTopicsForUser,
+  getReviewItemsForUser,
+  getTopic,
+} from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
+import { computeProgressSummary } from "@/lib/progressSummary";
 
 // ============================================================================
 // 学習計画エンジン（studyPlanner）
@@ -119,7 +127,7 @@ function weeklyMinutes(profile?: UserProfile): number {
 }
 
 /** 試験日までの学習可能総時間(分)。試験日未設定なら null。 */
-function totalAvailableMinutes(
+export function totalAvailableMinutes(
   profile: UserProfile | undefined,
   daysRemaining: number | null,
 ): number | null {
@@ -133,7 +141,7 @@ function totalAvailableMinutes(
  * 「未完了トピックのインプット + 全トピックの確認問題まわし直し + 過去問演習」を
  * ざっくり積み上げる（広く浅く何度も回す方針を反映）。
  */
-function requiredMinutesEstimate(
+export function requiredMinutesEstimate(
   topics: Topic[],
   progress: UserProgress,
 ): number {
@@ -153,7 +161,7 @@ function requiredMinutesEstimate(
 // 間に合い度
 // ---------------------------------------------------------------------------
 
-function computeOnTrack(
+export function computeOnTrack(
   available: number | null,
   required: number,
 ): OnTrackLevel {
@@ -163,6 +171,22 @@ function computeOnTrack(
   if (ratio >= 1.5) return "comfortable";
   if (ratio >= 1.0) return "tight";
   return "sprint";
+}
+
+/**
+ * 間に合い度を1回で算出する簡易ヘルパー。
+ * LearningPlan を作らずに onTrack だけ欲しい呼び出し側（/topics 等）向け。
+ */
+export function computeOnTrackForState(
+  profile: UserProfile | undefined,
+  progress: UserProgress,
+  topics: Topic[] = getAllTopics(),
+  now: Date = new Date(),
+): OnTrackLevel {
+  const daysRemaining = daysUntilExam(profile, now);
+  const available = totalAvailableMinutes(profile, daysRemaining);
+  const required = requiredMinutesEstimate(topics, progress);
+  return computeOnTrack(available, required);
 }
 
 // ---------------------------------------------------------------------------
@@ -320,6 +344,73 @@ export function determineCurrentPhase(
   return "phase4";
 }
 
+// ---------------------------------------------------------------------------
+// 期待フェーズ（学習開始日からの経過日数で「本来いるべき位置」を算出）
+// ---------------------------------------------------------------------------
+
+/** ローカルの "YYYY-MM-DD"。 */
+function localDateIso(now: Date): string {
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/** 2つの "YYYY-MM-DD" の日数差（to - from）。不正なら NaN。 */
+function daysBetweenDates(fromIso: string, toIso: string): number {
+  const from = new Date(`${fromIso}T00:00:00`);
+  const to = new Date(`${toIso}T00:00:00`);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return NaN;
+  return Math.round((to.getTime() - from.getTime()) / DAY_MS);
+}
+
+/**
+ * 「本来いるべきフェーズ」を、学習開始日から試験日までの経過割合で算出する。
+ * 完了率ベースの境界（determineCurrentPhase）を時間軸に読み替えた、推奨スケジュール。
+ * 各フェーズの時間配分（累積）: phase1=10% / phase2=45% / phase3=65% /
+ * phase4=80% / phase5=95% / phase6=100%（phase0=初回設定は瞬間）。
+ * 試験日・学習開始日が未設定なら null（比較は出さない）。
+ */
+export function determineExpectedPhase(
+  profile: UserProfile | undefined,
+  now: Date = new Date(),
+): StudyPhaseId | null {
+  if (!profile?.examDate || !profile.planStartDate) return null;
+  const total = daysBetweenDates(profile.planStartDate, profile.examDate);
+  if (!Number.isFinite(total) || total <= 0) return "phase6";
+  const elapsed = daysBetweenDates(profile.planStartDate, localDateIso(now));
+  const r = Math.max(0, Math.min(1, elapsed / total));
+  if (r < 0.1) return "phase1";
+  if (r < 0.45) return "phase2";
+  if (r < 0.65) return "phase3";
+  if (r < 0.8) return "phase4";
+  if (r < 0.95) return "phase5";
+  return "phase6";
+}
+
+/**
+ * 期待フェーズと現在フェーズの比較メッセージ（前向き・ユーザーを責めない）。
+ * delta = 現在フェーズの順序 - 期待フェーズの順序（負=遅れ / 0=計画通り / 正=先行）。
+ */
+export function buildPhaseComparisonMessage(
+  expected: StudyPhaseId,
+  actual: StudyPhaseId,
+): string {
+  const e = getPhaseDef(expected);
+  const a = getPhaseDef(actual);
+  const delta = a.order - e.order;
+  if (delta <= -2) {
+    return `いまの目安は「${e.title}」フェーズですが、まだ「${a.title}」です。頻出テーマから優先して追いつきましょう。`;
+  }
+  if (delta === -1) {
+    return "計画よりやや遅れ気味です。今週のゴールを一つずつ消化していきましょう。";
+  }
+  if (delta === 0) {
+    return "ほぼ計画どおりのペースです。この調子で進めましょう。";
+  }
+  return "計画より進んでいます。この調子で！";
+}
+
 /** 各フェーズの進捗（done/current/upcoming ＋ 目安%）を組み立てる。 */
 function buildPhaseProgress(
   currentPhase: StudyPhaseId,
@@ -456,6 +547,123 @@ function buildWeeklyGoal(
     reviewCount,
     detail,
   };
+}
+
+// ---------------------------------------------------------------------------
+// 今週のタスクリスト（実体化・スナップショット）
+// ---------------------------------------------------------------------------
+
+/** その週の月曜日(ローカル)を "YYYY-MM-DD" で返す。週の識別キーに使う。 */
+export function weekStartKey(now: Date = new Date()): string {
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffToMonday = (d.getDay() + 6) % 7; // Mon=0 ... Sun=6
+  d.setDate(d.getDate() - diffToMonday);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
+/**
+ * 今週やることの具体的なトピック/復習リストを組み立てる（スナップショット）。
+ * 件数は buildWeeklyGoal と同じ目安（targetTopicCount / reviewCount）を使い、
+ * 推薦順（getRecommendedTopicsForUser）と復習対象（getReviewItemsForUser）の
+ * 先頭から採用する。今日やること（generateTodayMenu）と同じ優先順位に基づくので、
+ * 当日メニューは通常この週次リストに含まれる。
+ */
+export function buildWeeklyPlan(
+  state: AppState,
+  topics: Topic[] = getAllTopics(),
+  now: Date = new Date(),
+): WeeklyPlan {
+  const { profile, progress, answers } = state;
+  const daysRemaining = daysUntilExam(profile, now);
+  const currentPhase = determineCurrentPhase(
+    topics,
+    profile,
+    progress,
+    answers,
+    daysRemaining,
+  );
+  const goal = buildWeeklyGoal(topics, profile, progress, currentPhase, daysRemaining);
+
+  const topicIds = getRecommendedTopicsForUser({
+    progress,
+    weakFields: profile?.weakFields,
+  })
+    .slice(0, goal.targetTopicCount)
+    .map((t) => t.id);
+
+  const reviewIds = getReviewItemsForUser(
+    { progress, weakFields: profile?.weakFields },
+    now,
+  )
+    .slice(0, goal.reviewCount)
+    .map((r) => r.topicId);
+
+  return { weekStartDate: weekStartKey(now), topicIds, reviewIds };
+}
+
+/**
+ * 今週のタスクリストを解決する。
+ * 保存済みスナップショットが今週のものならそのまま使い（週の途中で内容が
+ * 入れ替わらない）、無い/古いときだけ再生成する。永続化は呼び出し側が行う。
+ */
+export function resolveWeeklyPlan(
+  state: AppState,
+  topics: Topic[] = getAllTopics(),
+  now: Date = new Date(),
+): WeeklyPlan {
+  const existing = state.progress.weeklyPlan;
+  if (existing && existing.weekStartDate === weekStartKey(now)) {
+    return existing;
+  }
+  return buildWeeklyPlan(state, topics, now);
+}
+
+/**
+ * 週次リストを表示用（チェック状態つき）に展開する。
+ * チェック状態は保存せず、completedTopics / 現在の復習対象から都度導出する。
+ */
+export function buildWeeklyChecklist(
+  weekly: WeeklyPlan,
+  state: AppState,
+  now: Date = new Date(),
+): WeeklyItemView[] {
+  const { progress, profile } = state;
+  const completed = new Set(progress.completedTopics);
+  const dueSet = new Set(
+    getReviewItemsForUser(
+      { progress, weakFields: profile?.weakFields },
+      now,
+    ).map((r) => r.topicId),
+  );
+
+  const learn: WeeklyItemView[] = weekly.topicIds.map((id) => {
+    const t = getTopic(id);
+    return {
+      topicId: id,
+      kind: "learn",
+      title: t?.title ?? id,
+      minutes: t?.estimatedMinutes ?? 0,
+      checked: completed.has(id),
+    };
+  });
+
+  const review: WeeklyItemView[] = weekly.reviewIds.map((id) => {
+    const t = getTopic(id);
+    const mastery = progress.topicMastery[id] ?? 0;
+    return {
+      topicId: id,
+      kind: "review",
+      title: t?.title ?? id,
+      minutes: t?.estimatedMinutes ?? 0,
+      // 復習は「もう期限対象でない」または「習熟度>=70」でクリア扱い。
+      checked: !dueSet.has(id) || mastery >= 70,
+    };
+  });
+
+  return [...learn, ...review];
 }
 
 // ---------------------------------------------------------------------------
@@ -637,6 +845,7 @@ export function generateLearningPlan(
   const available = totalAvailableMinutes(profile, daysRemaining);
   const required = requiredMinutesEstimate(topics, progress);
   const onTrack = computeOnTrack(available, required);
+  const summary = computeProgressSummary(topics, progress);
 
   const currentPhase = determineCurrentPhase(
     topics,
@@ -660,6 +869,16 @@ export function generateLearningPlan(
     daysRemaining,
   );
 
+  const expectedPhase = determineExpectedPhase(profile, now);
+  const phaseComparison = expectedPhase
+    ? {
+        expected: expectedPhase,
+        actual: currentPhase,
+        delta: getPhaseDef(currentPhase).order - getPhaseDef(expectedPhase).order,
+        message: buildPhaseComparisonMessage(expectedPhase, currentPhase),
+      }
+    : undefined;
+
   const weeklyGoal = buildWeeklyGoal(
     topics,
     profile,
@@ -667,6 +886,9 @@ export function generateLearningPlan(
     currentPhase,
     daysRemaining,
   );
+
+  const weekly = resolveWeeklyPlan(state, topics, now);
+  const weeklyItems = buildWeeklyChecklist(weekly, state, now);
 
   const todayMenu = generateTodayMenu(profile, progress, topics, answers);
   const primaryItem = todayMenu.items.find((i) => i.kind === "learn");
@@ -708,15 +930,18 @@ export function generateLearningPlan(
     onTrack,
     currentPhase,
     phases,
+    phaseComparison,
     weeklyGoal,
+    weeklyItems,
     todayMenu,
     todayReasons,
     kakomonStartDate: kakomonStart,
     kakomonReady: ready,
     reviewPriority,
     reschedule,
-    completedTopicCount: progress.completedTopics.length,
-    totalTopicCount: topics.length,
+    completedTopicCount: summary.completedCount,
+    totalTopicCount: summary.totalCount,
+    readinessPct: summary.readinessPct,
     message,
   };
 }

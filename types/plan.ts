@@ -41,6 +41,14 @@ export type PhaseProgress = {
   hint: string; // いま/次に何をすると良いかの一言
 };
 
+/** 期待フェーズ（本来いるべき位置）と現在フェーズの比較。 */
+export type PhaseComparison = {
+  expected: StudyPhaseId; // 経過日数から見た本来のフェーズ
+  actual: StudyPhaseId; // いまのフェーズ
+  delta: number; // actual.order - expected.order（負=遅れ / 0=計画通り / 正=先行）
+  message: string; // 前向きな一言
+};
+
 // ---------------------------------------------------------------------------
 // 間に合い度（試験日までに間に合うかの目安）
 // ---------------------------------------------------------------------------
@@ -58,6 +66,14 @@ export const ON_TRACK_LABELS: Record<OnTrackLevel, string> = {
   "no-exam": "試験日未設定",
 };
 
+/** 間に合い度バッジの配色（ホーム/plan で共有）。 */
+export const ON_TRACK_STYLE: Record<OnTrackLevel, string> = {
+  comfortable: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+  tight: "bg-amber-100 text-amber-700 ring-amber-200",
+  sprint: "bg-rose-100 text-rose-700 ring-rose-200",
+  "no-exam": "bg-gray-100 text-gray-600 ring-gray-200",
+};
+
 // ---------------------------------------------------------------------------
 // 今週のゴール
 // ---------------------------------------------------------------------------
@@ -68,6 +84,15 @@ export type WeeklyGoal = {
   focusField?: TopicField; // 今週の重点分野
   reviewCount: number; // 今週こなしたい復習件数
   detail: string; // 補足の一言
+};
+
+/** 今週のタスクリストの1項目（表示用・チェック状態は都度導出）。 */
+export type WeeklyItemView = {
+  topicId: string;
+  kind: "learn" | "review";
+  title: string;
+  minutes: number; // 目安時間(分)
+  checked: boolean; // 完了/復習クリア済みか
 };
 
 // ---------------------------------------------------------------------------
@@ -98,9 +123,11 @@ export type LearningPlan = {
   // フェーズ・ロードマップ
   currentPhase: StudyPhaseId;
   phases: PhaseProgress[]; // Phase 0〜6 の進捗
+  phaseComparison?: PhaseComparison; // 本来いるべきフェーズとの比較（試験日+開始日があるとき）
 
   // 3層表示
   weeklyGoal: WeeklyGoal;
+  weeklyItems: WeeklyItemView[]; // 今週やること（チェック可能な実リスト）
   todayMenu: TodayMenu; // 今日の学習メニュー（aiPlanner を再利用）
   todayReasons: string[]; // 今日その学習を行う理由（1つ以上）
 
@@ -115,6 +142,7 @@ export type LearningPlan = {
   // 全体像・進捗
   completedTopicCount: number;
   totalTopicCount: number;
+  readinessPct: number; // 統一到達度(0〜100)。完了率と習熟度の折衷（progressSummary）
   message: string; // ユーザー向けの一言方針
 };
 

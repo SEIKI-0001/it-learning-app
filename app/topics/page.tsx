@@ -7,7 +7,10 @@ import { FIELD_LABELS, IMPORTANCE_LABELS } from "@/types/content";
 import type { UserProgress } from "@/types";
 import { getAllTopics } from "@/lib/content";
 import { useAppState } from "@/lib/useAppState";
+import { fieldMastery } from "@/lib/study";
+import { computeProgressSummary } from "@/lib/progressSummary";
 import BottomNav from "@/components/BottomNav";
+import FieldMasteryBars from "@/components/FieldMasteryBars";
 
 const DIFFICULTY_LABEL: Record<Topic["difficulty"], string> = {
   1: "やさしい",
@@ -79,6 +82,16 @@ export default function TopicsPage() {
   }, [filteredTopics]);
 
   const totalCount = filteredTopics.length;
+
+  // 全体像サマリ（フィルターに関わらず全トピック基準の集計）。
+  const summary = useMemo(
+    () => (progress ? computeProgressSummary(allTopics, progress) : null),
+    [allTopics, progress],
+  );
+  const mastery = useMemo(
+    () => (progress ? fieldMastery(progress, allTopics) : null),
+    [allTopics, progress],
+  );
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -166,6 +179,21 @@ export default function TopicsPage() {
       </div>
 
       <div className="mx-auto w-full max-w-md space-y-8 px-4 py-7 md:max-w-5xl">
+        {/* 全体の学習進捗サマリ（フィルターとは独立した全トピック基準） */}
+        {summary && mastery && (
+          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-extrabold text-gray-800">学習の進捗</h2>
+              <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+                学習済み {summary.completedCount}/{summary.totalCount}
+              </span>
+            </div>
+            <div className="mt-3">
+              <FieldMasteryBars mastery={mastery} />
+            </div>
+          </section>
+        )}
+
         {groupedTopics.length === 0 ? (
           <div className="py-16 text-center text-gray-400">
             <p className="text-4xl">🔍</p>

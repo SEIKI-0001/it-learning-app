@@ -3,12 +3,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { OnTrackLevel } from "@/types/plan";
-import { ON_TRACK_LABELS } from "@/types/plan";
+import { ON_TRACK_LABELS, ON_TRACK_STYLE } from "@/types/plan";
 import type { ReferenceBook } from "@/types/referenceBook";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
-import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
+import {
+  generateLearningPlan,
+  getPhaseDef,
+  resolveWeeklyPlan,
+} from "@/lib/studyPlanner";
+import { saveAppState } from "@/lib/storage";
+import { getUserId, saveProgressToDb, saveProfileToDb } from "@/lib/userSession";
 import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
 import BottomNav from "@/components/BottomNav";
 import RoadmapMap from "@/components/RoadmapMap";
@@ -17,13 +22,6 @@ import LoadingScreen from "@/components/LoadingScreen";
 // /plan = 合格までの全体ロードマップ。
 // 計画ロジックは lib/studyPlanner.ts（純粋関数）に閉じ込め、ここは表示だけを担う。
 // 3層（全体ロードマップ → 今週のゴール → 今日やること）で見せる。
-
-const ON_TRACK_STYLE: Record<OnTrackLevel, string> = {
-  comfortable: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-  tight: "bg-amber-100 text-amber-700 ring-amber-200",
-  sprint: "bg-rose-100 text-rose-700 ring-rose-200",
-  "no-exam": "bg-gray-100 text-gray-600 ring-gray-200",
-};
 
 function formatDate(iso: string | null): string {
   if (!iso) return "未定";
@@ -34,12 +32,44 @@ function formatDate(iso: string | null): string {
 
 export default function PlanPage() {
   const router = useRouter();
-  const [state] = useAppState();
+  const [state, setState] = useAppState();
   const [book, setBook] = useState<ReferenceBook | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [state, router]);
+
+  // 今週のタスクリストの確定と、既存ユーザーの学習開始日の補完をまとめて永続化する。
+  // - 週次リスト: 週初め/未確定のときだけ再生成（途中で内容が変わらない）。
+  // - 学習開始日: プロフィールはあるが planStartDate 未設定なら当日で補完（実質「今日から」）。
+  useEffect(() => {
+    if (!state) return;
+    const resolved = resolveWeeklyPlan(state);
+    const needsWeekly = resolved !== state.progress.weeklyPlan;
+    const needsStart = !!state.profile && !state.profile.planStartDate;
+    if (!needsWeekly && !needsStart) return;
+
+    const next = {
+      ...state,
+      profile:
+        needsStart && state.profile
+          ? {
+              ...state.profile,
+              planStartDate: new Date().toISOString().slice(0, 10),
+            }
+          : state.profile,
+      progress: needsWeekly
+        ? { ...state.progress, weeklyPlan: resolved }
+        : state.progress,
+    };
+    saveAppState(next);
+    setState(next);
+    const uid = getUserId();
+    if (uid) {
+      if (needsWeekly) saveProgressToDb(uid, next.progress);
+      if (needsStart && next.profile) saveProfileToDb(uid, next.profile);
+    }
+  }, [state, setState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +95,7 @@ export default function PlanPage() {
 
   const phaseDef = getPhaseDef(plan.currentPhase);
   const bookProgress = referenceBookProgress(book);
+  const weeklyDone = plan.weeklyItems.filter((i) => i.checked).length;
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -111,6 +142,20 @@ export default function PlanPage() {
           <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2.5 text-sm font-semibold text-indigo-700">
             {plan.message}
           </p>
+          {plan.phaseComparison && (
+            <p
+              className={`mt-2 rounded-xl px-3 py-2.5 text-sm font-semibold ${
+                plan.phaseComparison.delta <= -2
+                  ? "bg-rose-50 text-rose-700"
+                  : plan.phaseComparison.delta < 0
+                    ? "bg-amber-50 text-amber-700"
+                    : "bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              {plan.phaseComparison.delta < 0 ? "🧭" : "✅"}{" "}
+              {plan.phaseComparison.message}
+            </p>
+          )}
         </section>
 
         {/* 全体ロードマップ（すごろく風マップ） */}
@@ -118,28 +163,80 @@ export default function PlanPage() {
           <h2 className="mb-3 text-base font-extrabold text-gray-800">
             合格までのロードマップ
           </h2>
-          <RoadmapMap phases={plan.phases} />
+          <RoadmapMap
+            phases={plan.phases}
+            expectedPhaseId={plan.phaseComparison?.expected}
+          />
         </section>
 
         {/* 今週のゴール */}
         <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <p className="text-xs font-bold text-emerald-600">今週のゴール</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-emerald-600">今週のゴール</p>
+            {plan.weeklyItems.length > 0 && (
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                {weeklyDone}/{plan.weeklyItems.length} 完了
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-lg font-extrabold text-gray-800">
             {plan.weeklyGoal.headline}
           </p>
           <p className="mt-1 text-sm text-gray-600">{plan.weeklyGoal.detail}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {plan.weeklyGoal.targetTopicCount > 0 && (
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                🎯 テーマ {plan.weeklyGoal.targetTopicCount}件
-              </span>
-            )}
-            {plan.weeklyGoal.reviewCount > 0 && (
-              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                🔁 復習 {plan.weeklyGoal.reviewCount}件
-              </span>
-            )}
-          </div>
+
+          {plan.weeklyItems.length > 0 ? (
+            <ul className="mt-4 space-y-2">
+              {plan.weeklyItems.map((item) => (
+                <li key={`${item.kind}-${item.topicId}`}>
+                  <Link
+                    href={`/topics/${item.topicId}`}
+                    className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5 transition active:scale-[0.99]"
+                  >
+                    <span
+                      aria-hidden
+                      className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                        item.checked
+                          ? "bg-emerald-500 text-white"
+                          : "border-2 border-gray-300 text-transparent"
+                      }`}
+                    >
+                      ✓
+                    </span>
+                    <span
+                      className={`min-w-0 flex-1 truncate text-sm font-semibold ${
+                        item.checked
+                          ? "text-gray-400 line-through"
+                          : "text-gray-800"
+                      }`}
+                    >
+                      {item.title}
+                    </span>
+                    {item.kind === "review" && (
+                      <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                        🔁 復習
+                      </span>
+                    )}
+                    <span className="shrink-0 text-[11px] text-gray-400">
+                      ⏱️{item.minutes}分
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {plan.weeklyGoal.targetTopicCount > 0 && (
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                  🎯 テーマ {plan.weeklyGoal.targetTopicCount}件
+                </span>
+              )}
+              {plan.weeklyGoal.reviewCount > 0 && (
+                <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                  🔁 復習 {plan.weeklyGoal.reviewCount}件
+                </span>
+              )}
+            </div>
+          )}
         </section>
 
         {/* 今日やること導線 */}

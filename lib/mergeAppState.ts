@@ -1,4 +1,10 @@
-import type { AppState, ReviewItem, UserAnswer, UserProgress } from "@/types";
+import type {
+  AppState,
+  ReviewItem,
+  UserAnswer,
+  UserProgress,
+  WeeklyPlan,
+} from "@/types";
 
 // ============================================================================
 // AppState のマージ（複数端末の同期用・純粋関数）
@@ -26,6 +32,27 @@ function mergeReviewQueue(a: ReviewItem[], b: ReviewItem[]): ReviewItem[] {
   return [...byTopic.values()];
 }
 
+/**
+ * 今週のタスクリストをマージする。
+ * より新しい週（weekStartDate が後）を採用し、同じ週なら topicIds/reviewIds を
+ * 和集合にする（両端末で別々に確定したリストを取りこぼさない）。
+ */
+function mergeWeeklyPlan(
+  a: WeeklyPlan | null | undefined,
+  b: WeeklyPlan | null | undefined,
+): WeeklyPlan | null {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  if (a.weekStartDate === b.weekStartDate) {
+    return {
+      weekStartDate: a.weekStartDate,
+      topicIds: [...new Set([...a.topicIds, ...b.topicIds])],
+      reviewIds: [...new Set([...a.reviewIds, ...b.reviewIds])],
+    };
+  }
+  return a.weekStartDate > b.weekStartDate ? a : b;
+}
+
 /** 2つの進捗をマージする（どちらの端末で進めた分も失わない）。 */
 export function mergeProgress(a: UserProgress, b: UserProgress): UserProgress {
   // 連続日数と最終学習日は対で意味を持つため、最後に学習した側を採用する。
@@ -47,6 +74,7 @@ export function mergeProgress(a: UserProgress, b: UserProgress): UserProgress {
     completedTopics: [...new Set([...a.completedTopics, ...b.completedTopics])],
     topicMastery,
     reviewQueue: mergeReviewQueue(a.reviewQueue, b.reviewQueue),
+    weeklyPlan: mergeWeeklyPlan(a.weeklyPlan, b.weeklyPlan),
     // 旧版互換フィールドも「進んでいる方」を残す。
     currentDay: Math.max(a.currentDay ?? 1, b.currentDay ?? 1),
     completedDays: [...new Set([...(a.completedDays ?? []), ...(b.completedDays ?? [])])].sort(
