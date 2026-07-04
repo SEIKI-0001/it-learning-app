@@ -32,6 +32,7 @@ export type UserProfile = {
 
   // --- ITパスポート学習コーチの新フィールド ---
   examDate?: string; // 試験予定日(ISO "YYYY-MM-DD")。未定なら undefined。
+  planStartDate?: string; // 学習開始日(ISO "YYYY-MM-DD")。ロードマップの経過日数の基点。
   weekdayMinutes?: number; // 平日の学習可能時間(分)
   holidayMinutes?: number; // 休日の学習可能時間(分)
   weakFields?: TopicField[]; // 苦手分野(3分野から複数可)
@@ -49,6 +50,17 @@ export type ReviewItem = {
   reason: string; // "間違えた" | "苦手分野" | "復習期限" など
 };
 
+/**
+ * 今週のタスクリスト（スナップショット）。
+ * 週の途中で内容が入れ替わらないよう、週初め（月曜）に一度確定して保存する。
+ * チェック状態は保存せず、completedTopics / 復習状況から都度導出する。
+ */
+export type WeeklyPlan = {
+  weekStartDate: string; // その週の月曜(ISO "YYYY-MM-DD"・ローカル)
+  topicIds: string[]; // 今週進めたい新規学習トピック
+  reviewIds: string[]; // 今週こなしたい復習トピック
+};
+
 export type UserProgress = {
   level: number;
   exp: number;
@@ -60,6 +72,7 @@ export type UserProgress = {
   completedTopics: string[]; // 学習完了したトピックid
   topicMastery: Record<string, number>; // topicId → 習熟度(0〜100)
   reviewQueue: ReviewItem[]; // 復習対象
+  weeklyPlan?: WeeklyPlan | null; // 今週のタスクリスト（週初めに確定・端末間同期）
 
   // --- 旧版からの互換フィールド(新ロジックでは未使用) ---
   currentDay: number; // 旧: 1〜7。互換のため残すが進行には使わない。

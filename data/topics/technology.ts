@@ -230,6 +230,17 @@ const coreTechnologyTopics: Topic[] = [
         "DNS = 文字の名前を IPアドレスに変換する電話帳役",
         "接続の前に必ず名前解決（DNS）が行われる",
       ],
+      diagram: {
+        type: "flow",
+        title: "ページが表示されるまでの流れ",
+        direction: "vertical",
+        steps: [
+          { label: "名前を入力", description: "ブラウザにドメイン名（example.com）を入れる" },
+          { label: "DNSに問い合わせ", description: "この名前のIPアドレスは？" },
+          { label: "IPアドレスが返る", description: "番号の住所を受け取る" },
+          { label: "サーバへ接続", description: "IPアドレスを使って相手に届く" },
+        ],
+      },
     },
 
     reviewPrompt: {
@@ -389,6 +400,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["CPU", "メモリ", "ストレージ", "主記憶装置", "補助記憶装置"],
+    detail:
+      "コンピュータの部品は「処理する・一時的に広げる・ずっと保存する」の3つの役割に分けると整理できます。CPUは計算や判断を行う頭脳、メモリ（主記憶）はいま使うデータを広げておく作業机、ストレージ（補助記憶。SSDやHDD）は電源を切っても消えない保存場所です。よくある間違いは、メモリとストレージをどちらも「保存場所」とひとくくりにすることです。メモリは電源を切ると内容が消える一時的な置き場、ストレージは写真やアプリを長く残す場所、と役割がはっきり違います。試験では「作業中のデータを一時的に置くのはどれか」のように3つの役割を入れかえた選択肢で問われるので、頭脳・作業机・引き出しのたとえとセットで覚えましょう。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "CPU・メモリ・ストレージの違い",
+      headers: ["項目", "CPU", "メモリ", "ストレージ"],
+      rows: [
+        { label: "役割", cells: ["計算・判断する", "作業中のデータを一時的に置く", "データを長く保存する"] },
+        { label: "たとえ", cells: ["頭脳", "作業机", "本棚・引き出し"] },
+        { label: "電源を切ると", cells: ["（保存はしない）", "内容が消える", "内容が残る"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > コンピュータシステム > コンピュータ構成要素",
     questions: [
       {
@@ -462,6 +485,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["OS", "ソフトウェア", "ハードウェア", "アプリケーション"],
+    detail:
+      "ハードウェアは手で触れる機械そのもの、ソフトウェアは機械に仕事をさせる命令（プログラム）の集まりです。ソフトウェアはさらに2種類に分かれます。文書作成やSNSなど目的の作業を行うのがアプリケーションソフト、その土台としてアプリと機械の間に立ち、画面表示・ファイル保存・メモリの割り当てなどを一手に引き受けるのがOS（基本ソフト）です。アプリはOSにお願いするだけで、機械を直接操作しません。だからこそ、どのアプリも同じやり方で保存や印刷ができます。試験では「OSの役割はどれか」「アプリケーションとOSの違い」が定番で、OS＝アプリと機械の間で全体を管理する基本ソフトウェア、と押さえれば選択肢を絞れます。",
+    explanationDiagram: {
+      type: "layers",
+      title: "3層の関係（上が利用者に近い）",
+      layers: [
+        { emoji: "📱", title: "アプリケーション", body: "SNS・文書作成など、目的の作業を行うソフト" },
+        { emoji: "⚙️", title: "OS（基本ソフト）", body: "アプリと機械の間に立ち、全体を管理する土台" },
+        { emoji: "🔩", title: "ハードウェア", body: "CPU・メモリ・画面など、目に見える機械本体" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > コンピュータシステム > ソフトウェア",
     questions: [
       {
@@ -534,6 +568,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["LAN", "WAN", "ネットワーク"],
+    detail:
+      "LANは家庭・学校・会社のフロアといった限られた敷地内をつなぐネットワーク、WANは離れた拠点どうしを広い範囲でつなぐネットワークです。見分けるコツは、範囲に加えて「誰が用意するか」も意識することです。LANは自分たち（家庭や会社）で機器を用意して管理し、WANは通信事業者の回線を借りて拠点間を結びます。なお、Wi-FiはLANを無線でつないだもの（無線LAN）なのでLANの仲間です。また、インターネットは世界中のネットワークがつながった巨大なWANの代表例ですが、WAN＝インターネットだけではなく、本社と支社を専用回線で結ぶのもWANです。試験では「オフィス内のPCをつなぐ」「本社と支社を結ぶ」といった事例からLANかWANかを選ばせる形で問われます。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "LANとWANの見分け方",
+      headers: ["項目", "LAN", "WAN"],
+      rows: [
+        { label: "範囲", cells: ["建物・敷地内など近い範囲", "離れた拠点どうし・広い範囲"] },
+        { label: "例", cells: ["家のWi-Fi、オフィス内のネットワーク", "本社と支社を結ぶ回線、インターネット"] },
+        { label: "誰が用意する", cells: ["自分たち（家庭・会社）", "通信事業者の回線を利用"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > ネットワーク",
     questions: [
       {
@@ -607,6 +653,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["インターネット", "プロトコル", "TCP/IP"],
+    detail:
+      "インターネットは、世界中のネットワークどうしをつないだ「ネットワークの集まり」です。国も機器のメーカーもばらばらな相手と通信できるのは、全員が同じ約束事＝プロトコルに従っているからです。プロトコルは機器の名前ではなく「通信のルール（手順や形式の取り決め）」である点に注意しましょう。代表例として、Webページのやり取りに使うHTTP、インターネット全体の共通の土台となるTCP/IP、メール送信のSMTPなどがあります。また「インターネット」と「Web」は同じ意味ではなく、Web（ホームページのしくみ）はインターネットの上で動くサービスの1つです。試験では「通信を成立させるための約束事を何と呼ぶか」「HTTPは何のためのプロトコルか」といった形で問われます。",
+    explanationDiagram: {
+      type: "cards",
+      title: "代表的なプロトコル",
+      items: [
+        { emoji: "🌐", title: "TCP/IP", body: "インターネット全体を支える共通ルールの土台。" },
+        { emoji: "📄", title: "HTTP・HTTPS", body: "Webページのデータをやり取りするルール。" },
+        { emoji: "✉️", title: "SMTP・POP・IMAP", body: "メールの送信・受信のルール。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > ネットワーク",
     questions: [
       {
@@ -684,6 +741,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["HTTP", "HTTPS", "SSL/TLS"],
+    detail:
+      "HTTPは、ブラウザとWebサーバがページのデータをやり取りするときの通信ルールです。ただしHTTPの通信は、はがきのように中身がそのまま流れるため、途中で盗み見られるおそれがあります。そこでHTTPに暗号化（SSL/TLS）を組み合わせ、封筒に入れた手紙のように中身を読めなくしたものがHTTPSです。URLがhttpsで始まり鍵マークが表示されていれば、通信は暗号化されています。注意したいのは、SはSecure（安全）の意味で速度とは無関係なこと、そして「暗号化されている＝相手が信頼できる会社」とは限らないことです（詐欺サイトもHTTPSを使えます）。試験では「HTTPSはHTTPに何を加えたものか」＝通信の暗号化、という点が問われます。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "HTTPとHTTPSの違い",
+      headers: ["項目", "HTTP", "HTTPS"],
+      rows: [
+        { label: "通信の中身", cells: ["そのまま流れる（盗聴の危険）", "暗号化されて流れる"] },
+        { label: "たとえ", cells: ["はがき", "封筒に入れた手紙"] },
+        { label: "使う場面", cells: ["一般の閲覧", "ログイン・買い物など個人情報の入力"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > ネットワーク",
     questions: [
       {
@@ -756,6 +825,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["データベース", "SQL", "SELECT", "テーブル"],
+    detail:
+      "データベースは、大量のデータをあとから探しやすい形で保存しておくしくみです。リレーショナルデータベースでは、データをテーブルという表で管理し、横1行が1件分のデータ（行）、縦の並びが項目（列）です。行と列を逆に覚えないよう注意しましょう。SQLは、このデータベースに指示を出すための言語であって、データそのものではありません。代表的な命令は、検索のSELECT、追加のINSERT、更新のUPDATE、削除のDELETEの4つです。試験では「データを検索するSQLはどれか」「行と列は何を表すか」のように、用語と役割の対応が問われます。",
+    explanationDiagram: {
+      type: "cards",
+      title: "SQLの代表的な4つの命令",
+      items: [
+        { emoji: "🔍", title: "SELECT（検索）", body: "条件に合うデータを取り出す。いちばんよく使う。" },
+        { emoji: "➕", title: "INSERT（追加）", body: "新しいデータ（行）を表に入れる。" },
+        { emoji: "✏️", title: "UPDATE（更新）", body: "すでにあるデータを書きかえる。" },
+        { emoji: "🗑️", title: "DELETE（削除）", body: "データを消す。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > データベース",
     questions: [
       {
@@ -829,6 +910,36 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["DBMS", "主キー", "外部キー", "リレーション"],
+    detail:
+      "DBMSは、データベースへの保存・検索・同時利用の調整などを引き受ける管理ソフトウェアです。主キーは、テーブルの中で1行を確実に見分けるための項目で、同じ値の重複や空欄は許されません（学生番号のイメージ）。外部キーは、別のテーブルの主キーを参照する項目です。「外部の会社」とは関係なく、「他の表とつなぐためのキー」という意味です。たとえば成績表に学生番号を載せておけば、名簿とつないで「この成績は誰のものか」をたどれます。存在しない学生番号を成績表に書けないように保つ性質を参照整合性と呼びます。試験では、主キーの「一意で空欄不可」という性質と、外部キーが「他の表の主キーを参照する」ことがくり返し問われます。",
+    explanationDiagram: {
+      type: "tableRelation",
+      title: "主キーと外部キーのつながり",
+      tables: [
+        {
+          id: "roster",
+          name: "名簿",
+          caption: "学生番号が主キー",
+          columns: [
+            { name: "学生番号", keyType: "primary" },
+            { name: "氏名", keyType: "normal" },
+          ],
+        },
+        {
+          id: "grades",
+          name: "成績表",
+          caption: "学生番号は名簿を参照する外部キー",
+          columns: [
+            { name: "学生番号", keyType: "foreign", references: "名簿の主キー" },
+            { name: "科目", keyType: "normal" },
+            { name: "点数", keyType: "normal" },
+          ],
+        },
+      ],
+      relations: [
+        { fromTable: "grades", fromColumn: "学生番号", toTable: "roster", toColumn: "学生番号", label: "参照" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > データベース",
     questions: [
       {
@@ -901,6 +1012,19 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["正規化", "データの重複", "冗長性"],
+    detail:
+      "正規化は、1つの大きな表にすべてを書き込むのをやめ、重複が起きないように表を分けて整理する設計の考え方です。たとえば注文の表に顧客の住所を毎回書いていると、引っ越しのたびに何十行も直す必要があり、直し忘れると「同じ人なのに住所が2種類ある」という矛盾（不整合）が生まれます。顧客の情報は顧客表に1回だけ書き、注文表からは顧客番号（キー）で参照すれば、直すのは1か所で済みます。正規化の目的は「重複をなくして、更新時の矛盾を防ぐ」ことであり、暗号化のようなセキュリティ技術ではありません。また、表を分けるほど検索が速くなるとも限らない点に注意しましょう。試験では「正規化の目的はどれか」＝データの重複を排除し不整合を防ぐ、が定番です。",
+    explanationDiagram: {
+      type: "flow",
+      title: "正規化の流れ",
+      direction: "vertical",
+      steps: [
+        { label: "1つの大きな表", description: "同じ情報をあちこちに重複して記入している" },
+        { label: "重複を見つける", description: "顧客の住所などが何度も出てくる" },
+        { label: "表を分ける", description: "顧客は顧客表、注文は注文表に分ける" },
+        { label: "キーでつなぐ", description: "注文表からは顧客番号で参照する" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > データベース",
     questions: [
       {
@@ -974,6 +1098,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["暗号化", "復号", "ハッシュ化", "ハッシュ関数"],
+    detail:
+      "暗号化とハッシュ化は「読めなくする」点は似ていますが、目的も性質も違います。暗号化は、鍵を使えば元に戻せる（復号できる）変換で、通信や保存データの中身を秘密にするために使います。一方ハッシュ化は、データから固定長の短い値（ハッシュ値）を計算する処理で、原則として元には戻せません。同じデータからは必ず同じハッシュ値が得られ、少しでも変わるとまったく別の値になるため、「改ざんされていないか」の確認に使えます。パスワードの保存にハッシュ化が使われるのは、万一漏えいしても元のパスワードが分からないようにするためです。試験では「元に戻せるのはどちらか」「パスワード保存に使うのはどちらか」という違いが問われます。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "暗号化とハッシュ化の違い",
+      headers: ["項目", "暗号化", "ハッシュ化"],
+      rows: [
+        { label: "元に戻せるか", cells: ["戻せる（鍵で復号）", "原則戻せない"] },
+        { label: "目的", cells: ["中身を秘密にする", "改ざん検知・パスワード保存"] },
+        { label: "たとえ", cells: ["鍵付きの箱", "データの指紋"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ",
     questions: [
       {
@@ -1051,6 +1187,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["共通鍵暗号方式", "共通鍵", "鍵配送"],
+    detail:
+      "共通鍵暗号方式は、閉める（暗号化）のも開ける（復号）のも同じ1つの鍵を使う方式です。しくみが単純で処理が速いため、大量のデータの暗号化に向いています。弱点は、通信相手と同じ鍵を持ち合う必要があることです。鍵そのものをネットワークで送れば途中で盗まれるおそれがあり、これを鍵配送問題と呼びます。また、相手が増えるほど相手ごとの鍵が必要になり、管理が大変になります。実際の通信（HTTPSなど）では、公開鍵暗号方式で共通鍵を安全に渡し、その後の大量データは高速な共通鍵方式で暗号化する、いいとこ取りのハイブリッド方式が使われています。試験では「共通鍵方式の特徴＝同じ鍵・高速・鍵配送が課題」と、公開鍵方式との対比が問われます。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "共通鍵方式と公開鍵方式",
+      headers: ["項目", "共通鍵暗号方式", "公開鍵暗号方式"],
+      rows: [
+        { label: "使う鍵", cells: ["暗号化と復号で同じ鍵", "公開鍵と秘密鍵のペア"] },
+        { label: "処理速度", cells: ["速い（大量データ向き）", "遅い"] },
+        { label: "課題", cells: ["鍵を安全に渡す（鍵配送問題）", "処理が重い"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ",
     questions: [
       {
@@ -1127,6 +1275,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["公開鍵暗号方式", "公開鍵", "秘密鍵", "デジタル署名"],
+    detail:
+      "公開鍵暗号方式では、ペアになった2つの鍵を使います。公開鍵は誰に渡してもよい鍵、秘密鍵は本人だけが厳重に守る鍵です。秘密のメッセージを送りたい人は、受信者の公開鍵で暗号化します。それを元に戻せるのは、ペアの秘密鍵を持つ受信者だけです。郵便受けにたとえると、投函口（公開鍵）は誰でも使えますが、取り出せるのは鍵（秘密鍵）を持つ持ち主だけ、という関係です。共通鍵方式と違って鍵配送問題が起きない一方、処理は遅めです。注意点は「秘密鍵は絶対に配らない」こと、そして暗号化に使うのは「受信者の公開鍵」であることです。試験では、誰の・どちらの鍵で暗号化し復号するか、の組合せが最頻出です。",
+    explanationDiagram: {
+      type: "flow",
+      title: "公開鍵暗号での送信の流れ",
+      direction: "vertical",
+      steps: [
+        { label: "送信者が暗号化", description: "受信者の「公開鍵」で暗号化する" },
+        { label: "暗号文を送る", description: "途中で盗み見られても読めない" },
+        { label: "受信者が復号", description: "自分だけが持つ「秘密鍵」で元に戻す" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ",
     questions: [
       {
@@ -1199,6 +1359,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["認証", "認可", "多要素認証", "二要素認証"],
+    detail:
+      "認証は「操作しているのが本人かどうか」を確かめること、認可は「その人に何を許すか」を決めることです。順番は必ず認証が先で、本人だと確認できてはじめて権限の判断ができます。ログインはできたのに管理者ページに入れないのは、認証は通ったが認可されていない状態です。多要素認証は、知識（パスワードなど）・所持（スマホやICカード）・生体（指紋や顔）という異なる種類の要素を2つ以上組み合わせる本人確認です。パスワードを2つ使っても同じ「知識」なので多要素にはなりません。パスワードが漏れても、スマホや指紋がなければ突破されないのがねらいです。試験では「認証と認可の違い」「多要素と呼べる組合せはどれか」が問われます。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "認証と認可の違い",
+      headers: ["項目", "認証", "認可"],
+      rows: [
+        { label: "確かめること", cells: ["あなたは誰か（本人確認）", "何をしてよいか（権限）"] },
+        { label: "例", cells: ["IDとパスワードでログイン", "管理者だけ設定画面に入れる"] },
+        { label: "順番", cells: ["先に行う", "認証のあとに行う"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ",
     questions: [
       {
@@ -1271,6 +1443,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["マルウェア", "フィッシング", "ランサムウェア"],
+    detail:
+      "マルウェアは、ウイルス・ワーム・トロイの木馬など「悪さをするソフトウェア」全体の総称です。フィッシングはソフトではなく「手口」で、銀行や宅配業者をかたる偽メール・偽サイトに誘い込み、IDやパスワードを入力させてだまし取ります。ランサムウェアはマルウェアの一種で、感染するとファイルを暗号化して使えなくし、「元に戻してほしければ金銭（身代金＝ランサム）を払え」と要求します。バックアップを別の場所に取っておくことが有効な備えです。試験では手口の説明文から名称を選ぶ問題が定番なので、「総称＝マルウェア」「だまして入力させる＝フィッシング」「暗号化して身代金＝ランサムウェア」と特徴で結びつけましょう。",
+    explanationDiagram: {
+      type: "cards",
+      title: "3つの用語の整理",
+      items: [
+        { emoji: "😈", title: "マルウェア", body: "悪さをするソフトの総称。ウイルス・ワームなどを含む。" },
+        { emoji: "🎣", title: "フィッシング", body: "偽メール・偽サイトでIDやパスワードをだまし取る手口。" },
+        { emoji: "💰", title: "ランサムウェア", body: "ファイルを暗号化し、身代金を要求するマルウェア。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ",
     questions: [
       {
@@ -1343,6 +1526,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["ファイアウォール", "VPN", "ゼロトラスト"],
+    detail:
+      "ファイアウォールは、ネットワークの出入口に立つ門番です。あらかじめ決めたルールに従い、許可した通信だけを通して不要な通信を遮断します。VPNは、インターネットのような公共の道の上に暗号化された専用トンネルを作る技術で、外出先から社内ネットワークへ安全につなぐときに使います。ただし「VPNならすべて安全」ではなく、守られるのは通信の経路だけです。ゼロトラストは特定の製品ではなく、「社内からのアクセスでも自動的には信用せず、アクセスのたびに本人と端末を確認する」という考え方です。在宅勤務やクラウド利用が増え、「社内＝安全・社外＝危険」という境界型の前提が崩れたことから広まりました。試験では3つの目的と考え方の違いが問われます。",
+    explanationDiagram: {
+      type: "cards",
+      title: "3つの対策の整理",
+      items: [
+        { emoji: "🛡️", title: "ファイアウォール", body: "出入口の門番。許可した通信だけを通す。" },
+        { emoji: "🚇", title: "VPN", body: "暗号化された専用トンネルで安全に接続する。" },
+        { emoji: "🔍", title: "ゼロトラスト", body: "社内外を問わず、アクセスのたびに確認する考え方。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ",
     questions: [
       {
@@ -1419,6 +1613,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["クラウド", "SaaS", "PaaS", "IaaS"],
+    detail:
+      "クラウドサービスは、自前でサーバなどの機械を持たず、インターネット越しに借りて使う形態です。どこまでを事業者が用意してくれるかで3つに分かれます。SaaSは完成したアプリまで提供され、利用者はただ使うだけです（Webメールやオンラインストレージ）。PaaSはアプリを動かす土台（OSや開発環境）までが提供され、利用者は自分の作ったアプリを載せて動かします。IaaSはサーバやネットワークなどの基盤だけを借り、OSから上は利用者が用意します。頭文字（Software／Platform／Infrastructure）を思い出せば、PaaSとIaaSの取り違えを防げます。試験では「メールサービスを利用＝SaaS」「仮想サーバを借りる＝IaaS」のように、事例からモデルを選ばせる問題が定番です。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "SaaS・PaaS・IaaSの提供範囲",
+      headers: ["項目", "SaaS", "PaaS", "IaaS"],
+      rows: [
+        { label: "借りる範囲", cells: ["完成したアプリまで", "アプリを動かす土台まで", "サーバなどの基盤だけ"] },
+        { label: "利用者がすること", cells: ["使うだけ", "自分のアプリを載せる", "OSから上を用意する"] },
+        { label: "例", cells: ["Webメール", "アプリの開発・実行環境", "仮想サーバ"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > システム構成要素",
     questions: [
       {
@@ -1491,6 +1697,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["AI", "機械学習", "教師あり学習", "生成AI"],
+    detail:
+      "AI（人工知能）は、判断や予測など人の知的な作業をコンピュータで行う技術の総称です。その中の代表的な実現方法が機械学習で、人がルールを1つずつ書く代わりに、大量のデータから特徴やパターンをコンピュータ自身に学ばせます。機械学習の中でも、人間の脳のしくみを参考にした多層の方法で学ぶのがディープラーニング（深層学習）、学んだ内容をもとに文章や画像を新しく作り出すのが生成AIです。つまり「AI⊃機械学習⊃深層学習・生成AI」という入れ子の関係です。学習に使うデータが偏っていれば結果も偏るため、AIの答えがつねに正しいとは限りません。試験では、用語どうしの包含関係と、教師あり・教師なし・強化学習の違いが問われます。",
+    explanationDiagram: {
+      type: "nested",
+      title: "AIと機械学習の包含関係",
+      layers: [
+        { label: "AI（人工知能）", body: "知的な処理を行う技術の総称" },
+        { label: "機械学習", body: "データからパターンを学ぶ方法" },
+        { label: "深層学習・生成AI", body: "機械学習の発展形" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 基礎理論 > AI",
     questions: [
       {
@@ -1563,6 +1780,19 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["IoT", "センサー", "スマート家電"],
+    detail:
+      "IoT（Internet of Things）は、パソコンやスマホだけでなく、家電・車・工場の機械といった「モノ」がインターネットにつながるしくみです。基本の流れは、①センサーがモノの状態（温度・位置など）を測る、②ネットワークでデータを送る、③クラウドに集めて分析する、④結果に応じてモノを遠隔操作・自動制御する、という一周です。エアコンの遠隔操作、工場設備の故障予知、農業の水やり自動化などが活用例です。一方で、ネットにつながる機器が増えるぶん、乗っ取りや情報漏えいの入口も増えるため、初期パスワードの変更やソフトウェア更新などの対策が欠かせません。試験では、IoTの活用例の判別と、セキュリティ対策の必要性が問われます。",
+    explanationDiagram: {
+      type: "flow",
+      title: "IoTの基本の流れ",
+      direction: "vertical",
+      steps: [
+        { label: "センサーで測る", description: "温度・位置などモノの状態を集める" },
+        { label: "ネットワークで送る", description: "測ったデータをインターネット経由で送信" },
+        { label: "クラウドで分析", description: "データを集めて傾向をつかむ" },
+        { label: "遠隔操作・自動制御", description: "結果に応じてモノを動かす" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > IoT",
     questions: [
       {
@@ -1635,6 +1865,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["アルゴリズム", "フローチャート", "分岐", "繰り返し"],
+    detail:
+      "アルゴリズムは、目的を達成するための手順を、誰がやっても同じ結果になるように決めたものです。特定のプログラミング言語のことではなく、レシピのような「手順そのもの」を指します。どんなに複雑な処理も、上から順に実行する「順次」、条件によって道を選ぶ「分岐」、同じ処理をくり返す「繰り返し」の3つの組合せで書けます。フローチャートはこの手順を図にしたもので、長方形＝処理、ひし形＝判断（分岐）、平行四辺形＝入出力、と記号ごとに意味が決まっています。試験では、フローチャートを1歩ずつたどって「最後に変数はいくつになるか」を答えるトレース問題が定番です。あせらず、値の変化をメモに書きながら追うのがコツです。",
+    explanationDiagram: {
+      type: "cards",
+      title: "3つの基本構造",
+      items: [
+        { emoji: "⬇️", title: "順次", body: "上から順番に実行する。" },
+        { emoji: "🔀", title: "分岐", body: "条件によって道を選ぶ（ひし形の記号）。" },
+        { emoji: "🔁", title: "繰り返し", body: "条件を満たす間、同じ処理をくり返す。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 基礎理論 > アルゴリズムとプログラミング",
     questions: [
       {
@@ -1707,6 +1948,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["変数", "条件分岐", "繰り返し", "疑似言語"],
+    detail:
+      "プログラムは、コンピュータにしてほしい手順を順番に書き並べたものです。基本部品は3つあります。変数は値に名前を付けて入れておく箱で、中身はあとから何度でも入れかえられます（固定値ではありません）。「x ← 5」のような矢印は「等しい」ではなく「右の値を左の箱に入れる（代入）」という意味です。条件分岐は「もし雨なら傘を持つ」のような場合分け、繰り返しは同じ処理を何度も行うしくみです。繰り返しでは「いつ終わるか（終了条件）」を必ず確認しましょう。終了条件に届かないと無限ループになります。試験では、短い疑似言語のプログラムをたどって変数の最終値や繰り返し回数を答える問題が出ます。1行ずつ、箱の中身をメモしながら読むのが確実です。",
+    explanationDiagram: {
+      type: "cards",
+      title: "プログラムの3つの基本部品",
+      items: [
+        { emoji: "📦", title: "変数", body: "値に名前を付けて入れる箱。中身は入れかえられる。" },
+        { emoji: "🔀", title: "条件分岐", body: "もし〜なら…、そうでなければ…と場合分けする。" },
+        { emoji: "🔁", title: "繰り返し", body: "終了条件を満たすまで同じ処理を行う。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 基礎理論 > アルゴリズムとプログラミング",
     questions: [
       {
@@ -1779,6 +2031,20 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["データ活用", "BI", "データ分析", "データマイニング"],
+    detail:
+      "データ活用で大切なのは、集めることではなく「判断や行動につなげる」ことです。基本の流れは、①何のために分析するか目的を決める、②必要なデータを集める、③グラフなどで見やすく整理する（見える化）、④傾向や問題に気づく、⑤業務の改善に活かす、の5段階です。これを支える道具として、社内のデータをグラフやダッシュボードにまとめるBIツール、大量のデータから規則性を見つけ出すデータマイニングがあります。また、データが間違っていたり偏っていたりすれば、分析結果も信用できません（データ品質の重要性）。「たくさん集めれば正しい」とは限らない点に注意しましょう。試験では、目的を先に決める姿勢と、BI・データマイニングの意味が問われます。",
+    explanationDiagram: {
+      type: "flow",
+      title: "データ活用の5段階",
+      direction: "vertical",
+      steps: [
+        { label: "目的を決める", description: "何を知りたいか・何を良くしたいか" },
+        { label: "データを集める", description: "目的に必要なデータだけを集める" },
+        { label: "見える化する", description: "グラフや表で整理する（BIツール）" },
+        { label: "気づく", description: "傾向や問題を読み取る" },
+        { label: "改善につなげる", description: "判断や行動に活かす" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > データ活用",
     questions: [
       {
@@ -1851,6 +2117,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["API", "Web API", "システム連携"],
+    detail:
+      "APIは、あるソフトウェアの機能やデータを、別のソフトウェアから呼び出して使うための「決まった窓口」です。レストランにたとえると、客（自分のアプリ）は厨房（相手のサービス）に入らず、注文口（API）から決まった形式で注文し、料理（結果）を受け取ります。地図アプリの地図を自社アプリに表示したり、決済サービスと連携したりできるのは、各サービスがAPIを公開しているからです。APIは画面デザインのことではなく、内部の作りをすべて公開するものでもありません。窓口の使い方だけを公開し、中身は隠したまま機能を提供できるのが利点です。試験では「既存サービスと連携して開発を効率化する」といったシステム連携の文脈でAPIが問われます。",
+    explanationDiagram: {
+      type: "flow",
+      title: "API連携の流れ",
+      direction: "vertical",
+      steps: [
+        { label: "リクエスト", description: "アプリが決まった形式でAPIに依頼する" },
+        { label: "処理", description: "サービス側が中身は隠したまま処理する" },
+        { label: "レスポンス", description: "結果だけがアプリに返ってくる" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > ソフトウェア",
     questions: [
       {
@@ -1926,6 +2204,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["稼働率", "MTBF MTTR", "直列 並列 稼働率"],
+    detail:
+      "稼働率は、システムが正常に使えている時間の割合です。計算には2つの平均値を使います。MTBF（平均故障間隔）は「故障せずに動き続ける平均時間」、MTTR（平均修理時間）は「故障してから直るまでの平均時間」です。BはBetween（故障と故障の間＝動いている時間）、RはRepair（修理）と覚えると取り違えません。稼働率はMTBF÷（MTBF＋MTTR）、つまり「動いていた時間÷全体の時間」です。複数の装置をつなぐ場合、直列（全部動いてはじめて動く）では稼働率の掛け算になり全体は下がり、並列（どれか1つ動けばよい＝冗長化）では上がります。試験では、稼働率の計算問題と「直列で下がる・並列で上がる」の理解が問われます。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "直列と並列（各装置の稼働率0.9の場合）",
+      headers: ["項目", "直列接続", "並列接続（冗長化）"],
+      rows: [
+        { label: "動く条件", cells: ["全部の装置が動いてはじめて動く", "どれか1つでも動けばよい"] },
+        { label: "全体の稼働率", cells: ["単体より下がる", "単体より上がる"] },
+        { label: "計算例", cells: ["0.9 × 0.9 ＝ 0.81", "1 −（0.1 × 0.1）＝ 0.99"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > システム構成要素（信頼性）",
     questions: [
       {
@@ -1996,6 +2286,19 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["論理演算", "真理値表", "AND OR NOT XOR"],
+    detail:
+      "論理演算は、真（1）と偽（0）の2つの値だけで行う計算です。ANDは「宿題も掃除も終わったらゲームOK」のように両方が1のときだけ1、ORは「電車かバスのどちらかが来れば行ける」のようにどちらか一方でも1なら1です。NOTは0と1をひっくり返します。間違えやすいのがXOR（排他的論理和）で、「2つの値が違うとき1」になります。両方1のとき、ORは1ですがXORは0になる、という違いに注意しましょう。入力の組合せごとの結果を一覧にした表が真理値表です。試験では、真理値表を読んでどの演算か答える問題や、条件を論理演算で表す問題が出ます。迷ったら入力（0,0）（0,1）（1,0）（1,1）の4通りを書き出すのが確実です。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "4つの論理演算のまとめ",
+      headers: ["演算", "意味", "出力が1になる条件"],
+      rows: [
+        { label: "AND", cells: ["両方成り立つ", "両方とも1のときだけ"] },
+        { label: "OR", cells: ["どちらかが成り立つ", "少なくとも一方が1"] },
+        { label: "NOT", cells: ["反転する", "入力が0のとき"] },
+        { label: "XOR", cells: ["2つが異なる", "片方だけ1（両方1なら0）"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 基礎理論 > 離散数学（論理演算）",
     questions: [
       {
@@ -2066,6 +2369,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["表計算", "相対参照 絶対参照", "セル参照"],
+    detail:
+      "表計算の式は、コピーして使い回すことが前提です。「＝A1×B1」のような普通の書き方は相対参照で、「自分から見てどの位置のセルか」という相対的な指示です。式を1つ下のセルにコピーすると、参照も自動的に1つ下（A2×B2）にずれます。便利な半面、税率のように全員が同じセルを見てほしい場合には困ります。そこで「＝A1×$E$1」のように$を付けるのが絶対参照で、コピーしても$E$1は動きません。$A1（列だけ固定）やA$1（行だけ固定）のように片方だけ固定する複合参照もあります。試験では「この式を下のセルにコピーすると式はどうなるか」という形で問われるので、「$が付いた部分は動かず、付いていない部分はコピーした方向にずれる」と覚えましょう。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "参照の3つの書き方",
+      headers: ["書き方", "名前", "コピーしたとき"],
+      rows: [
+        { label: "A1", cells: ["相対参照", "コピーした方向に参照がずれる"] },
+        { label: "$A$1", cells: ["絶対参照", "どこへコピーしても動かない"] },
+        { label: "$A1・A$1", cells: ["複合参照", "$が付いた列・行だけ固定される"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > ソフトウェア（オフィスツール）",
     questions: [
       {
@@ -2138,6 +2453,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["データ構造", "スタック キュー", "LIFO FIFO"],
+    detail:
+      "データ構造は、データを取り出しやすいように並べて管理する「入れ物の形」です。代表がスタックとキューで、違いは取り出す順番だけです。スタックは机に積んだ本のように、最後に入れたものを最初に取り出します（LIFO＝後入れ先出し）。入れる操作をプッシュ、取り出す操作をポップと呼びます。キューはレジの行列のように、最初に入れたものから順に取り出します（FIFO＝先入れ先出し）。ほかに、番号で管理する配列、要素をつなぎ合わせるリスト、枝分かれで階層を表す木構造があります。試験では「A、B、Cの順に入れて2回取り出すと何が出るか」のような具体的な出し入れの問題が定番です。積んだ本と行列のイメージで確実に判断できます。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "スタックとキューの違い",
+      headers: ["項目", "スタック", "キュー"],
+      rows: [
+        { label: "取り出す順", cells: ["最後に入れたものが先（LIFO）", "先に入れたものが先（FIFO）"] },
+        { label: "たとえ", cells: ["机に積んだ本", "レジの行列"] },
+        { label: "用途の例", cells: ["直前の操作を戻す（元に戻す機能）", "印刷の待ち行列"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > アルゴリズムとプログラミング > データ構造",
     questions: [
       {
@@ -2209,6 +2536,17 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["トランザクション", "コミット ロールバック", "排他制御 ACID"],
+    detail:
+      "トランザクションは、「途中まで」では意味をなさない一連の処理を、1つのまとまりとして扱うしくみです。代表例が銀行振込で、「Aの口座から引く」と「Bの口座に足す」は必ずセットで成立しなければなりません。すべて成功したら結果を確定するのがコミット、途中で失敗したら開始前の状態まで巻き戻すのがロールバックです。コミット＝確定、ロールバック＝巻き戻し、と方向を取り違えないようにしましょう。また、複数の人が同じデータを同時に更新すると矛盾が起きるため、処理中はロックをかけて他の人を待たせる排他制御を行います。トランザクションが備えるべき性質は、原子性・一貫性・独立性・耐久性の頭文字でACID特性と呼ばれます。試験ではコミット／ロールバックの意味と排他制御の目的が問われます。",
+    explanationDiagram: {
+      type: "cards",
+      title: "トランザクションの重要用語",
+      items: [
+        { emoji: "✅", title: "コミット", body: "すべて成功したら結果を確定する。" },
+        { emoji: "⏪", title: "ロールバック", body: "失敗したら開始前の状態に巻き戻す。" },
+        { emoji: "🔒", title: "排他制御（ロック）", body: "同時更新の矛盾を防ぐため、処理中は他を待たせる。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > データベース（トランザクション処理）",
     questions: [
       {
@@ -2279,6 +2617,20 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["DoS DDoS", "SQLインジェクション XSS", "標的型攻撃 ソーシャルエンジニアリング"],
+    detail:
+      "サイバー攻撃は「どこを・どうやって狙うか」で整理すると覚えやすくなります。DoS攻撃は大量のアクセスを送りつけてサービスを止める攻撃で、多数の機器から一斉に行うとDDoS攻撃です。SQLインジェクションは、Webサイトの入力欄にデータベースへの不正な命令を紛れ込ませ、情報を盗んだり書きかえたりします。XSS（クロスサイトスクリプティング）は、Webページに罠のスクリプトを仕込み、閲覧した他人のブラウザ上で実行させる攻撃です（狙いがデータベース側かブラウザ側かが、SQLインジェクションとの違いです）。一方、技術ではなく人をだますのがソーシャルエンジニアリング（電話で聞き出す、肩越しにのぞくなど）で、特定の組織を狙った巧妙ななりすましメールで侵入するのが標的型攻撃です。試験は説明文から攻撃名を選ぶ形式が中心です。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "攻撃手口の早見表",
+      headers: ["攻撃", "狙い・手口"],
+      rows: [
+        { label: "DoS／DDoS", cells: ["大量アクセスでサービスを停止させる"] },
+        { label: "SQLインジェクション", cells: ["入力欄からデータベースへ不正な命令を送る"] },
+        { label: "XSS", cells: ["Webページに罠を仕込み、他人のブラウザで実行させる"] },
+        { label: "標的型攻撃", cells: ["特定の組織を狙う、なりすましメールなど"] },
+        { label: "ソーシャルエンジニアリング", cells: ["技術を使わず、人をだまして情報を得る"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ（攻撃手法）",
     questions: [
       {
@@ -2350,6 +2702,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "high",
     referenceKeywords: ["ディジタル署名", "認証局 電子証明書", "公開鍵基盤 PKI"],
+    detail:
+      "ディジタル署名は、「この文書は確かに本人が作り、途中で書きかえられていない」ことを証明する技術です。送信者は文書のハッシュ値（指紋）を自分の秘密鍵で暗号化して署名として添え、受信者は送信者の公開鍵でそれを検証します。秘密のメッセージを送る暗号化では「受信者の公開鍵で暗号化→受信者の秘密鍵で復号」なのに対し、署名は「送信者の秘密鍵で署名→送信者の公開鍵で検証」と、鍵の使い方がちょうど逆になるのが最大のポイントです。また、署名は本文を秘密にする機能ではありません（秘密にしたければ別途暗号化が必要です）。さらに「その公開鍵が本物か」を保証するのが認証局（CA）で、電子証明書を発行します。このしくみ全体をPKI（公開鍵基盤）と呼びます。試験では鍵の組合せと認証局の役割が最頻出です。",
+    explanationDiagram: {
+      type: "comparison",
+      title: "暗号化と署名では鍵の使い方が逆",
+      headers: ["項目", "暗号化（秘密を守る）", "ディジタル署名（本人確認）"],
+      rows: [
+        { label: "送る側が使う鍵", cells: ["受信者の公開鍵で暗号化", "送信者の秘密鍵で署名"] },
+        { label: "受け取る側が使う鍵", cells: ["受信者の秘密鍵で復号", "送信者の公開鍵で検証"] },
+        { label: "分かること", cells: ["中身を秘密にできる", "なりすまし防止・改ざん検知"] },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ（ディジタル署名・認証局）",
     questions: [
       {
@@ -2420,6 +2784,19 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "high",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["ISMS ISO27001", "リスクアセスメント", "リスク対応 回避 低減 移転 受容"],
+    detail:
+      "情報セキュリティは、機器やソフトの対策だけでなく「組織としての管理のしくみ」が重要です。その中心がリスクアセスメントで、①どんな危険があるか洗い出す（リスク特定）、②発生のしやすさと影響の大きさから危険度を見積もる（リスク分析）、③どれから対処するか優先順位を決める（リスク評価）、の順に進めます。対応は4分類から選びます。危険な行為自体をやめる「回避」、対策で被害を減らす「低減」、保険や委託で他者に負担してもらう「移転」、小さいリスクは承知の上で受け入れる「受容」です（移転＝保険、が取り違えやすいポイント）。こうした方針をまとめ、PDCAサイクルで回し続けるしくみがISMSで、国際規格はISO/IEC 27001です。一度作って終わりではなく継続的に見直す、という点も試験で問われます。",
+    explanationDiagram: {
+      type: "flow",
+      title: "リスクアセスメントから対応まで",
+      direction: "vertical",
+      steps: [
+        { label: "リスク特定", description: "どんな危険があるか洗い出す" },
+        { label: "リスク分析", description: "発生可能性 × 影響度で大きさを見積もる" },
+        { label: "リスク評価", description: "どれから対処するか優先順位を決める" },
+        { label: "リスク対応", description: "回避・低減・移転・受容から選ぶ" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > セキュリティ（情報セキュリティ管理）",
     questions: [
       {
@@ -2490,6 +2867,18 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["無線LAN SSID", "WPA2 WPA3 暗号化", "5G テザリング MVNO"],
+    detail:
+      "無線LAN（Wi-Fi）は電波で通信するため、電波が届く範囲なら誰でも受信できてしまいます。そこで2つのしくみで安全を保ちます。SSIDは接続先のネットワークを見分ける「名前（看板）」で、暗号化（WPA2やWPA3）は通信の中身を読めなくする鍵です。SSIDはただの名前であり、暗号化とは別物という点に注意しましょう。鍵マークのない（暗号化なしの）フリーWi-Fiでは、入力内容を盗み見られる危険があります。モバイル通信の頻出用語は3つです。5Gは高速・大容量・低遅延・多数同時接続が特徴の通信規格、テザリングはスマホを中継役にして他の機器をネットにつなぐ機能、MVNO（格安SIM）は大手の回線を借りてサービスを安く提供する事業者です。試験ではSSIDと暗号化の役割の区別と、これらの用語の意味が問われます。",
+    explanationDiagram: {
+      type: "cards",
+      title: "無線LAN・モバイルの頻出用語",
+      items: [
+        { emoji: "🏷️", title: "SSID", body: "無線LANを見分ける名前（看板）。暗号化とは別物。" },
+        { emoji: "🔐", title: "暗号化（WPA2/WPA3）", body: "通信の中身を守る鍵。ないWi-Fiは盗聴の危険。" },
+        { emoji: "📶", title: "5G", body: "高速・大容量・低遅延・多数同時接続。" },
+        { emoji: "📱", title: "テザリング／MVNO", body: "スマホで中継する機能／大手回線を借りた格安サービス。" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > ネットワーク（無線LAN・モバイル通信）",
     questions: [
       {
@@ -2560,6 +2949,19 @@ const additionalTechnologyTopics: Topic[] = [
     reviewPriority: "medium",
     beginnerTrapLevel: "medium",
     referenceKeywords: ["SMTP POP IMAP", "電子メール プロトコル", "CC BCC 使い分け"],
+    detail:
+      "メールは1つのプロトコルで完結せず、送る場面と受け取る場面で役割分担しています。メールソフトからサーバへの送信と、サーバからサーバへの配送はSMTPが担当します。届いたメールを読むときはPOPまたはIMAPを使います。POPはメールを端末にダウンロードして手元で管理する方式、IMAPはサーバに置いたまま読む方式で、スマホとPCなど複数の端末で同じ状態を見たいならIMAPが向いています。宛先欄は、To＝本来の宛先、CC＝参考までに共有（アドレスは全員に見える）、BCC＝ほかの受信者にアドレスを見せずに送る、と使い分けます。一斉送信でTo/CCに全員のアドレスを入れると個人情報の漏えいになるため、BCCを使います。試験では送信＝SMTP・受信＝POP/IMAPの対応と、CC/BCCの違いが問われます。",
+    explanationDiagram: {
+      type: "flow",
+      title: "メールが届くまで",
+      direction: "vertical",
+      steps: [
+        { label: "送信者", description: "メールソフトからSMTPで送信" },
+        { label: "サーバ間の配送", description: "SMTPで相手のサーバまで運ばれる" },
+        { label: "受信側サーバ", description: "メールボックスに保管される" },
+        { label: "受信者", description: "POP（端末に保存）または IMAP（サーバで読む）" },
+      ],
+    },
     kakomonLabel: "テクノロジ系 > 技術要素 > ネットワーク（電子メール）",
     questions: [
       {

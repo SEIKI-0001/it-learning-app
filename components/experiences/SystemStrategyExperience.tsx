@@ -5,95 +5,145 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「システム戦略」専用の体験。
-//   ① IT導入は「目的」ではなく「手段」。良い考え方 ⇄ ダメな考え方をトグル比較
-//   ② 目的 → IT → 効果 の流れ
-//   ③ システム戦略の考え方として適切か クイズ
+//   ① 社長シミュレータ … 「とりあえずIT導入」と「目的から決める」の
+//      2つの進め方を選んで進めると、会社の結末が変わる
+//   ② システム戦略の考え方として適切か クイズ
 // ============================================================================
 
-function MeansVsGoal() {
-  const [good, setGood] = useState(true);
+type Route = "hype" | "goal";
+
+const ROUTES: Record<
+  Route,
+  { steps: { emo: string; label: string; text: string }[]; result: { good: boolean; text: string } }
+> = {
+  hype: {
+    steps: [
+      { emo: "✨", label: "導入を決定", text: "「最新のAIシステムが話題らしい。うちも入れよう！」——何のためかは、まだ決めていない。" },
+      { emo: "💸", label: "お金を払う", text: "導入費用500万円。現場から「これ…何に使うんですか？」の声。目的がないので答えられない。" },
+      { emo: "🤷", label: "使われない", text: "使い道があいまいなまま放置。効果を測る物差しも決めていないので、役立ったかも分からない。" },
+    ],
+    result: { good: false, text: "📉 結末：売上は変わらず、お金だけ減った。「入れること」がゴールになると、こうなりがち。" },
+  },
+  goal: {
+    steps: [
+      { emo: "🎯", label: "目的を決める", text: "まず経営の目的から。「常連のお客さんを増やして、売上を伸ばしたい」。" },
+      { emo: "🛠️", label: "手段を選ぶ", text: "目的に合うITを手段として選ぶ。「常連を増やすなら、ポイントが貯まるアプリが合いそうだ」。" },
+      { emo: "📈", label: "効果を測る", text: "導入前に「リピート率」で効果を測ると決めておく。導入後、リピート率+8%——目的に効いたと確認できた。" },
+    ],
+    result: { good: true, text: "🎉 結末：常連が増えて売上アップ！ 目的 → 手段 → 効果の順で考えたから、ITがちゃんと役立った。" },
+  },
+};
+
+function CeoLab() {
+  const [route, setRoute] = useState<Route | null>(null);
+  const [step, setStep] = useState(0);
+  const [tried, setTried] = useState<Set<Route>>(new Set());
+  const bothTried = tried.has("hype") && tried.has("goal");
+
+  const choose = (r: Route) => {
+    setRoute(r);
+    setStep(0);
+    setTried((p) => new Set(p).add(r));
+  };
+
+  const cur = route ? ROUTES[route] : null;
+  const atEnd = cur ? step >= cur.steps.length - 1 : false;
+
   return (
     <Panel>
-      <SectionTitle step={1}>ITは「手段」？「目的」？</SectionTitle>
+      <SectionTitle step={1}>社長になって、IT導入を進めてみよう</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        新しいシステムを入れること<b className="text-gray-800">自体</b>がゴールではありません。切り替えて比べてみよう。
+        あなたはパン屋の社長。<b className="text-gray-800">「売上が伸び悩んでいる。ITで何とかしたい」</b>。
+        2つの進め方を両方試して、結末を比べてみよう。
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-1.5 rounded-xl bg-gray-100 p-1">
+      <div className="mt-3 grid grid-cols-2 gap-1.5">
         <button
-          onClick={() => setGood(false)}
-          className={`rounded-lg px-2 py-2 text-sm font-bold transition active:scale-95 ${
-            !good ? "bg-rose-500 text-white" : "text-gray-500"
+          onClick={() => choose("hype")}
+          className={`rounded-xl px-2 py-2.5 text-xs font-bold transition active:scale-95 ${
+            route === "hype" ? "bg-rose-500 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
           }`}
         >
-          🙅 ダメな考え方
+          ✨ 話題のAIシステムを
+          <br />
+          とりあえず導入！{tried.has("hype") && " ✓"}
         </button>
         <button
-          onClick={() => setGood(true)}
-          className={`rounded-lg px-2 py-2 text-sm font-bold transition active:scale-95 ${
-            good ? "bg-emerald-500 text-white" : "text-gray-500"
+          onClick={() => choose("goal")}
+          className={`rounded-xl px-2 py-2.5 text-xs font-bold transition active:scale-95 ${
+            route === "goal" ? "bg-emerald-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
           }`}
         >
-          🙆 良い考え方
+          🎯 まず「何のためか」
+          <br />
+          目的から決める{tried.has("goal") && " ✓"}
         </button>
       </div>
 
-      <div
-        className={`mt-3 rounded-xl px-4 py-4 ring-1 ${
-          good ? "bg-emerald-50 ring-emerald-200" : "bg-rose-50 ring-rose-200"
-        }`}
-      >
-        {good ? (
-          <>
-            <p className="text-sm font-extrabold text-emerald-700">「売上を伸ばすために、ITをどう使う？」</p>
-            <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-gray-700">
-              <li>🎯 まず<b>経営の目的</b>（売上・効率・コスト）を決める</li>
-              <li>🛠️ 目的に合うITを<b>手段</b>として選ぶ</li>
-              <li>📈 効果を測れるようにして導入する</li>
-            </ul>
-          </>
-        ) : (
-          <>
-            <p className="text-sm font-extrabold text-rose-700">「最新のITだから、とりあえず導入しよう」</p>
-            <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-gray-700">
-              <li>❌ 目的があいまいなまま導入する</li>
-              <li>❌ 「入れること」がゴールになっている</li>
-              <li>❌ 効果が出ず、お金だけかかる</li>
-            </ul>
-          </>
-        )}
-      </div>
+      {route && cur && (
+        <div
+          className={`mt-3 rounded-xl p-3 ring-1 ${
+            route === "goal" ? "bg-emerald-50 ring-emerald-200" : "bg-rose-50 ring-rose-200"
+          }`}
+        >
+          {/* 進行チップ */}
+          <div className="flex gap-1.5">
+            {cur.steps.map((s, i) => (
+              <div
+                key={i}
+                className={`flex-1 rounded-lg px-1 py-1.5 text-center text-[10px] font-bold transition ${
+                  i === step
+                    ? route === "goal"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-rose-500 text-white"
+                    : i < step
+                      ? route === "goal"
+                        ? "bg-emerald-200 text-emerald-800"
+                        : "bg-rose-200 text-rose-800"
+                      : "bg-white text-gray-400 ring-1 ring-gray-200"
+                }`}
+              >
+                {s.emo} {s.label}
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-2.5 min-h-[3.5em] rounded-lg bg-white px-3 py-2.5 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-100">
+            {cur.steps[step].emo} <b>{cur.steps[step].label}</b>：{cur.steps[step].text}
+          </p>
+
+          {!atEnd ? (
+            <button
+              onClick={() => setStep((v) => v + 1)}
+              className={`mt-2.5 w-full rounded-lg py-2 text-sm font-bold text-white active:scale-95 ${
+                route === "goal" ? "bg-emerald-600" : "bg-rose-500"
+              }`}
+            >
+              次へ →
+            </button>
+          ) : (
+            <div
+              className={`mt-2.5 rounded-lg px-3 py-2.5 text-sm font-extrabold ring-1 ${
+                cur.result.good
+                  ? "bg-white text-emerald-700 ring-emerald-200"
+                  : "bg-white text-rose-700 ring-rose-200"
+              }`}
+            >
+              {cur.result.text}
+            </div>
+          )}
+        </div>
+      )}
+
+      {bothTried && (
+        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+          💡 <b>気づいた？</b>　同じ「IT導入」でも、<b>目的 → 手段 → 効果</b>の順で考えるかどうかで結末が正反対。
+          ITは<b>目的ではなく手段</b>——この考え方が<b>システム戦略</b>です。ITで会社を変える取り組みは <b>DX</b> とも呼ばれます。
+        </div>
+      )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         💡 勉強アプリを入れること自体がゴールではなく、<b>成績を上げるためにどう使うか</b>を考えるのと同じ。
-      </div>
-    </Panel>
-  );
-}
-
-function Flow() {
-  const steps = [
-    { emoji: "🎯", t: "経営の目的", d: "売上を伸ばす・コストを下げる など" },
-    { emoji: "🛠️", t: "ITを手段に", d: "目的に合うシステムを選ぶ・作る" },
-    { emoji: "📈", t: "効果を測る", d: "本当に目的に役立ったか評価する" },
-  ];
-  return (
-    <Panel>
-      <SectionTitle step={2}>目的 → 手段 → 効果の順番</SectionTitle>
-      <div className="mt-3 flex items-stretch gap-1">
-        {steps.map((s, i) => (
-          <div key={s.t} className="flex flex-1 items-center gap-1">
-            <div className="flex-1 rounded-xl bg-indigo-50 p-3 text-center ring-1 ring-indigo-200">
-              <div className="text-xl">{s.emoji}</div>
-              <div className="mt-1 text-xs font-extrabold text-indigo-700">{s.t}</div>
-              <p className="mt-0.5 text-[10px] leading-tight text-gray-500">{s.d}</p>
-            </div>
-            {i < steps.length - 1 && <span className="text-lg text-gray-300">→</span>}
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        🔄 この「目的に役立てる」考え方が<b>システム戦略</b>。ITで会社を変える取り組みは <b>DX</b> とも呼ばれます。
       </div>
     </Panel>
   );
@@ -110,7 +160,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   return (
     <Panel>
-      <SectionTitle step={3}>システム戦略の考え方として正しい？</SectionTitle>
+      <SectionTitle step={2}>システム戦略の考え方として正しい？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {ITEMS.map((it, i) => {
           const chosen = answers[i];
@@ -167,8 +217,7 @@ export default function SystemStrategyExperience() {
         ITを入れること自体が目的ではなく、あくまで<b>手段</b>です。
       </div>
 
-      <MeansVsGoal />
-      <Flow />
+      <CeoLab />
       <Quiz />
     </div>
   );

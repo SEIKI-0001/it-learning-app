@@ -38,6 +38,29 @@ export function clearUserId(): void {
   }
 }
 
+/**
+ * この端末に残っているユーザーデータ（fequest:* の localStorage / sessionStorage）を
+ * すべて破棄する。ログアウト時と、セッションのユーザーがローカルの user_id と
+ * 食い違った（＝共有端末で別アカウントに切り替わった）ときに呼ぶ。
+ * 前のユーザーの学習状態・単語帳・参考書などが次のユーザーに混入するのを防ぐ。
+ */
+export function clearLocalUserData(): void {
+  if (!isBrowser()) return;
+  for (const storage of [window.localStorage, window.sessionStorage]) {
+    try {
+      const targets: string[] = [];
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        if (key && key.startsWith("fequest:")) targets.push(key);
+      }
+      for (const key of targets) storage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
+  }
+  invalidateSessionRestore();
+}
+
 /** URL の ?t=... から一時トークンを取り出す。 */
 export function readTokenFromUrl(): string | null {
   if (!isBrowser()) return null;

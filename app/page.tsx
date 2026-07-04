@@ -7,8 +7,10 @@ import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { fieldMastery } from "@/lib/study";
 import { getRankStatus } from "@/lib/rank";
+import { ON_TRACK_LABELS, ON_TRACK_STYLE } from "@/types/plan";
 import BottomNav from "@/components/BottomNav";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
+import LoadingScreen from "@/components/LoadingScreen";
 
 function formatMonthDay(iso: string | null): string {
   if (!iso) return "未定";
@@ -25,11 +27,7 @@ export default function Home() {
   const [state] = useAppState();
 
   if (state === undefined) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   // --- 未設定: サービス紹介 ---
@@ -134,6 +132,15 @@ export default function Home() {
                 {remaining === null ? "未設定" : `あと${remaining}日`}
               </p>
             </Link>
+            {plan.onTrack !== "no-exam" && (
+              <Link
+                href="/plan"
+                aria-label={`学習ペース：${ON_TRACK_LABELS[plan.onTrack]}`}
+                className={`self-center rounded-full px-3 py-1 text-xs font-bold ring-1 transition active:scale-95 ${ON_TRACK_STYLE[plan.onTrack]}`}
+              >
+                {ON_TRACK_LABELS[plan.onTrack]}
+              </Link>
+            )}
             <div className="ml-auto text-right">
               <p className="text-xs text-white/80">
                 {rank.current.emoji} {rank.current.name}
@@ -166,6 +173,12 @@ export default function Home() {
           </p>
           <p className="mt-1.5 text-sm font-semibold text-gray-700">
             🎯 今週のゴール：{plan.weeklyGoal.headline}
+            {plan.weeklyItems.length > 0 && (
+              <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                {plan.weeklyItems.filter((i) => i.checked).length}/
+                {plan.weeklyItems.length}
+              </span>
+            )}
           </p>
           <p className="mt-1 text-xs text-gray-500">
             過去問開始目安：

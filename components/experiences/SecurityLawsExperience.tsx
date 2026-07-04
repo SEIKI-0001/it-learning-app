@@ -5,37 +5,119 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「情報セキュリティ関連法規」専用の体験。
-//   ① 不正アクセス禁止法のイメージ（他人の鍵を勝手に使わない）
+//   ① ログインを試してみる … シナリオを選ぶとドアの図で OK/違法 が変わる
 //   ② その行為は「不正アクセス」にあたる？ ○×クイズ（侵入しなくてもNG）
 //   ③ 関連法規の早見
 // ============================================================================
 
-function Intro() {
+// ---------------------------------------------------------------------------
+// ① シナリオセレクタ: 誰の鍵でどう入るかを選ぶ → 判定と理由が変わる
+// ---------------------------------------------------------------------------
+const SCENARIOS = [
+  {
+    id: "own",
+    label: "自分のIDでログイン",
+    emoji: "🔑",
+    door: "🚪✅",
+    ok: true,
+    verdict: "OK（正当な利用）",
+    why: "自分の鍵で自分の家に入るのと同じ。何の問題もありません。",
+  },
+  {
+    id: "steal",
+    label: "他人のIDで無断ログイン",
+    emoji: "🗝️",
+    door: "🚪🚨",
+    ok: false,
+    verdict: "違法（不正アクセス）",
+    why: "他人の鍵を勝手に使って入るのと同じ。中身を見なくても、ログインした時点でアウトです。",
+  },
+  {
+    id: "keep",
+    label: "他人のパスワードを入手して保管",
+    emoji: "📋",
+    door: "🏠🗝️",
+    ok: false,
+    verdict: "違法（不正取得・保管）",
+    why: "合鍵をこっそり作って持っているのと同じ。ログインしていなくても、不正な取得・保管自体が禁止されています。",
+  },
+  {
+    id: "hole",
+    label: "セキュリティの穴を突いて侵入",
+    emoji: "🪟",
+    door: "🪟🚨",
+    ok: false,
+    verdict: "違法（不正アクセス）",
+    why: "鍵を使わず窓から入るのと同じ。認証を回避した侵入も不正アクセスです。",
+  },
+] as const;
+
+function LoginSimulator() {
+  const [sel, setSel] = useState<number | null>(null);
+  const s = sel !== null ? SCENARIOS[sel] : null;
+
   return (
     <Panel>
-      <SectionTitle step={1}>IDとパスワードは「家の鍵」</SectionTitle>
+      <SectionTitle step={1}>ログインを試してみる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">不正アクセス禁止法</b>は、他人のID・パスワードを無断で使ってログインするような行為を禁じる法律です。
+        IDとパスワードは<b className="text-gray-800">「家の鍵」</b>。
+        どの入り方が法律違反になるか、試して確かめよう。
       </p>
-      <div className="mt-4 grid grid-cols-2 gap-2.5">
-        <div className="rounded-xl bg-emerald-50 p-3 text-center ring-1 ring-emerald-200">
-          <div className="text-2xl">🔑🏠</div>
-          <div className="mt-1 text-sm font-extrabold text-emerald-700">自分の鍵で入る</div>
-          <p className="mt-1 text-[11px] leading-relaxed text-gray-600">自分のID/パスワードでログイン＝OK</p>
-        </div>
-        <div className="rounded-xl bg-rose-50 p-3 text-center ring-1 ring-rose-200">
-          <div className="text-2xl">🗝️🚫</div>
-          <div className="mt-1 text-sm font-extrabold text-rose-700">他人の鍵を勝手に使う</div>
-          <p className="mt-1 text-[11px] leading-relaxed text-gray-600">他人のID/パスワードで無断ログイン＝NG</p>
-        </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {SCENARIOS.map((sc, i) => {
+          const on = sel === i;
+          return (
+            <button
+              key={sc.id}
+              onClick={() => setSel(i)}
+              className={`rounded-xl p-2.5 text-left text-xs font-bold leading-relaxed ring-2 transition active:scale-95 ${
+                on ? "bg-indigo-600 text-white ring-indigo-600" : "bg-indigo-50 text-indigo-800 ring-indigo-200"
+              }`}
+            >
+              <span className="mr-1">{sc.emoji}</span>
+              {sc.label}
+            </button>
+          );
+        })}
       </div>
+
+      {/* 判定表示 */}
+      <div
+        className={`mt-3 min-h-[7em] rounded-xl px-4 py-3 ring-1 transition-colors ${
+          !s
+            ? "bg-gray-50 ring-gray-200"
+            : s.ok
+              ? "bg-emerald-50 ring-emerald-200"
+              : "bg-rose-50 ring-rose-200"
+        }`}
+      >
+        {!s ? (
+          <p className="text-sm text-gray-400">上のボタンから入り方を選んでね。</p>
+        ) : (
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{s.door}</span>
+              <span className={`text-sm font-extrabold ${s.ok ? "text-emerald-700" : "text-rose-700"}`}>
+                {s.ok ? "⭕" : "🚫"} {s.verdict}
+              </span>
+            </div>
+            <p className={`mt-2 text-sm leading-relaxed ${s.ok ? "text-emerald-800" : "text-rose-800"}`}>{s.why}</p>
+          </div>
+        )}
+      </div>
+
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 他人の家の鍵を勝手に使って入ってはいけないのと同じ。<b>許可のないログインは犯罪</b>になりえます。
+        💡 ポイントは<b>「実害がなくてもアウト」</b>。無断ログイン・不正な取得や保管は、
+        中身を見たかどうかに関係なく<b>不正アクセス禁止法</b>で禁じられています。
       </div>
     </Panel>
   );
 }
 
+// ---------------------------------------------------------------------------
+// ② ○×クイズ
+// ---------------------------------------------------------------------------
 const ITEMS: { t: string; ok: boolean; why: string }[] = [
   { t: "他人のIDとパスワードを無断で使ってログインする", ok: true, why: "典型的な不正アクセス。許可なくログインはNG。" },
   { t: "他人のパスワードを勝手に入手して保管しておく", ok: true, why: "ログインしなくても、不正取得・保管は禁止対象。" },
@@ -99,24 +181,28 @@ function Quiz() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// ③ 関連法規の早見: 「困りごと」から法律を引ける形に
+// ---------------------------------------------------------------------------
 function LawList() {
   const laws = [
-    { emoji: "🔓", name: "不正アクセス禁止法", d: "無断ログイン・不正取得などを禁止" },
-    { emoji: "🪪", name: "個人情報保護法", d: "個人情報の適切な取り扱いを定める" },
-    { emoji: "🛡️", name: "サイバーセキュリティ基本法", d: "国全体のセキュリティ対策の基本方針" },
+    { emoji: "🔓", scene: "他人のIDで無断ログインされた", name: "不正アクセス禁止法", d: "無断ログイン・不正取得などを禁止" },
+    { emoji: "🪪", scene: "個人情報が勝手に使われた", name: "個人情報保護法", d: "個人情報の適切な取り扱いを定める" },
+    { emoji: "🛡️", scene: "国全体でセキュリティを強くしたい", name: "サイバーセキュリティ基本法", d: "国の対策の基本方針を定める" },
   ];
   return (
     <Panel>
-      <SectionTitle step={3}>関連する主な法律</SectionTitle>
+      <SectionTitle step={3}>場面から法律を引く</SectionTitle>
       <div className="mt-3 space-y-2">
         {laws.map((l) => (
-          <div key={l.name} className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <span className="grid h-9 w-9 flex-none place-items-center rounded-lg bg-white text-lg ring-1 ring-gray-200">
-              {l.emoji}
-            </span>
-            <div>
-              <div className="text-sm font-extrabold text-gray-800">{l.name}</div>
-              <div className="text-xs text-gray-500">{l.d}</div>
+          <div key={l.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+            <div className="text-xs text-gray-500">「{l.scene}」→</div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-lg">{l.emoji}</span>
+              <div>
+                <div className="text-sm font-extrabold text-gray-800">{l.name}</div>
+                <div className="text-xs text-gray-500">{l.d}</div>
+              </div>
             </div>
           </div>
         ))}
@@ -136,7 +222,7 @@ export default function SecurityLawsExperience() {
         他人のID・パスワードを無断で使うような行為を禁じます。
       </div>
 
-      <Intro />
+      <LoginSimulator />
       <Quiz />
       <LawList />
     </div>

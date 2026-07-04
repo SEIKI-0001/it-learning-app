@@ -88,7 +88,15 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
 
   if (!mounted) {
     return (
-      <div className="rounded-3xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-400">
+      <div
+        role="status"
+        aria-live="polite"
+        className="flex flex-col items-center gap-3 rounded-3xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-400"
+      >
+        <span
+          aria-hidden
+          className="h-7 w-7 animate-spin rounded-full border-[3px] border-indigo-200 border-t-indigo-600 motion-reduce:animate-none"
+        />
         読み込み中…
       </div>
     );

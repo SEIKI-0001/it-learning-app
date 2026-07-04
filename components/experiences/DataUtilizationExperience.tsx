@@ -5,27 +5,119 @@ import { Panel, SectionTitle, StepNav } from "./ui";
 
 // ============================================================================
 // 「データ活用」専用の体験。
-//   ① 活用の流れ（目的→集める→見える化→気づく→改善）をStepで実演
-//   ② ためるだけ ⇄ 活用する の対比
+//   ① 成績アップ大作戦 … 実データ（科目別の点数）が「数字の山→グラフ→気づき→改善」
+//      と変化していく様子をStepで体感（見える化すると苦手が浮かぶ）
+//   ② ためるだけ ⇄ 活用する の対比＋よく出る道具
 //   ③ 役割クイズ（BI・データ品質などの考え方）
 // ============================================================================
 
-const STEPS = [
-  { badge: "🎯 目的", html: "まず<b>目的</b>を決める。例：「テストの成績を上げたい」。目的がないと、何を見ればいいか分からない。" },
-  { badge: "📥 集める", html: "目的に必要な<b>データを集める</b>。例：各科目の点数を記録する。" },
-  { badge: "📊 見える化", html: "数字の山を<b>グラフや表に整理</b>。例：科目別の点数を棒グラフに。傾向が見えてくる。" },
-  { badge: "💡 気づく", html: "整理した結果から<b>傾向を読む</b>。例：「数学だけ低い」と気づく。" },
-  { badge: "🔧 改善", html: "気づきを<b>行動に変える</b>。例：数学の勉強時間を増やす。ここまでやって初めて“活用”。" },
+// ① 成績アップ大作戦 --------------------------------------------------------
+const SUBJECTS = [
+  { name: "国語", score: 70 },
+  { name: "数学", score: 40 },
+  { name: "英語", score: 65 },
+  { name: "理科", score: 75 },
+  { name: "社会", score: 60 },
 ];
+const WEAK = "数学";
+const IMPROVED = 65;
+
+const STEPS = [
+  { badge: "🎯 目的", html: "まず<b>目的</b>を決める：「テストの成績を上げたい」。目的がないと、何のデータを集めて何を見ればいいか分かりません。" },
+  { badge: "📥 集める", html: "目的に必要なデータ＝<b>各科目の点数</b>を集めました。でも数字の山のままでは、パッと見て何も分かりません…。" },
+  { badge: "📊 見える化", html: "同じ数字を<b>棒グラフに整理</b>。高い・低いがひと目で分かるようになりました。これが「見える化」の力。" },
+  { badge: "💡 気づく", html: "グラフを読むと…<b>数学だけ極端に低い</b>！ 数字の山では埋もれていた傾向が、見える化で浮かび上がりました。" },
+  { badge: "🔧 改善", html: "気づきを<b>行動に変える</b>：数学の勉強時間を増やした結果、40点→65点にアップ！ ここまでやって初めて「データ活用」です。" },
+];
+
+function Chart({ idx }: { idx: number }) {
+  // idx: 0=まだ何もない 1=数字の山 2=グラフ化 3=苦手が浮かぶ 4=改善後
+  if (idx === 0) {
+    return (
+      <div className="grid h-40 place-items-center rounded-xl bg-gray-50 ring-1 ring-gray-200">
+        <div className="text-center">
+          <div className="text-3xl">🎯</div>
+          <div className="mt-1 text-sm font-extrabold text-gray-700">成績を上げたい！</div>
+          <div className="mt-0.5 text-xs text-gray-400">→ まずは点数のデータを集めよう</div>
+        </div>
+      </div>
+    );
+  }
+  if (idx === 1) {
+    // 数字の山（バラバラに置かれたメモ）
+    const tilts = ["-rotate-3", "rotate-2", "rotate-6", "-rotate-2", "rotate-3"];
+    return (
+      <div className="flex h-40 flex-wrap content-center items-center justify-center gap-2 rounded-xl bg-gray-50 ring-1 ring-gray-200">
+        {SUBJECTS.map((s, i) => (
+          <span
+            key={s.name}
+            className={`rounded-lg bg-white px-2.5 py-1.5 text-sm font-bold text-gray-700 shadow-sm ring-1 ring-gray-300 ${tilts[i]}`}
+          >
+            {s.name} {s.score}点
+          </span>
+        ))}
+        <span className="w-full text-center text-xs text-gray-400">📥 集めた数字の山…このままでは読みにくい</span>
+      </div>
+    );
+  }
+  // 2以降: 棒グラフ
+  return (
+    <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+      <div className="flex h-32 items-end justify-around gap-2">
+        {SUBJECTS.map((s) => {
+          const isWeak = s.name === WEAK;
+          const score = idx >= 4 && isWeak ? IMPROVED : s.score;
+          const tone =
+            idx >= 4 && isWeak
+              ? "bg-emerald-500"
+              : idx === 3
+                ? isWeak
+                  ? "bg-rose-500"
+                  : "bg-indigo-200"
+                : "bg-indigo-500";
+          return (
+            <div key={s.name} className="flex w-10 flex-col items-center justify-end self-stretch">
+              <span
+                className={`text-[11px] font-extrabold ${
+                  idx >= 4 && isWeak ? "text-emerald-600" : idx === 3 && isWeak ? "text-rose-600" : "text-gray-500"
+                }`}
+              >
+                {score}
+                {idx >= 4 && isWeak && <span className="ml-0.5 text-[10px]">↑</span>}
+              </span>
+              <div
+                className={`w-7 rounded-t-md transition-all duration-500 ${tone}`}
+                style={{ height: `${score}%` }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-1 flex justify-around gap-2">
+        {SUBJECTS.map((s) => (
+          <span
+            key={s.name}
+            className={`w-10 text-center text-[11px] font-bold ${
+              s.name === WEAK && idx >= 3 ? (idx >= 4 ? "text-emerald-700" : "text-rose-600") : "text-gray-500"
+            }`}
+          >
+            {s.name}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function Flow() {
   const [idx, setIdx] = useState(0);
   const step = STEPS[idx];
   return (
     <Panel>
-      <SectionTitle step={1}>データ活用の流れ</SectionTitle>
+      <SectionTitle step={1}>成績アップ大作戦 ― データ活用の流れ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        データは<b className="text-gray-800">集めて終わりではありません</b>。行動に変えるまでが活用です。
+        データは<b className="text-gray-800">集めて終わりではありません</b>。「次へ」で1歩ずつ、
+        数字の山が<b className="text-gray-800">行動</b>に変わるまでを見てみよう。
       </p>
 
       <div className="mt-3 flex gap-1">
@@ -41,8 +133,12 @@ function Flow() {
         ))}
       </div>
 
+      <div className="mt-3">
+        <Chart idx={idx} />
+      </div>
+
       <p
-        className="mt-4 min-h-[4.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
+        className="mt-3 min-h-[4.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
         dangerouslySetInnerHTML={{ __html: `<b>${step.badge}</b>：${step.html}` }}
       />
 

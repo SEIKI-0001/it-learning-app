@@ -1,91 +1,147 @@
 "use client";
 
 import { useState } from "react";
-import { Panel, SectionTitle } from "./ui";
+import { Panel, SectionTitle, StepNav } from "./ui";
 
 // ============================================================================
 // 「バリューチェーン（価値連鎖）」専用の体験。
-//   ① 主活動を矢印の流れで見る（価値が積み上がっていく）
-//   ② 支援活動が下から全体を支える図
+//   ① 工場ラインを進める … 主活動を1歩ずつ進めると製品が姿を変え、
+//      価値バーが積み上がっていく（最後にマージン＝利益が見える）
+//   ② 支援活動 … タップすると「もし無かったら」ラインがどう困るかが分かる
 //   ③ 「主活動？支援活動？」仕分けクイズ
 // ============================================================================
 
+// ① 主活動ライン ------------------------------------------------------------
 const MAIN = [
-  { emo: "📥", name: "購買物流", d: "原材料や部品を仕入れ、受け入れる" },
-  { emo: "🏭", name: "製造", d: "材料を加工して製品をつくる" },
-  { emo: "📦", name: "出荷物流", d: "完成した製品を保管・配送する" },
-  { emo: "🛒", name: "販売・マーケティング", d: "宣伝し、顧客に売る" },
-  { emo: "🔧", name: "サービス", d: "アフターサポートで価値を保つ" },
-];
-
-const SUPPORT = [
-  { emo: "🏢", name: "全般管理", d: "経営・経理・法務など全体の管理" },
-  { emo: "👥", name: "人事・労務管理", d: "採用・教育・働く環境づくり" },
-  { emo: "🔬", name: "技術開発", d: "研究や新技術の開発" },
-  { emo: "🛍️", name: "調達", d: "設備や資材を買い入れる活動" },
+  { emo: "📥", name: "購買物流", product: "🪵", state: "原材料が届いた", d: "原材料や部品を仕入れ、受け入れる", value: 15 },
+  { emo: "🏭", name: "製造", product: "🪑", state: "製品ができた！", d: "材料を加工して製品をつくる", value: 40 },
+  { emo: "📦", name: "出荷物流", product: "📦", state: "箱詰めして配送", d: "完成した製品を保管・配送する", value: 55 },
+  { emo: "🛒", name: "販売・マーケティング", product: "🏷️", state: "店頭に並んだ", d: "宣伝し、顧客に売る", value: 75 },
+  { emo: "🔧", name: "サービス", product: "😊", state: "顧客が満足！", d: "アフターサポートで価値を保つ", value: 90 },
 ];
 
 function MainFlow() {
-  const [open, setOpen] = useState<number | null>(null);
+  const [idx, setIdx] = useState(0);
+  const cur = MAIN[idx];
+  const atEnd = idx === MAIN.length - 1;
   return (
     <Panel>
-      <SectionTitle step={1}>主活動 ― 価値が積み上がる流れ</SectionTitle>
+      <SectionTitle step={1}>主活動 ― 工程を進めて価値を積み上げる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">主活動</b>は、仕入れから製造・出荷・販売・サービスまで、
-        <b className="text-gray-800">価値を直接生み出していく流れ</b>です。各工程をタップしてみましょう。
+        <b className="text-gray-800">主活動</b>は価値を直接生み出す流れ。いすを作る会社で「次へ」を押して、
+        <b className="text-gray-800">材料が売り物に変わっていく</b>様子を見てみよう。
       </p>
-      <div className="mt-3 space-y-1.5">
-        {MAIN.map((m, i) => {
-          const picked = open === i;
-          return (
-            <div key={m.name}>
-              <button
-                onClick={() => setOpen(picked ? null : i)}
-                className={`flex w-full items-center gap-2.5 rounded-xl p-2.5 text-left ring-1 transition active:scale-[0.99] ${
-                  picked ? "bg-indigo-50 ring-indigo-300" : "bg-gray-50 ring-gray-200"
-                }`}
-              >
-                <span className="grid h-7 w-7 flex-none place-items-center rounded-lg bg-white text-base ring-1 ring-gray-200">
-                  {m.emo}
-                </span>
-                <span className="text-sm font-extrabold text-gray-800">{m.name}</span>
-                <span className="ml-auto text-[11px] font-bold text-emerald-600">価値 +</span>
-              </button>
-              {picked && (
-                <p className="px-2 pt-1.5 text-[13px] leading-relaxed text-gray-600">{m.d}</p>
-              )}
-              {i < MAIN.length - 1 && (
-                <div className="py-0.5 text-center text-xs text-gray-300">↓</div>
-              )}
+
+      {/* 工程チップ */}
+      <div className="mt-3 flex gap-1">
+        {MAIN.map((m, i) => (
+          <div
+            key={m.name}
+            className={`flex-1 rounded-md px-0.5 py-1.5 text-center transition ${
+              i === idx ? "bg-indigo-600" : i < idx ? "bg-indigo-100" : "bg-gray-100"
+            }`}
+          >
+            <div className="text-sm leading-none">{m.emo}</div>
+            <div
+              className={`mt-0.5 text-[9px] font-bold leading-tight ${
+                i === idx ? "text-white" : i < idx ? "text-indigo-600" : "text-gray-400"
+              }`}
+            >
+              {m.name.split("・")[0]}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-      <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-2.5 text-xs leading-relaxed text-emerald-800 ring-1 ring-emerald-200">
-        💰 各工程で価値が少しずつ加わり、最後に利益（マージン）として残ります。
+
+      {/* 製品の今 */}
+      <div className="mt-3 rounded-xl bg-gray-50 p-4 text-center ring-1 ring-gray-200">
+        <div className="text-4xl transition-all">{cur.product}</div>
+        <div className="mt-1 text-sm font-extrabold text-gray-800">{cur.state}</div>
+        <div className="mt-0.5 text-xs text-gray-500">
+          {cur.emo} {cur.name}：{cur.d}
+        </div>
       </div>
+
+      {/* 価値バー */}
+      <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+        <div className="flex items-center justify-between text-xs font-bold">
+          <span className="text-gray-600">💰 積み上がった価値</span>
+          <span className={atEnd ? "text-emerald-600" : "text-indigo-600"}>
+            {atEnd ? "コスト＋マージン（利益）" : `価値 ${cur.value}`}
+          </span>
+        </div>
+        <div className="mt-1.5 flex h-3 w-full overflow-hidden rounded-full bg-gray-200">
+          <div
+            className="h-full bg-indigo-500 transition-all duration-500"
+            style={{ width: `${atEnd ? 70 : cur.value}%` }}
+          />
+          {atEnd && <div className="h-full w-[20%] bg-emerald-500 transition-all duration-500" />}
+        </div>
+        {atEnd && (
+          <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-700">
+            🎉 各工程で加わった価値の合計が売値に。<b>コスト（紫）を引いて残った緑がマージン（利益）</b>です。
+          </p>
+        )}
+      </div>
+
+      <StepNav
+        index={idx}
+        total={MAIN.length}
+        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
+        onNext={() => setIdx((i) => Math.min(MAIN.length - 1, i + 1))}
+        onReset={() => setIdx(0)}
+        doneLabel="マージン 💰"
+      />
     </Panel>
   );
 }
 
+// ② 支援活動 ----------------------------------------------------------------
+const SUPPORT = [
+  { emo: "🏢", name: "全般管理", d: "経営・経理・法務など全体の管理", without: "お金や契約の管理がぐちゃぐちゃに。ライン全体が混乱して止まる" },
+  { emo: "👥", name: "人事・労務管理", d: "採用・教育・働く環境づくり", without: "働く人が足りず育たない。製造も販売も回らなくなる" },
+  { emo: "🔬", name: "技術開発", d: "研究や新技術の開発", without: "製品が古いまま進化しない。ライバルに追い抜かれる" },
+  { emo: "🛍️", name: "調達", d: "設備や資材を買い入れる活動", without: "機械も資材も届かない。ラインがそもそも動かせない" },
+];
+
 function Support() {
+  const [sel, setSel] = useState<number | null>(null);
   return (
     <Panel>
-      <SectionTitle step={2}>支援活動 ― 下から全体を支える</SectionTitle>
+      <SectionTitle step={2}>支援活動 ― 無くなるとラインが困る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">支援活動</b>は、直接モノを作るわけではないけれど、
-        主活動を<b className="text-gray-800">下支えする</b>活動です。
+        <b className="text-gray-800">支援活動</b>は直接モノを作らないけれど、主活動の全工程を下支えします。
+        タップして<b className="text-gray-800">「もし無かったら」</b>を確かめてみよう。
       </p>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {SUPPORT.map((s) => (
-          <div key={s.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg">{s.emo}</span>
-              <span className="text-sm font-extrabold text-gray-800">{s.name}</span>
-            </div>
-            <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{s.d}</p>
-          </div>
-        ))}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {SUPPORT.map((s, i) => {
+          const picked = sel === i;
+          return (
+            <button
+              key={s.name}
+              onClick={() => setSel(picked ? null : i)}
+              className={`rounded-xl p-3 text-left ring-2 transition active:scale-95 ${
+                picked ? "bg-rose-50 ring-rose-300" : "bg-gray-50 ring-gray-200"
+              }`}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg">{picked ? "🚫" : s.emo}</span>
+                <span className={`text-sm font-extrabold ${picked ? "text-rose-700" : "text-gray-800"}`}>{s.name}</span>
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{s.d}</p>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-3 min-h-[3.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
+        {sel === null ? (
+          <p className="text-sm leading-relaxed text-gray-400">どれかをタップすると、無くなったときの影響が出ます。</p>
+        ) : (
+          <p className="text-sm leading-relaxed text-rose-700">
+            🚫 <b>{SUPPORT[sel].name}</b>が無いと… {SUPPORT[sel].without}。
+            <span className="text-gray-600">直接は作らないけれど、<b className="text-gray-800">全工程に効いている</b>のが支援活動。</span>
+          </p>
+        )}
       </div>
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ 人事・技術開発・調達は「価値を直接生む流れ」ではなく、それを<b>支える</b>側＝支援活動。

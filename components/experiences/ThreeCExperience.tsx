@@ -5,83 +5,156 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「3C分析」専用の体験。
-//   ① 3つのC（Customer/Competitor/Company）をタップで確認
+//   ① 市場マップ：クレープ屋の出店を例に、顧客/競合/自社の3視点をタップ調査。
+//      3つ全部そろうと「勝てる場所（作戦）」が見えるコンプリート体験
 //      ＋ よくある罠「Cost（費用）は3Cに入らない」を強調
 //   ② 観点の振り分けクイズ
 // ============================================================================
 
 type C = "customer" | "competitor" | "company";
 
-const CARDS: Record<C, { name: string; emoji: string; who: string; q: string; color: string }> = {
+const CARDS: Record<
+  C,
+  { name: string; emoji: string; who: string; q: string; found: string; color: string; pos: { left: string; top: string } }
+> = {
   customer: {
     name: "Customer（顧客）",
     emoji: "🙋",
     who: "買ってくれる相手・市場",
-    q: "誰が、どんな理由で買う？　ニーズは？",
+    q: "誰が、何を求めてる？",
+    found: "放課後の学生が多い。「安くて写真映えするおやつ」を探している！",
     color: "sky",
+    pos: { left: "50%", top: "10%" },
   },
   competitor: {
     name: "Competitor（競合）",
     emoji: "🥊",
     who: "同じお客を狙うライバル",
-    q: "ライバルは誰？　何が強い？",
+    q: "ライバルの強み・弱みは？",
+    found: "隣のカフェはおしゃれだけど、値段が高くて提供が遅い。",
     color: "rose",
+    pos: { left: "84%", top: "80%" },
   },
   company: {
     name: "Company（自社）",
     emoji: "🏢",
     who: "自分たちの会社",
-    q: "自社の強み・弱みは？　何ができる？",
+    q: "自社の強み・弱みは？",
+    found: "うちは「早い・安い・トッピング豊富」が売り！",
     color: "emerald",
+    pos: { left: "16%", top: "80%" },
   },
 };
 
-const TONE: Record<string, { on: string; off: string }> = {
-  sky: { on: "bg-sky-500 text-white ring-sky-500", off: "bg-sky-50 text-sky-700 ring-sky-200" },
-  rose: { on: "bg-rose-500 text-white ring-rose-500", off: "bg-rose-50 text-rose-700 ring-rose-200" },
-  emerald: { on: "bg-emerald-500 text-white ring-emerald-500", off: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
+const TONE: Record<string, { on: string; off: string; done: string }> = {
+  sky: {
+    on: "bg-sky-500 text-white ring-sky-500",
+    off: "bg-sky-50 text-sky-700 ring-sky-200",
+    done: "bg-white text-sky-700 ring-sky-400",
+  },
+  rose: {
+    on: "bg-rose-500 text-white ring-rose-500",
+    off: "bg-rose-50 text-rose-700 ring-rose-200",
+    done: "bg-white text-rose-700 ring-rose-400",
+  },
+  emerald: {
+    on: "bg-emerald-500 text-white ring-emerald-500",
+    off: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    done: "bg-white text-emerald-700 ring-emerald-400",
+  },
 };
 
-function ThreeCircles() {
+function MarketMap() {
   const [sel, setSel] = useState<C | null>(null);
+  const [seen, setSeen] = useState<Record<C, boolean>>({ customer: false, competitor: false, company: false });
   const order: C[] = ["customer", "competitor", "company"];
+  const allSeen = order.every((c) => seen[c]);
+  const card = sel ? CARDS[sel] : null;
+
+  const tap = (c: C) => {
+    setSel(c);
+    setSeen((p) => ({ ...p, [c]: true }));
+  };
+
   return (
     <Panel>
-      <SectionTitle step={1}>3つの「C」から見る</SectionTitle>
+      <SectionTitle step={1}>3つの視点で市場を調査せよ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        事業の環境を、頭文字がCの3つの視点で整理します。タップして中身を見よう。
+        あなたは<b className="text-gray-800">駅前にクレープ屋さんを出す</b>ことに。
+        マップの3か所を<b className="text-gray-800">全部タップ</b>して調査すると、勝てる作戦が見えてきます。
       </p>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      {/* 市場マップ: 上=顧客、下=自社と競合が顧客を取り合う */}
+      <div className="relative mx-auto mt-5 h-44 max-w-[300px]">
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+          {/* 自社→顧客 / 競合→顧客 : どちらも同じお客を狙う */}
+          <line x1="16" y1="80" x2="50" y2="10" stroke={sel === "company" ? "#10b981" : "#e5e7eb"} strokeWidth={sel === "company" ? 2.5 : 1.5} />
+          <line x1="84" y1="80" x2="50" y2="10" stroke={sel === "competitor" ? "#f43f5e" : "#e5e7eb"} strokeWidth={sel === "competitor" ? 2.5 : 1.5} />
+          <line x1="16" y1="80" x2="84" y2="80" stroke="#e5e7eb" strokeWidth="1.5" strokeDasharray="3 3" />
+        </svg>
+
         {order.map((c) => {
-          const card = CARDS[c];
+          const it = CARDS[c];
           const on = sel === c;
-          const tone = TONE[card.color];
+          const tone = TONE[it.color];
           return (
             <button
               key={c}
-              onClick={() => setSel(c)}
-              className={`flex flex-col items-center rounded-xl p-2.5 ring-2 transition active:scale-95 ${
-                on ? tone.on : tone.off
+              onClick={() => tap(c)}
+              style={{ left: it.pos.left, top: it.pos.top }}
+              className={`absolute z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center ring-2 transition active:scale-95 ${
+                on ? tone.on : seen[c] ? tone.done : tone.off
               }`}
             >
-              <span className="text-2xl leading-none">{card.emoji}</span>
-              <span className="mt-1.5 text-[11px] font-extrabold leading-tight">{card.name}</span>
+              <span className="text-xl leading-none">{it.emoji}</span>
+              <span className="mt-0.5 text-[9px] font-extrabold leading-tight">
+                {c === "customer" ? "顧客" : c === "competitor" ? "競合" : "自社"}
+              </span>
+              <span className="text-[8px] font-bold opacity-70">{seen[c] ? "調査済✓" : "タップ"}</span>
             </button>
           );
         })}
+
+        {/* 取り合いの説明 */}
+        <span className="absolute left-1/2 top-[46%] -translate-x-1/2 text-[9px] font-bold text-gray-400">
+          同じお客を取り合う
+        </span>
       </div>
 
-      <div className="mt-3 min-h-[4em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
-        {sel ? (
+      {/* 調査結果 */}
+      <div className="mt-3 min-h-[5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
+        {card ? (
           <>
             <div className="text-sm font-extrabold text-gray-800">
-              {CARDS[sel].emoji} {CARDS[sel].name} ＝ {CARDS[sel].who}
+              {card.emoji} {card.name} ＝ {card.who}
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-gray-700">考えること：{CARDS[sel].q}</p>
+            <p className="mt-1 text-xs text-gray-500">考えること：{card.q}</p>
+            <p className="mt-1.5 text-sm font-bold leading-relaxed text-gray-800">🔍 {card.found}</p>
           </>
         ) : (
-          <span className="text-sm text-gray-400">3つのうちどれかをタップしてね。</span>
+          <span className="text-sm text-gray-400">マップの丸をタップすると調査結果が出ます。</span>
+        )}
+      </div>
+
+      {/* 3つそろうと作戦が見える */}
+      <div
+        className={`mt-3 rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 transition ${
+          allSeen ? "bg-emerald-50 text-emerald-900 ring-emerald-300" : "bg-gray-50 text-gray-400 ring-gray-200"
+        }`}
+      >
+        {allSeen ? (
+          <>
+            ✨ <b>3つの調査がそろって、作戦が見えた！</b>
+            <br />
+            顧客は「安くて映える」を求め（C1）、競合は「高くて遅い」（C2）、自社は「早い・安い」が強み（C3）
+            → <b>「ワンコインの映えクレープを、待たせず出す」</b>で勝負！
+            このように3つを重ねて<b>勝てる場所</b>を探すのが3C分析です。
+          </>
+        ) : (
+          <>
+            🔒 作戦はまだ見えない… （調査 {order.filter((c) => seen[c]).length} / 3）
+            1つの視点だけでは作戦は立てられません。
+          </>
         )}
       </div>
 
@@ -166,7 +239,7 @@ export default function ThreeCExperience() {
         「Cost（費用）」は<b>入らない</b>のが引っかけポイント。
       </div>
 
-      <ThreeCircles />
+      <MarketMap />
       <Quiz />
     </div>
   );

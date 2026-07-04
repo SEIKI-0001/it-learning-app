@@ -5,96 +5,140 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「知的財産権と著作権」専用の体験。
-//   ① 知的財産権は「総称」。その中に著作権/特許権/商標権がある（包含イメージ）
-//   ② 何を守る権利かをタップで確認（作品/発明/名前ロゴ）
-//   ③ この成果物はどの権利？ 振り分けクイズ
+//   ① ヒット商品の「仕組み／名前ロゴ／イラスト」をマネしてみる→どの権利の侵害かが出る
+//   ② この成果物はどの権利？ 振り分けクイズ
 // ============================================================================
 
 type Right = "copyright" | "patent" | "trademark";
 
-const RIGHTS: Record<Right, { name: string; emoji: string; protects: string; ex: string; need: string; color: string }> = {
+const RIGHTS: Record<Right, { name: string; emoji: string; protects: string; need: string }> = {
   copyright: {
     name: "著作権",
     emoji: "🎨",
     protects: "文章・音楽・画像・プログラムなどの作品",
-    ex: "例：イラスト、小説、楽曲、写真、アプリのコード",
     need: "創作した時点で自動的に発生（申請不要）",
-    color: "rose",
   },
   patent: {
     name: "特許権",
     emoji: "💡",
     protects: "新しい技術・発明（仕組みやアイデア）",
-    ex: "例：新しい充電方式、便利な機械の仕組み",
     need: "特許庁に出願して認められる必要がある",
-    color: "amber",
   },
   trademark: {
     name: "商標権",
     emoji: "®️",
     protects: "商品名・サービス名・ロゴマーク",
-    ex: "例：ブランド名、企業ロゴ、商品の名前",
     need: "特許庁に出願して登録する",
-    color: "sky",
   },
-};
-
-const TONE: Record<string, { on: string; off: string }> = {
-  rose: { on: "bg-rose-500 text-white ring-rose-500", off: "bg-rose-50 text-rose-700 ring-rose-200" },
-  amber: { on: "bg-amber-500 text-white ring-amber-500", off: "bg-amber-50 text-amber-700 ring-amber-200" },
-  sky: { on: "bg-sky-500 text-white ring-sky-500", off: "bg-sky-50 text-sky-700 ring-sky-200" },
 };
 
 const ORDER: Right[] = ["copyright", "patent", "trademark"];
 
-function Nested() {
-  const [sel, setSel] = useState<Right | null>(null);
+// ヒット商品のマネできる3か所
+const PARTS: { right: Right; label: string; detail: string; verdict: string }[] = [
+  {
+    right: "patent",
+    label: "焼きムラゼロの新機構",
+    detail: "熱を均等に伝える独自の仕組み",
+    verdict: "仕組み・発明のマネ＝特許権の侵害！ 発明は特許庁に出願して守られている。",
+  },
+  {
+    right: "trademark",
+    label: "商品名・ロゴ「フワクレ」",
+    detail: "パッケージに輝くブランドロゴ",
+    verdict: "名前・ロゴのマネ＝商標権の侵害！ お客が本物と間違えて買ってしまう。",
+  },
+  {
+    right: "copyright",
+    label: "箱のかわいいイラスト",
+    detail: "描き下ろしのクレープキャラ",
+    verdict: "イラスト・作品のマネ＝著作権の侵害！ 描かれた瞬間から自動で守られている。",
+  },
+];
+
+function CopycatLab() {
+  const [tried, setTried] = useState<Record<Right, boolean>>({
+    copyright: false,
+    patent: false,
+    trademark: false,
+  });
+  const [current, setCurrent] = useState<Right | null>(null);
+  const allTried = ORDER.every((r) => tried[r]);
+
   return (
     <Panel>
-      <SectionTitle step={1}>知的財産権は「まとめ役」の名前</SectionTitle>
+      <SectionTitle step={1}>マネして売ったらどうなる？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">知的財産権</b>は、人が考えて生み出した成果を守る権利の<b>総称</b>。
-        その中に、守る対象ごとの権利があります。
+        大ヒット商品<b className="text-gray-800">「ふわふわクレープメーカー」</b>。
+        あなたはライバル会社の社員です。どこかを<b className="text-gray-800">マネして</b>売ってみよう。
       </p>
 
-      {/* 包含イメージ */}
+      {/* 商品カード */}
       <div className="mt-4 rounded-2xl bg-indigo-50 p-3 ring-2 ring-indigo-200">
-        <div className="text-center text-xs font-extrabold text-indigo-700">📚 知的財産権（総称）</div>
-        <div className="mt-2 grid grid-cols-3 gap-2">
-          {ORDER.map((r) => {
-            const card = RIGHTS[r];
-            const on = sel === r;
-            const tone = TONE[card.color];
+        <div className="text-center text-sm font-extrabold text-indigo-700">
+          🥞 ふわふわクレープメーカー（大ヒット中！）
+        </div>
+        <div className="mt-2 space-y-2">
+          {PARTS.map((p) => {
+            const done = tried[p.right];
+            const r = RIGHTS[p.right];
             return (
               <button
-                key={r}
-                onClick={() => setSel(r)}
-                className={`flex flex-col items-center rounded-xl p-2.5 ring-2 transition active:scale-95 ${
-                  on ? tone.on : tone.off
-                } ${on ? "" : "bg-white"}`}
+                key={p.right}
+                onClick={() => {
+                  setTried((prev) => ({ ...prev, [p.right]: true }));
+                  setCurrent(p.right);
+                }}
+                className={`flex w-full items-center gap-2.5 rounded-xl p-2.5 text-left ring-2 transition active:scale-[0.98] ${
+                  done
+                    ? "bg-rose-50 ring-rose-300"
+                    : "bg-white ring-gray-200"
+                }`}
               >
-                <span className="text-2xl leading-none">{card.emoji}</span>
-                <span className="mt-1 text-xs font-extrabold">{card.name}</span>
+                <span className="text-xl leading-none">{r.emoji}</span>
+                <span className="flex-1">
+                  <span className="block text-xs font-extrabold text-gray-800">{p.label}</span>
+                  <span className="block text-[10px] leading-relaxed text-gray-500">{p.detail}</span>
+                </span>
+                <span
+                  className={`flex-none rounded-full px-2 py-1 text-[10px] font-extrabold ${
+                    done ? "bg-rose-500 text-white" : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {done ? "⚖️ 訴えられた" : "マネする"}
+                </span>
               </button>
             );
           })}
         </div>
       </div>
 
+      {/* 判定結果 */}
       <div className="mt-3 min-h-[5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
-        {sel ? (
+        {current ? (
           <>
-            <div className="text-sm font-extrabold text-gray-800">
-              {RIGHTS[sel].emoji} {RIGHTS[sel].name}
+            <div className="text-sm font-extrabold text-rose-600">
+              ⚖️ {RIGHTS[current].emoji} {RIGHTS[current].name}の侵害で訴えられた！
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-gray-700">守るもの：{RIGHTS[sel].protects}</p>
-            <p className="mt-1 text-xs text-gray-500">{RIGHTS[sel].ex}</p>
-            <p className="mt-1.5 text-xs font-bold text-indigo-600">📌 {RIGHTS[sel].need}</p>
+            <p className="mt-1 text-xs leading-relaxed text-gray-700">
+              {PARTS.find((p) => p.right === current)!.verdict}
+            </p>
+            <p className="mt-1.5 text-xs text-gray-500">
+              守るもの：{RIGHTS[current].protects}
+              <br />📌 {RIGHTS[current].need}
+            </p>
           </>
         ) : (
-          <span className="text-sm text-gray-400">3つのうちどれかをタップしてね。</span>
+          <span className="text-sm text-gray-400">マネする場所をタップしてね。</span>
         )}
       </div>
+
+      {allTried && (
+        <div className="mt-2 rounded-xl bg-indigo-50 px-4 py-3 text-sm font-medium leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+          🎉 全部試したね。1つの商品でも<b>仕組み＝特許権、名前ロゴ＝商標権、イラスト＝著作権</b>と
+          部分ごとに別の権利で守られている。これらをまとめた総称が<b>知的財産権</b>！
+        </div>
+      )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         💡 <b>著作権は作った瞬間に自動で発生</b>（申請不要）。一方、<b>特許権・商標権は出願・登録が必要</b>。
@@ -171,7 +215,7 @@ export default function IntellectualPropertyExperience() {
         <b>著作権＝作品</b>、<b>特許権＝発明</b>、<b>商標権＝名前・ロゴ</b>、と「何を守るか」で分かれます。
       </div>
 
-      <Nested />
+      <CopycatLab />
       <Quiz />
     </div>
   );

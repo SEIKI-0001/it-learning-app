@@ -52,6 +52,8 @@ export type CompactTopic = {
   heroDiagram?: HeroDiagramSpec;
   visualLearning?: VisualLearningSpec;
   diagram?: DiagramSpec;
+  /** 「解説で理解を固める」セクションに表示する図解（比較表・流れ図など） */
+  explanationDiagram?: DiagramSpec;
   reviewQuestion?: string;
   reviewAnswer?: string;
   referenceKeywords?: string[];
@@ -155,6 +157,7 @@ export function createCompactTopic(topic: CompactTopic): Topic {
     explanation: {
       body: buildSummaryExplanation(topic, keyPoints),
       keyPoints,
+      diagram: topic.explanationDiagram,
     },
     reviewPrompt: {
       question:

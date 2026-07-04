@@ -5,12 +5,15 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「経営管理システム（CRM・SCM・ERP）」専用の体験。
-//   ① 3つのシステムを「何を管理するか」で対比（タップで切替）
+//   ① 会社の地図（仕入先→自社4部門→顧客）でシステムをタップ
+//      → 管理する「範囲」が光り、対象の違いが絵で分かる
 //   ② 「このシステムはどれ？」仕分けクイズ
 // ============================================================================
 
-type Sys = {
-  key: string;
+type SysKey = "crm" | "scm" | "erp";
+
+const SYS: {
+  key: SysKey;
   abbr: string;
   full: string;
   jp: string;
@@ -19,9 +22,7 @@ type Sys = {
   d: string;
   ex: string;
   tone: string;
-};
-
-const SYS: Sys[] = [
+}[] = [
   {
     key: "crm",
     abbr: "CRM",
@@ -57,45 +58,147 @@ const SYS: Sys[] = [
   },
 ];
 
-function Compare() {
-  const [open, setOpen] = useState("crm");
-  const active = SYS.find((s) => s.key === open)!;
+const DEPTS = [
+  { key: "acct", emo: "🧾", name: "会計" },
+  { key: "hr", emo: "👥", name: "人事" },
+  { key: "stock", emo: "📦", name: "在庫" },
+  { key: "sales", emo: "🛒", name: "販売" },
+];
+
+// 各システムが「光らせる」場所
+const COVER: Record<SysKey, { supplier: boolean; arrow1: boolean; depts: string[]; box: boolean; arrow2: boolean; customer: boolean }> = {
+  crm: { supplier: false, arrow1: false, depts: ["sales"], box: false, arrow2: true, customer: true },
+  scm: { supplier: true, arrow1: true, depts: ["stock", "sales"], box: false, arrow2: true, customer: true },
+  erp: { supplier: false, arrow1: false, depts: ["acct", "hr", "stock", "sales"], box: true, arrow2: false, customer: false },
+};
+
+const HI: Record<SysKey, { node: string; arrow: string; badge: string }> = {
+  crm: { node: "bg-rose-100 ring-rose-400", arrow: "text-rose-400", badge: "bg-rose-100 text-rose-700" },
+  scm: { node: "bg-sky-100 ring-sky-400", arrow: "text-sky-400", badge: "bg-sky-100 text-sky-700" },
+  erp: { node: "bg-emerald-100 ring-emerald-400", arrow: "text-emerald-400", badge: "bg-emerald-100 text-emerald-700" },
+};
+
+function CompanyMap() {
+  const [sys, setSys] = useState<SysKey | null>(null);
+  const [tried, setTried] = useState<Set<SysKey>>(new Set());
+  const active = SYS.find((s) => s.key === sys) ?? null;
+  const cover = sys ? COVER[sys] : null;
+  const hi = sys ? HI[sys] : null;
+  const allTried = tried.size === SYS.length;
+
+  const pick = (key: SysKey) => {
+    setSys(key);
+    setTried((prev) => new Set(prev).add(key));
+  };
+
   return (
     <Panel>
-      <SectionTitle step={1}>3つは「何を管理するか」が違う</SectionTitle>
+      <SectionTitle step={1}>どこを管理する？ 会社の地図で見る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        名前が似ていますが、<b className="text-gray-800">対象（どこを管理するか）</b>で区別できます。
-        タップして見比べましょう。
+        名前が似た3つのシステム。<b className="text-gray-800">タップすると、管理する範囲が光ります</b>。
+        違いは「どこを管理するか」だけ！
       </p>
+
+      {/* システム選択 */}
       <div className="mt-3 flex gap-1.5">
         {SYS.map((s) => {
-          const picked = open === s.key;
+          const picked = sys === s.key;
           return (
             <button
               key={s.key}
-              onClick={() => setOpen(s.key)}
+              onClick={() => pick(s.key)}
               className={`flex-1 rounded-xl py-2.5 text-center transition active:scale-95 ${
                 picked ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-300"
               }`}
             >
               <div className="text-lg">{s.emo}</div>
-              <div className="text-sm font-extrabold">{s.abbr}</div>
+              <div className="text-sm font-extrabold">
+                {s.abbr}
+                {tried.has(s.key) && !picked && <span className="ml-0.5 text-[10px]">✓</span>}
+              </div>
             </button>
           );
         })}
       </div>
 
-      <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${active.tone}`}>
-        <div className="text-sm font-extrabold">
-          {active.emo} {active.abbr}（{active.jp}）
+      {/* 会社の地図 */}
+      <div className="mt-3 rounded-xl bg-gray-50 p-2.5 ring-1 ring-gray-200">
+        <div className="flex items-center gap-1">
+          {/* 仕入先 */}
+          <div
+            className={`w-14 flex-none rounded-lg py-2 text-center ring-1 transition ${
+              cover?.supplier ? `${hi!.node} animate-pulse` : "bg-white ring-gray-200"
+            }`}
+          >
+            <div className="text-lg">🏭</div>
+            <div className="text-[9px] font-bold text-gray-600">仕入先</div>
+          </div>
+          <span className={`flex-none text-sm font-bold transition ${cover?.arrow1 ? `${hi!.arrow} animate-pulse` : "text-gray-200"}`}>
+            →
+          </span>
+          {/* 自社 */}
+          <div
+            className={`flex-1 rounded-lg p-1.5 ring-2 transition ${
+              cover?.box ? `${hi!.node}` : "bg-white ring-gray-200"
+            }`}
+          >
+            <div className="text-center text-[9px] font-extrabold text-gray-500">🏢 自社</div>
+            <div className="mt-1 grid grid-cols-2 gap-1">
+              {DEPTS.map((d) => {
+                const on = cover?.depts.includes(d.key);
+                return (
+                  <div
+                    key={d.key}
+                    className={`rounded-md py-1 text-center ring-1 transition ${
+                      on ? `${hi!.node} animate-pulse` : "bg-gray-50 ring-gray-200"
+                    }`}
+                  >
+                    <span className="text-xs">{d.emo}</span>
+                    <span className="ml-0.5 text-[10px] font-bold text-gray-700">{d.name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <span className={`flex-none text-sm font-bold transition ${cover?.arrow2 ? `${hi!.arrow} animate-pulse` : "text-gray-200"}`}>
+            →
+          </span>
+          {/* 顧客 */}
+          <div
+            className={`w-14 flex-none rounded-lg py-2 text-center ring-1 transition ${
+              cover?.customer ? `${hi!.node} animate-pulse` : "bg-white ring-gray-200"
+            }`}
+          >
+            <div className="text-lg">🙋</div>
+            <div className="text-[9px] font-bold text-gray-600">顧客</div>
+          </div>
         </div>
-        <div className="mt-0.5 text-[11px] font-mono opacity-70">{active.full}</div>
-        <div className="mt-2 inline-block rounded-full bg-white/70 px-2.5 py-0.5 text-xs font-bold">
-          管理する対象：{active.target}
-        </div>
-        <p className="mt-2 text-[13px] leading-relaxed">{active.d}</p>
-        <p className="mt-1.5 text-xs font-medium opacity-80">{active.ex}</p>
+        {!sys && <p className="mt-2 text-center text-[11px] text-gray-400">↑ ボタンをタップすると範囲が光ります</p>}
       </div>
+
+      {/* 説明 */}
+      {active && (
+        <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${active.tone}`}>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-extrabold">
+              {active.emo} {active.abbr}（{active.jp}）
+            </span>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${HI[active.key].badge}`}>
+              光った範囲＝{active.target}
+            </span>
+          </div>
+          <div className="mt-0.5 text-[11px] font-mono opacity-70">{active.full}</div>
+          <p className="mt-2 text-[13px] leading-relaxed">{active.d}</p>
+          <p className="mt-1.5 text-xs font-medium opacity-80">{active.ex}</p>
+        </div>
+      )}
+
+      {allTried && (
+        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
+          🎉 3つとも光らせた！ <b>CRM＝顧客との関係</b>、<b>SCM＝モノの流れ全体</b>、
+          <b>ERP＝社内をまるごと統合</b>。管理する「範囲」が違うだけです。
+        </div>
+      )}
 
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ 覚え方：<b>CRM＝顧客（Customer）</b>／<b>SCM＝供給の流れ（Supply Chain）</b>／
@@ -183,7 +286,7 @@ export default function ManagementSystemsExperience() {
         <b>顧客／供給の流れ／社内資源</b>のどれかで覚えましょう。
       </div>
 
-      <Compare />
+      <CompanyMap />
       <Quiz />
     </div>
   );

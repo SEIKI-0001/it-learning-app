@@ -7,11 +7,14 @@ import { useAppState } from "@/lib/useAppState";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
+import { computeProgressSummary } from "@/lib/progressSummary";
 import { getRankStatus } from "@/lib/rank";
 import type { ReviewItem } from "@/types";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import AchievementStrip from "@/components/progress/AchievementStrip";
+import LoadingScreen from "@/components/LoadingScreen";
+import LogoutLink from "@/components/auth/LogoutLink";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
 function daysSince(iso: string | undefined): number | null {
@@ -94,11 +97,7 @@ export default function ProgressPage() {
   }, [state, router]);
 
   if (state === undefined || state === null) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   const { profile, progress } = state;
@@ -106,9 +105,9 @@ export default function ProgressPage() {
   const topics = getAllTopics();
   const remaining = daysUntilExam(profile);
   const mastery = fieldMastery(progress, topics);
-  const completedCount = progress.completedTopics.length;
-  const overall =
-    topics.length > 0 ? Math.round((completedCount / topics.length) * 100) : 0;
+  const summary = computeProgressSummary(topics, progress);
+  const completedCount = summary.completedCount;
+  const overall = summary.readinessPct;
 
   const reviewQueue = progress.reviewQueue ?? [];
   const reviewCount = reviewQueue.length;
@@ -194,14 +193,9 @@ export default function ProgressPage() {
           {/* 実績バッジ(バナー内にコンパクト表示) */}
           <AchievementStrip state={state} />
 
-          {/* アカウント: ログアウト（Google / LINE セッションを破棄して /login へ） */}
+          {/* アカウント: ログアウト（ローカルデータ消去 → Google / LINE セッション破棄 → /login） */}
           <div className="mt-3 text-right">
-            <a
-              href="/api/auth/logout"
-              className="text-[11px] font-semibold text-white/70 underline underline-offset-4"
-            >
-              ログアウト
-            </a>
+            <LogoutLink className="text-[11px] font-semibold text-white/70 underline underline-offset-4" />
           </div>
         </div>
       </header>

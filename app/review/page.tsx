@@ -16,6 +16,7 @@ import {
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import BottomNav from "@/components/BottomNav";
+import LoadingScreen from "@/components/LoadingScreen";
 
 // 復習画面。間違えた問題・苦手Topic・復習期限が来たTopicをまとめ、
 // 「もう一度解く」「理解済みにする」を提供する。
@@ -51,11 +52,7 @@ export default function ReviewPage() {
   }, [state]);
 
   if (state === undefined || state === null) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 text-gray-400">
-        読み込み中…
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   function handleRetryComplete(topicId: string, answers: UserAnswer[]) {
