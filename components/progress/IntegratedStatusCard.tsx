@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getUserId, refreshIntegratedStatus } from "@/lib/userSession";
 import {
   overallStatusLabel,
   overallStatusTone,
@@ -11,21 +9,14 @@ import {
 // 統合進捗カード（/progress 上部）。
 // 確認問題・単語帳・過去問レベル・日次達成度を統合した「合格に対する現在地」を初心者向けに表示する。
 // 未ログイン・Supabase 未設定・失敗のときは何も表示しない（既存表示を壊さない）。
-export default function IntegratedStatusCard() {
-  const [status, setStatus] = useState<IntegratedLearningStatus | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    const userId = getUserId();
-    if (!userId) return;
-    // 表示のたびに当日分を再計算して保存する（軽量なルールベース計算）。
-    void refreshIntegratedStatus(userId).then((s) => {
-      if (alive) setStatus(s);
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
+export default function IntegratedStatusCard({
+  status,
+  loading = false,
+}: {
+  status: IntegratedLearningStatus | null;
+  loading?: boolean;
+}) {
+  if (loading) return <IntegratedStatusSkeleton />;
 
   if (!status) return null;
 
@@ -102,6 +93,38 @@ export default function IntegratedStatusCard() {
           <LegendDot tone="bg-emerald-400" label={`復習・単語 ${focus.review}%`} />
           <LegendDot tone="bg-rose-400" label={`過去問レベル ${focus.examPractice}%`} />
         </div>
+      </div>
+    </section>
+  );
+}
+
+function IntegratedStatusSkeleton() {
+  return (
+    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="h-3 w-20 rounded-full bg-gray-100" />
+          <div className="mt-2 h-7 w-36 rounded-full bg-gray-100" />
+        </div>
+        <div className="shrink-0 text-right">
+          <div className="ml-auto h-3 w-20 rounded-full bg-gray-100" />
+          <div className="mt-2 h-8 w-16 rounded-full bg-gray-100" />
+        </div>
+      </div>
+      <div className="mt-3 h-10 rounded-xl bg-indigo-50/70" />
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="rounded-xl bg-gray-50 px-3 py-2">
+            <div className="mx-auto h-5 w-12 rounded-full bg-gray-100" />
+            <div className="mx-auto mt-2 h-3 w-16 rounded-full bg-gray-100" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 h-3 rounded-full bg-gray-100" />
+      <div className="mt-2 flex gap-2">
+        <div className="h-3 w-24 rounded-full bg-gray-100" />
+        <div className="h-3 w-24 rounded-full bg-gray-100" />
+        <div className="h-3 w-28 rounded-full bg-gray-100" />
       </div>
     </section>
   );

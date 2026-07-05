@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
-  generatePlanAdjustment,
   getUserId,
-  refreshIntegratedStatus,
   respondToPlanAdjustment,
 } from "@/lib/userSession";
 import {
@@ -21,31 +19,27 @@ import {
 // 計画の立て直し提案カード（/progress・統合進捗カードの下）。
 // 遅れ・弱点・リスクを検知したときだけ、複数の立て直し案を提示する。
 // 未ログイン・Supabase 未設定・提案不要・失敗なら何も表示しない（既存表示を壊さない）。
-export default function PlanAdjustmentCard() {
-  const [proposal, setProposal] = useState<PlanAdjustmentProposal | null>(null);
+export default function PlanAdjustmentCard({
+  proposal: initialProposal,
+  loading = false,
+}: {
+  proposal: PlanAdjustmentProposal | null;
+  loading?: boolean;
+}) {
+  const [localProposal, setLocalProposal] =
+    useState<PlanAdjustmentProposal | null>(null);
   const [selectedId, setSelectedId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    let alive = true;
-    const userId = getUserId();
-    if (!userId) return;
-    // 先に当日の統合進捗を確定させてから提案を生成する（土台の取りこぼしを防ぐ）。
-    void (async () => {
-      await refreshIntegratedStatus(userId);
-      const p = await generatePlanAdjustment(userId);
-      if (!alive) return;
-      setProposal(p);
-      if (p && p.options.length > 0) setSelectedId(p.options[0].optionId);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
+  if (loading) return <PlanAdjustmentSkeleton />;
 
+  const proposal = localProposal ?? initialProposal;
   if (!proposal) return null;
   // 見送り・期限切れは表示しない。
   if (proposal.status === "rejected" || proposal.status === "expired") return null;
+  const activeSelectedId = proposal.options.some((o) => o.optionId === selectedId)
+    ? selectedId
+    : (proposal.options[0]?.optionId ?? "");
 
   // すでに承認済み：選んだ案の確認だけを表示する。
   if (proposal.status === "accepted") {
@@ -75,13 +69,13 @@ export default function PlanAdjustmentCard() {
       userId,
       proposal!.proposalId,
       action,
-      action === "accept" ? selectedId : undefined,
+      action === "accept" ? activeSelectedId : undefined,
     );
     setSubmitting(false);
-    if (updated) setProposal(updated);
+    if (updated) setLocalProposal(updated);
     else if (action === "reject") {
       // 保存に失敗しても、見送りの意思は画面上は反映する。
-      setProposal({ ...proposal!, status: "rejected" });
+      setLocalProposal({ ...proposal!, status: "rejected" });
     }
   }
 
@@ -113,7 +107,7 @@ export default function PlanAdjustmentCard() {
           <OptionCard
             key={opt.optionId}
             option={opt}
-            selected={selectedId === opt.optionId}
+            selected={activeSelectedId === opt.optionId}
             onSelect={() => setSelectedId(opt.optionId)}
           />
         ))}
@@ -122,7 +116,7 @@ export default function PlanAdjustmentCard() {
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
         <button
           type="button"
-          disabled={submitting || !selectedId}
+          disabled={submitting || !activeSelectedId}
           onClick={() => respond("accept")}
           className="flex-1 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-extrabold text-white shadow transition active:scale-[0.99] disabled:opacity-50"
         >
@@ -136,6 +130,31 @@ export default function PlanAdjustmentCard() {
         >
           今回は見送る
         </button>
+      </div>
+    </section>
+  );
+}
+
+function PlanAdjustmentSkeleton() {
+  return (
+    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+      <div className="flex items-center justify-between gap-3">
+        <div className="h-5 w-40 rounded-full bg-gray-100" />
+        <div className="h-6 w-28 rounded-full bg-gray-100" />
+      </div>
+      <div className="mt-3 h-4 w-3/4 rounded-full bg-gray-100" />
+      <div className="mt-2 h-10 rounded-xl bg-gray-50" />
+      <div className="mt-3 space-y-2.5">
+        {[0, 1].map((i) => (
+          <div key={i} className="rounded-2xl bg-gray-50 p-3 ring-1 ring-gray-100">
+            <div className="flex items-center justify-between gap-2">
+              <div className="h-4 w-36 rounded-full bg-gray-100" />
+              <div className="h-5 w-14 rounded-full bg-white" />
+            </div>
+            <div className="mt-2 h-3 w-full rounded-full bg-gray-100" />
+            <div className="mt-2 h-2 rounded-full bg-gray-100" />
+          </div>
+        ))}
       </div>
     </section>
   );

@@ -84,6 +84,11 @@ export type ResolveResult = {
   appState: AppState | null; // DB に既存データがあれば復元用の AppState
 };
 
+export type ProgressBootstrapResult = ResolveResult & {
+  integratedStatus: IntegratedLearningStatus | null;
+  planAdjustmentProposal: PlanAdjustmentProposal | null;
+};
+
 /** トークンを検証し、user_id と（あれば）DB上の AppState を取得する。 */
 export async function resolveToken(token: string): Promise<ResolveResult | null> {
   try {
@@ -135,6 +140,35 @@ export async function restoreFromSession(): Promise<ResolveResult | null> {
     const data = (await res.json()) as { ok: boolean } & Partial<ResolveResult>;
     if (!data.ok || !data.userId) return null;
     return { userId: data.userId, appState: data.appState ?? null };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * /progress 初期表示に必要なサーバー状態をまとめて取得する。
+ * 未ログイン・失敗時は null、Supabase 未設定時は中身 null の結果を返す
+ * （どちらも既存の localStorage 表示を継続）。
+ */
+export async function fetchProgressBootstrap(
+  userId?: string | null,
+): Promise<ProgressBootstrapResult | null> {
+  try {
+    const res = await fetch("/api/progress/bootstrap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: userId ?? undefined }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok: boolean } & Partial<ProgressBootstrapResult>;
+    if (!data.ok || !data.userId) return null;
+    setUserId(data.userId);
+    return {
+      userId: data.userId,
+      appState: data.appState ?? null,
+      integratedStatus: data.integratedStatus ?? null,
+      planAdjustmentProposal: data.planAdjustmentProposal ?? null,
+    };
   } catch {
     return null;
   }

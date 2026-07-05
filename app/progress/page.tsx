@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
+import { mergeAppState } from "@/lib/mergeAppState";
+import { saveAppState } from "@/lib/storage";
+import {
+  fetchProgressBootstrap,
+  getUserId,
+  type ProgressBootstrapResult,
+} from "@/lib/userSession";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
@@ -93,13 +100,51 @@ function comebackLabel(gap: number | null): string {
 // 進捗画面。サマリ/習熟度の下に「次のアクション」「リベンジ対象」を配置した学習ホーム。
 export default function ProgressPage() {
   const router = useRouter();
-  const [state] = useAppState();
+  const [state, setState] = useAppState();
+  const [bootstrap, setBootstrap] = useState<ProgressBootstrapResult | null>(null);
+  const [bootstrapLoading, setBootstrapLoading] = useState(true);
+  const bootstrappedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (state === null) router.replace("/onboarding");
-  }, [state, router]);
+    if (state === undefined) return;
 
-  if (state === undefined || state === null) {
+    let alive = true;
+    const userId = getUserId();
+    const key = userId ?? "session";
+    if (bootstrappedKeyRef.current === key) return;
+    bootstrappedKeyRef.current = key;
+    setBootstrapLoading(true);
+
+    void fetchProgressBootstrap(userId).then((data) => {
+      if (!alive) return;
+      setBootstrap(data);
+      if (data?.userId) bootstrappedKeyRef.current = data.userId;
+
+      if (data?.appState) {
+        const next = state ? mergeAppState(state, data.appState) : data.appState;
+        if (JSON.stringify(next) !== JSON.stringify(state)) {
+          saveAppState(next);
+          setState(next);
+        }
+      }
+    }).finally(() => {
+      if (alive) setBootstrapLoading(false);
+    });
+
+    return () => {
+      alive = false;
+    };
+  }, [state, setState]);
+
+  useEffect(() => {
+    if (state === null && !bootstrapLoading) router.replace("/onboarding");
+  }, [state, bootstrapLoading, router]);
+
+  if (state === undefined || (state === null && bootstrapLoading)) {
+    return <LoadingScreen />;
+  }
+
+  if (state === null) {
     return <LoadingScreen />;
   }
 
@@ -205,10 +250,16 @@ export default function ProgressPage() {
 
       <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4 md:max-w-4xl">
         {/* 統合進捗カード（合格に対する現在地・主なリスク・今週の推奨配分） */}
-        <IntegratedStatusCard />
+        <IntegratedStatusCard
+          status={bootstrap?.integratedStatus ?? null}
+          loading={bootstrapLoading}
+        />
 
         {/* 計画の立て直し提案（遅れ・弱点・リスクを検知したときのみ表示） */}
-        <PlanAdjustmentCard />
+        <PlanAdjustmentCard
+          proposal={bootstrap?.planAdjustmentProposal ?? null}
+          loading={bootstrapLoading}
+        />
 
         {/* 数値サマリ */}
         <div className="grid grid-cols-3 gap-3">
