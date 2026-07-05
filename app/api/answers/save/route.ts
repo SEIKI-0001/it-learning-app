@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     user_id: userId,
     question_id: a.questionId,
     day_no: dayNo,
-    selected_choice: a.selectedChoice,
+    selected_choice: a.selectedChoice ?? null,
     is_correct: a.isCorrect,
     tag: a.tag,
     topic_id: a.topicId ?? null,
