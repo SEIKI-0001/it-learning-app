@@ -17,7 +17,7 @@ import type {
 } from "@/types/checkpoint";
 import type { TopicField } from "@/types/content";
 import { getAllTopics } from "@/lib/content";
-import { fieldMastery } from "@/lib/study";
+import { fieldMastery, recentAccuracy } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
 
 // 習熟度のしきい値。confirm quiz で 3/4 正解 → mastery=75 になる前提で調整。
@@ -535,12 +535,6 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     if (m >= 100) perfectCount += 1;
   }
 
-  const recent = state.answers.slice(-20);
-  const recentAccuracy =
-    recent.length >= 5
-      ? recent.filter((a) => a.isCorrect).length / recent.length
-      : 0;
-
   const summary = computeProgressSummary(topics, progress);
   const cp = progress.checkpointProgress;
 
@@ -554,7 +548,7 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     reviewCount: (progress.reviewQueue ?? []).length,
     weakTagCount: (progress.weakTags ?? []).length,
     fieldMasteryAvg: fieldMastery(progress, topics),
-    recentAccuracy,
+    recentAccuracy: recentAccuracy(state.answers),
     readinessPct: summary.readinessPct,
     wordMasteredCount: signals?.wordMasteredCount ?? 0,
     examLevelClearedTopicCount: signals?.examLevelClearedTopicCount ?? 0,
@@ -701,6 +695,27 @@ export function buildBadgeStatuses(
       fromDrop: earned?.fromDrop,
     };
   });
+}
+
+/**
+ * 「次に狙うバッジ」を優先度順に選ぶ共通ロジック。
+ * 未獲得のうち、必須（requiredForGate）→ 条件達成間近（conditionMet）を優先する。
+ * /badges のヒーロー・BadgeList のハイライト・/today のカードで同じ並びを使う。
+ * カテゴリ絞り込み（例: final を除く）は呼び出し側で事前に filter しておく。
+ */
+export function selectNextBadges(
+  statuses: BadgeStatus[],
+  limit = 1,
+): BadgeStatus[] {
+  return statuses
+    .filter((s) => !s.earned)
+    .sort((a, b) => {
+      if (a.def.requiredForGate !== b.def.requiredForGate) {
+        return a.def.requiredForGate ? -1 : 1;
+      }
+      return Number(b.conditionMet) - Number(a.conditionMet);
+    })
+    .slice(0, limit);
 }
 
 /** 進捗から wordlist マスター数など「既存データで足りるぶん」だけ数える補助。 */

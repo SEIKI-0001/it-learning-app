@@ -8,7 +8,9 @@ import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getQuestionsByTopic, getReviewItemsForUser, getTopic } from "@/lib/content";
-import { completeTopicStudy, markTopicMastered } from "@/lib/study";
+import { markTopicMastered } from "@/lib/study";
+import { completeStudySession } from "@/lib/studySession";
+import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
   saveAnswersToDb,
@@ -62,7 +64,13 @@ export default function ReviewPage() {
       ...a,
       tag: topic?.tags[0] ?? topic?.field ?? a.tag,
     }));
-    const next = completeTopicStudy(state, topicId, tagged);
+    // 完了・バッジ確定付与・追加ドロップを /today と同一の共通経路で処理する。
+    const { state: next } = completeStudySession(
+      state,
+      topicId,
+      tagged,
+      getClientBadgeSignals(),
+    );
     saveAppState(next);
     setState(next);
     setOpenId(null);

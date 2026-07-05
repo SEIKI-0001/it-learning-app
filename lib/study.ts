@@ -1,6 +1,6 @@
 import type { AppState, ReviewItem, UserAnswer, UserProgress } from "@/types";
 import type { Topic } from "@/types/content";
-import { calculateLevel } from "@/lib/game";
+import { grantExp } from "@/lib/game";
 
 // ============================================================================
 // トピック単位の学習進行(7日固定の completeQuest に代わる新ロジック)。
@@ -34,6 +34,20 @@ function nextStreak(progress: UserProgress, now: Date): number {
 function correctRatio(answers: UserAnswer[]): number {
   if (answers.length === 0) return 1;
   return answers.filter((a) => a.isCorrect).length / answers.length;
+}
+
+/**
+ * 直近の正答率（0〜1）。ゲート判定・バッジ条件の共通ヘルパー。
+ * 直近 window 件で計算し、min 件に満たなければ 0（＝判定材料が不足）を返す。
+ */
+export function recentAccuracy(
+  answers: UserAnswer[],
+  window = 20,
+  min = 5,
+): number {
+  const recent = answers.slice(-window);
+  if (recent.length < min) return 0;
+  return recent.filter((a) => a.isCorrect).length / recent.length;
 }
 
 /** 復習期限を算出。習熟度が高いほど先送り(簡易の間隔反復)。 */
@@ -71,7 +85,10 @@ export function completeTopicStudy(
   if (!wasCompleted) gainedExp += 20; // 新規習得ボーナス
 
   const allAnswers = [...state.answers, ...newAnswers];
-  const newExp = state.progress.exp + gainedExp;
+  const { exp: newExp, level: newLevel } = grantExp(
+    state.progress.exp,
+    gainedExp,
+  );
 
   const completedTopics = wasCompleted
     ? state.progress.completedTopics
@@ -93,7 +110,7 @@ export function completeTopicStudy(
     progress: {
       ...state.progress,
       exp: newExp,
-      level: calculateLevel(newExp),
+      level: newLevel,
       streakCount: nextStreak(state.progress, now),
       weakTags: recomputeWeakTags(allAnswers),
       lastPlayedAt: now.toISOString(),
@@ -125,6 +142,33 @@ export function markTopicMastered(
   };
 }
 
+/**
+ * 複数トピックを復習キューへ追加する（重複は追加しない・dueAt は now）。
+ * 復習追加の dedup ルールをここに一本化する（最終問題の不合格追加などから再利用）。
+ */
+export function addTopicsToReview(
+  state: AppState,
+  topicIds: string[],
+  reason = "あとで復習",
+  now: Date = new Date(),
+): AppState {
+  const existing = new Set(state.progress.reviewQueue.map((r) => r.topicId));
+  const additions: ReviewItem[] = [];
+  for (const topicId of topicIds) {
+    if (existing.has(topicId)) continue;
+    existing.add(topicId);
+    additions.push({ topicId, dueAt: now.toISOString(), reason });
+  }
+  if (additions.length === 0) return state;
+  return {
+    ...state,
+    progress: {
+      ...state.progress,
+      reviewQueue: [...state.progress.reviewQueue, ...additions],
+    },
+  };
+}
+
 /** トピックを復習対象に追加する(詳細ページの「復習対象に追加」導線)。 */
 export function addTopicToReview(
   state: AppState,
@@ -132,19 +176,7 @@ export function addTopicToReview(
   reason = "あとで復習",
   now: Date = new Date(),
 ): AppState {
-  if (state.progress.reviewQueue.some((r) => r.topicId === topicId)) return state;
-  const item: ReviewItem = {
-    topicId,
-    dueAt: now.toISOString(),
-    reason,
-  };
-  return {
-    ...state,
-    progress: {
-      ...state.progress,
-      reviewQueue: [...state.progress.reviewQueue, item],
-    },
-  };
+  return addTopicsToReview(state, [topicId], reason, now);
 }
 
 /** 3分野ごとの習熟度(0〜100)を平均で算出する。 */

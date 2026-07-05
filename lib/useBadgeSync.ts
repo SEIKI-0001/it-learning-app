@@ -8,9 +8,12 @@ import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { getUserId, saveProgressToDb } from "@/lib/userSession";
 
 /**
- * 条件を満たしたバッジを取りこぼさず確定付与するための同期フック。
- * どの画面でも状態が更新されたら、いま満たしているバッジを確定で獲得させる。
+ * バッジ確定付与の「取りこぼしを拾う」冪等な catch-up フック。
+ * 学習完了時のバッジ付与・追加ドロップの主経路は lib/studySession.ts の
+ * completeStudySession（/today・/review・確認問題で共通）。このフックは、
+ * 単語帳・過去問レベルなど別画面のシグナル変化で後から条件を満たしたケースを補完する。
  * - 冪等: 新規獲得が無ければ state を変更しない（無限ループしない）。
+ * - 追加ドロップは発生させない（ドロップは完了イベント＝主経路に紐づく）。
  * - チェックポイントの前進は行わない（最終問題クリアのみ）。
  */
 export function useBadgeSync(

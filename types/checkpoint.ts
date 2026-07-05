@@ -184,3 +184,23 @@ export type CheckpointGate = {
   finalExamPassed: boolean;
   canAdvance: boolean;
 };
+
+/**
+ * 最終問題（突破試験）の状態。全画面で同じ語彙・同じ判定を使うための共通表現。
+ * ロック中 / 挑戦できます / クリア済み の3状態に統一する。
+ */
+export type FinalExamState = "locked" | "unlocked" | "passed";
+
+/** 状態ラベル（見出し・行内など幅のある場所向け）。 */
+export const FINAL_EXAM_STATE_LABELS: Record<FinalExamState, string> = {
+  locked: "🔒 突破試験：ロック中",
+  unlocked: "⚔️ 突破試験：挑戦できます",
+  passed: "🏆 突破試験：クリア済み",
+};
+
+/** 状態ラベル（ピル・バッジなど狭い場所向けの短縮形）。 */
+export const FINAL_EXAM_STATE_SHORT: Record<FinalExamState, string> = {
+  locked: "🔒 ロック中",
+  unlocked: "⚔️ 挑戦できます",
+  passed: "🏆 クリア済み",
+};

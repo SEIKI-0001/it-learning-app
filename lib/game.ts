@@ -25,6 +25,19 @@ export function getLevelName(level: number): string {
   return LEVELS.find((l) => l.level === level)?.name ?? "IT見習い";
 }
 
+/**
+ * EXP を加算し、レベルを必ず再計算して返す（XP付与の単一窓口）。
+ * トピック学習・バッジ確定付与・追加ドロップなど、EXP を足す処理はすべてこれを通す。
+ * これにより exp と level が乖離しない（level 未更新のバグを防ぐ）。
+ */
+export function grantExp(
+  exp: number,
+  amount: number,
+): { exp: number; level: number } {
+  const nextExp = exp + amount;
+  return { exp: nextExp, level: calculateLevel(nextExp) };
+}
+
 /** EXPバー表示用：現在レベルの下限・次レベルの下限を返す（Lv5は上限=下限+1で満タン表示） */
 export function getLevelRange(level: number): { min: number; next: number } {
   const idx = LEVELS.findIndex((l) => l.level === level);

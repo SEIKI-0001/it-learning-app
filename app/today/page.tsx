@@ -9,14 +9,12 @@ import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
 import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
-import { completeTopicStudy } from "@/lib/study";
+import { completeStudySession } from "@/lib/studySession";
 import {
-  applyBadgeProgress,
   buildCheckpointGate,
   getCheckpoint,
   getCheckpointProgress,
 } from "@/lib/checkpoints";
-import { applyBadgeDrop } from "@/lib/badgeDrops";
 import { getBadge } from "@/lib/badges";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { useBadgeSync } from "@/lib/useBadgeSync";
@@ -147,19 +145,11 @@ export default function TodayPage() {
       ...a,
       tag: primary.tags[0] ?? primary.field,
     }));
-    const studied = completeTopicStudy(state, primary.id, tagged);
-
-    // 学習結果を反映したうえで、条件を満たしたバッジを確定付与する（ランダム非依存）。
+    // 完了・バッジ確定付与・追加ドロップまでを共通オーケストレータで一括処理する。
     const signals = getClientBadgeSignals();
-    const awarded = applyBadgeProgress(studied, signals);
-    let finalState = awarded.state;
-    // 条件達成後だけ追加ドロップを1回発生させる（補助報酬・進行は動かさない）。
-    let dropLabel: string | null = null;
-    if (awarded.newlyEarnedIds.length > 0) {
-      const dropped = applyBadgeDrop(finalState);
-      finalState = dropped.state;
-      dropLabel = `${dropped.drop.emoji} ${dropped.drop.label}`;
-    }
+    const session = completeStudySession(state, primary.id, tagged, signals);
+    const finalState = session.state;
+    const dropLabel = session.dropLabel;
 
     saveAppState(finalState);
     setState(finalState);
@@ -181,7 +171,7 @@ export default function TodayPage() {
       total,
       gainedExp: finalState.progress.exp - state.progress.exp,
       streak: finalState.progress.streakCount,
-      newlyBadges: awarded.newlyEarnedIds
+      newlyBadges: session.newlyEarnedIds
         .map((id) => getBadge(id)?.label)
         .filter((v): v is string => !!v),
       drop: dropLabel,

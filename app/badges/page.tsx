@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
-import { buildBadgeStatuses } from "@/lib/badges";
+import { buildBadgeStatuses, selectNextBadges } from "@/lib/badges";
 import type { BadgeStatus } from "@/types/checkpoint";
 import {
   CHECKPOINTS,
+  buildCheckpointGate,
   getCheckpointProgress,
 } from "@/lib/checkpoints";
 import BadgeList, { badgeActionHref } from "@/components/badges/BadgeList";
@@ -57,11 +58,11 @@ export default function BadgesPage() {
       return Number(b.conditionMet) - Number(a.conditionMet);
     });
 
-  // 「次に狙うべきバッジ」= 現在CPの未獲得バッジのうち、必須→条件間近を最優先。
-  const currentSorted = sortStatuses(
-    buildBadgeStatuses(state, signals, currentId).filter((s) => !s.earned),
-  );
-  const recommended = currentSorted[0];
+  // 「次に狙うべきバッジ」= 現在CPの未獲得バッジの最優先（選定は共通ロジックに一本化）。
+  const recommended = selectNextBadges(
+    buildBadgeStatuses(state, signals, currentId),
+    1,
+  )[0];
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -126,12 +127,8 @@ export default function BadgesPage() {
         {checkpoints.map((cp) => {
           const statuses = sortStatuses(buildBadgeStatuses(state, signals, cp.id));
           const earned = statuses.filter((s) => s.earned).length;
-          const requiredTotal = statuses.filter(
-            (s) => s.def.requiredForGate,
-          ).length;
-          const requiredEarned = statuses.filter(
-            (s) => s.def.requiredForGate && s.earned,
-          ).length;
+          // 必須バッジの充足はゲート判定と同一ソースにする（GateCard と数値がズレない）。
+          const gate = buildCheckpointGate(state, cp.id);
           const isCleared = cpProgress.clearedCheckpointIds.includes(cp.id);
           const isCurrent = currentId === cp.id;
 
@@ -160,8 +157,8 @@ export default function BadgesPage() {
                 </span>
               </div>
               <p className="mb-3 text-xs font-semibold text-gray-500">
-                必須バッジ {requiredEarned}/{requiredTotal} 獲得（
-                {cp.requiredBadgeCount} 個で最終問題が解放）
+                必須バッジ {gate.earnedRequiredCount}/{gate.requiredBadgeCount}{" "}
+                獲得（{gate.requiredBadgeCount} 個で最終問題が解放）
               </p>
               <BadgeList
                 statuses={statuses}

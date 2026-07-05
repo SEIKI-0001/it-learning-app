@@ -1,5 +1,6 @@
 import type { ReviewItem, StudyStyle, UserProfile, UserProgress, WeeklyPlan } from "@/types";
 import type { TopicField } from "@/types/content";
+import type { CheckpointProgress } from "@/types/checkpoint";
 import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
 // 型のみ import（"use client" のランタイムは取り込まれない＝サーバーから安全に参照できる）。
 import type { WordProgress } from "@/lib/wordlistProgress";
@@ -49,6 +50,8 @@ export type ProgressRow = {
   topic_mastery: Record<string, number> | null;
   review_queue: ReviewItem[] | null;
   weekly_plan: WeeklyPlan | null;
+  // バッジゲート型ロードマップの進行状態（獲得バッジ・クリアCP・最終問題履歴・欠片・天井）。
+  checkpoint_progress: CheckpointProgress | null;
 };
 
 export type ProfileRow = {
@@ -77,6 +80,8 @@ export function progressRowToProgress(row: ProgressRow): UserProgress {
     topicMastery: row.topic_mastery ?? {},
     reviewQueue: row.review_queue ?? [],
     weeklyPlan: row.weekly_plan ?? null,
+    // 未設定（列 NULL）のときは undefined のままにし、localStorage 側の補完・migrate に委ねる。
+    checkpointProgress: row.checkpoint_progress ?? undefined,
     // 旧版互換
     currentDay: row.current_day ?? 1,
     completedDays: row.completed_days ?? [],
@@ -100,6 +105,7 @@ export function progressToRow(
     topic_mastery: p.topicMastery ?? {},
     review_queue: p.reviewQueue ?? [],
     weekly_plan: p.weeklyPlan ?? null,
+    checkpoint_progress: p.checkpointProgress ?? null,
     updated_at: new Date().toISOString(),
   };
 }

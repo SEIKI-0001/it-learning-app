@@ -7,14 +7,11 @@ import { ON_TRACK_LABELS, ON_TRACK_STYLE } from "@/types/plan";
 import type { ReferenceBook } from "@/types/referenceBook";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
-import {
-  generateLearningPlan,
-  getPhaseDef,
-  resolveWeeklyPlan,
-} from "@/lib/studyPlanner";
+import { generateLearningPlan, resolveWeeklyPlan } from "@/lib/studyPlanner";
 import { saveAppState } from "@/lib/storage";
 import { getUserId, saveProgressToDb, saveProfileToDb } from "@/lib/userSession";
 import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import { buildCheckpointRoadmap } from "@/lib/checkpoints";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import BottomNav from "@/components/BottomNav";
 import RoadmapMap from "@/components/RoadmapMap";
@@ -96,7 +93,6 @@ export default function PlanPage() {
     return <LoadingScreen />;
   }
 
-  const phaseDef = getPhaseDef(plan.currentPhase);
   const bookProgress = referenceBookProgress(book);
   const weeklyDone = plan.weeklyItems.filter((i) => i.checked).length;
 
@@ -133,46 +129,15 @@ export default function PlanPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-3xl">
-        {/* バッジゲート型ロードマップ: 現在CP・必要バッジ・不足・最終問題の解放状態 */}
+        {/* バッジゲート型ロードマップ: 現在CP・必要バッジ・不足・最終問題の解放状態（詳細） */}
         <CheckpointGateCard state={state} />
 
-        {/* 現在フェーズ */}
-        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <p className="text-xs font-bold text-indigo-500">いまのフェーズ</p>
-          <p className="mt-1 text-xl font-extrabold text-gray-800">
-            {phaseDef.emoji} {phaseDef.title}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-gray-600">
-            {phaseDef.summary}
-          </p>
-          <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2.5 text-sm font-semibold text-indigo-700">
-            {plan.message}
-          </p>
-          {plan.phaseComparison && (
-            <p
-              className={`mt-2 rounded-xl px-3 py-2.5 text-sm font-semibold ${
-                plan.phaseComparison.delta <= -2
-                  ? "bg-rose-50 text-rose-700"
-                  : plan.phaseComparison.delta < 0
-                    ? "bg-amber-50 text-amber-700"
-                    : "bg-emerald-50 text-emerald-700"
-              }`}
-            >
-              {plan.phaseComparison.delta < 0 ? "🧭" : "✅"}{" "}
-              {plan.phaseComparison.message}
-            </p>
-          )}
-        </section>
-
-        {/* 全体ロードマップ（すごろく風マップ） */}
+        {/* 全体ロードマップ（すごろく風マップ・CP進行で駆動＝現在地はゲートカードと一致） */}
         <section>
           <h2 className="mb-3 text-base font-extrabold text-gray-800">
             合格までのロードマップ
           </h2>
-          <RoadmapMap
-            phases={plan.phases}
-            expectedPhaseId={plan.phaseComparison?.expected}
-          />
+          <RoadmapMap phases={buildCheckpointRoadmap(state)} />
         </section>
 
         {/* 今週のゴール */}

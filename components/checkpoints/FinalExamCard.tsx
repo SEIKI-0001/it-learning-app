@@ -1,6 +1,8 @@
 "use client";
 
 import type { CheckpointDef, CheckpointGate } from "@/types/checkpoint";
+import { FINAL_EXAM_STATE_SHORT } from "@/types/checkpoint";
+import { finalExamState } from "@/lib/checkpoints";
 
 // 最終問題ページのヘッダ要約。タイトル・対象CP・解放条件・問題数・合格ライン・
 // 出題範囲・解放状態を1枚で見せる（開始操作はページ側が担う）。
@@ -45,11 +47,7 @@ export default function FinalExamCard({
                   : "bg-white text-gray-500 ring-1 ring-gray-300"
             }`}
           >
-            {gate.finalExamPassed
-              ? "🏆 突破済み"
-              : gate.finalExamUnlocked
-                ? "🔓 解放中"
-                : "🔒 ロック中"}
+            {FINAL_EXAM_STATE_SHORT[finalExamState(gate)]}
           </span>
         </div>
         <h1 className="mt-2 text-xl font-extrabold">

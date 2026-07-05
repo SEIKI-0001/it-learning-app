@@ -26,9 +26,9 @@ import {
   type FinalExam,
   type FinalExamResult,
 } from "@/lib/finalExam";
-import { badgeActionHref } from "@/components/badges/BadgeList";
 import FinalExamCard from "@/components/checkpoints/FinalExamCard";
 import GateRequirementList from "@/components/checkpoints/GateRequirementList";
+import MissingBadgeList from "@/components/checkpoints/MissingBadgeList";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -297,39 +297,9 @@ export default function FinalExamPage() {
               <GateRequirementList gate={gate} />
             </div>
 
-            {gate.missingBadges.length > 0 && (
-              <p className="mt-3 text-xs font-bold text-gray-500">
-                あと少しの必須バッジ
-              </p>
-            )}
-            {gate.missingBadges.length > 0 && (
-              <ul className="mt-3 space-y-2">
-                {gate.missingBadges.map((b) => (
-                  <li
-                    key={b.id}
-                    className="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2"
-                  >
-                    <span aria-hidden className="text-base opacity-60 grayscale">
-                      🔒
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-bold text-gray-800">
-                        {b.label}
-                      </span>
-                      <span className="block text-[11px] text-gray-500">
-                        {b.conditionLabel}
-                      </span>
-                    </span>
-                    <Link
-                      href={badgeActionHref(b)}
-                      className="shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white"
-                    >
-                      挑戦
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <div className="mt-3">
+              <MissingBadgeList badges={gate.missingBadges} />
+            </div>
 
             <Link
               href="/badges"

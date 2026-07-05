@@ -3,7 +3,8 @@
 import Link from "next/link";
 import type { AppState } from "@/types";
 import type { BadgeSignals } from "@/lib/badges";
-import { buildBadgeStatuses } from "@/lib/badges";
+import { buildBadgeStatuses, selectNextBadges } from "@/lib/badges";
+import { FINAL_EXAM_STATE_LABELS } from "@/types/checkpoint";
 import {
   buildCheckpointGate,
   getCheckpoint,
@@ -25,19 +26,13 @@ export default function BadgeProgressCard({
   const checkpoint = getCheckpoint(currentId);
   const gate = buildCheckpointGate(state, currentId);
 
-  // 現在CPの未獲得バッジ（必須優先）。条件に近いものから見せる。
-  const statuses = buildBadgeStatuses(state, signals, currentId).filter(
-    (s) => !s.earned && s.def.category !== "final",
+  // 現在CPの未獲得バッジ（必須優先）。最終問題バッジを除き、選定は共通ロジックに一本化。
+  const earnable = selectNextBadges(
+    buildBadgeStatuses(state, signals, currentId).filter(
+      (s) => s.def.category !== "final",
+    ),
+    3,
   );
-  const earnable = statuses
-    .sort((a, b) => {
-      // 必須優先 → 条件達成間近（conditionMet）優先。
-      if (a.def.requiredForGate !== b.def.requiredForGate) {
-        return a.def.requiredForGate ? -1 : 1;
-      }
-      return Number(b.conditionMet) - Number(a.conditionMet);
-    })
-    .slice(0, 3);
 
   const remaining = Math.max(
     0,
@@ -76,7 +71,7 @@ export default function BadgeProgressCard({
           className="mt-3 block rounded-xl bg-emerald-50 px-3 py-2.5 ring-1 ring-emerald-200"
         >
           <p className="text-sm font-extrabold text-emerald-700">
-            🔓 最終問題が解放されました！
+            {FINAL_EXAM_STATE_LABELS.unlocked}
           </p>
           <p className="mt-0.5 text-xs font-semibold text-emerald-600">
             {checkpoint.title}の最終問題に挑戦 → {checkpoint.winConditionLabel}

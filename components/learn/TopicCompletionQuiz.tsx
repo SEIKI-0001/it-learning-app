@@ -6,7 +6,8 @@ import type { UserAnswer } from "@/types";
 import type { Topic } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
-import { completeTopicStudy } from "@/lib/study";
+import { completeStudySession } from "@/lib/studySession";
+import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
   reportTopicQuizResult,
@@ -44,7 +45,13 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
       ...a,
       tag: topic.tags[0] ?? topic.field,
     }));
-    const next = completeTopicStudy(state, topic.id, tagged);
+    // 完了・バッジ確定付与・追加ドロップを /today と同一の共通経路で処理する。
+    const { state: next } = completeStudySession(
+      state,
+      topic.id,
+      tagged,
+      getClientBadgeSignals(),
+    );
     saveAppState(next);
     setState(next);
 

@@ -6,8 +6,8 @@
 //   - 既存ユーザーの移行時だけ、既存データから初期チェックポイントを推定してよい。
 //   - 学習時間は進行の主条件にしない。
 
-import type { AppState, UserAnswer } from "@/types";
-import type { StudyPhaseId } from "@/types/plan";
+import type { AppState } from "@/types";
+import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 import type { TopicField } from "@/types/content";
 import type {
   CheckpointDef,
@@ -15,9 +15,12 @@ import type {
   CheckpointId,
   CheckpointProgress,
   FinalExamAttempt,
+  FinalExamState,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { getAllTopics } from "@/lib/content";
+import { grantExp } from "@/lib/game";
+import { addTopicsToReview, recentAccuracy } from "@/lib/study";
 import type { BadgeSignals } from "@/lib/badges";
 import {
   evaluateBadgeAwards,
@@ -157,11 +160,7 @@ function completedFieldSet(state: AppState): Set<TopicField> {
   return set;
 }
 
-function recentAccuracy(answers: UserAnswer[]): number {
-  const recent = answers.slice(-20);
-  if (recent.length < 5) return 0;
-  return recent.filter((a) => a.isCorrect).length / recent.length;
-}
+// 直近正答率は lib/study.ts の recentAccuracy に一本化（badges の条件判定と共通）。
 
 // ---------------------------------------------------------------------------
 // ゲート判定
@@ -188,6 +187,13 @@ export function canAdvanceCheckpoint(
   checkpointId: CheckpointId,
 ): boolean {
   return buildCheckpointGate(state, checkpointId).canAdvance;
+}
+
+/** ゲート状況から最終問題の状態を1つに正規化する（表示の語彙統一に使う）。 */
+export function finalExamState(gate: CheckpointGate): FinalExamState {
+  if (gate.finalExamPassed) return "passed";
+  if (gate.finalExamUnlocked) return "unlocked";
+  return "locked";
 }
 
 /** 最終問題の最新結果（同一CPの最後の試行）。 */
@@ -258,6 +264,60 @@ export function buildCheckpointGate(
 }
 
 // ---------------------------------------------------------------------------
+// ロードマップ表示用（RoadmapMap を CP 進行で駆動する）
+// ---------------------------------------------------------------------------
+
+/**
+ * ロードマップ表示（RoadmapMap）を CP 進行から組み立てる。
+ * フェーズ完了率ではなく「クリア済みCP・現在CP・必須バッジ充足」を唯一の真実とし、
+ * CheckpointGateCard と現在地・進捗が一致するようにする（表示の二重管理を解消）。
+ * CP↔Phase は 1:1 なので、既存の PhaseProgress[] 形状で返し RoadmapMap を無改造で使う。
+ */
+export function buildCheckpointRoadmap(state: AppState): PhaseProgress[] {
+  const cp = getCheckpointProgress(state);
+  const currentOrder = getCheckpoint(cp.currentCheckpointId).order;
+
+  return CHECKPOINTS.map((c): PhaseProgress => {
+    const status: PhaseProgress["status"] =
+      c.order < currentOrder
+        ? "done"
+        : c.order === currentOrder
+          ? "current"
+          : "upcoming";
+
+    if (status !== "current") {
+      return {
+        id: c.phaseId,
+        status,
+        progress: status === "done" ? 100 : 0,
+        hint: "",
+      };
+    }
+
+    // 現在CP: 必須バッジの充足度を達成度に、次の一手を hint にする。
+    const gate = buildCheckpointGate(state, c.id);
+    const progress =
+      c.requiredBadgeCount > 0
+        ? Math.round(
+            (gate.earnedRequiredCount / c.requiredBadgeCount) * 100,
+          )
+        : gate.finalExamUnlocked || !c.finalExam
+          ? 100
+          : 0;
+    const remaining = c.requiredBadgeCount - gate.earnedRequiredCount;
+    const hint = gate.finalExamPassed
+      ? "突破済み。次のチェックポイントへ進みましょう。"
+      : gate.finalExamUnlocked
+        ? "最終問題に挑戦できます。"
+        : remaining > 0
+          ? `必須バッジをあと${remaining}個集めると最終問題が解放されます。`
+          : "3分野に手をつけると最終問題が解放されます。";
+
+    return { id: c.phaseId, status, progress, hint };
+  });
+}
+
+// ---------------------------------------------------------------------------
 // バッジ確定付与を AppState に適用する
 // ---------------------------------------------------------------------------
 
@@ -280,11 +340,13 @@ export function applyBadgeProgress(
   if (result.newlyEarned.length === 0 && state.progress.checkpointProgress) {
     return { state, newlyEarnedIds: [] };
   }
+  const { exp, level } = grantExp(state.progress.exp, result.gainedXp);
   const nextState: AppState = {
     ...state,
     progress: {
       ...state.progress,
-      exp: state.progress.exp + result.gainedXp,
+      exp,
+      level,
       checkpointProgress: {
         ...cpProgress,
         earnedBadges: result.earnedBadges,
@@ -334,25 +396,16 @@ export function recordFinalExamAttempt(
     }
   }
 
-  // 復習キュー: 不合格時のみ、間違えたトピックを追加（重複は避ける）。
-  let reviewQueue = state.progress.reviewQueue;
-  if (!attempt.passed && attempt.wrongTopicIds.length > 0) {
-    const existing = new Set(reviewQueue.map((r) => r.topicId));
-    const additions = attempt.wrongTopicIds
-      .filter((id) => !existing.has(id))
-      .map((id) => ({
-        topicId: id,
-        dueAt: now.toISOString(),
-        reason: "最終問題で間違えた",
-      }));
-    if (additions.length > 0) reviewQueue = [...reviewQueue, ...additions];
-  }
+  // 復習キュー: 不合格時のみ、間違えたトピックを追加（dedup は addTopicsToReview に集約）。
+  const base =
+    !attempt.passed && attempt.wrongTopicIds.length > 0
+      ? addTopicsToReview(state, attempt.wrongTopicIds, "最終問題で間違えた", now)
+      : state;
 
   const withAttempt: AppState = {
-    ...state,
+    ...base,
     progress: {
-      ...state.progress,
-      reviewQueue,
+      ...base.progress,
       checkpointProgress: {
         ...cp,
         currentCheckpointId,

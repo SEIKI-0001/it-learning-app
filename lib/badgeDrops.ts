@@ -14,6 +14,7 @@ import type {
   CheckpointProgress,
 } from "@/types/checkpoint";
 import { getCheckpointProgress } from "@/lib/checkpoints";
+import { grantExp } from "@/lib/game";
 
 const PITY_THRESHOLD = 5; // これ以上レアが出ていなければ次回レア確定
 const SMALL_XP = 3; // 追加ドロップに乗せてよい「ごく少量」の XP 上限
@@ -154,12 +155,14 @@ export function applyBadgeDrop(
 ): { state: AppState; drop: BadgeDrop } {
   const cp = getCheckpointProgress(state);
   const roll = rollBadgeDrop(cp, rng);
+  const { exp, level } = grantExp(state.progress.exp, roll.bonusXp);
   return {
     state: {
       ...state,
       progress: {
         ...state.progress,
-        exp: state.progress.exp + roll.bonusXp,
+        exp,
+        level,
         checkpointProgress: {
           ...cp,
           badgeFragments: roll.badgeFragments,

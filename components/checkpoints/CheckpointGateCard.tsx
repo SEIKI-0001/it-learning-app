@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import type { AppState } from "@/types";
+import { FINAL_EXAM_STATE_LABELS } from "@/types/checkpoint";
 import {
   buildCheckpointGate,
+  finalExamState,
   getCheckpoint,
   getCheckpointProgress,
   getNextCheckpointId,
 } from "@/lib/checkpoints";
-import { badgeActionHref } from "@/components/badges/BadgeList";
 import CheckpointStepper from "@/components/checkpoints/CheckpointStepper";
 import GateRequirementList from "@/components/checkpoints/GateRequirementList";
+import MissingBadgeList from "@/components/checkpoints/MissingBadgeList";
 
 // /plan 用: 現在のチェックポイントのゲート状況を1枚で見せる。
 //   旅の俯瞰（CP0〜6ステッパー）/ 現在CP→次CP / 次に進むための条件チェックリスト /
@@ -133,38 +135,10 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
           </p>
         </div>
 
-        {/* 不足バッジ一覧 */}
+        {/* 不足バッジ一覧（最終問題ロック画面と共通部品） */}
         {gate.missingBadges.length > 0 && (
           <div className="mt-3">
-            <p className="text-xs font-bold text-gray-500">
-              あと少しの必須バッジ
-            </p>
-            <ul className="mt-2 space-y-2">
-              {gate.missingBadges.map((b) => (
-                <li
-                  key={b.id}
-                  className="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2"
-                >
-                  <span aria-hidden className="text-base opacity-60 grayscale">
-                    🔒
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-bold text-gray-800">
-                      {b.label}
-                    </span>
-                    <span className="block text-[11px] text-gray-500">
-                      {b.conditionLabel}
-                    </span>
-                  </span>
-                  <Link
-                    href={badgeActionHref(b)}
-                    className="shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold text-white"
-                  >
-                    挑戦
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <MissingBadgeList badges={gate.missingBadges} />
           </div>
         )}
 
@@ -188,11 +162,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
                   : "text-gray-500"
               }`}
             >
-              {gate.finalExamUnlocked
-                ? gate.finalExamPassed
-                  ? "🏆 突破試験：クリア済み"
-                  : "⚔️ 突破試験に挑戦できます"
-                : "🔒 突破試験：ロック中"}
+              {FINAL_EXAM_STATE_LABELS[finalExamState(gate)]}
             </p>
             <Link
               href={`/checkpoint/${checkpoint.id}/final`}
