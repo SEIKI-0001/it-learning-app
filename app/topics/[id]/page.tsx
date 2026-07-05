@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Topic } from "@/types/content";
 import { FIELD_LABELS, IMPORTANCE_LABELS } from "@/types/content";
 import { getAllTopics, getTopic } from "@/lib/content";
+import { hasCheckPack } from "@/lib/checkPack";
 import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
@@ -58,6 +59,20 @@ export default async function TopicDetailPage({
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-8 px-4 py-7">
         <TopicContent topic={topic} />
+
+        {/* 確認パック導線（対象トピックのみ）。基礎＋用語＋過去問レベルで本番対応まで確認する。 */}
+        {hasCheckPack(topic.id) && (
+          <Link
+            href={`/check-pack/${topic.id}`}
+            className="block rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 p-4 text-white shadow-sm transition active:scale-[0.99]"
+          >
+            <p className="text-sm font-extrabold">✅ 確認パックを受ける</p>
+            <p className="mt-0.5 text-xs text-white/90">
+              基礎確認 → 関連用語 → 過去問レベルで「本番対応OK」まで確かめる
+            </p>
+          </Link>
+        )}
+
         <TopicReviewSections topic={topic} />
       </div>
 

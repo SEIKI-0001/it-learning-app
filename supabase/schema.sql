@@ -355,3 +355,50 @@ create index if not exists topic_progress_user_idx
 create index if not exists topic_progress_user_stage_idx
   on public.topic_progress(user_id, stage);
 alter table public.topic_progress enable row level security;
+
+-- ----------------------------------------------------------------------------
+-- question_attempts : 問題（確認問題 / 過去問レベル / ミニ模試）の回答ログ（第2弾）
+-- ----------------------------------------------------------------------------
+create table if not exists public.question_attempts (
+  attempt_id          uuid primary key default gen_random_uuid(),
+  user_id             uuid not null references public.line_users(id) on delete cascade,
+  question_id         text not null,
+  question_type       text not null,          -- topic_quiz / exam_level / mini_exam
+  topic_id            text not null,
+  selected_answer     text,
+  is_correct          boolean not null,
+  mistake_reason      text,
+  answered_at         timestamptz not null default now(),
+  time_spent_seconds  integer,
+  source_task_id      uuid
+);
+create index if not exists question_attempts_user_topic_idx
+  on public.question_attempts(user_id, topic_id);
+create index if not exists question_attempts_user_type_idx
+  on public.question_attempts(user_id, question_type);
+create index if not exists question_attempts_user_answered_idx
+  on public.question_attempts(user_id, answered_at);
+alter table public.question_attempts enable row level security;
+
+-- ----------------------------------------------------------------------------
+-- topic_check_pack_attempts : 確認パックの実施結果（第2弾）
+-- ----------------------------------------------------------------------------
+create table if not exists public.topic_check_pack_attempts (
+  attempt_id             uuid primary key default gen_random_uuid(),
+  user_id                uuid not null references public.line_users(id) on delete cascade,
+  pack_id                text not null,
+  topic_id               text not null,
+  started_at             timestamptz,
+  completed_at           timestamptz,
+  quiz_score_rate        integer,
+  flashcard_score_rate   integer,
+  exam_level_score_rate  integer,
+  result_status          text not null default 'incomplete', -- passed / review_needed / weak / incomplete
+  next_action            text,
+  created_at             timestamptz not null default now()
+);
+create index if not exists topic_check_pack_attempts_user_topic_idx
+  on public.topic_check_pack_attempts(user_id, topic_id);
+create index if not exists topic_check_pack_attempts_user_created_idx
+  on public.topic_check_pack_attempts(user_id, created_at);
+alter table public.topic_check_pack_attempts enable row level security;

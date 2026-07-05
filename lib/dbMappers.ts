@@ -14,6 +14,7 @@ import type {
   TopicProgress,
   TopicStage,
 } from "@/types/studyProgress";
+import type { CheckPackResultStatus } from "@/types/checkPack";
 
 // DB（snake_case の行）と アプリ内の型（camelCase）の相互変換。
 // サーバー側 API Route からのみ使用する。
@@ -410,5 +411,99 @@ export function topicProgressToRow(
     last_attempted_at: p.lastAttemptedAt ?? null,
     next_review_at: p.nextReviewAt ?? null,
     updated_at: new Date().toISOString(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// question_attempts : 問題（確認問題 / 過去問レベル / ミニ模試）の回答ログ（第2弾）
+// ---------------------------------------------------------------------------
+
+export type QuestionType = "topic_quiz" | "exam_level" | "mini_exam";
+
+export type QuestionAttemptRow = {
+  user_id: string;
+  question_id: string;
+  question_type: string;
+  topic_id: string;
+  selected_answer: string | null;
+  is_correct: boolean;
+  mistake_reason: string | null;
+  answered_at: string;
+  time_spent_seconds: number | null;
+  source_task_id: string | null;
+};
+
+/** 挿入用の行（attempt_id はDB既定）。 */
+export function questionAttemptToRow(
+  userId: string,
+  a: {
+    questionId: string;
+    questionType: QuestionType;
+    topicId: string;
+    selectedAnswer?: string | null;
+    isCorrect: boolean;
+    mistakeReason?: string | null;
+    answeredAt?: string | null;
+    timeSpentSeconds?: number | null;
+    sourceTaskId?: string | null;
+  },
+): QuestionAttemptRow {
+  return {
+    user_id: userId,
+    question_id: a.questionId,
+    question_type: a.questionType,
+    topic_id: a.topicId,
+    selected_answer: a.selectedAnswer ?? null,
+    is_correct: a.isCorrect,
+    mistake_reason: a.mistakeReason ?? null,
+    answered_at: a.answeredAt ?? new Date().toISOString(),
+    time_spent_seconds: a.timeSpentSeconds ?? null,
+    source_task_id: a.sourceTaskId ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// topic_check_pack_attempts : 確認パックの実施結果（第2弾）
+// ---------------------------------------------------------------------------
+
+export type TopicCheckPackAttemptRow = {
+  user_id: string;
+  pack_id: string;
+  topic_id: string;
+  started_at: string | null;
+  completed_at: string | null;
+  quiz_score_rate: number | null;
+  flashcard_score_rate: number | null;
+  exam_level_score_rate: number | null;
+  result_status: string;
+  next_action: string | null;
+};
+
+/** 挿入用の行（attempt_id / created_at はDB既定）。 */
+export function topicCheckPackAttemptToRow(
+  userId: string,
+  a: {
+    packId: string;
+    topicId: string;
+    startedAt?: string | null;
+    completedAt?: string | null;
+    quizScoreRate?: number | null;
+    flashcardScoreRate?: number | null;
+    examLevelScoreRate?: number | null;
+    resultStatus: CheckPackResultStatus;
+    nextAction?: string | null;
+  },
+): TopicCheckPackAttemptRow {
+  return {
+    user_id: userId,
+    pack_id: a.packId,
+    topic_id: a.topicId,
+    started_at: a.startedAt ?? null,
+    completed_at: a.completedAt ?? null,
+    quiz_score_rate: a.quizScoreRate ?? null,
+    flashcard_score_rate: a.flashcardScoreRate ?? null,
+    exam_level_score_rate: a.examLevelScoreRate ?? null,
+    result_status: a.resultStatus,
+    next_action: a.nextAction ?? null,
   };
 }

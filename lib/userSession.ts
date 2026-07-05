@@ -258,6 +258,102 @@ export function reportTopicQuizResult(
   });
 }
 
+// ---------------------------------------------------------------------------
+// 確認パック（第2弾）
+// ---------------------------------------------------------------------------
+
+/** question_attempts に保存する1件の回答。 */
+export type QuestionAttemptInput = {
+  questionId: string;
+  questionType: "topic_quiz" | "exam_level" | "mini_exam";
+  topicId: string;
+  selectedAnswer?: string | null;
+  isCorrect: boolean;
+  mistakeReason?: string | null;
+  timeSpentSeconds?: number | null;
+  sourceTaskId?: string | null;
+  answeredAt?: string | null;
+};
+
+/**
+ * 問題の回答ログを question_attempts に保存（fire-and-forget）。
+ * user_id が無い（匿名）場合は何もしない。失敗しても UI は止めない。
+ */
+export function saveQuestionAttempts(
+  userId: string,
+  attempts: QuestionAttemptInput[],
+): void {
+  if (attempts.length === 0) return;
+  void fetch("/api/question-attempts/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, attempts }),
+  }).catch(() => {
+    /* fire-and-forget */
+  });
+}
+
+export type CheckPackSubmitResult = {
+  stage: string;
+  resultStatus: "passed" | "review_needed" | "weak" | "incomplete";
+  nextAction: string;
+};
+
+/**
+ * 確認パックの結果を保存し、topic_progress.stage を更新する。
+ * 成功すればサーバー判定（stage / resultStatus / nextAction）を返す。
+ * 未ログイン・未設定・失敗なら null（呼び出し側はローカル判定で表示を継続）。
+ */
+export async function submitCheckPack(
+  userId: string,
+  input: {
+    packId: string;
+    topicId: string;
+    quizRate: number | null;
+    flashcardRate: number | null;
+    examLevelRate: number | null;
+    startedAt?: string;
+    date?: string;
+  },
+): Promise<CheckPackSubmitResult | null> {
+  try {
+    const res = await fetch("/api/check-pack/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, ...input }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok: boolean } & Partial<CheckPackSubmitResult>;
+    if (!data.ok || !data.stage || !data.resultStatus || !data.nextAction) return null;
+    return {
+      stage: data.stage,
+      resultStatus: data.resultStatus,
+      nextAction: data.nextAction,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** 1トピックの現在ステージを取得。未ログイン/未設定/失敗なら null。 */
+export async function fetchTopicStage(
+  userId: string,
+  topicId: string,
+): Promise<string | null> {
+  try {
+    const res = await fetch("/api/topic-progress/get", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, topicId }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok: boolean; stage?: string };
+    return data.ok && data.stage ? data.stage : null;
+  } catch {
+    return null;
+  }
+}
+
 /** /progress の簡易サマリを取得。未ログイン/未設定なら null。 */
 export async function fetchTopicProgressSummary(
   userId: string,

@@ -24,6 +24,7 @@ import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
 import DailyProgressReport from "@/components/learn/DailyProgressReport";
+import TodayCheckPackCta from "@/components/checkPack/TodayCheckPackCta";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -316,6 +317,9 @@ export default function TodayPage() {
             </Link>
           </section>
         )}
+
+        {/* 対象トピックの状態に応じた確認パック導線（パックが無ければ非表示） */}
+        {primary && <TodayCheckPackCta topicId={primary.id} />}
 
         {/* 今日の達成度報告（低入力・1日1回・同日上書き） */}
         <DailyProgressReport date={todayLocalDate()} />
