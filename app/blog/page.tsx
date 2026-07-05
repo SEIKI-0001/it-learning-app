@@ -4,6 +4,16 @@ import BlogCta from "./_components/BlogCta";
 
 export const metadata = createBlogListingMetadata();
 
+const featuredPost = {
+  slug: "it-passport-ai-study-plan",
+  title: "ITパスポートの勉強計画はAIに任せるべき？初心者向けに使い方と注意点を解説",
+  description:
+    "ITパスポート対策でAIを使うメリットと注意点を初心者向けに整理。試験日から逆算した学習計画、復習、確認問題の使い方を解説します。",
+  audience: "ITパスポートを独学で進めたいが、学習計画や復習管理に不安がある人",
+  readTime: "8分",
+  category: "AI学習計画",
+};
+
 export default function BlogIndexPage() {
   return (
     <main className="min-h-screen bg-[#f3f8fb] text-slate-800">
@@ -60,6 +70,38 @@ export default function BlogIndexPage() {
             </ol>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12">
+        <article className="grid gap-5 rounded-[22px] border border-[#cfe5f2] bg-white p-6 shadow-[0_14px_34px_rgba(22,94,131,0.08)] lg:grid-cols-[1fr_220px] lg:items-center">
+          <div>
+            <span className="rounded-full bg-[#e8f5fb] px-3 py-1 text-xs font-bold text-[#1b75a6]">
+              {featuredPost.category}
+            </span>
+            <h2 className="mt-4 text-2xl font-black leading-snug tracking-normal text-[#12384d] sm:text-3xl">
+              {featuredPost.title}
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-slate-700 sm:text-base">
+              {featuredPost.description}
+            </p>
+            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-[12px] bg-[#f7fbfe] px-4 py-3">
+                <dt className="font-black text-[#12384d]">この記事の対象</dt>
+                <dd className="mt-1 leading-6 text-slate-600">{featuredPost.audience}</dd>
+              </div>
+              <div className="rounded-[12px] bg-[#f7fbfe] px-4 py-3">
+                <dt className="font-black text-[#12384d]">読了目安</dt>
+                <dd className="mt-1 font-bold text-[#1b75a6]">{featuredPost.readTime}</dd>
+              </div>
+            </dl>
+          </div>
+          <Link
+            href={`/blog/${featuredPost.slug}`}
+            className="inline-flex justify-center rounded-full bg-[#f7a600] px-5 py-3 text-sm font-black text-white transition hover:opacity-90 active:scale-[0.99]"
+          >
+            AI学習計画の記事を読む
+          </Link>
+        </article>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
