@@ -81,7 +81,9 @@ export type UserProgress = {
 
 export type UserAnswer = {
   questionId: string;
-  selectedChoice: ChoiceKey;
+  // 時間切れで未回答のまま保存される場合があるため optional。
+  // DB の selected_choice も nullable。
+  selectedChoice?: ChoiceKey;
   isCorrect: boolean;
   answeredAt: string;
   tag: string;
@@ -118,9 +120,6 @@ export type TodayMenuItem = {
 
 /** 今日の学習メニュー */
 export type TodayMenu = {
-  theme: string; // 今日のテーマ
-  totalMinutes: number; // 目安時間(合計)
-  items: TodayMenuItem[]; // 学習トピック
-  reviewItems: ReviewItem[]; // 復習対象(問題)
-  message: string; // 一言メッセージ
+  items: TodayMenuItem[];
+  message: string;
 };
