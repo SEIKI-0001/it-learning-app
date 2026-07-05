@@ -25,6 +25,17 @@ import TopicQuiz from "@/components/learn/TopicQuiz";
 
 type Phase = "intro" | "quiz" | "flashcards" | "exam" | "result";
 
+// 確認パック専用の制限時間。
+// 基礎確認は軽く、用語確認はテンポ重視、過去問レベルは本番感を出すため少し長めにする。
+const MIN_STEP_SECONDS = 60;
+const QUIZ_SECONDS_PER_QUESTION = 45;
+const FLASHCARD_SECONDS_PER_TERM = 30;
+const EXAM_SECONDS_PER_QUESTION = 75;
+
+function stepLimitSeconds(count: number, secondsPerItem: number): number {
+  return Math.max(MIN_STEP_SECONDS, count * secondsPerItem);
+}
+
 /** correct/total から正答率(0〜100)。total 0 は null（未実施扱い）。 */
 function rateOf(correct: number, total: number): number | null {
   if (total <= 0) return null;
@@ -187,6 +198,10 @@ export default function CheckPackRunner({
           onComplete={handleQuizDone}
           completeLabel="次へ（用語の確認）"
           dense
+          timeLimitSeconds={stepLimitSeconds(
+            quizQuestions.length,
+            QUIZ_SECONDS_PER_QUESTION,
+          )}
         />
       </StepShell>
     );
@@ -202,6 +217,10 @@ export default function CheckPackRunner({
           onComplete={handleFlashcardsDone}
           completeLabel={hasExam ? "次へ（過去問レベル）" : "結果を見る"}
           dense
+          timeLimitSeconds={stepLimitSeconds(
+            flashcardQuestions.length,
+            FLASHCARD_SECONDS_PER_TERM,
+          )}
         />
       </StepShell>
     );
@@ -221,6 +240,10 @@ export default function CheckPackRunner({
           onComplete={handleExamDone}
           completeLabel="結果を見る"
           dense
+          timeLimitSeconds={stepLimitSeconds(
+            examQuestions.length,
+            EXAM_SECONDS_PER_QUESTION,
+          )}
         />
       </StepShell>
     );
