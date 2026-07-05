@@ -181,6 +181,7 @@ export default function CheckPackRunner({
     return (
       <StepShell step={1} title="基礎確認問題" note="まずは基礎理解のチェック。">
         <TopicQuiz
+          key={`${packId}:quiz`}
           topicId={topicId}
           questions={quizQuestions}
           onComplete={handleQuizDone}
@@ -195,6 +196,7 @@ export default function CheckPackRunner({
     return (
       <StepShell step={2} title="関連用語の確認" note="用語が定着しているかチェック。">
         <TopicQuiz
+          key={`${packId}:flashcards`}
           topicId={topicId}
           questions={flashcardQuestions}
           onComplete={handleFlashcardsDone}
@@ -213,6 +215,7 @@ export default function CheckPackRunner({
         note="本番対応力のチェック。ここが「本番対応OK」の判定になります。"
       >
         <TopicQuiz
+          key={`${packId}:exam`}
           topicId={topicId}
           questions={examQuestions}
           onComplete={handleExamDone}
