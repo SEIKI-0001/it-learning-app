@@ -7,6 +7,7 @@ import { hasCheckPack } from "@/lib/checkPack";
 import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
+import TopicCompletionQuiz from "@/components/learn/TopicCompletionQuiz";
 import BottomNav from "@/components/BottomNav";
 
 // トピック詳細。理解カード → 確認問題 → 解説 → 復習 → 参考書キーワード → 過去問分野 の順。
@@ -58,7 +59,15 @@ export default async function TopicDetailPage({
       </div>
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-8 px-4 py-7">
-        <TopicContent topic={topic} />
+        <TopicContent topic={topic} showCheckQuestions={false} />
+        <TopicCompletionQuiz
+          topic={{
+            id: topic.id,
+            field: topic.field,
+            tags: topic.tags,
+            checkQuestions: topic.checkQuestions,
+          }}
+        />
 
         {/* 確認パック導線（対象トピックのみ）。基礎＋用語＋過去問レベルで本番対応まで確認する。 */}
         {hasCheckPack(topic.id) && (
