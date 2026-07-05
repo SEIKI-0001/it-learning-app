@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import { getWrittenQuestion, getWrittenQuestions } from "@/data/writtenQuestions";
 import {
+  fetchAiGradingBootstrap,
   getUserId,
   readTokenFromUrl,
   resolveToken,
   setUserId,
 } from "@/lib/userSession";
 import type {
+  AiGradingBillingStatus,
   GradeResult,
   GradingRecord,
   WrittenGrade,
@@ -52,13 +54,7 @@ type ResultMeta = {
   fallback: boolean;
 };
 
-type BillingStatus = {
-  plan: "free" | "pro";
-  providerLabel: string;
-  usage: { used: number; limit: number; remaining: number };
-  tracked: boolean;
-  checkoutEnabled: boolean;
-};
+type BillingStatus = AiGradingBillingStatus;
 
 type Mode = "answer" | "review";
 
@@ -79,12 +75,62 @@ function firstUnansweredIndex(answered: Set<string>): number {
   return i === -1 ? 0 : i;
 }
 
+function normalizeQuestionIndex(value: number): number {
+  return Number.isInteger(value) && value >= 0 && value < QUESTIONS.length
+    ? value
+    : 0;
+}
+
 function formatDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(
     d.getMinutes()
   ).padStart(2, "0")}`;
+}
+
+async function requestBillingStatus(
+  uid: string | null,
+): Promise<BillingStatus | null> {
+  try {
+    const res = await fetch("/api/billing/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: uid }),
+    });
+    const data = (await res.json().catch(() => null)) as
+      | ({ ok: true } & BillingStatus)
+      | null;
+    if (!data?.ok) return null;
+    return {
+      plan: data.plan,
+      providerLabel: data.providerLabel,
+      usage: data.usage,
+      tracked: data.tracked,
+      checkoutEnabled: data.checkoutEnabled,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function requestGradingHistory(
+  uid: string | null,
+): Promise<GradingRecord[] | null> {
+  try {
+    const res = await fetch("/api/ai-grading/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: uid }),
+    });
+    const data = (await res.json().catch(() => null)) as
+      | { ok: true; records: GradingRecord[] }
+      | null;
+    if (!data?.ok || !Array.isArray(data.records)) return null;
+    return data.records;
+  } catch {
+    return null;
+  }
 }
 
 export default function AiGradingPage() {
@@ -95,6 +141,7 @@ export default function AiGradingPage() {
   const [meta, setMeta] = useState<GradeMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   const [userId, setUid] = useState<string | null>(null);
   const [status, setStatus] = useState<BillingStatus | null>(null);
@@ -118,54 +165,15 @@ export default function AiGradingPage() {
 
   // プラン・利用状況を読み込む。
   const loadStatus = useCallback(async (uid: string | null) => {
-    try {
-      const res = await fetch("/api/billing/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: uid }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | ({ ok: true } & BillingStatus)
-        | null;
-      if (data && data.ok) {
-        setStatus({
-          plan: data.plan,
-          providerLabel: data.providerLabel,
-          usage: data.usage,
-          tracked: data.tracked,
-          checkoutEnabled: data.checkoutEnabled,
-        });
-      }
-    } catch {
-      /* 取得失敗時は free 相当の既定UIのまま */
-    }
+    const nextStatus = await requestBillingStatus(uid);
+    if (nextStatus) setStatus(nextStatus);
   }, []);
 
-  // 採点履歴を読み込み、未回答問題を初期表示にする。
-  const loadHistory = useCallback(async (uid: string | null) => {
-    try {
-      const res = await fetch("/api/ai-grading/history", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: uid }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | { ok: true; records: GradingRecord[] }
-        | null;
-      if (data && data.ok && Array.isArray(data.records)) {
-        setRecords(data.records);
-        const answered = new Set(data.records.map((r) => r.questionId));
-        setIndex(firstUnansweredIndex(answered));
-      }
-    } catch {
-      /* 取得失敗時は履歴なし扱い */
-    }
-  }, []);
-
-  // 起動時に userId を解決（?t= があれば紐づけ）してから状況・履歴を取得。
+  // 起動時に userId を解決（?t= があれば紐づけ）してから状況・履歴を一括取得。
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setInitializing(true);
       let uid = getUserId();
       const token = readTokenFromUrl();
       if (!uid && token) {
@@ -176,13 +184,35 @@ export default function AiGradingPage() {
         }
       }
       if (cancelled) return;
-      setUid(uid);
-      await Promise.all([loadStatus(uid), loadHistory(uid)]);
+      const bootstrap = await fetchAiGradingBootstrap(uid);
+      if (cancelled) return;
+
+      if (bootstrap) {
+        const nextUid = bootstrap.userId ?? uid;
+        setUid(nextUid);
+        setStatus(bootstrap.billingStatus);
+        setRecords(bootstrap.gradingHistory);
+        setIndex(normalizeQuestionIndex(bootstrap.initialQuestionIndex));
+      } else {
+        setUid(uid);
+        const [nextStatus, nextRecords] = await Promise.all([
+          requestBillingStatus(uid),
+          requestGradingHistory(uid),
+        ]);
+        if (cancelled) return;
+        if (nextStatus) setStatus(nextStatus);
+        if (nextRecords) {
+          setRecords(nextRecords);
+          const answered = new Set(nextRecords.map((r) => r.questionId));
+          setIndex(firstUnansweredIndex(answered));
+        }
+      }
+      setInitializing(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [loadStatus, loadHistory]);
+  }, []);
 
   // 次の問題へ（未回答を優先して巡回）。入力・結果はリセットする。
   function handleNext() {
@@ -295,110 +325,116 @@ export default function AiGradingPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-5 px-4 py-5">
-        {/* プラン表示（無料/Pro の出し分け） */}
-        <PlanCard
-          status={status}
-          isPro={isPro}
-          upgrading={upgrading}
-          onUpgrade={handleUpgrade}
-        />
-
-        {/* 答える / 復習 の切り替え */}
-        <ModeTabs mode={mode} reviewCount={records.length} onChange={setMode} />
-
-        {mode === "answer" ? (
-          <>
-            {/* 問題カード */}
-            <section className="rounded-2xl border border-gray-200 bg-white p-4">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
-                  {question.category}
-                </span>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${diff.badge}`}
-                >
-                  {diff.label}
-                </span>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                    isCurrentAnswered
-                      ? "bg-gray-100 text-gray-500"
-                      : "bg-emerald-100 text-emerald-700"
-                  }`}
-                >
-                  {isCurrentAnswered ? "回答済み" : "未回答"}
-                </span>
-                <span className="ml-auto text-[11px] font-bold text-gray-400">
-                  回答済み {answeredIds.size} / {QUESTIONS.length} 問
-                </span>
-              </div>
-              <p className="mt-3 text-[15px] font-bold leading-relaxed text-gray-800">
-                {question.question}
-              </p>
-              {allAnswered && (
-                <p className="mt-2 text-[11px] font-bold text-emerald-600">
-                  🎉 全問回答済みです。「復習」タブで見直したり、もう一度挑戦できます。
-                </p>
-              )}
-            </section>
-
-            {/* 回答入力 */}
-            <section className="space-y-2">
-              <label
-                htmlFor="answer"
-                className="block text-sm font-extrabold text-gray-700"
-              >
-                あなたの回答
-              </label>
-              <textarea
-                id="answer"
-                value={answer}
-                onChange={(e) => setAnswer(e.target.value)}
-                rows={6}
-                placeholder="理由・仕組み・具体例を含めて、自分の言葉で説明してみましょう。"
-                className="w-full resize-y rounded-2xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-              />
-              <p className="text-right text-[11px] font-bold text-gray-400">
-                {answer.trim().length} 文字（20文字以上で採点できます）
-              </p>
-            </section>
-
-            {/* ボタン */}
-            <div className="flex gap-2.5">
-              <button
-                type="button"
-                onClick={handleGrade}
-                disabled={!canGrade || loading}
-                className="flex-1 rounded-2xl bg-indigo-600 px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition active:scale-[0.99] disabled:bg-gray-300 disabled:text-gray-500"
-              >
-                {loading
-                  ? "採点中…"
-                  : isPro
-                    ? "Claude Sonnetで採点する"
-                    : "採点する"}
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={loading}
-                className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-extrabold text-gray-600 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
-              >
-                別の問題
-              </button>
-            </div>
-
-            {/* エラー表示 */}
-            {error && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
-                {error}
-              </div>
-            )}
-
-            {/* 採点結果 */}
-            {result && <ResultView result={result} meta={meta} />}
-          </>
+        {initializing ? (
+          <AiGradingInitialSkeleton />
         ) : (
-          <ReviewList records={records} />
+          <>
+            {/* プラン表示（無料/Pro の出し分け） */}
+            <PlanCard
+              status={status}
+              isPro={isPro}
+              upgrading={upgrading}
+              onUpgrade={handleUpgrade}
+            />
+
+            {/* 答える / 復習 の切り替え */}
+            <ModeTabs mode={mode} reviewCount={records.length} onChange={setMode} />
+
+            {mode === "answer" ? (
+              <>
+                {/* 問題カード */}
+                <section className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
+                      {question.category}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${diff.badge}`}
+                    >
+                      {diff.label}
+                    </span>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                        isCurrentAnswered
+                          ? "bg-gray-100 text-gray-500"
+                          : "bg-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {isCurrentAnswered ? "回答済み" : "未回答"}
+                    </span>
+                    <span className="ml-auto text-[11px] font-bold text-gray-400">
+                      回答済み {answeredIds.size} / {QUESTIONS.length} 問
+                    </span>
+                  </div>
+                  <p className="mt-3 text-[15px] font-bold leading-relaxed text-gray-800">
+                    {question.question}
+                  </p>
+                  {allAnswered && (
+                    <p className="mt-2 text-[11px] font-bold text-emerald-600">
+                      🎉 全問回答済みです。「復習」タブで見直したり、もう一度挑戦できます。
+                    </p>
+                  )}
+                </section>
+
+                {/* 回答入力 */}
+                <section className="space-y-2">
+                  <label
+                    htmlFor="answer"
+                    className="block text-sm font-extrabold text-gray-700"
+                  >
+                    あなたの回答
+                  </label>
+                  <textarea
+                    id="answer"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    rows={6}
+                    placeholder="理由・仕組み・具体例を含めて、自分の言葉で説明してみましょう。"
+                    className="w-full resize-y rounded-2xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  />
+                  <p className="text-right text-[11px] font-bold text-gray-400">
+                    {answer.trim().length} 文字（20文字以上で採点できます）
+                  </p>
+                </section>
+
+                {/* ボタン */}
+                <div className="flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={handleGrade}
+                    disabled={!canGrade || loading}
+                    className="flex-1 rounded-2xl bg-indigo-600 px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition active:scale-[0.99] disabled:bg-gray-300 disabled:text-gray-500"
+                  >
+                    {loading
+                      ? "採点中…"
+                      : isPro
+                        ? "Claude Sonnetで採点する"
+                        : "採点する"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={loading}
+                    className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-extrabold text-gray-600 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
+                  >
+                    別の問題
+                  </button>
+                </div>
+
+                {/* エラー表示 */}
+                {error && (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                    {error}
+                  </div>
+                )}
+
+                {/* 採点結果 */}
+                {result && <ResultView result={result} meta={meta} />}
+              </>
+            ) : (
+              <ReviewList records={records} />
+            )}
+          </>
         )}
       </div>
 
@@ -408,6 +444,37 @@ export default function AiGradingPage() {
 }
 
 /** 答える / 復習 の切り替えタブ。 */
+function AiGradingInitialSkeleton() {
+  return (
+    <div className="space-y-5">
+      <SkeletonCard label="プラン情報を確認中" lines={3} />
+      <SkeletonCard label="採点履歴を読み込み中" lines={2} />
+      <SkeletonCard label="問題を準備中" lines={4} />
+    </div>
+  );
+}
+
+function SkeletonCard({ label, lines }: { label: string; lines: number }) {
+  return (
+    <section className="rounded-2xl border border-gray-200 bg-white p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-extrabold text-gray-500">{label}</span>
+        <span className="h-2.5 w-2.5 rounded-full bg-indigo-200" />
+      </div>
+      <div className="mt-4 space-y-2.5">
+        {Array.from({ length: lines }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-3 animate-pulse rounded-full bg-gray-100 ${
+              i === lines - 1 ? "w-7/12" : "w-full"
+            }`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function ModeTabs({
   mode,
   reviewCount,
@@ -541,6 +608,24 @@ function PlanCard({
   upgrading: boolean;
   onUpgrade: () => void;
 }) {
+  if (!status) {
+    return (
+      <section className="rounded-2xl border border-gray-200 bg-white p-4">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-extrabold text-gray-600">
+            確認中
+          </span>
+          <span className="text-sm font-extrabold text-gray-800">
+            プラン情報を確認できませんでした
+          </span>
+        </div>
+        <p className="mt-1.5 text-xs font-bold leading-relaxed text-gray-500">
+          採点時にサーバー側で現在のプランを確認します。
+        </p>
+      </section>
+    );
+  }
+
   const usage = status?.usage;
   const remainingText = usage
     ? `本日の残り採点回数：${usage.remaining} / ${usage.limit} 回`

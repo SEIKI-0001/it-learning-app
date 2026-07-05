@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestUserId } from "@/lib/apiUser";
-import {
-  DAILY_LIMITS,
-  PLAN_PROVIDER,
-  PROVIDER_LABEL,
-} from "@/lib/billing/constants";
-import { countTodayUsage, getUserPlan } from "@/lib/billing/plan";
+import { getBillingStatusSnapshot } from "@/lib/billing/plan";
 
 export const runtime = "nodejs";
 
@@ -24,28 +19,10 @@ export async function POST(request: Request) {
   }
 
   const userId = await getRequestUserId(body);
-  const plan = await getUserPlan(userId);
-  const provider = PLAN_PROVIDER[plan];
-  const limit = DAILY_LIMITS[plan];
-  const used = await countTodayUsage(userId);
-
-  const checkoutEnabled = Boolean(
-    process.env.STRIPE_SECRET_KEY?.trim() &&
-      process.env.STRIPE_PRICE_ID_PRO?.trim()
-  );
+  const status = await getBillingStatusSnapshot(userId);
 
   return NextResponse.json({
     ok: true,
-    plan,
-    provider,
-    providerLabel: PROVIDER_LABEL[provider],
-    usage: {
-      used,
-      limit,
-      remaining: Math.max(0, limit - used),
-    },
-    // userId がなければ回数の追跡・Proへのアップグレードはできない。
-    tracked: Boolean(userId),
-    checkoutEnabled,
+    ...status,
   });
 }

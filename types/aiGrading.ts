@@ -49,3 +49,20 @@ export type GradingRecord = {
   model: string;
   createdAt: string;
 };
+
+/** AI採点画面で表示する課金・利用状況。 */
+export type AiGradingBillingStatus = {
+  plan: "free" | "pro";
+  providerLabel: string;
+  usage: { used: number; limit: number; remaining: number };
+  tracked: boolean;
+  checkoutEnabled: boolean;
+};
+
+/** /ai-grading 初期表示に必要なサーバー状態。 */
+export type AiGradingBootstrapResult = {
+  userId: string | null;
+  billingStatus: AiGradingBillingStatus;
+  gradingHistory: GradingRecord[];
+  initialQuestionIndex: number;
+};

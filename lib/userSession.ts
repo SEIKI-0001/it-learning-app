@@ -9,6 +9,7 @@ import type {
 } from "@/types/studyProgress";
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
+import type { AiGradingBootstrapResult } from "@/types/aiGrading";
 
 // LINE 経由で解決した user_id を localStorage に保存し、以降のDB保存に使う。
 // user_id が無ければ（= 直接アクセス）すべて localStorage だけで動く（フォールバック）。
@@ -168,6 +169,39 @@ export async function fetchProgressBootstrap(
       appState: data.appState ?? null,
       integratedStatus: data.integratedStatus ?? null,
       planAdjustmentProposal: data.planAdjustmentProposal ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * /ai-grading 初期表示に必要なサーバー状態をまとめて取得する。
+ * 失敗時は null を返し、呼び出し側が既存の個別APIフォールバックへ戻る。
+ */
+export async function fetchAiGradingBootstrap(
+  userId?: string | null,
+): Promise<AiGradingBootstrapResult | null> {
+  try {
+    const res = await fetch("/api/ai-grading/bootstrap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: userId ?? undefined }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ok: boolean } & Partial<AiGradingBootstrapResult>;
+    if (!data.ok || !data.billingStatus || !Array.isArray(data.gradingHistory)) {
+      return null;
+    }
+    if (data.userId) setUserId(data.userId);
+    return {
+      userId: data.userId ?? null,
+      billingStatus: data.billingStatus,
+      gradingHistory: data.gradingHistory,
+      initialQuestionIndex:
+        typeof data.initialQuestionIndex === "number"
+          ? data.initialQuestionIndex
+          : 0,
     };
   } catch {
     return null;

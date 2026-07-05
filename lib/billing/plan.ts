@@ -4,7 +4,13 @@
 
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import type { GradeProviderId } from "@/lib/ai/gradingCore";
-import type { Plan } from "@/lib/billing/constants";
+import {
+  DAILY_LIMITS,
+  PLAN_PROVIDER,
+  PROVIDER_LABEL,
+  type Plan,
+} from "@/lib/billing/constants";
+import type { AiGradingBillingStatus } from "@/types/aiGrading";
 
 /** ユーザーの契約プランを取得する。userId 無し / 未設定 / 行なしは "free"。 */
 export async function getUserPlan(userId: string | null): Promise<Plan> {
@@ -91,6 +97,35 @@ export async function countTodayUsage(userId: string | null): Promise<number> {
     return 0;
   }
   return count ?? 0;
+}
+
+/** UI 初期表示用のプラン・利用状況をまとめて取得する。 */
+export async function getBillingStatusSnapshot(
+  userId: string | null,
+): Promise<AiGradingBillingStatus & { provider: GradeProviderId }> {
+  const plan = await getUserPlan(userId);
+  const provider = PLAN_PROVIDER[plan];
+  const limit = DAILY_LIMITS[plan];
+  const used = await countTodayUsage(userId);
+
+  const checkoutEnabled = Boolean(
+    process.env.STRIPE_SECRET_KEY?.trim() &&
+      process.env.STRIPE_PRICE_ID_PRO?.trim(),
+  );
+
+  return {
+    plan,
+    provider,
+    providerLabel: PROVIDER_LABEL[provider],
+    usage: {
+      used,
+      limit,
+      remaining: Math.max(0, limit - used),
+    },
+    // userId がなければ回数の追跡・Proへのアップグレードはできない。
+    tracked: Boolean(userId),
+    checkoutEnabled,
+  };
 }
 
 /** AI 採点の利用ログを 1 件記録する。userId 無し / 未設定はスキップ（投げない）。 */
