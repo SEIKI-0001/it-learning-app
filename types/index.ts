@@ -120,6 +120,9 @@ export type TodayMenuItem = {
 
 /** 今日の学習メニュー */
 export type TodayMenu = {
-  items: TodayMenuItem[];
-  message: string;
+  theme: string; // 今日のテーマ
+  totalMinutes: number; // 目安時間(合計)
+  items: TodayMenuItem[]; // 学習トピック
+  reviewItems: ReviewItem[]; // 復習対象(問題)
+  message: string; // 一言メッセージ
 };
