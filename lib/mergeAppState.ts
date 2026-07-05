@@ -5,6 +5,67 @@ import type {
   UserProgress,
   WeeklyPlan,
 } from "@/types";
+import type {
+  CheckpointId,
+  CheckpointProgress,
+  EarnedBadge,
+  FinalExamAttempt,
+} from "@/types/checkpoint";
+import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
+
+const CP_ORDER: CheckpointId[] = ["cp0", "cp1", "cp2", "cp3", "cp4", "cp5", "cp6"];
+
+/**
+ * チェックポイント進行をマージする（端末間の同期・巻き戻し防止）。
+ * - 現在地は「先に進んでいる方」を採用する。
+ * - 獲得バッジ・クリア済みCP・最終問題履歴は取りこぼさない和集合。
+ * - 欠片・天井カウンタは大きい方（何度マージしても増えない冪等な扱い）。
+ */
+function mergeCheckpointProgress(
+  a: CheckpointProgress | undefined,
+  b: CheckpointProgress | undefined,
+): CheckpointProgress {
+  if (!a) return b ?? { ...INITIAL_CHECKPOINT_PROGRESS };
+  if (!b) return a;
+
+  const badgeMap = new Map<string, EarnedBadge>();
+  for (const e of [...a.earnedBadges, ...b.earnedBadges]) {
+    const prev = badgeMap.get(e.badgeId);
+    // 先に獲得した方（earnedAt が早い方）を残す。ドロップ由来かどうかも保つ。
+    if (!prev || e.earnedAt < prev.earnedAt) badgeMap.set(e.badgeId, e);
+  }
+
+  const attemptMap = new Map<string, FinalExamAttempt>();
+  for (const at of [...a.finalExamAttempts, ...b.finalExamAttempts]) {
+    attemptMap.set(`${at.checkpointId}@${at.attemptedAt}`, at);
+  }
+
+  const fragMap = new Map<string, number>();
+  for (const f of [...a.badgeFragments, ...b.badgeFragments]) {
+    fragMap.set(f.fragmentId, Math.max(fragMap.get(f.fragmentId) ?? 0, f.count));
+  }
+
+  const currentIdx = Math.max(
+    CP_ORDER.indexOf(a.currentCheckpointId),
+    CP_ORDER.indexOf(b.currentCheckpointId),
+  );
+
+  return {
+    currentCheckpointId: CP_ORDER[currentIdx] ?? "cp0",
+    clearedCheckpointIds: [
+      ...new Set([...a.clearedCheckpointIds, ...b.clearedCheckpointIds]),
+    ],
+    earnedBadges: [...badgeMap.values()],
+    badgeFragments: [...fragMap.entries()].map(([fragmentId, count]) => ({
+      fragmentId,
+      count,
+    })),
+    finalExamAttempts: [...attemptMap.values()].sort((x, y) =>
+      x.attemptedAt.localeCompare(y.attemptedAt),
+    ),
+    rarePityCount: Math.max(a.rarePityCount, b.rarePityCount),
+  };
+}
 
 // ============================================================================
 // AppState のマージ（複数端末の同期用・純粋関数）
@@ -75,6 +136,10 @@ export function mergeProgress(a: UserProgress, b: UserProgress): UserProgress {
     topicMastery,
     reviewQueue: mergeReviewQueue(a.reviewQueue, b.reviewQueue),
     weeklyPlan: mergeWeeklyPlan(a.weeklyPlan, b.weeklyPlan),
+    checkpointProgress: mergeCheckpointProgress(
+      a.checkpointProgress,
+      b.checkpointProgress,
+    ),
     // 旧版互換フィールドも「進んでいる方」を残す。
     currentDay: Math.max(a.currentDay ?? 1, b.currentDay ?? 1),
     completedDays: [...new Set([...(a.completedDays ?? []), ...(b.completedDays ?? [])])].sort(

@@ -15,8 +15,10 @@ import {
 import { saveAppState } from "@/lib/storage";
 import { getUserId, saveProgressToDb, saveProfileToDb } from "@/lib/userSession";
 import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import { useBadgeSync } from "@/lib/useBadgeSync";
 import BottomNav from "@/components/BottomNav";
 import RoadmapMap from "@/components/RoadmapMap";
+import CheckpointGateCard from "@/components/checkpoints/CheckpointGateCard";
 import LoadingScreen from "@/components/LoadingScreen";
 
 // /plan = 合格までの全体ロードマップ。
@@ -33,6 +35,7 @@ function formatDate(iso: string | null): string {
 export default function PlanPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
+  useBadgeSync(state, setState);
   const [book, setBook] = useState<ReferenceBook | null>(null);
 
   useEffect(() => {
@@ -130,6 +133,9 @@ export default function PlanPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-3xl">
+        {/* バッジゲート型ロードマップ: 現在CP・必要バッジ・不足・最終問題の解放状態 */}
+        <CheckpointGateCard state={state} />
+
         {/* 現在フェーズ */}
         <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
           <p className="text-xs font-bold text-indigo-500">いまのフェーズ</p>

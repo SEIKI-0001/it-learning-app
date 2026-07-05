@@ -10,6 +10,12 @@ import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
 import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { completeTopicStudy } from "@/lib/study";
+import { applyBadgeProgress } from "@/lib/checkpoints";
+import { applyBadgeDrop } from "@/lib/badgeDrops";
+import { getBadge } from "@/lib/badges";
+import { getClientBadgeSignals } from "@/lib/badgeSignals";
+import { useBadgeSync } from "@/lib/useBadgeSync";
+import BadgeProgressCard from "@/components/badges/BadgeProgressCard";
 import {
   getUserId,
   reportTopicQuizResult,
@@ -34,6 +40,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 export default function TodayPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
+  useBadgeSync(state, setState);
   const [completed, setCompleted] = useState(false);
   // 完了画面で「どれだけ進んだか」を実数で見せるための結果サマリ
   const [result, setResult] = useState<{
@@ -41,6 +48,8 @@ export default function TodayPage() {
     total: number;
     gainedExp: number;
     streak: number;
+    newlyBadges: string[]; // 今回獲得したバッジ名
+    drop: string | null; // 追加ドロップの表示ラベル
   } | null>(null);
 
   useEffect(() => {
@@ -127,22 +136,39 @@ export default function TodayPage() {
       ...a,
       tag: primary.tags[0] ?? primary.field,
     }));
-    const next = completeTopicStudy(state, primary.id, tagged);
-    saveAppState(next);
-    setState(next);
+    const studied = completeTopicStudy(state, primary.id, tagged);
+
+    // 学習結果を反映したうえで、条件を満たしたバッジを確定付与する（ランダム非依存）。
+    const signals = getClientBadgeSignals();
+    const awarded = applyBadgeProgress(studied, signals);
+    let finalState = awarded.state;
+    // 条件達成後だけ追加ドロップを1回発生させる（補助報酬・進行は動かさない）。
+    let dropLabel: string | null = null;
+    if (awarded.newlyEarnedIds.length > 0) {
+      const dropped = applyBadgeDrop(finalState);
+      finalState = dropped.state;
+      dropLabel = `${dropped.drop.emoji} ${dropped.drop.label}`;
+    }
+
+    saveAppState(finalState);
+    setState(finalState);
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;
     setResult({
       correct,
       total,
-      gainedExp: next.progress.exp - state.progress.exp,
-      streak: next.progress.streakCount,
+      gainedExp: finalState.progress.exp - state.progress.exp,
+      streak: finalState.progress.streakCount,
+      newlyBadges: awarded.newlyEarnedIds
+        .map((id) => getBadge(id)?.label)
+        .filter((v): v is string => !!v),
+      drop: dropLabel,
     });
     setCompleted(true);
 
     const userId = getUserId();
     if (userId) {
-      saveProgressToDb(userId, next.progress);
+      saveProgressToDb(userId, finalState.progress);
       saveAnswersToDb(userId, 0, tagged);
       // 理解度（topic_progress）は確認問題結果でのみ更新する。
       if (total > 0) {
@@ -171,6 +197,9 @@ export default function TodayPage() {
 
         {/* 統合進捗の推奨配分にもとづく今日の短い案内（表示補助） */}
         <TodayFocusHint />
+
+        {/* 今日取れるバッジ・ロードマップへの効果・最終問題の解放通知 */}
+        <BadgeProgressCard state={state} signals={getClientBadgeSignals()} />
 
         {/* 今日の学習ガイド: 現在フェーズ・今日これをやる理由（必須）・ゴール・次の予定 */}
         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
@@ -271,6 +300,27 @@ export default function TodayPage() {
                         🔥 {result.streak}日連続
                       </span>
                     </div>
+                    {result.newlyBadges.length > 0 && (
+                      <div className="mt-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-emerald-100">
+                        <p className="text-xs font-bold text-emerald-600">
+                          🏅 新しいバッジを獲得！
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-gray-700">
+                          {result.newlyBadges.join(" ・ ")}
+                        </p>
+                        {result.drop && (
+                          <p className="mt-1 text-xs font-semibold text-sky-600">
+                            追加ドロップ：{result.drop}
+                          </p>
+                        )}
+                        <Link
+                          href="/badges"
+                          className="mt-1 inline-block text-xs font-bold text-indigo-600 underline underline-offset-2"
+                        >
+                          バッジ一覧を見る →
+                        </Link>
+                      </div>
+                    )}
                   </>
                 )}
                 <p className="mt-3 text-sm text-green-700">

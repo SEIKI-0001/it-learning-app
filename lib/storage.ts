@@ -1,4 +1,6 @@
 import type { AppState, UserProfile } from "@/types";
+import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
+import { migrateCheckpointProgress } from "@/lib/checkpoints";
 
 // localStorage 操作をこのファイルに隠蔽する。
 // プロトタイプのため保存先は localStorage のみ（将来はDBへ差し替え予定）。
@@ -33,7 +35,7 @@ export function loadAppState(): AppState | null {
  */
 export function normalizeAppState(state: AppState): AppState {
   const p = state.progress ?? ({} as AppState["progress"]);
-  return {
+  const normalized: AppState = {
     ...state,
     progress: {
       level: p.level ?? 1,
@@ -45,10 +47,21 @@ export function normalizeAppState(state: AppState): AppState {
       topicMastery: p.topicMastery ?? {},
       reviewQueue: p.reviewQueue ?? [],
       weeklyPlan: p.weeklyPlan ?? null,
+      checkpointProgress: p.checkpointProgress,
       currentDay: p.currentDay ?? 1,
       completedDays: p.completedDays ?? [],
     },
   };
+
+  // バッジゲート型ロードマップの進行状態を安全に補完する。
+  //   - 既にあれば尊重する（進行・獲得バッジを壊さない）。
+  //   - 無い既存ユーザーは、既存データから初期チェックポイントを一度だけ推定する
+  //     （migrateCheckpointProgress は profile 未設定なら cp0 の初期値を返す）。
+  if (!normalized.progress.checkpointProgress) {
+    normalized.progress.checkpointProgress = migrateCheckpointProgress(normalized);
+  }
+
+  return normalized;
 }
 
 /** AppState を保存する。 */
@@ -82,6 +95,11 @@ export function initializeAppState(profile: UserProfile): AppState {
       topicMastery: {},
       reviewQueue: [],
       weeklyPlan: null,
+      // 初回設定（オンボーディング）完了 ＝ CP0 クリア。以降は最終問題突破で進む。
+      checkpointProgress: {
+        ...INITIAL_CHECKPOINT_PROGRESS,
+        currentCheckpointId: "cp1",
+      },
       // 旧版互換(新ロジックでは未使用)
       currentDay: 1,
       completedDays: [],

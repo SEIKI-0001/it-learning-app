@@ -9,6 +9,7 @@ const ITEMS = [
   { href: "/plan", label: "計画", emoji: "🗺️" },
   { href: "/topics", label: "トピック", emoji: "🗂️" },
   { href: "/review", label: "復習", emoji: "🔁" },
+  { href: "/badges", label: "バッジ", emoji: "🏅" },
   { href: "/progress", label: "進捗", emoji: "📈" },
   { href: "/glossary", label: "単語帳", emoji: "📇" },
   { href: "/ai-grading", label: "AI採点", emoji: "📝" },

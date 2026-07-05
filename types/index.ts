@@ -7,6 +7,7 @@
 //     既存DB・localStorage との後方互換のために残すが、新しいUI/ロジックでは使わない。
 
 import type { TopicField } from "@/types/content";
+import type { CheckpointProgress } from "@/types/checkpoint";
 
 export type ChoiceKey = "A" | "B" | "C" | "D";
 
@@ -73,6 +74,10 @@ export type UserProgress = {
   topicMastery: Record<string, number>; // topicId → 習熟度(0〜100)
   reviewQueue: ReviewItem[]; // 復習対象
   weeklyPlan?: WeeklyPlan | null; // 今週のタスクリスト（週初めに確定・端末間同期）
+
+  // --- バッジゲート型ロードマップの進行状態（上位概念） ---
+  // 既存ユーザーには normalizeAppState で初期値を安全に補完する。
+  checkpointProgress?: CheckpointProgress;
 
   // --- 旧版からの互換フィールド(新ロジックでは未使用) ---
   currentDay: number; // 旧: 1〜7。互換のため残すが進行には使わない。

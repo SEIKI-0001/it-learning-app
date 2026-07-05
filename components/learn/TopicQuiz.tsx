@@ -122,6 +122,8 @@ export default function TopicQuiz({
   useEffect(() => {
     if (!timeLimited || done || timeLeft === null) return;
     if (timeLeft <= 0) {
+      // タイマー（外部システム）起因の自動締め切り。意図的に effect 内で確定する。
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       finish();
       return;
     }
