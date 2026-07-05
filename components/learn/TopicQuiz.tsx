@@ -57,6 +57,7 @@ export default function TopicQuiz({
   const [selections, setSelections] = useState<Record<string, ChoiceKey>>({});
   const [order, setOrder] = useState<string[]>([]); // 回答した順(連続正解の判定に使う)
   const [done, setDone] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0); // 1問ずつ表示する(下スクロールさせない)
   const timeLimited = typeof timeLimitSeconds === "number" && timeLimitSeconds > 0;
   const [timeLeft, setTimeLeft] = useState<number | null>(
     timeLimited ? timeLimitSeconds : null,
@@ -65,6 +66,9 @@ export default function TopicQuiz({
 
   const total = questions.length;
   const allAnswered = questions.every((q) => selections[q.id] !== undefined);
+  const currentQuestion = questions[currentIndex];
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === total - 1;
 
   const isCorrectOf = (qId: string) => selections[qId] === shuffled.get(qId)?.correct;
   const correctCount = order.reduce((n, qId) => n + (isCorrectOf(qId) ? 1 : 0), 0);
@@ -86,6 +90,14 @@ export default function TopicQuiz({
     if (selections[qId] !== undefined) return; // 二重回答防止
     setSelections((s) => ({ ...s, [qId]: key }));
     setOrder((o) => (o.includes(qId) ? o : [...o, qId]));
+  }
+
+  function goNext() {
+    setCurrentIndex((i) => Math.min(i + 1, total - 1));
+  }
+
+  function goPrev() {
+    setCurrentIndex((i) => Math.max(i - 1, 0));
   }
 
   const finish = useCallback(() => {
@@ -128,12 +140,18 @@ export default function TopicQuiz({
       : 0;
   const isTimeLow = timeLimited && timeLeft !== null && timeLeft <= 10;
 
+  const currentSelection = selections[currentQuestion.id] ?? null;
+  const currentRevealed = currentSelection !== null;
+  const showNav = currentRevealed || done || timeLimitReached;
+
   return (
     <div className="space-y-4">
-      {/* 積み上がりバー: 1問ずつ点灯し、正解が貯まっていくのを可視化する */}
+      {/* 進捗表示: 下スクロールではなく「1/4」のように現在位置を示す */}
       <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-gray-100">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-gray-500">解いて進もう</span>
+          <span className="text-xs font-semibold text-gray-500">
+            問題 {currentIndex + 1} / {total}
+          </span>
           <span className="text-xs font-bold text-gray-700">
             正解{" "}
             <span
@@ -146,13 +164,17 @@ export default function TopicQuiz({
           </span>
         </div>
         <div className="mt-2 flex gap-1.5">
-          {questions.map((q) => {
+          {questions.map((q, i) => {
             const answered = selections[q.id] !== undefined;
             const ok = isCorrectOf(q.id);
             return (
               <div
                 key={q.id}
                 className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+                  i === currentIndex
+                    ? "ring-2 ring-indigo-400 ring-offset-1"
+                    : ""
+                } ${
                   !answered
                     ? "bg-gray-200"
                     : ok
@@ -190,10 +212,11 @@ export default function TopicQuiz({
         )}
       </div>
 
-      {questions.map((q, i) => {
+      {(() => {
+        const q = currentQuestion;
         const sh = shuffled.get(q.id)!;
-        const sel = selections[q.id] ?? null;
-        const revealed = sel !== null;
+        const sel = currentSelection;
+        const revealed = currentRevealed;
         const isCorrect = sel === sh.correct;
         const streak = streakAt.get(q.id) ?? 0;
         return (
@@ -202,7 +225,7 @@ export default function TopicQuiz({
             className={`rounded-2xl border border-gray-200 bg-white ${dense ? "p-3" : "p-4"}`}
           >
             <p className={`text-sm font-bold text-gray-800 ${dense ? "mb-2" : "mb-3"}`}>
-              Q{i + 1}. {q.prompt}
+              Q{currentIndex + 1}. {q.prompt}
             </p>
             <div className={dense ? "space-y-2" : "space-y-2.5"}>
               {sh.choices.map((c) => (
@@ -234,7 +257,7 @@ export default function TopicQuiz({
                         🎉
                       </span>
                       <p className="text-sm font-extrabold text-green-700">
-                        {PRAISES[i % PRAISES.length]}
+                        {PRAISES[currentIndex % PRAISES.length]}
                       </p>
                       {streak >= 2 && (
                         <span className="ml-auto inline-block animate-pop-in rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-600">
@@ -255,10 +278,10 @@ export default function TopicQuiz({
             )}
           </div>
         );
-      })}
+      })()}
 
       {/* 全問そろったら、完了して進む流れを後押しする一言を出す */}
-      {allAnswered && !done && (
+      {isLast && allAnswered && !done && (
         <p className="animate-pop-in text-center text-sm font-bold text-green-700">
           {correctCount === total
             ? `全問正解！🎯 この勢いで完了しよう`
@@ -272,14 +295,39 @@ export default function TopicQuiz({
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={finish}
-        disabled={!allAnswered || done}
-        className="w-full rounded-2xl bg-indigo-600 px-6 py-4 text-lg font-extrabold text-white shadow-lg transition active:scale-[0.98] disabled:bg-gray-300"
-      >
-        {done ? "保存しました" : allAnswered ? completeLabel : "すべて答えると完了できます"}
-      </button>
+      {/* 解答すると下に「次へ」「前へ」が現れる。次へで次の問題を表示する */}
+      {showNav && (
+        <div className="flex gap-3">
+          {!isFirst && (
+            <button
+              type="button"
+              onClick={goPrev}
+              disabled={done}
+              className="flex-1 rounded-2xl bg-white px-6 py-4 text-base font-extrabold text-indigo-600 shadow-sm ring-1 ring-indigo-200 transition active:scale-[0.98] disabled:opacity-50"
+            >
+              ← 前へ
+            </button>
+          )}
+          {isLast ? (
+            <button
+              type="button"
+              onClick={finish}
+              disabled={!allAnswered || done}
+              className="flex-1 rounded-2xl bg-indigo-600 px-6 py-4 text-base font-extrabold text-white shadow-lg transition active:scale-[0.98] disabled:bg-gray-300"
+            >
+              {done ? "保存しました" : allAnswered ? completeLabel : "すべて答えると完了できます"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={goNext}
+              className="flex-1 rounded-2xl bg-indigo-600 px-6 py-4 text-base font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+            >
+              次へ →
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
