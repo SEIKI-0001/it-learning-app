@@ -22,6 +22,13 @@ import type {
   RecommendedFocus,
   WeakTopic,
 } from "@/types/integratedStatus";
+import type {
+  AdjustmentSeverity,
+  AdjustmentStatus,
+  AdjustmentTriggerType,
+  PlanAdjustmentProposal,
+  RecoveryPlanOption,
+} from "@/types/planAdjustment";
 
 // DB（snake_case の行）と アプリ内の型（camelCase）の相互変換。
 // サーバー側 API Route からのみ使用する。
@@ -588,5 +595,74 @@ export function integratedStatusToRow(
     main_risks: s.mainRisks,
     recommended_focus: s.recommendedFocus,
     generated_message: s.generatedMessage,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// plan_adjustment_proposals : 立て直し提案（第4弾）
+// ---------------------------------------------------------------------------
+
+export type PlanAdjustmentRow = {
+  proposal_id?: string;
+  user_id: string;
+  status_date: string;
+  source_status_id: string | null;
+  trigger_type: string;
+  severity: string;
+  headline: string;
+  reason_summary: string | null;
+  options: RecoveryPlanOption[];
+  selected_option_id: string | null;
+  status: string;
+  accepted_at: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export function planAdjustmentRowToProposal(
+  row: PlanAdjustmentRow,
+): PlanAdjustmentProposal {
+  return {
+    proposalId: row.proposal_id ?? "",
+    statusDate: row.status_date,
+    sourceStatusId: row.source_status_id ?? null,
+    triggerType: (row.trigger_type ?? "delay") as AdjustmentTriggerType,
+    severity: (row.severity ?? "moderate") as AdjustmentSeverity,
+    headline: row.headline ?? "",
+    reasonSummary: row.reason_summary ?? null,
+    options: row.options ?? [],
+    selectedOptionId: row.selected_option_id ?? null,
+    status: (row.status ?? "proposed") as AdjustmentStatus,
+    acceptedAt: row.accepted_at ?? null,
+    createdAt: row.created_at ?? undefined,
+    updatedAt: row.updated_at ?? undefined,
+  };
+}
+
+/** insert 用の行（proposal_id / created_at / updated_at はDB既定）。 */
+export function planAdjustmentToRow(
+  userId: string,
+  p: {
+    statusDate: string;
+    sourceStatusId?: string | null;
+    triggerType: AdjustmentTriggerType;
+    severity: AdjustmentSeverity;
+    headline: string;
+    reasonSummary?: string | null;
+    options: RecoveryPlanOption[];
+  },
+): Omit<PlanAdjustmentRow, "proposal_id" | "created_at" | "updated_at"> {
+  return {
+    user_id: userId,
+    status_date: p.statusDate,
+    source_status_id: p.sourceStatusId ?? null,
+    trigger_type: p.triggerType,
+    severity: p.severity,
+    headline: p.headline,
+    reason_summary: p.reasonSummary ?? null,
+    options: p.options,
+    selected_option_id: null,
+    status: "proposed",
+    accepted_at: null,
   };
 }

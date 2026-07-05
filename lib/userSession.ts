@@ -8,6 +8,7 @@ import type {
   TopicProgressSummary,
 } from "@/types/studyProgress";
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
+import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 
 // LINE 経由で解決した user_id を localStorage に保存し、以降のDB保存に使う。
 // user_id が無ければ（= 直接アクセス）すべて localStorage だけで動く（フォールバック）。
@@ -420,6 +421,82 @@ export async function fetchLatestIntegratedStatus(
       status?: IntegratedLearningStatus | null;
     };
     return data.ok && data.status ? data.status : null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// リカバリ案・計画修正（第4弾）
+// ---------------------------------------------------------------------------
+
+/**
+ * 最新の統合進捗から立て直し提案を生成（または同日の既存提案を再利用）して返す。
+ * 未ログイン・Supabase 未設定・提案不要・失敗なら null（呼び出し側は非表示で継続）。
+ */
+export async function generatePlanAdjustment(
+  userId: string,
+): Promise<PlanAdjustmentProposal | null> {
+  try {
+    const res = await fetch("/api/plan-adjustment/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      proposal?: PlanAdjustmentProposal | null;
+    };
+    return data.ok && data.proposal ? data.proposal : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 最新の有効な立て直し提案（proposed / accepted）を取得。無ければ null。 */
+export async function fetchLatestPlanAdjustment(
+  userId: string,
+): Promise<PlanAdjustmentProposal | null> {
+  try {
+    const res = await fetch("/api/plan-adjustment/latest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      proposal?: PlanAdjustmentProposal | null;
+    };
+    return data.ok && data.proposal ? data.proposal : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 立て直し提案に応答する（承認 / 見送り）。
+ * 承認時のみサーバー側で計画を補正する。更新後の提案を返す（失敗なら null）。
+ */
+export async function respondToPlanAdjustment(
+  userId: string,
+  proposalId: string,
+  action: "accept" | "reject",
+  selectedOptionId?: string,
+): Promise<PlanAdjustmentProposal | null> {
+  try {
+    const res = await fetch("/api/plan-adjustment/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, proposalId, action, selectedOptionId }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      proposal?: PlanAdjustmentProposal | null;
+    };
+    return data.ok && data.proposal ? data.proposal : null;
   } catch {
     return null;
   }

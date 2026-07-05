@@ -26,6 +26,7 @@ import TopicContent, {
 import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayCheckPackCta from "@/components/checkPack/TodayCheckPackCta";
 import TodayFocusHint from "@/components/checkPack/TodayFocusHint";
+import AcceptedAdjustmentNote from "@/components/today/AcceptedAdjustmentNote";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -164,6 +165,9 @@ export default function TodayPage() {
         <p className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700">
           「完了」を押して、ストリークを伸ばそう
         </p>
+
+        {/* 承認済みの立て直しプランがあれば、いま何を優先しているかを案内 */}
+        <AcceptedAdjustmentNote />
 
         {/* 統合進捗の推奨配分にもとづく今日の短い案内（表示補助） */}
         <TodayFocusHint />

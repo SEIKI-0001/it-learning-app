@@ -14,6 +14,7 @@ import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import AchievementStrip from "@/components/progress/AchievementStrip";
 import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
+import PlanAdjustmentCard from "@/components/progress/PlanAdjustmentCard";
 import TopicStageSummary from "@/components/progress/TopicStageSummary";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutLink from "@/components/auth/LogoutLink";
@@ -205,6 +206,9 @@ export default function ProgressPage() {
       <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4 md:max-w-4xl">
         {/* 統合進捗カード（合格に対する現在地・主なリスク・今週の推奨配分） */}
         <IntegratedStatusCard />
+
+        {/* 計画の立て直し提案（遅れ・弱点・リスクを検知したときのみ表示） */}
+        <PlanAdjustmentCard />
 
         {/* 数値サマリ */}
         <div className="grid grid-cols-3 gap-3">
