@@ -10,7 +10,12 @@ import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
 import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
 import { completeTopicStudy } from "@/lib/study";
-import { applyBadgeProgress } from "@/lib/checkpoints";
+import {
+  applyBadgeProgress,
+  buildCheckpointGate,
+  getCheckpoint,
+  getCheckpointProgress,
+} from "@/lib/checkpoints";
 import { applyBadgeDrop } from "@/lib/badgeDrops";
 import { getBadge } from "@/lib/badges";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
@@ -50,6 +55,12 @@ export default function TodayPage() {
     streak: number;
     newlyBadges: string[]; // 今回獲得したバッジ名
     drop: string | null; // 追加ドロップの表示ラベル
+    // 完了後の「次CPまでの残り条件」表示用（ロードマップ進行への効果を見せる）
+    cpTitle: string;
+    cpId: string;
+    remainingRequired: number; // 最終問題解放まで必要な必須バッジ残数
+    finalUnlocked: boolean; // 最終問題が解放済みか
+    finalJustUnlocked: boolean; // 今回の学習で解放されたか
   } | null>(null);
 
   useEffect(() => {
@@ -154,6 +165,17 @@ export default function TodayPage() {
     setState(finalState);
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;
+
+    // ロードマップ進行への効果を可視化する（学習前後で最終問題の解放が変わったか）。
+    const currentCpId = getCheckpointProgress(finalState).currentCheckpointId;
+    const cpDef = getCheckpoint(currentCpId);
+    const gateBefore = buildCheckpointGate(state, currentCpId);
+    const gateAfter = buildCheckpointGate(finalState, currentCpId);
+    const remainingRequired = Math.max(
+      0,
+      gateAfter.requiredBadgeCount - gateAfter.earnedRequiredCount,
+    );
+
     setResult({
       correct,
       total,
@@ -163,6 +185,12 @@ export default function TodayPage() {
         .map((id) => getBadge(id)?.label)
         .filter((v): v is string => !!v),
       drop: dropLabel,
+      cpTitle: cpDef.title,
+      cpId: currentCpId,
+      remainingRequired,
+      finalUnlocked: gateAfter.finalExamUnlocked,
+      finalJustUnlocked:
+        gateAfter.finalExamUnlocked && !gateBefore.finalExamUnlocked,
     });
     setCompleted(true);
 
@@ -301,7 +329,7 @@ export default function TodayPage() {
                       </span>
                     </div>
                     {result.newlyBadges.length > 0 && (
-                      <div className="mt-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-emerald-100">
+                      <div className="animate-rise-in mt-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-emerald-100">
                         <p className="text-xs font-bold text-emerald-600">
                           🏅 新しいバッジを獲得！
                         </p>
@@ -318,6 +346,52 @@ export default function TodayPage() {
                           className="mt-1 inline-block text-xs font-bold text-indigo-600 underline underline-offset-2"
                         >
                           バッジ一覧を見る →
+                        </Link>
+                      </div>
+                    )}
+
+                    {/* ロードマップ進行への効果: 次CPまでの残り条件 or 最終問題解放 */}
+                    {result.finalJustUnlocked ? (
+                      <Link
+                        href={`/checkpoint/${result.cpId}/final`}
+                        className="animate-sheen mt-3 block overflow-hidden rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 px-3 py-3 text-left shadow-sm"
+                      >
+                        <p className="text-sm font-extrabold text-white">
+                          ⚔️ 突破試験が解放されました！
+                        </p>
+                        <p className="mt-0.5 text-xs font-semibold text-white/90">
+                          {result.cpTitle}の最終問題に挑めば CP を突破できます →
+                        </p>
+                      </Link>
+                    ) : result.finalUnlocked ? (
+                      <Link
+                        href={`/checkpoint/${result.cpId}/final`}
+                        className="mt-3 block rounded-xl bg-white px-3 py-2.5 text-left ring-1 ring-rose-100"
+                      >
+                        <p className="text-xs font-bold text-rose-600">
+                          ⚔️ 突破試験は挑戦できます
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-gray-700">
+                          {result.cpTitle}の最終問題に挑む →
+                        </p>
+                      </Link>
+                    ) : (
+                      <div className="mt-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-indigo-100">
+                        <p className="text-xs font-bold text-indigo-600">
+                          🗺️ {result.cpTitle}の進行
+                        </p>
+                        <p className="mt-0.5 text-sm font-semibold text-gray-700">
+                          最終問題の解放まで、必須バッジあと
+                          <span className="text-indigo-600">
+                            {" "}
+                            {result.remainingRequired} 個
+                          </span>
+                        </p>
+                        <Link
+                          href="/plan"
+                          className="mt-1 inline-block text-xs font-bold text-indigo-600 underline underline-offset-2"
+                        >
+                          ロードマップで確認 →
                         </Link>
                       </div>
                     )}

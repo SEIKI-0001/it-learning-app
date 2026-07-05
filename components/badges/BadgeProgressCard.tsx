@@ -62,6 +62,12 @@ export default function BadgeProgressCard({
           バッジ一覧
         </Link>
       </div>
+      <p className="mt-1 text-[11px] font-semibold text-gray-500">
+        獲得すると{" "}
+        <span className="font-bold text-indigo-600">
+          {checkpoint.emoji} CP{checkpoint.order} {checkpoint.title}
+        </span>{" "}
+        の進行が進みます</p>
 
       {/* 最終問題の解放通知 */}
       {gate.finalExamUnlocked && !gate.finalExamPassed && (

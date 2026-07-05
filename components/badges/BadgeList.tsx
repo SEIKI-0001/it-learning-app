@@ -35,19 +35,28 @@ export function badgeActionHref(def: BadgeDef): string {
   }
 }
 
-function BadgeCard({ status }: { status: BadgeStatus }) {
+function BadgeCard({
+  status,
+  recommended = false,
+}: {
+  status: BadgeStatus;
+  recommended?: boolean;
+}) {
   const { def, earned, conditionMet } = status;
   // 表示状態: 獲得済み / 条件達成（未反映） / ロック中。
   const ready = !earned && conditionMet;
+  const highlight = recommended && !earned;
 
   return (
     <li
       className={`rounded-2xl p-4 ring-1 transition ${
-        earned
-          ? "bg-white ring-emerald-200"
-          : ready
-            ? "bg-amber-50 ring-amber-200"
-            : "bg-gray-50 ring-gray-200"
+        highlight
+          ? "bg-indigo-50 ring-2 ring-indigo-300"
+          : earned
+            ? "bg-white ring-emerald-200"
+            : ready
+              ? "bg-amber-50 ring-amber-200"
+              : "bg-gray-50 ring-gray-200"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -63,6 +72,11 @@ function BadgeCard({ status }: { status: BadgeStatus }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
+            {highlight && (
+              <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                🎯 次に狙う
+              </span>
+            )}
             <p className="text-sm font-extrabold text-gray-800">{def.label}</p>
             {def.requiredForGate ? (
               <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
@@ -120,7 +134,13 @@ function BadgeCard({ status }: { status: BadgeStatus }) {
   );
 }
 
-export default function BadgeList({ statuses }: { statuses: BadgeStatus[] }) {
+export default function BadgeList({
+  statuses,
+  recommendedId,
+}: {
+  statuses: BadgeStatus[];
+  recommendedId?: string;
+}) {
   if (statuses.length === 0) {
     return (
       <p className="rounded-2xl bg-gray-50 px-4 py-6 text-center text-sm text-gray-400">
@@ -131,7 +151,11 @@ export default function BadgeList({ statuses }: { statuses: BadgeStatus[] }) {
   return (
     <ul className="space-y-3">
       {statuses.map((s) => (
-        <BadgeCard key={s.def.id} status={s} />
+        <BadgeCard
+          key={s.def.id}
+          status={s}
+          recommended={s.def.id === recommendedId}
+        />
       ))}
     </ul>
   );

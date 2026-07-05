@@ -22,7 +22,10 @@ body {
 /* 視差・アニメーションを減らす設定のユーザーには装飾アニメーションを止める */
 @media (prefers-reduced-motion: reduce) {
   .animate-shake,
-  .animate-pop-in {
+  .animate-pop-in,
+  .animate-rise-in,
+  .animate-sheen::after,
+  .animate-glow-ring {
     animation: none;
   }
 }
@@ -47,4 +50,51 @@ body {
 
 .animate-pop-in {
   animation: pop-in 0.35s ease-out forwards;
+}
+
+/* 達成カード・バッジ列の登場: 下からふわっと現れる（少しずつ遅延できる） */
+@keyframes rise-in {
+  0%   { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+
+.animate-rise-in {
+  animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 解放・突破の“達成感”: 光がひとなでする控えめなシーン演出 */
+.animate-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  animation: sheen 2.6s ease-in-out 0.3s infinite;
+  pointer-events: none;
+}
+
+@keyframes sheen {
+  0%   { transform: translateX(-120%); }
+  55%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* 解放中の最終問題ボタンをやさしく脈打たせる（子どもっぽくならない範囲で） */
+@keyframes glow-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
+  50%      { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+}
+
+.animate-glow-ring {
+  animation: glow-ring 2s ease-out infinite;
 }

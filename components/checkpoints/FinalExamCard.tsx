@@ -15,28 +15,60 @@ export default function FinalExamCard({
   rangeLabel: string;
 }) {
   const rule = checkpoint.finalExam;
+  const unlockedActive = gate.finalExamUnlocked && !gate.finalExamPassed;
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-bold text-rose-500">
-          CP{checkpoint.order} 最終問題
-        </p>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${
-            gate.finalExamUnlocked
-              ? "bg-emerald-100 text-emerald-700 ring-emerald-200"
-              : "bg-gray-100 text-gray-500 ring-gray-200"
+    <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+      {/* ボス戦ヘッダ: 到達ポイントの突破試験として見せる */}
+      <div
+        className={`px-5 pb-4 pt-4 ${
+          gate.finalExamPassed
+            ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+            : unlockedActive
+              ? "animate-sheen bg-gradient-to-br from-rose-500 to-orange-500 text-white"
+              : "bg-gray-100 text-gray-600"
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <p
+            className={`text-[11px] font-bold ${
+              gate.finalExamUnlocked ? "text-white/80" : "text-gray-500"
+            }`}
+          >
+            CP{checkpoint.order} 突破試験
+          </p>
+          <span
+            className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+              gate.finalExamPassed
+                ? "bg-white/20 text-white"
+                : unlockedActive
+                  ? "bg-white/20 text-white"
+                  : "bg-white text-gray-500 ring-1 ring-gray-300"
+            }`}
+          >
+            {gate.finalExamPassed
+              ? "🏆 突破済み"
+              : gate.finalExamUnlocked
+                ? "🔓 解放中"
+                : "🔒 ロック中"}
+          </span>
+        </div>
+        <h1 className="mt-2 text-xl font-extrabold">
+          {gate.finalExamUnlocked ? "⚔️" : checkpoint.emoji}{" "}
+          {checkpoint.title} ボス戦
+        </h1>
+        <p
+          className={`mt-1 text-sm ${
+            gate.finalExamUnlocked ? "text-white/90" : "text-gray-500"
           }`}
         >
-          {gate.finalExamUnlocked ? "🔓 解放中" : "🔒 ロック中"}
-        </span>
+          {unlockedActive
+            ? "ここを突破すれば次のチェックポイントへ進めます。"
+            : checkpoint.summary}
+        </p>
       </div>
-      <h1 className="mt-1 text-xl font-extrabold text-gray-800">
-        {checkpoint.emoji} {checkpoint.title}の最終問題
-      </h1>
-      <p className="mt-1 text-sm text-gray-600">{checkpoint.summary}</p>
 
-      <dl className="mt-4 grid grid-cols-2 gap-2 text-sm">
+      <div className="p-5">
+      <dl className="grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-gray-50 px-3 py-2">
           <dt className="text-[11px] font-bold text-gray-400">問題数</dt>
           <dd className="font-extrabold text-gray-800">
@@ -67,6 +99,7 @@ export default function FinalExamCard({
       <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-700">
         勝利条件：{checkpoint.winConditionLabel}
       </p>
+      </div>
     </section>
   );
 }

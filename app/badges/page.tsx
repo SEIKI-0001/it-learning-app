@@ -7,11 +7,12 @@ import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { buildBadgeStatuses } from "@/lib/badges";
+import type { BadgeStatus } from "@/types/checkpoint";
 import {
   CHECKPOINTS,
   getCheckpointProgress,
 } from "@/lib/checkpoints";
-import BadgeList from "@/components/badges/BadgeList";
+import BadgeList, { badgeActionHref } from "@/components/badges/BadgeList";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -41,9 +42,26 @@ export default function BadgesPage() {
   const earnedCount = allStatuses.filter((s) => s.earned).length;
   const totalCount = allStatuses.length;
   const cpProgress = getCheckpointProgress(state);
+  const currentId = cpProgress.currentCheckpointId;
 
   // cp0 はバッジ無し。バッジを持つ CP のみ表示。
   const checkpoints = CHECKPOINTS.filter((c) => c.order >= 1);
+
+  // 一覧の並び: 未獲得の必須（条件達成間近を先）→ 未獲得の任意 → 獲得済み。
+  const sortStatuses = (list: BadgeStatus[]): BadgeStatus[] =>
+    [...list].sort((a, b) => {
+      if (a.earned !== b.earned) return a.earned ? 1 : -1;
+      if (a.def.requiredForGate !== b.def.requiredForGate) {
+        return a.def.requiredForGate ? -1 : 1;
+      }
+      return Number(b.conditionMet) - Number(a.conditionMet);
+    });
+
+  // 「次に狙うべきバッジ」= 現在CPの未獲得バッジのうち、必須→条件間近を最優先。
+  const currentSorted = sortStatuses(
+    buildBadgeStatuses(state, signals, currentId).filter((s) => !s.earned),
+  );
+  const recommended = currentSorted[0];
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -70,8 +88,43 @@ export default function BadgesPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md space-y-8 px-4 py-6 md:max-w-3xl">
+        {/* 凡例: バッジの状態と種別の見分け方 */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-2xl bg-white px-4 py-3 text-[11px] font-semibold ring-1 ring-gray-100">
+          <span className="text-emerald-600">● 獲得済み</span>
+          <span className="text-amber-600">● あと一歩</span>
+          <span className="text-gray-400">🔒 未獲得</span>
+          <span className="text-rose-600">必須＝最終問題の解放に必要</span>
+          <span className="text-gray-500">任意＝追加報酬</span>
+        </div>
+
+        {/* 次に狙うべきバッジ（現在CPの最優先の1件） */}
+        {recommended && (
+          <Link
+            href={badgeActionHref(recommended.def)}
+            className="block rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-4 text-white shadow-sm transition active:scale-[0.99]"
+          >
+            <p className="text-[11px] font-bold text-white/80">
+              🎯 次に狙うバッジ
+            </p>
+            <p className="mt-1 text-base font-extrabold">
+              {recommended.def.emoji} {recommended.def.label}
+              {recommended.def.requiredForGate && (
+                <span className="ml-1.5 rounded-full bg-rose-500/90 px-1.5 py-0.5 text-[10px] font-bold">
+                  必須
+                </span>
+              )}
+            </p>
+            <p className="mt-1 text-xs text-white/90">
+              🎯 {recommended.def.conditionLabel}
+            </p>
+            <span className="mt-2 inline-block text-xs font-bold text-white/90">
+              挑戦しにいく →
+            </span>
+          </Link>
+        )}
+
         {checkpoints.map((cp) => {
-          const statuses = buildBadgeStatuses(state, signals, cp.id);
+          const statuses = sortStatuses(buildBadgeStatuses(state, signals, cp.id));
           const earned = statuses.filter((s) => s.earned).length;
           const requiredTotal = statuses.filter(
             (s) => s.def.requiredForGate,
@@ -80,17 +133,20 @@ export default function BadgesPage() {
             (s) => s.def.requiredForGate && s.earned,
           ).length;
           const isCleared = cpProgress.clearedCheckpointIds.includes(cp.id);
-          const isCurrent = cpProgress.currentCheckpointId === cp.id;
+          const isCurrent = currentId === cp.id;
 
           return (
-            <section key={cp.id}>
+            <section
+              key={cp.id}
+              className={isCleared ? "opacity-80" : undefined}
+            >
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 text-base font-extrabold text-gray-800">
                   <span aria-hidden>{cp.emoji}</span>
                   CP{cp.order} {cp.title}
                   {isCleared && (
                     <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                      クリア済み
+                      ✓ クリア済み
                     </span>
                   )}
                   {isCurrent && !isCleared && (
@@ -107,7 +163,10 @@ export default function BadgesPage() {
                 必須バッジ {requiredEarned}/{requiredTotal} 獲得（
                 {cp.requiredBadgeCount} 個で最終問題が解放）
               </p>
-              <BadgeList statuses={statuses} />
+              <BadgeList
+                statuses={statuses}
+                recommendedId={isCurrent ? recommended?.def.id : undefined}
+              />
             </section>
           );
         })}
