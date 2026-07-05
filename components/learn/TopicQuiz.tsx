@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChoiceKey, UserAnswer } from "@/types";
 import type { CheckQuestion } from "@/types/content";
 import ChoiceButton from "@/components/ChoiceButton";
@@ -29,18 +29,26 @@ function shuffle(q: CheckQuestion): Shuffled {
   return { choices, correct };
 }
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export default function TopicQuiz({
   topicId,
   questions,
   onComplete,
   completeLabel = "完了する",
   dense = false,
+  timeLimitSeconds,
 }: {
   topicId: string;
   questions: CheckQuestion[];
   onComplete: (answers: UserAnswer[]) => void;
   completeLabel?: string;
   dense?: boolean; // 選択肢の縦幅を詰める(/today)
+  timeLimitSeconds?: number; // 指定時のみ制限時間を有効化（確認パック用）
 }) {
   const shuffled = useMemo(
     () => new Map(questions.map((q) => [q.id, shuffle(q)] as const)),
@@ -49,6 +57,11 @@ export default function TopicQuiz({
   const [selections, setSelections] = useState<Record<string, ChoiceKey>>({});
   const [order, setOrder] = useState<string[]>([]); // 回答した順(連続正解の判定に使う)
   const [done, setDone] = useState(false);
+  const timeLimited = typeof timeLimitSeconds === "number" && timeLimitSeconds > 0;
+  const [timeLeft, setTimeLeft] = useState<number | null>(
+    timeLimited ? timeLimitSeconds : null,
+  );
+  const timeLimitReached = timeLimited && timeLeft === 0;
 
   const total = questions.length;
   const allAnswered = questions.every((q) => selections[q.id] !== undefined);
@@ -69,12 +82,13 @@ export default function TopicQuiz({
   }, [order, selections, shuffled]);
 
   function select(qId: string, key: ChoiceKey) {
+    if (done || timeLimitReached) return;
     if (selections[qId] !== undefined) return; // 二重回答防止
     setSelections((s) => ({ ...s, [qId]: key }));
     setOrder((o) => (o.includes(qId) ? o : [...o, qId]));
   }
 
-  function finish() {
+  const finish = useCallback(() => {
     if (done) return;
     setDone(true);
     const now = new Date().toISOString();
@@ -91,7 +105,28 @@ export default function TopicQuiz({
       };
     });
     onComplete(answers);
-  }
+  }, [done, onComplete, questions, selections, shuffled, topicId]);
+
+  useEffect(() => {
+    if (!timeLimited || done || timeLeft === null) return;
+    if (timeLeft <= 0) {
+      finish();
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setTimeLeft((current) => {
+        if (current === null) return null;
+        return Math.max(current - 1, 0);
+      });
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [done, finish, timeLeft, timeLimited]);
+
+  const timeRatio =
+    timeLimited && timeLeft !== null && timeLimitSeconds
+      ? Math.max(0, Math.min(100, (timeLeft / timeLimitSeconds) * 100))
+      : 0;
+  const isTimeLow = timeLimited && timeLeft !== null && timeLeft <= 10;
 
   return (
     <div className="space-y-4">
@@ -128,6 +163,31 @@ export default function TopicQuiz({
             );
           })}
         </div>
+        {timeLimited && timeLeft !== null && (
+          <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2">
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className={isTimeLow ? "text-rose-600" : "text-gray-500"}>
+                ⏱ 制限時間
+              </span>
+              <span className={isTimeLow ? "text-rose-600" : "text-gray-700"}>
+                残り {formatTime(timeLeft)}
+              </span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-gray-200">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  isTimeLow ? "bg-rose-500" : "bg-indigo-500"
+                }`}
+                style={{ width: `${timeRatio}%` }}
+              />
+            </div>
+            {isTimeLow && !done && (
+              <p className="mt-1 text-[11px] font-bold text-rose-600">
+                時間が少なくなっています。分かる問題から回答してください。
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {questions.map((q, i) => {
@@ -151,7 +211,7 @@ export default function TopicQuiz({
                   choiceKey={c.key}
                   text={c.text}
                   onClick={() => select(q.id, c.key)}
-                  disabled={revealed}
+                  disabled={revealed || done || timeLimitReached}
                   isSelected={sel === c.key}
                   isCorrect={c.key === sh.correct}
                   revealed={revealed}
@@ -203,6 +263,12 @@ export default function TopicQuiz({
           {correctCount === total
             ? `全問正解！🎯 この勢いで完了しよう`
             : `${total}問クリア！ あと一押しで完了`}
+        </p>
+      )}
+
+      {timeLimitReached && !done && (
+        <p className="animate-pop-in text-center text-sm font-bold text-rose-600">
+          時間切れです。ここまでの回答で保存します。
         </p>
       )}
 
