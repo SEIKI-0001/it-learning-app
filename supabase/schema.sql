@@ -402,3 +402,37 @@ create index if not exists topic_check_pack_attempts_user_topic_idx
 create index if not exists topic_check_pack_attempts_user_created_idx
   on public.topic_check_pack_attempts(user_id, created_at);
 alter table public.topic_check_pack_attempts enable row level security;
+
+-- ============================================================================
+-- 統合進捗判定 第3弾 — 統合進捗スナップショット（加算マイグレーション）
+-- ----------------------------------------------------------------------------
+-- 確認問題(基礎理解)/単語帳(用語定着)/過去問レベル(本番対応力)/日次達成度 を統合した
+-- 「合格に対する現在地」を 1日1スナップショットで保存する。
+-- 自己申告は外部学習の推定にだけ使う。アクセスは service role 経由に限定（RLS 有効）。
+-- overall_status: on_track / slightly_delayed / delayed / recovery_needed / consultation_needed
+-- ============================================================================
+create table if not exists public.integrated_learning_status (
+  id                            uuid primary key default gen_random_uuid(),
+  user_id                       uuid not null references public.line_users(id) on delete cascade,
+  status_date                   date not null,
+  overall_status                text not null,
+  readiness_score               integer not null,
+  input_progress_rate           integer,
+  basic_understanding_rate      integer,
+  flashcard_mastery_rate        integer,
+  exam_ready_rate               integer,
+  field_balance_score           integer,
+  weak_topic_count              integer,
+  exam_ready_topic_count        integer,
+  basic_understood_topic_count  integer,
+  review_needed_topic_count     integer,
+  weak_topics                   jsonb,
+  main_risks                    jsonb,
+  recommended_focus             jsonb,
+  generated_message             text,
+  created_at                    timestamptz not null default now(),
+  unique (user_id, status_date)
+);
+create index if not exists integrated_learning_status_user_date_idx
+  on public.integrated_learning_status(user_id, status_date);
+alter table public.integrated_learning_status enable row level security;

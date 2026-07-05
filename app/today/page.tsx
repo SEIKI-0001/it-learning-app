@@ -25,6 +25,7 @@ import TopicContent, {
 } from "@/components/learn/TopicContent";
 import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayCheckPackCta from "@/components/checkPack/TodayCheckPackCta";
+import TodayFocusHint from "@/components/checkPack/TodayFocusHint";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -163,6 +164,9 @@ export default function TodayPage() {
         <p className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700">
           「完了」を押して、ストリークを伸ばそう
         </p>
+
+        {/* 統合進捗の推奨配分にもとづく今日の短い案内（表示補助） */}
+        <TodayFocusHint />
 
         {/* 今日の学習ガイド: 現在フェーズ・今日これをやる理由（必須）・ゴール・次の予定 */}
         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">

@@ -15,6 +15,13 @@ import type {
   TopicStage,
 } from "@/types/studyProgress";
 import type { CheckPackResultStatus } from "@/types/checkPack";
+import type {
+  IntegratedLearningStatus,
+  MainRisk,
+  OverallStatus,
+  RecommendedFocus,
+  WeakTopic,
+} from "@/types/integratedStatus";
 
 // DB（snake_case の行）と アプリ内の型（camelCase）の相互変換。
 // サーバー側 API Route からのみ使用する。
@@ -505,5 +512,81 @@ export function topicCheckPackAttemptToRow(
     exam_level_score_rate: a.examLevelScoreRate ?? null,
     result_status: a.resultStatus,
     next_action: a.nextAction ?? null,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// integrated_learning_status : 統合進捗の日次スナップショット（第3弾）
+// ---------------------------------------------------------------------------
+
+export type IntegratedStatusRow = {
+  id?: string;
+  user_id: string;
+  status_date: string;
+  overall_status: string;
+  readiness_score: number;
+  input_progress_rate: number | null;
+  basic_understanding_rate: number | null;
+  flashcard_mastery_rate: number | null;
+  exam_ready_rate: number | null;
+  field_balance_score: number | null;
+  weak_topic_count: number | null;
+  exam_ready_topic_count: number | null;
+  basic_understood_topic_count: number | null;
+  review_needed_topic_count: number | null;
+  weak_topics: WeakTopic[] | null;
+  main_risks: MainRisk[] | null;
+  recommended_focus: RecommendedFocus | null;
+  generated_message: string | null;
+  created_at?: string | null;
+};
+
+export function integratedStatusRowToStatus(
+  row: IntegratedStatusRow,
+): IntegratedLearningStatus {
+  return {
+    statusDate: row.status_date,
+    overallStatus: (row.overall_status ?? "delayed") as OverallStatus,
+    readinessScore: row.readiness_score ?? 0,
+    inputProgressRate: row.input_progress_rate ?? 0,
+    basicUnderstandingRate: row.basic_understanding_rate ?? 0,
+    flashcardMasteryRate: row.flashcard_mastery_rate ?? 0,
+    examReadyRate: row.exam_ready_rate ?? 0,
+    fieldBalanceScore: row.field_balance_score ?? 0,
+    weakTopicCount: row.weak_topic_count ?? 0,
+    examReadyTopicCount: row.exam_ready_topic_count ?? 0,
+    basicUnderstoodTopicCount: row.basic_understood_topic_count ?? 0,
+    reviewNeededTopicCount: row.review_needed_topic_count ?? 0,
+    weakTopics: row.weak_topics ?? [],
+    mainRisks: row.main_risks ?? [],
+    recommendedFocus:
+      row.recommended_focus ?? { textbook: 25, review: 40, examPractice: 35 },
+    generatedMessage: row.generated_message ?? "",
+  };
+}
+
+/** upsert 用の行（id / created_at はDB既定）。 */
+export function integratedStatusToRow(
+  userId: string,
+  s: IntegratedLearningStatus,
+): IntegratedStatusRow {
+  return {
+    user_id: userId,
+    status_date: s.statusDate,
+    overall_status: s.overallStatus,
+    readiness_score: s.readinessScore,
+    input_progress_rate: s.inputProgressRate,
+    basic_understanding_rate: s.basicUnderstandingRate,
+    flashcard_mastery_rate: s.flashcardMasteryRate,
+    exam_ready_rate: s.examReadyRate,
+    field_balance_score: s.fieldBalanceScore,
+    weak_topic_count: s.weakTopicCount,
+    exam_ready_topic_count: s.examReadyTopicCount,
+    basic_understood_topic_count: s.basicUnderstoodTopicCount,
+    review_needed_topic_count: s.reviewNeededTopicCount,
+    weak_topics: s.weakTopics,
+    main_risks: s.mainRisks,
+    recommended_focus: s.recommendedFocus,
+    generated_message: s.generatedMessage,
   };
 }

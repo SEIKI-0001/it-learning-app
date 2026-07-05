@@ -7,6 +7,7 @@ import type {
   ProgressReason,
   TopicProgressSummary,
 } from "@/types/studyProgress";
+import type { IntegratedLearningStatus } from "@/types/integratedStatus";
 
 // LINE 経由で解決した user_id を localStorage に保存し、以降のDB保存に使う。
 // user_id が無ければ（= 直接アクセス）すべて localStorage だけで動く（フォールバック）。
@@ -370,6 +371,55 @@ export async function fetchTopicProgressSummary(
       summary?: TopicProgressSummary;
     };
     return data.ok && data.summary ? data.summary : null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 統合進捗判定（第3弾）
+// ---------------------------------------------------------------------------
+
+/**
+ * 統合進捗を計算して当日分を保存し、結果を返す（/progress・/today の表示用）。
+ * 未ログイン・Supabase 未設定・失敗なら null（呼び出し側は非表示で継続）。
+ */
+export async function refreshIntegratedStatus(
+  userId: string,
+): Promise<IntegratedLearningStatus | null> {
+  try {
+    const res = await fetch("/api/integrated-status/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      status?: IntegratedLearningStatus;
+    };
+    return data.ok && data.status ? data.status : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 最新の統合進捗スナップショットを取得。未ログイン/未設定/未保存なら null。 */
+export async function fetchLatestIntegratedStatus(
+  userId: string,
+): Promise<IntegratedLearningStatus | null> {
+  try {
+    const res = await fetch("/api/integrated-status/latest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      status?: IntegratedLearningStatus | null;
+    };
+    return data.ok && data.status ? data.status : null;
   } catch {
     return null;
   }

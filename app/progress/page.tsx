@@ -13,6 +13,7 @@ import type { ReviewItem } from "@/types";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import AchievementStrip from "@/components/progress/AchievementStrip";
+import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
 import TopicStageSummary from "@/components/progress/TopicStageSummary";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutLink from "@/components/auth/LogoutLink";
@@ -202,6 +203,9 @@ export default function ProgressPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4 md:max-w-4xl">
+        {/* 統合進捗カード（合格に対する現在地・主なリスク・今週の推奨配分） */}
+        <IntegratedStatusCard />
+
         {/* 数値サマリ */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard label="学習済み" value={`${completedCount}/${topics.length}`} />
