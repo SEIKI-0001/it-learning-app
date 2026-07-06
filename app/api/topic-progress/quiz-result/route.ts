@@ -6,6 +6,7 @@ import {
   topicProgressToRow,
   type TopicProgressRow,
 } from "@/lib/dbMappers";
+import { refreshIntegratedStatusForUser } from "@/lib/progressBootstrap";
 import type { TopicStage } from "@/types/studyProgress";
 
 export const runtime = "nodejs";
@@ -130,6 +131,14 @@ export async function POST(request: Request) {
     .eq("date", date)
     .eq("topic_id", topicId)
     .eq("task_type", "topic_quiz");
+
+  // 統合進捗の当日スナップショットを更新する（合格準備度に即反映）。
+  // 失敗してもこのレスポンスは成功のまま返す（進捗保存自体は完了しているため）。
+  try {
+    await refreshIntegratedStatusForUser(supabase, userId);
+  } catch {
+    /* fail-safe */
+  }
 
   return NextResponse.json({ ok: true, stage, rate });
 }

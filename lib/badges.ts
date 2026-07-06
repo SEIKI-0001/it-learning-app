@@ -480,6 +480,11 @@ export type BadgeSignals = {
   wordMasteredCount?: number;
   /** 過去問レベル問題をクリアしたトピック数（将来 question_attempts から供給）。 */
   examLevelClearedTopicCount?: number;
+  /**
+   * 統合進捗の合格準備度 readinessScore（0〜100）。サーバー値が取得できたときのみ供給。
+   * 未供給ならローカル推定（progressSummary.readinessPct）で判定を継続する。
+   */
+  readinessScore?: number;
 };
 
 type BadgeMetrics = {
@@ -549,7 +554,8 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     weakTagCount: (progress.weakTags ?? []).length,
     fieldMasteryAvg: fieldMastery(progress, topics),
     recentAccuracy: recentAccuracy(state.answers),
-    readinessPct: summary.readinessPct,
+    // 合格準備度: サーバーの統合進捗(readinessScore)を優先し、無ければローカル推定。
+    readinessPct: signals?.readinessScore ?? summary.readinessPct,
     wordMasteredCount: signals?.wordMasteredCount ?? 0,
     examLevelClearedTopicCount: signals?.examLevelClearedTopicCount ?? 0,
     finalPassedCheckpointIds: new Set(

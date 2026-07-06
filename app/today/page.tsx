@@ -8,7 +8,7 @@ import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
-import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
+import { generateLearningPlan } from "@/lib/studyPlanner";
 import { completeStudySession } from "@/lib/studySession";
 import {
   buildCheckpointGate,
@@ -18,7 +18,6 @@ import {
 import { getBadge } from "@/lib/badges";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { useBadgeSync } from "@/lib/useBadgeSync";
-import BadgeProgressCard from "@/components/badges/BadgeProgressCard";
 import {
   getUserId,
   reportTopicQuizResult,
@@ -34,8 +33,7 @@ import TopicContent, {
 } from "@/components/learn/TopicContent";
 import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayCheckPackCta from "@/components/checkPack/TodayCheckPackCta";
-import TodayFocusHint from "@/components/checkPack/TodayFocusHint";
-import AcceptedAdjustmentNote from "@/components/today/AcceptedAdjustmentNote";
+import TodayPolicyStrip from "@/components/today/TodayPolicyStrip";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -131,7 +129,7 @@ export default function TodayPage() {
   const learnItem = menu.items.find((i) => i.kind === "learn");
   const primary = learnItem ? getTopic(learnItem.topicId) : undefined;
   const questions = primary ? getQuestionsByTopic(primary.id) : [];
-  const phaseDef = getPhaseDef(plan.currentPhase);
+  const currentCp = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
   // 次に進む予定: トピックの nextTopicIds があればそれ、無ければ今週の重点分野。
   const nextTopic =
     primary?.nextTopicIds
@@ -210,21 +208,15 @@ export default function TodayPage() {
           「完了」を押して、ストリークを伸ばそう
         </p>
 
-        {/* 承認済みの立て直しプランがあれば、いま何を優先しているかを案内 */}
-        <AcceptedAdjustmentNote />
+        {/* 今日の方針: 立て直しプラン・推奨配分・次のバッジ・突破試験を1枚に集約 */}
+        <TodayPolicyStrip state={state} signals={getClientBadgeSignals()} />
 
-        {/* 統合進捗の推奨配分にもとづく今日の短い案内（表示補助） */}
-        <TodayFocusHint />
-
-        {/* 今日取れるバッジ・ロードマップへの効果・最終問題の解放通知 */}
-        <BadgeProgressCard state={state} signals={getClientBadgeSignals()} />
-
-        {/* 今日の学習ガイド: 現在フェーズ・今日これをやる理由（必須）・ゴール・次の予定 */}
+        {/* 今日の学習ガイド: 現在CP・今日これをやる理由（必須）・ゴール・次の予定 */}
         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-500">
-              <span aria-hidden>{phaseDef.emoji}</span>
-              いまのフェーズ：{phaseDef.title}
+              <span aria-hidden>{currentCp.emoji}</span>
+              いまのチェックポイント：CP{currentCp.order} {currentCp.title}
             </p>
             <Link
               href="/plan"

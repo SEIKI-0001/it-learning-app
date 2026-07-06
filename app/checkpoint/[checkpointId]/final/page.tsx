@@ -9,7 +9,11 @@ import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { saveAppState } from "@/lib/storage";
-import { getUserId, saveProgressToDb } from "@/lib/userSession";
+import {
+  getUserId,
+  saveProgressToDb,
+  saveQuestionAttempts,
+} from "@/lib/userSession";
 import { getTopic } from "@/lib/content";
 import {
   CHECKPOINTS,
@@ -108,7 +112,21 @@ export default function FinalExamPage() {
     setState(updated);
     setResult(scored);
     const uid = getUserId();
-    if (uid) saveProgressToDb(uid, updated.progress);
+    if (uid) {
+      saveProgressToDb(uid, updated.progress);
+      // 突破試験の回答も集計ログに残す（統合進捗・弱点分析の材料）。
+      // 過去問レベル(exam_level)とは難度が違うため mini_exam として区別する。
+      saveQuestionAttempts(
+        uid,
+        answers.map((a) => ({
+          questionId: a.questionId,
+          questionType: "mini_exam" as const,
+          topicId: exam.topicIdByQuestionId[a.questionId] ?? a.topicId ?? checkpointId,
+          selectedAnswer: a.selectedChoice ?? null,
+          isCorrect: a.isCorrect,
+        })),
+      );
+    }
   }
 
   return (

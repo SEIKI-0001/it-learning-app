@@ -16,13 +16,12 @@ import { daysUntilExam } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
 import { getRankStatus } from "@/lib/rank";
+import { getCheckpointProgress } from "@/lib/checkpoints";
+import { BADGES } from "@/lib/badges";
 import type { ReviewItem } from "@/types";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
-import AchievementStrip from "@/components/progress/AchievementStrip";
 import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
-import PlanAdjustmentCard from "@/components/progress/PlanAdjustmentCard";
-import TopicStageSummary from "@/components/progress/TopicStageSummary";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutLink from "@/components/auth/LogoutLink";
 
@@ -155,7 +154,11 @@ export default function ProgressPage() {
   const mastery = fieldMastery(progress, topics);
   const summary = computeProgressSummary(topics, progress);
   const completedCount = summary.completedCount;
-  const overall = summary.readinessPct;
+  // 合格準備度は統合進捗(readinessScore)を正とする。
+  // 未取得（未ログイン・Supabase未設定・読込中失敗）のときだけローカル推定にフォールバック。
+  const overall = bootstrap?.integratedStatus?.readinessScore ?? summary.readinessPct;
+  const earnedBadgeCount = getCheckpointProgress(state).earnedBadges.length;
+  const proposal = bootstrap?.planAdjustmentProposal ?? null;
 
   const reviewQueue = progress.reviewQueue ?? [];
   const reviewCount = reviewQueue.length;
@@ -185,16 +188,19 @@ export default function ProgressPage() {
             </span>
           </div>
           <div className="mt-3 flex items-center gap-4">
-            {/* 達成リング */}
-            <div
-              className="grid h-20 w-20 shrink-0 place-items-center rounded-full"
-              style={{
-                background: `conic-gradient(#fbbf24 ${overall * 3.6}deg, rgba(255,255,255,0.2) 0deg)`,
-              }}
-            >
-              <div className="grid h-[66px] w-[66px] place-items-center rounded-full bg-indigo-600">
-                <span className="text-lg font-extrabold">{overall}%</span>
+            {/* 合格準備度リング（統合進捗の readinessScore を正とする） */}
+            <div className="shrink-0 text-center">
+              <div
+                className="grid h-20 w-20 place-items-center rounded-full"
+                style={{
+                  background: `conic-gradient(#fbbf24 ${overall * 3.6}deg, rgba(255,255,255,0.2) 0deg)`,
+                }}
+              >
+                <div className="grid h-[66px] w-[66px] place-items-center rounded-full bg-indigo-600">
+                  <span className="text-lg font-extrabold">{overall}%</span>
+                </div>
               </div>
+              <p className="mt-1 text-[10px] font-bold text-white/80">合格準備度</p>
             </div>
             <div className="space-y-1 text-sm">
               <p>
@@ -238,8 +244,14 @@ export default function ProgressPage() {
             </Link>
           </div>
 
-          {/* 実績バッジ(バナー内にコンパクト表示) */}
-          <AchievementStrip state={state} />
+          {/* バッジ獲得状況(ロードマップのバッジ体系に一本化) */}
+          <Link
+            href="/badges"
+            className="mt-3 flex items-center justify-between rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white/90 transition active:scale-[0.99]"
+          >
+            <span>🏅 バッジ {earnedBadgeCount}/{BADGES.length}</span>
+            <span>バッジ図鑑をみる →</span>
+          </Link>
 
           {/* アカウント: ログアウト（ローカルデータ消去 → Google / LINE セッション破棄 → /login） */}
           <div className="mt-3 text-right">
@@ -255,11 +267,36 @@ export default function ProgressPage() {
           loading={bootstrapLoading}
         />
 
-        {/* 計画の立て直し提案（遅れ・弱点・リスクを検知したときのみ表示） */}
-        <PlanAdjustmentCard
-          proposal={bootstrap?.planAdjustmentProposal ?? null}
-          loading={bootstrapLoading}
-        />
+        {/* 計画の立て直し提案への導線（提案の本体は /plan に置く） */}
+        {proposal && (
+          <Link
+            href="/plan"
+            className={`flex items-center justify-between rounded-2xl p-4 shadow-sm ring-1 transition active:scale-[0.99] ${
+              proposal.status === "accepted"
+                ? "bg-emerald-50 ring-emerald-200"
+                : "bg-amber-50 ring-amber-200"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl" aria-hidden>
+                🛠️
+              </span>
+              <div>
+                <p className="text-sm font-extrabold text-gray-800">
+                  {proposal.status === "accepted"
+                    ? "立て直しプランで進行中"
+                    : "計画の立て直し提案があります"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {proposal.status === "accepted"
+                    ? "内容はロードマップで確認できます"
+                    : "ロードマップで立て直し案を選べます"}
+                </p>
+              </div>
+            </div>
+            <span className="text-lg font-extrabold text-amber-600">→</span>
+          </Link>
+        )}
 
         {/* 数値サマリ */}
         <div className="grid grid-cols-3 gap-3">
@@ -267,9 +304,6 @@ export default function ProgressPage() {
           <StatCard label="復習待ち" value={`${reviewCount}`} />
           <StatCard label="累計XP" value={`${progress.exp}`} />
         </div>
-
-        {/* 確認問題からみた到達度（基礎理解OK / 要復習 / 苦手） */}
-        <TopicStageSummary />
 
         <div className="grid gap-4 md:grid-cols-2">
         {/* 3分野習熟度 */}

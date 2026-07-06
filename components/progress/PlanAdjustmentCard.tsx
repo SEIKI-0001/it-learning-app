@@ -16,8 +16,9 @@ import {
   type RecoveryPlanOption,
 } from "@/types/planAdjustment";
 
-// 計画の立て直し提案カード（/progress・統合進捗カードの下）。
+// 計画の立て直し提案カード（/plan・計画画面）。
 // 遅れ・弱点・リスクを検知したときだけ、複数の立て直し案を提示する。
+// /progress には本体を置かず、提案があるときだけ /plan への導線バナーを出す（重複解消）。
 // 未ログイン・Supabase 未設定・提案不要・失敗なら何も表示しない（既存表示を壊さない）。
 export default function PlanAdjustmentCard({
   proposal: initialProposal,

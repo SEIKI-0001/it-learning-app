@@ -44,38 +44,18 @@ export type PhaseProgress = {
   hint: string; // いま/次に何をすると良いかの一言
 };
 
-/** 期待フェーズ（本来いるべき位置）と現在フェーズの比較。 */
-export type PhaseComparison = {
-  expected: StudyPhaseId; // 経過日数から見た本来のフェーズ
-  actual: StudyPhaseId; // いまのフェーズ
-  delta: number; // actual.order - expected.order（負=遅れ / 0=計画通り / 正=先行）
-  message: string; // 前向きな一言
-};
-
 // ---------------------------------------------------------------------------
 // 間に合い度（試験日までに間に合うかの目安）
 // ---------------------------------------------------------------------------
+// メモ: ユーザー向けの「順調/遅れ」判定は統合進捗（types/integratedStatus の
+// overallStatus）に一本化した。OnTrackLevel は作業量見積り（todayMenu の分量・
+// リスケ方針）に使う内部指標として残す。表示用ラベル/配色は廃止。
 
 export type OnTrackLevel =
   | "comfortable" // 余裕あり
   | "tight" // やや詰め込み
   | "sprint" // 短期集中が必要
   | "no-exam"; // 試験日未設定
-
-export const ON_TRACK_LABELS: Record<OnTrackLevel, string> = {
-  comfortable: "余裕あり",
-  tight: "やや詰め込み",
-  sprint: "短期集中が必要",
-  "no-exam": "試験日未設定",
-};
-
-/** 間に合い度バッジの配色（ホーム/plan で共有）。 */
-export const ON_TRACK_STYLE: Record<OnTrackLevel, string> = {
-  comfortable: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-  tight: "bg-amber-100 text-amber-700 ring-amber-200",
-  sprint: "bg-rose-100 text-rose-700 ring-rose-200",
-  "no-exam": "bg-gray-100 text-gray-600 ring-gray-200",
-};
 
 // ---------------------------------------------------------------------------
 // 今週のゴール
@@ -123,10 +103,8 @@ export type LearningPlan = {
   requiredMinutesEstimate: number; // 必要学習量の目安(分)
   onTrack: OnTrackLevel; // 間に合い度
 
-  // フェーズ・ロードマップ
+  // フェーズ（内部指標）。ロードマップ表示は lib/checkpoints.ts の CP 進行が唯一の真実。
   currentPhase: StudyPhaseId;
-  phases: PhaseProgress[]; // Phase 0〜6 の進捗
-  phaseComparison?: PhaseComparison; // 本来いるべきフェーズとの比較（試験日+開始日があるとき）
 
   // 3層表示
   weeklyGoal: WeeklyGoal;
@@ -143,9 +121,10 @@ export type LearningPlan = {
   reschedule: RescheduleAdvice;
 
   // 全体像・進捗
+  // メモ: 合格準備度はここでは持たない。統合進捗（integrated_learning_status の
+  // readinessScore）が唯一のユーザー向け準備度。
   completedTopicCount: number;
   totalTopicCount: number;
-  readinessPct: number; // 統一到達度(0〜100)。完了率と習熟度の折衷（progressSummary）
   message: string; // ユーザー向けの一言方針
 };
 
@@ -167,15 +146,6 @@ export type KakomonStage = {
   description: string;
   /** その段階に「今」進んでよいか（段階的アンロック） */
   unlocked: boolean;
-};
-
-/** LINE「計画」「今週」向けの軽量サマリ（本文は出さず要約＋リンク方針） */
-export type PlanSummary = {
-  daysUntilExam: number | null;
-  onTrack: OnTrackLevel;
-  currentPhaseTitle: string;
-  weeklyHeadline: string;
-  todayTheme: string;
 };
 
 export type { ReviewItem };

@@ -6,9 +6,6 @@ import type {
   KakomonStage,
   LearningPlan,
   OnTrackLevel,
-  PhaseProgress,
-  PhaseStatus,
-  PlanSummary,
   RescheduleAdvice,
   StudyPhaseDef,
   StudyPhaseId,
@@ -236,22 +233,6 @@ export function computeOnTrack(
   return "sprint";
 }
 
-/**
- * 間に合い度を1回で算出する簡易ヘルパー。
- * LearningPlan を作らずに onTrack だけ欲しい呼び出し側（/topics 等）向け。
- */
-export function computeOnTrackForState(
-  profile: UserProfile | undefined,
-  progress: UserProgress,
-  topics: Topic[] = getAllTopics(),
-  now: Date = new Date(),
-): OnTrackLevel {
-  const daysRemaining = daysUntilExam(profile, now);
-  const available = totalAvailableMinutes(profile, daysRemaining);
-  const required = requiredMinutesEstimate(topics, progress);
-  return computeOnTrack(available, required);
-}
-
 // ---------------------------------------------------------------------------
 // 進捗の集計
 // ---------------------------------------------------------------------------
@@ -451,97 +432,9 @@ export function determineExpectedPhase(
   return "phase6";
 }
 
-/**
- * 期待フェーズと現在フェーズの比較メッセージ（前向き・ユーザーを責めない）。
- * delta = 現在フェーズの順序 - 期待フェーズの順序（負=遅れ / 0=計画通り / 正=先行）。
- */
-export function buildPhaseComparisonMessage(
-  expected: StudyPhaseId,
-  actual: StudyPhaseId,
-): string {
-  const e = getPhaseDef(expected);
-  const a = getPhaseDef(actual);
-  const delta = a.order - e.order;
-  if (delta <= -2) {
-    return `いまの目安は「${e.title}」フェーズですが、まだ「${a.title}」です。頻出テーマから優先して追いつきましょう。`;
-  }
-  if (delta === -1) {
-    return "計画よりやや遅れ気味です。今週のゴールを一つずつ消化していきましょう。";
-  }
-  if (delta === 0) {
-    return "ほぼ計画どおりのペースです。この調子で進めましょう。";
-  }
-  return "計画より進んでいます。この調子で！";
-}
-
-/** 各フェーズの進捗（done/current/upcoming ＋ 目安%）を組み立てる。 */
-function buildPhaseProgress(
-  currentPhase: StudyPhaseId,
-  topics: Topic[],
-  progress: UserProgress,
-  reviewCleared: boolean,
-  daysRemaining: number | null,
-): PhaseProgress[] {
-  const currentOrder = getPhaseDef(currentPhase).order;
-  const cRatio = completedRatio(topics, progress);
-  const mRatio = masteredRatio(topics, progress);
-
-  // 各フェーズの「達成度%」の目安（ざっくり）。
-  const pct: Record<StudyPhaseId, number> = {
-    phase0: 100, // ここに来ている時点で設定は済んでいる
-    phase1: clampPct(cRatio / 0.1),
-    phase2: clampPct((cRatio - 0.1) / 0.45),
-    phase3: clampPct(mRatio / 0.6),
-    phase4: reviewCleared ? 100 : clampPct(mRatio),
-    phase5: clampPct(cRatio - 0.5),
-    phase6: daysRemaining !== null && daysRemaining <= 3 ? 60 : 0,
-  };
-
-  return STUDY_PHASES.map((def) => {
-    let status: PhaseStatus;
-    if (def.order < currentOrder) status = "done";
-    else if (def.order === currentOrder) status = "current";
-    else status = "upcoming";
-
-    const progressPct =
-      status === "done" ? 100 : status === "current" ? Math.max(5, pct[def.id]) : 0;
-
-    return {
-      id: def.id,
-      status,
-      progress: progressPct,
-      hint:
-        status === "done"
-          ? "クリア済み"
-          : status === "current"
-            ? phaseHint(def.id)
-            : "このあと取り組みます",
-    };
-  });
-}
-
-function clampPct(x: number): number {
-  return Math.max(0, Math.min(100, Math.round(x * 100)));
-}
-
-function phaseHint(id: StudyPhaseId): string {
-  switch (id) {
-    case "phase0":
-      return "設定を済ませましょう";
-    case "phase1":
-      return "各分野を1つずつのぞいてみましょう";
-    case "phase2":
-      return "テーマの図解と体験で理解を進めましょう";
-    case "phase3":
-      return "確認問題を解いて『解ける』にしましょう";
-    case "phase4":
-      return "間違えた問題と苦手分野を復習しましょう";
-    case "phase5":
-      return "過去問道場で分野別に演習しましょう";
-    case "phase6":
-      return "頻出テーマと誤答を総ざらいしましょう";
-  }
-}
+// フェーズ別の達成度%・期待フェーズ比較メッセージの組み立ては廃止した。
+// ロードマップ表示は lib/checkpoints.ts の buildCheckpointRoadmap（CP進行が唯一の真実）、
+// 予定との比較は buildCheckpointComparison（determineExpectedPhase を再利用）に一本化。
 
 // ---------------------------------------------------------------------------
 // 今週のゴール
@@ -918,30 +811,6 @@ export function generateLearningPlan(
     daysRemaining,
   );
 
-  const reviewItems = getReviewItemsForUser({
-    progress,
-    weakFields: profile?.weakFields,
-  }, now);
-  const reviewCleared = reviewItems.length === 0;
-
-  const phases = buildPhaseProgress(
-    currentPhase,
-    topics,
-    progress,
-    reviewCleared,
-    daysRemaining,
-  );
-
-  const expectedPhase = determineExpectedPhase(profile, now);
-  const phaseComparison = expectedPhase
-    ? {
-        expected: expectedPhase,
-        actual: currentPhase,
-        delta: getPhaseDef(currentPhase).order - getPhaseDef(expectedPhase).order,
-        message: buildPhaseComparisonMessage(expectedPhase, currentPhase),
-      }
-    : undefined;
-
   const weeklyGoal = buildWeeklyGoal(
     topics,
     profile,
@@ -992,8 +861,6 @@ export function generateLearningPlan(
     requiredMinutesEstimate: required,
     onTrack,
     currentPhase,
-    phases,
-    phaseComparison,
     weeklyGoal,
     weeklyItems,
     todayMenu,
@@ -1004,18 +871,6 @@ export function generateLearningPlan(
     reschedule,
     completedTopicCount: summary.completedCount,
     totalTopicCount: summary.totalCount,
-    readinessPct: summary.readinessPct,
     message,
-  };
-}
-
-/** LINE「計画」「今週」向けの軽量サマリ（本文は出さず要約＋リンク方針）。 */
-export function summarizePlan(plan: LearningPlan): PlanSummary {
-  return {
-    daysUntilExam: plan.daysUntilExam,
-    onTrack: plan.onTrack,
-    currentPhaseTitle: getPhaseDef(plan.currentPhase).title,
-    weeklyHeadline: plan.weeklyGoal.headline,
-    todayTheme: plan.todayMenu.theme,
   };
 }

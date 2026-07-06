@@ -5,7 +5,6 @@ import type {
   DailyStudyTaskInput,
   ProgressLevel,
   ProgressReason,
-  TopicProgressSummary,
 } from "@/types/studyProgress";
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
@@ -147,6 +146,20 @@ export async function restoreFromSession(): Promise<ResolveResult | null> {
 }
 
 /**
+ * 統合進捗の合格準備度をローカルにキャッシュする。
+ * バッジ判定（b-cp6-high-readiness）がサーバー値と同じ準備度を参照できるようにするため。
+ * fequest: プレフィクスなので clearLocalUserData（ログアウト/切替）で自動消去される。
+ */
+function cacheIntegratedReadiness(score: unknown): void {
+  if (typeof score !== "number" || !Number.isFinite(score)) return;
+  try {
+    window.localStorage.setItem("fequest:integratedReadiness", String(score));
+  } catch {
+    /* localStorage 不可でも学習は継続 */
+  }
+}
+
+/**
  * /progress 初期表示に必要なサーバー状態をまとめて取得する。
  * 未ログイン・失敗時は null、Supabase 未設定時は中身 null の結果を返す
  * （どちらも既存の localStorage 表示を継続）。
@@ -164,6 +177,9 @@ export async function fetchProgressBootstrap(
     const data = (await res.json()) as { ok: boolean } & Partial<ProgressBootstrapResult>;
     if (!data.ok || !data.userId) return null;
     setUserId(data.userId);
+    if (data.integratedStatus) {
+      cacheIntegratedReadiness(data.integratedStatus.readinessScore);
+    }
     return {
       userId: data.userId,
       appState: data.appState ?? null,
@@ -424,27 +440,6 @@ export async function fetchTopicStage(
   }
 }
 
-/** /progress の簡易サマリを取得。未ログイン/未設定なら null。 */
-export async function fetchTopicProgressSummary(
-  userId: string,
-): Promise<TopicProgressSummary | null> {
-  try {
-    const res = await fetch("/api/topic-progress/summary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId }),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      ok: boolean;
-      summary?: TopicProgressSummary;
-    };
-    return data.ok && data.summary ? data.summary : null;
-  } catch {
-    return null;
-  }
-}
-
 // ---------------------------------------------------------------------------
 // 統合進捗判定（第3弾）
 // ---------------------------------------------------------------------------
@@ -467,7 +462,11 @@ export async function refreshIntegratedStatus(
       ok: boolean;
       status?: IntegratedLearningStatus;
     };
-    return data.ok && data.status ? data.status : null;
+    if (data.ok && data.status) {
+      cacheIntegratedReadiness(data.status.readinessScore);
+      return data.status;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -488,7 +487,11 @@ export async function fetchLatestIntegratedStatus(
       ok: boolean;
       status?: IntegratedLearningStatus | null;
     };
-    return data.ok && data.status ? data.status : null;
+    if (data.ok && data.status) {
+      cacheIntegratedReadiness(data.status.readinessScore);
+      return data.status;
+    }
+    return null;
   } catch {
     return null;
   }

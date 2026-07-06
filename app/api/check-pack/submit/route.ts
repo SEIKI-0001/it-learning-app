@@ -8,6 +8,7 @@ import {
   type TopicProgressRow,
 } from "@/lib/dbMappers";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
+import { refreshIntegratedStatusForUser } from "@/lib/progressBootstrap";
 
 export const runtime = "nodejs";
 
@@ -144,6 +145,14 @@ export async function POST(request: Request) {
       .eq("date", date)
       .eq("topic_id", topicId)
       .in("task_type", doneTaskTypes);
+  }
+
+  // 統合進捗の当日スナップショットを更新する（合格準備度に即反映）。
+  // 失敗してもこのレスポンスは成功のまま返す（進捗保存自体は完了しているため）。
+  try {
+    await refreshIntegratedStatusForUser(supabase, userId);
+  } catch {
+    /* fail-safe */
   }
 
   return NextResponse.json({

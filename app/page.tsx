@@ -4,12 +4,10 @@ import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
-import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
-import { fieldMastery } from "@/lib/study";
+import { generateLearningPlan } from "@/lib/studyPlanner";
+import { getCheckpoint, getCheckpointProgress } from "@/lib/checkpoints";
 import { getRankStatus } from "@/lib/rank";
-import { ON_TRACK_LABELS, ON_TRACK_STYLE } from "@/types/plan";
 import BottomNav from "@/components/BottomNav";
-import FieldMasteryBars from "@/components/FieldMasteryBars";
 import LoadingScreen from "@/components/LoadingScreen";
 
 function formatMonthDay(iso: string | null): string {
@@ -95,11 +93,10 @@ export default function Home() {
   const topics = getAllTopics();
   const remaining = daysUntilExam(profile);
   const menu = generateTodayMenu(profile, progress, topics, state.answers);
-  const mastery = fieldMastery(progress, topics);
   const completedCount = progress.completedTopics.length;
   const rank = getRankStatus(progress.exp);
   const plan = generateLearningPlan(state, topics);
-  const phaseDef = getPhaseDef(plan.currentPhase);
+  const cp = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -132,15 +129,6 @@ export default function Home() {
                 {remaining === null ? "未設定" : `あと${remaining}日`}
               </p>
             </Link>
-            {plan.onTrack !== "no-exam" && (
-              <Link
-                href="/plan"
-                aria-label={`学習ペース：${ON_TRACK_LABELS[plan.onTrack]}`}
-                className={`self-center rounded-full px-3 py-1 text-xs font-bold ring-1 transition active:scale-95 ${ON_TRACK_STYLE[plan.onTrack]}`}
-              >
-                {ON_TRACK_LABELS[plan.onTrack]}
-              </Link>
-            )}
             <div className="ml-auto text-right">
               <p className="text-xs text-white/80">
                 {rank.current.emoji} {rank.current.name}
@@ -164,7 +152,7 @@ export default function Home() {
             </span>
           </div>
           <p className="mt-1 text-lg font-extrabold text-gray-800">
-            {phaseDef.emoji} {phaseDef.title}
+            {cp.emoji} CP{cp.order} {cp.title}
             {remaining !== null && (
               <span className="ml-2 text-sm font-bold text-indigo-600">
                 試験まであと{remaining}日
@@ -206,24 +194,26 @@ export default function Home() {
           </span>
         </Link>
 
-        {/* 進捗サマリ */}
-        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-gray-800">3分野の習熟度</h2>
-            <Link
-              href="/progress"
-              className="text-xs font-bold text-indigo-600 underline underline-offset-2"
-            >
-              詳しく見る
-            </Link>
+        {/* 進捗への導線（詳細は /progress に一本化） */}
+        <Link
+          href="/progress"
+          className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl" aria-hidden>
+              📈
+            </span>
+            <div>
+              <p className="text-base font-extrabold text-gray-800">進捗をみる</p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                学習済み {completedCount} / {topics.length}
+                {progress.reviewQueue.length > 0 &&
+                  `・復習待ち ${progress.reviewQueue.length}`}
+              </p>
+            </div>
           </div>
-          <FieldMasteryBars mastery={mastery} />
-          <p className="mt-4 text-sm text-gray-500">
-            学習済みトピック {completedCount} / {topics.length}
-            {progress.reviewQueue.length > 0 &&
-              `・復習待ち ${progress.reviewQueue.length}`}
-          </p>
-        </section>
+          <span className="text-lg font-extrabold text-indigo-500">→</span>
+        </Link>
         </div>
 
         {/* LINE導線 */}

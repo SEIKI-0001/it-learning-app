@@ -132,24 +132,5 @@ export type TopicProgress = {
   updatedAt?: string;
 };
 
-/** 主なリスク（/progress に注意点として出す）。 */
-export type TopicProgressRisks = {
-  termsNotStable: number; // 用語未定着（terms_stabilizing）
-  examNotPassed: number; // 過去問レベル未達（exam_check_pending）
-  weakStuck: number; // 苦手滞留（weak）
-};
-
-/**
- * /progress の簡易サマリ。
- * 第1弾の3項目は互換のため必須のまま。第2弾で「本番対応OK（exam_ready）」と
- * リスク内訳を任意で足す（未設定でも既存表示は壊れない）。
- */
-export type TopicProgressSummary = {
-  basicUnderstood: number; // basic_understood 以上（＝理解済み系）のトピック数
-  reviewNeeded: number; // review_needed の数
-  weak: number; // weak の数
-  examReady?: number; // 本番対応OK（exam_ready）のトピック数
-  termsStabilizing?: number; // 用語定着中（terms_stabilizing）
-  examCheckPending?: number; // 過去問レベル確認待ち（exam_check_pending）
-  risks?: TopicProgressRisks;
-};
+// メモ: 旧「/progress の簡易サマリ」（TopicProgressSummary / topic-progress/summary API /
+// lib/topicStageAggregate）は統合進捗（integrated_learning_status）に一本化して廃止した。

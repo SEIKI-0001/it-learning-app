@@ -69,6 +69,8 @@ export type IntegratedStatusInputs = {
   totalWordCount: number;
   recentReports: IntegratedDailyReport[];
   examLevelAttempts: IntegratedExamAttempt[];
+  /** 参考書の章消化率（0〜100）。参考書未登録・章0件・使用中でない場合は null。 */
+  referenceBookRatio?: number | null;
 };
 
 const ALL_FIELDS: TopicField[] = ["technology", "management", "strategy"];
@@ -352,7 +354,13 @@ export function computeIntegratedStatus(
   const reportRates = inputs.recentReports
     .map((r) => r.estimatedCompletionRate)
     .filter((r): r is number => typeof r === "number");
-  const inputProgressRate = Math.round(average(reportRates));
+  // 自己申告平均と参考書の章消化率の高い方を採用する。
+  // 申告を忘れていても、参考書を読み進めた実績が準備度に乗るようにするため。
+  const selfReportRate = Math.round(average(reportRates));
+  const inputProgressRate =
+    inputs.referenceBookRatio == null
+      ? selfReportRate
+      : Math.max(selfReportRate, Math.round(inputs.referenceBookRatio));
 
   const fieldBalanceScore = computeFieldBalance(
     inputs.topics,
@@ -392,8 +400,9 @@ export function computeIntegratedStatus(
     return Number.isFinite(due) && due <= nowMs;
   }).length;
 
+  // 日次リズムの低下リスクは自己申告のみで見る（参考書進捗で打ち消さない）。
   const dailyLow =
-    reportRates.length > 0 && inputProgressRate < RISK_THRESHOLDS.dailyLowRate;
+    reportRates.length > 0 && selfReportRate < RISK_THRESHOLDS.dailyLowRate;
 
   // --- 総合ステータス・推奨配分・リスク・メッセージ ---
   const overallStatus = decideOverallStatus({

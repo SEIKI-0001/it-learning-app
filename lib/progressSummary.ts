@@ -2,12 +2,14 @@ import type { Topic } from "@/types/content";
 import type { UserProgress } from "@/types";
 
 // ============================================================================
-// 進捗サマリ（統一指標）
+// 進捗サマリ（ローカル推定）
 // ----------------------------------------------------------------------------
 // 役割:
-//   「全体の学習到達度%」を1つの計算式に統一する。ホーム・/progress・/topics・
-//   LINE Bot がそれぞれ別々に完了率を計算していたため数値が食い違っていた。
-//   ここを唯一の算出元とし、各画面はこの関数の結果を表示するだけにする。
+//   AppState（localStorage）だけで計算できる軽量な進捗サマリ。
+//   ユーザー向けの「合格準備度」は統合進捗（integrated_learning_status の
+//   readinessScore）が正であり、readinessPct はサーバー値を取得できないとき
+//   （未ログイン・Supabase未設定・失敗）のフォールバック表示と、
+//   バッジ判定のフォールバックにのみ使う。
 //
 // 設計の約束:
 //   - 純粋関数（副作用なし）。studyPlanner.ts の重い計算に依存させない
@@ -20,9 +22,8 @@ export type ProgressSummary = {
   completedCount: number; // 完了トピック数（素の件数）
   totalCount: number; // 全トピック数
   completedRatio: number; // 0〜1: 完了トピック / 全トピック
-  masteredRatio: number; // 0〜1: 習熟度>=70 のトピック割合
   avgMasteryRatio: number; // 0〜1: 全トピックの平均習熟度/100（未着手は0）
-  readinessPct: number; // 0〜100: 統一到達度 = round(50*完了率 + 50*平均習熟度)
+  readinessPct: number; // 0〜100: ローカル推定の到達度 = round(50*完了率 + 50*平均習熟度)
 };
 
 /**
@@ -43,18 +44,12 @@ export function computeProgressSummary(
       completedCount,
       totalCount: 0,
       completedRatio: 0,
-      masteredRatio: 0,
       avgMasteryRatio: 0,
       readinessPct: 0,
     };
   }
 
   const completedRatio = completedCount / totalCount;
-
-  const masteredCount = topics.filter(
-    (t) => (progress.topicMastery[t.id] ?? 0) >= 70,
-  ).length;
-  const masteredRatio = masteredCount / totalCount;
 
   const masterySum = topics.reduce(
     (s, t) => s + (progress.topicMastery[t.id] ?? 0),
@@ -70,7 +65,6 @@ export function computeProgressSummary(
     completedCount,
     totalCount,
     completedRatio,
-    masteredRatio,
     avgMasteryRatio,
     readinessPct,
   };

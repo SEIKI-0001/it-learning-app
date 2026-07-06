@@ -3,24 +3,35 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ON_TRACK_LABELS, ON_TRACK_STYLE } from "@/types/plan";
 import type { ReferenceBook } from "@/types/referenceBook";
+import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
 import { generateLearningPlan, resolveWeeklyPlan } from "@/lib/studyPlanner";
 import { saveAppState } from "@/lib/storage";
-import { getUserId, saveProgressToDb, saveProfileToDb } from "@/lib/userSession";
+import {
+  fetchLatestPlanAdjustment,
+  generatePlanAdjustment,
+  getUserId,
+  saveProgressToDb,
+  saveProfileToDb,
+} from "@/lib/userSession";
 import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
-import { buildCheckpointRoadmap } from "@/lib/checkpoints";
+import {
+  buildCheckpointComparison,
+  buildCheckpointRoadmap,
+  getCheckpoint,
+} from "@/lib/checkpoints";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import BottomNav from "@/components/BottomNav";
 import RoadmapMap from "@/components/RoadmapMap";
 import CheckpointGateCard from "@/components/checkpoints/CheckpointGateCard";
+import PlanAdjustmentCard from "@/components/progress/PlanAdjustmentCard";
 import LoadingScreen from "@/components/LoadingScreen";
 
-// /plan = 合格までの全体ロードマップ。
-// 計画ロジックは lib/studyPlanner.ts（純粋関数）に閉じ込め、ここは表示だけを担う。
-// 3層（全体ロードマップ → 今週のゴール → 今日やること）で見せる。
+// /plan = 合格までの全体ロードマップ（目標と道筋の画面）。
+// 計画ロジックは lib/studyPlanner.ts / lib/checkpoints.ts（純粋関数）に閉じ込め、ここは表示だけを担う。
+// CPクエスト → 全体ロードマップ（＋予定との比較）→ 今週のゴール → 過去問 → 参考書 → 立て直し提案。
 
 function formatDate(iso: string | null): string {
   if (!iso) return "未定";
@@ -34,10 +45,36 @@ export default function PlanPage() {
   const [state, setState] = useAppState();
   useBadgeSync(state, setState);
   const [book, setBook] = useState<ReferenceBook | null>(null);
+  const [proposal, setProposal] = useState<PlanAdjustmentProposal | null>(null);
+  const [proposalLoading, setProposalLoading] = useState(true);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [state, router]);
+
+  // 立て直し提案の取得（無ければ最新の統合進捗から生成を試みる）。
+  // 未ログイン・Supabase 未設定・提案不要・失敗なら非表示のまま学習を止めない。
+  useEffect(() => {
+    let cancelled = false;
+    async function init() {
+      const uid = getUserId();
+      if (!uid) {
+        if (!cancelled) setProposalLoading(false);
+        return;
+      }
+      const latest =
+        (await fetchLatestPlanAdjustment(uid)) ??
+        (await generatePlanAdjustment(uid));
+      if (!cancelled) {
+        setProposal(latest);
+        setProposalLoading(false);
+      }
+    }
+    void init();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // 今週のタスクリストの確定と、既存ユーザーの学習開始日の補完をまとめて永続化する。
   // - 週次リスト: 週初め/未確定のときだけ再生成（途中で内容が変わらない）。
@@ -95,6 +132,8 @@ export default function PlanPage() {
 
   const bookProgress = referenceBookProgress(book);
   const weeklyDone = plan.weeklyItems.filter((i) => i.checked).length;
+  // 予定（時間軸）と現在地（CP進行）の比較。試験日・開始日が未設定なら null。
+  const comparison = buildCheckpointComparison(state);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -110,20 +149,13 @@ export default function PlanPage() {
               ⚙️ 設定
             </Link>
           </div>
-          <div className="mt-4 flex items-end justify-between">
-            <div>
-              <p className="text-xs text-white/80">試験日まで</p>
-              <p className="text-3xl font-extrabold">
-                {plan.daysUntilExam === null
-                  ? "未設定"
-                  : `あと${plan.daysUntilExam}日`}
-              </p>
-            </div>
-            <span
-              className={`rounded-full px-3 py-1 text-sm font-bold ring-1 ${ON_TRACK_STYLE[plan.onTrack]}`}
-            >
-              {ON_TRACK_LABELS[plan.onTrack]}
-            </span>
+          <div className="mt-4">
+            <p className="text-xs text-white/80">試験日まで</p>
+            <p className="text-3xl font-extrabold">
+              {plan.daysUntilExam === null
+                ? "未設定"
+                : `あと${plan.daysUntilExam}日`}
+            </p>
           </div>
         </div>
       </header>
@@ -137,7 +169,23 @@ export default function PlanPage() {
           <h2 className="mb-3 text-base font-extrabold text-gray-800">
             合格までのロードマップ
           </h2>
-          <RoadmapMap phases={buildCheckpointRoadmap(state)} />
+          <RoadmapMap
+            phases={buildCheckpointRoadmap(state)}
+            expectedPhaseId={
+              comparison ? getCheckpoint(comparison.expectedId).phaseId : null
+            }
+          />
+          {comparison && (
+            <p
+              className={`mt-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${
+                comparison.delta < 0
+                  ? "bg-amber-50 text-amber-800"
+                  : "bg-emerald-50 text-emerald-700"
+              }`}
+            >
+              {comparison.delta < 0 ? "📍" : "✨"} {comparison.message}
+            </p>
+          )}
         </section>
 
         {/* 今週のゴール */}
@@ -210,23 +258,6 @@ export default function PlanPage() {
           )}
         </section>
 
-        {/* 今日やること導線 */}
-        <Link
-          href="/today"
-          className="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100 transition active:scale-[0.99]"
-        >
-          <p className="text-xs font-bold text-indigo-500">今日やること</p>
-          <p className="mt-1 text-lg font-extrabold text-gray-800">
-            {plan.todayMenu.theme}
-          </p>
-          {plan.todayReasons[0] && (
-            <p className="mt-1 text-sm text-gray-600">💡 {plan.todayReasons[0]}</p>
-          )}
-          <span className="mt-3 inline-block rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white">
-            今日の学習へ →
-          </span>
-        </Link>
-
         {/* 過去問開始予定 */}
         <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
           <p className="text-xs font-bold text-rose-500">過去問演習</p>
@@ -274,26 +305,8 @@ export default function PlanPage() {
           )}
         </section>
 
-        {/* 遅れの調整方針 */}
-        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <p className="text-xs font-bold text-violet-500">学習ペースの調整</p>
-          <p className="mt-1 text-base font-extrabold text-gray-800">
-            {plan.reschedule.headline}
-          </p>
-          <ul className="mt-2 space-y-1.5">
-            {plan.reschedule.actions.map((a, i) => (
-              <li
-                key={i}
-                className="flex gap-2 text-sm font-semibold text-gray-700"
-              >
-                <span aria-hidden className="text-violet-500">
-                  ・
-                </span>
-                {a}
-              </li>
-            ))}
-          </ul>
-        </section>
+        {/* 計画の立て直し提案（遅れ・弱点・リスクを検知したときのみ表示） */}
+        <PlanAdjustmentCard proposal={proposal} loading={proposalLoading} />
 
         {/* 設定変更への導線 */}
         <div className="flex flex-wrap gap-2">

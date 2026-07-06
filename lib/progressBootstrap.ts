@@ -43,6 +43,23 @@ function todayKey(now: Date): string {
   return now.toISOString().slice(0, 10);
 }
 
+/**
+ * user_reference_books.chapters（jsonb）から章消化率（0〜100）を求める。
+ * 参考書が未登録・使用中でない・章が0件のときは null（指標に含めない）。
+ * 計算は lib/referenceBook.ts の referenceBookProgress と同じ「done章 / 全章」。
+ */
+function referenceBookRatioFromRow(
+  row: { active: boolean | null; chapters: unknown } | null,
+): number | null {
+  if (!row || row.active === false) return null;
+  const chapters = Array.isArray(row.chapters) ? row.chapters : [];
+  if (chapters.length === 0) return null;
+  const done = chapters.filter(
+    (c) => typeof c === "object" && c !== null && (c as { done?: boolean }).done === true,
+  ).length;
+  return Math.round((done / chapters.length) * 100);
+}
+
 export async function getLatestIntegratedStatusRow(
   supabase: SupabaseClient,
   userId: string,
@@ -71,7 +88,7 @@ export async function refreshIntegratedStatusForUser(
     .toISOString()
     .slice(0, 10);
 
-  const [profileRes, progressRes, wordRes, reportRes, examRes] =
+  const [profileRes, progressRes, wordRes, reportRes, examRes, refBookRes] =
     await Promise.all([
       supabase
         .from("user_profiles")
@@ -97,6 +114,11 @@ export async function refreshIntegratedStatusForUser(
         .eq("user_id", userId)
         .eq("question_type", "exam_level")
         .gte("answered_at", sinceIso),
+      supabase
+        .from("user_reference_books")
+        .select("active, chapters")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
 
   const examDate =
@@ -134,6 +156,12 @@ export async function refreshIntegratedStatusForUser(
     totalWordCount: getAllWords().length,
     recentReports,
     examLevelAttempts,
+    referenceBookRatio: referenceBookRatioFromRow(
+      (refBookRes.data ?? null) as {
+        active: boolean | null;
+        chapters: unknown;
+      } | null,
+    ),
   });
 
   const { data: upserted, error: upsertError } = await supabase

@@ -3,7 +3,7 @@
 import { getUserId } from "@/lib/userSession";
 
 // 英略語の単語帳の学習進捗を localStorage に保存する小さなストア。
-// 既存の単語帳(lib/glossaryProgress)・ミニゲーム(lib/minigameProgress)と同じ方針で、
+// ミニゲーム(lib/minigameProgress)と同じ方針で、
 // 学習進捗本体(AppState=fequest:appstate)には手を入れず、機能ローカルの別キーに閉じ込める。
 //
 // 保存は二重化：必ず localStorage を更新したうえで、user_id があれば（=LINE経由）

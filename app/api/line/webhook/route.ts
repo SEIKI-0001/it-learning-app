@@ -7,9 +7,15 @@ import type { UserAnswer, UserProfile, UserProgress } from "@/types";
 import { FIELD_LABELS } from "@/types/content";
 import { getAllTopics, getReviewItemsForUser, getTopic } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
-import { generateLearningPlan, getPhaseDef } from "@/lib/studyPlanner";
+import { generateLearningPlan } from "@/lib/studyPlanner";
+import { getCheckpoint, phaseToCheckpointId } from "@/lib/checkpoints";
 import { fieldMastery } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
+import { getLatestOrRefreshIntegratedStatus } from "@/lib/progressBootstrap";
+import {
+  overallStatusLabel,
+  type IntegratedLearningStatus,
+} from "@/types/integratedStatus";
 
 /**
  * LINE Messaging API の Webhook 受け口（ITパスポート学習コーチ）。
@@ -160,14 +166,18 @@ function planText(
     { profile, progress, answers },
     getAllTopics(),
   );
-  const phase = getPhaseDef(plan.currentPhase);
+  // 現在地は Web と同じ CP（チェックポイント）語彙で伝える。
+  const cp = getCheckpoint(
+    progress.checkpointProgress?.currentCheckpointId ??
+      phaseToCheckpointId(plan.currentPhase),
+  );
   const lines = ["学習ロードマップ📅"];
   lines.push(
     plan.daysUntilExam === null
       ? "試験日は未設定です（設定すると逆算します）。"
       : `試験まであと${plan.daysUntilExam}日。`,
   );
-  lines.push(`現在は「${phase.title}」フェーズです。`);
+  lines.push(`現在は ${cp.emoji} CP${cp.order}「${cp.title}」です。`);
   lines.push(`今週のゴール：${plan.weeklyGoal.headline}。`);
   lines.push(`今日やること：${plan.todayMenu.theme}`);
   lines.push("詳しく見る👇", withToken(baseUrl, "/plan", token));
@@ -219,27 +229,34 @@ function todayText(
   return lines.join("\n");
 }
 
-/** 「進捗」: 全体進捗・連続日数・XP・3分野の弱点を返す。 */
+/** 「進捗」: 合格準備度・連続日数・XP・3分野の弱点を返す。 */
 function progressText(
   baseUrl: string,
   token: string | null,
   profile?: UserProfile,
   progress?: UserProgress,
+  integrated: IntegratedLearningStatus | null = null,
 ): string {
   if (!progress) {
     return ["あなたの進捗はこちら📈", withToken(baseUrl, "/progress", token)].join("\n");
   }
   const topics = getAllTopics();
   const summary = computeProgressSummary(topics, progress);
-  const overall = summary.readinessPct;
   const remaining = daysUntilExam(profile);
   const mastery = fieldMastery(progress, topics);
   const weakest = (Object.keys(mastery) as (keyof typeof mastery)[]).sort(
     (a, b) => mastery[a] - mastery[b],
   )[0];
 
+  // 合格準備度は Web と同じ統合進捗(readinessScore)を正とする。
+  // 取得できないとき（Supabase未設定など）のみローカル推定にフォールバック。
+  const readinessLine = integrated
+    ? `📈 合格準備度 ${integrated.readinessScore}%（${overallStatusLabel(integrated.overallStatus)}）`
+    : `📈 合格準備度 ${summary.readinessPct}%`;
+
   const lines = [
-    `📈 全体進捗 ${overall}%（学習済み ${summary.completedCount}/${summary.totalCount}）`,
+    readinessLine,
+    `学習済み ${summary.completedCount}/${summary.totalCount}`,
     remaining === null ? "試験日：未設定" : `試験まであと${remaining}日`,
     `🔥 連続学習 ${progress.streakCount}日 / Lv.${progress.level}・${progress.exp}XP`,
   ];
@@ -281,14 +298,16 @@ function reviewText(
 }
 
 /** 受け取ったテキストからコマンドを判定し、返信文を組み立てる。 */
-function buildReplyText(
+async function buildReplyText(
   rawText: string,
   baseUrl: string,
   token: string | null,
+  supabase: SupabaseClient | null,
+  userId: string | null,
   profile?: UserProfile,
   progress?: UserProgress,
   answers: UserAnswer[] = [],
-): string {
+): Promise<string> {
   const text = rawText.trim();
 
   if (text.includes("はじめ") || text.includes("始め") || text.includes("設定")) {
@@ -305,7 +324,18 @@ function buildReplyText(
     return todayText(baseUrl, token, profile, progress, answers);
   }
   if (text.includes("進捗") || text.includes("状況")) {
-    return progressText(baseUrl, token, profile, progress);
+    // Web の /progress と同じ統合進捗を参照する（HTTP自己呼び出しはせず共有ヘルパーを直接使う）。
+    // 失敗しても従来のローカル推定文面で返す。
+    let integrated: IntegratedLearningStatus | null = null;
+    if (supabase && userId) {
+      try {
+        integrated = (await getLatestOrRefreshIntegratedStatus(supabase, userId))
+          .status;
+      } catch {
+        integrated = null;
+      }
+    }
+    return progressText(baseUrl, token, profile, progress, integrated);
   }
   if (text.includes("復習")) {
     return reviewText(baseUrl, token, profile, progress);
@@ -405,10 +435,12 @@ export async function POST(request: Request) {
     if (ev.type === "message" && ev.message?.type === "text") {
       const { userId, token } = await linkUser(supabase, ev.source?.userId);
       const { profile, progress, answers } = await fetchUserState(supabase, userId);
-      const text = buildReplyText(
+      const text = await buildReplyText(
         ev.message.text ?? "",
         baseUrl,
         token,
+        supabase,
+        userId,
         profile,
         progress,
         answers,

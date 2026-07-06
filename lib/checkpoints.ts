@@ -19,6 +19,7 @@ import type {
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { getAllTopics } from "@/lib/content";
+import { determineExpectedPhase } from "@/lib/studyPlanner";
 import { grantExp } from "@/lib/game";
 import { addTopicsToReview, recentAccuracy } from "@/lib/study";
 import type { BadgeSignals } from "@/lib/badges";
@@ -315,6 +316,51 @@ export function buildCheckpointRoadmap(state: AppState): PhaseProgress[] {
 
     return { id: c.phaseId, status, progress, hint };
   });
+}
+
+// ---------------------------------------------------------------------------
+// 期待CP（予定に対する現在地の比較）
+// ---------------------------------------------------------------------------
+
+export type CheckpointComparison = {
+  /** 学習開始日〜試験日の経過割合から見た「予定ではこのあたり」のCP。 */
+  expectedId: CheckpointId;
+  /** 実際の現在CP。 */
+  currentId: CheckpointId;
+  /** 現在 - 期待（負=遅れ / 0=予定どおり / 正=先行）。 */
+  delta: number;
+  /** 前向きな一言（ユーザーを責めない）。 */
+  message: string;
+};
+
+/**
+ * 予定（時間軸）と現在地（CP進行）を比較する。
+ * 期待位置は studyPlanner.determineExpectedPhase（経過割合→フェーズ）を
+ * CP に読み替えて使う。試験日・学習開始日が未設定なら null（比較を出さない）。
+ */
+export function buildCheckpointComparison(
+  state: AppState,
+  now: Date = new Date(),
+): CheckpointComparison | null {
+  const expectedPhase = determineExpectedPhase(state.profile, now);
+  if (!expectedPhase) return null;
+
+  const expected = getCheckpointByPhase(expectedPhase);
+  const current = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
+  const delta = current.order - expected.order;
+
+  let message: string;
+  if (delta <= -2) {
+    message = `予定では「${expected.title}」のあたりです。今週のゴールを1つずつ進めて追いつきましょう。`;
+  } else if (delta === -1) {
+    message = "予定より少しだけ後ろにいます。数日で追いつける範囲です。";
+  } else if (delta === 0) {
+    message = "ほぼ予定どおりのペースです。この調子で進めましょう。";
+  } else {
+    message = "予定より先へ進んでいます。この調子で！";
+  }
+
+  return { expectedId: expected.id, currentId: current.id, delta, message };
 }
 
 // ---------------------------------------------------------------------------

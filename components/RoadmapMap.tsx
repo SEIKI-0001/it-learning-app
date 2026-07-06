@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { PhaseProgress } from "@/types/plan";
+import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 import { STUDY_PHASES } from "@/lib/studyPlanner";
 
 // 合格までのロードマップを「ゲームのワールドマップ風」で見せるコンポーネント。
-// - データは plan.phases（PhaseProgress[]）＋ STUDY_PHASES の静的メタを使う。
+// - データは buildCheckpointRoadmap（CP進行由来の PhaseProgress[]）＋ STUDY_PHASES の静的メタを使う。
+// - expectedPhaseId を渡すと「📍 予定ではこのあたり」の控えめなマーカーを出す。
 // - 8ノードを上下2段のつづら折り（4→4）に配置し、縦幅を抑える。
 //   コンテナは aspect-[100/62] で viewBox(0 0 100 62) と比率を一致させ、
 //   SVG 地形・道と HTML ピン（%配置）の座標系を確実に重ねる。
@@ -126,7 +127,14 @@ function Tree({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   );
 }
 
-export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
+export default function RoadmapMap({
+  phases,
+  expectedPhaseId = null,
+}: {
+  phases: PhaseProgress[];
+  /** 時間軸から見た「予定ではこのあたり」のフェーズ。現在地と同じなら表示しない。 */
+  expectedPhaseId?: StudyPhaseId | null;
+}) {
   const [selected, setSelected] = useState<MapNode | null>(null);
   const nodes = buildNodes(phases);
   const fullPath = nodes
@@ -265,6 +273,12 @@ export default function RoadmapMap({ phases }: { phases: PhaseProgress[] }) {
               {isCurrent && (
                 <span className="absolute -top-5 animate-bounce whitespace-nowrap rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white shadow motion-reduce:animate-none">
                   いまここ
+                </span>
+              )}
+              {/* 期待位置マーカー（「いまここ」より控えめ・非アニメーション） */}
+              {!isCurrent && n.key === expectedPhaseId && (
+                <span className="absolute -top-5 whitespace-nowrap rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 shadow ring-1 ring-amber-300">
+                  📍 予定ではこのあたり
                 </span>
               )}
               <span className="relative">
