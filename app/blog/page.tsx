@@ -4,6 +4,16 @@ import BlogCta from "./_components/BlogCta";
 
 export const metadata = createBlogListingMetadata();
 
+const latestPost = {
+  slug: "it-passport-app-comparison-2026",
+  title: "ITパスポート勉強アプリはどう選ぶ？独学初心者向けに5タイプを比較",
+  description:
+    "ITパスポート対策アプリの選び方を、過去問型・動画型・参考書型・AI学習管理型などに分けて比較。初心者が継続しやすい学習環境を整理します。",
+  audience: "独学で始めたいが、どのアプリ・教材を選ぶべきか迷っている初心者",
+  readTime: "7分",
+  category: "アプリ比較",
+};
+
 const featuredPost = {
   slug: "it-passport-ai-study-plan",
   title: "ITパスポートの勉強計画はAIに任せるべき？初心者向けに使い方と注意点を解説",
@@ -73,6 +83,38 @@ export default function BlogIndexPage() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12">
+        <article className="grid gap-5 rounded-[22px] border border-[#f7a600] bg-white p-6 shadow-[0_14px_34px_rgba(22,94,131,0.08)] lg:grid-cols-[1fr_220px] lg:items-center">
+          <div>
+            <span className="rounded-full bg-[#fff2cc] px-3 py-1 text-xs font-bold text-[#9a6400]">
+              NEW：{latestPost.category}
+            </span>
+            <h2 className="mt-4 text-2xl font-black leading-snug tracking-normal text-[#12384d] sm:text-3xl">
+              {latestPost.title}
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-slate-700 sm:text-base">
+              {latestPost.description}
+            </p>
+            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+              <div className="rounded-[12px] bg-[#f7fbfe] px-4 py-3">
+                <dt className="font-black text-[#12384d]">この記事の対象</dt>
+                <dd className="mt-1 leading-6 text-slate-600">{latestPost.audience}</dd>
+              </div>
+              <div className="rounded-[12px] bg-[#f7fbfe] px-4 py-3">
+                <dt className="font-black text-[#12384d]">読了目安</dt>
+                <dd className="mt-1 font-bold text-[#1b75a6]">{latestPost.readTime}</dd>
+              </div>
+            </dl>
+          </div>
+          <Link
+            href={`/blog/${latestPost.slug}`}
+            className="inline-flex justify-center rounded-full bg-[#f7a600] px-5 py-3 text-sm font-black text-white transition hover:opacity-90 active:scale-[0.99]"
+          >
+            アプリ比較の記事を読む
+          </Link>
+        </article>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6">
         <article className="grid gap-5 rounded-[22px] border border-[#cfe5f2] bg-white p-6 shadow-[0_14px_34px_rgba(22,94,131,0.08)] lg:grid-cols-[1fr_220px] lg:items-center">
           <div>
             <span className="rounded-full bg-[#e8f5fb] px-3 py-1 text-xs font-bold text-[#1b75a6]">
@@ -97,7 +139,7 @@ export default function BlogIndexPage() {
           </div>
           <Link
             href={`/blog/${featuredPost.slug}`}
-            className="inline-flex justify-center rounded-full bg-[#f7a600] px-5 py-3 text-sm font-black text-white transition hover:opacity-90 active:scale-[0.99]"
+            className="inline-flex justify-center rounded-full bg-[#1b75a6] px-5 py-3 text-sm font-black text-white transition hover:bg-[#155f87] active:scale-[0.99]"
           >
             AI学習計画の記事を読む
           </Link>
