@@ -6,11 +6,19 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-independent-study-roadmap-2026",
+    title: "ITパスポート独学ロードマップ｜30日・60日・90日で合格を目指す勉強計画",
+    description:
+      "試験日までの残り期間別に、参考書・単語帳・確認問題・過去問レベル演習の進め方を整理します。",
+    category: "NEW：独学ロードマップ",
+    cta: "独学ロードマップを読む",
+  },
+  {
     slug: "it-passport-app-comparison-2026",
     title: "ITパスポート勉強アプリはどう選ぶ？独学初心者向けに5タイプを比較",
     description:
       "過去問型・動画型・参考書型・AI学習管理型などを比較し、初心者が継続しやすい学習環境を整理します。",
-    category: "NEW：アプリ比較",
+    category: "アプリ比較",
     cta: "アプリ比較の記事を読む",
   },
   {
@@ -54,7 +62,7 @@ export default function BlogIndexPage() {
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-5 px-4 pt-8 sm:px-6 sm:pt-12 lg:grid-cols-2">
+      <section className="mx-auto grid w-full max-w-6xl gap-5 px-4 pt-8 sm:px-6 sm:pt-12 lg:grid-cols-3">
         {promotedPosts.map((post, index) => (
           <article key={post.slug} className="flex flex-col rounded-[22px] border border-[#cfe5f2] bg-white p-6 shadow-[0_14px_34px_rgba(22,94,131,0.08)]">
             <span className={index === 0 ? "w-fit rounded-full bg-[#fff2cc] px-3 py-1 text-xs font-bold text-[#9a6400]" : "w-fit rounded-full bg-[#e8f5fb] px-3 py-1 text-xs font-bold text-[#1b75a6]"}>{post.category}</span>
