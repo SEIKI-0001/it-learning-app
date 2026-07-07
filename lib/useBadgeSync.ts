@@ -6,6 +6,7 @@ import { saveAppState } from "@/lib/storage";
 import { applyBadgeProgress } from "@/lib/checkpoints";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { getUserId, saveProgressToDb } from "@/lib/userSession";
+import { emitUnlockNotice } from "@/lib/unlockNotice";
 
 /**
  * バッジ確定付与の「取りこぼしを拾う」冪等な catch-up フック。
@@ -27,6 +28,8 @@ export function useBadgeSync(
     if (newlyEarnedIds.length === 0) return;
     saveAppState(next);
     setState(next);
+    // catch-up 経路は画面内の演出を持たないため、バッジ名も含めて通知する。
+    emitUnlockNotice(state, next, newlyEarnedIds);
     const uid = getUserId();
     if (uid) saveProgressToDb(uid, next.progress);
   }, [state, setState]);

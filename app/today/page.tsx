@@ -10,6 +10,7 @@ import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { completeStudySession } from "@/lib/studySession";
+import { emitUnlockNotice } from "@/lib/unlockNotice";
 import {
   buildCheckpointGate,
   getCheckpoint,
@@ -151,6 +152,8 @@ export default function TodayPage() {
 
     saveAppState(finalState);
     setState(finalState);
+    // バッジは下の結果カードに出すので、グローバル通知は装備解放のみ。
+    emitUnlockNotice(state, finalState);
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;
 

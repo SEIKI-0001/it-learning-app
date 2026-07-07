@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { StudyStyle, UserProfile } from "@/types";
+import type { AppState, StudyStyle, UserProfile } from "@/types";
 import { STUDY_STYLE_LABELS } from "@/types";
 import type { TopicField } from "@/types/content";
 import { FIELD_LABELS } from "@/types/content";
+import type { AvatarPresetId } from "@/types/avatar";
 import { initializeAppState, saveAppState } from "@/lib/storage";
+import { setAvatarPreset } from "@/lib/avatarUnlocks";
 import {
   getUserId,
   readTokenFromUrl,
@@ -15,9 +17,11 @@ import {
   saveProgressToDb,
   setUserId,
 } from "@/lib/userSession";
+import AvatarCreator from "@/components/avatar/AvatarCreator";
 
 // 初回設定。試験予定日・学習可能時間・理解度・苦手分野・学習スタイルを取得し、
 // AIプランナー(lib/aiPlanner.ts)が使えるプロフィールとして保存する。
+// 保存後はアバター選択ステップを挟んでから /today へ進む（スキップ可）。
 
 const WEEKDAY_OPTIONS = [10, 20, 30, 60];
 const HOLIDAY_OPTIONS = [15, 30, 60, 120];
@@ -32,6 +36,8 @@ export default function OnboardingPage() {
   const [confidence, setConfidence] = useState<number>(2);
   const [weakFields, setWeakFields] = useState<TopicField[]>([]);
   const [studyStyle, setStudyStyle] = useState<StudyStyle>("balanced");
+  // 設定保存後のアバター選択ステップ。null のあいだは設定フォームを表示する。
+  const [createdState, setCreatedState] = useState<AppState | null>(null);
 
   // LINE 経由(?t=トークン)ならユーザーを解決。設定済みならダッシュボードへ。
   useEffect(() => {
@@ -76,13 +82,53 @@ export default function OnboardingPage() {
       saveProgressToDb(userId, initial.progress);
     }
 
+    // すぐには /today へ行かず、アバター選択ステップへ。
+    setCreatedState(initial);
+    window.scrollTo({ top: 0 });
+  }
+
+  function handleAvatarCreate(presetId: AvatarPresetId) {
+    if (!createdState) return;
+    const next = setAvatarPreset(createdState, presetId);
+    saveAppState(next);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, next.progress);
     router.push("/today");
+  }
+
+  // ステップ2: アバター選択（設定は保存済みなので、スキップしても学習は始められる）
+  if (createdState) {
+    return (
+      <main className="min-h-screen bg-gray-50 px-5 py-8">
+        <div className="mx-auto w-full max-w-md md:max-w-xl">
+          <p className="text-sm font-semibold text-indigo-500">初回設定 2/2</p>
+          <h1 className="mt-1 text-2xl font-extrabold text-gray-800">
+            学習プランができました！
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            最後に、いっしょに合格を目指す分身を選びましょう。
+          </p>
+
+          <div className="mt-6">
+            <AvatarCreator onCreate={handleAvatarCreate} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => router.push("/today")}
+            className="mt-4 w-full rounded-2xl bg-white px-6 py-3 text-sm font-bold text-gray-500 ring-1 ring-gray-200 transition active:scale-[0.99]"
+          >
+            あとで選ぶ（今日の学習へ進む）
+          </button>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="min-h-screen bg-gray-50 px-5 py-8">
       <div className="mx-auto w-full max-w-md md:max-w-xl">
-        <p className="text-sm font-semibold text-indigo-500">初回設定</p>
+        <p className="text-sm font-semibold text-indigo-500">初回設定 1/2</p>
         <h1 className="mt-1 text-2xl font-extrabold text-gray-800">
           あなたに合わせて学習プランを作ります
         </h1>
@@ -219,7 +265,7 @@ export default function OnboardingPage() {
           onClick={handleStart}
           className="mt-9 w-full rounded-2xl bg-indigo-600 px-6 py-4 text-lg font-extrabold text-white shadow-lg transition active:scale-[0.98]"
         >
-          📖 今日の学習へ進む
+          ✅ この内容でプランを作る
         </button>
       </div>
     </main>

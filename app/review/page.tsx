@@ -10,6 +10,7 @@ import { saveAppState } from "@/lib/storage";
 import { getQuestionsByTopic, getReviewItemsForUser, getTopic } from "@/lib/content";
 import { markTopicMastered } from "@/lib/study";
 import { completeStudySession } from "@/lib/studySession";
+import { emitUnlockNotice } from "@/lib/unlockNotice";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
@@ -74,6 +75,7 @@ export default function ReviewPage() {
     saveAppState(next);
     setState(next);
     setOpenId(null);
+    emitUnlockNotice(state, next);
     const userId = getUserId();
     if (userId) {
       saveProgressToDb(userId, next.progress);
