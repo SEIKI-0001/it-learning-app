@@ -12,8 +12,22 @@ import type {
   FinalExamAttempt,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
+import type { AvatarProfile } from "@/types/avatar";
 
 const CP_ORDER: CheckpointId[] = ["cp0", "cp1", "cp2", "cp3", "cp4", "cp5", "cp6"];
+
+/**
+ * アバター設定のマージ。装備の付け替えは「後から変更した方」を採用する
+ * （updatedAt の新しい方。片方しか無ければそれを使う）。
+ */
+function mergeAvatar(
+  a: AvatarProfile | undefined,
+  b: AvatarProfile | undefined,
+): AvatarProfile | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return (b.updatedAt ?? "") > (a.updatedAt ?? "") ? b : a;
+}
 
 /**
  * チェックポイント進行をマージする（端末間の同期・巻き戻し防止）。
@@ -64,6 +78,7 @@ function mergeCheckpointProgress(
       x.attemptedAt.localeCompare(y.attemptedAt),
     ),
     rarePityCount: Math.max(a.rarePityCount, b.rarePityCount),
+    avatar: mergeAvatar(a.avatar, b.avatar),
   };
 }
 

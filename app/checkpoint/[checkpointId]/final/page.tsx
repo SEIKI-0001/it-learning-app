@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { UserAnswer } from "@/types";
 import type { CheckpointId } from "@/types/checkpoint";
+import type { AvatarItemDef } from "@/types/avatar";
 import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
@@ -30,6 +31,10 @@ import {
   type FinalExam,
   type FinalExamResult,
 } from "@/lib/finalExam";
+import { getBadge } from "@/lib/badges";
+import { newlyUnlockedItems } from "@/lib/avatarUnlocks";
+import CheckpointBattleAvatar from "@/components/avatar/CheckpointBattleAvatar";
+import AvatarUnlockToast from "@/components/avatar/AvatarUnlockToast";
 import FinalExamCard from "@/components/checkpoints/FinalExamCard";
 import GateRequirementList from "@/components/checkpoints/GateRequirementList";
 import MissingBadgeList from "@/components/checkpoints/MissingBadgeList";
@@ -51,6 +56,9 @@ export default function FinalExamPage() {
   useBadgeSync(state, setState);
   const [exam, setExam] = useState<FinalExam | null>(null);
   const [result, setResult] = useState<FinalExamResult | null>(null);
+  // 突破演出用: 今回の合格で新たに解放された装備・獲得したバッジ（表示のみ）。
+  const [newUnlocks, setNewUnlocks] = useState<AvatarItemDef[]>([]);
+  const [newBadgeLabels, setNewBadgeLabels] = useState<string[]>([]);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -100,6 +108,8 @@ export default function FinalExamPage() {
   function startExam() {
     if (!state) return;
     setResult(null);
+    setNewUnlocks([]);
+    setNewBadgeLabels([]);
     setExam(generateFinalExam(state, checkpointId));
   }
 
@@ -108,6 +118,16 @@ export default function FinalExamPage() {
     const scored = scoreFinalExam(exam, answers);
     const attempt = buildFinalExamAttempt(exam, scored);
     const updated = recordFinalExamAttempt(state, attempt, signals);
+    // 今回の結果で増えた装備・バッジを突破演出用に控える（表示のみ・判定に影響しない）。
+    const prevBadgeIds = new Set(
+      getCheckpointProgress(state).earnedBadges.map((e) => e.badgeId),
+    );
+    setNewUnlocks(newlyUnlockedItems(state, updated));
+    setNewBadgeLabels(
+      getCheckpointProgress(updated)
+        .earnedBadges.filter((e) => !prevBadgeIds.has(e.badgeId))
+        .map((e) => getBadge(e.badgeId)?.label ?? e.badgeId),
+    );
     saveAppState(updated);
     setState(updated);
     setResult(scored);
@@ -145,6 +165,9 @@ export default function FinalExamPage() {
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-2xl">
         <FinalExamCard checkpoint={checkpoint} gate={gate} rangeLabel={rangeLabel} />
 
+        {/* 挑戦前: 現在のアバター・称号・装備を見せる（装備は見た目だけで合否に影響しない） */}
+        {!exam && !result && <CheckpointBattleAvatar state={state} />}
+
         {/* --- 採点結果 --- */}
         {result ? (
           result.passed ? (
@@ -156,6 +179,11 @@ export default function FinalExamPage() {
               <p className="mt-1 text-sm font-semibold text-emerald-600">
                 {result.total}問中 {result.correct}問正解
               </p>
+
+              {/* 突破エフェクトをまとったアバター（成長の実感） */}
+              <div className="mt-4">
+                <CheckpointBattleAvatar state={state} mode="victory" />
+              </div>
 
               {/* CP突破の達成感: いまのCP → 次のCP へ進んだことを見せる */}
               <div className="mt-4 flex items-center justify-center gap-2">
@@ -185,6 +213,16 @@ export default function FinalExamPage() {
                   ? `次のチェックポイント「${next.title}」へ進みます。`
                   : "すべてのチェックポイントを突破しました！合格へ向けて総仕上げを。"}
               </p>
+
+              {/* 新しいバッジ・装備解放の演出 */}
+              {(newUnlocks.length > 0 || newBadgeLabels.length > 0) && (
+                <div className="mt-4">
+                  <AvatarUnlockToast
+                    items={newUnlocks}
+                    badgeLabels={newBadgeLabels}
+                  />
+                </div>
+              )}
               <div className="mt-4 flex flex-col gap-2">
                 {next && next.finalExam && (
                   <Link

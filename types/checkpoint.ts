@@ -12,6 +12,7 @@
 
 import type { StudyPhaseId } from "@/types/plan";
 import type { TopicField } from "@/types/content";
+import type { AvatarProfile } from "@/types/avatar";
 
 // ---------------------------------------------------------------------------
 // チェックポイント
@@ -145,6 +146,12 @@ export type CheckpointProgress = {
   finalExamAttempts: FinalExamAttempt[];
   /** 直近で連続してレア報酬が出なかった回数（天井カウンタ）。 */
   rarePityCount: number;
+  /**
+   * 自分アバター（分身）の設定値。未作成なら undefined。
+   * checkpoint_progress（jsonb）にまるごと保存されるため、DBマイグレーション無しで
+   * 永続化・端末間同期される。解放済み装備は保存せず獲得バッジ等から導出する。
+   */
+  avatar?: AvatarProfile;
 };
 
 /** 既存ユーザー・新規ユーザー共通の初期値。 */

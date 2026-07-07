@@ -9,6 +9,7 @@ import { getCheckpoint, getCheckpointProgress } from "@/lib/checkpoints";
 import { getRankStatus } from "@/lib/rank";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
+import AvatarProgressCard from "@/components/avatar/AvatarProgressCard";
 
 function formatMonthDay(iso: string | null): string {
   if (!iso) return "未定";
@@ -177,6 +178,9 @@ export default function Home() {
                 : "主要テーマ完了後"}
           </p>
         </Link>
+
+        {/* あなたの分身（アバター）: 称号・装備・次の解放目標 */}
+        <AvatarProgressCard state={state} />
 
         <div className="grid gap-5 md:grid-cols-2">
         {/* 今日やること */}
