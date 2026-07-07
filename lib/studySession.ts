@@ -19,6 +19,7 @@ import {
 } from "@/lib/streak";
 import { applyBadgeProgress } from "@/lib/checkpoints";
 import { applyBadgeDrop } from "@/lib/badgeDrops";
+import { applyDailyQuestProgress, maxComboOf } from "@/lib/dailyQuests";
 
 export type StudySessionResult = {
   state: AppState;
@@ -43,10 +44,24 @@ export function completeStudySession(
   signals?: BadgeSignals,
   now: Date = new Date(),
 ): StudySessionResult {
+  // 復習だったかは学習前の復習キューで判定する（完了処理でキューから消えるため）。
+  const wasReview = state.progress.reviewQueue.some((r) => r.topicId === topicId);
+
   const studied = completeTopicStudy(state, topicId, answers, now);
   // ストリーク節目のXP・おまもり付与（受領済みはスキップされる冪等処理）。
   const milestoned = applyStreakMilestones(studied);
-  const awarded = applyBadgeProgress(milestoned.state, signals, now);
+  // 今日の3ミッションへ成果を反映（報酬の受け取りは /today のカードから行う）。
+  const quested = applyDailyQuestProgress(
+    milestoned.state,
+    {
+      correct: answers.filter((a) => a.isCorrect).length,
+      total: answers.length,
+      isReview: wasReview,
+      maxCombo: maxComboOf(answers),
+    },
+    now,
+  );
+  const awarded = applyBadgeProgress(quested, signals, now);
 
   let finalState = awarded.state;
   let dropLabel: string | null = null;

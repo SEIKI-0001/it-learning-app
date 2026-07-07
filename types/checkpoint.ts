@@ -144,6 +144,24 @@ export type StreakMeta = {
   lastShieldUsedAt?: string; // ISO
 };
 
+/** デイリーミッション1件の進捗（定義は lib/dailyQuests.ts の QUEST_DEFS が持つ）。 */
+export type DailyQuestProgress = {
+  id: string;
+  goal: number;
+  progress: number;
+};
+
+/**
+ * 「今日の3ミッション」の状態。date（ローカル日付）が変わったら作り直す。
+ * 進捗はすべて学習成果（確認問題の完了・正解など）から加算する。
+ */
+export type DailyQuestState = {
+  date: string; // "YYYY-MM-DD"（ローカル）
+  quests: DailyQuestProgress[];
+  /** 報酬（宝箱）受け取り済みか（冪等キー）。 */
+  claimed: boolean;
+};
+
 /** 最終問題の1回ぶんの結果。 */
 export type FinalExamAttempt = {
   checkpointId: CheckpointId;
@@ -172,6 +190,8 @@ export type CheckpointProgress = {
   avatar?: AvatarProfile;
   /** ストリークの節目受領・おまもり・自己ベスト。未使用なら undefined（旧データ互換）。 */
   streakMeta?: StreakMeta;
+  /** 今日の3ミッション。未使用なら undefined（旧データ互換）。 */
+  dailyQuests?: DailyQuestState;
 };
 
 /** 既存ユーザー・新規ユーザー共通の初期値。 */

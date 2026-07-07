@@ -8,6 +8,7 @@ import type {
 import type {
   CheckpointId,
   CheckpointProgress,
+  DailyQuestState,
   EarnedBadge,
   FinalExamAttempt,
   StreakMeta,
@@ -53,6 +54,30 @@ function mergeStreakMeta(
     shieldsUsed: Math.max(a.shieldsUsed, b.shieldsUsed),
     longestStreak: Math.max(a.longestStreak, b.longestStreak),
     ...(lastShieldUsedAt ? { lastShieldUsedAt } : {}),
+  };
+}
+
+/**
+ * 今日の3ミッションのマージ。
+ * - 日付が違えば新しい日の方を採用（古い日のミッションに意味はない）。
+ * - 同じ日なら quest ごとに progress の大きい方、claimed は OR
+ *   （どちらかの端末で受け取り済みなら受け取り済み＝報酬の二重取りを防ぐ）。
+ */
+function mergeDailyQuests(
+  a: DailyQuestState | undefined,
+  b: DailyQuestState | undefined,
+): DailyQuestState | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  if (a.date !== b.date) return a.date > b.date ? a : b;
+  const progressOf = new Map(b.quests.map((q) => [q.id, q.progress]));
+  return {
+    date: a.date,
+    quests: a.quests.map((q) => ({
+      ...q,
+      progress: Math.max(q.progress, progressOf.get(q.id) ?? 0),
+    })),
+    claimed: a.claimed || b.claimed,
   };
 }
 
@@ -107,6 +132,7 @@ function mergeCheckpointProgress(
     rarePityCount: Math.max(a.rarePityCount, b.rarePityCount),
     avatar: mergeAvatar(a.avatar, b.avatar),
     streakMeta: mergeStreakMeta(a.streakMeta, b.streakMeta),
+    dailyQuests: mergeDailyQuests(a.dailyQuests, b.dailyQuests),
   };
 }
 
