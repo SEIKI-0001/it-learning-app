@@ -149,7 +149,7 @@ export default function BadgeList({
     );
   }
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-3 md:grid md:grid-cols-2 md:items-start md:gap-3 md:space-y-0">
       {statuses.map((s) => (
         <BadgeCard
           key={s.def.id}

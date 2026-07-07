@@ -264,7 +264,7 @@ export default function RoadmapMap({
 
   return (
     <div>
-      <div className="relative mx-auto aspect-[100/130] w-full max-w-md overflow-hidden rounded-3xl shadow-inner ring-2 ring-amber-900/40">
+      <div className="relative mx-auto aspect-[100/130] w-full max-w-md overflow-hidden rounded-3xl shadow-inner ring-2 ring-amber-900/40 md:max-w-lg">
         {/* 地形・道（SVG）。コンテナと同比率なのでピン(%)とズレない */}
         <svg
           className="absolute inset-0 h-full w-full"
@@ -677,14 +677,14 @@ export default function RoadmapMap({
       {/* 詳細シート */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 md:items-center md:p-4"
           onClick={() => setSelected(null)}
         >
           <div
-            className="max-h-[86vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] shadow-xl"
+            className="max-h-[86vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] shadow-xl md:max-h-[80vh] md:rounded-3xl md:pb-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-200" />
+            <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-gray-200 md:hidden" />
             <div className="flex items-center gap-3">
               <span className="text-3xl" aria-hidden>
                 {selected.emoji}

@@ -23,7 +23,7 @@ export default function BottomNav() {
       aria-label="メインナビゲーション"
       className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
-      <ul className="mx-auto flex w-full max-w-md">
+      <ul className="mx-auto flex w-full max-w-md md:max-w-2xl">
         {ITEMS.map((item) => {
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);

@@ -204,7 +204,7 @@ export default function PlanPage() {
           <p className="mt-1 text-sm text-gray-600">{plan.weeklyGoal.detail}</p>
 
           {plan.weeklyItems.length > 0 ? (
-            <ul className="mt-4 space-y-2">
+            <ul className="mt-4 space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
               {plan.weeklyItems.map((item) => (
                 <li key={`${item.kind}-${item.topicId}`}>
                   <Link
@@ -258,52 +258,54 @@ export default function PlanPage() {
           )}
         </section>
 
-        {/* 過去問開始予定 */}
-        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <p className="text-xs font-bold text-rose-500">過去問演習</p>
-          <p className="mt-1 text-base font-extrabold text-gray-800">
-            {plan.kakomonReady
-              ? "今から過去問を始めてOK 🎯"
-              : plan.kakomonStartDate
-                ? `開始目安：${formatDate(plan.kakomonStartDate)}ごろ`
-                : "主要テーマが進んだら始めましょう"}
-          </p>
-          <p className="mt-1 text-sm text-gray-600">
-            参考書を全部読み終えてからではなく、頻出テーマに一通り触れたら
-            少しずつ過去問道場で解き始めます。
-          </p>
-        </section>
-
-        {/* 参考書1周の進捗 */}
-        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-indigo-500">参考書の進捗</p>
-            <Link
-              href="/settings/reference-book"
-              className="text-xs font-bold text-indigo-600 underline underline-offset-2"
-            >
-              {book && book.chapters.length > 0 ? "編集" : "登録する"}
-            </Link>
-          </div>
-          {bookProgress ? (
-            <>
-              <p className="mt-1 text-base font-extrabold text-gray-800">
-                {book?.title || "参考書"}：{bookProgress.done} / {bookProgress.total} 章
-              </p>
-              <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div
-                  className="h-full rounded-full bg-indigo-500"
-                  style={{ width: `${Math.round(bookProgress.ratio * 100)}%` }}
-                />
-              </div>
-            </>
-          ) : (
-            <p className="mt-1 text-sm text-gray-600">
-              参考書を登録すると、章ごとの進捗と「今日読む場所」を表示できます。
-              未登録でも、各トピックの「探すキーワード」で学習できます。
+        {/* 過去問開始予定・参考書進捗はPCでは横並びにする */}
+        <div className="space-y-5 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
+          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <p className="text-xs font-bold text-rose-500">過去問演習</p>
+            <p className="mt-1 text-base font-extrabold text-gray-800">
+              {plan.kakomonReady
+                ? "今から過去問を始めてOK 🎯"
+                : plan.kakomonStartDate
+                  ? `開始目安：${formatDate(plan.kakomonStartDate)}ごろ`
+                  : "主要テーマが進んだら始めましょう"}
             </p>
-          )}
-        </section>
+            <p className="mt-1 text-sm text-gray-600">
+              参考書を全部読み終えてからではなく、頻出テーマに一通り触れたら
+              少しずつ過去問道場で解き始めます。
+            </p>
+          </section>
+
+          {/* 参考書1周の進捗 */}
+          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-indigo-500">参考書の進捗</p>
+              <Link
+                href="/settings/reference-book"
+                className="text-xs font-bold text-indigo-600 underline underline-offset-2"
+              >
+                {book && book.chapters.length > 0 ? "編集" : "登録する"}
+              </Link>
+            </div>
+            {bookProgress ? (
+              <>
+                <p className="mt-1 text-base font-extrabold text-gray-800">
+                  {book?.title || "参考書"}：{bookProgress.done} / {bookProgress.total} 章
+                </p>
+                <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className="h-full rounded-full bg-indigo-500"
+                    style={{ width: `${Math.round(bookProgress.ratio * 100)}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="mt-1 text-sm text-gray-600">
+                参考書を登録すると、章ごとの進捗と「今日読む場所」を表示できます。
+                未登録でも、各トピックの「探すキーワード」で学習できます。
+              </p>
+            )}
+          </section>
+        </div>
 
         {/* 計画の立て直し提案（遅れ・弱点・リスクを検知したときのみ表示） */}
         <PlanAdjustmentCard proposal={proposal} loading={proposalLoading} />
