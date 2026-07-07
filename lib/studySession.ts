@@ -12,6 +12,11 @@
 import type { AppState, UserAnswer } from "@/types";
 import type { BadgeSignals } from "@/lib/badges";
 import { completeTopicStudy } from "@/lib/study";
+import {
+  applyStreakMilestones,
+  getStreakMeta,
+  type StreakMilestone,
+} from "@/lib/streak";
 import { applyBadgeProgress } from "@/lib/checkpoints";
 import { applyBadgeDrop } from "@/lib/badgeDrops";
 
@@ -21,6 +26,10 @@ export type StudySessionResult = {
   newlyEarnedIds: string[];
   /** 追加ドロップの表示ラベル（発生しなければ null）。 */
   dropLabel: string | null;
+  /** 今回受領したストリーク節目（無ければ null）。演出(emitCelebration)用。 */
+  streakMilestone: StreakMilestone | null;
+  /** 今回おまもりがストリークを守ったか（完了画面の表示用）。 */
+  shieldConsumed: boolean;
 };
 
 /**
@@ -35,7 +44,9 @@ export function completeStudySession(
   now: Date = new Date(),
 ): StudySessionResult {
   const studied = completeTopicStudy(state, topicId, answers, now);
-  const awarded = applyBadgeProgress(studied, signals, now);
+  // ストリーク節目のXP・おまもり付与（受領済みはスキップされる冪等処理）。
+  const milestoned = applyStreakMilestones(studied);
+  const awarded = applyBadgeProgress(milestoned.state, signals, now);
 
   let finalState = awarded.state;
   let dropLabel: string | null = null;
@@ -46,5 +57,13 @@ export function completeStudySession(
     dropLabel = `${dropped.drop.emoji} ${dropped.drop.label}`;
   }
 
-  return { state: finalState, newlyEarnedIds: awarded.newlyEarnedIds, dropLabel };
+  return {
+    state: finalState,
+    newlyEarnedIds: awarded.newlyEarnedIds,
+    dropLabel,
+    streakMilestone: milestoned.milestone,
+    shieldConsumed:
+      getStreakMeta(finalState.progress).shieldsUsed >
+      getStreakMeta(state.progress).shieldsUsed,
+  };
 }

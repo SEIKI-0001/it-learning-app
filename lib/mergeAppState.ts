@@ -10,6 +10,7 @@ import type {
   CheckpointProgress,
   EarnedBadge,
   FinalExamAttempt,
+  StreakMeta,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import type { AvatarProfile } from "@/types/avatar";
@@ -27,6 +28,32 @@ function mergeAvatar(
   if (!a) return b;
   if (!b) return a;
   return (b.updatedAt ?? "") > (a.updatedAt ?? "") ? b : a;
+}
+
+/**
+ * ストリーク付随情報のマージ。
+ * - 受領済みマイルストーンは和集合（同じ節目のXPを二重取りしない）。
+ * - おまもりの付与/消費・自己ベストは単調増加カウンタなので max（消費が復活しない）。
+ */
+function mergeStreakMeta(
+  a: StreakMeta | undefined,
+  b: StreakMeta | undefined,
+): StreakMeta | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  const lastShieldUsedAt =
+    (a.lastShieldUsedAt ?? "") > (b.lastShieldUsedAt ?? "")
+      ? a.lastShieldUsedAt
+      : b.lastShieldUsedAt;
+  return {
+    claimedMilestones: [
+      ...new Set([...a.claimedMilestones, ...b.claimedMilestones]),
+    ].sort((x, y) => x - y),
+    shieldsGranted: Math.max(a.shieldsGranted, b.shieldsGranted),
+    shieldsUsed: Math.max(a.shieldsUsed, b.shieldsUsed),
+    longestStreak: Math.max(a.longestStreak, b.longestStreak),
+    ...(lastShieldUsedAt ? { lastShieldUsedAt } : {}),
+  };
 }
 
 /**
@@ -79,6 +106,7 @@ function mergeCheckpointProgress(
     ),
     rarePityCount: Math.max(a.rarePityCount, b.rarePityCount),
     avatar: mergeAvatar(a.avatar, b.avatar),
+    streakMeta: mergeStreakMeta(a.streakMeta, b.streakMeta),
   };
 }
 

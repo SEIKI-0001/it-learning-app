@@ -31,6 +31,8 @@ import {
 } from "@/lib/userSession";
 import type { DailyStudyTaskInput } from "@/types/studyProgress";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import StreakFlame from "@/components/StreakFlame";
+import StreakBanner from "@/components/today/StreakBanner";
 import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
@@ -54,6 +56,7 @@ export default function TodayPage() {
     streak: number;
     newlyBadges: string[]; // 今回獲得したバッジ名
     drop: string | null; // 追加ドロップの表示ラベル
+    shieldConsumed: boolean; // おまもりがストリークを守ったか
     // 完了後の「次CPまでの残り条件」表示用（ロードマップ進行への効果を見せる）
     cpTitle: string;
     cpId: string;
@@ -157,7 +160,14 @@ export default function TodayPage() {
     // バッジは下の結果カードに出すので、グローバル通知は装備解放のみ。
     emitUnlockNotice(state, finalState);
     // XP獲得・レベル/ランクアップ・CP突破の達成演出（差分から自動検出）。
-    emitCelebration(state, finalState);
+    // ストリーク節目は差分から判定できないため extras で明示的に渡す。
+    emitCelebration(
+      state,
+      finalState,
+      session.streakMilestone
+        ? [{ kind: "streakMilestone", ...session.streakMilestone }]
+        : [],
+    );
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;
 
@@ -180,6 +190,7 @@ export default function TodayPage() {
         .map((id) => getBadge(id)?.label)
         .filter((v): v is string => !!v),
       drop: dropLabel,
+      shieldConsumed: session.shieldConsumed,
       cpTitle: cpDef.title,
       cpId: currentCpId,
       remainingRequired,
@@ -211,9 +222,8 @@ export default function TodayPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-7 px-4 py-6">
-        <p className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700">
-          「完了」を押して、ストリークを伸ばそう
-        </p>
+        {/* ストリークの現在地と損失回避の一言（今日やる理由を最初に作る） */}
+        <StreakBanner progress={state.progress} />
 
         {/* 今日の方針: 立て直しプラン・推奨配分・次のバッジ・突破試験を1枚に集約 */}
         <TodayPolicyStrip state={state} signals={getClientBadgeSignals()} />
@@ -309,14 +319,17 @@ export default function TodayPage() {
                     <p className="mt-1 text-sm font-semibold text-green-600">
                       {result.total}問中 {result.correct}問正解
                     </p>
-                    <div className="mt-3 flex justify-center gap-2">
+                    <div className="mt-3 flex flex-wrap justify-center gap-2">
                       <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-indigo-600 ring-1 ring-indigo-100">
                         +{result.gainedExp} XP
                       </span>
-                      <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-orange-600 ring-1 ring-orange-100">
-                        🔥 {result.streak}日連続
-                      </span>
+                      <StreakFlame days={result.streak} className="bg-white" />
                     </div>
+                    {result.shieldConsumed && (
+                      <p className="mt-2 text-xs font-bold text-sky-600">
+                        🛡️ おまもりがストリークを守りました
+                      </p>
+                    )}
                     {result.newlyBadges.length > 0 && (
                       <div className="animate-rise-in mt-3 rounded-xl bg-white px-3 py-2.5 ring-1 ring-emerald-100">
                         <p className="text-xs font-bold text-emerald-600">

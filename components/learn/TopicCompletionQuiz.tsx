@@ -49,16 +49,23 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
       tag: topic.tags[0] ?? topic.field,
     }));
     // 完了・バッジ確定付与・追加ドロップを /today と同一の共通経路で処理する。
-    const { state: next } = completeStudySession(
+    const session = completeStudySession(
       state,
       topic.id,
       tagged,
       getClientBadgeSignals(),
     );
+    const next = session.state;
     saveAppState(next);
     setState(next);
     emitUnlockNotice(state, next);
-    emitCelebration(state, next);
+    emitCelebration(
+      state,
+      next,
+      session.streakMilestone
+        ? [{ kind: "streakMilestone", ...session.streakMilestone }]
+        : [],
+    );
 
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;

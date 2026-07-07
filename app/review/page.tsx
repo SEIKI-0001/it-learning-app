@@ -67,17 +67,24 @@ export default function ReviewPage() {
       tag: topic?.tags[0] ?? topic?.field ?? a.tag,
     }));
     // 完了・バッジ確定付与・追加ドロップを /today と同一の共通経路で処理する。
-    const { state: next } = completeStudySession(
+    const session = completeStudySession(
       state,
       topicId,
       tagged,
       getClientBadgeSignals(),
     );
+    const next = session.state;
     saveAppState(next);
     setState(next);
     setOpenId(null);
     emitUnlockNotice(state, next);
-    emitCelebration(state, next);
+    emitCelebration(
+      state,
+      next,
+      session.streakMilestone
+        ? [{ kind: "streakMilestone", ...session.streakMilestone }]
+        : [],
+    );
     const userId = getUserId();
     if (userId) {
       saveProgressToDb(userId, next.progress);

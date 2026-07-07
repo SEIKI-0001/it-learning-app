@@ -14,6 +14,7 @@ import {
 import { getAllTopics, getTopic } from "@/lib/content";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
+import { getStreakMeta, shieldsAvailable } from "@/lib/streak";
 import { computeProgressSummary } from "@/lib/progressSummary";
 import { getRankStatus } from "@/lib/rank";
 import { getCheckpointProgress } from "@/lib/checkpoints";
@@ -216,6 +217,19 @@ export default function ProgressPage() {
               <p>
                 <span className="text-white/70">連続学習 </span>
                 <span className="font-extrabold">🔥 {progress.streakCount}日</span>
+                {shieldsAvailable(getStreakMeta(progress)) > 0 && (
+                  <span
+                    className="ml-1.5 text-xs font-bold text-sky-200"
+                    title="1日休んでも自動でストリークを守ります"
+                  >
+                    🛡️×{shieldsAvailable(getStreakMeta(progress))}
+                  </span>
+                )}
+                {getStreakMeta(progress).longestStreak > progress.streakCount && (
+                  <span className="ml-1.5 text-[10px] font-semibold text-white/60">
+                    ベスト{getStreakMeta(progress).longestStreak}日
+                  </span>
+                )}
               </p>
               <p>
                 <span className="text-white/70">ランク </span>

@@ -1,6 +1,7 @@
 import type { AppState, ReviewItem, UserAnswer, UserProgress } from "@/types";
 import type { Topic } from "@/types/content";
 import { grantExp } from "@/lib/game";
+import { advanceStreak } from "@/lib/streak";
 
 // ============================================================================
 // トピック単位の学習進行(7日固定の completeQuest に代わる新ロジック)。
@@ -31,26 +32,6 @@ export function comboBonus(answers: UserAnswer[]): number {
   }
   if (longest < 3) return 0;
   return Math.min((longest - 2) * XP_PER_COMBO, COMBO_BONUS_CAP);
-}
-
-/** 同じ日に学習済みか(ストリーク判定用) */
-function isSameDay(a: string | undefined, b: Date): boolean {
-  if (!a) return false;
-  const d = new Date(a);
-  return (
-    d.getFullYear() === b.getFullYear() &&
-    d.getMonth() === b.getMonth() &&
-    d.getDate() === b.getDate()
-  );
-}
-
-/** 連続学習日数を更新する。今日が初回なら+1、間が空いていれば1にリセット。 */
-function nextStreak(progress: UserProgress, now: Date): number {
-  if (isSameDay(progress.lastPlayedAt, now)) return progress.streakCount;
-  if (!progress.lastPlayedAt) return 1;
-  const last = new Date(progress.lastPlayedAt);
-  const gapDays = Math.floor((now.getTime() - last.getTime()) / DAY_MS);
-  return gapDays <= 1 ? progress.streakCount + 1 : 1;
 }
 
 /** 正答率(0〜1) */
@@ -128,6 +109,9 @@ export function completeTopicStudy(
     });
   }
 
+  // ストリーク更新（1日欠けはおまもりが有れば自動消費して継続）。
+  const streak = advanceStreak(state.progress, now);
+
   return {
     profile: state.profile,
     answers: allAnswers,
@@ -135,12 +119,13 @@ export function completeTopicStudy(
       ...state.progress,
       exp: newExp,
       level: newLevel,
-      streakCount: nextStreak(state.progress, now),
+      streakCount: streak.streakCount,
       weakTags: recomputeWeakTags(allAnswers),
       lastPlayedAt: now.toISOString(),
       completedTopics,
       topicMastery: { ...state.progress.topicMastery, [topicId]: mastery },
       reviewQueue: queue,
+      checkpointProgress: streak.checkpointProgress,
     },
   };
 }

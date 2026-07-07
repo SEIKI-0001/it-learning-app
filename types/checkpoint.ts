@@ -126,6 +126,24 @@ export type BadgeFragment = {
   count: number;
 };
 
+/**
+ * ストリーク（連続学習日数）の付随情報。
+ * おまもりは「累計付与数/累計消費数」の単調増加カウンタ2本で表現する
+ * （所持数 = granted - used）。端末間マージは max を取るだけで冪等になり、
+ * 消費済みのおまもりがマージで復活しない。
+ */
+export type StreakMeta = {
+  /** 受領済みマイルストーン日数（一度きりの冪等キー）。 */
+  claimedMilestones: number[];
+  /** おまもり累計付与数（単調増加）。 */
+  shieldsGranted: number;
+  /** おまもり累計消費数（単調増加）。 */
+  shieldsUsed: number;
+  /** 自己ベストの連続日数（自分比較の成長軸）。 */
+  longestStreak: number;
+  lastShieldUsedAt?: string; // ISO
+};
+
 /** 最終問題の1回ぶんの結果。 */
 export type FinalExamAttempt = {
   checkpointId: CheckpointId;
@@ -152,6 +170,8 @@ export type CheckpointProgress = {
    * 永続化・端末間同期される。解放済み装備は保存せず獲得バッジ等から導出する。
    */
   avatar?: AvatarProfile;
+  /** ストリークの節目受領・おまもり・自己ベスト。未使用なら undefined（旧データ互換）。 */
+  streakMeta?: StreakMeta;
 };
 
 /** 既存ユーザー・新規ユーザー共通の初期値。 */
