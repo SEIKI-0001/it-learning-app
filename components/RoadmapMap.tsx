@@ -1,8 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 import { STUDY_PHASES } from "@/lib/studyPlanner";
+
+// 「霧が晴れる」演出の既視管理キー（表示専用のビューステート。AppState 外なので
+// 端末間マージ不要。踏破済み＝雲が無い状態を一度見たフェーズの id を持つ）。
+const SEEN_REVEALED_KEY = "fequest:seenRevealedPhases";
+
+function readSeenRevealed(): string[] {
+  try {
+    const raw = localStorage.getItem(SEEN_REVEALED_KEY);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : [];
+    return Array.isArray(parsed) ? parsed.filter((v) => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
 
 // 合格までのロードマップを「ファンタジーRPGの冒険地図」で見せるコンポーネント。
 // - データは buildCheckpointRoadmap（CP進行由来の PhaseProgress[]）＋ STUDY_PHASES の静的メタを使う。
@@ -258,9 +272,31 @@ export default function RoadmapMap({
   expectedPhaseId?: StudyPhaseId | null;
 }) {
   const [selected, setSelected] = useState<MapNode | null>(null);
+  // 前回見たときから新たに「霧が晴れた」（upcoming でなくなった）フェーズ。
+  // 該当ノードには消えていく雲、その区間の街道には伸びる線のアニメを1回だけ流す。
+  const [clearingKeys, setClearingKeys] = useState<string[]>([]);
   const nodes = buildNodes(phases);
   const road = roadPoints(nodes);
   const roadFull = fullPath(road);
+
+  const revealedIds = phases
+    .filter((p) => p.status !== "upcoming")
+    .map((p) => p.id as string);
+  const revealedSig = revealedIds.join(",");
+  useEffect(() => {
+    const seen = readSeenRevealed();
+    const revealed = revealedSig ? revealedSig.split(",") : [];
+    const newly = revealed.filter((k) => !seen.includes(k));
+    try {
+      localStorage.setItem(SEEN_REVEALED_KEY, JSON.stringify(revealed));
+    } catch {
+      // localStorage が使えなくても演出をスキップするだけ
+    }
+    // 初回訪問（seen が空）は「晴れる瞬間」ではないので演出しない。
+    // localStorage（外部システム）との照合結果を1回だけ反映する意図的な setState。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (seen.length > 0 && newly.length > 0) setClearingKeys(newly);
+  }, [revealedSig]);
 
   return (
     <div>
@@ -461,11 +497,29 @@ export default function RoadmapMap({
               </g>
             </g>
 
-            {/* 未踏の土地は雲（霧）で覆う。進むと晴れる */}
+            {/* 未踏の土地は雲（霧）で覆う。進むと晴れる。
+                現在地の次の土地だけ雲を薄くして「先が少し見える」ようにする（目標勾配） */}
+            {(() => {
+              const upcoming = nodes.filter(
+                (n) => n.kind === "phase" && n.status === "upcoming",
+              );
+              const firstUpcomingKey = upcoming[0]?.key;
+              return upcoming.map((n) => (
+                <g
+                  key={`cloud-${n.key}`}
+                  opacity={n.key === firstUpcomingKey ? 0.55 : 1}
+                >
+                  <Cloud x={n.x} y={n.y - 1} s={1.15} />
+                </g>
+              ));
+            })()}
+            {/* 新たに踏み込んだ土地の雲は、ふわっと晴れる演出を1回だけ再生 */}
             {nodes
-              .filter((n) => n.kind === "phase" && n.status === "upcoming")
+              .filter((n) => n.kind === "phase" && clearingKeys.includes(n.key))
               .map((n) => (
-                <Cloud key={`cloud-${n.key}`} x={n.x} y={n.y - 1} s={1.15} />
+                <g key={`clearing-${n.key}`} className="fog-clearing">
+                  <Cloud x={n.x} y={n.y - 1} s={1.15} />
+                </g>
               ))}
           </g>
 
@@ -486,9 +540,12 @@ export default function RoadmapMap({
             strokeWidth="2.5"
             strokeLinecap="round"
           />
-          {/* 進捗の上書き: 踏破済みは実線、これからは足あとの点線 */}
+          {/* 進捗の上書き: 踏破済みは実線、これからは足あとの点線。
+              新たに踏破した区間は「道が伸びる」線描画アニメを1回だけ流す */}
           {nodes.slice(0, -1).map((n, i) => {
             const traveled = n.status === "done";
+            const drawing =
+              traveled && clearingKeys.includes(nodes[i + 1]?.key ?? "");
             return (
               <path
                 key={n.key}
@@ -498,7 +555,9 @@ export default function RoadmapMap({
                 strokeWidth={traveled ? 1.3 : 0.9}
                 strokeLinecap="round"
                 strokeOpacity={traveled ? 0.95 : 0.5}
-                strokeDasharray={traveled ? "0" : "0.1 2.2"}
+                {...(drawing
+                  ? { pathLength: 1, className: "path-draw" }
+                  : { strokeDasharray: traveled ? "0" : "0.1 2.2" })}
               />
             );
           })}
@@ -570,6 +629,9 @@ export default function RoadmapMap({
           const isCurrent = n.status === "current";
           const isDone = n.status === "done";
           const isGoal = n.kind === "goal";
+          // 全フェーズに足を踏み入れたら（未踏ゼロ）、ゴールの城が光って呼ぶ
+          const goalNear =
+            isGoal && phases.every((p) => p.status !== "upcoming");
 
           const circleCls = isGoal
             ? "bg-gradient-to-b from-amber-300 to-amber-500 ring-white"
@@ -609,7 +671,7 @@ export default function RoadmapMap({
                 <span
                   className={`relative flex items-center justify-center rounded-full shadow-md ring-[3px] transition active:scale-95 ${circleCls} ${
                     isGoal ? "h-11 w-11 text-xl" : "h-10 w-10 text-lg"
-                  } ${isCurrent ? "scale-110" : ""}`}
+                  } ${isCurrent ? "scale-110" : ""}${goalNear ? " animate-glow-ring" : ""}`}
                 >
                   <span
                     className={n.status === "upcoming" ? "opacity-55 grayscale" : ""}

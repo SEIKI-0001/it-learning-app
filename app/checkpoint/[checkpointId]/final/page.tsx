@@ -239,7 +239,7 @@ export default function FinalExamPage() {
                   href="/plan"
                   className="rounded-2xl bg-white px-6 py-3 font-bold text-emerald-700 ring-1 ring-emerald-200"
                 >
-                  ロードマップを見る
+                  🗺️ 地図で突破を確認する
                 </Link>
                 <Link
                   href="/badges"
