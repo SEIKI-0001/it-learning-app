@@ -7,12 +7,21 @@ import ChoiceButton from "@/components/ChoiceButton";
 
 // トピックの確認問題を順に解き、結果(UserAnswer[])を onComplete で親へ返す。
 // /today・/review の「解いて進める」体験に使う(表示専用の CheckQuestionCard とは別物)。
-// 正解するたびに小さな達成感が返るよう、ポップ表示・ほめ言葉・連続正解・積み上がりバーで報酬感を出す。
+// 正解するたびに小さな達成感が返るよう、ポップ表示・ほめ言葉・コンボ・積み上がりバーで報酬感を出す。
+
+import { XP_PER_COMBO } from "@/lib/study";
 
 const KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
 // 正解した瞬間に返す短いほめ言葉(学習から気をそらさない範囲で表情をつける)。
 const PRAISES = ["ナイス！", "その調子！", "正解！", "いいね！", "バッチリ！", "完璧！"];
+
+// コンボ数に応じて熱量が上がる配色（橙 → 赤 → 紫）。
+function comboPillClass(run: number): string {
+  if (run >= 5) return "bg-purple-100 text-purple-700 ring-1 ring-purple-200";
+  if (run >= 3) return "bg-rose-100 text-rose-600 ring-1 ring-rose-200";
+  return "bg-orange-100 text-orange-600 ring-1 ring-orange-200";
+}
 
 type Shuffled = { choices: { key: ChoiceKey; text: string }[]; correct: ChoiceKey };
 
@@ -42,6 +51,7 @@ export default function TopicQuiz({
   completeLabel = "完了する",
   dense = false,
   timeLimitSeconds,
+  xpPerCorrect,
 }: {
   topicId: string;
   questions: CheckQuestion[];
@@ -49,6 +59,8 @@ export default function TopicQuiz({
   completeLabel?: string;
   dense?: boolean; // 選択肢の縦幅を詰める(/today)
   timeLimitSeconds?: number; // 指定時のみ制限時間を有効化（確認パック用）
+  /** 正解1問あたりのXP。XPが付く画面(/today等)だけ渡す(確認パックでは付かないので渡さない) */
+  xpPerCorrect?: number;
 }) {
   const shuffled = useMemo(
     () => new Map(questions.map((q) => [q.id, shuffle(q)] as const)),
@@ -72,6 +84,8 @@ export default function TopicQuiz({
 
   const isCorrectOf = (qId: string) => selections[qId] === shuffled.get(qId)?.correct;
   const correctCount = order.reduce((n, qId) => n + (isCorrectOf(qId) ? 1 : 0), 0);
+  // いまの連続正解数（直近の回答時点）。ヘッダーのコンボ表示に使う。
+  const lastAnswered = order[order.length - 1];
 
   // 回答した順に「直近までの連続正解数」を各問へ割り当てる(その問の報酬表示に使う)。
   const streakAt = useMemo(() => {
@@ -154,15 +168,29 @@ export default function TopicQuiz({
           <span className="text-xs font-semibold text-gray-500">
             問題 {currentIndex + 1} / {total}
           </span>
-          <span className="text-xs font-bold text-gray-700">
-            正解{" "}
-            <span
-              key={correctCount}
-              className="inline-block animate-pop-in text-base font-extrabold text-green-600"
-            >
-              {correctCount}
+          <span className="flex items-center gap-2">
+            {(() => {
+              const combo = lastAnswered ? (streakAt.get(lastAnswered) ?? 0) : 0;
+              if (combo < 2 || done) return null;
+              return (
+                <span
+                  key={combo}
+                  className={`inline-block animate-pop-in rounded-full px-2 py-0.5 text-xs font-bold ${comboPillClass(combo)}`}
+                >
+                  🔥 {combo}コンボ
+                </span>
+              );
+            })()}
+            <span className="text-xs font-bold text-gray-700">
+              正解{" "}
+              <span
+                key={correctCount}
+                className="inline-block animate-pop-in text-base font-extrabold text-green-600"
+              >
+                {correctCount}
+              </span>
+              <span className="text-gray-400"> / {total}</span>
             </span>
-            <span className="text-gray-400"> / {total}</span>
           </span>
         </div>
         <div className="mt-2 flex gap-1.5">
@@ -224,7 +252,9 @@ export default function TopicQuiz({
         return (
           <div
             key={q.id}
-            className={`rounded-2xl border border-gray-200 bg-white ${dense ? "p-3" : "p-4"}`}
+            className={`rounded-2xl border border-gray-200 bg-white ${dense ? "p-3" : "p-4"}${
+              revealed && isCorrect && streak >= 5 ? " animate-glow-ring" : ""
+            }`}
           >
             <p className={`text-sm font-bold text-gray-800 ${dense ? "mb-2" : "mb-3"}`}>
               Q{currentIndex + 1}. {q.prompt}
@@ -261,9 +291,22 @@ export default function TopicQuiz({
                       <p className="text-sm font-extrabold text-green-700">
                         {PRAISES[currentIndex % PRAISES.length]}
                       </p>
+                      {xpPerCorrect !== undefined && (
+                        <span
+                          className="animate-float-up text-sm font-extrabold text-indigo-500"
+                          aria-hidden
+                        >
+                          +{xpPerCorrect} XP
+                        </span>
+                      )}
                       {streak >= 2 && (
-                        <span className="ml-auto inline-block animate-pop-in rounded-full bg-orange-100 px-2 py-0.5 text-xs font-bold text-orange-600">
-                          🔥 {streak}連続正解
+                        <span
+                          className={`ml-auto inline-block animate-pop-in rounded-full px-2 py-0.5 text-xs font-bold ${comboPillClass(streak)}`}
+                        >
+                          🔥 {streak}コンボ
+                          {xpPerCorrect !== undefined && streak >= 3
+                            ? ` +${XP_PER_COMBO}XP`
+                            : ""}
                         </span>
                       )}
                     </>

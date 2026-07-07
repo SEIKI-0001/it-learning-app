@@ -7,7 +7,9 @@ import type { Topic } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { completeStudySession } from "@/lib/studySession";
+import { XP_PER_CORRECT } from "@/lib/study";
 import { emitUnlockNotice } from "@/lib/unlockNotice";
+import { emitCelebration } from "@/lib/celebration";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
@@ -56,6 +58,7 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
     saveAppState(next);
     setState(next);
     emitUnlockNotice(state, next);
+    emitCelebration(state, next);
 
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;
@@ -166,6 +169,7 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
           questions={topic.checkQuestions}
           onComplete={handleComplete}
           completeLabel="このトピックを完了する"
+          xpPerCorrect={XP_PER_CORRECT}
         />
       )}
     </section>

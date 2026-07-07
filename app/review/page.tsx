@@ -8,9 +8,10 @@ import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getQuestionsByTopic, getReviewItemsForUser, getTopic } from "@/lib/content";
-import { markTopicMastered } from "@/lib/study";
+import { markTopicMastered, XP_PER_CORRECT } from "@/lib/study";
 import { completeStudySession } from "@/lib/studySession";
 import { emitUnlockNotice } from "@/lib/unlockNotice";
+import { emitCelebration } from "@/lib/celebration";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
@@ -76,6 +77,7 @@ export default function ReviewPage() {
     setState(next);
     setOpenId(null);
     emitUnlockNotice(state, next);
+    emitCelebration(state, next);
     const userId = getUserId();
     if (userId) {
       saveProgressToDb(userId, next.progress);
@@ -160,6 +162,7 @@ export default function ReviewPage() {
                       questions={questions}
                       onComplete={(ans) => handleRetryComplete(topic.id, ans)}
                       completeLabel="復習を完了する"
+                      xpPerCorrect={XP_PER_CORRECT}
                     />
                   </div>
                 ) : (

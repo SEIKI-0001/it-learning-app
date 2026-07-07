@@ -10,7 +10,9 @@ import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { completeStudySession } from "@/lib/studySession";
+import { XP_PER_CORRECT } from "@/lib/study";
 import { emitUnlockNotice } from "@/lib/unlockNotice";
+import { emitCelebration } from "@/lib/celebration";
 import {
   buildCheckpointGate,
   getCheckpoint,
@@ -154,6 +156,8 @@ export default function TodayPage() {
     setState(finalState);
     // バッジは下の結果カードに出すので、グローバル通知は装備解放のみ。
     emitUnlockNotice(state, finalState);
+    // XP獲得・レベル/ランクアップ・CP突破の達成演出（差分から自動検出）。
+    emitCelebration(state, finalState);
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;
 
@@ -407,6 +411,7 @@ export default function TodayPage() {
                 onComplete={handleComplete}
                 completeLabel="今日の学習を完了する"
                 dense
+                xpPerCorrect={XP_PER_CORRECT}
               />
             ) : (
               <p className="text-sm text-gray-500">このトピックの確認問題は準備中です。</p>

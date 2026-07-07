@@ -10,6 +10,29 @@ import { grantExp } from "@/lib/game";
 
 const DAY_MS = 1000 * 60 * 60 * 24;
 
+// XP の内訳（表示側でも同じ数字を使うため export する。二重管理を防ぐ）。
+export const XP_PER_CORRECT = 10; // 確認問題1問正解
+export const XP_PER_COMPLETION = 5; // トピック完了
+export const XP_NEW_TOPIC_BONUS = 20; // 新規習得ボーナス
+export const XP_PER_COMBO = 2; // 3連続正解目以降、1問ごとのコンボボーナス
+export const COMBO_BONUS_CAP = 10; // コンボボーナスの上限（XPインフレ防止）
+
+/**
+ * 連続正解コンボのXPボーナス。回答順の最長連続正解を求め、
+ * 3連続目以降1問につき +XP_PER_COMBO（上限 COMBO_BONUS_CAP）。
+ * 2連続まではボーナスなし（緊張感は3連続から報いる）。
+ */
+export function comboBonus(answers: UserAnswer[]): number {
+  let longest = 0;
+  let run = 0;
+  for (const a of answers) {
+    run = a.isCorrect ? run + 1 : 0;
+    longest = Math.max(longest, run);
+  }
+  if (longest < 3) return 0;
+  return Math.min((longest - 2) * XP_PER_COMBO, COMBO_BONUS_CAP);
+}
+
 /** 同じ日に学習済みか(ストリーク判定用) */
 function isSameDay(a: string | undefined, b: Date): boolean {
   if (!a) return false;
@@ -81,8 +104,9 @@ export function completeTopicStudy(
 
   const correctCount = newAnswers.filter((a) => a.isCorrect).length;
   const wasCompleted = state.progress.completedTopics.includes(topicId);
-  let gainedExp = correctCount * 10 + 5;
-  if (!wasCompleted) gainedExp += 20; // 新規習得ボーナス
+  let gainedExp = correctCount * XP_PER_CORRECT + XP_PER_COMPLETION;
+  if (!wasCompleted) gainedExp += XP_NEW_TOPIC_BONUS;
+  gainedExp += comboBonus(newAnswers); // 連続正解コンボ（上限つき）
 
   const allAnswers = [...state.answers, ...newAnswers];
   const { exp: newExp, level: newLevel } = grantExp(

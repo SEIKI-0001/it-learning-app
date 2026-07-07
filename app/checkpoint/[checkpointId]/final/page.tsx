@@ -33,6 +33,7 @@ import {
 } from "@/lib/finalExam";
 import { getBadge } from "@/lib/badges";
 import { newlyUnlockedItems } from "@/lib/avatarUnlocks";
+import { emitCelebration } from "@/lib/celebration";
 import CheckpointBattleAvatar from "@/components/avatar/CheckpointBattleAvatar";
 import AvatarUnlockToast from "@/components/avatar/AvatarUnlockToast";
 import FinalExamCard from "@/components/checkpoints/FinalExamCard";
@@ -131,6 +132,8 @@ export default function FinalExamPage() {
     saveAppState(updated);
     setState(updated);
     setResult(scored);
+    // CP突破の全画面演出（紙吹雪）。突破していなければ差分が無いので何も出ない。
+    emitCelebration(state, updated);
     const uid = getUserId();
     if (uid) {
       saveProgressToDb(uid, updated.progress);
