@@ -34,6 +34,7 @@ import TopicQuiz from "@/components/learn/TopicQuiz";
 import StreakFlame from "@/components/StreakFlame";
 import StreakBanner from "@/components/today/StreakBanner";
 import DailyQuestCard from "@/components/today/DailyQuestCard";
+import NextGoalCard from "@/components/today/NextGoalCard";
 import TopicContent, {
   TopicReviewSections,
 } from "@/components/learn/TopicContent";
@@ -231,6 +232,9 @@ export default function TodayPage() {
 
         {/* 今日の3ミッション（学習成果ベース・コンプリートで宝箱） */}
         <DailyQuestCard state={state} setState={setState} />
+
+        {/* あと少しのゴール（目標勾配: 近いゴールをバーで見せて今日の目的を作る） */}
+        <NextGoalCard state={state} />
 
         {/* 今日の学習ガイド: 現在CP・今日これをやる理由（必須）・ゴール・次の予定 */}
         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">

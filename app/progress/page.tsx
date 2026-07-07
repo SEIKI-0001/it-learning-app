@@ -26,6 +26,7 @@ import AvatarRenderer from "@/components/avatar/AvatarRenderer";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
+import NextGoalCard from "@/components/today/NextGoalCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutLink from "@/components/auth/LogoutLink";
 
@@ -308,6 +309,9 @@ export default function ProgressPage() {
           status={bootstrap?.integratedStatus ?? null}
           loading={bootstrapLoading}
         />
+
+        {/* あと少しのゴール（目標勾配の可視化） */}
+        <NextGoalCard state={state} />
 
         {/* 計画の立て直し提案への導線（提案の本体は /plan に置く） */}
         {proposal && (
