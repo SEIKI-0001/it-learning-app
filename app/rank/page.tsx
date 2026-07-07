@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import RankCard from "@/components/progress/RankCard";
+import RankAvatarCard from "@/components/avatar/RankAvatarCard";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -37,6 +38,7 @@ export default function RankPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-5">
+        <RankAvatarCard state={state} />
         <RankCard exp={state.progress.exp} />
         <p className="px-1 text-xs leading-relaxed text-gray-500">
           ランクは他の人との比較ではなく、これまでの積み上げが見える指標です。

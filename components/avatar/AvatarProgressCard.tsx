@@ -4,6 +4,7 @@
 import Link from "next/link";
 import type { AppState } from "@/types";
 import { getRankStatus } from "@/lib/rank";
+import { getAvatarGrowthStage } from "@/lib/avatarGrowth";
 import {
   equippedItemDefs,
   getAvatarProfile,
@@ -60,6 +61,7 @@ export default function AvatarProgressCard({ state }: Props) {
         <AvatarRenderer
           presetId={avatar.presetId}
           equipped={sanitizedEquipped(state)}
+          stage={getAvatarGrowthStage(state)}
           size={88}
         />
         <div className="min-w-0 flex-1">

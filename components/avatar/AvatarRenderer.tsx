@@ -4,13 +4,17 @@
 // を渡すこと。ここでは解放判定をしない（表示専用）。
 
 import type { AvatarEquipped, AvatarPresetId } from "@/types/avatar";
+import type { AvatarGrowthStage } from "@/lib/avatarGrowth";
 import { getAvatarPreset } from "@/lib/avatarPresets";
 import { PRESET_ART } from "@/components/avatar/AvatarPresetArt";
 import { ITEM_ART, type AvatarItemArt } from "@/components/avatar/AvatarItemArt";
+import { GROWTH_ART } from "@/components/avatar/AvatarGrowthArt";
 
 type Props = {
   presetId: AvatarPresetId;
   equipped?: AvatarEquipped;
+  /** 成長段階（lib/avatarGrowth.ts で導出）。段階2以上でオーラをまとう。 */
+  stage?: AvatarGrowthStage;
   /** 1辺のピクセル数（正方形）。 */
   size?: number;
   className?: string;
@@ -26,11 +30,13 @@ function art(equipped: AvatarEquipped | undefined, slot: keyof AvatarEquipped): 
 export default function AvatarRenderer({
   presetId,
   equipped,
+  stage = 1,
   size = 160,
   className,
   label,
 }: Props) {
   const preset = getAvatarPreset(presetId);
+  const growth = GROWTH_ART[stage];
   const background = art(equipped, "background");
   const effect = art(equipped, "effect");
   const body = art(equipped, "body");
@@ -53,6 +59,7 @@ export default function AvatarRenderer({
         <rect x={3} y={3} width={114} height={114} rx={14} fill="#eef1f6" />
       )}
       {background?.back}
+      {growth?.back}
       {effect?.back}
       {body?.back}
       {PRESET_ART[preset.id]}
@@ -62,6 +69,7 @@ export default function AvatarRenderer({
       {head?.front}
       {hand?.front}
       {effect?.front}
+      {growth?.front}
     </svg>
   );
 }

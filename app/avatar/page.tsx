@@ -10,6 +10,11 @@ import { useBadgeSync } from "@/lib/useBadgeSync";
 import { saveAppState } from "@/lib/storage";
 import { getUserId, saveProgressToDb } from "@/lib/userSession";
 import { getRankStatus } from "@/lib/rank";
+import {
+  GROWTH_STAGE_LABELS,
+  getAvatarGrowthStage,
+  nextGrowthStageInfo,
+} from "@/lib/avatarGrowth";
 import { AVATAR_PRESETS } from "@/lib/avatarPresets";
 import {
   getAvatarProfile,
@@ -63,6 +68,8 @@ export default function AvatarPage() {
 
   const avatar = getAvatarProfile(state);
   const rank = getRankStatus(state.progress.exp);
+  const stage = getAvatarGrowthStage(state);
+  const nextStage = nextGrowthStageInfo(state);
   const nextTargets = nextUnlockTargets(state, 2);
 
   return (
@@ -90,6 +97,7 @@ export default function AvatarPage() {
                 <AvatarRenderer
                   presetId={avatar.presetId}
                   equipped={sanitizedEquipped(state)}
+                  stage={stage}
                   size={176}
                 />
               </div>
@@ -100,6 +108,15 @@ export default function AvatarPage() {
                 ランク{rank.index + 1}・{state.progress.exp} XP
                 {!rank.isMax && `・次のランクまであと${rank.remaining} XP`}
               </p>
+              <p className="mt-1 text-xs font-semibold text-amber-600">
+                成長段階：{GROWTH_STAGE_LABELS[stage]}（{stage}/3）
+              </p>
+              {nextStage && (
+                <p className="mt-0.5 text-[11px] text-gray-400">
+                  次の段階「{GROWTH_STAGE_LABELS[nextStage.stage]}」：
+                  {nextStage.conditionLabel}
+                </p>
+              )}
 
               {/* タイプ変更 */}
               <div

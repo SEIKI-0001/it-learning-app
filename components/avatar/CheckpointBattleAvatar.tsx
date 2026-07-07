@@ -6,6 +6,7 @@
 import Link from "next/link";
 import type { AppState } from "@/types";
 import { getRankStatus } from "@/lib/rank";
+import { getAvatarGrowthStage } from "@/lib/avatarGrowth";
 import {
   equippedItemDefs,
   getAvatarProfile,
@@ -49,6 +50,7 @@ export default function CheckpointBattleAvatar({
         <AvatarRenderer
           presetId={avatar.presetId}
           equipped={{ ...sanitizedEquipped(state), effect: "effect-breakthrough" }}
+          stage={getAvatarGrowthStage(state)}
           size={140}
           label="チェックポイントを突破したアバター"
         />
@@ -62,6 +64,7 @@ export default function CheckpointBattleAvatar({
         <AvatarRenderer
           presetId={avatar.presetId}
           equipped={sanitizedEquipped(state)}
+          stage={getAvatarGrowthStage(state)}
           size={96}
         />
         <div className="min-w-0 flex-1">
