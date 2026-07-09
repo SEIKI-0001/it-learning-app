@@ -6,11 +6,20 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-free-study-diagnosis",
+    href: "/lp/it-passport-free-study-diagnosis",
+    title: "ITパスポート無料学習診断｜試験日から今日やることをAIで整理",
+    description:
+      "試験日・学習時間・今の理解度から、今日やるべき学習メニューを作る無料診断LPです。",
+    category: "NEW：無料学習診断",
+    cta: "無料診断を始める",
+  },
+  {
     slug: "it-passport-independent-study-roadmap-2026",
     title: "ITパスポート独学ロードマップ｜30日・60日・90日で合格を目指す勉強計画",
     description:
       "試験日までの残り期間別に、参考書・単語帳・確認問題・過去問レベル演習の進め方を整理します。",
-    category: "NEW：独学ロードマップ",
+    category: "独学ロードマップ",
     cta: "独学ロードマップを読む",
   },
   {
@@ -20,14 +29,6 @@ const promotedPosts = [
       "過去問型・動画型・参考書型・AI学習管理型などを比較し、初心者が継続しやすい学習環境を整理します。",
     category: "アプリ比較",
     cta: "アプリ比較の記事を読む",
-  },
-  {
-    slug: "it-passport-ai-study-plan",
-    title: "ITパスポートの勉強計画はAIに任せるべき？初心者向けに使い方と注意点を解説",
-    description:
-      "試験日から逆算した学習計画、復習、確認問題の使い方を初心者向けに解説します。",
-    category: "AI学習計画",
-    cta: "AI学習計画の記事を読む",
   },
 ];
 
@@ -127,7 +128,7 @@ export default function BlogIndexPage() {
             <span className={index === 0 ? "w-fit rounded-full bg-[#fff2cc] px-3 py-1 text-xs font-bold text-[#9a6400]" : "w-fit rounded-full bg-[#e8f5fb] px-3 py-1 text-xs font-bold text-[#1b75a6]"}>{post.category}</span>
             <h2 className="mt-4 text-2xl font-black leading-snug text-[#12384d]">{post.title}</h2>
             <p className="mt-4 text-sm leading-7 text-slate-700 sm:text-base">{post.description}</p>
-            <Link href={`/blog/${post.slug}`} className="mt-6 inline-flex justify-center rounded-full bg-[#1b75a6] px-5 py-3 text-sm font-black text-white transition hover:bg-[#155f87]">{post.cta}</Link>
+            <Link href={post.href ?? `/blog/${post.slug}`} className="mt-6 inline-flex justify-center rounded-full bg-[#1b75a6] px-5 py-3 text-sm font-black text-white transition hover:bg-[#155f87]">{post.cta}</Link>
           </article>
         ))}
       </section>
