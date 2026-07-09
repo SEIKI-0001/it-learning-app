@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BLOG_POSTS, createBlogListingMetadata } from "@/data/blogPosts";
+import { BLOG_POSTS, createBlogListingMetadata, IPA_RANGE_URL } from "@/data/blogPosts";
 import BlogCta from "./_components/BlogCta";
 
 export const metadata = createBlogListingMetadata();
@@ -31,6 +31,29 @@ const promotedPosts = [
   },
 ];
 
+const comparisonRows = [
+  {
+    type: "汎用チャットAI",
+    strength: "分からない用語をすぐ質問できる",
+    caution: "試験日までの計画と復習管理は自分で作る必要がある",
+  },
+  {
+    type: "過去問サイト",
+    strength: "演習量を確保しやすい",
+    caution: "初心者は正解・不正解だけを追いやすい",
+  },
+  {
+    type: "単語帳アプリ",
+    strength: "用語暗記と反復復習に強い",
+    caution: "出題範囲全体の学習順は管理しにくい",
+  },
+  {
+    type: "AI学習管理アプリ",
+    strength: "今日やること・確認・復習をつなげやすい",
+    caution: "単発の質問だけしたい人には機能が多く感じる場合がある",
+  },
+];
+
 export default function BlogIndexPage() {
   return (
     <main className="min-h-screen bg-[#f3f8fb] text-slate-800">
@@ -58,6 +81,42 @@ export default function BlogIndexPage() {
               <li><span className="font-black text-[#1b75a6]">02 </span>続かない原因を学習設計で見る</li>
               <li><span className="font-black text-[#1b75a6]">03 </span>教材・アプリの選び方を決める</li>
             </ol>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12">
+        <div className="overflow-hidden rounded-[26px] border border-[#cfe5f2] bg-white shadow-[0_18px_44px_rgba(22,94,131,0.10)]">
+          <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="p-6 sm:p-8 lg:p-10">
+              <p className="inline-flex rounded-full bg-[#fff2cc] px-3 py-1 text-xs font-black text-[#9a6400]">本日のリード獲得企画：AI学習ツール比較LP</p>
+              <h2 className="mt-5 text-3xl font-black leading-tight text-[#12384d] sm:text-5xl">ITパスポートのAI学習ツールは、問題数より「学習管理」で選ぶ。</h2>
+              <p className="mt-5 max-w-3xl text-base leading-8 text-slate-700 sm:text-lg">AIに質問できることと、合格まで学習が進むことは別です。独学初心者は、用語解説・暗記・過去問演習を点で使うより、試験日から逆算して今日やること、確認問題、復習タイミングまでつながる環境を選ぶほうが継続しやすくなります。</p>
+              <dl className="mt-6 grid gap-4 text-sm leading-7 sm:grid-cols-3">
+                <div className="rounded-[16px] bg-[#f7fbfe] p-4"><dt className="font-black text-[#12384d]">SEOキーワード</dt><dd className="mt-1 text-slate-700">ITパスポート AI / ITパスポート 学習アプリ / ITパスポート 独学</dd></div>
+                <div className="rounded-[16px] bg-[#f7fbfe] p-4"><dt className="font-black text-[#12384d]">想定読者</dt><dd className="mt-1 text-slate-700">AIを使って効率よく勉強したいが、何を選べばよいか迷っている初心者</dd></div>
+                <div className="rounded-[16px] bg-[#f7fbfe] p-4"><dt className="font-black text-[#12384d]">訴求軸</dt><dd className="mt-1 text-slate-700">問題を解くだけでなく、計画・理解度確認・復習までAIで支える</dd></div>
+              </dl>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Link href="/onboarding" className="inline-flex justify-center rounded-full bg-[#f7a600] px-6 py-4 text-sm font-black text-white transition hover:bg-[#d98f00]">無料で今日の学習メニューを作る</Link>
+                <a href={IPA_RANGE_URL} target="_blank" rel="noreferrer" className="inline-flex justify-center rounded-full border border-[#1b75a6] px-6 py-4 text-sm font-black text-[#1b75a6] transition hover:bg-[#e8f5fb]">IPA公式の出題範囲を確認</a>
+              </div>
+            </div>
+            <aside className="bg-[#12384d] p-6 text-white sm:p-8 lg:p-10">
+              <p className="text-lg font-black">メタディスクリプション案</p>
+              <p className="mt-4 text-sm leading-7 text-[#e6f6fc]">ITパスポート対策でAI学習ツールを使うなら何を見るべきか。チャットAI、単語帳、過去問サイト、学習管理アプリを比較し、初心者が合格まで続けるための選び方を解説します。</p>
+              <p className="mt-7 text-lg font-black">CTA</p>
+              <p className="mt-4 text-sm leading-7 text-[#e6f6fc]">まずは試験日と使える時間を入力し、it-learning-appで今日の学習メニューを無料作成する。</p>
+            </aside>
+          </div>
+          <div className="grid gap-4 border-t border-[#d7edf7] bg-[#f7fbfe] p-5 sm:grid-cols-2 lg:grid-cols-4">
+            {comparisonRows.map((row) => (
+              <article key={row.type} className="rounded-[18px] bg-white p-5 shadow-[0_10px_22px_rgba(22,94,131,0.06)]">
+                <h3 className="text-lg font-black text-[#12384d]">{row.type}</h3>
+                <p className="mt-4 text-sm leading-7 text-slate-700"><span className="font-black text-[#1b75a6]">強み：</span>{row.strength}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-700"><span className="font-black text-[#9a6400]">注意点：</span>{row.caution}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
