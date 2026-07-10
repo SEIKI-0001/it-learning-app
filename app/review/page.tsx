@@ -8,7 +8,7 @@ import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getQuestionsByTopic, getReviewItemsForUser, getTopic } from "@/lib/content";
-import { XP_PER_CORRECT, snoozeTopicReview } from "@/lib/study";
+import { studyXpReward, XP_PER_CORRECT, snoozeTopicReview } from "@/lib/study";
 import { completeStudySession } from "@/lib/studySession";
 import { emitUnlockNotice } from "@/lib/unlockNotice";
 import { emitCelebration } from "@/lib/celebration";
@@ -169,7 +169,7 @@ export default function ReviewPage() {
                       questions={questions}
                       onComplete={(ans) => handleRetryComplete(topic.id, ans)}
                       completeLabel="復習を完了する"
-                      xpPerCorrect={XP_PER_CORRECT}
+                      xpPerCorrect={Math.round(XP_PER_CORRECT * studyXpReward(state, topic.id).multiplier)}
                     />
                   </div>
                 ) : (

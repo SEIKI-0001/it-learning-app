@@ -2024,6 +2024,33 @@ const additionalStrategyTopics: Topic[] = [
       },
     ],
   }),
+  createCompactTopic({
+    id: "strat-system-planning-rfp",
+    field: "strategy",
+    category: "システム戦略",
+    title: "システム企画・RFP・調達管理",
+    summary: "システム導入の目的を定め、提案を募り、適切に選定する流れを学びます。",
+    body: "システム企画では経営や業務の課題から目的と要件を整理します。RFP（提案依頼書）でベンダに提案を依頼し、価格だけでなく機能・品質・実現性を評価して調達先を選びます。",
+    analogy: "家を建てる前に、希望する部屋や予算を整理して複数の建築会社へ見積りと提案を頼む流れに似ています。",
+    keyPoints: ["企画は課題と目的から始める", "RFPは提案を依頼する文書", "選定は価格以外も評価する"],
+    examPoint: "RFP・RFI・RFQの役割と、調達の評価観点を区別します。",
+    commonMistakes: ["RFPを発注後の契約書と考える", "最安値だけで調達先を決める"],
+    relatedTerms: ["RFP", "RFI", "RFQ", "ベンダ", "調達"],
+    reviewKeywords: ["rfp", "procurement", "system-planning"],
+    tags: ["strategy", "system-planning", "rfp"],
+    estimatedMinutes: 7,
+    difficulty: 2,
+    importance: 3,
+    examFrequency: "high",
+    reviewPriority: "high",
+    kakomonLabel: "ストラテジ系 > システム戦略 > システム企画・調達",
+    questions: [
+      { prompt: "発注側が、必要なシステムの要件を示してベンダから提案を募る文書はどれでしょう？", correct: "RFP（提案依頼書）", distractors: ["RFI（情報提供依頼書）", "RFQ（見積依頼書）", "SLA"], explanation: "RFPは、実現したい要件を示して提案を依頼する文書です。" },
+      { prompt: "製品やサービスに関する情報を広く集め、企画の材料にするための依頼はどれでしょう？", correct: "RFI（情報提供依頼書）", distractors: ["RFP", "RFQ", "NDA"], explanation: "RFIは、候補となる製品や技術の情報を集めるための依頼です。" },
+      { prompt: "仕様がほぼ固まり、価格や納期などの見積りを依頼する文書はどれでしょう？", correct: "RFQ（見積依頼書）", distractors: ["RFP", "RFI", "WBS"], explanation: "RFQは、価格や納期などの見積りを求めるための依頼です。", difficulty: 2 },
+      { prompt: "システムの調達先を選ぶとき、最も適切な考え方はどれでしょう？", correct: "要件への適合、品質、価格、保守性などを総合評価する", distractors: ["最も安い提案だけを選ぶ", "提案書のページ数が多い会社を選ぶ", "最初に連絡してきた会社を選ぶ"], explanation: "調達では価格だけでなく、要件適合性、品質、実現性、保守性などを総合的に評価します。", difficulty: 2 },
+    ],
+  }),
 ];
 
 export const strategyTopics: Topic[] = [

@@ -1,5 +1,7 @@
 import type { Topic } from "@/types/content";
 import type { UserProgress } from "@/types";
+import type { UserAnswer } from "@/types";
+import { masteryForTopic } from "@/lib/mastery";
 
 // ============================================================================
 // 進捗サマリ（ローカル推定）
@@ -35,6 +37,8 @@ export type ProgressSummary = {
 export function computeProgressSummary(
   topics: Topic[],
   progress: UserProgress,
+  answers: UserAnswer[] = [],
+  now: Date = new Date(),
 ): ProgressSummary {
   const totalCount = topics.length;
   const completedCount = progress.completedTopics.length;
@@ -52,7 +56,7 @@ export function computeProgressSummary(
   const completedRatio = completedCount / totalCount;
 
   const masterySum = topics.reduce(
-    (s, t) => s + (progress.topicMastery[t.id] ?? 0),
+    (s, t) => s + masteryForTopic(progress, answers, t.id, now),
     0,
   );
   const avgMasteryRatio = masterySum / (totalCount * 100);

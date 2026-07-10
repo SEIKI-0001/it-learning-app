@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AppState, UserAnswer } from "@/types";
-import { completeTopicStudy, snoozeTopicReview } from "@/lib/study";
+import { completeTopicStudy, snoozeTopicReview, studyXpReward } from "@/lib/study";
+import { calculateTopicMastery, effectiveTopicMastery } from "@/lib/mastery";
 
 function emptyState(): AppState {
   return {
@@ -63,5 +64,43 @@ describe("topic review confirmation", () => {
     expect(next.progress.reviewQueue[0]).toEqual(
       expect.objectContaining({ reason: "3日後に再確認", dueAt: "2026-07-04T00:00:00.000Z" }),
     );
+  });
+});
+
+describe("mastery and repeat XP", () => {
+  it("requires history across separate days before a perfect score reaches 100", () => {
+    const answers = Array.from({ length: 4 }, (_, index) => ({
+      ...correctAnswer(`2026-07-01T0${index}:00:00.000Z`),
+      questionId: `q-${index}`,
+    }));
+    expect(calculateTopicMastery(answers, new Date("2026-07-01T12:00:00Z"))).toBeLessThan(100);
+
+    const spaced = [
+      ...answers,
+      ...Array.from({ length: 4 }, (_, index) => ({
+        ...correctAnswer(`2026-07-04T0${index}:00:00.000Z`),
+        questionId: `r-${index}`,
+      })),
+      ...Array.from({ length: 4 }, (_, index) => ({
+        ...correctAnswer(`2026-07-11T0${index}:00:00.000Z`),
+        questionId: `s-${index}`,
+      })),
+    ];
+    expect(calculateTopicMastery(spaced, new Date("2026-07-11T12:00:00Z"))).toBe(100);
+    expect(effectiveTopicMastery(100, spaced, new Date("2026-10-11T12:00:00Z"))).toBeLessThan(100);
+  });
+
+  it("reduces XP for same-day repeats and rewards due reviews more", () => {
+    const now = new Date("2026-07-10T12:00:00Z");
+    const state = emptyState();
+    state.progress.completedTopics = ["topic-1"];
+    state.answers = [correctAnswer("2026-07-10T08:00:00Z")];
+    expect(studyXpReward(state, "topic-1", now)).toEqual({ multiplier: 0.1, label: "same_day" });
+
+    state.answers = [correctAnswer("2026-07-01T08:00:00Z")];
+    state.progress.reviewQueue = [
+      { topicId: "topic-1", dueAt: "2026-07-10T00:00:00Z", reason: "復習期限" },
+    ];
+    expect(studyXpReward(state, "topic-1", now)).toEqual({ multiplier: 0.6, label: "due_review" });
   });
 });

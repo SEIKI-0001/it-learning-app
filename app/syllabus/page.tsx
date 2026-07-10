@@ -1,26 +1,27 @@
 import Link from "next/link";
 import { getAllTopics } from "@/lib/content";
 import BottomNav from "@/components/BottomNav";
+import type { Topic } from "@/types/content";
 
 // ── シラバスデータ ──────────────────────────────────────────────────────────
 
-type SyllabusItem = {
+export type SyllabusItem = {
   label: string;
   topicIds: string[];
 };
 
-type SyllabusCategory = {
+export type SyllabusCategory = {
   label: string;
   items: SyllabusItem[];
 };
 
-type SyllabusSection = {
+export type SyllabusSection = {
   id: string;
   label: string;
   categories: SyllabusCategory[];
 };
 
-const SYLLABUS: SyllabusSection[] = [
+export const SYLLABUS: SyllabusSection[] = [
   {
     id: "technology",
     label: "テクノロジ系",
@@ -43,7 +44,7 @@ const SYLLABUS: SyllabusSection[] = [
           { label: "OSとソフトウェアの役割", topicIds: ["tech-os-software-hardware"] },
           { label: "稼働率・信頼性設計（MTBF・MTTR）", topicIds: ["tech-reliability-availability"] },
           { label: "クラウドコンピューティング（SaaS/PaaS/IaaS）", topicIds: ["tech-cloud-models"] },
-          { label: "ハードウェア（入出力装置・各種デバイス）", topicIds: [] },
+          { label: "ハードウェア（入出力装置・各種デバイス）", topicIds: ["tech-io-devices"] },
         ],
       },
       {
@@ -84,8 +85,8 @@ const SYLLABUS: SyllabusSection[] = [
       {
         label: "ヒューマンインタフェース・マルチメディア・新技術",
         items: [
-          { label: "ヒューマンインタフェース・UX", topicIds: [] },
-          { label: "情報メディア・マルチメディア・圧縮", topicIds: [] },
+          { label: "ヒューマンインタフェース・UX", topicIds: ["tech-ui-ux"] },
+          { label: "情報メディア・マルチメディア・圧縮", topicIds: ["tech-multimedia-compression"] },
           { label: "AI・機械学習", topicIds: ["tech-ai-ml"] },
           { label: "IoT（モノのインターネット）", topicIds: ["tech-iot"] },
           { label: "データ活用・BI・データマイニング", topicIds: ["tech-data-utilization"] },
@@ -172,17 +173,59 @@ const SYLLABUS: SyllabusSection[] = [
         items: [
           { label: "情報システム戦略", topicIds: ["strat-system-strategy"] },
           { label: "業務プロセス改善（BPR・BPM）", topicIds: ["strat-business-process"] },
-          { label: "システム企画・RFP・調達管理", topicIds: [] },
+          { label: "システム企画・RFP・調達管理", topicIds: ["strat-system-planning-rfp"] },
         ],
       },
     ],
   },
 ];
 
+/** シラバス定義と教材データの整合性を、ビルド時とテストで検証する。 */
+export function validateSyllabus(
+  syllabus: SyllabusSection[],
+  topics: Topic[],
+): string[] {
+  const topicMap = new Map(topics.map((topic) => [topic.id, topic]));
+  const errors: string[] = [];
+
+  for (const section of syllabus) {
+    for (const category of section.categories) {
+      for (const item of category.items) {
+        const location = `${section.label} > ${category.label} > ${item.label}`;
+        if (item.topicIds.length === 0) {
+          errors.push(`${location}: 対応トピックがありません`);
+          continue;
+        }
+        for (const topicId of item.topicIds) {
+          const topic = topicMap.get(topicId);
+          if (!topic) {
+            errors.push(`${location}: topicId「${topicId}」が存在しません`);
+            continue;
+          }
+          if (topic.checkQuestions.length < 4) {
+            errors.push(`${topicId}: 確認問題が4問未満です`);
+          }
+          if (!topic.explanation?.body || !topic.explanation.keyPoints?.length) {
+            errors.push(`${topicId}: 解説または重要ポイントがありません`);
+          }
+          if (!topic.reviewPrompt?.question || !topic.reviewPrompt.answer) {
+            errors.push(`${topicId}: 復習問題または回答がありません`);
+          }
+        }
+      }
+    }
+  }
+  return errors;
+}
+
 // ── ページ本体 ──────────────────────────────────────────────────────────────
 
 export default function SyllabusPage() {
   const topics = getAllTopics();
+  const validationErrors = validateSyllabus(SYLLABUS, topics);
+  if (validationErrors.length > 0) {
+    throw new Error(`シラバス検証に失敗しました: ${validationErrors.join(" / ")}`);
+  }
   const topicMap = new Map(topics.map((t) => [t.id, t]));
 
   const allItems = SYLLABUS.flatMap((s) => s.categories.flatMap((c) => c.items));
@@ -314,7 +357,7 @@ export default function SyllabusPage() {
         })}
 
         <div className="rounded-2xl border border-gray-200 bg-white px-4 py-4 text-center text-xs text-gray-400">
-          ITパスポートシラバス Ver.6.5 をもとに作成。未対応項目は今後のトピック追加予定です。
+          ITパスポートシラバス Ver.6.5 をもとに作成。対応項目は、トピック・確認問題・解説・復習問題まで自動検証しています。
         </div>
       </div>
 

@@ -17,6 +17,7 @@ import type {
 } from "@/types/checkpoint";
 import { getAllTopics } from "@/lib/content";
 import { getCheckpoint } from "@/lib/checkpoints";
+import { masteryForTopic } from "@/lib/mastery";
 
 const MASTERED = 75;
 
@@ -39,7 +40,8 @@ function weakTopicIds(state: AppState): Set<string> {
   const ids = new Set<string>();
   for (const r of state.progress.reviewQueue ?? []) ids.add(r.topicId);
   // 習熟度が低い（未定着）トピック。
-  for (const [id, m] of Object.entries(state.progress.topicMastery ?? {})) {
+  for (const id of Object.keys(state.progress.topicMastery ?? {})) {
+    const m = masteryForTopic(state.progress, state.answers, id);
     if (m < MASTERED) ids.add(id);
   }
   // 苦手タグに一致するトピック。

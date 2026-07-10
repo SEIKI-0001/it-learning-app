@@ -7,7 +7,7 @@ import type { Topic } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { completeStudySession } from "@/lib/studySession";
-import { XP_PER_CORRECT } from "@/lib/study";
+import { studyXpReward, XP_PER_CORRECT } from "@/lib/study";
 import { emitUnlockNotice } from "@/lib/unlockNotice";
 import { emitCelebration } from "@/lib/celebration";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
@@ -176,7 +176,9 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
           questions={topic.checkQuestions}
           onComplete={handleComplete}
           completeLabel="このトピックを完了する"
-          xpPerCorrect={XP_PER_CORRECT}
+          xpPerCorrect={
+            state ? Math.round(XP_PER_CORRECT * studyXpReward(state, topic.id).multiplier) : undefined
+          }
         />
       )}
     </section>

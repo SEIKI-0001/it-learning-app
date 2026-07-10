@@ -39,4 +39,32 @@ describe("TopicQuiz", () => {
       expect.objectContaining({ questionId: "question-1", topicId: "tech-binary-data" }),
     );
   });
+
+  it("shows the reason for the selected wrong choice after answering", () => {
+    render(
+      <TopicQuiz
+        topicId="topic-1"
+        onComplete={vi.fn()}
+        questions={[
+          {
+            id: "question-with-choice-reason",
+            prompt: "誤答理由を表示する問題",
+            choices: [
+              { key: "A", text: "正解" },
+              { key: "B", text: "誤答" },
+              { key: "C", text: "別の誤答" },
+              { key: "D", text: "さらに別の誤答" },
+            ],
+            correctChoice: "A",
+            explanation: "共通解説",
+            choiceExplanations: { B: "Bは条件を満たしていません。" },
+            difficulty: 1,
+          },
+        ]}
+      />,
+    );
+
+    fireEvent.click(screen.getByText(/^誤答$/).closest("button")!);
+    expect(screen.getByText("選んだ選択肢が違う理由：Bは条件を満たしていません。")).toBeInTheDocument();
+  });
 });

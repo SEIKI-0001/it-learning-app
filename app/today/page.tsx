@@ -10,7 +10,7 @@ import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { completeStudySession } from "@/lib/studySession";
-import { XP_PER_CORRECT } from "@/lib/study";
+import { studyXpReward, XP_PER_CORRECT } from "@/lib/study";
 import { emitUnlockNotice } from "@/lib/unlockNotice";
 import { emitCelebration } from "@/lib/celebration";
 import {
@@ -432,7 +432,9 @@ export default function TodayPage() {
                 onComplete={handleComplete}
                 completeLabel="今日の学習を完了する"
                 dense
-                xpPerCorrect={XP_PER_CORRECT}
+                xpPerCorrect={
+                  state ? Math.round(XP_PER_CORRECT * studyXpReward(state, primary.id).multiplier) : undefined
+                }
               />
             ) : (
               <p className="text-sm text-gray-500">このトピックの確認問題は準備中です。</p>

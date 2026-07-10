@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 // - Supabase 未設定: 503 / userId なし: 401 / body 不正: 400
 // - fire-and-forget で呼ばれる想定。保存失敗でも学習画面は止めない。
 
-const VALID_TYPES = new Set<QuestionType>(["topic_quiz", "exam_level", "mini_exam"]);
+const VALID_TYPES = new Set<QuestionType>(["topic_quiz", "exam_level", "mini_exam", "mock_exam"]);
 
 type AttemptInput = {
   questionId?: string;

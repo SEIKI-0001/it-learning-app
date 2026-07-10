@@ -156,8 +156,8 @@ export default function ProgressPage() {
   const rank = getRankStatus(progress.exp);
   const topics = getAllTopics();
   const remaining = daysUntilExam(profile);
-  const mastery = fieldMastery(progress, topics);
-  const summary = computeProgressSummary(topics, progress);
+  const mastery = fieldMastery(progress, topics, state.answers);
+  const summary = computeProgressSummary(topics, progress, state.answers);
   const completedCount = summary.completedCount;
   // 合格準備度は統合進捗(readinessScore)を正とする。
   // 未取得（未ログイン・Supabase未設定・読込中失敗）のときだけローカル推定にフォールバック。
@@ -378,6 +378,20 @@ export default function ProgressPage() {
             <span className="text-xl font-extrabold">→</span>
           </div>
           <p className="mt-2 text-sm text-white/90">{nextAction.description}</p>
+        </Link>
+
+        <Link
+          href="/mock-exam"
+          className="block rounded-2xl border border-violet-200 bg-violet-50 p-4 transition active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-3xl" aria-hidden>🧪</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-extrabold text-violet-900">本番形式 100問模試</p>
+              <p className="mt-0.5 text-xs font-semibold text-violet-700">3分野の実力をまとめて確認する</p>
+            </div>
+            <span className="text-lg font-extrabold text-violet-700">→</span>
+          </div>
         </Link>
 
         {/* リベンジ対象 */}

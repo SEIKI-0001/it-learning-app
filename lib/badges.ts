@@ -19,10 +19,11 @@ import type { TopicField } from "@/types/content";
 import { getAllTopics } from "@/lib/content";
 import { fieldMastery, recentAccuracy } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
+import { masteryForTopic } from "@/lib/mastery";
 
-// 習熟度のしきい値。confirm quiz で 3/4 正解 → mastery=75 になる前提で調整。
-const QUIZ_CLEARED = 60; // 確認問題を「解ける」水準（過半）
-const MASTERED = 75; // しっかり定着した水準
+// 習熟度のしきい値。初回満点は約72、日を空けた再確認で定着度が上がる前提で調整。
+const QUIZ_CLEARED = 60; // 確認問題を「解ける」水準
+const MASTERED = 75; // 時間を空けて再確認した定着水準
 
 // ---------------------------------------------------------------------------
 // バッジ定義（チェックポイント別）
@@ -530,7 +531,8 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
   let quizClearedTotal = 0;
   let masteredCount = 0;
   let perfectCount = 0;
-  for (const [id, m] of Object.entries(progress.topicMastery ?? {})) {
+  for (const id of Object.keys(progress.topicMastery ?? {})) {
+    const m = masteryForTopic(progress, state.answers, id);
     const t = topicById.get(id);
     if (m >= QUIZ_CLEARED) {
       quizClearedTotal += 1;
@@ -540,7 +542,7 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     if (m >= 100) perfectCount += 1;
   }
 
-  const summary = computeProgressSummary(topics, progress);
+  const summary = computeProgressSummary(topics, progress, state.answers);
   const cp = progress.checkpointProgress;
 
   return {
@@ -552,7 +554,7 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     perfectCount,
     reviewCount: (progress.reviewQueue ?? []).length,
     weakTagCount: (progress.weakTags ?? []).length,
-    fieldMasteryAvg: fieldMastery(progress, topics),
+    fieldMasteryAvg: fieldMastery(progress, topics, state.answers),
     recentAccuracy: recentAccuracy(state.answers),
     // 合格準備度: サーバーの統合進捗(readinessScore)を優先し、無ければローカル推定。
     readinessPct: signals?.readinessScore ?? summary.readinessPct,

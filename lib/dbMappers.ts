@@ -438,7 +438,7 @@ export function topicProgressToRow(
 // question_attempts : 問題（確認問題 / 過去問レベル / ミニ模試）の回答ログ（第2弾）
 // ---------------------------------------------------------------------------
 
-export type QuestionType = "topic_quiz" | "exam_level" | "mini_exam";
+export type QuestionType = "topic_quiz" | "exam_level" | "mini_exam" | "mock_exam";
 
 export type QuestionAttemptRow = {
   user_id: string;

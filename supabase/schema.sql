@@ -363,7 +363,7 @@ create table if not exists public.question_attempts (
   attempt_id          uuid primary key default gen_random_uuid(),
   user_id             uuid not null references public.line_users(id) on delete cascade,
   question_id         text not null,
-  question_type       text not null,          -- topic_quiz / exam_level / mini_exam
+  question_type       text not null,          -- topic_quiz / exam_level / mini_exam / mock_exam
   topic_id            text not null,
   selected_answer     text,
   is_correct          boolean not null,

@@ -23,18 +23,24 @@ function comboPillClass(run: number): string {
   return "bg-orange-100 text-orange-600 ring-1 ring-orange-200";
 }
 
-type Shuffled = { choices: { key: ChoiceKey; text: string }[]; correct: ChoiceKey };
+type Shuffled = {
+  choices: { key: ChoiceKey; text: string; sourceKey: ChoiceKey }[];
+  correct: ChoiceKey;
+};
 
 /** 正解テキストを保ったまま並び替え、キーを位置順に振り直す(マウント時に1度)。 */
 function shuffle(q: CheckQuestion): Shuffled {
-  const correctText = q.choices.find((c) => c.key === q.correctChoice)?.text;
-  const texts = q.choices.map((c) => c.text);
-  for (let i = texts.length - 1; i > 0; i--) {
+  const originalChoices = [...q.choices];
+  for (let i = originalChoices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [texts[i], texts[j]] = [texts[j], texts[i]];
+    [originalChoices[i], originalChoices[j]] = [originalChoices[j], originalChoices[i]];
   }
-  const choices = texts.map((text, i) => ({ key: KEYS[i], text }));
-  const correct = choices.find((c) => c.text === correctText)?.key ?? q.correctChoice;
+  const choices = originalChoices.map((choice, i) => ({
+    key: KEYS[i],
+    text: choice.text,
+    sourceKey: choice.key,
+  }));
+  const correct = choices.find((c) => c.sourceKey === q.correctChoice)?.key ?? q.correctChoice;
   return { choices, correct };
 }
 
@@ -251,6 +257,11 @@ export default function TopicQuiz({
         const sel = currentSelection;
         const revealed = currentRevealed;
         const isCorrect = sel === sh.correct;
+        const selectedChoice = sh.choices.find((choice) => choice.key === sel);
+        const selectedChoiceExplanation =
+          !isCorrect && selectedChoice
+            ? q.choiceExplanations?.[selectedChoice.sourceKey]
+            : undefined;
         const streak = streakAt.get(q.id) ?? 0;
         return (
           <div
@@ -322,6 +333,11 @@ export default function TopicQuiz({
                 <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
                   {q.explanation}
                 </p>
+                {selectedChoiceExplanation && (
+                  <p className="mt-2 rounded-xl bg-white/70 px-3 py-2 text-sm font-semibold leading-relaxed text-amber-800 ring-1 ring-amber-200">
+                    選んだ選択肢が違う理由：{selectedChoiceExplanation}
+                  </p>
+                )}
               </div>
             )}
           </div>

@@ -4,11 +4,12 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import type { Topic, TopicField } from "@/types/content";
 import { FIELD_LABELS, IMPORTANCE_LABELS } from "@/types/content";
-import type { UserProgress } from "@/types";
+import type { UserAnswer, UserProgress } from "@/types";
 import { getAllTopics } from "@/lib/content";
 import { useAppState } from "@/lib/useAppState";
 import { fieldMastery } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
+import { masteryForTopic } from "@/lib/mastery";
 import BottomNav from "@/components/BottomNav";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 
@@ -36,9 +37,9 @@ const FIELD_FILTERS: { key: "all" | TopicField; label: string }[] = [
   { key: "technology", label: "テクノロジ" },
 ];
 
-function statusOf(topic: Topic, progress?: UserProgress) {
+function statusOf(topic: Topic, progress?: UserProgress, answers: UserAnswer[] = []) {
   if (!progress) return { label: "未学習", key: "not_started" as StatusKey, className: "bg-gray-100 text-gray-500" };
-  const mastery = progress.topicMastery[topic.id];
+  const mastery = masteryForTopic(progress, answers, topic.id);
   if (progress.reviewQueue.some((r) => r.topicId === topic.id)) {
     return { label: "復習待ち", key: "in_progress" as StatusKey, className: "bg-amber-100 text-amber-700" };
   }
@@ -68,11 +69,11 @@ export default function TopicsPage() {
   const filteredTopics = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return filteredByField.filter((t) => {
-      if (statusFilter !== "all" && statusOf(t, progress).key !== statusFilter) return false;
+      if (statusFilter !== "all" && statusOf(t, progress, state?.answers ?? []).key !== statusFilter) return false;
       if (q && !t.title.toLowerCase().includes(q) && !t.summary.toLowerCase().includes(q) && !t.category.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [filteredByField, statusFilter, searchQuery, progress]);
+  }, [filteredByField, statusFilter, searchQuery, progress, state?.answers]);
 
   const groupedTopics = useMemo(() => {
     return FIELD_ORDER.map((field) => ({
@@ -85,12 +86,12 @@ export default function TopicsPage() {
 
   // 全体像サマリ（フィルターに関わらず全トピック基準の集計）。
   const summary = useMemo(
-    () => (progress ? computeProgressSummary(allTopics, progress) : null),
-    [allTopics, progress],
+    () => (progress ? computeProgressSummary(allTopics, progress, state?.answers) : null),
+    [allTopics, progress, state?.answers],
   );
   const mastery = useMemo(
-    () => (progress ? fieldMastery(progress, allTopics) : null),
-    [allTopics, progress],
+    () => (progress ? fieldMastery(progress, allTopics, state?.answers) : null),
+    [allTopics, progress, state?.answers],
   );
 
   return (

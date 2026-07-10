@@ -2,6 +2,7 @@ import type { AppState, ReviewItem, UserAnswer, UserProgress } from "@/types";
 import type { Topic } from "@/types/content";
 import { grantExp } from "@/lib/game";
 import { advanceStreak } from "@/lib/streak";
+import { calculateTopicMastery, masteryForTopic } from "@/lib/mastery";
 
 // ============================================================================
 // トピック単位の学習進行(7日固定の completeQuest に代わる新ロジック)。
@@ -38,6 +39,41 @@ export function comboBonus(answers: UserAnswer[]): number {
 function correctRatio(answers: UserAnswer[]): number {
   if (answers.length === 0) return 1;
   return answers.filter((a) => a.isCorrect).length / answers.length;
+}
+
+export type StudyXpReward = {
+  multiplier: number;
+  label: "new" | "due_review" | "same_day" | "repeat";
+};
+
+/**
+ * 同じ易しい問題を繰り返してランクだけを上げられないよう、XPを学習価値に応じて調整する。
+ * 新規=100%、期限到来復習=60%、同日反復=10%、それ以外の再挑戦=25%。
+ */
+export function studyXpReward(
+  state: AppState,
+  topicId: string,
+  now: Date = new Date(),
+): StudyXpReward {
+  if (!state.progress.completedTopics.includes(topicId)) {
+    return { multiplier: 1, label: "new" };
+  }
+
+  const review = state.progress.reviewQueue.find((item) => item.topicId === topicId);
+  if (review && Date.parse(review.dueAt) <= now.getTime()) {
+    return { multiplier: 0.6, label: "due_review" };
+  }
+
+  const today = now.toISOString().slice(0, 10);
+  if (
+    state.answers.some(
+      (answer) => answer.topicId === topicId && answer.answeredAt.slice(0, 10) === today,
+    )
+  ) {
+    return { multiplier: 0.1, label: "same_day" };
+  }
+
+  return { multiplier: 0.25, label: "repeat" };
 }
 
 /**
@@ -85,15 +121,16 @@ export function completeTopicStudy(
   now: Date = new Date(),
 ): AppState {
   const ratio = correctRatio(newAnswers);
-  const mastery = Math.round(ratio * 100);
+  const allAnswers = [...state.answers, ...newAnswers];
+  const topicAnswers = allAnswers.filter((answer) => answer.topicId === topicId);
+  const mastery = calculateTopicMastery(topicAnswers, now);
 
   const correctCount = newAnswers.filter((a) => a.isCorrect).length;
   const wasCompleted = state.progress.completedTopics.includes(topicId);
-  let gainedExp = correctCount * XP_PER_CORRECT + XP_PER_COMPLETION;
+  const reward = studyXpReward(state, topicId, now);
+  const baseRepeatExp = correctCount * XP_PER_CORRECT + XP_PER_COMPLETION + comboBonus(newAnswers);
+  let gainedExp = Math.round(baseRepeatExp * reward.multiplier);
   if (!wasCompleted) gainedExp += XP_NEW_TOPIC_BONUS;
-  gainedExp += comboBonus(newAnswers); // 連続正解コンボ（上限つき）
-
-  const allAnswers = [...state.answers, ...newAnswers];
   const { exp: newExp, level: newLevel } = grantExp(
     state.progress.exp,
     gainedExp,
@@ -107,7 +144,7 @@ export function completeTopicStudy(
   // 満点でも、時間を空けた確認を2回通るまで「理解済み」にはしない。
   const previousReview = state.progress.reviewQueue.find((r) => r.topicId === topicId);
   const queue = state.progress.reviewQueue.filter((r) => r.topicId !== topicId);
-  if (mastery < 100) {
+  if (ratio < 1) {
     queue.push({
       topicId,
       dueAt: nextDueAt(mastery, now),
@@ -216,6 +253,8 @@ export function addTopicToReview(
 export function fieldMastery(
   progress: UserProgress,
   topics: Topic[],
+  answers: UserAnswer[] = [],
+  now: Date = new Date(),
 ): Record<Topic["field"], number> {
   const fields: Topic["field"][] = ["technology", "management", "strategy"];
   const result = {} as Record<Topic["field"], number>;
@@ -226,7 +265,7 @@ export function fieldMastery(
       continue;
     }
     const sum = inField.reduce(
-      (s, t) => s + (progress.topicMastery[t.id] ?? 0),
+      (s, t) => s + masteryForTopic(progress, answers, t.id, now),
       0,
     );
     result[field] = Math.round(sum / inField.length);
