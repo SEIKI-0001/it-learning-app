@@ -6,12 +6,20 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-free-study-tools-2026",
+    title: "ITパスポート独学に役立つ無料ツール7選｜初心者向けの使い分けも解説",
+    description:
+      "公式情報、学習計画、用語整理、確認問題、復習、演習、AI学習支援を役割別に整理します。",
+    category: "NEW：無料ツールまとめ",
+    cta: "無料ツール7選を読む",
+  },
+  {
     slug: "it-passport-free-study-diagnosis",
     href: "/lp/it-passport-free-study-diagnosis",
     title: "ITパスポート無料学習診断｜試験日から今日やることをAIで整理",
     description:
       "試験日・学習時間・今の理解度から、今日やるべき学習メニューを作る無料診断LPです。",
-    category: "NEW：無料学習診断",
+    category: "無料学習診断",
     cta: "無料診断を始める",
   },
   {
@@ -21,14 +29,6 @@ const promotedPosts = [
       "試験日までの残り期間別に、参考書・単語帳・確認問題・過去問レベル演習の進め方を整理します。",
     category: "独学ロードマップ",
     cta: "独学ロードマップを読む",
-  },
-  {
-    slug: "it-passport-app-comparison-2026",
-    title: "ITパスポート勉強アプリはどう選ぶ？独学初心者向けに5タイプを比較",
-    description:
-      "過去問型・動画型・参考書型・AI学習管理型などを比較し、初心者が継続しやすい学習環境を整理します。",
-    category: "アプリ比較",
-    cta: "アプリ比較の記事を読む",
   },
 ];
 
