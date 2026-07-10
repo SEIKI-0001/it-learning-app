@@ -60,6 +60,10 @@ function nextDueAt(mastery: number, now: Date): string {
   return new Date(now.getTime() + days * DAY_MS).toISOString();
 }
 
+function afterDays(now: Date, days: number): string {
+  return new Date(now.getTime() + days * DAY_MS).toISOString();
+}
+
 /** weakTags を再計算(不正解だったタグの集合) */
 function recomputeWeakTags(answers: UserAnswer[]): string[] {
   return Array.from(
@@ -99,13 +103,30 @@ export function completeTopicStudy(
     ? state.progress.completedTopics
     : [...state.progress.completedTopics, topicId];
 
-  // 復習キュー: このトピックの既存項目を入れ替える。満点でなければ要復習で登録。
+  // 復習キュー: このトピックの既存項目を入れ替える。
+  // 満点でも、時間を空けた確認を2回通るまで「理解済み」にはしない。
+  const previousReview = state.progress.reviewQueue.find((r) => r.topicId === topicId);
   const queue = state.progress.reviewQueue.filter((r) => r.topicId !== topicId);
   if (mastery < 100) {
     queue.push({
       topicId,
       dueAt: nextDueAt(mastery, now),
       reason: ratio < 0.6 ? "間違えた問題" : "復習期限",
+      confirmationCount: 0,
+    });
+  } else if (!wasCompleted) {
+    queue.push({
+      topicId,
+      dueAt: afterDays(now, 3),
+      reason: "定着確認",
+      confirmationCount: 0,
+    });
+  } else if ((previousReview?.confirmationCount ?? 0) < 1) {
+    queue.push({
+      topicId,
+      dueAt: afterDays(now, 7),
+      reason: "もう一度定着確認",
+      confirmationCount: (previousReview?.confirmationCount ?? 0) + 1,
     });
   }
 
@@ -130,23 +151,26 @@ export function completeTopicStudy(
   };
 }
 
-/** トピックを「理解済み」にする。習熟度100・復習キューから除外。 */
-export function markTopicMastered(
+/** 復習を一時的に先送りする。自己申告で習熟度や完了状態は変えない。 */
+export function snoozeTopicReview(
   state: AppState,
   topicId: string,
+  days = 3,
   now: Date = new Date(),
 ): AppState {
-  const completedTopics = state.progress.completedTopics.includes(topicId)
-    ? state.progress.completedTopics
-    : [...state.progress.completedTopics, topicId];
+  const existing = state.progress.reviewQueue.find((item) => item.topicId === topicId);
+  const queue = state.progress.reviewQueue.filter((item) => item.topicId !== topicId);
+  queue.push({
+    topicId,
+    dueAt: afterDays(now, days),
+    reason: `${days}日後に再確認`,
+    confirmationCount: existing?.confirmationCount ?? 0,
+  });
   return {
     ...state,
     progress: {
       ...state.progress,
-      completedTopics,
-      topicMastery: { ...state.progress.topicMastery, [topicId]: 100 },
-      reviewQueue: state.progress.reviewQueue.filter((r) => r.topicId !== topicId),
-      lastPlayedAt: now.toISOString(),
+      reviewQueue: queue,
     },
   };
 }

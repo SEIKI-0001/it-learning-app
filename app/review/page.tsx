@@ -8,7 +8,7 @@ import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getQuestionsByTopic, getReviewItemsForUser, getTopic } from "@/lib/content";
-import { markTopicMastered, XP_PER_CORRECT } from "@/lib/study";
+import { XP_PER_CORRECT, snoozeTopicReview } from "@/lib/study";
 import { completeStudySession } from "@/lib/studySession";
 import { emitUnlockNotice } from "@/lib/unlockNotice";
 import { emitCelebration } from "@/lib/celebration";
@@ -23,7 +23,7 @@ import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
 // 復習画面。間違えた問題・苦手Topic・復習期限が来たTopicをまとめ、
-// 「もう一度解く」「理解済みにする」を提供する。
+// 「もう一度解く」「3日後に再表示」を提供する。
 export default function ReviewPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
@@ -92,9 +92,9 @@ export default function ReviewPage() {
     }
   }
 
-  function handleMastered(topicId: string) {
+  function handleSnooze(topicId: string) {
     if (!state) return;
-    const next = markTopicMastered(state, topicId);
+    const next = snoozeTopicReview(state, topicId);
     saveAppState(next);
     setState(next);
     const userId = getUserId();
@@ -184,10 +184,10 @@ export default function ReviewPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleMastered(topic.id)}
-                      className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-green-700 ring-1 ring-green-200"
+                      onClick={() => handleSnooze(topic.id)}
+                      className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-amber-700 ring-1 ring-amber-200"
                     >
-                      理解済みにする
+                      3日後に再表示
                     </button>
                   </div>
                 )}

@@ -49,6 +49,8 @@ export type ReviewItem = {
   topicId: string;
   dueAt: string; // 復習期限(ISO)
   reason: string; // "間違えた" | "苦手分野" | "復習期限" など
+  /** 満点後の定着確認を何回通過したか。未設定の旧データは0回として扱う。 */
+  confirmationCount?: number;
 };
 
 /**

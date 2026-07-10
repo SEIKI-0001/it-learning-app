@@ -28,14 +28,19 @@ export async function getUserPlan(userId: string | null): Promise<Plan> {
   return data.plan === "pro" ? "pro" : "free";
 }
 
-/** ユーザーのプランを設定する（Stripe webhook などから呼ぶ）。失敗しても投げない。 */
+/**
+ * ユーザーのプランを設定する（Stripe webhook などから呼ぶ）。
+ *
+ * 課金状態は失敗を握りつぶしてはいけないため、保存できなかった場合は例外にする。
+ * 呼び出し側のWebhookはこの例外に対して5xxを返し、Stripeの再試行につなげる。
+ */
 export async function setUserPlan(
   userId: string,
   plan: Plan,
   extra?: { stripeCustomerId?: string }
-): Promise<boolean> {
+): Promise<void> {
   const supabase = getServiceSupabase();
-  if (!supabase) return false;
+  if (!supabase) throw new Error("Supabase is not configured");
 
   const row: Record<string, unknown> = {
     user_id: userId,
@@ -49,28 +54,30 @@ export async function setUserPlan(
     .upsert(row, { onConflict: "user_id" });
   if (error) {
     console.error("[billing] setUserPlan failed:", error.message);
-    return false;
+    throw new Error(`Could not update user plan: ${error.message}`);
   }
-  return true;
 }
 
 /** Stripe の customer ID からユーザーを引いてプランを更新する（解約・更新時）。 */
 export async function setUserPlanByCustomer(
   stripeCustomerId: string,
   plan: Plan
-): Promise<boolean> {
+): Promise<void> {
   const supabase = getServiceSupabase();
-  if (!supabase) return false;
+  if (!supabase) throw new Error("Supabase is not configured");
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("user_profiles")
     .update({ plan, plan_updated_at: new Date().toISOString() })
-    .eq("stripe_customer_id", stripeCustomerId);
+    .eq("stripe_customer_id", stripeCustomerId)
+    .select("user_id");
   if (error) {
     console.error("[billing] setUserPlanByCustomer failed:", error.message);
-    return false;
+    throw new Error(`Could not update customer plan: ${error.message}`);
   }
-  return true;
+  if (!data || data.length === 0) {
+    throw new Error("No user profile matches the Stripe customer");
+  }
 }
 
 /**

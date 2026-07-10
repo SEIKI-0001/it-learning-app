@@ -46,6 +46,7 @@ function formatTime(seconds: number): string {
 
 export default function TopicQuiz({
   topicId,
+  topicIdForQuestion,
   questions,
   onComplete,
   completeLabel = "完了する",
@@ -54,6 +55,8 @@ export default function TopicQuiz({
   xpPerCorrect,
 }: {
   topicId: string;
+  /** 複数トピックを扱う試験では、設問ごとの復習先を指定する。 */
+  topicIdForQuestion?: (question: CheckQuestion) => string;
   questions: CheckQuestion[];
   onComplete: (answers: UserAnswer[]) => void;
   completeLabel?: string;
@@ -127,11 +130,11 @@ export default function TopicQuiz({
         isCorrect: sel === sh.correct,
         answeredAt: now,
         tag: q.id, // 呼び出し側でトピックのタグに上書きしてもよい
-        topicId,
+        topicId: topicIdForQuestion?.(q) ?? topicId,
       };
     });
     onComplete(answers);
-  }, [done, onComplete, questions, selections, shuffled, topicId]);
+  }, [done, onComplete, questions, selections, shuffled, topicId, topicIdForQuestion]);
 
   useEffect(() => {
     if (!timeLimited || done || timeLeft === null) return;

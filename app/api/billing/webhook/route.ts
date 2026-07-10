@@ -1,11 +1,21 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { setUserPlan, setUserPlanByCustomer } from "@/lib/billing/plan";
+import {
+  shouldRetryWebhookEvent,
+  type StripeWebhookEventStatus,
+} from "@/lib/billing/webhookState";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
 const STRIPE_SIGNATURE_TOLERANCE_SECONDS = 300;
+type WebhookEventRow = {
+  event_id: string;
+  status: StripeWebhookEventStatus | null;
+  attempt_count: number | null;
+  updated_at: string | null;
+};
 
 /**
  * POST /api/billing/webhook
@@ -43,26 +53,46 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid body" }, { status: 400 });
   }
 
+  const reservation = await reserveStripeWebhookEvent(event);
+  if (!reservation.shouldProcess) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
   try {
-    const shouldProcess = await reserveStripeWebhookEvent(event);
-    if (!shouldProcess) {
-      return NextResponse.json({ received: true, duplicate: true });
-    }
-    await handleEvent(event);
+    await processStripeWebhookEvent(event);
   } catch (e) {
-    // 処理に失敗しても 200 以外を返すと Stripe がリトライし続けるため、
-    // 詳細はログに残しつつ受領は返す。
     console.error("[billing] webhook handling error:", e);
+    // 課金状態を反映できていないため、Stripe の再送を要求する。
+    return NextResponse.json(
+      { ok: false, error: "webhook processing failed" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ received: true });
 }
 
-type StripeEvent = {
+export type StripeEvent = {
   id?: string;
   type: string;
   data: { object: Record<string, unknown> };
 };
+
+/**
+ * 予約済みのStripeイベントを処理して状態を確定する。
+ * Webhook本体と管理画面の手動再処理で同じ経路を通す。
+ */
+export async function processStripeWebhookEvent(event: StripeEvent): Promise<void> {
+  try {
+    await handleEvent(event);
+    await markStripeWebhookEvent(event, "succeeded");
+  } catch (error) {
+    await markStripeWebhookEvent(event, "failed", errorMessage(error)).catch((markError) => {
+      console.error("[billing] webhook failure status update error:", markError);
+    });
+    throw error;
+  }
+}
 
 /** イベント種別ごとに plan を更新する。 */
 async function handleEvent(event: StripeEvent): Promise<void> {
@@ -118,29 +148,106 @@ async function handleEvent(event: StripeEvent): Promise<void> {
   }
 }
 
-async function reserveStripeWebhookEvent(event: StripeEvent): Promise<boolean> {
+async function reserveStripeWebhookEvent(
+  event: StripeEvent,
+): Promise<{ shouldProcess: boolean }> {
   const eventId = asString(event.id);
   if (!eventId) {
-    console.warn("[billing] webhook event without id; idempotency skipped");
-    return true;
+    throw new Error("Stripe webhook event is missing an event id");
   }
 
   const supabase = getServiceSupabase();
   if (!supabase) {
-    console.warn("[billing] Supabase unavailable; webhook idempotency skipped");
-    return true;
+    throw new Error("Supabase is not configured");
   }
 
+  const now = new Date().toISOString();
   const { error } = await supabase.from("stripe_webhook_events").insert({
     event_id: eventId,
     event_type: event.type,
+    event_payload: event,
+    status: "processing",
+    attempt_count: 1,
+    updated_at: now,
   });
 
-  if (!error) return true;
-  if (error.code === "23505") return false;
+  if (!error) return { shouldProcess: true };
+  if (error.code !== "23505") {
+    throw new Error(`Could not reserve Stripe webhook event: ${error.message}`);
+  }
 
-  console.error("[billing] webhook idempotency insert failed:", error.message);
-  return true;
+  const { data: existing, error: readError } = await supabase
+    .from("stripe_webhook_events")
+    .select("event_id, status, attempt_count, updated_at")
+    .eq("event_id", eventId)
+    .maybeSingle();
+  if (readError || !existing) {
+    throw new Error(
+      `Could not read existing Stripe webhook event: ${readError?.message ?? "not found"}`,
+    );
+  }
+
+  const current = existing as WebhookEventRow;
+  const status = current.status ?? "succeeded";
+  if (status === "succeeded") return { shouldProcess: false };
+
+  if (!shouldRetryWebhookEvent(status, current.updated_at)) {
+    return { shouldProcess: false };
+  }
+
+  const { data: claimed, error: claimError } = await supabase
+    .from("stripe_webhook_events")
+    .update({
+      status: "processing",
+      attempt_count: Math.max(1, current.attempt_count ?? 0) + 1,
+      last_error: null,
+      updated_at: now,
+    })
+    .eq("event_id", eventId)
+    .eq("status", status)
+    .select("event_id");
+  if (claimError) {
+    throw new Error(`Could not claim Stripe webhook retry: ${claimError.message}`);
+  }
+
+  return { shouldProcess: (claimed?.length ?? 0) === 1 };
+}
+
+async function markStripeWebhookEvent(
+  event: StripeEvent,
+  status: Extract<StripeWebhookEventStatus, "succeeded" | "failed">,
+  lastError: string | null = null,
+): Promise<void> {
+  const eventId = asString(event.id);
+  if (!eventId) throw new Error("Stripe webhook event is missing an event id");
+
+  const supabase = getServiceSupabase();
+  if (!supabase) throw new Error("Supabase is not configured");
+
+  const update: Record<string, unknown> = {
+    status,
+    last_error: lastError,
+    processed_at: status === "succeeded" ? new Date().toISOString() : null,
+    updated_at: new Date().toISOString(),
+  };
+  // 失敗時だけ保持し、成功後はStripeイベント本文（メールアドレス等を含みうる）を消去する。
+  if (status === "succeeded") update.event_payload = null;
+
+  const { data, error } = await supabase
+    .from("stripe_webhook_events")
+    .update(update)
+    .eq("event_id", eventId)
+    .select("event_id");
+  if (error) {
+    throw new Error(`Could not mark Stripe webhook event ${status}: ${error.message}`);
+  }
+  if ((data?.length ?? 0) !== 1) {
+    throw new Error(`Stripe webhook event was not found while marking ${status}`);
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message.slice(0, 1_000) : "Unknown error";
 }
 
 async function checkoutSessionCanActivatePro(

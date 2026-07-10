@@ -41,8 +41,8 @@ type Summary = {
   }[];
   users: {
     userId: string;
-    lineUserId: string;
-    displayName: string | null;
+    lineUserId: string | null;
+    displayName: string;
     examDate: string | null;
     completedTopics: number;
     reviewQueue: number;
@@ -52,6 +52,20 @@ type Summary = {
     lastPlayedAt: string | null;
     createdAt: string;
   }[];
+  pagination: {
+    page: number;
+    perPage: number;
+    totalUsers: number;
+    totalPages: number;
+  };
+};
+
+type FailedBillingWebhook = {
+  event_id: string;
+  event_type: string | null;
+  attempt_count: number | null;
+  last_error: string | null;
+  updated_at: string;
 };
 
 export default function AdminPage() {
@@ -59,10 +73,30 @@ export default function AdminPage() {
   const [state, setState] = useAppState();
   const [summary, setSummary] = useState<Summary | null | undefined>(undefined);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [failedWebhooks, setFailedWebhooks] = useState<FailedBillingWebhook[]>([]);
+  const [webhookError, setWebhookError] = useState<string | null>(null);
+  const [retryingEventId, setRetryingEventId] = useState<string | null>(null);
+
+  async function loadFailedWebhooks() {
+    try {
+      const response = await fetch("/api/admin/billing-webhooks");
+      const data = (await response.json()) as {
+        ok?: boolean;
+        events?: FailedBillingWebhook[];
+        error?: string;
+      };
+      if (!response.ok || !data.ok) throw new Error(data.error ?? "query failed");
+      setFailedWebhooks(data.events ?? []);
+      setWebhookError(null);
+    } catch (error) {
+      setWebhookError(error instanceof Error ? error.message : "query failed");
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/admin/summary")
+    fetch(`/api/admin/summary?page=${page}`)
       .then(async (res) => {
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -82,7 +116,49 @@ export default function AdminPage() {
     return () => {
       cancelled = true;
     };
+  }, [page]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/billing-webhooks")
+      .then(async (response) => {
+        const data = (await response.json()) as {
+          ok?: boolean;
+          events?: FailedBillingWebhook[];
+          error?: string;
+        };
+        if (!response.ok || !data.ok) throw new Error(data.error ?? "query failed");
+        return data.events ?? [];
+      })
+      .then((events) => {
+        if (!cancelled) {
+          setFailedWebhooks(events);
+          setWebhookError(null);
+        }
+      })
+      .catch((error: Error) => {
+        if (!cancelled) setWebhookError(error.message);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  async function retryWebhook(eventId: string) {
+    setRetryingEventId(eventId);
+    try {
+      const response = await fetch(`/api/admin/billing-webhooks/${eventId}/retry`, {
+        method: "POST",
+      });
+      const data = (await response.json()) as { ok?: boolean; error?: string };
+      if (!response.ok || !data.ok) throw new Error(data.error ?? "retry failed");
+      await loadFailedWebhooks();
+    } catch (error) {
+      setWebhookError(error instanceof Error ? error.message : "retry failed");
+    } finally {
+      setRetryingEventId(null);
+    }
+  }
 
   function handleReset() {
     if (!window.confirm("この端末の localStorage を初期化します。よろしいですか？")) return;
@@ -146,6 +222,42 @@ export default function AdminPage() {
                     <p className="mt-1 text-2xl font-extrabold text-gray-800">{c.value}</p>
                   </div>
                 ))}
+              </div>
+
+              <div className="rounded-2xl bg-white p-4 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-700">課金Webhookの失敗イベント</h3>
+                {webhookError && (
+                  <p className="mt-2 text-xs font-semibold text-rose-600">取得・再処理エラー: {webhookError}</p>
+                )}
+                {failedWebhooks.length === 0 ? (
+                  <p className="mt-2 text-xs text-gray-400">再処理が必要なイベントはありません。</p>
+                ) : (
+                  <ul className="mt-3 space-y-3">
+                    {failedWebhooks.map((event) => (
+                      <li key={event.event_id} className="rounded-xl bg-rose-50 p-3 ring-1 ring-rose-100">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate font-mono text-xs font-bold text-gray-700">{event.event_id}</p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              {event.event_type ?? "unknown"}・{event.attempt_count ?? 0}回試行
+                            </p>
+                            {event.last_error && (
+                              <p className="mt-1 line-clamp-2 text-xs text-rose-700">{event.last_error}</p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => void retryWebhook(event.event_id)}
+                            disabled={retryingEventId === event.event_id}
+                            className="shrink-0 rounded-lg bg-rose-600 px-3 py-2 text-xs font-bold text-white disabled:bg-rose-300"
+                          >
+                            {retryingEventId === event.event_id ? "再処理中…" : "再処理"}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* トピック別 習熟度 */}
@@ -241,7 +353,7 @@ export default function AdminPage() {
               {/* LINE経由ユーザーの進捗 */}
               <div className="rounded-2xl bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-700">
-                  LINE経由ユーザーの進捗（{summary.users.length}人）
+                  ユーザーの進捗（{summary.pagination.totalUsers}人）
                 </h3>
                 {summary.users.length === 0 ? (
                   <p className="mt-2 text-xs text-gray-400">まだユーザーがいません</p>
@@ -262,7 +374,7 @@ export default function AdminPage() {
                         {summary.users.map((u) => (
                           <tr key={u.userId} className="border-b border-gray-50">
                             <td className="py-1.5 text-left font-mono text-gray-600">
-                              {u.displayName ?? u.lineUserId.slice(0, 8)}
+                              {u.displayName}
                             </td>
                             <td className="py-1.5 text-right text-gray-700">
                               {u.examDate ?? "—"}
@@ -284,6 +396,33 @@ export default function AdminPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+                {summary.pagination.totalPages > 1 && (
+                  <div className="mt-4 flex items-center justify-between gap-3 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                      disabled={summary.pagination.page === 1}
+                      className="rounded-lg px-3 py-2 font-bold text-indigo-600 ring-1 ring-indigo-200 disabled:cursor-not-allowed disabled:text-gray-300 disabled:ring-gray-200"
+                    >
+                      前へ
+                    </button>
+                    <span className="text-gray-500">
+                      {summary.pagination.page} / {summary.pagination.totalPages} ページ
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPage((current) =>
+                          Math.min(summary.pagination.totalPages, current + 1),
+                        )
+                      }
+                      disabled={summary.pagination.page === summary.pagination.totalPages}
+                      className="rounded-lg px-3 py-2 font-bold text-indigo-600 ring-1 ring-indigo-200 disabled:cursor-not-allowed disabled:text-gray-300 disabled:ring-gray-200"
+                    >
+                      次へ
+                    </button>
                   </div>
                 )}
               </div>
