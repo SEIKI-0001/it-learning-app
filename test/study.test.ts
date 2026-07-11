@@ -95,7 +95,7 @@ describe("mastery and repeat XP", () => {
     const state = emptyState();
     state.progress.completedTopics = ["topic-1"];
     state.answers = [correctAnswer("2026-07-10T08:00:00Z")];
-    expect(studyXpReward(state, "topic-1", now)).toEqual({ multiplier: 0.1, label: "same_day" });
+    expect(studyXpReward(state, "topic-1", now)).toEqual({ multiplier: 0, label: "same_day" });
 
     state.answers = [correctAnswer("2026-07-01T08:00:00Z")];
     state.progress.reviewQueue = [

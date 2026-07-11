@@ -16,6 +16,11 @@ test("a new learner can complete onboarding and open today's learning", async ({
   await page.getByRole("button", { name: /今日の学習へ進む/ }).click();
   await expect(page).toHaveURL(/\/today$/);
   await expect(page.getByText("今日の学習メニュー")).toBeVisible();
+  const bottomNav = page.getByRole("navigation", { name: "メインナビゲーション" });
+  await expect(bottomNav.getByRole("link")).toHaveCount(5);
+  await expect(bottomNav.getByRole("link", { name: /その他/ })).toBeVisible();
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/today$/);
 
   await page.goto("/checkpoint/cp-technology-foundations");
   await expect(page.getByRole("heading", { name: "CP1 テクノロジ基礎" })).toBeVisible();

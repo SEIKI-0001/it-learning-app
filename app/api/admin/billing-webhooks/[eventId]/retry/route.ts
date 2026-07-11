@@ -3,19 +3,26 @@ import {
   processStripeWebhookEvent,
   type StripeEvent,
 } from "@/app/api/billing/webhook/route";
+import {
+  shouldRetryWebhookEvent,
+  STALE_WEBHOOK_PROCESSING_SECONDS,
+  type StripeWebhookEventStatus,
+} from "@/lib/billing/webhookState";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
-type FailedEventRow = {
+type RecoverableEventRow = {
   event_id: string;
   event_type: string | null;
   event_payload: StripeEvent | null;
+  status: StripeWebhookEventStatus | null;
   attempt_count: number | null;
+  updated_at: string | null;
 };
 
 /**
- * 失敗したStripeイベントを管理者が再処理する。
+ * 失敗または停止したStripeイベントを管理者が再処理する。
  * /api/admin/* は proxy.ts のBasic認証で保護される。
  */
 export async function POST(
@@ -34,18 +41,18 @@ export async function POST(
 
   const { data, error } = await supabase
     .from("stripe_webhook_events")
-    .select("event_id, event_type, event_payload, attempt_count")
+    .select("event_id, event_type, event_payload, status, attempt_count, updated_at")
     .eq("event_id", eventId)
-    .eq("status", "failed")
+    .in("status", ["failed", "processing"])
     .maybeSingle();
   if (error) {
     return NextResponse.json({ ok: false, error: "query failed" }, { status: 500 });
   }
   if (!data) {
-    return NextResponse.json({ ok: false, error: "failed event not found" }, { status: 404 });
+    return NextResponse.json({ ok: false, error: "recoverable event not found" }, { status: 404 });
   }
 
-  const event = data as FailedEventRow;
+  const event = data as RecoverableEventRow;
   if (!event.event_payload || event.event_payload.id !== eventId) {
     return NextResponse.json(
       { ok: false, error: "event payload is unavailable; retry from Stripe instead" },
@@ -53,18 +60,33 @@ export async function POST(
     );
   }
 
-  // 同時に再実行されないよう、failed → processing を原子的に取得する。
-  const { data: claimed, error: claimError } = await supabase
+  const status = event.status ?? "failed";
+  const now = new Date();
+  if (!shouldRetryWebhookEvent(status, event.updated_at, now)) {
+    return NextResponse.json(
+      { ok: false, error: "event is still being processed" },
+      { status: 409 },
+    );
+  }
+
+  // 同時に再実行されないよう、failed/stale processing → processing を原子的に取得する。
+  let claimQuery = supabase
     .from("stripe_webhook_events")
     .update({
       status: "processing",
       attempt_count: Math.max(1, event.attempt_count ?? 0) + 1,
       last_error: null,
-      updated_at: new Date().toISOString(),
+      updated_at: now.toISOString(),
     })
     .eq("event_id", eventId)
-    .eq("status", "failed")
-    .select("event_id");
+    .eq("status", status);
+  if (status === "processing") {
+    claimQuery = claimQuery.lt(
+      "updated_at",
+      new Date(now.getTime() - STALE_WEBHOOK_PROCESSING_SECONDS * 1000).toISOString(),
+    );
+  }
+  const { data: claimed, error: claimError } = await claimQuery.select("event_id");
   if (claimError) {
     return NextResponse.json({ ok: false, error: "retry claim failed" }, { status: 500 });
   }
