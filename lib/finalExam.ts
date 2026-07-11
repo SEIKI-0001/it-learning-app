@@ -1,15 +1,13 @@
 // 最終問題（チェックポイント突破試験）の生成・採点（純粋関数）。
 //
-// 方針（初期実装）:
-//   - 既存トピックの checkQuestions を組み合わせて構成する。
-//   - 問題数はチェックポイント定義に合わせる。同一トピックに偏りすぎない。
-//   - 高重要度トピックを優先する。CP4 以降は苦手・誤答を一定割合で含める。
-//   - 問題が不足するときは条件を緩めて補充し、どうしても足りない場合も「準備中」に
-//     せず、既存の確認問題で必ず埋める。
+// 方針:
+//   - CPごとに宣言した対象範囲と、完了済みトピックの積集合だけから構成する。
+//   - 問題数・難易度配分・既出除外数はCP定義に合わせる。
+//   - 問題が不足しても未学習/範囲外のトピックには広げず、学習を促す。
 //   - 不合格時は間違えたトピックを復習キューへ（呼び出し側の recordFinalExamAttempt）。
 
 import type { AppState, UserAnswer } from "@/types";
-import type { CheckQuestion, Topic } from "@/types/content";
+import type { CheckQuestion, Difficulty } from "@/types/content";
 import type {
   CheckpointId,
   FinalExamAttempt,
@@ -17,79 +15,168 @@ import type {
 } from "@/types/checkpoint";
 import { getAllTopics } from "@/lib/content";
 import { getCheckpoint } from "@/lib/checkpoints";
-import { masteryForTopic } from "@/lib/mastery";
 
-const MASTERED = 75;
+type FinalExamScope = {
+  /** このCPで出題してよい中分類。未学習トピックはこの範囲内でも出題しない。 */
+  eligibleCategories: string[];
+  difficultyDistribution: Partial<Record<Difficulty, number>>;
+  recentQuestionExclusionCount: number;
+};
+
+// ロードマップ上のCPと、実際に使う最終問題の範囲を一つの定義にする。
+// 従来のように「問題数不足なら未学習/全トピックへ広げる」ことはしない。
+const FINAL_EXAM_SCOPES: Record<Exclude<CheckpointId, "cp0">, FinalExamScope> = {
+  cp1: {
+    eligibleCategories: [
+      "基礎理論（情報の表現）",
+      "コンピュータ構成要素",
+      "開発プロセス",
+      "企業活動",
+    ],
+    difficultyDistribution: { 1: 0.5, 2: 0.5 },
+    recentQuestionExclusionCount: 12,
+  },
+  cp2: {
+    eligibleCategories: [
+      "基礎理論（情報の表現）",
+      "基礎理論（アルゴリズム）",
+      "コンピュータ構成要素",
+      "ソフトウェア",
+      "技術要素（ネットワーク）",
+      "開発プロセス",
+      "プロジェクトマネジメント",
+      "サービスマネジメント",
+      "企業活動",
+      "経営戦略",
+      "会計・財務",
+      "法務",
+    ],
+    difficultyDistribution: { 1: 0.3, 2: 0.5, 3: 0.2 },
+    recentQuestionExclusionCount: 20,
+  },
+  cp3: {
+    eligibleCategories: [
+      "基礎理論（情報の表現）",
+      "基礎理論（アルゴリズム）",
+      "基礎理論（プログラミング）",
+      "コンピュータ構成要素",
+      "ソフトウェア",
+      "技術要素（ネットワーク）",
+      "技術要素（データベース）",
+      "技術要素（セキュリティ）",
+      "開発プロセス",
+      "プロジェクトマネジメント",
+      "サービスマネジメント",
+      "システム監査",
+      "企業活動",
+      "経営戦略",
+      "会計・財務",
+      "法務",
+      "システム戦略",
+    ],
+    difficultyDistribution: { 1: 0.2, 2: 0.55, 3: 0.25 },
+    recentQuestionExclusionCount: 24,
+  },
+  cp4: {
+    eligibleCategories: [
+      "基礎理論（情報の表現）",
+      "基礎理論（アルゴリズム）",
+      "基礎理論（プログラミング）",
+      "コンピュータ構成要素",
+      "ソフトウェア",
+      "技術要素（ネットワーク）",
+      "技術要素（データベース）",
+      "技術要素（セキュリティ）",
+      "開発プロセス",
+      "プロジェクトマネジメント",
+      "サービスマネジメント",
+      "システム監査",
+      "企業活動",
+      "経営戦略",
+      "会計・財務",
+      "法務",
+      "システム戦略",
+      "経営管理システム",
+    ],
+    difficultyDistribution: { 1: 0.15, 2: 0.5, 3: 0.35 },
+    recentQuestionExclusionCount: 24,
+  },
+  cp5: {
+    eligibleCategories: [
+      "基礎理論（情報の表現）",
+      "基礎理論（アルゴリズム）",
+      "基礎理論（プログラミング）",
+      "コンピュータ構成要素",
+      "ソフトウェア",
+      "技術要素（ネットワーク）",
+      "技術要素（データベース）",
+      "技術要素（セキュリティ）",
+      "技術要素（クラウド）",
+      "開発プロセス",
+      "プロジェクトマネジメント",
+      "サービスマネジメント",
+      "システム監査",
+      "企業活動",
+      "経営戦略",
+      "マーケティング",
+      "会計・財務",
+      "法務",
+      "システム戦略",
+      "経営管理システム",
+      "ビジネスインダストリ",
+      "標準化",
+    ],
+    difficultyDistribution: { 1: 0.15, 2: 0.45, 3: 0.4 },
+    recentQuestionExclusionCount: 30,
+  },
+  cp6: {
+    // 総仕上げでも、学んでいないトピックは出題しない。範囲はコンテンツ全体に明示する。
+    eligibleCategories: Array.from(new Set(getAllTopics().map((topic) => topic.category))),
+    difficultyDistribution: { 1: 0.1, 2: 0.45, 3: 0.45 },
+    recentQuestionExclusionCount: 40,
+  },
+};
 
 export type FinalExam = {
   checkpointId: CheckpointId;
   rule: FinalExamRule;
+  scope: FinalExamScope;
+  attemptId: string;
   questions: CheckQuestion[];
   /** 出題した問題 id → トピック id（採点で「間違えたトピック」を割り出す）。 */
   topicIdByQuestionId: Record<string, string>;
   /** 出題範囲（トピック）。UI 表示にも使う。 */
   topicIds: string[];
+  /** 範囲内の問題が不足し、直近の既出問題を再利用した場合に true。 */
+  reusedRecentQuestion: boolean;
 };
 
 // ---------------------------------------------------------------------------
 // 出題トピックの選定
 // ---------------------------------------------------------------------------
 
-/** 苦手・誤答に該当するトピック id 集合を作る。 */
-function weakTopicIds(state: AppState): Set<string> {
-  const ids = new Set<string>();
-  for (const r of state.progress.reviewQueue ?? []) ids.add(r.topicId);
-  // 習熟度が低い（未定着）トピック。
-  for (const id of Object.keys(state.progress.topicMastery ?? {})) {
-    const m = masteryForTopic(state.progress, state.answers, id);
-    if (m < MASTERED) ids.add(id);
+function hash(value: string): number {
+  let result = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    result ^= value.charCodeAt(index);
+    result = Math.imul(result, 16777619);
   }
-  // 苦手タグに一致するトピック。
-  const weakTags = new Set(state.progress.weakTags ?? []);
-  if (weakTags.size > 0) {
-    for (const t of getAllTopics()) {
-      if (t.tags.some((tag) => weakTags.has(tag))) ids.add(t.id);
-    }
-  }
-  return ids;
+  return result >>> 0;
 }
 
-function byImportance(a: Topic, b: Topic): number {
-  return b.importance - a.importance || a.difficulty - b.difficulty;
+function orderedBySeed<T extends { id: string }>(items: T[], seed: string): T[] {
+  return [...items].sort((a, b) => {
+    const result = hash(`${seed}:${a.id}`) - hash(`${seed}:${b.id}`);
+    return result || a.id.localeCompare(b.id);
+  });
 }
 
-/** 出題トピックを、重要度・苦手割合を考慮して順序づけて返す。 */
-function selectTopics(state: AppState, rule: FinalExamRule): Topic[] {
-  const all = getAllTopics().filter((t) => t.checkQuestions.length > 0);
-  const completed = new Set(state.progress.completedTopics);
-  const weak = weakTopicIds(state);
-
-  const completedTopics = all.filter((t) => completed.has(t.id));
-  const weakCompleted = completedTopics.filter((t) => weak.has(t.id)).sort(byImportance);
-  const strongCompleted = completedTopics
-    .filter((t) => !weak.has(t.id))
-    .sort(byImportance);
-  // 未着手トピックは補充用（不足時のみ）。重要度順。
-  const fallback = all.filter((t) => !completed.has(t.id)).sort(byImportance);
-
-  const want = rule.questionCount;
-  const wantWeak = Math.round(want * rule.weakRatio);
-
-  const ordered: Topic[] = [];
-  const pushUnique = (list: Topic[]) => {
-    for (const t of list) {
-      if (!ordered.some((o) => o.id === t.id)) ordered.push(t);
-    }
-  };
-
-  // 1) 苦手枠を先に確保、2) 重要度の高い定着トピック、3) 残りの苦手、
-  // 4) 未着手トピック（不足時の補充）。
-  pushUnique(weakCompleted.slice(0, wantWeak));
-  pushUnique(strongCompleted);
-  pushUnique(weakCompleted);
-  pushUnique(fallback);
-
-  return ordered;
+function targetCount(
+  rule: FinalExamRule,
+  scope: FinalExamScope,
+  difficulty: Difficulty,
+): number {
+  return Math.floor(rule.questionCount * (scope.difficultyDistribution[difficulty] ?? 0));
 }
 
 // ---------------------------------------------------------------------------
@@ -100,86 +187,80 @@ function selectTopics(state: AppState, rule: FinalExamRule): Topic[] {
 export function generateFinalExam(
   state: AppState,
   checkpointId: CheckpointId,
+  options: { attemptId?: string; recentQuestionIds?: string[] } = {},
 ): FinalExam {
   const checkpoint = getCheckpoint(checkpointId);
+  if (!checkpoint.finalExam || checkpointId === "cp0") {
+    throw new Error(`Checkpoint ${checkpointId} does not have a final exam`);
+  }
   const rule = checkpoint.finalExam ?? {
     questionCount: 6,
     passThreshold: 4,
     weakRatio: 0,
   };
+  const scope = FINAL_EXAM_SCOPES[checkpointId];
+  const attemptId = options.attemptId ?? "final-exam";
+  const completedTopicIds = new Set(state.progress.completedTopics);
+  const topics = getAllTopics().filter(
+    (topic) =>
+      completedTopicIds.has(topic.id) &&
+      scope.eligibleCategories.includes(topic.category) &&
+      topic.checkQuestions.length > 0,
+  );
+  const candidates = topics.flatMap((topic) =>
+    topic.checkQuestions.map((question) => ({ id: question.id, question, topicId: topic.id })),
+  );
+  const recent = new Set(
+    (options.recentQuestionIds ?? state.answers.map((answer) => answer.questionId)).slice(
+      0,
+      scope.recentQuestionExclusionCount,
+    ),
+  );
+  const withoutRecent = candidates.filter((candidate) => !recent.has(candidate.question.id));
+  const source = withoutRecent.length >= rule.questionCount ? withoutRecent : candidates;
+  if (source.length < rule.questionCount) {
+    throw new Error(
+      `Checkpoint ${checkpointId} needs ${rule.questionCount} scoped questions from completed topics, but only ${source.length} are available`,
+    );
+  }
 
-  const topics = selectTopics(state, rule);
-  const questions: CheckQuestion[] = [];
+  const selected: { id: string; question: CheckQuestion; topicId: string }[] = [];
   const topicIdByQuestionId: Record<string, string> = {};
-  const usedTopicIds: string[] = [];
   const usedQuestionIds = new Set<string>();
-
-  // トピックごとの「次に使う確認問題」を難易度の高い順で持っておく。
-  const queues = new Map<string, CheckQuestion[]>();
-  for (const t of topics) {
-    queues.set(t.id, [...t.checkQuestions].sort((a, b) => b.difficulty - a.difficulty));
-  }
-
-  const takeFromTopic = (t: Topic): boolean => {
-    const q = queues.get(t.id);
-    if (!q) return false;
-    while (q.length > 0) {
-      const next = q.shift()!;
-      if (usedQuestionIds.has(next.id)) continue;
-      questions.push(next);
-      usedQuestionIds.add(next.id);
-      topicIdByQuestionId[next.id] = t.id;
-      if (!usedTopicIds.includes(t.id)) usedTopicIds.push(t.id);
-      return true;
-    }
-    return false;
-  };
-
-  // ラウンド1: 1トピック1問（偏りを避ける）。
-  for (const t of topics) {
-    if (questions.length >= rule.questionCount) break;
-    takeFromTopic(t);
-  }
-
-  // ラウンド2以降: まだ足りなければ、同じトピックから追加の問題を使う。
-  let guard = 0;
-  while (questions.length < rule.questionCount && guard < 10) {
-    guard += 1;
-    let progressed = false;
-    for (const t of topics) {
-      if (questions.length >= rule.questionCount) break;
-      if (takeFromTopic(t)) progressed = true;
-    }
-    if (!progressed) break;
-  }
-
-  // どうしても不足する場合（コンテンツが極端に少ない環境）でも、
-  // 全トピックの確認問題から重複を許してでも埋め、「準備中」にはしない。
-  if (questions.length < rule.questionCount) {
-    const pool: { q: CheckQuestion; topicId: string }[] = [];
-    for (const t of getAllTopics()) {
-      for (const q of t.checkQuestions) pool.push({ q, topicId: t.id });
-    }
-    let i = 0;
-    while (questions.length < rule.questionCount && pool.length > 0) {
-      const { q, topicId } = pool[i % pool.length];
-      i += 1;
-      // まず未使用を優先、一巡したら重複も許容する。
-      if (i <= pool.length && usedQuestionIds.has(q.id)) continue;
-      questions.push(q);
-      usedQuestionIds.add(q.id);
-      topicIdByQuestionId[q.id] = topicId;
-      if (!usedTopicIds.includes(topicId)) usedTopicIds.push(topicId);
-      if (i > pool.length * 2) break; // 安全弁
+  for (const difficulty of [1, 2, 3] as Difficulty[]) {
+    const wanted = targetCount(rule, scope, difficulty);
+    for (const candidate of orderedBySeed(
+      source.filter((item) => item.question.difficulty === difficulty),
+      `${attemptId}:${difficulty}`,
+    )) {
+      if (selected.length >= rule.questionCount || usedQuestionIds.has(candidate.question.id)) break;
+      if (selected.filter((item) => item.question.difficulty === difficulty).length >= wanted) break;
+      selected.push(candidate);
+      usedQuestionIds.add(candidate.question.id);
     }
   }
+  for (const candidate of orderedBySeed(source, attemptId)) {
+    if (selected.length >= rule.questionCount) break;
+    if (usedQuestionIds.has(candidate.question.id)) continue;
+    selected.push(candidate);
+    usedQuestionIds.add(candidate.question.id);
+  }
+
+  const ordered = orderedBySeed(
+    selected,
+    `${attemptId}:order`,
+  );
+  for (const item of ordered) topicIdByQuestionId[item.question.id] = item.topicId;
 
   return {
     checkpointId,
     rule,
-    questions: questions.slice(0, rule.questionCount),
+    scope,
+    attemptId,
+    questions: ordered.map((item) => item.question),
     topicIdByQuestionId,
-    topicIds: usedTopicIds,
+    topicIds: [...new Set(ordered.map((item) => item.topicId))],
+    reusedRecentQuestion: source === candidates && recent.size > 0,
   };
 }
 

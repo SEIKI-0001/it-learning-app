@@ -4,15 +4,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // アプリ下部の固定ナビ。LINEから開く学習画面として、迷わず行き来できるようにする。
-const ITEMS = [
+type NavItem = {
+  href: string;
+  label: string;
+  emoji: string;
+  relatedPaths?: readonly string[];
+};
+
+const ITEMS: readonly NavItem[] = [
   { href: "/today", label: "今日", emoji: "📖" },
-  { href: "/plan", label: "計画", emoji: "🗺️" },
-  { href: "/topics", label: "トピック", emoji: "🗂️" },
+  { href: "/topics", label: "学ぶ", emoji: "🗂️" },
   { href: "/review", label: "復習", emoji: "🔁" },
-  { href: "/badges", label: "バッジ", emoji: "🏅" },
   { href: "/progress", label: "進捗", emoji: "📈" },
-  { href: "/glossary", label: "単語帳", emoji: "📇" },
-  { href: "/ai-grading", label: "AI採点", emoji: "📝" },
+  {
+    href: "/more",
+    label: "その他",
+    emoji: "☰",
+    relatedPaths: [
+      "/plan",
+      "/badges",
+      "/glossary",
+      "/ai-grading",
+      "/rank",
+      "/avatar",
+      "/mock-exam",
+      "/settings",
+      "/syllabus",
+      "/report",
+    ],
+  },
 ] as const;
 
 export default function BottomNav() {
@@ -26,7 +46,11 @@ export default function BottomNav() {
       <ul className="mx-auto flex w-full max-w-md md:max-w-2xl">
         {ITEMS.map((item) => {
           const active =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+            pathname === item.href ||
+            pathname.startsWith(`${item.href}/`) ||
+            item.relatedPaths?.some(
+              (path) => pathname === path || pathname.startsWith(`${path}/`),
+            );
           return (
             <li key={item.href} className="relative flex-1">
               {/* アクティブ表示は色だけに頼らず上端バーでも示す */}

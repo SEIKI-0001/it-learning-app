@@ -73,6 +73,7 @@ export default function TodayPage() {
 
   // 長い問題リストが結果カードに置き換わるため、完了時は結果へスクロールして迷子を防ぐ
   const resultRef = useRef<HTMLDivElement>(null);
+  const learningRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (completed) {
       resultRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -138,11 +139,6 @@ export default function TodayPage() {
   const primary = learnItem ? getTopic(learnItem.topicId) : undefined;
   const questions = primary ? getQuestionsByTopic(primary.id) : [];
   const currentCp = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
-  // 次に進む予定: トピックの nextTopicIds があればそれ、無ければ今週の重点分野。
-  const nextTopic =
-    primary?.nextTopicIds
-      ?.map((id) => getTopic(id))
-      .find((t) => t && !state.progress.completedTopics.includes(t.id)) ?? undefined;
 
   function handleComplete(answers: UserAnswer[]) {
     if (!state || !primary) return;
@@ -223,72 +219,52 @@ export default function TodayPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-7 px-4 py-6">
-        {/* ストリークの現在地と損失回避の一言（今日やる理由を最初に作る） */}
-        <StreakBanner progress={state.progress} />
+      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-5 px-4 py-6">
+        {/* 最初に必要なのは「何を、なぜ、どれくらい」で、すぐ学習へ入れること。 */}
+        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-indigo-100">
+          <p className="text-xs font-bold text-indigo-500">今日やること</p>
+          <h2 className="mt-1 text-xl font-extrabold text-gray-800">
+            {primary?.title ?? "復習で知識を定着させる"}
+          </h2>
+          <p className="mt-1 text-sm font-semibold text-gray-500">
+            ⏱️ {menu.totalMinutes}分・{primary ? "確認問題まで" : "復習を1つ"}
+          </p>
+          <p className="mt-4 rounded-xl bg-indigo-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-indigo-800">
+            💡 {plan.todayReasons[0] ?? "今日の学習を1つ終えると、次の学習が進めやすくなります。"}
+          </p>
+          <button
+            type="button"
+            onClick={() => learningRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="mt-4 w-full rounded-2xl bg-indigo-600 px-5 py-3.5 text-base font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+          >
+            学習を始める
+          </button>
+        </section>
 
-        {/* 今日の方針: 立て直しプラン・推奨配分・次のバッジ・突破試験を1枚に集約 */}
-        <TodayPolicyStrip state={state} signals={getClientBadgeSignals()} />
-
-        {/* 今日の3ミッション（学習成果ベース・コンプリートで宝箱） */}
-        <DailyQuestCard state={state} setState={setState} />
-
-        {/* あと少しのゴール（目標勾配: 近いゴールをバーで見せて今日の目的を作る） */}
-        <NextGoalCard state={state} />
-
-        {/* 今日の学習ガイド: 現在CP・今日これをやる理由（必須）・ゴール・次の予定 */}
-        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center justify-between">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-500">
-              <span aria-hidden>{currentCp.emoji}</span>
-              いまのチェックポイント：CP{currentCp.order} {currentCp.title}
-            </p>
-            <Link
-              href="/plan"
-              className="text-xs font-bold text-indigo-600 underline underline-offset-2"
-            >
-              ロードマップ
+        <details className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+          <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-bold text-gray-700 marker:content-none">
+            <span className="flex items-center justify-between gap-3">
+              <span>今日の状況</span>
+              <span className="text-xs font-semibold text-indigo-600">
+                {currentCp.emoji} CP{currentCp.order}・🔥 {state.progress.streakCount}日
+              </span>
+            </span>
+          </summary>
+          <div className="space-y-4 border-t border-gray-100 p-4">
+            <StreakBanner progress={state.progress} />
+            <TodayPolicyStrip state={state} signals={getClientBadgeSignals()} />
+            <DailyQuestCard state={state} setState={setState} />
+            <NextGoalCard state={state} />
+            <Link href="/plan" className="block text-center text-xs font-bold text-indigo-600 underline underline-offset-2">
+              ロードマップを詳しく見る
             </Link>
           </div>
-
-          {/* 今日これをやる理由（必ず表示） */}
-          <div className="mt-3 rounded-xl bg-indigo-50 px-3 py-2.5">
-            <p className="text-xs font-bold text-indigo-600">💡 今日これをやる理由</p>
-            <ul className="mt-1 space-y-1">
-              {plan.todayReasons.map((r, i) => (
-                <li key={i} className="text-sm font-semibold text-indigo-800">
-                  {r}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <div className="rounded-xl bg-emerald-50 px-3 py-2.5">
-              <p className="text-xs font-bold text-emerald-600">🎯 今日のゴール</p>
-              <p className="mt-0.5 text-sm font-semibold text-emerald-800">
-                {primary
-                  ? "確認問題まで解いて「完了」する"
-                  : "復習で知識を定着させる"}
-              </p>
-            </div>
-            <div className="rounded-xl bg-gray-50 px-3 py-2.5">
-              <p className="text-xs font-bold text-gray-500">⏭️ 次に進む予定</p>
-              <p className="mt-0.5 text-sm font-semibold text-gray-700">
-                {nextTopic
-                  ? nextTopic.title
-                  : plan.weeklyGoal.focusField
-                    ? `${FIELD_LABELS[plan.weeklyGoal.focusField]}の続き`
-                    : "復習・過去問"}
-              </p>
-            </div>
-          </div>
-        </section>
+        </details>
 
         {/* 今日のテーマ学習。内容はトピック詳細とまったく同じものを表示する
             （確認問題だけは下の「今日の学習を完了する」クイズに任せる）。 */}
         {primary ? (
-          <section>
+          <section ref={learningRef} className="scroll-mt-4">
             <h2 className="mb-3 text-lg font-extrabold text-gray-800">
               📖 今日のテーマ
             </h2>
@@ -446,7 +422,7 @@ export default function TodayPage() {
             </div>
           </section>
         ) : (
-          <section className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">
+          <section ref={learningRef} className="scroll-mt-4 rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">
             <p className="text-3xl">🏅</p>
             <p className="mt-2 text-base font-extrabold text-gray-800">
               新しく学ぶトピックはひと段落！

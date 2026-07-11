@@ -48,7 +48,7 @@ export type StudyXpReward = {
 
 /**
  * 同じ易しい問題を繰り返してランクだけを上げられないよう、XPを学習価値に応じて調整する。
- * 新規=100%、期限到来復習=60%、同日反復=10%、それ以外の再挑戦=25%。
+ * 新規=100%、期限到来復習=60%、同日反復=0%、それ以外の再挑戦=25%。
  */
 export function studyXpReward(
   state: AppState,
@@ -70,7 +70,8 @@ export function studyXpReward(
       (answer) => answer.topicId === topicId && answer.answeredAt.slice(0, 10) === today,
     )
   ) {
-    return { multiplier: 0.1, label: "same_day" };
+    // 同じ日の反復は理解確認として歓迎するが、ランク稼ぎには使えないようXPを付けない。
+    return { multiplier: 0, label: "same_day" };
   }
 
   return { multiplier: 0.25, label: "repeat" };

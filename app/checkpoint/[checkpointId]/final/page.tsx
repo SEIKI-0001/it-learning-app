@@ -57,6 +57,7 @@ export default function FinalExamPage() {
   useBadgeSync(state, setState);
   const [exam, setExam] = useState<FinalExam | null>(null);
   const [result, setResult] = useState<FinalExamResult | null>(null);
+  const [examError, setExamError] = useState<string | null>(null);
   // 突破演出用: 今回の合格で新たに解放された装備・獲得したバッジ（表示のみ）。
   const [newUnlocks, setNewUnlocks] = useState<AvatarItemDef[]>([]);
   const [newBadgeLabels, setNewBadgeLabels] = useState<string[]>([]);
@@ -69,10 +70,7 @@ export default function FinalExamPage() {
   const signals = getClientBadgeSignals();
 
   const checkpoint = getCheckpoint(checkpointId);
-  const rangeLabel =
-    checkpoint.finalExam && checkpoint.finalExam.weakRatio > 0
-      ? "3分野の重要トピック＋あなたの苦手・誤答から出題"
-      : "3分野の重要トピックから出題";
+  const rangeLabel = "このCPの対象範囲にある、完了済みトピックだけから出題";
 
   if (state === undefined || state === null) {
     return <LoadingScreen />;
@@ -111,7 +109,25 @@ export default function FinalExamPage() {
     setResult(null);
     setNewUnlocks([]);
     setNewBadgeLabels([]);
-    setExam(generateFinalExam(state, checkpointId));
+    setExamError(null);
+    try {
+      const recentQuestionIds = [...state.answers]
+        .sort((a, b) => b.answeredAt.localeCompare(a.answeredAt))
+        .map((answer) => answer.questionId);
+      setExam(
+        generateFinalExam(state, checkpointId, {
+          attemptId: crypto.randomUUID(),
+          recentQuestionIds,
+        }),
+      );
+    } catch (error) {
+      setExam(null);
+      setExamError(
+        error instanceof Error
+          ? "この範囲で十分な問題を作れません。対象トピックをもう少し学習してから再挑戦してください。"
+          : "問題の準備に失敗しました。",
+      );
+    }
   }
 
   function handleComplete(answers: UserAnswer[]) {
@@ -333,6 +349,11 @@ export default function FinalExamPage() {
             <p className="mt-2 text-sm font-semibold text-gray-700">
               必要な条件は揃いました。突破すれば次のチェックポイントへ進めます。
             </p>
+            {examError && (
+              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+                {examError}
+              </p>
+            )}
             <button
               type="button"
               onClick={startExam}

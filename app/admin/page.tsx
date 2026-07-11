@@ -63,6 +63,7 @@ type Summary = {
 type FailedBillingWebhook = {
   event_id: string;
   event_type: string | null;
+  status: "failed" | "processing";
   attempt_count: number | null;
   last_error: string | null;
   updated_at: string;
@@ -225,7 +226,7 @@ export default function AdminPage() {
               </div>
 
               <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <h3 className="text-sm font-bold text-gray-700">課金Webhookの失敗イベント</h3>
+                <h3 className="text-sm font-bold text-gray-700">課金Webhookの要回復イベント</h3>
                 {webhookError && (
                   <p className="mt-2 text-xs font-semibold text-rose-600">取得・再処理エラー: {webhookError}</p>
                 )}
@@ -239,7 +240,7 @@ export default function AdminPage() {
                           <div className="min-w-0">
                             <p className="truncate font-mono text-xs font-bold text-gray-700">{event.event_id}</p>
                             <p className="mt-1 text-xs text-gray-500">
-                              {event.event_type ?? "unknown"}・{event.attempt_count ?? 0}回試行
+                              {event.event_type ?? "unknown"}・{event.status === "processing" ? "停止検知" : "失敗"}・{event.attempt_count ?? 0}回試行
                             </p>
                             {event.last_error && (
                               <p className="mt-1 line-clamp-2 text-xs text-rose-700">{event.last_error}</p>

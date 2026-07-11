@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { setUserPlan, setUserPlanByCustomer } from "@/lib/billing/plan";
 import {
+  STALE_WEBHOOK_PROCESSING_SECONDS,
   shouldRetryWebhookEvent,
   type StripeWebhookEventStatus,
 } from "@/lib/billing/webhookState";
@@ -195,7 +196,7 @@ async function reserveStripeWebhookEvent(
     return { shouldProcess: false };
   }
 
-  const { data: claimed, error: claimError } = await supabase
+  let claimQuery = supabase
     .from("stripe_webhook_events")
     .update({
       status: "processing",
@@ -204,8 +205,15 @@ async function reserveStripeWebhookEvent(
       updated_at: now,
     })
     .eq("event_id", eventId)
-    .eq("status", status)
-    .select("event_id");
+    .eq("status", status);
+  // stale processing の取得では、読み取り後に別ワーカーが更新していないことも確認する。
+  if (status === "processing") {
+    claimQuery = claimQuery.lt(
+      "updated_at",
+      new Date(Date.now() - STALE_WEBHOOK_PROCESSING_SECONDS * 1000).toISOString(),
+    );
+  }
+  const { data: claimed, error: claimError } = await claimQuery.select("event_id");
   if (claimError) {
     throw new Error(`Could not claim Stripe webhook retry: ${claimError.message}`);
   }
