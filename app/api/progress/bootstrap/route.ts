@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { getRequestUserId } from "@/lib/apiUser";
+import { getRequestUserIdFast } from "@/lib/apiUser";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { loadAppStateForUser } from "@/lib/serverAppState";
 import {
-  getLatestOrGeneratePlanAdjustment,
+  generatePlanAdjustmentForUser,
   getLatestOrRefreshIntegratedStatus,
+  getLatestPlanAdjustmentProposal,
 } from "@/lib/progressBootstrap";
 
 export const runtime = "nodejs";
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
     // body なしでもセッション Cookie から解決できる。
   }
 
-  const userId = await getRequestUserId(body);
+  // 初期表示専用の読み取り API のため、高速版（getClaims）でユーザーを解決する。
+  const userId = await getRequestUserIdFast(body);
   if (!userId) {
     return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
@@ -43,19 +45,19 @@ export async function POST(request: Request) {
   }
 
   const now = new Date();
-  const [appState, integrated] = await Promise.all([
+  // 立て直し提案の「最新取得」は統合進捗に依存しないため並列で走らせ、
+  // 依存が必要な「生成」（提案が無いときだけ）のみ後段で行う。
+  const [appState, integrated, latestProposal] = await Promise.all([
     loadAppStateForUser(userId),
     getLatestOrRefreshIntegratedStatus(supabase, userId, now),
+    getLatestPlanAdjustmentProposal(supabase, userId),
   ]);
 
-  const planAdjustmentProposal = integrated.status
-    ? await getLatestOrGeneratePlanAdjustment(
-        supabase,
-        userId,
-        integrated.row,
-        now,
-      )
-    : null;
+  const planAdjustmentProposal =
+    latestProposal ??
+    (integrated.status
+      ? await generatePlanAdjustmentForUser(supabase, userId, integrated.row, now)
+      : null);
 
   return NextResponse.json({
     ok: true,

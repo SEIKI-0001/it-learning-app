@@ -9,7 +9,8 @@ import { saveAppState } from "@/lib/storage";
 import {
   fetchProgressBootstrap,
   getUserId,
-  type ProgressBootstrapResult,
+  loadCachedProgressBootstrap,
+  type ProgressBootstrapCache,
 } from "@/lib/userSession";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { daysUntilExam } from "@/lib/aiPlanner";
@@ -105,7 +106,11 @@ function comebackLabel(gap: number | null): string {
 export default function ProgressPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
-  const [bootstrap, setBootstrap] = useState<ProgressBootstrapResult | null>(null);
+  // 前回のサーバー応答があれば即表示し（スケルトンを出さない）、最新値は背景で差し替える。
+  // 初回描画は LoadingScreen（state===undefined）のため、遅延初期化でも hydration は一致する。
+  const [bootstrap, setBootstrap] = useState<ProgressBootstrapCache | null>(() =>
+    loadCachedProgressBootstrap(),
+  );
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
   const bootstrappedKeyRef = useRef<string | null>(null);
 
@@ -121,7 +126,12 @@ export default function ProgressPage() {
 
     void fetchProgressBootstrap(userId).then((data) => {
       if (!alive) return;
-      setBootstrap(data);
+      if (data) {
+        setBootstrap({
+          integratedStatus: data.integratedStatus,
+          planAdjustmentProposal: data.planAdjustmentProposal,
+        });
+      }
       if (data?.userId) bootstrappedKeyRef.current = data.userId;
 
       if (data?.appState) {
@@ -307,7 +317,7 @@ export default function ProgressPage() {
         {/* 統合進捗カード（合格に対する現在地・主なリスク・今週の推奨配分） */}
         <IntegratedStatusCard
           status={bootstrap?.integratedStatus ?? null}
-          loading={bootstrapLoading}
+          loading={bootstrapLoading && !bootstrap}
         />
 
         {/* あと少しのゴール（目標勾配の可視化） */}

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getWrittenQuestions } from "@/data/writtenQuestions";
 import { loadGradingRecordsForUser } from "@/lib/ai/gradingRecords";
-import { getRequestUserId } from "@/lib/apiUser";
+import { getRequestUserIdFast } from "@/lib/apiUser";
 import { getBillingStatusSnapshot } from "@/lib/billing/plan";
 import type { GradingRecord } from "@/types/aiGrading";
 
@@ -32,7 +32,8 @@ export async function POST(request: Request) {
     // body なしでもセッション Cookie から解決できる。
   }
 
-  const userId = await getRequestUserId(body);
+  // 初期表示専用の読み取り API のため、高速版（getClaims）でユーザーを解決する。
+  const userId = await getRequestUserIdFast(body);
   const [billingStatus, gradingHistory] = await Promise.all([
     getBillingStatusSnapshot(userId),
     loadGradingRecordsForUser(userId),

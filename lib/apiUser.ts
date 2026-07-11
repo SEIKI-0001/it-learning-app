@@ -1,4 +1,4 @@
-import { getInternalUserId } from "@/lib/auth/currentUser";
+import { getInternalUserId, getInternalUserIdFast } from "@/lib/auth/currentUser";
 
 // API Route 用のユーザー解決処理（共通化）。
 //
@@ -17,7 +17,21 @@ function isProduction(): boolean {
 export async function getRequestUserId(body?: { userId?: string }): Promise<string | null> {
   const fromSession = await getInternalUserId();
   if (fromSession) return fromSession;
+  return fallbackFromBody(body);
+}
 
+/**
+ * getRequestUserId の高速版（getClaims によるローカル署名検証）。
+ * 初期表示ブートストラップなど読み取り中心の API 専用。
+ * 保存系・課金・AI採点の実行では従来どおり getRequestUserId を使うこと。
+ */
+export async function getRequestUserIdFast(body?: { userId?: string }): Promise<string | null> {
+  const fromSession = await getInternalUserIdFast();
+  if (fromSession) return fromSession;
+  return fallbackFromBody(body);
+}
+
+function fallbackFromBody(body?: { userId?: string }): string | null {
   if (isProduction()) return null;
 
   // 開発用の後方互換。本番では body.userId fallback は禁止。

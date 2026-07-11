@@ -159,6 +159,92 @@ function cacheIntegratedReadiness(score: unknown): void {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 初期表示ブートストラップの localStorage キャッシュ（stale-while-revalidate）
+// ---------------------------------------------------------------------------
+// /progress・/ai-grading は前回のサーバー応答を即表示し、最新値は背景フェッチで
+// 差し替える。fequest: プレフィクスなので clearLocalUserData（ログアウト/切替）で
+// 自動的に消える。二重の保険として保存時の userId も照合する。
+
+const PROGRESS_BOOTSTRAP_CACHE_KEY = "fequest:progressBootstrapCache";
+const AI_GRADING_BOOTSTRAP_CACHE_KEY = "fequest:aiGradingBootstrapCache";
+const BOOTSTRAP_CACHE_TTL_MS = 24 * 60 * 60_000;
+
+type BootstrapCacheEnvelope<T> = {
+  userId: string | null;
+  savedAt: number;
+  data: T;
+};
+
+function readBootstrapCache<T>(key: string): T | null {
+  if (!isBrowser()) return null;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as BootstrapCacheEnvelope<T> | null;
+    if (!parsed || typeof parsed !== "object" || !parsed.data) return null;
+    if (
+      typeof parsed.savedAt !== "number" ||
+      Date.now() - parsed.savedAt > BOOTSTRAP_CACHE_TTL_MS
+    ) {
+      return null;
+    }
+    // 別ユーザーのキャッシュは使わない（アカウント切替の取りこぼし防止）。
+    const currentUserId = getUserId();
+    if (parsed.userId && currentUserId && parsed.userId !== currentUserId) {
+      return null;
+    }
+    return parsed.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeBootstrapCache<T>(key: string, userId: string | null, data: T): void {
+  if (!isBrowser()) return;
+  try {
+    const envelope: BootstrapCacheEnvelope<T> = {
+      userId,
+      savedAt: Date.now(),
+      data,
+    };
+    window.localStorage.setItem(key, JSON.stringify(envelope));
+  } catch {
+    /* 容量超過などで書けなくても表示は継続 */
+  }
+}
+
+/** /progress 用にキャッシュする範囲（AppState は localStorage 本体があるため含めない）。 */
+export type ProgressBootstrapCache = {
+  integratedStatus: IntegratedLearningStatus | null;
+  planAdjustmentProposal: PlanAdjustmentProposal | null;
+};
+
+export function loadCachedProgressBootstrap(): ProgressBootstrapCache | null {
+  return readBootstrapCache<ProgressBootstrapCache>(PROGRESS_BOOTSTRAP_CACHE_KEY);
+}
+
+export function saveCachedProgressBootstrap(
+  userId: string | null,
+  data: ProgressBootstrapCache,
+): void {
+  writeBootstrapCache(PROGRESS_BOOTSTRAP_CACHE_KEY, userId, data);
+}
+
+// 採点履歴は本文込みで大きくなり得るため、キャッシュには直近分だけ残す。
+const AI_GRADING_CACHE_HISTORY_LIMIT = 50;
+
+export function loadCachedAiGradingBootstrap(): AiGradingBootstrapResult | null {
+  return readBootstrapCache<AiGradingBootstrapResult>(AI_GRADING_BOOTSTRAP_CACHE_KEY);
+}
+
+export function saveCachedAiGradingBootstrap(data: AiGradingBootstrapResult): void {
+  writeBootstrapCache(AI_GRADING_BOOTSTRAP_CACHE_KEY, data.userId, {
+    ...data,
+    gradingHistory: data.gradingHistory.slice(0, AI_GRADING_CACHE_HISTORY_LIMIT),
+  });
+}
+
 /**
  * /progress 初期表示に必要なサーバー状態をまとめて取得する。
  * 未ログイン・失敗時は null、Supabase 未設定時は中身 null の結果を返す
@@ -180,12 +266,18 @@ export async function fetchProgressBootstrap(
     if (data.integratedStatus) {
       cacheIntegratedReadiness(data.integratedStatus.readinessScore);
     }
-    return {
+    const result: ProgressBootstrapResult = {
       userId: data.userId,
       appState: data.appState ?? null,
       integratedStatus: data.integratedStatus ?? null,
       planAdjustmentProposal: data.planAdjustmentProposal ?? null,
     };
+    // 次回の /progress 初期表示を即時にするためキャッシュを更新する。
+    saveCachedProgressBootstrap(data.userId, {
+      integratedStatus: result.integratedStatus,
+      planAdjustmentProposal: result.planAdjustmentProposal,
+    });
+    return result;
   } catch {
     return null;
   }
@@ -210,7 +302,7 @@ export async function fetchAiGradingBootstrap(
       return null;
     }
     if (data.userId) setUserId(data.userId);
-    return {
+    const result: AiGradingBootstrapResult = {
       userId: data.userId ?? null,
       billingStatus: data.billingStatus,
       gradingHistory: data.gradingHistory,
@@ -219,6 +311,9 @@ export async function fetchAiGradingBootstrap(
           ? data.initialQuestionIndex
           : 0,
     };
+    // 次回の /ai-grading 初期表示を即時にするためキャッシュを更新する。
+    saveCachedAiGradingBootstrap(result);
+    return result;
   } catch {
     return null;
   }

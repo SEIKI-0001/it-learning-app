@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BottomNav from "@/components/BottomNav";
 import { getWrittenQuestion, getWrittenQuestions } from "@/data/writtenQuestions";
 import {
   fetchAiGradingBootstrap,
   getUserId,
+  loadCachedAiGradingBootstrap,
   readTokenFromUrl,
   resolveToken,
+  saveCachedAiGradingBootstrap,
   setUserId,
 } from "@/lib/userSession";
 import type {
@@ -150,6 +152,10 @@ export default function AiGradingPage() {
   // 採点履歴（復習用）。新しい順。
   const [records, setRecords] = useState<GradingRecord[]>([]);
 
+  // キャッシュ即表示後の背景フェッチが、ユーザーの操作（入力・問題変更・採点）を
+  // 巻き戻さないようにするためのフラグ。
+  const touchedRef = useRef(false);
+
   const question = QUESTIONS[index];
   const diff = DIFFICULTY_META[question.difficulty] ?? DIFFICULTY_META.normal;
   const canGrade = useMemo(() => answer.trim().length >= 20, [answer]);
@@ -170,6 +176,7 @@ export default function AiGradingPage() {
   }, []);
 
   // 起動時に userId を解決（?t= があれば紐づけ）してから状況・履歴を一括取得。
+  // 前回のブートストラップ結果がキャッシュにあれば即表示し、最新値は背景で差し替える。
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -184,16 +191,29 @@ export default function AiGradingPage() {
         }
       }
       if (cancelled) return;
+
+      const cached = loadCachedAiGradingBootstrap();
+      if (cached) {
+        setUid(cached.userId ?? uid);
+        setStatus(cached.billingStatus);
+        setRecords(cached.gradingHistory);
+        setIndex(normalizeQuestionIndex(cached.initialQuestionIndex));
+        setInitializing(false);
+      }
+
       const bootstrap = await fetchAiGradingBootstrap(uid);
       if (cancelled) return;
 
       if (bootstrap) {
-        const nextUid = bootstrap.userId ?? uid;
-        setUid(nextUid);
+        setUid(bootstrap.userId ?? uid);
         setStatus(bootstrap.billingStatus);
-        setRecords(bootstrap.gradingHistory);
-        setIndex(normalizeQuestionIndex(bootstrap.initialQuestionIndex));
-      } else {
+        // 操作が始まっていたら履歴・出題位置は上書きしない
+        // （採点直後のローカル追記や選び直した問題を巻き戻さない）。
+        if (!touchedRef.current) {
+          setRecords(bootstrap.gradingHistory);
+          setIndex(normalizeQuestionIndex(bootstrap.initialQuestionIndex));
+        }
+      } else if (!cached) {
         setUid(uid);
         const [nextStatus, nextRecords] = await Promise.all([
           requestBillingStatus(uid),
@@ -201,7 +221,7 @@ export default function AiGradingPage() {
         ]);
         if (cancelled) return;
         if (nextStatus) setStatus(nextStatus);
-        if (nextRecords) {
+        if (nextRecords && !touchedRef.current) {
           setRecords(nextRecords);
           const answered = new Set(nextRecords.map((r) => r.questionId));
           setIndex(firstUnansweredIndex(answered));
@@ -216,6 +236,7 @@ export default function AiGradingPage() {
 
   // 次の問題へ（未回答を優先して巡回）。入力・結果はリセットする。
   function handleNext() {
+    touchedRef.current = true;
     setIndex((prev) => pickNextIndex(prev, answeredIds));
     setAnswer("");
     setResult(null);
@@ -225,6 +246,7 @@ export default function AiGradingPage() {
 
   async function handleGrade() {
     if (!canGrade || loading) return;
+    touchedRef.current = true;
     setLoading(true);
     setError(null);
     setResult(null);
@@ -256,9 +278,10 @@ export default function AiGradingPage() {
       setResult(data.result);
       setMeta(data.meta);
       // 残り回数を反映。
-      setStatus((prev) =>
-        prev ? { ...prev, usage: data.meta.usage, plan: data.meta.plan } : prev
-      );
+      const nextStatus: BillingStatus | null = status
+        ? { ...status, usage: data.meta.usage, plan: data.meta.plan }
+        : null;
+      if (nextStatus) setStatus(nextStatus);
       // 履歴に追加（＝回答済みになり、次は未回答が出る／復習で見直せる）。
       const newRecord: GradingRecord = {
         id: `local-${Date.now()}`,
@@ -270,7 +293,19 @@ export default function AiGradingPage() {
         model: data.meta.model,
         createdAt: new Date().toISOString(),
       };
-      setRecords((prev) => [newRecord, ...prev]);
+      const nextRecords = [newRecord, ...records];
+      setRecords(nextRecords);
+      // 次回訪問の即時表示キャッシュにも最新状態を反映しておく。
+      if (nextStatus) {
+        saveCachedAiGradingBootstrap({
+          userId,
+          billingStatus: nextStatus,
+          gradingHistory: nextRecords,
+          initialQuestionIndex: firstUnansweredIndex(
+            new Set(nextRecords.map((r) => r.questionId)),
+          ),
+        });
+      }
     } catch {
       setError("採点に失敗しました。時間をおいてもう一度試してください。");
     } finally {
@@ -338,7 +373,14 @@ export default function AiGradingPage() {
             />
 
             {/* 答える / 復習 の切り替え */}
-            <ModeTabs mode={mode} reviewCount={records.length} onChange={setMode} />
+            <ModeTabs
+              mode={mode}
+              reviewCount={records.length}
+              onChange={(m) => {
+                touchedRef.current = true;
+                setMode(m);
+              }}
+            />
 
             {mode === "answer" ? (
               <>
@@ -387,7 +429,10 @@ export default function AiGradingPage() {
                   <textarea
                     id="answer"
                     value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
+                    onChange={(e) => {
+                      touchedRef.current = true;
+                      setAnswer(e.target.value);
+                    }}
                     rows={6}
                     placeholder="理由・仕組み・具体例を含めて、自分の言葉で説明してみましょう。"
                     className="w-full resize-y rounded-2xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
