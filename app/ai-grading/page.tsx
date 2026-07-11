@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BottomNav from "@/components/BottomNav";
-import { getWrittenQuestion, getWrittenQuestions } from "@/data/writtenQuestions";
+import {
+  getWrittenQuestion,
+  getWrittenQuestions,
+  getWrittenQuestionsForTopic,
+} from "@/data/writtenQuestions";
 import {
   fetchAiGradingBootstrap,
   getUserId,
@@ -181,6 +185,16 @@ export default function AiGradingPage() {
     let cancelled = false;
     (async () => {
       setInitializing(true);
+      const requestedTopicId =
+        typeof window === "undefined"
+          ? null
+          : new URLSearchParams(window.location.search).get("topicId");
+      const requestedQuestionId = requestedTopicId
+        ? getWrittenQuestionsForTopic(requestedTopicId)[0]?.id
+        : undefined;
+      const requestedIndex = requestedQuestionId
+        ? QUESTIONS.findIndex((q) => q.id === requestedQuestionId)
+        : -1;
       let uid = getUserId();
       const token = readTokenFromUrl();
       if (!uid && token) {
@@ -197,7 +211,11 @@ export default function AiGradingPage() {
         setUid(cached.userId ?? uid);
         setStatus(cached.billingStatus);
         setRecords(cached.gradingHistory);
-        setIndex(normalizeQuestionIndex(cached.initialQuestionIndex));
+        setIndex(
+          requestedIndex >= 0
+            ? requestedIndex
+            : normalizeQuestionIndex(cached.initialQuestionIndex),
+        );
         setInitializing(false);
       }
 
@@ -211,7 +229,11 @@ export default function AiGradingPage() {
         // （採点直後のローカル追記や選び直した問題を巻き戻さない）。
         if (!touchedRef.current) {
           setRecords(bootstrap.gradingHistory);
-          setIndex(normalizeQuestionIndex(bootstrap.initialQuestionIndex));
+          setIndex(
+            requestedIndex >= 0
+              ? requestedIndex
+              : normalizeQuestionIndex(bootstrap.initialQuestionIndex),
+          );
         }
       } else if (!cached) {
         setUid(uid);
@@ -224,7 +246,11 @@ export default function AiGradingPage() {
         if (nextRecords && !touchedRef.current) {
           setRecords(nextRecords);
           const answered = new Set(nextRecords.map((r) => r.questionId));
-          setIndex(firstUnansweredIndex(answered));
+          setIndex(
+            requestedIndex >= 0
+              ? requestedIndex
+              : firstUnansweredIndex(answered),
+          );
         }
       }
       setInitializing(false);

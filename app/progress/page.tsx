@@ -63,9 +63,10 @@ type NextAction = {
   description: string;
   emoji: string;
   tone: string; // カードの配色
+  href: string;
 };
 
-// 次に取るべき最小行動を決める。遷移先は常に /today。
+// 次に取るべき最小行動と、その行動に対応する遷移先を決める。
 function decideNextAction(
   reviewCount: number,
   gap: number | null,
@@ -76,6 +77,7 @@ function decideNextAction(
       description: `リベンジ対象が${reviewCount}件。まず1件やっつけましょう。`,
       emoji: "🔁",
       tone: "from-amber-500 to-orange-500",
+      href: "/review",
     };
   }
   if (gap !== null && gap >= 2) {
@@ -84,6 +86,7 @@ function decideNextAction(
       description: "少し空きました。1テーマだけ軽く戻りましょう。",
       emoji: "🌱",
       tone: "from-emerald-500 to-teal-500",
+      href: "/today",
     };
   }
   return {
@@ -91,6 +94,7 @@ function decideNextAction(
     description: "今日のテーマに進みましょう。1つだけでOKです。",
     emoji: "✨",
     tone: "from-indigo-500 to-violet-500",
+    href: "/today",
   };
 }
 
@@ -370,9 +374,9 @@ export default function ProgressPage() {
           <FieldMasteryBars mastery={mastery} />
         </section>
 
-        {/* 次のアクション(カード全体が/todayへのCTA) */}
+        {/* 次のアクション（カード全体が行動に対応するCTA） */}
         <Link
-          href="/today"
+          href={nextAction.href}
           className={`block rounded-2xl bg-gradient-to-r ${nextAction.tone} p-4 text-white shadow-md transition active:scale-[0.99]`}
         >
           <div className="flex items-center gap-3">
@@ -450,7 +454,7 @@ export default function ProgressPage() {
                 })}
               </ul>
               <Link
-                href="/today"
+                href="/review"
                 className="mt-3 block rounded-xl bg-amber-500 px-6 py-2.5 text-center text-sm font-extrabold text-white shadow transition active:scale-[0.98]"
               >
                 リベンジする

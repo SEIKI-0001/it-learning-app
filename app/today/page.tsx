@@ -8,6 +8,7 @@ import { FIELD_LABELS } from "@/types/content";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { getAllTopics, getQuestionsByTopic, getTopic } from "@/lib/content";
+import { getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { completeStudySession } from "@/lib/studySession";
 import { studyXpReward, XP_PER_CORRECT } from "@/lib/study";
@@ -138,6 +139,7 @@ export default function TodayPage() {
   const learnItem = menu.items.find((i) => i.kind === "learn");
   const primary = learnItem ? getTopic(learnItem.topicId) : undefined;
   const questions = primary ? getQuestionsByTopic(primary.id) : [];
+  const writtenQuestions = primary ? getWrittenQuestionsForTopic(primary.id) : [];
   const currentCp = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
 
   function handleComplete(answers: UserAnswer[]) {
@@ -399,6 +401,14 @@ export default function TodayPage() {
                   >
                     別のトピックも学ぶ
                   </Link>
+                  {writtenQuestions.length > 0 && (
+                    <Link
+                      href={`/ai-grading?topicId=${encodeURIComponent(primary?.id ?? "")}`}
+                      className="rounded-2xl bg-emerald-50 px-6 py-3 text-center font-bold text-emerald-700 ring-1 ring-emerald-200"
+                    >
+                      ✍️ 自分の言葉で説明してみる
+                    </Link>
+                  )}
                 </div>
               </div>
             ) : questions.length > 0 ? (
