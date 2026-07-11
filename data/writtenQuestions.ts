@@ -491,3 +491,34 @@ export function getWrittenQuestions(): WrittenQuestion[] {
 export function getWrittenQuestion(id: string): WrittenQuestion | undefined {
   return WRITTEN_QUESTIONS.find((q) => q.id === id);
 }
+
+/** トピック完了後に提案できる、関連する記述問題を返す。 */
+const TOPIC_WRITTEN_QUESTION_IDS: Record<string, string[]> = {
+  "tech-auth-authz-mfa": ["sec-01"],
+  "tech-web-internet-basics": ["net-01"],
+  "tech-network-address": ["net-02", "net-03"],
+  "tech-http-https": ["net-04"],
+  "tech-email-protocol": ["net-05"],
+  "tech-encryption-hash": ["sec-03"],
+  "tech-common-key-crypto": ["sec-02"],
+  "tech-database-sql": ["sec-04", "db-04"],
+  "tech-transaction": ["db-01", "db-05"],
+  "tech-keys": ["db-02"],
+  "tech-normalization": ["db-03"],
+  "tech-security-cia": ["sec-07"],
+  "tech-malware-phishing-ransomware": ["sec-05", "sec-06"],
+  "tech-firewall-vpn-zero-trust": ["sec-08"],
+  "tech-ai-ml": ["ai-01", "ai-02", "ai-04"],
+  "tech-data-utilization": ["ai-03", "ai-05"],
+  "tech-algorithm-flowchart": ["ai-06"],
+  "tech-reliability-availability": ["sys-01", "sys-02", "sys-03"],
+  "strat-swot": ["str-01"],
+  "mgmt-wbs-gantt": ["pm-01"],
+};
+
+export function getWrittenQuestionsForTopic(topicId: string): WrittenQuestion[] {
+  const questionIds = TOPIC_WRITTEN_QUESTION_IDS[topicId] ?? [];
+  return questionIds
+    .map((id) => getWrittenQuestion(id))
+    .filter((question): question is WrittenQuestion => question !== undefined);
+}

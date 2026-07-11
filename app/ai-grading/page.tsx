@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
-import { getWrittenQuestion, getWrittenQuestions } from "@/data/writtenQuestions";
+import {
+  getWrittenQuestion,
+  getWrittenQuestions,
+  getWrittenQuestionsForTopic,
+} from "@/data/writtenQuestions";
 import {
   fetchAiGradingBootstrap,
   getUserId,
@@ -174,6 +178,16 @@ export default function AiGradingPage() {
     let cancelled = false;
     (async () => {
       setInitializing(true);
+      const requestedTopicId =
+        typeof window === "undefined"
+          ? null
+          : new URLSearchParams(window.location.search).get("topicId");
+      const requestedQuestionId = requestedTopicId
+        ? getWrittenQuestionsForTopic(requestedTopicId)[0]?.id
+        : undefined;
+      const requestedIndex = requestedQuestionId
+        ? QUESTIONS.findIndex((q) => q.id === requestedQuestionId)
+        : -1;
       let uid = getUserId();
       const token = readTokenFromUrl();
       if (!uid && token) {
@@ -192,7 +206,11 @@ export default function AiGradingPage() {
         setUid(nextUid);
         setStatus(bootstrap.billingStatus);
         setRecords(bootstrap.gradingHistory);
-        setIndex(normalizeQuestionIndex(bootstrap.initialQuestionIndex));
+        setIndex(
+          requestedIndex >= 0
+            ? requestedIndex
+            : normalizeQuestionIndex(bootstrap.initialQuestionIndex),
+        );
       } else {
         setUid(uid);
         const [nextStatus, nextRecords] = await Promise.all([
@@ -204,7 +222,11 @@ export default function AiGradingPage() {
         if (nextRecords) {
           setRecords(nextRecords);
           const answered = new Set(nextRecords.map((r) => r.questionId));
-          setIndex(firstUnansweredIndex(answered));
+          setIndex(
+            requestedIndex >= 0
+              ? requestedIndex
+              : firstUnansweredIndex(answered),
+          );
         }
       }
       setInitializing(false);
