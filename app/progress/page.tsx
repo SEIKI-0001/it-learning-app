@@ -199,21 +199,16 @@ export default function ProgressPage() {
                 </span>
               </p>
             </div>
-            {/* 分身アイコン（アバター管理へ）。未作成でも作成導線として出す */}
+            {/* モチットと状況コメントをまとめたアバター管理リンク */}
             <Link
               href="/avatar"
               aria-label="モチットを見る"
-              className="ml-auto shrink-0 text-center transition active:scale-[0.97]"
+              className="ml-auto flex min-w-0 max-w-[170px] shrink items-center justify-end gap-1 text-left transition active:scale-[0.97] [&>div>p]:text-white"
             >
-              <span className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-white/15 ring-2 ring-white/30">
-                <Mochit size="small" animation="none" growthStage={getMochitGrowthStage(state)} />
-              </span>
-              <span className="mt-1 block text-[10px] font-bold text-white/80">
-                モチットを見る
-              </span>
+              <Mochit {...mochit} size="small" growthStage={getMochitGrowthStage(state)} className="justify-end gap-1" />
+              <span className="sr-only">モチットを見る</span>
             </Link>
           </div>
-          <div className="mt-4 rounded-2xl bg-white/15 p-3"><Mochit {...mochit} size="medium" growthStage={getMochitGrowthStage(state)} className="items-center" />{mochit.action && <Link href={mochit.action.href} className="ml-[140px] text-xs font-bold text-white underline">{mochit.action.label} →</Link>}</div>
 
           {/* ランク進捗(次のランクまで)。EXP/レベル表示はランクに統合した。 */}
           <div className="mt-3">
