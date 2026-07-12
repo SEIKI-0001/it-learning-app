@@ -6,11 +6,20 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-study-time-calculator",
+    href: "/lp/it-passport-study-time-calculator",
+    title: "ITパスポート勉強時間シミュレーター｜試験日から無料で学習計画を計算",
+    description:
+      "試験日、平日・休日の学習時間、現在の理解度から、確保できる総時間と1日あたりの目安を無料で計算します。",
+    category: "NEW：無料シミュレーター",
+    cta: "勉強時間を計算する",
+  },
+  {
     slug: "it-passport-free-study-tools-2026",
     title: "ITパスポート独学に役立つ無料ツール7選｜初心者向けの使い分けも解説",
     description:
       "公式情報、学習計画、用語整理、確認問題、復習、演習、AI学習支援を役割別に整理します。",
-    category: "NEW：無料ツールまとめ",
+    category: "無料ツールまとめ",
     cta: "無料ツール7選を読む",
   },
   {
