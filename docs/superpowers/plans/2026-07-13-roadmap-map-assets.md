@@ -31,7 +31,7 @@
 - Consumes: `/Users/seikikobayashi/Downloads/ChatGPT Image 2026年7月12日 23_58_13.png`, `/Users/seikikobayashi/Downloads/ChatGPT Image 2026年7月12日 23_58_23.png`, and the supplied landmark ZIP.
 - Produces: stable public URLs under `/maps/roadmap/**` used by `mapConfig.ts` and `MapBackground.tsx`.
 
-- [ ] **Step 1: Write the asset processor with an outer-background alpha algorithm**
+- [x] **Step 1: Write the asset processor with an outer-background alpha algorithm**
 
 ```js
 // scripts/process-roadmap-map-assets.mjs
@@ -45,19 +45,19 @@ const isOuterBackground = ([r, g, b]) => {
 };
 ```
 
-- [ ] **Step 2: Run the processor and copy the eight runtime WebP landmark files**
+- [x] **Step 2: Run the processor and copy the eight runtime WebP landmark files**
 
 Run: `node scripts/process-roadmap-map-assets.mjs`
 
 Expected: `base-map.webp` and `fog.webp` have alpha channels; all eight named landmark files exist under `public/maps/roadmap/landmarks/`.
 
-- [ ] **Step 3: Verify output dimensions and alpha channels**
+- [x] **Step 3: Verify output dimensions and alpha channels**
 
 Run: `sips -g pixelWidth -g pixelHeight -g format -g hasAlpha public/maps/roadmap/base-map.webp public/maps/roadmap/effects/fog.webp public/maps/roadmap/landmarks/*.webp`
 
 Expected: the background preserves a vertical ratio close to 1100:1429, fog and landmarks are WebP with alpha, and every landmark remains 512x512.
 
-- [ ] **Step 4: Commit the independently verifiable asset pipeline and output**
+- [x] **Step 4: Commit the independently verifiable asset pipeline and output**
 
 ```bash
 git add scripts/process-roadmap-map-assets.mjs public/maps/roadmap
