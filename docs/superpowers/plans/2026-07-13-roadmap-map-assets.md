@@ -229,7 +229,7 @@ git commit -m "feat: refresh roadmap map interface"
 - Consumes: `.roadmap-fog-clearing` and `.roadmap-path-draw` classes rendered by Task 3.
 - Produces: animation-free end states for `prefers-reduced-motion: reduce` and reproducible browser screenshots.
 
-- [ ] **Step 1: Write a failing reduced-motion CSS contract test**
+- [x] **Step 1: Write a failing reduced-motion CSS contract test**
 
 ```ts
 import { readFileSync } from "node:fs";
@@ -242,13 +242,13 @@ it("stops roadmap fog and route animations for reduced motion", () => {
 });
 ```
 
-- [ ] **Step 2: Run the CSS contract test**
+- [x] **Step 2: Run the CSS contract test**
 
 Run: `npm test -- test/roadmapMapMotion.test.ts`
 
 Expected: FAIL because the dedicated roadmap selectors do not exist yet.
 
-- [ ] **Step 3: Add or adjust only roadmap-specific CSS animation rules**
+- [x] **Step 3: Add or adjust only roadmap-specific CSS animation rules**
 
 ```css
 @media (prefers-reduced-motion: reduce) {
@@ -257,13 +257,13 @@ Expected: FAIL because the dedicated roadmap selectors do not exist yet.
 }
 ```
 
-- [ ] **Step 4: Re-run the motion test**
+- [x] **Step 4: Re-run the motion test**
 
 Run: `npm test -- test/roadmapMapMotion.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 5: Capture mobile, desktop, and reduced-motion screenshots**
+- [x] **Step 5: Capture mobile, desktop, and reduced-motion screenshots**
 
 Run: `npm run dev`
 
@@ -275,7 +275,7 @@ Desktop width: map is capped instead of stretched; image aspect ratio remains ve
 Reduced motion: fog clearing and road drawing do not animate.
 ```
 
-- [ ] **Step 6: Commit motion styling and browser test support**
+- [x] **Step 6: Commit motion styling and browser test support**
 
 ```bash
 git add app/globals.css test/roadmapMapMotion.test.ts
