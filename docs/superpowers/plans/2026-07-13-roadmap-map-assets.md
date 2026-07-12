@@ -145,7 +145,7 @@ git commit -m "feat: centralize roadmap map configuration"
 - Consumes: `PhaseProgress[]`, optional `StudyPhaseId`, and config from Task 2.
 - Produces: the existing `RoadmapMap({ phases, expectedPhaseId })` API, HTML node buttons, and a modal detail sheet.
 
-- [ ] **Step 1: Write failing interaction and status tests**
+- [x] **Step 1: Write failing interaction and status tests**
 
 ```tsx
 // @vitest-environment jsdom
@@ -166,13 +166,13 @@ it("opens the matching sheet without depending on a loaded image", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused test and observe the expected failures**
+- [x] **Step 2: Run the focused test and observe the expected failures**
 
 Run: `npm test -- test/RoadmapMap.test.tsx`
 
 Expected: FAIL because the new progressbar semantics and dialog are not implemented.
 
-- [ ] **Step 3: Implement each layer with the defined responsibilities**
+- [x] **Step 3: Implement each layer with the defined responsibilities**
 
 ```tsx
 // MapBackground.tsx
@@ -192,7 +192,7 @@ Expected: FAIL because the new progressbar semantics and dialog are not implemen
 </div>
 ```
 
-- [ ] **Step 4: Preserve rendering compatibility in the entry point**
+- [x] **Step 4: Preserve rendering compatibility in the entry point**
 
 ```tsx
 export default function RoadmapMap({ phases, expectedPhaseId = null }: {
@@ -204,13 +204,13 @@ export default function RoadmapMap({ phases, expectedPhaseId = null }: {
 }
 ```
 
-- [ ] **Step 5: Re-run the interaction tests**
+- [x] **Step 5: Re-run the interaction tests**
 
 Run: `npm test -- test/RoadmapMap.test.tsx`
 
 Expected: PASS, including image-error-tolerant detail interaction.
 
-- [ ] **Step 6: Commit the layer split and component coverage**
+- [x] **Step 6: Commit the layer split and component coverage**
 
 ```bash
 git add components/RoadmapMap.tsx components/roadmap-map test/RoadmapMap.test.tsx

@@ -1,4 +1,4 @@
-import type { StudyPhaseId } from "@/types/plan";
+import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 
 export const MAP_VIEWBOX = { width: 100, height: 130 } as const;
 
@@ -16,6 +16,27 @@ export type MapStageConfig = {
 
 export type MapGoalConfig = Omit<MapStageConfig, "id"> & {
   id: "goal";
+};
+
+export type RoadmapNode = {
+  key: StudyPhaseId | "goal";
+  kind: "phase" | "goal";
+  emoji: string;
+  place: string;
+  title: string;
+  summary: string;
+  detail: string;
+  checkpoints: string[];
+  completionGoal: string;
+  status: PhaseProgress["status"] | "goal";
+  progress: number;
+  hint: string;
+  stage: number;
+  landmarkSrc: string;
+  landmarkSize: number;
+  x: number;
+  y: number;
+  labelOffset: MapLabelOffset;
 };
 
 export const ROADMAP_STAGES: readonly MapStageConfig[] = [
