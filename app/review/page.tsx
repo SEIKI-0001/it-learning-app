@@ -1,37 +1,39 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
-import type { UserAnswer } from "@/types";
-import { FIELD_LABELS } from "@/types/content";
+import { useRouter } from "next/navigation";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
-import { getQuestionsByTopic, getReviewItemsForUser, getTopic } from "@/lib/content";
-import { studyXpReward, XP_PER_CORRECT, snoozeTopicReview } from "@/lib/study";
-import { completeStudySession } from "@/lib/studySession";
-import { emitUnlockNotice } from "@/lib/unlockNotice";
-import { emitCelebration } from "@/lib/celebration";
-import { getClientBadgeSignals } from "@/lib/badgeSignals";
-import {
-  getUserId,
-  saveAnswersToDb,
-  saveProgressToDb,
-} from "@/lib/userSession";
-import TopicQuiz from "@/components/learn/TopicQuiz";
+import { getReviewItemsForUser, getTopic } from "@/lib/content";
+import { snoozeTopicReview } from "@/lib/study";
+import { getUserId, saveProgressToDb } from "@/lib/userSession";
+import { getLessonHref, getLessonLocation } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
-// 復習画面。間違えた問題・苦手Topic・復習期限が来たTopicをまとめ、
-// 「もう一度解く」「3日後に再表示」を提供する。
+type ReviewGroup = "scheduled" | "incorrect" | "weakness";
+
+const GROUP_LABELS: Record<ReviewGroup, string> = {
+  scheduled: "今日が復習予定",
+  incorrect: "間違えた問題",
+  weakness: "理解度が低い・苦手な内容",
+};
+
+function groupForReason(reason: string): ReviewGroup {
+  if (reason.includes("間違")) return "incorrect";
+  if (reason.includes("苦手") || reason.includes("理解")) return "weakness";
+  return "scheduled";
+}
+
+// 復習ページは対象を選ぶ一覧。解説・問題はレッスンページの同じUIに集約する。
 export default function ReviewPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
-  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
-  }, [state, router]);
+  }, [router, state]);
 
   const reviewItems = useMemo(
     () =>
@@ -44,53 +46,26 @@ export default function ReviewPage() {
     [state],
   );
 
-  // 間違えた問題の数(トピックごと)
   const wrongByTopic = useMemo(() => {
     const map = new Map<string, number>();
-    for (const a of state?.answers ?? []) {
-      if (!a.isCorrect && a.topicId) {
-        map.set(a.topicId, (map.get(a.topicId) ?? 0) + 1);
+    for (const answer of state?.answers ?? []) {
+      if (!answer.isCorrect && answer.topicId) {
+        map.set(answer.topicId, (map.get(answer.topicId) ?? 0) + 1);
       }
     }
     return map;
-  }, [state]);
+  }, [state?.answers]);
 
-  if (state === undefined || state === null) {
-    return <LoadingScreen />;
-  }
+  const groupedItems = useMemo(
+    () =>
+      (Object.keys(GROUP_LABELS) as ReviewGroup[]).map((group) => ({
+        group,
+        items: reviewItems.filter((item) => groupForReason(item.reason) === group),
+      })),
+    [reviewItems],
+  );
 
-  function handleRetryComplete(topicId: string, answers: UserAnswer[]) {
-    if (!state) return;
-    const topic = getTopic(topicId);
-    const tagged: UserAnswer[] = answers.map((a) => ({
-      ...a,
-      tag: topic?.tags[0] ?? topic?.field ?? a.tag,
-    }));
-    // 完了・バッジ確定付与・追加ドロップを /today と同一の共通経路で処理する。
-    const session = completeStudySession(
-      state,
-      topicId,
-      tagged,
-      getClientBadgeSignals(),
-    );
-    const next = session.state;
-    saveAppState(next);
-    setState(next);
-    setOpenId(null);
-    emitUnlockNotice(state, next);
-    emitCelebration(
-      state,
-      next,
-      session.streakMilestone
-        ? [{ kind: "streakMilestone", ...session.streakMilestone }]
-        : [],
-    );
-    const userId = getUserId();
-    if (userId) {
-      saveProgressToDb(userId, next.progress);
-      saveAnswersToDb(userId, 0, tagged);
-    }
-  }
+  if (state === undefined || state === null) return <LoadingScreen />;
 
   function handleSnooze(topicId: string) {
     if (!state) return;
@@ -98,105 +73,82 @@ export default function ReviewPage() {
     saveAppState(next);
     setState(next);
     const userId = getUserId();
-    if (userId) saveProgressToDb(userId, next.progress);
+    if (userId) void saveProgressToDb(userId, next.progress);
   }
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-amber-500 to-orange-600 px-4 pb-6 pt-6 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <h1 className="text-2xl font-extrabold">復習</h1>
-          <p className="mt-1 text-sm text-white/90">
-            間違えた問題・苦手分野・復習期限のきたトピックをまとめました。
+      <header className="border-b border-amber-100 bg-white px-4 py-7">
+        <div className="mx-auto w-full max-w-3xl">
+          <p className="text-sm font-bold text-amber-700">学び直すレッスン</p>
+          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-gray-900">復習</h1>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">
+            復習対象を選ぶと、学ぶページの解説や確認問題へ移動します。
           </p>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-6">
+      <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6">
         {reviewItems.length === 0 ? (
-          <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">
-            <p className="text-3xl">✨</p>
-            <p className="mt-2 text-base font-extrabold text-gray-800">
-              いまは復習対象がありません
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              新しいトピックを学ぶと、復習が自動で追加されます。
-            </p>
-            <Link
-              href="/today"
-              className="mt-4 inline-block rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white"
-            >
-              今日の学習へ
+          <section className="rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-100">
+            <p className="text-3xl" aria-hidden>✨</p>
+            <h2 className="mt-3 text-lg font-extrabold text-gray-900">いまは復習対象がありません</h2>
+            <p className="mt-1 text-sm text-gray-500">学習後に、必要なレッスンをここへ自動で追加します。</p>
+            <Link href="/learn" className="mt-5 inline-flex rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-extrabold text-white">
+              テーマから学ぶ
             </Link>
-          </div>
+          </section>
         ) : (
-          reviewItems.map((item) => {
-            const topic = getTopic(item.topicId);
-            if (!topic) return null;
-            const questions = getQuestionsByTopic(topic.id);
-            const wrong = wrongByTopic.get(topic.id) ?? 0;
-            const open = openId === topic.id;
+          groupedItems.map(({ group, items }) => {
+            if (items.length === 0) return null;
             return (
-              <div
-                key={topic.id}
-                className="rounded-2xl border border-gray-200 bg-white p-4"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-xs font-semibold text-amber-600">
-                      {item.reason}
-                      {wrong > 0 && `・間違い${wrong}問`}
-                    </p>
-                    <p className="mt-0.5 text-base font-bold text-gray-800">
-                      {topic.title}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {FIELD_LABELS[topic.field]}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/topics/${topic.id}`}
-                    className="shrink-0 text-xs font-bold text-indigo-600 underline underline-offset-2"
-                  >
-                    解説
-                  </Link>
+              <section key={group}>
+                <h2 className="text-lg font-extrabold text-gray-900">{GROUP_LABELS[group]}</h2>
+                <div className="mt-3 space-y-3">
+                  {items.map((item) => {
+                    const topic = getTopic(item.topicId);
+                    const location = getLessonLocation(item.topicId);
+                    if (!topic || !location) return null;
+                    const wrong = wrongByTopic.get(topic.id) ?? 0;
+                    return (
+                      <article key={topic.id} className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+                        <p className="text-xs font-extrabold text-amber-700">
+                          {item.reason}{wrong > 0 ? `・間違い${wrong}問` : ""}
+                        </p>
+                        <h3 className="mt-1 text-lg font-extrabold text-gray-900">{topic.title}</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {location.theme.title} ＞ {location.section.title}
+                        </p>
+                        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                          <Link
+                            href={getLessonHref(topic.id, { from: "review", activity: "review", anchor: "lesson-content" })}
+                            className="rounded-2xl bg-indigo-50 px-3 py-2.5 text-center text-sm font-bold text-indigo-700"
+                          >
+                            解説を読む
+                          </Link>
+                          <Link
+                            href={getLessonHref(topic.id, { from: "review", activity: "quiz", anchor: "lesson-quiz" })}
+                            className="rounded-2xl bg-indigo-600 px-3 py-2.5 text-center text-sm font-bold text-white"
+                          >
+                            問題に挑戦
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleSnooze(topic.id)}
+                            className="rounded-2xl bg-white px-3 py-2.5 text-sm font-bold text-amber-800 ring-1 ring-amber-200"
+                          >
+                            3日後に再表示
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
-
-                {open ? (
-                  <div className="mt-4">
-                    <TopicQuiz
-                      topicId={topic.id}
-                      questions={questions}
-                      onComplete={(ans) => handleRetryComplete(topic.id, ans)}
-                      completeLabel="復習を完了する"
-                      xpPerCorrect={Math.round(XP_PER_CORRECT * studyXpReward(state, topic.id).multiplier)}
-                    />
-                  </div>
-                ) : (
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setOpenId(topic.id)}
-                      disabled={questions.length === 0}
-                      className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white disabled:bg-gray-300"
-                    >
-                      もう一度解く
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSnooze(topic.id)}
-                      className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-amber-700 ring-1 ring-amber-200"
-                    >
-                      3日後に再表示
-                    </button>
-                  </div>
-                )}
-              </div>
+              </section>
             );
           })
         )}
       </div>
-
       <BottomNav />
     </main>
   );

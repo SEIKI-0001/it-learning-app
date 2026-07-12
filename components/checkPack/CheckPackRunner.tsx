@@ -15,6 +15,7 @@ import {
   type QuestionAttemptInput,
 } from "@/lib/userSession";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
+import { getLessonHref } from "@/lib/learningCatalog";
 import type { CheckPackResultStatus } from "@/types/checkPack";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 
@@ -279,10 +280,10 @@ export default function CheckPackRunner({
 
       <div className="flex flex-col gap-2">
         <Link
-          href={`/topics/${topicId}`}
+          href={getLessonHref(topicId)}
           className="rounded-2xl bg-indigo-600 px-6 py-3 text-center font-bold text-white"
         >
-          トピックに戻る
+          レッスンに戻る
         </Link>
         <Link
           href="/progress"

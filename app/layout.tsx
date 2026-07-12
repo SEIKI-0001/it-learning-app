@@ -1,11 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import UnlockNoticeHost from '@/components/avatar/UnlockNoticeHost';
 import CelebrationHost from '@/components/celebration/CelebrationHost';
-
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'ITパスポート学習コーチ',
@@ -24,7 +20,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="ja" className="antialiased">
       <body className="min-h-screen bg-gray-50">
         {children}
         <UnlockNoticeHost />

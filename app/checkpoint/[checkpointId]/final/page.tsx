@@ -16,6 +16,7 @@ import {
   saveQuestionAttempts,
 } from "@/lib/userSession";
 import { getTopic } from "@/lib/content";
+import { getLessonHref } from "@/lib/learningCatalog";
 import {
   CHECKPOINTS,
   buildCheckpointGate,
@@ -287,7 +288,7 @@ export default function FinalExamPage() {
                       return (
                         <li key={id}>
                           <Link
-                            href={`/topics/${id}`}
+                            href={getLessonHref(id, { from: "progress", activity: "learn", anchor: "lesson-content" })}
                             className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700"
                           >
                             <span className="truncate">{t?.title ?? id}</span>
