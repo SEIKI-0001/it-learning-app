@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllTopics } from "@/lib/content";
+import { getLessonHref } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
 import type { Topic } from "@/types/content";
 
@@ -238,10 +239,10 @@ export default function SyllabusPage() {
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-6 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-4xl">
           <Link
-            href="/topics"
+            href="/learn"
             className="mb-2 inline-flex items-center gap-1 text-sm text-white/80 hover:text-white"
           >
-            ← トピック一覧
+            ← 学ぶ
           </Link>
           <h1 className="text-2xl font-extrabold">シラバス対応表</h1>
           <p className="mt-1 text-sm text-white/90">
@@ -336,7 +337,7 @@ export default function SyllabusPage() {
                                   return (
                                     <Link
                                       key={id}
-                                      href={`/topics/${id}`}
+                                      href={getLessonHref(id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
                                       className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
                                     >
                                       {topic.title}

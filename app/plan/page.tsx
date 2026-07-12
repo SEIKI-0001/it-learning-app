@@ -7,6 +7,7 @@ import type { ReferenceBook } from "@/types/referenceBook";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
+import { getLessonHref } from "@/lib/learningCatalog";
 import { generateLearningPlan, resolveWeeklyPlan } from "@/lib/studyPlanner";
 import { saveAppState } from "@/lib/storage";
 import {
@@ -208,7 +209,7 @@ export default function PlanPage() {
               {plan.weeklyItems.map((item) => (
                 <li key={`${item.kind}-${item.topicId}`}>
                   <Link
-                    href={`/topics/${item.topicId}`}
+                    href={getLessonHref(item.topicId, { from: "plan", activity: item.kind === "review" ? "review" : "learn", anchor: "lesson-content" })}
                     className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5 transition active:scale-[0.99]"
                   >
                     <span

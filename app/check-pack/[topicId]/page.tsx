@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTopic } from "@/lib/content";
+import { getLessonHref } from "@/lib/learningCatalog";
 import {
   getAllCheckPacks,
   getCheckPackByTopic,
@@ -36,7 +37,7 @@ export default async function CheckPackPage({
       <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2 text-white">
         <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 md:max-w-2xl">
           <Link
-            href={`/topics/${topic.id}`}
+            href={getLessonHref(topic.id)}
             className="shrink-0 text-xs font-medium text-white/80"
           >
             ← {topic.title}

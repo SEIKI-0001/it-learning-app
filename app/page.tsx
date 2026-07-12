@@ -61,8 +61,8 @@ export default function Home() {
         >
           🚀 学習をはじめる
         </Link>
-        <Link href="/topics" className="mt-3 text-sm font-medium text-indigo-100 underline underline-offset-4">
-          まずはトピックを見てみる
+        <Link href="/learn" className="mt-3 text-sm font-medium text-indigo-100 underline underline-offset-4">
+          まずはテーマを見てみる
         </Link>
       </div>
     </main>

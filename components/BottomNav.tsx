@@ -13,7 +13,7 @@ type NavItem = {
 
 const ITEMS: readonly NavItem[] = [
   { href: "/today", label: "今日", emoji: "📖" },
-  { href: "/topics", label: "学ぶ", emoji: "🗂️" },
+  { href: "/learn", label: "学ぶ", emoji: "🗂️", relatedPaths: ["/topics"] },
   { href: "/review", label: "復習", emoji: "🔁" },
   { href: "/progress", label: "進捗", emoji: "📈" },
   {

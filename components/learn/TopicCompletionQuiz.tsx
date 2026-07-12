@@ -25,7 +25,23 @@ type CompletionTopic = Pick<
   "id" | "field" | "tags" | "checkQuestions"
 >;
 
-export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic }) {
+type TopicCompletionQuizProps = {
+  topic: CompletionTopic;
+  completionLabel?: string;
+  returnHref?: string;
+  returnLabel?: string;
+  nextLessonHref?: string;
+  nextLessonLabel?: string;
+};
+
+export default function TopicCompletionQuiz({
+  topic,
+  completionLabel = "このレッスンを完了する",
+  returnHref = "/learn",
+  returnLabel = "学ぶに戻る",
+  nextLessonHref,
+  nextLessonLabel,
+}: TopicCompletionQuizProps) {
   const [state, setState] = useAppState();
   const [completed, setCompleted] = useState(false);
   const [result, setResult] = useState<{
@@ -137,8 +153,8 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
           </p>
           <p className="mt-2 text-base font-extrabold text-green-700">
             {result && result.correct === result.total
-              ? "全問正解！このトピック、おつかれさま！"
-              : "このトピック、おつかれさま！"}
+              ? "全問正解！このレッスン、おつかれさま！"
+              : "このレッスン、おつかれさま！"}
           </p>
           {result && (
             <>
@@ -156,17 +172,25 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
             </>
           )}
           <div className="mt-4 flex flex-col gap-2">
+            {nextLessonHref && nextLessonLabel && (
+              <Link
+                href={nextLessonHref}
+                className="rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white"
+              >
+                {nextLessonLabel}
+              </Link>
+            )}
             <Link
               href="/progress"
-              className="rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white"
+              className="rounded-2xl bg-white px-6 py-3 font-bold text-indigo-600 ring-1 ring-indigo-200"
             >
               進捗を見る
             </Link>
             <Link
-              href="/topics"
+              href={returnHref}
               className="rounded-2xl bg-white px-6 py-3 font-bold text-indigo-600 ring-1 ring-indigo-200"
             >
-              トピック一覧へ
+              {returnLabel}
             </Link>
           </div>
         </div>
@@ -175,7 +199,7 @@ export default function TopicCompletionQuiz({ topic }: { topic: CompletionTopic 
           topicId={topic.id}
           questions={topic.checkQuestions}
           onComplete={handleComplete}
-          completeLabel="このトピックを完了する"
+          completeLabel={completionLabel}
           xpPerCorrect={
             state ? Math.round(XP_PER_CORRECT * studyXpReward(state, topic.id).multiplier) : undefined
           }
