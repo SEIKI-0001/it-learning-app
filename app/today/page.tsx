@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
 import { generateLearningPlan } from "@/lib/studyPlanner";
-import { getCheckpoint, getCheckpointProgress } from "@/lib/checkpoints";
+import { daysUntilExam } from "@/lib/aiPlanner";
+import { computeProgressSummary } from "@/lib/progressSummary";
+import {
+  buildCheckpointGate,
+  getCheckpoint,
+  getCheckpointProgress,
+} from "@/lib/checkpoints";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
+  loadCachedProgressBootstrap,
   saveDailyTasksToDb,
   todayLocalDate,
 } from "@/lib/userSession";
@@ -26,6 +33,7 @@ import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayPolicyStrip from "@/components/today/TodayPolicyStrip";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
+import { buttonClass } from "@/components/ui/Button";
 
 type TodayTask = {
   topicId: string;
@@ -42,6 +50,9 @@ export default function TodayPage() {
   const [state, setState] = useAppState();
   const topics = useMemo(() => getAllTopics(), []);
   const savedTasksDateRef = useRef<string | null>(null);
+  // 合格準備度: /progress と同じくサーバー統合値のキャッシュを正とし、
+  // 無ければローカル推定へフォールバックする（初回描画は LoadingScreen のため hydration は一致する）。
+  const [bootstrap] = useState(() => loadCachedProgressBootstrap());
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -128,14 +139,89 @@ export default function TodayPage() {
   }
 
   const currentCheckpoint = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
+  const gate = buildCheckpointGate(state, currentCheckpoint.id);
+
+  // ホームの1画面目で「合格までの距離」と「今日やること」が分かるようにする。
+  const readiness =
+    bootstrap?.integratedStatus?.readinessScore ??
+    computeProgressSummary(topics, state.progress, state.answers).readinessPct;
+  const examRemaining = daysUntilExam(state.profile);
+  const totalMinutes = tasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
+  const firstTask = tasks[0];
+  const startHref = firstTask
+    ? getLessonHref(firstTask.topicId, {
+        from: "today",
+        activity: firstTask.activity,
+        anchor: firstTask.activity === "review" ? "lesson-quiz" : "lesson-content",
+      })
+    : null;
+  const now = new Date();
+  const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日(${"日月火水木金土"[now.getDay()]})`;
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-5 pt-5 text-white">
+      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-6 pt-5 text-white">
         <div className="mx-auto w-full max-w-3xl">
-          <p className="text-xs font-bold text-white/80">今日の学習メニュー</p>
-          <h1 className="mt-1 text-2xl font-extrabold">今日</h1>
-          <p className="mt-1 text-sm text-white/90">{menu.theme}・目安 {menu.totalMinutes}分</p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold text-white/80">{dateLabel}</p>
+              <h1 className="mt-1 text-2xl font-extrabold">今日の学習</h1>
+            </div>
+            <span className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold">
+              🔥 {state.progress.streakCount}日連続
+            </span>
+          </div>
+
+          {/* 合格までの距離: 準備度リング + 試験日カウントダウン */}
+          <div className="mt-4 flex items-center gap-4">
+            <div
+              className="grid h-16 w-16 shrink-0 place-items-center rounded-full"
+              role="img"
+              aria-label={`合格準備度 ${readiness}パーセント`}
+              style={{
+                background: `conic-gradient(#fbbf24 ${readiness * 3.6}deg, rgba(255,255,255,0.2) 0deg)`,
+              }}
+            >
+              <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-indigo-600">
+                <span className="text-sm font-extrabold">{readiness}%</span>
+              </div>
+            </div>
+            <div className="min-w-0 text-sm">
+              <p className="font-extrabold">合格準備度 {readiness}%</p>
+              <p className="mt-0.5 text-white/85">
+                {examRemaining === null
+                  ? "試験日は未設定です"
+                  : `試験日まで あと${examRemaining}日`}
+                ・今日は{tasks.length > 0 ? `${tasks.length}件 / 約${totalMinutes}分` : "復習中心"}
+              </p>
+              <Link
+                href="/plan"
+                className="mt-0.5 inline-block text-xs font-bold text-white/80 underline underline-offset-2"
+              >
+                {currentCheckpoint.emoji} 次の目標 CP{currentCheckpoint.order}
+                「{currentCheckpoint.title}」 バッジ {gate.earnedRequiredCount}/
+                {gate.totalRequiredCount}
+              </Link>
+            </div>
+          </div>
+
+          {/* 主CTA: 迷わず最優先タスクから始める */}
+          {startHref && firstTask && (
+            <Link
+              href={startHref}
+              className="mt-4 flex w-full items-center justify-between rounded-2xl bg-amber-300 px-5 py-3.5 text-amber-950 shadow-md transition hover:bg-amber-200 active:scale-[0.99]"
+            >
+              <span className="min-w-0">
+                <span className="block text-base font-extrabold">
+                  {firstTask.activity === "review" ? "復習から始める" : "今日の学習を始める"}
+                </span>
+                <span className="mt-0.5 block truncate text-xs font-bold text-amber-800">
+                  {firstTask.title}・約{firstTask.estimatedMinutes}分
+                </span>
+              </span>
+              <span aria-hidden className="ml-3 shrink-0 text-xl font-extrabold">→</span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -143,7 +229,9 @@ export default function TodayPage() {
         <section>
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-xl font-extrabold text-gray-900">今日やること</h2>
-            <span className="text-xs font-bold text-gray-500">{tasks.length}件</span>
+            <span className="text-xs font-bold text-gray-500">
+              {tasks.length}件・約{totalMinutes}分
+            </span>
           </div>
           <div className="space-y-3">
             {tasks.map((task, index) => {
@@ -176,15 +264,12 @@ export default function TodayPage() {
                       {hasWrittenQuestion && (
                         <Link
                           href={`/ai-grading?topicId=${encodeURIComponent(task.topicId)}`}
-                          className="inline-flex items-center rounded-2xl bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 ring-1 ring-emerald-200"
+                          className="inline-flex items-center rounded-2xl bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 ring-1 ring-emerald-200 transition hover:bg-emerald-100 active:scale-[0.98]"
                         >
                           自分の言葉で説明
                         </Link>
                       )}
-                      <Link
-                        href={href}
-                        className="inline-flex items-center rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-extrabold text-white"
-                      >
+                      <Link href={href} className={buttonClass(index === 0 ? "primary" : "secondary")}>
                         {task.activity === "review" ? "復習を始める" : "学習を始める"} <span aria-hidden className="ml-1">→</span>
                       </Link>
                     </div>
@@ -197,8 +282,8 @@ export default function TodayPage() {
                 <p className="text-lg font-extrabold text-gray-900">今日の新しい学習はひと段落です</p>
                 <p className="mt-1 text-sm text-gray-500">復習リストやテーマ一覧から、気になるレッスンを選べます。</p>
                 <div className="mt-4 flex justify-center gap-3">
-                  <Link href="/review" className="rounded-2xl bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-800">復習を見る</Link>
-                  <Link href="/learn" className="rounded-2xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white">テーマを探す</Link>
+                  <Link href="/review" className={buttonClass("warn")}>復習を見る</Link>
+                  <Link href="/learn" className={buttonClass("primary")}>テーマを探す</Link>
                 </div>
               </article>
             )}

@@ -11,6 +11,8 @@ import { getUserId, saveProgressToDb } from "@/lib/userSession";
 import { getLessonHref, getLessonLocation } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
+import PageHeader from "@/components/ui/PageHeader";
+import { buttonClass } from "@/components/ui/Button";
 
 type ReviewGroup = "scheduled" | "incorrect" | "weakness";
 
@@ -78,15 +80,18 @@ export default function ReviewPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="border-b border-amber-100 bg-white px-4 py-7">
-        <div className="mx-auto w-full max-w-3xl">
-          <p className="text-sm font-bold text-amber-700">学び直すレッスン</p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-gray-900">復習</h1>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">
-            復習対象を選ぶと、学ぶページの解説や確認問題へ移動します。
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="学び直すレッスン"
+        title="復習"
+        description="復習対象を選ぶと、学ぶページの解説や確認問題へ移動します。"
+        accessory={
+          reviewItems.length > 0 ? (
+            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
+              {reviewItems.length}件
+            </span>
+          ) : undefined
+        }
+      />
 
       <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6">
         {reviewItems.length === 0 ? (
@@ -94,7 +99,7 @@ export default function ReviewPage() {
             <p className="text-3xl" aria-hidden>✨</p>
             <h2 className="mt-3 text-lg font-extrabold text-gray-900">いまは復習対象がありません</h2>
             <p className="mt-1 text-sm text-gray-500">学習後に、必要なレッスンをここへ自動で追加します。</p>
-            <Link href="/learn" className="mt-5 inline-flex rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-extrabold text-white">
+            <Link href="/learn" className={buttonClass("primary", "lg", "mt-5")}>
               テーマから学ぶ
             </Link>
           </section>
@@ -122,20 +127,20 @@ export default function ReviewPage() {
                         <div className="mt-4 grid gap-2 sm:grid-cols-3">
                           <Link
                             href={getLessonHref(topic.id, { from: "review", activity: "review", anchor: "lesson-content" })}
-                            className="rounded-2xl bg-indigo-50 px-3 py-2.5 text-center text-sm font-bold text-indigo-700"
+                            className={buttonClass("soft")}
                           >
                             解説を読む
                           </Link>
                           <Link
                             href={getLessonHref(topic.id, { from: "review", activity: "quiz", anchor: "lesson-quiz" })}
-                            className="rounded-2xl bg-indigo-600 px-3 py-2.5 text-center text-sm font-bold text-white"
+                            className={buttonClass("primary")}
                           >
                             問題に挑戦
                           </Link>
                           <button
                             type="button"
                             onClick={() => handleSnooze(topic.id)}
-                            className="rounded-2xl bg-white px-3 py-2.5 text-sm font-bold text-amber-800 ring-1 ring-amber-200"
+                            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-amber-800 ring-1 ring-amber-200 transition hover:bg-amber-50 active:scale-[0.98]"
                           >
                             3日後に再表示
                           </button>

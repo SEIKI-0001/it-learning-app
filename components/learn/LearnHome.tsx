@@ -14,6 +14,7 @@ import {
   getThemeProgress,
 } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
+import PageHeader from "@/components/ui/PageHeader";
 import ThemeCard from "@/components/learn/ThemeCard";
 
 type FieldFilter = "all" | TopicField;
@@ -74,24 +75,22 @@ export default function LearnHome() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="border-b border-gray-200 bg-white px-4 py-7">
-        <div className="mx-auto w-full max-w-6xl">
-          <p className="text-sm font-bold text-indigo-600">ITパスポートのナレッジベース</p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-gray-900">学ぶ</h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-gray-600">
-            ITパスポートの試験範囲を、参考書の章のようにテーマ別に整理しています。
-          </p>
-          <div className="mt-5 max-w-md rounded-2xl bg-indigo-50 px-4 py-3 ring-1 ring-indigo-100">
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="font-bold text-indigo-950">学習済み {completedLessons} / {totalLessons}レッスン</span>
-              <span className="font-extrabold text-indigo-700">{state === undefined ? "読み込み中" : `${overallPercent}%`}</span>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white" aria-hidden>
-              <div className="h-full rounded-full bg-indigo-600" style={{ width: `${overallPercent}%` }} />
-            </div>
+      <PageHeader
+        eyebrow="ITパスポートのナレッジベース"
+        title="学ぶ"
+        description="ITパスポートの試験範囲を、参考書の章のようにテーマ別に整理しています。"
+        widthClass="max-w-6xl"
+      >
+        <div className="mt-5 max-w-md rounded-2xl bg-indigo-50 px-4 py-3 ring-1 ring-indigo-100">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="font-bold text-indigo-950">学習済み {completedLessons} / {totalLessons}レッスン</span>
+            <span className="font-extrabold text-indigo-700">{state === undefined ? "読み込み中" : `${overallPercent}%`}</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-white" aria-hidden>
+            <div className="h-full rounded-full bg-indigo-600" style={{ width: `${overallPercent}%` }} />
           </div>
         </div>
-      </header>
+      </PageHeader>
 
       <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-6">
         {continueLesson && continueLocation && (

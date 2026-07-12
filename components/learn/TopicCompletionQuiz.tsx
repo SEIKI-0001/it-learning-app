@@ -19,6 +19,7 @@ import {
   todayLocalDate,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import { buttonClass } from "@/components/ui/Button";
 
 type CompletionTopic = Pick<
   Topic,
@@ -136,10 +137,7 @@ export default function TopicCompletionQuiz({
           <p className="mt-1 text-sm leading-relaxed text-gray-500">
             学習時間や試験予定を設定すると、トピック完了を進捗に保存できます。
           </p>
-          <Link
-            href="/onboarding"
-            className="mt-4 inline-flex rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white"
-          >
+          <Link href="/onboarding" className={buttonClass("primary", "lg", "mt-4")}>
             初期設定へ
           </Link>
         </div>
@@ -171,26 +169,27 @@ export default function TopicCompletionQuiz({
               </div>
             </>
           )}
+          {/* 次の行動は1つを主役にする: 次のレッスンがあればそれ、無ければ戻り先 */}
           <div className="mt-4 flex flex-col gap-2">
-            {nextLessonHref && nextLessonLabel && (
-              <Link
-                href={nextLessonHref}
-                className="rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white"
-              >
-                {nextLessonLabel}
+            {nextLessonHref && nextLessonLabel ? (
+              <>
+                <Link href={nextLessonHref} className={buttonClass("primary", "lg")}>
+                  {nextLessonLabel}
+                </Link>
+                <Link href={returnHref} className={buttonClass("secondary", "lg")}>
+                  {returnLabel}
+                </Link>
+              </>
+            ) : (
+              <Link href={returnHref} className={buttonClass("primary", "lg")}>
+                {returnLabel}
               </Link>
             )}
             <Link
               href="/progress"
-              className="rounded-2xl bg-white px-6 py-3 font-bold text-indigo-600 ring-1 ring-indigo-200"
+              className="mt-1 text-sm font-bold text-indigo-600 underline underline-offset-4"
             >
-              進捗を見る
-            </Link>
-            <Link
-              href={returnHref}
-              className="rounded-2xl bg-white px-6 py-3 font-bold text-indigo-600 ring-1 ring-indigo-200"
-            >
-              {returnLabel}
+              合格準備度への反映を見る
             </Link>
           </div>
         </div>

@@ -30,6 +30,7 @@ import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
 import NextGoalCard from "@/components/today/NextGoalCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutLink from "@/components/auth/LogoutLink";
+import { buttonClass } from "@/components/ui/Button";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
 function daysSince(iso: string | undefined): number | null {
@@ -453,10 +454,7 @@ export default function ProgressPage() {
                   );
                 })}
               </ul>
-              <Link
-                href="/review"
-                className="mt-3 block rounded-xl bg-amber-500 px-6 py-2.5 text-center text-sm font-extrabold text-white shadow transition active:scale-[0.98]"
-              >
+              <Link href="/review" className={buttonClass("warn", "md", "mt-3 w-full")}>
                 リベンジする
               </Link>
             </>

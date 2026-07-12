@@ -88,6 +88,24 @@ export default async function LessonPage({
             <span className="rounded-full bg-gray-100 px-3 py-1.5">重要度：{IMPORTANCE_LABELS[topic.importance]}</span>
             <span className="rounded-full bg-gray-100 px-3 py-1.5">難易度：{DIFFICULTY_LABEL[topic.difficulty]}</span>
           </div>
+
+          {/* このレッスンの流れ。理解→確認→仕上げの順で進むことを最初に示す */}
+          <nav aria-label="レッスンの流れ" className="mt-4 flex flex-wrap items-center gap-1.5 text-xs font-bold">
+            <a href="#lesson-content" className="rounded-full bg-indigo-50 px-3 py-1.5 text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100">
+              1. 解説で理解する
+            </a>
+            <span aria-hidden className="text-gray-300">→</span>
+            <a href="#lesson-quiz" className="rounded-full bg-indigo-50 px-3 py-1.5 text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100">
+              2. 確認問題で確かめる
+            </a>
+            <span aria-hidden className="text-gray-300">→</span>
+            <a
+              href={hasCheckPack(topic.id) ? "#lesson-check-pack" : "#lesson-review"}
+              className="rounded-full bg-indigo-50 px-3 py-1.5 text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100"
+            >
+              3. {hasCheckPack(topic.id) ? "過去問レベルで仕上げる" : "復習ポイントを押さえる"}
+            </a>
+          </nav>
         </div>
       </header>
 
@@ -122,8 +140,8 @@ export default async function LessonPage({
               href={`/check-pack/${topic.id}`}
               className="block rounded-3xl bg-gradient-to-r from-indigo-600 to-violet-600 p-5 text-white shadow-sm transition hover:shadow-md active:scale-[0.99]"
             >
-              <p className="text-base font-extrabold">確認パックを受ける</p>
-              <p className="mt-1 text-sm text-white/90">基礎確認から過去問レベルまで、理解を確かめます。</p>
+              <p className="text-base font-extrabold">仕上げ：確認パックを受ける</p>
+              <p className="mt-1 text-sm text-white/90">基礎確認から過去問レベルまで解いて、本番対応OKを目指します。</p>
             </Link>
           </section>
         )}

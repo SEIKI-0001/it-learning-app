@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
+import PageHeader from "@/components/ui/PageHeader";
 
 const GROUPS = [
   {
@@ -32,12 +33,11 @@ const GROUPS = [
 export default function MorePage() {
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-slate-700 to-indigo-700 px-4 pb-6 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <p className="text-xs font-semibold text-white/75">学習を支える機能</p>
-          <h1 className="mt-1 text-2xl font-extrabold">その他</h1>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="学習を支える機能"
+        title="その他"
+        widthClass="max-w-md md:max-w-2xl"
+      />
 
       <div className="mx-auto w-full max-w-md space-y-7 px-4 py-6 md:max-w-2xl">
         {GROUPS.map((group) => (
