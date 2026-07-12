@@ -24,7 +24,7 @@ const GROUPS = [
     links: [
       { href: "/badges", emoji: "🏅", title: "バッジ", description: "達成条件と獲得状況" },
       { href: "/rank", emoji: "✨", title: "ランク", description: "XPと成長の記録" },
-      { href: "/avatar", emoji: "🧑‍🚀", title: "アバター", description: "見た目を整える" },
+      { href: "/avatar", emoji: "🌱", title: "モチット", description: "成長とバッジを見る" },
       { href: "/settings", emoji: "⚙️", title: "設定", description: "試験日・学習時間など" },
     ],
   },

@@ -20,6 +20,7 @@ import {
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { buttonClass } from "@/components/ui/Button";
+import Mochit, { type MochitAnimation, type MochitState } from "@/components/mochit/Mochit";
 
 type CompletionTopic = Pick<
   Topic,
@@ -50,6 +51,7 @@ export default function TopicCompletionQuiz({
     total: number;
     gainedExp: number;
     streak: number;
+    presentation: { state: MochitState; animation: MochitAnimation; message: string };
   } | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -86,11 +88,19 @@ export default function TopicCompletionQuiz({
 
     const correct = tagged.filter((a) => a.isCorrect).length;
     const total = tagged.length;
+    const checkpointCleared = next.progress.checkpointProgress?.clearedCheckpointIds.some(
+      (id) => !state.progress.checkpointProgress?.clearedCheckpointIds.includes(id),
+    );
     setResult({
       correct,
       total,
       gainedExp: next.progress.exp - state.progress.exp,
       streak: next.progress.streakCount,
+      presentation: checkpointCleared
+        ? { state: "cheering", animation: "celebrate", message: "チェックポイント達成！次の学びへ進もう" }
+        : correct === total
+          ? { state: "happy", animation: "bounce", message: "いいね。知識がつながってきた！" }
+          : { state: "thinking", animation: "tilt", message: "惜しい。考え方を一緒に整理しよう" },
     });
     setCompleted(true);
 
@@ -149,6 +159,11 @@ export default function TopicCompletionQuiz({
           <p className="text-3xl">
             {result && result.correct === result.total ? "🏆" : "🎉"}
           </p>
+          {result && (
+            <div className="mt-2 flex justify-center">
+              <Mochit {...result.presentation} size="medium" className="text-left" />
+            </div>
+          )}
           <p className="mt-2 text-base font-extrabold text-green-700">
             {result && result.correct === result.total
               ? "全問正解！このレッスン、おつかれさま！"

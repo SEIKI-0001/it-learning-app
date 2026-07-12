@@ -34,6 +34,7 @@ import TodayPolicyStrip from "@/components/today/TodayPolicyStrip";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import { buttonClass } from "@/components/ui/Button";
+import Mochit from "@/components/mochit/Mochit";
 
 type TodayTask = {
   topicId: string;
@@ -251,6 +252,15 @@ export default function TodayPage() {
                   }`}
                 >
                   {index === 0 && <p className="text-xs font-extrabold text-indigo-600">最優先</p>}
+                  {index === 0 && (
+                    <Mochit
+                      state="normal"
+                      size="medium"
+                      animation="idle"
+                      message="今日はこの3問から始めよう"
+                      className="mt-2 rounded-2xl bg-sky-50 px-3 py-2"
+                    />
+                  )}
                   <h3 className="mt-1 text-lg font-extrabold text-gray-900">{task.title}</h3>
                   <p className="mt-1 text-sm text-gray-500">
                     {location.theme.title} ＞ {location.section.title}

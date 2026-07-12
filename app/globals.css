@@ -29,6 +29,12 @@ body {
   .animate-overlay-in {
     animation: none;
   }
+  .mochit-idle,
+  .mochit-bounce,
+  .mochit-tilt,
+  .mochit-celebrate {
+    animation: none;
+  }
   /* 消える前提の装飾（紙吹雪・XPフロート）は残像にならないよう非表示にする */
   .confetti-piece,
   .animate-float-up {
@@ -44,6 +50,32 @@ body {
     stroke-dashoffset: 0;
   }
 }
+
+@keyframes mochit-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes mochit-bounce {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-10px); }
+  70% { transform: translateY(-3px); }
+}
+
+@keyframes mochit-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-4deg); }
+}
+
+@keyframes mochit-celebrate {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  45% { transform: scale(1.08); filter: brightness(1.12); }
+}
+
+.mochit-idle { animation: mochit-idle 2.8s ease-in-out infinite; }
+.mochit-bounce { animation: mochit-bounce 480ms ease-out 1; }
+.mochit-tilt { animation: mochit-tilt 680ms ease-in-out 1; }
+.mochit-celebrate { animation: mochit-celebrate 620ms ease-out 1; }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
