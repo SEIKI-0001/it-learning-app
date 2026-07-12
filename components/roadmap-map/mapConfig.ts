@@ -45,8 +45,8 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
     place: "旅立ちの村",
     landmarkSrc: "/maps/roadmap/landmarks/village.webp",
     landmarkSize: 512,
-    x: 24,
-    y: 107,
+    x: 50,
+    y: 109,
     labelOffset: "left",
   },
   {
@@ -54,8 +54,8 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
     place: "見晴らしの丘",
     landmarkSrc: "/maps/roadmap/landmarks/hill.webp",
     landmarkSize: 512,
-    x: 62,
-    y: 99,
+    x: 36,
+    y: 87,
     labelOffset: "right",
   },
   {
@@ -63,8 +63,8 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
     place: "賢者の森",
     landmarkSrc: "/maps/roadmap/landmarks/forest.webp",
     landmarkSize: 512,
-    x: 28,
-    y: 85,
+    x: 29,
+    y: 57,
     labelOffset: "left",
   },
   {
@@ -72,8 +72,8 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
     place: "修練の平原",
     landmarkSrc: "/maps/roadmap/landmarks/plains.webp",
     landmarkSize: 512,
-    x: 69,
-    y: 72,
+    x: 61,
+    y: 54,
     labelOffset: "right",
   },
   {
@@ -81,8 +81,8 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
     place: "霧の沼",
     landmarkSrc: "/maps/roadmap/landmarks/swamp.webp",
     landmarkSize: 512,
-    x: 29,
-    y: 59,
+    x: 70,
+    y: 69,
     labelOffset: "left",
   },
   {
@@ -90,8 +90,8 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
     place: "試練の峡谷",
     landmarkSrc: "/maps/roadmap/landmarks/canyon.webp",
     landmarkSize: 512,
-    x: 68,
-    y: 45,
+    x: 51,
+    y: 37,
     labelOffset: "right",
   },
   {
@@ -99,8 +99,8 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
     place: "最後の関所",
     landmarkSrc: "/maps/roadmap/landmarks/gate.webp",
     landmarkSize: 512,
-    x: 35,
-    y: 31,
+    x: 49,
+    y: 25,
     labelOffset: "left",
   },
 ] as const;
@@ -111,7 +111,7 @@ export const ROADMAP_GOAL: MapGoalConfig = {
   landmarkSrc: "/maps/roadmap/landmarks/castle.webp",
   landmarkSize: 512,
   x: 57,
-  y: 22,
+  y: 12,
   labelOffset: "right",
 };
 

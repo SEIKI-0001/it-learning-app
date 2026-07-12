@@ -20,6 +20,21 @@ export default function MapDetailSheet({
   onClose: () => void;
 }) {
   const [imageFailed, setImageFailed] = useState(false);
+  const showsProgress = node.status === "current" || node.status === "done";
+  const progressStyle =
+    node.status === "done"
+      ? {
+          card: "bg-emerald-50 ring-emerald-100",
+          text: "text-emerald-900",
+          value: "text-emerald-800",
+          bar: "bg-emerald-600",
+        }
+      : {
+          card: "bg-indigo-50 ring-indigo-100",
+          text: "text-indigo-900",
+          value: "text-indigo-800",
+          bar: "bg-indigo-600",
+        };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -81,16 +96,18 @@ export default function MapDetailSheet({
         <p className="mt-5 text-sm font-semibold leading-relaxed text-slate-700">{node.summary}</p>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">{node.detail}</p>
 
-        {node.status === "current" && (
-          <div className="mt-5 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-100">
+        {showsProgress && (
+          <div className={`mt-5 rounded-2xl p-4 ring-1 ${progressStyle.card}`}>
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-extrabold text-indigo-900">現在ステージの達成度</p>
-              <span className="text-sm font-black text-indigo-800">{node.progress}%</span>
+              <p className={`text-sm font-extrabold ${progressStyle.text}`}>現在ステージの達成度</p>
+              <span className={`text-sm font-black ${progressStyle.value}`}>{node.progress}%</span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
-              <div className="h-full rounded-full bg-indigo-600" style={{ width: `${node.progress}%` }} />
+              <div className={`h-full rounded-full ${progressStyle.bar}`} style={{ width: `${node.progress}%` }} />
             </div>
-            {node.hint && <p className="mt-2 text-xs font-semibold text-indigo-800">{node.hint}</p>}
+            {node.status === "current" && node.hint && (
+              <p className={`mt-2 text-xs font-semibold ${progressStyle.value}`}>{node.hint}</p>
+            )}
           </div>
         )}
 

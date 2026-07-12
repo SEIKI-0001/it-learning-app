@@ -51,4 +51,35 @@ describe("RoadmapMap", () => {
     ).toBeVisible();
     expect(screen.getByText(/ステージ3/)).toBeVisible();
   });
+
+  it("keeps every stage control at the 44px mobile tap-target size", () => {
+    render(<RoadmapMap phases={phases} />);
+
+    expect(
+      screen.getByLabelText("賢者の森・テーマ別に理解する（これから）"),
+    ).toHaveClass("h-11", "w-11");
+  });
+
+  it("keeps completed-stage progress in the detail sheet", () => {
+    render(<RoadmapMap phases={phases} />);
+
+    fireEvent.click(
+      screen.getByLabelText("旅立ちの村・初回設定・診断（クリア済み）"),
+    );
+
+    expect(screen.getByText("現在ステージの達成度")).toBeVisible();
+    expect(screen.getByText("100%")).toBeVisible();
+  });
+
+  it("highlights the goal once every phase has been revealed", () => {
+    render(
+      <RoadmapMap
+        phases={phases.map((phase) => ({ ...phase, status: "done", progress: 100 }))}
+      />,
+    );
+
+    expect(screen.getByText("🎓").parentElement).toHaveClass(
+      "animate-glow-ring",
+    );
+  });
 });
