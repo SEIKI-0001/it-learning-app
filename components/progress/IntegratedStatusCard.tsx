@@ -4,32 +4,46 @@ import {
   overallStatusLabel,
   overallStatusTone,
   type IntegratedLearningStatus,
+  type RecommendedFocus,
 } from "@/types/integratedStatus";
 
 // 統合進捗カード（/progress 上部）。
-// 確認問題・単語帳・過去問レベル・日次達成度・参考書を統合した「合格に対する現在地」を初心者向けに表示する。
+// 「合格に対する現在地」を一目で掴めるよう、ステータス＋ひとこと＋到達度バー1本＋リスク1件＋今週の方針1行に絞る。
 // 合格準備度%はページヘッダーの達成リングに一本化したため、このカードでは表示しない。
 // 未ログイン・Supabase 未設定・失敗のときは何も表示しない（既存表示を壊さない）。
 export default function IntegratedStatusCard({
   status,
+  totalTopicCount,
   loading = false,
 }: {
   status: IntegratedLearningStatus | null;
+  totalTopicCount: number;
   loading?: boolean;
 }) {
   if (loading) return <IntegratedStatusSkeleton />;
 
   if (!status) return null;
 
-  const focus = status.recommendedFocus;
+  // 全トピックを重複なく4区分に分ける（basicUnderstood は exam_ready を含むため差し引く）。
+  const examReady = status.examReadyTopicCount;
+  const basicOnly = Math.max(0, status.basicUnderstoodTopicCount - examReady);
+  const needsWork = status.reviewNeededTopicCount + status.weakTopicCount;
+  const notStarted = Math.max(
+    0,
+    totalTopicCount - examReady - basicOnly - needsWork,
+  );
+  const widthPct = (n: number) =>
+    totalTopicCount > 0 ? (n / totalTopicCount) * 100 : 0;
+
+  const topRisk = status.mainRisks[0] ?? null;
 
   return (
     <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
       {/* 総合ステータス */}
-      <div className="min-w-0">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-bold text-gray-500">いまの現在地</p>
         <span
-          className={`mt-1 inline-block rounded-full px-3 py-1 text-sm font-extrabold ring-1 ${overallStatusTone(
+          className={`inline-block rounded-full px-3 py-1 text-sm font-extrabold ring-1 ${overallStatusTone(
             status.overallStatus,
           )}`}
         >
@@ -43,98 +57,70 @@ export default function IntegratedStatusCard({
         </p>
       )}
 
-      {/* 主要な到達指標（確認結果からみた到達度もここに集約） */}
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <MiniStat label="本番対応OK" value={`${status.examReadyTopicCount}`} unit="トピック" />
-        <MiniStat label="基礎理解OK" value={`${status.basicUnderstoodTopicCount}`} unit="トピック" />
-        <MiniStat label="要復習" value={`${status.reviewNeededTopicCount}`} unit="トピック" />
-        <MiniStat label="苦手" value={`${status.weakTopicCount}`} unit="トピック" />
-        <MiniStat label="単語定着" value={`${status.flashcardMasteryRate}`} unit="%" />
-        <MiniStat label="本番対応" value={`${status.examReadyRate}`} unit="%" />
-      </div>
-
-      {/* 主なリスク */}
-      {status.mainRisks.length > 0 && (
-        <div className="mt-3">
-          <p className="mb-1.5 text-xs font-bold text-gray-500">⚠️ 主なリスク</p>
-          <ul className="space-y-1.5">
-            {status.mainRisks.slice(0, 3).map((r) => (
-              <li
-                key={r.type}
-                className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800"
-              >
-                <span className="font-bold">
-                  {r.label}
-                  {typeof r.count === "number" ? `（${r.count}件）` : ""}
-                </span>
-                {r.detail && <span className="mt-0.5 block text-amber-700">{r.detail}</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* 今週の推奨配分 */}
+      {/* トピック到達度（全トピックの内訳を1本のバーで見る） */}
       <div className="mt-3">
-        <p className="mb-1.5 text-xs font-bold text-gray-500">📌 今週の推奨配分</p>
         <div className="flex h-3 w-full overflow-hidden rounded-full bg-gray-100">
-          <div className="bg-indigo-400" style={{ width: `${focus.textbook}%` }} />
-          <div className="bg-emerald-400" style={{ width: `${focus.review}%` }} />
-          <div className="bg-rose-400" style={{ width: `${focus.examPractice}%` }} />
+          <div className="bg-emerald-400" style={{ width: `${widthPct(examReady)}%` }} />
+          <div className="bg-sky-400" style={{ width: `${widthPct(basicOnly)}%` }} />
+          <div className="bg-amber-400" style={{ width: `${widthPct(needsWork)}%` }} />
         </div>
         <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-gray-600">
-          <LegendDot tone="bg-indigo-400" label={`インプット ${focus.textbook}%`} />
-          <LegendDot tone="bg-emerald-400" label={`復習・単語 ${focus.review}%`} />
-          <LegendDot tone="bg-rose-400" label={`過去問レベル ${focus.examPractice}%`} />
+          <LegendDot tone="bg-emerald-400" label={`本番対応OK ${examReady}`} />
+          <LegendDot tone="bg-sky-400" label={`基礎理解OK ${basicOnly}`} />
+          <LegendDot tone="bg-amber-400" label={`要復習 ${needsWork}`} />
+          <LegendDot tone="bg-gray-300" label={`これから ${notStarted}`} />
         </div>
       </div>
+
+      {/* いちばん大きなリスクだけ表示する */}
+      {topRisk && (
+        <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <span className="font-bold">
+            ⚠️ {topRisk.label}
+            {typeof topRisk.count === "number" ? `（${topRisk.count}件）` : ""}
+          </span>
+          {topRisk.detail && (
+            <span className="mt-0.5 block text-amber-700">{topRisk.detail}</span>
+          )}
+        </p>
+      )}
+
+      {/* 今週の方針は一言に絞る */}
+      <p className="mt-3 text-xs font-bold text-gray-600">
+        📌 今週は{weeklyFocusPhrase(status.recommendedFocus)}
+      </p>
     </section>
   );
+}
+
+// 推奨配分の最大要素を「今週は◯◯中心」の一言に変換する（%の内訳は出さない）。
+function weeklyFocusPhrase(focus: RecommendedFocus): string {
+  const { textbook, review, examPractice } = focus;
+  if (examPractice >= textbook && examPractice >= review) {
+    return "過去問レベル問題で本番対応力を伸ばすのがおすすめです";
+  }
+  if (review >= textbook) {
+    return "復習と単語の定着を優先するのがおすすめです";
+  }
+  return "新しい範囲のインプットを進めるのがおすすめです";
 }
 
 function IntegratedStatusSkeleton() {
   return (
     <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-      <div className="min-w-0">
+      <div className="flex items-center justify-between">
         <div className="h-3 w-20 rounded-full bg-gray-100" />
-        <div className="mt-2 h-7 w-36 rounded-full bg-gray-100" />
+        <div className="h-7 w-28 rounded-full bg-gray-100" />
       </div>
       <div className="mt-3 h-10 rounded-xl bg-indigo-50/70" />
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="rounded-xl bg-gray-50 px-3 py-2">
-            <div className="mx-auto h-5 w-12 rounded-full bg-gray-100" />
-            <div className="mx-auto mt-2 h-3 w-16 rounded-full bg-gray-100" />
-          </div>
-        ))}
-      </div>
       <div className="mt-3 h-3 rounded-full bg-gray-100" />
       <div className="mt-2 flex gap-2">
-        <div className="h-3 w-24 rounded-full bg-gray-100" />
-        <div className="h-3 w-24 rounded-full bg-gray-100" />
-        <div className="h-3 w-28 rounded-full bg-gray-100" />
+        <div className="h-3 w-20 rounded-full bg-gray-100" />
+        <div className="h-3 w-20 rounded-full bg-gray-100" />
+        <div className="h-3 w-16 rounded-full bg-gray-100" />
       </div>
+      <div className="mt-3 h-3 w-48 rounded-full bg-gray-100" />
     </section>
-  );
-}
-
-function MiniStat({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-}) {
-  return (
-    <div className="rounded-xl bg-gray-50 px-3 py-2 text-center">
-      <p className="text-lg font-extrabold text-gray-800">
-        {value}
-        <span className="ml-0.5 text-xs font-bold text-gray-500">{unit}</span>
-      </p>
-      <p className="mt-0.5 text-[11px] font-bold text-gray-500">{label}</p>
-    </div>
   );
 }
 

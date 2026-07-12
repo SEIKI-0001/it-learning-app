@@ -12,7 +12,7 @@ import {
   loadCachedProgressBootstrap,
   type ProgressBootstrapCache,
 } from "@/lib/userSession";
-import { getAllTopics, getTopic } from "@/lib/content";
+import { getAllTopics } from "@/lib/content";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
 import { getStreakMeta, shieldsAvailable } from "@/lib/streak";
@@ -22,7 +22,6 @@ import { getCheckpointProgress } from "@/lib/checkpoints";
 import { BADGES } from "@/lib/badges";
 import { getAvatarGrowthStage } from "@/lib/avatarGrowth";
 import { getAvatarProfile, sanitizedEquipped } from "@/lib/avatarUnlocks";
-import type { ReviewItem } from "@/types";
 import AvatarRenderer from "@/components/avatar/AvatarRenderer";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
@@ -30,7 +29,6 @@ import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
 import NextGoalCard from "@/components/today/NextGoalCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import LogoutLink from "@/components/auth/LogoutLink";
-import { buttonClass } from "@/components/ui/Button";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
 function daysSince(iso: string | undefined): number | null {
@@ -52,53 +50,6 @@ function daysSince(iso: string | undefined): number | null {
   return diff < 0 ? 0 : diff;
 }
 
-// 短い日付("M/D")。不正な値は空文字。
-function shortDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return `${d.getMonth() + 1}/${d.getDate()}`;
-}
-
-type NextAction = {
-  label: string;
-  description: string;
-  emoji: string;
-  tone: string; // カードの配色
-  href: string;
-};
-
-// 次に取るべき最小行動と、その行動に対応する遷移先を決める。
-function decideNextAction(
-  reviewCount: number,
-  gap: number | null,
-): NextAction {
-  if (reviewCount > 0) {
-    return {
-      label: "復習",
-      description: `リベンジ対象が${reviewCount}件。まず1件やっつけましょう。`,
-      emoji: "🔁",
-      tone: "from-amber-500 to-orange-500",
-      href: "/review",
-    };
-  }
-  if (gap !== null && gap >= 2) {
-    return {
-      label: "復帰",
-      description: "少し空きました。1テーマだけ軽く戻りましょう。",
-      emoji: "🌱",
-      tone: "from-emerald-500 to-teal-500",
-      href: "/today",
-    };
-  }
-  return {
-    label: "新規学習",
-    description: "今日のテーマに進みましょう。1つだけでOKです。",
-    emoji: "✨",
-    tone: "from-indigo-500 to-violet-500",
-    href: "/today",
-  };
-}
-
 // 最後の学習からの状態ラベル(ストリーク切れは強調しない)。
 function comebackLabel(gap: number | null): string {
   if (gap === null) return "これから";
@@ -107,7 +58,7 @@ function comebackLabel(gap: number | null): string {
   return "ゆっくり再開";
 }
 
-// 進捗画面。サマリ/習熟度の下に「次のアクション」「リベンジ対象」を配置した学習ホーム。
+// 進捗画面。合格に対する現在地と数値サマリ/習熟度に絞る（復習の実行は /review に集約）。
 export default function ProgressPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
@@ -185,18 +136,12 @@ export default function ProgressPage() {
   const reviewCount = reviewQueue.length;
   const gap = daysSince(progress.lastPlayedAt);
 
-  const nextAction = decideNextAction(reviewCount, gap);
   const gapText =
     gap === null
       ? "学習はこれから"
       : gap === 0
         ? "今日学習しました"
         : `最後の学習から${gap}日`;
-
-  // リベンジ対象: dueAtが近い順に最大3件。
-  const revengeItems: ReviewItem[] = [...reviewQueue]
-    .sort((a, b) => (a.dueAt < b.dueAt ? -1 : a.dueAt > b.dueAt ? 1 : 0))
-    .slice(0, 3);
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
@@ -322,6 +267,7 @@ export default function ProgressPage() {
         {/* 統合進捗カード（合格に対する現在地・主なリスク・今週の推奨配分） */}
         <IntegratedStatusCard
           status={bootstrap?.integratedStatus ?? null}
+          totalTopicCount={topics.length}
           loading={bootstrapLoading && !bootstrap}
         />
 
@@ -362,7 +308,7 @@ export default function ProgressPage() {
         {/* 数値サマリ */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard label="学習済み" value={`${completedCount}/${topics.length}`} />
-          <StatCard label="復習待ち" value={`${reviewCount}`} />
+          <StatCard label="復習待ち" value={`${reviewCount}`} href="/review" />
           <StatCard label="累計XP" value={`${progress.exp}`} />
         </div>
 
@@ -374,26 +320,6 @@ export default function ProgressPage() {
           </h2>
           <FieldMasteryBars mastery={mastery} />
         </section>
-
-        {/* 次のアクション（カード全体が行動に対応するCTA） */}
-        <Link
-          href={nextAction.href}
-          className={`block rounded-2xl bg-gradient-to-r ${nextAction.tone} p-4 text-white shadow-md transition active:scale-[0.99]`}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{nextAction.emoji}</span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-white/80">
-                次のアクション · 2〜5分
-              </p>
-              <p className="text-lg font-extrabold leading-tight">
-                {nextAction.label}
-              </p>
-            </div>
-            <span className="text-xl font-extrabold">→</span>
-          </div>
-          <p className="mt-2 text-sm text-white/90">{nextAction.description}</p>
-        </Link>
 
         <Link
           href="/mock-exam"
@@ -408,58 +334,6 @@ export default function ProgressPage() {
             <span className="text-lg font-extrabold text-violet-700">→</span>
           </div>
         </Link>
-
-        {/* リベンジ対象 */}
-        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-gray-800">
-              リベンジ対象
-            </h2>
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-              {reviewCount}件
-            </span>
-          </div>
-
-          {reviewCount === 0 ? (
-            <p className="mt-2 text-sm text-gray-400">
-              いまリベンジ対象はありません。間違えた問題はここに集まります。
-            </p>
-          ) : (
-            <>
-              <ul className="mt-2 space-y-2">
-                {revengeItems.map((item, i) => {
-                  const topic = getTopic(item.topicId);
-                  const due = shortDate(item.dueAt);
-                  return (
-                    <li
-                      key={`${item.topicId}-${i}`}
-                      className="rounded-xl bg-amber-50/60 px-3 py-2"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-sm font-bold text-gray-800">
-                          {topic?.title ?? "確認問題"}
-                        </span>
-                        {due && (
-                          <span className="shrink-0 text-xs text-amber-700">
-                            期限 {due}
-                          </span>
-                        )}
-                      </div>
-                      {item.reason && (
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          {item.reason}
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-              <Link href="/review" className={buttonClass("warn", "md", "mt-3 w-full")}>
-                リベンジする
-              </Link>
-            </>
-          )}
-        </section>
 
         {/* 今週の積み上げは別ページ(週間レポート)へ */}
         <Link
@@ -485,11 +359,29 @@ export default function ProgressPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl bg-white p-3 text-center shadow-sm ring-1 ring-gray-100">
+function StatCard({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href?: string;
+}) {
+  const body = (
+    <>
       <p className="text-xl font-extrabold text-gray-800">{value}</p>
       <p className="mt-0.5 text-xs text-gray-500">{label}</p>
-    </div>
+    </>
   );
+  const className =
+    "rounded-2xl bg-white p-3 text-center shadow-sm ring-1 ring-gray-100";
+  if (href) {
+    return (
+      <Link href={href} className={`${className} block transition active:scale-[0.98]`}>
+        {body}
+      </Link>
+    );
+  }
+  return <div className={className}>{body}</div>;
 }
