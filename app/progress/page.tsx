@@ -203,9 +203,14 @@ export default function ProgressPage() {
             <Link
               href="/avatar"
               aria-label="モチットを見る"
-              className="ml-auto flex min-w-0 max-w-[170px] shrink items-center justify-end gap-1 text-left transition active:scale-[0.97] [&>div>p]:text-white"
+              className="ml-auto flex min-w-0 max-w-[170px] shrink items-center justify-end text-left transition active:scale-[0.97]"
             >
-              <Mochit {...mochit} size="small" growthStage={getMochitGrowthStage(state)} className="justify-end gap-1" />
+              <span className="flex flex-col items-center gap-1">
+                <span className="relative block min-h-[22px] w-[150px] rounded-xl bg-white px-2 py-1 text-center text-[10px] font-bold leading-[1.1] text-indigo-900 shadow-sm line-clamp-2 after:absolute after:-bottom-1 after:left-1/2 after:h-2 after:w-2 after:-translate-x-1/2 after:rotate-45 after:bg-white" aria-hidden>
+                  {mochit.message}
+                </span>
+                <Mochit state={mochit.state} animation={mochit.animation} size="small" growthStage={getMochitGrowthStage(state)} className="justify-center" />
+              </span>
               <span className="sr-only">モチットを見る</span>
             </Link>
           </div>
