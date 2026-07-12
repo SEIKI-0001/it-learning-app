@@ -74,7 +74,7 @@ git commit -m "feat: add roadmap map artwork"
 - Consumes: `StudyPhaseId` from `@/types/plan` and the public asset URLs from Task 1.
 - Produces: `MAP_VIEWBOX`, `ROADMAP_STAGES`, `ROADMAP_GOAL`, `MapStageConfig`, and `MapNodeConfig`.
 
-- [ ] **Step 1: Write the failing configuration test**
+- [x] **Step 1: Write the failing configuration test**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -95,13 +95,13 @@ it("maps every phase and the goal to its configured artwork and coordinates", ()
 });
 ```
 
-- [ ] **Step 2: Run the focused test and observe the missing-module failure**
+- [x] **Step 2: Run the focused test and observe the missing-module failure**
 
 Run: `npm test -- test/roadmapMapConfig.test.ts`
 
 Expected: FAIL because `mapConfig` does not exist.
 
-- [ ] **Step 3: Implement the typed configuration**
+- [x] **Step 3: Implement the typed configuration**
 
 ```ts
 export const MAP_VIEWBOX = { width: 100, height: 130 } as const;
@@ -117,13 +117,13 @@ export const ROADMAP_STAGES: readonly MapStageConfig[] = [
 export const ROADMAP_GOAL: MapGoalConfig = { id: "goal", place: "合格の城", landmarkSrc: "/maps/roadmap/landmarks/castle.webp", x: 57, y: 22, labelOffset: "right" };
 ```
 
-- [ ] **Step 4: Re-run the focused test**
+- [x] **Step 4: Re-run the focused test**
 
 Run: `npm test -- test/roadmapMapConfig.test.ts`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit the config and its regression test**
+- [x] **Step 5: Commit the config and its regression test**
 
 ```bash
 git add components/roadmap-map/mapConfig.ts test/roadmapMapConfig.test.ts
