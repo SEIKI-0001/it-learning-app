@@ -24,6 +24,7 @@ export default function MapFog({
           key={`fog-${node.key}`}
           node={node}
           opacity={node.key === firstUpcomingKey ? 0.58 : 0.86}
+          priority={node.key === firstUpcomingKey}
         />
       ))}
       {clearing.map((node) => (
@@ -37,10 +38,12 @@ function FogPatch({
   node,
   opacity,
   className,
+  priority = false,
 }: {
   node: RoadmapNode;
   opacity: number;
   className?: string;
+  priority?: boolean;
 }) {
   return (
     <div
@@ -55,6 +58,7 @@ function FogPatch({
         src="/maps/roadmap/effects/fog.webp"
         alt=""
         fill
+        priority={priority}
         sizes="(max-width: 767px) 42vw, 215px"
         className="object-contain"
       />

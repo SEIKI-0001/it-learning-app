@@ -104,6 +104,8 @@ export default function RoadmapMap({
       // ストレージが使えない環境では演出だけを省略し、地図の操作は継続する。
     }
     if (seen.length > 0 && newlyRevealed.length > 0) {
+      // localStorage と照合した結果を一度だけ表示するための状態更新。
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClearingKeys(newlyRevealed);
     }
   }, [revealedSignature]);
