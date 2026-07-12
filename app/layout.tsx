@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import UnlockNoticeHost from '@/components/avatar/UnlockNoticeHost';
 import CelebrationHost from '@/components/celebration/CelebrationHost';
 
 export const metadata: Metadata = {
@@ -23,7 +22,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ja" className="antialiased">
       <body className="min-h-screen bg-gray-50">
         {children}
-        <UnlockNoticeHost />
         <CelebrationHost />
       </body>
     </html>

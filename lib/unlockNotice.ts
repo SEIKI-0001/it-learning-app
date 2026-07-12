@@ -1,4 +1,4 @@
-// バッジ獲得・装備解放のグローバル通知バス（クライアント専用）。
+// バッジ獲得のグローバル通知バス（クライアント専用）。
 //
 // バッジ付与は /today・/review・確認問題（completeStudySession）と
 // useBadgeSync（catch-up）のどこでも起きるため、どの画面にいても
@@ -8,26 +8,23 @@
 // 持っているのでこのバスを使わない）。
 
 import type { AppState } from "@/types";
-import { newlyUnlockedItems } from "@/lib/avatarUnlocks";
 import { getBadge } from "@/lib/badges";
 
 export type UnlockNotice = {
   /** 今回新たに獲得したバッジ名（画面側で別途表示済みなら空でよい）。 */
   badgeLabels: string[];
-  /** 今回新たに解放された装備の id。 */
-  itemIds: string[];
 };
 
 const UNLOCK_NOTICE_EVENT = "fequest:unlock-notice";
 
 /**
- * 学習前後の状態差分から解放通知を発火する。
- * 差分（新規バッジ・新規解放装備）が無ければ何もしない。SSR中も no-op。
+ * 学習前後の状態差分からバッジ通知を発火する。
+ * 新規バッジが無ければ何もしない。SSR中も no-op。
  * badgeIds を渡すとバッジ名もトーストに載せる（画面内に独自の
  * バッジ演出がある呼び出し元は渡さず、装備解放だけ通知する）。
  */
 export function emitUnlockNotice(
-  before: AppState,
+  _before: AppState,
   after: AppState,
   badgeIds: string[] = [],
 ): void {
@@ -36,9 +33,8 @@ export function emitUnlockNotice(
     badgeLabels: badgeIds
       .map((id) => getBadge(id)?.label)
       .filter((l): l is string => !!l),
-    itemIds: newlyUnlockedItems(before, after).map((i) => i.id),
   };
-  if (notice.badgeLabels.length === 0 && notice.itemIds.length === 0) return;
+  if (notice.badgeLabels.length === 0) return;
   window.dispatchEvent(
     new CustomEvent<UnlockNotice>(UNLOCK_NOTICE_EVENT, { detail: notice }),
   );

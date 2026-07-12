@@ -61,6 +61,14 @@ export function normalizeAppState(state: AppState): AppState {
     normalized.progress.checkpointProgress = migrateCheckpointProgress(normalized);
   }
 
+  // 旧人型アバター設定は表示・進行に使わない。次回保存時にJSONからも取り除く。
+  const checkpointProgress = normalized.progress.checkpointProgress as Record<string, unknown>;
+  if ("avatar" in checkpointProgress) {
+    const withoutLegacyAvatar = { ...checkpointProgress };
+    delete withoutLegacyAvatar.avatar;
+    normalized.progress.checkpointProgress = withoutLegacyAvatar as typeof normalized.progress.checkpointProgress;
+  }
+
   return normalized;
 }
 

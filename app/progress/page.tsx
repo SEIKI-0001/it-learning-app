@@ -20,9 +20,7 @@ import { computeProgressSummary } from "@/lib/progressSummary";
 import { getRankStatus } from "@/lib/rank";
 import { getCheckpointProgress } from "@/lib/checkpoints";
 import { BADGES } from "@/lib/badges";
-import { getAvatarGrowthStage } from "@/lib/avatarGrowth";
-import { getAvatarProfile, sanitizedEquipped } from "@/lib/avatarUnlocks";
-import AvatarRenderer from "@/components/avatar/AvatarRenderer";
+import Mochit from "@/components/mochit/Mochit";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
@@ -129,7 +127,6 @@ export default function ProgressPage() {
   // 未取得（未ログイン・Supabase未設定・読込中失敗）のときだけローカル推定にフォールバック。
   const overall = bootstrap?.integratedStatus?.readinessScore ?? summary.readinessPct;
   const earnedBadgeCount = getCheckpointProgress(state).earnedBadges.length;
-  const avatar = getAvatarProfile(state);
   const proposal = bootstrap?.planAdjustmentProposal ?? null;
 
   const reviewQueue = progress.reviewQueue ?? [];
@@ -202,25 +199,14 @@ export default function ProgressPage() {
             {/* 分身アイコン（アバター管理へ）。未作成でも作成導線として出す */}
             <Link
               href="/avatar"
-              aria-label="アバター管理へ"
+              aria-label="モチットを見る"
               className="ml-auto shrink-0 text-center transition active:scale-[0.97]"
             >
               <span className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-white/15 ring-2 ring-white/30">
-                {avatar ? (
-                  <AvatarRenderer
-                    presetId={avatar.presetId}
-                    equipped={sanitizedEquipped(state)}
-                    stage={getAvatarGrowthStage(state)}
-                    size={60}
-                  />
-                ) : (
-                  <span className="text-2xl" aria-hidden>
-                    🧑‍🎓
-                  </span>
-                )}
+                <Mochit size="small" animation="none" />
               </span>
               <span className="mt-1 block text-[10px] font-bold text-white/80">
-                {avatar ? "分身をみる" : "分身を作る"}
+                モチットを見る
               </span>
             </Link>
           </div>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import RankCard from "@/components/progress/RankCard";
-import RankAvatarCard from "@/components/avatar/RankAvatarCard";
+import Mochit from "@/components/mochit/Mochit";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -38,7 +38,7 @@ export default function RankPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-5">
-        <RankAvatarCard state={state} />
+        <section className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100"><Mochit state="normal" size="small" animation="idle" /><p className="text-sm font-bold text-gray-700">XPの積み上げも、モチットと一緒に振り返ろう。</p></section>
         <RankCard exp={state.progress.exp} />
         <p className="px-1 text-xs leading-relaxed text-gray-500">
           ランクは他の人との比較ではなく、これまでの積み上げが見える指標です。
