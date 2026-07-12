@@ -44,3 +44,9 @@ next-env.d.ts
 
 # rich menu generated preview
 /scripts/richmenu/richmenu-preview.png
+
+# Stripe Projects CLI の状態はアカウントID等を含むためリポジトリに含めない
+.projects/
+.env
+.env.*
+!.env.example
