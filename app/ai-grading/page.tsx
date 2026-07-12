@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
 import {
   getWrittenQuestion,
@@ -151,7 +152,6 @@ export default function AiGradingPage() {
 
   const [userId, setUid] = useState<string | null>(null);
   const [status, setStatus] = useState<BillingStatus | null>(null);
-  const [upgrading, setUpgrading] = useState(false);
 
   // 採点履歴（復習用）。新しい順。
   const [records, setRecords] = useState<GradingRecord[]>([]);
@@ -339,39 +339,6 @@ export default function AiGradingPage() {
     }
   }
 
-  async function handleUpgrade() {
-    if (upgrading) return;
-    if (!status?.checkoutEnabled) {
-      setError("決済は現在準備中です。もうしばらくお待ちください。");
-      return;
-    }
-    setUpgrading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = (await res.json().catch(() => null)) as
-        | { ok: true; url: string }
-        | { ok: false; error: string }
-        | null;
-      if (data && data.ok && data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      setError(
-        (data && "error" in data && data.error) ||
-          "アップグレードを開始できませんでした。"
-      );
-    } catch {
-      setError("アップグレードを開始できませんでした。");
-    } finally {
-      setUpgrading(false);
-    }
-  }
-
   const isPro = status?.plan === "pro";
 
   return (
@@ -391,12 +358,7 @@ export default function AiGradingPage() {
         ) : (
           <>
             {/* プラン表示（無料/Pro の出し分け） */}
-            <PlanCard
-              status={status}
-              isPro={isPro}
-              upgrading={upgrading}
-              onUpgrade={handleUpgrade}
-            />
+            <PlanCard status={status} isPro={isPro} />
 
             {/* 答える / 復習 の切り替え */}
             <ModeTabs
@@ -671,13 +633,9 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
 function PlanCard({
   status,
   isPro,
-  upgrading,
-  onUpgrade,
 }: {
   status: BillingStatus | null;
   isPro: boolean;
-  upgrading: boolean;
-  onUpgrade: () => void;
 }) {
   if (!status) {
     return (
@@ -748,14 +706,12 @@ function PlanCard({
         <p className="mt-1 text-[11px] font-bold leading-relaxed text-violet-900/70">
           より深い解説と、1日の採点回数アップが使えるようになります。
         </p>
-        <button
-          type="button"
-          onClick={onUpgrade}
-          disabled={upgrading}
-          className="mt-2.5 w-full rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition active:scale-[0.99] disabled:opacity-60"
+        <Link
+          href="/more#billing"
+          className="mt-2.5 block w-full rounded-xl bg-violet-600 px-4 py-2.5 text-center text-sm font-extrabold text-white shadow-sm transition active:scale-[0.99]"
         >
-          {upgrading ? "準備中…" : "Proにアップグレード"}
-        </button>
+          Proプランを見る
+        </Link>
       </div>
     </section>
   );

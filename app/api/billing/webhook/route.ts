@@ -1,6 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { setUserPlan, setUserPlanByCustomer } from "@/lib/billing/plan";
+import {
+  applyOneTimePurchase,
+  setUserPlan,
+  setUserPlanByCustomer,
+} from "@/lib/billing/plan";
+import { BILLING_PLANS, getBillingPlan } from "@/lib/billing/constants";
 import {
   STALE_WEBHOOK_PROCESSING_SECONDS,
   shouldRetryWebhookEvent,
@@ -106,6 +111,11 @@ async function handleEvent(event: StripeEvent): Promise<void> {
       const customerId = asString(obj.customer);
       if (!userId) {
         console.warn("[billing] checkout completed without user_id");
+        return;
+      }
+      // 買い切り（mode=payment）は pro_until を延長、サブスクは plan を pro に更新。
+      if (asString(obj.mode) === "payment") {
+        await handleOneTimeCheckout(obj, userId, customerId);
         return;
       }
       if (!(await checkoutSessionCanActivatePro(obj))) return;
@@ -258,6 +268,52 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message.slice(0, 1_000) : "Unknown error";
 }
 
+/**
+ * 買い切り購入（mode=payment）の checkout 完了を処理する。
+ * plan_key は checkout 作成時に metadata へ入れた値。Price ID を対応する env と
+ * 照合してから pro_until を延長する。冪等化は applyOneTimePurchase 側で行う。
+ */
+async function handleOneTimeCheckout(
+  obj: Record<string, unknown>,
+  userId: string,
+  customerId: string | null,
+): Promise<void> {
+  const paymentStatus = asString(obj.payment_status);
+  if (paymentStatus !== "paid") {
+    console.warn("[billing] one-time checkout ignored: not paid");
+    return;
+  }
+
+  const metadata = (obj.metadata ?? {}) as Record<string, unknown>;
+  const plan = getBillingPlan(asString(metadata.plan_key));
+  if (!plan || plan.kind !== "one_time") {
+    console.warn("[billing] one-time checkout ignored: unknown plan_key");
+    return;
+  }
+
+  const expectedPriceId = process.env[plan.priceEnv]?.trim();
+  if (!(await validateCheckoutPrice(obj, expectedPriceId ? [expectedPriceId] : []))) {
+    return;
+  }
+
+  const sessionId = asString(obj.id);
+  if (!sessionId) {
+    throw new Error("one-time checkout is missing a session id");
+  }
+
+  const amountTotal = typeof obj.amount_total === "number" ? obj.amount_total : null;
+  await applyOneTimePurchase({
+    userId,
+    planKey: plan.key,
+    months: plan.months,
+    amountTotal,
+    currency: asString(obj.currency),
+    stripeCheckoutSessionId: sessionId,
+    stripePaymentIntentId: asString(obj.payment_intent),
+    stripeCustomerId: customerId,
+  });
+}
+
 async function checkoutSessionCanActivatePro(
   obj: Record<string, unknown>,
 ): Promise<boolean> {
@@ -285,7 +341,9 @@ async function checkoutSessionCanActivatePro(
     }
   }
 
-  return validateCheckoutPrice(obj);
+  const subPlan = BILLING_PLANS.find((p) => p.kind === "subscription");
+  const expectedPriceId = subPlan ? process.env[subPlan.priceEnv]?.trim() : undefined;
+  return validateCheckoutPrice(obj, expectedPriceId ? [expectedPriceId] : []);
 }
 
 async function fetchStripeSubscriptionStatus(
@@ -302,13 +360,16 @@ async function fetchStripeSubscriptionStatus(
   return asString((subscription as Record<string, unknown>).status);
 }
 
-async function validateCheckoutPrice(obj: Record<string, unknown>): Promise<boolean> {
-  const expectedPriceId = process.env.STRIPE_PRICE_ID_PRO?.trim();
-  if (!expectedPriceId) return true;
+async function validateCheckoutPrice(
+  obj: Record<string, unknown>,
+  expectedPriceIds: string[],
+): Promise<boolean> {
+  // 照合先の env が未設定なら検証をスキップ（graceful に通す・既存挙動を踏襲）。
+  if (expectedPriceIds.length === 0) return true;
 
   const directPriceIds = collectPriceIds(obj);
   if (directPriceIds.length > 0) {
-    const ok = directPriceIds.includes(expectedPriceId);
+    const ok = directPriceIds.some((id) => expectedPriceIds.includes(id));
     if (!ok) console.warn("[billing] checkout completed ignored: unexpected price id");
     return ok;
   }
@@ -336,7 +397,7 @@ async function validateCheckoutPrice(obj: Record<string, unknown>): Promise<bool
     return true;
   }
 
-  const ok = fetchedPriceIds.includes(expectedPriceId);
+  const ok = fetchedPriceIds.some((id) => expectedPriceIds.includes(id));
   if (!ok) console.warn("[billing] checkout completed ignored: unexpected line item price");
   return ok;
 }

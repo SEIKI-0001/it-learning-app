@@ -19,6 +19,7 @@ import {
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
+import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 
 const FIELDS: TopicField[] = ["strategy", "management", "technology"];
 
@@ -116,6 +117,7 @@ export default function MockExamPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-2xl">
+        {!exam && !result && <RecordingLockNotice />}
         {!exam && !result && (
           <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
             <div className="flex items-start gap-3">

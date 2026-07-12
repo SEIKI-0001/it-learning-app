@@ -11,6 +11,7 @@ import { studyXpReward, XP_PER_CORRECT } from "@/lib/study";
 import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
 import { getMochitResultPresentation } from "@/lib/mochitPresentation";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
+import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import {
   getUserId,
   reportTopicQuizResult,
@@ -127,6 +128,8 @@ export default function TopicCompletionQuiz({
         <span aria-hidden>✏️</span>
         確認問題
       </h2>
+
+      <RecordingLockNotice variant="compact" className="mb-3" />
 
       {state === undefined ? (
         <div className="rounded-2xl bg-white p-4 text-sm font-semibold text-gray-500 shadow-sm ring-1 ring-gray-100">

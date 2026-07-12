@@ -3,6 +3,7 @@ import FlashcardDeck, {
   type StudyMode,
 } from "@/components/wordlist/FlashcardDeck";
 import BottomNav from "@/components/BottomNav";
+import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 
 // 英略語のカード学習モード。?mode=today|weak|all で出題プールを切り替える。
 // Next.js 16 では searchParams は Promise なので await が必須（AGENTS.md・docs 準拠）。
@@ -38,6 +39,7 @@ export default async function WordlistStudyPage({
       </header>
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl px-4 py-3">
+        <RecordingLockNotice variant="compact" className="mb-3" />
         <FlashcardDeck mode={mode} />
       </div>
 

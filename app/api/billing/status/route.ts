@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
 import { getRequestUserId } from "@/lib/apiUser";
-import { getBillingStatusSnapshot } from "@/lib/billing/plan";
+import {
+  getBillingStatusSnapshot,
+  getEntitlements,
+  getPlanOffers,
+  getSubscriptionInfo,
+  listPurchases,
+} from "@/lib/billing/plan";
+import type { BillingStatusPayload } from "@/types/billing";
 
 export const runtime = "nodejs";
 
 /**
  * POST /api/billing/status
  * body: { userId?: string }
- * ユーザーの現在のプラン・本日の利用状況・採点プロバイダ・決済可否を返す。
- * UI が free / pro の出し分けと回数表示に使う。
+ * ユーザーの現在のプラン・本日の利用状況・採点プロバイダ・決済可否に加え、
+ * エンタイトルメント（記録可否）・購入可能プラン・サブスク詳細・購入履歴を返す。
+ * AI採点画面の出し分けと「その他」ページの課金管理セクションが使う。
  */
 export async function POST(request: Request) {
   let body: { userId?: string } = {};
@@ -19,10 +27,24 @@ export async function POST(request: Request) {
   }
 
   const userId = await getRequestUserId(body);
-  const status = await getBillingStatusSnapshot(userId);
+  const [status, entitlements, subscription, purchases] = await Promise.all([
+    getBillingStatusSnapshot(userId),
+    getEntitlements(userId),
+    getSubscriptionInfo(userId),
+    listPurchases(userId),
+  ]);
 
-  return NextResponse.json({
+  const payload: BillingStatusPayload = {
     ok: true,
-    ...status,
-  });
+    plan: status.plan,
+    providerLabel: status.providerLabel,
+    usage: status.usage,
+    tracked: status.tracked,
+    checkoutEnabled: status.checkoutEnabled,
+    entitlements,
+    plans: getPlanOffers(),
+    subscription,
+    purchases,
+  };
+  return NextResponse.json(payload);
 }

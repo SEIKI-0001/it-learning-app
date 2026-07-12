@@ -17,6 +17,7 @@ import {
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
 import { getLessonHref } from "@/lib/learningCatalog";
 import type { CheckPackResultStatus } from "@/types/checkPack";
+import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 
 // 確認パックの実施フロー（クライアント）。
@@ -172,6 +173,7 @@ export default function CheckPackRunner({
   if (phase === "intro") {
     return (
       <div className="space-y-5">
+        <RecordingLockNotice variant="compact" />
         <IntroCard
           topicTitle={topicTitle}
           quizCount={quizQuestions.length}

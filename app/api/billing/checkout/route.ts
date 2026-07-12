@@ -1,24 +1,30 @@
 import { NextResponse } from "next/server";
 import { getRequestUserId } from "@/lib/apiUser";
+import { getBillingPlan } from "@/lib/billing/constants";
 
 export const runtime = "nodejs";
 
+/** checkout 後に戻せるアプリ内パスのホワイトリスト。 */
+const RETURN_PATHS = ["/more", "/ai-grading"] as const;
+
 /**
  * POST /api/billing/checkout
- * body: { userId: string }
+ * body: { plan: BillingPlanKey, returnTo?: string, userId?: string }
  * Pro プランの Stripe Checkout Session を作成し、その URL を返す。
  *
- * - Stripe 未設定（STRIPE_SECRET_KEY / STRIPE_PRICE_ID_PRO 無し）: 503（準備中）
+ * - 買い切り（one_*）: mode=payment。webhook が pro_until を延長する。
+ * - サブスク（sub_monthly）: mode=subscription。初月20%オフのクーポンを適用。
+ * - Stripe 未設定（STRIPE_SECRET_KEY / 対象 Price ID 無し）: 503（準備中）
  * - userId 無し: 400（誰の課金か紐づけられない）
  * - 作成成功: 200 { ok: true, url }
  *
  * Stripe SDK は追加せず REST（application/x-www-form-urlencoded）で呼ぶ。
- * 支払い完了は /api/billing/webhook が受けて plan を pro に更新する。
+ * 支払い完了は /api/billing/webhook が受けてプランを反映する。
  */
 export async function POST(request: Request) {
-  let body: { userId?: string } = {};
+  let body: { userId?: string; plan?: string; returnTo?: string } = {};
   try {
-    body = (await request.json()) as { userId?: string };
+    body = (await request.json()) as typeof body;
   } catch {
     return NextResponse.json(
       { ok: false, error: "リクエストの形式が正しくありません。" },
@@ -32,14 +38,22 @@ export async function POST(request: Request) {
       {
         ok: false,
         error:
-          "Proへのアップグレードには、LINEからのログインが必要です（誰のアカウントか紐づけるため）。",
+          "Proプランの購入にはログインが必要です（誰のアカウントか紐づけるため）。",
       },
       { status: 400 }
     );
   }
 
+  const plan = getBillingPlan(body.plan);
+  if (!plan) {
+    return NextResponse.json(
+      { ok: false, error: "プランの指定が正しくありません。" },
+      { status: 400 }
+    );
+  }
+
   const secret = process.env.STRIPE_SECRET_KEY?.trim();
-  const price = process.env.STRIPE_PRICE_ID_PRO?.trim();
+  const price = process.env[plan.priceEnv]?.trim();
   const appUrl = (
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.APP_BASE_URL ||
@@ -53,16 +67,32 @@ export async function POST(request: Request) {
     );
   }
 
+  const returnTo = RETURN_PATHS.includes(body.returnTo as (typeof RETURN_PATHS)[number])
+    ? (body.returnTo as string)
+    : "/more";
+
   const params = new URLSearchParams();
-  params.set("mode", "subscription");
   params.append("line_items[0][price]", price);
   params.append("line_items[0][quantity]", "1");
   params.set("client_reference_id", userId);
   params.append("metadata[user_id]", userId);
-  // サブスクリプション側にも user_id を持たせ、解約/更新の webhook で紐づける。
-  params.append("subscription_data[metadata][user_id]", userId);
-  params.set("success_url", `${appUrl}/ai-grading?checkout=success`);
-  params.set("cancel_url", `${appUrl}/ai-grading?checkout=cancel`);
+  params.append("metadata[plan_key]", plan.key);
+  params.set("success_url", `${appUrl}${returnTo}?checkout=success#billing`);
+  params.set("cancel_url", `${appUrl}${returnTo}?checkout=cancel#billing`);
+
+  if (plan.kind === "subscription") {
+    params.set("mode", "subscription");
+    // サブスクリプション側にも user_id を持たせ、解約/更新の webhook で紐づける。
+    params.append("subscription_data[metadata][user_id]", userId);
+    // 初月20%オフ（クーポン未設定なら割引なしで続行）。
+    const coupon = process.env.STRIPE_COUPON_FIRST_MONTH?.trim();
+    if (coupon) params.append("discounts[0][coupon]", coupon);
+  } else {
+    params.set("mode", "payment");
+    params.append("metadata[months]", String(plan.months));
+    // 買い切りでも customer を作り、購入履歴・領収書・portal 参照に使えるようにする。
+    params.set("customer_creation", "always");
+  }
 
   let res: Response;
   try {

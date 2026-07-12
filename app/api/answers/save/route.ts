@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getRequestUserId } from "@/lib/apiUser";
+import {
+  canRecordStudyForUser,
+  recordingLockedResponse,
+} from "@/lib/billing/recordingGate";
 import type { UserAnswer } from "@/types";
 
 export const runtime = "nodejs";
@@ -28,6 +32,9 @@ export async function POST(request: Request) {
   const userId = await getRequestUserId(body);
   if (!userId) {
     return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
+  }
+  if (!(await canRecordStudyForUser(userId))) {
+    return recordingLockedResponse();
   }
   if (answers.length === 0) {
     return NextResponse.json({ ok: true, inserted: 0 });

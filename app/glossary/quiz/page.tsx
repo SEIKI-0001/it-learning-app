@@ -1,6 +1,7 @@
 import Link from "next/link";
 import QuizDeck, { type QuizMode } from "@/components/wordlist/QuizDeck";
 import BottomNav from "@/components/BottomNav";
+import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 
 // 英略語の4択確認モード。?mode=all|weak|today で出題プールを切り替える。
 // Next.js 16 では searchParams は Promise なので await が必須（AGENTS.md・docs 準拠）。
@@ -36,6 +37,7 @@ export default async function WordlistQuizPage({
       </header>
 
       <div className="mx-auto w-full max-w-md md:max-w-2xl px-4 py-3">
+        <RecordingLockNotice variant="compact" className="mb-3" />
         <QuizDeck mode={mode} />
       </div>
 

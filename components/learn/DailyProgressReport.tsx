@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import { getUserId, reportDailyProgress } from "@/lib/userSession";
+import { useBillingStatus } from "@/lib/useBillingStatus";
 import type { ProgressLevel, ProgressReason } from "@/types/studyProgress";
 
 // 今日の学習の達成度を1日1回、低入力で報告するカード。
@@ -60,6 +62,7 @@ function writeSaved(date: string, saved: Saved): void {
 export default function DailyProgressReport({ date }: { date: string }) {
   const [level, setLevel] = useState<ProgressLevel | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const { status: billingStatus } = useBillingStatus();
 
   // 再訪時に前回の選択を反映する（date が変わったら読み直す）。
   // setState はネストした init() 経由で呼び、effect 直下の同期 setState を避ける
@@ -100,6 +103,11 @@ export default function DailyProgressReport({ date }: { date: string }) {
   }
 
   const showReasons = level !== null && asksReason(level) && !submitted;
+
+  // このカードは記録専用のため、無料記録期間が終了していたらロック表示に差し替える。
+  if (billingStatus?.entitlements && !billingStatus.entitlements.canRecordStudy) {
+    return <RecordingLockNotice />;
+  }
 
   return (
     <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">

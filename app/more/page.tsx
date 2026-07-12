@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
+import BillingSection from "@/components/billing/BillingSection";
 import PageHeader from "@/components/ui/PageHeader";
 
 const GROUPS = [
@@ -61,6 +62,8 @@ export default function MorePage() {
             </div>
           </section>
         ))}
+
+        <BillingSection />
       </div>
 
       <BottomNav />

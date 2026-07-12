@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getRequestUserId } from "@/lib/apiUser";
+import {
+  canRecordStudyForUser,
+  recordingLockedResponse,
+} from "@/lib/billing/recordingGate";
 import { questionAttemptToRow, type QuestionType } from "@/lib/dbMappers";
 
 export const runtime = "nodejs";
@@ -35,6 +39,9 @@ export async function POST(request: Request) {
   const userId = await getRequestUserId(body);
   if (!userId) {
     return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
+  }
+  if (!(await canRecordStudyForUser(userId))) {
+    return recordingLockedResponse();
   }
 
   const attempts = Array.isArray(body.attempts) ? body.attempts : [];
