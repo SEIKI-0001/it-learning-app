@@ -71,6 +71,8 @@ function miniText(c: Celebration): string | null {
       }`;
     case "questClear":
       return `🎁 ${c.label}`;
+    case "badgeEarned":
+      return `🏅「${c.label}」バッジ獲得！`;
     default:
       return null;
   }

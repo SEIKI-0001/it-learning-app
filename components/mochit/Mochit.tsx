@@ -3,6 +3,7 @@ import Image from "next/image";
 export type MochitState = "normal" | "happy" | "thinking" | "cheering";
 export type MochitSize = "small" | "medium" | "large";
 export type MochitAnimation = "idle" | "bounce" | "tilt" | "celebrate" | "none";
+export type MochitGrowthStage = 1 | 2 | 3;
 
 const STATE_META: Record<MochitState, { alt: string; src: string }> = {
   normal: { alt: "モチット", src: "/characters/mochit/normal.webp" },
@@ -30,6 +31,7 @@ type Props = {
   size?: MochitSize;
   message?: string;
   animation?: MochitAnimation;
+  growthStage?: MochitGrowthStage;
   className?: string;
 };
 
@@ -38,6 +40,7 @@ export default function Mochit({
   size = "medium",
   message,
   animation = "idle",
+  growthStage = 1,
   className = "",
 }: Props) {
   const meta = STATE_META[state];
@@ -49,7 +52,7 @@ export default function Mochit({
         width={512}
         height={512}
         sizes="(max-width: 640px) 128px, 240px"
-        className={`${SIZE_CLASS[size]} shrink-0 object-contain ${ANIMATION_CLASS[animation]}`}
+        className={`${SIZE_CLASS[size]} shrink-0 object-contain mochit-growth-${growthStage} ${ANIMATION_CLASS[animation]}`}
       />
       {message ? <p className="text-sm font-semibold leading-relaxed text-gray-700">{message}</p> : null}
     </div>

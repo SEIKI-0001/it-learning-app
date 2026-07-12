@@ -12,6 +12,7 @@ describe("Mochit", () => {
         size="medium"
         message="いいね。知識がつながってきた！"
         animation="bounce"
+        growthStage={3}
       />,
     );
 
@@ -20,5 +21,6 @@ describe("Mochit", () => {
       expect.stringContaining("%2Fcharacters%2Fmochit%2Fhappy.webp"),
     );
     expect(screen.getByText("いいね。知識がつながってきた！")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "よろこぶモチット" })).toHaveClass("mochit-growth-3");
   });
 });

@@ -35,6 +35,7 @@ import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import { buttonClass } from "@/components/ui/Button";
 import Mochit from "@/components/mochit/Mochit";
+import { getMochitGrowthStage } from "@/lib/mochit";
 
 type TodayTask = {
   topicId: string;
@@ -257,7 +258,8 @@ export default function TodayPage() {
                       state="normal"
                       size="medium"
                       animation="idle"
-                      message="今日はこの3問から始めよう"
+                      growthStage={getMochitGrowthStage(state)}
+                      message={hasWrittenQuestion ? "学んだ内容を、自分の言葉で説明してみよう" : task.activity === "review" ? `まずは「${task.title}」を復習しよう` : tasks.length > 3 ? "今日は最優先の1件から進めよう" : `今日は「${task.title}」から始めよう`}
                       className="mt-2 rounded-2xl bg-sky-50 px-3 py-2"
                     />
                   )}
@@ -289,6 +291,7 @@ export default function TodayPage() {
             })}
             {tasks.length === 0 && (
               <article className="rounded-3xl bg-white p-6 text-center shadow-sm ring-1 ring-gray-100">
+                <div className="flex justify-center"><Mochit state="normal" size="medium" growthStage={getMochitGrowthStage(state)} message="今日の予定はひと段落。復習を1つ確認しよう" /></div>
                 <p className="text-lg font-extrabold text-gray-900">今日の新しい学習はひと段落です</p>
                 <p className="mt-1 text-sm text-gray-500">復習リストやテーマ一覧から、気になるレッスンを選べます。</p>
                 <div className="mt-4 flex justify-center gap-3">

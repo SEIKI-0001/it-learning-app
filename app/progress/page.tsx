@@ -21,6 +21,8 @@ import { getRankStatus } from "@/lib/rank";
 import { getCheckpointProgress } from "@/lib/checkpoints";
 import { BADGES } from "@/lib/badges";
 import Mochit from "@/components/mochit/Mochit";
+import { getMochitGrowthStage } from "@/lib/mochit";
+import { getMochitProgressPresentation } from "@/lib/mochitPresentation";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
@@ -132,6 +134,7 @@ export default function ProgressPage() {
   const reviewQueue = progress.reviewQueue ?? [];
   const reviewCount = reviewQueue.length;
   const gap = daysSince(progress.lastPlayedAt);
+  const mochit = getMochitProgressPresentation({ readinessScore: overall, currentCheckpointId: getCheckpointProgress(state).currentCheckpointId, reviewCount, planAdjustmentProposal: !!proposal, lastPlayedAt: progress.lastPlayedAt });
 
   const gapText =
     gap === null
@@ -203,13 +206,14 @@ export default function ProgressPage() {
               className="ml-auto shrink-0 text-center transition active:scale-[0.97]"
             >
               <span className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-white/15 ring-2 ring-white/30">
-                <Mochit size="small" animation="none" />
+                <Mochit size="small" animation="none" growthStage={getMochitGrowthStage(state)} />
               </span>
               <span className="mt-1 block text-[10px] font-bold text-white/80">
                 モチットを見る
               </span>
             </Link>
           </div>
+          <div className="mt-4 rounded-2xl bg-white/15 p-3"><Mochit {...mochit} size="medium" growthStage={getMochitGrowthStage(state)} className="items-center" />{mochit.action && <Link href={mochit.action.href} className="ml-[140px] text-xs font-bold text-white underline">{mochit.action.label} →</Link>}</div>
 
           {/* ランク進捗(次のランクまで)。EXP/レベル表示はランクに統合した。 */}
           <div className="mt-3">

@@ -8,8 +8,8 @@ import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { completeStudySession } from "@/lib/studySession";
 import { studyXpReward, XP_PER_CORRECT } from "@/lib/study";
-import { emitUnlockNotice } from "@/lib/unlockNotice";
-import { emitCelebration } from "@/lib/celebration";
+import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
+import { getMochitResultPresentation } from "@/lib/mochitPresentation";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
@@ -20,7 +20,7 @@ import {
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { buttonClass } from "@/components/ui/Button";
-import Mochit, { type MochitAnimation, type MochitState } from "@/components/mochit/Mochit";
+import Mochit from "@/components/mochit/Mochit";
 
 type CompletionTopic = Pick<
   Topic,
@@ -51,7 +51,7 @@ export default function TopicCompletionQuiz({
     total: number;
     gainedExp: number;
     streak: number;
-    presentation: { state: MochitState; animation: MochitAnimation; message: string };
+    presentation: ReturnType<typeof getMochitResultPresentation>;
   } | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
 
@@ -77,13 +77,10 @@ export default function TopicCompletionQuiz({
     const next = session.state;
     saveAppState(next);
     setState(next);
-    emitUnlockNotice(state, next);
     emitCelebration(
       state,
       next,
-      session.streakMilestone
-        ? [{ kind: "streakMilestone", ...session.streakMilestone }]
-        : [],
+      [...badgeEarnedCelebrations(session.newlyEarnedIds), ...(session.streakMilestone ? [{ kind: "streakMilestone" as const, ...session.streakMilestone }] : [])],
     );
 
     const correct = tagged.filter((a) => a.isCorrect).length;
@@ -96,11 +93,7 @@ export default function TopicCompletionQuiz({
       total,
       gainedExp: next.progress.exp - state.progress.exp,
       streak: next.progress.streakCount,
-      presentation: checkpointCleared
-        ? { state: "cheering", animation: "celebrate", message: "チェックポイント達成！次の学びへ進もう" }
-        : correct === total
-          ? { state: "happy", animation: "bounce", message: "いいね。知識がつながってきた！" }
-          : { state: "thinking", animation: "tilt", message: "惜しい。考え方を一緒に整理しよう" },
+      presentation: getMochitResultPresentation({ checkpointCleared: !!checkpointCleared, correct, total }),
     });
     setCompleted(true);
 

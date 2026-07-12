@@ -5,13 +5,14 @@
 // 発火側は学習前後の AppState を渡すだけでよく、差分（XP・レベル・ランク・
 // クリア済みCP）はここで自動検出する。ストリーク節目・ミッション達成のように
 // 状態差分から判定できないものは extras で明示的に渡す。
-// バッジ・装備解放のトーストは既存の unlockNotice が担当し、本バスは重ねない。
+// バッジ獲得もこのバスへ統合し、同じ成果を二重に通知しない。
 
 import type { AppState } from "@/types";
 import type { CheckpointId } from "@/types/checkpoint";
 import { getRankStatus } from "@/lib/rank";
 import { getLevelName } from "@/lib/game";
 import { getCheckpointProgress } from "@/lib/checkpoints";
+import { getBadge } from "@/lib/badges";
 
 export type Celebration =
   | { kind: "xpGain"; amount: number }
@@ -24,7 +25,15 @@ export type Celebration =
       shieldGranted: boolean;
     }
   | { kind: "questClear"; label: string }
-  | { kind: "cpCleared"; cpId: CheckpointId };
+  | { kind: "cpCleared"; cpId: CheckpointId }
+  | { kind: "badgeEarned"; badgeId: string; label: string; emoji: string };
+
+export function badgeEarnedCelebrations(badgeIds: string[]): Celebration[] {
+  return [...new Set(badgeIds)].flatMap((badgeId) => {
+    const badge = getBadge(badgeId);
+    return badge ? [{ kind: "badgeEarned" as const, badgeId, label: badge.label, emoji: badge.emoji }] : [];
+  });
+}
 
 const CELEBRATION_EVENT = "fequest:celebration";
 
