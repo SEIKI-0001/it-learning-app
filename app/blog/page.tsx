@@ -6,12 +6,20 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-two-weeks-study-plan-2026",
+    title: "ITパスポートは2週間で間に合う？試験直前の勉強計画を初心者向けに解説",
+    description:
+      "残り14日で優先する学習、弱点の見つけ方、過去問レベル演習、直前復習を日程別に整理します。",
+    category: "NEW：試験直前2週間",
+    cta: "14日間の勉強計画を見る",
+  },
+  {
     slug: "it-passport-study-time-calculator",
     href: "/lp/it-passport-study-time-calculator",
     title: "ITパスポート勉強時間シミュレーター｜試験日から無料で学習計画を計算",
     description:
       "試験日、平日・休日の学習時間、現在の理解度から、確保できる総時間と1日あたりの目安を無料で計算します。",
-    category: "NEW：無料シミュレーター",
+    category: "無料シミュレーター",
     cta: "勉強時間を計算する",
   },
   {
@@ -30,14 +38,6 @@ const promotedPosts = [
       "試験日・学習時間・今の理解度から、今日やるべき学習メニューを作る無料診断LPです。",
     category: "無料学習診断",
     cta: "無料診断を始める",
-  },
-  {
-    slug: "it-passport-independent-study-roadmap-2026",
-    title: "ITパスポート独学ロードマップ｜30日・60日・90日で合格を目指す勉強計画",
-    description:
-      "試験日までの残り期間別に、参考書・単語帳・確認問題・過去問レベル演習の進め方を整理します。",
-    category: "独学ロードマップ",
-    cta: "独学ロードマップを読む",
   },
 ];
 
