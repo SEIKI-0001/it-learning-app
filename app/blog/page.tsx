@@ -6,11 +6,20 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-study-coach",
+    href: "/it-passport-study-coach",
+    title: "ITパスポートAI学習コーチ｜試験日から今日やることを無料で整理",
+    description:
+      "試験日から逆算した計画、確認問題、単語復習、進捗管理を一つにつなぐit-learning-appの紹介サイトです。",
+    category: "NEW：サービス紹介",
+    cta: "AI学習コーチを見る",
+  },
+  {
     slug: "it-passport-two-weeks-study-plan-2026",
     title: "ITパスポートは2週間で間に合う？試験直前の勉強計画を初心者向けに解説",
     description:
       "残り14日で優先する学習、弱点の見つけ方、過去問レベル演習、直前復習を日程別に整理します。",
-    category: "NEW：試験直前2週間",
+    category: "試験直前2週間",
     cta: "14日間の勉強計画を見る",
   },
   {
