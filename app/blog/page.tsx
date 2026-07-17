@@ -6,12 +6,21 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-pass-readiness-check",
+    href: "/lp/it-passport-pass-readiness-check",
+    title: "【無料診断】ITパスポートに合格できる？10項目の合格準備度チェック",
+    description:
+      "学習計画、確認問題、用語復習、過去問、苦手分野の把握状況を1分で確認し、次に優先すべき勉強を整理します。",
+    category: "NEW：無料合格診断",
+    cta: "合格準備度を診断する",
+  },
+  {
     slug: "it-passport-study-coach",
     href: "/it-passport-study-coach",
     title: "ITパスポートAI学習コーチ｜試験日から今日やることを無料で整理",
     description:
       "試験日から逆算した計画、確認問題、単語復習、進捗管理を一つにつなぐit-learning-appの紹介サイトです。",
-    category: "NEW：サービス紹介",
+    category: "サービス紹介",
     cta: "AI学習コーチを見る",
   },
   {
