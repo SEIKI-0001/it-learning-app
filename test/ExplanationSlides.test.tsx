@@ -17,19 +17,19 @@ describe("ExplanationSlides", () => {
     render(<ExplanationSlides slides={slides} />);
 
     const viewport = screen.getByTestId("explanation-slides-viewport");
-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
     expect(screen.getByText("スライド1")).toBeInTheDocument();
-    expect(screen.queryByText("スライド2")).not.toBeInTheDocument();
+    expect(screen.getByText("スライド2")).not.toBeVisible();
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "次の解説へ" }));
-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
-    expect(screen.queryByText("スライド1")).not.toBeInTheDocument();
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
+    expect(screen.getByText("スライド1")).not.toBeVisible();
     expect(screen.getByText("スライド2")).toBeInTheDocument();
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "解説3" }));
-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
     expect(screen.getByText("スライド3")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "次の解説へ" })).toBeDisabled();
   });
@@ -41,8 +41,31 @@ describe("ExplanationSlides", () => {
     fireEvent.touchStart(viewport, { changedTouches: [{ clientX: 240 }] });
     fireEvent.touchEnd(viewport, { changedTouches: [{ clientX: 80 }] });
 
-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
     expect(screen.getByText("スライド2")).toBeInTheDocument();
+  });
+
+  it("keeps every slide mounted to reserve the tallest slide height", () => {
+    render(<ExplanationSlides slides={slides} />);
+    const viewport = screen.getByTestId("explanation-slides-viewport");
+
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
+    expect(screen.getByRole("group", { name: "全体像" })).toBeVisible();
+    expect(screen.queryByRole("group", { name: "ポイント" })).not.toBeInTheDocument();
+  });
+
+  it("moves with arrow keys only while the explanation viewport has focus", () => {
+    render(<ExplanationSlides slides={slides} />);
+    const viewport = screen.getByTestId("explanation-slides-viewport");
+
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+
+    viewport.focus();
+    fireEvent.keyDown(viewport, { key: "ArrowRight" });
+    expect(screen.getByText("2 / 3")).toBeInTheDocument();
+    fireEvent.keyDown(viewport, { key: "ArrowLeft" });
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
   });
 
   it("shows the section title and slide labels", () => {
