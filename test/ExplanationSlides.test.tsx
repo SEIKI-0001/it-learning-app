@@ -62,6 +62,7 @@ describe("ExplanationSlides", () => {
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
 
     viewport.focus();
+    expect(viewport).toHaveFocus();
     fireEvent.keyDown(viewport, { key: "ArrowRight" });
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
     fireEvent.keyDown(viewport, { key: "ArrowLeft" });
