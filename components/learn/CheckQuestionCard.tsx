@@ -85,12 +85,12 @@ export default function CheckQuestionCard({
   const isCorrect = selected === shuffled.correctChoice;
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4">
+    <div className="rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
       <p className="mb-3 text-sm font-bold text-gray-800">
         Q{number}. {q.prompt}
       </p>
 
-      <div className="space-y-2.5">
+      <div className="space-y-2">
         {shuffled.choices.map((c) => (
           <ChoiceButton
             key={c.key}
@@ -107,7 +107,7 @@ export default function CheckQuestionCard({
 
       {revealed && (
         <div
-          className={`animate-pop-in mt-4 rounded-2xl p-4 ${
+          className={`animate-pop-in mt-3 rounded-2xl p-3 ${
             isCorrect ? "bg-green-50" : "bg-amber-50"
           }`}
         >
@@ -126,7 +126,7 @@ export default function CheckQuestionCard({
           <button
             type="button"
             onClick={() => setSelected(null)}
-            className="mt-3 text-xs font-bold text-indigo-600 underline underline-offset-2"
+            className="mt-2.5 text-xs font-bold text-indigo-600 underline underline-offset-2"
           >
             もう一度ためす
           </button>

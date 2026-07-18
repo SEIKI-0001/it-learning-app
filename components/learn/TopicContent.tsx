@@ -2,6 +2,9 @@ import { createElement } from "react";
 import type { Topic } from "@/types/content";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
+import ExplanationSlides, {
+  type ExplanationSlide,
+} from "@/components/learn/ExplanationSlides";
 import AddToReviewButton from "@/components/learn/AddToReviewButton";
 import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
 import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
@@ -24,6 +27,90 @@ export default function TopicContent({
   // レジストリから取り出した既存コンポーネントなので createElement で描画する
   // （render 中に新規コンポーネントを定義しているわけではない）。
   const experience = getTopicExperience(topic.id);
+  const explanationKeyPoints = topic.explanation.keyPoints ?? [];
+
+  const explanationSlides: ExplanationSlide[] = [];
+  if (experience) {
+    explanationSlides.push({
+      id: "experience",
+      label: "体験して理解",
+      content: createElement(experience),
+    });
+  } else if (processDemo) {
+    explanationSlides.push({
+      id: "process-demo",
+      label: "体験して理解",
+      content: <ProcessDemoSection demo={processDemo} />,
+    });
+  } else {
+    if (topic.visualLearning) {
+      explanationSlides.push({
+        id: "visual-learning",
+        label: "図で理解する",
+        content: <VisualLearningSection visualLearning={topic.visualLearning} />,
+      });
+    }
+
+    explanationSlides.push({
+      id: "concept",
+      label: "イメージをつかむ",
+      content: (
+        <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+          <h3 className="text-base font-bold text-gray-800">
+            {topic.conceptCard.heading}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-gray-700">
+            {topic.conceptCard.body}
+          </p>
+          {topic.conceptCard.analogy && (
+            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
+              🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
+            </p>
+          )}
+          {topic.conceptCard.diagram && (
+            <div className="mt-4">
+              <DiagramRenderer spec={topic.conceptCard.diagram} />
+            </div>
+          )}
+        </section>
+      ),
+    });
+
+    if (topic.explanation.diagram || explanationKeyPoints.length > 0) {
+      explanationSlides.push({
+        id: "exam-points",
+        label: "試験ポイント",
+        content: (
+          <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+            <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
+            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+              {topic.explanation.body}
+            </p>
+            {explanationKeyPoints.length > 0 && (
+              <ul className="mt-3 space-y-1.5">
+                {explanationKeyPoints.map((keyPoint, index) => (
+                  <li
+                    key={index}
+                    className="flex gap-2 text-sm font-semibold text-gray-700"
+                  >
+                    <span aria-hidden className="text-indigo-500">
+                      ✓
+                    </span>
+                    {keyPoint}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {topic.explanation.diagram && (
+              <div className="mt-4">
+                <DiagramRenderer spec={topic.explanation.diagram} />
+              </div>
+            )}
+          </section>
+        ),
+      });
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -40,39 +127,8 @@ export default function TopicContent({
         </section>
       )}
 
-      {/* テーマ専用の体験コンポーネント（最優先）。固定スタックは描画しない。 */}
-      {experience && createElement(experience)}
-
-      {/* 難テーマ: 操作できる理解パートをページ内で完結（別ページ遷移なし） */}
-      {!experience && processDemo && <ProcessDemoSection demo={processDemo} />}
-
-      {/* 通常トピック: 従来の固定構成（視覚理解→概念→図解→ミニゲーム導線） */}
-      {!experience && !processDemo && (
-        <>
-          {/* ① 視覚理解パーツ（MVP対象トピックのみ） */}
-          <VisualLearningSection visualLearning={topic.visualLearning} />
-
-          {/* ② 概念カード（図解理解） */}
-          <Section emoji="💡" title="まずはイメージをつかむ">
-            <h3 className="text-base font-bold text-gray-800">
-              {topic.conceptCard.heading}
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-gray-700">
-              {topic.conceptCard.body}
-            </p>
-            {topic.conceptCard.analogy && (
-              <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
-                🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
-              </p>
-            )}
-            {topic.conceptCard.diagram && (
-              <div className="mt-4">
-                <DiagramRenderer spec={topic.conceptCard.diagram} />
-              </div>
-            )}
-          </Section>
-        </>
-      )}
+      {/* 解説: 内容を1枚ずつ横に進める */}
+      <ExplanationSlides title="📖 解説" slides={explanationSlides} />
 
       {/* ③ 確認問題（today では完了クイズを別に出すため非表示にできる） */}
       {showCheckQuestions && (
