@@ -1,0 +1,755 @@
+# Review package: 0a6d7cb..320ec3c
+
+## Commits
+320ec3c docs: plan uniform lesson slides
+18751c3 feat: unify topic explanation slides
+a9ba598 fix: scope explanation slide keyboard navigation
+f752540 feat: preserve explanation slide layout
+04d9a6e test: cover inactive slide interaction and focus loss
+8f27221 test: require focusable explanation viewport
+a590913 test: cover explanation slide mounting and keyboard navigation
+47e7bf7 docs: specify uniform lesson slides
+
+## Files changed
+ components/learn/ExplanationSlides.tsx             |  56 +++++-
+ components/learn/TopicContent.tsx                  | 158 ++++++++--------
+ ...2026-07-18-uniform-lesson-explanation-slides.md | 208 +++++++++++++++++++++
+ .../2026-07-18-lesson-explanation-slides-design.md |  64 +++++++
+ test/ExplanationSlides.test.tsx                    |  65 ++++++-
+ test/TopicContent.test.tsx                         |  20 ++
+ 6 files changed, 478 insertions(+), 93 deletions(-)
+
+## Diff
+diff --git a/components/learn/ExplanationSlides.tsx b/components/learn/ExplanationSlides.tsx
+index 2e37b07..9c44ac9 100644
+--- a/components/learn/ExplanationSlides.tsx
++++ b/components/learn/ExplanationSlides.tsx
+@@ -1,13 +1,19 @@
+ "use client";
+ 
+-import { useRef, useState, type ReactNode, type TouchEvent } from "react";
++import {
++  useRef,
++  useState,
++  type KeyboardEvent,
++  type ReactNode,
++  type TouchEvent,
++} from "react";
+ 
+ export type ExplanationSlide = {
+   id: string;
+   label: string;
+   content: ReactNode;
+ };
+ 
+ const SWIPE_THRESHOLD = 56;
+ 
+ export default function ExplanationSlides({
+@@ -39,41 +45,73 @@ export default function ExplanationSlides({
+     const startX = touchStartX.current;
+     const endX = event.changedTouches[0]?.clientX;
+     touchStartX.current = null;
+     if (startX === null || endX === undefined) return;
+ 
+     const distance = endX - startX;
+     if (Math.abs(distance) < SWIPE_THRESHOLD) return;
+     moveTo(activeIndex + (distance < 0 ? 1 : -1));
+   }
+ 
++  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
++    if (event.target !== event.currentTarget) return;
++
++    if (event.key === "ArrowLeft") {
++      event.preventDefault();
++      moveTo(activeIndex - 1);
++    }
++
++    if (event.key === "ArrowRight") {
++      event.preventDefault();
++      moveTo(activeIndex + 1);
++    }
++  }
++
+   return (
+     <section aria-label="解説" className="space-y-3">
+       {title && (
+         <h2 className="flex items-center gap-2 text-lg font-extrabold text-gray-800">
+           {title}
+         </h2>
+       )}
+ 
+       <div
+         data-testid="explanation-slides-viewport"
+-        className="touch-pan-y overflow-hidden rounded-2xl"
++        tabIndex={slides.length > 1 ? 0 : undefined}
++        onKeyDown={handleKeyDown}
++        className="touch-pan-y overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+         onTouchStart={handleTouchStart}
+         onTouchEnd={handleTouchEnd}
+       >
+-        <article
+-          key={slides[activeIndex].id}
+-          aria-label={slides[activeIndex].label}
+-          role="group"
+-        >
+-          {slides[activeIndex].content}
+-        </article>
++        <div className="grid">
++          {slides.map((slide, index) => {
++            const isActive = index === activeIndex;
++            return (
++              <article
++                key={slide.id}
++                role="group"
++                aria-label={slide.label}
++                aria-hidden={!isActive}
++                inert={!isActive}
++                className={`col-start-1 row-start-1 w-full transition duration-300 motion-reduce:transition-none ${
++                  isActive
++                    ? "relative z-10 translate-x-0 opacity-100"
++                    : index < activeIndex
++                      ? "pointer-events-none -translate-x-full opacity-0"
++                      : "pointer-events-none translate-x-full opacity-0"
++                }`}
++              >
++                {slide.content}
++              </article>
++            );
++          })}
++        </div>
+       </div>
+ 
+       {slides.length > 1 && (
+         <div className="flex items-center justify-between gap-3">
+           <button
+             type="button"
+             onClick={() => moveTo(activeIndex - 1)}
+             disabled={!canGoPrevious}
+             aria-label="前の解説へ"
+             className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-indigo-200 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+diff --git a/components/learn/TopicContent.tsx b/components/learn/TopicContent.tsx
+index 1e31e2b..7f82fb6 100644
+--- a/components/learn/TopicContent.tsx
++++ b/components/learn/TopicContent.tsx
+@@ -3,122 +3,124 @@ import type { Topic } from "@/types/content";
+ import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
+ import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
+ import ExplanationSlides, {
+   type ExplanationSlide,
+ } from "@/components/learn/ExplanationSlides";
+ import AddToReviewButton from "@/components/learn/AddToReviewButton";
+ import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
+ import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
+ import { getTopicExperience } from "@/components/experiences/registry";
+ 
+-// トピックの本文スタック（理解パート→[確認問題]→解説→復習→参考書→過去問分野）。
+-// トピック詳細ページと「今日の学習メニュー」で同一の内容を表示するため共有する。
+-// directive を付けないことで、サーバ（トピック詳細）/クライアント（today）両方の
+-// ツリーから描画できる。
+-export default function TopicContent({
+-  topic,
+-  showCheckQuestions = true,
+-}: {
+-  topic: Topic;
+-  showCheckQuestions?: boolean;
+-}) {
++export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
+   const processDemo = topic.processDemo;
+   // テーマ専用に作り込んだ「体験コンポーネント」があれば、汎用カード図解の
+   // 代わりにそれを描画する（テーマごとに見せ方を最適化するための仕組み）。
+   // レジストリから取り出した既存コンポーネントなので createElement で描画する
+   // （render 中に新規コンポーネントを定義しているわけではない）。
+   const experience = getTopicExperience(topic.id);
+   const explanationKeyPoints = topic.explanation.keyPoints ?? [];
+-
+   const explanationSlides: ExplanationSlide[] = [];
++
+   if (experience) {
+     explanationSlides.push({
+       id: "experience",
+       label: "体験して理解",
+       content: createElement(experience),
+     });
+   } else if (processDemo) {
+     explanationSlides.push({
+       id: "process-demo",
+       label: "体験して理解",
+       content: <ProcessDemoSection demo={processDemo} />,
+     });
+-  } else {
+-    if (topic.visualLearning) {
+-      explanationSlides.push({
+-        id: "visual-learning",
+-        label: "図で理解する",
+-        content: <VisualLearningSection visualLearning={topic.visualLearning} />,
+-      });
+-    }
+-
++  } else if (topic.visualLearning) {
+     explanationSlides.push({
+-      id: "concept",
+-      label: "イメージをつかむ",
+-      content: (
+-        <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+-          <h3 className="text-base font-bold text-gray-800">
+-            {topic.conceptCard.heading}
+-          </h3>
+-          <p className="mt-2 text-sm leading-relaxed text-gray-700">
+-            {topic.conceptCard.body}
+-          </p>
+-          {topic.conceptCard.analogy && (
+-            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
+-              🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
+-            </p>
+-          )}
+-          {topic.conceptCard.diagram && (
+-            <div className="mt-4">
+-              <DiagramRenderer spec={topic.conceptCard.diagram} />
+-            </div>
+-          )}
+-        </section>
+-      ),
++      id: "visual-learning",
++      label: "図で理解する",
++      content: <VisualLearningSection visualLearning={topic.visualLearning} />,
+     });
+-
+-    if (topic.explanation.diagram || explanationKeyPoints.length > 0) {
+-      explanationSlides.push({
+-        id: "exam-points",
+-        label: "試験ポイント",
+-        content: (
+-          <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+-            <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
+-            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+-              {topic.explanation.body}
+-            </p>
+-            {explanationKeyPoints.length > 0 && (
+-              <ul className="mt-3 space-y-1.5">
+-                {explanationKeyPoints.map((keyPoint, index) => (
+-                  <li
+-                    key={index}
+-                    className="flex gap-2 text-sm font-semibold text-gray-700"
+-                  >
+-                    <span aria-hidden className="text-indigo-500">
+-                      ✓
+-                    </span>
+-                    {keyPoint}
+-                  </li>
+-                ))}
+-              </ul>
+-            )}
+-            {topic.explanation.diagram && (
+-              <div className="mt-4">
+-                <DiagramRenderer spec={topic.explanation.diagram} />
+-              </div>
+-            )}
+-          </section>
+-        ),
+-      });
+-    }
+   }
+ 
++  explanationSlides.push({
++    id: "concept",
++    label: "イメージをつかむ",
++    content: (
++      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
++        <h3 className="text-base font-bold text-gray-800">
++          {topic.conceptCard.heading}
++        </h3>
++        <p className="mt-2 text-sm leading-relaxed text-gray-700">
++          {topic.conceptCard.body}
++        </p>
++        {topic.conceptCard.analogy && (
++          <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
++            🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
++          </p>
++        )}
++        {topic.conceptCard.diagram && (
++          <div className="mt-4">
++            <DiagramRenderer spec={topic.conceptCard.diagram} />
++          </div>
++        )}
++      </section>
++    ),
++  });
++
++  explanationSlides.push({
++    id: "exam-points",
++    label: "試験ポイント",
++    content: (
++      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
++        <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
++        <p className="mt-2 text-sm leading-relaxed text-gray-700">
++          {topic.explanation.body}
++        </p>
++        {explanationKeyPoints.length > 0 && (
++          <ul className="mt-3 space-y-1.5">
++            {explanationKeyPoints.map((keyPoint, index) => (
++              <li
++                key={index}
++                className="flex gap-2 text-sm font-semibold text-gray-700"
++              >
++                <span aria-hidden className="text-indigo-500">
++                  ✓
++                </span>
++                {keyPoint}
++              </li>
++            ))}
++          </ul>
++        )}
++        {topic.explanation.diagram && (
++          <div className="mt-4">
++            <DiagramRenderer spec={topic.explanation.diagram} />
++          </div>
++        )}
++      </section>
++    ),
++  });
++
++  return explanationSlides;
++}
++
++// トピックの本文スタック（理解パート→[確認問題]→解説→復習→参考書→過去問分野）。
++// トピック詳細ページと「今日の学習メニュー」で同一の内容を表示するため共有する。
++// directive を付けないことで、サーバ（トピック詳細）/クライアント（today）両方の
++// ツリーから描画できる。
++export default function TopicContent({
++  topic,
++  showCheckQuestions = true,
++}: {
++  topic: Topic;
++  showCheckQuestions?: boolean;
++}) {
++  const explanationSlides = buildExplanationSlides(topic);
++
+   return (
+     <div className="space-y-8">
+       {/* 導入: 用語説明の前に「なぜこの概念が必要か」を問いかけて引き込む。 */}
+       {topic.hookQuestion && (
+         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-indigo-100">
+           <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-600">
+             <span aria-hidden>🤔</span>
+             最初に考えてみよう
+           </p>
+           <p className="mt-2 text-base font-bold leading-relaxed text-gray-800">
+diff --git a/docs/superpowers/plans/2026-07-18-uniform-lesson-explanation-slides.md b/docs/superpowers/plans/2026-07-18-uniform-lesson-explanation-slides.md
+new file mode 100644
+index 0000000..c25b358
+--- /dev/null
++++ b/docs/superpowers/plans/2026-07-18-uniform-lesson-explanation-slides.md
+@@ -0,0 +1,208 @@
++# 全トピック共通の解説スライド Implementation Plan
++
++> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
++
++**Goal:** 全トピックの解説を同一の横スライドUIで表示し、トピック内でスライド高さを固定したうえで、フォーカス時の左右矢印キーでも移動できるようにする。
++
++**Architecture:** `TopicContent` は専用体験・プロセスデモの有無にかかわらず、既存の体験・概念カード・試験ポイントを1つの `ExplanationSlides` 配列に組み立てる。`ExplanationSlides` は全スライドをCSS Gridの同じセルに置き、最も高い内容で高さを確保しながら、アクティブなスライドだけを表示・操作可能にする。
++
++**Tech Stack:** Next.js 16.2.9, React 19.2.4, TypeScript, Tailwind CSS v4, Vitest, Testing Library
++
++## Global Constraints
++
++- Next.js 16.2.9のApp Router構成を維持し、既存のServer/Client境界を広げない。
++- `.env` と `.projects` は読まない・編集しない。
++- 解説・体験・確認問題の既存コンテンツ、回答、正誤判定、シャッフルは削除・変更しない。
++- キーボード操作は `ExplanationSlides` 自体にフォーカスがあるときだけ有効にし、フォーム要素の操作を奪わない。
++- 非アクティブなスライドはアクセシビリティツリーとポインター操作から除外するが、レイアウト高さの計算には参加させる。
++
++---
++
++### Task 1: 高さ固定・キーボード操作の回帰テストを追加
++
++**Files:**
++- Modify: `test/ExplanationSlides.test.tsx`
++
++**Interfaces:**
++- Consumes: `ExplanationSlides` の既存 `slides`, `title` props。
++- Produces: すべてのスライドをDOMに保持し、アクティブなスライドだけが操作・公開されること、フォーカス時の左右キー操作を保証するテスト。
++
++- [ ] **Step 1: Write the failing tests**
++
++  既存テストを次の契約に更新・追加する。
++
++  ```tsx
++  it("keeps every slide mounted to reserve the tallest slide height", () => {
++    render(<ExplanationSlides slides={slides} />);
++    const viewport = screen.getByTestId("explanation-slides-viewport");
++
++    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
++    expect(screen.getByRole("group", { name: "全体像" })).toBeVisible();
++    expect(screen.queryByRole("group", { name: "ポイント" })).not.toBeInTheDocument();
++  });
++
++  it("moves with arrow keys only while the explanation viewport has focus", () => {
++    render(<ExplanationSlides slides={slides} />);
++    const viewport = screen.getByTestId("explanation-slides-viewport");
++
++    fireEvent.keyDown(window, { key: "ArrowRight" });
++    expect(screen.getByText("1 / 3")).toBeInTheDocument();
++
++    viewport.focus();
++    fireEvent.keyDown(viewport, { key: "ArrowRight" });
++    expect(screen.getByText("2 / 3")).toBeInTheDocument();
++    fireEvent.keyDown(viewport, { key: "ArrowLeft" });
++    expect(screen.getByText("1 / 3")).toBeInTheDocument();
++  });
++  ```
++
++- [ ] **Step 2: Run the focused test to verify RED**
++
++  Run: `npm test -- --run test/ExplanationSlides.test.tsx`
++
++  Expected: FAIL because inactive slides are currently unmounted and the viewport is not keyboard-focusable.
++
++### Task 2: 共通スライドUIを高さ固定・キーボード対応にする
++
++**Files:**
++- Modify: `components/learn/ExplanationSlides.tsx`
++- Test: `test/ExplanationSlides.test.tsx`
++
++**Interfaces:**
++- Consumes: `slides: ExplanationSlide[]`, `title?: string | null`。
++- Produces: `data-testid="explanation-slides-viewport"` を持つフォーカス可能な横スライド領域。`ArrowLeft` / `ArrowRight`、下部ボタン、番号、スワイプで同じ `moveTo` を呼び出す。
++
++- [ ] **Step 1: Implement the minimal shared layout**
++
++  `ExplanationSlides.tsx` を次の方針で変更する。
++
++  ```tsx
++  <div
++    data-testid="explanation-slides-viewport"
++    tabIndex={slides.length > 1 ? 0 : undefined}
++    onKeyDown={handleKeyDown}
++    className="touch-pan-y overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
++  >
++    <div className="grid">
++      {slides.map((slide, index) => {
++        const isActive = index === activeIndex;
++        return (
++          <article
++            key={slide.id}
++            role="group"
++            aria-label={slide.label}
++            aria-hidden={!isActive}
++            inert={!isActive}
++            className={`col-start-1 row-start-1 w-full transition duration-300 motion-reduce:transition-none ${
++              isActive
++                ? "relative z-10 translate-x-0 opacity-100"
++                : index < activeIndex
++                  ? "pointer-events-none -translate-x-full opacity-0"
++                  : "pointer-events-none translate-x-full opacity-0"
++            }`}
++          >
++            {slide.content}
++          </article>
++        );
++      })}
++    </div>
++  </div>
++  ```
++
++  `handleKeyDown` は `ArrowLeft` と `ArrowRight` だけで `preventDefault()` 後に `moveTo` を呼ぶ。`input`、`textarea`、`select`、`[contenteditable]` をイベント起点とする場合は何もしない。
++
++- [ ] **Step 2: Run the focused test to verify GREEN**
++
++  Run: `npm test -- --run test/ExplanationSlides.test.tsx`
++
++  Expected: PASS. 既存のクリック・番号・スワイプテストも維持する。
++
++- [ ] **Step 3: Check focused lint and types**
++
++  Run: `npx eslint components/learn/ExplanationSlides.tsx test/ExplanationSlides.test.tsx && npm run typecheck`
++
++  Expected: exit code 0.
++
++### Task 3: 全トピックの解説構成を共通UIへ流す
++
++**Files:**
++- Modify: `components/learn/TopicContent.tsx`
++- Test: `test/ExplanationSlides.test.tsx`
++
++**Interfaces:**
++- Consumes: `Topic`, `getTopicExperience`, `ProcessDemoSection`, `VisualLearningSection`, `DiagramRenderer`。
++- Produces: 専用体験・プロセスデモの有無に関係なく、体験（ある場合）・概念カード・試験ポイントを同じ `ExplanationSlides` に渡す `ExplanationSlide[]`。
++
++- [ ] **Step 1: Write the failing content-assembly test**
++
++  `TopicContent` のスライド配列生成を小さな純粋関数 `buildExplanationSlides(topic)` としてexportし、専用体験を持つトピックでも `experience`、`concept`、`exam-points` が順に含まれることをテストする。
++
++  ```tsx
++  it("keeps the common explanation slides after a topic experience", () => {
++    const slides = buildExplanationSlides(topicWithExperience);
++
++    expect(slides.map((slide) => slide.id)).toEqual([
++      "experience",
++      "concept",
++      "exam-points",
++    ]);
++  });
++  ```
++
++- [ ] **Step 2: Run the focused test to verify RED**
++
++  Run: `npm test -- --run test/TopicContent.test.tsx`
++
++  Expected: FAIL because the helper does not exist and experience topics currently omit the shared concept and exam slides.
++
++- [ ] **Step 3: Implement the minimal content assembly**
++
++  `TopicContent.tsx` を以下の順に構成する。
++
++  1. `getTopicExperience(topic.id)` があるときは `experience` を追加し、なければ `processDemo`、なければ `visualLearning` を最初の理解スライドとして追加する。
++  2. すべてのトピックで既存の概念カードを `concept` スライドとして追加する。ただし最初の理解スライドが概念カードそのものの場合は重複させない。
++  3. すべてのトピックで既存の解説本文・要点・図解を `exam-points` スライドとして追加する。要点と図解がなくても本文を表示する。
++  4. `ExplanationSlides title="📖 解説"` に生成した配列を渡す。確認問題と `TopicReviewSections` は変更しない。
++
++- [ ] **Step 4: Run focused tests to verify GREEN**
++
++  Run: `npm test -- --run test/TopicContent.test.tsx test/ExplanationSlides.test.tsx test/EnterpriseActivitiesExperience.test.tsx`
++
++  Expected: PASS. 専用体験の既存操作は失われず、共通の解説ナビゲーションも利用できる。
++
++### Task 4: 全体検証・ブラウザ確認・公開
++
++**Files:**
++- Modify: `components/learn/ExplanationSlides.tsx`, `components/learn/TopicContent.tsx`, `test/ExplanationSlides.test.tsx`, `test/TopicContent.test.tsx`
++
++**Interfaces:**
++- Consumes: Tasks 1〜3の実装。
++- Produces: 全トピックで同じ解説UIを提供する、検証済みのmainブランチ変更。
++
++- [ ] **Step 1: Run the complete validation suite**
++
++  Run: `npm test && npm run typecheck && npx eslint components/learn/ExplanationSlides.tsx components/learn/TopicContent.tsx test/ExplanationSlides.test.tsx test/TopicContent.test.tsx`
++
++  Expected: all tests pass, TypeScript exits 0, and changed-file lint exits 0.
++
++- [ ] **Step 2: Build the learn routes**
++
++  Run: `npx next build --turbo --debug-build-paths 'app/learn/**'`
++
++  Expected: compilation, type checking, and 94-page static generation complete with exit code 0.
++
++- [ ] **Step 3: Verify the rendered lesson flow**
++
++  Start `npm run dev`, open an experience-backed lesson and a standard lesson, then confirm:
++
++  - the first slide has a focus ring;
++  - `ArrowRight` and `ArrowLeft` move only while that viewport is focused;
++  - the section height stays unchanged between the tallest and shortest slides;
++  - existing next/previous buttons, number buttons, and swipe still work;
++  - confirmation questions and review sections remain visible.
++
++- [ ] **Step 4: Commit and push only scoped files**
++
++  Run: `git add components/learn/ExplanationSlides.tsx components/learn/TopicContent.tsx test/ExplanationSlides.test.tsx test/TopicContent.test.tsx docs/superpowers/plans/2026-07-18-uniform-lesson-explanation-slides.md && git commit -m "feat: unify lesson explanation slides" && git push origin main`
++
++  Expected: only the implementation, regression tests, and this plan are committed to `main`; unrelated untracked files remain unmodified.
+diff --git a/docs/superpowers/specs/2026-07-18-lesson-explanation-slides-design.md b/docs/superpowers/specs/2026-07-18-lesson-explanation-slides-design.md
+new file mode 100644
+index 0000000..05d23dd
+--- /dev/null
++++ b/docs/superpowers/specs/2026-07-18-lesson-explanation-slides-design.md
+@@ -0,0 +1,64 @@
++# レッスン解説スライド化・確認問題コンパクト化 設計
++
++## 目的
++
++各トピックのレッスンページで、学習者が解説を縦に読み続けなくても「1、2、3」と段階的に進められるようにする。同時に、確認問題の選択肢と回答結果の表示を少し圧縮し、1画面内で問題の全体像を把握しやすくする。解説スライドは、すべてのトピックで同じ操作・同じ高さのUIを使う。
++
++## 対象範囲
++
++- 対象は `/learn/[themeSlug]/[sectionSlug]/[lessonId]` のトピックレッスンUI。
++- 解説側は、既存の `TopicContent` が持つ視覚理解・概念カード・テーマ専用体験・プロセスデモを、レッスンページ内で横スライドできるセクションとして扱う。
++- 69件のテーマ専用体験を含む全トピックで、共通の `ExplanationSlides` を最上位の解説ナビゲーションとして使う。
++- 確認問題側は、既存の `CheckQuestionCard` の見た目だけを調整し、回答・正誤判定・シャッフルなどの挙動は変えない。
++- today、確認パック、模試など `TopicQuiz` を利用する別画面の挙動は変更しない。
++
++## UI設計
++
++### 解説セクション
++
++- 解説エリアの最上部に `📖 解説` のセクショントップ見出しを表示する。
++- 解説コンテンツは1枚ずつ表示する横スライダーにする。
++- スライドは利用可能な内容から最大3枚に整理する。
++  - 通常トピック: 視覚理解、概念カード、補足図解または要点。
++  - テーマ専用体験・プロセスデモ: 既存の体験を1枚目として扱い、残りは既存の固定構成に合わせて生成する。
++- 前後ボタン、現在位置表示（例: `1 / 3`）、ドットまたは番号ボタンを設ける。
++- ボタン操作、キーボード操作、タッチの横スワイプで移動できる。
++- PCでは、解説エリアにフォーカスがあるときにキーボードの `ArrowLeft` / `ArrowRight` で前後へ移動できる。選択肢や入力欄などの操作中には反応しない。
++- 横スライダーは各ページ幅を占有し、コンテンツの横はみ出しを起こさない。
++- 同じトピックの全スライドを同一グリッドセルへ重ねて描画する。グリッドの高さは最も高いスライドに合わせるため、1・2・3の切替で高さもナビゲーション位置も変わらない。
++- 低いスライドの余白は下部に残し、説明本文の読み始め位置をそろえる。
++- `prefers-reduced-motion` では移動アニメーションを無効化または即時切替にする。
++- スライドが1枚しかない場合はナビゲーションを表示しない。
++
++### 確認問題
++
++- 問題カードの外側余白を `p-4` から `p-3` 相当へ縮める。
++- 選択肢間の縦間隔を少し縮める。
++- 回答後の正解表示パネルの内側余白と、再挑戦ボタンまでの間隔を少し縮める。
++- 文字サイズ・色・正解判定・再挑戦操作は維持する。
++
++## 実装方針
++
++- `TopicContent` は、専用体験・プロセスデモがある場合も概念カードと試験ポイントを後続スライドへ追加し、全トピックで共通ナビゲーションを表示する。
++- `ExplanationSlides` は `"use client"` とし、現在スライド番号・前後移動・タッチ開始位置・フォーカス時のキーボード操作を管理する。
++- `ExplanationSlides` は各スライドを同じCSS Gridセルに配置し、アクティブな1枚だけを表示する。非アクティブなスライドは透明・操作不可・アクセシビリティツリーから除外するが、レイアウト計算には参加して最大高さを確保する。
++- 既存の `VisualLearningSection`、`ProcessDemoSection`、`DiagramRenderer` は再利用し、表示内容の重複を避ける。
++- `TopicReviewSections` の「解説で理解を固める」は、確認問題後の復習解説として残す。今回の横スライド対象はレッスン冒頭の解説エリアとする。
++- 既存の `Section` の見出しスタイルを共有し、ページの情報階層を揃える。
++
++## テスト方針
++
++- `ExplanationSlides` の初期表示、前後移動、最後/最初でのボタン状態、スライド位置表示をコンポーネントテストで確認する。
++- タッチ操作は最低限、左右スワイプでスライドが切り替わることをテストする。
++- すべてのスライドがレイアウト上は存在し、最大高さが確保されることをテストする。
++- 解説エリアにフォーカスを置いた状態で、左右矢印キーが前後移動し、テキスト入力中には移動しないことをテストする。
++- 既存の `TopicQuiz` テストを含む全体テスト、型チェック、Lint、Next.jsビルドを実行する。
++
++## 受け入れ条件
++
++- 解説の最上部にタイトルがあり、横方向に1、2、3と進められる。
++- 確認問題の選択肢・正解表示が従来より少し短い。
++- モバイル幅でも横スクロールがページ全体に漏れず、左右ボタンとスワイプが操作できる。
++- 各トピック内では、最も高い解説スライドの高さに全スライドが揃い、切替時に縦幅が変化しない。
++- PCでは、解説エリアにフォーカスしてキーボードの左右矢印キーで前後のスライドへ移動できる。
++- 既存の回答記録・正誤判定・別画面のクイズ表示に回帰がない。
+diff --git a/test/ExplanationSlides.test.tsx b/test/ExplanationSlides.test.tsx
+index efa8369..c98767c 100644
+--- a/test/ExplanationSlides.test.tsx
++++ b/test/ExplanationSlides.test.tsx
+@@ -10,45 +10,98 @@ describe("ExplanationSlides", () => {
+   const slides = [
+     { id: "one", label: "全体像", content: <p>スライド1</p> },
+     { id: "two", label: "ポイント", content: <p>スライド2</p> },
+     { id: "three", label: "まとめ", content: <p>スライド3</p> },
+   ];
+ 
+   it("starts on the first slide and moves with navigation controls", () => {
+     render(<ExplanationSlides slides={slides} />);
+ 
+     const viewport = screen.getByTestId("explanation-slides-viewport");
+-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
++    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
+     expect(screen.getByText("スライド1")).toBeInTheDocument();
+-    expect(screen.queryByText("スライド2")).not.toBeInTheDocument();
++    expect(viewport.querySelector('[aria-label="ポイント"]')).toHaveClass("opacity-0");
+     expect(screen.getByText("1 / 3")).toBeInTheDocument();
+ 
+     fireEvent.click(screen.getByRole("button", { name: "次の解説へ" }));
+-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+-    expect(screen.queryByText("スライド1")).not.toBeInTheDocument();
++    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
++    expect(viewport.querySelector('[aria-label="全体像"]')).toHaveClass("opacity-0");
+     expect(screen.getByText("スライド2")).toBeInTheDocument();
+     expect(screen.getByText("2 / 3")).toBeInTheDocument();
+ 
+     fireEvent.click(screen.getByRole("button", { name: "解説3" }));
+-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
++    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
+     expect(screen.getByText("スライド3")).toBeInTheDocument();
+     expect(screen.getByRole("button", { name: "次の解説へ" })).toBeDisabled();
+   });
+ 
+   it("changes slides after a horizontal swipe", () => {
+     render(<ExplanationSlides slides={slides} />);
+     const viewport = screen.getByTestId("explanation-slides-viewport");
+ 
+     fireEvent.touchStart(viewport, { changedTouches: [{ clientX: 240 }] });
+     fireEvent.touchEnd(viewport, { changedTouches: [{ clientX: 80 }] });
+ 
+-    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
++    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
+     expect(screen.getByText("スライド2")).toBeInTheDocument();
+   });
+ 
++  it("keeps every slide mounted to reserve the tallest slide height", () => {
++    render(<ExplanationSlides slides={slides} />);
++    const viewport = screen.getByTestId("explanation-slides-viewport");
++    const inactiveSlide = viewport.querySelector('[aria-label="ポイント"]');
++
++    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
++    expect(screen.getByRole("group", { name: "全体像" })).toBeVisible();
++    expect(inactiveSlide).toHaveAttribute("aria-hidden", "true");
++    expect(inactiveSlide).toHaveClass("pointer-events-none");
++    expect(screen.queryByRole("group", { name: "ポイント" })).not.toBeInTheDocument();
++  });
++
++  it("moves with arrow keys only while the explanation viewport has focus", () => {
++    render(<ExplanationSlides slides={slides} />);
++    const viewport = screen.getByTestId("explanation-slides-viewport");
++
++    fireEvent.keyDown(window, { key: "ArrowRight" });
++    expect(screen.getByText("1 / 3")).toBeInTheDocument();
++
++    viewport.focus();
++    expect(viewport).toHaveFocus();
++    fireEvent.keyDown(viewport, { key: "ArrowRight" });
++    expect(screen.getByText("2 / 3")).toBeInTheDocument();
++    fireEvent.keyDown(viewport, { key: "ArrowLeft" });
++    expect(screen.getByText("1 / 3")).toBeInTheDocument();
++
++    viewport.focus();
++    fireEvent.keyDown(viewport, { key: "ArrowRight" });
++    expect(screen.getByText("2 / 3")).toBeInTheDocument();
++    screen.getByRole("button", { name: "次の解説へ" }).focus();
++    expect(viewport).not.toHaveFocus();
++    fireEvent.keyDown(window, { key: "ArrowRight" });
++    expect(screen.getByText("2 / 3")).toBeInTheDocument();
++  });
++
++  it("does not navigate when an active slide descendant has focus", () => {
++    const slidesWithButton = [
++      { id: "one", label: "全体像", content: <button type="button">操作</button> },
++      { id: "two", label: "ポイント", content: <p>スライド2</p> },
++    ];
++
++    render(<ExplanationSlides slides={slidesWithButton} />);
++    const viewport = screen.getByTestId("explanation-slides-viewport");
++    const button = screen.getByRole("button", { name: "操作" });
++
++    button.focus();
++    expect(button).toHaveFocus();
++    fireEvent.keyDown(button, { key: "ArrowRight" });
++
++    expect(viewport).not.toHaveFocus();
++    expect(screen.getByText("1 / 2")).toBeInTheDocument();
++  });
++
+   it("shows the section title and slide labels", () => {
+     render(<ExplanationSlides title="📖 解説" slides={slides} />);
+ 
+     expect(screen.getByRole("heading", { name: "📖 解説" })).toBeInTheDocument();
+     expect(screen.getByRole("button", { name: "解説1" })).toHaveTextContent("全体像");
+   });
+ });
+diff --git a/test/TopicContent.test.tsx b/test/TopicContent.test.tsx
+new file mode 100644
+index 0000000..903327d
+--- /dev/null
++++ b/test/TopicContent.test.tsx
+@@ -0,0 +1,20 @@
++import { describe, expect, it } from "vitest";
++import { buildExplanationSlides } from "@/components/learn/TopicContent";
++import { topics } from "@/data/topics";
++
++describe("buildExplanationSlides", () => {
++  it("keeps the common explanation slides after a topic experience", () => {
++    const topicWithExperience = topics.find(
++      (topic) => topic.id === "strat-enterprise-activities",
++    );
++
++    expect(topicWithExperience).toBeDefined();
++    const slides = buildExplanationSlides(topicWithExperience!);
++
++    expect(slides.map((slide) => slide.id)).toEqual([
++      "experience",
++      "concept",
++      "exam-points",
++    ]);
++  });
++});

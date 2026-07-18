@@ -1,0 +1,124 @@
+# Review package: 04d9a6e..f752540
+
+## Commits
+f752540 feat: preserve explanation slide layout
+
+## Files changed
+ components/learn/ExplanationSlides.tsx | 63 +++++++++++++++++++++++++++++-----
+ 1 file changed, 54 insertions(+), 9 deletions(-)
+
+## Diff
+diff --git a/components/learn/ExplanationSlides.tsx b/components/learn/ExplanationSlides.tsx
+index 2e37b07..5c893dc 100644
+--- a/components/learn/ExplanationSlides.tsx
++++ b/components/learn/ExplanationSlides.tsx
+@@ -1,13 +1,19 @@
+ "use client";
+ 
+-import { useRef, useState, type ReactNode, type TouchEvent } from "react";
++import {
++  useRef,
++  useState,
++  type KeyboardEvent,
++  type ReactNode,
++  type TouchEvent,
++} from "react";
+ 
+ export type ExplanationSlide = {
+   id: string;
+   label: string;
+   content: ReactNode;
+ };
+ 
+ const SWIPE_THRESHOLD = 56;
+ 
+ export default function ExplanationSlides({
+@@ -39,41 +45,80 @@ export default function ExplanationSlides({
+     const startX = touchStartX.current;
+     const endX = event.changedTouches[0]?.clientX;
+     touchStartX.current = null;
+     if (startX === null || endX === undefined) return;
+ 
+     const distance = endX - startX;
+     if (Math.abs(distance) < SWIPE_THRESHOLD) return;
+     moveTo(activeIndex + (distance < 0 ? 1 : -1));
+   }
+ 
++  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
++    const target = event.target;
++    if (
++      target instanceof Element &&
++      target.closest("input, textarea, select, [contenteditable]")
++    ) {
++      return;
++    }
++
++    if (event.key === "ArrowLeft") {
++      event.preventDefault();
++      moveTo(activeIndex - 1);
++    }
++
++    if (event.key === "ArrowRight") {
++      event.preventDefault();
++      moveTo(activeIndex + 1);
++    }
++  }
++
+   return (
+     <section aria-label="解説" className="space-y-3">
+       {title && (
+         <h2 className="flex items-center gap-2 text-lg font-extrabold text-gray-800">
+           {title}
+         </h2>
+       )}
+ 
+       <div
+         data-testid="explanation-slides-viewport"
+-        className="touch-pan-y overflow-hidden rounded-2xl"
++        tabIndex={slides.length > 1 ? 0 : undefined}
++        onKeyDown={handleKeyDown}
++        className="touch-pan-y overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+         onTouchStart={handleTouchStart}
+         onTouchEnd={handleTouchEnd}
+       >
+-        <article
+-          key={slides[activeIndex].id}
+-          aria-label={slides[activeIndex].label}
+-          role="group"
+-        >
+-          {slides[activeIndex].content}
+-        </article>
++        <div className="grid">
++          {slides.map((slide, index) => {
++            const isActive = index === activeIndex;
++            return (
++              <article
++                key={slide.id}
++                role="group"
++                aria-label={slide.label}
++                aria-hidden={!isActive}
++                inert={!isActive}
++                style={{ opacity: isActive ? 1 : 0 }}
++                className={`col-start-1 row-start-1 w-full transition duration-300 motion-reduce:transition-none ${
++                  isActive
++                    ? "relative z-10 translate-x-0 opacity-100"
++                    : index < activeIndex
++                      ? "pointer-events-none -translate-x-full opacity-0"
++                      : "pointer-events-none translate-x-full opacity-0"
++                }`}
++              >
++                {slide.content}
++              </article>
++            );
++          })}
++        </div>
+       </div>
+ 
+       {slides.length > 1 && (
+         <div className="flex items-center justify-between gap-3">
+           <button
+             type="button"
+             onClick={() => moveTo(activeIndex - 1)}
+             disabled={!canGoPrevious}
+             aria-label="前の解説へ"
+             className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-indigo-200 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>モチット オーバーレイ比較（承認済みマスター vs レイヤー再構成SVG）</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; background: #f3f4f6; color: #1f2937; }
+  header { padding: 12px 16px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+  h1 { font-size: 15px; margin: 0 0 4px; }
+  p.note { font-size: 12px; color: #6b7280; margin: 0; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+  .controls label { display: flex; align-items: center; gap: 6px; }
+  main { display: flex; flex-wrap: wrap; gap: 24px; padding: 24px; justify-content: center; }
+  figure { margin: 0; text-align: center; }
+  figcaption { font-size: 12px; color: #6b7280; margin-top: 6px; }
+  .stage { position: relative; width: 512px; height: 512px; background:
+    repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0 / 24px 24px; border: 1px solid #d1d5db; }
+  .stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+  /* master.png はアルファ無し（市松模様焼き込み）のため multiply で重ねる */
+  #masterOverlayImg { mix-blend-mode: multiply; }
+  .single { width: 360px; height: 360px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>モチット オーバーレイ比較</h1>
+  <p class="note">
+    左: 承認済みマスター（public/characters/mochit/master.png・アルファ無し）
+    ／右: レイヤー再構成（design/mochit/source/mochit-layered.svg）。
+    中央は同位置・同サイズで重ね合わせ。スライダーでSVG側の不透明度を変更。
+  </p>
+</header>
+<div class="controls">
+  <label>SVG不透明度 <input id="alpha" type="range" min="0" max="100" value="55"></label>
+  <span id="alphaVal">55%</span>
+  <label><input id="diff" type="checkbox"> 差分モード（difference）</label>
+</div>
+<main>
+  <figure>
+    <div class="stage single"><img src="../../../public/characters/mochit/master.png" alt="マスター"></div>
+    <figcaption>マスター（原寸1254px）</figcaption>
+  </figure>
+  <figure>
+    <div class="stage" id="overlayStage">
+      <img id="masterOverlayImg" src="../../../public/characters/mochit/master.png" alt="マスター（下）">
+      <img id="svgOverlayImg" src="../source/mochit-layered.svg" alt="レイヤーSVG（上）" style="opacity:.55">
+    </div>
+    <figcaption>重ね合わせ（下=マスター / 上=SVG）</figcaption>
+  </figure>
+  <figure>
+    <div class="stage single"><img src="../source/mochit-layered.svg" alt="レイヤーSVG"></div>
+    <figcaption>レイヤー再構成SVG（1024pxアートボード）</figcaption>
+  </figure>
+</main>
+<script>
+  const alpha = document.getElementById('alpha');
+  const alphaVal = document.getElementById('alphaVal');
+  const svgImg = document.getElementById('svgOverlayImg');
+  const diff = document.getElementById('diff');
+  alpha.addEventListener('input', () => {
+    svgImg.style.opacity = alpha.value / 100;
+    alphaVal.textContent = alpha.value + '%';
+  });
+  diff.addEventListener('change', () => {
+    svgImg.style.mixBlendMode = diff.checked ? 'difference' : 'normal';
+  });
+</script>
+</body>
+</html>

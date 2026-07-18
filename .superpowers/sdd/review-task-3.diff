@@ -1,0 +1,244 @@
+# Review package: a9ba598..18751c3
+
+## Commits
+18751c3 feat: unify topic explanation slides
+
+## Files changed
+ components/learn/TopicContent.tsx | 158 +++++++++++++++++++-------------------
+ test/TopicContent.test.tsx        |  20 +++++
+ 2 files changed, 100 insertions(+), 78 deletions(-)
+
+## Diff
+diff --git a/components/learn/TopicContent.tsx b/components/learn/TopicContent.tsx
+index 1e31e2b..7f82fb6 100644
+--- a/components/learn/TopicContent.tsx
++++ b/components/learn/TopicContent.tsx
+@@ -3,122 +3,124 @@ import type { Topic } from "@/types/content";
+ import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
+ import CheckQuestionCard from "@/components/learn/CheckQuestionCard";
+ import ExplanationSlides, {
+   type ExplanationSlide,
+ } from "@/components/learn/ExplanationSlides";
+ import AddToReviewButton from "@/components/learn/AddToReviewButton";
+ import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
+ import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
+ import { getTopicExperience } from "@/components/experiences/registry";
+ 
+-// トピックの本文スタック（理解パート→[確認問題]→解説→復習→参考書→過去問分野）。
+-// トピック詳細ページと「今日の学習メニュー」で同一の内容を表示するため共有する。
+-// directive を付けないことで、サーバ（トピック詳細）/クライアント（today）両方の
+-// ツリーから描画できる。
+-export default function TopicContent({
+-  topic,
+-  showCheckQuestions = true,
+-}: {
+-  topic: Topic;
+-  showCheckQuestions?: boolean;
+-}) {
++export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
+   const processDemo = topic.processDemo;
+   // テーマ専用に作り込んだ「体験コンポーネント」があれば、汎用カード図解の
+   // 代わりにそれを描画する（テーマごとに見せ方を最適化するための仕組み）。
+   // レジストリから取り出した既存コンポーネントなので createElement で描画する
+   // （render 中に新規コンポーネントを定義しているわけではない）。
+   const experience = getTopicExperience(topic.id);
+   const explanationKeyPoints = topic.explanation.keyPoints ?? [];
+-
+   const explanationSlides: ExplanationSlide[] = [];
++
+   if (experience) {
+     explanationSlides.push({
+       id: "experience",
+       label: "体験して理解",
+       content: createElement(experience),
+     });
+   } else if (processDemo) {
+     explanationSlides.push({
+       id: "process-demo",
+       label: "体験して理解",
+       content: <ProcessDemoSection demo={processDemo} />,
+     });
+-  } else {
+-    if (topic.visualLearning) {
+-      explanationSlides.push({
+-        id: "visual-learning",
+-        label: "図で理解する",
+-        content: <VisualLearningSection visualLearning={topic.visualLearning} />,
+-      });
+-    }
+-
++  } else if (topic.visualLearning) {
+     explanationSlides.push({
+-      id: "concept",
+-      label: "イメージをつかむ",
+-      content: (
+-        <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+-          <h3 className="text-base font-bold text-gray-800">
+-            {topic.conceptCard.heading}
+-          </h3>
+-          <p className="mt-2 text-sm leading-relaxed text-gray-700">
+-            {topic.conceptCard.body}
+-          </p>
+-          {topic.conceptCard.analogy && (
+-            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
+-              🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
+-            </p>
+-          )}
+-          {topic.conceptCard.diagram && (
+-            <div className="mt-4">
+-              <DiagramRenderer spec={topic.conceptCard.diagram} />
+-            </div>
+-          )}
+-        </section>
+-      ),
++      id: "visual-learning",
++      label: "図で理解する",
++      content: <VisualLearningSection visualLearning={topic.visualLearning} />,
+     });
+-
+-    if (topic.explanation.diagram || explanationKeyPoints.length > 0) {
+-      explanationSlides.push({
+-        id: "exam-points",
+-        label: "試験ポイント",
+-        content: (
+-          <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+-            <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
+-            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+-              {topic.explanation.body}
+-            </p>
+-            {explanationKeyPoints.length > 0 && (
+-              <ul className="mt-3 space-y-1.5">
+-                {explanationKeyPoints.map((keyPoint, index) => (
+-                  <li
+-                    key={index}
+-                    className="flex gap-2 text-sm font-semibold text-gray-700"
+-                  >
+-                    <span aria-hidden className="text-indigo-500">
+-                      ✓
+-                    </span>
+-                    {keyPoint}
+-                  </li>
+-                ))}
+-              </ul>
+-            )}
+-            {topic.explanation.diagram && (
+-              <div className="mt-4">
+-                <DiagramRenderer spec={topic.explanation.diagram} />
+-              </div>
+-            )}
+-          </section>
+-        ),
+-      });
+-    }
+   }
+ 
++  explanationSlides.push({
++    id: "concept",
++    label: "イメージをつかむ",
++    content: (
++      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
++        <h3 className="text-base font-bold text-gray-800">
++          {topic.conceptCard.heading}
++        </h3>
++        <p className="mt-2 text-sm leading-relaxed text-gray-700">
++          {topic.conceptCard.body}
++        </p>
++        {topic.conceptCard.analogy && (
++          <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
++            🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
++          </p>
++        )}
++        {topic.conceptCard.diagram && (
++          <div className="mt-4">
++            <DiagramRenderer spec={topic.conceptCard.diagram} />
++          </div>
++        )}
++      </section>
++    ),
++  });
++
++  explanationSlides.push({
++    id: "exam-points",
++    label: "試験ポイント",
++    content: (
++      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
++        <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
++        <p className="mt-2 text-sm leading-relaxed text-gray-700">
++          {topic.explanation.body}
++        </p>
++        {explanationKeyPoints.length > 0 && (
++          <ul className="mt-3 space-y-1.5">
++            {explanationKeyPoints.map((keyPoint, index) => (
++              <li
++                key={index}
++                className="flex gap-2 text-sm font-semibold text-gray-700"
++              >
++                <span aria-hidden className="text-indigo-500">
++                  ✓
++                </span>
++                {keyPoint}
++              </li>
++            ))}
++          </ul>
++        )}
++        {topic.explanation.diagram && (
++          <div className="mt-4">
++            <DiagramRenderer spec={topic.explanation.diagram} />
++          </div>
++        )}
++      </section>
++    ),
++  });
++
++  return explanationSlides;
++}
++
++// トピックの本文スタック（理解パート→[確認問題]→解説→復習→参考書→過去問分野）。
++// トピック詳細ページと「今日の学習メニュー」で同一の内容を表示するため共有する。
++// directive を付けないことで、サーバ（トピック詳細）/クライアント（today）両方の
++// ツリーから描画できる。
++export default function TopicContent({
++  topic,
++  showCheckQuestions = true,
++}: {
++  topic: Topic;
++  showCheckQuestions?: boolean;
++}) {
++  const explanationSlides = buildExplanationSlides(topic);
++
+   return (
+     <div className="space-y-8">
+       {/* 導入: 用語説明の前に「なぜこの概念が必要か」を問いかけて引き込む。 */}
+       {topic.hookQuestion && (
+         <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-indigo-100">
+           <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-600">
+             <span aria-hidden>🤔</span>
+             最初に考えてみよう
+           </p>
+           <p className="mt-2 text-base font-bold leading-relaxed text-gray-800">
+diff --git a/test/TopicContent.test.tsx b/test/TopicContent.test.tsx
+new file mode 100644
+index 0000000..903327d
+--- /dev/null
++++ b/test/TopicContent.test.tsx
+@@ -0,0 +1,20 @@
++import { describe, expect, it } from "vitest";
++import { buildExplanationSlides } from "@/components/learn/TopicContent";
++import { topics } from "@/data/topics";
++
++describe("buildExplanationSlides", () => {
++  it("keeps the common explanation slides after a topic experience", () => {
++    const topicWithExperience = topics.find(
++      (topic) => topic.id === "strat-enterprise-activities",
++    );
++
++    expect(topicWithExperience).toBeDefined();
++    const slides = buildExplanationSlides(topicWithExperience!);
++
++    expect(slides.map((slide) => slide.id)).toEqual([
++      "experience",
++      "concept",
++      "exam-points",
++    ]);
++  });
++});
