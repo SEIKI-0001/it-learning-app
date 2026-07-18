@@ -20,6 +20,12 @@ describe("SqlExperience", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
 
+    const secondPanel = screen
+      .getByText("ミニSQL：選ぶと結果が変わる")
+      .closest("section");
+    expect(secondPanel).not.toHaveClass("hidden");
+    expect(secondPanel).toHaveClass("absolute", "invisible");
+
     fireEvent.click(screen.getByRole("button", { name: "解説2" }));
 
     expect(

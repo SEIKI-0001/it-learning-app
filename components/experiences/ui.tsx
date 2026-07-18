@@ -4,8 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,24 +16,92 @@ import {
 
 // テーマ専用「体験コンポーネント」で共通して使う小さなUI部品。
 
-type Deck = { active: number; ids: string[]; register: (id: string) => void };
+type Deck = {
+  active: number;
+  ids: string[];
+  register: (id: string, panel: HTMLElement) => void;
+  unregister: (id: string, panel: HTMLElement) => void;
+};
 const DeckContext = createContext<Deck | null>(null);
 const SWIPE_THRESHOLD = 56;
 
 export function ExperienceSlideDeck({ children }: { children: ReactNode }) {
   const [ids, setIds] = useState<string[]>([]);
   const [active, setActive] = useState(0);
+  const [panelRevision, setPanelRevision] = useState(0);
   const touchStartX = useRef<number | null>(null);
+  const panels = useRef(new Map<string, HTMLElement>());
   const register = useCallback(
-    (id: string) =>
-      setIds((current) => (current.includes(id) ? current : [...current, id])),
+    (id: string, panel: HTMLElement) => {
+      if (panels.current.get(id) === panel) return;
+      panels.current.set(id, panel);
+      setIds((current) => (current.includes(id) ? current : [...current, id]));
+      setPanelRevision((current) => current + 1);
+    },
     [],
   );
+  const unregister = useCallback((id: string, panel: HTMLElement) => {
+    if (panels.current.get(id) !== panel) return;
+    panels.current.delete(id);
+    setPanelRevision((current) => current + 1);
+  }, []);
   const move = useCallback(
     (index: number) => setActive(Math.max(0, Math.min(index, ids.length - 1))),
     [ids.length],
   );
-  const deck = useMemo(() => ({ active, ids, register }), [active, ids, register]);
+  const deck = useMemo(
+    () => ({ active, ids, register, unregister }),
+    [active, ids, register, unregister],
+  );
+
+  useLayoutEffect(() => {
+    const groups = new Map<HTMLElement, HTMLElement[]>();
+    for (const panel of panels.current.values()) {
+      const root = panel.parentElement;
+      if (!root) continue;
+      groups.set(root, [...(groups.get(root) ?? []), panel]);
+    }
+
+    const originalStyles = new Map<HTMLElement, { minHeight: string; position: string }>();
+    const measure = () => {
+      for (const [root, groupPanels] of groups) {
+        if (groupPanels.length < 2) continue;
+
+        if (!originalStyles.has(root)) {
+          originalStyles.set(root, {
+            minHeight: root.style.minHeight,
+            position: root.style.position,
+          });
+        }
+        root.style.position = "relative";
+        root.style.minHeight = "";
+
+        const activePanel =
+          groupPanels.find((panel) => panel.dataset.experienceSlideId === ids[active]) ??
+          groupPanels[0];
+        const tallestPanel = Math.max(
+          ...groupPanels.map((panel) => panel.getBoundingClientRect().height),
+        );
+        root.style.minHeight = `${Math.ceil(activePanel.offsetTop + tallestPanel)}px`;
+      }
+    };
+
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(measure);
+    for (const [root, groupPanels] of groups) {
+      observer.observe(root);
+      groupPanels.forEach((panel) => observer.observe(panel));
+    }
+    return () => {
+      observer.disconnect();
+      for (const [root, style] of originalStyles) {
+        root.style.minHeight = style.minHeight;
+        root.style.position = style.position;
+      }
+    };
+  }, [active, ids, panelRevision]);
 
   function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
     touchStartX.current =
@@ -124,11 +192,31 @@ export function ExperienceSlideDeck({ children }: { children: ReactNode }) {
 export function Panel({ children }: { children: ReactNode }) {
   const deck = useContext(DeckContext);
   const id = useId();
-  useEffect(() => deck?.register(id), [deck, id]);
+  const panelRef = useRef<HTMLElement>(null);
+  const register = deck?.register;
+  const unregister = deck?.unregister;
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || !register || !unregister) return;
+    register(id, panel);
+    return () => unregister(id, panel);
+  }, [id, register, unregister]);
   const index = deck?.ids.indexOf(id) ?? -1;
   const visible = index < 0 || index === deck?.active;
   return (
-    <section aria-hidden={!visible} inert={!visible} className={`rounded-2xl bg-white p-5 ring-1 ring-gray-200 ${visible ? "" : "pointer-events-none hidden"}`}>{children}</section>
+    <section
+      ref={panelRef}
+      data-experience-slide-id={id}
+      aria-hidden={!visible}
+      inert={!visible}
+      className={`rounded-2xl bg-white p-5 ring-1 ring-gray-200 ${
+        visible
+          ? ""
+          : "pointer-events-none invisible absolute inset-x-0 top-0"
+      }`}
+    >
+      {children}
+    </section>
   );
 }
 
