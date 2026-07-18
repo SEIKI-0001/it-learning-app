@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, useState, type ReactNode, type TouchEvent } from "react";
+import {
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type TouchEvent,
+} from "react";
 
 export type ExplanationSlide = {
   id: string;
@@ -46,6 +52,26 @@ export default function ExplanationSlides({
     moveTo(activeIndex + (distance < 0 ? 1 : -1));
   }
 
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest("input, textarea, select, [contenteditable]")
+    ) {
+      return;
+    }
+
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveTo(activeIndex - 1);
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveTo(activeIndex + 1);
+    }
+  }
+
   return (
     <section aria-label="解説" className="space-y-3">
       {title && (
@@ -56,17 +82,36 @@ export default function ExplanationSlides({
 
       <div
         data-testid="explanation-slides-viewport"
-        className="touch-pan-y overflow-hidden rounded-2xl"
+        tabIndex={slides.length > 1 ? 0 : undefined}
+        onKeyDown={handleKeyDown}
+        className="touch-pan-y overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <article
-          key={slides[activeIndex].id}
-          aria-label={slides[activeIndex].label}
-          role="group"
-        >
-          {slides[activeIndex].content}
-        </article>
+        <div className="grid">
+          {slides.map((slide, index) => {
+            const isActive = index === activeIndex;
+            return (
+              <article
+                key={slide.id}
+                role="group"
+                aria-label={slide.label}
+                aria-hidden={!isActive}
+                inert={!isActive}
+                style={{ opacity: isActive ? 1 : 0 }}
+                className={`col-start-1 row-start-1 w-full transition duration-300 motion-reduce:transition-none ${
+                  isActive
+                    ? "relative z-10 translate-x-0 opacity-100"
+                    : index < activeIndex
+                      ? "pointer-events-none -translate-x-full opacity-0"
+                      : "pointer-events-none translate-x-full opacity-0"
+                }`}
+              >
+                {slide.content}
+              </article>
+            );
+          })}
+        </div>
       </div>
 
       {slides.length > 1 && (
