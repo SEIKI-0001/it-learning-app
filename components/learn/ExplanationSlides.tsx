@@ -53,13 +53,7 @@ export default function ExplanationSlides({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const target = event.target;
-    if (
-      target instanceof Element &&
-      target.closest("input, textarea, select, [contenteditable]")
-    ) {
-      return;
-    }
+    if (event.target !== event.currentTarget) return;
 
     if (event.key === "ArrowLeft") {
       event.preventDefault();
@@ -98,7 +92,6 @@ export default function ExplanationSlides({
                 aria-label={slide.label}
                 aria-hidden={!isActive}
                 inert={!isActive}
-                style={{ opacity: isActive ? 1 : 0 }}
                 className={`col-start-1 row-start-1 w-full transition duration-300 motion-reduce:transition-none ${
                   isActive
                     ? "relative z-10 translate-x-0 opacity-100"

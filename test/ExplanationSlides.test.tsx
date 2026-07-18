@@ -19,12 +19,12 @@ describe("ExplanationSlides", () => {
     const viewport = screen.getByTestId("explanation-slides-viewport");
     expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
     expect(screen.getByText("スライド1")).toBeInTheDocument();
-    expect(screen.getByText("スライド2")).not.toBeVisible();
+    expect(viewport.querySelector('[aria-label="ポイント"]')).toHaveClass("opacity-0");
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "次の解説へ" }));
     expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
-    expect(screen.getByText("スライド1")).not.toBeVisible();
+    expect(viewport.querySelector('[aria-label="全体像"]')).toHaveClass("opacity-0");
     expect(screen.getByText("スライド2")).toBeInTheDocument();
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
 
@@ -78,6 +78,24 @@ describe("ExplanationSlides", () => {
     expect(viewport).not.toHaveFocus();
     fireEvent.keyDown(window, { key: "ArrowRight" });
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
+  });
+
+  it("does not navigate when an active slide descendant has focus", () => {
+    const slidesWithButton = [
+      { id: "one", label: "全体像", content: <button type="button">操作</button> },
+      { id: "two", label: "ポイント", content: <p>スライド2</p> },
+    ];
+
+    render(<ExplanationSlides slides={slidesWithButton} />);
+    const viewport = screen.getByTestId("explanation-slides-viewport");
+    const button = screen.getByRole("button", { name: "操作" });
+
+    button.focus();
+    expect(button).toHaveFocus();
+    fireEvent.keyDown(button, { key: "ArrowRight" });
+
+    expect(viewport).not.toHaveFocus();
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
   });
 
   it("shows the section title and slide labels", () => {
