@@ -10,17 +10,7 @@ import VisualLearningSection from "@/components/visual-learning/VisualLearningSe
 import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
 import { getTopicExperience } from "@/components/experiences/registry";
 
-// トピックの本文スタック（理解パート→[確認問題]→解説→復習→参考書→過去問分野）。
-// トピック詳細ページと「今日の学習メニュー」で同一の内容を表示するため共有する。
-// directive を付けないことで、サーバ（トピック詳細）/クライアント（today）両方の
-// ツリーから描画できる。
-export default function TopicContent({
-  topic,
-  showCheckQuestions = true,
-}: {
-  topic: Topic;
-  showCheckQuestions?: boolean;
-}) {
+export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
   const processDemo = topic.processDemo;
   // テーマ専用に作り込んだ「体験コンポーネント」があれば、汎用カード図解の
   // 代わりにそれを描画する（テーマごとに見せ方を最適化するための仕組み）。
@@ -28,8 +18,8 @@ export default function TopicContent({
   // （render 中に新規コンポーネントを定義しているわけではない）。
   const experience = getTopicExperience(topic.id);
   const explanationKeyPoints = topic.explanation.keyPoints ?? [];
-
   const explanationSlides: ExplanationSlide[] = [];
+
   if (experience) {
     explanationSlides.push({
       id: "experience",
@@ -42,75 +32,87 @@ export default function TopicContent({
       label: "体験して理解",
       content: <ProcessDemoSection demo={processDemo} />,
     });
-  } else {
-    if (topic.visualLearning) {
-      explanationSlides.push({
-        id: "visual-learning",
-        label: "図で理解する",
-        content: <VisualLearningSection visualLearning={topic.visualLearning} />,
-      });
-    }
-
+  } else if (topic.visualLearning) {
     explanationSlides.push({
-      id: "concept",
-      label: "イメージをつかむ",
-      content: (
-        <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
-          <h3 className="text-base font-bold text-gray-800">
-            {topic.conceptCard.heading}
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-gray-700">
-            {topic.conceptCard.body}
-          </p>
-          {topic.conceptCard.analogy && (
-            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
-              🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
-            </p>
-          )}
-          {topic.conceptCard.diagram && (
-            <div className="mt-4">
-              <DiagramRenderer spec={topic.conceptCard.diagram} />
-            </div>
-          )}
-        </section>
-      ),
+      id: "visual-learning",
+      label: "図で理解する",
+      content: <VisualLearningSection visualLearning={topic.visualLearning} />,
     });
-
-    if (topic.explanation.diagram || explanationKeyPoints.length > 0) {
-      explanationSlides.push({
-        id: "exam-points",
-        label: "試験ポイント",
-        content: (
-          <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
-            <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
-            <p className="mt-2 text-sm leading-relaxed text-gray-700">
-              {topic.explanation.body}
-            </p>
-            {explanationKeyPoints.length > 0 && (
-              <ul className="mt-3 space-y-1.5">
-                {explanationKeyPoints.map((keyPoint, index) => (
-                  <li
-                    key={index}
-                    className="flex gap-2 text-sm font-semibold text-gray-700"
-                  >
-                    <span aria-hidden className="text-indigo-500">
-                      ✓
-                    </span>
-                    {keyPoint}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {topic.explanation.diagram && (
-              <div className="mt-4">
-                <DiagramRenderer spec={topic.explanation.diagram} />
-              </div>
-            )}
-          </section>
-        ),
-      });
-    }
   }
+
+  explanationSlides.push({
+    id: "concept",
+    label: "イメージをつかむ",
+    content: (
+      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+        <h3 className="text-base font-bold text-gray-800">
+          {topic.conceptCard.heading}
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-gray-700">
+          {topic.conceptCard.body}
+        </p>
+        {topic.conceptCard.analogy && (
+          <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
+            🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
+          </p>
+        )}
+        {topic.conceptCard.diagram && (
+          <div className="mt-4">
+            <DiagramRenderer spec={topic.conceptCard.diagram} />
+          </div>
+        )}
+      </section>
+    ),
+  });
+
+  explanationSlides.push({
+    id: "exam-points",
+    label: "試験ポイント",
+    content: (
+      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+        <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
+        <p className="mt-2 text-sm leading-relaxed text-gray-700">
+          {topic.explanation.body}
+        </p>
+        {explanationKeyPoints.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {explanationKeyPoints.map((keyPoint, index) => (
+              <li
+                key={index}
+                className="flex gap-2 text-sm font-semibold text-gray-700"
+              >
+                <span aria-hidden className="text-indigo-500">
+                  ✓
+                </span>
+                {keyPoint}
+              </li>
+            ))}
+          </ul>
+        )}
+        {topic.explanation.diagram && (
+          <div className="mt-4">
+            <DiagramRenderer spec={topic.explanation.diagram} />
+          </div>
+        )}
+      </section>
+    ),
+  });
+
+  return explanationSlides;
+}
+
+// トピックの本文スタック（理解パート→[確認問題]→解説→復習→参考書→過去問分野）。
+// トピック詳細ページと「今日の学習メニュー」で同一の内容を表示するため共有する。
+// directive を付けないことで、サーバ（トピック詳細）/クライアント（today）両方の
+// ツリーから描画できる。
+export default function TopicContent({
+  topic,
+  showCheckQuestions = true,
+}: {
+  topic: Topic;
+  showCheckQuestions?: boolean;
+}) {
+  const explanationSlides = buildExplanationSlides(topic);
 
   return (
     <div className="space-y-8">
