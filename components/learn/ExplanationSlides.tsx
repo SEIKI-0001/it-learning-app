@@ -58,26 +58,13 @@ export default function ExplanationSlides({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div
-          className="flex items-start transition-transform duration-300 ease-out motion-reduce:transition-none"
-          style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+        <article
+          key={slides[activeIndex].id}
+          aria-label={slides[activeIndex].label}
+          role="group"
         >
-          {slides.map((slide, index) => {
-            const isActive = index === activeIndex;
-            return (
-              <article
-                key={slide.id}
-                aria-hidden={!isActive}
-                aria-label={slide.label}
-                className="min-w-full"
-                inert={!isActive}
-                role="group"
-              >
-                {slide.content}
-              </article>
-            );
-          })}
-        </div>
+          {slides[activeIndex].content}
+        </article>
       </div>
 
       {slides.length > 1 && (

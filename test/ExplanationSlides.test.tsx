@@ -16,30 +16,21 @@ describe("ExplanationSlides", () => {
   it("starts on the first slide and moves with navigation controls", () => {
     render(<ExplanationSlides slides={slides} />);
 
-    expect(screen.getByRole("group", { name: "全体像" })).toHaveAttribute(
-      "aria-hidden",
-      "false",
-    );
-    expect(
-      screen
-        .getByTestId("explanation-slides-viewport")
-        .querySelector('[aria-label="ポイント"]'),
-    ).toHaveAttribute("aria-hidden", "true");
+    const viewport = screen.getByTestId("explanation-slides-viewport");
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+    expect(screen.getByText("スライド1")).toBeInTheDocument();
+    expect(screen.queryByText("スライド2")).not.toBeInTheDocument();
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "次の解説へ" }));
-    expect(screen.getByRole("group", { name: "ポイント" })).toHaveAttribute(
-      "aria-hidden",
-      "false",
-    );
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+    expect(screen.queryByText("スライド1")).not.toBeInTheDocument();
+    expect(screen.getByText("スライド2")).toBeInTheDocument();
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "解説3" }));
-    expect(
-      screen
-        .getByTestId("explanation-slides-viewport")
-        .querySelector('[aria-label="まとめ"]'),
-    ).toHaveAttribute("aria-hidden", "false");
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+    expect(screen.getByText("スライド3")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "次の解説へ" })).toBeDisabled();
   });
 
@@ -50,9 +41,8 @@ describe("ExplanationSlides", () => {
     fireEvent.touchStart(viewport, { changedTouches: [{ clientX: 240 }] });
     fireEvent.touchEnd(viewport, { changedTouches: [{ clientX: 80 }] });
 
-    expect(
-      viewport.querySelector('[aria-label="ポイント"]'),
-    ).toHaveAttribute("aria-hidden", "false");
+    expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(1);
+    expect(screen.getByText("スライド2")).toBeInTheDocument();
   });
 
   it("shows the section title and slide labels", () => {
