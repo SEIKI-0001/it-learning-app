@@ -25,7 +25,7 @@ export const config = {
 
 const LINE_SESSION_COOKIE = "fq_line";
 // 認証不要で常に通すパス（前方一致）。
-const PUBLIC_PREFIXES = ["/login", "/auth"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/lp"];
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
