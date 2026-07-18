@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
-import ExplanationSlides from "@/components/learn/ExplanationSlides";
 
 // ============================================================================
 // 「企業活動とステークホルダ」専用の体験。
@@ -208,33 +207,14 @@ function CsrSummary() {
 
 export default function EnterpriseActivitiesExperience() {
   return (
-    <ExplanationSlides
-      title={null}
-      slides={[
-        {
-          id: "stakeholder-map",
-          label: "関係図",
-          content: (
-            <div className="space-y-5">
-              <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-                🏢 会社は商品やサービスで価値を生み、利益を得ながら社会に役立ちます。会社に関わる人・組織が
-                <b>ステークホルダ（利害関係者）</b>。株主だけでなく、顧客・従業員・地域なども含みます。
-              </div>
-              <Hub />
-            </div>
-          ),
-        },
-        {
-          id: "stakeholder-quiz",
-          label: "見分け方",
-          content: <Quiz />,
-        },
-        {
-          id: "csr-summary",
-          label: "CSRの要点",
-          content: <CsrSummary />,
-        },
-      ]}
-    />
+    <div>
+      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+        🏢 会社は商品やサービスで価値を生み、利益を得ながら社会に役立ちます。会社に関わる人・組織が
+        <b>ステークホルダ（利害関係者）</b>。株主だけでなく、顧客・従業員・地域なども含みます。
+      </div>
+      <Hub />
+      <Quiz />
+      <CsrSummary />
+    </div>
   );
 }

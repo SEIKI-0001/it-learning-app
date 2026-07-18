@@ -3,7 +3,7 @@ import { buildExplanationSlides } from "@/components/learn/TopicContent";
 import { topics } from "@/data/topics";
 
 describe("buildExplanationSlides", () => {
-  it("keeps the common explanation slides after a topic experience", () => {
+  it("uses the experience's own panels as its explanation slides", () => {
     const topicWithExperience = topics.find(
       (topic) => topic.id === "strat-enterprise-activities",
     );
@@ -11,10 +11,6 @@ describe("buildExplanationSlides", () => {
     expect(topicWithExperience).toBeDefined();
     const slides = buildExplanationSlides(topicWithExperience!);
 
-    expect(slides.map((slide) => slide.id)).toEqual([
-      "experience",
-      "concept",
-      "exam-points",
-    ]);
+    expect(slides.map((slide) => slide.id)).toEqual(["experience"]);
   });
 });

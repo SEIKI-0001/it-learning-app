@@ -9,6 +9,7 @@ import AddToReviewButton from "@/components/learn/AddToReviewButton";
 import VisualLearningSection from "@/components/visual-learning/VisualLearningSection";
 import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
 import { getTopicExperience } from "@/components/experiences/registry";
+import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
 export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
   const processDemo = topic.processDemo;
@@ -24,8 +25,9 @@ export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
     explanationSlides.push({
       id: "experience",
       label: "体験して理解",
-      content: createElement(experience),
+      content: <ExperienceSlideDeck>{createElement(experience)}</ExperienceSlideDeck>,
     });
+    return explanationSlides;
   } else if (processDemo) {
     explanationSlides.push({
       id: "process-demo",
@@ -148,43 +150,15 @@ export default function TopicContent({
   );
 }
 
-// 「解説で理解を固める・あとで思い出すための復習・参考書で探すキーワード・
-// 関連する過去問分野」。today では「今日の学習を完了する」ボタンより下
+// 「あとで思い出すための復習・参考書で探すキーワード・関連する過去問分野」。
+// today では「今日の学習を完了する」ボタンより下
 // （ページ最下部）に置きたいため、本文スタック（TopicContent）から切り出して
 // 独立コンポーネントにしている。トピック詳細では従来どおり本文の続き
 // （確認問題のあと）に並べて表示する。
 export function TopicReviewSections({ topic }: { topic: Topic }) {
   return (
     <div className="space-y-8">
-      {/* ④ 図解付き解説 */}
-      <Section emoji="📘" title="解説で理解を固める">
-        <p className="text-sm leading-relaxed text-gray-700">
-          {topic.explanation.body}
-        </p>
-        {topic.explanation.keyPoints &&
-          topic.explanation.keyPoints.length > 0 && (
-            <ul className="mt-3 space-y-1.5">
-              {topic.explanation.keyPoints.map((kp, i) => (
-                <li
-                  key={i}
-                  className="flex gap-2 text-sm font-semibold text-gray-700"
-                >
-                  <span aria-hidden className="text-indigo-500">
-                    ✓
-                  </span>
-                  {kp}
-                </li>
-              ))}
-            </ul>
-          )}
-        {topic.explanation.diagram && (
-          <div className="mt-4">
-            <DiagramRenderer spec={topic.explanation.diagram} />
-          </div>
-        )}
-      </Section>
-
-      {/* ⑤ 復習プロンプト */}
+      {/* 復習プロンプト */}
       <Section emoji="🔁" title="あとで思い出すための復習">
         <details className="rounded-xl border border-gray-200 bg-white px-4 py-3">
           <summary className="cursor-pointer text-sm font-bold text-gray-800">
