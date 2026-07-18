@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import ExplanationSlides from "@/components/learn/ExplanationSlides";
 
 // ============================================================================
 // 「企業活動とステークホルダ」専用の体験。
@@ -186,8 +187,20 @@ function Quiz() {
           );
         })}
       </ul>
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        🌍 会社は利益を出すだけでなく、社会の一員としての責任（<b>CSR</b>）も求められます。
+    </Panel>
+  );
+}
+
+function CsrSummary() {
+  return (
+    <Panel>
+      <SectionTitle step={3}>利益と社会的責任を両立する</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        会社は利益を出すだけでなく、社会の一員としての責任（<b className="text-gray-800">CSR</b>）も果たします。
+      </p>
+      <div className="mt-4 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
+        🌍 ステークホルダには株主だけでなく、顧客・従業員・取引先・地域社会なども含まれます。
+        信頼を得て活動を続けるために、利益とCSRの両方を大切にします。
       </div>
     </Panel>
   );
@@ -195,14 +208,33 @@ function Quiz() {
 
 export default function EnterpriseActivitiesExperience() {
   return (
-    <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🏢 会社は商品やサービスで価値を生み、利益を得ながら社会に役立ちます。会社に関わる人・組織が
-        <b>ステークホルダ（利害関係者）</b>。株主だけでなく、顧客・従業員・地域なども含みます。
-      </div>
-
-      <Hub />
-      <Quiz />
-    </div>
+    <ExplanationSlides
+      title={null}
+      slides={[
+        {
+          id: "stakeholder-map",
+          label: "関係図",
+          content: (
+            <div className="space-y-5">
+              <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+                🏢 会社は商品やサービスで価値を生み、利益を得ながら社会に役立ちます。会社に関わる人・組織が
+                <b>ステークホルダ（利害関係者）</b>。株主だけでなく、顧客・従業員・地域なども含みます。
+              </div>
+              <Hub />
+            </div>
+          ),
+        },
+        {
+          id: "stakeholder-quiz",
+          label: "見分け方",
+          content: <Quiz />,
+        },
+        {
+          id: "csr-summary",
+          label: "CSRの要点",
+          content: <CsrSummary />,
+        },
+      ]}
+    />
   );
 }

@@ -15,7 +15,7 @@ export default function ExplanationSlides({
   title = "📖 解説",
 }: {
   slides: ExplanationSlide[];
-  title?: string;
+  title?: string | null;
 }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -48,13 +48,15 @@ export default function ExplanationSlides({
 
   return (
     <section aria-label="解説" className="space-y-3">
-      <h2 className="flex items-center gap-2 text-lg font-extrabold text-gray-800">
-        {title}
-      </h2>
+      {title && (
+        <h2 className="flex items-center gap-2 text-lg font-extrabold text-gray-800">
+          {title}
+        </h2>
+      )}
 
       <div
         data-testid="explanation-slides-viewport"
-        className="overflow-hidden rounded-2xl"
+        className="touch-pan-y overflow-hidden rounded-2xl"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
