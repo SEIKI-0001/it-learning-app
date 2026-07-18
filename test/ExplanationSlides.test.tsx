@@ -48,9 +48,12 @@ describe("ExplanationSlides", () => {
   it("keeps every slide mounted to reserve the tallest slide height", () => {
     render(<ExplanationSlides slides={slides} />);
     const viewport = screen.getByTestId("explanation-slides-viewport");
+    const inactiveSlide = viewport.querySelector('[aria-label="ポイント"]');
 
     expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
     expect(screen.getByRole("group", { name: "全体像" })).toBeVisible();
+    expect(inactiveSlide).toHaveAttribute("aria-hidden", "true");
+    expect(inactiveSlide).toHaveClass("pointer-events-none");
     expect(screen.queryByRole("group", { name: "ポイント" })).not.toBeInTheDocument();
   });
 
@@ -67,6 +70,14 @@ describe("ExplanationSlides", () => {
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
     fireEvent.keyDown(viewport, { key: "ArrowLeft" });
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
+
+    viewport.focus();
+    fireEvent.keyDown(viewport, { key: "ArrowRight" });
+    expect(screen.getByText("2 / 3")).toBeInTheDocument();
+    screen.getByRole("button", { name: "次の解説へ" }).focus();
+    expect(viewport).not.toHaveFocus();
+    fireEvent.keyDown(window, { key: "ArrowRight" });
+    expect(screen.getByText("2 / 3")).toBeInTheDocument();
   });
 
   it("shows the section title and slide labels", () => {
