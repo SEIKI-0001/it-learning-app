@@ -215,6 +215,7 @@ export default function Mochit({
                 compact={effectiveCompact}
                 ariaLabel={meta.alt}
                 forceFailure={forceSvgFailure}
+                registerTriggerFirer={registerTriggerFirer}
                 onReady={() => setSvgReady(true)}
                 onLoadFailed={() => {
                   setSvgReady(false);

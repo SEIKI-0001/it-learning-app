@@ -5,7 +5,7 @@
 // フォールバック表示・セマンティックイベント・優先度制御の確認に使える。
 
 import { notFound } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Mochit from "@/components/mochit/Mochit";
 import type { MochitGrowthStage, MochitScreenContext, MochitSize, MochitState } from "@/components/mochit/mochitTypes";
 import type { MochitEvent, MochitEventSignal } from "@/components/mochit/mochitEvents";
@@ -39,7 +39,16 @@ export default function MochitDevPreviewPage() {
   const [mood, setMood] = useState(0);
   const [signal, setSignal] = useState<MochitEventSignal | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
+  const [eventCompact, setEventCompact] = useState(false);
   const eventIdRef = useRef(0);
+  const testTimerIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => {
+      testTimerIdsRef.current.forEach((id) => clearTimeout(id));
+      testTimerIdsRef.current = [];
+    };
+  }, []);
 
   const rendererProps = useMemo(() => {
     if (rendererMode === "fallback") return { rendererOverride: "fallback" as const };
@@ -57,6 +66,25 @@ export default function MochitDevPreviewPage() {
     setEventLog((log) =>
       [`#${eventIdRef.current} ${type}（優先度${MOCHIT_EVENT_PRIORITIES[type]}）`, ...log].slice(0, 8),
     );
+  };
+
+  const scheduleEvent = (type: MochitEvent, delayMs: number) => {
+    const id = setTimeout(() => sendEvent(type), delayMs);
+    testTimerIdsRef.current.push(id);
+  };
+
+  const sendRapidCorrect = () => {
+    for (let i = 0; i < 5; i++) scheduleEvent("correct", i * 150);
+  };
+
+  const sendCheckpointClearThenTap = () => {
+    scheduleEvent("checkpointClear", 0);
+    scheduleEvent("tap", 300);
+  };
+
+  const sendCorrectThenTaskComplete = () => {
+    scheduleEvent("correct", 0);
+    scheduleEvent("taskComplete", 250);
   };
 
   const shared = { ...rendererProps, reducedMotion, screenContext, mood };
@@ -138,15 +166,36 @@ export default function MochitDevPreviewPage() {
         {/* メインステージ（primary想定）＋イベントボタン */}
         <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
           <h2 className="text-base font-extrabold text-gray-800">セマンティックイベント（primaryインスタンス）</h2>
-          <div className="mt-3 flex justify-center">
-            <Mochit
-              {...shared}
-              state="normal"
-              size="large"
-              growthStage={stage}
-              event={signal}
-              message="イベントボタンで反応を確認"
+          <label className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <input
+              type="checkbox"
+              checked={eventCompact}
+              onChange={(e) => setEventCompact(e.target.checked)}
             />
+            compact表示で確認
+          </label>
+          <div className="mt-3 flex justify-center">
+            {eventCompact ? (
+              <Mochit
+                {...shared}
+                state="normal"
+                size="small"
+                compact
+                growthStage={stage}
+                event={signal}
+                message="イベントボタンで反応を確認"
+              />
+            ) : (
+              <Mochit
+                {...shared}
+                state="normal"
+                size="large"
+                compact={false}
+                growthStage={stage}
+                event={signal}
+                message="イベントボタンで反応を確認"
+              />
+            )}
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {EVENTS.map((event) => (
@@ -160,8 +209,32 @@ export default function MochitDevPreviewPage() {
               </button>
             ))}
           </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={sendRapidCorrect}
+              className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
+            >
+              連打: correct×5
+            </button>
+            <button
+              type="button"
+              onClick={sendCheckpointClearThenTap}
+              className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
+            >
+              競合: checkpointClear→tap
+            </button>
+            <button
+              type="button"
+              onClick={sendCorrectThenTaskComplete}
+              className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-bold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100"
+            >
+              競合: correct→taskComplete
+            </button>
+          </div>
           <div className="mt-3 rounded-2xl bg-gray-50 p-3 text-xs text-gray-600">
             <p className="font-bold">送信ログ（優先度が高い反応中は低優先度が破棄される）</p>
+            <p className="mt-0.5">同優先度以上=置換／低優先度=無視（キューなし）</p>
             {eventLog.length === 0 ? <p className="mt-1">まだ送信なし</p> : (
               <ul className="mt-1 space-y-0.5">{eventLog.map((line) => <li key={line}>{line}</li>)}</ul>
             )}

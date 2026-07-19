@@ -1,18 +1,30 @@
 "use client";
 
 // レイヤー分割済みSVGを React 上で直接アニメーションさせる無料方式の描画レイヤー。
-// Rive の代わりに「生きている待機（Living Idle）」だけを実装する:
-//   - ゆるやかな呼吸 / 小さな左右のゆれ / 不規則なまばたき / 小さな視線移動 / アンテナの遅れ追従
-// タイミングにはランダム性を持たせ、短い固定ループに見えないようにしている。
+// 「生きている待機（Living Idle）」に加え、学習イベントのリアクションを再生する:
+//   - Idle: ゆるやかな呼吸 / 小さな左右のゆれ / 不規則なまばたき / 小さな視線移動 / アンテナの遅れ追従
+//   - リアクション: mochitReactionAnimation.ts の仕様を有限WAAPIアニメとして適用。
+//     本体の動きは外側<svg>のCSS transform（Idleの内部グループとは別要素）なので
+//     Idleと自然に合成され、終了時は恒等変換＝位置飛びなしでIdleへ戻る。
+//     gaze/antenna は composite:"add" でIdleの変換に上乗せする。
 //
 // 契約:
 //   - onReady: SVG が正しく描画できた（親はWebPフォールバックを外してよい）
 //   - onLoadFailed: 読み込み/描画に失敗（親はWebPへフォールバック）
-//   - reduced-motion / ビューポート外 / タブ非表示 では停止して静止ポーズを保つ
-//   - 正解・不正解・完了リアクションはまだ実装しない（Living Idle のみ）
+//   - reduced-motion ではIdle停止＋リアクションは表情/Core発光のみの縮退版
+//   - ビューポート外 / タブ非表示 では停止して静止ポーズを保つ
+//   - registerTriggerFirer: useMochitController のトリガー発火を受け取る口（Riveと同じ契約）
 
 import { useEffect, useRef, useState } from "react";
 import { MOCHIT_SVG_MARKUP } from "./mochitSvgMarkup";
+import { MOCHIT_TRIGGER_EVENTS } from "./mochitEvents";
+import type { MochitRiveTriggerInput } from "./mochitTypes";
+import {
+  buildReactionSpec,
+  MOCHIT_BODY_TRANSFORM_ORIGIN,
+  type ReactionSpec,
+  type ReactionTargetId,
+} from "./mochitReactionAnimation";
 import {
   antennaKeyframes,
   blinkDurationMs,
@@ -42,6 +54,8 @@ type Props = {
   className?: string;
   /** devプレビュー用: 描画失敗を強制してWebPフォールバックを確認する */
   forceFailure?: boolean;
+  /** useMochitController のトリガー発火を受け取る（Riveと同じ契約） */
+  registerTriggerFirer?: (firer: ((trigger: MochitRiveTriggerInput) => void) | null) => void;
 };
 
 function canAnimate(el: SVGGraphicsElement | null): el is SVGGraphicsElement {
@@ -150,6 +164,96 @@ function startIdle(svg: SVGSVGElement, compact: boolean): () => void {
   };
 }
 
+// ---- 学習イベントリアクション ----
+
+// リアクション仕様のターゲットID → SVG内セレクタ。body は外側<svg>自身。
+const REACTION_TARGET_SELECTORS: Record<Exclude<ReactionTargetId, "body">, string[]> = {
+  armL: ["#Arm_L"],
+  armR: ["#Arm_R"],
+  coreGlow: ["#Core_Glow"],
+  mouthNeutral: ["#Mouth_Neutral"],
+  mouthSmile: ["#Mouth_Smile"],
+  mouthThinking: ["#Mouth_Thinking"],
+  mouthOpen: ["#Mouth_Open"],
+  gaze: ["#Pupil_L", "#Pupil_R", "#EyeHighlight_L", "#EyeHighlight_R"],
+  antenna: ["#Anim_Antenna"],
+};
+
+type RunningReaction = {
+  /** 実行中アニメーションと対象要素（settle用に対で保持） */
+  entries: Array<{ el: Element; animation: Animation; composite: "replace" | "add" }>;
+  endTimer: number;
+};
+
+/**
+ * リアクション仕様をDOMへ適用する。全キーフレームが基底状態で始まり基底状態で
+ * 終わる契約（fill:"none"）のため、自然終了時は何も片付けなくてもIdleへ戻る。
+ */
+function startReaction(svg: SVGSVGElement, spec: ReactionSpec, onEnd: () => void): RunningReaction {
+  const entries: RunningReaction["entries"] = [];
+  for (const track of spec.tracks) {
+    const els: Element[] =
+      track.target === "body"
+        ? [svg]
+        : REACTION_TARGET_SELECTORS[track.target].map((sel) => svg.querySelector(sel)).filter((el): el is Element => el !== null);
+    for (const el of els) {
+      if (typeof (el as SVGGraphicsElement).animate !== "function") continue;
+      const composite = track.composite ?? "replace";
+      try {
+        const animation = (el as SVGGraphicsElement).animate(track.keyframes, {
+          duration: spec.totalMs,
+          easing: "linear", // 区間ごとのeasingはキーフレーム側で指定済み
+          fill: "none",
+          composite,
+        });
+        entries.push({ el, animation, composite });
+      } catch (error) {
+        // composite未対応などで個別トラックが失敗しても他のトラックは続行
+        if (isDev) console.warn(`[Mochit] リアクショントラック ${track.target} の適用に失敗しました。`, error);
+      }
+    }
+  }
+  const endTimer = window.setTimeout(onEnd, spec.totalMs);
+  return { entries, endTimer };
+}
+
+/**
+ * 進行中リアクションを打ち切る。replace系トラックは現在の見た目を捕捉してから
+ * 短時間で基底状態へ戻し（settle）、キャンセルによる位置飛びを防ぐ。
+ * add系（gaze/antenna）は上乗せ量が小さいためそのままキャンセルする。
+ */
+function stopReaction(running: RunningReaction, settleMs: number): void {
+  clearTimeout(running.endTimer);
+  for (const { el, animation, composite } of running.entries) {
+    if (animation.playState !== "running" && animation.playState !== "paused") continue;
+    if (composite === "add" || settleMs <= 0) {
+      try {
+        animation.cancel();
+      } catch {
+        /* noop */
+      }
+      continue;
+    }
+    try {
+      const style = getComputedStyle(el);
+      const from: Keyframe = { transform: style.transform, opacity: style.opacity };
+      animation.cancel();
+      // 基底状態（インラインstyle・属性値）へ約settleMsでなめらかに戻す
+      (el as SVGGraphicsElement).animate([from, {}], {
+        duration: settleMs,
+        easing: "ease-out",
+        fill: "none",
+      });
+    } catch {
+      try {
+        animation.cancel();
+      } catch {
+        /* noop */
+      }
+    }
+  }
+}
+
 export default function MochitSvg({
   growthStage,
   reducedMotion,
@@ -159,6 +263,7 @@ export default function MochitSvg({
   onLoadFailed,
   className = "",
   forceFailure = false,
+  registerTriggerFirer,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [inViewport, setInViewport] = useState(true);
@@ -173,7 +278,11 @@ export default function MochitSvg({
     onFailedRef.current = onLoadFailed;
   });
 
-  // マウント時に描画健全性を確認。critical ノードが無ければ描画失敗扱い。
+  // マークアップの注入と描画健全性の確認。critical ノードが無ければ描画失敗扱い。
+  // 注入は dangerouslySetInnerHTML ではなく初回マウント時に一度だけ命令的に行う。
+  // React の再レンダーで子要素が作り直されると、子要素上で走っている
+  // WAAPIアニメーション（Living Idle・リアクション）が全て消えてしまうため、
+  // 子要素はReactの管理外に置く。
   useEffect(() => {
     const svg = svgRef.current;
     const fail = (reason: string) => {
@@ -184,6 +293,7 @@ export default function MochitSvg({
     try {
       if (forceFailure) return fail("forceFailure");
       if (!svg) return fail("no svg element");
+      if (!svg.firstElementChild) svg.innerHTML = MOCHIT_SVG_MARKUP;
       if (!svg.querySelector("#Mochit_Root") || !svg.querySelector("#Anim_Breathe")) {
         return fail("critical nodes missing");
       }
@@ -229,6 +339,78 @@ export default function MochitSvg({
     return () => stop?.();
   }, [active, compact]);
 
+  // ---- リアクション再生 ----
+  // reduced-motion では縮退版（表情/Core発光のみ）を再生するため gating には含めない。
+  const reactionGated = failed || !inViewport || documentHidden;
+  const reactionEnvRef = useRef({ reducedMotion, compact, gated: reactionGated });
+  useEffect(() => {
+    reactionEnvRef.current = { reducedMotion, compact, gated: reactionGated };
+  });
+  const runningRef = useRef<RunningReaction | null>(null);
+  const pendingStartRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!registerTriggerFirer) return;
+    registerTriggerFirer((trigger) => {
+      const svg = svgRef.current;
+      if (!svg || typeof svg.animate !== "function") return;
+      const env = reactionEnvRef.current;
+      if (env.gated) return;
+      const event = MOCHIT_TRIGGER_EVENTS[trigger];
+      if (!event) return;
+      const spec = buildReactionSpec(event, { compact: env.compact, reducedMotion: env.reducedMotion });
+      if (!spec) return;
+      if (pendingStartRef.current !== null) {
+        clearTimeout(pendingStartRef.current);
+        pendingStartRef.current = null;
+      }
+      const begin = () => {
+        pendingStartRef.current = null;
+        const target = svgRef.current;
+        if (!target || reactionEnvRef.current.gated) return;
+        try {
+          runningRef.current = startReaction(target, spec, () => {
+            runningRef.current = null;
+          });
+        } catch (error) {
+          if (isDev) console.warn("[Mochit] リアクションの再生に失敗しました。", error);
+        }
+      };
+      if (runningRef.current) {
+        // 置換: 進行中の見た目から短時間で基底へ戻してから新リアクションを開始
+        const settleMs = 90;
+        stopReaction(runningRef.current, settleMs);
+        runningRef.current = null;
+        pendingStartRef.current = window.setTimeout(begin, settleMs);
+      } else {
+        begin();
+      }
+    });
+    return () => {
+      registerTriggerFirer(null);
+    };
+  }, [registerTriggerFirer]);
+
+  // 非表示・失敗時とアンマウント時はリアクションを即時停止する。
+  useEffect(() => {
+    if (!reactionGated) return;
+    if (pendingStartRef.current !== null) {
+      clearTimeout(pendingStartRef.current);
+      pendingStartRef.current = null;
+    }
+    if (runningRef.current) {
+      stopReaction(runningRef.current, 0);
+      runningRef.current = null;
+    }
+  }, [reactionGated]);
+  useEffect(
+    () => () => {
+      if (pendingStartRef.current !== null) clearTimeout(pendingStartRef.current);
+      if (runningRef.current) stopReaction(runningRef.current, 0);
+    },
+    [],
+  );
+
   if (failed) return null;
 
   return (
@@ -237,9 +419,9 @@ export default function MochitSvg({
       viewBox="0 0 1024 1024"
       role="img"
       aria-label={ariaLabel}
-      style={{ overflow: "visible" }}
+      style={{ overflow: "visible", transformOrigin: MOCHIT_BODY_TRANSFORM_ORIGIN }}
       className={`h-full w-full mochit-growth-${growthStage} ${className}`}
-      dangerouslySetInnerHTML={{ __html: MOCHIT_SVG_MARKUP }}
     />
+    // 子要素（キャラクター本体のマークアップ）はマウント時effectで一度だけ注入する
   );
 }

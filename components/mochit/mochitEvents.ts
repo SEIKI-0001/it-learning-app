@@ -27,6 +27,11 @@ export const MOCHIT_EVENT_TRIGGERS: Record<MochitEvent, MochitRiveTriggerInput> 
   wakeUp: "triggerWakeUp",
 };
 
+// トリガー入力 → イベントの逆引き（SVG描画層がコントローラ発火を受けるのに使う）。
+export const MOCHIT_TRIGGER_EVENTS: Record<MochitRiveTriggerInput, MochitEvent> = Object.fromEntries(
+  Object.entries(MOCHIT_EVENT_TRIGGERS).map(([event, trigger]) => [trigger, event as MochitEvent]),
+) as Record<MochitRiveTriggerInput, MochitEvent>;
+
 // 優先度（大きいほど強い）。仕様の序列:
 // checkpoint > badge > task > 全問正解 > 個別回答 > 励まし > タップ > (idle)
 export const MOCHIT_EVENT_PRIORITIES: Record<MochitEvent, number> = {
@@ -57,6 +62,10 @@ export const MOCHIT_EVENT_REACTION_MS: Record<MochitEvent, number> = {
 // dev/preview で `event` prop として渡す形。id を変えると同種イベントを再発火できる。
 export type MochitEventSignal = { type: MochitEvent; id: number };
 
+// 連続入力時のルール（キューは持たない）:
+//   - 同優先度以上の新イベント → 「置換」: 進行中の反応を打ち切り新しい反応を開始
+//   - 低優先度の新イベント → 「無視」: 破棄され、後で再生されることもない
+//   - 占有時間（MOCHIT_EVENT_REACTION_MS）経過後は全イベントを受理
 export type MochitReactionController = {
   /** 受理したら true。高優先度の反応中は false を返し何もしない。 */
   dispatch: (event: MochitEvent) => boolean;
