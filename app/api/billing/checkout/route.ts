@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequestUserId } from "@/lib/apiUser";
 import { getBillingPlan } from "@/lib/billing/constants";
+import { getStripeCustomerId } from "@/lib/billing/plan";
 
 export const runtime = "nodejs";
 
@@ -71,6 +72,47 @@ export async function POST(request: Request) {
     ? (body.returnTo as string)
     : "/more";
 
+  const stripeCustomerId = await getStripeCustomerId(userId);
+  if (plan.kind === "subscription" && stripeCustomerId) {
+    const subscriptionCheck = await fetch(
+      `https://api.stripe.com/v1/subscriptions?customer=${encodeURIComponent(
+        stripeCustomerId,
+      )}&status=all&limit=100`,
+      { headers: { Authorization: `Bearer ${secret}` } },
+    ).catch((error: unknown) => {
+      console.error("[billing] stripe subscription check failed:", error);
+      return null;
+    });
+
+    if (!subscriptionCheck?.ok) {
+      const detail = await subscriptionCheck?.text().catch(() => "");
+      console.error(
+        "[billing] stripe subscription check http",
+        subscriptionCheck?.status,
+        detail?.slice(0, 500),
+      );
+      return NextResponse.json(
+        { ok: false, error: "決済の開始に失敗しました。時間をおいてお試しください。" },
+        { status: 502 },
+      );
+    }
+
+    const subscriptions = (await subscriptionCheck.json().catch(() => null)) as {
+      data?: Array<Record<string, unknown>>;
+    } | null;
+    const hasActiveProSubscription = subscriptions?.data?.some(
+      (subscription) =>
+        (subscription.status === "active" || subscription.status === "trialing") &&
+        collectPriceIds(subscription).includes(price),
+    );
+    if (hasActiveProSubscription) {
+      return NextResponse.json(
+        { ok: false, error: "すでに月額プランをご契約中です。管理画面をご利用ください。" },
+        { status: 409 },
+      );
+    }
+  }
+
   const params = new URLSearchParams();
   params.append("line_items[0][price]", price);
   params.append("line_items[0][quantity]", "1");
@@ -82,6 +124,7 @@ export async function POST(request: Request) {
 
   if (plan.kind === "subscription") {
     params.set("mode", "subscription");
+    if (stripeCustomerId) params.set("customer", stripeCustomerId);
     // サブスクリプション側にも user_id を持たせ、解約/更新の webhook で紐づける。
     params.append("subscription_data[metadata][user_id]", userId);
     // 初月20%オフ（クーポン未設定なら割引なしで続行）。
@@ -91,7 +134,8 @@ export async function POST(request: Request) {
     params.set("mode", "payment");
     params.append("metadata[months]", String(plan.months));
     // 買い切りでも customer を作り、購入履歴・領収書・portal 参照に使えるようにする。
-    params.set("customer_creation", "always");
+    if (stripeCustomerId) params.set("customer", stripeCustomerId);
+    else params.set("customer_creation", "always");
   }
 
   let res: Response;
@@ -130,4 +174,29 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true, url: session.url });
+}
+
+function collectPriceIds(value: Record<string, unknown>): string[] {
+  const ids = new Set<string>();
+
+  function walk(item: unknown): void {
+    if (Array.isArray(item)) {
+      item.forEach(walk);
+      return;
+    }
+    if (!item || typeof item !== "object") return;
+
+    const record = item as Record<string, unknown>;
+    if (record.object === "price" && typeof record.id === "string") {
+      ids.add(record.id);
+    }
+    if (record.price && typeof record.price === "object") {
+      const priceId = (record.price as Record<string, unknown>).id;
+      if (typeof priceId === "string") ids.add(priceId);
+    }
+    Object.values(record).forEach(walk);
+  }
+
+  walk(value);
+  return [...ids];
 }

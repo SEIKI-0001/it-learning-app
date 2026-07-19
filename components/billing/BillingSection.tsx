@@ -204,11 +204,13 @@ export default function BillingSection() {
 
           {/* プラン一覧 */}
           <div className="space-y-2">
-            {plans.map((plan) => (
-              <div
-                key={plan.key}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 ring-1 ring-gray-200"
-              >
+            {plans.map((plan) => {
+              const managesSubscription = plan.kind === "subscription" && hasSubscription;
+              return (
+                <div
+                  key={plan.key}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 ring-1 ring-gray-200"
+                >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="text-sm font-extrabold text-gray-800">{plan.label}</p>
@@ -236,15 +238,23 @@ export default function BillingSection() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => startCheckout(plan)}
-                  disabled={!plan.enabled || busyPlan !== null}
+                  onClick={() => (managesSubscription ? openPortal() : startCheckout(plan))}
+                  disabled={
+                    managesSubscription
+                      ? portalBusy
+                      : !plan.enabled || busyPlan !== null
+                  }
                   className={buttonClass(
                     plan.kind === "subscription" ? "primary" : "secondary",
                     "sm",
                     "shrink-0",
                   )}
                 >
-                  {busyPlan === plan.key
+                  {managesSubscription
+                    ? portalBusy
+                      ? "開いています…"
+                      : "管理する"
+                    : busyPlan === plan.key
                     ? "準備中…"
                     : !plan.enabled
                       ? "準備中"
@@ -252,21 +262,13 @@ export default function BillingSection() {
                         ? "延長する"
                         : "購入する"}
                 </button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
 
           {/* 管理・解約 */}
-          {hasSubscription ? (
-            <button
-              type="button"
-              onClick={openPortal}
-              disabled={portalBusy}
-              className={buttonClass("soft", "md", "w-full")}
-            >
-              {portalBusy ? "開いています…" : "サブスクの管理・解約（お支払い方法/領収書）"}
-            </button>
-          ) : (
+          {!hasSubscription && (
             <p className="text-[11px] leading-relaxed text-gray-400">
               買い切りプランに自動更新はありません（解約手続きは不要です）。期限が切れると
               自動的に無料プランへ戻ります。

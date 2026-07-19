@@ -13,6 +13,7 @@ import {
   type BillingPlanKey,
   type Plan,
 } from "@/lib/billing/constants";
+import { subscriptionKeepsPro } from "@/lib/billing/subscriptionState";
 import type { AiGradingBillingStatus } from "@/types/aiGrading";
 import type {
   BillingEntitlements,
@@ -25,6 +26,15 @@ type ProfileBillingRow = {
   plan: string | null;
   pro_until: string | null;
   stripe_customer_id: string | null;
+};
+
+export type StoredStripeSubscription = {
+  stripe_subscription_id: string;
+  stripe_customer_id: string;
+  user_id: string | null;
+  price_id: string | null;
+  status: string;
+  latest_event_created: number;
 };
 
 /** user_profiles の課金関連列を読む。行なし / 未設定は null。 */
@@ -51,7 +61,7 @@ function isProProfile(row: ProfileBillingRow | null): {
   if (!row) return { isPro: false, proSource: "none" };
   // plan='pro' はサブスク契約中（webhookが更新）または管理者の手動付与。
   if (row.plan === "pro") return { isPro: true, proSource: "subscription" };
-  if (row.pro_until && new Date(row.pro_until).getTime() > Date.now()) {
+  if (subscriptionKeepsPro(false, row.pro_until)) {
     return { isPro: true, proSource: "one_time" };
   }
   return { isPro: false, proSource: "none" };
@@ -168,6 +178,52 @@ export async function setUserPlanByCustomer(
   }
 }
 
+/** 既存のStripe subscription状態を、subscription IDで読む。 */
+export async function getStoredStripeSubscription(
+  stripeSubscriptionId: string,
+): Promise<StoredStripeSubscription | null> {
+  const supabase = getServiceSupabase();
+  if (!supabase) throw new Error("Supabase is not configured");
+
+  const { data, error } = await supabase
+    .from("billing_subscriptions")
+    .select(
+      "stripe_subscription_id, stripe_customer_id, user_id, price_id, status, latest_event_created",
+    )
+    .eq("stripe_subscription_id", stripeSubscriptionId)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`Could not read stored Stripe subscription: ${error.message}`);
+  }
+  return (data as StoredStripeSubscription | null) ?? null;
+}
+
+/** subscription IDごとに、event.createdの新しい状態だけを保存する。 */
+export async function recordStripeSubscriptionEvent(entry: {
+  stripeSubscriptionId: string;
+  stripeCustomerId: string;
+  userId: string | null;
+  priceId: string | null;
+  status: string;
+  eventCreated: number;
+}): Promise<boolean> {
+  const supabase = getServiceSupabase();
+  if (!supabase) throw new Error("Supabase is not configured");
+
+  const { data, error } = await supabase.rpc("record_stripe_subscription_event", {
+    p_stripe_subscription_id: entry.stripeSubscriptionId,
+    p_stripe_customer_id: entry.stripeCustomerId,
+    p_user_id: entry.userId,
+    p_price_id: entry.priceId,
+    p_status: entry.status,
+    p_latest_event_created: entry.eventCreated,
+  });
+  if (error) {
+    throw new Error(`Could not record Stripe subscription event: ${error.message}`);
+  }
+  return data !== false;
+}
+
 /**
  * 買い切り購入を反映する（webhook から呼ぶ）。
  * - pro_until を max(now, 現在の pro_until) + months ヶ月へ延長。
@@ -187,42 +243,21 @@ export async function applyOneTimePurchase(entry: {
   const supabase = getServiceSupabase();
   if (!supabase) throw new Error("Supabase is not configured");
 
-  // 冪等化: 先に購入履歴を insert し、既に同じ checkout session が記録済みなら
-  // pro_until の再延長をスキップする（webhook 再送で期間が二重加算されるのを防ぐ）。
-  const { error: insertError } = await supabase.from("billing_purchases").insert({
-    user_id: entry.userId,
-    kind: "one_time",
-    plan_key: entry.planKey,
-    months: entry.months,
-    amount_total: entry.amountTotal,
-    currency: entry.currency,
-    stripe_checkout_session_id: entry.stripeCheckoutSessionId,
-    stripe_payment_intent_id: entry.stripePaymentIntentId,
+  const { data, error } = await supabase.rpc("apply_one_time_purchase", {
+    p_user_id: entry.userId,
+    p_plan_key: entry.planKey,
+    p_months: entry.months,
+    p_amount_total: entry.amountTotal,
+    p_currency: entry.currency,
+    p_stripe_checkout_session_id: entry.stripeCheckoutSessionId,
+    p_stripe_payment_intent_id: entry.stripePaymentIntentId,
+    p_stripe_customer_id: entry.stripeCustomerId,
   });
-  if (insertError) {
-    if (insertError.code === "23505") return; // 重複＝処理済み
-    throw new Error(`Could not record purchase: ${insertError.message}`);
-  }
-
-  const row = await getProfileBillingRow(entry.userId);
-  const currentUntil = row?.pro_until ? new Date(row.pro_until).getTime() : 0;
-  const base = new Date(Math.max(Date.now(), currentUntil));
-  base.setUTCMonth(base.getUTCMonth() + entry.months);
-
-  const update: Record<string, unknown> = {
-    user_id: entry.userId,
-    pro_until: base.toISOString(),
-    plan_updated_at: new Date().toISOString(),
-  };
-  if (entry.stripeCustomerId) update.stripe_customer_id = entry.stripeCustomerId;
-
-  const { error } = await supabase
-    .from("user_profiles")
-    .upsert(update, { onConflict: "user_id" });
   if (error) {
-    console.error("[billing] applyOneTimePurchase failed:", error.message);
-    throw new Error(`Could not extend pro_until: ${error.message}`);
+    console.error("[billing] applyOneTimePurchase RPC failed:", error.message);
+    throw new Error(`Could not apply one-time purchase: ${error.message}`);
   }
+  if (data === false) return; // 重複した checkout session は既に反映済み。
 }
 
 /** 購入可能なプラン一覧（Price ID が設定済みのものだけ enabled）。 */
@@ -289,12 +324,19 @@ export async function getSubscriptionInfo(
       data?: Array<{
         status?: string;
         cancel_at_period_end?: boolean;
-        items?: { data?: Array<{ current_period_end?: number }> };
+        items?: {
+          data?: Array<{
+            price?: { id?: string } | string;
+            current_period_end?: number;
+          }>;
+        };
         current_period_end?: number;
       }>;
     };
     const sub = body.data?.find(
-      (s) => s.status === "active" || s.status === "trialing" || s.status === "past_due",
+      (s) =>
+        (s.status === "active" || s.status === "trialing" || s.status === "past_due") &&
+        isConfiguredProSubscription(s),
     );
     if (!sub) return null;
     // current_period_end は API バージョンにより subscription 直下 or item 側にある。
@@ -308,6 +350,18 @@ export async function getSubscriptionInfo(
   } catch {
     return null;
   }
+}
+
+function isConfiguredProSubscription(subscription: {
+  items?: { data?: Array<{ price?: { id?: string } | string }> };
+}): boolean {
+  const expectedPriceId = process.env.STRIPE_PRICE_ID_PRO_SUB?.trim();
+  if (!expectedPriceId) return true;
+  const prices = subscription.items?.data ?? [];
+  const priceIds = prices.flatMap((item) =>
+    typeof item.price === "string" ? [item.price] : item.price?.id ? [item.price.id] : [],
+  );
+  return priceIds.length === 0 || priceIds.includes(expectedPriceId);
 }
 
 /**

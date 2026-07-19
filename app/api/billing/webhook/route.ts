@@ -2,10 +2,13 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
   applyOneTimePurchase,
+  getStoredStripeSubscription,
+  recordStripeSubscriptionEvent,
   setUserPlan,
   setUserPlanByCustomer,
 } from "@/lib/billing/plan";
 import { BILLING_PLANS, getBillingPlan } from "@/lib/billing/constants";
+import { hasActiveProSubscription } from "@/lib/billing/subscriptionState";
 import {
   STALE_WEBHOOK_PROCESSING_SECONDS,
   shouldRetryWebhookEvent,
@@ -81,6 +84,7 @@ export async function POST(request: Request) {
 export type StripeEvent = {
   id?: string;
   type: string;
+  created: number;
   data: { object: Record<string, unknown> };
 };
 
@@ -126,36 +130,91 @@ async function handleEvent(event: StripeEvent): Promise<void> {
     }
 
     case "customer.subscription.updated": {
-      // status が active/trialing なら pro、それ以外は free。
-      const status = asString(obj.status);
-      const customerId = asString(obj.customer);
-      const userId = metadataUserId(obj.metadata);
-      const plan =
-        status === "active" || status === "trialing" ? "pro" : "free";
-      if (userId) {
-        await setUserPlan(userId, plan, {
-          stripeCustomerId: customerId ?? undefined,
-        });
-      } else if (customerId) {
-        await setUserPlanByCustomer(customerId, plan);
-      }
+      await handleSubscriptionEvent(event, obj);
       return;
     }
 
     case "customer.subscription.deleted": {
-      const customerId = asString(obj.customer);
-      const userId = metadataUserId(obj.metadata);
-      if (userId) {
-        await setUserPlan(userId, "free");
-      } else if (customerId) {
-        await setUserPlanByCustomer(customerId, "free");
-      }
+      await handleSubscriptionEvent(event, obj);
       return;
     }
 
     default:
       // 興味のないイベントは無視（受領のみ）。
       return;
+  }
+}
+
+type StripeSubscriptionSummary = {
+  id: string;
+  customerId: string;
+  status: string;
+  priceIds: string[];
+};
+
+/** subscriptionイベントをID・event.created順で保存し、Stripeの現在状態から再計算する。 */
+async function handleSubscriptionEvent(
+  event: StripeEvent,
+  obj: Record<string, unknown>,
+): Promise<void> {
+  if (!Number.isInteger(event.created) || event.created < 0) {
+    throw new Error("Stripe subscription event is missing a valid created timestamp");
+  }
+  const subscriptionId = asString(obj.id);
+  if (!subscriptionId) {
+    throw new Error("Stripe subscription event is missing a subscription id");
+  }
+
+  const stored = await getStoredStripeSubscription(subscriptionId);
+  const payloadCustomerId = asString(obj.customer);
+  const payloadPriceIds = collectPriceIds(obj);
+  const payloadStatus = asString(obj.status) ?? "canceled";
+  let fetchedSubscription: StripeSubscriptionSummary | null = null;
+
+  if (!payloadCustomerId || payloadPriceIds.length === 0) {
+    fetchedSubscription = await fetchStripeSubscription(subscriptionId);
+  }
+
+  const customerId =
+    payloadCustomerId ?? fetchedSubscription?.customerId ?? stored?.stripe_customer_id;
+  if (!customerId) {
+    throw new Error("Stripe subscription event is missing a customer id");
+  }
+
+  const priceIds =
+    payloadPriceIds.length > 0
+      ? payloadPriceIds
+      : fetchedSubscription?.priceIds ?? (stored?.price_id ? [stored.price_id] : []);
+  const userId = metadataUserId(obj.metadata) ?? stored?.user_id ?? null;
+  const accepted = await recordStripeSubscriptionEvent({
+    stripeSubscriptionId: subscriptionId,
+    stripeCustomerId: customerId,
+    userId,
+    priceId: priceIds[0] ?? null,
+    status: fetchedSubscription?.status ?? payloadStatus,
+    eventCreated: event.created,
+  });
+  if (!accepted) return;
+
+  const currentSubscriptions = await fetchStripeSubscriptions(customerId);
+  if (!currentSubscriptions) {
+    throw new Error("Could not reconcile Stripe subscriptions for customer");
+  }
+
+  const proPriceId = process.env.STRIPE_PRICE_ID_PRO_SUB?.trim();
+  if (!proPriceId) {
+    throw new Error("STRIPE_PRICE_ID_PRO_SUB is not configured");
+  }
+
+  const keepsSubscriptionPro = hasActiveProSubscription(
+    currentSubscriptions,
+    proPriceId,
+  );
+  const plan = keepsSubscriptionPro ? "pro" : "free";
+  if (userId) {
+    await setUserPlan(userId, plan, { stripeCustomerId: customerId });
+  } else {
+    await setUserPlanByCustomer(customerId, plan);
   }
 }
 
@@ -325,20 +384,23 @@ async function checkoutSessionCanActivatePro(
 
   const paymentStatus = asString(obj.payment_status);
   const subscriptionId = asString(obj.subscription);
-  if (paymentStatus !== "paid") {
-    if (!subscriptionId) {
-      console.warn("[billing] checkout completed ignored: paid subscription missing");
-      return false;
-    }
+  if (!subscriptionId) {
+    console.warn("[billing] checkout completed ignored: subscription missing");
+    return false;
+  }
 
+  if (process.env.STRIPE_SECRET_KEY?.trim()) {
     const subscriptionStatus = await fetchStripeSubscriptionStatus(subscriptionId);
     if (subscriptionStatus === null) {
-      // TODO: Stripe API から subscription が取れない環境では既存のPro反映を優先する。
-      console.warn("[billing] subscription status unavailable; preserving checkout behavior");
-    } else if (subscriptionStatus !== "active" && subscriptionStatus !== "trialing") {
+      throw new Error("Could not verify Stripe subscription status");
+    }
+    if (subscriptionStatus !== "active" && subscriptionStatus !== "trialing") {
       console.warn("[billing] checkout completed ignored: subscription is not active");
       return false;
     }
+  } else if (paymentStatus !== "paid") {
+    console.warn("[billing] checkout completed ignored: unpaid subscription missing Stripe API");
+    return false;
   }
 
   const subPlan = BILLING_PLANS.find((p) => p.kind === "subscription");
@@ -358,6 +420,54 @@ async function fetchStripeSubscriptionStatus(
   );
   if (!subscription || typeof subscription !== "object") return null;
   return asString((subscription as Record<string, unknown>).status);
+}
+
+async function fetchStripeSubscription(
+  subscriptionId: string,
+): Promise<StripeSubscriptionSummary | null> {
+  const secret = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!secret) return null;
+
+  const value = await fetchStripeJson(
+    `/v1/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    secret,
+  );
+  if (!value || typeof value !== "object") return null;
+  const subscription = value as Record<string, unknown>;
+  const customerId = asString(subscription.customer);
+  if (!customerId) return null;
+  return {
+    id: subscriptionId,
+    customerId,
+    status: asString(subscription.status) ?? "canceled",
+    priceIds: collectPriceIds(subscription),
+  };
+}
+
+async function fetchStripeSubscriptions(
+  customerId: string,
+): Promise<Array<{ status: string; priceIds: string[] }> | null> {
+  const secret = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!secret) return null;
+
+  const value = await fetchStripeJson(
+    `/v1/subscriptions?customer=${encodeURIComponent(customerId)}&status=all&limit=100`,
+    secret,
+  );
+  if (!value || typeof value !== "object") return null;
+  const data = (value as Record<string, unknown>).data;
+  if (!Array.isArray(data)) return null;
+
+  return data.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const subscription = item as Record<string, unknown>;
+    return [
+      {
+        status: asString(subscription.status) ?? "unknown",
+        priceIds: collectPriceIds(subscription),
+      },
+    ];
+  });
 }
 
 async function validateCheckoutPrice(
