@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import AlgorithmStepShell from "./AlgorithmStepShell";
 import {
   BoxStep,
   ComputerStep,
+  FlowchartStep,
   OrderStep,
   ProcedureStep,
   RepetitionStep,
@@ -12,6 +13,7 @@ import {
 import {
   addCurrentNumber,
   COMPUTER_ACTIONS,
+  FLOW_ACTIONS,
   isRepetitionComplete,
   isCorrectNoodleOrder,
   type NoodleActionId,
@@ -40,6 +42,17 @@ export default function AlgorithmExperience() {
     total: 0,
     current: 1,
   });
+  const [flowIndex, setFlowIndex] = useState(0);
+  const [isFlowModalOpen, setFlowModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isFlowModalOpen) return;
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setFlowModalOpen(false);
+    }
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isFlowModalOpen]);
 
   let content: ReactNode = null;
   let canContinue = false;
@@ -99,6 +112,25 @@ export default function AlgorithmExperience() {
       );
       canContinue = isRepetitionComplete(repetition);
       blockedHint = "1から5まで足してください";
+      break;
+    case 6:
+      content = (
+        <FlowchartStep
+          flowIndex={flowIndex}
+          isModalOpen={isFlowModalOpen}
+          onPrevious={() =>
+            setFlowIndex((current) => Math.max(0, current - 1))
+          }
+          onNext={() =>
+            setFlowIndex((current) =>
+              Math.min(FLOW_ACTIONS.length - 1, current + 1),
+            )
+          }
+          onOpenModal={() => setFlowModalOpen(true)}
+          onCloseModal={() => setFlowModalOpen(false)}
+        />
+      );
+      canContinue = true;
       break;
     default:
       content = null;

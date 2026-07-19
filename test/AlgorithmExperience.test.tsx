@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import AlgorithmExperience from "@/components/experiences/AlgorithmExperience";
 import {
@@ -50,6 +56,17 @@ function advanceToRepetitionStep() {
   advanceToBoxStep();
   fireEvent.click(screen.getByRole("button", { name: "1を足す" }));
   fireEvent.click(screen.getByRole("button", { name: "2を足す" }));
+  fireEvent.click(screen.getByRole("button", { name: "次へ" }));
+}
+
+function advanceToFlowchartStep() {
+  advanceToRepetitionStep();
+  const addButton = screen.getByRole("button", {
+    name: "現在の数字を足す",
+  });
+  for (let count = 0; count < 5; count += 1) {
+    fireEvent.click(addButton);
+  }
   fireEvent.click(screen.getByRole("button", { name: "次へ" }));
 }
 
@@ -147,5 +164,33 @@ describe("AlgorithmExperience beginner flow", () => {
     expect(
       screen.getByText("同じ処理を何度も行うことを繰り返しと呼ぶ"),
     ).toBeInTheDocument();
+  });
+
+  it("reveals the flowchart only at step 6 and limits the normal view to three actions", () => {
+    render(<AlgorithmExperience />);
+    expect(
+      screen.queryByRole("button", { name: "全体図を見る" }),
+    ).not.toBeInTheDocument();
+
+    advanceToFlowchartStep();
+    const flowWindow = screen.getByTestId("flow-window");
+    expect(within(flowWindow).getAllByRole("listitem")).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole("button", { name: "処理を進める" }));
+    expect(within(flowWindow).getAllByRole("listitem")).toHaveLength(3);
+    expect(
+      screen.queryByRole("dialog", { name: "フローチャート全体図" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "全体図を見る" }));
+    const dialog = screen.getByRole("dialog", {
+      name: "フローチャート全体図",
+    });
+    expect(within(dialog).getAllByRole("listitem")).toHaveLength(7);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(
+      screen.queryByRole("dialog", { name: "フローチャート全体図" }),
+    ).not.toBeInTheDocument();
   });
 });

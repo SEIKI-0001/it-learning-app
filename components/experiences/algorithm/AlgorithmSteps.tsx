@@ -1,11 +1,13 @@
 import {
   COMPUTER_ACTIONS,
+  FLOW_ACTIONS,
   NOODLE_ACTIONS,
   isRepetitionComplete,
   isCorrectNoodleOrder,
   type NoodleActionId,
   type RepetitionState,
 } from "./learningModel";
+import type { MouseEvent } from "react";
 
 type ProcedureStepProps = {
   order: NoodleActionId[];
@@ -331,6 +333,182 @@ export function RepetitionStep({ state, onAdd }: RepetitionStepProps) {
             同じ処理を何度も行うことを繰り返しと呼ぶ
           </span>
         </p>
+      ) : null}
+    </div>
+  );
+}
+
+type FlowchartStepProps = {
+  flowIndex: number;
+  isModalOpen: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+  onOpenModal: () => void;
+  onCloseModal: () => void;
+};
+
+const FLOW_KIND_LABELS = {
+  terminal: "開始・終了",
+  process: "処理",
+  decision: "確認",
+  output: "表示",
+} as const;
+
+function FlowNode({
+  action,
+  active,
+}: {
+  action: (typeof FLOW_ACTIONS)[number];
+  active: boolean;
+}) {
+  const shape =
+    action.kind === "terminal"
+      ? "rounded-full"
+      : action.kind === "decision"
+        ? "rounded-[1.5rem] border-2 border-amber-300"
+        : action.kind === "output"
+          ? "skew-x-[-6deg] rounded-lg"
+          : "rounded-lg";
+
+  return (
+    <div
+      className={`mx-auto w-full max-w-64 px-3 py-2.5 text-center ring-1 ${shape} ${
+        active
+          ? "bg-indigo-600 text-white ring-indigo-600"
+          : "bg-white text-gray-800 ring-gray-200"
+      }`}
+    >
+      <span className="block text-[10px] font-bold opacity-70">
+        {FLOW_KIND_LABELS[action.kind]}
+      </span>
+      <span className="block text-sm font-extrabold">{action.label}</span>
+    </div>
+  );
+}
+
+export function FlowchartStep({
+  flowIndex,
+  isModalOpen,
+  onPrevious,
+  onNext,
+  onOpenModal,
+  onCloseModal,
+}: FlowchartStepProps) {
+  const firstIndex = Math.max(0, flowIndex - 1);
+  const lastIndex = Math.min(FLOW_ACTIONS.length, flowIndex + 2);
+  const visibleActions = FLOW_ACTIONS.slice(firstIndex, lastIndex);
+
+  function handleBackdropClick(event: MouseEvent<HTMLDivElement>) {
+    if (event.target === event.currentTarget) onCloseModal();
+  }
+
+  return (
+    <div>
+      <p className="text-sm leading-relaxed text-gray-600">
+        手順を箱と矢印でつないだ図がフローチャートです。まずは今いる場所の前後だけを見て進めます。
+      </p>
+
+      <ol
+        data-testid="flow-window"
+        className="mt-4 space-y-1.5 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"
+        aria-label="現在位置の前後の処理"
+      >
+        {visibleActions.map((action, offset) => {
+          const absoluteIndex = firstIndex + offset;
+          const relation =
+            absoluteIndex === flowIndex
+              ? "現在"
+              : absoluteIndex < flowIndex
+                ? "前"
+                : "次";
+          return (
+            <li key={action.label}>
+              {offset > 0 ? (
+                <div aria-hidden className="py-0.5 text-center text-gray-300">
+                  ↓
+                </div>
+              ) : null}
+              <p
+                className={`mb-1 text-center text-[11px] font-black ${
+                  relation === "現在" ? "text-indigo-600" : "text-gray-400"
+                }`}
+              >
+                {relation}
+              </p>
+              <FlowNode action={action} active={absoluteIndex === flowIndex} />
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={onPrevious}
+          disabled={flowIndex === 0}
+          className="min-h-10 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 disabled:opacity-35"
+        >
+          処理を戻す
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={flowIndex === FLOW_ACTIONS.length - 1}
+          className="min-h-10 rounded-xl border border-indigo-200 bg-indigo-50 text-sm font-bold text-indigo-700 disabled:opacity-35"
+        >
+          処理を進める
+        </button>
+      </div>
+      <button
+        type="button"
+        onClick={onOpenModal}
+        className="mt-2 min-h-10 w-full rounded-xl text-sm font-bold text-indigo-700 underline decoration-indigo-200 underline-offset-4"
+      >
+        全体図を見る
+      </button>
+
+      {isModalOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="algorithm-flow-dialog-title"
+          onClick={handleBackdropClick}
+          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4"
+        >
+          <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-black text-indigo-600">1〜5を足す手順</p>
+                <h4
+                  id="algorithm-flow-dialog-title"
+                  className="mt-1 text-lg font-extrabold text-gray-900"
+                >
+                  フローチャート全体図
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={onCloseModal}
+                aria-label="全体図を閉じる"
+                className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-lg font-bold text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+            <ol className="mt-4 space-y-1" aria-label="すべての処理">
+              {FLOW_ACTIONS.map((action, index) => (
+                <li key={action.label}>
+                  {index > 0 ? (
+                    <div aria-hidden className="text-center text-gray-300">
+                      ↓
+                    </div>
+                  ) : null}
+                  <FlowNode action={action} active={index === flowIndex} />
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
       ) : null}
     </div>
   );
