@@ -1,6 +1,8 @@
 import {
   COMPUTER_ACTIONS,
   FLOW_ACTIONS,
+  FORMAL_MAPPINGS,
+  MINI_QUESTIONS,
   NOODLE_ACTIONS,
   isRepetitionComplete,
   isCorrectNoodleOrder,
@@ -508,6 +510,144 @@ export function FlowchartStep({
               ))}
             </ol>
           </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type ExamExpressionStepProps = {
+  questionIndex: number;
+  answers: (string | null)[];
+  onAnswer: (answer: string) => void;
+  onNextQuestion: () => void;
+};
+
+export function ExamExpressionStep({
+  questionIndex,
+  answers,
+  onAnswer,
+  onNextQuestion,
+}: ExamExpressionStepProps) {
+  const question = MINI_QUESTIONS[questionIndex];
+  const selected = answers[questionIndex] ?? null;
+  const answered = selected !== null;
+  const finished =
+    questionIndex === MINI_QUESTIONS.length - 1 && answered;
+  const correctCount = answers.reduce(
+    (total, answer, index) =>
+      total + (answer === MINI_QUESTIONS[index]?.correct ? 1 : 0),
+    0,
+  );
+
+  return (
+    <div>
+      <p className="text-sm leading-relaxed text-gray-600">
+        ここまで使った言葉を、試験に出る書き方へ置き換えてみましょう。
+      </p>
+
+      <dl className="mt-3 space-y-2">
+        {FORMAL_MAPPINGS.map((mapping) => (
+          <div
+            key={mapping.formal}
+            className="grid gap-1 rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-200 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-3"
+          >
+            <dt className="text-xs font-bold leading-relaxed text-gray-700">
+              {mapping.beginner}
+            </dt>
+            <dd className="flex items-center gap-2">
+              <span aria-hidden className="text-xs font-black text-indigo-400">
+                ⇔
+              </span>
+              <code className="rounded-lg bg-gray-900 px-2.5 py-1.5 font-mono text-xs font-bold text-white">
+                {mapping.formal}
+              </code>
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <section className="mt-4 rounded-2xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="text-sm font-extrabold text-indigo-950">ミニ確認</h4>
+          <span className="text-xs font-bold text-indigo-600">
+            {questionIndex + 1} / {MINI_QUESTIONS.length}
+          </span>
+        </div>
+        <p className="mt-2 text-sm font-bold leading-relaxed text-gray-900">
+          {question.prompt}
+        </p>
+        <div className="mt-3 grid gap-2">
+          {question.choices.map((choice) => {
+            const picked = selected === choice;
+            const correct = choice === question.correct;
+            const tone = !answered
+              ? "bg-white text-gray-800 ring-gray-200"
+              : picked
+                ? correct
+                  ? "bg-emerald-600 text-white ring-emerald-600"
+                  : "bg-rose-500 text-white ring-rose-500"
+                : correct
+                  ? "bg-white text-emerald-800 ring-emerald-400"
+                  : "bg-white text-gray-400 ring-gray-100";
+            return (
+              <button
+                key={choice}
+                type="button"
+                onClick={() => onAnswer(choice)}
+                disabled={answered}
+                className={`min-h-11 rounded-xl px-3 text-left text-sm font-bold ring-1 transition disabled:opacity-100 ${tone}`}
+              >
+                {choice}
+              </button>
+            );
+          })}
+        </div>
+
+        {answered ? (
+          <div
+            aria-live="polite"
+            className={`mt-3 rounded-xl px-3 py-2.5 text-xs font-semibold leading-relaxed ${
+              selected === question.correct
+                ? "bg-emerald-100 text-emerald-900"
+                : "bg-amber-100 text-amber-950"
+            }`}
+          >
+            <p className="font-extrabold">
+              {selected === question.correct ? "正解！" : "意味を確認しよう"}
+            </p>
+            <p className="mt-1">{question.explanation}</p>
+          </div>
+        ) : null}
+
+        {answered && !finished ? (
+          <button
+            type="button"
+            onClick={onNextQuestion}
+            className="mt-3 min-h-10 w-full rounded-xl bg-indigo-600 text-sm font-bold text-white"
+          >
+            次のミニ問題
+          </button>
+        ) : null}
+      </section>
+
+      {finished ? (
+        <div
+          aria-live="polite"
+          className="mt-4 rounded-2xl bg-emerald-50 p-4 text-center ring-1 ring-emerald-200"
+        >
+          <p className="text-xl" aria-hidden>
+            🎉
+          </p>
+          <p className="mt-1 text-sm font-extrabold text-emerald-900">
+            日常の手順から試験の表現までつながりました
+          </p>
+          <p className="mt-1 text-xs font-bold text-emerald-700">
+            {MINI_QUESTIONS.length}問中 {correctCount}問正解
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-emerald-800">
+            この下の確認問題で、レッスンの理解を記録しましょう。
+          </p>
         </div>
       ) : null}
     </div>

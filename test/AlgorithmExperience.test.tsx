@@ -70,6 +70,11 @@ function advanceToFlowchartStep() {
   fireEvent.click(screen.getByRole("button", { name: "次へ" }));
 }
 
+function advanceToExamStep() {
+  advanceToFlowchartStep();
+  fireEvent.click(screen.getByRole("button", { name: "次へ" }));
+}
+
 describe("AlgorithmExperience beginner flow", () => {
   it("renders only the current step", () => {
     render(<AlgorithmExperience />);
@@ -192,5 +197,38 @@ describe("AlgorithmExperience beginner flow", () => {
     expect(
       screen.queryByRole("dialog", { name: "フローチャート全体図" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("connects beginner language to exam expressions and completes three mini questions", () => {
+    render(<AlgorithmExperience />);
+    advanceToExamStep();
+
+    expect(screen.getAllByText("合計の箱を0にする").length).toBeGreaterThan(0);
+    expect(screen.getByText("合計 ← 合計 + i")).toBeInTheDocument();
+    expect(screen.getByText("i ← i + 1")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "合計の箱を0にする" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "次のミニ問題" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "合計に現在の数字を足す" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "次のミニ問題" }));
+    fireEvent.click(screen.getByRole("button", { name: "次の数字へ進む" }));
+
+    expect(
+      screen.getByText("日常の手順から試験の表現までつながりました"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("3問中 3問正解")).toBeInTheDocument();
+  });
+
+  it("preserves completed interaction state after going back", () => {
+    render(<AlgorithmExperience />);
+    advanceToExamStep();
+
+    fireEvent.click(screen.getByRole("button", { name: "戻る" }));
+    fireEvent.click(screen.getByRole("button", { name: "戻る" }));
+    expect(screen.getByTestId("repeat-total")).toHaveTextContent("15");
   });
 });

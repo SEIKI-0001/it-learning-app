@@ -5,6 +5,7 @@ import AlgorithmStepShell from "./AlgorithmStepShell";
 import {
   BoxStep,
   ComputerStep,
+  ExamExpressionStep,
   FlowchartStep,
   OrderStep,
   ProcedureStep,
@@ -16,6 +17,7 @@ import {
   FLOW_ACTIONS,
   isRepetitionComplete,
   isCorrectNoodleOrder,
+  MINI_QUESTIONS,
   type NoodleActionId,
   type RepetitionState,
 } from "./learningModel";
@@ -44,6 +46,10 @@ export default function AlgorithmExperience() {
   });
   const [flowIndex, setFlowIndex] = useState(0);
   const [isFlowModalOpen, setFlowModalOpen] = useState(false);
+  const [miniQuestionIndex, setMiniQuestionIndex] = useState(0);
+  const [miniAnswers, setMiniAnswers] = useState<(string | null)[]>(() =>
+    MINI_QUESTIONS.map(() => null),
+  );
 
   useEffect(() => {
     if (!isFlowModalOpen) return;
@@ -131,6 +137,28 @@ export default function AlgorithmExperience() {
         />
       );
       canContinue = true;
+      break;
+    case 7:
+      content = (
+        <ExamExpressionStep
+          questionIndex={miniQuestionIndex}
+          answers={miniAnswers}
+          onAnswer={(answer) =>
+            setMiniAnswers((current) =>
+              current.map((value, index) =>
+                index === miniQuestionIndex ? answer : value,
+              ),
+            )
+          }
+          onNextQuestion={() =>
+            setMiniQuestionIndex((current) =>
+              Math.min(MINI_QUESTIONS.length - 1, current + 1),
+            )
+          }
+        />
+      );
+      canContinue = miniAnswers.every((answer) => answer !== null);
+      blockedHint = "3問のミニ確認に答えてください";
       break;
     default:
       content = null;
