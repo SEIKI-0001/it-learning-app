@@ -1,6 +1,8 @@
 import {
   COMPUTER_ACTIONS,
-  FLOW_ACTIONS,
+  FLOW_LEARNING_PATH,
+  getFlowNode,
+  getOutgoingFlowEdges,
   FORMAL_MAPPINGS,
   MINI_QUESTIONS,
   NOODLE_ACTIONS,
@@ -8,8 +10,10 @@ import {
   isCorrectNoodleOrder,
   type NoodleActionId,
   type RepetitionState,
+  type FlowEdge,
+  type FlowNode,
 } from "./learningModel";
-import type { MouseEvent } from "react";
+import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 
 type ProcedureStepProps = {
@@ -361,7 +365,7 @@ function FlowNode({
   action,
   active,
 }: {
-  action: (typeof FLOW_ACTIONS)[number];
+  action: FlowNode;
   active: boolean;
 }) {
   const shape =
@@ -397,12 +401,60 @@ export function FlowchartStep({
   onOpenModal,
   onCloseModal,
 }: FlowchartStepProps) {
-  const firstIndex = Math.max(0, flowIndex - 1);
-  const lastIndex = Math.min(FLOW_ACTIONS.length, flowIndex + 2);
-  const visibleActions = FLOW_ACTIONS.slice(firstIndex, lastIndex);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const currentNodeId = FLOW_LEARNING_PATH[flowIndex] ?? "start";
+  const previousNodeId = FLOW_LEARNING_PATH[flowIndex - 1];
+  const nextNodeId = FLOW_LEARNING_PATH[flowIndex + 1];
+  const currentNode = getFlowNode(currentNodeId);
+  const previousNode = previousNodeId ? getFlowNode(previousNodeId) : null;
+  const nextNode = nextNodeId ? getFlowNode(nextNodeId) : null;
+  const outgoingEdges = getOutgoingFlowEdges(currentNodeId);
+  const isDecision = currentNode.kind === "decision";
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const trigger = triggerRef.current;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      trigger?.focus();
+    };
+  }, [isModalOpen]);
 
   function handleBackdropClick(event: MouseEvent<HTMLDivElement>) {
     if (event.target === event.currentTarget) onCloseModal();
+  }
+
+  function handleDialogKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Tab") return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const focusable = Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        "button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])",
+      ),
+    );
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  function renderEdgeLabel(edge: FlowEdge) {
+    return edge.label ? <span className="font-black text-indigo-700">{edge.label}</span> : null;
   }
 
   return (
@@ -416,32 +468,38 @@ export function FlowchartStep({
         className="mt-4 space-y-1.5 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"
         aria-label="現在位置の前後の処理"
       >
-        {visibleActions.map((action, offset) => {
-          const absoluteIndex = firstIndex + offset;
-          const relation =
-            absoluteIndex === flowIndex
-              ? "現在"
-              : absoluteIndex < flowIndex
-                ? "前"
-                : "次";
-          return (
-            <li key={action.label}>
-              {offset > 0 ? (
-                <div aria-hidden className="py-0.5 text-center text-gray-300">
-                  ↓
+        {previousNode ? (
+          <li>
+            <p className="mb-1 text-center text-[11px] font-black text-gray-400">前</p>
+            <FlowNode action={previousNode} active={false} />
+          </li>
+        ) : null}
+        <li>
+          {previousNode ? <div aria-hidden className="py-0.5 text-center text-gray-300">↓</div> : null}
+          <p className="mb-1 text-center text-[11px] font-black text-indigo-600">現在</p>
+          <FlowNode action={currentNode} active />
+        </li>
+        {isDecision ? (
+          <li>
+            <p className="mt-2 text-center text-[11px] font-black text-gray-400">次の分かれ道</p>
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              {outgoingEdges.map((edge) => (
+                <div key={`${edge.from}-${edge.to}`} className="space-y-1 text-center">
+                  {renderEdgeLabel(edge)}
+                  <FlowNode action={getFlowNode(edge.to)} active={false} />
                 </div>
-              ) : null}
-              <p
-                className={`mb-1 text-center text-[11px] font-black ${
-                  relation === "現在" ? "text-indigo-600" : "text-gray-400"
-                }`}
-              >
-                {relation}
-              </p>
-              <FlowNode action={action} active={absoluteIndex === flowIndex} />
-            </li>
-          );
-        })}
+              ))}
+            </div>
+          </li>
+        ) : nextNode ? (
+          <li>
+            <div className="py-0.5 text-center text-gray-300">
+              {outgoingEdges[0]?.isLoop ? "↺ 条件確認へ戻る" : "↓"}
+            </div>
+            <p className="mb-1 text-center text-[11px] font-black text-gray-400">次</p>
+            <FlowNode action={nextNode} active={false} />
+          </li>
+        ) : null}
       </ol>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -456,7 +514,7 @@ export function FlowchartStep({
         <button
           type="button"
           onClick={onNext}
-          disabled={flowIndex === FLOW_ACTIONS.length - 1}
+          disabled={flowIndex === FLOW_LEARNING_PATH.length - 1}
           className="min-h-10 rounded-xl border border-indigo-200 bg-indigo-50 text-sm font-bold text-indigo-700 disabled:opacity-35"
         >
           処理を進める
@@ -465,6 +523,7 @@ export function FlowchartStep({
       <button
         type="button"
         onClick={onOpenModal}
+        ref={triggerRef}
         className="mt-2 min-h-10 w-full rounded-xl text-sm font-bold text-indigo-700 underline decoration-indigo-200 underline-offset-4"
       >
         全体図を見る
@@ -477,6 +536,8 @@ export function FlowchartStep({
               aria-modal="true"
               aria-labelledby="algorithm-flow-dialog-title"
               onClick={handleBackdropClick}
+              onKeyDown={handleDialogKeyDown}
+              ref={dialogRef}
               className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4"
             >
               <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl">
@@ -495,24 +556,36 @@ export function FlowchartStep({
                   <button
                     type="button"
                     onClick={onCloseModal}
+                    ref={closeButtonRef}
                     aria-label="全体図を閉じる"
                     className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-lg font-bold text-gray-600"
                   >
                     ×
                   </button>
                 </div>
-                <ol className="mt-4 space-y-1" aria-label="すべての処理">
-                  {FLOW_ACTIONS.map((action, index) => (
-                    <li key={action.label}>
-                      {index > 0 ? (
-                        <div aria-hidden className="text-center text-gray-300">
-                          ↓
-                        </div>
-                      ) : null}
-                      <FlowNode action={action} active={index === flowIndex} />
-                    </li>
+                <div data-testid="flowchart-full-diagram" className="mt-4 space-y-1" aria-label="すべての処理">
+                  {(["start", "initialize-total", "initialize-current", "condition"] as const).map((nodeId, index) => (
+                    <div key={nodeId}>
+                      {index > 0 ? <div aria-hidden className="text-center text-gray-300">↓</div> : null}
+                      <FlowNode action={getFlowNode(nodeId)} active={nodeId === currentNodeId} />
+                    </div>
                   ))}
-                </ol>
+                  <div className="mt-2 grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <p className="text-center text-xs font-black text-indigo-700">はい</p>
+                      <FlowNode action={getFlowNode("add-current")} active={currentNodeId === "add-current"} />
+                      <div aria-hidden className="text-center text-gray-300">↓</div>
+                      <FlowNode action={getFlowNode("increment-current")} active={currentNodeId === "increment-current"} />
+                      <p className="text-center text-xs font-black text-indigo-700">↺ 条件確認へ戻る</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-center text-xs font-black text-indigo-700">いいえ</p>
+                      <FlowNode action={getFlowNode("display-total")} active={currentNodeId === "display-total"} />
+                      <div aria-hidden className="text-center text-gray-300">↓</div>
+                      <FlowNode action={getFlowNode("end")} active={currentNodeId === "end"} />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>,
             document.body,

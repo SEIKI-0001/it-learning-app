@@ -14,7 +14,7 @@ import {
 import {
   addCurrentNumber,
   COMPUTER_ACTIONS,
-  FLOW_ACTIONS,
+  FLOW_LEARNING_PATH,
   isRepetitionComplete,
   isCorrectNoodleOrder,
   MINI_QUESTIONS,
@@ -129,7 +129,7 @@ export default function AlgorithmExperience() {
           }
           onNext={() =>
             setFlowIndex((current) =>
-              Math.min(FLOW_ACTIONS.length - 1, current + 1),
+              Math.min(FLOW_LEARNING_PATH.length - 1, current + 1),
             )
           }
           onOpenModal={() => setFlowModalOpen(true)}
@@ -171,7 +171,18 @@ export default function AlgorithmExperience() {
       canContinue={canContinue}
       blockedHint={blockedHint}
       onBack={() => setStep((current) => Math.max(1, current - 1))}
-      onNext={() => setStep((current) => Math.min(7, current + 1))}
+      onNext={() => {
+        if (step !== 7) {
+          setStep((current) => Math.min(7, current + 1));
+          return;
+        }
+
+        const quizSection = document.getElementById("lesson-quiz");
+        quizSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+        quizSection
+          ?.querySelector<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])")
+          ?.focus({ preventScroll: true });
+      }}
     >
       {content}
     </AlgorithmStepShell>

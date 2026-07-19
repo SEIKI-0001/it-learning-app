@@ -67,10 +67,10 @@ export default function AlgorithmStepShell({
           <button
             type="button"
             onClick={onNext}
-            disabled={!canContinue || step === TOTAL_STEPS}
+            disabled={!canContinue}
             className="min-h-11 rounded-xl bg-indigo-600 font-bold text-white transition active:scale-[0.98] disabled:opacity-35"
           >
-            {step === TOTAL_STEPS ? "学習完了" : "次へ"}
+            {step === TOTAL_STEPS ? "確認問題へ" : "次へ"}
           </button>
         </div>
       </div>

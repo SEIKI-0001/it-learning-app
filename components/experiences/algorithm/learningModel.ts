@@ -45,20 +45,86 @@ export function addCurrentNumber(state: RepetitionState): RepetitionState {
   };
 }
 
-export const FLOW_ACTIONS = [
-  { label: "開始", kind: "terminal" },
-  { label: "合計を0にする", kind: "process" },
-  { label: "数字を足す", kind: "process" },
-  { label: "5以下か確認", kind: "decision" },
-  { label: "次の数字へ", kind: "process" },
-  { label: "合計を表示", kind: "output" },
-  { label: "終了", kind: "terminal" },
-] as const;
+export type FlowNodeId =
+  | "start"
+  | "initialize-total"
+  | "initialize-current"
+  | "condition"
+  | "add-current"
+  | "increment-current"
+  | "display-total"
+  | "end";
+
+export type FlowNode = {
+  id: FlowNodeId;
+  label: string;
+  kind: "terminal" | "process" | "decision" | "output";
+};
+
+export type FlowEdge = {
+  from: FlowNodeId;
+  to: FlowNodeId;
+  label?: "はい" | "いいえ" | "条件確認へ戻る";
+  isLoop?: boolean;
+};
+
+export const FLOWCHART = {
+  nodes: [
+    { id: "start", label: "開始", kind: "terminal" },
+    { id: "initialize-total", label: "合計を0にする", kind: "process" },
+    { id: "initialize-current", label: "現在の数字を1にする", kind: "process" },
+    { id: "condition", label: "現在の数字は5以下？", kind: "decision" },
+    { id: "add-current", label: "合計に現在の数字を足す", kind: "process" },
+    { id: "increment-current", label: "現在の数字を1増やす", kind: "process" },
+    { id: "display-total", label: "合計を表示", kind: "output" },
+    { id: "end", label: "終了", kind: "terminal" },
+  ],
+  edges: [
+    { from: "start", to: "initialize-total" },
+    { from: "initialize-total", to: "initialize-current" },
+    { from: "initialize-current", to: "condition" },
+    { from: "condition", to: "add-current", label: "はい" },
+    { from: "condition", to: "display-total", label: "いいえ" },
+    { from: "add-current", to: "increment-current" },
+    {
+      from: "increment-current",
+      to: "condition",
+      label: "条件確認へ戻る",
+      isLoop: true,
+    },
+    { from: "display-total", to: "end" },
+  ],
+} as const satisfies {
+  readonly nodes: readonly FlowNode[];
+  readonly edges: readonly FlowEdge[];
+};
+
+// 初心者向けの通常表示では、正しい実行順を一歩ずつ追う。
+// 条件ノードを2回置くことで、ループ後に「いいえ」の出口へ進む様子も見せる。
+export const FLOW_LEARNING_PATH: readonly FlowNodeId[] = [
+  "start",
+  "initialize-total",
+  "initialize-current",
+  "condition",
+  "add-current",
+  "increment-current",
+  "condition",
+  "display-total",
+  "end",
+];
+
+export function getFlowNode(id: FlowNodeId): FlowNode {
+  return FLOWCHART.nodes.find((node) => node.id === id) as FlowNode;
+}
+
+export function getOutgoingFlowEdges(id: FlowNodeId): readonly FlowEdge[] {
+  return FLOWCHART.edges.filter((edge) => edge.from === id) as readonly FlowEdge[];
+}
 
 export const FORMAL_MAPPINGS = [
   { beginner: "合計の箱を0にする", formal: "合計 ← 0" },
   { beginner: "合計に現在の数字を足す", formal: "合計 ← 合計 + i" },
-  { beginner: "次の数字へ", formal: "i ← i + 1" },
+  { beginner: "現在の数字を1増やす", formal: "i ← i + 1" },
 ] as const;
 
 export const MINI_QUESTIONS = [
@@ -76,8 +142,8 @@ export const MINI_QUESTIONS = [
   },
   {
     prompt: "「i ← i + 1」はどんな手順？",
-    choices: ["次の数字へ進む", "最初の数字へ戻る"],
-    correct: "次の数字へ進む",
+    choices: ["現在の数字を1増やす", "最初の数字へ戻る"],
+    correct: "現在の数字を1増やす",
     explanation: "iを1増やして、次に足す数字を準備します。",
   },
 ] as const;

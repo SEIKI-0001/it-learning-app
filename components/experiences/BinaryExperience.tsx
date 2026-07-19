@@ -88,40 +88,49 @@ function LessonCard({
 
 function StepNavigation({
   step,
+  canContinue,
+  blockedHint,
   onBack,
   onNext,
 }: {
   step: number;
+  canContinue: boolean;
+  blockedHint?: string;
   onBack: () => void;
   onNext: () => void;
 }) {
   return (
-    <nav aria-label="2進数レッスンのステップ移動" className="mt-3 flex items-center justify-between gap-3">
-      <button
-        type="button"
-        onClick={onBack}
-        disabled={step === 1}
-        className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition active:scale-95 disabled:opacity-40"
-      >
-        戻る
-      </button>
-      <div className="flex items-center gap-1.5" aria-label={`${step} / 5`}>
-        {Array.from({ length: 5 }, (_, index) => (
-          <span
-            key={index}
-            aria-hidden
-            className={`h-2 w-2 rounded-full ${index + 1 === step ? "bg-indigo-600" : "bg-slate-200"}`}
-          />
-        ))}
+    <nav aria-label="2進数レッスンのステップ移動" className="mt-3">
+      {!canContinue && blockedHint ? (
+        <p className="mb-2 text-center text-xs font-bold text-amber-700">{blockedHint}</p>
+      ) : null}
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={step === 1}
+          className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition active:scale-95 disabled:opacity-40"
+        >
+          戻る
+        </button>
+        <div className="flex items-center gap-1.5" aria-label={`${step} / 5`}>
+          {Array.from({ length: 5 }, (_, index) => (
+            <span
+              key={index}
+              aria-hidden
+              className={`h-2 w-2 rounded-full ${index + 1 === step ? "bg-indigo-600" : "bg-slate-200"}`}
+            />
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!canContinue || step === 5}
+          className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white transition active:scale-95 disabled:opacity-40"
+        >
+          次へ
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onNext}
-        disabled={step === 5}
-        className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white transition active:scale-95 disabled:opacity-40"
-      >
-        次へ
-      </button>
     </nav>
   );
 }
@@ -136,6 +145,16 @@ export default function BinaryExperience() {
   const fiveValue = valueOf(fiveBits, FOUR_WEIGHTS);
   const nineValue = valueOf(nineBits, FOUR_WEIGHTS);
   const litForFive = FOUR_WEIGHTS.filter((_, index) => fiveBits[index]);
+  const canContinue =
+    step === 1 ? fiveValue === 5 : step === 3 ? readAnswer !== null : step === 4 ? nineValue === 9 : true;
+  const blockedHint =
+    step === 1
+      ? "ランプで5を作ると次へ進めます"
+      : step === 3
+        ? "答えを選んでください"
+        : step === 4
+          ? "ランプで9を作ると次へ進めます"
+          : undefined;
 
   const toggle = (setBits: React.Dispatch<React.SetStateAction<boolean[]>>, index: number) => {
     setBits((bits) => bits.map((isOn, bitIndex) => (bitIndex === index ? !isOn : isOn)));
@@ -275,6 +294,8 @@ export default function BinaryExperience() {
       {content}
       <StepNavigation
         step={step}
+        canContinue={canContinue}
+        blockedHint={blockedHint}
         onBack={() => setStep((current) => Math.max(1, current - 1))}
         onNext={() => setStep((current) => Math.min(5, current + 1))}
       />
