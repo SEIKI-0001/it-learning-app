@@ -192,6 +192,7 @@ describe("AlgorithmExperience beginner flow", () => {
       name: "フローチャート全体図",
     });
     expect(within(dialog).getAllByRole("listitem")).toHaveLength(7);
+    expect(dialog.parentElement).toBe(document.body);
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(
@@ -221,6 +222,9 @@ describe("AlgorithmExperience beginner flow", () => {
       screen.getByText("日常の手順から試験の表現までつながりました"),
     ).toBeInTheDocument();
     expect(screen.getByText("3問中 3問正解")).toBeInTheDocument();
+    expect(
+      screen.queryByText("「i ← i + 1」はどんな手順？"),
+    ).not.toBeInTheDocument();
   });
 
   it("preserves completed interaction state after going back", () => {

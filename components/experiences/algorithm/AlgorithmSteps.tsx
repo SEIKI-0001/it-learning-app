@@ -10,6 +10,7 @@ import {
   type RepetitionState,
 } from "./learningModel";
 import type { MouseEvent } from "react";
+import { createPortal } from "react-dom";
 
 type ProcedureStepProps = {
   order: NoodleActionId[];
@@ -469,49 +470,54 @@ export function FlowchartStep({
         全体図を見る
       </button>
 
-      {isModalOpen ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="algorithm-flow-dialog-title"
-          onClick={handleBackdropClick}
-          className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4"
-        >
-          <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-black text-indigo-600">1〜5を足す手順</p>
-                <h4
-                  id="algorithm-flow-dialog-title"
-                  className="mt-1 text-lg font-extrabold text-gray-900"
-                >
-                  フローチャート全体図
-                </h4>
+      {isModalOpen
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="algorithm-flow-dialog-title"
+              onClick={handleBackdropClick}
+              className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4"
+            >
+              <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black text-indigo-600">
+                      1〜5を足す手順
+                    </p>
+                    <h4
+                      id="algorithm-flow-dialog-title"
+                      className="mt-1 text-lg font-extrabold text-gray-900"
+                    >
+                      フローチャート全体図
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onCloseModal}
+                    aria-label="全体図を閉じる"
+                    className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-lg font-bold text-gray-600"
+                  >
+                    ×
+                  </button>
+                </div>
+                <ol className="mt-4 space-y-1" aria-label="すべての処理">
+                  {FLOW_ACTIONS.map((action, index) => (
+                    <li key={action.label}>
+                      {index > 0 ? (
+                        <div aria-hidden className="text-center text-gray-300">
+                          ↓
+                        </div>
+                      ) : null}
+                      <FlowNode action={action} active={index === flowIndex} />
+                    </li>
+                  ))}
+                </ol>
               </div>
-              <button
-                type="button"
-                onClick={onCloseModal}
-                aria-label="全体図を閉じる"
-                className="grid h-10 w-10 place-items-center rounded-full bg-gray-100 text-lg font-bold text-gray-600"
-              >
-                ×
-              </button>
-            </div>
-            <ol className="mt-4 space-y-1" aria-label="すべての処理">
-              {FLOW_ACTIONS.map((action, index) => (
-                <li key={action.label}>
-                  {index > 0 ? (
-                    <div aria-hidden className="text-center text-gray-300">
-                      ↓
-                    </div>
-                  ) : null}
-                  <FlowNode action={action} active={index === flowIndex} />
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -550,7 +556,7 @@ export function ExamExpressionStep({
         {FORMAL_MAPPINGS.map((mapping) => (
           <div
             key={mapping.formal}
-            className="grid gap-1 rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-200 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-3"
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-200"
           >
             <dt className="text-xs font-bold leading-relaxed text-gray-700">
               {mapping.beginner}
@@ -567,69 +573,71 @@ export function ExamExpressionStep({
         ))}
       </dl>
 
-      <section className="mt-4 rounded-2xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
-        <div className="flex items-center justify-between gap-2">
-          <h4 className="text-sm font-extrabold text-indigo-950">ミニ確認</h4>
-          <span className="text-xs font-bold text-indigo-600">
-            {questionIndex + 1} / {MINI_QUESTIONS.length}
-          </span>
-        </div>
-        <p className="mt-2 text-sm font-bold leading-relaxed text-gray-900">
-          {question.prompt}
-        </p>
-        <div className="mt-3 grid gap-2">
-          {question.choices.map((choice) => {
-            const picked = selected === choice;
-            const correct = choice === question.correct;
-            const tone = !answered
-              ? "bg-white text-gray-800 ring-gray-200"
-              : picked
-                ? correct
-                  ? "bg-emerald-600 text-white ring-emerald-600"
-                  : "bg-rose-500 text-white ring-rose-500"
-                : correct
-                  ? "bg-white text-emerald-800 ring-emerald-400"
-                  : "bg-white text-gray-400 ring-gray-100";
-            return (
-              <button
-                key={choice}
-                type="button"
-                onClick={() => onAnswer(choice)}
-                disabled={answered}
-                className={`min-h-11 rounded-xl px-3 text-left text-sm font-bold ring-1 transition disabled:opacity-100 ${tone}`}
-              >
-                {choice}
-              </button>
-            );
-          })}
-        </div>
-
-        {answered ? (
-          <div
-            aria-live="polite"
-            className={`mt-3 rounded-xl px-3 py-2.5 text-xs font-semibold leading-relaxed ${
-              selected === question.correct
-                ? "bg-emerald-100 text-emerald-900"
-                : "bg-amber-100 text-amber-950"
-            }`}
-          >
-            <p className="font-extrabold">
-              {selected === question.correct ? "正解！" : "意味を確認しよう"}
-            </p>
-            <p className="mt-1">{question.explanation}</p>
+      {!finished ? (
+        <section className="mt-4 rounded-2xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-sm font-extrabold text-indigo-950">ミニ確認</h4>
+            <span className="text-xs font-bold text-indigo-600">
+              {questionIndex + 1} / {MINI_QUESTIONS.length}
+            </span>
           </div>
-        ) : null}
+          <p className="mt-2 text-sm font-bold leading-relaxed text-gray-900">
+            {question.prompt}
+          </p>
+          <div className="mt-3 grid gap-2">
+            {question.choices.map((choice) => {
+              const picked = selected === choice;
+              const correct = choice === question.correct;
+              const tone = !answered
+                ? "bg-white text-gray-800 ring-gray-200"
+                : picked
+                  ? correct
+                    ? "bg-emerald-600 text-white ring-emerald-600"
+                    : "bg-rose-500 text-white ring-rose-500"
+                  : correct
+                    ? "bg-white text-emerald-800 ring-emerald-400"
+                    : "bg-white text-gray-400 ring-gray-100";
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  onClick={() => onAnswer(choice)}
+                  disabled={answered}
+                  className={`min-h-11 rounded-xl px-3 text-left text-sm font-bold ring-1 transition disabled:opacity-100 ${tone}`}
+                >
+                  {choice}
+                </button>
+              );
+            })}
+          </div>
 
-        {answered && !finished ? (
-          <button
-            type="button"
-            onClick={onNextQuestion}
-            className="mt-3 min-h-10 w-full rounded-xl bg-indigo-600 text-sm font-bold text-white"
-          >
-            次のミニ問題
-          </button>
-        ) : null}
-      </section>
+          {answered ? (
+            <div
+              aria-live="polite"
+              className={`mt-3 rounded-xl px-3 py-2.5 text-xs font-semibold leading-relaxed ${
+                selected === question.correct
+                  ? "bg-emerald-100 text-emerald-900"
+                  : "bg-amber-100 text-amber-950"
+              }`}
+            >
+              <p className="font-extrabold">
+                {selected === question.correct ? "正解！" : "意味を確認しよう"}
+              </p>
+              <p className="mt-1">{question.explanation}</p>
+            </div>
+          ) : null}
+
+          {answered && !finished ? (
+            <button
+              type="button"
+              onClick={onNextQuestion}
+              className="mt-3 min-h-10 w-full rounded-xl bg-indigo-600 text-sm font-bold text-white"
+            >
+              次のミニ問題
+            </button>
+          ) : null}
+        </section>
+      ) : null}
 
       {finished ? (
         <div
