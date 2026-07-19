@@ -31,13 +31,16 @@ export default function BillingSection() {
   const [busyPlan, setBusyPlan] = useState<string | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mountedAt] = useState<number>(Date.now);
 
   // checkout から戻ってきたときの結果を URL から読む（表示後にURLを掃除する）。
   useEffect(() => {
+    let resultTimer: number | undefined;
+    let refreshTimer: number | undefined;
     const params = new URLSearchParams(window.location.search);
     const result = params.get("checkout");
     if (result === "success" || result === "cancel") {
-      setCheckoutResult(result);
+      resultTimer = window.setTimeout(() => setCheckoutResult(result), 0);
       params.delete("checkout");
       const query = params.toString();
       window.history.replaceState(
@@ -47,10 +50,13 @@ export default function BillingSection() {
       );
       if (result === "success") {
         // webhook の反映に少し時間がかかることがあるため、少し待ってから取り直す。
-        const timer = setTimeout(() => refresh(), 2500);
-        return () => clearTimeout(timer);
+        refreshTimer = window.setTimeout(() => refresh(), 2500);
       }
     }
+    return () => {
+      if (resultTimer !== undefined) window.clearTimeout(resultTimer);
+      if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
+    };
     // refresh は毎レンダー再生成されるため依存に含めない（マウント時に一度だけ読む）。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -69,7 +75,7 @@ export default function BillingSection() {
         | { ok: boolean; url?: string; error?: string }
         | null;
       if (data?.ok && data.url) {
-        window.location.href = data.url;
+        window.location.assign(data.url);
         return;
       }
       setError(data?.error || "購入手続きを開始できませんでした。");
@@ -94,7 +100,7 @@ export default function BillingSection() {
         | { ok: boolean; url?: string; error?: string }
         | null;
       if (data?.ok && data.url) {
-        window.location.href = data.url;
+        window.location.assign(data.url);
         return;
       }
       setError(data?.error || "管理画面を開けませんでした。");
@@ -185,7 +191,7 @@ export default function BillingSection() {
               {isPro &&
                 entitlements?.proSource === "subscription" &&
                 entitlements?.proUntil &&
-                new Date(entitlements.proUntil).getTime() > Date.now() && (
+                new Date(entitlements.proUntil).getTime() > mountedAt && (
                   <p className="mt-1 text-[11px] text-gray-500">
                     買い切り分は {formatDate(entitlements.proUntil)} まで有効です
                   </p>
