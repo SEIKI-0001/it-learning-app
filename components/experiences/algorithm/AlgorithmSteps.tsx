@@ -1,8 +1,10 @@
 import {
   COMPUTER_ACTIONS,
   NOODLE_ACTIONS,
+  isRepetitionComplete,
   isCorrectNoodleOrder,
   type NoodleActionId,
+  type RepetitionState,
 } from "./learningModel";
 
 type ProcedureStepProps = {
@@ -211,6 +213,123 @@ export function ComputerStep({
           className="mt-3 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm font-bold text-emerald-800 ring-1 ring-emerald-200"
         >
           コンピュータも手順を上から順番に実行する
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+type BoxStepProps = {
+  adds: number;
+  onAdd: () => void;
+};
+
+export function BoxStep({ adds, onAdd }: BoxStepProps) {
+  const total = [0, 1, 3][adds] ?? 3;
+  const complete = adds >= 2;
+  const nextValue = adds === 0 ? 1 : 2;
+
+  return (
+    <div>
+      <p className="text-sm leading-relaxed text-gray-600">
+        数字をあとで使えるように、名前の付いた箱へ入れておきます。
+      </p>
+
+      <div className="mx-auto mt-4 max-w-52 rounded-2xl bg-amber-50 p-4 text-center ring-1 ring-amber-200">
+        <p className="text-xs font-extrabold text-amber-800">合計の箱</p>
+        <div
+          data-testid="box-total"
+          aria-live="polite"
+          className="mx-auto mt-2 grid h-20 w-28 place-items-center rounded-xl border-4 border-dashed border-amber-400 bg-white font-mono text-4xl font-black text-gray-900"
+        >
+          {total}
+        </div>
+      </div>
+
+      {!complete ? (
+        <button
+          type="button"
+          onClick={onAdd}
+          className="mt-4 min-h-11 w-full rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white"
+        >
+          {nextValue}を足す
+        </button>
+      ) : (
+        <div
+          aria-live="polite"
+          className="mt-4 space-y-2 rounded-xl bg-indigo-50 p-3 text-sm leading-relaxed text-indigo-950 ring-1 ring-indigo-200"
+        >
+          <p className="font-extrabold">名前の付いた箱を変数と呼ぶ</p>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 ring-1 ring-indigo-100">
+            <span className="font-semibold">合計の箱を0にする</span>
+            <code className="rounded-md bg-gray-900 px-2 py-1 font-mono text-white">
+              合計 ← 0
+            </code>
+          </div>
+          <p className="text-xs font-semibold text-indigo-800">
+            ← は、右の値を左の箱へ入れる印です。等号ではありません。
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type RepetitionStepProps = {
+  state: RepetitionState;
+  onAdd: () => void;
+};
+
+export function RepetitionStep({ state, onAdd }: RepetitionStepProps) {
+  const complete = isRepetitionComplete(state);
+
+  return (
+    <div>
+      <p className="text-sm leading-relaxed text-gray-600">
+        1から5まで、同じボタンで順番に足してみましょう。
+      </p>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl bg-indigo-50 p-3 text-center ring-1 ring-indigo-200">
+          <p className="text-xs font-extrabold text-indigo-700">合計</p>
+          <p
+            data-testid="repeat-total"
+            aria-live="polite"
+            className="mt-1 font-mono text-4xl font-black text-indigo-950"
+          >
+            {state.total}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-amber-50 p-3 text-center ring-1 ring-amber-200">
+          <p className="text-xs font-extrabold text-amber-700">現在の数字</p>
+          <p
+            data-testid="repeat-current"
+            aria-live="polite"
+            className="mt-1 font-mono text-4xl font-black text-amber-950"
+          >
+            {state.current}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onAdd}
+        disabled={complete}
+        className="mt-4 min-h-11 w-full rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white disabled:opacity-40"
+      >
+        現在の数字を足す
+      </button>
+
+      {complete ? (
+        <p
+          aria-live="polite"
+          className="mt-3 rounded-xl bg-emerald-50 px-3 py-2.5 text-sm font-bold leading-relaxed text-emerald-800 ring-1 ring-emerald-200"
+        >
+          <span className="block">1 + 2 + 3 + 4 + 5 = 15。</span>
+          <span className="mt-1 block">
+            同じ処理を何度も行うことを繰り返しと呼ぶ
+          </span>
         </p>
       ) : null}
     </div>

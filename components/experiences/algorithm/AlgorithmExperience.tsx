@@ -2,11 +2,20 @@
 
 import { useState, type ReactNode } from "react";
 import AlgorithmStepShell from "./AlgorithmStepShell";
-import { ComputerStep, OrderStep, ProcedureStep } from "./AlgorithmSteps";
 import {
+  BoxStep,
+  ComputerStep,
+  OrderStep,
+  ProcedureStep,
+  RepetitionStep,
+} from "./AlgorithmSteps";
+import {
+  addCurrentNumber,
   COMPUTER_ACTIONS,
+  isRepetitionComplete,
   isCorrectNoodleOrder,
   type NoodleActionId,
+  type RepetitionState,
 } from "./learningModel";
 
 const STEP_TITLES = [
@@ -26,6 +35,11 @@ export default function AlgorithmExperience() {
     null,
   );
   const [executedLines, setExecutedLines] = useState(0);
+  const [boxAdds, setBoxAdds] = useState(0);
+  const [repetition, setRepetition] = useState<RepetitionState>({
+    total: 0,
+    current: 1,
+  });
 
   let content: ReactNode = null;
   let canContinue = false;
@@ -65,6 +79,26 @@ export default function AlgorithmExperience() {
       );
       canContinue = executedLines === COMPUTER_ACTIONS.length;
       blockedHint = "4行すべてを実行してください";
+      break;
+    case 4:
+      content = (
+        <BoxStep
+          adds={boxAdds}
+          onAdd={() => setBoxAdds((current) => Math.min(2, current + 1))}
+        />
+      );
+      canContinue = boxAdds >= 2;
+      blockedHint = "箱へ1と2を順番に足してください";
+      break;
+    case 5:
+      content = (
+        <RepetitionStep
+          state={repetition}
+          onAdd={() => setRepetition(addCurrentNumber)}
+        />
+      );
+      canContinue = isRepetitionComplete(repetition);
+      blockedHint = "1から5まで足してください";
       break;
     default:
       content = null;

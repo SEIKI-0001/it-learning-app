@@ -36,6 +36,23 @@ function completeStepOne() {
   fireEvent.click(screen.getByRole("button", { name: "次へ" }));
 }
 
+function advanceToBoxStep() {
+  completeStepOne();
+  fireEvent.click(screen.getByRole("button", { name: "うまくいかない" }));
+  fireEvent.click(screen.getByRole("button", { name: "次へ" }));
+  for (let count = 0; count < 4; count += 1) {
+    fireEvent.click(screen.getByRole("button", { name: "1行実行する" }));
+  }
+  fireEvent.click(screen.getByRole("button", { name: "次へ" }));
+}
+
+function advanceToRepetitionStep() {
+  advanceToBoxStep();
+  fireEvent.click(screen.getByRole("button", { name: "1を足す" }));
+  fireEvent.click(screen.getByRole("button", { name: "2を足す" }));
+  fireEvent.click(screen.getByRole("button", { name: "次へ" }));
+}
+
 describe("AlgorithmExperience beginner flow", () => {
   it("renders only the current step", () => {
     render(<AlgorithmExperience />);
@@ -91,6 +108,44 @@ describe("AlgorithmExperience beginner flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "1行実行する" }));
     expect(
       screen.getByText("コンピュータも手順を上から順番に実行する"),
+    ).toBeInTheDocument();
+  });
+
+  it("introduces a variable only after changing the named box", () => {
+    render(<AlgorithmExperience />);
+    advanceToBoxStep();
+
+    expect(
+      screen.queryByText("名前の付いた箱を変数と呼ぶ"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("box-total")).toHaveTextContent("0");
+
+    fireEvent.click(screen.getByRole("button", { name: "1を足す" }));
+    expect(screen.getByTestId("box-total")).toHaveTextContent("1");
+
+    fireEvent.click(screen.getByRole("button", { name: "2を足す" }));
+    expect(screen.getByTestId("box-total")).toHaveTextContent("3");
+    expect(
+      screen.getByText("名前の付いた箱を変数と呼ぶ"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("合計 ← 0")).toBeInTheDocument();
+  });
+
+  it("experiences repetition by adding the current number five times", () => {
+    render(<AlgorithmExperience />);
+    advanceToRepetitionStep();
+
+    const addButton = screen.getByRole("button", {
+      name: "現在の数字を足す",
+    });
+    for (let count = 0; count < 5; count += 1) {
+      fireEvent.click(addButton);
+    }
+
+    expect(screen.getByTestId("repeat-total")).toHaveTextContent("15");
+    expect(screen.getByTestId("repeat-current")).toHaveTextContent("6");
+    expect(
+      screen.getByText("同じ処理を何度も行うことを繰り返しと呼ぶ"),
     ).toBeInTheDocument();
   });
 });
