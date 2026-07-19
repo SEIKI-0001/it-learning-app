@@ -27,7 +27,7 @@ const EVENTS: MochitEvent[] = [
   "wakeUp",
 ];
 
-type RendererMode = "auto" | "rive" | "fallback" | "loadError";
+type RendererMode = "auto" | "svg" | "svgError" | "rive" | "fallback" | "loadError";
 
 export default function MochitDevPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
@@ -43,6 +43,8 @@ export default function MochitDevPreviewPage() {
 
   const rendererProps = useMemo(() => {
     if (rendererMode === "fallback") return { rendererOverride: "fallback" as const };
+    if (rendererMode === "svg") return { rendererOverride: "svg" as const };
+    if (rendererMode === "svgError") return { rendererOverride: "svg" as const, forceSvgFailure: true };
     if (rendererMode === "rive") return { rendererOverride: "rive" as const };
     if (rendererMode === "loadError")
       return { rendererOverride: "rive" as const, riveSrcOverride: "/characters/mochit/__load-error-sim__.riv" };
@@ -65,7 +67,8 @@ export default function MochitDevPreviewPage() {
         <div className="mx-auto w-full max-w-3xl">
           <p className="text-lg font-extrabold">モチット開発プレビュー</p>
           <p className="text-xs font-semibold text-white/80">
-            開発環境専用。mochit.riv を public/characters/mochit/ に置くとRive描画へ切替わる。
+            開発環境専用。既定はSVGアニメーション（Living Idle）。mochit.riv を
+            public/characters/mochit/ に置くとRive描画へ切替わる。
           </p>
         </div>
       </header>
@@ -82,10 +85,12 @@ export default function MochitDevPreviewPage() {
                 value={rendererMode}
                 onChange={(e) => setRendererMode(e.target.value as RendererMode)}
               >
-                <option value="auto">自動（.rivがあればRive）</option>
+                <option value="auto">自動（.rivがあればRive／無ければSVG）</option>
+                <option value="svg">SVGアニメ強制</option>
+                <option value="svgError">SVG描画失敗シミュレーション</option>
                 <option value="rive">Rive強制</option>
-                <option value="fallback">フォールバック強制</option>
-                <option value="loadError">ロード失敗シミュレーション</option>
+                <option value="fallback">WebPフォールバック強制</option>
+                <option value="loadError">Riveロード失敗シミュレーション</option>
               </select>
             </label>
             <label className="flex items-center gap-2">

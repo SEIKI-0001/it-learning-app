@@ -7,7 +7,7 @@
 // - どちらの描画でも外形寸法とセリフ表示は同一（レイアウトシフトなし）
 
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import MochitFallback, { MOCHIT_STATE_META } from "./MochitFallback";
 import MochitMessage from "./MochitMessage";
 import { useMochitController } from "./useMochitController";
@@ -25,6 +25,22 @@ import type { MochitEventSignal } from "./mochitEvents";
 export type { MochitAnimation, MochitGrowthStage, MochitSize, MochitState };
 
 const MochitRive = dynamic(() => import("./MochitRive"), { ssr: false, loading: () => null });
+// SVGアニメーションは window/WAAPI に依存するためクライアント専用で読み込む。
+const MochitSvg = dynamic(() => import("./MochitSvg"), { ssr: false, loading: () => null });
+
+// SVG描画中の想定外エラーを捕捉してWebPフォールバックへ落とす小さな境界。
+class MochitSvgBoundary extends Component<{ onError: () => void; children: ReactNode }, { crashed: boolean }> {
+  state = { crashed: false };
+  static getDerivedStateFromError() {
+    return { crashed: true };
+  }
+  componentDidCatch() {
+    this.props.onError();
+  }
+  render() {
+    return this.state.crashed ? null : this.props.children;
+  }
+}
 
 const SIZE_CLASS: Record<MochitSize, string> = {
   small: "h-24 w-24",
@@ -110,8 +126,10 @@ type Props = {
   /** コンパクト表示（省アニメーションプロファイル）。省略時は size==="small" */
   compact?: boolean;
   // ---- dev/テスト用の切替口 ----
-  rendererOverride?: "rive" | "fallback";
+  rendererOverride?: "rive" | "svg" | "fallback";
   riveSrcOverride?: string;
+  /** devプレビュー用: SVG描画失敗を強制する */
+  forceSvgFailure?: boolean;
 };
 
 export default function Mochit({
@@ -128,21 +146,35 @@ export default function Mochit({
   compact,
   rendererOverride,
   riveSrcOverride,
+  forceSvgFailure,
 }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const effectiveReducedMotion = reducedMotion ?? prefersReducedMotion;
   const effectiveCompact = compact ?? size === "small";
   const riveSrc = riveSrcOverride ?? MOCHIT_RIVE_SRC;
 
-  const probeEnabled = rendererOverride !== "fallback";
+  const forceFallback = rendererOverride === "fallback";
+  const forceRive = rendererOverride === "rive";
+  const forceSvg = rendererOverride === "svg";
+
+  // Riveプローブは .riv を積極的に使う場合のみ（svg/fallback強制時は不要）。
+  const probeEnabled = !forceFallback && !forceSvg;
   const assetStatus = useMochitRiveAvailability(riveSrc, probeEnabled);
   const [riveReady, setRiveReady] = useState(false);
   const [riveFailed, setRiveFailed] = useState(false);
+  const [svgReady, setSvgReady] = useState(false);
+  const [svgFailed, setSvgFailed] = useState(false);
 
+  // 描画方式の決定:
+  //  1. .riv があれば Rive（従来通り）
+  //  2. .riv が無い / Riveロード失敗 → SVGアニメーション（無料方式・優先）
+  //  3. SVG も失敗 → WebP フォールバック
   const wantRive =
-    !riveFailed &&
-    rendererOverride !== "fallback" &&
-    (rendererOverride === "rive" || assetStatus === "available");
+    !riveFailed && !forceFallback && !forceSvg && (forceRive || assetStatus === "available");
+  const wantSvg = !svgFailed && !forceFallback && !forceRive && (forceSvg || !wantRive);
+
+  // どちらの描画も準備できるまで（および両方失敗時）は WebP を土台として表示する。
+  const showWebP = !(wantRive && riveReady) && !(wantSvg && svgReady);
 
   const { dispatch, registerTriggerFirer } = useMochitController();
 
@@ -160,14 +192,37 @@ export default function Mochit({
   return (
     <div className={`mochit flex items-center gap-3 ${className}`}>
       <div className={`relative shrink-0 ${SIZE_CLASS[size]}`}>
-        {/* Rive準備完了までは必ずWebPを表示（壊れたcanvasを見せない） */}
-        {!(wantRive && riveReady) && (
+        {/* Rive/SVG準備完了までは必ずWebPを表示（壊れたcanvas・空SVGを見せない） */}
+        {showWebP && (
           <MochitFallback
             state={state}
             animation={effectiveReducedMotion ? "none" : animation}
             growthStage={growthStage}
             sizesAttr={SIZES_ATTR}
           />
+        )}
+        {wantSvg && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <MochitSvgBoundary
+              onError={() => {
+                setSvgReady(false);
+                setSvgFailed(true);
+              }}
+            >
+              <MochitSvg
+                growthStage={growthStage}
+                reducedMotion={effectiveReducedMotion}
+                compact={effectiveCompact}
+                ariaLabel={meta.alt}
+                forceFailure={forceSvgFailure}
+                onReady={() => setSvgReady(true)}
+                onLoadFailed={() => {
+                  setSvgReady(false);
+                  setSvgFailed(true);
+                }}
+              />
+            </MochitSvgBoundary>
+          </div>
         )}
         {wantRive && (
           <MochitRive
