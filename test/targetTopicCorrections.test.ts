@@ -39,6 +39,24 @@ describe("corrected target topic content", () => {
     expect(JSON.stringify(question)).not.toContain("55個");
   });
 
+  it("uses neutral POS-data objectives while only one choice changes ordering", () => {
+    const question = targetTopic("strat-business-systems").checkQuestions.find(
+      (candidate) => candidate.id === "strat-business-systems-q1",
+    );
+
+    expect(question).toBeDefined();
+    expect(question?.choices.map((choice) => choice.text)).toEqual([
+      "時間帯別の販売実績に合わせて発注量を変え、品切れと余剰在庫を減らす",
+      "商品別の販売数量を分析して売場の陳列を見直す",
+      "店舗別の売上高を集計して店舗の業績を比較する",
+      "時間帯別の取引件数を分析してレジ要員の配置を見直す",
+    ]);
+    expect(question?.choices.filter((choice) => choice.text.includes("発注"))).toHaveLength(1);
+    expect(question?.choiceExplanations?.B).toContain("売場");
+    expect(question?.choiceExplanations?.C).toContain("店舗別売上");
+    expect(question?.choiceExplanations?.D).toContain("レジ要員");
+  });
+
   it("uses the current Act on Ensuring Proper Transactions Involving Small and Medium-Sized Entrusted Business Operators", () => {
     const topic = targetTopic("strat-labor-laws");
     const content = allTopicText(topic);
