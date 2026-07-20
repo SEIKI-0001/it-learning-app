@@ -28,6 +28,17 @@ describe("corrected target topic content", () => {
     expect(textOf("strat-enterprise-activities")).toContain("ステークホルダ");
   });
 
+  it("keeps every MRP arithmetic distractor aligned with its explanation", () => {
+    const question = targetTopic("strat-production-management").checkQuestions.find(
+      (candidate) => candidate.id === "strat-production-management-q1",
+    );
+
+    expect(question).toBeDefined();
+    expect(question?.choices).toContainEqual({ key: "D", text: "15個" });
+    expect(question?.choiceExplanations?.D).toContain("40 - 25 = 15");
+    expect(JSON.stringify(question)).not.toContain("55個");
+  });
+
   it("uses the current Act on Ensuring Proper Transactions Involving Small and Medium-Sized Entrusted Business Operators", () => {
     const topic = targetTopic("strat-labor-laws");
     const content = allTopicText(topic);
