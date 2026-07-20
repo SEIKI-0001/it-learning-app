@@ -3,6 +3,7 @@ import BottomNav from "@/components/BottomNav";
 import BillingSection from "@/components/billing/BillingSection";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon, { type IconName } from "@/components/ui/Icon";
+import LogoutLink from "@/components/auth/LogoutLink";
 
 const GROUPS: readonly {
   title: string;
@@ -68,6 +69,10 @@ export default function MorePage() {
         ))}
 
         <BillingSection />
+
+        <section className="pt-2 text-center">
+          <LogoutLink className="text-xs text-gray-500 underline underline-offset-4" />
+        </section>
       </div>
 
       <BottomNav />

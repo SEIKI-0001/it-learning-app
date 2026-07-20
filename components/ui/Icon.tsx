@@ -28,7 +28,26 @@ export type IconName =
   | "star" // ランク
   | "layers" // 単語帳
   | "sprout" // モチット・成長
-  | "settings"; // 設定
+  | "settings" // 設定
+  | "circle" // 状態: 未着手・未到達
+  | "circle-dot" // 状態: 現在地・学習中
+  | "circle-check" // 状態: 完了・習得済み
+  | "check-double" // 状態: 完全習得
+  | "gift" // 今日の宝箱(デイリー報酬)
+  // ---- /learn テーマ識別アイコン(lib/themeIcons.ts で18テーマに割当) ----
+  | "building" // 企業活動
+  | "scale" // 法務・標準化
+  | "cart" // ビジネスインダストリ
+  | "compass" // システム戦略・企画
+  | "tool" // システム開発
+  | "life-buoy" // サービスマネジメント
+  | "binary" // 基礎理論・データサイエンス
+  | "puzzle" // アルゴリズム・プログラミング
+  | "cpu" // ハードウェア・コンピュータシステム
+  | "palette" // 情報デザイン・情報メディア
+  | "database" // データベース
+  | "globe" // ネットワーク
+  | "lock"; // 情報セキュリティ
 
 const PATHS: Record<IconName, React.ReactNode> = {
   "book-open": (
@@ -164,6 +183,116 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <circle cx="16.5" cy="7" r="2.5" />
       <path d="M20 17h-9" />
       <circle cx="7.5" cy="17" r="2.5" />
+    </>
+  ),
+  circle: <circle cx="12" cy="12" r="8" />,
+  "circle-dot": (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="1.2" />
+    </>
+  ),
+  "circle-check": (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <path d="m8.6 12.3 2.3 2.3 4.5-4.9" />
+    </>
+  ),
+  "check-double": (
+    <>
+      <path d="M17.5 7 7 17.5l-4.5-4.5" />
+      <path d="m21.5 10-7.3 7.3-1.4-1.4" />
+    </>
+  ),
+  gift: (
+    <>
+      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M12 8v13" />
+      <path d="M7.5 8a2.3 2.3 0 0 1 0-4.6C10 3.4 11.4 5.5 12 8c.6-2.5 2-4.6 4.5-4.6a2.3 2.3 0 0 1 0 4.6" />
+    </>
+  ),
+  building: (
+    <>
+      <rect x="5" y="3" width="14" height="18" rx="1" />
+      <path d="M9 8h2M13 8h2M9 12h2M13 12h2" />
+      <path d="M10 21v-4h4v4" />
+    </>
+  ),
+  scale: (
+    <>
+      <path d="M12 3v18" />
+      <path d="M6 7h12" />
+      <path d="M6 7 3.5 12a2.5 2.5 0 0 0 5 0z" />
+      <path d="M18 7l-2.5 5a2.5 2.5 0 0 0 5 0z" />
+    </>
+  ),
+  cart: (
+    <>
+      <path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.8h7.7a2 2 0 0 0 2-1.6L21 8H6" />
+      <circle cx="10" cy="20" r="1.3" />
+      <circle cx="17" cy="20" r="1.3" />
+    </>
+  ),
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m15 9-2 6-6 2 2-6z" />
+    </>
+  ),
+  tool: (
+    <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2z" />
+  ),
+  "life-buoy": (
+    <>
+      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 4v4.8M12 15.2V20M4 12h4.8M15.2 12H20" />
+    </>
+  ),
+  binary: (
+    <>
+      <rect x="3.5" y="7" width="6" height="10" rx="3" />
+      <path d="M14 7v10" />
+      <path d="M14 7l3-2v12" />
+    </>
+  ),
+  puzzle: (
+    <path d="M9 4h4a1.5 1.5 0 0 1 0 3 1.5 1.5 0 0 0 0 3h4a2 2 0 0 1 2 2v3a1.5 1.5 0 0 1-3 0 1.5 1.5 0 0 0 0 3v2H5v-4a1.5 1.5 0 0 0-3 0 1.5 1.5 0 0 1 0-3h3V9a2 2 0 0 1 2-2h2a1.5 1.5 0 0 0 0-3z" />
+  ),
+  cpu: (
+    <>
+      <rect x="7" y="7" width="10" height="10" rx="1.5" />
+      <rect x="10" y="10" width="4" height="4" />
+      <path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3" />
+    </>
+  ),
+  palette: (
+    <>
+      <path d="M12 3a9 8 0 1 0 0 16c1.5 0 2-1 2-2s-.5-1.5-.5-2.5S14.5 13 16 13h1.5A3.5 3.5 0 0 0 21 9.5C21 6 17 3 12 3Z" />
+      <circle cx="8" cy="10" r="1" />
+      <circle cx="8" cy="14" r="1" />
+      <circle cx="12" cy="7.5" r="1" />
+    </>
+  ),
+  database: (
+    <>
+      <ellipse cx="12" cy="6" rx="7" ry="3" />
+      <path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+      <path d="M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
     </>
   ),
 };

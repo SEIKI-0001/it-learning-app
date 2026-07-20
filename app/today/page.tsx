@@ -19,6 +19,7 @@ import {
   getUserId,
   loadCachedProgressBootstrap,
   saveDailyTasksToDb,
+  saveProgressToDb,
   todayLocalDate,
 } from "@/lib/userSession";
 import type { DailyStudyTaskInput } from "@/types/studyProgress";
@@ -37,6 +38,21 @@ import { buttonClass } from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 import Mochit from "@/components/mochit/Mochit";
 import { getMochitGrowthStage } from "@/lib/mochit";
+import QuestRoute from "@/components/quest/QuestRoute";
+import {
+  buildQuestRoute,
+  estimateTaskXpMax,
+  loadStoredRoute,
+  saveStoredRoute,
+} from "@/lib/questRoute";
+import {
+  allQuestsDone,
+  claimDailyQuestReward,
+  resolveDailyQuests,
+  DAILY_QUEST_CLEAR_XP,
+} from "@/lib/dailyQuests";
+import { emitCelebration } from "@/lib/celebration";
+import { saveAppState } from "@/lib/storage";
 
 type TodayTask = {
   topicId: string;
@@ -137,6 +153,19 @@ export default function TodayPage() {
     return result;
   }, [menu, plan?.todayReasons]);
 
+  // 今日のルート: メニューは進捗で毎回再生成され完了タスクが消えるため、
+  // その日のルート順序をlocalStorageに固定し、完了ノードを消さずに前進を見せる。
+  const [storedRouteIds] = useState(() => loadStoredRoute(todayLocalDate()));
+  const nodes = useMemo(
+    () => (state ? buildQuestRoute(state, tasks, storedRouteIds) : []),
+    [state, tasks, storedRouteIds],
+  );
+  useEffect(() => {
+    if (nodes.length > 0) {
+      saveStoredRoute(todayLocalDate(), nodes.map((node) => node.topicId));
+    }
+  }, [nodes]);
+
   if (state === undefined || state === null || !menu || !plan) {
     return <LoadingScreen />;
   }
@@ -144,20 +173,57 @@ export default function TodayPage() {
   const currentCheckpoint = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
   const gate = buildCheckpointGate(state, currentCheckpoint.id);
 
-  // ホームの1画面目で「合格までの距離」と「今日やること」が分かるようにする。
+  // ホームの1画面目で「合格までの距離」と「今日のミッション」が分かるようにする。
   const readiness =
     bootstrap?.integratedStatus?.readinessScore ??
     computeProgressSummary(topics, state.progress, state.answers).readinessPct;
   const examRemaining = daysUntilExam(state.profile);
-  const totalMinutes = tasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
-  const firstTask = tasks[0];
-  const startHref = firstTask
-    ? getLessonHref(firstTask.topicId, {
+  const totalMinutes = nodes.reduce((sum, node) => sum + node.estimatedMinutes, 0);
+  const currentNode = nodes.find((node) => node.state === "current") ?? null;
+  const doneCount = nodes.filter((node) => node.state === "done").length;
+  const startHref = currentNode
+    ? getLessonHref(currentNode.topicId, {
         from: "today",
-        activity: firstTask.activity,
-        anchor: firstTask.activity === "review" ? "lesson-quiz" : "lesson-content",
+        activity: currentNode.activity,
+        anchor: currentNode.activity === "review" ? "lesson-quiz" : "lesson-content",
       })
     : null;
+  // CTAには行動後の実際の成果を出す(実際の付与式から算出。架空の数字は出さない)
+  const ctaXpMax = currentNode ? estimateTaskXpMax(state, currentNode.topicId) : null;
+
+  // 今日の目的: 件数ではなく「何を達成するとどこへ進むか」を一文で示す
+  const missionText = gate.finalExamUnlocked && !gate.finalExamPassed
+    ? `CP${currentCheckpoint.order}「${currentCheckpoint.title}」の突破試験に挑戦できる状態です`
+    : currentNode
+      ? `「${currentNode.title}」${currentNode.activity === "review" ? "を復習して" : "を理解して"}、CP${currentCheckpoint.order}へのバッジを進める（${gate.earnedRequiredCount}/${gate.totalRequiredCount}）`
+      : nodes.length > 0
+        ? "今日のルートは踏破！復習やテーマ探索で上積みできます"
+        : null;
+
+  // 最終ノード=今日の宝箱(デイリーミッションの実報酬)
+  const quests = resolveDailyQuests(state, todayLocalDate());
+  const questDoneCount = quests.quests.filter((q) => q.progress >= q.goal).length;
+  const finalReward = {
+    progressLabel: `ミッション ${questDoneCount}/${quests.quests.length}`,
+    xp: DAILY_QUEST_CLEAR_XP,
+    state: quests.claimed
+      ? ("claimed" as const)
+      : allQuestsDone(quests)
+        ? ("claimable" as const)
+        : ("locked" as const),
+    onClaim: () => {
+      const claimed = claimDailyQuestReward(state);
+      if (!claimed) return;
+      saveAppState(claimed.state);
+      setState(claimed.state);
+      emitCelebration(state, claimed.state, [
+        { kind: "questClear", label: "今日の3ミッション コンプリート！" },
+      ]);
+      const userId = getUserId();
+      if (userId) saveProgressToDb(userId, claimed.state.progress);
+    },
+  };
+
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日(${"日月火水木金土"[now.getDay()]})`;
 
@@ -211,29 +277,46 @@ export default function TodayPage() {
             </div>
           </dl>
 
-          <p className="mt-3 text-sm text-gray-600">
-            今日は{tasks.length > 0 ? `${tasks.length}件・約${totalMinutes}分` : "復習が中心"}。{" "}
-            <Link
-              href="/plan"
-              className="text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
-            >
-              次の目標はCP{currentCheckpoint.order}「{currentCheckpoint.title}」（バッジ{" "}
-              {gate.earnedRequiredCount}/{gate.totalRequiredCount}）
-            </Link>
-          </p>
+          {missionText ? (
+            <p className="mt-3 text-sm text-gray-700">
+              <span className="font-semibold text-gray-900">今日のミッション</span>{" "}
+              <Link
+                href="/plan"
+                className="text-gray-700 underline decoration-gray-300 underline-offset-2 hover:decoration-brand-600 hover:text-brand-700"
+              >
+                {missionText}
+              </Link>
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-gray-600">
+              今日は復習が中心。{" "}
+              <Link
+                href="/plan"
+                className="text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
+              >
+                次の目標はCP{currentCheckpoint.order}「{currentCheckpoint.title}」（バッジ{" "}
+                {gate.earnedRequiredCount}/{gate.totalRequiredCount}）
+              </Link>
+            </p>
+          )}
 
-          {/* 主CTA: 迷わず最優先タスクから始める */}
-          {startHref && firstTask && (
+          {/* 主CTA: 迷わず現在挑戦中のミッションから始める。行動後の成果(実XP)も示す */}
+          {startHref && currentNode && (
             <Link
               href={startHref}
               className="mt-4 flex w-full items-center justify-between rounded-lg bg-brand-600 px-5 py-3.5 text-white transition hover:bg-brand-700 active:scale-[0.99]"
             >
               <span className="min-w-0">
                 <span className="block text-base font-semibold">
-                  {firstTask.activity === "review" ? "復習から始める" : "今日の学習を始める"}
+                  {currentNode.activity === "review"
+                    ? "復習ミッションから始める"
+                    : doneCount > 0
+                      ? "次のミッションに進む"
+                      : "最初のミッションを始める"}
                 </span>
-                <span className="mt-0.5 block truncate text-xs text-white/75">
-                  {firstTask.title}・約{firstTask.estimatedMinutes}分
+                <span className="mt-0.5 block truncate text-xs tabular-nums text-white/75">
+                  {currentNode.title}・約{currentNode.estimatedMinutes}分
+                  {ctaXpMax !== null && `・全問正解で+${ctaXpMax} XP`}
                 </span>
               </span>
               <Icon name="arrow-right" className="ml-3 h-5 w-5 shrink-0" />
@@ -245,88 +328,33 @@ export default function TodayPage() {
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
         <section>
           <div className="mb-2 flex items-baseline justify-between gap-3">
-            <h2 className="text-base font-semibold text-gray-900">今日やること</h2>
+            <h2 className="text-base font-semibold text-gray-900">今日のルート</h2>
             <span className="text-xs tabular-nums text-gray-500">
-              {tasks.length}件・約{totalMinutes}分
+              {nodes.length}件・約{totalMinutes}分
             </span>
           </div>
 
-          {/* モチットは「今日の最初の一歩」を後押しする場面にだけ登場する */}
-          {firstTask && (
-            <div className="mb-3">
-              <Mochit
-                state="normal"
-                size="small"
-                animation="idle"
-                growthStage={getMochitGrowthStage(state)}
-                message={
-                  firstTask.activity === "review"
-                    ? `まずは「${firstTask.title}」の復習から始めよう`
-                    : tasks.length > 3
-                      ? "全部やらなくて大丈夫。最初の1件から進めよう"
-                      : `今日は「${firstTask.title}」から始めよう`
-                }
-              />
-            </div>
-          )}
-
-          {tasks.length > 0 && (
-            <ol className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
-              {tasks.map((task, index) => {
-                const location = getLessonLocation(task.topicId);
-                const hasWrittenQuestion = getWrittenQuestionsForTopic(task.topicId).length > 0;
-                if (!location) return null;
-                const href = getLessonHref(task.topicId, {
+          {nodes.length > 0 && (
+            <QuestRoute
+              nodes={nodes}
+              growthStage={getMochitGrowthStage(state)}
+              hrefFor={(node) =>
+                getLessonHref(node.topicId, {
                   from: "today",
-                  activity: task.activity,
-                  anchor: task.activity === "review" ? "lesson-quiz" : "lesson-content",
-                });
-                return (
-                  <li key={task.topicId} className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="text-[15px] font-semibold text-gray-900">
-                          {index === 0 && (
-                            <span className="mr-2 inline-block rounded-full bg-brand-50 px-2 py-0.5 align-[2px] text-[11px] font-medium text-brand-700">
-                              まずはこれ
-                            </span>
-                          )}
-                          {task.title}
-                        </h3>
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          {location.theme.title} ＞ {location.section.title}
-                        </p>
-                      </div>
-                      <span className="flex shrink-0 items-center gap-1 text-xs tabular-nums text-gray-500">
-                        <Icon name="clock" className="h-3.5 w-3.5" />
-                        約{task.estimatedMinutes}分
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600">{task.reason}</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                      <Link
-                        href={href}
-                        className={buttonClass(index === 0 ? "primary" : "secondary", "sm")}
-                      >
-                        {task.activity === "review" ? "復習を始める" : "学習を始める"}
-                      </Link>
-                      {hasWrittenQuestion && (
-                        <Link
-                          href={`/ai-grading?topicId=${encodeURIComponent(task.topicId)}`}
-                          className="inline-flex items-center gap-1 text-sm text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
-                        >
-                          <Icon name="pen" className="h-3.5 w-3.5" />
-                          自分の言葉で説明する
-                        </Link>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
+                  activity: node.activity,
+                  anchor: node.activity === "review" ? "lesson-quiz" : "lesson-content",
+                })
+              }
+              aiGradingHrefFor={(node) =>
+                getWrittenQuestionsForTopic(node.topicId).length > 0
+                  ? `/ai-grading?topicId=${encodeURIComponent(node.topicId)}`
+                  : null
+              }
+              finalReward={finalReward}
+            />
           )}
 
-          {tasks.length === 0 && (
+          {nodes.length === 0 && (
             <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
               <div className="flex justify-center">
                 <Mochit

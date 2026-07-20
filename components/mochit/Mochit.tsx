@@ -43,6 +43,7 @@ class MochitSvgBoundary extends Component<{ onError: () => void; children: React
 }
 
 const SIZE_CLASS: Record<MochitSize, string> = {
+  xs: "h-14 w-14", // クエストルートのレール上に座る最小サイズ
   small: "h-24 w-24",
   medium: "h-32 w-32",
   large: "h-60 w-60",
@@ -150,7 +151,7 @@ export default function Mochit({
 }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const effectiveReducedMotion = reducedMotion ?? prefersReducedMotion;
-  const effectiveCompact = compact ?? size === "small";
+  const effectiveCompact = compact ?? (size === "small" || size === "xs");
   const riveSrc = riveSrcOverride ?? MOCHIT_RIVE_SRC;
 
   const forceFallback = rendererOverride === "fallback";

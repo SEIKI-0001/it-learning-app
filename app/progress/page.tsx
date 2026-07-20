@@ -21,15 +21,16 @@ import { getRankStatus } from "@/lib/rank";
 import { getCheckpointProgress } from "@/lib/checkpoints";
 import { BADGES } from "@/lib/badges";
 import Mochit from "@/components/mochit/Mochit";
-import { getMochitGrowthStage } from "@/lib/mochit";
+import { getMochitGrowthStage, MOCHIT_GROWTH_STAGE_LABELS } from "@/lib/mochit";
 import { getMochitProgressPresentation } from "@/lib/mochitPresentation";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import Icon from "@/components/ui/Icon";
 import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
-import NextGoalCard from "@/components/today/NextGoalCard";
+import NextUnlocks from "@/components/progress/NextUnlocks";
+import JourneyLedger from "@/components/progress/JourneyLedger";
 import LoadingScreen from "@/components/LoadingScreen";
-import LogoutLink from "@/components/auth/LogoutLink";
+import { useCountUp } from "@/lib/useCountUp";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
 function daysSince(iso: string | undefined): number | null {
@@ -70,6 +71,8 @@ export default function ProgressPage() {
   );
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
   const bootstrappedKeyRef = useRef<string | null>(null);
+  // 累計XPは値の変化時だけ自然に増えて見せる(初回は即時・reduced-motion対応)
+  const shownExp = useCountUp(state?.progress.exp ?? 0);
 
   useEffect(() => {
     if (state === undefined) return;
@@ -206,7 +209,7 @@ export default function ProgressPage() {
             </div>
           </dl>
 
-          {/* モチット: 現在地への一言。タップでアバター管理へ */}
+          {/* モチット: 現在地への一言と成長段階。タップでアバター管理へ */}
           <Link
             href="/avatar"
             className="mt-3 flex items-center gap-1 transition active:scale-[0.99]"
@@ -222,6 +225,10 @@ export default function ProgressPage() {
             <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-300" />
             <span className="sr-only">モチットを見る</span>
           </Link>
+          <p className="mt-1 text-[11px] tabular-nums text-gray-500">
+            モチット 成長段階{getMochitGrowthStage(state)}
+            「{MOCHIT_GROWTH_STAGE_LABELS[getMochitGrowthStage(state)]}」
+          </p>
 
           {/* ランク進捗(次のランクまで)。EXP/レベル表示はランクに統合した。 */}
           <div className="mt-3 border-t border-gray-100 pt-3">
@@ -256,23 +263,47 @@ export default function ProgressPage() {
             </div>
           </div>
 
-          {/* アカウント: ログアウト（ローカルデータ消去 → Google / LINE セッション破棄 → /login） */}
-          <div className="mt-3 text-right">
-            <LogoutLink className="text-[11px] text-gray-400 underline underline-offset-4" />
-          </div>
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4 md:max-w-4xl">
+      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-5 md:max-w-4xl">
+        {/* 第2層: 次の解放(実在する解放だけ: ランク/突破試験/モチット成長) */}
+        <NextUnlocks state={state} />
+
+        {/* 第3層: これまで進んだ道(チェックポイント台帳) */}
+        <JourneyLedger state={state} />
+
+        {/* 数値サマリ: カードではなく学習手帳の罫線区切りで示す */}
+        <dl className="grid grid-cols-3 divide-x divide-gray-200 border-y border-gray-200">
+          <div className="py-3 pr-3">
+            <dt className="text-xs text-gray-500">学習済み</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
+              {completedCount}
+              <span className="text-sm font-normal text-gray-500">/{topics.length}</span>
+            </dd>
+          </div>
+          <Link href="/review" className="block px-3 py-3 transition active:bg-gray-100">
+            <dt className="flex items-center gap-1 text-xs text-gray-500">
+              復習待ち
+              <Icon name="chevron-right" className="h-3 w-3 text-gray-300" />
+            </dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
+              {reviewCount}
+              <span className="ml-0.5 text-sm font-normal text-gray-500">件</span>
+            </dd>
+          </Link>
+          <div className="py-3 pl-3">
+            <dt className="text-xs text-gray-500">累計XP</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">{shownExp}</dd>
+          </div>
+        </dl>
+
         {/* 統合進捗カード（合格に対する現在地・主なリスク・今週の推奨配分） */}
         <IntegratedStatusCard
           status={bootstrap?.integratedStatus ?? null}
           totalTopicCount={topics.length}
           loading={bootstrapLoading && !bootstrap}
         />
-
-        {/* あと少しのゴール（目標勾配の可視化） */}
-        <NextGoalCard state={state} />
 
         {/* 計画の立て直し提案への導線（提案の本体は /plan に置く） */}
         {proposal && (
@@ -313,13 +344,6 @@ export default function ProgressPage() {
           </Link>
         )}
 
-        {/* 数値サマリ */}
-        <div className="grid grid-cols-3 gap-3">
-          <StatCard label="学習済み" value={`${completedCount}/${topics.length}`} />
-          <StatCard label="復習待ち" value={`${reviewCount}`} href="/review" />
-          <StatCard label="累計XP" value={`${progress.exp}`} />
-        </div>
-
         <div className="grid gap-4 md:grid-cols-2">
         {/* 3分野習熟度 */}
         <section className="rounded-xl bg-white p-4 border border-gray-200">
@@ -357,31 +381,4 @@ export default function ProgressPage() {
       <BottomNav />
     </main>
   );
-}
-
-function StatCard({
-  label,
-  value,
-  href,
-}: {
-  label: string;
-  value: string;
-  href?: string;
-}) {
-  const body = (
-    <>
-      <p className="text-xl font-semibold tabular-nums text-gray-900">{value}</p>
-      <p className="mt-0.5 text-xs text-gray-500">{label}</p>
-    </>
-  );
-  const className =
-    "rounded-xl bg-white p-3 text-center border border-gray-200";
-  if (href) {
-    return (
-      <Link href={href} className={`${className} block transition active:scale-[0.98]`}>
-        {body}
-      </Link>
-    );
-  }
-  return <div className={className}>{body}</div>;
 }

@@ -3,7 +3,7 @@
 // design/mochit/docs/mochit-rive-import-checklist.md と一致させること。
 
 export type MochitState = "normal" | "happy" | "thinking" | "cheering";
-export type MochitSize = "small" | "medium" | "large";
+export type MochitSize = "xs" | "small" | "medium" | "large";
 export type MochitAnimation = "idle" | "bounce" | "tilt" | "celebrate" | "none";
 export type MochitGrowthStage = 1 | 2 | 3;
 

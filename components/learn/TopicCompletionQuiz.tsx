@@ -22,6 +22,8 @@ import {
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { buttonClass } from "@/components/ui/Button";
 import Mochit from "@/components/mochit/Mochit";
+import type { MochitEventSignal } from "@/components/mochit/mochitEvents";
+import { useCountUp } from "@/lib/useCountUp";
 
 type CompletionTopic = Pick<
   Topic,
@@ -53,8 +55,11 @@ export default function TopicCompletionQuiz({
     gainedExp: number;
     streak: number;
     presentation: ReturnType<typeof getMochitResultPresentation>;
+    eventSignal: MochitEventSignal;
   } | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
+  // 獲得XPは0から自然に増えて見せる(reduced-motion時は即時表示)
+  const shownExp = useCountUp(result?.gainedExp ?? 0);
 
   useEffect(() => {
     if (completed) {
@@ -95,6 +100,15 @@ export default function TopicCompletionQuiz({
       gainedExp: next.progress.exp - state.progress.exp,
       streak: next.progress.streakCount,
       presentation: getMochitResultPresentation({ checkpointCleared: !!checkpointCleared, correct, total }),
+      // モチットを実際の学習イベントに反応させる(優先度・reduced-motionは描画側が制御)
+      eventSignal: {
+        type: checkpointCleared
+          ? "checkpointClear"
+          : correct === total
+            ? "allCorrect"
+            : "taskComplete",
+        id: Date.now(),
+      },
     });
     setCompleted(true);
 
@@ -157,7 +171,13 @@ export default function TopicCompletionQuiz({
           </p>
           {result && (
             <div className="mt-2 flex justify-center">
-              <Mochit {...result.presentation} size="medium" className="text-left" />
+              <Mochit
+                {...result.presentation}
+                event={result.eventSignal}
+                screenContext="quizResult"
+                size="medium"
+                className="text-left"
+              />
             </div>
           )}
           <p className="mt-2 text-base font-bold text-green-700">
@@ -171,8 +191,8 @@ export default function TopicCompletionQuiz({
                 {result.total}問中 {result.correct}問正解
               </p>
               <div className="mt-3 flex justify-center gap-2">
-                <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-brand-600 ring-1 ring-brand-100">
-                  +{result.gainedExp} XP
+                <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums text-brand-600 ring-1 ring-brand-100">
+                  +{shownExp} XP
                 </span>
                 <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-orange-600 ring-1 ring-orange-100">
                   🔥 {result.streak}日連続

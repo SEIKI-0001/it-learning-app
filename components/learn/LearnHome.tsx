@@ -17,6 +17,7 @@ import BottomNav from "@/components/BottomNav";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import ThemeCard from "@/components/learn/ThemeCard";
+import { getThemeMasterState } from "@/lib/lessonState";
 
 type FieldFilter = "all" | TopicField;
 
@@ -185,6 +186,7 @@ export default function LearnHome() {
                       key={theme.id}
                       theme={theme}
                       progress={themeProgress}
+                      masterState={getThemeMasterState(theme, progress)}
                       nextLessonTitle={nextLesson?.title}
                       nextLessonHref={
                         nextLesson
