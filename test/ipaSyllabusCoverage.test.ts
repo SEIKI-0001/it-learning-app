@@ -39,6 +39,14 @@ const STRATEGY_NEW_TOPIC_IDS = [
   "strat-embedded-systems",
 ] as const;
 
+const MANAGEMENT_NEW_TOPIC_IDS = [
+  "mgmt-system-design",
+  "mgmt-operation-maintenance",
+  "mgmt-pmbok-basics",
+  "mgmt-project-resource",
+  "mgmt-project-communication",
+] as const;
+
 const assertCompactTopicQuality = (id: string) => {
   const topic = getAllTopics().find((candidate) => candidate.id === id);
   expect(topic, `${id} should exist`).toBeDefined();
@@ -70,6 +78,20 @@ describe("IPA syllabus coverage", () => {
   describe("newly required Topic strategy content", () => {
     it.each(STRATEGY_NEW_TOPIC_IDS)("provides quality strategy Topic %s", (id) => {
       assertCompactTopicQuality(id);
+    });
+  });
+
+  describe("newly required Topic management content", () => {
+    it.each(MANAGEMENT_NEW_TOPIC_IDS)("provides quality management Topic %s", (id) => {
+      assertCompactTopicQuality(id);
+    });
+
+    it("teaches the communication channel calculation", () => {
+      const text = JSON.stringify(getAllTopics().find(
+        (topic) => topic.id === "mgmt-project-communication",
+      ));
+      expect(text).toContain("n(n-1)/2");
+      expect(text).toContain("6 × 5 ÷ 2 = 15");
     });
   });
 });

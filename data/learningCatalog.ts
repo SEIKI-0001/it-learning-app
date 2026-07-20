@@ -97,7 +97,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🛠️",
     order: 7,
     sections: [
-      { id: "development-lifecycle", slug: "development-lifecycle", title: "開発プロセス", description: "開発工程の全体像を学びます。", order: 1, lessonIds: ["mgmt-development-process"] },
+      { id: "development-lifecycle", slug: "development-lifecycle", title: "開発プロセス", description: "開発工程の全体像を学びます。", order: 1, lessonIds: ["mgmt-development-process", "mgmt-system-design", "mgmt-operation-maintenance"] },
       { id: "requirements-testing", slug: "requirements-testing", title: "要件定義とテスト", description: "要件を決め、品質を確かめる方法を学びます。", order: 2, lessonIds: ["mgmt-requirements-definition", "mgmt-testing"] },
     ],
   },
@@ -111,7 +111,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "📅",
     order: 8,
     sections: [
-      { id: "project-planning", slug: "project-planning", title: "計画と見積り", description: "QCD、WBS、見積りを学びます。", order: 1, lessonIds: ["mgmt-pm-qcd", "mgmt-wbs-gantt", "mgmt-estimation"] },
+      { id: "project-planning", slug: "project-planning", title: "計画と見積り", description: "QCD、WBS、見積りを学びます。", order: 1, lessonIds: ["mgmt-pm-qcd", "mgmt-pmbok-basics", "mgmt-wbs-gantt", "mgmt-estimation", "mgmt-project-resource", "mgmt-project-communication"] },
       { id: "project-control", slug: "project-control", title: "進行管理", description: "PDCAとリスク管理を学びます。", order: 2, lessonIds: ["mgmt-pdca", "mgmt-risk-management"] },
     ],
   },
