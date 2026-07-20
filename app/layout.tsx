@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import CelebrationHost from '@/components/celebration/CelebrationHost';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'ITパスポート学習コーチ',
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-gray-50">
         {children}
         <CelebrationHost />
+        <Analytics />
       </body>
     </html>
   );
