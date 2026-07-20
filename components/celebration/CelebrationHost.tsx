@@ -132,15 +132,15 @@ export default function CelebrationHost() {
           className="animate-overlay-in fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 px-6"
           onClick={() => setFullQueue((q) => q.slice(1))}
         >
-          <div className="animate-pop-in relative w-full max-w-sm rounded-3xl bg-white px-6 py-10 text-center shadow-2xl">
+          <div className="animate-pop-in relative w-full max-w-sm rounded-xl bg-white px-6 py-10 text-center shadow-2xl">
             <ConfettiBurst />
             <p className="text-5xl" aria-hidden>
               {full.emoji}
             </p>
-            <p className="mt-3 text-sm font-bold tracking-widest text-indigo-500">
+            <p className="mt-3 text-sm font-bold tracking-widest text-brand-500">
               {full.heading}
             </p>
-            <p className="mt-1 text-2xl font-extrabold text-gray-900">
+            <p className="mt-1 text-2xl font-bold text-gray-900">
               {full.title}
             </p>
             <p className="mt-2 text-sm font-semibold text-gray-500">{full.sub}</p>

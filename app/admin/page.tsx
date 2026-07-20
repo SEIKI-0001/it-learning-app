@@ -179,8 +179,8 @@ export default function AdminPage() {
     <main className="min-h-screen bg-gray-50 px-4 py-8">
       <div className="mx-auto w-full max-w-md md:max-w-5xl">
         <div className="mb-1 flex items-center justify-between">
-          <h1 className="text-xl font-extrabold text-gray-800">管理ビュー（検証用）</h1>
-          <Link href="/" className="text-sm font-medium text-indigo-500">
+          <h1 className="text-xl font-bold text-gray-800">管理ビュー（検証用）</h1>
+          <Link href="/" className="text-sm font-medium text-brand-500">
             ダッシュボードへ →
           </Link>
         </div>
@@ -190,16 +190,16 @@ export default function AdminPage() {
 
         {/* ============ Supabase 集計 ============ */}
         <section className="mb-8">
-          <h2 className="mb-3 text-sm font-extrabold text-gray-700">📊 全体集計（Supabase）</h2>
+          <h2 className="mb-3 text-sm font-bold text-gray-700">📊 全体集計（Supabase）</h2>
 
           {summary === undefined && (
-            <div className="rounded-2xl bg-white p-6 text-center text-sm text-gray-400 shadow-sm">
+            <div className="rounded-xl bg-white p-6 text-center text-sm text-gray-400 shadow-sm">
               集計を取得中…
             </div>
           )}
 
           {summary === null && (
-            <div className="rounded-2xl bg-amber-50 p-5 text-sm text-amber-700 shadow-sm">
+            <div className="rounded-xl bg-amber-50 p-5 text-sm text-amber-700 shadow-sm">
               集計を取得できませんでした（{summaryError ?? "unknown"}）。
               <br />
               Supabase の環境変数が未設定の可能性があります。
@@ -218,14 +218,14 @@ export default function AdminPage() {
                   { label: "復習キュー保有", value: summary.overview.reviewQueueUsers },
                   { label: "平均正答率", value: `${summary.accuracy.averageAccuracy}%` },
                 ].map((c) => (
-                  <div key={c.label} className="rounded-2xl bg-white p-4 shadow-sm">
+                  <div key={c.label} className="rounded-xl bg-white p-4 shadow-sm">
                     <p className="text-xs text-gray-500">{c.label}</p>
-                    <p className="mt-1 text-2xl font-extrabold text-gray-800">{c.value}</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-800">{c.value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-700">課金Webhookの要回復イベント</h3>
                 {webhookError && (
                   <p className="mt-2 text-xs font-semibold text-rose-600">取得・再処理エラー: {webhookError}</p>
@@ -262,7 +262,7 @@ export default function AdminPage() {
               </div>
 
               {/* トピック別 習熟度 */}
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
                 <h3 className="mb-3 text-sm font-bold text-gray-700">トピック別の習熟度</h3>
                 <ul className="space-y-2.5">
                   {summary.topicMastery.map((t) => (
@@ -278,7 +278,7 @@ export default function AdminPage() {
                       </div>
                       <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                         <div
-                          className="h-full rounded-full bg-indigo-500"
+                          className="h-full rounded-full bg-brand-500"
                           style={{ width: `${t.avgMastery}%` }}
                         />
                       </div>
@@ -288,12 +288,12 @@ export default function AdminPage() {
               </div>
 
               {/* 苦手分野（申告） */}
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-700">苦手分野（オンボーディング申告）</h3>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center">
                   {summary.weakFields.map((w) => (
                     <div key={w.field} className="rounded-xl bg-gray-50 p-3">
-                      <p className="text-lg font-extrabold text-gray-800">{w.count}</p>
+                      <p className="text-lg font-bold text-gray-800">{w.count}</p>
                       <p className="text-xs text-gray-500">{w.label}</p>
                     </div>
                   ))}
@@ -301,7 +301,7 @@ export default function AdminPage() {
               </div>
 
               {/* 苦手タグ（不正解の多い順） */}
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-700">苦手タグ（不正解が多い順）</h3>
                 {summary.weakTagRanking.length === 0 ? (
                   <p className="mt-2 text-xs text-gray-400">データなし</p>
@@ -320,7 +320,7 @@ export default function AdminPage() {
               </div>
 
               {/* 回答履歴（直近30件） */}
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-700">
                   回答履歴（直近 {summary.recentAnswers.length} 件）
                 </h3>
@@ -352,7 +352,7 @@ export default function AdminPage() {
               </div>
 
               {/* LINE経由ユーザーの進捗 */}
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
+              <div className="rounded-xl bg-white p-4 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-700">
                   ユーザーの進捗（{summary.pagination.totalUsers}人）
                 </h3>
@@ -405,7 +405,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => setPage((current) => Math.max(1, current - 1))}
                       disabled={summary.pagination.page === 1}
-                      className="rounded-lg px-3 py-2 font-bold text-indigo-600 ring-1 ring-indigo-200 disabled:cursor-not-allowed disabled:text-gray-300 disabled:ring-gray-200"
+                      className="rounded-lg px-3 py-2 font-bold text-brand-600 ring-1 ring-brand-200 disabled:cursor-not-allowed disabled:text-gray-300 disabled:ring-gray-200"
                     >
                       前へ
                     </button>
@@ -420,7 +420,7 @@ export default function AdminPage() {
                         )
                       }
                       disabled={summary.pagination.page === summary.pagination.totalPages}
-                      className="rounded-lg px-3 py-2 font-bold text-indigo-600 ring-1 ring-indigo-200 disabled:cursor-not-allowed disabled:text-gray-300 disabled:ring-gray-200"
+                      className="rounded-lg px-3 py-2 font-bold text-brand-600 ring-1 ring-brand-200 disabled:cursor-not-allowed disabled:text-gray-300 disabled:ring-gray-200"
                     >
                       次へ
                     </button>
@@ -433,17 +433,17 @@ export default function AdminPage() {
 
         {/* ============ この端末の localStorage ============ */}
         <section>
-          <h2 className="mb-3 text-sm font-extrabold text-gray-700">📱 この端末の状態（localStorage）</h2>
+          <h2 className="mb-3 text-sm font-bold text-gray-700">📱 この端末の状態（localStorage）</h2>
           {state === undefined ? (
-            <div className="rounded-2xl bg-white p-6 text-center text-sm text-gray-400 shadow-sm">
+            <div className="rounded-xl bg-white p-6 text-center text-sm text-gray-400 shadow-sm">
               読み込み中…
             </div>
           ) : !state ? (
-            <div className="rounded-2xl bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
+            <div className="rounded-xl bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
               この端末には保存データがありません。
             </div>
           ) : (
-            <dl className="divide-y divide-gray-100 overflow-hidden rounded-2xl bg-white shadow-sm">
+            <dl className="divide-y divide-gray-100 overflow-hidden rounded-xl bg-white shadow-sm">
               {[
                 { label: "試験予定日", value: state.profile?.examDate ?? "未設定" },
                 {
@@ -476,7 +476,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={handleReset}
-          className="mt-8 w-full rounded-2xl border-2 border-rose-200 bg-white px-6 py-3.5 text-base font-bold text-rose-600 transition active:scale-[0.99]"
+          className="mt-8 w-full rounded-xl border-2 border-rose-200 bg-white px-6 py-3.5 text-base font-bold text-rose-600 transition active:scale-[0.99]"
         >
           🗑️ この端末の localStorage を初期化する
         </button>

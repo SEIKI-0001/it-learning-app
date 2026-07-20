@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
+import Mochit from "@/components/mochit/Mochit";
 import { getInternalUserId } from "@/lib/auth/currentUser";
 
 // 初回登録・ログインページ。未ログインで Web を開くと proxy がここへ誘導する。
@@ -28,16 +29,16 @@ export default async function LoginPage({
   const lineUrl = process.env.NEXT_PUBLIC_LINE_ADD_FRIEND_URL?.trim() || "";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-indigo-600 via-violet-600 to-fuchsia-600 px-5 py-10 text-white">
+    <main className="min-h-screen bg-brand-800 px-5 py-10 text-white">
       <div className="mx-auto flex w-full max-w-md flex-col items-center text-center">
         <span className="mb-6 inline-block rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold tracking-wide">
           ITパスポート合格支援
         </span>
-        <div className="mb-3 text-6xl" aria-hidden>
-          🎓
+        <div className="mb-3 flex justify-center" aria-hidden>
+          <Mochit size="medium" animation="idle" className="justify-center" />
         </div>
-        <h1 className="text-3xl font-extrabold leading-tight">ITパスポート学習コーチ</h1>
-        <p className="mt-3 text-sm leading-relaxed text-indigo-100">
+        <h1 className="text-3xl font-bold leading-tight">ITパスポート学習コーチ</h1>
+        <p className="mt-3 text-sm leading-relaxed text-brand-100">
           試験日から逆算した学習プランで、ストラテジ・マネジメント・テクノロジの3分野を、
           やさしい言葉と図解・体験で少しずつ進められます。AI採点で「説明できる理解」も確認できます。
         </p>
@@ -47,7 +48,7 @@ export default async function LoginPage({
           {googleEnabled ? (
             <GoogleLoginButton next={next} />
           ) : (
-            <div className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-semibold text-indigo-100">
+            <div className="rounded-xl bg-white/12 px-4 py-3 text-sm font-semibold text-brand-100">
               Google ログインは現在準備中です。LINE から始めてください。
             </div>
           )}
@@ -55,20 +56,19 @@ export default async function LoginPage({
           {lineUrl ? (
             <a
               href={lineUrl}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#06C755] px-6 py-4 text-center text-base font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#06C755] px-6 py-4 text-center text-base font-semibold text-white transition active:scale-[0.99]"
             >
-              <span aria-hidden>💬</span>
               LINE公式アカウントから始める
             </a>
           ) : (
-            <div className="rounded-2xl bg-white/12 px-4 py-3 text-sm font-semibold text-indigo-100">
+            <div className="rounded-xl bg-white/12 px-4 py-3 text-sm font-semibold text-brand-100">
               LINE公式アカウントのURLが未設定です（NEXT_PUBLIC_LINE_ADD_FRIEND_URL）。
             </div>
           )}
         </div>
 
         {/* 使い分けの説明 */}
-        <div className="mt-7 w-full rounded-2xl bg-white/10 px-4 py-4 text-left text-sm leading-relaxed text-indigo-50">
+        <div className="mt-7 w-full rounded-xl bg-white/10 px-4 py-4 text-left text-sm leading-relaxed text-brand-50">
           <p className="font-bold text-white">はじめての方へ</p>
           <ul className="mt-2 space-y-1.5">
             <li>
@@ -85,7 +85,7 @@ export default async function LoginPage({
           </ul>
         </div>
 
-        <p className="mt-6 text-xs text-indigo-200">
+        <p className="mt-6 text-xs text-brand-200">
           ログインすると学習履歴がアカウントに保存され、機種変更や再アクセスでも続けられます。
         </p>
       </div>

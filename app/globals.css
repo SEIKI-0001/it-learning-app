@@ -1,20 +1,51 @@
 @import "tailwindcss";
 
+/*
+ * デザイントークン。
+ * - brand: 藍。モチット(ミント/紺)と調和する青藍。主要操作・リンク・進捗に使う。
+ * - accent: 柿。復習・ストリークなど「注意を向けたい」行動にだけ使う。
+ * - 装飾目的の多色使いはしない。成功/警告はテキスト・状態表示に限定する。
+ */
+@theme {
+  --color-brand-50: #f2f7fa;
+  --color-brand-100: #e3eef4;
+  --color-brand-200: #c5dce8;
+  --color-brand-300: #97c0d4;
+  --color-brand-400: #5b9cb9;
+  --color-brand-500: #357f9f;
+  --color-brand-600: #1d6285;
+  --color-brand-700: #17506d;
+  --color-brand-800: #14425a;
+  --color-brand-900: #12374b;
+  --color-brand-950: #0b2432;
+
+  --color-accent-50: #fbf4ed;
+  --color-accent-100: #f6e6d3;
+  --color-accent-200: #eccba6;
+  --color-accent-600: #b4551d;
+  --color-accent-700: #964718;
+  --color-accent-800: #7a3b16;
+
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    "Yu Gothic", "Meiryo", ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
-  --background: #f9fafb;
+  --background: #f8f9fa;
   --foreground: #111827;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-sans);
   /* 各要素が active:scale 等で押下フィードバックを持つため、OS標準のハイライトは消す */
   -webkit-tap-highlight-color: transparent;
 }
 
 /* キーボード操作時のフォーカスを常に見えるようにする */
 :focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #1d6285;
   outline-offset: 2px;
   border-radius: 4px;
 }

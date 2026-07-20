@@ -44,9 +44,9 @@ export function ProcedureStep({
           return (
             <li
               key={index}
-              className="min-h-20 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/60 p-2 text-center"
+              className="min-h-20 rounded-xl border border-dashed border-brand-200 bg-brand-50/60 p-2 text-center"
             >
-              <span className="text-[11px] font-bold text-indigo-500">
+              <span className="text-[11px] font-bold text-brand-500">
                 {index + 1}番目
               </span>
               <span className="mt-1 block text-xl" aria-hidden>
@@ -139,7 +139,7 @@ export function OrderStep({ answer, onAnswer }: OrderStepProps) {
         <button
           type="button"
           onClick={() => onAnswer("fails")}
-          className="min-h-11 rounded-xl bg-indigo-600 font-bold text-white"
+          className="min-h-11 rounded-xl bg-brand-600 font-bold text-white"
         >
           うまくいかない
         </button>
@@ -181,7 +181,7 @@ export function ComputerStep({
       <p className="text-sm leading-relaxed text-gray-600">
         コンピュータ役になって、命令を1行ずつ動かしてみましょう。
       </p>
-      <p className="mt-3 text-xs font-bold text-indigo-600">
+      <p className="mt-3 text-xs font-bold text-brand-600">
         実行済み {executedLines} / {COMPUTER_ACTIONS.length}
       </p>
       <ol className="mt-2 space-y-2">
@@ -195,14 +195,14 @@ export function ComputerStep({
                 done
                   ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
                   : current
-                    ? "bg-indigo-50 text-indigo-800 ring-indigo-200"
+                    ? "bg-brand-50 text-brand-800 ring-brand-200"
                     : "bg-gray-50 text-gray-400 ring-gray-100"
               }`}
             >
               <span className="font-mono text-xs">{done ? "✓" : index + 1}</span>
               {action}
               {current ? (
-                <span className="ml-auto text-[11px] text-indigo-500">次の行</span>
+                <span className="ml-auto text-[11px] text-brand-500">次の行</span>
               ) : null}
             </li>
           );
@@ -212,7 +212,7 @@ export function ComputerStep({
         type="button"
         onClick={onExecute}
         disabled={complete}
-        className="mt-3 min-h-11 w-full rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white disabled:opacity-40"
+        className="mt-3 min-h-11 w-full rounded-xl bg-brand-600 px-4 text-sm font-bold text-white disabled:opacity-40"
       >
         {complete ? "すべて実行しました" : "1行実行する"}
       </button>
@@ -244,8 +244,8 @@ export function BoxStep({ adds, onAdd }: BoxStepProps) {
         数字をあとで使えるように、名前の付いた箱へ入れておきます。
       </p>
 
-      <div className="mx-auto mt-4 max-w-52 rounded-2xl bg-amber-50 p-4 text-center ring-1 ring-amber-200">
-        <p className="text-xs font-extrabold text-amber-800">合計の箱</p>
+      <div className="mx-auto mt-4 max-w-52 rounded-xl bg-amber-50 p-4 text-center ring-1 ring-amber-200">
+        <p className="text-xs font-bold text-amber-800">合計の箱</p>
         <div
           data-testid="box-total"
           aria-live="polite"
@@ -259,23 +259,23 @@ export function BoxStep({ adds, onAdd }: BoxStepProps) {
         <button
           type="button"
           onClick={onAdd}
-          className="mt-4 min-h-11 w-full rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white"
+          className="mt-4 min-h-11 w-full rounded-xl bg-brand-600 px-4 text-sm font-bold text-white"
         >
           {nextValue}を足す
         </button>
       ) : (
         <div
           aria-live="polite"
-          className="mt-4 space-y-2 rounded-xl bg-indigo-50 p-3 text-sm leading-relaxed text-indigo-950 ring-1 ring-indigo-200"
+          className="mt-4 space-y-2 rounded-xl bg-brand-50 p-3 text-sm leading-relaxed text-brand-950 ring-1 ring-brand-200"
         >
-          <p className="font-extrabold">名前の付いた箱を変数と呼ぶ</p>
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 ring-1 ring-indigo-100">
+          <p className="font-bold">名前の付いた箱を変数と呼ぶ</p>
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2 ring-1 ring-brand-100">
             <span className="font-semibold">合計の箱を0にする</span>
             <code className="rounded-md bg-gray-900 px-2 py-1 font-mono text-white">
               合計 ← 0
             </code>
           </div>
-          <p className="text-xs font-semibold text-indigo-800">
+          <p className="text-xs font-semibold text-brand-800">
             ← は、右の値を左の箱へ入れる印です。等号ではありません。
           </p>
         </div>
@@ -299,18 +299,18 @@ export function RepetitionStep({ state, onAdd }: RepetitionStepProps) {
       </p>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-indigo-50 p-3 text-center ring-1 ring-indigo-200">
-          <p className="text-xs font-extrabold text-indigo-700">合計</p>
+        <div className="rounded-xl bg-brand-50 p-3 text-center ring-1 ring-brand-200">
+          <p className="text-xs font-bold text-brand-700">合計</p>
           <p
             data-testid="repeat-total"
             aria-live="polite"
-            className="mt-1 font-mono text-4xl font-black text-indigo-950"
+            className="mt-1 font-mono text-4xl font-black text-brand-950"
           >
             {state.total}
           </p>
         </div>
-        <div className="rounded-2xl bg-amber-50 p-3 text-center ring-1 ring-amber-200">
-          <p className="text-xs font-extrabold text-amber-700">現在の数字</p>
+        <div className="rounded-xl bg-amber-50 p-3 text-center ring-1 ring-amber-200">
+          <p className="text-xs font-bold text-amber-700">現在の数字</p>
           <p
             data-testid="repeat-current"
             aria-live="polite"
@@ -325,7 +325,7 @@ export function RepetitionStep({ state, onAdd }: RepetitionStepProps) {
         type="button"
         onClick={onAdd}
         disabled={complete}
-        className="mt-4 min-h-11 w-full rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white disabled:opacity-40"
+        className="mt-4 min-h-11 w-full rounded-xl bg-brand-600 px-4 text-sm font-bold text-white disabled:opacity-40"
       >
         現在の数字を足す
       </button>
@@ -381,14 +381,14 @@ function FlowNode({
     <div
       className={`mx-auto w-full max-w-64 px-3 py-2.5 text-center ring-1 ${shape} ${
         active
-          ? "bg-indigo-600 text-white ring-indigo-600"
+          ? "bg-brand-600 text-white ring-brand-600"
           : "bg-white text-gray-800 ring-gray-200"
       }`}
     >
       <span className="block text-[10px] font-bold opacity-70">
         {FLOW_KIND_LABELS[action.kind]}
       </span>
-      <span className="block text-sm font-extrabold">{action.label}</span>
+      <span className="block text-sm font-bold">{action.label}</span>
     </div>
   );
 }
@@ -454,7 +454,7 @@ export function FlowchartStep({
   }
 
   function renderEdgeLabel(edge: FlowEdge) {
-    return edge.label ? <span className="font-black text-indigo-700">{edge.label}</span> : null;
+    return edge.label ? <span className="font-black text-brand-700">{edge.label}</span> : null;
   }
 
   return (
@@ -465,7 +465,7 @@ export function FlowchartStep({
 
       <ol
         data-testid="flow-window"
-        className="mt-4 space-y-1.5 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"
+        className="mt-4 space-y-1.5 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200"
         aria-label="現在位置の前後の処理"
       >
         {previousNode ? (
@@ -476,7 +476,7 @@ export function FlowchartStep({
         ) : null}
         <li>
           {previousNode ? <div aria-hidden className="py-0.5 text-center text-gray-300">↓</div> : null}
-          <p className="mb-1 text-center text-[11px] font-black text-indigo-600">現在</p>
+          <p className="mb-1 text-center text-[11px] font-black text-brand-600">現在</p>
           <FlowNode action={currentNode} active />
         </li>
         {isDecision ? (
@@ -515,7 +515,7 @@ export function FlowchartStep({
           type="button"
           onClick={onNext}
           disabled={flowIndex === FLOW_LEARNING_PATH.length - 1}
-          className="min-h-10 rounded-xl border border-indigo-200 bg-indigo-50 text-sm font-bold text-indigo-700 disabled:opacity-35"
+          className="min-h-10 rounded-xl border border-brand-200 bg-brand-50 text-sm font-bold text-brand-700 disabled:opacity-35"
         >
           処理を進める
         </button>
@@ -524,7 +524,7 @@ export function FlowchartStep({
         type="button"
         onClick={onOpenModal}
         ref={triggerRef}
-        className="mt-2 min-h-10 w-full rounded-xl text-sm font-bold text-indigo-700 underline decoration-indigo-200 underline-offset-4"
+        className="mt-2 min-h-10 w-full rounded-xl text-sm font-bold text-brand-700 underline decoration-brand-200 underline-offset-4"
       >
         全体図を見る
       </button>
@@ -540,15 +540,15 @@ export function FlowchartStep({
               ref={dialogRef}
               className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 p-4"
             >
-              <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-4 shadow-2xl">
+              <div className="max-h-[85dvh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-4 shadow-2xl">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-black text-indigo-600">
+                    <p className="text-xs font-black text-brand-600">
                       1〜5を足す手順
                     </p>
                     <h4
                       id="algorithm-flow-dialog-title"
-                      className="mt-1 text-lg font-extrabold text-gray-900"
+                      className="mt-1 text-lg font-bold text-gray-900"
                     >
                       フローチャート全体図
                     </h4>
@@ -572,14 +572,14 @@ export function FlowchartStep({
                   ))}
                   <div className="mt-2 grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <p className="text-center text-xs font-black text-indigo-700">はい</p>
+                      <p className="text-center text-xs font-black text-brand-700">はい</p>
                       <FlowNode action={getFlowNode("add-current")} active={currentNodeId === "add-current"} />
                       <div aria-hidden className="text-center text-gray-300">↓</div>
                       <FlowNode action={getFlowNode("increment-current")} active={currentNodeId === "increment-current"} />
-                      <p className="text-center text-xs font-black text-indigo-700">↺ 条件確認へ戻る</p>
+                      <p className="text-center text-xs font-black text-brand-700">↺ 条件確認へ戻る</p>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-center text-xs font-black text-indigo-700">いいえ</p>
+                      <p className="text-center text-xs font-black text-brand-700">いいえ</p>
                       <FlowNode action={getFlowNode("display-total")} active={currentNodeId === "display-total"} />
                       <div aria-hidden className="text-center text-gray-300">↓</div>
                       <FlowNode action={getFlowNode("end")} active={currentNodeId === "end"} />
@@ -635,7 +635,7 @@ export function ExamExpressionStep({
               {mapping.beginner}
             </dt>
             <dd className="flex items-center gap-2">
-              <span aria-hidden className="text-xs font-black text-indigo-400">
+              <span aria-hidden className="text-xs font-black text-brand-400">
                 ⇔
               </span>
               <code className="rounded-lg bg-gray-900 px-2.5 py-1.5 font-mono text-xs font-bold text-white">
@@ -647,10 +647,10 @@ export function ExamExpressionStep({
       </dl>
 
       {!finished ? (
-        <section className="mt-4 rounded-2xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
+        <section className="mt-4 rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
           <div className="flex items-center justify-between gap-2">
-            <h4 className="text-sm font-extrabold text-indigo-950">ミニ確認</h4>
-            <span className="text-xs font-bold text-indigo-600">
+            <h4 className="text-sm font-bold text-brand-950">ミニ確認</h4>
+            <span className="text-xs font-bold text-brand-600">
               {questionIndex + 1} / {MINI_QUESTIONS.length}
             </span>
           </div>
@@ -693,7 +693,7 @@ export function ExamExpressionStep({
                   : "bg-amber-100 text-amber-950"
               }`}
             >
-              <p className="font-extrabold">
+              <p className="font-bold">
                 {selected === question.correct ? "正解！" : "意味を確認しよう"}
               </p>
               <p className="mt-1">{question.explanation}</p>
@@ -704,7 +704,7 @@ export function ExamExpressionStep({
             <button
               type="button"
               onClick={onNextQuestion}
-              className="mt-3 min-h-10 w-full rounded-xl bg-indigo-600 text-sm font-bold text-white"
+              className="mt-3 min-h-10 w-full rounded-xl bg-brand-600 text-sm font-bold text-white"
             >
               次のミニ問題
             </button>
@@ -715,12 +715,12 @@ export function ExamExpressionStep({
       {finished ? (
         <div
           aria-live="polite"
-          className="mt-4 rounded-2xl bg-emerald-50 p-4 text-center ring-1 ring-emerald-200"
+          className="mt-4 rounded-xl bg-emerald-50 p-4 text-center ring-1 ring-emerald-200"
         >
           <p className="text-xl" aria-hidden>
             🎉
           </p>
-          <p className="mt-1 text-sm font-extrabold text-emerald-900">
+          <p className="mt-1 text-sm font-bold text-emerald-900">
             日常の手順から試験の表現までつながりました
           </p>
           <p className="mt-1 text-xs font-bold text-emerald-700">

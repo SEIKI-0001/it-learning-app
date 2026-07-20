@@ -38,9 +38,9 @@ function PillarDemo() {
       {/* 屋根（情報）＋3本柱の図解 */}
       <div className="mt-4 select-none">
         <div
-          className={`mx-auto grid h-14 max-w-[280px] place-items-center rounded-xl text-sm font-extrabold transition-all duration-300 ${
+          className={`mx-auto grid h-14 max-w-[280px] place-items-center rounded-xl text-sm font-bold transition-all duration-300 ${
             count === 0
-              ? "bg-indigo-600 text-white"
+              ? "bg-brand-600 text-white"
               : count < 3
                 ? "translate-y-1 -rotate-2 bg-amber-500 text-white"
                 : "translate-y-3 rotate-3 bg-rose-500 text-white"
@@ -56,10 +56,10 @@ function PillarDemo() {
                 key={e.id}
                 onClick={() => setBroken((p) => ({ ...p, [e.id]: !p[e.id] }))}
                 aria-pressed={isBroken}
-                className={`flex h-24 flex-1 flex-col items-center justify-center gap-1 rounded-lg border-2 text-xs font-extrabold transition-all active:scale-95 ${
+                className={`flex h-24 flex-1 flex-col items-center justify-center gap-1 rounded-lg border-2 text-xs font-bold transition-all active:scale-95 ${
                   isBroken
                     ? "translate-y-2 rotate-6 border-dashed border-rose-400 bg-rose-50 text-rose-600 opacity-80"
-                    : "border-indigo-300 bg-indigo-50 text-indigo-700"
+                    : "border-brand-300 bg-brand-50 text-brand-700"
                 }`}
               >
                 <span className="text-lg leading-none">{isBroken ? "💥" : e.emo}</span>
@@ -165,7 +165,7 @@ function Classifier() {
 export default function SecurityCiaExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🛡️ 情報セキュリティは<b>3つの柱（CIA）</b>で守ります——
         <b>機密性</b>（見せない）・<b>完全性</b>（正しく保つ）・<b>可用性</b>（止めない）。
       </div>
@@ -177,9 +177,9 @@ export default function SecurityCiaExperience() {
         <SectionTitle step={3}>おさらい</SectionTitle>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {ELEMS.map((e) => (
-            <div key={e.id} className="rounded-xl bg-indigo-50 p-2.5 text-center ring-1 ring-indigo-100">
+            <div key={e.id} className="rounded-xl bg-brand-50 p-2.5 text-center ring-1 ring-brand-100">
               <div className="text-lg">{e.emo}</div>
-              <div className="mt-0.5 text-xs font-extrabold text-indigo-800">{e.name}</div>
+              <div className="mt-0.5 text-xs font-bold text-brand-800">{e.name}</div>
               <div className="mt-0.5 text-[10px] leading-tight text-gray-600">{e.mean}</div>
             </div>
           ))}

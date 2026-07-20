@@ -33,7 +33,7 @@ function LampButton({
           : "border-slate-200 bg-slate-50 text-slate-500"
       }`}
     >
-      <span className="font-mono text-sm font-extrabold">{weight}</span>
+      <span className="font-mono text-sm font-bold">{weight}</span>
       <span aria-hidden className="mt-1 text-2xl leading-none">
         {isOn ? "💡" : "⚫"}
       </span>
@@ -54,7 +54,7 @@ function LampDisplay({ bits, weights }: { bits: boolean[]; weights: readonly num
               : "border-slate-200 bg-slate-50 text-slate-500"
           }`}
         >
-          <span className="font-mono text-sm font-extrabold">{weight}</span>
+          <span className="font-mono text-sm font-bold">{weight}</span>
           <span aria-hidden className="mt-1 text-xl leading-none">
             {bits[index] ? "💡" : "⚫"}
           </span>
@@ -77,10 +77,10 @@ function LessonCard({
     <section
       data-testid="binary-learning-step"
       data-step={step}
-      className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5"
+      className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5"
     >
-      <p className="text-xs font-extrabold tracking-widest text-indigo-600">STEP {step} / 5</p>
-      <h3 className="mt-1 text-lg font-extrabold text-slate-900">STEP {step} {title}</h3>
+      <p className="text-xs font-bold tracking-widest text-brand-600">STEP {step} / 5</p>
+      <h3 className="mt-1 text-lg font-bold text-slate-900">STEP {step} {title}</h3>
       {children}
     </section>
   );
@@ -118,7 +118,7 @@ function StepNavigation({
             <span
               key={index}
               aria-hidden
-              className={`h-2 w-2 rounded-full ${index + 1 === step ? "bg-indigo-600" : "bg-slate-200"}`}
+              className={`h-2 w-2 rounded-full ${index + 1 === step ? "bg-brand-600" : "bg-slate-200"}`}
             />
           ))}
         </div>
@@ -126,7 +126,7 @@ function StepNavigation({
           type="button"
           onClick={onNext}
           disabled={!canContinue || step === 5}
-          className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white transition active:scale-95 disabled:opacity-40"
+          className="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white transition active:scale-95 disabled:opacity-40"
         >
           次へ
         </button>
@@ -195,13 +195,13 @@ export default function BinaryExperience() {
         </p>
         <div className="mt-4">
           <LampDisplay bits={fiveBits} weights={FOUR_WEIGHTS} />
-          <div className="mt-3 grid grid-cols-4 gap-2 text-center font-mono text-xl font-extrabold text-indigo-700">
+          <div className="mt-3 grid grid-cols-4 gap-2 text-center font-mono text-xl font-bold text-brand-700">
             {fiveBits.map((isOn, index) => (
               <span key={FOUR_WEIGHTS[index]}>{isOn ? 1 : 0}</span>
             ))}
           </div>
         </div>
-        <p className="mt-4 rounded-xl bg-indigo-50 px-3 py-3 text-center text-sm text-indigo-900 ring-1 ring-indigo-100">
+        <p className="mt-4 rounded-xl bg-brand-50 px-3 py-3 text-center text-sm text-brand-900 ring-1 ring-brand-100">
           ランプの点き方を <b>{bitsText(fiveBits)}</b> と書く。これが <b>2進数</b> のはじまりです。
         </p>
       </LessonCard>
@@ -215,7 +215,7 @@ export default function BinaryExperience() {
         </p>
         <div className="mt-4">
           <LampDisplay bits={readBits} weights={FOUR_WEIGHTS} />
-          <p className="mt-2 text-center font-mono text-xl font-extrabold text-indigo-700">1 0 1 0</p>
+          <p className="mt-2 text-center font-mono text-xl font-bold text-brand-700">1 0 1 0</p>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-2">
           {[8, 10, 12].map((answer) => (
@@ -224,7 +224,7 @@ export default function BinaryExperience() {
               type="button"
               aria-pressed={readAnswer === answer}
               onClick={() => setReadAnswer(answer)}
-              className="rounded-xl border border-slate-300 bg-white py-2.5 font-mono text-lg font-extrabold text-slate-700 active:scale-95 aria-pressed:border-indigo-600 aria-pressed:bg-indigo-50"
+              className="rounded-xl border border-slate-300 bg-white py-2.5 font-mono text-lg font-bold text-slate-700 active:scale-95 aria-pressed:border-brand-600 aria-pressed:bg-brand-50"
             >
               {answer}
             </button>
@@ -278,7 +278,7 @@ export default function BinaryExperience() {
             />
           ))}
         </div>
-        <p className="mt-4 rounded-xl bg-indigo-50 px-3 py-3 text-center text-sm font-bold text-indigo-950 ring-1 ring-indigo-200">
+        <p className="mt-4 rounded-xl bg-brand-50 px-3 py-3 text-center text-sm font-bold text-brand-950 ring-1 ring-brand-200">
           <b>8bit = 1byte（バイト）</b>。コンピュータは、この0と1の並びで情報を扱います。
         </p>
         <details className="mt-3 rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-600 ring-1 ring-slate-200">

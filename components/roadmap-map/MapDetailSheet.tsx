@@ -7,7 +7,7 @@ import { ROADMAP_STATUS_LABEL } from "./mapConfig";
 
 const statusStyle = {
   done: "bg-emerald-100 text-emerald-800",
-  current: "bg-indigo-100 text-indigo-800",
+  current: "bg-brand-100 text-brand-800",
   upcoming: "bg-stone-100 text-stone-700",
   goal: "bg-amber-100 text-amber-900",
 } as const;
@@ -30,10 +30,10 @@ export default function MapDetailSheet({
           bar: "bg-emerald-600",
         }
       : {
-          card: "bg-indigo-50 ring-indigo-100",
-          text: "text-indigo-900",
-          value: "text-indigo-800",
-          bar: "bg-indigo-600",
+          card: "bg-brand-50 ring-brand-100",
+          text: "text-brand-900",
+          value: "text-brand-800",
+          bar: "bg-brand-600",
         };
 
   useEffect(() => {
@@ -53,12 +53,12 @@ export default function MapDetailSheet({
         role="dialog"
         aria-modal="true"
         aria-label={`${node.place}の詳細`}
-        className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl md:max-h-[82vh] md:rounded-3xl md:p-6"
+        className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl md:max-h-[82vh] md:rounded-xl md:p-6"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mx-auto mb-2 h-1.5 w-11 rounded-full bg-slate-200 md:hidden" />
         <div className="flex items-start gap-3">
-          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-amber-50 ring-1 ring-amber-100">
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-amber-50 ring-1 ring-amber-100">
             {!imageFailed ? (
               <Image
                 src={node.landmarkSrc}
@@ -97,9 +97,9 @@ export default function MapDetailSheet({
         <p className="mt-3 text-sm leading-relaxed text-slate-600">{node.detail}</p>
 
         {showsProgress && (
-          <div className={`mt-5 rounded-2xl p-4 ring-1 ${progressStyle.card}`}>
+          <div className={`mt-5 rounded-xl p-4 ring-1 ${progressStyle.card}`}>
             <div className="flex items-center justify-between gap-3">
-              <p className={`text-sm font-extrabold ${progressStyle.text}`}>現在ステージの達成度</p>
+              <p className={`text-sm font-bold ${progressStyle.text}`}>現在ステージの達成度</p>
               <span className={`text-sm font-black ${progressStyle.value}`}>{node.progress}%</span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
@@ -123,7 +123,7 @@ export default function MapDetailSheet({
           </ul>
         </section>
 
-        <section className="mt-5 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-100">
+        <section className="mt-5 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-100">
           <h3 className="text-sm font-black text-amber-950">次へ進む目安</h3>
           <p className="mt-1 text-sm leading-relaxed text-amber-900">{node.completionGoal}</p>
         </section>

@@ -98,7 +98,7 @@ function Kinds() {
           <div key={k.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-2">
               <span className="text-lg">{k.emo}</span>
-              <span className="text-sm font-extrabold text-gray-800">{k.name}</span>
+              <span className="text-sm font-bold text-gray-800">{k.name}</span>
             </div>
             <p className="mt-1 text-[12px] leading-relaxed text-gray-600">{k.d}</p>
           </div>
@@ -185,7 +185,7 @@ function Quiz() {
 export default function StandardizationExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📏 標準化は<b>「形やルールを共通にそろえる」</b>こと。そろえると組み合わせ・交換・大量生産がしやすくなります。
         規格は<b>JIS（日本）／ISO（国際）／デファクト（事実上）</b>。
       </div>

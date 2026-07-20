@@ -29,15 +29,15 @@ function FixedVsVariable() {
         フリマに出店して<b className="text-gray-800">手作りグッズ</b>を売る場面で考えます。かかるお金は2種類です。
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
-        <div className="rounded-xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
-          <div className="text-sm font-extrabold text-indigo-700">🏠 固定費</div>
+        <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
+          <div className="text-sm font-bold text-brand-700">🏠 固定費</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             売れても売れなくても<b>必ずかかる</b>お金。
           </p>
           <p className="mt-2 text-[11px] text-gray-500">例：出店料 {yen(FIXED)}</p>
         </div>
         <div className="rounded-xl bg-emerald-50 p-3 ring-1 ring-emerald-200">
-          <div className="text-sm font-extrabold text-emerald-700">📦 変動費</div>
+          <div className="text-sm font-bold text-emerald-700">📦 変動費</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             売れた数に応じて<b>増えていく</b>お金。
           </p>
@@ -72,12 +72,12 @@ function Simulator() {
       <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
         <div>
           <div className="text-xs text-gray-500">売れた数</div>
-          <div className="text-2xl font-extrabold text-gray-800">{qty}個</div>
+          <div className="text-2xl font-bold text-gray-800">{qty}個</div>
         </div>
         <div className="text-right">
           <div className="text-xs text-gray-500">{profit >= 0 ? "利益" : "損失"}</div>
           <div
-            className={`text-2xl font-extrabold ${
+            className={`text-2xl font-bold ${
               profit > 0 ? "text-emerald-600" : profit < 0 ? "text-rose-600" : "text-gray-700"
             }`}
           >
@@ -94,12 +94,12 @@ function Simulator() {
         max={MAX_QTY}
         value={qty}
         onChange={(e) => setQty(Number(e.target.value))}
-        className="mt-4 w-full accent-indigo-600"
+        className="mt-4 w-full accent-brand-600"
         aria-label="販売数"
       />
       <div className="-mt-1 flex justify-between text-[10px] text-gray-400">
         <span>0個</span>
-        <span className="font-bold text-indigo-500">↑損益分岐点 {BREAK_EVEN}個</span>
+        <span className="font-bold text-brand-500">↑損益分岐点 {BREAK_EVEN}個</span>
         <span>{MAX_QTY}個</span>
       </div>
 
@@ -121,7 +121,7 @@ function Simulator() {
             ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
             : profit < 0
               ? "bg-rose-50 text-rose-900 ring-rose-200"
-              : "bg-indigo-50 text-indigo-900 ring-indigo-200"
+              : "bg-brand-50 text-brand-900 ring-brand-200"
         }`}
       >
         {profit > 0 && (
@@ -148,7 +148,7 @@ function Simulator() {
       {atBreak || (
         <button
           onClick={() => setQty(BREAK_EVEN)}
-          className="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white active:scale-95"
+          className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white active:scale-95"
         >
           🎯 損益分岐点（{BREAK_EVEN}個）に合わせる
         </button>
@@ -177,7 +177,7 @@ function Bar({
   return (
     <div>
       <div className="flex items-baseline justify-between text-xs">
-        <span className="font-extrabold text-gray-700">{label}</span>
+        <span className="font-bold text-gray-700">{label}</span>
         <span className="text-gray-500">
           {yen(value)} <span className="text-gray-400">（{note}）</span>
         </span>
@@ -251,7 +251,7 @@ function Quiz() {
 export default function BreakEvenExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ⚖️ <b>損益分岐点</b>は、売上と費用がちょうど同じで<b>もうけが0</b>になる売上（販売数）。
         ここを超えると黒字、下回ると赤字です。スライダーで体感しよう。
       </div>

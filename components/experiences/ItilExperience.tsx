@@ -133,7 +133,7 @@ function IncidentSim() {
       <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-2.5 ring-1 ring-gray-200">
         <span className="text-xs font-bold text-gray-500">📧 メールサービス</span>
         <span
-          className={`rounded-full px-3 py-1 text-xs font-extrabold ${
+          className={`rounded-full px-3 py-1 text-xs font-bold ${
             serviceDown ? "bg-rose-500 text-white" : "bg-emerald-500 text-white"
           }`}
         >
@@ -150,7 +150,7 @@ function IncidentSim() {
             <button
               key={c.label}
               onClick={() => pick(c)}
-              className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-left text-sm font-bold text-white transition active:scale-95"
+              className="w-full rounded-xl bg-brand-600 px-4 py-2.5 text-left text-sm font-bold text-white transition active:scale-95"
             >
               {c.label}
             </button>
@@ -162,7 +162,7 @@ function IncidentSim() {
             {SUMMARY.map((s) => (
               <div key={s.name} className="rounded-xl bg-emerald-50 p-2 text-center ring-1 ring-emerald-200">
                 <div className="text-lg leading-none">{s.emoji}</div>
-                <div className="mt-1 text-[10px] font-extrabold leading-tight text-emerald-800">{s.name}</div>
+                <div className="mt-1 text-[10px] font-bold leading-tight text-emerald-800">{s.name}</div>
                 <div className="mt-0.5 text-[9px] leading-tight text-gray-500">{s.desc}</div>
               </div>
             ))}
@@ -254,7 +254,7 @@ function Quiz() {
 export default function ItilExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📚 <b>ITIL</b>は、ITサービス管理の<b>ベストプラクティス（うまいやり方）をまとめた知識体系</b>。
         障害対応・変更・改善などの進め方が整理されています。
       </div>

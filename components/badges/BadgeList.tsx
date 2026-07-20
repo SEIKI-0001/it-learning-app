@@ -13,7 +13,7 @@ import {
 const RARITY_STYLE: Record<string, string> = {
   common: "bg-gray-100 text-gray-600 ring-gray-200",
   rare: "bg-sky-100 text-sky-700 ring-sky-200",
-  epic: "bg-violet-100 text-violet-700 ring-violet-200",
+  epic: "bg-brand-100 text-brand-700 ring-brand-200",
 };
 
 /** バッジ種別ごとの「挑戦する」導線。 */
@@ -49,9 +49,9 @@ function BadgeCard({
 
   return (
     <li
-      className={`rounded-2xl p-4 ring-1 transition ${
+      className={`rounded-xl p-4 ring-1 transition ${
         highlight
-          ? "bg-indigo-50 ring-2 ring-indigo-300"
+          ? "bg-brand-50 ring-2 ring-brand-300"
           : earned
             ? "bg-white ring-emerald-200"
             : ready
@@ -73,11 +73,11 @@ function BadgeCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             {highlight && (
-              <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-bold text-white">
+              <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold text-white">
                 🎯 次に狙う
               </span>
             )}
-            <p className="text-sm font-extrabold text-gray-800">{def.label}</p>
+            <p className="text-sm font-bold text-gray-800">{def.label}</p>
             {def.requiredForGate ? (
               <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-700">
                 必須
@@ -92,7 +92,7 @@ function BadgeCard({
             >
               {BADGE_RARITY_LABELS[def.rarity]}
             </span>
-            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600">
+            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-600">
               {BADGE_CATEGORY_LABELS[def.category]}
             </span>
           </div>
@@ -119,7 +119,7 @@ function BadgeCard({
             {!earned && (
               <Link
                 href={badgeActionHref(def)}
-                className="shrink-0 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white transition active:scale-95"
+                className="shrink-0 rounded-full bg-brand-600 px-3 py-1 text-xs font-bold text-white transition active:scale-95"
               >
                 挑戦する →
               </Link>
@@ -143,7 +143,7 @@ export default function BadgeList({
 }) {
   if (statuses.length === 0) {
     return (
-      <p className="rounded-2xl bg-gray-50 px-4 py-6 text-center text-sm text-gray-400">
+      <p className="rounded-xl bg-gray-50 px-4 py-6 text-center text-sm text-gray-400">
         表示できるバッジがありません。
       </p>
     );

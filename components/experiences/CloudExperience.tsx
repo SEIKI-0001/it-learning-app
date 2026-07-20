@@ -48,14 +48,14 @@ function WhatIsCloud() {
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 text-center ring-1 ring-gray-200">
           <div className="text-2xl">🏠</div>
-          <div className="mt-1 text-sm font-extrabold text-gray-700">オンプレミス</div>
+          <div className="mt-1 text-sm font-bold text-gray-700">オンプレミス</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
             機械を<b>自分で買って</b>社内に置く。自由だが手間とお金がかかる。
           </p>
         </div>
         <div className="rounded-xl bg-sky-50 p-3 text-center ring-1 ring-sky-200">
           <div className="text-2xl">☁️</div>
-          <div className="mt-1 text-sm font-extrabold text-sky-700">クラウド</div>
+          <div className="mt-1 text-sm font-bold text-sky-700">クラウド</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             必要な分だけ<b>借りて使う</b>。すぐ始められ、使った分だけ払う。
           </p>
@@ -77,7 +77,7 @@ function Stack() {
       <SectionTitle step={2}>事業者が用意する範囲</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         モデルを選ぶと、<b className="text-sky-700">事業者が用意する層</b>と
-        <b className="text-indigo-700">自分でやる層</b>が変わります。
+        <b className="text-brand-700">自分でやる層</b>が変わります。
       </p>
 
       {/* モデル選択 */}
@@ -88,7 +88,7 @@ function Stack() {
             onClick={() => setModel(m)}
             className={`rounded-lg px-1 py-2 text-xs font-bold transition active:scale-95 ${
               model === m
-                ? "bg-indigo-600 text-white"
+                ? "bg-brand-600 text-white"
                 : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
@@ -109,17 +109,17 @@ function Stack() {
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1 transition ${
                 byProvider
                   ? "bg-sky-50 ring-sky-300"
-                  : "bg-indigo-50 ring-indigo-300"
+                  : "bg-brand-50 ring-brand-300"
               }`}
             >
               <span className="text-xl">{layer.emoji}</span>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-extrabold text-gray-800">{layer.name}</div>
+                <div className="text-sm font-bold text-gray-800">{layer.name}</div>
                 <div className="truncate text-[11px] text-gray-500">{layer.note}</div>
               </div>
               <span
                 className={`flex-none rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                  byProvider ? "bg-sky-200 text-sky-800" : "bg-indigo-200 text-indigo-800"
+                  byProvider ? "bg-sky-200 text-sky-800" : "bg-brand-200 text-brand-800"
                 }`}
               >
                 {byProvider ? "☁️ 事業者" : "🙋 あなた"}
@@ -204,7 +204,7 @@ function Quiz() {
 export default function CloudExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ☁️ クラウドは「機械を持たず<b>借りて使う</b>」考え方。借りる範囲が広い順に <b>SaaS（完成アプリ）→ PaaS（開発土台）→ IaaS（サーバ資源）</b>。
         料理でいうと <b>完成弁当 → キッチン → 食材・設備</b> のイメージです。
       </div>

@@ -16,9 +16,9 @@ export default function WeeklyReportCard({ state }: { state: AppState }) {
   }
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="rounded-xl bg-white p-4 border border-gray-200">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-extrabold text-gray-800">今週のふりかえり</h2>
+        <h2 className="text-base font-bold text-gray-800">今週のふりかえり</h2>
         <span className="text-xs font-semibold text-gray-400">直近7日間</span>
       </div>
 
@@ -64,7 +64,7 @@ export default function WeeklyReportCard({ state }: { state: AppState }) {
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl bg-gray-50 p-2.5 text-center ring-1 ring-gray-100">
-      <p className="text-lg font-extrabold text-gray-800">{value}</p>
+      <p className="text-lg font-bold text-gray-800">{value}</p>
       <p className="mt-0.5 text-[11px] text-gray-500">{label}</p>
     </div>
   );

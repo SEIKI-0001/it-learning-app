@@ -72,7 +72,7 @@ function PacketJourney() {
             key={x.key}
             onClick={() => send(x.key)}
             className={`rounded-lg px-1 py-2 text-[11px] font-bold leading-tight transition active:scale-95 ${
-              dest === x.key ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              dest === x.key ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {x.label}
@@ -85,12 +85,12 @@ function PacketJourney() {
         {/* 家のLAN */}
         <div
           className={`flex-1 rounded-xl border-2 border-dashed px-1.5 py-2.5 text-center transition ${
-            dest ? "border-indigo-400 bg-indigo-50" : "border-gray-300 bg-gray-50"
+            dest ? "border-brand-400 bg-brand-50" : "border-gray-300 bg-gray-50"
           }`}
         >
-          <div className="text-[11px] font-extrabold text-indigo-700">🏠 家（LAN）</div>
+          <div className="text-[11px] font-bold text-brand-700">🏠 家（LAN）</div>
           <div className="mt-1.5 flex justify-center gap-1 text-base">
-            <span className={dest ? "rounded bg-indigo-200 px-0.5" : ""}>📱</span>
+            <span className={dest ? "rounded bg-brand-200 px-0.5" : ""}>📱</span>
             <span className={dest === "printer" ? "animate-pulse rounded bg-emerald-200 px-0.5" : ""}>🖨️</span>
             <span>💻</span>
           </div>
@@ -109,7 +109,7 @@ function PacketJourney() {
           }`}
         >
           <div className="text-lg">🌐</div>
-          <div className={`text-[10px] font-extrabold ${d?.usesWan ? "text-sky-700" : "text-gray-400"}`}>WAN</div>
+          <div className={`text-[10px] font-bold ${d?.usesWan ? "text-sky-700" : "text-gray-400"}`}>WAN</div>
           <div className="text-[9px] leading-tight text-gray-400">通信会社の回線</div>
         </div>
         <div className="flex items-center">
@@ -119,12 +119,12 @@ function PacketJourney() {
         {/* 相手側 */}
         <div
           className={`flex-1 rounded-xl border-2 border-dashed px-1.5 py-2.5 text-center transition ${
-            d?.usesWan ? "border-indigo-400 bg-indigo-50" : "border-gray-200 bg-gray-50 opacity-60"
+            d?.usesWan ? "border-brand-400 bg-brand-50" : "border-gray-200 bg-gray-50 opacity-60"
           }`}
         >
           {d?.remote ? (
             <>
-              <div className="text-[11px] font-extrabold text-indigo-700">
+              <div className="text-[11px] font-bold text-brand-700">
                 {d.remote.emoji} {d.remote.name}
               </div>
               <div className="mt-1.5 animate-pulse text-base">{d.remote.devices}</div>
@@ -132,7 +132,7 @@ function PacketJourney() {
             </>
           ) : (
             <>
-              <div className="text-[11px] font-extrabold text-gray-400">遠くの相手</div>
+              <div className="text-[11px] font-bold text-gray-400">遠くの相手</div>
               <div className="mt-1.5 text-base opacity-30">🏢🌍</div>
             </>
           )}
@@ -187,7 +187,7 @@ function CompareTable() {
           <thead>
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-3 py-2 text-left font-bold"> </th>
-              <th className="px-3 py-2 text-center font-bold text-indigo-700">🏠 LAN</th>
+              <th className="px-3 py-2 text-center font-bold text-brand-700">🏠 LAN</th>
               <th className="px-3 py-2 text-center font-bold text-sky-700">🌍 WAN</th>
             </tr>
           </thead>
@@ -270,7 +270,7 @@ function SortQuiz() {
 export default function LanWanExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🌐 ネットワークは「広さ」で呼び方が変わります。代表が <b>LAN（狭い）</b> と <b>WAN（広い）</b>。
         スマホ →（家のWi-Fi＝LAN）→ プロバイダ →（インターネット＝WAN）→ 相手、の順でつながっています。
       </div>

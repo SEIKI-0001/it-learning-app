@@ -88,12 +88,12 @@ function Simulator() {
             <div key={s.id}>
               <div
                 className={`flex items-center gap-2 rounded-xl px-3 py-2 ring-1 transition ${
-                  active ? "bg-indigo-50 ring-indigo-200" : "bg-gray-50 ring-gray-200"
+                  active ? "bg-brand-50 ring-brand-200" : "bg-gray-50 ring-gray-200"
                 }`}
               >
                 <span className="text-lg">{s.emoji}</span>
                 <div className="min-w-0 flex-1">
-                  <div className={`text-sm font-extrabold ${active ? "text-gray-800" : "text-gray-400"}`}>
+                  <div className={`text-sm font-bold ${active ? "text-gray-800" : "text-gray-400"}`}>
                     {s.name}
                   </div>
                   <div className="text-[10px] text-gray-400">🍳 {s.food}</div>
@@ -101,7 +101,7 @@ function Simulator() {
                 <button
                   onClick={() => toggle(s.id)}
                   className={`flex-none rounded-lg px-3 py-1.5 text-xs font-bold transition active:scale-95 ${
-                    active ? "bg-indigo-600 text-white" : "bg-white text-gray-500 ring-1 ring-gray-300"
+                    active ? "bg-brand-600 text-white" : "bg-white text-gray-500 ring-1 ring-gray-300"
                   }`}
                 >
                   {active ? "✓ やる" : "省く"}
@@ -129,7 +129,7 @@ function Simulator() {
       {!released ? (
         <button
           onClick={release}
-          className="mt-3 w-full rounded-xl bg-indigo-600 py-2.5 text-sm font-extrabold text-white transition active:scale-95"
+          className="mt-3 w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-95"
         >
           🚀 リリースする！
         </button>
@@ -160,7 +160,7 @@ function Simulator() {
       )}
 
       {sawPerfect && sawMiss && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 気づきましたか？ 段階ごとに<b>見つけられるバグが違う</b>んです。だから
           <b>単体→結合→システム→受入</b>と、小さい所から大きい所へ順にぜんぶ確認します。
         </div>
@@ -196,7 +196,7 @@ function VModel() {
               key={`l${p.id}`}
               onClick={() => setSel(p.id === sel ? null : p.id)}
               className={`w-full rounded-lg px-1 py-2 text-[11px] font-bold transition active:scale-95 ${
-                sel === p.id ? "bg-indigo-600 text-white" : "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200"
+                sel === p.id ? "bg-brand-600 text-white" : "bg-brand-50 text-brand-700 ring-1 ring-brand-200"
               }`}
             >
               {p.left}
@@ -206,7 +206,7 @@ function VModel() {
         {/* 中央：対応線 */}
         <div className="flex w-5 flex-none flex-col items-center justify-around pt-4">
           {PAIRS.map((p) => (
-            <span key={`m${p.id}`} className={`text-sm ${sel === p.id ? "text-indigo-600" : "text-gray-300"}`}>
+            <span key={`m${p.id}`} className={`text-sm ${sel === p.id ? "text-brand-600" : "text-gray-300"}`}>
               ⇄
             </span>
           ))}
@@ -301,7 +301,7 @@ function Quiz() {
 export default function TestingExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ✅ テストは<b>単体→結合→システム→受入</b>と段階を踏みます。料理でいうと
         <b>材料の味見→合わせ味見→完成品の試食→注文者の確認</b>。省くとどうなるか、まず体験してみましょう。
       </div>

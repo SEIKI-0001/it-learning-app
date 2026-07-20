@@ -1,9 +1,10 @@
-// 共通カード面。白背景 + ring-gray-100 + shadow-sm の「標準の面」をここで固定する。
+// 共通カード面。白背景 + border の「標準の面」をここで固定する。
+// 影は使わない(浮遊要素・モーダル以外は境界線と背景差で区切る)。
 
 import type { HTMLAttributes } from "react";
 
 export function cardClass(extra?: string): string {
-  return ["rounded-2xl bg-white shadow-sm ring-1 ring-gray-100", extra]
+  return ["rounded-xl border border-gray-200 bg-white", extra]
     .filter(Boolean)
     .join(" ");
 }

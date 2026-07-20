@@ -72,7 +72,7 @@ function LoginSimulator() {
               key={sc.id}
               onClick={() => setSel(i)}
               className={`rounded-xl p-2.5 text-left text-xs font-bold leading-relaxed ring-2 transition active:scale-95 ${
-                on ? "bg-indigo-600 text-white ring-indigo-600" : "bg-indigo-50 text-indigo-800 ring-indigo-200"
+                on ? "bg-brand-600 text-white ring-brand-600" : "bg-brand-50 text-brand-800 ring-brand-200"
               }`}
             >
               <span className="mr-1">{sc.emoji}</span>
@@ -98,7 +98,7 @@ function LoginSimulator() {
           <div>
             <div className="flex items-center gap-3">
               <span className="text-3xl">{s.door}</span>
-              <span className={`text-sm font-extrabold ${s.ok ? "text-emerald-700" : "text-rose-700"}`}>
+              <span className={`text-sm font-bold ${s.ok ? "text-emerald-700" : "text-rose-700"}`}>
                 {s.ok ? "⭕" : "🚫"} {s.verdict}
               </span>
             </div>
@@ -200,7 +200,7 @@ function LawList() {
             <div className="mt-1 flex items-center gap-2">
               <span className="text-lg">{l.emoji}</span>
               <div>
-                <div className="text-sm font-extrabold text-gray-800">{l.name}</div>
+                <div className="text-sm font-bold text-gray-800">{l.name}</div>
                 <div className="text-xs text-gray-500">{l.d}</div>
               </div>
             </div>
@@ -217,7 +217,7 @@ function LawList() {
 export default function SecurityLawsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📜 IT利用にはルールを定めた法律があります。代表が<b>不正アクセス禁止法</b>。
         他人のID・パスワードを無断で使うような行為を禁じます。
       </div>

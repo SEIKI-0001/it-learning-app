@@ -72,17 +72,17 @@ function TransferDemo() {
       {/* 操作 */}
       <div className="mt-3 space-y-2">
         {phase === "idle" && (
-          <button onClick={begin} className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white active:scale-95">
+          <button onClick={begin} className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white active:scale-95">
             ▶ 振込を始める
           </button>
         )}
         {phase === "step1" && (
-          <button onClick={step1} className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white active:scale-95">
+          <button onClick={step1} className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white active:scale-95">
             ① Aから 500 引く →
           </button>
         )}
         {phase === "step2" && (
-          <button onClick={step2} className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white active:scale-95">
+          <button onClick={step2} className="w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white active:scale-95">
             ② Bに 500 足す →
           </button>
         )}
@@ -115,11 +115,11 @@ function Account({ name, v, highlight }: { name: string; v: number; highlight: b
   return (
     <div
       className={`rounded-xl p-3 text-center ring-2 transition ${
-        highlight ? "bg-indigo-50 ring-indigo-400" : "bg-gray-50 ring-gray-200"
+        highlight ? "bg-brand-50 ring-brand-400" : "bg-gray-50 ring-gray-200"
       }`}
     >
       <div className="text-xs font-bold text-gray-500">{name}</div>
-      <div className="mt-1 text-2xl font-extrabold text-gray-800">{v}円</div>
+      <div className="mt-1 text-2xl font-bold text-gray-800">{v}円</div>
     </div>
   );
 }
@@ -138,10 +138,10 @@ function Acid() {
         {items.map((it) => (
           <div key={it.k} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
-              <span className="grid h-6 w-6 place-items-center rounded bg-indigo-100 font-mono text-xs font-extrabold text-indigo-700">
+              <span className="grid h-6 w-6 place-items-center rounded bg-brand-100 font-mono text-xs font-bold text-brand-700">
                 {it.k}
               </span>
-              <span className="text-sm font-extrabold text-gray-800">{it.t}</span>
+              <span className="text-sm font-bold text-gray-800">{it.t}</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{it.d}</p>
           </div>
@@ -157,7 +157,7 @@ function Acid() {
 export default function TransactionExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         💳 <b>トランザクション</b>は分けられない一連の処理。全部成功で確定する<b>コミット</b>、
         失敗時に開始前へ戻す<b>ロールバック</b>がカギです。
       </div>

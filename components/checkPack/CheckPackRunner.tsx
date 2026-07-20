@@ -183,7 +183,7 @@ export default function CheckPackRunner({
         <button
           type="button"
           onClick={() => setPhase("quiz")}
-          className="w-full rounded-2xl bg-indigo-600 px-6 py-4 text-lg font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+          className="w-full rounded-xl bg-brand-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition active:scale-[0.98]"
         >
           確認パックを始める
         </button>
@@ -261,10 +261,10 @@ export default function CheckPackRunner({
   return (
     <div className="space-y-5">
       <div
-        className={`animate-pop-in rounded-2xl p-5 text-center ring-1 ${STATUS_TONE[resultStatus]}`}
+        className={`animate-pop-in rounded-xl p-5 text-center ring-1 ${STATUS_TONE[resultStatus]}`}
       >
         <p className="text-sm font-bold">確認パックの結果</p>
-        <p className="mt-1 text-2xl font-extrabold">{STATUS_LABEL[resultStatus]}</p>
+        <p className="mt-1 text-2xl font-bold">{STATUS_LABEL[resultStatus]}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -273,8 +273,8 @@ export default function CheckPackRunner({
         <RateCard label="過去問レベル" rate={examLevelRate} passRate={70} />
       </div>
 
-      <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-        <p className="text-xs font-bold text-indigo-500">👉 次の推奨行動</p>
+      <div className="rounded-xl bg-white p-4 border border-gray-200">
+        <p className="text-xs font-bold text-brand-500">👉 次の推奨行動</p>
         <p className="mt-1 text-sm font-semibold leading-relaxed text-gray-700">
           {nextAction}
         </p>
@@ -283,13 +283,13 @@ export default function CheckPackRunner({
       <div className="flex flex-col gap-2">
         <Link
           href={getLessonHref(topicId)}
-          className="rounded-2xl bg-indigo-600 px-6 py-3 text-center font-bold text-white"
+          className="rounded-xl bg-brand-600 px-6 py-3 text-center font-bold text-white"
         >
           レッスンに戻る
         </Link>
         <Link
           href="/progress"
-          className="rounded-2xl bg-white px-6 py-3 text-center font-bold text-indigo-600 ring-1 ring-indigo-200"
+          className="rounded-xl bg-white px-6 py-3 text-center font-bold text-brand-600 ring-1 ring-brand-200"
         >
           進捗を見る
         </Link>
@@ -310,8 +310,8 @@ function IntroCard({
   examCount: number;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-      <h2 className="text-base font-extrabold text-gray-800">
+    <div className="rounded-xl bg-white p-5 border border-gray-200">
+      <h2 className="text-base font-bold text-gray-800">
         「{topicTitle}」の確認パック
       </h2>
       <p className="mt-1 text-sm text-gray-600">
@@ -341,7 +341,7 @@ function StepLine({
 }) {
   return (
     <li className="flex items-center gap-3">
-      <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-indigo-100 text-xs font-extrabold text-indigo-700">
+      <span className="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-brand-100 text-xs font-bold text-brand-700">
         {n}
       </span>
       <span className="font-semibold text-gray-800">{label}</span>
@@ -366,10 +366,10 @@ function StepShell({
 }) {
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl bg-indigo-50 px-4 py-3">
-        <p className="text-xs font-bold text-indigo-600">ステップ {step} / 3</p>
-        <p className="text-sm font-extrabold text-indigo-800">{title}</p>
-        <p className="mt-0.5 text-xs text-indigo-700">{note}</p>
+      <div className="rounded-xl bg-brand-50 px-4 py-3">
+        <p className="text-xs font-bold text-brand-600">ステップ {step} / 3</p>
+        <p className="text-sm font-bold text-brand-800">{title}</p>
+        <p className="mt-0.5 text-xs text-brand-700">{note}</p>
       </div>
       {children}
     </div>
@@ -394,7 +394,7 @@ function RateCard({
         : "bg-amber-50 text-amber-700";
   return (
     <div className={`rounded-xl px-2 py-3 text-center ${tone}`}>
-      <p className="text-xl font-extrabold">{rate == null ? "—" : `${rate}%`}</p>
+      <p className="text-xl font-bold">{rate == null ? "—" : `${rate}%`}</p>
       <p className="mt-0.5 text-[11px] font-bold">{label}</p>
       <p className="text-[10px] opacity-70">{passRate}%で合格</p>
     </div>

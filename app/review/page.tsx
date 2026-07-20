@@ -13,6 +13,7 @@ import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import PageHeader from "@/components/ui/PageHeader";
 import { buttonClass } from "@/components/ui/Button";
+import Icon from "@/components/ui/Icon";
 
 type ReviewGroup = "scheduled" | "incorrect" | "weakness";
 
@@ -86,7 +87,7 @@ export default function ReviewPage() {
         description="復習対象を選ぶと、学ぶページの解説や確認問題へ移動します。"
         accessory={
           reviewItems.length > 0 ? (
-            <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 ring-1 ring-amber-200">
+            <span className="rounded-full border border-accent-200 bg-accent-50 px-3 py-1 text-xs font-semibold tabular-nums text-accent-700">
               {reviewItems.length}件
             </span>
           ) : undefined
@@ -95,9 +96,9 @@ export default function ReviewPage() {
 
       <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6">
         {reviewItems.length === 0 ? (
-          <section className="rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-100">
-            <p className="text-3xl" aria-hidden>✨</p>
-            <h2 className="mt-3 text-lg font-extrabold text-gray-900">いまは復習対象がありません</h2>
+          <section className="rounded-xl bg-white p-8 text-center border border-gray-200">
+            <Icon name="rotate" className="mx-auto h-6 w-6 text-gray-300" />
+            <h2 className="mt-3 text-base font-semibold text-gray-900">いまは復習対象がありません</h2>
             <p className="mt-1 text-sm text-gray-500">学習後に、必要なレッスンをここへ自動で追加します。</p>
             <Link href="/learn" className={buttonClass("primary", "lg", "mt-5")}>
               テーマから学ぶ
@@ -108,7 +109,7 @@ export default function ReviewPage() {
             if (items.length === 0) return null;
             return (
               <section key={group}>
-                <h2 className="text-lg font-extrabold text-gray-900">{GROUP_LABELS[group]}</h2>
+                <h2 className="text-base font-semibold text-gray-900">{GROUP_LABELS[group]}</h2>
                 <div className="mt-3 space-y-3">
                   {items.map((item) => {
                     const topic = getTopic(item.topicId);
@@ -116,11 +117,11 @@ export default function ReviewPage() {
                     if (!topic || !location) return null;
                     const wrong = wrongByTopic.get(topic.id) ?? 0;
                     return (
-                      <article key={topic.id} className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-                        <p className="text-xs font-extrabold text-amber-700">
+                      <article key={topic.id} className="rounded-xl bg-white p-5 border border-gray-200">
+                        <p className="text-xs font-medium text-accent-700">
                           {item.reason}{wrong > 0 ? `・間違い${wrong}問` : ""}
                         </p>
-                        <h3 className="mt-1 text-lg font-extrabold text-gray-900">{topic.title}</h3>
+                        <h3 className="mt-1 text-[15px] font-semibold text-gray-900">{topic.title}</h3>
                         <p className="mt-1 text-sm text-gray-500">
                           {location.theme.title} ＞ {location.section.title}
                         </p>
@@ -140,7 +141,7 @@ export default function ReviewPage() {
                           <button
                             type="button"
                             onClick={() => handleSnooze(topic.id)}
-                            className="inline-flex items-center justify-center rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-amber-800 ring-1 ring-amber-200 transition hover:bg-amber-50 active:scale-[0.98]"
+                            className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 active:scale-[0.99]"
                           >
                             3日後に再表示
                           </button>

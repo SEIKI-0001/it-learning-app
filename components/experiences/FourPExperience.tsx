@@ -91,7 +91,7 @@ function Simulator() {
           return (
             <div key={d.p}>
               <div className="flex items-baseline gap-1.5 text-xs">
-                <span className="font-extrabold text-indigo-700">
+                <span className="font-bold text-brand-700">
                   {card.emoji} {card.name}
                 </span>
                 <span className="text-gray-400">＝ {card.mean}</span>
@@ -209,7 +209,7 @@ function Quiz() {
 export default function FourPExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🛍️ <b>4P分析</b>は <b>Product（製品）・Price（価格）・Place（流通）・Promotion（販売促進）</b>
         の4つで売り方を整理する方法。「何を・いくらで・どこで・どう知らせて」売るかです。
       </div>

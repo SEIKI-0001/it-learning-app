@@ -87,7 +87,7 @@ function Rules() {
         {rules.map((r) => (
           <div key={r.t} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="text-xl">{r.emoji}</div>
-            <div className="mt-1 text-sm font-extrabold text-gray-800">{r.t}</div>
+            <div className="mt-1 text-sm font-bold text-gray-800">{r.t}</div>
             <p className="mt-0.5 text-[11px] leading-relaxed text-gray-500">{r.d}</p>
           </div>
         ))}
@@ -162,7 +162,7 @@ function HandlingQuiz() {
 export default function PrivacyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🪪 <b>個人情報</b>は、氏名・住所・顔写真など<b>特定の個人を識別できる情報</b>。
         集めるときは目的を明確にし、必要な範囲で、安全に扱うのがルールです。
       </div>

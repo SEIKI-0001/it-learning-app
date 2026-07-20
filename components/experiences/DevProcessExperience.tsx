@@ -101,9 +101,9 @@ function Simulator() {
               ? "bg-rose-500 text-white"
               : "bg-emerald-500 text-white"
             : isActive
-              ? "bg-indigo-600 text-white"
+              ? "bg-brand-600 text-white"
               : isDone
-                ? "bg-indigo-100 text-indigo-600"
+                ? "bg-brand-100 text-brand-600"
                 : "bg-gray-100 text-gray-400";
           return (
             <div key={label} className="flex flex-1 items-center gap-1">
@@ -233,7 +233,7 @@ function Quiz() {
 export default function DevProcessExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🛠️ システム開発は<b>要件定義→設計→製造→テスト→運用</b>の流れ。進め方には
         <b>ウォーターフォール（順番に）</b>と<b>アジャイル（小さく反復）</b>の2つがあります。
       </div>

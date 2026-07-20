@@ -50,7 +50,7 @@ function RiskMeter() {
         <div className="text-xs font-bold opacity-70">
           {prob}（{pn}） × {impact}（{inum}） ＝ {score}
         </div>
-        <div className="mt-1 text-base font-extrabold">優先度：{priority}</div>
+        <div className="mt-1 text-base font-bold">優先度：{priority}</div>
       </div>
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ 「めったに起きないが起きたら大被害」も「よく起きるが軽微」も無視できません。
@@ -81,7 +81,7 @@ function Picker({
               onClick={() => onChange(l.key)}
               className={`flex-1 rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
                 picked
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-brand-600 text-white"
                   : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
               }`}
             >
@@ -113,7 +113,7 @@ function Treatments() {
           <div key={t.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
               <span className="text-lg">{t.emo}</span>
-              <span className="text-sm font-extrabold text-gray-800">{t.name}</span>
+              <span className="text-sm font-bold text-gray-800">{t.name}</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{t.d}</p>
           </div>
@@ -145,10 +145,10 @@ function IsmsPdca() {
         {items.map((it) => (
           <div key={it.k} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
-              <span className="grid h-6 w-6 place-items-center rounded bg-indigo-100 font-mono text-xs font-extrabold text-indigo-700">
+              <span className="grid h-6 w-6 place-items-center rounded bg-brand-100 font-mono text-xs font-bold text-brand-700">
                 {it.k}
               </span>
-              <span className="text-sm font-extrabold text-gray-800">{it.t}</span>
+              <span className="text-sm font-bold text-gray-800">{it.t}</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{it.d}</p>
           </div>
@@ -165,7 +165,7 @@ function IsmsPdca() {
 export default function IsmsRiskExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔐 セキュリティは「技術」だけでなく<b>組織で管理するしくみ</b>が大事。
         リスクを<b>見積もって（アセスメント）→対応を選び→PDCAで回し続ける</b>のが ISMS です。
       </div>

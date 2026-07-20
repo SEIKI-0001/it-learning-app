@@ -78,13 +78,13 @@ function ShieldDemo() {
               className={`flex flex-col items-center rounded-xl border-2 p-2.5 transition-all active:scale-95 ${
                 isBroken
                   ? "rotate-3 border-dashed border-rose-400 bg-rose-50 opacity-80"
-                  : "border-indigo-300 bg-indigo-50"
+                  : "border-brand-300 bg-brand-50"
               }`}
             >
               <span className="text-2xl leading-none">{isBroken ? "💥" : s.emoji}</span>
               <span
-                className={`mt-1 text-[11px] font-extrabold leading-tight ${
-                  isBroken ? "text-rose-600" : "text-indigo-700"
+                className={`mt-1 text-[11px] font-bold leading-tight ${
+                  isBroken ? "text-rose-600" : "text-brand-700"
                 }`}
               >
                 {s.name}
@@ -194,7 +194,7 @@ function Quiz() {
 export default function ComplianceExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🧑‍⚖️ <b>コンプライアンス</b>は、<b>法律・社内ルール・社会の約束</b>を守ること。
         ITでは個人情報・著作権・不正アクセスなど、情報の扱いがよく問われます。
       </div>

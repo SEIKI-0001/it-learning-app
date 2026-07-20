@@ -72,7 +72,7 @@ function DiagramFrame({
   children: React.ReactNode;
 }) {
   return (
-    <figure className="rounded-2xl border border-gray-200 bg-white p-4">
+    <figure className="rounded-xl border border-gray-200 bg-white p-4">
       {title && (
         <figcaption className="mb-3 text-sm font-bold text-gray-700">
           {title}
@@ -170,17 +170,17 @@ function FlowView({ spec }: { spec: FlowDiagram }) {
             key={i}
             className={horizontal ? "flex items-center gap-2" : ""}
           >
-            <div className="rounded-xl bg-indigo-50 px-3 py-2">
-              <p className="text-sm font-bold text-indigo-700">{step.label}</p>
+            <div className="rounded-xl bg-brand-50 px-3 py-2">
+              <p className="text-sm font-bold text-brand-700">{step.label}</p>
               {step.description && (
-                <p className="mt-0.5 text-xs text-indigo-900/70">
+                <p className="mt-0.5 text-xs text-brand-900/70">
                   {step.description}
                 </p>
               )}
             </div>
             {i < spec.steps.length - 1 && (
               <span
-                className="select-none text-indigo-300"
+                className="select-none text-brand-300"
                 aria-hidden
               >
                 {horizontal ? "→" : "↓"}
@@ -222,7 +222,7 @@ function MatrixView({ spec }: { spec: MatrixDiagram }) {
                     </p>
                     {cell ? (
                       <>
-                        <p className="mt-1 text-sm font-extrabold text-gray-800">
+                        <p className="mt-1 text-sm font-bold text-gray-800">
                           {cell.emoji && (
                             <span className="mr-1" aria-hidden>
                               {cell.emoji}
@@ -256,7 +256,7 @@ function LayerView({ spec }: { spec: LayerDiagram }) {
         {spec.layers.map((layer, i) => (
           <li key={i}>
             <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
-              <p className="text-sm font-extrabold text-gray-800">
+              <p className="text-sm font-bold text-gray-800">
                 {layer.emoji && (
                   <span className="mr-1.5" aria-hidden>
                     {layer.emoji}
@@ -292,7 +292,7 @@ function RelationshipView({ spec }: { spec: RelationshipDiagram }) {
             key={node.id}
             className="rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-100"
           >
-            <p className="text-sm font-extrabold text-gray-800">
+            <p className="text-sm font-bold text-gray-800">
               {node.emoji && (
                 <span className="mr-1.5" aria-hidden>
                   {node.emoji}
@@ -313,13 +313,13 @@ function RelationshipView({ spec }: { spec: RelationshipDiagram }) {
           {spec.links.map((link, i) => (
             <li
               key={`${link.from}-${link.to}-${i}`}
-              className="rounded-xl bg-indigo-50 px-3 py-2 text-xs font-semibold leading-relaxed text-indigo-800"
+              className="rounded-xl bg-brand-50 px-3 py-2 text-xs font-semibold leading-relaxed text-brand-800"
             >
               {nodeById.get(link.from)?.label ?? link.from}
               <span aria-hidden> → </span>
               {nodeById.get(link.to)?.label ?? link.to}
               {link.label && (
-                <span className="ml-1 font-medium text-indigo-900/70">
+                <span className="ml-1 font-medium text-brand-900/70">
                   {link.label}
                 </span>
               )}
@@ -343,7 +343,7 @@ function MechanismFlowView({ spec }: { spec: MechanismFlowDiagram }) {
             key={actor.id}
             className="rounded-xl bg-slate-50 px-3 py-3 ring-1 ring-slate-200"
           >
-            <p className="text-sm font-extrabold text-slate-900">
+            <p className="text-sm font-bold text-slate-900">
               {actor.label}
             </p>
             <p className="mt-1 text-xs font-bold text-slate-600">
@@ -361,21 +361,21 @@ function MechanismFlowView({ spec }: { spec: MechanismFlowDiagram }) {
         {spec.steps.map((step, i) => (
           <li
             key={`${step.from}-${step.to}-${i}`}
-            className="rounded-xl bg-indigo-50 p-3 ring-1 ring-indigo-100"
+            className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-100"
           >
-            <div className="flex items-center gap-2 text-xs font-bold text-indigo-800">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
+            <div className="flex items-center gap-2 text-xs font-bold text-brand-800">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white">
                 {i + 1}
               </span>
               <span>{actorById.get(step.from)?.label ?? step.from}</span>
               <span aria-hidden>→</span>
               <span>{actorById.get(step.to)?.label ?? step.to}</span>
             </div>
-            <p className="mt-2 text-sm font-extrabold text-indigo-950">
+            <p className="mt-2 text-sm font-bold text-brand-950">
               {step.label}
             </p>
             {step.body && (
-              <p className="mt-1 text-xs leading-relaxed text-indigo-900/75">
+              <p className="mt-1 text-xs leading-relaxed text-brand-900/75">
                 {step.body}
               </p>
             )}
@@ -398,7 +398,7 @@ function RoleMapView({ spec }: { spec: RoleMapDiagram }) {
             key={role.id}
             className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200"
           >
-            <p className="text-sm font-extrabold text-gray-900">
+            <p className="text-sm font-bold text-gray-900">
               {role.label}
             </p>
             <p className="mt-1 text-xs font-bold text-gray-600">
@@ -456,7 +456,7 @@ function TableRelationView({ spec }: { spec: TableRelationDiagram }) {
             className="overflow-hidden rounded-xl border border-gray-200 bg-white"
           >
             <div className="bg-gray-900 px-3 py-2 text-white">
-              <p className="text-sm font-extrabold">{table.name}</p>
+              <p className="text-sm font-bold">{table.name}</p>
               {table.caption && (
                 <p className="mt-0.5 text-xs text-white/70">{table.caption}</p>
               )}
@@ -473,9 +473,9 @@ function TableRelationView({ spec }: { spec: TableRelationDiagram }) {
                   <span
                     className={
                       column.keyType === "primary"
-                        ? "rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700"
+                        ? "rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700"
                         : column.keyType === "foreign"
-                          ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-extrabold text-emerald-700"
+                          ? "rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700"
                           : "rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-500"
                     }
                   >
@@ -518,8 +518,8 @@ function TableRelationView({ spec }: { spec: TableRelationDiagram }) {
 function BalanceView({ spec }: { spec: BalanceDiagram }) {
   return (
     <DiagramFrame title={spec.title}>
-      <div className="rounded-2xl bg-amber-50 px-4 py-3 text-center ring-1 ring-amber-100">
-        <p className="text-sm font-extrabold text-amber-950">{spec.center}</p>
+      <div className="rounded-xl bg-amber-50 px-4 py-3 text-center ring-1 ring-amber-100">
+        <p className="text-sm font-bold text-amber-950">{spec.center}</p>
       </div>
       <div className="mt-3 grid grid-cols-1 gap-2">
         {spec.factors.map((factor) => (
@@ -527,7 +527,7 @@ function BalanceView({ spec }: { spec: BalanceDiagram }) {
             key={factor.label}
             className="rounded-xl bg-white p-3 ring-1 ring-gray-200"
           >
-            <p className="text-sm font-extrabold text-gray-900">
+            <p className="text-sm font-bold text-gray-900">
               {factor.label}
             </p>
             <p className="mt-1 text-xs leading-relaxed text-gray-600">
@@ -628,21 +628,21 @@ function CycleView({ spec }: { spec: CycleDiagram }) {
       <ol className="flex flex-wrap items-stretch gap-2">
         {spec.steps.map((step, i) => (
           <li key={i} className="flex items-center gap-2">
-            <div className="rounded-xl bg-indigo-50 px-3 py-2">
-              <p className="text-sm font-bold text-indigo-700">{step.label}</p>
+            <div className="rounded-xl bg-brand-50 px-3 py-2">
+              <p className="text-sm font-bold text-brand-700">{step.label}</p>
               {step.description && (
-                <p className="mt-0.5 text-xs text-indigo-900/70">
+                <p className="mt-0.5 text-xs text-brand-900/70">
                   {step.description}
                 </p>
               )}
             </div>
-            <span className="select-none text-indigo-300" aria-hidden>
+            <span className="select-none text-brand-300" aria-hidden>
               →
             </span>
           </li>
         ))}
       </ol>
-      <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-indigo-600">
+      <p className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-brand-600">
         <span aria-hidden>↺</span>
         {spec.loopLabel ?? "くりかえして改善する"}
       </p>
@@ -653,9 +653,9 @@ function CycleView({ spec }: { spec: CycleDiagram }) {
 /** nested: 入れ子（包含）。外側が内側を含むことを示す（例: AI ⊃ 機械学習 ⊃ 生成AI）。 */
 function NestedView({ spec }: { spec: NestedDiagram }) {
   const tones = [
-    "bg-indigo-50 ring-indigo-200",
-    "bg-violet-50 ring-violet-200",
-    "bg-fuchsia-50 ring-fuchsia-200",
+    "bg-brand-50 ring-brand-200",
+    "bg-brand-50 ring-brand-200",
+    "bg-brand-50 ring-brand-200",
     "bg-pink-50 ring-pink-200",
   ];
   function render(index: number): React.ReactNode {
@@ -663,7 +663,7 @@ function NestedView({ spec }: { spec: NestedDiagram }) {
     const layer = spec.layers[index];
     const tone = tones[index % tones.length];
     return (
-      <div className={`rounded-2xl p-3 ring-1 ${tone}`}>
+      <div className={`rounded-xl p-3 ring-1 ${tone}`}>
         <p className="text-sm font-bold text-gray-800">{layer.label}</p>
         {layer.body && (
           <p className="mt-0.5 text-xs text-gray-600">{layer.body}</p>
@@ -682,15 +682,15 @@ function RelationView({ spec }: { spec: RelationDiagram }) {
   return (
     <DiagramFrame title={spec.title}>
       {spec.center && (
-        <div className="mx-auto mb-2 w-fit rounded-full bg-indigo-600 px-4 py-2 text-center">
+        <div className="mx-auto mb-2 w-fit rounded-full bg-brand-600 px-4 py-2 text-center">
           <p className="text-sm font-bold text-white">{spec.center.label}</p>
           {spec.center.body && (
-            <p className="text-[11px] text-indigo-100">{spec.center.body}</p>
+            <p className="text-[11px] text-brand-100">{spec.center.body}</p>
           )}
         </div>
       )}
       {spec.center && (
-        <p className="mb-2 text-center text-indigo-300" aria-hidden>
+        <p className="mb-2 text-center text-brand-300" aria-hidden>
           ↕
         </p>
       )}

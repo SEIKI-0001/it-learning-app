@@ -12,14 +12,14 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "lg";
 
 const BASE =
-  "inline-flex items-center justify-center gap-1 font-extrabold transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50";
+  "inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "rounded-2xl bg-indigo-600 text-white shadow-sm hover:bg-indigo-700",
+  primary: "bg-brand-600 text-white hover:bg-brand-700",
   secondary:
-    "rounded-2xl bg-white text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50",
-  soft: "rounded-2xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100",
-  warn: "rounded-2xl bg-amber-500 text-white shadow-sm hover:bg-amber-600",
+    "border border-gray-300 bg-white text-gray-800 hover:bg-gray-50",
+  soft: "bg-brand-50 text-brand-700 hover:bg-brand-100",
+  warn: "bg-accent-600 text-white hover:bg-accent-700",
 };
 
 const SIZES: Record<ButtonSize, string> = {

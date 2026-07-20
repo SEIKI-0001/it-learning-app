@@ -96,7 +96,7 @@ function SignatureLab() {
             key={x.key}
             onClick={() => pick(x.key)}
             className={`rounded-lg px-1 py-2 text-[11px] font-bold leading-tight transition active:scale-95 ${
-              scenario === x.key ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              scenario === x.key ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {x.label}
@@ -134,7 +134,7 @@ function SignatureLab() {
       <button
         onClick={verify}
         disabled={verified}
-        className="mt-3 w-full rounded-xl bg-indigo-600 py-2.5 text-sm font-bold text-white transition active:scale-[0.98] disabled:opacity-40"
+        className="mt-3 w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-[0.98] disabled:opacity-40"
       >
         🔍 届いた文書を検証する
       </button>
@@ -143,16 +143,16 @@ function SignatureLab() {
       {verified && (
         <div className="mt-3 space-y-2">
           <div className="flex items-center justify-center gap-2 text-center">
-            <div className="flex-1 rounded-xl bg-violet-50 px-2 py-2.5 ring-1 ring-violet-200">
-              <div className="text-[10px] font-bold text-violet-600">署名を公開鍵で開いた指紋</div>
-              <div className="mt-0.5 font-mono text-lg font-extrabold text-violet-700">{s.sigFp}</div>
+            <div className="flex-1 rounded-xl bg-brand-50 px-2 py-2.5 ring-1 ring-brand-200">
+              <div className="text-[10px] font-bold text-brand-600">署名を公開鍵で開いた指紋</div>
+              <div className="mt-0.5 font-mono text-lg font-bold text-brand-700">{s.sigFp}</div>
             </div>
-            <span className={`text-xl font-extrabold ${match ? "text-emerald-500" : "text-rose-500"}`}>
+            <span className={`text-xl font-bold ${match ? "text-emerald-500" : "text-rose-500"}`}>
               {match ? "＝" : "≠"}
             </span>
             <div className="flex-1 rounded-xl bg-sky-50 px-2 py-2.5 ring-1 ring-sky-200">
               <div className="text-[10px] font-bold text-sky-600">届いた文書から計算した指紋</div>
-              <div className="mt-0.5 font-mono text-lg font-extrabold text-sky-700">{s.docFp}</div>
+              <div className="mt-0.5 font-mono text-lg font-bold text-sky-700">{s.docFp}</div>
             </div>
           </div>
           <div
@@ -198,7 +198,7 @@ function CaPanel() {
           🙋 本人の<br />公開鍵
         </div>
         <span className="text-gray-300">▶</span>
-        <div className="flex-1 rounded-xl bg-indigo-50 p-2.5 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200">
+        <div className="flex-1 rounded-xl bg-brand-50 p-2.5 text-xs font-bold text-brand-700 ring-1 ring-brand-200">
           🏛️ 認証局(CA)<br />が保証
         </div>
         <span className="text-gray-300">▶</span>
@@ -257,7 +257,7 @@ function CompareTable() {
 export default function DigitalSignatureExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ✍️ <b>ディジタル署名</b>は「確かに本人が送った（なりすまし防止）」＋「途中で書き換えられていない（改ざん検知）」を
         証明するしくみ。<b>秘密鍵で署名→公開鍵で検証</b>が要点です。
       </div>

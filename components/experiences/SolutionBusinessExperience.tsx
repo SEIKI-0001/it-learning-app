@@ -62,7 +62,7 @@ function SalesLab() {
       {/* お客の悩み */}
       <div className="mt-3 flex items-start gap-2">
         <span className="text-2xl">🙍</span>
-        <div className="flex-1 rounded-2xl rounded-tl-sm bg-gray-100 px-3 py-2.5 text-sm leading-relaxed text-gray-700">
+        <div className="flex-1 rounded-xl rounded-tl-sm bg-gray-100 px-3 py-2.5 text-sm leading-relaxed text-gray-700">
           「うーん…勉強の時間がうまく作れなくて困ってるんです…」
         </div>
       </div>
@@ -96,7 +96,7 @@ function SalesLab() {
         <div className="mt-3 rounded-xl bg-rose-50 p-3 ring-1 ring-rose-200">
           <div className="flex items-start gap-2">
             <span className="text-2xl">🙍</span>
-            <div className="flex-1 rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-sm leading-relaxed text-gray-700 ring-1 ring-rose-100">
+            <div className="flex-1 rounded-xl rounded-tl-sm bg-white px-3 py-2 text-sm leading-relaxed text-gray-700 ring-1 ring-rose-100">
               「…手帳はもう持ってるんです。紙だと続かなくて。これじゃないんだよなあ…😕」
             </div>
           </div>
@@ -131,7 +131,7 @@ function SalesLab() {
           {SOLUTION_STEPS[step].customer && (
             <div className="mt-2.5 flex items-start gap-2">
               <span className="text-2xl">{step === SOLUTION_STEPS.length - 1 ? "🙆" : "🙍"}</span>
-              <div className="flex-1 rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-sm leading-relaxed text-gray-700 ring-1 ring-emerald-100">
+              <div className="flex-1 rounded-xl rounded-tl-sm bg-white px-3 py-2 text-sm leading-relaxed text-gray-700 ring-1 ring-emerald-100">
                 {SOLUTION_STEPS[step].customer}
               </div>
             </div>
@@ -148,7 +148,7 @@ function SalesLab() {
               次へ →
             </button>
           ) : (
-            <div className="mt-2.5 rounded-lg bg-white px-3 py-2 text-center text-sm font-extrabold text-emerald-700 ring-1 ring-emerald-200">
+            <div className="mt-2.5 rounded-lg bg-white px-3 py-2 text-center text-sm font-bold text-emerald-700 ring-1 ring-emerald-200">
               🎉 課題解決！ 聞く → 組み合わせる → 提案する
             </div>
           )}
@@ -156,7 +156,7 @@ function SalesLab() {
       )}
 
       {bothTried && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 <b>気づいた？</b>　同じお客でも、<b>商品から始めると外れ、課題から始めると解決</b>した。
           顧客の課題をITやサービスを<b>組み合わせて</b>解決するのが<b>ソリューションビジネス</b>です。
         </div>
@@ -242,7 +242,7 @@ function Quiz() {
 export default function SolutionBusinessExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🧩 <b>ソリューションビジネス</b>は、製品を売るのではなく<b>顧客の課題を解決</b>するビジネス。
         悩みを聞き、ITやサービスを組み合わせて提案します。
       </div>

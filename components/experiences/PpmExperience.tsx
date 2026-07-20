@@ -104,7 +104,7 @@ function MoneyCycle() {
         } ${disabled ? "opacity-70" : ""}`}
       >
         <div className="text-lg">{c.emo}</div>
-        <div className="mt-0.5 text-sm font-extrabold text-gray-800">{c.name}</div>
+        <div className="mt-0.5 text-sm font-bold text-gray-800">{c.name}</div>
         <div className="mt-0.5 text-[10px] font-bold text-gray-400">
           成長{c.growth}・シェア{c.share}
         </div>
@@ -132,7 +132,7 @@ function MoneyCycle() {
       </p>
 
       {/* 指令 */}
-      <div className="mt-3 rounded-xl bg-indigo-600 px-3 py-2 text-center text-sm font-extrabold text-white">
+      <div className="mt-3 rounded-xl bg-brand-600 px-3 py-2 text-center text-sm font-bold text-white">
         {phase === "earn" ? "Q1. どの事業がお金を生む？（タップ）" : "Q2. 稼いだ💰をどの事業に投資する？"}
       </div>
 
@@ -165,10 +165,10 @@ function MoneyCycle() {
           {EARN_FEEDBACK[earnPick].text}
           {EARN_FEEDBACK[earnPick].ok && (
             <>
-              <div className="mt-1.5 text-center text-base font-extrabold">💰💰💰 資金ゲット！</div>
+              <div className="mt-1.5 text-center text-base font-bold">💰💰💰 資金ゲット！</div>
               <button
                 onClick={() => setPhase("invest")}
-                className="mt-2 block w-full rounded-lg bg-indigo-600 py-1.5 text-center text-xs font-bold text-white active:scale-95"
+                className="mt-2 block w-full rounded-lg bg-brand-600 py-1.5 text-center text-xs font-bold text-white active:scale-95"
               >
                 💰を持って投資フェーズへ →
               </button>
@@ -187,7 +187,7 @@ function MoneyCycle() {
           }`}
         >
           <div
-            className={`text-sm font-extrabold ${
+            className={`text-sm font-bold ${
               INVEST_RESULT[investPick as "star" | "question" | "dog"].good
                 ? "text-emerald-800"
                 : "text-rose-700"
@@ -205,7 +205,7 @@ function MoneyCycle() {
       )}
 
       {allInvested && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 <b>気づいた？</b>　お金の流れは<b>「金のなる木で稼ぐ → 花形・問題児へ投資」</b>が基本。
           負け犬への投資は空振りしやすく、<b>撤退・縮小の検討</b>が先。
           PPMは「どこにお金を使い、どこから手を引くか」を決める地図です。
@@ -301,7 +301,7 @@ function Quiz() {
 export default function PpmExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📊 PPMは、いくつもの事業を<b>「成長率」と「占有率」の2軸</b>で4つに分け、
         <b>どこにお金を使い、どこから手を引くか</b>を考える地図です。
       </div>

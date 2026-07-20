@@ -25,7 +25,7 @@ export default function ChoiceButton({
   dense = false,
 }: Props) {
   let tone =
-    "border-gray-200 bg-white text-gray-800 active:scale-[0.99] hover:border-indigo-300";
+    "border-gray-200 bg-white text-gray-800 active:scale-[0.99] hover:border-brand-300";
 
   if (revealed) {
     if (isCorrect) {
@@ -42,7 +42,7 @@ export default function ChoiceButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex w-full items-center gap-3 rounded-2xl border-2 text-left font-medium shadow-sm transition ${
+      className={`flex w-full items-center gap-3 rounded-xl border-2 text-left font-medium shadow-sm transition ${
         dense ? "px-3 py-2.5 text-sm" : "px-4 py-4 text-base"
       } ${tone} disabled:cursor-default`}
     >
@@ -54,7 +54,7 @@ export default function ChoiceButton({
             ? "bg-green-500 text-white"
             : revealed && isSelected
               ? "bg-rose-400 text-white"
-              : "bg-indigo-100 text-indigo-700"
+              : "bg-brand-100 text-brand-700"
         }`}
       >
         {choiceKey}

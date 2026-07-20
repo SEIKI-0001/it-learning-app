@@ -77,14 +77,14 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     return (
       <div className="space-y-5">
         <section
-          className={`rounded-2xl p-5 text-center ring-1 ${
+          className={`rounded-xl p-5 text-center ring-1 ${
             result.passed
               ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
               : "bg-amber-50 text-amber-800 ring-amber-200"
           }`}
         >
           <p className="text-sm font-bold">{exam.definition.title} の結果</p>
-          <p className="mt-1 text-3xl font-extrabold">
+          <p className="mt-1 text-3xl font-bold">
             {score}%（{result.correct}/{result.total}問）
           </p>
           <p className="mt-2 text-sm font-semibold">
@@ -99,13 +99,13 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
             setAttemptId(newAttemptId());
             setResult(null);
           }}
-          className="w-full rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white"
+          className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white"
         >
           別の問題で再挑戦する
         </button>
         <Link
           href="/review"
-          className="block w-full rounded-2xl bg-white px-6 py-3 text-center font-bold text-indigo-600 ring-1 ring-indigo-200"
+          className="block w-full rounded-xl bg-white px-6 py-3 text-center font-bold text-brand-600 ring-1 ring-brand-200"
         >
           復習へ進む
         </Link>
@@ -115,7 +115,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+      <section className="rounded-xl bg-white p-4 border border-gray-200">
         <p className="text-sm font-bold text-gray-800">
           {exam.questions.length}問・{exam.definition.passingScore}%で合格
         </p>

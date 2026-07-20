@@ -38,13 +38,13 @@ function MainFlow() {
           <div
             key={m.name}
             className={`flex-1 rounded-md px-0.5 py-1.5 text-center transition ${
-              i === idx ? "bg-indigo-600" : i < idx ? "bg-indigo-100" : "bg-gray-100"
+              i === idx ? "bg-brand-600" : i < idx ? "bg-brand-100" : "bg-gray-100"
             }`}
           >
             <div className="text-sm leading-none">{m.emo}</div>
             <div
               className={`mt-0.5 text-[9px] font-bold leading-tight ${
-                i === idx ? "text-white" : i < idx ? "text-indigo-600" : "text-gray-400"
+                i === idx ? "text-white" : i < idx ? "text-brand-600" : "text-gray-400"
               }`}
             >
               {m.name.split("・")[0]}
@@ -56,7 +56,7 @@ function MainFlow() {
       {/* 製品の今 */}
       <div className="mt-3 rounded-xl bg-gray-50 p-4 text-center ring-1 ring-gray-200">
         <div className="text-4xl transition-all">{cur.product}</div>
-        <div className="mt-1 text-sm font-extrabold text-gray-800">{cur.state}</div>
+        <div className="mt-1 text-sm font-bold text-gray-800">{cur.state}</div>
         <div className="mt-0.5 text-xs text-gray-500">
           {cur.emo} {cur.name}：{cur.d}
         </div>
@@ -66,13 +66,13 @@ function MainFlow() {
       <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
         <div className="flex items-center justify-between text-xs font-bold">
           <span className="text-gray-600">💰 積み上がった価値</span>
-          <span className={atEnd ? "text-emerald-600" : "text-indigo-600"}>
+          <span className={atEnd ? "text-emerald-600" : "text-brand-600"}>
             {atEnd ? "コスト＋マージン（利益）" : `価値 ${cur.value}`}
           </span>
         </div>
         <div className="mt-1.5 flex h-3 w-full overflow-hidden rounded-full bg-gray-200">
           <div
-            className="h-full bg-indigo-500 transition-all duration-500"
+            className="h-full bg-brand-500 transition-all duration-500"
             style={{ width: `${atEnd ? 70 : cur.value}%` }}
           />
           {atEnd && <div className="h-full w-[20%] bg-emerald-500 transition-all duration-500" />}
@@ -126,7 +126,7 @@ function Support() {
             >
               <div className="flex items-center gap-1.5">
                 <span className="text-lg">{picked ? "🚫" : s.emo}</span>
-                <span className={`text-sm font-extrabold ${picked ? "text-rose-700" : "text-gray-800"}`}>{s.name}</span>
+                <span className={`text-sm font-bold ${picked ? "text-rose-700" : "text-gray-800"}`}>{s.name}</span>
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{s.d}</p>
             </button>
@@ -211,7 +211,7 @@ function Quiz() {
 export default function ValueChainExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔗 バリューチェーン（価値連鎖）は、会社の活動を<b>「価値を直接生む主活動」</b>と
         <b>「それを支える支援活動」</b>に分け、<b>どこに強みがあるか</b>を見える化します。
       </div>

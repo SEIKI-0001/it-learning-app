@@ -29,9 +29,9 @@ function WhatIs() {
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">合意</span>
           <span className="text-lg text-gray-300">🤝</span>
         </div>
-        <div className="rounded-xl bg-indigo-50 px-3 py-3 text-center ring-1 ring-indigo-200">
+        <div className="rounded-xl bg-brand-50 px-3 py-3 text-center ring-1 ring-brand-200">
           <div className="text-2xl">🧑‍💻</div>
-          <div className="mt-1 text-[11px] font-bold text-indigo-700">開発者</div>
+          <div className="mt-1 text-[11px] font-bold text-brand-700">開発者</div>
           <div className="text-[10px] text-gray-500">作れる形に整理</div>
         </div>
       </div>
@@ -110,7 +110,7 @@ function WhyMatters() {
               </div>
             </div>
             <div className="mt-3 flex items-start justify-end gap-2">
-              <div className="rounded-xl rounded-tr-none bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-800 ring-1 ring-indigo-200">
+              <div className="rounded-xl rounded-tr-none bg-brand-50 px-3 py-2 text-sm font-bold text-brand-800 ring-1 ring-brand-200">
                 わかりました！作ってきます
               </div>
               <span className="text-3xl">🧑‍💻</span>
@@ -134,7 +134,7 @@ function WhyMatters() {
               </div>
             </div>
             <div
-              className={`mt-3 rounded-lg px-3 py-2 text-center text-sm font-extrabold ${
+              className={`mt-3 rounded-lg px-3 py-2 text-center text-sm font-bold ${
                 vague ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"
               }`}
             >
@@ -158,7 +158,7 @@ function WhyMatters() {
           (vague ? (
             <div>
               <p className="text-xs font-bold text-gray-400">場面4：結末</p>
-              <p className="mt-2 text-sm font-extrabold text-rose-700">🙋😣「スマホで使いたかったのに…これじゃない！」</p>
+              <p className="mt-2 text-sm font-bold text-rose-700">🙋😣「スマホで使いたかったのに…これじゃない！」</p>
               <div className="mt-3 flex items-center justify-center gap-1 text-[11px] font-bold">
                 {["要件", "設計", "開発", "完成"].map((t, i) => (
                   <span key={t} className="flex items-center gap-1">
@@ -167,7 +167,7 @@ function WhyMatters() {
                   </span>
                 ))}
               </div>
-              <div className="mt-1.5 text-center text-sm font-extrabold text-rose-600">
+              <div className="mt-1.5 text-center text-sm font-bold text-rose-600">
                 ↩️ 最初まで大きく戻ってやり直し（手戻り）
               </div>
               <p className="mt-2 text-center text-xs font-bold text-rose-600">時間もお金もほぼ2倍に… 😱</p>
@@ -175,7 +175,7 @@ function WhyMatters() {
           ) : (
             <div>
               <p className="text-xs font-bold text-gray-400">場面4：結末</p>
-              <p className="mt-2 text-sm font-extrabold text-emerald-700">🙋😊「これこれ！思ってたとおり！」</p>
+              <p className="mt-2 text-sm font-bold text-emerald-700">🙋😊「これこれ！思ってたとおり！」</p>
               <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-center ring-1 ring-emerald-200">
                 <span className="text-3xl">🎉</span>
                 <p className="mt-1 text-sm font-bold text-emerald-800">一発で合格！手戻りゼロ</p>
@@ -263,7 +263,7 @@ function Quiz() {
 export default function RequirementsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📝 <b>要件定義</b>は、作り始める前に<b>「何を作るか」を利用者と決めて合意する</b>工程。
         ここがあいまいだと、完成後に「思ってたのと違う」が起きやすくなります。
       </div>

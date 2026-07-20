@@ -70,7 +70,7 @@ function InstructionLab() {
             key={m}
             onClick={() => switchMode(m)}
             className={`flex-1 rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
-              mode === m ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+              mode === m ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {m}契約 {tried.has(m) && "✓"}
@@ -81,23 +81,23 @@ function InstructionLab() {
       {/* 関係図 */}
       <div className="mt-4 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
         <div className="flex items-stretch justify-between gap-1.5 text-center">
-          <div className="flex-1 rounded-lg bg-white p-2 ring-2 ring-indigo-300">
+          <div className="flex-1 rounded-lg bg-white p-2 ring-2 ring-brand-300">
             <div className="text-2xl">🏢</div>
-            <div className="mt-0.5 text-[11px] font-extrabold text-gray-800">
+            <div className="mt-0.5 text-[11px] font-bold text-gray-800">
               発注側{dispatch ? "（派遣先）" : "（注文者）"}
             </div>
-            <div className="text-[10px] font-bold text-indigo-600">← あなた</div>
+            <div className="text-[10px] font-bold text-brand-600">← あなた</div>
           </div>
           <div className="flex-1 rounded-lg bg-white p-2 ring-1 ring-gray-200">
             <div className="text-2xl">{dispatch ? "🧑‍💼" : "🏭"}</div>
-            <div className="mt-0.5 text-[11px] font-extrabold text-gray-800">
+            <div className="mt-0.5 text-[11px] font-bold text-gray-800">
               {dispatch ? "派遣会社" : "請負会社"}
             </div>
             <div className="text-[10px] text-gray-400">作業者の雇い主</div>
           </div>
           <div className="flex-1 rounded-lg bg-white p-2 ring-1 ring-gray-200">
             <div className="text-2xl">👷</div>
-            <div className="mt-0.5 text-[11px] font-extrabold text-gray-800">作業者</div>
+            <div className="mt-0.5 text-[11px] font-bold text-gray-800">作業者</div>
             <div className="text-[10px] text-gray-400">
               {dispatch ? "派遣会社の社員" : "請負会社の社員"}
             </div>
@@ -114,8 +114,8 @@ function InstructionLab() {
         {/* 指示ボタン */}
         <button
           onClick={fire}
-          className={`mt-3 w-full rounded-xl py-2.5 text-sm font-extrabold text-white transition active:scale-95 ${
-            fired ? "bg-gray-300" : "bg-indigo-600"
+          className={`mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition active:scale-95 ${
+            fired ? "bg-gray-300" : "bg-brand-600"
           }`}
         >
           📣 👷に直接指示を出す「その作業、先にやって！」
@@ -126,7 +126,7 @@ function InstructionLab() {
           <div className="mt-3">
             {dispatch ? (
               <div className="rounded-xl bg-emerald-50 px-3 py-2.5 ring-1 ring-emerald-200">
-                <div className="text-center text-sm font-extrabold text-emerald-800 animate-pulse">
+                <div className="text-center text-sm font-bold text-emerald-800 animate-pulse">
                   🏢 ──📣──▶ 👷「わかりました！」
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed text-emerald-800">
@@ -136,7 +136,7 @@ function InstructionLab() {
               </div>
             ) : (
               <div className="rounded-xl bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200">
-                <div className="text-center text-sm font-extrabold text-rose-700 animate-pulse">
+                <div className="text-center text-sm font-bold text-rose-700 animate-pulse">
                   🏢 ──📣──▶ 👷 …🚨 偽装請負！
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed text-rose-800">
@@ -153,7 +153,7 @@ function InstructionLab() {
       </div>
 
       {bothTried && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 <b>気づいた？</b>　まったく同じ「直接指示」でも、<b>派遣ならOK・請負ならNG（偽装請負）</b>。
           違いを決めるのは<b>契約の形＝指揮命令の線がどこに引かれるか</b>です。試験もここを聞いてきます。
         </div>
@@ -237,7 +237,7 @@ function Quiz() {
 export default function LaborLawsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📜 働き方のルールでは、<b>派遣と請負の「誰が指示するか」</b>がよく問われます。
         <b>派遣＝派遣先が直接指示／請負＝発注側は直接指示できない</b>。
       </div>

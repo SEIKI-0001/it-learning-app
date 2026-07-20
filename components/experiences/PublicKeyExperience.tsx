@@ -66,10 +66,10 @@ function Flow() {
     const on = step.active === id;
     return (
       <div className={`w-[90px] flex-none rounded-xl border-2 px-1 py-2.5 text-center transition ${
-        on ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100" : "border-gray-200 bg-gray-50"
+        on ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100" : "border-gray-200 bg-gray-50"
       }`}>
         <div className="text-2xl leading-none">{emo}</div>
-        <div className="mt-1 text-xs font-extrabold text-gray-800">{name}</div>
+        <div className="mt-1 text-xs font-bold text-gray-800">{name}</div>
         <div className="text-[10px] leading-tight text-gray-500">{sub}</div>
       </div>
     );
@@ -84,10 +84,10 @@ function Flow() {
 
       {/* フェーズ表示（2段階） */}
       <div className="mt-3 flex gap-2 text-center text-[11px] font-bold">
-        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 1 ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
+        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 1 ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
           ① 事前準備：公開鍵を渡す
         </div>
-        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 2 ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
+        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 2 ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
           ② 本番：暗号化して送る
         </div>
       </div>
@@ -96,9 +96,9 @@ function Flow() {
       <div className="mt-4 flex items-center">
         {actor("A", "🅰️", "Aさん", "送る人")}
         <div className="flex-1 px-1 text-center">
-          <div className="h-4 text-[11px] font-bold text-indigo-700">{step.wire ? step.wire.item : ""}</div>
-          <div className={`h-0.5 w-full rounded ${step.wire ? "bg-indigo-500" : "bg-gray-300"}`} />
-          <div className={`mt-1 text-sm tracking-widest ${step.wire ? "text-indigo-600" : "text-gray-400"}`}>
+          <div className="h-4 text-[11px] font-bold text-brand-700">{step.wire ? step.wire.item : ""}</div>
+          <div className={`h-0.5 w-full rounded ${step.wire ? "bg-brand-500" : "bg-gray-300"}`} />
+          <div className={`mt-1 text-sm tracking-widest ${step.wire ? "text-brand-600" : "text-gray-400"}`}>
             {step.wire ? (step.wire.dir === "toA" ? "◀ ◀ ◀" : "▶ ▶ ▶") : "😈"}
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function PublicKeyExperience() {
   ];
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📮 たとえると<b>郵便受け</b>。<b>公開鍵＝投入口</b>（誰でも手紙を入れられる＝暗号化できる）、
         <b>秘密鍵＝持ち主だけの開錠鍵</b>（中身を取り出せる＝復号できる）。鍵は<b>2本でペア</b>です。
       </div>
@@ -142,7 +142,7 @@ export default function PublicKeyExperience() {
           <li className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-2">
               <span className="text-xl">🔓</span>
-              <span className="text-sm font-extrabold text-gray-800">公開鍵</span>
+              <span className="text-sm font-bold text-gray-800">公開鍵</span>
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-700">配ってOK</span>
             </div>
             <p className="mt-1 text-sm text-gray-600">みんなに渡してよい鍵。<b>暗号化（閉める）専用</b>。これだけでは中身を開けられない。</p>
@@ -150,7 +150,7 @@ export default function PublicKeyExperience() {
           <li className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-2">
               <span className="text-xl">🔑</span>
-              <span className="text-sm font-extrabold text-gray-800">秘密鍵</span>
+              <span className="text-sm font-bold text-gray-800">秘密鍵</span>
               <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-700">本人だけ</span>
             </div>
             <p className="mt-1 text-sm text-gray-600">絶対に配らない、自分だけの鍵。<b>復号（開ける）専用</b>。公開鍵で閉めたものを開けられる唯一の鍵。</p>
@@ -174,7 +174,7 @@ export default function PublicKeyExperience() {
               <tr className="bg-gray-100 text-gray-700">
                 <th className="px-3 py-2 text-left font-bold"> </th>
                 <th className="px-3 py-2 text-center font-bold text-gray-700">共通鍵</th>
-                <th className="px-3 py-2 text-center font-bold text-indigo-700">公開鍵</th>
+                <th className="px-3 py-2 text-center font-bold text-brand-700">公開鍵</th>
               </tr>
             </thead>
             <tbody>

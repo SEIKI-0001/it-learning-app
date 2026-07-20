@@ -37,7 +37,7 @@ function Chart({ idx }: { idx: number }) {
       <div className="grid h-40 place-items-center rounded-xl bg-gray-50 ring-1 ring-gray-200">
         <div className="text-center">
           <div className="text-3xl">🎯</div>
-          <div className="mt-1 text-sm font-extrabold text-gray-700">成績を上げたい！</div>
+          <div className="mt-1 text-sm font-bold text-gray-700">成績を上げたい！</div>
           <div className="mt-0.5 text-xs text-gray-400">→ まずは点数のデータを集めよう</div>
         </div>
       </div>
@@ -73,12 +73,12 @@ function Chart({ idx }: { idx: number }) {
               : idx === 3
                 ? isWeak
                   ? "bg-rose-500"
-                  : "bg-indigo-200"
-                : "bg-indigo-500";
+                  : "bg-brand-200"
+                : "bg-brand-500";
           return (
             <div key={s.name} className="flex w-10 flex-col items-center justify-end self-stretch">
               <span
-                className={`text-[11px] font-extrabold ${
+                className={`text-[11px] font-bold ${
                   idx >= 4 && isWeak ? "text-emerald-600" : idx === 3 && isWeak ? "text-rose-600" : "text-gray-500"
                 }`}
               >
@@ -125,7 +125,7 @@ function Flow() {
           <div
             key={i}
             className={`flex-1 rounded-md px-0.5 py-1.5 text-center text-[10px] font-bold transition ${
-              i === idx ? "bg-indigo-600 text-white" : i < idx ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400"
+              i === idx ? "bg-brand-600 text-white" : i < idx ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
             }`}
           >
             {s.badge}
@@ -160,20 +160,20 @@ function Contrast() {
       <SectionTitle step={2}>ためるだけ ⇄ 活用する</SectionTitle>
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <div className="text-sm font-extrabold text-gray-600">📦 ためるだけ</div>
+          <div className="text-sm font-bold text-gray-600">📦 ためるだけ</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
             点数をただ保存。眺めるだけで<b>何も変わらない</b>。
           </p>
         </div>
         <div className="rounded-xl bg-emerald-50 p-3 ring-1 ring-emerald-200">
-          <div className="text-sm font-extrabold text-emerald-700">🚀 活用する</div>
+          <div className="text-sm font-bold text-emerald-700">🚀 活用する</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             傾向を読み、苦手を見つけ、<b>勉強計画を変える</b>。結果につながる。
           </p>
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-        <div className="text-sm font-extrabold text-gray-800">🛠️ よく出る道具・言葉</div>
+        <div className="text-sm font-bold text-gray-800">🛠️ よく出る道具・言葉</div>
         <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-gray-600">
           <li>📈 <b>BI</b>：データを集計・可視化し、経営判断を助ける道具。</li>
           <li>⛏️ <b>データマイニング</b>：大量データから隠れた規則を掘り出すこと。</li>
@@ -247,7 +247,7 @@ function Quiz() {
 export default function DataUtilizationExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📊 <b>データ活用</b>は、集めて終わりではありません。テストの点数をただ保存するのではなく、
         <b>苦手科目を見つけて勉強計画を変える</b>——判断や改善につなげるまでが活用です。
       </div>

@@ -22,7 +22,7 @@ export default async function WordlistDetailPage({
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-3 text-white">
+      <header className="bg-brand-700 px-4 pb-4 pt-3 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <div className="flex items-center gap-3">
             <Link href="/glossary" className="text-sm font-medium text-white/80">
@@ -47,7 +47,7 @@ export default async function WordlistDetailPage({
 
         <Link
           href="/glossary/quiz?mode=all"
-          className="mt-6 block rounded-2xl bg-indigo-600 px-4 py-3 text-center text-sm font-extrabold text-white transition active:scale-[0.99]"
+          className="mt-6 block rounded-xl bg-brand-600 px-4 py-3 text-center text-sm font-bold text-white transition active:scale-[0.99]"
         >
           4択で確認する ✅
         </Link>

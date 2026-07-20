@@ -20,13 +20,13 @@ function WhatIsProject() {
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <div className="text-sm font-extrabold text-gray-600">🔁 通常業務</div>
+          <div className="text-sm font-bold text-gray-600">🔁 通常業務</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
             毎日同じ手順をくり返す。終わりは決まっていない。（例：日々のレジ打ち）
           </p>
         </div>
-        <div className="rounded-xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
-          <div className="text-sm font-extrabold text-indigo-700">🎯 プロジェクト</div>
+        <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
+          <div className="text-sm font-bold text-brand-700">🎯 プロジェクト</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             期限と目標がある一度きり。終わったら解散。（例：文化祭の出し物づくり）
           </p>
@@ -58,7 +58,7 @@ function QcdCards() {
               {c.emoji}
             </span>
             <div>
-              <div className="text-sm font-extrabold text-gray-800">{c.name}</div>
+              <div className="text-sm font-bold text-gray-800">{c.name}</div>
               <div className="text-xs text-gray-500">{c.desc}</div>
             </div>
           </div>
@@ -130,7 +130,7 @@ function Tradeoff() {
             key={k}
             onClick={() => setPri(k)}
             className={`rounded-lg px-1 py-2 text-xs font-bold transition active:scale-95 ${
-              pri === k ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              pri === k ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {PLANS[k].emoji} {PLANS[k].label}
@@ -145,7 +145,7 @@ function Tradeoff() {
           return (
             <div key={g.key} className="flex items-center gap-2">
               <div className="w-20 flex-none text-right">
-                <span className="text-sm font-extrabold text-gray-800">
+                <span className="text-sm font-bold text-gray-800">
                   {g.emoji} {g.name}
                 </span>
                 <div className="text-[10px] text-gray-400">{g.sub}</div>
@@ -156,7 +156,7 @@ function Tradeoff() {
                   style={{ width: `${v}%` }}
                 />
               </div>
-              <span className={`w-10 flex-none font-mono text-xs font-extrabold ${plan ? textTone(v) : "text-gray-400"}`}>
+              <span className={`w-10 flex-none font-mono text-xs font-bold ${plan ? textTone(v) : "text-gray-400"}`}>
                 {v}
               </span>
             </div>
@@ -192,7 +192,7 @@ function Tradeoff() {
 export default function QcdExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🎯 <b>プロジェクト</b>は「期限のある一度きりの仕事」。その出来ばえは
         <b>品質(Q)・費用(C)・納期(D)</b> の3つで見ます。この3つは<b>引っ張り合う</b>のがポイント。
       </div>

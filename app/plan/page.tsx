@@ -29,6 +29,7 @@ import RoadmapMap from "@/components/RoadmapMap";
 import CheckpointGateCard from "@/components/checkpoints/CheckpointGateCard";
 import PlanAdjustmentCard from "@/components/progress/PlanAdjustmentCard";
 import LoadingScreen from "@/components/LoadingScreen";
+import Icon from "@/components/ui/Icon";
 
 // /plan = 合格までの全体ロードマップ（目標と道筋の画面）。
 // 計画ロジックは lib/studyPlanner.ts / lib/checkpoints.ts（純粋関数）に閉じ込め、ここは表示だけを担う。
@@ -138,24 +139,28 @@ export default function PlanPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-6 pt-5 text-white">
+      <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
         <div className="mx-auto w-full max-w-md md:max-w-3xl">
           <div className="flex items-center justify-between">
-            <span className="text-lg font-extrabold">合格ロードマップ</span>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900">学習計画</h1>
             <Link
               href="/settings"
-              aria-label="設定"
-              className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold transition active:scale-95"
+              className="text-xs text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
             >
-              ⚙️ 設定
+              設定
             </Link>
           </div>
-          <div className="mt-4">
-            <p className="text-xs text-white/80">試験日まで</p>
-            <p className="text-3xl font-extrabold">
-              {plan.daysUntilExam === null
-                ? "未設定"
-                : `あと${plan.daysUntilExam}日`}
+          <div className="mt-4 border-y border-gray-200 py-3">
+            <p className="text-xs text-gray-500">試験まで</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
+              {plan.daysUntilExam === null ? (
+                <span className="text-base font-normal text-gray-500">未設定</span>
+              ) : (
+                <>
+                  あと{plan.daysUntilExam}
+                  <span className="ml-0.5 text-sm font-normal text-gray-500">日</span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -167,7 +172,7 @@ export default function PlanPage() {
 
         {/* 全体ロードマップ（すごろく風マップ・CP進行で駆動＝現在地はゲートカードと一致） */}
         <section>
-          <h2 className="mb-3 text-base font-extrabold text-gray-800">
+          <h2 className="mb-3 text-base font-semibold text-gray-900">
             合格までのロードマップ
           </h2>
           <RoadmapMap
@@ -178,52 +183,54 @@ export default function PlanPage() {
           />
           {comparison && (
             <p
-              className={`mt-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${
+              className={`mt-3 border-l-2 pl-3 text-sm ${
                 comparison.delta < 0
-                  ? "bg-amber-50 text-amber-800"
-                  : "bg-emerald-50 text-emerald-700"
+                  ? "border-accent-600 text-accent-800"
+                  : "border-emerald-600 text-emerald-700"
               }`}
             >
-              {comparison.delta < 0 ? "📍" : "✨"} {comparison.message}
+              {comparison.message}
             </p>
           )}
         </section>
 
         {/* 今週のゴール */}
-        <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-emerald-600">今週のゴール</p>
+            <p className="text-xs font-semibold text-gray-500">今週のゴール</p>
             {plan.weeklyItems.length > 0 && (
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+              <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold tabular-nums text-gray-700">
                 {weeklyDone}/{plan.weeklyItems.length} 完了
               </span>
             )}
           </div>
-          <p className="mt-1 text-lg font-extrabold text-gray-800">
+          <p className="mt-1 text-[15px] font-semibold text-gray-900">
             {plan.weeklyGoal.headline}
           </p>
           <p className="mt-1 text-sm text-gray-600">{plan.weeklyGoal.detail}</p>
 
           {plan.weeklyItems.length > 0 ? (
-            <ul className="mt-4 space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
+            <ul className="mt-4 divide-y divide-gray-100 border-t border-gray-100 md:grid md:grid-cols-2 md:gap-x-6">
               {plan.weeklyItems.map((item) => (
                 <li key={`${item.kind}-${item.topicId}`}>
                   <Link
                     href={getLessonHref(item.topicId, { from: "plan", activity: item.kind === "review" ? "review" : "learn", anchor: "lesson-content" })}
-                    className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5 transition active:scale-[0.99]"
+                    className="flex items-center gap-3 px-1 py-2.5 transition hover:bg-gray-50 active:scale-[0.99]"
                   >
                     <span
                       aria-hidden
-                      className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                      className={`grid h-5 w-5 shrink-0 place-items-center rounded-full ${
                         item.checked
-                          ? "bg-emerald-500 text-white"
-                          : "border-2 border-gray-300 text-transparent"
+                          ? "bg-emerald-600 text-white"
+                          : "border border-gray-300"
                       }`}
                     >
-                      ✓
+                      {item.checked && (
+                        <Icon name="check" className="h-3 w-3" strokeWidth={2.5} />
+                      )}
                     </span>
                     <span
-                      className={`min-w-0 flex-1 truncate text-sm font-semibold ${
+                      className={`min-w-0 flex-1 truncate text-sm ${
                         item.checked
                           ? "text-gray-400 line-through"
                           : "text-gray-800"
@@ -232,12 +239,12 @@ export default function PlanPage() {
                       {item.title}
                     </span>
                     {item.kind === "review" && (
-                      <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
-                        🔁 復習
+                      <span className="shrink-0 rounded-full border border-accent-200 bg-accent-50 px-2 py-0.5 text-[11px] font-medium text-accent-700">
+                        復習
                       </span>
                     )}
-                    <span className="shrink-0 text-[11px] text-gray-400">
-                      ⏱️{item.minutes}分
+                    <span className="shrink-0 text-[11px] tabular-nums text-gray-400">
+                      {item.minutes}分
                     </span>
                   </Link>
                 </li>
@@ -246,13 +253,13 @@ export default function PlanPage() {
           ) : (
             <div className="mt-3 flex flex-wrap gap-2">
               {plan.weeklyGoal.targetTopicCount > 0 && (
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                  🎯 テーマ {plan.weeklyGoal.targetTopicCount}件
+                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium tabular-nums text-gray-700">
+                  テーマ {plan.weeklyGoal.targetTopicCount}件
                 </span>
               )}
               {plan.weeklyGoal.reviewCount > 0 && (
-                <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                  🔁 復習 {plan.weeklyGoal.reviewCount}件
+                <span className="rounded-full border border-accent-200 bg-accent-50 px-3 py-1 text-xs font-medium tabular-nums text-accent-700">
+                  復習 {plan.weeklyGoal.reviewCount}件
                 </span>
               )}
             </div>
@@ -261,11 +268,11 @@ export default function PlanPage() {
 
         {/* 過去問開始予定・参考書進捗はPCでは横並びにする */}
         <div className="space-y-5 md:grid md:grid-cols-2 md:gap-5 md:space-y-0">
-          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-            <p className="text-xs font-bold text-rose-500">過去問演習</p>
-            <p className="mt-1 text-base font-extrabold text-gray-800">
+          <section className="rounded-xl bg-white p-5 border border-gray-200">
+            <p className="text-xs font-semibold text-gray-500">過去問演習</p>
+            <p className="mt-1 text-[15px] font-semibold text-gray-900">
               {plan.kakomonReady
-                ? "今から過去問を始めてOK 🎯"
+                ? "今から過去問を始めてOK"
                 : plan.kakomonStartDate
                   ? `開始目安：${formatDate(plan.kakomonStartDate)}ごろ`
                   : "主要テーマが進んだら始めましょう"}
@@ -277,24 +284,24 @@ export default function PlanPage() {
           </section>
 
           {/* 参考書1周の進捗 */}
-          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <section className="rounded-xl bg-white p-5 border border-gray-200">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-indigo-500">参考書の進捗</p>
+              <p className="text-xs font-semibold text-gray-500">参考書の進捗</p>
               <Link
                 href="/settings/reference-book"
-                className="text-xs font-bold text-indigo-600 underline underline-offset-2"
+                className="text-xs text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
               >
                 {book && book.chapters.length > 0 ? "編集" : "登録する"}
               </Link>
             </div>
             {bookProgress ? (
               <>
-                <p className="mt-1 text-base font-extrabold text-gray-800">
-                  {book?.title || "参考書"}：{bookProgress.done} / {bookProgress.total} 章
+                <p className="mt-1 text-[15px] font-semibold text-gray-900">
+                  {book?.title || "参考書"}：<span className="tabular-nums">{bookProgress.done} / {bookProgress.total}</span> 章
                 </p>
-                <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                   <div
-                    className="h-full rounded-full bg-indigo-500"
+                    className="h-full rounded-full bg-brand-600"
                     style={{ width: `${Math.round(bookProgress.ratio * 100)}%` }}
                   />
                 </div>
@@ -315,15 +322,15 @@ export default function PlanPage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href="/settings"
-            className="flex-1 rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-indigo-600 ring-1 ring-indigo-200"
+            className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
           >
-            ⚙️ 試験日・学習時間を変更
+            試験日・学習時間を変更
           </Link>
           <Link
             href="/settings/reference-book"
-            className="flex-1 rounded-2xl bg-white px-4 py-3 text-center text-sm font-bold text-indigo-600 ring-1 ring-indigo-200"
+            className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
           >
-            📚 参考書の設定
+            参考書の設定
           </Link>
         </div>
       </div>

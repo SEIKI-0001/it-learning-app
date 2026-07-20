@@ -27,12 +27,12 @@ export default async function WordlistQuizPage({
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-2 pt-2 text-white">
+      <header className="bg-brand-700 px-4 pb-2 pt-2 text-white">
         <div className="mx-auto flex w-full max-w-md md:max-w-2xl items-center gap-3">
           <Link href="/glossary" className="text-sm font-medium text-white/80">
             ←
           </Link>
-          <h1 className="text-base font-extrabold">{MODE_TITLE[mode]}</h1>
+          <h1 className="text-base font-bold">{MODE_TITLE[mode]}</h1>
         </div>
       </header>
 

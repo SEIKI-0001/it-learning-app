@@ -72,19 +72,19 @@ function MailFlow() {
             <div
               className={`relative w-full rounded-xl border-2 px-0.5 py-2 text-center transition ${
                 s.at === ni
-                  ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100"
+                  ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100"
                   : "border-gray-200 bg-gray-50"
               }`}
             >
               {s.at === ni && <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-lg">✉️</span>}
               <div className="text-xl leading-none">{n.emo}</div>
-              <div className="mt-0.5 text-[9px] font-extrabold leading-tight text-gray-700">{n.name}</div>
+              <div className="mt-0.5 text-[9px] font-bold leading-tight text-gray-700">{n.name}</div>
             </div>
             {ni < NODES.length - 1 && (
               <div className="w-6 flex-none px-0.5 text-center">
                 <div
                   className={`h-0.5 w-full rounded transition ${
-                    s.hop === ni ? "animate-pulse bg-indigo-500" : "bg-gray-200"
+                    s.hop === ni ? "animate-pulse bg-brand-500" : "bg-gray-200"
                   }`}
                 />
               </div>
@@ -95,7 +95,7 @@ function MailFlow() {
 
       {/* 区間のプロトコル表示 */}
       <div className="mt-2 flex text-center text-[10px] font-bold">
-        <div className={`flex-[2] ${s.hop === 0 || s.hop === 1 ? "text-indigo-600" : "text-gray-300"}`}>
+        <div className={`flex-[2] ${s.hop === 0 || s.hop === 1 ? "text-brand-600" : "text-gray-300"}`}>
           ── SMTP（送る）──
         </div>
         <div className={`flex-1 ${s.hop === 2 ? "text-sky-600" : "text-gray-300"}`}>─ POP/IMAP（受取）─</div>
@@ -104,8 +104,8 @@ function MailFlow() {
       {s.proto && (
         <div className="mt-2 text-center">
           <span
-            className={`inline-block rounded-full px-3 py-1 font-mono text-xs font-extrabold text-white ${
-              s.proto === "SMTP" ? "bg-indigo-600" : "bg-sky-600"
+            className={`inline-block rounded-full px-3 py-1 font-mono text-xs font-bold text-white ${
+              s.proto === "SMTP" ? "bg-brand-600" : "bg-sky-600"
             }`}
           >
             いま使っているのは {s.proto}
@@ -157,7 +157,7 @@ function PopImap() {
       }`}
     >
       <div className="text-2xl">{emo}</div>
-      <div className="mt-0.5 text-[11px] font-extrabold text-gray-800">{name}</div>
+      <div className="mt-0.5 text-[11px] font-bold text-gray-800">{name}</div>
       <div
         className={`mt-1 min-h-[2.6em] text-[10px] font-bold leading-snug ${
           tone === "ok" ? "text-emerald-700" : tone === "ng" ? "text-rose-700" : "text-gray-400"
@@ -182,7 +182,7 @@ function PopImap() {
             key={p}
             onClick={() => switchProto(p)}
             className={`flex-1 rounded-lg py-2 font-mono text-sm font-bold transition active:scale-95 ${
-              proto === p ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+              proto === p ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {p === "POP" ? "📥 POP" : "☁️ IMAP"} {tried.has(p) && "✓"}
@@ -215,8 +215,8 @@ function PopImap() {
         <button
           onClick={receive}
           disabled={received}
-          className={`mt-3 w-full rounded-xl py-2.5 text-sm font-extrabold text-white transition active:scale-95 ${
-            received ? "bg-gray-300" : "bg-indigo-600"
+          className={`mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition active:scale-95 ${
+            received ? "bg-gray-300" : "bg-brand-600"
           }`}
         >
           📱 スマホで受信する
@@ -246,7 +246,7 @@ function PopImap() {
       </div>
 
       {bothTried && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 <b>気づいた？</b>　違いは<b>「メールの置き場所」</b>。
           <b>POP＝手元に持ってくる（サーバから取り出す）／IMAP＝サーバに置いたまま</b>。
           スマホとPCで同じメールを見たいなら IMAP です。
@@ -337,7 +337,7 @@ function CcBccQuiz() {
 export default function EmailProtocolExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ✉️ メールは<b>送る＝SMTP</b>、<b>受け取る＝POP / IMAP</b>。宛先は
         <b>To / CC / BCC</b> の使い分けがよく問われます。
       </div>

@@ -75,33 +75,28 @@ export default function TodayPolicyStrip({
   const isPostpone = accepted?.selectedOptionId === OPTION_ID.postponeExam;
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section>
       <div className="flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-500">
-          <span aria-hidden>🧭</span>
-          今日の方針
-        </p>
+        <h3 className="text-xs font-semibold text-gray-500">今日の方針</h3>
         <Link
           href="/plan"
-          className="text-xs font-bold text-indigo-600 underline underline-offset-2"
+          className="text-xs text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
         >
           ロードマップ
         </Link>
       </div>
 
-      <ul className="mt-2.5 space-y-2">
+      <ul className="mt-2 divide-y divide-gray-100">
         {/* 承認済みの立て直しプラン */}
         {acceptedNote && (
-          <li className="rounded-xl bg-emerald-50 px-3 py-2">
-            <p className="text-sm font-semibold text-emerald-800">
-              🛠️ {acceptedNote}
-            </p>
+          <li className="py-2">
+            <p className="text-sm text-gray-700">{acceptedNote}</p>
             {isPostpone && (
               <Link
                 href="/settings"
-                className="mt-1.5 inline-block rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white"
+                className="mt-1 inline-block text-sm text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
               >
-                設定で試験日を登録する →
+                設定で試験日を登録する
               </Link>
             )}
           </li>
@@ -109,8 +104,8 @@ export default function TodayPolicyStrip({
 
         {/* 統合進捗の推奨配分からの一言 */}
         {status && (
-          <li className="rounded-xl bg-amber-50 px-3 py-2">
-            <p className="text-sm font-semibold text-amber-800">
+          <li className="py-2">
+            <p className="text-sm text-gray-700">
               {focusHintMessage(status.recommendedFocus)}
             </p>
           </li>
@@ -118,32 +113,30 @@ export default function TodayPolicyStrip({
 
         {/* 次に狙うバッジ（CP進行の次の一手） */}
         {nextBadge && (
-          <li className="rounded-xl bg-gray-50 px-3 py-2">
-            <p className="text-sm font-semibold text-gray-800">
-              🏅 次のバッジ：{nextBadge.def.emoji} {nextBadge.def.label}
+          <li className="py-2">
+            <p className="text-sm text-gray-700">
+              次のバッジ：<span className="font-semibold text-gray-900">{nextBadge.def.label}</span>
               {nextBadge.def.requiredForGate && (
-                <span className="ml-1.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+                <span className="ml-1.5 rounded-full border border-accent-200 bg-accent-50 px-1.5 py-0.5 text-[10px] font-medium text-accent-700">
                   必須
                 </span>
               )}
             </p>
-            <p className="mt-0.5 text-xs font-semibold text-gray-600">
-              🎯 {nextBadge.def.conditionLabel}
-            </p>
+            <p className="mt-0.5 text-xs text-gray-500">{nextBadge.def.conditionLabel}</p>
           </li>
         )}
 
         {/* 突破試験の解放通知 */}
         {finalReady && (
-          <li>
+          <li className="py-2">
             <Link
               href={`/checkpoint/${checkpoint.id}/final`}
-              className="block rounded-xl bg-rose-50 px-3 py-2 ring-1 ring-rose-200"
+              className="block rounded-lg border border-accent-200 bg-accent-50 px-3 py-2 transition hover:bg-accent-100"
             >
-              <p className="text-sm font-extrabold text-rose-700">
-                ⚔️ 突破試験に挑戦できます →
+              <p className="text-sm font-semibold text-accent-800">
+                突破試験に挑戦できます
               </p>
-              <p className="mt-0.5 text-xs font-semibold text-rose-600">
+              <p className="mt-0.5 text-xs text-accent-700">
                 {checkpoint.title}の最終問題。{checkpoint.winConditionLabel}
               </p>
             </Link>

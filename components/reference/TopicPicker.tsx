@@ -42,7 +42,7 @@ export default function TopicPicker({
 
   return (
     <details className="rounded-xl border border-gray-200 bg-white">
-      <summary className="cursor-pointer px-3 py-2 text-xs font-bold text-indigo-600">
+      <summary className="cursor-pointer px-3 py-2 text-xs font-bold text-brand-600">
         アプリ内トピックと紐づける
         {selected.length > 0 && (
           <span className="ml-1 text-gray-500">（{selected.length}件）</span>
@@ -75,7 +75,7 @@ export default function TopicPicker({
                         onClick={() => toggle(t.id)}
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                           on
-                            ? "bg-indigo-600 text-white"
+                            ? "bg-brand-600 text-white"
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >

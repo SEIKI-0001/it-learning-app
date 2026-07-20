@@ -34,7 +34,7 @@ function calc(op: Op, a: number, b: number): number {
 function Lamp({ on }: { on: boolean }) {
   return (
     <div
-      className={`grid h-16 w-16 place-items-center rounded-full text-2xl font-extrabold ring-4 transition ${
+      className={`grid h-16 w-16 place-items-center rounded-full text-2xl font-bold ring-4 transition ${
         on ? "bg-amber-300 text-amber-900 ring-amber-200" : "bg-gray-200 text-gray-400 ring-gray-100"
       }`}
     >
@@ -48,11 +48,11 @@ function Switch({ value, onToggle, label }: { value: number; onToggle: () => voi
     <button
       onClick={onToggle}
       className={`flex flex-col items-center rounded-xl px-4 py-2.5 ring-2 transition active:scale-95 ${
-        value === 1 ? "bg-indigo-600 text-white ring-indigo-600" : "bg-white text-gray-500 ring-gray-300"
+        value === 1 ? "bg-brand-600 text-white ring-brand-600" : "bg-white text-gray-500 ring-gray-300"
       }`}
     >
       <span className="text-[11px] font-bold">{label}</span>
-      <span className="text-2xl font-extrabold leading-none">{value}</span>
+      <span className="text-2xl font-bold leading-none">{value}</span>
     </button>
   );
 }
@@ -78,7 +78,7 @@ function Playground() {
             key={o.op}
             onClick={() => setOp(o.op)}
             className={`rounded-lg px-2 py-1.5 text-xs font-bold transition active:scale-95 ${
-              op === o.op ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              op === o.op ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {o.op}
@@ -100,7 +100,7 @@ function Playground() {
         <span className="text-xl text-gray-300">→</span>
         <div className="flex flex-col items-center">
           <Lamp on={out === 1} />
-          <span className="mt-1 text-xs font-extrabold text-gray-700">出力 = {out}</span>
+          <span className="mt-1 text-xs font-bold text-gray-700">出力 = {out}</span>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ function TruthTable() {
             key={o.op}
             onClick={() => setOp(o.op)}
             className={`rounded-lg px-1 py-1.5 text-xs font-bold transition active:scale-95 ${
-              op === o.op ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              op === o.op ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {o.op}
@@ -145,10 +145,10 @@ function TruthTable() {
 
       <table className="mt-3 w-full overflow-hidden rounded-xl text-center text-sm ring-1 ring-gray-200">
         <thead>
-          <tr className="bg-gray-100 text-xs font-extrabold text-gray-600">
+          <tr className="bg-gray-100 text-xs font-bold text-gray-600">
             <th className="py-2">A</th>
             {op !== "NOT" && <th className="py-2">B</th>}
-            <th className="py-2 text-indigo-700">{op} の出力</th>
+            <th className="py-2 text-brand-700">{op} の出力</th>
           </tr>
         </thead>
         <tbody>
@@ -156,7 +156,7 @@ function TruthTable() {
             <tr key={i} className="border-t border-gray-100">
               <td className="py-2 font-mono">{r[0]}</td>
               {op !== "NOT" && <td className="py-2 font-mono">{r[1]}</td>}
-              <td className={`py-2 font-mono font-extrabold ${r[r.length - 1] === 1 ? "text-amber-600" : "text-gray-400"}`}>
+              <td className={`py-2 font-mono font-bold ${r[r.length - 1] === 1 ? "text-amber-600" : "text-gray-400"}`}>
                 {r[r.length - 1]}
               </td>
             </tr>
@@ -173,7 +173,7 @@ function TruthTable() {
 export default function LogicOperationsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔌 <b>論理演算</b>は 0（偽）と 1（真）を組み合わせる計算。
         <b>AND＝両方1で1</b>、<b>OR＝どちらか1で1</b>、<b>NOT＝反転</b>、<b>XOR＝違うとき1</b>。
       </div>

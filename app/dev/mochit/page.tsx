@@ -91,9 +91,9 @@ export default function MochitDevPreviewPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-sky-600 to-cyan-600 px-4 py-4 text-white">
+      <header className="bg-brand-600 px-4 py-4 text-white">
         <div className="mx-auto w-full max-w-3xl">
-          <p className="text-lg font-extrabold">モチット開発プレビュー</p>
+          <p className="text-lg font-bold">モチット開発プレビュー</p>
           <p className="text-xs font-semibold text-white/80">
             開発環境専用。既定はSVGアニメーション（Living Idle）。mochit.riv を
             public/characters/mochit/ に置くとRive描画へ切替わる。
@@ -103,8 +103,8 @@ export default function MochitDevPreviewPage() {
 
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
         {/* コントロール */}
-        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <h2 className="text-base font-extrabold text-gray-800">コントロール</h2>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <h2 className="text-base font-bold text-gray-800">コントロール</h2>
           <div className="mt-3 flex flex-wrap items-center gap-4 text-sm font-semibold text-gray-700">
             <label className="flex items-center gap-2">
               描画:
@@ -164,8 +164,8 @@ export default function MochitDevPreviewPage() {
         </section>
 
         {/* メインステージ（primary想定）＋イベントボタン */}
-        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <h2 className="text-base font-extrabold text-gray-800">セマンティックイベント（primaryインスタンス）</h2>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <h2 className="text-base font-bold text-gray-800">セマンティックイベント（primaryインスタンス）</h2>
           <label className="mt-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
             <input
               type="checkbox"
@@ -232,7 +232,7 @@ export default function MochitDevPreviewPage() {
               競合: correct→taskComplete
             </button>
           </div>
-          <div className="mt-3 rounded-2xl bg-gray-50 p-3 text-xs text-gray-600">
+          <div className="mt-3 rounded-xl bg-gray-50 p-3 text-xs text-gray-600">
             <p className="font-bold">送信ログ（優先度が高い反応中は低優先度が破棄される）</p>
             <p className="mt-0.5">同優先度以上=置換／低優先度=無視（キューなし）</p>
             {eventLog.length === 0 ? <p className="mt-1">まだ送信なし</p> : (
@@ -242,8 +242,8 @@ export default function MochitDevPreviewPage() {
         </section>
 
         {/* 全状態 × 全サイズ */}
-        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <h2 className="text-base font-extrabold text-gray-800">全状態 × 全サイズ</h2>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <h2 className="text-base font-bold text-gray-800">全状態 × 全サイズ</h2>
           {STATES.map((state) => (
             <div key={state} className="mt-4">
               <p className="text-sm font-bold text-gray-600">{state}</p>
@@ -266,8 +266,8 @@ export default function MochitDevPreviewPage() {
         </section>
 
         {/* 成長段階 */}
-        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <h2 className="text-base font-extrabold text-gray-800">成長段階（1〜3）</h2>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <h2 className="text-base font-bold text-gray-800">成長段階（1〜3）</h2>
           <div className="mt-3 flex flex-wrap items-end gap-6">
             {STAGES.map((s) => (
               <div key={s} className="text-center">
@@ -279,8 +279,8 @@ export default function MochitDevPreviewPage() {
         </section>
 
         {/* コンパクト（省アニメ） vs primary */}
-        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <h2 className="text-base font-extrabold text-gray-800">コンパクト表示とprimary表示</h2>
+        <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <h2 className="text-base font-bold text-gray-800">コンパクト表示とprimary表示</h2>
           <p className="mt-1 text-xs text-gray-500">
             small/compactは省アニメーションプロファイル。同一画面のフル演出は1体のみ（primaryInstance）。
           </p>

@@ -62,18 +62,18 @@ function Flow() {
     const on = step.active === id;
     return (
       <div className={`w-[90px] flex-none rounded-xl border-2 px-1 py-2.5 text-center transition ${
-        on ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100" : "border-gray-200 bg-gray-50"
+        on ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100" : "border-gray-200 bg-gray-50"
       }`}>
         <div className="text-2xl leading-none">{emo}</div>
-        <div className="mt-1 text-xs font-extrabold text-gray-800">{name}</div>
+        <div className="mt-1 text-xs font-bold text-gray-800">{name}</div>
         <div className="text-[10px] leading-tight text-gray-500">{sub}</div>
       </div>
     );
   };
 
-  const lineColor = step.warn ? "bg-amber-500" : step.wire ? "bg-indigo-500" : "bg-gray-300";
-  const arrowColor = step.warn ? "text-amber-600" : step.wire ? "text-indigo-600" : "text-gray-400";
-  const badgeColor = step.warn ? "bg-amber-500" : "bg-indigo-600";
+  const lineColor = step.warn ? "bg-amber-500" : step.wire ? "bg-brand-500" : "bg-gray-300";
+  const arrowColor = step.warn ? "text-amber-600" : step.wire ? "text-brand-600" : "text-gray-400";
+  const badgeColor = step.warn ? "bg-amber-500" : "bg-brand-600";
 
   return (
     <Panel>
@@ -84,10 +84,10 @@ function Flow() {
 
       {/* フェーズ表示（2段階） */}
       <div className="mt-3 flex gap-2 text-center text-[11px] font-bold">
-        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 1 ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
+        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 1 ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
           ① 同じ鍵を共有
         </div>
-        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 2 ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
+        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 2 ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
           ② 暗号化して送る
         </div>
       </div>
@@ -96,7 +96,7 @@ function Flow() {
       <div className="mt-4 flex items-center">
         {actor("A", "🅰️", "Aさん", "共通鍵🔑を持つ")}
         <div className="flex-1 px-1 text-center">
-          <div className={`h-4 text-[11px] font-bold ${step.warn ? "text-amber-700" : "text-indigo-700"}`}>
+          <div className={`h-4 text-[11px] font-bold ${step.warn ? "text-amber-700" : "text-brand-700"}`}>
             {step.wire ? step.wire.item : ""}
           </div>
           <div className={`h-0.5 w-full rounded ${lineColor}`} />
@@ -142,7 +142,7 @@ export default function CommonKeyExperience() {
   ];
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔑 たとえると<b>「合鍵」</b>。AさんもBさんも<b>同じ1本の鍵</b>を持ち、
         その鍵で<b>閉める（暗号化）も開ける（復号）も</b>できます。便利で速い反面、
         <b>合鍵を相手にどう安全に渡すか</b>が悩みどころです。
@@ -159,8 +159,8 @@ export default function CommonKeyExperience() {
             <div className="text-lg">🔑→🔒</div>
             <div className="text-[10px] text-gray-400">共通鍵で暗号化</div>
           </div>
-          <div className="rounded-xl bg-indigo-50 px-3 py-2.5 ring-1 ring-indigo-200">
-            <div className="text-sm font-bold text-indigo-700">暗号文</div>
+          <div className="rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-brand-200">
+            <div className="text-sm font-bold text-brand-700">暗号文</div>
             <div className="text-[11px] text-gray-500">＃＄％‥</div>
           </div>
           <div className="text-center">
@@ -187,7 +187,7 @@ export default function CommonKeyExperience() {
             <thead>
               <tr className="bg-gray-100 text-gray-700">
                 <th className="px-3 py-2 text-left font-bold"> </th>
-                <th className="px-3 py-2 text-center font-bold text-indigo-700">共通鍵</th>
+                <th className="px-3 py-2 text-center font-bold text-brand-700">共通鍵</th>
                 <th className="px-3 py-2 text-center font-bold text-gray-700">公開鍵</th>
               </tr>
             </thead>

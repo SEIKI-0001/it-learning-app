@@ -25,8 +25,8 @@ const LAYERS = [
     emo: "⚙️",
     name: "OS（オーエス）",
     tag: "基本ソフト",
-    color: "border-indigo-300 bg-indigo-50",
-    on: "border-indigo-500 bg-indigo-100",
+    color: "border-brand-300 bg-brand-50",
+    on: "border-brand-500 bg-brand-100",
     d: "アプリと機械の間に立つ土台。メモリ・ファイル・画面・入出力など全体を管理し、機械を使えるように取り次ぐ。例：Windows / macOS / iOS / Android。",
   },
   {
@@ -48,7 +48,7 @@ function LayerStack() {
       <SectionTitle step={1}>3層の構造（タップして役割を見る）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         コンピュータは<b className="text-gray-800">上から アプリ → OS → ハードウェア</b>の3層。
-        <b className="text-indigo-700">OSが真ん中</b>で全体を管理しています。
+        <b className="text-brand-700">OSが真ん中</b>で全体を管理しています。
       </p>
 
       <div className="mt-4 space-y-2">
@@ -64,13 +64,13 @@ function LayerStack() {
             >
               <span className="text-2xl">{l.emo}</span>
               <span className="flex-1">
-                <span className="text-sm font-extrabold text-gray-800">{l.name}</span>
+                <span className="text-sm font-bold text-gray-800">{l.name}</span>
                 <span className="ml-2 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-bold text-gray-600">
                   {l.tag}
                 </span>
               </span>
               {l.id === "os" && (
-                <span className="text-[11px] font-bold text-indigo-600">仲介役</span>
+                <span className="text-[11px] font-bold text-brand-600">仲介役</span>
               )}
             </button>
           );
@@ -140,12 +140,12 @@ function Relay() {
             <div key={a.id} className="flex items-center">
               <div
                 className={`relative w-[92px] rounded-xl border-2 px-1 py-2.5 text-center transition ${
-                  on ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100" : "border-gray-200 bg-gray-50"
+                  on ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100" : "border-gray-200 bg-gray-50"
                 }`}
               >
                 {holds && <span className="absolute -top-3 right-1 text-lg">📨</span>}
                 <div className="text-2xl leading-none">{a.emo}</div>
-                <div className="mt-1 text-xs font-extrabold text-gray-800">{a.name}</div>
+                <div className="mt-1 text-xs font-bold text-gray-800">{a.name}</div>
               </div>
               {i < ACTORS.length - 1 && <span className="px-0.5 text-lg text-gray-300">↔</span>}
             </div>
@@ -173,7 +173,7 @@ function Relay() {
 export default function OsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📱 スマホでたとえると——<b>本体＝ハードウェア</b>（機械）、<b>SNSアプリ＝アプリケーション</b>、
         画面・保存・通信などを<b>まとめて面倒みるのがOS</b>。OSはアプリと機械の<b>間に立つ土台</b>です。
       </div>
@@ -188,7 +188,7 @@ export default function OsExperience() {
             <b>ハードウェア</b>＝目に見える<b>機械</b>　／　<b>ソフトウェア</b>＝機械に仕事をさせる<b>命令</b>（見えない）
           </div>
           <div className="rounded-xl bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200">
-            ソフトウェアは2種類：<b className="text-indigo-700">基本ソフト（OS）</b>＝全体を管理／
+            ソフトウェアは2種類：<b className="text-brand-700">基本ソフト（OS）</b>＝全体を管理／
             <b className="text-sky-700">応用ソフト（アプリ）</b>＝やりたいこと専用
           </div>
         </div>

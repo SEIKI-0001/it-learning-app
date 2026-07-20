@@ -38,12 +38,12 @@ export default function IntegratedStatusCard({
   const topRisk = status.mainRisks[0] ?? null;
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="rounded-xl bg-white p-4 border border-gray-200">
       {/* 総合ステータス */}
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-bold text-gray-500">いまの現在地</p>
         <span
-          className={`inline-block rounded-full px-3 py-1 text-sm font-extrabold ring-1 ${overallStatusTone(
+          className={`inline-block rounded-full px-3 py-1 text-sm font-bold ring-1 ${overallStatusTone(
             status.overallStatus,
           )}`}
         >
@@ -52,7 +52,7 @@ export default function IntegratedStatusCard({
       </div>
 
       {status.generatedMessage && (
-        <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-800">
+        <p className="mt-3 rounded-xl bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800">
           {status.generatedMessage}
         </p>
       )}
@@ -107,12 +107,12 @@ function weeklyFocusPhrase(focus: RecommendedFocus): string {
 
 function IntegratedStatusSkeleton() {
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="rounded-xl bg-white p-4 border border-gray-200">
       <div className="flex items-center justify-between">
         <div className="h-3 w-20 rounded-full bg-gray-100" />
         <div className="h-7 w-28 rounded-full bg-gray-100" />
       </div>
-      <div className="mt-3 h-10 rounded-xl bg-indigo-50/70" />
+      <div className="mt-3 h-10 rounded-xl bg-brand-50/70" />
       <div className="mt-3 h-3 rounded-full bg-gray-100" />
       <div className="mt-2 flex gap-2">
         <div className="h-3 w-20 rounded-full bg-gray-100" />

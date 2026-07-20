@@ -47,13 +47,13 @@ export default function PlanAdjustmentCard({
     const note = acceptedOptionNote(proposal.selectedOptionId ?? "");
     const isPostpone = proposal.selectedOptionId === OPTION_ID.postponeExam;
     return (
-      <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-emerald-100">
+      <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-emerald-100">
         <p className="text-xs font-bold text-emerald-600">✅ 立て直しプラン調整中</p>
         <p className="mt-1 text-sm font-semibold text-gray-700">{note}</p>
         {isPostpone && (
           <Link
             href="/settings"
-            className="mt-3 inline-block rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white"
+            className="mt-3 inline-block rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white"
           >
             設定で試験日を登録する →
           </Link>
@@ -81,9 +81,9 @@ export default function PlanAdjustmentCard({
   }
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="rounded-xl bg-white p-4 border border-gray-200">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-extrabold text-gray-800">🛠️ 計画の立て直し提案</p>
+        <p className="text-sm font-bold text-gray-800">🛠️ 計画の立て直し提案</p>
         <span
           className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold ring-1 ${severityTone(
             proposal.severity,
@@ -99,7 +99,7 @@ export default function PlanAdjustmentCard({
           {proposal.reasonSummary}
         </p>
       )}
-      <p className="mt-2 rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-700">
+      <p className="mt-2 rounded-xl bg-brand-50 px-3 py-2 text-xs text-brand-700">
         どれを選んでも間違いではありません。今のあなたに合う進め方を選ぶだけです。
       </p>
 
@@ -119,7 +119,7 @@ export default function PlanAdjustmentCard({
           type="button"
           disabled={submitting || !activeSelectedId}
           onClick={() => respond("accept")}
-          className="flex-1 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-extrabold text-white shadow transition active:scale-[0.99] disabled:opacity-50"
+          className="flex-1 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow transition active:scale-[0.99] disabled:opacity-50"
         >
           この案で調整する
         </button>
@@ -127,7 +127,7 @@ export default function PlanAdjustmentCard({
           type="button"
           disabled={submitting}
           onClick={() => respond("reject")}
-          className="rounded-2xl bg-white px-6 py-3 text-sm font-bold text-gray-500 ring-1 ring-gray-200 transition active:scale-[0.99] disabled:opacity-50"
+          className="rounded-xl bg-white px-6 py-3 text-sm font-bold text-gray-500 ring-1 ring-gray-200 transition active:scale-[0.99] disabled:opacity-50"
         >
           今回は見送る
         </button>
@@ -138,7 +138,7 @@ export default function PlanAdjustmentCard({
 
 function PlanAdjustmentSkeleton() {
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="rounded-xl bg-white p-4 border border-gray-200">
       <div className="flex items-center justify-between gap-3">
         <div className="h-5 w-40 rounded-full bg-gray-100" />
         <div className="h-6 w-28 rounded-full bg-gray-100" />
@@ -147,7 +147,7 @@ function PlanAdjustmentSkeleton() {
       <div className="mt-2 h-10 rounded-xl bg-gray-50" />
       <div className="mt-3 space-y-2.5">
         {[0, 1].map((i) => (
-          <div key={i} className="rounded-2xl bg-gray-50 p-3 ring-1 ring-gray-100">
+          <div key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-100">
             <div className="flex items-center justify-between gap-2">
               <div className="h-4 w-36 rounded-full bg-gray-100" />
               <div className="h-5 w-14 rounded-full bg-white" />
@@ -175,17 +175,17 @@ function OptionCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`block w-full rounded-2xl p-3 text-left ring-1 transition ${
+      className={`block w-full rounded-xl p-3 text-left ring-1 transition ${
         selected
-          ? "bg-indigo-50 ring-indigo-300"
+          ? "bg-brand-50 ring-brand-300"
           : "bg-gray-50 ring-gray-100 hover:ring-gray-200"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-2 text-sm font-extrabold text-gray-800">
+        <span className="flex items-center gap-2 text-sm font-bold text-gray-800">
           <span
             className={`grid h-4 w-4 shrink-0 place-items-center rounded-full ring-2 ${
-              selected ? "bg-indigo-600 ring-indigo-600" : "bg-white ring-gray-300"
+              selected ? "bg-brand-600 ring-brand-600" : "bg-white ring-gray-300"
             }`}
           >
             {selected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -203,7 +203,7 @@ function OptionCard({
 
       {/* 配分バー */}
       <div className="mt-2 flex h-2 w-full overflow-hidden rounded-full bg-gray-100">
-        <div className="bg-indigo-400" style={{ width: `${f.textbook}%` }} />
+        <div className="bg-brand-400" style={{ width: `${f.textbook}%` }} />
         <div className="bg-emerald-400" style={{ width: `${f.review}%` }} />
         <div className="bg-rose-400" style={{ width: `${f.examPractice}%` }} />
       </div>
@@ -232,7 +232,7 @@ function OptionCard({
       </p>
 
       {option.requiresExamDateChange && (
-        <p className="mt-1 text-[11px] font-bold text-indigo-600">
+        <p className="mt-1 text-[11px] font-bold text-brand-600">
           ※ この案は設定からの試験日変更が前提です
         </p>
       )}

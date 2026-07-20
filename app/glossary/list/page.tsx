@@ -56,12 +56,12 @@ export default function WordlistListPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-3 pt-3 text-white">
+      <header className="bg-brand-700 px-4 pb-3 pt-3 text-white">
         <div className="mx-auto flex w-full max-w-md items-center gap-3 md:max-w-4xl">
           <Link href="/glossary" className="text-sm font-medium text-white/80">
             ←
           </Link>
-          <h1 className="text-lg font-extrabold">単語一覧</h1>
+          <h1 className="text-lg font-bold">単語一覧</h1>
           <span className="ml-auto text-xs font-bold text-white/80">
             全{WORDS.length}語
           </span>
@@ -111,11 +111,11 @@ export default function WordlistListPage() {
               <li key={w.id}>
                 <Link
                   href={`/glossary/${w.id}`}
-                  className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 transition active:scale-[0.99]"
+                  className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition active:scale-[0.99]"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-base font-extrabold text-gray-900">
+                      <p className="truncate text-base font-bold text-gray-900">
                         {w.acronym}
                       </p>
                       <span
@@ -139,7 +139,7 @@ export default function WordlistListPage() {
             );
           })}
           {list.length === 0 && (
-            <li className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+            <li className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
               該当する単語がありません。
             </li>
           )}
@@ -163,7 +163,7 @@ function FilterChip({
   tone?: "category" | "status";
 }) {
   const activeCls =
-    tone === "status" ? "bg-gray-800 text-white" : "bg-indigo-600 text-white";
+    tone === "status" ? "bg-gray-800 text-white" : "bg-brand-600 text-white";
   return (
     <button
       type="button"

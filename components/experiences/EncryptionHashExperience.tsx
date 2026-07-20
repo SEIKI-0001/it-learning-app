@@ -52,7 +52,7 @@ function Encryption() {
             setText(e.target.value);
             setMode("plain");
           }}
-          className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
         />
       </div>
 
@@ -63,7 +63,7 @@ function Encryption() {
             key={k}
             onClick={() => setKey(k)}
             className={`h-8 w-8 rounded-lg font-mono font-bold active:scale-95 ${
-              key === k ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              key === k ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {k}
@@ -75,7 +75,7 @@ function Encryption() {
         <button
           onClick={() => setMode("cipher")}
           className={`rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
-            mode === "cipher" ? "bg-indigo-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
+            mode === "cipher" ? "bg-brand-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
           }`}
         >
           🔒 鍵で暗号化
@@ -92,7 +92,7 @@ function Encryption() {
 
       <div
         className={`mt-3 rounded-xl px-4 py-3 ring-1 ${
-          mode === "cipher" ? "bg-indigo-50 ring-indigo-200" : "bg-emerald-50 ring-emerald-200"
+          mode === "cipher" ? "bg-brand-50 ring-brand-200" : "bg-emerald-50 ring-emerald-200"
         }`}
       >
         <div className="text-xs font-bold text-gray-500">{mode === "cipher" ? "暗号文（読めない）" : "平文（元に戻った）"}</div>
@@ -133,7 +133,7 @@ function Hashing() {
                   value={f.value}
                   maxLength={20}
                   onChange={(e) => f.set(e.target.value)}
-                  className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+                  className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
                 />
               </div>
               <div
@@ -178,7 +178,7 @@ export default function EncryptionHashExperience() {
   ];
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔐 ふたつは似て非なるもの。<b>暗号化＝鍵付きの箱</b>（鍵で開けて中身を読める＝戻せる）、
         <b>ハッシュ化＝ミキサー</b>（材料を入れて回すとスムージーに。スムージーから元の果物には戻せない＝戻せない）。
       </div>
@@ -193,7 +193,7 @@ export default function EncryptionHashExperience() {
             <thead>
               <tr className="bg-gray-100 text-gray-700">
                 <th className="px-3 py-2 text-left font-bold"> </th>
-                <th className="px-3 py-2 text-center font-bold text-indigo-700">🔒 暗号化</th>
+                <th className="px-3 py-2 text-center font-bold text-brand-700">🔒 暗号化</th>
                 <th className="px-3 py-2 text-center font-bold text-emerald-700">🥤 ハッシュ化</th>
               </tr>
             </thead>

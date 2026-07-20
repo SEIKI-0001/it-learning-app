@@ -21,7 +21,7 @@ function IpAddress() {
         <div className="flex items-center justify-center gap-1 font-mono">
           {["192", "168", "0", "5"].map((o, i) => (
             <span key={i} className="flex items-center gap-1">
-              <span className="rounded-lg border-2 border-indigo-400 bg-white px-2.5 py-1 text-xl font-extrabold text-indigo-700">
+              <span className="rounded-lg border-2 border-brand-400 bg-white px-2.5 py-1 text-xl font-bold text-brand-700">
                 {o}
               </span>
               {i < 3 && <span className="text-gray-400">.</span>}
@@ -96,14 +96,14 @@ function Journey() {
           const tone = danger
             ? "border-rose-400 bg-rose-50"
             : on
-              ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100"
+              ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100"
               : "border-gray-200 bg-gray-50";
           return (
             <div key={a.id} className="flex items-center">
               <div className={`relative w-[96px] rounded-xl border-2 px-1 py-2.5 text-center transition ${tone}`}>
                 {holds && <span className="absolute -top-3 right-1 text-lg">📨</span>}
                 <div className="text-2xl leading-none">{a.emo}</div>
-                <div className="mt-1 text-xs font-extrabold text-gray-800">{a.name}</div>
+                <div className="mt-1 text-xs font-bold text-gray-800">{a.name}</div>
                 <div className="text-[10px] leading-tight text-gray-500">{a.sub}</div>
               </div>
               {i < ACTORS.length - 1 && <span className="px-0.5 text-lg text-gray-300">↔</span>}
@@ -132,7 +132,7 @@ function Journey() {
 export default function NetworkAddressExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📮 イメージは郵便。<b>住所＝IPアドレス</b>（番号）でデータを届けます。でも番号は覚えにくいので、
         ふだんは <b>example.com</b> のような名前を使い、<b>名前→住所に変換する電話帳＝DNS</b> が橋渡しします。
       </div>
@@ -144,10 +144,10 @@ export default function NetworkAddressExperience() {
         <SectionTitle step={3}>おさらい</SectionTitle>
         <ul className="mt-3 space-y-2 text-sm">
           <li className="rounded-xl bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200">
-            <b className="text-indigo-700">IPアドレス</b>：ネット上の住所（番号）。データを正しい相手へ届ける。
+            <b className="text-brand-700">IPアドレス</b>：ネット上の住所（番号）。データを正しい相手へ届ける。
           </li>
           <li className="rounded-xl bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200">
-            <b className="text-indigo-700">DNS</b>：文字の名前（ドメイン名）を IPアドレスに変換する電話帳役。
+            <b className="text-brand-700">DNS</b>：文字の名前（ドメイン名）を IPアドレスに変換する電話帳役。
           </li>
           <li className="rounded-xl bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200">
             接続の前に<b>必ず名前解決（DNS）</b>が行われる。順番は「名前 → DNS → IP → 接続」。

@@ -67,7 +67,7 @@ function CopyDemo() {
       {/* 表 */}
       <table className="mt-3 w-full overflow-hidden rounded-xl text-center text-sm ring-1 ring-gray-200">
         <thead>
-          <tr className="bg-gray-100 text-[11px] font-extrabold text-gray-600">
+          <tr className="bg-gray-100 text-[11px] font-bold text-gray-600">
             <th className="py-2">セル</th>
             <th className="py-2">価格(B)</th>
             <th className="py-2">入っている式</th>
@@ -82,7 +82,7 @@ function CopyDemo() {
               <td className={`py-2 font-mono text-xs ${r.broken ? "text-rose-600" : "text-gray-700"}`}>
                 {r.filled ? r.formula : "—"}
               </td>
-              <td className="py-2 font-mono font-extrabold">
+              <td className="py-2 font-mono font-bold">
                 {r.result === null ? (
                   <span className="text-gray-300">—</span>
                 ) : r.broken ? (
@@ -100,7 +100,7 @@ function CopyDemo() {
         <button
           onClick={() => setCopied(true)}
           disabled={copied}
-          className="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
+          className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
         >
           ⬇ 下にコピーして埋める
         </button>
@@ -139,15 +139,15 @@ function Summary() {
       <SectionTitle step={2}>$ の意味をまとめる</SectionTitle>
       <div className="mt-3 space-y-2">
         <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <span className="font-mono text-sm font-extrabold text-gray-800">A1</span>
+          <span className="font-mono text-sm font-bold text-gray-800">A1</span>
           <span className="ml-2 text-sm text-gray-600">相対参照：コピーで列も行もズレる</span>
         </div>
         <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <span className="font-mono text-sm font-extrabold text-emerald-700">$A$1</span>
+          <span className="font-mono text-sm font-bold text-emerald-700">$A$1</span>
           <span className="ml-2 text-sm text-gray-600">絶対参照：コピーしてもズレない（完全固定）</span>
         </div>
         <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <span className="font-mono text-sm font-extrabold text-indigo-700">$A1 / A$1</span>
+          <span className="font-mono text-sm font-bold text-brand-700">$A1 / A$1</span>
           <span className="ml-2 text-sm text-gray-600">複合参照：$の付いた側だけ固定</span>
         </div>
       </div>
@@ -161,7 +161,7 @@ function Summary() {
 export default function SpreadsheetExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📊 表計算で式をコピーすると、参照するセルが自動でズレるのが<b>相対参照</b>。
         ズラしたくないセルは <b>$</b> で固定する<b>絶対参照</b>を使います。
       </div>

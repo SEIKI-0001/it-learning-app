@@ -120,8 +120,8 @@ export default function BillingSection() {
 
   return (
     <section id="billing">
-      <h2 className="mb-2 text-sm font-extrabold text-gray-700">プラン・お支払い</h2>
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+      <h2 className="mb-2 text-sm font-bold text-gray-700">プラン・お支払い</h2>
+      <div className="overflow-hidden rounded-xl bg-white border border-gray-200">
         <div className="space-y-4 p-4">
           {checkoutResult === "success" && (
             <div className="rounded-xl bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-800 ring-1 ring-emerald-200">
@@ -145,17 +145,12 @@ export default function BillingSection() {
           ) : (
             <div
               className={`rounded-xl px-4 py-3 ring-1 ${
-                isPro ? "bg-indigo-50 ring-indigo-200" : "bg-gray-50 ring-gray-200"
+                isPro ? "bg-brand-50 ring-brand-200" : "bg-gray-50 ring-gray-200"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <span className="text-lg" aria-hidden>
-                  {isPro ? "✨" : "🌱"}
-                </span>
-                <p className="text-sm font-extrabold text-gray-800">
-                  {isPro ? "Proプラン" : "無料プラン"}
-                </p>
-              </div>
+              <p className="text-sm font-bold text-gray-800">
+                {isPro ? "Proプラン" : "無料プラン"}
+              </p>
               <p className="mt-1 text-xs text-gray-600">
                 {isPro && entitlements?.proSource === "subscription" && subscription ? (
                   subscription.cancelAtPeriodEnd ? (
@@ -175,7 +170,7 @@ export default function BillingSection() {
                 ) : entitlements?.canRecordStudy ? (
                   <>
                     学習記録の無料期間は残り{" "}
-                    <span className="font-extrabold text-indigo-600">
+                    <span className="font-bold text-brand-600">
                       {entitlements.freeDaysLeft}日
                     </span>
                     （{formatDate(entitlements.freeRecordingUntil)}まで）です
@@ -201,7 +196,7 @@ export default function BillingSection() {
 
           {/* Pro特典の説明 */}
           <div className="rounded-xl bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-600 ring-1 ring-gray-200">
-            <p className="font-extrabold text-gray-700">Proでできること</p>
+            <p className="font-bold text-gray-700">Proでできること</p>
             <ul className="mt-1 list-disc space-y-0.5 pl-4">
               <li>学習記録が無期限（無料は登録から7日間のみ）</li>
               <li>AI採点がClaude Sonnetの高精度採点に（1日10回まで）</li>
@@ -219,14 +214,14 @@ export default function BillingSection() {
                 >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="text-sm font-extrabold text-gray-800">{plan.label}</p>
+                    <p className="text-sm font-bold text-gray-800">{plan.label}</p>
                     {plan.kind === "subscription" && (
-                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-extrabold text-rose-600">
+                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-600">
                         初月20%オフ
                       </span>
                     )}
                     {plan.key === "one_6m" && (
-                      <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-extrabold text-indigo-600">
+                      <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-600">
                         いちばんお得
                       </span>
                     )}
@@ -284,7 +279,7 @@ export default function BillingSection() {
           {/* 購入履歴 */}
           {purchases.length > 0 && (
             <div>
-              <p className="text-xs font-extrabold text-gray-700">購入履歴</p>
+              <p className="text-xs font-bold text-gray-700">購入履歴</p>
               <ul className="mt-1.5 divide-y divide-gray-100 rounded-xl ring-1 ring-gray-200">
                 {purchases.map((p) => (
                   <li key={p.id} className="flex items-center justify-between px-3 py-2">

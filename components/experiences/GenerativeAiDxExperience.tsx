@@ -86,7 +86,7 @@ function AiLab() {
             key={x.id}
             onClick={() => pick(x.id)}
             className={`rounded-lg px-1 py-2 text-[11px] font-bold leading-tight transition active:scale-95 ${
-              sel === x.id ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+              sel === x.id ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {x.label}
@@ -98,14 +98,14 @@ function AiLab() {
         <div className="mt-3 space-y-2">
           {/* あなたの発言 */}
           <div className="flex justify-end">
-            <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-indigo-600 px-3.5 py-2 text-[13px] leading-relaxed text-white">
+            <div className="max-w-[85%] rounded-xl rounded-tr-sm bg-brand-600 px-3.5 py-2 text-[13px] leading-relaxed text-white">
               {p.q}
             </div>
           </div>
           {/* AIの回答 */}
           <div className="flex items-start gap-1.5">
             <span className="mt-0.5 text-lg">🤖</span>
-            <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-gray-100 px-3.5 py-2 text-[13px] leading-relaxed text-gray-800">
+            <div className="max-w-[85%] rounded-xl rounded-tl-sm bg-gray-100 px-3.5 py-2 text-[13px] leading-relaxed text-gray-800">
               {p.a}
             </div>
           </div>
@@ -125,7 +125,7 @@ function AiLab() {
             ) : (
               <button
                 onClick={() => setChecked(true)}
-                className="w-full rounded-xl bg-rose-600 py-2.5 text-sm font-extrabold text-white transition active:scale-95"
+                className="w-full rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white transition active:scale-95"
               >
                 🔍 本当か、事実を確認してみる
               </button>
@@ -138,7 +138,7 @@ function AiLab() {
       )}
 
       {done && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 分かったこと：<b>①プロンプト次第で答えの質が変わる</b>／<b>②AIは平気で間違える（ハルシネーション）</b>。
           だから、そのまま使わず<b>人が事実を確認する</b>のが鉄則です。
         </div>
@@ -185,7 +185,7 @@ function DxLadder() {
             key={m.id}
             onClick={() => pick(m.id)}
             className={`block w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-bold transition active:scale-[0.99] ${
-              sel === m.id ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-200"
+              sel === m.id ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-200"
             }`}
           >
             {m.emo} {m.t}
@@ -207,7 +207,7 @@ function DxLadder() {
               >
                 <div className="flex items-center gap-2">
                   <span className={lit ? "animate-bounce text-lg" : "text-lg"}>{s.emo}</span>
-                  <span className={`text-sm font-extrabold ${lit ? "text-emerald-800" : "text-gray-700"}`}>
+                  <span className={`text-sm font-bold ${lit ? "text-emerald-800" : "text-gray-700"}`}>
                     {s.name}
                   </span>
                   <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-gray-500 ring-1 ring-gray-200">
@@ -319,7 +319,7 @@ function Quiz() {
 export default function GenerativeAiDxExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🤖 生成AIは<b>便利だが誤る（ハルシネーション）</b>ので人の確認が必須。
         DXは<b>電子化だけでなく、しくみごと変えて新しい価値を生む</b>こと。
       </div>

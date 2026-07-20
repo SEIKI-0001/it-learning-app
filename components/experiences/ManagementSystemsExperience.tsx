@@ -108,11 +108,11 @@ function CompanyMap() {
               key={s.key}
               onClick={() => pick(s.key)}
               className={`flex-1 rounded-xl py-2.5 text-center transition active:scale-95 ${
-                picked ? "bg-indigo-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-300"
+                picked ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-300"
               }`}
             >
               <div className="text-lg">{s.emo}</div>
-              <div className="text-sm font-extrabold">
+              <div className="text-sm font-bold">
                 {s.abbr}
                 {tried.has(s.key) && !picked && <span className="ml-0.5 text-[10px]">✓</span>}
               </div>
@@ -142,7 +142,7 @@ function CompanyMap() {
               cover?.box ? `${hi!.node}` : "bg-white ring-gray-200"
             }`}
           >
-            <div className="text-center text-[9px] font-extrabold text-gray-500">🏢 自社</div>
+            <div className="text-center text-[9px] font-bold text-gray-500">🏢 自社</div>
             <div className="mt-1 grid grid-cols-2 gap-1">
               {DEPTS.map((d) => {
                 const on = cover?.depts.includes(d.key);
@@ -180,7 +180,7 @@ function CompanyMap() {
       {active && (
         <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${active.tone}`}>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-extrabold">
+            <span className="text-sm font-bold">
               {active.emo} {active.abbr}（{active.jp}）
             </span>
             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${HI[active.key].badge}`}>
@@ -281,7 +281,7 @@ function Quiz() {
 export default function ManagementSystemsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🏢 CRM・SCM・ERPは名前が似ていますが、<b>「どこを管理するか」</b>が違います。
         <b>顧客／供給の流れ／社内資源</b>のどれかで覚えましょう。
       </div>

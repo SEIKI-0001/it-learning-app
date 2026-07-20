@@ -143,7 +143,7 @@ function MiniSql() {
                   <tr
                     key={i}
                     className={`border-t border-gray-200 text-center transition ${
-                      hit ? "bg-indigo-50" : "bg-white opacity-40"
+                      hit ? "bg-brand-50" : "bg-white opacity-40"
                     }`}
                   >
                     {COLS.map((c) => (
@@ -206,7 +206,7 @@ function MiniSql() {
 export default function SqlExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📚 データベースは<b>整理された保管場所</b>、その中の<b>表＝テーブル</b>。
         その表から欲しいデータを取り出す<b>「お願いの言葉」がSQL</b>です（図書館で司書さんに頼む注文文のイメージ）。
       </div>
@@ -250,7 +250,7 @@ export default function SqlExperience() {
             { k: "DELETE", d: "消す" },
           ].map((x) => (
             <li key={x.k} className="flex items-center gap-3 rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-              <span className="w-20 font-mono text-sm font-bold text-indigo-700">{x.k}</span>
+              <span className="w-20 font-mono text-sm font-bold text-brand-700">{x.k}</span>
               <span className="text-sm text-gray-700">{x.d}</span>
             </li>
           ))}

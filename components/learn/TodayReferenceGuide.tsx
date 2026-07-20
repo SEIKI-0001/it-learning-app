@@ -20,7 +20,7 @@ export default function TodayReferenceGuide({
       ? `${location.chapter.title} ／ ${location.section.title}`
       : location.chapter.title;
     return (
-      <section className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+      <section className="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
         <p className="flex items-center gap-1.5 text-xs font-bold text-amber-700">
           <span aria-hidden>📗</span>今日の参考書
         </p>
@@ -41,7 +41,7 @@ export default function TodayReferenceGuide({
   if (keywords.length === 0) return null;
 
   return (
-    <section className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+    <section className="rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
       <p className="flex items-center gap-1.5 text-xs font-bold text-amber-700">
         <span aria-hidden>📗</span>参考書で探すキーワード
       </p>

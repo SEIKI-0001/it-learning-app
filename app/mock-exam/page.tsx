@@ -104,12 +104,12 @@ export default function MockExamPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-6 pt-5 text-white">
+      <header className="bg-brand-700 px-4 pb-6 pt-5 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <Link href="/progress" className="text-xs font-semibold text-white/80 hover:text-white">
             ← 進捗へ戻る
           </Link>
-          <h1 className="mt-2 text-2xl font-extrabold">本番形式 100問模試</h1>
+          <h1 className="mt-2 text-2xl font-bold">本番形式 100問模試</h1>
           <p className="mt-1 text-sm text-white/85">
             3分野をバランスよく出題。結果は分野別の見直しに使えます。
           </p>
@@ -119,11 +119,11 @@ export default function MockExamPage() {
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-2xl">
         {!exam && !result && <RecordingLockNotice />}
         {!exam && !result && (
-          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <section className="rounded-xl bg-white p-5 border border-gray-200">
             <div className="flex items-start gap-3">
               <span className="text-3xl" aria-hidden>🧪</span>
               <div>
-                <h2 className="text-lg font-extrabold text-gray-800">実力をまとめて確認</h2>
+                <h2 className="text-lg font-bold text-gray-800">実力をまとめて確認</h2>
                 <p className="mt-1 text-sm leading-relaxed text-gray-600">
                   {MOCK_EXAM_RULE.questionCount}問・{MOCK_EXAM_RULE.timeLimitSeconds / 60}分。途中で時間切れになった場合も、回答済みの結果を保存します。
                 </p>
@@ -131,7 +131,7 @@ export default function MockExamPage() {
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
               {FIELDS.map((field) => (
-                <div key={field} className="rounded-xl bg-indigo-50 px-2 py-2 font-bold text-indigo-700">
+                <div key={field} className="rounded-xl bg-brand-50 px-2 py-2 font-bold text-brand-700">
                   <p>{FIELD_LABELS[field]}</p>
                   <p className="mt-0.5 text-base">{MOCK_EXAM_RULE.fieldQuestionCounts[field]}問</p>
                 </div>
@@ -140,7 +140,7 @@ export default function MockExamPage() {
             <button
               type="button"
               onClick={startExam}
-              className="mt-5 w-full rounded-2xl bg-indigo-600 px-5 py-4 text-base font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+              className="mt-5 w-full rounded-xl bg-brand-600 px-5 py-4 text-base font-bold text-white shadow-lg transition active:scale-[0.98]"
             >
               模試を始める
             </button>
@@ -159,10 +159,10 @@ export default function MockExamPage() {
         )}
 
         {result && (
-          <section className="animate-pop-in rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-gray-100">
+          <section className="animate-pop-in rounded-xl bg-white p-5 text-center border border-gray-200">
             <p className="text-4xl" aria-hidden>📊</p>
-            <h2 className="mt-2 text-xl font-extrabold text-gray-800">模試結果</h2>
-            <p className="mt-1 text-3xl font-extrabold text-indigo-600">
+            <h2 className="mt-2 text-xl font-bold text-gray-800">模試結果</h2>
+            <p className="mt-1 text-3xl font-bold text-brand-600">
               {result.correct}<span className="text-base text-gray-500"> / {result.total}問正解</span>
             </p>
             <div className="mt-5 grid grid-cols-3 gap-2">
@@ -172,8 +172,8 @@ export default function MockExamPage() {
                 return (
                   <div key={field} className="rounded-xl bg-gray-50 px-2 py-3">
                     <p className="text-[11px] font-bold text-gray-500">{FIELD_LABELS[field]}</p>
-                    <p className="mt-1 text-base font-extrabold text-gray-800">{score.correct}/{score.total}</p>
-                    <p className="text-xs font-bold text-indigo-600">{rate}%</p>
+                    <p className="mt-1 text-base font-bold text-gray-800">{score.correct}/{score.total}</p>
+                    <p className="text-xs font-bold text-brand-600">{rate}%</p>
                   </div>
                 );
               })}
@@ -182,10 +182,10 @@ export default function MockExamPage() {
               間違えた {result.wrongTopicIds.length} トピックを「復習」に追加しました。まず苦手分野を1つ解き直しましょう。
             </p>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <Link href="/review" className="rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-extrabold text-white">
+              <Link href="/review" className="rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white">
                 復習する
               </Link>
-              <button type="button" onClick={startExam} className="rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-extrabold text-indigo-700">
+              <button type="button" onClick={startExam} className="rounded-xl bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700">
                 もう一度挑戦
               </button>
             </div>

@@ -28,9 +28,9 @@ function ProtocolRule() {
       </p>
 
       <div className="mt-4 flex items-center justify-center gap-3">
-        <div className="w-24 rounded-xl border-2 border-indigo-300 bg-indigo-50 py-3 text-center">
+        <div className="w-24 rounded-xl border-2 border-brand-300 bg-brand-50 py-3 text-center">
           <div className="text-2xl">🧑</div>
-          <div className="text-xs font-extrabold text-indigo-700">あなた</div>
+          <div className="text-xs font-bold text-brand-700">あなた</div>
           <div className="text-[11px] text-gray-500">🇯🇵 日本語</div>
         </div>
         <div className="text-center">
@@ -38,7 +38,7 @@ function ProtocolRule() {
         </div>
         <div className="w-24 rounded-xl border-2 border-gray-300 bg-gray-50 py-3 text-center">
           <div className="text-2xl">🧑‍🦰</div>
-          <div className="text-xs font-extrabold text-gray-700">相手</div>
+          <div className="text-xs font-bold text-gray-700">相手</div>
           <div className="text-[11px] text-gray-500">
             {LANGS.find((l) => l.id === other)?.emo} {LANGS.find((l) => l.id === other)?.label}
           </div>
@@ -51,7 +51,7 @@ function ProtocolRule() {
             key={l.id}
             onClick={() => setOther(l.id)}
             className={`rounded-lg px-3 py-1.5 text-sm font-bold transition active:scale-95 ${
-              other === l.id ? "bg-indigo-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
+              other === l.id ? "bg-brand-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
             }`}
           >
             {l.emo} {l.label}
@@ -92,7 +92,7 @@ function ProtocolTable() {
           <tbody>
             {rows.map((r, i) => (
               <tr key={r.k} className={`${i ? "border-t border-gray-200" : ""}`}>
-                <td className="whitespace-nowrap px-3 py-2.5 align-top font-mono text-sm font-bold text-indigo-700">
+                <td className="whitespace-nowrap px-3 py-2.5 align-top font-mono text-sm font-bold text-brand-700">
                   {r.k}
                 </td>
                 <td className="px-3 py-2.5 text-sm text-gray-700">{r.d}</td>
@@ -127,7 +127,7 @@ function PacketSplit() {
           value={text}
           maxLength={15}
           onChange={(e) => setText(e.target.value)}
-          className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="flex-1 rounded-lg border-2 border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
         />
       </div>
       <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -135,8 +135,8 @@ function PacketSplit() {
           <span className="text-sm text-gray-400">文字を入れてみよう。</span>
         ) : (
           groups.map((g, i) => (
-            <div key={i} className="rounded-xl border-2 border-indigo-300 bg-white px-3 py-2 text-center">
-              <div className="rounded bg-indigo-100 px-1.5 text-[11px] font-bold text-indigo-700">
+            <div key={i} className="rounded-xl border-2 border-brand-300 bg-white px-3 py-2 text-center">
+              <div className="rounded bg-brand-100 px-1.5 text-[11px] font-bold text-brand-700">
                 No.{i + 1}/{groups.length}
               </div>
               <div className="mt-1 text-base font-bold">{g}</div>
@@ -156,7 +156,7 @@ function PacketSplit() {
 export default function InternetProtocolExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🤝 ちがう学校どうしでも、<b>同じルールブック</b>を使うから試合が成り立つ——通信も同じ。
         機器どうしが正しくやり取りするための<b>共通ルール＝プロトコル</b>です。
       </div>

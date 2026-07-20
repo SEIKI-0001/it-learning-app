@@ -23,7 +23,7 @@ export default function ReportPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-emerald-500 to-teal-600 px-4 pb-5 pt-5 text-white">
+      <header className="bg-emerald-700 px-4 pb-5 pt-5 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <Link
             href="/progress"
@@ -31,7 +31,7 @@ export default function ReportPage() {
           >
             ← 進捗にもどる
           </Link>
-          <h1 className="mt-2 text-2xl font-extrabold">週間レポート</h1>
+          <h1 className="mt-2 text-2xl font-bold">週間レポート</h1>
           <p className="mt-1 text-sm text-white/90">
             直近7日間の積み上げをまとめました。
           </p>

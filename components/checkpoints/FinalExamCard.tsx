@@ -19,14 +19,14 @@ export default function FinalExamCard({
   const rule = checkpoint.finalExam;
   const unlockedActive = gate.finalExamUnlocked && !gate.finalExamPassed;
   return (
-    <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+    <section className="overflow-hidden rounded-xl bg-white border border-gray-200">
       {/* ボス戦ヘッダ: 到達ポイントの突破試験として見せる */}
       <div
         className={`px-5 pb-4 pt-4 ${
           gate.finalExamPassed
-            ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+            ? "bg-emerald-600 text-white"
             : unlockedActive
-              ? "animate-sheen bg-gradient-to-br from-rose-500 to-orange-500 text-white"
+              ? "animate-sheen bg-accent-600 text-white"
               : "bg-gray-100 text-gray-600"
         }`}
       >
@@ -50,7 +50,7 @@ export default function FinalExamCard({
             {FINAL_EXAM_STATE_SHORT[finalExamState(gate)]}
           </span>
         </div>
-        <h1 className="mt-2 text-xl font-extrabold">
+        <h1 className="mt-2 text-xl font-bold">
           {gate.finalExamUnlocked ? "⚔️" : checkpoint.emoji}{" "}
           {checkpoint.title} ボス戦
         </h1>
@@ -69,13 +69,13 @@ export default function FinalExamCard({
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-gray-50 px-3 py-2">
           <dt className="text-[11px] font-bold text-gray-400">問題数</dt>
-          <dd className="font-extrabold text-gray-800">
+          <dd className="font-bold text-gray-800">
             {rule?.questionCount ?? 0} 問
           </dd>
         </div>
         <div className="rounded-xl bg-gray-50 px-3 py-2">
           <dt className="text-[11px] font-bold text-gray-400">合格ライン</dt>
-          <dd className="font-extrabold text-gray-800">
+          <dd className="font-bold text-gray-800">
             {rule ? `${rule.passThreshold} 問以上` : "-"}
           </dd>
         </div>

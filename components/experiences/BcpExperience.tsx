@@ -71,11 +71,11 @@ function Lab() {
             >
               <span className="text-2xl leading-none">{p.emoji}</span>
               <span className="flex-1">
-                <span className="block text-sm font-extrabold text-gray-800">{p.name}</span>
+                <span className="block text-sm font-bold text-gray-800">{p.name}</span>
                 <span className="block text-[11px] leading-relaxed text-gray-500">{p.d}</span>
               </span>
               <span
-                className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold ${
+                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
                   active ? "bg-emerald-500 text-white" : "bg-gray-200 text-gray-500"
                 }`}
               >
@@ -90,13 +90,13 @@ function Lab() {
       {!struck ? (
         <button
           onClick={() => setStruck(true)}
-          className="mt-4 w-full rounded-xl bg-rose-600 py-3 text-base font-extrabold text-white transition active:scale-95"
+          className="mt-4 w-full rounded-xl bg-rose-600 py-3 text-base font-bold text-white transition active:scale-95"
         >
           🌋 大地震発生！
         </button>
       ) : (
         <div className="mt-4 space-y-2">
-          <div className="rounded-xl bg-gray-800 px-4 py-2.5 text-center text-sm font-extrabold text-white">
+          <div className="rounded-xl bg-gray-800 px-4 py-2.5 text-center text-sm font-bold text-white">
             🌋 大地震発生！ システム停止・本社ビル立入禁止…
           </div>
           {/* 備えごとの結末 */}
@@ -123,7 +123,7 @@ function Lab() {
           {/* 総合結果 */}
           <div className={`rounded-xl px-4 py-3 text-center ring-1 ${verdictTone}`}>
             <div className="text-xs font-bold opacity-70">営業再開まで</div>
-            <div className="mt-0.5 text-lg font-extrabold">{verdict.days}</div>
+            <div className="mt-0.5 text-lg font-bold">{verdict.days}</div>
             <p className="mt-1 text-xs font-medium leading-relaxed">{verdict.note}</p>
           </div>
           <button
@@ -209,7 +209,7 @@ function Quiz() {
 export default function BcpExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🆘 <b>BCP（事業継続計画）</b>は、災害や事故が起きても<b>重要な仕事を止めない・早く再開する</b>ための計画。
         カギは「起きる前の備え」です。
       </div>

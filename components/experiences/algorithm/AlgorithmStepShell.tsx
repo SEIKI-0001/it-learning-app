@@ -21,9 +21,9 @@ export default function AlgorithmStepShell({
   children,
 }: AlgorithmStepShellProps) {
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-indigo-100 sm:p-5">
+    <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-brand-100 sm:p-5">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-black tracking-wide text-indigo-600">
+        <p className="text-xs font-black tracking-wide text-brand-600">
           STEP {step} / {TOTAL_STEPS}
         </p>
         <p className="text-xs font-bold text-gray-500">
@@ -40,13 +40,13 @@ export default function AlgorithmStepShell({
             key={index}
             aria-hidden
             className={`h-1.5 rounded-full ${
-              index < step ? "bg-indigo-600" : "bg-gray-200"
+              index < step ? "bg-brand-600" : "bg-gray-200"
             }`}
           />
         ))}
       </div>
 
-      <h3 className="mt-4 text-lg font-extrabold text-gray-900">{title}</h3>
+      <h3 className="mt-4 text-lg font-bold text-gray-900">{title}</h3>
       <div className="mt-4">{children}</div>
 
       <div className="mt-5 border-t border-gray-100 pt-4">
@@ -68,7 +68,7 @@ export default function AlgorithmStepShell({
             type="button"
             onClick={onNext}
             disabled={!canContinue}
-            className="min-h-11 rounded-xl bg-indigo-600 font-bold text-white transition active:scale-[0.98] disabled:opacity-35"
+            className="min-h-11 rounded-xl bg-brand-600 font-bold text-white transition active:scale-[0.98] disabled:opacity-35"
           >
             {step === TOTAL_STEPS ? "確認問題へ" : "次へ"}
           </button>

@@ -343,9 +343,9 @@ export default function AiGradingPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-4 text-white">
+      <header className="bg-brand-700 px-4 pb-4 pt-4 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <h1 className="text-xl font-extrabold">📝 AI採点</h1>
+          <h1 className="text-xl font-bold">📝 AI採点</h1>
           <p className="mt-0.5 text-xs text-white/90">
             用語を覚えるだけでなく、説明できるかをAIがチェックします
           </p>
@@ -373,9 +373,9 @@ export default function AiGradingPage() {
             {mode === "answer" ? (
               <>
                 {/* 問題カード */}
-                <section className="rounded-2xl border border-gray-200 bg-white p-4">
+                <section className="rounded-xl border border-gray-200 bg-white p-4">
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
+                    <span className="rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-bold text-brand-700">
                       {question.category}
                     </span>
                     <span
@@ -410,7 +410,7 @@ export default function AiGradingPage() {
                 <section className="space-y-2">
                   <label
                     htmlFor="answer"
-                    className="block text-sm font-extrabold text-gray-700"
+                    className="block text-sm font-bold text-gray-700"
                   >
                     あなたの回答
                   </label>
@@ -423,7 +423,7 @@ export default function AiGradingPage() {
                     }}
                     rows={6}
                     placeholder="理由・仕組み・具体例を含めて、自分の言葉で説明してみましょう。"
-                    className="w-full resize-y rounded-2xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                    className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                   />
                   <p className="text-right text-[11px] font-bold text-gray-400">
                     {answer.trim().length} 文字（20文字以上で採点できます）
@@ -436,7 +436,7 @@ export default function AiGradingPage() {
                     type="button"
                     onClick={handleGrade}
                     disabled={!canGrade || loading}
-                    className="flex-1 rounded-2xl bg-indigo-600 px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition active:scale-[0.99] disabled:bg-gray-300 disabled:text-gray-500"
+                    className="flex-1 rounded-xl bg-brand-600 px-4 py-3.5 text-base font-bold text-white shadow-sm transition active:scale-[0.99] disabled:bg-gray-300 disabled:text-gray-500"
                   >
                     {loading
                       ? "採点中…"
@@ -448,7 +448,7 @@ export default function AiGradingPage() {
                     type="button"
                     onClick={handleNext}
                     disabled={loading}
-                    className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-extrabold text-gray-600 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
+                    className="rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-bold text-gray-600 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
                   >
                     別の問題
                   </button>
@@ -456,7 +456,7 @@ export default function AiGradingPage() {
 
                 {/* エラー表示 */}
                 {error && (
-                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
                     {error}
                   </div>
                 )}
@@ -489,10 +489,10 @@ function AiGradingInitialSkeleton() {
 
 function SkeletonCard({ label, lines }: { label: string; lines: number }) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-4">
+    <section className="rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-extrabold text-gray-500">{label}</span>
-        <span className="h-2.5 w-2.5 rounded-full bg-indigo-200" />
+        <span className="text-sm font-bold text-gray-500">{label}</span>
+        <span className="h-2.5 w-2.5 rounded-full bg-brand-200" />
       </div>
       <div className="mt-4 space-y-2.5">
         {Array.from({ length: lines }).map((_, i) => (
@@ -518,14 +518,14 @@ function ModeTabs({
   onChange: (m: Mode) => void;
 }) {
   const base =
-    "flex-1 rounded-xl px-4 py-2.5 text-sm font-extrabold transition active:scale-[0.99]";
+    "flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition active:scale-[0.99]";
   return (
-    <div className="flex gap-2 rounded-2xl border border-gray-200 bg-white p-1.5">
+    <div className="flex gap-2 rounded-xl border border-gray-200 bg-white p-1.5">
       <button
         type="button"
         onClick={() => onChange("answer")}
         className={`${base} ${
-          mode === "answer" ? "bg-indigo-600 text-white" : "text-gray-500"
+          mode === "answer" ? "bg-brand-600 text-white" : "text-gray-500"
         }`}
       >
         答える
@@ -534,7 +534,7 @@ function ModeTabs({
         type="button"
         onClick={() => onChange("review")}
         className={`${base} ${
-          mode === "review" ? "bg-indigo-600 text-white" : "text-gray-500"
+          mode === "review" ? "bg-brand-600 text-white" : "text-gray-500"
         }`}
       >
         復習{reviewCount > 0 ? `（${reviewCount}）` : ""}
@@ -549,7 +549,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
 
   if (records.length === 0) {
     return (
-      <section className="rounded-2xl border border-dashed border-gray-300 bg-white p-6 text-center">
+      <section className="rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center">
         <p className="text-sm font-bold text-gray-500">
           まだ採点した記録がありません。
         </p>
@@ -569,7 +569,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
         return (
           <div
             key={rec.id}
-            className="overflow-hidden rounded-2xl border border-gray-200 bg-white"
+            className="overflow-hidden rounded-xl border border-gray-200 bg-white"
           >
             <button
               type="button"
@@ -579,7 +579,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
               <div
                 className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl ring-1 ${gradeMeta.ring}`}
               >
-                <span className={`text-lg font-extrabold leading-none ${gradeMeta.text}`}>
+                <span className={`text-lg font-bold leading-none ${gradeMeta.text}`}>
                   {rec.result.grade}
                 </span>
                 <span className="text-[10px] font-bold text-gray-400">
@@ -588,7 +588,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                  <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700">
                     {rec.category || "AI採点"}
                   </span>
                   <span className="text-[10px] font-bold text-gray-400">
@@ -604,7 +604,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
 
             {open && (
               <div className="space-y-4 border-t border-gray-100 px-4 pb-4 pt-3">
-                <div className="rounded-2xl bg-gray-50 p-3">
+                <div className="rounded-xl bg-gray-50 p-3">
                   <span className="text-[11px] font-bold text-gray-500">
                     あなたの回答
                   </span>
@@ -639,12 +639,12 @@ function PlanCard({
 }) {
   if (!status) {
     return (
-      <section className="rounded-2xl border border-gray-200 bg-white p-4">
+      <section className="rounded-xl border border-gray-200 bg-white p-4">
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-extrabold text-gray-600">
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-600">
             確認中
           </span>
-          <span className="text-sm font-extrabold text-gray-800">
+          <span className="text-sm font-bold text-gray-800">
             プラン情報を確認できませんでした
           </span>
         </div>
@@ -662,20 +662,20 @@ function PlanCard({
 
   if (isPro) {
     return (
-      <section className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
+      <section className="rounded-xl border border-brand-200 bg-brand-50 p-4">
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-violet-600 px-2.5 py-1 text-[11px] font-extrabold text-white">
+          <span className="rounded-full bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white">
             PRO
           </span>
-          <span className="text-sm font-extrabold text-violet-800">
+          <span className="text-sm font-bold text-brand-800">
             Claude Sonnetで詳しく採点
           </span>
         </div>
-        <p className="mt-1.5 text-xs font-bold leading-relaxed text-violet-900/80">
+        <p className="mt-1.5 text-xs font-bold leading-relaxed text-brand-900/80">
           高品質なAIが、良い点・不足点・改善のヒントまで丁寧に解説します。
         </p>
         {remainingText && (
-          <p className="mt-1.5 text-[11px] font-bold text-violet-700">
+          <p className="mt-1.5 text-[11px] font-bold text-brand-700">
             {remainingText}
           </p>
         )}
@@ -685,12 +685,12 @@ function PlanCard({
 
   // 無料ユーザー向け：通常採点の案内＋Pro誘導。
   return (
-    <section className="rounded-2xl border border-indigo-100 bg-white p-4">
+    <section className="rounded-xl border border-brand-100 bg-white p-4">
       <div className="flex items-center gap-2">
-        <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-extrabold text-indigo-700">
+        <span className="rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-bold text-brand-700">
           無料
         </span>
-        <span className="text-sm font-extrabold text-gray-800">
+        <span className="text-sm font-bold text-gray-800">
           Geminiによる通常採点
         </span>
       </div>
@@ -699,16 +699,16 @@ function PlanCard({
           {remainingText}
         </p>
       )}
-      <div className="mt-3 rounded-xl bg-violet-50 p-3">
-        <p className="text-xs font-extrabold text-violet-800">
+      <div className="mt-3 rounded-xl bg-brand-50 p-3">
+        <p className="text-xs font-bold text-brand-800">
           ✨ Claude Sonnetによる詳しい採点はPro機能です
         </p>
-        <p className="mt-1 text-[11px] font-bold leading-relaxed text-violet-900/70">
+        <p className="mt-1 text-[11px] font-bold leading-relaxed text-brand-900/70">
           より深い解説と、1日の採点回数アップが使えるようになります。
         </p>
         <Link
           href="/more#billing"
-          className="mt-2.5 block w-full rounded-xl bg-violet-600 px-4 py-2.5 text-center text-sm font-extrabold text-white shadow-sm transition active:scale-[0.99]"
+          className="mt-2.5 block w-full rounded-xl bg-brand-600 px-4 py-2.5 text-center text-sm font-bold text-white shadow-sm transition active:scale-[0.99]"
         >
           Proプランを見る
         </Link>
@@ -745,7 +745,7 @@ function ResultView({
             採点エンジン：{providerLabel}
           </p>
           {meta.fallback && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-800">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-800">
               Claude採点が一時的に使えなかったため、通常採点（Gemini）で表示しています。
             </div>
           )}
@@ -754,11 +754,11 @@ function ResultView({
 
       {/* スコア・グレード・判定 */}
       <div
-        className={`flex items-center gap-4 rounded-2xl p-4 ring-1 ${gradeMeta.ring}`}
+        className={`flex items-center gap-4 rounded-xl p-4 ring-1 ${gradeMeta.ring}`}
       >
         <div className="flex flex-col items-center">
           <span
-            className={`text-4xl font-extrabold leading-none ${gradeMeta.text}`}
+            className={`text-4xl font-bold leading-none ${gradeMeta.text}`}
           >
             {result.grade}
           </span>
@@ -766,7 +766,7 @@ function ResultView({
         </div>
         <div className="flex-1">
           <div className="flex items-baseline gap-1">
-            <span className={`text-3xl font-extrabold ${gradeMeta.text}`}>
+            <span className={`text-3xl font-bold ${gradeMeta.text}`}>
               {result.score}
             </span>
             <span className="text-sm font-bold text-gray-400">/ 100点</span>
@@ -780,7 +780,7 @@ function ResultView({
       </div>
 
       {result.summary && (
-        <p className="rounded-2xl bg-white px-4 py-3 text-sm font-bold leading-relaxed text-gray-700 ring-1 ring-gray-100">
+        <p className="rounded-xl bg-white px-4 py-3 text-sm font-bold leading-relaxed text-gray-700 ring-1 ring-gray-100">
           {result.summary}
         </p>
       )}
@@ -801,27 +801,27 @@ function ResultView({
       )}
 
       {result.feedback && (
-        <div className="rounded-2xl border border-gray-200 bg-white p-4">
-          <h3 className="text-sm font-extrabold text-gray-800">💡 解説</h3>
+        <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <h3 className="text-sm font-bold text-gray-800">💡 解説</h3>
           <p className="mt-2 text-sm leading-relaxed text-gray-700">
             {result.feedback}
           </p>
         </div>
       )}
 
-      <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-        <h3 className="text-sm font-extrabold text-indigo-700">📘 模範解答</h3>
-        <p className="mt-2 text-sm leading-relaxed text-indigo-900/90">
+      <div className="rounded-xl border border-brand-100 bg-brand-50 p-4">
+        <h3 className="text-sm font-bold text-brand-700">📘 模範解答</h3>
+        <p className="mt-2 text-sm leading-relaxed text-brand-900/90">
           {result.modelAnswer}
         </p>
       </div>
 
       {result.nextReviewTheme && (
-        <div className="rounded-2xl bg-gray-100 px-4 py-3">
+        <div className="rounded-xl bg-gray-100 px-4 py-3">
           <span className="text-xs font-bold text-gray-500">
             次に復習すべきテーマ
           </span>
-          <p className="mt-0.5 text-sm font-extrabold text-gray-700">
+          <p className="mt-0.5 text-sm font-bold text-gray-700">
             {result.nextReviewTheme}
           </p>
         </div>
@@ -840,8 +840,8 @@ function ResultBlock({
   tone: string;
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4">
-      <h3 className={`text-sm font-extrabold ${tone}`}>{title}</h3>
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <h3 className={`text-sm font-bold ${tone}`}>{title}</h3>
       <ul className="mt-2 space-y-1.5">
         {items.map((item, i) => (
           <li key={i} className="flex gap-2 text-sm leading-relaxed text-gray-700">

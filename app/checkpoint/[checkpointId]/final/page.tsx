@@ -76,12 +76,12 @@ export default function FinalExamPage() {
       <main className="min-h-screen bg-gray-50 pb-24">
         <div className="mx-auto max-w-md px-4 py-10 text-center">
           <p className="text-3xl">🧭</p>
-          <p className="mt-2 text-base font-extrabold text-gray-800">
+          <p className="mt-2 text-base font-bold text-gray-800">
             このチェックポイントに最終問題はありません
           </p>
           <Link
             href="/plan"
-            className="mt-4 inline-block rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white"
+            className="mt-4 inline-block rounded-xl bg-brand-600 px-6 py-3 font-bold text-white"
           >
             ロードマップへ
           </Link>
@@ -152,7 +152,7 @@ export default function FinalExamPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-rose-500 to-orange-500 px-4 pb-4 pt-4 text-white">
+      <header className="bg-accent-600 px-4 pb-4 pt-4 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-2xl">
           <Link href="/plan" className="text-xs font-semibold text-white/80">
             ← ロードマップ
@@ -166,14 +166,14 @@ export default function FinalExamPage() {
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-2xl">
         <FinalExamCard checkpoint={checkpoint} gate={gate} rangeLabel={rangeLabel} />
 
-        {!exam && !result && <Mochit state="normal" size="medium" animation="idle" message="準備ができたら、落ち着いて挑戦しよう" className="justify-center rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100" />}
+        {!exam && !result && <Mochit state="normal" size="medium" animation="idle" message="準備ができたら、落ち着いて挑戦しよう" className="justify-center rounded-xl bg-white p-4 border border-gray-200" />}
 
         {/* --- 採点結果 --- */}
         {result ? (
           result.passed ? (
-            <section className="animate-pop-in overflow-hidden rounded-2xl bg-emerald-50 p-6 text-center ring-1 ring-emerald-200">
+            <section className="animate-pop-in overflow-hidden rounded-xl bg-emerald-50 p-6 text-center ring-1 ring-emerald-200">
               <p className="text-4xl">🏆</p>
-              <p className="mt-2 text-lg font-extrabold text-emerald-700">
+              <p className="mt-2 text-lg font-bold text-emerald-700">
                 CP{checkpoint.order} を突破しました！
               </p>
               <p className="mt-1 text-sm font-semibold text-emerald-600">
@@ -192,14 +192,14 @@ export default function FinalExamPage() {
                   →
                 </span>
                 {next ? (
-                  <span className="animate-sheen rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 px-3 py-2 text-sm font-bold text-white">
+                  <span className="animate-sheen rounded-xl bg-brand-700 px-3 py-2 text-sm font-bold text-white">
                     {next.emoji} CP{next.order}
                     <span className="ml-1 text-[10px] text-white/80">
                       {next.finalExam ? "解禁" : "ゴール"}
                     </span>
                   </span>
                 ) : (
-                  <span className="rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 px-3 py-2 text-sm font-bold text-white">
+                  <span className="rounded-xl bg-accent-600 px-3 py-2 text-sm font-bold text-white">
                     🎓 合格へ
                   </span>
                 )}
@@ -215,30 +215,30 @@ export default function FinalExamPage() {
                 {next && next.finalExam && (
                   <Link
                     href={`/checkpoint/${next.id}/final`}
-                    className="rounded-2xl bg-emerald-600 px-6 py-3 font-bold text-white"
+                    className="rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white"
                   >
                     次のチェックポイントへ →
                   </Link>
                 )}
                 <Link
                   href="/plan"
-                  className="rounded-2xl bg-white px-6 py-3 font-bold text-emerald-700 ring-1 ring-emerald-200"
+                  className="rounded-xl bg-white px-6 py-3 font-bold text-emerald-700 ring-1 ring-emerald-200"
                 >
                   🗺️ 地図で突破を確認する
                 </Link>
                 <Link
                   href="/badges"
-                  className="rounded-2xl bg-white px-6 py-3 font-bold text-indigo-600 ring-1 ring-indigo-200"
+                  className="rounded-xl bg-white px-6 py-3 font-bold text-brand-600 ring-1 ring-brand-200"
                 >
                   獲得バッジを見る
                 </Link>
               </div>
             </section>
           ) : (
-            <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-amber-200">
+            <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-amber-200">
               <div className="flex justify-center"><Mochit state="thinking" size="medium" animation="tilt" message="惜しい。考え方を一緒に整理しよう" /></div>
               <p className="text-center text-4xl">💪</p>
-              <p className="mt-2 text-center text-lg font-extrabold text-gray-800">
+              <p className="mt-2 text-center text-lg font-bold text-gray-800">
                 あと少し！次で突破できます
               </p>
               <p className="mt-1 text-center text-sm font-semibold text-gray-600">
@@ -261,7 +261,7 @@ export default function FinalExamPage() {
                             className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700"
                           >
                             <span className="truncate">{t?.title ?? id}</span>
-                            <span className="shrink-0 text-xs text-indigo-600">
+                            <span className="shrink-0 text-xs text-brand-600">
                               復習する →
                             </span>
                           </Link>
@@ -280,13 +280,13 @@ export default function FinalExamPage() {
                 <button
                   type="button"
                   onClick={startExam}
-                  className="rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white active:scale-[0.99]"
+                  className="rounded-xl bg-brand-600 px-6 py-3 font-bold text-white active:scale-[0.99]"
                 >
                   もう一度挑戦する
                 </button>
                 <Link
                   href="/review"
-                  className="rounded-2xl bg-white px-6 py-3 text-center font-bold text-indigo-600 ring-1 ring-indigo-200"
+                  className="rounded-xl bg-white px-6 py-3 text-center font-bold text-brand-600 ring-1 ring-brand-200"
                 >
                   先に復習する
                 </Link>
@@ -296,7 +296,7 @@ export default function FinalExamPage() {
         ) : exam ? (
           /* --- 出題中 --- */
           <section>
-            <h2 className="mb-3 text-base font-extrabold text-gray-800">
+            <h2 className="mb-3 text-base font-bold text-gray-800">
               ⚔️ 突破試験（全{exam.questions.length}問）
             </h2>
             <TopicQuiz
@@ -309,7 +309,7 @@ export default function FinalExamPage() {
           </section>
         ) : gate.finalExamUnlocked ? (
           /* --- 解放済み・未開始 --- */
-          <section className="rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-gray-100">
+          <section className="rounded-xl bg-white p-5 text-center border border-gray-200">
             {alreadyPassed && (
               <p className="mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
                 このチェックポイントは突破済みです。実力確認にもう一度挑戦できます。
@@ -327,14 +327,14 @@ export default function FinalExamPage() {
             <button
               type="button"
               onClick={startExam}
-              className="animate-glow-ring mt-4 w-full rounded-2xl bg-rose-500 px-6 py-3 font-bold text-white active:scale-[0.99]"
+              className="animate-glow-ring mt-4 w-full rounded-xl bg-rose-500 px-6 py-3 font-bold text-white active:scale-[0.99]"
             >
               突破試験に挑む
             </button>
           </section>
         ) : (
           /* --- ロック中 --- */
-          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <section className="rounded-xl bg-white p-5 border border-gray-200">
             <p className="text-sm font-bold text-gray-700">
               🔒 まだ解放されていません
             </p>
@@ -353,7 +353,7 @@ export default function FinalExamPage() {
 
             <Link
               href="/badges"
-              className="mt-4 inline-block rounded-2xl bg-white px-5 py-2.5 text-sm font-bold text-indigo-600 ring-1 ring-indigo-200"
+              className="mt-4 inline-block rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-brand-600 ring-1 ring-brand-200"
             >
               バッジ一覧で条件を見る
             </Link>

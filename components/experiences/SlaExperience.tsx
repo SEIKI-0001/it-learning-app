@@ -18,9 +18,9 @@ function WhatIs() {
         ITサービス（メール・社内システムなど）を、利用者に<b className="text-gray-800">止めずに安定して届ける</b>ための運用管理です。
       </p>
       <div className="mt-4 flex items-center justify-center gap-2">
-        <div className="rounded-xl bg-indigo-50 px-3 py-3 text-center ring-1 ring-indigo-200">
+        <div className="rounded-xl bg-brand-50 px-3 py-3 text-center ring-1 ring-brand-200">
           <div className="text-2xl">🏢</div>
-          <div className="mt-1 text-[11px] font-bold text-indigo-700">提供者</div>
+          <div className="mt-1 text-[11px] font-bold text-brand-700">提供者</div>
           <div className="text-[10px] text-gray-500">運用・サポート</div>
         </div>
         <div className="flex flex-col items-center">
@@ -66,7 +66,7 @@ function Availability() {
             key={l.rate}
             onClick={() => setIdx(i)}
             className={`rounded-lg px-1 py-2 text-sm font-bold transition active:scale-95 ${
-              idx === i ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              idx === i ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {l.rate}
@@ -76,7 +76,7 @@ function Availability() {
 
       <div className="mt-4 rounded-xl bg-gray-50 p-4 text-center ring-1 ring-gray-200">
         <div className="text-xs text-gray-500">稼働率 {cur.rate}（{cur.label}）なら、1年で止まってよいのは…</div>
-        <div className="mt-1 text-2xl font-extrabold text-indigo-700">
+        <div className="mt-1 text-2xl font-bold text-brand-700">
           約 {h > 0 ? `${h}時間` : ""}{m > 0 ? `${m}分` : ""}
         </div>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
@@ -155,7 +155,7 @@ function Quiz() {
 export default function SlaExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🤝 <b>サービスマネジメント</b>はITサービスを安定して届ける運用管理。
         <b>SLA</b>は提供者と利用者で決める<b>品質の約束</b>（稼働率や応答時間など）。スマホ回線の契約で通信範囲やサポート時間を約束するのと同じです。
       </div>

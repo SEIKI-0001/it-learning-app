@@ -118,7 +118,7 @@ function CellTd({ cell, isKey }: { cell: Cell; isKey: boolean }) {
   }
   if ("repeat" in cell) {
     return (
-      <td className="whitespace-pre-line px-2.5 py-1.5 text-center text-violet-700">{cell.text}</td>
+      <td className="whitespace-pre-line px-2.5 py-1.5 text-center text-brand-700">{cell.text}</td>
     );
   }
   return (
@@ -175,7 +175,7 @@ export default function NormalizationExperience() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🗂️ 正規化とは、<b>1つの表に詰め込んだデータを、重複やムダのない複数の表に分けていく</b>整理作業。
         目的は<b>データの重複をなくし、更新時の矛盾（更新異常）を防ぐ</b>こと。下のボタンで段階を進めてみよう。
       </div>
@@ -189,19 +189,19 @@ export default function NormalizationExperience() {
               onClick={() => setStage(i)}
               className={`flex-1 rounded-lg px-1 py-2 text-center transition active:scale-95 ${
                 i === stage
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-brand-600 text-white"
                   : i < stage
-                    ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200"
+                    ? "bg-brand-50 text-brand-700 ring-1 ring-brand-200"
                     : "bg-gray-50 text-gray-500 ring-1 ring-gray-200"
               }`}
             >
-              <div className="text-sm font-extrabold">{st.chip}</div>
+              <div className="text-sm font-bold">{st.chip}</div>
               <div className="text-[10px] leading-tight opacity-80">{st.sub}</div>
             </button>
           ))}
         </div>
 
-        <h3 className="mt-4 text-lg font-extrabold text-gray-800">{s.title}</h3>
+        <h3 className="mt-4 text-lg font-bold text-gray-800">{s.title}</h3>
 
         {/* 解説パネル */}
         <div className="mt-2 space-y-2">
@@ -211,10 +211,10 @@ export default function NormalizationExperience() {
                 ? "bg-emerald-50 ring-emerald-200 [&_.lbl]:text-emerald-700"
                 : p.kind === "problem"
                   ? "bg-amber-50 ring-amber-200 [&_.lbl]:text-amber-700"
-                  : "bg-gray-50 ring-gray-200 [&_.lbl]:text-indigo-700";
+                  : "bg-gray-50 ring-gray-200 [&_.lbl]:text-brand-700";
             return (
               <div key={i} className={`rounded-xl px-3.5 py-2.5 text-sm ring-1 ${tone}`}>
-                <div className="lbl mb-0.5 font-extrabold">{p.lbl}</div>
+                <div className="lbl mb-0.5 font-bold">{p.lbl}</div>
                 <p
                   className="leading-relaxed text-gray-700 [&_b]:text-gray-900"
                   dangerouslySetInnerHTML={{ __html: p.html }}
@@ -255,7 +255,7 @@ export default function NormalizationExperience() {
             <i className="inline-block h-3 w-3 rounded bg-amber-300" /> 重複データ
           </span>
           <span className="flex items-center gap-1.5">
-            <i className="inline-block h-3 w-3 rounded bg-violet-300" /> 繰り返し項目
+            <i className="inline-block h-3 w-3 rounded bg-brand-300" /> 繰り返し項目
           </span>
         </div>
 
@@ -271,7 +271,7 @@ export default function NormalizationExperience() {
           <button
             onClick={() => setStage((v) => Math.min(STAGES.length - 1, v + 1))}
             disabled={stage === STAGES.length - 1}
-            className="flex-1 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
+            className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
           >
             {stage === STAGES.length - 1 ? "完成 🎉" : "次へ進む →"}
           </button>
@@ -279,7 +279,7 @@ export default function NormalizationExperience() {
       </Panel>
 
       <Panel>
-        <h3 className="text-base font-extrabold text-gray-800">📌 3行で覚える正規形</h3>
+        <h3 className="text-base font-bold text-gray-800">📌 3行で覚える正規形</h3>
         <ul className="mt-2 space-y-2 text-sm">
           <li className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
             <b>第1正規形</b>：繰り返し項目をなくし、1マス1値にする。

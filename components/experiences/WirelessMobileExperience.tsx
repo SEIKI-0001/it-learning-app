@@ -106,8 +106,8 @@ function MobileTerms() {
           <li key={t.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xl">{t.emo}</span>
-              <span className="text-sm font-extrabold text-gray-800">{t.name}</span>
-              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold text-indigo-700">
+              <span className="text-sm font-bold text-gray-800">{t.name}</span>
+              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700">
                 {t.tag}
               </span>
             </div>
@@ -198,7 +198,7 @@ function WifiQuiz() {
 export default function WirelessMobileExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📶 無線LANは電波が飛ぶぶん<b>暗号化が大切</b>。モバイルは<b>5G・テザリング・MVNO</b>の
         意味をセットで覚えましょう。
       </div>

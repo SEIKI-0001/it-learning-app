@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
+import Icon from "@/components/ui/Icon";
 import { getUserId, reportDailyProgress } from "@/lib/userSession";
 import { useBillingStatus } from "@/lib/useBillingStatus";
 import type { ProgressLevel, ProgressReason } from "@/types/studyProgress";
@@ -11,12 +12,12 @@ import type { ProgressLevel, ProgressReason } from "@/types/studyProgress";
 // - 「少しだけ」「できなかった」のときだけ任意で理由を選べる（スキップ可）。
 // - 選択は同日上書き。端末に控えを残し、再訪時に前回の選択を反映する。
 
-const LEVELS: { value: ProgressLevel; label: string; emoji: string }[] = [
-  { value: "all", label: "全部できた", emoji: "💯" },
-  { value: "half", label: "半分くらいできた", emoji: "🙂" },
-  { value: "little", label: "少しだけできた", emoji: "🌱" },
-  { value: "none", label: "できなかった", emoji: "🌙" },
-  { value: "rest", label: "今日は休む", emoji: "☕️" },
+const LEVELS: { value: ProgressLevel; label: string }[] = [
+  { value: "all", label: "全部できた" },
+  { value: "half", label: "半分くらいできた" },
+  { value: "little", label: "少しだけできた" },
+  { value: "none", label: "できなかった" },
+  { value: "rest", label: "今日は休む" },
 ];
 
 const REASONS: { value: ProgressReason; label: string }[] = [
@@ -110,8 +111,8 @@ export default function DailyProgressReport({ date }: { date: string }) {
   }
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-      <p className="text-sm font-extrabold text-gray-800">
+    <section className="rounded-xl border border-gray-200 bg-white p-4">
+      <p className="text-sm font-semibold text-gray-900">
         今日の学習はどこまでできましたか？
       </p>
       <p className="mt-0.5 text-xs text-gray-500">
@@ -126,23 +127,24 @@ export default function DailyProgressReport({ date }: { date: string }) {
               key={l.value}
               type="button"
               onClick={() => handleSelectLevel(l.value)}
-              className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-bold transition active:scale-[0.99] ${
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-left text-sm transition active:scale-[0.99] ${
                 active
-                  ? "bg-indigo-600 text-white shadow"
-                  : "bg-gray-50 text-gray-700 ring-1 ring-gray-100"
+                  ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
-              <span aria-hidden>{l.emoji}</span>
               <span>{l.label}</span>
-              {active && <span className="ml-auto">✓</span>}
+              {active && (
+                <Icon name="check" className="ml-auto h-4 w-4 text-brand-700" strokeWidth={2.2} />
+              )}
             </button>
           );
         })}
       </div>
 
       {showReasons && (
-        <div className="mt-3 rounded-xl bg-gray-50 px-3 py-3">
-          <p className="text-xs font-bold text-gray-600">
+        <div className="mt-3 border-t border-gray-100 pt-3">
+          <p className="text-xs text-gray-600">
             よかったら理由も教えてください（任意）
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -151,7 +153,7 @@ export default function DailyProgressReport({ date }: { date: string }) {
                 key={r.value}
                 type="button"
                 onClick={() => handleSelectReason(r.value)}
-                className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-gray-700 ring-1 ring-gray-200 transition active:scale-[0.98]"
+                className="rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-700 transition hover:bg-gray-50 active:scale-[0.98]"
               >
                 {r.label}
               </button>
@@ -159,7 +161,7 @@ export default function DailyProgressReport({ date }: { date: string }) {
             <button
               type="button"
               onClick={() => handleSelectReason(null)}
-              className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-gray-400 ring-1 ring-gray-200 transition active:scale-[0.98]"
+              className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-400 transition hover:bg-gray-50 active:scale-[0.98]"
             >
               スキップ
             </button>
@@ -168,7 +170,7 @@ export default function DailyProgressReport({ date }: { date: string }) {
       )}
 
       {submitted && (
-        <p className="mt-3 animate-pop-in text-center text-xs font-bold text-emerald-600">
+        <p className="mt-3 animate-pop-in text-center text-xs text-emerald-700">
           記録しました。今日もおつかれさま！
         </p>
       )}

@@ -30,7 +30,7 @@ function Wbs() {
       {/* ツリー（タップで展開） */}
       <button onClick={next} className="mt-4 block w-full text-left" disabled={level >= 2}>
         <div
-          className={`mx-auto w-fit rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-extrabold text-white transition ${
+          className={`mx-auto w-fit rounded-lg bg-brand-600 px-4 py-2 text-center text-sm font-bold text-white transition ${
             level === 0 ? "animate-pulse" : ""
           }`}
         >
@@ -47,7 +47,7 @@ function Wbs() {
               ].map((c) => (
                 <div key={c.t}>
                   <div
-                    className={`rounded-lg bg-indigo-100 px-1 py-1.5 text-center text-[11px] font-bold text-indigo-700 transition ${
+                    className={`rounded-lg bg-brand-100 px-1 py-1.5 text-center text-[11px] font-bold text-brand-700 transition ${
                       level === 1 ? "animate-pulse" : ""
                     }`}
                   >
@@ -99,7 +99,7 @@ function Wbs() {
 
 // start/len は日数（0始まり）。delay=買い出し遅delayで後ろへずれる作業。
 const TASKS = [
-  { t: "看板づくり", start: 0, len: 3, color: "bg-indigo-400", follows: false },
+  { t: "看板づくり", start: 0, len: 3, color: "bg-brand-400", follows: false },
   { t: "買い出し", start: 2, len: 2, color: "bg-emerald-400", follows: true },
   { t: "リハーサル", start: 4, len: 2, color: "bg-amber-400", follows: true },
   { t: "本番準備", start: 5, len: 2, color: "bg-rose-400", follows: true },
@@ -143,7 +143,7 @@ function Gantt() {
         <div className="w-16 flex-none" />
         <div className="grid flex-1" style={{ gridTemplateColumns: `repeat(${DAYS}, 1fr)` }}>
           {Array.from({ length: DAYS }, (_, i) => (
-            <div key={i} className={`text-center text-[10px] ${i + 1 === DEADLINE ? "font-extrabold text-rose-500" : "text-gray-400"}`}>
+            <div key={i} className={`text-center text-[10px] ${i + 1 === DEADLINE ? "font-bold text-rose-500" : "text-gray-400"}`}>
               {i + 1 === DEADLINE ? "🎪" : `${i + 1}`}
             </div>
           ))}
@@ -260,7 +260,7 @@ function Quiz() {
 export default function WbsGanttExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🗂️ <b>WBS＝作業を分解した一覧（何をやる）</b>、<b>ガントチャート＝横棒のスケジュール（いつやる）</b>。
         セットでプロジェクトの計画と進捗管理に使います。
       </div>

@@ -57,9 +57,9 @@ const TERMS: Term[] = [
     flow: "支払い・送金をITで",
     d: "金融（Finance）×IT（Technology）。銀行に行かなくても、スマホで支払い・送金・家計管理ができる。",
     ex: "例：スマホのQRコード決済で支払う",
-    chip: "bg-violet-600 text-white",
+    chip: "bg-brand-600 text-white",
     stroke: "#7c3aed",
-    badge: "bg-violet-50 text-violet-900 ring-violet-200",
+    badge: "bg-brand-50 text-brand-900 ring-brand-200",
   },
   {
     key: "sharing",
@@ -180,7 +180,7 @@ function TradeMap() {
             <div
               key={n.id}
               className={`absolute w-[72px] -translate-x-1/2 -translate-y-1/2 rounded-xl border-2 px-1 py-1.5 text-center transition ${
-                lit ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100" : "border-gray-200 bg-white"
+                lit ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100" : "border-gray-200 bg-white"
               }`}
               style={{ left: `${n.x}%`, top: `${n.y}%` }}
             >
@@ -194,7 +194,7 @@ function TradeMap() {
       {/* 説明 */}
       {term ? (
         <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${term.badge}`}>
-          <div className="text-sm font-extrabold">
+          <div className="text-sm font-bold">
             {term.emo} {term.name} ＝ <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs">{term.who}</span>{" "}
             {term.flow}
           </div>
@@ -296,7 +296,7 @@ function Quiz() {
 export default function EbusinessExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🌐 ネットを使った取引は<b>相手が誰か</b>で呼び名が変わります。
         <b>EC＝消費者向け売買／EDI＝企業間データ交換／フィンテック＝金融×IT／シェアリング＝個人間共有</b>。
       </div>

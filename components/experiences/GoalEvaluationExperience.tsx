@@ -80,21 +80,21 @@ function Meter({
   const reached = value >= goal;
   const pct = Math.min(100, Math.round((value / max) * 100));
   const goalPct = Math.round((goal / max) * 100);
-  const bar = tone === "emerald" ? "bg-emerald-500" : "bg-indigo-500";
+  const bar = tone === "emerald" ? "bg-emerald-500" : "bg-brand-500";
   return (
     <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-extrabold text-gray-700">
+        <span className="text-xs font-bold text-gray-700">
           <span
-            className={`mr-1.5 rounded px-1.5 py-0.5 font-mono text-[10px] font-extrabold text-white ${
-              tone === "emerald" ? "bg-emerald-500" : "bg-indigo-500"
+            className={`mr-1.5 rounded px-1.5 py-0.5 font-mono text-[10px] font-bold text-white ${
+              tone === "emerald" ? "bg-emerald-500" : "bg-brand-500"
             }`}
           >
             {tag}
           </span>
           {label}
         </span>
-        <span className={`font-mono text-sm font-extrabold ${reached ? "text-emerald-600" : "text-gray-800"}`}>
+        <span className={`font-mono text-sm font-bold ${reached ? "text-emerald-600" : "text-gray-800"}`}>
           {value}
           {unit}
           {reached && " 🎉"}
@@ -143,7 +143,7 @@ function Simulator() {
       </p>
 
       {/* CSFバッジ */}
-      <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-center text-xs font-extrabold text-amber-800 ring-1 ring-amber-200">
+      <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-center text-xs font-bold text-amber-800 ring-1 ring-amber-200">
         🗝️ CSF（成功のカギ）＝リピート客を増やすこと
       </div>
 
@@ -193,7 +193,7 @@ function Simulator() {
 
       {/* 気づき */}
       {showInsight && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 <b>気づいた？</b>　<b>CSFに効く施策だけがKPIを動かし、KPIが動くとKGIがついてくる</b>。
           広告のようにカギに効かない施策は、がんばってもゴールが遠いまま。
           だから<b>KGI（ゴール）→ CSF（カギ）→ KPI（途中の数字）</b>の順で決めるのです。
@@ -237,7 +237,7 @@ function Bsc() {
           <div key={b.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
               <span className="text-lg">{b.emo}</span>
-              <span className="text-sm font-extrabold text-gray-800">{b.name}</span>
+              <span className="text-sm font-bold text-gray-800">{b.name}</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{b.d}</p>
           </div>
@@ -323,7 +323,7 @@ function Quiz() {
 export default function GoalEvaluationExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🎯 目標は<b>「ゴール（KGI）→ 成功のカギ（CSF）→ 測る数字（KPI）」</b>の順で決めます。
         <b>KGI＝最終ゴール／KPI＝途中の進み具合</b>の違いが何より大事。
       </div>

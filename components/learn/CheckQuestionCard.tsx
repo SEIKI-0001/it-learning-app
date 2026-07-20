@@ -85,7 +85,7 @@ export default function CheckQuestionCard({
   const isCorrect = selected === shuffled.correctChoice;
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-2.5 sm:p-3">
+    <div className="rounded-xl border border-gray-200 bg-white p-2.5 sm:p-3">
       <p className="mb-2 text-sm font-bold text-gray-800">
         Q{number}. {q.prompt}
       </p>
@@ -108,12 +108,12 @@ export default function CheckQuestionCard({
 
       {revealed && (
         <div
-          className={`animate-pop-in mt-2 rounded-2xl p-2.5 ${
+          className={`animate-pop-in mt-2 rounded-xl p-2.5 ${
             isCorrect ? "bg-green-50" : "bg-amber-50"
           }`}
         >
           <p
-            className={`mb-1 text-sm font-extrabold ${
+            className={`mb-1 text-sm font-bold ${
               isCorrect ? "text-green-700" : "text-amber-700"
             }`}
           >
@@ -127,7 +127,7 @@ export default function CheckQuestionCard({
           <button
             type="button"
             onClick={() => setSelected(null)}
-            className="mt-2 text-xs font-bold text-indigo-600 underline underline-offset-2"
+            className="mt-2 text-xs font-bold text-brand-600 underline underline-offset-2"
           >
             もう一度ためす
           </button>

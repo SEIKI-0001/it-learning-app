@@ -54,12 +54,12 @@ function FpCounter() {
               >
                 −
               </button>
-              <span className="w-5 text-center font-mono text-sm font-extrabold text-gray-800">
+              <span className="w-5 text-center font-mono text-sm font-bold text-gray-800">
                 {counts[f.key]}
               </span>
               <button
                 onClick={() => set(f.key, 1)}
-                className="grid h-7 w-7 place-items-center rounded-lg bg-indigo-600 text-base font-bold text-white active:scale-95"
+                className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-base font-bold text-white active:scale-95"
               >
                 ＋
               </button>
@@ -68,9 +68,9 @@ function FpCounter() {
         ))}
       </div>
 
-      <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-center ring-1 ring-indigo-200">
-        <div className="text-xs font-bold text-indigo-500">合計ファンクションポイント</div>
-        <div className="mt-0.5 text-2xl font-extrabold text-indigo-700">{fp} FP</div>
+      <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-center ring-1 ring-brand-200">
+        <div className="text-xs font-bold text-brand-500">合計ファンクションポイント</div>
+        <div className="mt-0.5 text-2xl font-bold text-brand-700">{fp} FP</div>
       </div>
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ ポイントは「<b>利用者から見た機能</b>」で測ること。
@@ -91,7 +91,7 @@ function PersonMonth() {
       </p>
       <div className="mt-3 rounded-xl bg-gray-50 p-4 text-center ring-1 ring-gray-200">
         <div className="text-sm font-bold text-gray-700">
-          👥 3人 × 📅 4か月 ＝ <span className="text-indigo-700">12人月</span>
+          👥 3人 × 📅 4か月 ＝ <span className="text-brand-700">12人月</span>
         </div>
       </div>
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
@@ -168,7 +168,7 @@ function Quiz() {
 export default function EstimationExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📐 見積りは、開発の<b>規模や手間を前もって数値化</b>すること。
         <b>FP法＝機能の数から規模／人月＝人数×期間で工数</b>を表します。
       </div>

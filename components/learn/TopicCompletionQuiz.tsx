@@ -111,11 +111,11 @@ export default function TopicCompletionQuiz({
   if (topic.checkQuestions.length === 0) {
     return (
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold text-gray-800">
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
           <span aria-hidden>✏️</span>
           確認問題
         </h2>
-        <p className="rounded-2xl bg-white p-4 text-sm text-gray-500 shadow-sm ring-1 ring-gray-100">
+        <p className="rounded-xl bg-white p-4 text-sm text-gray-500 border border-gray-200">
           このトピックの確認問題は準備中です。
         </p>
       </section>
@@ -124,7 +124,7 @@ export default function TopicCompletionQuiz({
 
   return (
     <section>
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold text-gray-800">
+      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
         <span aria-hidden>✏️</span>
         確認問題
       </h2>
@@ -132,12 +132,12 @@ export default function TopicCompletionQuiz({
       <RecordingLockNotice variant="compact" className="mb-3" />
 
       {state === undefined ? (
-        <div className="rounded-2xl bg-white p-4 text-sm font-semibold text-gray-500 shadow-sm ring-1 ring-gray-100">
+        <div className="rounded-xl bg-white p-4 text-sm font-semibold text-gray-500 border border-gray-200">
           進捗を読み込んでいます...
         </div>
       ) : state === null ? (
-        <div className="rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-gray-100">
-          <p className="text-base font-extrabold text-gray-800">
+        <div className="rounded-xl bg-white p-5 text-center border border-gray-200">
+          <p className="text-base font-bold text-gray-800">
             完了を記録するには初期設定が必要です
           </p>
           <p className="mt-1 text-sm leading-relaxed text-gray-500">
@@ -150,7 +150,7 @@ export default function TopicCompletionQuiz({
       ) : completed ? (
         <div
           ref={resultRef}
-          className="animate-pop-in rounded-2xl bg-green-50 p-5 text-center ring-1 ring-green-200"
+          className="animate-pop-in rounded-xl bg-green-50 p-5 text-center ring-1 ring-green-200"
         >
           <p className="text-3xl">
             {result && result.correct === result.total ? "🏆" : "🎉"}
@@ -160,7 +160,7 @@ export default function TopicCompletionQuiz({
               <Mochit {...result.presentation} size="medium" className="text-left" />
             </div>
           )}
-          <p className="mt-2 text-base font-extrabold text-green-700">
+          <p className="mt-2 text-base font-bold text-green-700">
             {result && result.correct === result.total
               ? "全問正解！このレッスン、おつかれさま！"
               : "このレッスン、おつかれさま！"}
@@ -171,7 +171,7 @@ export default function TopicCompletionQuiz({
                 {result.total}問中 {result.correct}問正解
               </p>
               <div className="mt-3 flex justify-center gap-2">
-                <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-indigo-600 ring-1 ring-indigo-100">
+                <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-brand-600 ring-1 ring-brand-100">
                   +{result.gainedExp} XP
                 </span>
                 <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-orange-600 ring-1 ring-orange-100">
@@ -198,7 +198,7 @@ export default function TopicCompletionQuiz({
             )}
             <Link
               href="/progress"
-              className="mt-1 text-sm font-bold text-indigo-600 underline underline-offset-4"
+              className="mt-1 text-sm font-bold text-brand-600 underline underline-offset-4"
             >
               合格準備度への反映を見る
             </Link>

@@ -77,7 +77,7 @@ function Sorter() {
           isTarget ? "animate-pulse" : ""
         }`}
       >
-        <div className="text-[11px] font-extrabold text-gray-700">
+        <div className="text-[11px] font-bold text-gray-700">
           {c.emoji} {c.short}
           <span className="ml-1 font-mono text-[10px] text-gray-400">{q}</span>
         </div>
@@ -130,7 +130,7 @@ function Sorter() {
           <div className="text-[11px] font-bold text-gray-400">
             出来事 {idx + 1} / {EVENTS.length}
           </div>
-          <p className="mt-1 text-sm font-extrabold text-gray-800">
+          <p className="mt-1 text-sm font-bold text-gray-800">
             {ev.emo} {ev.t}
           </p>
 
@@ -143,7 +143,7 @@ function Sorter() {
                     key={String(v)}
                     onClick={() => setAnsIn(v)}
                     className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition active:scale-95 ${
-                      ansIn === v ? "bg-indigo-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
+                      ansIn === v ? "bg-brand-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
                     }`}
                   >
                     {v ? "🏠 会社の中（内部）" : "🌍 世の中（外部）"}
@@ -159,7 +159,7 @@ function Sorter() {
                     key={String(v)}
                     onClick={() => setAnsPlus(v)}
                     className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition active:scale-95 ${
-                      ansPlus === v ? "bg-indigo-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
+                      ansPlus === v ? "bg-brand-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
                     }`}
                   >
                     {v ? "😀 追い風（プラス）" : "😟 向かい風（マイナス）"}
@@ -191,7 +191,7 @@ function Sorter() {
               )}
               <button
                 onClick={next}
-                className="mt-2 block w-full rounded-lg bg-indigo-600 py-1.5 text-center text-xs font-bold text-white active:scale-95"
+                className="mt-2 block w-full rounded-lg bg-brand-600 py-1.5 text-center text-xs font-bold text-white active:scale-95"
               >
                 マスに入れて{idx < EVENTS.length - 1 ? "次の出来事へ →" : "完成！"}
               </button>
@@ -202,7 +202,7 @@ function Sorter() {
 
       {done && (
         <div className="mt-4">
-          <div className="rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+          <div className="rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
             💡 <b>気づいた？</b>　どんな出来事も<b>「内か外か」「＋か−か」の2つの質問だけ</b>で
             必ず4マスのどこかに入ります。埋めたマトリクスから
             <b>「強み×機会」を組み合わせて作戦を立てる</b>のがSWOT分析の使い方です。
@@ -287,7 +287,7 @@ function Quiz() {
 export default function SwotExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🧭 <b>SWOT分析</b>は、<b>強み・弱み（内）</b>と<b>機会・脅威（外）</b>の4つで現状を整理する方法。
         「内か外か」を分けるのが最大のポイントです。
       </div>

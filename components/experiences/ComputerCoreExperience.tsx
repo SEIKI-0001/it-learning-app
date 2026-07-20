@@ -67,14 +67,14 @@ function FlowDiagram({ step }: { step: FlowStep }) {
         const tone = isDanger
           ? "border-rose-400 bg-rose-50"
           : isActive
-            ? "border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100"
+            ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100"
             : "border-gray-200 bg-gray-50";
         return (
           <div key={a.id} className="flex items-center">
             <div className={`relative w-[88px] rounded-xl border-2 px-1 py-2.5 text-center transition ${tone}`}>
               {holds && <span className="absolute -top-3 right-1 text-lg">📄</span>}
               <div className="text-2xl leading-none">{a.emo}</div>
-              <div className="mt-1 text-xs font-extrabold text-gray-800">{a.name}</div>
+              <div className="mt-1 text-xs font-bold text-gray-800">{a.name}</div>
               <div className="text-[10px] leading-tight text-gray-500">{a.role}</div>
             </div>
             {i < ACTORS.length - 1 && (
@@ -136,7 +136,7 @@ export default function ComputerCoreExperience() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🖥️ パソコンの中身は<b>「机で勉強する」</b>イメージ。<b>あなた＝CPU（頭脳）</b>、
         <b>机の広さ＝メモリ</b>、<b>引き出し＝ストレージ</b>。この3つの役割を分けると一気に読みやすくなります。
       </div>
@@ -151,8 +151,8 @@ export default function ComputerCoreExperience() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold text-gray-800">{p.name}</span>
-                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[11px] font-bold text-indigo-700">
+                  <span className="text-sm font-bold text-gray-800">{p.name}</span>
+                  <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700">
                     {p.tag}
                   </span>
                 </div>

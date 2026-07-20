@@ -112,7 +112,7 @@ function AttackLab() {
 
   const nodeCard = (emo: string, name: string, st: { tone: string; body: string; hit: boolean }) => (
     <div className={`rounded-xl p-2 ring-2 transition ${st.tone}`}>
-      <div className="text-[11px] font-extrabold text-gray-800">
+      <div className="text-[11px] font-bold text-gray-800">
         {emo} {name}
       </div>
       <div
@@ -143,9 +143,9 @@ function AttackLab() {
               onClick={() => fire(a.id)}
               className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
                 on
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-brand-600 text-white"
                   : tried.has(a.id)
-                    ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200"
+                    ? "bg-brand-50 text-brand-700 ring-1 ring-brand-200"
                     : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
               }`}
             >
@@ -162,7 +162,7 @@ function AttackLab() {
           <span className="text-[11px] font-bold text-gray-400">🏢 実験用の会社</span>
           {cur && (
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                 cur.target === "人をだます" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
               }`}
             >
@@ -198,7 +198,7 @@ function AttackLab() {
       </div>
 
       {allTried && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 <b>気づいた？</b>　<b>DoS・SQLインジェクション・XSSは「機械」を攻める</b>ので仕組み（設定や修正）で防ぎ、
           <b>標的型・ソーシャルエンジニアリングは「人」をだます</b>のでルールと教育で防ぎます。
           狙いがどちらかを見分けるのが第一歩。
@@ -295,7 +295,7 @@ function AttackQuiz() {
 export default function CyberAttacksExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🛡️ 攻撃は<b>「機械（システム）を攻める」</b>ものと<b>「人をだます」</b>ものがあります。
         名前と<b>特徴のキーワード</b>をセットで覚えるのがコツ。
       </div>

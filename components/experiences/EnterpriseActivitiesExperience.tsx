@@ -68,7 +68,7 @@ function Hub() {
 
         {/* 中心=自社 */}
         <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-indigo-600 text-center text-xs font-extrabold leading-tight text-white ring-4 ring-indigo-100">
+          <div className="grid h-16 w-16 place-items-center rounded-full bg-brand-600 text-center text-xs font-bold leading-tight text-white ring-4 ring-brand-100">
             🏢
             <br />
             自社
@@ -88,7 +88,7 @@ function Hub() {
               }`}
             >
               <span className="text-base leading-none">{holder.emoji}</span>
-              <span className="mt-0.5 text-[9px] font-extrabold leading-tight">{holder.name}</span>
+              <span className="mt-0.5 text-[9px] font-bold leading-tight">{holder.name}</span>
             </button>
           );
         })}
@@ -98,12 +98,12 @@ function Hub() {
       <div className="mt-4 min-h-[5.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
         {h ? (
           <div>
-            <div className="text-sm font-extrabold text-gray-800">
+            <div className="text-sm font-bold text-gray-800">
               {h.emoji} {h.name} とのやり取り
             </div>
             <div className="mt-2 space-y-1.5 text-sm">
-              <div className="flex items-center gap-2 rounded-lg bg-indigo-50 px-3 py-1.5">
-                <span className="text-xs font-bold text-indigo-500">自社 →</span>
+              <div className="flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-1.5">
+                <span className="text-xs font-bold text-brand-500">自社 →</span>
                 <span className="font-semibold text-gray-800">{h.give}</span>
               </div>
               <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5">
@@ -208,7 +208,7 @@ function CsrSummary() {
 export default function EnterpriseActivitiesExperience() {
   return (
     <div>
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🏢 会社は商品やサービスで価値を生み、利益を得ながら社会に役立ちます。会社に関わる人・組織が
         <b>ステークホルダ（利害関係者）</b>。株主だけでなく、顧客・従業員・地域なども含みます。
       </div>

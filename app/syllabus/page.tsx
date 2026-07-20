@@ -236,7 +236,7 @@ export default function SyllabusPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-6 pt-6 text-white">
+      <header className="bg-brand-700 px-4 pb-6 pt-6 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-4xl">
           <Link
             href="/learn"
@@ -244,15 +244,15 @@ export default function SyllabusPage() {
           >
             ← 学ぶ
           </Link>
-          <h1 className="text-2xl font-extrabold">シラバス対応表</h1>
+          <h1 className="text-2xl font-bold">シラバス対応表</h1>
           <p className="mt-1 text-sm text-white/90">
             ITパスポートシラバス Ver.6.5 との対応状況を確認できます。
           </p>
 
-          <div className="mt-4 rounded-2xl bg-white/15 px-4 py-3">
+          <div className="mt-4 rounded-xl bg-white/15 px-4 py-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold">シラバス項目カバー率</span>
-              <span className="text-xl font-extrabold">
+              <span className="text-xl font-bold">
                 {coveredTotal}
                 <span className="text-sm font-normal text-white/80">/{total}項目</span>
               </span>
@@ -291,8 +291,8 @@ export default function SyllabusPage() {
           return (
             <section key={section.id} id={section.id}>
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-extrabold text-gray-800">{section.label}</h2>
-                <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-bold text-indigo-600">
+                <h2 className="text-xl font-bold text-gray-800">{section.label}</h2>
+                <span className="rounded-full bg-brand-50 px-3 py-1 text-sm font-bold text-brand-600">
                   {sectionCovered}/{sectionItems.length}
                 </span>
               </div>
@@ -301,7 +301,7 @@ export default function SyllabusPage() {
                 {section.categories.map((cat) => (
                   <div
                     key={cat.label}
-                    className="overflow-hidden rounded-2xl border border-gray-200 bg-white"
+                    className="overflow-hidden rounded-xl border border-gray-200 bg-white"
                   >
                     <div className="border-b border-gray-100 bg-gray-50 px-4 py-2.5">
                       <h3 className="text-sm font-bold text-gray-700">{cat.label}</h3>
@@ -338,7 +338,7 @@ export default function SyllabusPage() {
                                     <Link
                                       key={id}
                                       href={getLessonHref(id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-                                      className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                                      className="inline-flex items-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700 hover:bg-brand-100"
                                     >
                                       {topic.title}
                                     </Link>
@@ -357,7 +357,7 @@ export default function SyllabusPage() {
           );
         })}
 
-        <div className="rounded-2xl border border-gray-200 bg-white px-4 py-4 text-center text-xs text-gray-400">
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center text-xs text-gray-400">
           ITパスポートシラバス Ver.6.5 をもとに作成。対応項目は、トピック・確認問題・解説・復習問題まで自動検証しています。
         </div>
       </div>

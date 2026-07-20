@@ -67,7 +67,7 @@ function Flow() {
               }`}
             >
               <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-gray-700">
+                <span className="font-bold text-gray-700">
                   {s.emoji} {s.name}
                   {canFix && !isFixed && <span className="ml-1.5 text-amber-600">← 時間がかかる</span>}
                   {isFixed && <span className="ml-1.5 text-emerald-600">✓ 改善した</span>}
@@ -170,7 +170,7 @@ function Quiz() {
 export default function BusinessProcessExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔧 <b>業務プロセス改善</b>は、仕事の流れを<b>見える化</b>して、時間のかかる所やミスの起きる所を見つけ、
         手順の見直しやIT化でよくする活動です。
       </div>

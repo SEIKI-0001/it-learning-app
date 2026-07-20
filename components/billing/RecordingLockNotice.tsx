@@ -33,7 +33,7 @@ export default function RecordingLockNotice({ variant = "card", className }: Pro
         <p className="min-w-0 flex-1 text-xs font-bold text-amber-800">
           無料の記録期間が終了しています。結果は記録されません。
         </p>
-        <Link href="/more#billing" className="shrink-0 text-xs font-extrabold text-indigo-600 underline">
+        <Link href="/more#billing" className="shrink-0 text-xs font-bold text-brand-600 underline">
           Proで再開
         </Link>
       </div>
@@ -43,7 +43,7 @@ export default function RecordingLockNotice({ variant = "card", className }: Pro
   return (
     <section
       className={[
-        "rounded-2xl bg-white p-4 shadow-sm ring-1 ring-amber-200",
+        "rounded-xl bg-white p-4 shadow-sm ring-1 ring-amber-200",
         className,
       ]
         .filter(Boolean)
@@ -54,7 +54,7 @@ export default function RecordingLockNotice({ variant = "card", className }: Pro
           🔒
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-extrabold text-gray-800">
+          <h3 className="text-sm font-bold text-gray-800">
             無料の記録期間（7日間）が終了しました
           </h3>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">

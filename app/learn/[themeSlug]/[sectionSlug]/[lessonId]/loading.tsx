@@ -4,8 +4,8 @@ export default function LessonLoading() {
       <div className="mx-auto max-w-3xl animate-pulse space-y-5">
         <div className="h-5 w-48 rounded bg-gray-200" />
         <div className="h-10 w-2/3 rounded bg-gray-200" />
-        <div className="h-56 rounded-3xl bg-gray-200" />
-        <div className="h-44 rounded-3xl bg-gray-200" />
+        <div className="h-56 rounded-xl bg-gray-200" />
+        <div className="h-44 rounded-xl bg-gray-200" />
       </div>
     </main>
   );

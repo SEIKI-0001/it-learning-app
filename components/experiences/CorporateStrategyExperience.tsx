@@ -106,7 +106,7 @@ function CeoSimulator() {
   return (
     <Panel>
       <SectionTitle step={1}>社長になって、成長の手を選ぶ</SectionTitle>
-      <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+      <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
         🧑‍💼 あなたはおもちゃ会社の社長。次のヒットには<b>AI技術</b>が必要。でも自社にはない！
         <b>どうやって手に入れる？</b>
       </div>
@@ -120,17 +120,17 @@ function CeoSimulator() {
               key={w.key}
               onClick={() => pick(w.key)}
               className={`rounded-xl p-3 text-left ring-1 transition active:scale-[0.98] ${
-                on ? "bg-indigo-600 text-white ring-indigo-600" : "bg-gray-50 ring-gray-200"
+                on ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 ring-gray-200"
               }`}
             >
               <div className="text-lg">
                 {w.emo}
                 {done && !on && <span className="ml-1 text-xs">✓</span>}
               </div>
-              <div className={`mt-0.5 text-[13px] font-extrabold ${on ? "text-white" : "text-gray-800"}`}>
+              <div className={`mt-0.5 text-[13px] font-bold ${on ? "text-white" : "text-gray-800"}`}>
                 {w.name}
               </div>
-              <div className={`mt-0.5 text-[10px] font-bold ${on ? "text-indigo-100" : "text-gray-400"}`}>
+              <div className={`mt-0.5 text-[10px] font-bold ${on ? "text-brand-100" : "text-gray-400"}`}>
                 {w.tag}
               </div>
             </button>
@@ -141,7 +141,7 @@ function CeoSimulator() {
       {active ? (
         <div className="mt-3 space-y-2.5">
           <div className="rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
-            <div className="text-sm font-extrabold text-gray-800">
+            <div className="text-sm font-bold text-gray-800">
               {active.emo} {active.name}を選んだ結果…
             </div>
             <p className="mt-1 text-[13px] leading-relaxed text-gray-600">{active.story}</p>
@@ -253,7 +253,7 @@ function Quiz() {
 export default function CorporateStrategyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🚀 会社が成長する手は<b>「自前で磨く（コアコンピタンス）／他社と組む（アライアンス）／買い取る（M&A）／外に出す（アウトソーシング）」</b>。
         どれも“どう力を得るか”の違いです。
       </div>

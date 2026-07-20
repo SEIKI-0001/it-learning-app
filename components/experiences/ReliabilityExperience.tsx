@@ -25,7 +25,7 @@ function AvailabilityCalc() {
       <div className="mt-4 space-y-3">
         <div>
           <div className="flex justify-between text-xs">
-            <span className="font-extrabold text-emerald-700">MTBF（動いている平均時間）</span>
+            <span className="font-bold text-emerald-700">MTBF（動いている平均時間）</span>
             <span className="text-gray-600">{mtbf} 時間</span>
           </div>
           <input
@@ -41,7 +41,7 @@ function AvailabilityCalc() {
         </div>
         <div>
           <div className="flex justify-between text-xs">
-            <span className="font-extrabold text-rose-700">MTTR（直すのにかかる平均時間）</span>
+            <span className="font-bold text-rose-700">MTTR（直すのにかかる平均時間）</span>
             <span className="text-gray-600">{mttr} 時間</span>
           </div>
           <input
@@ -63,7 +63,7 @@ function AvailabilityCalc() {
         <div className="mt-1 text-sm text-gray-700">
           {mtbf} ÷（{mtbf} ＋ {mttr}）＝ {mtbf} ÷ {mtbf + mttr}
         </div>
-        <div className="mt-1 text-2xl font-extrabold text-indigo-600">
+        <div className="mt-1 text-2xl font-bold text-brand-600">
           {avail.toFixed(3)}（{pct.toFixed(1)}%）
         </div>
       </div>
@@ -149,7 +149,7 @@ function SerialVsParallel() {
         ) : (
           <div className="text-xs text-gray-500">並列：1 −（0.1 × 0.1）（どちらか動けばOK）</div>
         )}
-        <div className={`mt-1 text-2xl font-extrabold ${mode === "serial" ? "text-rose-600" : "text-emerald-600"}`}>
+        <div className={`mt-1 text-2xl font-bold ${mode === "serial" ? "text-rose-600" : "text-emerald-600"}`}>
           {val.toFixed(2)}（{(val * 100).toFixed(0)}%）
         </div>
       </div>
@@ -173,7 +173,7 @@ function Box() {
 export default function ReliabilityExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ⚙️ <b>稼働率</b>はシステムが動いている時間の割合。<b>稼働率＝MTBF÷(MTBF＋MTTR)</b>で計算します。
         つなぎ方（直列／並列）でも全体の稼働率は変わります。
       </div>

@@ -22,7 +22,7 @@ export default function VisualLearningSection({
 
   return (
     <section className="-mx-4 bg-white px-4 py-5 ring-1 ring-gray-200 sm:mx-0">
-      <h2 className="flex items-center gap-2 text-lg font-extrabold text-gray-900">
+      <h2 className="flex items-center gap-2 text-lg font-bold text-gray-900">
         <span aria-hidden>▣</span>
         {visualLearning.title ?? "まず図で理解する"}
       </h2>
@@ -61,7 +61,7 @@ export default function VisualLearningSection({
 function PartTitle({ title, prompt }: { title: string; prompt?: string }) {
   return (
     <div>
-      <h3 className="text-base font-extrabold text-gray-800">{title}</h3>
+      <h3 className="text-base font-bold text-gray-800">{title}</h3>
       {prompt && (
         <p className="mt-1 text-xs font-medium leading-relaxed text-gray-500">
           {prompt}
@@ -87,7 +87,7 @@ function IllustrationView({ spec }: { spec: IllustrationSpec }) {
               </span>
             )}
             <div>
-              <p className="text-sm font-extrabold text-sky-950">
+              <p className="text-sm font-bold text-sky-950">
                 {item.title}
               </p>
               <p className="mt-0.5 text-xs leading-relaxed text-sky-900/75">
@@ -118,7 +118,7 @@ function TapRevealView({ spec }: { spec: InteractiveSpec }) {
               onClick={() => setSelectedIndex(i)}
               className={
                 active
-                  ? "min-h-14 rounded-xl bg-indigo-600 px-2 py-2 text-left text-sm font-extrabold text-white shadow-sm"
+                  ? "min-h-14 rounded-xl bg-brand-600 px-2 py-2 text-left text-sm font-bold text-white shadow-sm"
                   : "min-h-14 rounded-xl bg-gray-50 px-2 py-2 text-left text-sm font-bold text-gray-700 ring-1 ring-gray-200"
               }
             >
@@ -133,11 +133,11 @@ function TapRevealView({ spec }: { spec: InteractiveSpec }) {
         })}
       </div>
       {selected && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-3 py-3 ring-1 ring-indigo-100">
-          <p className="text-sm font-extrabold text-indigo-950">
+        <div className="mt-3 rounded-xl bg-brand-50 px-3 py-3 ring-1 ring-brand-100">
+          <p className="text-sm font-bold text-brand-950">
             {selected.title}
           </p>
-          <p className="mt-1 text-sm leading-relaxed text-indigo-900/75">
+          <p className="mt-1 text-sm leading-relaxed text-brand-900/75">
             {selected.body}
           </p>
         </div>
@@ -159,7 +159,7 @@ function StepFlowView({ spec }: { spec: AnimationSpec }) {
               aria-hidden
             />
             <div className="flex-1 rounded-xl bg-emerald-50 px-3 py-2.5 ring-1 ring-emerald-100">
-              <p className="text-sm font-extrabold text-emerald-950">
+              <p className="text-sm font-bold text-emerald-950">
                 {step.emoji && (
                   <span className="mr-1" aria-hidden>
                     {step.emoji}
@@ -214,7 +214,7 @@ function ClassificationGame({ spec }: { spec: ClassificationMiniGame }) {
 
           return (
             <li key={card.label} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <p className="text-sm font-extrabold text-gray-800">
+              <p className="text-sm font-bold text-gray-800">
                 {card.label}
               </p>
               <div className="mt-2 grid grid-cols-2 gap-2">
@@ -227,7 +227,7 @@ function ClassificationGame({ spec }: { spec: ClassificationMiniGame }) {
                     }
                     className={
                       selected === bucket.id
-                        ? "rounded-lg bg-gray-900 px-2 py-2 text-xs font-extrabold text-white"
+                        ? "rounded-lg bg-gray-900 px-2 py-2 text-xs font-bold text-white"
                         : "rounded-lg bg-white px-2 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200"
                     }
                   >
@@ -277,7 +277,7 @@ function MatchingGame({ spec }: { spec: MatchingMiniGame }) {
 
           return (
             <li key={pair.left} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <p className="text-sm font-extrabold text-gray-800">
+              <p className="text-sm font-bold text-gray-800">
                 {pair.left}
               </p>
               <div className="mt-2 grid grid-cols-1 gap-2">
@@ -290,7 +290,7 @@ function MatchingGame({ spec }: { spec: MatchingMiniGame }) {
                     }
                     className={
                       selected === right
-                        ? "rounded-lg bg-gray-900 px-2 py-2 text-left text-xs font-extrabold text-white"
+                        ? "rounded-lg bg-gray-900 px-2 py-2 text-left text-xs font-bold text-white"
                         : "rounded-lg bg-white px-2 py-2 text-left text-xs font-bold text-gray-700 ring-1 ring-gray-200"
                     }
                   >

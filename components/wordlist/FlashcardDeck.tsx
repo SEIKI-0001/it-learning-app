@@ -91,11 +91,11 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
       <div
         role="status"
         aria-live="polite"
-        className="flex flex-col items-center gap-3 rounded-3xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-400"
+        className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-400"
       >
         <span
           aria-hidden
-          className="h-7 w-7 animate-spin rounded-full border-[3px] border-indigo-200 border-t-indigo-600 motion-reduce:animate-none"
+          className="h-7 w-7 animate-spin rounded-full border-[3px] border-brand-200 border-t-brand-600 motion-reduce:animate-none"
         />
         読み込み中…
       </div>
@@ -104,14 +104,14 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
 
   if (pool.length === 0) {
     return (
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center">
+      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
         <p className="text-4xl">📭</p>
         <p className="mt-3 text-sm leading-relaxed text-gray-500">
           {EMPTY_HINT[mode]}
         </p>
         <Link
           href="/glossary"
-          className="mt-5 inline-block rounded-2xl bg-indigo-600 px-5 py-2.5 text-sm font-extrabold text-white"
+          className="mt-5 inline-block rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white"
         >
           単語帳トップへ
         </Link>
@@ -145,22 +145,22 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
     const retryList = deck.filter((e) => retryIds.has(e.id));
 
     return (
-      <div className="rounded-3xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
         <p className="text-4xl">🎉</p>
-        <p className="mt-2 text-lg font-extrabold text-gray-900">
+        <p className="mt-2 text-lg font-bold text-gray-900">
           {total}枚 おつかれさま！
         </p>
         <div className="mx-auto mt-4 grid max-w-xs grid-cols-3 gap-2">
-          <div className="rounded-2xl bg-green-50 py-3">
-            <p className="text-2xl font-extrabold text-green-600">{remembered}</p>
+          <div className="rounded-xl bg-green-50 py-3">
+            <p className="text-2xl font-bold text-green-600">{remembered}</p>
             <p className="text-xs font-bold text-green-700">覚えた</p>
           </div>
-          <div className="rounded-2xl bg-amber-50 py-3">
-            <p className="text-2xl font-extrabold text-amber-600">{vague}</p>
+          <div className="rounded-xl bg-amber-50 py-3">
+            <p className="text-2xl font-bold text-amber-600">{vague}</p>
             <p className="text-xs font-bold text-amber-700">あいまい</p>
           </div>
-          <div className="rounded-2xl bg-rose-50 py-3">
-            <p className="text-2xl font-extrabold text-rose-600">{forgot}</p>
+          <div className="rounded-xl bg-rose-50 py-3">
+            <p className="text-2xl font-bold text-rose-600">{forgot}</p>
             <p className="text-xs font-bold text-rose-700">覚えてない</p>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
             <button
               type="button"
               onClick={() => startSession(retryList)}
-              className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-extrabold text-white transition active:scale-[0.98]"
+              className="w-full rounded-xl bg-amber-500 py-3 text-sm font-bold text-white transition active:scale-[0.98]"
             >
               あいまい・覚えてない {retryList.length}枚をもう一度
             </button>
@@ -179,7 +179,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
             <button
               type="button"
               onClick={() => startSession(pool)}
-              className="w-full rounded-2xl bg-indigo-600 py-3 text-sm font-extrabold text-white transition active:scale-[0.98]"
+              className="w-full rounded-xl bg-brand-600 py-3 text-sm font-bold text-white transition active:scale-[0.98]"
             >
               次の{Math.min(SESSION_SIZE, pool.length)}枚へ
             </button>
@@ -187,13 +187,13 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
           <button
             type="button"
             onClick={() => startSession(deck)}
-            className="w-full rounded-2xl bg-gray-100 py-3 text-sm font-extrabold text-gray-600 transition active:scale-[0.98]"
+            className="w-full rounded-xl bg-gray-100 py-3 text-sm font-bold text-gray-600 transition active:scale-[0.98]"
           >
             同じ{total}枚をもう一度
           </button>
           <Link
             href="/glossary"
-            className="block w-full rounded-2xl bg-gray-100 py-3 text-sm font-extrabold text-gray-600 transition active:scale-[0.98]"
+            className="block w-full rounded-xl bg-gray-100 py-3 text-sm font-bold text-gray-600 transition active:scale-[0.98]"
           >
             単語帳トップへ
           </Link>
@@ -208,7 +208,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
       <div className="mb-3 flex items-center gap-3">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
           <div
-            className="h-full rounded-full bg-indigo-500 transition-all"
+            className="h-full rounded-full bg-brand-500 transition-all"
             style={{ width: `${(index / total) * 100}%` }}
           />
         </div>
@@ -219,7 +219,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
 
       {!flipped ? (
         // 表面：略語を大きく＋「答えを見る」
-        <div className="flex min-h-[18rem] flex-col items-center justify-center gap-4 rounded-3xl border border-gray-200 bg-white px-6 py-12 shadow-sm">
+        <div className="flex min-h-[18rem] flex-col items-center justify-center gap-4 rounded-xl border border-gray-200 bg-white px-6 py-12 shadow-sm">
           <span
             className={`rounded-full px-3 py-1 text-xs font-bold ${CATEGORY_BADGE[current.category]}`}
           >
@@ -231,17 +231,17 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
           <button
             type="button"
             onClick={() => setFlipped(true)}
-            className="mt-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-extrabold text-white transition active:scale-[0.98]"
+            className="mt-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-bold text-white transition active:scale-[0.98]"
           >
             答えを見る ▶
           </button>
         </div>
       ) : (
         // 裏面：正式名称/日本語/英単語分解/一言意味/試験キーワード/似た語との違い
-        <div className="space-y-3 rounded-3xl border border-indigo-200 bg-white px-5 py-5 shadow-sm">
+        <div className="space-y-3 rounded-xl border border-brand-200 bg-white px-5 py-5 shadow-sm">
           <div>
             <p className="text-3xl font-black text-gray-900">{current.acronym}</p>
-            <p className="mt-1 text-base font-bold text-indigo-700">
+            <p className="mt-1 text-base font-bold text-brand-700">
               {current.fullName}
             </p>
             <p className="text-sm font-bold text-gray-700">{current.japanese}</p>
@@ -261,16 +261,16 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
           </div>
 
           {/* 一言意味（目立たせる） */}
-          <div className="rounded-2xl bg-indigo-50 p-3">
-            <p className="text-xs font-bold text-indigo-500">一言でいうと</p>
-            <p className="mt-0.5 text-base font-bold leading-snug text-indigo-800">
+          <div className="rounded-xl bg-brand-50 p-3">
+            <p className="text-xs font-bold text-brand-500">一言でいうと</p>
+            <p className="mt-0.5 text-base font-bold leading-snug text-brand-800">
               {current.oneLine}
             </p>
           </div>
 
           {/* 試験キーワード */}
           {current.examKeywords.length > 0 && (
-            <div className="rounded-2xl bg-amber-50 p-3">
+            <div className="rounded-xl bg-amber-50 p-3">
               <p className="text-xs font-bold text-amber-600">試験キーワード</p>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {current.examKeywords.map((k) => (
@@ -287,7 +287,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
 
           {/* 似た語との違い */}
           {current.confusedWith.length > 0 && (
-            <div className="rounded-2xl bg-rose-50 p-3">
+            <div className="rounded-xl bg-rose-50 p-3">
               <p className="text-xs font-bold text-rose-600">
                 似た語との違い：{current.differenceAxis}
               </p>
@@ -312,21 +312,21 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
           <button
             type="button"
             onClick={() => rate("forgot")}
-            className="rounded-2xl bg-rose-100 py-3.5 text-sm font-extrabold text-rose-700 transition active:scale-[0.98]"
+            className="rounded-xl bg-rose-100 py-3.5 text-sm font-bold text-rose-700 transition active:scale-[0.98]"
           >
             覚えてない
           </button>
           <button
             type="button"
             onClick={() => rate("vague")}
-            className="rounded-2xl bg-amber-100 py-3.5 text-sm font-extrabold text-amber-700 transition active:scale-[0.98]"
+            className="rounded-xl bg-amber-100 py-3.5 text-sm font-bold text-amber-700 transition active:scale-[0.98]"
           >
             あいまい
           </button>
           <button
             type="button"
             onClick={() => rate("remembered")}
-            className="rounded-2xl bg-green-500 py-3.5 text-sm font-extrabold text-white transition active:scale-[0.98]"
+            className="rounded-xl bg-green-500 py-3.5 text-sm font-bold text-white transition active:scale-[0.98]"
           >
             覚えた
           </button>
@@ -341,7 +341,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
         くわしくは{" "}
         <Link
           href={`/glossary/${current.id}`}
-          className="font-bold text-indigo-500 underline underline-offset-2"
+          className="font-bold text-brand-500 underline underline-offset-2"
         >
           詳細ページ
         </Link>

@@ -18,7 +18,7 @@ const CYCLE = [
 ];
 
 const RING: Record<string, { on: string; off: string }> = {
-  indigo: { on: "bg-indigo-600 text-white ring-indigo-600", off: "bg-indigo-50 text-indigo-400 ring-indigo-200" },
+  indigo: { on: "bg-brand-600 text-white ring-brand-600", off: "bg-brand-50 text-brand-400 ring-brand-200" },
   emerald: { on: "bg-emerald-600 text-white ring-emerald-600", off: "bg-emerald-50 text-emerald-400 ring-emerald-200" },
   amber: { on: "bg-amber-500 text-white ring-amber-500", off: "bg-amber-50 text-amber-500 ring-amber-200" },
   rose: { on: "bg-rose-500 text-white ring-rose-500", off: "bg-rose-50 text-rose-400 ring-rose-200" },
@@ -44,13 +44,13 @@ function Cycle() {
           return (
             <div
               key={c.k}
-              className={`grid h-20 w-20 place-items-center rounded-2xl text-center ring-2 transition ${
+              className={`grid h-20 w-20 place-items-center rounded-xl text-center ring-2 transition ${
                 on ? `${ring.on} scale-105` : ring.off
               }`}
             >
               <div>
                 <div className="text-xl leading-none">{c.emoji}</div>
-                <div className="mt-1 text-lg font-extrabold leading-none">{c.k}</div>
+                <div className="mt-1 text-lg font-bold leading-none">{c.k}</div>
               </div>
             </div>
           );
@@ -59,7 +59,7 @@ function Cycle() {
       <p className="mt-1 text-center text-[11px] text-gray-400">時計回りに P → D → C → A、そしてまた P へ</p>
 
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 ring-1 ring-sky-200">
-        <div className="text-sm font-extrabold text-gray-800">
+        <div className="text-sm font-bold text-gray-800">
           {cur.emoji} {cur.name}
         </div>
         <p className="mt-1 text-sm leading-relaxed text-gray-700">例：{cur.ex}</p>
@@ -77,7 +77,7 @@ function Cycle() {
           </button>
           <button
             onClick={() => setStep((s) => s + 1)}
-            className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-bold text-white active:scale-95"
+            className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-bold text-white active:scale-95"
           >
             次へ →
           </button>
@@ -94,14 +94,14 @@ function KeyPoint() {
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 text-center ring-1 ring-gray-200">
           <div className="text-xl">🛑</div>
-          <div className="mt-1 text-xs font-extrabold text-gray-600">やりがちなミス</div>
+          <div className="mt-1 text-xs font-bold text-gray-600">やりがちなミス</div>
           <p className="mt-1 text-[11px] leading-relaxed text-gray-500">
             Check（評価）で「確認した」だけで終わり、次に活かさない。
           </p>
         </div>
         <div className="rounded-xl bg-emerald-50 p-3 text-center ring-1 ring-emerald-200">
           <div className="text-xl">🔄</div>
-          <div className="mt-1 text-xs font-extrabold text-emerald-700">正しい使い方</div>
+          <div className="mt-1 text-xs font-bold text-emerald-700">正しい使い方</div>
           <p className="mt-1 text-[11px] leading-relaxed text-gray-600">
             Act（改善）で直し、それを<b>次のPlan</b>に反映してまた回す。
           </p>
@@ -174,7 +174,7 @@ function Quiz() {
 export default function PdcaExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔄 <b>PDCA</b> は <b>Plan(計画)→Do(実行)→Check(評価)→Act(改善)</b> をくり返す改善サイクル。
         やりっぱなしにせず、結果を見て次の行動を直すのがコツです。
       </div>

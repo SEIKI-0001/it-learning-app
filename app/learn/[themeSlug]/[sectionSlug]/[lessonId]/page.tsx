@@ -72,16 +72,16 @@ export default async function LessonPage({
       <header className="border-b border-gray-200 bg-white px-4 py-5">
         <div className="mx-auto w-full max-w-3xl">
           <nav aria-label="パンくず" className="flex flex-wrap gap-x-1 text-sm font-semibold text-gray-500">
-            <Link href="/learn" className="hover:text-indigo-600">学ぶ</Link>
+            <Link href="/learn" className="hover:text-brand-600">学ぶ</Link>
             <span aria-hidden>＞</span>
-            <Link href={themeHref} className="hover:text-indigo-600">{theme.title}</Link>
+            <Link href={themeHref} className="hover:text-brand-600">{theme.title}</Link>
             <span aria-hidden>＞</span>
             <span>{section.title}</span>
           </nav>
-          <p className="mt-5 text-xs font-extrabold text-indigo-600">
+          <p className="mt-5 text-xs font-bold text-brand-600">
             {FIELD_LABELS[topic.field]}・第{theme.chapterNumber}章
           </p>
-          <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-gray-900">{topic.title}</h1>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">{topic.title}</h1>
           <p className="mt-2 text-sm leading-relaxed text-gray-600">{topic.summary}</p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-gray-600">
             <span className="rounded-full bg-gray-100 px-3 py-1.5">目安 {topic.estimatedMinutes}分</span>
@@ -91,17 +91,17 @@ export default async function LessonPage({
 
           {/* このレッスンの流れ。理解→確認→仕上げの順で進むことを最初に示す */}
           <nav aria-label="レッスンの流れ" className="mt-4 flex flex-wrap items-center gap-1.5 text-xs font-bold">
-            <a href="#lesson-content" className="rounded-full bg-indigo-50 px-3 py-1.5 text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100">
+            <a href="#lesson-content" className="rounded-full bg-brand-50 px-3 py-1.5 text-brand-700 ring-1 ring-brand-100 transition hover:bg-brand-100">
               1. 解説で理解する
             </a>
             <span aria-hidden className="text-gray-300">→</span>
-            <a href="#lesson-quiz" className="rounded-full bg-indigo-50 px-3 py-1.5 text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100">
+            <a href="#lesson-quiz" className="rounded-full bg-brand-50 px-3 py-1.5 text-brand-700 ring-1 ring-brand-100 transition hover:bg-brand-100">
               2. 確認問題で確かめる
             </a>
             <span aria-hidden className="text-gray-300">→</span>
             <a
               href={hasCheckPack(topic.id) ? "#lesson-check-pack" : "#lesson-review"}
-              className="rounded-full bg-indigo-50 px-3 py-1.5 text-indigo-700 ring-1 ring-indigo-100 transition hover:bg-indigo-100"
+              className="rounded-full bg-brand-50 px-3 py-1.5 text-brand-700 ring-1 ring-brand-100 transition hover:bg-brand-100"
             >
               3. {hasCheckPack(topic.id) ? "過去問レベルで仕上げる" : "復習ポイントを押さえる"}
             </a>
@@ -138,9 +138,9 @@ export default async function LessonPage({
           <section id="lesson-check-pack" className="scroll-mt-24">
             <Link
               href={`/check-pack/${topic.id}`}
-              className="block rounded-3xl bg-gradient-to-r from-indigo-600 to-violet-600 p-5 text-white shadow-sm transition hover:shadow-md active:scale-[0.99]"
+              className="block rounded-xl bg-brand-700 p-5 text-white shadow-sm transition hover:shadow-md active:scale-[0.99]"
             >
-              <p className="text-base font-extrabold">仕上げ：確認パックを受ける</p>
+              <p className="text-base font-bold">仕上げ：確認パックを受ける</p>
               <p className="mt-1 text-sm text-white/90">基礎確認から過去問レベルまで解いて、本番対応OKを目指します。</p>
             </Link>
           </section>
@@ -154,7 +154,7 @@ export default async function LessonPage({
           {adjacent.previous ? (
             <Link
               href={getLessonHref(adjacent.previous.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-              className="rounded-2xl border border-gray-200 bg-white p-4 text-sm font-bold text-gray-700 hover:border-indigo-200 hover:text-indigo-700"
+              className="rounded-xl border border-gray-200 bg-white p-4 text-sm font-bold text-gray-700 hover:border-brand-200 hover:text-brand-700"
             >
               <span className="block text-xs text-gray-400">← 前のレッスン</span>
               <span className="mt-1 block">{adjacent.previous.title}</span>
@@ -162,14 +162,14 @@ export default async function LessonPage({
           ) : <div className="hidden sm:block" />}
           <Link
             href={themeHref}
-            className="rounded-2xl border border-gray-200 bg-white p-4 text-center text-sm font-bold text-gray-700 hover:border-indigo-200 hover:text-indigo-700"
+            className="rounded-xl border border-gray-200 bg-white p-4 text-center text-sm font-bold text-gray-700 hover:border-brand-200 hover:text-brand-700"
           >
             テーマに戻る
           </Link>
           {adjacent.next ? (
             <Link
               href={getLessonHref(adjacent.next.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-              className="rounded-2xl border border-gray-200 bg-white p-4 text-right text-sm font-bold text-gray-700 hover:border-indigo-200 hover:text-indigo-700"
+              className="rounded-xl border border-gray-200 bg-white p-4 text-right text-sm font-bold text-gray-700 hover:border-brand-200 hover:text-brand-700"
             >
               <span className="block text-xs text-gray-400">次のレッスン →</span>
               <span className="mt-1 block">{adjacent.next.title}</span>

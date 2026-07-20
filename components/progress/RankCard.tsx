@@ -8,22 +8,22 @@ export default function RankCard({ exp }: { exp: number }) {
   const { current, next, index, isMax, remaining, ratio } = status;
 
   return (
-    <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="rounded-xl bg-white p-4 border border-gray-200">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-extrabold text-gray-800">ランク</h2>
+        <h2 className="text-base font-bold text-gray-800">ランク</h2>
         <span className="text-xs font-bold text-gray-400">累計 {Math.max(0, exp)} XP</span>
       </div>
 
       {/* 現在のランクを強調 */}
-      <div className="mt-3 flex items-center gap-3 rounded-2xl bg-indigo-50 p-3 ring-1 ring-indigo-100">
+      <div className="mt-3 flex items-center gap-3 rounded-xl bg-brand-50 p-3 ring-1 ring-brand-100">
         <span className="text-3xl" aria-hidden>
           {current.emoji}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-400">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-brand-400">
             いまのランク
           </p>
-          <p className="text-lg font-extrabold leading-tight text-indigo-700">
+          <p className="text-lg font-bold leading-tight text-brand-700">
             {current.name}
           </p>
         </div>
@@ -32,7 +32,7 @@ export default function RankCard({ exp }: { exp: number }) {
       {/* 次ランクまでの進捗 */}
       <div className="mt-3">
         {isMax ? (
-          <p className="text-center text-sm font-extrabold text-amber-600">
+          <p className="text-center text-sm font-bold text-amber-600">
             👑 最高ランクに到達！ここまでの積み上げ、お見事です。
           </p>
         ) : (
@@ -41,11 +41,11 @@ export default function RankCard({ exp }: { exp: number }) {
               <span className="font-semibold text-gray-500">
                 次は {next!.emoji} {next!.name}
               </span>
-              <span className="font-bold text-indigo-600">あと {remaining} XP</span>
+              <span className="font-bold text-brand-600">あと {remaining} XP</span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"
+                className="h-full rounded-full bg-brand-600 transition-all duration-500"
                 style={{ width: `${Math.round(ratio * 100)}%` }}
               />
             </div>
@@ -63,7 +63,7 @@ export default function RankCard({ exp }: { exp: number }) {
               key={r.id}
               className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm ${
                 isCurrent
-                  ? "bg-indigo-600 font-extrabold text-white"
+                  ? "bg-brand-600 font-bold text-white"
                   : reached
                     ? "text-gray-700"
                     : "text-gray-400"

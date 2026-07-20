@@ -15,6 +15,7 @@ import {
   saveProgressToDb,
   setUserId,
 } from "@/lib/userSession";
+import Icon from "@/components/ui/Icon";
 
 // 初回設定。試験予定日・学習可能時間・理解度・苦手分野・学習スタイルを取得し、
 // AIプランナー(lib/aiPlanner.ts)が使えるプロフィールとして保存する。
@@ -83,37 +84,37 @@ export default function OnboardingPage() {
   return (
     <main className="min-h-screen bg-gray-50 px-5 py-8">
       <div className="mx-auto w-full max-w-md md:max-w-xl">
-        <p className="text-sm font-semibold text-indigo-500">初回設定 1/2</p>
-        <h1 className="mt-1 text-2xl font-extrabold text-gray-800">
+        <p className="text-xs font-medium text-gray-500">初回設定 1/2</p>
+        <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">
           あなたに合わせて学習プランを作ります
         </h1>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-gray-600">
           あとから変更できます。気軽に選んでください。
         </p>
 
-        <div className="mt-8 space-y-7">
+        <div className="mt-8 space-y-8">
           {/* 試験予定日 */}
           <fieldset>
-            <legend className="mb-2 flex items-center gap-2 text-base font-bold text-gray-800">
-              <span aria-hidden>📅</span>試験予定日
+            <legend className="mb-2 text-[15px] font-semibold text-gray-900">
+              試験予定日
             </legend>
             <input
               type="date"
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
-              className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3.5 text-base font-semibold text-gray-700"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             />
-            <p className="mt-1.5 text-xs text-gray-400">
+            <p className="mt-1.5 text-xs text-gray-500">
               まだ決まっていなければ空のままでOK。決めると残り日数から逆算します。
             </p>
           </fieldset>
 
           {/* 学習可能時間 */}
           <fieldset>
-            <legend className="mb-3 flex items-center gap-2 text-base font-bold text-gray-800">
-              <span aria-hidden>⏱️</span>1日の学習可能時間
+            <legend className="mb-3 text-[15px] font-semibold text-gray-900">
+              1日の学習可能時間
             </legend>
-            <p className="mb-1.5 text-sm font-semibold text-gray-600">平日</p>
+            <p className="mb-1.5 text-sm text-gray-600">平日</p>
             <div className="grid grid-cols-4 gap-2">
               {WEEKDAY_OPTIONS.map((m) => (
                 <MinuteButton
@@ -124,7 +125,7 @@ export default function OnboardingPage() {
                 />
               ))}
             </div>
-            <p className="mb-1.5 mt-3 text-sm font-semibold text-gray-600">休日</p>
+            <p className="mb-1.5 mt-3 text-sm text-gray-600">休日</p>
             <div className="grid grid-cols-4 gap-2">
               {HOLIDAY_OPTIONS.map((m) => (
                 <MinuteButton
@@ -139,8 +140,8 @@ export default function OnboardingPage() {
 
           {/* 現在の理解度 */}
           <fieldset>
-            <legend className="mb-3 flex items-center gap-2 text-base font-bold text-gray-800">
-              <span aria-hidden>🌟</span>今の理解度は？（0〜5）
+            <legend className="mb-3 text-[15px] font-semibold text-gray-900">
+              今の理解度は？（0〜5）
             </legend>
             <div className="flex justify-between gap-2">
               {[0, 1, 2, 3, 4, 5].map((n) => (
@@ -148,10 +149,10 @@ export default function OnboardingPage() {
                   key={n}
                   type="button"
                   onClick={() => setConfidence(n)}
-                  className={`h-12 flex-1 rounded-xl border-2 text-base font-extrabold transition active:scale-[0.97] ${
+                  className={`h-12 flex-1 rounded-lg border text-base tabular-nums transition active:scale-[0.98] ${
                     confidence === n
-                      ? "border-amber-400 bg-amber-100 text-amber-700"
-                      : "border-gray-200 bg-white text-gray-500"
+                      ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
+                      : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   {n}
@@ -162,10 +163,10 @@ export default function OnboardingPage() {
 
           {/* 苦手分野 */}
           <fieldset>
-            <legend className="mb-1 flex items-center gap-2 text-base font-bold text-gray-800">
-              <span aria-hidden>🧩</span>苦手・不安な分野は？
+            <legend className="mb-1 text-[15px] font-semibold text-gray-900">
+              苦手・不安な分野は？
             </legend>
-            <p className="mb-3 text-xs text-gray-400">複数選べます（なくてもOK）</p>
+            <p className="mb-3 text-xs text-gray-500">複数選べます（なくてもOK）</p>
             <div className="grid grid-cols-1 gap-2.5">
               {FIELDS.map((field) => {
                 const active = weakFields.includes(field);
@@ -174,14 +175,17 @@ export default function OnboardingPage() {
                     key={field}
                     type="button"
                     onClick={() => toggleField(field)}
-                    className={`rounded-2xl border-2 px-4 py-3.5 text-left text-base font-semibold transition active:scale-[0.99] ${
+                    aria-pressed={active}
+                    className={`flex items-center justify-between rounded-lg border px-4 py-3.5 text-left text-[15px] transition active:scale-[0.99] ${
                       active
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                        : "border-gray-200 bg-white text-gray-700"
+                        ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
-                    {active ? "☑ " : "　"}
                     {FIELD_LABELS[field]}
+                    {active && (
+                      <Icon name="check" className="h-4 w-4 text-brand-700" strokeWidth={2.2} />
+                    )}
                   </button>
                 );
               })}
@@ -190,8 +194,8 @@ export default function OnboardingPage() {
 
           {/* 学習スタイル */}
           <fieldset>
-            <legend className="mb-3 flex items-center gap-2 text-base font-bold text-gray-800">
-              <span aria-hidden>🎯</span>学習スタイルの希望
+            <legend className="mb-3 text-[15px] font-semibold text-gray-900">
+              学習スタイルの希望
             </legend>
             <div className="grid grid-cols-1 gap-2.5">
               {STYLES.map((style) => {
@@ -201,13 +205,17 @@ export default function OnboardingPage() {
                     key={style}
                     type="button"
                     onClick={() => setStudyStyle(style)}
-                    className={`rounded-2xl border-2 px-4 py-3.5 text-left text-base font-semibold transition active:scale-[0.99] ${
+                    aria-pressed={active}
+                    className={`flex items-center justify-between rounded-lg border px-4 py-3.5 text-left text-[15px] transition active:scale-[0.99] ${
                       active
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                        : "border-gray-200 bg-white text-gray-700"
+                        ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                     }`}
                   >
                     {STUDY_STYLE_LABELS[style]}
+                    {active && (
+                      <Icon name="check" className="h-4 w-4 text-brand-700" strokeWidth={2.2} />
+                    )}
                   </button>
                 );
               })}
@@ -218,9 +226,9 @@ export default function OnboardingPage() {
         <button
           type="button"
           onClick={handleStart}
-          className="mt-9 w-full rounded-2xl bg-indigo-600 px-6 py-4 text-lg font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+          className="mt-9 w-full rounded-lg bg-brand-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-brand-700 active:scale-[0.99]"
         >
-          ✅ この内容でプランを作る
+          この内容でプランを作る
         </button>
       </div>
     </main>
@@ -240,10 +248,11 @@ function MinuteButton({
     <button
       type="button"
       onClick={onClick}
-      className={`h-12 rounded-xl border-2 text-sm font-bold transition active:scale-[0.97] ${
+      aria-pressed={active}
+      className={`h-12 rounded-lg border text-sm tabular-nums transition active:scale-[0.98] ${
         active
-          ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-          : "border-gray-200 bg-white text-gray-500"
+          ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
+          : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
       }`}
     >
       {label}

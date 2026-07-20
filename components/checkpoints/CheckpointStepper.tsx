@@ -28,11 +28,11 @@ export default function CheckpointStepper({
             <div className="flex flex-col items-center">
               <span
                 aria-hidden
-                className={`grid h-6 w-6 place-items-center rounded-full text-[11px] font-extrabold ring-2 transition ${
+                className={`grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold ring-2 transition ${
                   state === "cleared"
                     ? "bg-emerald-500 text-white ring-emerald-200"
                     : state === "current"
-                      ? "scale-110 bg-indigo-600 text-white ring-indigo-200"
+                      ? "scale-110 bg-brand-600 text-white ring-brand-200"
                       : "bg-gray-100 text-gray-400 ring-gray-200"
                 }`}
               >
@@ -41,7 +41,7 @@ export default function CheckpointStepper({
               <span
                 className={`mt-0.5 text-[9px] font-bold ${
                   isCurrent
-                    ? "text-indigo-600"
+                    ? "text-brand-600"
                     : isCleared
                       ? "text-emerald-600"
                       : "text-gray-400"

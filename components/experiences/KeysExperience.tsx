@@ -32,7 +32,7 @@ function LinkExperience() {
     <Panel>
       <SectionTitle step={2}>外部キーでつながる（クリックして辿る）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        成績表の<b className="text-violet-700">学生番号（外部キー）</b>は、名簿の
+        成績表の<b className="text-brand-700">学生番号（外部キー）</b>は、名簿の
         <b className="text-rose-700">学生番号（主キー）</b>を指しています。
         <b className="text-gray-800">成績の行をタップ</b>すると、それが誰の成績か辿れます。
       </p>
@@ -44,7 +44,7 @@ function LinkExperience() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-100 text-gray-700">
-                <th className="px-3 py-2 font-bold text-violet-700">学生番号（外部キー）</th>
+                <th className="px-3 py-2 font-bold text-brand-700">学生番号（外部キー）</th>
                 <th className="px-3 py-2 font-bold">科目</th>
                 <th className="px-3 py-2 font-bold">点数</th>
               </tr>
@@ -57,10 +57,10 @@ function LinkExperience() {
                     key={`${g.student}-${g.subject}`}
                     onClick={() => setSel(i)}
                     className={`cursor-pointer border-t border-gray-200 text-center transition active:scale-[0.99] ${
-                      on ? "bg-indigo-50" : "bg-white hover:bg-gray-50"
+                      on ? "bg-brand-50" : "bg-white hover:bg-gray-50"
                     }`}
                   >
-                    <td className={`px-3 py-2 font-mono font-bold ${on ? "bg-violet-200 text-violet-800" : "text-violet-700"}`}>
+                    <td className={`px-3 py-2 font-mono font-bold ${on ? "bg-brand-200 text-brand-800" : "text-brand-700"}`}>
                       {g.student}
                     </td>
                     <td className="px-3 py-2">{g.subject}</td>
@@ -76,7 +76,7 @@ function LinkExperience() {
       {/* つながりの説明 */}
       <div className="my-3 rounded-xl bg-sky-50 px-4 py-3 text-center text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200">
         成績「<b>{grade.subject} {grade.score}点</b>」の学生番号は{" "}
-        <b className="font-mono text-violet-700">{grade.student}</b> →
+        <b className="font-mono text-brand-700">{grade.student}</b> →
         名簿で <b className="font-mono text-rose-700">{grade.student}</b> を探すと…
         <b className="text-gray-900">「{matched.name}」さん（{matched.klass}）</b>の成績だと分かる！
       </div>
@@ -100,7 +100,7 @@ function LinkExperience() {
                   <tr
                     key={s.id}
                     className={`border-t border-gray-200 text-center transition ${
-                      on ? "bg-indigo-50" : "bg-white"
+                      on ? "bg-brand-50" : "bg-white"
                     }`}
                   >
                     <td className={`px-3 py-2 font-mono font-bold ${on ? "bg-rose-200 text-rose-800" : "text-rose-700"}`}>
@@ -122,7 +122,7 @@ function LinkExperience() {
 export default function KeysExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🏫 学校でたとえると——名簿を管理する<b>先生＝DBMS</b>、<b>学生番号＝主キー</b>（1人を確実に見分ける）、
         成績表に書かれた<b>学生番号＝外部キー</b>（名簿とつなぐ）。番号で名簿と成績表が結びつきます。
       </div>
@@ -171,7 +171,7 @@ export default function KeysExperience() {
             <b className="text-rose-700">主キー</b>：表の1行を重複なく見分ける項目（学生番号）。
           </li>
           <li className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-            <b className="text-violet-700">外部キー</b>：別の表の主キーを参照してつなぐ項目（成績表の学生番号）。
+            <b className="text-brand-700">外部キー</b>：別の表の主キーを参照してつなぐ項目（成績表の学生番号）。
           </li>
         </ul>
       </Panel>

@@ -46,7 +46,7 @@ export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
     id: "concept",
     label: "イメージをつかむ",
     content: (
-      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+      <section className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
         <h3 className="text-base font-bold text-gray-800">
           {topic.conceptCard.heading}
         </h3>
@@ -71,7 +71,7 @@ export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
     id: "exam-points",
     label: "試験ポイント",
     content: (
-      <section className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+      <section className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
         <h3 className="text-base font-bold text-gray-800">試験ポイント</h3>
         <p className="mt-2 text-sm leading-relaxed text-gray-700">
           {topic.explanation.body}
@@ -83,7 +83,7 @@ export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
                 key={index}
                 className="flex gap-2 text-sm font-semibold text-gray-700"
               >
-                <span aria-hidden className="text-indigo-500">
+                <span aria-hidden className="text-brand-500">
                   ✓
                 </span>
                 {keyPoint}
@@ -120,8 +120,8 @@ export default function TopicContent({
     <div className="space-y-8">
       {/* 導入: 用語説明の前に「なぜこの概念が必要か」を問いかけて引き込む。 */}
       {topic.hookQuestion && (
-        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-indigo-100">
-          <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-600">
+        <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-brand-100">
+          <p className="flex items-center gap-1.5 text-xs font-bold text-brand-600">
             <span aria-hidden>🤔</span>
             最初に考えてみよう
           </p>
@@ -185,7 +185,7 @@ export function TopicReviewSections({ topic }: { topic: Topic }) {
                 {hint.keywords.map((kw, ki) => (
                   <span
                     key={ki}
-                    className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700"
+                    className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700"
                   >
                     {kw}
                   </span>
@@ -229,7 +229,7 @@ function Section({
 }) {
   return (
     <section>
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold text-gray-800">
+      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
         <span aria-hidden>{emoji}</span>
         {title}
       </h2>

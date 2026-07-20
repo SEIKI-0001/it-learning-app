@@ -90,9 +90,9 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
   return (
     <div className="space-y-8">
       {/* 1. 何が分かるページか */}
-      <section className="rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-100">
-        <h2 className="text-lg font-extrabold text-indigo-950">{demo.title}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-indigo-900/80">
+      <section className="rounded-xl bg-brand-50 p-4 ring-1 ring-brand-100">
+        <h2 className="text-lg font-bold text-brand-950">{demo.title}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-brand-900/80">
           {demo.lead}
         </p>
       </section>
@@ -145,7 +145,7 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
               <button
                 type="button"
                 onClick={() => setRevealed((n) => Math.min(n + 1, totalSteps))}
-                className="flex-1 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-bold text-white active:scale-[0.99]"
+                className="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white active:scale-[0.99]"
               >
                 次へ進む →
               </button>
@@ -162,10 +162,10 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
           {/* 結果 + 学習ポイント */}
           {allRevealed && (
             <div
-              className={`mt-4 rounded-2xl p-4 ring-1 ${OUTCOME_STYLE[activeScenario.outcomeTone].box}`}
+              className={`mt-4 rounded-xl p-4 ring-1 ${OUTCOME_STYLE[activeScenario.outcomeTone].box}`}
             >
               <p
-                className={`text-sm font-extrabold ${OUTCOME_STYLE[activeScenario.outcomeTone].label}`}
+                className={`text-sm font-bold ${OUTCOME_STYLE[activeScenario.outcomeTone].label}`}
               >
                 {OUTCOME_STYLE[activeScenario.outcomeTone].mark}：
                 {activeScenario.outcomeLabel}
@@ -198,7 +198,7 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
               className="rounded-xl bg-white p-3 ring-1 ring-gray-200"
             >
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-extrabold text-indigo-700">
+                <span className="rounded-md bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700">
                   {m.term}
                 </span>
                 <span className="text-sm font-semibold text-gray-800">
@@ -220,9 +220,9 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
           {demo.examPoints.map((p, i) => (
             <li
               key={i}
-              className="flex gap-2 rounded-xl bg-violet-50 px-3 py-2.5 text-sm leading-relaxed text-violet-900 ring-1 ring-violet-100"
+              className="flex gap-2 rounded-xl bg-brand-50 px-3 py-2.5 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-100"
             >
-              <span aria-hidden className="font-bold text-violet-500">
+              <span aria-hidden className="font-bold text-brand-500">
                 ✓
               </span>
               {p}
@@ -236,7 +236,7 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
 
 function SectionHeading({ emoji, title }: { emoji: string; title: string }) {
   return (
-    <h3 className="mb-3 flex items-center gap-2 text-base font-extrabold text-gray-800">
+    <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-gray-800">
       <span aria-hidden>{emoji}</span>
       {title}
     </h3>
@@ -259,7 +259,7 @@ function ScreenView({
   running: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-gray-100 p-4 ring-1 ring-gray-200">
+    <div className="rounded-xl bg-gray-100 p-4 ring-1 ring-gray-200">
       {screen.kind === "browserBar" && (
         <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2.5 ring-1 ring-gray-200">
           <span aria-hidden className="text-gray-400">
@@ -279,7 +279,7 @@ function ScreenView({
               className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 ring-1 ring-gray-200"
             >
               <span className="text-xs font-bold text-gray-500">{f.label}</span>
-              <span className="text-sm font-extrabold text-gray-800">
+              <span className="text-sm font-bold text-gray-800">
                 {f.value}
               </span>
             </div>
@@ -302,7 +302,7 @@ function ScreenView({
                       onClick={() => onPick(g.id, o.id)}
                       className={
                         active
-                          ? "rounded-lg bg-indigo-600 px-3 py-2 text-xs font-extrabold text-white"
+                          ? "rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white"
                           : "rounded-lg bg-white px-3 py-2 text-xs font-bold text-gray-700 ring-1 ring-gray-200"
                       }
                     >
@@ -352,12 +352,12 @@ function StepCard({
       }
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-extrabold text-gray-700">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
           {actor?.emoji && <span aria-hidden>{actor.emoji}</span>}
           {actor?.label ?? step.actorId}
         </span>
         {step.term && (
-          <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700">
+          <span className="rounded-md bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700">
             {step.term}
           </span>
         )}
@@ -409,7 +409,7 @@ function MiniCheckView({
   const correct = selected === check.correctIndex;
 
   return (
-    <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-200">
+    <div className="rounded-xl bg-white p-4 ring-1 ring-gray-200">
       <p className="text-sm font-bold leading-relaxed text-gray-800">
         {check.question}
       </p>

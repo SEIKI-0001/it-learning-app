@@ -54,7 +54,7 @@ function Matrix() {
     const s = p * im;
     const here = p === prob && im === impact;
     const base = s >= 6 ? "bg-rose-200" : s >= 3 ? "bg-amber-200" : "bg-emerald-200";
-    return `${base} ${here ? "ring-2 ring-indigo-600" : "ring-1 ring-white"}`;
+    return `${base} ${here ? "ring-2 ring-brand-600" : "ring-1 ring-white"}`;
   };
 
   return (
@@ -92,20 +92,20 @@ function Matrix() {
         <div>
           <div className="flex justify-between text-xs font-bold text-gray-600">
             <span>発生確率</span>
-            <span className="text-indigo-700">{["低", "中", "高"][prob - 1]}</span>
+            <span className="text-brand-700">{["低", "中", "高"][prob - 1]}</span>
           </div>
-          <input type="range" min={1} max={3} value={prob} onChange={(e) => setProb(Number(e.target.value))} className="mt-1 w-full accent-indigo-600" />
+          <input type="range" min={1} max={3} value={prob} onChange={(e) => setProb(Number(e.target.value))} className="mt-1 w-full accent-brand-600" />
         </div>
         <div>
           <div className="flex justify-between text-xs font-bold text-gray-600">
             <span>影響度</span>
-            <span className="text-indigo-700">{["小", "中", "大"][impact - 1]}</span>
+            <span className="text-brand-700">{["小", "中", "大"][impact - 1]}</span>
           </div>
-          <input type="range" min={1} max={3} value={impact} onChange={(e) => setImpact(Number(e.target.value))} className="mt-1 w-full accent-indigo-600" />
+          <input type="range" min={1} max={3} value={impact} onChange={(e) => setImpact(Number(e.target.value))} className="mt-1 w-full accent-brand-600" />
         </div>
       </div>
 
-      <div className={`mt-3 rounded-xl px-4 py-3 text-center text-sm font-extrabold ${level.tone}`}>
+      <div className={`mt-3 rounded-xl px-4 py-3 text-center text-sm font-bold ${level.tone}`}>
         {level.emoji} このリスクは「{level.t}」
       </div>
       <p className="mt-2 text-center text-xs text-gray-400">確率も影響も大きいほど、優先して対策する</p>
@@ -138,7 +138,7 @@ function Responses() {
           <div key={r.name} className="rounded-xl bg-gray-50 p-2.5 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
               <span className="text-base">{r.emoji}</span>
-              <span className="text-sm font-extrabold text-gray-800">{r.name}</span>
+              <span className="text-sm font-bold text-gray-800">{r.name}</span>
             </div>
             <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">{r.desc}</p>
             <p className="mt-0.5 text-[10px] text-gray-400">例：{r.ex}</p>
@@ -194,7 +194,7 @@ function Responses() {
 export default function RiskExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🎲 <b>リスク</b>は「これから起きるかもしれない問題」。<b>発生確率×影響度</b>で優先度を決め、
         <b>回避・低減・移転・受容</b>から対応を選んで備えます。
       </div>

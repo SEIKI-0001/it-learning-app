@@ -123,7 +123,7 @@ function CeoLab() {
             </button>
           ) : (
             <div
-              className={`mt-2.5 rounded-lg px-3 py-2.5 text-sm font-extrabold ring-1 ${
+              className={`mt-2.5 rounded-lg px-3 py-2.5 text-sm font-bold ring-1 ${
                 cur.result.good
                   ? "bg-white text-emerald-700 ring-emerald-200"
                   : "bg-white text-rose-700 ring-rose-200"
@@ -136,7 +136,7 @@ function CeoLab() {
       )}
 
       {bothTried && (
-        <div className="mt-3 rounded-xl bg-indigo-50 px-4 py-3 text-sm leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           💡 <b>気づいた？</b>　同じ「IT導入」でも、<b>目的 → 手段 → 効果</b>の順で考えるかどうかで結末が正反対。
           ITは<b>目的ではなく手段</b>——この考え方が<b>システム戦略</b>です。ITで会社を変える取り組みは <b>DX</b> とも呼ばれます。
         </div>
@@ -212,7 +212,7 @@ function Quiz() {
 export default function SystemStrategyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🧩 <b>システム戦略</b>は、会社の目標を達成するためにITを<b>どう活用するか</b>を考えること。
         ITを入れること自体が目的ではなく、あくまで<b>手段</b>です。
       </div>

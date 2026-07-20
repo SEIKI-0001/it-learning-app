@@ -22,10 +22,10 @@ export const STATUS_META: Record<
 };
 
 export const CATEGORY_BADGE: Record<WordlistCategory, string> = {
-  strategy: "bg-violet-100 text-violet-700",
+  strategy: "bg-brand-100 text-brand-700",
   management: "bg-amber-100 text-amber-700",
   technology: "bg-sky-100 text-sky-700",
   security: "bg-rose-100 text-rose-700",
-  ai: "bg-fuchsia-100 text-fuchsia-700",
+  ai: "bg-brand-100 text-brand-700",
   finance: "bg-emerald-100 text-emerald-700",
 };

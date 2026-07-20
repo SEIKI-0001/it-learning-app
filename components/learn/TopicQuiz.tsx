@@ -18,7 +18,7 @@ const PRAISES = ["ナイス！", "その調子！", "正解！", "いいね！",
 
 // コンボ数に応じて熱量が上がる配色（橙 → 赤 → 紫）。
 function comboPillClass(run: number): string {
-  if (run >= 5) return "bg-purple-100 text-purple-700 ring-1 ring-purple-200";
+  if (run >= 5) return "bg-brand-100 text-brand-700 ring-1 ring-brand-200";
   if (run >= 3) return "bg-rose-100 text-rose-600 ring-1 ring-rose-200";
   return "bg-orange-100 text-orange-600 ring-1 ring-orange-200";
 }
@@ -172,7 +172,7 @@ export default function TopicQuiz({
   return (
     <div className="space-y-4">
       {/* 進捗表示: 下スクロールではなく「1/4」のように現在位置を示す */}
-      <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-gray-100">
+      <div className="rounded-xl bg-white px-4 py-3 ring-1 ring-gray-100">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-gray-500">
             問題 {currentIndex + 1} / {total}
@@ -194,7 +194,7 @@ export default function TopicQuiz({
               正解{" "}
               <span
                 key={correctCount}
-                className="inline-block animate-pop-in text-base font-extrabold text-green-600"
+                className="inline-block animate-pop-in text-base font-bold text-green-600"
               >
                 {correctCount}
               </span>
@@ -211,7 +211,7 @@ export default function TopicQuiz({
                 key={q.id}
                 className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
                   i === currentIndex
-                    ? "ring-2 ring-indigo-400 ring-offset-1"
+                    ? "ring-2 ring-brand-400 ring-offset-1"
                     : ""
                 } ${
                   !answered
@@ -237,7 +237,7 @@ export default function TopicQuiz({
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-gray-200">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${
-                  isTimeLow ? "bg-rose-500" : "bg-indigo-500"
+                  isTimeLow ? "bg-rose-500" : "bg-brand-500"
                 }`}
                 style={{ width: `${timeRatio}%` }}
               />
@@ -266,7 +266,7 @@ export default function TopicQuiz({
         return (
           <div
             key={q.id}
-            className={`rounded-2xl border border-gray-200 bg-white ${dense ? "p-3" : "p-4"}${
+            className={`rounded-xl border border-gray-200 bg-white ${dense ? "p-3" : "p-4"}${
               revealed && isCorrect && streak >= 5 ? " animate-glow-ring" : ""
             }`}
           >
@@ -290,7 +290,7 @@ export default function TopicQuiz({
             </div>
             {revealed && (
               <div
-                className={`mt-4 animate-pop-in rounded-2xl p-4 ${
+                className={`mt-4 animate-pop-in rounded-xl p-4 ${
                   isCorrect
                     ? "bg-green-50 ring-1 ring-green-200"
                     : "bg-amber-50 ring-1 ring-amber-200"
@@ -302,12 +302,12 @@ export default function TopicQuiz({
                       <span className="inline-block animate-pop-in text-xl" aria-hidden>
                         🎉
                       </span>
-                      <p className="text-sm font-extrabold text-green-700">
+                      <p className="text-sm font-bold text-green-700">
                         {PRAISES[currentIndex % PRAISES.length]}
                       </p>
                       {xpPerCorrect !== undefined && (
                         <span
-                          className="animate-float-up text-sm font-extrabold text-indigo-500"
+                          className="animate-float-up text-sm font-bold text-brand-500"
                           aria-hidden
                         >
                           +{xpPerCorrect} XP
@@ -325,7 +325,7 @@ export default function TopicQuiz({
                       )}
                     </>
                   ) : (
-                    <p className="text-sm font-extrabold text-amber-700">
+                    <p className="text-sm font-bold text-amber-700">
                       🌱 正解は「{sh.correct}」
                     </p>
                   )}
@@ -367,7 +367,7 @@ export default function TopicQuiz({
               type="button"
               onClick={goPrev}
               disabled={done}
-              className="flex-1 rounded-2xl bg-white px-6 py-4 text-base font-extrabold text-indigo-600 shadow-sm ring-1 ring-indigo-200 transition active:scale-[0.98] disabled:opacity-50"
+              className="flex-1 rounded-xl bg-white px-6 py-4 text-base font-bold text-brand-600 shadow-sm ring-1 ring-brand-200 transition active:scale-[0.98] disabled:opacity-50"
             >
               ← 前へ
             </button>
@@ -377,7 +377,7 @@ export default function TopicQuiz({
               type="button"
               onClick={finish}
               disabled={!allAnswered || done}
-              className="flex-1 rounded-2xl bg-indigo-600 px-6 py-4 text-base font-extrabold text-white shadow-lg transition active:scale-[0.98] disabled:bg-gray-300"
+              className="flex-1 rounded-xl bg-brand-600 px-6 py-4 text-base font-bold text-white shadow-lg transition active:scale-[0.98] disabled:bg-gray-300"
             >
               {done ? "保存しました" : allAnswered ? completeLabel : "すべて答えると完了できます"}
             </button>
@@ -385,7 +385,7 @@ export default function TopicQuiz({
             <button
               type="button"
               onClick={goNext}
-              className="flex-1 rounded-2xl bg-indigo-600 px-6 py-4 text-base font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+              className="flex-1 rounded-xl bg-brand-600 px-6 py-4 text-base font-bold text-white shadow-lg transition active:scale-[0.98]"
             >
               次へ →
             </button>

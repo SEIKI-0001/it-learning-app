@@ -46,7 +46,7 @@ function Loop() {
               >
                 {holds && <span className="absolute -top-3 right-1 text-base">📦</span>}
                 <div className="text-2xl leading-none">{n.emoji}</div>
-                <div className="mt-1 text-[11px] font-extrabold text-gray-800">{n.name}</div>
+                <div className="mt-1 text-[11px] font-bold text-gray-800">{n.name}</div>
                 <div className="text-[10px] leading-tight text-gray-500">{n.sub}</div>
               </div>
               {i < NODES.length - 1 && <span className="px-0.5 text-lg text-gray-300">↔</span>}
@@ -88,7 +88,7 @@ function Uses() {
           <div key={u.t} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
               <span className="text-lg">{u.emoji}</span>
-              <span className="text-sm font-extrabold text-gray-800">{u.t}</span>
+              <span className="text-sm font-bold text-gray-800">{u.t}</span>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-gray-600">{u.d}</p>
           </div>
@@ -164,7 +164,7 @@ function SecurityQuiz() {
 export default function IotExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔌 <b>IoT</b>（Internet of Things）は、家電・車・工場の機械などの<b>モノがインターネットにつながる</b>仕組み。
         温度計が自分で室温を知らせ、必要ならエアコンを調整してもらう——そんなイメージです。
       </div>

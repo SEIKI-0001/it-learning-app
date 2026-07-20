@@ -17,14 +17,14 @@ function Nested() {
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         AI・機械学習・生成AIは<b className="text-gray-800">大きさの違う入れ子</b>の関係です。
       </p>
-      <div className="mt-4 rounded-2xl bg-violet-50 p-3 ring-2 ring-violet-300">
-        <div className="text-xs font-extrabold text-violet-700">🤖 AI（人工知能）</div>
-        <div className="mt-0.5 text-[11px] text-violet-600/80">人の知的な判断に近い処理ぜんぶ</div>
-        <div className="mt-2.5 rounded-xl bg-indigo-50 p-3 ring-2 ring-indigo-300">
-          <div className="text-xs font-extrabold text-indigo-700">📊 機械学習</div>
-          <div className="mt-0.5 text-[11px] text-indigo-600/80">データからパターンを学ぶ代表的な方法</div>
+      <div className="mt-4 rounded-xl bg-brand-50 p-3 ring-2 ring-brand-300">
+        <div className="text-xs font-bold text-brand-700">🤖 AI（人工知能）</div>
+        <div className="mt-0.5 text-[11px] text-brand-600/80">人の知的な判断に近い処理ぜんぶ</div>
+        <div className="mt-2.5 rounded-xl bg-brand-50 p-3 ring-2 ring-brand-300">
+          <div className="text-xs font-bold text-brand-700">📊 機械学習</div>
+          <div className="mt-0.5 text-[11px] text-brand-600/80">データからパターンを学ぶ代表的な方法</div>
           <div className="mt-2.5 rounded-lg bg-sky-100 p-3 ring-2 ring-sky-300">
-            <div className="text-xs font-extrabold text-sky-700">🧠 深層学習・生成AI</div>
+            <div className="text-xs font-bold text-sky-700">🧠 深層学習・生成AI</div>
             <div className="mt-0.5 text-[11px] text-sky-600/80">機械学習をさらに発展させた方法</div>
           </div>
         </div>
@@ -78,7 +78,7 @@ function MlFlow() {
           <div
             key={i}
             className={`flex-1 rounded-lg px-1 py-1.5 text-center text-[10px] font-bold transition ${
-              i === idx ? "bg-indigo-600 text-white" : i < idx ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400"
+              i === idx ? "bg-brand-600 text-white" : i < idx ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
             }`}
           >
             {s.badge}
@@ -119,20 +119,20 @@ function DataLearning() {
       </p>
 
       {/* 教師あり */}
-      <div className="mt-4 rounded-xl bg-indigo-50 p-3.5 ring-1 ring-indigo-200">
+      <div className="mt-4 rounded-xl bg-brand-50 p-3.5 ring-1 ring-brand-200">
         <div className="flex items-center gap-2">
           <span className="text-lg">🏷️</span>
-          <span className="text-sm font-extrabold text-indigo-800">教師あり学習</span>
-          <span className="rounded-full bg-indigo-200 px-2 py-0.5 text-[10px] font-bold text-indigo-800">正解あり</span>
+          <span className="text-sm font-bold text-brand-800">教師あり学習</span>
+          <span className="rounded-full bg-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-800">正解あり</span>
         </div>
         <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
           <b>答え付きの問題集</b>で練習するイメージ。「この写真は猫」「このメールは迷惑」と
           <b>正解をセットで</b>大量に見せ、当てられるようにします。
         </p>
         <dl className="mt-2.5 space-y-1 text-xs leading-relaxed text-gray-600">
-          <div><dt className="inline font-bold text-indigo-700">学び方：</dt> 入力と正解のペアから、対応のルールを覚える</div>
-          <div><dt className="inline font-bold text-indigo-700">できること：</dt> 分類（迷惑メールか否か）・予測（来月の売上）</div>
-          <div><dt className="inline font-bold text-indigo-700">見分け方：</dt> 学習データに「正解ラベル」が付いている</div>
+          <div><dt className="inline font-bold text-brand-700">学び方：</dt> 入力と正解のペアから、対応のルールを覚える</div>
+          <div><dt className="inline font-bold text-brand-700">できること：</dt> 分類（迷惑メールか否か）・予測（来月の売上）</div>
+          <div><dt className="inline font-bold text-brand-700">見分け方：</dt> 学習データに「正解ラベル」が付いている</div>
         </dl>
       </div>
 
@@ -140,7 +140,7 @@ function DataLearning() {
       <div className="mt-3 rounded-xl bg-emerald-50 p-3.5 ring-1 ring-emerald-200">
         <div className="flex items-center gap-2">
           <span className="text-lg">🧩</span>
-          <span className="text-sm font-extrabold text-emerald-800">教師なし学習</span>
+          <span className="text-sm font-bold text-emerald-800">教師なし学習</span>
           <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">正解なし</span>
         </div>
         <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
@@ -171,11 +171,11 @@ function Reinforcement() {
         実際に<b className="text-gray-800">行動してみて、その結果から学ぶ</b>のがちがいです。
       </p>
 
-      <div className="mt-4 rounded-xl bg-violet-50 p-3.5 ring-1 ring-violet-200">
+      <div className="mt-4 rounded-xl bg-brand-50 p-3.5 ring-1 ring-brand-200">
         <div className="flex items-center gap-2">
           <span className="text-lg">🎮</span>
-          <span className="text-sm font-extrabold text-violet-800">強化学習</span>
-          <span className="rounded-full bg-violet-200 px-2 py-0.5 text-[10px] font-bold text-violet-800">ごほうびで上達</span>
+          <span className="text-sm font-bold text-brand-800">強化学習</span>
+          <span className="rounded-full bg-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-800">ごほうびで上達</span>
         </div>
         <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
           ゲームで<b>上手な手にはスコア（報酬）</b>、まずい手には減点。
@@ -203,8 +203,8 @@ function Reinforcement() {
       <p className="mt-2 text-center text-[11px] text-gray-400">このループをくり返して、だんだん賢くなる</p>
 
       <dl className="mt-3 space-y-1 rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600 ring-1 ring-gray-200">
-        <div><dt className="inline font-bold text-violet-700">できること：</dt> ゲームAI・ロボットの制御・自動運転の判断</div>
-        <div><dt className="inline font-bold text-violet-700">見分け方：</dt> 正解データではなく「報酬」で良し悪しを教える</div>
+        <div><dt className="inline font-bold text-brand-700">できること：</dt> ゲームAI・ロボットの制御・自動運転の判断</div>
+        <div><dt className="inline font-bold text-brand-700">見分け方：</dt> 正解データではなく「報酬」で良し悪しを教える</div>
       </dl>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
@@ -217,7 +217,7 @@ function Reinforcement() {
 export default function AiMlExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🤖 <b>AI</b> は知的な処理の総称。その代表が、データからパターンを学ぶ <b>機械学習</b>。
         問題集をたくさん解いて傾向をつかむ学習者のように、<b>データを見て判断のコツを覚えます</b>。
       </div>

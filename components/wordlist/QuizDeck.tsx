@@ -107,11 +107,11 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
       <div
         role="status"
         aria-live="polite"
-        className="flex flex-col items-center gap-3 rounded-3xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-400"
+        className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-400"
       >
         <span
           aria-hidden
-          className="h-7 w-7 animate-spin rounded-full border-[3px] border-indigo-200 border-t-indigo-600 motion-reduce:animate-none"
+          className="h-7 w-7 animate-spin rounded-full border-[3px] border-brand-200 border-t-brand-600 motion-reduce:animate-none"
         />
         読み込み中…
       </div>
@@ -120,14 +120,14 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
 
   if (questions.length === 0) {
     return (
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center">
+      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
         <p className="text-4xl">📭</p>
         <p className="mt-3 text-sm leading-relaxed text-gray-500">
           {EMPTY_HINT[mode]}
         </p>
         <Link
           href="/glossary"
-          className="mt-5 inline-block rounded-2xl bg-indigo-600 px-5 py-2.5 text-sm font-extrabold text-white"
+          className="mt-5 inline-block rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white"
         >
           単語帳トップへ
         </Link>
@@ -141,12 +141,12 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
   if (done) {
     const correct = Object.values(results).filter(Boolean).length;
     return (
-      <div className="rounded-3xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
         <p className="text-4xl">🏁</p>
-        <p className="mt-2 text-lg font-extrabold text-gray-900">
+        <p className="mt-2 text-lg font-bold text-gray-900">
           {total}問 おつかれさま！
         </p>
-        <p className="mt-3 text-3xl font-black text-indigo-600">
+        <p className="mt-3 text-3xl font-black text-brand-600">
           {correct}
           <span className="text-lg text-gray-400"> / {total} 正解</span>
         </p>
@@ -154,13 +154,13 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
           <button
             type="button"
             onClick={restart}
-            className="w-full rounded-2xl bg-indigo-600 py-3 text-sm font-extrabold text-white transition active:scale-[0.98]"
+            className="w-full rounded-xl bg-brand-600 py-3 text-sm font-bold text-white transition active:scale-[0.98]"
           >
             もう一度
           </button>
           <Link
             href="/glossary"
-            className="block w-full rounded-2xl bg-gray-100 py-3 text-sm font-extrabold text-gray-600 transition active:scale-[0.98]"
+            className="block w-full rounded-xl bg-gray-100 py-3 text-sm font-bold text-gray-600 transition active:scale-[0.98]"
           >
             単語帳トップへ
           </Link>
@@ -195,7 +195,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
       <div className="mb-2 flex items-center gap-3">
         <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
           <div
-            className="h-full rounded-full bg-indigo-500 transition-all"
+            className="h-full rounded-full bg-brand-500 transition-all"
             style={{ width: `${(index / total) * 100}%` }}
           />
         </div>
@@ -204,8 +204,8 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
         </span>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-3">
-        <span className="inline-block rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-bold text-indigo-600">
+      <div className="rounded-xl border border-gray-200 bg-white p-3">
+        <span className="inline-block rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-600">
           {TYPE_LABEL[q.type]}
         </span>
         <p className="mt-1.5 whitespace-pre-line text-base font-bold leading-snug text-gray-800">
@@ -230,12 +230,12 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
 
         {revealed && (
           <div
-            className={`animate-pop-in mt-3 rounded-2xl p-3 ${
+            className={`animate-pop-in mt-3 rounded-xl p-3 ${
               isCorrect ? "bg-green-50" : "bg-amber-50"
             }`}
           >
             <p
-              className={`mb-1 text-sm font-extrabold ${
+              className={`mb-1 text-sm font-bold ${
                 isCorrect ? "text-green-700" : "text-amber-700"
               }`}
             >
@@ -249,7 +249,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
             <button
               type="button"
               onClick={next}
-              className="mt-3 w-full rounded-2xl bg-indigo-600 py-2.5 text-sm font-extrabold text-white transition active:scale-[0.98]"
+              className="mt-3 w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-[0.98]"
             >
               {index + 1 >= total ? "結果を見る" : "次の問題 ▶"}
             </button>

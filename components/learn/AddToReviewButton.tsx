@@ -30,7 +30,7 @@ export default function AddToReviewButton({ topicId }: { topicId: string }) {
       type="button"
       onClick={handleAdd}
       disabled={isAdded || state === null || state === undefined}
-      className={`w-full rounded-2xl px-6 py-3.5 text-base font-extrabold transition active:scale-[0.99] ${
+      className={`w-full rounded-xl px-6 py-3.5 text-base font-bold transition active:scale-[0.99] ${
         isAdded
           ? "bg-amber-100 text-amber-700"
           : "bg-amber-400 text-amber-900 shadow"

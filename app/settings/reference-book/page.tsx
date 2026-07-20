@@ -210,7 +210,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
     <main className="min-h-screen bg-gray-50 pb-28">
       <div className="mx-auto w-full max-w-md px-4 py-8 md:max-w-2xl">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-indigo-500">参考書の設定</p>
+          <p className="text-sm font-semibold text-brand-500">参考書の設定</p>
           <Link
             href="/plan"
             className="text-sm font-medium text-gray-400 underline underline-offset-4"
@@ -218,7 +218,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
             もどる
           </Link>
         </div>
-        <h1 className="mt-1 text-2xl font-extrabold text-gray-800">
+        <h1 className="mt-1 text-2xl font-bold text-gray-800">
           参考書アウトライン
         </h1>
         <p className="mt-2 text-sm text-gray-500">
@@ -227,7 +227,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
         </p>
 
         {/* 参考書メタ情報 */}
-        <section className="mt-6 space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+        <section className="mt-6 space-y-3 rounded-xl bg-white p-4 border border-gray-200">
           <Field label="参考書名">
             <input
               type="text"
@@ -281,7 +281,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
 
         {/* 参考書名から推測したプリセットの反映提案 */}
         {showSuggestion && suggestion && (
-          <div className="mt-4 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+          <div className="mt-4 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
             <p className="text-sm font-bold text-amber-800">
               📚「{suggestion.title}」の章立てが登録されています
             </p>
@@ -305,11 +305,11 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
         />
 
         {/* 目次テキスト貼り付け */}
-        <section className="mt-5 rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-100">
-          <p className="text-sm font-bold text-indigo-700">
+        <section className="mt-5 rounded-xl bg-brand-50 p-4 ring-1 ring-brand-100">
+          <p className="text-sm font-bold text-brand-700">
             📋 目次を貼り付けて章を作る
           </p>
-          <p className="mt-1 text-xs text-indigo-600">
+          <p className="mt-1 text-xs text-brand-600">
             「第○章」「1.1」「Chapter○」などを自動で章・節にします。あとから編集できます。
           </p>
           <textarea
@@ -317,13 +317,13 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
             onChange={(e) => setToc(e.target.value)}
             rows={4}
             placeholder={"第1章 コンピュータの基礎\n1.1 2進数\n1.2 論理演算\n第2章 ネットワーク"}
-            className="mt-2 w-full rounded-xl border-2 border-indigo-200 bg-white px-3 py-2.5 text-sm text-gray-700"
+            className="mt-2 w-full rounded-xl border-2 border-brand-200 bg-white px-3 py-2.5 text-sm text-gray-700"
           />
           <button
             type="button"
             onClick={importToc}
             disabled={!toc.trim()}
-            className="mt-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+            className="mt-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
           >
             変換して章を追加
           </button>
@@ -332,20 +332,20 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
         {/* 章構成 */}
         <section className="mt-6">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-extrabold text-gray-800">
+            <h2 className="text-base font-bold text-gray-800">
               章構成（{book.chapters.length}章）
             </h2>
             <button
               type="button"
               onClick={addChapter}
-              className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white"
+              className="rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-bold text-white"
             >
               ＋ 章を追加
             </button>
           </div>
 
           {book.chapters.length === 0 ? (
-            <p className="rounded-2xl bg-white p-5 text-center text-sm text-gray-400 ring-1 ring-gray-100">
+            <p className="rounded-xl bg-white p-5 text-center text-sm text-gray-400 ring-1 ring-gray-100">
               まだ章がありません。「＋ 章を追加」または目次の貼り付けで作成できます。
             </p>
           ) : (
@@ -353,7 +353,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
               {book.chapters.map((chapter, index) => (
                 <li
                   key={chapter.id}
-                  className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100"
+                  className="rounded-xl bg-white p-4 border border-gray-200"
                 >
                   <div className="flex items-start gap-2">
                     <div className="flex flex-col gap-1 pt-1">
@@ -461,7 +461,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
                       <button
                         type="button"
                         onClick={() => addSection(chapter.id)}
-                        className="text-xs font-bold text-indigo-600"
+                        className="text-xs font-bold text-brand-600"
                       >
                         ＋ 節を追加
                       </button>
@@ -524,7 +524,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
           <button
             type="button"
             onClick={handleSave}
-            className="w-full rounded-2xl bg-indigo-600 px-6 py-3 text-base font-extrabold text-white shadow-lg transition active:scale-[0.98]"
+            className="w-full rounded-xl bg-brand-600 px-6 py-3 text-base font-bold text-white shadow-lg transition active:scale-[0.98]"
           >
             {saved ? "✓ 保存しました" : "💾 参考書を保存"}
           </button>
@@ -557,7 +557,7 @@ function PresetPicker({
   );
 
   return (
-    <section className="mt-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="mt-5 rounded-xl bg-white p-4 border border-gray-200">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -602,7 +602,7 @@ function PresetPicker({
                       <button
                         type="button"
                         onClick={() => onSelect(p.id)}
-                        className="shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                        className="shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                         disabled={active}
                       >
                         {active ? "反映中" : "反映"}
@@ -675,7 +675,7 @@ function LinkedTopicList({ ids }: { ids: string[] }) {
       {titles.map((t) => (
         <span
           key={t.id}
-          className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-600"
+          className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-600"
         >
           {t.title}
         </span>

@@ -46,9 +46,9 @@ export default function WordlistHubPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-500 to-violet-600 px-4 pb-4 pt-4 text-white">
+      <header className="bg-brand-700 px-4 pb-4 pt-4 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <h1 className="text-xl font-extrabold">📇 英略語 単語帳</h1>
+          <h1 className="text-xl font-bold">📇 英略語 単語帳</h1>
           <p className="mt-0.5 text-xs text-white/90">
             ITパスポートの英略語{TOTAL}語を、意味・正式名称・違いまでまとめて暗記。
           </p>
@@ -57,9 +57,9 @@ export default function WordlistHubPage() {
 
       <div className="mx-auto w-full max-w-md space-y-6 px-4 py-5 md:max-w-2xl">
         {/* 学習状況サマリ */}
-        <section className="rounded-2xl border border-gray-200 bg-white p-4">
+        <section className="rounded-xl border border-gray-200 bg-white p-4">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-extrabold text-gray-800">学習状況</h2>
+            <h2 className="text-sm font-bold text-gray-800">学習状況</h2>
             <span className="text-xs font-bold text-gray-400">
               全{TOTAL}語
             </span>
@@ -67,18 +67,18 @@ export default function WordlistHubPage() {
           <div className="mt-3 grid grid-cols-4 gap-2 text-center">
             {STAT_META.map((s) => (
               <div key={s.key} className="rounded-xl bg-gray-50 py-2.5">
-                <p className={`text-xl font-extrabold ${s.color}`}>
+                <p className={`text-xl font-bold ${s.color}`}>
                   {counts[s.key as WordStatus]}
                 </p>
                 <p className="text-[11px] font-bold text-gray-500">{s.label}</p>
               </div>
             ))}
           </div>
-          <div className="mt-2 rounded-xl bg-indigo-50 px-3 py-2.5">
-            <span className="text-xs font-bold text-indigo-500">
+          <div className="mt-2 rounded-xl bg-brand-50 px-3 py-2.5">
+            <span className="text-xs font-bold text-brand-500">
               今日の復習対象
             </span>
-            <span className="ml-2 text-base font-extrabold text-indigo-700">
+            <span className="ml-2 text-base font-bold text-brand-700">
               {dueCount}語
             </span>
           </div>
@@ -88,39 +88,39 @@ export default function WordlistHubPage() {
         <section className="grid gap-2.5 sm:grid-cols-2">
           <Link
             href="/glossary/study?mode=today"
-            className="flex items-center justify-between rounded-2xl bg-indigo-600 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
+            className="flex items-center justify-between rounded-xl bg-brand-600 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
           >
-            <span className="text-base font-extrabold">🔁 今日の復習を始める</span>
+            <span className="text-base font-bold">🔁 今日の復習を始める</span>
             <span className="text-xs font-bold text-white/80">{dueCount}語</span>
           </Link>
           <Link
             href="/glossary/study?mode=weak"
-            className="flex items-center justify-between rounded-2xl bg-rose-500 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
+            className="flex items-center justify-between rounded-xl bg-rose-500 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
           >
-            <span className="text-base font-extrabold">⚡ 苦手だけ復習</span>
+            <span className="text-base font-bold">⚡ 苦手だけ復習</span>
             <span className="text-xs font-bold text-white/80">
               {counts.weak}語
             </span>
           </Link>
           <Link
             href="/glossary/study?mode=all"
-            className="flex items-center justify-between rounded-2xl border border-indigo-200 bg-white px-4 py-3.5 text-indigo-700 shadow-sm transition active:scale-[0.99]"
+            className="flex items-center justify-between rounded-xl border border-brand-200 bg-white px-4 py-3.5 text-brand-700 shadow-sm transition active:scale-[0.99]"
           >
-            <span className="text-base font-extrabold">📚 すべてから学習</span>
-            <span className="text-xs font-bold text-indigo-400">{TOTAL}語</span>
+            <span className="text-base font-bold">📚 すべてから学習</span>
+            <span className="text-xs font-bold text-brand-400">{TOTAL}語</span>
           </Link>
           <Link
             href="/glossary/quiz?mode=all"
-            className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-gray-700 shadow-sm transition active:scale-[0.99]"
+            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-gray-700 shadow-sm transition active:scale-[0.99]"
           >
-            <span className="text-base font-extrabold">✅ 4択確認をする</span>
+            <span className="text-base font-bold">✅ 4択確認をする</span>
             <span className="text-xs font-bold text-gray-400">4択</span>
           </Link>
         </section>
 
         <Link
           href="/glossary/list"
-          className="block rounded-2xl bg-gray-100 px-4 py-3 text-center text-sm font-extrabold text-gray-600 transition active:scale-[0.99]"
+          className="block rounded-xl bg-gray-100 px-4 py-3 text-center text-sm font-bold text-gray-600 transition active:scale-[0.99]"
         >
           単語一覧を見る →
         </Link>

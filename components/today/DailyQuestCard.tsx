@@ -17,6 +17,7 @@ import { emitCelebration } from "@/lib/celebration";
 import { saveAppState } from "@/lib/storage";
 import { getUserId, saveProgressToDb, todayLocalDate } from "@/lib/userSession";
 import ConfettiBurst from "@/components/celebration/ConfettiBurst";
+import Icon from "@/components/ui/Icon";
 
 export default function DailyQuestCard({
   state,
@@ -44,24 +45,22 @@ export default function DailyQuestCard({
   }
 
   return (
-    <section className="relative rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
+    <section className="relative">
       {justClaimed && <ConfettiBurst />}
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-extrabold text-gray-800">
-          📋 今日の3ミッション
-        </h2>
+        <h3 className="text-xs font-semibold text-gray-500">今日の3ミッション</h3>
         <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+          className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums ${
             complete
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-indigo-50 text-indigo-600"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-gray-200 bg-white text-gray-600"
           }`}
         >
           {doneCount} / {quests.quests.length}
         </span>
       </div>
 
-      <ul className="mt-3 space-y-2">
+      <ul className="mt-2.5 space-y-2">
         {quests.quests.map((q) => {
           const def = getQuestDef(q.id);
           if (!def) return null;
@@ -70,23 +69,23 @@ export default function DailyQuestCard({
             <li key={q.id} className="flex items-center gap-2.5">
               <span
                 aria-hidden
-                className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${
+                className={`grid h-5 w-5 shrink-0 place-items-center rounded-full ${
                   done
-                    ? "animate-pop-in bg-emerald-500 text-white"
-                    : "bg-gray-100 text-gray-400"
+                    ? "animate-pop-in bg-emerald-600 text-white"
+                    : "border border-gray-300 bg-white"
                 }`}
               >
-                {done ? "✓" : def.emoji}
+                {done && <Icon name="check" className="h-3 w-3" strokeWidth={2.5} />}
               </span>
               <span
-                className={`flex-1 text-sm font-semibold ${
+                className={`flex-1 text-sm ${
                   done ? "text-gray-400 line-through" : "text-gray-700"
                 }`}
               >
                 {def.label}
               </span>
               {q.goal > 1 && !done && (
-                <span className="shrink-0 text-xs font-bold text-gray-400">
+                <span className="shrink-0 text-xs tabular-nums text-gray-400">
                   {q.progress}/{q.goal}
                 </span>
               )}
@@ -96,12 +95,10 @@ export default function DailyQuestCard({
       </ul>
 
       {quests.claimed || justClaimed ? (
-        <div className="mt-3 rounded-xl bg-emerald-50 px-3 py-2.5 text-center">
-          <p className="text-sm font-bold text-emerald-700">
-            🎁 今日の宝箱は受け取り済み
-          </p>
+        <div className="mt-3 border-t border-gray-100 pt-2.5">
+          <p className="text-sm text-emerald-700">今日の宝箱は受け取り済みです</p>
           {justClaimed && (
-            <p className="mt-0.5 text-xs font-semibold text-emerald-600">
+            <p className="mt-0.5 text-xs text-emerald-600">
               +{DAILY_QUEST_CLEAR_XP} XP・{justClaimed}
             </p>
           )}
@@ -110,12 +107,12 @@ export default function DailyQuestCard({
         <button
           type="button"
           onClick={handleClaim}
-          className="animate-sheen mt-3 w-full overflow-hidden rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 px-4 py-3 text-sm font-extrabold text-white shadow-sm transition active:scale-[0.98]"
+          className="mt-3 w-full rounded-lg bg-accent-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-accent-700 active:scale-[0.99]"
         >
-          🎁 宝箱を開ける（+{DAILY_QUEST_CLEAR_XP} XP）
+          宝箱を開ける（+{DAILY_QUEST_CLEAR_XP} XP）
         </button>
       ) : (
-        <p className="mt-3 text-xs font-semibold text-gray-400">
+        <p className="mt-3 text-xs text-gray-400">
           3つ達成すると宝箱がもらえます
         </p>
       )}

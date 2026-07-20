@@ -66,10 +66,10 @@ export default function BadgesPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-gradient-to-r from-indigo-600 to-violet-600 px-4 pb-6 pt-5 text-white">
+      <header className="bg-brand-700 px-4 pb-6 pt-5 text-white">
         <div className="mx-auto w-full max-w-md md:max-w-3xl">
           <div className="flex items-center justify-between">
-            <span className="text-lg font-extrabold">バッジ図鑑</span>
+            <span className="text-lg font-bold">バッジ図鑑</span>
             <Link
               href="/plan"
               className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold transition active:scale-95"
@@ -78,7 +78,7 @@ export default function BadgesPage() {
             </Link>
           </div>
           <p className="mt-4 text-xs text-white/80">獲得したバッジ</p>
-          <p className="text-3xl font-extrabold">
+          <p className="text-3xl font-bold">
             {earnedCount}
             <span className="text-lg font-bold text-white/70"> / {totalCount}</span>
           </p>
@@ -90,7 +90,7 @@ export default function BadgesPage() {
 
       <div className="mx-auto w-full max-w-md space-y-8 px-4 py-6 md:max-w-3xl">
         {/* 凡例: バッジの状態と種別の見分け方 */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-2xl bg-white px-4 py-3 text-[11px] font-semibold ring-1 ring-gray-100">
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-xl bg-white px-4 py-3 text-[11px] font-semibold ring-1 ring-gray-100">
           <span className="text-emerald-600">● 獲得済み</span>
           <span className="text-amber-600">● あと一歩</span>
           <span className="text-gray-400">🔒 未獲得</span>
@@ -102,12 +102,12 @@ export default function BadgesPage() {
         {recommended && (
           <Link
             href={badgeActionHref(recommended.def)}
-            className="block rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-4 text-white shadow-sm transition active:scale-[0.99]"
+            className="block rounded-xl bg-brand-700 p-4 text-white shadow-sm transition active:scale-[0.99]"
           >
             <p className="text-[11px] font-bold text-white/80">
               🎯 次に狙うバッジ
             </p>
-            <p className="mt-1 text-base font-extrabold">
+            <p className="mt-1 text-base font-bold">
               {recommended.def.emoji} {recommended.def.label}
               {recommended.def.requiredForGate && (
                 <span className="ml-1.5 rounded-full bg-rose-500/90 px-1.5 py-0.5 text-[10px] font-bold">
@@ -138,7 +138,7 @@ export default function BadgesPage() {
               className={isCleared ? "opacity-80" : undefined}
             >
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-base font-extrabold text-gray-800">
+                <h2 className="flex items-center gap-2 text-base font-bold text-gray-800">
                   <span aria-hidden>{cp.emoji}</span>
                   CP{cp.order} {cp.title}
                   {isCleared && (
@@ -147,7 +147,7 @@ export default function BadgesPage() {
                     </span>
                   )}
                   {isCurrent && !isCleared && (
-                    <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700">
                       いまここ
                     </span>
                   )}

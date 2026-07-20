@@ -19,21 +19,21 @@ function Restaurant() {
       </p>
 
       <div className="mt-4 flex items-stretch justify-center gap-1.5">
-        <div className="flex-1 rounded-xl border-2 border-indigo-300 bg-indigo-50 px-1 py-3 text-center">
+        <div className="flex-1 rounded-xl border-2 border-brand-300 bg-brand-50 px-1 py-3 text-center">
           <div className="text-2xl">🙋</div>
-          <div className="mt-1 text-xs font-extrabold text-indigo-700">客</div>
+          <div className="mt-1 text-xs font-bold text-brand-700">客</div>
           <div className="text-[10px] text-gray-500">あなたのアプリ</div>
         </div>
         <span className="self-center text-lg text-gray-300">→</span>
         <div className="flex-1 rounded-xl border-2 border-emerald-400 bg-emerald-50 px-1 py-3 text-center">
           <div className="text-2xl">🧑‍🍳</div>
-          <div className="mt-1 text-xs font-extrabold text-emerald-700">注文口＝API</div>
+          <div className="mt-1 text-xs font-bold text-emerald-700">注文口＝API</div>
           <div className="text-[10px] text-gray-500">決まった頼み方</div>
         </div>
         <span className="self-center text-lg text-gray-300">→</span>
         <div className="flex-1 rounded-xl border-2 border-gray-300 bg-gray-100 px-1 py-3 text-center">
           <div className="text-2xl">🍳</div>
-          <div className="mt-1 text-xs font-extrabold text-gray-700">厨房</div>
+          <div className="mt-1 text-xs font-bold text-gray-700">厨房</div>
           <div className="text-[10px] text-gray-500">サービス内部</div>
         </div>
       </div>
@@ -86,7 +86,7 @@ function Flow() {
               >
                 {holds && <span className="absolute -top-3 right-1 text-base">📨</span>}
                 <div className="text-2xl leading-none">{n.emoji}</div>
-                <div className="mt-1 text-[11px] font-extrabold text-gray-800">{n.name}</div>
+                <div className="mt-1 text-[11px] font-bold text-gray-800">{n.name}</div>
                 <div className="text-[10px] leading-tight text-gray-500">{n.sub}</div>
               </div>
               {i < NODES.length - 1 && <span className="px-0.5 text-lg text-gray-300">{step.dir}</span>}
@@ -178,7 +178,7 @@ function Quiz() {
 export default function ApiExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔌 <b>API</b> は、あるソフトの機能やデータを別のソフトから使うための<b>決まった入口</b>。
         レストランの注文口のように、客（アプリ）は厨房に入らず、決まった頼み方で料理（機能）を受け取ります。
       </div>

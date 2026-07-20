@@ -41,7 +41,7 @@ export default function GoogleLoginButton({ next = "/" }: { next?: string }) {
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-center text-base font-bold text-gray-700 shadow-lg transition active:scale-[0.98] disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-6 py-4 text-center text-base font-bold text-gray-700 shadow-lg transition active:scale-[0.98] disabled:opacity-60"
       >
         <GoogleMark />
         {loading ? "Google に移動中…" : "Google でログイン"}

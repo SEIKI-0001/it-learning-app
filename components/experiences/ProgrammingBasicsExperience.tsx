@@ -16,7 +16,7 @@ import { Panel, SectionTitle } from "./ui";
 // やさしい擬似コード行（白背景・読みやすい等幅）
 function CodeLine({ children }: { children: React.ReactNode }) {
   return (
-    <code className="font-mono text-[13px] leading-relaxed text-gray-800 [&_b]:text-indigo-700">
+    <code className="font-mono text-[13px] leading-relaxed text-gray-800 [&_b]:text-brand-700">
       {children}
     </code>
   );
@@ -36,11 +36,11 @@ function Variable() {
 
       {/* 名前つきの箱 */}
       <div className="mt-4 flex flex-col items-center">
-        <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-bold text-indigo-700">
+        <span className="rounded-md bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700">
           箱の名前：りんごの数
         </span>
         <span className="my-1 text-lg text-gray-300">↓</span>
-        <div className="grid h-20 w-20 place-items-center rounded-2xl border-4 border-dashed border-indigo-300 bg-indigo-50 text-3xl font-extrabold text-indigo-700">
+        <div className="grid h-20 w-20 place-items-center rounded-xl border-4 border-dashed border-brand-300 bg-brand-50 text-3xl font-bold text-brand-700">
           {count}
         </div>
         <span className="mt-1 text-xs text-gray-400">中に入っている値</span>
@@ -52,7 +52,7 @@ function Variable() {
             key={c}
             onClick={() => setCount(c)}
             className={`rounded-lg px-1 py-2 text-sm font-bold transition active:scale-95 ${
-              count === c ? "bg-indigo-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+              count === c ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {c}個
@@ -65,7 +65,7 @@ function Variable() {
         <p className="text-xs font-bold text-gray-500">名前で呼び出して計算に使う</p>
         <div className="mt-1.5 space-y-1">
           <CodeLine>
-            りんごの数 <b className="text-indigo-700">←</b> {count}
+            りんごの数 <b className="text-brand-700">←</b> {count}
             <span className="ml-2 text-gray-400">（箱に {count} を入れる）</span>
           </CodeLine>
           <br />
@@ -113,7 +113,7 @@ function Branch() {
       <div className="mt-4">
         <div className="flex items-center justify-between text-sm">
           <span className="font-bold text-gray-700">テストの点数を動かす</span>
-          <span className="font-mono text-lg font-extrabold text-indigo-700">{score}点</span>
+          <span className="font-mono text-lg font-bold text-brand-700">{score}点</span>
         </div>
         <input
           type="range"
@@ -121,15 +121,15 @@ function Branch() {
           max={100}
           value={score}
           onChange={(e) => setScore(Number(e.target.value))}
-          className="mt-1 w-full accent-indigo-600"
+          className="mt-1 w-full accent-brand-600"
         />
       </div>
 
       {/* 分かれ道の図 */}
       <div className="mt-4 flex flex-col items-center">
-        <div className="rounded-xl bg-indigo-50 px-4 py-2 text-center text-sm font-bold text-indigo-800 ring-1 ring-indigo-200">
+        <div className="rounded-xl bg-brand-50 px-4 py-2 text-center text-sm font-bold text-brand-800 ring-1 ring-brand-200">
           点数は 60点以上？
-          <span className="ml-1 text-indigo-500">→ {pass ? "はい" : "いいえ"}</span>
+          <span className="ml-1 text-brand-500">→ {pass ? "はい" : "いいえ"}</span>
         </div>
         <div className="mt-1 flex w-full items-stretch justify-center gap-3">
           <div className="text-2xl text-gray-300">↙</div>
@@ -137,7 +137,7 @@ function Branch() {
         </div>
         <div className="grid w-full grid-cols-2 gap-3">
           <div
-            className={`rounded-xl px-2 py-3 text-center text-sm font-extrabold ring-1 transition ${
+            className={`rounded-xl px-2 py-3 text-center text-sm font-bold ring-1 transition ${
               pass ? "bg-emerald-500 text-white ring-emerald-500" : "bg-gray-50 text-gray-300 ring-gray-200"
             }`}
           >
@@ -145,7 +145,7 @@ function Branch() {
             <div className="mt-0.5 text-[10px] font-medium opacity-80">はい の道</div>
           </div>
           <div
-            className={`rounded-xl px-2 py-3 text-center text-sm font-extrabold ring-1 transition ${
+            className={`rounded-xl px-2 py-3 text-center text-sm font-bold ring-1 transition ${
               !pass ? "bg-rose-500 text-white ring-rose-500" : "bg-gray-50 text-gray-300 ring-gray-200"
             }`}
           >
@@ -176,12 +176,12 @@ function Loop() {
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 text-center ring-1 ring-gray-200">
           <div className="text-xl">😩</div>
-          <div className="mt-1 text-xs font-extrabold text-gray-600">手作業</div>
+          <div className="mt-1 text-xs font-bold text-gray-600">手作業</div>
           <p className="mt-0.5 text-[11px] leading-relaxed text-gray-500">同じ命令を100回書く</p>
         </div>
         <div className="rounded-xl bg-emerald-50 p-3 text-center ring-1 ring-emerald-200">
           <div className="text-xl">😄</div>
-          <div className="mt-1 text-xs font-extrabold text-emerald-700">繰り返し</div>
+          <div className="mt-1 text-xs font-bold text-emerald-700">繰り返し</div>
           <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">「100回くり返す」の1行でOK</p>
         </div>
       </div>
@@ -199,7 +199,7 @@ function Loop() {
       {/* 実行の様子 */}
       <div className="mt-3 flex items-center justify-center gap-2">
         <span className="text-xs text-gray-500">いま何回目？</span>
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-indigo-100 font-mono text-base font-extrabold text-indigo-700">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 font-mono text-base font-bold text-brand-700">
           {Math.min(count, TIMES)}
         </span>
         <span className="text-xs text-gray-400">/ {TIMES} 回</span>
@@ -234,7 +234,7 @@ function Loop() {
           <button
             onClick={() => setCount((c) => Math.min(TIMES, c + 1))}
             disabled={done}
-            className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
+            className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
           >
             {done ? "完了 🎉" : "次へ →"}
           </button>
@@ -251,7 +251,7 @@ function Loop() {
 export default function ProgrammingBasicsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         💻 プログラムは、コンピュータへの<b>作業手順書</b>。むずかしく見えても、組み合わせる部品は基本この3つだけ：
         <b>変数（値を入れる箱）</b>・<b>条件分岐（もし〜なら）</b>・<b>繰り返し（同じ処理を続ける）</b>。
         どれも<b>日常でやっていること</b>です。

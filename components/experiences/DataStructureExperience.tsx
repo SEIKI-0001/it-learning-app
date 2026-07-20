@@ -40,8 +40,8 @@ function StackDemo() {
           {items.map((v, i) => (
             <div
               key={`${v}-${i}`}
-              className={`grid place-items-center rounded-lg py-2 text-sm font-extrabold ${
-                i === items.length - 1 ? "bg-indigo-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
+              className={`grid place-items-center rounded-lg py-2 text-sm font-bold ${
+                i === items.length - 1 ? "bg-brand-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
               }`}
             >
               {v}
@@ -99,8 +99,8 @@ function QueueDemo() {
           {items.map((v, i) => (
             <div
               key={`${v}-${i}`}
-              className={`grid h-10 w-10 flex-none place-items-center rounded-lg text-sm font-extrabold ${
-                i === 0 ? "bg-indigo-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
+              className={`grid h-10 w-10 flex-none place-items-center rounded-lg text-sm font-bold ${
+                i === 0 ? "bg-brand-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
               }`}
             >
               {v}
@@ -140,7 +140,7 @@ function Others() {
           <div key={l.t} className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <span className="grid h-9 w-9 flex-none place-items-center rounded-lg bg-white text-lg ring-1 ring-gray-200">{l.emoji}</span>
             <div>
-              <div className="text-sm font-extrabold text-gray-800">{l.t}</div>
+              <div className="text-sm font-bold text-gray-800">{l.t}</div>
               <div className="text-xs text-gray-500">{l.d}</div>
             </div>
           </div>
@@ -153,7 +153,7 @@ function Others() {
 export default function DataStructureExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🗂️ <b>データ構造</b>はデータの並べ方・取り出し方。代表が<b>スタック（後入れ先出し・LIFO）</b>と
         <b>キュー（先入れ先出し・FIFO）</b>。出入りの順番が逆なのがポイント。
       </div>

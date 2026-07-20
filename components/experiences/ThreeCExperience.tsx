@@ -107,7 +107,7 @@ function MarketMap() {
               }`}
             >
               <span className="text-xl leading-none">{it.emoji}</span>
-              <span className="mt-0.5 text-[9px] font-extrabold leading-tight">
+              <span className="mt-0.5 text-[9px] font-bold leading-tight">
                 {c === "customer" ? "顧客" : c === "competitor" ? "競合" : "自社"}
               </span>
               <span className="text-[8px] font-bold opacity-70">{seen[c] ? "調査済✓" : "タップ"}</span>
@@ -125,7 +125,7 @@ function MarketMap() {
       <div className="mt-3 min-h-[5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
         {card ? (
           <>
-            <div className="text-sm font-extrabold text-gray-800">
+            <div className="text-sm font-bold text-gray-800">
               {card.emoji} {card.name} ＝ {card.who}
             </div>
             <p className="mt-1 text-xs text-gray-500">考えること：{card.q}</p>
@@ -234,7 +234,7 @@ function Quiz() {
 export default function ThreeCExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🔭 <b>3C分析</b>は <b>Customer（顧客）・Competitor（競合）・Company（自社）</b> の3つで事業環境を見る方法。
         「Cost（費用）」は<b>入らない</b>のが引っかけポイント。
       </div>

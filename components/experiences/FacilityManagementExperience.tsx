@@ -92,7 +92,7 @@ function Facilities() {
           <div key={f.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
               <span className="text-lg">{f.emo}</span>
-              <span className="text-sm font-extrabold text-gray-800">{f.name}</span>
+              <span className="text-sm font-bold text-gray-800">{f.name}</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{f.d}</p>
           </div>
@@ -169,7 +169,7 @@ function Quiz() {
 export default function FacilityManagementExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🏗️ ファシリティマネジメントは<b>電源・空調・入退室などの設備を管理</b>してシステムを守る活動。
         とくに<b>UPS＝停電時に一時的に電力を供給する装置</b>が頻出です。
       </div>

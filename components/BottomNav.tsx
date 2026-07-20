@@ -2,24 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // アプリ下部の固定ナビ。LINEから開く学習画面として、迷わず行き来できるようにする。
 type NavItem = {
   href: string;
   label: string;
-  emoji: string;
+  icon: IconName;
   relatedPaths?: readonly string[];
 };
 
 const ITEMS: readonly NavItem[] = [
-  { href: "/today", label: "今日", emoji: "📖" },
-  { href: "/learn", label: "学ぶ", emoji: "🗂️", relatedPaths: ["/topics"] },
-  { href: "/review", label: "復習", emoji: "🔁" },
-  { href: "/progress", label: "進捗", emoji: "📈" },
+  { href: "/today", label: "今日", icon: "book-open" },
+  { href: "/learn", label: "学ぶ", icon: "library", relatedPaths: ["/topics"] },
+  { href: "/review", label: "復習", icon: "rotate" },
+  { href: "/progress", label: "進捗", icon: "chart" },
   {
     href: "/more",
     label: "その他",
-    emoji: "☰",
+    icon: "ellipsis",
     relatedPaths: [
       "/plan",
       "/badges",
@@ -57,22 +58,21 @@ export default function BottomNav() {
               {active && (
                 <span
                   aria-hidden
-                  className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-indigo-600"
+                  className="absolute inset-x-2 top-0 h-0.5 rounded-full bg-brand-600"
                 />
               )}
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-0.5 whitespace-nowrap py-2.5 text-[11px] font-bold tracking-tight transition ${
-                  active ? "text-indigo-600" : "text-gray-400"
+                className={`flex flex-col items-center gap-1 whitespace-nowrap py-2.5 text-[10px] font-medium tracking-tight transition ${
+                  active ? "text-brand-700" : "text-gray-500"
                 }`}
               >
-                <span
-                  className={`text-lg transition ${active ? "" : "opacity-70 grayscale-[35%]"}`}
-                  aria-hidden
-                >
-                  {item.emoji}
-                </span>
+                <Icon
+                  name={item.icon}
+                  className="h-[22px] w-[22px]"
+                  strokeWidth={active ? 2 : 1.6}
+                />
                 {item.label}
               </Link>
             </li>

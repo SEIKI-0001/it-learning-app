@@ -18,9 +18,9 @@ export default function DiagramCard({
   showHeading?: boolean;
 }) {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       {showHeading && (
-        <p className="mb-1 flex items-center gap-1 text-xs font-bold text-indigo-500">
+        <p className="mb-1 flex items-center gap-1 text-xs font-bold text-brand-500">
           <span aria-hidden>📊</span> 図で理解
         </p>
       )}
@@ -37,9 +37,9 @@ export default function DiagramCard({
       )}
 
       {/* ひとことで言うと */}
-      <div className="mt-4 rounded-xl bg-indigo-50 px-3 py-2.5">
-        <p className="text-xs font-bold text-indigo-600">ひとことで言うと</p>
-        <p className="mt-0.5 text-sm leading-relaxed text-indigo-900">
+      <div className="mt-4 rounded-xl bg-brand-50 px-3 py-2.5">
+        <p className="text-xs font-bold text-brand-600">ひとことで言うと</p>
+        <p className="mt-0.5 text-sm leading-relaxed text-brand-900">
           {diagram.oneLine}
         </p>
       </div>
@@ -47,7 +47,7 @@ export default function DiagramCard({
       {/* 重要ポイント */}
       <Block label="重要ポイント">
         {diagram.keyPoints.map((p, i) => (
-          <Item key={i} icon="✓" iconClass="text-indigo-500">
+          <Item key={i} icon="✓" iconClass="text-brand-500">
             {p}
           </Item>
         ))}

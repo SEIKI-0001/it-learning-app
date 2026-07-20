@@ -104,7 +104,7 @@ function SettingsForm({
     <main className="min-h-screen bg-gray-50 px-5 py-8">
       <div className="mx-auto w-full max-w-md md:max-w-xl">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-indigo-500">設定の変更</p>
+          <p className="text-sm font-semibold text-brand-500">設定の変更</p>
           <Link
             href="/"
             className="text-sm font-medium text-gray-400 underline underline-offset-4"
@@ -112,7 +112,7 @@ function SettingsForm({
             もどる
           </Link>
         </div>
-        <h1 className="mt-1 text-2xl font-extrabold text-gray-800">
+        <h1 className="mt-1 text-2xl font-bold text-gray-800">
           学習プランの設定
         </h1>
         <p className="mt-2 text-sm text-gray-500">
@@ -129,7 +129,7 @@ function SettingsForm({
               type="date"
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
-              className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-3.5 text-base font-semibold text-gray-700"
+              className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3.5 text-base font-semibold text-gray-700"
             />
             <div className="mt-1.5 flex items-center justify-between">
               <p className="text-xs text-gray-400">
@@ -187,7 +187,7 @@ function SettingsForm({
                   key={n}
                   type="button"
                   onClick={() => setConfidence(n)}
-                  className={`h-12 flex-1 rounded-xl border-2 text-base font-extrabold transition active:scale-[0.97] ${
+                  className={`h-12 flex-1 rounded-xl border-2 text-base font-bold transition active:scale-[0.97] ${
                     confidence === n
                       ? "border-amber-400 bg-amber-100 text-amber-700"
                       : "border-gray-200 bg-white text-gray-500"
@@ -213,9 +213,9 @@ function SettingsForm({
                     key={field}
                     type="button"
                     onClick={() => toggleField(field)}
-                    className={`rounded-2xl border-2 px-4 py-3.5 text-left text-base font-semibold transition active:scale-[0.99] ${
+                    className={`rounded-xl border-2 px-4 py-3.5 text-left text-base font-semibold transition active:scale-[0.99] ${
                       active
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                        ? "border-brand-500 bg-brand-50 text-brand-700"
                         : "border-gray-200 bg-white text-gray-700"
                     }`}
                   >
@@ -240,9 +240,9 @@ function SettingsForm({
                     key={style}
                     type="button"
                     onClick={() => setStudyStyle(style)}
-                    className={`rounded-2xl border-2 px-4 py-3.5 text-left text-base font-semibold transition active:scale-[0.99] ${
+                    className={`rounded-xl border-2 px-4 py-3.5 text-left text-base font-semibold transition active:scale-[0.99] ${
                       active
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                        ? "border-brand-500 bg-brand-50 text-brand-700"
                         : "border-gray-200 bg-white text-gray-700"
                     }`}
                   >
@@ -258,7 +258,7 @@ function SettingsForm({
           type="button"
           onClick={handleSave}
           disabled={saved}
-          className="mt-9 w-full rounded-2xl bg-indigo-600 px-6 py-4 text-lg font-extrabold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-60"
+          className="mt-9 w-full rounded-xl bg-brand-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-60"
         >
           {saved ? "保存しました" : "💾 変更を保存"}
         </button>
@@ -282,7 +282,7 @@ function MinuteButton({
       onClick={onClick}
       className={`h-12 rounded-xl border-2 text-sm font-bold transition active:scale-[0.97] ${
         active
-          ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+          ? "border-brand-500 bg-brand-50 text-brand-700"
           : "border-gray-200 bg-white text-gray-500"
       }`}
     >

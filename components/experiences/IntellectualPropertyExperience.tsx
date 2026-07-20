@@ -74,8 +74,8 @@ function CopycatLab() {
       </p>
 
       {/* 商品カード */}
-      <div className="mt-4 rounded-2xl bg-indigo-50 p-3 ring-2 ring-indigo-200">
-        <div className="text-center text-sm font-extrabold text-indigo-700">
+      <div className="mt-4 rounded-xl bg-brand-50 p-3 ring-2 ring-brand-200">
+        <div className="text-center text-sm font-bold text-brand-700">
           🥞 ふわふわクレープメーカー（大ヒット中！）
         </div>
         <div className="mt-2 space-y-2">
@@ -97,11 +97,11 @@ function CopycatLab() {
               >
                 <span className="text-xl leading-none">{r.emoji}</span>
                 <span className="flex-1">
-                  <span className="block text-xs font-extrabold text-gray-800">{p.label}</span>
+                  <span className="block text-xs font-bold text-gray-800">{p.label}</span>
                   <span className="block text-[10px] leading-relaxed text-gray-500">{p.detail}</span>
                 </span>
                 <span
-                  className={`flex-none rounded-full px-2 py-1 text-[10px] font-extrabold ${
+                  className={`flex-none rounded-full px-2 py-1 text-[10px] font-bold ${
                     done ? "bg-rose-500 text-white" : "bg-gray-100 text-gray-500"
                   }`}
                 >
@@ -117,7 +117,7 @@ function CopycatLab() {
       <div className="mt-3 min-h-[5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
         {current ? (
           <>
-            <div className="text-sm font-extrabold text-rose-600">
+            <div className="text-sm font-bold text-rose-600">
               ⚖️ {RIGHTS[current].emoji} {RIGHTS[current].name}の侵害で訴えられた！
             </div>
             <p className="mt-1 text-xs leading-relaxed text-gray-700">
@@ -134,7 +134,7 @@ function CopycatLab() {
       </div>
 
       {allTried && (
-        <div className="mt-2 rounded-xl bg-indigo-50 px-4 py-3 text-sm font-medium leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+        <div className="mt-2 rounded-xl bg-brand-50 px-4 py-3 text-sm font-medium leading-relaxed text-brand-900 ring-1 ring-brand-200">
           🎉 全部試したね。1つの商品でも<b>仕組み＝特許権、名前ロゴ＝商標権、イラスト＝著作権</b>と
           部分ごとに別の権利で守られている。これらをまとめた総称が<b>知的財産権</b>！
         </div>
@@ -210,7 +210,7 @@ function Quiz() {
 export default function IntellectualPropertyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🛡️ <b>知的財産権</b>は、人の創作やアイデアを守る権利の総称。
         <b>著作権＝作品</b>、<b>特許権＝発明</b>、<b>商標権＝名前・ロゴ</b>、と「何を守るか」で分かれます。
       </div>

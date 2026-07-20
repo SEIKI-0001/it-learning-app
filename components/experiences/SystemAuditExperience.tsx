@@ -25,7 +25,7 @@ function WhatIsAudit() {
           <span className="text-sm font-bold text-gray-700">だれが採点する？</span>
           <button
             onClick={() => setSelf((s) => !s)}
-            className="rounded-lg bg-indigo-600 px-3 py-1 text-xs font-bold text-white active:scale-95"
+            className="rounded-lg bg-brand-600 px-3 py-1 text-xs font-bold text-white active:scale-95"
           >
             切り替え
           </button>
@@ -34,13 +34,13 @@ function WhatIsAudit() {
           {self ? (
             <div>
               <div className="text-3xl">🙋‍♂️📝</div>
-              <div className="mt-1 text-sm font-extrabold text-rose-600">自分で自分を採点</div>
+              <div className="mt-1 text-sm font-bold text-rose-600">自分で自分を採点</div>
               <p className="mt-1 text-xs text-gray-500">甘くなりがち。見落としや隠ぺいも起きうる…</p>
             </div>
           ) : (
             <div>
               <div className="text-3xl">🧑‍⚖️🔍</div>
-              <div className="mt-1 text-sm font-extrabold text-emerald-600">独立した第三者が確認</div>
+              <div className="mt-1 text-sm font-bold text-emerald-600">独立した第三者が確認</div>
               <p className="mt-1 text-xs text-gray-500">利害がないから客観的。これが監査の姿。</p>
             </div>
           )}
@@ -118,7 +118,7 @@ function ControlLab() {
               }`}
             >
               <span className="text-lg leading-none">{c.emoji}</span>
-              <span className="mt-1 text-[11px] font-extrabold leading-tight">{c.t}</span>
+              <span className="mt-1 text-[11px] font-bold leading-tight">{c.t}</span>
               <span className={`mt-0.5 text-[10px] font-bold ${active ? "text-emerald-100" : "text-gray-400"}`}>
                 {active ? "ON" : "OFF"}
               </span>
@@ -146,7 +146,7 @@ function ControlLab() {
             >
               <div className="flex items-center gap-2">
                 <span className="text-base">{s.emoji}</span>
-                <span className="text-xs font-extrabold text-gray-700">{s.label}</span>
+                <span className="text-xs font-bold text-gray-700">{s.label}</span>
               </div>
               <p className="mt-0.5 text-xs leading-relaxed text-gray-600">{s.note}</p>
             </div>
@@ -244,7 +244,7 @@ function Quiz() {
 export default function SystemAuditExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🧑‍⚖️ <b>システム監査</b>は、システムが正しく安全に使われているかを<b>独立した第三者</b>が客観的に確認する活動。
         <b>内部統制</b>は、ミスや不正を防ぐ社内の仕組みです。テストを先生が採点基準で確認するイメージ。
       </div>

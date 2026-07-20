@@ -69,7 +69,7 @@ export default function ExplanationSlides({
   return (
     <section aria-label="解説" className="space-y-3">
       {title && (
-        <h2 className="flex items-center gap-2 text-lg font-extrabold text-gray-800">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-gray-800">
           {title}
         </h2>
       )}
@@ -78,7 +78,7 @@ export default function ExplanationSlides({
         data-testid="explanation-slides-viewport"
         tabIndex={slides.length > 1 ? 0 : undefined}
         onKeyDown={handleKeyDown}
-        className="touch-pan-y overflow-hidden rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        className="touch-pan-y overflow-hidden rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -114,13 +114,13 @@ export default function ExplanationSlides({
             onClick={() => moveTo(activeIndex - 1)}
             disabled={!canGoPrevious}
             aria-label="前の解説へ"
-            className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-indigo-200 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-brand-200 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             ← 前へ
           </button>
 
           <div className="flex items-center gap-2" aria-label="解説の進み具合">
-            <span aria-live="polite" className="text-xs font-extrabold text-gray-600">
+            <span aria-live="polite" className="text-xs font-bold text-gray-600">
               {activeIndex + 1} / {slides.length}
             </span>
             <div className="flex items-center gap-1" aria-label="解説を選ぶ">
@@ -132,7 +132,7 @@ export default function ExplanationSlides({
                   aria-label={`解説${index + 1}`}
                   aria-current={index === activeIndex ? "step" : undefined}
                   className={`h-2.5 w-2.5 rounded-full transition ${
-                    index === activeIndex ? "bg-indigo-600" : "bg-gray-200 hover:bg-indigo-200"
+                    index === activeIndex ? "bg-brand-600" : "bg-gray-200 hover:bg-brand-200"
                   }`}
                 >
                   <span className="sr-only">{slide.label}</span>
@@ -146,7 +146,7 @@ export default function ExplanationSlides({
             onClick={() => moveTo(activeIndex + 1)}
             disabled={!canGoNext}
             aria-label="次の解説へ"
-            className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-indigo-200 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:border-brand-200 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             次へ →
           </button>

@@ -31,9 +31,9 @@ function Firewall() {
           <div className="text-[11px] font-bold text-gray-700">社外</div>
         </div>
         <span className="text-gray-300">→</span>
-        <div className="w-24 rounded-xl bg-indigo-50 px-1 py-2.5 ring-2 ring-indigo-300">
+        <div className="w-24 rounded-xl bg-brand-50 px-1 py-2.5 ring-2 ring-brand-300">
           <div className="text-2xl">🛡️</div>
-          <div className="text-[11px] font-extrabold text-indigo-700">ファイア<br />ウォール</div>
+          <div className="text-[11px] font-bold text-brand-700">ファイア<br />ウォール</div>
         </div>
         <span className="text-gray-300">→</span>
         <div className="w-20 rounded-xl bg-gray-50 px-1 py-2.5 ring-1 ring-gray-200">
@@ -91,7 +91,7 @@ function WafCompare() {
           <thead>
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-3 py-2 text-left font-bold"> </th>
-              <th className="px-3 py-2 text-center font-bold text-indigo-700">🚪 ファイアウォール</th>
+              <th className="px-3 py-2 text-center font-bold text-brand-700">🚪 ファイアウォール</th>
               <th className="px-3 py-2 text-center font-bold text-emerald-700">🔎 WAF</th>
             </tr>
           </thead>
@@ -191,8 +191,8 @@ function Placement() {
         <div className="text-center text-[11px] text-gray-400">📨 リクエストが届く ▼</div>
 
         {/* ファイアウォール（必ず通過：ポート443は許可） */}
-        <div className="mx-auto max-w-[280px] rounded-lg bg-indigo-50 px-3 py-2 text-center ring-2 ring-indigo-300">
-          <div className="text-sm font-extrabold text-indigo-700">🚪 ファイアウォール</div>
+        <div className="mx-auto max-w-[280px] rounded-lg bg-brand-50 px-3 py-2 text-center ring-2 ring-brand-300">
+          <div className="text-sm font-bold text-brand-700">🚪 ファイアウォール</div>
           <div className="text-[11px] text-gray-600">IP・ポートを確認（境界）</div>
           <div className="mt-1 inline-block rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-bold text-white">
             ✅ 通過（ポート443は許可）
@@ -202,7 +202,7 @@ function Placement() {
 
         {/* WAF（中身を検査：攻撃なら遮断） */}
         <div className={`mx-auto max-w-[280px] rounded-lg px-3 py-2 text-center ring-2 ${wafPass ? "bg-emerald-50 ring-emerald-300" : "bg-rose-50 ring-rose-300"}`}>
-          <div className={`text-sm font-extrabold ${wafPass ? "text-emerald-700" : "text-rose-700"}`}>🔎 WAF</div>
+          <div className={`text-sm font-bold ${wafPass ? "text-emerald-700" : "text-rose-700"}`}>🔎 WAF</div>
           <div className="text-[11px] text-gray-600">HTTP/HTTPSの中身を確認（アプリ直前）</div>
           <div className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold text-white ${wafPass ? "bg-emerald-500" : "bg-rose-500"}`}>
             {wafPass ? "✅ 通過（中身は正常）" : "⛔ 遮断（中身が攻撃）"}
@@ -291,7 +291,7 @@ function Vpn() {
 export default function FirewallExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🛡️ 守り方の整理：<b>ファイアウォール＝通信の門番</b>（許可だけ通す）、
         <b>WAF＝Webアプリの門番</b>（中身を検査）、<b>VPN＝安全な通り道</b>（暗号トンネル）、
         <b>ゼロトラスト＝何も最初から信じない</b>（毎回確認）。
@@ -310,14 +310,14 @@ export default function FirewallExperience() {
         </p>
         <div className="mt-3 grid grid-cols-1 gap-2">
           <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="text-sm font-extrabold text-gray-700">🏰 従来（境界防御）</div>
+            <div className="text-sm font-bold text-gray-700">🏰 従来（境界防御）</div>
             <p className="mt-1 text-sm text-gray-600">
               「外は危険／中（社内）は安全」とみなす。<b>一度入れば信用</b>される。
               → 中に侵入されると一気に弱い。
             </p>
           </div>
-          <div className="rounded-xl bg-indigo-50 p-3 ring-1 ring-indigo-200">
-            <div className="text-sm font-extrabold text-indigo-700">🚦 ゼロトラスト</div>
+          <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
+            <div className="text-sm font-bold text-brand-700">🚦 ゼロトラスト</div>
             <p className="mt-1 text-sm text-gray-700">
               <b>だれも・何も最初から信じない</b>。社内・社外を問わず、アクセスのたびに
               本人確認（認証）と権限確認（認可）を行う。
