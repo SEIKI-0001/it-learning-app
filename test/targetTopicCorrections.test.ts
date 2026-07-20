@@ -11,6 +11,23 @@ const targetTopic = (id: string): Topic => {
 const allTopicText = (topic: Topic): string => JSON.stringify(topic);
 
 describe("corrected target topic content", () => {
+  it("adds the required strategy calculations and existing-topic expansions", () => {
+    const textOf = (id: string) => JSON.stringify(targetTopic(id));
+    for (const keyword of ["MRP", "発注", "40 × 3 - 25 = 95"]) {
+      expect(textOf("strat-production-management")).toContain(keyword);
+    }
+    for (const [id, keywords] of [
+      ["strat-management-systems", ["ヒト", "モノ", "カネ", "情報"]],
+      ["strat-business-process", ["業務分析", "業務計画", "ボトルネック"]],
+      ["strat-financial-statements", ["売上総利益", "営業利益", "経常利益", "当期純利益"]],
+      ["strat-system-strategy", ["利用者教育", "導入促進", "IT投資評価", "導入後評価"]],
+    ] as const) {
+      for (const keyword of keywords) expect(textOf(id)).toContain(keyword);
+    }
+    expect(textOf("strat-enterprise-activities")).toContain("CSR");
+    expect(textOf("strat-enterprise-activities")).toContain("ステークホルダ");
+  });
+
   it("uses the current Act on Ensuring Proper Transactions Involving Small and Medium-Sized Entrusted Business Operators", () => {
     const topic = targetTopic("strat-labor-laws");
     const content = allTopicText(topic);

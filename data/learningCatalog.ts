@@ -13,7 +13,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🏢",
     order: 1,
     sections: [
-      { id: "enterprise-basics", slug: "enterprise-basics", title: "企業のしくみ", description: "企業活動と継続計画を学びます。", order: 1, lessonIds: ["strat-enterprise-activities", "strat-bcp"] },
+      { id: "enterprise-basics", slug: "enterprise-basics", title: "企業のしくみ", description: "企業活動と継続計画を学びます。", order: 1, lessonIds: ["strat-enterprise-activities", "strat-corporation-management-organization", "strat-bcp"] },
       { id: "accounting-finance", slug: "accounting-finance", title: "会計・財務", description: "利益の考え方と財務諸表を学びます。", order: 2, lessonIds: ["strat-accounting-break-even", "strat-financial-statements"] },
     ],
   },
@@ -27,7 +27,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "📊",
     order: 2,
     sections: [
-      { id: "business-analysis", slug: "business-analysis", title: "業務分析", description: "業務プロセスを改善する考え方を学びます。", order: 1, lessonIds: ["strat-business-process"] },
+      { id: "business-analysis", slug: "business-analysis", title: "業務分析", description: "業務プロセスを改善する考え方を学びます。", order: 1, lessonIds: ["strat-business-process", "strat-decision-problem-solving"] },
       { id: "management-information", slug: "management-information", title: "経営情報の活用", description: "CRM・SCM・ERPを学びます。", order: 2, lessonIds: ["strat-management-systems"] },
     ],
   },
@@ -56,7 +56,7 @@ export const learningThemes: LearningTheme[] = [
     order: 4,
     sections: [
       { id: "business-analysis-frameworks", slug: "analysis-frameworks", title: "分析フレームワーク", description: "SWOT・3C・4Pを学びます。", order: 1, lessonIds: ["strat-swot", "strat-3c", "strat-marketing-4p"] },
-      { id: "corporate-strategy", slug: "corporate-strategy", title: "企業戦略", description: "PPM・バリューチェーン・成長戦略を学びます。", order: 2, lessonIds: ["strat-ppm", "strat-value-chain", "strat-corporate-strategy"] },
+      { id: "corporate-strategy", slug: "corporate-strategy", title: "企業戦略", description: "PPM・バリューチェーン・成長戦略を学びます。", order: 2, lessonIds: ["strat-ppm", "strat-value-chain", "strat-corporate-strategy", "strat-technology-development-strategy"] },
       { id: "strategy-evaluation", slug: "strategy-evaluation", title: "目標と評価", description: "KPIなどの目標管理を学びます。", order: 3, lessonIds: ["strat-goal-evaluation"] },
     ],
   },
@@ -70,7 +70,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🛒",
     order: 5,
     sections: [
-      { id: "ebusiness", slug: "ebusiness", title: "eビジネス", description: "EC・EDI・フィンテックを学びます。", order: 1, lessonIds: ["strat-ebusiness"] },
+      { id: "ebusiness", slug: "ebusiness", title: "eビジネス", description: "EC・EDI・フィンテックを学びます。", order: 1, lessonIds: ["strat-business-systems", "strat-engineering-systems", "strat-production-management", "strat-ebusiness", "strat-embedded-systems"] },
     ],
   },
   {

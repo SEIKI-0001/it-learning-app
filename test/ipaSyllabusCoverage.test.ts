@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getAllTopics } from "@/lib/content";
+import { getOrderedLessonIds } from "@/lib/learningCatalog";
 
 const EXISTING_TOPIC_IDS = [
   "tech-binary-data", "tech-network-address", "tech-security-cia",
@@ -28,9 +29,47 @@ const EXISTING_TOPIC_IDS = [
   "strat-labor-laws", "strat-bcp", "strat-system-planning-rfp",
 ] as const;
 
+const STRATEGY_NEW_TOPIC_IDS = [
+  "strat-corporation-management-organization",
+  "strat-decision-problem-solving",
+  "strat-technology-development-strategy",
+  "strat-business-systems",
+  "strat-engineering-systems",
+  "strat-production-management",
+  "strat-embedded-systems",
+] as const;
+
+const assertCompactTopicQuality = (id: string) => {
+  const topic = getAllTopics().find((candidate) => candidate.id === id);
+  expect(topic, `${id} should exist`).toBeDefined();
+  expect(getOrderedLessonIds().filter((candidate) => candidate === id)).toHaveLength(1);
+  expect(topic?.summary.trim()).toBeTruthy();
+  expect(topic?.conceptCard.body.trim()).toBeTruthy();
+  expect(topic?.conceptCard.analogy?.trim()).toBeTruthy();
+  expect(topic?.explanation.body.trim()).toBeTruthy();
+  expect(topic?.explanation.keyPoints?.length).toBeGreaterThanOrEqual(3);
+  expect(topic?.conceptCard.diagram ?? topic?.explanation.diagram).toBeDefined();
+  expect(topic?.relatedTerms?.length).toBeGreaterThanOrEqual(3);
+  expect(topic?.referenceHints[0]?.keywords.length).toBeGreaterThanOrEqual(3);
+  expect(topic?.checkQuestions.length).toBeGreaterThanOrEqual(4);
+  for (const question of topic?.checkQuestions ?? []) {
+    expect(question.choices).toHaveLength(4);
+    expect(question.choiceExplanations?.A).toBeTruthy();
+    expect(question.choiceExplanations?.B).toBeTruthy();
+    expect(question.choiceExplanations?.C).toBeTruthy();
+    expect(question.choiceExplanations?.D).toBeTruthy();
+  }
+};
+
 describe("IPA syllabus coverage", () => {
   it("keeps every pre-existing Topic ID", () => {
     const actual = new Set(getAllTopics().map((topic) => topic.id));
     expect(EXISTING_TOPIC_IDS.filter((id) => !actual.has(id))).toEqual([]);
+  });
+
+  describe("newly required Topic strategy content", () => {
+    it.each(STRATEGY_NEW_TOPIC_IDS)("provides quality strategy Topic %s", (id) => {
+      assertCompactTopicQuality(id);
+    });
   });
 });
