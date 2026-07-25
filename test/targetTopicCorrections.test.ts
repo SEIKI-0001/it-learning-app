@@ -214,23 +214,34 @@ describe("corrected target topic content", () => {
     expect(content).toContain("組み合わせ");
   });
 
-  it("compares nearby parallelization and bottleneck alternatives with aligned reasons", () => {
+  it("asks beginners to judge when independent work benefits from multiple cores", () => {
     const parallelQuestion = targetTopic("tech-parallel-systems").checkQuestions.find(
-      (candidate) => candidate.prompt.includes("100枚の画像"),
+      (candidate) => candidate.prompt.includes("マルチコアに仕事を分ける"),
     );
+
+    expect(parallelQuestion).toBeDefined();
+    expect(parallelQuestion?.correctChoice).toBe("A");
+    expect(parallelQuestion?.choices[0]?.text).toContain("100店舗");
+    expect(parallelQuestion?.choices[1]?.text).toContain("前月残高");
+    expect(parallelQuestion?.choices[2]?.text).toContain("受注番号順");
+    expect(parallelQuestion?.choices[3]?.text).toContain("直前の圧縮結果");
+    expect(parallelQuestion?.choices.every((choice) => !choice.text.includes("並列"))).toBe(
+      true,
+    );
+    expect(parallelQuestion?.choiceExplanations?.A).toContain("独立");
+    expect(parallelQuestion?.choiceExplanations?.B).toContain("前月");
+    expect(parallelQuestion?.choiceExplanations?.C).toContain("一つの在庫数");
+    expect(parallelQuestion?.choiceExplanations?.D).toContain("直前");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("データ並列");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("タスク並列");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("パイプライン並列");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("命令レベル並列");
+  });
+
+  it("compares nearby bottleneck alternatives with aligned reasons", () => {
     const bottleneckQuestion = targetTopic("tech-system-performance").checkQuestions.find(
       (candidate) => candidate.prompt.includes("ストレージ待ち時間"),
     );
-
-    expect(parallelQuestion?.choices.map((choice) => choice.text)).toEqual([
-      "データ並列：画像単位で複数のコアへ分配する",
-      "タスク並列：1枚の画像内の異なる処理をコアごとに分担する",
-      "パイプライン並列：読込み・変換・保存の段階ごとにコアを分ける",
-      "命令レベル並列：1コア内で独立した命令を同時に実行する",
-    ]);
-    expect(parallelQuestion?.choiceExplanations?.B).toContain("画像単位");
-    expect(parallelQuestion?.choiceExplanations?.C).toContain("段階");
-    expect(parallelQuestion?.choiceExplanations?.D).toContain("1コア内");
 
     expect(bottleneckQuestion?.choices.map((choice) => choice.text)).toEqual([
       "ストレージ装置のI/O性能",
