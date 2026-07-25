@@ -39,6 +39,79 @@ describe("corrected target topic content", () => {
     expect(JSON.stringify(question)).not.toContain("55個");
   });
 
+  it("checks the added profit stages with a numerical income-statement case", () => {
+    const topic = targetTopic("strat-financial-statements");
+    const question = topic.checkQuestions.find((candidate) =>
+      candidate.prompt.includes("販売費及び一般管理費が250万円"),
+    );
+
+    expect(topic.checkQuestions).toHaveLength(5);
+    expect(
+      topic.checkQuestions.some((candidate) =>
+        candidate.prompt.includes("現金や預金、売掛金"),
+      ),
+    ).toBe(true);
+    expect(question).toBeDefined();
+    expect(question?.prompt).toContain("営業利益");
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices).toEqual([
+      { key: "A", text: "450万円" },
+      { key: "B", text: "700万円" },
+      { key: "C", text: "420万円" },
+      { key: "D", text: "400万円" },
+    ]);
+    expect(question?.choiceExplanations?.A).toContain("700万円 - 250万円 = 450万円");
+    expect(Object.keys(question?.choiceExplanations ?? {})).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("checks business analysis and planning with a realistic bottleneck case", () => {
+    const topic = targetTopic("strat-business-process");
+    const question = topic.checkQuestions.find((candidate) =>
+      candidate.prompt.includes("1時間当たりの処理能力"),
+    );
+
+    expect(topic.checkQuestions).toHaveLength(5);
+    expect(
+      topic.checkQuestions.some((candidate) =>
+        candidate.prompt.includes("申請や承認などの業務の流れ"),
+      ),
+    ).toBe(true);
+    expect(question).toBeDefined();
+    expect(question?.prompt).toContain("業務分析");
+    expect(question?.prompt).toContain("業務計画");
+    expect(question?.prompt).toContain("ボトルネック");
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices.map((choice) => choice.text)).toEqual([
+      "本人確認工程（35件/時、平均待ち時間50分）",
+      "申請受付工程（80件/時、平均待ち時間5分）",
+      "審査工程（60件/時、平均待ち時間15分）",
+      "結果通知工程（90件/時、平均待ち時間3分）",
+    ]);
+    expect(question?.choiceExplanations?.A).toContain("最小");
+    expect(Object.keys(question?.choiceExplanations ?? {})).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("preserves the ROI question alongside the system adoption expansion", () => {
+    const topic = targetTopic("strat-system-strategy");
+    const question = topic.checkQuestions.find((candidate) =>
+      candidate.prompt.includes("かけた費用に対してどれだけの利益"),
+    );
+
+    expect(topic.checkQuestions).toHaveLength(5);
+    expect(
+      topic.checkQuestions.some((candidate) =>
+        candidate.prompt.includes("新システムの導入前から導入後"),
+      ),
+    ).toBe(true);
+    expect(question).toBeDefined();
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices[0]).toEqual({ key: "A", text: "ROI（投資利益率）" });
+    expect(question?.choiceExplanations?.A).toContain(
+      "（効果 - 投資額）÷ 投資額",
+    );
+    expect(Object.keys(question?.choiceExplanations ?? {})).toEqual(["A", "B", "C", "D"]);
+  });
+
   it("uses neutral POS-data objectives while only one choice changes ordering", () => {
     const question = targetTopic("strat-business-systems").checkQuestions.find(
       (candidate) => candidate.id === "strat-business-systems-q1",
