@@ -71,6 +71,10 @@ body {
   .mochit-celebrate {
     animation: none;
   }
+  .floating-mochit-body[data-motion] {
+    animation: none;
+    transform: none;
+  }
   /* 消える前提の装飾（紙吹雪・XPフロート）は残像にならないよう非表示にする */
   .confetti-piece,
   .animate-float-up {
@@ -114,6 +118,47 @@ body {
 .mochit-celebrate { animation: mochit-celebrate 620ms ease-out 1; }
 .mochit-growth-2 { filter: drop-shadow(0 0 5px rgba(34, 211, 238, .35)); }
 .mochit-growth-3 { filter: drop-shadow(0 0 8px rgba(34, 211, 238, .55)) drop-shadow(0 0 0 rgba(34, 211, 238, .45)); outline: 1px solid rgba(34, 211, 238, .35); outline-offset: 2px; border-radius: 50%; }
+
+@keyframes floating-mochit-rebound {
+  0% { transform: translateY(4px) scaleX(1.12) scaleY(.86); }
+  34% { transform: translateY(-3px) scaleX(.93) scaleY(1.08); }
+  58% { transform: translateY(1px) scaleX(1.04) scaleY(.97); }
+  78% { transform: translateY(-1px) scaleX(.98) scaleY(1.02); }
+  100% { transform: translateY(0) scaleX(1) scaleY(1); }
+}
+
+@keyframes floating-mochit-settle {
+  0% { transform: rotate(var(--mochit-drag-rotate, 0deg)) scaleX(1.06) scaleY(.92); }
+  38% { transform: rotate(calc(var(--mochit-drag-rotate, 0deg) * -.35)) scaleX(.98) scaleY(1.03); }
+  70% { transform: rotate(calc(var(--mochit-drag-rotate, 0deg) * .12)) scaleX(1.01) scaleY(.99); }
+  100% { transform: rotate(0) scaleX(1) scaleY(1); }
+}
+
+.floating-mochit-body {
+  transform-origin: 50% 72%;
+  will-change: transform;
+}
+
+.floating-mochit-body[data-motion="pressed"] {
+  transform: translateY(4px) scaleX(1.12) scaleY(.86);
+}
+
+.floating-mochit-body[data-motion="dragging"] {
+  transform: rotate(var(--mochit-drag-rotate, 0deg)) scaleX(1.06) scaleY(.92);
+}
+
+.floating-mochit-body[data-motion="rebounding"] {
+  animation: floating-mochit-rebound 520ms cubic-bezier(.22, .8, .3, 1);
+}
+
+.floating-mochit-body[data-motion="settling"] {
+  animation: floating-mochit-settle 520ms cubic-bezier(.22, .8, .3, 1);
+}
+
+.floating-mochit-body[data-reduced-motion="true"] {
+  animation: none;
+  transform: none;
+}
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
