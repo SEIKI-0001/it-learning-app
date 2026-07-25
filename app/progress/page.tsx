@@ -21,6 +21,7 @@ import { getRankStatus } from "@/lib/rank";
 import { getCheckpointProgress } from "@/lib/checkpoints";
 import { BADGES } from "@/lib/badges";
 import Mochit from "@/components/mochit/Mochit";
+import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
 import { getMochitGrowthStage, MOCHIT_GROWTH_STAGE_LABELS } from "@/lib/mochit";
 import { getMochitProgressPresentation } from "@/lib/mochitPresentation";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
@@ -233,6 +234,7 @@ export default function ProgressPage() {
             モチット 成長段階{getMochitGrowthStage(state)}
             「{MOCHIT_GROWTH_STAGE_LABELS[getMochitGrowthStage(state)]}」
           </p>
+          <FloatingMochitVisibilityControl restoreOnly className="mt-3" />
 
           {/* ランク進捗(次のランクまで)。EXP/レベル表示はランクに統合した。 */}
           <div className="mt-3 border-t border-gray-100 pt-3">
