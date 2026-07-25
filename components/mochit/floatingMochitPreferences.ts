@@ -17,6 +17,8 @@ export const DEFAULT_FLOATING_MOCHIT_PREFERENCES = {
   position: null,
 } satisfies FloatingMochitPreferences;
 
+let volatileSnapshot: string | null = null;
+
 export function clampFloatingMochitPosition(
   point: FloatingMochitPoint,
   viewportWidth: number,
@@ -97,6 +99,10 @@ function isBrowser(): boolean {
 export function loadFloatingMochitPreferences(): FloatingMochitPreferences {
   if (!isBrowser()) return DEFAULT_FLOATING_MOCHIT_PREFERENCES;
 
+  if (volatileSnapshot !== null) {
+    return parseFloatingMochitPreferences(volatileSnapshot);
+  }
+
   try {
     return parseFloatingMochitPreferences(
       window.localStorage.getItem(FLOATING_MOCHIT_STORAGE_KEY),
@@ -111,13 +117,13 @@ export function saveFloatingMochitPreferences(
 ): void {
   if (!isBrowser()) return;
 
+  const serialized = JSON.stringify(preferences);
   try {
-    window.localStorage.setItem(
-      FLOATING_MOCHIT_STORAGE_KEY,
-      JSON.stringify(preferences),
-    );
+    window.localStorage.setItem(FLOATING_MOCHIT_STORAGE_KEY, serialized);
+    volatileSnapshot = null;
   } catch {
     // The pet remains usable for this page when browser storage is blocked.
+    volatileSnapshot = serialized;
   }
 
   window.dispatchEvent(
@@ -138,19 +144,15 @@ export function setFloatingMochitVisibility(visible: boolean): void {
 }
 
 export function subscribeToFloatingMochitPreferences(
-  listener: (preferences: FloatingMochitPreferences) => void,
+  listener: () => void,
 ): () => void {
   if (!isBrowser()) return () => undefined;
 
-  const handleLocalChange = (event: Event) => {
-    listener(
-      (event as CustomEvent<FloatingMochitPreferences>).detail ??
-        loadFloatingMochitPreferences(),
-    );
-  };
+  const handleLocalChange = () => listener();
   const handleStorageChange = (event: StorageEvent) => {
     if (event.key !== FLOATING_MOCHIT_STORAGE_KEY) return;
-    listener(parseFloatingMochitPreferences(event.newValue));
+    volatileSnapshot = null;
+    listener();
   };
 
   window.addEventListener(FLOATING_MOCHIT_CHANGE_EVENT, handleLocalChange);
@@ -160,4 +162,22 @@ export function subscribeToFloatingMochitPreferences(
     window.removeEventListener(FLOATING_MOCHIT_CHANGE_EVENT, handleLocalChange);
     window.removeEventListener("storage", handleStorageChange);
   };
+}
+
+export function getFloatingMochitPreferencesSnapshot(): string | null {
+  if (!isBrowser()) return null;
+  if (volatileSnapshot !== null) return volatileSnapshot;
+
+  try {
+    return (
+      window.localStorage.getItem(FLOATING_MOCHIT_STORAGE_KEY) ??
+      ""
+    );
+  } catch {
+    return "";
+  }
+}
+
+export function getFloatingMochitPreferencesServerSnapshot(): null {
+  return null;
 }
