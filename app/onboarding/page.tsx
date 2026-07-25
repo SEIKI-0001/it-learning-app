@@ -84,7 +84,8 @@ export default function OnboardingPage() {
   return (
     <main className="min-h-screen px-5 py-8">
       <div className="mx-auto w-full max-w-3xl">
-        <p className="text-xs font-medium text-gray-500">初回設定 1/2</p>
+        {/* 2/2（アバター選択）は Mochit 導入時に廃止したので、段数は表示しない。 */}
+        <p className="text-xs font-medium text-gray-500">初回設定</p>
         <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">
           あなたに合わせて学習プランを作ります
         </h1>

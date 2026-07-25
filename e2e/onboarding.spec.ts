@@ -11,11 +11,11 @@ test("a new learner can complete onboarding and open today's learning", async ({
     page.getByRole("heading", { name: "あなたに合わせて学習プランを作ります" }),
   ).toBeVisible();
 
+  // 初回設定は1画面のみ。プラン作成後は確認画面を挟まず今日の学習へ直行する
+  // （アバター選択ステップは Mochit 導入時に廃止済み）。
   await page.getByRole("button", { name: /この内容でプランを作る/ }).click();
-  await expect(page.getByRole("heading", { name: "学習プランができました！" })).toBeVisible();
-  await page.getByRole("button", { name: /今日の学習へ進む/ }).click();
   await expect(page).toHaveURL(/\/today$/);
-  await expect(page.getByText("今日の学習メニュー")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "今日の学習" })).toBeVisible();
   const bottomNav = page.getByRole("navigation", { name: "メインナビゲーション" });
   await expect(bottomNav.getByRole("link")).toHaveCount(5);
   await expect(bottomNav.getByRole("link", { name: /その他/ })).toBeVisible();
