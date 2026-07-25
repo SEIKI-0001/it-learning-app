@@ -2,6 +2,9 @@
   "name": "it-learning-app",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,6 +13,8 @@
     "typecheck": "tsc --noEmit --project tsconfig.typecheck.json",
     "test": "vitest run",
     "validate:syllabus": "vitest run test/syllabus.test.ts",
+    "validate:questions": "vitest run test/questionBank.test.ts",
+    "questions:migrate": "node scripts/question-bank/migrate-exam-level.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "richmenu:preview": "node scripts/richmenu/richmenu-image.mjs",
