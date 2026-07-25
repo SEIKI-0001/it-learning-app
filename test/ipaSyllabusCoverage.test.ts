@@ -87,11 +87,37 @@ describe("IPA syllabus coverage", () => {
     });
 
     it("teaches the communication channel calculation", () => {
-      const text = JSON.stringify(getAllTopics().find(
+      const topic = getAllTopics().find(
         (topic) => topic.id === "mgmt-project-communication",
-      ));
-      expect(text).toContain("n(n-1)/2");
-      expect(text).toContain("6 × 5 ÷ 2 = 15");
+      );
+      const sixPersonQuestion = topic?.checkQuestions.find(
+        (question) => question.prompt.includes("6人のメンバー"),
+      );
+
+      expect(JSON.stringify(topic)).toContain("n(n-1)/2");
+      expect(sixPersonQuestion).toBeDefined();
+      expect(sixPersonQuestion?.correctChoice).toBe("A");
+      expect(sixPersonQuestion?.choices).toEqual([
+        { key: "A", text: "15本" },
+        { key: "B", text: "6本" },
+        { key: "C", text: "30本" },
+        { key: "D", text: "12本" },
+      ]);
+      expect(sixPersonQuestion?.choiceExplanations?.A).toContain("6 × 5 ÷ 2 = 15");
+    });
+
+    it("teaches PMBOK process groups as overlapping management-purpose groupings", () => {
+      const topic = getAllTopics().find((candidate) => candidate.id === "mgmt-pmbok-basics");
+      const text = JSON.stringify(topic);
+
+      expect(topic?.explanation.body).toContain("管理上の目的");
+      expect(topic?.explanation.body).toContain("重なり");
+      expect(topic?.explanation.body).toContain("繰り返");
+      expect(topic?.explanation.body).toContain("実行と並行して");
+      expect(text).not.toContain("時間的なまとまり");
+      expect(text).not.toContain("活動の段階");
+      expect(text).not.toContain("代表的なプロセス群の並び");
+      expect(text).not.toContain("基本の並び");
     });
   });
 });
