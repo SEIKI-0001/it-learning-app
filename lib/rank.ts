@@ -1,3 +1,5 @@
+import type { IconName } from "@/components/ui/Icon";
+
 // 本人の「成長段階」を表すランク制度。累計EXPをもとに算出する。
 // 既存の Lv(lib/game.ts)とは別物で、長期的な積み上げの段階を示すモチベーション要素。
 // 他人比較・ランキングではなく、あくまで自分の歩みを段階で見せるためのもの。
@@ -6,18 +8,32 @@ export type Rank = {
   id: string;
   name: string;
   minExp: number; // このランクに到達する下限EXP
+  /** UI表示に使う線画アイコン。emoji はデータ互換のために残す(画面では使わない)。 */
+  icon: IconName;
   emoji: string;
 };
 
 // 最低ランク(0EXP)から最高ランクまで。名前はITパスポート学習コーチの雰囲気に合わせた。
 export const RANKS: Rank[] = [
-  { id: "step", name: "はじめの一歩", minExp: 0, emoji: "🌱" },
-  { id: "apprentice", name: "見習い", minExp: 60, emoji: "🔰" },
-  { id: "novice", name: "初級冒険者", minExp: 180, emoji: "🧭" },
-  { id: "explorer", name: "中級探索者", minExp: 400, emoji: "🗺️" },
-  { id: "challenger", name: "上級チャレンジャー", minExp: 750, emoji: "⚔️" },
-  { id: "hunter", name: "合格圏ハンター", minExp: 1300, emoji: "🎯" },
-  { id: "master", name: "ITパスポートマスター", minExp: 2200, emoji: "👑" },
+  { id: "step", name: "はじめの一歩", minExp: 0, icon: "sprout", emoji: "🌱" },
+  { id: "apprentice", name: "見習い", minExp: 60, icon: "shield", emoji: "🔰" },
+  { id: "novice", name: "初級冒険者", minExp: 180, icon: "compass", emoji: "🧭" },
+  { id: "explorer", name: "中級探索者", minExp: 400, icon: "map", emoji: "🗺️" },
+  {
+    id: "challenger",
+    name: "上級チャレンジャー",
+    minExp: 750,
+    icon: "flame",
+    emoji: "⚔️",
+  },
+  { id: "hunter", name: "合格圏ハンター", minExp: 1300, icon: "target", emoji: "🎯" },
+  {
+    id: "master",
+    name: "ITパスポートマスター",
+    minExp: 2200,
+    icon: "award",
+    emoji: "👑",
+  },
 ];
 
 export type RankStatus = {

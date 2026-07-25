@@ -150,7 +150,7 @@ export default function ProgressPage() {
   return (
     <main className="min-h-screen pb-24">
       <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
-        <div className="mx-auto w-full max-w-md md:max-w-4xl">
+        <div className="mx-auto w-full max-w-3xl">
           <div className="flex items-baseline justify-between gap-3">
             <h1 className="text-xl font-bold tracking-tight text-gray-900">進捗</h1>
             <p className="text-xs text-gray-500">
@@ -270,7 +270,7 @@ export default function ProgressPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-5 md:max-w-4xl">
+      <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5">
         {/* 第2層: 次の解放(実在する解放だけ: ランク/突破試験/モチット成長) */}
         <NextUnlocks state={state} />
 

@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { WORDLIST_CATEGORY_LABELS } from "@/types/wordlist";
 import { getAllWords, getWord } from "@/lib/wordlist";
 import WordDetail from "@/components/wordlist/WordDetail";
+import PageHeader from "@/components/ui/PageHeader";
+import Icon from "@/components/ui/Icon";
+import { buttonClass } from "@/components/ui/Button";
 import BottomNav from "@/components/BottomNav";
 
 // 英略語1語の詳細ページ（表示のみ）。固定データなのでビルド時に静的生成する。
@@ -21,35 +24,25 @@ export default async function WordlistDetailPage({
   if (!entry) notFound();
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-4 pt-3 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <div className="flex items-center gap-3">
-            <Link href="/glossary" className="text-sm font-medium text-white/80">
-              ←
-            </Link>
-            <span className="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold">
-              {WORDLIST_CATEGORY_LABELS[entry.category]}
-            </span>
-          </div>
-          <h1 className="mt-2 text-3xl font-black tracking-wide">
-            {entry.acronym}
-          </h1>
-          <p className="mt-0.5 text-sm font-bold text-white/95">
-            {entry.fullName}
-          </p>
-          <p className="text-xs text-white/85">{entry.japanese}</p>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: "/glossary", label: "単語帳" }}
+        eyebrow={WORDLIST_CATEGORY_LABELS[entry.category]}
+        title={entry.acronym}
+        description={entry.fullName}
+      >
+        <p className="mt-1 text-sm text-gray-600">{entry.japanese}</p>
+      </PageHeader>
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl px-4 py-5">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6">
         <WordDetail entry={entry} />
 
         <Link
           href="/glossary/quiz?mode=all"
-          className="mt-6 block rounded-xl bg-brand-600 px-4 py-3 text-center text-sm font-bold text-white transition active:scale-[0.99]"
+          className={buttonClass("primary", "md", "mt-6 w-full")}
         >
-          4択で確認する ✅
+          4択で確認する
+          <Icon name="arrow-right" className="h-4 w-4" />
         </Link>
       </div>
 

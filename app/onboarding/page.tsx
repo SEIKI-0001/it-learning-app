@@ -82,8 +82,8 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-5 py-8">
-      <div className="mx-auto w-full max-w-md md:max-w-xl">
+    <main className="min-h-screen px-5 py-8">
+      <div className="mx-auto w-full max-w-3xl">
         <p className="text-xs font-medium text-gray-500">初回設定 1/2</p>
         <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">
           あなたに合わせて学習プランを作ります

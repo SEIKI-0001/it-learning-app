@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
+import PageHeader from "@/components/ui/PageHeader";
 import RankCard from "@/components/progress/RankCard";
 import Mochit from "@/components/mochit/Mochit";
 import BottomNav from "@/components/BottomNav";
@@ -24,21 +24,20 @@ export default function RankPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-5 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <Link href="/progress" className="text-sm font-bold text-white/90">
-            ← 進捗にもどる
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold">ランク</h1>
-          <p className="mt-1 text-sm text-white/90">
-            累計XPで上がる、あなたの成長段階です。
-          </p>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: "/progress", label: "進捗にもどる" }}
+        title="ランク"
+        description="累計XPで上がる、あなたの成長段階です。"
+      />
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-5">
-        <section className="flex items-center gap-3 rounded-xl bg-white p-4 border border-gray-200"><Mochit state="normal" size="small" animation="idle" /><p className="text-sm font-bold text-gray-700">XPの積み上げも、モチットと一緒に振り返ろう。</p></section>
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        <section className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
+          <Mochit state="normal" size="small" animation="idle" />
+          <p className="text-sm text-gray-600">
+            XPの積み上げも、モチットと一緒に振り返ろう。
+          </p>
+        </section>
         <RankCard exp={state.progress.exp} />
         <p className="px-1 text-xs leading-relaxed text-gray-500">
           ランクは他の人との比較ではなく、これまでの積み上げが見える指標です。

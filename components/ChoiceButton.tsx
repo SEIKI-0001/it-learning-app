@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChoiceKey } from "@/types";
+import Icon from "@/components/ui/Icon";
 
 type Props = {
   choiceKey: ChoiceKey;
@@ -29,7 +30,7 @@ export default function ChoiceButton({
 
   if (revealed) {
     if (isCorrect) {
-      tone = "border-green-400 bg-green-50 text-green-800";
+      tone = "border-emerald-400 bg-emerald-50 text-emerald-800";
     } else if (isSelected) {
       tone = "border-rose-300 bg-rose-50 text-rose-700";
     } else {
@@ -42,7 +43,7 @@ export default function ChoiceButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex w-full items-center gap-3 rounded-xl border-2 text-left font-medium shadow-sm transition ${
+      className={`flex w-full items-center gap-3 rounded-xl border-2 text-left font-medium transition ${
         dense ? "px-3 py-2.5 text-sm" : "px-4 py-4 text-base"
       } ${tone} disabled:cursor-default`}
     >
@@ -51,9 +52,9 @@ export default function ChoiceButton({
           dense ? "h-7 w-7 text-xs" : "h-8 w-8 text-sm"
         } ${
           revealed && isCorrect
-            ? "bg-green-500 text-white"
+            ? "bg-emerald-600 text-white"
             : revealed && isSelected
-              ? "bg-rose-400 text-white"
+              ? "bg-rose-600 text-white"
               : "bg-brand-100 text-brand-700"
         }`}
       >
@@ -61,16 +62,14 @@ export default function ChoiceButton({
       </span>
       <span className="flex-1 leading-snug">{text}</span>
       {revealed && isCorrect && (
-        <span>
-          <span aria-hidden>⭕️</span>
-          <span className="sr-only">正解</span>
-        </span>
+        <Icon
+          name="circle-check"
+          label="正解"
+          className="h-5 w-5 shrink-0 text-emerald-600"
+        />
       )}
       {revealed && isSelected && !isCorrect && (
-        <span>
-          <span aria-hidden>✗</span>
-          <span className="sr-only">不正解</span>
-        </span>
+        <Icon name="x" label="不正解" className="h-5 w-5 shrink-0 text-rose-600" />
       )}
     </button>
   );

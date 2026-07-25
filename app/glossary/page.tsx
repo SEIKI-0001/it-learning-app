@@ -11,6 +11,8 @@ import {
   type WordStatus,
 } from "@/lib/wordlistProgress";
 import BottomNav from "@/components/BottomNav";
+import PageHeader from "@/components/ui/PageHeader";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // 単語帳トップ（ハブ）。ITパスポート英略語の学習状況サマリと学習メニューを置く。
 // 進捗は localStorage（lib/wordlistProgress）からクライアントで読む。
@@ -18,11 +20,11 @@ import BottomNav from "@/components/BottomNav";
 const ALL_IDS = getAllWords().map((e) => e.id);
 const TOTAL = getWordlistCount();
 
-const STAT_META: { key: WordStatus | "due"; label: string; color: string }[] = [
-  { key: "new", label: "未学習", color: "text-gray-500" },
-  { key: "learning", label: "学習中", color: "text-amber-600" },
-  { key: "weak", label: "苦手", color: "text-rose-600" },
-  { key: "mastered", label: "定着済み", color: "text-green-600" },
+const STAT_META: { key: WordStatus; label: string }[] = [
+  { key: "new", label: "未学習" },
+  { key: "learning", label: "学習中" },
+  { key: "weak", label: "苦手" },
+  { key: "mastered", label: "定着済み" },
 ];
 
 export default function WordlistHubPage() {
@@ -45,88 +47,130 @@ export default function WordlistHubPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-4 pt-4 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <h1 className="text-xl font-bold">📇 英略語 単語帳</h1>
-          <p className="mt-0.5 text-xs text-white/90">
-            ITパスポートの英略語{TOTAL}語を、意味・正式名称・違いまでまとめて暗記。
-          </p>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        title="英略語 単語帳"
+        description={`ITパスポートの英略語${TOTAL}語を、意味・正式名称・違いまでまとめて暗記。`}
+      >
+        <dl className="mt-4 grid grid-cols-4 divide-x divide-gray-200 border-y border-gray-200 text-center">
+          {STAT_META.map((s) => (
+            <div key={s.key} className="px-2 py-3">
+              <dt className="text-[11px] text-gray-600">{s.label}</dt>
+              <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
+                {counts[s.key]}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </PageHeader>
 
-      <div className="mx-auto w-full max-w-md space-y-6 px-4 py-5 md:max-w-2xl">
-        {/* 学習状況サマリ */}
-        <section className="rounded-xl border border-gray-200 bg-white p-4">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-bold text-gray-800">学習状況</h2>
-            <span className="text-xs font-bold text-gray-400">
-              全{TOTAL}語
-            </span>
-          </div>
-          <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-            {STAT_META.map((s) => (
-              <div key={s.key} className="rounded-xl bg-gray-50 py-2.5">
-                <p className={`text-xl font-bold ${s.color}`}>
-                  {counts[s.key as WordStatus]}
-                </p>
-                <p className="text-[11px] font-bold text-gray-500">{s.label}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-2 rounded-xl bg-brand-50 px-3 py-2.5">
-            <span className="text-xs font-bold text-brand-500">
-              今日の復習対象
-            </span>
-            <span className="ml-2 text-base font-bold text-brand-700">
-              {dueCount}語
-            </span>
-          </div>
-        </section>
-
-        {/* 学習メニュー */}
-        <section className="grid gap-2.5 sm:grid-cols-2">
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        {/* この画面で唯一の強調ブロック。復習が溜まっていれば復習を、なければ通常学習を主役にする */}
+        {dueCount > 0 ? (
           <Link
             href="/glossary/study?mode=today"
-            className="flex items-center justify-between rounded-xl bg-brand-600 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
+            className="group block rounded-lg border border-accent-200 border-l-4 border-l-accent-500 bg-accent-50 p-4 transition hover:bg-accent-100 active:scale-[0.99]"
           >
-            <span className="text-base font-bold">🔁 今日の復習を始める</span>
-            <span className="text-xs font-bold text-white/80">{dueCount}語</span>
-          </Link>
-          <Link
-            href="/glossary/study?mode=weak"
-            className="flex items-center justify-between rounded-xl bg-rose-500 px-4 py-3.5 text-white shadow-sm transition active:scale-[0.99]"
-          >
-            <span className="text-base font-bold">⚡ 苦手だけ復習</span>
-            <span className="text-xs font-bold text-white/80">
-              {counts.weak}語
+            <p className="text-xs font-semibold text-accent-700">今日の復習対象</p>
+            <p className="mt-1 flex items-center justify-between gap-3">
+              <span className="text-[15px] font-semibold leading-snug text-gray-900">
+                今日の復習を始める
+              </span>
+              <span className="shrink-0 text-sm font-semibold tabular-nums text-accent-700">
+                {dueCount}語
+              </span>
+            </p>
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-accent-700">
+              はじめる
+              <Icon
+                name="arrow-right"
+                className="h-3.5 w-3.5 transition group-hover:translate-x-0.5"
+              />
             </span>
           </Link>
+        ) : (
           <Link
             href="/glossary/study?mode=all"
-            className="flex items-center justify-between rounded-xl border border-brand-200 bg-white px-4 py-3.5 text-brand-700 shadow-sm transition active:scale-[0.99]"
+            className="group block rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
           >
-            <span className="text-base font-bold">📚 すべてから学習</span>
-            <span className="text-xs font-bold text-brand-400">{TOTAL}語</span>
+            <p className="text-xs font-semibold text-brand-700">今日の復習はありません</p>
+            <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">
+              新しい語を覚えにいく
+            </p>
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-700">
+              はじめる
+              <Icon
+                name="arrow-right"
+                className="h-3.5 w-3.5 transition group-hover:translate-x-0.5"
+              />
+            </span>
           </Link>
-          <Link
-            href="/glossary/quiz?mode=all"
-            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-gray-700 shadow-sm transition active:scale-[0.99]"
-          >
-            <span className="text-base font-bold">✅ 4択確認をする</span>
-            <span className="text-xs font-bold text-gray-400">4択</span>
-          </Link>
-        </section>
+        )}
 
-        <Link
-          href="/glossary/list"
-          className="block rounded-xl bg-gray-100 px-4 py-3 text-center text-sm font-bold text-gray-600 transition active:scale-[0.99]"
-        >
-          単語一覧を見る →
-        </Link>
+        {/* 学習メニュー */}
+        <section>
+          <h2 className="mb-2 text-base font-semibold text-gray-900">学習メニュー</h2>
+          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+            <MenuRow
+              href="/glossary/study?mode=weak"
+              icon="target"
+              label="苦手だけ復習"
+              meta={`${counts.weak}語`}
+            />
+            <MenuRow
+              href="/glossary/study?mode=all"
+              icon="book-open"
+              label="すべてから学習"
+              meta={`${TOTAL}語`}
+            />
+            <MenuRow
+              href="/glossary/quiz?mode=all"
+              icon="circle-check"
+              label="4択で確認する"
+              meta="4択"
+            />
+            <MenuRow
+              href="/glossary/list"
+              icon="list"
+              label="単語一覧を見る"
+              meta={`${TOTAL}語`}
+            />
+          </ul>
+        </section>
       </div>
 
       <BottomNav />
     </main>
+  );
+}
+
+function MenuRow({
+  href,
+  icon,
+  label,
+  meta,
+}: {
+  href: string;
+  icon: IconName;
+  label: string;
+  meta: string;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="group flex items-center gap-3 px-4 py-3.5 transition hover:bg-gray-50 active:bg-gray-100"
+      >
+        <Icon name={icon} className="h-4 w-4 shrink-0 text-gray-500" />
+        <span className="min-w-0 flex-1 text-sm font-semibold text-gray-900">
+          {label}
+        </span>
+        <span className="shrink-0 text-xs tabular-nums text-gray-500">{meta}</span>
+        <Icon
+          name="chevron-right"
+          className="h-4 w-4 shrink-0 text-gray-500 transition group-hover:text-brand-600"
+        />
+      </Link>
+    </li>
   );
 }

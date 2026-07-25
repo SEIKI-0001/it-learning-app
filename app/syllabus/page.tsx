@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PageHeader from "@/components/ui/PageHeader";
 import { getAllTopics } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
@@ -235,56 +236,61 @@ export default function SyllabusPage() {
   const coveragePercent = Math.round((coveredTotal / total) * 100);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-6 pt-6 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-4xl">
-          <Link
-            href="/learn"
-            className="mb-2 inline-flex items-center gap-1 text-sm text-white/80 hover:text-white"
-          >
-            ← 学ぶ
-          </Link>
-          <h1 className="text-2xl font-bold">シラバス対応表</h1>
-          <p className="mt-1 text-sm text-white/90">
-            ITパスポートシラバス Ver.6.5 との対応状況を確認できます。
-          </p>
-
-          <div className="mt-4 rounded-xl bg-white/15 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">シラバス項目カバー率</span>
-              <span className="text-xl font-bold">
-                {coveredTotal}
-                <span className="text-sm font-normal text-white/80">/{total}項目</span>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: "/learn", label: "学ぶ" }}
+        title="シラバス対応表"
+        description="ITパスポートシラバス Ver.6.5 との対応状況を確認できます。"
+      >
+        {/* この画面で唯一の強調ブロック＝全体のカバー率 */}
+        <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-xs font-semibold text-brand-700">
+              シラバス項目カバー率
+            </span>
+            <span className="text-xl font-semibold tabular-nums text-gray-900">
+              {coveredTotal}
+              <span className="ml-0.5 text-sm font-normal text-gray-500">
+                /{total}項目
               </span>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/25">
-              <div
-                className="h-2 rounded-full bg-emerald-300"
-                style={{ width: `${coveragePercent}%` }}
-              />
-            </div>
-            <p className="mt-1.5 text-right text-xs text-white/70">{coveragePercent}% カバー</p>
+            </span>
           </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
-            {SYLLABUS.map((section) => {
-              const items = section.categories.flatMap((c) => c.items);
-              const covered = items.filter((i) => i.topicIds.length > 0).length;
-              return (
-                <a
-                  key={section.id}
-                  href={`#${section.id}`}
-                  className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white hover:bg-white/30"
-                >
-                  {section.label}　{covered}/{items.length}
-                </a>
-              );
-            })}
+          <div
+            className="mt-2 h-2 overflow-hidden rounded-full bg-gray-200"
+            role="progressbar"
+            aria-label="シラバス項目カバー率"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={coveragePercent}
+          >
+            <div
+              className="h-full rounded-full bg-brand-600"
+              style={{ width: `${coveragePercent}%` }}
+            />
           </div>
+          <p className="mt-1.5 text-right text-xs tabular-nums text-gray-600">
+            {coveragePercent}% カバー
+          </p>
         </div>
-      </header>
 
-      <div className="mx-auto w-full max-w-md space-y-10 px-4 py-8 md:max-w-4xl">
+        <nav aria-label="分野へ移動" className="mt-3 flex flex-wrap gap-2">
+          {SYLLABUS.map((section) => {
+            const items = section.categories.flatMap((c) => c.items);
+            const covered = items.filter((i) => i.topicIds.length > 0).length;
+            return (
+              <a
+                key={section.id}
+                href={`#${section.id}`}
+                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 hover:text-brand-700"
+              >
+                {section.label}　{covered}/{items.length}
+              </a>
+            );
+          })}
+        </nav>
+      </PageHeader>
+
+      <div className="mx-auto w-full max-w-3xl space-y-10 px-4 py-8">
         {SYLLABUS.map((section) => {
           const sectionItems = section.categories.flatMap((c) => c.items);
           const sectionCovered = sectionItems.filter((i) => i.topicIds.length > 0).length;
@@ -314,7 +320,7 @@ export default function SyllabusPage() {
                             <div className="flex items-start justify-between gap-3">
                               <p
                                 className={`text-sm leading-snug ${
-                                  covered ? "font-medium text-gray-800" : "text-gray-400"
+                                  covered ? "font-medium text-gray-800" : "text-gray-500"
                                 }`}
                               >
                                 {item.label}
@@ -322,8 +328,8 @@ export default function SyllabusPage() {
                               <span
                                 className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${
                                   covered
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-gray-100 text-gray-400"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-gray-100 text-gray-500"
                                 }`}
                               >
                                 {covered ? "対応済" : "未対応"}
@@ -357,7 +363,7 @@ export default function SyllabusPage() {
           );
         })}
 
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center text-xs text-gray-400">
+        <div className="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center text-xs text-gray-500">
           ITパスポートシラバス Ver.6.5 をもとに作成。対応項目は、トピック・確認問題・解説・復習問題まで自動検証しています。
         </div>
       </div>

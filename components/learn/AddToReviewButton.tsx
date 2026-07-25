@@ -5,6 +5,7 @@ import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { addTopicToReview } from "@/lib/study";
 import { getUserId, saveProgressToDb } from "@/lib/userSession";
+import Icon from "@/components/ui/Icon";
 
 // トピック詳細の「復習対象に追加」導線(クライアントの小さな島)。
 export default function AddToReviewButton({ topicId }: { topicId: string }) {
@@ -30,13 +31,14 @@ export default function AddToReviewButton({ topicId }: { topicId: string }) {
       type="button"
       onClick={handleAdd}
       disabled={isAdded || state === null || state === undefined}
-      className={`w-full rounded-xl px-6 py-3.5 text-base font-bold transition active:scale-[0.99] ${
+      className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-6 py-3.5 text-base font-semibold transition active:scale-[0.99] ${
         isAdded
-          ? "bg-amber-100 text-amber-700"
-          : "bg-amber-400 text-amber-900 shadow"
+          ? "border border-accent-200 bg-accent-50 text-accent-700"
+          : "bg-accent-600 text-white hover:bg-accent-700"
       } disabled:opacity-70`}
     >
-      {isAdded ? "✓ 復習リストに追加済み" : "🔁 復習対象に追加する"}
+      <Icon name={isAdded ? "check" : "rotate"} className="h-4 w-4" />
+      {isAdded ? "復習リストに追加済み" : "復習対象に追加する"}
     </button>
   );
 }

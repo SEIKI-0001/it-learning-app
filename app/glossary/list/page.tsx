@@ -15,6 +15,7 @@ import {
   type WordStatus,
 } from "@/lib/wordlistProgress";
 import { STATUS_META, CATEGORY_BADGE } from "@/components/wordlist/ui";
+import PageHeader from "@/components/ui/PageHeader";
 import BottomNav from "@/components/BottomNav";
 
 // 単語一覧。wordlist の全単語をカード表示し、カテゴリと習得状態で絞り込む。
@@ -55,20 +56,18 @@ export default function WordlistListPage() {
   }, [category, status, progress]);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-3 pt-3 text-white">
-        <div className="mx-auto flex w-full max-w-md items-center gap-3 md:max-w-4xl">
-          <Link href="/glossary" className="text-sm font-medium text-white/80">
-            ←
-          </Link>
-          <h1 className="text-lg font-bold">単語一覧</h1>
-          <span className="ml-auto text-xs font-bold text-white/80">
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: "/glossary", label: "単語帳" }}
+        title="単語一覧"
+        accessory={
+          <span className="text-xs tabular-nums text-gray-500">
             全{WORDS.length}語
           </span>
-        </div>
-      </header>
+        }
+      />
 
-      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4 md:max-w-4xl">
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-6">
         {/* カテゴリフィルタ */}
         <div className="flex flex-wrap gap-2">
           <FilterChip
@@ -102,35 +101,35 @@ export default function WordlistListPage() {
           ))}
         </div>
 
-        <p className="text-xs font-bold text-gray-400">{list.length}語</p>
+        <p className="text-xs tabular-nums text-gray-500">{list.length}語</p>
 
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((w) => {
             const st = progress[w.id]?.status ?? "new";
             return (
               <li key={w.id}>
                 <Link
                   href={`/glossary/${w.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition active:scale-[0.99]"
+                  className="flex h-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition hover:bg-gray-50 active:scale-[0.99]"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="truncate text-base font-bold text-gray-900">
+                      <p className="truncate text-base font-semibold text-gray-900">
                         {w.acronym}
                       </p>
                       <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${CATEGORY_BADGE[w.category]}`}
+                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${CATEGORY_BADGE[w.category]}`}
                       >
                         {WORDLIST_CATEGORY_LABELS[w.category]}
                       </span>
                     </div>
-                    <p className="mt-0.5 truncate text-sm font-bold text-gray-700">
+                    <p className="mt-0.5 truncate text-sm text-gray-700">
                       {w.japanese}
                     </p>
                     <p className="truncate text-xs text-gray-500">{w.oneLine}</p>
                   </div>
                   <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_META[st].badge}`}
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${STATUS_META[st].badge}`}
                   >
                     {STATUS_META[st].label}
                   </span>
@@ -139,7 +138,7 @@ export default function WordlistListPage() {
             );
           })}
           {list.length === 0 && (
-            <li className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+            <li className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
               該当する単語がありません。
             </li>
           )}
@@ -168,8 +167,10 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3.5 py-1.5 text-sm font-bold transition active:scale-[0.97] ${
-        active ? activeCls : "bg-white text-gray-500 ring-1 ring-gray-200"
+      className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold transition active:scale-[0.97] ${
+        active
+          ? `border-transparent ${activeCls}`
+          : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
       }`}
     >
       {children}

@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import BottomNav from "@/components/BottomNav";
+import PageHeader from "@/components/ui/PageHeader";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { buttonClass } from "@/components/ui/Button";
 import {
   getWrittenQuestion,
   getWrittenQuestions,
@@ -27,23 +30,23 @@ import type {
 // AI採点ページ。記述問題に回答し、AIが採点・解説する。
 // 無料ユーザーは Gemini（通常採点）、Proユーザーは Claude Sonnet（Pro採点）。
 // 「答える」モードでは未回答の問題を優先して出題し、「復習」モードで回答済みを見直せる。
-// 既存の単語帳などと同じ「グラデ上部バナー＋max-w-md＋BottomNav」の体裁に合わせる。
+// 体裁は共通の PageHeader（白背景＋下罫線）＋max-w-3xl＋BottomNav に合わせる。
 
 const QUESTIONS = getWrittenQuestions();
 
 // 難易度バッジの色。
 const DIFFICULTY_META: Record<string, { label: string; badge: string }> = {
-  normal: { label: "標準", badge: "bg-sky-100 text-sky-700" },
-  hard: { label: "やや難", badge: "bg-rose-100 text-rose-700" },
+  normal: { label: "標準", badge: "border border-gray-200 bg-white text-gray-600" },
+  hard: { label: "やや難", badge: "bg-accent-100 text-accent-700" },
 };
 
 // グレードごとの配色（結果カードの主役）。
 const GRADE_META: Record<WrittenGrade, { ring: string; text: string }> = {
-  S: { ring: "ring-emerald-200 bg-emerald-50", text: "text-emerald-600" },
-  A: { ring: "ring-green-200 bg-green-50", text: "text-green-600" },
-  B: { ring: "ring-sky-200 bg-sky-50", text: "text-sky-600" },
-  C: { ring: "ring-amber-200 bg-amber-50", text: "text-amber-600" },
-  D: { ring: "ring-rose-200 bg-rose-50", text: "text-rose-600" },
+  S: { ring: "ring-emerald-200 bg-emerald-50", text: "text-emerald-700" },
+  A: { ring: "ring-emerald-200 bg-emerald-50", text: "text-emerald-700" },
+  B: { ring: "ring-brand-200 bg-brand-50", text: "text-brand-700" },
+  C: { ring: "ring-accent-200 bg-accent-50", text: "text-accent-700" },
+  D: { ring: "ring-rose-200 bg-rose-50", text: "text-rose-700" },
 };
 
 type GradeMeta = {
@@ -342,17 +345,13 @@ export default function AiGradingPage() {
   const isPro = status?.plan === "pro";
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-4 pt-4 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <h1 className="text-xl font-bold">📝 AI採点</h1>
-          <p className="mt-0.5 text-xs text-white/90">
-            用語を覚えるだけでなく、説明できるかをAIがチェックします
-          </p>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        title="AI採点"
+        description="用語を覚えるだけでなく、説明できるかをAIがチェックします。"
+      />
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-5 px-4 py-5">
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
         {initializing ? (
           <AiGradingInitialSkeleton />
         ) : (
@@ -392,7 +391,7 @@ export default function AiGradingPage() {
                     >
                       {isCurrentAnswered ? "回答済み" : "未回答"}
                     </span>
-                    <span className="ml-auto text-[11px] font-bold text-gray-400">
+                    <span className="ml-auto text-[11px] font-semibold text-gray-500">
                       回答済み {answeredIds.size} / {QUESTIONS.length} 問
                     </span>
                   </div>
@@ -401,7 +400,7 @@ export default function AiGradingPage() {
                   </p>
                   {allAnswered && (
                     <p className="mt-2 text-[11px] font-bold text-emerald-600">
-                      🎉 全問回答済みです。「復習」タブで見直したり、もう一度挑戦できます。
+                      全問回答済みです。「復習」タブで見直したり、もう一度挑戦できます。
                     </p>
                   )}
                 </section>
@@ -425,7 +424,7 @@ export default function AiGradingPage() {
                     placeholder="理由・仕組み・具体例を含めて、自分の言葉で説明してみましょう。"
                     className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                   />
-                  <p className="text-right text-[11px] font-bold text-gray-400">
+                  <p className="text-right text-[11px] font-semibold text-gray-500">
                     {answer.trim().length} 文字（20文字以上で採点できます）
                   </p>
                 </section>
@@ -436,7 +435,7 @@ export default function AiGradingPage() {
                     type="button"
                     onClick={handleGrade}
                     disabled={!canGrade || loading}
-                    className="flex-1 rounded-xl bg-brand-600 px-4 py-3.5 text-base font-bold text-white shadow-sm transition active:scale-[0.99] disabled:bg-gray-300 disabled:text-gray-500"
+                    className={buttonClass("primary", "lg", "flex-1 disabled:bg-gray-300 disabled:text-gray-500")}
                   >
                     {loading
                       ? "採点中…"
@@ -448,7 +447,7 @@ export default function AiGradingPage() {
                     type="button"
                     onClick={handleNext}
                     disabled={loading}
-                    className="rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-bold text-gray-600 shadow-sm transition active:scale-[0.99] disabled:opacity-50"
+                    className={buttonClass("secondary", "lg")}
                   >
                     別の問題
                   </button>
@@ -456,7 +455,7 @@ export default function AiGradingPage() {
 
                 {/* エラー表示 */}
                 {error && (
-                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
                     {error}
                   </div>
                 )}
@@ -553,7 +552,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
         <p className="text-sm font-bold text-gray-500">
           まだ採点した記録がありません。
         </p>
-        <p className="mt-1 text-xs font-bold text-gray-400">
+        <p className="mt-1 text-xs font-semibold text-gray-500">
           「答える」から記述問題に挑戦すると、ここで見直せます。
         </p>
       </section>
@@ -582,7 +581,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
                 <span className={`text-lg font-bold leading-none ${gradeMeta.text}`}>
                   {rec.result.grade}
                 </span>
-                <span className="text-[10px] font-bold text-gray-400">
+                <span className="text-[10px] font-semibold text-gray-500">
                   {rec.result.score}点
                 </span>
               </div>
@@ -591,7 +590,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
                   <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700">
                     {rec.category || "AI採点"}
                   </span>
-                  <span className="text-[10px] font-bold text-gray-400">
+                  <span className="text-[10px] font-semibold text-gray-500">
                     {formatDate(rec.createdAt)}
                   </span>
                 </div>
@@ -599,7 +598,10 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
                   {q?.question ?? rec.questionId}
                 </p>
               </div>
-              <span className="shrink-0 text-gray-400">{open ? "▲" : "▼"}</span>
+              <Icon
+                name="chevron-down"
+                className={`h-4 w-4 shrink-0 text-gray-500 transition ${open ? "rotate-180" : ""}`}
+              />
             </button>
 
             {open && (
@@ -701,14 +703,14 @@ function PlanCard({
       )}
       <div className="mt-3 rounded-xl bg-brand-50 p-3">
         <p className="text-xs font-bold text-brand-800">
-          ✨ Claude Sonnetによる詳しい採点はPro機能です
+          Claude Sonnetによる詳しい採点はPro機能です
         </p>
         <p className="mt-1 text-[11px] font-bold leading-relaxed text-brand-900/70">
           より深い解説と、1日の採点回数アップが使えるようになります。
         </p>
         <Link
           href="/more#billing"
-          className="mt-2.5 block w-full rounded-xl bg-brand-600 px-4 py-2.5 text-center text-sm font-bold text-white shadow-sm transition active:scale-[0.99]"
+          className={buttonClass("primary", "sm", "mt-2.5 w-full")}
         >
           Proプランを見る
         </Link>
@@ -726,9 +728,9 @@ function ResultView({
 }) {
   const gradeMeta = GRADE_META[result.grade] ?? GRADE_META.C;
   const verdict = result.isCorrect
-    ? { label: "概ね正解", badge: "bg-green-100 text-green-700" }
+    ? { label: "概ね正解", badge: "bg-emerald-100 text-emerald-700" }
     : result.score >= 60
-      ? { label: "部分正解", badge: "bg-amber-100 text-amber-700" }
+      ? { label: "部分正解", badge: "bg-accent-100 text-accent-700" }
       : { label: "理解不足", badge: "bg-rose-100 text-rose-700" };
 
   const providerLabel =
@@ -741,11 +743,11 @@ function ResultView({
       {/* 使用モデルの表示 / フォールバック通知 */}
       {meta && (
         <div className="space-y-2">
-          <p className="text-right text-[11px] font-bold text-gray-400">
+          <p className="text-right text-[11px] font-semibold text-gray-500">
             採点エンジン：{providerLabel}
           </p>
           {meta.fallback && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-bold text-amber-800">
+            <div className="rounded-lg border border-accent-200 bg-accent-50 px-4 py-2.5 text-xs font-semibold text-accent-800">
               Claude採点が一時的に使えなかったため、通常採点（Gemini）で表示しています。
             </div>
           )}
@@ -769,7 +771,7 @@ function ResultView({
             <span className={`text-3xl font-bold ${gradeMeta.text}`}>
               {result.score}
             </span>
-            <span className="text-sm font-bold text-gray-400">/ 100点</span>
+            <span className="text-sm font-normal text-gray-500">/ 100点</span>
           </div>
           <span
             className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${verdict.badge}`}
@@ -780,29 +782,34 @@ function ResultView({
       </div>
 
       {result.summary && (
-        <p className="rounded-xl bg-white px-4 py-3 text-sm font-bold leading-relaxed text-gray-700 ring-1 ring-gray-100">
+        <p className="rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm leading-relaxed text-gray-700">
           {result.summary}
         </p>
       )}
 
       {result.goodPoints.length > 0 && (
         <ResultBlock
-          title="✅ 良かった点"
+          title="良かった点"
+          icon="circle-check"
           items={result.goodPoints}
-          tone="text-green-700"
+          tone="text-emerald-700"
         />
       )}
       {result.missingPoints.length > 0 && (
         <ResultBlock
-          title="⚠️ 不足している点"
+          title="不足している点"
+          icon="alert"
           items={result.missingPoints}
-          tone="text-amber-700"
+          tone="text-accent-700"
         />
       )}
 
       {result.feedback && (
         <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <h3 className="text-sm font-bold text-gray-800">💡 解説</h3>
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+            <Icon name="lightbulb" className="h-4 w-4 text-gray-500" />
+            解説
+          </h3>
           <p className="mt-2 text-sm leading-relaxed text-gray-700">
             {result.feedback}
           </p>
@@ -810,7 +817,10 @@ function ResultView({
       )}
 
       <div className="rounded-xl border border-brand-100 bg-brand-50 p-4">
-        <h3 className="text-sm font-bold text-brand-700">📘 模範解答</h3>
+        <h3 className="flex items-center gap-1.5 text-sm font-semibold text-brand-700">
+          <Icon name="book-open" className="h-4 w-4" />
+          模範解答
+        </h3>
         <p className="mt-2 text-sm leading-relaxed text-brand-900/90">
           {result.modelAnswer}
         </p>
@@ -832,20 +842,25 @@ function ResultView({
 
 function ResultBlock({
   title,
+  icon,
   items,
   tone,
 }: {
   title: string;
+  icon: IconName;
   items: string[];
   tone: string;
 }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <h3 className={`text-sm font-bold ${tone}`}>{title}</h3>
+      <h3 className={`flex items-center gap-1.5 text-sm font-semibold ${tone}`}>
+        <Icon name={icon} className="h-4 w-4" />
+        {title}
+      </h3>
       <ul className="mt-2 space-y-1.5">
         {items.map((item, i) => (
           <li key={i} className="flex gap-2 text-sm leading-relaxed text-gray-700">
-            <span className="text-gray-300">・</span>
+            <span className="text-gray-400">・</span>
             <span>{item}</span>
           </li>
         ))}

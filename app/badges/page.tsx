@@ -13,7 +13,10 @@ import {
   buildCheckpointGate,
   getCheckpointProgress,
 } from "@/lib/checkpoints";
+import { badgeIcon, checkpointIcon } from "@/lib/badgeIcons";
 import BadgeList, { badgeActionHref } from "@/components/badges/BadgeList";
+import PageHeader from "@/components/ui/PageHeader";
+import Icon from "@/components/ui/Icon";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -65,61 +68,80 @@ export default function BadgesPage() {
   )[0];
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-6 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-3xl">
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-bold">バッジ図鑑</span>
-            <Link
-              href="/plan"
-              className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold transition active:scale-95"
-            >
-              🗺️ ロードマップ
-            </Link>
-          </div>
-          <p className="mt-4 text-xs text-white/80">獲得したバッジ</p>
-          <p className="text-3xl font-bold">
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        title="バッジ図鑑"
+        description="バッジを集めると最終問題が解放され、次のチェックポイントへ進めます。"
+        accessory={
+          <Link
+            href="/plan"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 transition hover:text-brand-800"
+          >
+            <Icon name="map" className="h-3.5 w-3.5" />
+            ロードマップ
+          </Link>
+        }
+      >
+        <div className="mt-4 border-y border-gray-200 py-3">
+          <p className="text-xs text-gray-600">獲得したバッジ</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
             {earnedCount}
-            <span className="text-lg font-bold text-white/70"> / {totalCount}</span>
-          </p>
-          <p className="mt-1 text-xs text-white/80">
-            バッジを集めると最終問題が解放され、次のチェックポイントへ進めます。
+            <span className="ml-0.5 text-sm font-normal text-gray-500">
+              {" "}/ {totalCount}
+            </span>
           </p>
         </div>
-      </header>
+      </PageHeader>
 
-      <div className="mx-auto w-full max-w-md space-y-8 px-4 py-6 md:max-w-3xl">
+      <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6">
         {/* 凡例: バッジの状態と種別の見分け方 */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-xl bg-white px-4 py-3 text-[11px] font-semibold ring-1 ring-gray-100">
-          <span className="text-emerald-600">● 獲得済み</span>
-          <span className="text-amber-600">● あと一歩</span>
-          <span className="text-gray-400">🔒 未獲得</span>
-          <span className="text-rose-600">必須＝最終問題の解放に必要</span>
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-xl border border-gray-200 bg-white px-4 py-3 text-[11px]">
+          <span className="flex items-center gap-1 text-emerald-700">
+            <Icon name="circle-check" className="h-3.5 w-3.5" />
+            獲得済み
+          </span>
+          <span className="flex items-center gap-1 text-accent-700">
+            <Icon name="circle-dot" className="h-3.5 w-3.5" />
+            あと一歩
+          </span>
+          <span className="flex items-center gap-1 text-gray-500">
+            <Icon name="lock" className="h-3.5 w-3.5" />
+            未獲得
+          </span>
+          <span className="font-semibold text-brand-700">
+            必須＝最終問題の解放に必要
+          </span>
           <span className="text-gray-500">任意＝追加報酬</span>
         </div>
 
-        {/* 次に狙うべきバッジ（現在CPの最優先の1件） */}
+        {/* 次に狙うべきバッジ（現在CPの最優先の1件）＝この画面で唯一の強調ブロック */}
         {recommended && (
           <Link
             href={badgeActionHref(recommended.def)}
-            className="block rounded-xl bg-brand-700 p-4 text-white shadow-sm transition active:scale-[0.99]"
+            className="group block rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
           >
-            <p className="text-[11px] font-bold text-white/80">
-              🎯 次に狙うバッジ
-            </p>
-            <p className="mt-1 text-base font-bold">
-              {recommended.def.emoji} {recommended.def.label}
+            <p className="text-xs font-semibold text-brand-700">次に狙うバッジ</p>
+            <p className="mt-1 flex items-center gap-2 text-[15px] font-semibold leading-snug text-gray-900">
+              <Icon
+                name={badgeIcon(recommended.def.id)}
+                className="h-5 w-5 shrink-0 text-brand-500"
+              />
+              {recommended.def.label}
               {recommended.def.requiredForGate && (
-                <span className="ml-1.5 rounded-full bg-rose-500/90 px-1.5 py-0.5 text-[10px] font-bold">
+                <span className="rounded-full border border-brand-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">
                   必須
                 </span>
               )}
             </p>
-            <p className="mt-1 text-xs text-white/90">
-              🎯 {recommended.def.conditionLabel}
+            <p className="mt-1 text-xs text-gray-600">
+              {recommended.def.conditionLabel}
             </p>
-            <span className="mt-2 inline-block text-xs font-bold text-white/90">
-              挑戦しにいく →
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-700">
+              挑戦しにいく
+              <Icon
+                name="arrow-right"
+                className="h-3.5 w-3.5 transition group-hover:translate-x-0.5"
+              />
             </span>
           </Link>
         )}
@@ -137,26 +159,36 @@ export default function BadgesPage() {
               key={cp.id}
               className={isCleared ? "opacity-80" : undefined}
             >
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-base font-bold text-gray-800">
-                  <span aria-hidden>{cp.emoji}</span>
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+                  <Icon
+                    name={checkpointIcon(cp.id)}
+                    className={`h-4 w-4 shrink-0 ${
+                      isCleared
+                        ? "text-emerald-600"
+                        : isCurrent
+                          ? "text-brand-500"
+                          : "text-gray-500"
+                    }`}
+                  />
                   CP{cp.order} {cp.title}
                   {isCleared && (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                      ✓ クリア済み
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                      <Icon name="check" className="h-3 w-3" />
+                      クリア済み
                     </span>
                   )}
                   {isCurrent && !isCleared && (
-                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-700">
+                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
                       いまここ
                     </span>
                   )}
                 </h2>
-                <span className="text-xs font-bold text-gray-400">
+                <span className="shrink-0 text-xs tabular-nums text-gray-500">
                   {earned}/{statuses.length}
                 </span>
               </div>
-              <p className="mb-3 text-xs font-semibold text-gray-500">
+              <p className="mb-3 text-xs text-gray-500">
                 必須バッジ {gate.earnedRequiredCount}/{gate.requiredBadgeCount}{" "}
                 獲得（{gate.requiredBadgeCount} 個で最終問題が解放）
               </p>

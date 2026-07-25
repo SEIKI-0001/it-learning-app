@@ -16,6 +16,8 @@ import {
   syncWordProgressFromDb,
 } from "@/lib/wordlistProgress";
 import ChoiceButton from "@/components/ChoiceButton";
+import Icon from "@/components/ui/Icon";
+import { buttonClass } from "@/components/ui/Button";
 
 // 英略語の4択確認モード。
 // 略語→意味 / 意味→略語 / 英単語パーツ / 混同語比較 の4形式を wordlist から生成する。
@@ -107,7 +109,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
       <div
         role="status"
         aria-live="polite"
-        className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-400"
+        className="flex flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-500"
       >
         <span
           aria-hidden
@@ -121,13 +123,13 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
   if (questions.length === 0) {
     return (
       <div className="rounded-xl border border-gray-200 bg-white p-8 text-center">
-        <p className="text-4xl">📭</p>
+        <Icon name="search" className="mx-auto h-6 w-6 text-gray-300" />
         <p className="mt-3 text-sm leading-relaxed text-gray-500">
           {EMPTY_HINT[mode]}
         </p>
         <Link
           href="/glossary"
-          className="mt-5 inline-block rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-bold text-white"
+          className={buttonClass("primary", "sm", "mt-5")}
         >
           単語帳トップへ
         </Link>
@@ -141,27 +143,26 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
   if (done) {
     const correct = Object.values(results).filter(Boolean).length;
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
-        <p className="text-4xl">🏁</p>
-        <p className="mt-2 text-lg font-bold text-gray-900">
-          {total}問 おつかれさま！
+      <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
+        <Icon name="circle-check" className="mx-auto h-6 w-6 text-emerald-600" />
+        <p className="mt-2 text-base font-semibold text-gray-900">
+          {total}問 おつかれさま
         </p>
-        <p className="mt-3 text-3xl font-black text-brand-600">
+        <p className="mt-3 text-3xl font-semibold tabular-nums text-gray-900">
           {correct}
-          <span className="text-lg text-gray-400"> / {total} 正解</span>
+          <span className="ml-0.5 text-base font-normal text-gray-500">
+            {" "}/ {total} 正解
+          </span>
         </p>
         <div className="mt-6 space-y-2.5">
           <button
             type="button"
             onClick={restart}
-            className="w-full rounded-xl bg-brand-600 py-3 text-sm font-bold text-white transition active:scale-[0.98]"
+            className={buttonClass("primary", "md", "w-full")}
           >
             もう一度
           </button>
-          <Link
-            href="/glossary"
-            className="block w-full rounded-xl bg-gray-100 py-3 text-sm font-bold text-gray-600 transition active:scale-[0.98]"
-          >
+          <Link href="/glossary" className={buttonClass("secondary", "md", "w-full")}>
             単語帳トップへ
           </Link>
         </div>
@@ -199,16 +200,16 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
             style={{ width: `${(index / total) * 100}%` }}
           />
         </div>
-        <span className="shrink-0 text-xs font-bold text-gray-400">
+        <span className="shrink-0 text-xs tabular-nums text-gray-500">
           {index + 1} / {total}
         </span>
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-3">
-        <span className="inline-block rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-600">
+        <span className="inline-block rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-semibold text-brand-700">
           {TYPE_LABEL[q.type]}
         </span>
-        <p className="mt-1.5 whitespace-pre-line text-base font-bold leading-snug text-gray-800">
+        <p className="mt-1.5 whitespace-pre-line text-base font-semibold leading-snug text-gray-900">
           {q.prompt}
         </p>
 
@@ -230,18 +231,22 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
 
         {revealed && (
           <div
-            className={`animate-pop-in mt-3 rounded-xl p-3 ${
-              isCorrect ? "bg-green-50" : "bg-amber-50"
+            className={`animate-pop-in mt-3 rounded-lg border p-3 ${
+              isCorrect
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-rose-200 bg-rose-50"
             }`}
           >
             <p
-              className={`mb-1 text-sm font-bold ${
-                isCorrect ? "text-green-700" : "text-amber-700"
+              className={`mb-1 flex items-center gap-1.5 text-sm font-semibold ${
+                isCorrect ? "text-emerald-700" : "text-rose-700"
               }`}
             >
-              {isCorrect
-                ? "🎉 正解！"
-                : `🌱 正解は「${q.correctKey}」でした`}
+              <Icon
+                name={isCorrect ? "circle-check" : "x"}
+                className="h-4 w-4 shrink-0"
+              />
+              {isCorrect ? "正解" : `正解は「${q.correctKey}」でした`}
             </p>
             <p className="text-sm leading-relaxed text-gray-700">
               {q.explanation}
@@ -249,9 +254,9 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
             <button
               type="button"
               onClick={next}
-              className="mt-3 w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-[0.98]"
+              className={buttonClass("primary", "md", "mt-3 w-full")}
             >
-              {index + 1 >= total ? "結果を見る" : "次の問題 ▶"}
+              {index + 1 >= total ? "結果を見る" : "次の問題"}
             </button>
           </div>
         )}

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
@@ -10,6 +9,7 @@ import {
   resolvePackQuizQuestions,
 } from "@/lib/checkPack";
 import CheckPackRunner from "@/components/checkPack/CheckPackRunner";
+import PageHeader from "@/components/ui/PageHeader";
 import BottomNav from "@/components/BottomNav";
 
 // 確認パック実施ページ。パックを持つトピックのみ静的生成する。
@@ -33,22 +33,14 @@ export default async function CheckPackPage({
   const examQuestions = resolvePackExamAsCheckQuestions(pack);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 py-2 text-white">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 md:max-w-2xl">
-          <Link
-            href={getLessonHref(topic.id)}
-            className="shrink-0 text-xs font-medium text-white/80"
-          >
-            ← {topic.title}
-          </Link>
-          <h1 className="truncate text-sm font-bold">
-            確認パック・本番対応チェック
-          </h1>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: getLessonHref(topic.id), label: topic.title }}
+        eyebrow="確認パック"
+        title="本番対応チェック"
+      />
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl px-4 py-6">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6">
         <CheckPackRunner
           packId={pack.packId}
           topicId={topic.id}

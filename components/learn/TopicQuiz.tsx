@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChoiceKey, UserAnswer } from "@/types";
 import type { CheckQuestion } from "@/types/content";
 import ChoiceButton from "@/components/ChoiceButton";
+import Icon from "@/components/ui/Icon";
+import { buttonClass } from "@/components/ui/Button";
 
 // トピックの確認問題を順に解き、結果(UserAnswer[])を onComplete で親へ返す。
 // /today・/review の「解いて進める」体験に使う(表示専用の CheckQuestionCard とは別物)。
@@ -18,9 +20,9 @@ const PRAISES = ["ナイス！", "その調子！", "正解！", "いいね！",
 
 // コンボ数に応じて熱量が上がる配色（橙 → 赤 → 紫）。
 function comboPillClass(run: number): string {
-  if (run >= 5) return "bg-brand-100 text-brand-700 ring-1 ring-brand-200";
-  if (run >= 3) return "bg-rose-100 text-rose-600 ring-1 ring-rose-200";
-  return "bg-orange-100 text-orange-600 ring-1 ring-orange-200";
+  if (run >= 5) return "bg-accent-600 text-white";
+  if (run >= 3) return "bg-accent-100 text-accent-800 ring-1 ring-accent-200";
+  return "bg-accent-50 text-accent-700 ring-1 ring-accent-200";
 }
 
 type Shuffled = {
@@ -186,7 +188,7 @@ export default function TopicQuiz({
                   key={combo}
                   className={`inline-block animate-pop-in rounded-full px-2 py-0.5 text-xs font-bold ${comboPillClass(combo)}`}
                 >
-                  🔥 {combo}コンボ
+                  {combo}コンボ
                 </span>
               );
             })()}
@@ -217,8 +219,8 @@ export default function TopicQuiz({
                   !answered
                     ? "bg-gray-200"
                     : ok
-                      ? "bg-green-500"
-                      : "bg-amber-400"
+                      ? "bg-emerald-500"
+                      : "bg-rose-500"
                 }`}
               />
             );
@@ -292,17 +294,18 @@ export default function TopicQuiz({
               <div
                 className={`mt-4 animate-pop-in rounded-xl p-4 ${
                   isCorrect
-                    ? "bg-green-50 ring-1 ring-green-200"
-                    : "bg-amber-50 ring-1 ring-amber-200"
+                    ? "bg-emerald-50 ring-1 ring-emerald-200"
+                    : "bg-rose-50 ring-1 ring-rose-200"
                 }`}
               >
                 <div className="flex items-center gap-2">
                   {isCorrect ? (
                     <>
-                      <span className="inline-block animate-pop-in text-xl" aria-hidden>
-                        🎉
-                      </span>
-                      <p className="text-sm font-bold text-green-700">
+                      <Icon
+                        name="circle-check"
+                        className="inline-block h-5 w-5 shrink-0 animate-pop-in text-emerald-600"
+                      />
+                      <p className="text-sm font-semibold text-emerald-700">
                         {PRAISES[currentIndex % PRAISES.length]}
                       </p>
                       {xpPerCorrect !== undefined && (
@@ -317,7 +320,7 @@ export default function TopicQuiz({
                         <span
                           className={`ml-auto inline-block animate-pop-in rounded-full px-2 py-0.5 text-xs font-bold ${comboPillClass(streak)}`}
                         >
-                          🔥 {streak}コンボ
+                          {streak}コンボ
                           {xpPerCorrect !== undefined && streak >= 3
                             ? ` +${XP_PER_COMBO}XP`
                             : ""}
@@ -325,8 +328,9 @@ export default function TopicQuiz({
                       )}
                     </>
                   ) : (
-                    <p className="text-sm font-bold text-amber-700">
-                      🌱 正解は「{sh.correct}」
+                    <p className="flex items-center gap-1.5 text-sm font-semibold text-rose-700">
+                      <Icon name="x" className="h-4 w-4 shrink-0" />
+                      正解は「{sh.correct}」
                     </p>
                   )}
                 </div>
@@ -334,7 +338,7 @@ export default function TopicQuiz({
                   {q.explanation}
                 </p>
                 {selectedChoiceExplanation && (
-                  <p className="mt-2 rounded-xl bg-white/70 px-3 py-2 text-sm font-semibold leading-relaxed text-amber-800 ring-1 ring-amber-200">
+                  <p className="mt-2 rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm leading-relaxed text-rose-800">
                     選んだ選択肢が違う理由：{selectedChoiceExplanation}
                   </p>
                 )}
@@ -367,9 +371,10 @@ export default function TopicQuiz({
               type="button"
               onClick={goPrev}
               disabled={done}
-              className="flex-1 rounded-xl bg-white px-6 py-4 text-base font-bold text-brand-600 shadow-sm ring-1 ring-brand-200 transition active:scale-[0.98] disabled:opacity-50"
+              className={buttonClass("soft", "lg", "flex-1")}
             >
-              ← 前へ
+              <Icon name="chevron-left" className="h-4 w-4" />
+              前へ
             </button>
           )}
           {isLast ? (
@@ -377,7 +382,7 @@ export default function TopicQuiz({
               type="button"
               onClick={finish}
               disabled={!allAnswered || done}
-              className="flex-1 rounded-xl bg-brand-600 px-6 py-4 text-base font-bold text-white shadow-lg transition active:scale-[0.98] disabled:bg-gray-300"
+              className={buttonClass("primary", "lg", "flex-1 disabled:bg-gray-300")}
             >
               {done ? "保存しました" : allAnswered ? completeLabel : "すべて答えると完了できます"}
             </button>
@@ -385,9 +390,10 @@ export default function TopicQuiz({
             <button
               type="button"
               onClick={goNext}
-              className="flex-1 rounded-xl bg-brand-600 px-6 py-4 text-base font-bold text-white shadow-lg transition active:scale-[0.98]"
+              className={buttonClass("primary", "lg", "flex-1")}
             >
-              次へ →
+              次へ
+              <Icon name="chevron-right" className="h-4 w-4" />
             </button>
           )}
         </div>

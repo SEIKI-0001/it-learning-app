@@ -80,7 +80,7 @@ export default function ReviewPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       <PageHeader
         eyebrow="学び直すレッスン"
         title="復習"

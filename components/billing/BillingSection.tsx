@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from "react";
 import { buttonClass } from "@/components/ui/Button";
+import Icon from "@/components/ui/Icon";
 import { getUserId } from "@/lib/userSession";
 import { useBillingStatus } from "@/lib/useBillingStatus";
 import type { BillingPlanOffer } from "@/types/billing";
@@ -124,17 +125,18 @@ export default function BillingSection() {
       <div className="overflow-hidden rounded-xl bg-white border border-gray-200">
         <div className="space-y-4 p-4">
           {checkoutResult === "success" && (
-            <div className="rounded-xl bg-emerald-50 px-3 py-2.5 text-xs font-bold text-emerald-800 ring-1 ring-emerald-200">
-              ✅ ご購入ありがとうございます！反映まで数秒かかることがあります。
+            <div className="flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-800">
+              <Icon name="circle-check" className="h-4 w-4 shrink-0" />
+              ご購入ありがとうございます！反映まで数秒かかることがあります。
             </div>
           )}
           {checkoutResult === "cancel" && (
-            <div className="rounded-xl bg-gray-50 px-3 py-2.5 text-xs font-bold text-gray-600 ring-1 ring-gray-200">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-semibold text-gray-600">
               購入手続きをキャンセルしました。
             </div>
           )}
           {error && (
-            <div className="rounded-xl bg-rose-50 px-3 py-2.5 text-xs font-bold text-rose-700 ring-1 ring-rose-200">
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-700">
               {error}
             </div>
           )}
@@ -216,12 +218,12 @@ export default function BillingSection() {
                   <div className="flex flex-wrap items-center gap-1.5">
                     <p className="text-sm font-bold text-gray-800">{plan.label}</p>
                     {plan.kind === "subscription" && (
-                      <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-600">
+                      <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-semibold text-accent-700">
                         初月20%オフ
                       </span>
                     )}
                     {plan.key === "one_6m" && (
-                      <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-600">
+                      <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
                         いちばんお得
                       </span>
                     )}

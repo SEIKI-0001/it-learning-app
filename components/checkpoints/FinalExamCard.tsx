@@ -3,6 +3,8 @@
 import type { CheckpointDef, CheckpointGate } from "@/types/checkpoint";
 import { FINAL_EXAM_STATE_SHORT } from "@/types/checkpoint";
 import { finalExamState } from "@/lib/checkpoints";
+import Icon from "@/components/ui/Icon";
+import { checkpointIcon } from "@/lib/badgeIcons";
 
 // 最終問題ページのヘッダ要約。タイトル・対象CP・解放条件・問題数・合格ライン・
 // 出題範囲・解放状態を1枚で見せる（開始操作はページ側が担う）。
@@ -51,7 +53,10 @@ export default function FinalExamCard({
           </span>
         </div>
         <h1 className="mt-2 text-xl font-bold">
-          {gate.finalExamUnlocked ? "⚔️" : checkpoint.emoji}{" "}
+          <Icon
+            name={gate.finalExamUnlocked ? "flame" : checkpointIcon(checkpoint.id)}
+            className="mr-1.5 inline-block h-4 w-4 align-[-2px] text-gray-500"
+          />
           {checkpoint.title} ボス戦
         </h1>
         <p
@@ -68,19 +73,19 @@ export default function FinalExamCard({
       <div className="p-5">
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div className="rounded-xl bg-gray-50 px-3 py-2">
-          <dt className="text-[11px] font-bold text-gray-400">問題数</dt>
+          <dt className="text-[11px] font-semibold text-gray-600">問題数</dt>
           <dd className="font-bold text-gray-800">
             {rule?.questionCount ?? 0} 問
           </dd>
         </div>
         <div className="rounded-xl bg-gray-50 px-3 py-2">
-          <dt className="text-[11px] font-bold text-gray-400">合格ライン</dt>
+          <dt className="text-[11px] font-semibold text-gray-600">合格ライン</dt>
           <dd className="font-bold text-gray-800">
             {rule ? `${rule.passThreshold} 問以上` : "-"}
           </dd>
         </div>
         <div className="col-span-2 rounded-xl bg-gray-50 px-3 py-2">
-          <dt className="text-[11px] font-bold text-gray-400">解放条件</dt>
+          <dt className="text-[11px] font-semibold text-gray-600">解放条件</dt>
           <dd className="font-semibold text-gray-700">
             必須バッジ {gate.requiredBadgeCount} 個
             {checkpoint.requiredFieldCoverage.length > 0 && "＋3分野に着手"}
@@ -89,12 +94,12 @@ export default function FinalExamCard({
           </dd>
         </div>
         <div className="col-span-2 rounded-xl bg-gray-50 px-3 py-2">
-          <dt className="text-[11px] font-bold text-gray-400">出題範囲</dt>
+          <dt className="text-[11px] font-semibold text-gray-600">出題範囲</dt>
           <dd className="font-semibold text-gray-700">{rangeLabel}</dd>
         </div>
       </dl>
 
-      <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2.5 text-sm font-semibold text-rose-700">
+      <p className="mt-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2.5 text-sm font-semibold text-brand-800">
         勝利条件：{checkpoint.winConditionLabel}
       </p>
       </div>

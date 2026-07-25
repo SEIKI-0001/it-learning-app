@@ -1,6 +1,7 @@
 "use client";
 
 import type { CheckpointGate } from "@/types/checkpoint";
+import Icon from "@/components/ui/Icon";
 
 // 「次に進むための条件」を、達成/未達がひと目で分かるチェックリストで見せる部品。
 // gate（既存の判定結果）をそのまま映すだけで、進行ロジックには触れない。
@@ -55,12 +56,12 @@ export default function GateRequirementList({ gate }: { gate: CheckpointGate }) 
                 : "border-2 border-gray-300 text-transparent"
             }`}
           >
-            ✓
+            <Icon name="check" className="h-3.5 w-3.5" />
           </span>
           <span className="min-w-0 flex-1">
             <span
               className={`block text-sm font-semibold ${
-                r.met ? "text-gray-400 line-through" : "text-gray-800"
+                r.met ? "text-gray-500 line-through" : "text-gray-800"
               }`}
             >
               {r.label}

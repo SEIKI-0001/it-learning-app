@@ -1,4 +1,4 @@
-import Link from "next/link";
+import PageHeader from "@/components/ui/PageHeader";
 import QuizDeck, { type QuizMode } from "@/components/wordlist/QuizDeck";
 import BottomNav from "@/components/BottomNav";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
@@ -26,17 +26,13 @@ export default async function WordlistQuizPage({
   const mode = parseMode(rawMode);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-2 pt-2 text-white">
-        <div className="mx-auto flex w-full max-w-md md:max-w-2xl items-center gap-3">
-          <Link href="/glossary" className="text-sm font-medium text-white/80">
-            ←
-          </Link>
-          <h1 className="text-base font-bold">{MODE_TITLE[mode]}</h1>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: "/glossary", label: "単語帳" }}
+        title={MODE_TITLE[mode]}
+      />
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl px-4 py-3">
+      <div className="mx-auto w-full max-w-3xl px-4 py-6">
         <RecordingLockNotice variant="compact" className="mb-3" />
         <QuizDeck mode={mode} />
       </div>

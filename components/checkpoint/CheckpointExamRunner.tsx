@@ -80,7 +80,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
           className={`rounded-xl p-5 text-center ring-1 ${
             result.passed
               ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
-              : "bg-amber-50 text-amber-800 ring-amber-200"
+              : "bg-accent-50 text-accent-800 ring-accent-200"
           }`}
         >
           <p className="text-sm font-bold">{exam.definition.title} の結果</p>
@@ -123,7 +123,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
           範囲はこのチェックポイントに定義されたトピックだけです。直近に答えた問題は優先して外します。
         </p>
         {exam.reusedRecentQuestion && (
-          <p className="mt-2 text-xs font-semibold text-amber-700">
+          <p className="mt-2 text-xs font-semibold text-accent-700">
             この範囲の問題数が足りないため、一部の既出問題を含みます。
           </p>
         )}

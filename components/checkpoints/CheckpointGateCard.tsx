@@ -13,6 +13,9 @@ import {
 import CheckpointStepper from "@/components/checkpoints/CheckpointStepper";
 import GateRequirementList from "@/components/checkpoints/GateRequirementList";
 import MissingBadgeList from "@/components/checkpoints/MissingBadgeList";
+import Icon from "@/components/ui/Icon";
+import { buttonClass } from "@/components/ui/Button";
+import { checkpointIcon } from "@/lib/badgeIcons";
 
 // /plan 用: 現在のチェックポイントのゲート状況を1枚で見せる。
 //   旅の俯瞰（CP0〜6ステッパー）/ 現在CP→次CP / 次に進むための条件チェックリスト /
@@ -34,18 +37,22 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
           currentId={currentId}
           clearedIds={cpProgress.clearedCheckpointIds}
         />
-        <p className="mt-4 text-xs font-bold text-brand-500">
+        <p className="mt-4 text-xs font-semibold text-brand-700">
           チェックポイント {checkpoint.order}
         </p>
-        <p className="mt-1 text-lg font-bold text-gray-800">
-          {checkpoint.emoji} {checkpoint.title}
+        <p className="mt-1 flex items-center gap-1.5 text-lg font-semibold text-gray-900">
+          <Icon
+            name={checkpointIcon(checkpoint.id)}
+            className="h-5 w-5 shrink-0 text-brand-500"
+          />
+          {checkpoint.title}
         </p>
         <p className="mt-1 text-sm text-gray-600">{checkpoint.summary}</p>
         <Link
           href="/settings"
-          className="mt-3 inline-block rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white"
+          className={buttonClass("primary", "sm", "mt-3")}
         >
-          初回設定を確認する →
+          初回設定を確認する
         </Link>
       </section>
     );
@@ -71,30 +78,33 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
 
   return (
     <section className="overflow-hidden rounded-xl bg-white border border-gray-200">
-      {/* クエストヘッダ: 旅の俯瞰と現在→次 */}
-      <div className="bg-brand-700 px-5 pb-4 pt-4 text-white">
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] font-bold text-white/80">
-            クエスト進行中
-          </p>
+      {/* クエストヘッダ: 旅の俯瞰と現在→次。現在地なので唯一の強調ブロックにする */}
+      <div className="border-l-4 border-l-brand-500 bg-brand-50 px-5 pb-4 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold text-brand-700">クエスト進行中</p>
           <Link
             href="/badges"
-            className="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold transition active:scale-95"
+            className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-brand-700 transition hover:text-brand-800"
           >
-            🏅 バッジ一覧
+            <Icon name="award" className="h-3.5 w-3.5" />
+            バッジ一覧
           </Link>
         </div>
-        <div className="mt-2 flex items-baseline gap-2">
-          <p className="text-lg font-bold">
-            {checkpoint.emoji} CP{checkpoint.order} {checkpoint.title}
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <p className="flex items-center gap-1.5 text-base font-semibold text-gray-900">
+            <Icon
+              name={checkpointIcon(checkpoint.id)}
+              className="h-4 w-4 shrink-0 text-brand-500"
+            />
+            CP{checkpoint.order} {checkpoint.title}
           </p>
           {next && (
-            <p className="text-xs font-semibold text-white/70">
-              → 次は CP{next.order} {next.title}
+            <p className="text-xs text-gray-600">
+              次は CP{next.order} {next.title}
             </p>
           )}
         </div>
-        <p className="mt-1 text-xs text-white/80">{checkpoint.summary}</p>
+        <p className="mt-1 text-xs text-gray-600">{checkpoint.summary}</p>
       </div>
 
       <div className="p-5">
@@ -105,9 +115,9 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
         />
 
         {/* 次に進むための条件（達成/未達を一目で） */}
-        <div className="mt-5 rounded-xl bg-gray-50 px-3.5 py-3">
-          <p className="text-xs font-bold text-gray-500">
-            🚩 次のチェックポイントに進む条件
+        <div className="mt-5 rounded-lg border border-gray-200 px-3.5 py-3">
+          <p className="text-xs font-semibold text-gray-600">
+            次のチェックポイントに進む条件
           </p>
           <div className="mt-2">
             <GateRequirementList gate={gate} />
@@ -115,20 +125,20 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
         </div>
 
         {/* 必要バッジの進捗 */}
-        <div className="mt-3 rounded-xl bg-brand-50 px-3 py-3">
-          <div className="flex items-center justify-between text-sm font-bold text-brand-700">
+        <div className="mt-3 rounded-lg border border-gray-200 px-3 py-3">
+          <div className="flex items-center justify-between text-sm font-semibold text-gray-900">
             <span>必須バッジ</span>
             <span>
               {gate.earnedRequiredCount} / {gate.requiredBadgeCount}
             </span>
           </div>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white">
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
             <div
-              className="h-full rounded-full bg-brand-500 transition-all"
+              className="h-full rounded-full bg-brand-600 transition-all"
               style={{ width: `${badgePct}%` }}
             />
           </div>
-          <p className="mt-1.5 text-xs font-semibold text-brand-700">
+          <p className="mt-1.5 text-xs text-gray-600">
             {remaining > 0
               ? `残り ${remaining} 個で最終問題が解放`
               : "必須バッジは全てそろいました"}
@@ -148,7 +158,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             gate.finalExamUnlocked
               ? gate.finalExamPassed
                 ? "bg-emerald-50 ring-1 ring-emerald-200"
-                : "animate-sheen bg-accent-600 text-white shadow-sm"
+                : "animate-sheen bg-accent-600 text-white"
               : "bg-gray-50"
           }`}
         >
@@ -170,12 +180,12 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
                 gate.finalExamUnlocked
                   ? gate.finalExamPassed
                     ? "bg-emerald-600 text-white"
-                    : "bg-white text-rose-600"
+                    : "bg-white text-accent-700"
                   : "bg-white text-gray-500 ring-1 ring-gray-200"
               }`}
             >
               {gate.finalExamUnlocked && !gate.finalExamPassed
-                ? "挑む →"
+                ? "挑む"
                 : gate.finalExamPassed
                   ? "再挑戦"
                   : "詳細を見る"}
@@ -195,8 +205,8 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
         </div>
 
         {/* おすすめ行動 */}
-        <p className="mt-3 rounded-xl bg-brand-50 px-3 py-2.5 text-sm font-semibold text-brand-700">
-          👉 {recommend}
+        <p className="mt-3 rounded-lg bg-brand-50 px-3 py-2.5 text-sm font-semibold text-brand-800">
+          {recommend}
         </p>
       </div>
     </section>

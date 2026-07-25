@@ -109,12 +109,12 @@ export default function CheckQuestionCard({
       {revealed && (
         <div
           className={`animate-pop-in mt-2 rounded-xl p-2.5 ${
-            isCorrect ? "bg-green-50" : "bg-amber-50"
+            isCorrect ? "bg-emerald-50" : "bg-rose-50"
           }`}
         >
           <p
             className={`mb-1 text-sm font-bold ${
-              isCorrect ? "text-green-700" : "text-amber-700"
+              isCorrect ? "text-emerald-700" : "text-rose-700"
             }`}
           >
             {isCorrect

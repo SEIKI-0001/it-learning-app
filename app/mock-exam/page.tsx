@@ -17,6 +17,9 @@ import {
   saveQuestionAttempts,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import PageHeader from "@/components/ui/PageHeader";
+import Icon from "@/components/ui/Icon";
+import { buttonClass } from "@/components/ui/Button";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
@@ -103,46 +106,44 @@ export default function MockExamPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-brand-700 px-4 pb-6 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <Link href="/progress" className="text-xs font-semibold text-white/80 hover:text-white">
-            ← 進捗へ戻る
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold">本番形式 100問模試</h1>
-          <p className="mt-1 text-sm text-white/85">
-            3分野をバランスよく出題。結果は分野別の見直しに使えます。
-          </p>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: "/progress", label: "進捗へ戻る" }}
+        title="本番形式 100問模試"
+        description="3分野をバランスよく出題。結果は分野別の見直しに使えます。"
+      />
 
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-2xl">
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
         {!exam && !result && <RecordingLockNotice />}
         {!exam && !result && (
-          <section className="rounded-xl bg-white p-5 border border-gray-200">
+          <section className="rounded-xl border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
             <div className="flex items-start gap-3">
-              <span className="text-3xl" aria-hidden>🧪</span>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">実力をまとめて確認</h2>
-                <p className="mt-1 text-sm leading-relaxed text-gray-600">
+              <Icon name="flask" className="mt-0.5 h-5 w-5 shrink-0 text-brand-500" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-brand-700">実力をまとめて確認</p>
+                <p className="mt-1 text-sm leading-relaxed text-gray-700">
                   {MOCK_EXAM_RULE.questionCount}問・{MOCK_EXAM_RULE.timeLimitSeconds / 60}分。途中で時間切れになった場合も、回答済みの結果を保存します。
                 </p>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="mt-4 grid grid-cols-3 divide-x divide-brand-200 border-y border-brand-200 text-center">
               {FIELDS.map((field) => (
-                <div key={field} className="rounded-xl bg-brand-50 px-2 py-2 font-bold text-brand-700">
-                  <p>{FIELD_LABELS[field]}</p>
-                  <p className="mt-0.5 text-base">{MOCK_EXAM_RULE.fieldQuestionCounts[field]}問</p>
+                <div key={field} className="px-2 py-3">
+                  <p className="text-xs text-gray-600">{FIELD_LABELS[field]}</p>
+                  <p className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
+                    {MOCK_EXAM_RULE.fieldQuestionCounts[field]}
+                    <span className="ml-0.5 text-sm font-normal text-gray-500">問</span>
+                  </p>
                 </div>
               ))}
             </div>
             <button
               type="button"
               onClick={startExam}
-              className="mt-5 w-full rounded-xl bg-brand-600 px-5 py-4 text-base font-bold text-white shadow-lg transition active:scale-[0.98]"
+              className={buttonClass("primary", "lg", "mt-4 w-full")}
             >
               模試を始める
+              <Icon name="arrow-right" className="h-5 w-5" />
             </button>
           </section>
         )}
@@ -159,21 +160,26 @@ export default function MockExamPage() {
         )}
 
         {result && (
-          <section className="animate-pop-in rounded-xl bg-white p-5 text-center border border-gray-200">
-            <p className="text-4xl" aria-hidden>📊</p>
-            <h2 className="mt-2 text-xl font-bold text-gray-800">模試結果</h2>
-            <p className="mt-1 text-3xl font-bold text-brand-600">
-              {result.correct}<span className="text-base text-gray-500"> / {result.total}問正解</span>
+          <section className="animate-pop-in rounded-xl border border-gray-200 bg-white p-5 text-center">
+            <Icon name="chart" className="mx-auto h-6 w-6 text-gray-400" />
+            <h2 className="mt-2 text-base font-semibold text-gray-900">模試結果</h2>
+            <p className="mt-1 text-3xl font-semibold tabular-nums text-gray-900">
+              {result.correct}
+              <span className="ml-0.5 text-base font-normal text-gray-500">
+                {" "}/ {result.total}問正解
+              </span>
             </p>
-            <div className="mt-5 grid grid-cols-3 gap-2">
+            <div className="mt-5 grid grid-cols-3 divide-x divide-gray-200 border-y border-gray-200">
               {FIELDS.map((field) => {
                 const score = result.fieldScores[field];
                 const rate = score.total === 0 ? 0 : Math.round((score.correct / score.total) * 100);
                 return (
-                  <div key={field} className="rounded-xl bg-gray-50 px-2 py-3">
-                    <p className="text-[11px] font-bold text-gray-500">{FIELD_LABELS[field]}</p>
-                    <p className="mt-1 text-base font-bold text-gray-800">{score.correct}/{score.total}</p>
-                    <p className="text-xs font-bold text-brand-600">{rate}%</p>
+                  <div key={field} className="px-2 py-3">
+                    <p className="text-[11px] text-gray-600">{FIELD_LABELS[field]}</p>
+                    <p className="mt-1 text-base font-semibold tabular-nums text-gray-900">
+                      {score.correct}/{score.total}
+                    </p>
+                    <p className="text-xs font-semibold tabular-nums text-brand-700">{rate}%</p>
                   </div>
                 );
               })}
@@ -182,10 +188,10 @@ export default function MockExamPage() {
               間違えた {result.wrongTopicIds.length} トピックを「復習」に追加しました。まず苦手分野を1つ解き直しましょう。
             </p>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <Link href="/review" className="rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white">
+              <Link href="/review" className={buttonClass("primary", "md")}>
                 復習する
               </Link>
-              <button type="button" onClick={startExam} className="rounded-xl bg-brand-50 px-4 py-3 text-sm font-bold text-brand-700">
+              <button type="button" onClick={startExam} className={buttonClass("soft", "md")}>
                 もう一度挑戦
               </button>
             </div>

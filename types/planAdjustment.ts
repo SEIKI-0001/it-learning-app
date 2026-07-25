@@ -103,11 +103,11 @@ export function severityLabel(severity: AdjustmentSeverity): string {
 export function severityTone(severity: AdjustmentSeverity): string {
   switch (severity) {
     case "slight":
-      return "bg-sky-50 text-sky-700 ring-sky-100";
+      return "bg-brand-50 text-brand-700 ring-brand-100";
     case "moderate":
-      return "bg-amber-50 text-amber-700 ring-amber-100";
+      return "bg-accent-50 text-accent-700 ring-accent-100";
     case "severe":
-      return "bg-orange-50 text-orange-700 ring-orange-100";
+      return "bg-accent-100 text-accent-800 ring-accent-200";
   }
 }
 

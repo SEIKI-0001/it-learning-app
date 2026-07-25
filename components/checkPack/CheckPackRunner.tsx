@@ -19,6 +19,7 @@ import { getLessonHref } from "@/lib/learningCatalog";
 import type { CheckPackResultStatus } from "@/types/checkPack";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import { buttonClass } from "@/components/ui/Button";
 
 // 確認パックの実施フロー（クライアント）。
 // 1) 基礎確認問題 → 2) 関連単語の確認 → 3) 過去問レベル問題 → 4) 結果 → 5) 次の推奨行動。
@@ -58,7 +59,7 @@ function flashcardToCheckQuestion(entry: WordlistEntry): CheckQuestion {
 }
 
 const STATUS_LABEL: Record<CheckPackResultStatus, string> = {
-  passed: "本番対応OK 🎯",
+  passed: "本番対応OK",
   review_needed: "もう一歩（要復習）",
   weak: "重点的に復習しよう",
   incomplete: "途中まで実施",
@@ -66,7 +67,7 @@ const STATUS_LABEL: Record<CheckPackResultStatus, string> = {
 
 const STATUS_TONE: Record<CheckPackResultStatus, string> = {
   passed: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  review_needed: "bg-amber-50 text-amber-700 ring-amber-200",
+  review_needed: "bg-accent-50 text-accent-700 ring-accent-200",
   weak: "bg-rose-50 text-rose-700 ring-rose-200",
   incomplete: "bg-gray-50 text-gray-700 ring-gray-200",
 };
@@ -183,7 +184,7 @@ export default function CheckPackRunner({
         <button
           type="button"
           onClick={() => setPhase("quiz")}
-          className="w-full rounded-xl bg-brand-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition active:scale-[0.98]"
+          className={buttonClass("primary", "lg", "w-full")}
         >
           確認パックを始める
         </button>
@@ -274,7 +275,7 @@ export default function CheckPackRunner({
       </div>
 
       <div className="rounded-xl bg-white p-4 border border-gray-200">
-        <p className="text-xs font-bold text-brand-500">👉 次の推奨行動</p>
+        <p className="text-xs font-semibold text-brand-700">次の推奨行動</p>
         <p className="mt-1 text-sm font-semibold leading-relaxed text-gray-700">
           {nextAction}
         </p>
@@ -283,7 +284,7 @@ export default function CheckPackRunner({
       <div className="flex flex-col gap-2">
         <Link
           href={getLessonHref(topicId)}
-          className="rounded-xl bg-brand-600 px-6 py-3 text-center font-bold text-white"
+          className={buttonClass("primary", "md")}
         >
           レッスンに戻る
         </Link>
@@ -388,14 +389,14 @@ function RateCard({
   const passed = rate != null && rate >= passRate;
   const tone =
     rate == null
-      ? "bg-gray-50 text-gray-400"
+      ? "border-gray-200 bg-white text-gray-500"
       : passed
-        ? "bg-emerald-50 text-emerald-700"
-        : "bg-amber-50 text-amber-700";
+        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+        : "border-accent-200 bg-accent-50 text-accent-700";
   return (
-    <div className={`rounded-xl px-2 py-3 text-center ${tone}`}>
-      <p className="text-xl font-bold">{rate == null ? "—" : `${rate}%`}</p>
-      <p className="mt-0.5 text-[11px] font-bold">{label}</p>
+    <div className={`rounded-lg border px-2 py-3 text-center ${tone}`}>
+      <p className="text-xl font-semibold tabular-nums">{rate == null ? "—" : `${rate}%`}</p>
+      <p className="mt-0.5 text-[11px] font-semibold">{label}</p>
       <p className="text-[10px] opacity-70">{passRate}%で合格</p>
     </div>
   );

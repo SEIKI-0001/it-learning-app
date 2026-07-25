@@ -90,7 +90,7 @@ export default function MochitDevPreviewPage() {
   const shared = { ...rendererProps, reducedMotion, screenContext, mood };
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       <header className="bg-brand-600 px-4 py-4 text-white">
         <div className="mx-auto w-full max-w-3xl">
           <p className="text-lg font-bold">モチット開発プレビュー</p>

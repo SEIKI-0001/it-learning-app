@@ -38,14 +38,13 @@ const GROUPS: readonly {
 
 export default function MorePage() {
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       <PageHeader
         title="その他"
         description="計画の見直しや実力確認など、学習を支える機能をまとめています。"
-        widthClass="max-w-md md:max-w-2xl"
       />
 
-      <div className="mx-auto w-full max-w-md space-y-7 px-4 py-6 md:max-w-2xl">
+      <div className="mx-auto w-full max-w-3xl space-y-7 px-4 py-6">
         {GROUPS.map((group) => (
           <section key={group.title}>
             <h2 className="mb-2 text-xs font-semibold text-gray-500">{group.title}</h2>
@@ -54,14 +53,14 @@ export default function MorePage() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-3 border-b border-gray-100 px-4 py-3.5 last:border-b-0 transition active:bg-gray-50"
+                  className="group flex items-center gap-3 border-b border-gray-100 px-4 py-3.5 transition last:border-b-0 hover:bg-gray-50 active:bg-gray-100"
                 >
-                  <Icon name={link.icon} className="h-5 w-5 shrink-0 text-gray-400" />
+                  <Icon name={link.icon} className="h-5 w-5 shrink-0 text-gray-500" />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-gray-900">{link.title}</span>
+                    <span className="block text-sm font-semibold text-gray-900">{link.title}</span>
                     <span className="mt-0.5 block text-xs text-gray-500">{link.description}</span>
                   </span>
-                  <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-300" />
+                  <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-500 transition group-hover:text-brand-600" />
                 </Link>
               ))}
             </div>

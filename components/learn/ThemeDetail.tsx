@@ -31,7 +31,7 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
     : theme.sections[0]?.id;
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       <header className="border-b border-gray-200 bg-white px-4 py-5">
         <div className="mx-auto w-full max-w-3xl">
           <nav aria-label="パンくず" className="text-xs text-gray-500">

@@ -21,6 +21,7 @@ import {
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { buttonClass } from "@/components/ui/Button";
+import Icon from "@/components/ui/Icon";
 import Mochit from "@/components/mochit/Mochit";
 import type { MochitEventSignal } from "@/components/mochit/mochitEvents";
 import { useCountUp } from "@/lib/useCountUp";
@@ -125,8 +126,8 @@ export default function TopicCompletionQuiz({
   if (topic.checkQuestions.length === 0) {
     return (
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
-          <span aria-hidden>✏️</span>
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-900">
+          <Icon name="pen" className="h-5 w-5 text-gray-500" />
           確認問題
         </h2>
         <p className="rounded-xl bg-white p-4 text-sm text-gray-500 border border-gray-200">
@@ -138,8 +139,8 @@ export default function TopicCompletionQuiz({
 
   return (
     <section>
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
-        <span aria-hidden>✏️</span>
+      <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-900">
+        <Icon name="pen" className="h-5 w-5 text-gray-500" />
         確認問題
       </h2>
 
@@ -164,11 +165,12 @@ export default function TopicCompletionQuiz({
       ) : completed ? (
         <div
           ref={resultRef}
-          className="animate-pop-in rounded-xl bg-green-50 p-5 text-center ring-1 ring-green-200"
+          className="animate-pop-in rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center"
         >
-          <p className="text-3xl">
-            {result && result.correct === result.total ? "🏆" : "🎉"}
-          </p>
+          <Icon
+            name={result && result.correct === result.total ? "award" : "circle-check"}
+            className="mx-auto h-6 w-6 text-emerald-600"
+          />
           {result && (
             <div className="mt-2 flex justify-center">
               <Mochit
@@ -180,22 +182,23 @@ export default function TopicCompletionQuiz({
               />
             </div>
           )}
-          <p className="mt-2 text-base font-bold text-green-700">
+          <p className="mt-2 text-base font-semibold text-emerald-800">
             {result && result.correct === result.total
               ? "全問正解！このレッスン、おつかれさま！"
               : "このレッスン、おつかれさま！"}
           </p>
           {result && (
             <>
-              <p className="mt-1 text-sm font-semibold text-green-600">
+              <p className="mt-1 text-sm font-semibold text-emerald-700">
                 {result.total}問中 {result.correct}問正解
               </p>
               <div className="mt-3 flex justify-center gap-2">
-                <span className="rounded-full bg-white px-3 py-1 text-sm font-bold tabular-nums text-brand-600 ring-1 ring-brand-100">
+                <span className="rounded-full border border-brand-200 bg-white px-3 py-1 text-sm font-semibold tabular-nums text-brand-700">
                   +{shownExp} XP
                 </span>
-                <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-orange-600 ring-1 ring-orange-100">
-                  🔥 {result.streak}日連続
+                <span className="inline-flex items-center gap-1 rounded-full border border-accent-200 bg-white px-3 py-1 text-sm font-semibold tabular-nums text-accent-700">
+                  <Icon name="flame" className="h-3.5 w-3.5" />
+                  {result.streak}日連続
                 </span>
               </div>
             </>

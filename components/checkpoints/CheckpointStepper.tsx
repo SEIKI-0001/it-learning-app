@@ -2,6 +2,7 @@
 
 import { CHECKPOINTS } from "@/lib/checkpoints";
 import type { CheckpointId } from "@/types/checkpoint";
+import Icon from "@/components/ui/Icon";
 
 // チェックポイントの旅（CP0〜CP6）を横一列のドットで俯瞰させる小さな部品。
 // 「今どこにいるか」「どこまで突破したか」を一目で伝えるための表示専用。
@@ -33,10 +34,10 @@ export default function CheckpointStepper({
                     ? "bg-emerald-500 text-white ring-emerald-200"
                     : state === "current"
                       ? "scale-110 bg-brand-600 text-white ring-brand-200"
-                      : "bg-gray-100 text-gray-400 ring-gray-200"
+                      : "bg-gray-100 text-gray-500 ring-gray-200"
                 }`}
               >
-                {isCleared ? "✓" : cp.order}
+                {isCleared ? <Icon name="check" className="h-3.5 w-3.5" /> : cp.order}
               </span>
               <span
                 className={`mt-0.5 text-[9px] font-bold ${
@@ -44,7 +45,7 @@ export default function CheckpointStepper({
                     ? "text-brand-600"
                     : isCleared
                       ? "text-emerald-600"
-                      : "text-gray-400"
+                      : "text-gray-500"
                 }`}
               >
                 CP{cp.order}

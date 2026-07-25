@@ -138,9 +138,9 @@ export default function PlanPage() {
   const comparison = buildCheckpointComparison(state);
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
-        <div className="mx-auto w-full max-w-md md:max-w-3xl">
+        <div className="mx-auto w-full max-w-3xl">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold tracking-tight text-gray-900">学習計画</h1>
             <Link
@@ -166,7 +166,7 @@ export default function PlanPage() {
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-3xl">
+      <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6">
         {/* バッジゲート型ロードマップ: 現在CP・必要バッジ・不足・最終問題の解放状態（詳細） */}
         <CheckpointGateCard state={state} />
 

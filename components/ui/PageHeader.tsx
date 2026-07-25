@@ -2,6 +2,8 @@
 // tone="brand" は互換のために残し、eyebrow の色だけをブランド色にする。
 
 import type { ReactNode } from "react";
+import Link from "next/link";
+import Icon from "@/components/ui/Icon";
 
 type PageHeaderProps = {
   tone?: "brand" | "plain";
@@ -12,6 +14,8 @@ type PageHeaderProps = {
   widthClass?: string;
   /** タイトル行の右側に置く補助表示（タグ等） */
   accessory?: ReactNode;
+  /** 前の画面へ戻る導線。タイトルの上に小さく置く */
+  back?: { href: string; label: string };
   children?: ReactNode;
 };
 
@@ -22,12 +26,22 @@ export default function PageHeader({
   description,
   widthClass = "max-w-3xl",
   accessory,
+  back,
   children,
 }: PageHeaderProps) {
   const isBrand = tone === "brand";
   return (
     <header className="border-b border-gray-200 bg-white px-4 py-5">
       <div className={`mx-auto w-full ${widthClass}`}>
+        {back && (
+          <Link
+            href={back.href}
+            className="-ml-1 mb-2 inline-flex items-center gap-0.5 text-xs font-medium text-gray-500 transition hover:text-brand-600"
+          >
+            <Icon name="chevron-left" className="h-3.5 w-3.5" />
+            {back.label}
+          </Link>
+        )}
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             {eyebrow && (

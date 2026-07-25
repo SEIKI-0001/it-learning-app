@@ -13,6 +13,7 @@ export type IconName =
   | "search"
   | "arrow-right"
   | "chevron-right"
+  | "chevron-left" // 前の画面へ戻る
   | "chevron-down"
   | "check"
   | "clock"
@@ -34,6 +35,11 @@ export type IconName =
   | "circle-check" // 状態: 完了・習得済み
   | "check-double" // 状態: 完全習得
   | "gift" // 今日の宝箱(デイリー報酬)
+  | "x" // 不正解・閉じる
+  | "lightbulb" // ヒント・コツ
+  | "flask" // 模擬試験
+  | "save" // 保存
+  | "trash" // 削除
   // ---- /learn テーマ識別アイコン(lib/themeIcons.ts で18テーマに割当) ----
   | "building" // 企業活動
   | "scale" // 法務・標準化
@@ -96,6 +102,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
     </>
   ),
   "chevron-right": <path d="m9 6 6 6-6 6" />,
+  "chevron-left": <path d="m15 6-6 6 6 6" />,
   "chevron-down": <path d="m6 9 6 6 6-6" />,
   check: <path d="M20 6 9 17l-5-5" />,
   clock: (
@@ -293,6 +300,36 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <rect x="5" y="11" width="14" height="9" rx="2" />
       <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </>
+  ),
+  x: <path d="M6 6l12 12M18 6L6 18" />,
+  lightbulb: (
+    <>
+      <path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 1.9v.3h5.2v-.3c0-.7.4-1.4 1-1.9A6 6 0 0 0 12 3Z" />
+      <path d="M10 19h4" />
+      <path d="M10.5 21.5h3" />
+    </>
+  ),
+  flask: (
+    <>
+      <path d="M9 3h6" />
+      <path d="M10 3v6.4L4.9 18a2 2 0 0 0 1.7 3h10.8a2 2 0 0 0 1.7-3L14 9.4V3" />
+      <path d="M7.2 14.5h9.6" />
+    </>
+  ),
+  save: (
+    <>
+      <path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" />
+      <path d="M8 3v6h7V3" />
+      <rect x="8" y="14" width="8" height="7" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M10 4h4" />
+      <path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" />
+      <path d="M10.5 11v7M13.5 11v7" />
     </>
   ),
 };

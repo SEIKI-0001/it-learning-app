@@ -6,6 +6,7 @@
 
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/Button";
+import Icon from "@/components/ui/Icon";
 import { useBillingStatus } from "@/lib/useBillingStatus";
 
 type Props = {
@@ -23,17 +24,20 @@ export default function RecordingLockNotice({ variant = "card", className }: Pro
     return (
       <div
         className={[
-          "flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 ring-1 ring-amber-200",
+          "flex items-center gap-2 rounded-lg border border-accent-200 bg-accent-50 px-3 py-2",
           className,
         ]
           .filter(Boolean)
           .join(" ")}
       >
-        <span aria-hidden>🔒</span>
-        <p className="min-w-0 flex-1 text-xs font-bold text-amber-800">
+        <Icon name="lock" className="h-4 w-4 shrink-0 text-accent-700" />
+        <p className="min-w-0 flex-1 text-xs font-semibold text-accent-800">
           無料の記録期間が終了しています。結果は記録されません。
         </p>
-        <Link href="/more#billing" className="shrink-0 text-xs font-bold text-brand-600 underline">
+        <Link
+          href="/more#billing"
+          className="shrink-0 text-xs font-semibold text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
+        >
           Proで再開
         </Link>
       </div>
@@ -43,18 +47,16 @@ export default function RecordingLockNotice({ variant = "card", className }: Pro
   return (
     <section
       className={[
-        "rounded-xl bg-white p-4 shadow-sm ring-1 ring-amber-200",
+        "rounded-xl border border-accent-200 bg-white p-4",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
       <div className="flex items-start gap-3">
-        <span className="text-2xl" aria-hidden>
-          🔒
-        </span>
+        <Icon name="lock" className="mt-0.5 h-5 w-5 shrink-0 text-accent-600" />
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-bold text-gray-800">
+          <h3 className="text-sm font-semibold text-gray-900">
             無料の記録期間（7日間）が終了しました
           </h3>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">

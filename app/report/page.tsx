@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
+import PageHeader from "@/components/ui/PageHeader";
 import WeeklyReportCard from "@/components/progress/WeeklyReportCard";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -22,23 +22,14 @@ export default function ReportPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
-      <header className="bg-emerald-700 px-4 pb-5 pt-5 text-white">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
-          <Link
-            href="/progress"
-            className="text-sm font-bold text-white/90"
-          >
-            ← 進捗にもどる
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold">週間レポート</h1>
-          <p className="mt-1 text-sm text-white/90">
-            直近7日間の積み上げをまとめました。
-          </p>
-        </div>
-      </header>
+    <main className="min-h-screen pb-24">
+      <PageHeader
+        back={{ href: "/progress", label: "進捗にもどる" }}
+        title="週間レポート"
+        description="直近7日間の積み上げをまとめました。"
+      />
 
-      <div className="mx-auto w-full max-w-md md:max-w-2xl space-y-4 px-4 py-5">
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
         <WeeklyReportCard state={state} />
       </div>
 
