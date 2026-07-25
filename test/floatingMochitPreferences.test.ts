@@ -130,7 +130,8 @@ describe("floating Mochit device storage", () => {
       visible: false,
       position: { x: 120, y: 80 },
     });
-    expect(listener).toHaveBeenCalledWith({
+    expect(listener).toHaveBeenCalledOnce();
+    expect(loadFloatingMochitPreferences()).toEqual({
       visible: false,
       position: { x: 120, y: 80 },
     });
@@ -163,7 +164,8 @@ describe("floating Mochit device storage", () => {
       position: null,
     });
 
-    expect(listener).toHaveBeenCalledWith({
+    expect(listener).toHaveBeenCalledOnce();
+    expect(loadFloatingMochitPreferences()).toEqual({
       visible: false,
       position: null,
     });
