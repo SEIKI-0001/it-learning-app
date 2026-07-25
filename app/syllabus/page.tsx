@@ -285,6 +285,31 @@ export default function SyllabusPage() {
       </header>
 
       <div className="mx-auto w-full max-w-md space-y-10 px-4 py-8 md:max-w-4xl">
+        <section className="rounded-xl border border-brand-100 bg-white p-5">
+          <h2 className="text-lg font-bold text-gray-800">はじめて受験する方へ</h2>
+          <div className="mt-3 space-y-2 text-sm leading-relaxed text-gray-600">
+            <p>
+              ITパスポート試験は、ストラテジ系・マネジメント系・テクノロジ系の
+              3分野から出題されます。
+            </p>
+            <p>
+              CBT方式で、試験会場のコンピュータ画面に表示される問題を読み、
+              選択肢を選んで回答します。見直したい問題には印を付け、試験時間内に
+              戻って確認できます。
+            </p>
+            <p>
+              合格には、1000点満点中の総合評価点600点以上に加え、
+              各分野別評価点300点以上が必要です。
+            </p>
+          </div>
+          <Link
+            href="/learn"
+            className="mt-4 inline-flex rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-700"
+          >
+            学ぶ画面から3分野の学習を始める
+          </Link>
+        </section>
+
         {SYLLABUS.map((section) => {
           const sectionItems = section.categories.flatMap((c) => c.items);
           const sectionCovered = sectionItems.filter((i) => i.topicIds.length > 0).length;

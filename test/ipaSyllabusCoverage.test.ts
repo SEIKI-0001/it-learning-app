@@ -1,4 +1,7 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { IPA_SYLLABUS_VERSION, ipaSyllabusItems } from "@/data/ipaSyllabus";
 import { getAllTopics } from "@/lib/content";
 import { getOrderedLessonIds } from "@/lib/learningCatalog";
 
@@ -81,6 +84,62 @@ const assertCompactTopicQuality = (id: string) => {
 };
 
 describe("IPA syllabus coverage", () => {
+  it("tracks IPA syllabus 6.5 items 1 through 63 without gaps", () => {
+    expect(IPA_SYLLABUS_VERSION).toBe("6.5");
+    expect(ipaSyllabusItems).toHaveLength(63);
+    expect(ipaSyllabusItems.map((item) => item.number)).toEqual(
+      Array.from({ length: 63 }, (_, index) => index + 1),
+    );
+    expect(new Set(ipaSyllabusItems.map((item) => item.id)).size).toBe(63);
+  });
+
+  it("maps every IPA item to existing learning content", () => {
+    const topicIds = new Set(getAllTopics().map((topic) => topic.id));
+    for (const item of ipaSyllabusItems) {
+      expect(item.topicIds.length, item.id).toBeGreaterThan(0);
+      expect(item.topicIds.filter((id) => !topicIds.has(id)), item.id).toEqual([]);
+      expect(["covered", "expanded", "new"]).toContain(item.coverage);
+      expect(item.note.trim(), item.id).toBeTruthy();
+    }
+  });
+
+  it("registers every Topic in the learning catalog exactly once", () => {
+    const allTopicIds = getAllTopics().map((topic) => topic.id);
+    const orderedLessonIds = getOrderedLessonIds();
+
+    expect(orderedLessonIds).toHaveLength(allTopicIds.length);
+    expect(new Set(orderedLessonIds)).toEqual(new Set(allTopicIds));
+  });
+
+  it("keeps the human-readable IPA coverage document synchronized", () => {
+    const coveragePath = path.join(
+      process.cwd(),
+      "docs/content/ipa-syllabus-coverage.md",
+    );
+    const coverageDocument = readFileSync(coveragePath, "utf8");
+    const markers = coverageDocument.match(/<!-- ipa-\d{2} -->/g) ?? [];
+
+    expect(markers).toHaveLength(63);
+    expect(new Set(markers).size).toBe(63);
+    for (const item of ipaSyllabusItems) {
+      const marker = `<!-- ${item.id} -->`;
+      const row = coverageDocument
+        .split("\n")
+        .find((line) => line.includes(marker));
+
+      expect(row, item.id).toBeDefined();
+      expect(row).toContain(item.majorCategory);
+      expect(row).toContain(item.middleCategory);
+      expect(row).toContain(item.name);
+      expect(row).toContain(item.coverage);
+      expect(row).toContain(item.note);
+      for (const topicId of item.topicIds) {
+        expect(row).toContain(`\`${topicId}\``);
+      }
+    }
+    expect(coverageDocument).not.toMatch(/\b(?:0[0-9]|1[0-5])-\d{2}\b/);
+  });
+
   it("keeps every pre-existing Topic ID", () => {
     const actual = new Set(getAllTopics().map((topic) => topic.id));
     expect(EXISTING_TOPIC_IDS.filter((id) => !actual.has(id))).toEqual([]);
