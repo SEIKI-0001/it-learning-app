@@ -158,4 +158,67 @@ describe("corrected target topic content", () => {
     expect(JSON.stringify(certificateQuestion)).toContain("ドメイン管理権限");
     expect(JSON.stringify(certificateQuestion)).toContain("組織の実在");
   });
+
+  it("adds calculations and required technology expansions", () => {
+    const textOf = (id: string) => JSON.stringify(targetTopic(id));
+    for (const keyword of ["RAID 0", "RAID 1", "RAID 5", "RAID 6", "16TB", "12TB"]) {
+      expect(textOf("tech-raid")).toContain(keyword);
+    }
+    for (const keyword of ["レスポンスタイム", "ターンアラウンドタイム", "スループット", "60件/分"]) {
+      expect(textOf("tech-system-performance")).toContain(keyword);
+    }
+    for (const [id, keywords] of [
+      ["tech-programming-basics", ["機械語", "アセンブラ", "高水準言語", "コンパイラ", "インタプリタ", "HTML", "XML", "JSON"]],
+      ["tech-io-devices", ["USB", "HDMI", "Bluetooth", "NFC"]],
+      ["tech-os-software-hardware", ["ワープロ", "表計算", "プレゼンテーション", "グループウェア", "OSS", "GPL", "コピーレフト"]],
+    ] as const) {
+      for (const keyword of keywords) expect(textOf(id)).toContain(keyword);
+    }
+  });
+
+  it("teaches RAID capacities with aligned arithmetic explanations", () => {
+    const topic = targetTopic("tech-raid");
+    const raid5 = topic.checkQuestions.find((question) =>
+      question.prompt.includes("RAID 5"),
+    );
+    const raid6 = topic.checkQuestions.find((question) =>
+      question.prompt.includes("RAID 6"),
+    );
+
+    expect(raid5?.correctChoice).toBe("A");
+    expect(raid5?.choices[0]).toEqual({ key: "A", text: "16TB" });
+    expect(raid5?.choiceExplanations?.A).toContain("4TB × (5 - 1) = 16TB");
+    expect(raid6?.correctChoice).toBe("A");
+    expect(raid6?.choices[0]).toEqual({ key: "A", text: "12TB" });
+    expect(raid6?.choiceExplanations?.A).toContain("4TB × (5 - 2) = 12TB");
+  });
+
+  it("teaches system throughput with an aligned calculation", () => {
+    const question = targetTopic("tech-system-performance").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("10分で600件"),
+    );
+
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices[0]).toEqual({ key: "A", text: "60件/分" });
+    expect(question?.choiceExplanations?.A).toContain("600件 ÷ 10分 = 60件/分");
+  });
+
+  it("uses scenarios for backup recovery order and network device distinctions", () => {
+    const backupQuestion = targetTopic("tech-backup").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("日曜にフル"),
+    );
+    const routerQuestion = targetTopic("tech-network-devices").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("異なるIPネットワーク"),
+    );
+
+    expect(backupQuestion?.choices[0]).toEqual({
+      key: "A",
+      text: "日曜フル → 月曜増分 → 火曜増分 → 水曜増分",
+    });
+    expect(backupQuestion?.choiceExplanations?.A).toContain(
+      "取得した順にすべて適用",
+    );
+    expect(routerQuestion?.choices[0]).toEqual({ key: "A", text: "ルータ" });
+    expect(routerQuestion?.choiceExplanations?.A).toContain("パケット");
+  });
 });

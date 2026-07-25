@@ -180,8 +180,8 @@ export const learningThemes: LearningTheme[] = [
     icon: "💻",
     order: 13,
     sections: [
-      { id: "computer-components", slug: "computer-components", title: "コンピュータの構成", description: "CPU・メモリ・入出力装置を学びます。", order: 1, lessonIds: ["tech-computer-core", "tech-io-devices"] },
-      { id: "system-reliability", slug: "system-reliability", title: "システムの信頼性", description: "稼働率と障害対応の指標を学びます。", order: 2, lessonIds: ["tech-reliability-availability"] },
+      { id: "computer-components", slug: "computer-components", title: "コンピュータの構成", description: "CPU・メモリ・入出力装置を学びます。", order: 1, lessonIds: ["tech-computer-types", "tech-computer-core", "tech-parallel-systems", "tech-io-devices"] },
+      { id: "system-reliability", slug: "system-reliability", title: "システムの信頼性", description: "稼働率と障害対応の指標を学びます。", order: 2, lessonIds: ["tech-system-processing-architecture", "tech-raid", "tech-system-performance", "tech-reliability-availability"] },
     ],
   },
   {
@@ -194,7 +194,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "⚙️",
     order: 14,
     sections: [
-      { id: "software-basics", slug: "software-basics", title: "ソフトウェアの基礎", description: "OSとソフトウェアの役割を学びます。", order: 1, lessonIds: ["tech-os-software-hardware", "tech-api"] },
+      { id: "software-basics", slug: "software-basics", title: "ソフトウェアの基礎", description: "OSとソフトウェアの役割を学びます。", order: 1, lessonIds: ["tech-os-software-hardware", "tech-file-system", "tech-backup", "tech-api"] },
       { id: "software-use", slug: "software-use", title: "ソフトウェアの活用", description: "クラウドと表計算を学びます。", order: 2, lessonIds: ["tech-cloud-models", "tech-spreadsheet"] },
     ],
   },
@@ -236,7 +236,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🌐",
     order: 17,
     sections: [
-      { id: "network-basics", slug: "network-basics", title: "ネットワークの基礎", description: "LAN・WAN・IPアドレスを学びます。", order: 1, lessonIds: ["tech-lan-wan", "tech-network-address"] },
+      { id: "network-basics", slug: "network-basics", title: "ネットワークの基礎", description: "LAN・WAN・IPアドレスを学びます。", order: 1, lessonIds: ["tech-lan-wan", "tech-network-devices", "tech-network-address"] },
       { id: "internet-web", slug: "internet-web", title: "インターネットとWeb", description: "プロトコルとHTTPSを学びます。", order: 2, lessonIds: ["tech-web-internet-basics", "tech-http-https"] },
       { id: "network-services", slug: "network-services", title: "ネットワークサービス", description: "無線LANとメールを学びます。", order: 3, lessonIds: ["tech-wireless-mobile", "tech-email-protocol"] },
     ],

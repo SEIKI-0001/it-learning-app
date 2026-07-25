@@ -47,6 +47,17 @@ const MANAGEMENT_NEW_TOPIC_IDS = [
   "mgmt-project-communication",
 ] as const;
 
+const TECHNOLOGY_NEW_TOPIC_IDS = [
+  "tech-system-processing-architecture",
+  "tech-raid",
+  "tech-system-performance",
+  "tech-parallel-systems",
+  "tech-computer-types",
+  "tech-file-system",
+  "tech-backup",
+  "tech-network-devices",
+] as const;
+
 const assertCompactTopicQuality = (id: string) => {
   const topic = getAllTopics().find((candidate) => candidate.id === id);
   expect(topic, `${id} should exist`).toBeDefined();
@@ -118,6 +129,12 @@ describe("IPA syllabus coverage", () => {
       expect(text).not.toContain("活動の段階");
       expect(text).not.toContain("代表的なプロセス群の並び");
       expect(text).not.toContain("基本の並び");
+    });
+  });
+
+  describe("newly required Topic technology content", () => {
+    it.each(TECHNOLOGY_NEW_TOPIC_IDS)("provides quality technology Topic %s", (id) => {
+      assertCompactTopicQuality(id);
     });
   });
 });
