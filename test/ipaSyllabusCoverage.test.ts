@@ -185,7 +185,7 @@ describe("IPA syllabus coverage", () => {
     for (const item of ipaSyllabusItems) {
       expect(item.topicIds.length, item.id).toBeGreaterThan(0);
       expect(item.topicIds.filter((id) => !topicIds.has(id)), item.id).toEqual([]);
-      expect(["covered", "expanded", "new"]).toContain(item.status);
+      expect(["covered", "expanded", "new"]).toContain(item.coverage);
       expect(item.note.trim(), item.id).toBeTruthy();
     }
   });
@@ -224,7 +224,7 @@ describe("IPA syllabus coverage", () => {
       expect(columns[5].match(/`([^`]+)`/g)?.map((id) => id.slice(1, -1)) ?? []).toEqual(
         item.topicIds,
       );
-      expect(columns[6]).toBe(item.status);
+      expect(columns[6]).toBe(item.coverage);
       expect(columns[7]).toBe(item.note);
     }
     expect(coverageDocument).not.toMatch(/\b(?:0[0-9]|1[0-5])-\d{2}\b/);
@@ -236,7 +236,7 @@ describe("IPA syllabus coverage", () => {
     expect(byNumber.get(34)).toMatchObject({
       item: "応用数学",
       topicIds: ["tech-data-utilization"],
-      status: "expanded",
+      coverage: "expanded",
     });
     expect(byNumber.get(34)?.note).toMatch(/確率.*平均.*中央値.*最頻値.*分散.*標準偏差/);
     expect(byNumber.get(35)).toMatchObject({
@@ -246,16 +246,16 @@ describe("IPA syllabus coverage", () => {
     expect(byNumber.get(35)?.note).toContain("AI");
     expect(byNumber.get(50)).toMatchObject({
       middleCategory: "情報デザイン",
-      status: "expanded",
+      coverage: "expanded",
     });
     expect(byNumber.get(50)?.note).toMatch(/LATCH/);
     expect(byNumber.get(52)).toMatchObject({
       middleCategory: "情報メディア",
-      status: "covered",
+      coverage: "covered",
     });
     expect(byNumber.get(53)).toMatchObject({
       middleCategory: "情報メディア",
-      status: "expanded",
+      coverage: "expanded",
     });
     expect(byNumber.get(53)?.note).toMatch(/CG.*RGB.*CMYK.*VR.*AR.*MR/);
   });
