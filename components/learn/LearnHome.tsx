@@ -34,6 +34,7 @@ export default function LearnHome() {
   const [state] = useAppState();
   const [fieldFilter, setFieldFilter] = useState<FieldFilter>("all");
   const [query, setQuery] = useState("");
+  const [openThemeIds, setOpenThemeIds] = useState<Set<string>>(() => new Set());
   const themes = useMemo(() => getAllThemes(), []);
   const progress = state?.progress;
 
@@ -84,6 +85,33 @@ export default function LearnHome() {
   const continueLocation = continueLesson
     ? getLessonLocation(continueLesson.id)
     : undefined;
+  const hasOpenVisibleTheme = visibleThemes.some((theme) => openThemeIds.has(theme.id));
+
+  function toggleTheme(themeId: string) {
+    setOpenThemeIds((current) => {
+      const next = new Set(current);
+      if (next.has(themeId)) {
+        next.delete(themeId);
+      } else {
+        next.add(themeId);
+      }
+      return next;
+    });
+  }
+
+  function setVisibleThemesOpen(open: boolean) {
+    setOpenThemeIds((current) => {
+      const next = new Set(current);
+      visibleThemes.forEach((theme) => {
+        if (open) {
+          next.add(theme.id);
+        } else {
+          next.delete(theme.id);
+        }
+      });
+      return next;
+    });
+  }
 
   return (
     <main className="min-h-screen pb-24">
@@ -167,6 +195,15 @@ export default function LearnHome() {
               className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-9 pr-4 text-sm text-gray-800 outline-none placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             />
           </label>
+          {visibleThemes.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setVisibleThemesOpen(!hasOpenVisibleTheme)}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              {hasOpenVisibleTheme ? "すべて閉じる" : "すべて開く"}
+            </button>
+          )}
         </section>
 
         {FIELD_ORDER.map((field) => {
@@ -205,6 +242,9 @@ export default function LearnHome() {
                           ? getLessonHref(nextLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })
                           : undefined
                       }
+                      userProgress={progress}
+                      isOpen={openThemeIds.has(theme.id)}
+                      onToggle={() => toggleTheme(theme.id)}
                     />
                   );
                 })}
