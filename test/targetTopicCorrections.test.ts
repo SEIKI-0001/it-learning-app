@@ -11,6 +11,125 @@ const targetTopic = (id: string): Topic => {
 const allTopicText = (topic: Topic): string => JSON.stringify(topic);
 
 describe("corrected target topic content", () => {
+  it("adds the required strategy calculations and existing-topic expansions", () => {
+    const textOf = (id: string) => JSON.stringify(targetTopic(id));
+    for (const keyword of ["MRP", "発注", "40 × 3 - 25 = 95"]) {
+      expect(textOf("strat-production-management")).toContain(keyword);
+    }
+    for (const [id, keywords] of [
+      ["strat-management-systems", ["ヒト", "モノ", "カネ", "情報"]],
+      ["strat-business-process", ["業務分析", "業務計画", "ボトルネック"]],
+      ["strat-financial-statements", ["売上総利益", "営業利益", "経常利益", "当期純利益"]],
+      ["strat-system-strategy", ["利用者教育", "導入促進", "IT投資評価", "導入後評価"]],
+    ] as const) {
+      for (const keyword of keywords) expect(textOf(id)).toContain(keyword);
+    }
+    expect(textOf("strat-enterprise-activities")).toContain("CSR");
+    expect(textOf("strat-enterprise-activities")).toContain("ステークホルダ");
+  });
+
+  it("keeps every MRP arithmetic distractor aligned with its explanation", () => {
+    const question = targetTopic("strat-production-management").checkQuestions.find(
+      (candidate) => candidate.id === "strat-production-management-q1",
+    );
+
+    expect(question).toBeDefined();
+    expect(question?.choices).toContainEqual({ key: "D", text: "15個" });
+    expect(question?.choiceExplanations?.D).toContain("40 - 25 = 15");
+    expect(JSON.stringify(question)).not.toContain("55個");
+  });
+
+  it("checks the added profit stages with a numerical income-statement case", () => {
+    const topic = targetTopic("strat-financial-statements");
+    const question = topic.checkQuestions.find((candidate) =>
+      candidate.prompt.includes("販売費及び一般管理費が250万円"),
+    );
+
+    expect(topic.checkQuestions).toHaveLength(5);
+    expect(
+      topic.checkQuestions.some((candidate) =>
+        candidate.prompt.includes("現金や預金、売掛金"),
+      ),
+    ).toBe(true);
+    expect(question).toBeDefined();
+    expect(question?.prompt).toContain("営業利益");
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices).toEqual([
+      { key: "A", text: "450万円" },
+      { key: "B", text: "700万円" },
+      { key: "C", text: "420万円" },
+      { key: "D", text: "400万円" },
+    ]);
+    expect(question?.choiceExplanations?.A).toContain("700万円 - 250万円 = 450万円");
+    expect(Object.keys(question?.choiceExplanations ?? {})).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("checks business analysis and planning with a realistic bottleneck case", () => {
+    const topic = targetTopic("strat-business-process");
+    const question = topic.checkQuestions.find((candidate) =>
+      candidate.prompt.includes("1時間当たりの処理能力"),
+    );
+
+    expect(topic.checkQuestions).toHaveLength(5);
+    expect(
+      topic.checkQuestions.some((candidate) =>
+        candidate.prompt.includes("申請や承認などの業務の流れ"),
+      ),
+    ).toBe(true);
+    expect(question).toBeDefined();
+    expect(question?.prompt).toContain("業務分析");
+    expect(question?.prompt).toContain("業務計画");
+    expect(question?.prompt).toContain("ボトルネック");
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices.map((choice) => choice.text)).toEqual([
+      "本人確認工程（35件/時、平均待ち時間50分）",
+      "申請受付工程（80件/時、平均待ち時間5分）",
+      "審査工程（60件/時、平均待ち時間15分）",
+      "結果通知工程（90件/時、平均待ち時間3分）",
+    ]);
+    expect(question?.choiceExplanations?.A).toContain("最小");
+    expect(Object.keys(question?.choiceExplanations ?? {})).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("preserves the ROI question alongside the system adoption expansion", () => {
+    const topic = targetTopic("strat-system-strategy");
+    const question = topic.checkQuestions.find((candidate) =>
+      candidate.prompt.includes("かけた費用に対してどれだけの利益"),
+    );
+
+    expect(topic.checkQuestions).toHaveLength(5);
+    expect(
+      topic.checkQuestions.some((candidate) =>
+        candidate.prompt.includes("新システムの導入前から導入後"),
+      ),
+    ).toBe(true);
+    expect(question).toBeDefined();
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices[0]).toEqual({ key: "A", text: "ROI（投資利益率）" });
+    expect(question?.choiceExplanations?.A).toContain(
+      "（効果 - 投資額）÷ 投資額",
+    );
+    expect(Object.keys(question?.choiceExplanations ?? {})).toEqual(["A", "B", "C", "D"]);
+  });
+
+  it("uses neutral POS-data objectives while only one choice changes ordering", () => {
+    const question = targetTopic("strat-business-systems").checkQuestions.find(
+      (candidate) => candidate.id === "strat-business-systems-q1",
+    );
+
+    expect(question).toBeDefined();
+    expect(question?.choices.map((choice) => choice.text)).toEqual([
+      "時間帯別の販売実績に合わせて発注量を変え、品切れと余剰在庫を減らす",
+      "商品別の販売数量を分析して売場の陳列を見直す",
+      "店舗別の売上高を集計して店舗の業績を比較する",
+      "時間帯別の取引件数を分析してレジ要員の配置を見直す",
+    ]);
+    expect(question?.choices.filter((choice) => choice.text.includes("発注"))).toHaveLength(1);
+    expect(question?.choiceExplanations?.B).toContain("売場");
+    expect(question?.choiceExplanations?.C).toContain("店舗別売上");
+    expect(question?.choiceExplanations?.D).toContain("レジ要員");
+  });
+
   it("uses the current Act on Ensuring Proper Transactions Involving Small and Medium-Sized Entrusted Business Operators", () => {
     const topic = targetTopic("strat-labor-laws");
     const content = allTopicText(topic);
@@ -111,5 +230,148 @@ describe("corrected target topic content", () => {
     expect(certificateQuestion).toBeDefined();
     expect(JSON.stringify(certificateQuestion)).toContain("ドメイン管理権限");
     expect(JSON.stringify(certificateQuestion)).toContain("組織の実在");
+  });
+
+  it("adds calculations and required technology expansions", () => {
+    const textOf = (id: string) => JSON.stringify(targetTopic(id));
+    for (const keyword of ["RAID 0", "RAID 1", "RAID 5", "RAID 6", "16TB", "12TB"]) {
+      expect(textOf("tech-raid")).toContain(keyword);
+    }
+    for (const keyword of ["レスポンスタイム", "ターンアラウンドタイム", "スループット", "60件/分"]) {
+      expect(textOf("tech-system-performance")).toContain(keyword);
+    }
+    for (const [id, keywords] of [
+      ["tech-programming-basics", ["機械語", "アセンブラ", "高水準言語", "コンパイラ", "インタプリタ", "HTML", "XML", "JSON"]],
+      ["tech-io-devices", ["USB", "HDMI", "Bluetooth", "NFC"]],
+      ["tech-os-software-hardware", ["ワープロ", "表計算", "プレゼンテーション", "グループウェア", "OSS", "GPL", "コピーレフト"]],
+    ] as const) {
+      for (const keyword of keywords) expect(textOf(id)).toContain(keyword);
+    }
+  });
+
+  it("teaches RAID capacities with aligned arithmetic explanations", () => {
+    const topic = targetTopic("tech-raid");
+    const raid5 = topic.checkQuestions.find((question) =>
+      question.prompt.includes("RAID 5"),
+    );
+    const raid6 = topic.checkQuestions.find((question) =>
+      question.prompt.includes("RAID 6"),
+    );
+
+    expect(raid5?.correctChoice).toBe("A");
+    expect(raid5?.choices[0]).toEqual({ key: "A", text: "16TB" });
+    expect(raid5?.choiceExplanations?.A).toContain("4TB × (5 - 1) = 16TB");
+    expect(raid6?.correctChoice).toBe("A");
+    expect(raid6?.choices[0]).toEqual({ key: "A", text: "12TB" });
+    expect(raid6?.choiceExplanations?.A).toContain("4TB × (5 - 2) = 12TB");
+  });
+
+  it("teaches system throughput with an aligned calculation", () => {
+    const question = targetTopic("tech-system-performance").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("10分で600件"),
+    );
+
+    expect(question?.correctChoice).toBe("A");
+    expect(question?.choices[0]).toEqual({ key: "A", text: "60件/分" });
+    expect(question?.choiceExplanations?.A).toContain("600件 ÷ 10分 = 60件/分");
+  });
+
+  it("separates processing timing from connection mode and allows their combinations", () => {
+    const topic = targetTopic("tech-system-processing-architecture");
+    const content = allTopicText(topic);
+
+    expect(content).toContain("処理タイミング");
+    expect(content).toContain("接続形態");
+    expect(content).toContain("オンラインバッチ");
+    expect(content).toContain("オンラインリアルタイム");
+    expect(content).toContain("組み合わせ");
+  });
+
+  it("asks beginners to judge when independent work benefits from multiple cores", () => {
+    const parallelQuestion = targetTopic("tech-parallel-systems").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("マルチコアに仕事を分ける"),
+    );
+
+    expect(parallelQuestion).toBeDefined();
+    expect(parallelQuestion?.correctChoice).toBe("A");
+    expect(parallelQuestion?.choices[0]?.text).toContain("100店舗");
+    expect(parallelQuestion?.choices[1]?.text).toContain("前月残高");
+    expect(parallelQuestion?.choices[2]?.text).toContain("受注番号順");
+    expect(parallelQuestion?.choices[3]?.text).toContain("直前の圧縮結果");
+    expect(parallelQuestion?.choices.every((choice) => !choice.text.includes("並列"))).toBe(
+      true,
+    );
+    expect(parallelQuestion?.choiceExplanations?.A).toContain("独立");
+    expect(parallelQuestion?.choiceExplanations?.B).toContain("前月");
+    expect(parallelQuestion?.choiceExplanations?.C).toContain("一つの在庫数");
+    expect(parallelQuestion?.choiceExplanations?.D).toContain("直前");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("データ並列");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("タスク並列");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("パイプライン並列");
+    expect(JSON.stringify(parallelQuestion)).not.toContain("命令レベル並列");
+  });
+
+  it("compares nearby bottleneck alternatives with aligned reasons", () => {
+    const bottleneckQuestion = targetTopic("tech-system-performance").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("ストレージ待ち時間"),
+    );
+
+    expect(bottleneckQuestion?.choices.map((choice) => choice.text)).toEqual([
+      "ストレージ装置のI/O性能",
+      "CPUの演算性能",
+      "ネットワーク回線の帯域",
+      "主記憶の容量",
+    ]);
+    expect(bottleneckQuestion?.choiceExplanations?.B).toContain("CPU使用率");
+    expect(bottleneckQuestion?.choiceExplanations?.C).toContain("ネットワーク待ち");
+    expect(bottleneckQuestion?.choiceExplanations?.D).toContain("主記憶不足");
+  });
+
+  it("uses neighboring data formats and realistic extension-change outcomes", () => {
+    const jsonQuestion = targetTopic("tech-programming-basics").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("Web API"),
+    );
+    const extensionQuestion = targetTopic("tech-file-system").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("photo.jpg"),
+    );
+
+    expect(jsonQuestion?.choices.map((choice) => choice.text)).toEqual([
+      "JSON",
+      "XML",
+      "CSV",
+      "HTML",
+    ]);
+    expect(jsonQuestion?.choiceExplanations?.B).toContain("タグ");
+    expect(jsonQuestion?.choiceExplanations?.C).toContain("表形式");
+    expect(jsonQuestion?.choiceExplanations?.D).toContain("Webページ");
+
+    expect(extensionQuestion?.choices.map((choice) => choice.text)).toEqual([
+      "データはJPEG形式のままで、関連付けによっては開けなくなる",
+      "データがTXT形式へ変換され、文字として読めるようになる",
+      "画像の画素が文字コードへ置き換えられる",
+      "JPEG形式とTXT形式を併せ持つデータへ変わる",
+    ]);
+    expect(extensionQuestion?.choiceExplanations?.B).toContain("形式変換");
+    expect(extensionQuestion?.choiceExplanations?.C).toContain("画素");
+    expect(extensionQuestion?.choiceExplanations?.D).toContain("複合");
+  });
+
+  it("uses scenarios for backup recovery order and network device distinctions", () => {
+    const backupQuestion = targetTopic("tech-backup").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("日曜にフル"),
+    );
+    const routerQuestion = targetTopic("tech-network-devices").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("異なるIPネットワーク"),
+    );
+
+    expect(backupQuestion?.choices[0]).toEqual({
+      key: "A",
+      text: "日曜フル → 月曜増分 → 火曜増分 → 水曜増分",
+    });
+    expect(backupQuestion?.choiceExplanations?.A).toContain(
+      "取得した順にすべて適用",
+    );
+    expect(routerQuestion?.choices[0]).toEqual({ key: "A", text: "ルータ" });
+    expect(routerQuestion?.choiceExplanations?.A).toContain("パケット");
   });
 });

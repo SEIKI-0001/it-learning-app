@@ -13,7 +13,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🏢",
     order: 1,
     sections: [
-      { id: "enterprise-basics", slug: "enterprise-basics", title: "企業のしくみ", description: "企業活動と継続計画を学びます。", order: 1, lessonIds: ["strat-enterprise-activities", "strat-bcp"] },
+      { id: "enterprise-basics", slug: "enterprise-basics", title: "企業のしくみ", description: "企業活動と継続計画を学びます。", order: 1, lessonIds: ["strat-enterprise-activities", "strat-corporation-management-organization", "strat-bcp"] },
       { id: "accounting-finance", slug: "accounting-finance", title: "会計・財務", description: "利益の考え方と財務諸表を学びます。", order: 2, lessonIds: ["strat-accounting-break-even", "strat-financial-statements"] },
     ],
   },
@@ -27,7 +27,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "📊",
     order: 2,
     sections: [
-      { id: "business-analysis", slug: "business-analysis", title: "業務分析", description: "業務プロセスを改善する考え方を学びます。", order: 1, lessonIds: ["strat-business-process"] },
+      { id: "business-analysis", slug: "business-analysis", title: "業務分析", description: "業務プロセスを改善する考え方を学びます。", order: 1, lessonIds: ["strat-business-process", "strat-decision-problem-solving"] },
       { id: "management-information", slug: "management-information", title: "経営情報の活用", description: "CRM・SCM・ERPを学びます。", order: 2, lessonIds: ["strat-management-systems"] },
     ],
   },
@@ -56,7 +56,7 @@ export const learningThemes: LearningTheme[] = [
     order: 4,
     sections: [
       { id: "business-analysis-frameworks", slug: "analysis-frameworks", title: "分析フレームワーク", description: "SWOT・3C・4Pを学びます。", order: 1, lessonIds: ["strat-swot", "strat-3c", "strat-marketing-4p"] },
-      { id: "corporate-strategy", slug: "corporate-strategy", title: "企業戦略", description: "PPM・バリューチェーン・成長戦略を学びます。", order: 2, lessonIds: ["strat-ppm", "strat-value-chain", "strat-corporate-strategy"] },
+      { id: "corporate-strategy", slug: "corporate-strategy", title: "企業戦略", description: "PPM・バリューチェーン・成長戦略を学びます。", order: 2, lessonIds: ["strat-ppm", "strat-value-chain", "strat-corporate-strategy", "strat-technology-development-strategy"] },
       { id: "strategy-evaluation", slug: "strategy-evaluation", title: "目標と評価", description: "KPIなどの目標管理を学びます。", order: 3, lessonIds: ["strat-goal-evaluation"] },
     ],
   },
@@ -70,7 +70,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🛒",
     order: 5,
     sections: [
-      { id: "ebusiness", slug: "ebusiness", title: "eビジネス", description: "EC・EDI・フィンテックを学びます。", order: 1, lessonIds: ["strat-ebusiness"] },
+      { id: "ebusiness", slug: "ebusiness", title: "eビジネス", description: "EC・EDI・フィンテックを学びます。", order: 1, lessonIds: ["strat-business-systems", "strat-engineering-systems", "strat-production-management", "strat-ebusiness", "strat-embedded-systems"] },
     ],
   },
   {
@@ -97,7 +97,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🛠️",
     order: 7,
     sections: [
-      { id: "development-lifecycle", slug: "development-lifecycle", title: "開発プロセス", description: "開発工程の全体像を学びます。", order: 1, lessonIds: ["mgmt-development-process"] },
+      { id: "development-lifecycle", slug: "development-lifecycle", title: "開発プロセス", description: "開発工程の全体像を学びます。", order: 1, lessonIds: ["mgmt-development-process", "mgmt-system-design", "mgmt-operation-maintenance"] },
       { id: "requirements-testing", slug: "requirements-testing", title: "要件定義とテスト", description: "要件を決め、品質を確かめる方法を学びます。", order: 2, lessonIds: ["mgmt-requirements-definition", "mgmt-testing"] },
     ],
   },
@@ -111,7 +111,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "📅",
     order: 8,
     sections: [
-      { id: "project-planning", slug: "project-planning", title: "計画と見積り", description: "QCD、WBS、見積りを学びます。", order: 1, lessonIds: ["mgmt-pm-qcd", "mgmt-wbs-gantt", "mgmt-estimation"] },
+      { id: "project-planning", slug: "project-planning", title: "計画と見積り", description: "QCD、WBS、見積りを学びます。", order: 1, lessonIds: ["mgmt-pm-qcd", "mgmt-pmbok-basics", "mgmt-wbs-gantt", "mgmt-estimation", "mgmt-project-resource", "mgmt-project-communication"] },
       { id: "project-control", slug: "project-control", title: "進行管理", description: "PDCAとリスク管理を学びます。", order: 2, lessonIds: ["mgmt-pdca", "mgmt-risk-management"] },
     ],
   },
@@ -180,8 +180,8 @@ export const learningThemes: LearningTheme[] = [
     icon: "💻",
     order: 13,
     sections: [
-      { id: "computer-components", slug: "computer-components", title: "コンピュータの構成", description: "CPU・メモリ・入出力装置を学びます。", order: 1, lessonIds: ["tech-computer-core", "tech-io-devices"] },
-      { id: "system-reliability", slug: "system-reliability", title: "システムの信頼性", description: "稼働率と障害対応の指標を学びます。", order: 2, lessonIds: ["tech-reliability-availability"] },
+      { id: "computer-components", slug: "computer-components", title: "コンピュータの構成", description: "CPU・メモリ・入出力装置を学びます。", order: 1, lessonIds: ["tech-computer-types", "tech-computer-core", "tech-parallel-systems", "tech-io-devices"] },
+      { id: "system-reliability", slug: "system-reliability", title: "システムの信頼性", description: "稼働率と障害対応の指標を学びます。", order: 2, lessonIds: ["tech-system-processing-architecture", "tech-raid", "tech-system-performance", "tech-reliability-availability"] },
     ],
   },
   {
@@ -194,7 +194,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "⚙️",
     order: 14,
     sections: [
-      { id: "software-basics", slug: "software-basics", title: "ソフトウェアの基礎", description: "OSとソフトウェアの役割を学びます。", order: 1, lessonIds: ["tech-os-software-hardware", "tech-api"] },
+      { id: "software-basics", slug: "software-basics", title: "ソフトウェアの基礎", description: "OSとソフトウェアの役割を学びます。", order: 1, lessonIds: ["tech-os-software-hardware", "tech-file-system", "tech-backup", "tech-api"] },
       { id: "software-use", slug: "software-use", title: "ソフトウェアの活用", description: "クラウドと表計算を学びます。", order: 2, lessonIds: ["tech-cloud-models", "tech-spreadsheet"] },
     ],
   },
@@ -236,7 +236,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🌐",
     order: 17,
     sections: [
-      { id: "network-basics", slug: "network-basics", title: "ネットワークの基礎", description: "LAN・WAN・IPアドレスを学びます。", order: 1, lessonIds: ["tech-lan-wan", "tech-network-address"] },
+      { id: "network-basics", slug: "network-basics", title: "ネットワークの基礎", description: "LAN・WAN・IPアドレスを学びます。", order: 1, lessonIds: ["tech-lan-wan", "tech-network-devices", "tech-network-address"] },
       { id: "internet-web", slug: "internet-web", title: "インターネットとWeb", description: "プロトコルとHTTPSを学びます。", order: 2, lessonIds: ["tech-web-internet-basics", "tech-http-https"] },
       { id: "network-services", slug: "network-services", title: "ネットワークサービス", description: "無線LANとメールを学びます。", order: 3, lessonIds: ["tech-wireless-mobile", "tech-email-protocol"] },
     ],

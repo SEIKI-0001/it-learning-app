@@ -87,7 +87,7 @@ export const EXPECTED_NEW_TOPIC_IDS = [
 
 ---
 
-### Task 1: Add Failing Coverage and Compatibility Contracts
+### Task 1: Add the Topic ID Compatibility Baseline
 
 **Files:**
 - Create: `test/ipaSyllabusCoverage.test.ts`
@@ -97,7 +97,7 @@ export const EXPECTED_NEW_TOPIC_IDS = [
 
 **Consumes:** `topics`, `getAllTopics()`, `getOrderedLessonIds()` and current Topic shape.
 
-**Produces:** A RED test suite that names all 20 new Topic IDs, all 8 existing Topic expansions, required question quality, and the future IPA manifest interface.
+**Produces:** A GREEN compatibility test that prevents deletion or renaming of all 73 pre-existing Topic IDs while allowing later additions.
 
 - [ ] **Step 1: Capture the existing Topic ID compatibility baseline**
 
@@ -137,106 +137,17 @@ it("keeps every pre-existing Topic ID", () => {
 });
 ```
 
-- [ ] **Step 2: Add RED tests for the 20 new Topics and quality contract**
-
-```ts
-const NEW_TOPIC_IDS = [
-  "strat-corporation-management-organization",
-  "strat-decision-problem-solving",
-  "strat-technology-development-strategy",
-  "strat-business-systems",
-  "strat-engineering-systems",
-  "strat-production-management",
-  "strat-embedded-systems",
-  "mgmt-system-design",
-  "mgmt-operation-maintenance",
-  "mgmt-pmbok-basics",
-  "mgmt-project-resource",
-  "mgmt-project-communication",
-  "tech-system-processing-architecture",
-  "tech-raid",
-  "tech-system-performance",
-  "tech-parallel-systems",
-  "tech-computer-types",
-  "tech-file-system",
-  "tech-backup",
-  "tech-network-devices",
-] as const;
-
-it("provides every newly required Topic from the learning catalog", () => {
-  const byId = new Map(getAllTopics().map((topic) => [topic.id, topic]));
-  const catalogIds = getOrderedLessonIds();
-
-  for (const id of NEW_TOPIC_IDS) {
-    const topic = byId.get(id);
-    expect(topic, `${id} should exist`).toBeDefined();
-    expect(catalogIds.filter((candidate) => candidate === id)).toHaveLength(1);
-    expect(topic?.summary.trim()).toBeTruthy();
-    expect(topic?.conceptCard.body.trim()).toBeTruthy();
-    expect(topic?.conceptCard.analogy.trim()).toBeTruthy();
-    expect(topic?.explanation.body.trim()).toBeTruthy();
-    expect(topic?.explanation.keyPoints?.length).toBeGreaterThanOrEqual(3);
-    expect(topic?.conceptCard.diagram ?? topic?.explanation.diagram).toBeDefined();
-    expect(topic?.relatedTerms?.length).toBeGreaterThanOrEqual(3);
-    expect(topic?.referenceHints[0]?.keywords.length).toBeGreaterThanOrEqual(3);
-    expect(topic?.checkQuestions.length).toBeGreaterThanOrEqual(4);
-
-    for (const question of topic?.checkQuestions ?? []) {
-      expect(question.choices).toHaveLength(4);
-      expect(question.choiceExplanations?.A).toBeTruthy();
-      expect(question.choiceExplanations?.B).toBeTruthy();
-      expect(question.choiceExplanations?.C).toBeTruthy();
-      expect(question.choiceExplanations?.D).toBeTruthy();
-    }
-  }
-});
-```
-
-- [ ] **Step 3: Add RED tests for calculation and existing-topic expansion terms**
-
-```ts
-const textOf = (id: string) => JSON.stringify(getAllTopics().find((topic) => topic.id === id));
-
-it.each([
-  ["strat-production-management", ["MRP", "発注", "計算"]],
-  ["mgmt-project-communication", ["n(n-1)/2", "通信経路", "計算"]],
-  ["tech-raid", ["RAID 0", "RAID 1", "RAID 5", "RAID 6", "容量"]],
-  ["tech-system-performance", ["レスポンスタイム", "ターンアラウンドタイム", "スループット", "計算"]],
-])("includes a calculation scenario in %s", (id, keywords) => {
-  const text = textOf(id);
-  for (const keyword of keywords) expect(text).toContain(keyword);
-  expect(getAllTopics().find((topic) => topic.id === id)?.checkQuestions.some(
-    (question) => /台|人|秒|件|TB|GB|本/.test(question.prompt),
-  )).toBe(true);
-});
-
-it.each([
-  ["strat-management-systems", ["ヒト", "モノ", "カネ", "情報"]],
-  ["strat-business-process", ["業務分析", "業務計画", "ボトルネック"]],
-  ["strat-financial-statements", ["売上総利益", "営業利益", "経常利益", "当期純利益"]],
-  ["strat-system-strategy", ["利用者教育", "導入促進", "IT投資評価", "導入後評価"]],
-  ["tech-programming-basics", ["機械語", "アセンブラ", "高水準言語", "コンパイラ", "インタプリタ", "HTML", "XML", "JSON"]],
-  ["tech-io-devices", ["USB", "HDMI", "Bluetooth", "NFC"]],
-  ["tech-os-software-hardware", ["ワープロ", "表計算", "プレゼンテーション", "グループウェア", "OSS", "GPL", "コピーレフト"]],
-])("expands %s with required concepts", (id, keywords) => {
-  const text = textOf(id);
-  for (const keyword of keywords) expect(text).toContain(keyword);
-});
-```
-
-Keep the existing `strat-enterprise-activities` assertions and add an explicit guard that `CSR` and all stakeholder relationships remain present.
-
-- [ ] **Step 4: Run the focused suite and verify RED**
+- [ ] **Step 2: Run the focused suite and verify the baseline is GREEN**
 
 Run: `npm test -- test/ipaSyllabusCoverage.test.ts test/targetTopicCorrections.test.ts`
 
-Expected: FAIL because `data/ipaSyllabus.ts` and the 20 new Topic IDs do not exist, and expansion terms are absent.
+Expected: PASS. The test captures current compatibility before any Topic is added.
 
-- [ ] **Step 5: Commit the RED tests**
+- [ ] **Step 3: Commit the compatibility test**
 
 ```bash
 git add test/ipaSyllabusCoverage.test.ts test/targetTopicCorrections.test.ts
-git commit -m "test: define IPA syllabus content contracts"
+git commit -m "test: preserve existing learning topic ids"
 ```
 
 ---
@@ -267,6 +178,49 @@ const STRATEGY_NEW_TOPIC_IDS = [
   "strat-production-management",
   "strat-embedded-systems",
 ] as const;
+
+const assertCompactTopicQuality = (id: string) => {
+  const topic = getAllTopics().find((candidate) => candidate.id === id);
+  expect(topic, `${id} should exist`).toBeDefined();
+  expect(getOrderedLessonIds().filter((candidate) => candidate === id)).toHaveLength(1);
+  expect(topic?.summary.trim()).toBeTruthy();
+  expect(topic?.conceptCard.body.trim()).toBeTruthy();
+  expect(topic?.conceptCard.analogy.trim()).toBeTruthy();
+  expect(topic?.explanation.body.trim()).toBeTruthy();
+  expect(topic?.explanation.keyPoints?.length).toBeGreaterThanOrEqual(3);
+  expect(topic?.conceptCard.diagram ?? topic?.explanation.diagram).toBeDefined();
+  expect(topic?.relatedTerms?.length).toBeGreaterThanOrEqual(3);
+  expect(topic?.referenceHints[0]?.keywords.length).toBeGreaterThanOrEqual(3);
+  expect(topic?.checkQuestions.length).toBeGreaterThanOrEqual(4);
+  for (const question of topic?.checkQuestions ?? []) {
+    expect(question.choices).toHaveLength(4);
+    expect(question.choiceExplanations?.A).toBeTruthy();
+    expect(question.choiceExplanations?.B).toBeTruthy();
+    expect(question.choiceExplanations?.C).toBeTruthy();
+    expect(question.choiceExplanations?.D).toBeTruthy();
+  }
+};
+
+it.each(STRATEGY_NEW_TOPIC_IDS)("provides quality strategy Topic %s", (id) => {
+  assertCompactTopicQuality(id);
+});
+
+it("adds the required strategy calculations and existing-topic expansions", () => {
+  const textOf = (id: string) => JSON.stringify(getAllTopics().find((topic) => topic.id === id));
+  for (const keyword of ["MRP", "発注", "40 × 3 - 25 = 95"]) {
+    expect(textOf("strat-production-management")).toContain(keyword);
+  }
+  for (const [id, keywords] of [
+    ["strat-management-systems", ["ヒト", "モノ", "カネ", "情報"]],
+    ["strat-business-process", ["業務分析", "業務計画", "ボトルネック"]],
+    ["strat-financial-statements", ["売上総利益", "営業利益", "経常利益", "当期純利益"]],
+    ["strat-system-strategy", ["利用者教育", "導入促進", "IT投資評価", "導入後評価"]],
+  ] as const) {
+    for (const keyword of keywords) expect(textOf(id)).toContain(keyword);
+  }
+  expect(textOf("strat-enterprise-activities")).toContain("CSR");
+  expect(textOf("strat-enterprise-activities")).toContain("ステークホルダ");
+});
 ```
 
 Run: `npm test -- test/ipaSyllabusCoverage.test.ts -t "newly required Topic"`
@@ -340,7 +294,7 @@ npm test -- test/ipaSyllabusCoverage.test.ts test/targetTopicCorrections.test.ts
 npm run typecheck
 ```
 
-Expected: Strategy-specific assertions PASS. Whole new-topic test may still report the pending management and technology IDs; no strategy ID may remain missing.
+Expected: PASS. The repository returns to GREEN before the phase A commit.
 
 - [ ] **Step 6: Commit phase A**
 
@@ -372,6 +326,18 @@ const MANAGEMENT_NEW_TOPIC_IDS = [
   "mgmt-project-resource",
   "mgmt-project-communication",
 ] as const;
+
+it.each(MANAGEMENT_NEW_TOPIC_IDS)("provides quality management Topic %s", (id) => {
+  assertCompactTopicQuality(id);
+});
+
+it("teaches the communication channel calculation", () => {
+  const text = JSON.stringify(getAllTopics().find(
+    (topic) => topic.id === "mgmt-project-communication",
+  ));
+  expect(text).toContain("n(n-1)/2");
+  expect(text).toContain("6 × 5 ÷ 2 = 15");
+});
 ```
 
 Run: `npm test -- test/ipaSyllabusCoverage.test.ts -t "newly required Topic"`
@@ -412,7 +378,7 @@ npm test -- test/ipaSyllabusCoverage.test.ts test/learningCatalog.test.ts
 npm run typecheck
 ```
 
-Expected: Strategy and management IDs PASS; only the eight pending technology IDs may remain missing.
+Expected: PASS. The repository returns to GREEN before the phase B commit.
 
 - [ ] **Step 5: Commit phase B**
 
@@ -443,6 +409,27 @@ const TECHNOLOGY_NEW_TOPIC_IDS = [
   "tech-parallel-systems", "tech-computer-types", "tech-file-system",
   "tech-backup", "tech-network-devices",
 ] as const;
+
+it.each(TECHNOLOGY_NEW_TOPIC_IDS)("provides quality technology Topic %s", (id) => {
+  assertCompactTopicQuality(id);
+});
+
+it("adds calculations and required technology expansions", () => {
+  const textOf = (id: string) => JSON.stringify(getAllTopics().find((topic) => topic.id === id));
+  for (const keyword of ["RAID 0", "RAID 1", "RAID 5", "RAID 6", "16TB", "12TB"]) {
+    expect(textOf("tech-raid")).toContain(keyword);
+  }
+  for (const keyword of ["レスポンスタイム", "ターンアラウンドタイム", "スループット", "60件/分"]) {
+    expect(textOf("tech-system-performance")).toContain(keyword);
+  }
+  for (const [id, keywords] of [
+    ["tech-programming-basics", ["機械語", "アセンブラ", "高水準言語", "コンパイラ", "インタプリタ", "HTML", "XML", "JSON"]],
+    ["tech-io-devices", ["USB", "HDMI", "Bluetooth", "NFC"]],
+    ["tech-os-software-hardware", ["ワープロ", "表計算", "プレゼンテーション", "グループウェア", "OSS", "GPL", "コピーレフト"]],
+  ] as const) {
+    for (const keyword of keywords) expect(textOf(id)).toContain(keyword);
+  }
+});
 ```
 
 Run: `npm test -- test/ipaSyllabusCoverage.test.ts -t "newly required Topic"`
