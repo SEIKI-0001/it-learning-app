@@ -41,8 +41,8 @@
 | 31 <!-- ipa-31 --> | マネジメント | サービスマネジメント | システム監査 | システム監査 | `mgmt-system-audit` | covered | 監査人の独立性、監査計画、証拠収集、評価、報告とフォローアップを学ぶ。 |
 | 32 <!-- ipa-32 --> | マネジメント | サービスマネジメント | システム監査 | 内部統制 | `mgmt-system-audit` | covered | 内部統制の目的、職務分掌、承認、記録など業務を適切に保つ統制活動を学ぶ。 |
 | 33 <!-- ipa-33 --> | テクノロジ | 基礎理論 | 基礎理論 | 離散数学 | `tech-binary-data`, `tech-logic-operations` | covered | 2進数などの基数変換、集合・論理演算、真理値表の基礎を学ぶ。 |
-| 34 <!-- ipa-34 --> | テクノロジ | 基礎理論 | 基礎理論 | 応用数学 | `tech-data-utilization` | covered | 平均・中央値・分散などの統計量と、データを読み取る基礎を学ぶ。 |
-| 35 <!-- ipa-35 --> | テクノロジ | 基礎理論 | 基礎理論 | 情報に関する理論 | `tech-binary-data`, `tech-multimedia-compression` | covered | 情報量とデータ量の単位、符号化、画像・音声データと圧縮の考え方を学ぶ。 |
+| 34 <!-- ipa-34 --> | テクノロジ | 基礎理論 | 基礎理論 | 応用数学 | `tech-data-utilization` | expanded | 確率の基本と、平均・中央値・最頻値、分散・標準偏差からデータの中心とばらつきを読み取る。 |
+| 35 <!-- ipa-35 --> | テクノロジ | 基礎理論 | 基礎理論 | 情報に関する理論 | `tech-binary-data`, `tech-multimedia-compression`, `tech-ai-ml` | covered | 情報量とデータ量の単位、符号化・圧縮の考え方、AIと機械学習の基本を学ぶ。 |
 | 36 <!-- ipa-36 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | データ構造 | `tech-data-structure` | covered | 配列、リスト、スタック、キュー、木構造などデータの持ち方と操作を学ぶ。 |
 | 37 <!-- ipa-37 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | アルゴリズムとプログラミング | `tech-algorithm-flowchart` | covered | 順次・分岐・反復、フローチャート、探索・整列など処理手順の表現を学ぶ。 |
 | 38 <!-- ipa-38 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | プログラム言語 | `tech-programming-basics` | expanded | 機械語、アセンブリ言語、高水準言語と、コンパイラ・インタプリタの違いを学ぶ。 |
@@ -57,10 +57,10 @@
 | 47 <!-- ipa-47 --> | テクノロジ | コンピュータシステム | ソフトウェア | オフィスツール | `tech-os-software-hardware`, `tech-spreadsheet` | expanded | ワープロ、表計算、プレゼンテーション、グループウェア、Webブラウザの用途と表計算操作を学ぶ。 |
 | 48 <!-- ipa-48 --> | テクノロジ | コンピュータシステム | ソフトウェア | オープンソースソフトウェア | `tech-os-software-hardware` | expanded | ソースコード公開、再配布、無保証、ライセンス、GPLとコピーレフトの考え方を学ぶ。 |
 | 49 <!-- ipa-49 --> | テクノロジ | コンピュータシステム | ハードウェア | ハードウェア（コンピュータ・入出力装置） | `tech-computer-types`, `tech-computer-core`, `tech-io-devices` | new | PC、サーバ、汎用機、スーパーコンピュータ、マイコンと、CPU・記憶・入出力装置を学ぶ。 |
-| 50 <!-- ipa-50 --> | テクノロジ | 技術要素 | 情報デザイン | 情報デザイン | `tech-ui-ux` | covered | 情報を目的に合わせて整理し、分かりやすく伝えるレイアウトや表現方法を学ぶ。 |
+| 50 <!-- ipa-50 --> | テクノロジ | 技術要素 | 情報デザイン | 情報デザイン | `tech-ui-ux` | expanded | 情報デザインの原則と、Location・Alphabet・Time・Category・Hierarchyで整理するLATCHを学ぶ。 |
 | 51 <!-- ipa-51 --> | テクノロジ | 技術要素 | 情報デザイン | インタフェース設計 | `tech-ui-ux` | covered | ユーザビリティ、アクセシビリティ、ユニバーサルデザイン、GUI部品の使い分けを学ぶ。 |
-| 52 <!-- ipa-52 --> | テクノロジ | 技術要素 | 情報デザイン | マルチメディア技術 | `tech-multimedia-compression` | covered | 画像・音声・動画のデジタル化、解像度、色、代表的な圧縮方式を学ぶ。 |
-| 53 <!-- ipa-53 --> | テクノロジ | 技術要素 | 情報デザイン | マルチメディア応用 | `tech-multimedia-compression` | covered | マルチメディアコンテンツの制作・配信と、用途に応じたデータ形式・圧縮の選択を学ぶ。 |
+| 52 <!-- ipa-52 --> | テクノロジ | 技術要素 | 情報メディア | マルチメディア技術 | `tech-multimedia-compression` | covered | 画像・音声・動画のデジタル化、解像度、色、代表的な圧縮方式を学ぶ。 |
+| 53 <!-- ipa-53 --> | テクノロジ | 技術要素 | 情報メディア | マルチメディア応用 | `tech-multimedia-compression` | expanded | CG、RGB・CMYKの色表現、VR・AR・MRと、用途に応じたマルチメディア表現を学ぶ。 |
 | 54 <!-- ipa-54 --> | テクノロジ | 技術要素 | データベース | データベース方式 | `tech-database-sql`, `tech-keys` | covered | 関係データベース、表・行・列、主キー・外部キー、DBMSの基本を学ぶ。 |
 | 55 <!-- ipa-55 --> | テクノロジ | 技術要素 | データベース | データベース設計 | `tech-normalization`, `tech-keys` | covered | 主キーと外部キー、参照整合性、重複や更新矛盾を減らす正規化を学ぶ。 |
 | 56 <!-- ipa-56 --> | テクノロジ | 技術要素 | データベース | データ操作 | `tech-database-sql` | covered | SQLのSELECT・INSERT・UPDATE・DELETE、抽出条件、集計、結合の基本を学ぶ。 |
