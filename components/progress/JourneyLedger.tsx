@@ -44,7 +44,7 @@ export default function JourneyLedger({ state }: { state: AppState }) {
                     aria-hidden
                     className={`absolute top-0 h-2.5 w-px ${
                       clearedIds.includes(CHECKPOINTS[index - 1].id)
-                        ? "bg-brand-300"
+                        ? "bg-brand-400"
                         : "bg-gray-200"
                     }`}
                   />
@@ -53,37 +53,36 @@ export default function JourneyLedger({ state }: { state: AppState }) {
                   <span
                     aria-hidden
                     className={`absolute bottom-0 top-7 w-px ${
-                      cleared ? "bg-brand-300" : "bg-gray-200"
+                      cleared ? "bg-brand-400" : "bg-gray-200"
                     }`}
                   />
                 )}
                 <StateMarker
                   icon={cleared ? "circle-check" : isCurrent ? "circle-dot" : "circle"}
                   tone={cleared ? "done" : isCurrent ? "active" : "muted"}
-                  className="relative z-10 mt-2.5 h-4.5 w-4.5 bg-gray-50"
+                  className="relative z-10 mt-2.5 h-4.5 w-4.5 bg-(--background)"
                 />
               </div>
-              <div className="min-w-0 flex-1 py-2">
-                <p
-                  className={`text-sm ${
-                    isCurrent
-                      ? "font-semibold text-gray-900"
-                      : cleared
-                        ? "text-gray-600"
-                        : "text-gray-400"
-                  }`}
-                >
-                  CP{cp.order} {cp.title}
-                  {cleared && <span className="ml-2 text-xs text-emerald-700">突破済み</span>}
-                  {isCurrent && <span className="ml-2 text-xs font-medium text-brand-700">現在地</span>}
-                </p>
-                {isCurrent && (
-                  <p className="mt-0.5 text-xs tabular-nums text-gray-500">
+              {isCurrent ? (
+                /* Primary: 現在地の行だけbrand-50面+brand-200境界で強調する */
+                <div className="my-1 min-w-0 flex-1 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2">
+                  <p className="text-sm font-semibold text-gray-900">
+                    CP{cp.order} {cp.title}
+                    <span className="ml-2 text-xs font-semibold text-brand-700">現在地</span>
+                  </p>
+                  <p className="mt-0.5 text-xs tabular-nums text-gray-600">
                     到達条件：{cp.winConditionLabel}・必須バッジ {gate.earnedRequiredCount}/
                     {gate.totalRequiredCount}
                   </p>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="min-w-0 flex-1 py-2">
+                  <p className="text-sm text-gray-600">
+                    CP{cp.order} {cp.title}
+                    {cleared && <span className="ml-2 text-xs text-emerald-700">突破済み</span>}
+                  </p>
+                </div>
+              )}
             </li>
           );
         })}

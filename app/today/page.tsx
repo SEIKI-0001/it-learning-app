@@ -228,7 +228,7 @@ export default function TodayPage() {
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日(${"日月火水木金土"[now.getDay()]})`;
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       {/* 学習手帳: 日付・試験までの距離・準備度を数字で静かに示す */}
       <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
         <div className="mx-auto w-full max-w-3xl">
@@ -246,7 +246,7 @@ export default function TodayPage() {
 
           <dl className="mt-4 grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-200">
             <div className="py-3 pr-4">
-              <dt className="text-xs text-gray-500">試験まで</dt>
+              <dt className="text-xs text-gray-600">試験まで</dt>
               <dd className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
                 {examRemaining === null ? (
                   <span className="text-base font-normal text-gray-500">未設定</span>
@@ -259,13 +259,13 @@ export default function TodayPage() {
               </dd>
             </div>
             <div className="py-3 pl-4">
-              <dt className="text-xs text-gray-500">合格準備度</dt>
+              <dt className="text-xs text-gray-600">合格準備度</dt>
               <dd className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
                 {readiness}
                 <span className="ml-0.5 text-sm font-normal text-gray-500">%</span>
               </dd>
               <div
-                className="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-100"
+                className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200"
                 role="progressbar"
                 aria-label="合格準備度"
                 aria-valuemin={0}
@@ -277,51 +277,54 @@ export default function TodayPage() {
             </div>
           </dl>
 
-          {missionText ? (
-            <p className="mt-3 text-sm text-gray-700">
-              <span className="font-semibold text-gray-900">今日のミッション</span>{" "}
-              <Link
-                href="/plan"
-                className="text-gray-700 underline decoration-gray-300 underline-offset-2 hover:decoration-brand-600 hover:text-brand-700"
-              >
-                {missionText}
-              </Link>
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-gray-600">
-              今日は復習が中心。{" "}
-              <Link
-                href="/plan"
-                className="text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
-              >
-                次の目標はCP{currentCheckpoint.order}「{currentCheckpoint.title}」（バッジ{" "}
-                {gate.earnedRequiredCount}/{gate.totalRequiredCount}）
-              </Link>
-            </p>
-          )}
+          {/* Primary: 今日のミッションを画面で唯一の強調ブロックにする(brand-50面+brand-200境界+左端brand-500線) */}
+          <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+            <p className="text-xs font-semibold text-brand-700">今日のミッション</p>
+            {missionText ? (
+              <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">
+                <Link
+                  href="/plan"
+                  className="underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600 hover:text-brand-700"
+                >
+                  {missionText}
+                </Link>
+              </p>
+            ) : (
+              <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">
+                今日は復習が中心。{" "}
+                <Link
+                  href="/plan"
+                  className="underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600 hover:text-brand-700"
+                >
+                  次の目標はCP{currentCheckpoint.order}「{currentCheckpoint.title}」（バッジ{" "}
+                  {gate.earnedRequiredCount}/{gate.totalRequiredCount}）
+                </Link>
+              </p>
+            )}
+            {currentNode && (
+              <p className="mt-1 text-sm tabular-nums text-gray-600">
+                {currentNode.title}・約{currentNode.estimatedMinutes}分
+                {ctaXpMax !== null && `・全問正解で+${ctaXpMax} XP`}
+              </p>
+            )}
 
-          {/* 主CTA: 迷わず現在挑戦中のミッションから始める。行動後の成果(実XP)も示す */}
-          {startHref && currentNode && (
-            <Link
-              href={startHref}
-              className="mt-4 flex w-full items-center justify-between rounded-lg bg-brand-600 px-5 py-3.5 text-white transition hover:bg-brand-700 active:scale-[0.99]"
-            >
-              <span className="min-w-0">
-                <span className="block text-base font-semibold">
+            {/* 主CTA: 迷わず現在挑戦中のミッションから始める */}
+            {startHref && currentNode && (
+              <Link
+                href={startHref}
+                className="mt-3 flex w-full items-center justify-between rounded-lg bg-brand-600 px-5 py-3 text-white transition hover:bg-brand-700 active:scale-[0.99]"
+              >
+                <span className="text-base font-semibold">
                   {currentNode.activity === "review"
                     ? "復習ミッションから始める"
                     : doneCount > 0
                       ? "次のミッションに進む"
                       : "最初のミッションを始める"}
                 </span>
-                <span className="mt-0.5 block truncate text-xs tabular-nums text-white/75">
-                  {currentNode.title}・約{currentNode.estimatedMinutes}分
-                  {ctaXpMax !== null && `・全問正解で+${ctaXpMax} XP`}
-                </span>
-              </span>
-              <Icon name="arrow-right" className="ml-3 h-5 w-5 shrink-0" />
-            </Link>
-          )}
+                <Icon name="arrow-right" className="ml-3 h-5 w-5 shrink-0" />
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

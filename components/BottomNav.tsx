@@ -64,8 +64,8 @@ export default function BottomNav() {
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 whitespace-nowrap py-2.5 text-[10px] font-medium tracking-tight transition ${
-                  active ? "text-brand-700" : "text-gray-500"
+                className={`flex flex-col items-center gap-1 whitespace-nowrap py-2.5 text-[11px] tracking-tight transition ${
+                  active ? "font-semibold text-brand-700" : "font-medium text-gray-600"
                 }`}
               >
                 <Icon

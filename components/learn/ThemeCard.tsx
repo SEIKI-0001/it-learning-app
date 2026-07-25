@@ -2,7 +2,8 @@
 // 行全体はテーマページへのリンク。次に学ぶレッスンへの直行リンクを重ねる
 // (stretched-link + z-index)。
 // 攻略図鑑として、未着手/学習中/復習待ち/習得済み/完全習得の5状態を
-// 左端の状態線+アイコン+テキスト(LessonStateBadge)で瞬時に判別できるようにする。
+// 左端の状態線+章番号/アイコンの色+テキスト(LessonStateBadge)で瞬時に判別できるようにする。
+// 強調(brand-50背景)は「学習中/次に学ぶ」の行だけ(highlighted)。全行に色は付けない。
 
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
@@ -15,41 +16,58 @@ type ThemeCardProps = {
   theme: LearningTheme;
   progress: ThemeProgress;
   masterState: LessonMasterState;
+  /** 学習中、または(学習中がないとき)次に学ぶテーマの行だけ true */
+  highlighted?: boolean;
   nextLessonTitle?: string;
   nextLessonHref?: string;
 };
 
-// 状態線(左端の縦線)。色のみに頼らず LessonStateBadge のアイコン+文字と併用する。
-const STATE_LINE_CLASS: Record<LessonMasterState, string> = {
-  not_started: "bg-gray-200",
-  in_progress: "bg-brand-400",
-  review_due: "bg-accent-400",
-  mastered: "bg-emerald-400",
-  fully_mastered: "bg-emerald-600",
+// 状態ごとの色。線とアイコンは500系、テキストはコントラストの取れる700系を使う。
+const STATE_CLASS: Record<
+  LessonMasterState,
+  { line: string; number: string; icon: string }
+> = {
+  not_started: { line: "bg-gray-300", number: "text-gray-500", icon: "text-gray-500" },
+  in_progress: { line: "bg-brand-500", number: "text-brand-700", icon: "text-brand-500" },
+  review_due: { line: "bg-accent-500", number: "text-accent-700", icon: "text-accent-500" },
+  mastered: { line: "bg-emerald-500", number: "text-emerald-700", icon: "text-emerald-500" },
+  fully_mastered: {
+    line: "bg-emerald-700",
+    number: "text-emerald-700",
+    icon: "text-emerald-700",
+  },
 };
 
 export default function ThemeCard({
   theme,
   progress,
   masterState,
+  highlighted = false,
   nextLessonTitle,
   nextLessonHref,
 }: ThemeCardProps) {
   const themeHref = `/learn/${theme.slug}`;
   const showNextLesson =
     masterState !== "fully_mastered" && nextLessonTitle && nextLessonHref;
+  const stateClass = STATE_CLASS[masterState];
 
   return (
-    <article className="group relative flex gap-3 p-4 transition hover:bg-gray-50 active:bg-gray-100">
+    <article
+      className={`group relative flex gap-3 p-4 transition ${
+        highlighted
+          ? "bg-brand-50 hover:bg-brand-100 active:bg-brand-100"
+          : "hover:bg-gray-50 active:bg-gray-100"
+      }`}
+    >
       <span
         aria-hidden
-        className={`absolute inset-y-2 left-0 w-0.5 rounded-full ${STATE_LINE_CLASS[masterState]}`}
+        className={`absolute inset-y-2 left-0 w-1 rounded-full ${stateClass.line}`}
       />
       <div className="flex w-9 shrink-0 flex-col items-center gap-1 pt-0.5">
-        <p className="text-sm font-semibold tabular-nums text-gray-400">
+        <p className={`text-sm font-semibold tabular-nums ${stateClass.number}`}>
           {String(theme.chapterNumber).padStart(2, "0")}
         </p>
-        <Icon name={getThemeIcon(theme)} className="h-5 w-5 text-gray-400" />
+        <Icon name={getThemeIcon(theme)} className={`h-5 w-5 ${stateClass.icon}`} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
@@ -67,7 +85,7 @@ export default function ThemeCard({
           {progress.progressPercent}%
         </p>
         <div
-          className="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-100"
+          className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200"
           role="progressbar"
           aria-label={`${theme.title}の進捗`}
           aria-valuemin={0}
@@ -99,7 +117,7 @@ export default function ThemeCard({
       </div>
       <Icon
         name="chevron-right"
-        className="h-4 w-4 shrink-0 self-center text-gray-300 transition group-hover:text-gray-500"
+        className="h-4 w-4 shrink-0 self-center text-gray-500 transition group-hover:text-brand-600"
       />
     </article>
   );

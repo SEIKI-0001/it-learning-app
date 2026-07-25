@@ -148,7 +148,7 @@ export default function ProgressPage() {
         : `最後の学習から${gap}日`;
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
         <div className="mx-auto w-full max-w-md md:max-w-4xl">
           <div className="flex items-baseline justify-between gap-3">
@@ -158,11 +158,32 @@ export default function ProgressPage() {
             </p>
           </div>
 
-          {/* 学習手帳: /today と同じ台帳ブロックで現在地を示す */}
-          <dl className="mt-4 grid grid-cols-3 divide-x divide-gray-200 border-y border-gray-200">
-            <div className="py-3 pr-3">
-              <dt className="text-xs text-gray-500">試験まで</dt>
-              <dd className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
+          {/* Primary: 合格準備度をこの画面の主指標として横幅いっぱいで示す */}
+          <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="text-xs font-semibold text-brand-700">合格準備度</p>
+              <p className="text-2xl font-bold tabular-nums text-gray-900">
+                {overall}
+                <span className="ml-0.5 text-sm font-normal text-gray-600">%</span>
+              </p>
+            </div>
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-gray-200"
+              role="progressbar"
+              aria-label="合格準備度"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={overall}
+            >
+              <div className="h-full rounded-full bg-brand-600" style={{ width: `${overall}%` }} />
+            </div>
+          </div>
+
+          {/* Secondary: 試験までの日数・連続学習は準備度より一段弱く2列で示す */}
+          <dl className="mt-3 grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-200">
+            <div className="py-3 pr-4">
+              <dt className="text-xs text-gray-600">試験まで</dt>
+              <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
                 {remaining === null ? (
                   <span className="text-base font-normal text-gray-500">未設定</span>
                 ) : (
@@ -173,30 +194,13 @@ export default function ProgressPage() {
                 )}
               </dd>
             </div>
-            <div className="px-3 py-3">
-              <dt className="text-xs text-gray-500">合格準備度</dt>
-              <dd className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
-                {overall}
-                <span className="ml-0.5 text-sm font-normal text-gray-500">%</span>
-              </dd>
-              <div
-                className="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-100"
-                role="progressbar"
-                aria-label="合格準備度"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={overall}
-              >
-                <div className="h-full rounded-full bg-brand-600" style={{ width: `${overall}%` }} />
-              </div>
-            </div>
-            <div className="py-3 pl-3">
-              <dt className="text-xs text-gray-500">連続学習</dt>
-              <dd className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
+            <div className="py-3 pl-4">
+              <dt className="text-xs text-gray-600">連続学習</dt>
+              <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
                 {progress.streakCount}
                 <span className="ml-0.5 text-sm font-normal text-gray-500">日</span>
               </dd>
-              <p className="mt-1 text-[11px] text-gray-500">
+              <p className="mt-1 text-xs text-gray-500">
                 {shieldsAvailable(getStreakMeta(progress)) > 0 && (
                   <span title="1日休んでも自動でストリークを守ります">
                     おまもり ×{shieldsAvailable(getStreakMeta(progress))}
@@ -222,7 +226,7 @@ export default function ProgressPage() {
               message={mochit.message}
               className="min-w-0 flex-1"
             />
-            <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-300" />
+            <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-500" />
             <span className="sr-only">モチットを見る</span>
           </Link>
           <p className="mt-1 text-[11px] tabular-nums text-gray-500">
@@ -241,7 +245,7 @@ export default function ProgressPage() {
                 {rank.isMax ? `${progress.exp} XP（MAX）` : `あと ${rank.remaining} XP`}
               </span>
             </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
               <div
                 className="h-full rounded-full bg-brand-600 transition-all duration-500"
                 style={{ width: `${Math.round(rank.ratio * 100)}%` }}
@@ -276,16 +280,16 @@ export default function ProgressPage() {
         {/* 数値サマリ: カードではなく学習手帳の罫線区切りで示す */}
         <dl className="grid grid-cols-3 divide-x divide-gray-200 border-y border-gray-200">
           <div className="py-3 pr-3">
-            <dt className="text-xs text-gray-500">学習済み</dt>
+            <dt className="text-xs text-gray-600">学習済み</dt>
             <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
               {completedCount}
               <span className="text-sm font-normal text-gray-500">/{topics.length}</span>
             </dd>
           </div>
           <Link href="/review" className="block px-3 py-3 transition active:bg-gray-100">
-            <dt className="flex items-center gap-1 text-xs text-gray-500">
+            <dt className="flex items-center gap-1 text-xs text-gray-600">
               復習待ち
-              <Icon name="chevron-right" className="h-3 w-3 text-gray-300" />
+              <Icon name="chevron-right" className="h-3 w-3 text-gray-500" />
             </dt>
             <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
               {reviewCount}
@@ -293,7 +297,7 @@ export default function ProgressPage() {
             </dd>
           </Link>
           <div className="py-3 pl-3">
-            <dt className="text-xs text-gray-500">累計XP</dt>
+            <dt className="text-xs text-gray-600">累計XP</dt>
             <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">{shownExp}</dd>
           </div>
         </dl>
@@ -361,7 +365,7 @@ export default function ProgressPage() {
             <p className="text-sm font-semibold text-gray-900">本番形式 100問模試</p>
             <p className="mt-0.5 text-xs text-gray-500">3分野の実力をまとめて確認する</p>
           </div>
-          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-300" />
+          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-500" />
         </Link>
 
         {/* 今週の積み上げは別ページ(週間レポート)へ */}
@@ -373,7 +377,7 @@ export default function ProgressPage() {
             <p className="text-sm font-semibold text-gray-900">週間レポート</p>
             <p className="mt-0.5 text-xs text-gray-500">直近7日間の積み上げをみる</p>
           </div>
-          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-300" />
+          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-500" />
         </Link>
         </div>
       </div>

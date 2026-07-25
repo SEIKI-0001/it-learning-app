@@ -2,37 +2,42 @@
 
 /*
  * デザイントークン。
- * - brand: 藍。モチット(ミント/紺)と調和する青藍。主要操作・リンク・進捗に使う。
- * - accent: 柿。復習・ストリークなど「注意を向けたい」行動にだけ使う。
+ * - brand: 明るく鮮明な青。主CTA・選択中タブ・現在位置・進捗バーは500〜600、
+ *   本文リンク・小さめの強調テキストは700を使う(500は白地の小テキストにはコントラスト不足)。
+ * - accent: オレンジ。復習・ストリーク・あと少しの目標・受取可能な報酬・注意状態にだけ使う。
+ *   テキスト用途は700以上、500は線・バー・アイコンに限定する。
  * - 装飾目的の多色使いはしない。成功/警告はテキスト・状態表示に限定する。
  */
 @theme {
-  --color-brand-50: #f2f7fa;
-  --color-brand-100: #e3eef4;
-  --color-brand-200: #c5dce8;
-  --color-brand-300: #97c0d4;
-  --color-brand-400: #5b9cb9;
-  --color-brand-500: #357f9f;
-  --color-brand-600: #1d6285;
-  --color-brand-700: #17506d;
-  --color-brand-800: #14425a;
-  --color-brand-900: #12374b;
-  --color-brand-950: #0b2432;
+  --color-brand-50: #eff7ff;
+  --color-brand-100: #dbecff;
+  --color-brand-200: #b8d9ff;
+  --color-brand-300: #86bdff;
+  --color-brand-400: #4f9df2;
+  --color-brand-500: #187bd7;
+  --color-brand-600: #0868c9;
+  --color-brand-700: #0756a8;
+  --color-brand-800: #0b4687;
+  --color-brand-900: #103a6b;
+  --color-brand-950: #0a2445;
 
-  --color-accent-50: #fbf4ed;
-  --color-accent-100: #f6e6d3;
-  --color-accent-200: #eccba6;
-  --color-accent-600: #b4551d;
-  --color-accent-700: #964718;
-  --color-accent-800: #7a3b16;
+  --color-accent-50: #fff7ed;
+  --color-accent-100: #ffedd5;
+  --color-accent-200: #fed7aa;
+  --color-accent-300: #fdba74;
+  --color-accent-400: #fb923c;
+  --color-accent-500: #f58a17;
+  --color-accent-600: #d96c0b;
+  --color-accent-700: #b45309;
+  --color-accent-800: #8a3c08;
 
   --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
     "Yu Gothic", "Meiryo", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
-  --background: #f8f9fa;
-  --foreground: #111827;
+  --background: #f6f8fb;
+  --foreground: #152033;
 }
 
 body {
@@ -45,7 +50,7 @@ body {
 
 /* キーボード操作時のフォーカスを常に見えるようにする */
 :focus-visible {
-  outline: 2px solid #1d6285;
+  outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
   border-radius: 4px;
 }

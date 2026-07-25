@@ -48,7 +48,7 @@ export default function DailyQuestCard({
     <section className="relative">
       {justClaimed && <ConfettiBurst />}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-gray-500">今日の3ミッション</h3>
+        <h3 className="text-xs font-semibold text-gray-600">今日の3ミッション</h3>
         <span
           className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold tabular-nums ${
             complete
@@ -79,13 +79,13 @@ export default function DailyQuestCard({
               </span>
               <span
                 className={`flex-1 text-sm ${
-                  done ? "text-gray-400 line-through" : "text-gray-700"
+                  done ? "text-gray-500 line-through" : "text-gray-700"
                 }`}
               >
                 {def.label}
               </span>
               {q.goal > 1 && !done && (
-                <span className="shrink-0 text-xs tabular-nums text-gray-400">
+                <span className="shrink-0 text-xs tabular-nums text-gray-500">
                   {q.progress}/{q.goal}
                 </span>
               )}
@@ -112,7 +112,7 @@ export default function DailyQuestCard({
           宝箱を開ける（+{DAILY_QUEST_CLEAR_XP} XP）
         </button>
       ) : (
-        <p className="mt-3 text-xs text-gray-400">
+        <p className="mt-3 text-xs text-gray-500">
           3つ達成すると宝箱がもらえます
         </p>
       )}

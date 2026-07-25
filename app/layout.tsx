@@ -14,13 +14,14 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#1d6285',
+  themeColor: '#0868c9',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja" className="antialiased">
-      <body className="min-h-screen bg-gray-50">
+      {/* 背景色は globals.css の --background(#f6f8fb) に一元化する */}
+      <body className="min-h-screen">
         {children}
         <CelebrationHost />
       </body>

@@ -6,6 +6,7 @@ import {
   type IntegratedLearningStatus,
   type RecommendedFocus,
 } from "@/types/integratedStatus";
+import Icon from "@/components/ui/Icon";
 
 // 統合進捗カード（/progress 上部）。
 // 「合格に対する現在地」を一目で掴めるよう、ステータス＋ひとこと＋到達度バー1本＋リスク1件＋今週の方針1行に絞る。
@@ -41,7 +42,7 @@ export default function IntegratedStatusCard({
     <section className="rounded-xl bg-white p-4 border border-gray-200">
       {/* 総合ステータス */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold text-gray-500">いまの現在地</p>
+        <p className="text-xs font-bold text-gray-600">いまの現在地</p>
         <span
           className={`inline-block rounded-full px-3 py-1 text-sm font-bold ring-1 ${overallStatusTone(
             status.overallStatus,
@@ -57,37 +58,41 @@ export default function IntegratedStatusCard({
         </p>
       )}
 
-      {/* トピック到達度（全トピックの内訳を1本のバーで見る） */}
+      {/* トピック到達度（全トピックの内訳を1本のバーで見る）。色は状態パレットに揃える */}
       <div className="mt-3">
-        <div className="flex h-3 w-full overflow-hidden rounded-full bg-gray-100">
-          <div className="bg-emerald-400" style={{ width: `${widthPct(examReady)}%` }} />
-          <div className="bg-sky-400" style={{ width: `${widthPct(basicOnly)}%` }} />
-          <div className="bg-amber-400" style={{ width: `${widthPct(needsWork)}%` }} />
+        <div className="flex h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          <div className="bg-emerald-500" style={{ width: `${widthPct(examReady)}%` }} />
+          <div className="bg-brand-500" style={{ width: `${widthPct(basicOnly)}%` }} />
+          <div className="bg-accent-400" style={{ width: `${widthPct(needsWork)}%` }} />
         </div>
-        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] font-semibold text-gray-600">
-          <LegendDot tone="bg-emerald-400" label={`本番対応OK ${examReady}`} />
-          <LegendDot tone="bg-sky-400" label={`基礎理解OK ${basicOnly}`} />
-          <LegendDot tone="bg-amber-400" label={`要復習 ${needsWork}`} />
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-gray-600">
+          <LegendDot tone="bg-emerald-500" label={`本番対応OK ${examReady}`} />
+          <LegendDot tone="bg-brand-500" label={`基礎理解OK ${basicOnly}`} />
+          <LegendDot tone="bg-accent-400" label={`要復習 ${needsWork}`} />
           <LegendDot tone="bg-gray-300" label={`これから ${notStarted}`} />
         </div>
       </div>
 
       {/* いちばん大きなリスクだけ表示する */}
       {topRisk && (
-        <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          <span className="font-bold">
-            ⚠️ {topRisk.label}
-            {typeof topRisk.count === "number" ? `（${topRisk.count}件）` : ""}
+        <p className="mt-3 rounded-xl bg-accent-50 px-3 py-2 text-xs text-accent-800">
+          <span className="flex items-start gap-1 font-bold">
+            <Icon name="alert" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-600" />
+            <span>
+              {topRisk.label}
+              {typeof topRisk.count === "number" ? `（${topRisk.count}件）` : ""}
+            </span>
           </span>
           {topRisk.detail && (
-            <span className="mt-0.5 block text-amber-700">{topRisk.detail}</span>
+            <span className="mt-0.5 block pl-[18px] text-accent-700">{topRisk.detail}</span>
           )}
         </p>
       )}
 
       {/* 今週の方針は一言に絞る */}
-      <p className="mt-3 text-xs font-bold text-gray-600">
-        📌 今週は{weeklyFocusPhrase(status.recommendedFocus)}
+      <p className="mt-3 flex items-center gap-1 text-xs font-bold text-gray-600">
+        <Icon name="pen" className="h-3.5 w-3.5 shrink-0 text-gray-500" />
+        今週は{weeklyFocusPhrase(status.recommendedFocus)}
       </p>
     </section>
   );

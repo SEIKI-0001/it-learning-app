@@ -77,7 +77,7 @@ export default function TodayPolicyStrip({
   return (
     <section>
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold text-gray-500">今日の方針</h3>
+        <h3 className="text-xs font-semibold text-gray-600">今日の方針</h3>
         <Link
           href="/plan"
           className="text-xs text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
@@ -117,7 +117,7 @@ export default function TodayPolicyStrip({
             <p className="text-sm text-gray-700">
               次のバッジ：<span className="font-semibold text-gray-900">{nextBadge.def.label}</span>
               {nextBadge.def.requiredForGate && (
-                <span className="ml-1.5 rounded-full border border-accent-200 bg-accent-50 px-1.5 py-0.5 text-[10px] font-medium text-accent-700">
+                <span className="ml-1.5 rounded-full border border-accent-200 bg-accent-50 px-1.5 py-0.5 text-xs font-medium text-accent-700">
                   必須
                 </span>
               )}

@@ -10,7 +10,7 @@ const TONE_CLASS: Record<StateMarkerTone, string> = {
   done: "text-emerald-600",
   active: "text-brand-600",
   accent: "text-accent-600",
-  muted: "text-gray-300",
+  muted: "text-gray-400",
 };
 
 type StateMarkerProps = {

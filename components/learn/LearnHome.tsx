@@ -70,13 +70,23 @@ export default function LearnHome() {
   );
   const overallPercent =
     totalLessons === 0 ? 0 : Math.round((completedLessons / totalLessons) * 100);
+  // 強調は「学習中」の行だけ。学習中が1つもなければ最初の未着手テーマを「次に学ぶ」として強調する
+  const masterStates = useMemo(
+    () => new Map(themes.map((theme) => [theme.id, getThemeMasterState(theme, progress)])),
+    [progress, themes],
+  );
+  const hasInProgress = themes.some((theme) => masterStates.get(theme.id) === "in_progress");
+  const nextThemeId = hasInProgress
+    ? null
+    : (themes.find((theme) => masterStates.get(theme.id) === "not_started")?.id ?? null);
+
   const continueLesson = getContinueLesson(progress);
   const continueLocation = continueLesson
     ? getLessonLocation(continueLesson.id)
     : undefined;
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-24">
+    <main className="min-h-screen pb-24">
       <PageHeader
         title="学ぶ"
         description="試験範囲を参考書の章立てで整理しています。気になる章から開けます。"
@@ -92,7 +102,7 @@ export default function LearnHome() {
             </span>
           </div>
           <div
-            className="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-100"
+            className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200"
             role="progressbar"
             aria-label="全体の学習進捗"
             aria-valuemin={0}
@@ -108,12 +118,12 @@ export default function LearnHome() {
         {continueLesson && continueLocation && (
           <Link
             href={getLessonHref(continueLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-            className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50"
+            className="flex items-center justify-between gap-3 rounded-xl border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 transition hover:bg-brand-100"
           >
             <div className="min-w-0">
-              <p className="text-xs font-medium text-brand-700">前回の続き</p>
+              <p className="text-xs font-semibold text-brand-700">前回の続き</p>
               <p className="mt-0.5 truncate font-semibold text-gray-900">{continueLesson.title}</p>
-              <p className="mt-0.5 truncate text-xs text-gray-500">
+              <p className="mt-0.5 truncate text-xs text-gray-600">
                 {continueLocation.theme.title} ＞ {continueLocation.section.title}・目安{" "}
                 {continueLesson.estimatedMinutes}分
               </p>
@@ -136,7 +146,7 @@ export default function LearnHome() {
                 className={`flex-1 whitespace-nowrap rounded-md px-1 py-1.5 text-[13px] transition ${
                   fieldFilter === field.id
                     ? "bg-brand-600 font-semibold text-white"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 {field.label}
@@ -181,12 +191,14 @@ export default function LearnHome() {
                 {fieldThemes.map((theme) => {
                   const themeProgress = getThemeProgress(theme, progress);
                   const nextLesson = getNextLessonForTheme(theme, progress);
+                  const masterState = masterStates.get(theme.id) ?? "not_started";
                   return (
                     <ThemeCard
                       key={theme.id}
                       theme={theme}
                       progress={themeProgress}
-                      masterState={getThemeMasterState(theme, progress)}
+                      masterState={masterState}
+                      highlighted={masterState === "in_progress" || theme.id === nextThemeId}
                       nextLessonTitle={nextLesson?.title}
                       nextLessonHref={
                         nextLesson

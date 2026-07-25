@@ -167,14 +167,14 @@ export default function QuestRoute({
           const body = (
             <>
               <p
-                className={`text-[15px] leading-snug ${
+                className={`leading-snug ${
                   isCurrent
-                    ? "font-semibold text-gray-900"
+                    ? "text-base font-bold text-gray-900"
                     : node.state === "done"
-                      ? "text-gray-600"
+                      ? "text-[15px] text-gray-600"
                       : node.state === "up_next"
-                        ? "text-gray-800"
-                        : "text-gray-400"
+                        ? "text-[15px] text-gray-800"
+                        : "text-[15px] text-gray-500"
                 }`}
               >
                 {node.title}
@@ -187,7 +187,7 @@ export default function QuestRoute({
                       node.state === "done"
                         ? "text-emerald-700"
                         : isCurrent
-                          ? "font-medium text-brand-700"
+                          ? "font-semibold text-brand-700"
                           : "text-gray-500"
                     }
                   >
@@ -206,14 +206,14 @@ export default function QuestRoute({
                   <span
                     aria-hidden
                     className={`absolute top-0 h-3 w-px ${
-                      nodes[index - 1].state === "done" ? "bg-brand-300" : "bg-gray-200"
+                      nodes[index - 1].state === "done" ? "bg-brand-400" : "bg-gray-200"
                     }`}
                   />
                 )}
                 <span
                   aria-hidden
                   className={`absolute bottom-0 top-8 w-px ${
-                    node.state === "done" ? "bg-brand-300" : "bg-gray-200"
+                    node.state === "done" ? "bg-brand-400" : "bg-gray-200"
                   }`}
                 />
                 <StateMarker
@@ -225,7 +225,10 @@ export default function QuestRoute({
               </div>
 
               {isCurrent ? (
-                <div className={`min-w-0 flex-1 py-3 ${isMochitRow ? "pr-14" : ""}`}>
+                /* Primary: いま挑戦中のノードだけをbrand-50面+brand-200境界で唯一の強調にする */
+                <div
+                  className={`my-2 min-w-0 flex-1 rounded-lg border border-brand-200 bg-brand-50 p-3 ${isMochitRow ? "pr-14" : ""}`}
+                >
                   {body}
                   <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
                     <Link href={hrefFor(node)} className={buttonClass("primary", "sm")}>
@@ -253,7 +256,7 @@ export default function QuestRoute({
                     <span className="min-w-0 flex-1">{body}</span>
                     <Icon
                       name="chevron-right"
-                      className="h-4 w-4 shrink-0 text-gray-200 transition group-hover:text-gray-400"
+                      className="h-4 w-4 shrink-0 text-gray-500 transition group-hover:text-brand-600"
                     />
                   </span>
                 </Link>
@@ -269,7 +272,7 @@ export default function QuestRoute({
               <span
                 aria-hidden
                 className={`absolute top-0 h-3 w-px ${
-                  nodes[nodes.length - 1].state === "done" ? "bg-brand-300" : "bg-gray-200"
+                  nodes[nodes.length - 1].state === "done" ? "bg-brand-400" : "bg-gray-200"
                 }`}
               />
             )}
@@ -289,7 +292,8 @@ export default function QuestRoute({
             {finalReward.state === "claimed" ? (
               <p className="text-sm text-emerald-700">今日の宝箱は受け取り済みです</p>
             ) : finalReward.state === "claimable" ? (
-              <>
+              /* 受取可能なときだけaccentで注意を引く(通常時は無彩色のまま) */
+              <div className="rounded-lg border border-accent-200 bg-accent-50 p-3">
                 <p className="text-[15px] font-semibold text-gray-900">今日の宝箱</p>
                 <button
                   type="button"
@@ -298,7 +302,7 @@ export default function QuestRoute({
                 >
                   宝箱を開ける（+{finalReward.xp} XP）
                 </button>
-              </>
+              </div>
             ) : (
               <>
                 <p className="text-[15px] text-gray-500">今日の宝箱</p>

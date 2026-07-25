@@ -13,7 +13,7 @@ export default function NextGoalCard({ state }: { state: AppState }) {
 
   return (
     <section>
-      <h3 className="text-xs font-semibold text-gray-500">あと少しのゴール</h3>
+      <h3 className="text-xs font-semibold text-gray-600">あと少しのゴール</h3>
       <ul className="mt-2.5 space-y-3">
         {goals.map((g) => {
           const pct = Math.round(Math.min(1, Math.max(0, g.ratio)) * 100);
@@ -26,7 +26,7 @@ export default function NextGoalCard({ state }: { state: AppState }) {
                     {g.detail}
                   </p>
                 </div>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200">
                   <div
                     className="h-full rounded-full bg-brand-600 transition-all duration-700"
                     style={{ width: `${pct}%` }}
