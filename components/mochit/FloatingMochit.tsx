@@ -183,7 +183,11 @@ export default function FloatingMochit({ reducedMotion }: Props) {
       dragging: false,
       menuTriggered: false,
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    } catch {
+      // Synthetic or already-ended pointers may not be capturable.
+    }
     setDragRotation(0);
     setMenuOpen(false);
     setMotion("pressed");

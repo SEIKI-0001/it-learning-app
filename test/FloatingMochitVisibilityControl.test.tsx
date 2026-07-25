@@ -88,4 +88,24 @@ describe("FloatingMochitVisibilityControl", () => {
       ).toBeInTheDocument();
     });
   });
+
+  it("renders a restore-only control only while the pet is hidden", async () => {
+    const { rerender } = render(
+      <FloatingMochitVisibilityControl restoreOnly />,
+    );
+    await waitFor(() => {
+      expect(
+        screen.queryByText("フローティングモチットは表示中です"),
+      ).toBeNull();
+    });
+
+    setFloatingMochitVisibility(false);
+    rerender(<FloatingMochitVisibilityControl restoreOnly />);
+
+    expect(
+      await screen.findByRole("button", {
+        name: "フローティングモチットを表示",
+      }),
+    ).toBeInTheDocument();
+  });
 });

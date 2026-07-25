@@ -83,7 +83,9 @@ The existing Mochit entries remain available:
 - Progress (`/progress`) continues to show its Mochit entry.
 - Both entries lead to the existing Mochit page (`/avatar`).
 
-The Mochit page gains a clearly labelled floating-pet control. When the pet is hidden, the control offers `Show floating Mochit`. Restoring it makes the pet visible immediately and places it at the last valid saved position, or the default upper-right position if no saved position exists.
+More and Progress also render a restore-only control directly when the pet is hidden. This keeps restoration available even before onboarding, when `/avatar` redirects to onboarding because no learning profile exists. The restore-only control renders nothing while the pet is visible.
+
+The Mochit page gains a clearly labelled full floating-pet control. When the pet is hidden, the control offers `Show floating Mochit`. Restoring from any of these controls makes the pet visible immediately and places it at the last valid saved position, or the default upper-right position if no saved position exists.
 
 ## Device-Specific Persistence
 

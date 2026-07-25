@@ -16,7 +16,7 @@
 - Keep every existing page-specific Mochit presentation unchanged.
 - Use the existing `Mochit` renderer; do not add a character-rendering dependency.
 - Right-click and touch long-press expose only one contextual action: `Hide`.
-- The More and Progress entry points continue to lead to `/avatar`; restoration lives on `/avatar`.
+- The More and Progress entry points continue to lead to `/avatar`, and both pages expose a restore-only control when the pet is hidden.
 - Reduced motion keeps dragging and controls functional while removing decorative deformation and rebound.
 - Do not add a drag-and-drop or physics package.
 - Preserve unrelated worktree changes and stage only task-owned files.
@@ -388,6 +388,8 @@ git commit -m "feat: add interactive floating Mochit"
 - Create: `test/FloatingMochitVisibilityControl.test.tsx`
 - Modify: `app/layout.tsx`
 - Modify: `app/avatar/page.tsx`
+- Modify: `app/more/page.tsx`
+- Modify: `app/progress/page.tsx`
 
 **Interfaces:**
 - Consumes `FloatingMochit` from Task 2.
@@ -452,7 +454,7 @@ import FloatingMochit from "@/components/mochit/FloatingMochit";
 </body>
 ```
 
-Update `app/avatar/page.tsx` to render `<FloatingMochitVisibilityControl />` in its own bordered section after the growth summary and before earned badges. Do not change the existing More or Progress links.
+Update `app/avatar/page.tsx` to render `<FloatingMochitVisibilityControl />` in its own bordered section after the growth summary and before earned badges. Keep the existing More and Progress links, and render `<FloatingMochitVisibilityControl restoreOnly />` on both pages so a hidden pet can be restored without navigating through an onboarding-gated route.
 
 - [ ] **Step 6: Run focused and existing Mochit tests**
 

@@ -4,6 +4,7 @@ import BillingSection from "@/components/billing/BillingSection";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import LogoutLink from "@/components/auth/LogoutLink";
+import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
 
 const GROUPS: readonly {
   title: string;
@@ -66,6 +67,8 @@ export default function MorePage() {
             </div>
           </section>
         ))}
+
+        <FloatingMochitVisibilityControl restoreOnly />
 
         <BillingSection />
 
