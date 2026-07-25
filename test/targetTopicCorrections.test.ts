@@ -203,6 +203,75 @@ describe("corrected target topic content", () => {
     expect(question?.choiceExplanations?.A).toContain("600件 ÷ 10分 = 60件/分");
   });
 
+  it("separates processing timing from connection mode and allows their combinations", () => {
+    const topic = targetTopic("tech-system-processing-architecture");
+    const content = allTopicText(topic);
+
+    expect(content).toContain("処理タイミング");
+    expect(content).toContain("接続形態");
+    expect(content).toContain("オンラインバッチ");
+    expect(content).toContain("オンラインリアルタイム");
+    expect(content).toContain("組み合わせ");
+  });
+
+  it("compares nearby parallelization and bottleneck alternatives with aligned reasons", () => {
+    const parallelQuestion = targetTopic("tech-parallel-systems").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("100枚の画像"),
+    );
+    const bottleneckQuestion = targetTopic("tech-system-performance").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("ストレージ待ち時間"),
+    );
+
+    expect(parallelQuestion?.choices.map((choice) => choice.text)).toEqual([
+      "データ並列：画像単位で複数のコアへ分配する",
+      "タスク並列：1枚の画像内の異なる処理をコアごとに分担する",
+      "パイプライン並列：読込み・変換・保存の段階ごとにコアを分ける",
+      "命令レベル並列：1コア内で独立した命令を同時に実行する",
+    ]);
+    expect(parallelQuestion?.choiceExplanations?.B).toContain("画像単位");
+    expect(parallelQuestion?.choiceExplanations?.C).toContain("段階");
+    expect(parallelQuestion?.choiceExplanations?.D).toContain("1コア内");
+
+    expect(bottleneckQuestion?.choices.map((choice) => choice.text)).toEqual([
+      "ストレージ装置のI/O性能",
+      "CPUの演算性能",
+      "ネットワーク回線の帯域",
+      "主記憶の容量",
+    ]);
+    expect(bottleneckQuestion?.choiceExplanations?.B).toContain("CPU使用率");
+    expect(bottleneckQuestion?.choiceExplanations?.C).toContain("ネットワーク待ち");
+    expect(bottleneckQuestion?.choiceExplanations?.D).toContain("主記憶不足");
+  });
+
+  it("uses neighboring data formats and realistic extension-change outcomes", () => {
+    const jsonQuestion = targetTopic("tech-programming-basics").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("Web API"),
+    );
+    const extensionQuestion = targetTopic("tech-file-system").checkQuestions.find(
+      (candidate) => candidate.prompt.includes("photo.jpg"),
+    );
+
+    expect(jsonQuestion?.choices.map((choice) => choice.text)).toEqual([
+      "JSON",
+      "XML",
+      "CSV",
+      "HTML",
+    ]);
+    expect(jsonQuestion?.choiceExplanations?.B).toContain("タグ");
+    expect(jsonQuestion?.choiceExplanations?.C).toContain("表形式");
+    expect(jsonQuestion?.choiceExplanations?.D).toContain("Webページ");
+
+    expect(extensionQuestion?.choices.map((choice) => choice.text)).toEqual([
+      "データはJPEG形式のままで、関連付けによっては開けなくなる",
+      "データがTXT形式へ変換され、文字として読めるようになる",
+      "画像の画素が文字コードへ置き換えられる",
+      "JPEG形式とTXT形式を併せ持つデータへ変わる",
+    ]);
+    expect(extensionQuestion?.choiceExplanations?.B).toContain("形式変換");
+    expect(extensionQuestion?.choiceExplanations?.C).toContain("画素");
+    expect(extensionQuestion?.choiceExplanations?.D).toContain("複合");
+  });
+
   it("uses scenarios for backup recovery order and network device distinctions", () => {
     const backupQuestion = targetTopic("tech-backup").checkQuestions.find(
       (candidate) => candidate.prompt.includes("日曜にフル"),
