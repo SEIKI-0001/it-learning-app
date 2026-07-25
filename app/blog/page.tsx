@@ -6,12 +6,20 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-calculation-problems-2026",
+    title: "ITパスポートの計算問題7選｜初心者向けの解き方と対策【2026年版】",
+    description:
+      "損益分岐点、稼働率、データ量、表計算、論理演算、期待値など、対策したい代表的な計算問題を7種類に整理します。",
+    category: "NEW：計算問題まとめ",
+    cta: "計算問題7選を読む",
+  },
+  {
     slug: "it-passport-pass-readiness-check",
     href: "/lp/it-passport-pass-readiness-check",
     title: "【無料診断】ITパスポートに合格できる？10項目の合格準備度チェック",
     description:
       "学習計画、確認問題、用語復習、過去問、苦手分野の把握状況を1分で確認し、次に優先すべき勉強を整理します。",
-    category: "NEW：無料合格診断",
+    category: "無料合格診断",
     cta: "合格準備度を診断する",
   },
   {
