@@ -1,0 +1,20 @@
+import type { QuestionBankFile } from "@/types/questionBank";
+import examLevel from "./original/exam-level.json";
+
+// ============================================================================
+// 問題バンクのファイル束ね。ここに JSON を1行足すだけで問題が増える構成にする。
+// ----------------------------------------------------------------------------
+// - original/ : アプリ独自問題（origin: "app_original"）
+// - official/ : 公式公開の過去問（origin: "official_past" / "modified_official"）
+//               例: official/ipa/it-passport-2023.json
+// - manifests/: 生成時の件数・ID一覧。移行や再生成でのドリフト検知に使う。
+//
+// JSON からの読み込みは型が広がる（"A" ではなく string になる）ため、
+// data/wordlist と同じく読み込み地点で1度だけキャストする。
+// 中身の正しさは lib/questionBank/validate.ts が検証する。
+// ============================================================================
+
+export const questionBankFiles: QuestionBankFile[] = [
+  examLevel as unknown as QuestionBankFile,
+  // 公式過去問を収録したら、ここに追加する。
+];

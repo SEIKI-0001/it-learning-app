@@ -1,0 +1,6404 @@
+{
+  "schemaVersion": 1,
+  "source": "original/exam-level",
+  "questions": [
+    {
+      "id": "tech-security-cia-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-security-cia",
+      "questionPattern": "application",
+      "prompt": "Webサーバへの攻撃で、保存されている顧客データが第三者に読み取られてしまった。主にどの要素が損なわれたか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "機密性（Confidentiality）"
+        },
+        {
+          "key": "B",
+          "text": "完全性（Integrity）"
+        },
+        {
+          "key": "C",
+          "text": "可用性（Availability）"
+        },
+        {
+          "key": "D",
+          "text": "責任追跡性（Accountability）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "権限のない者にデータを見られた＝機密性の侵害。改ざんは完全性、使えなくなるのは可用性。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "CIA",
+        "機密性"
+      ],
+      "contentHash": "sha256:966fdfa5dccd8b5d43da60df7baa866fbfdbc56300a4dee8c96341872ae1456e",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-security-cia-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-security-cia",
+      "questionPattern": "application",
+      "prompt": "災害でサーバが停止し、利用者が長時間サービスを使えなくなった。CIAのどの要素を高める対策が最も直接的か。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "冗長化やバックアップで可用性を高める"
+        },
+        {
+          "key": "B",
+          "text": "暗号化を強化して機密性を高める"
+        },
+        {
+          "key": "C",
+          "text": "ハッシュ値で完全性を検証する"
+        },
+        {
+          "key": "D",
+          "text": "アクセスログで機密性を監査する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "「使い続けられる」は可用性。停止対策は冗長構成・バックアップ・復旧手順が中心になる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "CIA",
+        "可用性"
+      ],
+      "contentHash": "sha256:5066c746736fc442dbbff57bd6e5c5ccdfca833491575e364615545c058a096c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-network-address-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-network-address",
+      "questionPattern": "application",
+      "prompt": "社内の多数の端末が、1つのグローバルIPアドレスを共有してインターネットに接続している。この変換を行う仕組みはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "NAT（NAPT）"
+        },
+        {
+          "key": "B",
+          "text": "DNS"
+        },
+        {
+          "key": "C",
+          "text": "DHCP"
+        },
+        {
+          "key": "D",
+          "text": "VPN"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "プライベートIPとグローバルIPを変換するのがNAT。ポートも使い分けて多対1にするのがNAPT。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "NAT",
+        "アドレス変換"
+      ],
+      "contentHash": "sha256:c8fbfaa2dec0331da269b1aa095caed56da1752a1606b1ce0ce7d0b884f40b99",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-60",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-network-address-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-network-address",
+      "questionPattern": "application",
+      "prompt": "PCをLANに接続すると、IPアドレスが自動で割り当てられて通信できるようになる。この割り当てを担うのはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "DHCP"
+        },
+        {
+          "key": "B",
+          "text": "DNS"
+        },
+        {
+          "key": "C",
+          "text": "NAT"
+        },
+        {
+          "key": "D",
+          "text": "ARP"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "IPアドレスなどの設定を自動配布するのがDHCP。名前とIPの対応はDNS、アドレス変換はNAT。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "DHCP"
+      ],
+      "contentHash": "sha256:323d763a7785c00d5af667e3d85da3ac872dbab9d023faaa053f334aec46a9df",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-60",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-http-https-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-http-https",
+      "questionPattern": "application",
+      "prompt": "ログイン情報を安全に送るため、通信を暗号化したい。HTTPに対して何を組み合わせればよいか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "TLSで暗号化するHTTPS"
+        },
+        {
+          "key": "B",
+          "text": "圧縮を行うHTTP/2"
+        },
+        {
+          "key": "C",
+          "text": "アドレス変換を行うNAT"
+        },
+        {
+          "key": "D",
+          "text": "名前解決を行うDNS"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "HTTPSはHTTPをTLSで暗号化した通信。盗聴・改ざん・なりすましを防ぎ、ログイン等に使う。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "HTTPS",
+        "TLS"
+      ],
+      "contentHash": "sha256:022c3d8e9571e7ac47f2d63cb37e5feef89905a8189f14a9455c38fdfc822437",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-http-https-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-http-https",
+      "questionPattern": "application",
+      "prompt": "HTTPSで通信するとき、接続先が本物のサーバであることを確認するために使われるものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "サーバ証明書（デジタル証明書）"
+        },
+        {
+          "key": "B",
+          "text": "共通鍵のパスワード"
+        },
+        {
+          "key": "C",
+          "text": "MACアドレス"
+        },
+        {
+          "key": "D",
+          "text": "セッションクッキー"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "サーバ証明書で相手の正当性を確認し、その後の通信を暗号化する。なりすまし防止に働く。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "証明書",
+        "HTTPS"
+      ],
+      "contentHash": "sha256:cf695fb674a3ca9d52fa8ced21856c61d51ad80c2016ccb571f9525add9fc4da",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-firewall-vpn-zero-trust-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-firewall-vpn-zero-trust",
+      "questionPattern": "application",
+      "prompt": "「社内ネットワークだから安全」という前提を置かず、すべてのアクセスを検証する考え方はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ゼロトラスト"
+        },
+        {
+          "key": "B",
+          "text": "多層防御（多重防御）"
+        },
+        {
+          "key": "C",
+          "text": "境界防御モデル"
+        },
+        {
+          "key": "D",
+          "text": "フェールセーフ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ゼロトラストは内部・外部を問わず「常に検証」する考え方。従来の境界防御の弱点を補う。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ゼロトラスト"
+      ],
+      "contentHash": "sha256:521b2fc0ed9e9298cff6a74831a8d178bb770cdc45f607289c0b1159e3690d01",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-firewall-vpn-zero-trust-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-firewall-vpn-zero-trust",
+      "questionPattern": "application",
+      "prompt": "外出先から社内システムへ、通信内容を暗号化した安全な経路で接続したい。適切な手段はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "VPNで接続する"
+        },
+        {
+          "key": "B",
+          "text": "WAFを導入する"
+        },
+        {
+          "key": "C",
+          "text": "IDSを設置する"
+        },
+        {
+          "key": "D",
+          "text": "DMZに公開する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "VPNは公衆網の上に暗号化した仮想的な専用線を作る。WAFはWeb攻撃対策、IDSは侵入検知。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "VPN"
+      ],
+      "contentHash": "sha256:ac1ee11ce83cd5957f82f151f117777159f3465d89dc53c8ef370267ccf7732c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-auth-authz-mfa-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "questionPattern": "application",
+      "prompt": "パスワードに加えてスマートフォンに届くワンタイムコードの入力を求める。これは何の強化にあたるか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "多要素認証（MFA）による本人認証の強化"
+        },
+        {
+          "key": "B",
+          "text": "認可（アクセス権付与）の強化"
+        },
+        {
+          "key": "C",
+          "text": "シングルサインオンの導入"
+        },
+        {
+          "key": "D",
+          "text": "暗号化通信の強化"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "「知識（パスワード）」＋「所持（スマホ）」など複数要素で認証するのがMFA。本人確認を強くする。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "MFA",
+        "認証"
+      ],
+      "contentHash": "sha256:08ec28e2bb22cc16af5c393a140964e78fd3487a681a00e099b5be7fdb76436c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-auth-authz-mfa-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "questionPattern": "application",
+      "prompt": "ログイン後に「この利用者はどのファイルを編集してよいか」を制御する仕組みはどれにあたるか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "認可（アクセス権の付与・制御）"
+        },
+        {
+          "key": "B",
+          "text": "認証（本人であることの確認）"
+        },
+        {
+          "key": "C",
+          "text": "識別（IDの申告）"
+        },
+        {
+          "key": "D",
+          "text": "暗号化（内容の秘匿）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "本人確認が認証、できることの範囲を決めるのが認可。試験ではこの区別が問われやすい。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "認可",
+        "認証"
+      ],
+      "contentHash": "sha256:f89491bec4a7b7d938101ead46637da6c1c2ccf9265d6aa1589302640e07dec2",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-cloud-models-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-cloud-models",
+      "questionPattern": "application",
+      "prompt": "利用者が自分でアプリを開発できるよう、OSや実行環境まで提供されるクラウドサービスの区分はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "PaaS"
+        },
+        {
+          "key": "B",
+          "text": "SaaS"
+        },
+        {
+          "key": "C",
+          "text": "IaaS"
+        },
+        {
+          "key": "D",
+          "text": "オンプレミス"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "PaaSは開発・実行のプラットフォームを提供。完成アプリの利用はSaaS、基盤のみはIaaS。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "PaaS",
+        "クラウド"
+      ],
+      "contentHash": "sha256:4825317100df9a99dfa136f37c3c63076afe172eba49cd4ff32ab3aa569b289b",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-43",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "システム構成要素"
+      }
+    },
+    {
+      "id": "tech-cloud-models-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-cloud-models",
+      "questionPattern": "application",
+      "prompt": "電子メールや表計算などの完成したソフトを、ブラウザからそのまま使うクラウドの区分はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SaaS"
+        },
+        {
+          "key": "B",
+          "text": "PaaS"
+        },
+        {
+          "key": "C",
+          "text": "IaaS"
+        },
+        {
+          "key": "D",
+          "text": "ハウジング"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "SaaSは完成したソフトウェアをサービスとして利用する形態。利用者は開発も基盤管理も不要。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SaaS",
+        "クラウド"
+      ],
+      "contentHash": "sha256:78f7e590fdfc273945b8aaef1c6abbeceebeca6f0b6b12e11a8161a1371db8b7",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-43",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "システム構成要素"
+      }
+    },
+    {
+      "id": "tech-ai-ml-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "application",
+      "prompt": "正解ラベル付きの大量データを与えて、予測モデルに規則性を学習させる方法はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "教師あり学習"
+        },
+        {
+          "key": "B",
+          "text": "教師なし学習"
+        },
+        {
+          "key": "C",
+          "text": "強化学習"
+        },
+        {
+          "key": "D",
+          "text": "転移学習"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "正解付きデータで学ぶのが教師あり学習。正解なしで構造を見つけるのが教師なし、試行錯誤で報酬最大化が強化学習。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "機械学習",
+        "教師あり学習"
+      ],
+      "contentHash": "sha256:9f4b6d6e29a69f52f5f7eed0f5887447a05be4f460969d832f71a069193d0013",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      }
+    },
+    {
+      "id": "tech-ai-ml-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "application",
+      "prompt": "エージェントが行動の結果として得られる報酬を手がかりに、より良い方策を学んでいく手法はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "強化学習"
+        },
+        {
+          "key": "B",
+          "text": "教師あり学習"
+        },
+        {
+          "key": "C",
+          "text": "教師なし学習"
+        },
+        {
+          "key": "D",
+          "text": "クラスタリング"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "報酬を最大化するよう試行錯誤で学ぶのが強化学習。ゲームAIやロボット制御で使われる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "機械学習",
+        "強化学習"
+      ],
+      "contentHash": "sha256:23451690e39b784b627971e4dc272380f7b446619cd2d7f4764b347b3541342a",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      }
+    },
+    {
+      "id": "tech-database-sql-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-database-sql",
+      "questionPattern": "application",
+      "prompt": "リレーショナルデータベースで、特定の条件に合う行だけを取り出すSQLの操作はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SELECT 文の WHERE 句で絞り込む"
+        },
+        {
+          "key": "B",
+          "text": "INSERT 文で行を追加する"
+        },
+        {
+          "key": "C",
+          "text": "UPDATE 文で値を書き換える"
+        },
+        {
+          "key": "D",
+          "text": "CREATE TABLE で表を定義する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "行の抽出はSELECT＋WHERE。追加はINSERT、更新はUPDATE、表定義はCREATE TABLE。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SQL",
+        "SELECT"
+      ],
+      "contentHash": "sha256:72cc5c7a347c7d73e5119498cfea9158cc100605a48666d7dd4716cc0b563665",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-54",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-database-sql-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-database-sql",
+      "questionPattern": "application",
+      "prompt": "複数の利用者が同じデータを同時に更新しても矛盾が起きないよう、DBMSが持つ仕組みはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "排他制御（ロック）"
+        },
+        {
+          "key": "B",
+          "text": "正規化"
+        },
+        {
+          "key": "C",
+          "text": "インデックス"
+        },
+        {
+          "key": "D",
+          "text": "バックアップ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "同時更新の矛盾を防ぐのが排他制御。正規化は重複排除、インデックスは検索高速化の仕組み。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "排他制御",
+        "DBMS"
+      ],
+      "contentHash": "sha256:50c46093368b7c254faeb08e96c3ddc874cabc4c4929eae885e64cac5b9bda86",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-54",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-malware-phishing-ransomware-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-malware-phishing-ransomware",
+      "questionPattern": "application",
+      "prompt": "PC内のファイルが勝手に暗号化され、元に戻す条件として金銭を要求された。この攻撃はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ランサムウェア"
+        },
+        {
+          "key": "B",
+          "text": "フィッシング"
+        },
+        {
+          "key": "C",
+          "text": "スパイウェア"
+        },
+        {
+          "key": "D",
+          "text": "SQLインジェクション"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "データを暗号化し身代金を要求するのがランサムウェア。定期バックアップが有効な対策になる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ランサムウェア"
+      ],
+      "contentHash": "sha256:614408601ce5eb0c5aac898329ce2a9d45b95fd286ef940e7363704e5093346b",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-malware-phishing-ransomware-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-malware-phishing-ransomware",
+      "questionPattern": "application",
+      "prompt": "銀行を装ったメールで偽サイトへ誘導し、IDやパスワードを入力させて盗む手口はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "フィッシング"
+        },
+        {
+          "key": "B",
+          "text": "ランサムウェア"
+        },
+        {
+          "key": "C",
+          "text": "DoS攻撃"
+        },
+        {
+          "key": "D",
+          "text": "ゼロデイ攻撃"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "正規サービスを装って認証情報をだまし取るのがフィッシング。URLや送信元の確認が対策になる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "フィッシング"
+      ],
+      "contentHash": "sha256:9219f38ebb8d13270a4aaeccb4e6659a4775a81ae855d8d10bcfff2e61fae1e2",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "mgmt-service-sla-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-service-sla",
+      "questionPattern": "application",
+      "prompt": "サービス提供者と利用者の間で、稼働率や応答時間などのサービス品質水準を数値で合意した文書はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SLA（サービスレベル合意）"
+        },
+        {
+          "key": "B",
+          "text": "SLM（サービスレベル管理）"
+        },
+        {
+          "key": "C",
+          "text": "RFP（提案依頼書）"
+        },
+        {
+          "key": "D",
+          "text": "NDA（秘密保持契約）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "品質水準を数値で取り決める合意がSLA。それをPDCAで維持・改善する活動がSLM。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SLA"
+      ],
+      "contentHash": "sha256:0201eeeedeb8f529e656777890703a2c0789da9ec4d5354afc4296cf7a394c22",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-service-sla-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-service-sla",
+      "questionPattern": "application",
+      "prompt": "SLAで合意したサービスレベルを継続的に測定・評価し、維持向上させていく管理活動はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SLM（サービスレベル管理）"
+        },
+        {
+          "key": "B",
+          "text": "SLA（サービスレベル合意）"
+        },
+        {
+          "key": "C",
+          "text": "SLO（サービスレベル目標）"
+        },
+        {
+          "key": "D",
+          "text": "BCP（事業継続計画）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "合意（SLA）に対し、測定・評価・改善を回す管理がSLM。SLOは内部で持つ目標値。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "SLM",
+        "SLA"
+      ],
+      "contentHash": "sha256:ddf08e38d62d445748f2e903da2bab4a9bba2816f2864aa191c9f783f7018760",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      }
+    },
+    {
+      "id": "strat-swot-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-swot",
+      "questionPattern": "application",
+      "prompt": "SWOT分析で、自社の技術力の高さは内部環境のどの区分に分類されるか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "強み（Strength）"
+        },
+        {
+          "key": "B",
+          "text": "機会（Opportunity）"
+        },
+        {
+          "key": "C",
+          "text": "弱み（Weakness）"
+        },
+        {
+          "key": "D",
+          "text": "脅威（Threat）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "内部のプラス要因が強み、内部のマイナスが弱み。外部のプラスが機会、外部のマイナスが脅威。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SWOT",
+        "強み"
+      ],
+      "contentHash": "sha256:09e57e3159d9a49c9185c5e578e71c166f77fbbe6ee3e27cd274f296fc2fb64e",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-swot-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-swot",
+      "questionPattern": "application",
+      "prompt": "市場の拡大や規制緩和など、自社にとって追い風となる外部環境はSWOTのどれにあたるか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "機会（Opportunity）"
+        },
+        {
+          "key": "B",
+          "text": "強み（Strength）"
+        },
+        {
+          "key": "C",
+          "text": "弱み（Weakness）"
+        },
+        {
+          "key": "D",
+          "text": "脅威（Threat）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "外部環境のプラス要因が機会。競合の台頭や景気悪化などのマイナス外部要因は脅威になる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SWOT",
+        "機会"
+      ],
+      "contentHash": "sha256:cfd83012cdeb69bba3b12d5d79f7cfb1bf2a9caf93a74f4b86308d5ba69c113e",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-generative-ai-dx-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-generative-ai-dx",
+      "questionPattern": "application",
+      "prompt": "生成AIが、事実に基づかないもっともらしい誤った内容を生成してしまう現象はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ハルシネーション"
+        },
+        {
+          "key": "B",
+          "text": "オーバーフィッティング"
+        },
+        {
+          "key": "C",
+          "text": "アルゴリズムバイアス"
+        },
+        {
+          "key": "D",
+          "text": "ディープフェイク"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "生成AIが誤情報をもっともらしく出す現象がハルシネーション。出力の事実確認が欠かせない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "生成AI",
+        "ハルシネーション"
+      ],
+      "contentHash": "sha256:82e07796696a94195505fc8560ed79892a7a175b57be8690948a8bfa72b26b2b",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-20",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      }
+    },
+    {
+      "id": "strat-generative-ai-dx-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-generative-ai-dx",
+      "questionPattern": "application",
+      "prompt": "生成AIの回答精度を高めるため、社内文書などの外部知識を検索して回答に反映させる手法はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "RAG（検索拡張生成）"
+        },
+        {
+          "key": "B",
+          "text": "ファインチューニング"
+        },
+        {
+          "key": "C",
+          "text": "プロンプトインジェクション"
+        },
+        {
+          "key": "D",
+          "text": "エッジコンピューティング"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "外部知識を検索して回答に組み込むのがRAG。最新・社内情報を根拠づけて答えさせやすい。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "生成AI",
+        "RAG"
+      ],
+      "contentHash": "sha256:9bb3910459d3805c563edcf32fc2fdd60db2d037cd44982fe7f6308bc2dfa262",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-20",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      }
+    },
+    {
+      "id": "tech-security-cia-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-security-cia",
+      "questionPattern": "application",
+      "prompt": "顧客情報を扱う社内システムで、担当者以外が顧客データを閲覧できないようにしたい。CIAの観点で最も直接的な対策はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "アクセス権を必要最小限に設定し、機密性を保つ"
+        },
+        {
+          "key": "B",
+          "text": "二重化構成にして可用性を高める"
+        },
+        {
+          "key": "C",
+          "text": "入力値の検証で完全性だけを確認する"
+        },
+        {
+          "key": "D",
+          "text": "古いログを削除して保存容量を空ける"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "閲覧できる人を制限する対策は機密性を守るもの。二重化は可用性、入力値検証は完全性の観点が中心になる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "CIA",
+        "アクセス制御",
+        "機密性"
+      ],
+      "contentHash": "sha256:f6e07426c58f524c5b53ffc21a5b32b5a4957da80113a82168b4f618ccf36b0c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-network-address-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-network-address",
+      "questionPattern": "application",
+      "prompt": "社内LANで端末を増やしたところ、IPアドレスの重複による通信障害が増えた。運用ミスを減らすために最も適切な対応はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "DHCPで割り当て範囲を管理し、自動配布する"
+        },
+        {
+          "key": "B",
+          "text": "DNSのキャッシュ時間を短くする"
+        },
+        {
+          "key": "C",
+          "text": "全端末に同じプライベートIPを設定する"
+        },
+        {
+          "key": "D",
+          "text": "HTTPをHTTPSに変更する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "IPアドレスの重複防止にはDHCPによる自動割り当てが有効。DNSやHTTPSはアドレス配布の重複対策ではない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "DHCP",
+        "IPアドレス",
+        "運用"
+      ],
+      "contentHash": "sha256:ae20aabbb0279d596c1326204c9a094cdcac22b07d283ba0fe16939f92240265",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-60",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-http-https-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-http-https",
+      "questionPattern": "application",
+      "prompt": "社内ポータルをHTTPS化したが、ブラウザに証明書の警告が表示される。利用者のなりすまし確認を適切に行うための対応はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "信頼された認証局が発行した有効期限内のサーバ証明書を設定する"
+        },
+        {
+          "key": "B",
+          "text": "HTMLファイルを圧縮して転送量を減らす"
+        },
+        {
+          "key": "C",
+          "text": "プライベートIPアドレスを固定する"
+        },
+        {
+          "key": "D",
+          "text": "Cookieの保存期間を長くする"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "HTTPSではサーバ証明書で接続先の正当性を確認する。圧縮、IP固定、Cookie期間は証明書警告の解消にならない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "HTTPS",
+        "サーバ証明書",
+        "認証局"
+      ],
+      "contentHash": "sha256:eccf6946aa1df9d8b37548dfb3578d5cafd1c9cb2bd8f4fe2b24d777bf5dad70",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-firewall-vpn-zero-trust-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-firewall-vpn-zero-trust",
+      "questionPattern": "application",
+      "prompt": "公開WebサイトへのSQLインジェクションやクロスサイトスクリプティングを検知・遮断したい。最も適切な対策はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "WAFを導入してWebアプリケーション層の攻撃を防ぐ"
+        },
+        {
+          "key": "B",
+          "text": "VPNで社外から社内LANへ接続する"
+        },
+        {
+          "key": "C",
+          "text": "DNSでドメイン名をIPアドレスへ変換する"
+        },
+        {
+          "key": "D",
+          "text": "DHCPで端末にIPアドレスを配布する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "WAFはWebアプリへの攻撃を防ぐ仕組み。VPNは暗号化された接続経路、DNS/DHCPはネットワークの基本機能。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "WAF",
+        "Web攻撃",
+        "ファイアウォール"
+      ],
+      "contentHash": "sha256:e2a2d5383d133409e313cde562b5e8921c4ef5bb933def6a075e7ac28a39e4a7",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-auth-authz-mfa-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "questionPattern": "application",
+      "prompt": "ある社員はログインには成功するが、経理データの閲覧は許可しないようにしたい。この制御で中心となる考え方はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "認可で、利用できる操作やデータの範囲を制御する"
+        },
+        {
+          "key": "B",
+          "text": "認証で、パスワードの文字数だけを増やす"
+        },
+        {
+          "key": "C",
+          "text": "暗号化で、画面の表示順を入れ替える"
+        },
+        {
+          "key": "D",
+          "text": "バックアップで、閲覧権限を自動付与する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ログインできるかを確かめるのが認証、ログイン後に何をしてよいかを決めるのが認可。権限管理は認可の領域。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "認証",
+        "認可",
+        "アクセス権"
+      ],
+      "contentHash": "sha256:f4eaef26c20553cf9373e003b1d31e50b855d82cc5d0685c25696b67ec18515c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-cloud-models-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-cloud-models",
+      "questionPattern": "application",
+      "prompt": "繁忙期だけWebサーバを増やし、閑散期は台数を減らして費用を抑えたい。クラウド利用の利点として最も当てはまるものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "需要に応じてリソースを増減しやすいスケーラビリティ"
+        },
+        {
+          "key": "B",
+          "text": "すべての障害が自動的にゼロになること"
+        },
+        {
+          "key": "C",
+          "text": "利用者が必ずOSのパッチ適用を不要にできること"
+        },
+        {
+          "key": "D",
+          "text": "社内ネットワークだけで完結し外部接続が不要になること"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "クラウドは必要なときにリソースを増減しやすい。障害ゼロや全管理不要はサービス形態によっても異なり、過大な理解。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "クラウド",
+        "スケーラビリティ",
+        "IaaS"
+      ],
+      "contentHash": "sha256:7830622e3c93c5c08dd945d321efb427f2df936d6784a33d98d5db2511e45f96",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-43",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "システム構成要素"
+      }
+    },
+    {
+      "id": "tech-ai-ml-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "application",
+      "prompt": "採用支援AIの判定が特定の属性に不利に働いている疑いがある。まず確認すべき観点として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "学習データや評価指標に偏りが含まれていないか確認する"
+        },
+        {
+          "key": "B",
+          "text": "モデルを大きくすれば偏りは必ず消えると判断する"
+        },
+        {
+          "key": "C",
+          "text": "正解率だけ高ければ公平性の確認は不要とする"
+        },
+        {
+          "key": "D",
+          "text": "入力データを暗号化すれば判定の偏りは解消すると考える"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "AIの偏りは学習データや評価方法に起因することがある。精度だけでなく公平性や説明可能性の確認が必要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "AI",
+        "アルゴリズムバイアス",
+        "データ品質"
+      ],
+      "contentHash": "sha256:189db6c0b4c5f2cba7f1494eece38c409e20abc099a20ddc1172e5850a734ae5",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      }
+    },
+    {
+      "id": "tech-database-sql-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-database-sql",
+      "questionPattern": "application",
+      "prompt": "注文表にある顧客IDを使って、顧客表の氏名と注文表の購入金額を組み合わせて表示したい。SQLで主に使う操作はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "JOINで複数の表を結合する"
+        },
+        {
+          "key": "B",
+          "text": "DELETEで不要な行を削除する"
+        },
+        {
+          "key": "C",
+          "text": "COMMITで処理結果を確定する"
+        },
+        {
+          "key": "D",
+          "text": "CREATE DATABASEで新しいデータベースを作る"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "複数表の関連する行を組み合わせるのはJOIN。DELETE、COMMIT、CREATE DATABASEは目的が異なる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "SQL",
+        "JOIN",
+        "リレーショナルデータベース"
+      ],
+      "contentHash": "sha256:7b036c1ea846b665969e8281c995831c17e011d723bbf1bea55bc6275959ec50",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-54",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-malware-phishing-ransomware-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-malware-phishing-ransomware",
+      "questionPattern": "application",
+      "prompt": "ランサムウェア対策としてバックアップを取っていたが、常時接続された保存先も同時に暗号化された。改善策として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "バックアップを世代管理し、オフラインまたは書換え不可の保管も行う"
+        },
+        {
+          "key": "B",
+          "text": "バックアップファイル名を短くする"
+        },
+        {
+          "key": "C",
+          "text": "バックアップを同じPCの同じフォルダにだけ保存する"
+        },
+        {
+          "key": "D",
+          "text": "感染後にパスワードを長くすれば暗号化済みファイルが戻る"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ランサムウェアでは接続中のバックアップも暗号化され得る。世代管理、隔離保管、復元訓練が重要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ランサムウェア",
+        "バックアップ",
+        "復旧"
+      ],
+      "contentHash": "sha256:a8baaf0b454232b7f6f9a182a47405c6f022de5b24099de01bfcca83ff057650",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "mgmt-service-sla-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-service-sla",
+      "questionPattern": "application",
+      "prompt": "SLAで月間稼働率99.9%以上を約束している。これを継続的に守るための活動として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "実績を測定し、未達の原因分析と改善を行う"
+        },
+        {
+          "key": "B",
+          "text": "一度SLAを締結したら測定を省略する"
+        },
+        {
+          "key": "C",
+          "text": "障害件数を利用者に知らせず記録から削除する"
+        },
+        {
+          "key": "D",
+          "text": "サービス品質ではなく広告文だけを変更する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "SLMはSLAで合意した水準を測定・評価し、改善する活動。測定しない、隠す、広告だけ変えるのは管理にならない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "SLA",
+        "SLM",
+        "継続的改善"
+      ],
+      "contentHash": "sha256:7e4b906071bd973facfd2025f73b16b13551d3f817c672d3769ca59c65501cae",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      }
+    },
+    {
+      "id": "strat-swot-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-swot",
+      "questionPattern": "application",
+      "prompt": "自社は技術力が高い一方、販売網が弱い。市場は拡大している。SWOTを踏まえた施策として最も自然なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "技術力という強みを生かし、販売提携で機会を取り込む"
+        },
+        {
+          "key": "B",
+          "text": "市場拡大を内部の弱みとして分類する"
+        },
+        {
+          "key": "C",
+          "text": "販売網の弱さを外部の脅威として分類する"
+        },
+        {
+          "key": "D",
+          "text": "強みと機会を無視し、既存事業をすべて停止する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "技術力は内部の強み、市場拡大は外部の機会。弱みを補う提携などで機会を取り込む判断が自然。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "SWOT",
+        "クロスSWOT",
+        "経営戦略"
+      ],
+      "contentHash": "sha256:f3a74eefb3076cdd39ffb3782f9ca20ed97341293cf0d61c5e6b38d07d96d7a8",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-generative-ai-dx-ex3",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-generative-ai-dx",
+      "questionPattern": "application",
+      "prompt": "社員が公開型の生成AIに未公表の顧客情報を入力して要約させようとしている。最も重視すべきリスクはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "機密情報や個人情報が外部へ漏えいするリスク"
+        },
+        {
+          "key": "B",
+          "text": "入力文が短いほど必ず回答精度が下がるリスク"
+        },
+        {
+          "key": "C",
+          "text": "生成AIを使うと社内規程が自動的に整備されるリスク"
+        },
+        {
+          "key": "D",
+          "text": "RAGを使えばすべての法的責任がなくなるリスク"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "公開型AIへ機密・個人情報を入力すると外部送信や学習利用のリスクがある。利用ルールとデータ分類が必要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "生成AI",
+        "個人情報",
+        "情報漏えい"
+      ],
+      "contentHash": "sha256:ba6a827b98127bb0ccb8e99a8fa76732a8536a51fedaf0165d38b712e4b058c7",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-20",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      }
+    },
+    {
+      "id": "tech-binary-data-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-binary-data",
+      "questionPattern": "application",
+      "prompt": "8ビットで表せる状態数が256通りになる理由として正しいものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "各ビットが0または1の2通りを持ち、2の8乗で数えるから"
+        },
+        {
+          "key": "B",
+          "text": "8ビットは常に10進数の8通りだけを表すから"
+        },
+        {
+          "key": "C",
+          "text": "1バイトは1,000ビットなので1,000通りになるから"
+        },
+        {
+          "key": "D",
+          "text": "文字コードでは必ず128通りに制限されるから"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "1ビットは2通り。8個並ぶと2を8回掛けるので256通りになる。1バイト=8ビットも合わせて覚える。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "2進数",
+        "ビット",
+        "バイト"
+      ],
+      "contentHash": "sha256:3be746d7f3d156723d9dc04d243519c262d18243dd49c1645304869e29b4a4c2",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-33",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      }
+    },
+    {
+      "id": "tech-binary-data-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-binary-data",
+      "questionPattern": "application",
+      "prompt": "画像ファイルのサイズを比較するとき、2MBと800KBでは一般にどちらが大きいか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "2MBの方が大きい"
+        },
+        {
+          "key": "B",
+          "text": "800KBの方が大きい"
+        },
+        {
+          "key": "C",
+          "text": "単位が違うので大小は判断できない"
+        },
+        {
+          "key": "D",
+          "text": "どちらも必ず同じ大きさになる"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "1MBは約1,000KBなので、2MBは約2,000KB。800KBより大きい。単位換算の読み取り問題でよく問われる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "データ量",
+        "単位換算",
+        "KB",
+        "MB"
+      ],
+      "contentHash": "sha256:86baeae7e3355b00c78e03fe3e43f59515e34734956aab0fbabc30f8d3c9f8e1",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-33",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      }
+    },
+    {
+      "id": "tech-computer-core-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-computer-core",
+      "questionPattern": "application",
+      "prompt": "表計算ソフトで大きなファイルを開くと動作が重くなるため、同時に扱える作業領域を増やしたい。主に増設を検討するものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "メモリ"
+        },
+        {
+          "key": "B",
+          "text": "CPUの命令セット"
+        },
+        {
+          "key": "C",
+          "text": "ディスプレイの解像度"
+        },
+        {
+          "key": "D",
+          "text": "ネットワークのドメイン名"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "メモリは作業中のデータを一時的に置く領域。大きなファイルや複数アプリを同時に扱う場合に不足しやすい。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "メモリ",
+        "主記憶",
+        "ハードウェア"
+      ],
+      "contentHash": "sha256:94a97763f03ca30b560b08740b9f7525b9fc65cfe36af8c405931cd64de05ebd",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-40",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "コンピュータ構成要素"
+      }
+    },
+    {
+      "id": "tech-computer-core-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-computer-core",
+      "questionPattern": "application",
+      "prompt": "電源を切っても写真や文書ファイルを保存しておく役割を持つ装置はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SSDやHDDなどのストレージ"
+        },
+        {
+          "key": "B",
+          "text": "CPUのレジスタ"
+        },
+        {
+          "key": "C",
+          "text": "メインメモリのみ"
+        },
+        {
+          "key": "D",
+          "text": "ブラウザのタブ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "長期保存はストレージの役割。メモリは高速だが通常は電源を切ると内容が消える。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ストレージ",
+        "補助記憶装置",
+        "SSD"
+      ],
+      "contentHash": "sha256:ad22d0ee549abd0e6a720577e8d123a72865ffd1ac08cfd8d9e10dff7574adaf",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-40",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "コンピュータ構成要素"
+      }
+    },
+    {
+      "id": "tech-os-software-hardware-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-os-software-hardware",
+      "questionPattern": "application",
+      "prompt": "アプリケーションがプリンタやファイル保存を直接細かく制御しなくても利用できるのは、主に何が仲介しているからか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "OSがハードウェア資源を管理してアプリに機能を提供するから"
+        },
+        {
+          "key": "B",
+          "text": "CPUが利用者の意図を自動で読み取るから"
+        },
+        {
+          "key": "C",
+          "text": "ストレージが画面表示を直接制御するから"
+        },
+        {
+          "key": "D",
+          "text": "LANケーブルがアプリの権限を決めるから"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "OSはアプリとハードウェアの間で資源管理や入出力機能を提供する基本ソフト。役割の階層を区別する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "OS",
+        "ソフトウェア",
+        "ハードウェア"
+      ],
+      "contentHash": "sha256:a56013a92021b567f1e6a04fc781c42ec9b4c2bd75efa8997a5524bfc652e04c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-45",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      }
+    },
+    {
+      "id": "tech-os-software-hardware-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-os-software-hardware",
+      "questionPattern": "application",
+      "prompt": "スマートフォンで地図アプリを削除しても、OS自体は起動し続ける。この説明として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "地図アプリはOS上で動くアプリケーションの一つだから"
+        },
+        {
+          "key": "B",
+          "text": "地図アプリはCPUそのものだから"
+        },
+        {
+          "key": "C",
+          "text": "OSは写真データだけを保存する装置だから"
+        },
+        {
+          "key": "D",
+          "text": "アプリケーションは必ずハードウェアと同じ意味だから"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "OSは基本ソフト、アプリはOS上で特定の目的を果たすソフト。アプリ削除とOS停止は同じではない。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "OS",
+        "アプリケーション",
+        "基本ソフト"
+      ],
+      "contentHash": "sha256:8875f83a31c897f0d5f7fc1ea8fb4cd38262011aa33d2c48d487fd488e850b3d",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-45",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      }
+    },
+    {
+      "id": "tech-web-internet-basics-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-web-internet-basics",
+      "questionPattern": "application",
+      "prompt": "Webページ閲覧、メール送信、ファイル転送などで、通信の手順や形式を定めた約束事を何と呼ぶか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "プロトコル"
+        },
+        {
+          "key": "B",
+          "text": "コンパイラ"
+        },
+        {
+          "key": "C",
+          "text": "デバイスドライバ"
+        },
+        {
+          "key": "D",
+          "text": "データベース"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "通信の約束事がプロトコル。HTTP/HTTPS、SMTP、TCP/IPなどは用途別のプロトコルとして整理する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "プロトコル",
+        "TCP/IP",
+        "インターネット"
+      ],
+      "contentHash": "sha256:b8ebc2dde1a1f77cc7d52f1a48b0cd950bd49a253452530018022ba36f2f8620",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-web-internet-basics-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-web-internet-basics",
+      "questionPattern": "application",
+      "prompt": "Webブラウザでページを表示するとき、アプリケーション層で主に使われるプロトコルはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "HTTPまたはHTTPS"
+        },
+        {
+          "key": "B",
+          "text": "DHCP"
+        },
+        {
+          "key": "C",
+          "text": "SQL"
+        },
+        {
+          "key": "D",
+          "text": "CSV"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "Webのデータ転送にはHTTP/HTTPSを使う。DHCPはIP設定配布、SQLはデータベース操作、CSVはデータ形式。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "HTTP",
+        "HTTPS",
+        "アプリケーション層"
+      ],
+      "contentHash": "sha256:4c1a7017d1fc64b6769b056b1687938fd76313f9859c82bf8ccc0826a3f5b447",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-keys-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-keys",
+      "questionPattern": "application",
+      "prompt": "社員表で社員番号を主キーにする理由として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "各社員を一意に識別でき、同じ値が重複しないから"
+        },
+        {
+          "key": "B",
+          "text": "氏名より文字数が長いほど検索が遅くなるから"
+        },
+        {
+          "key": "C",
+          "text": "主キーは必ず外部の会社が発行する番号だから"
+        },
+        {
+          "key": "D",
+          "text": "主キーにすると表のすべての列が暗号化されるから"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "主キーは行を一意に識別する列。重複しないこと、値が空でないことが重要な性質になる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "主キー",
+        "DBMS",
+        "一意性"
+      ],
+      "contentHash": "sha256:6f53cf3dc3c7d8efbbaffadf3b5cd9d995429aaabed484da871a79434d78409f",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-54",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-keys-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-keys",
+      "questionPattern": "application",
+      "prompt": "注文表の顧客IDが、顧客表の顧客IDを参照している。この注文表側の顧客IDは何にあたるか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "外部キー"
+        },
+        {
+          "key": "B",
+          "text": "主記憶"
+        },
+        {
+          "key": "C",
+          "text": "サブネットマスク"
+        },
+        {
+          "key": "D",
+          "text": "公開鍵"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "別の表の主キーを参照し、表同士の関係を表す列が外部キー。参照整合性の理解につながる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "外部キー",
+        "参照整合性",
+        "リレーショナルデータベース"
+      ],
+      "contentHash": "sha256:b423478b9d987d9193daac4168961eb401441aa3296d01ce71cf2b3c16995e33",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-54",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-normalization-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-normalization",
+      "questionPattern": "application",
+      "prompt": "受注明細に顧客住所を毎行重複して持たせた結果、住所変更時に一部の行だけ古い住所のまま残った。主にどの問題を避けるために正規化を行うか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "データの重複による更新不整合を防ぐため"
+        },
+        {
+          "key": "B",
+          "text": "すべての検索を必ず遅くするため"
+        },
+        {
+          "key": "C",
+          "text": "表を1つにまとめて重複を増やすため"
+        },
+        {
+          "key": "D",
+          "text": "通信内容を暗号化するため"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "正規化は重複を減らし、更新・追加・削除時の不整合を防ぐ設計。暗号化や通信速度の話ではない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "正規化",
+        "更新不整合",
+        "データベース設計"
+      ],
+      "contentHash": "sha256:0b7582556713df484e8561d38da1a1323089f01064e7b7051b971af5ad41da11",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-55",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-normalization-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-normalization",
+      "questionPattern": "application",
+      "prompt": "商品マスタと売上明細に分ける設計の説明として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "商品名や単価などの商品情報を一か所で管理し、明細から参照する"
+        },
+        {
+          "key": "B",
+          "text": "同じ商品名を売上明細の全行に必ず手入力する"
+        },
+        {
+          "key": "C",
+          "text": "商品情報を削除して売上だけを保存する"
+        },
+        {
+          "key": "D",
+          "text": "商品マスタを作ると主キーが不要になる"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "マスタ情報を分離し、明細はキーで参照することで重複を減らす。主キーは参照のためにも重要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "正規化",
+        "マスタ",
+        "外部キー"
+      ],
+      "contentHash": "sha256:13adf12116203ab3fa7ea077baf07dfc5598ac6628bb14f8556615eedf501c48",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-55",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-encryption-hash-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-encryption-hash",
+      "questionPattern": "application",
+      "prompt": "保存したパスワードそのものを復元できない形で照合したい。適切な方式はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ソルトを加えたハッシュ値を保存して照合する"
+        },
+        {
+          "key": "B",
+          "text": "平文パスワードをそのまま保存する"
+        },
+        {
+          "key": "C",
+          "text": "可逆な暗号化だけで全員同じ鍵を共有する"
+        },
+        {
+          "key": "D",
+          "text": "パスワードを画面に表示して利用者に確認させる"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "パスワード保存では復号を前提にしないハッシュ化が基本。ソルトで同じパスワードでも異なる値にし、総当たりを難しくする。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ハッシュ",
+        "ソルト",
+        "パスワード"
+      ],
+      "contentHash": "sha256:b317ae267fa13126d79c1a2f59221aad5b0f960e8a8ca66f954529642c987c30",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-encryption-hash-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-encryption-hash",
+      "questionPattern": "application",
+      "prompt": "ファイルが改ざんされていないことを確認したい。送信前後で比較する値として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ハッシュ値"
+        },
+        {
+          "key": "B",
+          "text": "IPアドレス"
+        },
+        {
+          "key": "C",
+          "text": "画面解像度"
+        },
+        {
+          "key": "D",
+          "text": "メール件名"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ハッシュ値はデータから固定長の値を計算し、改ざん検知に使える。内容を秘匿する暗号化とは目的が異なる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ハッシュ",
+        "完全性",
+        "改ざん検知"
+      ],
+      "contentHash": "sha256:bdb80162e2c843b0b4d0cb528d5b3924e67ca9cae89316ecc9692348c58f8751",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-common-key-crypto-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-common-key-crypto",
+      "questionPattern": "application",
+      "prompt": "共通鍵暗号方式の特徴として正しいものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "暗号化と復号に同じ鍵を使うため、鍵の安全な共有が課題になる"
+        },
+        {
+          "key": "B",
+          "text": "暗号化には公開鍵、復号には秘密鍵を必ず使う"
+        },
+        {
+          "key": "C",
+          "text": "鍵を使わずにデータの改ざんだけを検知する"
+        },
+        {
+          "key": "D",
+          "text": "通信相手が増えても鍵管理の手間はまったく増えない"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "共通鍵暗号は同じ鍵で暗号化・復号するため高速だが、相手に鍵を安全に渡す必要がある。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "共通鍵暗号",
+        "暗号化",
+        "鍵配送"
+      ],
+      "contentHash": "sha256:b9422ca16fe395874937698815f74c439d81d5558ed5ce75a207274394916c43",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-common-key-crypto-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-common-key-crypto",
+      "questionPattern": "application",
+      "prompt": "大量データの暗号化処理で、公開鍵暗号より共通鍵暗号がよく使われる理由として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "一般に処理が高速で、大量データの暗号化に向いているから"
+        },
+        {
+          "key": "B",
+          "text": "鍵を秘密にしなくても安全だから"
+        },
+        {
+          "key": "C",
+          "text": "復号できない一方向処理だから"
+        },
+        {
+          "key": "D",
+          "text": "認証局がなければ絶対に使えないから"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "共通鍵暗号は高速で大量データ向き。鍵の秘密保持は必要であり、一方向処理はハッシュの説明。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "共通鍵暗号",
+        "性能",
+        "暗号化"
+      ],
+      "contentHash": "sha256:475bd7aa16a100e12a7c2f26cd47c1acf51bf55e2c1bcaf0a1d3b00abbfe5b6c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-public-key-crypto-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-public-key-crypto",
+      "questionPattern": "application",
+      "prompt": "Aさんにだけ読めるようにメッセージを送りたい。公開鍵暗号方式で送信者が暗号化に使う鍵はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "Aさんの公開鍵"
+        },
+        {
+          "key": "B",
+          "text": "Aさんの秘密鍵"
+        },
+        {
+          "key": "C",
+          "text": "送信者の公開鍵"
+        },
+        {
+          "key": "D",
+          "text": "全員で共有する同じパスワード"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "受信者の公開鍵で暗号化し、対応する受信者の秘密鍵で復号する。秘密鍵は本人だけが持つ。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "公開鍵暗号",
+        "公開鍵",
+        "秘密鍵"
+      ],
+      "contentHash": "sha256:e182782335a409a71c1d1a15c087e9816a1cc416605304187b45dedf5100f919",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-public-key-crypto-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-public-key-crypto",
+      "questionPattern": "application",
+      "prompt": "公開鍵暗号方式の説明として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "公開鍵は配布でき、秘密鍵は本人だけが厳重に管理する"
+        },
+        {
+          "key": "B",
+          "text": "公開鍵も秘密鍵も全員にメールで配布する"
+        },
+        {
+          "key": "C",
+          "text": "秘密鍵だけで相手の本人確認が不要になる"
+        },
+        {
+          "key": "D",
+          "text": "同じ鍵を全員で共有して暗号化と復号に使う"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "公開鍵暗号は鍵のペアを使う。公開鍵は広く配布できるが、秘密鍵は本人だけが守る必要がある。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "公開鍵暗号",
+        "鍵管理",
+        "秘密鍵"
+      ],
+      "contentHash": "sha256:bd8ffd343584e0cf4ad3cc76e7bdf8e0d71c2d1ad7b4e8674f4f5a18c771ae9b",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-algorithm-flowchart-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "questionPattern": "application",
+      "prompt": "入力された点数が80点以上なら「合格」、そうでなければ「再学習」と表示する処理は、基本構造のどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "分岐"
+        },
+        {
+          "key": "B",
+          "text": "順次"
+        },
+        {
+          "key": "C",
+          "text": "繰り返し"
+        },
+        {
+          "key": "D",
+          "text": "排他制御"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "条件によって処理を変えるのが分岐。順次は上から実行、繰り返しは同じ処理を反復する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "アルゴリズム",
+        "分岐",
+        "フローチャート"
+      ],
+      "contentHash": "sha256:37112fa317e8d53082e050c0d0f0353759855582fcc14f53fd5efcc3e1ee15b2",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-37",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      }
+    },
+    {
+      "id": "tech-algorithm-flowchart-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "questionPattern": "application",
+      "prompt": "1から10までの数を順に合計する処理で、同じ加算処理を条件が終わるまで行う。基本構造として最も当てはまるものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "繰り返し"
+        },
+        {
+          "key": "B",
+          "text": "暗号化"
+        },
+        {
+          "key": "C",
+          "text": "正規化"
+        },
+        {
+          "key": "D",
+          "text": "名前解決"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "同じ処理を条件付きで反復するのが繰り返し。合計、検索、件数カウントなどでよく使われる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "アルゴリズム",
+        "繰り返し",
+        "合計"
+      ],
+      "contentHash": "sha256:424f5457eb0625fb68d697b8e62327c144aa518d2e6291028d34362d0a07bf16",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-37",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      }
+    },
+    {
+      "id": "tech-reliability-availability-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-reliability-availability",
+      "questionPattern": "application",
+      "prompt": "稼働率が0.9の装置を2台直列に接続したシステムの稼働率はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "0.81"
+        },
+        {
+          "key": "B",
+          "text": "0.99"
+        },
+        {
+          "key": "C",
+          "text": "0.9"
+        },
+        {
+          "key": "D",
+          "text": "1.8"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "直列構成はすべて動く必要があるため稼働率を掛け合わせる。0.9×0.9=0.81。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "稼働率",
+        "直列構成",
+        "計算"
+      ],
+      "contentHash": "sha256:0f755f3474a9c5a6e72ea5e8379a78ecec6ca082a6415d4c61c7d7f57efc78dc",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-44",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "システム構成要素"
+      }
+    },
+    {
+      "id": "tech-reliability-availability-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-reliability-availability",
+      "questionPattern": "application",
+      "prompt": "MTBFが長く、MTTRが短いシステムの特徴として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "故障しにくく、故障しても早く復旧できる"
+        },
+        {
+          "key": "B",
+          "text": "故障しやすく、復旧にも時間がかかる"
+        },
+        {
+          "key": "C",
+          "text": "故障の平均間隔と復旧時間は稼働率に関係しない"
+        },
+        {
+          "key": "D",
+          "text": "MTBFは短いほど信頼性が高い"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "MTBFは平均故障間隔で長いほど故障しにくい。MTTRは平均修復時間で短いほど復旧が早い。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "MTBF",
+        "MTTR",
+        "信頼性"
+      ],
+      "contentHash": "sha256:1cdb87b3cc725cf56bb8be8e8be16adb176bd6b816286ab1e44bf95b561e0d42",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-44",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "システム構成要素"
+      }
+    },
+    {
+      "id": "tech-logic-operations-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-logic-operations",
+      "questionPattern": "application",
+      "prompt": "会員であり、かつ、年齢が18歳以上の利用者だけ申込み可能にしたい。条件式で中心となる論理演算はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "AND"
+        },
+        {
+          "key": "B",
+          "text": "OR"
+        },
+        {
+          "key": "C",
+          "text": "NOT"
+        },
+        {
+          "key": "D",
+          "text": "XOR"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "両方の条件を同時に満たす必要がある場合はAND。どちらか一方ならOR、否定ならNOT。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "論理演算",
+        "AND",
+        "条件式"
+      ],
+      "contentHash": "sha256:9ff517f7120ade7ec24f6c58f75400c6d285f9ad3ebcd0557b92c033bdd43854",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-33",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      }
+    },
+    {
+      "id": "tech-logic-operations-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-logic-operations",
+      "questionPattern": "application",
+      "prompt": "「在庫がない」ことを条件にしたい。真偽値で条件を反転させる論理演算はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "NOT"
+        },
+        {
+          "key": "B",
+          "text": "AND"
+        },
+        {
+          "key": "C",
+          "text": "OR"
+        },
+        {
+          "key": "D",
+          "text": "JOIN"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "NOTは真偽を反転する演算。AND/ORは複数条件の組合せ、JOINはデータベースの表結合。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "論理演算",
+        "NOT",
+        "真理値"
+      ],
+      "contentHash": "sha256:444ebd55d4ce669dc4c3579a0ef051b94c1c6353bf8bae746a8c69ed55e06cd7",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-33",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      }
+    },
+    {
+      "id": "tech-spreadsheet-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-spreadsheet",
+      "questionPattern": "application",
+      "prompt": "セルB2の式 `=$A$1*B2` をC3へコピーしたとき、参照 `$A$1` はどうなるか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "$A$1のまま変わらない"
+        },
+        {
+          "key": "B",
+          "text": "$B$2に変わる"
+        },
+        {
+          "key": "C",
+          "text": "A1に戻る"
+        },
+        {
+          "key": "D",
+          "text": "C3に変わる"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "$A$1は列も行も固定した絶対参照なので、コピー先が変わっても参照先は変わらない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "表計算",
+        "絶対参照",
+        "セル参照"
+      ],
+      "contentHash": "sha256:264a7f1bf674abb628594728fae9819d4263078239cac7b78721ae2418eaed56",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-47",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      }
+    },
+    {
+      "id": "tech-spreadsheet-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-spreadsheet",
+      "questionPattern": "application",
+      "prompt": "税率セルだけを固定し、商品価格の行に合わせて計算式を下へコピーしたい。税率セルの参照として適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "$B$1"
+        },
+        {
+          "key": "B",
+          "text": "B1"
+        },
+        {
+          "key": "C",
+          "text": "B$1C"
+        },
+        {
+          "key": "D",
+          "text": "税率"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "税率セルを固定するには絶対参照にする。列B・行1を固定する表記は$B$1。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "表計算",
+        "絶対参照",
+        "計算式"
+      ],
+      "contentHash": "sha256:ba7e2e08288923ff7d742efc94b09b7556a99cc45daa431ca31e9fe4b1648d97",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-47",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      }
+    },
+    {
+      "id": "tech-data-structure-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-data-structure",
+      "questionPattern": "application",
+      "prompt": "最後に入れたデータを最初に取り出すデータ構造はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "スタック"
+        },
+        {
+          "key": "B",
+          "text": "キュー"
+        },
+        {
+          "key": "C",
+          "text": "DNS"
+        },
+        {
+          "key": "D",
+          "text": "リレーショナルデータベース"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "スタックはLIFO（後入れ先出し）。キューはFIFO（先入れ先出し）で、待ち行列のイメージ。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "スタック",
+        "LIFO",
+        "データ構造"
+      ],
+      "contentHash": "sha256:8bf56b9e3007b537965c87f5604d75f81c19b4e79c74ba1617e8c853fdd9165b",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-36",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      }
+    },
+    {
+      "id": "tech-data-structure-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-data-structure",
+      "questionPattern": "application",
+      "prompt": "コールセンターの受付順に問い合わせを処理する仕組みに近いデータ構造はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "キュー"
+        },
+        {
+          "key": "B",
+          "text": "スタック"
+        },
+        {
+          "key": "C",
+          "text": "ハッシュ値"
+        },
+        {
+          "key": "D",
+          "text": "公開鍵"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "先に入ったものを先に処理するのがキュー（FIFO）。受付順の処理や印刷待ち行列に使われる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "キュー",
+        "FIFO",
+        "待ち行列"
+      ],
+      "contentHash": "sha256:3c2646a8872b29b5f795338e2fd03ba0cf5194c0598195ed42c7ab1da4cdbaf7",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-36",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      }
+    },
+    {
+      "id": "tech-transaction-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-transaction",
+      "questionPattern": "application",
+      "prompt": "銀行振込で、出金処理は成功したが入金処理に失敗した。この不整合を避けるために必要な考え方はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "一連の処理をトランザクションとして扱い、失敗時はロールバックする"
+        },
+        {
+          "key": "B",
+          "text": "出金処理だけをコミットして終了する"
+        },
+        {
+          "key": "C",
+          "text": "入金先口座を削除して処理を軽くする"
+        },
+        {
+          "key": "D",
+          "text": "処理結果をログに残さず再実行を禁止する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "関連する複数処理は全部成功して確定、失敗したら元に戻す。これがトランザクション管理の基本。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "トランザクション",
+        "ロールバック",
+        "整合性"
+      ],
+      "contentHash": "sha256:844ea6ad8c4f0552a59b888b2cc8c111479efae9054c49fe575a329169d1cd83",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-57",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-transaction-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-transaction",
+      "questionPattern": "application",
+      "prompt": "同じ在庫数を複数の利用者が同時に更新し、在庫数がずれることを防ぐ仕組みはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "排他制御"
+        },
+        {
+          "key": "B",
+          "text": "正規化だけ"
+        },
+        {
+          "key": "C",
+          "text": "DNSラウンドロビン"
+        },
+        {
+          "key": "D",
+          "text": "画像圧縮"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "同時更新の競合を防ぐには排他制御（ロック）を使う。正規化はデータ構造の重複削減が中心。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "排他制御",
+        "ロック",
+        "同時更新"
+      ],
+      "contentHash": "sha256:3a43ef4e89f7629e86c0ea1cf31df965112832fa832ae06888ccc2f4dfb2e5fa",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-57",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      }
+    },
+    {
+      "id": "tech-cyber-attacks-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-cyber-attacks",
+      "questionPattern": "application",
+      "prompt": "Web入力欄に不正なSQL断片を入れて、意図しない検索や更新を実行させる攻撃はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SQLインジェクション"
+        },
+        {
+          "key": "B",
+          "text": "DoS攻撃"
+        },
+        {
+          "key": "C",
+          "text": "フィッシング"
+        },
+        {
+          "key": "D",
+          "text": "ブルートフォース攻撃"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "SQLインジェクションは入力値を悪用してSQLを改変する攻撃。入力値検証やプレースホルダが対策になる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SQLインジェクション",
+        "Web攻撃",
+        "入力値検証"
+      ],
+      "contentHash": "sha256:a615ef53b9134eabd46cfb8d645a53300d732b7d30c07a2513141b167685af8c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-cyber-attacks-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-cyber-attacks",
+      "questionPattern": "application",
+      "prompt": "多数の端末から大量の通信を送り、サービスを利用できない状態にする攻撃はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "DDoS攻撃"
+        },
+        {
+          "key": "B",
+          "text": "ディジタル署名"
+        },
+        {
+          "key": "C",
+          "text": "正規化"
+        },
+        {
+          "key": "D",
+          "text": "RAG"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "分散した多数の端末から過大な負荷をかけるのがDDoS攻撃。可用性を損なう攻撃として整理する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "DDoS",
+        "可用性",
+        "サイバー攻撃"
+      ],
+      "contentHash": "sha256:afaa299e49012206b8fc211818a8b2983c095cbc33a97b6fcb1025216a4a28dd",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-digital-signature-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-digital-signature",
+      "questionPattern": "application",
+      "prompt": "電子契約書が本人から送られ、送信後に改ざんされていないことを確認したい。利用する仕組みはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ディジタル署名"
+        },
+        {
+          "key": "B",
+          "text": "NAT"
+        },
+        {
+          "key": "C",
+          "text": "DHCP"
+        },
+        {
+          "key": "D",
+          "text": "キャッシュ削除"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ディジタル署名は送信者の確認と改ざん検知に使う。暗号化だけとは目的が異なる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ディジタル署名",
+        "完全性",
+        "本人確認"
+      ],
+      "contentHash": "sha256:24f96bdfc3cc2d7501a03647617bff428c2c7b93cdb835f0097e1cde5fb12d72",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-digital-signature-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-digital-signature",
+      "questionPattern": "application",
+      "prompt": "公開鍵が本当に本人のものかを確認するため、公開鍵と所有者を結び付ける役割を持つものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "認証局が発行する電子証明書"
+        },
+        {
+          "key": "B",
+          "text": "プライベートIPアドレス"
+        },
+        {
+          "key": "C",
+          "text": "表計算の相対参照"
+        },
+        {
+          "key": "D",
+          "text": "ロールバックログ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "電子証明書は公開鍵と所有者情報を結び付け、認証局が信頼を支える。HTTPSでも重要な役割を持つ。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "認証局",
+        "電子証明書",
+        "公開鍵"
+      ],
+      "contentHash": "sha256:10a888418711dd9008bc2cd02c1b21d43d9c572ea1a43679d36edd6833339e6f",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-isms-risk-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "application",
+      "prompt": "情報資産を洗い出し、脅威と脆弱性からリスクを評価して対策を決める活動はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "リスクアセスメント"
+        },
+        {
+          "key": "B",
+          "text": "リスクの完全放置"
+        },
+        {
+          "key": "C",
+          "text": "画面デザインレビュー"
+        },
+        {
+          "key": "D",
+          "text": "売上予測だけの分析"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "リスクアセスメントは情報資産・脅威・脆弱性を踏まえてリスクを評価する活動。ISMSの重要要素。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ISMS",
+        "リスクアセスメント",
+        "情報資産"
+      ],
+      "contentHash": "sha256:d89275cb627fb7eeb4be3bf01e5957e5d4ba64a38f5637a95b19cf344249bbe1",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-isms-risk-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "application",
+      "prompt": "ISMSを継続的に改善するための考え方として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "PDCAサイクルを回して管理策を見直す"
+        },
+        {
+          "key": "B",
+          "text": "一度文書を作成したら見直しをしない"
+        },
+        {
+          "key": "C",
+          "text": "事故が起きたら記録を残さず担当者だけで処理する"
+        },
+        {
+          "key": "D",
+          "text": "セキュリティ対策をすべて利用者任せにする"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ISMSは組織的な情報セキュリティ管理で、リスクに応じた管理策を継続的に改善する。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ISMS",
+        "PDCA",
+        "継続的改善"
+      ],
+      "contentHash": "sha256:66adfcad60e039d37e46151992a15c47d634b911ca8803cbc4d1c9b8207a5379",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      }
+    },
+    {
+      "id": "tech-wireless-mobile-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-wireless-mobile",
+      "questionPattern": "application",
+      "prompt": "店舗の無料Wi-Fiで、SSIDだけが正規店名に似ているアクセスポイントを見つけた。利用前の判断として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "店舗が掲示する正規SSIDか確認し、不明な場合は接続しない"
+        },
+        {
+          "key": "B",
+          "text": "SSIDが似ていれば暗号化されているとみなす"
+        },
+        {
+          "key": "C",
+          "text": "パスワード不要のWi-Fiほど安全と判断する"
+        },
+        {
+          "key": "D",
+          "text": "通信内容がHTTPでも個人情報を入力する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "偽アクセスポイントに接続すると盗聴や誘導のリスクがある。SSID名だけで安全とは判断できない。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "無線LAN",
+        "SSID",
+        "盗聴対策"
+      ],
+      "contentHash": "sha256:ad52017b2f26ad7c06ef3ceec717621ed97adbba649ffdc97804d5caee96e4b8",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-wireless-mobile-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-wireless-mobile",
+      "questionPattern": "application",
+      "prompt": "スマートフォンの回線を使ってPCをインターネットに接続する機能はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "テザリング"
+        },
+        {
+          "key": "B",
+          "text": "ハウジング"
+        },
+        {
+          "key": "C",
+          "text": "正規化"
+        },
+        {
+          "key": "D",
+          "text": "ロールバック"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "テザリングはスマートフォンを中継して他端末をネット接続する機能。通信量やセキュリティ設定に注意する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "テザリング",
+        "モバイル通信",
+        "無線LAN"
+      ],
+      "contentHash": "sha256:775ef4111badae2d6d66352b32e693284b8ddfa87ed81cb314fa345ce41c7e14",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-email-protocol-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-email-protocol",
+      "questionPattern": "application",
+      "prompt": "メールを送信するために主に使われるプロトコルはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SMTP"
+        },
+        {
+          "key": "B",
+          "text": "POP3"
+        },
+        {
+          "key": "C",
+          "text": "IMAP"
+        },
+        {
+          "key": "D",
+          "text": "DHCP"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "メール送信はSMTP。受信はPOP3やIMAPが使われる。DHCPはIPアドレスなどの自動配布。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SMTP",
+        "メール",
+        "プロトコル"
+      ],
+      "contentHash": "sha256:797b53abaa6734b4014717982f4203b5a3d82226f669542d0ba2e9cbb9ed3d42",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-email-protocol-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-email-protocol",
+      "questionPattern": "application",
+      "prompt": "複数端末で同じメールボックスを同期しながら扱いたい。受信方式として適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "IMAP"
+        },
+        {
+          "key": "B",
+          "text": "SMTPだけ"
+        },
+        {
+          "key": "C",
+          "text": "NAT"
+        },
+        {
+          "key": "D",
+          "text": "SQL"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "IMAPはサーバ上のメールを参照し、複数端末で状態を共有しやすい。POP3は端末へ取り込む利用が中心。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "IMAP",
+        "POP3",
+        "メール受信"
+      ],
+      "contentHash": "sha256:9884a3e86e40b86f617a7000f0473d25f8bd2ac909ab9dda6b0e42cc55c78d45",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "mgmt-pm-qcd-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-pm-qcd",
+      "questionPattern": "application",
+      "prompt": "納期を守るためにテスト期間を極端に短縮すると、最も直接的に悪化しやすいQCDの要素はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "Quality（品質）"
+        },
+        {
+          "key": "B",
+          "text": "Cost（費用）だけ"
+        },
+        {
+          "key": "C",
+          "text": "Delivery（納期）だけ"
+        },
+        {
+          "key": "D",
+          "text": "DNS（名前解決）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "QCDは品質・費用・納期のバランス。テスト不足は品質低下につながりやすく、単純な納期優先は危険。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "QCD",
+        "品質",
+        "プロジェクト管理"
+      ],
+      "contentHash": "sha256:4f9985adb681f95ba42ded6edfe25c4d9f96ebbd01b570719b354940ae466714",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-pm-qcd-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-pm-qcd",
+      "questionPattern": "application",
+      "prompt": "要件追加により作業量が増えた。納期と品質を維持したい場合、プロジェクト管理上まず検討すべき対応はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "追加費用やスコープ調整を含め、QCD全体の影響を関係者と合意する"
+        },
+        {
+          "key": "B",
+          "text": "担当者に無断で残業を前提にする"
+        },
+        {
+          "key": "C",
+          "text": "テストをすべて省略して品質を維持する"
+        },
+        {
+          "key": "D",
+          "text": "変更内容を記録せずに進める"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "スコープ変更はQCDに影響するため、費用・納期・品質のトレードオフを可視化し合意する必要がある。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "QCD",
+        "スコープ変更",
+        "合意形成"
+      ],
+      "contentHash": "sha256:d387854d1b4f4b2377fcbe940cc4b0a9d0fa51b03b8ea10fc323ffd9b6862a5e",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-wbs-gantt-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-wbs-gantt",
+      "questionPattern": "application",
+      "prompt": "プロジェクトの作業を成果物単位で細かく分解し、漏れを防ぎたい。作成するものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "WBS"
+        },
+        {
+          "key": "B",
+          "text": "SLA"
+        },
+        {
+          "key": "C",
+          "text": "NAT"
+        },
+        {
+          "key": "D",
+          "text": "貸借対照表"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "WBSは作業分解構成図。やるべき作業を階層的に分解し、見積りや担当割当の土台にする。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "WBS",
+        "プロジェクト管理",
+        "作業分解"
+      ],
+      "contentHash": "sha256:6d01c81aaad0d15a1aa1bf6df701dafeff4acdda151a1e5adec25550982a4063",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-wbs-gantt-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-wbs-gantt",
+      "questionPattern": "application",
+      "prompt": "各作業の開始日・終了日・前後関係を横棒で示し、進捗を見える化したい。適切な図はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ガントチャート"
+        },
+        {
+          "key": "B",
+          "text": "SWOTマトリクス"
+        },
+        {
+          "key": "C",
+          "text": "ER図"
+        },
+        {
+          "key": "D",
+          "text": "真理値表"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ガントチャートは時間軸上に作業期間を示す管理図。WBSで分解した作業のスケジュール管理に使う。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ガントチャート",
+        "進捗管理",
+        "スケジュール"
+      ],
+      "contentHash": "sha256:9b0cea7f7302fae57cb5da9574cdc77a7f1c309e4810bd5a939a2d5841015562",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-system-audit-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-system-audit",
+      "questionPattern": "application",
+      "prompt": "システム監査人に求められる立場として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "監査対象から独立した立場で客観的に評価する"
+        },
+        {
+          "key": "B",
+          "text": "開発担当者として仕様を自由に変更する"
+        },
+        {
+          "key": "C",
+          "text": "監査対象部門の成果を必ず承認する"
+        },
+        {
+          "key": "D",
+          "text": "利用者のパスワードを収集して公開する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "システム監査では独立性と客観性が重要。監査対象を評価し、改善提案を行うが運用の責任者そのものではない。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "システム監査",
+        "独立性",
+        "内部統制"
+      ],
+      "contentHash": "sha256:fcb81888b9a4a63236b48a77b05dd9f2b668f7546a5d7ac000cf28cc58bd1ba6",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-31",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "システム監査"
+      }
+    },
+    {
+      "id": "mgmt-system-audit-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-system-audit",
+      "questionPattern": "application",
+      "prompt": "内部統制の説明として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "業務の有効性、法令遵守、財務報告の信頼性などを確保する仕組み"
+        },
+        {
+          "key": "B",
+          "text": "すべての業務判断を外部監査人だけが行う仕組み"
+        },
+        {
+          "key": "C",
+          "text": "社員の裁量を完全になくし、改善提案も禁止する仕組み"
+        },
+        {
+          "key": "D",
+          "text": "情報システムの画面色を統一するだけの活動"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "内部統制は組織が目的を達成し、不正や誤りを防ぐための仕組み。IT統制もその一部として問われる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "内部統制",
+        "IT統制",
+        "コンプライアンス"
+      ],
+      "contentHash": "sha256:11727eb3a48ec42788a9ccb20eb921ec5d3237e3ae7153a8dd8e216e25ad325a",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-31",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "システム監査"
+      }
+    },
+    {
+      "id": "mgmt-development-process-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-development-process",
+      "questionPattern": "application",
+      "prompt": "要件定義、設計、実装、テストを順番に進め、前工程の成果物を確認しながら進める開発モデルはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ウォータフォールモデル"
+        },
+        {
+          "key": "B",
+          "text": "アジャイル開発"
+        },
+        {
+          "key": "C",
+          "text": "ランサムウェア"
+        },
+        {
+          "key": "D",
+          "text": "PPM"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ウォータフォールは工程を上流から下流へ順に進めるモデル。変更には弱いが計画管理しやすい。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ウォータフォール",
+        "開発プロセス",
+        "工程"
+      ],
+      "contentHash": "sha256:c00a3267191007a717a5b21381afba81f672a59128d1658fc1446da1b5599720",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-26",
+        "field": "management",
+        "majorCategory": "開発技術",
+        "middleCategory": "ソフトウェア開発管理技術"
+      }
+    },
+    {
+      "id": "mgmt-development-process-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-development-process",
+      "questionPattern": "application",
+      "prompt": "短い期間で動くソフトを少しずつ作り、利用者の反応を得ながら改善したい。適した開発の考え方はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "アジャイル開発"
+        },
+        {
+          "key": "B",
+          "text": "一括移行だけ"
+        },
+        {
+          "key": "C",
+          "text": "完全な手作業運用"
+        },
+        {
+          "key": "D",
+          "text": "単純なデータ圧縮"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "アジャイルは短い反復で開発し、変化に対応しながら価値を高める。要件が変わりやすい場面に向く。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "アジャイル",
+        "反復開発",
+        "利用者フィードバック"
+      ],
+      "contentHash": "sha256:6dcc1ae9cbdc9d92451daa58211f34f9fc08f4c75cf1311df5ed79f5150ccb16",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-26",
+        "field": "management",
+        "majorCategory": "開発技術",
+        "middleCategory": "ソフトウェア開発管理技術"
+      }
+    },
+    {
+      "id": "mgmt-requirements-definition-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-requirements-definition",
+      "questionPattern": "application",
+      "prompt": "システムに「何をさせるか」を表す、注文登録や在庫照会などの要件はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "機能要件"
+        },
+        {
+          "key": "B",
+          "text": "非機能要件"
+        },
+        {
+          "key": "C",
+          "text": "法定耐用年数"
+        },
+        {
+          "key": "D",
+          "text": "公開鍵"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "機能要件はシステムが提供する機能。性能、可用性、セキュリティなど品質面は非機能要件。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "要件定義",
+        "機能要件",
+        "非機能要件"
+      ],
+      "contentHash": "sha256:844785ae7668c2e4620f9958ffd30583b5f0d5630f502691ac54ca4c1af0c896",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-23",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム企画"
+      }
+    },
+    {
+      "id": "mgmt-requirements-definition-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-requirements-definition",
+      "questionPattern": "application",
+      "prompt": "「ピーク時でも3秒以内に検索結果を返す」という要件の分類として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "非機能要件"
+        },
+        {
+          "key": "B",
+          "text": "機能要件"
+        },
+        {
+          "key": "C",
+          "text": "著作権"
+        },
+        {
+          "key": "D",
+          "text": "主キー"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "応答時間や稼働率など品質・制約に関する条件は非機能要件。処理内容そのものとは区別する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "非機能要件",
+        "性能",
+        "要件定義"
+      ],
+      "contentHash": "sha256:4e9b80817b5788f9557d8c8b316a247653d93220ffb8b6167a657155b0261524",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-23",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム企画"
+      }
+    },
+    {
+      "id": "mgmt-testing-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-testing",
+      "questionPattern": "application",
+      "prompt": "個々のプログラム部品が設計どおり動くかを確認する最初の段階のテストはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "単体テスト"
+        },
+        {
+          "key": "B",
+          "text": "受入テスト"
+        },
+        {
+          "key": "C",
+          "text": "運用テスト"
+        },
+        {
+          "key": "D",
+          "text": "システム監査"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "単体テストは部品単位の確認。結合テスト、システムテスト、受入テストへと範囲が広がる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "テスト",
+        "単体テスト",
+        "開発工程"
+      ],
+      "contentHash": "sha256:59da1548a37531a6285a219ce3f67ba7f98737eb1d4508bb07ea71577a262d21",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-25",
+        "field": "management",
+        "majorCategory": "開発技術",
+        "middleCategory": "システム開発技術"
+      }
+    },
+    {
+      "id": "mgmt-testing-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-testing",
+      "questionPattern": "application",
+      "prompt": "利用部門が、完成したシステムが業務要件を満たしているかを最終確認するテストはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "受入テスト"
+        },
+        {
+          "key": "B",
+          "text": "単体テスト"
+        },
+        {
+          "key": "C",
+          "text": "結合テスト"
+        },
+        {
+          "key": "D",
+          "text": "静的コード解析だけ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "受入テストは利用者側が業務要件への適合を確認するテスト。開発者だけの部品確認とは目的が違う。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "受入テスト",
+        "要件確認",
+        "利用者"
+      ],
+      "contentHash": "sha256:559c8cb0dcb92a4c35005df0c1566edc6a3a5cb579d0468a2f308ddddda829c1",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-25",
+        "field": "management",
+        "majorCategory": "開発技術",
+        "middleCategory": "システム開発技術"
+      }
+    },
+    {
+      "id": "mgmt-pdca-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-pdca",
+      "questionPattern": "application",
+      "prompt": "問い合わせ対応時間を短縮するため、目標を決めて改善策を実施し、結果を測定して次の改善につなげる考え方はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "PDCAサイクル"
+        },
+        {
+          "key": "B",
+          "text": "CIA"
+        },
+        {
+          "key": "C",
+          "text": "NAT"
+        },
+        {
+          "key": "D",
+          "text": "SQLインジェクション"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "PDCAはPlan、Do、Check、Actの改善サイクル。継続的な業務改善やサービス管理で使われる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "PDCA",
+        "継続的改善",
+        "管理"
+      ],
+      "contentHash": "sha256:6ea786e97ce13426afac4d328e0ccff5379bdd8021d502a920391eb4c575a2f1",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-pdca-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-pdca",
+      "questionPattern": "application",
+      "prompt": "改善施策を実施した後、目標値と実績を比較して効果を確認する段階はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "Check"
+        },
+        {
+          "key": "B",
+          "text": "Plan"
+        },
+        {
+          "key": "C",
+          "text": "Do"
+        },
+        {
+          "key": "D",
+          "text": "Act"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "Checkは評価・確認の段階。Planは計画、Doは実行、Actは改善・標準化など次の行動。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "PDCA",
+        "Check",
+        "評価"
+      ],
+      "contentHash": "sha256:396181f07cb12b1f95ed39d6de4dc49e68df4cfc1aa753196f462efbf786fe6c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-risk-management-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-risk-management",
+      "questionPattern": "application",
+      "prompt": "重要サーバの停止リスクに対し、冗長化して発生時の影響を小さくする対応はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "リスク低減"
+        },
+        {
+          "key": "B",
+          "text": "リスク回避"
+        },
+        {
+          "key": "C",
+          "text": "リスク移転"
+        },
+        {
+          "key": "D",
+          "text": "リスク受容"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "対策により発生確率や影響を小さくするのが低減。活動をやめるのが回避、保険などは移転、小さいリスクを受け入れるのが受容。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "リスク管理",
+        "リスク低減",
+        "冗長化"
+      ],
+      "contentHash": "sha256:c66a2004b8cb294cbe70439eef9579c6b5ef38dcc8040b23b41ec67eaf07199e",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-risk-management-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-risk-management",
+      "questionPattern": "application",
+      "prompt": "自社で設備を持つリスクを減らすため、専門業者へ運用を委託して契約で責任分担を決める対応はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "リスク移転"
+        },
+        {
+          "key": "B",
+          "text": "リスク受容"
+        },
+        {
+          "key": "C",
+          "text": "リスク発生"
+        },
+        {
+          "key": "D",
+          "text": "リスク隠蔽"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "委託や保険でリスクの影響や負担を他者へ移すのがリスク移転。ただし責任が完全になくなるわけではない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "リスク管理",
+        "リスク移転",
+        "委託"
+      ],
+      "contentHash": "sha256:4689051961542cb77b95e1a6dcaa344b934e974dbce5614dd726a4d9eef9b957",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-itil-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-itil",
+      "questionPattern": "application",
+      "prompt": "利用者から「業務システムにログインできない」と連絡があった。まずサービスを早く使える状態に戻す活動はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "インシデント管理"
+        },
+        {
+          "key": "B",
+          "text": "問題管理"
+        },
+        {
+          "key": "C",
+          "text": "変更管理"
+        },
+        {
+          "key": "D",
+          "text": "財務会計"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "インシデント管理はサービスの早期復旧を目的とする。問題管理は根本原因の分析、変更管理は変更の影響評価と統制。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ITIL",
+        "インシデント管理",
+        "サービス管理"
+      ],
+      "contentHash": "sha256:4603bab65abceb61847ca0175823ad12d5dd3b959714d02fece5c0b6b9578640",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-itil-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-itil",
+      "questionPattern": "application",
+      "prompt": "同じ障害が繰り返し発生しているため、根本原因を分析し再発防止策を決めたい。ITILの活動として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "問題管理"
+        },
+        {
+          "key": "B",
+          "text": "インシデント管理だけ"
+        },
+        {
+          "key": "C",
+          "text": "変更管理だけ"
+        },
+        {
+          "key": "D",
+          "text": "販売促進管理"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "問題管理は根本原因を特定し、恒久対策や再発防止につなげる。単に早く復旧させるだけならインシデント管理。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ITIL",
+        "問題管理",
+        "再発防止"
+      ],
+      "contentHash": "sha256:7d287332d647a0e1976435b9047967460187ce191bc05d265bf8aa066e971be5",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      }
+    },
+    {
+      "id": "strat-3c-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-3c",
+      "questionPattern": "application",
+      "prompt": "3C分析で、自社の強みや経営資源を分析する視点はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "Company（自社）"
+        },
+        {
+          "key": "B",
+          "text": "Customer（顧客）"
+        },
+        {
+          "key": "C",
+          "text": "Competitor（競合）"
+        },
+        {
+          "key": "D",
+          "text": "Cost（費用）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "3CはCustomer、Competitor、Company。自社の強み・弱みや経営資源はCompanyの視点で見る。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "3C",
+        "Company",
+        "経営分析"
+      ],
+      "contentHash": "sha256:dcd484d055fbdafe0c303ccd9eb6a5acaaacffd00aa1ab2f98884afd30d4b73f",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-3c-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-3c",
+      "questionPattern": "application",
+      "prompt": "新サービス検討で、顧客ニーズ、競合の提供価値、自社の実現力を比較したい。使う分析手法として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "3C分析"
+        },
+        {
+          "key": "B",
+          "text": "正規化"
+        },
+        {
+          "key": "C",
+          "text": "ディジタル署名"
+        },
+        {
+          "key": "D",
+          "text": "MTBF分析だけ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "3Cは顧客・競合・自社の3視点で市場を整理する。サービス戦略やマーケティングの初期検討に向く。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "3C",
+        "顧客",
+        "競合"
+      ],
+      "contentHash": "sha256:e25a06f28748dc1f7f13599cb7ec6fc225d8a837dfb99836d960fc4779429ed8",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-marketing-4p-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-marketing-4p",
+      "questionPattern": "application",
+      "prompt": "新商品の価格設定や割引方針を検討している。4Pのどの要素か。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "Price"
+        },
+        {
+          "key": "B",
+          "text": "Product"
+        },
+        {
+          "key": "C",
+          "text": "Place"
+        },
+        {
+          "key": "D",
+          "text": "Promotion"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "価格、割引、支払条件はPrice。製品はProduct、流通はPlace、広告や販売促進はPromotion。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "4P",
+        "Price",
+        "マーケティング"
+      ],
+      "contentHash": "sha256:9e34b93134026c96f5bde0f4121c0c0c4d5240105b3c0a0690d549737d57c2b5",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-10",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-marketing-4p-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-marketing-4p",
+      "questionPattern": "application",
+      "prompt": "ECだけでなく実店舗でも受け取れるようにする施策は、4Pでは主にどれに関係するか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "Place（流通）"
+        },
+        {
+          "key": "B",
+          "text": "Price（価格）"
+        },
+        {
+          "key": "C",
+          "text": "Product（製品）"
+        },
+        {
+          "key": "D",
+          "text": "Patent（特許）"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "顧客にどこでどのように届けるかはPlace。販売チャネルや物流の設計が含まれる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "4P",
+        "Place",
+        "チャネル"
+      ],
+      "contentHash": "sha256:c3d6f121c99b0764bde6c82e65e8407ec5fa4107ce7b310d574ef53c9d1c56ca",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-10",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-accounting-break-even-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-accounting-break-even",
+      "questionPattern": "application",
+      "prompt": "固定費100万円、販売単価5,000円、1個当たり変動費3,000円の商品の損益分岐点販売数量はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "500個"
+        },
+        {
+          "key": "B",
+          "text": "200個"
+        },
+        {
+          "key": "C",
+          "text": "333個"
+        },
+        {
+          "key": "D",
+          "text": "1,000個"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "1個当たりの限界利益は5,000-3,000=2,000円。固定費1,000,000円÷2,000円=500個。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "損益分岐点",
+        "固定費",
+        "変動費",
+        "計算"
+      ],
+      "contentHash": "sha256:76c20cc3944c5d4c014e99e0be2b076ebd49ffde4e3ad7862a17e0aa643378f4",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-03",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-accounting-break-even-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-accounting-break-even",
+      "questionPattern": "application",
+      "prompt": "損益分岐点を下げる施策として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "固定費を削減する、または1個当たりの限界利益を高める"
+        },
+        {
+          "key": "B",
+          "text": "固定費を増やし、販売単価を下げる"
+        },
+        {
+          "key": "C",
+          "text": "売上に関係なく変動費を必ず増やす"
+        },
+        {
+          "key": "D",
+          "text": "利益計算から固定費を除外する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "損益分岐点は固定費÷限界利益。固定費を下げるか、単価上昇・変動費低減で限界利益を高めると下がる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "損益分岐点",
+        "限界利益",
+        "利益管理"
+      ],
+      "contentHash": "sha256:efe4b991dee23dde3e90d7fe9e706470fb7ed90294c1ebd7231d198e24955292",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-03",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-legal-compliance-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-legal-compliance",
+      "questionPattern": "application",
+      "prompt": "法令には違反していなくても、社会的信用を損なう行為を避けるべきという考え方として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "コンプライアンスは法令だけでなく社会規範や倫理も含めて考える"
+        },
+        {
+          "key": "B",
+          "text": "法律に罰則がなければ何をしてもよい"
+        },
+        {
+          "key": "C",
+          "text": "社内規程は顧客対応には一切関係しない"
+        },
+        {
+          "key": "D",
+          "text": "倫理より短期売上を常に優先する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "コンプライアンスは法令遵守に加え、社内規程や社会倫理を含む。信用リスクの観点で問われる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "コンプライアンス",
+        "企業倫理",
+        "法務"
+      ],
+      "contentHash": "sha256:2c2b59df52f72c0aff2a353c8f4f9d408cd897fa0d77f0b1fcaf3ef4af3909fa",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-07",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-legal-compliance-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-legal-compliance",
+      "questionPattern": "application",
+      "prompt": "取引先から受け取った未公開情報を外部に漏らさない義務を契約で明確にしたい。締結する契約はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "NDA（秘密保持契約）"
+        },
+        {
+          "key": "B",
+          "text": "SLA"
+        },
+        {
+          "key": "C",
+          "text": "WBS"
+        },
+        {
+          "key": "D",
+          "text": "DNS"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "秘密情報の取扱いを定める契約がNDA。SLAはサービス水準、WBSは作業分解、DNSは名前解決。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "NDA",
+        "秘密保持",
+        "契約"
+      ],
+      "contentHash": "sha256:5f2c12ecd88c2f4a9a15a27fc35ca8e346c293fc52a0ae8526bfd3bf4154ed53",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-07",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-intellectual-property-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-intellectual-property",
+      "questionPattern": "application",
+      "prompt": "自社が開発した新しい技術的アイデアを保護したい。主に対象となる権利はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "特許権"
+        },
+        {
+          "key": "B",
+          "text": "著作権"
+        },
+        {
+          "key": "C",
+          "text": "商標権"
+        },
+        {
+          "key": "D",
+          "text": "肖像権だけ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "技術的な発明は特許権で保護する。著作権は表現、商標権は商品・サービスの識別標識を保護する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "特許権",
+        "知的財産権",
+        "発明"
+      ],
+      "contentHash": "sha256:b4005e4a501bd417ce53a853e6ab678d3ee38141163ba31917ec9cba269f2956",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-04",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-intellectual-property-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-intellectual-property",
+      "questionPattern": "application",
+      "prompt": "Webサイトに掲載する文章やイラストを、作者の許諾なくコピーして使うと問題になり得る権利はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "著作権"
+        },
+        {
+          "key": "B",
+          "text": "主キー"
+        },
+        {
+          "key": "C",
+          "text": "NAT"
+        },
+        {
+          "key": "D",
+          "text": "MTTR"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "文章、画像、音楽、プログラムなどの創作的表現は著作権で保護される。利用条件やライセンス確認が必要。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "著作権",
+        "ライセンス",
+        "知的財産権"
+      ],
+      "contentHash": "sha256:3ae5ff1342f395fbaecae304a5ac432225056e23a7745f545f31921a47e96d73",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-04",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-privacy-law-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-privacy-law",
+      "questionPattern": "application",
+      "prompt": "キャンペーン応募で個人情報を取得する際、最初に行うべき対応として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "利用目的をできるだけ具体的に示し、必要な範囲で取得する"
+        },
+        {
+          "key": "B",
+          "text": "利用目的を知らせず、将来使うかもしれない情報もすべて集める"
+        },
+        {
+          "key": "C",
+          "text": "取得後は本人からの開示請求に一切応じない"
+        },
+        {
+          "key": "D",
+          "text": "同意がなくても無制限に第三者へ販売する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "個人情報は利用目的を明示し、目的達成に必要な範囲で取り扱う。過剰取得や無断提供は不適切。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "個人情報保護",
+        "利用目的",
+        "取得"
+      ],
+      "contentHash": "sha256:252efbaa6c4dc82b17139ee49424279f968964ad789bc2f43baf0b8a8f1a3bd5",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-07",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-privacy-law-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-privacy-law",
+      "questionPattern": "application",
+      "prompt": "個人データを委託先に扱わせる場合の対応として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "委託先を適切に監督し、安全管理措置を契約などで確認する"
+        },
+        {
+          "key": "B",
+          "text": "委託した時点で自社の管理責任は完全になくなる"
+        },
+        {
+          "key": "C",
+          "text": "委託先には目的外利用を自由に認める"
+        },
+        {
+          "key": "D",
+          "text": "漏えい時の連絡手順を決めない"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "委託先に個人データを扱わせる場合も、委託元は適切な監督が必要。契約、管理状況確認、事故対応手順が重要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "個人情報保護",
+        "委託先管理",
+        "安全管理措置"
+      ],
+      "contentHash": "sha256:75ea4be593158e664b152829bfd7552546a512e702080689a1c37e416989eaac",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-07",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-security-laws-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-security-laws",
+      "questionPattern": "application",
+      "prompt": "他人のIDとパスワードを無断で使い、本人になりすましてシステムへログインする行為を禁じる法律はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "不正アクセス禁止法"
+        },
+        {
+          "key": "B",
+          "text": "著作権法"
+        },
+        {
+          "key": "C",
+          "text": "労働基準法"
+        },
+        {
+          "key": "D",
+          "text": "独占禁止法"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "無断ログインや識別符号の不正取得・提供は不正アクセス禁止法の対象。セキュリティ関連法規の頻出。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "不正アクセス禁止法",
+        "情報セキュリティ法規",
+        "認証情報"
+      ],
+      "contentHash": "sha256:ff6b780d4aad959bd43e513c4aaee861117f07fd7b24e399338b59ca31fa2665",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-05",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-security-laws-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-security-laws",
+      "questionPattern": "application",
+      "prompt": "正当な理由なく、他人のPCで動作して被害を与えるウイルスを作成・提供する行為が処罰対象となる法律上の考え方はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "不正指令電磁的記録に関する罪"
+        },
+        {
+          "key": "B",
+          "text": "商標権の更新"
+        },
+        {
+          "key": "C",
+          "text": "SLA違反だけ"
+        },
+        {
+          "key": "D",
+          "text": "景品表示法の優良誤認だけ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "マルウェアの作成・提供などは刑法の不正指令電磁的記録に関する罪で問われる。名称と対象行為を結び付ける。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "不正指令電磁的記録",
+        "マルウェア",
+        "法規"
+      ],
+      "contentHash": "sha256:a902326bc9b4000ad55ffdaa9e6c1622775362fde0750198012518a77e33cdf4",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-05",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-system-strategy-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-system-strategy",
+      "questionPattern": "application",
+      "prompt": "経営目標を達成するため、どの業務をどのようにIT化するかを全体方針として定める活動はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "システム戦略の策定"
+        },
+        {
+          "key": "B",
+          "text": "単体テストの実施"
+        },
+        {
+          "key": "C",
+          "text": "DNSサーバの再起動"
+        },
+        {
+          "key": "D",
+          "text": "表計算のセル結合"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "システム戦略は経営戦略とIT活用を結び付ける全体方針。個別の実装作業より上流の活動。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "システム戦略",
+        "経営戦略",
+        "IT化"
+      ],
+      "contentHash": "sha256:21b3b2b9d1dbf12e08fafc8a771efcd9ffe097d786225667d1d59b35120bac79",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-18",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      }
+    },
+    {
+      "id": "strat-system-strategy-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-system-strategy",
+      "questionPattern": "application",
+      "prompt": "現行業務をそのままシステム化すると非効率も残るため、業務手順を見直してからIT導入したい。適切な考え方はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "業務改革や業務改善と合わせてシステム化を検討する"
+        },
+        {
+          "key": "B",
+          "text": "非効率な作業をすべて手入力のまま増やす"
+        },
+        {
+          "key": "C",
+          "text": "経営目標と関係なく最新技術だけを導入する"
+        },
+        {
+          "key": "D",
+          "text": "利用部門の意見を聞かずに画面色だけ決める"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "IT導入は目的ではなく手段。業務プロセスや経営目標と合わせて検討することで効果が出る。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "システム戦略",
+        "業務改革",
+        "IT投資"
+      ],
+      "contentHash": "sha256:6d73bb0f831a48fd977957c688994d149aa3d0624a2f2cdcc9cdd7d9deb7f532",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-18",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      }
+    },
+    {
+      "id": "strat-business-process-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-business-process",
+      "questionPattern": "application",
+      "prompt": "受注から出荷までの作業を図にし、重複入力や承認待ちの停滞を見つけて改善したい。まず有効な活動はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "業務フローを可視化し、ボトルネックを分析する"
+        },
+        {
+          "key": "B",
+          "text": "現行業務を確認せず新システムを即時導入する"
+        },
+        {
+          "key": "C",
+          "text": "担当者ごとの暗黙知をさらに増やす"
+        },
+        {
+          "key": "D",
+          "text": "問題点を記録せず個人の努力だけに任せる"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "業務改善では現状を可視化し、ムダや停滞の原因を特定してから改善策を考える。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "業務プロセス",
+        "可視化",
+        "ボトルネック"
+      ],
+      "contentHash": "sha256:3a8d8c3b3f0c4ca7c9f1705421319cb14da3e3f8c78a372554f6a8df2011ad2c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-business-process-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-business-process",
+      "questionPattern": "application",
+      "prompt": "紙の申請を単にPDFにしただけで、承認ルートや判断基準は変わっていない。この状態の説明として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "デジタル化はしているが、業務プロセス改善としては不十分な可能性がある"
+        },
+        {
+          "key": "B",
+          "text": "必ずDXが完了して競争優位が確立した"
+        },
+        {
+          "key": "C",
+          "text": "個人情報保護の義務がなくなった"
+        },
+        {
+          "key": "D",
+          "text": "業務要件を確認する必要がなくなった"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "紙を電子化するだけでは業務改革とは限らない。流れや判断、価値提供の改善まで考える必要がある。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "業務改善",
+        "デジタル化",
+        "DX"
+      ],
+      "contentHash": "sha256:fa7933ab10eac232403a95531f4d1767aad81adba67cbe46f5cec315a7990ab3",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-ppm-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-ppm",
+      "questionPattern": "application",
+      "prompt": "市場成長率が高く、市場占有率も高い事業に対するPPM上の分類はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "花形"
+        },
+        {
+          "key": "B",
+          "text": "金のなる木"
+        },
+        {
+          "key": "C",
+          "text": "問題児"
+        },
+        {
+          "key": "D",
+          "text": "負け犬"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "高成長・高シェアは花形。投資も必要だが将来の収益源として期待される。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "PPM",
+        "花形",
+        "市場成長率"
+      ],
+      "contentHash": "sha256:c878e686221e233b5dc1630bf3af388028db815413e1ff3ffcf34b932cb8ab1b",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-ppm-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-ppm",
+      "questionPattern": "application",
+      "prompt": "市場成長率は低いが市場占有率が高く、安定した資金を生む事業はPPMで何と呼ぶか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "金のなる木"
+        },
+        {
+          "key": "B",
+          "text": "問題児"
+        },
+        {
+          "key": "C",
+          "text": "花形"
+        },
+        {
+          "key": "D",
+          "text": "負け犬"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "低成長・高シェアは金のなる木。大きな成長投資は少なく、得た資金を他事業へ回す判断が問われる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "PPM",
+        "金のなる木",
+        "市場占有率"
+      ],
+      "contentHash": "sha256:cec5c1600f17d8489cfc4694fc8093b2cb6ef72417e2c865b494f2ad49e99d87",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-value-chain-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-value-chain",
+      "questionPattern": "application",
+      "prompt": "購買物流、製造、出荷物流、販売・マーケティング、サービスを一連の価値活動として分析する手法はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "バリューチェーン分析"
+        },
+        {
+          "key": "B",
+          "text": "SWOTの脅威分析だけ"
+        },
+        {
+          "key": "C",
+          "text": "公開鍵暗号方式"
+        },
+        {
+          "key": "D",
+          "text": "排他制御"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "バリューチェーンは企業活動を価値の連鎖として見て、どこで価値やコストが生まれるか分析する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "バリューチェーン",
+        "主活動",
+        "競争優位"
+      ],
+      "contentHash": "sha256:28e141fbe92a3d9fdd7c421ec6879733b28dd1ecb62099c618e77d331b593a50",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-value-chain-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-value-chain",
+      "questionPattern": "application",
+      "prompt": "製造部門だけでなく、人事、技術開発、調達などが主活動を支えるという見方はどの分析に含まれるか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "バリューチェーン分析"
+        },
+        {
+          "key": "B",
+          "text": "真理値表"
+        },
+        {
+          "key": "C",
+          "text": "ランサムウェア分析"
+        },
+        {
+          "key": "D",
+          "text": "サブネット分割"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "バリューチェーンでは主活動と支援活動を分けて、価値創出への貢献を分析する。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "バリューチェーン",
+        "支援活動",
+        "価値創出"
+      ],
+      "contentHash": "sha256:f26fe1d0114c5d4c0e0a11d6df24afe53f4e41ebaebf6e80b4b841ef0482b2e5",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-management-systems-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-management-systems",
+      "questionPattern": "application",
+      "prompt": "顧客の購入履歴や問い合わせ履歴を活用し、関係を強化して売上向上を図るシステムはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "CRM"
+        },
+        {
+          "key": "B",
+          "text": "SCM"
+        },
+        {
+          "key": "C",
+          "text": "ERP"
+        },
+        {
+          "key": "D",
+          "text": "DNS"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "CRMは顧客関係管理。SCMは供給連鎖、ERPは企業資源を統合管理する仕組み。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "CRM",
+        "顧客管理",
+        "経営管理システム"
+      ],
+      "contentHash": "sha256:925bc699bd89e07438d5fbcc62b67d41eb8660ea265477e58a2e9e792e53d6a8",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-management-systems-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-management-systems",
+      "questionPattern": "application",
+      "prompt": "調達、生産、物流、販売までの流れを全体最適し、在庫過多や欠品を減らす仕組みはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "SCM"
+        },
+        {
+          "key": "B",
+          "text": "CRM"
+        },
+        {
+          "key": "C",
+          "text": "MFA"
+        },
+        {
+          "key": "D",
+          "text": "WBS"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "SCMはサプライチェーン全体を管理する考え方。部門や企業をまたいだモノと情報の流れを最適化する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SCM",
+        "サプライチェーン",
+        "在庫管理"
+      ],
+      "contentHash": "sha256:ec654a73e7658470ae57ba56957976007c779c958d45dd0be6ab5e89d36b4775",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-goal-evaluation-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-goal-evaluation",
+      "questionPattern": "application",
+      "prompt": "ECサイトで「年間売上10億円」を最終目標に置いた。この指標はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "KGI"
+        },
+        {
+          "key": "B",
+          "text": "KPI"
+        },
+        {
+          "key": "C",
+          "text": "CSF"
+        },
+        {
+          "key": "D",
+          "text": "SLA"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "KGIは最終目標を表す指標。KPIは達成までの途中指標、CSFは成功要因。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "KGI",
+        "KPI",
+        "目標管理"
+      ],
+      "contentHash": "sha256:9557a7615e1c62014f6caa9b5e084c0a00609321bfb67ba04ec58ecdc6a7e010",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-11",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-goal-evaluation-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-goal-evaluation",
+      "questionPattern": "application",
+      "prompt": "最終目標の売上達成に向けて、月間購入率やリピート率を追跡する。このような途中指標はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "KPI"
+        },
+        {
+          "key": "B",
+          "text": "KGI"
+        },
+        {
+          "key": "C",
+          "text": "NDA"
+        },
+        {
+          "key": "D",
+          "text": "DHCP"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "KPIは重要業績評価指標で、KGI達成までの進捗を測る。途中指標と最終指標の区別が頻出。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "KPI",
+        "KGI",
+        "評価指標"
+      ],
+      "contentHash": "sha256:e5e0ef1068dde3fdce3a50f8aff95d1600d46a868f0d59a6c807c5d5117c8f3c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-11",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-financial-statements-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-financial-statements",
+      "questionPattern": "application",
+      "prompt": "ある時点の資産、負債、純資産の状態を示す財務諸表はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "貸借対照表（B/S）"
+        },
+        {
+          "key": "B",
+          "text": "損益計算書（P/L）"
+        },
+        {
+          "key": "C",
+          "text": "WBS"
+        },
+        {
+          "key": "D",
+          "text": "ガントチャート"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "貸借対照表は一定時点の財政状態を示す。損益計算書は一定期間の収益・費用・利益を示す。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "貸借対照表",
+        "財務諸表",
+        "BS"
+      ],
+      "contentHash": "sha256:80fee1e0e954c39e110ea17f6a682517f232ea3f852fa6d8abe5009210ef98fa",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-03",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-financial-statements-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-financial-statements",
+      "questionPattern": "application",
+      "prompt": "売上高から売上原価や販管費などを差し引き、一定期間の利益を示す財務諸表はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "損益計算書（P/L）"
+        },
+        {
+          "key": "B",
+          "text": "貸借対照表（B/S）"
+        },
+        {
+          "key": "C",
+          "text": "ER図"
+        },
+        {
+          "key": "D",
+          "text": "サーバ証明書"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "損益計算書は一定期間の経営成績を示す。売上、費用、利益の関係を読む問題で問われる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "損益計算書",
+        "財務諸表",
+        "PL"
+      ],
+      "contentHash": "sha256:b632f4df8cae272c7a3e47f11dc85c55786cb7d16c03af77df3a2824881e1d55",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-03",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-corporate-strategy-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-corporate-strategy",
+      "questionPattern": "application",
+      "prompt": "他社がまねしにくく、競争優位の源泉となる自社の中核的能力はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "コアコンピタンス"
+        },
+        {
+          "key": "B",
+          "text": "ランサムウェア"
+        },
+        {
+          "key": "C",
+          "text": "サブネットマスク"
+        },
+        {
+          "key": "D",
+          "text": "単体テスト"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "コアコンピタンスは競争力の源泉となる中核能力。単なる保有設備や一時的流行とは区別する。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "コアコンピタンス",
+        "競争優位",
+        "経営戦略"
+      ],
+      "contentHash": "sha256:0837ed3c31367dbdcfad01a326b323bff4da57e05a0f3a0ba2743970bcd8c263",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-corporate-strategy-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-corporate-strategy",
+      "questionPattern": "application",
+      "prompt": "技術を持つ企業を買収して自社グループに取り込み、事業拡大を図る戦略はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "M&A"
+        },
+        {
+          "key": "B",
+          "text": "アライアンス"
+        },
+        {
+          "key": "C",
+          "text": "アウトソーシング"
+        },
+        {
+          "key": "D",
+          "text": "NAT"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "M&Aは合併・買収。アライアンスは別会社のまま提携、アウトソーシングは業務委託。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "M&A",
+        "アライアンス",
+        "成長戦略"
+      ],
+      "contentHash": "sha256:c7b8d21132c223f1410ffc16eb10c1e9d332933e690fddd1ff837c47e1694df5",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      }
+    },
+    {
+      "id": "strat-ebusiness-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-ebusiness",
+      "questionPattern": "application",
+      "prompt": "企業間で受発注データを標準化した形式で電子的に交換する仕組みはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "EDI"
+        },
+        {
+          "key": "B",
+          "text": "EC"
+        },
+        {
+          "key": "C",
+          "text": "SEO"
+        },
+        {
+          "key": "D",
+          "text": "MFA"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "EDIは企業間の電子データ交換。ECは電子商取引全般、SEOは検索エンジン最適化。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "EDI",
+        "eビジネス",
+        "企業間取引"
+      ],
+      "contentHash": "sha256:eaaa9bd60e572f11b35df40abc3f1b5caf917a457135a0e19d4e95bdfbaf7928",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-16",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      }
+    },
+    {
+      "id": "strat-ebusiness-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-ebusiness",
+      "questionPattern": "application",
+      "prompt": "スマートフォン決済やオンライン送金など、金融とITを組み合わせたサービス分野はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "フィンテック"
+        },
+        {
+          "key": "B",
+          "text": "ハウジング"
+        },
+        {
+          "key": "C",
+          "text": "正規化"
+        },
+        {
+          "key": "D",
+          "text": "フェールセーフ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "フィンテックは金融（Finance）と技術（Technology）を組み合わせたサービスや事業領域。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "フィンテック",
+        "eビジネス",
+        "決済"
+      ],
+      "contentHash": "sha256:1b9d3f13a4af16f7d79975ab91079d9ceb1db33f6524e8cb0031beb89fbf988f",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-16",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      }
+    },
+    {
+      "id": "strat-labor-laws-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-labor-laws",
+      "questionPattern": "application",
+      "prompt": "派遣契約で、派遣先が派遣労働者に業務上の指揮命令を行う形態はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "労働者派遣"
+        },
+        {
+          "key": "B",
+          "text": "請負"
+        },
+        {
+          "key": "C",
+          "text": "売買"
+        },
+        {
+          "key": "D",
+          "text": "NDA"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "派遣は派遣先が指揮命令を行う。請負は請負会社が仕事の完成責任を負い、発注者が作業者へ直接指揮命令しない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "労働者派遣",
+        "請負",
+        "指揮命令"
+      ],
+      "contentHash": "sha256:3d8856d90bdbb8c9245ed03e36df19107fff0f6697b81546bbffbf855bc4bc09",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-06",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-labor-laws-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-labor-laws",
+      "questionPattern": "application",
+      "prompt": "請負契約として適切な運用はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "受注会社が自社の作業者に指揮命令し、成果物の完成責任を負う"
+        },
+        {
+          "key": "B",
+          "text": "発注者が請負会社の作業者へ日々直接指示する"
+        },
+        {
+          "key": "C",
+          "text": "発注者が請負会社の勤怠や残業を直接命令する"
+        },
+        {
+          "key": "D",
+          "text": "成果物ではなく作業者の貸出しだけを目的にする"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "請負では請負会社が指揮命令と完成責任を負う。発注者が直接指示すると偽装請負の問題になり得る。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "請負",
+        "偽装請負",
+        "労働関連法規"
+      ],
+      "contentHash": "sha256:a99486f9a52b9748f54afc0a2e086ac4e332cfaea79b5c2c31a1b12f4222c0a4",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-06",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-bcp-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-bcp",
+      "questionPattern": "application",
+      "prompt": "大規模災害時にも重要業務を継続・早期復旧できるよう、事前に優先業務や代替手段を決める計画はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "BCP"
+        },
+        {
+          "key": "B",
+          "text": "PPM"
+        },
+        {
+          "key": "C",
+          "text": "SQL"
+        },
+        {
+          "key": "D",
+          "text": "WAF"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "BCPは事業継続計画。災害や障害時に重要業務を止めない、または早く復旧するための計画。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "BCP",
+        "事業継続",
+        "災害対策"
+      ],
+      "contentHash": "sha256:c1063fa016596927314fe0c2e49e53cd3b78d860e50fb2e63b54c66e9275c95c",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "strat-bcp-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-bcp",
+      "questionPattern": "application",
+      "prompt": "BCPで、どの業務をどの順に復旧するかを決める際に重視すべき観点はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "事業への影響度と許容停止時間"
+        },
+        {
+          "key": "B",
+          "text": "担当者の好みだけ"
+        },
+        {
+          "key": "C",
+          "text": "画面デザインの派手さだけ"
+        },
+        {
+          "key": "D",
+          "text": "ファイル名の長さだけ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "BCPでは重要業務、影響度、目標復旧時間などから優先順位を決める。限られた資源で復旧する判断が必要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "BCP",
+        "復旧優先順位",
+        "RTO"
+      ],
+      "contentHash": "sha256:7d056ba361c52f217e8f81dae532aa37fd98d91f814405b4a61654da6e338958",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "tech-lan-wan-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-lan-wan",
+      "questionPattern": "application",
+      "prompt": "本社ビル内の各フロアのPCやプリンタを接続するネットワークと、本社と支社を通信事業者の回線で結ぶネットワークの組合せとして適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ビル内はLAN、本社と支社の接続はWAN"
+        },
+        {
+          "key": "B",
+          "text": "ビル内はWAN、本社と支社の接続はLAN"
+        },
+        {
+          "key": "C",
+          "text": "どちらも必ずBluetoothで接続する"
+        },
+        {
+          "key": "D",
+          "text": "どちらもデータベースの正規化で実現する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "LANは建物や敷地内など近い範囲、WANは離れた拠点間など広い範囲をつなぐ。Wi-Fiは無線LANの一種。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "LAN",
+        "WAN",
+        "ネットワーク"
+      ],
+      "contentHash": "sha256:29dde11a431280351d7bad687185211e3f3913837f2cae5ecaa9a521d91078d4",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-lan-wan-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-lan-wan",
+      "questionPattern": "application",
+      "prompt": "支店から本社サーバへの通信が遅い。原因調査で最初に切り分ける観点として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "支店内LAN、本社内LAN、拠点間WANのどこで遅延しているかを分けて確認する"
+        },
+        {
+          "key": "B",
+          "text": "すべてのPCの画面解像度を同じにする"
+        },
+        {
+          "key": "C",
+          "text": "支店のプリンタ名を短くする"
+        },
+        {
+          "key": "D",
+          "text": "データベースの主キーを削除する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ネットワーク障害は範囲を切り分けることが重要。LAN内の問題か、拠点間WANの問題かで対策が変わる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "LAN",
+        "WAN",
+        "障害切り分け"
+      ],
+      "contentHash": "sha256:19aa3144423d7af8fe9c74c89af84e7eca3087dd7dc94596d9f8076ba7986416",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-iot-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "application",
+      "prompt": "工場設備にセンサーを取り付け、振動データを収集して故障の兆候を検知したい。IoT活用として最も適切な説明はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "モノの状態をネットワーク経由で集め、分析して保全に活用する"
+        },
+        {
+          "key": "B",
+          "text": "設備をネットにつなげばパスワード管理は不要になる"
+        },
+        {
+          "key": "C",
+          "text": "センサーは必ず人が紙に記録するためだけに使う"
+        },
+        {
+          "key": "D",
+          "text": "IoTではクラウドやエッジでの処理は一切使わない"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "IoTはモノの状態をセンサーで取得し、ネットワーク経由で収集・分析・制御に使う。セキュリティ対策もセットで必要。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "IoT",
+        "センサー",
+        "予知保全"
+      ],
+      "contentHash": "sha256:a9e6f0b3316364dab7890ab312749c193234538bc441172276f9d4c4aea1d6be",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-17",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      }
+    },
+    {
+      "id": "tech-iot-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "application",
+      "prompt": "IoT機器を大量導入する際のセキュリティ対策として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "初期パスワード変更、更新適用、不要な通信の制限を行う"
+        },
+        {
+          "key": "B",
+          "text": "初期パスワードのままにして管理を簡単にする"
+        },
+        {
+          "key": "C",
+          "text": "インターネットに接続すれば更新作業は不要とする"
+        },
+        {
+          "key": "D",
+          "text": "全機器を同じ管理者IDで外部公開する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "IoT機器は攻撃の入口になり得る。初期設定の見直し、脆弱性修正、通信制御、資産管理が重要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "IoT",
+        "セキュリティ",
+        "脆弱性管理"
+      ],
+      "contentHash": "sha256:84ce5a422a95d25a34cae64b0391ec7d2bb5d5e0457aeea9177f5c5976cc01e9",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-17",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      }
+    },
+    {
+      "id": "tech-programming-basics-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-programming-basics",
+      "questionPattern": "application",
+      "prompt": "変数xに3を入れた後、`x ← x + 2` を2回実行した。最後のxの値はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "7"
+        },
+        {
+          "key": "B",
+          "text": "5"
+        },
+        {
+          "key": "C",
+          "text": "6"
+        },
+        {
+          "key": "D",
+          "text": "10"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "最初は3。1回目で5、2回目で7になる。代入は右辺の計算結果を左辺の変数へ入れ直す操作。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "プログラミング",
+        "変数",
+        "代入",
+        "計算"
+      ],
+      "contentHash": "sha256:d684f0e7d661d761a7c2ca75f55d3be74a74d4ead1ccb8470ca4e7d30bd60906",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-38",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      }
+    },
+    {
+      "id": "tech-programming-basics-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-programming-basics",
+      "questionPattern": "application",
+      "prompt": "同じ処理を必要な回数だけ実行したいが、終了条件を誤ると処理が終わらない。これに関係が深い基本構造はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "繰り返し"
+        },
+        {
+          "key": "B",
+          "text": "順次"
+        },
+        {
+          "key": "C",
+          "text": "暗号化"
+        },
+        {
+          "key": "D",
+          "text": "正規化"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "繰り返しでは終了条件が重要。条件が満たされない設計だと無限ループになり、処理が終わらない。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "プログラミング",
+        "繰り返し",
+        "終了条件"
+      ],
+      "contentHash": "sha256:c78b2d0eaa5e7dabb9c81cfb7fc3807d1360cfb87059f7bfd83ce0c1d3e543c3",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-38",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      }
+    },
+    {
+      "id": "tech-data-utilization-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-data-utilization",
+      "questionPattern": "application",
+      "prompt": "店舗別の売上、在庫、来店者数をダッシュボードで可視化し、発注量の判断に使いたい。最も適切な仕組みはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "BIツール"
+        },
+        {
+          "key": "B",
+          "text": "UPS"
+        },
+        {
+          "key": "C",
+          "text": "NAT"
+        },
+        {
+          "key": "D",
+          "text": "ディジタル署名"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "BIは蓄積データを集計・可視化して意思決定を支援する。UPSは電源対策、NATはアドレス変換。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "BI",
+        "データ活用",
+        "可視化"
+      ],
+      "contentHash": "sha256:c345ab83352645b04efd07700ef04a816ad04045d315b785e387b9843a393e80",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "tech-data-utilization-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-data-utilization",
+      "questionPattern": "application",
+      "prompt": "分析に使う顧客データで、同じ顧客が表記ゆれや重複で複数件登録されていた。分析前に行うべき作業として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "データクレンジングで誤り、重複、表記ゆれを補正する"
+        },
+        {
+          "key": "B",
+          "text": "誤りを含むまま分析すれば必ず精度が上がる"
+        },
+        {
+          "key": "C",
+          "text": "データを暗号化すれば重複は自動的に統合される"
+        },
+        {
+          "key": "D",
+          "text": "分析目的を決めずに全データを無制限に収集する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "データ品質が低いと分析結果も信用しにくい。分析前に重複、欠損、表記ゆれを整えることが重要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "データクレンジング",
+        "データ品質",
+        "分析"
+      ],
+      "contentHash": "sha256:51caeff4a3fe7ec60a9af2a28ee1b1553c81c4607d976a53a94b49d7d2321394",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      }
+    },
+    {
+      "id": "tech-api-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-api",
+      "questionPattern": "application",
+      "prompt": "自社アプリに外部の地図サービスを組み込み、住所から地図を表示したい。利用する仕組みとして最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "外部サービスが提供するWeb APIを呼び出す"
+        },
+        {
+          "key": "B",
+          "text": "外部サービスのサーバ室に物理的に入る"
+        },
+        {
+          "key": "C",
+          "text": "利用者のブラウザ履歴だけを解析する"
+        },
+        {
+          "key": "D",
+          "text": "DBの主キーをすべて削除する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "APIは外部サービスの機能やデータを決まった形式で利用する入口。内部実装を直接触る必要はない。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "API",
+        "Web API",
+        "システム連携"
+      ],
+      "contentHash": "sha256:7f6e1f5f29451d8b62577aabeb1b277211d1e2c1ce2444898b5597254606e967",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-60",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "tech-api-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "tech-api",
+      "questionPattern": "application",
+      "prompt": "API連携で、相手システムの内部処理をすべて公開せずに機能を提供できる理由として最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "決められたリクエストとレスポンスの形式だけを公開すればよいから"
+        },
+        {
+          "key": "B",
+          "text": "APIを使うと認証や利用制限が一切不要になるから"
+        },
+        {
+          "key": "C",
+          "text": "APIは画面デザインを自動で統一する機能だから"
+        },
+        {
+          "key": "D",
+          "text": "APIでは通信内容が必ず紙で郵送されるから"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "APIは窓口の仕様を公開し、内部実装は隠したまま連携できる。認証、権限、利用回数制限などの設計も重要。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "API",
+        "インタフェース",
+        "カプセル化"
+      ],
+      "contentHash": "sha256:d248a6ce328991d586710ee37232e24f2cf472d0d786b957d8a86af194f59447",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-60",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      }
+    },
+    {
+      "id": "mgmt-facility-management-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-facility-management",
+      "questionPattern": "application",
+      "prompt": "停電が発生した瞬間にサーバが突然停止しないよう、短時間だけ電力を供給して安全な停止時間を確保する装置はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "UPS（無停電電源装置）"
+        },
+        {
+          "key": "B",
+          "text": "WAF"
+        },
+        {
+          "key": "C",
+          "text": "DHCPサーバ"
+        },
+        {
+          "key": "D",
+          "text": "データマイニングツール"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "UPSは停電時に一時的な電力を供給する装置。長時間の電源確保は自家発電装置などと組み合わせる。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "UPS",
+        "ファシリティマネジメント",
+        "電源対策"
+      ],
+      "contentHash": "sha256:35a3bc48ca263976eefc43816ac129a5de59bc4d45e48f04f0b8bbad5a142e29",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-30",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-facility-management-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-facility-management",
+      "questionPattern": "application",
+      "prompt": "サーバ室の可用性を維持するためのファシリティ管理として不適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "誰でも自由に入室できるようにし、入退室記録を残さない"
+        },
+        {
+          "key": "B",
+          "text": "空調で温度と湿度を管理する"
+        },
+        {
+          "key": "C",
+          "text": "UPSや自家発電装置で停電に備える"
+        },
+        {
+          "key": "D",
+          "text": "ICカードなどで入退室を管理する"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "サーバ室は物理的セキュリティも重要。入退室管理をしないと盗難、破壊、誤操作のリスクが高まる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ファシリティマネジメント",
+        "入退室管理",
+        "可用性"
+      ],
+      "contentHash": "sha256:b2824880f3a4b06261056c93e959e5b2d39d61e04d66b8fcd8ad8cfc282968ee",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-30",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-estimation-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-estimation",
+      "questionPattern": "application",
+      "prompt": "10人月の作業量を、2人で担当する場合の単純計算上の期間はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "5か月"
+        },
+        {
+          "key": "B",
+          "text": "2か月"
+        },
+        {
+          "key": "C",
+          "text": "10か月"
+        },
+        {
+          "key": "D",
+          "text": "20か月"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "工数は人数×期間で表す。10人月÷2人=5か月。ただし実務では人数を増やせば必ず比例して短縮できるとは限らない。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "人月",
+        "工数",
+        "見積り",
+        "計算"
+      ],
+      "contentHash": "sha256:74d792598caec6ea7ceaca7d68835fdd2c1605f46657283a448519c7c1c0ff29",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "mgmt-estimation-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "mgmt-estimation",
+      "questionPattern": "application",
+      "prompt": "開発規模を、プログラム行数ではなく、画面・帳票・入出力など利用者から見た機能の数と複雑さで見積もる方法はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "FP法（ファンクションポイント法）"
+        },
+        {
+          "key": "B",
+          "text": "ウォータフォールモデル"
+        },
+        {
+          "key": "C",
+          "text": "クリティカルパス法"
+        },
+        {
+          "key": "D",
+          "text": "リスク移転"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "FP法は利用者から見た機能に着目して規模を見積もる。まだコードがない段階でも見積りやすい。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "FP法",
+        "見積り",
+        "ファンクションポイント"
+      ],
+      "contentHash": "sha256:471694756c14b0e36fdc46ae6a432168f5d795bbfe4b066c64a55a6a99a83a23",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      }
+    },
+    {
+      "id": "strat-standardization-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-standardization",
+      "questionPattern": "application",
+      "prompt": "国内だけでなく海外企業とも部品仕様を合わせ、相互接続性を高めたい。国際的な標準として参照するものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "ISOなどの国際規格"
+        },
+        {
+          "key": "B",
+          "text": "自社内だけの口頭ルール"
+        },
+        {
+          "key": "C",
+          "text": "担当者個人の好み"
+        },
+        {
+          "key": "D",
+          "text": "未公開の一時的なメモ"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "国際的な相互接続性や取引にはISOなどの国際規格が使われる。JISは日本の国家規格。",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "標準化",
+        "ISO",
+        "国際規格"
+      ],
+      "contentHash": "sha256:8dff33bd42aaf4421eab85e88622be01b52adf72cb20d41ff37c1bb537c77874",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-08",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    },
+    {
+      "id": "strat-standardization-ex2",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-standardization",
+      "questionPattern": "application",
+      "prompt": "ある製品仕様が公的機関で定められたわけではないが、市場で圧倒的に普及し事実上の標準になった。このような標準はどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "デファクトスタンダード"
+        },
+        {
+          "key": "B",
+          "text": "JIS"
+        },
+        {
+          "key": "C",
+          "text": "ISO 9001"
+        },
+        {
+          "key": "D",
+          "text": "SLA"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "デファクトスタンダードは市場で広く使われた結果として標準になったもの。JISやISOのような公的規格とは成り立ちが異なる。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "デファクトスタンダード",
+        "標準化",
+        "市場"
+      ],
+      "contentHash": "sha256:16521b20948dd32f4acf269d2599a77dce24e93c7c35658caf93d56097aa52f1",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-08",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      }
+    }
+  ]
+}
