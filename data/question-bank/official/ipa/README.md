@@ -40,8 +40,47 @@ official/ipa/it-passport-<年度>.json
   原文を収録しただけの `content_verified` 段階では空でよい
   （埋めるためだけの解説を書かせないため）。
 - `sourceUrl`（問題冊子）と `answerSourceUrl`（解答表）は必須。
+- `official.examField`（公式問題冊子上の出題区分）は必須。詳細は下の「3つの分類軸」。
 - 収録したら `data/question-bank/index.ts` の `questionBankFiles` に追加する。
 - ID は他ファイルと重複させない。重複するとローダーが例外を投げる。
+
+## 3つの分類軸
+
+似ているが**別物**の分類が3つある。混同すると分野別集計と復習導線の両方が壊れる。
+
+| フィールド | 意味 | 何に使うか | 決め方 |
+| --- | --- | --- | --- |
+| `official.examField` | 公式問題冊子上の**出題区分** | 年度別・区分別の再現、出典表示 | 公式冊子の並び（問番号）から機械的に決める |
+| `syllabusNode.field` | 問題の**内容**から見た IPA シラバス分類 | 弱点分析、分野別集計 | `primaryTopicId` → `data/ipaSyllabus.ts` から引く |
+| `primaryTopicId` | アプリ内の**復習先トピック** | 間違えたときの戻り先 | 転記時に人が決めて source.json に書く |
+
+`official.examField` は「公式ではこの区分の問だった」という**出典側の事実**、
+`syllabusNode.field` は「何を問うている問題か」という**アプリ側の解釈**。
+この2つは一致しないことがあり、一致させてもいけない。
+
+```text
+問16 … official.examField: "strategy"   / syllabusNode.field: "technology"
+問52 … official.examField: "management" / syllabusNode.field: "strategy"
+```
+
+公式区分で `syllabusNode.field` を上書きすると、内容ベースの弱点分析が
+公式冊子の並びに引きずられて壊れる。逆も同じ。
+
+令和8年度 ITパスポートの区分の境目は
+`lib/questionBank/officialExamField.ts` の `getOfficialExamField()` が持つ。
+
+```text
+問1〜34   ストラテジ   （34問）
+問35〜54  マネジメント （20問）
+問55〜100 テクノロジ   （46問）
+```
+
+問番号から決まるので source.json に区分を手入力する必要はない。
+境目は年度・試験区分ごとに変わるため、他の年度を収録するときはこの範囲を使い回さないこと。
+
+なお `official.examField` は出典側のメタ情報なので **`contentHash` の対象外**
+（対象は `prompt` / `choices` / `correctChoice` / `explanation` のみ）。
+区分を直しても本文のハッシュは動かない。
 
 ## 図表
 

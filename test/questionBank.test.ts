@@ -5,6 +5,7 @@ import path from "node:path";
 
 import { examLevelQuestions } from "@/data/examLevelQuestions";
 import { topicCheckPacks } from "@/data/topicCheckPacks";
+import { getAllTopics } from "@/lib/content";
 import manifest from "@/data/question-bank/manifests/original-exam-level.json";
 import ipa2026Manifest from "@/data/question-bank/manifests/official-ipa-it-passport-2026.json";
 import ipa2026Source from "@/data/question-bank/sources/official/ipa/it-passport-2026.source.json";
@@ -23,6 +24,7 @@ import {
   validateQuestion,
   validateQuestions,
 } from "@/lib/questionBank/validate";
+import { getOfficialExamField } from "@/lib/questionBank/officialExamField";
 import { resolvePackExamAsCheckQuestions, resolvePackExamQuestions } from "@/lib/checkPack";
 import type { QuestionRecord } from "@/types/questionBank";
 
@@ -360,6 +362,7 @@ describe("公式問題の制約", () => {
     sourceUrl: "https://www.ipa.go.jp/shiken/mondai-kaiotu/example.html",
     answerSourceUrl: "https://www.ipa.go.jp/shiken/mondai-kaiotu/example-answer.html",
     attribution: "IPA 独立行政法人情報処理推進機構",
+    examField: "technology",
     isModified: false,
   } as const;
 
@@ -415,6 +418,64 @@ describe("公式問題の制約", () => {
       official: { ...officialSource, isModified: false },
     });
     expect(validateQuestion(q).map((i) => i.rule)).toContain("modified-official-is-modified");
+  });
+
+  // --- 公式出題区分（official.examField） ---------------------------------
+
+  it("公式問題に examField が無いと検出される", () => {
+    for (const origin of ["official_past", "modified_official"] as const) {
+      const withoutExamField = { ...officialSource, isModified: origin === "modified_official" };
+      delete (withoutExamField as Partial<typeof withoutExamField>).examField;
+
+      const q = makeQuestion({ origin, official: withoutExamField as QuestionRecord["official"] });
+      expect(validateQuestion(q).map((i) => i.rule), origin).toContain(
+        "official-exam-field-required",
+      );
+    }
+  });
+
+  it("許可されていない examField は検出される", () => {
+    const q = makeQuestion({
+      origin: "official_past",
+      official: { ...officialSource, examField: "テクノロジ" as never },
+    });
+    expect(validateQuestion(q).map((i) => i.rule)).toContain("official-exam-field-value");
+  });
+
+  it("令和8年度の問番号と examField がずれていると検出される", () => {
+    // 問16 は公式冊子ではストラテジ区分。内容分類（technology）を入れると落ちる。
+    const q = makeQuestion({
+      origin: "official_past",
+      official: { ...officialSource, year: 2026, questionNumber: 16, examField: "technology" },
+    });
+    expect(validateQuestion(q).map((i) => i.rule)).toContain(
+      "official-exam-field-question-number",
+    );
+  });
+
+  it("令和8年度の問番号と examField が一致していれば違反ゼロ", () => {
+    const cases = [
+      { questionNumber: 1, examField: "strategy" },
+      { questionNumber: 34, examField: "strategy" },
+      { questionNumber: 35, examField: "management" },
+      { questionNumber: 54, examField: "management" },
+      { questionNumber: 55, examField: "technology" },
+      { questionNumber: 100, examField: "technology" },
+    ] as const;
+
+    for (const { questionNumber, examField } of cases) {
+      const q = makeQuestion({
+        origin: "official_past",
+        official: { ...officialSource, year: 2026, questionNumber, examField },
+      });
+      expect(formatIssues(validateQuestion(q)), `問${questionNumber}`).toBe("");
+    }
+  });
+
+  it("getOfficialExamField は範囲外の問番号で例外を投げる", () => {
+    for (const bad of [0, -1, 101, 1.5, Number.NaN]) {
+      expect(() => getOfficialExamField(bad), String(bad)).toThrow(/公式出題区分を判定できない/);
+    }
   });
 
   it("app_original / ai_generated に出典を付けると検出される", () => {
@@ -564,14 +625,87 @@ describe("令和8年度 ITパスポート 公開問題", () => {
     }
   });
 
-  it("全問に有効な primaryTopicId と syllabusNode がある", () => {
-    const validTopicIds = new Set(examLevelQuestions.map((q) => q.topicId));
+  it("全問の primaryTopicId がアプリの正規トピックに実在する", () => {
+    // 有効集合はアプリのトピック一覧（data/topics）。既存問題が使っているIDだけに
+    // 絞ると、まだ問題が無いトピックを指せなくなるうえ、検査もそのぶん緩くなる。
+    const validTopicIds = new Set(getAllTopics().map((topic) => topic.id));
+    expect(validTopicIds.size).toBeGreaterThan(0);
+
     for (const q of IPA_2026) {
-      expect(q.primaryTopicId.trim(), q.id).not.toBe("");
-      // 分類のためだけに新しい topicId を作っていないこと。
-      expect(validTopicIds.has(q.primaryTopicId) || q.primaryTopicId.length > 0, q.id).toBe(true);
+      // 完全一致で存在確認する。「空でなければ通る」ような緩い条件にしないこと。
+      expect(validTopicIds.has(q.primaryTopicId), `${q.id} / ${q.primaryTopicId}`).toBe(true);
+    }
+  });
+
+  it("全問に内容ベースの syllabusNode がある", () => {
+    for (const q of IPA_2026) {
       expect(q.syllabusNode?.itemId, q.id).toMatch(/^ipa-\d+$/);
       expect(q.syllabusNode?.field, q.id).toBeTruthy();
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // 公式出題区分（official.examField）— 内容分類とは別軸であることを固定する
+  // -------------------------------------------------------------------------
+
+  it("全問に公式出題区分（official.examField）がある", () => {
+    for (const q of IPA_2026) {
+      expect(q.official?.examField, q.id).toBeDefined();
+      expect(["strategy", "management", "technology"], q.id).toContain(q.official?.examField);
+    }
+  });
+
+  it("公式出題区分の件数が冊子どおり（ストラテジ34・マネジメント20・テクノロジ46）", () => {
+    const countBy = (field: string) =>
+      IPA_2026.filter((q) => q.official?.examField === field).length;
+
+    expect(countBy("strategy")).toBe(34);
+    expect(countBy("management")).toBe(20);
+    expect(countBy("technology")).toBe(46);
+    expect(countBy("strategy") + countBy("management") + countBy("technology")).toBe(100);
+  });
+
+  it("公式出題区分が問番号の範囲と一致する", () => {
+    for (const q of IPA_2026) {
+      const number = q.official?.questionNumber;
+      expect(number, q.id).toBeDefined();
+      expect(q.official?.examField, `${q.id} / 問${number}`).toBe(
+        getOfficialExamField(number as number),
+      );
+    }
+  });
+
+  it("公式出題区分と内容分類は別物として保持されている", () => {
+    // 公式冊子の区分で内容分類を上書きしていないことを、実データのズレで固定する。
+    // 問16: 公式はストラテジ区分だが、問うている内容はテクノロジ。
+    // 問52: 公式はマネジメント区分だが、問うている内容はストラテジ。
+    const byNumber = new Map(IPA_2026.map((q) => [q.official?.questionNumber, q]));
+
+    const q16 = byNumber.get(16);
+    expect(q16?.official?.examField).toBe("strategy");
+    expect(q16?.syllabusNode?.field).toBe("technology");
+
+    const q52 = byNumber.get(52);
+    expect(q52?.official?.examField).toBe("management");
+    expect(q52?.syllabusNode?.field).toBe("strategy");
+  });
+
+  it("公式出題区分と内容分類が一致しない問が実際に存在する", () => {
+    // 「examField を syllabusNode.field からコピーする」実装に戻ったら落ちる。
+    const mismatched = IPA_2026.filter(
+      (q) => q.syllabusNode?.field && q.official?.examField !== q.syllabusNode.field,
+    );
+    expect(mismatched.length).toBeGreaterThan(0);
+  });
+
+  it("公式出題区分は contentHash に影響しない", () => {
+    // examField は出典側のメタ情報。本文が同じならハッシュは動かない。
+    for (const q of IPA_2026.slice(0, 5)) {
+      const flipped: QuestionRecord = {
+        ...q,
+        official: q.official && { ...q.official, examField: "management" },
+      };
+      expect(computeContentHash(flipped), q.id).toBe(q.contentHash);
     }
   });
 
@@ -714,6 +848,7 @@ describe("図表の検証ルール", () => {
     sourceUrl: IPA_2026_QS_PDF,
     answerSourceUrl: IPA_2026_ANS_PDF,
     attribution: "出典：令和8年度 ITパスポート試験 公開問題 問1",
+    examField: "strategy", // 令和8年度 問1 の公式出題区分
     isModified: false,
   } as const;
 

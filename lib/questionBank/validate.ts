@@ -1,6 +1,12 @@
 import type { ChoiceKey } from "@/types";
 import type { QuestionRecord, QuestionStatus } from "@/types/questionBank";
 import { CONTENT_HASH_PATTERN, computeContentHash } from "@/lib/questionBank/contentHash";
+import {
+  OFFICIAL_EXAM_FIELDS,
+  OFFICIAL_EXAM_FIELD_SCOPE,
+  getOfficialExamField,
+  isOfficialExamField,
+} from "@/lib/questionBank/officialExamField";
 
 // ============================================================================
 // 問題バンクの整合性検証。
@@ -79,6 +85,7 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
   }
 
   // --- 公式問題の出典 -----------------------------------------------------
+  // 出典を持つ問題（official_past / modified_official）は examField も必須。
   // official_past      … 出典必須 / isModified: false
   // modified_official  … 出典必須 / isModified: true（改変でも出典は必要。非公式扱いにしない）
   // app_original       … 出典を持たない
@@ -102,6 +109,37 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
     if (s.attribution.trim() === "") add("official-attribution", "attribution が空です。");
     if (!Number.isInteger(s.questionNumber) || s.questionNumber < 1) {
       add("official-question-number", `questionNumber が不正です: ${s.questionNumber}`);
+    }
+
+    // --- 公式出題区分 -----------------------------------------------------
+    // examField は「公式問題冊子でどの区分の問だったか」。出典表示と年度別・区分別
+    // 演習がこの値に乗るため、公式問題では欠けていることを許さない。
+    // syllabusNode.field（内容分類）とは別物なので、ここで両者の一致は検査しない。
+    if (!s.examField) {
+      add(
+        "official-exam-field-required",
+        `origin "${q.origin}" には official.examField（公式問題冊子上の出題区分）が必要です。`,
+      );
+    } else if (!isOfficialExamField(s.examField)) {
+      add(
+        "official-exam-field-value",
+        `official.examField は ${OFFICIAL_EXAM_FIELDS.join(" / ")} のみ許可されます: "${s.examField}"`,
+      );
+    } else if (
+      s.examType === OFFICIAL_EXAM_FIELD_SCOPE.examType &&
+      s.year === OFFICIAL_EXAM_FIELD_SCOPE.year &&
+      Number.isInteger(s.questionNumber) &&
+      s.questionNumber >= 1 &&
+      s.questionNumber <= 100
+    ) {
+      // 令和8年度 ITパスポートは公式冊子の並びが分かっているので、問番号と突き合わせる。
+      const expected = getOfficialExamField(s.questionNumber);
+      if (s.examField !== expected) {
+        add(
+          "official-exam-field-question-number",
+          `問${s.questionNumber} の公式出題区分は "${expected}" のはずですが "${s.examField}" です。`,
+        );
+      }
     }
 
     if (q.origin === "official_past" && s.isModified) {

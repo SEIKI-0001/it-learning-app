@@ -13,7 +13,7 @@
 //       lib/questionBank/adapter.ts で変換する。UI から JSON を直接読まない。
 
 import type { ChoiceKey } from "@/types";
-import type { Difficulty } from "@/types/content";
+import type { Difficulty, TopicField } from "@/types/content";
 
 // ---------------------------------------------------------------------------
 // 分類軸
@@ -59,13 +59,19 @@ export type QuestionChoice = {
 };
 
 /**
- * シラバス上の位置。primaryTopicId（アプリ内トピック）とは別に、
- * IPA シラバスのどこに属するかを持たせて年度別演習・分野別集計に使う。
+ * シラバス上の位置。問題の「内容」から見て IPA シラバスのどこに属するかを持たせ、
+ * 年度別演習・分野別集計に使う。
+ *
+ * 重要: これは official.examField（公式問題冊子上の出題区分）とは別物で、
+ * 一致しないことがある。詳しくは QuestionRecord のコメントを参照。
  */
 export type QuestionSyllabusNode = {
   /** data/ipaSyllabus.ts の IpaSyllabusItem.id（例: "ipa-01"）。 */
   itemId?: string;
-  /** 分野（ストラテジ / マネジメント / テクノロジ）。 */
+  /**
+   * 内容から見た分野（ストラテジ / マネジメント / テクノロジ）。
+   * primaryTopicId から引く。公式出題区分（official.examField）で上書きしないこと。
+   */
   field?: string;
   majorCategory?: string;
   middleCategory?: string;
@@ -118,6 +124,18 @@ export type OfficialQuestionSource = {
   year: number;
   /** 問番号（公式の「問 n」）。 */
   questionNumber: number;
+  /**
+   * 公式問題冊子上の出題区分。「その問がどの区分の問として出題されたか」という
+   * 出典側の事実であって、問題内容の分類ではない。
+   *
+   * syllabusNode.field（内容分類）と一致しないことがあり、一致させてはいけない。
+   * 例）令和8年度 問16: examField "strategy" / syllabusNode.field "technology"
+   *     令和8年度 問52: examField "management" / syllabusNode.field "strategy"
+   *
+   * 公式問題（official_past / modified_official）では必須（validate で検査）。
+   * 出典側の値なので contentHash の対象外（本文が変わらない限りハッシュは動かない）。
+   */
+  examField: TopicField;
   /** 問題冊子・公開ページの URL。 */
   sourceUrl: string;
   /** 解答表の URL。 */
@@ -138,6 +156,21 @@ export type OfficialQuestionSource = {
 // 問題レコード
 // ---------------------------------------------------------------------------
 
+/**
+ * 問題1件。
+ *
+ * 分類は3軸あり、混同すると集計も復習導線も壊れる。必ず別物として扱うこと。
+ *
+ *   official.examField … 公式問題冊子上の出題区分（出典側の事実）
+ *                        「公式ではこの区分の問だった」。年度別・区分別の再現に使う。
+ *   syllabusNode.field … 問題内容から見た IPA シラバス分類（アプリ側の解釈）
+ *                        「何を問うている問題か」。弱点分析・分野別集計に使う。
+ *   primaryTopicId     … アプリ内の復習先トピック（導線）
+ *                        「間違えたらどこへ戻すか」。分類ラベルではない。
+ *
+ * 3つは一致しないことがある。例）令和8年度 問16 は公式区分ストラテジだが
+ * 内容はテクノロジ。どれかで他を上書きしてはいけない。
+ */
 export type QuestionRecord = {
   /** 問題ID。回答履歴（question_attempts）のキーになるため変更禁止。 */
   id: string;
@@ -145,7 +178,11 @@ export type QuestionRecord = {
   version: number;
   origin: QuestionOrigin;
   status: QuestionStatus;
-  /** アプリ内トピックID（data/topics）。出題導線の主キー。 */
+  /**
+   * アプリ内トピックID（data/topics の Topic.id）。復習導線の主キー。
+   * 「間違えたらどこへ戻すか」を決める値で、分類ラベルではない。
+   * 存在しないIDを置かないこと（テストで data/topics との完全一致を検査する）。
+   */
   primaryTopicId: string;
   syllabusNode?: QuestionSyllabusNode;
   questionPattern: QuestionPattern;

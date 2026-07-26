@@ -12,6 +12,11 @@
 //   - 原文（prompt / choices / correctChoice）は official.original に必ず保存し，
 //     表示用の prompt / choices / correctChoice にも同じ値を入れる。
 //     今回は言い換え・要約をしないため両者は完全一致する（検証テストで強制）。
+//   - 分類は3軸を別々に持つ（混ぜない）:
+//       official.examField … 公式問題冊子上の出題区分。問番号から機械的に決める。
+//       syllabusNode.field … 問題内容から見た IPA シラバス分類。primaryTopicId から引く。
+//       primaryTopicId     … アプリ内の復習先トピック。source.json が持つ。
+//     公式区分と内容分類はずれることがある（例: 問16 / 問52）。片方で他方を上書きしない。
 //   - 解説は書かない（status: "content_verified" / explanation: ""）。
 //     解説の妥当性は未監査なので explanation_verified には上げない。
 //   - contentHash はアプリ側と同じ実装（lib/questionBank/contentHash.ts）を使う。
@@ -24,6 +29,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 import { computeContentHash } from "../../lib/questionBank/contentHash.ts";
+import { getOfficialExamField } from "../../lib/questionBank/officialExamField.ts";
 import { ipaSyllabusItems } from "../../data/ipaSyllabus.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -138,6 +144,9 @@ function toQuestionRecord(src, exam, syllabusIndex) {
       sourceUrl: exam.sourceUrl,
       answerSourceUrl: exam.answerSourceUrl,
       attribution: exam.attributionTemplate.replace("{n}", String(number)),
+      // 公式問題冊子上の出題区分。問番号の並びから機械的に決まるので source.json には持たせない。
+      // 内容分類（syllabusNode.field）とは別物で、一致しない問がある。
+      examField: getOfficialExamField(number),
       isModified: false,
       examSession: exam.examSession,
       original,
@@ -150,6 +159,9 @@ function toQuestionRecord(src, exam, syllabusIndex) {
 
   if (figures.length > 0) record.figures = figures;
 
+  // 内容分類。primaryTopicId（＝何を問うている問題か）から引く。
+  // official.examField（公式冊子の出題区分）で上書きしないこと。両者はずれることがあり、
+  // ずれ自体が「公式区分と内容が違う問」という情報なので潰してはいけない。
   const syllabusNode = syllabusIndex.get(src.primaryTopicId);
   if (syllabusNode) record.syllabusNode = syllabusNode;
 
@@ -236,11 +248,15 @@ function main() {
   const withFigures = questions.filter((q) => q.figures);
   const figureCount = withFigures.reduce((sum, q) => sum + q.figures.length, 0);
   const withSyllabus = questions.filter((q) => q.syllabusNode).length;
+  const countBy = (field) => questions.filter((q) => q.official.examField === field).length;
 
   console.log(`取り込みました: ${questions.length} 問`);
   console.log(`  出典: ${source.exam.examName}`);
   console.log(`  図表: ${withFigures.length} 問 / ${figureCount} 点`);
   console.log(`  シラバス紐づけあり: ${withSyllabus} 問`);
+  console.log(
+    `  公式出題区分: ストラテジ ${countBy("strategy")} / マネジメント ${countBy("management")} / テクノロジ ${countBy("technology")} 問`,
+  );
   console.log(`  出力: ${path.relative(ROOT, OUT_QUESTIONS)}`);
   console.log(`  出力: ${path.relative(ROOT, OUT_MANIFEST)}`);
 }
