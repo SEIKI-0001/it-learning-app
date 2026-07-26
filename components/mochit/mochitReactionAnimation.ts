@@ -21,6 +21,7 @@
 import type { MochitEvent } from "./mochitEvents";
 import { MOCHIT_EVENT_REACTION_MS } from "./mochitEvents";
 import { offsetTransform, rotateAbout } from "./mochitIdleAnimation";
+import type { MochitReactionProfile } from "./mochitTypes";
 
 export type ReactionTargetId =
   | "body"
@@ -48,7 +49,8 @@ export type ReactionSpec = {
 };
 
 export type ReactionMode = {
-  compact: boolean;
+  compact?: boolean;
+  profile?: MochitReactionProfile;
   reducedMotion: boolean;
 };
 
@@ -88,6 +90,7 @@ type MotionScale = {
 const FULL_SCALE: MotionScale = { move: 1, squash: 1, rot: 1, arm: 1, gaze: 1, antenna: 1 };
 // compact: 大きなジャンプを使わず、主に表情・アンテナ・Core発光で伝える。
 const COMPACT_SCALE: MotionScale = { move: 0.3, squash: 0.4, rot: 0.5, arm: 0.35, gaze: 0.7, antenna: 0.8 };
+const FLOATING_SCALE: MotionScale = { move: 0.65, squash: 0.75, rot: 0.8, arm: 0.7, gaze: 0.9, antenna: 1 };
 
 // ---- キーフレーム組み立てヘルパ ----
 
@@ -225,9 +228,20 @@ export function buildReactionSpec(event: MochitEvent, mode: ReactionMode): React
   const totalMs = REACTION_TOTAL_MS[event] ?? 0;
   if (totalMs <= 0) return null;
   if (mode.reducedMotion) return buildReducedSpec(event, totalMs);
-  const s = mode.compact ? COMPACT_SCALE : FULL_SCALE;
+  const profile = mode.profile ?? (mode.compact ? "compact" : "full");
+  const s =
+    profile === "floating"
+      ? FLOATING_SCALE
+      : profile === "compact"
+        ? COMPACT_SCALE
+        : FULL_SCALE;
   const build = CHOREOGRAPHIES[event];
-  return build ? { event, totalMs, tracks: build(s) } : null;
+  if (!build) return null;
+  const tracks = build(s);
+  if (event === "correct" && profile === "floating") {
+    tracks.splice(1, 0, ...floatingCorrectAccentTracks(s));
+  }
+  return { event, totalMs, tracks };
 }
 
 /** アニメーション全長。占有時間（MOCHIT_EVENT_REACTION_MS）以下に収める。 */
@@ -243,6 +257,43 @@ export const REACTION_TOTAL_MS: Partial<Record<MochitEvent, number>> = {
 };
 
 type Choreography = (s: MotionScale) => ReactionTrack[];
+
+function floatingCorrectAccentTracks(s: MotionScale): ReactionTrack[] {
+  return [
+    {
+      target: "armL",
+      keyframes: [
+        armFrame(0, "L", 0, s),
+        armFrame(0.16, "L", 0, s, "ease-out"),
+        armFrame(0.42, "L", 10, s),
+        armFrame(0.72, "L", 8, s, "ease-in-out"),
+        armFrame(1, "L", 0, s),
+      ],
+    },
+    {
+      target: "armR",
+      keyframes: [
+        armFrame(0, "R", 0, s),
+        armFrame(0.18, "R", 0, s, "ease-out"),
+        armFrame(0.44, "R", 10, s),
+        armFrame(0.74, "R", 8, s, "ease-in-out"),
+        armFrame(1, "R", 0, s),
+      ],
+    },
+    {
+      target: "antenna",
+      composite: "add",
+      keyframes: [
+        antennaFrame(0, 0, s),
+        antennaFrame(0.22, 0, s, "ease-out"),
+        antennaFrame(0.4, 6, s),
+        antennaFrame(0.58, -4, s),
+        antennaFrame(0.76, 2, s, "ease-in-out"),
+        antennaFrame(1, 0, s),
+      ],
+    },
+  ];
+}
 
 const CHOREOGRAPHIES: Partial<Record<MochitEvent, Choreography>> = {
   // 1. 正解: 小さな予備動作 → 控えめな1回のバウンド → 柔らかい笑顔 → Core1回発光。

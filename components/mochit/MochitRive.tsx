@@ -18,6 +18,7 @@ import {
   MOCHIT_RIVE_STATE_MACHINE,
   shouldPlayMochitRive,
   type MochitGrowthStage,
+  type MochitReactionProfile,
   type MochitRiveInputLike,
   type MochitScreenContext,
   type MochitState,
@@ -77,6 +78,7 @@ type Props = {
   growthStage: MochitGrowthStage;
   reducedMotion: boolean;
   compact: boolean;
+  reactionProfile: MochitReactionProfile;
   screenContext: MochitScreenContext;
   mood?: number;
   /** ステートマシンの発火関数を親（useMochitController）へ登録する */
@@ -95,6 +97,7 @@ export default function MochitRive({
   growthStage,
   reducedMotion,
   compact,
+  reactionProfile,
   screenContext,
   mood,
   registerTriggerFirer,
@@ -153,13 +156,14 @@ export default function MochitRive({
         growthStage,
         reducedMotion,
         compact,
+        reactionProfile,
         primary,
         visible: inViewport && !documentHidden,
         focused: screenContext === "quizResult" || screenContext === "checkpoint",
         screenContext,
         mood,
       }),
-    [state, growthStage, reducedMotion, compact, primary, inViewport, documentHidden, screenContext, mood],
+    [state, growthStage, reducedMotion, compact, reactionProfile, primary, inViewport, documentHidden, screenContext, mood],
   );
 
   useEffect(() => {

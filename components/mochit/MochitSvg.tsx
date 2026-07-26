@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from "react";
 import { MOCHIT_SVG_MARKUP } from "./mochitSvgMarkup";
 import { MOCHIT_TRIGGER_EVENTS } from "./mochitEvents";
 import type { MochitRiveTriggerInput } from "./mochitTypes";
+import type { MochitReactionProfile } from "./mochitTypes";
 import {
   buildReactionSpec,
   MOCHIT_BODY_TRANSFORM_ORIGIN,
@@ -48,6 +49,7 @@ type Props = {
   growthStage: number;
   reducedMotion: boolean;
   compact: boolean;
+  reactionProfile: MochitReactionProfile;
   ariaLabel: string;
   onReady?: () => void;
   onLoadFailed?: (error: unknown) => void;
@@ -258,6 +260,7 @@ export default function MochitSvg({
   growthStage,
   reducedMotion,
   compact,
+  reactionProfile,
   ariaLabel,
   onReady,
   onLoadFailed,
@@ -342,9 +345,17 @@ export default function MochitSvg({
   // ---- リアクション再生 ----
   // reduced-motion では縮退版（表情/Core発光のみ）を再生するため gating には含めない。
   const reactionGated = failed || !inViewport || documentHidden;
-  const reactionEnvRef = useRef({ reducedMotion, compact, gated: reactionGated });
+  const reactionEnvRef = useRef({
+    reducedMotion,
+    reactionProfile,
+    gated: reactionGated,
+  });
   useEffect(() => {
-    reactionEnvRef.current = { reducedMotion, compact, gated: reactionGated };
+    reactionEnvRef.current = {
+      reducedMotion,
+      reactionProfile,
+      gated: reactionGated,
+    };
   });
   const runningRef = useRef<RunningReaction | null>(null);
   const pendingStartRef = useRef<number | null>(null);
@@ -358,7 +369,10 @@ export default function MochitSvg({
       if (env.gated) return;
       const event = MOCHIT_TRIGGER_EVENTS[trigger];
       if (!event) return;
-      const spec = buildReactionSpec(event, { compact: env.compact, reducedMotion: env.reducedMotion });
+      const spec = buildReactionSpec(event, {
+        profile: env.reactionProfile,
+        reducedMotion: env.reducedMotion,
+      });
       if (!spec) return;
       if (pendingStartRef.current !== null) {
         clearTimeout(pendingStartRef.current);

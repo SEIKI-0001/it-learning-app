@@ -63,11 +63,114 @@ beforeAll(() => {
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.innerWidth = 390;
+  window.innerHeight = 844;
   vi.clearAllTimers();
   vi.useRealTimers();
 });
 
 describe("FloatingMochit touch response", () => {
+  it("shows a non-live positive bubble for an accepted correct event", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    await screen.findByRole("button", { name: "モチットを触る" });
+
+    emitMochitEvent("correct");
+
+    const bubble = await screen.findByTestId("floating-mochit-bubble");
+    expect([
+      "ナイス！",
+      "正解！",
+      "その調子！",
+      "いいね！",
+    ]).toContain(bubble.textContent);
+    expect(bubble).not.toHaveAttribute("aria-live");
+  });
+
+  it("shows only supportive copy for an accepted incorrect event", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    await screen.findByRole("button", { name: "モチットを触る" });
+
+    emitMochitEvent("incorrect");
+
+    const bubble = await screen.findByTestId("floating-mochit-bubble");
+    expect([
+      "ここで覚えればOK！",
+      "解説を確認しよう",
+      "次に活かそう！",
+    ]).toContain(bubble.textContent);
+    expect(bubble).not.toHaveTextContent(/ダメ|失敗|残念|泣/);
+  });
+
+  it("replaces a lower-priority bubble and rejects a later lower-priority one", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    await screen.findByRole("button", { name: "モチットを触る" });
+
+    emitMochitEvent("encourage");
+    await screen.findByTestId("floating-mochit-bubble");
+
+    emitMochitEvent("checkpointClear");
+    await waitFor(() => {
+      expect(screen.getByTestId("floating-mochit-bubble")).toHaveTextContent(
+        "チェックポイント突破！",
+      );
+    });
+
+    emitMochitEvent("correct");
+    expect(screen.getByTestId("floating-mochit-bubble")).toHaveTextContent(
+      "チェックポイント突破！",
+    );
+  });
+
+  it("removes a correct bubble after 1.4 seconds", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    await screen.findByRole("button", { name: "モチットを触る" });
+    vi.useFakeTimers();
+
+    await act(async () => {
+      emitMochitEvent("correct");
+    });
+    expect(screen.getByTestId("floating-mochit-bubble")).toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(1_400);
+    });
+    expect(screen.queryByTestId("floating-mochit-bubble")).toBeNull();
+  });
+
+  it("closes the bubble when a drag starts", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+    emitMochitEvent("correct");
+    await screen.findByTestId("floating-mochit-bubble");
+
+    fireEvent.pointerDown(pet, {
+      pointerId: 12,
+      button: 0,
+      clientX: 320,
+      clientY: 60,
+    });
+    fireEvent.pointerMove(pet, {
+      pointerId: 12,
+      clientX: 280,
+      clientY: 120,
+    });
+
+    expect(screen.queryByTestId("floating-mochit-bubble")).toBeNull();
+  });
+
+  it("keeps the bubble visible in reduced-motion mode", async () => {
+    render(<FloatingMochit reducedMotion />);
+    await screen.findByRole("button", { name: "モチットを触る" });
+
+    emitMochitEvent("encourage");
+
+    expect(
+      await screen.findByTestId("floating-mochit-bubble"),
+    ).toBeInTheDocument();
+  });
+
   it("subscribes to learning events and keeps a higher-priority reaction over a tap", async () => {
     render(<FloatingMochit reducedMotion={false} />);
     const pet = await screen.findByRole("button", {
@@ -82,18 +185,26 @@ describe("FloatingMochit touch response", () => {
 
     fireEvent.keyDown(pet, { key: "Enter" });
     expect(mochit).toHaveAttribute("data-active-event", "checkpointClear");
+    expect(
+      screen.getByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeInTheDocument();
   });
 
-  it("renders at the upper-right default and compresses on press", async () => {
+  it("renders a 108px hit area with an 84px Mochit at the upper-right default", async () => {
     render(<FloatingMochit reducedMotion={false} />);
 
     const pet = await screen.findByRole("button", {
       name: "モチットを触る",
     });
     expect(pet.parentElement).toHaveStyle({
-      left: "302px",
+      left: "266px",
       top: "16px",
     });
+    expect(pet.parentElement).toHaveClass("h-[108px]", "w-[108px]");
+    expect(pet.querySelector(".mochit > div")).toHaveClass(
+      "h-[84px]",
+      "w-[84px]",
+    );
 
     fireEvent.pointerDown(pet, {
       pointerId: 1,
@@ -126,6 +237,9 @@ describe("FloatingMochit touch response", () => {
     });
 
     expect(pet).toHaveAttribute("data-motion", "rebounding");
+    expect(
+      screen.getByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeInTheDocument();
     await act(async () => {
       vi.advanceTimersByTime(520);
     });
@@ -154,10 +268,51 @@ describe("FloatingMochit touch response", () => {
     await waitFor(() => {
       expect(pet).toHaveAttribute("data-motion", "idle");
     });
+    expect(
+      screen.getByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeInTheDocument();
   });
 });
 
 describe("FloatingMochit dragging", () => {
+  it("reclamps a position saved for the old 72px size into the new viewport", async () => {
+    window.localStorage.setItem(
+      FLOATING_MOCHIT_STORAGE_KEY,
+      JSON.stringify({
+        visible: true,
+        position: { x: 302, y: 756 },
+      }),
+    );
+
+    render(<FloatingMochit reducedMotion={false} />);
+
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+    expect(pet.parentElement).toHaveStyle({
+      left: "266px",
+      top: "656px",
+    });
+  });
+
+  it("reclamps the complete hit area when the viewport resizes", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+
+    window.innerWidth = 320;
+    window.innerHeight = 600;
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(pet.parentElement).toHaveStyle({
+        left: "196px",
+        top: "16px",
+      });
+    });
+  });
+
   it("keeps and saves the drag position when a learning event arrives", async () => {
     render(<FloatingMochit reducedMotion={false} />);
     const pet = await screen.findByRole("button", {
@@ -175,7 +330,7 @@ describe("FloatingMochit dragging", () => {
       clientX: 200,
       clientY: 200,
     });
-    expect(pet.parentElement).toHaveStyle({ left: "172px", top: "172px" });
+    expect(pet.parentElement).toHaveStyle({ left: "136px", top: "172px" });
 
     emitMochitEvent("correct");
     await waitFor(() => {
@@ -184,7 +339,7 @@ describe("FloatingMochit dragging", () => {
         "correct",
       );
     });
-    expect(pet.parentElement).toHaveStyle({ left: "172px", top: "172px" });
+    expect(pet.parentElement).toHaveStyle({ left: "136px", top: "172px" });
 
     fireEvent.pointerUp(pet, {
       pointerId: 8,
@@ -196,7 +351,7 @@ describe("FloatingMochit dragging", () => {
       JSON.parse(
         window.localStorage.getItem(FLOATING_MOCHIT_STORAGE_KEY)!,
       ).position,
-    ).toEqual({ x: 172, y: 172 });
+    ).toEqual({ x: 136, y: 172 });
   });
 
   it("drags, clamps, and saves without using the tap rebound", async () => {
@@ -220,7 +375,7 @@ describe("FloatingMochit dragging", () => {
     expect(pet).toHaveAttribute("data-motion", "dragging");
     expect(pet.parentElement).toHaveStyle({
       left: "16px",
-      top: "756px",
+      top: "656px",
     });
 
     fireEvent.pointerUp(pet, {
@@ -237,7 +392,7 @@ describe("FloatingMochit dragging", () => {
       ),
     ).toEqual({
       visible: true,
-      position: { x: 16, y: 756 },
+      position: { x: 16, y: 656 },
     });
   });
 
@@ -267,6 +422,9 @@ describe("FloatingMochit dragging", () => {
 
     expect(pet).toHaveAttribute("data-motion", "rebounding");
     expect(window.localStorage.getItem(FLOATING_MOCHIT_STORAGE_KEY)).toBeNull();
+    expect(
+      screen.getByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -284,14 +442,16 @@ describe("FloatingMochit visibility menu", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("opens Hide on right-click and hides only the floating pet", async () => {
+  it("opens the quick menu on right-click and hides only the floating pet", async () => {
     render(<FloatingMochit reducedMotion={false} />);
     const pet = await screen.findByRole("button", {
       name: "モチットを触る",
     });
 
     fireEvent.contextMenu(pet, { clientX: 330, clientY: 44 });
-    fireEvent.click(screen.getByRole("menuitem", { name: "Hide" }));
+    fireEvent.click(
+      screen.getByRole("menuitem", { name: "モチットを非表示" }),
+    );
 
     await waitFor(() => {
       expect(
@@ -322,7 +482,9 @@ describe("FloatingMochit visibility menu", () => {
       vi.advanceTimersByTime(550);
     });
 
-    expect(screen.getByRole("menuitem", { name: "Hide" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: "モチットを非表示" }),
+    ).toBeInTheDocument();
     fireEvent.pointerUp(pet, {
       pointerId: 1,
       button: 0,
@@ -357,11 +519,13 @@ describe("FloatingMochit visibility menu", () => {
       vi.advanceTimersByTime(300);
     });
 
-    expect(screen.queryByRole("menuitem", { name: "Hide" })).toBeNull();
+    expect(
+      screen.queryByRole("menuitem", { name: "モチットを非表示" }),
+    ).toBeNull();
     expect(pet).toHaveAttribute("data-motion", "dragging");
   });
 
-  it("supports keyboard reaction, context-menu shortcut, and Escape", async () => {
+  it("supports Enter, Space, context-menu shortcuts, and Escape", async () => {
     render(<FloatingMochit reducedMotion={false} />);
     const pet = await screen.findByRole("button", {
       name: "モチットを触る",
@@ -369,12 +533,128 @@ describe("FloatingMochit visibility menu", () => {
 
     fireEvent.keyDown(pet, { key: "Enter" });
     expect(pet).toHaveAttribute("data-motion", "rebounding");
-
-    fireEvent.keyDown(pet, { key: "F10", shiftKey: true });
-    expect(screen.getByRole("menuitem", { name: "Hide" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "Escape" });
-    expect(screen.queryByRole("menuitem", { name: "Hide" })).toBeNull();
+    fireEvent.keyDown(pet, { key: " " });
+    expect(
+      screen.getByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.keyDown(pet, { key: "F10", shiftKey: true });
+    expect(
+      screen.getByRole("menuitem", { name: "モチットを非表示" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(
+      screen.queryByRole("menuitem", { name: "モチットを非表示" }),
+    ).toBeNull();
     expect(pet).toHaveFocus();
+  });
+
+  it("offers the five shortcut links with exact destinations", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+    fireEvent.contextMenu(pet);
+
+    const links = [
+      ["今日の学習", "/today"],
+      ["復習する", "/review"],
+      ["ロードマップ", "/plan"],
+      ["進捗を見る", "/progress"],
+      ["モチットの成長", "/avatar"],
+    ] as const;
+    for (const [name, href] of links) {
+      expect(screen.getByRole("menuitem", { name })).toHaveAttribute(
+        "href",
+        href,
+      );
+    }
+  });
+
+  it("closes on an outside pointer and after selecting a link", async () => {
+    render(
+      <div>
+        <FloatingMochit reducedMotion={false} />
+        <button type="button">Outside</button>
+      </div>,
+    );
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+
+    fireEvent.contextMenu(pet);
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Outside" }));
+    expect(
+      screen.queryByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeNull();
+
+    fireEvent.contextMenu(pet);
+    const todayLink = screen.getByRole("menuitem", { name: "今日の学習" });
+    todayLink.addEventListener("click", (event) => event.preventDefault(), {
+      once: true,
+    });
+    fireEvent.click(todayLink);
+    expect(
+      screen.queryByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeNull();
+  });
+
+  it("does not open the menu for a drag and closes an active bubble when opening", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+    emitMochitEvent("correct");
+    await screen.findByTestId("floating-mochit-bubble");
+
+    fireEvent.contextMenu(pet);
+    expect(screen.queryByTestId("floating-mochit-bubble")).toBeNull();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.pointerDown(pet, {
+      pointerId: 31,
+      button: 0,
+      clientX: 320,
+      clientY: 60,
+    });
+    fireEvent.pointerMove(pet, {
+      pointerId: 31,
+      clientX: 220,
+      clientY: 180,
+    });
+    fireEvent.pointerUp(pet, {
+      pointerId: 31,
+      button: 0,
+      clientX: 220,
+      clientY: 180,
+    });
+    expect(
+      screen.queryByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeNull();
+  });
+
+  it("keeps the menu open and suppresses bubbles while the menu is visible", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+
+    fireEvent.contextMenu(pet);
+    await act(async () => {
+      emitMochitEvent("correct");
+      await Promise.resolve();
+    });
+
+    expect(
+      screen.getByRole("menu", { name: "モチットクイックメニュー" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("floating-mochit-bubble")).toBeNull();
   });
 });

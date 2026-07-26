@@ -38,6 +38,7 @@
 :root {
   --background: #f6f8fb;
   --foreground: #152033;
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body {
@@ -158,6 +159,27 @@ body {
 .floating-mochit-body[data-reduced-motion="true"] {
   animation: none;
   transform: none;
+}
+
+.floating-mochit-overlay {
+  animation: floating-mochit-overlay-in 140ms ease-out;
+}
+
+@keyframes floating-mochit-overlay-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-mochit-overlay {
+    animation: none;
+  }
 }
 
 @keyframes shake {

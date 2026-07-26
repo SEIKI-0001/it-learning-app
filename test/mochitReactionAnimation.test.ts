@@ -18,6 +18,10 @@ const EVENTS = Object.keys(REACTION_TOTAL_MS) as MochitEvent[];
 const FULL: ReactionMode = { compact: false, reducedMotion: false };
 const COMPACT: ReactionMode = { compact: true, reducedMotion: false };
 const REDUCED: ReactionMode = { compact: false, reducedMotion: true };
+const FLOATING = {
+  profile: "floating",
+  reducedMotion: false,
+} as unknown as ReactionMode;
 
 // 仕様レンジ（ms）。totalMsはこの範囲に収まる。
 const SPEC_RANGE_MS: Partial<Record<MochitEvent, { min: number; max: number }>> = {
@@ -176,6 +180,52 @@ describe("buildReactionSpec: compact抑制", () => {
       expect(compactMax).toBeLessThan(fullMax);
       expect(compactMax).toBeLessThanOrEqual(3);
     }
+  });
+});
+
+describe("buildReactionSpec: floating強度", () => {
+  it("correctのバウンドをcompactより強くfullの65%にする", () => {
+    const fullBody = buildReactionSpec("correct", FULL)!.tracks.find(
+      (track) => track.target === "body",
+    )!;
+    const compactBody = buildReactionSpec("correct", COMPACT)!.tracks.find(
+      (track) => track.target === "body",
+    )!;
+    const floatingBody = buildReactionSpec("correct", FLOATING)!.tracks.find(
+      (track) => track.target === "body",
+    )!;
+
+    const fullPeak = Math.min(...translateYPercentValues(fullBody));
+    const compactPeak = Math.min(...translateYPercentValues(compactBody));
+    const floatingPeak = Math.min(...translateYPercentValues(floatingBody));
+
+    expect(floatingPeak).toBe(-2.08);
+    expect(floatingPeak).toBeGreaterThan(fullPeak);
+    expect(floatingPeak).toBeLessThan(compactPeak);
+  });
+
+  it("correctで笑顔・両腕・アンテナ・Core発光を同じ反応に含める", () => {
+    const targets = buildReactionSpec("correct", FLOATING)!.tracks.map(
+      (track) => track.target,
+    );
+    expect(targets).toContain("mouthSmile");
+    expect(targets).toContain("armL");
+    expect(targets).toContain("armR");
+    expect(targets).toContain("antenna");
+    expect(targets).toContain("coreGlow");
+  });
+
+  it("incorrectの傾き・視線・アンテナへfloating係数を適用する", () => {
+    const spec = buildReactionSpec("incorrect", FLOATING)!;
+    const body = spec.tracks.find((track) => track.target === "body")!;
+    const gaze = spec.tracks.find((track) => track.target === "gaze")!;
+    const antenna = spec.tracks.find((track) => track.target === "antenna")!;
+
+    expect(String(body.keyframes[1].transform)).toContain("rotate(1.76deg)");
+    expect(String(gaze.keyframes[1].transform)).toContain(
+      "translate(7.2px, 2.7px)",
+    );
+    expect(String(antenna.keyframes[1].transform)).toContain("rotate(-2deg)");
   });
 });
 

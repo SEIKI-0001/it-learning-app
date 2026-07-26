@@ -52,6 +52,16 @@ describe("buildMochitRiveInputValues", () => {
     expect(values.booleans.primaryInstance).toBe(false);
   });
 
+  it("uses high energy without compact suppression for the floating profile", () => {
+    const values = buildMochitRiveInputValues({
+      ...baseProps,
+      reactionProfile: "floating",
+    });
+    expect(values.numbers.energy).toBe(0.85);
+    expect(values.booleans.primaryInstance).toBe(true);
+    expect(values.booleans.pointerEnabled).toBe(true);
+  });
+
   it("encodes screenContext as its numeric code", () => {
     const values = buildMochitRiveInputValues({ ...baseProps, screenContext: "quizResult" });
     expect(values.numbers.screenContext).toBe(MOCHIT_SCREEN_CONTEXT_CODES.quizResult);

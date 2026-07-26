@@ -3,9 +3,10 @@
 // design/mochit/docs/mochit-rive-import-checklist.md と一致させること。
 
 export type MochitState = "normal" | "happy" | "thinking" | "cheering";
-export type MochitSize = "xs" | "small" | "medium" | "large";
+export type MochitSize = "xs" | "floating" | "small" | "medium" | "large";
 export type MochitAnimation = "idle" | "bounce" | "tilt" | "celebrate" | "none";
 export type MochitGrowthStage = 1 | 2 | 3;
+export type MochitReactionProfile = "full" | "compact" | "floating";
 
 export type MochitScreenContext =
   | "other"
@@ -92,6 +93,7 @@ export type MochitRiveInputSyncProps = {
   growthStage: MochitGrowthStage;
   reducedMotion: boolean;
   compact: boolean;
+  reactionProfile?: MochitReactionProfile;
   primary: boolean;
   visible: boolean;
   focused: boolean;
@@ -118,7 +120,13 @@ export function buildMochitRiveInputValues(props: MochitRiveInputSyncProps): Moc
     },
     numbers: {
       mood: props.mood ?? MOCHIT_STATE_MOOD_VALUES[props.state],
-      energy: props.energy ?? (props.compact ? 0.4 : 0.7),
+      energy:
+        props.energy ??
+        (props.reactionProfile === "floating"
+          ? 0.85
+          : props.compact
+            ? 0.4
+            : 0.7),
       growthStage: props.growthStage,
       attentionX: props.attentionX ?? 0.5,
       attentionY: props.attentionY ?? 0.5,

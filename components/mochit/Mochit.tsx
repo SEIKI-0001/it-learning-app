@@ -15,6 +15,7 @@ import { MOCHIT_RIVE_SRC } from "./mochitTypes";
 import type {
   MochitAnimation,
   MochitGrowthStage,
+  MochitReactionProfile,
   MochitScreenContext,
   MochitSize,
   MochitState,
@@ -44,6 +45,7 @@ class MochitSvgBoundary extends Component<{ onError: () => void; children: React
 
 const SIZE_CLASS: Record<MochitSize, string> = {
   xs: "h-14 w-14", // クエストルートのレール上に座る最小サイズ
+  floating: "h-[84px] w-[84px]",
   small: "h-24 w-24",
   medium: "h-32 w-32",
   large: "h-60 w-60",
@@ -126,6 +128,10 @@ type Props = {
   reducedMotion?: boolean;
   /** コンパクト表示（省アニメーションプロファイル）。省略時は size==="small" */
   compact?: boolean;
+  /** リアクション強度。常時表示版は floating を明示する。 */
+  reactionProfile?: MochitReactionProfile;
+  /** 既存優先度コントローラーがイベントを受理した時だけ通知する。 */
+  onEventAccepted?: (signal: MochitEventSignal) => void;
   // ---- dev/テスト用の切替口 ----
   rendererOverride?: "rive" | "svg" | "fallback";
   riveSrcOverride?: string;
@@ -145,13 +151,18 @@ export default function Mochit({
   screenContext = "other",
   reducedMotion,
   compact,
+  reactionProfile,
+  onEventAccepted,
   rendererOverride,
   riveSrcOverride,
   forceSvgFailure,
 }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const effectiveReducedMotion = reducedMotion ?? prefersReducedMotion;
-  const effectiveCompact = compact ?? (size === "small" || size === "xs");
+  const sizeCompact = compact ?? (size === "small" || size === "xs");
+  const effectiveReactionProfile =
+    reactionProfile ?? (sizeCompact ? "compact" : "full");
+  const effectiveCompact = effectiveReactionProfile === "compact";
   const riveSrc = riveSrcOverride ?? MOCHIT_RIVE_SRC;
 
   const forceFallback = rendererOverride === "fallback";
@@ -179,6 +190,10 @@ export default function Mochit({
 
   const { activeEvent, dispatch, registerTriggerFirer } =
     useMochitController();
+  const onEventAcceptedRef = useRef(onEventAccepted);
+  useEffect(() => {
+    onEventAcceptedRef.current = onEventAccepted;
+  }, [onEventAccepted]);
 
   // event propの変化をセマンティックイベントとして優先度制御付きで反映する。
   const lastEventIdRef = useRef<number | null>(null);
@@ -186,7 +201,9 @@ export default function Mochit({
     if (!event) return;
     if (lastEventIdRef.current === event.id) return;
     lastEventIdRef.current = event.id;
-    dispatch(event.type);
+    if (dispatch(event.type)) {
+      onEventAcceptedRef.current?.(event);
+    }
   }, [event, dispatch]);
 
   const meta = MOCHIT_STATE_META[state];
@@ -218,6 +235,7 @@ export default function Mochit({
                 growthStage={growthStage}
                 reducedMotion={effectiveReducedMotion}
                 compact={effectiveCompact}
+                reactionProfile={effectiveReactionProfile}
                 ariaLabel={meta.alt}
                 forceFailure={forceSvgFailure}
                 registerTriggerFirer={registerTriggerFirer}
@@ -236,6 +254,7 @@ export default function Mochit({
             growthStage={growthStage}
             reducedMotion={effectiveReducedMotion}
             compact={effectiveCompact}
+            reactionProfile={effectiveReactionProfile}
             screenContext={screenContext}
             mood={mood}
             registerTriggerFirer={registerTriggerFirer}

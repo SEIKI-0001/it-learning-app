@@ -48,30 +48,32 @@ afterEach(() => {
 
 describe("floating Mochit viewport geometry", () => {
   it("places the default pet at the upper-right margin", () => {
-    expect(getDefaultFloatingMochitPosition(390, 844, 72, 72)).toEqual({
-      x: 302,
+    expect(getDefaultFloatingMochitPosition(390, 844, 108, 108)).toEqual({
+      x: 266,
       y: 16,
     });
   });
 
-  it("clamps the complete hit area inside the viewport", () => {
+  it("clamps the complete 108px hit area above the mobile bottom clearance", () => {
     expect(
       clampFloatingMochitPosition(
         { x: -20, y: 900 },
         390,
         844,
-        72,
-        72,
+        108,
+        108,
+        16,
+        80,
       ),
     ).toEqual({
       x: 16,
-      y: 756,
+      y: 640,
     });
   });
 
   it("keeps the margin stable when the viewport is smaller than the pet", () => {
     expect(
-      clampFloatingMochitPosition({ x: 200, y: 200 }, 60, 60, 72, 72),
+      clampFloatingMochitPosition({ x: 200, y: 200 }, 60, 60, 108, 108),
     ).toEqual({
       x: 16,
       y: 16,

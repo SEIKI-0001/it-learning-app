@@ -26,9 +26,13 @@ export function clampFloatingMochitPosition(
   petWidth: number,
   petHeight: number,
   margin = 16,
+  bottomClearance = 0,
 ): FloatingMochitPoint {
   const maximumX = Math.max(margin, viewportWidth - petWidth - margin);
-  const maximumY = Math.max(margin, viewportHeight - petHeight - margin);
+  const maximumY = Math.max(
+    margin,
+    viewportHeight - petHeight - margin - bottomClearance,
+  );
 
   return {
     x: Math.min(Math.max(point.x, margin), maximumX),
@@ -42,6 +46,7 @@ export function getDefaultFloatingMochitPosition(
   petWidth: number,
   petHeight: number,
   margin = 16,
+  bottomClearance = 0,
 ): FloatingMochitPoint {
   return clampFloatingMochitPosition(
     {
@@ -53,6 +58,7 @@ export function getDefaultFloatingMochitPosition(
     petWidth,
     petHeight,
     margin,
+    bottomClearance,
   );
 }
 

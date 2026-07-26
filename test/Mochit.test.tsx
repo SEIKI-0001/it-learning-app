@@ -8,6 +8,9 @@ import Mochit from "@/components/mochit/Mochit";
 // onReady/onLoadFailed/registerTriggerFirer の呼び出しタイミングだけ本物と揃える。
 const riveStubMode = vi.hoisted(() => ({ current: "ready" as "ready" | "fail" }));
 const firedTriggers = vi.hoisted(() => ({ current: [] as string[] }));
+const renderedReactionProfile = vi.hoisted(() => ({
+  current: null as string | null,
+}));
 
 vi.mock("@/components/mochit/MochitRive", async () => {
   const React = await import("react");
@@ -16,8 +19,10 @@ vi.mock("@/components/mochit/MochitRive", async () => {
     onLoadFailed?: (error: unknown) => void;
     registerTriggerFirer?: (firer: ((trigger: string) => void) | null) => void;
     ariaLabel: string;
+    reactionProfile?: string;
   };
   function MochitRiveStub(props: StubProps) {
+    renderedReactionProfile.current = props.reactionProfile ?? null;
     const [failed, setFailed] = React.useState(riveStubMode.current === "fail");
     React.useEffect(() => {
       if (riveStubMode.current === "fail") {
@@ -39,6 +44,7 @@ afterEach(() => {
   cleanup();
   riveStubMode.current = "ready";
   firedTriggers.current = [];
+  renderedReactionProfile.current = null;
 });
 
 describe("Mochit (後方互換)", () => {
@@ -112,6 +118,18 @@ describe("Mochit (レンダラー選択)", () => {
     expect(riveBox?.className).toBe(fallbackClass);
   });
 
+  it("passes the explicit floating reaction profile to the renderer", async () => {
+    render(
+      <Mochit
+        size="floating"
+        reactionProfile="floating"
+        rendererOverride="rive"
+      />,
+    );
+    await screen.findByTestId("mochit-rive");
+    expect(renderedReactionProfile.current).toBe("floating");
+  });
+
   it("disables CSS animation classes when reduced motion is requested", () => {
     render(<Mochit state="happy" animation="bounce" reducedMotion rendererOverride="fallback" />);
     const img = screen.getByRole("img", { name: "よろこぶモチット" });
@@ -164,6 +182,36 @@ describe("Mochit (レンダラー選択)", () => {
         "triggerCorrect",
         "triggerCorrect",
       ]);
+    });
+  });
+
+  it("notifies the parent only when the existing priority controller accepts the event", async () => {
+    const onEventAccepted = vi.fn();
+    const { rerender } = render(
+      <Mochit
+        rendererOverride="fallback"
+        event={{ type: "checkpointClear", id: 20 }}
+        onEventAccepted={onEventAccepted}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onEventAccepted).toHaveBeenCalledWith({
+        type: "checkpointClear",
+        id: 20,
+      });
+    });
+
+    rerender(
+      <Mochit
+        rendererOverride="fallback"
+        event={{ type: "tap", id: 21 }}
+        onEventAccepted={onEventAccepted}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onEventAccepted).toHaveBeenCalledTimes(1);
     });
   });
 });

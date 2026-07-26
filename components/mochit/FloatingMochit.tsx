@@ -11,22 +11,32 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import Mochit from "./Mochit";
+import FloatingMochitBubble from "./FloatingMochitBubble";
+import FloatingMochitMenu from "./FloatingMochitMenu";
 import {
   createMochitEventSignal,
   subscribeMochitEvent,
 } from "./mochitEventBus";
 import type { MochitEventSignal } from "./mochitEvents";
 import {
-  clampFloatingMochitPosition,
+  clampFloatingMochitPoint,
+  getDefaultFloatingMochitPoint,
+  getFloatingMochitViewportMetrics,
+  type FloatingViewportMetrics,
+} from "./floatingMochitLayout";
+import {
   getFloatingMochitPreferencesServerSnapshot,
   getFloatingMochitPreferencesSnapshot,
-  getDefaultFloatingMochitPosition,
   parseFloatingMochitPreferences,
   saveFloatingMochitPreferences,
   subscribeToFloatingMochitPreferences,
   type FloatingMochitPoint,
   type FloatingMochitPreferences,
 } from "./floatingMochitPreferences";
+import {
+  getFloatingMochitMessage,
+  type FloatingMochitMessage,
+} from "./floatingMochitMessages";
 
 type MotionState =
   | "idle"
@@ -35,8 +45,6 @@ type MotionState =
   | "rebounding"
   | "settling";
 
-const PET_HIT_SIZE = 72;
-const VIEWPORT_MARGIN = 16;
 const DRAG_THRESHOLD_PX = 6;
 const LONG_PRESS_MS = 550;
 
@@ -66,24 +74,11 @@ function usePrefersReducedMotion(): boolean {
 
 function positionForPreferences(
   preferences: FloatingMochitPreferences,
+  metrics: FloatingViewportMetrics,
 ): FloatingMochitPoint {
-  const saved =
-    preferences.position ??
-    getDefaultFloatingMochitPosition(
-      window.innerWidth,
-      window.innerHeight,
-      PET_HIT_SIZE,
-      PET_HIT_SIZE,
-      VIEWPORT_MARGIN,
-    );
-
-  return clampFloatingMochitPosition(
-    saved,
-    window.innerWidth,
-    window.innerHeight,
-    PET_HIT_SIZE,
-    PET_HIT_SIZE,
-    VIEWPORT_MARGIN,
+  return clampFloatingMochitPoint(
+    preferences.position ?? getDefaultFloatingMochitPoint(metrics),
+    metrics,
   );
 }
 
@@ -109,23 +104,46 @@ export default function FloatingMochit({ reducedMotion }: Props) {
   const [motion, setMotion] = useState<MotionState>("idle");
   const [reactionSignal, setReactionSignal] =
     useState<MochitEventSignal | null>(null);
+  const [bubble, setBubble] = useState<FloatingMochitMessage | null>(null);
   const [dragRotation, setDragRotation] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const gestureRef = useRef<ActiveGesture | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const petButtonRef = useRef<HTMLButtonElement | null>(null);
-  const menuItemRef = useRef<HTMLButtonElement | null>(null);
+  const menuItemRef = useRef<HTMLAnchorElement | null>(null);
+  const bubbleTimerRef = useRef<number | null>(null);
+  const previousBubbleTextRef = useRef<string | null>(null);
+  const viewportMetrics = preferences
+    ? getFloatingMochitViewportMetrics(window)
+    : { width: 0, height: 0, margin: 0, bottomClearance: 0 };
   const position = preferences
-    ? (dragPosition ?? positionForPreferences(preferences))
+    ? clampFloatingMochitPoint(
+        dragPosition ?? positionForPreferences(preferences, viewportMetrics),
+        viewportMetrics,
+      )
     : { x: 0, y: 0 };
 
   useEffect(() => {
     const handleResize = () => {
+      const metrics = getFloatingMochitViewportMetrics(window);
+      setDragPosition((current) =>
+        current ? clampFloatingMochitPoint(current, metrics) : current,
+      );
+      if (gestureRef.current) {
+        gestureRef.current.latest = clampFloatingMochitPoint(
+          gestureRef.current.latest,
+          metrics,
+        );
+      }
       setViewportRevision((revision) => revision + 1);
     };
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.visualViewport?.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.visualViewport?.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   useEffect(() => {
@@ -145,8 +163,37 @@ export default function FloatingMochit({ reducedMotion }: Props) {
     longPressTimerRef.current = null;
   };
 
+  const clearBubble = () => {
+    if (bubbleTimerRef.current !== null) {
+      window.clearTimeout(bubbleTimerRef.current);
+      bubbleTimerRef.current = null;
+    }
+    setBubble(null);
+  };
+
+  const showBubbleForEvent = (signal: MochitEventSignal) => {
+    if (menuOpen) return;
+
+    const message = getFloatingMochitMessage(
+      signal.type,
+      previousBubbleTextRef.current,
+    );
+    if (!message) return;
+
+    if (bubbleTimerRef.current !== null) {
+      window.clearTimeout(bubbleTimerRef.current);
+    }
+    previousBubbleTextRef.current = message.text;
+    setBubble(message);
+    bubbleTimerRef.current = window.setTimeout(() => {
+      bubbleTimerRef.current = null;
+      setBubble(null);
+    }, message.durationMs);
+  };
+
   const openMenu = () => {
     clearLongPress();
+    clearBubble();
     setMotion("idle");
     setMenuOpen(true);
   };
@@ -155,6 +202,9 @@ export default function FloatingMochit({ reducedMotion }: Props) {
     return () => {
       if (longPressTimerRef.current !== null) {
         window.clearTimeout(longPressTimerRef.current);
+      }
+      if (bubbleTimerRef.current !== null) {
+        window.clearTimeout(bubbleTimerRef.current);
       }
     };
   }, []);
@@ -230,17 +280,14 @@ export default function FloatingMochit({ reducedMotion }: Props) {
 
     gesture.dragging = true;
     clearLongPress();
+    clearBubble();
     setMenuOpen(false);
-    const next = clampFloatingMochitPosition(
+    const next = clampFloatingMochitPoint(
       {
         x: gesture.origin.x + deltaX,
         y: gesture.origin.y + deltaY,
       },
-      window.innerWidth,
-      window.innerHeight,
-      PET_HIT_SIZE,
-      PET_HIT_SIZE,
-      VIEWPORT_MARGIN,
+      getFloatingMochitViewportMetrics(window),
     );
     gesture.latest = next;
     setDragPosition(next);
@@ -269,9 +316,13 @@ export default function FloatingMochit({ reducedMotion }: Props) {
       return;
     }
     if (gesture.dragging) {
+      const savedPosition = clampFloatingMochitPoint(
+        gesture.latest,
+        getFloatingMochitViewportMetrics(window),
+      );
       saveFloatingMochitPreferences({
         visible: true,
-        position: gesture.latest,
+        position: savedPosition,
       });
       setDragPosition(null);
       setMotion(effectiveReducedMotion ? "idle" : "settling");
@@ -279,6 +330,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
     }
 
     setReactionSignal(createMochitEventSignal("tap"));
+    openMenu();
     setMotion(effectiveReducedMotion ? "idle" : "rebounding");
   };
 
@@ -308,11 +360,13 @@ export default function FloatingMochit({ reducedMotion }: Props) {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     setReactionSignal(createMochitEventSignal("tap"));
+    openMenu();
     setMotion(effectiveReducedMotion ? "idle" : "rebounding");
   };
 
   const hidePet = () => {
     setMenuOpen(false);
+    clearBubble();
     saveFloatingMochitPreferences({
       visible: false,
       position,
@@ -324,7 +378,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
   return (
     <div
       ref={rootRef}
-      className="fixed z-30 h-[72px] w-[72px]"
+      className="fixed z-30 h-[108px] w-[108px]"
       style={{ left: position.x, top: position.y }}
     >
       <button
@@ -350,33 +404,30 @@ export default function FloatingMochit({ reducedMotion }: Props) {
         onAnimationEnd={() => setMotion("idle")}
       >
         <Mochit
-          size="xs"
+          size="floating"
+          reactionProfile="floating"
           animation="idle"
           reducedMotion={effectiveReducedMotion}
           event={reactionSignal}
+          onEventAccepted={showBubbleForEvent}
           className="pointer-events-none justify-center"
         />
       </button>
+      {bubble ? (
+        <FloatingMochitBubble
+          message={bubble}
+          anchor={position}
+          viewport={viewportMetrics}
+        />
+      ) : null}
       {menuOpen ? (
-        <div
-          role="menu"
-          aria-label="モチットメニュー"
-          className={`absolute right-0 min-w-24 rounded-lg border border-gray-200 bg-white p-1 shadow-lg ${
-            position.y > window.innerHeight / 2
-              ? "bottom-full mb-2"
-              : "top-full mt-2"
-          }`}
-        >
-          <button
-            ref={menuItemRef}
-            type="button"
-            role="menuitem"
-            onClick={hidePet}
-            className="w-full rounded-md px-3 py-2 text-left text-sm font-semibold text-gray-800 hover:bg-gray-100 active:bg-gray-200"
-          >
-            Hide
-          </button>
-        </div>
+        <FloatingMochitMenu
+          anchor={position}
+          viewport={viewportMetrics}
+          firstItemRef={menuItemRef}
+          onClose={() => setMenuOpen(false)}
+          onHide={hidePet}
+        />
       ) : null}
     </div>
   );
