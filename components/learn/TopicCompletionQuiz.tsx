@@ -9,7 +9,6 @@ import { saveAppState } from "@/lib/storage";
 import { completeStudySession } from "@/lib/studySession";
 import { studyXpReward, XP_PER_CORRECT } from "@/lib/study";
 import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
-import { getMochitResultPresentation } from "@/lib/mochitPresentation";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import {
@@ -22,8 +21,8 @@ import {
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { buttonClass } from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
-import Mochit from "@/components/mochit/Mochit";
-import type { MochitEventSignal } from "@/components/mochit/mochitEvents";
+import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
+import { getMochitCompletionEvent } from "@/components/mochit/mochitEvents";
 import { useCountUp } from "@/lib/useCountUp";
 
 type CompletionTopic = Pick<
@@ -55,8 +54,6 @@ export default function TopicCompletionQuiz({
     total: number;
     gainedExp: number;
     streak: number;
-    presentation: ReturnType<typeof getMochitResultPresentation>;
-    eventSignal: MochitEventSignal;
   } | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   // 獲得XPは0から自然に増えて見せる(reduced-motion時は即時表示)
@@ -95,22 +92,18 @@ export default function TopicCompletionQuiz({
     const checkpointCleared = next.progress.checkpointProgress?.clearedCheckpointIds.some(
       (id) => !state.progress.checkpointProgress?.clearedCheckpointIds.includes(id),
     );
+    const completionEvent = getMochitCompletionEvent({
+      checkpointCleared: !!checkpointCleared,
+      correct,
+      total,
+    });
     setResult({
       correct,
       total,
       gainedExp: next.progress.exp - state.progress.exp,
       streak: next.progress.streakCount,
-      presentation: getMochitResultPresentation({ checkpointCleared: !!checkpointCleared, correct, total }),
-      // モチットを実際の学習イベントに反応させる(優先度・reduced-motionは描画側が制御)
-      eventSignal: {
-        type: checkpointCleared
-          ? "checkpointClear"
-          : correct === total
-            ? "allCorrect"
-            : "taskComplete",
-        id: Date.now(),
-      },
     });
+    emitMochitEvent(completionEvent);
     setCompleted(true);
 
     const userId = getUserId();
@@ -171,17 +164,6 @@ export default function TopicCompletionQuiz({
             name={result && result.correct === result.total ? "award" : "circle-check"}
             className="mx-auto h-6 w-6 text-emerald-600"
           />
-          {result && (
-            <div className="mt-2 flex justify-center">
-              <Mochit
-                {...result.presentation}
-                event={result.eventSignal}
-                screenContext="quizResult"
-                size="medium"
-                className="text-left"
-              />
-            </div>
-          )}
           <p className="mt-2 text-base font-semibold text-emerald-800">
             {result && result.correct === result.total
               ? "全問正解！このレッスン、おつかれさま！"

@@ -32,7 +32,7 @@ import {
   type FinalExamResult,
 } from "@/lib/finalExam";
 import { emitCelebration } from "@/lib/celebration";
-import Mochit from "@/components/mochit/Mochit";
+import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import FinalExamCard from "@/components/checkpoints/FinalExamCard";
 import GateRequirementList from "@/components/checkpoints/GateRequirementList";
 import MissingBadgeList from "@/components/checkpoints/MissingBadgeList";
@@ -106,12 +106,12 @@ export default function FinalExamPage() {
       const recentQuestionIds = [...state.answers]
         .sort((a, b) => b.answeredAt.localeCompare(a.answeredAt))
         .map((answer) => answer.questionId);
-      setExam(
-        generateFinalExam(state, checkpointId, {
+      const nextExam = generateFinalExam(state, checkpointId, {
           attemptId: crypto.randomUUID(),
           recentQuestionIds,
-        }),
-      );
+        });
+      setExam(nextExam);
+      emitMochitEvent("encourage");
     } catch (error) {
       setExam(null);
       setExamError(
@@ -132,6 +132,7 @@ export default function FinalExamPage() {
     setResult(scored);
     // CP突破の全画面演出（紙吹雪）。突破していなければ差分が無いので何も出ない。
     emitCelebration(state, updated);
+    emitMochitEvent(scored.passed ? "checkpointClear" : "incorrect");
     const uid = getUserId();
     if (uid) {
       saveProgressToDb(uid, updated.progress);
@@ -166,8 +167,6 @@ export default function FinalExamPage() {
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-2xl">
         <FinalExamCard checkpoint={checkpoint} gate={gate} rangeLabel={rangeLabel} />
 
-        {!exam && !result && <Mochit state="normal" size="medium" animation="idle" message="準備ができたら、落ち着いて挑戦しよう" className="justify-center rounded-xl bg-white p-4 border border-gray-200" />}
-
         {/* --- 採点結果 --- */}
         {result ? (
           result.passed ? (
@@ -179,8 +178,6 @@ export default function FinalExamPage() {
               <p className="mt-1 text-sm font-semibold text-emerald-600">
                 {result.total}問中 {result.correct}問正解
               </p>
-
-              <div className="mt-4 flex justify-center"><Mochit state="cheering" size="medium" animation="celebrate" /></div>
 
               {/* CP突破の達成感: いまのCP → 次のCP へ進んだことを見せる */}
               <div className="mt-4 flex items-center justify-center gap-2">
@@ -236,7 +233,6 @@ export default function FinalExamPage() {
             </section>
           ) : (
             <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-amber-200">
-              <div className="flex justify-center"><Mochit state="thinking" size="medium" animation="tilt" message="惜しい。考え方を一緒に整理しよう" /></div>
               <p className="text-center text-4xl">💪</p>
               <p className="mt-2 text-center text-lg font-bold text-gray-800">
                 あと少し！次で突破できます

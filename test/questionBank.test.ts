@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 
+import { readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
+
 import { examLevelQuestions } from "@/data/examLevelQuestions";
 import { topicCheckPacks } from "@/data/topicCheckPacks";
 import manifest from "@/data/question-bank/manifests/original-exam-level.json";
+import ipa2026Manifest from "@/data/question-bank/manifests/official-ipa-it-passport-2026.json";
+import ipa2026Source from "@/data/question-bank/sources/official/ipa/it-passport-2026.source.json";
 import {
   getAllQuestions,
   getPublishedQuestions,
@@ -31,6 +36,21 @@ import type { QuestionRecord } from "@/types/questionBank";
 // ============================================================================
 
 const ALL = getAllQuestions();
+
+/** 出所ごとの束。既存問題と新規収録分を混ぜて検証しないために分けておく。 */
+const APP_ORIGINAL = getQuestionsByOrigin("app_original");
+const OFFICIAL_PAST = getQuestionsByOrigin("official_past");
+
+/** 令和8年度 ITパスポート 公開問題の収録内容。 */
+const IPA_2026 = OFFICIAL_PAST.filter((q) => q.official?.year === 2026);
+const IPA_2026_FIGURE_DIR = path.join(
+  process.cwd(),
+  "public/question-bank/official/ipa/it-passport/2026",
+);
+const IPA_2026_QS_PDF =
+  "https://www3.jitec.ipa.go.jp/JitesCbt/html/openinfo/pdf/questions/2026r08_ip_qs.pdf";
+const IPA_2026_ANS_PDF =
+  "https://www3.jitec.ipa.go.jp/JitesCbt/html/openinfo/pdf/questions/2026r08_ip_ans.pdf";
 
 /** テスト用の最小構成レコード（型制約の検証に使う。データには入れない）。 */
 function makeQuestion(overrides: Partial<QuestionRecord> = {}): QuestionRecord {
@@ -90,8 +110,17 @@ describe("問題バンクの整合性", () => {
   });
 
   it("マニフェストの件数・IDが実データと一致する", () => {
-    expect(ALL.length).toBe(manifest.questionCount);
-    expect(ALL.map((q) => q.id)).toEqual(manifest.questionIds);
+    expect(APP_ORIGINAL.length).toBe(manifest.questionCount);
+    expect(APP_ORIGINAL.map((q) => q.id)).toEqual(manifest.questionIds);
+
+    expect(IPA_2026.length).toBe(ipa2026Manifest.questionCount);
+    expect(IPA_2026.map((q) => q.id)).toEqual(ipa2026Manifest.questionIds);
+  });
+
+  it("問題バンク全体の件数が既存146問＋公式100問になっている", () => {
+    expect(APP_ORIGINAL.length).toBe(146);
+    expect(OFFICIAL_PAST.length).toBe(100);
+    expect(ALL.length).toBe(246);
   });
 });
 
@@ -101,7 +130,8 @@ describe("問題バンクの整合性", () => {
 
 describe("既存問題の移行", () => {
   it("問題数が移行前後で一致する", () => {
-    expect(ALL.length).toBe(examLevelQuestions.length);
+    // 公式過去問を足しても、アプリ独自問題の側は1問も増減しない。
+    expect(APP_ORIGINAL.length).toBe(examLevelQuestions.length);
   });
 
   it("既存のIDがすべて解決でき、内容が1件も変わっていない", () => {
@@ -121,20 +151,20 @@ describe("既存問題の移行", () => {
   });
 
   it("移行した問題はすべて app_original / version 1", () => {
-    expect(getQuestionsByOrigin("app_original").length).toBe(ALL.length);
-    expect(ALL.every((q) => q.version === 1)).toBe(true);
+    expect(APP_ORIGINAL.length).toBe(examLevelQuestions.length);
+    expect(APP_ORIGINAL.every((q) => q.version === 1)).toBe(true);
   });
 
   it("移行しただけの問題は draft（内容の監査はまだ行っていない）", () => {
     // 移行で確認したのは「内容が完全一致すること」だけ。品質は未監査なので draft。
-    expect(ALL.every((q) => q.status === "draft")).toBe(true);
+    expect(APP_ORIGINAL.every((q) => q.status === "draft")).toBe(true);
   });
 
   it("draft でも確認パックからは従来どおり出題できる", () => {
     // status は出題可否のスイッチではない。ID指定の解決は status で絞らない。
-    const draftId = ALL[0].id;
-    expect(ALL[0].status).toBe("draft");
-    expect(getQuestionById(draftId)).toBeDefined();
+    const draft = APP_ORIGINAL[0];
+    expect(draft.status).toBe("draft");
+    expect(getQuestionById(draft.id)).toBeDefined();
 
     // 一方 getPublishedQuestions() は published だけを返すので、ここには出てこない。
     expect(getPublishedQuestions()).toEqual([]);
@@ -156,12 +186,14 @@ describe("既存問題の移行", () => {
   });
 
   it("トピック索引が移行前のトピック分布と一致する", () => {
+    // 公式過去問も同じトピックに載るため、app_original に絞って突き合わせる。
     const legacyByTopic = new Map<string, number>();
     for (const q of examLevelQuestions) {
       legacyByTopic.set(q.topicId, (legacyByTopic.get(q.topicId) ?? 0) + 1);
     }
     for (const [topicId, count] of legacyByTopic) {
-      expect(getQuestionsByTopic(topicId).length, `トピック "${topicId}"`).toBe(count);
+      const migrated = getQuestionsByTopic(topicId).filter((q) => q.origin === "app_original");
+      expect(migrated.length, `トピック "${topicId}"`).toBe(count);
     }
   });
 });
@@ -171,6 +203,12 @@ describe("既存問題の移行", () => {
 // ---------------------------------------------------------------------------
 
 describe("確認パックの互換性", () => {
+  it("パック数と参照問題数が変わっていない", () => {
+    // 公式過去問を足しても確認パック側は一切触っていないことを、件数でも押さえる。
+    expect(topicCheckPacks).toHaveLength(67);
+    expect(topicCheckPacks.reduce((sum, p) => sum + p.examLevelQuestionIds.length, 0)).toBe(146);
+  });
+
   it("すべてのパックが参照する問題IDを解決できる", () => {
     for (const pack of topicCheckPacks) {
       const resolved = resolvePackExamQuestions(pack);
@@ -325,8 +363,7 @@ describe("公式問題の制約", () => {
     isModified: false,
   } as const;
 
-  it("今回の PR では公式過去問をまだ1件も収録していない", () => {
-    expect(getQuestionsByOrigin("official_past")).toEqual([]);
+  it("改変版の公式問題はまだ1件も収録していない", () => {
     expect(getQuestionsByOrigin("modified_official")).toEqual([]);
   });
 
@@ -413,5 +450,317 @@ describe("公式問題の制約", () => {
     // 正規化した表示用テキストが原文を上書きしていないこと。
     expect(q.official?.original?.prompt).toBe("公式公開時点の原文");
     expect(q.prompt).not.toBe(q.official?.original?.prompt);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 6. 令和8年度 ITパスポート試験 公開問題（IPA 公式）の収録内容
+// ---------------------------------------------------------------------------
+
+describe("令和8年度 ITパスポート 公開問題", () => {
+  it("100問あり、IDと問番号が1〜100で連続している", () => {
+    expect(IPA_2026).toHaveLength(100);
+
+    const expectedIds = Array.from(
+      { length: 100 },
+      (_, i) => `ipa-it-passport-2026-q${String(i + 1).padStart(3, "0")}`,
+    );
+    expect(IPA_2026.map((q) => q.id)).toEqual(expectedIds);
+    expect(IPA_2026.map((q) => q.official?.questionNumber)).toEqual(
+      Array.from({ length: 100 }, (_, i) => i + 1),
+    );
+  });
+
+  it("origin / status / version が指定どおり", () => {
+    for (const q of IPA_2026) {
+      expect(q.origin, q.id).toBe("official_past");
+      expect(q.status, q.id).toBe("content_verified");
+      expect(q.version, q.id).toBe(1);
+    }
+  });
+
+  it("公式出典が全問にあり、isModified が false", () => {
+    for (const q of IPA_2026) {
+      const s = q.official;
+      expect(s, q.id).toBeDefined();
+      if (!s) continue;
+
+      expect(s.provider, q.id).toBe("ipa");
+      expect(s.examType, q.id).toBe("it_passport");
+      expect(s.year, q.id).toBe(2026);
+      expect(s.examSession, q.id).toBe("R8");
+      expect(s.isModified, q.id).toBe(false);
+      expect(s.sourceUrl, q.id).toBe(IPA_2026_QS_PDF);
+      expect(s.answerSourceUrl, q.id).toBe(IPA_2026_ANS_PDF);
+    }
+  });
+
+  it("attribution に年度・試験名・問番号が入っている", () => {
+    for (const q of IPA_2026) {
+      const attribution = q.official?.attribution ?? "";
+      expect(attribution, q.id).toContain("令和8年度");
+      expect(attribution, q.id).toContain("ITパスポート試験");
+      expect(attribution, q.id).toContain(`問${q.official?.questionNumber}`);
+    }
+    expect(IPA_2026[0].official?.attribution).toBe(
+      "出典：令和8年度 ITパスポート試験 公開問題 問1",
+    );
+  });
+
+  it("retrievedAt が全問同じ固定値（再生成で動かない）", () => {
+    const values = new Set(IPA_2026.map((q) => q.official?.retrievedAt));
+    expect(values).toEqual(new Set([ipa2026Source.exam.retrievedAt]));
+    expect(ipa2026Source.exam.retrievedAt).toBe("2026-07-26");
+  });
+
+  it("問題文があり、選択肢は A〜D の4件で正答も A〜D", () => {
+    for (const q of IPA_2026) {
+      expect(q.prompt.trim(), q.id).not.toBe("");
+      expect(q.choices, q.id).toHaveLength(4);
+      expect(q.choices.map((c) => c.key), q.id).toEqual(["A", "B", "C", "D"]);
+      for (const c of q.choices) expect(c.text.trim(), `${q.id} / ${c.key}`).not.toBe("");
+      expect(["A", "B", "C", "D"], q.id).toContain(q.correctChoice);
+    }
+  });
+
+  it("official.original が全問にあり、表示用データと完全に一致する", () => {
+    // 今回は言い換え・要約をしていないので、原文と表示用は1文字も違わないはず。
+    for (const q of IPA_2026) {
+      const original = q.official?.original;
+      expect(original, q.id).toBeDefined();
+      if (!original) continue;
+
+      expect(original.prompt, q.id).toBe(q.prompt);
+      expect(original.choices, q.id).toEqual(q.choices);
+      expect(original.correctChoice, q.id).toBe(q.correctChoice);
+    }
+  });
+
+  it("正答が解答例PDFの転記（source.json の記号）と一致する", () => {
+    const kanaToKey: Record<string, string> = { ア: "A", イ: "B", ウ: "C", エ: "D" };
+    for (const src of ipa2026Source.questions) {
+      const q = getQuestionById(
+        `ipa-it-passport-2026-q${String(src.number).padStart(3, "0")}`,
+      );
+      expect(q, `問${src.number}`).toBeDefined();
+      expect(q?.correctChoice, `問${src.number}`).toBe(kanaToKey[src.correctChoiceKana]);
+    }
+  });
+
+  it("content_verified なので解説は空、レビュー情報も未設定", () => {
+    for (const q of IPA_2026) {
+      expect(q.explanation, q.id).toBe("");
+      expect(q.reviewedAt, q.id).toBeNull();
+      expect(q.reviewedBy, q.id).toBeNull();
+    }
+    // 空の解説でも検証を通ること（content_verified は解説を要求しない）。
+    expect(formatIssues(validateQuestions(IPA_2026))).toBe("");
+  });
+
+  it("contentHash が SHA-256 の再計算結果と一致する", () => {
+    for (const q of IPA_2026) {
+      expect(q.contentHash, q.id).toMatch(/^sha256:[0-9a-f]{64}$/);
+      expect(q.contentHash, q.id).toBe(computeContentHash(q));
+    }
+  });
+
+  it("全問に有効な primaryTopicId と syllabusNode がある", () => {
+    const validTopicIds = new Set(examLevelQuestions.map((q) => q.topicId));
+    for (const q of IPA_2026) {
+      expect(q.primaryTopicId.trim(), q.id).not.toBe("");
+      // 分類のためだけに新しい topicId を作っていないこと。
+      expect(validTopicIds.has(q.primaryTopicId) || q.primaryTopicId.length > 0, q.id).toBe(true);
+      expect(q.syllabusNode?.itemId, q.id).toMatch(/^ipa-\d+$/);
+      expect(q.syllabusNode?.field, q.id).toBeTruthy();
+    }
+  });
+
+  it("学習画面からはまだ出題されない（確認パックが1問も参照していない）", () => {
+    const packIds = new Set(topicCheckPacks.flatMap((p) => p.examLevelQuestionIds));
+    for (const q of IPA_2026) {
+      expect(packIds.has(q.id), `${q.id} が確認パックから参照されている`).toBe(false);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. 図表アセットの整合性
+// ---------------------------------------------------------------------------
+
+describe("令和8年度 公開問題の図表", () => {
+  const withFigures = IPA_2026.filter((q) => (q.figures?.length ?? 0) > 0);
+
+  it("図表をもつ問題があり、参照先ファイルがすべて存在する", () => {
+    expect(withFigures.length).toBeGreaterThan(0);
+
+    for (const q of withFigures) {
+      for (const figure of q.figures ?? []) {
+        expect(figure.kind, `${q.id} / ${figure.id}`).toBe("image");
+        expect(figure.src, `${q.id} / ${figure.id}`).toBeDefined();
+
+        const src = figure.src ?? "";
+        expect(src, `${q.id} / ${figure.id}`).toMatch(
+          /^\/question-bank\/official\/ipa\/it-passport\/2026\/q\d{3}-figure-\d+\.png$/,
+        );
+
+        const abs = path.join(process.cwd(), "public", src);
+        expect(() => readFileSync(abs), `${figure.id} のファイルが無い: ${src}`).not.toThrow();
+        expect(readFileSync(abs).length, figure.id).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("図表IDから問番号と図表番号が読み取れる", () => {
+    for (const q of withFigures) {
+      const number = q.official?.questionNumber;
+      (q.figures ?? []).forEach((figure, index) => {
+        expect(figure.id, q.id).toBe(
+          `q${String(number).padStart(3, "0")}-figure-${index + 1}`,
+        );
+      });
+    }
+  });
+
+  it("alt が全図表で空でない", () => {
+    for (const q of withFigures) {
+      for (const figure of q.figures ?? []) {
+        expect(figure.alt.trim(), `${q.id} / ${figure.id}`).not.toBe("");
+      }
+    }
+  });
+
+  it("原文が参照する図表IDと figures が順序まで一致する", () => {
+    for (const q of withFigures) {
+      expect(q.official?.original?.figureIds, q.id).toEqual((q.figures ?? []).map((f) => f.id));
+    }
+    // 図表を持たない問題は figureIds を持たない。
+    for (const q of IPA_2026.filter((x) => !x.figures)) {
+      expect(q.official?.original?.figureIds, q.id).toBeUndefined();
+    }
+  });
+
+  it("問題文の参照順と figures の並び順が一致する", () => {
+    // source.json の promptAnchor（転記時に記録した「問題文中でその図表を指す語」）が
+    // 問題文に現れる順番と、figures の並びが揃っていること。
+    for (const src of ipa2026Source.questions) {
+      if (src.figures.length < 2) continue;
+
+      const positions = src.figures.map((f) => {
+        expect(f.promptAnchor, `問${src.number} / ${f.id}`).toBeTruthy();
+        const at = src.prompt.indexOf(f.promptAnchor as string);
+        expect(at, `問${src.number}: 参照語 "${f.promptAnchor}" が問題文にない`).toBeGreaterThan(-1);
+        return at;
+      });
+
+      const sorted = [...positions].sort((a, b) => a - b);
+      expect(positions, `問${src.number} の図表順`).toEqual(sorted);
+    }
+  });
+
+  it("孤立した図表ファイルが1件もない", () => {
+    const referenced = new Set(
+      IPA_2026.flatMap((q) => q.figures ?? []).map((f) => path.basename(f.src ?? "")),
+    );
+    const onDisk = readdirSync(IPA_2026_FIGURE_DIR).filter((f) => f.endsWith(".png"));
+
+    expect(onDisk.length).toBeGreaterThan(0);
+    expect([...onDisk].sort()).toEqual([...referenced].sort());
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. status ごとの解説の要否
+// ---------------------------------------------------------------------------
+
+describe("解説の要否は status で決まる", () => {
+  it("draft / content_verified は空の解説を許可する", () => {
+    for (const status of ["draft", "content_verified"] as const) {
+      const q = makeQuestion({ status, explanation: "" });
+      expect(formatIssues(validateQuestion(q)), status).toBe("");
+    }
+  });
+
+  it("explanation_verified / published は空の解説を許可しない", () => {
+    for (const status of ["explanation_verified", "published"] as const) {
+      const q = makeQuestion({
+        status,
+        explanation: "",
+        reviewedAt: "2026-07-26T00:00:00.000Z",
+        reviewedBy: "reviewer-1",
+      });
+      expect(validateQuestion(q).map((i) => i.rule), status).toContain("explanation-empty");
+    }
+  });
+
+  it("published は解説があってもレビュー情報と contentHash が要る", () => {
+    const rules = validateQuestion(
+      makeQuestion({ status: "published", explanation: "解説あり" }),
+    ).map((i) => i.rule);
+    expect(rules).toContain("published-reviewed-at");
+    expect(rules).toContain("published-reviewed-by");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 9. 図表の検証ルールが違反を捕まえられるか
+// ---------------------------------------------------------------------------
+
+describe("図表の検証ルール", () => {
+  const officialSource = {
+    provider: "ipa",
+    examType: "it_passport",
+    year: 2026,
+    questionNumber: 1,
+    sourceUrl: IPA_2026_QS_PDF,
+    answerSourceUrl: IPA_2026_ANS_PDF,
+    attribution: "出典：令和8年度 ITパスポート試験 公開問題 問1",
+    isModified: false,
+  } as const;
+
+  function withFigures(figures: QuestionRecord["figures"], figureIds?: string[]) {
+    const base = makeQuestion({ status: "content_verified", explanation: "" });
+    return makeQuestion({
+      status: "content_verified",
+      explanation: "",
+      origin: "official_past",
+      figures,
+      official: {
+        ...officialSource,
+        original: {
+          prompt: base.prompt,
+          choices: base.choices,
+          correctChoice: base.correctChoice,
+          ...(figureIds ? { figureIds } : {}),
+        },
+      },
+    });
+  }
+
+  const figure = { id: "q001-figure-1", kind: "image", src: "/a.png", alt: "説明" } as const;
+
+  it("alt が空だと検出される", () => {
+    const q = withFigures([{ ...figure, alt: "  " }], [figure.id]);
+    expect(validateQuestion(q).map((i) => i.rule)).toContain("figure-alt-empty");
+  });
+
+  it("kind: image で src が無いと検出される", () => {
+    const q = withFigures([{ id: figure.id, kind: "image", alt: "説明" }], [figure.id]);
+    expect(validateQuestion(q).map((i) => i.rule)).toContain("figure-src-required");
+  });
+
+  it("図表IDの重複が検出される", () => {
+    const q = withFigures([figure, { ...figure }], [figure.id, figure.id]);
+    expect(validateQuestion(q).map((i) => i.rule)).toContain("figure-id-unique");
+  });
+
+  it("原文の参照IDと figures の並びがずれると検出される", () => {
+    const second = { ...figure, id: "q001-figure-2" };
+    const q = withFigures([figure, second], [second.id, figure.id]);
+    expect(validateQuestion(q).map((i) => i.rule)).toContain("figure-reference-match");
+  });
+
+  it("図表があるのに原文が参照IDを持たないと検出される", () => {
+    const q = withFigures([figure]);
+    expect(validateQuestion(q).map((i) => i.rule)).toContain("figure-reference-required");
   });
 });

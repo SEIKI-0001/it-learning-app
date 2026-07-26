@@ -103,6 +103,12 @@ export type OfficialQuestionOriginal = {
   prompt: string;
   choices: QuestionChoice[];
   correctChoice: ChoiceKey;
+  /**
+   * 公式問題が本文中で参照している図表のID。QuestionRecord.figures[].id と対応する。
+   * 並び順は問題文が参照する順（1つ目に出てくる図表が先頭）。
+   * 図表なしの問題では省略する（空配列は置かない）。
+   */
+  figureIds?: string[];
 };
 
 export type OfficialQuestionSource = {

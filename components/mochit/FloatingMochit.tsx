@@ -12,6 +12,11 @@ import {
 } from "react";
 import Mochit from "./Mochit";
 import {
+  createMochitEventSignal,
+  subscribeMochitEvent,
+} from "./mochitEventBus";
+import type { MochitEventSignal } from "./mochitEvents";
+import {
   clampFloatingMochitPosition,
   getFloatingMochitPreferencesServerSnapshot,
   getFloatingMochitPreferencesSnapshot,
@@ -102,7 +107,8 @@ export default function FloatingMochit({ reducedMotion }: Props) {
     useState<FloatingMochitPoint | null>(null);
   const [, setViewportRevision] = useState(0);
   const [motion, setMotion] = useState<MotionState>("idle");
-  const [tapId, setTapId] = useState(0);
+  const [reactionSignal, setReactionSignal] =
+    useState<MochitEventSignal | null>(null);
   const [dragRotation, setDragRotation] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const gestureRef = useRef<ActiveGesture | null>(null);
@@ -121,6 +127,11 @@ export default function FloatingMochit({ reducedMotion }: Props) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!preferences?.visible) return;
+    return subscribeMochitEvent(setReactionSignal);
+  }, [preferences?.visible]);
 
   useEffect(() => {
     if (motion !== "rebounding" && motion !== "settling") return;
@@ -267,7 +278,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
       return;
     }
 
-    setTapId((current) => current + 1);
+    setReactionSignal(createMochitEventSignal("tap"));
     setMotion(effectiveReducedMotion ? "idle" : "rebounding");
   };
 
@@ -296,7 +307,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
     }
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
-    setTapId((current) => current + 1);
+    setReactionSignal(createMochitEventSignal("tap"));
     setMotion(effectiveReducedMotion ? "idle" : "rebounding");
   };
 
@@ -342,7 +353,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
           size="xs"
           animation="idle"
           reducedMotion={effectiveReducedMotion}
-          event={tapId > 0 ? { type: "tap", id: tapId } : null}
+          event={reactionSignal}
           className="pointer-events-none justify-center"
         />
       </button>

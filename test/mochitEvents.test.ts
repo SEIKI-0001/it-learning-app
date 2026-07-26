@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createMochitReactionController,
+  getMochitCompletionEvent,
   MOCHIT_EVENT_PRIORITIES,
   MOCHIT_EVENT_REACTION_MS,
   MOCHIT_EVENT_TRIGGERS,
@@ -17,6 +18,30 @@ describe("mochitEvents mapping", () => {
       expect(MOCHIT_EVENT_PRIORITIES[event]).toBeGreaterThan(0);
       expect(MOCHIT_EVENT_REACTION_MS[event]).toBeGreaterThan(0);
     }
+  });
+
+  it("selects exactly one completion event in checkpoint, perfect, normal order", () => {
+    expect(
+      getMochitCompletionEvent({
+        checkpointCleared: true,
+        correct: 4,
+        total: 4,
+      }),
+    ).toBe("checkpointClear");
+    expect(
+      getMochitCompletionEvent({
+        checkpointCleared: false,
+        correct: 4,
+        total: 4,
+      }),
+    ).toBe("allCorrect");
+    expect(
+      getMochitCompletionEvent({
+        checkpointCleared: false,
+        correct: 3,
+        total: 4,
+      }),
+    ).toBe("taskComplete");
   });
 
   it("orders priorities per spec: checkpoint > badge > task > allCorrect > answer > encourage > tap", () => {

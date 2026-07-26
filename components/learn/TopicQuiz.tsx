@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChoiceKey, UserAnswer } from "@/types";
 import type { CheckQuestion } from "@/types/content";
 import ChoiceButton from "@/components/ChoiceButton";
 import Icon from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
+import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 
 // トピックの確認問題を順に解き、結果(UserAnswer[])を onComplete で親へ返す。
 // /today・/review の「解いて進める」体験に使う(表示専用の CheckQuestionCard とは別物)。
@@ -78,6 +79,7 @@ export default function TopicQuiz({
     [questions],
   );
   const [selections, setSelections] = useState<Record<string, ChoiceKey>>({});
+  const answeredQuestionIdsRef = useRef(new Set<string>());
   const [order, setOrder] = useState<string[]>([]); // 回答した順(連続正解の判定に使う)
   const [done, setDone] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0); // 1問ずつ表示する(下スクロールさせない)
@@ -112,7 +114,14 @@ export default function TopicQuiz({
 
   function select(qId: string, key: ChoiceKey) {
     if (done || timeLimitReached) return;
-    if (selections[qId] !== undefined) return; // 二重回答防止
+    if (
+      selections[qId] !== undefined ||
+      answeredQuestionIdsRef.current.has(qId)
+    ) {
+      return;
+    }
+    answeredQuestionIdsRef.current.add(qId);
+    emitMochitEvent(key === shuffled.get(qId)?.correct ? "correct" : "incorrect");
     setSelections((s) => ({ ...s, [qId]: key }));
     setOrder((o) => (o.includes(qId) ? o : [...o, qId]));
   }

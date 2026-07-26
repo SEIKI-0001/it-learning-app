@@ -20,10 +20,8 @@ import { computeProgressSummary } from "@/lib/progressSummary";
 import { getRankStatus } from "@/lib/rank";
 import { getCheckpointProgress } from "@/lib/checkpoints";
 import { BADGES } from "@/lib/badges";
-import Mochit from "@/components/mochit/Mochit";
 import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
 import { getMochitGrowthStage, MOCHIT_GROWTH_STAGE_LABELS } from "@/lib/mochit";
-import { getMochitProgressPresentation } from "@/lib/mochitPresentation";
 import FieldMasteryBars from "@/components/FieldMasteryBars";
 import BottomNav from "@/components/BottomNav";
 import Icon from "@/components/ui/Icon";
@@ -139,7 +137,7 @@ export default function ProgressPage() {
   const reviewQueue = progress.reviewQueue ?? [];
   const reviewCount = reviewQueue.length;
   const gap = daysSince(progress.lastPlayedAt);
-  const mochit = getMochitProgressPresentation({ readinessScore: overall, currentCheckpointId: getCheckpointProgress(state).currentCheckpointId, reviewCount, planAdjustmentProposal: !!proposal, lastPlayedAt: progress.lastPlayedAt });
+  const mochitGrowthStage = getMochitGrowthStage(state);
 
   const gapText =
     gap === null
@@ -214,27 +212,26 @@ export default function ProgressPage() {
             </div>
           </dl>
 
-          {/* モチット: 現在地への一言と成長段階。タップでアバター管理へ */}
-          <Link
-            href="/avatar"
-            className="mt-3 flex items-center gap-1 transition active:scale-[0.99]"
-          >
-            <Mochit
-              state={mochit.state}
-              animation={mochit.animation}
-              size="small"
-              growthStage={getMochitGrowthStage(state)}
-              message={mochit.message}
-              className="min-w-0 flex-1"
-            />
-            <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-500" />
-            <span className="sr-only">モチットを見る</span>
-          </Link>
-          <p className="mt-1 text-[11px] tabular-nums text-gray-500">
-            モチット 成長段階{getMochitGrowthStage(state)}
-            「{MOCHIT_GROWTH_STAGE_LABELS[getMochitGrowthStage(state)]}」
-          </p>
-          <FloatingMochitVisibilityControl restoreOnly className="mt-3" />
+          <div className="mt-3 border-t border-gray-100 pt-3">
+            <div className="flex items-center gap-3">
+              <Icon name="sprout" className="h-5 w-5 shrink-0 text-brand-600" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-gray-600">モチットの成長段階</p>
+                <p className="text-sm font-semibold text-gray-900">
+                  段階{mochitGrowthStage}「
+                  {MOCHIT_GROWTH_STAGE_LABELS[mochitGrowthStage]}」
+                </p>
+              </div>
+              <Link
+                href="/avatar"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700"
+              >
+                成長を見る
+                <Icon name="chevron-right" className="h-4 w-4" />
+              </Link>
+            </div>
+            <FloatingMochitVisibilityControl restoreOnly className="mt-3" />
+          </div>
 
           {/* ランク進捗(次のランクまで)。EXP/レベル表示はランクに統合した。 */}
           <div className="mt-3 border-t border-gray-100 pt-3">

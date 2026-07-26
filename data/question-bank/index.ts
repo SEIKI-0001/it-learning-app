@@ -1,5 +1,6 @@
 import type { QuestionBankFile } from "@/types/questionBank";
 import examLevel from "./original/exam-level.json";
+import ipaItPassport2026 from "./official/ipa/it-passport-2026.json";
 
 // ============================================================================
 // 問題バンクのファイル束ね。ここに JSON を1行足すだけで問題が増える構成にする。
@@ -16,5 +17,5 @@ import examLevel from "./original/exam-level.json";
 
 export const questionBankFiles: QuestionBankFile[] = [
   examLevel as unknown as QuestionBankFile,
-  // 公式過去問を収録したら、ここに追加する。
+  ipaItPassport2026 as unknown as QuestionBankFile,
 ];

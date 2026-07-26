@@ -1,5 +1,5 @@
 import type { ChoiceKey } from "@/types";
-import type { QuestionRecord } from "@/types/questionBank";
+import type { QuestionRecord, QuestionStatus } from "@/types/questionBank";
 import { CONTENT_HASH_PATTERN, computeContentHash } from "@/lib/questionBank/contentHash";
 
 // ============================================================================
@@ -18,6 +18,12 @@ export type QuestionBankIssue = {
 };
 
 const EXPECTED_CHOICE_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
+
+/** 解説が必須になる status（これ以外は空の解説を許可する）。 */
+export const EXPLANATION_REQUIRED_STATUSES: QuestionStatus[] = [
+  "explanation_verified",
+  "published",
+];
 
 /** 問題1件を検証する。 */
 export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
@@ -58,8 +64,15 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
   if (q.prompt.trim() === "") {
     add("prompt-empty", "問題文が空です。");
   }
-  if (q.explanation.trim() === "") {
-    add("explanation-empty", "解説が空です。");
+  // 解説の要否は status で決まる。
+  //   draft / content_verified      … 空でよい
+  //     問題文・選択肢・正答の監査と、解説を書く作業は別工程。公式過去問を原文のまま
+  //     収録した直後は解説がない状態が正しく、ここで空を弾くと「埋めるためだけの解説」を
+  //     書かせることになる。
+  //   explanation_verified / published … 空は不可（解説を監査した、と主張する状態のため）
+  //   retired                        … 出題停止。内容を問わない。
+  if (EXPLANATION_REQUIRED_STATUSES.includes(q.status) && q.explanation.trim() === "") {
+    add("explanation-empty", `status "${q.status}" の問題には解説が必要です。`);
   }
   if (q.version < 1 || !Number.isInteger(q.version)) {
     add("version-positive-integer", `version は1以上の整数である必要があります: ${q.version}`);
@@ -103,6 +116,45 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
         'origin "modified_official" は isModified: true である必要があります。',
       );
     }
+  }
+
+  // --- 図表 ---------------------------------------------------------------
+  // 図表は「問題が成立するために必要な情報」なので、参照切れ・alt 欠落を本文の欠落と
+  // 同じ重さで弾く。実ファイルの存在確認は fs を使うテスト側で行う。
+  const figures = q.figures ?? [];
+  const figureIds = figures.map((f) => f.id);
+  if (new Set(figureIds).size !== figureIds.length) {
+    add("figure-id-unique", `図表IDが重複しています: ${figureIds.join(", ")}`);
+  }
+  for (const figure of figures) {
+    if (figure.id.trim() === "") add("figure-id-empty", "図表IDが空です。");
+    if (figure.alt.trim() === "") {
+      add("figure-alt-empty", `図表 "${figure.id}" の alt が空です。`);
+    }
+    if (figure.kind === "image") {
+      if (!figure.src || figure.src.trim() === "") {
+        add("figure-src-required", `図表 "${figure.id}" は kind "image" なので src が必要です。`);
+      }
+    } else if (!figure.body || figure.body.trim() === "") {
+      add("figure-body-required", `図表 "${figure.id}" は kind "${figure.kind}" なので body が必要です。`);
+    }
+  }
+
+  // 原文が参照する図表IDと、実際に持っている図表が一致すること（順序も含む）。
+  // 問題文の参照順と配列順がずれると「図1」と実物が食い違うため、順序まで見る。
+  const referencedIds = q.official?.original?.figureIds;
+  if (referencedIds) {
+    if (referencedIds.join("") !== figureIds.join("")) {
+      add(
+        "figure-reference-match",
+        `official.original.figureIds（${referencedIds.join(", ")}）と figures（${figureIds.join(", ")}）が一致しません。`,
+      );
+    }
+  } else if (figures.length > 0 && q.official) {
+    add(
+      "figure-reference-required",
+      `図表を持つ公式問題には official.original.figureIds が必要です（${figureIds.join(", ")}）。`,
+    );
   }
 
   // --- contentHash / レビュー情報 -----------------------------------------

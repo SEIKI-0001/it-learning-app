@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import CelebrationHost from '@/components/celebration/CelebrationHost';
-import FloatingMochit from '@/components/mochit/FloatingMochit';
+import FloatingMochitGate from '@/components/mochit/FloatingMochitGate';
 
 export const metadata: Metadata = {
   title: 'ITパスポート学習コーチ',
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       {/* 背景色は globals.css の --background(#f6f8fb) に一元化する */}
       <body className="min-h-screen">
         {children}
-        <FloatingMochit />
+        <FloatingMochitGate />
         <CelebrationHost />
       </body>
     </html>

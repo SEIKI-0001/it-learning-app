@@ -36,8 +36,7 @@ import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import { buttonClass } from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
-import Mochit from "@/components/mochit/Mochit";
-import { getMochitGrowthStage } from "@/lib/mochit";
+import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import QuestRoute from "@/components/quest/QuestRoute";
 import {
   buildQuestRoute,
@@ -156,6 +155,7 @@ export default function TodayPage() {
   // 今日のルート: メニューは進捗で毎回再生成され完了タスクが消えるため、
   // その日のルート順序をlocalStorageに固定し、完了ノードを消さずに前進を見せる。
   const [storedRouteIds] = useState(() => loadStoredRoute(todayLocalDate()));
+  const completionReactionSentRef = useRef(false);
   const nodes = useMemo(
     () => (state ? buildQuestRoute(state, tasks, storedRouteIds) : []),
     [state, tasks, storedRouteIds],
@@ -165,6 +165,16 @@ export default function TodayPage() {
       saveStoredRoute(todayLocalDate(), nodes.map((node) => node.topicId));
     }
   }, [nodes]);
+  useEffect(() => {
+    if (!state?.profile || !menu || !plan) return;
+    if (nodes.length > 0) {
+      completionReactionSentRef.current = false;
+      return;
+    }
+    if (completionReactionSentRef.current) return;
+    completionReactionSentRef.current = true;
+    emitMochitEvent("taskComplete");
+  }, [menu, nodes.length, plan, state?.profile]);
 
   if (state === undefined || state === null || !menu || !plan) {
     return <LoadingScreen />;
@@ -340,7 +350,6 @@ export default function TodayPage() {
           {nodes.length > 0 && (
             <QuestRoute
               nodes={nodes}
-              growthStage={getMochitGrowthStage(state)}
               hrefFor={(node) =>
                 getLessonHref(node.topicId, {
                   from: "today",
@@ -359,15 +368,11 @@ export default function TodayPage() {
 
           {nodes.length === 0 && (
             <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
-              <div className="flex justify-center">
-                <Mochit
-                  state="normal"
-                  size="small"
-                  growthStage={getMochitGrowthStage(state)}
-                  message="今日の予定はひと段落。復習を1つ確認しよう"
-                />
-              </div>
-              <p className="mt-2 text-base font-semibold text-gray-900">
+              <Icon
+                name="circle-check"
+                className="mx-auto h-7 w-7 text-emerald-600"
+              />
+              <p className="mt-3 text-base font-semibold text-gray-900">
                 今日の新しい学習はひと段落です
               </p>
               <p className="mt-1 text-sm text-gray-500">
