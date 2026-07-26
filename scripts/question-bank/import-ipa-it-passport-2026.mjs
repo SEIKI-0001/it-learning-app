@@ -17,9 +17,15 @@
 //       syllabusNode.field … 問題内容から見た IPA シラバス分類。primaryTopicId から引く。
 //       primaryTopicId     … アプリ内の復習先トピック。source.json が持つ。
 //     公式区分と内容分類はずれることがある（例: 問16 / 問52）。片方で他方を上書きしない。
-//   - 解説は書かない（status: "content_verified" / explanation: ""）。
-//     解説の妥当性は未監査なので explanation_verified には上げない。
+//   - 独自解説は原文とは別ファイルで管理する:
+//       data/question-bank/explanations/official/ipa/it-passport-2026.json
+//     source.json（＝公式原文の転記結果）には解説を混ぜない。原文と独自著作物を
+//     ファイルごと分けておくことで、「どこまでが IPA の公開物か」が常に一目で分かる。
+//   - 解説がそろっている問題は version 2 / status "published" に上げ、
+//     レビュー情報（reviewedAt / reviewedBy）を付ける。解説の有無で状態が変わるのは
+//     この1点だけで、原文・図表・分類は解説の有無にかかわらず不変。
 //   - contentHash はアプリ側と同じ実装（lib/questionBank/contentHash.ts）を使う。
+//     explanation はハッシュ対象なので、解説を入れると必ず再計算される。
 //
 // Node の TypeScript 型ストリップで .ts を直接読む。
 // 読み込む .ts は import type だけを使っているため、@/ エイリアスの解決は不要。
@@ -38,6 +44,10 @@ const IN_SOURCE = path.join(
   ROOT,
   "data/question-bank/sources/official/ipa/it-passport-2026.source.json",
 );
+const IN_EXPLANATIONS = path.join(
+  ROOT,
+  "data/question-bank/explanations/official/ipa/it-passport-2026.json",
+);
 const OUT_QUESTIONS = path.join(ROOT, "data/question-bank/official/ipa/it-passport-2026.json");
 const OUT_MANIFEST = path.join(
   ROOT,
@@ -48,10 +58,16 @@ const FIGURE_DIR = path.join(ROOT, "public/question-bank/official/ipa/it-passpor
 const BANK_SOURCE = "official/ipa/it-passport-2026";
 const GENERATED_FROM = "data/question-bank/sources/official/ipa/it-passport-2026.source.json";
 
-/** 全問共通。原文出題なので改変なし・内容監査済み。解説は未作成。 */
+/** 全問共通。原文出題なので改変なし。 */
 const ORIGIN = "official_past";
-const STATUS = "content_verified";
-const VERSION = 1;
+
+/** 解説がない問題（＝内容監査だけ済んだ状態）。 */
+const STATUS_WITHOUT_EXPLANATION = "content_verified";
+const VERSION_WITHOUT_EXPLANATION = 1;
+
+/** 独自解説を入れて二段階監査を通した問題。 */
+const STATUS_WITH_EXPLANATION = "published";
+const VERSION_WITH_EXPLANATION = 2;
 
 const CHOICE_KEYS = ["A", "B", "C", "D"];
 /** 公式の選択肢記号 → 内部キー。 */
@@ -78,8 +94,10 @@ function questionId(number) {
   return `ipa-it-passport-2026-q${String(number).padStart(3, "0")}`;
 }
 
-function toQuestionRecord(src, exam, syllabusIndex) {
+function toQuestionRecord(src, exam, syllabusIndex, explanations) {
   const { number } = src;
+  const explanation = explanations.byNumber.get(number) ?? "";
+  const hasExplanation = explanation !== "";
 
   // --- 原文 -----------------------------------------------------------------
   // 選択肢は必ず A→D の順に並べる（source の記載順に依存させない）。
@@ -120,14 +138,15 @@ function toQuestionRecord(src, exam, syllabusIndex) {
     prompt: original.prompt,
     choices: original.choices,
     correctChoice: original.correctChoice,
-    explanation: "", // 独自解説は今回作らない
+    // 独自解説（IPA の公式解説ではない）。未作成なら空文字のまま。
+    explanation,
   };
 
   const record = {
     id: questionId(number),
-    version: VERSION,
+    version: hasExplanation ? VERSION_WITH_EXPLANATION : VERSION_WITHOUT_EXPLANATION,
     origin: ORIGIN,
-    status: STATUS,
+    status: hasExplanation ? STATUS_WITH_EXPLANATION : STATUS_WITHOUT_EXPLANATION,
     primaryTopicId: src.primaryTopicId,
     questionPattern: src.questionPattern,
     prompt: body.prompt,
@@ -153,8 +172,9 @@ function toQuestionRecord(src, exam, syllabusIndex) {
       retrievedAt: exam.retrievedAt,
     },
     contentHash: computeContentHash(body),
-    reviewedAt: null, // 解説レビューは未実施
-    reviewedBy: null,
+    // レビュー情報は「解説の二段階監査を通したか」を表す。解説がなければ未レビュー。
+    reviewedAt: hasExplanation ? explanations.reviewedAt : null,
+    reviewedBy: hasExplanation ? explanations.reviewedBy : null,
   };
 
   if (figures.length > 0) record.figures = figures;
@@ -166,6 +186,93 @@ function toQuestionRecord(src, exam, syllabusIndex) {
   if (syllabusNode) record.syllabusNode = syllabusNode;
 
   return record;
+}
+
+// ---------------------------------------------------------------------------
+// 独自解説
+// ---------------------------------------------------------------------------
+
+/**
+ * 未完成の解説を published に昇格させないための検出パターン。
+ * 「仮」「後で」のような日常語の部分一致は誤検知するので使わない
+ * （例: 問10 の「発想を出し切った後で行う」は正当な本文）。
+ */
+const PLACEHOLDER_PATTERNS = [
+  /TODO/i,
+  /FIXME/i,
+  /\bWIP\b/i,
+  /後で(書く|埋める|追記)/,
+  /(仮|ダミー|サンプル|暫定)の?(解説|文|テキスト)/,
+  /未(作成|記入|定)/,
+  /あとで/,
+  /^\s*$/,
+];
+
+/** 解説が「公式の解説」だと誤解される書き方になっていないか。 */
+const CLAIMS_OFFICIAL_PATTERNS = [/公式解説/, /公式の解説/, /IPAの解説/, /IPA公式解説/];
+
+/** 独自解説ファイルを読み、published に上げてよい品質かを確認する。 */
+function loadExplanations() {
+  if (!existsSync(IN_EXPLANATIONS)) {
+    throw new Error(`独自解説ファイルがありません: ${path.relative(ROOT, IN_EXPLANATIONS)}`);
+  }
+  const file = JSON.parse(readFileSync(IN_EXPLANATIONS, "utf8"));
+
+  if (typeof file.reviewedAt !== "string" || Number.isNaN(Date.parse(file.reviewedAt))) {
+    throw new Error("独自解説ファイルの reviewedAt が ISO8601 の日時ではありません。");
+  }
+  if (typeof file.reviewedBy !== "string" || file.reviewedBy.trim() === "") {
+    throw new Error("独自解説ファイルの reviewedBy が空です。");
+  }
+
+  const byNumber = new Map();
+  const problems = [];
+  const seenText = new Map(); // 解説本文 -> 最初に出てきた問番号
+
+  for (const [key, text] of Object.entries(file.explanations ?? {})) {
+    const number = Number(key);
+    if (!Number.isInteger(number) || number < 1 || number > 100) {
+      problems.push(`解説のキー "${key}" が問番号(1〜100)ではありません。`);
+      continue;
+    }
+    if (typeof text !== "string") {
+      problems.push(`問${number}: 解説が文字列ではありません。`);
+      continue;
+    }
+
+    for (const pattern of PLACEHOLDER_PATTERNS) {
+      if (pattern.test(text)) problems.push(`問${number}: 未完成の解説と思われます（${pattern}）。`);
+    }
+    for (const pattern of CLAIMS_OFFICIAL_PATTERNS) {
+      if (pattern.test(text)) {
+        problems.push(`問${number}: 公式解説と誤認させる表現があります（${pattern}）。`);
+      }
+    }
+
+    // 同一文章の大量流用の検出。書き出しだけ変えた使い回しも拾えるよう全文で見る。
+    const duplicatedAt = seenText.get(text);
+    if (duplicatedAt !== undefined) {
+      problems.push(`問${number}: 問${duplicatedAt} と解説本文が完全に同一です。`);
+    } else {
+      seenText.set(text, number);
+    }
+
+    byNumber.set(number, text);
+  }
+
+  if (problems.length > 0) {
+    throw new Error(`独自解説に問題があります:\n  - ${problems.join("\n  - ")}`);
+  }
+
+  // 年度演習は「全100問が監査済み」を前提にしているので、中途半端な状態を作らない。
+  if (byNumber.size !== 0 && byNumber.size !== 100) {
+    throw new Error(
+      `独自解説は 0 問か 100 問のどちらかである必要があります（現在 ${byNumber.size} 問）。` +
+        "一部だけ published になると年度別演習が開始できない状態になります。",
+    );
+  }
+
+  return { byNumber, reviewedAt: file.reviewedAt, reviewedBy: file.reviewedBy };
 }
 
 /** 生成前に、入力そのものが壊れていないかを確認する。 */
@@ -218,8 +325,11 @@ function main() {
   const source = JSON.parse(readFileSync(IN_SOURCE, "utf8"));
   assertSourceIsSane(source);
 
+  const explanations = loadExplanations();
   const syllabusIndex = buildSyllabusIndex();
-  const questions = source.questions.map((q) => toQuestionRecord(q, source.exam, syllabusIndex));
+  const questions = source.questions.map((q) =>
+    toQuestionRecord(q, source.exam, syllabusIndex, explanations),
+  );
 
   const ids = questions.map((q) => q.id);
   const duplicated = ids.filter((id, i) => ids.indexOf(id) !== i);
@@ -254,6 +364,10 @@ function main() {
   console.log(`  出典: ${source.exam.examName}`);
   console.log(`  図表: ${withFigures.length} 問 / ${figureCount} 点`);
   console.log(`  シラバス紐づけあり: ${withSyllabus} 問`);
+  console.log(
+    `  独自解説あり: ${questions.filter((q) => q.explanation !== "").length} 問` +
+      `（published: ${questions.filter((q) => q.status === "published").length} 問）`,
+  );
   console.log(
     `  公式出題区分: ストラテジ ${countBy("strategy")} / マネジメント ${countBy("management")} / テクノロジ ${countBy("technology")} 問`,
   );

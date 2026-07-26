@@ -438,8 +438,14 @@ export function topicProgressToRow(
 // question_attempts : 問題（確認問題 / 過去問レベル / ミニ模試）の回答ログ（第2弾）
 // ---------------------------------------------------------------------------
 
-export type QuestionType = "topic_quiz" | "exam_level" | "mini_exam" | "mock_exam";
+export type QuestionType =
+  | "topic_quiz"
+  | "exam_level"
+  | "mini_exam"
+  | "mock_exam"
+  | "official_past"; // 公式過去問の年度別演習（20260726）
 
+/** 旧形式の行。20260726 マイグレーション適用前のDBはこの列しか持たない。 */
 export type QuestionAttemptRow = {
   user_id: string;
   question_id: string;
@@ -453,20 +459,44 @@ export type QuestionAttemptRow = {
   source_task_id: string | null;
 };
 
-/** 挿入用の行（attempt_id はDB既定）。 */
+/**
+ * 公式過去問 年度別演習で足す列（20260726 加算マイグレーション）。
+ * すべて nullable。既存の保存経路はこれらを付けないので旧形式と同じ行になる。
+ */
+export type QuestionAttemptOfficialColumns = {
+  question_origin: string | null;
+  question_version: number | null;
+  exam_year: number | null;
+  attempt_mode: string | null;
+  official_exam_field: string | null;
+  attempt_group_id: string | null;
+};
+
+export type QuestionAttemptRowV2 = QuestionAttemptRow & QuestionAttemptOfficialColumns;
+
+export type QuestionAttemptInput = {
+  questionId: string;
+  questionType: QuestionType;
+  topicId: string;
+  selectedAnswer?: string | null;
+  isCorrect: boolean;
+  mistakeReason?: string | null;
+  answeredAt?: string | null;
+  timeSpentSeconds?: number | null;
+  sourceTaskId?: string | null;
+  /** 以下は公式過去問の年度別演習でだけ埋まる（サーバ側で問題IDから解決した値）。 */
+  questionOrigin?: string | null;
+  questionVersion?: number | null;
+  examYear?: number | null;
+  attemptMode?: string | null;
+  officialExamField?: string | null;
+  attemptGroupId?: string | null;
+};
+
+/** 挿入用の行（attempt_id はDB既定）。従来どおりの列だけを持つ。 */
 export function questionAttemptToRow(
   userId: string,
-  a: {
-    questionId: string;
-    questionType: QuestionType;
-    topicId: string;
-    selectedAnswer?: string | null;
-    isCorrect: boolean;
-    mistakeReason?: string | null;
-    answeredAt?: string | null;
-    timeSpentSeconds?: number | null;
-    sourceTaskId?: string | null;
-  },
+  a: QuestionAttemptInput,
 ): QuestionAttemptRow {
   return {
     user_id: userId,
@@ -480,6 +510,41 @@ export function questionAttemptToRow(
     time_spent_seconds: a.timeSpentSeconds ?? null,
     source_task_id: a.sourceTaskId ?? null,
   };
+}
+
+/**
+ * 新列を含めた挿入用の行。
+ * マイグレーション未適用のDBでは列が無くて insert が失敗するため、
+ * 呼び出し側は失敗時に questionAttemptToRow（旧形式）で再試行すること。
+ */
+export function questionAttemptToRowV2(
+  userId: string,
+  a: QuestionAttemptInput,
+): QuestionAttemptRowV2 {
+  return {
+    ...questionAttemptToRow(userId, a),
+    question_origin: a.questionOrigin ?? null,
+    question_version: a.questionVersion ?? null,
+    exam_year: a.examYear ?? null,
+    attempt_mode: a.attemptMode ?? null,
+    official_exam_field: a.officialExamField ?? null,
+    attempt_group_id: a.attemptGroupId ?? null,
+  };
+}
+
+/**
+ * 「その列がまだ存在しない」ことによる失敗か。
+ * PostgreSQL の undefined_column は 42703。Supabase の PostgREST は
+ * スキーマキャッシュに無い列を PGRST204 で返すことがあるので両方を見る。
+ */
+export function isMissingColumnError(error: {
+  code?: string | null;
+  message?: string | null;
+} | null): boolean {
+  if (!error) return false;
+  if (error.code === "42703" || error.code === "PGRST204") return true;
+  const message = error.message ?? "";
+  return /column .* does not exist|could not find the .* column/i.test(message);
 }
 
 // ---------------------------------------------------------------------------

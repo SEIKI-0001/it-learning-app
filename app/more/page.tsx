@@ -15,6 +15,12 @@ const GROUPS: readonly {
     links: [
       { href: "/plan", icon: "map", title: "学習計画", description: "ロードマップと今週の目標" },
       { href: "/mock-exam", icon: "check", title: "100問模試", description: "本番形式で実力を確認" },
+      {
+        href: "/past-exams",
+        icon: "library",
+        title: "公式過去問",
+        description: "IPA公開問題を年度別に演習",
+      },
       { href: "/report", icon: "chart", title: "週次レポート", description: "今週の振り返り" },
     ],
   },

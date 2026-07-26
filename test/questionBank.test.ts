@@ -65,7 +65,9 @@ function makeQuestion(overrides: Partial<QuestionRecord> = {}): QuestionRecord {
       { key: "D", text: "選択肢D" },
     ],
     correctChoice: "A",
-    explanation: "サンプル解説",
+    // 「サンプル解説」のような書きかけ表現は published の検証で弾かれる（意図した挙動）。
+    // ここは型・制約の検証用のひな形なので、実際の解説らしい文章にしておく。
+    explanation: "選択肢Aが正しいのは、条件を満たす唯一の組合せだからです。",
   } satisfies Pick<QuestionRecord, "prompt" | "choices" | "correctChoice" | "explanation">;
 
   const question: QuestionRecord = {
@@ -169,7 +171,11 @@ describe("既存問題の移行", () => {
     expect(getQuestionById(draft.id)).toBeDefined();
 
     // 一方 getPublishedQuestions() は published だけを返すので、ここには出てこない。
-    expect(getPublishedQuestions()).toEqual([]);
+    // PR2-B 以降は令和8年度の公式過去問100問が published なので、
+    // 「移行しただけの既存問題が1問も含まれないこと」で確認する。
+    const published = getPublishedQuestions();
+    expect(published.some((q) => q.origin === "app_original")).toBe(false);
+    expect(published.every((q) => q.origin === "official_past")).toBe(true);
   });
 
   it("contentHash が SHA-256 形式で、本文から再計算できる", () => {
@@ -533,10 +539,12 @@ describe("令和8年度 ITパスポート 公開問題", () => {
   });
 
   it("origin / status / version が指定どおり", () => {
+    // PR2-B で独自解説を入れ、二段階監査を通したので version 2 / published。
+    // 解説そのものの検証は test/pastExamQuestions.test.ts 側で行う。
     for (const q of IPA_2026) {
       expect(q.origin, q.id).toBe("official_past");
-      expect(q.status, q.id).toBe("content_verified");
-      expect(q.version, q.id).toBe(1);
+      expect(q.status, q.id).toBe("published");
+      expect(q.version, q.id).toBe(2);
     }
   });
 
@@ -608,13 +616,14 @@ describe("令和8年度 ITパスポート 公開問題", () => {
     }
   });
 
-  it("content_verified なので解説は空、レビュー情報も未設定", () => {
+  it("published なので独自解説とレビュー情報がそろっている", () => {
+    // PR2-A では解説が空・未レビューだった。PR2-B で全問に独自解説を入れて
+    // 二段階監査を通したので、published に必要な情報がそろっている必要がある。
     for (const q of IPA_2026) {
-      expect(q.explanation, q.id).toBe("");
-      expect(q.reviewedAt, q.id).toBeNull();
-      expect(q.reviewedBy, q.id).toBeNull();
+      expect(q.explanation.trim(), q.id).not.toBe("");
+      expect(q.reviewedAt, q.id).not.toBeNull();
+      expect(q.reviewedBy, q.id).not.toBeNull();
     }
-    // 空の解説でも検証を通ること（content_verified は解説を要求しない）。
     expect(formatIssues(validateQuestions(IPA_2026))).toBe("");
   });
 

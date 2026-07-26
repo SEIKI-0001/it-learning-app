@@ -363,14 +363,22 @@ create table if not exists public.question_attempts (
   attempt_id          uuid primary key default gen_random_uuid(),
   user_id             uuid not null references public.line_users(id) on delete cascade,
   question_id         text not null,
-  question_type       text not null,          -- topic_quiz / exam_level / mini_exam / mock_exam
+  question_type       text not null,          -- topic_quiz / exam_level / mini_exam / mock_exam / official_past
   topic_id            text not null,
   selected_answer     text,
   is_correct          boolean not null,
   mistake_reason      text,
   answered_at         timestamptz not null default now(),
   time_spent_seconds  integer,
-  source_task_id      uuid
+  source_task_id      uuid,
+  -- 公式過去問 年度別演習（20260726 加算マイグレーション）。すべて nullable で、
+  -- 既存の保存経路は送らない。詳細は migrations/20260726_official_past_exam_attempts.sql。
+  question_origin     text,                   -- official_past / app_original / ai_generated / modified_official
+  question_version    integer,                -- 回答時点の QuestionRecord.version
+  exam_year           integer,                -- 公式過去問の実施年（西暦）
+  attempt_mode        text,                   -- practice / exam
+  official_exam_field text,                   -- 公式問題冊子上の出題区分（内容分類とは別物）
+  attempt_group_id    text                    -- 100問の演習1回をまとめるID
 );
 create index if not exists question_attempts_user_topic_idx
   on public.question_attempts(user_id, topic_id);
@@ -378,6 +386,10 @@ create index if not exists question_attempts_user_type_idx
   on public.question_attempts(user_id, question_type);
 create index if not exists question_attempts_user_answered_idx
   on public.question_attempts(user_id, answered_at);
+create index if not exists question_attempts_group_idx
+  on public.question_attempts(user_id, attempt_group_id);
+create index if not exists question_attempts_user_exam_year_idx
+  on public.question_attempts(user_id, exam_year);
 alter table public.question_attempts enable row level security;
 
 -- ----------------------------------------------------------------------------

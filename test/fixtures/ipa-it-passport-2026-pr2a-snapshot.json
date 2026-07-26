@@ -1,14 +1,9 @@
 {
-  "schemaVersion": 1,
-  "source": "official/ipa/it-passport-2026",
+  "note": "PR2-A（コミット a49e6cb）時点の、公式原文と不変であるべき項目のスナップショット。PR2-B の独自解説追加でこれらが1文字でも変わっていないことを検証する。生成物ではなく固定資産なので、問題の差し替え以外で再生成しないこと。",
+  "sourceCommit": "a49e6cb",
   "questions": [
     {
       "id": "ipa-it-passport-2026-q001",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-intellectual-property",
-      "questionPattern": "application",
       "prompt": "生成AIを用いた生成物の取扱いに関して，既存の著作物の著作権者から許諾を得ることが必要となる可能性のあるものだけを，全て挙げたものはどれか。\na 好みのアーティストの楽曲に似た音楽が得られるように生成AIを用いて楽曲を生成し，その楽曲をインターネット上にアップロードし，無料で公開した。\nb 好みのアーティストの楽曲に似た音楽が得られるように生成AIを用いて楽曲を生成し，その楽曲を自分のPC上に保管し，個人で視聴した。\nc 生成AIで音楽を生成したところ，偶然好みのアーティストの楽曲に似た音楽が生成できたので，自分のPC上に保管し，個人で視聴した。",
       "choices": [
         {
@@ -29,12 +24,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "著作権者の許諾が必要になるのは、既存の著作物に似たものを不特定多数に届ける（公衆送信する）場合です。aは生成した楽曲をインターネットへアップロードして公開しており、無料であっても公衆送信に当たるため、既存楽曲に似ていると判断されれば許諾が必要になる可能性があります。bとcは自分のPCに保管して個人で聴くだけなので、著作権法が認める「私的使用のための複製」の範囲に収まり、許諾は要りません。cのように似た楽曲が偶然できた場合も、公開しない限り扱いは同じです。よって許諾が必要になり得るのはaだけです。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "著作権",
         "生成AI"
       ],
+      "primaryTopicId": "strat-intellectual-property",
+      "syllabusNode": {
+        "itemId": "ipa-04",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -69,24 +71,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:9373a479fb5b42383101835b2ed019c3bc92378e39aa9255af64b9f2c89aee4c",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-04",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "法務"
       }
     },
     {
       "id": "ipa-it-passport-2026-q002",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-system-strategy",
-      "questionPattern": "knowledge",
       "prompt": "BYODに関する記述として，適切なものはどれか。",
       "choices": [
         {
@@ -107,11 +95,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "BYODはBring Your Own Deviceの略で、従業員が私物のスマートフォンやPCを、勤務先の許可を得たうえで業務に使う運用のことです。端末の購入費を抑えられる反面、私物端末に業務データが入るため、紛失・盗難時の情報漏えい対策やアクセス制限が欠かせません。イは定型作業をソフトウェアのロボットに任せるRPAの説明です。ウは業務の流れを継続的に改善するBPM、エは業務を抜本的に設計し直すBPRの説明で、どちらも私物端末の業務利用とは関係ありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "BYOD"
       ],
+      "primaryTopicId": "strat-system-strategy",
+      "syllabusNode": {
+        "itemId": "ipa-18",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -146,24 +141,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:e78b1a2e09a6db01428f63f1bb57c382583ea438115c4a6077c2de1a30c83a72",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-18",
-        "field": "strategy",
-        "majorCategory": "システム戦略",
-        "middleCategory": "システム戦略"
       }
     },
     {
       "id": "ipa-it-passport-2026-q003",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-decision-problem-solving",
-      "questionPattern": "calculation",
       "prompt": "投資会社であるA社が，それぞれの投資戦略を採る場合の利益は，表のように予想される。A社がマクシミン戦略を採り，かつ，市況が好転した場合の利益はどれか。マクシミン戦略とは，戦略ごとに予想される利益の最小値が最も大きくなるように戦略を採用する理論である。",
       "choices": [
         {
@@ -184,11 +165,26 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "マクシミン戦略は、各戦略で起こり得る最悪の結果（利益の最小値）を並べ、その中で最も大きいものを選ぶ考え方です。表から、投資戦略aの最小値は市況が悪化した場合の−15、投資戦略bの最小値は市況が悪化した場合の0になります。−15と0では0の方が大きいので、マクシミン戦略で採用するのは投資戦略bです。問われているのは「その戦略を採り、かつ市況が好転した場合」の利益なので、戦略bの好転時の値である5が答えになります。最大利益20に引かれて戦略aを選ばないことが、この問題の分かれ目です。",
+      "questionPattern": "calculation",
       "estimatedDifficulty": 3,
       "tags": [
         "マクシミン戦略",
         "意思決定"
+      ],
+      "primaryTopicId": "strat-decision-problem-solving",
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
+      "figures": [
+        {
+          "id": "q003-figure-1",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q003-figure-1.png",
+          "alt": "投資戦略ごとの予想利益を示す表。投資戦略aは市況が好転した場合20，市況が悪化した場合−15。投資戦略bは市況が好転した場合5，市況が悪化した場合0。"
+        }
       ],
       "official": {
         "provider": "ipa",
@@ -227,32 +223,10 @@
           ]
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:c1e056f7f2e59049393b3c474848029cec331abe51a27aaa7be59021f8f8a3f8",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "figures": [
-        {
-          "id": "q003-figure-1",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q003-figure-1.png",
-          "alt": "投資戦略ごとの予想利益を示す表。投資戦略aは市況が好転した場合20，市況が悪化した場合−15。投資戦略bは市況が好転した場合5，市況が悪化した場合0。"
-        }
-      ],
-      "syllabusNode": {
-        "itemId": "ipa-02",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q004",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-technology-development-strategy",
-      "questionPattern": "knowledge",
       "prompt": "特定の目的の達成や課題の解決をテーマとして，ソフトウェアの開発者や企画者などが短期集中的にアイディアを出し合い，ソフトウェアの開発などの共同作業を行い，成果を競い合うイベントはどれか。",
       "choices": [
         {
@@ -273,12 +247,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "ハッカソンは、hack（開発）とmarathon（マラソン）を組み合わせた造語で、開発者や企画者が数日程度の短期間に集中して共同でソフトウェアを作り、その成果を競い合うイベントです。テーマを決めてチームで一気に形にするため、新しいアイディアの創出や人材交流の場として使われます。アのトレードフェアは企業が商品を展示・商談する見本市です。ウのパネルディスカッションは登壇者が公開で討論する形式、エのレセプションは歓迎会・招待会のことで、いずれも共同開発を伴いません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "ハッカソン",
         "技術開発戦略"
       ],
+      "primaryTopicId": "strat-technology-development-strategy",
+      "syllabusNode": {
+        "itemId": "ipa-13",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "技術戦略マネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -313,24 +294,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:7650effad5f8239655dd6c06bcda249e2afc819aefe43cc368e2e96c9bb6fcfb",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-13",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "技術戦略マネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q005",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-intellectual-property",
-      "questionPattern": "knowledge",
       "prompt": "インターネットを利用した企業広告に関する新たなビジネスモデルを知的財産として出願し，コンピュータシステムとして実現した。このビジネスモデルを知的財産として，保護する法律はどれか。",
       "choices": [
         {
@@ -351,12 +318,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "ビジネスモデルそのものは、それだけでは法律で保護されません。しかしコンピュータシステムとして実現された、技術的な仕組みを伴う発明であれば「ビジネスモデル特許」として特許法で保護され得ます。この問題も「コンピュータシステムとして実現した」とあるので、特許法が答えです。アの意匠法は物品のデザイン、イの実用新案法は物品の形状・構造に関する考案を保護します。ウの著作権法はプログラムや文章などの表現を保護するもので、ビジネスの仕組みというアイディア自体は保護対象になりません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "特許法",
         "ビジネスモデル特許"
       ],
+      "primaryTopicId": "strat-intellectual-property",
+      "syllabusNode": {
+        "itemId": "ipa-04",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -391,24 +365,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:2f1063d9ca4c7c5f763899b79dbd245bdbfdef2fa817145fd32727a79b390306",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-04",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "法務"
       }
     },
     {
       "id": "ipa-it-passport-2026-q006",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-generative-ai-dx",
-      "questionPattern": "knowledge",
       "prompt": "デジタルトランスフォーメーションに関する説明として，最も適切なものはどれか。",
       "choices": [
         {
@@ -429,11 +389,18 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "デジタルトランスフォーメーション（DX）は、デジタル技術が人々の生活やビジネスのあらゆる面に浸透し、仕組みそのものを変革していくという考え方です。単にツールを導入することではなく、製品・サービスや業務プロセス、組織のあり方まで作り変える点が要点になります。アはデジタル機器を使える人と使えない人の間に生じる格差、いわゆるデジタルデバイドの説明です。イはデジタルネイティブ、ウはアナログ信号をデジタル信号へ変えるデジタイゼーション（A/D変換）の説明で、いずれも「変革」を表す語ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "DX"
       ],
+      "primaryTopicId": "strat-generative-ai-dx",
+      "syllabusNode": {
+        "itemId": "ipa-20",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -468,24 +435,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:f17ec6e20582baf38c443c93c185b2f70717895fd5638e81d48b029e3c7074fe",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-20",
-        "field": "strategy",
-        "majorCategory": "システム戦略",
-        "middleCategory": "システム戦略"
       }
     },
     {
       "id": "ipa-it-passport-2026-q007",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-engineering-systems",
-      "questionPattern": "knowledge",
       "prompt": "製品やサービスの価値を機能とコストの関係で把握し，価値の向上をはかる“バリューエンジニアリング”という手法がある。バリューエンジニアリングにおける価値，機能，コストの関係性を示すものとして，適切なものはどれか。",
       "choices": [
         {
@@ -506,11 +459,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "バリューエンジニアリングでは、価値を「その製品やサービスが果たす機能」と「そこにかかるコスト」の比で捉え、価値＝機能／コストと表します。この式から、同じコストでより高い機能を実現するか、同じ機能をより低いコストで実現すれば価値が上がると分かります。エのようにコストを分子に置くと、費用をかけるほど価値が高いという逆の意味になってしまいます。ウの掛け算もコストが増えるほど価値が上がることになり、実務の感覚と合いません。分母にコストが来る形を覚えておくと迷いません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "バリューエンジニアリング"
       ],
+      "primaryTopicId": "strat-engineering-systems",
+      "syllabusNode": {
+        "itemId": "ipa-15",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -545,24 +505,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:9c070f022ebe05fb14f45214a31da5a6b505302722397ef65a93c2171af68940",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-15",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q008",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-iot",
-      "questionPattern": "application",
       "prompt": "IoTを利用したシステムの事例として，最も適切なものはどれか。",
       "choices": [
         {
@@ -583,11 +529,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "IoT（Internet of Things）は、これまでインターネットにつながっていなかった機器にセンサーや通信機能を持たせ、集めたデータを活用する仕組みです。ウは設備に取り付けたセンサーの情報をインターネット経由で集め、離れた場所のスマートフォンから設備の状態を監視しており、まさにIoTの典型例です。アはインターネットで貸し手と借り手を仲介するソーシャルレンディングの例です。イは文章からの感情分析でテキストマイニングやAIの活用例、エはオンラインストレージのサービスであり、どれも「モノに付けたセンサー」が登場しません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "IoT"
       ],
+      "primaryTopicId": "tech-iot",
+      "syllabusNode": {
+        "itemId": "ipa-17",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -622,24 +575,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:1e8fa62b6e98183718c2762a928d4539ad6c2b32afcd2eb8ba80f992e304536e",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-17",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q009",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-accounting-break-even",
-      "questionPattern": "application",
       "prompt": "製品の製造に関連して発生する次の費用のうち，間接費だけを全て挙げたものはどれか。\na 完成した製品を検査する労務費\nb 工場の電気供給設備を保守する労務費\nc 製品の外注加工費",
       "choices": [
         {
@@ -660,12 +599,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "間接費とは、特定の製品ひとつひとつに直接ひも付けて集計できない費用のことです。bの工場の電気供給設備を保守する労務費は、工場全体を支える費用であってどの製品のためにいくらかかったかを直接たどれないので、間接費に当たります。aの完成した製品を検査する労務費は、検査対象の製品が特定できるため直接費です。cの製品の外注加工費も、どの製品の加工に支払ったかがはっきりしているので直接費になります。したがって間接費はbだけです。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "間接費",
         "原価"
       ],
+      "primaryTopicId": "strat-accounting-break-even",
+      "syllabusNode": {
+        "itemId": "ipa-03",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -700,24 +646,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:76393809411c22c57b38d2b97747fd51cebef3b0206b7b3e6070543b2a53672e",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-03",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q010",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-decision-problem-solving",
-      "questionPattern": "application",
       "prompt": "会議に関する記述のうち，ブレーンストーミングの進め方として，適切なものだけを全て挙げたものはどれか。\na 自由奔放なアイディアは控え，実現可能なアイディアの提出を求める。\nb ほかのメンバーのアイディアに便乗した案であっても，とがめずに進める。\nc メンバーから出されるアイディアの中で，テーマに適したものを選択しながら進める。",
       "choices": [
         {
@@ -738,11 +670,18 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "ブレーンストーミングには「批判をしない」「自由奔放な発想を歓迎する」「質より量を求める」「他人の案に便乗して発展させる（結合便乗）」という4つの原則があります。bは他のメンバーの案に便乗した案をとがめずに進めるという内容で、結合便乗の原則にそのまま当てはまります。aは自由奔放なアイディアを控えさせており、自由奔放の原則に反します。cはテーマに適したものを選択しながら進めるとしていますが、その場で取捨選択することは批判・評価に当たり、批判厳禁の原則に反します。アイディアの評価は発想を出し切った後で行うのが基本です。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "ブレーンストーミング"
       ],
+      "primaryTopicId": "strat-decision-problem-solving",
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -777,24 +716,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:af94b9b4e5f2cb1525673a574a03f973ad8304d4e4d630b991dd10e1827fe152",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-02",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q011",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-intellectual-property",
-      "questionPattern": "application",
       "prompt": "プロサッカーチームのファンの集いで，人気のある選手が背広姿でサインをしている姿を撮影し，プリントしてフリーマーケットで販売した。この行為によって侵害されるおそれがある選手が有する権利として，最も適切なものはどれか。",
       "choices": [
         {
@@ -815,11 +740,18 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "パブリシティ権は、有名人の氏名や肖像が持つ「顧客を引き付ける力」を、本人が経済的に独占できるとする権利です。人気選手の写真をプリントして販売する行為は、その選手の知名度を利用して収益を得ることになるため、パブリシティ権の侵害になるおそれがあります。アの意匠権は工業製品のデザイン、イの商標権は商品やサービスの目印となるマークを保護する権利で、人物の肖像そのものは対象外です。ウの著作権は写真を撮影した人に生じるもので、被写体である選手の権利ではありません。「選手が有する権利」と問われている点に注目します。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "パブリシティ権"
       ],
+      "primaryTopicId": "strat-intellectual-property",
+      "syllabusNode": {
+        "itemId": "ipa-04",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -854,24 +786,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:aa69c24ef2447523d65a33353837a53f89a602ecb6596c28d0264bdf8b0e9b84",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-04",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "法務"
       }
     },
     {
       "id": "ipa-it-passport-2026-q012",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-business-process",
-      "questionPattern": "knowledge",
       "prompt": "A社は，自社の業務プロセスの課題を抽出し，見直しをするために流れ図を用いて業務プロセスを可視化することにした。A社が流れ図の作成において利用する記述様式として，最も適切なものはどれか。",
       "choices": [
         {
@@ -892,12 +810,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "WFA（Work Flow Architecture）は、業務がどの部門・担当者を、どの順序で流れていくかを図に表す記述様式で、業務プロセスの可視化と課題の洗い出しに使われます。誰から誰へ、どの帳票やデータが渡るのかが見えるため、無駄や重複の発見に向いています。アのCRUD図はデータに対する生成・参照・更新・削除の対応関係を表す表です。イのDMMは中心テーマから発想を広げる思考整理の手法、ウのE-R図はデータの実体と関連を表すデータモデルの図で、いずれも業務の流れそのものを描くものではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "業務プロセス",
         "WFA"
       ],
+      "primaryTopicId": "strat-business-process",
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -932,24 +857,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:5aad6ff235c3bff74faabca25f906d848d6c2a8add6b558916021be0957b2ef2",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-02",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q013",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-privacy-law",
-      "questionPattern": "knowledge",
       "prompt": "個人情報保護法に規定された匿名加工情報の説明として，最も適切なものはどれか。",
       "choices": [
         {
@@ -970,12 +881,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "匿名加工情報は、個人情報を法令で定められた基準に従って加工し、特定の個人を識別できず、かつ元の個人情報に復元できないようにした情報です。この状態にすれば、一定のルール（作成した旨の公表や識別行為の禁止など）を守ることを条件に、本人の同意なしにデータを利活用できます。イは元の個人情報への復元を担保しているため、匿名加工情報の要件である「復元できない」を満たしません。アは公開統計を加工した情報で、そもそも個人情報の加工ではありません。エは個人番号など別の情報で個人を識別できるようにしており、依然として個人情報のままです。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "匿名加工情報",
         "個人情報保護法"
       ],
+      "primaryTopicId": "strat-privacy-law",
+      "syllabusNode": {
+        "itemId": "ipa-07",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1010,24 +928,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:f17d570cc33ebe9b40e86bd152799e5e762b8036018e5730fa55ce63438784ec",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-07",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "法務"
       }
     },
     {
       "id": "ipa-it-passport-2026-q014",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-enterprise-activities",
-      "questionPattern": "knowledge",
       "prompt": "ISO 26000とは，組織の社会的責任についての国際規格である。ISO 26000で定められている，企業が果たすべき社会的責任を表す用語として，最も適切なものはどれか。",
       "choices": [
         {
@@ -1048,12 +952,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "CSR（Corporate Social Responsibility）は「企業の社会的責任」を意味し、企業が利益追求だけでなく、環境や人権、地域社会などに配慮して行動する責任を指します。ISO 26000は、この社会的責任について組織が取り組むべき事項を示した国際規格です。イのSDGsは国連が採択した2030年までの持続可能な開発目標で、企業だけを対象とした責任の概念ではありません。ウのコーポレートガバナンスは経営を監視・統制する枠組み、エのソーシャルメディアポリシーはSNS利用の社内ルールで、社会的責任そのものを表す用語ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "CSR",
         "ISO 26000"
       ],
+      "primaryTopicId": "strat-enterprise-activities",
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1088,24 +999,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:15cee13b74116071da01abca304616a3ee04026210541a32b09853e3f738ae9e",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-01",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q015",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-marketing-4p",
-      "questionPattern": "knowledge",
       "prompt": "マーケティングにおけるイノベーター理論では，新しい製品やサービスが普及していく過程に沿って，消費者を，イノベーター，アーリーアダプター，アーリーマジョリティ，レイトマジョリティ，ラガードという五つのグループに分ける。このとき，アーリーアダプターからアーリーマジョリティへの普及において生じる，越えることが困難な隔たりを表す用語として，最も適切なものはどれか。",
       "choices": [
         {
@@ -1126,12 +1023,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "キャズムは「深い溝」という意味で、新製品の普及過程において、新しもの好きのアーリーアダプターと、慎重で実績を重視するアーリーマジョリティとの間にある越えがたい隔たりを指します。この2つの層は購買の動機が大きく違うため、初期に売れた製品がここで伸び悩むことが多いとされます。アのカニバリゼーションは自社製品同士が顧客を奪い合う共食い現象です。ウの死の谷は研究開発が事業化に至るまでの資金・体制の壁、エのレッドオーシャンは競争が激しい既存市場のことで、いずれも普及段階の断絶を表す語ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "キャズム",
         "イノベーター理論"
       ],
+      "primaryTopicId": "strat-marketing-4p",
+      "syllabusNode": {
+        "itemId": "ipa-10",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1166,24 +1070,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:cc22f86c9d10d7092107c87d28ef7c3917e9c78a22a8df029e6e2a7b8bb48ccf",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-10",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "経営戦略マネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q016",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ai-ml",
-      "questionPattern": "knowledge",
       "prompt": "教師あり学習において，正解となる情報を付与する作業を表す用語として，最も適切なものはどれか。",
       "choices": [
         {
@@ -1204,12 +1094,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "アノテーションは、教師あり学習で使う訓練データに対して「これは猫の画像」「この文は肯定的」といった正解ラベルを付ける作業です。教師あり学習は入力と正解のペアから規則を学ぶため、この作業の質が学習結果の精度を大きく左右します。イのエンコードはデータを別の形式へ変換すること、ウのデータクレンジングは欠損や表記ゆれ、誤りを取り除いてデータを整える作業です。エのフィルタリングは条件に合うデータだけを選び出すことで、いずれも正解を与える作業ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "アノテーション",
         "教師あり学習"
       ],
+      "primaryTopicId": "tech-ai-ml",
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1244,24 +1141,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:e43f5ef72d0cbd417e6160279f8dc83592f09878ae1a54943de071dfe63db2df",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-35",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
       }
     },
     {
       "id": "ipa-it-passport-2026-q017",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-legal-compliance",
-      "questionPattern": "application",
       "prompt": "AIを利活用する上で留意すべき事項として，適切なものだけを全て挙げたものはどれか。\na AIの意図しない動作によって，人間の生命や身体などに危害を及ぼす可能性\nb AIの判断に差別的な内容が含まれる可能性\nc AIの判断にプライバシーの侵害となる内容が含まれる可能性",
       "choices": [
         {
@@ -1282,12 +1165,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "AIは学習したデータや設計次第で、想定外の動作や偏った判断をすることがあるため、a・b・cはいずれも実際に留意すべき事項です。aについては、自動運転や医療機器のようにAIの誤動作が生命や身体に直接危害を及ぼす場面が現実にあります。bについては、学習データに偏りがあると、性別や人種などに関して差別的な判断が再生産されるおそれがあります。cについては、学習データや出力に個人を特定できる情報が含まれ、プライバシー侵害につながる可能性があります。どれか1つを除外する理由がないので、a・b・cすべてが正解です。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "AI倫理",
         "情報倫理"
       ],
+      "primaryTopicId": "strat-legal-compliance",
+      "syllabusNode": {
+        "itemId": "ipa-07",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1322,24 +1212,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:70302ac78f9502fa6acd49f06a1b7fb4abc2041366380a1e1c70627ae7aded6f",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-07",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "法務"
       }
     },
     {
       "id": "ipa-it-passport-2026-q018",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-engineering-systems",
-      "questionPattern": "knowledge",
       "prompt": "コンカレントエンジニアリングを採用する目的として，最も適切なものはどれか。",
       "choices": [
         {
@@ -1360,11 +1236,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "コンカレントエンジニアリングは、設計・試作・生産準備といった工程を順番に行うのではなく、複数の工程を並行して進める開発手法です。前工程の完了を待たずに後工程を始められるため、開発期間や納期を短縮できることが最大の狙いになります。並行作業のためには部門間で情報を早期に共有する必要があり、後戻りの削減にもつながります。イのセキュリティ確保、ウの省エネルギー性能、エの最新技術の活用は、いずれも製品の中身に関する目標であって、工程を並行化する手法の目的ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "コンカレントエンジニアリング"
       ],
+      "primaryTopicId": "strat-engineering-systems",
+      "syllabusNode": {
+        "itemId": "ipa-15",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1399,24 +1282,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:1dc6f34479730e922c420b52db84daed35a9257ee94db39ce9a2ee33c2bc8ae1",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-15",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q019",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-solution-business",
-      "questionPattern": "knowledge",
       "prompt": "サーバ上にインストールされたアプリケーションソフトウェアを，インターネット経由で利用者に提供する事業者，又はそのサービス形態として，適切なものはどれか。",
       "choices": [
         {
@@ -1437,11 +1306,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "ASP（Application Service Provider）は、サーバ上に用意したアプリケーションソフトウェアを、インターネット経由で利用者に使わせる事業者、またはそのサービス形態です。利用者は自分の環境にソフトを導入せずに済み、SaaSの先駆けとなった考え方でもあります。イのISPはインターネットへの接続そのものを提供する事業者です。ウのアウトソーシングは業務を外部に委託すること全般を指す広い言葉、エのデータウェアハウスは分析用に業務データを蓄積するデータベースで、どれもアプリケーションの提供形態ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "ASP"
       ],
+      "primaryTopicId": "strat-solution-business",
+      "syllabusNode": {
+        "itemId": "ipa-20",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1476,24 +1352,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:38c46e62d302257f6fcf48e56d30c570540e41684586ce7f4c346850d50c5813",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-20",
-        "field": "strategy",
-        "majorCategory": "システム戦略",
-        "middleCategory": "システム戦略"
       }
     },
     {
       "id": "ipa-it-passport-2026-q020",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-system-planning-rfp",
-      "questionPattern": "knowledge",
       "prompt": "システム開発におけるRFPの説明として，適切なものはどれか。",
       "choices": [
         {
@@ -1514,12 +1376,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "RFP（Request For Proposal）は提案依頼書のことで、発注者側がシステムに求める要件や予算、納期といった調達条件をまとめ、ITベンダーに提案を求めるために示す文書です。これを受け取ったベンダーが提案書を作成し、発注者はそれを比較して発注先を選びます。アはベンダー側から出す提案書の説明で、依頼する側と提案する側が逆になっています。ウは発注後に共同で作る設計文書、エは社内のユーザー部門から情報システム部門への要望であり、いずれも社外のベンダーへ示す調達文書ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "RFP",
         "調達"
       ],
+      "primaryTopicId": "strat-system-planning-rfp",
+      "syllabusNode": {
+        "itemId": "ipa-22",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム企画"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1554,24 +1423,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:0676f65d6c3843abd33b6e3e5ad163a76f9369871621a9e0139a8e7411cb7dd8",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-22",
-        "field": "strategy",
-        "majorCategory": "システム戦略",
-        "middleCategory": "システム企画"
       }
     },
     {
       "id": "ipa-it-passport-2026-q021",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-security-laws",
-      "questionPattern": "knowledge",
       "prompt": "サイバーセキュリティ基本法の立法趣旨を説明したものはどれか。",
       "choices": [
         {
@@ -1592,11 +1447,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "サイバーセキュリティ基本法は、サイバーセキュリティに関する施策を国全体として進めるための基本理念を定め、国や地方公共団体、重要インフラ事業者などの責務を明らかにした法律です。個別の行為を取り締まるのではなく、総合的・効果的に施策を推進する枠組みを作ることが立法の趣旨になります。アは不正アクセス行為そのものを禁止し罰則を定める不正アクセス禁止法の説明です。イは情報セキュリティ管理の実践規範を示すISO/IEC 27002などの規格、エは技術的制限手段の無効化を規制する不正競争防止法の説明で、いずれも国の施策推進を定める基本法ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "サイバーセキュリティ基本法"
       ],
+      "primaryTopicId": "strat-security-laws",
+      "syllabusNode": {
+        "itemId": "ipa-05",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1631,24 +1493,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:5dc7c0fbd2eb5d6e39cbcaa61983caf0da344ae1a8e7515ab74aa74cd67640cf",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-05",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "法務"
       }
     },
     {
       "id": "ipa-it-passport-2026-q022",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-business-process",
-      "questionPattern": "knowledge",
       "prompt": "伝票入力処理などの定型的な事務作業を，ソフトウェアロボットに代替させることによって，自動化や効率化を図る手段として，最も適切なものはどれか。",
       "choices": [
         {
@@ -1669,11 +1517,18 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "RPA（Robotic Process Automation）は、これまで人が画面上で行っていた伝票入力や転記といった定型的な事務作業を、ソフトウェアのロボットに代行させて自動化・効率化する仕組みです。判断の余地が少なく手順が決まっている作業ほど効果が出やすいという特徴があります。アのBPOは業務そのものを外部企業に委託することで、自動化とは別の考え方です。イのEUCは利用者自身がシステムを構築・運用すること、ウのFAは工場の生産設備を自動化することで、事務作業をソフトウェアロボットに任せる話ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "RPA"
       ],
+      "primaryTopicId": "strat-business-process",
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1708,24 +1563,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:e855a110bcb936e8190e0395f6cc223b9e545df9a15d4b2b03209a685c68797b",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-02",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q023",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-ebusiness",
-      "questionPattern": "knowledge",
       "prompt": "インターネット広告の手法の一つである，リスティング広告に関する記述として，最も適切なものはどれか。",
       "choices": [
         {
@@ -1746,12 +1587,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "リスティング広告は検索連動型広告とも呼ばれ、検索エンジンの利用者が入力したキーワードに合わせて、検索結果のページに関連する広告を表示する手法です。今まさに探している人に届くため、購買意欲の高い層に接触しやすいという特徴があります。アは閲覧履歴や購買履歴といった行動データを基に表示する行動ターゲティング広告の説明です。ウは受信許諾を得た相手に送るオプトインメール広告、エはメールマガジンに掲載する広告で、いずれも検索キーワードとは連動していません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "リスティング広告",
         "インターネット広告"
       ],
+      "primaryTopicId": "strat-ebusiness",
+      "syllabusNode": {
+        "itemId": "ipa-16",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1786,24 +1634,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:7439f95a413a390c7d0035b0c2a438129707fb763063f0f78454db0932892a58",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-16",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q024",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-corporation-management-organization",
-      "questionPattern": "knowledge",
       "prompt": "コーポレートガバナンスの説明として，適切なものはどれか。",
       "choices": [
         {
@@ -1824,11 +1658,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "コーポレートガバナンスは「企業統治」と訳され、株主をはじめとする利害関係者が経営者を監視・監督し、健全で透明な経営を保つための枠組みを指します。社外取締役の設置や監査役会などが、その具体的な仕組みに当たります。イは資金調達（ファイナンス）の説明で、統治の枠組みではありません。ウは統一されたイメージで企業価値を高めるコーポレートアイデンティティ、エは他社が真似できない独自の強みを指すコアコンピタンスの説明で、いずれも経営を監視する仕組みとは別のものです。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "コーポレートガバナンス"
       ],
+      "primaryTopicId": "strat-corporation-management-organization",
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1863,24 +1704,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:d5bcfb94b7e7fb95b057fe991c531f40b91517523d484fefbcc3393234d0f8d1",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-01",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q025",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-data-utilization",
-      "questionPattern": "knowledge",
       "prompt": "大容量，頻繁な更新，多種多様という三つの要素をもつ情報資産を“ビッグデータ”と定義する考え方がある。このビッグデータを特徴づける三つの要素を総称して何というか。",
       "choices": [
         {
@@ -1901,12 +1728,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "ビッグデータの特徴は、Volume（量）、Velocity（速度・頻度）、Variety（多様性）の3つの英単語の頭文字を取って3Vと呼ばれます。問題文の「大容量」がVolume、「頻繁な更新」がVelocity、「多種多様」がVarietyにそれぞれ対応しています。アの3Cは自社・競合・顧客という市場分析の枠組みです。イの3Dは三次元、ウの3Gは第3世代の移動通信規格を指す言葉で、いずれもビッグデータの性質を表す用語ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "ビッグデータ",
         "3V"
       ],
+      "primaryTopicId": "tech-data-utilization",
+      "syllabusNode": {
+        "itemId": "ipa-02",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -1941,24 +1775,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:adffca8802cef95f1f205f9188730a87f9b5bfcd99f15334decbb308364e96c4",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-02",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q026",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-financial-statements",
-      "questionPattern": "calculation",
       "prompt": "表はA社の貸借対照表である。A社の自己資本比率は何％か。",
       "choices": [
         {
@@ -1979,11 +1799,26 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "自己資本比率は、総資産のうち返済不要の自己資本（純資産）がどれだけを占めるかを示す指標で、純資産÷総資産×100で求めます。表から総資産は流動資産730＋固定資産270＝1,000百万円、純資産は資本金の300百万円です。したがって300÷1,000×100＝30％となります。負債合計（200＋500＝700）を使って70％としてしまうとそれは他人資本の比率になり、意味が逆になります。比率が高いほど借入への依存が小さく、財務が安定しているとみなされます。",
+      "questionPattern": "calculation",
       "estimatedDifficulty": 3,
       "tags": [
         "自己資本比率",
         "貸借対照表"
+      ],
+      "primaryTopicId": "strat-financial-statements",
+      "syllabusNode": {
+        "itemId": "ipa-03",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
+      "figures": [
+        {
+          "id": "q026-figure-1",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q026-figure-1.png",
+          "alt": "A社の貸借対照表。単位は百万円。資産の部は流動資産730，固定資産270。負債の部は流動負債200，固定負債500。純資産の部は資本金300。"
+        }
       ],
       "official": {
         "provider": "ipa",
@@ -2022,32 +1857,10 @@
           ]
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:422b438b9cfcd061cab50e2dc07cd917e23b4b8cf138521e837e66164e8eeeac",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "figures": [
-        {
-          "id": "q026-figure-1",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q026-figure-1.png",
-          "alt": "A社の貸借対照表。単位は百万円。資産の部は流動資産730，固定資産270。負債の部は流動負債200，固定負債500。純資産の部は資本金300。"
-        }
-      ],
-      "syllabusNode": {
-        "itemId": "ipa-03",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q027",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ai-ml",
-      "questionPattern": "knowledge",
       "prompt": "AIを，様々な課題に対して判断できる“強いAI”と，特定の課題だけを判断できる“弱いAI”に分類した場合，“弱いAI”の記述として，最も適切なものはどれか。",
       "choices": [
         {
@@ -2068,12 +1881,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "「弱いAI」は、あらかじめ決められた特定の課題に限って処理を行うAIで、人間のように質問の意味を理解したり自ら考えたりしているわけではありませんが、結果としてもっともらしい判断や出力を示すことはできます。現在実用化されているAIの大半はこの弱いAIに当たります。アは人間と同等の知能が再現されているという内容で、強いAIの記述です。ウは人間を超えて自ら賢くなるという内容、エは自律的に知識を適用して柔軟に判断できるという内容で、いずれも強いAIの特徴です。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "強いAI",
         "弱いAI"
       ],
+      "primaryTopicId": "tech-ai-ml",
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2108,24 +1928,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:b195ab1e4fd30831657bbc59d76c33da3c2b06636189dd0f4926848ece3c8dea",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-35",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
       }
     },
     {
       "id": "ipa-it-passport-2026-q028",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-ebusiness",
-      "questionPattern": "application",
       "prompt": "インターネット上の商取引に関連したリスクのうち，エスクローサービスを利用することによって低減できるリスクとして，適切なものはどれか。",
       "choices": [
         {
@@ -2146,11 +1952,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "エスクローサービスは、買い手が支払った代金を第三者がいったん預かり、商品が確かに届いたことを確認してから売り手に渡す仕組みです。これにより「代金を払ったのに商品が送られてこない」という取引相手の不履行リスクを下げられます。アの金額の入力ミスは買い手自身の操作の問題で、代金を預かる仕組みでは防げません。ウのパスワード漏えいは認証・通信の安全性の話、エの自己都合による解約可否は契約条件の話で、いずれもエスクローが対象とするリスクではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "エスクローサービス"
       ],
+      "primaryTopicId": "strat-ebusiness",
+      "syllabusNode": {
+        "itemId": "ipa-16",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2185,24 +1998,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:c5807c1ca1e2c480d25932c3fa411944adb4e8212d0032823cd23be0137112c0",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-16",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q029",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-labor-laws",
-      "questionPattern": "knowledge",
       "prompt": "プログラム開発業務の委託に当たり，請負契約における注文者及び請負業者の権利や義務について特段の取決めがない場合の説明として，適切なものはどれか。",
       "choices": [
         {
@@ -2223,11 +2022,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "請負契約は「仕事を完成させること」を目的とする契約で、特段の取決めがなければ、報酬は完成した目的物の引渡しと引き換えに支払われます。したがって注文者には、プログラムの引渡しを受けた時点で報酬を支払う義務が生じます。アについては、請負では原則として再委託が可能で、事前承諾が必須という決まりはありません。イは、欠陥（契約不適合）の責任を追及できる期間には制限があり「いつでも」ではないため誤りです。エは、注文者は完成前であれば契約を解除できますが、その際は損害を賠償する必要があるため誤りです。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "請負契約"
       ],
+      "primaryTopicId": "strat-labor-laws",
+      "syllabusNode": {
+        "itemId": "ipa-06",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2262,24 +2068,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:000e0b6cc53f239da8df04560f86fc24f335b428a7fe9a642dba4792727ab4e0",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-06",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "法務"
       }
     },
     {
       "id": "ipa-it-passport-2026-q030",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-corporation-management-organization",
-      "questionPattern": "application",
       "prompt": "事業部制組織の事例はどれか。",
       "choices": [
         {
@@ -2300,12 +2092,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "事業部制組織は、製品や地域などの事業単位ごとに部門を分け、各事業部が開発・購買・生産・販売といった機能を自前で持って、独立採算に近い形で運営する組織形態です。アはX事業とY事業がそれぞれ自分の購買組織を持っており、事業ごとに機能が完結しているので事業部制に当たります。イは人事・開発・生産・販売という機能ごとに組織を分けた職能別組織の例です。ウは2人の上司から指示を受けるマトリックス組織、エは目的達成後に解散するプロジェクト組織の例で、いずれも事業部制ではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "事業部制組織",
         "組織形態"
       ],
+      "primaryTopicId": "strat-corporation-management-organization",
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2340,24 +2139,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:4e069ade3461771650fe1b7952807a03635b9169544f37f10c837514a052b60d",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-01",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q031",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-production-management",
-      "questionPattern": "knowledge",
       "prompt": "リーン生産方式による業務改善の観点であるムリ，ムラ，ムダのうち，ムダに当たるものとして，最も適切なものはどれか。",
       "choices": [
         {
@@ -2378,12 +2163,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "リーン生産方式では、ムリ（能力を超えた過大な負荷）、ムラ（仕事量や品質のばらつき）、ムダ（付加価値を生まない動作）の3つを取り除くことを目指します。ウの待機時間や必要以上の加工は、顧客にとっての価値を何ら増やさない動作なので、ムダに当たります。アの担当者によって品質が異なる作業は、ばらつきなのでムラです。イの能力以上の負荷をかける無謀な計画はムリ、エの身体に負担がかかり健康を害するおそれのある作業もムリに分類され、いずれもムダではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "リーン生産方式",
         "ムダ"
       ],
+      "primaryTopicId": "strat-production-management",
+      "syllabusNode": {
+        "itemId": "ipa-15",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2418,24 +2210,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:09e2d285a9b8361ff594ad23a53ec32395e3712e6a6e72bb75f09a6168c35856",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-15",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q032",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-corporate-strategy",
-      "questionPattern": "application",
       "prompt": "ニッチ戦略の事例として，最も適切なものはどれか。",
       "choices": [
         {
@@ -2456,11 +2234,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "ニッチ戦略は、大企業が参入しにくい小規模で特殊な市場（すきま市場）に狙いを定め、独自の強みを生かして高い収益を得る戦略です。ウは自社固有の加工技術を生かし、高級レストランという限られた顧客層に高価な専用鍋を売っており、まさにニッチ戦略に当たります。アは低価格の商品を全国で大量に売る戦略で、コストリーダーシップに近い考え方です。イは同業他社との経営統合によるシェア拡大、エは不採算事業からの撤退であり、いずれもすきま市場を狙う戦略ではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "ニッチ戦略"
       ],
+      "primaryTopicId": "strat-corporate-strategy",
+      "syllabusNode": {
+        "itemId": "ipa-09",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "経営戦略マネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2495,24 +2280,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:8d88a7618533ced66f560ccc817517d31ed2936d5785af994d85252a4d9385ee",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-09",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "経営戦略マネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q033",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-management-systems",
-      "questionPattern": "knowledge",
       "prompt": "購買，製造，販売という供給者から消費者までを結ぶ一連の業務のつながりを総合的に管理し，資材の調達から顧客への販売に至る在庫などの無駄をなくして，プロセス全体の最適化を図るものはどれか。",
       "choices": [
         {
@@ -2533,11 +2304,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "SCM（Supply Chain Management）は、購買・製造・物流・販売という供給者から消費者までの一連の流れを1つの鎖として捉え、全体で最適になるように管理する考え方です。各工程が個別に在庫を抱えると全体では大きな無駄になるため、情報を共有して在庫や納期を調整します。アのCRMは顧客との関係を管理して満足度や収益を高める仕組みです。イのPOSは店舗での販売実績をその場で記録するシステム、エのSFAは営業活動を支援する仕組みで、いずれも調達から販売までの全体最適を扱うものではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "SCM"
       ],
+      "primaryTopicId": "strat-management-systems",
+      "syllabusNode": {
+        "itemId": "ipa-01",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2572,24 +2350,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:c058ae79a2177c491596d4c0ee21552d035da695e17bc6dfe9f19a5d74d6e98a",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-01",
-        "field": "strategy",
-        "majorCategory": "企業と法務",
-        "middleCategory": "企業活動"
       }
     },
     {
       "id": "ipa-it-passport-2026-q034",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "strat-system-strategy",
-      "questionPattern": "application",
       "prompt": "IT基本計画の策定の際，明確にすべき事項だけを全て挙げたものはどれか。\na ITシステムの利活用に関わるステークホルダ\nb 組織体の現在及び将来的なニーズへの対応\nc 発生したインシデントに関する管理手順\nd 利用者及び関係者との合意に基づいた業務要件とその優先順位",
       "choices": [
         {
@@ -2610,12 +2374,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "IT基本計画は、組織全体のIT活用の方向性を定める上位の計画です。aのステークホルダを明確にすることは、誰の要求を踏まえて計画を立てるかを決めるうえで不可欠です。bの現在および将来的なニーズへの対応も、中長期の方向性を定める基本計画の中心的な内容になります。一方cのインシデントの管理手順は、システムを動かし始めた後の運用段階で定めるもので、基本計画の段階で決める事項ではありません。dの業務要件とその優先順位も、個別のシステム化計画や要件定義で詰める内容なので、基本計画で明確にすべき事項からは外れます。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "IT基本計画",
         "情報システム戦略"
       ],
+      "primaryTopicId": "strat-system-strategy",
+      "syllabusNode": {
+        "itemId": "ipa-18",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2650,24 +2421,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:479656f2bb601347596c81c26b407b4c8bc64bfbfdd37483eb382c22f7fcd291",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-18",
-        "field": "strategy",
-        "majorCategory": "システム戦略",
-        "middleCategory": "システム戦略"
       }
     },
     {
       "id": "ipa-it-passport-2026-q035",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-system-audit",
-      "questionPattern": "application",
       "prompt": "情報システムの企画，開発，運用，保守に関わるマネジメントとプロセスに対して，ITガバナンスにおける経営陣の活動として，評価，指示，モニターを実施する必要がある。ITガバナンスにおける経営陣の活動に関する記述として，適切なものだけを全て挙げたものはどれか。\na 外部のコンサルタントに責任と権限を委譲し，戦略立案からモニタリングまで全面的に任せる。\nb 情報システム戦略で想定した効果が，どの程度達成されているか確認するための情報を収集する。\nc 情報システム戦略を実現するために，必要な責任と要員を組織に割り当てる。\nd 情報システムの複数の将来像を想定し，外部の情報システムの専門家に比較分析を依頼して評価する。",
       "choices": [
         {
@@ -2688,11 +2445,18 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "ITガバナンスにおいて経営陣は、評価・指示・モニターという役割を自ら担う必要があります。bは達成状況を確認するための情報収集で、モニターに当たります。cは責任と要員を組織に割り当てる行為で、戦略を実現させるための指示に当たります。dは複数の将来像を専門家に比較分析させて評価するもので、外部の力を借りていても最終的に評価するのは経営陣なので、評価の活動に含まれます。これに対しaは、戦略立案からモニタリングまでを外部のコンサルタントに全面的に任せるという内容で、経営陣が自らの責任を放棄することになるため適切ではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "ITガバナンス"
       ],
+      "primaryTopicId": "mgmt-system-audit",
+      "syllabusNode": {
+        "itemId": "ipa-31",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "システム監査"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2727,24 +2491,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:0f1c0a9eaf7aa388c4169a5624065134c40e0a6b2ba8e7be0c5b5c703878f16b",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-31",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "システム監査"
       }
     },
     {
       "id": "ipa-it-passport-2026-q036",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-pm-qcd",
-      "questionPattern": "application",
       "prompt": "クライアントPCへのソフトウェアの導入作業が契約に含まれるシステム開発プロジェクトがある。導入作業の行動に関する記述のうち，適切なものだけを全て挙げたものはどれか。\na 導入作業中に契約外のPCが見つかった。そのPCを導入対象外とした。\nb 導入作業中に契約外のPCへの導入を依頼された。依頼に基づいて，その対応を無償で行った。\nc 導入作業の続行が困難な状態となった。発注者と合意し，導入前の状態に復旧した。",
       "choices": [
         {
@@ -2765,12 +2515,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "aは契約外のPCが見つかった際にそれを導入対象外としており、契約で定めた範囲（スコープ）を守る正しい判断です。cは作業の続行が困難になったときに、発注者と合意したうえで導入前の状態に戻しており、勝手に判断せず関係者の同意を得ている点で適切です。一方bは、契約外のPCへの導入依頼を無償で引き受けています。善意に見えますが、合意のないまま作業範囲を広げることはスコープクリープと呼ばれ、工数や品質、責任範囲に影響するため避けるべきです。よって適切なものはaとcです。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "スコープ管理",
         "契約"
       ],
+      "primaryTopicId": "mgmt-pm-qcd",
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2805,24 +2562,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:e94889af2cce97bb6244852677ddf6b645cf0c42c63e88e120fafb773b6af3f1",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-27",
-        "field": "management",
-        "majorCategory": "プロジェクトマネジメント",
-        "middleCategory": "プロジェクトマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q037",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-estimation",
-      "questionPattern": "application",
       "prompt": "Aさんは新規プロジェクトの計画段階の作業をしており，開発コストの見積りに着手した。この段階で短期的に概算費用を見積もる方法として，最も適切なものはどれか。",
       "choices": [
         {
@@ -2843,12 +2586,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "計画段階では要件がまだ固まっていないため、詳細な情報がなくても短期間で概算を出せる方法が求められます。エの類似プロジェクトを参考にする方法は類推見積り（トップダウン見積り）と呼ばれ、過去の実績を基に全体規模をすばやく見積もれるので、この段階に最も適しています。アのFP法は機能の数と複雑さから見積もる方法で、機能が具体化していないと使えません。イは作業単位を積み上げるボトムアップ見積りでWBSの詳細が必要です。ウのコード行数による見積りも、設計がある程度進まないと妥当な行数を予測できません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "類推見積り",
         "見積り"
       ],
+      "primaryTopicId": "mgmt-estimation",
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2883,24 +2633,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:87b5d4a58db010f959d8bdf2e4d738b818c50f0a12989112634a50865eba0c0d",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-27",
-        "field": "management",
-        "majorCategory": "プロジェクトマネジメント",
-        "middleCategory": "プロジェクトマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q038",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-development-process",
-      "questionPattern": "application",
       "prompt": "要求事項が明確であり仕様変更が少ないことが見込まれるソフトウェアの開発に用いる開発モデル・手法として，最も適切なものはどれか。",
       "choices": [
         {
@@ -2921,11 +2657,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "ウォーターフォールモデルは、要件定義・設計・実装・テストという工程を上流から下流へ順番に進め、原則として前の工程には戻らない開発モデルです。各工程の成果物を固めてから次に進むため、要求事項が明確で仕様変更が少ない開発に向いています。アのアジャイル開発は、短い反復を繰り返して変化に対応することを重視する手法で、仕様変更が多い場合に力を発揮します。ウのスパイラルモデルはリスクを評価しながら反復する手法、エのプロトタイピングモデルは試作品で要求を固めていく手法で、いずれも要求が定まらない状況を前提としています。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "ウォーターフォールモデル"
       ],
+      "primaryTopicId": "mgmt-development-process",
+      "syllabusNode": {
+        "itemId": "ipa-26",
+        "field": "management",
+        "majorCategory": "開発技術",
+        "middleCategory": "ソフトウェア開発管理技術"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -2960,24 +2703,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:42769b2a81749c1c85b3f90f5c7e99a31531821a0dde48ce52872bd64a1b050d",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-26",
-        "field": "management",
-        "majorCategory": "開発技術",
-        "middleCategory": "ソフトウェア開発管理技術"
       }
     },
     {
       "id": "ipa-it-passport-2026-q039",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-wbs-gantt",
-      "questionPattern": "knowledge",
       "prompt": "システム開発のプロジェクトマネジメントにおけるWBSの説明として，最も適切なものはどれか。",
       "choices": [
         {
@@ -2998,11 +2727,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "WBS（Work Breakdown Structure）は、プロジェクトで作成するすべての成果物と、それを作るために必要な作業を、大きな単位から小さな単位へ階層的に分解して整理したものです。作業の抜け漏れを防ぎ、日程や工数、担当者を割り当てる土台になります。アのクリティカルパスは、日程計画上で最も余裕のない作業の連なりのことで、WBSとは別の概念です。イは主要な成果物の開始日と終了日を並べたマイルストーン表やスケジュールの説明、エは使用ツールの一覧であり、いずれも作業の階層的な分解ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "WBS"
       ],
+      "primaryTopicId": "mgmt-wbs-gantt",
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3037,24 +2773,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:2edd5185a0790a358c8065de1844102176850761427c86d7122e7848279b80e6",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-27",
-        "field": "management",
-        "majorCategory": "プロジェクトマネジメント",
-        "middleCategory": "プロジェクトマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q040",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-system-audit",
-      "questionPattern": "application",
       "prompt": "企業の活動に関する記述のうち，内部統制の活動内容として，最も適切なものはどれか。",
       "choices": [
         {
@@ -3075,11 +2797,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "内部統制では、誤りや不正を早く見つけて是正し、財務報告の信頼性を保つことが求められます。アは決算発表に重大な誤りがあった場合に速やかに外部へ公表するという内容で、透明性を確保する適切な行動です。イは起票者自身が最終承認をしており、担当と承認を分ける職務分掌の原則に反します。ウはすべてのリスクを回避で対応するとしていますが、リスク対応には低減・移転・受容もあり、回避一辺倒では事業活動が成り立ちません。エは内部通報を必ず直属の上司経由とするもので、上司自身が不正に関与している場合に通報できなくなるため不適切です。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "内部統制"
       ],
+      "primaryTopicId": "mgmt-system-audit",
+      "syllabusNode": {
+        "itemId": "ipa-31",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "システム監査"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3114,24 +2843,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:50e41cc12ff77b7c0da15744a1714c312fa3c22ae1948921aa3c95a8a2d84f2b",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-31",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "システム監査"
       }
     },
     {
       "id": "ipa-it-passport-2026-q041",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-system-audit",
-      "questionPattern": "application",
       "prompt": "ITガバナンスの活動において，取締役会等のリーダーシップに関するリスクの記述として，最も適切なものはどれか。",
       "choices": [
         {
@@ -3152,12 +2867,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "ITガバナンスでは、取締役会などの経営層が自ら規範を示し、率先して守る姿勢を見せることが前提になります。ウはそれを怠ると倫理的な行動が組織全体に浸透しないという内容で、リーダーシップに関するリスクを正しく表しています。アは、権限委譲した場合でも最終的な説明責任は取締役会等が負うものであり、担当部門に最終責任を持たせれば済むという記述は誤りです。イは、経営層がパフォーマンスの期待値の設定に関与することはむしろ望ましく、関与すると現状踏襲になるという因果関係は成り立ちません。エも、ガバナンス方針の明示は組織全体を導くために必要であり、それ自体が情報システム部門への偏重を招くわけではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "ITガバナンス",
         "リーダーシップ"
       ],
+      "primaryTopicId": "mgmt-system-audit",
+      "syllabusNode": {
+        "itemId": "ipa-31",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "システム監査"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3192,24 +2914,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:64cdb6ac05cb87f28346829217121337becf5cc0096fe1b6309fb74b930fed9d",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-31",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "システム監査"
       }
     },
     {
       "id": "ipa-it-passport-2026-q042",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-itil",
-      "questionPattern": "knowledge",
       "prompt": "サービスデスクに関する記述として，最も適切なものはどれか。",
       "choices": [
         {
@@ -3230,11 +2938,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "サービスデスクは、システムの稼働後に利用者からの問合せや障害の連絡を一元的に受け付ける窓口です。単なる取次ぎではなく、記録を残して対応状況を追跡し、必要に応じて専門部隊へつなぐ役割を担います。アの受入テスト段階で不具合報告を受ける窓口や、ウの開発段階での質問受付、エの要件定義段階での要求受付は、いずれも稼働前のプロジェクト内の活動です。サービスデスクはITサービスマネジメントの用語であり、サービスを提供している運用段階の窓口を指す点が区別のポイントになります。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "サービスデスク"
       ],
+      "primaryTopicId": "mgmt-itil",
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3269,24 +2984,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:891d2e582baf8972feb55df29a31bf1105623d77395a02140922b707e225903f",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-28",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "サービスマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q043",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-development-process",
-      "questionPattern": "application",
       "prompt": "ある企業でスマートフォン向けのアプリケーションソフトウェアの開発を計画しており，2週間ごとに新機能や不具合の修正を含めた新しいバージョンを繰り返しリリースすることにした。新機能の候補や不具合は一覧表で管理し，優先順位をつけて開発し，逐次リリースする方針にした。この開発に採用するソフトウェア開発モデルとして，最も適切なものはどれか。",
       "choices": [
         {
@@ -3307,11 +3008,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "アジャイル開発は、短い期間の反復（イテレーション）を繰り返し、動くソフトウェアを継続的にリリースしていく開発モデルです。この事例は2週間ごとにバージョンをリリースし、機能や不具合の一覧に優先順位を付けて順次開発しており、アジャイルの進め方そのものです。アのDevOpsは開発チームと運用チームが連携して継続的にリリースする考え方や文化で、開発モデルの名称ではありません。ウのウォーターフォールは工程を一度だけ順に進める方式、エのリバースエンジニアリングは既存の製品を解析して仕様を導く技術で、いずれも反復リリースの手法ではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "アジャイル"
       ],
+      "primaryTopicId": "mgmt-development-process",
+      "syllabusNode": {
+        "itemId": "ipa-26",
+        "field": "management",
+        "majorCategory": "開発技術",
+        "middleCategory": "ソフトウェア開発管理技術"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3346,24 +3054,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:cccf75b27a61786bcdbb3821b1693b66e401abf74e37d436ea1b3cf6ed794b63",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-26",
-        "field": "management",
-        "majorCategory": "開発技術",
-        "middleCategory": "ソフトウェア開発管理技術"
       }
     },
     {
       "id": "ipa-it-passport-2026-q044",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-itil",
-      "questionPattern": "calculation",
       "prompt": "あるサービスデスクでは，電子メールによる問合せに対応しており，受付担当者がメールの内容を確認し，回答担当者の割当てをしていた。このたび，割当て業務の効率化を目的に，自動割当てツールを導入した。自動割当てツールは，メールの内容を基に自動で回答担当者の割当てを行うが，割当てができないことや割当てミスをすることがあり，それらについては，人手で対応している。導入前及び導入半年後の状況が次のとき，割当ての時間はサービスデスク全体で何％削減できたか。ここで，割当ての時間の削減率（％）は小数第1位を四捨五入するものとする。",
       "choices": [
         {
@@ -3384,11 +3078,26 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "まず導入前の割当て時間は、1,000件×2分＝2,000分です。導入半年後は、自動割当てができた90％の900件が0分となる一方、そのうち割当てミスの5％に当たる45件は4分ずつかかるので45×4＝180分です。自動割当てができなかった10％の100件は2分ずつで100×2＝200分となり、合計は180＋200＝380分になります。削減率は（2,000−380）÷2,000×100＝81％で、これが答えです。自動化された分をゼロと数えたうえで、ミス対応の手戻り時間を上乗せするのが計算の要点です。",
+      "questionPattern": "calculation",
       "estimatedDifficulty": 3,
       "tags": [
         "サービスデスク",
         "削減率"
+      ],
+      "primaryTopicId": "mgmt-itil",
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      },
+      "figures": [
+        {
+          "id": "q044-figure-1",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q044-figure-1.png",
+          "alt": "自動割当てツール導入前と導入半年後の状況を示す表。導入前は問合せ件数1,000件/日，割当ての時間2分/件。導入半年後は問合せ件数1,000件/日で，自動割当てができた割合90％は割当ての時間0分/件，うち割当てミスの割合5％は割当ての時間4分/件，自動割当てができなかった割合10％は割当ての時間2分/件。"
+        }
       ],
       "official": {
         "provider": "ipa",
@@ -3427,32 +3136,10 @@
           ]
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:7ad539f7c1dfd2443583529295dba529b11736ae41e985b8a530bc8fd3715cb9",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "figures": [
-        {
-          "id": "q044-figure-1",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q044-figure-1.png",
-          "alt": "自動割当てツール導入前と導入半年後の状況を示す表。導入前は問合せ件数1,000件/日，割当ての時間2分/件。導入半年後は問合せ件数1,000件/日で，自動割当てができた割合90％は割当ての時間0分/件，うち割当てミスの割合5％は割当ての時間4分/件，自動割当てができなかった割合10％は割当ての時間2分/件。"
-        }
-      ],
-      "syllabusNode": {
-        "itemId": "ipa-28",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "サービスマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q045",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-pmbok-basics",
-      "questionPattern": "knowledge",
       "prompt": "プロジェクトにおいて，新規プロジェクトを正式に認可する文書として，適切なものはどれか。",
       "choices": [
         {
@@ -3473,11 +3160,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "プロジェクト憲章は、プロジェクトの目的や概要、プロジェクトマネージャの任命と権限などを記した文書で、これが承認されることでプロジェクトが正式に認可されます。組織としての「やると決めた」証拠になるため、立ち上げの最初に作られます。アのステークホルダ登録簿は利害関係者の情報を整理した一覧です。ウのプロジェクトスコープ記述書は作業範囲や成果物を詳しく定義した文書、エのリスク登録簿は洗い出したリスクを記録する一覧で、いずれもプロジェクトを認可する文書ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "プロジェクト憲章"
       ],
+      "primaryTopicId": "mgmt-pmbok-basics",
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3512,24 +3206,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:64d45db93108a99b76786ddd57e049dec24e59ac54726aeb2f83bc02a28ab424",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-27",
-        "field": "management",
-        "majorCategory": "プロジェクトマネジメント",
-        "middleCategory": "プロジェクトマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q046",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-itil",
-      "questionPattern": "knowledge",
       "prompt": "ITサービスマネジメントのプロセスである問題管理の説明として，適切なものはどれか。",
       "choices": [
         {
@@ -3550,11 +3230,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "問題管理は、インシデントの背後にある根本原因を調査・特定し、恒久的な解決策や再発防止策を提示するプロセスです。同じ障害が繰り返し起きることを防ぐのが目的になります。アは構成情報を維持管理する構成管理の説明です。イは計画外のサービス中断からできるだけ早く復旧させるインシデント管理の説明で、問題管理とよく混同されますが、インシデント管理は復旧の速さ、問題管理は原因の除去に主眼があります。エはプログラム修正を計画的に反映させる変更管理やリリース管理に近い内容です。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "問題管理"
       ],
+      "primaryTopicId": "mgmt-itil",
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3589,24 +3276,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:9837dfe2142d606d6afc176111c9f194715e76d246dfbb1649e82d8339698e07",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-28",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "サービスマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q047",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-system-audit",
-      "questionPattern": "knowledge",
       "prompt": "監査を会計監査，業務監査，情報セキュリティ監査，システム監査に分けたとき，システム監査に関する記述として，最も適切なものはどれか。",
       "choices": [
         {
@@ -3627,11 +3300,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "システム監査は、情報システムに関わるリスクに対して、組織が適切に対応できているかを独立した立場で点検・評価するものです。ウはまさにその内容を述べています。アは情報の漏えいに関するリスクマネジメントの検証で、情報セキュリティ監査に当たります。イは財務諸表の作成過程に不正や誤りがないかを確かめるもので会計監査です。エは組織内の諸業務が方針に従って合理的・効率的に運用されているかの検証で、業務監査に当たります。対象が「情報システムに係るリスク」であるかどうかが見分けの決め手になります。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "システム監査"
       ],
+      "primaryTopicId": "mgmt-system-audit",
+      "syllabusNode": {
+        "itemId": "ipa-31",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "システム監査"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3666,24 +3346,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:500fe5df6f15219e74f77575c54385c3cbb3d82c3bfa4451c75503c1e0def340",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-31",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "システム監査"
       }
     },
     {
       "id": "ipa-it-passport-2026-q048",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-itil",
-      "questionPattern": "application",
       "prompt": "ある組織では，IT資産を管理しているグループが，共有ディスクの使用量を月次でチェックし，容量が不足しそうなときは，不要なファイルを消すよう呼び掛けたり，すぐに使わないファイルを別のメディアに退避したりして，容量が不足することを回避する対応を行っている。共有ディスクの増設の対応は，年単位で計画して実施している。ある日，共有ディスクの使用量が上限に達し，組織の業務に支障が出る事象が発生した。この事象への対応を，インシデント管理，問題管理，サービスマネジメントシステムの改善に分けて考えるとき，サービスマネジメントシステムの改善として，適切なものだけを全て挙げたものはどれか。\na 共有ディスクの使用量が大きいファイルを調べ，当面の業務に使用しないものを一時的に別のストレージに移動する。\nb 共有ディスクの使用量が上限に達した原因を特定し，再発防止策を検討する。\nc 共有ディスクの使用量をタイムリーに把握し，容量不足の兆候を早期に検知できるようにする。\nd すぐに共有ディスクの増設の手続を進める。",
       "choices": [
         {
@@ -3704,12 +3370,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "サービスマネジメントシステムの改善とは、個々の障害対応や原因究明にとどまらず、仕組みそのものをより良くする活動を指します。cは使用量をタイムリーに把握し容量不足の兆候を早期に検知できるようにするという内容で、月次チェックという現行の仕組みを見直す改善に当たります。aは当面使わないファイルを一時的に退避して業務を回復させる行為で、インシデント管理です。bは上限に達した原因を特定して再発防止策を検討するもので問題管理に当たります。dの増設手続を急ぐことは目の前の事象への対処であり、仕組みの改善ではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "サービスマネジメントシステム",
         "インシデント管理"
       ],
+      "primaryTopicId": "mgmt-itil",
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3744,24 +3417,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:c089f39185c84436810982a238926cab63447744511d5fcd21d8c2b14f7ba9d1",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-28",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "サービスマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q049",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-project-communication",
-      "questionPattern": "application",
       "prompt": "システム開発プロジェクトで開催するプロジェクト会議に関する記述のうち，最も適切なものはどれか。",
       "choices": [
         {
@@ -3782,12 +3441,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "会議で決まったことを議事録として残し、関係者と共有することは、決定事項の周知徹底と認識のずれの防止につながる基本的な取組みです。後から経緯をたどれるという意味でも重要になります。イは終了時刻を決めないという内容ですが、時間を区切らない会議は間延びしやすく、参加者の負担も増えるため適切ではありません。ウはすべての会議にステークホルダ全員が常に参加するというもので、必要のない人まで拘束することになり効率的とはいえません。エは議題を開始直後に募って決めるという内容で、参加者が準備できず議論が深まらないため不適切です。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "プロジェクト会議",
         "議事録"
       ],
+      "primaryTopicId": "mgmt-project-communication",
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3822,24 +3488,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:c8cb85e8d1cad7ee4ab2e11fcb8cfdc5b70d1b418234870914c7491e48cbe4fa",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-27",
-        "field": "management",
-        "majorCategory": "プロジェクトマネジメント",
-        "middleCategory": "プロジェクトマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q050",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-project-resource",
-      "questionPattern": "calculation",
       "prompt": "次の表の作業を3名で実施するとき，全ての作業を終わらせるのに必要な最短の日数は何日か。ここで，複数要員が必要な作業は全員がそろわないと着手できず，指定された要員数以上の要員を充てても所要日数は短縮できない。また，着手した作業は作業が完了するまで中断できないものとする。",
       "choices": [
         {
@@ -3860,11 +3512,26 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "作業Aは1名で3日かかり、これが終わらないとBもCも始められないので、まず1〜3日目にAを行います。BとCはそれぞれ2名必要で合計4名になり、3名では同時に着手できないため、4〜6日目にBを実施します。7〜9日目には、Bが終わって着手できるDを1名で、同時にCを2名で行い、ちょうど3名を使い切ります。10〜12日目はCの完了を受けてEを2名で実施し、13〜15日目にDとEの両方が終わったことでFを1名で行います。よって最短で15日です。要員数の制約でBとCを並行させられない点が、この問題の要になります。",
+      "questionPattern": "calculation",
       "estimatedDifficulty": 3,
       "tags": [
         "要員計画",
         "所要日数"
+      ],
+      "primaryTopicId": "mgmt-project-resource",
+      "syllabusNode": {
+        "itemId": "ipa-27",
+        "field": "management",
+        "majorCategory": "プロジェクトマネジメント",
+        "middleCategory": "プロジェクトマネジメント"
+      },
+      "figures": [
+        {
+          "id": "q050-figure-1",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q050-figure-1.png",
+          "alt": "作業名，前提作業，要員数，所要日数を示す表。作業Aは前提作業なし，1名，3日。作業Bは前提作業A，2名，3日。作業Cは前提作業A，2名，3日。作業Dは前提作業B，1名，3日。作業Eは前提作業C，2名，3日。作業Fは前提作業DとE，1名，3日。"
+        }
       ],
       "official": {
         "provider": "ipa",
@@ -3903,32 +3570,10 @@
           ]
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:b8ecdead1c28318ff4216915b87ed73b4ed9b3c53550a5cfe8d4b6013c2b652f",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "figures": [
-        {
-          "id": "q050-figure-1",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q050-figure-1.png",
-          "alt": "作業名，前提作業，要員数，所要日数を示す表。作業Aは前提作業なし，1名，3日。作業Bは前提作業A，2名，3日。作業Cは前提作業A，2名，3日。作業Dは前提作業B，1名，3日。作業Eは前提作業C，2名，3日。作業Fは前提作業DとE，1名，3日。"
-        }
-      ],
-      "syllabusNode": {
-        "itemId": "ipa-27",
-        "field": "management",
-        "majorCategory": "プロジェクトマネジメント",
-        "middleCategory": "プロジェクトマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q051",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-system-audit",
-      "questionPattern": "ordering",
       "prompt": "システム監査において，各部署の外部媒体の管理状況について調査することにした。システム監査を，監査計画，予備調査，本調査，評価・結論のプロセスに分けて実施するとき，収集した結果に基づき，外部媒体の管理状況についての監査意見を検討するプロセスはどれか。",
       "choices": [
         {
@@ -3949,12 +3594,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "システム監査は、監査計画、予備調査、本調査、評価・結論という流れで進みます。このうち収集した証拠に基づいて監査意見をまとめるのは、最後の評価・結論のプロセスです。アの監査計画は監査の目的や範囲、手順を決める段階です。イの予備調査は監査対象の概要を把握して本調査の進め方を固める段階、ウの本調査は実際に証拠となる資料を集めて事実を確かめる段階に当たります。集めた結果を「検討して意見を出す」のは調査そのものではないという点で区別できます。",
+      "questionPattern": "ordering",
       "estimatedDifficulty": 2,
       "tags": [
         "システム監査",
         "監査プロセス"
       ],
+      "primaryTopicId": "mgmt-system-audit",
+      "syllabusNode": {
+        "itemId": "ipa-31",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "システム監査"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -3989,24 +3641,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:e8bf390d0f210dbf63a4d4ba0572035d491ce35c9eef953da8c8ad329e977cf2",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-31",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "システム監査"
       }
     },
     {
       "id": "ipa-it-passport-2026-q052",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-requirements-definition",
-      "questionPattern": "application",
       "prompt": "業務システムの開発において，開発者がシステム要件定義を実施する場合，利用者の関わり方として，最も適切なものはどれか。",
       "choices": [
         {
@@ -4027,12 +3665,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "システム要件定義では、作られるシステムを実際に使う利用者が、要件が業務に合っているかを確かめる役割を担います。アのように開発者が行うレビューに参加して妥当性を確認することは、認識のずれを早い段階で正すために欠かせません。イのように開発者へ全て任せてしまうと、業務実態と合わないシステムができるおそれがあります。ウの保守の可否やエの技術的な実現性の検証は、開発者や運用担当といった技術側が判断する事柄であり、利用者に期待される関わり方ではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "要件定義",
         "利用者関与"
       ],
+      "primaryTopicId": "mgmt-requirements-definition",
+      "syllabusNode": {
+        "itemId": "ipa-23",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム企画"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4067,24 +3712,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:71f52a30d6cc143da9eb152282cb13796578ab66791c0af13bcc04fc27995855",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-23",
-        "field": "strategy",
-        "majorCategory": "システム戦略",
-        "middleCategory": "システム企画"
       }
     },
     {
       "id": "ipa-it-passport-2026-q053",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-service-sla",
-      "questionPattern": "knowledge",
       "prompt": "SLAの計画立案，サービス内容の交渉，草案作成，合意，導入，測定などの活動を行うものはどれか。",
       "choices": [
         {
@@ -4105,12 +3736,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "サービスレベル管理は、SLAの計画立案から交渉、草案作成、合意、導入、そして達成状況の測定・見直しまでの一連の活動を行うプロセスです。合意して終わりではなく、継続的に測定・改善する点が特徴になります。ウのサービスレベル契約（SLA）は、その活動の結果として結ばれる合意文書そのものであって、活動を指す言葉ではありません。アのアウトソーシングは業務の外部委託、エのリエンジニアリングは業務プロセスの抜本的な作り直しで、いずれもSLAを運営する活動ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "SLA",
         "サービスレベル管理"
       ],
+      "primaryTopicId": "mgmt-service-sla",
+      "syllabusNode": {
+        "itemId": "ipa-28",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4145,24 +3783,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:ec1e565f52b29106b992481403647d2b61936a026884fcbb1fae55c9ff0aaaa2",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-28",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "サービスマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q054",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "mgmt-facility-management",
-      "questionPattern": "application",
       "prompt": "ある組織では過去には全員出社して業務を遂行していたが，現在は出社とテレワークの両方を使い分けて業務を遂行している。この組織において，ファシリティマネジメントの観点で改善を図っている事例として，適切なものだけを全て挙げたものはどれか。\na 従業員のPCにインストールされたWeb会議用のソフトウェアを常に最新にし，Web会議における利便性及びセキュリティを向上させる。\nb 執務室のレイアウト変更や大画面のTV会議室の設置を行い，従業員間のコミュニケーションを取りやすくする。\nc 出社率を踏まえてフリーアドレスエリアの割合を増加し，オフィスを縮小させる。\nd 短時間勤務や自宅外での業務を可能とする制度を導入し，様々な従業員が業務に参画しやすくする。",
       "choices": [
         {
@@ -4183,12 +3807,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "ファシリティマネジメントは、建物や執務空間、設備といった施設を経営資源として最適に管理する取組みです。bの執務室のレイアウト変更やTV会議室の設置は、まさに施設・設備に手を入れる改善に当たります。cのフリーアドレスエリアを増やしてオフィスを縮小することも、出社率に合わせて空間を最適化する典型例です。aはソフトウェアを最新に保つという内容で、IT資産管理やセキュリティ管理の領域です。dの短時間勤務や自宅外勤務を可能にする制度は人事制度の話であり、いずれも施設の管理そのものではありません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "ファシリティマネジメント",
         "テレワーク"
       ],
+      "primaryTopicId": "mgmt-facility-management",
+      "syllabusNode": {
+        "itemId": "ipa-30",
+        "field": "management",
+        "majorCategory": "サービスマネジメント",
+        "middleCategory": "サービスマネジメント"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4223,24 +3854,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:99a3d9549f9921b51ac8a2f5e5bdea4f20e38195511ea208edfe089d9ceb89d3",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-30",
-        "field": "management",
-        "majorCategory": "サービスマネジメント",
-        "middleCategory": "サービスマネジメント"
       }
     },
     {
       "id": "ipa-it-passport-2026-q055",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-auth-authz-mfa",
-      "questionPattern": "application",
       "prompt": "IoTのセキュリティに関する次の記述中のa, bに入れる字句の適切な組合せはどれか。\nネットワークカメラの画像を盗み見される脅威のうち，ネットワークカメラへの［a］対策として，第三者がカメラにアクセスして映像を閲覧できないようにするためには，［b］で利用しない。",
       "choices": [
         {
@@ -4261,12 +3878,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "ネットワークカメラの映像を第三者に盗み見られるのは、カメラに不正にアクセスされる、すなわち不正侵入によって起こります。したがってaには「不正侵入」が入ります。その対策として基本になるのが、出荷時に設定されている初期パスワードを使い続けないことです。初期パスワードは機種ごとに共通で、インターネット上に一覧が出回っていることも多いため、そのままでは誰でもログインできてしまいます。DDoS攻撃は大量の通信でサービスを停止させる攻撃で盗み見とは目的が異なり、有線回線の利用も映像の閲覧防止とは直接関係しないので、他の選択肢は当てはまりません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "IoTセキュリティ",
         "初期パスワード"
       ],
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4301,24 +3925,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:c1429a293d8656b1f277429df18105e1b53907a9a9276ca9cfa2be0f8f19f968",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-63",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q056",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-transaction",
-      "questionPattern": "knowledge",
       "prompt": "DBMSにおけるチェックポイントの説明として，適切なものはどれか。",
       "choices": [
         {
@@ -4339,12 +3949,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "チェックポイントは、メモリ上に溜まっている更新結果をまとめてハードディスクなどの外部記憶装置へ書き出す操作、またはその時点のことです。これを定期的に行っておくと、障害からの復旧時に、その時点以降のログだけを処理すればよくなり回復時間を短縮できます。アはトランザクションの処理を確定させるコミットの説明です。イは処理開始前の状態に戻すロールバック、ウは互いにロックの解放を待ち合って処理が進まなくなるデッドロックの説明で、いずれもチェックポイントとは別の用語です。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "チェックポイント",
         "DBMS"
       ],
+      "primaryTopicId": "tech-transaction",
+      "syllabusNode": {
+        "itemId": "ipa-57",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4379,24 +3996,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:30312eea2b19f99fb18df3e6d5ebc368486087e3cf51889bdfbe53b4827e28eb",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-57",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "データベース"
       }
     },
     {
       "id": "ipa-it-passport-2026-q057",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-keys",
-      "questionPattern": "diagram",
       "prompt": "関係データベースで管理している“学生”表，“科目”表，“成績”表がある。1人の学生は複数の科目を履修するものとし，“学生”表に登録されていない学生や，“科目”表に登録されていない科目は“成績”表に登録できないものとするとき，外部キーとして設定するのが適切なものはどれか。ここで，表中の下線は主キーを表す。",
       "choices": [
         {
@@ -4417,11 +4020,38 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "外部キーは、ある表の列が別の表の主キーを参照していることを示す仕組みで、参照先に存在しない値を登録できないように保つ役割があります。この問題では「学生表に登録されていない学生や、科目表に登録されていない科目は成績表に登録できない」という制約が求められています。これを実現するには、成績表の学生番号を学生表の主キーへ、成績表の科目コードを科目表の主キーへ参照させればよいので、ウが正解です。アは学生表の学生番号まで外部キーに含めていますが、こちらは参照される側の主キーなので誤りです。イの学生名や科目名は主キーではなく、エの成績はどの表も参照していないため外部キーにはなりません。",
+      "questionPattern": "diagram",
       "estimatedDifficulty": 3,
       "tags": [
         "外部キー",
         "主キー"
+      ],
+      "primaryTopicId": "tech-keys",
+      "syllabusNode": {
+        "itemId": "ipa-54",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      },
+      "figures": [
+        {
+          "id": "q057-figure-1",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q057-figure-1.png",
+          "alt": "“学生”表。列は学生番号（主キー，下線）と学生名。行はG001が鈴木 次郎，G002が山田 春子。"
+        },
+        {
+          "id": "q057-figure-2",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q057-figure-2.png",
+          "alt": "“科目”表。列は科目コード（主キー，下線）と科目名。行はK001がデータベース，K002がコンピュータ，K003がネットワーク。"
+        },
+        {
+          "id": "q057-figure-3",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q057-figure-3.png",
+          "alt": "“成績”表。列は学生番号（主キー，下線），科目コード（主キー，下線），成績。行はG001とK001が優，G001とK002が可，G002とK002が良，G002とK003が優。"
+        }
       ],
       "official": {
         "provider": "ipa",
@@ -4462,44 +4092,10 @@
           ]
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:23d73a161e687199b928b137e7de00539527055509b46da222e1572bfed25dba",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "figures": [
-        {
-          "id": "q057-figure-1",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q057-figure-1.png",
-          "alt": "“学生”表。列は学生番号（主キー，下線）と学生名。行はG001が鈴木 次郎，G002が山田 春子。"
-        },
-        {
-          "id": "q057-figure-2",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q057-figure-2.png",
-          "alt": "“科目”表。列は科目コード（主キー，下線）と科目名。行はK001がデータベース，K002がコンピュータ，K003がネットワーク。"
-        },
-        {
-          "id": "q057-figure-3",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q057-figure-3.png",
-          "alt": "“成績”表。列は学生番号（主キー，下線），科目コード（主キー，下線），成績。行はG001とK001が優，G001とK002が可，G002とK002が良，G002とK003が優。"
-        }
-      ],
-      "syllabusNode": {
-        "itemId": "ipa-54",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "データベース"
       }
     },
     {
       "id": "ipa-it-passport-2026-q058",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ui-ux",
-      "questionPattern": "knowledge",
       "prompt": "UXデザインで用いられることがある構造化シナリオ法における，三つのシナリオはどれか。",
       "choices": [
         {
@@ -4520,12 +4116,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "構造化シナリオ法は、UXデザインで利用者の体験を段階的に具体化していく手法で、バリューシナリオ、アクティビティシナリオ、インタラクションシナリオという3つのシナリオを使います。バリューシナリオでどんな価値を提供するかを描き、アクティビティシナリオで利用者の行動の流れを、インタラクションシナリオで画面や機器との具体的なやり取りを記述するという順に詳細化します。ペルソナは、これらのシナリオを書く前提として設定する典型的な利用者像であり、シナリオそのものではありません。したがってペルソナを含むイ・ウ・エは誤りで、3つのシナリオがそろっているアが正解です。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "UXデザイン",
         "構造化シナリオ法"
       ],
+      "primaryTopicId": "tech-ui-ux",
+      "syllabusNode": {
+        "itemId": "ipa-50",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "情報デザイン"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4560,24 +4163,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:b35a675d0781bd156b541d083287e28fee8b5cd23869b6abcea51f5946b96f57",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-50",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "情報デザイン"
       }
     },
     {
       "id": "ipa-it-passport-2026-q059",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-wireless-mobile",
-      "questionPattern": "knowledge",
       "prompt": "無線LANで使用するWPA2の機能として，適切なものはどれか。",
       "choices": [
         {
@@ -4598,12 +4187,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "WPA2は無線LANのセキュリティ規格で、主な機能は通信データを暗号化して、電波を傍受されても内容を読み取られないようにすることです。WEPの弱点を改善した規格で、AESによる強度の高い暗号化が使われます。アの2本のアンテナで高速化する技術はMIMOの説明です。イのアクセスポイントのステルス化（SSIDを隠す設定）やエのMACアドレスフィルタリングは、いずれも無線LANで併用されることのある別の機能で、WPA2そのものの機能ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "WPA2",
         "無線LAN"
       ],
+      "primaryTopicId": "tech-wireless-mobile",
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4638,24 +4234,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:021bd97c6227727c679f59c1594c8c17cf2172931d539d80a6e422d8ebc36ce2",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-58",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "ネットワーク"
       }
     },
     {
       "id": "ipa-it-passport-2026-q060",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ui-ux",
-      "questionPattern": "knowledge",
       "prompt": "レスポンシブWebデザインに関する記述として，適切なものはどれか。",
       "choices": [
         {
@@ -4676,11 +4258,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "レスポンシブWebデザインは、1つのHTMLで作ったWebサイトを、表示する端末の画面サイズに応じてレイアウトを変化させ、PCでもスマートフォンでも見やすく操作しやすくする設計手法です。端末ごとに別のサイトを用意しなくてよいため、運用の手間も減らせます。イは利用者に近いサーバから配信するCDNの説明です。ウは加速度センサーやジャイロセンサーを使うデバイスAPIの活用例、エはマウスを重ねたときに説明を出すツールチップの説明で、いずれも画面サイズへの対応ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "レスポンシブWebデザイン"
       ],
+      "primaryTopicId": "tech-ui-ux",
+      "syllabusNode": {
+        "itemId": "ipa-50",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "情報デザイン"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4715,24 +4304,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:4a944361e61343ab4133404bc8bf7fc80b07e64820d3c0a306fc5fd160eadb99",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-50",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "情報デザイン"
       }
     },
     {
       "id": "ipa-it-passport-2026-q061",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-computer-core",
-      "questionPattern": "knowledge",
       "prompt": "PCの画面表示に必要なデータを保持するのに使われる，画面表示専用メモリはどれか。",
       "choices": [
         {
@@ -4753,12 +4328,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "VRAM（Video RAM）は、ディスプレイに表示する画面のデータを一時的に保持する専用のメモリです。画面の解像度や色数が大きいほど多くの容量を必要とし、描画性能に直結します。アのEEPROMは電気的に内容を書き換えられる不揮発性メモリで、設定情報の保存などに使われます。ウのキャッシュメモリはCPUと主記憶の速度差を埋めるための高速なメモリ、エのフラッシュメモリはSSDやUSBメモリに使われる不揮発性メモリで、いずれも画面表示専用ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "VRAM",
         "メモリ"
       ],
+      "primaryTopicId": "tech-computer-core",
+      "syllabusNode": {
+        "itemId": "ipa-40",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "コンピュータ構成要素"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4793,24 +4375,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:d763730a2b37e21c7e7b41b0711a508c136f896461abce1f54be2bd4a188adc2",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-40",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "コンピュータ構成要素"
       }
     },
     {
       "id": "ipa-it-passport-2026-q062",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-system-performance",
-      "questionPattern": "knowledge",
       "prompt": "システムの性能評価におけるベンチマークテストに関する記述として，適切なものはどれか。",
       "choices": [
         {
@@ -4831,11 +4399,18 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "ベンチマークテストは、あらかじめ決めた標準的な処理を行う評価用プログラムを、評価したいシステムの上で実際に動かし、その所要時間などから性能を測る方法です。実機で動かすため、実際の環境に近い結果が得られます。アとイは別の疑似システム上で実行しており、評価対象そのもので動かしていないため当てはまりません。ウは机上計算で処理時間を積算する方法で、実測ではなく見積りに当たります。「評価対象のシステム上で実際に実行させる」という点が判断の決め手です。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "ベンチマークテスト"
       ],
+      "primaryTopicId": "tech-system-performance",
+      "syllabusNode": {
+        "itemId": "ipa-44",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "システム構成要素"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4870,24 +4445,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:4f4b0ffd3d70edba9fe711353c5510c8fa4e6accf595712698038a990a957239",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-44",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "システム構成要素"
       }
     },
     {
       "id": "ipa-it-passport-2026-q063",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-malware-phishing-ransomware",
-      "questionPattern": "application",
       "prompt": "PCに保存されたファイルを使用できなくするランサムウェアによる被害を低減させるための対策として，適切なものはどれか。",
       "choices": [
         {
@@ -4908,12 +4469,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "ランサムウェアはファイルを暗号化して使えなくし、復旧と引き換えに金銭を要求するマルウェアです。被害を低減するうえで最も有効なのは、日頃からバックアップを取り、感染しても身代金を払わずに元のデータへ戻せる状態にしておくことです。アのUPSは停電時に電源を保つ装置で、暗号化被害には効きません。イのデータの暗号化は第三者による情報の盗み見を防ぐ対策であり、攻撃者に別途暗号化されてしまう事態は防げません。エのパスワード変更も、すでにファイルが暗号化された状態を元に戻す手立てにはなりません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "ランサムウェア",
         "バックアップ"
       ],
+      "primaryTopicId": "tech-malware-phishing-ransomware",
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -4948,24 +4516,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:938ed2da53c168b2e2614cae58fd8306b6d3d9a4fdfc03aad40ea03da5cd06c6",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-61",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q064",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-wireless-mobile",
-      "questionPattern": "knowledge",
       "prompt": "キャリアアグリゲーションの説明として，適切なものはどれか。",
       "choices": [
         {
@@ -4986,11 +4540,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "キャリアアグリゲーションは、携帯電話の通信で複数の異なる周波数帯の電波を束ねて同時に使い、実質的な帯域幅を広げて通信を高速化する技術です。1つの周波数帯だけでは足りない速度を、複数をまとめることで実現します。アは移動中に接続先の基地局を切り替えるハンドオーバの説明です。イはセキュリティ機能の強化で該当しません。エはアクセスポイントを経由して通信する無線LANのインフラストラクチャモードの説明で、携帯電話の周波数を束ねる技術ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "キャリアアグリゲーション"
       ],
+      "primaryTopicId": "tech-wireless-mobile",
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5025,24 +4586,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:6c1f75828899dbc7ca5ebecaec3bb89dd8f319fe758536622bb14054c55e1e88",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-58",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "ネットワーク"
       }
     },
     {
       "id": "ipa-it-passport-2026-q065",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-web-internet-basics",
-      "questionPattern": "knowledge",
       "prompt": "DNSサーバの役割に関する記述として，適切なものはどれか。",
       "choices": [
         {
@@ -5063,11 +4610,18 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "DNS（Domain Name System）サーバは、人が扱いやすいドメイン名と、通信で実際に使うIPアドレスとを相互に変換する役割を担います。Webサイトを閲覧するとき、ブラウザはまずDNSサーバに問い合わせて接続先のIPアドレスを得ています。アはPCの代理でWebサーバへアクセスするプロキシサーバの説明です。イはファイルの転送を行うFTPサーバ、ウはIPアドレスやサブネットマスクを自動的に割り当てるDHCPサーバの説明で、いずれも名前の変換は行いません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "DNS"
       ],
+      "primaryTopicId": "tech-web-internet-basics",
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5102,24 +4656,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:1036c712204751b3a8d2f67bff8b975a033f153b0a7ff4f77575f5bc0e5167de",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-59",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "ネットワーク"
       }
     },
     {
       "id": "ipa-it-passport-2026-q066",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ui-ux",
-      "questionPattern": "knowledge",
       "prompt": "アプリケーションソフトウェアの操作を行うとき，質問に答えていく対話形式によって，煩雑な操作を簡単に行えるようにする機能はどれか。",
       "choices": [
         {
@@ -5140,11 +4680,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "ウィザードは、「次はどうしますか」といった質問に順番に答えていく対話形式の画面を通じて、本来は手順が複雑な設定や作業を簡単に完了できるようにする機能です。ソフトウェアのインストールや初期設定でよく使われます。アのアーカイブは複数のファイルをひとまとめにして保存することです。ウのオートコンプリートは入力途中の文字から候補を補完する機能、エのポップアップウィンドウは別枠で表示される小さな画面のことで、いずれも手順を順に案内する仕組みではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "ウィザード"
       ],
+      "primaryTopicId": "tech-ui-ux",
+      "syllabusNode": {
+        "itemId": "ipa-50",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "情報デザイン"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5179,24 +4726,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:9c9eded114043d537525528b9725a2a6e9c0e2d4057e648f0fb0cf00eeaae06e",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-50",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "情報デザイン"
       }
     },
     {
       "id": "ipa-it-passport-2026-q067",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-algorithm-flowchart",
-      "questionPattern": "calculation",
       "prompt": "手続sortは，要素数が2以上の整数型の配列を引数numberArrayで受け取り，その要素を昇順に並べ替えた結果を出力する。手続sortの動作確認のために，処理の途中でjの値とworkArrayの全ての要素を出力する。配列numberArrayを{3, 5, 1, 2, 4}とし，手続sortをsort(numberArray)として呼び出したとき，jの値が3と出力された直後のworkArrayの全ての要素の出力はどれか。ここで，配列の要素番号は1から始まる。\n\n〔プログラム〕\n○sort(整数型の配列: numberArray)\n  整数型: minIndex, j, k\n  整数型の配列: workArray ← numberArray  // 配列の複製を作る\n  for (j を 1 から (workArray の要素数 − 1) まで 1 ずつ増やす)\n    // j番目から末尾までの要素の中で最も小さい値をもつ要素の要素番号を\n    // 一つ求める\n    minIndex ← j\n    for (k を (j + 1) から workArray の要素数 まで 1 ずつ増やす)\n      if (workArray[k] が workArray[minIndex] より小さい)\n        minIndex ← k\n      endif\n    endfor\n    workArray[j] と workArray[minIndex] の値を入れ替える\n\n    // 動作確認のために，j の値と workArray の全ての要素を出力する\n    j の値を出力する\n    workArray の全ての要素 を先頭から順にコンマ区切りで出力する\n  endfor\n  workArray の全ての要素 を先頭から順にコンマ区切りで出力する",
       "choices": [
         {
@@ -5217,12 +4750,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "このプログラムは選択ソートで、j番目以降で最小の要素を探して j 番目と入れ替える処理を繰り返します。初期値{3, 5, 1, 2, 4}に対し、j＝1では最小値1（3番目）と入れ替えて{1, 5, 3, 2, 4}になります。j＝2では2番目以降の最小値2（4番目）と入れ替えて{1, 2, 3, 5, 4}になります。j＝3では3番目以降の最小値は3で、すでに3番目にあるため自分自身と入れ替わって配列は変わらず{1, 2, 3, 5, 4}のままです。したがってj＝3と出力された直後の出力は1, 2, 3, 5, 4となります。",
+      "questionPattern": "calculation",
       "estimatedDifficulty": 3,
       "tags": [
         "擬似言語",
         "選択ソート"
       ],
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "syllabusNode": {
+        "itemId": "ipa-37",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5257,24 +4797,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:bb0456c362a611101e65ce2497bc752fdc2acae1edc7b628a9a838c3c708cfc3",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-37",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "アルゴリズムとプログラミング"
       }
     },
     {
       "id": "ipa-it-passport-2026-q068",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-email-protocol",
-      "questionPattern": "knowledge",
       "prompt": "メールソフトが電子メールの送受信に用いるプロトコルの組合せとして，適切なものはどれか。",
       "choices": [
         {
@@ -5295,12 +4821,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "電子メールの送信にはSMTP、受信にはPOP3またはIMAP4を使うのが基本の組合せです。選択肢の中でこの対応になっているのは、送信SMTP・受信IMAP4のエだけです。IMAP4はメールをサーバ上に置いたまま読む方式で、複数の端末から同じメールを見たい場合に向いています。アとイはIMAP4を送信に使っており、ウはPOP3を送信に、SMTPを受信に使っていて、いずれも役割が逆になっているため誤りです。送信＝SMTPを軸に覚えると判別しやすくなります。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "SMTP",
         "IMAP4"
       ],
+      "primaryTopicId": "tech-email-protocol",
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5335,24 +4868,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:433f8f143f0abeeeadeea51464ab637d82f9ac7cadd1a338821d563b40bd4e2a",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-59",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "ネットワーク"
       }
     },
     {
       "id": "ipa-it-passport-2026-q069",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-normalization",
-      "questionPattern": "knowledge",
       "prompt": "関係データベースにおけるデータの正規化に関する次の記述中のa, bに入れる字句の適切な組合せはどれか。\n正規化の主な目的として，データの重複を排除し，［a］ことが挙げられる。正規化には複数の段階があり，これを進めていくと，［b］。",
       "choices": [
         {
@@ -5373,11 +4892,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "正規化の主な目的は、同じデータが複数の場所に重複して存在する状態をなくし、更新漏れによる矛盾を防いでデータの一貫性を保つことです。したがってaには「一貫性を保つ」が入ります。正規化を第1正規形、第2正規形と進めていくと、1つの表に混在していた項目が意味のまとまりごとに切り出され、複数の表に分割されていきます。よってbには「一つの表が複数の表に分割される」が入ります。圧縮率の向上は正規化の目的ではなく、また正規化は表を統合するのではなく分割していく操作である点が判断のポイントです。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "正規化"
       ],
+      "primaryTopicId": "tech-normalization",
+      "syllabusNode": {
+        "itemId": "ipa-55",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5412,24 +4938,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:195e0e09eb0fc5d8290042c8403fd15a55772daedd8633276983075e67d73dd8",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-55",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "データベース"
       }
     },
     {
       "id": "ipa-it-passport-2026-q070",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-isms-risk",
-      "questionPattern": "application",
       "prompt": "ISMSにおける情報セキュリティインシデントの管理に関する記述のうち，適切なものはどれか。",
       "choices": [
         {
@@ -5450,12 +4962,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "情報セキュリティインシデントに素早く対応するには、誰にどう連絡するかをあらかじめ決め、その仕組みを用意しておくことが不可欠です。エはこれを述べており適切です。アは対応手順を文書化しないという内容ですが、事前の手順化がなければ現場が混乱するため誤りです。イは得られた知識を管理策の強化に用いないとしていますが、教訓を反映して再発を防ぐことこそ管理の目的なので誤りです。ウは、報告された情報セキュリティ事象がすべてインシデントになるとしていますが、事象は評価を経て初めてインシデントに分類されるため誤りです。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "ISMS",
         "インシデント管理"
       ],
+      "primaryTopicId": "tech-isms-risk",
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5490,24 +5009,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:d912f67dd40e7c4b874c819ac013663bd8b7a21725004ed489da530da5e293a9",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-62",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q071",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-auth-authz-mfa",
-      "questionPattern": "application",
       "prompt": "インターネットバンキングなどのWebサイトで利用されているリスクベース認証の例として，適切なものはどれか。",
       "choices": [
         {
@@ -5528,11 +5033,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "リスクベース認証は、ふだんの利用状況と異なるアクセスを検知したときにだけ、追加の認証を求める方式です。アはいつもと違うPCからのログインという通常と異なる状況を捉え、秘密の質問による追加認証を行っており、まさにこの仕組みに当たります。イは一定時間操作がないと自動ログアウトするタイムアウトの設定です。ウは連続した入力失敗でアカウントを止めるアカウントロック、エは長期間変更のないパスワードの更新を促す運用で、いずれも「いつもと違うかどうか」を判断材料にしていません。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "リスクベース認証"
       ],
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5567,24 +5079,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:b67093c5a9d6335ca9d5386668c8cc5fccb3cd924d6758ae0ffe1c5d27c5a831",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-63",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q072",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-keys",
-      "questionPattern": "ordering",
       "prompt": "関係データベースで管理している“口座”表，“顧客”表及び“取引明細”表がある。新たな顧客が口座の開設と同時に1万円を入金するとき，表にデータを追加する順序として，適切なものはどれか。ここで，下線のうち実線は主キーを，破線は外部キーを表す。",
       "choices": [
         {
@@ -5605,11 +5103,38 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "外部キーには、参照先の表に存在しない値を登録できないという制約があります。口座表の顧客番号は顧客表を参照し、取引明細表の口座番号は口座表を参照しているので、参照される側から先に登録しなければなりません。したがって、まず顧客表に顧客を登録し、次に口座表に口座を作り、最後に取引明細表へ入金の明細を追加するイの順序が正しくなります。アは口座を先に作ろうとしていますが、参照先の顧客がまだ存在せず登録できません。ウとエも取引明細を口座より先に登録しようとしており、同じ理由で成り立ちません。",
+      "questionPattern": "ordering",
       "estimatedDifficulty": 3,
       "tags": [
         "外部キー",
         "参照整合性"
+      ],
+      "primaryTopicId": "tech-keys",
+      "syllabusNode": {
+        "itemId": "ipa-54",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "データベース"
+      },
+      "figures": [
+        {
+          "id": "q072-figure-1",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q072-figure-1.png",
+          "alt": "“口座”表の構成。列は口座番号（実線の下線，主キー），口座種別，残高，顧客番号（破線の下線，外部キー）。"
+        },
+        {
+          "id": "q072-figure-2",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q072-figure-2.png",
+          "alt": "“顧客”表の構成。列は顧客番号（実線の下線，主キー），顧客名。"
+        },
+        {
+          "id": "q072-figure-3",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q072-figure-3.png",
+          "alt": "“取引明細”表の構成。列は取引番号（実線の下線，主キー），取引日時，取引種別，取引金額，口座番号（破線の下線，外部キー）。"
+        }
       ],
       "official": {
         "provider": "ipa",
@@ -5650,44 +5175,10 @@
           ]
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:c8b796705b0ea64bddf67895d6894d6a303945975acba7efd50694d2210a8d07",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "figures": [
-        {
-          "id": "q072-figure-1",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q072-figure-1.png",
-          "alt": "“口座”表の構成。列は口座番号（実線の下線，主キー），口座種別，残高，顧客番号（破線の下線，外部キー）。"
-        },
-        {
-          "id": "q072-figure-2",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q072-figure-2.png",
-          "alt": "“顧客”表の構成。列は顧客番号（実線の下線，主キー），顧客名。"
-        },
-        {
-          "id": "q072-figure-3",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q072-figure-3.png",
-          "alt": "“取引明細”表の構成。列は取引番号（実線の下線，主キー），取引日時，取引種別，取引金額，口座番号（破線の下線，外部キー）。"
-        }
-      ],
-      "syllabusNode": {
-        "itemId": "ipa-54",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "データベース"
       }
     },
     {
       "id": "ipa-it-passport-2026-q073",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-os-software-hardware",
-      "questionPattern": "knowledge",
       "prompt": "OSS (Open Source Software) のライセンスにおけるコピーレフトに関する記述として，適切なものはどれか。",
       "choices": [
         {
@@ -5708,12 +5199,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "コピーレフトは、ソフトウェアを自由に利用・改変・再配布できるようにしつつ、その自由を後の世代にも引き継がせるという考え方です。具体的には、OSSを改変して作った派生ソフトウェアを配布する場合、元のOSSと同じライセンスを適用しなければならないという条件として現れます。アは著作権の放棄と述べていますが、コピーレフトは著作権を保持したうえで条件を課す仕組みなので誤りです。イの金銭的対価の要求は義務ではありません。ウは改変部分を非公開にできるとしていますが、これはコピーレフトが禁じている内容そのものです。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "OSS",
         "コピーレフト"
       ],
+      "primaryTopicId": "tech-os-software-hardware",
+      "syllabusNode": {
+        "itemId": "ipa-45",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5748,24 +5246,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:492c40f64bbdaa3d7b75fa930b1d9af43d1fbf0dd725322abb73c978b484f6f3",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-45",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "ソフトウェア"
       }
     },
     {
       "id": "ipa-it-passport-2026-q074",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-spreadsheet",
-      "questionPattern": "calculation",
       "prompt": "表計算ソフトを用いて，二つの2進数α，βの和を求める。α，βの桁数は2桁に限定し，2の位，1の位の順に各桁の値がセルB3，セルC3とセルB4，セルC4に入力されている。ワークシートは2進数α＝10，β＝11の例である。結果は，4の位，2の位，1の位の順にセルA5，セルB5，セルC5に表示したい。セルB2は1の位からの繰り上がりの情報を格納するために用いられ，式 IF(C3＋C4＝2, 1, 0)が入力されている。セルB5に入力する式はどれか。",
       "choices": [
         {
@@ -5786,12 +5270,27 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "セルB5には2の位の結果を表示します。ここに集まるのは、1の位からの繰上げ（B2）と、αの2の位（B3）、βの2の位（B4）の3つで、その合計は0〜3のいずれかになります。合計が0か1なら繰上げは起きないのでその値をそのまま表示し、合計が2なら2進数で「10」となり2の位は0、合計が3なら「11」となり2の位は1です。この条件をそのまま表しているのがアの式で、合計が2未満なら合計を、2ならば0を、それ以外（3）は1を返します。イは合計が2のときに1を返してしまい、繰上げの扱いが逆になるため誤りです。",
+      "questionPattern": "calculation",
       "estimatedDifficulty": 3,
       "tags": [
         "表計算",
         "IF関数",
         "2進数"
+      ],
+      "primaryTopicId": "tech-spreadsheet",
+      "syllabusNode": {
+        "itemId": "ipa-47",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      },
+      "figures": [
+        {
+          "id": "q074-figure-1",
+          "kind": "image",
+          "src": "/question-bank/official/ipa/it-passport/2026/q074-figure-1.png",
+          "alt": "表計算ソフトのワークシート。列はA，B，C，D，行は1から5。行1はA列が4の位，B列が2の位，C列が1の位。行2はB列が0，D列が「：1の位からの繰上げ」。行3はB列が1，C列が0，D列が「：2進数αの値」。行4はB列が1，C列が1，D列が「：2進数βの値」。行5はA列が1，B列が0，C列が1，D列が「：結果の表示」。"
+        }
       ],
       "official": {
         "provider": "ipa",
@@ -5830,32 +5329,10 @@
           ]
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:3ff4d8784c3fddf79d5c2235a76f28311a9cce82541cc388580ccd6e1a54326a",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "figures": [
-        {
-          "id": "q074-figure-1",
-          "kind": "image",
-          "src": "/question-bank/official/ipa/it-passport/2026/q074-figure-1.png",
-          "alt": "表計算ソフトのワークシート。列はA，B，C，D，行は1から5。行1はA列が4の位，B列が2の位，C列が1の位。行2はB列が0，D列が「：1の位からの繰上げ」。行3はB列が1，C列が0，D列が「：2進数αの値」。行4はB列が1，C列が1，D列が「：2進数βの値」。行5はA列が1，B列が0，C列が1，D列が「：結果の表示」。"
-        }
-      ],
-      "syllabusNode": {
-        "itemId": "ipa-47",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "ソフトウェア"
       }
     },
     {
       "id": "ipa-it-passport-2026-q075",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-email-protocol",
-      "questionPattern": "knowledge",
       "prompt": "電子メールの宛先入力におけるBcc欄に関する記述のうち，適切なものはどれか。",
       "choices": [
         {
@@ -5876,12 +5353,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "Bcc（Blind carbon copy）は、その宛先に送ったことを他の受信者に知らせずに送信するための欄です。To欄やCc欄の受信者には、Bcc欄に入力されたメールアドレスは通知されないので、エが正解です。アは逆の説明で、Bccの受信者からはTo欄やCc欄のアドレスは見えるため誤りです。イの自動的な暗号化やウの添付ファイルの削除といった機能はBccにはなく、送られる本文や添付ファイルは他の宛先と同じものになります。多数の相手へ一斉送信する際にアドレスを互いに見せない用途で使われます。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "Bcc",
         "電子メール"
       ],
+      "primaryTopicId": "tech-email-protocol",
+      "syllabusNode": {
+        "itemId": "ipa-59",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5916,24 +5400,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:5cab2fc7aa6a9b0a6eca26f4f068aa0772701b42dc67964ae2e0d61846d64375",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-59",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "ネットワーク"
       }
     },
     {
       "id": "ipa-it-passport-2026-q076",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-wireless-mobile",
-      "questionPattern": "knowledge",
       "prompt": "IoTデバイスで用いられるLPWAに関する次の記述中のa, bに入れる字句の適切な組合せはどれか。\nLPWAに分類される無線通信方式の特徴は，通信可能な範囲が無線LANに比べて［a］，消費する電力が第4世代移動通信規格（4G）に比べて［b］。",
       "choices": [
         {
@@ -5954,12 +5424,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "LPWA（Low Power Wide Area）は、その名のとおり低消費電力で広い範囲をカバーする無線通信方式で、IoT機器向けに使われます。通信できる範囲は数十メートル程度の無線LANよりも広く、数キロメートルに及ぶものもあるので、aには「広く」が入ります。消費電力は4Gなどの携帯電話網より少なく、電池だけで数年動作させられる機器もあるため、bには「少ない」が入ります。その代わり通信速度は遅く、センサーの計測値のような小さなデータを時々送る用途に向いています。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "LPWA",
         "IoT"
       ],
+      "primaryTopicId": "tech-wireless-mobile",
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -5994,24 +5471,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:b3c0c7617abe205358ec056a6adf3707f32820916807f8d3f56045aee5ca56fe",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-58",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "ネットワーク"
       }
     },
     {
       "id": "ipa-it-passport-2026-q077",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-security-cia",
-      "questionPattern": "application",
       "prompt": "ある企業では，サーバ室への入室管理を暗証番号で行っていたが，虹彩認証装置による本人確認を加えることによって，無許可の者の入室をより確実に防止する対策とした。これは，サーバ室における情報セキュリティ要素のうち，どれを高める対策に該当するか。",
       "choices": [
         {
@@ -6032,12 +5495,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "情報セキュリティの3要素のうち、機密性は許可された人だけが情報や設備にアクセスできる状態を保つことを指します。暗証番号に虹彩認証を加えて本人確認を強化し、無許可の者の入室をより確実に防ぐ対策は、この機密性を高める取組みです。アの可用性は必要なときに使える状態を保つこと、イの完全性は情報が正確で改ざんされていないことを保つ性質で、入室制限の強化とは目的が異なります。エの否認防止は「やっていない」と後から否定できないようにする性質で、これも本問の狙いとは違います。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "機密性",
         "CIA"
       ],
+      "primaryTopicId": "tech-security-cia",
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6072,24 +5542,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:02e900650654b017e16f13cc7c3fef0dc380fe263c2a04991a69b39ed092a907",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-61",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q078",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-iot",
-      "questionPattern": "knowledge",
       "prompt": "IoTデバイスとIoTサーバで構成され，IoTデバイスが計測した外気温をIoTサーバへ送り，IoTサーバからの指示でIoTデバイスが窓を開閉するシステムがある。このシステムのIoTデバイスに搭載された，外気温を電気信号に変換する役割をもつものはどれか。",
       "choices": [
         {
@@ -6110,12 +5566,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "センサーは、温度や光、圧力といった物理的な量を検知して電気信号に変換する部品です。外気温を測ってIoTサーバへ送るという役割は、まさにセンサーが担う働きです。アのアクチュエーターは電気信号を受けて物を動かす部品で、この問題では窓を開閉する側に当たります。イのエッジコンピューティングは端末に近い場所でデータを処理する方式、ウのキャリアアグリゲーションは複数の周波数を束ねる通信技術で、いずれも物理量を電気信号に変える部品ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "センサー",
         "IoT"
       ],
+      "primaryTopicId": "tech-iot",
+      "syllabusNode": {
+        "itemId": "ipa-17",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "ビジネスインダストリ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6150,24 +5613,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:0d8078b01a7096f6d91fa5364681fc95b8eae523baf0c3d147b14b8e54bedb6b",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-17",
-        "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q079",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-isms-risk",
-      "questionPattern": "application",
       "prompt": "企業のリスクマネジメントの一環として行われるサイバーセキュリティリスク対策の推進において，経営者に求められる役割として，最も適切なものはどれか。",
       "choices": [
         {
@@ -6188,12 +5637,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "サイバーセキュリティリスクへの対応は経営課題であり、経営者には実施方針の検討、予算や人材の割当て、実施状況の確認と問題への対応といった形で、自らリーダーシップを発揮することが求められます。ウがこれに当たります。ア・イ・エはいずれも、担当者やCISO、外部コンサルタントに「全て任せる」「権限と責任を委譲する」という点が共通しています。責任者を置いたり専門家の力を借りたりすること自体は有効ですが、経営者が最終的な責任から離れてしまう点で不適切です。丸投げになっていないかどうかが見分ける手がかりになります。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "サイバーセキュリティ経営",
         "リスクマネジメント"
       ],
+      "primaryTopicId": "tech-isms-risk",
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6228,24 +5684,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:dc8ce627d702f772053ae15152791815fd84e9f7edb51a1a5e64a50a1ecd1e78",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-62",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q080",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-auth-authz-mfa",
-      "questionPattern": "application",
       "prompt": "バイオメトリクス認証に関する次の記述中のa, bに入れる字句の適切な組合せはどれか。\nバイオメトリクス認証を利用したシステムの設計を始めるときには，システムの目的と認証の用途を明らかにし，認証精度の設定方針を策定することが必要である。他人受入率が［a］なるように設定した場合は，安全性を重視した認証になり，本人拒否率が［b］なるように設定した場合は，本人の利便性を重視した認証になるといえる。",
       "choices": [
         {
@@ -6266,13 +5708,20 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "他人受入率は、本人でない人を誤って受け入れてしまう割合です。これを低く設定すれば、なりすましが通りにくくなるので安全性を重視した認証になり、aには「低く」が入ります。本人拒否率は、本人なのに拒否されてしまう割合です。これを低く設定すれば、正しい利用者がやり直しを求められる場面が減るので利便性を重視した認証になり、bにも「低く」が入ります。両者はしきい値を通じてトレードオフの関係にあり、一方を下げるともう一方が上がるため、目的に応じた設定方針が必要になります。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "バイオメトリクス認証",
         "他人受入率",
         "本人拒否率"
       ],
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6307,24 +5756,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:7be91d244b1fb2150cb56b90821536c73f2421bb86a2874d4ef6a6478497c5fe",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-63",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q081",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-wireless-mobile",
-      "questionPattern": "knowledge",
       "prompt": "Bluetoothの規格に含まれ，デバイス間の省電力通信を実現させるものはどれか。",
       "choices": [
         {
@@ -6345,12 +5780,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "BLE（Bluetooth Low Energy）は、Bluetoothの規格に含まれる低消費電力の通信方式で、ボタン電池で長期間動作するようなセンサーやウェアラブル機器で使われます。少量のデータを間欠的にやり取りする用途に適しています。イのLPWAはBluetoothとは別系統の、広域をカバーする省電力無線通信方式の総称です。ウのLTEは携帯電話の通信規格、エのPLCは電力線を通信路として使う技術で、いずれもBluetoothの規格には含まれません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "BLE",
         "Bluetooth"
       ],
+      "primaryTopicId": "tech-wireless-mobile",
+      "syllabusNode": {
+        "itemId": "ipa-58",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "ネットワーク"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6385,24 +5827,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:dd13486a2ae01581dc9bae7b0228c24bd0da77565baa1140fcb89da3bb8877a4",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-58",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "ネットワーク"
       }
     },
     {
       "id": "ipa-it-passport-2026-q082",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ai-ml",
-      "questionPattern": "knowledge",
       "prompt": "ニューラルネットワークの学習に用いられるバックプロパゲーションで行われていることはどれか。",
       "choices": [
         {
@@ -6423,12 +5851,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "バックプロパゲーション（誤差逆伝播法）は、ニューラルネットワークの出力と正解との誤差を、出力側から入力側へさかのぼって伝えながら、各ノードをつなぐ重みを少しずつ調整して誤差を小さくしていく学習方法です。この繰り返しによってネットワークが正解に近い出力を返すようになります。イは活性化関数の選択と述べていますが、バックプロパゲーションが調整するのは重みであり、活性化関数は設計時に決めるものです。ウとエはノードの数を変更するとしていますが、ネットワークの構造そのものを変える操作はこの手法には含まれません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
         "バックプロパゲーション",
         "ニューラルネットワーク"
       ],
+      "primaryTopicId": "tech-ai-ml",
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6463,24 +5898,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:fb78c61c0cedc4a821d1b3871b587232b3eb554552ff9587beb96494c47f69cf",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-35",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
       }
     },
     {
       "id": "ipa-it-passport-2026-q083",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-malware-phishing-ransomware",
-      "questionPattern": "application",
       "prompt": "職場のPCに適用する情報セキュリティ対策a〜cのうち，マルウェア対策ソフトの導入のほかに，マルウェア感染を防止するための対策として，適切なものだけを全て挙げたものはどれか。\na OSのセキュリティパッチ（修正モジュール）の適用\nb 起動ドライブとなっているハードディスクに対するパスワード設定\nc 複雑かつ十分な長さをもつログインパスワードの導入",
       "choices": [
         {
@@ -6501,12 +5922,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "マルウェア感染を防ぐには、攻撃に悪用される弱点そのものをふさぐことが有効です。aのOSのセキュリティパッチの適用は、既知の脆弱性を修正して侵入の入口を減らすので、感染防止の対策として適切です。bの起動ドライブへのパスワード設定は、PCそのものを盗まれたときにデータを読み取られないようにする対策で、感染を防ぐものではありません。cの複雑で長いログインパスワードも、不正ログインを防ぐ効果はありますが、メールの添付ファイルやWebサイト経由のマルウェア感染を防ぐ手立てにはなりません。したがって適切なものはaだけです。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "マルウェア対策",
         "セキュリティパッチ"
       ],
+      "primaryTopicId": "tech-malware-phishing-ransomware",
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6541,24 +5969,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:a6ffda6d2879a007ea5487cf818cd8957ff87d25e237fe888c805a00a9bfb714",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-61",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q084",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ai-ml",
-      "questionPattern": "application",
       "prompt": "ある推論システムは，演繹推論，帰納推論，仮説形成などの推論が実行できる。この推論システムへの入力と得られた出力に関する記述のうち，演繹推論を実行した例として，適切なものはどれか。",
       "choices": [
         {
@@ -6579,12 +5993,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "演繹推論は、一般的な規則にあてはめて個別の結論を導く推論です。エは「全ての記憶装置は記憶容量をもつ」という一般規則に「HDDは記憶装置である」という事実をあてはめ、「HDDは記憶容量をもつ」という結論を出しており、演繹推論の典型です。ウは複数の個別事例から「全ての記憶装置は」という一般則を導いており、帰納推論に当たります。イは結果から前提を推し量る形で仮説形成に近く、アもHDDの性質をSSDへ広げており個別から個別への類推です。一般から個別へ向かっているかどうかが見分ける鍵になります。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "演繹推論",
         "推論"
       ],
+      "primaryTopicId": "tech-ai-ml",
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6619,24 +6040,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:cca44263ab6403f4fb6b658336b9289033315a4caa59e4a0d402b52a5d764ee2",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-35",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
       }
     },
     {
       "id": "ipa-it-passport-2026-q085",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-algorithm-flowchart",
-      "questionPattern": "application",
       "prompt": "関数isPrimeは，引数として与えられた正の整数が，素数であればtrueを，素数でなければfalseを戻り値とする。例えば，関数isPrimeをisPrime(2)として呼び出したときの戻り値はtrueである。プログラム中のa, bに入れる字句の適切な組合せはどれか。\n\n〔プログラム〕\n○論理型: isPrime(整数型: num)\n  整数型: div ← 2\n  if (num が 2 ［a］)\n    return false\n  else\n    while (num が div ［b］)\n      if (num ÷ div の余り が 0 と等しい)\n        return false\n      else\n        div ← div + 1\n      endif\n    endwhile\n    return true\n  endif",
       "choices": [
         {
@@ -6657,12 +6064,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "この関数は、2から順に割り切れるかどうかを試して素数を判定します。まずaでは、1以下の数を素数でないとして除外する必要があるので「num が 2 より小さい」が入ります。ここを「2以下」にすると素数である2までfalseになってしまい、例に示されたisPrime(2)がtrueになるという条件に反します。bのwhile文は、割る数divがnumに達するまで試行を続ける必要があるので「num が div より大きい」が入ります。例えばnum＝2ならdiv＝2で条件が成立せずループに入らずtrueを返し、num＝4ならdiv＝2で割り切れてfalseを返すという、正しい動作になります。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "擬似言語",
         "素数判定"
       ],
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "syllabusNode": {
+        "itemId": "ipa-37",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6697,24 +6111,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:208ed6685c22fd7b40746f27c9d9f434b258512ef1258cc4bad55080ecb4d9b3",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-37",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "アルゴリズムとプログラミング"
       }
     },
     {
       "id": "ipa-it-passport-2026-q086",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-backup",
-      "questionPattern": "application",
       "prompt": "データベースの障害に備えて，毎日業務終了後にバックアップファイルを取得している。毎週土曜日にはフルバックアップファイルを取得し，日曜日から金曜日は差分バックアップファイルを取得する。差分バックアップファイルとは，最後のフルバックアップファイルから，差分バックアップファイルを取得する当日までの，全ての差分データのバックアップファイルである。水曜日にデータベースが破損したので，前日の火曜日の業務終了時点のデータベースに復旧することにした。このとき，データベースを復旧させるために最低限必要なバックアップファイルはどれか。",
       "choices": [
         {
@@ -6735,12 +6135,19 @@
         }
       ],
       "correctChoice": "D",
-      "explanation": "差分バックアップは、最後のフルバックアップ以降に変更されたすべてのデータを対象とします。つまり火曜日の差分バックアップファイルには、土曜日のフルバックアップ以降、火曜日までの変更がすべて含まれています。したがって火曜日の業務終了時点に戻すには、土曜日のフルバックアップファイルを復元したうえで、火曜日の差分バックアップファイルを適用すれば足ります。ウのように日曜日と月曜日の差分まで適用する必要はなく、これは最後の1つに前日までの変更が含まれるという差分バックアップの性質によります。日ごとの変更分だけを取る増分バックアップとの違いに注意してください。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "差分バックアップ",
         "リストア"
       ],
+      "primaryTopicId": "tech-backup",
+      "syllabusNode": {
+        "itemId": "ipa-46",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6775,24 +6182,10 @@
           "correctChoice": "D"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:4e505a86f9f16e73f573f68dc170d899972e2573f37ed963b0d77ab1361fb549",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-46",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "ソフトウェア"
       }
     },
     {
       "id": "ipa-it-passport-2026-q087",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-io-devices",
-      "questionPattern": "knowledge",
       "prompt": "NASの説明として，適切なものはどれか。",
       "choices": [
         {
@@ -6813,11 +6206,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "NAS（Network Attached Storage）は、ネットワークに直接つないで使う外部記憶装置で、PCやスマートフォンなど複数の機器からネットワーク経由でファイルを共有できます。イは記憶媒体上の位置に関係なく目的のデータへ直接アクセスできるファイル形式の説明で、直接編成ファイルなどに当たります。ウは複数の記憶装置をまとめて高速化や耐障害性の向上を図るRAIDの説明です。エは無線LANのネットワークを識別する文字列であるSSIDの説明で、いずれも記憶装置をネットワークに接続する仕組みではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "NAS"
       ],
+      "primaryTopicId": "tech-io-devices",
+      "syllabusNode": {
+        "itemId": "ipa-42",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "コンピュータ構成要素"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6852,24 +6252,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:2364012223f6d9be972796f7f896f1ed43b4238b9e96332302afd699fdf77770",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-42",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "コンピュータ構成要素"
       }
     },
     {
       "id": "ipa-it-passport-2026-q088",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-algorithm-flowchart",
-      "questionPattern": "application",
       "prompt": "プログラミングすることによって，ペンの上げ下げ，直進及び右回りの方向転換が可能なロボットがある。このロボットに1辺が1mの正六角形を描画させるプログラムを作成した。次の正六角形描画プログラムのa, bに入れる字句の適切な組合せはどれか。\n\n〔正六角形描画プログラム〕\n（1）ペンを下ろす。\n（2）処理回数のカウンタに［a］を設定する。\n（3）次の処理を順に実行する。\n・1m直進する。\n・右回りに［b］度方向転換する。\n・処理回数のカウンタに1を加える。\n（4）処理回数のカウンタが6未満の場合は，（3）に戻る。\n（5）ペンを上げる。",
       "choices": [
         {
@@ -6890,12 +6276,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "正六角形を描くには、1辺を進んでから方向を変える動作を6回繰り返します。（4）の判定が「カウンタが6未満なら（3）に戻る」となっているので、カウンタは0から始めれば0, 1, 2, 3, 4, 5の6回で処理が実行され、6になった時点で終了します。したがってaには0が入ります。1を初期値にすると5回しか繰り返されず、六角形になりません。bの方向転換の角度は、多角形を一周する間に向きが合計360度変わることから、360÷6＝60度となります。内角の120度と混同しやすいので、進行方向が変わる角度（外角）で考える点が要点です。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "アルゴリズム",
         "繰返し"
       ],
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "syllabusNode": {
+        "itemId": "ipa-37",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "アルゴリズムとプログラミング"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -6930,24 +6323,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:8b5b74297abab01276a95f430003ed19738975fbb33cbfa3d47e56e9fdda39dc",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-37",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "アルゴリズムとプログラミング"
       }
     },
     {
       "id": "ipa-it-passport-2026-q089",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-isms-risk",
-      "questionPattern": "knowledge",
       "prompt": "情報セキュリティに関する次の記述中のa, bに入れる字句の適切な組合せはどれか。\n守るべき情報資産に対して望ましくない影響を及ぼす可能性のある原因のことを［a］といい，情報資産自身の価値を損なう可能性をもつ弱点のことを［b］という。",
       "choices": [
         {
@@ -6968,12 +6347,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "情報セキュリティでは、守るべき情報資産に悪影響を及ぼしうる原因のことを脅威と呼びます。マルウェアや不正アクセス、自然災害、人為的なミスなどが該当し、aには「脅威」が入ります。一方、情報資産そのものが抱える弱点のことを脆弱性と呼び、bにはこれが入ります。ソフトウェアの欠陥や設定の不備、教育不足などがその例です。脅威が脆弱性を突いたときに損害が現実になる可能性がリスクであり、実際に発生した事象がインシデントなので、これらを取り違えないようにします。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "脅威",
         "脆弱性"
       ],
+      "primaryTopicId": "tech-isms-risk",
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7008,24 +6394,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:5c0c44c08267dd180628bff1fd3eaac3131acfe0199e5ca7dbc628f457fa2fdf",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-62",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q090",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-public-key-crypto",
-      "questionPattern": "knowledge",
       "prompt": "PKI(公開鍵基盤)の特徴として，適切なものはどれか。",
       "choices": [
         {
@@ -7046,12 +6418,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "PKI（公開鍵基盤）は、公開鍵が確かに本人のものであることを、信頼できる第三者である認証局（CA）が発行する電子証明書によって保証する仕組みです。ウがこの特徴を正しく述べています。アは共通鍵の所有者確認としていますが、PKIが扱うのは公開鍵暗号方式であり誤りです。イは知人同士の署名の連鎖で信頼を築く「信頼の輪」の説明で、これはPGPが採る方式であってPKIとは対照的な考え方です。エは秘密鍵を公開すると述べていますが、秘密鍵は決して公開してはならない鍵なので明確な誤りです。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "PKI",
         "認証局"
       ],
+      "primaryTopicId": "tech-public-key-crypto",
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7086,24 +6465,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:510623918e23a691431e93be1777679e9b8cc1347cac919a6cc3d6e3320d4b0e",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-63",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q091",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-encryption-hash",
-      "questionPattern": "knowledge",
       "prompt": "デジタル署名やブロックチェーンで用いられるハッシュ関数には，SHA-256，SHA-512などがある。このようなハッシュ関数に関する記述として，適切なものはどれか。",
       "choices": [
         {
@@ -7124,12 +6489,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "ハッシュ関数は、入力データから固定長のハッシュ値を計算する一方向の関数です。同じハッシュ関数に同じデータを入力すれば、いつでも必ず同じハッシュ値が得られるという性質があり、これによりデータが改ざんされていないかを検証できます。したがってウが正解です。アとエはハッシュ値から元のデータを復元できるとしていますが、ハッシュ関数は一方向性を持ち逆関数は存在しないため誤りです。イは異なるハッシュ関数でも同じ値になるとしていますが、SHA-256とSHA-512では出力の長さすら異なるため成り立ちません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "ハッシュ関数",
         "SHA-256"
       ],
+      "primaryTopicId": "tech-encryption-hash",
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7164,24 +6536,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:48777bca0feafc0ca05187456742356d9d262f0d841ecb2efa9142c9fbed4270",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-63",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q092",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-firewall-vpn-zero-trust",
-      "questionPattern": "application",
       "prompt": "ゼロトラストセキュリティの考え方に基づいた情報セキュリティ対策の例として，適切なものはどれか。",
       "choices": [
         {
@@ -7202,11 +6560,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "ゼロトラストセキュリティは「何も信頼しない」を前提とし、社内ネットワークからのアクセスであっても安全とはみなさず、その都度検証するという考え方です。イは内部・外部を問わずアクセスに二要素認証を求めており、この考え方に沿っています。アは境界にファイアウォールを置いて外部の脅威を遮断するもので、内側は安全とみなす従来の境界型防御の発想です。ウのパッチの迅速な適用は重要な対策ですが、ゼロトラスト固有の考え方ではありません。エはインターネットに接続するPCだけを守る内容で、内部を信頼している点でむしろ逆の発想になります。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "ゼロトラスト"
       ],
+      "primaryTopicId": "tech-firewall-vpn-zero-trust",
+      "syllabusNode": {
+        "itemId": "ipa-63",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7241,24 +6606,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:70469f7972099e7d9a8c409ee2630a32a39c18943a4b57fc7e17953730670d9e",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-63",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q093",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-isms-risk",
-      "questionPattern": "ordering",
       "prompt": "次のISMSにおける実施項目のうち，最初に行うものはどれか。",
       "choices": [
         {
@@ -7279,12 +6630,19 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "ISMSを構築するときは、まずどの組織・業務・情報資産を対象とするのかという適用範囲を決めます。範囲が定まらなければ、守るべき情報資産を洗い出すこともできないため、アが最初に行う項目です。イの情報セキュリティリスクアセスメントは、範囲内の資産に対してリスクを特定・分析・評価する活動で、適用範囲の決定より後になります。ウのリスク対応はアセスメントの結果を受けて実施する段階、エの内部監査は運用が始まってから有効性を点検する活動で、いずれも後続の工程です。",
+      "questionPattern": "ordering",
       "estimatedDifficulty": 2,
       "tags": [
         "ISMS",
         "適用範囲"
       ],
+      "primaryTopicId": "tech-isms-risk",
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7319,24 +6677,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:f81b0d311689b615e2c8bd732cb6f020e1a52a639d5907a40bf89a3d8f778c7f",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-62",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q094",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-isms-risk",
-      "questionPattern": "application",
       "prompt": "情報セキュリティ対策を，“技術的セキュリティ対策”，“人的セキュリティ対策”及び“物理的セキュリティ対策”に分類したとき，“物理的セキュリティ対策”の例として，適切なものはどれか。",
       "choices": [
         {
@@ -7357,11 +6701,18 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "物理的セキュリティ対策は、建物や設備、機器といった物理的な資産や場所を守る対策を指します。イの遠隔地にバックアップシステムを用意することは、災害という物理的な脅威に備えて拠点そのものを分散させる対策なので、物理的セキュリティ対策に当たります。アの規則の制定と定期的な教育や、ウのサイバー攻撃に関する情報の周知は、人の行動に働きかける人的セキュリティ対策です。エのマルウェア対策ソフトの導入と定義ファイルの更新は、技術的セキュリティ対策に分類されます。",
+      "questionPattern": "application",
       "estimatedDifficulty": 2,
       "tags": [
         "物理的セキュリティ対策"
       ],
+      "primaryTopicId": "tech-isms-risk",
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7396,24 +6747,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:654f81a93dcd36d3ed5e5c30a581b7da9c0bd9e95e67bc8d30a94dcdd6f01f39",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-62",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q095",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-cyber-attacks",
-      "questionPattern": "knowledge",
       "prompt": "SQLインジェクションの対策などで用いられ，処理の誤動作を招かないように，利用者がWebサイトに入力した内容に含まれる有害な文字列を無害な文字列に置き換えることを何と呼ぶか。",
       "choices": [
         {
@@ -7434,12 +6771,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "サニタイジングは「無害化」を意味し、利用者が入力した文字列に含まれる、システムに特別な意味を持つ文字（シングルクォートや不等号など）を、単なる文字として扱われる形に置き換える処理です。これによりSQLインジェクションやクロスサイトスクリプティングのように、入力を命令として解釈させる攻撃を防げます。アのMACアドレスフィルタリングは接続機器を制限する仕組みです。ウのストライピングはデータを複数のディスクに分散して書き込むRAIDの技術、エのソーシャルエンジニアリングは人の心理につけ込んで情報を得る攻撃手法で、いずれも入力値の処理とは関係ありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "サニタイジング",
         "SQLインジェクション"
       ],
+      "primaryTopicId": "tech-cyber-attacks",
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7474,24 +6818,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:21669c90f2090dc04c8670863ece3e082166e37d128d547e4ae149bef461d32e",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-61",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q096",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-cyber-attacks",
-      "questionPattern": "knowledge",
       "prompt": "機密情報の取得などを目的として，特定の組織や個人に対して，複数の攻撃手法を使うなどして長期間にわたり継続的に攻撃を行うという特徴をもつ，サイバー攻撃はどれか。",
       "choices": [
         {
@@ -7512,11 +6842,18 @@
         }
       ],
       "correctChoice": "A",
-      "explanation": "APT（Advanced Persistent Threat）攻撃は、特定の組織や個人を標的に定め、複数の手法を組み合わせながら長期間にわたって執拗に侵入を試みる攻撃です。機密情報の窃取などを目的とし、気付かれないよう静かに続けられる点が特徴になります。イのDDoS攻撃は多数の端末から大量の通信を送ってサービスを停止させる攻撃です。ウのゼロデイ攻撃は修正プログラムが公開される前の脆弱性を突く攻撃、エのパスワードリスト攻撃は他所で漏えいしたIDとパスワードの組を使い回して侵入を試みる攻撃で、いずれも長期間の継続性を特徴とはしていません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "APT攻撃"
       ],
+      "primaryTopicId": "tech-cyber-attacks",
+      "syllabusNode": {
+        "itemId": "ipa-61",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7551,24 +6888,10 @@
           "correctChoice": "A"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:d62e846d1cad44c6a9990efe480e9454fe968ae0d826c7796c41c8cc6f9ab093",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-61",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     },
     {
       "id": "ipa-it-passport-2026-q097",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-os-software-hardware",
-      "questionPattern": "application",
       "prompt": "OSS (Open Source Software) の取扱いに関する記述のうち，適切なものだけを全て挙げたものはどれか。\na OSSを集めた記録媒体を，顧客に有償で提供する。\nb 改変したOSSを，特定の利用分野に制限してOSSとして提供する。\nc 不具合を発見して修正したOSSのソースコードを，自分のWebサイトで提供する。",
       "choices": [
         {
@@ -7589,12 +6912,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "OSSのライセンスは、利用・改変・再配布の自由を保証する一方で、その自由を制限することを禁じています。aのOSSを集めた記録媒体を有償で提供する行為は、複製物の配布に手数料を取ることに当たり、多くのOSSライセンスで認められています。cの修正したソースコードを自分のWebサイトで公開することも、改変と再配布の自由の範囲内で問題ありません。一方bは、改変したOSSを特定の利用分野に制限して提供するという内容ですが、使用する分野で差別してはならないというOSSの定義に反するため認められません。したがって適切なものはaとcです。",
+      "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
         "OSS",
         "ライセンス"
       ],
+      "primaryTopicId": "tech-os-software-hardware",
+      "syllabusNode": {
+        "itemId": "ipa-45",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "ソフトウェア"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7629,24 +6959,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:1134e579797a29240c67b99a7af22fd66466936dab3f164a20a5e068a6b1ec0c",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-45",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "ソフトウェア"
       }
     },
     {
       "id": "ipa-it-passport-2026-q098",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-ai-ml",
-      "questionPattern": "knowledge",
       "prompt": "AIにおけるプロンプトエンジニアリングの説明として，適切なものはどれか。",
       "choices": [
         {
@@ -7667,12 +6983,19 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "プロンプトエンジニアリングは、生成AIから意図した回答を引き出すために、質問や指示の書き方を工夫することです。前提となる情報を与えたり、出力の形式や役割を具体的に指定したりすることで、回答の精度や使いやすさが大きく変わります。アは多数のデータから規則を獲得する機械学習の説明です。イは入力を受け付ける状態を示すプロンプト（記号としての入力促進表示）そのものの説明、エは神経細胞のネットワークを模したニューラルネットワークの説明で、いずれも指示の工夫を指す言葉ではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "プロンプトエンジニアリング",
         "生成AI"
       ],
+      "primaryTopicId": "tech-ai-ml",
+      "syllabusNode": {
+        "itemId": "ipa-35",
+        "field": "technology",
+        "majorCategory": "基礎理論",
+        "middleCategory": "基礎理論"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7707,24 +7030,10 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:1f2278ca425a81ef0dd1668b04a0705a33a6247b58bcb0488651e74f7f4a6135",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-35",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
       }
     },
     {
       "id": "ipa-it-passport-2026-q099",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-io-devices",
-      "questionPattern": "knowledge",
       "prompt": "入力装置に関する次の記述中のa, bに入れる字句の適切な組合せはどれか。\n［a］は，紙などに光を当て，反射光を読み取り，文字や図形をデジタルデータに変換してPCに取り込む。［a］が文字や図形をどの程度細かく読み取れるかの性能を示す単位として［b］が使われる。",
       "choices": [
         {
@@ -7745,12 +7054,19 @@
         }
       ],
       "correctChoice": "B",
-      "explanation": "紙に光を当て、その反射光を読み取って文字や図形をデジタルデータに変換する装置はイメージスキャナーなので、aにはこれが入ります。スクリーンリーダーは画面上の文字を音声で読み上げる支援ソフトウェアであり、紙を読み取る入力装置ではありません。読み取りの細かさを示す単位はdpi（dots per inch）で、1インチあたり何個の点として読み取れるかを表し、値が大きいほど精細になります。bpsは1秒あたりに転送できるビット数を示す通信速度の単位なので、解像度の単位としては誤りです。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "イメージスキャナー",
         "dpi"
       ],
+      "primaryTopicId": "tech-io-devices",
+      "syllabusNode": {
+        "itemId": "ipa-42",
+        "field": "technology",
+        "majorCategory": "コンピュータシステム",
+        "middleCategory": "コンピュータ構成要素"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7785,24 +7101,10 @@
           "correctChoice": "B"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:0157f48e487d1e92bf9c680ea7e54a1454c51bc8465fed8f2d9e02a6b5d96e98",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-42",
-        "field": "technology",
-        "majorCategory": "コンピュータシステム",
-        "middleCategory": "コンピュータ構成要素"
       }
     },
     {
       "id": "ipa-it-passport-2026-q100",
-      "version": 2,
-      "origin": "official_past",
-      "status": "published",
-      "primaryTopicId": "tech-isms-risk",
-      "questionPattern": "knowledge",
       "prompt": "ISMSの活動に関する記述として，最も適切なものはどれか。",
       "choices": [
         {
@@ -7823,11 +7125,18 @@
         }
       ],
       "correctChoice": "C",
-      "explanation": "ISMS（情報セキュリティマネジメントシステム）は、組織が持つ情報資産を洗い出し、それぞれのリスクを特定・分析・評価したうえで対策を講じ、継続的に見直していく仕組みです。ウがこの活動を正しく述べています。アは業務プロセスを改善して品質やコストを見直す活動で、BPRやTQMなどに近い内容です。イはITサービスの品質を継続的に改善する活動でITサービスマネジメントの説明、エは開発プロセスの成熟度を評価・改善するCMMIの説明で、いずれも情報資産のリスク管理を中心に据えたものではありません。",
+      "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
         "ISMS"
       ],
+      "primaryTopicId": "tech-isms-risk",
+      "syllabusNode": {
+        "itemId": "ipa-62",
+        "field": "technology",
+        "majorCategory": "技術要素",
+        "middleCategory": "セキュリティ"
+      },
       "official": {
         "provider": "ipa",
         "examType": "it_passport",
@@ -7862,15 +7171,6 @@
           "correctChoice": "C"
         },
         "retrievedAt": "2026-07-26"
-      },
-      "contentHash": "sha256:273ebec2b7f2213d121b8a712a5bc7c2a1d16207f91f98259196dd529ea1764b",
-      "reviewedAt": "2026-07-26T00:00:00.000Z",
-      "reviewedBy": "claude-code:two-pass-explanation-review",
-      "syllabusNode": {
-        "itemId": "ipa-62",
-        "field": "technology",
-        "majorCategory": "技術要素",
-        "middleCategory": "セキュリティ"
       }
     }
   ]

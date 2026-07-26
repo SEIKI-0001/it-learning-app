@@ -2,13 +2,17 @@
 // （data/question-bank 配下の JSON を画面・API から直接 import しないこと）
 
 export {
+  OFFICIAL_EXAM_QUESTION_COUNT,
   QuestionBankError,
   getAllQuestions,
+  getPlayableOfficialExamYears,
+  getPublishedOfficialQuestionsByYear,
   getPublishedQuestions,
   getQuestionById,
   getQuestionsByOrigin,
   getQuestionsByStatus,
   getQuestionsByTopic,
+  isPlayableOfficialExamYear,
 } from "@/lib/questionBank/loader";
 
 export {

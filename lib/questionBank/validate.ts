@@ -222,10 +222,51 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
     if (!q.reviewedBy) {
       add("published-reviewed-by", "published の問題には reviewedBy が必要です。");
     }
+
+    // 「解説を監査した」と主張する状態なので、書きかけの痕跡を残さない。
+    for (const pattern of EXPLANATION_PLACEHOLDER_PATTERNS) {
+      if (pattern.test(q.explanation)) {
+        add(
+          "explanation-placeholder",
+          `解説が未完成のように見えます（${pattern} に一致）。published にする前に仕上げてください。`,
+        );
+      }
+    }
+    // 独自解説を「公式の解説」と誤認させない（出典表示の正確さに関わる）。
+    for (const pattern of EXPLANATION_CLAIMS_OFFICIAL_PATTERNS) {
+      if (pattern.test(q.explanation)) {
+        add(
+          "explanation-claims-official",
+          `解説が公式解説だと誤認させる表現を含みます（${pattern} に一致）。`,
+        );
+      }
+    }
   }
 
   return issues;
 }
+
+/**
+ * 未完成の解説を published に通さないための検出パターン。
+ * 日常語の部分一致は使わない（「発想を出し切った後で行う」のような正当な本文を
+ * 誤検知すると、検証を無視する習慣がついてしまう）。
+ */
+export const EXPLANATION_PLACEHOLDER_PATTERNS: RegExp[] = [
+  /TODO/i,
+  /FIXME/i,
+  /\bWIP\b/i,
+  /後で(書く|埋める|追記)/,
+  /(仮|ダミー|サンプル|暫定)の?(解説|文|テキスト)/,
+  /未(作成|記入|定)/,
+  /あとで/,
+];
+
+/** 独自解説を公式解説だと誤認させる表現。 */
+export const EXPLANATION_CLAIMS_OFFICIAL_PATTERNS: RegExp[] = [
+  /公式解説/,
+  /公式の解説/,
+  /IPAの解説/,
+];
 
 /** 問題集合全体を検証する（重複IDを含む）。 */
 export function validateQuestions(questions: QuestionRecord[]): QuestionBankIssue[] {
@@ -241,6 +282,27 @@ export function validateQuestions(questions: QuestionRecord[]): QuestionBankIssu
       });
     }
     seen.add(q.id);
+  }
+
+  // 同一文章の大量流用の検出。
+  // 1問ずつ見ても分からないので、集合全体で突き合わせる。
+  // 対象は published のみ（draft の空解説どうしを重複扱いしない）。
+  const explanationOwner = new Map<string, string>();
+  for (const q of questions) {
+    if (q.status !== "published") continue;
+    const text = q.explanation.trim();
+    if (text === "") continue;
+
+    const firstOwner = explanationOwner.get(text);
+    if (firstOwner !== undefined) {
+      issues.push({
+        questionId: q.id,
+        rule: "explanation-duplicate",
+        message: `解説の本文が "${firstOwner}" と完全に同一です。問題ごとに書き分けてください。`,
+      });
+    } else {
+      explanationOwner.set(text, q.id);
+    }
   }
 
   for (const q of questions) {
