@@ -15,6 +15,7 @@
     "validate:syllabus": "vitest run test/syllabus.test.ts",
     "validate:questions": "vitest run test/questionBank.test.ts",
     "questions:migrate": "node scripts/question-bank/migrate-exam-level.mjs",
+    "questions:import:ipa:2026": "node scripts/question-bank/import-ipa-it-passport-2026.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "richmenu:preview": "node scripts/richmenu/richmenu-image.mjs",
