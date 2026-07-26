@@ -62,6 +62,20 @@ export const MOCHIT_EVENT_REACTION_MS: Record<MochitEvent, number> = {
 // dev/preview で `event` prop として渡す形。id を変えると同種イベントを再発火できる。
 export type MochitEventSignal = { type: MochitEvent; id: number };
 
+export function getMochitCompletionEvent({
+  checkpointCleared,
+  correct,
+  total,
+}: {
+  checkpointCleared: boolean;
+  correct: number;
+  total: number;
+}): MochitEvent {
+  if (checkpointCleared) return "checkpointClear";
+  if (correct === total) return "allCorrect";
+  return "taskComplete";
+}
+
 // 連続入力時のルール（キューは持たない）:
 //   - 同優先度以上の新イベント → 「置換」: 進行中の反応を打ち切り新しい反応を開始
 //   - 低優先度の新イベント → 「無視」: 破棄され、後で再生されることもない

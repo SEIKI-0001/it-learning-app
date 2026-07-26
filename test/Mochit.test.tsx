@@ -119,14 +119,51 @@ describe("Mochit (レンダラー選択)", () => {
   });
 
   it("fires the mapped state-machine trigger for a semantic event and drops lower-priority ones", async () => {
-    const { rerender } = render(<Mochit state="normal" rendererOverride="rive" event={null} />);
+    const { container, rerender } = render(<Mochit state="normal" rendererOverride="rive" event={null} />);
     await screen.findByTestId("mochit-rive");
     rerender(<Mochit state="normal" rendererOverride="rive" event={{ type: "checkpointClear", id: 1 }} />);
     await waitFor(() => {
       expect(firedTriggers.current).toContain("triggerCheckpointClear");
     });
+    expect(container.querySelector(".mochit")).toHaveAttribute(
+      "data-active-event",
+      "checkpointClear",
+    );
     // 高優先度反応中の低優先度イベントは破棄される
     rerender(<Mochit state="normal" rendererOverride="rive" event={{ type: "tap", id: 2 }} />);
     expect(firedTriggers.current).not.toContain("triggerTap");
+    expect(container.querySelector(".mochit")).toHaveAttribute(
+      "data-active-event",
+      "checkpointClear",
+    );
+  });
+
+  it("replays the same semantic event when the signal id changes", async () => {
+    const { rerender } = render(
+      <Mochit
+        state="normal"
+        rendererOverride="rive"
+        event={{ type: "correct", id: 10 }}
+      />,
+    );
+    await screen.findByTestId("mochit-rive");
+    await waitFor(() => {
+      expect(firedTriggers.current).toEqual(["triggerCorrect"]);
+    });
+
+    rerender(
+      <Mochit
+        state="normal"
+        rendererOverride="rive"
+        event={{ type: "correct", id: 11 }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(firedTriggers.current).toEqual([
+        "triggerCorrect",
+        "triggerCorrect",
+      ]);
+    });
   });
 });

@@ -10,6 +10,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import FloatingMochit from "@/components/mochit/FloatingMochit";
+import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import { FLOATING_MOCHIT_STORAGE_KEY } from "@/components/mochit/floatingMochitPreferences";
 
 const storageValues = new Map<string, string>();
@@ -67,6 +68,22 @@ afterEach(() => {
 });
 
 describe("FloatingMochit touch response", () => {
+  it("subscribes to learning events and keeps a higher-priority reaction over a tap", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+    const mochit = pet.querySelector(".mochit");
+
+    emitMochitEvent("checkpointClear");
+    await waitFor(() => {
+      expect(mochit).toHaveAttribute("data-active-event", "checkpointClear");
+    });
+
+    fireEvent.keyDown(pet, { key: "Enter" });
+    expect(mochit).toHaveAttribute("data-active-event", "checkpointClear");
+  });
+
   it("renders at the upper-right default and compresses on press", async () => {
     render(<FloatingMochit reducedMotion={false} />);
 
@@ -141,6 +158,47 @@ describe("FloatingMochit touch response", () => {
 });
 
 describe("FloatingMochit dragging", () => {
+  it("keeps and saves the drag position when a learning event arrives", async () => {
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", {
+      name: "モチットを触る",
+    });
+
+    fireEvent.pointerDown(pet, {
+      pointerId: 8,
+      button: 0,
+      clientX: 330,
+      clientY: 44,
+    });
+    fireEvent.pointerMove(pet, {
+      pointerId: 8,
+      clientX: 200,
+      clientY: 200,
+    });
+    expect(pet.parentElement).toHaveStyle({ left: "172px", top: "172px" });
+
+    emitMochitEvent("correct");
+    await waitFor(() => {
+      expect(pet.querySelector(".mochit")).toHaveAttribute(
+        "data-active-event",
+        "correct",
+      );
+    });
+    expect(pet.parentElement).toHaveStyle({ left: "172px", top: "172px" });
+
+    fireEvent.pointerUp(pet, {
+      pointerId: 8,
+      button: 0,
+      clientX: 200,
+      clientY: 200,
+    });
+    expect(
+      JSON.parse(
+        window.localStorage.getItem(FLOATING_MOCHIT_STORAGE_KEY)!,
+      ).position,
+    ).toEqual({ x: 172, y: 172 });
+  });
+
   it("drags, clamps, and saves without using the tap rebound", async () => {
     render(<FloatingMochit reducedMotion={false} />);
     const pet = await screen.findByRole("button", {
@@ -213,6 +271,19 @@ describe("FloatingMochit dragging", () => {
 });
 
 describe("FloatingMochit visibility menu", () => {
+  it("ignores learning events while hidden without throwing", () => {
+    window.localStorage.setItem(
+      FLOATING_MOCHIT_STORAGE_KEY,
+      JSON.stringify({ visible: false, position: { x: 120, y: 80 } }),
+    );
+    render(<FloatingMochit reducedMotion={false} />);
+
+    expect(() => emitMochitEvent("correct")).not.toThrow();
+    expect(
+      screen.queryByRole("button", { name: "モチットを触る" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("opens Hide on right-click and hides only the floating pet", async () => {
     render(<FloatingMochit reducedMotion={false} />);
     const pet = await screen.findByRole("button", {

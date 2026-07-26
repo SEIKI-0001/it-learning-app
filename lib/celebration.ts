@@ -13,6 +13,7 @@ import { getRankStatus } from "@/lib/rank";
 import { getLevelName } from "@/lib/game";
 import { getCheckpointProgress } from "@/lib/checkpoints";
 import { getBadge } from "@/lib/badges";
+import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 
 export type Celebration =
   | { kind: "xpGain"; amount: number }
@@ -75,6 +76,9 @@ export function emitCelebration(
 
   celebrations.push(...extras);
   if (celebrations.length === 0) return;
+  if (celebrations.some((celebration) => celebration.kind === "badgeEarned")) {
+    emitMochitEvent("badgeEarned");
+  }
   window.dispatchEvent(
     new CustomEvent<Celebration[]>(CELEBRATION_EVENT, { detail: celebrations }),
   );

@@ -177,7 +177,8 @@ export default function Mochit({
   // どちらの描画も準備できるまで（および両方失敗時）は WebP を土台として表示する。
   const showWebP = !(wantRive && riveReady) && !(wantSvg && svgReady);
 
-  const { dispatch, registerTriggerFirer } = useMochitController();
+  const { activeEvent, dispatch, registerTriggerFirer } =
+    useMochitController();
 
   // event propの変化をセマンティックイベントとして優先度制御付きで反映する。
   const lastEventIdRef = useRef<number | null>(null);
@@ -191,7 +192,10 @@ export default function Mochit({
   const meta = MOCHIT_STATE_META[state];
 
   return (
-    <div className={`mochit flex items-center gap-3 ${className}`}>
+    <div
+      className={`mochit flex items-center gap-3 ${className}`}
+      data-active-event={activeEvent ?? undefined}
+    >
       <div className={`relative shrink-0 ${SIZE_CLASS[size]}`}>
         {/* Rive/SVG準備完了までは必ずWebPを表示（壊れたcanvas・空SVGを見せない） */}
         {showWebP && (

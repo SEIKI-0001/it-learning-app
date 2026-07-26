@@ -1,10 +1,86 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import { subscribeMochitEvent } from "@/components/mochit/mochitEventBus";
+
+const singleQuestion = {
+  id: "reaction-question",
+  prompt: "リアクションを確認する問題",
+  choices: [
+    { key: "A" as const, text: "正解の答え" },
+    { key: "B" as const, text: "不正解の答え" },
+    { key: "C" as const, text: "別の不正解" },
+    { key: "D" as const, text: "もう一つの不正解" },
+  ],
+  correctChoice: "A" as const,
+  explanation: "解説",
+  difficulty: 1 as const,
+};
+
+afterEach(cleanup);
 
 describe("TopicQuiz", () => {
+  it("emits correct once immediately after a correct answer", () => {
+    const events: string[] = [];
+    const unsubscribe = subscribeMochitEvent((signal) =>
+      events.push(signal.type),
+    );
+    render(
+      <TopicQuiz
+        topicId="topic-1"
+        onComplete={vi.fn()}
+        questions={[singleQuestion]}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("正解の答え").closest("button")!);
+    unsubscribe();
+
+    expect(events).toEqual(["correct"]);
+  });
+
+  it("emits incorrect once immediately after an incorrect answer", () => {
+    const events: string[] = [];
+    const unsubscribe = subscribeMochitEvent((signal) =>
+      events.push(signal.type),
+    );
+    render(
+      <TopicQuiz
+        topicId="topic-1"
+        onComplete={vi.fn()}
+        questions={[singleQuestion]}
+      />,
+    );
+
+    fireEvent.click(screen.getByText("不正解の答え").closest("button")!);
+    unsubscribe();
+
+    expect(events).toEqual(["incorrect"]);
+  });
+
+  it("does not emit a second reaction for a double-clicked answer", () => {
+    const events: string[] = [];
+    const unsubscribe = subscribeMochitEvent((signal) =>
+      events.push(signal.type),
+    );
+    render(
+      <TopicQuiz
+        topicId="topic-1"
+        onComplete={vi.fn()}
+        questions={[singleQuestion]}
+      />,
+    );
+    const answer = screen.getByText("正解の答え").closest("button")!;
+
+    fireEvent.click(answer);
+    fireEvent.click(answer);
+    unsubscribe();
+
+    expect(events).toEqual(["correct"]);
+  });
+
   it("records the per-question topic for checkpoint-style mixed-topic quizzes", () => {
     const onComplete = vi.fn();
     render(
