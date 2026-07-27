@@ -2,11 +2,20 @@ import { NextResponse } from "next/server";
 import { getRequestUserId } from "@/lib/apiUser";
 import { getBillingPlan } from "@/lib/billing/constants";
 import { getStripeCustomerId } from "@/lib/billing/plan";
+import {
+  AUGUST_2026_CAMPAIGN,
+  isAugust2026BonusActive,
+  isAugust2026BonusOpen,
+} from "@/lib/campaign/august2026";
 
 export const runtime = "nodejs";
 
 /** checkout 後に戻せるアプリ内パスのホワイトリスト。 */
-const RETURN_PATHS = ["/more", "/ai-grading"] as const;
+const RETURN_PATHS = [
+  "/more",
+  "/ai-grading",
+  AUGUST_2026_CAMPAIGN.path,
+] as const;
 
 /**
  * POST /api/billing/checkout
@@ -23,7 +32,12 @@ const RETURN_PATHS = ["/more", "/ai-grading"] as const;
  * 支払い完了は /api/billing/webhook が受けてプランを反映する。
  */
 export async function POST(request: Request) {
-  let body: { userId?: string; plan?: string; returnTo?: string } = {};
+  let body: {
+    userId?: string;
+    plan?: string;
+    returnTo?: string;
+    campaign?: string;
+  } = {};
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -71,6 +85,19 @@ export async function POST(request: Request) {
   const returnTo = RETURN_PATHS.includes(body.returnTo as (typeof RETURN_PATHS)[number])
     ? (body.returnTo as string)
     : "/more";
+  const isAugustCampaignCheckout =
+    body.campaign === AUGUST_2026_CAMPAIGN.key &&
+    plan.key === AUGUST_2026_CAMPAIGN.planKey &&
+    returnTo === AUGUST_2026_CAMPAIGN.path &&
+    isAugust2026BonusActive({
+      now: new Date(),
+      bonusOpen: isAugust2026BonusOpen(
+        process.env.AUGUST_2026_BONUS_OPEN,
+      ),
+    });
+  const returnAnchor =
+    returnTo === AUGUST_2026_CAMPAIGN.path ? "purchase" : "billing";
+  const baseUrl = appUrl.replace(/\/+$/, "");
 
   const stripeCustomerId = await getStripeCustomerId(userId);
   if (plan.kind === "subscription" && stripeCustomerId) {
@@ -119,8 +146,26 @@ export async function POST(request: Request) {
   params.set("client_reference_id", userId);
   params.append("metadata[user_id]", userId);
   params.append("metadata[plan_key]", plan.key);
-  params.set("success_url", `${appUrl}${returnTo}?checkout=success#billing`);
-  params.set("cancel_url", `${appUrl}${returnTo}?checkout=cancel#billing`);
+  const successQuery = new URLSearchParams({ checkout: "success" });
+  if (isAugustCampaignCheckout) {
+    successQuery.set("campaign", AUGUST_2026_CAMPAIGN.key);
+  }
+  params.set(
+    "success_url",
+    `${baseUrl}${returnTo}?${successQuery.toString()}#${returnAnchor}`,
+  );
+  params.set(
+    "cancel_url",
+    `${baseUrl}${returnTo}?checkout=cancel#${returnAnchor}`,
+  );
+
+  if (isAugustCampaignCheckout) {
+    params.append("metadata[campaign]", AUGUST_2026_CAMPAIGN.key);
+    params.set(
+      "custom_text[submit][message]",
+      `買い切り6か月・自動更新なし。購入日を含む7日以内かつ個別相談前は全額返金。条件: ${baseUrl}/legal/tokusho`,
+    );
+  }
 
   if (plan.kind === "subscription") {
     params.set("mode", "subscription");
