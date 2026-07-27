@@ -21,9 +21,10 @@ export const runtime = "nodejs";
 // - Supabase 未設定: 503 / userId なし: 401 / body 不正: 400
 // - fire-and-forget で呼ばれる想定。保存失敗でも学習画面は止めない。
 //
-// 公式過去問（official_past）の付加情報（出所・版・年度・公式区分）は、
-// クライアントの申告を信用せず、必ず問題IDから問題バンクを引いて求める。
-// 回答履歴は後から成績や弱点分析の根拠になるため、改ざん可能な値を入れない。
+// 公式過去問（official_past）は、付加情報（出所・版・年度・公式区分）だけでなく
+// 正誤（isCorrect）とトピックもクライアントの申告を信用せず、問題IDから問題バンクを
+// 引いて求める。回答履歴は後から成績や弱点分析の根拠になるため、改ざん可能な値を
+// 入れない。問題バンクに無いID・公式でない問題・A〜D以外の回答は保存しない。
 
 const VALID_TYPES = new Set<QuestionType>([
   "topic_quiz",
@@ -34,6 +35,9 @@ const VALID_TYPES = new Set<QuestionType>([
 ]);
 
 const VALID_MODES = new Set(["practice", "exam"]);
+
+/** 公式過去問で受け付ける選択肢。これ以外（未回答は null）は保存しない。 */
+const VALID_CHOICES = new Set(["A", "B", "C", "D"]);
 
 type AttemptInput = {
   questionId?: string;
@@ -50,28 +54,89 @@ type AttemptInput = {
   attemptGroupId?: string | null;
 };
 
-/**
- * クライアントが送ってよいのは「どの問題に何を答えたか」と、
- * 問題IDからは分からない演習の文脈（モード・グループID）だけ。
- * 出所・版・年度・公式区分は問題バンクから引き直す。
- */
-function toAttemptInput(a: AttemptInput): QuestionAttemptInput {
-  const questionType = a.questionType as QuestionType;
-  const record = getQuestionById(a.questionId!);
+/** 演習の文脈（モード・グループID）は問題IDから導けないので受け取るが、値は検証する。 */
+function attemptMode(a: AttemptInput): string | null {
+  return typeof a.attemptMode === "string" && VALID_MODES.has(a.attemptMode)
+    ? a.attemptMode
+    : null;
+}
 
-  const isOfficialPast = questionType === "official_past";
-  const mode =
-    typeof a.attemptMode === "string" && VALID_MODES.has(a.attemptMode)
-      ? a.attemptMode
-      : null;
+function attemptGroupId(a: AttemptInput): string | null {
+  return typeof a.attemptGroupId === "string" && a.attemptGroupId.length > 0
+    ? a.attemptGroupId.slice(0, 100)
+    : null;
+}
+
+/**
+ * 保存する1件へ正規化する。受け付けられない attempt は null（＝捨てる）。
+ * questionId と questionType はここへ来る前に検証済み。
+ */
+function toAttemptInput(a: AttemptInput, questionId: string, questionType: QuestionType) {
+  return questionType === "official_past"
+    ? toOfficialAttempt(a, questionId)
+    : toLegacyAttempt(a, questionId, questionType);
+}
+
+/**
+ * 公式過去問。クライアントが送ってよいのは「どの問題に何を答えたか」と演習の文脈だけで、
+ * 正誤・トピック・出所・版・年度・公式区分はすべて問題バンクから決める。
+ */
+function toOfficialAttempt(
+  a: AttemptInput,
+  questionId: string,
+): QuestionAttemptInput | null {
+  const record = getQuestionById(questionId);
+  // 問題バンクに無いIDは、正誤を判定する根拠が無いので保存しない。
+  if (!record) return null;
+  // 公式過去問でない問題を official_past として送られても受け付けない
+  // （年度・公式区分の集計に、公式でない問題が混ざる）。
+  if (record.origin !== "official_past") return null;
+
+  const selectedAnswer = a.selectedAnswer ?? null;
+  if (selectedAnswer !== null && !VALID_CHOICES.has(selectedAnswer)) return null;
 
   return {
-    questionId: a.questionId!,
+    questionId,
+    questionType: "official_past",
+    topicId: record.primaryTopicId,
+    selectedAnswer,
+    // 正誤はサーバ側で判定する。クライアントの isCorrect は読まない。
+    // 未回答（null）は不正解として残す。
+    isCorrect: selectedAnswer !== null && selectedAnswer === record.correctChoice,
+    mistakeReason: a.mistakeReason ?? null,
+    timeSpentSeconds: typeof a.timeSpentSeconds === "number" ? a.timeSpentSeconds : null,
+    sourceTaskId: a.sourceTaskId ?? null,
+    answeredAt: a.answeredAt ?? null,
+    questionOrigin: record.origin,
+    questionVersion: record.version,
+    examYear: record.official?.year ?? null,
+    officialExamField: record.official?.examField ?? null,
+    attemptMode: attemptMode(a),
+    attemptGroupId: attemptGroupId(a),
+  };
+}
+
+/**
+ * 確認問題 / 過去問レベル / ミニ模試 / 模試。従来どおりクライアントの正誤を使う
+ * （これらは問題バンクに正答を持たない出題経路を含むため、挙動を変えない）。
+ */
+function toLegacyAttempt(
+  a: AttemptInput,
+  questionId: string,
+  questionType: QuestionType,
+): QuestionAttemptInput | null {
+  if (typeof a.topicId !== "string" || a.topicId.length === 0) return null;
+  if (typeof a.isCorrect !== "boolean") return null;
+
+  const record = getQuestionById(questionId);
+
+  return {
+    questionId,
     questionType,
     // 復習導線に使う値なので、問題バンクに実体があればそちらを正とする。
-    topicId: record?.primaryTopicId ?? a.topicId!,
+    topicId: record?.primaryTopicId ?? a.topicId,
     selectedAnswer: a.selectedAnswer ?? null,
-    isCorrect: a.isCorrect!,
+    isCorrect: a.isCorrect,
     mistakeReason: a.mistakeReason ?? null,
     timeSpentSeconds: typeof a.timeSpentSeconds === "number" ? a.timeSpentSeconds : null,
     sourceTaskId: a.sourceTaskId ?? null,
@@ -81,12 +146,9 @@ function toAttemptInput(a: AttemptInput): QuestionAttemptInput {
     questionVersion: record?.version ?? null,
     examYear: record?.official?.year ?? null,
     officialExamField: record?.official?.examField ?? null,
-    // モードとグループIDは問題IDから導けないので受け取るが、値は検証する。
-    attemptMode: isOfficialPast ? mode : null,
-    attemptGroupId:
-      isOfficialPast && typeof a.attemptGroupId === "string" && a.attemptGroupId.length > 0
-        ? a.attemptGroupId.slice(0, 100)
-        : null,
+    // モード・グループIDは公式過去問の年度別演習だけが持つ文脈。
+    attemptMode: null,
+    attemptGroupId: null,
   };
 }
 
@@ -108,16 +170,13 @@ export async function POST(request: Request) {
 
   const attempts = Array.isArray(body.attempts) ? body.attempts : [];
   const inputs = attempts
-    .filter(
-      (a): a is AttemptInput =>
-        typeof a?.questionId === "string" &&
-        a.questionId.length > 0 &&
-        typeof a?.topicId === "string" &&
-        a.topicId.length > 0 &&
-        typeof a?.isCorrect === "boolean" &&
-        VALID_TYPES.has(a.questionType as QuestionType),
-    )
-    .map(toAttemptInput);
+    .map((a): QuestionAttemptInput | null => {
+      if (typeof a?.questionId !== "string" || a.questionId.length === 0) return null;
+      const questionType = a.questionType as QuestionType;
+      if (!VALID_TYPES.has(questionType)) return null;
+      return toAttemptInput(a, a.questionId, questionType);
+    })
+    .filter((a): a is QuestionAttemptInput => a !== null);
 
   if (inputs.length === 0) {
     return NextResponse.json({ ok: false, error: "no valid attempts" }, { status: 400 });

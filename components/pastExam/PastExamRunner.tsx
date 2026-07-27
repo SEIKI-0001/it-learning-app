@@ -209,7 +209,12 @@ function ModeSelect({
       <ModeCard
         title="練習モード"
         description={`公式の並びどおりに${total}問を解きます。1問ごとに正誤と解説を確認でき、前後の問題へ自由に移動できます。制限時間はありません。`}
-        points={["回答するとすぐ解説が出る", "制限時間なし", "途中でやめても再開できる"]}
+        points={[
+          "回答するとすぐ解説が出る",
+          "回答は最初の1回で確定する",
+          "制限時間なし",
+          "途中でやめても再開できる",
+        ]}
         resumable={resumable.practice}
         onStart={() => onStart("practice")}
         onRestart={() => onRestart("practice")}
@@ -295,6 +300,16 @@ function QuestionStage({
   // 練習モードでは、回答済みの問題に戻ったときも解説を出す。
   const revealAnswer = !isExam && selected !== null;
 
+  // 練習モードは最初に選んだ回答で確定する。正答と解説を見てから選び直せると、
+  // 誤答を正答に付け替えられてしまい、回答履歴が実力を表さなくなるため。
+  // 本番モードは採点までいつでも選び直せる（採点前は正答が見えないので問題ない）。
+  const answerLocked = !isExam && selected !== null;
+
+  // 同一セッションで保存済みの問題。回答の確定は上の answerLocked で足りるが、
+  // 再描画前に連打された場合まで含めて「1問1回」を守るための保険。
+  const savedQuestionsRef = useRef<Set<string>>(new Set());
+  const saveKey = `${session.sessionId}:${question.questionNumber}`;
+
   // 1問あたりの所要時間を測る基準。問題を切り替えたら測り直す。
   // Date.now() はレンダリング中に呼べない（純粋でない）ので、初期値は 0 にして
   // マウント後の effect で入れる。0 のまま回答された場合は下で経過を捨てる。
@@ -308,6 +323,9 @@ function QuestionStage({
   ).length;
 
   const handleSelect = (key: ChoiceKey) => {
+    // UI 側でも選択肢を disabled にしているが、表示に依らずここでも弾く。
+    if (answerLocked || (!isExam && savedQuestionsRef.current.has(saveKey))) return;
+
     const now = Date.now();
     // effect が走る前に回答された場合（enteredAt が 0）は、経過時間を 0 とする。
     const elapsed = enteredAt.current === 0 ? 0 : (now - enteredAt.current) / 1000;
@@ -315,10 +333,11 @@ function QuestionStage({
     const next = withAnswer(session, question.questionNumber, key, elapsed);
     onChange(next);
 
-    // 練習モードは1問ごとに保存する。
+    // 練習モードは1問ごとに保存する（回答は確定するので1問1回だけ送る）。
     if (!isExam) {
       const saved = next.answers[question.questionNumber];
       if (saved) {
+        savedQuestionsRef.current.add(saveKey);
         saveSingleAttempt({
           question,
           answer: saved,
@@ -350,6 +369,7 @@ function QuestionStage({
         selected={selected}
         onSelect={handleSelect}
         revealAnswer={revealAnswer}
+        disabled={answerLocked}
       />
 
       <nav className="flex items-center justify-between gap-2" aria-label="問題の移動">

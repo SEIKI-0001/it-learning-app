@@ -5,8 +5,11 @@
 // 方針:
 //   - fire-and-forget。保存に失敗しても画面とローカルの結果は維持する
 //     （採点結果は localStorage とメモリ上にあるので、DBが無くても学習は成立する）。
-//   - 練習モードは1問ごと、本番モードは採点時にまとめて送る。
+//   - 練習モードは1問ごと（回答は最初の1回で確定するので再送しない）、
+//     本番モードは採点時にまとめて送る。
 //   - 出所・版・年度・公式区分は送らない。サーバ側が問題IDから解決する。
+//   - isCorrect も送るが、サーバ側は問題バンクの正答で計算し直す（この値は使わない）。
+//     画面に出す正誤は gradePastExam の結果であって、この値ではない。
 
 import { getUserId } from "@/lib/userSession";
 import type { PastExamMode, PastExamAnswer } from "@/types/pastExam";

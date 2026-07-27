@@ -55,6 +55,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/** 保存APIへ送られた attempt を、呼び出し順に平坦化して取り出す。 */
+function savedAttempts(): Array<Record<string, unknown>> {
+  const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  return fetchMock.mock.calls
+    .filter(([url]) => url === "/api/question-attempts/save")
+    .flatMap(([, init]) => JSON.parse((init as RequestInit).body as string).attempts);
+}
+
 const EXPLANATION_1 = "これは問1の独自解説です。正答の理由をここで説明します。";
 const EXPLANATION_2 = "これは問2の独自解説です。誤答の理由もここで説明します。";
 
@@ -215,6 +223,85 @@ describe("練習モード", () => {
     expect(screen.queryByRole("timer")).not.toBeInTheDocument();
   });
 
+  it("一度回答したら別の選択肢へ変更できない", () => {
+    renderRunner();
+    startMode("練習モード");
+
+    // 問1の正答は D。まず誤答の A を選ぶ。
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    expect(screen.getByText(/不正解.*正答: エ/)).toBeInTheDocument();
+
+    // 正答が見えた後に正答の D をクリックしても、回答は A のまま動かない。
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+
+    expect(screen.getByText(/不正解.*正答: エ/)).toBeInTheDocument();
+    expect(screen.queryByText("正解")).not.toBeInTheDocument();
+
+    const saved = [...storageValues.entries()].find(([key]) =>
+      key.startsWith("fequest:pastExam"),
+    );
+    expect(JSON.parse(saved![1]).answers[1].selected).toBe("A");
+  });
+
+  it("回答後は全選択肢が disabled になる", () => {
+    renderRunner();
+    startMode("練習モード");
+
+    for (const text of ["選択肢アの本文", "選択肢イの本文", "選択肢ウの本文", "選択肢エの本文"]) {
+      expect(screen.getByText(text).closest("button")).not.toBeDisabled();
+    }
+
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+
+    for (const text of ["選択肢アの本文", "選択肢イの本文", "選択肢ウの本文", "選択肢エの本文"]) {
+      expect(screen.getByText(text).closest("button")).toBeDisabled();
+    }
+  });
+
+  it("問題を移動して戻ってきても回答は固定されたまま", () => {
+    renderRunner();
+    startMode("練習モード");
+
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "次の問題" }));
+    expect(screen.getByText("問2の問題文")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "前の問題" }));
+
+    // 戻っても解説が出たまま、選択肢は disabled のまま。
+    expect(screen.getByText(EXPLANATION_1)).toBeInTheDocument();
+    expect(screen.getByText("選択肢エの本文").closest("button")).toBeDisabled();
+
+    // 戻った先で正答をクリックしても変わらない。
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    expect(screen.getByText(/不正解.*正答: エ/)).toBeInTheDocument();
+  });
+
+  it("同じ問題の保存リクエストは1回だけ送る", () => {
+    renderRunner();
+    startMode("練習モード");
+
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    // 変更しようとしても、移動して戻ってから押しても、追加で送らない。
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "次の問題" }));
+    fireEvent.click(screen.getByRole("button", { name: "前の問題" }));
+    fireEvent.click(screen.getByText("選択肢イの本文"));
+
+    expect(savedAttempts()).toHaveLength(1);
+    expect(savedAttempts()[0]).toMatchObject({ questionId: "q1", selectedAnswer: "A" });
+  });
+
+  it("別の問題に答えればその問題ぶんは保存される", () => {
+    renderRunner();
+    startMode("練習モード");
+
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "次の問題" }));
+    fireEvent.click(screen.getByText("2のアの本文"));
+
+    expect(savedAttempts().map((a) => a.questionId)).toEqual(["q1", "q2"]);
+  });
+
   it("回答した内容は途中状態として保存される", () => {
     renderRunner();
     startMode("練習モード");
@@ -246,6 +333,50 @@ describe("本番モード", () => {
     expect(screen.queryByText("解説（本サービス独自）")).not.toBeInTheDocument();
     expect(screen.queryByText(/正答:/)).not.toBeInTheDocument();
     expect(screen.queryByText("正解")).not.toBeInTheDocument();
+  });
+
+  it("採点前は回答を変更できる（練習モードのような確定はしない）", () => {
+    renderRunner();
+    startMode("本番モード");
+
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    // 練習モードと違い、選択肢は押せるままであること。
+    expect(screen.getByText("選択肢エの本文").closest("button")).not.toBeDisabled();
+
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+
+    const saved = [...storageValues.entries()].find(([key]) =>
+      key.startsWith("fequest:pastExam"),
+    );
+    expect(JSON.parse(saved![1]).answers[1].selected).toBe("D");
+
+    // 変更した後も、採点前は正答・解説を出さない。
+    expect(screen.queryByText(EXPLANATION_1)).not.toBeInTheDocument();
+    expect(screen.queryByText("正解")).not.toBeInTheDocument();
+  });
+
+  it("採点するまで保存APIへ送らない（1問ごとの送信は練習モードだけ）", () => {
+    renderRunner();
+    startMode("本番モード");
+
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+
+    expect(savedAttempts()).toHaveLength(0);
+  });
+
+  it("回答を変更して採点すると、変更後の回答で採点される", () => {
+    renderRunner();
+    startMode("本番モード");
+
+    // 問1の正答は D。まず A（誤答）を選び、D（正答）へ変更する。
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(savedAttempts()).toHaveLength(2);
+    expect(savedAttempts()[0]).toMatchObject({ questionId: "q1", selectedAnswer: "D" });
   });
 
   it("採点すると正答と解説が見えるようになる", () => {
