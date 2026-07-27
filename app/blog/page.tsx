@@ -6,11 +6,20 @@ export const metadata = createBlogListingMetadata();
 
 const promotedPosts = [
   {
+    slug: "it-passport-study-habit-2026",
+    href: "/guide/it-passport-study-habit-2026",
+    title: "ITパスポートの勉強が続かない人へ｜3日坊主を防ぐ学習設計【2026年版】",
+    description:
+      "毎日の負荷、今日やること、復習の順番を見直し、学習を再開するための7日間プランを解説します。",
+    category: "NEW：学習継続ガイド",
+    cta: "続ける学習設計を見る",
+  },
+  {
     slug: "it-passport-calculation-problems-2026",
     title: "ITパスポートの計算問題7選｜初心者向けの解き方と対策【2026年版】",
     description:
       "損益分岐点、稼働率、データ量、表計算、論理演算、期待値など、対策したい代表的な計算問題を7種類に整理します。",
-    category: "NEW：計算問題まとめ",
+    category: "計算問題まとめ",
     cta: "計算問題7選を読む",
   },
   {
