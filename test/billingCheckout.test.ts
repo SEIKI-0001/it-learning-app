@@ -186,6 +186,30 @@ describe("billing checkout safeguards", () => {
     expect(checkoutBody.has("custom_text[submit][message]")).toBe(false);
   });
 
+  it("stops campaign labeling when the bonus is manually closed without blocking purchase", async () => {
+    vi.stubEnv("AUGUST_2026_BONUS_OPEN", "false");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(stripeResponse({ url: "https://checkout.test/session" }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await POST(
+      new Request("https://example.test/api/billing/checkout", {
+        method: "POST",
+        body: JSON.stringify({
+          plan: "one_6m",
+          returnTo: "/campaign/august-2026",
+          campaign: "august_2026",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    const checkoutBody = new URLSearchParams(fetchMock.mock.calls[0][1].body);
+    expect(checkoutBody.has("metadata[campaign]")).toBe(false);
+    expect(checkoutBody.has("custom_text[submit][message]")).toBe(false);
+  });
+
   it("falls back to /more for an unapproved return path", async () => {
     const fetchMock = vi
       .fn()
