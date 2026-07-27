@@ -40,6 +40,14 @@ export default function LandingPage() {
         </div>
       </header>
 
+      <aside className="campaign-banner" aria-label="期間限定キャンペーン">
+        <p>
+          <strong>8月10日まで・先着6名</strong>
+          6か月Pro 3,480円に、20分の学習計画相談が付きます。
+        </p>
+        <a href="/campaign/august-2026">6か月Proキャンペーンを見る</a>
+      </aside>
+
       <main id="top">
         {/* ヒーロー */}
         <section className="hero">
@@ -407,6 +415,10 @@ export default function LandingPage() {
         ITパスポート学習コーチ
         <br />
         <a href={START_HREF}>ログイン / 無料登録</a>
+        {" / "}
+        <a href="/legal/tokusho">特定商取引法に基づく表示</a>
+        {" / "}
+        <a href="/privacy">プライバシーポリシー</a>
       </footer>
     </div>
   );
