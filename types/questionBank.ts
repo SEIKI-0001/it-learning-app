@@ -146,10 +146,50 @@ export type OfficialQuestionSource = {
   isModified: boolean;
   /** 実施回（例: "2023-spring" / "R5"）。年度内に複数回ある試験向け。 */
   examSession?: string;
+  /**
+   * 改変元の問題ID（origin: "modified_official" のとき必須）。
+   *
+   * 改変問題は元の公式問題と似ていて当然なので、類似度検査の block 判定から除外する。
+   * その除外を成立させるのが「どの問題を改変したか」を明示するこの値で、
+   * 未設定のまま改変問題を名乗ることは許さない（validate で検査）。
+   * 参照先は問題バンク内に実在する official_past の問題であること。
+   */
+  derivedFromQuestionId?: string;
   /** 公式公開時点の原文。取り込み時に必ず保存する。 */
   original?: OfficialQuestionOriginal;
   /** 取得日（ISO8601）。出典 URL の版を追えるようにする。 */
   retrievedAt?: string;
+};
+
+// ---------------------------------------------------------------------------
+// AI生成のメタデータ
+// ---------------------------------------------------------------------------
+
+/**
+ * AI が生成した問題の来歴（origin: "ai_generated" のとき必須）。
+ *
+ * 運用方針: 生成はアプリの実行時ではなくオフラインで行う。
+ * 手元の生成物（構造化JSON）を data/question-bank/candidates/ai-generated/ に置き、
+ * scripts/question-bank/import-candidates.mjs で取り込んで品質ゲートに通す。
+ * 本番リクエスト中に外部AIを呼ぶ経路は作らない（再現性・費用・レビュー可能性のため）。
+ */
+export type QuestionGeneration = {
+  /** 生成に使ったサービス（例: "anthropic" / "openai" / "manual-llm"）。 */
+  provider: string;
+  /** モデル名（例: "claude-opus-5"）。再現と品質の追跡に使う。 */
+  model: string;
+  /** プロンプトの版。作問方針を変えたら上げる（例: "ip-v1"）。 */
+  promptVersion: string;
+  /** 生成日時（ISO8601）。 */
+  generatedAt: string;
+  /**
+   * 作問時に参考にした / 品質比較の対象にした問題ID。
+   *
+   * 重要: これは出典ではない。「この公式問題をもとに出題した」という主張には使えない
+   * （それは modified_official + official.derivedFromQuestionId の役目）。
+   * 参照先は問題バンク内に実在すること（validate で検査）。
+   */
+  referenceQuestionIds?: string[];
 };
 
 // ---------------------------------------------------------------------------
@@ -213,9 +253,16 @@ export type QuestionRecord = {
    *
    * 注意: AI生成問題が「どの公式問題を参考にしたか」を持たせたくなっても、
    * このフィールドを流用しない。出典表示に使う値なので、参照しただけの問題を
-   * 入れると出典表記が事実と食い違う。将来 referenceQuestionIds 等を別に足す。
+   * 入れると出典表記が事実と食い違う。参照は generation.referenceQuestionIds を使う。
    */
   official?: OfficialQuestionSource;
+
+  /**
+   * AI生成の来歴。origin との対応は validate で強制する。
+   *   ai_generated … 必須（かつ status は "draft" 固定）
+   *   それ以外     … 持たない
+   */
+  generation?: QuestionGeneration;
 
   /**
    * 問題本文のハッシュ。計算対象は lib/questionBank/contentHash.ts を参照

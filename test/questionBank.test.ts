@@ -376,25 +376,46 @@ describe("公式問題の制約", () => {
     expect(getQuestionsByOrigin("modified_official")).toEqual([]);
   });
 
+  /** AI生成問題に必須の来歴。ai_generated はこれが無いと成立しない。 */
+  const generation = {
+    provider: "anthropic",
+    model: "claude-opus-5",
+    promptVersion: "ip-v1",
+    generatedAt: "2026-08-01T00:00:00.000Z",
+  } as const;
+
   // origin ごとの「正しい形」。ここが仕様表そのもの。
   const validCombinations = [
     {
       origin: "official_past",
-      official: { ...officialSource, isModified: false },
+      overrides: { official: { ...officialSource, isModified: false } },
       note: "出典必須 / isModified: false",
     },
     {
       origin: "modified_official",
-      official: { ...officialSource, isModified: true },
-      note: "出典必須 / isModified: true（改変でも出典は必要）",
+      // 改変元の明示（derivedFromQuestionId）も必須。似ていて当然な相手を
+      // 類似度検査の対象から外す根拠になるため。
+      overrides: {
+        official: {
+          ...officialSource,
+          isModified: true,
+          derivedFromQuestionId: "ipa-it-passport-2026-q001",
+        },
+      },
+      note: "出典必須 / isModified: true / 改変元必須",
     },
-    { origin: "app_original", official: undefined, note: "出典を持たない" },
-    { origin: "ai_generated", official: undefined, note: "出典を持たない" },
+    { origin: "app_original", overrides: {}, note: "出典も生成メタデータも持たない" },
+    {
+      origin: "ai_generated",
+      // 生成メタデータ必須・status は draft 固定。
+      overrides: { status: "draft", generation: { ...generation } },
+      note: "出典を持たず、生成メタデータ必須で draft",
+    },
   ] as const;
 
-  for (const { origin, official, note } of validCombinations) {
+  for (const { origin, overrides, note } of validCombinations) {
     it(`${origin} は「${note}」なら違反ゼロ`, () => {
-      const q = makeQuestion(official ? { origin, official: { ...official } } : { origin });
+      const q = makeQuestion({ origin, ...overrides } as Partial<QuestionRecord>);
       expect(formatIssues(validateQuestion(q))).toBe("");
     });
   }
@@ -500,6 +521,7 @@ describe("公式問題の制約", () => {
       official: {
         ...officialSource,
         isModified: true,
+        derivedFromQuestionId: "ipa-it-passport-2026-q001",
         original: {
           prompt: "公式公開時点の原文",
           choices: [

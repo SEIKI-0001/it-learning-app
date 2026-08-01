@@ -1,0 +1,35 @@
+{
+  "_comment": "書き方の見本。ファイル名が *.candidate.json のものは取り込み対象外です。実際の候補は example ではない名前で置いてください。",
+  "schemaVersion": 1,
+  "generation": {
+    "provider": "anthropic",
+    "model": "claude-opus-5",
+    "promptVersion": "ip-v1",
+    "generatedAt": "2026-08-01T00:00:00.000Z"
+  },
+  "questions": [
+    {
+      "id": "ai-strat-intellectual-property-001",
+      "primaryTopicId": "strat-intellectual-property",
+      "questionPattern": "knowledge",
+      "prompt": "著作権法において、プログラムの著作物が保護される対象として最も適切なものはどれか。",
+      "choices": [
+        { "key": "A", "text": "プログラムの具体的な表現" },
+        { "key": "B", "text": "プログラムが実現する解法そのもの" },
+        { "key": "C", "text": "プログラム言語の文法規則" },
+        { "key": "D", "text": "プログラム間の通信規約" }
+      ],
+      "correctChoice": "A",
+      "explanation": "著作権法が守るのは表現であって、アイデアや解法は守りません。同じ処理を実現するプログラムでも、書き方が違えばそれぞれ別の著作物になります。プログラム言語の文法規則や通信規約は、誰もが使う共通の約束事なので保護対象から明示的に除かれています。",
+      "choiceExplanations": {
+        "A": "プログラムの具体的な表現が著作物として保護されます。",
+        "B": "解法（アルゴリズム）はアイデアなので著作権では保護されません。",
+        "C": "プログラム言語そのものは著作権法で保護対象から除かれています。",
+        "D": "通信規約（プロトコル）も保護対象から除かれています。"
+      },
+      "estimatedDifficulty": 2,
+      "tags": ["知的財産権", "著作権"],
+      "referenceQuestionIds": ["ipa-it-passport-2026-q011"]
+    }
+  ]
+}

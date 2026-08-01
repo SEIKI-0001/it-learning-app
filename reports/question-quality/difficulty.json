@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "source": "fixture",
+  "metrics": [
+    {
+      "questionId": "ipa-it-passport-2026-q001",
+      "questionVersion": 2,
+      "sampleStatus": "reliable",
+      "uniqueUserCount": 120,
+      "firstAttemptCount": 120,
+      "allAttemptCount": 180,
+      "firstAttemptCorrectRate": 0.6,
+      "allAttemptCorrectRate": 0.7333,
+      "medianTimeSeconds": 63.5,
+      "p90TimeSeconds": 81,
+      "unansweredRate": 0,
+      "choiceCounts": {
+        "A": 72,
+        "B": 26,
+        "C": 20,
+        "D": 2,
+        "unanswered": 0
+      },
+      "choiceRates": {
+        "A": 0.6,
+        "B": 0.2167,
+        "C": 0.1667,
+        "D": 0.0167,
+        "unanswered": 0
+      },
+      "recommendedDifficulty": 3,
+      "anomalyFlags": [
+        "non_functioning_distractor"
+      ]
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q002",
+      "questionVersion": 2,
+      "sampleStatus": "provisional",
+      "uniqueUserCount": 45,
+      "firstAttemptCount": 45,
+      "allAttemptCount": 45,
+      "firstAttemptCorrectRate": 0.1778,
+      "allAttemptCorrectRate": 0.1778,
+      "medianTimeSeconds": 200,
+      "p90TimeSeconds": 242,
+      "unansweredRate": 0.2444,
+      "choiceCounts": {
+        "A": 8,
+        "B": 21,
+        "C": 5,
+        "D": 0,
+        "unanswered": 11
+      },
+      "choiceRates": {
+        "A": 0.1778,
+        "B": 0.4667,
+        "C": 0.1111,
+        "D": 0,
+        "unanswered": 0.2444
+      },
+      "recommendedDifficulty": 5,
+      "anomalyFlags": [
+        "too_hard",
+        "non_functioning_distractor",
+        "dominant_wrong_choice",
+        "unusually_slow",
+        "high_unanswered_rate"
+      ]
+    },
+    {
+      "questionId": "tech-security-cia-ex1",
+      "questionVersion": 1,
+      "sampleStatus": "insufficient",
+      "uniqueUserCount": 12,
+      "firstAttemptCount": 12,
+      "allAttemptCount": 16,
+      "firstAttemptCorrectRate": 1,
+      "allAttemptCorrectRate": 1,
+      "medianTimeSeconds": 5,
+      "p90TimeSeconds": 6,
+      "unansweredRate": 0,
+      "choiceCounts": {
+        "A": 12,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "unanswered": 0
+      },
+      "choiceRates": {
+        "A": 1,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "unanswered": 0
+      },
+      "recommendedDifficulty": 1,
+      "anomalyFlags": []
+    }
+  ]
+}

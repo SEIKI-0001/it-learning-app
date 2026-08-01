@@ -154,6 +154,70 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
         'origin "modified_official" は isModified: true である必要があります。',
       );
     }
+
+    // 改変元の明示。類似度検査で「元問題と似ているのは当然」として block を免除する
+    // 根拠になる値なので、改変問題を名乗るなら必ず持たせる。
+    if (q.origin === "modified_official" && !s.derivedFromQuestionId?.trim()) {
+      add(
+        "modified-official-derived-from",
+        'origin "modified_official" には official.derivedFromQuestionId（改変元の問題ID）が必要です。',
+      );
+    }
+    if (q.origin !== "modified_official" && s.derivedFromQuestionId) {
+      add(
+        "derived-from-unexpected",
+        `origin "${q.origin}" に official.derivedFromQuestionId を付けることはできません。`,
+      );
+    }
+  }
+
+  // --- AI生成のメタデータ -------------------------------------------------
+  // 生成はオフラインで行い、来歴を必ず残す。「どのモデルのどの版で作ったか」が
+  // 分からない問題を出題に混ぜない。
+  if (q.origin === "ai_generated" && !q.generation) {
+    add("generation-required", 'origin "ai_generated" には generation（生成メタデータ）が必要です。');
+  }
+  if (q.origin !== "ai_generated" && q.generation) {
+    add(
+      "generation-unexpected",
+      `origin "${q.origin}" に generation（生成メタデータ）を付けることはできません。`,
+    );
+  }
+  if (q.generation) {
+    const g = q.generation;
+    for (const [field, value] of [
+      ["provider", g.provider],
+      ["model", g.model],
+      ["promptVersion", g.promptVersion],
+      ["generatedAt", g.generatedAt],
+    ] as const) {
+      if (typeof value !== "string" || value.trim() === "") {
+        add("generation-field-required", `generation.${field} が空です。`);
+      }
+    }
+    if (g.generatedAt && Number.isNaN(Date.parse(g.generatedAt))) {
+      add("generation-generated-at", `generation.generatedAt が日時として解釈できません: "${g.generatedAt}"`);
+    }
+    if (g.referenceQuestionIds) {
+      if (g.referenceQuestionIds.includes(q.id)) {
+        add("generation-reference-self", "generation.referenceQuestionIds に自分自身のIDは入れられません。");
+      }
+      const seenRefs = new Set<string>();
+      for (const ref of g.referenceQuestionIds) {
+        if (seenRefs.has(ref)) {
+          add("generation-reference-duplicate", `generation.referenceQuestionIds が重複しています: "${ref}"`);
+        }
+        seenRefs.add(ref);
+      }
+    }
+  }
+
+  // AI生成問題は必ず draft。人手のレビューを経ずに公開状態へ上がる経路を作らない。
+  if (q.origin === "ai_generated" && q.status !== "draft") {
+    add(
+      "ai-generated-draft-only",
+      `AI生成問題は status "draft" のみ許可されます（現在: "${q.status}"）。公開はレビュー後に別の origin へ移してから行ってください。`,
+    );
   }
 
   // --- 図表 ---------------------------------------------------------------
@@ -302,6 +366,46 @@ export function validateQuestions(questions: QuestionRecord[]): QuestionBankIssu
       });
     } else {
       explanationOwner.set(text, q.id);
+    }
+  }
+
+  // 参照切れの検出。問題1件だけでは判定できないので集合全体で見る。
+  // 参照先が消えると「何をもとに作ったか」を後から追えなくなり、
+  // 類似度検査の除外根拠（改変元）も宙に浮く。
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  for (const q of questions) {
+    for (const ref of q.generation?.referenceQuestionIds ?? []) {
+      if (!byId.has(ref)) {
+        issues.push({
+          questionId: q.id,
+          rule: "generation-reference-resolvable",
+          message: `generation.referenceQuestionIds が存在しない問題ID "${ref}" を参照しています。`,
+        });
+      }
+    }
+
+    const derivedFrom = q.official?.derivedFromQuestionId;
+    if (derivedFrom) {
+      const parent = byId.get(derivedFrom);
+      if (!parent) {
+        issues.push({
+          questionId: q.id,
+          rule: "derived-from-resolvable",
+          message: `official.derivedFromQuestionId が存在しない問題ID "${derivedFrom}" を参照しています。`,
+        });
+      } else if (parent.origin !== "official_past") {
+        issues.push({
+          questionId: q.id,
+          rule: "derived-from-official-past",
+          message: `official.derivedFromQuestionId は origin "official_past" の問題を指す必要があります（"${derivedFrom}" は "${parent.origin}"）。`,
+        });
+      } else if (derivedFrom === q.id) {
+        issues.push({
+          questionId: q.id,
+          rule: "derived-from-self",
+          message: "official.derivedFromQuestionId に自分自身のIDは指定できません。",
+        });
+      }
     }
   }
 

@@ -7,7 +7,12 @@
 data/question-bank/
 ├── index.ts                       # JSON を束ねる唯一の場所
 ├── original/exam-level.json       # アプリ独自問題（146問）
-├── official/ipa/                  # 公式過去問（未収録。README 参照）
+├── official/ipa/                  # 公式過去問（令和8年度 ITパスポート 100問）
+├── explanations/                  # 公式問題に対するアプリ独自の解説（原文と分ける）
+├── sources/                       # 公式原文の転記結果（取り込みの入力）
+├── candidates/ai-generated/       # AI生成問題の候補（取り込み前。README 参照）
+├── reviews/                       # 公開前レビュー記録（1問1ファイル。README 参照）
+├── quality-baseline.json          # 既存問題に残る既知 warning（新規悪化だけを検出するため）
 └── manifests/                     # 生成時の件数・ID一覧（ドリフト検知用）
 ```
 
@@ -45,19 +50,56 @@ data/question-bank/
 
 ## origin と公式出典の対応
 
-| origin | `official`（出典情報） | `isModified` |
-|---|---|---|
-| `official_past` | **必須** | `false` |
-| `modified_official` | **必須** | `true` |
-| `app_original` | 持たない | — |
-| `ai_generated` | 持たない | — |
+| origin | `official`（出典情報） | `isModified` | `derivedFromQuestionId` | `generation` | status |
+|---|---|---|---|---|---|
+| `official_past` | **必須** | `false` | 付けない | 付けない | 制限なし |
+| `modified_official` | **必須** | `true` | **必須** | 付けない | `published` は承認記録が必要 |
+| `app_original` | 持たない | — | 付けない | 付けない | 制限なし |
+| `ai_generated` | 持たない | — | 付けない | **必須** | **`draft` 固定** |
 
 `modified_official` は公式問題を改変したものなので、**出典は必要**（非公式扱いにしない）。
+加えて `official.derivedFromQuestionId` で改変元を明示する。改変問題が元の公式問題と
+似ているのは当然なので、類似度検査の block 判定から外す必要があり、その根拠になる値。
 
-AI生成問題が「どの公式問題を参考にしたか」を持たせたくなった場合は、
+AI生成問題が「どの公式問題を参考にしたか」は `generation.referenceQuestionIds` に持たせる。
 `official` フィールドを流用しない。出典表示に使われるフィールドに
 「参照しただけの問題」を入れると、出典表記が事実と食い違うため。
-将来 `referenceQuestionIds` 等の別フィールドを追加する（今回は未実装）。
+
+## 公開前の品質検査
+
+```bash
+npm run questions:quality-report                      # 品質レポートを生成（blocker があれば失敗）
+npm run questions:quality-report -- --update-baseline # 既知 warning を固定し直す
+```
+
+出力は `reports/question-quality/latest.json` と `latest.md`。
+`npm run validate:questions` は blocker が1件でもあれば落ちる。
+
+検査の中身:
+
+- **類似度** … 外部APIを使わない決定的な検査（文字bi-gram Dice）。
+  `exact_duplicate` / `block`（0.92）/ `review_required`（0.80）/ `notice`（0.70）。
+  実装は `lib/questionQuality/similarity.ts`、閾値は `lib/questionQuality/thresholds.ts`。
+- **品質ゲート** … 選択肢の重複・正答ヒント・解説の矛盾など（`lib/questionQuality/rules.ts`）。
+  機械的に断定できるものだけが blocker で、それ以外はすべて warning。
+- **レビュー記録** … `reviews/` の承認状況（`lib/questionQuality/reviews.ts`）。
+
+既存問題に残る warning は `quality-baseline.json` に固定してある。
+検証が落ちるのは **新しく増えた warning** と blocker だけ。
+既存問題を直すときはベースラインも更新すること。
+
+## 実測難易度
+
+```bash
+npm run questions:analyze-quality      # Supabase の回答実績から算出
+npm run questions:analyze-quality -- --fixture test/fixtures/questionAttempts.sample.json
+```
+
+主指標は「同一ユーザー・同一問題・同一version の**最初の回答**」だけで作る
+（復習による正答率の上昇を難易度に混ぜないため）。
+
+結果は `question_quality_metrics` テーブルと `reports/question-quality/difficulty.{json,md}` へ。
+**`recommendedDifficulty` は推奨値であって、`estimatedDifficulty` を自動更新することはない。**
 
 ## contentHash
 
@@ -70,8 +112,10 @@ status・tags・official・レビュー情報などのメタ情報は含めな�
 ## 再生成
 
 ```bash
-npm run questions:migrate      # data/examLevelQuestions.ts から再生成
-npm run validate:questions     # 整合性検証
+npm run questions:migrate            # data/examLevelQuestions.ts から再生成
+npm run questions:import:ipa:2026    # 公式過去問（令和8年度 ITパスポート）を再生成
+npm run questions:import:candidates  # AI生成候補を取り込む（candidates/ai-generated/）
+npm run validate:questions           # 整合性検証 + 品質ゲート
 ```
 
 生成物は決定的（実行時刻を持たない）。入力が変わっていなければ

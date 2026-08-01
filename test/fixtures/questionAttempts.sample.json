@@ -1,0 +1,2414 @@
+{
+  "attempts": [
+    {
+      "attempt_id": "fixture-attempt-00001",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0000",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 81,
+      "answered_at": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00002",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0000",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 41,
+      "answered_at": "2026-07-31T00:01:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00003",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0001",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 69,
+      "answered_at": "2026-07-01T00:02:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00004",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0001",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 35,
+      "answered_at": "2026-07-31T00:03:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00005",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0002",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 61,
+      "answered_at": "2026-07-01T00:04:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00006",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0002",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 31,
+      "answered_at": "2026-07-31T00:05:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00007",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0003",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 73,
+      "answered_at": "2026-07-01T00:06:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00008",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0003",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 37,
+      "answered_at": "2026-07-31T00:07:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00009",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0004",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 27,
+      "answered_at": "2026-07-01T00:08:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00010",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0004",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 14,
+      "answered_at": "2026-07-31T00:09:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00011",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0005",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 55,
+      "answered_at": "2026-07-01T00:10:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00012",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0005",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 28,
+      "answered_at": "2026-07-31T00:11:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00013",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0006",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 62,
+      "answered_at": "2026-07-01T00:12:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00014",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0006",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 31,
+      "answered_at": "2026-07-31T00:13:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00015",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0007",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 88,
+      "answered_at": "2026-07-01T00:14:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00016",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0007",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 44,
+      "answered_at": "2026-07-31T00:15:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00017",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0008",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 72,
+      "answered_at": "2026-07-01T00:16:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00018",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0008",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 36,
+      "answered_at": "2026-07-31T00:17:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00019",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0009",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 63,
+      "answered_at": "2026-07-01T00:18:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00020",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0009",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 32,
+      "answered_at": "2026-07-31T00:19:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00021",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0010",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 50,
+      "answered_at": "2026-07-01T00:20:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00022",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0010",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 25,
+      "answered_at": "2026-07-31T00:21:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00023",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0011",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 65,
+      "answered_at": "2026-07-01T00:22:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00024",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0011",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 33,
+      "answered_at": "2026-07-31T00:23:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00025",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0012",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 34,
+      "answered_at": "2026-07-01T00:24:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00026",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0012",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 17,
+      "answered_at": "2026-07-31T00:25:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00027",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0013",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 35,
+      "answered_at": "2026-07-01T00:26:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00028",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0013",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 18,
+      "answered_at": "2026-07-31T00:27:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00029",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0014",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 63,
+      "answered_at": "2026-07-01T00:28:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00030",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0014",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 32,
+      "answered_at": "2026-07-31T00:29:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00031",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0015",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 76,
+      "answered_at": "2026-07-01T00:30:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00032",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0015",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 38,
+      "answered_at": "2026-07-31T00:31:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00033",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0016",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 76,
+      "answered_at": "2026-07-01T00:32:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00034",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0016",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 38,
+      "answered_at": "2026-07-31T00:33:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00035",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0017",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 74,
+      "answered_at": "2026-07-01T00:34:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00036",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0017",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 37,
+      "answered_at": "2026-07-31T00:35:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00037",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0018",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 35,
+      "answered_at": "2026-07-01T00:36:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00038",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0018",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 18,
+      "answered_at": "2026-07-31T00:37:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00039",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0019",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 75,
+      "answered_at": "2026-07-01T00:38:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00040",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0019",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 38,
+      "answered_at": "2026-07-31T00:39:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00041",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0020",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 33,
+      "answered_at": "2026-07-01T00:40:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00042",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0020",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 17,
+      "answered_at": "2026-07-31T00:41:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00043",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0021",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 84,
+      "answered_at": "2026-07-01T00:42:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00044",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0021",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 42,
+      "answered_at": "2026-07-31T00:43:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00045",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0022",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 30,
+      "answered_at": "2026-07-01T00:44:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00046",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0022",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 15,
+      "answered_at": "2026-07-31T00:45:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00047",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0023",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 33,
+      "answered_at": "2026-07-01T00:46:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00048",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0023",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 17,
+      "answered_at": "2026-07-31T00:47:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00049",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0024",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 46,
+      "answered_at": "2026-07-01T00:48:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00050",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0024",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 23,
+      "answered_at": "2026-07-31T00:49:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00051",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0025",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 81,
+      "answered_at": "2026-07-01T00:50:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00052",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0025",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 41,
+      "answered_at": "2026-07-31T00:51:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00053",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0026",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "D",
+      "is_correct": false,
+      "time_spent_seconds": 48,
+      "answered_at": "2026-07-01T00:52:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00054",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0026",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 24,
+      "answered_at": "2026-07-31T00:53:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00055",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0027",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 90,
+      "answered_at": "2026-07-01T00:54:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00056",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0027",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 45,
+      "answered_at": "2026-07-31T00:55:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00057",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0028",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 48,
+      "answered_at": "2026-07-01T00:56:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00058",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0028",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 24,
+      "answered_at": "2026-07-31T00:57:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00059",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0029",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 73,
+      "answered_at": "2026-07-01T00:58:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00060",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0029",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 37,
+      "answered_at": "2026-07-31T00:59:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00061",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0030",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 80,
+      "answered_at": "2026-07-01T01:00:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00062",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0030",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 40,
+      "answered_at": "2026-07-31T01:01:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00063",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0031",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 77,
+      "answered_at": "2026-07-01T01:02:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00064",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0031",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 39,
+      "answered_at": "2026-07-31T01:03:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00065",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0032",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 72,
+      "answered_at": "2026-07-01T01:04:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00066",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0032",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 36,
+      "answered_at": "2026-07-31T01:05:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00067",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0033",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 24,
+      "answered_at": "2026-07-01T01:06:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00068",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0033",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 12,
+      "answered_at": "2026-07-31T01:07:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00069",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0034",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 77,
+      "answered_at": "2026-07-01T01:08:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00070",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0034",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 39,
+      "answered_at": "2026-07-31T01:09:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00071",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0035",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 73,
+      "answered_at": "2026-07-01T01:10:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00072",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0035",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 37,
+      "answered_at": "2026-07-31T01:11:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00073",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0036",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 63,
+      "answered_at": "2026-07-01T01:12:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00074",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0036",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 32,
+      "answered_at": "2026-07-31T01:13:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00075",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0037",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 58,
+      "answered_at": "2026-07-01T01:14:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00076",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0037",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 29,
+      "answered_at": "2026-07-31T01:15:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00077",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0038",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 75,
+      "answered_at": "2026-07-01T01:16:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00078",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0038",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 38,
+      "answered_at": "2026-07-31T01:17:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00079",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0039",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 68,
+      "answered_at": "2026-07-01T01:18:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00080",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0039",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 34,
+      "answered_at": "2026-07-31T01:19:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00081",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0040",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 55,
+      "answered_at": "2026-07-01T01:20:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00082",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0040",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 28,
+      "answered_at": "2026-07-31T01:21:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00083",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0041",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 68,
+      "answered_at": "2026-07-01T01:22:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00084",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0041",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 34,
+      "answered_at": "2026-07-31T01:23:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00085",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0042",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 62,
+      "answered_at": "2026-07-01T01:24:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00086",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0042",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 31,
+      "answered_at": "2026-07-31T01:25:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00087",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0043",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 39,
+      "answered_at": "2026-07-01T01:26:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00088",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0043",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 20,
+      "answered_at": "2026-07-31T01:27:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00089",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0044",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 84,
+      "answered_at": "2026-07-01T01:28:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00090",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0044",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 42,
+      "answered_at": "2026-07-31T01:29:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00091",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0045",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 46,
+      "answered_at": "2026-07-01T01:30:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00092",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0045",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 23,
+      "answered_at": "2026-07-31T01:31:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00093",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0046",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 53,
+      "answered_at": "2026-07-01T01:32:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00094",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0046",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 27,
+      "answered_at": "2026-07-31T01:33:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00095",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0047",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 69,
+      "answered_at": "2026-07-01T01:34:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00096",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0047",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 35,
+      "answered_at": "2026-07-31T01:35:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00097",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0048",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 79,
+      "answered_at": "2026-07-01T01:36:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00098",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0048",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 40,
+      "answered_at": "2026-07-31T01:37:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00099",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0049",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 56,
+      "answered_at": "2026-07-01T01:38:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00100",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0049",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 28,
+      "answered_at": "2026-07-31T01:39:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00101",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0050",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 54,
+      "answered_at": "2026-07-01T01:40:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00102",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0050",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 27,
+      "answered_at": "2026-07-31T01:41:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00103",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0051",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 45,
+      "answered_at": "2026-07-01T01:42:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00104",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0051",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 23,
+      "answered_at": "2026-07-31T01:43:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00105",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0052",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 36,
+      "answered_at": "2026-07-01T01:44:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00106",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0052",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 18,
+      "answered_at": "2026-07-31T01:45:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00107",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0053",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 33,
+      "answered_at": "2026-07-01T01:46:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00108",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0053",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 17,
+      "answered_at": "2026-07-31T01:47:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00109",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0054",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 64,
+      "answered_at": "2026-07-01T01:48:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00110",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0054",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 32,
+      "answered_at": "2026-07-31T01:49:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00111",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0055",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 68,
+      "answered_at": "2026-07-01T01:50:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00112",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0055",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 34,
+      "answered_at": "2026-07-31T01:51:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00113",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0056",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 27,
+      "answered_at": "2026-07-01T01:52:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00114",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0056",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 14,
+      "answered_at": "2026-07-31T01:53:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00115",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0057",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 45,
+      "answered_at": "2026-07-01T01:54:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00116",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0057",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 23,
+      "answered_at": "2026-07-31T01:55:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00117",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0058",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 71,
+      "answered_at": "2026-07-01T01:56:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00118",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0058",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 36,
+      "answered_at": "2026-07-31T01:57:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00119",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0059",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 25,
+      "answered_at": "2026-07-01T01:58:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00120",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0059",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 13,
+      "answered_at": "2026-07-31T01:59:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00121",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0060",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 23,
+      "answered_at": "2026-07-01T02:00:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00122",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0061",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 48,
+      "answered_at": "2026-07-01T02:01:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00123",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0062",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 37,
+      "answered_at": "2026-07-01T02:02:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00124",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0063",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 66,
+      "answered_at": "2026-07-01T02:03:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00125",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0064",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 42,
+      "answered_at": "2026-07-01T02:04:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00126",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0065",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 26,
+      "answered_at": "2026-07-01T02:05:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00127",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0066",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 25,
+      "answered_at": "2026-07-01T02:06:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00128",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0067",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 64,
+      "answered_at": "2026-07-01T02:07:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00129",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0068",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 31,
+      "answered_at": "2026-07-01T02:08:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00130",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0069",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 55,
+      "answered_at": "2026-07-01T02:09:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00131",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0070",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 43,
+      "answered_at": "2026-07-01T02:10:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00132",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0071",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 72,
+      "answered_at": "2026-07-01T02:11:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00133",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0072",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 71,
+      "answered_at": "2026-07-01T02:12:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00134",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0073",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 23,
+      "answered_at": "2026-07-01T02:13:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00135",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0074",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 66,
+      "answered_at": "2026-07-01T02:14:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00136",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0075",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 51,
+      "answered_at": "2026-07-01T02:15:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00137",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0076",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 70,
+      "answered_at": "2026-07-01T02:16:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00138",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0077",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 43,
+      "answered_at": "2026-07-01T02:17:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00139",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0078",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 51,
+      "answered_at": "2026-07-01T02:18:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00140",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0079",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 74,
+      "answered_at": "2026-07-01T02:19:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00141",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0080",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 70,
+      "answered_at": "2026-07-01T02:20:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00142",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0081",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 75,
+      "answered_at": "2026-07-01T02:21:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00143",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0082",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 36,
+      "answered_at": "2026-07-01T02:22:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00144",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0083",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 69,
+      "answered_at": "2026-07-01T02:23:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00145",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0084",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 72,
+      "answered_at": "2026-07-01T02:24:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00146",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0085",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 68,
+      "answered_at": "2026-07-01T02:25:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00147",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0086",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 80,
+      "answered_at": "2026-07-01T02:26:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00148",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0087",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 46,
+      "answered_at": "2026-07-01T02:27:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00149",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0088",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 23,
+      "answered_at": "2026-07-01T02:28:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00150",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0089",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 86,
+      "answered_at": "2026-07-01T02:29:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00151",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0090",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 84,
+      "answered_at": "2026-07-01T02:30:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00152",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0091",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 86,
+      "answered_at": "2026-07-01T02:31:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00153",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0092",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 22,
+      "answered_at": "2026-07-01T02:32:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00154",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0093",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 72,
+      "answered_at": "2026-07-01T02:33:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00155",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0094",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "D",
+      "is_correct": false,
+      "time_spent_seconds": 24,
+      "answered_at": "2026-07-01T02:34:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00156",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0095",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 56,
+      "answered_at": "2026-07-01T02:35:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00157",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0096",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 72,
+      "answered_at": "2026-07-01T02:36:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00158",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0097",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 85,
+      "answered_at": "2026-07-01T02:37:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00159",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0098",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 76,
+      "answered_at": "2026-07-01T02:38:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00160",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0099",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 58,
+      "answered_at": "2026-07-01T02:39:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00161",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0100",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 64,
+      "answered_at": "2026-07-01T02:40:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00162",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0101",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 73,
+      "answered_at": "2026-07-01T02:41:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00163",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0102",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 70,
+      "answered_at": "2026-07-01T02:42:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00164",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0103",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 62,
+      "answered_at": "2026-07-01T02:43:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00165",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0104",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 63,
+      "answered_at": "2026-07-01T02:44:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00166",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0105",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 83,
+      "answered_at": "2026-07-01T02:45:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00167",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0106",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 22,
+      "answered_at": "2026-07-01T02:46:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00168",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0107",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 67,
+      "answered_at": "2026-07-01T02:47:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00169",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0108",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 33,
+      "answered_at": "2026-07-01T02:48:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00170",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0109",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 85,
+      "answered_at": "2026-07-01T02:49:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00171",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0110",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 79,
+      "answered_at": "2026-07-01T02:50:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00172",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0111",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 65,
+      "answered_at": "2026-07-01T02:51:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00173",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0112",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 35,
+      "answered_at": "2026-07-01T02:52:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00174",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0113",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 80,
+      "answered_at": "2026-07-01T02:53:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00175",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0114",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 70,
+      "answered_at": "2026-07-01T02:54:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00176",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0115",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 89,
+      "answered_at": "2026-07-01T02:55:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00177",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0116",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 41,
+      "answered_at": "2026-07-01T02:56:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00178",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0117",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 45,
+      "answered_at": "2026-07-01T02:57:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00179",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0118",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 74,
+      "answered_at": "2026-07-01T02:58:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00180",
+      "user_id": "fixture-user-ipa-it-passport-2026-q001-0119",
+      "question_id": "ipa-it-passport-2026-q001",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 56,
+      "answered_at": "2026-07-01T02:59:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00181",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0000",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 200,
+      "answered_at": "2026-07-01T03:00:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00182",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0001",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 219,
+      "answered_at": "2026-07-01T03:01:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00183",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0002",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 164,
+      "answered_at": "2026-07-01T03:02:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00184",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0003",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 166,
+      "answered_at": "2026-07-01T03:03:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00185",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0004",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 206,
+      "answered_at": "2026-07-01T03:04:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00186",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0005",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 192,
+      "answered_at": "2026-07-01T03:05:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00187",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0006",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 248,
+      "answered_at": "2026-07-01T03:06:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00188",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0007",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 160,
+      "answered_at": "2026-07-01T03:07:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00189",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0008",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 191,
+      "answered_at": "2026-07-01T03:08:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00190",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0009",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 186,
+      "answered_at": "2026-07-01T03:09:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00191",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0010",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 199,
+      "answered_at": "2026-07-01T03:10:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00192",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0011",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 223,
+      "answered_at": "2026-07-01T03:11:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00193",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0012",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 156,
+      "answered_at": "2026-07-01T03:12:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00194",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0013",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 154,
+      "answered_at": "2026-07-01T03:13:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00195",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0014",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 210,
+      "answered_at": "2026-07-01T03:14:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00196",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0015",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 155,
+      "answered_at": "2026-07-01T03:15:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00197",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0016",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 189,
+      "answered_at": "2026-07-01T03:16:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00198",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0017",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 196,
+      "answered_at": "2026-07-01T03:17:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00199",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0018",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 159,
+      "answered_at": "2026-07-01T03:18:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00200",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0019",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 154,
+      "answered_at": "2026-07-01T03:19:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00201",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0020",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 215,
+      "answered_at": "2026-07-01T03:20:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00202",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0021",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 152,
+      "answered_at": "2026-07-01T03:21:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00203",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0022",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 205,
+      "answered_at": "2026-07-01T03:22:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00204",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0023",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 244,
+      "answered_at": "2026-07-01T03:23:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00205",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0024",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 229,
+      "answered_at": "2026-07-01T03:24:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00206",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0025",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 207,
+      "answered_at": "2026-07-01T03:25:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00207",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0026",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 197,
+      "answered_at": "2026-07-01T03:26:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00208",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0027",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 173,
+      "answered_at": "2026-07-01T03:27:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00209",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0028",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 179,
+      "answered_at": "2026-07-01T03:28:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00210",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0029",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 250,
+      "answered_at": "2026-07-01T03:29:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00211",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0030",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 218,
+      "answered_at": "2026-07-01T03:30:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00212",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0031",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 227,
+      "answered_at": "2026-07-01T03:31:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00213",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0032",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 205,
+      "answered_at": "2026-07-01T03:32:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00214",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0033",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 232,
+      "answered_at": "2026-07-01T03:33:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00215",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0034",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 224,
+      "answered_at": "2026-07-01T03:34:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00216",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0035",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 164,
+      "answered_at": "2026-07-01T03:35:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00217",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0036",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "C",
+      "is_correct": false,
+      "time_spent_seconds": 203,
+      "answered_at": "2026-07-01T03:36:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00218",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0037",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 236,
+      "answered_at": "2026-07-01T03:37:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00219",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0038",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 227,
+      "answered_at": "2026-07-01T03:38:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00220",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0039",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 242,
+      "answered_at": "2026-07-01T03:39:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00221",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0040",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 196,
+      "answered_at": "2026-07-01T03:40:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00222",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0041",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 177,
+      "answered_at": "2026-07-01T03:41:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00223",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0042",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 160,
+      "answered_at": "2026-07-01T03:42:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00224",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0043",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": "B",
+      "is_correct": false,
+      "time_spent_seconds": 244,
+      "answered_at": "2026-07-01T03:43:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00225",
+      "user_id": "fixture-user-ipa-it-passport-2026-q002-0044",
+      "question_id": "ipa-it-passport-2026-q002",
+      "question_version": 2,
+      "selected_answer": null,
+      "is_correct": false,
+      "time_spent_seconds": 217,
+      "answered_at": "2026-07-01T03:44:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00226",
+      "user_id": "fixture-user-tech-security-cia-ex1-0000",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 5,
+      "answered_at": "2026-07-01T03:45:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00227",
+      "user_id": "fixture-user-tech-security-cia-ex1-0000",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 3,
+      "answered_at": "2026-07-31T03:46:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00228",
+      "user_id": "fixture-user-tech-security-cia-ex1-0001",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 3,
+      "answered_at": "2026-07-01T03:47:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00229",
+      "user_id": "fixture-user-tech-security-cia-ex1-0001",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 2,
+      "answered_at": "2026-07-31T03:48:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00230",
+      "user_id": "fixture-user-tech-security-cia-ex1-0002",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 4,
+      "answered_at": "2026-07-01T03:49:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00231",
+      "user_id": "fixture-user-tech-security-cia-ex1-0002",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 2,
+      "answered_at": "2026-07-31T03:50:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00232",
+      "user_id": "fixture-user-tech-security-cia-ex1-0003",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 6,
+      "answered_at": "2026-07-01T03:51:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00233",
+      "user_id": "fixture-user-tech-security-cia-ex1-0003",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 3,
+      "answered_at": "2026-07-31T03:52:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00234",
+      "user_id": "fixture-user-tech-security-cia-ex1-0004",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 4,
+      "answered_at": "2026-07-01T03:53:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00235",
+      "user_id": "fixture-user-tech-security-cia-ex1-0005",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 4,
+      "answered_at": "2026-07-01T03:54:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00236",
+      "user_id": "fixture-user-tech-security-cia-ex1-0006",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 4,
+      "answered_at": "2026-07-01T03:55:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00237",
+      "user_id": "fixture-user-tech-security-cia-ex1-0007",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 5,
+      "answered_at": "2026-07-01T03:56:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00238",
+      "user_id": "fixture-user-tech-security-cia-ex1-0008",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 5,
+      "answered_at": "2026-07-01T03:57:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00239",
+      "user_id": "fixture-user-tech-security-cia-ex1-0009",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 6,
+      "answered_at": "2026-07-01T03:58:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00240",
+      "user_id": "fixture-user-tech-security-cia-ex1-0010",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 5,
+      "answered_at": "2026-07-01T03:59:00.000Z"
+    },
+    {
+      "attempt_id": "fixture-attempt-00241",
+      "user_id": "fixture-user-tech-security-cia-ex1-0011",
+      "question_id": "tech-security-cia-ex1",
+      "question_version": 1,
+      "selected_answer": "A",
+      "is_correct": true,
+      "time_spent_seconds": 6,
+      "answered_at": "2026-07-01T04:00:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,475 @@
+{
+  "schemaVersion": 1,
+  "summary": {
+    "questionCount": 246,
+    "blockerCount": 0,
+    "warningCount": 74,
+    "byOrigin": {
+      "official_past": 100,
+      "app_original": 146,
+      "ai_generated": 0,
+      "modified_official": 0
+    },
+    "byStatus": {
+      "draft": 146,
+      "content_verified": 0,
+      "explanation_verified": 0,
+      "published": 100,
+      "retired": 0
+    },
+    "similarityBandCounts": {
+      "exact_duplicate": 0,
+      "block": 0,
+      "review_required": 0,
+      "notice": 0,
+      "ok": 0
+    }
+  },
+  "findings": [
+    {
+      "questionId": "ipa-it-passport-2026-q003",
+      "severity": "warning",
+      "rule": "calculation-missing-unit",
+      "message": "計算問題ですが、選択肢がすべて単位のない数値で、問題文にも単位が見当たりません。何を答えるのかが曖昧です。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q007",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.889）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q039",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q040",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q040",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q049",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「常に」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q049",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q052",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q068",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.941）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q074",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q074",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q074",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q074",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q075",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と D の本文がほとんど同じです（類似度 0.964）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q084",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q086",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q086",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.875）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q086",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q086",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q091",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「常に」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q091",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q094",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「常に」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "mgmt-pm-qcd-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "mgmt-pm-qcd-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 32文字）が最長の誤答（18文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "mgmt-requirements-definition-ex1",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "mgmt-requirements-definition-ex2",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "mgmt-system-audit-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "mgmt-system-audit-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-3c-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-specificity",
+      "message": "正答（A）だけが数値を含み、誤答はいずれも含みません。具体性の差で正解が推測できます。"
+    },
+    {
+      "questionId": "strat-accounting-break-even-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-accounting-break-even-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 26文字）が最長の誤答（16文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "strat-accounting-break-even-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-specificity",
+      "message": "正答（A）だけが数値を含み、誤答はいずれも含みません。具体性の差で正解が推測できます。"
+    },
+    {
+      "questionId": "strat-business-process-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-business-process-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 34文字）が最長の誤答（18文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "strat-generative-ai-dx-ex3",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-generative-ai-dx-ex3",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-legal-compliance-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「常に」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-legal-compliance-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「一切」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-legal-compliance-ex1",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 30文字）が最長の誤答（18文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "strat-legal-compliance-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 11文字）が最長の誤答（3文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "strat-privacy-law-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-privacy-law-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「一切」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-swot-ex3",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "strat-system-strategy-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-ai-ml-ex3",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-api-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-api-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-api-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「一切」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-binary-data-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「常に」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-binary-data-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-binary-data-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-cloud-models-ex3",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-cloud-models-ex3",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-common-key-crypto-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-common-key-crypto-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「絶対に」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-computer-core-ex1",
+      "severity": "warning",
+      "rule": "correct-choice-shortest",
+      "message": "正答（A, 3文字）が最短の誤答（9文字）より極端に短く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "tech-data-utilization-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-iot-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-iot-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「一切」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-isms-risk-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-keys-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-keys-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-lan-wan-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-lan-wan-ex1",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 1.000）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "tech-lan-wan-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-lan-wan-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 39文字）が最長の誤答（18文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "tech-normalization-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-normalization-ex1",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-normalization-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-os-software-hardware-ex2",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "tech-programming-basics-ex1",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"application\" です。\"calculation\" が適切ではないか確認してください。"
+    },
+    {
+      "questionId": "tech-reliability-availability-ex1",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"application\" です。\"calculation\" が適切ではないか確認してください。"
+    },
+    {
+      "questionId": "tech-transaction-ex1",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 32文字）が最長の誤答（19文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "tech-web-internet-basics-ex2",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 12文字）が最長の誤答（4文字）より極端に長く、長さだけで正解が推測できます。"
+    }
+  ],
+  "similarities": []
+}
