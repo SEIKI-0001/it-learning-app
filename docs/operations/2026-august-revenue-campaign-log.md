@@ -11,7 +11,7 @@
 
 | 日付 | 媒体 | 活動内容 | 対象者の悩み | 投稿/返信URL | 返信数 | LP閲覧 | 登録 | Checkout開始 | 外部顧客購入 | 売上総額 | Stripe手数料 | 純額 | 次の改善 |
 |---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| 2026-08-01 | X | 開始投稿1件・実演投稿1件・個別返信3件 | 初学者の進め方、30分学習、苦手分野の絞り込み | https://x.com/dpwwBxjhU8nvCCI/status/2083442899702988892<br>https://x.com/itpassportsup/status/2083443992931484054<br>https://x.com/itpassportsup/status/2083446282631471567<br>https://x.com/itpassportsup/status/2083446392308293938<br>https://x.com/itpassportsup/status/2083446469550645467 | 0 | 未確認 | 未確認 | 未確認 | 0 | ¥0 | ¥0 | ¥0 | 返信反応を確認し、関心表明があった相手にだけキャンペーンURLを案内する |
+| 2026-08-01 | X | 開始投稿1件・実演投稿1件・個別返信3件 | 初学者の進め方、30分学習、苦手分野の絞り込み | https://x.com/dpwwBxjhU8nvCCI/status/2083442899702988892<br>https://x.com/itpassportsup/status/2083443992931484054<br>https://x.com/itpassportsup/status/2083446282631471567<br>https://x.com/itpassportsup/status/2083446392308293938<br>https://x.com/itpassportsup/status/2083446469550645467 | 0 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | 返信反応を確認し、関心表明があった相手にだけキャンペーンURLを案内する |
 
 ## 購入・特典台帳
 
