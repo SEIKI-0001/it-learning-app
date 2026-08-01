@@ -28,6 +28,8 @@ export type QuestionOrigin =
 
 /**
  * 公開状態。draft → 内容確認 → 解説確認 → published の順に上げる。
+ * origin による制限は無く、ai_generated も同じ順路をたどって published まで上がる
+ * （公開条件は lib/questionBank/validate.ts と lib/questionQuality/ が検査する）。
  *
  * 重要: status は「品質の監査がどこまで進んだか」を表すもので、
  * 出題可否のスイッチではない。確認パックは問題IDを明示的に参照して出題するため、
@@ -172,6 +174,9 @@ export type OfficialQuestionSource = {
  * 手元の生成物（構造化JSON）を data/question-bank/candidates/ai-generated/ に置き、
  * scripts/question-bank/import-candidates.mjs で取り込んで品質ゲートに通す。
  * 本番リクエスト中に外部AIを呼ぶ経路は作らない（再現性・費用・レビュー可能性のため）。
+ *
+ * 取り込み時は必ず status "draft"。そこから先へ上げるのは人の操作だけで、
+ * 公開後もこの来歴は消さない（origin を移して公開する運用は禁止）。
  */
 export type QuestionGeneration = {
   /** 生成に使ったサービス（例: "anthropic" / "openai" / "manual-llm"）。 */
@@ -259,8 +264,14 @@ export type QuestionRecord = {
 
   /**
    * AI生成の来歴。origin との対応は validate で強制する。
-   *   ai_generated … 必須（かつ status は "draft" 固定）
+   *   ai_generated … 必須。status が published になっても保持し続ける
    *   それ以外     … 持たない
+   *
+   * 重要: AI生成問題を公開するために origin を app_original へ書き換えない。
+   * generation は ai_generated 以外に付けられないため、origin を変えると来歴が消え、
+   * 「どのモデルのどのプロンプトで作った問題か」を後から追えなくなる。
+   * 出題実績の分析でも AI生成問題として識別できなくなり、まとめて撤回もできない。
+   * 公開はレビュー記録を積んだうえで、ai_generated のまま status を上げて行う。
    */
   generation?: QuestionGeneration;
 

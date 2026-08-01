@@ -28,9 +28,20 @@ candidates/
 3. `npm run questions:import:candidates` で取り込む
 4. `npm run questions:quality-report` で品質ゲートに通す
 5. レビュー記録（`data/question-bank/reviews/<question-id>.json`）を作る
+6. 公開するときは `data/question-bank/ai-generated/candidates.json` を手で編集し、
+   `status` を `published` にして `reviewedAt` / `reviewedBy` を埋める
 
-取り込まれた AI 生成問題は **必ず `draft`** になります。
-`published` へ自動で上がる経路はありません（`lib/questionBank/validate.ts` が強制）。
+取り込まれた AI 生成問題は **必ず `draft`** になります
+（`scripts/question-bank/candidate-record.mjs` が `origin` / `status` / `version` を固定）。
+候補 JSON がこれらを指定していたら、無視ではなく**取り込みごと拒否**します。
+
+`draft` から先へ status を上げる自動処理はありません。**公開は人の操作だけ**で、
+条件を満たしているかは品質ゲートが検査します（[../README.md](../README.md) の
+「AI生成問題の公開」を参照）。
+
+公開しても **`origin` は `ai_generated` のまま**にしてください。
+`app_original` などへ書き換えると `generation`（来歴）を持てなくなり、
+どのモデルで作った問題かを後から追えなくなります。
 
 ## 候補 JSON の形式
 

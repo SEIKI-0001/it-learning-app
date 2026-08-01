@@ -42,10 +42,15 @@
   **`decision: "approve"` の記録がなければ `published` にできません**
 - 類似度が `review_required` 帯（0.80 以上）の問題を `published` にするには、
   `similarityReviewedBy` まで埋まった `approve` の記録が必要です
+- `origin: "ai_generated"` は**帯にかかわらず** `similarityReviewedBy` が必須です。
+  AI は既存問題の言い回しをなぞりやすく、閾値の下でも既視感のある問題が残るためです
 - `version` が問題側と食い違う記録は失効扱いです。
   本文を直して `version` を上げたら、レビューもやり直してください
-- 作成者とレビュー者が同じ場合は warning が出ます（公開は止めません）
+- 作成者とレビュー者が同じ場合は warning が出ます（公開は止めません）。
+  この扱いは `lib/questionQuality/reviews.ts` の `REVIEWER_INDEPENDENCE` にまとめてあり、
+  レビューできる人が増えたら `selfReviewSeverity` を `blocker` に変えて厳格化できます
 
-なお `origin: "ai_generated"` は `status: "draft"` に固定されているため、
-そもそも `published` にはできません。公開したい場合は、人の手で内容を確認・修正したうえで
-`app_original` として作り直してください（AI の生成物をそのまま公開しない、という方針です）。
+`origin: "ai_generated"` の問題は、承認が済めば **`ai_generated` のまま `published`**
+にします。公開のために `app_original` へ作り直すことはしません。origin を移すと
+`generation`（来歴）を持てなくなり、AI 生成問題として識別・分析・撤回できなくなるためです。
+公開条件の全体は [../README.md](../README.md) の「AI生成問題の公開」を参照してください。

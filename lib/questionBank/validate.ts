@@ -212,13 +212,31 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
     }
   }
 
-  // AI生成問題は必ず draft。人手のレビューを経ずに公開状態へ上がる経路を作らない。
-  if (q.origin === "ai_generated" && q.status !== "draft") {
-    add(
-      "ai-generated-draft-only",
-      `AI生成問題は status "draft" のみ許可されます（現在: "${q.status}"）。公開はレビュー後に別の origin へ移してから行ってください。`,
-    );
-  }
+  // AI生成問題の status は draft に固定しない。
+  //
+  // 固定すると「公開するには別の origin へ移す」しかなくなり、そのとき generation を
+  // 捨てることになる（generation は ai_generated 以外に付けられないため）。
+  // 来歴を消さないと公開できない仕組みは、来歴を残す目的そのものと矛盾する。
+  // AI生成と分かったまま公開できること自体が、後から分析・撤回できる条件でもある。
+  //
+  // 代わりに、公開の条件を人手のレビュー側で満たさせる。ai_generated が published に
+  // なるために必要なものは、この関数の中と外に分かれている:
+  //
+  //   ここ（QuestionRecord 1件だけで判定できるもの）
+  //     - generation が存在し、provider / model / promptVersion / generatedAt が埋まっている
+  //       … generation-required / generation-field-required
+  //     - contentHash が本文と一致する … content-hash-match
+  //     - reviewedAt / reviewedBy が埋まっている … published-reviewed-at / published-reviewed-by
+  //
+  //   lib/questionQuality/（レビュー記録・類似度・全問の突き合わせが要るもの）
+  //     - approve のレビュー記録があり、contentReviewedBy / explanationReviewedBy /
+  //       similarityReviewedBy が埋まっている … reviews.ts checkReviewGate
+  //     - レビュー記録の questionId / version が問題側と一致する … 同上
+  //     - 類似度が block 帯に該当しない … gate.ts checkSimilarityGate
+  //     - blocker が1件も無い … report.ts buildQualityReport
+  //
+  // status を自動で書き換える処理はどこにも作らない。published にするのは、
+  // Git 管理された問題データを人が明示的に編集する操作だけ。
 
   // --- 図表 ---------------------------------------------------------------
   // 図表は「問題が成立するために必要な情報」なので、参照切れ・alt 欠落を本文の欠落と

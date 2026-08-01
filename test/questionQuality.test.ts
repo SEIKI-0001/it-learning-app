@@ -16,7 +16,11 @@ import {
   renderQualityReportMarkdown,
 } from "@/lib/questionQuality/report";
 import { checkQuestionQuality } from "@/lib/questionQuality/rules";
-import { checkReviewGate, validateReviewRecord } from "@/lib/questionQuality/reviews";
+import {
+  REVIEWER_INDEPENDENCE,
+  checkReviewGate,
+  validateReviewRecord,
+} from "@/lib/questionQuality/reviews";
 import { loadReviewRecords } from "@/lib/questionQuality/reviewStore";
 import {
   analyzeSimilarity,
@@ -28,6 +32,7 @@ import {
   toNgrams,
 } from "@/lib/questionQuality/similarity";
 import { SIMILARITY_THRESHOLDS } from "@/lib/questionQuality/thresholds";
+import { toQuestionRecord } from "@/scripts/question-bank/candidate-record.mjs";
 import type { QuestionRecord } from "@/types/questionBank";
 import type { QualityBaseline, QuestionReviewRecord } from "@/types/questionQuality";
 
@@ -112,14 +117,35 @@ describe("AI生成問題のメタデータ", () => {
     generatedAt: "2026-08-01T00:00:00.000Z",
   };
 
-  it("ai_generated は draft 以外にできない", () => {
-    for (const status of ["content_verified", "explanation_verified", "published"] as const) {
+  it("ai_generated も監査の進行に合わせて status を上げられる", () => {
+    // 来歴を残したまま公開できることが目的なので、status を draft に固定しない。
+    // 固定すると「公開するには別の origin へ移す」しかなくなり、そのとき generation を捨てる。
+    for (const status of ["draft", "content_verified", "explanation_verified"] as const) {
       const q = makeQuestion({ id: "ai-1", origin: "ai_generated", status, generation });
-      expect(rules(validateQuestions([q]))).toContain("ai-generated-draft-only");
+      expect(formatIssues(validateQuestions([q])), `status "${status}" が拒否されました`).toBe("");
     }
+  });
 
-    const draft = makeQuestion({ id: "ai-1", origin: "ai_generated", status: "draft", generation });
-    expect(rules(validateQuestions([draft]))).not.toContain("ai-generated-draft-only");
+  it("retired も許可される（出題停止は origin を問わない）", () => {
+    const q = makeQuestion({ id: "ai-1", origin: "ai_generated", status: "retired", generation });
+    expect(formatIssues(validateQuestions([q]))).toBe("");
+  });
+
+  it("published にしても generation は保持される", () => {
+    // origin を app_original へ移して公開する運用を禁止しているので、
+    // published の AI 生成問題が generation を持っていることが正常な状態。
+    const q = makeQuestion({
+      id: "ai-1",
+      origin: "ai_generated",
+      status: "published",
+      generation,
+      reviewedAt: "2026-08-01T09:00:00.000Z",
+      reviewedBy: "kobayashi",
+    });
+
+    expect(formatIssues(validateQuestions([q]))).toBe("");
+    expect(q.generation).toEqual(generation);
+    expect(q.origin).toBe("ai_generated");
   });
 
   it("ai_generated には generation が必須", () => {
@@ -718,15 +744,139 @@ describe("レビュー記録", () => {
     expect(checkReviewGate(q, undefined, false)).toHaveLength(0);
   });
 
-  it("ai_generated は承認記録があっても draft のままにされる", () => {
-    // レビュー記録は「公開してよい」と言えるが、それでも status は draft に固定。
+  it("承認記録が無い ai_generated は published にできない", () => {
     const q = makeQuestion({
       id: "ai-1",
       origin: "ai_generated",
       status: "published",
       generation,
     });
-    expect(rules(validateQuestions([q]))).toContain("ai-generated-draft-only");
+    const findings = checkReviewGate(q, undefined, false);
+    expect(findings.find((f) => f.rule === "review-record-required")?.severity).toBe("blocker");
+  });
+
+  it("ai_generated は類似度が ok 帯でも similarityReviewedBy が必要", () => {
+    // AI は既存問題の言い回しをなぞるので、閾値の下でも人が類似度を見た記録を求める。
+    const q = makeQuestion({
+      id: "ai-1",
+      origin: "ai_generated",
+      status: "published",
+      generation,
+    });
+
+    const without = checkReviewGate(q, makeReview({ questionId: "ai-1" }), false);
+    expect(rules(without)).toContain("review-similarity-required");
+
+    const withReviewer = checkReviewGate(
+      q,
+      makeReview({ questionId: "ai-1", similarityReviewedBy: "reviewer-c" }),
+      false,
+    );
+    expect(withReviewer).toHaveLength(0);
+  });
+
+  it("version がずれたレビュー記録では ai_generated を published にできない", () => {
+    const q = makeQuestion({
+      id: "ai-1",
+      version: 2,
+      origin: "ai_generated",
+      status: "published",
+      generation,
+    });
+    const findings = checkReviewGate(
+      q,
+      makeReview({ questionId: "ai-1", version: 1, similarityReviewedBy: "reviewer-c" }),
+      false,
+    );
+    expect(rules(findings)).toContain("review-version-mismatch");
+  });
+
+  it("approve でないレビュー記録では ai_generated を published にできない", () => {
+    const q = makeQuestion({
+      id: "ai-1",
+      origin: "ai_generated",
+      status: "published",
+      generation,
+    });
+    for (const decision of ["revise", "reject"] as const) {
+      const findings = checkReviewGate(
+        q,
+        makeReview({ questionId: "ai-1", decision, similarityReviewedBy: "reviewer-c" }),
+        false,
+      );
+      expect(rules(findings)).toContain("review-not-approved");
+    }
+  });
+
+  it("条件をすべて満たした ai_generated は published にできる", () => {
+    const q = makeQuestion({
+      id: "ai-1",
+      origin: "ai_generated",
+      status: "published",
+      generation,
+      reviewedAt: "2026-08-01T09:00:00.000Z",
+      reviewedBy: "kobayashi",
+    });
+    const review = makeReview({
+      questionId: "ai-1",
+      similarityReviewedBy: "reviewer-c",
+      authoredBy: "claude-opus-5",
+    });
+
+    const report = buildQualityReport({
+      questions: [q],
+      reviews: new Map([[q.id, review]]),
+      reviewFileNames: new Map([[q.id, "ai-1.json"]]),
+    });
+
+    expect(
+      report.findings
+        .filter((f) => f.severity === "blocker")
+        .map((f) => `- [${f.rule}] ${f.questionId}: ${f.message}`)
+        .join("\n"),
+    ).toBe("");
+    // 公開できたうえで、来歴が残っていること自体がこの変更の目的。
+    expect(report.summary.byOrigin.ai_generated).toBe(1);
+    expect(report.summary.byStatus.published).toBe(1);
+  });
+
+  it("blocker が残っている ai_generated は published にできない", () => {
+    // 既存問題と正規化後に完全一致する AI 生成問題。承認記録がそろっていても通さない。
+    const original = makeQuestion({ id: "app-1", origin: "app_original", status: "published" });
+    const copy = makeQuestion({
+      id: "ai-1",
+      origin: "ai_generated",
+      status: "published",
+      generation,
+      reviewedAt: "2026-08-01T09:00:00.000Z",
+      reviewedBy: "kobayashi",
+    });
+
+    const report = buildQualityReport({
+      questions: [original, copy],
+      reviews: new Map([
+        ["ai-1", makeReview({ questionId: "ai-1", similarityReviewedBy: "reviewer-c" })],
+      ]),
+      reviewFileNames: new Map([["ai-1", "ai-1.json"]]),
+    });
+
+    const blockers = report.findings.filter((f) => f.severity === "blocker" && f.questionId === "ai-1");
+    expect(rules(blockers)).toContain("similarity-exact-duplicate");
+    expect(report.summary.blockerCount).toBeGreaterThan(0);
+  });
+
+  it("自己レビューの扱いは REVIEWER_INDEPENDENCE に集約されている", () => {
+    // 将来 blocker へ厳格化するときに、書き換える場所が1つで済むようにしてある。
+    const review = makeReview({
+      authoredBy: "kobayashi",
+      contentReviewedBy: "kobayashi",
+      explanationReviewedBy: "kobayashi",
+    });
+    const self = validateReviewRecord(review, "quality-sample-1.json").find(
+      (f) => f.rule === "review-self-review",
+    );
+    expect(self?.severity).toBe(REVIEWER_INDEPENDENCE.selfReviewSeverity);
+    expect(REVIEWER_INDEPENDENCE.selfReviewSeverity).toBe("warning");
   });
 
   it("作成者とレビュー者が同じなら warning", () => {
@@ -868,10 +1018,83 @@ describe("既存の問題バンク", () => {
     expect(serious.join("\n")).toBe("");
   });
 
-  it("AI生成問題はすべて draft", () => {
+  it("AI生成問題は status を問わず generation を保持している", () => {
+    // 公開のために origin を app_original へ移す運用を禁止しているので、
+    // published の AI 生成問題も来歴を持ったままバンクに残る。
     for (const q of ALL.filter((x) => x.origin === "ai_generated")) {
-      expect(q.status, `${q.id} が draft ではありません`).toBe("draft");
       expect(q.generation, `${q.id} に generation がありません`).toBeDefined();
+    }
+  });
+
+  it("published の AI生成問題には承認記録がそろっている", () => {
+    for (const q of ALL.filter((x) => x.origin === "ai_generated" && x.status === "published")) {
+      const review = reviews.byQuestionId.get(q.id);
+      expect(review, `${q.id} のレビュー記録がありません`).toBeDefined();
+      expect(review?.decision, `${q.id} が approve されていません`).toBe("approve");
+      expect(review?.version, `${q.id} のレビュー記録が失効しています`).toBe(q.version);
+      expect(review?.similarityReviewedBy, `${q.id} の similarityReviewedBy が空です`).toBeTruthy();
+      expect(q.reviewedAt, `${q.id} の reviewedAt が空です`).toBeTruthy();
+      expect(q.reviewedBy, `${q.id} の reviewedBy が空です`).toBeTruthy();
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 9. 候補の取り込み（AI に公開状態を決めさせない）
+// ---------------------------------------------------------------------------
+
+describe("AI候補の取り込み", () => {
+  const generation = {
+    provider: "anthropic",
+    model: "claude-opus-5",
+    promptVersion: "ip-v1",
+    generatedAt: "2026-08-01T00:00:00.000Z",
+  };
+
+  function makeCandidate(overrides: Record<string, unknown> = {}) {
+    return {
+      id: "ai-cand-1",
+      primaryTopicId: "tech-security-management",
+      questionPattern: "knowledge",
+      prompt: LONG_PROMPT,
+      choices: [
+        { key: "A", text: "組織全体で情報セキュリティの判断基準をそろえること" },
+        { key: "B", text: "個々の担当者が独自の判断で運用できるようにすること" },
+        { key: "C", text: "外部委託先との契約を不要にすること" },
+        { key: "D", text: "監査の対象範囲を情報システム部門に限定すること" },
+      ],
+      correctChoice: "A",
+      explanation: "方針を経営層の承認のもとで全社に周知することで、判断基準が組織全体でそろいます。",
+      estimatedDifficulty: 2,
+      ...overrides,
+    };
+  }
+
+  it("取り込んだ候補は必ず ai_generated / draft / version 1 になる", () => {
+    const record = toQuestionRecord(makeCandidate(), generation, "candidates.json");
+
+    expect(record.origin).toBe("ai_generated");
+    expect(record.status).toBe("draft");
+    expect(record.version).toBe(1);
+    expect(record.reviewedAt).toBeNull();
+    expect(record.reviewedBy).toBeNull();
+    expect(record.generation).toMatchObject(generation);
+    // 取り込んだ時点でデータとしては正しい（公開だけがまだ、という状態）。
+    expect(formatIssues(validateQuestions([record as QuestionRecord]))).toBe("");
+  });
+
+  it("候補JSONが status: published を指定すると取り込みごと拒否される", () => {
+    expect(() =>
+      toQuestionRecord(makeCandidate({ status: "published" }), generation, "candidates.json"),
+    ).toThrow(/"status" は取り込み側が決める項目/);
+  });
+
+  it("候補JSONは origin / version / レビュー情報も指定できない", () => {
+    for (const field of ["origin", "version", "contentHash", "reviewedAt", "reviewedBy", "official"]) {
+      expect(
+        () => toQuestionRecord(makeCandidate({ [field]: "x" }), generation, "candidates.json"),
+        `${field} が拒否されていません`,
+      ).toThrow(new RegExp(`"${field}" は取り込み側が決める項目`));
     }
   });
 });

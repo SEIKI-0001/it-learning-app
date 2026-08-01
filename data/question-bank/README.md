@@ -55,7 +55,7 @@ data/question-bank/
 | `official_past` | **必須** | `false` | 付けない | 付けない | 制限なし |
 | `modified_official` | **必須** | `true` | **必須** | 付けない | `published` は承認記録が必要 |
 | `app_original` | 持たない | — | 付けない | 付けない | 制限なし |
-| `ai_generated` | 持たない | — | 付けない | **必須** | **`draft` 固定** |
+| `ai_generated` | 持たない | — | 付けない | **必須（公開後も保持）** | `published` は承認記録が必要（下記） |
 
 `modified_official` は公式問題を改変したものなので、**出典は必要**（非公式扱いにしない）。
 加えて `official.derivedFromQuestionId` で改変元を明示する。改変問題が元の公式問題と
@@ -64,6 +64,35 @@ data/question-bank/
 AI生成問題が「どの公式問題を参考にしたか」は `generation.referenceQuestionIds` に持たせる。
 `official` フィールドを流用しない。出典表示に使われるフィールドに
 「参照しただけの問題」を入れると、出典表記が事実と食い違うため。
+
+### AI生成問題の公開
+
+**`origin` を `app_original` に書き換えて公開してはいけない。**
+`generation` は `ai_generated` にしか付けられないので、origin を移すと来歴（どのモデルの
+どのプロンプトで、いつ作った問題か）が消える。出題実績を分析するときに AI 生成問題を
+識別できなくなり、生成方針に問題が見つかってもまとめて撤回できなくなる。
+
+公開は `origin: "ai_generated"` のまま `status` を上げて行う。
+`draft` → `content_verified` → `explanation_verified` → `published` の順路は
+他の origin と同じで、`published` に上げるには次を**すべて**満たす必要がある。
+
+| 条件 | 検査する場所 |
+|---|---|
+| `generation` の provider / model / promptVersion / generatedAt が埋まっている | `lib/questionBank/validate.ts` |
+| `contentHash` が本文と一致する | 同上 |
+| `reviewedAt` / `reviewedBy` が埋まっている | 同上 |
+| `reviews/<question-id>.json` があり `decision` が `approve` | `lib/questionQuality/reviews.ts` |
+| `contentReviewedBy` / `explanationReviewedBy` / `similarityReviewedBy` が埋まっている | 同上 |
+| レビュー記録の `questionId` / `version` が問題側と一致する | 同上 |
+| 類似度が `block` 帯に該当しない | `lib/questionQuality/gate.ts` |
+| blocker が1件も無い | `lib/questionQuality/report.ts` |
+
+`similarityReviewedBy` は、類似度が `review_required` 帯でなくても AI 生成問題では必須。
+AI は既存問題の言い回しをなぞりやすく、閾値の下でも既視感のある問題が残るため。
+
+**status を自動で書き換える処理はどこにも無い。** `published` にするのは、
+Git 管理された問題データを人が明示的に編集する操作だけ
+（`npm run questions:import:candidates` は常に `draft` で取り込み、status を上げない）。
 
 ## 公開前の品質検査
 
