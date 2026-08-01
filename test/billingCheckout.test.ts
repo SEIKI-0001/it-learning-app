@@ -125,7 +125,7 @@ describe("billing checkout safeguards", () => {
     expect(checkoutBody.get("line_items[0][price]")).toBe("price_pro_6m");
     expect(checkoutBody.get("metadata[campaign]")).toBe("august_2026");
     expect(checkoutBody.get("success_url")).toBe(
-      "https://example.test/campaign/august-2026?checkout=success&campaign=august_2026#purchase",
+      "https://example.test/campaign/august-2026?checkout=success&campaign=august_2026&session_id={CHECKOUT_SESSION_ID}#purchase",
     );
     expect(checkoutBody.get("cancel_url")).toBe(
       "https://example.test/campaign/august-2026?checkout=cancel#purchase",

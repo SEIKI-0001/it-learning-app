@@ -8,14 +8,23 @@ import {
   isAugust2026BonusOpen,
   parseAugust2026CheckoutResult,
 } from "@/lib/campaign/august2026";
+import { verifyAugust2026CampaignPurchase } from "@/lib/campaign/august2026Purchase";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Pro 6か月 3,480円｜ITパスポート学習コーチ",
-  description:
-    "ITパスポート学習コーチの6か月Pro買い切りプラン。2026年8月10日まで先着6名に20分の学習計画相談付き。",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const bonusActive = isAugust2026BonusActive({
+    now: new Date(),
+    bonusOpen: isAugust2026BonusOpen(process.env.AUGUST_2026_BONUS_OPEN),
+  });
+
+  return {
+    title: "Pro 6か月 3,480円｜ITパスポート学習コーチ",
+    description: bonusActive
+      ? "ITパスポート学習コーチの6か月Pro買い切りプラン。2026年8月10日まで先着6名に20分の学習計画相談付き。"
+      : "ITパスポート学習コーチの通常の6か月Pro買い切りプラン。3,480円（税込）で、自動更新はありません。",
+  };
+}
 
 export default async function CampaignPage({
   searchParams,
@@ -23,6 +32,7 @@ export default async function CampaignPage({
   searchParams: Promise<{
     checkout?: string | string[];
     campaign?: string | string[];
+    session_id?: string | string[];
   }>;
 }) {
   const [userId, query] = await Promise.all([getInternalUserId(), searchParams]);
@@ -50,17 +60,34 @@ export default async function CampaignPage({
     "登録",
     "Stripeで決済",
     "Pro反映",
-    "LINEで購入時メールアドレスを送信",
-    "相談日時を決定",
+    ...(bonusActive
+      ? ["LINEで購入時メールアドレスを送信", "相談日時を決定"]
+      : []),
   ];
+  const checkoutResult = parseAugust2026CheckoutResult(query.checkout);
+  const campaignPurchase = Boolean(
+    userId &&
+      checkoutResult === "success" &&
+      query.campaign === AUGUST_2026_CAMPAIGN.key &&
+      (await verifyAugust2026CampaignPurchase({
+        sessionId: query.session_id,
+        userId,
+      })),
+  );
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="bg-brand-900 px-5 py-16 text-white">
         <div className="mx-auto max-w-5xl">
-          <p className="text-sm font-bold text-brand-100">
-            2026年8月10日 23:59（日本時間）まで・先着6名
-          </p>
+          {bonusActive ? (
+            <p className="text-sm font-bold text-brand-100">
+              2026年8月10日 23:59（日本時間）まで・先着6名
+            </p>
+          ) : (
+            <p className="text-sm font-bold text-brand-100">
+              相談特典の受付は終了しました
+            </p>
+          )}
           <h1 className="mt-4 text-4xl font-bold leading-tight">
             ITパスポート学習コーチ Pro 6か月
           </h1>
@@ -96,19 +123,33 @@ export default async function CampaignPage({
               ))}
             </ul>
           </section>
-          <section className="rounded-2xl bg-brand-50 p-6 ring-1 ring-brand-200">
-            <h2 className="text-2xl font-bold">先着6名の期間限定特典</h2>
-            <p className="mt-3 font-bold">
-              20分のオンライン学習計画相談1回＋相談後のLINEフォロー1回
-            </p>
-            <p className="mt-3 leading-7 text-slate-700">
-              本特典は、試験日と生活時間に合わせた学習計画を一緒に作るものです。
-              合格を保証するものではありません。
-            </p>
-          </section>
+          {bonusActive ? (
+            <section className="rounded-2xl bg-brand-50 p-6 ring-1 ring-brand-200">
+              <h2 className="text-2xl font-bold">先着6名の期間限定特典</h2>
+              <p className="mt-3 font-bold">
+                20分のオンライン学習計画相談1回＋相談後のLINEフォロー1回
+              </p>
+              <p className="mt-3 leading-7 text-slate-700">
+                本特典は、試験日と生活時間に合わせた学習計画を一緒に作るものです。
+                合格を保証するものではありません。
+              </p>
+            </section>
+          ) : (
+            <section className="rounded-2xl bg-white p-6 ring-1 ring-slate-200">
+              <h2 className="text-2xl font-bold">6か月Proプラン</h2>
+              <p className="mt-3 leading-7 text-slate-700">
+                相談特典の受付は終了しました。通常の6か月Pro買い切りプランは、
+                3,480円（税込・自動更新なし）で購入できます。
+              </p>
+            </section>
+          )}
           <section>
-            <h2 className="text-2xl font-bold">購入から相談まで</h2>
-            <ol className="mt-4 grid gap-3 sm:grid-cols-5">
+            <h2 className="text-2xl font-bold">
+              {bonusActive ? "購入から相談まで" : "購入の流れ"}
+            </h2>
+            <ol
+              className={`mt-4 grid gap-3 ${bonusActive ? "sm:grid-cols-5" : "sm:grid-cols-3"}`}
+            >
               {steps.map((step, index) => (
                 <li
                   className="rounded-xl bg-white p-3 ring-1 ring-slate-200"
@@ -138,7 +179,11 @@ export default async function CampaignPage({
               </details>
               <details>
                 <summary>相談特典はどう受け取りますか？</summary>
-                <p>購入後、公式LINEへ購入時メールアドレスを送ってください。</p>
+                <p>
+                  {bonusActive
+                    ? "購入後、公式LINEへ購入時メールアドレスを送ってください。"
+                    : "相談特典の受付は終了しました。"}
+                </p>
               </details>
               <details>
                 <summary>返金できますか？</summary>
@@ -157,11 +202,8 @@ export default async function CampaignPage({
             bonusActive={bonusActive}
             checkoutEnabled={checkoutEnabled}
             lineUrl={lineUrl}
-            checkoutResult={parseAugust2026CheckoutResult(query.checkout)}
-            campaignPurchase={
-              query.campaign === AUGUST_2026_CAMPAIGN.key &&
-              query.checkout === "success"
-            }
+            checkoutResult={checkoutResult}
+            campaignPurchase={campaignPurchase}
           />
         </aside>
       </div>

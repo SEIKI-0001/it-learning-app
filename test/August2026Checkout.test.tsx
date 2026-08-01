@@ -122,4 +122,22 @@ describe("August2026Checkout", () => {
       screen.getByRole("link", { name: "LINEで相談特典を受け取る" }),
     ).toHaveAttribute("href", "https://line.example/add");
   });
+
+  it("does not show the fulfillment link for an unverified campaign return", () => {
+    billing.status = { entitlements: { isPro: true } };
+    render(
+      <August2026Checkout
+        {...baseProps}
+        checkoutResult="success"
+        campaignPurchase={false}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "LINEで相談特典を受け取る" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "プラン・購入履歴を確認する" }),
+    ).toHaveAttribute("href", "/more");
+  });
 });

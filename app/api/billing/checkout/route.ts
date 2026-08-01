@@ -150,9 +150,12 @@ export async function POST(request: Request) {
   if (isAugustCampaignCheckout) {
     successQuery.set("campaign", AUGUST_2026_CAMPAIGN.key);
   }
+  const checkoutSessionQuery = isAugustCampaignCheckout
+    ? "&session_id={CHECKOUT_SESSION_ID}"
+    : "";
   params.set(
     "success_url",
-    `${baseUrl}${returnTo}?${successQuery.toString()}#${returnAnchor}`,
+    `${baseUrl}${returnTo}?${successQuery.toString()}${checkoutSessionQuery}#${returnAnchor}`,
   );
   params.set(
     "cancel_url",
