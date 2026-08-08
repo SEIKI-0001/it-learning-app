@@ -9,6 +9,7 @@ export {
   getPublishedOfficialQuestionsByYear,
   getPublishedQuestions,
   getQuestionById,
+  getQuestionForDelivery,
   getQuestionsByOrigin,
   getQuestionsByStatus,
   getQuestionsByTopic,
@@ -35,3 +36,7 @@ export {
 } from "@/lib/questionBank/validate";
 
 export type { QuestionBankIssue } from "@/lib/questionBank/validate";
+
+export type { QuestionDeliveryMode } from "@/lib/questionBank/loader";
+
+export { isOfficialQuestion } from "@/lib/questionBank/adapter";

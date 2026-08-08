@@ -61,11 +61,52 @@ const BY_TOPIC = (() => {
 
 /**
  * 問題を1件取得する（なければ undefined）。
- * status では絞らない。確認パックのように問題IDを明示指定して出題する導線が
- * draft の問題も従来どおり解決できる必要があるため（移行した既存146問がこれに当たる）。
+ * status では絞らない。「出題」ではない用途（回答の保存・集計・検証）はこちらを使う。
+ *
+ * 重要: 出題導線からは直接呼ばないこと。retired の問題まで返してしまうため、
+ * 出題には getQuestionForDelivery() を使う。
+ * 回答の保存経路が status を問わないのは意図的で、出題停止にした問題への
+ * 過去の回答も、履歴として正しく解決できる必要があるため。
  */
 export function getQuestionById(id: string): QuestionRecord | undefined {
   return BY_ID.get(id);
+}
+
+/**
+ * 出題導線の種類。「その導線に出してよい問題か」の条件がここで分かれる。
+ *   check_pack        … 確認パックの過去問レベル問題
+ *   official_past_exam … 公式過去問の年度別演習
+ */
+export type QuestionDeliveryMode = "check_pack" | "official_past_exam";
+
+/**
+ * 出題用に問題を1件取得する（出してはいけない問題は undefined）。
+ *
+ * getQuestionById() との違いは status を見ること。retired は「出題停止」であって
+ * 削除ではないので、レコード自体は引けるが、この関数からは返さない。
+ * retired にしたのに出題され続ける、という事故をここ1か所で止める。
+ *
+ * draft は従来どおり出題できる。移行した既存146問が draft のままであり、
+ * ここで弾くと確認パックの過去問レベル問題が丸ごと消えるため
+ * （禁止対象は draft ではなく retired）。
+ */
+export function getQuestionForDelivery(
+  id: string,
+  deliveryMode: QuestionDeliveryMode,
+): QuestionRecord | undefined {
+  const question = BY_ID.get(id);
+  if (!question) return undefined;
+
+  // 出題停止。どの導線からも出さない。
+  if (question.status === "retired") return undefined;
+
+  // 年度別演習は公式過去問の原文出題だけ。二段階監査を通ったものに限る。
+  if (deliveryMode === "official_past_exam") {
+    if (question.origin !== "official_past") return undefined;
+    if (question.status !== "published") return undefined;
+  }
+
+  return question;
 }
 
 /** すべての問題（status を問わない）。 */
