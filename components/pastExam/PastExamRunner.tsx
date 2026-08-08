@@ -58,6 +58,19 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const [phase, setPhase] = useState<Phase>("select");
   const [session, setSession] = useState<PastExamSession | null>(null);
   const [result, setResult] = useState<PastExamResult | null>(null);
+
+  // 採点は1セッションにつき1回だけ走らせる。
+  //
+  // 採点を複数回通すと、本番モードでは saveAllAttempts() が100問ぶんの保存を
+  // そのたびに送るため、同じ回答が二重に記録される。二重に走りうる経路が複数ある:
+  //   - 「採点する」の連打（再描画前に onClick が続けて発火する）
+  //   - 時間切れの自動採点と手動採点の競合
+  //   - 残り0秒のあいだタイマーが毎秒 onTimeUp を呼び続ける
+  //
+  // state だけでは再描画を待つ隙に通り抜けるので、同期的に閉じる ref を正とし、
+  // state（submitting）はボタンを無効化する表示のためだけに使う。
+  const submittedRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
   // userId はサーバ描画では分からない（localStorage）。確定するまで（null の間）は
   // 保存しない。未確定のまま書くと anon 側のキーへ書いてしまう。
   const rawUserId = useSyncExternalStore(
@@ -84,28 +97,41 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     [userReady, userId],
   );
 
+  /** 新しい演習を始めるたびに採点ガードを開け直す（セッション単位の1回制限のため）。 */
+  const allowSubmit = useCallback(() => {
+    submittedRef.current = false;
+    setSubmitting(false);
+  }, []);
+
   const start = useCallback(
     (mode: PastExamMode) => {
       const existing = loadSession(userId, year, mode);
       const next = existing ?? createSession(year, mode);
+      allowSubmit();
       persist(next);
       setPhase("running");
     },
-    [userId, year, persist],
+    [userId, year, persist, allowSubmit],
   );
 
   const restart = useCallback(
     (mode: PastExamMode) => {
       clearSession(userId, year, mode);
       const next = createSession(year, mode);
+      allowSubmit();
       persist(next);
       setPhase("running");
     },
-    [userId, year, persist],
+    [userId, year, persist, allowSubmit],
   );
 
   const finish = useCallback(
     (current: PastExamSession) => {
+      // 2回目以降は何もしない。ここを通すと保存も採点もやり直される。
+      if (submittedRef.current) return;
+      submittedRef.current = true;
+      setSubmitting(true);
+
       const graded = gradePastExam({
         sessionId: current.sessionId,
         year,
@@ -159,6 +185,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         questions={questions}
         onChange={persist}
         onFinish={finish}
+        submitting={submitting}
       />
     );
   }
@@ -285,11 +312,14 @@ function QuestionStage({
   questions,
   onChange,
   onFinish,
+  submitting,
 }: {
   session: PastExamSession;
   questions: PastExamQuestionView[];
   onChange: (next: PastExamSession) => void;
   onFinish: (session: PastExamSession) => void;
+  /** 採点処理が走り出したか。ボタンを無効化して連打の入口を塞ぐ。 */
+  submitting: boolean;
 }) {
   const isExam = session.mode === "exam";
   const index = Math.min(Math.max(0, session.currentIndex), questions.length - 1);
@@ -405,8 +435,12 @@ function QuestionStage({
           {answeredCount < questions.length &&
             "未回答のまま採点すると、その問題は不正解として集計されます。"}
         </p>
-        <Button className="mt-3 w-full" onClick={() => onFinish(session)}>
-          採点する
+        <Button
+          className="mt-3 w-full"
+          onClick={() => onFinish(session)}
+          disabled={submitting}
+        >
+          {submitting ? "採点中…" : "採点する"}
         </Button>
       </div>
     </div>
@@ -437,6 +471,10 @@ function StageHeader({
     onTimeUpRef.current = onTimeUp;
   }, [onTimeUp]);
 
+  // 時間切れの通知は1回だけにする。残り0秒のあいだ毎秒 onTimeUp を呼び続けると、
+  // 採点側のガードを外したときにそのまま二重保存になる（多重防御としてここでも止める）。
+  const timeUpNotifiedRef = useRef(false);
+
   useEffect(() => {
     if (!isExam) return;
     // 残り時間は毎秒「開始時刻からの経過」で計算し直す。
@@ -444,7 +482,10 @@ function StageHeader({
     const tick = () => {
       const left = remainingSeconds(session);
       setRemaining(left);
-      if (left <= 0) onTimeUpRef.current();
+      if (left <= 0 && !timeUpNotifiedRef.current) {
+        timeUpNotifiedRef.current = true;
+        onTimeUpRef.current();
+      }
     };
     tick();
     const id = window.setInterval(tick, 1000);
