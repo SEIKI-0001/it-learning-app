@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-transaction-ex1",
+  "version": 2,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューで確認: 誤答Cが設問の状態そのものを言語化しており、13問中で最も誤答の質が高いと評価された。指摘なし。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

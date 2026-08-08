@@ -1,0 +1,11 @@
+{
+  "questionId": "strat-business-process-ex2",
+  "version": 3,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューでの指摘: 選択肢Dの「紙の保管コストと引き換えに承認期間が短縮している」は、二つの事象がトレードオフの関係になく文として不自然。また解説Dの「ルートが同じなら期間も変わらない」は断定として乱暴だった。 指摘を反映のうえ承認。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

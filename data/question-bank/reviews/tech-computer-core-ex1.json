@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-computer-core-ex1",
+  "version": 3,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューでの指摘: 設問の「同時に扱える作業領域」が主記憶の定義そのもので、知識なしに語感で正答へ到達できた。加えて誤答（ディスプレイの解像度・ネットワークのドメイン名）が増設対象として的外れだった。 指摘を反映のうえ承認。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

@@ -1,0 +1,11 @@
+{
+  "questionId": "mgmt-requirements-definition-ex2",
+  "version": 2,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューでの指摘: ex1 と選択肢セットがほぼ同一で、正答が機能要件／非機能要件の対になっており連続出題でメタ推論が働く点。ex1 側の選択肢を「システム化の目的／制約条件」へ変えて重複を解消したため、本問は本文を変えずに承認。誤答C・Dの弁別力が低い点は残課題として記録する。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

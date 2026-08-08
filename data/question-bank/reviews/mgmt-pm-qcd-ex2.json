@@ -1,0 +1,11 @@
+{
+  "questionId": "mgmt-pm-qcd-ex2",
+  "version": 3,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューでの指摘: 解説に英単語 risk が混入。加えて設問の条件「納期と品質を維持したい」に対し、選択肢D（次期リリースへ回す）が条件を満たす手段に見えてしまい、「即断する」の一語だけで誤答にしていた。 指摘を反映のうえ承認。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

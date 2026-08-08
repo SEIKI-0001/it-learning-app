@@ -1647,46 +1647,52 @@
     },
     {
       "id": "tech-computer-core-ex1",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "tech-computer-core",
       "questionPattern": "application",
-      "prompt": "表計算ソフトで大きなファイルを開くと動作が重くなるため、同時に扱える作業領域を増やしたい。主に増設を検討するものはどれか。",
+      "prompt": "表計算ソフトで大きなファイルを開くと動作が極端に遅くなる。PCの構成のうち、この症状の改善に最も効果が期待できるものはどれか。",
       "choices": [
         {
           "key": "A",
-          "text": "メモリ"
+          "text": "主記憶を増設する"
         },
         {
           "key": "B",
-          "text": "CPUの命令セット"
+          "text": "補助記憶をSSDに交換する"
         },
         {
           "key": "C",
-          "text": "ディスプレイの解像度"
+          "text": "補助記憶の空き容量を増やす"
         },
         {
           "key": "D",
-          "text": "ネットワークのドメイン名"
+          "text": "CPUのコア数を増やす"
         }
       ],
       "correctChoice": "A",
-      "explanation": "メモリは作業中のデータを一時的に置く領域。大きなファイルや複数アプリを同時に扱う場合に不足しやすい。",
+      "explanation": "処理中のデータは主記憶に置かれる。主記憶が不足すると補助記憶への退避が繰り返され、動作が極端に遅くなるため、増設が最も効く。SSDへの交換は読み書きを速くし、空き容量の確保は保存できる量を増やすが、いずれも扱えるデータ量そのものは増えない。コア数は同時に実行できる処理の数に効く。",
       "estimatedDifficulty": 2,
       "tags": [
         "メモリ",
         "主記憶",
         "ハードウェア"
       ],
-      "contentHash": "sha256:94a97763f03ca30b560b08740b9f7525b9fc65cfe36af8c405931cd64de05ebd",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:26f425a2e6380eb9bc085be134e693ce5cc21c8b9a23666cf646929d1e0960db",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-40",
         "field": "technology",
         "majorCategory": "コンピュータシステム",
         "middleCategory": "コンピュータ構成要素"
+      },
+      "choiceExplanations": {
+        "A": "処理中のデータを置く領域が広がり、退避の発生を抑えられる。",
+        "B": "読み書きは速くなるが、主記憶の不足そのものは解消しない。",
+        "C": "保存できる量は増えるが、処理中に扱える量は変わらない。",
+        "D": "処理の並列度は上がるが、扱えるデータ量は増えない。"
       }
     },
     {
@@ -1867,7 +1873,7 @@
     },
     {
       "id": "tech-web-internet-basics-ex2",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "tech-web-internet-basics",
@@ -1876,37 +1882,43 @@
       "choices": [
         {
           "key": "A",
-          "text": "HTTPまたはHTTPS"
+          "text": "HTTP"
         },
         {
           "key": "B",
-          "text": "DHCP"
+          "text": "TCP"
         },
         {
           "key": "C",
-          "text": "SQL"
+          "text": "IP"
         },
         {
           "key": "D",
-          "text": "CSV"
+          "text": "イーサネット"
         }
       ],
       "correctChoice": "A",
-      "explanation": "Webのデータ転送にはHTTP/HTTPSを使う。DHCPはIP設定配布、SQLはデータベース操作、CSVはデータ形式。",
+      "explanation": "Webページのやり取りに使うHTTPはアプリケーション層のプロトコル。TCPはトランスポート層で通信の信頼性を確保し、IPはインターネット層で宛先までの経路を決め、イーサネットはネットワークインタフェース層で同一ネットワーク内の伝送を担う。層ごとに役割が分かれている。",
       "estimatedDifficulty": 2,
       "tags": [
         "HTTP",
         "HTTPS",
         "アプリケーション層"
       ],
-      "contentHash": "sha256:4c1a7017d1fc64b6769b056b1687938fd76313f9859c82bf8ccc0826a3f5b447",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:0e3dc058f20fd0f61c9a7076de661aefdcc3ea4bf0fb2b79b2eefba5dc78bb23",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-59",
         "field": "technology",
         "majorCategory": "技術要素",
         "middleCategory": "ネットワーク"
+      },
+      "choiceExplanations": {
+        "A": "アプリケーション層。Webページの転送に使う（暗号化するとHTTPS）。",
+        "B": "トランスポート層。データを確実に届けるための制御を行う。",
+        "C": "インターネット層。宛先までどの経路で送るかを決める。",
+        "D": "ネットワークインタフェース層。同じネットワーク内の物理的な伝送を担う。"
       }
     },
     {
@@ -2791,7 +2803,7 @@
     },
     {
       "id": "tech-transaction-ex1",
-      "version": 1,
+      "version": 2,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "tech-transaction",
@@ -2800,37 +2812,43 @@
       "choices": [
         {
           "key": "A",
-          "text": "一連の処理をトランザクションとして扱い、失敗時はロールバックする"
+          "text": "一連の処理をまとめ、失敗時は全体を取り消す"
         },
         {
           "key": "B",
-          "text": "出金処理だけをコミットして終了する"
+          "text": "失敗した処理だけを後から手作業で補う"
         },
         {
           "key": "C",
-          "text": "入金先口座を削除して処理を軽くする"
+          "text": "処理ごとに結果を確定させ、順に進める"
         },
         {
           "key": "D",
-          "text": "処理結果をログに残さず再実行を禁止する"
+          "text": "失敗した処理を成功するまで自動で繰り返す"
         }
       ],
       "correctChoice": "A",
-      "explanation": "関連する複数処理は全部成功して確定、失敗したら元に戻す。これがトランザクション管理の基本。",
+      "explanation": "出金と入金は分けられない一連の処理なので、まとめて確定するか、まとめて取り消すかのどちらかにする。これがトランザクション管理の考え方。処理ごとに確定させると設問の不整合がそのまま起きる。手作業の補正や無制限の再実行は、不整合が起きた後の対処であって、起こさないための仕組みではない。",
       "estimatedDifficulty": 3,
       "tags": [
         "トランザクション",
         "ロールバック",
         "整合性"
       ],
-      "contentHash": "sha256:844ea6ad8c4f0552a59b888b2cc8c111479efae9054c49fe575a329169d1cd83",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:c6abe382352360f5194b659794f8aa43d1f5a9b6632ddb4bb5f6996fd596a232",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-57",
         "field": "technology",
         "majorCategory": "技術要素",
         "middleCategory": "データベース"
+      },
+      "choiceExplanations": {
+        "A": "全部成功で確定、失敗なら元に戻す（ロールバック）。",
+        "B": "不整合が起きることを前提にしており、防ぐ仕組みになっていない。",
+        "C": "出金だけが確定してしまう。設問の状態そのもの。",
+        "D": "繰り返しても入金が失敗し続ければ不整合は残る。"
       }
     },
     {
@@ -3363,46 +3381,52 @@
     },
     {
       "id": "mgmt-pm-qcd-ex2",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "mgmt-pm-qcd",
       "questionPattern": "application",
-      "prompt": "要件追加により作業量が増えた。納期と品質を維持したい場合、プロジェクト管理上まず検討すべき対応はどれか。",
+      "prompt": "開発中のシステムに要件が追加され、作業量が増えることが分かった。プロジェクトマネージャがまず行うべき対応はどれか。",
       "choices": [
         {
           "key": "A",
-          "text": "追加費用やスコープ調整を含め、QCD全体の影響を関係者と合意する"
+          "text": "QCDへの影響を見積もり、関係者と調整する"
         },
         {
           "key": "B",
-          "text": "担当者に無断で残業を前提にする"
+          "text": "開発チームの残業でスコープを吸収する"
         },
         {
           "key": "C",
-          "text": "テストをすべて省略して品質を維持する"
+          "text": "テスト工程を短縮して納期に間に合わせる"
         },
         {
           "key": "D",
-          "text": "変更内容を記録せずに進める"
+          "text": "追加要件は受け入れず、当初の計画どおり進める"
         }
       ],
       "correctChoice": "A",
-      "explanation": "スコープ変更はQCDに影響するため、費用・納期・品質のトレードオフを可視化し合意する必要がある。",
+      "explanation": "スコープが増えれば、費用・納期・品質のどれかに必ず影響が出る。まず影響を見積もって関係者と合意するのが順序であり、残業・テスト短縮・要件の一方的な拒否は、いずれも影響を関係者に示さないまま特定の要素を犠牲にしている。",
       "estimatedDifficulty": 3,
       "tags": [
         "QCD",
         "スコープ変更",
         "合意形成"
       ],
-      "contentHash": "sha256:d387854d1b4f4b2377fcbe940cc4b0a9d0fa51b03b8ea10fc323ffd9b6862a5e",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:7e5659a322e54e09e454b556edb17b841c57de8499de6408eca18489b015229b",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-27",
         "field": "management",
         "majorCategory": "プロジェクトマネジメント",
         "middleCategory": "プロジェクトマネジメント"
+      },
+      "choiceExplanations": {
+        "A": "QCDのトレードオフを可視化して合意する。変更管理の基本の順序。",
+        "B": "工数を人の負担で吸収しているだけで、品質低下のリスクも関係者の合意もない。",
+        "C": "納期は守れても品質を落としている。QCDのうち品質を一方的に犠牲にした形。",
+        "D": "受け入れないという判断もありうるが、影響を示さず独断で決めている点が誤り。"
       }
     },
     {
@@ -3671,7 +3695,7 @@
     },
     {
       "id": "mgmt-requirements-definition-ex1",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "mgmt-requirements-definition",
@@ -3688,34 +3712,40 @@
         },
         {
           "key": "C",
-          "text": "法定耐用年数"
+          "text": "システム化の目的"
         },
         {
           "key": "D",
-          "text": "公開鍵"
+          "text": "制約条件"
         }
       ],
       "correctChoice": "A",
-      "explanation": "機能要件はシステムが提供する機能。性能、可用性、セキュリティなど品質面は非機能要件。",
+      "explanation": "機能要件はシステムが「何をするか」。注文登録や在庫照会は処理そのものなのでこれにあたる。非機能要件は応答時間や稼働率などの品質、システム化の目的は業務上何を達成したいか、制約条件は予算や期限など守るべき前提を指す。",
       "estimatedDifficulty": 2,
       "tags": [
         "要件定義",
         "機能要件",
         "非機能要件"
       ],
-      "contentHash": "sha256:844785ae7668c2e4620f9958ffd30583b5f0d5630f502691ac54ca4c1af0c896",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:1e4597d4b8e6afbc1a8e3d502aa229c02a2598ff83806db246ba0498564c885f",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-23",
         "field": "strategy",
         "majorCategory": "システム戦略",
         "middleCategory": "システム企画"
+      },
+      "choiceExplanations": {
+        "A": "システムが提供する処理そのもの。注文登録・在庫照会はここ。",
+        "B": "応答時間・稼働率など、機能をどの水準で満たすかの条件。",
+        "C": "業務上達成したいねらいで、個々の処理の分類ではない。",
+        "D": "予算・期限・利用する技術など、守るべき前提条件。"
       }
     },
     {
       "id": "mgmt-requirements-definition-ex2",
-      "version": 1,
+      "version": 2,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "mgmt-requirements-definition",
@@ -3732,29 +3762,35 @@
         },
         {
           "key": "C",
-          "text": "著作権"
+          "text": "業務要件"
         },
         {
           "key": "D",
-          "text": "主キー"
+          "text": "移行要件"
         }
       ],
       "correctChoice": "A",
-      "explanation": "応答時間や稼働率など品質・制約に関する条件は非機能要件。処理内容そのものとは区別する。",
+      "explanation": "「3秒以内に返す」は処理の内容ではなく、その処理をどの水準で満たすかという条件なので非機能要件。機能要件は検索するという処理そのもの、業務要件は業務上の目的、移行要件は切替えの条件を指す。",
       "estimatedDifficulty": 2,
       "tags": [
         "非機能要件",
         "性能",
         "要件定義"
       ],
-      "contentHash": "sha256:4e9b80817b5788f9557d8c8b316a247653d93220ffb8b6167a657155b0261524",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:3b50493126ca94efcd669ac37ee047f23e48b12954d6c3d2858615088ea9aeff",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-23",
         "field": "strategy",
         "majorCategory": "システム戦略",
         "middleCategory": "システム企画"
+      },
+      "choiceExplanations": {
+        "A": "応答時間は品質・制約の条件なので非機能要件。",
+        "B": "「検索できること」自体は機能要件だが、設問は速度の条件を問うている。",
+        "C": "業務上達成したい目的のことで、システムの品質条件ではない。",
+        "D": "既存データや業務の切替えに関する条件。"
       }
     },
     {
@@ -4155,46 +4191,52 @@
     },
     {
       "id": "strat-3c-ex2",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "strat-3c",
       "questionPattern": "application",
-      "prompt": "新サービス検討で、顧客ニーズ、競合の提供価値、自社の実現力を比較したい。使う分析手法として最も適切なものはどれか。",
+      "prompt": "3C分析で分析の対象とする三つの視点の組合せはどれか。",
       "choices": [
         {
           "key": "A",
-          "text": "3C分析"
+          "text": "顧客・競合・自社"
         },
         {
           "key": "B",
-          "text": "正規化"
+          "text": "強み・弱み・機会・脅威"
         },
         {
           "key": "C",
-          "text": "ディジタル署名"
+          "text": "製品・価格・流通・販促"
         },
         {
           "key": "D",
-          "text": "MTBF分析だけ"
+          "text": "市場成長率・市場占有率"
         }
       ],
       "correctChoice": "A",
-      "explanation": "3Cは顧客・競合・自社の3視点で市場を整理する。サービス戦略やマーケティングの初期検討に向く。",
+      "explanation": "3CはCustomer（顧客）・Competitor（競合）・Company（自社）の頭文字で、市場環境を整理する枠組み。強み・弱み・機会・脅威はSWOT分析、製品・価格・流通・販促はマーケティングミックス（4P）、市場成長率と市場占有率はPPMで用いる軸である。",
       "estimatedDifficulty": 2,
       "tags": [
         "3C",
         "顧客",
         "競合"
       ],
-      "contentHash": "sha256:e25a06f28748dc1f7f13599cb7ec6fc225d8a837dfb99836d960fc4779429ed8",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:d4267517449a02a3e77793dcfe60c1504851cda459910892818c8ea471623021",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-09",
         "field": "strategy",
         "majorCategory": "経営戦略",
         "middleCategory": "経営戦略マネジメント"
+      },
+      "choiceExplanations": {
+        "A": "Customer・Competitor・Company の3つ。3C分析そのもの。",
+        "B": "内部要因と外部要因を4区分で整理するSWOT分析の軸。",
+        "C": "施策を組み立てるためのマーケティングミックス（4P）の要素。",
+        "D": "事業や製品への投資配分を判断するPPMの2軸。"
       }
     },
     {
@@ -4332,7 +4374,7 @@
     },
     {
       "id": "strat-accounting-break-even-ex2",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "strat-accounting-break-even",
@@ -4341,86 +4383,98 @@
       "choices": [
         {
           "key": "A",
-          "text": "固定費を削減する、または1個当たりの限界利益を高める"
+          "text": "固定費を削減する"
         },
         {
           "key": "B",
-          "text": "固定費を増やし、販売単価を下げる"
+          "text": "販売単価を引き下げる"
         },
         {
           "key": "C",
-          "text": "売上に関係なく変動費を必ず増やす"
+          "text": "設備を導入して生産能力を高める"
         },
         {
           "key": "D",
-          "text": "利益計算から固定費を除外する"
+          "text": "目標利益額を引き下げる"
         }
       ],
       "correctChoice": "A",
-      "explanation": "損益分岐点は固定費÷限界利益。固定費を下げるか、単価上昇・変動費低減で限界利益を高めると下がる。",
+      "explanation": "損益分岐点売上高は固定費÷限界利益率で求める。固定費を減らせば分岐点は下がる。販売単価の引下げは限界利益率を下げ、設備の導入は固定費を増やすため、どちらも分岐点はむしろ上がる。目標利益額は分岐点を超えた先の話なので、分岐点自体は動かない。",
       "estimatedDifficulty": 3,
       "tags": [
         "損益分岐点",
         "限界利益",
         "利益管理"
       ],
-      "contentHash": "sha256:efe4b991dee23dde3e90d7fe9e706470fb7ed90294c1ebd7231d198e24955292",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:f5927e4993098a009666555109a46eb0b3680e3c3717cebf39464cdfaab9548f",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-03",
         "field": "strategy",
         "majorCategory": "企業と法務",
         "middleCategory": "企業活動"
+      },
+      "choiceExplanations": {
+        "A": "分子である固定費が小さくなるので、損益分岐点は下がる。",
+        "B": "限界利益率が下がるため、分岐点はむしろ上がる。",
+        "C": "生産能力は上がるが減価償却費などの固定費が増え、分岐点は上がる。",
+        "D": "目標利益は分岐点を超えた先の話で、分岐点そのものは変わらない。"
       }
     },
     {
       "id": "strat-legal-compliance-ex1",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "strat-legal-compliance",
       "questionPattern": "application",
-      "prompt": "法令には違反していなくても、社会的信用を損なう行為を避けるべきという考え方として最も適切なものはどれか。",
+      "prompt": "法令には違反しないが、社会から批判を受けるおそれのある広告表現が社内で提案された。コンプライアンスの観点から最も適切な対応はどれか。",
       "choices": [
         {
           "key": "A",
-          "text": "コンプライアンスは法令だけでなく社会規範や倫理も含めて考える"
+          "text": "社会規範や倫理の観点からも検討し、必要なら表現を見直す"
         },
         {
           "key": "B",
-          "text": "法律に罰則がなければ何をしてもよい"
+          "text": "法務部門が法令違反でないと確認できた時点で実施する"
         },
         {
           "key": "C",
-          "text": "社内規程は顧客対応には一切関係しない"
+          "text": "批判が出たときに備え、撤回の手順を決めてから実施する"
         },
         {
           "key": "D",
-          "text": "倫理より短期売上を常に優先する"
+          "text": "社内規程に定めがないため、担当者の判断に委ねる"
         }
       ],
       "correctChoice": "A",
-      "explanation": "コンプライアンスは法令遵守に加え、社内規程や社会倫理を含む。信用リスクの観点で問われる。",
+      "explanation": "コンプライアンスは法令遵守にとどまらず、社内規程・社会規範・倫理までを含む。法令違反でないことの確認だけで実施すれば、信用を損なうおそれをそのまま残すことになる。撤回手順の準備は批判が出た後の対処であり、担当者任せは組織として判断していないことになる。",
       "estimatedDifficulty": 2,
       "tags": [
         "コンプライアンス",
         "企業倫理",
         "法務"
       ],
-      "contentHash": "sha256:2c2b59df52f72c0aff2a353c8f4f9d408cd897fa0d77f0b1fcaf3ef4af3909fa",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:1126b0f7f474805cec6b884ae22116c3290c2316bfd2d6693e1012b937b41083",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-07",
         "field": "strategy",
         "majorCategory": "企業と法務",
         "middleCategory": "法務"
+      },
+      "choiceExplanations": {
+        "A": "法令の外にある社会規範・倫理まで含めて判断している。",
+        "B": "法令だけを基準にしており、信用を損なうおそれを検討していない。",
+        "C": "批判が出る前提の後始末で、表現そのものを見直していない。",
+        "D": "規程に定めがないことを理由に、組織としての判断を放棄している。"
       }
     },
     {
       "id": "strat-legal-compliance-ex2",
-      "version": 1,
+      "version": 2,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "strat-legal-compliance",
@@ -4429,7 +4483,7 @@
       "choices": [
         {
           "key": "A",
-          "text": "NDA（秘密保持契約）"
+          "text": "NDA"
         },
         {
           "key": "B",
@@ -4437,29 +4491,35 @@
         },
         {
           "key": "C",
-          "text": "WBS"
+          "text": "OEM"
         },
         {
           "key": "D",
-          "text": "DNS"
+          "text": "RFP"
         }
       ],
       "correctChoice": "A",
-      "explanation": "秘密情報の取扱いを定める契約がNDA。SLAはサービス水準、WBSは作業分解、DNSは名前解決。",
+      "explanation": "秘密情報の取扱いを定める契約がNDA（秘密保持契約）。SLAはサービス水準の合意、OEMは相手先ブランドでの製造、RFPは調達時の提案依頼書であり、いずれも情報の秘匿を目的とするものではない。",
       "estimatedDifficulty": 2,
       "tags": [
         "NDA",
         "秘密保持",
         "契約"
       ],
-      "contentHash": "sha256:5f2c12ecd88c2f4a9a15a27fc35ca8e346c293fc52a0ae8526bfd3bf4154ed53",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:9d6d41f1bcb4dd66de158597f289208ba3184518907e924843a3c7b104c30e0a",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-07",
         "field": "strategy",
         "majorCategory": "企業と法務",
         "middleCategory": "法務"
+      },
+      "choiceExplanations": {
+        "A": "秘密保持契約。未公開情報を外部へ開示しない義務を定める。",
+        "B": "サービス品質の水準を取り決めるもので、秘密保持の契約ではない。",
+        "C": "相手先ブランドによる製造の形態を指す言葉。",
+        "D": "調達で提案を求める文書であり、契約そのものではない。"
       }
     },
     {
@@ -4860,7 +4920,7 @@
     },
     {
       "id": "strat-business-process-ex2",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "strat-business-process",
@@ -4869,37 +4929,43 @@
       "choices": [
         {
           "key": "A",
-          "text": "デジタル化はしているが、業務プロセス改善としては不十分な可能性がある"
+          "text": "記録が電子化されただけで、業務プロセスは改善されていない"
         },
         {
           "key": "B",
-          "text": "必ずDXが完了して競争優位が確立した"
+          "text": "業務プロセスが再設計され、DXが実現している"
         },
         {
           "key": "C",
-          "text": "個人情報保護の義務がなくなった"
+          "text": "承認の判断基準が標準化され、属人化が解消している"
         },
         {
           "key": "D",
-          "text": "業務要件を確認する必要がなくなった"
+          "text": "承認の待ち時間が可視化され、滞留の原因を特定できている"
         }
       ],
       "correctChoice": "A",
-      "explanation": "紙を電子化するだけでは業務改革とは限らない。流れや判断、価値提供の改善まで考える必要がある。",
+      "explanation": "媒体を紙からPDFへ変えただけでは、承認ルートも判断基準も従来のままなので、業務の流れは何も変わっていない。プロセスの再設計も判断基準の標準化も行われておらず、待ち時間を測る仕組みも導入されていない。デジタル化は業務改革の前提であって、それ自体が改革ではない。",
       "estimatedDifficulty": 3,
       "tags": [
         "業務改善",
         "デジタル化",
         "DX"
       ],
-      "contentHash": "sha256:fa7933ab10eac232403a95531f4d1767aad81adba67cbe46f5cec315a7990ab3",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:93a230a87a2e6a6a0f35aff71b770a5670301b0922dd787cb561f6cd16f3c267",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-02",
         "field": "strategy",
         "majorCategory": "企業と法務",
         "middleCategory": "企業活動"
+      },
+      "choiceExplanations": {
+        "A": "媒体が変わっただけで、流れも判断基準も従来どおり。",
+        "B": "プロセスを設計し直していないので、DXが実現したとはいえない。",
+        "C": "判断基準は変えていないため、属人化はそのまま残っている。",
+        "D": "待ち時間を計測・可視化する仕組みは導入されていない。"
       }
     },
     {
@@ -5696,7 +5762,7 @@
     },
     {
       "id": "tech-lan-wan-ex1",
-      "version": 1,
+      "version": 2,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "tech-lan-wan",
@@ -5705,81 +5771,93 @@
       "choices": [
         {
           "key": "A",
-          "text": "ビル内はLAN、本社と支社の接続はWAN"
+          "text": "ビル内はLAN、拠点間はWAN"
         },
         {
           "key": "B",
-          "text": "ビル内はWAN、本社と支社の接続はLAN"
+          "text": "ビル内はWAN、拠点間はLAN"
         },
         {
           "key": "C",
-          "text": "どちらも必ずBluetoothで接続する"
+          "text": "ビル内も拠点間もLAN"
         },
         {
           "key": "D",
-          "text": "どちらもデータベースの正規化で実現する"
+          "text": "ビル内も拠点間もWAN"
         }
       ],
       "correctChoice": "A",
-      "explanation": "LANは建物や敷地内など近い範囲、WANは離れた拠点間など広い範囲をつなぐ。Wi-Fiは無線LANの一種。",
+      "explanation": "LANは建物や敷地内など近い範囲、WANは通信事業者の回線を使って離れた拠点間を結ぶ範囲を指す。したがってビル内がLAN、本社と支社の間がWANになる。両者は範囲で区別するため、どちらも同じ種別になることはこの構成では起こらない。",
       "estimatedDifficulty": 2,
       "tags": [
         "LAN",
         "WAN",
         "ネットワーク"
       ],
-      "contentHash": "sha256:29dde11a431280351d7bad687185211e3f3913837f2cae5ecaa9a521d91078d4",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:7e51d50fc00e5c04bd45f6ae1bcc5a9b9894e193d368ed3269f5968d3d5aa69b",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-58",
         "field": "technology",
         "majorCategory": "技術要素",
         "middleCategory": "ネットワーク"
+      },
+      "choiceExplanations": {
+        "A": "範囲の広さによる区別と一致している。",
+        "B": "LANとWANが逆。ビル内を事業者回線で結ぶ形になってしまう。",
+        "C": "拠点間は事業者回線を使うためLANの範囲を超えている。",
+        "D": "ビル内の接続に事業者回線は使わないためWANではない。"
       }
     },
     {
       "id": "tech-lan-wan-ex2",
-      "version": 1,
+      "version": 3,
       "origin": "app_original",
       "status": "draft",
       "primaryTopicId": "tech-lan-wan",
       "questionPattern": "application",
-      "prompt": "支店から本社サーバへの通信が遅い。原因調査で最初に切り分ける観点として最も適切なものはどれか。",
+      "prompt": "支店から本社サーバへの通信が遅いという申告があった。原因を特定するために最初に確認すべきことはどれか。",
       "choices": [
         {
           "key": "A",
-          "text": "支店内LAN、本社内LAN、拠点間WANのどこで遅延しているかを分けて確認する"
+          "text": "支店内・拠点間・本社内のどこで遅延しているか"
         },
         {
           "key": "B",
-          "text": "すべてのPCの画面解像度を同じにする"
+          "text": "支店のPCを新しい機種へ入れ替えるべきかどうか"
         },
         {
           "key": "C",
-          "text": "支店のプリンタ名を短くする"
+          "text": "本社サーバのCPU使用率が上がっていないか"
         },
         {
           "key": "D",
-          "text": "データベースの主キーを削除する"
+          "text": "利用者が業務時間内に何回アクセスしているか"
         }
       ],
       "correctChoice": "A",
-      "explanation": "ネットワーク障害は範囲を切り分けることが重要。LAN内の問題か、拠点間WANの問題かで対策が変わる。",
+      "explanation": "ネットワークの障害はまず範囲を絞る。支店内LAN・拠点間WAN・本社内LANのどこで遅延しているかが分かって初めて、調べる対象と対策が決まる。機器の更新・サーバ負荷・利用状況はいずれも原因の候補にすぎず、範囲を絞る前に個別に当たると原因にたどり着けない。",
       "estimatedDifficulty": 3,
       "tags": [
         "LAN",
         "WAN",
         "障害切り分け"
       ],
-      "contentHash": "sha256:19aa3144423d7af8fe9c74c89af84e7eca3087dd7dc94596d9f8076ba7986416",
-      "reviewedAt": null,
-      "reviewedBy": null,
+      "contentHash": "sha256:6c8a520484fa81814c9c027ed717db5948bc632225d919defab8a52caba17686",
+      "reviewedAt": "2026-08-08T00:00:00.000Z",
+      "reviewedBy": "claude-code:independent-question-review",
       "syllabusNode": {
         "itemId": "ipa-58",
         "field": "technology",
         "majorCategory": "技術要素",
         "middleCategory": "ネットワーク"
+      },
+      "choiceExplanations": {
+        "A": "範囲を絞ることで、調べる対象と対策の方向が決まる。",
+        "B": "原因が支店のPCとは限らない。特定前の対策になっている。",
+        "C": "サーバ側も候補の一つだが、範囲を絞る前に見る観点ではない。",
+        "D": "利用状況は参考になるが、どこで遅いかの特定にはならない。"
       }
     },
     {
