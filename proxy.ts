@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isPublicPath } from "@/lib/auth/publicRoutes";
 
 // ============================================================================
 // Proxy (Next.js 16 で middleware から改名)。ルート描画前に実行される。
@@ -24,8 +25,6 @@ export const config = {
 };
 
 const LINE_SESSION_COOKIE = "fq_line";
-// 認証不要で常に通すパス（前方一致）。
-const PUBLIC_PREFIXES = ["/login", "/auth", "/lp"];
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
@@ -84,9 +83,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // 5) 認証不要パス（ログイン/コールバック）はそのまま。
-  if (
-    PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
-  ) {
+  if (isPublicPath(pathname)) {
     return response;
   }
 
