@@ -533,6 +533,23 @@ export function questionAttemptToRowV2(
 }
 
 /**
+ * 一意制約違反か（PostgreSQL の unique_violation は 23505）。
+ *
+ * 公式過去問の回答は (user_id, attempt_group_id, question_id, question_version) で
+ * 一意にしてある。ここに当たるのは「同じ演習の同じ回答をもう一度送った」ときなので、
+ * 保存側から見れば既に目的は達成されている＝成功として扱ってよい。
+ * 失敗として返すと、クライアントが再送を繰り返す口実になる。
+ */
+export function isUniqueViolationError(error: {
+  code?: string | null;
+  message?: string | null;
+} | null): boolean {
+  if (!error) return false;
+  if (error.code === "23505") return true;
+  return /duplicate key value violates unique constraint/i.test(error.message ?? "");
+}
+
+/**
  * 「その列がまだ存在しない」ことによる失敗か。
  * PostgreSQL の undefined_column は 42703。Supabase の PostgREST は
  * スキーマキャッシュに無い列を PGRST204 で返すことがあるので両方を見る。

@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-lan-wan-ex1",
+  "version": 2,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューで確認: 組合せ形式として標準的な作りで、条件不足なしと評価された。指摘なし。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

@@ -1,0 +1,11 @@
+{
+  "questionId": "mgmt-requirements-definition-ex1",
+  "version": 3,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューでの指摘: 同一トピックの ex2 と選択肢セットがほぼ同一で、正答が機能要件／非機能要件の対になっており、連続出題するとメタ推論で解けた。ex2 と重ならない構成へ変えた。 指摘を反映のうえ承認。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

@@ -435,26 +435,124 @@ export function validateQuestions(questions: QuestionRecord[]): QuestionBankIssu
 }
 
 /**
- * 確認パックが参照する問題IDがすべて解決できるかを検証する。
- * 現行の解決処理は見つからないIDを黙って捨てるため、
- * 「出題数が知らないうちに減る」事故をここで止める。
+ * 確認パックが参照する問題を検証する。
+ *
+ * 現行の解決処理（lib/checkPack）は出題できないIDを黙って捨てるため、
+ * 「出題数が知らないうちに減る」事故はここでしか気づけない。検出するのは3種類:
+ *
+ *   1. 存在しない問題       … 参照切れ。出題数が減る
+ *   2. retired の問題       … 出題停止にしたのに参照が残っている
+ *   3. 表示情報が欠けた公式問題 … 出典・図表を出せないまま公式問題を出すことになる
+ *
+ * draft は検出対象にしない。既存146問が draft のままで出題されており、
+ * 禁止したいのは draft ではなく retired だから。
  */
 export function validatePackReferences(
   packs: { packId: string; examLevelQuestionIds: string[] }[],
   questions: QuestionRecord[],
 ): QuestionBankIssue[] {
-  const ids = new Set(questions.map((q) => q.id));
+  const byId = new Map(questions.map((q) => [q.id, q]));
   const issues: QuestionBankIssue[] = [];
 
   for (const pack of packs) {
     for (const questionId of pack.examLevelQuestionIds) {
-      if (!ids.has(questionId)) {
+      const question = byId.get(questionId);
+
+      if (!question) {
         issues.push({
           questionId,
           rule: "pack-reference-resolvable",
           message: `確認パック "${pack.packId}" が存在しない問題ID "${questionId}" を参照しています。`,
         });
+        continue;
       }
+
+      // 出題停止にした問題を参照したままにしない。
+      // getQuestionForDelivery() が出題側で弾くので、画面は静かに1問減る。
+      // 差し替え忘れに気づけるのはこの検証だけなので、ここで CI を落とす。
+      if (question.status === "retired") {
+        issues.push({
+          questionId,
+          rule: "pack-reference-retired",
+          message: `確認パック "${pack.packId}" が retired の問題 "${questionId}" を参照しています。別の問題へ差し替えてください。`,
+        });
+        continue;
+      }
+
+      issues.push(...validatePackOfficialDisplay(pack.packId, question));
+    }
+  }
+
+  return issues;
+}
+
+/**
+ * 確認パックに公式問題を入れるとき、出題画面が出典・図表を表示できる状態か。
+ *
+ * 公式問題は「問題文・選択肢はIPA公開問題／解説は本サービス独自」を問題ごとに示す前提で
+ * 出題している。その表示に必要な値が欠けたまま出題されると、出典表示のない公式問題が
+ * 画面に出てしまう。年度別演習と違って確認パックは問題IDの手書き指定なので、
+ * 欠けた問題が紛れ込む経路がある。
+ */
+function validatePackOfficialDisplay(
+  packId: string,
+  q: QuestionRecord,
+): QuestionBankIssue[] {
+  if (q.origin !== "official_past" && q.origin !== "modified_official") return [];
+
+  const issues: QuestionBankIssue[] = [];
+  const add = (rule: string, message: string) =>
+    issues.push({ questionId: q.id, rule, message });
+
+  const official = q.official;
+  if (!official) {
+    // validateQuestion 側も official-source-required で拾うが、
+    // 「確認パックに出典なしの公式問題が載っている」ことをパック側の文脈で報告する。
+    add(
+      "pack-official-source-required",
+      `確認パック "${packId}" が参照する公式問題 "${q.id}" に official（出典情報）がありません。`,
+    );
+    return issues;
+  }
+
+  const missing: string[] = [];
+  if (official.attribution.trim() === "") missing.push("attribution");
+  if (official.sourceUrl.trim() === "") missing.push("sourceUrl");
+  if (!Number.isInteger(official.year) || official.year < 1) missing.push("year");
+  if (!Number.isInteger(official.questionNumber) || official.questionNumber < 1) {
+    missing.push("questionNumber");
+  }
+  if (missing.length > 0) {
+    add(
+      "pack-official-display-required",
+      `確認パック "${packId}" が参照する公式問題 "${q.id}" は、出題時に年度・問番号・出典を表示できません（欠けている値: ${missing.join(", ")}）。`,
+    );
+  }
+
+  // 図表は問題が成立するための情報。参照だけあって実体が無いと、
+  // 図を見ないと解けない問題を図なしで出題することになる。
+  const figureIds = (q.figures ?? []).map((f) => f.id);
+  const referencedIds = official.original?.figureIds ?? [];
+  for (const referenced of referencedIds) {
+    if (!figureIds.includes(referenced)) {
+      add(
+        "pack-official-figure-resolvable",
+        `確認パック "${packId}" が参照する公式問題 "${q.id}" は、原文が参照する図表 "${referenced}" を持っていません。`,
+      );
+    }
+  }
+  for (const figure of q.figures ?? []) {
+    if (figure.kind === "image" && !figure.src?.trim()) {
+      add(
+        "pack-official-figure-src",
+        `確認パック "${packId}" が参照する公式問題 "${q.id}" の図表 "${figure.id}" に src がありません。`,
+      );
+    }
+    if (figure.alt.trim() === "") {
+      add(
+        "pack-official-figure-alt",
+        `確認パック "${packId}" が参照する公式問題 "${q.id}" の図表 "${figure.id}" に alt がありません。`,
+      );
     }
   }
 

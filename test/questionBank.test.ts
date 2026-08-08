@@ -39,6 +39,14 @@ import type { QuestionRecord } from "@/types/questionBank";
 
 const ALL = getAllQuestions();
 
+// 移行後に本文を直した問題は version > 1 になる。
+// 「移行時から1文字も変わっていない」ことを確かめられるのは未改訂（version 1）の問題だけなので、
+// 同一性の検証はそちらに限る。改訂した問題の側は、
+//   - version を上げたか / レビュー記録を更新したか … npm run validate:question-versions
+//   - 直した結果が品質基準を満たすか               … npm run questions:quality-report
+// で守る。ここで「全問が version 1」を強制すると、欠陥のある問題を直せなくなる。
+const isRevised = (id: string) => (getQuestionById(id)?.version ?? 1) > 1;
+
 /** 出所ごとの束。既存問題と新規収録分を混ぜて検証しないために分けておく。 */
 const APP_ORIGINAL = getQuestionsByOrigin("app_original");
 const OFFICIAL_PAST = getQuestionsByOrigin("official_past");
@@ -138,11 +146,16 @@ describe("既存問題の移行", () => {
     expect(APP_ORIGINAL.length).toBe(examLevelQuestions.length);
   });
 
-  it("既存のIDがすべて解決でき、内容が1件も変わっていない", () => {
+  it("既存のIDがすべて解決でき、未改訂の問題は内容が1件も変わっていない", () => {
     for (const legacy of examLevelQuestions) {
       const migrated = getQuestionById(legacy.id);
       expect(migrated, `問題ID "${legacy.id}" が問題バンクで解決できない`).toBeDefined();
       if (!migrated) continue;
+
+      // 復習導線（どのトピックへ戻すか）は改訂しても変えない。
+      expect(migrated.primaryTopicId).toBe(legacy.topicId);
+
+      if (isRevised(legacy.id)) continue;
 
       expect(migrated.prompt).toBe(legacy.prompt);
       expect(migrated.choices).toEqual(legacy.choices);
@@ -150,13 +163,24 @@ describe("既存問題の移行", () => {
       expect(migrated.explanation).toBe(legacy.explanation);
       expect(migrated.estimatedDifficulty).toBe(legacy.difficulty);
       expect(migrated.tags).toEqual(legacy.examTags ?? []);
-      expect(migrated.primaryTopicId).toBe(legacy.topicId);
     }
   });
 
-  it("移行した問題はすべて app_original / version 1", () => {
+  it("移行した問題はすべて app_original で、改訂していなければ version 1", () => {
     expect(APP_ORIGINAL.length).toBe(examLevelQuestions.length);
-    expect(APP_ORIGINAL.every((q) => q.version === 1)).toBe(true);
+    for (const q of APP_ORIGINAL) {
+      if (q.version === 1) continue;
+      // 改訂したなら、レビュー記録が問題側にも残っていること。
+      expect(q.reviewedAt, `${q.id}`).not.toBeNull();
+      expect(q.reviewedBy, `${q.id}`).not.toBeNull();
+    }
+  });
+
+  it("改訂した問題は正答の記号を変えていない（回答履歴の意味を変えないため）", () => {
+    const legacyById = new Map(examLevelQuestions.map((q) => [q.id, q]));
+    for (const q of APP_ORIGINAL.filter((x) => x.version > 1)) {
+      expect(q.correctChoice, q.id).toBe(legacyById.get(q.id)?.correctChoice);
+    }
   });
 
   it("移行しただけの問題は draft（内容の監査はまだ行っていない）", () => {
@@ -235,10 +259,17 @@ describe("確認パックの互換性", () => {
         .filter((q) => q !== undefined);
       const actual = resolvePackExamQuestions(pack);
 
+      // 出題順・問題数・正答は改訂しても変えない。
       expect(actual.map((q) => q.id)).toEqual(expected.map((q) => q.id));
       expect(actual.map((q) => q.correctChoice)).toEqual(expected.map((q) => q.correctChoice));
-      expect(actual.map((q) => q.prompt)).toEqual(expected.map((q) => q.prompt));
-      expect(actual.map((q) => q.explanation)).toEqual(expected.map((q) => q.explanation));
+
+      // 本文は未改訂の問題だけ突き合わせる（改訂した問題は変わっていて当然）。
+      const unrevised = actual.filter((q) => !isRevised(q.id));
+      const expectedById = new Map(expected.map((q) => [q.id, q]));
+      for (const q of unrevised) {
+        expect(q.prompt, q.id).toBe(expectedById.get(q.id)?.prompt);
+        expect(q.explanation, q.id).toBe(expectedById.get(q.id)?.explanation);
+      }
     }
   });
 

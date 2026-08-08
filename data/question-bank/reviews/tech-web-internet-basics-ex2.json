@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-web-internet-basics-ex2",
+  "version": 3,
+  "contentReviewedBy": "claude-code:independent-question-review",
+  "explanationReviewedBy": "claude-code:independent-question-review",
+  "similarityReviewedBy": "claude-code:independent-question-review",
+  "reviewedAt": "2026-08-08T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "実装文脈を渡していない独立レビューでの指摘: 設問の限定条件「アプリケーション層で」が識別条件として機能していなかった（選択肢4つとも同じ層で、解説自身がそれを認めていた）。層の区別を問う形へ作り替えた。 指摘を反映のうえ承認。",
+  "authoredBy": "claude-code:distractor-quality-fix"
+}

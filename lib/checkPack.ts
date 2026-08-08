@@ -1,7 +1,7 @@
 import type { CheckQuestion, Topic } from "@/types/content";
 import type { ExamLevelQuestion, TopicCheckPack } from "@/types/checkPack";
 import { topicCheckPacks } from "@/data/topicCheckPacks";
-import { getQuestionById } from "@/lib/questionBank/loader";
+import { getQuestionForDelivery } from "@/lib/questionBank/loader";
 import {
   questionRecordToCheckQuestion,
   questionRecordToExamLevelQuestion,
@@ -63,13 +63,18 @@ export function resolvePackFlashcards(pack: TopicCheckPack): WordlistEntry[] {
 }
 
 /**
- * パックの過去問レベル問題（存在するものだけ）。
- * 解決できないIDは従来どおり黙って除外し、画面を止めない。
- * 参照切れ自体は npm run validate:questions が検出する。
+ * パックの過去問レベル問題（出題してよいものだけ）。
+ *
+ * 解決できないID・retired の問題は従来どおり黙って除外し、画面を止めない。
+ * 参照切れと retired 参照は npm run validate:questions が検出して CI で落とす
+ * （画面側で気づけないぶん、検証側で必ず気づけるようにしてある）。
+ *
+ * draft は従来どおり出題される。既存146問が draft のままなので、
+ * ここで status を狭めると確認パックの第3段階が空になる。
  */
 export function resolvePackExamQuestions(pack: TopicCheckPack): ExamLevelQuestion[] {
   return pack.examLevelQuestionIds
-    .map((id) => getQuestionById(id))
+    .map((id) => getQuestionForDelivery(id, "check_pack"))
     .filter((q) => q !== undefined)
     .map(questionRecordToExamLevelQuestion);
 }
@@ -77,7 +82,7 @@ export function resolvePackExamQuestions(pack: TopicCheckPack): ExamLevelQuestio
 /** パックの過去問レベル問題を CheckQuestion 形（TopicQuiz 用）で返す。 */
 export function resolvePackExamAsCheckQuestions(pack: TopicCheckPack): CheckQuestion[] {
   return pack.examLevelQuestionIds
-    .map((id) => getQuestionById(id))
+    .map((id) => getQuestionForDelivery(id, "check_pack"))
     .filter((q) => q !== undefined)
     .map(questionRecordToCheckQuestion);
 }

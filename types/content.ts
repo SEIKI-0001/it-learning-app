@@ -11,6 +11,8 @@
 // ここはクエストとは独立した、新しいコンテンツ基盤の型を定義する。
 
 import type { ChoiceKey } from "@/types";
+// 型だけの参照（実行時に読み込まれないので、questionBank.ts との相互参照にはならない）。
+import type { QuestionOrigin } from "@/types/questionBank";
 
 /** 難易度（1=やさしい / 2=ふつう / 3=ややむずかしい） */
 export type Difficulty = 1 | 2 | 3;
@@ -512,6 +514,40 @@ export type ConceptCard = {
 };
 
 /** 確認問題（4択）。クエスト用 Question とは独立（day/stage を持たない）。 */
+/**
+ * 出題時に表示する図表。
+ * width / height はサーバ側で画像の実寸を読めたときだけ入る（読めなければ既定値で描く）。
+ * QuestionFigure（問題データの正）から表示に必要な分だけ写したもの。
+ */
+export type QuestionFigureView = {
+  id: string;
+  kind: "image" | "table" | "ascii";
+  src?: string;
+  body?: string;
+  alt: string;
+  caption?: string;
+  width?: number;
+  height?: number;
+};
+
+/**
+ * 公式問題の出典表示に必要な値。
+ *
+ * 公式問題を出題する画面は、年度・問番号・出典表記を必ず出す。
+ * 「どこまでが公開問題で、どこからが本サービスの著作物か」を問題ごとに示すため、
+ * この情報を落としたまま公式問題を出題してはいけない。
+ */
+export type QuestionOfficialView = {
+  /** 画面に出す出典表記（例: "IPA 独立行政法人情報処理推進機構"）。 */
+  attribution: string;
+  sourceUrl: string;
+  answerSourceUrl: string;
+  /** 実施年（西暦）。 */
+  year: number;
+  /** 公式の「問 n」。 */
+  questionNumber: number;
+};
+
 export type CheckQuestion = {
   id: string;
   prompt: string;
@@ -525,6 +561,26 @@ export type CheckQuestion = {
   relatedTopicIds?: string[];
   /** 誤答分析・直前復習向けのタグ。 */
   reviewTags?: string[];
+
+  // --- 出題元の来歴と表示制御 ---------------------------------------------
+  // 以下はすべて省略可能。省略時は「アプリ独自問題を従来どおり出す」挙動になる
+  // （トピックの確認問題・単語帳の4択はこれらを持たないまま今までどおり動く）。
+
+  /** 問題バンク由来の出所。公式問題かどうかの判定に使う。 */
+  origin?: QuestionOrigin;
+  /** 問題バンク由来の版。どの版に答えたかを履歴へ残すために使う。 */
+  version?: number;
+  /**
+   * 選択肢を並び替えてよいか。省略時は true（従来どおりシャッフルする）。
+   *
+   * 公式問題では必ず false にする。公式の選択肢順そのものが出題の一部であり、
+   * 並び替えると「原文どおりに出題している」という出典表示が事実と食い違う。
+   */
+  shuffleChoices?: boolean;
+  /** 出典。公式問題では必須（表示を省略しないこと）。 */
+  official?: QuestionOfficialView;
+  /** 問題文と選択肢の間に出す図表。 */
+  figures?: QuestionFigureView[];
 };
 
 /** 図解付き解説（確認問題のあとに読む、理解を固めるパート） */

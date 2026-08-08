@@ -6,8 +6,9 @@
 // 選択肢は受け取った配列の順にそのまま出す（シャッフルしない）。
 // 内部キーは A〜D のままで、画面上の記号だけ ア〜エ にする。
 
-import Image from "next/image";
 import Link from "next/link";
+import OfficialQuestionSource from "@/components/questions/OfficialQuestionSource";
+import QuestionFigures from "@/components/questions/QuestionFigures";
 import { CHOICE_LABELS, type PastExamQuestionView } from "@/lib/pastExam/questionView";
 import type { ChoiceKey } from "@/types";
 
@@ -50,13 +51,7 @@ export default function PastExamQuestionCard({
           {question.prompt}
         </p>
 
-        {question.figures.length > 0 && (
-          <div className="mt-4 space-y-3">
-            {question.figures.map((figure) => (
-              <PastExamFigure key={figure.id} figure={figure} />
-            ))}
-          </div>
-        )}
+        <QuestionFigures figures={question.figures} className="mt-4" />
 
         <fieldset className="mt-4" disabled={disabled}>
           <legend className="sr-only">選択肢</legend>
@@ -112,7 +107,15 @@ export default function PastExamQuestionCard({
         )}
       </div>
 
-      <QuestionSource question={question} />
+      <OfficialQuestionSource
+        official={{
+          attribution: question.attribution,
+          sourceUrl: question.sourceUrl,
+          answerSourceUrl: question.answerSourceUrl,
+          year: question.year,
+          questionNumber: question.questionNumber,
+        }}
+      />
     </article>
   );
 }
@@ -165,72 +168,5 @@ function ChoiceButton({
         {text}
       </span>
     </button>
-  );
-}
-
-function PastExamFigure({
-  figure,
-}: {
-  figure: PastExamQuestionView["figures"][number];
-}) {
-  if (figure.kind !== "image" || !figure.src) {
-    // table / ascii の図表は本文として出す（現状の令和8年度は全て image）。
-    return (
-      <figure>
-        <pre className="overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs leading-relaxed text-gray-800">
-          {figure.body ?? figure.alt}
-        </pre>
-        {figure.caption && (
-          <figcaption className="mt-1 text-xs text-gray-500">{figure.caption}</figcaption>
-        )}
-      </figure>
-    );
-  }
-
-  // 実寸が読めなかった場合でもレイアウトが壊れないよう既定値を置く。
-  const width = figure.width ?? 800;
-  const height = figure.height ?? 400;
-
-  return (
-    <figure>
-      <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white p-2">
-        <Image
-          src={figure.src}
-          alt={figure.alt}
-          width={width}
-          height={height}
-          sizes="(max-width: 768px) 100vw, 720px"
-          className="h-auto w-full max-w-full"
-        />
-      </div>
-      {figure.caption && (
-        <figcaption className="mt-1 text-xs text-gray-500">{figure.caption}</figcaption>
-      )}
-    </figure>
-  );
-}
-
-/**
- * 出典表記。「どこまでが IPA の公開物で、どこからが本サービスの著作物か」を
- * 問題ごとに明示する。ここは表示を省略しないこと。
- */
-function QuestionSource({ question }: { question: PastExamQuestionView }) {
-  return (
-    <footer className="border-t border-gray-100 bg-gray-50 px-4 py-3">
-      <p className="text-xs text-gray-600">{question.attribution}</p>
-      <p className="mt-1 text-xs leading-relaxed text-gray-500">
-        問題文・選択肢はIPA公開問題です。解説は本サービス独自のものです。
-      </p>
-      {question.sourceUrl && (
-        <a
-          href={question.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-1 inline-flex text-xs font-medium text-brand-600 hover:text-brand-700"
-        >
-          IPA公式PDF（問題）を開く
-        </a>
-      )}
-    </footer>
   );
 }

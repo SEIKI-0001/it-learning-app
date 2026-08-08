@@ -7,12 +7,17 @@ import {
 } from "@/lib/billing/recordingGate";
 import {
   isMissingColumnError,
+  isUniqueViolationError,
   questionAttemptToRow,
   questionAttemptToRowV2,
   type QuestionAttemptInput,
   type QuestionType,
 } from "@/lib/dbMappers";
 import { getQuestionById } from "@/lib/questionBank";
+import {
+  sanitizeAnsweredAt,
+  sanitizeTimeSpentSeconds,
+} from "@/lib/questionAttemptSanitize";
 
 export const runtime = "nodejs";
 
@@ -104,9 +109,10 @@ function toOfficialAttempt(
     // 未回答（null）は不正解として残す。
     isCorrect: selectedAnswer !== null && selectedAnswer === record.correctChoice,
     mistakeReason: a.mistakeReason ?? null,
-    timeSpentSeconds: typeof a.timeSpentSeconds === "number" ? a.timeSpentSeconds : null,
+    // 実測難易度の入力になる値。壊れた値・あり得ない値は保存しない。
+    timeSpentSeconds: sanitizeTimeSpentSeconds(a.timeSpentSeconds),
     sourceTaskId: a.sourceTaskId ?? null,
-    answeredAt: a.answeredAt ?? null,
+    answeredAt: sanitizeAnsweredAt(a.answeredAt),
     questionOrigin: record.origin,
     questionVersion: record.version,
     examYear: record.official?.year ?? null,
@@ -138,9 +144,11 @@ function toLegacyAttempt(
     selectedAnswer: a.selectedAnswer ?? null,
     isCorrect: a.isCorrect,
     mistakeReason: a.mistakeReason ?? null,
-    timeSpentSeconds: typeof a.timeSpentSeconds === "number" ? a.timeSpentSeconds : null,
+    // 公式過去問と同じ正規化をかける。所要時間・回答日時はどの出題経路でも
+    // クライアント由来なので、扱いを分ける理由がない。
+    timeSpentSeconds: sanitizeTimeSpentSeconds(a.timeSpentSeconds),
+    answeredAt: sanitizeAnsweredAt(a.answeredAt),
     sourceTaskId: a.sourceTaskId ?? null,
-    answeredAt: a.answeredAt ?? null,
     // --- 以下はサーバ側で解決する（クライアント値は使わない） ---
     questionOrigin: record?.origin ?? null,
     questionVersion: record?.version ?? null,
@@ -150,6 +158,25 @@ function toLegacyAttempt(
     attemptMode: null,
     attemptGroupId: null,
   };
+}
+
+type ServiceSupabase = NonNullable<ReturnType<typeof getServiceSupabase>>;
+
+/**
+ * 1件ずつ insert し、一意制約違反だけ無視して保存できた件数を返す。
+ * それ以外のエラーは無視しない（保存できていない行を成功と数えないため）。
+ */
+async function insertIgnoringDuplicates(
+  supabase: ServiceSupabase,
+  rows: Record<string, unknown>[],
+): Promise<number> {
+  let saved = 0;
+  for (const row of rows) {
+    const { error } = await supabase.from("question_attempts").insert([row]);
+    if (!error) saved += 1;
+    else if (!isUniqueViolationError(error)) break;
+  }
+  return saved;
 }
 
 export async function POST(request: Request) {
@@ -191,12 +218,22 @@ export async function POST(request: Request) {
   }
 
   // まず新列を含めて保存する。
-  const { error } = await supabase
-    .from("question_attempts")
-    .insert(inputs.map((a) => questionAttemptToRowV2(userId, a)));
+  const rows = inputs.map((a) => questionAttemptToRowV2(userId, a));
+  const { error } = await supabase.from("question_attempts").insert(rows);
 
   if (!error) {
     return NextResponse.json({ ok: true, saved: inputs.length });
+  }
+
+  // 既に保存済みの回答をもう一度送った場合（採点の再送・API再送）。
+  // 一意制約が弾いた＝目的の行は既にあるので、成功として返す。
+  //
+  // まとめて insert すると1件でも重複があれば全件入らないため、
+  // 「一部だけ重複」を取りこぼさないよう1件ずつ入れ直す。
+  // ここへ来るのは再送のときだけなので、通常の保存経路は従来どおり1回の insert で済む。
+  if (isUniqueViolationError(error)) {
+    const saved = await insertIgnoringDuplicates(supabase, rows);
+    return NextResponse.json({ ok: true, saved, duplicatesIgnored: rows.length - saved });
   }
 
   // 20260726 のマイグレーションが本番へ未適用だと、新列が無くて insert が落ちる。

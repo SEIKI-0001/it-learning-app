@@ -350,7 +350,17 @@ describe("既存機能への影響", () => {
     const appOriginal = getQuestionsByOrigin("app_original");
     expect(appOriginal).toHaveLength(146);
     expect(appOriginal.every((q) => q.status === "draft")).toBe(true);
-    expect(appOriginal.every((q) => q.version === 1)).toBe(true);
+
+    // version は 1 とは限らない。品質レポートで見つかった欠陥を直した問題は
+    // version を上げてある（直したのに据え置くと、別内容への回答が同じ版として
+    // 集計されるため）。版を上げた問題にはレビュー記録が必須。
+    for (const q of appOriginal) {
+      expect(q.version, q.id).toBeGreaterThanOrEqual(1);
+      if (q.version > 1) {
+        expect(q.reviewedAt, `${q.id} は改訂済みなのでレビュー記録が必要`).not.toBeNull();
+        expect(q.reviewedBy, `${q.id} は改訂済みなのでレビュー記録が必要`).not.toBeNull();
+      }
+    }
   });
 
   it("問題の総数が 246 問（146 + 100）で増減していない", () => {
