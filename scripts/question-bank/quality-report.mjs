@@ -13,6 +13,10 @@
 //   - blocker が1件でもあれば終了コード 1 で落とす。
 //     （公開可否の正は npm run validate:questions だが、
 //       CI でこのスクリプトだけを回しても同じ結論になるようにしておく）
+//   - --fail-on-new-warnings を付けると、ベースラインに無い warning でも落とす。
+//     CI ではこれを付ける。既存問題に残る warning は直さないと決めた分だけを
+//     ベースラインに固定してあるので、そこから増えた＝今回の変更で悪化した、と見なせる。
+//     手元での実行では付けない（直している最中に落ちると読みにくいため）。
 //   - --update-baseline を付けたときだけ data/question-bank/quality-baseline.json を書き換える。
 //     既存問題に残る「直さない warning」を固定し、新規悪化だけを検出できるようにするため。
 //     blocker はベースラインの対象にしない。
@@ -50,6 +54,7 @@ function loadBaseline() {
 
 function main() {
   const updateBaseline = process.argv.includes("--update-baseline");
+  const failOnNewWarnings = process.argv.includes("--fail-on-new-warnings");
 
   const questions = getAllQuestions();
   const reviews = loadReviewRecords(ROOT);
@@ -104,6 +109,23 @@ function main() {
     for (const f of report.findings.filter((x) => x.severity === "blocker").slice(0, 20)) {
       console.error(`  - [${f.rule}] ${f.questionId}: ${f.message}`);
     }
+    process.exitCode = 1;
+  }
+
+  // ベースラインに無い warning は「今回の変更で増えたもの」。
+  // 直すか、見た上で残すと決めてベースラインを更新するか、どちらかを求める。
+  if (failOnNewWarnings && diff.newWarnings.length > 0) {
+    console.error(`\nベースラインに無い warning が ${diff.newWarnings.length} 件あります。`);
+    for (const key of diff.newWarnings.slice(0, 20)) {
+      const [questionId, rule] = key.split("::");
+      const finding = report.findings.find(
+        (f) => f.questionId === questionId && f.rule === rule,
+      );
+      console.error(`  - [${rule}] ${questionId}: ${finding?.message ?? ""}`);
+    }
+    console.error(
+      "\n直すか、見た上で残すと決めるなら --update-baseline でベースラインを更新してください。",
+    );
     process.exitCode = 1;
   }
 }

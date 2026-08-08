@@ -24,6 +24,45 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  questions:
+    name: Question bank gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 本文変更と version の対応は「前の版」と比べないと検証できない。
+          # 既定の浅いクローンだと比較元（origin/main / マージベース）に届かないため、
+          # 全履歴を取る。
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # 問題データそのものの整合。
+      # 確認パックの参照切れ・retired 参照・公式問題の出典/図表の欠落もここで落ちる。
+      - run: npm run validate:questions
+
+      # 本文を変えたのに version を据え置いていないか。
+      # レビュー記録の版ずれ・使い回しもここで落ちる。
+      # 比較元が取れない場合はスキップせずエラーにする（--allow-missing-base を付けない）。
+      - run: npm run validate:question-versions
+
+      # 作問の設計図。参照問題の実在と、完成候補との整合を見る。
+      - run: npm run validate:blueprints
+
+      # 品質レポート。blocker と、ベースラインに無い新規 warning で落とす。
+      - run: npm run questions:quality-report -- --fail-on-new-warnings
+
+      # 実測難易度レポートは fixture から作る。
+      # CI から Supabase へは接続しない（本番の回答データを CI に持ち込まないため）。
+      - run: npm run questions:analyze-quality -- --fixture test/fixtures/questionAttempts.sample.json --dry-run
+
+      # 成果物の更新漏れ。問題データを直してレポートを作り直していないと差分が出る。
+      - name: 品質成果物が問題データと一致しているか
+        run: git diff --exit-code -- reports/question-quality
+
   e2e:
     name: E2E smoke test
     needs: quality
