@@ -1,0 +1,29 @@
+{
+  "id": "example-strat-intellectual-property",
+  "primaryTopicId": "strat-intellectual-property",
+  "learningObjective": "ある成果物について、著作権・特許権・商標権のどれで守られるかを、保護対象（表現か・技術的思想か・出所表示か）から判断できる",
+  "questionPattern": "application",
+  "targetDifficulty": 2,
+  "requiredReasoningSteps": [
+    "問題文の成果物が「表現」「技術的思想」「出所の目印」のどれにあたるかを見分ける",
+    "見分けた区分に対応する権利を選ぶ（表現→著作権 / 技術的思想→特許権 / 出所の目印→商標権）",
+    "登録の要否を確認し、登録なしで発生する権利かどうかで最終的に絞り込む"
+  ],
+  "distractorStrategies": [
+    "保護対象を1つ隣にずらす（表現の話に特許権を当てる）",
+    "登録の要否を取り違える（登録不要の著作権を「出願が必要」として扱う）",
+    "上位概念で答えさせる（個別の権利ではなく「知的財産権」と答えさせる）"
+  ],
+  "referenceQuestionIds": [
+    "ipa-it-passport-2026-q001",
+    "ipa-it-passport-2026-q005",
+    "ipa-it-passport-2026-q011"
+  ],
+  "prohibitedCopyElements": [
+    "参照問題に出てくる題材（生成AI・サッカー選手・広告ビジネスモデル）",
+    "参照問題と同じ企業名・人物設定",
+    "参照問題の言い回しをなぞった問題文の書き出し"
+  ],
+  "promptVersion": "ip-v1",
+  "notes": "設計図の書き方の見本。対応する問題はまだ作っていない（候補が無い状態でも検証は通る）。"
+}
