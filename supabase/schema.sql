@@ -369,6 +369,13 @@ create table if not exists public.question_attempts (
   is_correct          boolean not null,
   mistake_reason      text,
   answered_at         timestamptz not null default now(),
+  -- サーバが受け取った時刻。answered_at と違いクライアントからは書けない。
+  -- 申告日時が疑わしいときの突き合わせと、保存順の追跡に使う。
+  --
+  -- not null にしない。稼働中DBへは下の alter で後から足すため、
+  -- この列ができる前に保存された行は null（＝受信時刻は不明）のまま残る。
+  -- そこを now() で埋めると「あとから記録された」という誤った時刻になる。
+  recorded_at         timestamptz default now(),
   time_spent_seconds  integer,
   source_task_id      uuid,
   -- 公式過去問 年度別演習（20260726 加算マイグレーション）。すべて nullable で、
@@ -380,6 +387,15 @@ create table if not exists public.question_attempts (
   official_exam_field text,                   -- 公式問題冊子上の出題区分（内容分類とは別物）
   attempt_group_id    text                    -- 100問の演習1回をまとめるID
 );
+
+-- 既存DBの追随（新規DBでは no-op）。
+-- recorded_at は「列を足す」と「既定値を付ける」を必ず2段階に分ける。
+-- default 付きで add column すると、PostgreSQL 11 以降は既存行にもその既定値が入り、
+-- この列より前に保存された行に「あとから記録された」という誤った時刻が入ってしまう。
+-- 先に default なしで足せば既存行は null（＝この列ができる前の行なので不明）のまま残り、
+-- そのあとで既定値を付ければ、以降の新しい行にだけ now() が入る。
+alter table public.question_attempts add column if not exists recorded_at         timestamptz;
+alter table public.question_attempts alter column recorded_at set default now();
 create index if not exists question_attempts_user_topic_idx
   on public.question_attempts(user_id, topic_id);
 create index if not exists question_attempts_user_type_idx
@@ -390,6 +406,31 @@ create index if not exists question_attempts_group_idx
   on public.question_attempts(user_id, attempt_group_id);
 create index if not exists question_attempts_user_exam_year_idx
   on public.question_attempts(user_id, exam_year);
+-- ---------------------------------------------------------------------------
+-- 公式過去問の二重保存の防止
+-- ---------------------------------------------------------------------------
+-- 本番モードは採点時に100問をまとめて送るため、次の競合で同じ回答が二度入りうる:
+--   採点ボタンの連打 / 時間切れと手動採点の競合 / APIの再送 / 同一セッションの再送信
+-- クライアント側でも1回に絞っているが、ネットワーク再送はクライアントからは見えないので
+-- 最終的な一意性はここで担保する。
+--
+-- 対象を attempt_group_id が入っている行に限る（＝公式過去問の年度別演習だけ）。
+-- 確認問題・過去問レベル・ミニ模試・模試は attempt_group_id を送らないので対象外で、
+-- 「同じ問題を何度も解き直す」という既存の保存挙動は一切変わらない。
+--
+-- 既に重複行がある稼働中DBでは、この索引の作成は失敗する。
+-- schema.sql は「あるべき姿の宣言」であって既存データを消す場所ではないので、
+-- ここでは重複を消さない。失敗したら、docs/question-bank/operations.md の
+-- 「公式過去問の重複回答の片付け」を実行してから、もう一度この索引を作ること
+-- （黙って行が消えるより、止まって気づけるほうを選んでいる）。
+--
+-- question_version も条件に含めるのは、NULL どうしが一意制約では別物として扱われ、
+-- 「版が入っていない行なら何件でも入る」状態になるため。版が解決できた行だけを対象にする
+-- （公式過去問の保存経路は問題バンクから必ず版を解決するので、実質すべての行が対象）。
+create unique index if not exists question_attempts_official_group_unique_idx
+  on public.question_attempts(user_id, attempt_group_id, question_id, question_version)
+  where attempt_group_id is not null and question_version is not null;
+
 alter table public.question_attempts enable row level security;
 
 -- ----------------------------------------------------------------------------
