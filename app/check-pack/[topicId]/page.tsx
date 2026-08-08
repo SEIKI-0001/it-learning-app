@@ -8,6 +8,7 @@ import {
   resolvePackFlashcards,
   resolvePackQuizQuestions,
 } from "@/lib/checkPack";
+import { withMeasuredFigures } from "@/lib/questions/measureFigures";
 import CheckPackRunner from "@/components/checkPack/CheckPackRunner";
 import PageHeader from "@/components/ui/PageHeader";
 import BottomNav from "@/components/BottomNav";
@@ -30,7 +31,8 @@ export default async function CheckPackPage({
 
   const quizQuestions = resolvePackQuizQuestions(topic, pack);
   const flashcardEntries = resolvePackFlashcards(pack);
-  const examQuestions = resolvePackExamAsCheckQuestions(pack);
+  // 図表の実寸はサーバでしか読めないので、クライアントへ渡す前にここで足す。
+  const examQuestions = withMeasuredFigures(resolvePackExamAsCheckQuestions(pack));
 
   return (
     <main className="min-h-screen pb-24">

@@ -7,6 +7,8 @@ import ChoiceButton from "@/components/ChoiceButton";
 import Icon from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
+import OfficialQuestionSource from "@/components/questions/OfficialQuestionSource";
+import QuestionFigures from "@/components/questions/QuestionFigures";
 
 // トピックの確認問題を順に解き、結果(UserAnswer[])を onComplete で親へ返す。
 // /today・/review の「解いて進める」体験に使う(表示専用の CheckQuestionCard とは別物)。
@@ -47,6 +49,29 @@ function shuffle(q: CheckQuestion): Shuffled {
   return { choices, correct };
 }
 
+/** 並び替えずにそのまま出す(公式問題)。以降の処理を同じ形で扱えるよう Shuffled に揃える。 */
+function keepOrder(q: CheckQuestion): Shuffled {
+  return {
+    choices: q.choices.map((choice) => ({
+      key: choice.key,
+      text: choice.text,
+      sourceKey: choice.key,
+    })),
+    correct: q.correctChoice,
+  };
+}
+
+/**
+ * 出題する選択肢を決める。
+ *
+ * 既定はシャッフル(従来どおり)。shuffleChoices: false のときだけ並びを保つ。
+ * 公式問題は公式の選択肢順そのものが出題の一部で、並び替えると
+ * 「原文どおりに出題している」という出典表示が事実と食い違うため。
+ */
+function prepareChoices(q: CheckQuestion): Shuffled {
+  return q.shuffleChoices === false ? keepOrder(q) : shuffle(q);
+}
+
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -75,7 +100,7 @@ export default function TopicQuiz({
   xpPerCorrect?: number;
 }) {
   const shuffled = useMemo(
-    () => new Map(questions.map((q) => [q.id, shuffle(q)] as const)),
+    () => new Map(questions.map((q) => [q.id, prepareChoices(q)] as const)),
     [questions],
   );
   const [selections, setSelections] = useState<Record<string, ChoiceKey>>({});
@@ -281,9 +306,21 @@ export default function TopicQuiz({
               revealed && isCorrect && streak >= 5 ? " animate-glow-ring" : ""
             }`}
           >
+            {q.official && (
+              <p className="mb-2 text-xs font-semibold text-brand-600">
+                {q.official.year}年度 公開問題 問{q.official.questionNumber}
+              </p>
+            )}
             <p className={`text-sm font-bold text-gray-800 ${dense ? "mb-2" : "mb-3"}`}>
               Q{currentIndex + 1}. {q.prompt}
             </p>
+            {/* 図表は問題文と選択肢の間に出す(公式問題冊子と同じ並び)。 */}
+            {q.figures && q.figures.length > 0 && (
+              <QuestionFigures
+                figures={q.figures}
+                className={dense ? "mb-2" : "mb-3"}
+              />
+            )}
             <div className={dense ? "space-y-2" : "space-y-2.5"}>
               {sh.choices.map((c) => (
                 <ChoiceButton
@@ -351,6 +388,19 @@ export default function TopicQuiz({
                     選んだ選択肢が違う理由：{selectedChoiceExplanation}
                   </p>
                 )}
+              </div>
+            )}
+            {/*
+              公式問題は出典表示を省略しない。カード内側の余白を打ち消して、
+              カード下端に接した帯として出す(年度別演習のカードと同じ見え方)。
+            */}
+            {q.official && (
+              <div
+                className={`overflow-hidden rounded-b-xl ${
+                  dense ? "-mx-3 -mb-3 mt-3" : "-mx-4 -mb-4 mt-4"
+                }`}
+              >
+                <OfficialQuestionSource official={q.official} />
               </div>
             )}
           </div>
