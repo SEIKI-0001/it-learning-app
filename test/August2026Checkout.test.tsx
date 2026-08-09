@@ -52,6 +52,41 @@ describe("August2026Checkout", () => {
     );
   });
 
+  it("renders purchase actions as accessible full-width CTAs", async () => {
+    const { rerender } = render(
+      <August2026Checkout {...baseProps} authenticated={false} />,
+    );
+    const loginLink = screen.getByRole("link", {
+      name: "ログインして3,480円で始める",
+    });
+    expect(loginLink).toHaveClass("flex", "min-h-11", "w-full", "bg-brand-700", "text-white");
+
+    rerender(<August2026Checkout {...baseProps} />);
+    const activeButton = screen.getByRole("button", {
+      name: "3,480円で6か月始める",
+    });
+    expect(activeButton).toHaveClass(
+      "flex",
+      "min-h-11",
+      "w-full",
+      "bg-brand-700",
+      "text-white",
+    );
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+    fireEvent.click(activeButton);
+    expect(
+      await screen.findByRole("button", { name: "Stripeを開いています…" }),
+    ).toHaveClass("flex", "min-h-11", "w-full", "bg-brand-700", "text-white");
+
+    rerender(<August2026Checkout {...baseProps} checkoutEnabled={false} />);
+    expect(screen.getByRole("button", { name: "決済を準備中" })).toHaveClass(
+      "flex",
+      "min-h-11",
+      "w-full",
+      "disabled:bg-slate-300",
+    );
+  });
+
   it("starts the approved campaign checkout", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(

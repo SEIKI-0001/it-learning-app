@@ -71,6 +71,11 @@ describe("August campaign page", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("3,480円（税込・買い切り）")).toBeInTheDocument();
     expect(screen.getByText(/自動更新はありません/)).toBeInTheDocument();
+    const mobilePurchaseLink = screen.getByRole("link", {
+      name: "購入内容を確認する",
+    });
+    expect(mobilePurchaseLink).toHaveAttribute("href", "#purchase");
+    expect(mobilePurchaseLink).toHaveClass("flex", "min-h-11", "lg:hidden");
     expect(screen.getByText(/合格を保証するものではありません/)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "特定商取引法に基づく表示" }),

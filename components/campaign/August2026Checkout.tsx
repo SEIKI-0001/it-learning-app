@@ -16,6 +16,9 @@ type Props = {
   campaignPurchase: boolean;
 };
 
+const purchaseActionClassName =
+  "flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-700 px-5 py-3 text-center text-base font-bold text-white shadow-sm transition hover:bg-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 disabled:shadow-none";
+
 export default function August2026Checkout(props: Props) {
   const { status, refresh } = useBillingStatus();
   const [busy, setBusy] = useState(false);
@@ -118,17 +121,24 @@ export default function August2026Checkout(props: Props) {
       )}
       <div className="mt-5">
         {!props.authenticated ? (
-          <Link href={loginHref}>ログインして3,480円で始める</Link>
+          <Link className={purchaseActionClassName} href={loginHref}>
+            ログインして3,480円で始める
+          </Link>
         ) : bonusUnavailable ? (
-          <button type="button" disabled>
+          <button className={purchaseActionClassName} type="button" disabled>
             特典受付を準備中
           </button>
         ) : !props.checkoutEnabled ? (
-          <button type="button" disabled>
+          <button className={purchaseActionClassName} type="button" disabled>
             決済を準備中
           </button>
         ) : (
-          <button type="button" disabled={busy} onClick={startCheckout}>
+          <button
+            className={purchaseActionClassName}
+            type="button"
+            disabled={busy}
+            onClick={startCheckout}
+          >
             {busy ? "Stripeを開いています…" : buttonLabel}
           </button>
         )}

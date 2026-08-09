@@ -97,6 +97,12 @@ export default async function CampaignPage({
             理解を確かめるAI採点を6か月使えます。
           </p>
           <p className="mt-3 text-sm text-brand-100">自動更新はありません。</p>
+          <Link
+            href="#purchase"
+            className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-white px-5 py-3 text-center text-base font-bold text-brand-900 shadow-sm transition hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:scale-[0.99] lg:hidden"
+          >
+            購入内容を確認する
+          </Link>
         </div>
       </section>
 
