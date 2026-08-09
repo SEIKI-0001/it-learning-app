@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 import Mochit from "@/components/mochit/Mochit";
 import { getInternalUserId } from "@/lib/auth/currentUser";
+import { AUGUST_2026_CAMPAIGN } from "@/lib/campaign/august2026";
 
 // 初回登録・ログインページ。未ログインで Web を開くと proxy がここへ誘導する。
 // - 初回は LINE 公式アカウント登録を推奨（初回導線・通知チャネル）。
@@ -22,11 +23,16 @@ export default async function LoginPage({
   // オープンリダイレクト防止: アプリ内パスのみ許可。
   const next =
     sp?.next && sp.next.startsWith("/") && !sp.next.startsWith("//") ? sp.next : "/";
+  const campaignContinuation = next === AUGUST_2026_CAMPAIGN.path;
 
   const googleEnabled = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   );
   const lineUrl = process.env.NEXT_PUBLIC_LINE_ADD_FRIEND_URL?.trim() || "";
+  const lineActionClassName =
+    campaignContinuation && googleEnabled
+      ? "flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-4 text-center text-base font-semibold text-brand-800 ring-1 ring-white/70 transition hover:bg-brand-50 active:scale-[0.99]"
+      : "flex w-full items-center justify-center gap-2 rounded-lg bg-[#06C755] px-6 py-4 text-center text-base font-semibold text-white transition active:scale-[0.99]";
 
   return (
     <main className="min-h-screen bg-brand-800 px-5 py-10 text-white">
@@ -43,6 +49,15 @@ export default async function LoginPage({
           やさしい言葉と図解・体験で少しずつ進められます。AI採点で「説明できる理解」も確認できます。
         </p>
 
+        {campaignContinuation && (
+          <div className="mt-6 w-full rounded-xl bg-white/15 px-4 py-4 text-left">
+            <p className="font-bold">ログイン後、購入ページへ戻ります</p>
+            <p className="mt-1 text-sm leading-relaxed text-brand-100">
+              Googleログインなら購入ページへ戻れます。LINEは購入後の相談特典の受け取りにも利用できます。
+            </p>
+          </div>
+        )}
+
         {/* ログイン手段 */}
         <div className="mt-8 w-full space-y-3">
           {googleEnabled ? (
@@ -56,7 +71,7 @@ export default async function LoginPage({
           {lineUrl ? (
             <a
               href={lineUrl}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#06C755] px-6 py-4 text-center text-base font-semibold text-white transition active:scale-[0.99]"
+              className={lineActionClassName}
             >
               LINE公式アカウントから始める
             </a>
