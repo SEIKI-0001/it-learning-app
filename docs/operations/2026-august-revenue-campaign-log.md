@@ -13,6 +13,13 @@
 |---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | 2026-08-01 | X | プロフィール整備1件・開始投稿1件・実演投稿1件・個別返信3件 | 初学者の進め方、30分学習、苦手分野の絞り込み | https://x.com/dpwwBxjhU8nvCCI/status/2083442899702988892<br>https://x.com/itpassportsup/status/2083443992931484054<br>https://x.com/itpassportsup/status/2083446282631471567<br>https://x.com/itpassportsup/status/2083446392308293938<br>https://x.com/itpassportsup/status/2083446469550645467 | 0 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | 返信反応を確認し、関心表明があった相手にだけキャンペーンURLを案内する |
 | 2026-08-08 | X | 期限案内1件・個別返信10件 | 試験直前対策、学習開始直後の難しさ、計算問題、プログラミング、長文問題、学習再開 | https://x.com/itpassportsup/status/2085980448782778821<br>https://x.com/itpassportsup/status/2085979958892237177<br>https://x.com/itpassportsup/status/2085980143810658324<br>https://x.com/itpassportsup/status/2085980307023688029<br>https://x.com/itpassportsup/status/2085982155570901079<br>https://x.com/itpassportsup/status/2085984450656210970<br>https://x.com/itpassportsup/status/2085984516938846495<br>https://x.com/itpassportsup/status/2085984574535016814<br>https://x.com/itpassportsup/status/2085984663949201507<br>https://x.com/itpassportsup/status/2085984732245045376<br>https://x.com/itpassportsup/status/2085984849496781188 | 0 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | 返信反応を確認し、関心表明があった相手にだけキャンペーンURLを案内する |
+| 2026-08-09 | YouTube Shorts | 15分学習の実演動画1件 | 勉強を再開できない、次に何をするか決められない | https://youtube.com/shorts/YK3JFCF_32c | 未確認 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | URLが説明欄で省略表示されるため、note記事から購入ページへの導線も用意する |
+| 2026-08-09 | note | 15分学習プランの解説記事1件 | 勉強を再開できない、学習計画を作り込みすぎる | https://note.com/pure_pika5336/n/n961c5a5f31d9 | 未確認 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | 記事内の購入リンクからのCheckout開始と購入を確認する |
+
+## 配信媒体の決定
+
+- 2026-08-09: 追加配信はnoteに限定し、LinkedInとInstagramは使用しない。YouTube Shortsは同日公開済み。
+- 2026-08-09 18:04 JST: Stripe Checkout Sessionsは0件で、外部顧客購入と売上はいずれも0。
 
 ## 購入・特典台帳
 
