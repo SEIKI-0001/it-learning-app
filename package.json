@@ -25,7 +25,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "richmenu:preview": "node scripts/richmenu/richmenu-image.mjs",
-    "richmenu:setup": "node scripts/richmenu/setup-richmenu.mjs"
+    "richmenu:setup": "node scripts/richmenu/setup-richmenu.mjs",
+    "questions:apply-revision": "node scripts/question-bank/apply-revision.mjs",
+    "questions:build:theme-exam": "node scripts/question-bank/build-theme-exam.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",

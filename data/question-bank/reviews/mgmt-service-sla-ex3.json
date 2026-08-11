@@ -1,0 +1,11 @@
+{
+  "questionId": "mgmt-service-sla-ex3",
+  "version": 3,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "「3.6時間」と「36時間」が正規化後に同一と判定され、正答が一意に定まらなかった。誤答を桁の衝突しない値に置き換えた。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

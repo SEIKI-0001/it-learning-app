@@ -11,6 +11,7 @@ import {
   getThemeProgress,
 } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
+import { hasThemeExam } from "@/lib/themeExam";
 
 const STATUS = {
   not_started: { symbol: "○", label: "未着手", className: "text-gray-400" },
@@ -109,6 +110,23 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
             );
           })}
         </div>
+
+        {/* 章を通した仕上げ。各レッスンの確認パックとは役割が違うので、セクションの後に置く。 */}
+        {hasThemeExam(theme.slug) && (
+          <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
+            <h2 className="text-base font-semibold text-gray-900">総まとめ試験</h2>
+            <p className="mt-1 text-sm leading-relaxed text-gray-600">
+              この章の内容を横断した、本試験に近い形式の試験です。
+              組合せ型・計算・資料の読み取りを含みます。
+            </p>
+            <Link
+              href={`/theme-exam/${theme.slug}`}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition hover:bg-gray-50"
+            >
+              章の総まとめ試験へ
+            </Link>
+          </section>
+        )}
       </div>
       <BottomNav />
     </main>

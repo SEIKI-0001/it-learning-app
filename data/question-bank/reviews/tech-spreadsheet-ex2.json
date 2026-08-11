@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-spreadsheet-ex2",
+  "version": 3,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "計算問題なのに選択肢も問題文も単位を持たず、何を答えるのかが曖昧だったため、金額であることを明示した。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

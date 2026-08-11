@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
   "summary": {
-    "questionCount": 246,
+    "questionCount": 426,
     "blockerCount": 0,
-    "warningCount": 56,
+    "warningCount": 155,
     "byOrigin": {
       "official_past": 100,
-      "app_original": 146,
+      "app_original": 326,
       "ai_generated": 0,
       "modified_official": 0
     },
     "byStatus": {
-      "draft": 146,
+      "draft": 326,
       "content_verified": 0,
       "explanation_verified": 0,
       "published": 100,
@@ -75,36 +75,6 @@
       "message": "「全て」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
     },
     {
-      "questionId": "ipa-it-passport-2026-q068",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.941）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "ipa-it-passport-2026-q074",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "ipa-it-passport-2026-q074",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "ipa-it-passport-2026-q074",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "ipa-it-passport-2026-q074",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.867）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
       "questionId": "ipa-it-passport-2026-q075",
       "severity": "warning",
       "rule": "choice-near-duplicate",
@@ -120,25 +90,7 @@
       "questionId": "ipa-it-passport-2026-q086",
       "severity": "warning",
       "rule": "choice-near-duplicate",
-      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "ipa-it-passport-2026-q086",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.875）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "ipa-it-passport-2026-q086",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "ipa-it-passport-2026-q086",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.842）。言い換えただけで実質同じことを述べていないか確認してください。"
     },
     {
       "questionId": "ipa-it-passport-2026-q091",
@@ -159,6 +111,72 @@
       "message": "「常に」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
     },
     {
+      "questionId": "mgmt-development-process-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-development-process-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-estimation-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-estimation-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-facility-management-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-facility-management-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-itil-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-itil-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-pdca-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-pdca-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-pm-qcd-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
       "questionId": "mgmt-requirements-definition-ex1",
       "severity": "warning",
       "rule": "choice-near-duplicate",
@@ -171,196 +189,772 @@
       "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
     },
     {
+      "questionId": "mgmt-risk-management-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-risk-management-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-service-sla-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-service-sla-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-service-sla-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
       "questionId": "mgmt-system-audit-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "mgmt-system-audit-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-testing-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-testing-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-wbs-gantt-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "mgmt-wbs-gantt-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-3c-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-accounting-break-even-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-bcp-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-bcp-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-business-process-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-corporate-strategy-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-corporate-strategy-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-ebusiness-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-ebusiness-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-financial-statements-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-financial-statements-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-generative-ai-dx-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-generative-ai-dx-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "strat-generative-ai-dx-ex3",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
-      "questionId": "strat-generative-ai-dx-ex3",
+      "questionId": "strat-goal-evaluation-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-goal-evaluation-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-intellectual-property-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-intellectual-property-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-labor-laws-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-labor-laws-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-management-systems-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-management-systems-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-marketing-4p-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-marketing-4p-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-ppm-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-ppm-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "strat-privacy-law-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
-      "questionId": "strat-privacy-law-ex1",
+      "questionId": "strat-privacy-law-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「一切」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-security-laws-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-security-laws-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-standardization-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-standardization-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-swot-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-swot-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "strat-swot-ex3",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-system-strategy-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "strat-system-strategy-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-value-chain-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "strat-value-chain-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-ai-ml-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-ai-ml-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-ai-ml-ex3",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-algorithm-flowchart-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-algorithm-flowchart-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-api-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-api-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
-      "questionId": "tech-api-ex2",
+      "questionId": "tech-auth-authz-mfa-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「一切」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-auth-authz-mfa-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-auth-authz-mfa-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-binary-data-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「常に」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
-    },
-    {
-      "questionId": "tech-binary-data-ex1",
-      "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-binary-data-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-cloud-models-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-cloud-models-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-cloud-models-ex3",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
-    },
-    {
-      "questionId": "tech-cloud-models-ex3",
-      "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-common-key-crypto-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-common-key-crypto-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「絶対に」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-computer-core-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-cyber-attacks-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-cyber-attacks-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-data-structure-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-data-structure-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-data-utilization-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-data-utilization-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-database-sql-ex1",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.947）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "tech-database-sql-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-database-sql-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-database-sql-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-digital-signature-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-digital-signature-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-email-protocol-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-email-protocol-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-encryption-hash-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-encryption-hash-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-firewall-vpn-zero-trust-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-firewall-vpn-zero-trust-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-firewall-vpn-zero-trust-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-http-https-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-http-https-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-http-https-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-iot-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
-      "questionId": "tech-iot-ex1",
+      "questionId": "tech-iot-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「一切」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-isms-risk-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-isms-risk-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-keys-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
-      "questionId": "tech-keys-ex1",
+      "questionId": "tech-keys-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-lan-wan-ex1",
       "severity": "warning",
       "rule": "choice-near-duplicate",
-      "message": "選択肢 A と B の本文がほとんど同じです（類似度 1.000）。言い換えただけで実質同じことを述べていないか確認してください。"
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.875）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "tech-logic-operations-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-logic-operations-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-malware-phishing-ransomware-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-malware-phishing-ransomware-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-malware-phishing-ransomware-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-network-address-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-network-address-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-network-address-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-normalization-ex1",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
-    },
-    {
-      "questionId": "tech-normalization-ex1",
-      "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「すべて」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-normalization-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-os-software-hardware-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-os-software-hardware-ex2",
       "severity": "warning",
-      "rule": "absolute-word-hint",
-      "message": "「必ず」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-programming-basics-ex1",
       "severity": "warning",
-      "rule": "pattern-calculation-candidate",
-      "message": "選択肢がすべて数値ですが questionPattern が \"application\" です。\"calculation\" が適切ではないか確認してください。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-programming-basics-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-public-key-crypto-ex1",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.889）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "tech-public-key-crypto-ex1",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.889）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "tech-public-key-crypto-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-public-key-crypto-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
     {
       "questionId": "tech-reliability-availability-ex1",
       "severity": "warning",
-      "rule": "pattern-calculation-candidate",
-      "message": "選択肢がすべて数値ですが questionPattern が \"application\" です。\"calculation\" が適切ではないか確認してください。"
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-reliability-availability-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-security-cia-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-security-cia-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-security-cia-ex3",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-spreadsheet-ex1",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "tech-spreadsheet-ex1",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "tech-spreadsheet-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-spreadsheet-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-transaction-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-web-internet-basics-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-wireless-mobile-ex1",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
+    },
+    {
+      "questionId": "tech-wireless-mobile-ex2",
+      "severity": "warning",
+      "rule": "review-self-review",
+      "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     }
   ],
   "similarities": []

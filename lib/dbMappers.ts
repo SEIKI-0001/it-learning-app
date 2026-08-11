@@ -443,7 +443,8 @@ export type QuestionType =
   | "exam_level"
   | "mini_exam"
   | "mock_exam"
-  | "official_past"; // 公式過去問の年度別演習（20260726）
+  | "official_past" // 公式過去問の年度別演習（20260726）
+  | "theme_exam"; // テーマ別 高難易度試験（章単位。確認パックの exam_level とは別に集計する）
 
 /** 旧形式の行。20260726 マイグレーション適用前のDBはこの列しか持たない。 */
 export type QuestionAttemptRow = {

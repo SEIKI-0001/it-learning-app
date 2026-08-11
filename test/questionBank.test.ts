@@ -48,7 +48,13 @@ const ALL = getAllQuestions();
 const isRevised = (id: string) => (getQuestionById(id)?.version ?? 1) > 1;
 
 /** 出所ごとの束。既存問題と新規収録分を混ぜて検証しないために分けておく。 */
-const APP_ORIGINAL = getQuestionsByOrigin("app_original");
+//
+// app_original には2つの束がある。移行の同一性を見たいのは前者だけなので分ける。
+//   exam-level  … 確認パックの過去問レベル問題（移行元 data/examLevelQuestions.ts がある）
+//   theme-exam  … テーマ別 高難易度試験（移行元は無く、圧縮ソースから生成される）
+const ALL_APP_ORIGINAL = getQuestionsByOrigin("app_original");
+const APP_ORIGINAL = ALL_APP_ORIGINAL.filter((q) => !q.id.startsWith("theme-exam-"));
+const THEME_EXAM = ALL_APP_ORIGINAL.filter((q) => q.id.startsWith("theme-exam-"));
 const OFFICIAL_PAST = getQuestionsByOrigin("official_past");
 
 /** 令和8年度 ITパスポート 公開問題の収録内容。 */
@@ -129,10 +135,14 @@ describe("問題バンクの整合性", () => {
     expect(IPA_2026.map((q) => q.id)).toEqual(ipa2026Manifest.questionIds);
   });
 
-  it("問題バンク全体の件数が既存146問＋公式100問になっている", () => {
+  it("問題バンクの件数が、束ごとの想定と一致する", () => {
+    // 過去問レベル問題は146問で固定。ここが動いたら、確認パックの参照か移行の同一性が壊れている。
     expect(APP_ORIGINAL.length).toBe(146);
     expect(OFFICIAL_PAST.length).toBe(100);
-    expect(ALL.length).toBe(246);
+    // テーマ別試験は増えていく想定なので件数は固定しない。
+    // 「1テーマ10問ちょうど」であることだけを守る（構成の崩れをここで気づけるようにする）。
+    expect(THEME_EXAM.length % 10).toBe(0);
+    expect(ALL.length).toBe(APP_ORIGINAL.length + THEME_EXAM.length + OFFICIAL_PAST.length);
   });
 });
 
@@ -224,7 +234,10 @@ describe("既存問題の移行", () => {
       legacyByTopic.set(q.topicId, (legacyByTopic.get(q.topicId) ?? 0) + 1);
     }
     for (const [topicId, count] of legacyByTopic) {
-      const migrated = getQuestionsByTopic(topicId).filter((q) => q.origin === "app_original");
+      // テーマ別試験も同じトピックに載るため、移行元と対応する束だけに絞る。
+      const migrated = getQuestionsByTopic(topicId).filter(
+        (q) => q.origin === "app_original" && !q.id.startsWith("theme-exam-"),
+      );
       expect(migrated.length, `トピック "${topicId}"`).toBe(count);
     }
   });

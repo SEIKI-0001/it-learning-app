@@ -6,7 +6,9 @@
 ```text
 data/question-bank/
 ├── index.ts                       # JSON を束ねる唯一の場所
-├── original/exam-level.json       # アプリ独自問題（146問）
+├── original/exam-level.json       # 確認パックの過去問レベル問題（146問）
+├── original/theme-exam.json       # テーマ別 高難易度試験（18章 × 10問。自動生成）
+├── original/theme-exam/           # ↑ の生成元（1テーマ1ファイル。人が編集するのはこちら）
 ├── official/ipa/                  # 公式過去問（令和8年度 ITパスポート 100問）
 ├── explanations/                  # 公式問題に対するアプリ独自の解説（原文と分ける）
 ├── sources/                       # 公式原文の転記結果（取り込みの入力）
@@ -47,6 +49,43 @@ data/question-bank/
 
 既存問題を監査したら status を引き上げていく。`published` にする際は
 `reviewedAt` / `reviewedBy` を必ず埋める（無いと `npm run validate:questions` が落ちる）。
+
+## アプリ独自問題の2つの束
+
+`origin: "app_original"` には、役割の違う2つの束がある。
+
+| 束 | 件数 | 出題される場所 | 作り方 |
+|---|---|---|---|
+| `original/exam-level.json` | 146問 | 確認パック（トピック単位） | 直接編集。改訂は `npm run questions:apply-revision` |
+| `original/theme-exam.json` | 180問 | 総まとめ試験（章単位） | `original/theme-exam/<slug>.json` を編集し `npm run questions:build:theme-exam` |
+
+分けている理由は、測っているものが違うため。確認パックは1つのトピックの理解を、
+テーマ別試験は章を横断した対応力を見る。公式過去問の約2割を占める組合せ型
+（適切なものだけを全て挙げたもの）や資料の読み取りは、1トピックだけでは成立しないので
+テーマ別試験の側に置いている。
+
+### テーマ別試験の作り方
+
+```bash
+# 1. data/question-bank/original/theme-exam/<themeSlug>.json を編集する
+# 2. 生成する（ID・contentHash・version・シラバス分類が自動で埋まる）
+npm run questions:build:theme-exam
+# 3. 検証する
+npm run validate:questions
+```
+
+生成物（`theme-exam.json` / `data/themeExams.ts` / マニフェスト）は直接編集しない。
+本文が変わっていない問題は version を据え置くので、再生成しても回答履歴は分断されない。
+
+### 既存問題の改訂
+
+```bash
+# data/question-bank/revisions/<name>.json に差分を書いて適用する
+npm run questions:apply-revision -- data/question-bank/revisions/batch-01.json
+```
+
+本文・version・contentHash・`reviews/<id>.json` をまとめて更新する。
+この3つを手でそろえると必ずずれるので、本文だけ書けば残りが揃うようにしてある。
 
 ## origin と公式出典の対応
 

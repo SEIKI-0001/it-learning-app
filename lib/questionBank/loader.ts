@@ -77,7 +77,7 @@ export function getQuestionById(id: string): QuestionRecord | undefined {
  *   check_pack        … 確認パックの過去問レベル問題
  *   official_past_exam … 公式過去問の年度別演習
  */
-export type QuestionDeliveryMode = "check_pack" | "official_past_exam";
+export type QuestionDeliveryMode = "check_pack" | "theme_exam" | "official_past_exam";
 
 /**
  * 出題用に問題を1件取得する（出してはいけない問題は undefined）。

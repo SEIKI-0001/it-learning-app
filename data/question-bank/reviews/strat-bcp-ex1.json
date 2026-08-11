@@ -1,0 +1,11 @@
+{
+  "questionId": "strat-bcp-ex1",
+  "version": 3,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "断定語「全て」を含む選択肢が1つだけで、内容を読まずに誤答と絞り込めたため文言を改めた。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

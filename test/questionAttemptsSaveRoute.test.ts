@@ -22,6 +22,7 @@ vi.mock("@/lib/billing/recordingGate", () => ({
 vi.mock("@/lib/supabaseServer", () => ({ getServiceSupabase }));
 
 import { POST } from "@/app/api/question-attempts/save/route";
+import { getQuestionById } from "@/lib/questionBank";
 
 /** insert された行（呼び出しごとの配列）。 */
 let inserted: Array<Array<Record<string, unknown>>> = [];
@@ -245,10 +246,13 @@ describe("既存4種類の保存は変わらない", () => {
       },
     ]);
 
+    // 版は問題バンクから引く。問題を改訂すると version が上がるため、
+    // ここで数値を固定すると改訂のたびにこのテストが落ちる。
+    // 見たいのは「クライアントの申告ではなく問題バンクの値で補われること」。
     expect(rows()[0]).toMatchObject({
       topic_id: "tech-security-cia",
       question_origin: "app_original",
-      question_version: 1,
+      question_version: getQuestionById("tech-security-cia-ex1")?.version,
       exam_year: null,
       official_exam_field: null,
     });

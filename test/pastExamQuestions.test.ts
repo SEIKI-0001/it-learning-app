@@ -347,7 +347,11 @@ describe("既存機能への影響", () => {
     expect(published).toHaveLength(100);
     expect(published.every((q) => q.origin === "official_past")).toBe(true);
 
-    const appOriginal = getQuestionsByOrigin("app_original");
+    // app_original には過去問レベル問題（146問）とテーマ別試験の2つの束がある。
+    // ここで見たいのは前者が draft のままであることなので、IDの接頭辞で分ける。
+    const appOriginal = getQuestionsByOrigin("app_original").filter(
+      (q) => !q.id.startsWith("theme-exam-"),
+    );
     expect(appOriginal).toHaveLength(146);
     expect(appOriginal.every((q) => q.status === "draft")).toBe(true);
 
@@ -363,8 +367,14 @@ describe("既存機能への影響", () => {
     }
   });
 
-  it("問題の総数が 246 問（146 + 100）で増減していない", () => {
-    expect(getAllQuestions()).toHaveLength(246);
+  it("過去問レベル問題146問と公式過去問100問が、どちらも増減していない", () => {
+    // テーマ別試験は今後増えるので総数は固定しない。
+    // 「公式過去問の収録が既存の束に影響していない」ことがここでの関心事。
+    const all = getAllQuestions();
+    expect(all.filter((q) => q.origin === "official_past")).toHaveLength(100);
+    expect(
+      all.filter((q) => q.origin === "app_original" && !q.id.startsWith("theme-exam-")),
+    ).toHaveLength(146);
   });
 
   it("確認パックは67個のままで、公式過去問を1問も取り込んでいない", () => {

@@ -1,0 +1,19 @@
+{
+  "reviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "authoredBy": "claude-code:exam-level-quality-2026-08",
+  "decision": "approve",
+  "notes": "断定語「全て」を含む選択肢が1つだけで、内容を読まずに誤答と絞り込めたため文言を改めた。",
+  "questions": [
+    {
+      "id": "strat-bcp-ex1",
+      "choices": [
+        "業務が停止した場合の影響を分析し、優先して復旧する業務を決める",
+        "どの業務システムも同時に復旧できるだけの設備を用意する",
+        "復旧の手順書を作成し、担当者へ配付して訓練を実施する",
+        "災害の発生する確率を調べ、確率が最も高い災害だけに備える"
+      ],
+      "correctChoice": "A"
+    }
+  ]
+}
