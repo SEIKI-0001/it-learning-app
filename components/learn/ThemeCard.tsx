@@ -17,6 +17,7 @@ import {
 import { getThemeIcon } from "@/lib/themeIcons";
 import type { UserProgress } from "@/types";
 import type { LearningTheme, ThemeProgress } from "@/types/learningCatalog";
+import type { ThemeExamSummary } from "@/types/themeExam";
 
 type ThemeCardProps = {
   theme: LearningTheme;
@@ -27,6 +28,8 @@ type ThemeCardProps = {
   nextLessonTitle?: string;
   nextLessonHref?: string;
   userProgress?: UserProgress;
+  /** この章の総まとめ試験。無い章では省略する。 */
+  themeExam?: ThemeExamSummary;
   isOpen: boolean;
   onToggle: () => void;
 };
@@ -62,6 +65,7 @@ export default function ThemeCard({
   nextLessonTitle,
   nextLessonHref,
   userProgress,
+  themeExam,
   isOpen,
   onToggle,
 }: ThemeCardProps) {
@@ -200,6 +204,22 @@ export default function ThemeCard({
               );
             })}
           </div>
+          {/* 章を通した仕上げ。セクション（＝レッスン）とは役割が違うので最後に置く。 */}
+          {themeExam && (
+            <Link
+              href={`/theme-exam/${theme.slug}`}
+              className="mt-3 flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5 transition hover:bg-gray-50"
+            >
+              <Icon name="award" className="h-4 w-4 shrink-0 text-brand-600" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-gray-900">総まとめ試験</span>
+                <span className="mt-0.5 block text-xs tabular-nums text-gray-500">
+                  {themeExam.questionCount}問・合格ライン {themeExam.passRate}%・章を横断した出題
+                </span>
+              </span>
+              <Icon name="chevron-right" className="h-4 w-4 text-gray-300" />
+            </Link>
+          )}
         </div>
       )}
     </article>

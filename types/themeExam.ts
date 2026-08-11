@@ -30,6 +30,19 @@ export type ThemeExam = {
   passRate: number;
 };
 
+/**
+ * 一覧に出すための、試験1つぶんの見出し情報。
+ *
+ * 問題の実体（data/question-bank、1MB超）をクライアントへ運ばないために、
+ * サーバ側で件数まで解決したこの形だけを画面へ渡す。
+ */
+export type ThemeExamSummary = {
+  themeSlug: string;
+  /** 実際に出題できる問題数（解決できないIDを除いたあとの数）。 */
+  questionCount: number;
+  passRate: number;
+};
+
 /** 出題1問ぶんの表示用の形。正答と解説も含む（採点はクライアントで完結する）。 */
 export type ThemeExamQuestionView = {
   id: string;

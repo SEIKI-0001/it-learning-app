@@ -9,6 +9,7 @@ import type {
   ThemeExamQuestionResult,
   ThemeExamQuestionView,
   ThemeExamResult,
+  ThemeExamSummary,
 } from "@/types/themeExam";
 import { THEME_EXAM_PASS_RATE } from "@/types/themeExam";
 
@@ -70,6 +71,21 @@ export function resolveThemeExamQuestions(exam: ThemeExam): ThemeExamQuestionVie
       topicTitle: getTopic(q.primaryTopicId)?.title ?? q.primaryTopicId,
       tags: q.tags ?? [],
     }));
+}
+
+/**
+ * 一覧表示用の見出し情報だけを、章の順に返す。
+ *
+ * 学ぶ画面（クライアント）へは必ずこの形で渡す。lib/themeExam 自体を
+ * クライアントから import すると問題バンクのJSON一式が同じバンドルに載るため、
+ * サーバコンポーネントで解決してから props で渡す。
+ */
+export function getThemeExamSummaries(): ThemeExamSummary[] {
+  return themeExams.map((exam) => ({
+    themeSlug: exam.themeSlug,
+    questionCount: resolveThemeExamQuestions(exam).length,
+    passRate: exam.passRate,
+  }));
 }
 
 /** 試験に対応するテーマ（学ぶ画面の章）。 */

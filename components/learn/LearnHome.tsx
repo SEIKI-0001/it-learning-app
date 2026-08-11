@@ -18,6 +18,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import ThemeCard from "@/components/learn/ThemeCard";
 import { getThemeMasterState } from "@/lib/lessonState";
+import type { ThemeExamSummary } from "@/types/themeExam";
 
 type FieldFilter = "all" | TopicField;
 
@@ -30,13 +31,18 @@ const FIELDS: { id: FieldFilter; label: string }[] = [
 
 const FIELD_ORDER: TopicField[] = ["strategy", "management", "technology"];
 
-export default function LearnHome() {
+export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamSummary[] }) {
   const [state] = useAppState();
   const [fieldFilter, setFieldFilter] = useState<FieldFilter>("all");
   const [query, setQuery] = useState("");
   const [openThemeIds, setOpenThemeIds] = useState<Set<string>>(() => new Set());
   const themes = useMemo(() => getAllThemes(), []);
   const progress = state?.progress;
+  const examBySlug = useMemo(
+    () => new Map(themeExams.map((exam) => [exam.themeSlug, exam])),
+    [themeExams],
+  );
+  const totalExamQuestions = themeExams.reduce((sum, exam) => sum + exam.questionCount, 0);
 
   const visibleThemes = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("ja-JP");
@@ -243,6 +249,7 @@ export default function LearnHome() {
                           : undefined
                       }
                       userProgress={progress}
+                      themeExam={examBySlug.get(theme.slug)}
                       isOpen={openThemeIds.has(theme.id)}
                       onToggle={() => toggleTheme(theme.id)}
                     />
@@ -252,6 +259,38 @@ export default function LearnHome() {
             </section>
           );
         })}
+
+        {/* 章ごとの仕上げ。各章の行を開くと同じ試験へ入れるが、
+            章を横断して選びたいときのために一覧への入口も置く。 */}
+        {themeExams.length > 0 && (
+          <section
+            aria-labelledby="theme-exam-heading"
+            className="rounded-xl border border-gray-200 bg-white p-4"
+          >
+            <div className="flex items-start gap-3">
+              <Icon name="award" className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+              <div className="min-w-0">
+                <h2 id="theme-exam-heading" className="text-base font-semibold text-gray-900">
+                  総まとめ試験
+                </h2>
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                  章の内容を横断した、本試験に近い形式の試験です。
+                  組合せ型・計算・資料の読み取りを含みます。
+                </p>
+                <p className="mt-1 text-xs tabular-nums text-gray-500">
+                  {themeExams.length}章・全{totalExamQuestions}問
+                </p>
+                <Link
+                  href="/theme-exam"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition hover:bg-gray-50"
+                >
+                  章を選んで解く
+                  <Icon name="chevron-right" className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
         {visibleThemes.length === 0 && (
           <section className="rounded-xl border border-gray-200 bg-white py-12 text-center">
