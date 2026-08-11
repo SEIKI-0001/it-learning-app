@@ -1,4 +1,8 @@
 import type { Metadata } from 'next';
+import {
+  isAugust2026BonusActive,
+  isAugust2026BonusOpen,
+} from '@/lib/campaign/august2026';
 import Reveal from './Reveal';
 import './lp.css';
 
@@ -15,9 +19,16 @@ export const metadata: Metadata = {
     '参考書が途中で止まってしまう人のためのITパスポート試験対策。全69トピックを操作しながら学び、試験日から逆算した「今日やること」が毎日届きます。7日間無料。',
 };
 
+export const dynamic = 'force-dynamic';
+
 const START_HREF = '/login';
 
 export default function LandingPage() {
+  const bonusActive = isAugust2026BonusActive({
+    now: new Date(),
+    bonusOpen: isAugust2026BonusOpen(process.env.AUGUST_2026_BONUS_OPEN),
+  });
+
   return (
     <div className="lp">
       <Reveal />
@@ -39,6 +50,16 @@ export default function LandingPage() {
           </a>
         </div>
       </header>
+
+      {bonusActive && (
+        <aside className="campaign-banner" aria-label="期間限定キャンペーン">
+          <p>
+            <strong>8月10日まで・先着6名</strong>
+            6か月Pro 3,480円に、20分の学習計画相談が付きます。
+          </p>
+          <a href="/campaign/august-2026">6か月Proキャンペーンを見る</a>
+        </aside>
+      )}
 
       <main id="top">
         {/* ヒーロー */}
@@ -407,6 +428,10 @@ export default function LandingPage() {
         ITパスポート学習コーチ
         <br />
         <a href={START_HREF}>ログイン / 無料登録</a>
+        {" / "}
+        <a href="/legal/tokusho">特定商取引法に基づく表示</a>
+        {" / "}
+        <a href="/privacy">プライバシーポリシー</a>
       </footer>
     </div>
   );

@@ -1,0 +1,64 @@
+# 2026年8月 収益化キャンペーン運用ログ
+
+## 目標
+
+- 期限: 2026-08-10 23:59 JST
+- 商品: Pro 6か月・3,480円・買い切り
+- 目標: 外部顧客6件、Stripe手数料控除後100米ドル相当以上
+- キャンペーンURL: https://it-learning-app.vercel.app/campaign/august-2026
+
+## 日次ファネル
+
+| 日付 | 媒体 | 活動内容 | 対象者の悩み | 投稿/返信URL | 返信数 | LP閲覧 | 登録 | Checkout開始 | 外部顧客購入 | 売上総額 | Stripe手数料 | 純額 | 次の改善 |
+|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 2026-08-01 | X | プロフィール整備1件・開始投稿1件・実演投稿1件・個別返信3件 | 初学者の進め方、30分学習、苦手分野の絞り込み | https://x.com/dpwwBxjhU8nvCCI/status/2083442899702988892<br>https://x.com/itpassportsup/status/2083443992931484054<br>https://x.com/itpassportsup/status/2083446282631471567<br>https://x.com/itpassportsup/status/2083446392308293938<br>https://x.com/itpassportsup/status/2083446469550645467 | 0 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | 返信反応を確認し、関心表明があった相手にだけキャンペーンURLを案内する |
+| 2026-08-08 | X | 期限案内1件・個別返信10件 | 試験直前対策、学習開始直後の難しさ、計算問題、プログラミング、長文問題、学習再開 | https://x.com/itpassportsup/status/2085980448782778821<br>https://x.com/itpassportsup/status/2085979958892237177<br>https://x.com/itpassportsup/status/2085980143810658324<br>https://x.com/itpassportsup/status/2085980307023688029<br>https://x.com/itpassportsup/status/2085982155570901079<br>https://x.com/itpassportsup/status/2085984450656210970<br>https://x.com/itpassportsup/status/2085984516938846495<br>https://x.com/itpassportsup/status/2085984574535016814<br>https://x.com/itpassportsup/status/2085984663949201507<br>https://x.com/itpassportsup/status/2085984732245045376<br>https://x.com/itpassportsup/status/2085984849496781188 | 0 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | 返信反応を確認し、関心表明があった相手にだけキャンペーンURLを案内する |
+| 2026-08-09 | YouTube Shorts | 15分学習の実演動画1件 | 勉強を再開できない、次に何をするか決められない | https://youtube.com/shorts/YK3JFCF_32c | 未確認 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | URLが説明欄で省略表示されるため、note記事から購入ページへの導線も用意する |
+| 2026-08-09 | note | 15分学習プランの解説記事1件 | 勉強を再開できない、学習計画を作り込みすぎる | https://note.com/pure_pika5336/n/n961c5a5f31d9 | 未確認 | 未確認 | 未確認 | 0 | 0 | ¥0 | ¥0 | ¥0 | 記事内の購入リンクからのCheckout開始と購入を確認する |
+
+## 配信媒体の決定
+
+- 2026-08-09: 追加配信はnoteに限定し、LinkedInとInstagramは使用しない。YouTube Shortsは同日公開済み。
+- 2026-08-09 18:04 JST: Stripe Checkout Sessionsは0件で、外部顧客購入と売上はいずれも0。
+
+## 購入・特典台帳
+
+個人情報をこのGit管理ファイルへ記録しない。Stripe Checkout Session IDの末尾8文字だけを照合用に使う。
+
+特典内容: 20分の学習計画相談1回＋相談後のLINEフォロー1回。
+
+| 順位 | 決済日時(JST) | Session末尾8文字 | 金額 | 外部顧客確認 | 返金 | 学習計画相談予約 | 学習計画相談実施 | LINEフォロー実施 | 備考 |
+|---:|---|---|---:|---|---|---|---|---|---|
+
+## 毎日09:00の確認
+
+- [ ] Stripeの支払済みCheckoutを`metadata.campaign=august_2026`で確認
+- [ ] Webhook失敗とPro未反映を管理画面で確認
+- [ ] 前日の閲覧→登録→Checkout→購入の最大離脱点を特定
+- [ ] 公開SNSで個別性のある回答を最大10件
+- [ ] 実物が分かる投稿を最大2件
+- [ ] 同文大量投稿、無差別DM、無関係な宣伝をしていない
+- [ ] 6件到達時は超過同時決済も特典対象にしてから特典受付を閉じる
+
+## 判断ルール
+
+- 閲覧0: 投稿の入口と配信場所を変える。
+- 閲覧あり・登録0: 対象者と価値提案を明確にする。
+- 登録あり・Checkout0: 価格、返金、内容の説明を改善する。
+- Checkoutあり・購入0: Stripe表示と技術エラーを最優先で確認する。
+- 8月5日時点で購入2件未満: 値下げせず、20分の学習計画相談1回＋相談後のLINEフォロー1回の特典内容を具体的に説明して信頼形成する。
+
+## 6件到達時の手順
+
+1. Stripeで`metadata.campaign=august_2026`かつ支払済みの外部顧客取引を決済時刻順に並べる。
+2. 6件目と同時刻帯の超過購入も特典対象として台帳へ記録する。
+3. Vercel Productionの`AUGUST_2026_BONUS_OPEN`を`false`へ変更する。
+4. 同じ検証済みcommitを再deployする。
+5. 公開ページが「相談特典の受付は終了しました。」を表示し、通常の6か月購入だけを案内することを確認する。
+
+## 目標達成の証跡
+
+| 確認日 | 外部顧客売上総額(JPY) | Stripe手数料(JPY) | 返金(JPY) | 純額(JPY) | 日銀USD/JPY | 純額(USD) | 証跡 |
+|---|---:|---:|---:|---:|---:|---:|---|
+
+計算式は`純額(JPY) = 売上総額 - Stripe手数料 - 返金`、`純額(USD) = 純額(JPY) ÷ 日銀USD/JPY`とする。日銀の公表ページURLと確認日を証跡欄へ記録する。
