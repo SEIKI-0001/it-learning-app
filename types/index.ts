@@ -51,6 +51,77 @@ export type ReviewItem = {
   reason: string; // "間違えた" | "苦手分野" | "復習期限" など
   /** 満点後の定着確認を何回通過したか。未設定の旧データは0回として扱う。 */
   confirmationCount?: number;
+  /** 共通復習スケジュールの段階。未設定の旧データは0として扱う。 */
+  reviewStage?: number;
+  /** 直近の復習・評価日時。 */
+  lastReviewedAt?: string;
+  /** 表示文言に依存せず優先順位を判断するための理由コード。 */
+  reasonCode?: ReviewReasonCode;
+};
+
+export type ReviewReasonCode =
+  | "scheduled"
+  | "low_mastery"
+  | "summary_exam_miss"
+  | "review_failure"
+  | "repeated_miss";
+
+export type LearningEvidenceKind =
+  | "confirmation"
+  | "review"
+  | "summary_exam"
+  | "mock_exam"
+  | "past_exam"
+  | "checkpoint";
+
+export type LearningEvidence = {
+  topicId: string;
+  questionId: string;
+  kind: LearningEvidenceKind;
+  isCorrect: boolean;
+  isFirstSeen: boolean;
+  answeredAt: string;
+};
+
+export type TopicMasteryEvidence = Omit<LearningEvidence, "topicId">;
+
+export type TopicMasteryStats = {
+  topicId: string;
+  masteryScore: number;
+  lastEvaluatedAt: string;
+  correctCount: number;
+  incorrectCount: number;
+  reviewSuccessCount: number;
+  recentEvidence: TopicMasteryEvidence[];
+};
+
+export type WeakTopicReason =
+  | "low_mastery"
+  | "summary_exam_miss"
+  | "review_failure"
+  | "repeated_miss";
+
+export type WeakTopic = {
+  topicId: string;
+  severity: number;
+  reason: WeakTopicReason;
+};
+
+export type TodaysLearningQueueKind =
+  | "overdue_review"
+  | "summary_weak"
+  | "low_mastery"
+  | "new_topic"
+  | "flashcard"
+  | "extra_practice";
+
+export type TodaysLearningQueueItem = {
+  id: string;
+  topicId?: string;
+  kind: TodaysLearningQueueKind;
+  priority: number;
+  estimatedMinutes: number;
+  reason: string;
 };
 
 /**
@@ -74,6 +145,8 @@ export type UserProgress = {
   // --- トピック単位の学習状態(新) ---
   completedTopics: string[]; // 学習完了したトピックid
   topicMastery: Record<string, number>; // topicId → 習熟度(0〜100)
+  /** 評価根拠つきMastery。topicMasteryは既存UI向けの数値投影として同期する。 */
+  topicMasteryStats?: Record<string, TopicMasteryStats>;
   reviewQueue: ReviewItem[]; // 復習対象
   weeklyPlan?: WeeklyPlan | null; // 今週のタスクリスト（週初めに確定・端末間同期）
 

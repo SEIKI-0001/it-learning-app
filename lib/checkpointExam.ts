@@ -1,6 +1,7 @@
-import type { AppState, ReviewItem, UserAnswer } from "@/types";
+import type { AppState, UserAnswer } from "@/types";
 import type { CheckQuestion, Difficulty, Topic } from "@/types/content";
 import { getAllTopics } from "@/lib/content";
+import { updateLearningLoopProgress } from "@/lib/learningLoop";
 
 export type DifficultyDistribution = Partial<Record<Difficulty, number>>;
 
@@ -201,31 +202,33 @@ export function recordCheckpointExamResult(
   answers: UserAnswer[],
   now: Date = new Date(),
 ): AppState {
-  const wrongTopicIds = new Set(
-    answers.filter((answer) => !answer.isCorrect).flatMap((answer) => answer.topicId ?? []),
-  );
-  const reviewByTopic = new Map<string, ReviewItem>(
-    state.progress.reviewQueue.map((item) => [item.topicId, item]),
-  );
-  for (const topicId of wrongTopicIds) {
-    reviewByTopic.set(topicId, {
-      topicId,
-      dueAt: now.toISOString(),
-      reason: "突破試験で要復習",
-    });
-  }
-
   const allAnswers = [...state.answers, ...answers];
-  return {
-    ...state,
-    answers: allAnswers,
-    progress: {
+  const seen = new Set(state.answers.map((answer) => answer.questionId));
+  const progress = updateLearningLoopProgress(
+    {
       ...state.progress,
       weakTags: Array.from(
         new Set(allAnswers.filter((answer) => !answer.isCorrect).map((answer) => answer.tag)),
       ),
-      reviewQueue: Array.from(reviewByTopic.values()),
       lastPlayedAt: now.toISOString(),
     },
+    answers.flatMap((answer) =>
+      answer.topicId
+        ? [{
+            topicId: answer.topicId,
+            questionId: answer.questionId,
+            kind: "checkpoint" as const,
+            isCorrect: answer.isCorrect,
+            isFirstSeen: !seen.has(answer.questionId),
+            answeredAt: answer.answeredAt,
+          }]
+        : [],
+    ),
+    now,
+  );
+  return {
+    ...state,
+    answers: allAnswers,
+    progress,
   };
 }

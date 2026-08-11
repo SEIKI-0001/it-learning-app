@@ -45,6 +45,7 @@ export function normalizeAppState(state: AppState): AppState {
       lastPlayedAt: p.lastPlayedAt,
       completedTopics: p.completedTopics ?? [],
       topicMastery: p.topicMastery ?? {},
+      topicMasteryStats: p.topicMasteryStats ?? {},
       reviewQueue: p.reviewQueue ?? [],
       weeklyPlan: p.weeklyPlan ?? null,
       checkpointProgress: p.checkpointProgress,
@@ -101,6 +102,7 @@ export function initializeAppState(profile: UserProfile): AppState {
       weakTags: [],
       completedTopics: [],
       topicMastery: {},
+      topicMasteryStats: {},
       reviewQueue: [],
       weeklyPlan: null,
       // 初回設定（オンボーディング）完了 ＝ CP0 クリア。以降は最終問題突破で進む。

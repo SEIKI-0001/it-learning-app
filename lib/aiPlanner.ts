@@ -12,9 +12,9 @@ import type {
 import {
   getAllTopics,
   getRecommendedTopicsForUser,
-  getReviewItemsForUser,
   getTopic,
 } from "@/lib/content";
+import { buildTodaysLearningQueue } from "@/lib/learningLoop";
 
 // ============================================================================
 // AIプランナー抽象層
@@ -119,49 +119,56 @@ export function generateTodayMenu(
   progress: UserProgress,
   topics: Topic[] = getAllTopics(),
   answers: UserAnswer[] = [],
+  now: Date = new Date(),
 ): TodayMenu {
   const budget = resolveDailyMinutes(profile);
-  const remaining = daysUntilExam(profile);
+  const remaining = daysUntilExam(profile, now);
 
   // 直近の解答で間違いが多いほど、復習を厚くする(解答履歴の活用)。
   const recentWrong = answers
     .slice(-10)
     .filter((a) => !a.isCorrect).length;
 
-  // 復習を先に確保。試験が近い/直近の間違いが多いほど復習比率を上げる。
-  const reviewAll = getReviewItemsForUser({
-    progress,
-    weakFields: profile?.weakFields,
-  });
+  const ranked = buildTodaysLearningQueue({ progress, topics, now });
+  const reviewAll = ranked
+    .filter((item) =>
+      item.topicId &&
+      (item.kind === "overdue_review" ||
+        item.kind === "summary_weak" ||
+        item.kind === "low_mastery"),
+    )
+    .map((item): ReviewItem => {
+      const existing = progress.reviewQueue.find((review) => review.topicId === item.topicId);
+      return existing ?? {
+        topicId: item.topicId!,
+        dueAt: now.toISOString(),
+        reason: item.reason,
+        reasonCode:
+          item.kind === "summary_weak" ? "summary_exam_miss" : "low_mastery",
+      };
+    });
   const reviewCap =
     (remaining !== null && remaining <= 7) || recentWrong >= 4 ? 3 : 2;
   const reviewItems: ReviewItem[] = reviewAll.slice(0, reviewCap);
 
-  // 新規学習トピックを時間予算に収まるだけ積む(最低1件)。
-  const recommended = getRecommendedTopicsForUser({
-    progress,
-    weakFields: profile?.weakFields,
-  }).filter((t) => topics.includes(t));
-
+  // 共通キューの順を保ったまま、Topic候補を時間予算へ収める。
   const items: TodayMenuItem[] = [];
   let used = 0;
-  for (const t of recommended) {
+  for (const candidate of ranked) {
+    if (!candidate.topicId) continue;
+    const t = getTopic(candidate.topicId);
+    if (!t) continue;
     if (items.length > 0 && used + t.estimatedMinutes > budget) break;
     items.push({
       topicId: t.id,
       title: t.title,
       field: t.field,
       estimatedMinutes: t.estimatedMinutes,
-      kind: "learn",
+      kind: candidate.kind === "new_topic" ? "learn" : "review",
     });
     used += t.estimatedMinutes;
     if (used >= budget) break;
   }
-
-  const reviewMinutes = reviewItems.reduce(
-    (s, r) => s + (getTopic(r.topicId)?.estimatedMinutes ?? 3),
-    0,
-  );
 
   const primary = items[0] ? getTopic(items[0].topicId) : undefined;
   const theme = primary
@@ -182,7 +189,7 @@ export function generateTodayMenu(
 
   return {
     theme,
-    totalMinutes: used + reviewMinutes,
+    totalMinutes: used,
     items,
     reviewItems,
     message,

@@ -64,7 +64,7 @@ describe("checkpoint exams", () => {
     );
   });
 
-  it("adds only incorrect checkpoint topics to review without inflating mastery", () => {
+  it("keeps pass semantics separate while recording checkpoint mastery evidence", () => {
     const state = emptyState();
     const answers: UserAnswer[] = [
       {
@@ -80,9 +80,14 @@ describe("checkpoint exams", () => {
     const next = recordCheckpointExamResult(state, answers, new Date("2026-07-10T00:00:00Z"));
 
     expect(next.progress.reviewQueue).toEqual([
-      expect.objectContaining({ topicId: "tech-binary-data", reason: "突破試験で要復習" }),
+      expect.objectContaining({
+        topicId: "tech-binary-data",
+        dueAt: "2026-07-11T00:00:00.000Z",
+      }),
     ]);
-    expect(next.progress.topicMastery).toEqual(state.progress.topicMastery);
+    expect(next.progress.topicMastery["tech-binary-data"]).toBeLessThan(40);
+    expect(next.progress.topicMasteryStats?.["tech-binary-data"].incorrectCount).toBe(1);
+    expect(next.progress.topicMasteryStats?.["tech-binary-data"].recentEvidence[0].kind).toBe("checkpoint");
     expect(next.progress.weakTags).toEqual(["binary"]);
   });
 });

@@ -126,7 +126,7 @@ export default function FinalExamPage() {
     if (!state || !exam) return;
     const scored = scoreFinalExam(exam, answers);
     const attempt = buildFinalExamAttempt(exam, scored);
-    const updated = recordFinalExamAttempt(state, attempt, signals);
+    const updated = recordFinalExamAttempt(state, attempt, signals, new Date(), answers);
     saveAppState(updated);
     setState(updated);
     setResult(scored);

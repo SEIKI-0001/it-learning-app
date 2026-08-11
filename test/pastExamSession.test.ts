@@ -287,6 +287,8 @@ describe("採点", () => {
     const sum = result.byField.reduce((acc, f) => acc + f.correct, 0);
     expect(sum).toBe(result.correct);
     expect(result.byField.reduce((acc, f) => acc + f.total, 0)).toBe(100);
+    expect(result.byTopic.reduce((acc, topic) => acc + topic.total, 0)).toBe(100);
+    expect(result.byTopic.every((topic) => topic.rate >= 0 && topic.rate <= 100)).toBe(true);
   });
 
   it("区分の集計に使うのは official.examField（内容分類ではない）", () => {
