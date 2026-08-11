@@ -1,0 +1,11 @@
+{
+  "questionId": "strat-swot-ex1",
+  "version": 2,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "誤答が別カテゴリ・非現実的で1秒で切れる状態だったため、同カテゴリの実在する用語・現実的な施策に差し替えた。あわせて用語当て型を、公式過去問と同じ組合せ型・責任範囲の比較・隣接概念の区別へ引き上げた。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

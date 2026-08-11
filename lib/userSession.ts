@@ -446,7 +446,7 @@ export function reportTopicQuizResult(
 /** question_attempts に保存する1件の回答。 */
 export type QuestionAttemptInput = {
   questionId: string;
-  questionType: "topic_quiz" | "exam_level" | "mini_exam" | "mock_exam";
+  questionType: "topic_quiz" | "exam_level" | "mini_exam" | "mock_exam" | "theme_exam";
   topicId: string;
   selectedAnswer?: string | null;
   isCorrect: boolean;

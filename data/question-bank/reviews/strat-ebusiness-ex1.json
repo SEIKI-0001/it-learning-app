@@ -1,0 +1,11 @@
+{
+  "questionId": "strat-ebusiness-ex1",
+  "version": 2,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "誤答を同じ枠組みの隣接概念に差し替え、用語当て型を対応関係の判別・分類・計算へ引き上げた。あわせて、断定語「全て」を含む選択肢が1つだけで内容を読まずに絞り込めた2問の文言を改めた。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

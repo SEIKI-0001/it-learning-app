@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-http-https-ex3",
+  "version": 3,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "誤答Cが正答の語順を入れ替えただけで、文としての類似度が高すぎた。別の誤解に基づく選択肢へ差し替えた。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

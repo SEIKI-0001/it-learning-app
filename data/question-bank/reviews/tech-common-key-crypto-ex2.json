@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-common-key-crypto-ex2",
+  "version": 2,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "誤答が無関係な用語（NAT・正規化・RAGなど）で1秒で切れる状態だったため、同じ分野の隣接概念に差し替えた。あわせて用語当て型を、鍵の使い分け・稼働率計算・トレース・分類の判別といった本試験の頻出形式へ引き上げた。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

@@ -37,6 +37,7 @@ const VALID_TYPES = new Set<QuestionType>([
   "mini_exam",
   "mock_exam",
   "official_past",
+  "theme_exam",
 ]);
 
 const VALID_MODES = new Set(["practice", "exam"]);

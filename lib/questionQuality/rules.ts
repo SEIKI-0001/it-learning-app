@@ -81,8 +81,109 @@ function isBareNumber(text: string): boolean {
   return plain.test(t) || grouped.test(t);
 }
 
+/**
+ * 選択肢が「数値（＋単位）」だけか。
+ *
+ * 計算問題の選択肢は "3,300円" と "3,000円" のように1桁しか違わないことがあり、
+ * 文字 n-gram では必ず似る。しかし値が違う以上「言い換えただけで実質同じ」では
+ * ありえないので、近似判定の対象から外す。
+ * 表記ゆれを除いて完全に同一なら choice-text-duplicate（blocker）が拾うため、
+ * ここを外しても本当の重複は素通りしない。
+ */
+function isNumericChoice(text: string): boolean {
+  const t = normalizeBase(text).replace(/\s/g, "");
+  return new RegExp(`^[-−]?[0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]+)?(?:${UNIT_SOURCE})?$`, "i").test(t);
+}
+
 /** 公式の選択肢記号 → 内部キー。取り込みスクリプトと同じ対応。 */
 const KANA_TO_KEY: Record<string, ChoiceKey> = { ア: "A", イ: "B", ウ: "C", エ: "D" };
+
+// ---------------------------------------------------------------------------
+// ひな形で組み立てられた選択肢
+// ---------------------------------------------------------------------------
+// 公式過去問には、共通のひな形に別々の値を埋めた選択肢がよく出る。
+//
+//   「送信：SMTP　受信：POP3またはIMAP」 / 「送信：POP3　受信：SMTPまたはIMAP」
+//   「(1) 教師あり学習　(2) 教師なし学習」 / 「(1) 教師なし学習　(2) 強化学習」
+//   「ガントチャート ― 進捗を把握しやすい」 / 「ガントチャート ― 経路を求める」
+//   「SELECT … WHERE 単価 >= 1000 ORDER BY 単価 DESC」 / 「… GROUP BY 単価 DESC」
+//
+// これらは文字 n-gram で見ると必ず似る。ひな形が共通なのだから当然で、
+// 「言い換えただけで実質同じ」という near-duplicate の狙いとは別物になる。
+// そこでひな形を取り除き、差し替え部分どうしを比べる。
+// 差し替え部分が全て似ている場合にだけ報告すれば、
+// 「送信：SMTP」と「送信：SMTP」のような本当の重複は従来どおり拾える。
+//
+// 完全一致（choice-text-duplicate）は blocker のまま。ここで緩めるのは近似判定だけ。
+
+/** 「項目名：値」形式で使われる区切り。全ての選択肢に同数含まれるときだけ使う。 */
+const TEMPLATE_FIELD_SEPARATORS = ["：", ":", "―", "—"] as const;
+
+/** 「(1) … (2) …」形式の2つ目の見出し。 */
+const TEMPLATE_INDEX_MARKERS = ["(2)", "（2）"] as const;
+
+/** ひな形とみなすのに必要な共通部分の長さ（文字数と、最短の選択肢に対する割合）。 */
+const TEMPLATE_SHARED_MIN_CHARS = 5;
+const TEMPLATE_SHARED_MIN_RATIO = 0.3;
+
+function commonPrefixLength(texts: string[]): number {
+  const [first, ...rest] = texts;
+  let n = 0;
+  while (n < first.length && rest.every((t) => n < t.length && t[n] === first[n])) n += 1;
+  return n;
+}
+
+function commonSuffixLength(texts: string[], skip: number): number {
+  const [first, ...rest] = texts;
+  let n = 0;
+  const room = (t: string) => t.length - skip;
+  while (
+    n < room(first) &&
+    rest.every((t) => n < room(t) && t[t.length - 1 - n] === first[first.length - 1 - n])
+  ) {
+    n += 1;
+  }
+  return n;
+}
+
+/**
+ * 選択肢群を「差し替え部分」の配列に分解する。ひな形が見つからなければ null。
+ *
+ * 返り値の各要素は選択肢1件ぶんの差し替え部分で、要素数は全選択肢で揃う。
+ */
+function templatedChoiceParts(texts: string[]): string[][] | null {
+  if (texts.length < 2 || texts.some((t) => t.trim() === "")) return null;
+
+  // 1. 「項目名：値」形式。全ての選択肢で同じ区切りが同じ数だけ現れることを要求する。
+  for (const sep of TEMPLATE_FIELD_SEPARATORS) {
+    const counts = texts.map((t) => t.split(sep).length - 1);
+    if (counts[0] >= 1 && counts.every((c) => c === counts[0])) {
+      return texts.map((t) => t.split(sep).map((part) => part.trim()));
+    }
+  }
+
+  // 2. 「(1) … (2) …」形式。2つ目の見出しで前後に割る。
+  for (const marker of TEMPLATE_INDEX_MARKERS) {
+    if (texts.every((t) => t.includes(marker))) {
+      return texts.map((t) => {
+        const at = t.indexOf(marker);
+        return [t.slice(0, at).trim(), t.slice(at + marker.length).trim()];
+      });
+    }
+  }
+
+  // 3. 区切り記号を持たない場合は、共通の前置き・後置きを剥がして残りを比べる。
+  //    SQL 文や数式のように、書き出しが丸ごと同じ選択肢群がこれにあたる。
+  const shortest = Math.min(...texts.map((t) => t.length));
+  const prefix = commonPrefixLength(texts);
+  const suffix = commonSuffixLength(texts, prefix);
+  const shared = prefix + suffix;
+  if (shared >= TEMPLATE_SHARED_MIN_CHARS && shared >= shortest * TEMPLATE_SHARED_MIN_RATIO) {
+    return texts.map((t) => [t.slice(prefix, t.length - suffix).trim()]);
+  }
+
+  return null;
+}
 
 /**
  * 解説の中で「正解の記号」を名指ししている箇所を拾う。
@@ -258,6 +359,34 @@ export function checkQuestionQuality(q: QuestionRecord): QualityFinding[] {
 
   // --- 選択肢の重複・近似 -------------------------------------------------
   const normalizedChoices = choices.map((c) => ({ key: c.key, text: normalizeChoiceText(c.text) }));
+
+  // ひな形で組み立てられた選択肢は、差し替え部分どうしで比べる（前掲の説明を参照）。
+  // 分解できたときだけ使い、できなければ従来どおり全文で比べる。
+  const templateParts = templatedChoiceParts(choices.map((c) => c.text));
+  const normalizedParts = templateParts?.map((parts) => parts.map(normalizeChoiceText));
+
+  /** i 番目と j 番目の選択肢が「実質同じ」か。 */
+  const isNearDuplicate = (i: number, j: number): { hit: boolean; score: number } => {
+    // 値の異なる数値どうしは、似ていても別のことを述べている（前掲の説明を参照）。
+    if (isNumericChoice(choices[i].text) && isNumericChoice(choices[j].text)) {
+      return { hit: false, score: 0 };
+    }
+    if (normalizedParts) {
+      const a = normalizedParts[i];
+      const b = normalizedParts[j];
+      // 差し替え部分が全て似ているときだけ実質同じとみなす。
+      // 1か所でも違えば、ひな形が同じでも別の主張になっている。
+      let min = 1;
+      for (let k = 0; k < a.length; k += 1) {
+        const score = a[k] === b[k] ? 1 : textSimilarity(a[k], b[k]);
+        if (score < min) min = score;
+      }
+      return { hit: min >= QUALITY_THRESHOLDS.choiceNearDuplicate, score: min };
+    }
+    const score = textSimilarity(normalizedChoices[i].text, normalizedChoices[j].text);
+    return { hit: score >= QUALITY_THRESHOLDS.choiceNearDuplicate, score };
+  };
+
   for (let i = 0; i < normalizedChoices.length; i += 1) {
     for (let j = i + 1; j < normalizedChoices.length; j += 1) {
       const a = normalizedChoices[i];
@@ -278,8 +407,8 @@ export function checkQuestionQuality(q: QuestionRecord): QualityFinding[] {
       // ここで拾いたいのは「言い換えただけで実質同じことを言っている選択肢」。
       if (q.questionPattern === "ordering") continue;
 
-      const score = textSimilarity(a.text, b.text);
-      if (score >= QUALITY_THRESHOLDS.choiceNearDuplicate) {
+      const { hit, score } = isNearDuplicate(i, j);
+      if (hit) {
         add(
           "warning",
           "choice-near-duplicate",

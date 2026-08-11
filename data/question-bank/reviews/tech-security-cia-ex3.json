@@ -1,0 +1,11 @@
+{
+  "questionId": "tech-security-cia-ex3",
+  "version": 2,
+  "contentReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "explanationReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "similarityReviewedBy": "claude-code:exam-level-quality-2026-08",
+  "reviewedAt": "2026-08-09T00:00:00.000Z",
+  "decision": "approve",
+  "notes": "誤答を同カテゴリの実在する用語・現実的な施策に差し替え、用語当て型を隣接概念の区別・組合せ型・計算問題へ引き上げた。同一トピック内で問う角度が重ならないようにも整理した。",
+  "authoredBy": "claude-code:exam-level-quality-2026-08"
+}

@@ -21,6 +21,12 @@ const GROUPS: readonly {
         title: "公式過去問",
         description: "IPA公開問題を年度別に演習",
       },
+      {
+        href: "/theme-exam",
+        icon: "check",
+        title: "総まとめ試験",
+        description: "章ごとに横断的な高難易度問題を解く",
+      },
       { href: "/report", icon: "chart", title: "週次レポート", description: "今週の振り返り" },
     ],
   },
