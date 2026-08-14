@@ -1,7 +1,7 @@
--- GENERATED SNAPSHOT — DO NOT EDIT OR APPLY MANUALLY.
--- Source of truth: supabase/migrations.
--- Regenerate from a local database rebuilt from the active migrations with:
--- supabase db dump --local --schema public --file supabase/schema.sql
+-- Production public-schema baseline generated from the linked production database
+-- with `supabase db dump --linked --schema public` on 2026-08-13.
+-- This migration records the existing schema; it must not be replayed against
+-- production when the remote migration history is initialized.
 
 
 
@@ -1324,11 +1324,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQ
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
-
-
-
-
-
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";

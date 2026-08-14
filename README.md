@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Database schema
+
+`supabase/migrations` is the sole source of truth for Supabase schema changes. Active migrations use unique 14-digit UTC versions. `supabase/schema.sql` is a generated snapshot for inspection and compatibility tests; do not edit it independently or apply it manually. Historical manual-era files are preserved in `supabase/legacy_migrations` and are not active CLI migrations.
+
 ## Getting Started
 
 First, run the development server:
@@ -42,7 +46,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
   ```sql
   update public.user_profiles set plan = 'pro', plan_updated_at = now() where user_id = '<line_users.id>';
   ```
-  `supabase/schema.sql` を再実行すると `user_profiles.plan` 列と `ai_usage_logs` テーブルが追加されます（加算マイグレーション・冪等）。
+  DB変更は `supabase/migrations` に一意な14桁UTC versionのmigrationを追加して適用します。
 - **利用回数制限**: 1日あたり free=3回 / pro=10回（`lib/billing/constants.ts`）。AI 呼び出し前に `ai_usage_logs` の当日件数で判定し、超過時は AI を呼ばずにメッセージを返します。userId（LINE 連携で解決される内部ID）がある場合のみ集計・制限します。
 
 ## Stripe 課金（Proプランの土台）
@@ -71,7 +75,7 @@ Web 利用のアカウント本体を **Google ログイン（Supabase Auth）**
 
 ### セットアップ手順
 
-1. **DB マイグレーション**: `supabase/migrations/20260628_google_auth.sql`（または `supabase/schema.sql` 末尾）を Supabase の SQL Editor で実行（`line_user_id` を NULL 許容化、`auth_user_id` / `email` 追加）。
+1. **DB マイグレーション**: Google認証用schemaはproduction baselineに含まれています。今後の変更は `supabase/migrations` に追加し、Supabase CLIで適用します。
 2. **Supabase Auth（Google プロバイダ）を有効化**（ダッシュボード）:
    - Authentication → Providers → Google を ON にし、Google Cloud の OAuth クライアントID/Secret を登録。
    - Authentication → URL Configuration の Redirect URLs に `http://localhost:3000/auth/callback` と `https://<本番ドメイン>/auth/callback` を追加。

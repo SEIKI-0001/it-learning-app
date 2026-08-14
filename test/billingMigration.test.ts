@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 describe("billing correctness migration", () => {
   it("adds subscription event state and atomic one-time purchase RPC", () => {
     const sql = readFileSync(
-      "supabase/migrations/20260719_billing_correctness.sql",
+      "supabase/legacy_migrations/20260719_billing_correctness.sql",
       "utf8",
     );
 

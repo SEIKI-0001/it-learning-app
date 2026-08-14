@@ -147,7 +147,10 @@ describe("マイグレーション未適用の検出", () => {
 
 describe("マイグレーションSQL", () => {
   const sql = readFileSync(
-    path.join(process.cwd(), "supabase/migrations/20260726_official_past_exam_attempts.sql"),
+    path.join(
+      process.cwd(),
+      "supabase/legacy_migrations/20260726_official_past_exam_attempts.sql",
+    ),
     "utf8",
   );
 
