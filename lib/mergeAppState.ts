@@ -4,6 +4,7 @@ import type {
   UserAnswer,
   UserProgress,
   WeeklyPlan,
+  TopicMasteryStats,
 } from "@/types";
 import type {
   CheckpointId,
@@ -142,9 +143,37 @@ function mergeReviewQueue(a: ReviewItem[], b: ReviewItem[]): ReviewItem[] {
   const byTopic = new Map<string, ReviewItem>();
   for (const item of [...a, ...b]) {
     const prev = byTopic.get(item.topicId);
-    if (!prev || item.dueAt < prev.dueAt) byTopic.set(item.topicId, item);
+    const itemReviewed = item.lastReviewedAt ?? "";
+    const prevReviewed = prev?.lastReviewedAt ?? "";
+    if (
+      !prev ||
+      itemReviewed > prevReviewed ||
+      (itemReviewed === prevReviewed && item.dueAt < prev.dueAt)
+    ) {
+      byTopic.set(item.topicId, item);
+    }
   }
   return [...byTopic.values()];
+}
+
+function mergeTopicMasteryStats(
+  a: Record<string, TopicMasteryStats> | undefined,
+  b: Record<string, TopicMasteryStats> | undefined,
+): Record<string, TopicMasteryStats> {
+  const merged = { ...(a ?? {}) };
+  for (const [topicId, candidate] of Object.entries(b ?? {})) {
+    const current = merged[topicId];
+    if (
+      !current ||
+      candidate.lastEvaluatedAt > current.lastEvaluatedAt ||
+      (candidate.lastEvaluatedAt === current.lastEvaluatedAt &&
+        candidate.correctCount + candidate.incorrectCount >
+          current.correctCount + current.incorrectCount)
+    ) {
+      merged[topicId] = candidate;
+    }
+  }
+  return merged;
 }
 
 /**
@@ -175,9 +204,16 @@ export function mergeProgress(a: UserProgress, b: UserProgress): UserProgress {
   const bTime = b.lastPlayedAt ? Date.parse(b.lastPlayedAt) : 0;
   const latest = bTime > aTime ? b : a;
 
+  const topicMasteryStats = mergeTopicMasteryStats(
+    a.topicMasteryStats,
+    b.topicMasteryStats,
+  );
   const topicMastery: Record<string, number> = { ...a.topicMastery };
   for (const [topicId, value] of Object.entries(b.topicMastery)) {
     topicMastery[topicId] = Math.max(topicMastery[topicId] ?? 0, value);
+  }
+  for (const [topicId, detail] of Object.entries(topicMasteryStats)) {
+    topicMastery[topicId] = detail.masteryScore;
   }
 
   return {
@@ -188,6 +224,7 @@ export function mergeProgress(a: UserProgress, b: UserProgress): UserProgress {
     lastPlayedAt: latest.lastPlayedAt ?? (bTime > aTime ? a : b).lastPlayedAt,
     completedTopics: [...new Set([...a.completedTopics, ...b.completedTopics])],
     topicMastery,
+    topicMasteryStats,
     reviewQueue: mergeReviewQueue(a.reviewQueue, b.reviewQueue),
     weeklyPlan: mergeWeeklyPlan(a.weeklyPlan, b.weeklyPlan),
     checkpointProgress: mergeCheckpointProgress(

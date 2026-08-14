@@ -2,7 +2,8 @@ import type { AppState, ReviewItem, UserAnswer, UserProgress } from "@/types";
 import type { Topic } from "@/types/content";
 import { grantExp } from "@/lib/game";
 import { advanceStreak } from "@/lib/streak";
-import { calculateTopicMastery, masteryForTopic } from "@/lib/mastery";
+import { masteryForTopic } from "@/lib/mastery";
+import { updateLearningLoopProgress } from "@/lib/learningLoop";
 
 // ============================================================================
 // トピック単位の学習進行(7日固定の completeQuest に代わる新ロジック)。
@@ -33,12 +34,6 @@ export function comboBonus(answers: UserAnswer[]): number {
   }
   if (longest < 3) return 0;
   return Math.min((longest - 2) * XP_PER_COMBO, COMBO_BONUS_CAP);
-}
-
-/** 正答率(0〜1) */
-function correctRatio(answers: UserAnswer[]): number {
-  if (answers.length === 0) return 1;
-  return answers.filter((a) => a.isCorrect).length / answers.length;
 }
 
 export type StudyXpReward = {
@@ -91,12 +86,6 @@ export function recentAccuracy(
   return recent.filter((a) => a.isCorrect).length / recent.length;
 }
 
-/** 復習期限を算出。習熟度が高いほど先送り(簡易の間隔反復)。 */
-function nextDueAt(mastery: number, now: Date): string {
-  const days = mastery >= 90 ? 7 : mastery >= 70 ? 3 : 1;
-  return new Date(now.getTime() + days * DAY_MS).toISOString();
-}
-
 function afterDays(now: Date, days: number): string {
   return new Date(now.getTime() + days * DAY_MS).toISOString();
 }
@@ -121,10 +110,7 @@ export function completeTopicStudy(
   newAnswers: UserAnswer[],
   now: Date = new Date(),
 ): AppState {
-  const ratio = correctRatio(newAnswers);
   const allAnswers = [...state.answers, ...newAnswers];
-  const topicAnswers = allAnswers.filter((answer) => answer.topicId === topicId);
-  const mastery = calculateTopicMastery(topicAnswers, now);
 
   const correctCount = newAnswers.filter((a) => a.isCorrect).length;
   const wasCompleted = state.progress.completedTopics.includes(topicId);
@@ -141,40 +127,12 @@ export function completeTopicStudy(
     ? state.progress.completedTopics
     : [...state.progress.completedTopics, topicId];
 
-  // 復習キュー: このトピックの既存項目を入れ替える。
-  // 満点でも、時間を空けた確認を2回通るまで「理解済み」にはしない。
-  const previousReview = state.progress.reviewQueue.find((r) => r.topicId === topicId);
-  const queue = state.progress.reviewQueue.filter((r) => r.topicId !== topicId);
-  if (ratio < 1) {
-    queue.push({
-      topicId,
-      dueAt: nextDueAt(mastery, now),
-      reason: ratio < 0.6 ? "間違えた問題" : "復習期限",
-      confirmationCount: 0,
-    });
-  } else if (!wasCompleted) {
-    queue.push({
-      topicId,
-      dueAt: afterDays(now, 3),
-      reason: "定着確認",
-      confirmationCount: 0,
-    });
-  } else if ((previousReview?.confirmationCount ?? 0) < 1) {
-    queue.push({
-      topicId,
-      dueAt: afterDays(now, 7),
-      reason: "もう一度定着確認",
-      confirmationCount: (previousReview?.confirmationCount ?? 0) + 1,
-    });
-  }
-
   // ストリーク更新（1日欠けはおまもりが有れば自動消費して継続）。
   const streak = advanceStreak(state.progress, now);
 
-  return {
-    profile: state.profile,
-    answers: allAnswers,
-    progress: {
+  const seenQuestionIds = new Set(state.answers.map((answer) => answer.questionId));
+  const progressWithLearningLoop = updateLearningLoopProgress(
+    {
       ...state.progress,
       exp: newExp,
       level: newLevel,
@@ -182,10 +140,23 @@ export function completeTopicStudy(
       weakTags: recomputeWeakTags(allAnswers),
       lastPlayedAt: now.toISOString(),
       completedTopics,
-      topicMastery: { ...state.progress.topicMastery, [topicId]: mastery },
-      reviewQueue: queue,
       checkpointProgress: streak.checkpointProgress,
     },
+    newAnswers.map((answer) => ({
+      topicId: answer.topicId ?? topicId,
+      questionId: answer.questionId,
+      kind: reward.label === "due_review" ? "review" as const : "confirmation" as const,
+      isCorrect: answer.isCorrect,
+      isFirstSeen: !seenQuestionIds.has(answer.questionId),
+      answeredAt: answer.answeredAt,
+    })),
+    now,
+  );
+
+  return {
+    profile: state.profile,
+    answers: allAnswers,
+    progress: progressWithLearningLoop,
   };
 }
 

@@ -16,7 +16,10 @@ import Button from "@/components/ui/Button";
 import PastExamQuestionCard from "@/components/pastExam/PastExamQuestionCard";
 import PastExamResultView from "@/components/pastExam/PastExamResultView";
 import type { PastExamQuestionView } from "@/lib/pastExam/questionView";
-import { gradePastExam } from "@/lib/pastExam/scoring";
+import {
+  gradePastExam,
+  recordPastExamLearningResult,
+} from "@/lib/pastExam/scoring";
 import { saveAllAttempts, saveSingleAttempt } from "@/lib/pastExam/saveAttempts";
 import {
   clearSession,
@@ -36,8 +39,8 @@ import {
   getUserIdSnapshot,
   subscribeToUserId,
 } from "@/lib/pastExam/userIdStore";
-import { addTopicsToReview } from "@/lib/study";
 import { loadAppState, saveAppState } from "@/lib/storage";
+import { saveProgressToDb } from "@/lib/userSession";
 import type { ChoiceKey } from "@/types";
 import {
   EXAM_MODE_DURATION_MINUTES,
@@ -154,9 +157,16 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         });
       }
 
-      // 誤答トピックを既存の復習キューへ入れる。
-      // exam_ready 判定や確認パックの結果には触れない（PR2-B の対象外）。
-      addIncorrectTopicsToReview(graded);
+      const currentState = loadAppState();
+      if (currentState) {
+        const next = recordPastExamLearningResult(
+          currentState,
+          graded,
+          current.answers,
+        );
+        saveAppState(next);
+        if (userId) saveProgressToDb(userId, next.progress);
+      }
 
       // 完了した演習は途中状態として残さない（購読側へも通知される）。
       clearSession(userId, year, current.mode);
@@ -198,22 +208,6 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       onRestart={restart}
     />
   );
-}
-
-/** 誤答トピックを復習キューへ追加する。既存の判定ロジックには影響させない。 */
-function addIncorrectTopicsToReview(result: PastExamResult): void {
-  const topicIds = [
-    ...new Set(result.questions.filter((q) => !q.isCorrect).map((q) => q.topicId)),
-  ].filter(Boolean);
-  if (topicIds.length === 0) return;
-  try {
-    const state = loadAppState();
-    // 学習状態がまだ無い端末では何もしない（ここで新規作成はしない）。
-    if (!state) return;
-    saveAppState(addTopicsToReview(state, topicIds, "公式過去問で間違えた"));
-  } catch {
-    /* ローカル状態が壊れていても結果画面は出す */
-  }
 }
 
 // ---------------------------------------------------------------------------

@@ -1,4 +1,11 @@
-import type { ReviewItem, StudyStyle, UserProfile, UserProgress, WeeklyPlan } from "@/types";
+import type {
+  ReviewItem,
+  StudyStyle,
+  TopicMasteryStats,
+  UserProfile,
+  UserProgress,
+  WeeklyPlan,
+} from "@/types";
 import type { TopicField } from "@/types/content";
 import type { CheckpointProgress } from "@/types/checkpoint";
 import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
@@ -48,6 +55,7 @@ export type ProgressRow = {
   // 新(トピック単位)
   completed_topics: string[] | null;
   topic_mastery: Record<string, number> | null;
+  topic_mastery_stats: Record<string, TopicMasteryStats> | null;
   review_queue: ReviewItem[] | null;
   weekly_plan: WeeklyPlan | null;
   // バッジゲート型ロードマップの進行状態（獲得バッジ・クリアCP・最終問題履歴・欠片・天井）。
@@ -78,6 +86,7 @@ export function progressRowToProgress(row: ProgressRow): UserProgress {
     lastPlayedAt: row.last_played_at ?? undefined,
     completedTopics: row.completed_topics ?? [],
     topicMastery: row.topic_mastery ?? {},
+    topicMasteryStats: row.topic_mastery_stats ?? {},
     reviewQueue: row.review_queue ?? [],
     weeklyPlan: row.weekly_plan ?? null,
     // 未設定（列 NULL）のときは undefined のままにし、localStorage 側の補完・migrate に委ねる。
@@ -103,6 +112,7 @@ export function progressToRow(
     last_played_at: p.lastPlayedAt ?? null,
     completed_topics: p.completedTopics ?? [],
     topic_mastery: p.topicMastery ?? {},
+    topic_mastery_stats: p.topicMasteryStats ?? {},
     review_queue: p.reviewQueue ?? [],
     weekly_plan: p.weeklyPlan ?? null,
     checkpoint_progress: p.checkpointProgress ?? null,

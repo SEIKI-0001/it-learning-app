@@ -72,6 +72,14 @@ export type PastExamFieldSummary = {
   rate: number;
 };
 
+/** アプリ内Topicごとの集計（復習・Mastery更新用）。 */
+export type PastExamTopicSummary = {
+  topicId: string;
+  total: number;
+  correct: number;
+  rate: number;
+};
+
 /** 採点結果全体。 */
 export type PastExamResult = {
   sessionId: string;
@@ -83,5 +91,6 @@ export type PastExamResult = {
   /** 単純正答率（％、小数第1位を四捨五入した整数）。 */
   rate: number;
   byField: PastExamFieldSummary[];
+  byTopic: PastExamTopicSummary[];
   questions: PastExamQuestionResult[];
 };

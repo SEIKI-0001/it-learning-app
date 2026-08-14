@@ -7,6 +7,7 @@
 
 import { OFFICIAL_EXAM_FIELDS } from "@/lib/questionBank/officialExamField";
 import type { ChoiceKey } from "@/types";
+import type { AppState, UserAnswer } from "@/types";
 import type { QuestionRecord } from "@/types/questionBank";
 import type { TopicField } from "@/types/content";
 import type {
@@ -16,6 +17,8 @@ import type {
   PastExamQuestionResult,
   PastExamResult,
 } from "@/types/pastExam";
+import { getTopic } from "@/lib/content";
+import { updateLearningLoopProgress } from "@/lib/learningLoop";
 
 /**
  * 採点に必要な情報だけを取り出した形。
@@ -92,6 +95,22 @@ export function gradePastExam(params: {
     };
   });
 
+  const byTopicMap = new Map<string, { correct: number; total: number }>();
+  for (const question of results) {
+    if (!question.topicId) continue;
+    const current = byTopicMap.get(question.topicId) ?? { correct: 0, total: 0 };
+    current.total += 1;
+    if (question.isCorrect) current.correct += 1;
+    byTopicMap.set(question.topicId, current);
+  }
+  const byTopic = [...byTopicMap.entries()]
+    .map(([topicId, score]) => ({
+      topicId,
+      ...score,
+      rate: percentage(score.correct, score.total),
+    }))
+    .sort((a, b) => a.rate - b.rate || b.total - a.total || a.topicId.localeCompare(b.topicId));
+
   return {
     sessionId,
     year,
@@ -101,8 +120,52 @@ export function gradePastExam(params: {
     unanswered,
     rate: percentage(correct, results.length),
     byField,
+    byTopic,
     questions: results,
   };
+}
+
+/** 公式過去問の採点結果をAppStateの共通学習ループへ反映する。 */
+export function recordPastExamLearningResult(
+  state: AppState,
+  result: PastExamResult,
+  sessionAnswers: Record<number, PastExamAnswer>,
+  now: Date = new Date(),
+): AppState {
+  const seen = new Set(state.answers.map((answer) => answer.questionId));
+  const answers: UserAnswer[] = result.questions.flatMap((question) => {
+    const topic = getTopic(question.topicId);
+    if (!topic) return [];
+    return [{
+      questionId: question.questionId,
+      selectedChoice: question.selected ?? undefined,
+      isCorrect: question.isCorrect,
+      answeredAt:
+        sessionAnswers[question.questionNumber]?.answeredAt || now.toISOString(),
+      tag: topic.tags[0] ?? topic.field,
+      topicId: topic.id,
+    }];
+  });
+  const allAnswers = [...state.answers, ...answers];
+  const progress = updateLearningLoopProgress(
+    {
+      ...state.progress,
+      weakTags: Array.from(
+        new Set(allAnswers.filter((answer) => !answer.isCorrect).map((answer) => answer.tag)),
+      ),
+      lastPlayedAt: now.toISOString(),
+    },
+    answers.map((answer) => ({
+      topicId: answer.topicId!,
+      questionId: answer.questionId,
+      kind: "past_exam" as const,
+      isCorrect: answer.isCorrect,
+      isFirstSeen: !seen.has(answer.questionId),
+      answeredAt: answer.answeredAt,
+    })),
+    now,
+  );
+  return { ...state, answers: allAnswers, progress };
 }
 
 /** 誤答（未回答を含む）の問題だけ。復習導線と誤答フィルターに使う。 */

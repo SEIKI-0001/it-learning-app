@@ -92,7 +92,9 @@ export default function TodayPage() {
 
     const defaultReason = plan?.todayReasons.join(" / ") || undefined;
     const inputs: DailyStudyTaskInput[] = [];
+    const savedTopicIds = new Set<string>();
     for (const item of menu.items) {
+      savedTopicIds.add(item.topicId);
       inputs.push({
         taskType: item.kind === "review" ? "review" : "topic_quiz",
         topicId: item.topicId,
@@ -103,6 +105,7 @@ export default function TodayPage() {
       });
     }
     for (const review of menu.reviewItems) {
+      if (savedTopicIds.has(review.topicId)) continue;
       const topic = getTopic(review.topicId);
       inputs.push({
         taskType: "review",

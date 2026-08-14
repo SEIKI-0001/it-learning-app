@@ -6,7 +6,7 @@
 //   - 既存ユーザーの移行時だけ、既存データから初期チェックポイントを推定してよい。
 //   - 学習時間は進行の主条件にしない。
 
-import type { AppState } from "@/types";
+import type { AppState, UserAnswer } from "@/types";
 import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 import type { TopicField } from "@/types/content";
 import type {
@@ -22,6 +22,7 @@ import { getAllTopics } from "@/lib/content";
 import { determineExpectedPhase } from "@/lib/studyPlanner";
 import { grantExp } from "@/lib/game";
 import { addTopicsToReview, recentAccuracy } from "@/lib/study";
+import { updateLearningLoopProgress } from "@/lib/learningLoop";
 import type { BadgeSignals } from "@/lib/badges";
 import {
   evaluateBadgeAwards,
@@ -420,6 +421,7 @@ export function recordFinalExamAttempt(
   attempt: FinalExamAttempt,
   signals?: BadgeSignals,
   now: Date = new Date(),
+  answers: UserAnswer[] = [],
 ): AppState {
   const cp = getCheckpointProgress(state);
   const finalExamAttempts = [...cp.finalExamAttempts, attempt];
@@ -443,10 +445,41 @@ export function recordFinalExamAttempt(
   }
 
   // 復習キュー: 不合格時のみ、間違えたトピックを追加（dedup は addTopicsToReview に集約）。
+  const seen = new Set(state.answers.map((answer) => answer.questionId));
+  const validAnswers = answers.filter((answer) => answer.topicId);
+  const allAnswers = [...state.answers, ...validAnswers];
+  const withEvidence = validAnswers.length > 0
+    ? {
+        ...state,
+        answers: allAnswers,
+        progress: updateLearningLoopProgress(
+          {
+            ...state.progress,
+            weakTags: Array.from(
+              new Set(
+                allAnswers
+                  .filter((answer) => !answer.isCorrect)
+                  .map((answer) => answer.tag),
+              ),
+            ),
+            lastPlayedAt: now.toISOString(),
+          },
+          validAnswers.map((answer) => ({
+            topicId: answer.topicId!,
+            questionId: answer.questionId,
+            kind: "checkpoint" as const,
+            isCorrect: answer.isCorrect,
+            isFirstSeen: !seen.has(answer.questionId),
+            answeredAt: answer.answeredAt,
+          })),
+          now,
+        ),
+      }
+    : state;
   const base =
-    !attempt.passed && attempt.wrongTopicIds.length > 0
-      ? addTopicsToReview(state, attempt.wrongTopicIds, "最終問題で間違えた", now)
-      : state;
+    validAnswers.length === 0 && !attempt.passed && attempt.wrongTopicIds.length > 0
+      ? addTopicsToReview(withEvidence, attempt.wrongTopicIds, "最終問題で間違えた", now)
+      : withEvidence;
 
   const withAttempt: AppState = {
     ...base,

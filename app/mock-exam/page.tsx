@@ -5,9 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { AppState, UserAnswer } from "@/types";
 import { FIELD_LABELS, type TopicField } from "@/types/content";
-import { getTopic } from "@/lib/content";
-import { addTopicsToReview } from "@/lib/study";
-import { generateMockExam, MOCK_EXAM_RULE, scoreMockExam, type MockExam, type MockExamResult } from "@/lib/mockExam";
+import { getAllTopics, getTopic } from "@/lib/content";
+import {
+  generateMockExam,
+  buildMockExamInsights,
+  MOCK_EXAM_RULE,
+  recordMockExamResult,
+  scoreMockExam,
+  type MockExam,
+  type MockExamResult,
+} from "@/lib/mockExam";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import {
@@ -23,30 +30,9 @@ import { buttonClass } from "@/components/ui/Button";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
+import { getLessonHref } from "@/lib/learningCatalog";
 
 const FIELDS: TopicField[] = ["strategy", "management", "technology"];
-
-function recordMockExam(
-  state: AppState,
-  answers: UserAnswer[],
-  result: MockExamResult,
-  now: Date,
-): AppState {
-  const weakTags = new Set(state.progress.weakTags);
-  for (const answer of answers) {
-    if (!answer.isCorrect) weakTags.add(answer.tag);
-  }
-  const withAnswers: AppState = {
-    ...state,
-    answers: [...state.answers, ...answers],
-    progress: {
-      ...state.progress,
-      weakTags: [...weakTags],
-      lastPlayedAt: now.toISOString(),
-    },
-  };
-  return addTopicsToReview(withAnswers, result.wrongTopicIds, "模試で見直し", now);
-}
 
 export default function MockExamPage() {
   const router = useRouter();
@@ -60,6 +46,7 @@ export default function MockExamPage() {
 
   if (state === undefined || state === null) return <LoadingScreen />;
   const appState: AppState = state;
+  const insights = result ? buildMockExamInsights(result, getAllTopics()) : null;
 
   function startExam() {
     // 同じ挑戦中は設問順を固定し、再挑戦時だけ新しい構成にする。
@@ -81,7 +68,7 @@ export default function MockExamPage() {
       };
     });
     const scored = scoreMockExam(exam, tagged);
-    const next = recordMockExam(appState, tagged, scored, now);
+    const next = recordMockExamResult(appState, tagged, scored, now);
     saveAppState(next);
     setState(next);
     setResult(scored);
@@ -187,8 +174,38 @@ export default function MockExamPage() {
             <p className="mt-4 text-sm leading-relaxed text-gray-600">
               間違えた {result.wrongTopicIds.length} トピックを「復習」に追加しました。まず苦手分野を1つ解き直しましょう。
             </p>
+            {insights && insights.topics.length > 0 && (
+              <div className="mt-5 rounded-xl border border-accent-200 bg-accent-50 p-4 text-left">
+                <h3 className="text-sm font-semibold text-gray-900">強化が必要なTopic</h3>
+                <ol className="mt-2 space-y-2">
+                  {insights.topics.map((topic) => (
+                    <li key={topic.topicId} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="font-semibold text-gray-800">{topic.title}</span>
+                      <span className="shrink-0 tabular-nums text-accent-700">{topic.rate}%</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+            {insights && (
+              <div className="mt-4 text-left">
+                <h3 className="text-sm font-semibold text-gray-900">次にやること</h3>
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">{insights.message}</p>
+              </div>
+            )}
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <Link href="/review" className={buttonClass("primary", "md")}>
+              <Link
+                href={
+                  insights?.primaryTopicId
+                    ? getLessonHref(insights.primaryTopicId, {
+                        from: "review",
+                        activity: "review",
+                        anchor: "lesson-quiz",
+                      })
+                    : "/review"
+                }
+                className={buttonClass("primary", "md")}
+              >
                 復習する
               </Link>
               <button type="button" onClick={startExam} className={buttonClass("soft", "md")}>
