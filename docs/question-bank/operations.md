@@ -1,8 +1,9 @@
 # 問題バンクの運用手順
 
-本番 Supabase に対して手で流す SQL と、その前に確認することをまとめる。
-`supabase/schema.sql` は「DB のあるべき姿の宣言」で、既存データを消す操作は置かない方針なので、
-データの片付けが要るものはここに書く。
+本番 Supabase の運用上の確認事項をまとめる。
+DB schema変更の正本は `supabase/migrations` であり、本番へはSupabase CLIのmigration運用で適用する。
+`supabase/schema.sql` はactive migrationsから再生成できるsnapshotで、手動編集・本番への直接適用は禁止する。
+データの片付けが要る場合は、schema migrationとは分離した承認済み手順としてここに記録する。
 
 ---
 
