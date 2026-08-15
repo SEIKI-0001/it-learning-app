@@ -6,13 +6,10 @@ import {
   recordingLockedResponse,
 } from "@/lib/billing/recordingGate";
 import {
-  isMissingColumnError,
-  isUniqueViolationError,
-  questionAttemptToRow,
-  questionAttemptToRowV2,
   type QuestionAttemptInput,
   type QuestionType,
 } from "@/lib/dbMappers";
+import { recordQuestionAttemptsWithExposure } from "@/lib/questionExposureServer";
 import { getQuestionById } from "@/lib/questionBank";
 import {
   sanitizeAnsweredAt,
@@ -161,25 +158,6 @@ function toLegacyAttempt(
   };
 }
 
-type ServiceSupabase = NonNullable<ReturnType<typeof getServiceSupabase>>;
-
-/**
- * 1件ずつ insert し、一意制約違反だけ無視して保存できた件数を返す。
- * それ以外のエラーは無視しない（保存できていない行を成功と数えないため）。
- */
-async function insertIgnoringDuplicates(
-  supabase: ServiceSupabase,
-  rows: Record<string, unknown>[],
-): Promise<number> {
-  let saved = 0;
-  for (const row of rows) {
-    const { error } = await supabase.from("question_attempts").insert([row]);
-    if (!error) saved += 1;
-    else if (!isUniqueViolationError(error)) break;
-  }
-  return saved;
-}
-
 export async function POST(request: Request) {
   let body: { userId?: string; attempts?: AttemptInput[] } = {};
   try {
@@ -218,43 +196,10 @@ export async function POST(request: Request) {
     );
   }
 
-  // まず新列を含めて保存する。
-  const rows = inputs.map((a) => questionAttemptToRowV2(userId, a));
-  const { error } = await supabase.from("question_attempts").insert(rows);
-
-  if (!error) {
-    return NextResponse.json({ ok: true, saved: inputs.length });
-  }
-
-  // 既に保存済みの回答をもう一度送った場合（採点の再送・API再送）。
-  // 一意制約が弾いた＝目的の行は既にあるので、成功として返す。
-  //
-  // まとめて insert すると1件でも重複があれば全件入らないため、
-  // 「一部だけ重複」を取りこぼさないよう1件ずつ入れ直す。
-  // ここへ来るのは再送のときだけなので、通常の保存経路は従来どおり1回の insert で済む。
-  if (isUniqueViolationError(error)) {
-    const saved = await insertIgnoringDuplicates(supabase, rows);
-    return NextResponse.json({ ok: true, saved, duplicatesIgnored: rows.length - saved });
-  }
-
-  // 20260726 のマイグレーションが本番へ未適用だと、新列が無くて insert が落ちる。
-  // その場合だけ旧形式で入れ直し、既存の学習記録が止まらないようにする。
-  // （付加情報は落ちるが、回答そのものを残す方を優先する）
-  if (!isMissingColumnError(error)) {
+  try {
+    const result = await recordQuestionAttemptsWithExposure(supabase, userId, inputs);
+    return NextResponse.json({ ok: true, ...result });
+  } catch {
     return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
   }
-
-  const { error: legacyError } = await supabase
-    .from("question_attempts")
-    .insert(inputs.map((a) => questionAttemptToRow(userId, a)));
-
-  if (legacyError) {
-    return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
-  }
-
-  return NextResponse.json({
-    ok: true,
-    saved: inputs.length,
-    degraded: "legacy_columns",
-  });
 }
