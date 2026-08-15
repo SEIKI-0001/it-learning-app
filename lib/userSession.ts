@@ -1,6 +1,15 @@
 "use client";
 
-import type { AppState, UserAnswer, UserProfile, UserProgress } from "@/types";
+import type {
+  AppState,
+  QuestionExposure,
+  QuestionExposureMap,
+  QuestionExposureState,
+  UserAnswer,
+  UserProfile,
+  UserProgress,
+} from "@/types";
+import { getUnknownQuestionExposureStates } from "@/lib/questionExposure";
 import type {
   DailyStudyTaskInput,
   ProgressLevel,
@@ -456,22 +465,66 @@ export type QuestionAttemptInput = {
   answeredAt?: string | null;
 };
 
+function isQuestionExposureState(value: unknown): value is QuestionExposureState {
+  return value === "first" || value === "seen" || value === "unknown";
+}
+
+function parseQuestionExposure(value: unknown): QuestionExposure | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  if (
+    typeof row.questionId !== "string"
+    || row.questionId.length === 0
+    || !isQuestionExposureState(row.state)
+    || (row.attemptedBefore !== null && typeof row.attemptedBefore !== "boolean")
+    || (row.firstAttemptAt !== null && typeof row.firstAttemptAt !== "string")
+    || (row.attemptCount !== null
+      && (typeof row.attemptCount !== "number" || !Number.isInteger(row.attemptCount)))
+  ) return null;
+  return row as QuestionExposure;
+}
+
 /**
- * 問題の回答ログを question_attempts に保存（fire-and-forget）。
- * user_id が無い（匿名）場合は何もしない。失敗しても UI は止めない。
+ * Logged-in answer batch persistence and authoritative exposure classification.
+ * Any unavailable or incomplete server result becomes unknown for the whole batch.
  */
+export async function saveQuestionAttemptsWithExposure(
+  userId: string,
+  attempts: QuestionAttemptInput[],
+): Promise<QuestionExposureMap> {
+  const questionIds = attempts.map((attempt) => attempt.questionId);
+  if (attempts.length === 0) return {};
+  const unknown = getUnknownQuestionExposureStates(questionIds);
+  try {
+    const response = await fetch("/api/question-attempts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, attempts }),
+    });
+    if (!response.ok) return unknown;
+    const body = await response.json() as { ok?: boolean; exposures?: unknown };
+    if (!body.ok || !Array.isArray(body.exposures)) return unknown;
+
+    const exposures = body.exposures.map(parseQuestionExposure);
+    if (exposures.some((exposure) => exposure === null)) return unknown;
+    const result: Record<string, QuestionExposure> = { ...unknown };
+    for (const exposure of exposures) {
+      if (exposure && exposure.questionId in result) {
+        result[exposure.questionId] = exposure;
+      }
+    }
+    return result;
+  } catch {
+    return unknown;
+  }
+}
+
+/** Compatibility wrapper for callers that only need to record history. */
 export function saveQuestionAttempts(
   userId: string,
   attempts: QuestionAttemptInput[],
 ): void {
-  if (attempts.length === 0) return;
-  void fetch("/api/question-attempts/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, attempts }),
-  }).catch(() => {
-    /* fire-and-forget */
-  });
+  void saveQuestionAttemptsWithExposure(userId, attempts);
 }
 
 export type CheckPackSubmitResult = {
