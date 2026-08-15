@@ -48,7 +48,10 @@ function supabaseStub() {
     ) => {
       insertCalls += 1;
       const data = params.p_attempts.map((input) => {
-        const row = { ...input, user_id: params.p_user_id };
+        const row: Record<string, unknown> = {
+          ...input,
+          user_id: params.p_user_id,
+        };
         const attemptedBefore = stored.some(
           (existing) =>
             existing.user_id === row.user_id

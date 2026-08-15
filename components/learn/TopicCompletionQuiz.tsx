@@ -16,8 +16,11 @@ import {
   reportTopicQuizResult,
   saveAnswersToDb,
   saveProgressToDb,
+  saveQuestionAttemptsWithExposure,
   todayLocalDate,
+  type QuestionAttemptInput,
 } from "@/lib/userSession";
+import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { buttonClass } from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
@@ -65,17 +68,33 @@ export default function TopicCompletionQuiz({
     }
   }, [completed]);
 
-  function handleComplete(answers: UserAnswer[]) {
+  async function handleComplete(answers: UserAnswer[]) {
     if (!state) return;
     const tagged: UserAnswer[] = answers.map((a) => ({
       ...a,
       tag: topic.tags[0] ?? topic.field,
     }));
+    const attempts: QuestionAttemptInput[] = tagged.map((answer) => ({
+      questionId: answer.questionId,
+      questionType: "topic_quiz",
+      topicId: answer.topicId ?? topic.id,
+      selectedAnswer: answer.selectedChoice ?? null,
+      isCorrect: answer.isCorrect,
+      answeredAt: answer.answeredAt,
+    }));
+    const userId = getUserId();
+    const exposures = userId
+      ? await saveQuestionAttemptsWithExposure(userId, attempts)
+      : getAnonymousQuestionExposureStates(
+          state.answers,
+          tagged.map((answer) => answer.questionId),
+        );
     // 完了・バッジ確定付与・追加ドロップを /today と同一の共通経路で処理する。
     const session = completeStudySession(
       state,
       topic.id,
       tagged,
+      exposures,
       getClientBadgeSignals(),
     );
     const next = session.state;
@@ -106,7 +125,6 @@ export default function TopicCompletionQuiz({
     emitMochitEvent(completionEvent);
     setCompleted(true);
 
-    const userId = getUserId();
     if (userId) {
       saveProgressToDb(userId, next.progress);
       saveAnswersToDb(userId, 0, tagged);

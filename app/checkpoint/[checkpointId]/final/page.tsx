@@ -12,8 +12,9 @@ import { saveAppState } from "@/lib/storage";
 import {
   getUserId,
   saveProgressToDb,
-  saveQuestionAttempts,
+  saveQuestionAttemptsWithExposure,
 } from "@/lib/userSession";
+import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import { getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
 import {
@@ -122,32 +123,41 @@ export default function FinalExamPage() {
     }
   }
 
-  function handleComplete(answers: UserAnswer[]) {
+  async function handleComplete(answers: UserAnswer[]) {
     if (!state || !exam) return;
     const scored = scoreFinalExam(exam, answers);
     const attempt = buildFinalExamAttempt(exam, scored);
-    const updated = recordFinalExamAttempt(state, attempt, signals, new Date(), answers);
+    const uid = getUserId();
+    const questionAttempts = answers.map((answer) => ({
+      questionId: answer.questionId,
+      questionType: "mini_exam" as const,
+      topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
+      selectedAnswer: answer.selectedChoice ?? null,
+      isCorrect: answer.isCorrect,
+      answeredAt: answer.answeredAt,
+    }));
+    const exposures = uid
+      ? await saveQuestionAttemptsWithExposure(uid, questionAttempts)
+      : getAnonymousQuestionExposureStates(
+          state.answers,
+          answers.map((answer) => answer.questionId),
+        );
+    const updated = recordFinalExamAttempt(
+      state,
+      attempt,
+      answers,
+      exposures,
+      signals,
+      new Date(),
+    );
     saveAppState(updated);
     setState(updated);
     setResult(scored);
     // CP突破の全画面演出（紙吹雪）。突破していなければ差分が無いので何も出ない。
     emitCelebration(state, updated);
     emitMochitEvent(scored.passed ? "checkpointClear" : "incorrect");
-    const uid = getUserId();
     if (uid) {
       saveProgressToDb(uid, updated.progress);
-      // 突破試験の回答も集計ログに残す（統合進捗・弱点分析の材料）。
-      // 過去問レベル(exam_level)とは難度が違うため mini_exam として区別する。
-      saveQuestionAttempts(
-        uid,
-        answers.map((a) => ({
-          questionId: a.questionId,
-          questionType: "mini_exam" as const,
-          topicId: exam.topicIdByQuestionId[a.questionId] ?? a.topicId ?? checkpointId,
-          selectedAnswer: a.selectedChoice ?? null,
-          isCorrect: a.isCorrect,
-        })),
-      );
     }
   }
 

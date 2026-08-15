@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import { getAllTopics } from "@/lib/content";
 import {
   buildCheckpointExam,
@@ -77,7 +77,21 @@ describe("checkpoint exams", () => {
       },
     ];
 
-    const next = recordCheckpointExamResult(state, answers, new Date("2026-07-10T00:00:00Z"));
+    const exposures: QuestionExposureMap = {
+      "tech-binary-data-q1": {
+        questionId: "tech-binary-data-q1",
+        state: "seen",
+        attemptedBefore: true,
+        firstAttemptAt: "2026-07-01T00:00:00.000Z",
+        attemptCount: 2,
+      },
+    };
+    const next = recordCheckpointExamResult(
+      state,
+      answers,
+      exposures,
+      new Date("2026-07-10T00:00:00Z"),
+    );
 
     expect(next.progress.reviewQueue).toEqual([
       expect.objectContaining({
@@ -88,6 +102,9 @@ describe("checkpoint exams", () => {
     expect(next.progress.topicMastery["tech-binary-data"]).toBeLessThan(40);
     expect(next.progress.topicMasteryStats?.["tech-binary-data"].incorrectCount).toBe(1);
     expect(next.progress.topicMasteryStats?.["tech-binary-data"].recentEvidence[0].kind).toBe("checkpoint");
+    expect(next.progress.topicMasteryStats?.["tech-binary-data"].recentEvidence[0]).toEqual(
+      expect.objectContaining({ exposureState: "seen", isFirstSeen: false }),
+    );
     expect(next.progress.weakTags).toEqual(["binary"]);
   });
 });

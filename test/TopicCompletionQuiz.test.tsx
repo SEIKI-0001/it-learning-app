@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import TopicCompletionQuiz from "@/components/learn/TopicCompletionQuiz";
 import { subscribeMochitEvent } from "@/components/mochit/mochitEventBus";
@@ -24,6 +24,7 @@ const flow = vi.hoisted(() => {
   };
   return {
     before,
+    userId: null as string | null,
     next: {
       ...before,
       progress: {
@@ -36,6 +37,9 @@ const flow = vi.hoisted(() => {
   };
 });
 
+const completeStudySession = vi.hoisted(() => vi.fn());
+const saveQuestionAttemptsWithExposure = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/useAppState", () => ({
   useAppState: () => [flow.before, vi.fn()],
 }));
@@ -45,11 +49,7 @@ vi.mock("@/lib/storage", () => ({
 }));
 
 vi.mock("@/lib/studySession", () => ({
-  completeStudySession: () => ({
-    state: flow.next,
-    newlyEarnedIds: [],
-    streakMilestone: null,
-  }),
+  completeStudySession,
 }));
 
 vi.mock("@/lib/study", () => ({
@@ -67,10 +67,11 @@ vi.mock("@/lib/badgeSignals", () => ({
 }));
 
 vi.mock("@/lib/userSession", () => ({
-  getUserId: () => null,
+  getUserId: () => flow.userId,
   reportTopicQuizResult: vi.fn(),
   saveAnswersToDb: vi.fn(),
   saveProgressToDb: vi.fn(),
+  saveQuestionAttemptsWithExposure,
   todayLocalDate: () => "2026-07-26",
 }));
 
@@ -103,7 +104,23 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  vi.clearAllMocks();
+  flow.userId = null;
   flow.next.progress.checkpointProgress.clearedCheckpointIds = [];
+  completeStudySession.mockReturnValue({
+    state: flow.next,
+    newlyEarnedIds: [],
+    streakMilestone: null,
+  });
+  saveQuestionAttemptsWithExposure.mockResolvedValue({
+    "completion-question": {
+      questionId: "completion-question",
+      state: "seen",
+      attemptedBefore: true,
+      firstAttemptAt: "2026-07-01T00:00:00.000Z",
+      attemptCount: 2,
+    },
+  });
 });
 
 afterEach(() => {
@@ -127,6 +144,22 @@ function completeWith(answerText: string): string[] {
 }
 
 describe("TopicCompletionQuiz Mochit reactions", () => {
+  it("awaits logged-in exposure before completing Mastery", async () => {
+    flow.userId = "user-1";
+    render(<TopicCompletionQuiz topic={topic} />);
+    fireEvent.click(screen.getByText("完了テストの正解").closest("button")!);
+    fireEvent.click(screen.getByRole("button", { name: "このレッスンを完了する" }));
+
+    await waitFor(() => expect(completeStudySession).toHaveBeenCalled());
+    expect(saveQuestionAttemptsWithExposure).toHaveBeenCalledTimes(1);
+    expect(completeStudySession.mock.invocationCallOrder[0]).toBeGreaterThan(
+      saveQuestionAttemptsWithExposure.mock.invocationCallOrder[0],
+    );
+    expect(completeStudySession.mock.calls[0][3]).toEqual({
+      "completion-question": expect.objectContaining({ state: "seen" }),
+    });
+  });
+
   it("emits allCorrect after the final correct answer", () => {
     expect(completeWith("完了テストの正解")).toEqual([
       "correct",

@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import { completeTopicStudy } from "@/lib/study";
 import {
   recordMockExamResult,
@@ -41,12 +41,28 @@ function answer(
   };
 }
 
+function exposure(
+  questionId: string,
+  state: "first" | "seen" = "first",
+): QuestionExposureMap {
+  return {
+    [questionId]: {
+      questionId,
+      state,
+      attemptedBefore: state === "seen",
+      firstAttemptAt: null,
+      attemptCount: state === "seen" ? 2 : 1,
+    },
+  };
+}
+
 it("connects topic study, summary exam weakness, and successful review", () => {
   const learnedAt = new Date("2026-08-11T00:00:00.000Z");
   const learned = completeTopicStudy(
     state(),
     "tech-binary-data",
     [answer("confirm-1", true, learnedAt.toISOString())],
+    exposure("confirm-1"),
     learnedAt,
   );
   expect(learned.progress.topicMasteryStats?.["tech-binary-data"].correctCount).toBe(1);
@@ -87,6 +103,7 @@ it("connects topic study, summary exam weakness, and successful review", () => {
     missed,
     "tech-binary-data",
     [answer("review-1", true, reviewedAt.toISOString())],
+    exposure("review-1"),
     reviewedAt,
   );
   expect(reviewed.progress.topicMastery["tech-binary-data"]).toBeGreaterThan(

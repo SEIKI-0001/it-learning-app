@@ -1,7 +1,8 @@
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import type { CheckQuestion, Difficulty, Topic } from "@/types/content";
 import { getAllTopics } from "@/lib/content";
 import { updateLearningLoopProgress } from "@/lib/learningLoop";
+import { exposureStateFor } from "@/lib/questionExposure";
 
 export type DifficultyDistribution = Partial<Record<Difficulty, number>>;
 
@@ -200,10 +201,10 @@ export function buildCheckpointExam({
 export function recordCheckpointExamResult(
   state: AppState,
   answers: UserAnswer[],
+  exposures: QuestionExposureMap,
   now: Date = new Date(),
 ): AppState {
   const allAnswers = [...state.answers, ...answers];
-  const seen = new Set(state.answers.map((answer) => answer.questionId));
   const progress = updateLearningLoopProgress(
     {
       ...state.progress,
@@ -219,7 +220,7 @@ export function recordCheckpointExamResult(
             questionId: answer.questionId,
             kind: "checkpoint" as const,
             isCorrect: answer.isCorrect,
-            isFirstSeen: !seen.has(answer.questionId),
+            exposureState: exposureStateFor(exposures, answer.questionId),
             answeredAt: answer.answeredAt,
           }]
         : [],

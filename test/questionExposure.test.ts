@@ -21,12 +21,13 @@ describe("question exposure domain", () => {
   it.each([true, false])(
     "classifies a prior anonymous answer as seen regardless of correctness (%s)",
     (isCorrect) => {
+      const priorAnswer = {
+        questionId: "question-a",
+        answeredAt: "2026-08-14T01:02:03.000Z",
+        isCorrect,
+      };
       const exposures = getAnonymousQuestionExposureStates(
-        [{
-          questionId: "question-a",
-          answeredAt: "2026-08-14T01:02:03.000Z",
-          isCorrect,
-        }],
+        [priorAnswer],
         ["question-a"],
       );
 

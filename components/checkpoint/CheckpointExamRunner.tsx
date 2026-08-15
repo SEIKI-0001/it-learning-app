@@ -11,7 +11,13 @@ import {
 } from "@/lib/checkpointExam";
 import { saveAppState } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
-import { getUserId, saveAnswersToDb, saveProgressToDb } from "@/lib/userSession";
+import {
+  getUserId,
+  saveAnswersToDb,
+  saveProgressToDb,
+  saveQuestionAttemptsWithExposure,
+} from "@/lib/userSession";
+import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -50,16 +56,32 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
 
   if (state === undefined || state === null) return <LoadingScreen />;
 
-  function handleComplete(answers: UserAnswer[]) {
+  async function handleComplete(answers: UserAnswer[]) {
     if (!state) return;
     const tagged = answers.map((answer) => {
       const topic = getTopic(answer.topicId ?? "");
       return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
     });
-    const next = recordCheckpointExamResult(state, tagged);
+    const userId = getUserId();
+    const exposures = userId
+      ? await saveQuestionAttemptsWithExposure(
+          userId,
+          tagged.map((answer) => ({
+            questionId: answer.questionId,
+            questionType: "mini_exam" as const,
+            topicId: answer.topicId ?? checkpointId,
+            selectedAnswer: answer.selectedChoice ?? null,
+            isCorrect: answer.isCorrect,
+            answeredAt: answer.answeredAt,
+          })),
+        )
+      : getAnonymousQuestionExposureStates(
+          state.answers,
+          tagged.map((answer) => answer.questionId),
+        );
+    const next = recordCheckpointExamResult(state, tagged, exposures);
     saveAppState(next);
     setState(next);
-    const userId = getUserId();
     if (userId) {
       void saveProgressToDb(userId, next.progress);
       void saveAnswersToDb(userId, 0, tagged);
