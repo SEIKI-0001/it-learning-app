@@ -17,6 +17,10 @@ export const metadata: Metadata = {
 
 /** 西暦 → 和暦の表示名。収録年度が増えたらここに足す。 */
 const YEAR_LABELS: Record<number, string> = {
+  2022: "令和4年度",
+  2023: "令和5年度",
+  2024: "令和6年度",
+  2025: "令和7年度",
   2026: "令和8年度",
 };
 
