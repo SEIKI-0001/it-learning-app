@@ -53,7 +53,10 @@ function parseRpcRow(value: unknown): RpcExposureRow {
 }
 
 function toRpcAttempt(input: QuestionAttemptInput): Record<string, unknown> {
-  const { user_id: _userId, ...row } = questionAttemptToRowV2("unused", input);
+  const row: Record<string, unknown> = {
+    ...questionAttemptToRowV2("unused", input),
+  };
+  delete row.user_id;
   return row;
 }
 
