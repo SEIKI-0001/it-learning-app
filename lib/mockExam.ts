@@ -1,7 +1,13 @@
-import type { AppState, UserAnswer, WeakTopic } from "@/types";
+import type {
+  AppState,
+  QuestionExposureMap,
+  UserAnswer,
+  WeakTopic,
+} from "@/types";
 import { FIELD_LABELS, type CheckQuestion, type Topic, type TopicField } from "@/types/content";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { updateLearningLoopProgress } from "@/lib/learningLoop";
+import { exposureStateFor } from "@/lib/questionExposure";
 
 export const MOCK_EXAM_RULE = {
   questionCount: 100,
@@ -224,9 +230,9 @@ export function recordMockExamResult(
   state: AppState,
   answers: UserAnswer[],
   _result: MockExamResult,
+  exposures: QuestionExposureMap,
   now: Date = new Date(),
 ): AppState {
-  const seen = new Set(state.answers.map((answer) => answer.questionId));
   const validAnswers = answers.filter(
     (answer) => answer.topicId && getTopic(answer.topicId),
   );
@@ -245,7 +251,7 @@ export function recordMockExamResult(
       questionId: answer.questionId,
       kind: "mock_exam" as const,
       isCorrect: answer.isCorrect,
-      isFirstSeen: !seen.has(answer.questionId),
+      exposureState: exposureStateFor(exposures, answer.questionId),
       answeredAt: answer.answeredAt,
     })),
     now,

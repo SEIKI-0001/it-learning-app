@@ -7,7 +7,22 @@ import {
   scoreMockExam,
 } from "@/lib/mockExam";
 import { getAllTopics } from "@/lib/content";
-import type { AppState } from "@/types";
+import type { AppState, QuestionExposureMap } from "@/types";
+
+function exposure(
+  questionId: string,
+  exposureState: "first" | "seen" | "unknown",
+): QuestionExposureMap {
+  return {
+    [questionId]: {
+      questionId,
+      state: exposureState,
+      attemptedBefore: exposureState === "seen" ? true : exposureState === "first" ? false : null,
+      firstAttemptAt: null,
+      attemptCount: exposureState === "first" ? 1 : exposureState === "seen" ? 2 : null,
+    },
+  };
+}
 
 const state: AppState = {
   progress: {
@@ -73,8 +88,18 @@ describe("100-question mock exam", () => {
     };
     const result = scoreMockExam(exam, [answer]);
 
-    const next = recordMockExamResult(state, [answer], result, new Date(answer.answeredAt));
+    const next = recordMockExamResult(
+      state,
+      [answer],
+      result,
+      exposure(answer.questionId, "seen"),
+      new Date(answer.answeredAt),
+    );
 
     expect(next.progress.topicMasteryStats?.[answer.topicId].recentEvidence[0].kind).toBe("mock_exam");
+    expect(next.progress.topicMastery[answer.topicId]).toBe(12);
+    expect(next.progress.topicMasteryStats?.[answer.topicId].recentEvidence[0]).toEqual(
+      expect.objectContaining({ exposureState: "seen", isFirstSeen: false }),
+    );
   });
 });

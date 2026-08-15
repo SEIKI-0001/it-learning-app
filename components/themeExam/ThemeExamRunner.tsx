@@ -4,9 +4,16 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { ChoiceKey } from "@/types";
 import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
-import { gradeThemeExam } from "@/lib/themeExam";
+import { gradeThemeExam, recordThemeExamLearningResult } from "@/lib/themeExam";
 import { getLessonHref } from "@/lib/learningCatalog";
-import { getUserId, saveQuestionAttempts } from "@/lib/userSession";
+import {
+  getUserId,
+  saveProgressToDb,
+  saveQuestionAttemptsWithExposure,
+} from "@/lib/userSession";
+import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
+import { useAppState } from "@/lib/useAppState";
+import { saveAppState } from "@/lib/storage";
 import { buttonClass } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 
@@ -47,6 +54,7 @@ export default function ThemeExamRunner({
   passRate,
   questions,
 }: Props) {
+  const [appState, setAppState] = useAppState();
   const [phase, setPhase] = useState<"intro" | "running" | "result">("intro");
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
@@ -89,7 +97,7 @@ export default function ThemeExamRunner({
     setIndex(Math.min(Math.max(to, 0), questions.length - 1));
   };
 
-  const finish = () => {
+  const finish = async () => {
     commitElapsed();
     const graded = gradeThemeExam({
       sessionId: sessionIdRef.current,
@@ -101,22 +109,29 @@ export default function ThemeExamRunner({
     setResult(graded);
     setPhase("result");
 
-    // 保存は fire-and-forget。失敗しても結果の表示は続ける。
+    if (!appState) return;
     const userId = getUserId();
+    const answeredAt = new Date().toISOString();
+    const attempts = graded.questions.map((question) => ({
+      questionId: question.questionId,
+      questionType: "theme_exam" as const,
+      topicId: question.topicId,
+      selectedAnswer: question.selected,
+      isCorrect: question.isCorrect,
+      timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
+      answeredAt,
+    }));
+    const exposures = userId
+      ? await saveQuestionAttemptsWithExposure(userId, attempts)
+      : getAnonymousQuestionExposureStates(
+          appState.answers,
+          graded.questions.map((question) => question.questionId),
+        );
+    const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
+    saveAppState(next);
+    setAppState(next);
     if (userId) {
-      const answeredAt = new Date().toISOString();
-      saveQuestionAttempts(
-        userId,
-        graded.questions.map((r) => ({
-          questionId: r.questionId,
-          questionType: "theme_exam" as const,
-          topicId: r.topicId,
-          selectedAnswer: r.selected,
-          isCorrect: r.isCorrect,
-          timeSpentSeconds: timeSpentRef.current[r.questionNumber] ?? null,
-          answeredAt,
-        })),
-      );
+      saveProgressToDb(userId, next.progress);
     }
   };
 

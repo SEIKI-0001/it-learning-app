@@ -21,8 +21,9 @@ import {
   getUserId,
   saveAnswersToDb,
   saveProgressToDb,
-  saveQuestionAttempts,
+  saveQuestionAttemptsWithExposure,
 } from "@/lib/userSession";
+import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
@@ -55,7 +56,7 @@ export default function MockExamPage() {
     setResult(null);
   }
 
-  function handleComplete(answers: UserAnswer[]) {
+  async function handleComplete(answers: UserAnswer[]) {
     if (!exam) return;
     const now = new Date();
     const tagged = answers.map((answer) => {
@@ -68,27 +69,30 @@ export default function MockExamPage() {
       };
     });
     const scored = scoreMockExam(exam, tagged);
-    const next = recordMockExamResult(appState, tagged, scored, now);
+    const userId = getUserId();
+    const questionAttempts = tagged.map((answer) => ({
+      questionId: answer.questionId,
+      questionType: "mock_exam" as const,
+      topicId: answer.topicId ?? "mock-exam",
+      selectedAnswer: answer.selectedChoice ?? null,
+      isCorrect: answer.isCorrect,
+      mistakeReason: answer.isCorrect ? null : "模試の誤答",
+      answeredAt: answer.answeredAt,
+    }));
+    const exposures = userId
+      ? await saveQuestionAttemptsWithExposure(userId, questionAttempts)
+      : getAnonymousQuestionExposureStates(
+          appState.answers,
+          tagged.map((answer) => answer.questionId),
+        );
+    const next = recordMockExamResult(appState, tagged, scored, exposures, now);
     saveAppState(next);
     setState(next);
     setResult(scored);
 
-    const userId = getUserId();
     if (userId) {
       saveProgressToDb(userId, next.progress);
       saveAnswersToDb(userId, appState.progress.currentDay, tagged);
-      saveQuestionAttempts(
-        userId,
-        tagged.map((answer) => ({
-          questionId: answer.questionId,
-          questionType: "mock_exam" as const,
-          topicId: answer.topicId ?? "mock-exam",
-          selectedAnswer: answer.selectedChoice ?? null,
-          isCorrect: answer.isCorrect,
-          mistakeReason: answer.isCorrect ? null : "模試の誤答",
-          answeredAt: answer.answeredAt,
-        })),
-      );
     }
   }
 

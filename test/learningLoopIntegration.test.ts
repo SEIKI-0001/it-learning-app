@@ -82,7 +82,13 @@ it("connects topic study, summary exam weakness, and successful review", () => {
     weakTopics: [{ topicId: "tech-binary-data", severity: 95, reason: "summary_exam_miss" }],
     wrongTopicIds: ["tech-binary-data"],
   };
-  const missed = recordMockExamResult(learned, [summaryAnswer], result, summaryAt);
+  const missed = recordMockExamResult(
+    learned,
+    [summaryAnswer],
+    result,
+    exposure("summary-1"),
+    summaryAt,
+  );
   expect(getWeakTopics(missed.progress.topicMasteryStats ?? {})[0]).toEqual(
     expect.objectContaining({ topicId: "tech-binary-data", reason: "summary_exam_miss" }),
   );
