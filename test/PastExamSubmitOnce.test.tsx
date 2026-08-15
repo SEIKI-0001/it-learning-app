@@ -44,6 +44,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.localStorage.setItem("fequest:userId", "user-1");
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
 });
 
@@ -163,14 +164,14 @@ describe("本番モードの採点は1回だけ走る", () => {
     expect(screen.queryByRole("button", { name: /採点する/ })).not.toBeInTheDocument();
   });
 
-  it("やり直すと次のセッションでは再び採点できる", () => {
+  it("やり直すと次のセッションでは再び採点できる", async () => {
     renderRunner();
     startExamMode();
     fireEvent.click(gradeButton());
     expect(saveCallCount()).toBe(1);
 
     // 結果画面から戻って、もう一度本番モードを始める。
-    fireEvent.click(screen.getByRole("button", { name: /もう一度|戻る|選び直す/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /もう一度|戻る|選び直す/ }));
     const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
     fireEvent.click(
       within(card).getByRole("button", { name: /始める|最初からやり直す/ }),

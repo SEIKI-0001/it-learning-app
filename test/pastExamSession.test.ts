@@ -15,6 +15,7 @@ import {
   saveSession,
   sessionStorageKey,
   withAnswer,
+  withAnswerExposure,
 } from "@/lib/pastExam/session";
 import {
   gradePastExam,
@@ -145,6 +146,25 @@ describe("途中保存と再開", () => {
     const original = createSession(2026, "practice");
     withAnswer(original, 1, "A", 5);
     expect(original.answers[1]).toBeUndefined();
+  });
+
+  it("サーバー判定を回答へ保存し、回答内容を変更しない", () => {
+    const answered = withAnswer(createSession(2026, "practice"), 1, "A", 5);
+    const classified = withAnswerExposure(answered, 1, "seen");
+
+    expect(classified.answers[1]).toEqual({
+      ...answered.answers[1],
+      exposureState: "seen",
+    });
+    expect(answered.answers[1].exposureState).toBeUndefined();
+  });
+
+  it("旧形式の途中セッションは読み込めるが初見状態は未確定のまま", () => {
+    const legacy = withAnswer(createSession(2026, "practice"), 1, "A", 5);
+    saveSession("user-1", legacy);
+
+    expect(loadSession("user-1", 2026, "practice")!.answers[1].exposureState)
+      .toBeUndefined();
   });
 });
 

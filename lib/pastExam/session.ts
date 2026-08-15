@@ -10,7 +10,7 @@
 //     タブを閉じている間の経過が無視されたりする。
 //   - 完了した演習は途中状態として復元しない（結果画面は別途保持する）。
 
-import type { ChoiceKey } from "@/types";
+import type { ChoiceKey, QuestionExposureState } from "@/types";
 import type { PastExamMode, PastExamSession } from "@/types/pastExam";
 import { EXAM_MODE_DURATION_MINUTES } from "@/types/pastExam";
 
@@ -205,11 +205,31 @@ export function withAnswer(
       [questionNumber]: {
         selected,
         answeredAt: now.toISOString(),
+        ...(previous?.exposureState
+          ? { exposureState: previous.exposureState }
+          : {}),
         timeSpentSeconds: Math.max(
           0,
           Math.round((previous?.timeSpentSeconds ?? 0) + elapsedSeconds),
         ),
       },
+    },
+  };
+}
+
+/** 回答保存時に確定した初見状態だけを追記する（旧セッションとの互換を保つ）。 */
+export function withAnswerExposure(
+  session: PastExamSession,
+  questionNumber: number,
+  exposureState: QuestionExposureState,
+): PastExamSession {
+  const answer = session.answers[questionNumber];
+  if (!answer) return session;
+  return {
+    ...session,
+    answers: {
+      ...session.answers,
+      [questionNumber]: { ...answer, exposureState },
     },
   };
 }

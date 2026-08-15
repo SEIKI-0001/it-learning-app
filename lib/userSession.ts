@@ -455,7 +455,13 @@ export function reportTopicQuizResult(
 /** question_attempts に保存する1件の回答。 */
 export type QuestionAttemptInput = {
   questionId: string;
-  questionType: "topic_quiz" | "exam_level" | "mini_exam" | "mock_exam" | "theme_exam";
+  questionType:
+    | "topic_quiz"
+    | "exam_level"
+    | "mini_exam"
+    | "mock_exam"
+    | "theme_exam"
+    | "official_past";
   topicId: string;
   selectedAnswer?: string | null;
   isCorrect: boolean;
@@ -463,6 +469,8 @@ export type QuestionAttemptInput = {
   timeSpentSeconds?: number | null;
   sourceTaskId?: string | null;
   answeredAt?: string | null;
+  attemptMode?: "practice" | "exam" | null;
+  attemptGroupId?: string | null;
 };
 
 function isQuestionExposureState(value: unknown): value is QuestionExposureState {

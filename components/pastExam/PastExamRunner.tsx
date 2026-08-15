@@ -22,6 +22,10 @@ import {
 } from "@/lib/pastExam/scoring";
 import { saveAllAttempts, saveSingleAttempt } from "@/lib/pastExam/saveAttempts";
 import {
+  getAnonymousQuestionExposureStates,
+  getUnknownQuestionExposureStates,
+} from "@/lib/questionExposure";
+import {
   clearSession,
   createSession,
   formatRemaining,
@@ -33,6 +37,7 @@ import {
   saveSession,
   subscribeToSessions,
   withAnswer,
+  withAnswerExposure,
 } from "@/lib/pastExam/session";
 import {
   getUserIdServerSnapshot,
@@ -42,6 +47,7 @@ import {
 import { loadAppState, saveAppState } from "@/lib/storage";
 import { saveProgressToDb } from "@/lib/userSession";
 import type { ChoiceKey } from "@/types";
+import type { QuestionExposureMap, QuestionExposureState } from "@/types";
 import {
   EXAM_MODE_DURATION_MINUTES,
   type PastExamMode,
@@ -100,6 +106,18 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     [userReady, userId],
   );
 
+  const persistExposure = useCallback(
+    (sessionId: string, questionNumber: number, exposureState: QuestionExposureState) => {
+      setSession((current) => {
+        if (!current || current.sessionId !== sessionId) return current;
+        const next = withAnswerExposure(current, questionNumber, exposureState);
+        if (userReady) saveSession(userId, next);
+        return next;
+      });
+    },
+    [userReady, userId],
+  );
+
   /** 新しい演習を始めるたびに採点ガードを開け直す（セッション単位の1回制限のため）。 */
   const allowSubmit = useCallback(() => {
     submittedRef.current = false;
@@ -129,7 +147,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   );
 
   const finish = useCallback(
-    (current: PastExamSession) => {
+    async (current: PastExamSession) => {
       // 2回目以降は何もしない。ここを通すと保存も採点もやり直される。
       if (submittedRef.current) return;
       submittedRef.current = true;
@@ -144,25 +162,52 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         answers: current.answers,
       });
 
-      setResult(graded);
-      setPhase("result");
-
-      // 本番モードは採点時にまとめて送る（練習モードは1問ごとに送信済み）。
-      if (current.mode === "exam") {
-        saveAllAttempts({
+      const currentState = loadAppState();
+      let exposures: QuestionExposureMap;
+      if (!userId) {
+        exposures = getAnonymousQuestionExposureStates(
+          currentState?.answers ?? [],
+          questions.map((question) => question.id),
+        );
+      } else if (current.mode === "exam") {
+        exposures = await saveAllAttempts({
+          userId,
           questions,
           answers: current.answers,
           mode: current.mode,
           sessionId: current.sessionId,
         });
+      } else {
+        exposures = getUnknownQuestionExposureStates(
+          questions.map((question) => question.id),
+        );
+        for (const question of questions) {
+          const exposureState = current.answers[question.questionNumber]?.exposureState;
+          if (!exposureState) continue;
+          exposures = {
+            ...exposures,
+            [question.id]: {
+              questionId: question.id,
+              state: exposureState,
+              attemptedBefore:
+                exposureState === "first"
+                  ? false
+                  : exposureState === "seen"
+                    ? true
+                    : null,
+              firstAttemptAt: null,
+              attemptCount: null,
+            },
+          };
+        }
       }
 
-      const currentState = loadAppState();
       if (currentState) {
         const next = recordPastExamLearningResult(
           currentState,
           graded,
           current.answers,
+          exposures,
         );
         saveAppState(next);
         if (userId) saveProgressToDb(userId, next.progress);
@@ -170,6 +215,8 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
 
       // 完了した演習は途中状態として残さない（購読側へも通知される）。
       clearSession(userId, year, current.mode);
+      setResult(graded);
+      setPhase("result");
     },
     [questions, userId, year],
   );
@@ -194,7 +241,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         session={session}
         questions={questions}
         onChange={persist}
+        onExposure={persistExposure}
         onFinish={finish}
+        userId={userId}
         submitting={submitting}
       />
     );
@@ -305,13 +354,21 @@ function QuestionStage({
   session,
   questions,
   onChange,
+  onExposure,
   onFinish,
+  userId,
   submitting,
 }: {
   session: PastExamSession;
   questions: PastExamQuestionView[];
   onChange: (next: PastExamSession) => void;
-  onFinish: (session: PastExamSession) => void;
+  onExposure: (
+    sessionId: string,
+    questionNumber: number,
+    exposureState: QuestionExposureState,
+  ) => void;
+  onFinish: (session: PastExamSession) => Promise<void>;
+  userId: string | null;
   /** 採点処理が走り出したか。ボタンを無効化して連打の入口を塞ぐ。 */
   submitting: boolean;
 }) {
@@ -332,6 +389,7 @@ function QuestionStage({
   // 同一セッションで保存済みの問題。回答の確定は上の answerLocked で足りるが、
   // 再描画前に連打された場合まで含めて「1問1回」を守るための保険。
   const savedQuestionsRef = useRef<Set<string>>(new Set());
+  const [classifying, setClassifying] = useState(false);
   const saveKey = `${session.sessionId}:${question.questionNumber}`;
 
   // 1問あたりの所要時間を測る基準。問題を切り替えたら測り直す。
@@ -346,7 +404,7 @@ function QuestionStage({
     (a) => a.selected !== null,
   ).length;
 
-  const handleSelect = (key: ChoiceKey) => {
+  const handleSelect = async (key: ChoiceKey) => {
     // UI 側でも選択肢を disabled にしているが、表示に依らずここでも弾く。
     if (answerLocked || (!isExam && savedQuestionsRef.current.has(saveKey))) return;
 
@@ -362,12 +420,25 @@ function QuestionStage({
       const saved = next.answers[question.questionNumber];
       if (saved) {
         savedQuestionsRef.current.add(saveKey);
-        saveSingleAttempt({
-          question,
-          answer: saved,
-          mode: session.mode,
-          sessionId: next.sessionId,
-        });
+        setClassifying(true);
+        const exposure = userId
+          ? await saveSingleAttempt({
+            userId,
+            question,
+            answer: saved,
+            mode: session.mode,
+            sessionId: next.sessionId,
+          })
+          : getAnonymousQuestionExposureStates(
+            loadAppState()?.answers ?? [],
+            [question.id],
+          );
+        onExposure(
+          next.sessionId,
+          question.questionNumber,
+          exposure[question.id]?.state ?? "unknown",
+        );
+        setClassifying(false);
       }
     }
   };
@@ -431,10 +502,10 @@ function QuestionStage({
         </p>
         <Button
           className="mt-3 w-full"
-          onClick={() => onFinish(session)}
-          disabled={submitting}
+          onClick={() => void onFinish(session)}
+          disabled={submitting || classifying}
         >
-          {submitting ? "採点中…" : "採点する"}
+          {submitting ? "採点中…" : classifying ? "回答保存中…" : "採点する"}
         </Button>
       </div>
     </div>

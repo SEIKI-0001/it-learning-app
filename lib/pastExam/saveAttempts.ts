@@ -3,19 +3,23 @@
 // 年度別演習の回答を question_attempts へ送る（クライアント側）。
 //
 // 方針:
-//   - fire-and-forget。保存に失敗しても画面とローカルの結果は維持する
-//     （採点結果は localStorage とメモリ上にあるので、DBが無くても学習は成立する）。
+//   - 保存APIのatomic RPCが返す初見状態をMasteryへ渡す。
+//     失敗時はunknownとなり、初見加点を付けない。
 //   - 練習モードは1問ごと（回答は最初の1回で確定するので再送しない）、
 //     本番モードは採点時にまとめて送る。
 //   - 出所・版・年度・公式区分は送らない。サーバ側が問題IDから解決する。
 //   - isCorrect も送るが、サーバ側は問題バンクの正答で計算し直す（この値は使わない）。
 //     画面に出す正誤は gradePastExam の結果であって、この値ではない。
 
-import { getUserId } from "@/lib/userSession";
+import {
+  saveQuestionAttemptsWithExposure,
+  type QuestionAttemptInput,
+} from "@/lib/userSession";
+import type { QuestionExposureMap } from "@/types";
 import type { PastExamMode, PastExamAnswer } from "@/types/pastExam";
 import type { PastExamQuestionView } from "@/lib/pastExam/questionView";
 
-type AttemptPayload = {
+type AttemptPayload = QuestionAttemptInput & {
   questionId: string;
   questionType: "official_past";
   topicId: string;
@@ -47,29 +51,19 @@ function toPayload(
   };
 }
 
-async function post(attempts: AttemptPayload[]): Promise<void> {
-  if (attempts.length === 0) return;
-  try {
-    await fetch("/api/question-attempts/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: getUserId(), attempts }),
-      keepalive: true,
-    });
-  } catch {
-    /* 保存できなくても演習は続行する */
-  }
-}
-
 /** 練習モード: 1問ぶんを送る。 */
 export function saveSingleAttempt(params: {
+  userId: string;
   question: PastExamQuestionView;
   answer: PastExamAnswer;
   mode: PastExamMode;
   sessionId: string;
-}): void {
-  const { question, answer, mode, sessionId } = params;
-  void post([toPayload(question, answer, mode, sessionId)]);
+}): Promise<QuestionExposureMap> {
+  const { userId, question, answer, mode, sessionId } = params;
+  return saveQuestionAttemptsWithExposure(
+    userId,
+    [toPayload(question, answer, mode, sessionId)],
+  );
 }
 
 /**
@@ -77,13 +71,15 @@ export function saveSingleAttempt(params: {
  * 未回答の問題も「未回答だった」という事実として残す（selectedAnswer: null）。
  */
 export function saveAllAttempts(params: {
+  userId: string;
   questions: PastExamQuestionView[];
   answers: Record<number, PastExamAnswer>;
   mode: PastExamMode;
   sessionId: string;
-}): void {
-  const { questions, answers, mode, sessionId } = params;
-  void post(
+}): Promise<QuestionExposureMap> {
+  const { userId, questions, answers, mode, sessionId } = params;
+  return saveQuestionAttemptsWithExposure(
+    userId,
     questions.map((q) => toPayload(q, answers[q.questionNumber], mode, sessionId)),
   );
 }

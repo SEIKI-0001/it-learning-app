@@ -4,7 +4,7 @@
 // 100問模試とは別の演習のための型。既存の CheckQuestion / ExamLevelQuestion へは
 // 変換しない（選択肢のシャッフルや即時正答表示といった既存挙動を持ち込まないため）。
 
-import type { ChoiceKey } from "@/types";
+import type { ChoiceKey, QuestionExposureState } from "@/types";
 import type { TopicField } from "@/types/content";
 
 /**
@@ -25,6 +25,8 @@ export type PastExamAnswer = {
   answeredAt: string;
   /** その問題に費やした秒数（同じ問題に戻って answer し直した場合は累計）。 */
   timeSpentSeconds: number;
+  /** DB回答保存と同時に確定した初見状態。旧セッションでは未設定＝unknown。 */
+  exposureState?: QuestionExposureState;
 };
 
 /**

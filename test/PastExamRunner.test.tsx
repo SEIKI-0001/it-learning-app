@@ -277,6 +277,7 @@ describe("練習モード", () => {
   });
 
   it("同じ問題の保存リクエストは1回だけ送る", () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
     renderRunner();
     startMode("練習モード");
 
@@ -292,6 +293,7 @@ describe("練習モード", () => {
   });
 
   it("別の問題に答えればその問題ぶんは保存される", () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
     renderRunner();
     startMode("練習モード");
 
@@ -365,7 +367,8 @@ describe("本番モード", () => {
     expect(savedAttempts()).toHaveLength(0);
   });
 
-  it("回答を変更して採点すると、変更後の回答で採点される", () => {
+  it("回答を変更して採点すると、変更後の回答で採点される", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
     renderRunner();
     startMode("本番モード");
 
@@ -374,7 +377,7 @@ describe("本番モード", () => {
     fireEvent.click(screen.getByText("選択肢エの本文"));
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
-    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(await screen.findByText("50%")).toBeInTheDocument();
     expect(savedAttempts()).toHaveLength(2);
     expect(savedAttempts()[0]).toMatchObject({ questionId: "q1", selectedAnswer: "D" });
   });
