@@ -73,7 +73,8 @@ export function applyLearningEvidence(
 ): TopicMasteryStats {
   const before = current ?? emptyStats(evidence.topicId);
   const weight = MASTERY_WEIGHTS[evidence.kind];
-  const firstSeenBonus = evidence.isFirstSeen && evidence.kind !== "confirmation"
+  const isFirstSeen = evidence.exposureState === "first";
+  const firstSeenBonus = isFirstSeen && evidence.kind !== "confirmation"
     ? LEARNING_LOOP_CONFIG.firstSeenBonus
     : 0;
   const consecutiveMisses = before.recentEvidence
@@ -98,7 +99,8 @@ export function applyLearningEvidence(
       questionId: evidence.questionId,
       kind: evidence.kind,
       isCorrect: evidence.isCorrect,
-      isFirstSeen: evidence.isFirstSeen,
+      isFirstSeen,
+      exposureState: evidence.exposureState,
       answeredAt: evidence.answeredAt,
     },
   ].slice(-LEARNING_LOOP_CONFIG.recentEvidenceLimit);

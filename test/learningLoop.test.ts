@@ -58,7 +58,7 @@ describe("Topic Mastery evidence", () => {
       questionId: "q-1",
       kind,
       isCorrect,
-      isFirstSeen: false,
+      exposureState: "seen",
       answeredAt: NOW.toISOString(),
     });
 
@@ -71,7 +71,7 @@ describe("Topic Mastery evidence", () => {
       questionId: "q-1",
       kind: "summary_exam",
       isCorrect: true,
-      isFirstSeen: false,
+      exposureState: "seen",
       answeredAt: NOW.toISOString(),
     });
     const firstSeen = applyLearningEvidence(stats(0), {
@@ -79,12 +79,33 @@ describe("Topic Mastery evidence", () => {
       questionId: "q-2",
       kind: "summary_exam",
       isCorrect: true,
-      isFirstSeen: true,
+      exposureState: "first",
       answeredAt: NOW.toISOString(),
     });
 
     expect(firstSeen.masteryScore).toBeGreaterThan(normal.masteryScore);
     expect(firstSeen.masteryScore).toBeLessThan(100);
+    expect(firstSeen.recentEvidence[0]).toEqual(expect.objectContaining({
+      exposureState: "first",
+      isFirstSeen: true,
+    }));
+  });
+
+  it("does not grant a first-seen bonus when exposure is unknown", () => {
+    const unknown = applyLearningEvidence(stats(0), {
+      topicId: "topic-a",
+      questionId: "q-unknown",
+      kind: "summary_exam",
+      isCorrect: true,
+      exposureState: "unknown",
+      answeredAt: NOW.toISOString(),
+    });
+
+    expect(unknown.masteryScore).toBe(12);
+    expect(unknown.recentEvidence[0]).toEqual(expect.objectContaining({
+      exposureState: "unknown",
+      isFirstSeen: false,
+    }));
   });
 
   it("penalizes a repeated miss and clamps scores to 0..100", () => {
@@ -93,7 +114,7 @@ describe("Topic Mastery evidence", () => {
       questionId: "q-1",
       kind: "confirmation",
       isCorrect: false,
-      isFirstSeen: false,
+      exposureState: "seen",
       answeredAt: "2026-08-10T00:00:00.000Z",
     });
     const repeatedMiss = applyLearningEvidence(firstMiss, {
@@ -101,18 +122,18 @@ describe("Topic Mastery evidence", () => {
       questionId: "q-2",
       kind: "confirmation",
       isCorrect: false,
-      isFirstSeen: false,
+      exposureState: "seen",
       answeredAt: NOW.toISOString(),
     });
 
     expect(repeatedMiss.masteryScore).toBe(26);
     expect(applyLearningEvidence(stats(95), {
       topicId: "topic-a", questionId: "q-3", kind: "review", isCorrect: true,
-      isFirstSeen: false, answeredAt: NOW.toISOString(),
+      exposureState: "seen", answeredAt: NOW.toISOString(),
     }).masteryScore).toBe(100);
     expect(applyLearningEvidence(stats(5), {
       topicId: "topic-a", questionId: "q-4", kind: "summary_exam", isCorrect: false,
-      isFirstSeen: false, answeredAt: NOW.toISOString(),
+      exposureState: "seen", answeredAt: NOW.toISOString(),
     }).masteryScore).toBe(0);
   });
 });
@@ -167,7 +188,7 @@ describe("Review Due", () => {
       questionId: "q-1",
       kind: "confirmation",
       isCorrect: true,
-      isFirstSeen: true,
+      exposureState: "first",
       answeredAt: NOW.toISOString(),
     }], NOW);
     const sameDay = new Date("2026-08-11T12:00:00.000Z");
@@ -177,7 +198,7 @@ describe("Review Due", () => {
       questionId: "q-2",
       kind: "confirmation",
       isCorrect: true,
-      isFirstSeen: true,
+      exposureState: "first",
       answeredAt: sameDay.toISOString(),
     }], sameDay);
 
@@ -246,7 +267,7 @@ describe("P0 learning loop scenario", () => {
   it("learns, schedules, weakens after summary miss, then extends after review success", () => {
     const learned = updateLearningLoopProgress(state().progress, [{
       topicId: "topic-a", questionId: "confirm-1", kind: "confirmation", isCorrect: true,
-      isFirstSeen: true, answeredAt: NOW.toISOString(),
+      exposureState: "first", answeredAt: NOW.toISOString(),
     }], NOW);
     expect(learned.topicMastery["topic-a"]).toBeGreaterThan(0);
     expect(learned.reviewQueue[0].dueAt).toBe("2026-08-14T00:00:00.000Z");
@@ -254,7 +275,7 @@ describe("P0 learning loop scenario", () => {
     const missedAt = new Date("2026-08-14T00:00:00.000Z");
     const missed = updateLearningLoopProgress(learned, [{
       topicId: "topic-a", questionId: "summary-1", kind: "summary_exam", isCorrect: false,
-      isFirstSeen: true, answeredAt: missedAt.toISOString(),
+      exposureState: "first", answeredAt: missedAt.toISOString(),
     }], missedAt);
     expect(getWeakTopics(missed.topicMasteryStats ?? {})[0]).toEqual(
       expect.objectContaining({ topicId: "topic-a", reason: "summary_exam_miss" }),
@@ -264,7 +285,7 @@ describe("P0 learning loop scenario", () => {
     const reviewedAt = new Date("2026-08-15T00:00:00.000Z");
     const reviewed = updateLearningLoopProgress(missed, [{
       topicId: "topic-a", questionId: "review-1", kind: "review", isCorrect: true,
-      isFirstSeen: true, answeredAt: reviewedAt.toISOString(),
+      exposureState: "first", answeredAt: reviewedAt.toISOString(),
     }], reviewedAt);
     expect(reviewed.topicMastery["topic-a"]).toBeGreaterThan(missed.topicMastery["topic-a"]);
     expect(reviewed.reviewQueue[0].dueAt).toBe("2026-08-18T00:00:00.000Z");
