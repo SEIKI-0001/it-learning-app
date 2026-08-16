@@ -39,7 +39,7 @@ const flow = vi.hoisted(() => ({
 }));
 
 const recordThemeExamLearningResult = vi.hoisted(() => vi.fn());
-const saveQuestionAttemptsWithExposure = vi.hoisted(() => vi.fn());
+const saveQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn());
 const saveProgressToDb = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/useAppState", () => ({
@@ -47,9 +47,8 @@ vi.mock("@/lib/useAppState", () => ({
 }));
 vi.mock("@/lib/storage", () => ({ saveAppState: vi.fn() }));
 vi.mock("@/lib/userSession", () => ({
-  getUserId: () => "user-1",
   saveProgressToDb,
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
 }));
 vi.mock("@/lib/themeExam", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/themeExam")>();
@@ -77,13 +76,17 @@ const question: ThemeExamQuestionView = {
 beforeEach(() => {
   vi.clearAllMocks();
   recordThemeExamLearningResult.mockReturnValue(flow.next);
-  saveQuestionAttemptsWithExposure.mockResolvedValue({
-    "tech-binary-data-ex1": {
-      questionId: "tech-binary-data-ex1",
-      state: "seen",
-      attemptedBefore: true,
-      firstAttemptAt: "2026-08-01T00:00:00.000Z",
-      attemptCount: 2,
+  saveQuestionAttemptsForCurrentSession.mockResolvedValue({
+    authState: "authenticated",
+    userId: "user-1",
+    exposures: {
+      "tech-binary-data-ex1": {
+        questionId: "tech-binary-data-ex1",
+        state: "seen",
+        attemptedBefore: true,
+        firstAttemptAt: "2026-08-01T00:00:00.000Z",
+        attemptCount: 2,
+      },
     },
   });
 });
@@ -107,13 +110,35 @@ describe("ThemeExamRunner exposure integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
     await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalled());
-    expect(saveQuestionAttemptsWithExposure).toHaveBeenCalledTimes(1);
+    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
     expect(recordThemeExamLearningResult.mock.invocationCallOrder[0]).toBeGreaterThan(
-      saveQuestionAttemptsWithExposure.mock.invocationCallOrder[0],
+      saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
     );
     expect(recordThemeExamLearningResult.mock.calls[0][3]).toEqual({
       "tech-binary-data-ex1": expect.objectContaining({ state: "seen" }),
     });
     expect(saveProgressToDb).toHaveBeenCalledWith("user-1", flow.next.progress);
+  });
+
+  it("submits and updates Mastery only once when the grade button is rapidly repeated", async () => {
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(screen.getByRole("button", { name: /正しい選択肢/ }));
+    const grade = screen.getByRole("button", { name: "採点する" });
+
+    grade.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    grade.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalled());
+    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
+    expect(recordThemeExamLearningResult).toHaveBeenCalledTimes(1);
   });
 });

@@ -12,10 +12,11 @@
 //     画面に出す正誤は gradePastExam の結果であって、この値ではない。
 
 import {
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
+  type CurrentSessionQuestionExposureResult,
   type QuestionAttemptInput,
 } from "@/lib/userSession";
-import type { QuestionExposureMap } from "@/types";
+import type { UserAnswer } from "@/types";
 import type { PastExamMode, PastExamAnswer } from "@/types/pastExam";
 import type { PastExamQuestionView } from "@/lib/pastExam/questionView";
 
@@ -53,16 +54,16 @@ function toPayload(
 
 /** 練習モード: 1問ぶんを送る。 */
 export function saveSingleAttempt(params: {
-  userId: string;
   question: PastExamQuestionView;
   answer: PastExamAnswer;
   mode: PastExamMode;
   sessionId: string;
-}): Promise<QuestionExposureMap> {
-  const { userId, question, answer, mode, sessionId } = params;
-  return saveQuestionAttemptsWithExposure(
-    userId,
+  anonymousAnswers: UserAnswer[];
+}): Promise<CurrentSessionQuestionExposureResult> {
+  const { question, answer, mode, sessionId, anonymousAnswers } = params;
+  return saveQuestionAttemptsForCurrentSession(
     [toPayload(question, answer, mode, sessionId)],
+    anonymousAnswers,
   );
 }
 
@@ -71,15 +72,15 @@ export function saveSingleAttempt(params: {
  * 未回答の問題も「未回答だった」という事実として残す（selectedAnswer: null）。
  */
 export function saveAllAttempts(params: {
-  userId: string;
   questions: PastExamQuestionView[];
   answers: Record<number, PastExamAnswer>;
   mode: PastExamMode;
   sessionId: string;
-}): Promise<QuestionExposureMap> {
-  const { userId, questions, answers, mode, sessionId } = params;
-  return saveQuestionAttemptsWithExposure(
-    userId,
+  anonymousAnswers: UserAnswer[];
+}): Promise<CurrentSessionQuestionExposureResult> {
+  const { questions, answers, mode, sessionId, anonymousAnswers } = params;
+  return saveQuestionAttemptsForCurrentSession(
     questions.map((q) => toPayload(q, answers[q.questionNumber], mode, sessionId)),
+    anonymousAnswers,
   );
 }

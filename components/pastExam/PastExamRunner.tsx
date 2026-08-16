@@ -21,10 +21,7 @@ import {
   recordPastExamLearningResult,
 } from "@/lib/pastExam/scoring";
 import { saveAllAttempts, saveSingleAttempt } from "@/lib/pastExam/saveAttempts";
-import {
-  getAnonymousQuestionExposureStates,
-  getUnknownQuestionExposureStates,
-} from "@/lib/questionExposure";
+import { getUnknownQuestionExposureStates } from "@/lib/questionExposure";
 import {
   clearSession,
   createSession,
@@ -39,13 +36,12 @@ import {
   withAnswer,
   withAnswerExposure,
 } from "@/lib/pastExam/session";
-import {
-  getUserIdServerSnapshot,
-  getUserIdSnapshot,
-  subscribeToUserId,
-} from "@/lib/pastExam/userIdStore";
 import { loadAppState, saveAppState } from "@/lib/storage";
-import { saveProgressToDb } from "@/lib/userSession";
+import {
+  resolveQuestionExposureIdentity,
+  saveProgressToDb,
+  type QuestionExposureIdentity,
+} from "@/lib/userSession";
 import type { ChoiceKey } from "@/types";
 import type { QuestionExposureMap, QuestionExposureState } from "@/types";
 import {
@@ -80,20 +76,25 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   // state（submitting）はボタンを無効化する表示のためだけに使う。
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
-  // userId はサーバ描画では分からない（localStorage）。確定するまで（null の間）は
-  // 保存しない。未確定のまま書くと anon 側のキーへ書いてしまう。
-  const rawUserId = useSyncExternalStore(
-    subscribeToUserId,
-    getUserIdSnapshot,
-    getUserIdServerSnapshot,
-  );
-  const userReady = rawUserId !== null;
-  const userId = rawUserId ? rawUserId : null;
+  const [identity, setIdentity] = useState<QuestionExposureIdentity | null>(null);
+  useEffect(() => {
+    void resolveQuestionExposureIdentity().then(setIdentity);
+  }, []);
+  // pending/unknown must never share the anonymous key. Only a server-confirmed
+  // authenticated or anonymous identity may persist resumable state.
+  const userReady = identity?.authState === "authenticated"
+    || identity?.authState === "anonymous";
+  const userId = identity?.authState === "authenticated" ? identity.userId : null;
+  const sessionUserId = userReady ? userId : "__unverified__";
+
+  useEffect(() => {
+    if (userReady && session) saveSession(sessionUserId, session);
+  }, [session, sessionUserId, userReady]);
 
   // 再開できる途中状態があるか。保存・削除のたびに購読側へ通知される。
   const resumableSnapshot = useSyncExternalStore(
     subscribeToSessions,
-    useCallback(() => getResumableSnapshot(userId, year), [userId, year]),
+    useCallback(() => getResumableSnapshot(sessionUserId, year), [sessionUserId, year]),
     getResumableServerSnapshot,
   );
   const resumable = parseResumable(resumableSnapshot);
@@ -101,9 +102,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const persist = useCallback(
     (next: PastExamSession) => {
       setSession(next);
-      if (userReady) saveSession(userId, next);
+      if (userReady) saveSession(sessionUserId, next);
     },
-    [userReady, userId],
+    [sessionUserId, userReady],
   );
 
   const persistExposure = useCallback(
@@ -111,11 +112,11 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       setSession((current) => {
         if (!current || current.sessionId !== sessionId) return current;
         const next = withAnswerExposure(current, questionNumber, exposureState);
-        if (userReady) saveSession(userId, next);
+        if (userReady) saveSession(sessionUserId, next);
         return next;
       });
     },
-    [userReady, userId],
+    [sessionUserId, userReady],
   );
 
   /** 新しい演習を始めるたびに採点ガードを開け直す（セッション単位の1回制限のため）。 */
@@ -126,24 +127,24 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
 
   const start = useCallback(
     (mode: PastExamMode) => {
-      const existing = loadSession(userId, year, mode);
+      const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
       const next = existing ?? createSession(year, mode);
       allowSubmit();
       persist(next);
       setPhase("running");
     },
-    [userId, year, persist, allowSubmit],
+    [sessionUserId, userReady, year, persist, allowSubmit],
   );
 
   const restart = useCallback(
     (mode: PastExamMode) => {
-      clearSession(userId, year, mode);
+      if (userReady) clearSession(sessionUserId, year, mode);
       const next = createSession(year, mode);
       allowSubmit();
       persist(next);
       setPhase("running");
     },
-    [userId, year, persist, allowSubmit],
+    [sessionUserId, userReady, year, persist, allowSubmit],
   );
 
   const finish = useCallback(
@@ -164,19 +165,17 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
 
       const currentState = loadAppState();
       let exposures: QuestionExposureMap;
-      if (!userId) {
-        exposures = getAnonymousQuestionExposureStates(
-          currentState?.answers ?? [],
-          questions.map((question) => question.id),
-        );
-      } else if (current.mode === "exam") {
-        exposures = await saveAllAttempts({
-          userId,
+      let confirmedUserId = userId;
+      if (current.mode === "exam") {
+        const exposureResult = await saveAllAttempts({
           questions,
           answers: current.answers,
           mode: current.mode,
           sessionId: current.sessionId,
+          anonymousAnswers: currentState?.answers ?? [],
         });
+        exposures = exposureResult.exposures;
+        confirmedUserId = exposureResult.userId;
       } else {
         exposures = getUnknownQuestionExposureStates(
           questions.map((question) => question.id),
@@ -210,15 +209,16 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           exposures,
         );
         saveAppState(next);
-        if (userId) saveProgressToDb(userId, next.progress);
+        if (confirmedUserId) saveProgressToDb(confirmedUserId, next.progress);
       }
 
       // 完了した演習は途中状態として残さない（購読側へも通知される）。
-      clearSession(userId, year, current.mode);
+      setSession(null);
+      if (userReady) clearSession(sessionUserId, year, current.mode);
       setResult(graded);
       setPhase("result");
     },
-    [questions, userId, year],
+    [questions, sessionUserId, userId, userReady, year],
   );
 
   if (phase === "result" && result) {
@@ -242,8 +242,8 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         questions={questions}
         onChange={persist}
         onExposure={persistExposure}
+        onIdentity={setIdentity}
         onFinish={finish}
-        userId={userId}
         submitting={submitting}
       />
     );
@@ -355,8 +355,8 @@ function QuestionStage({
   questions,
   onChange,
   onExposure,
+  onIdentity,
   onFinish,
-  userId,
   submitting,
 }: {
   session: PastExamSession;
@@ -367,8 +367,8 @@ function QuestionStage({
     questionNumber: number,
     exposureState: QuestionExposureState,
   ) => void;
+  onIdentity: (identity: QuestionExposureIdentity) => void;
   onFinish: (session: PastExamSession) => Promise<void>;
-  userId: string | null;
   /** 採点処理が走り出したか。ボタンを無効化して連打の入口を塞ぐ。 */
   submitting: boolean;
 }) {
@@ -421,22 +421,23 @@ function QuestionStage({
       if (saved) {
         savedQuestionsRef.current.add(saveKey);
         setClassifying(true);
-        const exposure = userId
-          ? await saveSingleAttempt({
-            userId,
-            question,
-            answer: saved,
-            mode: session.mode,
-            sessionId: next.sessionId,
-          })
-          : getAnonymousQuestionExposureStates(
-            loadAppState()?.answers ?? [],
-            [question.id],
-          );
+        const exposureResult = await saveSingleAttempt({
+          question,
+          answer: saved,
+          mode: session.mode,
+          sessionId: next.sessionId,
+          anonymousAnswers: loadAppState()?.answers ?? [],
+        });
+        if (exposureResult.authState !== "unknown") {
+          onIdentity({
+            authState: exposureResult.authState,
+            userId: exposureResult.userId,
+          });
+        }
         onExposure(
           next.sessionId,
           question.questionNumber,
-          exposure[question.id]?.state ?? "unknown",
+          exposureResult.exposures[question.id]?.state ?? "unknown",
         );
         setClassifying(false);
       }
@@ -464,7 +465,7 @@ function QuestionStage({
         selected={selected}
         onSelect={handleSelect}
         revealAnswer={revealAnswer}
-        disabled={answerLocked}
+        disabled={answerLocked || classifying}
       />
 
       <nav className="flex items-center justify-between gap-2" aria-label="問題の移動">

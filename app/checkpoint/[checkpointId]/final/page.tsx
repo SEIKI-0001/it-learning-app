@@ -10,11 +10,9 @@ import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { saveAppState } from "@/lib/storage";
 import {
-  getUserId,
   saveProgressToDb,
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
 } from "@/lib/userSession";
-import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import { getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
 import {
@@ -127,7 +125,6 @@ export default function FinalExamPage() {
     if (!state || !exam) return;
     const scored = scoreFinalExam(exam, answers);
     const attempt = buildFinalExamAttempt(exam, scored);
-    const uid = getUserId();
     const questionAttempts = answers.map((answer) => ({
       questionId: answer.questionId,
       questionType: "mini_exam" as const,
@@ -136,12 +133,11 @@ export default function FinalExamPage() {
       isCorrect: answer.isCorrect,
       answeredAt: answer.answeredAt,
     }));
-    const exposures = uid
-      ? await saveQuestionAttemptsWithExposure(uid, questionAttempts)
-      : getAnonymousQuestionExposureStates(
-          state.answers,
-          answers.map((answer) => answer.questionId),
-        );
+    const exposureResult = await saveQuestionAttemptsForCurrentSession(
+      questionAttempts,
+      state.answers,
+    );
+    const { exposures, userId: uid } = exposureResult;
     const updated = recordFinalExamAttempt(
       state,
       attempt,

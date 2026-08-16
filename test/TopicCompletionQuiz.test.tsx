@@ -38,7 +38,7 @@ const flow = vi.hoisted(() => {
 });
 
 const completeStudySession = vi.hoisted(() => vi.fn());
-const saveQuestionAttemptsWithExposure = vi.hoisted(() => vi.fn());
+const saveQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/useAppState", () => ({
   useAppState: () => [flow.before, vi.fn()],
@@ -67,11 +67,10 @@ vi.mock("@/lib/badgeSignals", () => ({
 }));
 
 vi.mock("@/lib/userSession", () => ({
-  getUserId: () => flow.userId,
   reportTopicQuizResult: vi.fn(),
   saveAnswersToDb: vi.fn(),
   saveProgressToDb: vi.fn(),
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
   todayLocalDate: () => "2026-07-26",
 }));
 
@@ -112,13 +111,17 @@ beforeEach(() => {
     newlyEarnedIds: [],
     streakMilestone: null,
   });
-  saveQuestionAttemptsWithExposure.mockResolvedValue({
-    "completion-question": {
-      questionId: "completion-question",
-      state: "seen",
-      attemptedBefore: true,
-      firstAttemptAt: "2026-07-01T00:00:00.000Z",
-      attemptCount: 2,
+  saveQuestionAttemptsForCurrentSession.mockResolvedValue({
+    authState: "authenticated",
+    userId: "user-1",
+    exposures: {
+      "completion-question": {
+        questionId: "completion-question",
+        state: "seen",
+        attemptedBefore: true,
+        firstAttemptAt: "2026-07-01T00:00:00.000Z",
+        attemptCount: 2,
+      },
     },
   });
 });
@@ -127,7 +130,7 @@ afterEach(() => {
   cleanup();
 });
 
-function completeWith(answerText: string): string[] {
+async function completeWith(answerText: string): Promise<string[]> {
   const events: string[] = [];
   const unsubscribe = subscribeMochitEvent((signal) =>
     events.push(signal.type),
@@ -139,6 +142,7 @@ function completeWith(answerText: string): string[] {
       name: "このレッスンを完了する",
     }),
   );
+  await waitFor(() => expect(completeStudySession).toHaveBeenCalled());
   unsubscribe();
   return events;
 }
@@ -151,33 +155,33 @@ describe("TopicCompletionQuiz Mochit reactions", () => {
     fireEvent.click(screen.getByRole("button", { name: "このレッスンを完了する" }));
 
     await waitFor(() => expect(completeStudySession).toHaveBeenCalled());
-    expect(saveQuestionAttemptsWithExposure).toHaveBeenCalledTimes(1);
+    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
     expect(completeStudySession.mock.invocationCallOrder[0]).toBeGreaterThan(
-      saveQuestionAttemptsWithExposure.mock.invocationCallOrder[0],
+      saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
     );
     expect(completeStudySession.mock.calls[0][3]).toEqual({
       "completion-question": expect.objectContaining({ state: "seen" }),
     });
   });
 
-  it("emits allCorrect after the final correct answer", () => {
-    expect(completeWith("完了テストの正解")).toEqual([
+  it("emits allCorrect after the final correct answer", async () => {
+    await expect(completeWith("完了テストの正解")).resolves.toEqual([
       "correct",
       "allCorrect",
     ]);
   });
 
-  it("emits taskComplete after a non-perfect completion", () => {
-    expect(completeWith("完了テストの不正解")).toEqual([
+  it("emits taskComplete after a non-perfect completion", async () => {
+    await expect(completeWith("完了テストの不正解")).resolves.toEqual([
       "incorrect",
       "taskComplete",
     ]);
   });
 
-  it("prioritizes checkpointClear over allCorrect", () => {
+  it("prioritizes checkpointClear over allCorrect", async () => {
     flow.next.progress.checkpointProgress.clearedCheckpointIds = ["cp1"];
 
-    expect(completeWith("完了テストの正解")).toEqual([
+    await expect(completeWith("完了テストの正解")).resolves.toEqual([
       "correct",
       "checkpointClear",
     ]);

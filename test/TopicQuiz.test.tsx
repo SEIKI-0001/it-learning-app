@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { subscribeMochitEvent } from "@/components/mochit/mochitEventBus";
@@ -114,6 +114,22 @@ describe("TopicQuiz", () => {
     expect(onComplete.mock.calls[0][0][0]).toEqual(
       expect.objectContaining({ questionId: "question-1", topicId: "tech-binary-data" }),
     );
+  });
+
+  it("completes only once when the finish event is dispatched repeatedly before render", () => {
+    const onComplete = vi.fn();
+    render(
+      <TopicQuiz topicId="topic-1" onComplete={onComplete} questions={[singleQuestion]} />,
+    );
+    fireEvent.click(screen.getByText("正解の答え").closest("button")!);
+    const finish = screen.getByRole("button", { name: "完了する" });
+
+    act(() => {
+      finish.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      finish.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
   it("shows the reason for the selected wrong choice after answering", () => {

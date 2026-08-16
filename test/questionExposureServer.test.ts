@@ -118,4 +118,34 @@ describe("recordQuestionAttemptsWithExposure", () => {
       [attempt("question-a")],
     )).rejects.toBeInstanceOf(QuestionExposurePersistenceError);
   });
+
+  it("rejects duplicate or unexpected response IDs even when the row count matches", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      error: null,
+      data: [
+        {
+          question_id: "question-a",
+          state: "first",
+          attempted_before: false,
+          first_attempt_at: "2026-08-15T04:00:00.000Z",
+          attempt_count: 1,
+          saved: true,
+        },
+        {
+          question_id: "question-a",
+          state: "seen",
+          attempted_before: true,
+          first_attempt_at: "2026-08-15T04:00:00.000Z",
+          attempt_count: 2,
+          saved: true,
+        },
+      ],
+    });
+
+    await expect(recordQuestionAttemptsWithExposure(
+      { rpc },
+      "10000000-0000-0000-0000-000000000001",
+      [attempt("question-a"), attempt("question-b")],
+    )).rejects.toBeInstanceOf(QuestionExposurePersistenceError);
+  });
 });

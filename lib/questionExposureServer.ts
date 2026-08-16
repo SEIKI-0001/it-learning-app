@@ -78,7 +78,14 @@ export async function recordQuestionAttemptsWithExposure(
   }
 
   const rows = data.map(parseRpcRow);
-  if (rows.length !== new Set(inputs.map((input) => input.questionId)).size) {
+  const requestedIds = new Set(inputs.map((input) => input.questionId));
+  const returnedIds = new Set(rows.map((row) => row.question_id));
+  if (
+    rows.length !== requestedIds.size
+    || returnedIds.size !== rows.length
+    || [...requestedIds].some((questionId) => !returnedIds.has(questionId))
+    || [...returnedIds].some((questionId) => !requestedIds.has(questionId))
+  ) {
     throw new QuestionExposurePersistenceError("incomplete exposure response");
   }
 

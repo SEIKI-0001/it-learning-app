@@ -12,15 +12,13 @@ import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import {
-  getUserId,
   reportTopicQuizResult,
   saveAnswersToDb,
   saveProgressToDb,
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
   todayLocalDate,
   type QuestionAttemptInput,
 } from "@/lib/userSession";
-import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { buttonClass } from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
@@ -82,13 +80,11 @@ export default function TopicCompletionQuiz({
       isCorrect: answer.isCorrect,
       answeredAt: answer.answeredAt,
     }));
-    const userId = getUserId();
-    const exposures = userId
-      ? await saveQuestionAttemptsWithExposure(userId, attempts)
-      : getAnonymousQuestionExposureStates(
-          state.answers,
-          tagged.map((answer) => answer.questionId),
-        );
+    const exposureResult = await saveQuestionAttemptsForCurrentSession(
+      attempts,
+      state.answers,
+    );
+    const { exposures, userId } = exposureResult;
     // 完了・バッジ確定付与・追加ドロップを /today と同一の共通経路で処理する。
     const session = completeStudySession(
       state,

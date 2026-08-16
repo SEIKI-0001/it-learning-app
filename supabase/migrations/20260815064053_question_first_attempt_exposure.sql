@@ -1,62 +1,57 @@
 -- P1-1: cross-device first-seen classification.
 --
 -- question_attempts and user_answers remain the answer-history source of truth.
--- The RPC records one validated batch and classifies exposure in the same
--- transaction so concurrent tabs cannot both claim the first attempt.
+-- Historical rows stay false: history still makes future attempts "seen", while
+-- inventing a historical first marker from incomplete legacy data would be unsafe.
+-- A constant NOT NULL default is metadata-only on supported production Postgres.
+set local lock_timeout = '5s';
+set local statement_timeout = '60s';
 
 alter table public.question_attempts
-  add column if not exists is_first_attempt boolean;
-
--- Existing users keep their history. Mark a question_attempt row only when it
--- is the earliest question_attempt and no user_answers fact is earlier (or tied).
-update public.question_attempts
-set is_first_attempt = false
-where is_first_attempt is null;
-
-with ranked_attempts as (
-  select
-    qa.attempt_id,
-    qa.user_id,
-    qa.question_id,
-    qa.answered_at,
-    row_number() over (
-      partition by qa.user_id, qa.question_id
-      order by
-        qa.answered_at,
-        coalesce(qa.recorded_at, qa.answered_at),
-        qa.attempt_id
-    ) as attempt_rank
-  from public.question_attempts qa
-), eligible_first_attempts as (
-  select ranked.attempt_id
-  from ranked_attempts ranked
-  where ranked.attempt_rank = 1
-    and not exists (
-      select 1
-      from public.user_answers ua
-      where ua.user_id = ranked.user_id
-        and ua.question_id = ranked.question_id
-        and ua.answered_at <= ranked.answered_at
-    )
-)
-update public.question_attempts qa
-set is_first_attempt = true
-from eligible_first_attempts eligible
-where qa.attempt_id = eligible.attempt_id;
-
-alter table public.question_attempts
-  alter column is_first_attempt set default false,
-  alter column is_first_attempt set not null;
+  add column if not exists is_first_attempt boolean not null default false;
 
 create unique index if not exists question_attempts_one_first_per_user_question_idx
   on public.question_attempts (user_id, question_id)
   where is_first_attempt;
 
-create index if not exists question_attempts_user_question_answered_at_idx
-  on public.question_attempts (user_id, question_id, answered_at);
+-- The set-based history query reuses the production baseline's existing
+-- per-user indexes. Avoid two additional full index builds on live tables.
 
-create index if not exists user_answers_user_question_answered_at_idx
-  on public.user_answers (user_id, question_id, answered_at);
+-- All application answer writers take the same per-user transaction lock.
+-- This makes the atomic RPC and the legacy user_answers writer serialize. A
+-- 64-bit hash collision can only over-serialize unrelated users; it cannot
+-- create two first claims.
+create or replace function public.lock_question_exposure_answer_write()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+begin
+  perform pg_advisory_xact_lock(
+    hashtextextended('question-exposure-user' || chr(31) || new.user_id::text, 0)
+  );
+  return new;
+end;
+$$;
+
+alter function public.lock_question_exposure_answer_write() owner to postgres;
+revoke all on function public.lock_question_exposure_answer_write() from public;
+revoke all on function public.lock_question_exposure_answer_write() from anon;
+revoke all on function public.lock_question_exposure_answer_write() from authenticated;
+revoke all on function public.lock_question_exposure_answer_write() from service_role;
+
+drop trigger if exists lock_question_exposure_question_attempts
+  on public.question_attempts;
+create trigger lock_question_exposure_question_attempts
+before insert or update of user_id, question_id on public.question_attempts
+for each row execute function public.lock_question_exposure_answer_write();
+
+drop trigger if exists lock_question_exposure_user_answers
+  on public.user_answers;
+create trigger lock_question_exposure_user_answers
+before insert or update of user_id, question_id on public.user_answers
+for each row execute function public.lock_question_exposure_answer_write();
 
 create or replace function public.record_question_attempts_with_exposure(
   p_user_id uuid,
@@ -74,8 +69,6 @@ language plpgsql
 security definer
 set search_path = pg_catalog, public
 as $$
-declare
-  v_question_id text;
 begin
   if p_user_id is null then
     raise exception 'p_user_id is required' using errcode = '22023';
@@ -174,17 +167,11 @@ begin
     raise exception 'p_attempts contained no valid attempts' using errcode = '22023';
   end if;
 
-  -- Every overlapping batch acquires the same keys in the same order. The hash
-  -- can over-serialize on collision, but it cannot allow two first claims.
-  for v_question_id in
-    select input.question_id
-    from pg_temp.question_exposure_input input
-    order by input.question_id
-  loop
-    perform pg_advisory_xact_lock(
-      hashtextextended(p_user_id::text || chr(31) || v_question_id, 0)
-    );
-  end loop;
+  -- One lock per user keeps a 100-question batch at O(1) lock calls and also
+  -- coordinates with direct question_attempts/user_answers writers.
+  perform pg_advisory_xact_lock(
+    hashtextextended('question-exposure-user' || chr(31) || p_user_id::text, 0)
+  );
 
   create temporary table if not exists question_exposure_before (
     question_id text primary key,
@@ -353,6 +340,7 @@ begin
 end;
 $$;
 
+alter function public.record_question_attempts_with_exposure(uuid, jsonb) owner to postgres;
 revoke all on function public.record_question_attempts_with_exposure(uuid, jsonb)
   from public;
 revoke all on function public.record_question_attempts_with_exposure(uuid, jsonb)
@@ -366,3 +354,5 @@ comment on column public.question_attempts.is_first_attempt is
   'True only for the atomic first persisted answer for one user and canonical question.';
 comment on function public.record_question_attempts_with_exposure(uuid, jsonb) is
   'Records a validated attempt batch and returns transaction-safe first/seen exposure.';
+comment on function public.lock_question_exposure_answer_write() is
+  'Serializes all persisted answer writers per user for first-attempt classification.';

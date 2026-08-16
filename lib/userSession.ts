@@ -9,7 +9,10 @@ import type {
   UserProfile,
   UserProgress,
 } from "@/types";
-import { getUnknownQuestionExposureStates } from "@/lib/questionExposure";
+import {
+  getAnonymousQuestionExposureStates,
+  getUnknownQuestionExposureStates,
+} from "@/lib/questionExposure";
 import type {
   DailyStudyTaskInput,
   ProgressLevel,
@@ -524,6 +527,107 @@ export async function saveQuestionAttemptsWithExposure(
     return result;
   } catch {
     return unknown;
+  }
+}
+
+export type CurrentSessionQuestionExposureResult = {
+  authState: "authenticated" | "anonymous" | "unknown";
+  userId: string | null;
+  exposures: QuestionExposureMap;
+};
+
+export type QuestionExposureIdentity = Pick<
+  CurrentSessionQuestionExposureResult,
+  "authState" | "userId"
+>;
+
+/** Resolve only a server-cookie identity; localStorage is never an authority. */
+export async function resolveQuestionExposureIdentity(): Promise<QuestionExposureIdentity> {
+  try {
+    const response = await fetch("/api/session/state", { method: "GET" });
+    if (response.status === 401) {
+      clearUserId();
+      return { authState: "anonymous", userId: null };
+    }
+    if (!response.ok) return { authState: "unknown", userId: null };
+    const body = await response.json() as { ok?: boolean; userId?: unknown };
+    if (!body.ok || typeof body.userId !== "string" || body.userId.length === 0) {
+      return { authState: "unknown", userId: null };
+    }
+    setUserId(body.userId);
+    return { authState: "authenticated", userId: body.userId };
+  } catch {
+    return { authState: "unknown", userId: null };
+  }
+}
+
+/**
+ * Records a batch against the cookie-authenticated user. A local user ID is
+ * deliberately never sent: the response's userId is the server-confirmed
+ * identity used by subsequent progress writers.
+ */
+export async function saveQuestionAttemptsForCurrentSession(
+  attempts: QuestionAttemptInput[],
+  anonymousAnswers: UserAnswer[],
+): Promise<CurrentSessionQuestionExposureResult> {
+  const questionIds = attempts.map((attempt) => attempt.questionId);
+  if (attempts.length === 0) {
+    return { authState: "unknown", userId: null, exposures: {} };
+  }
+  const unknown = getUnknownQuestionExposureStates(questionIds);
+  try {
+    const response = await fetch("/api/question-attempts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attempts }),
+    });
+    if (response.status === 401) {
+      clearUserId();
+      return {
+        authState: "anonymous",
+        userId: null,
+        exposures: getAnonymousQuestionExposureStates(anonymousAnswers, questionIds),
+      };
+    }
+    if (!response.ok) {
+      return { authState: "unknown", userId: null, exposures: unknown };
+    }
+    const body = await response.json() as {
+      ok?: boolean;
+      userId?: unknown;
+      exposures?: unknown;
+    };
+    if (
+      !body.ok
+      || typeof body.userId !== "string"
+      || body.userId.length === 0
+      || !Array.isArray(body.exposures)
+    ) {
+      return { authState: "unknown", userId: null, exposures: unknown };
+    }
+    const parsed = body.exposures.map(parseQuestionExposure);
+    const requestedIds = new Set(questionIds);
+    const returnedIds = new Set(
+      parsed.flatMap((exposure) => exposure ? [exposure.questionId] : []),
+    );
+    if (
+      parsed.some((exposure) => exposure === null)
+      || parsed.length !== requestedIds.size
+      || returnedIds.size !== parsed.length
+      || [...requestedIds].some((questionId) => !returnedIds.has(questionId))
+    ) {
+      return { authState: "unknown", userId: null, exposures: unknown };
+    }
+    setUserId(body.userId);
+    return {
+      authState: "authenticated",
+      userId: body.userId,
+      exposures: Object.fromEntries(
+        parsed.map((exposure) => [exposure!.questionId, exposure!]),
+      ),
+    };
+  } catch {
+    return { authState: "unknown", userId: null, exposures: unknown };
   }
 }
 

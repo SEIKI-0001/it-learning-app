@@ -61,6 +61,7 @@ describe("question attempt exposure route", () => {
     expect(response.status).toBe(200);
     expect(body).toEqual({
       ok: true,
+      userId: "10000000-0000-0000-0000-000000000001",
       saved: 1,
       exposures: [{
         questionId: "tech-security-cia-ex1",

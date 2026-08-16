@@ -198,7 +198,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await recordQuestionAttemptsWithExposure(supabase, userId, inputs);
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json({ ok: true, userId, ...result });
   } catch {
     return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
   }

@@ -1,6 +1,6 @@
 begin;
 
-select plan(15);
+select plan(19);
 
 select has_column(
   'public',
@@ -29,20 +29,6 @@ select has_index(
   'question_attempts',
   'question_attempts_one_first_per_user_question_idx',
   'at most one first claim exists per user and canonical question'
-);
-
-select has_index(
-  'public',
-  'question_attempts',
-  'question_attempts_user_question_answered_at_idx',
-  'question_attempt history lookup is indexed'
-);
-
-select has_index(
-  'public',
-  'user_answers',
-  'user_answers_user_question_answered_at_idx',
-  'legacy answer history lookup is indexed'
 );
 
 select has_function(
@@ -80,6 +66,46 @@ select is(
   ),
   true,
   'service_role can execute the recorder after server validation'
+);
+
+select has_function(
+  'public',
+  'lock_question_exposure_answer_write',
+  array[]::text[],
+  'the shared answer-writer advisory lock exists'
+);
+
+select has_trigger(
+  'public',
+  'question_attempts',
+  'lock_question_exposure_question_attempts',
+  'question_attempts writers participate in the exposure lock'
+);
+
+select has_trigger(
+  'public',
+  'user_answers',
+  'lock_question_exposure_user_answers',
+  'legacy user_answers writers participate in the exposure lock'
+);
+
+select is(
+  has_function_privilege(
+    'service_role',
+    'public.lock_question_exposure_answer_write()',
+    'execute'
+  ),
+  false,
+  'the trigger-only lock function cannot be called directly by service_role'
+);
+
+select ok(
+  (
+    select 'search_path=pg_catalog, public' = any(proconfig)
+    from pg_proc
+    where oid = 'public.record_question_attempts_with_exposure(uuid,jsonb)'::regprocedure
+  ),
+  'the security-definer recorder has a fixed search_path'
 );
 
 insert into public.line_users (id, line_user_id)
@@ -193,6 +219,28 @@ select is(
   ),
   1,
   'one batch records and classifies each canonical question once'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.record_question_attempts_with_exposure(
+      '10000000-0000-0000-0000-000000000001',
+      (
+        select jsonb_agg(jsonb_build_object(
+          'question_id', 'canonical-load-' || n,
+          'question_type', 'mock_exam',
+          'topic_id', 'topic-a',
+          'selected_answer', 'A',
+          'is_correct', true,
+          'answered_at', '2026-08-15T04:00:00Z'
+        ))
+        from generate_series(1, 100) n
+      )
+    )
+  ),
+  100,
+  'a 100-question exam is classified in one set-based RPC call'
 );
 
 select * from finish();

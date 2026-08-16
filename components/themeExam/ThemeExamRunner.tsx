@@ -7,11 +7,9 @@ import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
 import { gradeThemeExam, recordThemeExamLearningResult } from "@/lib/themeExam";
 import { getLessonHref } from "@/lib/learningCatalog";
 import {
-  getUserId,
   saveProgressToDb,
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
 } from "@/lib/userSession";
-import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { buttonClass } from "@/components/ui/Button";
@@ -66,6 +64,7 @@ export default function ThemeExamRunner({
   const questionStartedAtRef = useRef<number>(0);
   // 問題ごとに費やした秒数。戻って解き直した場合は累計する。
   const timeSpentRef = useRef<Record<number, number>>({});
+  const submittedRef = useRef(false);
 
   // 選択肢の並びは開始時に1度だけ決める。表示のたびに入れ替わると見直しができない。
   const order = useMemo(
@@ -86,6 +85,7 @@ export default function ThemeExamRunner({
   }, [index, questions]);
 
   const start = () => {
+    submittedRef.current = false;
     sessionIdRef.current = `theme-exam-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     startedAtRef.current = Date.now();
     questionStartedAtRef.current = Date.now();
@@ -98,6 +98,8 @@ export default function ThemeExamRunner({
   };
 
   const finish = async () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     commitElapsed();
     const graded = gradeThemeExam({
       sessionId: sessionIdRef.current,
@@ -110,7 +112,6 @@ export default function ThemeExamRunner({
     setPhase("result");
 
     if (!appState) return;
-    const userId = getUserId();
     const answeredAt = new Date().toISOString();
     const attempts = graded.questions.map((question) => ({
       questionId: question.questionId,
@@ -121,12 +122,11 @@ export default function ThemeExamRunner({
       timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
       answeredAt,
     }));
-    const exposures = userId
-      ? await saveQuestionAttemptsWithExposure(userId, attempts)
-      : getAnonymousQuestionExposureStates(
-          appState.answers,
-          graded.questions.map((question) => question.questionId),
-        );
+    const exposureResult = await saveQuestionAttemptsForCurrentSession(
+      attempts,
+      appState.answers,
+    );
+    const { exposures, userId } = exposureResult;
     const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
     saveAppState(next);
     setAppState(next);
@@ -136,6 +136,7 @@ export default function ThemeExamRunner({
   };
 
   const retry = () => {
+    submittedRef.current = false;
     setAnswers({});
     setIndex(0);
     setResult(null);

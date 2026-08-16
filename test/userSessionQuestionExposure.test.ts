@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  saveQuestionAttemptsForCurrentSession,
   saveQuestionAttemptsWithExposure,
   type QuestionAttemptInput,
 } from "@/lib/userSession";
@@ -95,5 +96,63 @@ describe("saveQuestionAttemptsWithExposure", () => {
 
     await expect(saveQuestionAttemptsWithExposure("user-1", [])).resolves.toEqual({});
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("uses the server-authenticated user and never sends a local user ID claim", async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      ok: true,
+      userId: "server-user",
+      saved: 1,
+      exposures: [{
+        questionId: "question-a",
+        state: "seen",
+        attemptedBefore: true,
+        firstAttemptAt: "2026-08-14T04:00:00.000Z",
+        attemptCount: 2,
+      }],
+    }), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await saveQuestionAttemptsForCurrentSession(
+      [attempt("question-a")],
+      [],
+    );
+
+    expect(result).toEqual(expect.objectContaining({
+      authState: "authenticated",
+      userId: "server-user",
+      exposures: { "question-a": expect.objectContaining({ state: "seen" }) },
+    }));
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).not.toHaveProperty("userId");
+  });
+
+  it("uses local history only after the server explicitly confirms anonymous", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: false }), { status: 401 }),
+    ));
+
+    const result = await saveQuestionAttemptsForCurrentSession(
+      [attempt("question-a")],
+      [],
+    );
+
+    expect(result.authState).toBe("anonymous");
+    expect(result.userId).toBeNull();
+    expect(result.exposures["question-a"].state).toBe("first");
+  });
+
+  it("does not turn an authentication or API failure into a local first claim", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: false }), { status: 500 }),
+    ));
+
+    const result = await saveQuestionAttemptsForCurrentSession(
+      [attempt("question-a")],
+      [],
+    );
+
+    expect(result.authState).toBe("unknown");
+    expect(result.userId).toBeNull();
+    expect(result.exposures["question-a"].state).toBe("unknown");
   });
 });

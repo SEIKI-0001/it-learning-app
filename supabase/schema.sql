@@ -247,12 +247,30 @@ $$;
 ALTER FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_plan_key" "text", "p_months" integer, "p_amount_total" integer, "p_currency" "text", "p_stripe_checkout_session_id" "text", "p_stripe_payment_intent_id" "text", "p_stripe_customer_id" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."lock_question_exposure_answer_write"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+begin
+  perform pg_advisory_xact_lock(
+    hashtextextended('question-exposure-user' || chr(31) || new.user_id::text, 0)
+  );
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."lock_question_exposure_answer_write"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."lock_question_exposure_answer_write"() IS 'Serializes all persisted answer writers per user for first-attempt classification.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") RETURNS TABLE("question_id" "text", "state" "text", "attempted_before" boolean, "first_attempt_at" timestamp with time zone, "attempt_count" bigint, "saved" boolean)
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog', 'public'
     AS $$
-declare
-  v_question_id text;
 begin
   if p_user_id is null then
     raise exception 'p_user_id is required' using errcode = '22023';
@@ -351,17 +369,11 @@ begin
     raise exception 'p_attempts contained no valid attempts' using errcode = '22023';
   end if;
 
-  -- Every overlapping batch acquires the same keys in the same order. The hash
-  -- can over-serialize on collision, but it cannot allow two first claims.
-  for v_question_id in
-    select input.question_id
-    from pg_temp.question_exposure_input input
-    order by input.question_id
-  loop
-    perform pg_advisory_xact_lock(
-      hashtextextended(p_user_id::text || chr(31) || v_question_id, 0)
-    );
-  end loop;
+  -- One lock per user keeps a 100-question batch at O(1) lock calls and also
+  -- coordinates with direct question_attempts/user_answers writers.
+  perform pg_advisory_xact_lock(
+    hashtextextended('question-exposure-user' || chr(31) || p_user_id::text, 0)
+  );
 
   create temporary table if not exists question_exposure_before (
     question_id text primary key,
@@ -1235,10 +1247,6 @@ CREATE INDEX "question_attempts_user_exam_year_idx" ON "public"."question_attemp
 
 
 
-CREATE INDEX "question_attempts_user_question_answered_at_idx" ON "public"."question_attempts" USING "btree" ("user_id", "question_id", "answered_at");
-
-
-
 CREATE INDEX "question_attempts_user_topic_idx" ON "public"."question_attempts" USING "btree" ("user_id", "topic_id");
 
 
@@ -1295,10 +1303,6 @@ CREATE INDEX "user_answers_user_id_idx" ON "public"."user_answers" USING "btree"
 
 
 
-CREATE INDEX "user_answers_user_question_answered_at_idx" ON "public"."user_answers" USING "btree" ("user_id", "question_id", "answered_at");
-
-
-
 CREATE INDEX "user_feedback_user_id_idx" ON "public"."user_feedback" USING "btree" ("user_id");
 
 
@@ -1320,6 +1324,14 @@ CREATE INDEX "user_word_progress_updated_at_idx" ON "public"."user_word_progress
 
 
 CREATE INDEX "user_word_progress_user_id_idx" ON "public"."user_word_progress" USING "btree" ("user_id");
+
+
+
+CREATE OR REPLACE TRIGGER "lock_question_exposure_question_attempts" BEFORE INSERT OR UPDATE OF "user_id", "question_id" ON "public"."question_attempts" FOR EACH ROW EXECUTE FUNCTION "public"."lock_question_exposure_answer_write"();
+
+
+
+CREATE OR REPLACE TRIGGER "lock_question_exposure_user_answers" BEFORE INSERT OR UPDATE OF "user_id", "question_id" ON "public"."user_answers" FOR EACH ROW EXECUTE FUNCTION "public"."lock_question_exposure_answer_write"();
 
 
 
@@ -1492,6 +1504,10 @@ GRANT ALL ON FUNCTION "public"."admin_dashboard_summary"("p_today_start" timesta
 
 REVOKE ALL ON FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_plan_key" "text", "p_months" integer, "p_amount_total" integer, "p_currency" "text", "p_stripe_checkout_session_id" "text", "p_stripe_payment_intent_id" "text", "p_stripe_customer_id" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_plan_key" "text", "p_months" integer, "p_amount_total" integer, "p_currency" "text", "p_stripe_checkout_session_id" "text", "p_stripe_payment_intent_id" "text", "p_stripe_customer_id" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."lock_question_exposure_answer_write"() FROM PUBLIC;
 
 
 

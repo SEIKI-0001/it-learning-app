@@ -18,12 +18,10 @@ import {
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import {
-  getUserId,
   saveAnswersToDb,
   saveProgressToDb,
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
 } from "@/lib/userSession";
-import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
@@ -69,7 +67,6 @@ export default function MockExamPage() {
       };
     });
     const scored = scoreMockExam(exam, tagged);
-    const userId = getUserId();
     const questionAttempts = tagged.map((answer) => ({
       questionId: answer.questionId,
       questionType: "mock_exam" as const,
@@ -79,12 +76,11 @@ export default function MockExamPage() {
       mistakeReason: answer.isCorrect ? null : "模試の誤答",
       answeredAt: answer.answeredAt,
     }));
-    const exposures = userId
-      ? await saveQuestionAttemptsWithExposure(userId, questionAttempts)
-      : getAnonymousQuestionExposureStates(
-          appState.answers,
-          tagged.map((answer) => answer.questionId),
-        );
+    const exposureResult = await saveQuestionAttemptsForCurrentSession(
+      questionAttempts,
+      appState.answers,
+    );
+    const { exposures, userId } = exposureResult;
     const next = recordMockExamResult(appState, tagged, scored, exposures, now);
     saveAppState(next);
     setState(next);

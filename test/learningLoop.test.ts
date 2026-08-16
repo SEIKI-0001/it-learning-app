@@ -136,6 +136,22 @@ describe("Topic Mastery evidence", () => {
       exposureState: "seen", answeredAt: NOW.toISOString(),
     }).masteryScore).toBe(0);
   });
+
+  it("applies one persisted answer event to Mastery only once", () => {
+    const evidence = {
+      topicId: "topic-a",
+      questionId: "q-idempotent",
+      kind: "confirmation" as const,
+      isCorrect: true,
+      exposureState: "first" as const,
+      answeredAt: NOW.toISOString(),
+    };
+    const once = updateLearningLoopProgress(state().progress, [evidence], NOW);
+    const twice = updateLearningLoopProgress(once, [evidence], NOW);
+
+    expect(twice).toEqual(once);
+    expect(twice.topicMasteryStats?.["topic-a"].recentEvidence).toHaveLength(1);
+  });
 });
 
 describe("Review Due", () => {

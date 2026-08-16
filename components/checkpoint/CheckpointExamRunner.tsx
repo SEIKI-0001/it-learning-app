@@ -12,12 +12,10 @@ import {
 import { saveAppState } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
 import {
-  getUserId,
   saveAnswersToDb,
   saveProgressToDb,
-  saveQuestionAttemptsWithExposure,
+  saveQuestionAttemptsForCurrentSession,
 } from "@/lib/userSession";
-import { getAnonymousQuestionExposureStates } from "@/lib/questionExposure";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -62,23 +60,18 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
       const topic = getTopic(answer.topicId ?? "");
       return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
     });
-    const userId = getUserId();
-    const exposures = userId
-      ? await saveQuestionAttemptsWithExposure(
-          userId,
-          tagged.map((answer) => ({
-            questionId: answer.questionId,
-            questionType: "mini_exam" as const,
-            topicId: answer.topicId ?? checkpointId,
-            selectedAnswer: answer.selectedChoice ?? null,
-            isCorrect: answer.isCorrect,
-            answeredAt: answer.answeredAt,
-          })),
-        )
-      : getAnonymousQuestionExposureStates(
-          state.answers,
-          tagged.map((answer) => answer.questionId),
-        );
+    const exposureResult = await saveQuestionAttemptsForCurrentSession(
+      tagged.map((answer) => ({
+        questionId: answer.questionId,
+        questionType: "mini_exam" as const,
+        topicId: answer.topicId ?? checkpointId,
+        selectedAnswer: answer.selectedChoice ?? null,
+        isCorrect: answer.isCorrect,
+        answeredAt: answer.answeredAt,
+      })),
+      state.answers,
+    );
+    const { exposures, userId } = exposureResult;
     const next = recordCheckpointExamResult(state, tagged, exposures);
     saveAppState(next);
     setState(next);
