@@ -1,6 +1,7 @@
 import type { QuestionBankFile } from "@/types/questionBank";
 import examLevel from "./original/exam-level.json";
 import themeExam from "./original/theme-exam.json";
+import ipaItPassport2024 from "./official/ipa/it-passport-2024.json";
 import ipaItPassport2025 from "./official/ipa/it-passport-2025.json";
 import ipaItPassport2026 from "./official/ipa/it-passport-2026.json";
 
@@ -20,6 +21,7 @@ import ipaItPassport2026 from "./official/ipa/it-passport-2026.json";
 export const questionBankFiles: QuestionBankFile[] = [
   examLevel as unknown as QuestionBankFile,
   themeExam as unknown as QuestionBankFile,
+  ipaItPassport2024 as unknown as QuestionBankFile,
   ipaItPassport2025 as unknown as QuestionBankFile,
   ipaItPassport2026 as unknown as QuestionBankFile,
 ];
