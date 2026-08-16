@@ -4,9 +4,14 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { ChoiceKey } from "@/types";
 import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
-import { gradeThemeExam } from "@/lib/themeExam";
+import { gradeThemeExam, recordThemeExamLearningResult } from "@/lib/themeExam";
 import { getLessonHref } from "@/lib/learningCatalog";
-import { getUserId, saveQuestionAttempts } from "@/lib/userSession";
+import {
+  saveProgressToDb,
+  saveQuestionAttemptsForCurrentSession,
+} from "@/lib/userSession";
+import { useAppState } from "@/lib/useAppState";
+import { saveAppState } from "@/lib/storage";
 import { buttonClass } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 
@@ -47,6 +52,7 @@ export default function ThemeExamRunner({
   passRate,
   questions,
 }: Props) {
+  const [appState, setAppState] = useAppState();
   const [phase, setPhase] = useState<"intro" | "running" | "result">("intro");
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
@@ -58,6 +64,7 @@ export default function ThemeExamRunner({
   const questionStartedAtRef = useRef<number>(0);
   // 問題ごとに費やした秒数。戻って解き直した場合は累計する。
   const timeSpentRef = useRef<Record<number, number>>({});
+  const submittedRef = useRef(false);
 
   // 選択肢の並びは開始時に1度だけ決める。表示のたびに入れ替わると見直しができない。
   const order = useMemo(
@@ -78,6 +85,7 @@ export default function ThemeExamRunner({
   }, [index, questions]);
 
   const start = () => {
+    submittedRef.current = false;
     sessionIdRef.current = `theme-exam-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     startedAtRef.current = Date.now();
     questionStartedAtRef.current = Date.now();
@@ -89,7 +97,9 @@ export default function ThemeExamRunner({
     setIndex(Math.min(Math.max(to, 0), questions.length - 1));
   };
 
-  const finish = () => {
+  const finish = async () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
     commitElapsed();
     const graded = gradeThemeExam({
       sessionId: sessionIdRef.current,
@@ -101,26 +111,32 @@ export default function ThemeExamRunner({
     setResult(graded);
     setPhase("result");
 
-    // 保存は fire-and-forget。失敗しても結果の表示は続ける。
-    const userId = getUserId();
+    if (!appState) return;
+    const answeredAt = new Date().toISOString();
+    const attempts = graded.questions.map((question) => ({
+      questionId: question.questionId,
+      questionType: "theme_exam" as const,
+      topicId: question.topicId,
+      selectedAnswer: question.selected,
+      isCorrect: question.isCorrect,
+      timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
+      answeredAt,
+    }));
+    const exposureResult = await saveQuestionAttemptsForCurrentSession(
+      attempts,
+      appState.answers,
+    );
+    const { exposures, userId } = exposureResult;
+    const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
+    saveAppState(next);
+    setAppState(next);
     if (userId) {
-      const answeredAt = new Date().toISOString();
-      saveQuestionAttempts(
-        userId,
-        graded.questions.map((r) => ({
-          questionId: r.questionId,
-          questionType: "theme_exam" as const,
-          topicId: r.topicId,
-          selectedAnswer: r.selected,
-          isCorrect: r.isCorrect,
-          timeSpentSeconds: timeSpentRef.current[r.questionNumber] ?? null,
-          answeredAt,
-        })),
-      );
+      saveProgressToDb(userId, next.progress);
     }
   };
 
   const retry = () => {
+    submittedRef.current = false;
     setAnswers({});
     setIndex(0);
     setResult(null);

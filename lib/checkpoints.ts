@@ -6,7 +6,7 @@
 //   - 既存ユーザーの移行時だけ、既存データから初期チェックポイントを推定してよい。
 //   - 学習時間は進行の主条件にしない。
 
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import type { PhaseProgress, StudyPhaseId } from "@/types/plan";
 import type { TopicField } from "@/types/content";
 import type {
@@ -23,6 +23,7 @@ import { determineExpectedPhase } from "@/lib/studyPlanner";
 import { grantExp } from "@/lib/game";
 import { addTopicsToReview, recentAccuracy } from "@/lib/study";
 import { updateLearningLoopProgress } from "@/lib/learningLoop";
+import { exposureStateFor } from "@/lib/questionExposure";
 import type { BadgeSignals } from "@/lib/badges";
 import {
   evaluateBadgeAwards,
@@ -419,9 +420,10 @@ export function applyBadgeProgress(
 export function recordFinalExamAttempt(
   state: AppState,
   attempt: FinalExamAttempt,
+  answers: UserAnswer[],
+  exposures: QuestionExposureMap,
   signals?: BadgeSignals,
   now: Date = new Date(),
-  answers: UserAnswer[] = [],
 ): AppState {
   const cp = getCheckpointProgress(state);
   const finalExamAttempts = [...cp.finalExamAttempts, attempt];
@@ -445,7 +447,6 @@ export function recordFinalExamAttempt(
   }
 
   // 復習キュー: 不合格時のみ、間違えたトピックを追加（dedup は addTopicsToReview に集約）。
-  const seen = new Set(state.answers.map((answer) => answer.questionId));
   const validAnswers = answers.filter((answer) => answer.topicId);
   const allAnswers = [...state.answers, ...validAnswers];
   const withEvidence = validAnswers.length > 0
@@ -469,7 +470,7 @@ export function recordFinalExamAttempt(
             questionId: answer.questionId,
             kind: "checkpoint" as const,
             isCorrect: answer.isCorrect,
-            isFirstSeen: !seen.has(answer.questionId),
+            exposureState: exposureStateFor(exposures, answer.questionId),
             answeredAt: answer.answeredAt,
           })),
           now,

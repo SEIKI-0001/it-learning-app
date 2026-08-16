@@ -74,16 +74,36 @@ export type LearningEvidenceKind =
   | "past_exam"
   | "checkpoint";
 
+export type QuestionExposureState = "first" | "seen" | "unknown";
+
+export type QuestionExposure = {
+  questionId: string;
+  state: QuestionExposureState;
+  attemptedBefore: boolean | null;
+  firstAttemptAt: string | null;
+  attemptCount: number | null;
+};
+
+export type QuestionExposureMap = Readonly<Record<string, QuestionExposure>>;
+
 export type LearningEvidence = {
   topicId: string;
   questionId: string;
   kind: LearningEvidenceKind;
   isCorrect: boolean;
-  isFirstSeen: boolean;
+  exposureState: QuestionExposureState;
   answeredAt: string;
 };
 
-export type TopicMasteryEvidence = Omit<LearningEvidence, "topicId">;
+export type TopicMasteryEvidence = Omit<
+  LearningEvidence,
+  "topicId" | "exposureState"
+> & {
+  /** Persisted for compatibility with P0 state created before exposure states existed. */
+  isFirstSeen: boolean;
+  /** Missing only on legacy P0 evidence. */
+  exposureState?: QuestionExposureState;
+};
 
 export type TopicMasteryStats = {
   topicId: string;

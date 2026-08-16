@@ -73,7 +73,8 @@ export function applyLearningEvidence(
 ): TopicMasteryStats {
   const before = current ?? emptyStats(evidence.topicId);
   const weight = MASTERY_WEIGHTS[evidence.kind];
-  const firstSeenBonus = evidence.isFirstSeen && evidence.kind !== "confirmation"
+  const isFirstSeen = evidence.exposureState === "first";
+  const firstSeenBonus = isFirstSeen && evidence.kind !== "confirmation"
     ? LEARNING_LOOP_CONFIG.firstSeenBonus
     : 0;
   const consecutiveMisses = before.recentEvidence
@@ -98,7 +99,8 @@ export function applyLearningEvidence(
       questionId: evidence.questionId,
       kind: evidence.kind,
       isCorrect: evidence.isCorrect,
-      isFirstSeen: evidence.isFirstSeen,
+      isFirstSeen,
+      exposureState: evidence.exposureState,
       answeredAt: evidence.answeredAt,
     },
   ].slice(-LEARNING_LOOP_CONFIG.recentEvidenceLimit);
@@ -258,13 +260,26 @@ export function updateLearningLoopProgress(
 
   for (const [topicId, topicEvidence] of grouped) {
     let current = statsByTopic[topicId] ?? emptyStats(topicId, mastery[topicId] ?? 0);
-    for (const item of topicEvidence) current = applyLearningEvidence(current, item);
+    const seenEvents = new Set(
+      current.recentEvidence.map((item) =>
+        `${item.questionId}\u001f${item.kind}\u001f${item.answeredAt}`
+      ),
+    );
+    const appliedEvidence: LearningEvidence[] = [];
+    for (const item of topicEvidence) {
+      const eventKey = `${item.questionId}\u001f${item.kind}\u001f${item.answeredAt}`;
+      if (seenEvents.has(eventKey)) continue;
+      seenEvents.add(eventKey);
+      appliedEvidence.push(item);
+      current = applyLearningEvidence(current, item);
+    }
+    if (appliedEvidence.length === 0) continue;
     statsByTopic[topicId] = current;
     mastery[topicId] = current.masteryScore;
-    const success = topicEvidence.every((item) => item.isCorrect);
+    const success = appliedEvidence.every((item) => item.isCorrect);
     const previousReview = reviews.get(topicId);
     const previousDueAt = previousReview ? Date.parse(previousReview.dueAt) : Number.NaN;
-    const completedDueReview = topicEvidence.some((item) => item.kind === "review")
+    const completedDueReview = appliedEvidence.some((item) => item.kind === "review")
       && Number.isFinite(previousDueAt)
       && previousDueAt <= now.getTime();
     if (!success || !previousReview || completedDueReview) {
@@ -275,7 +290,7 @@ export function updateLearningLoopProgress(
           success,
           previousReview,
           now,
-          failureReasonFor(topicEvidence),
+          failureReasonFor(appliedEvidence),
         ),
       );
     }

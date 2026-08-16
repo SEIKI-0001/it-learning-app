@@ -7,7 +7,7 @@
 
 import { OFFICIAL_EXAM_FIELDS } from "@/lib/questionBank/officialExamField";
 import type { ChoiceKey } from "@/types";
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import type { QuestionRecord } from "@/types/questionBank";
 import type { TopicField } from "@/types/content";
 import type {
@@ -19,6 +19,7 @@ import type {
 } from "@/types/pastExam";
 import { getTopic } from "@/lib/content";
 import { updateLearningLoopProgress } from "@/lib/learningLoop";
+import { exposureStateFor } from "@/lib/questionExposure";
 
 /**
  * 採点に必要な情報だけを取り出した形。
@@ -130,9 +131,9 @@ export function recordPastExamLearningResult(
   state: AppState,
   result: PastExamResult,
   sessionAnswers: Record<number, PastExamAnswer>,
+  exposures: QuestionExposureMap,
   now: Date = new Date(),
 ): AppState {
-  const seen = new Set(state.answers.map((answer) => answer.questionId));
   const answers: UserAnswer[] = result.questions.flatMap((question) => {
     const topic = getTopic(question.topicId);
     if (!topic) return [];
@@ -160,7 +161,7 @@ export function recordPastExamLearningResult(
       questionId: answer.questionId,
       kind: "past_exam" as const,
       isCorrect: answer.isCorrect,
-      isFirstSeen: !seen.has(answer.questionId),
+      exposureState: exposureStateFor(exposures, answer.questionId),
       answeredAt: answer.answeredAt,
     })),
     now,

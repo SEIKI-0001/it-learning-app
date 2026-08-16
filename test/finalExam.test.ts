@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppState } from "@/types";
+import type { AppState, QuestionExposureMap } from "@/types";
 import { generateFinalExam } from "@/lib/finalExam";
 import { recordFinalExamAttempt } from "@/lib/checkpoints";
 
@@ -62,6 +62,23 @@ describe("roadmap final exams", () => {
   it("records answers as mastery evidence without changing the existing pass result", () => {
     const current = state();
     current.progress.topicMastery = { "tech-binary-data": 50 };
+    const answers = [{
+      questionId: "tech-binary-data-q1",
+      selectedChoice: "B" as const,
+      isCorrect: false,
+      answeredAt: "2026-08-11T00:00:00.000Z",
+      tag: "binary",
+      topicId: "tech-binary-data",
+    }];
+    const exposures: QuestionExposureMap = {
+      "tech-binary-data-q1": {
+        questionId: "tech-binary-data-q1",
+        state: "seen",
+        attemptedBefore: true,
+        firstAttemptAt: "2026-08-01T00:00:00.000Z",
+        attemptCount: 2,
+      },
+    };
     const next = recordFinalExamAttempt(
       current,
       {
@@ -72,21 +89,18 @@ describe("roadmap final exams", () => {
         attemptedAt: "2026-08-11T00:00:00.000Z",
         wrongTopicIds: ["tech-binary-data"],
       },
+      answers,
+      exposures,
       undefined,
       new Date("2026-08-11T00:00:00.000Z"),
-      [{
-        questionId: "tech-binary-data-q1",
-        selectedChoice: "B",
-        isCorrect: false,
-        answeredAt: "2026-08-11T00:00:00.000Z",
-        tag: "binary",
-        topicId: "tech-binary-data",
-      }],
     );
 
     expect(next.progress.checkpointProgress?.clearedCheckpointIds).not.toContain("cp1");
     expect(next.progress.topicMastery["tech-binary-data"]).toBeLessThan(50);
     expect(next.progress.topicMasteryStats?.["tech-binary-data"].recentEvidence[0].kind).toBe("checkpoint");
+    expect(next.progress.topicMasteryStats?.["tech-binary-data"].recentEvidence[0]).toEqual(
+      expect.objectContaining({ exposureState: "seen", isFirstSeen: false }),
+    );
     expect(next.answers).toHaveLength(1);
   });
 });

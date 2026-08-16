@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import TopicCompletionQuiz from "@/components/learn/TopicCompletionQuiz";
 import { subscribeMochitEvent } from "@/components/mochit/mochitEventBus";
@@ -24,6 +24,7 @@ const flow = vi.hoisted(() => {
   };
   return {
     before,
+    userId: null as string | null,
     next: {
       ...before,
       progress: {
@@ -36,6 +37,9 @@ const flow = vi.hoisted(() => {
   };
 });
 
+const completeStudySession = vi.hoisted(() => vi.fn());
+const saveQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/useAppState", () => ({
   useAppState: () => [flow.before, vi.fn()],
 }));
@@ -45,11 +49,7 @@ vi.mock("@/lib/storage", () => ({
 }));
 
 vi.mock("@/lib/studySession", () => ({
-  completeStudySession: () => ({
-    state: flow.next,
-    newlyEarnedIds: [],
-    streakMilestone: null,
-  }),
+  completeStudySession,
 }));
 
 vi.mock("@/lib/study", () => ({
@@ -67,10 +67,10 @@ vi.mock("@/lib/badgeSignals", () => ({
 }));
 
 vi.mock("@/lib/userSession", () => ({
-  getUserId: () => null,
   reportTopicQuizResult: vi.fn(),
   saveAnswersToDb: vi.fn(),
   saveProgressToDb: vi.fn(),
+  saveQuestionAttemptsForCurrentSession,
   todayLocalDate: () => "2026-07-26",
 }));
 
@@ -103,14 +103,34 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  vi.clearAllMocks();
+  flow.userId = null;
   flow.next.progress.checkpointProgress.clearedCheckpointIds = [];
+  completeStudySession.mockReturnValue({
+    state: flow.next,
+    newlyEarnedIds: [],
+    streakMilestone: null,
+  });
+  saveQuestionAttemptsForCurrentSession.mockResolvedValue({
+    authState: "authenticated",
+    userId: "user-1",
+    exposures: {
+      "completion-question": {
+        questionId: "completion-question",
+        state: "seen",
+        attemptedBefore: true,
+        firstAttemptAt: "2026-07-01T00:00:00.000Z",
+        attemptCount: 2,
+      },
+    },
+  });
 });
 
 afterEach(() => {
   cleanup();
 });
 
-function completeWith(answerText: string): string[] {
+async function completeWith(answerText: string): Promise<string[]> {
   const events: string[] = [];
   const unsubscribe = subscribeMochitEvent((signal) =>
     events.push(signal.type),
@@ -122,29 +142,46 @@ function completeWith(answerText: string): string[] {
       name: "このレッスンを完了する",
     }),
   );
+  await waitFor(() => expect(completeStudySession).toHaveBeenCalled());
   unsubscribe();
   return events;
 }
 
 describe("TopicCompletionQuiz Mochit reactions", () => {
-  it("emits allCorrect after the final correct answer", () => {
-    expect(completeWith("完了テストの正解")).toEqual([
+  it("awaits logged-in exposure before completing Mastery", async () => {
+    flow.userId = "user-1";
+    render(<TopicCompletionQuiz topic={topic} />);
+    fireEvent.click(screen.getByText("完了テストの正解").closest("button")!);
+    fireEvent.click(screen.getByRole("button", { name: "このレッスンを完了する" }));
+
+    await waitFor(() => expect(completeStudySession).toHaveBeenCalled());
+    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
+    expect(completeStudySession.mock.invocationCallOrder[0]).toBeGreaterThan(
+      saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
+    );
+    expect(completeStudySession.mock.calls[0][3]).toEqual({
+      "completion-question": expect.objectContaining({ state: "seen" }),
+    });
+  });
+
+  it("emits allCorrect after the final correct answer", async () => {
+    await expect(completeWith("完了テストの正解")).resolves.toEqual([
       "correct",
       "allCorrect",
     ]);
   });
 
-  it("emits taskComplete after a non-perfect completion", () => {
-    expect(completeWith("完了テストの不正解")).toEqual([
+  it("emits taskComplete after a non-perfect completion", async () => {
+    await expect(completeWith("完了テストの不正解")).resolves.toEqual([
       "incorrect",
       "taskComplete",
     ]);
   });
 
-  it("prioritizes checkpointClear over allCorrect", () => {
+  it("prioritizes checkpointClear over allCorrect", async () => {
     flow.next.progress.checkpointProgress.clearedCheckpointIds = ["cp1"];
 
-    expect(completeWith("完了テストの正解")).toEqual([
+    await expect(completeWith("完了テストの正解")).resolves.toEqual([
       "correct",
       "checkpointClear",
     ]);

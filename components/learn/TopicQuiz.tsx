@@ -107,6 +107,7 @@ export default function TopicQuiz({
   const answeredQuestionIdsRef = useRef(new Set<string>());
   const [order, setOrder] = useState<string[]>([]); // 回答した順(連続正解の判定に使う)
   const [done, setDone] = useState(false);
+  const finishedRef = useRef(false);
   const [currentIndex, setCurrentIndex] = useState(0); // 1問ずつ表示する(下スクロールさせない)
   const timeLimited = typeof timeLimitSeconds === "number" && timeLimitSeconds > 0;
   const [timeLeft, setTimeLeft] = useState<number | null>(
@@ -160,7 +161,8 @@ export default function TopicQuiz({
   }
 
   const finish = useCallback(() => {
-    if (done) return;
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     setDone(true);
     const now = new Date().toISOString();
     const answers: UserAnswer[] = questions.map((q) => {
@@ -176,13 +178,12 @@ export default function TopicQuiz({
       };
     });
     onComplete(answers);
-  }, [done, onComplete, questions, selections, shuffled, topicId, topicIdForQuestion]);
+  }, [onComplete, questions, selections, shuffled, topicId, topicIdForQuestion]);
 
   useEffect(() => {
     if (!timeLimited || done || timeLeft === null) return;
     if (timeLeft <= 0) {
       // タイマー（外部システム）起因の自動締め切り。意図的に effect 内で確定する。
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       finish();
       return;
     }

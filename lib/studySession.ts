@@ -9,7 +9,7 @@
 // 「どの画面で完了したかでバッジ付与・ドロップ有無が変わる」不整合をなくす。
 // useBadgeSync は取りこぼしを拾う冪等な catch-up として残す（主経路はここ）。
 
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import type { BadgeSignals } from "@/lib/badges";
 import { completeTopicStudy } from "@/lib/study";
 import {
@@ -41,13 +41,14 @@ export function completeStudySession(
   state: AppState,
   topicId: string,
   answers: UserAnswer[],
+  exposures: QuestionExposureMap,
   signals?: BadgeSignals,
   now: Date = new Date(),
 ): StudySessionResult {
   // 復習だったかは学習前の復習キューで判定する（完了処理でキューから消えるため）。
   const wasReview = state.progress.reviewQueue.some((r) => r.topicId === topicId);
 
-  const studied = completeTopicStudy(state, topicId, answers, now);
+  const studied = completeTopicStudy(state, topicId, answers, exposures, now);
   // ストリーク節目のXP・おまもり付与（受領済みはスキップされる冪等処理）。
   const milestoned = applyStreakMilestones(studied);
   // 今日の3ミッションへ成果を反映（報酬の受け取りは /today のカードから行う）。

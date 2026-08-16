@@ -1,6 +1,18 @@
 "use client";
 
-import type { AppState, UserAnswer, UserProfile, UserProgress } from "@/types";
+import type {
+  AppState,
+  QuestionExposure,
+  QuestionExposureMap,
+  QuestionExposureState,
+  UserAnswer,
+  UserProfile,
+  UserProgress,
+} from "@/types";
+import {
+  getAnonymousQuestionExposureStates,
+  getUnknownQuestionExposureStates,
+} from "@/lib/questionExposure";
 import type {
   DailyStudyTaskInput,
   ProgressLevel,
@@ -446,7 +458,13 @@ export function reportTopicQuizResult(
 /** question_attempts に保存する1件の回答。 */
 export type QuestionAttemptInput = {
   questionId: string;
-  questionType: "topic_quiz" | "exam_level" | "mini_exam" | "mock_exam" | "theme_exam";
+  questionType:
+    | "topic_quiz"
+    | "exam_level"
+    | "mini_exam"
+    | "mock_exam"
+    | "theme_exam"
+    | "official_past";
   topicId: string;
   selectedAnswer?: string | null;
   isCorrect: boolean;
@@ -454,24 +472,171 @@ export type QuestionAttemptInput = {
   timeSpentSeconds?: number | null;
   sourceTaskId?: string | null;
   answeredAt?: string | null;
+  attemptMode?: "practice" | "exam" | null;
+  attemptGroupId?: string | null;
 };
 
+function isQuestionExposureState(value: unknown): value is QuestionExposureState {
+  return value === "first" || value === "seen" || value === "unknown";
+}
+
+function parseQuestionExposure(value: unknown): QuestionExposure | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Record<string, unknown>;
+  if (
+    typeof row.questionId !== "string"
+    || row.questionId.length === 0
+    || !isQuestionExposureState(row.state)
+    || (row.attemptedBefore !== null && typeof row.attemptedBefore !== "boolean")
+    || (row.firstAttemptAt !== null && typeof row.firstAttemptAt !== "string")
+    || (row.attemptCount !== null
+      && (typeof row.attemptCount !== "number" || !Number.isInteger(row.attemptCount)))
+  ) return null;
+  return row as QuestionExposure;
+}
+
 /**
- * 問題の回答ログを question_attempts に保存（fire-and-forget）。
- * user_id が無い（匿名）場合は何もしない。失敗しても UI は止めない。
+ * Logged-in answer batch persistence and authoritative exposure classification.
+ * Any unavailable or incomplete server result becomes unknown for the whole batch.
  */
+export async function saveQuestionAttemptsWithExposure(
+  userId: string,
+  attempts: QuestionAttemptInput[],
+): Promise<QuestionExposureMap> {
+  const questionIds = attempts.map((attempt) => attempt.questionId);
+  if (attempts.length === 0) return {};
+  const unknown = getUnknownQuestionExposureStates(questionIds);
+  try {
+    const response = await fetch("/api/question-attempts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, attempts }),
+    });
+    if (!response.ok) return unknown;
+    const body = await response.json() as { ok?: boolean; exposures?: unknown };
+    if (!body.ok || !Array.isArray(body.exposures)) return unknown;
+
+    const exposures = body.exposures.map(parseQuestionExposure);
+    if (exposures.some((exposure) => exposure === null)) return unknown;
+    const result: Record<string, QuestionExposure> = { ...unknown };
+    for (const exposure of exposures) {
+      if (exposure && exposure.questionId in result) {
+        result[exposure.questionId] = exposure;
+      }
+    }
+    return result;
+  } catch {
+    return unknown;
+  }
+}
+
+export type CurrentSessionQuestionExposureResult = {
+  authState: "authenticated" | "anonymous" | "unknown";
+  userId: string | null;
+  exposures: QuestionExposureMap;
+};
+
+export type QuestionExposureIdentity = Pick<
+  CurrentSessionQuestionExposureResult,
+  "authState" | "userId"
+>;
+
+/** Resolve only a server-cookie identity; localStorage is never an authority. */
+export async function resolveQuestionExposureIdentity(): Promise<QuestionExposureIdentity> {
+  try {
+    const response = await fetch("/api/session/state", { method: "GET" });
+    if (response.status === 401) {
+      clearUserId();
+      return { authState: "anonymous", userId: null };
+    }
+    if (!response.ok) return { authState: "unknown", userId: null };
+    const body = await response.json() as { ok?: boolean; userId?: unknown };
+    if (!body.ok || typeof body.userId !== "string" || body.userId.length === 0) {
+      return { authState: "unknown", userId: null };
+    }
+    setUserId(body.userId);
+    return { authState: "authenticated", userId: body.userId };
+  } catch {
+    return { authState: "unknown", userId: null };
+  }
+}
+
+/**
+ * Records a batch against the cookie-authenticated user. A local user ID is
+ * deliberately never sent: the response's userId is the server-confirmed
+ * identity used by subsequent progress writers.
+ */
+export async function saveQuestionAttemptsForCurrentSession(
+  attempts: QuestionAttemptInput[],
+  anonymousAnswers: UserAnswer[],
+): Promise<CurrentSessionQuestionExposureResult> {
+  const questionIds = attempts.map((attempt) => attempt.questionId);
+  if (attempts.length === 0) {
+    return { authState: "unknown", userId: null, exposures: {} };
+  }
+  const unknown = getUnknownQuestionExposureStates(questionIds);
+  try {
+    const response = await fetch("/api/question-attempts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attempts }),
+    });
+    if (response.status === 401) {
+      clearUserId();
+      return {
+        authState: "anonymous",
+        userId: null,
+        exposures: getAnonymousQuestionExposureStates(anonymousAnswers, questionIds),
+      };
+    }
+    if (!response.ok) {
+      return { authState: "unknown", userId: null, exposures: unknown };
+    }
+    const body = await response.json() as {
+      ok?: boolean;
+      userId?: unknown;
+      exposures?: unknown;
+    };
+    if (
+      !body.ok
+      || typeof body.userId !== "string"
+      || body.userId.length === 0
+      || !Array.isArray(body.exposures)
+    ) {
+      return { authState: "unknown", userId: null, exposures: unknown };
+    }
+    const parsed = body.exposures.map(parseQuestionExposure);
+    const requestedIds = new Set(questionIds);
+    const returnedIds = new Set(
+      parsed.flatMap((exposure) => exposure ? [exposure.questionId] : []),
+    );
+    if (
+      parsed.some((exposure) => exposure === null)
+      || parsed.length !== requestedIds.size
+      || returnedIds.size !== parsed.length
+      || [...requestedIds].some((questionId) => !returnedIds.has(questionId))
+    ) {
+      return { authState: "unknown", userId: null, exposures: unknown };
+    }
+    setUserId(body.userId);
+    return {
+      authState: "authenticated",
+      userId: body.userId,
+      exposures: Object.fromEntries(
+        parsed.map((exposure) => [exposure!.questionId, exposure!]),
+      ),
+    };
+  } catch {
+    return { authState: "unknown", userId: null, exposures: unknown };
+  }
+}
+
+/** Compatibility wrapper for callers that only need to record history. */
 export function saveQuestionAttempts(
   userId: string,
   attempts: QuestionAttemptInput[],
 ): void {
-  if (attempts.length === 0) return;
-  void fetch("/api/question-attempts/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, attempts }),
-  }).catch(() => {
-    /* fire-and-forget */
-  });
+  void saveQuestionAttemptsWithExposure(userId, attempts);
 }
 
 export type CheckPackSubmitResult = {

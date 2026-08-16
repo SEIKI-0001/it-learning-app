@@ -29,13 +29,8 @@ const OFFICIAL_Q2 = "ipa-it-passport-2026-q002";
 
 /** 実際に「テーブルへ入った」行。一意制約に弾かれた行はここに入らない。 */
 let stored: Array<Record<string, unknown>> = [];
-/** insert が呼ばれた回数（まとめて1回か、1件ずつかを見る）。 */
+/** transaction RPC が呼ばれた回数（1 batch = 1 callを見る）。 */
 let insertCalls = 0;
-
-const UNIQUE_VIOLATION = {
-  code: "23505",
-  message: 'duplicate key value violates unique constraint "question_attempts_official_group_unique_idx"',
-};
 
 /** 一意キー。schema.sql の部分一意索引と同じ組み合わせ。 */
 function uniqueKey(row: Record<string, unknown>): string {
@@ -47,31 +42,41 @@ function uniqueKey(row: Record<string, unknown>): string {
 /** 一意制約つきのテーブルを模したスタブ。 */
 function supabaseStub() {
   return {
-    from: () => ({
-      insert: (rows: Array<Record<string, unknown>>) => {
-        insertCalls += 1;
-
-        const existing = new Set(
-          stored
-            .filter((r) => r.attempt_group_id != null && r.question_version != null)
-            .map(uniqueKey),
+    rpc: (
+      _name: string,
+      params: { p_user_id: string; p_attempts: Array<Record<string, unknown>> },
+    ) => {
+      insertCalls += 1;
+      const data = params.p_attempts.map((input) => {
+        const row: Record<string, unknown> = {
+          ...input,
+          user_id: params.p_user_id,
+        };
+        const attemptedBefore = stored.some(
+          (existing) =>
+            existing.user_id === row.user_id
+            && existing.question_id === row.question_id,
         );
+        const officialDuplicate = row.attempt_group_id != null
+          && row.question_version != null
+          && stored.some((existing) => uniqueKey(existing) === uniqueKey(row));
 
-        // 1行でも重複していれば insert 全体が失敗する（PostgreSQL の挙動）。
-        for (const row of rows) {
-          if (
-            row.attempt_group_id != null &&
-            row.question_version != null &&
-            existing.has(uniqueKey(row))
-          ) {
-            return Promise.resolve({ error: UNIQUE_VIOLATION });
-          }
-        }
-
-        stored.push(...rows);
-        return Promise.resolve({ error: null });
-      },
-    }),
+        if (!officialDuplicate) stored.push(row);
+        return {
+          question_id: row.question_id,
+          state: attemptedBefore ? "seen" : "first",
+          attempted_before: attemptedBefore,
+          first_attempt_at: row.answered_at,
+          attempt_count: stored.filter(
+            (existing) =>
+              existing.user_id === row.user_id
+              && existing.question_id === row.question_id,
+          ).length,
+          saved: !officialDuplicate,
+        };
+      });
+      return Promise.resolve({ error: null, data });
+    },
   };
 }
 
@@ -128,13 +133,15 @@ describe("公式過去問の重複保存", () => {
     expect(stored).toHaveLength(1);
   });
 
-  it("重複は成功として返す（クライアントに再送させない）", async () => {
+  it("重複はseenとして成功を返す（クライアントに再送させない）", async () => {
     await save([officialAttempt()]);
     const { body } = await save([officialAttempt()]);
 
     expect(body.ok).toBe(true);
     expect(body.saved).toBe(0);
-    expect(body.duplicatesIgnored).toBe(1);
+    expect(body.exposures).toEqual([
+      expect.objectContaining({ questionId: OFFICIAL_Q1, state: "seen" }),
+    ]);
   });
 
   it("一部だけ重複しているときは、残りを保存する", async () => {

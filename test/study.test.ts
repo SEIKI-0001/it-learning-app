@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import { completeTopicStudy, snoozeTopicReview, studyXpReward } from "@/lib/study";
 import { calculateTopicMastery, effectiveTopicMastery } from "@/lib/mastery";
 
@@ -31,22 +31,55 @@ function correctAnswer(at: string): UserAnswer {
   };
 }
 
+function exposure(
+  questionId: string,
+  state: "first" | "seen" | "unknown",
+): QuestionExposureMap {
+  return {
+    [questionId]: {
+      questionId,
+      state,
+      attemptedBefore: state === "seen" ? true : state === "first" ? false : null,
+      firstAttemptAt: null,
+      attemptCount: state === "first" ? 1 : state === "seen" ? 2 : null,
+    },
+  };
+}
+
 describe("topic review confirmation", () => {
   it("extends successful review intervals from 3 to 7 to 14 days", () => {
     const firstDate = new Date("2026-07-01T00:00:00Z");
-    const first = completeTopicStudy(emptyState(), "topic-1", [correctAnswer(firstDate.toISOString())], firstDate);
+    const first = completeTopicStudy(
+      emptyState(),
+      "topic-1",
+      [correctAnswer(firstDate.toISOString())],
+      exposure("topic-q1", "first"),
+      firstDate,
+    );
     expect(first.progress.reviewQueue[0]).toEqual(
       expect.objectContaining({ reason: "定着確認", confirmationCount: 0 }),
     );
 
     const secondDate = new Date("2026-07-04T00:00:00Z");
-    const second = completeTopicStudy(first, "topic-1", [correctAnswer(secondDate.toISOString())], secondDate);
+    const second = completeTopicStudy(
+      first,
+      "topic-1",
+      [correctAnswer(secondDate.toISOString())],
+      exposure("topic-q1", "seen"),
+      secondDate,
+    );
     expect(second.progress.reviewQueue[0]).toEqual(
       expect.objectContaining({ reason: "2回目の定着確認", confirmationCount: 1 }),
     );
 
     const thirdDate = new Date("2026-07-11T00:00:00Z");
-    const third = completeTopicStudy(second, "topic-1", [correctAnswer(thirdDate.toISOString())], thirdDate);
+    const third = completeTopicStudy(
+      second,
+      "topic-1",
+      [correctAnswer(thirdDate.toISOString())],
+      exposure("topic-q1", "seen"),
+      thirdDate,
+    );
     expect(third.progress.reviewQueue[0]).toEqual(
       expect.objectContaining({
         reviewStage: 3,
@@ -54,6 +87,32 @@ describe("topic review confirmation", () => {
       }),
     );
   });
+
+  it.each(["seen", "unknown"] as const)(
+    "does not grant a first bonus to a fresh AppState when exposure is %s",
+    (exposureState) => {
+      const current = emptyState();
+      current.progress.completedTopics = ["topic-1"];
+      current.progress.reviewQueue = [{
+        topicId: "topic-1",
+        dueAt: "2026-07-10T00:00:00.000Z",
+        reason: "復習期限",
+      }];
+
+      const next = completeTopicStudy(
+        current,
+        "topic-1",
+        [correctAnswer("2026-07-10T12:00:00.000Z")],
+        exposure("topic-q1", exposureState),
+        new Date("2026-07-10T12:00:00.000Z"),
+      );
+
+      expect(next.progress.topicMastery["topic-1"]).toBe(14);
+      expect(next.progress.topicMasteryStats?.["topic-1"].recentEvidence[0]).toEqual(
+        expect.objectContaining({ exposureState, isFirstSeen: false }),
+      );
+    },
+  );
 
   it("snoozing a review does not change mastery or mark a topic complete", () => {
     const state = emptyState();

@@ -3,8 +3,6 @@
 -- Regenerate from a local database rebuilt from the active migrations with:
 -- supabase db dump --local --schema public --file supabase/schema.sql
 
-
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -249,6 +247,309 @@ $$;
 ALTER FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_plan_key" "text", "p_months" integer, "p_amount_total" integer, "p_currency" "text", "p_stripe_checkout_session_id" "text", "p_stripe_payment_intent_id" "text", "p_stripe_customer_id" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."lock_question_exposure_answer_write"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+begin
+  perform pg_advisory_xact_lock(
+    hashtextextended('question-exposure-user' || chr(31) || new.user_id::text, 0)
+  );
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."lock_question_exposure_answer_write"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."lock_question_exposure_answer_write"() IS 'Serializes all persisted answer writers per user for first-attempt classification.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") RETURNS TABLE("question_id" "text", "state" "text", "attempted_before" boolean, "first_attempt_at" timestamp with time zone, "attempt_count" bigint, "saved" boolean)
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+begin
+  if p_user_id is null then
+    raise exception 'p_user_id is required' using errcode = '22023';
+  end if;
+  if p_attempts is null
+    or jsonb_typeof(p_attempts) <> 'array'
+    or jsonb_array_length(p_attempts) = 0 then
+    raise exception 'p_attempts must be a non-empty JSON array' using errcode = '22023';
+  end if;
+
+  create temporary table if not exists question_exposure_input (
+    ordinal bigint not null,
+    question_id text primary key,
+    question_type text not null,
+    topic_id text not null,
+    selected_answer text,
+    is_correct boolean not null,
+    mistake_reason text,
+    answered_at timestamptz not null,
+    time_spent_seconds integer,
+    source_task_id uuid,
+    question_origin text,
+    question_version integer,
+    exam_year integer,
+    attempt_mode text,
+    official_exam_field text,
+    attempt_group_id text
+  ) on commit drop;
+  truncate table pg_temp.question_exposure_input;
+
+  insert into pg_temp.question_exposure_input (
+    ordinal,
+    question_id,
+    question_type,
+    topic_id,
+    selected_answer,
+    is_correct,
+    mistake_reason,
+    answered_at,
+    time_spent_seconds,
+    source_task_id,
+    question_origin,
+    question_version,
+    exam_year,
+    attempt_mode,
+    official_exam_field,
+    attempt_group_id
+  )
+  select distinct on (parsed.question_id)
+    parsed.ordinal,
+    parsed.question_id,
+    parsed.question_type,
+    parsed.topic_id,
+    parsed.selected_answer,
+    parsed.is_correct,
+    parsed.mistake_reason,
+    parsed.answered_at,
+    parsed.time_spent_seconds,
+    parsed.source_task_id,
+    parsed.question_origin,
+    parsed.question_version,
+    parsed.exam_year,
+    parsed.attempt_mode,
+    parsed.official_exam_field,
+    parsed.attempt_group_id
+  from (
+    select
+      item.ordinality as ordinal,
+      nullif(item.value ->> 'question_id', '') as question_id,
+      nullif(item.value ->> 'question_type', '') as question_type,
+      nullif(item.value ->> 'topic_id', '') as topic_id,
+      item.value ->> 'selected_answer' as selected_answer,
+      (item.value ->> 'is_correct')::boolean as is_correct,
+      item.value ->> 'mistake_reason' as mistake_reason,
+      coalesce(
+        nullif(item.value ->> 'answered_at', '')::timestamptz,
+        statement_timestamp()
+      ) as answered_at,
+      nullif(item.value ->> 'time_spent_seconds', '')::integer as time_spent_seconds,
+      nullif(item.value ->> 'source_task_id', '')::uuid as source_task_id,
+      item.value ->> 'question_origin' as question_origin,
+      nullif(item.value ->> 'question_version', '')::integer as question_version,
+      nullif(item.value ->> 'exam_year', '')::integer as exam_year,
+      item.value ->> 'attempt_mode' as attempt_mode,
+      item.value ->> 'official_exam_field' as official_exam_field,
+      item.value ->> 'attempt_group_id' as attempt_group_id
+    from jsonb_array_elements(p_attempts) with ordinality as item(value, ordinality)
+  ) parsed
+  where parsed.question_id is not null
+    and parsed.question_type is not null
+    and parsed.topic_id is not null
+    and parsed.is_correct is not null
+  order by parsed.question_id, parsed.ordinal;
+
+  if not exists (select 1 from pg_temp.question_exposure_input) then
+    raise exception 'p_attempts contained no valid attempts' using errcode = '22023';
+  end if;
+
+  -- One lock per user keeps a 100-question batch at O(1) lock calls and also
+  -- coordinates with direct question_attempts/user_answers writers.
+  perform pg_advisory_xact_lock(
+    hashtextextended('question-exposure-user' || chr(31) || p_user_id::text, 0)
+  );
+
+  create temporary table if not exists question_exposure_before (
+    question_id text primary key,
+    attempted_before boolean not null,
+    first_attempt_at timestamptz,
+    attempt_count bigint not null
+  ) on commit drop;
+  truncate table pg_temp.question_exposure_before;
+
+  insert into pg_temp.question_exposure_before (
+    question_id,
+    attempted_before,
+    first_attempt_at,
+    attempt_count
+  )
+  select
+    input.question_id,
+    count(fact.question_id) > 0,
+    min(fact.answered_at),
+    count(fact.question_id)
+  from pg_temp.question_exposure_input input
+  left join (
+    select distinct
+      history.question_id,
+      history.answered_at,
+      history.selected_answer,
+      history.is_correct
+    from (
+      select
+        qa.question_id,
+        qa.answered_at,
+        qa.selected_answer,
+        qa.is_correct
+      from public.question_attempts qa
+      where qa.user_id = p_user_id
+        and qa.question_id in (
+          select exposure_input.question_id
+          from pg_temp.question_exposure_input exposure_input
+        )
+      union all
+      select
+        ua.question_id,
+        ua.answered_at,
+        ua.selected_choice as selected_answer,
+        ua.is_correct
+      from public.user_answers ua
+      where ua.user_id = p_user_id
+        and ua.question_id in (
+          select exposure_input.question_id
+          from pg_temp.question_exposure_input exposure_input
+        )
+    ) history
+  ) fact on fact.question_id = input.question_id
+  group by input.question_id;
+
+  create temporary table if not exists question_exposure_inserted (
+    question_id text primary key,
+    is_first_attempt boolean not null
+  ) on commit drop;
+  truncate table pg_temp.question_exposure_inserted;
+
+  with inserted as (
+    insert into public.question_attempts (
+      user_id,
+      question_id,
+      question_type,
+      topic_id,
+      selected_answer,
+      is_correct,
+      mistake_reason,
+      answered_at,
+      time_spent_seconds,
+      source_task_id,
+      question_origin,
+      question_version,
+      exam_year,
+      attempt_mode,
+      official_exam_field,
+      attempt_group_id,
+      is_first_attempt
+    )
+    select
+      p_user_id,
+      input.question_id,
+      input.question_type,
+      input.topic_id,
+      input.selected_answer,
+      input.is_correct,
+      input.mistake_reason,
+      input.answered_at,
+      input.time_spent_seconds,
+      input.source_task_id,
+      input.question_origin,
+      input.question_version,
+      input.exam_year,
+      input.attempt_mode,
+      input.official_exam_field,
+      input.attempt_group_id,
+      not before.attempted_before
+    from pg_temp.question_exposure_input input
+    join pg_temp.question_exposure_before before using (question_id)
+    on conflict do nothing
+    returning question_attempts.question_id, question_attempts.is_first_attempt
+  )
+  insert into pg_temp.question_exposure_inserted (question_id, is_first_attempt)
+  select inserted.question_id, inserted.is_first_attempt
+  from inserted;
+
+  return query
+  with current_facts as (
+    select distinct
+      history.question_id,
+      history.answered_at,
+      history.selected_answer,
+      history.is_correct
+    from (
+      select
+        qa.question_id,
+        qa.answered_at,
+        qa.selected_answer,
+        qa.is_correct
+      from public.question_attempts qa
+      where qa.user_id = p_user_id
+        and qa.question_id in (
+          select exposure_input.question_id
+          from pg_temp.question_exposure_input exposure_input
+        )
+      union all
+      select
+        ua.question_id,
+        ua.answered_at,
+        ua.selected_choice as selected_answer,
+        ua.is_correct
+      from public.user_answers ua
+      where ua.user_id = p_user_id
+        and ua.question_id in (
+          select exposure_input.question_id
+          from pg_temp.question_exposure_input exposure_input
+        )
+    ) history
+  ), current_totals as (
+    select
+      input.question_id,
+      min(fact.answered_at) as first_attempt_at,
+      count(fact.question_id) as attempt_count
+    from pg_temp.question_exposure_input input
+    left join current_facts fact using (question_id)
+    group by input.question_id
+  )
+  select
+    input.question_id,
+    case
+      when before.attempted_before then 'seen'
+      when coalesce(inserted.is_first_attempt, false) then 'first'
+      else 'seen'
+    end as state,
+    before.attempted_before,
+    totals.first_attempt_at,
+    totals.attempt_count,
+    inserted.question_id is not null as saved
+  from pg_temp.question_exposure_input input
+  join pg_temp.question_exposure_before before using (question_id)
+  join current_totals totals using (question_id)
+  left join pg_temp.question_exposure_inserted inserted using (question_id)
+  order by input.ordinal;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") IS 'Records a validated attempt batch and returns transaction-safe first/seen exposure.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."record_stripe_subscription_event"("p_stripe_subscription_id" "text", "p_stripe_customer_id" "text", "p_user_id" "uuid", "p_price_id" "text", "p_status" "text", "p_latest_event_created" bigint) RETURNS boolean
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog'
@@ -489,7 +790,8 @@ CREATE TABLE IF NOT EXISTS "public"."question_attempts" (
     "attempt_mode" "text",
     "official_exam_field" "text",
     "attempt_group_id" "text",
-    "recorded_at" timestamp with time zone DEFAULT "now"()
+    "recorded_at" timestamp with time zone DEFAULT "now"(),
+    "is_first_attempt" boolean DEFAULT false NOT NULL
 );
 
 
@@ -497,6 +799,10 @@ ALTER TABLE "public"."question_attempts" OWNER TO "postgres";
 
 
 COMMENT ON COLUMN "public"."question_attempts"."question_type" IS 'topic_quiz / exam_level / mini_exam / mock_exam / official_past';
+
+
+
+COMMENT ON COLUMN "public"."question_attempts"."is_first_attempt" IS 'True only for the atomic first persisted answer for one user and canonical question.';
 
 
 
@@ -925,6 +1231,10 @@ CREATE UNIQUE INDEX "question_attempts_official_group_unique_idx" ON "public"."q
 
 
 
+CREATE UNIQUE INDEX "question_attempts_one_first_per_user_question_idx" ON "public"."question_attempts" USING "btree" ("user_id", "question_id") WHERE "is_first_attempt";
+
+
+
 CREATE INDEX "question_attempts_question_version_idx" ON "public"."question_attempts" USING "btree" ("question_id", "question_version");
 
 
@@ -1014,6 +1324,14 @@ CREATE INDEX "user_word_progress_updated_at_idx" ON "public"."user_word_progress
 
 
 CREATE INDEX "user_word_progress_user_id_idx" ON "public"."user_word_progress" USING "btree" ("user_id");
+
+
+
+CREATE OR REPLACE TRIGGER "lock_question_exposure_question_attempts" BEFORE INSERT OR UPDATE OF "user_id", "question_id" ON "public"."question_attempts" FOR EACH ROW EXECUTE FUNCTION "public"."lock_question_exposure_answer_write"();
+
+
+
+CREATE OR REPLACE TRIGGER "lock_question_exposure_user_answers" BEFORE INSERT OR UPDATE OF "user_id", "question_id" ON "public"."user_answers" FOR EACH ROW EXECUTE FUNCTION "public"."lock_question_exposure_answer_write"();
 
 
 
@@ -1186,6 +1504,15 @@ GRANT ALL ON FUNCTION "public"."admin_dashboard_summary"("p_today_start" timesta
 
 REVOKE ALL ON FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_plan_key" "text", "p_months" integer, "p_amount_total" integer, "p_currency" "text", "p_stripe_checkout_session_id" "text", "p_stripe_payment_intent_id" "text", "p_stripe_customer_id" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_plan_key" "text", "p_months" integer, "p_amount_total" integer, "p_currency" "text", "p_stripe_checkout_session_id" "text", "p_stripe_payment_intent_id" "text", "p_stripe_customer_id" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."lock_question_exposure_answer_write"() FROM PUBLIC;
+
+
+
+REVOKE ALL ON FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") TO "service_role";
 
 
 

@@ -1,9 +1,16 @@
-import type { AppState, ReviewItem, UserAnswer, UserProgress } from "@/types";
+import type {
+  AppState,
+  QuestionExposureMap,
+  ReviewItem,
+  UserAnswer,
+  UserProgress,
+} from "@/types";
 import type { Topic } from "@/types/content";
 import { grantExp } from "@/lib/game";
 import { advanceStreak } from "@/lib/streak";
 import { masteryForTopic } from "@/lib/mastery";
 import { updateLearningLoopProgress } from "@/lib/learningLoop";
+import { exposureStateFor } from "@/lib/questionExposure";
 
 // ============================================================================
 // トピック単位の学習進行(7日固定の completeQuest に代わる新ロジック)。
@@ -108,6 +115,7 @@ export function completeTopicStudy(
   state: AppState,
   topicId: string,
   newAnswers: UserAnswer[],
+  exposures: QuestionExposureMap,
   now: Date = new Date(),
 ): AppState {
   const allAnswers = [...state.answers, ...newAnswers];
@@ -130,7 +138,6 @@ export function completeTopicStudy(
   // ストリーク更新（1日欠けはおまもりが有れば自動消費して継続）。
   const streak = advanceStreak(state.progress, now);
 
-  const seenQuestionIds = new Set(state.answers.map((answer) => answer.questionId));
   const progressWithLearningLoop = updateLearningLoopProgress(
     {
       ...state.progress,
@@ -147,7 +154,7 @@ export function completeTopicStudy(
       questionId: answer.questionId,
       kind: reward.label === "due_review" ? "review" as const : "confirmation" as const,
       isCorrect: answer.isCorrect,
-      isFirstSeen: !seenQuestionIds.has(answer.questionId),
+      exposureState: exposureStateFor(exposures, answer.questionId),
       answeredAt: answer.answeredAt,
     })),
     now,

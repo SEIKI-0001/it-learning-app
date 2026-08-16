@@ -33,12 +33,26 @@ beforeEach(() => {
   getRequestUserId.mockResolvedValue("user-1");
   canRecordStudyForUser.mockResolvedValue(true);
   getServiceSupabase.mockReturnValue({
-    from: () => ({
-      insert: (rows: Array<Record<string, unknown>>) => {
-        inserted.push(rows);
-        return Promise.resolve({ error: null });
-      },
-    }),
+    rpc: (
+      _name: string,
+      params: { p_user_id: string; p_attempts: Array<Record<string, unknown>> },
+    ) => {
+      inserted.push(params.p_attempts.map((row) => ({
+        ...row,
+        user_id: params.p_user_id,
+      })));
+      return Promise.resolve({
+        error: null,
+        data: params.p_attempts.map((row) => ({
+          question_id: row.question_id,
+          state: "first",
+          attempted_before: false,
+          first_attempt_at: row.answered_at,
+          attempt_count: 1,
+          saved: true,
+        })),
+      });
+    },
   });
 });
 

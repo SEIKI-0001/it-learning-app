@@ -2,7 +2,12 @@ import { themeExams } from "@/data/themeExams";
 import { getTopic } from "@/lib/content";
 import { getThemeBySlug } from "@/lib/learningCatalog";
 import { getQuestionForDelivery } from "@/lib/questionBank/loader";
-import type { ChoiceKey } from "@/types";
+import type {
+  AppState,
+  ChoiceKey,
+  QuestionExposureMap,
+  UserAnswer,
+} from "@/types";
 import type { LearningTheme } from "@/types/learningCatalog";
 import type {
   ThemeExam,
@@ -12,6 +17,8 @@ import type {
   ThemeExamSummary,
 } from "@/types/themeExam";
 import { THEME_EXAM_PASS_RATE } from "@/types/themeExam";
+import { updateLearningLoopProgress } from "@/lib/learningLoop";
+import { exposureStateFor } from "@/lib/questionExposure";
 
 // ============================================================================
 // テーマ別 高難易度試験のデータアクセスと採点（純粋関数）。
@@ -156,4 +163,46 @@ export function gradeThemeExam(params: {
     questions: results,
     reviewTopics,
   };
+}
+
+/** Record a chapter-wide summary exam in the shared P0 learning loop. */
+export function recordThemeExamLearningResult(
+  state: AppState,
+  result: ThemeExamResult,
+  answeredAt: string,
+  exposures: QuestionExposureMap,
+): AppState {
+  const answers: UserAnswer[] = result.questions.flatMap((question) => {
+    const topic = getTopic(question.topicId);
+    if (!topic) return [];
+    return [{
+      questionId: question.questionId,
+      selectedChoice: question.selected ?? undefined,
+      isCorrect: question.isCorrect,
+      answeredAt,
+      tag: topic.tags[0] ?? topic.field,
+      topicId: topic.id,
+    }];
+  });
+  const allAnswers = [...state.answers, ...answers];
+  const now = new Date(answeredAt);
+  const progress = updateLearningLoopProgress(
+    {
+      ...state.progress,
+      weakTags: Array.from(
+        new Set(allAnswers.filter((answer) => !answer.isCorrect).map((answer) => answer.tag)),
+      ),
+      lastPlayedAt: answeredAt,
+    },
+    answers.map((answer) => ({
+      topicId: answer.topicId!,
+      questionId: answer.questionId,
+      kind: "summary_exam" as const,
+      isCorrect: answer.isCorrect,
+      exposureState: exposureStateFor(exposures, answer.questionId),
+      answeredAt,
+    })),
+    now,
+  );
+  return { ...state, answers: allAnswers, progress };
 }

@@ -21,6 +21,7 @@ import {
   recordPastExamLearningResult,
 } from "@/lib/pastExam/scoring";
 import { saveAllAttempts, saveSingleAttempt } from "@/lib/pastExam/saveAttempts";
+import { getUnknownQuestionExposureStates } from "@/lib/questionExposure";
 import {
   clearSession,
   createSession,
@@ -33,15 +34,16 @@ import {
   saveSession,
   subscribeToSessions,
   withAnswer,
+  withAnswerExposure,
 } from "@/lib/pastExam/session";
-import {
-  getUserIdServerSnapshot,
-  getUserIdSnapshot,
-  subscribeToUserId,
-} from "@/lib/pastExam/userIdStore";
 import { loadAppState, saveAppState } from "@/lib/storage";
-import { saveProgressToDb } from "@/lib/userSession";
+import {
+  resolveQuestionExposureIdentity,
+  saveProgressToDb,
+  type QuestionExposureIdentity,
+} from "@/lib/userSession";
 import type { ChoiceKey } from "@/types";
+import type { QuestionExposureMap, QuestionExposureState } from "@/types";
 import {
   EXAM_MODE_DURATION_MINUTES,
   type PastExamMode,
@@ -74,20 +76,25 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   // state（submitting）はボタンを無効化する表示のためだけに使う。
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
-  // userId はサーバ描画では分からない（localStorage）。確定するまで（null の間）は
-  // 保存しない。未確定のまま書くと anon 側のキーへ書いてしまう。
-  const rawUserId = useSyncExternalStore(
-    subscribeToUserId,
-    getUserIdSnapshot,
-    getUserIdServerSnapshot,
-  );
-  const userReady = rawUserId !== null;
-  const userId = rawUserId ? rawUserId : null;
+  const [identity, setIdentity] = useState<QuestionExposureIdentity | null>(null);
+  useEffect(() => {
+    void resolveQuestionExposureIdentity().then(setIdentity);
+  }, []);
+  // pending/unknown must never share the anonymous key. Only a server-confirmed
+  // authenticated or anonymous identity may persist resumable state.
+  const userReady = identity?.authState === "authenticated"
+    || identity?.authState === "anonymous";
+  const userId = identity?.authState === "authenticated" ? identity.userId : null;
+  const sessionUserId = userReady ? userId : "__unverified__";
+
+  useEffect(() => {
+    if (userReady && session) saveSession(sessionUserId, session);
+  }, [session, sessionUserId, userReady]);
 
   // 再開できる途中状態があるか。保存・削除のたびに購読側へ通知される。
   const resumableSnapshot = useSyncExternalStore(
     subscribeToSessions,
-    useCallback(() => getResumableSnapshot(userId, year), [userId, year]),
+    useCallback(() => getResumableSnapshot(sessionUserId, year), [sessionUserId, year]),
     getResumableServerSnapshot,
   );
   const resumable = parseResumable(resumableSnapshot);
@@ -95,9 +102,21 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const persist = useCallback(
     (next: PastExamSession) => {
       setSession(next);
-      if (userReady) saveSession(userId, next);
+      if (userReady) saveSession(sessionUserId, next);
     },
-    [userReady, userId],
+    [sessionUserId, userReady],
+  );
+
+  const persistExposure = useCallback(
+    (sessionId: string, questionNumber: number, exposureState: QuestionExposureState) => {
+      setSession((current) => {
+        if (!current || current.sessionId !== sessionId) return current;
+        const next = withAnswerExposure(current, questionNumber, exposureState);
+        if (userReady) saveSession(sessionUserId, next);
+        return next;
+      });
+    },
+    [sessionUserId, userReady],
   );
 
   /** 新しい演習を始めるたびに採点ガードを開け直す（セッション単位の1回制限のため）。 */
@@ -108,28 +127,28 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
 
   const start = useCallback(
     (mode: PastExamMode) => {
-      const existing = loadSession(userId, year, mode);
+      const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
       const next = existing ?? createSession(year, mode);
       allowSubmit();
       persist(next);
       setPhase("running");
     },
-    [userId, year, persist, allowSubmit],
+    [sessionUserId, userReady, year, persist, allowSubmit],
   );
 
   const restart = useCallback(
     (mode: PastExamMode) => {
-      clearSession(userId, year, mode);
+      if (userReady) clearSession(sessionUserId, year, mode);
       const next = createSession(year, mode);
       allowSubmit();
       persist(next);
       setPhase("running");
     },
-    [userId, year, persist, allowSubmit],
+    [sessionUserId, userReady, year, persist, allowSubmit],
   );
 
   const finish = useCallback(
-    (current: PastExamSession) => {
+    async (current: PastExamSession) => {
       // 2回目以降は何もしない。ここを通すと保存も採点もやり直される。
       if (submittedRef.current) return;
       submittedRef.current = true;
@@ -144,34 +163,62 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         answers: current.answers,
       });
 
-      setResult(graded);
-      setPhase("result");
-
-      // 本番モードは採点時にまとめて送る（練習モードは1問ごとに送信済み）。
+      const currentState = loadAppState();
+      let exposures: QuestionExposureMap;
+      let confirmedUserId = userId;
       if (current.mode === "exam") {
-        saveAllAttempts({
+        const exposureResult = await saveAllAttempts({
           questions,
           answers: current.answers,
           mode: current.mode,
           sessionId: current.sessionId,
+          anonymousAnswers: currentState?.answers ?? [],
         });
+        exposures = exposureResult.exposures;
+        confirmedUserId = exposureResult.userId;
+      } else {
+        exposures = getUnknownQuestionExposureStates(
+          questions.map((question) => question.id),
+        );
+        for (const question of questions) {
+          const exposureState = current.answers[question.questionNumber]?.exposureState;
+          if (!exposureState) continue;
+          exposures = {
+            ...exposures,
+            [question.id]: {
+              questionId: question.id,
+              state: exposureState,
+              attemptedBefore:
+                exposureState === "first"
+                  ? false
+                  : exposureState === "seen"
+                    ? true
+                    : null,
+              firstAttemptAt: null,
+              attemptCount: null,
+            },
+          };
+        }
       }
 
-      const currentState = loadAppState();
       if (currentState) {
         const next = recordPastExamLearningResult(
           currentState,
           graded,
           current.answers,
+          exposures,
         );
         saveAppState(next);
-        if (userId) saveProgressToDb(userId, next.progress);
+        if (confirmedUserId) saveProgressToDb(confirmedUserId, next.progress);
       }
 
       // 完了した演習は途中状態として残さない（購読側へも通知される）。
-      clearSession(userId, year, current.mode);
+      setSession(null);
+      if (userReady) clearSession(sessionUserId, year, current.mode);
+      setResult(graded);
+      setPhase("result");
     },
-    [questions, userId, year],
+    [questions, sessionUserId, userId, userReady, year],
   );
 
   if (phase === "result" && result) {
@@ -194,6 +241,8 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         session={session}
         questions={questions}
         onChange={persist}
+        onExposure={persistExposure}
+        onIdentity={setIdentity}
         onFinish={finish}
         submitting={submitting}
       />
@@ -305,13 +354,21 @@ function QuestionStage({
   session,
   questions,
   onChange,
+  onExposure,
+  onIdentity,
   onFinish,
   submitting,
 }: {
   session: PastExamSession;
   questions: PastExamQuestionView[];
   onChange: (next: PastExamSession) => void;
-  onFinish: (session: PastExamSession) => void;
+  onExposure: (
+    sessionId: string,
+    questionNumber: number,
+    exposureState: QuestionExposureState,
+  ) => void;
+  onIdentity: (identity: QuestionExposureIdentity) => void;
+  onFinish: (session: PastExamSession) => Promise<void>;
   /** 採点処理が走り出したか。ボタンを無効化して連打の入口を塞ぐ。 */
   submitting: boolean;
 }) {
@@ -332,6 +389,7 @@ function QuestionStage({
   // 同一セッションで保存済みの問題。回答の確定は上の answerLocked で足りるが、
   // 再描画前に連打された場合まで含めて「1問1回」を守るための保険。
   const savedQuestionsRef = useRef<Set<string>>(new Set());
+  const [classifying, setClassifying] = useState(false);
   const saveKey = `${session.sessionId}:${question.questionNumber}`;
 
   // 1問あたりの所要時間を測る基準。問題を切り替えたら測り直す。
@@ -346,7 +404,7 @@ function QuestionStage({
     (a) => a.selected !== null,
   ).length;
 
-  const handleSelect = (key: ChoiceKey) => {
+  const handleSelect = async (key: ChoiceKey) => {
     // UI 側でも選択肢を disabled にしているが、表示に依らずここでも弾く。
     if (answerLocked || (!isExam && savedQuestionsRef.current.has(saveKey))) return;
 
@@ -362,12 +420,26 @@ function QuestionStage({
       const saved = next.answers[question.questionNumber];
       if (saved) {
         savedQuestionsRef.current.add(saveKey);
-        saveSingleAttempt({
+        setClassifying(true);
+        const exposureResult = await saveSingleAttempt({
           question,
           answer: saved,
           mode: session.mode,
           sessionId: next.sessionId,
+          anonymousAnswers: loadAppState()?.answers ?? [],
         });
+        if (exposureResult.authState !== "unknown") {
+          onIdentity({
+            authState: exposureResult.authState,
+            userId: exposureResult.userId,
+          });
+        }
+        onExposure(
+          next.sessionId,
+          question.questionNumber,
+          exposureResult.exposures[question.id]?.state ?? "unknown",
+        );
+        setClassifying(false);
       }
     }
   };
@@ -393,7 +465,7 @@ function QuestionStage({
         selected={selected}
         onSelect={handleSelect}
         revealAnswer={revealAnswer}
-        disabled={answerLocked}
+        disabled={answerLocked || classifying}
       />
 
       <nav className="flex items-center justify-between gap-2" aria-label="問題の移動">
@@ -431,10 +503,10 @@ function QuestionStage({
         </p>
         <Button
           className="mt-3 w-full"
-          onClick={() => onFinish(session)}
-          disabled={submitting}
+          onClick={() => void onFinish(session)}
+          disabled={submitting || classifying}
         >
-          {submitting ? "採点中…" : "採点する"}
+          {submitting ? "採点中…" : classifying ? "回答保存中…" : "採点する"}
         </Button>
       </div>
     </div>
