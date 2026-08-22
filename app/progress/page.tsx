@@ -88,6 +88,7 @@ export default function ProgressPage() {
       if (data) {
         setBootstrap({
           integratedStatus: data.integratedStatus,
+          examReadiness: data.examReadiness,
           planAdjustmentProposal: data.planAdjustmentProposal,
         });
       }

@@ -6,6 +6,7 @@ import {
   generatePlanAdjustmentForUser,
   getLatestOrRefreshIntegratedStatus,
   getLatestPlanAdjustmentProposal,
+  getProgressBootstrapExamReadiness,
 } from "@/lib/progressBootstrap";
 
 export const runtime = "nodejs";
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
       userId,
       appState: null,
       integratedStatus: null,
+      examReadiness: null,
       planAdjustmentProposal: null,
       fallback: "supabase_not_configured",
     });
@@ -47,10 +49,11 @@ export async function POST(request: Request) {
   const now = new Date();
   // 立て直し提案の「最新取得」は統合進捗に依存しないため並列で走らせ、
   // 依存が必要な「生成」（提案が無いときだけ）のみ後段で行う。
-  const [appState, integrated, latestProposal] = await Promise.all([
+  const [appState, integrated, latestProposal, examReadiness] = await Promise.all([
     loadAppStateForUser(userId),
     getLatestOrRefreshIntegratedStatus(supabase, userId, now),
     getLatestPlanAdjustmentProposal(supabase, userId),
+    getProgressBootstrapExamReadiness(supabase, userId, now),
   ]);
 
   const planAdjustmentProposal =
@@ -64,6 +67,7 @@ export async function POST(request: Request) {
     userId,
     appState,
     integratedStatus: integrated.status,
+    examReadiness,
     planAdjustmentProposal,
   });
 }

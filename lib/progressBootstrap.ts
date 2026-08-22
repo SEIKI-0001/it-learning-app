@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAllTopics } from "@/lib/content";
 import { getAllWords } from "@/lib/wordlist";
@@ -20,12 +22,22 @@ import {
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import type { TopicStage } from "@/types/studyProgress";
+import { getCurrentReadiness } from "@/lib/examReadiness/service";
+import type { ExamReadinessResult } from "@/types/examReadiness";
 
 export type IntegratedStatusBootstrapResult = {
   status: IntegratedLearningStatus | null;
   row: IntegratedStatusRow | null;
   saved?: boolean;
 };
+
+export async function getProgressBootstrapExamReadiness(
+  supabase: SupabaseClient,
+  userId: string,
+  now = new Date(),
+): Promise<ExamReadinessResult | null> {
+  return getCurrentReadiness({ supabase, userId, now });
+}
 
 /** exam_date（"YYYY-MM-DD"）から試験までの残り日数を求める。 */
 function daysUntil(examDate: string | null, now: Date): number | null {

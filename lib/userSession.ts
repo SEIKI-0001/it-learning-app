@@ -21,6 +21,7 @@ import type {
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import type { AiGradingBootstrapResult } from "@/types/aiGrading";
+import type { ExamReadinessResult } from "@/types/examReadiness";
 
 // LINE 経由で解決した user_id を localStorage に保存し、以降のDB保存に使う。
 // user_id が無ければ（= 直接アクセス）すべて localStorage だけで動く（フォールバック）。
@@ -98,6 +99,7 @@ export type ResolveResult = {
 
 export type ProgressBootstrapResult = ResolveResult & {
   integratedStatus: IntegratedLearningStatus | null;
+  examReadiness: ExamReadinessResult | null;
   planAdjustmentProposal: PlanAdjustmentProposal | null;
 };
 
@@ -154,20 +156,6 @@ export async function restoreFromSession(): Promise<ResolveResult | null> {
     return { userId: data.userId, appState: data.appState ?? null };
   } catch {
     return null;
-  }
-}
-
-/**
- * 統合進捗の合格準備度をローカルにキャッシュする。
- * バッジ判定（b-cp6-high-readiness）がサーバー値と同じ準備度を参照できるようにするため。
- * fequest: プレフィクスなので clearLocalUserData（ログアウト/切替）で自動消去される。
- */
-function cacheIntegratedReadiness(score: unknown): void {
-  if (typeof score !== "number" || !Number.isFinite(score)) return;
-  try {
-    window.localStorage.setItem("fequest:integratedReadiness", String(score));
-  } catch {
-    /* localStorage 不可でも学習は継続 */
   }
 }
 
@@ -229,6 +217,7 @@ function writeBootstrapCache<T>(key: string, userId: string | null, data: T): vo
 /** /progress 用にキャッシュする範囲（AppState は localStorage 本体があるため含めない）。 */
 export type ProgressBootstrapCache = {
   integratedStatus: IntegratedLearningStatus | null;
+  examReadiness: ExamReadinessResult | null;
   planAdjustmentProposal: PlanAdjustmentProposal | null;
 };
 
@@ -275,18 +264,17 @@ export async function fetchProgressBootstrap(
     const data = (await res.json()) as { ok: boolean } & Partial<ProgressBootstrapResult>;
     if (!data.ok || !data.userId) return null;
     setUserId(data.userId);
-    if (data.integratedStatus) {
-      cacheIntegratedReadiness(data.integratedStatus.readinessScore);
-    }
     const result: ProgressBootstrapResult = {
       userId: data.userId,
       appState: data.appState ?? null,
       integratedStatus: data.integratedStatus ?? null,
+      examReadiness: data.examReadiness ?? null,
       planAdjustmentProposal: data.planAdjustmentProposal ?? null,
     };
     // 次回の /progress 初期表示を即時にするためキャッシュを更新する。
     saveCachedProgressBootstrap(data.userId, {
       integratedStatus: result.integratedStatus,
+      examReadiness: result.examReadiness,
       planAdjustmentProposal: result.planAdjustmentProposal,
     });
     return result;
@@ -722,10 +710,7 @@ export async function refreshIntegratedStatus(
       ok: boolean;
       status?: IntegratedLearningStatus;
     };
-    if (data.ok && data.status) {
-      cacheIntegratedReadiness(data.status.readinessScore);
-      return data.status;
-    }
+    if (data.ok && data.status) return data.status;
     return null;
   } catch {
     return null;
@@ -747,11 +732,26 @@ export async function fetchLatestIntegratedStatus(
       ok: boolean;
       status?: IntegratedLearningStatus | null;
     };
-    if (data.ok && data.status) {
-      cacheIntegratedReadiness(data.status.readinessScore);
-      return data.status;
-    }
+    if (data.ok && data.status) return data.status;
     return null;
+  } catch {
+    return null;
+  }
+}
+
+/** セッション本人の完全な最新 Exam Readiness 結果を取得する。 */
+export async function fetchCurrentExamReadiness(): Promise<ExamReadinessResult | null> {
+  try {
+    const response = await fetch("/api/exam-readiness/current", {
+      method: "GET",
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const body = await response.json() as {
+      ok?: boolean;
+      readiness?: ExamReadinessResult | null;
+    };
+    return body.ok ? body.readiness ?? null : null;
   } catch {
     return null;
   }
