@@ -529,6 +529,89 @@ export type QuestionExposureIdentity = Pick<
   "authState" | "userId"
 >;
 
+export type StartAssessmentSessionInput = {
+  action: "start";
+  sessionId: string;
+  source: "checkpoint" | "summary" | "mock" | "official_past";
+  mode: "practice" | "exam";
+  startedAt: string;
+  questionCount: number;
+};
+
+export type CompleteAssessmentSessionInput = {
+  action: "complete";
+  sessionId: string;
+  completedAt: string;
+  answers: Array<{
+    idempotencyKey: string;
+    canonicalQuestionId: string;
+    topicId: string;
+    isCorrect: boolean;
+    answeredAt: string;
+  }>;
+};
+
+export type AbandonAssessmentSessionInput = {
+  action: "abandon";
+  sessionId: string;
+  completedAt: string;
+};
+
+/** Creates a database-compatible UUID even in older browsers without randomUUID(). */
+export function createAssessmentSessionId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  const bytes = Array.from({ length: 16 }, () => Math.floor(Math.random() * 256));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.map((byte) => byte.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
+}
+
+export function assessmentAnswerIdempotencyKey(
+  sessionId: string,
+  canonicalQuestionId: string,
+): string {
+  return `assessment:${sessionId}:${canonicalQuestionId}`;
+}
+
+export function startAssessmentSessionForCurrentSession(
+  input: StartAssessmentSessionInput,
+): Promise<boolean> {
+  return postAssessmentSession(input);
+}
+
+export function completeAssessmentSessionForCurrentSession(
+  input: CompleteAssessmentSessionInput,
+): Promise<boolean> {
+  return postAssessmentSession(input);
+}
+
+export function abandonAssessmentSessionForCurrentSession(
+  input: AbandonAssessmentSessionInput,
+): Promise<boolean> {
+  return postAssessmentSession(input);
+}
+
+async function postAssessmentSession(
+  input:
+    | StartAssessmentSessionInput
+    | CompleteAssessmentSessionInput
+    | AbandonAssessmentSessionInput,
+): Promise<boolean> {
+  try {
+    const response = await fetch("/api/assessment-sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Resolve only a server-cookie identity; localStorage is never an authority. */
 export async function resolveQuestionExposureIdentity(): Promise<QuestionExposureIdentity> {
   try {

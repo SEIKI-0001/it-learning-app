@@ -6,6 +6,7 @@ import ThemeExamRunner from "@/components/themeExam/ThemeExamRunner";
 import type { ThemeExamQuestionView } from "@/types/themeExam";
 
 const flow = vi.hoisted(() => ({
+  hasState: true,
   before: {
     progress: {
       level: 1,
@@ -41,14 +42,21 @@ const flow = vi.hoisted(() => ({
 const recordThemeExamLearningResult = vi.hoisted(() => vi.fn());
 const saveQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn());
 const saveProgressToDb = vi.hoisted(() => vi.fn());
+const startAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
+const completeAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/useAppState", () => ({
-  useAppState: () => [flow.before, vi.fn()],
+  useAppState: () => [flow.hasState ? flow.before : undefined, vi.fn()],
 }));
 vi.mock("@/lib/storage", () => ({ saveAppState: vi.fn() }));
 vi.mock("@/lib/userSession", () => ({
+  assessmentAnswerIdempotencyKey: (sessionId: string, questionId: string) =>
+    `assessment:${sessionId}:${questionId}`,
+  completeAssessmentSessionForCurrentSession,
+  createAssessmentSessionId: () => "20000000-0000-4000-8000-000000000001",
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
+  startAssessmentSessionForCurrentSession,
 }));
 vi.mock("@/lib/themeExam", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/themeExam")>();
@@ -75,6 +83,7 @@ const question: ThemeExamQuestionView = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  flow.hasState = true;
   recordThemeExamLearningResult.mockReturnValue(flow.next);
   saveQuestionAttemptsForCurrentSession.mockResolvedValue({
     authState: "authenticated",
@@ -89,11 +98,46 @@ beforeEach(() => {
       },
     },
   });
+  startAssessmentSessionForCurrentSession.mockResolvedValue(true);
+  completeAssessmentSessionForCurrentSession.mockResolvedValue(true);
 });
 
 afterEach(cleanup);
 
 describe("ThemeExamRunner exposure integration", () => {
+  it("persists start before showing questions", async () => {
+    let releaseStart!: () => void;
+    startAssessmentSessionForCurrentSession.mockImplementation(() =>
+      new Promise<boolean>((resolve) => {
+        releaseStart = () => resolve(true);
+      })
+    );
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+
+    expect(screen.queryByText("2進数の確認")).not.toBeInTheDocument();
+    await waitFor(() => expect(startAssessmentSessionForCurrentSession).toHaveBeenCalled());
+    releaseStart();
+    expect(await screen.findByText("2進数の確認")).toBeInTheDocument();
+    expect(startAssessmentSessionForCurrentSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "start",
+        source: "summary",
+        mode: "exam",
+        questionCount: 1,
+      }),
+    );
+  });
+
   it("awaits one classification batch before updating summary-exam Mastery", async () => {
     render(
       <ThemeExamRunner
@@ -106,13 +150,19 @@ describe("ThemeExamRunner exposure integration", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
-    fireEvent.click(screen.getByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
     await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalled());
     expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
     expect(recordThemeExamLearningResult.mock.invocationCallOrder[0]).toBeGreaterThan(
       saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
+    );
+    expect(completeAssessmentSessionForCurrentSession.mock.invocationCallOrder[0]).toBeGreaterThan(
+      saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
+    );
+    expect(recordThemeExamLearningResult.mock.invocationCallOrder[0]).toBeGreaterThan(
+      completeAssessmentSessionForCurrentSession.mock.invocationCallOrder[0],
     );
     expect(recordThemeExamLearningResult.mock.calls[0][3]).toEqual({
       "tech-binary-data-ex1": expect.objectContaining({ state: "seen" }),
@@ -131,7 +181,7 @@ describe("ThemeExamRunner exposure integration", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
-    fireEvent.click(screen.getByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
     const grade = screen.getByRole("button", { name: "採点する" });
 
     grade.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -140,5 +190,28 @@ describe("ThemeExamRunner exposure integration", () => {
     await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalled());
     expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
     expect(recordThemeExamLearningResult).toHaveBeenCalledTimes(1);
+  });
+
+  it("still completes the persisted session when P0 state is unavailable", async () => {
+    flow.hasState = false;
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    await waitFor(() => expect(completeAssessmentSessionForCurrentSession).toHaveBeenCalledOnce());
+    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledWith(
+      expect.any(Array),
+      [],
+    );
+    expect(recordThemeExamLearningResult).not.toHaveBeenCalled();
   });
 });

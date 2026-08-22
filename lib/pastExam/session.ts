@@ -13,6 +13,7 @@
 import type { ChoiceKey, QuestionExposureState } from "@/types";
 import type { PastExamMode, PastExamSession } from "@/types/pastExam";
 import { EXAM_MODE_DURATION_MINUTES } from "@/types/pastExam";
+import { createAssessmentSessionId } from "@/lib/userSession";
 
 const KEY_PREFIX = "fequest:pastExam";
 
@@ -180,10 +181,7 @@ export function createSession(
 
 /** crypto.randomUUID が無い環境（古いブラウザ・テスト）でも動くID生成。 */
 function newSessionId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  return `pe-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  return createAssessmentSessionId();
 }
 
 /**

@@ -7,8 +7,12 @@ import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
 import { gradeThemeExam, recordThemeExamLearningResult } from "@/lib/themeExam";
 import { getLessonHref } from "@/lib/learningCatalog";
 import {
+  assessmentAnswerIdempotencyKey,
+  completeAssessmentSessionForCurrentSession,
+  createAssessmentSessionId,
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
+  startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
@@ -57,6 +61,7 @@ export default function ThemeExamRunner({
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [result, setResult] = useState<ThemeExamResult | null>(null);
+  const [starting, setStarting] = useState(false);
 
   // この演習1回を識別するID。question_attempts の attempt_group_id に使う。
   const sessionIdRef = useRef<string>("");
@@ -84,12 +89,24 @@ export default function ThemeExamRunner({
     questionStartedAtRef.current = Date.now();
   }, [index, questions]);
 
-  const start = () => {
+  const start = async () => {
+    if (starting) return;
+    setStarting(true);
     submittedRef.current = false;
-    sessionIdRef.current = `theme-exam-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    startedAtRef.current = Date.now();
+    sessionIdRef.current = createAssessmentSessionId();
+    const startedAt = new Date();
+    startedAtRef.current = startedAt.getTime();
+    await startAssessmentSessionForCurrentSession({
+      action: "start",
+      sessionId: sessionIdRef.current,
+      source: "summary",
+      mode: "exam",
+      startedAt: startedAt.toISOString(),
+      questionCount: questions.length,
+    });
     questionStartedAtRef.current = Date.now();
     setPhase("running");
+    setStarting(false);
   };
 
   const move = (to: number) => {
@@ -111,7 +128,6 @@ export default function ThemeExamRunner({
     setResult(graded);
     setPhase("result");
 
-    if (!appState) return;
     const answeredAt = new Date().toISOString();
     const attempts = graded.questions.map((question) => ({
       questionId: question.questionId,
@@ -121,12 +137,29 @@ export default function ThemeExamRunner({
       isCorrect: question.isCorrect,
       timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
       answeredAt,
+      attemptGroupId: sessionIdRef.current,
     }));
     const exposureResult = await saveQuestionAttemptsForCurrentSession(
       attempts,
-      appState.answers,
+      appState?.answers ?? [],
     );
     const { exposures, userId } = exposureResult;
+    await completeAssessmentSessionForCurrentSession({
+      action: "complete",
+      sessionId: sessionIdRef.current,
+      completedAt: answeredAt,
+      answers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
+        idempotencyKey: assessmentAnswerIdempotencyKey(
+          sessionIdRef.current,
+          question.questionId,
+        ),
+        canonicalQuestionId: question.questionId,
+        topicId: question.topicId,
+        isCorrect: question.isCorrect,
+        answeredAt,
+      }]),
+    });
+    if (!appState) return;
     const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
     saveAppState(next);
     setAppState(next);
@@ -158,8 +191,13 @@ export default function ThemeExamRunner({
           <li>・前後の問題へ移動して見直せます</li>
           <li>・組合せ型・計算・資料の読み取りを含みます</li>
         </ul>
-        <button type="button" onClick={start} className={buttonClass("primary", "lg", "mt-5 w-full")}>
-          試験を始める
+        <button
+          type="button"
+          onClick={() => void start()}
+          disabled={starting}
+          className={buttonClass("primary", "lg", "mt-5 w-full")}
+        >
+          {starting ? "準備中…" : "試験を始める"}
         </button>
       </Card>
     );

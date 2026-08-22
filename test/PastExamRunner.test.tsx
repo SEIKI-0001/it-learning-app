@@ -5,6 +5,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 
 import PastExamRunner from "@/components/pastExam/PastExamRunner";
 import type { PastExamQuestionView } from "@/lib/pastExam/questionView";
+import { initializeAppState } from "@/lib/storage";
 
 // ============================================================================
 // 練習モード / 本番モードの表示ルールの検証。
@@ -87,6 +88,13 @@ function savedAttempts(): Array<Record<string, unknown>> {
     .flatMap(([, init]) => JSON.parse((init as RequestInit).body as string).attempts);
 }
 
+function assessmentActions(): Array<Record<string, unknown>> {
+  const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  return fetchMock.mock.calls
+    .filter(([url]) => url === "/api/assessment-sessions")
+    .map(([, init]) => JSON.parse((init as RequestInit).body as string));
+}
+
 const EXPLANATION_1 = "これは問1の独自解説です。正答の理由をここで説明します。";
 const EXPLANATION_2 = "これは問2の独自解説です。誤答の理由もここで説明します。";
 
@@ -157,9 +165,10 @@ function renderRunner() {
   );
 }
 
-function startMode(mode: "練習モード" | "本番モード") {
+async function startMode(mode: "練習モード" | "本番モード") {
   const card = screen.getByRole("heading", { name: mode }).closest("section")!;
   fireEvent.click(within(card).getByRole("button", { name: "始める" }));
+  await screen.findByText("問1の問題文");
 }
 
 describe("モード選択", () => {
@@ -173,12 +182,101 @@ describe("モード選択", () => {
     renderRunner();
     expect(screen.getByText(/120分/)).toBeInTheDocument();
   });
+
+  it("共通セッションの開始保存が終わるまで問題を表示しない", async () => {
+    let resolveStart!: (response: Response) => void;
+    const pendingStart = new Promise<Response>((resolve) => {
+      resolveStart = resolve;
+    });
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((url: string) => {
+      if (url === "/api/session/state") {
+        return Promise.resolve(new Response(JSON.stringify({ ok: false }), { status: 401 }));
+      }
+      if (url === "/api/assessment-sessions") return pendingStart;
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    }));
+    renderRunner();
+
+    const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    fireEvent.click(within(card).getByRole("button", { name: "始める" }));
+
+    expect(screen.queryByText("問1の問題文")).not.toBeInTheDocument();
+    await waitFor(() => expect(assessmentActions()).toHaveLength(1));
+    expect(assessmentActions()[0]).toMatchObject({
+      action: "start",
+      source: "official_past",
+      mode: "exam",
+      questionCount: 2,
+    });
+    resolveStart(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    expect(await screen.findByText("問1の問題文")).toBeInTheDocument();
+  });
+});
+
+describe("共通評価セッション", () => {
+  it("本番モードは回答保存、セッション完了、P0進捗の順で確定する", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    await screen.findByText("50%");
+    const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+    const urls = fetchMock.mock.calls.map(([url]) => url);
+    const attemptIndex = urls.lastIndexOf("/api/question-attempts/save");
+    const completionIndex = fetchMock.mock.calls.findIndex(([url, init]) =>
+      url === "/api/assessment-sessions"
+      && JSON.parse((init as RequestInit).body as string).action === "complete"
+    );
+    const progressIndex = urls.lastIndexOf("/api/progress/save");
+
+    expect(attemptIndex).toBeGreaterThan(-1);
+    expect(completionIndex).toBeGreaterThan(attemptIndex);
+    expect(progressIndex).toBeGreaterThan(completionIndex);
+    expect(assessmentActions().find((action) => action.action === "complete"))
+      .toMatchObject({
+        sessionId: expect.any(String),
+        answers: [{
+          canonicalQuestionId: "q1",
+          topicId: "strat-intellectual-property",
+          isCorrect: true,
+        }],
+      });
+  });
+
+  it("明示的な最初からやり直しだけが旧セッションを abandon する", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
+    renderRunner();
+    await startMode("練習モード");
+    await waitFor(() => expect(
+      [...storageValues.keys()].some((key) => key.startsWith("fequest:pastExam")),
+    ).toBe(true));
+    cleanup();
+    renderRunner();
+    const card = screen.getByRole("heading", { name: "練習モード" }).closest("section")!;
+    fireEvent.click(await within(card).findByRole("button", { name: "最初からやり直す" }));
+
+    await waitFor(() => expect(
+      assessmentActions().some((action) => action.action === "abandon"),
+    ).toBe(true));
+    const actions = assessmentActions().filter((action) =>
+      action.action === "abandon" || action.action === "start"
+    );
+    expect(actions.slice(-2).map((action) => action.action)).toEqual(["abandon", "start"]);
+  });
 });
 
 describe("選択肢の並び", () => {
-  it("シャッフルせず、公式どおり ア→イ→ウ→エ の順に出す", () => {
+  it("シャッフルせず、公式どおり ア→イ→ウ→エ の順に出す", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     // 正答は D（エ）だが、並びは公式どおり ア→イ→ウ→エ のまま動かないこと。
     const texts = screen
@@ -195,9 +293,9 @@ describe("選択肢の並び", () => {
     ]);
   });
 
-  it("内部キーA〜Dを画面上は ア〜エ として表示する", () => {
+  it("内部キーA〜Dを画面上は ア〜エ として表示する", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
     for (const label of ["ア", "イ", "ウ", "エ"]) {
       expect(screen.getByText(`選択肢${label}`, { selector: ".sr-only" })).toBeInTheDocument();
     }
@@ -205,15 +303,15 @@ describe("選択肢の並び", () => {
 });
 
 describe("練習モード", () => {
-  it("回答するまでは解説を出さない", () => {
+  it("回答するまでは解説を出さない", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
     expect(screen.queryByText(EXPLANATION_1)).not.toBeInTheDocument();
   });
 
-  it("回答すると正誤と独自解説をその場で出す", () => {
+  it("回答すると正誤と独自解説をその場で出す", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
 
@@ -223,16 +321,16 @@ describe("練習モード", () => {
     expect(screen.getByText(/不正解.*正答: エ/)).toBeInTheDocument();
   });
 
-  it("正解したときは正解と表示する", () => {
+  it("正解したときは正解と表示する", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
     fireEvent.click(screen.getByText("選択肢エの本文"));
     expect(screen.getByText("正解")).toBeInTheDocument();
   });
 
-  it("前後の問題へ移動できる", () => {
+  it("前後の問題へ移動できる", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     expect(screen.getByText("問1の問題文")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "次の問題" }));
@@ -241,15 +339,15 @@ describe("練習モード", () => {
     expect(screen.getByText("問1の問題文")).toBeInTheDocument();
   });
 
-  it("残り時間を表示しない", () => {
+  it("残り時間を表示しない", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
     expect(screen.queryByRole("timer")).not.toBeInTheDocument();
   });
 
   it("一度回答したら別の選択肢へ変更できない", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     // 問1の正答は D。まず誤答の A を選ぶ。
     fireEvent.click(screen.getByText("選択肢アの本文"));
@@ -268,9 +366,9 @@ describe("練習モード", () => {
     expect(JSON.parse(saved![1]).answers[1].selected).toBe("A");
   });
 
-  it("回答後は全選択肢が disabled になる", () => {
+  it("回答後は全選択肢が disabled になる", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     for (const text of ["選択肢アの本文", "選択肢イの本文", "選択肢ウの本文", "選択肢エの本文"]) {
       expect(screen.getByText(text).closest("button")).not.toBeDisabled();
@@ -283,9 +381,9 @@ describe("練習モード", () => {
     }
   });
 
-  it("問題を移動して戻ってきても回答は固定されたまま", () => {
+  it("問題を移動して戻ってきても回答は固定されたまま", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
     fireEvent.click(screen.getByRole("button", { name: "次の問題" }));
@@ -301,10 +399,10 @@ describe("練習モード", () => {
     expect(screen.getByText(/不正解.*正答: エ/)).toBeInTheDocument();
   });
 
-  it("同じ問題の保存リクエストは1回だけ送る", () => {
+  it("同じ問題の保存リクエストは1回だけ送る", async () => {
     window.localStorage.setItem("fequest:userId", "user-1");
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
     // 変更しようとしても、移動して戻ってから押しても、追加で送らない。
@@ -320,7 +418,7 @@ describe("練習モード", () => {
   it("別の問題に答えればその問題ぶんは保存される", async () => {
     window.localStorage.setItem("fequest:userId", "user-1");
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
     fireEvent.click(screen.getByRole("button", { name: "次の問題" }));
@@ -347,7 +445,7 @@ describe("練習モード", () => {
       return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
     }));
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
     fireEvent.click(screen.getByRole("button", { name: "次の問題" }));
@@ -377,7 +475,7 @@ describe("練習モード", () => {
 
   it("回答した内容は途中状態として保存される", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
     fireEvent.click(screen.getByText("選択肢アの本文"));
 
     await waitFor(() => expect(
@@ -390,16 +488,16 @@ describe("練習モード", () => {
 });
 
 describe("本番モード", () => {
-  it("残り時間を表示する", () => {
+  it("残り時間を表示する", async () => {
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
     expect(screen.getByRole("timer")).toBeInTheDocument();
     expect(screen.getByText(/残り 2:00:00|残り 1:59:5\d/)).toBeInTheDocument();
   });
 
-  it("回答しても正答・解説を出さない", () => {
+  it("回答しても正答・解説を出さない", async () => {
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
 
@@ -411,7 +509,7 @@ describe("本番モード", () => {
 
   it("採点前は回答を変更できる（練習モードのような確定はしない）", async () => {
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
     // 練習モードと違い、選択肢は押せるままであること。
@@ -430,9 +528,9 @@ describe("本番モード", () => {
     expect(screen.queryByText("正解")).not.toBeInTheDocument();
   });
 
-  it("採点するまで保存APIへ送らない（1問ごとの送信は練習モードだけ）", () => {
+  it("採点するまで保存APIへ送らない（1問ごとの送信は練習モードだけ）", async () => {
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
     fireEvent.click(screen.getByText("選択肢エの本文"));
@@ -443,7 +541,7 @@ describe("本番モード", () => {
   it("回答を変更して採点すると、変更後の回答で採点される", async () => {
     window.localStorage.setItem("fequest:userId", "user-1");
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
 
     // 問1の正答は D。まず A（誤答）を選び、D（正答）へ変更する。
     fireEvent.click(screen.getByText("選択肢アの本文"));
@@ -457,7 +555,7 @@ describe("本番モード", () => {
 
   it("採点すると正答と解説が見えるようになる", async () => {
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
 
     fireEvent.click(screen.getByText("選択肢アの本文"));
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
@@ -466,18 +564,18 @@ describe("本番モード", () => {
     expect(screen.getByText(EXPLANATION_2)).toBeInTheDocument();
   });
 
-  it("未回答の問題へ移動できる（問題一覧から選ぶ）", () => {
+  it("未回答の問題へ移動できる（問題一覧から選ぶ）", async () => {
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
     fireEvent.click(screen.getByRole("button", { name: "問2（未回答）" }));
     expect(screen.getByText("問2の問題文")).toBeInTheDocument();
   });
 });
 
 describe("図表・出典の表示", () => {
-  it("図表を alt つきで、問題文の後・選択肢の前に表示する", () => {
+  it("図表を alt つきで、問題文の後・選択肢の前に表示する", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     const figure = screen.getByAltText("問1の図表の説明");
     expect(figure).toBeInTheDocument();
@@ -489,9 +587,9 @@ describe("図表・出典の表示", () => {
     expect(figure.compareDocumentPosition(firstChoice) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("出典と、解説が独自である旨を表示する", () => {
+  it("出典と、解説が独自である旨を表示する", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
 
     expect(
       screen.getByText("出典：令和8年度 ITパスポート試験 公開問題 問1"),
@@ -501,9 +599,9 @@ describe("図表・出典の表示", () => {
     ).toBeInTheDocument();
   });
 
-  it("IPA公式PDFへのリンクを出す", () => {
+  it("IPA公式PDFへのリンクを出す", async () => {
     renderRunner();
-    startMode("練習モード");
+    await startMode("練習モード");
     const link = screen.getByRole("link", { name: "IPA公式PDF（問題）を開く" });
     expect(link).toHaveAttribute("href", "https://example.invalid/qs.pdf");
     expect(link).toHaveAttribute("target", "_blank");
@@ -513,7 +611,7 @@ describe("図表・出典の表示", () => {
 describe("結果画面", () => {
   async function gradeWithOneCorrect() {
     renderRunner();
-    startMode("本番モード");
+    await startMode("本番モード");
     // 問1は正答D。ここでは A を選んで誤答にする。
     fireEvent.click(screen.getByText("選択肢アの本文"));
     fireEvent.click(screen.getByRole("button", { name: "次の問題" }));

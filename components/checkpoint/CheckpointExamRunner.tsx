@@ -12,9 +12,12 @@ import {
 import { saveAppState } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
 import {
+  assessmentAnswerIdempotencyKey,
+  completeAssessmentSessionForCurrentSession,
   saveAnswersToDb,
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
+  startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -27,6 +30,8 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   const router = useRouter();
   const [state, setState] = useAppState();
   const [attemptId, setAttemptId] = useState(newAttemptId);
+  const [startedAt, setStartedAt] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
   const [result, setResult] = useState<{ correct: number; total: number; passed: boolean } | null>(
     null,
   );
@@ -54,8 +59,24 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
 
   if (state === undefined || state === null) return <LoadingScreen />;
 
+  async function startExam() {
+    if (starting || startedAt !== null) return;
+    setStarting(true);
+    const nextStartedAt = new Date().toISOString();
+    await startAssessmentSessionForCurrentSession({
+      action: "start",
+      sessionId: attemptId,
+      source: "checkpoint",
+      mode: "exam",
+      startedAt: nextStartedAt,
+      questionCount: exam.questions.length,
+    });
+    setStartedAt(nextStartedAt);
+    setStarting(false);
+  }
+
   async function handleComplete(answers: UserAnswer[]) {
-    if (!state) return;
+    if (!state || startedAt === null) return;
     const tagged = answers.map((answer) => {
       const topic = getTopic(answer.topicId ?? "");
       return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
@@ -68,10 +89,24 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
         selectedAnswer: answer.selectedChoice ?? null,
         isCorrect: answer.isCorrect,
         answeredAt: answer.answeredAt,
+        attemptGroupId: attemptId,
       })),
       state.answers,
     );
     const { exposures, userId } = exposureResult;
+    const completedAt = new Date().toISOString();
+    await completeAssessmentSessionForCurrentSession({
+      action: "complete",
+      sessionId: attemptId,
+      completedAt,
+      answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+        idempotencyKey: assessmentAnswerIdempotencyKey(attemptId, answer.questionId),
+        canonicalQuestionId: answer.questionId,
+        topicId: answer.topicId ?? checkpointId,
+        isCorrect: answer.isCorrect,
+        answeredAt: answer.answeredAt,
+      }]),
+    });
     const next = recordCheckpointExamResult(state, tagged, exposures);
     saveAppState(next);
     setState(next);
@@ -112,6 +147,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
           type="button"
           onClick={() => {
             setAttemptId(newAttemptId());
+            setStartedAt(null);
             setResult(null);
           }}
           className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white"
@@ -143,15 +179,26 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
           </p>
         )}
       </section>
-      <TopicQuiz
-        topicId={checkpointId}
-        questions={exam.questions}
-        topicIdForQuestion={(question) =>
-          (question as (typeof exam.questions)[number]).topicId
-        }
-        onComplete={handleComplete}
-        completeLabel="採点して結果を見る"
-      />
+      {startedAt === null ? (
+        <button
+          type="button"
+          onClick={() => void startExam()}
+          disabled={starting}
+          className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white disabled:opacity-50"
+        >
+          チェックポイント試験を始める
+        </button>
+      ) : (
+        <TopicQuiz
+          topicId={checkpointId}
+          questions={exam.questions}
+          topicIdForQuestion={(question) =>
+            (question as (typeof exam.questions)[number]).topicId
+          }
+          onComplete={handleComplete}
+          completeLabel="採点して結果を見る"
+        />
+      )}
     </div>
   );
 }

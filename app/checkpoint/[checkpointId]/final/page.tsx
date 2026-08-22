@@ -10,8 +10,11 @@ import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { saveAppState } from "@/lib/storage";
 import {
+  assessmentAnswerIdempotencyKey,
+  completeAssessmentSessionForCurrentSession,
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
+  startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
 import { getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
@@ -54,6 +57,7 @@ export default function FinalExamPage() {
   const [exam, setExam] = useState<FinalExam | null>(null);
   const [result, setResult] = useState<FinalExamResult | null>(null);
   const [examError, setExamError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -97,8 +101,9 @@ export default function FinalExamPage() {
   const nextId = getNextCheckpointId(checkpointId);
   const next = nextId ? getCheckpoint(nextId) : null;
 
-  function startExam() {
-    if (!state) return;
+  async function startExam() {
+    if (!state || starting) return;
+    setStarting(true);
     setResult(null);
     setExamError(null);
     try {
@@ -109,6 +114,15 @@ export default function FinalExamPage() {
           attemptId: crypto.randomUUID(),
           recentQuestionIds,
         });
+      const startedAt = new Date().toISOString();
+      await startAssessmentSessionForCurrentSession({
+        action: "start",
+        sessionId: nextExam.attemptId,
+        source: "checkpoint",
+        mode: "exam",
+        startedAt,
+        questionCount: nextExam.questions.length,
+      });
       setExam(nextExam);
       emitMochitEvent("encourage");
     } catch (error) {
@@ -118,6 +132,8 @@ export default function FinalExamPage() {
           ? "この範囲で十分な問題を作れません。対象トピックをもう少し学習してから再挑戦してください。"
           : "問題の準備に失敗しました。",
       );
+    } finally {
+      setStarting(false);
     }
   }
 
@@ -132,12 +148,26 @@ export default function FinalExamPage() {
       selectedAnswer: answer.selectedChoice ?? null,
       isCorrect: answer.isCorrect,
       answeredAt: answer.answeredAt,
+      attemptGroupId: exam.attemptId,
     }));
     const exposureResult = await saveQuestionAttemptsForCurrentSession(
       questionAttempts,
       state.answers,
     );
     const { exposures, userId: uid } = exposureResult;
+    const completedAt = new Date().toISOString();
+    await completeAssessmentSessionForCurrentSession({
+      action: "complete",
+      sessionId: exam.attemptId,
+      completedAt,
+      answers: answers.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+        idempotencyKey: assessmentAnswerIdempotencyKey(exam.attemptId, answer.questionId),
+        canonicalQuestionId: answer.questionId,
+        topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
+        isCorrect: answer.isCorrect,
+        answeredAt: answer.answeredAt,
+      }]),
+    });
     const updated = recordFinalExamAttempt(
       state,
       attempt,
@@ -281,7 +311,8 @@ export default function FinalExamPage() {
               <div className="mt-4 flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={startExam}
+                  onClick={() => void startExam()}
+                  disabled={starting}
                   className="rounded-xl bg-brand-600 px-6 py-3 font-bold text-white active:scale-[0.99]"
                 >
                   もう一度挑戦する
@@ -328,7 +359,8 @@ export default function FinalExamPage() {
             )}
             <button
               type="button"
-              onClick={startExam}
+              onClick={() => void startExam()}
+              disabled={starting}
               className="animate-glow-ring mt-4 w-full rounded-xl bg-rose-500 px-6 py-3 font-bold text-white active:scale-[0.99]"
             >
               突破試験に挑む

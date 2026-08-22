@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import PastExamRunner from "@/components/pastExam/PastExamRunner";
 import type { PastExamQuestionView } from "@/lib/pastExam/questionView";
@@ -45,7 +45,26 @@ beforeAll(() => {
 beforeEach(() => {
   window.localStorage.clear();
   window.localStorage.setItem("fequest:userId", "user-1");
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+  vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url === "/api/session/state") {
+      return new Response(JSON.stringify({ ok: true, userId: "user-1" }), { status: 200 });
+    }
+    if (url === "/api/question-attempts/save") {
+      const attempts = JSON.parse(String(init?.body)).attempts as Array<{ questionId: string }>;
+      return new Response(JSON.stringify({
+        ok: true,
+        userId: "user-1",
+        exposures: attempts.map((attempt) => ({
+          questionId: attempt.questionId,
+          state: "first",
+          attemptedBefore: false,
+          firstAttemptAt: "2026-08-15T00:00:00.000Z",
+          attemptCount: 1,
+        })),
+      }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  }));
 });
 
 afterEach(() => {
@@ -102,9 +121,10 @@ function renderRunner() {
   );
 }
 
-function startExamMode() {
+async function startExamMode() {
   const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
   fireEvent.click(within(card).getByRole("button", { name: "始める" }));
+  await screen.findByText("問1の問題文");
 }
 
 function gradeButton(): HTMLElement {
@@ -112,9 +132,9 @@ function gradeButton(): HTMLElement {
 }
 
 describe("本番モードの採点は1回だけ走る", () => {
-  it("採点ボタンを連打しても保存は1回だけ", () => {
+  it("採点ボタンを連打しても保存は1回だけ", async () => {
     renderRunner();
-    startExamMode();
+    await startExamMode();
 
     const button = gradeButton();
 
@@ -130,9 +150,9 @@ describe("本番モードの採点は1回だけ走る", () => {
     expect(saveCallCount()).toBe(1);
   });
 
-  it("採点すると結果画面へ進み、問題数ぶんの回答だけが送られる", () => {
+  it("採点すると結果画面へ進み、問題数ぶんの回答だけが送られる", async () => {
     renderRunner();
-    startExamMode();
+    await startExamMode();
     fireEvent.click(gradeButton());
 
     // 2問ぶん。未回答も「未回答だった」という事実として送る。
@@ -140,14 +160,21 @@ describe("本番モードの採点は1回だけ走る", () => {
     expect(savedAttempts().map((a) => a.questionId)).toEqual(["q1", "q2"]);
   });
 
-  it("時間切れの自動採点と手動採点が競合しても保存は1回だけ", () => {
+  it("時間切れの自動採点と手動採点が競合しても保存は1回だけ", async () => {
+    const now = Date.now();
     vi.useFakeTimers();
+    vi.setSystemTime(now);
     try {
       renderRunner();
-      startExamMode();
+      const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+      fireEvent.click(within(card).getByRole("button", { name: "始める" }));
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(screen.getByText("問1の問題文")).toBeInTheDocument();
 
       // 制限時間を使い切らせる（タイマーは残り0秒のあいだ毎秒発火しうる）。
-      vi.advanceTimersByTime(121 * 60 * 1000);
+      await act(async () => vi.advanceTimersByTimeAsync(121 * 60 * 1000));
 
       expect(saveCallCount()).toBe(1);
     } finally {
@@ -155,9 +182,9 @@ describe("本番モードの採点は1回だけ走る", () => {
     }
   });
 
-  it("採点処理が走り出したら採点ボタンを無効化する", () => {
+  it("採点処理が走り出したら採点ボタンを無効化する", async () => {
     renderRunner();
-    startExamMode();
+    await startExamMode();
     fireEvent.click(gradeButton());
 
     // 結果画面へ遷移しているので、採点ボタン自体が画面から消えている。
@@ -166,7 +193,7 @@ describe("本番モードの採点は1回だけ走る", () => {
 
   it("やり直すと次のセッションでは再び採点できる", async () => {
     renderRunner();
-    startExamMode();
+    await startExamMode();
     fireEvent.click(gradeButton());
     expect(saveCallCount()).toBe(1);
 
@@ -176,6 +203,7 @@ describe("本番モードの採点は1回だけ走る", () => {
     fireEvent.click(
       within(card).getByRole("button", { name: /始める|最初からやり直す/ }),
     );
+    await screen.findByText("問1の問題文");
     fireEvent.click(gradeButton());
 
     // 別セッションなので、こちらは新たに1回保存される。
@@ -184,16 +212,17 @@ describe("本番モードの採点は1回だけ走る", () => {
 });
 
 describe("練習モードの保存は従来どおり", () => {
-  it("1問ごとに保存し、同じ問題を二度送らない", () => {
+  it("1問ごとに保存し、同じ問題を二度送らない", async () => {
     renderRunner();
     const card = screen.getByRole("heading", { name: "練習モード" }).closest("section")!;
     fireEvent.click(within(card).getByRole("button", { name: "始める" }));
+    await screen.findByText("問1の問題文");
 
     fireEvent.click(screen.getByText("1のアの本文").closest("button")!);
     // 回答は最初の1回で確定するので、押し直しても送られない。
     fireEvent.click(screen.getByText("1のイの本文").closest("button")!);
 
-    expect(saveCallCount()).toBe(1);
+    await waitFor(() => expect(saveCallCount()).toBe(1));
     expect(savedAttempts()).toHaveLength(1);
   });
 });

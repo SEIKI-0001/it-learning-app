@@ -36,7 +36,7 @@ export type PastExamAnswer = {
 export type PastExamSession = {
   /** 保存形式の版。読み込み側の互換判定に使う。 */
   schemaVersion: 1;
-  /** この演習1回を識別するID。question_attempts の attempt_group_id に使う。 */
+  /** この演習1回を識別するUUID。共通評価セッションと attempt_group_id に使う。 */
   sessionId: string;
   year: number;
   mode: PastExamMode;

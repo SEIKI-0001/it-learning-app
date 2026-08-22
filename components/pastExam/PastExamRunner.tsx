@@ -38,8 +38,12 @@ import {
 } from "@/lib/pastExam/session";
 import { loadAppState, saveAppState } from "@/lib/storage";
 import {
+  abandonAssessmentSessionForCurrentSession,
+  assessmentAnswerIdempotencyKey,
+  completeAssessmentSessionForCurrentSession,
   resolveQuestionExposureIdentity,
   saveProgressToDb,
+  startAssessmentSessionForCurrentSession,
   type QuestionExposureIdentity,
 } from "@/lib/userSession";
 import type { ChoiceKey } from "@/types";
@@ -76,6 +80,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   // state（submitting）はボタンを無効化する表示のためだけに使う。
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
+  const [startingMode, setStartingMode] = useState<PastExamMode | null>(null);
   const [identity, setIdentity] = useState<QuestionExposureIdentity | null>(null);
   useEffect(() => {
     void resolveQuestionExposureIdentity().then(setIdentity);
@@ -126,25 +131,55 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   }, []);
 
   const start = useCallback(
-    (mode: PastExamMode) => {
+    async (mode: PastExamMode) => {
+      if (startingMode !== null) return;
+      setStartingMode(mode);
       const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
       const next = existing ?? createSession(year, mode);
       allowSubmit();
+      await startAssessmentSessionForCurrentSession({
+        action: "start",
+        sessionId: next.sessionId,
+        source: "official_past",
+        mode: next.mode,
+        startedAt: next.startedAt,
+        questionCount: questions.length,
+      });
       persist(next);
       setPhase("running");
+      setStartingMode(null);
     },
-    [sessionUserId, userReady, year, persist, allowSubmit],
+    [allowSubmit, persist, questions.length, sessionUserId, startingMode, userReady, year],
   );
 
   const restart = useCallback(
-    (mode: PastExamMode) => {
+    async (mode: PastExamMode) => {
+      if (startingMode !== null) return;
+      setStartingMode(mode);
+      const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
+      if (existing) {
+        await abandonAssessmentSessionForCurrentSession({
+          action: "abandon",
+          sessionId: existing.sessionId,
+          completedAt: new Date().toISOString(),
+        });
+      }
       if (userReady) clearSession(sessionUserId, year, mode);
       const next = createSession(year, mode);
       allowSubmit();
+      await startAssessmentSessionForCurrentSession({
+        action: "start",
+        sessionId: next.sessionId,
+        source: "official_past",
+        mode: next.mode,
+        startedAt: next.startedAt,
+        questionCount: questions.length,
+      });
       persist(next);
       setPhase("running");
+      setStartingMode(null);
     },
-    [sessionUserId, userReady, year, persist, allowSubmit],
+    [allowSubmit, persist, questions.length, sessionUserId, startingMode, userReady, year],
   );
 
   const finish = useCallback(
@@ -201,6 +236,27 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         }
       }
 
+      const completedAt = new Date().toISOString();
+      await completeAssessmentSessionForCurrentSession({
+        action: "complete",
+        sessionId: current.sessionId,
+        completedAt,
+        answers: questions.flatMap((question) => {
+          const answer = current.answers[question.questionNumber];
+          if (!answer || answer.selected === null) return [];
+          return [{
+            idempotencyKey: assessmentAnswerIdempotencyKey(
+              current.sessionId,
+              question.id,
+            ),
+            canonicalQuestionId: question.id,
+            topicId: question.topicId,
+            isCorrect: answer.selected === question.correctChoice,
+            answeredAt: answer.answeredAt,
+          }];
+        }),
+      });
+
       if (currentState) {
         const next = recordPastExamLearningResult(
           currentState,
@@ -253,8 +309,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     <ModeSelect
       total={questions.length}
       resumable={resumable}
-      onStart={start}
-      onRestart={restart}
+      onStart={(mode) => void start(mode)}
+      onRestart={(mode) => void restart(mode)}
+      startingMode={startingMode}
     />
   );
 }
@@ -268,11 +325,13 @@ function ModeSelect({
   resumable,
   onStart,
   onRestart,
+  startingMode,
 }: {
   total: number;
   resumable: Record<PastExamMode, boolean>;
   onStart: (mode: PastExamMode) => void;
   onRestart: (mode: PastExamMode) => void;
+  startingMode: PastExamMode | null;
 }) {
   return (
     <div className="space-y-4">
@@ -288,6 +347,7 @@ function ModeSelect({
         resumable={resumable.practice}
         onStart={() => onStart("practice")}
         onRestart={() => onRestart("practice")}
+        disabled={startingMode !== null}
       />
       <ModeCard
         title="本番モード"
@@ -300,6 +360,7 @@ function ModeSelect({
         resumable={resumable.exam}
         onStart={() => onStart("exam")}
         onRestart={() => onRestart("exam")}
+        disabled={startingMode !== null}
       />
     </div>
   );
@@ -312,6 +373,7 @@ function ModeCard({
   resumable,
   onStart,
   onRestart,
+  disabled,
 }: {
   title: string;
   description: string;
@@ -319,6 +381,7 @@ function ModeCard({
   resumable: boolean;
   onStart: () => void;
   onRestart: () => void;
+  disabled: boolean;
 }) {
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-4">
@@ -335,9 +398,11 @@ function ModeCard({
         ))}
       </ul>
       <div className="mt-4 flex flex-wrap gap-2">
-        <Button onClick={onStart}>{resumable ? "続きから再開する" : "始める"}</Button>
+        <Button onClick={onStart} disabled={disabled}>
+          {resumable ? "続きから再開する" : "始める"}
+        </Button>
         {resumable && (
-          <Button variant="secondary" onClick={onRestart}>
+          <Button variant="secondary" onClick={onRestart} disabled={disabled}>
             最初からやり直す
           </Button>
         )}

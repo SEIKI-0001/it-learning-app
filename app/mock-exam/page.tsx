@@ -18,9 +18,13 @@ import {
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import {
+  assessmentAnswerIdempotencyKey,
+  completeAssessmentSessionForCurrentSession,
+  createAssessmentSessionId,
   saveAnswersToDb,
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
+  startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import PageHeader from "@/components/ui/PageHeader";
@@ -38,6 +42,10 @@ export default function MockExamPage() {
   const [state, setState] = useAppState();
   const [exam, setExam] = useState<MockExam | null>(null);
   const [result, setResult] = useState<MockExamResult | null>(null);
+  const [assessment, setAssessment] = useState<{ sessionId: string; startedAt: string } | null>(
+    null,
+  );
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -47,15 +55,29 @@ export default function MockExamPage() {
   const appState: AppState = state;
   const insights = result ? buildMockExamInsights(result, getAllTopics()) : null;
 
-  function startExam() {
+  async function startExam() {
+    if (starting) return;
+    setStarting(true);
     // 同じ挑戦中は設問順を固定し、再挑戦時だけ新しい構成にする。
-    const seed = `${new Date().toISOString()}:${appState.answers.length}`;
-    setExam(generateMockExam(appState, seed));
+    const startedAt = new Date().toISOString();
+    const sessionId = createAssessmentSessionId();
+    const nextExam = generateMockExam(appState, `${startedAt}:${appState.answers.length}`);
+    await startAssessmentSessionForCurrentSession({
+      action: "start",
+      sessionId,
+      source: "mock",
+      mode: "exam",
+      startedAt,
+      questionCount: nextExam.questions.length,
+    });
+    setAssessment({ sessionId, startedAt });
+    setExam(nextExam);
     setResult(null);
+    setStarting(false);
   }
 
   async function handleComplete(answers: UserAnswer[]) {
-    if (!exam) return;
+    if (!exam || !assessment) return;
     const now = new Date();
     const tagged = answers.map((answer) => {
       const topicId = exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId;
@@ -75,12 +97,29 @@ export default function MockExamPage() {
       isCorrect: answer.isCorrect,
       mistakeReason: answer.isCorrect ? null : "模試の誤答",
       answeredAt: answer.answeredAt,
+      attemptGroupId: assessment.sessionId,
     }));
     const exposureResult = await saveQuestionAttemptsForCurrentSession(
       questionAttempts,
       appState.answers,
     );
     const { exposures, userId } = exposureResult;
+    const completedAt = now.toISOString();
+    await completeAssessmentSessionForCurrentSession({
+      action: "complete",
+      sessionId: assessment.sessionId,
+      completedAt,
+      answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+        idempotencyKey: assessmentAnswerIdempotencyKey(
+          assessment.sessionId,
+          answer.questionId,
+        ),
+        canonicalQuestionId: answer.questionId,
+        topicId: answer.topicId ?? "mock-exam",
+        isCorrect: answer.isCorrect,
+        answeredAt: answer.answeredAt,
+      }]),
+    });
     const next = recordMockExamResult(appState, tagged, scored, exposures, now);
     saveAppState(next);
     setState(next);
@@ -126,7 +165,8 @@ export default function MockExamPage() {
             </div>
             <button
               type="button"
-              onClick={startExam}
+              onClick={() => void startExam()}
+              disabled={starting}
               className={buttonClass("primary", "lg", "mt-4 w-full")}
             >
               模試を始める
@@ -208,7 +248,12 @@ export default function MockExamPage() {
               >
                 復習する
               </Link>
-              <button type="button" onClick={startExam} className={buttonClass("soft", "md")}>
+              <button
+                type="button"
+                onClick={() => void startExam()}
+                disabled={starting}
+                className={buttonClass("soft", "md")}
+              >
                 もう一度挑戦
               </button>
             </div>

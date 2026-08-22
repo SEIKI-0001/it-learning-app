@@ -1,0 +1,245 @@
+// @vitest-environment jsdom
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type { AppState, UserAnswer } from "@/types";
+
+const harness = vi.hoisted(() => ({
+  state: undefined as unknown,
+  setState: vi.fn(),
+  replace: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: harness.replace }),
+  useParams: () => ({ checkpointId: "cp1" }),
+}));
+
+vi.mock("@/lib/useAppState", () => ({
+  useAppState: () => [harness.state, harness.setState],
+}));
+
+vi.mock("@/lib/useBadgeSync", () => ({ useBadgeSync: () => undefined }));
+vi.mock("@/lib/badgeSignals", () => ({ getClientBadgeSignals: () => undefined }));
+vi.mock("@/components/checkpoints/FinalExamCard", () => ({
+  default: () => <div data-testid="final-exam-card" />,
+}));
+vi.mock("@/components/BottomNav", () => ({ default: () => null }));
+vi.mock("@/components/LoadingScreen", () => ({ default: () => <div>loading</div> }));
+vi.mock("@/components/billing/RecordingLockNotice", () => ({ default: () => null }));
+vi.mock("@/lib/checkpoints", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/checkpoints")>();
+  return {
+    ...actual,
+    buildCheckpointGate: () => ({
+      finalExamUnlocked: true,
+      finalExamPassed: false,
+      missingBadges: [],
+    }),
+  };
+});
+
+vi.mock("@/components/learn/TopicQuiz", () => ({
+  default: ({
+    questions,
+    onComplete,
+  }: {
+    questions: Array<{ id: string }>;
+    onComplete: (answers: UserAnswer[]) => void | Promise<void>;
+  }) => (
+    <div data-testid="topic-quiz">
+      <span>{questions[0]?.id}</span>
+      <button
+        type="button"
+        onClick={() => void onComplete(questions.slice(0, 2).map((question, index) => ({
+          questionId: question.id,
+          selectedChoice: index === 0 ? "A" : undefined,
+          isCorrect: index === 0,
+          answeredAt: "2026-08-23T00:05:00.000Z",
+          tag: question.id,
+        })))}
+      >
+        test-complete
+      </button>
+    </div>
+  ),
+}));
+
+import MockExamPage from "@/app/mock-exam/page";
+import CheckpointExamRunner from "@/components/checkpoint/CheckpointExamRunner";
+import FinalExamPage from "@/app/checkpoint/[checkpointId]/final/page";
+
+const CP1_TOPICS = [
+  "tech-binary-data",
+  "tech-computer-core",
+  "mgmt-development-process",
+  "strat-enterprise-activities",
+];
+
+function makeState(): AppState {
+  return {
+    profile: {
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    },
+    progress: {
+      level: 1,
+      exp: 0,
+      streakCount: 0,
+      weakTags: [],
+      completedTopics: CP1_TOPICS,
+      topicMastery: {},
+      topicMasteryStats: {},
+      reviewQueue: [],
+      weeklyPlan: null,
+      currentDay: 1,
+      completedDays: [],
+    },
+    answers: [],
+  };
+}
+
+type Deferred = {
+  promise: Promise<Response>;
+  resolve: (response: Response) => void;
+};
+
+function deferredResponse(): Deferred {
+  let resolve!: (response: Response) => void;
+  const promise = new Promise<Response>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+function requestBodies(path: string): Array<Record<string, unknown>> {
+  const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  return fetchMock.mock.calls
+    .filter(([url]) => url === path)
+    .map(([, init]) => JSON.parse(String((init as RequestInit | undefined)?.body)));
+}
+
+function installFetch(startResponse?: Deferred) {
+  vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url === "/api/assessment-sessions") {
+      const action = JSON.parse(String(init?.body)).action;
+      if (action === "start" && startResponse) return startResponse.promise;
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+    if (url === "/api/question-attempts/save") {
+      const attempts = JSON.parse(String(init?.body)).attempts as Array<{ questionId: string }>;
+      return new Response(JSON.stringify({
+        ok: true,
+        userId: "user-1",
+        exposures: attempts.map((attempt) => ({
+          questionId: attempt.questionId,
+          state: "first",
+          attemptedBefore: false,
+          firstAttemptAt: "2026-08-23T00:05:00.000Z",
+          attemptCount: 1,
+        })),
+      }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  }));
+}
+
+function expectCompletionOrder() {
+  const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  const calls = fetchMock.mock.calls;
+  const attemptIndex = calls.findIndex(([url]) => url === "/api/question-attempts/save");
+  const completionIndex = calls.findIndex(([url, init]) =>
+    url === "/api/assessment-sessions"
+      && JSON.parse(String((init as RequestInit).body)).action === "complete"
+  );
+  const progressIndex = calls.findIndex(([url]) => url === "/api/progress/save");
+  expect(attemptIndex).toBeGreaterThan(-1);
+  expect(completionIndex).toBeGreaterThan(attemptIndex);
+  expect(progressIndex).toBeGreaterThan(completionIndex);
+
+  const completion = requestBodies("/api/assessment-sessions")
+    .find((body) => body.action === "complete");
+  expect(completion?.answers).toEqual([
+    expect.objectContaining({
+      idempotencyKey: expect.stringMatching(/^assessment:/),
+      isCorrect: true,
+    }),
+  ]);
+}
+
+beforeEach(() => {
+  harness.state = makeState();
+  harness.setState.mockReset();
+  harness.replace.mockReset();
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+describe("assessment delivery runners", () => {
+  it("mock persists start before questions and completes after classification", async () => {
+    const start = deferredResponse();
+    installFetch(start);
+    render(<MockExamPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: /模試を始める/ }));
+    expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
+    await waitFor(() => expect(requestBodies("/api/assessment-sessions")[0]).toMatchObject({
+      action: "start",
+      source: "mock",
+      mode: "exam",
+      questionCount: 100,
+    }));
+    start.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    await waitFor(expectCompletionOrder);
+  });
+
+  it("checkpoint evidence starts explicitly and completes before P0", async () => {
+    const start = deferredResponse();
+    installFetch(start);
+    render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />);
+
+    expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "チェックポイント試験を始める" }));
+    expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
+    await waitFor(() => expect(requestBodies("/api/assessment-sessions")[0]).toMatchObject({
+      action: "start",
+      source: "checkpoint",
+      mode: "exam",
+      questionCount: 12,
+    }));
+    start.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    await waitFor(expectCompletionOrder);
+  });
+
+  it("checkpoint final persists start before questions and completes before P0", async () => {
+    const start = deferredResponse();
+    installFetch(start);
+    render(<FinalExamPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "突破試験に挑む" }));
+    expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
+    await waitFor(() => expect(requestBodies("/api/assessment-sessions")[0]).toMatchObject({
+      action: "start",
+      source: "checkpoint",
+      mode: "exam",
+      questionCount: 6,
+    }));
+    start.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    await waitFor(expectCompletionOrder);
+  });
+});
