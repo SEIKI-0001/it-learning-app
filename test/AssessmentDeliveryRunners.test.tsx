@@ -51,13 +51,15 @@ vi.mock("@/components/learn/TopicQuiz", () => ({
       <span>{questions[0]?.id}</span>
       <button
         type="button"
-        onClick={() => void onComplete(questions.slice(0, 2).map((question, index) => ({
-          questionId: question.id,
-          selectedChoice: index === 0 ? "A" : undefined,
-          isCorrect: index === 0,
-          answeredAt: "2026-08-23T00:05:00.000Z",
-          tag: question.id,
-        })))}
+        onClick={() => void Promise.resolve(onComplete(
+          questions.slice(0, 2).map((question, index) => ({
+            questionId: question.id,
+            selectedChoice: index === 0 ? "A" : undefined,
+            isCorrect: index === 0,
+            answeredAt: "2026-08-23T00:05:00.000Z",
+            tag: question.id,
+          })),
+        )).catch(() => undefined)}
       >
         test-complete
       </button>
@@ -121,12 +123,32 @@ function requestBodies(path: string): Array<Record<string, unknown>> {
     .map(([, init]) => JSON.parse(String((init as RequestInit | undefined)?.body)));
 }
 
-function installFetch(startResponse?: Deferred) {
+function assessmentSuccess(action: string, sessionId: string): Response {
+  const status = action === "start"
+    ? "in_progress"
+    : action === "complete"
+      ? "completed"
+      : "abandoned";
+  return new Response(JSON.stringify({
+    ok: true,
+    session: { sessionId, status },
+  }), { status: 200 });
+}
+
+function installFetch(
+  startResponse?: Deferred,
+  failures: Partial<Record<"start" | "complete" | "abandon", number>> = {},
+) {
   vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
     if (url === "/api/assessment-sessions") {
-      const action = JSON.parse(String(init?.body)).action;
+      const body = JSON.parse(String(init?.body)) as { action: "start" | "complete" | "abandon"; sessionId: string };
+      const action = body.action;
       if (action === "start" && startResponse) return startResponse.promise;
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      if ((failures[action] ?? 0) > 0) {
+        failures[action] = (failures[action] ?? 0) - 1;
+        return new Response(JSON.stringify({ error: "persistence_failed" }), { status: 503 });
+      }
+      return assessmentSuccess(action, body.sessionId);
     }
     if (url === "/api/question-attempts/save") {
       const attempts = JSON.parse(String(init?.body)).attempts as Array<{ questionId: string }>;
@@ -195,7 +217,8 @@ describe("assessment delivery runners", () => {
       mode: "exam",
       questionCount: 100,
     }));
-    start.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const startBody = requestBodies("/api/assessment-sessions")[0];
+    start.resolve(assessmentSuccess("start", String(startBody.sessionId)));
     expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
@@ -216,7 +239,8 @@ describe("assessment delivery runners", () => {
       mode: "exam",
       questionCount: 12,
     }));
-    start.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const startBody = requestBodies("/api/assessment-sessions")[0];
+    start.resolve(assessmentSuccess("start", String(startBody.sessionId)));
     expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
@@ -236,10 +260,81 @@ describe("assessment delivery runners", () => {
       mode: "exam",
       questionCount: 6,
     }));
-    start.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const startBody = requestBodies("/api/assessment-sessions")[0];
+    start.resolve(assessmentSuccess("start", String(startBody.sessionId)));
     expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
     await waitFor(expectCompletionOrder);
+  });
+
+  it.each([
+    ["mock", () => render(<MockExamPage />), /模試を始める/],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+    ],
+    ["checkpoint final", () => render(<FinalExamPage />), /突破試験に挑む/],
+  ])("%s keeps questions unmounted when start persistence fails and allows retry", async (
+    _name,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch(undefined, { start: 1 });
+    renderRunner();
+
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("開始");
+    expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    const starts = requestBodies("/api/assessment-sessions")
+      .filter((body) => body.action === "start");
+    expect(starts).toHaveLength(2);
+    expect(starts[1]).toMatchObject({
+      sessionId: starts[0].sessionId,
+      startedAt: starts[0].startedAt,
+      questionCount: starts[0].questionCount,
+    });
+  });
+
+  it.each([
+    ["mock", () => render(<MockExamPage />), /模試を始める/],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+    ],
+    ["checkpoint final", () => render(<FinalExamPage />), /突破試験に挑む/],
+  ])("%s does not write P0 or show a result when completion fails and allows retry", async (
+    _name,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch(undefined, { complete: 1 });
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.getByTestId("topic-quiz")).toBeInTheDocument();
+    expect(harness.setState).not.toHaveBeenCalled();
+    expect(requestBodies("/api/progress/save")).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    await waitFor(() => expect(requestBodies("/api/progress/save")).toHaveLength(1));
+    const completions = requestBodies("/api/assessment-sessions")
+      .filter((body) => body.action === "complete");
+    expect(completions).toHaveLength(2);
+    expect(completions[1]).toMatchObject({
+      sessionId: completions[0].sessionId,
+      completedAt: completions[0].completedAt,
+      answers: completions[0].answers,
+    });
   });
 });

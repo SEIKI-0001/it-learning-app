@@ -27,7 +27,7 @@ import Card from "@/components/ui/Card";
 //   - 結果画面では、誤答が多いトピックを復習先として上位から並べる。
 //
 // 採点はクライアントで完結する（lib/themeExam.ts の純関数を使う）。
-// 保存に失敗しても、結果の表示と復習の導線は止めない。
+// 共通評価セッションの保存が確定してから結果と復習導線へ進む。
 
 type Props = {
   examId: string;
@@ -62,6 +62,8 @@ export default function ThemeExamRunner({
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [result, setResult] = useState<ThemeExamResult | null>(null);
   const [starting, setStarting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [persistenceError, setPersistenceError] = useState<string | null>(null);
 
   // この演習1回を識別するID。question_attempts の attempt_group_id に使う。
   const sessionIdRef = useRef<string>("");
@@ -70,6 +72,7 @@ export default function ThemeExamRunner({
   // 問題ごとに費やした秒数。戻って解き直した場合は累計する。
   const timeSpentRef = useRef<Record<number, number>>({});
   const submittedRef = useRef(false);
+  const pendingAnsweredAtRef = useRef<string | null>(null);
 
   // 選択肢の並びは開始時に1度だけ決める。表示のたびに入れ替わると見直しができない。
   const order = useMemo(
@@ -92,21 +95,26 @@ export default function ThemeExamRunner({
   const start = async () => {
     if (starting) return;
     setStarting(true);
+    setPersistenceError(null);
     submittedRef.current = false;
-    sessionIdRef.current = createAssessmentSessionId();
-    const startedAt = new Date();
-    startedAtRef.current = startedAt.getTime();
-    await startAssessmentSessionForCurrentSession({
-      action: "start",
-      sessionId: sessionIdRef.current,
-      source: "summary",
-      mode: "exam",
-      startedAt: startedAt.toISOString(),
-      questionCount: questions.length,
-    });
-    questionStartedAtRef.current = Date.now();
-    setPhase("running");
-    setStarting(false);
+    if (sessionIdRef.current === "") sessionIdRef.current = createAssessmentSessionId();
+    if (startedAtRef.current === 0) startedAtRef.current = Date.now();
+    try {
+      await startAssessmentSessionForCurrentSession({
+        action: "start",
+        sessionId: sessionIdRef.current,
+        source: "summary",
+        mode: "exam",
+        startedAt: new Date(startedAtRef.current).toISOString(),
+        questionCount: questions.length,
+      });
+      questionStartedAtRef.current = Date.now();
+      setPhase("running");
+    } catch {
+      setPersistenceError("評価セッションを開始できませんでした。もう一度お試しください。");
+    } finally {
+      setStarting(false);
+    }
   };
 
   const move = (to: number) => {
@@ -117,6 +125,8 @@ export default function ThemeExamRunner({
   const finish = async () => {
     if (submittedRef.current) return;
     submittedRef.current = true;
+    setSubmitting(true);
+    setPersistenceError(null);
     commitElapsed();
     const graded = gradeThemeExam({
       sessionId: sessionIdRef.current,
@@ -125,46 +135,62 @@ export default function ThemeExamRunner({
       answers,
       passRate,
     });
-    setResult(graded);
-    setPhase("result");
-
-    const answeredAt = new Date().toISOString();
-    const attempts = graded.questions.map((question) => ({
-      questionId: question.questionId,
-      questionType: "theme_exam" as const,
-      topicId: question.topicId,
-      selectedAnswer: question.selected,
-      isCorrect: question.isCorrect,
-      timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
-      answeredAt,
-      attemptGroupId: sessionIdRef.current,
-    }));
-    const exposureResult = await saveQuestionAttemptsForCurrentSession(
-      attempts,
-      appState?.answers ?? [],
-    );
-    const { exposures, userId } = exposureResult;
-    await completeAssessmentSessionForCurrentSession({
-      action: "complete",
-      sessionId: sessionIdRef.current,
-      completedAt: answeredAt,
-      answers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
-        idempotencyKey: assessmentAnswerIdempotencyKey(
-          sessionIdRef.current,
-          question.questionId,
-        ),
-        canonicalQuestionId: question.questionId,
+    let factsCommitted = false;
+    try {
+      const answeredAt = pendingAnsweredAtRef.current ?? new Date().toISOString();
+      pendingAnsweredAtRef.current = answeredAt;
+      const attempts = graded.questions.map((question) => ({
+        questionId: question.questionId,
+        questionType: "theme_exam" as const,
         topicId: question.topicId,
+        selectedAnswer: question.selected,
         isCorrect: question.isCorrect,
+        timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
         answeredAt,
-      }]),
-    });
-    if (!appState) return;
-    const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
-    saveAppState(next);
-    setAppState(next);
-    if (userId) {
-      saveProgressToDb(userId, next.progress);
+        attemptGroupId: sessionIdRef.current,
+      }));
+      const exposureResult = await saveQuestionAttemptsForCurrentSession(
+        attempts,
+        appState?.answers ?? [],
+      );
+      const { exposures, userId } = exposureResult;
+      await completeAssessmentSessionForCurrentSession({
+        action: "complete",
+        sessionId: sessionIdRef.current,
+        completedAt: answeredAt,
+        answers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
+          idempotencyKey: assessmentAnswerIdempotencyKey(
+            sessionIdRef.current,
+            question.questionId,
+          ),
+          canonicalQuestionId: question.questionId,
+          topicId: question.topicId,
+          isCorrect: question.isCorrect,
+          answeredAt,
+        }]),
+      });
+      factsCommitted = true;
+      pendingAnsweredAtRef.current = null;
+      if (appState) {
+        const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
+        saveAppState(next);
+        setAppState(next);
+        if (userId) {
+          saveProgressToDb(userId, next.progress);
+        }
+      }
+      setResult(graded);
+      setPhase("result");
+    } catch {
+      if (factsCommitted) {
+        setResult(graded);
+        setPhase("result");
+        return;
+      }
+      submittedRef.current = false;
+      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -173,6 +199,11 @@ export default function ThemeExamRunner({
     setAnswers({});
     setIndex(0);
     setResult(null);
+    setPersistenceError(null);
+    setSubmitting(false);
+    sessionIdRef.current = "";
+    startedAtRef.current = 0;
+    pendingAnsweredAtRef.current = null;
     timeSpentRef.current = {};
     setPhase("intro");
   };
@@ -191,6 +222,11 @@ export default function ThemeExamRunner({
           <li>・前後の問題へ移動して見直せます</li>
           <li>・組合せ型・計算・資料の読み取りを含みます</li>
         </ul>
+        {persistenceError && (
+          <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+            {persistenceError}
+          </p>
+        )}
         <button
           type="button"
           onClick={() => void start()}
@@ -211,6 +247,11 @@ export default function ThemeExamRunner({
 
     return (
       <div className="space-y-4">
+        {persistenceError && (
+          <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+            {persistenceError}
+          </p>
+        )}
         <Card as="section" className="p-4">
           <div className="flex items-center justify-between text-xs text-gray-600">
             <span className="font-semibold text-gray-900">
@@ -237,6 +278,7 @@ export default function ThemeExamRunner({
                 <li key={choice.key}>
                   <button
                     type="button"
+                    disabled={submitting}
                     onClick={() =>
                       setAnswers((prev) => ({
                         ...prev,
@@ -271,19 +313,25 @@ export default function ThemeExamRunner({
           <button
             type="button"
             onClick={() => move(index - 1)}
-            disabled={index === 0}
+            disabled={index === 0 || submitting}
             className={buttonClass("secondary", "md", "flex-1")}
           >
             前へ
           </button>
           {isLast ? (
-            <button type="button" onClick={finish} className={buttonClass("primary", "md", "flex-1")}>
-              採点する
+            <button
+              type="button"
+              onClick={() => void finish()}
+              disabled={submitting}
+              className={buttonClass("primary", "md", "flex-1")}
+            >
+              {submitting ? "保存中…" : "採点する"}
             </button>
           ) : (
             <button
               type="button"
               onClick={() => move(index + 1)}
+              disabled={submitting}
               className={buttonClass("primary", "md", "flex-1")}
             >
               次へ

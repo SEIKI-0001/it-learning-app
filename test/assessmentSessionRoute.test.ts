@@ -153,6 +153,84 @@ describe("POST /api/assessment-sessions", () => {
     expect(mocks.abandonAssessmentSession).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["date only", "2026-08-23"],
+    ["missing timezone", "2026-08-23T01:00:00"],
+    ["locale string", "August 23, 2026 01:00 UTC"],
+    ["invalid day", "2026-02-30T01:00:00Z"],
+    ["invalid leap day", "2025-02-29T01:00:00Z"],
+    ["invalid hour", "2026-08-23T24:00:00Z"],
+    ["invalid minute", "2026-08-23T01:60:00Z"],
+    ["invalid second", "2026-08-23T01:00:60Z"],
+    ["invalid offset hour", "2026-08-23T01:00:00+15:00"],
+    ["invalid maximum offset minutes", "2026-08-23T01:00:00+14:01"],
+  ])("rejects a non-explicit or impossible ISO timestamp: %s", async (_name, startedAt) => {
+    const response = await request({
+      action: "start",
+      sessionId: SESSION_ID,
+      source: "mock",
+      mode: "exam",
+      startedAt,
+      questionCount: 100,
+    });
+
+    expect(response.status).toBe(400);
+    expect(mocks.startAssessmentSession).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "2026-08-23T01:00:00Z",
+    "2026-08-23T01:00:00.1Z",
+    "2026-08-23T10:00:00+09:00",
+    "2026-08-22T11:00:00-14:00",
+  ])("accepts an explicit valid ISO timestamp: %s", async (startedAt) => {
+    const response = await request({
+      action: "start",
+      sessionId: SESSION_ID,
+      source: "mock",
+      mode: "exam",
+      startedAt,
+      questionCount: 100,
+    });
+
+    expect(response.status).toBe(200);
+    expect(mocks.startAssessmentSession).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({ startedAt }),
+    }));
+  });
+
+  it.each([
+    ["complete timestamp", {
+      action: "complete",
+      sessionId: SESSION_ID,
+      completedAt: "2026-08-23T02:00:00",
+      answers: [],
+    }],
+    ["answer timestamp", {
+      action: "complete",
+      sessionId: SESSION_ID,
+      completedAt: "2026-08-23T02:00:00Z",
+      answers: [{
+        idempotencyKey: `${SESSION_ID}:q1`,
+        canonicalQuestionId: "tech-binary-data-ex1",
+        topicId: "tech-binary-data",
+        isCorrect: true,
+        answeredAt: "2026-02-30T01:00:00Z",
+      }],
+    }],
+    ["abandon timestamp", {
+      action: "abandon",
+      sessionId: SESSION_ID,
+      completedAt: "2026-08-23",
+    }],
+  ])("applies strict timestamp parsing to every lifecycle timestamp: %s", async (_name, body) => {
+    const response = await request(body);
+
+    expect(response.status).toBe(400);
+    expect(mocks.completeAssessmentSession).not.toHaveBeenCalled();
+    expect(mocks.abandonAssessmentSession).not.toHaveBeenCalled();
+  });
+
   it("rejects an unauthenticated request without opening the service client", async () => {
     mocks.getInternalUserId.mockResolvedValue(null);
 

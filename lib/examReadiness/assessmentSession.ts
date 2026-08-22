@@ -88,6 +88,9 @@ export async function startAssessmentSession(args: {
 }): Promise<AssessmentSession> {
   const existing = await readSession(args.supabase, args.userId, args.input.sessionId);
   if (existing !== null) {
+    if (existing.status !== "in_progress") {
+      throw sessionConflict("Assessment session is already terminal");
+    }
     assertSameStartFrame(existing, args.input);
     return existing;
   }
@@ -112,6 +115,9 @@ export async function startAssessmentSession(args: {
     if (errorCode(response.error) === "23505") {
       const concurrent = await readSession(args.supabase, args.userId, args.input.sessionId);
       if (concurrent !== null) {
+        if (concurrent.status !== "in_progress") {
+          throw sessionConflict("Assessment session is already terminal");
+        }
         assertSameStartFrame(concurrent, args.input);
         return concurrent;
       }
@@ -143,7 +149,11 @@ export async function abandonAssessmentSession(args: {
 
   const existing = await readSession(args.supabase, args.userId, args.input.sessionId);
   if (existing === null) throw sessionNotFound();
-  if (existing.status === "abandoned" && existing.completedAt === args.input.completedAt) {
+  if (
+    existing.status === "abandoned"
+    && existing.completedAt !== null
+    && isSameInstant(existing.completedAt, args.input.completedAt)
+  ) {
     return existing;
   }
   throw sessionConflict("Assessment session is already terminal");
@@ -256,11 +266,12 @@ async function readAuthoritativeAttempts(
     .eq("user_id", userId)
     .eq("attempt_group_id", sessionId) as QueryResult;
   if (response.error || !Array.isArray(response.data)) {
-    // Classification is allowed to degrade to unknown. Official correctness still requires
-    // a matching authoritative row and is rejected later rather than trusting the client.
-    return [];
+    throw persistenceFailed("Could not read authoritative question attempts");
   }
-  return response.data.flatMap((value) => isAttemptRow(value) ? [value] : []);
+  if (response.data.some((value) => !isAttemptRow(value))) {
+    throw persistenceFailed("Authoritative question attempts returned invalid rows");
+  }
+  return response.data as AttemptRow[];
 }
 
 function buildRpcAnswer(
@@ -272,7 +283,7 @@ function buildRpcAnswer(
   const matching = attempts
     .filter((attempt) =>
       attempt.question_id === input.canonicalQuestionId
-      && attempt.answered_at === input.answeredAt
+      && isSameInstant(attempt.answered_at, input.answeredAt)
       && attempt.question_type === expectedQuestionType
     )
     .sort((left, right) => left.attempt_id.localeCompare(right.attempt_id))[0];
@@ -380,11 +391,15 @@ function assertSameStartFrame(
   if (
     existing.source !== input.source
     || existing.mode !== input.mode
-    || existing.startedAt !== input.startedAt
+    || !isSameInstant(existing.startedAt, input.startedAt)
     || existing.questionCount !== input.questionCount
   ) {
     throw sessionConflict("Assessment start conflicts with the immutable frame");
   }
+}
+
+function isSameInstant(left: string, right: string): boolean {
+  return Date.parse(left) === Date.parse(right);
 }
 
 function assertUniqueAnswerIdentities(

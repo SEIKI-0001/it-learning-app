@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { AppState, UserAnswer } from "@/types";
@@ -46,6 +46,12 @@ export default function MockExamPage() {
     null,
   );
   const [starting, setStarting] = useState(false);
+  const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const pendingStartRef = useRef<{
+    assessment: { sessionId: string; startedAt: string };
+    exam: MockExam;
+  } | null>(null);
+  const pendingCompletionAtRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -58,76 +64,106 @@ export default function MockExamPage() {
   async function startExam() {
     if (starting) return;
     setStarting(true);
-    // 同じ挑戦中は設問順を固定し、再挑戦時だけ新しい構成にする。
-    const startedAt = new Date().toISOString();
-    const sessionId = createAssessmentSessionId();
-    const nextExam = generateMockExam(appState, `${startedAt}:${appState.answers.length}`);
-    await startAssessmentSessionForCurrentSession({
-      action: "start",
-      sessionId,
-      source: "mock",
-      mode: "exam",
-      startedAt,
-      questionCount: nextExam.questions.length,
-    });
-    setAssessment({ sessionId, startedAt });
-    setExam(nextExam);
-    setResult(null);
-    setStarting(false);
+    setPersistenceError(null);
+    // A failed response may still follow a committed start. Preserve the exact immutable
+    // frame and question set so retry is idempotent.
+    const pending = pendingStartRef.current ?? (() => {
+      const startedAt = new Date().toISOString();
+      const sessionId = createAssessmentSessionId();
+      return {
+        assessment: { sessionId, startedAt },
+        exam: generateMockExam(appState, `${startedAt}:${appState.answers.length}`),
+      };
+    })();
+    pendingStartRef.current = pending;
+    try {
+      await startAssessmentSessionForCurrentSession({
+        action: "start",
+        sessionId: pending.assessment.sessionId,
+        source: "mock",
+        mode: "exam",
+        startedAt: pending.assessment.startedAt,
+        questionCount: pending.exam.questions.length,
+      });
+      setAssessment(pending.assessment);
+      setExam(pending.exam);
+      setResult(null);
+      pendingStartRef.current = null;
+    } catch {
+      setPersistenceError("評価セッションを開始できませんでした。もう一度お試しください。");
+    } finally {
+      setStarting(false);
+    }
   }
 
   async function handleComplete(answers: UserAnswer[]) {
     if (!exam || !assessment) return;
-    const now = new Date();
-    const tagged = answers.map((answer) => {
-      const topicId = exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId;
-      const topic = topicId ? getTopic(topicId) : undefined;
-      return {
-        ...answer,
-        topicId,
-        tag: topic?.tags[0] ?? topic?.field ?? answer.tag,
-      };
-    });
-    const scored = scoreMockExam(exam, tagged);
-    const questionAttempts = tagged.map((answer) => ({
-      questionId: answer.questionId,
-      questionType: "mock_exam" as const,
-      topicId: answer.topicId ?? "mock-exam",
-      selectedAnswer: answer.selectedChoice ?? null,
-      isCorrect: answer.isCorrect,
-      mistakeReason: answer.isCorrect ? null : "模試の誤答",
-      answeredAt: answer.answeredAt,
-      attemptGroupId: assessment.sessionId,
-    }));
-    const exposureResult = await saveQuestionAttemptsForCurrentSession(
-      questionAttempts,
-      appState.answers,
-    );
-    const { exposures, userId } = exposureResult;
-    const completedAt = now.toISOString();
-    await completeAssessmentSessionForCurrentSession({
-      action: "complete",
-      sessionId: assessment.sessionId,
-      completedAt,
-      answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
-        idempotencyKey: assessmentAnswerIdempotencyKey(
-          assessment.sessionId,
-          answer.questionId,
-        ),
-        canonicalQuestionId: answer.questionId,
+    setPersistenceError(null);
+    let factsCommitted = false;
+    let committedResult: MockExamResult | null = null;
+    try {
+      const now = new Date();
+      const tagged = answers.map((answer) => {
+        const topicId = exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId;
+        const topic = topicId ? getTopic(topicId) : undefined;
+        return {
+          ...answer,
+          topicId,
+          tag: topic?.tags[0] ?? topic?.field ?? answer.tag,
+        };
+      });
+      const scored = scoreMockExam(exam, tagged);
+      committedResult = scored;
+      const questionAttempts = tagged.map((answer) => ({
+        questionId: answer.questionId,
+        questionType: "mock_exam" as const,
         topicId: answer.topicId ?? "mock-exam",
+        selectedAnswer: answer.selectedChoice ?? null,
         isCorrect: answer.isCorrect,
+        mistakeReason: answer.isCorrect ? null : "模試の誤答",
         answeredAt: answer.answeredAt,
-      }]),
-    });
-    const next = recordMockExamResult(appState, tagged, scored, exposures, now);
-    saveAppState(next);
-    setState(next);
-    setResult(scored);
+        attemptGroupId: assessment.sessionId,
+      }));
+      const exposureResult = await saveQuestionAttemptsForCurrentSession(
+        questionAttempts,
+        appState.answers,
+      );
+      const { exposures, userId } = exposureResult;
+      const completedAt = pendingCompletionAtRef.current ?? now.toISOString();
+      pendingCompletionAtRef.current = completedAt;
+      await completeAssessmentSessionForCurrentSession({
+        action: "complete",
+        sessionId: assessment.sessionId,
+        completedAt,
+        answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+          idempotencyKey: assessmentAnswerIdempotencyKey(
+            assessment.sessionId,
+            answer.questionId,
+          ),
+          canonicalQuestionId: answer.questionId,
+          topicId: answer.topicId ?? "mock-exam",
+          isCorrect: answer.isCorrect,
+          answeredAt: answer.answeredAt,
+        }]),
+      });
+      factsCommitted = true;
+      pendingCompletionAtRef.current = null;
+      const next = recordMockExamResult(appState, tagged, scored, exposures, now);
+      saveAppState(next);
+      setState(next);
+      setResult(scored);
 
-    if (userId) {
-      saveProgressToDb(userId, next.progress);
-      saveAnswersToDb(userId, appState.progress.currentDay, tagged);
+      if (userId) {
+        saveProgressToDb(userId, next.progress);
+        saveAnswersToDb(userId, appState.progress.currentDay, tagged);
+      }
+    } catch (error) {
+      if (factsCommitted) {
+        if (committedResult) setResult(committedResult);
+        return;
+      }
+      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      throw error;
     }
   }
 
@@ -140,6 +176,11 @@ export default function MockExamPage() {
       />
 
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        {persistenceError && (
+          <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {persistenceError}
+          </p>
+        )}
         {!exam && !result && <RecordingLockNotice />}
         {!exam && !result && (
           <section className="rounded-xl border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">

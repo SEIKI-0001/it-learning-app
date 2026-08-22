@@ -76,7 +76,7 @@ The static migration-contract test passes. Every active migration was also repla
 - Checkpoint final: generates a stable final-exam attempt UUID, persists checkpoint start before mounting questions, awaits classification, completes, then records checkpoint/gate P0 state and progress. Retry creates a new attempt after completion.
 - Official past: uses the resumable local session UUID/start as the common frame, persists start before questions, carries that UUID as `attemptGroupId`, awaits official authoritative classification, completes with selected answers only, then writes P0 progress. Practice remains stored but calculator-ineligible; one-answer locking and resumability remain green. Only the existing explicit “start over” path abandons the discarded in-progress session; ordinary navigation does not.
 
-All runners invoke the P1-1 attempt endpoint before common completion and invoke P0 progress only after completion. Client helpers intentionally return `false` on persistence/network failure so saved assessment facts or readiness follow-up failures never replace an already available result UI with a failure screen.
+All runners invoke the P1-1 attempt endpoint before common completion and invoke P0 progress only after completion. Client helpers return a validated lifecycle result and throw typed failures for network, HTTP, malformed-response, and unexpected-status outcomes. The runners expose retryable errors before advancing UI or P0 state; readiness recalculation remains isolated server-side after facts commit.
 
 ## React self-review
 
@@ -133,4 +133,108 @@ Modified:
 
 - The recorded V1 limitation remains intact: start persists only total `questionCount`, so field-level summative performance cannot assign unanswered questions to official exam fields. No per-field unanswered denominator was invented.
 - Vitest prints the existing Node `module.register()` deprecation warning and the existing unavailable-localStorage experimental warning; neither affects results.
+- No implementation blocker remains.
+
+---
+
+## Fix Round 1 — Authoritative lifecycle failures and temporal matching
+
+### Status
+
+Resolved all four review findings across the shared client, route, persistence service, and all five delivery paths. No migration or RPC source changed; the existing additive completion migration and pgTAP contract were rerun unchanged.
+
+### RED / GREEN evidence
+
+RED was established independently at each boundary before implementation:
+
+- Client contract: 9 tests, 8 expected failures for boolean fallback, HTTP/network swallowing, malformed lifecycle acceptance, and terminal start acceptance.
+- Route timestamp parser: 22 tests, 8 expected failures for date-only, timezone-less, locale, impossible calendar/time, and invalid offset inputs.
+- Persistence integration: 12 tests, 5 expected failures for raw timestamp equality, terminal start replay, official attempt instant matching, query failure degradation, and malformed attempt-row filtering.
+- `TopicQuiz`: 7 tests, 1 expected failure because asynchronous completion failure permanently latched the quiz as done.
+- Mock/checkpoint/checkpoint-final runners: 9 tests, 6 expected failures because failed starts mounted questions and failed completions advanced result/P0 state.
+- Theme summary runner: 6 tests, 2 expected failures for failed start and completion ordering.
+- Official past runner: 38 tests, 3 expected failures for start, completion, and abandon failure handling.
+
+Final focused GREEN:
+
+```text
+npx vitest run test/assessmentSessionMigration.test.ts test/assessmentSessionRoute.test.ts test/assessmentSessionIntegration.test.ts test/assessmentSessionClient.test.ts test/AssessmentDeliveryRunners.test.tsx test/ThemeExamRunner.test.tsx test/PastExamRunner.test.tsx test/PastExamSubmitOnce.test.tsx test/TopicQuiz.test.tsx test/mockExam.test.ts test/themeExamLearningLoop.test.ts test/pastExamSession.test.ts test/pastExamAttempts.test.ts test/checkpointExam.test.ts test/finalExam.test.ts
+Test Files  15 passed (15)
+Tests  172 passed (172)
+```
+
+### Route security, validation, and idempotency
+
+- The authenticated server identity remains the sole user authority; body `userId` is still ignored.
+- The client now validates `{ ok: true, session: { sessionId, status } }`, checks the response session ID and action-specific status, and throws `AssessmentSessionClientError` with `network | http | malformed_response | unexpected_status` instead of returning an ignored boolean.
+- Start accepts only a confirmed `in_progress` lifecycle. The service rejects any start replay after `completed` or `abandoned`, even when every immutable frame field matches.
+- Route timestamps now require an explicit ISO-8601 date-time with uppercase `Z` or a numeric `±HH:MM` offset. Calendar dates, clock ranges, and the ISO maximum offset (`±14:00`) are validated. Date-only, timezone-less, locale, impossible leap/day/time, and invalid offset values are rejected for start, completion, answer, and abandon timestamps.
+- Start replay, abandon replay, and authoritative attempt matching compare parsed instants. Equivalent `Z`, `+00:00`, and fractional renderings are treated as the same time.
+- A failed or non-array authoritative attempt query, or any malformed attempt row, now throws `persistence_failed`. Only a successful query with no match derives `unknown`; completion RPC is not called on query failure, the session remains `in_progress`, and the same payload can later retry successfully.
+
+### Runner integration and failure ordering
+
+- Mock: preserves the generated exam, session ID, start time, answer timestamps, and completion time across an ambiguous retry. Failed start leaves the intro mounted; failed completion leaves the quiz mounted and writes neither result nor P0 progress.
+- Theme summary: preserves the session frame and completion timestamp, disables interaction while saving, restores the grade action on failure, and advances Mastery/result only after confirmed completion.
+- Checkpoint exam: preserves attempt/start/completion frames, keeps questions unmounted until confirmed start, and keeps checkpoint result/P0 state unchanged until confirmed completion.
+- Checkpoint final: preserves the generated attempt and timestamps across retries, keeps the start screen or running quiz on failure, and records checkpoint/gate state only after confirmed completion.
+- Official past: preserves resumable session identity, answer locking, and stored local progress. A failed explicit abandon keeps the prior resumable local session and does not start a replacement. Start, abandon, and completion retries reuse exactly the same immutable payload; failed completion leaves the running session and local resume record intact with no P0 write.
+- `TopicQuiz` now awaits asynchronous completion, shows a saving state, retains the exact answer payload for retries, and reopens completion after rejection. Timer-driven submissions use the same path and remain retryable.
+- Readiness recalculation failure remains nonfatal because the server still catches it only after the atomic completion RPC has committed session, answers, and evidence.
+
+### React self-review
+
+Applied the Vercel React best-practices checklist after all TSX edits:
+
+- Interaction persistence remains in event handlers; effects only handle navigation, identity synchronization, and external timers.
+- Transient immutable retry payloads use refs, avoiding effect-derived state and dependency churn.
+- Start/submit controls expose pending states and prevent competing input while persistence is active.
+- Failure messages use `role="alert"`; existing native button semantics, navigation, render structure, practice resumability, and one-answer locking remain intact.
+- The timer completion effect schedules the external callback rather than synchronously cascading state from the effect body; lint confirms the hook boundary.
+
+### Fix Round 1 files
+
+Modified:
+
+- `app/api/assessment-sessions/route.ts`
+- `lib/examReadiness/assessmentSession.ts`
+- `lib/userSession.ts`
+- `app/mock-exam/page.tsx`
+- `components/themeExam/ThemeExamRunner.tsx`
+- `components/checkpoint/CheckpointExamRunner.tsx`
+- `app/checkpoint/[checkpointId]/final/page.tsx`
+- `components/pastExam/PastExamRunner.tsx`
+- `components/learn/TopicQuiz.tsx`
+- `test/assessmentSessionClient.test.ts`
+- `test/assessmentSessionRoute.test.ts`
+- `test/assessmentSessionIntegration.test.ts`
+- `test/AssessmentDeliveryRunners.test.tsx`
+- `test/ThemeExamRunner.test.tsx`
+- `test/PastExamRunner.test.tsx`
+- `test/PastExamSubmitOnce.test.tsx`
+- `test/TopicQuiz.test.tsx`
+- `.superpowers/sdd/2026-08-22-exam-readiness-p1-2/task-8-report.md`
+
+Verified unchanged but rerun:
+
+- `supabase/migrations/20260823070000_assessment_session_completion.sql`
+- `supabase/tests/assessment_session_completion_test.sql`
+- `test/assessmentSessionMigration.test.ts`
+
+### Fix Round 1 verification
+
+- Static migration contract: passed.
+- Disposable Supabase PostgreSQL 17.6 migration replay: passed; only the existing `SET LOCAL` outside transaction warnings and idempotent-schema notices appeared.
+- pgTAP: 18/18 assertions passed, including atomic success/rollback, identical retry, conflicting retry, terminal immutability, and one evidence revision. The uniquely named disposable container was removed afterward.
+- Focused route/client/service/runner and delivery regressions: 15 files, 172 tests passed.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed with no errors or warnings.
+- `npm test`: 103 files, 1,135 tests passed.
+- `git diff --check`: passed.
+
+### Fix Round 1 concerns
+
+- The V1 limitation remains unchanged: sessions persist only total `questionCount`, so field-level summative performance still cannot invent per-field unanswered denominators.
+- Question-attempt batches can be repeated after an ambiguous completion response; their existing P1-1 idempotency keys/grouping remain the authority while the common completion payload itself is byte-for-byte stable across retry.
+- Vitest continues to print the existing Node `module.register()` deprecation and unavailable-localStorage experimental warnings; neither affects results.
 - No implementation blocker remains.

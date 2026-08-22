@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { UserAnswer } from "@/types";
@@ -32,6 +32,9 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   const [attemptId, setAttemptId] = useState(newAttemptId);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const pendingStartedAtRef = useRef<string | null>(null);
+  const pendingCompletionAtRef = useRef<string | null>(null);
   const [result, setResult] = useState<{ correct: number; total: number; passed: boolean } | null>(
     null,
   );
@@ -62,64 +65,88 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   async function startExam() {
     if (starting || startedAt !== null) return;
     setStarting(true);
-    const nextStartedAt = new Date().toISOString();
-    await startAssessmentSessionForCurrentSession({
-      action: "start",
-      sessionId: attemptId,
-      source: "checkpoint",
-      mode: "exam",
-      startedAt: nextStartedAt,
-      questionCount: exam.questions.length,
-    });
-    setStartedAt(nextStartedAt);
-    setStarting(false);
+    setPersistenceError(null);
+    const nextStartedAt = pendingStartedAtRef.current ?? new Date().toISOString();
+    pendingStartedAtRef.current = nextStartedAt;
+    try {
+      await startAssessmentSessionForCurrentSession({
+        action: "start",
+        sessionId: attemptId,
+        source: "checkpoint",
+        mode: "exam",
+        startedAt: nextStartedAt,
+        questionCount: exam.questions.length,
+      });
+      setStartedAt(nextStartedAt);
+      pendingStartedAtRef.current = null;
+    } catch {
+      setPersistenceError("評価セッションを開始できませんでした。もう一度お試しください。");
+    } finally {
+      setStarting(false);
+    }
   }
 
   async function handleComplete(answers: UserAnswer[]) {
     if (!state || startedAt === null) return;
-    const tagged = answers.map((answer) => {
-      const topic = getTopic(answer.topicId ?? "");
-      return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
-    });
-    const exposureResult = await saveQuestionAttemptsForCurrentSession(
-      tagged.map((answer) => ({
-        questionId: answer.questionId,
-        questionType: "mini_exam" as const,
-        topicId: answer.topicId ?? checkpointId,
-        selectedAnswer: answer.selectedChoice ?? null,
-        isCorrect: answer.isCorrect,
-        answeredAt: answer.answeredAt,
-        attemptGroupId: attemptId,
-      })),
-      state.answers,
-    );
-    const { exposures, userId } = exposureResult;
-    const completedAt = new Date().toISOString();
-    await completeAssessmentSessionForCurrentSession({
-      action: "complete",
-      sessionId: attemptId,
-      completedAt,
-      answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
-        idempotencyKey: assessmentAnswerIdempotencyKey(attemptId, answer.questionId),
-        canonicalQuestionId: answer.questionId,
-        topicId: answer.topicId ?? checkpointId,
-        isCorrect: answer.isCorrect,
-        answeredAt: answer.answeredAt,
-      }]),
-    });
-    const next = recordCheckpointExamResult(state, tagged, exposures);
-    saveAppState(next);
-    setState(next);
-    if (userId) {
-      void saveProgressToDb(userId, next.progress);
-      void saveAnswersToDb(userId, 0, tagged);
+    setPersistenceError(null);
+    let factsCommitted = false;
+    let committedResult: { correct: number; total: number; passed: boolean } | null = null;
+    try {
+      const tagged = answers.map((answer) => {
+        const topic = getTopic(answer.topicId ?? "");
+        return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
+      });
+      const exposureResult = await saveQuestionAttemptsForCurrentSession(
+        tagged.map((answer) => ({
+          questionId: answer.questionId,
+          questionType: "mini_exam" as const,
+          topicId: answer.topicId ?? checkpointId,
+          selectedAnswer: answer.selectedChoice ?? null,
+          isCorrect: answer.isCorrect,
+          answeredAt: answer.answeredAt,
+          attemptGroupId: attemptId,
+        })),
+        state.answers,
+      );
+      const { exposures, userId } = exposureResult;
+      const completedAt = pendingCompletionAtRef.current ?? new Date().toISOString();
+      pendingCompletionAtRef.current = completedAt;
+      await completeAssessmentSessionForCurrentSession({
+        action: "complete",
+        sessionId: attemptId,
+        completedAt,
+        answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+          idempotencyKey: assessmentAnswerIdempotencyKey(attemptId, answer.questionId),
+          canonicalQuestionId: answer.questionId,
+          topicId: answer.topicId ?? checkpointId,
+          isCorrect: answer.isCorrect,
+          answeredAt: answer.answeredAt,
+        }]),
+      });
+      factsCommitted = true;
+      pendingCompletionAtRef.current = null;
+      const next = recordCheckpointExamResult(state, tagged, exposures);
+      saveAppState(next);
+      setState(next);
+      if (userId) {
+        void saveProgressToDb(userId, next.progress);
+        void saveAnswersToDb(userId, 0, tagged);
+      }
+      const correct = tagged.filter((answer) => answer.isCorrect).length;
+      committedResult = {
+        correct,
+        total: tagged.length,
+        passed: Math.round((correct / tagged.length) * 100) >= exam.definition.passingScore,
+      };
+      setResult(committedResult);
+    } catch (error) {
+      if (factsCommitted) {
+        if (committedResult) setResult(committedResult);
+        return;
+      }
+      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      throw error;
     }
-    const correct = tagged.filter((answer) => answer.isCorrect).length;
-    setResult({
-      correct,
-      total: tagged.length,
-      passed: Math.round((correct / tagged.length) * 100) >= exam.definition.passingScore,
-    });
   }
 
   if (result) {
@@ -149,6 +176,9 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
             setAttemptId(newAttemptId());
             setStartedAt(null);
             setResult(null);
+            setPersistenceError(null);
+            pendingStartedAtRef.current = null;
+            pendingCompletionAtRef.current = null;
           }}
           className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white"
         >
@@ -166,6 +196,11 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
 
   return (
     <div className="space-y-4">
+      {persistenceError && (
+        <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+          {persistenceError}
+        </p>
+      )}
       <section className="rounded-xl bg-white p-4 border border-gray-200">
         <p className="text-sm font-bold text-gray-800">
           {exam.questions.length}問・{exam.definition.passingScore}%で合格

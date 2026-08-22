@@ -81,6 +81,13 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [startingMode, setStartingMode] = useState<PastExamMode | null>(null);
+  const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const pendingStartRef = useRef<Partial<Record<PastExamMode, PastExamSession>>>({});
+  const pendingAbandonRef = useRef<Partial<Record<PastExamMode, {
+    sessionId: string;
+    completedAt: string;
+  }>>>({});
+  const pendingCompletionRef = useRef<{ sessionId: string; completedAt: string } | null>(null);
   const [identity, setIdentity] = useState<QuestionExposureIdentity | null>(null);
   useEffect(() => {
     void resolveQuestionExposureIdentity().then(setIdentity);
@@ -134,20 +141,28 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     async (mode: PastExamMode) => {
       if (startingMode !== null) return;
       setStartingMode(mode);
+      setPersistenceError(null);
       const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
-      const next = existing ?? createSession(year, mode);
-      allowSubmit();
-      await startAssessmentSessionForCurrentSession({
-        action: "start",
-        sessionId: next.sessionId,
-        source: "official_past",
-        mode: next.mode,
-        startedAt: next.startedAt,
-        questionCount: questions.length,
-      });
-      persist(next);
-      setPhase("running");
-      setStartingMode(null);
+      const next = existing ?? pendingStartRef.current[mode] ?? createSession(year, mode);
+      pendingStartRef.current[mode] = next;
+      try {
+        await startAssessmentSessionForCurrentSession({
+          action: "start",
+          sessionId: next.sessionId,
+          source: "official_past",
+          mode: next.mode,
+          startedAt: next.startedAt,
+          questionCount: questions.length,
+        });
+        delete pendingStartRef.current[mode];
+        allowSubmit();
+        persist(next);
+        setPhase("running");
+      } catch {
+        setPersistenceError("評価セッションを開始できませんでした。もう一度お試しください。");
+      } finally {
+        setStartingMode(null);
+      }
     },
     [allowSubmit, persist, questions.length, sessionUserId, startingMode, userReady, year],
   );
@@ -156,28 +171,47 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     async (mode: PastExamMode) => {
       if (startingMode !== null) return;
       setStartingMode(mode);
+      setPersistenceError(null);
       const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
       if (existing) {
-        await abandonAssessmentSessionForCurrentSession({
-          action: "abandon",
-          sessionId: existing.sessionId,
-          completedAt: new Date().toISOString(),
-        });
+        const pendingAbandon = pendingAbandonRef.current[mode]?.sessionId === existing.sessionId
+          ? pendingAbandonRef.current[mode]
+          : { sessionId: existing.sessionId, completedAt: new Date().toISOString() };
+        pendingAbandonRef.current[mode] = pendingAbandon;
+        try {
+          await abandonAssessmentSessionForCurrentSession({
+            action: "abandon",
+            sessionId: existing.sessionId,
+            completedAt: pendingAbandon.completedAt,
+          });
+          delete pendingAbandonRef.current[mode];
+        } catch {
+          setPersistenceError("前回のセッションを終了できませんでした。もう一度お試しください。");
+          setStartingMode(null);
+          return;
+        }
       }
       if (userReady) clearSession(sessionUserId, year, mode);
-      const next = createSession(year, mode);
-      allowSubmit();
-      await startAssessmentSessionForCurrentSession({
-        action: "start",
-        sessionId: next.sessionId,
-        source: "official_past",
-        mode: next.mode,
-        startedAt: next.startedAt,
-        questionCount: questions.length,
-      });
-      persist(next);
-      setPhase("running");
-      setStartingMode(null);
+      const next = pendingStartRef.current[mode] ?? createSession(year, mode);
+      pendingStartRef.current[mode] = next;
+      try {
+        await startAssessmentSessionForCurrentSession({
+          action: "start",
+          sessionId: next.sessionId,
+          source: "official_past",
+          mode: next.mode,
+          startedAt: next.startedAt,
+          questionCount: questions.length,
+        });
+        delete pendingStartRef.current[mode];
+        allowSubmit();
+        persist(next);
+        setPhase("running");
+      } catch {
+        setPersistenceError("評価セッションを開始できませんでした。もう一度お試しください。");
+      } finally {
+        setStartingMode(null);
+      }
     },
     [allowSubmit, persist, questions.length, sessionUserId, startingMode, userReady, year],
   );
@@ -188,6 +222,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       if (submittedRef.current) return;
       submittedRef.current = true;
       setSubmitting(true);
+      setPersistenceError(null);
 
       const graded = gradePastExam({
         sessionId: current.sessionId,
@@ -197,82 +232,101 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         questions,
         answers: current.answers,
       });
-
-      const currentState = loadAppState();
-      let exposures: QuestionExposureMap;
-      let confirmedUserId = userId;
-      if (current.mode === "exam") {
-        const exposureResult = await saveAllAttempts({
-          questions,
-          answers: current.answers,
-          mode: current.mode,
-          sessionId: current.sessionId,
-          anonymousAnswers: currentState?.answers ?? [],
-        });
-        exposures = exposureResult.exposures;
-        confirmedUserId = exposureResult.userId;
-      } else {
-        exposures = getUnknownQuestionExposureStates(
-          questions.map((question) => question.id),
-        );
-        for (const question of questions) {
-          const exposureState = current.answers[question.questionNumber]?.exposureState;
-          if (!exposureState) continue;
-          exposures = {
-            ...exposures,
-            [question.id]: {
-              questionId: question.id,
-              state: exposureState,
-              attemptedBefore:
-                exposureState === "first"
-                  ? false
-                  : exposureState === "seen"
-                    ? true
-                    : null,
-              firstAttemptAt: null,
-              attemptCount: null,
-            },
-          };
+      let factsCommitted = false;
+      try {
+        const currentState = loadAppState();
+        let exposures: QuestionExposureMap;
+        let confirmedUserId = userId;
+        if (current.mode === "exam") {
+          const exposureResult = await saveAllAttempts({
+            questions,
+            answers: current.answers,
+            mode: current.mode,
+            sessionId: current.sessionId,
+            anonymousAnswers: currentState?.answers ?? [],
+          });
+          exposures = exposureResult.exposures;
+          confirmedUserId = exposureResult.userId;
+        } else {
+          exposures = getUnknownQuestionExposureStates(
+            questions.map((question) => question.id),
+          );
+          for (const question of questions) {
+            const exposureState = current.answers[question.questionNumber]?.exposureState;
+            if (!exposureState) continue;
+            exposures = {
+              ...exposures,
+              [question.id]: {
+                questionId: question.id,
+                state: exposureState,
+                attemptedBefore:
+                  exposureState === "first"
+                    ? false
+                    : exposureState === "seen"
+                      ? true
+                      : null,
+                firstAttemptAt: null,
+                attemptCount: null,
+              },
+            };
+          }
         }
+
+        const pendingCompletion = pendingCompletionRef.current?.sessionId === current.sessionId
+          ? pendingCompletionRef.current
+          : { sessionId: current.sessionId, completedAt: new Date().toISOString() };
+        pendingCompletionRef.current = pendingCompletion;
+        await completeAssessmentSessionForCurrentSession({
+          action: "complete",
+          sessionId: current.sessionId,
+          completedAt: pendingCompletion.completedAt,
+          answers: questions.flatMap((question) => {
+            const answer = current.answers[question.questionNumber];
+            if (!answer || answer.selected === null) return [];
+            return [{
+              idempotencyKey: assessmentAnswerIdempotencyKey(
+                current.sessionId,
+                question.id,
+              ),
+              canonicalQuestionId: question.id,
+              topicId: question.topicId,
+              isCorrect: answer.selected === question.correctChoice,
+              answeredAt: answer.answeredAt,
+            }];
+          }),
+        });
+        factsCommitted = true;
+        pendingCompletionRef.current = null;
+
+        if (currentState) {
+          const next = recordPastExamLearningResult(
+            currentState,
+            graded,
+            current.answers,
+            exposures,
+          );
+          saveAppState(next);
+          if (confirmedUserId) saveProgressToDb(confirmedUserId, next.progress);
+        }
+
+        // 完了した演習は途中状態として残さない（購読側へも通知される）。
+        setSession(null);
+        if (userReady) clearSession(sessionUserId, year, current.mode);
+        setResult(graded);
+        setPhase("result");
+      } catch {
+        if (factsCommitted) {
+          setSession(null);
+          if (userReady) clearSession(sessionUserId, year, current.mode);
+          setResult(graded);
+          setPhase("result");
+          return;
+        }
+        submittedRef.current = false;
+        setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      } finally {
+        setSubmitting(false);
       }
-
-      const completedAt = new Date().toISOString();
-      await completeAssessmentSessionForCurrentSession({
-        action: "complete",
-        sessionId: current.sessionId,
-        completedAt,
-        answers: questions.flatMap((question) => {
-          const answer = current.answers[question.questionNumber];
-          if (!answer || answer.selected === null) return [];
-          return [{
-            idempotencyKey: assessmentAnswerIdempotencyKey(
-              current.sessionId,
-              question.id,
-            ),
-            canonicalQuestionId: question.id,
-            topicId: question.topicId,
-            isCorrect: answer.selected === question.correctChoice,
-            answeredAt: answer.answeredAt,
-          }];
-        }),
-      });
-
-      if (currentState) {
-        const next = recordPastExamLearningResult(
-          currentState,
-          graded,
-          current.answers,
-          exposures,
-        );
-        saveAppState(next);
-        if (confirmedUserId) saveProgressToDb(confirmedUserId, next.progress);
-      }
-
-      // 完了した演習は途中状態として残さない（購読側へも通知される）。
-      setSession(null);
-      if (userReady) clearSession(sessionUserId, year, current.mode);
-      setResult(graded);
-      setPhase("result");
     },
     [questions, sessionUserId, userId, userReady, year],
   );
@@ -301,6 +355,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         onIdentity={setIdentity}
         onFinish={finish}
         submitting={submitting}
+        persistenceError={persistenceError}
       />
     );
   }
@@ -312,6 +367,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       onStart={(mode) => void start(mode)}
       onRestart={(mode) => void restart(mode)}
       startingMode={startingMode}
+      persistenceError={persistenceError}
     />
   );
 }
@@ -326,15 +382,22 @@ function ModeSelect({
   onStart,
   onRestart,
   startingMode,
+  persistenceError,
 }: {
   total: number;
   resumable: Record<PastExamMode, boolean>;
   onStart: (mode: PastExamMode) => void;
   onRestart: (mode: PastExamMode) => void;
   startingMode: PastExamMode | null;
+  persistenceError: string | null;
 }) {
   return (
     <div className="space-y-4">
+      {persistenceError && (
+        <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+          {persistenceError}
+        </p>
+      )}
       <ModeCard
         title="練習モード"
         description={`公式の並びどおりに${total}問を解きます。1問ごとに正誤と解説を確認でき、前後の問題へ自由に移動できます。制限時間はありません。`}
@@ -423,6 +486,7 @@ function QuestionStage({
   onIdentity,
   onFinish,
   submitting,
+  persistenceError,
 }: {
   session: PastExamSession;
   questions: PastExamQuestionView[];
@@ -436,6 +500,7 @@ function QuestionStage({
   onFinish: (session: PastExamSession) => Promise<void>;
   /** 採点処理が走り出したか。ボタンを無効化して連打の入口を塞ぐ。 */
   submitting: boolean;
+  persistenceError: string | null;
 }) {
   const isExam = session.mode === "exam";
   const index = Math.min(Math.max(0, session.currentIndex), questions.length - 1);
@@ -516,6 +581,11 @@ function QuestionStage({
 
   return (
     <div className="space-y-4">
+      {persistenceError && (
+        <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+          {persistenceError}
+        </p>
+      )}
       <StageHeader
         session={session}
         answeredCount={answeredCount}
@@ -530,7 +600,7 @@ function QuestionStage({
         selected={selected}
         onSelect={handleSelect}
         revealAnswer={revealAnswer}
-        disabled={answerLocked || classifying}
+        disabled={answerLocked || classifying || submitting}
       />
 
       <nav className="flex items-center justify-between gap-2" aria-label="問題の移動">

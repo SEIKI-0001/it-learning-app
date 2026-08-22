@@ -92,7 +92,7 @@ export default function TopicQuiz({
   /** 複数トピックを扱う試験では、設問ごとの復習先を指定する。 */
   topicIdForQuestion?: (question: CheckQuestion) => string;
   questions: CheckQuestion[];
-  onComplete: (answers: UserAnswer[]) => void;
+  onComplete: (answers: UserAnswer[]) => void | Promise<void>;
   completeLabel?: string;
   dense?: boolean; // 選択肢の縦幅を詰める(/today)
   timeLimitSeconds?: number; // 指定時のみ制限時間を有効化（確認パック用）
@@ -107,7 +107,9 @@ export default function TopicQuiz({
   const answeredQuestionIdsRef = useRef(new Set<string>());
   const [order, setOrder] = useState<string[]>([]); // 回答した順(連続正解の判定に使う)
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const finishedRef = useRef(false);
+  const pendingAnswersRef = useRef<UserAnswer[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0); // 1問ずつ表示する(下スクロールさせない)
   const timeLimited = typeof timeLimitSeconds === "number" && timeLimitSeconds > 0;
   const [timeLeft, setTimeLeft] = useState<number | null>(
@@ -139,7 +141,7 @@ export default function TopicQuiz({
   }, [order, selections, shuffled]);
 
   function select(qId: string, key: ChoiceKey) {
-    if (done || timeLimitReached) return;
+    if (done || submitting || timeLimitReached) return;
     if (
       selections[qId] !== undefined ||
       answeredQuestionIdsRef.current.has(qId)
@@ -160,32 +162,43 @@ export default function TopicQuiz({
     setCurrentIndex((i) => Math.max(i - 1, 0));
   }
 
-  const finish = useCallback(() => {
+  const finish = useCallback(async () => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    setDone(true);
-    const now = new Date().toISOString();
-    const answers: UserAnswer[] = questions.map((q) => {
+    setSubmitting(true);
+    const answers = pendingAnswersRef.current ?? questions.map((q) => {
+      const answeredAt = new Date().toISOString();
       const sh = shuffled.get(q.id)!;
       const sel = selections[q.id];
       return {
         questionId: q.id,
         selectedChoice: sel,
         isCorrect: sel === sh.correct,
-        answeredAt: now,
+        answeredAt,
         tag: q.id, // 呼び出し側でトピックのタグに上書きしてもよい
         topicId: topicIdForQuestion?.(q) ?? topicId,
       };
     });
-    onComplete(answers);
+    pendingAnswersRef.current = answers;
+    try {
+      await onComplete(answers);
+      pendingAnswersRef.current = null;
+      setDone(true);
+    } catch {
+      // The parent renders the persistence error. Re-open this exact submission so the
+      // same immutable assessment session can be completed on retry.
+      finishedRef.current = false;
+    } finally {
+      setSubmitting(false);
+    }
   }, [onComplete, questions, selections, shuffled, topicId, topicIdForQuestion]);
 
   useEffect(() => {
     if (!timeLimited || done || timeLeft === null) return;
     if (timeLeft <= 0) {
       // タイマー（外部システム）起因の自動締め切り。意図的に effect 内で確定する。
-      finish();
-      return;
+      const timer = window.setTimeout(() => void finish(), 0);
+      return () => window.clearTimeout(timer);
     }
     const timer = window.setTimeout(() => {
       setTimeLeft((current) => {
@@ -440,11 +453,17 @@ export default function TopicQuiz({
           {isLast ? (
             <button
               type="button"
-              onClick={finish}
-              disabled={!allAnswered || done}
+              onClick={() => void finish()}
+              disabled={(!allAnswered && !timeLimitReached) || done || submitting}
               className={buttonClass("primary", "lg", "flex-1 disabled:bg-gray-300")}
             >
-              {done ? "保存しました" : allAnswered ? completeLabel : "すべて答えると完了できます"}
+              {done
+                ? "保存しました"
+                : submitting
+                  ? "保存中…"
+                  : allAnswered || timeLimitReached
+                    ? completeLabel
+                    : "すべて答えると完了できます"}
             </button>
           ) : (
             <button

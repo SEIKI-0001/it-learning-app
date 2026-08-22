@@ -557,6 +557,27 @@ export type AbandonAssessmentSessionInput = {
   completedAt: string;
 };
 
+export type AssessmentSessionLifecycle = {
+  sessionId: string;
+  status: "in_progress" | "completed" | "abandoned";
+};
+
+export type AssessmentSessionClientErrorCode =
+  | "network"
+  | "http"
+  | "malformed_response"
+  | "unexpected_status";
+
+export class AssessmentSessionClientError extends Error {
+  constructor(
+    readonly code: AssessmentSessionClientErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = "AssessmentSessionClientError";
+  }
+}
+
 /** Creates a database-compatible UUID even in older browsers without randomUUID(). */
 export function createAssessmentSessionId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -578,19 +599,19 @@ export function assessmentAnswerIdempotencyKey(
 
 export function startAssessmentSessionForCurrentSession(
   input: StartAssessmentSessionInput,
-): Promise<boolean> {
+): Promise<AssessmentSessionLifecycle> {
   return postAssessmentSession(input);
 }
 
 export function completeAssessmentSessionForCurrentSession(
   input: CompleteAssessmentSessionInput,
-): Promise<boolean> {
+): Promise<AssessmentSessionLifecycle> {
   return postAssessmentSession(input);
 }
 
 export function abandonAssessmentSessionForCurrentSession(
   input: AbandonAssessmentSessionInput,
-): Promise<boolean> {
+): Promise<AssessmentSessionLifecycle> {
   return postAssessmentSession(input);
 }
 
@@ -599,17 +620,73 @@ async function postAssessmentSession(
     | StartAssessmentSessionInput
     | CompleteAssessmentSessionInput
     | AbandonAssessmentSessionInput,
-): Promise<boolean> {
+): Promise<AssessmentSessionLifecycle> {
+  let response: Response;
   try {
-    const response = await fetch("/api/assessment-sessions", {
+    response = await fetch("/api/assessment-sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    return response.ok;
-  } catch {
-    return false;
+  } catch (cause) {
+    throw new AssessmentSessionClientError(
+      "network",
+      cause instanceof Error ? cause.message : "Assessment session request failed",
+    );
   }
+  if (!response.ok) {
+    throw new AssessmentSessionClientError(
+      "http",
+      `Assessment session request returned HTTP ${response.status}`,
+    );
+  }
+
+  let value: unknown;
+  try {
+    value = await response.json();
+  } catch {
+    throw new AssessmentSessionClientError(
+      "malformed_response",
+      "Assessment session response was not valid JSON",
+    );
+  }
+  if (
+    !isClientRecord(value)
+    || value.ok !== true
+    || !isClientRecord(value.session)
+    || value.session.sessionId !== input.sessionId
+    || !isAssessmentSessionStatus(value.session.status)
+  ) {
+    throw new AssessmentSessionClientError(
+      "malformed_response",
+      "Assessment session response did not contain a valid lifecycle",
+    );
+  }
+  const expectedStatus = input.action === "start"
+    ? "in_progress"
+    : input.action === "complete"
+      ? "completed"
+      : "abandoned";
+  if (value.session.status !== expectedStatus) {
+    throw new AssessmentSessionClientError(
+      "unexpected_status",
+      `Assessment session returned ${value.session.status} for ${input.action}`,
+    );
+  }
+  return {
+    sessionId: value.session.sessionId,
+    status: value.session.status,
+  };
+}
+
+function isClientRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isAssessmentSessionStatus(
+  value: unknown,
+): value is AssessmentSessionLifecycle["status"] {
+  return value === "in_progress" || value === "completed" || value === "abandoned";
 }
 
 /** Resolve only a server-cookie identity; localStorage is never an authority. */

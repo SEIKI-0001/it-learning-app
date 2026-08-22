@@ -63,6 +63,16 @@ beforeEach(() => {
         })),
       }), { status: 200 });
     }
+    if (url === "/api/assessment-sessions") {
+      const body = JSON.parse(String(init?.body)) as { action: string; sessionId: string };
+      return new Response(JSON.stringify({
+        ok: true,
+        session: {
+          sessionId: body.sessionId,
+          status: body.action === "start" ? "in_progress" : "completed",
+        },
+      }), { status: 200 });
+    }
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   }));
 });

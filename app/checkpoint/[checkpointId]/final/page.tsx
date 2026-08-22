@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { UserAnswer } from "@/types";
@@ -57,7 +57,10 @@ export default function FinalExamPage() {
   const [exam, setExam] = useState<FinalExam | null>(null);
   const [result, setResult] = useState<FinalExamResult | null>(null);
   const [examError, setExamError] = useState<string | null>(null);
+  const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const pendingExamRef = useRef<{ exam: FinalExam; startedAt: string } | null>(null);
+  const pendingCompletionAtRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -106,24 +109,36 @@ export default function FinalExamPage() {
     setStarting(true);
     setResult(null);
     setExamError(null);
+    setPersistenceError(null);
     try {
-      const recentQuestionIds = [...state.answers]
-        .sort((a, b) => b.answeredAt.localeCompare(a.answeredAt))
-        .map((answer) => answer.questionId);
-      const nextExam = generateFinalExam(state, checkpointId, {
-          attemptId: crypto.randomUUID(),
-          recentQuestionIds,
+      const pending = pendingExamRef.current ?? (() => {
+        const recentQuestionIds = [...state.answers]
+          .sort((a, b) => b.answeredAt.localeCompare(a.answeredAt))
+          .map((answer) => answer.questionId);
+        return {
+          exam: generateFinalExam(state, checkpointId, {
+            attemptId: crypto.randomUUID(),
+            recentQuestionIds,
+          }),
+          startedAt: new Date().toISOString(),
+        };
+      })();
+      pendingExamRef.current = pending;
+      try {
+        await startAssessmentSessionForCurrentSession({
+          action: "start",
+          sessionId: pending.exam.attemptId,
+          source: "checkpoint",
+          mode: "exam",
+          startedAt: pending.startedAt,
+          questionCount: pending.exam.questions.length,
         });
-      const startedAt = new Date().toISOString();
-      await startAssessmentSessionForCurrentSession({
-        action: "start",
-        sessionId: nextExam.attemptId,
-        source: "checkpoint",
-        mode: "exam",
-        startedAt,
-        questionCount: nextExam.questions.length,
-      });
-      setExam(nextExam);
+      } catch {
+        setPersistenceError("評価セッションを開始できませんでした。もう一度お試しください。");
+        return;
+      }
+      setExam(pending.exam);
+      pendingExamRef.current = null;
       emitMochitEvent("encourage");
     } catch (error) {
       setExam(null);
@@ -139,51 +154,67 @@ export default function FinalExamPage() {
 
   async function handleComplete(answers: UserAnswer[]) {
     if (!state || !exam) return;
-    const scored = scoreFinalExam(exam, answers);
-    const attempt = buildFinalExamAttempt(exam, scored);
-    const questionAttempts = answers.map((answer) => ({
-      questionId: answer.questionId,
-      questionType: "mini_exam" as const,
-      topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
-      selectedAnswer: answer.selectedChoice ?? null,
-      isCorrect: answer.isCorrect,
-      answeredAt: answer.answeredAt,
-      attemptGroupId: exam.attemptId,
-    }));
-    const exposureResult = await saveQuestionAttemptsForCurrentSession(
-      questionAttempts,
-      state.answers,
-    );
-    const { exposures, userId: uid } = exposureResult;
-    const completedAt = new Date().toISOString();
-    await completeAssessmentSessionForCurrentSession({
-      action: "complete",
-      sessionId: exam.attemptId,
-      completedAt,
-      answers: answers.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
-        idempotencyKey: assessmentAnswerIdempotencyKey(exam.attemptId, answer.questionId),
-        canonicalQuestionId: answer.questionId,
+    setPersistenceError(null);
+    let factsCommitted = false;
+    let committedResult: FinalExamResult | null = null;
+    try {
+      const scored = scoreFinalExam(exam, answers);
+      committedResult = scored;
+      const attempt = buildFinalExamAttempt(exam, scored);
+      const questionAttempts = answers.map((answer) => ({
+        questionId: answer.questionId,
+        questionType: "mini_exam" as const,
         topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
+        selectedAnswer: answer.selectedChoice ?? null,
         isCorrect: answer.isCorrect,
         answeredAt: answer.answeredAt,
-      }]),
-    });
-    const updated = recordFinalExamAttempt(
-      state,
-      attempt,
-      answers,
-      exposures,
-      signals,
-      new Date(),
-    );
-    saveAppState(updated);
-    setState(updated);
-    setResult(scored);
-    // CP突破の全画面演出（紙吹雪）。突破していなければ差分が無いので何も出ない。
-    emitCelebration(state, updated);
-    emitMochitEvent(scored.passed ? "checkpointClear" : "incorrect");
-    if (uid) {
-      saveProgressToDb(uid, updated.progress);
+        attemptGroupId: exam.attemptId,
+      }));
+      const exposureResult = await saveQuestionAttemptsForCurrentSession(
+        questionAttempts,
+        state.answers,
+      );
+      const { exposures, userId: uid } = exposureResult;
+      const completedAt = pendingCompletionAtRef.current ?? new Date().toISOString();
+      pendingCompletionAtRef.current = completedAt;
+      await completeAssessmentSessionForCurrentSession({
+        action: "complete",
+        sessionId: exam.attemptId,
+        completedAt,
+        answers: answers.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+          idempotencyKey: assessmentAnswerIdempotencyKey(exam.attemptId, answer.questionId),
+          canonicalQuestionId: answer.questionId,
+          topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
+          isCorrect: answer.isCorrect,
+          answeredAt: answer.answeredAt,
+        }]),
+      });
+      factsCommitted = true;
+      pendingCompletionAtRef.current = null;
+      const updated = recordFinalExamAttempt(
+        state,
+        attempt,
+        answers,
+        exposures,
+        signals,
+        new Date(),
+      );
+      saveAppState(updated);
+      setState(updated);
+      setResult(scored);
+      // CP突破の全画面演出（紙吹雪）。突破していなければ差分が無いので何も出ない。
+      emitCelebration(state, updated);
+      emitMochitEvent(scored.passed ? "checkpointClear" : "incorrect");
+      if (uid) {
+        saveProgressToDb(uid, updated.progress);
+      }
+    } catch (error) {
+      if (factsCommitted) {
+        if (committedResult) setResult(committedResult);
+        return;
+      }
+      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      throw error;
     }
   }
 
@@ -202,6 +233,12 @@ export default function FinalExamPage() {
 
       <div className="mx-auto w-full max-w-md space-y-5 px-4 py-6 md:max-w-2xl">
         <FinalExamCard checkpoint={checkpoint} gate={gate} rangeLabel={rangeLabel} />
+
+        {persistenceError && (
+          <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {persistenceError}
+          </p>
+        )}
 
         {/* --- 採点結果 --- */}
         {result ? (

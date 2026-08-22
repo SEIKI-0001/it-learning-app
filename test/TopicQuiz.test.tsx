@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import { subscribeMochitEvent } from "@/components/mochit/mochitEventBus";
@@ -130,6 +130,26 @@ describe("TopicQuiz", () => {
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it("unlocks completion for retry when asynchronous persistence fails", async () => {
+    const onComplete = vi.fn()
+      .mockRejectedValueOnce(new Error("persistence failed"))
+      .mockResolvedValueOnce(undefined);
+    render(
+      <TopicQuiz topicId="topic-1" onComplete={onComplete} questions={[singleQuestion]} />,
+    );
+    fireEvent.click(screen.getByText("正解の答え").closest("button")!);
+
+    fireEvent.click(screen.getByRole("button", { name: "完了する" }));
+
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    expect(await screen.findByRole("button", { name: "完了する" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "完了する" }));
+
+    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(2));
+    expect(await screen.findByRole("button", { name: "保存しました" })).toBeDisabled();
   });
 
   it("shows the reason for the selected wrong choice after answering", () => {

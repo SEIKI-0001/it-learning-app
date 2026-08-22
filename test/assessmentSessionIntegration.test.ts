@@ -96,6 +96,7 @@ class MemoryQuery implements PromiseLike<QueryResult> {
       return { data: single ? rows[0] ?? null : rows, error: null };
     }
     if (this.table === "question_attempts") {
+      if (this.db.attemptQueryResult !== null) return this.db.attemptQueryResult;
       const rows = this.db.attempts.filter((row) =>
         this.filters.every(([column, value]) =>
           column === "user_id" || row[column as keyof AttemptRow] === value
@@ -110,6 +111,7 @@ class MemoryQuery implements PromiseLike<QueryResult> {
 class MemorySupabase {
   readonly sessions = new Map<string, SessionRow>();
   readonly attempts: AttemptRow[] = [];
+  attemptQueryResult: QueryResult | null = null;
   readonly answers = new Map<string, Array<Record<string, unknown>>>();
   readonly evidenceEvents = new Set<string>();
   readonly from = vi.fn((table: string) => new MemoryQuery(this, table));
@@ -226,6 +228,31 @@ describe("assessment session persistence", () => {
     expect(db.sessions.get(SESSION_ID)?.question_count).toBe(2);
   });
 
+  it("compares replay timestamps by instant and rejects start replays after terminal state", async () => {
+    const db = new MemorySupabase();
+    await startAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: startInput({ startedAt: "2026-08-23T01:00:00Z" }),
+    });
+
+    await expect(startAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: startInput({ startedAt: "2026-08-23T01:00:00.000+00:00" }),
+    })).resolves.toMatchObject({ status: "in_progress" });
+
+    Object.assign(db.sessions.get(SESSION_ID)!, {
+      status: "completed",
+      completed_at: COMPLETED_AT,
+    });
+    await expect(startAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: startInput({ startedAt: "2026-08-23T01:00:00Z" }),
+    })).rejects.toMatchObject({ code: "session_conflict" });
+  });
+
   it("abandons only an in-progress session and leaves terminal facts immutable", async () => {
     const db = new MemorySupabase();
     await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });
@@ -244,6 +271,26 @@ describe("assessment session persistence", () => {
       input: { action: "complete", sessionId: SESSION_ID, completedAt: COMPLETED_AT, answers: [] },
     })).rejects.toMatchObject({ code: "session_conflict" });
     expect(db.sessions.get(SESSION_ID)?.status).toBe("abandoned");
+  });
+
+  it("treats an equivalent abandon replay timestamp as the same instant", async () => {
+    const db = new MemorySupabase();
+    await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });
+    await abandonAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: {
+        action: "abandon",
+        sessionId: SESSION_ID,
+        completedAt: "2026-08-23T02:00:00+00:00",
+      },
+    });
+
+    await expect(abandonAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: { action: "abandon", sessionId: SESSION_ID, completedAt: COMPLETED_AT },
+    })).resolves.toMatchObject({ status: "abandoned" });
   });
 
   it("derives first, seen, and unknown from matching authoritative attempts", async () => {
@@ -376,6 +423,92 @@ describe("assessment session persistence", () => {
       is_correct: true,
       first_attempt_state: "seen",
     })]);
+  });
+
+  it("matches an official authoritative attempt by instant despite timestamp formatting", async () => {
+    const db = new MemorySupabase();
+    await startAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: startInput({ source: "official_past", questionCount: 1 }),
+    });
+    db.attempts.push({
+      attempt_id: "official-equivalent-time",
+      question_id: "ipa-it-passport-2026-q016",
+      question_type: "official_past",
+      topic_id: "tech-ai-ml",
+      is_correct: true,
+      answered_at: "2026-08-23T01:10:00.000Z",
+      official_exam_field: "strategy",
+      is_first_attempt: true,
+      attempt_group_id: SESSION_ID,
+    });
+
+    await expect(completeAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: {
+        action: "complete",
+        sessionId: SESSION_ID,
+        completedAt: COMPLETED_AT,
+        answers: [{
+          idempotencyKey: `${SESSION_ID}:official-equivalent-time`,
+          canonicalQuestionId: "ipa-it-passport-2026-q016",
+          topicId: "ignored-client-topic",
+          isCorrect: false,
+          answeredAt: "2026-08-23T01:10:00+00:00",
+        }],
+      },
+    })).resolves.toMatchObject({ status: "completed", firstCount: 1 });
+    expect(db.answers.get(SESSION_ID)?.[0]).toMatchObject({ is_correct: true });
+  });
+
+  it("does not complete when the authoritative attempt query fails, then allows retry", async () => {
+    const db = new MemorySupabase();
+    await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });
+    db.attemptQueryResult = { data: null, error: { message: "database unavailable" } };
+    const input = {
+      action: "complete" as const,
+      sessionId: SESSION_ID,
+      completedAt: COMPLETED_AT,
+      answers: [{
+        idempotencyKey: `${SESSION_ID}:retry`,
+        canonicalQuestionId: "tech-binary-data-ex1",
+        topicId: "tech-binary-data",
+        isCorrect: true,
+        answeredAt: "2026-08-23T01:01:00.000Z",
+      }],
+    };
+
+    await expect(completeAssessmentSession({
+      supabase: db.client(), userId: USER_ID, input,
+    })).rejects.toMatchObject({ code: "persistence_failed" });
+    expect(db.rpc).not.toHaveBeenCalled();
+    expect(db.sessions.get(SESSION_ID)?.status).toBe("in_progress");
+
+    db.attemptQueryResult = null;
+    await expect(completeAssessmentSession({
+      supabase: db.client(), userId: USER_ID, input,
+    })).resolves.toMatchObject({ status: "completed", unknownCount: 1 });
+  });
+
+  it("rejects a malformed authoritative attempt response instead of deriving unknown", async () => {
+    const db = new MemorySupabase();
+    await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });
+    db.attemptQueryResult = { data: [{ question_id: "incomplete-row" }], error: null };
+
+    await expect(completeAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: {
+        action: "complete",
+        sessionId: SESSION_ID,
+        completedAt: COMPLETED_AT,
+        answers: [],
+      },
+    })).rejects.toMatchObject({ code: "persistence_failed" });
+    expect(db.rpc).not.toHaveBeenCalled();
+    expect(db.sessions.get(SESSION_ID)?.status).toBe("in_progress");
   });
 
   it("keeps unanswered questions only in the fixed denominator", async () => {

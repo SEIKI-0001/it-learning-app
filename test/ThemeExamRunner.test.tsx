@@ -98,8 +98,14 @@ beforeEach(() => {
       },
     },
   });
-  startAssessmentSessionForCurrentSession.mockResolvedValue(true);
-  completeAssessmentSessionForCurrentSession.mockResolvedValue(true);
+  startAssessmentSessionForCurrentSession.mockResolvedValue({
+    sessionId: "20000000-0000-4000-8000-000000000001",
+    status: "in_progress",
+  });
+  completeAssessmentSessionForCurrentSession.mockResolvedValue({
+    sessionId: "20000000-0000-4000-8000-000000000001",
+    status: "completed",
+  });
 });
 
 afterEach(cleanup);
@@ -108,8 +114,11 @@ describe("ThemeExamRunner exposure integration", () => {
   it("persists start before showing questions", async () => {
     let releaseStart!: () => void;
     startAssessmentSessionForCurrentSession.mockImplementation(() =>
-      new Promise<boolean>((resolve) => {
-        releaseStart = () => resolve(true);
+      new Promise((resolve) => {
+        releaseStart = () => resolve({
+          sessionId: "20000000-0000-4000-8000-000000000001",
+          status: "in_progress",
+        });
       })
     );
     render(
@@ -213,5 +222,66 @@ describe("ThemeExamRunner exposure integration", () => {
       [],
     );
     expect(recordThemeExamLearningResult).not.toHaveBeenCalled();
+  });
+
+  it("keeps questions unmounted after a failed start and retries the same action", async () => {
+    startAssessmentSessionForCurrentSession
+      .mockRejectedValueOnce(new Error("start failed"))
+      .mockResolvedValueOnce({
+        sessionId: "20000000-0000-4000-8000-000000000001",
+        status: "in_progress",
+      });
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("開始");
+    expect(screen.queryByText("2進数の確認")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    expect(await screen.findByText("2進数の確認")).toBeInTheDocument();
+    expect(startAssessmentSessionForCurrentSession.mock.calls[1][0]).toEqual(
+      startAssessmentSessionForCurrentSession.mock.calls[0][0],
+    );
+  });
+
+  it("does not write P0 or show results after failed completion and permits retry", async () => {
+    completeAssessmentSessionForCurrentSession
+      .mockRejectedValueOnce(new Error("complete failed"))
+      .mockResolvedValueOnce({
+        sessionId: "20000000-0000-4000-8000-000000000001",
+        status: "completed",
+      });
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.getByText("2進数の確認")).toBeInTheDocument();
+    expect(recordThemeExamLearningResult).not.toHaveBeenCalled();
+    expect(saveProgressToDb).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalledOnce());
+    expect(completeAssessmentSessionForCurrentSession.mock.calls[1][0]).toEqual(
+      completeAssessmentSessionForCurrentSession.mock.calls[0][0],
+    );
   });
 });
