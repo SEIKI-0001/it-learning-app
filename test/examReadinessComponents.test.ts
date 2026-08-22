@@ -6,6 +6,7 @@ import {
   computeFieldEvidence,
   computeFirstPerformance,
   computeRetention,
+  scopeComponentInputsToField,
   computeSummativePerformance,
   computeTopicMastery,
   computeWeakTopics,
@@ -528,5 +529,57 @@ describe("computeConfidenceInputs", () => {
     expect(result.completedEligibleSummativeSessionCount).toBe(4);
     expect(result.summativeSessionIds).toEqual(["summary", "mock", "official", "old-summary"]);
     expect(result.summativeSessionSufficiency).toBe(100);
+  });
+});
+
+describe("scopeComponentInputsToField", () => {
+  it("centralizes official and Topic-primary field attribution and omits unavailable field summative data", () => {
+    const source = input({
+      topics: [
+        topic({ topicId: "strategy-topic", fieldId: "strategy" }),
+        topic({ topicId: "technology-topic", fieldId: "technology" }),
+      ],
+      answers: [
+        answer({
+          topicId: "technology-topic",
+          fieldId: "technology",
+          kind: "official_past",
+          officialExamFieldId: "strategy",
+        }),
+        answer({
+          answerId: "answer-2",
+          idempotencyKey: "event-2",
+          canonicalQuestionId: "question-2",
+          topicId: "technology-topic",
+          fieldId: "technology",
+          kind: "confirmation",
+        }),
+      ],
+      assessmentSessions: [session()],
+      masteryByTopic: {
+        "strategy-topic": mastery("strategy-topic", 70),
+        "technology-topic": mastery("technology-topic", 90),
+      },
+      reviewOutcomes: [
+        review({ topicId: "strategy-topic" }),
+        review({ topicId: "technology-topic" }),
+      ],
+    });
+    const strategy = scopeComponentInputsToField(source, "strategy");
+    const technology = scopeComponentInputsToField(source, "technology");
+
+    expect(strategy.firstPerformanceInput.answers.map((event) => event.idempotencyKey))
+      .toEqual(["event-1"]);
+    expect(technology.firstPerformanceInput.answers.map((event) => event.idempotencyKey))
+      .toEqual(["event-2"]);
+    expect(technology.topicInput.answers.map((event) => event.idempotencyKey))
+      .toEqual(["event-1", "event-2"]);
+    expect(technology.topicInput.topics.map((item) => item.topicId)).toEqual(["technology-topic"]);
+    expect(Object.keys(technology.topicInput.masteryByTopic)).toEqual(["technology-topic"]);
+    expect(technology.topicInput.reviewOutcomes.map((outcome) => outcome.topicId))
+      .toEqual(["technology-topic"]);
+    expect(strategy.firstPerformanceInput.assessmentSessions).toEqual([]);
+    expect(strategy.topicInput.assessmentSessions).toEqual([]);
+    expect(computeSummativePerformance(strategy.firstPerformanceInput)).toBeNull();
   });
 });

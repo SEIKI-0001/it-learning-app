@@ -282,6 +282,43 @@ export function computeConfidenceInputs(input: ComponentInput): ConfidenceInputs
   };
 }
 
+export function scopeComponentInputsToField(
+  input: ComponentInput,
+  fieldId: string,
+): { firstPerformanceInput: ComponentInput; topicInput: ComponentInput } {
+  const topics = input.topics.filter((topic) => topic.fieldId === fieldId);
+  const topicIds = new Set(topics.map((topic) => topic.topicId));
+  const masteryByTopic: Record<string, ComponentInput["masteryByTopic"][string]> = {};
+  for (const topicId of topicIds) {
+    const mastery = input.masteryByTopic[topicId];
+    if (mastery !== undefined) masteryByTopic[topicId] = mastery;
+  }
+
+  const base = {
+    calculationReferenceTime: input.calculationReferenceTime,
+    topics,
+    // The V1 session contract has no per-field unanswered denominator.
+    assessmentSessions: [],
+    masteryByTopic,
+    reviewOutcomes: input.reviewOutcomes.filter((outcome) => topicIds.has(outcome.topicId)),
+    weakTopicSignals: input.weakTopicSignals?.filter((signal) => topicIds.has(signal.topicId)),
+  };
+  return {
+    firstPerformanceInput: {
+      ...base,
+      answers: input.answers.filter((event) =>
+        event.kind === "official_past"
+          ? event.officialExamFieldId === fieldId
+          : event.fieldId === fieldId
+      ),
+    },
+    topicInput: {
+      ...base,
+      answers: input.answers.filter((event) => topicIds.has(event.topicId)),
+    },
+  };
+}
+
 function eventDeduplicatedAnswers(input: ComponentInput): ReadinessAnswerEvidence[] {
   return dedupeAnswerEvents([...input.answers]);
 }
