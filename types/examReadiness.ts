@@ -1,3 +1,5 @@
+import type { TopicMasteryStats } from "@/types";
+
 export type FirstAttemptState = "first" | "seen" | "unknown";
 export type ReadinessBand = "measuring" | "needs_work" | "approaching" | "ready" | "stable";
 export type ConfidenceLevel = "low" | "medium" | "high";
@@ -22,6 +24,8 @@ export type ReadinessAnswerEvidence = {
   canonicalQuestionId: string;
   topicId: string;
   fieldId: string;
+  /** The exam-scheme field for official questions, which may differ from the Topic's primary field. */
+  officialExamFieldId?: string;
   kind: ReadinessEvidenceKind;
   isCorrect: boolean;
   firstAttemptState: FirstAttemptState;
@@ -143,6 +147,67 @@ export type EvidenceBundle = {
   evidenceRevision: number;
   answers: NormalizedAnswerEvidence[];
   assessmentSessions: AssessmentSession[];
+};
+
+export type ReadinessReviewOutcome = {
+  topicId: string;
+  completedAt: string;
+  wasDue: boolean;
+  isCorrect: boolean;
+  /** The stage reached by this result. Stage 1 is the initial-learning success. */
+  stage: number;
+  /** The current deadline after this result. */
+  dueAt: string;
+  /** The interval that produced the current deadline. */
+  scheduledIntervalDays: number;
+};
+
+export type P0WeakTopicReason =
+  | "low_mastery"
+  | "summary_exam_miss"
+  | "review_failure"
+  | "repeated_miss";
+
+export type ReadinessWeakTopicSignal = {
+  topicId: string;
+  reason: P0WeakTopicReason;
+};
+
+export type ComponentInput = {
+  calculationReferenceTime: Date;
+  topics: ReadinessTopic[];
+  answers: ReadinessAnswerEvidence[];
+  assessmentSessions: AssessmentSession[];
+  /** Parsed latest topic_mastery_stats; calculators must treat this as read-only. */
+  masteryByTopic: Readonly<Record<string, TopicMasteryStats>>;
+  reviewOutcomes: ReadinessReviewOutcome[];
+  weakTopicSignals?: ReadinessWeakTopicSignal[];
+};
+
+export type FieldEvidenceResult = {
+  fieldId: string;
+  weightedEvidenceUnits: number;
+  targetEvidenceUnits: number;
+  evidenceVolume: number;
+  assessmentCoverage: number;
+  evidenceSufficiency: number;
+};
+
+export type WeakPenaltyResult = {
+  topics: WeakTopic[];
+  penalty: number;
+};
+
+export type ConfidenceInputs = {
+  uniqueQuestionCount: number;
+  weightedEvidenceUnits: number;
+  evidenceVolume: number;
+  assessmentCoverage: number;
+  fieldEvidence: FieldEvidenceResult[];
+  threeFieldEvidenceSufficiency: number;
+  completedEligibleSummativeSessionCount: number;
+  summativeSessionIds: string[];
+  summativeSessionSufficiency: number;
 };
 
 export type ExamReadinessResult = {
