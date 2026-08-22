@@ -1,6 +1,32 @@
 export type FirstAttemptState = "first" | "seen" | "unknown";
 export type ReadinessBand = "measuring" | "needs_work" | "approaching" | "ready" | "stable";
 export type ConfidenceLevel = "low" | "medium" | "high";
+export type ReadinessEvidenceKind =
+  | "confirmation"
+  | "checkpoint"
+  | "review"
+  | "summary"
+  | "mock"
+  | "official_past";
+
+export type ReadinessTopic = {
+  topicId: string;
+  fieldId: string;
+  label: string;
+  importance: 1 | 2 | 3;
+};
+
+export type ReadinessAnswerEvidence = {
+  answerId: string | null;
+  idempotencyKey: string;
+  canonicalQuestionId: string;
+  topicId: string;
+  fieldId: string;
+  kind: ReadinessEvidenceKind;
+  isCorrect: boolean;
+  firstAttemptState: FirstAttemptState;
+  answeredAt: string;
+};
 
 export type ConfidenceReasonCode =
   | "insufficient_evidence"
