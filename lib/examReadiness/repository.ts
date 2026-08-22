@@ -1,7 +1,10 @@
+import "server-only";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   buildReadinessTopicCatalog,
   ExamReadinessCatalogError,
+  isConfiguredReadinessFieldId,
   resolveReadinessQuestionContext,
 } from "@/lib/examReadiness/catalog";
 import type { ExamReadinessEvidenceBundle } from "@/lib/examReadiness/calculator";
@@ -176,24 +179,24 @@ function assembleEvidenceBundle(
     const sessionById = new Map(assessmentSessions.map((session) => [session.sessionId, session]));
     const p0Answers = parseP0Answers(progress.masteryByTopic);
     const attemptAnswers = parseQuestionAttempts(rows.questionAttempts.data);
-    const sessionAnswers = parseSessionAnswers(
+    const parsedSessionAnswers = parseSessionAnswers(
       rows.sessionAnswers.data,
       sessionById,
       attemptAnswers,
     );
     const reconciledAttemptAnswers = attemptAnswers.map((attempt) => {
-      const matchingSessionAnswer = sessionAnswers.find(
-        (sessionAnswer) => isSamePersistedAnswerFact(attempt, sessionAnswer),
-      );
-      return matchingSessionAnswer === undefined
+      const idempotencyKey = attempt.answerId === null
+        ? undefined
+        : parsedSessionAnswers.idempotencyKeyByAttemptId.get(attempt.answerId);
+      return idempotencyKey === undefined
         ? attempt
-        : { ...attempt, idempotencyKey: matchingSessionAnswer.idempotencyKey };
+        : { ...attempt, idempotencyKey };
     });
 
     return {
       evidenceRevision,
       topics: buildReadinessTopicCatalog(),
-      answers: [...p0Answers, ...reconciledAttemptAnswers, ...sessionAnswers],
+      answers: [...p0Answers, ...reconciledAttemptAnswers, ...parsedSessionAnswers.answers],
       assessmentSessions,
       masteryByTopic: progress.masteryByTopic,
       reviewOutcomes: parseReviewOutcomes(progress),
@@ -322,7 +325,7 @@ function parseQuestionAttempts(value: unknown): ReadinessAnswerEvidence[] {
       || !isIsoString(raw.answered_at)
       || typeof raw.is_first_attempt !== "boolean"
       || (raw.official_exam_field !== null && raw.official_exam_field !== undefined
-        && !isConfiguredField(raw.official_exam_field))
+        && !isConfiguredReadinessFieldId(raw.official_exam_field))
       || (raw.attempt_group_id !== null && raw.attempt_group_id !== undefined
         && typeof raw.attempt_group_id !== "string")
     ) {
@@ -339,7 +342,7 @@ function parseQuestionAttempts(value: unknown): ReadinessAnswerEvidence[] {
     });
     return {
       answerId: raw.attempt_id,
-      idempotencyKey: fallbackEventKey(raw.question_id, kind, raw.answered_at),
+      idempotencyKey: `question_attempt:${raw.attempt_id}`,
       sessionId: typeof raw.attempt_group_id === "string" ? raw.attempt_group_id : null,
       canonicalQuestionId: context.canonicalQuestionId,
       topicId: context.topicId,
@@ -407,9 +410,15 @@ function parseSessionAnswers(
   value: unknown,
   sessionById: ReadonlyMap<string, AssessmentSession>,
   attemptAnswers: ReadonlyArray<ReadinessAnswerEvidence>,
-): ReadinessAnswerEvidence[] {
+): {
+  answers: ReadinessAnswerEvidence[];
+  idempotencyKeyByAttemptId: ReadonlyMap<string, string>;
+} {
   if (!Array.isArray(value)) throw invalidEvidence("Invalid assessment_session_answers result");
-  return value.map((raw) => {
+  const matchedAttemptIds = new Set<string>();
+  const idempotencyKeyByAttemptId = new Map<string, string>();
+  const orderedRows = [...value].sort(compareSessionAnswerRows);
+  const answers = orderedRows.map((raw) => {
     if (
       !isRecord(raw)
       || !isNonEmptyString(raw.answer_id)
@@ -417,34 +426,55 @@ function parseSessionAnswers(
       || !isNonEmptyString(raw.session_id)
       || !isNonEmptyString(raw.canonical_question_id)
       || !isNonEmptyString(raw.topic_id)
-      || !isConfiguredField(raw.field_id)
+      || !isConfiguredReadinessFieldId(raw.field_id)
       || typeof raw.is_correct !== "boolean"
       || !isFirstAttemptState(raw.first_attempt_state)
       || !isIsoString(raw.answered_at)
     ) {
       throw invalidEvidence("Invalid assessment_session_answers row");
     }
-    const session = sessionById.get(raw.session_id);
+    const sessionAnswer = raw as Record<string, unknown> & {
+      answer_id: string;
+      idempotency_key: string;
+      session_id: string;
+      canonical_question_id: string;
+      topic_id: string;
+      field_id: string;
+      is_correct: boolean;
+      first_attempt_state: FirstAttemptState;
+      answered_at: string;
+    };
+    const session = sessionById.get(sessionAnswer.session_id);
     if (session === undefined) {
-      throw invalidEvidence(`Assessment answer references missing session ${raw.session_id}`);
+      throw invalidEvidence(
+        `Assessment answer references missing session ${sessionAnswer.session_id}`,
+      );
     }
-    const matchingAttempt = attemptAnswers.find((attempt) =>
-      attempt.sessionId === raw.session_id
-      && attempt.canonicalQuestionId === raw.canonical_question_id
-      && attempt.answeredAt === raw.answered_at
-      && attempt.kind === session.source
-    );
+    const matchingAttempt = attemptAnswers
+      .filter((attempt) =>
+        attempt.answerId !== null
+        && !matchedAttemptIds.has(attempt.answerId)
+        && isSamePersistedAnswerFact(attempt, sessionAnswer, session)
+      )
+      .sort((left, right) => (left.answerId as string).localeCompare(right.answerId as string))[0];
+    if (matchingAttempt?.answerId !== null && matchingAttempt?.answerId !== undefined) {
+      matchedAttemptIds.add(matchingAttempt.answerId);
+      idempotencyKeyByAttemptId.set(
+        matchingAttempt.answerId,
+        sessionAnswer.idempotency_key,
+      );
+    }
     const context = resolveReadinessQuestionContext({
-      questionId: raw.canonical_question_id,
-      topicId: raw.topic_id,
+      questionId: sessionAnswer.canonical_question_id,
+      topicId: sessionAnswer.topic_id,
       officialExamFieldId: session.source === "official_past"
         ? matchingAttempt?.officialExamFieldId
         : undefined,
     });
     return {
-      answerId: raw.answer_id,
-      idempotencyKey: raw.idempotency_key,
-      sessionId: raw.session_id,
+      answerId: sessionAnswer.answer_id,
+      idempotencyKey: sessionAnswer.idempotency_key,
+      sessionId: sessionAnswer.session_id,
       canonicalQuestionId: context.canonicalQuestionId,
       topicId: context.topicId,
       fieldId: context.fieldId,
@@ -452,23 +482,43 @@ function parseSessionAnswers(
         ? {}
         : { officialExamFieldId: context.officialExamFieldId }),
       kind: session.source,
-      isCorrect: raw.is_correct,
-      firstAttemptState: raw.first_attempt_state,
-      answeredAt: raw.answered_at,
+      isCorrect: sessionAnswer.is_correct,
+      firstAttemptState: sessionAnswer.first_attempt_state,
+      answeredAt: sessionAnswer.answered_at,
     };
   });
+  return { answers, idempotencyKeyByAttemptId };
 }
 
 function isSamePersistedAnswerFact(
-  left: ReadinessAnswerEvidence,
-  right: ReadinessAnswerEvidence,
+  attempt: ReadinessAnswerEvidence,
+  sessionAnswer: Record<string, unknown> & {
+    session_id: string;
+    canonical_question_id: string;
+    topic_id: string;
+    field_id: string;
+    is_correct: boolean;
+    first_attempt_state: FirstAttemptState;
+    answered_at: string;
+  },
+  session: AssessmentSession,
 ): boolean {
-  return left.sessionId !== null
-    && left.sessionId !== undefined
-    && left.sessionId === right.sessionId
-    && left.canonicalQuestionId === right.canonicalQuestionId
-    && left.kind === right.kind
-    && left.answeredAt === right.answeredAt;
+  return attempt.sessionId === sessionAnswer.session_id
+    && attempt.canonicalQuestionId === sessionAnswer.canonical_question_id
+    && attempt.topicId === sessionAnswer.topic_id
+    && attempt.kind === session.source
+    && attempt.answeredAt === sessionAnswer.answered_at
+    && attempt.isCorrect === sessionAnswer.is_correct
+    && attempt.firstAttemptState === sessionAnswer.first_attempt_state
+    && (session.source === "official_past"
+      ? attempt.officialExamFieldId === sessionAnswer.field_id
+      : attempt.fieldId === sessionAnswer.field_id);
+}
+
+function compareSessionAnswerRows(left: unknown, right: unknown): number {
+  if (!isRecord(left) || !isRecord(right)) return 0;
+  return String(left.answered_at).localeCompare(String(right.answered_at))
+    || String(left.answer_id).localeCompare(String(right.answer_id));
 }
 
 function parseReviewOutcomes(progress: ProgressEvidence): ReadinessReviewOutcome[] {
@@ -704,10 +754,6 @@ function isOneOf<T extends string>(value: unknown, candidates: readonly T[]): va
 
 function isFirstAttemptState(value: unknown): value is FirstAttemptState {
   return isOneOf(value, ["first", "seen", "unknown"]);
-}
-
-function isConfiguredField(value: unknown): value is string {
-  return isOneOf(value, ["strategy", "management", "technology"]);
 }
 
 function isLegacyEvidenceKind(value: unknown): value is P0Evidence["kind"] {

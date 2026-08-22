@@ -6,6 +6,8 @@ import type { ReadinessTopic } from "@/types/examReadiness";
 const CONFIGURED_FIELD_IDS = new Set<string>(
   EXAM_READINESS_CONFIG.fields.map((field) => field.fieldId),
 );
+type ConfiguredReadinessFieldId =
+  typeof EXAM_READINESS_CONFIG.fields[number]["fieldId"];
 
 export type ReadinessQuestionCatalogEntry = {
   canonicalQuestionId: string;
@@ -22,6 +24,12 @@ export class ExamReadinessCatalogError extends Error {
     super(message);
     this.name = "ExamReadinessCatalogError";
   }
+}
+
+export function isConfiguredReadinessFieldId(
+  value: unknown,
+): value is ConfiguredReadinessFieldId {
+  return typeof value === "string" && CONFIGURED_FIELD_IDS.has(value);
 }
 
 export function buildReadinessTopicCatalog(): ReadinessTopic[] {
@@ -88,7 +96,7 @@ export function resolveReadinessQuestionContext(input: {
   if (
     input.officialExamFieldId !== undefined
     && input.officialExamFieldId !== null
-    && !CONFIGURED_FIELD_IDS.has(input.officialExamFieldId)
+    && !isConfiguredReadinessFieldId(input.officialExamFieldId)
   ) {
     throw new ExamReadinessCatalogError(
       `Question ${input.questionId} has an unknown official exam field: ${input.officialExamFieldId}`,

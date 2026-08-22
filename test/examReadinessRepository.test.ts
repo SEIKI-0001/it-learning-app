@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+vi.mock("server-only", () => ({}));
+
 import {
   ExamReadinessRepositoryError,
   getStoredCurrentReadiness,
@@ -172,7 +175,7 @@ function evidenceTables() {
       topic_id: "tech-ai-ml",
       field_id: "strategy",
       is_correct: true,
-      first_attempt_state: "unknown",
+      first_attempt_state: "seen",
       answered_at: "2026-08-21T01:00:00.000Z",
     }],
   };
@@ -217,7 +220,7 @@ describe("loadExamReadinessEvidence", () => {
         sessionId: "session-completed",
         fieldId: "technology",
         officialExamFieldId: "strategy",
-        firstAttemptState: "unknown",
+        firstAttemptState: "seen",
       }),
     ]));
     expect(evidence.answers.find((answer) => answer.answerId === null)?.idempotencyKey)
@@ -232,6 +235,53 @@ describe("loadExamReadinessEvidence", () => {
     ]);
     expect(fake.calls).toContain("assessment_sessions.order:completed_at:desc");
     expect(fake.calls).toContain("assessment_sessions.order:session_id:asc");
+  });
+
+  it("keeps genuine attempt IDs when two attempts share question, kind, and timestamp", async () => {
+    const tables = evidenceTables();
+    tables.question_attempts.push({
+      ...tables.question_attempts[0],
+      attempt_id: "attempt-2",
+    });
+    const fake = fakeSupabase({ tables, revisions: [9, 9] });
+
+    const evidence = await loadExamReadinessEvidence(fake.client, USER_ID);
+    const official = evidence.answers.filter(
+      (answer) => answer.canonicalQuestionId === "ipa-it-passport-2026-q016",
+    );
+    const deduplicated = dedupeAnswerEvents(official);
+
+    expect(official.find((answer) => answer.answerId === "attempt-1")?.idempotencyKey)
+      .toBe("session-answer-event-1");
+    expect(official.find((answer) => answer.answerId === "attempt-2")?.idempotencyKey)
+      .toBe("question_attempt:attempt-2");
+    expect(deduplicated.map((answer) => answer.answerId).sort()).toEqual([
+      "attempt-1",
+      "attempt-2",
+    ]);
+  });
+
+  it.each([
+    ["missing exposure and first-seen true", { isFirstSeen: true }, "first"],
+    ["missing exposure and first-seen false", { isFirstSeen: false }, "unknown"],
+    [
+      "explicit unknown exposure",
+      { exposureState: "unknown", isFirstSeen: true },
+      "unknown",
+    ],
+  ] as const)("maps P0 legacy exposure: %s", async (_name, legacy, expected) => {
+    const tables = evidenceTables();
+    const mastery = tables.user_progress.topic_mastery_stats["tech-ai-ml"];
+    mastery.recentEvidence = [{
+      ...mastery.recentEvidence[0],
+      ...legacy,
+    }];
+    const fake = fakeSupabase({ tables, revisions: [9, 9] });
+
+    const evidence = await loadExamReadinessEvidence(fake.client, USER_ID);
+
+    expect(evidence.answers.find((answer) => answer.answerId === null)?.firstAttemptState)
+      .toBe(expected);
   });
 
   it("retries the whole evidence read when the revision changes", async () => {
