@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
-import { getRequestUserId } from "@/lib/apiUser";
+import { getInternalUserId } from "@/lib/auth/currentUser";
 import {
   canRecordStudyForUser,
   recordingLockedResponse,
@@ -10,7 +10,7 @@ import {
   topicProgressToRow,
   type TopicProgressRow,
 } from "@/lib/dbMappers";
-import { refreshIntegratedStatusForUser } from "@/lib/progressBootstrap";
+import { recalculateExamReadiness } from "@/lib/examReadiness/service";
 import type { TopicStage } from "@/types/studyProgress";
 
 export const runtime = "nodejs";
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     correct?: number;
     total?: number;
     date?: string;
+    completionId?: string;
   } = {};
   try {
     body = (await request.json()) as typeof body;
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid body" }, { status: 400 });
   }
 
-  const userId = await getRequestUserId(body);
+  const userId = await getInternalUserId();
   if (!userId) {
     return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
@@ -139,13 +140,23 @@ export async function POST(request: Request) {
     .eq("topic_id", topicId)
     .eq("task_type", "topic_quiz");
 
-  // 統合進捗の当日スナップショットを更新する（合格準備度に即反映）。
-  // 失敗してもこのレスポンスは成功のまま返す（進捗保存自体は完了しているため）。
+  const completionId = typeof body.completionId === "string"
+    && body.completionId.trim().length > 0
+    && body.completionId.length <= 4096
+    ? body.completionId
+    : [topicId, date, String(correct), String(total)].join("\u001f");
+  let readinessUpdated = false;
   try {
-    await refreshIntegratedStatusForUser(supabase, userId);
+    await recalculateExamReadiness({
+      supabase,
+      userId,
+      triggerType: "topic_quiz_complete",
+      triggerId: completionId,
+    });
+    readinessUpdated = true;
   } catch {
-    /* fail-safe */
+    // topic_progress は commit 済み。Readiness の失敗で学習結果を巻き戻さない。
   }
 
-  return NextResponse.json({ ok: true, stage, rate });
+  return NextResponse.json({ ok: true, stage, rate, readinessUpdated });
 }

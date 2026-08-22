@@ -319,15 +319,30 @@ export async function fetchAiGradingBootstrap(
   }
 }
 
-/** 進捗をDBへ保存（user_id がある場合のみ呼ぶ。失敗してもUIは止めない）。 */
-export function saveProgressToDb(userId: string, progress: UserProgress): void {
-  void fetch("/api/progress/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, progress }),
-  }).catch(() => {
-    /* fire-and-forget */
-  });
+export type ReadinessTriggerInput = {
+  triggerType: "learning_complete" | "review_complete";
+  triggerId: string;
+};
+
+/**
+ * 進捗をDBへ保存する。完了イベントは Promise を await し、通常の UI 同期は返り値を
+ * 待たず従来どおり fire-and-forget で使える。
+ */
+export async function saveProgressToDb(
+  userId: string,
+  progress: UserProgress,
+  readinessTrigger?: ReadinessTriggerInput | null,
+): Promise<boolean> {
+  try {
+    const response = await fetch("/api/progress/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, progress, readinessTrigger: readinessTrigger ?? undefined }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 /** プロフィールをDBへ保存（オンボーディング完了時）。 */
@@ -420,23 +435,27 @@ export async function reportDailyProgress(
 }
 
 /**
- * 確認問題の結果を topic_progress に反映（fire-and-forget）。
+ * 確認問題の結果を topic_progress に反映する。
  * 理解度はこの確認問題結果でのみ更新される（自己申告では上げない）。
  */
-export function reportTopicQuizResult(
+export async function reportTopicQuizResult(
   userId: string,
   topicId: string,
   correct: number,
   total: number,
   date: string,
-): void {
-  void fetch("/api/topic-progress/quiz-result", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, topicId, correct, total, date }),
-  }).catch(() => {
-    /* fire-and-forget */
-  });
+  completionId?: string,
+): Promise<boolean> {
+  try {
+    const response = await fetch("/api/topic-progress/quiz-result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, topicId, correct, total, date, completionId }),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------

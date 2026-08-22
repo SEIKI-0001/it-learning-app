@@ -76,6 +76,7 @@ export default function ReviewPage() {
     saveAppState(next);
     setState(next);
     const userId = getUserId();
+    // 先送りは完了イベントではないため、通常の UI 同期として待たない。
     if (userId) void saveProgressToDb(userId, next.progress);
   }
 

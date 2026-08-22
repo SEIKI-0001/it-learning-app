@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
-import { getRequestUserId } from "@/lib/apiUser";
+import { getInternalUserId } from "@/lib/auth/currentUser";
 import {
   canRecordStudyForUser,
   recordingLockedResponse,
@@ -12,7 +12,7 @@ import {
   type TopicProgressRow,
 } from "@/lib/dbMappers";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
-import { refreshIntegratedStatusForUser } from "@/lib/progressBootstrap";
+import { recalculateExamReadiness } from "@/lib/examReadiness/service";
 
 export const runtime = "nodejs";
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "invalid body" }, { status: 400 });
   }
 
-  const userId = await getRequestUserId(body);
+  const userId = await getInternalUserId();
   if (!userId) {
     return NextResponse.json({ ok: false, error: "unauthenticated" }, { status: 401 });
   }
@@ -154,12 +154,25 @@ export async function POST(request: Request) {
       .in("task_type", doneTaskTypes);
   }
 
-  // 統合進捗の当日スナップショットを更新する（合格準備度に即反映）。
-  // 失敗してもこのレスポンスは成功のまま返す（進捗保存自体は完了しているため）。
+  const completionId = [
+    packId,
+    topicId,
+    typeof body.startedAt === "string" && body.startedAt.length > 0 ? body.startedAt : date,
+    String(rates.quizRate ?? ""),
+    String(rates.flashcardRate ?? ""),
+    String(rates.examLevelRate ?? ""),
+  ].join("\u001f");
+  let readinessUpdated = false;
   try {
-    await refreshIntegratedStatusForUser(supabase, userId);
+    await recalculateExamReadiness({
+      supabase,
+      userId,
+      triggerType: "check_pack_complete",
+      triggerId: completionId,
+    });
+    readinessUpdated = true;
   } catch {
-    /* fail-safe */
+    // パック結果は commit 済み。Readiness の失敗で学習結果を巻き戻さない。
   }
 
   return NextResponse.json({
@@ -168,5 +181,6 @@ export async function POST(request: Request) {
     resultStatus: decision.resultStatus,
     nextAction: decision.nextAction,
     rates,
+    readinessUpdated,
   });
 }

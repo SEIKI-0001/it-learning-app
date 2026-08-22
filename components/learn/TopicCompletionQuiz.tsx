@@ -112,6 +112,27 @@ export default function TopicCompletionQuiz({
       correct,
       total,
     });
+    if (userId) {
+      // Mastery / Review Due を所有する completeStudySession の最新結果を先に確定する。
+      // Readiness はこの保存済み P0 state だけを読み、画面側で再構成しない。
+      const progressSaved = await saveProgressToDb(
+        userId,
+        next.progress,
+        session.readinessTrigger,
+      );
+      saveAnswersToDb(userId, 0, tagged);
+      if (progressSaved && total > 0) {
+        await reportTopicQuizResult(
+          userId,
+          topic.id,
+          correct,
+          total,
+          todayLocalDate(),
+          session.readinessTrigger?.triggerId,
+        );
+      }
+    }
+
     setResult({
       correct,
       total,
@@ -120,14 +141,6 @@ export default function TopicCompletionQuiz({
     });
     emitMochitEvent(completionEvent);
     setCompleted(true);
-
-    if (userId) {
-      saveProgressToDb(userId, next.progress);
-      saveAnswersToDb(userId, 0, tagged);
-      if (total > 0) {
-        reportTopicQuizResult(userId, topic.id, correct, total, todayLocalDate());
-      }
-    }
   }
 
   if (topic.checkQuestions.length === 0) {

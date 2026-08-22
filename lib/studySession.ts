@@ -11,7 +11,7 @@
 
 import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import type { BadgeSignals } from "@/lib/badges";
-import { completeTopicStudy } from "@/lib/study";
+import { completeTopicStudy, studyXpReward } from "@/lib/study";
 import {
   applyStreakMilestones,
   getStreakMeta,
@@ -23,6 +23,11 @@ import { applyDailyQuestProgress, maxComboOf } from "@/lib/dailyQuests";
 
 export type StudySessionResult = {
   state: AppState;
+  /** P0 の永続化と同じ回答イベントから作る、再送可能な Readiness 完了キー。 */
+  readinessTrigger: {
+    triggerType: "learning_complete" | "review_complete";
+    triggerId: string;
+  } | null;
   /** 今回新たに獲得したバッジID。 */
   newlyEarnedIds: string[];
   /** 追加ドロップの表示ラベル（発生しなければ null）。 */
@@ -47,6 +52,11 @@ export function completeStudySession(
 ): StudySessionResult {
   // 復習だったかは学習前の復習キューで判定する（完了処理でキューから消えるため）。
   const wasReview = state.progress.reviewQueue.some((r) => r.topicId === topicId);
+  const completedDueReview = studyXpReward(state, topicId, now).label === "due_review";
+  const evidenceKind = completedDueReview ? "review" : "confirmation";
+  const answerEventKeys = answers
+    .map((answer) => `${answer.questionId}\u001f${evidenceKind}\u001f${answer.answeredAt}`)
+    .sort();
 
   const studied = completeTopicStudy(state, topicId, answers, exposures, now);
   // ストリーク節目のXP・おまもり付与（受領済みはスキップされる冪等処理）。
@@ -75,6 +85,12 @@ export function completeStudySession(
 
   return {
     state: finalState,
+    readinessTrigger: answerEventKeys.length === 0
+      ? null
+      : {
+          triggerType: completedDueReview ? "review_complete" : "learning_complete",
+          triggerId: answerEventKeys.join("\u001e"),
+        },
     newlyEarnedIds: awarded.newlyEarnedIds,
     dropLabel,
     streakMilestone: milestoned.milestone,
