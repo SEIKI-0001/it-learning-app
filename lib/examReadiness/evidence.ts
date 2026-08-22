@@ -44,15 +44,12 @@ export function dedupeAnswerEvents(
   const idempotencyKeys = new Set<string>();
 
   return events.filter((event) => {
-    if (event.answerId !== null) {
-      if (answerIds.has(event.answerId)) return false;
-    }
-
-    if (idempotencyKeys.has(event.idempotencyKey)) return false;
+    const isDuplicate = (event.answerId !== null && answerIds.has(event.answerId))
+      || idempotencyKeys.has(event.idempotencyKey);
 
     if (event.answerId !== null) answerIds.add(event.answerId);
     idempotencyKeys.add(event.idempotencyKey);
-    return true;
+    return !isDuplicate;
   });
 }
 

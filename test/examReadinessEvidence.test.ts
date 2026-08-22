@@ -54,6 +54,22 @@ describe("dedupeAnswerEvents", () => {
     expect(dedupeAnswerEvents(history)).toEqual([history[0]]);
   });
 
+  it("remembers an answer ID carried by an idempotency-key duplicate", () => {
+    const idlessOriginal = evidence({ answerId: null, idempotencyKey: "event-original" });
+    const mixedDuplicate = evidence({ answerId: "answer-alias", idempotencyKey: "event-original" });
+    const answerIdAlias = evidence({ answerId: "answer-alias", idempotencyKey: "event-new" });
+
+    expect(dedupeAnswerEvents([idlessOriginal, mixedDuplicate, answerIdAlias])).toEqual([idlessOriginal]);
+  });
+
+  it("remembers an idempotency key carried by an answer-ID duplicate", () => {
+    const answerIdOriginal = evidence({ answerId: "answer-alias", idempotencyKey: "event-original" });
+    const answerIdDuplicate = evidence({ answerId: "answer-alias", idempotencyKey: "event-new" });
+    const idlessAlias = evidence({ answerId: null, idempotencyKey: "event-new" });
+
+    expect(dedupeAnswerEvents([answerIdOriginal, answerIdDuplicate, idlessAlias])).toEqual([answerIdOriginal]);
+  });
+
   it("keeps real repeated answers as separate chronological events", () => {
     const firstAttempt = evidence({
       answerId: "answer-1",
