@@ -582,4 +582,17 @@ describe("scopeComponentInputsToField", () => {
     expect(strategy.topicInput.assessmentSessions).toEqual([]);
     expect(computeSummativePerformance(strategy.firstPerformanceInput)).toBeNull();
   });
+
+  it("keeps official evidence without an official field out of field first performance", () => {
+    const scoped = scopeComponentInputsToField(input({
+      answers: [answer({
+        kind: "official_past",
+        fieldId: "technology",
+        officialExamFieldId: undefined,
+      })],
+    }), "technology");
+
+    expect(scoped.firstPerformanceInput.answers).toEqual([]);
+    expect(scoped.topicInput.answers.map((event) => event.idempotencyKey)).toEqual(["event-1"]);
+  });
 });

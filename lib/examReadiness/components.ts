@@ -306,11 +306,7 @@ export function scopeComponentInputsToField(
   return {
     firstPerformanceInput: {
       ...base,
-      answers: input.answers.filter((event) =>
-        event.kind === "official_past"
-          ? event.officialExamFieldId === fieldId
-          : event.fieldId === fieldId
-      ),
+      answers: input.answers.filter((event) => evidenceFieldId(event) === fieldId),
     },
     topicInput: {
       ...base,

@@ -382,7 +382,61 @@ describe("selectPrimaryImprovement", () => {
     } })).toEqual({ code: "improve_field", fieldId: "technology" });
   });
 
+  it("chooses the field with the lowest cap before comparing scores", () => {
+    expect(primary({ overrides: {
+      fields: [
+        { fieldId: "strategy", label: "S", score: 20, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 74, reasonCode: "field_score_below_60" } },
+        { fieldId: "management", label: "M", score: 39, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+      ],
+    } })).toEqual({ code: "improve_field", fieldId: "management" });
+  });
+
+  it("chooses the lowest field score when caps are equal", () => {
+    expect(primary({ overrides: {
+      fields: [
+        { fieldId: "strategy", label: "S", score: 39, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+        { fieldId: "management", label: "M", score: 38, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+      ],
+    } })).toEqual({ code: "improve_field", fieldId: "management" });
+  });
+
+  it("uses exam-scheme order when field caps and scores are equal", () => {
+    expect(primary({ overrides: {
+      fields: [
+        { fieldId: "technology", label: "T", score: 39, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+        { fieldId: "strategy", label: "S", score: 39, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+      ],
+    } })).toEqual({ code: "improve_field", fieldId: "strategy" });
+  });
+
   it("chooses a Weak Topic by penalty, importance, then topicId", () => {
+    expect(primary({ overrides: {
+      weakTopics: [
+        { topicId: "b", label: "B", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+        { topicId: "a", label: "A", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+      ],
+    } })).toEqual({ code: "review_weak_topic", topicId: "a" });
+  });
+
+  it("chooses the Weak Topic with the greatest individual penalty first", () => {
+    expect(primary({ overrides: {
+      weakTopics: [
+        { topicId: "high-importance", label: "High importance", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+        { topicId: "high-penalty", label: "High penalty", importance: 1, reason: "latest_review_failed", penalty: 1.5, penaltyApplied: true },
+      ],
+    } })).toEqual({ code: "review_weak_topic", topicId: "high-penalty" });
+  });
+
+  it("chooses the greatest Weak Topic importance when penalties are equal", () => {
+    expect(primary({ overrides: {
+      weakTopics: [
+        { topicId: "a", label: "A", importance: 1, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+        { topicId: "z", label: "Z", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+      ],
+    } })).toEqual({ code: "review_weak_topic", topicId: "z" });
+  });
+
+  it("uses ascending topicId when Weak Topic penalty and importance are equal", () => {
     expect(primary({ overrides: {
       weakTopics: [
         { topicId: "b", label: "B", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
@@ -404,6 +458,111 @@ describe("selectPrimaryImprovement", () => {
       overrides: { components: { ...baseWithoutPrimary().components, retention: null } },
       perTopicRetention: [{ topicId: "a", retention: 0, importance: 3 }],
     })).toBeNull();
+  });
+
+  it("chooses the Topic with the lowest retention before comparing importance", () => {
+    expect(primary({
+      overrides: { components: { ...baseWithoutPrimary().components, retention: 50 } },
+      perTopicRetention: [
+        { topicId: "important", retention: 40, importance: 3 },
+        { topicId: "lowest", retention: 30, importance: 1 },
+      ],
+    })).toEqual({ code: "improve_retention", topicId: "lowest" });
+  });
+
+  it("chooses the greatest Topic importance when retention values are equal", () => {
+    expect(primary({
+      overrides: { components: { ...baseWithoutPrimary().components, retention: 50 } },
+      perTopicRetention: [
+        { topicId: "a", retention: 30, importance: 1 },
+        { topicId: "z", retention: 30, importance: 3 },
+      ],
+    })).toEqual({ code: "improve_retention", topicId: "z" });
+  });
+
+  it("uses ascending topicId when Topic retention and importance are equal", () => {
+    expect(primary({
+      overrides: { components: { ...baseWithoutPrimary().components, retention: 50 } },
+      perTopicRetention: [
+        { topicId: "b", retention: 30, importance: 3 },
+        { topicId: "a", retention: 30, importance: 3 },
+      ],
+    })).toEqual({ code: "improve_retention", topicId: "a" });
+  });
+
+  it("keeps substantive low-confidence shortage ahead of every later improvement", () => {
+    expect(primary({ overrides: {
+      confidence: {
+        score: 59,
+        level: "low",
+        reasons: [
+          { code: "insufficient_evidence", actual: 20, required: 100 },
+          { code: "insufficient_summative_sessions", actual: 0, required: 3 },
+        ],
+      },
+      fields: [
+        { fieldId: "strategy", label: "S", score: 39, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+      ],
+      weakTopics: [
+        { topicId: "weak", label: "Weak", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+      ],
+      components: { ...baseWithoutPrimary().components, retention: 50 },
+      evidence: { ...baseWithoutPrimary().evidence, summativeSessionCount: 0 },
+    }, perTopicRetention: [{ topicId: "retention", retention: 20, importance: 3 }] }))
+      .toEqual({ code: "collect_more_evidence" });
+  });
+
+  it("keeps summative-only low confidence ahead of field, Weak, and retention improvements", () => {
+    expect(primary({ overrides: {
+      confidence: {
+        score: 59,
+        level: "low",
+        reasons: [{ code: "insufficient_summative_sessions", actual: 0, required: 3 }],
+      },
+      fields: [
+        { fieldId: "strategy", label: "S", score: 39, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+      ],
+      weakTopics: [
+        { topicId: "weak", label: "Weak", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+      ],
+      components: { ...baseWithoutPrimary().components, retention: 50 },
+    }, perTopicRetention: [{ topicId: "retention", retention: 20, importance: 3 }] }))
+      .toEqual({ code: "take_summative_assessment" });
+  });
+
+  it("keeps a field cap ahead of Weak, retention, and summative improvements", () => {
+    expect(primary({ overrides: {
+      fields: [
+        { fieldId: "strategy", label: "S", score: 39, evidenceSufficiency: 100, scoreGate: { evaluated: true, cap: 59, reasonCode: "field_score_below_40" } },
+      ],
+      weakTopics: [
+        { topicId: "weak", label: "Weak", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+      ],
+      components: { ...baseWithoutPrimary().components, retention: 50 },
+      evidence: { ...baseWithoutPrimary().evidence, summativeSessionCount: 0 },
+    }, perTopicRetention: [{ topicId: "retention", retention: 20, importance: 3 }] }))
+      .toEqual({ code: "improve_field", fieldId: "strategy" });
+  });
+
+  it("keeps a penalty-applied Weak Topic ahead of retention and summative improvements", () => {
+    expect(primary({ overrides: {
+      weakTopics: [
+        { topicId: "weak", label: "Weak", importance: 3, reason: "low_mastery", penalty: 1, penaltyApplied: true },
+      ],
+      components: { ...baseWithoutPrimary().components, retention: 50 },
+      evidence: { ...baseWithoutPrimary().evidence, summativeSessionCount: 0 },
+    }, perTopicRetention: [{ topicId: "retention", retention: 20, importance: 3 }] }))
+      .toEqual({ code: "review_weak_topic", topicId: "weak" });
+  });
+
+  it("keeps low retention ahead of insufficient summative sessions", () => {
+    expect(primary({
+      overrides: {
+        components: { ...baseWithoutPrimary().components, retention: 50 },
+        evidence: { ...baseWithoutPrimary().evidence, summativeSessionCount: 0 },
+      },
+      perTopicRetention: [{ topicId: "retention", retention: 20, importance: 3 }],
+    })).toEqual({ code: "improve_retention", topicId: "retention" });
   });
 
   it("requests summative evidence below three eligible sessions, then returns null", () => {
