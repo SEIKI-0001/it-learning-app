@@ -2,9 +2,7 @@
 
 ## Status
 
-This document consolidates the design sections approved on 2026-08-16. P1-2 defines the rule-based Exam Readiness calculation and its explainable output. It does not implement the calculator or UI.
-
-Three configuration values remain explicitly open at the end of this document. They must be approved and included in `exam-readiness-rule-v1` before implementation begins; no implementation may invent them implicitly.
+This document consolidates the design sections approved from 2026-08-16 through 2026-08-22. P1-2 defines the rule-based Exam Readiness calculation and its explainable output. It does not implement the calculator or UI. All V1 calculation-affecting constants referenced by this design are fixed below.
 
 ## Goal
 
@@ -85,6 +83,56 @@ Both output fields have the TypeScript type `string`, not a literal type. Any ch
 | `technology` | テクノロジ | `42 / 92` |
 
 The field list, labels, ratios, and gates are loaded through `examSchemeVersion`. A future scheme can replace the configuration without changing the result contract.
+
+### V1 freshness schedule
+
+Freshness uses elapsed whole 24-hour days, clamped to zero for a future timestamp:
+
+```text
+elapsedWholeDays
+= max(
+    0,
+    floor((calculationReferenceTime - evidenceReferenceTime) / 24 hours)
+  )
+```
+
+| Elapsed whole days | Freshness coefficient |
+| --- | ---: |
+| 0-30 | 1.0 |
+| 31-60 | 0.8 |
+| 61-90 | 0.6 |
+| 91+ | 0.4 |
+
+An answer evidence item uses `answeredAt` as its reference time. A completed assessment session uses `completedAt` for session evidence weight. The next 31-, 61-, or 91-day transition contributes a future `validUntil` boundary.
+
+### V1 retention-overdue schedule
+
+Retention overdue age also uses elapsed whole 24-hour days from the current `dueAt`:
+
+```text
+overdueWholeDays
+= max(
+    0,
+    floor((calculationReferenceTime - dueAt) / 24 hours)
+  )
+```
+
+| State | Multiplier |
+| --- | ---: |
+| Not overdue, or fewer than 1 whole day overdue | 1.0 |
+| 1 through the scheduled Review interval in whole days overdue | 0.7 |
+| More than the scheduled Review interval overdue | 0.4 |
+
+The scheduled Review interval is the interval that produced the current `dueAt`. The next one-day or interval-exceeded transition contributes a future `validUntil` boundary. These multipliers still apply only to Topics with an existing retention result.
+
+### V1 structured shortage thresholds
+
+```text
+insufficient_evidence.required = 100 weighted evidence units
+insufficient_coverage.required = 60
+insufficient_field_evidence.required = 60 per field
+insufficient_summative_sessions.required = 3 completed eligible sessions
+```
 
 ## Result contract
 
@@ -791,12 +839,6 @@ The snapshot stores the complete result contract, evidence revision, selected se
 - The result explains confidence shortage, field restriction, Weak deduction, and the next improvement.
 - P0 Mastery and P1-1 first-attempt meanings are unchanged.
 
-## Open configuration values before implementation
+## Configuration completeness
 
-The approved design references the following values but has not yet assigned reproducible V1 constants:
-
-1. Freshness schedule: elapsed-time boundaries and coefficients used by answer evidence, assessment coverage, session evidence weight, and `validUntil`.
-2. Retention overdue schedule: the exact overdue-duration boundary that selects multiplier `0.7` versus `0.4`.
-3. Overall coverage reason threshold: the V1 `required` value for `insufficient_coverage` in structured confidence reasons.
-
-These are calculation-affecting values. They must be chosen before implementation and become part of `exam-readiness-rule-v1`; changing them later requires a new `modelVersion`.
+The V1 freshness schedule, retention-overdue schedule, and structured shortage thresholds are fixed in this document. Implementation must not substitute different defaults. Any later change to these values requires a new `modelVersion`.
