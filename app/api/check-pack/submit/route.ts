@@ -13,6 +13,7 @@ import {
 } from "@/lib/dbMappers";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
 import { recalculateExamReadiness } from "@/lib/examReadiness/service";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 
 export const runtime = "nodejs";
 
@@ -60,7 +61,8 @@ export async function POST(request: Request) {
 
   const packId = (body.packId ?? "").trim();
   const topicId = (body.topicId ?? "").trim();
-  if (!packId || !topicId) {
+  const startedAt = body.startedAt;
+  if (!packId || !topicId || !isStrictOffsetIsoTimestamp(startedAt)) {
     return NextResponse.json({ ok: false, error: "invalid pack" }, { status: 400 });
   }
 
@@ -105,7 +107,7 @@ export async function POST(request: Request) {
   const attemptRow = topicCheckPackAttemptToRow(userId, {
     packId,
     topicId,
-    startedAt: body.startedAt ?? null,
+    startedAt,
     completedAt: now,
     quizScoreRate: rates.quizRate,
     flashcardScoreRate: rates.flashcardRate,
@@ -157,7 +159,7 @@ export async function POST(request: Request) {
   const completionId = [
     packId,
     topicId,
-    typeof body.startedAt === "string" && body.startedAt.length > 0 ? body.startedAt : date,
+    startedAt,
     String(rates.quizRate ?? ""),
     String(rates.flashcardRate ?? ""),
     String(rates.examLevelRate ?? ""),

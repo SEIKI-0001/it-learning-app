@@ -121,4 +121,90 @@ Added:
 
 ## Concerns
 
-No Task 9 blocker remains. Test output contains the repository's existing Node `module.register()` deprecation and unavailable-localStorage experimental warnings; there were no failures. The check-pack route's date fallback is only used for older callers that omit `startedAt`; the current runner always supplies its stable start time.
+No Task 9 blocker remained at the initial implementation checkpoint. Test output contained the repository's existing Node `module.register()` deprecation and unavailable-localStorage experimental warnings; there were no failures. The initial check-pack compatibility fallback described here was subsequently removed by Fix Round 1 below.
+
+## Fix Round 1 — 2026-08-23
+
+### RED / GREEN
+
+The fix-round tests were written before production changes and failed in all intended branches:
+
+- four check-pack identity cases returned 200 instead of 400;
+- four topic-quiz identity cases returned 200 instead of 400;
+- check-pack submission ran while authoritative question-attempt persistence was still pending and also ran after an unknown/failure result;
+- the migration contract had no full-payload completion binding.
+
+After the fixes:
+
+- route/component/migration fix focus: 4 files, 19 tests passed;
+- Task 9 plus CheckPack/TopicQuiz regressions: 11 files, 69 tests passed;
+- pgTAP: 43/43 passed;
+- full suite: 109 files, 1,171 tests passed.
+
+### Atomic compare, exact replay, and job reuse
+
+The evidence event table could prove that a trigger had registered a revision, but it did not retain the original full progress payload. Comparing an old retry with the current `user_progress` row therefore could not distinguish a valid delayed replay from conflicting trigger reuse. It could either rewrite newer non-P0 state or reject after a newer P0 completion.
+
+Because the Task 9 migration is not deployed, Fix Round 1 adds `progress_readiness_completions` inside that existing additive migration. Each `(user_id, trigger_type, trigger_id)` is transactionally bound to:
+
+- the original canonical `jsonb` progress payload;
+- its MD5 fingerprint for fast comparison, with the full JSON comparison also required so hash collision cannot authorize a mismatch;
+- whether that original completion registered readiness evidence.
+
+The RPC still locks `user_progress` first. If the trigger already exists, a full-payload mismatch raises `23505` before any progress update. An exact match returns `replayed: true` and the stored `trigger_registered` value without rewriting any progress column. The route can therefore call the same recalculation trigger again after commit; Task 5 reclaims a failed job under the existing unique key instead of inserting another job.
+
+The idempotency table is RPC-private: postgres-owned, RLS enabled, and all direct privileges revoked from `PUBLIC`, `anon`, `authenticated`, and `service_role`. Only the hardened service-role RPC exposes the behavior. pgTAP proves delayed exact replay after a later non-P0 write and after a later P0 completion, preserving current EXP/Mastery while keeping revision, event count, job count, and job ID unchanged. It also proves the failed job is reclaimed under the same ID with an incremented attempt count.
+
+### Check-pack completion ordering
+
+`saveQuestionAttempts` now returns the authoritative exposure Promise instead of discarding it. `CheckPackRunner` awaits that result before changing phase or submitting the pack. A missing/`unknown` exposure throws through `TopicQuiz.onComplete`, so `TopicQuiz` retains its existing frozen `pendingAnswersRef`, releases only its explicit retry state, and preserves the completion latch. The retry sends the exact same attempt payload; no check-pack persistence or readiness recalculation occurs after the failed attempt save.
+
+The new component tests prove both pending-call ordering and the failure/retry path. The completion work remains in the explicit user event handler, not an effect. The sequencing is intentionally serial because the question attempt is authoritative input that must commit before the check-pack completion can persist or recalculate.
+
+### Stable route identities
+
+- Check-pack submission now requires a strict, explicit-offset, calendar-valid ISO `startedAt`. The date fallback was removed from its trigger identity.
+- Topic-quiz result now requires the P0 orchestration's nonblank completion ID with the existing 4,096-character bound. The topic/date/score fallback was removed.
+- `reportTopicQuizResult` and `submitCheckPack` make these identities required at the TypeScript boundary.
+- Missing or invalid identities return 400 before database access.
+- Route tests prove equal-score completions on the same day remain distinct when their stable identities differ.
+
+### P0 ownership and React self-review
+
+`completeStudySession` remains unchanged by Fix Round 1 and remains the sole Mastery/Review Due mutator. `TopicCompletionQuiz` forwards the P0 orchestration's returned trigger only after its latest progress payload saves successfully; it never reconstructs that trigger or P0 state.
+
+The Vercel React best-practices checklist was rerun after the two TSX edits. Persistence stays in the user completion path, the required dependent awaits are not parallelized, no effect or render path gained a side effect, no unstable dependency was added, and the existing TopicQuiz completion latch/frozen-answer retry mechanism remains authoritative.
+
+### Fix Round 1 files
+
+Modified:
+
+- `app/api/check-pack/submit/route.ts`
+- `app/api/question-attempts/save/route.ts` (contract comment only)
+- `app/api/topic-progress/quiz-result/route.ts`
+- `components/checkPack/CheckPackRunner.tsx`
+- `components/learn/TopicCompletionQuiz.tsx`
+- `lib/userSession.ts`
+- `supabase/migrations/20260823080000_progress_readiness_completion.sql`
+- `supabase/tests/progress_readiness_save_test.sql`
+- `test/checkPackReadinessTriggerRoute.test.ts`
+- `test/progressReadinessMigration.test.ts`
+- `test/topicProgressReadinessTriggerRoute.test.ts`
+
+Added:
+
+- `test/CheckPackRunner.test.tsx`
+
+### Fix Round 1 verification
+
+- Next.js 16 Route Handler guide read completely before route edits.
+- Every active migration replayed successfully in a disposable `public.ecr.aws/supabase/postgres:17.6.1.158` container.
+- Focused pgTAP contract: 43/43 passed; the disposable container was removed afterward.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed with no errors or warnings.
+- `npm test`: 109 files, 1,171 tests passed.
+- `git diff --check`: passed.
+
+### Fix Round 1 concerns
+
+No blocker remains. The full test run emitted only the repository's existing Node `module.register()` deprecation and localStorage experimental warnings. The earlier report's compatibility concern about the check-pack date fallback is resolved: the fallback no longer exists, and callers must supply the stable start timestamp.

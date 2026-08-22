@@ -21,7 +21,7 @@ export const runtime = "nodejs";
 // 問題（確認問題 / 過去問レベル / ミニ模試 / 公式過去問）の回答ログを
 // question_attempts に保存する。既存の user_answers は壊さない。
 // - Supabase 未設定: 503 / userId なし: 401 / body 不正: 400
-// - fire-and-forget で呼ばれる想定。保存失敗でも学習画面は止めない。
+// - 完了イベントの呼び出し元は保存結果を await する。通常の履歴記録は結果を無視してよい。
 //
 // 公式過去問（official_past）は、付加情報（出所・版・年度・公式区分）だけでなく
 // 正誤（isCorrect）とトピックもクライアントの申告を信用せず、問題IDから問題バンクを

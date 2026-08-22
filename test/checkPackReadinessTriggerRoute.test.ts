@@ -56,7 +56,7 @@ function createSupabase() {
   };
 }
 
-function request() {
+function request(overrides: Record<string, unknown> = {}) {
   return POST(new Request("https://example.test/api/check-pack/submit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -69,6 +69,7 @@ function request() {
       examLevelRate: 70,
       startedAt: "2026-08-23T00:55:00.000Z",
       date: "2026-08-23",
+      ...overrides,
     }),
   }));
 }
@@ -118,5 +119,29 @@ describe("check-pack completion readiness", () => {
       ok: true,
       readinessUpdated: false,
     });
+  });
+
+  it.each([
+    ["missing", undefined],
+    ["empty", ""],
+    ["no explicit offset", "2026-08-23T00:55:00"],
+    ["impossible date", "2026-02-30T00:55:00.000Z"],
+  ])("rejects a %s stable completion timestamp before persistence", async (_name, startedAt) => {
+    const response = await request({ startedAt });
+
+    expect(response.status).toBe(400);
+    expect(SUPABASE.from).not.toHaveBeenCalled();
+    expect(mocks.recalculateExamReadiness).not.toHaveBeenCalled();
+  });
+
+  it("keeps same-day equal-score completions distinct by their stable timestamps", async () => {
+    await request({ startedAt: "2026-08-23T00:55:00.000Z" });
+    await request({ startedAt: "2026-08-23T01:55:00.000Z" });
+
+    expect(mocks.recalculateExamReadiness).toHaveBeenCalledTimes(2);
+    expect(mocks.recalculateExamReadiness.mock.calls.map(([input]) => input.triggerId)).toEqual([
+      "pack-tech-binary\u001ftech-binary-data\u001f2026-08-23T00:55:00.000Z\u001f80\u001f90\u001f70",
+      "pack-tech-binary\u001ftech-binary-data\u001f2026-08-23T01:55:00.000Z\u001f80\u001f90\u001f70",
+    ]);
   });
 });

@@ -62,7 +62,13 @@ export async function POST(request: Request) {
   const topicId = (body.topicId ?? "").trim();
   const total = Number(body.total);
   const correct = Number(body.correct);
-  if (!topicId || !Number.isFinite(total) || total <= 0 || !Number.isFinite(correct)) {
+  const completionId = typeof body.completionId === "string"
+    && body.completionId.trim().length > 0
+    && body.completionId.length <= 4096
+    ? body.completionId
+    : null;
+  if (!topicId || !Number.isFinite(total) || total <= 0 || !Number.isFinite(correct)
+    || completionId === null) {
     return NextResponse.json({ ok: false, error: "invalid result" }, { status: 400 });
   }
 
@@ -140,11 +146,6 @@ export async function POST(request: Request) {
     .eq("topic_id", topicId)
     .eq("task_type", "topic_quiz");
 
-  const completionId = typeof body.completionId === "string"
-    && body.completionId.trim().length > 0
-    && body.completionId.length <= 4096
-    ? body.completionId
-    : [topicId, date, String(correct), String(total)].join("\u001f");
   let readinessUpdated = false;
   try {
     await recalculateExamReadiness({

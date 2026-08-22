@@ -444,7 +444,7 @@ export async function reportTopicQuizResult(
   correct: number,
   total: number,
   date: string,
-  completionId?: string,
+  completionId: string,
 ): Promise<boolean> {
   try {
     const response = await fetch("/api/topic-progress/quiz-result", {
@@ -798,12 +798,12 @@ export async function saveQuestionAttemptsForCurrentSession(
   }
 }
 
-/** Compatibility wrapper for callers that only need to record history. */
+/** Compatibility wrapper exposing authoritative persistence to completion callers. */
 export function saveQuestionAttempts(
   userId: string,
   attempts: QuestionAttemptInput[],
-): void {
-  void saveQuestionAttemptsWithExposure(userId, attempts);
+): Promise<QuestionExposureMap> {
+  return saveQuestionAttemptsWithExposure(userId, attempts);
 }
 
 export type CheckPackSubmitResult = {
@@ -825,7 +825,7 @@ export async function submitCheckPack(
     quizRate: number | null;
     flashcardRate: number | null;
     examLevelRate: number | null;
-    startedAt?: string;
+    startedAt: string;
     date?: string;
   },
 ): Promise<CheckPackSubmitResult | null> {

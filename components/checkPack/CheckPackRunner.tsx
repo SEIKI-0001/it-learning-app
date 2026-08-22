@@ -106,10 +106,10 @@ export default function CheckPackRunner({
   const hasFlashcards = flashcardQuestions.length > 0;
   const hasExam = examQuestions.length > 0;
 
-  function saveAttempts(
+  async function saveAttempts(
     answers: UserAnswer[],
     questionType: QuestionAttemptInput["questionType"],
-  ) {
+  ): Promise<void> {
     const userId = getUserId();
     if (!userId) return;
     const attempts: QuestionAttemptInput[] = answers.map((a) => ({
@@ -118,16 +118,23 @@ export default function CheckPackRunner({
       topicId,
       selectedAnswer: a.selectedChoice ?? null,
       isCorrect: a.isCorrect,
+      answeredAt: a.answeredAt,
     }));
-    saveQuestionAttempts(userId, attempts);
+    const exposures = await saveQuestionAttempts(userId, attempts);
+    if (attempts.some((attempt) => exposures[attempt.questionId]?.state === "unknown"
+      || exposures[attempt.questionId] === undefined)) {
+      throw new Error("question attempt persistence failed");
+    }
   }
 
-  function handleQuizDone(answers: UserAnswer[]) {
+  async function handleQuizDone(answers: UserAnswer[]) {
     const correct = answers.filter((a) => a.isCorrect).length;
+    await saveAttempts(answers, "topic_quiz");
     setQuizRate(rateOf(correct, answers.length));
-    saveAttempts(answers, "topic_quiz");
     setPhase(hasFlashcards ? "flashcards" : hasExam ? "exam" : "result");
-    if (!hasFlashcards && !hasExam) void finalize(rateOf(correct, answers.length), null, null);
+    if (!hasFlashcards && !hasExam) {
+      await finalize(rateOf(correct, answers.length), null, null);
+    }
   }
 
   function handleFlashcardsDone(answers: UserAnswer[]) {
@@ -140,13 +147,13 @@ export default function CheckPackRunner({
     if (!hasExam) void finalize(quizRate, rate, null);
   }
 
-  function handleExamDone(answers: UserAnswer[]) {
+  async function handleExamDone(answers: UserAnswer[]) {
     const correct = answers.filter((a) => a.isCorrect).length;
     const rate = rateOf(correct, answers.length);
+    await saveAttempts(answers, "exam_level");
     setExamLevelRate(rate);
-    saveAttempts(answers, "exam_level");
     setPhase("result");
-    void finalize(quizRate, flashcardRate, rate);
+    await finalize(quizRate, flashcardRate, rate);
   }
 
   // 結果をサーバーへ送り、topic_progress を更新する（失敗してもローカル判定で表示継続）。

@@ -2,6 +2,30 @@
 set local lock_timeout = '5s';
 set local statement_timeout = '60s';
 
+-- A stable completion key is bound to the full canonical JSON payload received
+-- on its first successful transaction. This lets an old exact retry reclaim
+-- readiness work without rewriting progress that newer completions have moved on.
+create table public.progress_readiness_completions (
+  user_id uuid not null references public.line_users (id) on delete cascade,
+  trigger_type text not null check (trigger_type in ('learning_complete', 'review_complete')),
+  trigger_id text not null check (length(btrim(trigger_id)) > 0 and length(trigger_id) <= 4096),
+  progress_payload jsonb not null check (jsonb_typeof(progress_payload) = 'object'),
+  payload_fingerprint text not null check (length(payload_fingerprint) = 32),
+  readiness_registered boolean not null,
+  created_at timestamptz not null default statement_timestamp(),
+  primary key (user_id, trigger_type, trigger_id)
+);
+
+alter table public.progress_readiness_completions owner to postgres;
+alter table public.progress_readiness_completions enable row level security;
+revoke all on table public.progress_readiness_completions from public;
+revoke all on table public.progress_readiness_completions from anon;
+revoke all on table public.progress_readiness_completions from authenticated;
+revoke all on table public.progress_readiness_completions from service_role;
+
+comment on table public.progress_readiness_completions is
+  'RPC-private idempotency records binding a stable learning/review completion to its original full progress payload and readiness association.';
+
 create or replace function public.save_user_progress_with_readiness_evidence(
   p_user_id uuid,
   p_progress jsonb,
@@ -15,6 +39,7 @@ set search_path = pg_catalog, public
 as $$
 declare
   v_existing public.user_progress%rowtype;
+  v_completion public.progress_readiness_completions%rowtype;
   v_evidence_changed boolean;
   v_event_key text;
   v_trigger_registered boolean := false;
@@ -75,6 +100,30 @@ begin
   where progress.user_id = p_user_id
   for update;
 
+  if p_trigger_type is not null then
+    select completion.*
+    into v_completion
+    from public.progress_readiness_completions completion
+    where completion.user_id = p_user_id
+      and completion.trigger_type = p_trigger_type
+      and completion.trigger_id = p_trigger_id
+    for update;
+
+    if found then
+      if v_completion.payload_fingerprint is distinct from md5(p_progress::text)
+        or v_completion.progress_payload is distinct from p_progress then
+        raise exception 'progress readiness trigger conflicts with original payload'
+          using errcode = '23505';
+      end if;
+
+      return jsonb_build_object(
+        'evidence_changed', false,
+        'trigger_registered', v_completion.readiness_registered,
+        'replayed', true
+      );
+    end if;
+  end if;
+
   v_evidence_changed :=
     v_existing.topic_mastery_stats is distinct from (p_progress -> 'topic_mastery_stats')
     or v_existing.review_queue is distinct from (p_progress -> 'review_queue');
@@ -82,19 +131,6 @@ begin
     then null
     else p_trigger_type || ':' || p_trigger_id
   end;
-
-  if v_event_key is not null and exists (
-    select 1
-    from public.exam_readiness_evidence_events event
-    where event.user_id = p_user_id
-      and event.event_key = v_event_key
-  ) then
-    if v_evidence_changed then
-      raise exception 'progress readiness trigger conflicts with stored evidence'
-        using errcode = '23505';
-    end if;
-    v_trigger_registered := true;
-  end if;
 
   update public.user_progress
   set current_day = (p_progress ->> 'current_day')::integer,
@@ -127,9 +163,28 @@ begin
     v_trigger_registered := true;
   end if;
 
+  if v_event_key is not null then
+    insert into public.progress_readiness_completions (
+      user_id,
+      trigger_type,
+      trigger_id,
+      progress_payload,
+      payload_fingerprint,
+      readiness_registered
+    ) values (
+      p_user_id,
+      p_trigger_type,
+      p_trigger_id,
+      p_progress,
+      md5(p_progress::text),
+      v_trigger_registered
+    );
+  end if;
+
   return jsonb_build_object(
     'evidence_changed', v_evidence_changed,
-    'trigger_registered', v_trigger_registered
+    'trigger_registered', v_trigger_registered,
+    'replayed', false
   );
 end;
 $$;
@@ -148,4 +203,4 @@ grant execute on function public.save_user_progress_with_readiness_evidence(uuid
   to service_role;
 
 comment on function public.save_user_progress_with_readiness_evidence(uuid, jsonb, text, text) is
-  'Atomically writes authoritative P0 progress and registers a typed stable readiness event only when mastery or review facts change.';
+  'Atomically binds a stable completion to its full payload, writes authoritative P0 progress once, and registers readiness only when mastery or review facts change.';

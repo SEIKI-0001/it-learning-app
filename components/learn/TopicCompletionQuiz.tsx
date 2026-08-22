@@ -121,14 +121,14 @@ export default function TopicCompletionQuiz({
         session.readinessTrigger,
       );
       saveAnswersToDb(userId, 0, tagged);
-      if (progressSaved && total > 0) {
+      if (progressSaved && total > 0 && session.readinessTrigger) {
         await reportTopicQuizResult(
           userId,
           topic.id,
           correct,
           total,
           todayLocalDate(),
-          session.readinessTrigger?.triggerId,
+          session.readinessTrigger.triggerId,
         );
       }
     }

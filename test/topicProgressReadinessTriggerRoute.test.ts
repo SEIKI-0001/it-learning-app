@@ -54,7 +54,10 @@ function createSupabase() {
   };
 }
 
-function request(completionId = "question-b\u001fconfirmation\u001f2026-08-23T01:00:00.000Z") {
+function request(
+  completionId: unknown = "question-b\u001fconfirmation\u001f2026-08-23T01:00:00.000Z",
+  includeCompletionId = true,
+) {
   return POST(new Request("https://example.test/api/topic-progress/quiz-result", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -64,7 +67,7 @@ function request(completionId = "question-b\u001fconfirmation\u001f2026-08-23T01
       correct: 1,
       total: 1,
       date: "2026-08-23",
-      completionId,
+      ...(includeCompletionId ? { completionId } : {}),
     }),
   }));
 }
@@ -110,5 +113,29 @@ describe("topic quiz completion readiness", () => {
       ok: true,
       readinessUpdated: false,
     });
+  });
+
+  it.each([
+    ["missing", undefined, false],
+    ["empty", "", true],
+    ["blank", "   ", true],
+    ["oversized", "x".repeat(4097), true],
+  ])("rejects a %s stable P0 completion ID before persistence", async (_name, completionId, includeCompletionId) => {
+    const response = await request(completionId, includeCompletionId);
+
+    expect(response.status).toBe(400);
+    expect(SUPABASE.from).not.toHaveBeenCalled();
+    expect(mocks.recalculateExamReadiness).not.toHaveBeenCalled();
+  });
+
+  it("keeps same-day equal-score completions distinct by their P0 completion IDs", async () => {
+    await request("question-a\u001fconfirmation\u001f2026-08-23T01:00:00.000Z");
+    await request("question-a\u001fconfirmation\u001f2026-08-23T02:00:00.000Z");
+
+    expect(mocks.recalculateExamReadiness).toHaveBeenCalledTimes(2);
+    expect(mocks.recalculateExamReadiness.mock.calls.map(([input]) => input.triggerId)).toEqual([
+      "question-a\u001fconfirmation\u001f2026-08-23T01:00:00.000Z",
+      "question-a\u001fconfirmation\u001f2026-08-23T02:00:00.000Z",
+    ]);
   });
 });

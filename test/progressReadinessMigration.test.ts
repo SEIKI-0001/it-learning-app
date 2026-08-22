@@ -25,6 +25,16 @@ describe("progress readiness completion migration", () => {
     expect(source).toMatch(/topic_mastery_stats is distinct from/i);
     expect(source).toMatch(/review_queue is distinct from/i);
     expect(source).toMatch(/update public\.user_progress[\s\S]*register_exam_readiness_evidence/i);
-    expect(source).toMatch(/progress readiness trigger conflicts with stored evidence/i);
+    expect(source).toMatch(/progress readiness trigger conflicts with original payload/i);
+  });
+
+  it("binds a trigger to its original full progress payload behind the RPC boundary", () => {
+    const source = sql();
+
+    expect(source).toMatch(/create table public\.progress_readiness_completions/i);
+    expect(source).toMatch(/progress_payload jsonb not null/i);
+    expect(source).toMatch(/payload_fingerprint text not null/i);
+    expect(source).toMatch(/enable row level security/i);
+    expect(source).toMatch(/revoke all on table public\.progress_readiness_completions[\s\S]*from service_role/i);
   });
 });
