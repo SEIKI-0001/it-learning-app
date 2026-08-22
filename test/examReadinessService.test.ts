@@ -125,6 +125,22 @@ describe("recalculateExamReadiness", () => {
     });
   });
 
+  it("rejects an invalid reference time before claiming a job", async () => {
+    const fake = successfulRpc();
+
+    await expect(recalculateExamReadiness({
+      supabase: fake.client,
+      userId: USER_ID,
+      triggerType: "assessment_completed",
+      triggerId: "session-1",
+      now: new Date(Number.NaN),
+    })).rejects.toMatchObject({
+      name: "ExamReadinessServiceError",
+      code: "claim_invalid",
+    });
+    expect(fake.rpc).not.toHaveBeenCalled();
+  });
+
   it("marks the claimed attempt failed and a later call reclaims the same job", async () => {
     repository.loadExamReadinessEvidence
       .mockRejectedValueOnce(new Error("evidence unavailable"))
@@ -311,6 +327,76 @@ describe("recalculateExamReadiness", () => {
     expect(error).toMatchObject({ code: "recalculation_busy", retryable: true });
     expect(repository.loadExamReadinessEvidence).not.toHaveBeenCalled();
   });
+
+  it("does not return an owner commit that expired before the waiting current read", async () => {
+    const ownerReferenceTime = new Date("2026-08-22T23:59:59.000Z");
+    const waiterReferenceTime = new Date("2026-08-23T00:00:01.000Z");
+    const crossedBoundary = "2026-08-23T00:00:00.000Z";
+    let releaseOwnerEvidence!: () => void;
+    const ownerEvidenceGate = new Promise<void>((resolve) => {
+      releaseOwnerEvidence = resolve;
+    });
+    const evidence = makeEvidence({
+      answers: [makeAnswer(0, {
+        answeredAt: "2026-07-23T00:00:00.000Z",
+        firstAttemptState: "first",
+      })],
+    });
+    const previous = resultAt({
+      referenceTime: new Date("2026-08-20T00:00:00.000Z"),
+      validUntil: "2026-08-21T00:00:00.000Z",
+    });
+    let stored: ExamReadinessResult | null = previous;
+    repository.getStoredCurrentReadiness.mockImplementation(async () => stored);
+    let evidenceLoadCount = 0;
+    repository.loadExamReadinessEvidence.mockImplementation(async () => {
+      evidenceLoadCount += 1;
+      if (evidenceLoadCount === 1) await ownerEvidenceGate;
+      return evidence;
+    });
+    let claimCount = 0;
+    const claimTriggers: Array<{ type: unknown; id: unknown }> = [];
+    const fake = fakeSupabase(async (name, params) => {
+      if (name === "claim_exam_readiness_recalculation") {
+        claimCount += 1;
+        claimTriggers.push({ type: params.p_trigger_type, id: params.p_trigger_id });
+        if (claimCount === 1) return { data: [processingJob({ job_id: "owner-job" })], error: null };
+        if (claimCount === 2) return { data: [], error: null };
+        return { data: [processingJob({ job_id: "boundary-job" })], error: null };
+      }
+      if (name === "complete_exam_readiness_recalculation") {
+        stored = params.p_result as ExamReadinessResult;
+        return { data: "saved", error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const owner = recalculateExamReadiness({
+      supabase: fake.client,
+      userId: USER_ID,
+      triggerType: "evidence_changed",
+      triggerId: "event-1",
+      now: ownerReferenceTime,
+    });
+    await vi.waitFor(() => expect(evidenceLoadCount).toBe(1));
+    const waiter = getCurrentReadiness({
+      supabase: fake.client,
+      userId: USER_ID,
+      now: waiterReferenceTime,
+    });
+    await vi.waitFor(() => expect(claimCount).toBe(2));
+    releaseOwnerEvidence();
+
+    const [ownerResult, waiterResult] = await Promise.all([owner, waiter]);
+    expect(ownerResult.validUntil).toBe(crossedBoundary);
+    expect(waiterResult?.calculationReferenceTime).toBe(waiterReferenceTime.toISOString());
+    expect(Date.parse(waiterResult!.validUntil!)).toBeGreaterThan(waiterReferenceTime.getTime());
+    expect(claimTriggers).toContainEqual({
+      type: "time_boundary",
+      id: crossedBoundary,
+    });
+    expect(evidenceLoadCount).toBe(2);
+  });
 });
 
 describe("getCurrentReadiness", () => {
@@ -407,5 +493,42 @@ describe("getCurrentReadiness", () => {
         validUntil: "2026-08-23T00:00:00.000Z",
       }),
     });
+  });
+
+  it("fails temporarily after bounded boundary refreshes keep returning expired results", async () => {
+    const expired = resultAt({ validUntil: "2026-08-21T00:00:00.000Z" });
+    repository.getStoredCurrentReadiness.mockResolvedValue(expired);
+    const fake = successfulRpc(processingJob({ status: "succeeded", result: expired }));
+
+    await expect(getCurrentReadiness({
+      supabase: fake.client,
+      userId: USER_ID,
+      now: REFERENCE_TIME,
+    })).rejects.toMatchObject({
+      name: "ExamReadinessServiceError",
+      retryable: true,
+    });
+    expect(fake.rpc).toHaveBeenCalledTimes(3);
+  });
+
+  it("accepts the third bounded boundary refresh when it is finally current", async () => {
+    const expired = resultAt({ validUntil: "2026-08-21T00:00:00.000Z" });
+    const current = resultAt({ validUntil: "2026-08-23T00:00:00.000Z" });
+    repository.getStoredCurrentReadiness
+      .mockResolvedValueOnce(expired)
+      .mockResolvedValueOnce(expired)
+      .mockResolvedValueOnce(expired)
+      .mockResolvedValueOnce(expired)
+      .mockResolvedValueOnce(expired)
+      .mockResolvedValueOnce(expired)
+      .mockResolvedValueOnce(current);
+    const fake = successfulRpc(processingJob({ status: "succeeded", result: expired }));
+
+    await expect(getCurrentReadiness({
+      supabase: fake.client,
+      userId: USER_ID,
+      now: REFERENCE_TIME,
+    })).resolves.toEqual(current);
+    expect(fake.rpc).toHaveBeenCalledTimes(3);
   });
 });

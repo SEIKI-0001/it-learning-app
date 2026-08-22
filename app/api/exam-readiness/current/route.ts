@@ -8,17 +8,17 @@ const JSON_HEADERS = {
 };
 
 export async function GET() {
-  const userId = await getInternalUserId();
-  if (!userId) {
-    return json({ ok: false, error: "unauthenticated" }, 401);
-  }
-
-  const supabase = getServiceSupabase();
-  if (!supabase) {
-    return json({ ok: false, error: "supabase_not_configured" }, 503);
-  }
-
   try {
+    const userId = await getInternalUserId();
+    if (!userId) {
+      return json({ ok: false, error: "unauthenticated" }, 401);
+    }
+
+    const supabase = getServiceSupabase();
+    if (!supabase) {
+      return json({ ok: false, error: "supabase_not_configured" }, 503);
+    }
+
     const readiness = await getCurrentReadiness({ supabase, userId });
     return json({ ok: true, readiness });
   } catch (error) {

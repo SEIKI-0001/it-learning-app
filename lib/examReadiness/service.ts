@@ -17,6 +17,7 @@ import type { ExamReadinessResult } from "@/types/examReadiness";
 
 const LEASE_SECONDS = 30;
 const MAX_STALE_RECOMPUTATIONS = 3;
+const MAX_TIME_BOUNDARY_RECALCULATIONS = 3;
 const COMMIT_WAIT_ATTEMPTS = 12;
 const COMMIT_WAIT_INTERVAL_MS = 20;
 
@@ -24,6 +25,7 @@ export type ExamReadinessServiceErrorCode =
   | "claim_failed"
   | "claim_invalid"
   | "completion_failed"
+  | "current_read_unstable"
   | "recalculation_busy"
   | "recalculation_unstable";
 
@@ -62,6 +64,9 @@ export async function recalculateExamReadiness(args: {
   requireNonEmpty(args.userId, "userId");
   requireNonEmpty(args.triggerType, "triggerType");
   requireNonEmpty(args.triggerId, "triggerId");
+  const suppliedReferenceTime = args.now === undefined
+    ? null
+    : calculationStart(args.now);
   const baseline = await getStoredCurrentReadiness(args.supabase, args.userId);
 
   for (let recomputation = 0; recomputation < MAX_STALE_RECOMPUTATIONS; recomputation += 1) {
@@ -89,7 +94,9 @@ export async function recalculateExamReadiness(args: {
       );
     }
 
-    const calculationReferenceTime = calculationStart(args.now);
+    const calculationReferenceTime = suppliedReferenceTime === null
+      ? calculationStart()
+      : new Date(suppliedReferenceTime.getTime());
     try {
       const evidence = await loadExamReadinessEvidence(args.supabase, args.userId);
       if (evidence.evidenceRevision !== job.evidenceRevision) {
@@ -129,18 +136,31 @@ export async function getCurrentReadiness(args: {
   userId: string;
   now?: Date;
 }): Promise<ExamReadinessResult | null> {
-  const current = await getStoredCurrentReadiness(args.supabase, args.userId);
-  if (current === null || current.validUntil === null) return current;
+  const callerReferenceTime = calculationStart(args.now);
+  let current = await getStoredCurrentReadiness(args.supabase, args.userId);
 
-  const now = calculationStart(args.now);
-  if (Date.parse(current.validUntil) > now.getTime()) return current;
-  return recalculateExamReadiness({
-    supabase: args.supabase,
-    userId: args.userId,
-    triggerType: "time_boundary",
-    triggerId: current.validUntil,
-    now,
-  });
+  for (let recalculation = 0; ; recalculation += 1) {
+    if (
+      current === null
+      || current.validUntil === null
+      || Date.parse(current.validUntil) > callerReferenceTime.getTime()
+    ) {
+      return current;
+    }
+    if (recalculation >= MAX_TIME_BOUNDARY_RECALCULATIONS) break;
+    current = await recalculateExamReadiness({
+      supabase: args.supabase,
+      userId: args.userId,
+      triggerType: "time_boundary",
+      triggerId: current.validUntil,
+      now: callerReferenceTime,
+    });
+  }
+
+  throw temporaryError(
+    "current_read_unstable",
+    "Exam Readiness remained expired after three time-boundary recalculations",
+  );
 }
 
 async function claimRecalculation(args: {
@@ -280,7 +300,7 @@ function completionTimeAfter(referenceTime: Date): Date {
 }
 
 function temporaryError(
-  code: "recalculation_busy" | "recalculation_unstable",
+  code: "current_read_unstable" | "recalculation_busy" | "recalculation_unstable",
   message: string,
 ): ExamReadinessServiceError {
   return new ExamReadinessServiceError(code, message, { retryable: true });

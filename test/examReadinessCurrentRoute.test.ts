@@ -146,6 +146,40 @@ describe("GET /api/exam-readiness/current", () => {
     expect(JSON.stringify(body)).not.toContain("database secret");
     error.mockRestore();
   });
+
+  it("returns no-store JSON 500 when session authentication rejects", async () => {
+    mocks.getInternalUserId.mockRejectedValue(new Error("auth unavailable"));
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const response = await GET();
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "readiness_unavailable",
+    });
+    expect(mocks.getServiceSupabase).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it("returns no-store JSON 500 when service client initialization rejects", async () => {
+    mocks.getServiceSupabase.mockImplementation(() => {
+      throw new Error("client initialization failed");
+    });
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const response = await GET();
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "readiness_unavailable",
+    });
+    expect(mocks.getCurrentReadiness).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
 });
 
 describe("readiness bootstrap clients", () => {
@@ -195,6 +229,39 @@ describe("readiness bootstrap clients", () => {
       userId: USER_ID,
       now: expect.any(Date),
     });
+  });
+
+  it("keeps other progress bootstrap state when readiness is temporarily unavailable", async () => {
+    const integratedStatus = { overallStatus: "on_track" };
+    mocks.getRequestUserIdFast.mockResolvedValue(USER_ID);
+    mocks.getServiceSupabase.mockReturnValue(SUPABASE);
+    mocks.loadAppStateForUser.mockResolvedValue({ day: 4 });
+    mocks.getLatestOrRefreshIntegratedStatus.mockResolvedValue({
+      status: integratedStatus,
+      row: { id: "status-row" },
+      saved: true,
+    });
+    mocks.getLatestPlanAdjustmentProposal.mockResolvedValue({ proposalId: "proposal-1" });
+    mocks.getCurrentReadiness.mockRejectedValue(
+      new TemporaryReadinessError("recalculation_busy"),
+    );
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const response = await progressBootstrap(new Request(
+      "https://example.test/api/progress/bootstrap",
+      { method: "POST", body: "{}" },
+    ));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      appState: { day: 4 },
+      integratedStatus,
+      examReadiness: null,
+      planAdjustmentProposal: { proposalId: "proposal-1" },
+    });
+    expect(error).toHaveBeenCalled();
+    error.mockRestore();
   });
 
   it("preserves the complete result in the client progress bootstrap contract", async () => {

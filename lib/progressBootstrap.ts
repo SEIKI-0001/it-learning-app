@@ -36,7 +36,12 @@ export async function getProgressBootstrapExamReadiness(
   userId: string,
   now = new Date(),
 ): Promise<ExamReadinessResult | null> {
-  return getCurrentReadiness({ supabase, userId, now });
+  try {
+    return await getCurrentReadiness({ supabase, userId, now });
+  } catch (error) {
+    console.error("progress bootstrap exam readiness failed", error);
+    return null;
+  }
 }
 
 /** exam_date（"YYYY-MM-DD"）から試験までの残り日数を求める。 */
