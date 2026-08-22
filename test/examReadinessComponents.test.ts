@@ -203,6 +203,17 @@ describe("computeSummativePerformance", () => {
     expect(result).toBeCloseTo(0.7 * (1000 / 18));
   });
 
+  it("uses completed-session freshness in the weighted mean", () => {
+    const result = computeSummativePerformance(input({
+      assessmentSessions: [
+        session({ sessionId: "fresh", correctCount: 10 }),
+        session({ sessionId: "stale", correctCount: 0, completedAt: "2026-07-22T00:00:00.000Z" }),
+      ],
+    }));
+
+    expect(result).toBeCloseTo(0.7 * (1000 / 18));
+  });
+
   it("uses 0.5 + 0.5 * firstRate and excludes unknown from that rate", () => {
     const result = computeSummativePerformance(input({
       assessmentSessions: [
@@ -331,6 +342,16 @@ describe("computeFieldEvidence", () => {
     expect(technology.assessmentCoverage).toBe(100);
   });
 
+  it("does not assign official volume to a Topic field when officialExamFieldId is unavailable", () => {
+    const fields = computeFieldEvidence(input({
+      topics: [topic({ fieldId: "technology" })],
+      answers: [answer({ kind: "official_past", fieldId: "technology" })],
+    }));
+
+    expect(fields.map((field) => field.weightedEvidenceUnits)).toEqual([0, 0, 0]);
+    expect(fields.find((field) => field.fieldId === "technology")?.assessmentCoverage).toBe(100);
+  });
+
   it("uses binary importance-weighted Topic coverage", () => {
     const strategy = computeFieldEvidence(input({
       topics: [topic({ fieldId: "strategy" }), topic({ topicId: "topic-2", fieldId: "strategy", importance: 3 })],
@@ -351,6 +372,7 @@ describe("computeFieldEvidence", () => {
         idempotencyKey: `event-${index}`,
         canonicalQuestionId: `question-${index}`,
         fieldId: "strategy",
+        officialExamFieldId: "strategy",
         kind: "official_past",
       })),
     })).find((field) => field.fieldId === "strategy")!;
@@ -388,6 +410,7 @@ describe("computeWeakTopics", () => {
 
   it("keeps a summative miss unresolved until a later successful Review", () => {
     const summativeMiss = answer({
+      sessionId: "summary-session",
       kind: "summary",
       isCorrect: false,
       answeredAt: "2026-08-19T00:00:00.000Z",
@@ -408,10 +431,37 @@ describe("computeWeakTopics", () => {
       answeredAt: "2026-08-21T00:00:00.000Z",
     });
 
-    expect(computeWeakTopics(input({ answers: [summativeMiss, laterConfirmation] })).topics[0]?.reason)
+    const assessmentSessions = [session({ sessionId: "summary-session", source: "summary" })];
+
+    expect(computeWeakTopics(input({ answers: [summativeMiss, laterConfirmation], assessmentSessions })).topics[0]?.reason)
       .toBe("unresolved_summative_error");
-    expect(computeWeakTopics(input({ answers: [summativeMiss, laterConfirmation, successfulReview] })).topics)
+    expect(computeWeakTopics(input({ answers: [summativeMiss, laterConfirmation, successfulReview], assessmentSessions })).topics)
       .toEqual([]);
+  });
+
+  it.each([
+    ["official practice", "practice", "completed", false],
+    ["official in progress", "exam", "in_progress", false],
+    ["official exam", "exam", "completed", true],
+  ] as const)("uses eligible session context for an %s miss", (_label, mode, status, expectedWeak) => {
+    const officialMiss = answer({
+      sessionId: "official-session",
+      kind: "official_past",
+      isCorrect: false,
+    });
+    const result = computeWeakTopics(input({
+      answers: [officialMiss],
+      assessmentSessions: [session({
+        sessionId: "official-session",
+        source: "official_past",
+        mode,
+        status,
+        completedAt: status === "completed" ? referenceTime.toISOString() : null,
+      })],
+    }));
+
+    expect(result.topics.some((weakTopic) => weakTopic.reason === "unresolved_summative_error"))
+      .toBe(expectedWeak);
   });
 
   it("orders by penalty, importance, then topicId and applies only the top five", () => {

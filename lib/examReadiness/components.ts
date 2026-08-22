@@ -308,9 +308,9 @@ function compareIsoTime(left: string, right: string): number {
   return new Date(left).getTime() - new Date(right).getTime();
 }
 
-function evidenceFieldId(event: ReadinessAnswerEvidence): string {
-  if (event.kind === "official_past" && event.officialExamFieldId !== undefined) {
-    return event.officialExamFieldId;
+function evidenceFieldId(event: ReadinessAnswerEvidence): string | null {
+  if (event.kind === "official_past") {
+    return event.officialExamFieldId ?? null;
   }
   return event.fieldId;
 }
@@ -325,6 +325,11 @@ function addTimeSeriesWeakReasons(
   input: ComponentInput,
   addReason: (topicId: string, reason: WeakTopicReason) => void,
 ): void {
+  const eligibleSessionSources = new Map(
+    eligibleSummativeSessions(input.assessmentSessions).map(
+      (assessment) => [assessment.sessionId, assessment.source] as const,
+    ),
+  );
   const answersByTopic = new Map<string, ReadinessAnswerEvidence[]>();
   for (const event of eventDeduplicatedAnswers(input)) {
     const history = answersByTopic.get(event.topicId) ?? [];
@@ -341,7 +346,9 @@ function addTimeSeriesWeakReasons(
       addReason(topicId, "repeated_incorrect");
     }
     const latestSummativeMissIndex = history.findLastIndex(
-      (event) => isSummativeKind(event.kind) && !event.isCorrect,
+      (event) => !event.isCorrect
+        && event.sessionId != null
+        && eligibleSessionSources.get(event.sessionId) === event.kind,
     );
     if (
       latestSummativeMissIndex >= 0
@@ -364,8 +371,4 @@ function addTimeSeriesWeakReasons(
   for (const outcome of latestReviewByTopic.values()) {
     if (!outcome.isCorrect) addReason(outcome.topicId, "latest_review_failed");
   }
-}
-
-function isSummativeKind(kind: ReadinessAnswerEvidence["kind"]): boolean {
-  return kind === "summary" || kind === "mock" || kind === "official_past";
 }

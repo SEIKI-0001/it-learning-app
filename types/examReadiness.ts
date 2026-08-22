@@ -21,6 +21,8 @@ export type ReadinessTopic = {
 export type ReadinessAnswerEvidence = {
   answerId: string | null;
   idempotencyKey: string;
+  /** Assessment-session linkage when the answer was produced inside a session. */
+  sessionId?: string | null;
   canonicalQuestionId: string;
   topicId: string;
   fieldId: string;
