@@ -41,6 +41,19 @@ describe("dedupeAnswerEvents", () => {
     expect(dedupeAnswerEvents([original, retransmission])).toEqual([original]);
   });
 
+  it.each([
+    ["the answer-ID event arrives first", true],
+    ["the answer-ID-less event arrives first", false],
+  ])("removes a mixed-ID retransmission when %s", (_description, answerIdFirst) => {
+    const answerIdEvent = evidence({ answerId: "answer-mixed", idempotencyKey: "event-mixed" });
+    const answerIdlessEvent = evidence({ answerId: null, idempotencyKey: "event-mixed" });
+    const history = answerIdFirst
+      ? [answerIdEvent, answerIdlessEvent]
+      : [answerIdlessEvent, answerIdEvent];
+
+    expect(dedupeAnswerEvents(history)).toEqual([history[0]]);
+  });
+
   it("keeps real repeated answers as separate chronological events", () => {
     const firstAttempt = evidence({
       answerId: "answer-1",

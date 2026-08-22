@@ -41,17 +41,17 @@ export function dedupeAnswerEvents(
   events: ReadinessAnswerEvidence[],
 ): ReadinessAnswerEvidence[] {
   const answerIds = new Set<string>();
-  const idempotencyKeysWithoutAnswerId = new Set<string>();
+  const idempotencyKeys = new Set<string>();
 
   return events.filter((event) => {
     if (event.answerId !== null) {
       if (answerIds.has(event.answerId)) return false;
-      answerIds.add(event.answerId);
-      return true;
     }
 
-    if (idempotencyKeysWithoutAnswerId.has(event.idempotencyKey)) return false;
-    idempotencyKeysWithoutAnswerId.add(event.idempotencyKey);
+    if (idempotencyKeys.has(event.idempotencyKey)) return false;
+
+    if (event.answerId !== null) answerIds.add(event.answerId);
+    idempotencyKeys.add(event.idempotencyKey);
     return true;
   });
 }
