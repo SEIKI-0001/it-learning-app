@@ -290,7 +290,7 @@ as $$
 declare
   v_state public.exam_readiness_evidence_state%rowtype;
   v_job public.exam_readiness_recalculation_jobs%rowtype;
-  v_now timestamptz := statement_timestamp();
+  v_now timestamptz;
   v_lease_expires_at timestamptz;
 begin
   if p_user_id is null then
@@ -307,8 +307,6 @@ begin
     raise exception 'p_lease_seconds must be between 1 and 3600'
       using errcode = '22023';
   end if;
-
-  v_lease_expires_at := v_now + make_interval(secs => p_lease_seconds);
 
   insert into public.exam_readiness_evidence_state (user_id)
   values (p_user_id)
@@ -329,6 +327,11 @@ begin
     and model_version = p_model_version
     and exam_scheme_version = p_exam_scheme_version
   for update;
+
+  -- Capture wall-clock time only after every lease-protecting lock is held.
+  -- statement_timestamp() would be frozen before any lock wait.
+  v_now := clock_timestamp();
+  v_lease_expires_at := v_now + make_interval(secs => p_lease_seconds);
 
   if found and v_job.status = 'succeeded' then
     return next v_job;
@@ -379,7 +382,7 @@ begin
   where exam_readiness_recalculation_jobs.status = 'failed'
     or (
       exam_readiness_recalculation_jobs.status = 'processing'
-      and exam_readiness_recalculation_jobs.lease_expires_at <= statement_timestamp()
+      and exam_readiness_recalculation_jobs.lease_expires_at <= v_now
     )
   returning * into v_job;
 
@@ -425,6 +428,7 @@ declare
   v_calculated_at timestamptz;
   v_valid_until timestamptz;
   v_snapshot_date date;
+  v_now timestamptz;
 begin
   if p_job_id is null or p_expected_evidence_revision is null
     or p_expected_attempt is null or p_result is null
@@ -454,9 +458,11 @@ begin
   where job_id = p_job_id
   for update;
 
+  v_now := clock_timestamp();
+
   if v_job.status <> 'processing'
     or v_job.attempt_count <> p_expected_attempt
-    or v_job.lease_expires_at <= statement_timestamp()
+    or v_job.lease_expires_at <= v_now
     or v_state.lease_job_id is distinct from v_job.job_id
     or v_state.lease_expires_at is distinct from v_job.lease_expires_at then
     return 'stale';
@@ -468,15 +474,15 @@ begin
     set status = 'failed',
         lease_expires_at = null,
         error_code = 'stale_evidence',
-        completed_at = statement_timestamp(),
-        updated_at = statement_timestamp()
+        completed_at = v_now,
+        updated_at = v_now
     where job_id = p_job_id
       and attempt_count = p_expected_attempt;
 
     update public.exam_readiness_evidence_state
     set lease_job_id = null,
         lease_expires_at = null,
-        updated_at = statement_timestamp()
+        updated_at = v_now
     where user_id = v_job.user_id
       and lease_job_id = p_job_id;
 
@@ -538,7 +544,7 @@ begin
     v_calculation_reference_time,
     v_calculated_at,
     v_valid_until,
-    statement_timestamp()
+    v_now
   )
   on conflict (user_id) do update
   set evidence_revision = excluded.evidence_revision,
@@ -571,7 +577,7 @@ begin
     v_calculation_reference_time,
     v_calculated_at,
     v_valid_until,
-    statement_timestamp()
+    v_now
   )
   on conflict (user_id, snapshot_date, model_version, exam_scheme_version) do update
   set evidence_revision = excluded.evidence_revision,
@@ -586,15 +592,15 @@ begin
       lease_expires_at = null,
       error_code = null,
       result = v_result,
-      completed_at = statement_timestamp(),
-      updated_at = statement_timestamp()
+      completed_at = v_now,
+      updated_at = v_now
   where job_id = p_job_id
     and attempt_count = p_expected_attempt;
 
   update public.exam_readiness_evidence_state
   set lease_job_id = null,
       lease_expires_at = null,
-      updated_at = statement_timestamp()
+      updated_at = v_now
   where user_id = v_job.user_id
     and lease_job_id = p_job_id;
 
@@ -623,6 +629,7 @@ declare
   v_user_id uuid;
   v_job public.exam_readiness_recalculation_jobs%rowtype;
   v_state public.exam_readiness_evidence_state%rowtype;
+  v_now timestamptz;
 begin
   if p_job_id is null or p_expected_attempt is null then
     raise exception 'p_job_id and p_expected_attempt are required'
@@ -650,9 +657,11 @@ begin
   where job_id = p_job_id
   for update;
 
+  v_now := clock_timestamp();
+
   if v_job.status <> 'processing'
     or v_job.attempt_count <> p_expected_attempt
-    or v_job.lease_expires_at <= statement_timestamp()
+    or v_job.lease_expires_at <= v_now
     or v_state.lease_job_id is distinct from v_job.job_id
     or v_state.lease_expires_at is distinct from v_job.lease_expires_at then
     return;
@@ -662,15 +671,15 @@ begin
   set status = 'failed',
       lease_expires_at = null,
       error_code = nullif(p_error_code, ''),
-      completed_at = statement_timestamp(),
-      updated_at = statement_timestamp()
+      completed_at = v_now,
+      updated_at = v_now
   where job_id = p_job_id
     and attempt_count = p_expected_attempt;
 
   update public.exam_readiness_evidence_state
   set lease_job_id = null,
       lease_expires_at = null,
-      updated_at = statement_timestamp()
+      updated_at = v_now
   where user_id = v_job.user_id
     and lease_job_id = p_job_id;
 end;

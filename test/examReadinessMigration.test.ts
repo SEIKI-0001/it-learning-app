@@ -55,6 +55,18 @@ function tableDefinition(table: (typeof TABLES)[number]): string {
   return match?.[1] ?? "";
 }
 
+function functionDefinition(name: string): string {
+  const match = SQL.match(
+    new RegExp(
+      `create or replace function public\\.${name}([\\s\\S]*?)\\n\\$\\$;`,
+      "i",
+    ),
+  );
+
+  expect(match, `missing definition for ${name}`).not.toBeNull();
+  return match?.[0] ?? "";
+}
+
 describe("exam-readiness persistence migration contract", () => {
   it("creates all seven postgres-owned user-scoped tables", () => {
     for (const table of TABLES) {
@@ -139,7 +151,7 @@ describe("exam-readiness persistence migration contract", () => {
       /on conflict \(user_id, trigger_type, trigger_id, model_version, exam_scheme_version\)[\s\S]*do update[\s\S]*status = 'processing'[\s\S]*attempt_count = exam_readiness_recalculation_jobs\.attempt_count \+ 1/i,
     );
     expect(SQL).toMatch(
-      /exam_readiness_recalculation_jobs\.status = 'failed'[\s\S]*or[\s\S]*exam_readiness_recalculation_jobs\.lease_expires_at <= statement_timestamp\(\)/i,
+      /exam_readiness_recalculation_jobs\.status = 'failed'[\s\S]*or[\s\S]*exam_readiness_recalculation_jobs\.lease_expires_at <= v_now/i,
     );
   });
 
@@ -157,11 +169,31 @@ describe("exam-readiness persistence migration contract", () => {
       /if v_revision <> p_expected_evidence_revision then[\s\S]*return 'stale'/i,
     );
     expect(SQL).toMatch(
-      /if v_job\.status <> 'processing'[\s\S]*or v_job\.attempt_count <> p_expected_attempt[\s\S]*or v_job\.lease_expires_at <= statement_timestamp\(\)[\s\S]*then[\s\S]*return 'stale'/i,
+      /if v_job\.status <> 'processing'[\s\S]*or v_job\.attempt_count <> p_expected_attempt[\s\S]*or v_job\.lease_expires_at <= v_now[\s\S]*then[\s\S]*return 'stale'/i,
     );
     expect(SQL).toMatch(
-      /if v_job\.status <> 'processing'[\s\S]*or v_job\.attempt_count <> p_expected_attempt[\s\S]*or v_job\.lease_expires_at <= statement_timestamp\(\)[\s\S]*then[\s\S]*return;/i,
+      /if v_job\.status <> 'processing'[\s\S]*or v_job\.attempt_count <> p_expected_attempt[\s\S]*or v_job\.lease_expires_at <= v_now[\s\S]*then[\s\S]*return;/i,
     );
+  });
+
+  it("captures wall-clock time only after lease-protecting row locks", () => {
+    const claim = functionDefinition("claim_exam_readiness_recalculation");
+    const complete = functionDefinition("complete_exam_readiness_recalculation");
+    const fail = functionDefinition("fail_exam_readiness_recalculation");
+
+    expect(claim).toMatch(
+      /for update;[\s\S]*for update;[\s\S]*v_now := clock_timestamp\(\);[\s\S]*v_lease_expires_at := v_now \+ make_interval/i,
+    );
+    expect(claim).not.toMatch(/v_now\s+timestamptz\s*:=/i);
+
+    for (const terminal of [complete, fail]) {
+      expect(terminal).toMatch(
+        /for update;[\s\S]*for update;[\s\S]*v_now := clock_timestamp\(\);[\s\S]*lease_expires_at <= v_now/i,
+      );
+      expect(terminal).not.toMatch(
+        /lease_expires_at <= statement_timestamp\(\)/i,
+      );
+    }
   });
 
   it("atomically saves current and Tokyo-dated versioned snapshots", () => {
