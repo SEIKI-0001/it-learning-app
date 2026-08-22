@@ -14,6 +14,7 @@ import type { ChoiceKey, QuestionExposureState } from "@/types";
 import type { PastExamMode, PastExamSession } from "@/types/pastExam";
 import { EXAM_MODE_DURATION_MINUTES } from "@/types/pastExam";
 import { createAssessmentSessionId } from "@/lib/userSession";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 
 const KEY_PREFIX = "fequest:pastExam";
 
@@ -42,13 +43,67 @@ function isValidSession(value: unknown): value is PastExamSession {
     typeof s.sessionId === "string" &&
     typeof s.year === "number" &&
     (s.mode === "practice" || s.mode === "exam") &&
-    typeof s.startedAt === "string" &&
-    !Number.isNaN(Date.parse(s.startedAt)) &&
+    isStrictOffsetIsoTimestamp(s.startedAt) &&
     typeof s.currentIndex === "number" &&
-    typeof s.answers === "object" &&
-    s.answers !== null &&
-    typeof s.completed === "boolean"
+    isValidAnswerSnapshot(s.answers) &&
+    typeof s.completed === "boolean" &&
+    isValidPendingMutation(s.pendingMutation)
   );
+}
+
+function isValidPendingMutation(value: unknown): boolean {
+  if (value === undefined) return true;
+  if (typeof value !== "object" || value === null) return false;
+  const pending = value as Record<string, unknown>;
+  if (
+    (pending.action !== "complete" && pending.action !== "abandon")
+    || !isStrictOffsetIsoTimestamp(pending.completedAt)
+  ) return false;
+  if (pending.action === "abandon") return true;
+  return isValidAnswerSnapshot(pending.answerSnapshot)
+    && Array.isArray(pending.assessmentAnswers)
+    && pending.assessmentAnswers.every(isValidAssessmentAnswer)
+    && typeof pending.exposures === "object"
+    && pending.exposures !== null
+    && (pending.confirmedUserId === null || typeof pending.confirmedUserId === "string");
+}
+
+function isValidAnswerSnapshot(value: unknown): boolean {
+  return typeof value === "object"
+    && value !== null
+    && !Array.isArray(value)
+    && Object.values(value).every((answer) => {
+      if (typeof answer !== "object" || answer === null) return false;
+      const record = answer as Record<string, unknown>;
+      return (record.selected === null || isChoiceKey(record.selected))
+        && isStrictOffsetIsoTimestamp(record.answeredAt)
+        && typeof record.timeSpentSeconds === "number"
+        && Number.isFinite(record.timeSpentSeconds)
+        && record.timeSpentSeconds >= 0
+        && (
+          record.exposureState === undefined
+          || record.exposureState === "first"
+          || record.exposureState === "seen"
+          || record.exposureState === "unknown"
+        );
+    });
+}
+
+function isValidAssessmentAnswer(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const answer = value as Record<string, unknown>;
+  return typeof answer.idempotencyKey === "string"
+    && answer.idempotencyKey.length > 0
+    && typeof answer.canonicalQuestionId === "string"
+    && answer.canonicalQuestionId.length > 0
+    && typeof answer.topicId === "string"
+    && answer.topicId.length > 0
+    && typeof answer.isCorrect === "boolean"
+    && isStrictOffsetIsoTimestamp(answer.answeredAt);
+}
+
+function isChoiceKey(value: unknown): value is ChoiceKey {
+  return value === "A" || value === "B" || value === "C" || value === "D";
 }
 
 /** 途中状態を読む。壊れていた場合・完了済みの場合は null。 */
@@ -73,17 +128,18 @@ export function loadSession(
 }
 
 /** 途中状態を書く。保存に失敗しても演習は続行できるよう、例外は投げない。 */
-export function saveSession(userId: string | null, session: PastExamSession): void {
-  if (!isBrowser()) return;
+export function saveSession(userId: string | null, session: PastExamSession): boolean {
+  if (!isBrowser()) return false;
   try {
     window.localStorage.setItem(
       sessionStorageKey(userId, session.year, session.mode),
       JSON.stringify(session),
     );
   } catch {
-    /* 容量超過などは無視する（画面を止めない） */
+    return false;
   }
   notifyChange();
+  return true;
 }
 
 /** 途中状態を消す。採点が終わったときと、やり直しを選んだときに呼ぶ。 */

@@ -51,6 +51,7 @@ import type { QuestionExposureMap, QuestionExposureState } from "@/types";
 import {
   EXAM_MODE_DURATION_MINUTES,
   type PastExamMode,
+  type PastExamPendingMutation,
   type PastExamResult,
   type PastExamSession,
 } from "@/types/pastExam";
@@ -83,11 +84,6 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const [startingMode, setStartingMode] = useState<PastExamMode | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const pendingStartRef = useRef<Partial<Record<PastExamMode, PastExamSession>>>({});
-  const pendingAbandonRef = useRef<Partial<Record<PastExamMode, {
-    sessionId: string;
-    completedAt: string;
-  }>>>({});
-  const pendingCompletionRef = useRef<{ sessionId: string; completedAt: string } | null>(null);
   const [identity, setIdentity] = useState<QuestionExposureIdentity | null>(null);
   useEffect(() => {
     void resolveQuestionExposureIdentity().then(setIdentity);
@@ -113,6 +109,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
 
   const persist = useCallback(
     (next: PastExamSession) => {
+      if (submittedRef.current) return;
       setSession(next);
       if (userReady) saveSession(sessionUserId, next);
     },
@@ -137,12 +134,132 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     setSubmitting(false);
   }, []);
 
+  const resolveMutationStorageUserId = useCallback(async (): Promise<string | null> => {
+    if (userReady) return sessionUserId;
+    const resolved = await resolveQuestionExposureIdentity();
+    if (resolved.authState === "unknown") {
+      throw new Error("Assessment mutation identity is unavailable");
+    }
+    setIdentity(resolved);
+    return resolved.userId;
+  }, [sessionUserId, userReady]);
+
+  const commitPendingCompletion = useCallback(async (
+    current: PastExamSession,
+    pending: Extract<PastExamPendingMutation, { action: "complete" }>,
+    storageUserId: string | null,
+  ): Promise<boolean> => {
+    submittedRef.current = true;
+    setSubmitting(true);
+    setPersistenceError(null);
+    const graded = gradePastExam({
+      sessionId: current.sessionId,
+      year,
+      mode: current.mode,
+      questions,
+      answers: pending.answerSnapshot,
+    });
+    let factsCommitted = false;
+    try {
+      await completeAssessmentSessionForCurrentSession({
+        action: "complete",
+        sessionId: current.sessionId,
+        completedAt: pending.completedAt,
+        answers: pending.assessmentAnswers,
+      });
+      factsCommitted = true;
+
+      const currentState = loadAppState();
+      if (currentState) {
+        const next = recordPastExamLearningResult(
+          currentState,
+          graded,
+          pending.answerSnapshot,
+          pending.exposures,
+        );
+        saveAppState(next);
+        if (pending.confirmedUserId) {
+          saveProgressToDb(pending.confirmedUserId, next.progress);
+        }
+      }
+
+      setSession(null);
+      clearSession(storageUserId, year, current.mode);
+      setResult(graded);
+      setPhase("result");
+      return true;
+    } catch {
+      if (factsCommitted) {
+        setSession(null);
+        clearSession(storageUserId, year, current.mode);
+        setResult(graded);
+        setPhase("result");
+        return true;
+      }
+      submittedRef.current = false;
+      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  }, [questions, year]);
+
+  const settleExistingBeforeStart = useCallback(async (
+    existing: PastExamSession,
+    storageUserId: string | null,
+    forceAbandon: boolean,
+  ): Promise<"continue" | "settled" | "failed"> => {
+    if (existing.pendingMutation?.action === "complete") {
+      const completed = await commitPendingCompletion(
+        existing,
+        existing.pendingMutation,
+        storageUserId,
+      );
+      return completed ? "settled" : "failed";
+    }
+    if (!forceAbandon && existing.pendingMutation?.action !== "abandon") {
+      return "continue";
+    }
+
+    const pending = existing.pendingMutation?.action === "abandon"
+      ? existing.pendingMutation
+      : { action: "abandon" as const, completedAt: new Date().toISOString() };
+    const pendingSession = { ...existing, pendingMutation: pending };
+    if (!saveSession(storageUserId, pendingSession)) {
+      setPersistenceError("前回のセッション終了を端末に保存できませんでした。もう一度お試しください。");
+      return "failed";
+    }
+    setSession(pendingSession);
+    try {
+      await abandonAssessmentSessionForCurrentSession({
+        action: "abandon",
+        sessionId: existing.sessionId,
+        completedAt: pending.completedAt,
+      });
+      setSession(null);
+      clearSession(storageUserId, year, existing.mode);
+      return "settled";
+    } catch {
+      setPersistenceError("前回のセッションを終了できませんでした。もう一度お試しください。");
+      return "failed";
+    }
+  }, [commitPendingCompletion, year]);
+
   const start = useCallback(
     async (mode: PastExamMode) => {
       if (startingMode !== null) return;
       setStartingMode(mode);
       setPersistenceError(null);
-      const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
+      let existing = userReady ? loadSession(sessionUserId, year, mode) : null;
+      if (existing) {
+        const pendingAction = existing.pendingMutation?.action;
+        const settlement = await settleExistingBeforeStart(existing, sessionUserId, false);
+        if (settlement === "failed" || (settlement === "settled" && pendingAction === "complete")) {
+          setStartingMode(null);
+          return;
+        }
+        if (settlement === "settled") existing = null;
+      }
       const next = existing ?? pendingStartRef.current[mode] ?? createSession(year, mode);
       pendingStartRef.current[mode] = next;
       try {
@@ -164,7 +281,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         setStartingMode(null);
       }
     },
-    [allowSubmit, persist, questions.length, sessionUserId, startingMode, userReady, year],
+    [allowSubmit, persist, questions.length, sessionUserId, settleExistingBeforeStart, startingMode, userReady, year],
   );
 
   const restart = useCallback(
@@ -174,24 +291,12 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       setPersistenceError(null);
       const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
       if (existing) {
-        const pendingAbandon = pendingAbandonRef.current[mode]?.sessionId === existing.sessionId
-          ? pendingAbandonRef.current[mode]
-          : { sessionId: existing.sessionId, completedAt: new Date().toISOString() };
-        pendingAbandonRef.current[mode] = pendingAbandon;
-        try {
-          await abandonAssessmentSessionForCurrentSession({
-            action: "abandon",
-            sessionId: existing.sessionId,
-            completedAt: pendingAbandon.completedAt,
-          });
-          delete pendingAbandonRef.current[mode];
-        } catch {
-          setPersistenceError("前回のセッションを終了できませんでした。もう一度お試しください。");
+        const settlement = await settleExistingBeforeStart(existing, sessionUserId, true);
+        if (settlement === "failed" || existing.pendingMutation?.action === "complete") {
           setStartingMode(null);
           return;
         }
       }
-      if (userReady) clearSession(sessionUserId, year, mode);
       const next = pendingStartRef.current[mode] ?? createSession(year, mode);
       pendingStartRef.current[mode] = next;
       try {
@@ -213,7 +318,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         setStartingMode(null);
       }
     },
-    [allowSubmit, persist, questions.length, sessionUserId, startingMode, userReady, year],
+    [allowSubmit, persist, questions.length, sessionUserId, settleExistingBeforeStart, startingMode, userReady, year],
   );
 
   const finish = useCallback(
@@ -223,20 +328,20 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       submittedRef.current = true;
       setSubmitting(true);
       setPersistenceError(null);
-
-      const graded = gradePastExam({
-        sessionId: current.sessionId,
-        year,
-        mode: current.mode,
-        // PastExamQuestionView は GradableQuestion を構造的に満たす。
-        questions,
-        answers: current.answers,
-      });
-      let factsCommitted = false;
       try {
+        if (current.pendingMutation?.action === "complete") {
+          const storageUserId = await resolveMutationStorageUserId();
+          await commitPendingCompletion(current, current.pendingMutation, storageUserId);
+          return;
+        }
+        if (current.pendingMutation?.action === "abandon") {
+          throw new Error("Cannot complete a session pending abandon");
+        }
+
         const currentState = loadAppState();
         let exposures: QuestionExposureMap;
         let confirmedUserId = userId;
+        let storageUserId: string | null;
         if (current.mode === "exam") {
           const exposureResult = await saveAllAttempts({
             questions,
@@ -247,7 +352,11 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           });
           exposures = exposureResult.exposures;
           confirmedUserId = exposureResult.userId;
+          storageUserId = exposureResult.authState === "unknown"
+            ? await resolveMutationStorageUserId()
+            : exposureResult.userId;
         } else {
+          storageUserId = await resolveMutationStorageUserId();
           exposures = getUnknownQuestionExposureStates(
             questions.map((question) => question.id),
           );
@@ -272,15 +381,14 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           }
         }
 
-        const pendingCompletion = pendingCompletionRef.current?.sessionId === current.sessionId
-          ? pendingCompletionRef.current
-          : { sessionId: current.sessionId, completedAt: new Date().toISOString() };
-        pendingCompletionRef.current = pendingCompletion;
-        await completeAssessmentSessionForCurrentSession({
+        const answerSnapshot = Object.fromEntries(
+          Object.entries(current.answers).map(([number, answer]) => [number, { ...answer }]),
+        );
+        const pendingMutation: Extract<PastExamPendingMutation, { action: "complete" }> = {
           action: "complete",
-          sessionId: current.sessionId,
-          completedAt: pendingCompletion.completedAt,
-          answers: questions.flatMap((question) => {
+          completedAt: new Date().toISOString(),
+          answerSnapshot,
+          assessmentAnswers: questions.flatMap((question) => {
             const answer = current.answers[question.questionNumber];
             if (!answer || answer.selected === null) return [];
             return [{
@@ -294,41 +402,26 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
               answeredAt: answer.answeredAt,
             }];
           }),
-        });
-        factsCommitted = true;
-        pendingCompletionRef.current = null;
-
-        if (currentState) {
-          const next = recordPastExamLearningResult(
-            currentState,
-            graded,
-            current.answers,
-            exposures,
-          );
-          saveAppState(next);
-          if (confirmedUserId) saveProgressToDb(confirmedUserId, next.progress);
+          exposures,
+          confirmedUserId,
+        };
+        const pendingSession = {
+          ...current,
+          answers: answerSnapshot,
+          pendingMutation,
+        };
+        if (!saveSession(storageUserId, pendingSession)) {
+          throw new Error("Could not save pending assessment completion");
         }
-
-        // 完了した演習は途中状態として残さない（購読側へも通知される）。
-        setSession(null);
-        if (userReady) clearSession(sessionUserId, year, current.mode);
-        setResult(graded);
-        setPhase("result");
+        setSession(pendingSession);
+        await commitPendingCompletion(pendingSession, pendingMutation, storageUserId);
       } catch {
-        if (factsCommitted) {
-          setSession(null);
-          if (userReady) clearSession(sessionUserId, year, current.mode);
-          setResult(graded);
-          setPhase("result");
-          return;
-        }
         submittedRef.current = false;
         setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
-      } finally {
         setSubmitting(false);
       }
     },
-    [questions, sessionUserId, userId, userReady, year],
+    [commitPendingCompletion, questions, resolveMutationStorageUserId, userId],
   );
 
   if (phase === "result" && result) {
@@ -507,6 +600,7 @@ function QuestionStage({
   const question = questions[index];
   const answer = session.answers[question.questionNumber];
   const selected = answer?.selected ?? null;
+  const completionFrozen = session.pendingMutation?.action === "complete";
 
   // 練習モードでは、回答済みの問題に戻ったときも解説を出す。
   const revealAnswer = !isExam && selected !== null;
@@ -600,7 +694,7 @@ function QuestionStage({
         selected={selected}
         onSelect={handleSelect}
         revealAnswer={revealAnswer}
-        disabled={answerLocked || classifying || submitting}
+        disabled={answerLocked || classifying || submitting || completionFrozen}
       />
 
       <nav className="flex items-center justify-between gap-2" aria-label="問題の移動">

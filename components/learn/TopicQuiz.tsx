@@ -109,6 +109,7 @@ export default function TopicQuiz({
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const finishedRef = useRef(false);
+  const failedSubmissionRef = useRef(false);
   const pendingAnswersRef = useRef<UserAnswer[] | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0); // 1問ずつ表示する(下スクロールさせない)
   const timeLimited = typeof timeLimitSeconds === "number" && timeLimitSeconds > 0;
@@ -162,9 +163,12 @@ export default function TopicQuiz({
     setCurrentIndex((i) => Math.max(i - 1, 0));
   }
 
-  const finish = useCallback(async () => {
-    if (finishedRef.current) return;
+  const finish = useCallback(async (explicitRetry = false) => {
+    if (finishedRef.current) {
+      if (!explicitRetry || !failedSubmissionRef.current) return;
+    }
     finishedRef.current = true;
+    failedSubmissionRef.current = false;
     setSubmitting(true);
     const answers = pendingAnswersRef.current ?? questions.map((q) => {
       const answeredAt = new Date().toISOString();
@@ -185,9 +189,9 @@ export default function TopicQuiz({
       pendingAnswersRef.current = null;
       setDone(true);
     } catch {
-      // The parent renders the persistence error. Re-open this exact submission so the
-      // same immutable assessment session can be completed on retry.
-      finishedRef.current = false;
+      // Keep an automatic timeout attempt latched even when parent callbacks rerender.
+      // Only a direct user action may retry the exact frozen payload.
+      failedSubmissionRef.current = true;
     } finally {
       setSubmitting(false);
     }
@@ -197,7 +201,7 @@ export default function TopicQuiz({
     if (!timeLimited || done || timeLeft === null) return;
     if (timeLeft <= 0) {
       // タイマー（外部システム）起因の自動締め切り。意図的に effect 内で確定する。
-      const timer = window.setTimeout(() => void finish(), 0);
+      const timer = window.setTimeout(() => void finish(false), 0);
       return () => window.clearTimeout(timer);
     }
     const timer = window.setTimeout(() => {
@@ -453,7 +457,7 @@ export default function TopicQuiz({
           {isLast ? (
             <button
               type="button"
-              onClick={() => void finish()}
+              onClick={() => void finish(true)}
               disabled={(!allAnswered && !timeLimitReached) || done || submitting}
               className={buttonClass("primary", "lg", "flex-1 disabled:bg-gray-300")}
             >

@@ -4,7 +4,11 @@
 // 100問模試とは別の演習のための型。既存の CheckQuestion / ExamLevelQuestion へは
 // 変換しない（選択肢のシャッフルや即時正答表示といった既存挙動を持ち込まないため）。
 
-import type { ChoiceKey, QuestionExposureState } from "@/types";
+import type {
+  ChoiceKey,
+  QuestionExposureMap,
+  QuestionExposureState,
+} from "@/types";
 import type { TopicField } from "@/types/content";
 
 /**
@@ -29,6 +33,26 @@ export type PastExamAnswer = {
   exposureState?: QuestionExposureState;
 };
 
+export type PastExamAssessmentAnswer = {
+  idempotencyKey: string;
+  canonicalQuestionId: string;
+  topicId: string;
+  isCorrect: boolean;
+  answeredAt: string;
+};
+
+export type PastExamPendingMutation = {
+  action: "complete";
+  completedAt: string;
+  answerSnapshot: Record<number, PastExamAnswer>;
+  assessmentAnswers: PastExamAssessmentAnswer[];
+  exposures: QuestionExposureMap;
+  confirmedUserId: string | null;
+} | {
+  action: "abandon";
+  completedAt: string;
+};
+
 /**
  * 途中状態。localStorage に保存して再開に使う。
  * ユーザー・年度・モードごとに独立して持つ。
@@ -46,6 +70,8 @@ export type PastExamSession = {
   currentIndex: number;
   /** 問番号（1〜100）→ 回答。未回答の問題はキーごと存在しない。 */
   answers: Record<number, PastExamAnswer>;
+  /** Response-lost lifecycle operations are retried byte-for-byte after reload. */
+  pendingMutation?: PastExamPendingMutation;
   /** 採点まで終わったか。完了後は途中状態として復元しない。 */
   completed: boolean;
 };

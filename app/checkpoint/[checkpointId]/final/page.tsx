@@ -107,7 +107,6 @@ export default function FinalExamPage() {
   async function startExam() {
     if (!state || starting) return;
     setStarting(true);
-    setResult(null);
     setExamError(null);
     setPersistenceError(null);
     try {
@@ -137,11 +136,14 @@ export default function FinalExamPage() {
         setPersistenceError("評価セッションを開始できませんでした。もう一度お試しください。");
         return;
       }
+      // Keep the completed result authoritative until the replacement session frame
+      // is durably in_progress. React batches this swap, so the terminal exam never
+      // remounts between the result and the new question set.
       setExam(pending.exam);
+      setResult(null);
       pendingExamRef.current = null;
       emitMochitEvent("encourage");
     } catch (error) {
-      setExam(null);
       setExamError(
         error instanceof Error
           ? "この範囲で十分な問題を作れません。対象トピックをもう少し学習してから再挑戦してください。"

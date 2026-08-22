@@ -63,6 +63,7 @@ export default function ThemeExamRunner({
   const [result, setResult] = useState<ThemeExamResult | null>(null);
   const [starting, setStarting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [completionFrozen, setCompletionFrozen] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
 
   // この演習1回を識別するID。question_attempts の attempt_group_id に使う。
@@ -72,7 +73,27 @@ export default function ThemeExamRunner({
   // 問題ごとに費やした秒数。戻って解き直した場合は累計する。
   const timeSpentRef = useRef<Record<number, number>>({});
   const submittedRef = useRef(false);
-  const pendingAnsweredAtRef = useRef<string | null>(null);
+  const pendingCompletionRef = useRef<{
+    graded: ThemeExamResult;
+    answeredAt: string;
+    attempts: Array<{
+      questionId: string;
+      questionType: "theme_exam";
+      topicId: string;
+      selectedAnswer: ChoiceKey | null;
+      isCorrect: boolean;
+      timeSpentSeconds: number | null;
+      answeredAt: string;
+      attemptGroupId: string;
+    }>;
+    assessmentAnswers: Array<{
+      idempotencyKey: string;
+      canonicalQuestionId: string;
+      topicId: string;
+      isCorrect: boolean;
+      answeredAt: string;
+    }>;
+  } | null>(null);
 
   // 選択肢の並びは開始時に1度だけ決める。表示のたびに入れ替わると見直しができない。
   const order = useMemo(
@@ -127,38 +148,30 @@ export default function ThemeExamRunner({
     submittedRef.current = true;
     setSubmitting(true);
     setPersistenceError(null);
-    commitElapsed();
-    const graded = gradeThemeExam({
-      sessionId: sessionIdRef.current,
-      themeSlug,
-      questions,
-      answers,
-      passRate,
-    });
-    let factsCommitted = false;
-    try {
-      const answeredAt = pendingAnsweredAtRef.current ?? new Date().toISOString();
-      pendingAnsweredAtRef.current = answeredAt;
-      const attempts = graded.questions.map((question) => ({
-        questionId: question.questionId,
-        questionType: "theme_exam" as const,
-        topicId: question.topicId,
-        selectedAnswer: question.selected,
-        isCorrect: question.isCorrect,
-        timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
-        answeredAt,
-        attemptGroupId: sessionIdRef.current,
-      }));
-      const exposureResult = await saveQuestionAttemptsForCurrentSession(
-        attempts,
-        appState?.answers ?? [],
-      );
-      const { exposures, userId } = exposureResult;
-      await completeAssessmentSessionForCurrentSession({
-        action: "complete",
+    const pending = pendingCompletionRef.current ?? (() => {
+      commitElapsed();
+      const graded = gradeThemeExam({
         sessionId: sessionIdRef.current,
-        completedAt: answeredAt,
-        answers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
+        themeSlug,
+        questions,
+        answers,
+        passRate,
+      });
+      const answeredAt = new Date().toISOString();
+      return {
+        graded,
+        answeredAt,
+        attempts: graded.questions.map((question) => ({
+          questionId: question.questionId,
+          questionType: "theme_exam" as const,
+          topicId: question.topicId,
+          selectedAnswer: question.selected,
+          isCorrect: question.isCorrect,
+          timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
+          answeredAt,
+          attemptGroupId: sessionIdRef.current,
+        })),
+        assessmentAnswers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
           idempotencyKey: assessmentAnswerIdempotencyKey(
             sessionIdRef.current,
             question.questionId,
@@ -168,9 +181,26 @@ export default function ThemeExamRunner({
           isCorrect: question.isCorrect,
           answeredAt,
         }]),
+      };
+    })();
+    pendingCompletionRef.current = pending;
+    setCompletionFrozen(true);
+    const { graded, answeredAt, attempts, assessmentAnswers } = pending;
+    let factsCommitted = false;
+    try {
+      const exposureResult = await saveQuestionAttemptsForCurrentSession(
+        attempts,
+        appState?.answers ?? [],
+      );
+      const { exposures, userId } = exposureResult;
+      await completeAssessmentSessionForCurrentSession({
+        action: "complete",
+        sessionId: sessionIdRef.current,
+        completedAt: answeredAt,
+        answers: assessmentAnswers,
       });
       factsCommitted = true;
-      pendingAnsweredAtRef.current = null;
+      pendingCompletionRef.current = null;
       if (appState) {
         const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
         saveAppState(next);
@@ -203,7 +233,8 @@ export default function ThemeExamRunner({
     setSubmitting(false);
     sessionIdRef.current = "";
     startedAtRef.current = 0;
-    pendingAnsweredAtRef.current = null;
+    pendingCompletionRef.current = null;
+    setCompletionFrozen(false);
     timeSpentRef.current = {};
     setPhase("intro");
   };
@@ -278,13 +309,14 @@ export default function ThemeExamRunner({
                 <li key={choice.key}>
                   <button
                     type="button"
-                    disabled={submitting}
-                    onClick={() =>
+                    disabled={submitting || completionFrozen}
+                    onClick={() => {
+                      if (pendingCompletionRef.current !== null) return;
                       setAnswers((prev) => ({
                         ...prev,
                         [current.questionNumber]: isSelected ? null : choice.key,
-                      }))
-                    }
+                      }));
+                    }}
                     aria-pressed={isSelected}
                     className={[
                       "flex w-full items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left text-sm transition",
@@ -313,7 +345,7 @@ export default function ThemeExamRunner({
           <button
             type="button"
             onClick={() => move(index - 1)}
-            disabled={index === 0 || submitting}
+            disabled={index === 0 || submitting || completionFrozen}
             className={buttonClass("secondary", "md", "flex-1")}
           >
             前へ
@@ -331,7 +363,7 @@ export default function ThemeExamRunner({
             <button
               type="button"
               onClick={() => move(index + 1)}
-              disabled={submitting}
+              disabled={submitting || completionFrozen}
               className={buttonClass("primary", "md", "flex-1")}
             >
               次へ

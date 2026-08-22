@@ -7,6 +7,10 @@ import {
 import { recalculateExamReadiness } from "@/lib/examReadiness/service";
 import { getQuestionById } from "@/lib/questionBank";
 import type { AssessmentSession, FirstAttemptState } from "@/types/examReadiness";
+import {
+  isSameStrictIsoInstant,
+  isStrictOffsetIsoTimestamp,
+} from "@/lib/strictIsoTimestamp";
 
 export type StartAssessmentSessionInput = {
   action: "start";
@@ -356,8 +360,8 @@ function parseSession(value: unknown): AssessmentSession {
     || !isSource(value.source)
     || !isMode(value.mode)
     || !isStatus(value.status)
-    || !isIsoString(value.started_at)
-    || (value.completed_at !== null && !isIsoString(value.completed_at))
+    || !isStrictOffsetIsoTimestamp(value.started_at)
+    || (value.completed_at !== null && !isStrictOffsetIsoTimestamp(value.completed_at))
     || !isNonNegativeInteger(value.question_count)
     || !isNonNegativeInteger(value.answered_count)
     || !isNonNegativeInteger(value.correct_count)
@@ -399,7 +403,7 @@ function assertSameStartFrame(
 }
 
 function isSameInstant(left: string, right: string): boolean {
-  return Date.parse(left) === Date.parse(right);
+  return isSameStrictIsoInstant(left, right);
 }
 
 function assertUniqueAnswerIdentities(
@@ -447,7 +451,7 @@ function isAttemptRow(value: unknown): value is AttemptRow {
     && isNonEmptyString(value.question_type)
     && isNonEmptyString(value.topic_id)
     && typeof value.is_correct === "boolean"
-    && isIsoString(value.answered_at)
+    && isStrictOffsetIsoTimestamp(value.answered_at)
     && (value.official_exam_field === null || typeof value.official_exam_field === "string")
     && typeof value.is_first_attempt === "boolean"
     && isNonEmptyString(value.attempt_group_id);
@@ -475,10 +479,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
-}
-
-function isIsoString(value: unknown): value is string {
-  return isNonEmptyString(value) && Number.isFinite(Date.parse(value));
 }
 
 function isNonNegativeInteger(value: unknown): value is number {

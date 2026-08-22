@@ -238,3 +238,112 @@ Verified unchanged but rerun:
 - Question-attempt batches can be repeated after an ambiguous completion response; their existing P1-1 idempotency keys/grouping remain the authority while the common completion payload itself is byte-for-byte stable across retry.
 - Vitest continues to print the existing Node `module.register()` deprecation and unavailable-localStorage experimental warnings; neither affects results.
 - No implementation blocker remains.
+
+---
+
+## Fix Round 2 — Durable ambiguous-response recovery and frozen submissions
+
+### Status
+
+Resolved all five remaining findings. Checkpoint-final retry starts are staged without exposing the terminal exam, official-past terminal mutations survive reload with their exact payload, every mutable completion path freezes its first submission, timeout failure retries require an explicit action, and all assessment timestamps now use one millisecond-lossless strict parser.
+
+### RED / GREEN evidence
+
+The first focused RED run produced nine expected failures across six files:
+
+- two route failures for accepted sub-millisecond request timestamps;
+- one service failure for accepting a sub-millisecond authoritative-attempt row;
+- one checkpoint-final failure because a failed retry start cleared the prior result and remounted the terminal quiz;
+- one TopicQuiz failure because timeout completion was not correctly exercised/latched across callback rerenders;
+- one Theme summary failure because choices changed after an ambiguous completion failure;
+- three official-past failures because completion/abandon pending mutations were not stored across reload and exam answers remained mutable.
+
+A further local-session RED test proved that a locale-formatted pending completion timestamp was incorrectly accepted for reload recovery. It passed after pending data was validated with the shared strict timestamp contract.
+
+Final focused GREEN:
+
+```text
+npx vitest run test/assessmentSessionMigration.test.ts test/assessmentSessionRoute.test.ts test/assessmentSessionIntegration.test.ts test/assessmentSessionClient.test.ts test/AssessmentDeliveryRunners.test.tsx test/ThemeExamRunner.test.tsx test/PastExamRunner.test.tsx test/PastExamSubmitOnce.test.tsx test/TopicQuiz.test.tsx test/mockExam.test.ts test/themeExamLearningLoop.test.ts test/pastExamSession.test.ts test/pastExamAttempts.test.ts test/checkpointExam.test.ts test/finalExam.test.ts
+Test Files  15 passed (15)
+Tests  180 passed (180)
+```
+
+### Lifecycle recovery and ordering
+
+- Checkpoint final: the previous completed result remains rendered while a replacement frame is generated and persisted. A failed retry start shows a retryable alert without mounting the old quiz; only a validated `in_progress` start atomically swaps in the newly generated exam. The failed and successful retry calls use the same staged session ID/start/frame, which is distinct from the terminal session.
+- Official past completion: before the common completion request, the existing resumable session now stores the exact `completedAt`, immutable answer snapshot, exact assessment-answer payload, authoritative exposure snapshot, and confirmed progress identity. A response-lost reload retries only that stored common completion payload, derives the result/P0 update from the stored snapshot, and clears local state only after validated success.
+- Official past abandon: explicit start-over first stores the exact pending abandon timestamp in the resumable session. A response-lost reload retries the identical abandon before a replacement session may start; a failed/malformed response preserves the old local session and never starts a replacement.
+- Official past reload controls inspect any pending mutation before continuing or starting over. Pending completion resolves to the stored result; pending abandon resolves the old terminal transition before a fresh start. Arbitrary terminal timestamps or reconstructed answer payloads are not accepted.
+- Theme summary: the first grade action freezes grade output, answered-at time, attempt batch, time-spent snapshot, and assessment answers in one pending object. Choices and navigation remain disabled after an ambiguous failure, while the grade button provides an explicit retry of the exact object.
+- TopicQuiz-backed mock/checkpoint/checkpoint-final paths retain the frozen `pendingAnswersRef` payload. The final checkpoint additionally preserves its prior result until the next start succeeds.
+- Official-past event handlers and the Theme choice handler both guard against same-tick interaction races before disabled state rerenders.
+
+### Timeout behavior
+
+`TopicQuiz` now distinguishes automatic timeout submission from explicit retry. A rejected timeout attempt remains latched even if a parent rerender changes `onComplete` and causes the timer effect dependencies to update. Only the user-visible completion button can retry the exact pending answers. The fake-timer regression advances to zero, changes the callback identity, drains subsequent timers, and proves one automatic call before one explicit retry.
+
+### Timestamp precision and service validation
+
+- Added `lib/strictIsoTimestamp.ts`, a pure server-safe helper shared by the Route Handler, assessment persistence service, and official-past local pending validation.
+- Accepted request timestamps require a real ISO-8601 date-time, uppercase `Z` or numeric `±HH:MM` offset, valid calendar/clock/offset ranges, and zero to three fractional digits. Sub-millisecond precision is rejected so JavaScript millisecond instant comparison is lossless.
+- Start replay, abandon replay, and authoritative-attempt matching use the same strict instant comparator. Existing equivalent `Z`/`+00:00` coverage remains green.
+- Session rows and authoritative attempt rows use the strict validator rather than permissive `Date.parse`. A malformed/sub-millisecond authoritative row stops completion before the RPC and leaves the session retryable.
+
+### React self-review
+
+Applied the Vercel React best-practices checklist after the TSX changes:
+
+- Start, completion, abandon, local pending persistence, and retries remain in interaction handlers; no effect-derived lifecycle state was added.
+- Immutable mutation payloads use refs or the existing versioned local session, while small render-facing booleans expose pending/disabled UI without reconstructing facts.
+- The timeout effect has primitive state dependencies and a callback latch; callback identity churn cannot schedule repeated failed submissions.
+- Official-past external-store snapshots remain primitive strings, avoiding unstable `useSyncExternalStore` snapshots.
+- Existing native buttons, `role="alert"` errors, result views, question render structure, practice one-answer locking, and official resumability are preserved.
+- The shared timestamp regular expression is hoisted outside the validator and no new global listener, inline component definition, or client bundle dependency was introduced.
+
+### Fix Round 2 files
+
+Added:
+
+- `lib/strictIsoTimestamp.ts`
+
+Modified:
+
+- `app/api/assessment-sessions/route.ts`
+- `lib/examReadiness/assessmentSession.ts`
+- `app/checkpoint/[checkpointId]/final/page.tsx`
+- `components/learn/TopicQuiz.tsx`
+- `components/themeExam/ThemeExamRunner.tsx`
+- `components/pastExam/PastExamRunner.tsx`
+- `lib/pastExam/session.ts`
+- `types/pastExam.ts`
+- `test/assessmentSessionRoute.test.ts`
+- `test/assessmentSessionIntegration.test.ts`
+- `test/AssessmentDeliveryRunners.test.tsx`
+- `test/TopicQuiz.test.tsx`
+- `test/ThemeExamRunner.test.tsx`
+- `test/PastExamRunner.test.tsx`
+- `test/pastExamSession.test.ts`
+- `.superpowers/sdd/2026-08-22-exam-readiness-p1-2/task-8-report.md`
+
+Verified unchanged and rerun:
+
+- `supabase/migrations/20260823070000_assessment_session_completion.sql`
+- `supabase/tests/assessment_session_completion_test.sql`
+- `test/assessmentSessionMigration.test.ts`
+
+### Fix Round 2 verification
+
+- Focused route/client/service/all-runner regression: 15 files, 180 tests passed.
+- Every active migration replayed successfully in a uniquely named disposable Supabase PostgreSQL 17.6 container.
+- pgTAP: 18/18 assertions passed for atomic success/rollback, identical retry, conflicting retry, terminal immutability, and one evidence revision. The disposable container and SQL-only temporary directory were removed after the run.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed with no errors or warnings.
+- `npm test`: 103 files, 1,143 tests passed.
+- `git diff --check`: passed.
+
+### Fix Round 2 concerns
+
+- The V1 limitation remains unchanged: only total `questionCount` is persisted at start, so no field-level unanswered denominator is inferred or invented.
+- Official-past pending recovery relies on the existing versioned local resumable record. If the browser cannot durably write that record, the terminal mutation is not sent and the UI exposes a retryable persistence error.
+- PostgreSQL replay prints the existing `SET LOCAL` outside transaction warnings and Vitest prints the existing Node/localStorage warnings; all migrations, assertions, and tests still exit successfully.
+- No implementation blocker remains.

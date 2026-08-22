@@ -164,6 +164,8 @@ describe("POST /api/assessment-sessions", () => {
     ["invalid second", "2026-08-23T01:00:60Z"],
     ["invalid offset hour", "2026-08-23T01:00:00+15:00"],
     ["invalid maximum offset minutes", "2026-08-23T01:00:00+14:01"],
+    ["sub-millisecond fraction", "2026-08-23T01:00:00.0001Z"],
+    ["long fractional offset timestamp", "2026-08-23T10:00:00.1234+09:00"],
   ])("rejects a non-explicit or impossible ISO timestamp: %s", async (_name, startedAt) => {
     const response = await request({
       action: "start",

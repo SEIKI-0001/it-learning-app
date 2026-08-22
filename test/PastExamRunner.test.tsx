@@ -21,6 +21,11 @@ const assessmentFailures: Record<"start" | "complete" | "abandon", number> = {
   complete: 0,
   abandon: 0,
 };
+const assessmentMalformed: Record<"start" | "complete" | "abandon", number> = {
+  start: 0,
+  complete: 0,
+  abandon: 0,
+};
 const localStorageStub: Storage = {
   get length() {
     return storageValues.size;
@@ -54,6 +59,9 @@ beforeEach(() => {
   assessmentFailures.start = 0;
   assessmentFailures.complete = 0;
   assessmentFailures.abandon = 0;
+  assessmentMalformed.start = 0;
+  assessmentMalformed.complete = 0;
+  assessmentMalformed.abandon = 0;
   vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
     const userId = window.localStorage.getItem("fequest:userId");
     if (url === "/api/session/state") {
@@ -85,6 +93,10 @@ beforeEach(() => {
       if (assessmentFailures[body.action] > 0) {
         assessmentFailures[body.action] -= 1;
         return new Response(JSON.stringify({ error: "persistence_failed" }), { status: 503 });
+      }
+      if (assessmentMalformed[body.action] > 0) {
+        assessmentMalformed[body.action] -= 1;
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
       }
       return assessmentResponse(body.action, body.sessionId);
     }
@@ -355,6 +367,43 @@ describe("共通評価セッション", () => {
       sessionId: abandons[0].sessionId,
       completedAt: abandons[0].completedAt,
     });
+  });
+
+  it("abandon の応答喪失後にリロードしても同じ終了操作を再送してから新規開始する", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
+    renderRunner();
+    await startMode("練習モード");
+    cleanup();
+
+    assessmentMalformed.abandon = 1;
+    renderRunner();
+    const firstCard = screen.getByRole("heading", { name: "練習モード" }).closest("section")!;
+    fireEvent.click(await within(firstCard).findByRole("button", { name: "最初からやり直す" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("終了");
+    const persistedAfterLostResponse = [...storageValues.entries()]
+      .find(([key]) => key.startsWith("fequest:pastExam") && key.endsWith(":practice"));
+    expect(JSON.parse(persistedAfterLostResponse![1]).pendingMutation).toMatchObject({
+      action: "abandon",
+      completedAt: expect.any(String),
+    });
+
+    cleanup();
+    renderRunner();
+    const reloadedCard = screen.getByRole("heading", { name: "練習モード" }).closest("section")!;
+    fireEvent.click(await within(reloadedCard).findByRole("button", { name: "最初からやり直す" }));
+    expect(await screen.findByText("問1の問題文")).toBeInTheDocument();
+
+    const lifecycle = assessmentActions().filter((action) =>
+      action.action === "abandon" || action.action === "start"
+    );
+    const abandons = lifecycle.filter((action) => action.action === "abandon");
+    expect(abandons).toHaveLength(2);
+    expect(abandons[1]).toEqual(abandons[0]);
+    expect(lifecycle.slice(-3).map((action) => action.action)).toEqual([
+      "abandon",
+      "abandon",
+      "start",
+    ]);
   });
 });
 
@@ -784,6 +833,12 @@ describe("結果画面", () => {
     expect((globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls
       .filter(([url]) => url === "/api/progress/save")).toHaveLength(0);
 
+    fireEvent.click(screen.getByText("選択肢アの本文"));
+    expect(screen.getByText("選択肢エの本文").closest("button")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
     expect(await screen.findByText("50%")).toBeInTheDocument();
     expect([...storageValues.keys()].filter((key) => key.startsWith("fequest:pastExam"))).toEqual([]);
@@ -794,5 +849,45 @@ describe("結果画面", () => {
       completedAt: completions[0].completedAt,
       answers: completions[0].answers,
     });
+  });
+
+  it("完了応答の喪失後にリロードしても保存済みの同一採点操作を再送して復旧する", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    assessmentMalformed.complete = 1;
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    const persistedAfterLostResponse = [...storageValues.entries()]
+      .find(([key]) => key.startsWith("fequest:pastExam") && key.endsWith(":exam"));
+    const pending = JSON.parse(persistedAfterLostResponse![1]).pendingMutation;
+    expect(pending).toMatchObject({
+      action: "complete",
+      completedAt: expect.any(String),
+      answerSnapshot: expect.objectContaining({
+        "1": expect.objectContaining({ selected: "D" }),
+      }),
+      assessmentAnswers: [expect.objectContaining({ canonicalQuestionId: "q1" })],
+    });
+
+    cleanup();
+    renderRunner();
+    const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    fireEvent.click(await within(card).findByRole("button", { name: "続きから再開する" }));
+    expect(await screen.findByText("50%")).toBeInTheDocument();
+    expect([...storageValues.keys()].filter((key) => key.startsWith("fequest:pastExam"))).toEqual([]);
+
+    const completions = assessmentActions().filter((action) => action.action === "complete");
+    expect(completions).toHaveLength(2);
+    expect(completions[1]).toEqual(completions[0]);
+    expect(assessmentActions().filter((action) => action.action === "start")).toHaveLength(1);
   });
 });

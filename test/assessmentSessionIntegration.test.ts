@@ -511,6 +511,35 @@ describe("assessment session persistence", () => {
     expect(db.sessions.get(SESSION_ID)?.status).toBe("in_progress");
   });
 
+  it("rejects authoritative attempt timestamps with sub-millisecond precision", async () => {
+    const db = new MemorySupabase();
+    await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });
+    db.attempts.push({
+      attempt_id: "sub-millisecond-attempt",
+      question_id: "tech-binary-data-ex1",
+      question_type: "mock_exam",
+      topic_id: "tech-binary-data",
+      is_correct: true,
+      answered_at: "2026-08-23T01:01:00.0001Z",
+      official_exam_field: null,
+      is_first_attempt: true,
+      attempt_group_id: SESSION_ID,
+    });
+
+    await expect(completeAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: {
+        action: "complete",
+        sessionId: SESSION_ID,
+        completedAt: COMPLETED_AT,
+        answers: [],
+      },
+    })).rejects.toMatchObject({ code: "persistence_failed" });
+    expect(db.rpc).not.toHaveBeenCalled();
+    expect(db.sessions.get(SESSION_ID)?.status).toBe("in_progress");
+  });
+
   it("keeps unanswered questions only in the fixed denominator", async () => {
     const db = new MemorySupabase();
     await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });

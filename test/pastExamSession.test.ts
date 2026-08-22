@@ -166,6 +166,26 @@ describe("途中保存と再開", () => {
     expect(loadSession("user-1", 2026, "practice")!.answers[1].exposureState)
       .toBeUndefined();
   });
+
+  it("壊れた pending mutation は再送対象として読み込まない", () => {
+    const session = {
+      ...createSession(2026, "exam"),
+      pendingMutation: {
+        action: "complete" as const,
+        completedAt: "August 23, 2026 10:00",
+        answerSnapshot: {},
+        assessmentAnswers: [],
+        exposures: {},
+        confirmedUserId: "user-1",
+      },
+    };
+    window.localStorage.setItem(
+      sessionStorageKey("user-1", 2026, "exam"),
+      JSON.stringify(session),
+    );
+
+    expect(loadSession("user-1", 2026, "exam")).toBeNull();
+  });
 });
 
 describe("再開可能なモードのスナップショット", () => {

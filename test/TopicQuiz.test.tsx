@@ -152,6 +152,53 @@ describe("TopicQuiz", () => {
     expect(await screen.findByRole("button", { name: "保存しました" })).toBeDisabled();
   });
 
+  it("latches a failed timeout submission until an explicit retry despite callback rerenders", async () => {
+    vi.useFakeTimers();
+    try {
+      const firstComplete = vi.fn().mockRejectedValue(new Error("persistence failed"));
+      const { rerender } = render(
+        <TopicQuiz
+          topicId="topic-1"
+          onComplete={firstComplete}
+          questions={[singleQuestion]}
+          timeLimitSeconds={1}
+        />,
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_000);
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(firstComplete).toHaveBeenCalledTimes(1);
+
+      const rerenderedComplete = vi.fn().mockRejectedValue(new Error("still unavailable"));
+      rerender(
+        <TopicQuiz
+          topicId="topic-1"
+          onComplete={rerenderedComplete}
+          questions={[singleQuestion]}
+          timeLimitSeconds={1}
+        />,
+      );
+      await act(async () => {
+        await vi.runOnlyPendingTimersAsync();
+        await vi.runOnlyPendingTimersAsync();
+      });
+      expect(firstComplete).toHaveBeenCalledTimes(1);
+      expect(rerenderedComplete).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "完了する" }));
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(rerenderedComplete).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("shows the reason for the selected wrong choice after answering", () => {
     render(
       <TopicQuiz

@@ -268,6 +268,38 @@ describe("assessment delivery runners", () => {
     await waitFor(expectCompletionOrder);
   });
 
+  it("checkpoint final keeps the completed result while a retry start fails and swaps exams only after success", async () => {
+    const failures: Partial<Record<"start" | "complete" | "abandon", number>> = {};
+    installFetch(undefined, failures);
+    render(<FinalExamPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "突破試験に挑む" }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    expect(await screen.findByText("あと少し！次で突破できます")).toBeInTheDocument();
+    const completedSessionId = requestBodies("/api/assessment-sessions")
+      .find((body) => body.action === "complete")?.sessionId;
+
+    failures.start = 1;
+    fireEvent.click(screen.getByRole("button", { name: "もう一度挑戦する" }));
+
+    expect(screen.getByText("あと少し！次で突破できます")).toBeInTheDocument();
+    expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent("開始");
+    expect(screen.getByText("あと少し！次で突破できます")).toBeInTheDocument();
+    expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "もう一度挑戦する" }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    expect(screen.queryByText("あと少し！次で突破できます")).not.toBeInTheDocument();
+
+    const actions = requestBodies("/api/assessment-sessions");
+    expect(actions.map((body) => body.action)).toEqual(["start", "complete", "start", "start"]);
+    const retryStarts = actions.filter((body) => body.action === "start").slice(1);
+    expect(retryStarts[0]).toEqual(retryStarts[1]);
+    expect(retryStarts[0]?.sessionId).not.toBe(completedSessionId);
+  });
+
   it.each([
     ["mock", () => render(<MockExamPage />), /模試を始める/],
     [

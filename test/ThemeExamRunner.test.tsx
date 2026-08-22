@@ -278,6 +278,10 @@ describe("ThemeExamRunner exposure integration", () => {
     expect(recordThemeExamLearningResult).not.toHaveBeenCalled();
     expect(saveProgressToDb).not.toHaveBeenCalled();
 
+    fireEvent.click(screen.getByRole("button", { name: /誤った選択肢/ }));
+    expect(screen.getByRole("button", { name: /正しい選択肢/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /誤った選択肢/ })).toHaveAttribute("aria-pressed", "false");
+
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
     await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalledOnce());
     expect(completeAssessmentSessionForCurrentSession.mock.calls[1][0]).toEqual(
