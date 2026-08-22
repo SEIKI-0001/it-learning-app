@@ -1,0 +1,304 @@
+import { describe, expect, it, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  ExamReadinessRepositoryError,
+  getStoredCurrentReadiness,
+  loadExamReadinessEvidence,
+  registerEvidenceEvent,
+} from "@/lib/examReadiness/repository";
+import { calculateExamReadinessDraft, finalizeExamReadinessResult } from "@/lib/examReadiness/calculator";
+import { dedupeAnswerEvents } from "@/lib/examReadiness/evidence";
+import { makeEvidence } from "@/test/fixtures/examReadiness/v1-cases";
+
+type QueryResult = { data: unknown; error: unknown };
+
+class FakeQuery implements PromiseLike<QueryResult> {
+  constructor(
+    private readonly execute: () => QueryResult,
+    private readonly calls: string[],
+    private readonly table: string,
+  ) {}
+
+  select(columns: string) {
+    this.calls.push(`${this.table}.select:${columns}`);
+    return this;
+  }
+
+  eq(column: string, value: unknown) {
+    this.calls.push(`${this.table}.eq:${column}=${String(value)}`);
+    return this;
+  }
+
+  order(column: string, options?: { ascending?: boolean }) {
+    this.calls.push(`${this.table}.order:${column}:${options?.ascending === true ? "asc" : "desc"}`);
+    return this;
+  }
+
+  maybeSingle() {
+    this.calls.push(`${this.table}.maybeSingle`);
+    return this;
+  }
+
+  then<TResult1 = QueryResult, TResult2 = never>(
+    onfulfilled?: ((value: QueryResult) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2> {
+    return Promise.resolve(this.execute()).then(onfulfilled, onrejected);
+  }
+}
+
+function fakeSupabase(args: {
+  tables?: Record<string, unknown>;
+  revisions?: Array<number | null>;
+  currentResult?: unknown;
+  rpcResult?: QueryResult;
+}) {
+  const calls: string[] = [];
+  let revisionIndex = 0;
+  const from = vi.fn((table: string) => new FakeQuery(() => {
+    if (table === "exam_readiness_evidence_state") {
+      const revision = args.revisions?.[revisionIndex++] ?? null;
+      return { data: revision === null ? null : { revision }, error: null };
+    }
+    if (table === "exam_readiness_current") {
+      return {
+        data: args.currentResult === undefined ? null : { result: args.currentResult },
+        error: null,
+      };
+    }
+    return { data: args.tables?.[table] ?? null, error: null };
+  }, calls, table));
+  const rpc = vi.fn().mockResolvedValue(
+    args.rpcResult ?? { data: 1, error: null },
+  );
+  return { client: { from, rpc } as unknown as SupabaseClient, calls, from, rpc };
+}
+
+const USER_ID = "10000000-0000-0000-0000-000000000001";
+const ANSWERED_AT = "2026-08-21T00:00:00.000Z";
+
+function evidenceTables() {
+  return {
+    user_progress: {
+      topic_mastery_stats: {
+        "tech-ai-ml": {
+          topicId: "tech-ai-ml",
+          masteryScore: 54,
+          lastEvaluatedAt: ANSWERED_AT,
+          correctCount: 0,
+          incorrectCount: 1,
+          reviewSuccessCount: 0,
+          recentEvidence: [{
+            questionId: "legacy-review-q",
+            kind: "review",
+            isCorrect: false,
+            isFirstSeen: false,
+            answeredAt: ANSWERED_AT,
+          }],
+        },
+      },
+      review_queue: [{
+        topicId: "tech-ai-ml",
+        dueAt: "2026-08-22T00:00:00.000Z",
+        reason: "復習で間違えた",
+        reviewStage: 0,
+        lastReviewedAt: ANSWERED_AT,
+        reasonCode: "review_failure",
+      }],
+    },
+    question_attempts: [{
+      attempt_id: "attempt-1",
+      question_id: "ipa-it-passport-2026-q016",
+      question_type: "official_past",
+      topic_id: "tech-ai-ml",
+      is_correct: true,
+      answered_at: "2026-08-21T01:00:00.000Z",
+      official_exam_field: "strategy",
+      is_first_attempt: false,
+      attempt_group_id: "session-completed",
+    }],
+    assessment_sessions: [
+      {
+        session_id: "session-completed",
+        user_id: USER_ID,
+        source: "official_past",
+        mode: "exam",
+        status: "completed",
+        started_at: "2026-08-21T00:00:00.000Z",
+        completed_at: "2026-08-21T02:00:00.000Z",
+        question_count: 1,
+        answered_count: 1,
+        correct_count: 1,
+        first_count: 0,
+        seen_count: 1,
+        unknown_count: 0,
+      },
+      {
+        session_id: "session-progress",
+        user_id: USER_ID,
+        source: "mock",
+        mode: "exam",
+        status: "in_progress",
+        started_at: "2026-08-22T00:00:00.000Z",
+        completed_at: null,
+        question_count: 100,
+        answered_count: 2,
+        correct_count: 1,
+        first_count: 1,
+        seen_count: 0,
+        unknown_count: 1,
+      },
+      {
+        session_id: "session-abandoned",
+        user_id: USER_ID,
+        source: "checkpoint",
+        mode: "exam",
+        status: "abandoned",
+        started_at: "2026-08-20T00:00:00.000Z",
+        completed_at: "2026-08-20T01:00:00.000Z",
+        question_count: 10,
+        answered_count: 4,
+        correct_count: 3,
+        first_count: 2,
+        seen_count: 1,
+        unknown_count: 1,
+      },
+    ],
+    assessment_session_answers: [{
+      answer_id: "session-answer-1",
+      idempotency_key: "session-answer-event-1",
+      session_id: "session-completed",
+      canonical_question_id: "ipa-it-passport-2026-q016",
+      topic_id: "tech-ai-ml",
+      field_id: "strategy",
+      is_correct: true,
+      first_attempt_state: "unknown",
+      answered_at: "2026-08-21T01:00:00.000Z",
+    }],
+  };
+}
+
+describe("loadExamReadinessEvidence", () => {
+  it("collects authoritative P0, attempt, session, answer, revision, and catalog evidence", async () => {
+    const fake = fakeSupabase({ tables: evidenceTables(), revisions: [9, 9] });
+
+    const evidence = await loadExamReadinessEvidence(fake.client, USER_ID);
+
+    expect(evidence.evidenceRevision).toBe(9);
+    expect(evidence.topics.some((topic) => topic.topicId === "tech-ai-ml")).toBe(true);
+    expect(evidence.masteryByTopic["tech-ai-ml"]?.masteryScore).toBe(54);
+    expect(evidence.reviewOutcomes).toEqual([expect.objectContaining({
+      topicId: "tech-ai-ml",
+      isCorrect: false,
+      stage: 0,
+      dueAt: "2026-08-22T00:00:00.000Z",
+      scheduledIntervalDays: 1,
+    })]);
+    expect(evidence.weakTopicSignals).toContainEqual({
+      topicId: "tech-ai-ml",
+      reason: "review_failure",
+    });
+    expect(evidence.answers).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        answerId: null,
+        canonicalQuestionId: "legacy-review-q",
+        firstAttemptState: "unknown",
+        kind: "review",
+      }),
+      expect.objectContaining({
+        answerId: "attempt-1",
+        canonicalQuestionId: "ipa-it-passport-2026-q016",
+        fieldId: "technology",
+        officialExamFieldId: "strategy",
+        firstAttemptState: "seen",
+      }),
+      expect.objectContaining({
+        answerId: "session-answer-1",
+        sessionId: "session-completed",
+        fieldId: "technology",
+        officialExamFieldId: "strategy",
+        firstAttemptState: "unknown",
+      }),
+    ]));
+    expect(evidence.answers.find((answer) => answer.answerId === null)?.idempotencyKey)
+      .toBe(`legacy-review-q\u001freview\u001f${ANSWERED_AT}`);
+    expect(dedupeAnswerEvents(evidence.answers).filter(
+      (answer) => answer.canonicalQuestionId === "ipa-it-passport-2026-q016",
+    )).toHaveLength(1);
+    expect(evidence.assessmentSessions.map((session) => session.status).sort()).toEqual([
+      "abandoned",
+      "completed",
+      "in_progress",
+    ]);
+    expect(fake.calls).toContain("assessment_sessions.order:completed_at:desc");
+    expect(fake.calls).toContain("assessment_sessions.order:session_id:asc");
+  });
+
+  it("retries the whole evidence read when the revision changes", async () => {
+    const fake = fakeSupabase({ tables: evidenceTables(), revisions: [1, 2, 2, 2] });
+
+    const evidence = await loadExamReadinessEvidence(fake.client, USER_ID);
+
+    expect(evidence.evidenceRevision).toBe(2);
+    expect(fake.from.mock.calls.filter(([table]) => table === "user_progress")).toHaveLength(2);
+  });
+
+  it("fails with a typed evidence_revision_unstable error after three changing reads", async () => {
+    const fake = fakeSupabase({
+      tables: evidenceTables(),
+      revisions: [1, 2, 2, 3, 3, 4],
+    });
+
+    await expect(loadExamReadinessEvidence(fake.client, USER_ID)).rejects.toMatchObject({
+      name: "ExamReadinessRepositoryError",
+      code: "evidence_revision_unstable",
+    });
+    expect(fake.from.mock.calls.filter(([table]) => table === "user_progress")).toHaveLength(3);
+  });
+});
+
+describe("stored readiness and revision adapters", () => {
+  it("returns a complete stored result and null when no current row exists", async () => {
+    const result = finalizeExamReadinessResult(
+      calculateExamReadinessDraft({
+        evidence: makeEvidence(),
+        calculationReferenceTime: new Date("2026-08-22T00:00:00.000Z"),
+      }),
+      new Date("2026-08-22T00:00:01.000Z"),
+    );
+    const stored = fakeSupabase({ currentResult: result });
+    const missing = fakeSupabase({});
+
+    await expect(getStoredCurrentReadiness(stored.client, USER_ID)).resolves.toEqual(result);
+    await expect(getStoredCurrentReadiness(missing.client, USER_ID)).resolves.toBeNull();
+  });
+
+  it("rejects malformed or partial result JSON instead of returning a partial score", async () => {
+    const fake = fakeSupabase({ currentResult: { score: 72, band: "ready" } });
+
+    await expect(getStoredCurrentReadiness(fake.client, USER_ID)).rejects.toMatchObject({
+      name: "ExamReadinessRepositoryError",
+      code: "stored_result_invalid",
+    });
+  });
+
+  it("registers a stable event through the service-role RPC and parses its revision", async () => {
+    const fake = fakeSupabase({ rpcResult: { data: 12, error: null } });
+
+    await expect(registerEvidenceEvent(fake.client, USER_ID, "review:attempt-1"))
+      .resolves.toBe(12);
+    expect(fake.rpc).toHaveBeenCalledWith("register_exam_readiness_evidence", {
+      p_user_id: USER_ID,
+      p_event_key: "review:attempt-1",
+    });
+  });
+
+  it("surfaces typed RPC failures", async () => {
+    const fake = fakeSupabase({
+      rpcResult: { data: null, error: { message: "database unavailable" } },
+    });
+
+    await expect(registerEvidenceEvent(fake.client, USER_ID, "event"))
+      .rejects.toBeInstanceOf(ExamReadinessRepositoryError);
+  });
+});
