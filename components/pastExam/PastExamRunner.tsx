@@ -167,21 +167,33 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         completedAt: pending.completedAt,
         answers: pending.assessmentAnswers,
       });
-      factsCommitted = true;
 
       const currentState = loadAppState();
-      if (currentState) {
-        const next = recordPastExamLearningResult(
+      if (currentState && pending.progressSnapshot !== null) {
+        const recomputed = recordPastExamLearningResult(
           currentState,
           graded,
           pending.answerSnapshot,
           pending.exposures,
+          new Date(pending.completedAt),
         );
-        saveAppState(next);
+        const next = pending.progressSnapshot === undefined
+          ? recomputed
+          : { ...recomputed, progress: pending.progressSnapshot };
         if (pending.confirmedUserId) {
-          saveProgressToDb(pending.confirmedUserId, next.progress);
+          const progressSaved = await saveProgressToDb(
+            pending.confirmedUserId,
+            next.progress,
+            {
+              triggerType: "assessment",
+              triggerId: current.sessionId,
+            },
+          );
+          if (!progressSaved) throw new Error("Assessment progress finalization failed");
         }
+        saveAppState(next);
       }
+      factsCommitted = true;
 
       setSession(null);
       clearSession(storageUserId, year, current.mode);
@@ -384,9 +396,26 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         const answerSnapshot = Object.fromEntries(
           Object.entries(current.answers).map(([number, answer]) => [number, { ...answer }]),
         );
+        const completedAt = new Date().toISOString();
+        const graded = gradePastExam({
+          sessionId: current.sessionId,
+          year,
+          mode: current.mode,
+          questions,
+          answers: answerSnapshot,
+        });
+        const progressSnapshot = currentState
+          ? recordPastExamLearningResult(
+            currentState,
+            graded,
+            answerSnapshot,
+            exposures,
+            new Date(completedAt),
+          ).progress
+          : null;
         const pendingMutation: Extract<PastExamPendingMutation, { action: "complete" }> = {
           action: "complete",
-          completedAt: new Date().toISOString(),
+          completedAt,
           answerSnapshot,
           assessmentAnswers: questions.flatMap((question) => {
             const answer = current.answers[question.questionNumber];
@@ -404,6 +433,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           }),
           exposures,
           confirmedUserId,
+          progressSnapshot,
         };
         const pendingSession = {
           ...current,
@@ -421,7 +451,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         setSubmitting(false);
       }
     },
-    [commitPendingCompletion, questions, resolveMutationStorageUserId, userId],
+    [commitPendingCompletion, questions, resolveMutationStorageUserId, userId, year],
   );
 
   if (phase === "result" && result) {

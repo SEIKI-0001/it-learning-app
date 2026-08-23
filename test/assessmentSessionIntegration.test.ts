@@ -6,12 +6,23 @@ vi.mock("server-only", () => ({}));
 const recalculateExamReadiness = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/examReadiness/service", () => ({ recalculateExamReadiness }));
 
+const getRequestUserId = vi.hoisted(() => vi.fn());
+const canRecordStudyForUser = vi.hoisted(() => vi.fn());
+const getServiceSupabase = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/apiUser", () => ({ getRequestUserId }));
+vi.mock("@/lib/billing/recordingGate", () => ({
+  canRecordStudyForUser,
+  recordingLockedResponse: () => new Response(null, { status: 403 }),
+}));
+vi.mock("@/lib/supabaseServer", () => ({ getServiceSupabase }));
+
 import {
   AssessmentSessionPersistenceError,
   abandonAssessmentSession,
   completeAssessmentSession,
   startAssessmentSession,
 } from "@/lib/examReadiness/assessmentSession";
+import { POST as saveQuestionAttempts } from "@/app/api/question-attempts/save/route";
 import { computeSummativePerformance } from "@/lib/examReadiness/components";
 import type { AssessmentSession, ComponentInput } from "@/types/examReadiness";
 
@@ -116,6 +127,37 @@ class MemorySupabase {
   readonly evidenceEvents = new Set<string>();
   readonly from = vi.fn((table: string) => new MemoryQuery(this, table));
   readonly rpc = vi.fn(async (name: string, params: Record<string, unknown>) => {
+    if (name === "record_question_attempts_with_exposure") {
+      const attempts = params.p_attempts as Array<Record<string, unknown>>;
+      attempts.forEach((attempt, index) => {
+        this.attempts.push({
+          attempt_id: `route-attempt-${this.attempts.length + index + 1}`,
+          question_id: String(attempt.question_id),
+          question_type: String(attempt.question_type),
+          topic_id: String(attempt.topic_id),
+          is_correct: Boolean(attempt.is_correct),
+          answered_at: String(attempt.answered_at),
+          official_exam_field: typeof attempt.official_exam_field === "string"
+            ? attempt.official_exam_field
+            : null,
+          is_first_attempt: true,
+          attempt_group_id: typeof attempt.attempt_group_id === "string"
+            ? attempt.attempt_group_id
+            : "",
+        });
+      });
+      return {
+        data: attempts.map((attempt) => ({
+          question_id: attempt.question_id,
+          state: "first",
+          attempted_before: false,
+          first_attempt_at: attempt.answered_at,
+          attempt_count: 1,
+          saved: true,
+        })),
+        error: null,
+      };
+    }
     if (name !== "complete_assessment_session") {
       return { data: null, error: { message: `unexpected rpc ${name}` } };
     }
@@ -199,6 +241,8 @@ function startInput(overrides: Record<string, unknown> = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   recalculateExamReadiness.mockResolvedValue({ score: 72 });
+  getRequestUserId.mockResolvedValue(USER_ID);
+  canRecordStudyForUser.mockResolvedValue(true);
 });
 
 describe("assessment session persistence", () => {
@@ -354,30 +398,100 @@ describe("assessment session persistence", () => {
       unknown_count: 0,
     });
 
-    const dbUnknown = new MemorySupabase();
+  });
+
+  it("rejects a completion answer without its persisted authoritative attempt", async () => {
+    const db = new MemorySupabase();
     await startAssessmentSession({
-      supabase: dbUnknown.client(),
+      supabase: db.client(),
       userId: USER_ID,
-      input: startInput({ sessionId: "20000000-0000-4000-8000-000000000002", questionCount: 1 }),
+      input: startInput({ questionCount: 1 }),
     });
-    await completeAssessmentSession({
-      supabase: dbUnknown.client(),
+
+    await expect(completeAssessmentSession({
+      supabase: db.client(),
       userId: USER_ID,
       input: {
         action: "complete",
-        sessionId: "20000000-0000-4000-8000-000000000002",
+        sessionId: SESSION_ID,
         completedAt: COMPLETED_AT,
         answers: [{
-          idempotencyKey: "unknown:q1",
+          idempotencyKey: `${SESSION_ID}:missing`,
           canonicalQuestionId: "tech-binary-data-ex1",
           topicId: "tech-binary-data",
           isCorrect: true,
           answeredAt: "2026-08-23T01:03:00.000Z",
         }],
       },
+    })).rejects.toMatchObject({ code: "invalid_session" });
+    expect(db.rpc).not.toHaveBeenCalledWith(
+      "complete_assessment_session",
+      expect.anything(),
+    );
+    expect(db.sessions.get(SESSION_ID)?.status).toBe("in_progress");
+  });
+
+  it("normalizes a real non-official route save into the grouped attempt completion consumes", async () => {
+    const db = new MemorySupabase();
+    getServiceSupabase.mockReturnValue(db.client());
+    await startAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: startInput({ questionCount: 1 }),
     });
-    expect(dbUnknown.sessions.get("20000000-0000-4000-8000-000000000002"))
-      .toMatchObject({ first_count: 0, seen_count: 0, unknown_count: 1 });
+    const answeredAt = "2026-08-23T01:04:00.000Z";
+
+    const saveResponse = await saveQuestionAttempts(new Request(
+      "http://localhost/api/question-attempts/save",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          attempts: [{
+            questionId: "tech-binary-data-ex1",
+            questionType: "mock_exam",
+            topicId: "client-topic",
+            selectedAnswer: "A",
+            isCorrect: true,
+            answeredAt,
+            attemptGroupId: SESSION_ID,
+          }],
+        }),
+      },
+    ));
+
+    expect(saveResponse.status).toBe(200);
+    expect(db.attempts).toEqual([
+      expect.objectContaining({
+        question_id: "tech-binary-data-ex1",
+        question_type: "mock_exam",
+        topic_id: "tech-binary-data",
+        attempt_group_id: SESSION_ID,
+      }),
+    ]);
+    await expect(completeAssessmentSession({
+      supabase: db.client(),
+      userId: USER_ID,
+      input: {
+        action: "complete",
+        sessionId: SESSION_ID,
+        completedAt: COMPLETED_AT,
+        answers: [{
+          idempotencyKey: `${SESSION_ID}:route-q1`,
+          canonicalQuestionId: "tech-binary-data-ex1",
+          topicId: "forged-topic",
+          isCorrect: false,
+          answeredAt,
+        }],
+      },
+    })).resolves.toMatchObject({ firstCount: 1, unknownCount: 0 });
+    expect(db.answers.get(SESSION_ID)).toEqual([
+      expect.objectContaining({
+        topic_id: "tech-binary-data",
+        is_correct: true,
+        first_attempt_state: "first",
+      }),
+    ]);
   });
 
   it("re-derives official correctness, Topic, and official field from authoritative facts", async () => {
@@ -487,9 +601,20 @@ describe("assessment session persistence", () => {
     expect(db.sessions.get(SESSION_ID)?.status).toBe("in_progress");
 
     db.attemptQueryResult = null;
+    db.attempts.push({
+      attempt_id: "retry-attempt",
+      question_id: "tech-binary-data-ex1",
+      question_type: "mock_exam",
+      topic_id: "tech-binary-data",
+      is_correct: true,
+      answered_at: "2026-08-23T01:01:00.000Z",
+      official_exam_field: null,
+      is_first_attempt: true,
+      attempt_group_id: SESSION_ID,
+    });
     await expect(completeAssessmentSession({
       supabase: db.client(), userId: USER_ID, input,
-    })).resolves.toMatchObject({ status: "completed", unknownCount: 1 });
+    })).resolves.toMatchObject({ status: "completed", firstCount: 1, unknownCount: 0 });
   });
 
   it("rejects a malformed authoritative attempt response instead of deriving unknown", async () => {
@@ -543,6 +668,17 @@ describe("assessment session persistence", () => {
   it("keeps unanswered questions only in the fixed denominator", async () => {
     const db = new MemorySupabase();
     await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });
+    db.attempts.push({
+      attempt_id: "answered-attempt",
+      question_id: "tech-binary-data-ex1",
+      question_type: "mock_exam",
+      topic_id: "tech-binary-data",
+      is_correct: true,
+      answered_at: "2026-08-23T01:01:00.000Z",
+      official_exam_field: null,
+      is_first_attempt: true,
+      attempt_group_id: SESSION_ID,
+    });
 
     const completed = await completeAssessmentSession({
       supabase: db.client(),
@@ -566,10 +702,9 @@ describe("assessment session persistence", () => {
     expect(computeSummativePerformance(componentInput([completed.session]))).toBe(50);
   });
 
-  it("registers and recalculates once, and keeps saved facts successful when readiness fails", async () => {
+  it("registers session evidence once but defers readiness until the P0 transaction", async () => {
     const db = new MemorySupabase();
     await startAssessmentSession({ supabase: db.client(), userId: USER_ID, input: startInput() });
-    recalculateExamReadiness.mockRejectedValue(new Error("temporary readiness failure"));
 
     const input = {
       action: "complete" as const,
@@ -587,13 +722,7 @@ describe("assessment session persistence", () => {
     expect(completed).toMatchObject({ status: "completed", readinessUpdated: false });
     expect(replay).toMatchObject({ completedNow: false, readinessUpdated: false });
     expect(db.evidenceEvents).toEqual(new Set([`assessment:${SESSION_ID}`]));
-    expect(recalculateExamReadiness).toHaveBeenCalledOnce();
-    expect(recalculateExamReadiness).toHaveBeenCalledWith({
-      supabase: db,
-      userId: USER_ID,
-      triggerType: "assessment",
-      triggerId: SESSION_ID,
-    });
+    expect(recalculateExamReadiness).not.toHaveBeenCalled();
   });
 });
 

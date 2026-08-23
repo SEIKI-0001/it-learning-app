@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { ChoiceKey } from "@/types";
+import type { AppState, ChoiceKey } from "@/types";
 import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
 import { gradeThemeExam, recordThemeExamLearningResult } from "@/lib/themeExam";
 import { getLessonHref } from "@/lib/learningCatalog";
@@ -13,6 +13,7 @@ import {
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
+  type CurrentSessionQuestionExposureResult,
 } from "@/lib/userSession";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
@@ -93,6 +94,8 @@ export default function ThemeExamRunner({
       isCorrect: boolean;
       answeredAt: string;
     }>;
+    exposureResult?: CurrentSessionQuestionExposureResult;
+    next?: AppState | null;
   } | null>(null);
 
   // 選択肢の並びは開始時に1度だけ決める。表示のたびに入れ替わると見直しができない。
@@ -148,50 +151,50 @@ export default function ThemeExamRunner({
     submittedRef.current = true;
     setSubmitting(true);
     setPersistenceError(null);
-    const pending = pendingCompletionRef.current ?? (() => {
-      commitElapsed();
-      const graded = gradeThemeExam({
-        sessionId: sessionIdRef.current,
-        themeSlug,
-        questions,
-        answers,
-        passRate,
-      });
-      const answeredAt = new Date().toISOString();
-      return {
-        graded,
-        answeredAt,
-        attempts: graded.questions.map((question) => ({
-          questionId: question.questionId,
-          questionType: "theme_exam" as const,
-          topicId: question.topicId,
-          selectedAnswer: question.selected,
-          isCorrect: question.isCorrect,
-          timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
+    const pending: NonNullable<typeof pendingCompletionRef.current> =
+      pendingCompletionRef.current ?? (() => {
+        commitElapsed();
+        const graded = gradeThemeExam({
+          sessionId: sessionIdRef.current,
+          themeSlug,
+          questions,
+          answers,
+          passRate,
+        });
+        const answeredAt = new Date().toISOString();
+        return {
+          graded,
           answeredAt,
-          attemptGroupId: sessionIdRef.current,
-        })),
-        assessmentAnswers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
-          idempotencyKey: assessmentAnswerIdempotencyKey(
-            sessionIdRef.current,
-            question.questionId,
-          ),
-          canonicalQuestionId: question.questionId,
-          topicId: question.topicId,
-          isCorrect: question.isCorrect,
-          answeredAt,
-        }]),
-      };
-    })();
+          attempts: graded.questions.map((question) => ({
+            questionId: question.questionId,
+            questionType: "theme_exam" as const,
+            topicId: question.topicId,
+            selectedAnswer: question.selected,
+            isCorrect: question.isCorrect,
+            timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
+            answeredAt,
+            attemptGroupId: sessionIdRef.current,
+          })),
+          assessmentAnswers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
+            idempotencyKey: assessmentAnswerIdempotencyKey(
+              sessionIdRef.current,
+              question.questionId,
+            ),
+            canonicalQuestionId: question.questionId,
+            topicId: question.topicId,
+            isCorrect: question.isCorrect,
+            answeredAt,
+          }]),
+        };
+      })();
     pendingCompletionRef.current = pending;
     setCompletionFrozen(true);
     const { graded, answeredAt, attempts, assessmentAnswers } = pending;
     let factsCommitted = false;
     try {
-      const exposureResult = await saveQuestionAttemptsForCurrentSession(
-        attempts,
-        appState?.answers ?? [],
-      );
+      const exposureResult = pending.exposureResult
+        ?? await saveQuestionAttemptsForCurrentSession(attempts, appState?.answers ?? []);
+      pending.exposureResult = exposureResult;
       const { exposures, userId } = exposureResult;
       await completeAssessmentSessionForCurrentSession({
         action: "complete",
@@ -199,15 +202,24 @@ export default function ThemeExamRunner({
         completedAt: answeredAt,
         answers: assessmentAnswers,
       });
+      const next = pending.next !== undefined
+        ? pending.next
+        : appState
+          ? recordThemeExamLearningResult(appState, graded, answeredAt, exposures)
+          : null;
+      pending.next = next;
+      if (next && userId) {
+        const progressSaved = await saveProgressToDb(userId, next.progress, {
+          triggerType: "assessment",
+          triggerId: sessionIdRef.current,
+        });
+        if (!progressSaved) throw new Error("Assessment progress finalization failed");
+      }
       factsCommitted = true;
       pendingCompletionRef.current = null;
-      if (appState) {
-        const next = recordThemeExamLearningResult(appState, graded, answeredAt, exposures);
+      if (next) {
         saveAppState(next);
         setAppState(next);
-        if (userId) {
-          saveProgressToDb(userId, next.progress);
-        }
       }
       setResult(graded);
       setPhase("result");

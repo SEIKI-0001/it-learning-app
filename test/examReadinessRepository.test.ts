@@ -5,6 +5,7 @@ vi.mock("server-only", () => ({}));
 
 import {
   ExamReadinessRepositoryError,
+  getReadinessRecoveryState,
   getStoredCurrentReadiness,
   loadExamReadinessEvidence,
   registerEvidenceEvent,
@@ -34,6 +35,11 @@ class FakeQuery implements PromiseLike<QueryResult> {
 
   order(column: string, options?: { ascending?: boolean }) {
     this.calls.push(`${this.table}.order:${column}:${options?.ascending === true ? "asc" : "desc"}`);
+    return this;
+  }
+
+  limit(count: number) {
+    this.calls.push(`${this.table}.limit:${count}`);
     return this;
   }
 
@@ -97,7 +103,14 @@ function evidenceTables() {
             isCorrect: false,
             isFirstSeen: false,
             answeredAt: ANSWERED_AT,
-          }],
+          }] as Array<{
+            questionId: string;
+            kind: string;
+            isCorrect: boolean;
+            isFirstSeen: boolean;
+            exposureState?: "first" | "seen" | "unknown";
+            answeredAt: string;
+          }>,
         },
       },
       review_queue: [{
@@ -261,6 +274,88 @@ describe("loadExamReadinessEvidence", () => {
     ]);
   });
 
+  it("reconciles one physical P0 miss with its question-attempt copy and keeps richer P0 semantics", async () => {
+    const tables = evidenceTables();
+    const mastery = tables.user_progress.topic_mastery_stats["tech-ai-ml"];
+    mastery.masteryScore = 80;
+    mastery.recentEvidence = [{
+      questionId: "legacy-review-q",
+      kind: "review",
+      isCorrect: false,
+      isFirstSeen: false,
+      exposureState: "unknown",
+      answeredAt: ANSWERED_AT,
+    }];
+    tables.user_progress.review_queue = [];
+    tables.question_attempts[0] = {
+      ...tables.question_attempts[0],
+      attempt_id: "topic-attempt-1",
+      question_id: "legacy-review-q",
+      question_type: "topic_quiz",
+      is_correct: false,
+      answered_at: ANSWERED_AT,
+      is_first_attempt: false,
+      attempt_group_id: "",
+    };
+    tables.assessment_session_answers = [];
+    const fake = fakeSupabase({ tables, revisions: [9, 9] });
+
+    const evidence = await loadExamReadinessEvidence(fake.client, USER_ID);
+    const physical = evidence.answers.filter(
+      (answer) => answer.canonicalQuestionId === "legacy-review-q",
+    );
+
+    expect(physical).toEqual([expect.objectContaining({
+      answerId: "topic-attempt-1",
+      kind: "review",
+      firstAttemptState: "unknown",
+      isCorrect: false,
+    })]);
+  });
+
+  it("keeps a genuinely later miss after reconciling the earlier P0/attempt copy", async () => {
+    const tables = evidenceTables();
+    const mastery = tables.user_progress.topic_mastery_stats["tech-ai-ml"];
+    mastery.recentEvidence = [{
+      questionId: "legacy-review-q",
+      kind: "confirmation",
+      isCorrect: false,
+      isFirstSeen: true,
+      exposureState: "first",
+      answeredAt: ANSWERED_AT,
+    }];
+    tables.question_attempts = [
+      {
+        ...tables.question_attempts[0],
+        attempt_id: "topic-attempt-1",
+        question_id: "legacy-review-q",
+        question_type: "topic_quiz",
+        is_correct: false,
+        answered_at: ANSWERED_AT,
+        is_first_attempt: true,
+        attempt_group_id: "",
+      },
+      {
+        ...tables.question_attempts[0],
+        attempt_id: "topic-attempt-2",
+        question_id: "legacy-review-q",
+        question_type: "topic_quiz",
+        is_correct: false,
+        answered_at: "2026-08-21T01:00:00.000Z",
+        is_first_attempt: false,
+        attempt_group_id: "",
+      },
+    ];
+    tables.assessment_session_answers = [];
+    const fake = fakeSupabase({ tables, revisions: [9, 9] });
+
+    const evidence = await loadExamReadinessEvidence(fake.client, USER_ID);
+
+    expect(evidence.answers.filter(
+      (answer) => answer.canonicalQuestionId === "legacy-review-q",
+    )).toHaveLength(2);
+  });
+
   it.each([
     ["missing exposure and first-seen true", { isFirstSeen: true }, "first"],
     ["missing exposure and first-seen false", { isFirstSeen: false }, "unknown"],
@@ -308,6 +403,30 @@ describe("loadExamReadinessEvidence", () => {
 });
 
 describe("stored readiness and revision adapters", () => {
+  it("returns the current revision and latest failed trigger for lazy recovery", async () => {
+    const fake = fakeSupabase({
+      revisions: [8],
+      tables: {
+        exam_readiness_recalculation_jobs: {
+          trigger_type: "assessment",
+          trigger_id: "session-1",
+          evidence_revision: 8,
+        },
+      },
+    });
+
+    await expect(getReadinessRecoveryState(fake.client, USER_ID)).resolves.toEqual({
+      evidenceRevision: 8,
+      failedTrigger: {
+        triggerType: "assessment",
+        triggerId: "session-1",
+      },
+    });
+    expect(fake.calls).toContain("exam_readiness_recalculation_jobs.eq:status=failed");
+    expect(fake.calls).toContain("exam_readiness_recalculation_jobs.order:updated_at:desc");
+    expect(fake.calls).toContain("exam_readiness_recalculation_jobs.limit:1");
+  });
+
   it("returns a complete stored result and null when no current row exists", async () => {
     const result = finalizeExamReadinessResult(
       calculateExamReadinessDraft({

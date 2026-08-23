@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const path = "supabase/migrations/20260823070000_assessment_session_completion.sql";
+const progressPath = "supabase/migrations/20260823080000_progress_readiness_completion.sql";
 
 function sql(): string {
   return readFileSync(path, "utf8");
@@ -28,7 +29,7 @@ describe("assessment session completion migration", () => {
     expect(definition).toMatch(/grant execute on function public\.complete_assessment_session\([\s\S]*?to service_role/i);
   });
 
-  it("locks an in-progress frame, inserts answers, derives counts, completes, and registers one stable event", () => {
+  it("locks an in-progress frame, inserts answers, derives counts, and defers evidence publication", () => {
     const definition = functionDefinition(sql());
 
     expect(definition).toMatch(/from public\.assessment_sessions[\s\S]*for update/i);
@@ -37,7 +38,12 @@ describe("assessment session completion migration", () => {
     expect(definition).toMatch(/count\(\*\) filter \(where is_correct\)/i);
     expect(definition).toMatch(/count\(\*\) filter \(where first_attempt_state = 'first'\)/i);
     expect(definition).toMatch(/update public\.assessment_sessions[\s\S]*status = 'completed'/i);
-    expect(definition).toMatch(/register_exam_readiness_evidence\([\s\S]*'assessment:' \|\| p_session_id::text/i);
+    expect(definition).not.toMatch(/register_exam_readiness_evidence/i);
+
+    const progressDefinition = readFileSync(progressPath, "utf8");
+    expect(progressDefinition).toMatch(
+      /p_trigger_type = 'assessment'[\s\S]*register_exam_readiness_evidence\(p_user_id, v_event_key\)/i,
+    );
   });
 
   it("has explicit identical-retry and conflicting-terminal branches", () => {

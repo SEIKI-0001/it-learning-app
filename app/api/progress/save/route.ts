@@ -8,7 +8,7 @@ import type { UserProfile, UserProgress } from "@/types";
 export const runtime = "nodejs";
 
 type ReadinessTriggerInput = {
-  triggerType: "learning_complete" | "review_complete";
+  triggerType: "learning_complete" | "review_complete" | "assessment";
   triggerId: string;
 };
 
@@ -110,7 +110,8 @@ function parseReadinessTrigger(value: unknown): ReadinessTriggerInput | undefine
   const candidate = value as Record<string, unknown>;
   if (
     (candidate.triggerType !== "learning_complete"
-      && candidate.triggerType !== "review_complete")
+      && candidate.triggerType !== "review_complete"
+      && candidate.triggerType !== "assessment")
     || typeof candidate.triggerId !== "string"
     || candidate.triggerId.trim().length === 0
     || candidate.triggerId.length > 4096

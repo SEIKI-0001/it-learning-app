@@ -15,6 +15,7 @@ import {
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
+  type CurrentSessionQuestionExposureResult,
 } from "@/lib/userSession";
 import { getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
@@ -60,7 +61,14 @@ export default function FinalExamPage() {
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const pendingExamRef = useRef<{ exam: FinalExam; startedAt: string } | null>(null);
-  const pendingCompletionAtRef = useRef<string | null>(null);
+  const pendingCompletionRef = useRef<{
+    completedAt: string;
+    answers: UserAnswer[];
+    scored: FinalExamResult;
+    attempt: ReturnType<typeof buildFinalExamAttempt>;
+    exposureResult?: CurrentSessionQuestionExposureResult;
+    updated?: ReturnType<typeof recordFinalExamAttempt>;
+  } | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -160,30 +168,39 @@ export default function FinalExamPage() {
     let factsCommitted = false;
     let committedResult: FinalExamResult | null = null;
     try {
-      const scored = scoreFinalExam(exam, answers);
-      committedResult = scored;
-      const attempt = buildFinalExamAttempt(exam, scored);
-      const questionAttempts = answers.map((answer) => ({
-        questionId: answer.questionId,
-        questionType: "mini_exam" as const,
-        topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
-        selectedAnswer: answer.selectedChoice ?? null,
-        isCorrect: answer.isCorrect,
-        answeredAt: answer.answeredAt,
-        attemptGroupId: exam.attemptId,
-      }));
-      const exposureResult = await saveQuestionAttemptsForCurrentSession(
-        questionAttempts,
-        state.answers,
-      );
+      const pending: NonNullable<typeof pendingCompletionRef.current> =
+        pendingCompletionRef.current ?? (() => {
+          const completedAt = new Date().toISOString();
+          const scored = scoreFinalExam(exam, answers);
+          return {
+            completedAt,
+            answers: answers.map((answer) => ({ ...answer })),
+            scored,
+            attempt: buildFinalExamAttempt(exam, scored, new Date(completedAt)),
+          };
+        })();
+      pendingCompletionRef.current = pending;
+      committedResult = pending.scored;
+      const exposureResult = pending.exposureResult
+        ?? await saveQuestionAttemptsForCurrentSession(
+          pending.answers.map((answer) => ({
+            questionId: answer.questionId,
+            questionType: "mini_exam" as const,
+            topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
+            selectedAnswer: answer.selectedChoice ?? null,
+            isCorrect: answer.isCorrect,
+            answeredAt: answer.answeredAt,
+            attemptGroupId: exam.attemptId,
+          })),
+          state.answers,
+        );
+      pending.exposureResult = exposureResult;
       const { exposures, userId: uid } = exposureResult;
-      const completedAt = pendingCompletionAtRef.current ?? new Date().toISOString();
-      pendingCompletionAtRef.current = completedAt;
       await completeAssessmentSessionForCurrentSession({
         action: "complete",
         sessionId: exam.attemptId,
-        completedAt,
-        answers: answers.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+        completedAt: pending.completedAt,
+        answers: pending.answers.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
           idempotencyKey: assessmentAnswerIdempotencyKey(exam.attemptId, answer.questionId),
           canonicalQuestionId: answer.questionId,
           topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
@@ -191,25 +208,30 @@ export default function FinalExamPage() {
           answeredAt: answer.answeredAt,
         }]),
       });
-      factsCommitted = true;
-      pendingCompletionAtRef.current = null;
-      const updated = recordFinalExamAttempt(
+      const updated = pending.updated ?? recordFinalExamAttempt(
         state,
-        attempt,
-        answers,
+        pending.attempt,
+        pending.answers,
         exposures,
         signals,
-        new Date(),
+        new Date(pending.completedAt),
       );
+      pending.updated = updated;
+      if (uid) {
+        const progressSaved = await saveProgressToDb(uid, updated.progress, {
+          triggerType: "assessment",
+          triggerId: exam.attemptId,
+        });
+        if (!progressSaved) throw new Error("Assessment progress finalization failed");
+      }
+      factsCommitted = true;
+      pendingCompletionRef.current = null;
       saveAppState(updated);
       setState(updated);
-      setResult(scored);
+      setResult(pending.scored);
       // CP突破の全画面演出（紙吹雪）。突破していなければ差分が無いので何も出ない。
       emitCelebration(state, updated);
-      emitMochitEvent(scored.passed ? "checkpointClear" : "incorrect");
-      if (uid) {
-        saveProgressToDb(uid, updated.progress);
-      }
+      emitMochitEvent(pending.scored.passed ? "checkpointClear" : "incorrect");
     } catch (error) {
       if (factsCommitted) {
         if (committedResult) setResult(committedResult);

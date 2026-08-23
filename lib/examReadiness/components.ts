@@ -319,7 +319,7 @@ function eventDeduplicatedAnswers(input: ComponentInput): ReadinessAnswerEvidenc
   return dedupeAnswerEvents([...input.answers]);
 }
 
-function eligibleSummativeSessions(sessions: AssessmentSession[]): AssessmentSession[] {
+export function eligibleSummativeSessions(sessions: AssessmentSession[]): AssessmentSession[] {
   return sessions.filter((assessment) =>
     assessment.status === "completed"
     && assessment.completedAt !== null

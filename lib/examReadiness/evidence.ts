@@ -53,6 +53,45 @@ export function dedupeAnswerEvents(
   });
 }
 
+/**
+ * P0 mastery and question_attempts are written from the same client answer. Reconcile
+ * that physical fact before time-series calculations while keeping the attempt's stable
+ * database/session identity and P0's richer Review/exposure semantics.
+ */
+export function reconcileP0AndAttemptEvents(
+  p0Events: ReadinessAnswerEvidence[],
+  attemptEvents: ReadinessAnswerEvidence[],
+): ReadinessAnswerEvidence[] {
+  const unmatchedAttempts = [...attemptEvents];
+  const reconciled = p0Events.map((p0Event) => {
+    const attemptIndex = unmatchedAttempts.findIndex(
+      (attemptEvent) => isEquivalentPhysicalFact(p0Event, attemptEvent),
+    );
+    if (attemptIndex < 0) return p0Event;
+    const [attemptEvent] = unmatchedAttempts.splice(attemptIndex, 1);
+    return {
+      ...attemptEvent,
+      kind: p0Event.kind,
+      firstAttemptState: p0Event.firstAttemptState,
+    };
+  });
+  return [...reconciled, ...unmatchedAttempts];
+}
+
+function isEquivalentPhysicalFact(
+  p0Event: ReadinessAnswerEvidence,
+  attemptEvent: ReadinessAnswerEvidence,
+): boolean {
+  const kindMatches = p0Event.kind === attemptEvent.kind
+    || (attemptEvent.kind === "confirmation"
+      && (p0Event.kind === "confirmation" || p0Event.kind === "review"));
+  return kindMatches
+    && p0Event.canonicalQuestionId === attemptEvent.canonicalQuestionId
+    && p0Event.topicId === attemptEvent.topicId
+    && p0Event.isCorrect === attemptEvent.isCorrect
+    && Date.parse(p0Event.answeredAt) === Date.parse(attemptEvent.answeredAt);
+}
+
 export function strongestEvidenceByCanonicalQuestion(
   events: ReadinessAnswerEvidence[],
   calculationReferenceTime: Date,

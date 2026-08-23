@@ -30,6 +30,10 @@ const TRIGGER = {
   triggerType: "learning_complete" as const,
   triggerId: "question-b\u001fconfirmation\u001f2026-08-23T01:00:00.000Z",
 };
+const ASSESSMENT_TRIGGER = {
+  triggerType: "assessment" as const,
+  triggerId: "20000000-0000-4000-8000-000000000001",
+};
 
 function progress(overrides: Partial<UserProgress> = {}): UserProgress {
   return {
@@ -195,6 +199,43 @@ describe("POST /api/progress/save readiness trigger", () => {
     expect(mocks.recalculateExamReadiness.mock.calls[0][0]).toEqual(
       mocks.recalculateExamReadiness.mock.calls[1][0],
     );
+  });
+
+  it("recalculates an assessment only after its authoritative P0 transaction, including exact replay", async () => {
+    const supabase = supabaseWithRpc({
+      evidence_changed: false,
+      trigger_registered: true,
+    });
+    mocks.getServiceSupabase.mockReturnValue(supabase.client);
+
+    const first = await request({
+      progress: progress(),
+      readinessTrigger: ASSESSMENT_TRIGGER,
+    });
+    const replay = await request({
+      progress: progress(),
+      readinessTrigger: ASSESSMENT_TRIGGER,
+    });
+
+    expect(first.status).toBe(200);
+    expect(replay.status).toBe(200);
+    expect(supabase.rpc).toHaveBeenNthCalledWith(
+      1,
+      "save_user_progress_with_readiness_evidence",
+      expect.objectContaining({
+        p_trigger_type: "assessment",
+        p_trigger_id: ASSESSMENT_TRIGGER.triggerId,
+      }),
+    );
+    expect(mocks.recalculateExamReadiness).toHaveBeenCalledTimes(2);
+    expect(mocks.recalculateExamReadiness.mock.calls[0][0]).toEqual(
+      mocks.recalculateExamReadiness.mock.calls[1][0],
+    );
+    expect(mocks.recalculateExamReadiness).toHaveBeenCalledWith({
+      supabase: supabase.client,
+      userId: USER_ID,
+      ...ASSESSMENT_TRIGGER,
+    });
   });
 
   it("keeps committed learning successful when recalculation fails", async () => {

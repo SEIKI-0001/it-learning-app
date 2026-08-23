@@ -8,6 +8,7 @@ import type {
   ChoiceKey,
   QuestionExposureMap,
   QuestionExposureState,
+  UserProgress,
 } from "@/types";
 import type { TopicField } from "@/types/content";
 
@@ -48,6 +49,8 @@ export type PastExamPendingMutation = {
   assessmentAnswers: PastExamAssessmentAnswer[];
   exposures: QuestionExposureMap;
   confirmedUserId: string | null;
+  /** Frozen P0 payload. Undefined is accepted only for pre-upgrade pending sessions. */
+  progressSnapshot?: UserProgress | null;
 } | {
   action: "abandon";
   completedAt: string;

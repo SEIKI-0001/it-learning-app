@@ -106,6 +106,7 @@ beforeEach(() => {
     sessionId: "20000000-0000-4000-8000-000000000001",
     status: "completed",
   });
+  saveProgressToDb.mockResolvedValue(true);
 });
 
 afterEach(cleanup);
@@ -176,7 +177,14 @@ describe("ThemeExamRunner exposure integration", () => {
     expect(recordThemeExamLearningResult.mock.calls[0][3]).toEqual({
       "tech-binary-data-ex1": expect.objectContaining({ state: "seen" }),
     });
-    expect(saveProgressToDb).toHaveBeenCalledWith("user-1", flow.next.progress);
+    expect(saveProgressToDb).toHaveBeenCalledWith(
+      "user-1",
+      flow.next.progress,
+      {
+        triggerType: "assessment",
+        triggerId: "20000000-0000-4000-8000-000000000001",
+      },
+    );
   });
 
   it("submits and updates Mastery only once when the grade button is rapidly repeated", async () => {

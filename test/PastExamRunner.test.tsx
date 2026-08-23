@@ -5,7 +5,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 
 import PastExamRunner from "@/components/pastExam/PastExamRunner";
 import type { PastExamQuestionView } from "@/lib/pastExam/questionView";
-import { initializeAppState } from "@/lib/storage";
+import { initializeAppState, loadAppState, saveAppState } from "@/lib/storage";
 
 // ============================================================================
 // 練習モード / 本番モードの表示ルールの検証。
@@ -26,6 +26,7 @@ const assessmentMalformed: Record<"start" | "complete" | "abandon", number> = {
   complete: 0,
   abandon: 0,
 };
+let progressFailures = 0;
 const localStorageStub: Storage = {
   get length() {
     return storageValues.size;
@@ -62,6 +63,7 @@ beforeEach(() => {
   assessmentMalformed.start = 0;
   assessmentMalformed.complete = 0;
   assessmentMalformed.abandon = 0;
+  progressFailures = 0;
   vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
     const userId = window.localStorage.getItem("fequest:userId");
     if (url === "/api/session/state") {
@@ -100,6 +102,10 @@ beforeEach(() => {
       }
       return assessmentResponse(body.action, body.sessionId);
     }
+    if (url === "/api/progress/save" && progressFailures > 0) {
+      progressFailures -= 1;
+      return new Response(JSON.stringify({ error: "response_lost" }), { status: 503 });
+    }
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   }));
 });
@@ -123,6 +129,13 @@ function assessmentActions(): Array<Record<string, unknown>> {
   const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   return fetchMock.mock.calls
     .filter(([url]) => url === "/api/assessment-sessions")
+    .map(([, init]) => JSON.parse((init as RequestInit).body as string));
+}
+
+function progressSaves(): Array<Record<string, unknown>> {
+  const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+  return fetchMock.mock.calls
+    .filter(([url]) => url === "/api/progress/save")
     .map(([, init]) => JSON.parse((init as RequestInit).body as string));
 }
 
@@ -314,6 +327,15 @@ describe("共通評価セッション", () => {
           isCorrect: true,
         }],
       });
+    const completion = assessmentActions().find((action) => action.action === "complete");
+    expect(progressSaves()).toEqual([
+      expect.objectContaining({
+        readinessTrigger: {
+          triggerType: "assessment",
+          triggerId: completion?.sessionId,
+        },
+      }),
+    ]);
   });
 
   it("明示的な最初からやり直しだけが旧セッションを abandon する", async () => {
@@ -889,5 +911,38 @@ describe("結果画面", () => {
     expect(completions).toHaveLength(2);
     expect(completions[1]).toEqual(completions[0]);
     expect(assessmentActions().filter((action) => action.action === "start")).toHaveLength(1);
+  });
+
+  it("P0応答の喪失後に端末状態が変わってもリロード再送する進捗本文を固定する", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    progressFailures = 1;
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(progressSaves()).toHaveLength(1);
+    const firstProgress = progressSaves()[0];
+
+    const changed = loadAppState()!;
+    saveAppState({
+      ...changed,
+      progress: { ...changed.progress, exp: changed.progress.exp + 123 },
+    });
+    cleanup();
+    renderRunner();
+    const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    fireEvent.click(await within(card).findByRole("button", { name: "続きから再開する" }));
+    expect(await screen.findByText("50%")).toBeInTheDocument();
+
+    expect(progressSaves()).toHaveLength(2);
+    expect(progressSaves()[1]).toEqual(firstProgress);
   });
 });

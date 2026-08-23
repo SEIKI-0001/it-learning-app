@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getRequestUserId } from "@/lib/apiUser";
 import {
@@ -74,10 +75,15 @@ function attemptGroupId(a: AttemptInput): string | null {
  * 保存する1件へ正規化する。受け付けられない attempt は null（＝捨てる）。
  * questionId と questionType はここへ来る前に検証済み。
  */
-function toAttemptInput(a: AttemptInput, questionId: string, questionType: QuestionType) {
+function toAttemptInput(
+  a: AttemptInput,
+  questionId: string,
+  questionType: QuestionType,
+  validatedGroupId: string | null,
+) {
   return questionType === "official_past"
-    ? toOfficialAttempt(a, questionId)
-    : toLegacyAttempt(a, questionId, questionType);
+    ? toOfficialAttempt(a, questionId, validatedGroupId)
+    : toLegacyAttempt(a, questionId, questionType, validatedGroupId);
 }
 
 /**
@@ -87,6 +93,7 @@ function toAttemptInput(a: AttemptInput, questionId: string, questionType: Quest
 function toOfficialAttempt(
   a: AttemptInput,
   questionId: string,
+  validatedGroupId: string | null,
 ): QuestionAttemptInput | null {
   const record = getQuestionById(questionId);
   // 問題バンクに無いIDは、正誤を判定する根拠が無いので保存しない。
@@ -116,7 +123,7 @@ function toOfficialAttempt(
     examYear: record.official?.year ?? null,
     officialExamField: record.official?.examField ?? null,
     attemptMode: attemptMode(a),
-    attemptGroupId: attemptGroupId(a),
+    attemptGroupId: validatedGroupId,
   };
 }
 
@@ -128,6 +135,7 @@ function toLegacyAttempt(
   a: AttemptInput,
   questionId: string,
   questionType: QuestionType,
+  validatedGroupId: string | null,
 ): QuestionAttemptInput | null {
   if (typeof a.topicId !== "string" || a.topicId.length === 0) return null;
   if (typeof a.isCorrect !== "boolean") return null;
@@ -152,9 +160,9 @@ function toLegacyAttempt(
     questionVersion: record?.version ?? null,
     examYear: record?.official?.year ?? null,
     officialExamField: record?.official?.examField ?? null,
-    // モード・グループIDは公式過去問の年度別演習だけが持つ文脈。
+    // モードは公式過去問だけが持つ。グループIDは認証済み評価セッションだけを保持する。
     attemptMode: null,
-    attemptGroupId: null,
+    attemptGroupId: validatedGroupId,
   };
 }
 
@@ -175,16 +183,16 @@ export async function POST(request: Request) {
   }
 
   const attempts = Array.isArray(body.attempts) ? body.attempts : [];
-  const inputs = attempts
-    .map((a): QuestionAttemptInput | null => {
+  const candidates = attempts
+    .map((a): { attempt: AttemptInput; questionId: string; questionType: QuestionType } | null => {
       if (typeof a?.questionId !== "string" || a.questionId.length === 0) return null;
       const questionType = a.questionType as QuestionType;
       if (!VALID_TYPES.has(questionType)) return null;
-      return toAttemptInput(a, a.questionId, questionType);
+      return { attempt: a, questionId: a.questionId, questionType };
     })
-    .filter((a): a is QuestionAttemptInput => a !== null);
+    .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
 
-  if (inputs.length === 0) {
+  if (candidates.length === 0) {
     return NextResponse.json({ ok: false, error: "no valid attempts" }, { status: 400 });
   }
 
@@ -197,9 +205,76 @@ export async function POST(request: Request) {
   }
 
   try {
+    const groupChecks = new Map<string, Promise<boolean>>();
+    const inputs = (await Promise.all(candidates.map(async (candidate) => {
+      const groupId = attemptGroupId(candidate.attempt);
+      let validatedGroupId: string | null = null;
+      if (groupId !== null) {
+        const key = `${groupId}\u0000${candidate.questionType}\u0000${attemptMode(candidate.attempt)}`;
+        let check = groupChecks.get(key);
+        if (check === undefined) {
+          check = isAuthorizedAssessmentGroup({
+            supabase,
+            userId,
+            groupId,
+            questionType: candidate.questionType,
+            requestedMode: attemptMode(candidate.attempt),
+          });
+          groupChecks.set(key, check);
+        }
+        if (!(await check)) return null;
+        validatedGroupId = groupId;
+      }
+      return toAttemptInput(
+        candidate.attempt,
+        candidate.questionId,
+        candidate.questionType,
+        validatedGroupId,
+      );
+    }))).filter((input): input is QuestionAttemptInput => input !== null);
+    if (inputs.length === 0) {
+      return NextResponse.json({ ok: false, error: "no valid attempts" }, { status: 400 });
+    }
     const result = await recordQuestionAttemptsWithExposure(supabase, userId, inputs);
     return NextResponse.json({ ok: true, userId, ...result });
   } catch {
     return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
   }
+}
+
+async function isAuthorizedAssessmentGroup(args: {
+  supabase: SupabaseClient;
+  userId: string;
+  groupId: string;
+  questionType: QuestionType;
+  requestedMode: string | null;
+}): Promise<boolean> {
+  const expectedSource = assessmentSourceForQuestionType(args.questionType);
+  if (expectedSource === null) return false;
+  const { data, error } = await args.supabase
+    .from("assessment_sessions")
+    .select("session_id, source, mode, status")
+    .eq("user_id", args.userId)
+    .eq("session_id", args.groupId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!isRecord(data)) return false;
+  if (data.status !== "in_progress" || data.source !== expectedSource) return false;
+  return args.questionType !== "official_past" || data.mode === args.requestedMode;
+}
+
+function assessmentSourceForQuestionType(
+  questionType: QuestionType,
+): "checkpoint" | "summary" | "mock" | "official_past" | null {
+  switch (questionType) {
+    case "mini_exam": return "checkpoint";
+    case "theme_exam": return "summary";
+    case "mock_exam": return "mock";
+    case "official_past": return "official_past";
+    default: return null;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }

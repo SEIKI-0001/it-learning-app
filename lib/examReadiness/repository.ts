@@ -9,8 +9,13 @@ import {
 } from "@/lib/examReadiness/catalog";
 import type { ExamReadinessEvidenceBundle } from "@/lib/examReadiness/calculator";
 import {
+  EXAM_READINESS_MODEL_VERSION,
+  EXAM_SCHEME_VERSION,
+} from "@/lib/examReadiness/config";
+import {
   normalizeEvidenceKind,
   normalizeFirstAttemptState,
+  reconcileP0AndAttemptEvents,
 } from "@/lib/examReadiness/evidence";
 import { getWeakTopics } from "@/lib/learningLoop";
 import type { ReviewItem, TopicMasteryStats } from "@/types";
@@ -94,6 +99,49 @@ export async function getStoredCurrentReadiness(
     throw invalidStoredResult();
   }
   return parseStoredResult(response.data.result);
+}
+
+export type ReadinessRecoveryState = {
+  evidenceRevision: number;
+  failedTrigger: { triggerType: string; triggerId: string } | null;
+};
+
+/** Reads the revision gap and an existing failed job identity used by lazy current reads. */
+export async function getReadinessRecoveryState(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<ReadinessRecoveryState> {
+  requireNonEmpty(userId, "userId");
+  const [evidenceRevision, failedJob] = await Promise.all([
+    readEvidenceRevision(supabase, userId),
+    supabase
+      .from("exam_readiness_recalculation_jobs")
+      .select("trigger_type, trigger_id, evidence_revision")
+      .eq("user_id", userId)
+      .eq("model_version", EXAM_READINESS_MODEL_VERSION)
+      .eq("exam_scheme_version", EXAM_SCHEME_VERSION)
+      .eq("status", "failed")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+  ensureQuerySucceeded(failedJob, "exam_readiness_recalculation_jobs");
+  if (failedJob.data === null) return { evidenceRevision, failedTrigger: null };
+  if (
+    !isRecord(failedJob.data)
+    || !isNonEmptyString(failedJob.data.trigger_type)
+    || !isNonEmptyString(failedJob.data.trigger_id)
+    || parseRevision(failedJob.data.evidence_revision, "evidence_invalid") > evidenceRevision
+  ) {
+    throw invalidEvidence("Invalid failed recalculation job");
+  }
+  return {
+    evidenceRevision,
+    failedTrigger: {
+      triggerType: failedJob.data.trigger_type,
+      triggerId: failedJob.data.trigger_id,
+    },
+  };
 }
 
 export async function registerEvidenceEvent(
@@ -192,11 +240,15 @@ function assembleEvidenceBundle(
         ? attempt
         : { ...attempt, idempotencyKey };
     });
+    const reconciledPhysicalAnswers = reconcileP0AndAttemptEvents(
+      p0Answers,
+      reconciledAttemptAnswers,
+    );
 
     return {
       evidenceRevision,
       topics: buildReadinessTopicCatalog(),
-      answers: [...p0Answers, ...reconciledAttemptAnswers, ...parsedSessionAnswers.answers],
+      answers: [...reconciledPhysicalAnswers, ...parsedSessionAnswers.answers],
       assessmentSessions,
       masteryByTopic: progress.masteryByTopic,
       reviewOutcomes: parseReviewOutcomes(progress),

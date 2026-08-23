@@ -13,6 +13,7 @@ import {
 vi.mock("server-only", () => ({}));
 
 const repository = vi.hoisted(() => ({
+  getReadinessRecoveryState: vi.fn(),
   getStoredCurrentReadiness: vi.fn(),
   loadExamReadinessEvidence: vi.fn(),
 }));
@@ -93,6 +94,10 @@ describe("recalculateExamReadiness", () => {
   beforeEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+    repository.getReadinessRecoveryState.mockResolvedValue({
+      evidenceRevision: 0,
+      failedTrigger: null,
+    });
     repository.getStoredCurrentReadiness.mockResolvedValue(null);
     repository.loadExamReadinessEvidence.mockResolvedValue(makeEvidence());
   });
@@ -403,7 +408,60 @@ describe("getCurrentReadiness", () => {
   beforeEach(() => {
     vi.useRealTimers();
     vi.clearAllMocks();
+    repository.getReadinessRecoveryState.mockResolvedValue({
+      evidenceRevision: 0,
+      failedTrigger: null,
+    });
     repository.loadExamReadinessEvidence.mockResolvedValue(makeEvidence());
+  });
+
+  it("reclaims the same failed trigger when a lazy read finds a behind evidence revision", async () => {
+    const stale = resultAt({ revision: 7, validUntil: null });
+    repository.getStoredCurrentReadiness.mockResolvedValue(stale);
+    repository.getReadinessRecoveryState.mockResolvedValue({
+      evidenceRevision: 8,
+      failedTrigger: {
+        triggerType: "assessment",
+        triggerId: "session-1",
+      },
+    });
+    repository.loadExamReadinessEvidence
+      .mockRejectedValueOnce(new Error("temporary evidence failure"))
+      .mockResolvedValueOnce(makeEvidence({ evidenceRevision: 8 }));
+    let claimCount = 0;
+    const fake = fakeSupabase(async (name) => {
+      if (name === "claim_exam_readiness_recalculation") {
+        claimCount += 1;
+        return {
+          data: [processingJob({ evidence_revision: 8, attempt_count: claimCount })],
+          error: null,
+        };
+      }
+      if (name === "complete_exam_readiness_recalculation") {
+        return { data: "saved", error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    await expect(recalculateExamReadiness({
+      supabase: fake.client,
+      userId: USER_ID,
+      triggerType: "assessment",
+      triggerId: "session-1",
+      now: REFERENCE_TIME,
+    })).rejects.toThrow("temporary evidence failure");
+
+    await expect(getCurrentReadiness({
+      supabase: fake.client,
+      userId: USER_ID,
+      now: REFERENCE_TIME,
+    })).resolves.toMatchObject({ evidence: { evidenceRevision: 8 } });
+
+    const claims = fake.rpc.mock.calls.filter(
+      ([name]) => name === "claim_exam_readiness_recalculation",
+    );
+    expect(claims).toHaveLength(2);
+    expect(claims[1]?.[1]).toEqual(claims[0]?.[1]);
   });
 
   it("returns null without claiming when no current result has been saved", async () => {

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getAllTopics } from "@/lib/content";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { isBadgeConditionMet } from "@/lib/badges";
+import { applyBadgeProgress } from "@/lib/checkpoints";
 import type { AppState } from "@/types";
 import { makeExamReadinessResult } from "@/test/fixtures/examReadiness/result";
 
@@ -55,6 +56,7 @@ describe("Exam Readiness badge signal", () => {
           level: band === "stable" ? "high" : "medium",
           reasons: [],
         },
+        validUntil: null,
       });
 
       expect(isBadgeConditionMet("b-cp6-high-readiness", completedState(), {
@@ -88,5 +90,50 @@ describe("Exam Readiness badge signal", () => {
 
     expect(signals.examReadiness).toBe(result);
     expect(signals).not.toHaveProperty("readinessScore");
+  });
+
+  it("stops treating cached readiness as met at the exact validUntil boundary", () => {
+    const result = makeExamReadinessResult({
+      validUntil: "2026-08-23T00:00:00.000Z",
+    });
+    const signals = { examReadiness: result };
+
+    expect(isBadgeConditionMet(
+      "b-cp6-high-readiness",
+      completedState(),
+      signals,
+      new Date("2026-08-22T23:59:59.999Z"),
+    )).toBe(true);
+    expect(isBadgeConditionMet(
+      "b-cp6-high-readiness",
+      completedState(),
+      signals,
+      new Date("2026-08-23T00:00:00.000Z"),
+    )).toBe(false);
+  });
+
+  it("does not irreversibly award high readiness from a provisional cache signal", () => {
+    const result = makeExamReadinessResult({ validUntil: null });
+    const awarded = applyBadgeProgress(completedState(), {
+      examReadiness: result,
+      examReadinessVerified: false,
+    });
+
+    expect(awarded.newlyEarnedIds).not.toContain("b-cp6-high-readiness");
+  });
+
+  it("does not irreversibly award a verified result at its validUntil boundary", () => {
+    const awarded = applyBadgeProgress(
+      completedState(),
+      {
+        examReadiness: makeExamReadinessResult({
+          validUntil: "2026-08-23T00:00:00.000Z",
+        }),
+        examReadinessVerified: true,
+      },
+      new Date("2026-08-23T00:00:00.000Z"),
+    );
+
+    expect(awarded.newlyEarnedIds).not.toContain("b-cp6-high-readiness");
   });
 });

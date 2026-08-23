@@ -18,6 +18,7 @@ import {
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
+  type CurrentSessionQuestionExposureResult,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -34,7 +35,13 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   const [starting, setStarting] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const pendingStartedAtRef = useRef<string | null>(null);
-  const pendingCompletionAtRef = useRef<string | null>(null);
+  const pendingCompletionRef = useRef<{
+    completedAt: string;
+    tagged: UserAnswer[];
+    exposureResult?: CurrentSessionQuestionExposureResult;
+    next?: ReturnType<typeof recordCheckpointExamResult>;
+    result: { correct: number; total: number; passed: boolean };
+  } | null>(null);
   const [result, setResult] = useState<{ correct: number; total: number; passed: boolean } | null>(
     null,
   );
@@ -92,30 +99,45 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     let factsCommitted = false;
     let committedResult: { correct: number; total: number; passed: boolean } | null = null;
     try {
-      const tagged = answers.map((answer) => {
-        const topic = getTopic(answer.topicId ?? "");
-        return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
-      });
-      const exposureResult = await saveQuestionAttemptsForCurrentSession(
-        tagged.map((answer) => ({
-          questionId: answer.questionId,
-          questionType: "mini_exam" as const,
-          topicId: answer.topicId ?? checkpointId,
-          selectedAnswer: answer.selectedChoice ?? null,
-          isCorrect: answer.isCorrect,
-          answeredAt: answer.answeredAt,
-          attemptGroupId: attemptId,
-        })),
-        state.answers,
-      );
+      const pending: NonNullable<typeof pendingCompletionRef.current> =
+        pendingCompletionRef.current ?? (() => {
+          const tagged = answers.map((answer) => {
+            const topic = getTopic(answer.topicId ?? "");
+            return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
+          });
+          const correct = tagged.filter((answer) => answer.isCorrect).length;
+          return {
+            completedAt: new Date().toISOString(),
+            tagged,
+            result: {
+              correct,
+              total: tagged.length,
+              passed: Math.round((correct / tagged.length) * 100) >= exam.definition.passingScore,
+            },
+          };
+        })();
+      pendingCompletionRef.current = pending;
+      committedResult = pending.result;
+      const exposureResult = pending.exposureResult
+        ?? await saveQuestionAttemptsForCurrentSession(
+          pending.tagged.map((answer) => ({
+            questionId: answer.questionId,
+            questionType: "mini_exam" as const,
+            topicId: answer.topicId ?? checkpointId,
+            selectedAnswer: answer.selectedChoice ?? null,
+            isCorrect: answer.isCorrect,
+            answeredAt: answer.answeredAt,
+            attemptGroupId: attemptId,
+          })),
+          state.answers,
+        );
+      pending.exposureResult = exposureResult;
       const { exposures, userId } = exposureResult;
-      const completedAt = pendingCompletionAtRef.current ?? new Date().toISOString();
-      pendingCompletionAtRef.current = completedAt;
       await completeAssessmentSessionForCurrentSession({
         action: "complete",
         sessionId: attemptId,
-        completedAt,
-        answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+        completedAt: pending.completedAt,
+        answers: pending.tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
           idempotencyKey: assessmentAnswerIdempotencyKey(attemptId, answer.questionId),
           canonicalQuestionId: answer.questionId,
           topicId: answer.topicId ?? checkpointId,
@@ -123,21 +145,27 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
           answeredAt: answer.answeredAt,
         }]),
       });
+      const next = pending.next ?? recordCheckpointExamResult(
+        state,
+        pending.tagged,
+        exposures,
+        new Date(pending.completedAt),
+      );
+      pending.next = next;
+      if (userId) {
+        const progressSaved = await saveProgressToDb(userId, next.progress, {
+          triggerType: "assessment",
+          triggerId: attemptId,
+        });
+        if (!progressSaved) throw new Error("Assessment progress finalization failed");
+      }
       factsCommitted = true;
-      pendingCompletionAtRef.current = null;
-      const next = recordCheckpointExamResult(state, tagged, exposures);
+      pendingCompletionRef.current = null;
       saveAppState(next);
       setState(next);
       if (userId) {
-        void saveProgressToDb(userId, next.progress);
-        void saveAnswersToDb(userId, 0, tagged);
+        saveAnswersToDb(userId, 0, pending.tagged);
       }
-      const correct = tagged.filter((answer) => answer.isCorrect).length;
-      committedResult = {
-        correct,
-        total: tagged.length,
-        passed: Math.round((correct / tagged.length) * 100) >= exam.definition.passingScore,
-      };
       setResult(committedResult);
     } catch (error) {
       if (factsCommitted) {
@@ -178,7 +206,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
             setResult(null);
             setPersistenceError(null);
             pendingStartedAtRef.current = null;
-            pendingCompletionAtRef.current = null;
+            pendingCompletionRef.current = null;
           }}
           className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white"
         >

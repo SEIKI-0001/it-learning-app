@@ -26,6 +26,8 @@ function calculate(
   return calculateExamReadinessDraft({ evidence, calculationReferenceTime });
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 function completeMastery(score = 100) {
   return {
     "strategy-topic": makeMastery("strategy-topic", score),
@@ -45,6 +47,54 @@ function evidenceWithUnits(
 }
 
 describe("calculateExamReadinessDraft", () => {
+  it.each([
+    [31, 30],
+    [61, 60],
+    [91, 90],
+  ])(
+    "uses eligible unanswered-session completion for the %i-day freshness boundary",
+    (_transitionDay, elapsedDays) => {
+      const completedAt = new Date(REFERENCE_TIME.getTime() - elapsedDays * DAY_MS).toISOString();
+      const result = calculate(makeEvidence({
+        assessmentSessions: [makeSession(0, {
+          completedAt,
+          answeredCount: 0,
+          correctCount: 0,
+          firstCount: 0,
+          seenCount: 0,
+          unknownCount: 0,
+        })],
+      }));
+
+      expect(result.validUntil).toBe(
+        new Date(REFERENCE_TIME.getTime() + DAY_MS).toISOString(),
+      );
+    },
+  );
+
+  it("uses session completion time when its answer was submitted at a different instant", () => {
+    const session = makeSession(0, {
+      completedAt: new Date(REFERENCE_TIME.getTime() - 30 * DAY_MS).toISOString(),
+      questionCount: 1,
+      answeredCount: 1,
+      correctCount: 1,
+      firstCount: 0,
+      seenCount: 1,
+    });
+    const result = calculate(makeEvidence({
+      assessmentSessions: [session],
+      answers: [makeAnswer(0, {
+        sessionId: session.sessionId,
+        kind: "mock",
+        answeredAt: new Date(REFERENCE_TIME.getTime() - 31 * DAY_MS).toISOString(),
+      })],
+    }));
+
+    expect(result.validUntil).toBe(
+      new Date(REFERENCE_TIME.getTime() + DAY_MS).toISOString(),
+    );
+  });
+
   it("keeps the score null when all four performance components are null", () => {
     const result = calculate(makeEvidence({
       answers: [makeAnswer(0, { firstAttemptState: "seen" })],

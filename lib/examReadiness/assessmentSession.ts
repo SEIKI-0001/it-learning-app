@@ -4,7 +4,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   resolveReadinessQuestionContext,
 } from "@/lib/examReadiness/catalog";
-import { recalculateExamReadiness } from "@/lib/examReadiness/service";
 import { getQuestionById } from "@/lib/questionBank";
 import type { AssessmentSession, FirstAttemptState } from "@/types/examReadiness";
 import {
@@ -202,27 +201,13 @@ export async function completeAssessmentSession(args: {
   if (response.error) throw mapRpcError(response.error);
   const completed = parseCompletion(response.data);
 
-  let readinessUpdated = false;
-  if (completed.completedNow) {
-    try {
-      await recalculateExamReadiness({
-        supabase: args.supabase,
-        userId: args.userId,
-        triggerType: "assessment",
-        triggerId: args.input.sessionId,
-      });
-      readinessUpdated = true;
-    } catch {
-      // Session, answers, and evidence revision are already committed. The delivery result
-      // remains successful; a later current-read request can retry readiness calculation.
-    }
-  }
-
   return {
     ...completed.session,
     session: completed.session,
     completedNow: completed.completedNow,
-    readinessUpdated,
+    // Assessment evidence is published only after the matching P0 progress payload is
+    // committed by save_user_progress_with_readiness_evidence.
+    readinessUpdated: false,
   };
 }
 
@@ -291,9 +276,13 @@ function buildRpcAnswer(
       && attempt.question_type === expectedQuestionType
     )
     .sort((left, right) => left.attempt_id.localeCompare(right.attempt_id))[0];
-  const firstAttemptState: FirstAttemptState = matching === undefined
-    ? "unknown"
-    : matching.is_first_attempt ? "first" : "seen";
+  if (matching === undefined) {
+    throw new AssessmentSessionPersistenceError(
+      "invalid_session",
+      "Assessment answer has no authoritative question attempt",
+    );
+  }
+  const firstAttemptState: FirstAttemptState = matching.is_first_attempt ? "first" : "seen";
 
   if (session.source === "official_past") {
     const question = getQuestionById(input.canonicalQuestionId);
@@ -301,7 +290,6 @@ function buildRpcAnswer(
       question === undefined
       || question.origin !== "official_past"
       || question.official?.examField === undefined
-      || matching === undefined
     ) {
       throw new AssessmentSessionPersistenceError(
         "invalid_session",
@@ -325,15 +313,15 @@ function buildRpcAnswer(
   }
 
   const context = resolveReadinessQuestionContext({
-    questionId: input.canonicalQuestionId,
-    topicId: input.topicId,
+    questionId: matching.question_id,
+    topicId: matching.topic_id,
   });
   return {
     idempotency_key: input.idempotencyKey,
     canonical_question_id: context.canonicalQuestionId,
     topic_id: context.topicId,
     field_id: context.fieldId,
-    is_correct: input.isCorrect,
+    is_correct: matching.is_correct,
     first_attempt_state: firstAttemptState,
     answered_at: input.answeredAt,
   };

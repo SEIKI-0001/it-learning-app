@@ -483,6 +483,8 @@ export type BadgeSignals = {
   examLevelClearedTopicCount?: number;
   /** 完全な共有結果。高準備度バッジは band と confidence だけを参照する。 */
   examReadiness?: ExamReadinessResult | null;
+  /** false means the result came from bootstrap cache and is display-only. */
+  examReadinessVerified?: boolean;
 };
 
 type BadgeMetrics = {
@@ -505,7 +507,12 @@ type BadgeMetrics = {
 
 const FIELDS: TopicField[] = ["technology", "management", "strategy"];
 
-function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
+function computeMetrics(
+  state: AppState,
+  signals?: BadgeSignals,
+  now: Date = new Date(),
+  requireVerifiedReadiness = false,
+): BadgeMetrics {
   const topics = getAllTopics();
   const progress = state.progress;
   const topicById = new Map(topics.map((t) => [t.id, t]));
@@ -541,6 +548,15 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
 
   const cp = progress.checkpointProgress;
   const readiness = signals?.examReadiness;
+  const readinessIsCurrent = readiness !== null
+    && readiness !== undefined
+    && (
+      readiness.validUntil === null
+      || (Number.isFinite(Date.parse(readiness.validUntil))
+        && Date.parse(readiness.validUntil) > now.getTime())
+    );
+  const readinessCanAward = !requireVerifiedReadiness
+    || signals?.examReadinessVerified !== false;
 
   return {
     completedTotal: progress.completedTopics.length,
@@ -555,6 +571,8 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     recentAccuracy: recentAccuracy(state.answers),
     highReadiness: Boolean(
       readiness
+      && readinessIsCurrent
+      && readinessCanAward
       && (readiness.band === "ready" || readiness.band === "stable")
       && readiness.confidence.level !== "low"
     ),
@@ -626,10 +644,11 @@ export function isBadgeConditionMet(
   badgeId: string,
   state: AppState,
   signals?: BadgeSignals,
+  now: Date = new Date(),
 ): boolean {
   const cond = BADGE_CONDITIONS[badgeId];
   if (!cond) return false;
-  return cond(computeMetrics(state, signals));
+  return cond(computeMetrics(state, signals, now));
 }
 
 // ---------------------------------------------------------------------------
@@ -653,7 +672,7 @@ export function evaluateBadgeAwards(
 ): BadgeAwardResult {
   const cp = state.progress.checkpointProgress;
   const already = new Set((cp?.earnedBadges ?? []).map((e) => e.badgeId));
-  const metrics = computeMetrics(state, signals);
+  const metrics = computeMetrics(state, signals, now, true);
 
   const newlyEarned: BadgeDef[] = [];
   const added: EarnedBadge[] = [];

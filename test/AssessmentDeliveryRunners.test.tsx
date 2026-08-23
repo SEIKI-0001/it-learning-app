@@ -189,6 +189,14 @@ function expectCompletionOrder() {
       isCorrect: true,
     }),
   ]);
+  expect(requestBodies("/api/progress/save")).toEqual([
+    expect.objectContaining({
+      readinessTrigger: {
+        triggerType: "assessment",
+        triggerId: completion?.sessionId,
+      },
+    }),
+  ]);
 }
 
 beforeEach(() => {

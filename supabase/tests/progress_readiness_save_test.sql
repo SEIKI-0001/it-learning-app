@@ -2,7 +2,7 @@ begin;
 
 set local search_path = extensions, public, pg_catalog;
 
-select plan(43);
+select plan(54);
 
 select has_function(
   'public',
@@ -448,6 +448,165 @@ select is(
   ),
   3,
   'one idempotency record exists per distinct completion trigger'
+);
+
+insert into public.line_users (id, line_user_id)
+values
+  ('21000000-0000-0000-0000-000000000010', 'assessment-progress-test-user'),
+  ('21000000-0000-0000-0000-000000000011', 'assessment-progress-other-user');
+
+insert into public.assessment_sessions (
+  session_id,
+  user_id,
+  source,
+  mode,
+  status,
+  started_at,
+  question_count
+) values
+  (
+    '22000000-0000-4000-8000-000000000010',
+    '21000000-0000-0000-0000-000000000010',
+    'mock',
+    'exam',
+    'in_progress',
+    '2026-08-23T02:00:00Z',
+    0
+  ),
+  (
+    '22000000-0000-4000-8000-000000000011',
+    '21000000-0000-0000-0000-000000000010',
+    'checkpoint',
+    'exam',
+    'in_progress',
+    '2026-08-23T02:00:00Z',
+    0
+  ),
+  (
+    '22000000-0000-4000-8000-000000000012',
+    '21000000-0000-0000-0000-000000000011',
+    'mock',
+    'exam',
+    'in_progress',
+    '2026-08-23T02:00:00Z',
+    0
+  );
+
+select lives_ok(
+  $$
+    select public.complete_assessment_session(
+      '21000000-0000-0000-0000-000000000010',
+      '22000000-0000-4000-8000-000000000010',
+      '2026-08-23T02:30:00Z',
+      '[]'::jsonb
+    )
+  $$,
+  'assessment facts can commit before their P0 finalization'
+);
+
+select is(
+  coalesce((
+    select revision
+    from public.exam_readiness_evidence_state
+    where user_id = '21000000-0000-0000-0000-000000000010'
+  ), 0::bigint),
+  0::bigint,
+  'assessment completion alone does not publish a new evidence revision'
+);
+
+select throws_ok(
+  $$
+    select public.save_user_progress_with_readiness_evidence(
+      '21000000-0000-0000-0000-000000000010',
+      (select payload from task9_payloads where label = 'initial'),
+      'assessment',
+      '22000000-0000-4000-8000-000000000011'
+    )
+  $$,
+  '23503',
+  'assessment readiness trigger requires a completed session owned by the user',
+  'an in-progress session cannot publish assessment readiness'
+);
+
+select throws_ok(
+  $$
+    select public.save_user_progress_with_readiness_evidence(
+      '21000000-0000-0000-0000-000000000010',
+      (select payload from task9_payloads where label = 'initial'),
+      'assessment',
+      '22000000-0000-4000-8000-000000000012'
+    )
+  $$,
+  '23503',
+  'assessment readiness trigger requires a completed session owned by the user',
+  'another user session cannot publish assessment readiness'
+);
+
+select is(
+  (
+    public.save_user_progress_with_readiness_evidence(
+      '21000000-0000-0000-0000-000000000010',
+      (select payload from task9_payloads where label = 'initial'),
+      'assessment',
+      '22000000-0000-4000-8000-000000000010'
+    ) ->> 'trigger_registered'
+  )::boolean,
+  true,
+  'a completed assessment publishes readiness only with its P0 transaction'
+);
+
+select is(
+  (select topic_mastery_stats -> 'topic-a' ->> 'masteryScore'
+   from public.user_progress
+   where user_id = '21000000-0000-0000-0000-000000000010'),
+  '8',
+  'the assessment P0 payload is authoritative when readiness becomes visible'
+);
+
+select is(
+  (select revision from public.exam_readiness_evidence_state
+   where user_id = '21000000-0000-0000-0000-000000000010'),
+  1::bigint,
+  'assessment finalization advances evidence exactly once after P0 persists'
+);
+
+select is(
+  (select count(*)::integer
+   from public.exam_readiness_evidence_events
+   where user_id = '21000000-0000-0000-0000-000000000010'
+     and event_key = 'assessment:22000000-0000-4000-8000-000000000010'),
+  1,
+  'the finalization owns the stable assessment evidence event'
+);
+
+select is(
+  (
+    public.save_user_progress_with_readiness_evidence(
+      '21000000-0000-0000-0000-000000000010',
+      (select payload from task9_payloads where label = 'initial'),
+      'assessment',
+      '22000000-0000-4000-8000-000000000010'
+    ) ->> 'replayed'
+  )::boolean,
+  true,
+  'an exact assessment finalization retry reuses the frozen payload'
+);
+
+select is(
+  (select revision from public.exam_readiness_evidence_state
+   where user_id = '21000000-0000-0000-0000-000000000010'),
+  1::bigint,
+  'an exact assessment retry does not duplicate its evidence revision'
+);
+
+select is(
+  (select count(*)::integer
+   from public.progress_readiness_completions
+   where user_id = '21000000-0000-0000-0000-000000000010'
+     and trigger_type = 'assessment'
+     and trigger_id = '22000000-0000-4000-8000-000000000010'),
+  1,
+  'an exact assessment retry keeps one trigger identity'
 );
 
 select * from finish();

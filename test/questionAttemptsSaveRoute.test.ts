@@ -26,13 +26,59 @@ import { getQuestionById } from "@/lib/questionBank";
 
 /** insert された行（呼び出しごとの配列）。 */
 let inserted: Array<Array<Record<string, unknown>>> = [];
+let assessmentSessions: Array<Record<string, unknown>> = [];
+
+function assessmentQuery() {
+  const filters: Array<[string, unknown]> = [];
+  const query = {
+    select: () => query,
+    eq: (column: string, value: unknown) => {
+      filters.push([column, value]);
+      return query;
+    },
+    maybeSingle: () => Promise.resolve({
+      data: assessmentSessions.find((row) =>
+        filters.every(([column, value]) => row[column] === value)
+      ) ?? null,
+      error: null,
+    }),
+  };
+  return query;
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
   inserted = [];
+  assessmentSessions = [
+    {
+      session_id: "session-1",
+      user_id: "user-1",
+      source: "official_past",
+      mode: "practice",
+      status: "in_progress",
+    },
+    {
+      session_id: "group-9",
+      user_id: "user-1",
+      source: "official_past",
+      mode: "exam",
+      status: "in_progress",
+    },
+    {
+      session_id: "mock-session",
+      user_id: "user-1",
+      source: "mock",
+      mode: "exam",
+      status: "in_progress",
+    },
+  ];
   getRequestUserId.mockResolvedValue("user-1");
   canRecordStudyForUser.mockResolvedValue(true);
   getServiceSupabase.mockReturnValue({
+    from: (table: string) => {
+      if (table !== "assessment_sessions") throw new Error(`unexpected table ${table}`);
+      return assessmentQuery();
+    },
     rpc: (
       _name: string,
       params: { p_user_id: string; p_attempts: Array<Record<string, unknown>> },
@@ -151,7 +197,7 @@ describe("公式過去問の正誤はサーバ側で計算する", () => {
   });
 
   it("不正なモードは null にする（保存自体は拒否しない）", async () => {
-    await save([officialAttempt({ attemptMode: "cheat" })]);
+    await save([officialAttempt({ attemptMode: "cheat", attemptGroupId: null })]);
     expect(rows()[0].attempt_mode).toBeNull();
   });
 });
@@ -272,21 +318,48 @@ describe("既存4種類の保存は変わらない", () => {
     });
   });
 
-  it("モード・グループIDを送られても公式過去問以外では入れない", async () => {
-    await save([
+  it("進行中の同一ユーザー・同一source評価セッションならグループIDを保存する", async () => {
+    const { response } = await save([
       {
         questionId: "check-1",
-        questionType: "topic_quiz",
+        questionType: "mock_exam",
         topicId: "tech-security-cia",
         selectedAnswer: "B",
         isCorrect: false,
         attemptMode: "exam",
-        attemptGroupId: "group-1",
+        attemptGroupId: "mock-session",
       },
     ]);
 
+    expect(response.status).toBe(200);
     expect(rows()[0].attempt_mode).toBeNull();
-    expect(rows()[0].attempt_group_id).toBeNull();
+    expect(rows()[0].attempt_group_id).toBe("mock-session");
+  });
+
+  it.each([
+    ["別ユーザー", { user_id: "user-2", source: "mock", status: "in_progress" }],
+    ["異なるsource", { user_id: "user-1", source: "summary", status: "in_progress" }],
+    ["完了済み", { user_id: "user-1", source: "mock", status: "completed" }],
+    ["放棄済み", { user_id: "user-1", source: "mock", status: "abandoned" }],
+  ])("%sの評価セッションへattemptを関連付けない", async (_label, overrides) => {
+    assessmentSessions.push({
+      session_id: "untrusted-session",
+      mode: "exam",
+      ...overrides,
+    });
+
+    const { response, body } = await save([{
+      questionId: "check-1",
+      questionType: "mock_exam",
+      topicId: "tech-security-cia",
+      selectedAnswer: "B",
+      isCorrect: false,
+      attemptGroupId: "untrusted-session",
+    }]);
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("no valid attempts");
+    expect(inserted).toHaveLength(0);
   });
 
   it("topicId と isCorrect は従来どおり必須", async () => {

@@ -41,7 +41,33 @@ function uniqueKey(row: Record<string, unknown>): string {
 
 /** 一意制約つきのテーブルを模したスタブ。 */
 function supabaseStub() {
+  const from = () => {
+    const filters = new Map<string, unknown>();
+    const query = {
+      select: () => query,
+      eq: (column: string, value: unknown) => {
+        filters.set(column, value);
+        return query;
+      },
+      maybeSingle: () => Promise.resolve({
+        data:
+          filters.get("user_id") === "user-1"
+          && (filters.get("session_id") === "group-1"
+            || filters.get("session_id") === "group-2")
+            ? {
+                session_id: filters.get("session_id"),
+                source: "official_past",
+                mode: "exam",
+                status: "in_progress",
+              }
+            : null,
+        error: null,
+      }),
+    };
+    return query;
+  };
   return {
+    from,
     rpc: (
       _name: string,
       params: { p_user_id: string; p_attempts: Array<Record<string, unknown>> },

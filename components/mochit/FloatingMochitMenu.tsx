@@ -9,6 +9,7 @@ import {
   type FloatingViewportMetrics,
 } from "./floatingMochitLayout";
 import type { FloatingMochitPoint } from "./floatingMochitPreferences";
+import type { MochitPresentation } from "@/lib/mochitPresentation";
 
 type Shortcut = {
   href: string;
@@ -27,6 +28,7 @@ type Props = {
   anchor: FloatingMochitPoint;
   viewport: FloatingViewportMetrics;
   firstItemRef: RefObject<HTMLAnchorElement | null>;
+  presentation?: MochitPresentation | null;
   onClose: () => void;
   onHide: () => void;
 };
@@ -35,6 +37,7 @@ export default function FloatingMochitMenu({
   anchor,
   viewport,
   firstItemRef,
+  presentation,
   onClose,
   onHide,
 }: Props) {
@@ -68,6 +71,23 @@ export default function FloatingMochitMenu({
         maxHeight: height,
       }}
     >
+      {presentation ? (
+        <div className="mb-2 rounded-xl bg-brand-50 px-3 py-2.5">
+          <p className="text-xs font-semibold leading-relaxed text-gray-800">
+            {presentation.message}
+          </p>
+          {presentation.action ? (
+            <Link
+              href={presentation.action.href}
+              role="menuitem"
+              onClick={onClose}
+              className="mt-2 inline-flex min-h-9 items-center rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100"
+            >
+              {presentation.action.label}
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
       <div className="grid grid-cols-2 gap-1.5">
         {PRIMARY_SHORTCUTS.map((item, index) => (
           <Link

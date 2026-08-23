@@ -37,6 +37,7 @@ import {
   getFloatingMochitMessage,
   type FloatingMochitMessage,
 } from "./floatingMochitMessages";
+import type { MochitPresentation } from "@/lib/mochitPresentation";
 
 type MotionState =
   | "idle"
@@ -84,9 +85,10 @@ function positionForPreferences(
 
 type Props = {
   reducedMotion?: boolean;
+  presentation?: MochitPresentation | null;
 };
 
-export default function FloatingMochit({ reducedMotion }: Props) {
+export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   const systemReducedMotion = usePrefersReducedMotion();
   const effectiveReducedMotion = reducedMotion ?? systemReducedMotion;
   const preferencesSnapshot = useSyncExternalStore(
@@ -404,9 +406,10 @@ export default function FloatingMochit({ reducedMotion }: Props) {
         onAnimationEnd={() => setMotion("idle")}
       >
         <Mochit
+          state={presentation?.state}
           size="floating"
           reactionProfile="floating"
-          animation="idle"
+          animation={presentation?.animation ?? "idle"}
           reducedMotion={effectiveReducedMotion}
           event={reactionSignal}
           onEventAccepted={showBubbleForEvent}
@@ -425,6 +428,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
           anchor={position}
           viewport={viewportMetrics}
           firstItemRef={menuItemRef}
+          presentation={presentation}
           onClose={() => setMenuOpen(false)}
           onHide={hidePet}
         />

@@ -7,7 +7,9 @@ set local statement_timeout = '60s';
 -- readiness work without rewriting progress that newer completions have moved on.
 create table public.progress_readiness_completions (
   user_id uuid not null references public.line_users (id) on delete cascade,
-  trigger_type text not null check (trigger_type in ('learning_complete', 'review_complete')),
+  trigger_type text not null check (
+    trigger_type in ('learning_complete', 'review_complete', 'assessment')
+  ),
   trigger_id text not null check (length(btrim(trigger_id)) > 0 and length(trigger_id) <= 4096),
   progress_payload jsonb not null check (jsonb_typeof(progress_payload) = 'object'),
   payload_fingerprint text not null check (length(payload_fingerprint) = 32),
@@ -24,7 +26,7 @@ revoke all on table public.progress_readiness_completions from authenticated;
 revoke all on table public.progress_readiness_completions from service_role;
 
 comment on table public.progress_readiness_completions is
-  'RPC-private idempotency records binding a stable learning/review completion to its original full progress payload and readiness association.';
+  'RPC-private idempotency records binding a stable learning/review/assessment completion to its original full progress payload and readiness association.';
 
 create or replace function public.save_user_progress_with_readiness_evidence(
   p_user_id uuid,
@@ -85,9 +87,24 @@ begin
     raise exception 'invalid progress payload' using errcode = '22023';
   end if;
   if (p_trigger_type is null) <> (p_trigger_id is null)
-    or (p_trigger_type is not null and p_trigger_type not in ('learning_complete', 'review_complete'))
+    or (p_trigger_type is not null and p_trigger_type not in (
+      'learning_complete',
+      'review_complete',
+      'assessment'
+    ))
     or (p_trigger_id is not null and (length(btrim(p_trigger_id)) = 0 or length(p_trigger_id) > 4096)) then
     raise exception 'invalid progress readiness trigger' using errcode = '22023';
+  end if;
+
+  if p_trigger_type = 'assessment' and not exists (
+    select 1
+    from public.assessment_sessions assessment
+    where assessment.user_id = p_user_id
+      and assessment.session_id::text = p_trigger_id
+      and assessment.status = 'completed'
+  ) then
+    raise exception 'assessment readiness trigger requires a completed session owned by the user'
+      using errcode = '23503';
   end if;
 
   insert into public.user_progress (user_id)
@@ -158,7 +175,8 @@ begin
       updated_at = clock_timestamp()
   where user_id = p_user_id;
 
-  if v_evidence_changed and v_event_key is not null then
+  if v_event_key is not null
+    and (v_evidence_changed or p_trigger_type = 'assessment') then
     perform public.register_exam_readiness_evidence(p_user_id, v_event_key);
     v_trigger_registered := true;
   end if;
@@ -203,4 +221,4 @@ grant execute on function public.save_user_progress_with_readiness_evidence(uuid
   to service_role;
 
 comment on function public.save_user_progress_with_readiness_evidence(uuid, jsonb, text, text) is
-  'Atomically binds a stable completion to its full payload, writes authoritative P0 progress once, and registers readiness only when mastery or review facts change.';
+  'Atomically binds a stable completion to its full payload, writes authoritative P0 progress once, and registers readiness for assessment finalization or changed mastery/review facts.';

@@ -5,7 +5,11 @@ import type { AppState } from "@/types";
 import { saveAppState } from "@/lib/storage";
 import { applyBadgeProgress } from "@/lib/checkpoints";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
-import { getUserId, saveProgressToDb } from "@/lib/userSession";
+import {
+  fetchCurrentExamReadiness,
+  getUserId,
+  saveProgressToDb,
+} from "@/lib/userSession";
 import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
 
 /**
@@ -23,15 +27,23 @@ export function useBadgeSync(
 ): void {
   useEffect(() => {
     if (!state) return;
-    const signals = getClientBadgeSignals();
-    const { state: next, newlyEarnedIds } = applyBadgeProgress(state, signals);
-    if (newlyEarnedIds.length === 0) return;
-    saveAppState(next);
-    setState(next);
-    // catch-up 経路は画面内の演出を持たないため、バッジ名も含めて通知する。
-    // バッジXPでのレベル/ランクアップもこの経路で取りこぼさない。
-    emitCelebration(state, next, badgeEarnedCelebrations(newlyEarnedIds));
-    const uid = getUserId();
-    if (uid) saveProgressToDb(uid, next.progress);
+    let active = true;
+    void (async () => {
+      const readiness = await fetchCurrentExamReadiness();
+      if (!active) return;
+      const signals = getClientBadgeSignals(readiness);
+      const { state: next, newlyEarnedIds } = applyBadgeProgress(state, signals);
+      if (newlyEarnedIds.length === 0) return;
+      saveAppState(next);
+      setState(next);
+      // catch-up 経路は画面内の演出を持たないため、バッジ名も含めて通知する。
+      // バッジXPでのレベル/ランクアップもこの経路で取りこぼさない。
+      emitCelebration(state, next, badgeEarnedCelebrations(newlyEarnedIds));
+      const uid = getUserId();
+      if (uid) saveProgressToDb(uid, next.progress);
+    })();
+    return () => {
+      active = false;
+    };
   }, [state, setState]);
 }

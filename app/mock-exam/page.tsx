@@ -25,6 +25,7 @@ import {
   saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
+  type CurrentSessionQuestionExposureResult,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import PageHeader from "@/components/ui/PageHeader";
@@ -51,7 +52,13 @@ export default function MockExamPage() {
     assessment: { sessionId: string; startedAt: string };
     exam: MockExam;
   } | null>(null);
-  const pendingCompletionAtRef = useRef<string | null>(null);
+  const pendingCompletionRef = useRef<{
+    completedAt: string;
+    tagged: UserAnswer[];
+    scored: MockExamResult;
+    exposureResult?: CurrentSessionQuestionExposureResult;
+    next?: AppState;
+  } | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -102,40 +109,46 @@ export default function MockExamPage() {
     let factsCommitted = false;
     let committedResult: MockExamResult | null = null;
     try {
-      const now = new Date();
-      const tagged = answers.map((answer) => {
-        const topicId = exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId;
-        const topic = topicId ? getTopic(topicId) : undefined;
-        return {
-          ...answer,
-          topicId,
-          tag: topic?.tags[0] ?? topic?.field ?? answer.tag,
-        };
-      });
-      const scored = scoreMockExam(exam, tagged);
-      committedResult = scored;
-      const questionAttempts = tagged.map((answer) => ({
-        questionId: answer.questionId,
-        questionType: "mock_exam" as const,
-        topicId: answer.topicId ?? "mock-exam",
-        selectedAnswer: answer.selectedChoice ?? null,
-        isCorrect: answer.isCorrect,
-        mistakeReason: answer.isCorrect ? null : "模試の誤答",
-        answeredAt: answer.answeredAt,
-        attemptGroupId: assessment.sessionId,
-      }));
-      const exposureResult = await saveQuestionAttemptsForCurrentSession(
-        questionAttempts,
-        appState.answers,
-      );
+      const pending: NonNullable<typeof pendingCompletionRef.current> =
+        pendingCompletionRef.current ?? (() => {
+          const tagged = answers.map((answer) => {
+            const topicId = exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId;
+            const topic = topicId ? getTopic(topicId) : undefined;
+            return {
+              ...answer,
+              topicId,
+              tag: topic?.tags[0] ?? topic?.field ?? answer.tag,
+            };
+          });
+          return {
+            completedAt: new Date().toISOString(),
+            tagged,
+            scored: scoreMockExam(exam, tagged),
+          };
+        })();
+      pendingCompletionRef.current = pending;
+      committedResult = pending.scored;
+      const exposureResult = pending.exposureResult
+        ?? await saveQuestionAttemptsForCurrentSession(
+          pending.tagged.map((answer) => ({
+            questionId: answer.questionId,
+            questionType: "mock_exam" as const,
+            topicId: answer.topicId ?? "mock-exam",
+            selectedAnswer: answer.selectedChoice ?? null,
+            isCorrect: answer.isCorrect,
+            mistakeReason: answer.isCorrect ? null : "模試の誤答",
+            answeredAt: answer.answeredAt,
+            attemptGroupId: assessment.sessionId,
+          })),
+          appState.answers,
+        );
+      pending.exposureResult = exposureResult;
       const { exposures, userId } = exposureResult;
-      const completedAt = pendingCompletionAtRef.current ?? now.toISOString();
-      pendingCompletionAtRef.current = completedAt;
       await completeAssessmentSessionForCurrentSession({
         action: "complete",
         sessionId: assessment.sessionId,
-        completedAt,
-        answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+        completedAt: pending.completedAt,
+        answers: pending.tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
           idempotencyKey: assessmentAnswerIdempotencyKey(
             assessment.sessionId,
             answer.questionId,
@@ -146,16 +159,29 @@ export default function MockExamPage() {
           answeredAt: answer.answeredAt,
         }]),
       });
+      const next = pending.next ?? recordMockExamResult(
+        appState,
+        pending.tagged,
+        pending.scored,
+        exposures,
+        new Date(pending.completedAt),
+      );
+      pending.next = next;
+      if (userId) {
+        const progressSaved = await saveProgressToDb(userId, next.progress, {
+          triggerType: "assessment",
+          triggerId: assessment.sessionId,
+        });
+        if (!progressSaved) throw new Error("Assessment progress finalization failed");
+      }
       factsCommitted = true;
-      pendingCompletionAtRef.current = null;
-      const next = recordMockExamResult(appState, tagged, scored, exposures, now);
+      pendingCompletionRef.current = null;
       saveAppState(next);
       setState(next);
-      setResult(scored);
+      setResult(pending.scored);
 
       if (userId) {
-        saveProgressToDb(userId, next.progress);
-        saveAnswersToDb(userId, appState.progress.currentDay, tagged);
+        saveAnswersToDb(userId, appState.progress.currentDay, pending.tagged);
       }
     } catch (error) {
       if (factsCommitted) {

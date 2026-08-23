@@ -604,11 +604,6 @@ begin
       using errcode = '40001';
   end if;
 
-  perform public.register_exam_readiness_evidence(
-    p_user_id,
-    'assessment:' || p_session_id::text
-  );
-
   return jsonb_build_object(
     'session', to_jsonb(v_session),
     'completed_now', true
@@ -1393,9 +1388,24 @@ begin
     raise exception 'invalid progress payload' using errcode = '22023';
   end if;
   if (p_trigger_type is null) <> (p_trigger_id is null)
-    or (p_trigger_type is not null and p_trigger_type not in ('learning_complete', 'review_complete'))
+    or (p_trigger_type is not null and p_trigger_type not in (
+      'learning_complete',
+      'review_complete',
+      'assessment'
+    ))
     or (p_trigger_id is not null and (length(btrim(p_trigger_id)) = 0 or length(p_trigger_id) > 4096)) then
     raise exception 'invalid progress readiness trigger' using errcode = '22023';
+  end if;
+
+  if p_trigger_type = 'assessment' and not exists (
+    select 1
+    from public.assessment_sessions assessment
+    where assessment.user_id = p_user_id
+      and assessment.session_id::text = p_trigger_id
+      and assessment.status = 'completed'
+  ) then
+    raise exception 'assessment readiness trigger requires a completed session owned by the user'
+      using errcode = '23503';
   end if;
 
   insert into public.user_progress (user_id)
@@ -1466,7 +1476,8 @@ begin
       updated_at = clock_timestamp()
   where user_id = p_user_id;
 
-  if v_evidence_changed and v_event_key is not null then
+  if v_event_key is not null
+    and (v_evidence_changed or p_trigger_type = 'assessment') then
     perform public.register_exam_readiness_evidence(p_user_id, v_event_key);
     v_trigger_registered := true;
   end if;
@@ -1501,7 +1512,7 @@ $$;
 ALTER FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text", "p_trigger_id" "text") OWNER TO "postgres";
 
 
-COMMENT ON FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text", "p_trigger_id" "text") IS 'Atomically binds a stable completion to its full payload, writes authoritative P0 progress once, and registers readiness only when mastery or review facts change.';
+COMMENT ON FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text", "p_trigger_id" "text") IS 'Atomically binds a stable completion to its full payload, writes authoritative P0 progress once, and registers readiness for assessment finalization or changed mastery/review facts.';
 
 
 
@@ -1823,14 +1834,14 @@ CREATE TABLE IF NOT EXISTS "public"."progress_readiness_completions" (
     CONSTRAINT "progress_readiness_completions_payload_fingerprint_check" CHECK (("length"("payload_fingerprint") = 32)),
     CONSTRAINT "progress_readiness_completions_progress_payload_check" CHECK (("jsonb_typeof"("progress_payload") = 'object'::"text")),
     CONSTRAINT "progress_readiness_completions_trigger_id_check" CHECK ((("length"("btrim"("trigger_id")) > 0) AND ("length"("trigger_id") <= 4096))),
-    CONSTRAINT "progress_readiness_completions_trigger_type_check" CHECK (("trigger_type" = ANY (ARRAY['learning_complete'::"text", 'review_complete'::"text"])))
+    CONSTRAINT "progress_readiness_completions_trigger_type_check" CHECK (("trigger_type" = ANY (ARRAY['learning_complete'::"text", 'review_complete'::"text", 'assessment'::"text"])))
 );
 
 
 ALTER TABLE "public"."progress_readiness_completions" OWNER TO "postgres";
 
 
-COMMENT ON TABLE "public"."progress_readiness_completions" IS 'RPC-private idempotency records binding a stable learning/review completion to its original full progress payload and readiness association.';
+COMMENT ON TABLE "public"."progress_readiness_completions" IS 'RPC-private idempotency records binding a stable learning/review/assessment completion to its original full progress payload and readiness association.';
 
 
 

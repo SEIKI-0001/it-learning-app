@@ -65,7 +65,29 @@ function isValidPendingMutation(value: unknown): boolean {
     && pending.assessmentAnswers.every(isValidAssessmentAnswer)
     && typeof pending.exposures === "object"
     && pending.exposures !== null
-    && (pending.confirmedUserId === null || typeof pending.confirmedUserId === "string");
+    && (pending.confirmedUserId === null || typeof pending.confirmedUserId === "string")
+    && (
+      pending.progressSnapshot === undefined
+      || pending.progressSnapshot === null
+      || isValidProgressSnapshot(pending.progressSnapshot)
+    );
+}
+
+function isValidProgressSnapshot(value: unknown): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  const progress = value as Record<string, unknown>;
+  return typeof progress.level === "number"
+    && typeof progress.exp === "number"
+    && typeof progress.streakCount === "number"
+    && typeof progress.currentDay === "number"
+    && Array.isArray(progress.weakTags)
+    && Array.isArray(progress.completedTopics)
+    && typeof progress.topicMastery === "object"
+    && progress.topicMastery !== null
+    && typeof progress.topicMasteryStats === "object"
+    && progress.topicMasteryStats !== null
+    && Array.isArray(progress.reviewQueue)
+    && Array.isArray(progress.completedDays);
 }
 
 function isValidAnswerSnapshot(value: unknown): boolean {

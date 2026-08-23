@@ -81,8 +81,8 @@ select is(
     where user_id = '21000000-0000-0000-0000-000000000001'
       and event_key = 'assessment:22000000-0000-4000-8000-000000000001'
   ),
-  1,
-  'completion registers one stable evidence event'
+  0,
+  'completion defers its stable evidence event until the P0 transaction'
 );
 
 select is(
@@ -99,13 +99,13 @@ select is(
 );
 
 select is(
-  (
+  coalesce((
     select revision
     from public.exam_readiness_evidence_state
     where user_id = '21000000-0000-0000-0000-000000000001'
-  ),
-  1::bigint,
-  'an identical retry does not advance evidence revision'
+  ), 0::bigint),
+  0::bigint,
+  'an identical retry still does not publish evidence before P0'
 );
 
 select throws_ok(

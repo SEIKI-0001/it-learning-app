@@ -320,7 +320,7 @@ export async function fetchAiGradingBootstrap(
 }
 
 export type ReadinessTriggerInput = {
-  triggerType: "learning_complete" | "review_complete";
+  triggerType: "learning_complete" | "review_complete" | "assessment";
   triggerId: string;
 };
 

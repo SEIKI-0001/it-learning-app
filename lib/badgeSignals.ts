@@ -25,5 +25,9 @@ export function getClientBadgeSignals(
   const current = examReadiness === undefined
     ? loadCachedProgressBootstrap()?.examReadiness
     : examReadiness;
-  return { wordMasteredCount, examReadiness: current ?? null };
+  return {
+    wordMasteredCount,
+    examReadiness: current ?? null,
+    examReadinessVerified: examReadiness !== undefined,
+  };
 }

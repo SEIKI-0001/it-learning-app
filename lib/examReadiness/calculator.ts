@@ -6,6 +6,7 @@ import {
   computeSummativePerformance,
   computeTopicMastery,
   computeWeakTopics,
+  eligibleSummativeSessions,
   scopeComponentInputsToField,
 } from "@/lib/examReadiness/components";
 import {
@@ -80,7 +81,12 @@ export function calculateExamReadinessDraft(args: {
   const band = readinessBand(score, confidence.level);
   const boundary = nextTimeBoundary({
     calculationReferenceTime: args.calculationReferenceTime,
-    evidenceTimes: input.answers.map((answer) => new Date(answer.answeredAt)),
+    evidenceTimes: [
+      ...input.answers.map((answer) => new Date(answer.answeredAt)),
+      ...eligibleSummativeSessions(input.assessmentSessions).map(
+        (session) => new Date(session.completedAt as string),
+      ),
+    ],
     reviews: input.reviewOutcomes.map((review) => ({
       dueAt: new Date(review.dueAt),
       scheduledIntervalDays: review.scheduledIntervalDays,

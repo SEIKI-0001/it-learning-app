@@ -207,11 +207,6 @@ begin
       using errcode = '40001';
   end if;
 
-  perform public.register_exam_readiness_evidence(
-    p_user_id,
-    'assessment:' || p_session_id::text
-  );
-
   return jsonb_build_object(
     'session', to_jsonb(v_session),
     'completed_now', true

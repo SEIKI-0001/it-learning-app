@@ -10,6 +10,7 @@ import {
   EXAM_SCHEME_VERSION,
 } from "@/lib/examReadiness/config";
 import {
+  getReadinessRecoveryState,
   getStoredCurrentReadiness,
   loadExamReadinessEvidence,
 } from "@/lib/examReadiness/repository";
@@ -138,6 +139,20 @@ export async function getCurrentReadiness(args: {
 }): Promise<ExamReadinessResult | null> {
   const callerReferenceTime = calculationStart(args.now);
   let current = await getStoredCurrentReadiness(args.supabase, args.userId);
+  const recovery = await getReadinessRecoveryState(args.supabase, args.userId);
+  const currentRevision = current?.evidence.evidenceRevision ?? 0;
+  if (recovery.evidenceRevision > currentRevision) {
+    const trigger = recovery.failedTrigger ?? {
+      triggerType: "evidence_revision",
+      triggerId: String(recovery.evidenceRevision),
+    };
+    current = await recalculateExamReadiness({
+      supabase: args.supabase,
+      userId: args.userId,
+      ...trigger,
+      now: callerReferenceTime,
+    });
+  }
 
   for (let recalculation = 0; ; recalculation += 1) {
     if (
