@@ -22,6 +22,15 @@ if (( $# > 0 )); then
   option_index=0
   while (( option_index < ${#dump_options[@]} )); do
     option=${dump_options[${option_index}]}
+    # Supabase boolean flags accept assigned values (including false/0), so
+    # validate the normalized option name and keep every mode override out.
+    option_name=${option%%=*}
+    case "${option_name}" in
+      --linked|--file|-f|--schema|-s|--data-only|--role-only|--keep-comments|\
+      --dry-run|--use-copy|--project-ref|--password|-p|--debug|--)
+        usage_error
+        ;;
+    esac
     case "${option}" in
       --local)
         [[ -z "${database_selector}" ]] || usage_error
@@ -39,9 +48,7 @@ if (( $# > 0 )); then
         [[ -n "${option#--db-url=}" ]] || usage_error
         database_selector=db-url
         ;;
-      --linked|--file|-f|--file=*|-f?*|--schema|-s|--schema=*|-s?*|\
-      --data-only|--role-only|--keep-comments|--dry-run|--use-copy|\
-      --project-ref|--project-ref=*|--password|-p|--password=*|-p?*|--debug|--)
+      -f?*|-s?*|-p?*)
         usage_error
         ;;
     esac

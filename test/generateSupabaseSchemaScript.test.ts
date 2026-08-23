@@ -206,4 +206,54 @@ describe("generate-supabase-schema.sh", () => {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
   });
+
+  it("rejects assigned boolean dump modes before they can replace the snapshot", () => {
+    const fixtureRoot = mkdtempSync(path.join(tmpdir(), "supabase-schema-generator-"));
+
+    try {
+      const fakeSupabase = path.join(fixtureRoot, "fake-supabase");
+      writeFakeSupabase(fakeSupabase);
+      const cases = [
+        ["--data-only=true"],
+        ["--data-only=false"],
+        ["--data-only=0"],
+        ["--role-only=true"],
+        ["--role-only=false"],
+        ["--keep-comments=true"],
+        ["--keep-comments=false"],
+        ["--dry-run=true"],
+        ["--dry-run=false"],
+        ["--use-copy=true"],
+        ["--use-copy=false"],
+        ["--linked=true"],
+        ["--linked=false"],
+      ];
+
+      for (const [index, args] of cases.entries()) {
+        const caseRoot = path.join(fixtureRoot, `assigned-case-${index}`);
+        const output = path.join(caseRoot, "schema.sql");
+        const argsFile = path.join(caseRoot, "args.txt");
+        mkdirSync(caseRoot, { recursive: true });
+        writeFileSync(output, "trusted existing snapshot\n");
+
+        const result = spawnSync("bash", [generator, ...args], {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            FAKE_ARGS_FILE: argsFile,
+            SUPABASE_BIN: fakeSupabase,
+            SUPABASE_SCHEMA_OUTPUT: output,
+          },
+        });
+
+        expect(result.status, `args: ${args.join(" ")}\n${result.stderr}`).toBe(64);
+        expect(readFileSync(output, "utf8")).toBe("trusted existing snapshot\n");
+        expect(existsSync(argsFile)).toBe(false);
+        expect(readdirSync(caseRoot)).toEqual(["schema.sql"]);
+      }
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
 });
