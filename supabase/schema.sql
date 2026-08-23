@@ -246,6 +246,670 @@ $$;
 
 ALTER FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_plan_key" "text", "p_months" integer, "p_amount_total" integer, "p_currency" "text", "p_stripe_checkout_session_id" "text", "p_stripe_payment_intent_id" "text", "p_stripe_customer_id" "text") OWNER TO "postgres";
 
+SET default_tablespace = '';
+
+SET default_table_access_method = "heap";
+
+
+CREATE TABLE IF NOT EXISTS "public"."exam_readiness_recalculation_jobs" (
+    "job_id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "trigger_type" "text" NOT NULL,
+    "trigger_id" "text" NOT NULL,
+    "model_version" "text" NOT NULL,
+    "exam_scheme_version" "text" NOT NULL,
+    "status" "text" DEFAULT 'processing'::"text" NOT NULL,
+    "evidence_revision" bigint NOT NULL,
+    "attempt_count" integer DEFAULT 0 NOT NULL,
+    "lease_expires_at" timestamp with time zone,
+    "error_code" "text",
+    "result" "jsonb",
+    "started_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    "completed_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "exam_readiness_recalculation_jobs_attempt_count_check" CHECK (("attempt_count" >= 0)),
+    CONSTRAINT "exam_readiness_recalculation_jobs_evidence_revision_check" CHECK (("evidence_revision" >= 0)),
+    CONSTRAINT "exam_readiness_recalculation_jobs_exam_scheme_version_check" CHECK (("length"("exam_scheme_version") > 0)),
+    CONSTRAINT "exam_readiness_recalculation_jobs_model_version_check" CHECK (("length"("model_version") > 0)),
+    CONSTRAINT "exam_readiness_recalculation_jobs_status_check" CHECK (("status" = ANY (ARRAY['processing'::"text", 'succeeded'::"text", 'failed'::"text"]))),
+    CONSTRAINT "exam_readiness_recalculation_jobs_trigger_id_check" CHECK (("length"("trigger_id") > 0)),
+    CONSTRAINT "exam_readiness_recalculation_jobs_trigger_type_check" CHECK (("length"("trigger_type") > 0))
+);
+
+
+ALTER TABLE "public"."exam_readiness_recalculation_jobs" OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."claim_exam_readiness_recalculation"("p_user_id" "uuid", "p_trigger_type" "text", "p_trigger_id" "text", "p_model_version" "text", "p_exam_scheme_version" "text", "p_lease_seconds" integer) RETURNS SETOF "public"."exam_readiness_recalculation_jobs"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+declare
+  v_state public.exam_readiness_evidence_state%rowtype;
+  v_job public.exam_readiness_recalculation_jobs%rowtype;
+  v_now timestamptz;
+  v_lease_expires_at timestamptz;
+begin
+  if p_user_id is null then
+    raise exception 'p_user_id is required' using errcode = '22023';
+  end if;
+  if p_trigger_type is null or length(btrim(p_trigger_type)) = 0
+    or p_trigger_id is null or length(btrim(p_trigger_id)) = 0
+    or p_model_version is null or length(btrim(p_model_version)) = 0
+    or p_exam_scheme_version is null or length(btrim(p_exam_scheme_version)) = 0 then
+    raise exception 'recalculation trigger and version values are required'
+      using errcode = '22023';
+  end if;
+  if p_lease_seconds is null or p_lease_seconds < 1 or p_lease_seconds > 3600 then
+    raise exception 'p_lease_seconds must be between 1 and 3600'
+      using errcode = '22023';
+  end if;
+
+  insert into public.exam_readiness_evidence_state (user_id)
+  values (p_user_id)
+  on conflict (user_id) do nothing;
+
+  select *
+  into v_state
+  from public.exam_readiness_evidence_state
+  where user_id = p_user_id
+  for update;
+
+  select *
+  into v_job
+  from public.exam_readiness_recalculation_jobs
+  where user_id = p_user_id
+    and trigger_type = p_trigger_type
+    and trigger_id = p_trigger_id
+    and model_version = p_model_version
+    and exam_scheme_version = p_exam_scheme_version
+  for update;
+
+  -- Capture wall-clock time only after every lease-protecting lock is held.
+  -- statement_timestamp() would be frozen before any lock wait.
+  v_now := clock_timestamp();
+  v_lease_expires_at := v_now + make_interval(secs => p_lease_seconds);
+
+  if found and v_job.status = 'succeeded' then
+    return next v_job;
+    return;
+  end if;
+
+  if v_state.lease_job_id is not null
+    and v_state.lease_expires_at > v_now then
+    return;
+  end if;
+
+  insert into public.exam_readiness_recalculation_jobs (
+    user_id,
+    trigger_type,
+    trigger_id,
+    model_version,
+    exam_scheme_version,
+    status,
+    evidence_revision,
+    attempt_count,
+    lease_expires_at,
+    started_at,
+    updated_at
+  ) values (
+    p_user_id,
+    p_trigger_type,
+    p_trigger_id,
+    p_model_version,
+    p_exam_scheme_version,
+    'processing',
+    v_state.revision,
+    1,
+    v_lease_expires_at,
+    v_now,
+    v_now
+  )
+  on conflict (user_id, trigger_type, trigger_id, model_version, exam_scheme_version)
+  do update
+  set status = 'processing',
+      evidence_revision = excluded.evidence_revision,
+      attempt_count = exam_readiness_recalculation_jobs.attempt_count + 1,
+      lease_expires_at = excluded.lease_expires_at,
+      error_code = null,
+      result = null,
+      started_at = excluded.started_at,
+      completed_at = null,
+      updated_at = excluded.updated_at
+  where exam_readiness_recalculation_jobs.status = 'failed'
+    or (
+      exam_readiness_recalculation_jobs.status = 'processing'
+      and exam_readiness_recalculation_jobs.lease_expires_at <= v_now
+    )
+  returning * into v_job;
+
+  if not found then
+    return;
+  end if;
+
+  update public.exam_readiness_evidence_state
+  set lease_job_id = v_job.job_id,
+      lease_expires_at = v_job.lease_expires_at,
+      updated_at = v_now
+  where user_id = p_user_id;
+
+  return next v_job;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."claim_exam_readiness_recalculation"("p_user_id" "uuid", "p_trigger_type" "text", "p_trigger_id" "text", "p_model_version" "text", "p_exam_scheme_version" "text", "p_lease_seconds" integer) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."claim_exam_readiness_recalculation"("p_user_id" "uuid", "p_trigger_type" "text", "p_trigger_id" "text", "p_model_version" "text", "p_exam_scheme_version" "text", "p_lease_seconds" integer) IS 'Claims or reclaims one versioned trigger row under the per-user calculation lease.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."complete_assessment_session"("p_user_id" "uuid", "p_session_id" "uuid", "p_completed_at" timestamp with time zone, "p_answers" "jsonb") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+declare
+  v_session public.assessment_sessions%rowtype;
+  v_answer jsonb;
+  v_answered_count integer;
+  v_correct_count integer;
+  v_first_count integer;
+  v_seen_count integer;
+  v_unknown_count integer;
+begin
+  if p_user_id is null or p_session_id is null or p_completed_at is null then
+    raise exception 'assessment session identity and completion time are required'
+      using errcode = '22023';
+  end if;
+  if p_answers is null or jsonb_typeof(p_answers) <> 'array' then
+    raise exception 'assessment session answers must be an array'
+      using errcode = '22023';
+  end if;
+
+  select session.*
+  into v_session
+  from public.assessment_sessions session
+  where session.user_id = p_user_id
+    and session.session_id = p_session_id
+  for update;
+
+  if not found then
+    raise exception 'assessment session not found' using errcode = 'P0002';
+  end if;
+  if p_completed_at < v_session.started_at then
+    raise exception 'assessment completion precedes start' using errcode = '22023';
+  end if;
+
+  for v_answer in select value from jsonb_array_elements(p_answers)
+  loop
+    if jsonb_typeof(v_answer) <> 'object'
+      or (select count(*) from jsonb_object_keys(v_answer)) <> 7
+      or not (
+        v_answer ? 'idempotency_key'
+        and v_answer ? 'canonical_question_id'
+        and v_answer ? 'topic_id'
+        and v_answer ? 'field_id'
+        and v_answer ? 'is_correct'
+        and v_answer ? 'first_attempt_state'
+        and v_answer ? 'answered_at'
+      )
+      or jsonb_typeof(v_answer -> 'idempotency_key') <> 'string'
+      or jsonb_typeof(v_answer -> 'canonical_question_id') <> 'string'
+      or jsonb_typeof(v_answer -> 'topic_id') <> 'string'
+      or jsonb_typeof(v_answer -> 'field_id') <> 'string'
+      or jsonb_typeof(v_answer -> 'is_correct') <> 'boolean'
+      or jsonb_typeof(v_answer -> 'first_attempt_state') <> 'string'
+      or jsonb_typeof(v_answer -> 'answered_at') <> 'string'
+      or length(btrim(v_answer ->> 'idempotency_key')) = 0
+      or length(btrim(v_answer ->> 'canonical_question_id')) = 0
+      or length(btrim(v_answer ->> 'topic_id')) = 0
+      or length(btrim(v_answer ->> 'field_id')) = 0
+      or (v_answer ->> 'first_attempt_state') not in ('first', 'seen', 'unknown') then
+      raise exception 'invalid assessment session answer'
+        using errcode = '22023';
+    end if;
+
+    -- Force timestamp parsing before any write so malformed payloads roll back cleanly.
+    perform (v_answer ->> 'answered_at')::timestamptz;
+  end loop;
+
+  if jsonb_array_length(p_answers) > v_session.question_count then
+    raise exception 'assessment answers exceed immutable question count'
+      using errcode = '22023';
+  end if;
+  if (
+    select count(*) <> count(distinct answer.idempotency_key)
+      or count(*) <> count(distinct answer.canonical_question_id)
+    from jsonb_to_recordset(p_answers) as answer(
+      idempotency_key text,
+      canonical_question_id text
+    )
+  ) then
+    raise exception 'assessment answers contain duplicate identities'
+      using errcode = '22023';
+  end if;
+
+  select
+    count(*)::integer,
+    count(*) filter (where is_correct)::integer,
+    count(*) filter (where first_attempt_state = 'first')::integer,
+    count(*) filter (where first_attempt_state = 'seen')::integer,
+    count(*) filter (where first_attempt_state = 'unknown')::integer
+  into
+    v_answered_count,
+    v_correct_count,
+    v_first_count,
+    v_seen_count,
+    v_unknown_count
+  from jsonb_to_recordset(p_answers) as answer(
+    is_correct boolean,
+    first_attempt_state text
+  );
+
+  if v_session.status = 'completed' then
+    if v_session.completed_at is distinct from p_completed_at
+      or v_session.answered_count <> v_answered_count
+      or v_session.correct_count <> v_correct_count
+      or v_session.first_count <> v_first_count
+      or v_session.seen_count <> v_seen_count
+      or v_session.unknown_count <> v_unknown_count
+      or exists (
+        select 1
+        from jsonb_to_recordset(p_answers) as answer(
+          idempotency_key text,
+          canonical_question_id text,
+          topic_id text,
+          field_id text,
+          is_correct boolean,
+          first_attempt_state text,
+          answered_at timestamptz
+        )
+        where not exists (
+          select 1
+          from public.assessment_session_answers stored
+          where stored.user_id = p_user_id
+            and stored.session_id = p_session_id
+            and stored.idempotency_key = answer.idempotency_key
+            and stored.canonical_question_id = answer.canonical_question_id
+            and stored.topic_id = answer.topic_id
+            and stored.field_id = answer.field_id
+            and stored.is_correct = answer.is_correct
+            and stored.first_attempt_state = answer.first_attempt_state
+            and stored.answered_at = answer.answered_at
+        )
+      ) then
+      raise exception 'assessment session completion conflicts with stored facts'
+        using errcode = '23505';
+    end if;
+
+    return jsonb_build_object(
+      'session', to_jsonb(v_session),
+      'completed_now', false
+    );
+  end if;
+
+  if v_session.status <> 'in_progress' then
+    raise exception 'assessment session is terminal' using errcode = '23505';
+  end if;
+
+  insert into public.assessment_session_answers (
+    user_id,
+    session_id,
+    idempotency_key,
+    canonical_question_id,
+    topic_id,
+    field_id,
+    is_correct,
+    first_attempt_state,
+    answered_at
+  )
+  select
+    p_user_id,
+    p_session_id,
+    answer.idempotency_key,
+    answer.canonical_question_id,
+    answer.topic_id,
+    answer.field_id,
+    answer.is_correct,
+    answer.first_attempt_state,
+    answer.answered_at
+  from jsonb_to_recordset(p_answers) as answer(
+    idempotency_key text,
+    canonical_question_id text,
+    topic_id text,
+    field_id text,
+    is_correct boolean,
+    first_attempt_state text,
+    answered_at timestamptz
+  );
+
+  update public.assessment_sessions
+  set status = 'completed',
+      completed_at = p_completed_at,
+      answered_count = v_answered_count,
+      correct_count = v_correct_count,
+      first_count = v_first_count,
+      seen_count = v_seen_count,
+      unknown_count = v_unknown_count,
+      updated_at = clock_timestamp()
+  where user_id = p_user_id
+    and session_id = p_session_id
+    and status = 'in_progress'
+  returning * into v_session;
+
+  if not found then
+    raise exception 'assessment session transition lost its lock'
+      using errcode = '40001';
+  end if;
+
+  perform public.register_exam_readiness_evidence(
+    p_user_id,
+    'assessment:' || p_session_id::text
+  );
+
+  return jsonb_build_object(
+    'session', to_jsonb(v_session),
+    'completed_now', true
+  );
+end;
+$$;
+
+
+ALTER FUNCTION "public"."complete_assessment_session"("p_user_id" "uuid", "p_session_id" "uuid", "p_completed_at" timestamp with time zone, "p_answers" "jsonb") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."complete_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_evidence_revision" bigint, "p_expected_attempt" integer, "p_result" "jsonb") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+declare
+  v_user_id uuid;
+  v_job public.exam_readiness_recalculation_jobs%rowtype;
+  v_state public.exam_readiness_evidence_state%rowtype;
+  v_revision bigint;
+  v_result jsonb;
+  v_calculation_reference_time timestamptz;
+  v_calculated_at timestamptz;
+  v_valid_until timestamptz;
+  v_snapshot_date date;
+  v_now timestamptz;
+begin
+  if p_job_id is null or p_expected_evidence_revision is null
+    or p_expected_attempt is null or p_result is null
+    or jsonb_typeof(p_result) <> 'object' then
+    raise exception 'job, revision, attempt, and object result are required'
+      using errcode = '22023';
+  end if;
+
+  select user_id
+  into v_user_id
+  from public.exam_readiness_recalculation_jobs
+  where job_id = p_job_id;
+
+  if not found then
+    raise exception 'recalculation job not found' using errcode = 'P0002';
+  end if;
+
+  select *
+  into v_state
+  from public.exam_readiness_evidence_state
+  where user_id = v_user_id
+  for update;
+
+  select *
+  into v_job
+  from public.exam_readiness_recalculation_jobs
+  where job_id = p_job_id
+  for update;
+
+  v_now := clock_timestamp();
+
+  if v_job.status <> 'processing'
+    or v_job.attempt_count <> p_expected_attempt
+    or v_job.lease_expires_at <= v_now
+    or v_state.lease_job_id is distinct from v_job.job_id
+    or v_state.lease_expires_at is distinct from v_job.lease_expires_at then
+    return 'stale';
+  end if;
+
+  v_revision := v_state.revision;
+  if v_revision <> p_expected_evidence_revision then
+    update public.exam_readiness_recalculation_jobs
+    set status = 'failed',
+        lease_expires_at = null,
+        error_code = 'stale_evidence',
+        completed_at = v_now,
+        updated_at = v_now
+    where job_id = p_job_id
+      and attempt_count = p_expected_attempt;
+
+    update public.exam_readiness_evidence_state
+    set lease_job_id = null,
+        lease_expires_at = null,
+        updated_at = v_now
+    where user_id = v_job.user_id
+      and lease_job_id = p_job_id;
+
+    return 'stale';
+  end if;
+
+  if v_job.evidence_revision <> p_expected_evidence_revision then
+    raise exception 'expected evidence revision does not match claimed revision'
+      using errcode = '22023';
+  end if;
+  if p_result ->> 'modelVersion' is distinct from v_job.model_version
+    or p_result ->> 'examSchemeVersion' is distinct from v_job.exam_scheme_version then
+    raise exception 'result versions do not match claimed versions'
+      using errcode = '22023';
+  end if;
+
+  begin
+    v_calculation_reference_time :=
+      nullif(p_result ->> 'calculationReferenceTime', '')::timestamptz;
+    v_calculated_at := nullif(p_result ->> 'calculatedAt', '')::timestamptz;
+    v_valid_until := nullif(p_result ->> 'validUntil', '')::timestamptz;
+  exception when invalid_text_representation or datetime_field_overflow then
+    raise exception 'result timestamps are invalid' using errcode = '22007';
+  end;
+
+  if v_calculation_reference_time is null or v_calculated_at is null then
+    raise exception 'calculationReferenceTime and calculatedAt are required'
+      using errcode = '22023';
+  end if;
+  if v_valid_until is not null and v_valid_until <= v_calculation_reference_time then
+    raise exception 'validUntil must be later than calculationReferenceTime'
+      using errcode = '22023';
+  end if;
+
+  v_snapshot_date := (v_calculated_at at time zone 'Asia/Tokyo')::date;
+  v_result := jsonb_set(
+    p_result,
+    '{snapshotDate}',
+    to_jsonb(v_snapshot_date::text),
+    true
+  );
+
+  insert into public.exam_readiness_current (
+    user_id,
+    evidence_revision,
+    model_version,
+    exam_scheme_version,
+    result,
+    calculation_reference_time,
+    calculated_at,
+    valid_until,
+    updated_at
+  ) values (
+    v_job.user_id,
+    p_expected_evidence_revision,
+    v_job.model_version,
+    v_job.exam_scheme_version,
+    v_result,
+    v_calculation_reference_time,
+    v_calculated_at,
+    v_valid_until,
+    v_now
+  )
+  on conflict (user_id) do update
+  set evidence_revision = excluded.evidence_revision,
+      model_version = excluded.model_version,
+      exam_scheme_version = excluded.exam_scheme_version,
+      result = excluded.result,
+      calculation_reference_time = excluded.calculation_reference_time,
+      calculated_at = excluded.calculated_at,
+      valid_until = excluded.valid_until,
+      updated_at = excluded.updated_at;
+
+  insert into public.exam_readiness_snapshots (
+    user_id,
+    snapshot_date,
+    model_version,
+    exam_scheme_version,
+    evidence_revision,
+    result,
+    calculation_reference_time,
+    calculated_at,
+    valid_until,
+    updated_at
+  ) values (
+    v_job.user_id,
+    v_snapshot_date,
+    v_job.model_version,
+    v_job.exam_scheme_version,
+    p_expected_evidence_revision,
+    v_result,
+    v_calculation_reference_time,
+    v_calculated_at,
+    v_valid_until,
+    v_now
+  )
+  on conflict (user_id, snapshot_date, model_version, exam_scheme_version) do update
+  set evidence_revision = excluded.evidence_revision,
+      result = excluded.result,
+      calculation_reference_time = excluded.calculation_reference_time,
+      calculated_at = excluded.calculated_at,
+      valid_until = excluded.valid_until,
+      updated_at = excluded.updated_at;
+
+  update public.exam_readiness_recalculation_jobs
+  set status = 'succeeded',
+      lease_expires_at = null,
+      error_code = null,
+      result = v_result,
+      completed_at = v_now,
+      updated_at = v_now
+  where job_id = p_job_id
+    and attempt_count = p_expected_attempt;
+
+  update public.exam_readiness_evidence_state
+  set lease_job_id = null,
+      lease_expires_at = null,
+      updated_at = v_now
+  where user_id = v_job.user_id
+    and lease_job_id = p_job_id;
+
+  return 'saved';
+end;
+$$;
+
+
+ALTER FUNCTION "public"."complete_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_evidence_revision" bigint, "p_expected_attempt" integer, "p_result" "jsonb") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."complete_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_evidence_revision" bigint, "p_expected_attempt" integer, "p_result" "jsonb") IS 'Fences by attempt and evidence revision, then atomically saves current and Tokyo-dated snapshot state.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."fail_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_attempt" integer, "p_error_code" "text") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+declare
+  v_user_id uuid;
+  v_job public.exam_readiness_recalculation_jobs%rowtype;
+  v_state public.exam_readiness_evidence_state%rowtype;
+  v_now timestamptz;
+begin
+  if p_job_id is null or p_expected_attempt is null then
+    raise exception 'p_job_id and p_expected_attempt are required'
+      using errcode = '22023';
+  end if;
+
+  select user_id
+  into v_user_id
+  from public.exam_readiness_recalculation_jobs
+  where job_id = p_job_id;
+
+  if not found then
+    return;
+  end if;
+
+  select *
+  into v_state
+  from public.exam_readiness_evidence_state
+  where user_id = v_user_id
+  for update;
+
+  select *
+  into v_job
+  from public.exam_readiness_recalculation_jobs
+  where job_id = p_job_id
+  for update;
+
+  v_now := clock_timestamp();
+
+  if v_job.status <> 'processing'
+    or v_job.attempt_count <> p_expected_attempt
+    or v_job.lease_expires_at <= v_now
+    or v_state.lease_job_id is distinct from v_job.job_id
+    or v_state.lease_expires_at is distinct from v_job.lease_expires_at then
+    return;
+  end if;
+
+  update public.exam_readiness_recalculation_jobs
+  set status = 'failed',
+      lease_expires_at = null,
+      error_code = nullif(p_error_code, ''),
+      completed_at = v_now,
+      updated_at = v_now
+  where job_id = p_job_id
+    and attempt_count = p_expected_attempt;
+
+  update public.exam_readiness_evidence_state
+  set lease_job_id = null,
+      lease_expires_at = null,
+      updated_at = v_now
+  where user_id = v_job.user_id
+    and lease_job_id = p_job_id;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."fail_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_attempt" integer, "p_error_code" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."fail_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_attempt" integer, "p_error_code" "text") IS 'Fails only the matching live attempt; superseded worker failures are no-ops.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."keep_assessment_session_question_count"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+begin
+  if new.question_count is distinct from old.question_count then
+    raise exception 'assessment session question_count is immutable'
+      using errcode = '22023';
+  end if;
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."keep_assessment_session_question_count"() OWNER TO "postgres";
+
 
 CREATE OR REPLACE FUNCTION "public"."lock_question_exposure_answer_write"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -369,8 +1033,6 @@ begin
     raise exception 'p_attempts contained no valid attempts' using errcode = '22023';
   end if;
 
-  -- One lock per user keeps a 100-question batch at O(1) lock calls and also
-  -- coordinates with direct question_attempts/user_answers writers.
   perform pg_advisory_xact_lock(
     hashtextextended('question-exposure-user' || chr(31) || p_user_id::text, 0)
   );
@@ -482,6 +1144,33 @@ begin
   select inserted.question_id, inserted.is_first_attempt
   from inserted;
 
+  if exists (select 1 from pg_temp.question_exposure_inserted) then
+    perform public.register_exam_readiness_evidence(
+      p_user_id,
+      (
+        select 'question-attempt-batch:' || md5(
+          string_agg(
+            jsonb_build_object(
+              'questionId', input.question_id,
+              'questionType', input.question_type,
+              'topicId', input.topic_id,
+              'selectedAnswer', input.selected_answer,
+              'isCorrect', input.is_correct,
+              'answeredAtEpochMicros',
+                floor(extract(epoch from input.answered_at) * 1000000)::bigint,
+              'questionVersion', input.question_version,
+              'attemptGroupId', input.attempt_group_id
+            )::text,
+            chr(30)
+            order by input.question_id
+          )
+        )
+        from pg_temp.question_exposure_input input
+        join pg_temp.question_exposure_inserted inserted using (question_id)
+      )
+    );
+  end if;
+
   return query
   with current_facts as (
     select distinct
@@ -546,7 +1235,7 @@ $$;
 ALTER FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") OWNER TO "postgres";
 
 
-COMMENT ON FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") IS 'Records a validated attempt batch and returns transaction-safe first/seen exposure.';
+COMMENT ON FUNCTION "public"."record_question_attempts_with_exposure"("p_user_id" "uuid", "p_attempts" "jsonb") IS 'Records P1-1 exposure facts and registers one deterministic evidence event per newly inserted batch.';
 
 
 
@@ -588,9 +1277,232 @@ $$;
 
 ALTER FUNCTION "public"."record_stripe_subscription_event"("p_stripe_subscription_id" "text", "p_stripe_customer_id" "text", "p_user_id" "uuid", "p_price_id" "text", "p_status" "text", "p_latest_event_created" bigint) OWNER TO "postgres";
 
-SET default_tablespace = '';
 
-SET default_table_access_method = "heap";
+CREATE OR REPLACE FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uuid", "p_event_key" "text") RETURNS bigint
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+declare
+  v_revision bigint;
+begin
+  if p_user_id is null then
+    raise exception 'p_user_id is required' using errcode = '22023';
+  end if;
+  if p_event_key is null or length(btrim(p_event_key)) = 0 then
+    raise exception 'p_event_key is required' using errcode = '22023';
+  end if;
+
+  insert into public.exam_readiness_evidence_state (user_id)
+  values (p_user_id)
+  on conflict (user_id) do nothing;
+
+  select revision
+  into v_revision
+  from public.exam_readiness_evidence_state
+  where user_id = p_user_id
+  for update;
+
+  if exists (
+    select 1
+    from public.exam_readiness_evidence_events
+    where user_id = p_user_id
+      and event_key = p_event_key
+  ) then
+    return v_revision;
+  end if;
+
+  v_revision := v_revision + 1;
+
+  insert into public.exam_readiness_evidence_events (
+    user_id,
+    event_key,
+    revision
+  ) values (
+    p_user_id,
+    p_event_key,
+    v_revision
+  )
+  on conflict (user_id, event_key) do nothing;
+
+  update public.exam_readiness_evidence_state
+  set revision = v_revision,
+      updated_at = statement_timestamp()
+  where user_id = p_user_id;
+
+  return v_revision;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uuid", "p_event_key" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uuid", "p_event_key" "text") IS 'Advances a user evidence revision once for each stable event key.';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text" DEFAULT NULL::"text", "p_trigger_id" "text" DEFAULT NULL::"text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+declare
+  v_existing public.user_progress%rowtype;
+  v_completion public.progress_readiness_completions%rowtype;
+  v_evidence_changed boolean;
+  v_event_key text;
+  v_trigger_registered boolean := false;
+begin
+  if p_user_id is null then
+    raise exception 'p_user_id is required' using errcode = '22023';
+  end if;
+  if p_progress is null
+    or jsonb_typeof(p_progress) <> 'object'
+    or (select count(*) from jsonb_object_keys(p_progress)) <> 13
+    or not p_progress ?& array[
+      'current_day', 'exp', 'level', 'completed_days', 'streak_count', 'weak_tags',
+      'last_played_at', 'completed_topics', 'topic_mastery', 'topic_mastery_stats',
+      'review_queue', 'weekly_plan', 'checkpoint_progress'
+    ] then
+    raise exception 'invalid progress payload' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_progress -> 'current_day') <> 'number'
+    or jsonb_typeof(p_progress -> 'exp') <> 'number'
+    or jsonb_typeof(p_progress -> 'level') <> 'number'
+    or jsonb_typeof(p_progress -> 'completed_days') <> 'array'
+    or jsonb_typeof(p_progress -> 'streak_count') <> 'number'
+    or jsonb_typeof(p_progress -> 'weak_tags') <> 'array'
+    or jsonb_typeof(p_progress -> 'completed_topics') <> 'array'
+    or jsonb_typeof(p_progress -> 'topic_mastery') <> 'object'
+    or jsonb_typeof(p_progress -> 'topic_mastery_stats') <> 'object'
+    or jsonb_typeof(p_progress -> 'review_queue') <> 'array'
+    or jsonb_typeof(p_progress -> 'weekly_plan') not in ('object', 'null')
+    or jsonb_typeof(p_progress -> 'checkpoint_progress') not in ('object', 'null')
+    or jsonb_typeof(p_progress -> 'last_played_at') not in ('string', 'null') then
+    raise exception 'invalid progress payload' using errcode = '22023';
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_progress -> 'weak_tags') item
+    where jsonb_typeof(item) <> 'string'
+  ) or exists (
+    select 1 from jsonb_array_elements(p_progress -> 'completed_topics') item
+    where jsonb_typeof(item) <> 'string'
+  ) or exists (
+    select 1 from jsonb_array_elements(p_progress -> 'completed_days') item
+    where jsonb_typeof(item) <> 'number'
+  ) then
+    raise exception 'invalid progress payload' using errcode = '22023';
+  end if;
+  if (p_trigger_type is null) <> (p_trigger_id is null)
+    or (p_trigger_type is not null and p_trigger_type not in ('learning_complete', 'review_complete'))
+    or (p_trigger_id is not null and (length(btrim(p_trigger_id)) = 0 or length(p_trigger_id) > 4096)) then
+    raise exception 'invalid progress readiness trigger' using errcode = '22023';
+  end if;
+
+  insert into public.user_progress (user_id)
+  values (p_user_id)
+  on conflict (user_id) do nothing;
+
+  select progress.*
+  into v_existing
+  from public.user_progress progress
+  where progress.user_id = p_user_id
+  for update;
+
+  if p_trigger_type is not null then
+    select completion.*
+    into v_completion
+    from public.progress_readiness_completions completion
+    where completion.user_id = p_user_id
+      and completion.trigger_type = p_trigger_type
+      and completion.trigger_id = p_trigger_id
+    for update;
+
+    if found then
+      if v_completion.payload_fingerprint is distinct from md5(p_progress::text)
+        or v_completion.progress_payload is distinct from p_progress then
+        raise exception 'progress readiness trigger conflicts with original payload'
+          using errcode = '23505';
+      end if;
+
+      return jsonb_build_object(
+        'evidence_changed', false,
+        'trigger_registered', v_completion.readiness_registered,
+        'replayed', true
+      );
+    end if;
+  end if;
+
+  v_evidence_changed :=
+    v_existing.topic_mastery_stats is distinct from (p_progress -> 'topic_mastery_stats')
+    or v_existing.review_queue is distinct from (p_progress -> 'review_queue');
+  v_event_key := case when p_trigger_type is null
+    then null
+    else p_trigger_type || ':' || p_trigger_id
+  end;
+
+  update public.user_progress
+  set current_day = (p_progress ->> 'current_day')::integer,
+      exp = (p_progress ->> 'exp')::integer,
+      level = (p_progress ->> 'level')::integer,
+      completed_days = array(
+        select item.value::integer
+        from jsonb_array_elements_text(p_progress -> 'completed_days') as item(value)
+      ),
+      streak_count = (p_progress ->> 'streak_count')::integer,
+      weak_tags = array(
+        select item.value
+        from jsonb_array_elements_text(p_progress -> 'weak_tags') as item(value)
+      ),
+      last_played_at = (p_progress ->> 'last_played_at')::timestamptz,
+      completed_topics = array(
+        select item.value
+        from jsonb_array_elements_text(p_progress -> 'completed_topics') as item(value)
+      ),
+      topic_mastery = p_progress -> 'topic_mastery',
+      topic_mastery_stats = p_progress -> 'topic_mastery_stats',
+      review_queue = p_progress -> 'review_queue',
+      weekly_plan = p_progress -> 'weekly_plan',
+      checkpoint_progress = p_progress -> 'checkpoint_progress',
+      updated_at = clock_timestamp()
+  where user_id = p_user_id;
+
+  if v_evidence_changed and v_event_key is not null then
+    perform public.register_exam_readiness_evidence(p_user_id, v_event_key);
+    v_trigger_registered := true;
+  end if;
+
+  if v_event_key is not null then
+    insert into public.progress_readiness_completions (
+      user_id,
+      trigger_type,
+      trigger_id,
+      progress_payload,
+      payload_fingerprint,
+      readiness_registered
+    ) values (
+      p_user_id,
+      p_trigger_type,
+      p_trigger_id,
+      p_progress,
+      md5(p_progress::text),
+      v_trigger_registered
+    );
+  end if;
+
+  return jsonb_build_object(
+    'evidence_changed', v_evidence_changed,
+    'trigger_registered', v_trigger_registered,
+    'replayed', false
+  );
+end;
+$$;
+
+
+ALTER FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text", "p_trigger_id" "text") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text", "p_trigger_id" "text") IS 'Atomically binds a stable completion to its full payload, writes authoritative P0 progress once, and registers readiness only when mastery or review facts change.';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."ai_grading_records" (
@@ -629,6 +1541,64 @@ CREATE TABLE IF NOT EXISTS "public"."ai_usage_logs" (
 
 
 ALTER TABLE "public"."ai_usage_logs" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."assessment_session_answers" (
+    "answer_id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "session_id" "uuid" NOT NULL,
+    "idempotency_key" "text" NOT NULL,
+    "canonical_question_id" "text" NOT NULL,
+    "topic_id" "text" NOT NULL,
+    "field_id" "text" NOT NULL,
+    "is_correct" boolean NOT NULL,
+    "first_attempt_state" "text" NOT NULL,
+    "answered_at" timestamp with time zone NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "assessment_session_answers_canonical_question_id_check" CHECK (("length"("canonical_question_id") > 0)),
+    CONSTRAINT "assessment_session_answers_field_id_check" CHECK (("length"("field_id") > 0)),
+    CONSTRAINT "assessment_session_answers_first_attempt_state_check" CHECK (("first_attempt_state" = ANY (ARRAY['first'::"text", 'seen'::"text", 'unknown'::"text"]))),
+    CONSTRAINT "assessment_session_answers_idempotency_key_check" CHECK (("length"("idempotency_key") > 0)),
+    CONSTRAINT "assessment_session_answers_topic_id_check" CHECK (("length"("topic_id") > 0))
+);
+
+
+ALTER TABLE "public"."assessment_session_answers" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."assessment_sessions" (
+    "session_id" "uuid" NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "source" "text" NOT NULL,
+    "mode" "text" NOT NULL,
+    "status" "text" DEFAULT 'in_progress'::"text" NOT NULL,
+    "started_at" timestamp with time zone NOT NULL,
+    "completed_at" timestamp with time zone,
+    "question_count" integer NOT NULL,
+    "answered_count" integer DEFAULT 0 NOT NULL,
+    "correct_count" integer DEFAULT 0 NOT NULL,
+    "first_count" integer DEFAULT 0 NOT NULL,
+    "seen_count" integer DEFAULT 0 NOT NULL,
+    "unknown_count" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "assessment_sessions_answered_count_check" CHECK (("answered_count" >= 0)),
+    CONSTRAINT "assessment_sessions_check" CHECK (("answered_count" <= "question_count")),
+    CONSTRAINT "assessment_sessions_check1" CHECK (("correct_count" <= "answered_count")),
+    CONSTRAINT "assessment_sessions_check2" CHECK (((("first_count" + "seen_count") + "unknown_count") = "answered_count")),
+    CONSTRAINT "assessment_sessions_check3" CHECK (((("status" = 'in_progress'::"text") AND ("completed_at" IS NULL)) OR (("status" = ANY (ARRAY['completed'::"text", 'abandoned'::"text"])) AND ("completed_at" IS NOT NULL)))),
+    CONSTRAINT "assessment_sessions_correct_count_check" CHECK (("correct_count" >= 0)),
+    CONSTRAINT "assessment_sessions_first_count_check" CHECK (("first_count" >= 0)),
+    CONSTRAINT "assessment_sessions_mode_check" CHECK (("mode" = ANY (ARRAY['practice'::"text", 'exam'::"text"]))),
+    CONSTRAINT "assessment_sessions_question_count_check" CHECK (("question_count" >= 0)),
+    CONSTRAINT "assessment_sessions_seen_count_check" CHECK (("seen_count" >= 0)),
+    CONSTRAINT "assessment_sessions_source_check" CHECK (("source" = ANY (ARRAY['checkpoint'::"text", 'summary'::"text", 'mock'::"text", 'official_past'::"text"]))),
+    CONSTRAINT "assessment_sessions_status_check" CHECK (("status" = ANY (ARRAY['in_progress'::"text", 'completed'::"text", 'abandoned'::"text"]))),
+    CONSTRAINT "assessment_sessions_unknown_count_check" CHECK (("unknown_count" >= 0))
+);
+
+
+ALTER TABLE "public"."assessment_sessions" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."billing_purchases" (
@@ -700,12 +1670,82 @@ CREATE TABLE IF NOT EXISTS "public"."daily_study_tasks" (
 ALTER TABLE "public"."daily_study_tasks" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."exam_readiness_current" (
+    "user_id" "uuid" NOT NULL,
+    "evidence_revision" bigint NOT NULL,
+    "model_version" "text" NOT NULL,
+    "exam_scheme_version" "text" NOT NULL,
+    "result" "jsonb" NOT NULL,
+    "calculation_reference_time" timestamp with time zone NOT NULL,
+    "calculated_at" timestamp with time zone NOT NULL,
+    "valid_until" timestamp with time zone,
+    "updated_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "exam_readiness_current_evidence_revision_check" CHECK (("evidence_revision" >= 0)),
+    CONSTRAINT "exam_readiness_current_exam_scheme_version_check" CHECK (("length"("exam_scheme_version") > 0)),
+    CONSTRAINT "exam_readiness_current_model_version_check" CHECK (("length"("model_version") > 0)),
+    CONSTRAINT "exam_readiness_current_result_check" CHECK (("jsonb_typeof"("result") = 'object'::"text"))
+);
+
+
+ALTER TABLE "public"."exam_readiness_current" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."exam_readiness_evidence_events" (
+    "event_id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "event_key" "text" NOT NULL,
+    "revision" bigint NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "exam_readiness_evidence_events_event_key_check" CHECK (("length"("event_key") > 0)),
+    CONSTRAINT "exam_readiness_evidence_events_revision_check" CHECK (("revision" >= 0))
+);
+
+
+ALTER TABLE "public"."exam_readiness_evidence_events" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."exam_readiness_evidence_state" (
+    "user_id" "uuid" NOT NULL,
+    "revision" bigint DEFAULT 0 NOT NULL,
+    "lease_job_id" "uuid",
+    "lease_expires_at" timestamp with time zone,
+    "updated_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "exam_readiness_evidence_state_check" CHECK (((("lease_job_id" IS NULL) AND ("lease_expires_at" IS NULL)) OR (("lease_job_id" IS NOT NULL) AND ("lease_expires_at" IS NOT NULL)))),
+    CONSTRAINT "exam_readiness_evidence_state_revision_check" CHECK (("revision" >= 0))
+);
+
+
+ALTER TABLE "public"."exam_readiness_evidence_state" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."exam_readiness_snapshots" (
+    "user_id" "uuid" NOT NULL,
+    "snapshot_date" "date" NOT NULL,
+    "model_version" "text" NOT NULL,
+    "exam_scheme_version" "text" NOT NULL,
+    "evidence_revision" bigint NOT NULL,
+    "result" "jsonb" NOT NULL,
+    "calculation_reference_time" timestamp with time zone NOT NULL,
+    "calculated_at" timestamp with time zone NOT NULL,
+    "valid_until" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "exam_readiness_snapshots_evidence_revision_check" CHECK (("evidence_revision" >= 0)),
+    CONSTRAINT "exam_readiness_snapshots_exam_scheme_version_check" CHECK (("length"("exam_scheme_version") > 0)),
+    CONSTRAINT "exam_readiness_snapshots_model_version_check" CHECK (("length"("model_version") > 0)),
+    CONSTRAINT "exam_readiness_snapshots_result_check" CHECK (("jsonb_typeof"("result") = 'object'::"text"))
+);
+
+
+ALTER TABLE "public"."exam_readiness_snapshots" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."integrated_learning_status" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
     "status_date" "date" NOT NULL,
     "overall_status" "text" NOT NULL,
-    "readiness_score" integer NOT NULL,
+    "readiness_score" integer,
     "input_progress_rate" integer,
     "basic_understanding_rate" integer,
     "flashcard_mastery_rate" integer,
@@ -770,6 +1810,28 @@ CREATE TABLE IF NOT EXISTS "public"."plan_adjustment_proposals" (
 
 
 ALTER TABLE "public"."plan_adjustment_proposals" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."progress_readiness_completions" (
+    "user_id" "uuid" NOT NULL,
+    "trigger_type" "text" NOT NULL,
+    "trigger_id" "text" NOT NULL,
+    "progress_payload" "jsonb" NOT NULL,
+    "payload_fingerprint" "text" NOT NULL,
+    "readiness_registered" boolean NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "progress_readiness_completions_payload_fingerprint_check" CHECK (("length"("payload_fingerprint") = 32)),
+    CONSTRAINT "progress_readiness_completions_progress_payload_check" CHECK (("jsonb_typeof"("progress_payload") = 'object'::"text")),
+    CONSTRAINT "progress_readiness_completions_trigger_id_check" CHECK ((("length"("btrim"("trigger_id")) > 0) AND ("length"("trigger_id") <= 4096))),
+    CONSTRAINT "progress_readiness_completions_trigger_type_check" CHECK (("trigger_type" = ANY (ARRAY['learning_complete'::"text", 'review_complete'::"text"])))
+);
+
+
+ALTER TABLE "public"."progress_readiness_completions" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."progress_readiness_completions" IS 'RPC-private idempotency records binding a stable learning/review completion to its original full progress payload and readiness association.';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."question_attempts" (
@@ -1030,6 +2092,26 @@ ALTER TABLE ONLY "public"."ai_usage_logs"
 
 
 
+ALTER TABLE ONLY "public"."assessment_session_answers"
+    ADD CONSTRAINT "assessment_session_answers_pkey" PRIMARY KEY ("answer_id");
+
+
+
+ALTER TABLE ONLY "public"."assessment_session_answers"
+    ADD CONSTRAINT "assessment_session_answers_user_id_idempotency_key_key" UNIQUE ("user_id", "idempotency_key");
+
+
+
+ALTER TABLE ONLY "public"."assessment_sessions"
+    ADD CONSTRAINT "assessment_sessions_pkey" PRIMARY KEY ("session_id");
+
+
+
+ALTER TABLE ONLY "public"."assessment_sessions"
+    ADD CONSTRAINT "assessment_sessions_user_id_session_id_key" UNIQUE ("user_id", "session_id");
+
+
+
 ALTER TABLE ONLY "public"."billing_purchases"
     ADD CONSTRAINT "billing_purchases_pkey" PRIMARY KEY ("id");
 
@@ -1065,6 +2147,46 @@ ALTER TABLE ONLY "public"."daily_study_tasks"
 
 
 
+ALTER TABLE ONLY "public"."exam_readiness_current"
+    ADD CONSTRAINT "exam_readiness_current_pkey" PRIMARY KEY ("user_id");
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_evidence_events"
+    ADD CONSTRAINT "exam_readiness_evidence_events_pkey" PRIMARY KEY ("event_id");
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_evidence_events"
+    ADD CONSTRAINT "exam_readiness_evidence_events_user_id_event_key_key" UNIQUE ("user_id", "event_key");
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_evidence_events"
+    ADD CONSTRAINT "exam_readiness_evidence_events_user_id_revision_key" UNIQUE ("user_id", "revision");
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_evidence_state"
+    ADD CONSTRAINT "exam_readiness_evidence_state_pkey" PRIMARY KEY ("user_id");
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_recalculation_jobs"
+    ADD CONSTRAINT "exam_readiness_recalculation__user_id_trigger_type_trigger__key" UNIQUE ("user_id", "trigger_type", "trigger_id", "model_version", "exam_scheme_version");
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_recalculation_jobs"
+    ADD CONSTRAINT "exam_readiness_recalculation_jobs_pkey" PRIMARY KEY ("job_id");
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_snapshots"
+    ADD CONSTRAINT "exam_readiness_snapshots_pkey" PRIMARY KEY ("user_id", "snapshot_date", "model_version", "exam_scheme_version");
+
+
+
 ALTER TABLE ONLY "public"."integrated_learning_status"
     ADD CONSTRAINT "integrated_learning_status_pkey" PRIMARY KEY ("id");
 
@@ -1092,6 +2214,11 @@ ALTER TABLE ONLY "public"."line_users"
 
 ALTER TABLE ONLY "public"."plan_adjustment_proposals"
     ADD CONSTRAINT "plan_adjustment_proposals_pkey" PRIMARY KEY ("proposal_id");
+
+
+
+ALTER TABLE ONLY "public"."progress_readiness_completions"
+    ADD CONSTRAINT "progress_readiness_completions_pkey" PRIMARY KEY ("user_id", "trigger_type", "trigger_id");
 
 
 
@@ -1175,6 +2302,18 @@ CREATE INDEX "ai_usage_logs_user_id_idx" ON "public"."ai_usage_logs" USING "btre
 
 
 
+CREATE INDEX "assessment_session_answers_session_idx" ON "public"."assessment_session_answers" USING "btree" ("session_id", "answered_at");
+
+
+
+CREATE INDEX "assessment_session_answers_user_answered_idx" ON "public"."assessment_session_answers" USING "btree" ("user_id", "answered_at" DESC);
+
+
+
+CREATE INDEX "assessment_sessions_user_status_completed_idx" ON "public"."assessment_sessions" USING "btree" ("user_id", "status", "completed_at" DESC);
+
+
+
 CREATE INDEX "billing_purchases_user_created_idx" ON "public"."billing_purchases" USING "btree" ("user_id", "created_at" DESC);
 
 
@@ -1196,6 +2335,18 @@ CREATE INDEX "daily_study_tasks_user_date_idx" ON "public"."daily_study_tasks" U
 
 
 CREATE INDEX "daily_study_tasks_user_topic_idx" ON "public"."daily_study_tasks" USING "btree" ("user_id", "topic_id");
+
+
+
+CREATE INDEX "exam_readiness_evidence_events_user_revision_idx" ON "public"."exam_readiness_evidence_events" USING "btree" ("user_id", "revision" DESC);
+
+
+
+CREATE INDEX "exam_readiness_recalculation_jobs_user_status_lease_idx" ON "public"."exam_readiness_recalculation_jobs" USING "btree" ("user_id", "status", "lease_expires_at");
+
+
+
+CREATE INDEX "exam_readiness_snapshots_user_date_idx" ON "public"."exam_readiness_snapshots" USING "btree" ("user_id", "snapshot_date" DESC);
 
 
 
@@ -1327,6 +2478,10 @@ CREATE INDEX "user_word_progress_user_id_idx" ON "public"."user_word_progress" U
 
 
 
+CREATE OR REPLACE TRIGGER "assessment_sessions_keep_question_count" BEFORE UPDATE OF "question_count" ON "public"."assessment_sessions" FOR EACH ROW EXECUTE FUNCTION "public"."keep_assessment_session_question_count"();
+
+
+
 CREATE OR REPLACE TRIGGER "lock_question_exposure_question_attempts" BEFORE INSERT OR UPDATE OF "user_id", "question_id" ON "public"."question_attempts" FOR EACH ROW EXECUTE FUNCTION "public"."lock_question_exposure_answer_write"();
 
 
@@ -1342,6 +2497,21 @@ ALTER TABLE ONLY "public"."ai_grading_records"
 
 ALTER TABLE ONLY "public"."ai_usage_logs"
     ADD CONSTRAINT "ai_usage_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."assessment_session_answers"
+    ADD CONSTRAINT "assessment_session_answers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."assessment_session_answers"
+    ADD CONSTRAINT "assessment_session_answers_user_id_session_id_fkey" FOREIGN KEY ("user_id", "session_id") REFERENCES "public"."assessment_sessions"("user_id", "session_id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."assessment_sessions"
+    ADD CONSTRAINT "assessment_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
 
 
 
@@ -1365,6 +2535,31 @@ ALTER TABLE ONLY "public"."daily_study_tasks"
 
 
 
+ALTER TABLE ONLY "public"."exam_readiness_current"
+    ADD CONSTRAINT "exam_readiness_current_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_evidence_events"
+    ADD CONSTRAINT "exam_readiness_evidence_events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_evidence_state"
+    ADD CONSTRAINT "exam_readiness_evidence_state_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_recalculation_jobs"
+    ADD CONSTRAINT "exam_readiness_recalculation_jobs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."exam_readiness_snapshots"
+    ADD CONSTRAINT "exam_readiness_snapshots_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."integrated_learning_status"
     ADD CONSTRAINT "integrated_learning_status_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
 
@@ -1377,6 +2572,11 @@ ALTER TABLE ONLY "public"."line_sessions"
 
 ALTER TABLE ONLY "public"."plan_adjustment_proposals"
     ADD CONSTRAINT "plan_adjustment_proposals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."progress_readiness_completions"
+    ADD CONSTRAINT "progress_readiness_completions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
 
 
 
@@ -1431,6 +2631,12 @@ ALTER TABLE "public"."ai_grading_records" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."ai_usage_logs" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."assessment_session_answers" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."assessment_sessions" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."billing_purchases" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1443,6 +2649,21 @@ ALTER TABLE "public"."daily_progress_reports" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."daily_study_tasks" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."exam_readiness_current" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."exam_readiness_evidence_events" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."exam_readiness_evidence_state" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."exam_readiness_recalculation_jobs" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."exam_readiness_snapshots" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."integrated_learning_status" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1453,6 +2674,9 @@ ALTER TABLE "public"."line_users" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."plan_adjustment_proposals" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."progress_readiness_completions" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."question_attempts" ENABLE ROW LEVEL SECURITY;
@@ -1507,6 +2731,34 @@ GRANT ALL ON FUNCTION "public"."apply_one_time_purchase"("p_user_id" "uuid", "p_
 
 
 
+GRANT ALL ON TABLE "public"."exam_readiness_recalculation_jobs" TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."claim_exam_readiness_recalculation"("p_user_id" "uuid", "p_trigger_type" "text", "p_trigger_id" "text", "p_model_version" "text", "p_exam_scheme_version" "text", "p_lease_seconds" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."claim_exam_readiness_recalculation"("p_user_id" "uuid", "p_trigger_type" "text", "p_trigger_id" "text", "p_model_version" "text", "p_exam_scheme_version" "text", "p_lease_seconds" integer) TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."complete_assessment_session"("p_user_id" "uuid", "p_session_id" "uuid", "p_completed_at" timestamp with time zone, "p_answers" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."complete_assessment_session"("p_user_id" "uuid", "p_session_id" "uuid", "p_completed_at" timestamp with time zone, "p_answers" "jsonb") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."complete_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_evidence_revision" bigint, "p_expected_attempt" integer, "p_result" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."complete_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_evidence_revision" bigint, "p_expected_attempt" integer, "p_result" "jsonb") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."fail_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_attempt" integer, "p_error_code" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."fail_exam_readiness_recalculation"("p_job_id" "uuid", "p_expected_attempt" integer, "p_error_code" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."keep_assessment_session_question_count"() FROM PUBLIC;
+
+
+
 REVOKE ALL ON FUNCTION "public"."lock_question_exposure_answer_write"() FROM PUBLIC;
 
 
@@ -1521,6 +2773,16 @@ GRANT ALL ON FUNCTION "public"."record_stripe_subscription_event"("p_stripe_subs
 
 
 
+REVOKE ALL ON FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uuid", "p_event_key" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uuid", "p_event_key" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text", "p_trigger_id" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text", "p_trigger_id" "text") TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."ai_grading_records" TO "anon";
 GRANT ALL ON TABLE "public"."ai_grading_records" TO "authenticated";
 GRANT ALL ON TABLE "public"."ai_grading_records" TO "service_role";
@@ -1530,6 +2792,14 @@ GRANT ALL ON TABLE "public"."ai_grading_records" TO "service_role";
 GRANT ALL ON TABLE "public"."ai_usage_logs" TO "anon";
 GRANT ALL ON TABLE "public"."ai_usage_logs" TO "authenticated";
 GRANT ALL ON TABLE "public"."ai_usage_logs" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."assessment_session_answers" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."assessment_sessions" TO "service_role";
 
 
 
@@ -1554,6 +2824,22 @@ GRANT ALL ON TABLE "public"."daily_progress_reports" TO "service_role";
 GRANT ALL ON TABLE "public"."daily_study_tasks" TO "anon";
 GRANT ALL ON TABLE "public"."daily_study_tasks" TO "authenticated";
 GRANT ALL ON TABLE "public"."daily_study_tasks" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."exam_readiness_current" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."exam_readiness_evidence_events" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."exam_readiness_evidence_state" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."exam_readiness_snapshots" TO "service_role";
 
 
 
@@ -1654,16 +2940,10 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQ
 
 
 
-
-
-
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
-
-
-
 
 
 
