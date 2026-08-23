@@ -2,7 +2,8 @@
 //
 // 設計方針:
 //   - 確認問題(基礎理解) / 単語帳(用語定着) / 過去問レベル(本番対応力) / 日次達成度 を統合し、
-//     「合格に対する現在地」「主なリスク」「次に優先すべきこと」を返す。
+//     予定に対する学習ペース・主なリスク・次に優先すべきことを返す。
+//   - 合格準備度は共有 ExamReadinessResult が所有し、この型では互換列以外に混ぜない。
 //   - 自己申告（日次達成度）は外部学習の推定にだけ使い、理解度・本番対応力の判定には使わない。
 //   - まずはルールベースで再現性のある判定を作る（AI提案・計画修正の自動反映は次フェーズ）。
 //   - このファイルは DB・React に依存しない（サーバー/クライアント両方から安全に import できる）。
@@ -13,7 +14,7 @@ import type { TopicStage } from "@/types/studyProgress";
 // 総合ステータス
 // ---------------------------------------------------------------------------
 
-/** 合格に対する現在地（5段階）。 */
+/** 予定に対する学習ペース（5段階）。 */
 export type OverallStatus =
   | "on_track" // 順調
   | "slightly_delayed" // 少し遅れ
@@ -56,7 +57,8 @@ export type RecommendedFocus = {
 export type IntegratedLearningStatus = {
   statusDate: string; // "YYYY-MM-DD"
   overallStatus: OverallStatus;
-  readinessScore: number; // 0〜100 合格準備度
+  /** DB compatibility only. New consumers use ExamReadinessResult directly. */
+  readinessScore: number;
   inputProgressRate: number; // 0〜100 インプット進捗（自己申告推定）
   basicUnderstandingRate: number; // 0〜100 基礎理解率
   flashcardMasteryRate: number; // 0〜100 用語定着率
@@ -72,36 +74,6 @@ export type IntegratedLearningStatus = {
   generatedMessage: string;
 };
 
-// ---------------------------------------------------------------------------
-// readiness_score の重み（合計100）
-// ---------------------------------------------------------------------------
-
-export type ReadinessWeights = {
-  input: number;
-  basic: number;
-  terms: number;
-  exam: number;
-  balance: number;
-};
-
-/** 通常期の重み。 */
-export const READINESS_WEIGHTS_NORMAL: ReadinessWeights = {
-  input: 10,
-  basic: 30,
-  terms: 25,
-  exam: 25,
-  balance: 10,
-};
-
-/** 直前期（試験14日以内、または exam_ready が1件以上）の重み。本番対応を厚くする。 */
-export const READINESS_WEIGHTS_DIRECT: ReadinessWeights = {
-  input: 5,
-  basic: 20,
-  terms: 25,
-  exam: 40,
-  balance: 10,
-};
-
 /** 直前期とみなす試験までの残り日数。 */
 export const DIRECT_PERIOD_DAYS = 14;
 
@@ -110,11 +82,11 @@ export const DIRECT_PERIOD_DAYS = 14;
 // ---------------------------------------------------------------------------
 
 export const STATUS_THRESHOLDS = {
-  /** on_track の下限（readiness）。 */
+  /** on_track の下限（予定に対する学習進捗）。 */
   onTrack: 75,
-  /** slightly_delayed の下限（readiness）。 */
+  /** slightly_delayed の下限（予定に対する学習進捗）。 */
   slightlyDelayed: 60,
-  /** delayed の下限（readiness）。これ未満は recovery_needed 候補。 */
+  /** delayed の下限（予定に対する学習進捗）。これ未満は recovery_needed 候補。 */
   delayed: 45,
   /** consultation_needed：試験まで残りこの日数以内。 */
   consultationExamDays: 7,

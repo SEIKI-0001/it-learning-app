@@ -872,12 +872,16 @@ export async function fetchTopicStage(
 // ---------------------------------------------------------------------------
 
 /**
- * 統合進捗を計算して当日分を保存し、結果を返す（/progress・/today の表示用）。
+ * 予定の健全性を計算して当日分を保存し、同じサーバー処理で読んだ共有
+ * Exam Readiness と一緒に返す（Today で current を重複取得しないため）。
  * 未ログイン・Supabase 未設定・失敗なら null（呼び出し側は非表示で継続）。
  */
 export async function refreshIntegratedStatus(
   userId: string,
-): Promise<IntegratedLearningStatus | null> {
+): Promise<{
+  status: IntegratedLearningStatus;
+  examReadiness: ExamReadinessResult | null;
+} | null> {
   try {
     const res = await fetch("/api/integrated-status/refresh", {
       method: "POST",
@@ -888,8 +892,18 @@ export async function refreshIntegratedStatus(
     const data = (await res.json()) as {
       ok: boolean;
       status?: IntegratedLearningStatus;
+      examReadiness?: ExamReadinessResult | null;
     };
-    if (data.ok && data.status) return data.status;
+    if (data.ok && data.status) {
+      const examReadiness = data.examReadiness ?? null;
+      const cached = loadCachedProgressBootstrap();
+      saveCachedProgressBootstrap(getUserId(), {
+        integratedStatus: data.status,
+        examReadiness,
+        planAdjustmentProposal: cached?.planAdjustmentProposal ?? null,
+      });
+      return { status: data.status, examReadiness };
+    }
     return null;
   } catch {
     return null;
@@ -930,7 +944,15 @@ export async function fetchCurrentExamReadiness(): Promise<ExamReadinessResult |
       ok?: boolean;
       readiness?: ExamReadinessResult | null;
     };
-    return body.ok ? body.readiness ?? null : null;
+    if (!body.ok) return null;
+    const readiness = body.readiness ?? null;
+    const cached = loadCachedProgressBootstrap();
+    saveCachedProgressBootstrap(getUserId(), {
+      integratedStatus: cached?.integratedStatus ?? null,
+      examReadiness: readiness,
+      planAdjustmentProposal: cached?.planAdjustmentProposal ?? null,
+    });
+    return readiness;
   } catch {
     return null;
   }

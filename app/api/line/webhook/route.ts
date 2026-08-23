@@ -2,20 +2,19 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseServer";
+import { getCurrentReadiness } from "@/lib/examReadiness/service";
+import {
+  primaryImprovementLabel,
+  readinessResultLabel,
+} from "@/lib/examReadiness/presentation";
 import { loadAppStateForUser } from "@/lib/serverAppState";
 import type { UserAnswer, UserProfile, UserProgress } from "@/types";
-import { FIELD_LABELS } from "@/types/content";
+import type { ExamReadinessResult } from "@/types/examReadiness";
 import { getAllTopics, getReviewItemsForUser, getTopic } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { getCheckpoint, phaseToCheckpointId } from "@/lib/checkpoints";
-import { fieldMastery } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
-import { getLatestOrRefreshIntegratedStatus } from "@/lib/progressBootstrap";
-import {
-  overallStatusLabel,
-  type IntegratedLearningStatus,
-} from "@/types/integratedStatus";
 
 /**
  * LINE Messaging API の Webhook 受け口（ITパスポート学習コーチ）。
@@ -229,13 +228,13 @@ function todayText(
   return lines.join("\n");
 }
 
-/** 「進捗」: 合格準備度・連続日数・XP・3分野の弱点を返す。 */
+/** 「進捗」: 共有の合格準備度・次の一歩・学習量を返す。 */
 function progressText(
   baseUrl: string,
   token: string | null,
   profile?: UserProfile,
   progress?: UserProgress,
-  integrated: IntegratedLearningStatus | null = null,
+  readiness: ExamReadinessResult | null = null,
 ): string {
   if (!progress) {
     return ["あなたの進捗はこちら📈", withToken(baseUrl, "/progress", token)].join("\n");
@@ -243,16 +242,12 @@ function progressText(
   const topics = getAllTopics();
   const summary = computeProgressSummary(topics, progress);
   const remaining = daysUntilExam(profile);
-  const mastery = fieldMastery(progress, topics);
-  const weakest = (Object.keys(mastery) as (keyof typeof mastery)[]).sort(
-    (a, b) => mastery[a] - mastery[b],
-  )[0];
-
-  // 合格準備度は Web と同じ統合進捗(readinessScore)を正とする。
-  // 取得できないとき（Supabase未設定など）のみローカル推定にフォールバック。
-  const readinessLine = integrated
-    ? `📈 合格準備度 ${integrated.readinessScore}%（${overallStatusLabel(integrated.overallStatus)}）`
-    : `📈 合格準備度 ${summary.readinessPct}%`;
+  const readinessLine = readiness
+    ? `📈 合格準備度 ${readinessResultLabel(readiness)}`
+    : "📈 合格準備度 測定中";
+  const improvement = readiness
+    ? primaryImprovementLabel(readiness.primaryImprovement, readiness)
+    : null;
 
   const lines = [
     readinessLine,
@@ -260,7 +255,7 @@ function progressText(
     remaining === null ? "試験日：未設定" : `試験まであと${remaining}日`,
     `🔥 連続学習 ${progress.streakCount}日 / Lv.${progress.level}・${progress.exp}XP`,
   ];
-  if (weakest) lines.push(`いま弱いのは「${FIELD_LABELS[weakest]}」`);
+  if (improvement) lines.push(`次の一歩：${improvement}`);
   lines.push("詳しくはWebで👇", withToken(baseUrl, "/progress", token));
   return lines.join("\n");
 }
@@ -324,18 +319,16 @@ async function buildReplyText(
     return todayText(baseUrl, token, profile, progress, answers);
   }
   if (text.includes("進捗") || text.includes("状況")) {
-    // Web の /progress と同じ統合進捗を参照する（HTTP自己呼び出しはせず共有ヘルパーを直接使う）。
-    // 失敗しても従来のローカル推定文面で返す。
-    let integrated: IntegratedLearningStatus | null = null;
+    // HTTP 自己呼び出しをせず、唯一の期限境界を持つ共有 current service を直接使う。
+    let readiness: ExamReadinessResult | null = null;
     if (supabase && userId) {
       try {
-        integrated = (await getLatestOrRefreshIntegratedStatus(supabase, userId))
-          .status;
+        readiness = await getCurrentReadiness({ supabase, userId });
       } catch {
-        integrated = null;
+        readiness = null;
       }
     }
-    return progressText(baseUrl, token, profile, progress, integrated);
+    return progressText(baseUrl, token, profile, progress, readiness);
   }
   if (text.includes("復習")) {
     return reviewText(baseUrl, token, profile, progress);

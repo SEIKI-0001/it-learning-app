@@ -9,8 +9,8 @@ import {
 import Icon from "@/components/ui/Icon";
 
 // 統合進捗カード（/progress 上部）。
-// 「合格に対する現在地」を一目で掴めるよう、ステータス＋ひとこと＋到達度バー1本＋リスク1件＋今週の方針1行に絞る。
-// 合格準備度%はページヘッダーの達成リングに一本化したため、このカードでは表示しない。
+// 予定に対する学習ペースを、ステータス＋ひとこと＋到達度バー＋リスク＋今週の方針で示す。
+// Exam Readiness は別の共有カードだけで表示する。
 // 未ログイン・Supabase 未設定・失敗のときは何も表示しない（既存表示を壊さない）。
 export default function IntegratedStatusCard({
   status,
@@ -42,7 +42,7 @@ export default function IntegratedStatusCard({
     <section className="rounded-xl bg-white p-4 border border-gray-200">
       {/* 総合ステータス */}
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold text-gray-600">いまの現在地</p>
+        <p className="text-xs font-bold text-gray-600">学習ペース</p>
         <span
           className={`inline-block rounded-full px-3 py-1 text-sm font-bold ring-1 ${overallStatusTone(
             status.overallStatus,

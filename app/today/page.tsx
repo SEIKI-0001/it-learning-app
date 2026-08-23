@@ -8,13 +8,11 @@ import { getAllTopics, getTopic } from "@/lib/content";
 import { getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { daysUntilExam } from "@/lib/aiPlanner";
-import { computeProgressSummary } from "@/lib/progressSummary";
 import {
   buildCheckpointGate,
   getCheckpoint,
   getCheckpointProgress,
 } from "@/lib/checkpoints";
-import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import {
   getUserId,
   loadCachedProgressBootstrap,
@@ -52,6 +50,7 @@ import {
 } from "@/lib/dailyQuests";
 import { emitCelebration } from "@/lib/celebration";
 import { saveAppState } from "@/lib/storage";
+import ExamReadinessSummary from "@/components/today/ExamReadinessSummary";
 
 type TodayTask = {
   topicId: string;
@@ -68,9 +67,9 @@ export default function TodayPage() {
   const [state, setState] = useAppState();
   const topics = useMemo(() => getAllTopics(), []);
   const savedTasksDateRef = useRef<string | null>(null);
-  // 合格準備度: /progress と同じくサーバー統合値のキャッシュを正とし、
-  // 無ければローカル推定へフォールバックする（初回描画は LoadingScreen のため hydration は一致する）。
-  const [bootstrap] = useState(() => loadCachedProgressBootstrap());
+  const [examReadiness, setExamReadiness] = useState(
+    () => loadCachedProgressBootstrap()?.examReadiness ?? null,
+  );
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -187,9 +186,6 @@ export default function TodayPage() {
   const gate = buildCheckpointGate(state, currentCheckpoint.id);
 
   // ホームの1画面目で「合格までの距離」と「今日のミッション」が分かるようにする。
-  const readiness =
-    bootstrap?.integratedStatus?.readinessScore ??
-    computeProgressSummary(topics, state.progress, state.answers).readinessPct;
   const examRemaining = daysUntilExam(state.profile);
   const totalMinutes = nodes.reduce((sum, node) => sum + node.estimatedMinutes, 0);
   const currentNode = nodes.find((node) => node.state === "current") ?? null;
@@ -257,10 +253,10 @@ export default function TodayPage() {
           </div>
           <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">今日の学習</h1>
 
-          <dl className="mt-4 grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-200">
+          <div className="mt-4 grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-200">
             <div className="py-3 pr-4">
-              <dt className="text-xs text-gray-600">試験まで</dt>
-              <dd className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
+              <p className="text-xs text-gray-600">試験まで</p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
                 {examRemaining === null ? (
                   <span className="text-base font-normal text-gray-500">未設定</span>
                 ) : (
@@ -269,26 +265,10 @@ export default function TodayPage() {
                     <span className="ml-0.5 text-sm font-normal text-gray-500">日</span>
                   </>
                 )}
-              </dd>
+              </p>
             </div>
-            <div className="py-3 pl-4">
-              <dt className="text-xs text-gray-600">合格準備度</dt>
-              <dd className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
-                {readiness}
-                <span className="ml-0.5 text-sm font-normal text-gray-500">%</span>
-              </dd>
-              <div
-                className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-200"
-                role="progressbar"
-                aria-label="合格準備度"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={readiness}
-              >
-                <div className="h-full rounded-full bg-brand-600" style={{ width: `${readiness}%` }} />
-              </div>
-            </div>
-          </dl>
+            <ExamReadinessSummary result={examReadiness} />
+          </div>
 
           {/* Primary: 今日のミッションを画面で唯一の強調ブロックにする(brand-50面+brand-200境界+左端brand-500線) */}
           <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
@@ -403,7 +383,11 @@ export default function TodayPage() {
           </summary>
           <div className="space-y-5 border-t border-gray-200 p-4">
             <StreakBanner progress={state.progress} />
-            <TodayPolicyStrip state={state} signals={getClientBadgeSignals()} />
+            <TodayPolicyStrip
+              state={state}
+              examReadiness={examReadiness}
+              onExamReadiness={setExamReadiness}
+            />
             <DailyQuestCard state={state} setState={setState} />
             <NextGoalCard state={state} />
             <Link

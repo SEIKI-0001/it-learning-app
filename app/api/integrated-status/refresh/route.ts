@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getRequestUserId } from "@/lib/apiUser";
-import { refreshIntegratedStatusForUser } from "@/lib/progressBootstrap";
+import {
+  getProgressBootstrapExamReadiness,
+  refreshIntegratedStatusForUser,
+} from "@/lib/progressBootstrap";
 
 export const runtime = "nodejs";
 
@@ -10,7 +13,7 @@ export const runtime = "nodejs";
 // 集計・データ取得は lib/progressBootstrap の refreshIntegratedStatusForUser に集約している
 // （/progress の bootstrap・LINE webhook・各学習 API の鮮度フックと同じ経路）。
 //   確認問題(基礎理解) / 単語帳(用語定着) / 過去問レベル(本番対応力) / 日次達成度・参考書 を統合し、
-//   合格に対する現在地・主なリスク・推奨配分を返す。自己申告は外部学習の推定にだけ使う。
+//   予定に対する学習ペース・主なリスク・推奨配分を返す。合格準備度は共有結果に分離する。
 //
 // - Supabase 未設定: 503 / userId なし: 401
 // - 計算はできたが保存に失敗しても画面は止めない（ok:true, saved:false で status を返す）。
@@ -40,13 +43,23 @@ export async function POST(request: Request) {
     );
   }
 
+  const now = new Date();
+  const examReadinessPromise = getProgressBootstrapExamReadiness(
+    supabase,
+    userId,
+    now,
+  );
   const result = await refreshIntegratedStatusForUser(supabase, userId, {
     date: isIsoDate(body.date) ? body.date : undefined,
+    now,
+    examReadiness: examReadinessPromise,
   });
+  const examReadiness = await examReadinessPromise;
 
   return NextResponse.json({
     ok: true,
     saved: result.saved ?? false,
     status: result.status,
+    examReadiness,
   });
 }

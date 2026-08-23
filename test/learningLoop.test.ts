@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { AppState, ReviewItem, TopicMasteryStats } from "@/types";
 import {
   applyLearningEvidence,
-  computeExamReadiness,
   getDueReviewTopics,
   getWeakTopics,
   scheduleTopicReview,
@@ -268,15 +267,6 @@ describe("Weak Topics", () => {
       },
     })).toEqual([]);
   });
-});
-
-it("exposes a conservative Exam Readiness interface from evaluated topics", () => {
-  const readiness = computeExamReadiness({
-    a: { ...stats(40), topicId: "a" },
-    b: { ...stats(80), topicId: "b" },
-  });
-
-  expect(readiness).toEqual({ score: 60, evaluatedTopicCount: 2, weakTopicCount: 1 });
 });
 
 describe("P0 learning loop scenario", () => {

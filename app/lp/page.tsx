@@ -199,8 +199,8 @@ export default function LandingPage() {
                 <p className="k">合格に近づく</p>
                 <h3>「今の自分は受かるのか」に、数字で答える</h3>
                 <p className="d">
-                  確認問題・単語帳・過去問レベル演習・毎日の達成度を統合して、<b>合格準備度スコア</b>
-                  を算出。弱い分野と今週の優先順位まで示します。さらにAI採点で「クラウドとは？」を自分の言葉で説明してみる——
+                  実際の問題への回答と定着から判定する<b>合格準備度スコア</b>
+                  で、弱い分野と次の一歩まで示します。さらにAI採点で「クラウドとは？」を自分の言葉で説明してみる——
                   <b>説明できれば、本番で選択肢に迷いません</b>。
                 </p>
               </div>
@@ -208,13 +208,14 @@ export default function LandingPage() {
                 <div className="ringrow">
                   <div className="ring">
                     <div>
-                      <span className="pct num">68%</span>
+                      <span className="pct num">68/100</span>
                       <span className="cap">合格準備度</span>
+                      <span className="cap">あと一歩</span>
                     </div>
                   </div>
                   <p className="advice">
-                    <b>ストラテジ系がのび悩み。</b>
-                    今週は「経営のことば」を優先しましょう。テクノロジ系は仕上げ段階です。
+                    <b>次の一歩：「経営のことば」を優先しましょう。</b>
+                    テクノロジ系は仕上げ段階です。
                   </p>
                 </div>
                 <div className="chat" style={{ marginTop: 18 }}>

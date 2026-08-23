@@ -31,6 +31,11 @@ export type IntegratedStatusBootstrapResult = {
   saved?: boolean;
 };
 
+type ExamReadinessSource =
+  | ExamReadinessResult
+  | null
+  | Promise<ExamReadinessResult | null>;
+
 export async function getProgressBootstrapExamReadiness(
   supabase: SupabaseClient,
   userId: string,
@@ -96,7 +101,11 @@ export async function getLatestIntegratedStatusRow(
 export async function refreshIntegratedStatusForUser(
   supabase: SupabaseClient,
   userId: string,
-  options: { date?: string; now?: Date } = {},
+  options: {
+    date?: string;
+    now?: Date;
+    examReadiness?: ExamReadinessSource;
+  } = {},
 ): Promise<IntegratedStatusBootstrapResult> {
   const now = options.now ?? new Date();
   const statusDate = isIsoDate(options.date) ? options.date : todayKey(now);
@@ -105,7 +114,10 @@ export async function refreshIntegratedStatusForUser(
     .toISOString()
     .slice(0, 10);
 
-  const [profileRes, progressRes, wordRes, reportRes, examRes, refBookRes] =
+  const readinessSource = options.examReadiness === undefined
+    ? getProgressBootstrapExamReadiness(supabase, userId, now)
+    : options.examReadiness;
+  const [profileRes, progressRes, wordRes, reportRes, examRes, refBookRes, examReadiness] =
     await Promise.all([
       supabase
         .from("user_profiles")
@@ -136,6 +148,7 @@ export async function refreshIntegratedStatusForUser(
         .select("active, chapters")
         .eq("user_id", userId)
         .maybeSingle(),
+      readinessSource,
     ]);
 
   const examDate =
@@ -179,6 +192,7 @@ export async function refreshIntegratedStatusForUser(
         chapters: unknown;
       } | null,
     ),
+    examReadiness,
   });
 
   const { data: upserted, error: upsertError } = await supabase
@@ -200,6 +214,7 @@ export async function getLatestOrRefreshIntegratedStatus(
   supabase: SupabaseClient,
   userId: string,
   now = new Date(),
+  examReadiness?: ExamReadinessSource,
 ): Promise<IntegratedStatusBootstrapResult> {
   const latest = await getLatestIntegratedStatusRow(supabase, userId);
   if (latest && latest.status_date === todayKey(now)) {
@@ -209,7 +224,7 @@ export async function getLatestOrRefreshIntegratedStatus(
       saved: true,
     };
   }
-  return refreshIntegratedStatusForUser(supabase, userId, { now });
+  return refreshIntegratedStatusForUser(supabase, userId, { now, examReadiness });
 }
 
 export async function getLatestPlanAdjustmentProposal(
@@ -234,6 +249,7 @@ export async function generatePlanAdjustmentForUser(
   userId: string,
   sourceStatusRow?: IntegratedStatusRow | null,
   now = new Date(),
+  examReadiness?: ExamReadinessSource,
 ): Promise<PlanAdjustmentProposal | null> {
   const statusRow =
     sourceStatusRow ?? (await getLatestIntegratedStatusRow(supabase, userId));
@@ -263,12 +279,17 @@ export async function generatePlanAdjustmentForUser(
     .maybeSingle();
   const examDate =
     (profile as { exam_date: string | null } | null)?.exam_date ?? null;
+  const currentReadiness = await (
+    examReadiness === undefined
+      ? getProgressBootstrapExamReadiness(supabase, userId, now)
+      : examReadiness
+  );
 
   const generated = buildPlanAdjustmentProposal({
     statusDate,
     status,
     daysUntilExam: daysUntil(examDate, now),
-  });
+  }, currentReadiness);
 
   if (!generated) return null;
 
@@ -312,8 +333,15 @@ export async function getLatestOrGeneratePlanAdjustment(
   userId: string,
   sourceStatusRow?: IntegratedStatusRow | null,
   now = new Date(),
+  examReadiness?: ExamReadinessSource,
 ): Promise<PlanAdjustmentProposal | null> {
   const latest = await getLatestPlanAdjustmentProposal(supabase, userId);
   if (latest) return latest;
-  return generatePlanAdjustmentForUser(supabase, userId, sourceStatusRow, now);
+  return generatePlanAdjustmentForUser(
+    supabase,
+    userId,
+    sourceStatusRow,
+    now,
+    examReadiness,
+  );
 }

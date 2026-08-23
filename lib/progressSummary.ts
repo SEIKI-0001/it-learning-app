@@ -4,14 +4,12 @@ import type { UserAnswer } from "@/types";
 import { masteryForTopic } from "@/lib/mastery";
 
 // ============================================================================
-// 進捗サマリ（ローカル推定）
+// 学習進捗サマリ（ローカル集計）
 // ----------------------------------------------------------------------------
 // 役割:
 //   AppState（localStorage）だけで計算できる軽量な進捗サマリ。
-//   ユーザー向けの「合格準備度」は統合進捗（integrated_learning_status の
-//   readinessScore）が正であり、readinessPct はサーバー値を取得できないとき
-//   （未ログイン・Supabase未設定・失敗）のフォールバック表示と、
-//   バッジ判定のフォールバックにのみ使う。
+//   Exam Readiness とは別の「学習活動がどれだけ進んだか」だけを表す。
+//   合格準備度の表示や判定には使わない。
 //
 // 設計の約束:
 //   - 純粋関数（副作用なし）。studyPlanner.ts の重い計算に依存させない
@@ -25,12 +23,12 @@ export type ProgressSummary = {
   totalCount: number; // 全トピック数
   completedRatio: number; // 0〜1: 完了トピック / 全トピック
   avgMasteryRatio: number; // 0〜1: 全トピックの平均習熟度/100（未着手は0）
-  readinessPct: number; // 0〜100: ローカル推定の到達度 = round(50*完了率 + 50*平均習熟度)
+  learningProgressPct: number; // 0〜100: 学習進捗 = round(50*完了率 + 50*平均習熟度)
 };
 
 /**
  * 全体の学習到達度を算出する。
- * readinessPct は「完了率」と「習熟度」の折衷（各50%）とし、
+ * learningProgressPct は「完了率」と「習熟度」の折衷（各50%）とし、
  * 「1回だけ合格点で完了したトピック」と「何度も復習して習熟したトピック」を
  * 区別できるようにする（完了率のみの旧指標より進捗の実態を表す）。
  */
@@ -49,7 +47,7 @@ export function computeProgressSummary(
       totalCount: 0,
       completedRatio: 0,
       avgMasteryRatio: 0,
-      readinessPct: 0,
+      learningProgressPct: 0,
     };
   }
 
@@ -61,7 +59,7 @@ export function computeProgressSummary(
   );
   const avgMasteryRatio = masterySum / (totalCount * 100);
 
-  const readinessPct = Math.round(
+  const learningProgressPct = Math.round(
     50 * completedRatio + 50 * avgMasteryRatio,
   );
 
@@ -70,6 +68,6 @@ export function computeProgressSummary(
     totalCount,
     completedRatio,
     avgMasteryRatio,
-    readinessPct,
+    learningProgressPct,
   };
 }

@@ -18,8 +18,8 @@ import type {
 import type { TopicField } from "@/types/content";
 import { getAllTopics } from "@/lib/content";
 import { fieldMastery, recentAccuracy } from "@/lib/study";
-import { computeProgressSummary } from "@/lib/progressSummary";
 import { masteryForTopic } from "@/lib/mastery";
+import type { ExamReadinessResult } from "@/types/examReadiness";
 
 // 習熟度のしきい値。初回満点は約72、日を空けた再確認で定着度が上がる前提で調整。
 const QUIZ_CLEARED = 60; // 確認問題を「解ける」水準
@@ -401,7 +401,7 @@ export const BADGES: BadgeDef[] = [
     rarity: "epic",
     checkpointId: "cp6",
     requiredForGate: true,
-    conditionLabel: "合格準備度（到達度）を80%以上にする",
+    conditionLabel: "合格準備度を「準備良好」以上にする",
     xp: 45,
     emoji: "🚀",
   },
@@ -481,11 +481,8 @@ export type BadgeSignals = {
   wordMasteredCount?: number;
   /** 過去問レベル問題をクリアしたトピック数（将来 question_attempts から供給）。 */
   examLevelClearedTopicCount?: number;
-  /**
-   * 統合進捗の合格準備度 readinessScore（0〜100）。サーバー値が取得できたときのみ供給。
-   * 未供給ならローカル推定（progressSummary.readinessPct）で判定を継続する。
-   */
-  readinessScore?: number;
+  /** 完全な共有結果。高準備度バッジは band と confidence だけを参照する。 */
+  examReadiness?: ExamReadinessResult | null;
 };
 
 type BadgeMetrics = {
@@ -499,7 +496,7 @@ type BadgeMetrics = {
   weakTagCount: number;
   fieldMasteryAvg: Record<TopicField, number>;
   recentAccuracy: number; // 直近20問の正答率（回答不足なら0）
-  readinessPct: number;
+  highReadiness: boolean;
   wordMasteredCount: number;
   examLevelClearedTopicCount: number;
   finalPassedCheckpointIds: Set<CheckpointId>;
@@ -542,8 +539,8 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     if (m >= 100) perfectCount += 1;
   }
 
-  const summary = computeProgressSummary(topics, progress, state.answers);
   const cp = progress.checkpointProgress;
+  const readiness = signals?.examReadiness;
 
   return {
     completedTotal: progress.completedTopics.length,
@@ -556,8 +553,11 @@ function computeMetrics(state: AppState, signals?: BadgeSignals): BadgeMetrics {
     weakTagCount: (progress.weakTags ?? []).length,
     fieldMasteryAvg: fieldMastery(progress, topics, state.answers),
     recentAccuracy: recentAccuracy(state.answers),
-    // 合格準備度: サーバーの統合進捗(readinessScore)を優先し、無ければローカル推定。
-    readinessPct: signals?.readinessScore ?? summary.readinessPct,
+    highReadiness: Boolean(
+      readiness
+      && (readiness.band === "ready" || readiness.band === "stable")
+      && readiness.confidence.level !== "low"
+    ),
     wordMasteredCount: signals?.wordMasteredCount ?? 0,
     examLevelClearedTopicCount: signals?.examLevelClearedTopicCount ?? 0,
     finalPassedCheckpointIds: new Set(
@@ -610,7 +610,7 @@ const BADGE_CONDITIONS: Record<string, (m: BadgeMetrics) => boolean> = {
   // CP6
   "b-cp6-mastered-60": (m) => m.masteredCount >= 60,
   "b-cp6-review-clean": (m) => m.completedTotal >= 30 && m.reviewCount <= 2,
-  "b-cp6-high-readiness": (m) => m.readinessPct >= 80,
+  "b-cp6-high-readiness": (m) => m.highReadiness,
   "b-cp6-word-100": (m) => m.wordMasteredCount >= 100,
   "b-cp6-perfect-20": (m) => m.perfectCount >= 20,
   "b-cp6-final": (m) => m.finalPassedCheckpointIds.has("cp6"),

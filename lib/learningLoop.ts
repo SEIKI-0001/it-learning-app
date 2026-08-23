@@ -304,27 +304,6 @@ export function updateLearningLoopProgress(
   };
 }
 
-export type ExamReadiness = {
-  score: number;
-  evaluatedTopicCount: number;
-  weakTopicCount: number;
-};
-
-/** P0の将来拡張用インターフェース。UI表示は既存の統合準備度を維持する。 */
-export function computeExamReadiness(
-  statsByTopic: Record<string, TopicMasteryStats>,
-): ExamReadiness {
-  const values = Object.values(statsByTopic).filter((item) => item.lastEvaluatedAt);
-  return {
-    score:
-      values.length === 0
-        ? 0
-        : Math.round(values.reduce((sum, item) => sum + item.masteryScore, 0) / values.length),
-    evaluatedTopicCount: values.length,
-    weakTopicCount: getWeakTopics(statsByTopic).length,
-  };
-}
-
 export function buildTodaysLearningQueue(input: {
   progress: UserProgress;
   topics: Topic[];

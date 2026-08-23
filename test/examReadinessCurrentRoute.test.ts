@@ -9,6 +9,7 @@ vi.mock("server-only", () => ({}));
 
 const mocks = vi.hoisted(() => ({
   getInternalUserId: vi.fn(),
+  getRequestUserId: vi.fn(),
   getRequestUserIdFast: vi.fn(),
   getServiceSupabase: vi.fn(),
   getCurrentReadiness: vi.fn(),
@@ -16,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   getLatestOrRefreshIntegratedStatus: vi.fn(),
   getLatestPlanAdjustmentProposal: vi.fn(),
   generatePlanAdjustmentForUser: vi.fn(),
+  refreshIntegratedStatusForUser: vi.fn(),
 }));
 
 const TemporaryReadinessError = vi.hoisted(() => class extends Error {
@@ -33,6 +35,7 @@ vi.mock("@/lib/auth/currentUser", () => ({
   getInternalUserId: mocks.getInternalUserId,
 }));
 vi.mock("@/lib/apiUser", () => ({
+  getRequestUserId: mocks.getRequestUserId,
   getRequestUserIdFast: mocks.getRequestUserIdFast,
 }));
 vi.mock("@/lib/supabaseServer", () => ({
@@ -50,13 +53,16 @@ vi.mock("@/lib/progressBootstrap", async (importOriginal) => ({
   getLatestOrRefreshIntegratedStatus: mocks.getLatestOrRefreshIntegratedStatus,
   getLatestPlanAdjustmentProposal: mocks.getLatestPlanAdjustmentProposal,
   generatePlanAdjustmentForUser: mocks.generatePlanAdjustmentForUser,
+  refreshIntegratedStatusForUser: mocks.refreshIntegratedStatusForUser,
 }));
 
 import { GET } from "@/app/api/exam-readiness/current/route";
 import { POST as progressBootstrap } from "@/app/api/progress/bootstrap/route";
+import { POST as refreshIntegratedStatusRoute } from "@/app/api/integrated-status/refresh/route";
 import {
   fetchCurrentExamReadiness,
   fetchProgressBootstrap,
+  refreshIntegratedStatus,
 } from "@/lib/userSession";
 
 const USER_ID = "10000000-0000-0000-0000-000000000001";
@@ -277,6 +283,56 @@ describe("readiness bootstrap clients", () => {
 
     await expect(fetchProgressBootstrap()).resolves.toMatchObject({
       userId: USER_ID,
+      examReadiness: READINESS,
+    });
+    vi.unstubAllGlobals();
+  });
+
+  it("shares one current result with Today's schedule refresh and returns it to the client", async () => {
+    const integratedStatus = { overallStatus: "on_track" };
+    mocks.getRequestUserId.mockResolvedValue(USER_ID);
+    mocks.getServiceSupabase.mockReturnValue(SUPABASE);
+    mocks.getCurrentReadiness.mockResolvedValue(READINESS);
+    mocks.refreshIntegratedStatusForUser.mockImplementation(
+      async (_supabase, _userId, options) => {
+        expect(await options.examReadiness).toEqual(READINESS);
+        return { status: integratedStatus, row: null, saved: true };
+      },
+    );
+
+    const response = await refreshIntegratedStatusRoute(new Request(
+      "https://example.test/api/integrated-status/refresh",
+      { method: "POST", body: "{}" },
+    ));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      status: integratedStatus,
+      examReadiness: READINESS,
+    });
+    expect(mocks.getCurrentReadiness).toHaveBeenCalledOnce();
+    expect(mocks.refreshIntegratedStatusForUser).toHaveBeenCalledWith(
+      SUPABASE,
+      USER_ID,
+      expect.objectContaining({
+        now: expect.any(Date),
+        examReadiness: expect.any(Promise),
+      }),
+    );
+  });
+
+  it("keeps the complete result in the schedule-refresh client contract", async () => {
+    const integratedStatus = { overallStatus: "on_track" };
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      ok: true,
+      status: integratedStatus,
+      examReadiness: READINESS,
+    }), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(refreshIntegratedStatus(USER_ID)).resolves.toEqual({
+      status: integratedStatus,
       examReadiness: READINESS,
     });
     vi.unstubAllGlobals();

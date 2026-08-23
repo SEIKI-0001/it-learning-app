@@ -7,6 +7,8 @@ import {
 } from "@/lib/mockExam";
 import { buildTodaysLearningQueue, getWeakTopics } from "@/lib/learningLoop";
 import { getAllTopics } from "@/lib/content";
+import { computeIntegratedStatus } from "@/lib/integratedStatus";
+import { makeExamReadinessResult } from "@/test/fixtures/examReadiness/result";
 
 function state(): AppState {
   return {
@@ -116,4 +118,38 @@ it("connects topic study, summary exam weakness, and successful review", () => {
     missed.progress.topicMastery["tech-binary-data"],
   );
   expect(reviewed.progress.reviewQueue[0].dueAt).toBe("2026-08-18T00:00:00.000Z");
+});
+
+it("keeps schedule health separate while compatibility readiness follows the shared result", () => {
+  const inputs = {
+    statusDate: "2026-08-22",
+    now: new Date("2026-08-22T00:00:00.000Z"),
+    daysUntilExam: 30,
+    topics: [
+      { id: "strategy-topic", field: "strategy" as const, title: "戦略" },
+      { id: "management-topic", field: "management" as const, title: "管理" },
+      { id: "technology-topic", field: "technology" as const, title: "技術" },
+    ],
+    topicProgress: [],
+    wordProgress: [],
+    totalWordCount: 100,
+    recentReports: [{ estimatedCompletionRate: 80 }],
+    examLevelAttempts: [],
+  };
+  const low = computeIntegratedStatus({
+    ...inputs,
+    examReadiness: makeExamReadinessResult({ score: 20, band: "needs_work" }),
+  });
+  const high = computeIntegratedStatus({
+    ...inputs,
+    examReadiness: makeExamReadinessResult({
+      score: 88,
+      band: "stable",
+      confidence: { score: 85, level: "high", reasons: [] },
+    }),
+  });
+
+  expect(low.readinessScore).toBe(20);
+  expect(high.readinessScore).toBe(88);
+  expect(low.overallStatus).toBe(high.overallStatus);
 });

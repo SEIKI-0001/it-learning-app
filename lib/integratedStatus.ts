@@ -1,12 +1,11 @@
 import type { TopicField } from "@/types/content";
+import type { ExamReadinessResult } from "@/types/examReadiness";
 import {
   UNDERSTOOD_STAGES,
   type TopicStage,
 } from "@/types/studyProgress";
 import {
   DIRECT_PERIOD_DAYS,
-  READINESS_WEIGHTS_DIRECT,
-  READINESS_WEIGHTS_NORMAL,
   RISK_THRESHOLDS,
   STATUS_THRESHOLDS,
   focusHintMessage,
@@ -14,7 +13,6 @@ import {
   type IntegratedLearningStatus,
   type MainRisk,
   type OverallStatus,
-  type ReadinessWeights,
   type RecommendedFocus,
   type WeakTopic,
 } from "@/types/integratedStatus";
@@ -71,6 +69,8 @@ export type IntegratedStatusInputs = {
   examLevelAttempts: IntegratedExamAttempt[];
   /** 参考書の章消化率（0〜100）。参考書未登録・章0件・使用中でない場合は null。 */
   referenceBookRatio?: number | null;
+  /** Sole source for the legacy readiness_score compatibility column. */
+  examReadiness: ExamReadinessResult | null;
 };
 
 const ALL_FIELDS: TopicField[] = ["technology", "management", "strategy"];
@@ -151,10 +151,11 @@ function decideRecommendedFocus(args: {
 
 /**
  * 総合ステータスを決める（重い順に評価し、最初に該当したものを返す）。
- * readiness のバンドに加え、リスク（過去問レベル低迷・weak 多数・復習滞留）でも段階を落とす。
+ * 予定に対する学習進捗と、学習ペース上のリスクから段階を決める。
+ * Exam Readiness の score/band はここへ混ぜない。
  */
 function decideOverallStatus(args: {
-  readinessScore: number;
+  inputProgressRate: number;
   daysUntilExam: number | null;
   examReadyRate: number;
   examLevelLow: boolean;
@@ -172,22 +173,22 @@ function decideOverallStatus(args: {
     return "consultation_needed";
   }
 
-  // 立て直しが必要：readiness 極端に低い、または過去問レベル低迷。
-  if (args.readinessScore < t.delayed || args.examLevelLow) {
+  // 立て直しが必要：予定に対する進捗が極端に低い、または本番演習が低迷。
+  if (args.inputProgressRate < t.delayed || args.examLevelLow) {
     return "recovery_needed";
   }
 
-  // 遅れ：readiness 中低位、または weak が一定数以上。
+  // 遅れ：予定に対する進捗が中低位、または weak が一定数以上。
   if (
-    args.readinessScore < t.slightlyDelayed ||
+    args.inputProgressRate < t.slightlyDelayed ||
     args.weakTopicCount >= t.weakDelayedCount
   ) {
     return "delayed";
   }
 
-  // 少し遅れ：readiness やや低位、または軽微な復習滞留。
+  // 少し遅れ：予定に対する進捗がやや低位、または軽微な復習滞留。
   if (
-    args.readinessScore < t.onTrack ||
+    args.inputProgressRate < t.onTrack ||
     args.reviewNeededTopicCount >= t.reviewMinorCount
   ) {
     return "slightly_delayed";
@@ -216,7 +217,7 @@ function collectMainRisks(args: {
     risks.push({
       type: "exam_level_low",
       label: "過去問レベル問題の正答率が伸びていません",
-      detail: `直近の正答率は約${args.examLevelAccuracy}%。本番形式の問題に慣れる時間をとりましょう。`,
+      detail: `直近の正答は約${args.examLevelAccuracy}/100です。本番形式の問題に慣れる時間をとりましょう。`,
     });
   }
 
@@ -296,11 +297,8 @@ function buildMessage(
 /**
  * 統合進捗判定を計算する。
  *
- * readiness_score は各指標（0〜100）の加重平均:
- *   score = Σ( weight_i / 100 × rate_i )
- *   - 通常期の重み: input 10 / basic 30 / terms 25 / exam 25 / balance 10
- *   - 直前期の重み: input  5 / basic 20 / terms 25 / exam 40 / balance 10
- *   - 直前期の条件: 試験14日以内、または exam_ready が1件以上ある。
+ * readiness_score は既存 DB 契約の互換列であり、共有 Exam Readiness の score
+ * だけを書き写す。予定の健全性（overallStatus）は別に計算する。
  */
 export function computeIntegratedStatus(
   inputs: IntegratedStatusInputs,
@@ -355,7 +353,7 @@ export function computeIntegratedStatus(
     .map((r) => r.estimatedCompletionRate)
     .filter((r): r is number => typeof r === "number");
   // 自己申告平均と参考書の章消化率の高い方を採用する。
-  // 申告を忘れていても、参考書を読み進めた実績が準備度に乗るようにするため。
+  // 申告を忘れていても、参考書を読み進めた実績が予定進捗に乗るようにするため。
   const selfReportRate = Math.round(average(reportRates));
   const inputProgressRate =
     inputs.referenceBookRatio == null
@@ -367,24 +365,13 @@ export function computeIntegratedStatus(
     understoodTopicIds,
   );
 
-  // --- 直前期判定と readiness ---
+  // --- 直前期判定と互換 readiness_score ---
   const directPeriod =
     (inputs.daysUntilExam != null &&
       inputs.daysUntilExam <= DIRECT_PERIOD_DAYS) ||
     examReadyTopicCount >= 1;
 
-  const weights: ReadinessWeights = directPeriod
-    ? READINESS_WEIGHTS_DIRECT
-    : READINESS_WEIGHTS_NORMAL;
-
-  const readinessScore = Math.round(
-    (weights.input * inputProgressRate +
-      weights.basic * basicUnderstandingRate +
-      weights.terms * flashcardMasteryRate +
-      weights.exam * examReadyRate +
-      weights.balance * fieldBalanceScore) /
-      100,
-  );
+  const readinessScore = inputs.examReadiness?.score ?? 0;
 
   // --- リスク素材 ---
   const examLevelAccuracy = computeExamLevelAccuracy(inputs.examLevelAttempts);
@@ -406,7 +393,7 @@ export function computeIntegratedStatus(
 
   // --- 総合ステータス・推奨配分・リスク・メッセージ ---
   const overallStatus = decideOverallStatus({
-    readinessScore,
+    inputProgressRate,
     daysUntilExam: inputs.daysUntilExam,
     examReadyRate,
     examLevelLow,

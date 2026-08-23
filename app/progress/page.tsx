@@ -30,6 +30,7 @@ import NextUnlocks from "@/components/progress/NextUnlocks";
 import JourneyLedger from "@/components/progress/JourneyLedger";
 import LoadingScreen from "@/components/LoadingScreen";
 import { useCountUp } from "@/lib/useCountUp";
+import ExamReadinessCard from "@/components/progress/ExamReadinessCard";
 
 // 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
 function daysSince(iso: string | undefined): number | null {
@@ -129,9 +130,6 @@ export default function ProgressPage() {
   const mastery = fieldMastery(progress, topics, state.answers);
   const summary = computeProgressSummary(topics, progress, state.answers);
   const completedCount = summary.completedCount;
-  // 合格準備度は統合進捗(readinessScore)を正とする。
-  // 未取得（未ログイン・Supabase未設定・読込中失敗）のときだけローカル推定にフォールバック。
-  const overall = bootstrap?.integratedStatus?.readinessScore ?? summary.readinessPct;
   const earnedBadgeCount = getCheckpointProgress(state).earnedBadges.length;
   const proposal = bootstrap?.planAdjustmentProposal ?? null;
 
@@ -158,25 +156,11 @@ export default function ProgressPage() {
             </p>
           </div>
 
-          {/* Primary: 合格準備度をこの画面の主指標として横幅いっぱいで示す */}
-          <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-xs font-semibold text-brand-700">合格準備度</p>
-              <p className="text-2xl font-bold tabular-nums text-gray-900">
-                {overall}
-                <span className="ml-0.5 text-sm font-normal text-gray-600">%</span>
-              </p>
-            </div>
-            <div
-              className="mt-2 h-2 overflow-hidden rounded-full bg-gray-200"
-              role="progressbar"
-              aria-label="合格準備度"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={overall}
-            >
-              <div className="h-full rounded-full bg-brand-600" style={{ width: `${overall}%` }} />
-            </div>
+          <div className="mt-4">
+            <ExamReadinessCard
+              result={bootstrap?.examReadiness ?? null}
+              loading={bootstrapLoading && !bootstrap?.examReadiness}
+            />
           </div>
 
           {/* Secondary: 試験までの日数・連続学習は準備度より一段弱く2列で示す */}

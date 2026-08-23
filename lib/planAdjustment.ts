@@ -1,13 +1,18 @@
 // リカバリ案・計画修正（第4弾）— 提案生成ロジック（純粋関数・ルールベース）
 //
 // 設計方針:
-//   - AI連携は使わない。統合進捗（IntegratedLearningStatus）から遅れ・弱点・リスクを検知し、
+//   - AI連携は使わない。Exam Readiness と予定の健全性を別入力として扱い、
 //     複数の立て直し案をルールベースで組み立てる（再現性を優先）。
 //   - ユーザーを責めない。自己申告だけで理解度・本番対応力は上げない。
-//   - 受験日延期（postpone_exam）は常に選択肢として提示する（合格可能性を上げる選択肢）。
+//   - 受験日延期（postpone_exam）は常に選択肢として提示する。
 //   - このファイルは DB・React に依存しない（サーバーから安全に import できる）。
 
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
+import type { ExamReadinessResult, ReadinessFieldScore } from "@/types/examReadiness";
+import {
+  primaryImprovementLabel,
+  readinessResultLabel,
+} from "@/lib/examReadiness/presentation";
 import {
   OPTION_ID,
   type AdjustmentSeverity,
@@ -29,14 +34,10 @@ export const ADJUSTMENT_THRESHOLDS = {
   weakTopicCount: 3,
   /** weak トピックがこの数以上で severe 寄り。 */
   weakTopicSevere: 5,
-  /** 本番対応率がこれ未満で提案対象。 */
-  examReadyRateLow: 30,
   /** 用語定着率がこれ未満で提案対象。 */
   flashcardRateLow: 50,
   /** 試験までこの日数以内を「直前期」とみなす。 */
   nearExamDays: 7,
-  /** 直前期に本番対応OKトピックがこの数未満なら不足とみなす。 */
-  nearExamReadyMin: 5,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -71,7 +72,31 @@ type TriggerFlags = {
   nearExam: boolean;
 };
 
-function detectTriggers(ctx: PlanAdjustmentContext): TriggerFlags {
+function relevantScoredFields(
+  readiness: ExamReadinessResult | null,
+): ReadinessFieldScore[] {
+  if (!readiness) return [];
+
+  const improvement = readiness.primaryImprovement;
+  if (improvement?.code === "improve_field") {
+    const savedField = readiness.fields.find(
+      (field) => field.fieldId === improvement.fieldId,
+    );
+    return savedField ? [savedField] : [];
+  }
+
+  // A saved improvement owns the next action. Do not independently rank or
+  // substitute another field even when its raw score looks lower.
+  if (improvement) return [];
+  return readiness.fields.filter(
+    (field) => field.score !== null && field.score < 60,
+  );
+}
+
+function detectTriggers(
+  ctx: PlanAdjustmentContext,
+  readiness: ExamReadinessResult | null,
+): TriggerFlags {
   const { status, daysUntilExam } = ctx;
   const t = ADJUSTMENT_THRESHOLDS;
 
@@ -83,14 +108,29 @@ function detectTriggers(ctx: PlanAdjustmentContext): TriggerFlags {
   const nearExam =
     daysUntilExam !== null &&
     daysUntilExam <= t.nearExamDays &&
-    status.examReadyTopicCount < t.nearExamReadyMin;
+    readiness !== null &&
+    readiness.band !== "ready" &&
+    readiness.band !== "stable";
 
   const lowDaily = status.mainRisks.some((r) => r.type === "daily_progress_low");
+  const improvement = readiness?.primaryImprovement?.code;
+  const lowScore = readiness?.score !== null
+    && readiness?.score !== undefined
+    && readiness.score < t.readinessLow;
+  const lowField = readiness?.fields.some(
+    (field) => field.score !== null && field.score < 60,
+  ) ?? false;
 
   return {
-    delay: delayedStatus || status.readinessScore < t.readinessLow,
-    weakTopics: status.weakTopicCount >= t.weakTopicCount,
-    lowExamReady: status.examReadyRate < t.examReadyRateLow,
+    delay: delayedStatus || lowScore || improvement === "collect_more_evidence",
+    weakTopics:
+      (readiness?.weakTopics.length ?? 0) >= t.weakTopicCount
+      || improvement === "review_weak_topic"
+      || improvement === "improve_retention",
+    lowExamReady:
+      lowField
+      || improvement === "improve_field"
+      || improvement === "take_summative_assessment",
     lowFlashcard: status.flashcardMasteryRate < t.flashcardRateLow,
     lowDaily,
     nearExam,
@@ -98,8 +138,30 @@ function detectTriggers(ctx: PlanAdjustmentContext): TriggerFlags {
 }
 
 /** 最も優先度の高いトリガーを主トリガーとして選ぶ（表示の見出しに使う）。 */
-function primaryTrigger(flags: TriggerFlags): AdjustmentTriggerType | null {
+function improvementTrigger(
+  readiness: ExamReadinessResult | null,
+): AdjustmentTriggerType | null {
+  switch (readiness?.primaryImprovement?.code) {
+    case "collect_more_evidence":
+      return "delay";
+    case "improve_field":
+    case "take_summative_assessment":
+      return "low_exam_ready";
+    case "review_weak_topic":
+    case "improve_retention":
+      return "weak_topics";
+    case undefined:
+      return null;
+  }
+}
+
+function primaryTrigger(
+  flags: TriggerFlags,
+  readiness: ExamReadinessResult | null,
+): AdjustmentTriggerType | null {
   if (flags.nearExam) return "near_exam";
+  const savedImprovementTrigger = improvementTrigger(readiness);
+  if (savedImprovementTrigger) return savedImprovementTrigger;
   if (flags.lowExamReady) return "low_exam_ready";
   if (flags.weakTopics) return "weak_topics";
   if (flags.delay) return "delay";
@@ -109,20 +171,28 @@ function primaryTrigger(flags: TriggerFlags): AdjustmentTriggerType | null {
 }
 
 /** 重大度を決める。on_track の除外は呼び出し側（generate）が別途行う。 */
-function decideSeverity(ctx: PlanAdjustmentContext, flags: TriggerFlags): AdjustmentSeverity {
+function decideSeverity(
+  ctx: PlanAdjustmentContext,
+  flags: TriggerFlags,
+  readiness: ExamReadinessResult | null,
+): AdjustmentSeverity {
   const { status, daysUntilExam } = ctx;
   const t = ADJUSTMENT_THRESHOLDS;
 
   const nearExamSevere =
     daysUntilExam !== null &&
     daysUntilExam <= t.nearExamDays &&
-    status.examReadyRate < t.examReadyRateLow;
+    readiness !== null &&
+    readiness.band !== "ready" &&
+    readiness.band !== "stable";
 
   if (
     status.overallStatus === "consultation_needed" ||
     status.overallStatus === "recovery_needed" ||
-    status.readinessScore < t.readinessSevere ||
-    status.weakTopicCount >= t.weakTopicSevere ||
+    (readiness?.score !== null
+      && readiness?.score !== undefined
+      && readiness.score < t.readinessSevere) ||
+    (readiness?.weakTopics.length ?? 0) >= t.weakTopicSevere ||
     nearExamSevere
   ) {
     return "severe";
@@ -130,7 +200,9 @@ function decideSeverity(ctx: PlanAdjustmentContext, flags: TriggerFlags): Adjust
 
   const moderate =
     status.overallStatus === "delayed" ||
-    status.readinessScore < t.readinessLow ||
+    (readiness?.score !== null
+      && readiness?.score !== undefined
+      && readiness.score < t.readinessLow) ||
     flags.weakTopics ||
     flags.lowExamReady;
 
@@ -161,32 +233,48 @@ function buildHeadline(trigger: AdjustmentTriggerType): string {
 function buildReasonSummary(
   ctx: PlanAdjustmentContext,
   flags: TriggerFlags,
+  readiness: ExamReadinessResult | null,
+  trigger: AdjustmentTriggerType,
 ): string {
   const { status, daysUntilExam } = ctx;
   const parts: string[] = [];
+  const relevantFields = relevantScoredFields(readiness);
 
   if (flags.nearExam && daysUntilExam !== null) {
-    parts.push(
-      `試験まであと${daysUntilExam}日ですが、本番対応OKのトピックが${status.examReadyTopicCount}件です`,
-    );
+    parts.push(`試験まであと${daysUntilExam}日です`);
   }
-  if (flags.weakTopics) {
-    parts.push(`苦手・要復習のトピックが${status.weakTopicCount}件たまっています`);
+  if (trigger === "weak_topics" && flags.weakTopics && readiness) {
+    const labels = readiness.weakTopics.slice(0, 3).map((topic) => `「${topic.label}」`);
+    parts.push(labels.length > 0
+      ? `見直したい Weak Topic は${labels.join("・")}です`
+      : "定着を確かめる復習が必要です");
   }
-  if (flags.lowExamReady) {
-    parts.push(`過去問レベルの正答が${status.examReadyRate}%で、本番対応力を伸ばす余地があります`);
+  if (trigger === "low_exam_ready" && flags.lowExamReady) {
+    const scoredFields = relevantFields
+      .filter((field) => field.score !== null);
+    const fieldSummary = scoredFields.length === 1
+      ? `${scoredFields[0].label}は${scoredFields[0].score}/100`
+      : scoredFields.map((field) => `${field.label} ${field.score}/100`).join("・");
+    parts.push(fieldSummary
+      ? `${fieldSummary}を重点的に伸ばせます`
+      : "本番形式テストの判定材料を増やす段階です");
   }
   if (flags.lowFlashcard) {
-    parts.push(`用語の定着が${status.flashcardMasteryRate}%で、あと少しで安定します`);
+    parts.push(`用語の定着は${status.flashcardMasteryRate}/100で、あと少しで安定します`);
   }
   if (flags.lowDaily) {
     parts.push("ここ最近は少しペースが落ちています");
   }
-  if (parts.length === 0) {
-    parts.push(`いまの合格準備度は${status.readinessScore}%です`);
+  if (parts.length === 0 && readiness) {
+    parts.push(`いまの合格準備度は${readinessResultLabel(readiness)}です`);
   }
+  const improvement = readiness
+    ? primaryImprovementLabel(readiness.primaryImprovement, readiness)
+    : null;
+  if (improvement) parts.push(`次の一歩は${improvement}`);
+  if (parts.length === 0) parts.push("最近の学習ペースを整える時期です");
 
-  return `${parts.join("。")}。今のうちに配分を見直すと、合格可能性を上げられます。`;
+  return `${parts.join("。")}。今のうちに配分を見直して、準備を進めましょう。`;
 }
 
 // ---------------------------------------------------------------------------
@@ -216,9 +304,9 @@ function balancedOption(): RecoveryPlanOption {
   };
 }
 
-function weakFocusOption(status: IntegratedLearningStatus): RecoveryPlanOption {
+function weakFocusOption(readiness: ExamReadinessResult | null): RecoveryPlanOption {
   const focus: RecoveryFocus = { textbook: 10, review: 65, examPractice: 25 };
-  const weakNames = status.weakTopics.slice(0, 3).map((w) => w.title);
+  const weakNames = readiness?.weakTopics.slice(0, 3).map((topic) => topic.label) ?? [];
   const actions = [
     weakNames.length > 0
       ? `苦手トピック（${weakNames.join("・")}）の確認問題を優先する`
@@ -234,12 +322,14 @@ function weakFocusOption(status: IntegratedLearningStatus): RecoveryPlanOption {
     focus,
     actions,
     tradeoff: "新しい範囲の学習は一時的にゆっくりになります。",
-    estimatedImpact: weakImpact(status.weakTopicCount),
+    estimatedImpact: weakImpact(readiness?.weakTopics.length ?? 0),
   };
 }
 
-function examFocusOption(status: IntegratedLearningStatus): RecoveryPlanOption {
+function examFocusOption(readiness: ExamReadinessResult | null): RecoveryPlanOption {
   const focus: RecoveryFocus = { textbook: 5, review: 30, examPractice: 65 };
+  const relevantFields = relevantScoredFields(readiness);
+  const fieldNames = relevantFields.map((field) => `「${field.label}」`).join("・");
   return {
     optionId: OPTION_ID.examFocus,
     title: "本番対応優先案",
@@ -248,12 +338,16 @@ function examFocusOption(status: IntegratedLearningStatus): RecoveryPlanOption {
     focus,
     actions: [
       "確認パック（確認問題＋単語＋過去問レベル）を回す",
+      fieldNames
+        ? `${fieldNames}の問題を優先する`
+        : "判定材料が少ない分野から問題に答える",
       "過去問レベル問題で本番の時間感覚に慣れる",
-      "間違えた論点だけ参考書に戻って確認する",
     ],
     tradeoff: "基礎があいまいなトピックは、別途復習が必要になることがあります。",
     estimatedImpact:
-      status.examReadyRate < ADJUSTMENT_THRESHOLDS.examReadyRateLow ? "large" : "medium",
+      relevantFields.some((field) => field.score !== null && field.score < 40)
+        ? "large"
+        : "medium",
   };
 }
 
@@ -271,7 +365,7 @@ function postponeExamOption(): RecoveryPlanOption {
       "焦らず、合格ラインに届く準備を整える",
     ],
     tradeoff:
-      "受験のタイミングは後ろにずれますが、合格可能性を上げるための前向きな選択です。",
+      "受験のタイミングは後ろにずれますが、準備時間を確保するための前向きな選択です。",
     estimatedImpact: "large",
     requiresExamDateChange: true,
   };
@@ -302,12 +396,13 @@ function shortSprintOption(): RecoveryPlanOption {
 function buildOptions(
   ctx: PlanAdjustmentContext,
   severity: AdjustmentSeverity,
+  readiness: ExamReadinessResult | null,
 ): RecoveryPlanOption[] {
-  const { status, daysUntilExam } = ctx;
+  const { daysUntilExam } = ctx;
   const options: RecoveryPlanOption[] = [
     balancedOption(),
-    weakFocusOption(status),
-    examFocusOption(status),
+    weakFocusOption(readiness),
+    examFocusOption(readiness),
     postponeExamOption(),
   ];
 
@@ -326,28 +421,26 @@ function buildOptions(
 // ---------------------------------------------------------------------------
 
 /**
- * 統合進捗から立て直し提案を組み立てる。
- * 提案不要（on_track・重大リスクなし）なら null を返す。
+ * 予定の健全性と共有 Exam Readiness から立て直し提案を組み立てる。
+ * どちらにも提案トリガーが無ければ null を返す。
  * 「同日 proposed が既に存在」の重複回避は呼び出し側（API）で行う。
  */
 export function buildPlanAdjustmentProposal(
   ctx: PlanAdjustmentContext,
+  readiness: ExamReadinessResult | null,
 ): GeneratedProposal | null {
-  // on_track は提案しない。
-  if (ctx.status.overallStatus === "on_track") return null;
-
-  const flags = detectTriggers(ctx);
-  const trigger = primaryTrigger(flags);
+  const flags = detectTriggers(ctx, readiness);
+  const trigger = primaryTrigger(flags, readiness);
   // どのトリガーも立っていなければ提案不要（重大リスクなし）。
   if (!trigger) return null;
 
-  const severity = decideSeverity(ctx, flags);
+  const severity = decideSeverity(ctx, flags, readiness);
 
   return {
     triggerType: trigger,
     severity,
     headline: buildHeadline(trigger),
-    reasonSummary: buildReasonSummary(ctx, flags),
-    options: buildOptions(ctx, severity),
+    reasonSummary: buildReasonSummary(ctx, flags, readiness, trigger),
+    options: buildOptions(ctx, severity, readiness),
   };
 }

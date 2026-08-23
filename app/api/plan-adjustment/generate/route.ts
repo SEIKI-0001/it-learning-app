@@ -9,11 +9,12 @@ import {
   type PlanAdjustmentRow,
 } from "@/lib/dbMappers";
 import { buildPlanAdjustmentProposal } from "@/lib/planAdjustment";
+import { getCurrentReadiness } from "@/lib/examReadiness/service";
 
 export const runtime = "nodejs";
 
 // POST /api/plan-adjustment/generate
-// 最新の integrated_learning_status からルールベースで立て直し提案を生成し保存する。
+// 共有 Exam Readiness と予定の健全性からルールベースで立て直し提案を生成し保存する。
 // body: { userId? }
 // 返却: { ok, proposal | null }
 //
@@ -97,11 +98,13 @@ export async function POST(request: Request) {
   const examDate =
     (profile as { exam_date: string | null } | null)?.exam_date ?? null;
 
+  const now = new Date();
+  const readiness = await getCurrentReadiness({ supabase, userId, now });
   const generated = buildPlanAdjustmentProposal({
     statusDate,
     status,
-    daysUntilExam: daysUntil(examDate, new Date()),
-  });
+    daysUntilExam: daysUntil(examDate, now),
+  }, readiness);
 
   // 提案不要。
   if (!generated) {

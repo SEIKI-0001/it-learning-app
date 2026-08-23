@@ -24,6 +24,17 @@ afterEach(() => {
 });
 
 describe("landing page campaign route", () => {
+  it("presents Exam Readiness as an evidence score rather than a probability", () => {
+    render(<LandingPage />);
+
+    const readinessCaption = screen.getByText("合格準備度");
+    expect(readinessCaption.parentElement).toHaveTextContent("68/100");
+    expect(readinessCaption.parentElement).toHaveTextContent("あと一歩");
+    expect(readinessCaption.parentElement?.textContent).not.toMatch(/合格率|合格確率|%/);
+    expect(screen.getByText(/実際の問題への回答と定着から判定/)).toBeInTheDocument();
+    expect(screen.getByText(/次の一歩：.*経営のことば/)).toBeInTheDocument();
+  });
+
   it("links to the approved offer without replacing normal pricing", () => {
     render(<LandingPage />);
     expect(

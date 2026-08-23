@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { AppState } from "@/types";
-import type { BadgeSignals } from "@/lib/badges";
 import { buildBadgeStatuses, selectNextBadges } from "@/lib/badges";
+import { getClientBadgeSignals } from "@/lib/badgeSignals";
+import type { ExamReadinessResult } from "@/types/examReadiness";
 import {
   buildCheckpointGate,
   getCheckpoint,
@@ -32,10 +33,12 @@ import {
 // 各行は独立にフェイルセーフ：未ログイン・未設定・取得失敗ならその行だけ出さない。
 export default function TodayPolicyStrip({
   state,
-  signals,
+  examReadiness,
+  onExamReadiness,
 }: {
   state: AppState;
-  signals?: BadgeSignals;
+  examReadiness: ExamReadinessResult | null;
+  onExamReadiness: (result: ExamReadinessResult | null) => void;
 }) {
   const [status, setStatus] = useState<IntegratedLearningStatus | null>(null);
   const [proposal, setProposal] = useState<PlanAdjustmentProposal | null>(null);
@@ -44,8 +47,11 @@ export default function TodayPolicyStrip({
     let alive = true;
     const userId = getUserId();
     if (!userId) return;
-    void refreshIntegratedStatus(userId).then((s) => {
-      if (alive) setStatus(s);
+    void refreshIntegratedStatus(userId).then((result) => {
+      if (alive && result) {
+        setStatus(result.status);
+        onExamReadiness(result.examReadiness);
+      }
     });
     void fetchLatestPlanAdjustment(userId).then((p) => {
       if (alive) setProposal(p);
@@ -53,7 +59,7 @@ export default function TodayPolicyStrip({
     return () => {
       alive = false;
     };
-  }, []);
+  }, [onExamReadiness]);
 
   const cpProgress = getCheckpointProgress(state);
   const checkpoint = getCheckpoint(cpProgress.currentCheckpointId);
@@ -62,7 +68,11 @@ export default function TodayPolicyStrip({
 
   // 次に狙うバッジ（最終問題バッジ除く・共通ロジックで1件）。
   const nextBadge = selectNextBadges(
-    buildBadgeStatuses(state, signals, checkpoint.id).filter(
+    buildBadgeStatuses(
+      state,
+      getClientBadgeSignals(examReadiness),
+      checkpoint.id,
+    ).filter(
       (s) => s.def.category !== "final",
     ),
     1,

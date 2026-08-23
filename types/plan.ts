@@ -121,8 +121,7 @@ export type LearningPlan = {
   reschedule: RescheduleAdvice;
 
   // 全体像・進捗
-  // メモ: 合格準備度はここでは持たない。統合進捗（integrated_learning_status の
-  // readinessScore）が唯一のユーザー向け準備度。
+  // メモ: 合格準備度はここでは持たない。共有 ExamReadinessResult が唯一の準備度。
   completedTopicCount: number;
   totalTopicCount: number;
   message: string; // ユーザー向けの一言方針

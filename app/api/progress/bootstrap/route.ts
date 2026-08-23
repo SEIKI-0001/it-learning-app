@@ -47,19 +47,30 @@ export async function POST(request: Request) {
   }
 
   const now = new Date();
+  const examReadinessPromise = getProgressBootstrapExamReadiness(
+    supabase,
+    userId,
+    now,
+  );
   // 立て直し提案の「最新取得」は統合進捗に依存しないため並列で走らせ、
   // 依存が必要な「生成」（提案が無いときだけ）のみ後段で行う。
   const [appState, integrated, latestProposal, examReadiness] = await Promise.all([
     loadAppStateForUser(userId),
-    getLatestOrRefreshIntegratedStatus(supabase, userId, now),
+    getLatestOrRefreshIntegratedStatus(supabase, userId, now, examReadinessPromise),
     getLatestPlanAdjustmentProposal(supabase, userId),
-    getProgressBootstrapExamReadiness(supabase, userId, now),
+    examReadinessPromise,
   ]);
 
   const planAdjustmentProposal =
     latestProposal ??
     (integrated.status
-      ? await generatePlanAdjustmentForUser(supabase, userId, integrated.row, now)
+      ? await generatePlanAdjustmentForUser(
+          supabase,
+          userId,
+          integrated.row,
+          now,
+          examReadiness,
+        )
       : null);
 
   return NextResponse.json({
