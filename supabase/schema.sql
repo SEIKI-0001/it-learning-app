@@ -1,7 +1,7 @@
 -- GENERATED SNAPSHOT — DO NOT EDIT OR APPLY MANUALLY.
 -- Source of truth: supabase/migrations.
 -- Regenerate from a local database rebuilt from the active migrations with:
--- supabase db dump --local --schema public --file supabase/schema.sql
+-- scripts/generate-supabase-schema.sh
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;

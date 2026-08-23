@@ -19,10 +19,18 @@ Regenerate the snapshot only after rebuilding a disposable local Supabase databa
 
 ```bash
 supabase db reset --local --no-seed
-supabase db dump --local --schema public --file supabase/schema.sql
+scripts/generate-supabase-schema.sh
 ```
 
-Restore the generated warning header after the dump.
+The generator runs a schema-only `supabase db dump` into a same-filesystem temporary directory, writes the canonical generated-warning header and normalized dump body to a candidate file, and atomically replaces `supabase/schema.sql` only after the dump succeeds. Do not run `supabase db dump` directly into the snapshot or restore the header by hand.
+
+The generator uses `--local` when no database selector is supplied. To generate from a uniquely named disposable database exposed on localhost, pass its percent-encoded connection URL as one quoted argument:
+
+```bash
+scripts/generate-supabase-schema.sh --db-url "$DISPOSABLE_DATABASE_URL"
+```
+
+Additional safe Supabase CLI options such as `--workdir` pass through without shell evaluation. The generator does not print its arguments and rejects `--linked`, caller-owned `--file`/`--schema`, non-schema dump modes, conflicting selectors, and debug mode. Keep connection URLs out of command traces and reports.
 
 ## Catalog verification
 
