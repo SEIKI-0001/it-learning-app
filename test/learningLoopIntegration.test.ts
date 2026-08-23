@@ -8,6 +8,10 @@ import {
 import { buildTodaysLearningQueue, getWeakTopics } from "@/lib/learningLoop";
 import { getAllTopics } from "@/lib/content";
 import { computeIntegratedStatus } from "@/lib/integratedStatus";
+import {
+  integratedStatusRowToStatus,
+  integratedStatusToRow,
+} from "@/lib/dbMappers";
 import { makeExamReadinessResult } from "@/test/fixtures/examReadiness/result";
 
 function state(): AppState {
@@ -152,4 +156,33 @@ it("keeps schedule health separate while compatibility readiness follows the sha
   expect(low.readinessScore).toBe(20);
   expect(high.readinessScore).toBe(88);
   expect(low.overallStatus).toBe(high.overallStatus);
+});
+
+it("preserves absent and measuring readiness as null through compatibility persistence", () => {
+  const inputs = {
+    statusDate: "2026-08-22",
+    now: new Date("2026-08-22T00:00:00.000Z"),
+    daysUntilExam: 30,
+    topics: [
+      { id: "strategy-topic", field: "strategy" as const, title: "戦略" },
+      { id: "management-topic", field: "management" as const, title: "管理" },
+      { id: "technology-topic", field: "technology" as const, title: "技術" },
+    ],
+    topicProgress: [],
+    wordProgress: [],
+    totalWordCount: 100,
+    recentReports: [{ estimatedCompletionRate: 80 }],
+    examLevelAttempts: [],
+  };
+  const absent = computeIntegratedStatus({ ...inputs, examReadiness: null });
+  const measuring = computeIntegratedStatus({
+    ...inputs,
+    examReadiness: makeExamReadinessResult({ score: null, band: "measuring" }),
+  });
+
+  expect(absent.readinessScore).toBeNull();
+  expect(measuring.readinessScore).toBeNull();
+  const row = integratedStatusToRow("10000000-0000-0000-0000-000000000001", measuring);
+  expect(row.readiness_score).toBeNull();
+  expect(integratedStatusRowToStatus(row).readinessScore).toBeNull();
 });

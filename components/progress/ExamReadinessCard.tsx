@@ -121,10 +121,10 @@ export default function ExamReadinessCard({
               <dt className="text-xs text-gray-600">{field.label}</dt>
               <dd className="mt-0.5 text-sm font-semibold tabular-nums text-gray-900">
                 {metricLabel(field.score)}
+                <p className="mt-0.5 text-xs font-normal text-gray-500">
+                  根拠 {field.evidenceSufficiency}/100
+                </p>
               </dd>
-              <p className="mt-0.5 text-xs text-gray-500">
-                根拠 {field.evidenceSufficiency}/100
-              </p>
             </div>
           ))}
         </dl>

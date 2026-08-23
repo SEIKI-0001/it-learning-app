@@ -3,6 +3,7 @@ import {
   calculateExamReadinessDraft,
   finalizeExamReadinessResult,
 } from "@/lib/examReadiness/calculator";
+import { ExamReadinessRepositoryError } from "@/lib/examReadiness/repository";
 import { makeEvidence } from "@/test/fixtures/examReadiness/v1-cases";
 
 vi.mock("server-only", () => ({}));
@@ -137,6 +138,23 @@ describe("GET /api/exam-readiness/current", () => {
     });
   });
 
+  it("maps typed repository revision instability to 503", async () => {
+    mocks.getCurrentReadiness.mockRejectedValue(
+      new ExamReadinessRepositoryError(
+        "evidence_revision_unstable",
+        "evidence changed while reading",
+      ),
+    );
+
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      error: "readiness_temporarily_unavailable",
+    });
+  });
+
   it("returns a generic server error without exposing details", async () => {
     mocks.getCurrentReadiness.mockRejectedValue(new Error("database secret"));
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
@@ -153,8 +171,11 @@ describe("GET /api/exam-readiness/current", () => {
     error.mockRestore();
   });
 
-  it("returns no-store JSON 500 when session authentication rejects", async () => {
-    mocks.getInternalUserId.mockRejectedValue(new Error("auth unavailable"));
+  it("keeps an arbitrary retryable-shaped authentication error generic", async () => {
+    mocks.getInternalUserId.mockRejectedValue(Object.assign(
+      new Error("auth unavailable"),
+      { retryable: true, code: "recalculation_unstable" },
+    ));
     const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const response = await GET();

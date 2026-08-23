@@ -115,4 +115,27 @@ describe("LINE Exam Readiness", () => {
     expect(text).not.toContain("合格準備度 0/100");
     expect(text).not.toMatch(/合格率|合格確率|%/);
   });
+
+  it("shows the shared result and saved improvement when legacy progress is absent", async () => {
+    mocks.loadAppStateForUser.mockResolvedValue({ answers: [] });
+
+    const text = await requestProgress();
+
+    expect(text).toContain("合格準備度 78/100（準備良好）");
+    expect(text).toContain("次の一歩：\u300cテクノロジ\u300dの問題を優先しましょう");
+    expect(text).not.toContain("学習済み");
+    expect(text).not.toContain("連続学習");
+  });
+
+  it("keeps readiness measuring when both the shared result and legacy progress are absent", async () => {
+    mocks.loadAppStateForUser.mockResolvedValue({ answers: [] });
+    mocks.getCurrentReadiness.mockResolvedValue(null);
+
+    const text = await requestProgress();
+
+    expect(text).toContain("合格準備度 測定中");
+    expect(text).not.toContain("合格準備度 0/100");
+    expect(text).not.toContain("学習済み");
+    expect(text).not.toContain("連続学習");
+  });
 });

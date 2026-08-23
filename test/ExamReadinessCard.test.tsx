@@ -81,7 +81,9 @@ describe("ExamReadinessCard", () => {
     expect(within(components).getByText("評価範囲")).toBeInTheDocument();
 
     expect(screen.getByText("テクノロジ")).toBeInTheDocument();
-    expect(screen.getByText("39/100")).toBeInTheDocument();
+    const fieldValue = screen.getByText("39/100").closest("dd");
+    expect(fieldValue).not.toBeNull();
+    expect(within(fieldValue!).getByText("根拠 39/100")).toBeInTheDocument();
     expect(screen.getByText("信頼度 58/100（低）")).toBeInTheDocument();
     expect(screen.getByText("テクノロジの根拠がまだ不足しています（39/60）"))
       .toBeInTheDocument();

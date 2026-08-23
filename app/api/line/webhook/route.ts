@@ -236,12 +236,6 @@ function progressText(
   progress?: UserProgress,
   readiness: ExamReadinessResult | null = null,
 ): string {
-  if (!progress) {
-    return ["あなたの進捗はこちら📈", withToken(baseUrl, "/progress", token)].join("\n");
-  }
-  const topics = getAllTopics();
-  const summary = computeProgressSummary(topics, progress);
-  const remaining = daysUntilExam(profile);
   const readinessLine = readiness
     ? `📈 合格準備度 ${readinessResultLabel(readiness)}`
     : "📈 合格準備度 測定中";
@@ -249,12 +243,16 @@ function progressText(
     ? primaryImprovementLabel(readiness.primaryImprovement, readiness)
     : null;
 
-  const lines = [
-    readinessLine,
-    `学習済み ${summary.completedCount}/${summary.totalCount}`,
-    remaining === null ? "試験日：未設定" : `試験まであと${remaining}日`,
-    `🔥 連続学習 ${progress.streakCount}日 / Lv.${progress.level}・${progress.exp}XP`,
-  ];
+  const lines = [readinessLine];
+  if (progress) {
+    const summary = computeProgressSummary(getAllTopics(), progress);
+    lines.push(`学習済み ${summary.completedCount}/${summary.totalCount}`);
+  }
+  const remaining = daysUntilExam(profile);
+  lines.push(remaining === null ? "試験日：未設定" : `試験まであと${remaining}日`);
+  if (progress) {
+    lines.push(`🔥 連続学習 ${progress.streakCount}日 / Lv.${progress.level}・${progress.exp}XP`);
+  }
   if (improvement) lines.push(`次の一歩：${improvement}`);
   lines.push("詳しくはWebで👇", withToken(baseUrl, "/progress", token));
   return lines.join("\n");

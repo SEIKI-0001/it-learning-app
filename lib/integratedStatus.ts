@@ -371,7 +371,7 @@ export function computeIntegratedStatus(
       inputs.daysUntilExam <= DIRECT_PERIOD_DAYS) ||
     examReadyTopicCount >= 1;
 
-  const readinessScore = inputs.examReadiness?.score ?? 0;
+  const readinessScore = inputs.examReadiness?.score ?? null;
 
   // --- リスク素材 ---
   const examLevelAccuracy = computeExamLevelAccuracy(inputs.examLevelAttempts);

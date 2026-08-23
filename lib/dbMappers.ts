@@ -630,7 +630,7 @@ export type IntegratedStatusRow = {
   user_id: string;
   status_date: string;
   overall_status: string;
-  readiness_score: number;
+  readiness_score: number | null;
   input_progress_rate: number | null;
   basic_understanding_rate: number | null;
   flashcard_mastery_rate: number | null;
@@ -653,7 +653,7 @@ export function integratedStatusRowToStatus(
   return {
     statusDate: row.status_date,
     overallStatus: (row.overall_status ?? "delayed") as OverallStatus,
-    readinessScore: row.readiness_score ?? 0,
+    readinessScore: row.readiness_score ?? null,
     inputProgressRate: row.input_progress_rate ?? 0,
     basicUnderstandingRate: row.basic_understanding_rate ?? 0,
     flashcardMasteryRate: row.flashcard_mastery_rate ?? 0,

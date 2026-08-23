@@ -58,7 +58,7 @@ export type IntegratedLearningStatus = {
   statusDate: string; // "YYYY-MM-DD"
   overallStatus: OverallStatus;
   /** DB compatibility only. New consumers use ExamReadinessResult directly. */
-  readinessScore: number;
+  readinessScore: number | null;
   inputProgressRate: number; // 0〜100 インプット進捗（自己申告推定）
   basicUnderstandingRate: number; // 0〜100 基礎理解率
   flashcardMasteryRate: number; // 0〜100 用語定着率

@@ -1,5 +1,13 @@
 import { getInternalUserId } from "@/lib/auth/currentUser";
-import { getCurrentReadiness } from "@/lib/examReadiness/service";
+import {
+  ExamReadinessServiceError,
+  getCurrentReadiness,
+  type ExamReadinessServiceErrorCode,
+} from "@/lib/examReadiness/service";
+import {
+  ExamReadinessRepositoryError,
+  type ExamReadinessRepositoryErrorCode,
+} from "@/lib/examReadiness/repository";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 
 const JSON_HEADERS = {
@@ -35,8 +43,21 @@ function json(body: unknown, status = 200): Response {
 }
 
 function isRetryableReadinessError(error: unknown): boolean {
-  return error !== null
-    && typeof error === "object"
-    && "retryable" in error
-    && error.retryable === true;
+  if (error instanceof ExamReadinessServiceError) {
+    return error.retryable && TEMPORARY_SERVICE_CODES.has(error.code);
+  }
+  return error instanceof ExamReadinessRepositoryError
+    && TEMPORARY_REPOSITORY_CODES.has(error.code);
 }
+
+const TEMPORARY_SERVICE_CODES = new Set<ExamReadinessServiceErrorCode>([
+  "claim_failed",
+  "completion_failed",
+  "current_read_unstable",
+  "recalculation_busy",
+  "recalculation_unstable",
+]);
+
+const TEMPORARY_REPOSITORY_CODES = new Set<ExamReadinessRepositoryErrorCode>([
+  "evidence_revision_unstable",
+]);
