@@ -138,7 +138,9 @@ describe("問題バンクの整合性", () => {
   it("問題バンクの件数が、束ごとの想定と一致する", () => {
     // 過去問レベル問題は146問で固定。ここが動いたら、確認パックの参照か移行の同一性が壊れている。
     expect(APP_ORIGINAL.length).toBe(146);
-    expect(OFFICIAL_PAST.length).toBe(100);
+    // 公式過去問は1年度100問。収録年度が増えたら100の倍数で増える。
+    expect(OFFICIAL_PAST.length % 100).toBe(0);
+    expect(OFFICIAL_PAST.length).toBe(500);
     // テーマ別試験は増えていく想定なので件数は固定しない。
     // 「1テーマ10問ちょうど」であることだけを守る（構成の崩れをここで気づけるようにする）。
     expect(THEME_EXAM.length % 10).toBe(0);

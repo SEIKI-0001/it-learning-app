@@ -36,6 +36,8 @@ import type { QuestionRecord } from "@/types/questionBank";
 // ============================================================================
 
 const IPA_2026 = getPublishedOfficialQuestionsByYear(2026);
+/** 収録済みの年度（西暦）。年度を足したらここに1行足す。 */
+const RECORDED_YEARS = [2022, 2023, 2024, 2025, 2026];
 const SNAPSHOT_BY_ID = new Map(pr2aSnapshot.questions.map((q) => [q.id, q]));
 const EXPLANATIONS = explanationFile.explanations as Record<string, string>;
 
@@ -227,7 +229,7 @@ describe("年度別の取得", () => {
   it("公式出題区分が問番号から決まる値と一致する", () => {
     for (const q of IPA_2026) {
       expect(q.official!.examField, `${q.id}`).toBe(
-        getOfficialExamField(q.official!.questionNumber),
+        getOfficialExamField(q.official!.questionNumber, 2026),
       );
     }
   });
@@ -241,13 +243,16 @@ describe("年度別の取得", () => {
   });
 
   it("収録していない年度は空で、演習を開始できない", () => {
-    expect(getPublishedOfficialQuestionsByYear(2025)).toEqual([]);
-    expect(isPlayableOfficialExamYear(2025)).toBe(false);
+    expect(getPublishedOfficialQuestionsByYear(2021)).toEqual([]);
+    expect(isPlayableOfficialExamYear(2021)).toBe(false);
   });
 
-  it("令和8年度は演習を開始できる年度として一覧に出る", () => {
-    expect(isPlayableOfficialExamYear(2026)).toBe(true);
-    expect(getPlayableOfficialExamYears()).toEqual([2026]);
+  it("収録済みの5年度が、新しい順に演習可能年度として並ぶ", () => {
+    for (const year of RECORDED_YEARS) {
+      expect(isPlayableOfficialExamYear(year), `${year}年度`).toBe(true);
+    }
+    // 並びは新しい年度が先。年度別演習の一覧がこの順で表示される。
+    expect(getPlayableOfficialExamYears()).toEqual([...RECORDED_YEARS].sort((a, b) => b - a));
   });
 });
 
@@ -342,9 +347,9 @@ describe("validator が未完成・使い回しの解説を弾く", () => {
 });
 
 describe("既存機能への影響", () => {
-  it("published は令和8年度の100問だけ（既存146問は draft のまま）", () => {
+  it("published は公式過去問だけ（既存146問は draft のまま）", () => {
     const published = getPublishedQuestions();
-    expect(published).toHaveLength(100);
+    expect(published).toHaveLength(100 * RECORDED_YEARS.length);
     expect(published.every((q) => q.origin === "official_past")).toBe(true);
 
     // app_original には過去問レベル問題（146問）とテーマ別試験の2つの束がある。
@@ -367,11 +372,13 @@ describe("既存機能への影響", () => {
     }
   });
 
-  it("過去問レベル問題146問と公式過去問100問が、どちらも増減していない", () => {
+  it("過去問レベル問題146問と公式過去問（1年度100問）が、どちらも増減していない", () => {
     // テーマ別試験は今後増えるので総数は固定しない。
     // 「公式過去問の収録が既存の束に影響していない」ことがここでの関心事。
     const all = getAllQuestions();
-    expect(all.filter((q) => q.origin === "official_past")).toHaveLength(100);
+    expect(all.filter((q) => q.origin === "official_past")).toHaveLength(
+      100 * RECORDED_YEARS.length,
+    );
     expect(
       all.filter((q) => q.origin === "app_original" && !q.id.startsWith("theme-exam-")),
     ).toHaveLength(146);
