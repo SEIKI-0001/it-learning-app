@@ -56,7 +56,7 @@ export function dedupeAnswerEvents(
 /**
  * P0 mastery and question_attempts are written from the same client answer. Reconcile
  * that physical fact before time-series calculations while keeping the attempt's stable
- * database/session identity and P0's richer Review/exposure semantics.
+ * database/session identity and P0's richer kind/Review semantics.
  */
 export function reconcileP0AndAttemptEvents(
   p0Events: ReadinessAnswerEvidence[],
