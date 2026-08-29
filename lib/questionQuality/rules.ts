@@ -2,7 +2,11 @@ import type { ChoiceKey } from "@/types";
 import type { QuestionRecord } from "@/types/questionBank";
 import type { QualityFinding } from "@/types/questionQuality";
 import { ipaSyllabusItems } from "@/data/ipaSyllabus";
-import { normalizeBase, normalizeChoiceText } from "@/lib/questionQuality/normalize";
+import {
+  normalizeBase,
+  normalizeChoiceIdentity,
+  normalizeChoiceText,
+} from "@/lib/questionQuality/normalize";
 import { textSimilarity } from "@/lib/questionQuality/similarity";
 import { QUALITY_THRESHOLDS } from "@/lib/questionQuality/thresholds";
 
@@ -93,6 +97,22 @@ function isBareNumber(text: string): boolean {
 function isNumericChoice(text: string): boolean {
   const t = normalizeBase(text).replace(/\s/g, "");
   return new RegExp(`^[-−]?[0-9]{1,3}(?:,[0-9]{3})*(?:\\.[0-9]+)?(?:${UNIT_SOURCE})?$`, "i").test(t);
+}
+
+/**
+ * 選択肢が「日本語の文でない」（式・項番の組合せ・略語だけ）か。
+ *
+ * 擬似言語の式や項番の列挙は、違いが括弧や番号そのものに現れる:
+ *
+ *   "j ← k ＋ (j － 10 × k)" / "j ← k ＋ (j － 10) × k"
+ *   "（1），（3）"           / "（2），（3）"
+ *
+ * 近似判定の正規化は、日本語の文を比べるために括弧や先頭の項番を落とす。
+ * その結果この種の選択肢は必ず似てしまうので、数値選択肢と同じ理由で対象から外す。
+ * 表記ゆれを除いて完全に同一なら choice-text-duplicate（blocker）が拾う。
+ */
+function isSymbolicChoice(text: string): boolean {
+  return !/[぀-ヿ一-鿿]/.test(normalizeBase(text));
 }
 
 /** 公式の選択肢記号 → 内部キー。取り込みスクリプトと同じ対応。 */
@@ -358,7 +378,12 @@ export function checkQuestionQuality(q: QuestionRecord): QualityFinding[] {
   }
 
   // --- 選択肢の重複・近似 -------------------------------------------------
-  const normalizedChoices = choices.map((c) => ({ key: c.key, text: normalizeChoiceText(c.text) }));
+  const normalizedChoices = choices.map((c) => ({
+    key: c.key,
+    text: normalizeChoiceText(c.text),
+    // 完全一致（blocker）の判定だけは、括弧や項番を落とさない正規化で行う。
+    identity: normalizeChoiceIdentity(c.text),
+  }));
 
   // ひな形で組み立てられた選択肢は、差し替え部分どうしで比べる（前掲の説明を参照）。
   // 分解できたときだけ使い、できなければ従来どおり全文で比べる。
@@ -369,6 +394,10 @@ export function checkQuestionQuality(q: QuestionRecord): QualityFinding[] {
   const isNearDuplicate = (i: number, j: number): { hit: boolean; score: number } => {
     // 値の異なる数値どうしは、似ていても別のことを述べている（前掲の説明を参照）。
     if (isNumericChoice(choices[i].text) && isNumericChoice(choices[j].text)) {
+      return { hit: false, score: 0 };
+    }
+    // 式や項番だけの選択肢も、違いが正規化で落ちる記号に出るので同じ扱いにする。
+    if (isSymbolicChoice(choices[i].text) && isSymbolicChoice(choices[j].text)) {
       return { hit: false, score: 0 };
     }
     if (normalizedParts) {
@@ -393,7 +422,7 @@ export function checkQuestionQuality(q: QuestionRecord): QualityFinding[] {
       const b = normalizedChoices[j];
       if (a.text === "" || b.text === "") continue;
 
-      if (a.text === b.text) {
+      if (a.identity === b.identity) {
         // 同じ本文が2つある時点で、正答が一意に決まらない。断定できるので blocker。
         add(
           "blocker",

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "summary": {
-    "questionCount": 426,
+    "questionCount": 826,
     "blockerCount": 0,
-    "warningCount": 155,
+    "warningCount": 206,
     "byOrigin": {
-      "official_past": 100,
+      "official_past": 500,
       "app_original": 326,
       "ai_generated": 0,
       "modified_official": 0
@@ -14,18 +14,357 @@
       "draft": 326,
       "content_verified": 0,
       "explanation_verified": 0,
-      "published": 100,
+      "published": 500,
       "retired": 0
     },
     "similarityBandCounts": {
       "exact_duplicate": 0,
-      "block": 0,
-      "review_required": 0,
-      "notice": 0,
+      "block": 2,
+      "review_required": 2,
+      "notice": 18,
       "ok": 0
     }
   },
   "findings": [
+    {
+      "questionId": "ipa-it-passport-2022-q017",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q032",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と C の本文がほとんど同じです（類似度 0.851）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q036",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q039",
+      "severity": "warning",
+      "rule": "correct-choice-specificity",
+      "message": "正答（A）だけが数値を含み、誤答はいずれも含みません。具体性の差で正解が推測できます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q043",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"diagram\" です。\"calculation\" が適切ではないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q060",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q060",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q066",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q077",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q079",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"diagram\" です。\"calculation\" が適切ではないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q081",
+      "severity": "warning",
+      "rule": "correct-choice-specificity",
+      "message": "正答（A）だけが数値を含み、誤答はいずれも含みません。具体性の差で正解が推測できます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q007",
+      "severity": "warning",
+      "rule": "correct-choice-shortest",
+      "message": "正答（A, 3文字）が最短の誤答（9文字）より極端に短く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q030",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 26文字）が最長の誤答（10文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q040",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q047",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q072",
+      "severity": "warning",
+      "rule": "similarity-official-notice",
+      "message": "公式過去問どうしが酷似しています（公開は阻害しません）。最類似: \"ipa-it-passport-2024-q064\"（official_past） / 代表スコア 0.839 / prompt 0.839 / 全体 0.316 / 正答本文 0.172",
+      "similarity": {
+        "matchedQuestionId": "ipa-it-passport-2024-q064",
+        "matchedOrigin": "official_past",
+        "band": "review_required",
+        "promptScore": 0.8392857142857143,
+        "fullScore": 0.3160493827160494,
+        "correctChoiceScore": 0.17204301075268819,
+        "score": 0.8392857142857143
+      }
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q075",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.913）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q075",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.913）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q075",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と D の本文がほとんど同じです（類似度 0.826）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q075",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と C の本文がほとんど同じです（類似度 0.826）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q075",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.913）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q075",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.913）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q092",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q096",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と C の本文がほとんど同じです（類似度 0.833）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q096",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.917）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q008",
+      "severity": "warning",
+      "rule": "calculation-missing-unit",
+      "message": "計算問題ですが、選択肢がすべて単位のない数値で、問題文にも単位が見当たりません。何を答えるのかが曖昧です。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q011",
+      "severity": "warning",
+      "rule": "correct-choice-specificity",
+      "message": "正答（B）だけが数値を含み、誤答はいずれも含みません。具体性の差で正解が推測できます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q032",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 1.000）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q037",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が B だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q040",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q064",
+      "severity": "warning",
+      "rule": "similarity-official-notice",
+      "message": "公式過去問どうしが酷似しています（公開は阻害しません）。最類似: \"ipa-it-passport-2023-q072\"（official_past） / 代表スコア 0.839 / prompt 0.839 / 全体 0.316 / 正答本文 0.172",
+      "similarity": {
+        "matchedQuestionId": "ipa-it-passport-2023-q072",
+        "matchedOrigin": "official_past",
+        "band": "review_required",
+        "promptScore": 0.8392857142857143,
+        "fullScore": 0.3160493827160494,
+        "correctChoiceScore": 0.17204301075268819,
+        "score": 0.8392857142857143
+      }
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q073",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「常に」を含む選択肢が A だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q081",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.952）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q081",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q085",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.936）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q085",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.936）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q093",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"diagram\" です。\"calculation\" が適切ではないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q005",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 C と D の本文がほとんど同じです（類似度 1.000）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q025",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q028",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「一切」を含む選択肢が A だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q040",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q058",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 C と D の本文がほとんど同じです（類似度 0.877）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q059",
+      "severity": "warning",
+      "rule": "correct-choice-longest",
+      "message": "正答（A, 75文字）が最長の誤答（43文字）より極端に長く、長さだけで正解が推測できます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q061",
+      "severity": "warning",
+      "rule": "absolute-word-hint",
+      "message": "「全て」を含む選択肢が C だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q066",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.824）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q066",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.824）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q078",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"application\" です。\"calculation\" が適切ではないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q088",
+      "severity": "warning",
+      "rule": "similarity-official-notice",
+      "message": "公式過去問どうしが酷似しています（公開は阻害しません）。最類似: \"ipa-it-passport-2026-q094\"（official_past） / 代表スコア 1.000 / prompt 1.000 / 全体 0.328 / 正答本文 0.000",
+      "similarity": {
+        "matchedQuestionId": "ipa-it-passport-2026-q094",
+        "matchedOrigin": "official_past",
+        "band": "block",
+        "promptScore": 1,
+        "fullScore": 0.32754342431761785,
+        "correctChoiceScore": 0,
+        "score": 1
+      }
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q090",
+      "severity": "warning",
+      "rule": "correct-choice-specificity",
+      "message": "正答（D）だけが数値を含み、誤答はいずれも含みません。具体性の差で正解が推測できます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q091",
+      "severity": "warning",
+      "rule": "choice-near-duplicate",
+      "message": "選択肢 A と B の本文がほとんど同じです（類似度 0.935）。言い換えただけで実質同じことを述べていないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q098",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"application\" です。\"calculation\" が適切ではないか確認してください。"
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q099",
+      "severity": "warning",
+      "rule": "pattern-calculation-candidate",
+      "message": "選択肢がすべて数値ですが questionPattern が \"application\" です。\"calculation\" が適切ではないか確認してください。"
+    },
     {
       "questionId": "ipa-it-passport-2026-q003",
       "severity": "warning",
@@ -109,6 +448,21 @@
       "severity": "warning",
       "rule": "absolute-word-hint",
       "message": "「常に」を含む選択肢が D だけです。断定語のある選択肢は誤答だと推測されやすく、内容を読まずに絞り込めます。"
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q094",
+      "severity": "warning",
+      "rule": "similarity-official-notice",
+      "message": "公式過去問どうしが酷似しています（公開は阻害しません）。最類似: \"ipa-it-passport-2025-q088\"（official_past） / 代表スコア 1.000 / prompt 1.000 / 全体 0.328 / 正答本文 0.000",
+      "similarity": {
+        "matchedQuestionId": "ipa-it-passport-2025-q088",
+        "matchedOrigin": "official_past",
+        "band": "block",
+        "promptScore": 1,
+        "fullScore": 0.32754342431761785,
+        "correctChoiceScore": 0,
+        "score": 1
+      }
     },
     {
       "questionId": "mgmt-development-process-ex1",
@@ -911,18 +1265,6 @@
     {
       "questionId": "tech-spreadsheet-ex1",
       "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 A と C の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "tech-spreadsheet-ex1",
-      "severity": "warning",
-      "rule": "choice-near-duplicate",
-      "message": "選択肢 B と D の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。"
-    },
-    {
-      "questionId": "tech-spreadsheet-ex1",
-      "severity": "warning",
       "rule": "review-self-review",
       "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     },
@@ -957,5 +1299,248 @@
       "message": "作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。"
     }
   ],
-  "similarities": []
+  "similarities": [
+    {
+      "questionId": "ipa-it-passport-2022-q007",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2025-q027",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.603,
+      "fullScore": 0.766,
+      "correctChoiceScore": 1,
+      "score": 0.766
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q009",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2025-q016",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.784,
+      "fullScore": 0.775,
+      "correctChoiceScore": 0,
+      "score": 0.784
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q055",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2025-q093",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.762,
+      "fullScore": 0.189,
+      "correctChoiceScore": 0.043,
+      "score": 0.762
+    },
+    {
+      "questionId": "ipa-it-passport-2022-q075",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2023-q099",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.783,
+      "fullScore": 0.168,
+      "correctChoiceScore": 0.141,
+      "score": 0.783
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q040",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2024-q047",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.914,
+      "fullScore": 0.422,
+      "correctChoiceScore": 0.495,
+      "score": 0.914
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q056",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2024-q082",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 1,
+      "fullScore": 0.507,
+      "correctChoiceScore": 0.776,
+      "score": 1
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q072",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2024-q064",
+      "matchedOrigin": "official_past",
+      "band": "review_required",
+      "promptScore": 0.839,
+      "fullScore": 0.316,
+      "correctChoiceScore": 0.172,
+      "score": 0.839
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q094",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2025-q084",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 1,
+      "fullScore": 0.205,
+      "correctChoiceScore": 0.22,
+      "score": 1
+    },
+    {
+      "questionId": "ipa-it-passport-2023-q099",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2022-q075",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.783,
+      "fullScore": 0.168,
+      "correctChoiceScore": 0.141,
+      "score": 0.783
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q047",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2023-q040",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.914,
+      "fullScore": 0.422,
+      "correctChoiceScore": 0.495,
+      "score": 0.914
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q064",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2023-q072",
+      "matchedOrigin": "official_past",
+      "band": "review_required",
+      "promptScore": 0.839,
+      "fullScore": 0.316,
+      "correctChoiceScore": 0.172,
+      "score": 0.839
+    },
+    {
+      "questionId": "ipa-it-passport-2024-q082",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2023-q056",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 1,
+      "fullScore": 0.507,
+      "correctChoiceScore": 0.776,
+      "score": 1
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q016",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2022-q009",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.784,
+      "fullScore": 0.775,
+      "correctChoiceScore": 0,
+      "score": 0.784
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q027",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2022-q007",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.603,
+      "fullScore": 0.766,
+      "correctChoiceScore": 1,
+      "score": 0.766
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q038",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2025-q093",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.706,
+      "fullScore": 0.167,
+      "correctChoiceScore": 0.136,
+      "score": 0.706
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q058",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2026-q087",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.75,
+      "fullScore": 0.167,
+      "correctChoiceScore": 0,
+      "score": 0.75
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q084",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2023-q094",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 1,
+      "fullScore": 0.205,
+      "correctChoiceScore": 0.22,
+      "score": 1
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q088",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2026-q094",
+      "matchedOrigin": "official_past",
+      "band": "block",
+      "promptScore": 1,
+      "fullScore": 0.328,
+      "correctChoiceScore": 0,
+      "score": 1
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q091",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2023-q072",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.765,
+      "fullScore": 0.344,
+      "correctChoiceScore": 0.132,
+      "score": 0.765
+    },
+    {
+      "questionId": "ipa-it-passport-2025-q093",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2022-q055",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.762,
+      "fullScore": 0.189,
+      "correctChoiceScore": 0.043,
+      "score": 0.762
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q087",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2025-q058",
+      "matchedOrigin": "official_past",
+      "band": "notice",
+      "promptScore": 0.75,
+      "fullScore": 0.167,
+      "correctChoiceScore": 0,
+      "score": 0.75
+    },
+    {
+      "questionId": "ipa-it-passport-2026-q094",
+      "origin": "official_past",
+      "matchedQuestionId": "ipa-it-passport-2025-q088",
+      "matchedOrigin": "official_past",
+      "band": "block",
+      "promptScore": 1,
+      "fullScore": 0.328,
+      "correctChoiceScore": 0,
+      "score": 1
+    }
+  ]
 }

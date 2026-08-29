@@ -138,7 +138,9 @@ describe("問題バンクの整合性", () => {
   it("問題バンクの件数が、束ごとの想定と一致する", () => {
     // 過去問レベル問題は146問で固定。ここが動いたら、確認パックの参照か移行の同一性が壊れている。
     expect(APP_ORIGINAL.length).toBe(146);
-    expect(OFFICIAL_PAST.length).toBe(100);
+    // 公式過去問は1年度100問。収録年度が増えたら100の倍数で増える。
+    expect(OFFICIAL_PAST.length % 100).toBe(0);
+    expect(OFFICIAL_PAST.length).toBe(500);
     // テーマ別試験は増えていく想定なので件数は固定しない。
     // 「1テーマ10問ちょうど」であることだけを守る（構成の崩れをここで気づけるようにする）。
     expect(THEME_EXAM.length % 10).toBe(0);
@@ -412,7 +414,9 @@ describe("公式問題の制約", () => {
     sourceUrl: "https://www.ipa.go.jp/shiken/mondai-kaiotu/example.html",
     answerSourceUrl: "https://www.ipa.go.jp/shiken/mondai-kaiotu/example-answer.html",
     attribution: "IPA 独立行政法人情報処理推進機構",
-    examField: "technology",
+    // 令和5年度(2023)の問12はストラテジ区分。収録済み年度は問番号との一致まで検証されるので、
+    // ここも実際の冊子の並びに合わせる。
+    examField: "strategy",
     isModified: false,
   } as const;
 
@@ -545,8 +549,24 @@ describe("公式問題の制約", () => {
 
   it("getOfficialExamField は範囲外の問番号で例外を投げる", () => {
     for (const bad of [0, -1, 101, 1.5, Number.NaN]) {
-      expect(() => getOfficialExamField(bad), String(bad)).toThrow(/公式出題区分を判定できない/);
+      expect(() => getOfficialExamField(bad, 2026), String(bad)).toThrow(
+        /公式出題区分を判定できない/,
+      );
     }
+  });
+
+  it("getOfficialExamField は範囲が未登録の年度で例外を投げる", () => {
+    // 年度ごとに区分の境目が違うので、知らない年度を別年度の境目で分類しないこと。
+    expect(() => getOfficialExamField(1, 2021)).toThrow(/範囲が未登録の年度/);
+  });
+
+  it("公式出題区分の境目は年度ごとに違う", () => {
+    // 令和8年度(2026)は問35からマネジメント。令和7年度(2025)は問35がまだストラテジ。
+    expect(getOfficialExamField(35, 2026)).toBe("management");
+    expect(getOfficialExamField(35, 2025)).toBe("strategy");
+    // 令和4年度(2022)はマネジメントが19問しかないので問55はテクノロジ。
+    expect(getOfficialExamField(55, 2022)).toBe("technology");
+    expect(getOfficialExamField(55, 2023)).toBe("management");
   });
 
   it("app_original / ai_generated に出典を付けると検出される", () => {
@@ -745,7 +765,7 @@ describe("令和8年度 ITパスポート 公開問題", () => {
       const number = q.official?.questionNumber;
       expect(number, q.id).toBeDefined();
       expect(q.official?.examField, `${q.id} / 問${number}`).toBe(
-        getOfficialExamField(number as number),
+        getOfficialExamField(number as number, 2026),
       );
     }
   });

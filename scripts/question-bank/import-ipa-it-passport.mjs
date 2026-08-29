@@ -1,11 +1,12 @@
-// 令和8年度 ITパスポート試験 公開問題（IPA 公式公開）を統一問題バンクへ取り込む生成スクリプト。
+// ITパスポート試験 公開問題（IPA 公式公開）を統一問題バンクへ取り込む生成スクリプト。
 //
 // 使い方:
-//   npm run questions:import:ipa:2026
+//   npm run questions:import:ipa           … 収録済みの全年度
+//   npm run questions:import:ipa -- 2025   … 年度を指定（西暦）
 //
 // 方針:
-//   - 入力は Git 管理された1ファイルだけ:
-//       data/question-bank/sources/official/ipa/it-passport-2026.source.json
+//   - 入力は年度ごとに Git 管理された1ファイルだけ:
+//       data/question-bank/sources/official/ipa/it-passport-<西暦>.source.json
 //     公式PDFはリポジトリに含めない。原文の転記結果はこの source.json が正。
 //   - 出力は決定的。同じ入力なら同じ JSON になる（実行時刻・乱数を混ぜない）。
 //     再実行して git diff が出ないことを CI で確認する。
@@ -18,7 +19,7 @@
 //       primaryTopicId     … アプリ内の復習先トピック。source.json が持つ。
 //     公式区分と内容分類はずれることがある（例: 問16 / 問52）。片方で他方を上書きしない。
 //   - 独自解説は原文とは別ファイルで管理する:
-//       data/question-bank/explanations/official/ipa/it-passport-2026.json
+//       data/question-bank/explanations/official/ipa/it-passport-<西暦>.json
 //     source.json（＝公式原文の転記結果）には解説を混ぜない。原文と独自著作物を
 //     ファイルごと分けておくことで、「どこまでが IPA の公開物か」が常に一目で分かる。
 //   - 解説がそろっている問題は version 2 / status "published" に上げ、
@@ -40,23 +41,34 @@ import { ipaSyllabusItems } from "../../data/ipaSyllabus.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 
-const IN_SOURCE = path.join(
-  ROOT,
-  "data/question-bank/sources/official/ipa/it-passport-2026.source.json",
-);
-const IN_EXPLANATIONS = path.join(
-  ROOT,
-  "data/question-bank/explanations/official/ipa/it-passport-2026.json",
-);
-const OUT_QUESTIONS = path.join(ROOT, "data/question-bank/official/ipa/it-passport-2026.json");
-const OUT_MANIFEST = path.join(
-  ROOT,
-  "data/question-bank/manifests/official-ipa-it-passport-2026.json",
-);
-const FIGURE_DIR = path.join(ROOT, "public/question-bank/official/ipa/it-passport/2026");
+/** 収録済みの年度（西暦）。新しい年度を足したらここに1行足す。 */
+export const IMPORTABLE_YEARS = [2022, 2023, 2024, 2025, 2026];
 
-const BANK_SOURCE = "official/ipa/it-passport-2026";
-const GENERATED_FROM = "data/question-bank/sources/official/ipa/it-passport-2026.source.json";
+/**
+ * 年度ごとの入出力パス。年度は「西暦」で統一する（和暦は表示だけで使う）。
+ * ここ以外に年度を散らかさないこと。
+ */
+function pathsFor(year) {
+  const sourceRel = `data/question-bank/sources/official/ipa/it-passport-${year}.source.json`;
+  const questionsRel = `data/question-bank/official/ipa/it-passport-${year}.json`;
+  return {
+    year,
+    inSource: path.join(ROOT, sourceRel),
+    inExplanations: path.join(
+      ROOT,
+      `data/question-bank/explanations/official/ipa/it-passport-${year}.json`,
+    ),
+    outQuestions: path.join(ROOT, questionsRel),
+    outManifest: path.join(
+      ROOT,
+      `data/question-bank/manifests/official-ipa-it-passport-${year}.json`,
+    ),
+    figureDir: path.join(ROOT, `public/question-bank/official/ipa/it-passport/${year}`),
+    bankSource: `official/ipa/it-passport-${year}`,
+    generatedFrom: sourceRel,
+    questionsRel,
+  };
+}
 
 /** 全問共通。原文出題なので改変なし。 */
 const ORIGIN = "official_past";
@@ -90,8 +102,8 @@ function buildSyllabusIndex() {
   return index;
 }
 
-function questionId(number) {
-  return `ipa-it-passport-2026-q${String(number).padStart(3, "0")}`;
+function questionId(year, number) {
+  return `ipa-it-passport-${year}-q${String(number).padStart(3, "0")}`;
 }
 
 function toQuestionRecord(src, exam, syllabusIndex, explanations) {
@@ -143,7 +155,7 @@ function toQuestionRecord(src, exam, syllabusIndex, explanations) {
   };
 
   const record = {
-    id: questionId(number),
+    id: questionId(exam.year, number),
     version: hasExplanation ? VERSION_WITH_EXPLANATION : VERSION_WITHOUT_EXPLANATION,
     origin: ORIGIN,
     status: hasExplanation ? STATUS_WITH_EXPLANATION : STATUS_WITHOUT_EXPLANATION,
@@ -165,7 +177,7 @@ function toQuestionRecord(src, exam, syllabusIndex, explanations) {
       attribution: exam.attributionTemplate.replace("{n}", String(number)),
       // 公式問題冊子上の出題区分。問番号の並びから機械的に決まるので source.json には持たせない。
       // 内容分類（syllabusNode.field）とは別物で、一致しない問がある。
-      examField: getOfficialExamField(number),
+      examField: getOfficialExamField(number, exam.year),
       isModified: false,
       examSession: exam.examSession,
       original,
@@ -212,11 +224,11 @@ const PLACEHOLDER_PATTERNS = [
 const CLAIMS_OFFICIAL_PATTERNS = [/公式解説/, /公式の解説/, /IPAの解説/, /IPA公式解説/];
 
 /** 独自解説ファイルを読み、published に上げてよい品質かを確認する。 */
-function loadExplanations() {
-  if (!existsSync(IN_EXPLANATIONS)) {
-    throw new Error(`独自解説ファイルがありません: ${path.relative(ROOT, IN_EXPLANATIONS)}`);
+function loadExplanations(paths) {
+  if (!existsSync(paths.inExplanations)) {
+    throw new Error(`独自解説ファイルがありません: ${path.relative(ROOT, paths.inExplanations)}`);
   }
-  const file = JSON.parse(readFileSync(IN_EXPLANATIONS, "utf8"));
+  const file = JSON.parse(readFileSync(paths.inExplanations, "utf8"));
 
   if (typeof file.reviewedAt !== "string" || Number.isNaN(Date.parse(file.reviewedAt))) {
     throw new Error("独自解説ファイルの reviewedAt が ISO8601 の日時ではありません。");
@@ -276,8 +288,19 @@ function loadExplanations() {
 }
 
 /** 生成前に、入力そのものが壊れていないかを確認する。 */
-function assertSourceIsSane(source) {
+function assertSourceIsSane(source, paths) {
   const { questions } = source;
+
+  if (source.exam?.year !== paths.year) {
+    throw new Error(
+      `source.json の exam.year（${source.exam?.year}）が取り込み対象の年度（${paths.year}）と違います。`,
+    );
+  }
+  if (source.source !== paths.bankSource) {
+    throw new Error(
+      `source.json の source（${source.source}）が "${paths.bankSource}" ではありません。`,
+    );
+  }
 
   if (questions.length !== 100) {
     throw new Error(`公開問題は100問のはずですが ${questions.length} 問です。`);
@@ -302,7 +325,7 @@ function assertSourceIsSane(source) {
     }
     for (const f of q.figures) {
       if (!f.alt || f.alt.trim() === "") throw new Error(`問${q.number}: 図表 ${f.id} の alt が空です。`);
-      const abs = path.join(FIGURE_DIR, f.file);
+      const abs = path.join(paths.figureDir, f.file);
       if (!existsSync(abs)) throw new Error(`問${q.number}: 図表ファイルがありません: ${f.file}`);
       if (figureFiles.has(f.file)) throw new Error(`図表ファイルが重複しています: ${f.file}`);
       figureFiles.add(f.file);
@@ -314,18 +337,22 @@ function assertSourceIsSane(source) {
   }
 
   // 孤立画像（どの問題からも参照されていないファイル）がないこと。
-  const onDisk = readdirSync(FIGURE_DIR).filter((f) => f.endsWith(".png"));
+  // 図表が1点も無い年度はディレクトリ自体を作らないので、無ければ空扱いにする。
+  const onDisk = existsSync(paths.figureDir)
+    ? readdirSync(paths.figureDir).filter((f) => f.endsWith(".png"))
+    : [];
   const orphans = onDisk.filter((f) => !figureFiles.has(f));
   if (orphans.length > 0) {
     throw new Error(`参照されていない図表ファイルがあります: ${orphans.join(", ")}`);
   }
 }
 
-function main() {
-  const source = JSON.parse(readFileSync(IN_SOURCE, "utf8"));
-  assertSourceIsSane(source);
+function importYear(year) {
+  const paths = pathsFor(year);
+  const source = JSON.parse(readFileSync(paths.inSource, "utf8"));
+  assertSourceIsSane(source, paths);
 
-  const explanations = loadExplanations();
+  const explanations = loadExplanations(paths);
   const syllabusIndex = buildSyllabusIndex();
   const questions = source.questions.map((q) =>
     toQuestionRecord(q, source.exam, syllabusIndex, explanations),
@@ -339,21 +366,21 @@ function main() {
 
   const file = {
     schemaVersion: 1,
-    source: BANK_SOURCE,
+    source: paths.bankSource,
     questions,
   };
 
   // generatedAt のような実行時刻は入れない。再実行で無意味な差分が出るのを避け、
   // 「入力が同じなら出力も同じ」を保つ（生成日時は git 履歴で追える）。
   const manifest = {
-    file: "data/question-bank/official/ipa/it-passport-2026.json",
-    generatedFrom: GENERATED_FROM,
+    file: paths.questionsRel,
+    generatedFrom: paths.generatedFrom,
     questionCount: questions.length,
     questionIds: ids,
   };
 
-  writeFileSync(OUT_QUESTIONS, `${JSON.stringify(file, null, 2)}\n`, "utf8");
-  writeFileSync(OUT_MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  writeFileSync(paths.outQuestions, `${JSON.stringify(file, null, 2)}\n`, "utf8");
+  writeFileSync(paths.outManifest, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
   const withFigures = questions.filter((q) => q.figures);
   const figureCount = withFigures.reduce((sum, q) => sum + q.figures.length, 0);
@@ -371,8 +398,27 @@ function main() {
   console.log(
     `  公式出題区分: ストラテジ ${countBy("strategy")} / マネジメント ${countBy("management")} / テクノロジ ${countBy("technology")} 問`,
   );
-  console.log(`  出力: ${path.relative(ROOT, OUT_QUESTIONS)}`);
-  console.log(`  出力: ${path.relative(ROOT, OUT_MANIFEST)}`);
+  console.log(`  出力: ${path.relative(ROOT, paths.outQuestions)}`);
+  console.log(`  出力: ${path.relative(ROOT, paths.outManifest)}`);
+}
+
+function main() {
+  const args = process.argv.slice(2);
+  const years = args.length === 0 ? IMPORTABLE_YEARS : args.map(Number);
+
+  for (const year of years) {
+    if (!IMPORTABLE_YEARS.includes(year)) {
+      throw new Error(
+        `未登録の年度です: ${args.join(" ")}` +
+          `（収録済み: ${IMPORTABLE_YEARS.join(" / ")}）。` +
+          "新しい年度を足すときは IMPORTABLE_YEARS と lib/questionBank/officialExamField.ts の両方に登録すること。",
+      );
+    }
+  }
+
+  for (const year of years) {
+    importYear(year);
+  }
 }
 
 main();

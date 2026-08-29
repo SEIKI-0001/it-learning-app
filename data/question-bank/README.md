@@ -9,7 +9,7 @@ data/question-bank/
 ├── original/exam-level.json       # 確認パックの過去問レベル問題（146問）
 ├── original/theme-exam.json       # テーマ別 高難易度試験（18章 × 10問。自動生成）
 ├── original/theme-exam/           # ↑ の生成元（1テーマ1ファイル。人が編集するのはこちら）
-├── official/ipa/                  # 公式過去問（令和8年度 ITパスポート 100問）
+├── official/ipa/                  # 公式過去問（ITパスポート 令和4〜8年度 各100問）
 ├── explanations/                  # 公式問題に対するアプリ独自の解説（原文と分ける）
 ├── sources/                       # 公式原文の転記結果（取り込みの入力）
 ├── candidates/ai-generated/       # AI生成問題の候補（取り込み前。README 参照）
@@ -181,7 +181,8 @@ status・tags・official・レビュー情報などのメタ情報は含めな�
 
 ```bash
 npm run questions:migrate            # data/examLevelQuestions.ts から再生成
-npm run questions:import:ipa:2026    # 公式過去問（令和8年度 ITパスポート）を再生成
+npm run questions:import:ipa         # 公式過去問（ITパスポート全年度）を再生成
+npm run questions:import:ipa -- 2025 # 年度を指定して再生成（西暦）
 npm run questions:import:candidates  # AI生成候補を取り込む（candidates/ai-generated/）
 npm run validate:questions           # 整合性検証 + 品質ゲート
 ```

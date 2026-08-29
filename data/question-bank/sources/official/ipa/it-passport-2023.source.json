@@ -1,0 +1,2252 @@
+{
+  "schemaVersion": 1,
+  "source": "official/ipa/it-passport-2023",
+  "exam": {
+    "provider": "ipa",
+    "examType": "it_passport",
+    "year": 2023,
+    "examSession": "R5",
+    "examName": "令和5年度 ITパスポート試験 公開問題",
+    "sourceUrl": "https://www3.jitec.ipa.go.jp/JitesCbt/html/openinfo/pdf/questions/2023r05_ip_qs.pdf",
+    "answerSourceUrl": "https://www3.jitec.ipa.go.jp/JitesCbt/html/openinfo/pdf/questions/2023r05_ip_ans.pdf",
+    "attributionTemplate": "出典：令和5年度 ITパスポート試験 公開問題 問{n}",
+    "retrievedAt": "2026-08-15",
+    "figureBaseUrl": "/question-bank/official/ipa/it-passport/2023"
+  },
+  "questions": [
+    {
+      "number": 1,
+      "page": 2,
+      "prompt": "新しいビジネスモデルや製品を開発する際に，仮説に基づいて実用に向けた最小限のサービスや製品を作り，短期に顧客価値の検証を繰り返すことによって，新規事業などを成功させる可能性を高める手法を示す用語はどれか。",
+      "choices": {
+        "A": "カニバリゼーション",
+        "B": "業務モデリング",
+        "C": "デジタルトランスフォーメーション",
+        "D": "リーンスタートアップ"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-corporate-strategy",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "リーンスタートアップ",
+        "新規事業"
+      ],
+      "figures": []
+    },
+    {
+      "number": 2,
+      "page": 2,
+      "prompt": "次のa〜cのうち，著作権法によって定められた著作物に該当するものだけを全て挙げたものはどれか。\na 原稿なしで話した講演の録音\nb 時刻表に掲載されたバスの到着時刻\nc 創造性の高い技術の発明",
+      "choices": {
+        "A": "a",
+        "B": "a, c",
+        "C": "b, c",
+        "D": "c"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "strat-intellectual-property",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "著作権法",
+        "著作物"
+      ],
+      "figures": []
+    },
+    {
+      "number": 3,
+      "page": 2,
+      "prompt": "観光などで訪日した外国人が国内にもたらす経済効果を示す言葉として，最も適切なものはどれか。",
+      "choices": {
+        "A": "アウトソーシング",
+        "B": "アウトバウンド需要",
+        "C": "インキュベーター",
+        "D": "インバウンド需要"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-enterprise-activities",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "インバウンド需要",
+        "経済用語"
+      ],
+      "figures": []
+    },
+    {
+      "number": 4,
+      "page": 3,
+      "prompt": "ASP利用方式と自社開発の自社センター利用方式（以下“自社方式”という）の採算性を比較する。次の条件のとき，ASP利用方式の期待利益（効果額－費用）が自社方式よりも大きくなるのは，自社方式の初期投資額が何万円を超えたときか。ここで，比較期間は5年とする。\n\n〔条件〕\n・両方式とも，システム利用による効果額は500万円／年とする。\n・ASP利用方式の場合，初期費用は0円，利用料は300万円／年とする。\n・自社方式の場合，初期投資額は定額法で減価償却計算を行い，5年後の残存簿価は0円とする。また，運用費は100万円／年とする。\n・金利やその他の費用は考慮しないものとする。",
+      "choices": {
+        "A": "500",
+        "B": "1,000",
+        "C": "1,500",
+        "D": "2,000"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "strat-goal-evaluation",
+      "questionPattern": "calculation",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "費用対効果",
+        "ASP"
+      ],
+      "figures": []
+    },
+    {
+      "number": 5,
+      "page": 3,
+      "prompt": "企業でのRPAの活用方法として，最も適切なものはどれか。",
+      "choices": {
+        "A": "M&Aといった経営層が行う重要な戦略の採択",
+        "B": "個人の嗜好に合わせたサービスの提供",
+        "C": "潜在顧客層に関する大量の行動データからの規則性抽出",
+        "D": "定型的な事務処理の効率化"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-business-process",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "RPA",
+        "定型業務"
+      ],
+      "figures": []
+    },
+    {
+      "number": 6,
+      "page": 3,
+      "prompt": "A社では，顧客の行動や天候，販売店のロケーションなどの多くの項目から成るデータを取得している。これらのデータを分析することによって販売数量の変化を説明することを考える。その際，説明に使用するパラメータをできるだけ少数に絞りたい。このときに用いる分析法として，最も適切なものはどれか。",
+      "choices": {
+        "A": "ABC分析",
+        "B": "クラスター分析",
+        "C": "主成分分析",
+        "D": "相関分析"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-data-utilization",
+      "questionPattern": "application",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "主成分分析",
+        "データ分析"
+      ],
+      "figures": []
+    },
+    {
+      "number": 7,
+      "page": 4,
+      "prompt": "経営戦略に基づいて策定される情報システム戦略の責任者として，最も適切なものはどれか。",
+      "choices": {
+        "A": "CIO",
+        "B": "基幹システムの利用部門の部門長",
+        "C": "システム開発プロジェクトマネージャ",
+        "D": "システム企画担当者"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "strat-system-strategy",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "CIO",
+        "情報システム戦略"
+      ],
+      "figures": []
+    },
+    {
+      "number": 8,
+      "page": 4,
+      "prompt": "A社の営業部門では，成約件数を増やすことを目的として，営業担当者が企画を顧客に提案する活動を始めた。この営業活動の達成度を測るための指標としてKGI（Key Goal Indicator）とKPI（Key Performance Indicator）を定めたい。本活動におけるKGIとKPIの組合せとして，最も適切なものはどれか。",
+      "choices": {
+        "A": "KGI：成約件数，KPI：売上高",
+        "B": "KGI：成約件数，KPI：提案件数",
+        "C": "KGI：提案件数，KPI：売上高",
+        "D": "KGI：提案件数，KPI：成約件数"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "strat-goal-evaluation",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "KGI",
+        "KPI"
+      ],
+      "figures": []
+    },
+    {
+      "number": 9,
+      "page": 5,
+      "prompt": "ソーシャルメディアポリシーを制定する目的として，適切なものだけを全て挙げたものはどれか。\na 企業がソーシャルメディアを使用する際の心得やルールなどを取り決めて，社外の人々が理解できるようにするため\nb 企業に属する役員や従業員が，公私限らずにソーシャルメディアを使用する際のルールを示すため\nc ソーシャルメディアが企業に対して取材や問合せを行う際の条件や窓口での取扱いのルールを示すため",
+      "choices": {
+        "A": "a",
+        "B": "a, b",
+        "C": "a, c",
+        "D": "b, c"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "strat-legal-compliance",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ソーシャルメディアポリシー",
+        "コンプライアンス"
+      ],
+      "figures": []
+    },
+    {
+      "number": 10,
+      "page": 5,
+      "prompt": "フォーラム標準に関する記述として，最も適切なものはどれか。",
+      "choices": {
+        "A": "工業製品が，定められた品質，寸法，機能及び形状の範囲内であることを保証したもの",
+        "B": "公的な標準化機関において，透明かつ公正な手続の下，関係者が合意の上で制定したもの",
+        "C": "特定の企業が開発した仕様が広く利用された結果，事実上の業界標準になったもの",
+        "D": "特定の分野に関心のある複数の企業などが集まって結成した組織が，規格として作ったもの"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-standardization",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "フォーラム標準",
+        "標準化"
+      ],
+      "figures": []
+    },
+    {
+      "number": 11,
+      "page": 5,
+      "prompt": "IoTやAIといったITを活用し，戦略的にビジネスモデルの刷新や新たな付加価値を生み出していくことなどを示す言葉として，最も適切なものはどれか。",
+      "choices": {
+        "A": "デジタルサイネージ",
+        "B": "デジタルディバイド",
+        "C": "デジタルトランスフォーメーション",
+        "D": "デジタルネイティブ"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "strat-generative-ai-dx",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "デジタルトランスフォーメーション",
+        "DX"
+      ],
+      "figures": []
+    },
+    {
+      "number": 12,
+      "page": 6,
+      "prompt": "スマートフォンに内蔵された非接触型ICチップと外部のRFIDリーダーによって，実現しているサービスの事例だけを全て挙げたものはどれか。\na 移動中の通話の際に基地局を自動的に切り替えて通話を保持する。\nb 駅の自動改札を通過する際の定期券として利用する。\nc 海外でも国内と同じ電子メールなどのサービスを利用する。\nd 決済手続情報を得るためにQRコードを読み込む。",
+      "choices": {
+        "A": "a, b, c, d",
+        "B": "a, b, d",
+        "C": "b",
+        "D": "b, d"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-wireless-mobile",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "RFID",
+        "非接触ICチップ"
+      ],
+      "figures": []
+    },
+    {
+      "number": 13,
+      "page": 6,
+      "prompt": "ある製品の今月の売上高と費用は表のとおりであった。販売単価を1,000円から800円に変更するとき，赤字にならないためには少なくとも毎月何個を販売する必要があるか。ここで，固定費及び製品1個当たりの変動費は変化しないものとする。",
+      "choices": {
+        "A": "2,400",
+        "B": "2,500",
+        "C": "4,800",
+        "D": "6,000"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-accounting-break-even",
+      "questionPattern": "calculation",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "損益分岐点",
+        "変動費"
+      ],
+      "figures": [
+        {
+          "id": "q013-figure-1",
+          "kind": "image",
+          "file": "q013-figure-1.png",
+          "alt": "今月の売上高と費用を示す表。売上高2,000,000円（販売単価1,000円，販売個数2,000個）、固定費600,000円、1個当たりの変動費700円。",
+          "promptAnchor": "表",
+          "pdfPage": 6,
+          "pdfRect": [
+            414,
+            1000,
+            576,
+            265
+          ]
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "page": 7,
+      "prompt": "AIの活用領域の一つである自然言語処理が利用されている事例として，適切なものだけを全て挙げたものはどれか。\na Webサイト上で，日本語の文章を入力すると即座に他言語に翻訳される。\nb 災害時にSNSに投稿された文字情報をリアルタイムで収集し，地名と災害情報などを解析して被災状況を把握する。\nc スマートスピーカーを利用して，音声によって家電の操作や音楽の再生を行う。\nd 駐車場の出入口に設置したカメラでナンバープレートを撮影して，文字認識処理をし，精算済みの車両がゲートに近付くと自動で開く。",
+      "choices": {
+        "A": "a, b, c",
+        "B": "a, b, d",
+        "C": "a, c, d",
+        "D": "b, c, d"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "application",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "自然言語処理",
+        "AI活用"
+      ],
+      "figures": []
+    },
+    {
+      "number": 15,
+      "page": 7,
+      "prompt": "パスワードに関連した不適切な行為a〜dのうち，不正アクセス禁止法で規制されている行為だけを全て挙げたものはどれか。\na 業務を代行してもらうために，社内データベースアクセス用の自分のIDとパスワードを同僚に伝えた。\nb 自分のPCに，社内データベースアクセス用の自分のパスワードのメモを貼り付けた。\nc 電子メールに添付されていた文書をPCに取り込んだ。その文書の閲覧用パスワードを，その文書を見る権利のない人に教えた。\nd 人気のショッピングサイトに登録されている他人のIDとパスワードを，無断で第三者に伝えた。",
+      "choices": {
+        "A": "a, b, c, d",
+        "B": "a, c, d",
+        "C": "a, d",
+        "D": "d"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-security-laws",
+      "questionPattern": "application",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "不正アクセス禁止法",
+        "パスワード"
+      ],
+      "figures": []
+    },
+    {
+      "number": 16,
+      "page": 8,
+      "prompt": "コールセンターにおける電話応対業務において，AIを活用し，より有効なFAQシステムを実現する事例として，最も適切なものはどれか。",
+      "choices": {
+        "A": "オペレーター業務研修の一環で，既存のFAQを用いた質疑応答の事例をWebの画面で学習する。",
+        "B": "ガイダンスに従って入力されたダイヤル番号に従って，FAQの該当項目を担当するオペレーターに振り分ける。",
+        "C": "受信した電話番号から顧客の情報，過去の問合せ内容及び回答の記録を，顧客情報データベースから呼び出してオペレーターの画面に表示する。",
+        "D": "電話応対時に，質問の音声から感情と内容を読み取って解析し，FAQから最適な回答候補を選び出す確度を高める。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "AI活用",
+        "FAQ"
+      ],
+      "figures": []
+    },
+    {
+      "number": 17,
+      "page": 8,
+      "prompt": "ITの進展や関連するサービスの拡大によって，様々なデータやツールを自社のビジネスや日常の業務に利用することが可能となっている。このようなデータやツールを課題解決などのために適切に活用できる能力を示す用語として，最も適切なものはどれか。",
+      "choices": {
+        "A": "アクセシビリティ",
+        "B": "コアコンピタンス",
+        "C": "情報リテラシー",
+        "D": "デジタルディバイド"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-data-utilization",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "情報リテラシー",
+        "データ活用"
+      ],
+      "figures": []
+    },
+    {
+      "number": 18,
+      "page": 9,
+      "prompt": "EUの一般データ保護規則（GDPR）に関する記述として，適切なものだけを全て挙げたものはどれか。\na EU域内に拠点がある事業者が，EU域内に対してデータやサービスを提供している場合は，適用の対象となる。\nb EU域内に拠点がある事業者が，アジアや米国などEU域外に対してデータやサービスを提供している場合は，適用の対象とならない。\nc EU域内に拠点がない事業者が，アジアや米国などEU域外に対してだけデータやサービスを提供している場合は，適用の対象とならない。\nd EU域内に拠点がない事業者が，アジアや米国などからEU域内に対してデータやサービスを提供している場合は，適用の対象とならない。",
+      "choices": {
+        "A": "a",
+        "B": "a, b, c",
+        "C": "a, c",
+        "D": "a, c, d"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "strat-privacy-law",
+      "questionPattern": "application",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "GDPR",
+        "個人データ保護"
+      ],
+      "figures": []
+    },
+    {
+      "number": 19,
+      "page": 9,
+      "prompt": "住宅地に設置してある飲料の自動販売機に組み込まれた通信機器と，遠隔で自動販売機を監視しているコンピュータが，ネットワークを介してデータを送受信することによって在庫管理を実現するような仕組みがある。このように，機械同士がネットワークを介して互いに情報をやり取りすることによって，自律的に高度な制御や動作を行う仕組みはどれか。",
+      "choices": {
+        "A": "MOT",
+        "B": "MRP",
+        "C": "M2M",
+        "D": "O2O"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "M2M",
+        "IoT"
+      ],
+      "figures": []
+    },
+    {
+      "number": 20,
+      "page": 9,
+      "prompt": "資本活用の効率性を示す指標はどれか。",
+      "choices": {
+        "A": "売上高営業利益率",
+        "B": "自己資本比率",
+        "C": "総資本回転率",
+        "D": "損益分岐点比率"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "strat-financial-statements",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "総資本回転率",
+        "経営指標"
+      ],
+      "figures": []
+    },
+    {
+      "number": 21,
+      "page": 10,
+      "prompt": "フリーミアムの事例として，適切なものはどれか。",
+      "choices": {
+        "A": "購入した定額パスをもっていれば，期限内は何杯でもドリンクをもらえるファーストフード店のサービス",
+        "B": "無料でダウンロードして使うことはできるが，プログラムの改変は許されていない統計解析プログラム",
+        "C": "名刺を個人で登録・管理する基本機能を無料で提供し，社内関係者との間での顧客情報の共有や人物検索などの追加機能を有料で提供する名刺管理サービス",
+        "D": "有料広告を収入源とすることによって，無料で配布している地域限定の生活情報などの広報誌"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "strat-ebusiness",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "フリーミアム",
+        "ビジネスモデル"
+      ],
+      "figures": []
+    },
+    {
+      "number": 22,
+      "page": 10,
+      "prompt": "資金決済法における前払式支払手段に該当するものはどれか。",
+      "choices": {
+        "A": "Webサイト上で預金口座から振込や送金ができるサービス",
+        "B": "インターネット上で電子的な通貨として利用可能な暗号資産",
+        "C": "全国のデパートや商店などで共通に利用可能な使用期限のない商品券",
+        "D": "店舗などでの商品購入時に付与され，同店での次回の購入代金として利用可能なポイント"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "strat-legal-compliance",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "資金決済法",
+        "前払式支払手段"
+      ],
+      "figures": []
+    },
+    {
+      "number": 23,
+      "page": 10,
+      "prompt": "OMG（Object Management Group）によって維持されており，国際規格ISO/IEC 19510として標準化されているビジネスプロセスのモデリング手法及び表記法はどれか。",
+      "choices": {
+        "A": "BABOK",
+        "B": "BPMN",
+        "C": "BPO",
+        "D": "BPR"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "strat-business-process",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "BPMN",
+        "業務モデリング"
+      ],
+      "figures": []
+    },
+    {
+      "number": 24,
+      "page": 11,
+      "prompt": "需要量が年間を通じて安定している場合において，定量発注方式に関する記述として，最も適切なものはどれか。",
+      "choices": {
+        "A": "最適な発注量は，発注費用と在庫維持費用の総額が最小となる場合である。",
+        "B": "発注回数の多寡で比較したとき，発注回数の多い方が商品を保管するスペースを広くする必要がある。",
+        "C": "発注は毎週金曜日，毎月末など，決められた同じサイクルで行われる。",
+        "D": "毎回需要予測に基づき発注が行われる。"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "strat-production-management",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "定量発注方式",
+        "経済的発注量"
+      ],
+      "figures": []
+    },
+    {
+      "number": 25,
+      "page": 11,
+      "prompt": "企業の行為に関する記述a〜cのうち，コンプライアンスにおいて問題となるおそれのある行為だけを全て挙げたものはどれか。\na 新商品の名称を消費者に浸透させるために，誰でも応募ができて，商品名の一部を答えさせるだけの簡単なクイズを新聞や自社ホームページ，雑誌などに広く掲載し，応募者の中から抽選で現金10万円が当たるキャンペーンを実施した。\nb 人気のあるWebサイトを運営している企業が，広告主から宣伝の依頼があった特定の商品を好意的に評価する記事を，広告であることを表示することなく一般の記事として掲載した。\nc フランスをイメージしてデザインしたバッグを国内で製造し，原産国の国名は記載せず，パリの風景写真とフランス国旗だけを印刷したタグを添付して，販売した。",
+      "choices": {
+        "A": "a, b",
+        "B": "a, b, c",
+        "C": "a, c",
+        "D": "b, c"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-legal-compliance",
+      "questionPattern": "application",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "コンプライアンス",
+        "景品表示法"
+      ],
+      "figures": []
+    },
+    {
+      "number": 26,
+      "page": 12,
+      "prompt": "組立製造販売業A社では経営効率化の戦略として，部品在庫を極限まで削減するためにかんばん方式を導入することにした。この戦略実現のために，A社が在庫管理システムとオンラインで連携させる情報システムとして，最も適切なものはどれか。\nなお，A社では在庫管理システムで部品在庫も管理している。また，現在は他のどのシステムも在庫管理システムと連携していないものとする。",
+      "choices": {
+        "A": "会計システム",
+        "B": "部品購買システム",
+        "C": "顧客管理システム",
+        "D": "販売管理システム"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "strat-production-management",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "かんばん方式",
+        "在庫管理"
+      ],
+      "figures": []
+    },
+    {
+      "number": 27,
+      "page": 12,
+      "prompt": "ファミリーレストランチェーンAでは，店舗の運営戦略を検討するために，店舗ごとの座席数，客単価及び売上高の三つの要素の関係を分析することにした。各店舗の三つの要素を，一つの図表で全店舗分可視化するときに用いる図表として，最も適切なものはどれか。",
+      "choices": {
+        "A": "ガントチャート",
+        "B": "バブルチャート",
+        "C": "マインドマップ",
+        "D": "ロードマップ"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-data-utilization",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "バブルチャート",
+        "可視化"
+      ],
+      "figures": []
+    },
+    {
+      "number": 28,
+      "page": 12,
+      "prompt": "AIを開発するベンチャー企業のA社が，資金調達を目的に，金融商品取引所に初めて上場することになった。このように，企業の未公開の株式を，新たに公開することを表す用語として，最も適切なものはどれか。",
+      "choices": {
+        "A": "IPO",
+        "B": "LBO",
+        "C": "TOB",
+        "D": "VC"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "strat-enterprise-activities",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "IPO",
+        "株式公開"
+      ],
+      "figures": []
+    },
+    {
+      "number": 29,
+      "page": 13,
+      "prompt": "不正な販売行為を防ぐために，正当な理由なく映像ソフトのコピープロテクトを無効化するプログラムの販売行為を規制している法律はどれか。",
+      "choices": {
+        "A": "商標法",
+        "B": "特定商取引に関する法律",
+        "C": "不正アクセス行為の禁止等に関する法律",
+        "D": "不正競争防止法"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-intellectual-property",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "不正競争防止法",
+        "コピープロテクト"
+      ],
+      "figures": []
+    },
+    {
+      "number": 30,
+      "page": 13,
+      "prompt": "犯罪によって得た資金を正当な手段で得たように見せかける行為を防ぐために，金融機関などが実施する取組を表す用語として，最も適切なものはどれか。",
+      "choices": {
+        "A": "AML（Anti-Money Laundering）",
+        "B": "インサイダー取引規制",
+        "C": "スキミング",
+        "D": "フィッシング"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "strat-legal-compliance",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "AML",
+        "マネーロンダリング"
+      ],
+      "figures": []
+    },
+    {
+      "number": 31,
+      "page": 13,
+      "prompt": "様々な企業のシステム間を連携させる公開されたインタフェースを通じて，データやソフトウェアを相互利用し，それらの企業との協業を促進しながら新しいサービスを創出することなどで，ビジネスを拡大していく仕組みを表す用語として，最も適切なものはどれか。",
+      "choices": {
+        "A": "APIエコノミー",
+        "B": "アウトソーシング",
+        "C": "シェアリングエコノミー",
+        "D": "プロセスイノベーション"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-api",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "APIエコノミー",
+        "協業"
+      ],
+      "figures": []
+    },
+    {
+      "number": 32,
+      "page": 14,
+      "prompt": "新システムの導入を予定している企業や官公庁などが作成するRFPの説明として，最も適切なものはどれか。",
+      "choices": {
+        "A": "ベンダー企業から情報収集を行い，システムの技術的な課題や実現性を把握するもの",
+        "B": "ベンダー企業と発注者で新システムに求められる性能要件などを定義するもの",
+        "C": "ベンダー企業と発注者との間でサービス品質のレベルに関する合意事項を列挙したもの",
+        "D": "ベンダー企業にシステムの導入目的や機能概要などを示し，提案書の提出を求めるもの"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "strat-system-planning-rfp",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "RFP",
+        "調達"
+      ],
+      "figures": []
+    },
+    {
+      "number": 33,
+      "page": 14,
+      "prompt": "製品Aを1個生産するのに部品aが2個，部品bが1個必要である。部品aは1回の発注数量150個，調達期間1週間，部品bは1回の発注数量100個，調達期間2週間の購買部品である。製品Aの6週間の生産計画と，部品a，部品bの1週目の手持在庫が表のとおりであるとき，遅くとも何週目に部品を発注する必要があるか。ここで，部品の発注，納品はそれぞれ週の初めに行われるものとし，納品された部品はすぐに生産に利用できるものとする。",
+      "choices": {
+        "A": "2",
+        "B": "3",
+        "C": "4",
+        "D": "5"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "strat-production-management",
+      "questionPattern": "calculation",
+      "estimatedDifficulty": 5,
+      "tags": [
+        "所要量計算",
+        "調達期間"
+      ],
+      "figures": [
+        {
+          "id": "q033-figure-1",
+          "kind": "image",
+          "file": "q033-figure-1.png",
+          "alt": "製品Aの6週間の生産計画と部品の在庫を示す表。製品Aの生産個数は1週目0，2〜6週目は各40。部品aは所要数量が1週目0，2〜6週目は各80，手持在庫数量は1週目250。部品bは所要数量が1週目0，手持在庫数量は1週目150。注記として網掛けの部分は表示していないと書かれている。",
+          "promptAnchor": "表",
+          "pdfPage": 14,
+          "pdfRect": [
+            252,
+            1200,
+            945,
+            375
+          ]
+        }
+      ]
+    },
+    {
+      "number": 34,
+      "page": 15,
+      "prompt": "記述a〜cのうち，“人間中心のAI社会原則”において，AIが社会に受け入れられ，適正に利用されるために，社会が留意すべき事項として記されているものだけを全て挙げたものはどれか。\na AIの利用に当たっては，人が利用方法を判断し決定するのではなく，AIが自律的に判断し決定できるように，AIそのものを高度化しなくてはならない。\nb AIの利用は，憲法及び国際的な規範の保障する基本的人権を侵すものであってはならない。\nc AIを早期に普及させるために，まず高度な情報リテラシーを保有する者に向けたシステムを実現し，その後，情報弱者もAIの恩恵を享受できるシステムを実現するよう，段階的に発展させていかなくてはならない。",
+      "choices": {
+        "A": "a, b",
+        "B": "a, b, c",
+        "C": "b",
+        "D": "b, c"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "strat-generative-ai-dx",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "AI社会原則",
+        "人間中心"
+      ],
+      "figures": []
+    },
+    {
+      "number": 35,
+      "page": 15,
+      "prompt": "第4次産業革命に関する記述として，最も適切なものはどれか。",
+      "choices": {
+        "A": "医療やインフラ，交通システムなどの生活における様々な領域で，インターネットやAIを活用して，サービスの自動化と質の向上を図る。",
+        "B": "エレクトロニクスを活用した産業用ロボットを工場に導入することによって，生産の自動化と人件費の抑制を行う。",
+        "C": "工場においてベルトコンベアを利用した生産ラインを構築することによって，工業製品の大量生産を行う。",
+        "D": "織機など，軽工業の機械の動力に蒸気エネルギーを利用することによって，人手による作業に比べて生産性を高める。"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "strat-technology-development-strategy",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "第4次産業革命",
+        "Society 5.0"
+      ],
+      "figures": []
+    },
+    {
+      "number": 36,
+      "page": 16,
+      "prompt": "サービスデスクの業務改善に関する記述のうち，最も適切なものはどれか。",
+      "choices": {
+        "A": "サービスデスクが受け付けた問合せの内容や回答，費やした時間などを記録して分析を行う。",
+        "B": "障害の問合せに対して一時的な回避策は提示せず，根本原因及び解決策の検討に注力する体制を組む。",
+        "C": "利用者が問合せを速やかに実施できるように，問合せ窓口は問合せの種別ごとにできるだけ細かく分ける。",
+        "D": "利用者に対して公平性を保つように，問合せ内容の重要度にかかわらず受付順に回答を実施するように徹底する。"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "mgmt-itil",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "サービスデスク",
+        "業務改善"
+      ],
+      "figures": []
+    },
+    {
+      "number": 37,
+      "page": 16,
+      "prompt": "システム監査人の行動規範に関して，次の記述中のa, bに入れる字句の適切な組合せはどれか。\nシステム監査人は，監査対象となる組織と同一の指揮命令系統に属していないなど，［a］上の独立性が確保されている必要がある。また，システム監査人は［b］立場で公正な判断を行うという精神的な態度が求められる。",
+      "choices": {
+        "A": "a：外観，b：客観的な",
+        "B": "a：経営，b：被監査側の",
+        "C": "a：契約，b：経営者側の",
+        "D": "a：取引，b：良心的な"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "mgmt-system-audit",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "システム監査人",
+        "独立性"
+      ],
+      "figures": []
+    },
+    {
+      "number": 38,
+      "page": 17,
+      "prompt": "システム開発プロジェクトの品質目標を検討するために，複数の類似プロジェクトのプログラムステップ数と不良件数の関係性を示す図として，適切なものはどれか。",
+      "choices": {
+        "A": "管理図",
+        "B": "散布図",
+        "C": "特性要因図",
+        "D": "パレート図"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "mgmt-pm-qcd",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "散布図",
+        "品質管理"
+      ],
+      "figures": []
+    },
+    {
+      "number": 39,
+      "page": 17,
+      "prompt": "運用中のソフトウェアの仕様書がないので，ソースコードを解析してプログラムの仕様書を作成した。この手法を何というか。",
+      "choices": {
+        "A": "コードレビュー",
+        "B": "デザインレビュー",
+        "C": "リバースエンジニアリング",
+        "D": "リファクタリング"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "mgmt-development-process",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "リバースエンジニアリング",
+        "保守"
+      ],
+      "figures": []
+    },
+    {
+      "number": 40,
+      "page": 17,
+      "prompt": "ソフトウェア開発におけるDevOpsに関する記述として，最も適切なものはどれか。",
+      "choices": {
+        "A": "運用側で利用する画面のイメージを明確にするために，開発側が要件定義段階でプロトタイプを作成する。",
+        "B": "開発側が，設計・開発・テストの工程を順に実施して，システムに必要な全ての機能及び品質を揃えてから運用側に引き渡す。",
+        "C": "開発側と運用側が密接に連携し，自動化ツールなどを取り入れることによって，仕様変更要求などに対して迅速かつ柔軟に対応する。",
+        "D": "一つのプログラムを2人の開発者が共同で開発することによって，生産性と信頼性を向上させる。"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "mgmt-development-process",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "DevOps",
+        "開発と運用"
+      ],
+      "figures": []
+    },
+    {
+      "number": 41,
+      "page": 18,
+      "prompt": "次のアローダイアグラムに基づき作業を行った結果，作業Dが2日遅延し，作業Fが3日前倒しで完了した。作業全体の所要日数は予定と比べてどれくらい変化したか。",
+      "choices": {
+        "A": "3日遅延",
+        "B": "1日前倒し",
+        "C": "2日前倒し",
+        "D": "3日前倒し"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "mgmt-wbs-gantt",
+      "questionPattern": "diagram",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "アローダイアグラム",
+        "クリティカルパス"
+      ],
+      "figures": [
+        {
+          "id": "q041-figure-1",
+          "kind": "image",
+          "file": "q041-figure-1.png",
+          "alt": "作業A〜Gから成るアローダイアグラム。開始点から作業A（2日）と作業B（3日）が分岐する。Aの後は作業C（4日）、Bの後は作業D（1日）と作業E（1日）に分かれる。CとDの合流点から作業F（5日）、Eの後から作業G（5日）が終了点へ向かう。凡例として結合点間の矢印に作業名と所要日数を添えることが示されている。",
+          "promptAnchor": "アローダイアグラム",
+          "pdfPage": 18,
+          "pdfRect": [
+            268,
+            348,
+            875,
+            450
+          ]
+        }
+      ]
+    },
+    {
+      "number": 42,
+      "page": 18,
+      "prompt": "ソフトウェア開発における，テストに関する記述a〜cとテスト工程の適切な組合せはどれか。\na 運用予定時間内に処理が終了することを確認する。\nb ソフトウェア間のインタフェースを確認する。\nc プログラムの内部パスを網羅的に確認する。",
+      "choices": {
+        "A": "単体テスト：a，結合テスト：b，システムテスト：c",
+        "B": "単体テスト：a，結合テスト：c，システムテスト：b",
+        "C": "単体テスト：b，結合テスト：a，システムテスト：c",
+        "D": "単体テスト：c，結合テスト：b，システムテスト：a"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "mgmt-testing",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "テスト工程",
+        "単体テスト"
+      ],
+      "figures": []
+    },
+    {
+      "number": 43,
+      "page": 19,
+      "prompt": "ソフトウェア導入作業に関する記述a〜dのうち，適切なものだけを全て挙げたものはどれか。\na 新規開発の場合，導入計画書の作成はせず，期日までに速やかに導入する。\nb ソフトウェア導入作業を実施した後，速やかに導入計画書と導入報告書を作成し，合意を得る必要がある。\nc ソフトウェアを自社開発した場合，影響範囲が社内になるので導入計画書の作成後に導入し，導入計画書の合意は導入後に行う。\nd 本番稼働中のソフトウェアに機能追加する場合，機能追加したソフトウェアの導入計画書を作成し，合意を得てソフトウェア導入作業を実施する。",
+      "choices": {
+        "A": "a, c",
+        "B": "b, c, d",
+        "C": "b, d",
+        "D": "d"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "mgmt-development-process",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ソフトウェア導入",
+        "導入計画書"
+      ],
+      "figures": []
+    },
+    {
+      "number": 44,
+      "page": 19,
+      "prompt": "A社のIT部門では，ヘルプデスクのサービス可用性の向上を図るために，対応時間を24時間に拡大することを検討している。ヘルプデスク業務をA社から受託しているB社は，これを実現するためにチャットボットをB社に導入して活用することによって，深夜時間帯は自動応答で対応する旨を提案したところ，A社は24時間対応が可能であるのでこれに合意した。この合意に用いる文書として，最も適切なものはどれか。",
+      "choices": {
+        "A": "BCP",
+        "B": "NDA",
+        "C": "SLA",
+        "D": "SLM"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "mgmt-service-sla",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "SLA",
+        "サービス可用性"
+      ],
+      "figures": []
+    },
+    {
+      "number": 45,
+      "page": 20,
+      "prompt": "プロジェクトマネジメントでは，スケジュール，コスト，品質といった競合する制約条件のバランスをとることが求められる。計画していた開発スケジュールを短縮することになった場合の対応として，適切なものはどれか。",
+      "choices": {
+        "A": "資源の追加によってコストを増加させてでもスケジュールを遵守することを検討する。",
+        "B": "提供するシステムの高機能化を図ってスケジュールを遵守することを検討する。",
+        "C": "プロジェクトの対象スコープを拡大してスケジュールを遵守することを検討する。",
+        "D": "プロジェクトメンバーを削減してスケジュールを遵守することを検討する。"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "mgmt-pm-qcd",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "QCD",
+        "スケジュール短縮"
+      ],
+      "figures": []
+    },
+    {
+      "number": 46,
+      "page": 20,
+      "prompt": "ITサービスに関する指標には，ITサービスが利用できなくなるインシデントの発生間隔の平均時間であるMTBSI（Mean Time Between Service Incidents）があり，サービスの中断の発生しにくさを表す。ITサービスにおいてMTBSIの改善を行っている事例として，最も適切なものはどれか。",
+      "choices": {
+        "A": "インシデント対応事例のデータベースを整備し，分析することによって，サービスの中断から原因究明までの時間の短縮を図る。",
+        "B": "サービスのメニューを増やすことによって，利用者数の増加を図る。",
+        "C": "サービスを提供しているネットワークの構成を二重化することによって，ネットワークがつながらなくなる障害の低減を図る。",
+        "D": "ヘルプデスクの要員を増やすことによって，サービス利用者からの個々の問合せにおける待ち時間の短縮を図る。"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "mgmt-service-sla",
+      "questionPattern": "application",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "MTBSI",
+        "可用性"
+      ],
+      "figures": []
+    },
+    {
+      "number": 47,
+      "page": 21,
+      "prompt": "あるホスティングサービスのSLAの内容にa〜cがある。これらと関連するITサービスマネジメントの管理との適切な組合せはどれか。\na サーバが稼働している時間\nb ディスクの使用量が設定したしきい値に達したことを検出した後に，指定された担当者に通知するまでの時間\nc 不正アクセスの検知後に，指定された担当者に通知するまでの時間",
+      "choices": {
+        "A": "サービス可用性管理：a，容量・能力管理：b，情報セキュリティ管理：c",
+        "B": "サービス可用性管理：a，容量・能力管理：c，情報セキュリティ管理：b",
+        "C": "サービス可用性管理：b，容量・能力管理：a，情報セキュリティ管理：c",
+        "D": "サービス可用性管理：c，容量・能力管理：b，情報セキュリティ管理：a"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "mgmt-itil",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "SLA",
+        "容量・能力管理"
+      ],
+      "figures": []
+    },
+    {
+      "number": 48,
+      "page": 21,
+      "prompt": "システム環境整備に関する次の記述中のa, bに入れる字句の適切な組合せはどれか。\n企業などがシステム環境である建物や設備などの資源を最善の状態に保つ考え方として［a］がある。その考え方を踏まえたシステム環境整備の施策として，突発的な停電が発生したときにサーバに一定時間電力を供給する機器である［b］の配備などがある。",
+      "choices": {
+        "A": "a：サービスレベルマネジメント，b：IPS",
+        "B": "a：サービスレベルマネジメント，b：UPS",
+        "C": "a：ファシリティマネジメント，b：IPS",
+        "D": "a：ファシリティマネジメント，b：UPS"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "mgmt-facility-management",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ファシリティマネジメント",
+        "UPS"
+      ],
+      "figures": []
+    },
+    {
+      "number": 49,
+      "page": 22,
+      "prompt": "リファクタリングの説明として，適切なものはどれか。",
+      "choices": {
+        "A": "ソフトウェアが提供する機能仕様を変えずに，内部構造を改善すること",
+        "B": "ソフトウェアの動作などを解析して，その仕様を明らかにすること",
+        "C": "ソフトウェアの不具合を修正し，仕様どおりに動くようにすること",
+        "D": "利用者の要望などを基に，ソフトウェアに新しい機能を加える修正をすること"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "mgmt-development-process",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "リファクタリング",
+        "保守"
+      ],
+      "figures": []
+    },
+    {
+      "number": 50,
+      "page": 22,
+      "prompt": "内部統制において，不正防止を目的とした職務分掌に関する事例として，最も適切なものはどれか。",
+      "choices": {
+        "A": "申請者は自身の申請を承認できないようにする。",
+        "B": "申請部署と承認部署の役員を兼務させる。",
+        "C": "一つの業務を複数の担当者が手分けして行う。",
+        "D": "一つの業務を複数の部署で分散して行う。"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "mgmt-system-audit",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "職務分掌",
+        "内部統制"
+      ],
+      "figures": []
+    },
+    {
+      "number": 51,
+      "page": 22,
+      "prompt": "ITサービスマネジメントにおいて，過去のインシデントの内容をFAQとしてデータベース化した。それによって改善が期待できる項目に関する記述a〜cのうち，適切なものだけを全て挙げたものはどれか。\na ITサービスに関連する構成要素の情報を必要な場合にいつでも確認できる。\nb 要員候補の業務経歴を確認し，適切な要員配置計画を立案できる。\nc 利用者からの問合せに対する一次回答率が高まる。",
+      "choices": {
+        "A": "a",
+        "B": "a, b",
+        "C": "a, c",
+        "D": "c"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "mgmt-itil",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "FAQ",
+        "インシデント管理"
+      ],
+      "figures": []
+    },
+    {
+      "number": 52,
+      "page": 23,
+      "prompt": "会計監査の目的として，最も適切なものはどれか。",
+      "choices": {
+        "A": "経理システムを含め，利用しているITに関するリスクをコントロールし，ITガバナンスが実現されていることを確認する。",
+        "B": "経理部門が保有しているPCの利用方法をはじめとして，情報のセキュリティに係るリスクマネジメントが効果的に実施されていることを確認する。",
+        "C": "組織内の会計業務などを含む諸業務が組織の方針に従って，合理的かつ効率的な運用が実現されていることを確認する。",
+        "D": "日常の各種取引の発生から決算報告書への集計に至るまで，不正や誤りのない処理が行われていることを確認する。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "mgmt-system-audit",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "会計監査",
+        "監査の種類"
+      ],
+      "figures": []
+    },
+    {
+      "number": 53,
+      "page": 23,
+      "prompt": "ITが適切に活用されるために企業が実施している活動を，ルールを決める活動と，ルールに従って行動する活動に分けたとき，ルールを決める活動に該当するものはどれか。",
+      "choices": {
+        "A": "IT投資判断基準の確立",
+        "B": "SLA遵守のためのオペレーション管理",
+        "C": "開発プロジェクトの予算管理",
+        "D": "標準システム開発手法に準拠した個別のプロジェクトの推進"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "mgmt-system-audit",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ITガバナンス",
+        "ルール策定"
+      ],
+      "figures": []
+    },
+    {
+      "number": 54,
+      "page": 24,
+      "prompt": "システム開発のプロジェクトマネジメントに関する記述a〜dのうち，スコープのマネジメントの失敗事例だけを全て挙げたものはどれか。\na 開発に必要な人件費を過少に見積もったので，予算を超過した。\nb 開発の作業に必要な期間を短く設定したので，予定期間で開発を完了させることができなかった。\nc 作成する機能の範囲をあらかじめ決めずにプロジェクトを開始したので，開発期間を超過した。\nd プロジェクトで実施すべき作業が幾つか計画から欠落していたので，システムを完成できなかった。",
+      "choices": {
+        "A": "a, b",
+        "B": "b, c",
+        "C": "b, d",
+        "D": "c, d"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "mgmt-pmbok-basics",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "スコープマネジメント",
+        "失敗事例"
+      ],
+      "figures": []
+    },
+    {
+      "number": 55,
+      "page": 24,
+      "prompt": "ソフトウェア開発の仕事に対し，10名が15日間で完了する計画を立てた。しかし，仕事開始日から5日間は，8名しか要員を確保できないことが分かった。計画どおり15日間で仕事を完了させるためには，6日目以降は何名の要員が必要か。ここで，各要員の生産性は同じものとする。",
+      "choices": {
+        "A": "10",
+        "B": "11",
+        "C": "12",
+        "D": "14"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "mgmt-estimation",
+      "questionPattern": "calculation",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "工数",
+        "要員計画"
+      ],
+      "figures": []
+    },
+    {
+      "number": 56,
+      "page": 25,
+      "prompt": "ISMSクラウドセキュリティ認証に関する記述として，適切なものはどれか。",
+      "choices": {
+        "A": "PaaS，SaaSが対象であり，IaaSは対象ではない。",
+        "B": "クラウドサービス固有の管理策が適切に導入，実施されていることを認証するものである。",
+        "C": "クラウドサービスを提供している組織が対象であり，クラウドサービスを利用する組織は対象ではない。",
+        "D": "クラウドサービスで保管されている個人情報について，適切な保護措置を講じる体制を整備し，運用していることを評価して，プライバシーマークの使用を認める制度である。"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-cloud-models",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "ISMSクラウドセキュリティ認証",
+        "クラウド"
+      ],
+      "figures": []
+    },
+    {
+      "number": 57,
+      "page": 25,
+      "prompt": "IoTデバイスにおけるセキュリティ対策のうち，耐タンパ性をもたせる対策として，適切なものはどれか。",
+      "choices": {
+        "A": "サーバからの接続認証が連続して一定回数失敗したら，接続できないようにする。",
+        "B": "通信するデータを暗号化し，データの機密性を確保する。",
+        "C": "内蔵ソフトウェアにオンラインアップデート機能をもたせ，最新のパッチが適用されるようにする。",
+        "D": "内蔵ソフトウェアを難読化し，解読に要する時間を増大させる。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "application",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "耐タンパ性",
+        "IoTセキュリティ"
+      ],
+      "figures": []
+    },
+    {
+      "number": 58,
+      "page": 26,
+      "prompt": "Webサイトなどに不正なソフトウェアを潜ませておき，PCやスマートフォンなどのWebブラウザからこのサイトにアクセスしたとき，利用者が気付かないうちにWebブラウザなどの脆弱性を突いてマルウェアを送り込む攻撃はどれか。",
+      "choices": {
+        "A": "DDoS攻撃",
+        "B": "SQLインジェクション",
+        "C": "ドライブバイダウンロード",
+        "D": "フィッシング攻撃"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-cyber-attacks",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ドライブバイダウンロード",
+        "サイバー攻撃"
+      ],
+      "figures": []
+    },
+    {
+      "number": 59,
+      "page": 27,
+      "prompt": "関係データベースで管理された“会員管理”表を正規化して，“店舗”表，“会員種別”表及び“会員”表に分割した。“会員”表として，適切なものはどれか。ここで，表中の下線は主キーを表し，一人の会員が複数の店舗に登録した場合は，会員番号を店舗ごとに付与するものとする。",
+      "choices": {
+        "A": "会員番号（主キー），会員名",
+        "B": "会員番号（主キー），会員名，会員種別コード",
+        "C": "会員番号（主キー），店舗コード（主キー），会員名",
+        "D": "会員番号（主キー），店舗コード（主キー），会員名，会員種別コード"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-normalization",
+      "questionPattern": "diagram",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "正規化",
+        "主キー"
+      ],
+      "figures": [
+        {
+          "id": "q059-figure-1",
+          "kind": "image",
+          "file": "q059-figure-1.png",
+          "alt": "“会員管理”表。店舗コード（主キー）・店舗名・会員番号（主キー）・会員名・会員種別コード・会員種別名の6列で5行。001札幌の会員番号1は試験花子で02ゴールド，001札幌の会員番号2は情報太郎で02ゴールド，002東京の会員番号1は高度次郎で03一般，002東京の会員番号2は午前桜子で01プラチナ，003大阪の会員番号1は午前桜子で03一般。",
+          "promptAnchor": "“会員管理”表",
+          "pdfPage": 27,
+          "pdfRect": [
+            197,
+            485,
+            1060,
+            370
+          ]
+        },
+        {
+          "id": "q059-figure-2",
+          "kind": "image",
+          "file": "q059-figure-2.png",
+          "alt": "分割後の“店舗”表と“会員種別”表。“店舗”表は店舗コード（主キー）と店舗名の2列。“会員種別”表は会員種別コード（主キー）と会員種別名の2列。",
+          "promptAnchor": "“店舗”表",
+          "pdfPage": 27,
+          "pdfRect": [
+            197,
+            920,
+            425,
+            240
+          ]
+        }
+      ]
+    },
+    {
+      "number": 60,
+      "page": 28,
+      "prompt": "手続printArrayは，配列integerArrayの要素を並べ替えて出力する。手続printArrayを呼び出したときの出力はどれか。ここで，配列の要素番号は1から始まる。\n\n〔プログラム〕\n○printArray()\n  整数型: n, m\n  整数型の配列: integerArray ← {2, 4, 1, 3}\n  for (n を 1 から (integerArray の要素数 － 1) まで 1 ずつ増やす)\n    for (m を 1 から (integerArray の要素数 － n) まで 1 ずつ増やす)\n      if (integerArray[m] ＞ integerArray[m ＋ 1])\n        integerArray[m] と integerArray[m ＋ 1] の値を入れ替える\n      endif\n    endfor\n  endfor\n  integerArray の全ての要素 を先頭から順にコンマ区切りで出力する",
+      "choices": {
+        "A": "1,2,3,4",
+        "B": "1,3,2,4",
+        "C": "3,1,4,2",
+        "D": "4,3,2,1"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "擬似言語",
+        "整列"
+      ],
+      "figures": []
+    },
+    {
+      "number": 61,
+      "page": 28,
+      "prompt": "IoTシステムなどの設計，構築及び運用に際しての基本原則とされ，システムの企画，設計段階から情報セキュリティを確保するための方策を何と呼ぶか。",
+      "choices": {
+        "A": "セキュアブート",
+        "B": "セキュリティバイデザイン",
+        "C": "ユニバーサルデザイン",
+        "D": "リブート"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "セキュリティバイデザイン",
+        "IoT"
+      ],
+      "figures": []
+    },
+    {
+      "number": 62,
+      "page": 29,
+      "prompt": "情報セキュリティにおける認証要素は3種類に分類できる。認証要素の3種類として，適切なものはどれか。",
+      "choices": {
+        "A": "個人情報，所持情報，生体情報",
+        "B": "個人情報，所持情報，知識情報",
+        "C": "個人情報，生体情報，知識情報",
+        "D": "所持情報，生体情報，知識情報"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "認証要素",
+        "多要素認証"
+      ],
+      "figures": []
+    },
+    {
+      "number": 63,
+      "page": 29,
+      "prompt": "容量が500GバイトのHDDを2台使用して，RAID0，RAID1を構成したとき，実際に利用可能な記憶容量の組合せとして，適切なものはどれか。",
+      "choices": {
+        "A": "RAID0：1Tバイト，RAID1：1Tバイト",
+        "B": "RAID0：1Tバイト，RAID1：500Gバイト",
+        "C": "RAID0：500Gバイト，RAID1：1Tバイト",
+        "D": "RAID0：500Gバイト，RAID1：500Gバイト"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-raid",
+      "questionPattern": "calculation",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "RAID0",
+        "RAID1"
+      ],
+      "figures": []
+    },
+    {
+      "number": 64,
+      "page": 30,
+      "prompt": "関数sigmaは，正の整数を引数maxで受け取り，1からmaxまでの整数の総和を戻り値とする。プログラム中のaに入れる字句として，適切なものはどれか。\n\n〔プログラム〕\n○整数型: sigma(整数型: max)\n  整数型: calcX ← 0\n  整数型: n\n  for (n を 1 から max まで 1 ずつ増やす)\n    ［a］\n  endfor\n  return calcX",
+      "choices": {
+        "A": "calcX ← calcX × n",
+        "B": "calcX ← calcX ＋ 1",
+        "C": "calcX ← calcX ＋ n",
+        "D": "calcX ← n"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "擬似言語",
+        "総和"
+      ],
+      "figures": []
+    },
+    {
+      "number": 65,
+      "page": 30,
+      "prompt": "Wi-Fiのセキュリティ規格であるWPA2を用いて，PCを無線LANルータと接続するときに設定するPSKの説明として，適切なものはどれか。",
+      "choices": {
+        "A": "アクセスポイントへの接続を認証するときに用いる符号（パスフレーズ）であり，この符号に基づいて，接続するPCごとに通信の暗号化に用いる鍵が生成される。",
+        "B": "アクセスポイントへの接続を認証するときに用いる符号（パスフレーズ）であり，この符号に基づいて，接続するPCごとにプライベートIPアドレスが割り当てられる。",
+        "C": "接続するアクセスポイントを識別するために用いる名前であり，この名前に基づいて，接続するPCごとに通信の暗号化に用いる鍵が生成される。",
+        "D": "接続するアクセスポイントを識別するために用いる名前であり，この名前に基づいて，接続するPCごとにプライベートIPアドレスが割り当てられる。"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-wireless-mobile",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "WPA2",
+        "PSK"
+      ],
+      "figures": []
+    },
+    {
+      "number": 66,
+      "page": 31,
+      "prompt": "トランザクション処理におけるコミットの説明として，適切なものはどれか。",
+      "choices": {
+        "A": "あるトランザクションが共有データを更新しようとしたとき，そのデータに対する他のトランザクションからの更新を禁止すること",
+        "B": "トランザクションが正常に処理されたときに，データベースへの更新を確定させること",
+        "C": "何らかの理由で，トランザクションが正常に処理されなかったときに，データベースをトランザクション開始前の状態にすること",
+        "D": "複数の表を，互いに関係付ける列をキーとして，一つの表にすること"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-transaction",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "コミット",
+        "トランザクション"
+      ],
+      "figures": []
+    },
+    {
+      "number": 67,
+      "page": 31,
+      "prompt": "ネットワーク環境で利用されるIDSの役割として，適切なものはどれか。",
+      "choices": {
+        "A": "IPアドレスとドメイン名を相互に変換する。",
+        "B": "ネットワーク上の複数のコンピュータの時刻を同期させる。",
+        "C": "ネットワークなどに対する不正アクセスやその予兆を検知し，管理者に通知する。",
+        "D": "メールサーバに届いた電子メールを，メールクライアントに送る。"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-firewall-vpn-zero-trust",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "IDS",
+        "不正アクセス検知"
+      ],
+      "figures": []
+    },
+    {
+      "number": 68,
+      "page": 31,
+      "prompt": "インターネット上のコンピュータでは，Webや電子メールなど様々なアプリケーションプログラムが動作し，それぞれに対応したアプリケーション層の通信プロトコルが使われている。これらの通信プロトコルの下位にあり，基本的な通信機能を実現するものとして共通に使われる通信プロトコルはどれか。",
+      "choices": {
+        "A": "FTP",
+        "B": "POP",
+        "C": "SMTP",
+        "D": "TCP/IP"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-web-internet-basics",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "TCP/IP",
+        "プロトコル階層"
+      ],
+      "figures": []
+    },
+    {
+      "number": 69,
+      "page": 32,
+      "prompt": "配列に格納されているデータを探索するときの，探索アルゴリズムに関する記述のうち，適切なものはどれか。",
+      "choices": {
+        "A": "2分探索法は，探索対象となる配列の先頭の要素から順に探索する。",
+        "B": "線形探索法で探索するのに必要な計算量は，探索対象となる配列の要素数に比例する。",
+        "C": "線形探索法を用いるためには，探索対象となる配列の要素は要素の値で昇順又は降順にソートされている必要がある。",
+        "D": "探索対象となる配列が同一であれば，探索に必要な計算量は探索する値によらず，2分探索法が線形探索法よりも少ない。"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-algorithm-flowchart",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "線形探索法",
+        "2分探索法"
+      ],
+      "figures": []
+    },
+    {
+      "number": 70,
+      "page": 32,
+      "prompt": "Webサービスなどにおいて，信頼性を高め，かつ，利用者からの多量のアクセスを処理するために，複数のコンピュータを連携させて全体として一つのコンピュータであるかのように動作させる技法はどれか。",
+      "choices": {
+        "A": "クラスタリング",
+        "B": "スプーリング",
+        "C": "バッファリング",
+        "D": "ミラーリング"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-parallel-systems",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "クラスタリング",
+        "負荷分散"
+      ],
+      "figures": []
+    },
+    {
+      "number": 71,
+      "page": 33,
+      "prompt": "IoTシステムにおけるエッジコンピューティングに関する記述として，最も適切なものはどれか。",
+      "choices": {
+        "A": "IoTデバイスの増加によるIoTサーバの負荷を軽減するために，IoTデバイスに近いところで可能な限りのデータ処理を行う。",
+        "B": "一定時間ごとに複数の取引をまとめたデータを作成し，そのデータに直前のデータのハッシュ値を埋め込むことによって，データを相互に関連付け，改ざんすることを困難にすることによって，データの信頼性を高める。",
+        "C": "ネットワークの先にあるデータセンター上に集約されたコンピュータ資源を，ネットワークを介して遠隔地から利用する。",
+        "D": "明示的にプログラミングすることなく，入力されたデータからコンピュータが新たな知識やルールを獲得できるようにする。"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "エッジコンピューティング",
+        "IoT"
+      ],
+      "figures": []
+    },
+    {
+      "number": 72,
+      "page": 33,
+      "prompt": "情報セキュリティのリスクマネジメントにおけるリスク対応を，リスク回避，リスク共有，リスク低減及びリスク保有の四つに分類したとき，リスク共有の説明として，適切なものはどれか。",
+      "choices": {
+        "A": "個人情報を取り扱わないなど，リスクを伴う活動自体を停止したり，リスク要因を根本的に排除したりすること",
+        "B": "災害に備えてデータセンターを地理的に離れた複数の場所に分散するなど，リスクの発生確率や損害を減らす対策を講じること",
+        "C": "保険への加入など，リスクを一定の合意の下に別の組織へ移転又は分散することによって，リスクが顕在化したときの損害を低減すること",
+        "D": "リスクの発生確率やリスクが発生したときの損害が小さいと考えられる場合に，リスクを認識した上で特に対策を講じず，そのリスクを受け入れること"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "リスク共有",
+        "リスク対応"
+      ],
+      "figures": []
+    },
+    {
+      "number": 73,
+      "page": 34,
+      "prompt": "攻撃者がコンピュータに不正侵入したとき，再侵入を容易にするためにプログラムや設定の変更を行うことがある。この手口を表す用語として，最も適切なものはどれか。",
+      "choices": {
+        "A": "盗聴",
+        "B": "バックドア",
+        "C": "フィッシング",
+        "D": "ポートスキャン"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-cyber-attacks",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "バックドア",
+        "不正侵入"
+      ],
+      "figures": []
+    },
+    {
+      "number": 74,
+      "page": 34,
+      "prompt": "ニューラルネットワークに関する記述として，最も適切なものはどれか。",
+      "choices": {
+        "A": "PC，携帯電話，情報家電などの様々な情報機器が，社会の至る所に存在し，いつでもどこでもネットワークに接続できる環境",
+        "B": "国立情報学研究所が運用している，大学や研究機関などを結ぶ学術研究用途のネットワーク",
+        "C": "全国の自治体が，氏名，生年月日，性別，住所などの情報を居住地以外の自治体から引き出せるようにネットワーク化したシステム",
+        "D": "ディープラーニングなどで用いられる，脳神経系の仕組みをコンピュータで模したモデル"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ニューラルネットワーク",
+        "ディープラーニング"
+      ],
+      "figures": []
+    },
+    {
+      "number": 75,
+      "page": 35,
+      "prompt": "表計算ソフトを用いて，二つの科目X，Yの点数を評価して合否を判定する。それぞれの点数はワークシートのセルA2，B2に入力する。合格判定条件（1）又は（2）に該当するときはセルC2に“合格”，それ以外のときは“不合格”を表示する。セルC2に入力する式はどれか。\n\n〔合格判定条件〕\n（1）科目Xと科目Yの合計が120点以上である。\n（2）科目X又は科目Yのうち，少なくとも一つが100点である。",
+      "choices": {
+        "A": "IF(論理積((A2＋B2) ≧ 120, A2 ＝ 100, B2 ＝ 100), '合格', '不合格')",
+        "B": "IF(論理積((A2＋B2) ≧ 120, A2 ＝ 100, B2 ＝ 100), '不合格', '合格')",
+        "C": "IF(論理和((A2＋B2) ≧ 120, A2 ＝ 100, B2 ＝ 100), '合格', '不合格')",
+        "D": "IF(論理和((A2＋B2) ≧ 120, A2 ＝ 100, B2 ＝ 100), '不合格', '合格')"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-spreadsheet",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "表計算",
+        "論理和"
+      ],
+      "figures": [
+        {
+          "id": "q075-figure-1",
+          "kind": "image",
+          "file": "q075-figure-1.png",
+          "alt": "表計算のワークシート。A列B列C列，1行目と2行目。1行目はA1が科目X，B1が科目Y，C1が合否。2行目はA2が50，B2が80，C2が合格。",
+          "promptAnchor": "ワークシート",
+          "pdfPage": 35,
+          "pdfRect": [
+            439,
+            687,
+            530,
+            182
+          ]
+        }
+      ]
+    },
+    {
+      "number": 76,
+      "page": 36,
+      "prompt": "品質管理担当者が行っている検査を自動化することを考えた。10,000枚の製品画像と，それに対する品質管理担当者による不良品かどうかの判定結果を学習データとして与えることによって，製品が不良品かどうかを判定する機械学習モデルを構築した。100枚の製品画像に対してテストを行った結果は表のとおりである。品質管理担当者が不良品と判定した製品画像数に占める，機械学習モデルの判定が不良品と判定した製品画像数の割合を再現率としたとき，このテストにおける再現率は幾らか。",
+      "choices": {
+        "A": "0.05",
+        "B": "0.25",
+        "C": "0.50",
+        "D": "0.80"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "calculation",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "再現率",
+        "機械学習"
+      ],
+      "figures": [
+        {
+          "id": "q076-figure-1",
+          "kind": "image",
+          "file": "q076-figure-1.png",
+          "alt": "テスト結果を示す表（単位 枚）。品質管理担当者が不良品と判定したもののうち，機械学習モデルが不良品と判定したのは5枚，良品と判定したのは5枚。品質管理担当者が良品と判定したもののうち，機械学習モデルが不良品と判定したのは15枚，良品と判定したのは75枚。",
+          "promptAnchor": "表",
+          "pdfPage": 36,
+          "pdfRect": [
+            323,
+            601,
+            768,
+            292
+          ]
+        }
+      ]
+    },
+    {
+      "number": 77,
+      "page": 36,
+      "prompt": "受験者10,000人の4教科の試験結果は表のとおりであり，いずれの教科の得点分布も正規分布に従っていたとする。ある受験者の4教科の得点が全て71点であったとき，この受験者が最も高い偏差値を得た教科はどれか。",
+      "choices": {
+        "A": "国語",
+        "B": "社会",
+        "C": "数学",
+        "D": "理科"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-data-utilization",
+      "questionPattern": "calculation",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "偏差値",
+        "標準偏差"
+      ],
+      "figures": [
+        {
+          "id": "q077-figure-1",
+          "kind": "image",
+          "file": "q077-figure-1.png",
+          "alt": "4教科の平均点と標準偏差を示す表（単位 点）。国語は平均点62，標準偏差5。社会は平均点55，標準偏差9。数学は平均点58，標準偏差6。理科は平均点60，標準偏差7。",
+          "promptAnchor": "表",
+          "pdfPage": 36,
+          "pdfRect": [
+            500,
+            1333,
+            419,
+            343
+          ]
+        }
+      ]
+    },
+    {
+      "number": 78,
+      "page": 37,
+      "prompt": "関係データベースの主キーの設定に関する記述として，適切なものだけを全て挙げたものはどれか。\na 値が他のレコードと重複するものは主キーとして使用できない。\nb インデックスとの重複設定はできない。\nc 主キーの値は数値でなければならない。\nd 複数のフィールドを使って主キーを構成できる。",
+      "choices": {
+        "A": "a, c",
+        "B": "a, d",
+        "C": "b, c",
+        "D": "b, d"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-database-sql",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "主キー",
+        "関係データベース"
+      ],
+      "figures": []
+    },
+    {
+      "number": 79,
+      "page": 37,
+      "prompt": "PDCAモデルに基づいてISMSを運用している組織の活動において，次のような調査報告があった。この調査はPDCAモデルのどのプロセスで実施されるか。\n\n社外からの電子メールの受信に対しては，情報セキュリティポリシーに従ってマルウェア検知システムを導入し，維持運用されており，日々数十件のマルウェア付き電子メールの受信を検知し，破棄するという効果を上げている。しかし，社外への電子メールの送信に関するセキュリティ対策のための規定や明確な運用手順がなく，社外秘の資料を添付した電子メールの社外への誤送信などが発生するリスクがある。",
+      "choices": {
+        "A": "P",
+        "B": "D",
+        "C": "C",
+        "D": "A"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "application",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ISMS",
+        "PDCA"
+      ],
+      "figures": []
+    },
+    {
+      "number": 80,
+      "page": 37,
+      "prompt": "USBメモリなどの外部記憶媒体をPCに接続したときに，その媒体中のプログラムや動画などを自動的に実行したり再生したりするOSの機能であり，マルウェア感染の要因ともなるものはどれか。",
+      "choices": {
+        "A": "オートコレクト",
+        "B": "オートコンプリート",
+        "C": "オートフィルター",
+        "D": "オートラン"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-malware-phishing-ransomware",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "オートラン",
+        "マルウェア感染"
+      ],
+      "figures": []
+    },
+    {
+      "number": 81,
+      "page": 38,
+      "prompt": "HDDを廃棄するときに，HDDからの情報漏えい防止策として，適切なものだけを全て挙げたものはどれか。\na データ消去用ソフトウェアを利用し，ランダムなデータをHDDの全ての領域に複数回書き込む。\nb ドリルやメディアシュレッダーなどを用いてHDDを物理的に破壊する。\nc ファイルを消去した後，HDDの論理フォーマットを行う。",
+      "choices": {
+        "A": "a, b",
+        "B": "a, b, c",
+        "C": "a, c",
+        "D": "b, c"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "データ消去",
+        "廃棄"
+      ],
+      "figures": []
+    },
+    {
+      "number": 82,
+      "page": 38,
+      "prompt": "OSS（Open Source Software）に関する記述a〜cのうち，適切なものだけを全て挙げたものはどれか。\na ソースコードに手を加えて再配布することができる。\nb ソースコードの入手は無償だが，有償の保守サポートを受けなければならない。\nc 著作権が放棄されており，無断で利用することができる。",
+      "choices": {
+        "A": "a",
+        "B": "a, c",
+        "C": "b",
+        "D": "c"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-os-software-hardware",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "OSS",
+        "ライセンス"
+      ],
+      "figures": []
+    },
+    {
+      "number": 83,
+      "page": 38,
+      "prompt": "スマートフォンなどで，相互に同じアプリケーションを用いて，インターネットを介した音声通話を行うときに利用される技術はどれか。",
+      "choices": {
+        "A": "MVNO",
+        "B": "NFC",
+        "C": "NTP",
+        "D": "VoIP"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-web-internet-basics",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "VoIP",
+        "音声通話"
+      ],
+      "figures": []
+    },
+    {
+      "number": 84,
+      "page": 39,
+      "prompt": "メッセージダイジェストを利用した送信者のデジタル署名が付与された電子メールに関する記述のうち，適切なものはどれか。",
+      "choices": {
+        "A": "デジタル署名を受信者が検証することによって，不正なメールサーバから送信された電子メールであるかどうかを判別できる。",
+        "B": "デジタル署名を送信側メールサーバのサーバ証明書で受信者が検証することによって，送信者のなりすましを検知できる。",
+        "C": "デジタル署名を付与すると，同時に電子メール本文の暗号化も行われるので，電子メールの内容の漏えいを防ぐことができる。",
+        "D": "電子メール本文の改ざんの防止はできないが，デジタル署名をすることによって，受信者は改ざんが行われたことを検知することはできる。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-digital-signature",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "デジタル署名",
+        "メッセージダイジェスト"
+      ],
+      "figures": []
+    },
+    {
+      "number": 85,
+      "page": 39,
+      "prompt": "IoT機器におけるソフトウェアの改ざん対策にも用いられ，OSやファームウェアなどの起動時に，それらのデジタル署名を検証し，正当であるとみなされた場合にだけそのソフトウェアを実行する技術はどれか。",
+      "choices": {
+        "A": "GPU",
+        "B": "RAID",
+        "C": "セキュアブート",
+        "D": "リブート"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "セキュアブート",
+        "改ざん対策"
+      ],
+      "figures": []
+    },
+    {
+      "number": 86,
+      "page": 40,
+      "prompt": "ハイブリッド暗号方式を用いてメッセージを送信したい。メッセージと復号用の鍵の暗号化手順を表した図において，メッセージの暗号化に使用する鍵を（1）とし，（1）の暗号化に使用する鍵を（2）としたとき，図のa, bに入れる字句の適切な組合せはどれか。",
+      "choices": {
+        "A": "a：共通，b：公開",
+        "B": "a：共通，b：秘密",
+        "C": "a：公開，b：共通",
+        "D": "a：公開，b：秘密"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-public-key-crypto",
+      "questionPattern": "diagram",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "ハイブリッド暗号方式",
+        "鍵配送"
+      ],
+      "figures": [
+        {
+          "id": "q086-figure-1",
+          "kind": "image",
+          "file": "q086-figure-1.png",
+          "alt": "ハイブリッド暗号方式でメッセージと鍵を暗号化する手順の図。（1）の［a］鍵でメッセージを暗号化して暗号化されたメッセージを作り，同時にその［a］鍵を（2）の受信者の［b］鍵で暗号化して暗号化された［a］鍵を作る。両方をまとめて送信する。",
+          "promptAnchor": "図",
+          "pdfPage": 40,
+          "pdfRect": [
+            157,
+            470,
+            1096,
+            530
+          ]
+        }
+      ]
+    },
+    {
+      "number": 87,
+      "page": 40,
+      "prompt": "IoTエリアネットワークでも用いられ，電気を供給する電力線に高周波の通信用信号を乗せて伝送させることによって，電力線を伝送路としても使用する技術はどれか。",
+      "choices": {
+        "A": "PLC",
+        "B": "PoE",
+        "C": "エネルギーハーベスティング",
+        "D": "テザリング"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "PLC",
+        "電力線通信"
+      ],
+      "figures": []
+    },
+    {
+      "number": 88,
+      "page": 41,
+      "prompt": "読出し専用のDVDはどれか。",
+      "choices": {
+        "A": "DVD-R",
+        "B": "DVD-RAM",
+        "C": "DVD-ROM",
+        "D": "DVD-RW"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-io-devices",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "DVD-ROM",
+        "光ディスク"
+      ],
+      "figures": []
+    },
+    {
+      "number": 89,
+      "page": 41,
+      "prompt": "企業の従業員になりすましてIDやパスワードを聞き出したり，くずかごから機密情報を入手したりするなど，技術的手法を用いない攻撃はどれか。",
+      "choices": {
+        "A": "ゼロデイ攻撃",
+        "B": "ソーシャルエンジニアリング",
+        "C": "ソーシャルメディア",
+        "D": "トロイの木馬"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-cyber-attacks",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "ソーシャルエンジニアリング",
+        "なりすまし"
+      ],
+      "figures": []
+    },
+    {
+      "number": 90,
+      "page": 41,
+      "prompt": "情報セキュリティにおける物理的及び環境的セキュリティ管理策であるクリアデスクを職場で実施する例として，適切なものはどれか。",
+      "choices": {
+        "A": "従業員に固定された机がなく，空いている机で業務を行う。",
+        "B": "情報を記録した書類などを机の上に放置したまま離席しない。",
+        "C": "机の上のLANケーブルを撤去して，暗号化された無線LANを使用する。",
+        "D": "離席時は，PCをパスワードロックする。"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "クリアデスク",
+        "物理的セキュリティ"
+      ],
+      "figures": []
+    },
+    {
+      "number": 91,
+      "page": 42,
+      "prompt": "AIに利用されるニューラルネットワークにおける活性化関数に関する記述として，適切なものはどれか。",
+      "choices": {
+        "A": "ニューラルネットワークから得られた結果を基に計算し，結果の信頼度を出力する。",
+        "B": "入力層と出力層のニューロンの数を基に計算し，中間層に必要なニューロンの数を出力する。",
+        "C": "ニューロンの接続構成を基に計算し，最適なニューロンの数を出力する。",
+        "D": "一つのニューロンにおいて，入力された値を基に計算し，次のニューロンに渡す値を出力する。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-ai-ml",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 4,
+      "tags": [
+        "活性化関数",
+        "ニューラルネットワーク"
+      ],
+      "figures": []
+    },
+    {
+      "number": 92,
+      "page": 42,
+      "prompt": "電子メールに関する記述のうち，適切なものはどれか。",
+      "choices": {
+        "A": "電子メールのプロトコルには，受信にSMTP，送信にPOP3が使われる。",
+        "B": "メーリングリストによる電子メールを受信すると，その宛先には全ての登録メンバーのメールアドレスが記述されている。",
+        "C": "メールアドレスの“@”の左側部分に記述されているドメイン名に基づいて，電子メールが転送される。",
+        "D": "メール転送サービスを利用すると，自分名義の複数のメールアドレス宛に届いた電子メールを一つのメールボックスに保存することができる。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-email-protocol",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "電子メール",
+        "メール転送"
+      ],
+      "figures": []
+    },
+    {
+      "number": 93,
+      "page": 42,
+      "prompt": "フールプルーフの考え方を適用した例として，適切なものはどれか。",
+      "choices": {
+        "A": "HDDをRAIDで構成する。",
+        "B": "システムに障害が発生しても，最低限の機能を維持して処理を継続する。",
+        "C": "システムを二重化して障害に備える。",
+        "D": "利用者がファイルの削除操作をしたときに，“削除してよいか”の確認メッセージを表示する。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-reliability-availability",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "フールプルーフ",
+        "信頼性設計"
+      ],
+      "figures": []
+    },
+    {
+      "number": 94,
+      "page": 43,
+      "prompt": "ISMSにおける情報セキュリティ方針に関する記述として，適切なものはどれか。",
+      "choices": {
+        "A": "企業が導入するセキュリティ製品を対象として作成され，セキュリティの設定値を定めたもの",
+        "B": "個人情報を取り扱う部門を対象として，個人情報取扱い手順を規定したもの",
+        "C": "自社と取引先企業との間で授受する情報資産の範囲と具体的な保護方法について，両社間で合意したもの",
+        "D": "情報セキュリティに対する組織の意図を示し，方向付けしたもの"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-isms-risk",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "情報セキュリティ方針",
+        "ISMS"
+      ],
+      "figures": []
+    },
+    {
+      "number": 95,
+      "page": 43,
+      "prompt": "情報セキュリティにおける機密性，完全性及び可用性に関する記述のうち，完全性が確保されなかった例だけを全て挙げたものはどれか。\na オペレーターが誤ったデータを入力し，顧客名簿に矛盾が生じた。\nb ショッピングサイトがシステム障害で一時的に利用できなかった。\nc データベースで管理していた顧客の個人情報が漏えいした。",
+      "choices": {
+        "A": "a",
+        "B": "a, b",
+        "C": "b",
+        "D": "c"
+      },
+      "correctChoiceKana": "ア",
+      "correctChoice": "A",
+      "primaryTopicId": "tech-security-cia",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "完全性",
+        "情報セキュリティの3要素"
+      ],
+      "figures": []
+    },
+    {
+      "number": 96,
+      "page": 43,
+      "prompt": "CPUのクロック周波数や通信速度などを表すときに用いられる国際単位系（SI）接頭語に関する記述のうち，適切なものはどれか。",
+      "choices": {
+        "A": "Gの10の6乗倍は，Tである。",
+        "B": "Mの10の3乗倍は，Gである。",
+        "C": "Mの10の6乗倍は，Gである。",
+        "D": "Tの10の3乗倍は，Gである。"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-binary-data",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "SI接頭語",
+        "単位"
+      ],
+      "figures": []
+    },
+    {
+      "number": 97,
+      "page": 44,
+      "prompt": "サブネットマスクの役割として，適切なものはどれか。",
+      "choices": {
+        "A": "IPアドレスから，利用しているLAN上のMACアドレスを導き出す。",
+        "B": "IPアドレスの先頭から何ビットをネットワークアドレスに使用するかを定義する。",
+        "C": "コンピュータをLANに接続するだけで，TCP/IPの設定情報を自動的に取得する。",
+        "D": "通信相手のドメイン名とIPアドレスを対応付ける。"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-network-address",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "サブネットマスク",
+        "IPアドレス"
+      ],
+      "figures": []
+    },
+    {
+      "number": 98,
+      "page": 44,
+      "prompt": "IoT機器であるスマートメーターに関する記述として，適切なものはどれか。",
+      "choices": {
+        "A": "カーナビゲーションシステムやゲームコントローラーに内蔵されて，速度がどれだけ変化したかを計測する。",
+        "B": "住宅などに設置され，電気やガスなどの使用量を自動的に計測し，携帯電話回線などを利用して供給事業者にそのデータを送信する。",
+        "C": "スマートフォンやモバイルPCなどのモバイル情報端末に保存しているデータを，ネットワークを介して遠隔地から消去する。",
+        "D": "歩数を数えるとともに，GPS機能などによって，歩行経路を把握したり，歩行速度や道のアップダウンを検知して消費エネルギーを計算したりする。"
+      },
+      "correctChoiceKana": "イ",
+      "correctChoice": "B",
+      "primaryTopicId": "tech-iot",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "スマートメーター",
+        "IoT機器"
+      ],
+      "figures": []
+    },
+    {
+      "number": 99,
+      "page": 44,
+      "prompt": "バイオメトリクス認証の例として，適切なものはどれか。",
+      "choices": {
+        "A": "機械では判読が困難な文字列の画像をモニターに表示して人に判読させ，その文字列を入力させることによって認証する。",
+        "B": "タッチパネルに表示されたソフトウェアキーボードから入力されたパスワード文字列によって認証する。",
+        "C": "タッチペンなどを用いて署名する際の筆跡や筆圧など，動作の特徴を読み取ることによって認証する。",
+        "D": "秘密の質問として，本人しか知り得ない質問に答えさせることによって認証する。"
+      },
+      "correctChoiceKana": "ウ",
+      "correctChoice": "C",
+      "primaryTopicId": "tech-auth-authz-mfa",
+      "questionPattern": "application",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "バイオメトリクス認証",
+        "行動的特徴"
+      ],
+      "figures": []
+    },
+    {
+      "number": 100,
+      "page": 45,
+      "prompt": "関係データベースにおける結合操作はどれか。",
+      "choices": {
+        "A": "表から，特定の条件を満たすレコードを抜き出した表を作る。",
+        "B": "表から，特定のフィールドを抜き出した表を作る。",
+        "C": "二つの表から，同じ値をもつレコードを抜き出した表を作る。",
+        "D": "二つの表から，フィールドの値によって関連付けした表を作る。"
+      },
+      "correctChoiceKana": "エ",
+      "correctChoice": "D",
+      "primaryTopicId": "tech-database-sql",
+      "questionPattern": "knowledge",
+      "estimatedDifficulty": 2,
+      "tags": [
+        "結合",
+        "関係演算"
+      ],
+      "figures": []
+    }
+  ]
+}

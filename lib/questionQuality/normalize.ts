@@ -103,6 +103,25 @@ export function normalizeChoiceText(text: string): string {
 }
 
 /**
+ * 「この2つは本当に同じ文字列か」を判定するための正規化。
+ *
+ * normalizeChoiceText との違いは、括弧も先頭記号も落とさないこと。落とすと、
+ * 記号の位置だけが違う選択肢が同一に見えてしまう:
+ *
+ *   "j ← k ＋ (j － 10 × k)" と "j ← k ＋ (j － 10) × k"  … 括弧の位置が違う別の式
+ *   "（1），（3）" と "（2），（3）"                       … 先頭の項番が違う別の組合せ
+ *
+ * どちらも「正答が一意に定まらない」という断定（blocker）の根拠にはできない。
+ * 吸収するのは、全角半角・大文字小文字・空白と、文の区切りに使う句読点だけ。
+ * 括弧や項番は構造を表す記号なので残す。
+ */
+const IDENTITY_PUNCTUATION_PATTERN = /[\s　。、，．,.]/g;
+
+export function normalizeChoiceIdentity(text: string): string {
+  return normalizeBase(text).replace(IDENTITY_PUNCTUATION_PATTERN, "");
+}
+
+/**
  * 問題全体（問題文＋選択肢）の正規化テキスト。
  *
  * 選択肢は key の順ではなく本文のソート順で連結する。選択肢の並べ替えだけを行った
