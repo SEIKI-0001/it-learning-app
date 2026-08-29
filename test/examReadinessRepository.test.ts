@@ -308,9 +308,46 @@ describe("loadExamReadinessEvidence", () => {
     expect(physical).toEqual([expect.objectContaining({
       answerId: "topic-attempt-1",
       kind: "review",
-      firstAttemptState: "unknown",
+      firstAttemptState: "seen",
       isCorrect: false,
     })]);
+  });
+
+  it("keeps question-attempt first state when a matching P0 event disagrees", async () => {
+    const tables = evidenceTables();
+    const mastery = tables.user_progress.topic_mastery_stats["tech-ai-ml"];
+    mastery.recentEvidence = [{
+      questionId: "legacy-review-q",
+      kind: "review",
+      isCorrect: false,
+      isFirstSeen: true,
+      exposureState: "first",
+      answeredAt: ANSWERED_AT,
+    }];
+    tables.user_progress.review_queue = [];
+    tables.question_attempts[0] = {
+      ...tables.question_attempts[0],
+      attempt_id: "topic-attempt-1",
+      question_id: "legacy-review-q",
+      question_type: "topic_quiz",
+      is_correct: false,
+      answered_at: ANSWERED_AT,
+      is_first_attempt: false,
+      attempt_group_id: "",
+    };
+    tables.assessment_session_answers = [];
+    const fake = fakeSupabase({ tables, revisions: [9, 9] });
+
+    const evidence = await loadExamReadinessEvidence(fake.client, USER_ID);
+    const [physical] = evidence.answers.filter(
+      (answer) => answer.canonicalQuestionId === "legacy-review-q",
+    );
+
+    expect(physical).toEqual(expect.objectContaining({
+      answerId: "topic-attempt-1",
+      kind: "review",
+      firstAttemptState: "seen",
+    }));
   });
 
   it("keeps a genuinely later miss after reconciling the earlier P0/attempt copy", async () => {

@@ -4,6 +4,7 @@ import {
   dedupeAnswerEvents,
   normalizeEvidenceKind,
   normalizeFirstAttemptState,
+  reconcileP0AndAttemptEvents,
   strongestEvidenceByCanonicalQuestion,
   strongestEvidenceByTopic,
 } from "@/lib/examReadiness/evidence";
@@ -24,6 +25,14 @@ function evidence(overrides: Partial<ReadinessAnswerEvidence> = {}): ReadinessAn
     answeredAt: "2026-08-22T00:00:00.000Z",
     ...overrides,
   };
+}
+
+function p0Evidence(overrides: Partial<ReadinessAnswerEvidence> = {}): ReadinessAnswerEvidence {
+  return evidence({ answerId: null, idempotencyKey: "p0-event-1", ...overrides });
+}
+
+function attemptEvidence(overrides: Partial<ReadinessAnswerEvidence> = {}): ReadinessAnswerEvidence {
+  return evidence({ answerId: "attempt-1", idempotencyKey: "attempt-event-1", ...overrides });
 }
 
 describe("dedupeAnswerEvents", () => {
@@ -161,5 +170,26 @@ describe("source and first-attempt normalization", () => {
     expect(normalizeFirstAttemptState({ exposureState: "unknown", isFirstSeen: false })).toBe("unknown");
     expect(normalizeFirstAttemptState({ isFirstSeen: true })).toBe("first");
     expect(normalizeFirstAttemptState({ isFirstSeen: false })).toBe("unknown");
+  });
+});
+
+describe("P0 and question-attempt reconciliation", () => {
+  it("keeps authoritative attempt first state when matching P0 exposure is unknown", () => {
+    const [event] = reconcileP0AndAttemptEvents(
+      [p0Evidence({ firstAttemptState: "unknown", kind: "review" })],
+      [attemptEvidence({ firstAttemptState: "first", kind: "confirmation" })],
+    );
+
+    expect(event.firstAttemptState).toBe("first");
+    expect(event.kind).toBe("review");
+  });
+
+  it("keeps authoritative attempt seen state when matching P0 exposure says first", () => {
+    const [event] = reconcileP0AndAttemptEvents(
+      [p0Evidence({ firstAttemptState: "first" })],
+      [attemptEvidence({ firstAttemptState: "seen" })],
+    );
+
+    expect(event.firstAttemptState).toBe("seen");
   });
 });

@@ -72,7 +72,7 @@ export function reconcileP0AndAttemptEvents(
     return {
       ...attemptEvent,
       kind: p0Event.kind,
-      firstAttemptState: p0Event.firstAttemptState,
+      firstAttemptState: attemptEvent.firstAttemptState,
     };
   });
   return [...reconciled, ...unmatchedAttempts];
