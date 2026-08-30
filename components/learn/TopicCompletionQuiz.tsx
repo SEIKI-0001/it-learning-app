@@ -28,6 +28,7 @@ import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import { getMochitCompletionEvent } from "@/components/mochit/mochitEvents";
 import { useCountUp } from "@/lib/useCountUp";
 import { buildSessionOutcome } from "@/lib/sessionOutcome";
+import { buildMochitContext } from "@/lib/mochitContext";
 import type { SessionOutcome } from "@/types/gameful";
 import SessionOutcomeCard from "@/components/learn/SessionOutcomeCard";
 
@@ -136,7 +137,18 @@ export default function TopicCompletionQuiz({
       gainedExp: next.progress.exp - state.progress.exp,
       streak: next.progress.streakCount,
     });
-    emitMochitEvent(completionEvent);
+    // モチットには確定した事実だけを渡す（GF-P0-004）。事実が無ければ
+    // 空のコンテキストになり、従来どおり汎用メッセージへフォールバックする。
+    emitMochitEvent(
+      completionEvent,
+      buildMochitContext({
+        before: state,
+        after: next,
+        topicId: topic.id,
+        answers: tagged,
+        newlyEarnedBadgeIds: session.newlyEarnedIds,
+      }),
+    );
     setCompleted(true);
 
     // 学習後の成果差分（GF-P0-005）。表示用の導出なので、ここで失敗しても

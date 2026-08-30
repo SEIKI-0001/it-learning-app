@@ -245,3 +245,43 @@ describe("session outcome feedback (GF-P0-005)", () => {
     expect(panel.textContent ?? "").not.toMatch(/\d+%\s*→\s*\d+%/);
   });
 });
+
+describe("mochit context (GF-P0-004)", () => {
+  async function completeAndCaptureSignal() {
+    const signals: { type: string; context?: Record<string, unknown> }[] = [];
+    const unsubscribe = subscribeMochitEvent((signal) => signals.push(signal));
+    render(<TopicCompletionQuiz topic={topic} />);
+    fireEvent.click(screen.getByText("完了テストの正解").closest("button")!);
+    fireEvent.click(screen.getByText("このレッスンを完了する").closest("button")!);
+    await waitFor(() => screen.getByText(/問正解$/));
+    unsubscribe();
+    return signals;
+  }
+
+  it("attaches a context to the completion event", async () => {
+    const signals = await completeAndCaptureSignal();
+    const completion = signals.find((s) => s.type === "allCorrect" || s.type === "taskComplete");
+
+    expect(completion?.context).toBeDefined();
+  });
+
+  it("states no fact it does not have", async () => {
+    // fixture には過去の誤答も復習キューもストリーク更新も無い。
+    const signals = await completeAndCaptureSignal();
+    const completion = signals.find((s) => s.type === "allCorrect" || s.type === "taskComplete");
+
+    expect(completion?.context).not.toHaveProperty("recoveredCount");
+    expect(completion?.context).not.toHaveProperty("reviewCleared");
+    expect(completion?.context).not.toHaveProperty("personalBestStreak");
+    expect(completion?.context).not.toHaveProperty("streakShieldUsed");
+  });
+
+  it("keeps per-answer reactions free of context", async () => {
+    const signals = await completeAndCaptureSignal();
+    const perAnswer = signals.filter((s) => s.type === "correct" || s.type === "incorrect");
+
+    for (const signal of perAnswer) {
+      expect(signal.context).toBeUndefined();
+    }
+  });
+});
