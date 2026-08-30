@@ -42,3 +42,17 @@ export function getMochitUnlockSummary(state: AppState): {
     earnedBadgeCount: checkpointProgress.earnedBadges.length,
   };
 }
+
+/**
+ * 学習前後でモチットの成長段階が上がったか（GF-P1-003）。
+ * 上がっていなければ null。判定は既存の getMochitGrowthStage をそのまま使い、
+ * 段階の決まり方（クリア済みCP数）には手を加えない。
+ */
+export function getMochitStageChange(
+  before: AppState,
+  after: AppState,
+): { from: MochitGrowthStage; to: MochitGrowthStage } | null {
+  const from = getMochitGrowthStage(before);
+  const to = getMochitGrowthStage(after);
+  return to > from ? { from, to } : null;
+}

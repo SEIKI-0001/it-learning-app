@@ -9,8 +9,13 @@
 //     badgeFragments だけ。学習評価に関わるフィールドには一切触れない。
 
 import type { AppState } from "@/types";
-import type { BadgeFragment, BadgeRarity, PendingChoiceOption } from "@/types/checkpoint";
-import { getCheckpointProgress } from "@/lib/checkpoints";
+import type {
+  BadgeFragment,
+  BadgeRarity,
+  CheckpointId,
+  PendingChoiceOption,
+} from "@/types/checkpoint";
+import { getCheckpoint, getCheckpointProgress } from "@/lib/checkpoints";
 
 /** 欠片の表示名。未知のIDはそのまま出さず「かけら」と総称する。 */
 const FRAGMENT_LABELS: Record<string, string> = {
@@ -32,8 +37,14 @@ export type CosmeticTitle = {
   label: string;
   description: string;
   rarity: BadgeRarity;
-  /** 交換に必要な欠片。 */
-  cost: { fragmentId: string; count: number };
+  /** 交換に必要な欠片。記念称号は交換で得られないため持たない。 */
+  cost?: { fragmentId: string; count: number };
+  /**
+   * この称号を解放するチェックポイント（記念称号のみ）。
+   * 突破済みかどうかから毎回導出するので、付与処理も保存も持たない。
+   * CP の判定ロジックには一切触れない。
+   */
+  milestoneCheckpointId?: CheckpointId;
 };
 
 export const COSMETIC_TITLES: CosmeticTitle[] = [
@@ -74,8 +85,37 @@ export const COSMETIC_TITLES: CosmeticTitle[] = [
   },
 ];
 
+/**
+ * チェックポイント突破の記念称号（GF-P1-003）。
+ * 突破が「段階の変化」であることを、あとから見返せる形で残す記念品。
+ * 交換では手に入らず、欠片も消費しない。学習評価にも影響しない。
+ */
+export const COMMEMORATIVE_TITLES: CosmeticTitle[] = (
+  ["cp1", "cp2", "cp3", "cp4", "cp5", "cp6"] as const
+).map((checkpointId) => {
+  const checkpoint = getCheckpoint(checkpointId);
+  return {
+    id: `title-cp-${checkpointId}`,
+    label: `${checkpoint.title}の踏破者`,
+    description: `CP${checkpoint.order}「${checkpoint.title}」を突破した記念。`,
+    rarity: "rare" as BadgeRarity,
+    milestoneCheckpointId: checkpointId,
+  };
+});
+
+/** 交換・記念をあわせた全称号。 */
+export const ALL_TITLES: CosmeticTitle[] = [...COSMETIC_TITLES, ...COMMEMORATIVE_TITLES];
+
 export function getCosmeticTitle(id: string): CosmeticTitle | undefined {
-  return COSMETIC_TITLES.find((title) => title.id === id);
+  return ALL_TITLES.find((title) => title.id === id);
+}
+
+/** 突破済みCPから導出した記念称号（保存しない）。 */
+export function getEarnedCommemoratives(state: AppState): CosmeticTitle[] {
+  const cleared = new Set(getCheckpointProgress(state).clearedCheckpointIds);
+  return COMMEMORATIVE_TITLES.filter(
+    (title) => title.milestoneCheckpointId && cleared.has(title.milestoneCheckpointId),
+  );
 }
 
 /** 所持している欠片の一覧（0個は含めない）。 */
@@ -89,9 +129,11 @@ function fragmentCount(state: AppState, fragmentId: string): number {
   return getCheckpointProgress(state).badgeFragments.find((f) => f.fragmentId === fragmentId)?.count ?? 0;
 }
 
-/** 交換済みの称号ID。 */
+/** 手に入れている称号ID（交換済み ＋ 突破済みCPから導出した記念称号）。 */
 export function getUnlockedTitleIds(state: AppState): string[] {
-  return getCheckpointProgress(state).gameful?.rewards?.unlockedCosmetics ?? [];
+  const exchanged = getCheckpointProgress(state).gameful?.rewards?.unlockedCosmetics ?? [];
+  const commemorative = getEarnedCommemoratives(state).map((title) => title.id);
+  return [...new Set([...exchanged, ...commemorative])];
 }
 
 /** 表示中の称号。未設定なら undefined。 */
@@ -109,14 +151,15 @@ export type TitleAvailability = {
   missing: number;
 };
 
-/** 称号の一覧と、それぞれの交換可否。 */
+/** 交換できる称号の一覧と、それぞれの交換可否（記念称号は含めない）。 */
 export function listTitleAvailability(state: AppState): TitleAvailability[] {
   const unlockedIds = new Set(getUnlockedTitleIds(state));
-  return COSMETIC_TITLES.map((title) => {
+  return COSMETIC_TITLES.flatMap((title) => {
+    if (!title.cost) return [];
     const held = fragmentCount(state, title.cost.fragmentId);
     const unlocked = unlockedIds.has(title.id);
     const missing = unlocked ? 0 : Math.max(0, title.cost.count - held);
-    return { title, unlocked, affordable: !unlocked && missing === 0, missing };
+    return [{ title, unlocked, affordable: !unlocked && missing === 0, missing }];
   });
 }
 
@@ -148,15 +191,17 @@ function readRewards(state: AppState) {
  */
 export function exchangeTitle(state: AppState, titleId: string): AppState {
   const title = getCosmeticTitle(titleId);
-  if (!title) return state;
+  // 記念称号は突破の記録から導出されるもので、欠片では買えない。
+  if (!title?.cost) return state;
+  const cost = title.cost;
   if (getUnlockedTitleIds(state).includes(titleId)) return state;
-  if (fragmentCount(state, title.cost.fragmentId) < title.cost.count) return state;
+  if (fragmentCount(state, cost.fragmentId) < cost.count) return state;
 
   const cp = getCheckpointProgress(state);
   const badgeFragments = cp.badgeFragments
     .map((fragment) =>
-      fragment.fragmentId === title.cost.fragmentId
-        ? { ...fragment, count: fragment.count - title.cost.count }
+      fragment.fragmentId === cost.fragmentId
+        ? { ...fragment, count: fragment.count - cost.count }
         : fragment,
     )
     .filter((fragment) => fragment.count > 0);

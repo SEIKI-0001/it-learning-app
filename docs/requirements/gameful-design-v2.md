@@ -943,7 +943,7 @@ DB側の原子的判定がこの単位で行われている。
 | `GF-P0-006` | P0 | `NOT_STARTED` | - | - | LINE reminder（migration 着地待ち） |
 | `GF-P1-001` | P1 | `IMPLEMENTED` | #31 | studyAmount / StudyAmountPicker | Session length choice |
 | `GF-P1-002` | P1 | `IMPLEMENTED` | #31 | comebackMission / ComebackMissionCard | Comeback mission |
-| `GF-P1-003` | P1 | `NOT_STARTED` | - | - | CP evolution |
+| `GF-P1-003` | P1 | `IMPLEMENTED` | #32 | cpEvolution / mochitGrowthCelebration | CP evolution |
 | `GF-P1-004` | P1 | `IMPLEMENTED` | #28 | learningHistory / LearningHeatmap | Heatmap/journey |
 | `GF-P1-005` | P1 | `IMPLEMENTED` | #29 | badgeDrops / rewardInventory / RewardChoiceCard | Reward inventory |
 | `GF-P1-006` | P1 | `IMPLEMENTED` | #29 | RewardChoiceCard（RarityMark） | Rarity feedback |

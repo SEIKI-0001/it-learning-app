@@ -12,6 +12,7 @@ import type { CheckpointId } from "@/types/checkpoint";
 import { getRankStatus } from "@/lib/rank";
 import { getLevelName } from "@/lib/game";
 import { getCheckpointProgress } from "@/lib/checkpoints";
+import { getMochitStageChange, MOCHIT_GROWTH_STAGE_LABELS } from "@/lib/mochit";
 import { getBadge } from "@/lib/badges";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 
@@ -27,6 +28,13 @@ export type Celebration =
     }
   | { kind: "questClear"; label: string }
   | { kind: "cpCleared"; cpId: CheckpointId }
+  | {
+      kind: "mochitGrowth";
+      from: number;
+      to: number;
+      /** 到達した段階の呼び名。 */
+      label: string;
+    }
   | { kind: "badgeEarned"; badgeId: string; label: string; emoji: string };
 
 export function badgeEarnedCelebrations(badgeIds: string[]): Celebration[] {
@@ -72,6 +80,18 @@ export function emitCelebration(
   );
   for (const cpId of getCheckpointProgress(after).clearedCheckpointIds) {
     if (!clearedBefore.has(cpId)) celebrations.push({ kind: "cpCleared", cpId });
+  }
+
+  // CP突破でモチットの段階が上がった場合は、単なるXP増加と区別して
+  // 「段階が変わった」ことを独立した節目として見せる（GF-P1-003）。
+  const stageChange = getMochitStageChange(before, after);
+  if (stageChange) {
+    celebrations.push({
+      kind: "mochitGrowth",
+      from: stageChange.from,
+      to: stageChange.to,
+      label: MOCHIT_GROWTH_STAGE_LABELS[stageChange.to],
+    });
   }
 
   celebrations.push(...extras);
