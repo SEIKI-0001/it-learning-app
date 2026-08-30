@@ -18,6 +18,7 @@ import {
   saveProfileToDb,
 } from "@/lib/userSession";
 import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import PledgeCard from "@/components/pledge/PledgeCard";
 import {
   buildCheckpointComparison,
   buildCheckpointRoadmap,
@@ -169,6 +170,18 @@ export default function PlanPage() {
       <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6">
         {/* バッジゲート型ロードマップ: 現在CP・必要バッジ・不足・最終問題の解放状態（詳細） */}
         <CheckpointGateCard state={state} />
+
+        {/* 合格宣言(任意)。宣言の有無で学習も報酬も変わらない。 */}
+        <PledgeCard
+          state={state}
+          profile={state.profile}
+          onChange={(next) => {
+            saveAppState(next);
+            setState(next);
+            const userId = getUserId();
+            if (userId) saveProgressToDb(userId, next.progress);
+          }}
+        />
 
         {/* 全体ロードマップ（すごろく風マップ・CP進行で駆動＝現在地はゲートカードと一致） */}
         <section>

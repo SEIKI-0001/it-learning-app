@@ -66,6 +66,13 @@ function fullCheckpointProgress(): CheckpointProgress {
         unlockedCosmetics: ["title-steady"],
         equippedTitleId: "title-steady",
       },
+      questReroll: {
+        date: "2026-08-20",
+        replacedQuestId: "combo_3",
+        newQuestId: "review_one",
+      },
+      pledge: { pledgedAt: "2026-08-15T00:00:00.000Z", examDate: "2026-10-15" },
+      mochitName: { value: "もちすけ", updatedAt: "2026-08-18T00:00:00.000Z" },
     },
   };
 }
@@ -403,6 +410,72 @@ describe("reward state merge", () => {
     const legacy = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp1" as const] } } };
 
     expect(merge(legacy, legacy).gameful?.rewards).toBeUndefined();
+  });
+});
+
+describe("personalisation merge", () => {
+  const base = fullCheckpointProgress();
+
+  const reroll = (date: string, newQuestId: string) => ({
+    date,
+    replacedQuestId: "combo_3",
+    newQuestId,
+  });
+
+  it("takes the newer day's reroll", () => {
+    const older = { ...base, gameful: { questReroll: reroll("2026-08-19", "review_one") } };
+    const newer = { ...base, gameful: { questReroll: reroll("2026-08-20", "correct_8") } };
+
+    expect(merge(older, newer).gameful?.questReroll?.date).toBe("2026-08-20");
+    expect(merge(newer, older).gameful?.questReroll?.date).toBe("2026-08-20");
+  });
+
+  it("keeps exactly one reroll when both devices swapped on the same day", () => {
+    // どちらを採っても「1日1回」は保たれる。結果は決定的でなければならない。
+    const a = { ...base, gameful: { questReroll: reroll("2026-08-20", "review_one") } };
+    const b = { ...base, gameful: { questReroll: reroll("2026-08-20", "correct_8") } };
+
+    expect(merge(a, b).gameful?.questReroll).toEqual(merge(b, a).gameful?.questReroll);
+    expect(merge(a, b).gameful?.questReroll?.date).toBe("2026-08-20");
+  });
+
+  it("keeps the most recent pledge", () => {
+    const older = { ...base, gameful: { pledge: { pledgedAt: "2026-08-01T00:00:00.000Z" } } };
+    const newer = { ...base, gameful: { pledge: { pledgedAt: "2026-08-15T00:00:00.000Z" } } };
+
+    expect(merge(older, newer).gameful?.pledge?.pledgedAt).toBe("2026-08-15T00:00:00.000Z");
+    expect(merge(newer, older).gameful?.pledge?.pledgedAt).toBe("2026-08-15T00:00:00.000Z");
+  });
+
+  it("keeps the latest rename", () => {
+    const older = {
+      ...base,
+      gameful: { mochitName: { value: "いち", updatedAt: "2026-08-01T00:00:00.000Z" } },
+    };
+    const newer = {
+      ...base,
+      gameful: { mochitName: { value: "に", updatedAt: "2026-08-18T00:00:00.000Z" } },
+    };
+
+    expect(merge(older, newer).gameful?.mochitName?.value).toBe("に");
+    expect(merge(newer, older).gameful?.mochitName?.value).toBe("に");
+  });
+
+  it("keeps the side that has a value when the other has none", () => {
+    const legacy = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp1" as const] } } };
+
+    expect(merge(base, legacy).gameful?.mochitName?.value).toBe("もちすけ");
+    expect(merge(legacy, base).gameful?.pledge?.pledgedAt).toBe("2026-08-15T00:00:00.000Z");
+    expect(merge(legacy, base).gameful?.questReroll?.date).toBe("2026-08-20");
+  });
+
+  it("leaves the fields undefined for older data that never had them", () => {
+    const legacy = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp1" as const] } } };
+    const merged = merge(legacy, legacy).gameful;
+
+    expect(merged?.questReroll).toBeUndefined();
+    expect(merged?.pledge).toBeUndefined();
+    expect(merged?.mochitName).toBeUndefined();
   });
 });
 

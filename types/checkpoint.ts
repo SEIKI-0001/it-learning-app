@@ -192,6 +192,41 @@ export type GamefulState = {
   };
   /** 追加報酬（3択・欠片・装飾）の状態。 */
   rewards?: RewardState;
+  /** デイリーミッションの差し替え（1日1回）。 */
+  questReroll?: QuestReroll;
+  /** 合格宣言。任意で、有無によって学習評価も機能も変わらない。 */
+  pledge?: Pledge;
+  /** モチットの名前。未設定なら既定名を使う。 */
+  mochitName?: MochitName;
+};
+
+/**
+ * その日のミッション差し替え記録（GF-P1-009）。
+ * 1日1件だけ持ち、これがある日はもう差し替えられない。
+ */
+export type QuestReroll = {
+  /** ローカル日付 "YYYY-MM-DD"。 */
+  date: string;
+  /** 差し替えたミッションID。 */
+  replacedQuestId: string;
+  /** 差し替え後のミッションID。 */
+  newQuestId: string;
+};
+
+/**
+ * 合格宣言（GF-P1-010）。
+ * 宣言しても報酬は無く、しなくても不利益は無い。表示のためだけの記録。
+ */
+export type Pledge = {
+  pledgedAt: string; // ISO
+  /** 宣言した時点の試験日。後で試験日を変えても宣言の記録は動かさない。 */
+  examDate?: string;
+};
+
+/** モチットの名前（GF-P1-007）。改名の前後関係を保つため更新時刻を持つ。 */
+export type MochitName = {
+  value: string;
+  updatedAt: string; // ISO
 };
 
 /** 3択報酬の1候補（すべて補助＝学習進行を壊さない）。 */

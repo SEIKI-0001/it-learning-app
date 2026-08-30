@@ -13,6 +13,9 @@ import type {
   EarnedBadge,
   FinalExamAttempt,
   GamefulState,
+  MochitName,
+  Pledge,
+  QuestReroll,
   RewardState,
   StreakMeta,
 } from "@/types/checkpoint";
@@ -91,11 +94,54 @@ function mergeGamefulState(
     ]),
   ];
   const rewards = mergeRewardState(a.rewards, b.rewards);
+  const questReroll = mergeQuestReroll(a.questReroll, b.questReroll);
+  const pledge = mergePledge(a.pledge, b.pledge);
+  const mochitName = mergeMochitName(a.mochitName, b.mochitName);
 
   return {
     ...(shownCheckpointIds.length > 0 ? { growthCheck: { shownCheckpointIds } } : {}),
     ...(rewards ? { rewards } : {}),
+    ...(questReroll ? { questReroll } : {}),
+    ...(pledge ? { pledge } : {}),
+    ...(mochitName ? { mochitName } : {}),
   };
+}
+
+/**
+ * ミッション差し替えのマージ。
+ * 新しい日を採用し、同じ日なら片方に決める（差し替えは1日1回なので、
+ * どちらを採っても「2回目のリロール」にはならない）。
+ */
+function mergeQuestReroll(
+  a: QuestReroll | undefined,
+  b: QuestReroll | undefined,
+): QuestReroll | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  if (a.date !== b.date) return a.date > b.date ? a : b;
+  // 同じ日に別々の端末で差し替えた場合は、結果IDで決定的に1つへ寄せる。
+  return a.newQuestId <= b.newQuestId ? a : b;
+}
+
+/**
+ * 合格宣言のマージ。より新しい宣言を採る。
+ * 片方で解除しても、もう片方に残っていれば復活しうるが、宣言は報酬も
+ * 不利益も伴わない表示専用の記録なので、ユーザーはいつでも再解除できる。
+ */
+function mergePledge(a: Pledge | undefined, b: Pledge | undefined): Pledge | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return a.pledgedAt >= b.pledgedAt ? a : b;
+}
+
+/** モチットの名前のマージ。後から改名した方を採る。 */
+function mergeMochitName(
+  a: MochitName | undefined,
+  b: MochitName | undefined,
+): MochitName | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return a.updatedAt >= b.updatedAt ? a : b;
 }
 
 /**

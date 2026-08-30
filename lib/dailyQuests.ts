@@ -9,7 +9,7 @@
 // データは CheckpointProgress.dailyQuests（jsonb内・DBマイグレーション不要）に持つ。
 
 import type { AppState, UserAnswer } from "@/types";
-import type { DailyQuestState } from "@/types/checkpoint";
+import type { DailyQuestState, QuestReroll } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { grantExp } from "@/lib/game";
 import { applyBadgeDrop } from "@/lib/badgeDrops";
@@ -110,11 +110,94 @@ export function buildTodayQuests(state: AppState, date: string): DailyQuestState
   };
 }
 
+/**
+ * その日の差し替え記録をミッション一覧へ適用する（GF-P1-009）。
+ *
+ * 差し替え済みのIDが一覧に無ければ何もしない。つまり進捗保存によって
+ * 差し替え後の状態が既に永続化されていても、二重に適用されない（冪等）。
+ */
+function applyReroll(quests: DailyQuestState, reroll: QuestReroll | undefined): DailyQuestState {
+  if (!reroll || reroll.date !== quests.date) return quests;
+  const index = quests.quests.findIndex((quest) => quest.id === reroll.replacedQuestId);
+  if (index < 0) return quests;
+  const def = getQuestDef(reroll.newQuestId);
+  if (!def) return quests;
+
+  const next = [...quests.quests];
+  next[index] = { id: def.id, goal: def.goal, progress: 0 };
+  return { ...quests, quests: next };
+}
+
 /** 保存済み状態を今日の分に解決する（日付が変わっていたら作り直す）。 */
 export function resolveDailyQuests(state: AppState, date: string): DailyQuestState {
+  const reroll = state.progress.checkpointProgress?.gameful?.questReroll;
   const saved = state.progress.checkpointProgress?.dailyQuests;
-  if (saved && saved.date === date) return saved;
-  return buildTodayQuests(state, date);
+  const base = saved && saved.date === date ? saved : buildTodayQuests(state, date);
+  return applyReroll(base, reroll);
+}
+
+/** その日にまだ差し替えられるか（1日1回）。 */
+export function canRerollQuest(state: AppState, date: string): boolean {
+  const reroll = state.progress.checkpointProgress?.gameful?.questReroll;
+  return !reroll || reroll.date !== date;
+}
+
+/**
+ * 差し替え候補。今日の3件に入っていない、その日に出題可能なミッションから
+ * 日付ハッシュで決定的に1件選ぶ（render 中の乱数を増やさない）。
+ */
+export function pickRerollCandidate(state: AppState, date: string): DailyQuestDef | null {
+  const current = new Set(resolveDailyQuests(state, date).quests.map((quest) => quest.id));
+  const candidates = QUEST_DEFS.filter(
+    (def) => !current.has(def.id) && (def.isAvailable?.(state) ?? true),
+  );
+  if (candidates.length === 0) return null;
+  return [...candidates].sort(
+    (a, b) => hashString(`${date}:reroll:${a.id}`) - hashString(`${date}:reroll:${b.id}`),
+  )[0];
+}
+
+/**
+ * ミッションを1件だけ差し替える（GF-P1-009）。
+ *
+ * 差し替えられるのは「まだ手をつけていない」ミッションだけ。着手済みや完了済みを
+ * 差し替えると、そこまでの進捗や達成が消えてしまうため許可しない
+ * （要件「完了済みミッションを不利益にしない」「既に獲得した進捗を失わせない」）。
+ * 条件を満たさない場合は state をそのまま返す。
+ */
+export function applyQuestReroll(
+  state: AppState,
+  questId: string,
+  now: Date = new Date(),
+): AppState {
+  const date = localDateOf(now);
+  if (!canRerollQuest(state, date)) return state;
+
+  const resolved = resolveDailyQuests(state, date);
+  const target = resolved.quests.find((quest) => quest.id === questId);
+  if (!target || target.progress > 0) return state;
+
+  const replacement = pickRerollCandidate(state, date);
+  if (!replacement) return state;
+
+  const cp = state.progress.checkpointProgress ?? { ...INITIAL_CHECKPOINT_PROGRESS };
+  const reroll: QuestReroll = {
+    date,
+    replacedQuestId: questId,
+    newQuestId: replacement.id,
+  };
+  return {
+    ...state,
+    progress: {
+      ...state.progress,
+      checkpointProgress: {
+        ...cp,
+        // 差し替え後の一覧をそのまま保存し、再読込でも同じ結果になるようにする。
+        dailyQuests: applyReroll(resolved, reroll),
+        gameful: { ...cp.gameful, questReroll: reroll },
+      },
+    },
+  };
 }
 
 export function allQuestsDone(quests: DailyQuestState): boolean {

@@ -33,6 +33,8 @@ import {
   type FloatingMochitPoint,
   type FloatingMochitPreferences,
 } from "./floatingMochitPreferences";
+import { getMochitDisplayName } from "@/lib/mochitName";
+import { loadAppState } from "@/lib/storage";
 import {
   buildMochitMessage,
   type FloatingMochitMessage,
@@ -107,6 +109,9 @@ export default function FloatingMochit({ reducedMotion }: Props) {
   const [bubble, setBubble] = useState<FloatingMochitMessage | null>(null);
   const [dragRotation, setDragRotation] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  // 表示名は保存済みの AppState から一度だけ読む（このコンポーネントは
+  // 進捗を持たないため、購読せずマウント時のスナップショットで足りる）。
+  const [displayName] = useState(() => getMochitDisplayName(loadAppState()));
   const gestureRef = useRef<ActiveGesture | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -381,7 +386,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
       <button
         ref={petButtonRef}
         type="button"
-        aria-label="モチットを触る"
+        aria-label={`${displayName}を触る`}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         className="floating-mochit-body flex h-full w-full cursor-grab touch-none select-none items-center justify-center rounded-full active:cursor-grabbing"
