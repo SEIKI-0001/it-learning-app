@@ -543,6 +543,28 @@ export type CurrentSessionQuestionExposureResult = {
   exposures: QuestionExposureMap;
 };
 
+export type AuthenticatedQuestionExposureResult = {
+  authState: "authenticated";
+  userId: string;
+  exposures: QuestionExposureMap;
+};
+
+export type AssessmentAttemptSaveErrorCode =
+  | "network"
+  | "http"
+  | "malformed_response"
+  | "authentication";
+
+export class AssessmentAttemptSaveError extends Error {
+  constructor(
+    readonly code: AssessmentAttemptSaveErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = "AssessmentAttemptSaveError";
+  }
+}
+
 export type QuestionExposureIdentity = Pick<
   CurrentSessionQuestionExposureResult,
   "authState" | "userId"
@@ -796,6 +818,107 @@ export async function saveQuestionAttemptsForCurrentSession(
   } catch {
     return { authState: "unknown", userId: null, exposures: unknown };
   }
+}
+
+/**
+ * Strict assessment persistence contract. Assessment finalization may proceed
+ * only after the server confirms an authenticated, complete authoritative
+ * exposure response. Every ambiguous outcome throws so the caller can retry
+ * its unchanged frozen batch.
+ */
+export async function saveAssessmentQuestionAttemptsForCurrentSession(
+  attempts: QuestionAttemptInput[],
+): Promise<AuthenticatedQuestionExposureResult> {
+  const questionIds = attempts.map((attempt) => attempt.questionId);
+  const requestedIds = new Set(questionIds);
+  if (attempts.length === 0 || requestedIds.size !== attempts.length) {
+    throw new AssessmentAttemptSaveError(
+      "malformed_response",
+      "assessment attempt batch must contain unique questions",
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch("/api/question-attempts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attempts }),
+    });
+  } catch {
+    throw new AssessmentAttemptSaveError(
+      "network",
+      "assessment attempt save response was not acknowledged",
+    );
+  }
+
+  if (response.status === 401) {
+    clearUserId();
+    throw new AssessmentAttemptSaveError(
+      "authentication",
+      "assessment attempt save requires authentication",
+    );
+  }
+  if (!response.ok) {
+    throw new AssessmentAttemptSaveError(
+      "http",
+      `assessment attempt save failed with HTTP ${response.status}`,
+    );
+  }
+
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    throw new AssessmentAttemptSaveError(
+      "malformed_response",
+      "assessment attempt save returned malformed JSON",
+    );
+  }
+
+  if (
+    !isClientRecord(body)
+    || body.ok !== true
+    || typeof body.userId !== "string"
+    || body.userId.length === 0
+    || !Array.isArray(body.exposures)
+  ) {
+    throw new AssessmentAttemptSaveError(
+      "malformed_response",
+      "assessment attempt save returned an invalid response",
+    );
+  }
+
+  const parsed = body.exposures.map(parseQuestionExposure);
+  const returnedIds = new Set(
+    parsed.flatMap((exposure) => exposure ? [exposure.questionId] : []),
+  );
+  if (
+    parsed.some((exposure) => exposure === null)
+    || parsed.some((exposure) =>
+      exposure!.attemptedBefore === null
+      || exposure!.attemptCount === null
+      || exposure!.attemptCount < 0
+    )
+    || parsed.length !== requestedIds.size
+    || returnedIds.size !== parsed.length
+    || [...requestedIds].some((questionId) => !returnedIds.has(questionId))
+    || [...returnedIds].some((questionId) => !requestedIds.has(questionId))
+  ) {
+    throw new AssessmentAttemptSaveError(
+      "malformed_response",
+      "assessment attempt save returned incomplete exposures",
+    );
+  }
+
+  setUserId(body.userId);
+  return {
+    authState: "authenticated",
+    userId: body.userId,
+    exposures: Object.fromEntries(
+      parsed.map((exposure) => [exposure!.questionId, exposure!]),
+    ),
+  };
 }
 
 /** Compatibility wrapper exposing authoritative persistence to completion callers. */

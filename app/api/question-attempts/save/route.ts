@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getRequestUserId } from "@/lib/apiUser";
 import {
@@ -10,7 +9,10 @@ import {
   type QuestionAttemptInput,
   type QuestionType,
 } from "@/lib/dbMappers";
-import { recordQuestionAttemptsWithExposure } from "@/lib/questionExposureServer";
+import {
+  recordAssessmentQuestionAttemptsWithExposure,
+  recordQuestionAttemptsWithExposure,
+} from "@/lib/questionExposureServer";
 import { getQuestionById } from "@/lib/questionBank";
 import {
   sanitizeAnsweredAt,
@@ -205,62 +207,65 @@ export async function POST(request: Request) {
   }
 
   try {
-    const groupChecks = new Map<string, Promise<boolean>>();
-    const inputs = (await Promise.all(candidates.map(async (candidate) => {
-      const groupId = attemptGroupId(candidate.attempt);
-      let validatedGroupId: string | null = null;
-      if (groupId !== null) {
-        const key = `${groupId}\u0000${candidate.questionType}\u0000${attemptMode(candidate.attempt)}`;
-        let check = groupChecks.get(key);
-        if (check === undefined) {
-          check = isAuthorizedAssessmentGroup({
-            supabase,
-            userId,
-            groupId,
-            questionType: candidate.questionType,
-            requestedMode: attemptMode(candidate.attempt),
-          });
-          groupChecks.set(key, check);
-        }
-        if (!(await check)) return null;
-        validatedGroupId = groupId;
+    const groupIds = candidates.map((candidate) => attemptGroupId(candidate.attempt));
+    const grouped = groupIds.some((groupId) => groupId !== null);
+    let assessmentSessionId: string | null = null;
+
+    if (grouped) {
+      assessmentSessionId = groupIds[0];
+      const expectedSource = assessmentSourceForQuestionType(candidates[0].questionType);
+      const expectedOfficialMode = candidates[0].questionType === "official_past"
+        ? attemptMode(candidates[0].attempt)
+        : null;
+      const mismatched = candidates.length !== attempts.length
+        || assessmentSessionId === null
+        || expectedSource === null
+        || (candidates[0].questionType === "official_past" && expectedOfficialMode === null)
+        || candidates.some((candidate, index) =>
+          groupIds[index] !== assessmentSessionId
+          || assessmentSourceForQuestionType(candidate.questionType) !== expectedSource
+          || (
+            candidate.questionType === "official_past"
+            && attemptMode(candidate.attempt) !== expectedOfficialMode
+          )
+        );
+      if (mismatched) {
+        return NextResponse.json(
+          { ok: false, error: "invalid assessment batch" },
+          { status: 400 },
+        );
       }
-      return toAttemptInput(
+    }
+
+    const inputs = candidates.map((candidate) =>
+      toAttemptInput(
         candidate.attempt,
         candidate.questionId,
         candidate.questionType,
-        validatedGroupId,
-      );
-    }))).filter((input): input is QuestionAttemptInput => input !== null);
+        assessmentSessionId,
+      )
+    ).filter((input): input is QuestionAttemptInput => input !== null);
     if (inputs.length === 0) {
       return NextResponse.json({ ok: false, error: "no valid attempts" }, { status: 400 });
     }
-    const result = await recordQuestionAttemptsWithExposure(supabase, userId, inputs);
+    if (assessmentSessionId !== null && inputs.length !== candidates.length) {
+      return NextResponse.json(
+        { ok: false, error: "invalid assessment batch" },
+        { status: 400 },
+      );
+    }
+    const result = assessmentSessionId === null
+      ? await recordQuestionAttemptsWithExposure(supabase, userId, inputs)
+      : await recordAssessmentQuestionAttemptsWithExposure(
+        supabase,
+        userId,
+        assessmentSessionId,
+        inputs,
+      );
     return NextResponse.json({ ok: true, userId, ...result });
   } catch {
     return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
   }
-}
-
-async function isAuthorizedAssessmentGroup(args: {
-  supabase: SupabaseClient;
-  userId: string;
-  groupId: string;
-  questionType: QuestionType;
-  requestedMode: string | null;
-}): Promise<boolean> {
-  const expectedSource = assessmentSourceForQuestionType(args.questionType);
-  if (expectedSource === null) return false;
-  const { data, error } = await args.supabase
-    .from("assessment_sessions")
-    .select("session_id, source, mode, status")
-    .eq("user_id", args.userId)
-    .eq("session_id", args.groupId)
-    .maybeSingle();
-  if (error) throw error;
-  if (!isRecord(data)) return false;
-  if (data.status !== "in_progress" || data.source !== expectedSource) return false;
-  return args.questionType !== "official_past" || data.mode === args.requestedMode;
 }
 
 function assessmentSourceForQuestionType(
@@ -273,8 +278,4 @@ function assessmentSourceForQuestionType(
     case "official_past": return "official_past";
     default: return null;
   }
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }

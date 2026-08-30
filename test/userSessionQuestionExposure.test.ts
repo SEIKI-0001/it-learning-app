@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  AssessmentAttemptSaveError,
+  saveAssessmentQuestionAttemptsForCurrentSession,
   saveQuestionAttemptsForCurrentSession,
   saveQuestionAttemptsWithExposure,
   type QuestionAttemptInput,
@@ -154,5 +156,90 @@ describe("saveQuestionAttemptsWithExposure", () => {
     expect(result.authState).toBe("unknown");
     expect(result.userId).toBeNull();
     expect(result.exposures["question-a"].state).toBe("unknown");
+  });
+});
+
+describe("saveAssessmentQuestionAttemptsForCurrentSession", () => {
+  it("returns only a confirmed authenticated exposure result", async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      ok: true,
+      userId: "server-user",
+      saved: 1,
+      exposures: [{
+        questionId: "question-a",
+        state: "first",
+        attemptedBefore: false,
+        firstAttemptAt: "2026-08-15T04:00:00.000Z",
+        attemptCount: 1,
+      }],
+    }), { status: 200 }));
+    vi.stubGlobal("fetch", fetch);
+
+    await expect(saveAssessmentQuestionAttemptsForCurrentSession([
+      attempt("question-a"),
+    ])).resolves.toEqual({
+      authState: "authenticated",
+      userId: "server-user",
+      exposures: {
+        "question-a": expect.objectContaining({ state: "first" }),
+      },
+    });
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
+      attempts: [attempt("question-a")],
+    });
+  });
+
+  it("throws a retryable error for a committed-but-unacknowledged assessment save", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValueOnce(new TypeError("connection lost")));
+
+    await expect(saveAssessmentQuestionAttemptsForCurrentSession([
+      attempt("question-a"),
+    ])).rejects.toMatchObject({ code: "network" });
+  });
+
+  it.each([
+    ["a 5xx response", () => new Response(JSON.stringify({ ok: false }), { status: 500 })],
+    ["malformed JSON", () => new Response("not-json", { status: 200 })],
+    ["an incomplete response", () => new Response(JSON.stringify({
+      ok: true,
+      userId: "server-user",
+      exposures: [],
+    }), { status: 200 })],
+    ["duplicate question rows", () => new Response(JSON.stringify({
+      ok: true,
+      userId: "server-user",
+      exposures: [
+        {
+          questionId: "question-a",
+          state: "first",
+          attemptedBefore: false,
+          firstAttemptAt: "2026-08-15T04:00:00.000Z",
+          attemptCount: 1,
+        },
+        {
+          questionId: "question-a",
+          state: "first",
+          attemptedBefore: false,
+          firstAttemptAt: "2026-08-15T04:00:00.000Z",
+          attemptCount: 1,
+        },
+      ],
+    }), { status: 200 })],
+  ])("never returns authenticated progress inputs from %s", async (_label, response) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response()));
+
+    await expect(saveAssessmentQuestionAttemptsForCurrentSession([
+      attempt("question-a"),
+    ])).rejects.toBeInstanceOf(AssessmentAttemptSaveError);
+  });
+
+  it("classifies 401 as an authentication failure", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: false }), { status: 401 }),
+    ));
+
+    await expect(saveAssessmentQuestionAttemptsForCurrentSession([
+      attempt("question-a"),
+    ])).rejects.toMatchObject({ code: "authentication" });
   });
 });

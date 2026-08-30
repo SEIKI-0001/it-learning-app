@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   QuestionExposurePersistenceError,
+  recordAssessmentQuestionAttemptsWithExposure,
   recordQuestionAttemptsWithExposure,
 } from "@/lib/questionExposureServer";
 import type { QuestionAttemptInput } from "@/lib/dbMappers";
@@ -147,5 +148,91 @@ describe("recordQuestionAttemptsWithExposure", () => {
       "10000000-0000-0000-0000-000000000001",
       [attempt("question-a"), attempt("question-b")],
     )).rejects.toBeInstanceOf(QuestionExposurePersistenceError);
+  });
+});
+
+describe("recordAssessmentQuestionAttemptsWithExposure", () => {
+  it("records one grouped assessment batch through the session-locking RPC", async () => {
+    const sessionId = "20000000-0000-4000-8000-000000000001";
+    const input = { ...attempt("question-a"), attemptGroupId: sessionId };
+    const rpc = vi.fn().mockResolvedValue({
+      error: null,
+      data: [{
+        question_id: "question-a",
+        state: "first",
+        attempted_before: false,
+        first_attempt_at: "2026-08-15T04:00:00.000Z",
+        attempt_count: 1,
+        saved: true,
+      }],
+    });
+
+    await expect(recordAssessmentQuestionAttemptsWithExposure(
+      { rpc },
+      "10000000-0000-0000-0000-000000000001",
+      sessionId,
+      [input],
+    )).resolves.toEqual({
+      saved: 1,
+      exposures: [{
+        questionId: "question-a",
+        state: "first",
+        attemptedBefore: false,
+        firstAttemptAt: "2026-08-15T04:00:00.000Z",
+        attemptCount: 1,
+      }],
+    });
+    expect(rpc).toHaveBeenCalledOnce();
+    expect(rpc).toHaveBeenCalledWith(
+      "record_assessment_question_attempts_with_exposure",
+      {
+        p_user_id: "10000000-0000-0000-0000-000000000001",
+        p_session_id: sessionId,
+        p_attempts: [expect.objectContaining({
+          question_id: "question-a",
+          attempt_group_id: sessionId,
+        })],
+      },
+    );
+  });
+
+  it("rejects incomplete assessment recorder output", async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null, data: [] });
+
+    await expect(recordAssessmentQuestionAttemptsWithExposure(
+      { rpc },
+      "10000000-0000-0000-0000-000000000001",
+      "20000000-0000-4000-8000-000000000001",
+      [attempt("question-a")],
+    )).rejects.toBeInstanceOf(QuestionExposurePersistenceError);
+  });
+
+  it("preserves a missing assessment answer timestamp for idempotent replay", async () => {
+    const sessionId = "20000000-0000-4000-8000-000000000001";
+    const input = { ...attempt("question-a"), answeredAt: null, attemptGroupId: sessionId };
+    const rpc = vi.fn().mockResolvedValue({
+      error: null,
+      data: [{
+        question_id: "question-a",
+        state: "first",
+        attempted_before: false,
+        first_attempt_at: "2026-08-29T05:00:00.000Z",
+        attempt_count: 1,
+        saved: true,
+      }],
+    });
+
+    await recordAssessmentQuestionAttemptsWithExposure(
+      { rpc },
+      "10000000-0000-0000-0000-000000000001",
+      sessionId,
+      [input],
+    );
+
+    expect(rpc.mock.calls[0][1].p_attempts[0]).toMatchObject({
+      question_id: "question-a",
+      answered_at: null,
+      attempt_group_id: sessionId,
+    });
   });
 });

@@ -127,7 +127,10 @@ class MemorySupabase {
   readonly evidenceEvents = new Set<string>();
   readonly from = vi.fn((table: string) => new MemoryQuery(this, table));
   readonly rpc = vi.fn(async (name: string, params: Record<string, unknown>) => {
-    if (name === "record_question_attempts_with_exposure") {
+    if (
+      name === "record_question_attempts_with_exposure"
+      || name === "record_assessment_question_attempts_with_exposure"
+    ) {
       const attempts = params.p_attempts as Array<Record<string, unknown>>;
       attempts.forEach((attempt, index) => {
         this.attempts.push({
@@ -461,6 +464,10 @@ describe("assessment session persistence", () => {
     ));
 
     expect(saveResponse.status).toBe(200);
+    expect(db.rpc).toHaveBeenCalledWith(
+      "record_assessment_question_attempts_with_exposure",
+      expect.objectContaining({ p_session_id: SESSION_ID }),
+    );
     expect(db.attempts).toEqual([
       expect.objectContaining({
         question_id: "tech-binary-data-ex1",

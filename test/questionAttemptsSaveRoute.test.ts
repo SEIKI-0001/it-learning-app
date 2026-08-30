@@ -27,24 +27,7 @@ import { getQuestionById } from "@/lib/questionBank";
 /** insert された行（呼び出しごとの配列）。 */
 let inserted: Array<Array<Record<string, unknown>>> = [];
 let assessmentSessions: Array<Record<string, unknown>> = [];
-
-function assessmentQuery() {
-  const filters: Array<[string, unknown]> = [];
-  const query = {
-    select: () => query,
-    eq: (column: string, value: unknown) => {
-      filters.push([column, value]);
-      return query;
-    },
-    maybeSingle: () => Promise.resolve({
-      data: assessmentSessions.find((row) =>
-        filters.every(([column, value]) => row[column] === value)
-      ) ?? null,
-      error: null,
-    }),
-  };
-  return query;
-}
+let rpc: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -74,31 +57,65 @@ beforeEach(() => {
   ];
   getRequestUserId.mockResolvedValue("user-1");
   canRecordStudyForUser.mockResolvedValue(true);
+  rpc = vi.fn((
+    name: string,
+    params: {
+      p_user_id: string;
+      p_session_id?: string;
+      p_attempts: Array<Record<string, unknown>>;
+    },
+  ) => {
+    if (name === "record_assessment_question_attempts_with_exposure") {
+      const session = assessmentSessions.find((row) =>
+        row.session_id === params.p_session_id
+        && row.user_id === params.p_user_id
+      );
+      const first = params.p_attempts[0];
+      const expectedSource = first.question_type === "mini_exam"
+        ? "checkpoint"
+        : first.question_type === "theme_exam"
+          ? "summary"
+          : first.question_type === "mock_exam"
+            ? "mock"
+            : first.question_type === "official_past"
+              ? "official_past"
+              : null;
+      if (
+        !session
+        || session.status !== "in_progress"
+        || session.source !== expectedSource
+        || (
+          first.question_type === "official_past"
+          && session.mode !== first.attempt_mode
+        )
+      ) {
+        return Promise.resolve({
+          data: null,
+          error: { code: "23503", message: "assessment session mismatch" },
+        });
+      }
+    }
+    inserted.push(params.p_attempts.map((row) => ({
+      ...row,
+      user_id: params.p_user_id,
+    })));
+    return Promise.resolve({
+      error: null,
+      data: params.p_attempts.map((row) => ({
+        question_id: row.question_id,
+        state: "first",
+        attempted_before: false,
+        first_attempt_at: row.answered_at,
+        attempt_count: 1,
+        saved: true,
+      })),
+    });
+  });
   getServiceSupabase.mockReturnValue({
-    from: (table: string) => {
-      if (table !== "assessment_sessions") throw new Error(`unexpected table ${table}`);
-      return assessmentQuery();
-    },
-    rpc: (
-      _name: string,
-      params: { p_user_id: string; p_attempts: Array<Record<string, unknown>> },
-    ) => {
-      inserted.push(params.p_attempts.map((row) => ({
-        ...row,
-        user_id: params.p_user_id,
-      })));
-      return Promise.resolve({
-        error: null,
-        data: params.p_attempts.map((row) => ({
-          question_id: row.question_id,
-          state: "first",
-          attempted_before: false,
-          first_attempt_at: row.answered_at,
-          attempt_count: 1,
-          saved: true,
-        })),
-      });
-    },
+    from: vi.fn(() => {
+      throw new Error("the route must not query assessment_sessions before recording");
+    }),
+    rpc,
   });
 });
 
@@ -241,18 +258,17 @@ describe("公式過去問として受け付けない attempt", () => {
     }
   });
 
-  it("不正な attempt だけを捨て、正しい attempt は保存する", async () => {
-    const { body } = await save([
+  it("グループ評価の一部に不正な attempt があれば全件を拒否する", async () => {
+    const { response, body } = await save([
       officialAttempt({ questionId: "does-not-exist" }),
       officialAttempt({ selectedAnswer: "E" }),
       officialAttempt({ questionId: OFFICIAL_Q3, selectedAnswer: "C" }),
     ]);
 
-    expect(body.ok).toBe(true);
-    expect(body.saved).toBe(1);
-    expect(rows()).toHaveLength(1);
-    expect(rows()[0].question_id).toBe(OFFICIAL_Q3);
-    expect(rows()[0].is_correct).toBe(true);
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ ok: false, error: "invalid assessment batch" });
+    expect(inserted).toHaveLength(0);
+    expect(rpc).not.toHaveBeenCalled();
   });
 });
 
@@ -334,6 +350,10 @@ describe("既存4種類の保存は変わらない", () => {
     expect(response.status).toBe(200);
     expect(rows()[0].attempt_mode).toBeNull();
     expect(rows()[0].attempt_group_id).toBe("mock-session");
+    expect(rpc).toHaveBeenCalledWith(
+      "record_assessment_question_attempts_with_exposure",
+      expect.objectContaining({ p_session_id: "mock-session" }),
+    );
   });
 
   it.each([
@@ -341,7 +361,7 @@ describe("既存4種類の保存は変わらない", () => {
     ["異なるsource", { user_id: "user-1", source: "summary", status: "in_progress" }],
     ["完了済み", { user_id: "user-1", source: "mock", status: "completed" }],
     ["放棄済み", { user_id: "user-1", source: "mock", status: "abandoned" }],
-  ])("%sの評価セッションへattemptを関連付けない", async (_label, overrides) => {
+  ])("%sの評価セッションはatomic RPCが拒否しrouteは保存失敗を返す", async (_label, overrides) => {
     assessmentSessions.push({
       session_id: "untrusted-session",
       mode: "exam",
@@ -357,9 +377,13 @@ describe("既存4種類の保存は変わらない", () => {
       attemptGroupId: "untrusted-session",
     }]);
 
-    expect(response.status).toBe(400);
-    expect(body.error).toBe("no valid attempts");
+    expect(response.status).toBe(500);
+    expect(body.error).toBe("save failed");
     expect(inserted).toHaveLength(0);
+    expect(rpc).toHaveBeenCalledWith(
+      "record_assessment_question_attempts_with_exposure",
+      expect.objectContaining({ p_session_id: "untrusted-session" }),
+    );
   });
 
   it("topicId と isCorrect は従来どおり必須", async () => {

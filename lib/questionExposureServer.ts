@@ -4,7 +4,7 @@ import {
 } from "@/lib/dbMappers";
 import type { QuestionExposure, QuestionExposureState } from "@/types";
 
-type RpcClient = {
+export type RpcClient = {
   rpc: (
     functionName: string,
     params: Record<string, unknown>,
@@ -60,6 +60,16 @@ function toRpcAttempt(input: QuestionAttemptInput): Record<string, unknown> {
   return row;
 }
 
+function toRpcAssessmentAttempt(input: QuestionAttemptInput): Record<string, unknown> {
+  return {
+    ...toRpcAttempt(input),
+    // Preserve the caller-owned batch exactly. The RPC may assign the first
+    // server timestamp, but an ambiguous retry must send null again rather
+    // than inventing a different client timestamp and conflicting with itself.
+    answered_at: input.answeredAt ?? null,
+  };
+}
+
 /** Server-only adapter for the transaction-safe batch recorder. */
 export async function recordQuestionAttemptsWithExposure(
   supabase: RpcClient,
@@ -71,6 +81,53 @@ export async function recordQuestionAttemptsWithExposure(
     {
       p_user_id: userId,
       p_attempts: inputs.map(toRpcAttempt),
+    },
+  );
+  if (error || !Array.isArray(data)) {
+    throw new QuestionExposurePersistenceError();
+  }
+
+  const rows = data.map(parseRpcRow);
+  const requestedIds = new Set(inputs.map((input) => input.questionId));
+  const returnedIds = new Set(rows.map((row) => row.question_id));
+  if (
+    rows.length !== requestedIds.size
+    || returnedIds.size !== rows.length
+    || [...requestedIds].some((questionId) => !returnedIds.has(questionId))
+    || [...returnedIds].some((questionId) => !requestedIds.has(questionId))
+  ) {
+    throw new QuestionExposurePersistenceError("incomplete exposure response");
+  }
+
+  return {
+    saved: rows.filter((row) => row.saved).length,
+    exposures: rows.map((row) => ({
+      questionId: row.question_id,
+      state: row.state,
+      attemptedBefore: row.attempted_before,
+      firstAttemptAt: row.first_attempt_at,
+      attemptCount: row.attempt_count,
+    })),
+  };
+}
+
+/**
+ * Server-only adapter for grouped assessments. The database function owns the
+ * session-row lock and keeps it through validation, insertion, and replay
+ * classification.
+ */
+export async function recordAssessmentQuestionAttemptsWithExposure(
+  supabase: RpcClient,
+  userId: string,
+  sessionId: string,
+  inputs: QuestionAttemptInput[],
+): Promise<{ saved: number; exposures: QuestionExposure[] }> {
+  const { data, error } = await supabase.rpc(
+    "record_assessment_question_attempts_with_exposure",
+    {
+      p_user_id: userId,
+      p_session_id: sessionId,
+      p_attempts: inputs.map(toRpcAssessmentAttempt),
     },
   );
   if (error || !Array.isArray(data)) {

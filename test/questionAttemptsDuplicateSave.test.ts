@@ -77,6 +77,10 @@ function supabaseStub() {
         const row: Record<string, unknown> = {
           ...input,
           user_id: params.p_user_id,
+          // The grouped assessment recorder deliberately preserves a missing
+          // timestamp so a lost-response retry sends the identical batch. The
+          // real SQL recorder fills it with statement_timestamp().
+          answered_at: input.answered_at ?? new Date().toISOString(),
         };
         const attemptedBefore = stored.some(
           (existing) =>
