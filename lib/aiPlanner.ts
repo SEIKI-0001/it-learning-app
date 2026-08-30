@@ -120,8 +120,17 @@ export function generateTodayMenu(
   topics: Topic[] = getAllTopics(),
   answers: UserAnswer[] = [],
   now: Date = new Date(),
+  /**
+   * 当日の学習量の上書き（GF-P1-001）。省略時はプロフィールの予算をそのまま使い、
+   * 従来と完全に同じメニューになる。上書きするのは「どれだけ」だけで、
+   * 「何を」の優先順位（復習期限 > 弱点 > 新規）は変えない。
+   */
+  dailyMinutesOverride?: number,
 ): TodayMenu {
-  const budget = resolveDailyMinutes(profile);
+  const budget =
+    typeof dailyMinutesOverride === "number" && dailyMinutesOverride > 0
+      ? dailyMinutesOverride
+      : resolveDailyMinutes(profile);
   const remaining = daysUntilExam(profile, now);
 
   // 直近の解答で間違いが多いほど、復習を厚くする(解答履歴の活用)。

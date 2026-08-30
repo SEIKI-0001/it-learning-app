@@ -73,6 +73,7 @@ function fullCheckpointProgress(): CheckpointProgress {
       },
       pledge: { pledgedAt: "2026-08-15T00:00:00.000Z", examDate: "2026-10-15" },
       mochitName: { value: "もちすけ", updatedAt: "2026-08-18T00:00:00.000Z" },
+      studyAmount: { date: "2026-08-20", minutes: 15 },
     },
   };
 }
@@ -476,6 +477,24 @@ describe("personalisation merge", () => {
     expect(merged?.questReroll).toBeUndefined();
     expect(merged?.pledge).toBeUndefined();
     expect(merged?.mochitName).toBeUndefined();
+    expect(merged?.studyAmount).toBeUndefined();
+  });
+
+  it("takes the newer day's study amount", () => {
+    const older = { ...base, gameful: { studyAmount: { date: "2026-08-19", minutes: 30 } } };
+    const newer = { ...base, gameful: { studyAmount: { date: "2026-08-20", minutes: 5 } } };
+
+    expect(merge(older, newer).gameful?.studyAmount?.date).toBe("2026-08-20");
+    expect(merge(newer, older).gameful?.studyAmount?.minutes).toBe(5);
+  });
+
+  it("keeps the larger study amount on the same day", () => {
+    // 少ない方に寄せると、片方の端末で増やした分の候補が消えてしまう。
+    const a = { ...base, gameful: { studyAmount: { date: "2026-08-20", minutes: 30 } } };
+    const b = { ...base, gameful: { studyAmount: { date: "2026-08-20", minutes: 5 } } };
+
+    expect(merge(a, b).gameful?.studyAmount?.minutes).toBe(30);
+    expect(merge(b, a).gameful?.studyAmount?.minutes).toBe(30);
   });
 });
 

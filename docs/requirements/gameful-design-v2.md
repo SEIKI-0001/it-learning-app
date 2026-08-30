@@ -941,16 +941,16 @@ DB側の原子的判定がこの単位で行われている。
 | `GF-P0-004` | P0 | `IMPLEMENTED` | #27 | mochitContext / contextualMochitMessages | Contextual Mochit |
 | `GF-P0-005` | P0 | `IMPLEMENTED` | #25 | sessionOutcome / SessionOutcomeCard | Session outcome |
 | `GF-P0-006` | P0 | `NOT_STARTED` | - | - | LINE reminder（migration 着地待ち） |
-| `GF-P1-001` | P1 | `NOT_STARTED` | - | - | Session length choice |
-| `GF-P1-002` | P1 | `NOT_STARTED` | - | - | Comeback mission |
+| `GF-P1-001` | P1 | `IMPLEMENTED` | #31 | studyAmount / StudyAmountPicker | Session length choice |
+| `GF-P1-002` | P1 | `IMPLEMENTED` | #31 | comebackMission / ComebackMissionCard | Comeback mission |
 | `GF-P1-003` | P1 | `NOT_STARTED` | - | - | CP evolution |
 | `GF-P1-004` | P1 | `IMPLEMENTED` | #28 | learningHistory / LearningHeatmap | Heatmap/journey |
 | `GF-P1-005` | P1 | `IMPLEMENTED` | #29 | badgeDrops / rewardInventory / RewardChoiceCard | Reward inventory |
 | `GF-P1-006` | P1 | `IMPLEMENTED` | #29 | RewardChoiceCard（RarityMark） | Rarity feedback |
-| `GF-P1-007` | P1 | `NOT_STARTED` | - | - | Mochit naming |
+| `GF-P1-007` | P1 | `IMPLEMENTED` | #30 | pledgeAndMochitName | Mochit naming |
 | `GF-P1-008` | P1 | `IMPLEMENTED` | #28 | glossaryCollection | Glossary collection |
-| `GF-P1-009` | P1 | `NOT_STARTED` | - | - | Quest reroll |
-| `GF-P1-010` | P1 | `NOT_STARTED` | - | - | Pledge |
+| `GF-P1-009` | P1 | `IMPLEMENTED` | #30 | questReroll | Quest reroll |
+| `GF-P1-010` | P1 | `IMPLEMENTED` | #30 | pledgeAndMochitName | Pledge |
 | `GF-P1-011` | P1 | `NOT_STARTED` | - | - | Narrative consistency |
 | `GF-P2-001` | P2 | `DEFERRED` | - | - | Requires sufficient population |
 | `GF-P2-002` | P2 | `DEFERRED` | - | - | Conditional experiment |

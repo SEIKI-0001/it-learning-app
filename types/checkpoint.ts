@@ -198,6 +198,19 @@ export type GamefulState = {
   pledge?: Pledge;
   /** モチットの名前。未設定なら既定名を使う。 */
   mochitName?: MochitName;
+  /** その日の学習量の選択。未設定ならプロフィールの予算をそのまま使う。 */
+  studyAmount?: StudyAmountChoice;
+};
+
+/**
+ * 当日の学習量の選択（GF-P1-001）。
+ * 選ばなければこの記録自体が存在せず、従来どおりプロフィールの予算が使われる。
+ * 「何を学ぶか」の優先順位はシステム側が保つので、ここは分量だけを持つ。
+ */
+export type StudyAmountChoice = {
+  /** ローカル日付 "YYYY-MM-DD"。日をまたいだら選択は持ち越さない。 */
+  date: string;
+  minutes: number;
 };
 
 /**

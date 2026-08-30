@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { AppState } from "@/types";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
@@ -19,6 +20,13 @@ import { buildTodaysLearningQueue } from "@/lib/learningLoop";
 import { buildTodayPrimaryAction } from "@/lib/todayPrimary";
 import { buildActionImpact } from "@/lib/actionImpact";
 import { evaluateGrowthCheckGate } from "@/lib/growthCheck";
+import { buildComebackMission } from "@/lib/comebackMission";
+import {
+  clearStudyAmount,
+  defaultDailyMinutes,
+  getSelectedMinutes,
+  setStudyAmount,
+} from "@/lib/studyAmount";
 import {
   getUserId,
   loadCachedProgressBootstrap,
@@ -38,6 +46,8 @@ import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayPolicyStrip from "@/components/today/TodayPolicyStrip";
 import TodayPrimaryCard from "@/components/today/TodayPrimaryCard";
 import GrowthCheckCard from "@/components/today/GrowthCheckCard";
+import StudyAmountPicker from "@/components/today/StudyAmountPicker";
+import ComebackMissionCard from "@/components/today/ComebackMissionCard";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import { buttonClass } from "@/components/ui/Button";
@@ -82,9 +92,14 @@ export default function TodayPage() {
     if (state === null) router.replace("/onboarding");
   }, [router, state]);
 
+  // 選ばれた学習量があればそれを予算にする。選んでいなければ従来どおり。
+  const selectedMinutes = state ? getSelectedMinutes(state, todayLocalDate()) : null;
   const plan = useMemo(
-    () => (state?.profile ? generateLearningPlan(state, topics) : null),
-    [state, topics],
+    () =>
+      state?.profile
+        ? generateLearningPlan(state, topics, new Date(), selectedMinutes ?? undefined)
+        : null,
+    [selectedMinutes, state, topics],
   );
   const menu = plan?.todayMenu;
 
@@ -203,6 +218,17 @@ export default function TodayPage() {
 
   // 成長確認（踊り場）はCPの中間で最大1回。緊急の復習が溜まっていれば延期する。
   const growthCheckGate = evaluateGrowthCheckGate({ state, gate });
+
+  // 数日空いた人向けの短い再開点。対象外なら null で何も出さない。
+  const comeback = buildComebackMission({ state });
+
+  const persistState = (next: AppState) => {
+    if (next === state) return;
+    saveAppState(next);
+    setState(next);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, next.progress);
+  };
 
   // ホームの1画面目で「合格までの距離」と「今日のミッション」が分かるようにする。
   const readiness =
@@ -335,12 +361,27 @@ export default function TodayPage() {
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        {/* Secondary の先頭: 久しぶりの人へ、重いルートより先に短い再開点を出す */}
+        {comeback && <ComebackMissionCard mission={comeback} />}
+
         <section>
           <div className="mb-2 flex items-baseline justify-between gap-3">
             <h2 className="text-base font-semibold text-gray-900">今日のルート</h2>
             <span className="text-xs tabular-nums text-gray-500">
               {nodes.length}件・約{totalMinutes}分
             </span>
+          </div>
+
+          {/* 学習量は任意。既定の「おまかせ」が最初から選ばれている。 */}
+          <div className="mb-3">
+            <StudyAmountPicker
+              selectedMinutes={selectedMinutes}
+              defaultMinutes={defaultDailyMinutes(state.profile)}
+              onSelect={(minutes) =>
+                persistState(setStudyAmount(state, todayLocalDate(), minutes))
+              }
+              onClear={() => persistState(clearStudyAmount(state, todayLocalDate()))}
+            />
           </div>
 
           {nodes.length > 0 && (
