@@ -205,6 +205,17 @@ describe("saveAssessmentQuestionAttemptsForCurrentSession", () => {
       userId: "server-user",
       exposures: [],
     }), { status: 200 })],
+    ["an unknown exposure state", () => new Response(JSON.stringify({
+      ok: true,
+      userId: "server-user",
+      exposures: [{
+        questionId: "question-a",
+        state: "unknown",
+        attemptedBefore: false,
+        firstAttemptAt: "2026-08-15T04:00:00.000Z",
+        attemptCount: 1,
+      }],
+    }), { status: 200 })],
     ["duplicate question rows", () => new Response(JSON.stringify({
       ok: true,
       userId: "server-user",

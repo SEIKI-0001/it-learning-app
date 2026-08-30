@@ -40,7 +40,7 @@ const flow = vi.hoisted(() => ({
 }));
 
 const recordThemeExamLearningResult = vi.hoisted(() => vi.fn());
-const saveQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn());
+const saveAssessmentQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn());
 const saveProgressToDb = vi.hoisted(() => vi.fn());
 const startAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
 const completeAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
@@ -55,7 +55,7 @@ vi.mock("@/lib/userSession", () => ({
   completeAssessmentSessionForCurrentSession,
   createAssessmentSessionId: () => "20000000-0000-4000-8000-000000000001",
   saveProgressToDb,
-  saveQuestionAttemptsForCurrentSession,
+  saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
 }));
 vi.mock("@/lib/themeExam", async (importOriginal) => {
@@ -85,7 +85,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   flow.hasState = true;
   recordThemeExamLearningResult.mockReturnValue(flow.next);
-  saveQuestionAttemptsForCurrentSession.mockResolvedValue({
+  saveAssessmentQuestionAttemptsForCurrentSession.mockResolvedValue({
     authState: "authenticated",
     userId: "user-1",
     exposures: {
@@ -164,12 +164,12 @@ describe("ThemeExamRunner exposure integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
     await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalled());
-    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
+    expect(saveAssessmentQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
     expect(recordThemeExamLearningResult.mock.invocationCallOrder[0]).toBeGreaterThan(
-      saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
+      saveAssessmentQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
     );
     expect(completeAssessmentSessionForCurrentSession.mock.invocationCallOrder[0]).toBeGreaterThan(
-      saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
+      saveAssessmentQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
     );
     expect(recordThemeExamLearningResult.mock.invocationCallOrder[0]).toBeGreaterThan(
       completeAssessmentSessionForCurrentSession.mock.invocationCallOrder[0],
@@ -205,7 +205,7 @@ describe("ThemeExamRunner exposure integration", () => {
     grade.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalled());
-    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
+    expect(saveAssessmentQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
     expect(recordThemeExamLearningResult).toHaveBeenCalledTimes(1);
   });
 
@@ -225,9 +225,8 @@ describe("ThemeExamRunner exposure integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
     await waitFor(() => expect(completeAssessmentSessionForCurrentSession).toHaveBeenCalledOnce());
-    expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledWith(
+    expect(saveAssessmentQuestionAttemptsForCurrentSession).toHaveBeenCalledWith(
       expect.any(Array),
-      [],
     );
     expect(recordThemeExamLearningResult).not.toHaveBeenCalled();
   });
@@ -295,5 +294,47 @@ describe("ThemeExamRunner exposure integration", () => {
     expect(completeAssessmentSessionForCurrentSession.mock.calls[1][0]).toEqual(
       completeAssessmentSessionForCurrentSession.mock.calls[0][0],
     );
+  });
+
+  it.each([
+    ["network", () => new TypeError("connection lost")],
+    ["http", () => Object.assign(new Error("503"), { code: "http" })],
+    ["malformed", () => Object.assign(new Error("bad response"), { code: "malformed_response" })],
+    ["unknown", () => Object.assign(new Error("unknown exposure"), { code: "malformed_response" })],
+  ])("does not cache %s exposure data and retries its byte-identical batch", async (_failure, error) => {
+    saveAssessmentQuestionAttemptsForCurrentSession
+      .mockRejectedValueOnce(error())
+      .mockResolvedValueOnce({
+        authState: "authenticated",
+        userId: "user-1",
+        exposures: {
+          "tech-binary-data-ex1": {
+            questionId: "tech-binary-data-ex1",
+            state: "first",
+            attemptedBefore: false,
+            firstAttemptAt: "2026-08-01T00:00:00.000Z",
+            attemptCount: 1,
+          },
+        },
+      });
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(recordThemeExamLearningResult).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalledOnce());
+    expect(saveAssessmentQuestionAttemptsForCurrentSession.mock.calls[1][0])
+      .toEqual(saveAssessmentQuestionAttemptsForCurrentSession.mock.calls[0][0]);
   });
 });

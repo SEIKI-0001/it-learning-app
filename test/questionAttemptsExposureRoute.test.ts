@@ -188,4 +188,30 @@ describe("question attempt exposure route", () => {
     expect(recordAssessmentQuestionAttemptsWithExposure).not.toHaveBeenCalled();
     expect(recordQuestionAttemptsWithExposure).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ["empty", ""],
+    ["non-string", 42],
+    ["oversized", "20000000-0000-4000-8000-000000000001".repeat(3)],
+    ["not a UUID", "group-name"],
+  ])("rejects a supplied %s assessment group ID before persistence", async (_label, attemptGroupId) => {
+    const response = await POST(new Request("http://localhost/api/question-attempts/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        attempts: [{
+          questionId: "tech-security-cia-ex1",
+          questionType: "mock_exam",
+          topicId: "tech-security-cia",
+          selectedAnswer: "A",
+          isCorrect: true,
+          attemptGroupId,
+        }],
+      }),
+    }));
+
+    expect(response.status).toBe(400);
+    expect(recordAssessmentQuestionAttemptsWithExposure).not.toHaveBeenCalled();
+    expect(recordQuestionAttemptsWithExposure).not.toHaveBeenCalled();
+  });
 });

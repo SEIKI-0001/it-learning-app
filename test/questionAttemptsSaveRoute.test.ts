@@ -34,21 +34,21 @@ beforeEach(() => {
   inserted = [];
   assessmentSessions = [
     {
-      session_id: "session-1",
+      session_id: "10000000-0000-4000-8000-000000000001",
       user_id: "user-1",
       source: "official_past",
       mode: "practice",
       status: "in_progress",
     },
     {
-      session_id: "group-9",
+      session_id: "10000000-0000-4000-8000-000000000002",
       user_id: "user-1",
       source: "official_past",
       mode: "exam",
       status: "in_progress",
     },
     {
-      session_id: "mock-session",
+      session_id: "10000000-0000-4000-8000-000000000003",
       user_id: "user-1",
       source: "mock",
       mode: "exam",
@@ -150,7 +150,7 @@ function officialAttempt(overrides: Attempt = {}): Attempt {
     selectedAnswer: "A",
     isCorrect: true,
     attemptMode: "practice",
-    attemptGroupId: "session-1",
+    attemptGroupId: "10000000-0000-4000-8000-000000000001",
     ...overrides,
   };
 }
@@ -208,9 +208,9 @@ describe("公式過去問の正誤はサーバ側で計算する", () => {
   });
 
   it("演習の文脈（モード・グループID）はクライアント値を検証して使う", async () => {
-    await save([officialAttempt({ attemptMode: "exam", attemptGroupId: "group-9" })]);
+    await save([officialAttempt({ attemptMode: "exam", attemptGroupId: "10000000-0000-4000-8000-000000000002" })]);
     expect(rows()[0].attempt_mode).toBe("exam");
-    expect(rows()[0].attempt_group_id).toBe("group-9");
+    expect(rows()[0].attempt_group_id).toBe("10000000-0000-4000-8000-000000000002");
   });
 
   it("不正なモードは null にする（保存自体は拒否しない）", async () => {
@@ -343,16 +343,16 @@ describe("既存4種類の保存は変わらない", () => {
         selectedAnswer: "B",
         isCorrect: false,
         attemptMode: "exam",
-        attemptGroupId: "mock-session",
+        attemptGroupId: "10000000-0000-4000-8000-000000000003",
       },
     ]);
 
     expect(response.status).toBe(200);
     expect(rows()[0].attempt_mode).toBeNull();
-    expect(rows()[0].attempt_group_id).toBe("mock-session");
+    expect(rows()[0].attempt_group_id).toBe("10000000-0000-4000-8000-000000000003");
     expect(rpc).toHaveBeenCalledWith(
       "record_assessment_question_attempts_with_exposure",
-      expect.objectContaining({ p_session_id: "mock-session" }),
+      expect.objectContaining({ p_session_id: "10000000-0000-4000-8000-000000000003" }),
     );
   });
 
@@ -363,7 +363,7 @@ describe("既存4種類の保存は変わらない", () => {
     ["放棄済み", { user_id: "user-1", source: "mock", status: "abandoned" }],
   ])("%sの評価セッションはatomic RPCが拒否しrouteは保存失敗を返す", async (_label, overrides) => {
     assessmentSessions.push({
-      session_id: "untrusted-session",
+      session_id: "10000000-0000-4000-8000-000000000004",
       mode: "exam",
       ...overrides,
     });
@@ -374,7 +374,7 @@ describe("既存4種類の保存は変わらない", () => {
       topicId: "tech-security-cia",
       selectedAnswer: "B",
       isCorrect: false,
-      attemptGroupId: "untrusted-session",
+      attemptGroupId: "10000000-0000-4000-8000-000000000004",
     }]);
 
     expect(response.status).toBe(500);
@@ -382,7 +382,7 @@ describe("既存4種類の保存は変わらない", () => {
     expect(inserted).toHaveLength(0);
     expect(rpc).toHaveBeenCalledWith(
       "record_assessment_question_attempts_with_exposure",
-      expect.objectContaining({ p_session_id: "untrusted-session" }),
+      expect.objectContaining({ p_session_id: "10000000-0000-4000-8000-000000000004" }),
     );
   });
 

@@ -1,6 +1,6 @@
 begin;
 
-select plan(40);
+select plan(44);
 
 select has_column(
   'public',
@@ -245,11 +245,10 @@ select is(
   'a 100-question exam is classified in one set-based RPC call'
 );
 
-select has_index(
+select has_table(
   'public',
-  'question_attempts',
-  'question_attempts_assessment_group_unique_idx',
-  'null-version grouped assessment attempts have an idempotency boundary'
+  'assessment_attempt_receipts',
+  'grouped assessment retries use receipts without constraining legacy attempts'
 );
 
 select has_function(
@@ -572,6 +571,62 @@ select is(
   ),
   (select revision from assessment_replay_revision),
   'an exact assessment replay does not increment the evidence revision'
+);
+
+-- Historical grouped attempts can legally contain duplicate facts. The receipt
+-- table must leave them alone while binding only new/replayed writes.
+insert into public.question_attempts (
+  user_id, question_id, question_type, topic_id, is_correct, answered_at,
+  attempt_group_id
+) values
+  ('10000000-0000-0000-0000-000000000001', 'legacy-group-duplicate', 'mock_exam', 'topic-a', true,
+   '2026-08-29T01:20:00Z', '11000000-0000-4000-8000-000000000001'),
+  ('10000000-0000-0000-0000-000000000001', 'legacy-group-duplicate', 'mock_exam', 'topic-a', false,
+   '2026-08-29T01:21:00Z', '11000000-0000-4000-8000-000000000001');
+
+select results_eq(
+  $$
+    select saved
+    from public.record_assessment_question_attempts_with_exposure(
+      '10000000-0000-0000-0000-000000000001',
+      '11000000-0000-4000-8000-000000000001',
+      '[{
+        "question_id":"post-legacy-replay",
+        "question_type":"mock_exam",
+        "topic_id":"topic-a",
+        "is_correct":true,
+        "answered_at":"2026-08-29T01:22:00Z",
+        "attempt_group_id":"11000000-0000-4000-8000-000000000001"
+      }]'::jsonb
+    )
+  $$,
+  $$values (true)$$,
+  'a new assessment attempt records beside legal legacy duplicates'
+);
+
+select is(
+  (select count(*)::integer from public.question_attempts
+   where question_id = 'legacy-group-duplicate'
+     and attempt_group_id = '11000000-0000-4000-8000-000000000001'),
+  2,
+  'legacy grouped duplicate rows remain unchanged'
+);
+
+select is(
+  (select count(*)::integer from public.question_attempts
+   where question_id = 'post-legacy-replay'
+     and attempt_group_id = '11000000-0000-4000-8000-000000000001'),
+  1,
+  'the future replay target has one canonical attempt row'
+);
+
+select is(
+  (select count(*)::integer from public.assessment_attempt_receipts
+   where user_id = '10000000-0000-0000-0000-000000000001'
+     and session_id = '11000000-0000-4000-8000-000000000001'
+     and question_id = 'post-legacy-replay'),
+  1,
+  'the future replay target has a single receipt'
 );
 
 select * from finish();

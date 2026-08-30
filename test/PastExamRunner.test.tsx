@@ -57,6 +57,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.localStorage.setItem("fequest:userId", "user-1");
   assessmentFailures.start = 0;
   assessmentFailures.complete = 0;
   assessmentFailures.abandon = 0;

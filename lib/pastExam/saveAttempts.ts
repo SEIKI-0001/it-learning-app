@@ -12,8 +12,8 @@
 //     画面に出す正誤は gradePastExam の結果であって、この値ではない。
 
 import {
-  saveQuestionAttemptsForCurrentSession,
-  type CurrentSessionQuestionExposureResult,
+  saveAssessmentQuestionAttemptsForCurrentSession,
+  type AuthenticatedQuestionExposureResult,
   type QuestionAttemptInput,
 } from "@/lib/userSession";
 import type { UserAnswer } from "@/types";
@@ -59,11 +59,10 @@ export function saveSingleAttempt(params: {
   mode: PastExamMode;
   sessionId: string;
   anonymousAnswers: UserAnswer[];
-}): Promise<CurrentSessionQuestionExposureResult> {
-  const { question, answer, mode, sessionId, anonymousAnswers } = params;
-  return saveQuestionAttemptsForCurrentSession(
+}): Promise<AuthenticatedQuestionExposureResult> {
+  const { question, answer, mode, sessionId } = params;
+  return saveAssessmentQuestionAttemptsForCurrentSession(
     [toPayload(question, answer, mode, sessionId)],
-    anonymousAnswers,
   );
 }
 
@@ -77,10 +76,9 @@ export function saveAllAttempts(params: {
   mode: PastExamMode;
   sessionId: string;
   anonymousAnswers: UserAnswer[];
-}): Promise<CurrentSessionQuestionExposureResult> {
-  const { questions, answers, mode, sessionId, anonymousAnswers } = params;
-  return saveQuestionAttemptsForCurrentSession(
+}): Promise<AuthenticatedQuestionExposureResult> {
+  const { questions, answers, mode, sessionId } = params;
+  return saveAssessmentQuestionAttemptsForCurrentSession(
     questions.map((q) => toPayload(q, answers[q.questionNumber], mode, sessionId)),
-    anonymousAnswers,
   );
 }

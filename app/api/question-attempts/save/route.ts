@@ -41,6 +41,7 @@ const VALID_TYPES = new Set<QuestionType>([
 ]);
 
 const VALID_MODES = new Set(["practice", "exam"]);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** 公式過去問で受け付ける選択肢。これ以外（未回答は null）は保存しない。 */
 const VALID_CHOICES = new Set(["A", "B", "C", "D"]);
@@ -67,10 +68,14 @@ function attemptMode(a: AttemptInput): string | null {
     : null;
 }
 
+function hasInvalidAttemptGroupId(a: AttemptInput): boolean {
+  if (!("attemptGroupId" in a) || a.attemptGroupId === null) return false;
+  return typeof a.attemptGroupId !== "string"
+    || !UUID.test(a.attemptGroupId);
+}
+
 function attemptGroupId(a: AttemptInput): string | null {
-  return typeof a.attemptGroupId === "string" && a.attemptGroupId.length > 0
-    ? a.attemptGroupId.slice(0, 100)
-    : null;
+  return typeof a.attemptGroupId === "string" ? a.attemptGroupId : null;
 }
 
 /**
@@ -185,6 +190,12 @@ export async function POST(request: Request) {
   }
 
   const attempts = Array.isArray(body.attempts) ? body.attempts : [];
+  if (attempts.some((attempt) => hasInvalidAttemptGroupId(attempt))) {
+    return NextResponse.json(
+      { ok: false, error: "invalid assessment batch" },
+      { status: 400 },
+    );
+  }
   const candidates = attempts
     .map((a): { attempt: AttemptInput; questionId: string; questionType: QuestionType } | null => {
       if (typeof a?.questionId !== "string" || a.questionId.length === 0) return null;

@@ -2,12 +2,19 @@
 set local lock_timeout = '5s';
 set local statement_timeout = '60s';
 
--- The existing versioned grouped-attempt index covers every non-null version.
--- This complementary boundary makes unversioned grouped assessment replays
--- idempotent without changing the repeatable ungrouped learning flow.
-create unique index question_attempts_assessment_group_unique_idx
-  on public.question_attempts (user_id, attempt_group_id, question_id)
-  where attempt_group_id is not null and question_version is null;
+-- Do not add a unique index over question_attempts: historical grouped rows can
+-- legitimately contain duplicates. Receipts bind only new assessment writes and
+-- leave every legacy row untouched.
+create table public.assessment_attempt_receipts (
+  user_id uuid not null,
+  session_id uuid not null,
+  question_id text not null,
+  attempt_id uuid not null references public.question_attempts(attempt_id) on delete cascade,
+  payload jsonb not null,
+  first_attempt_at timestamptz,
+  attempt_count bigint not null,
+  primary key (user_id, session_id, question_id)
+);
 
 create or replace function public.record_assessment_question_attempts_with_exposure(
   p_user_id uuid,
@@ -33,6 +40,7 @@ declare
   v_result record;
   v_attempt jsonb;
   v_persisted public.question_attempts%rowtype;
+  v_receipt public.assessment_attempt_receipts%rowtype;
 begin
   if p_user_id is null or p_session_id is null then
     raise exception 'assessment session identity is required'
@@ -99,6 +107,53 @@ begin
       using errcode = '23503';
   end if;
 
+  -- A receipt is the idempotency boundary for new writes. Existing historical
+  -- duplicate rows have no receipt, so the migration never rewrites or rejects
+  -- them. A retry must contain the exact caller-owned batch.
+  if exists (
+    select 1
+    from jsonb_array_elements(p_attempts) as item(value)
+    join public.assessment_attempt_receipts receipt
+      on receipt.user_id = p_user_id
+      and receipt.session_id = p_session_id
+      and receipt.question_id = item.value ->> 'question_id'
+  ) then
+    for v_attempt in
+      select item.value
+      from jsonb_array_elements(p_attempts) with ordinality as item(value, ordinality)
+      order by item.ordinality
+    loop
+      select receipt.* into v_receipt
+      from public.assessment_attempt_receipts receipt
+      where receipt.user_id = p_user_id
+        and receipt.session_id = p_session_id
+        and receipt.question_id = v_attempt ->> 'question_id';
+      if not found then
+        raise exception 'assessment attempt replay is missing a receipt'
+          using errcode = '23505';
+      end if;
+      if v_receipt.payload is distinct from v_attempt then
+        raise exception 'assessment attempt replay conflicts with stored facts'
+          using errcode = '23505';
+      end if;
+      select attempt.* into v_persisted
+      from public.question_attempts attempt
+      where attempt.attempt_id = v_receipt.attempt_id;
+      if not found then
+        raise exception 'assessment attempt receipt lost its canonical row'
+          using errcode = '40001';
+      end if;
+      question_id := v_receipt.question_id;
+      state := case when v_persisted.is_first_attempt then 'first' else 'seen' end;
+      attempted_before := not v_persisted.is_first_attempt;
+      first_attempt_at := v_receipt.first_attempt_at;
+      attempt_count := v_receipt.attempt_count;
+      saved := false;
+      return next;
+    end loop;
+    return;
+  end if;
+
   -- The generic recorder remains the single P1-1 first-attempt authority. Its
   -- validation, advisory serialization, insert, and evidence registration all
   -- execute while this transaction still owns the assessment session row lock.
@@ -121,48 +176,22 @@ begin
       and attempt.attempt_group_id = p_session_id::text
       and attempt.question_id = v_result.question_id
       and attempt.question_version is not distinct from
-        nullif(v_attempt ->> 'question_version', '')::integer;
+        nullif(v_attempt ->> 'question_version', '')::integer
+    order by attempt.answered_at desc, attempt.attempt_id desc
+    limit 1;
 
     if not found then
       raise exception 'assessment attempt persistence lost its idempotent row'
         using errcode = '40001';
     end if;
 
-    -- A unique-key collision is an idempotent replay only when every persisted
-    -- answer fact is identical. Conflicting reuse must never acknowledge a
-    -- different answer as saved.
-    if not v_result.saved and not (
-      v_persisted.question_type = v_attempt ->> 'question_type'
-      and v_persisted.topic_id = v_attempt ->> 'topic_id'
-      and v_persisted.selected_answer is not distinct from
-        v_attempt ->> 'selected_answer'
-      and v_persisted.is_correct = (v_attempt ->> 'is_correct')::boolean
-      and v_persisted.mistake_reason is not distinct from
-        v_attempt ->> 'mistake_reason'
-      and (
-        v_attempt ->> 'answered_at' is null
-        or v_persisted.answered_at =
-          (v_attempt ->> 'answered_at')::timestamptz
-      )
-      and v_persisted.time_spent_seconds is not distinct from
-        nullif(v_attempt ->> 'time_spent_seconds', '')::integer
-      and v_persisted.source_task_id is not distinct from
-        nullif(v_attempt ->> 'source_task_id', '')::uuid
-      and v_persisted.question_origin is not distinct from
-        v_attempt ->> 'question_origin'
-      and v_persisted.question_version is not distinct from
-        nullif(v_attempt ->> 'question_version', '')::integer
-      and v_persisted.exam_year is not distinct from
-        nullif(v_attempt ->> 'exam_year', '')::integer
-      and v_persisted.attempt_mode is not distinct from
-        v_attempt ->> 'attempt_mode'
-      and v_persisted.official_exam_field is not distinct from
-        v_attempt ->> 'official_exam_field'
-      and v_persisted.attempt_group_id = p_session_id::text
-    ) then
-      raise exception 'assessment attempt replay conflicts with stored facts'
-        using errcode = '23505';
-    end if;
+    insert into public.assessment_attempt_receipts (
+      user_id, session_id, question_id, attempt_id, payload,
+      first_attempt_at, attempt_count
+    ) values (
+      p_user_id, p_session_id, v_result.question_id, v_persisted.attempt_id,
+      v_attempt, v_result.first_attempt_at, v_result.attempt_count
+    );
 
     question_id := v_result.question_id;
     state := case when v_persisted.is_first_attempt then 'first' else 'seen' end;

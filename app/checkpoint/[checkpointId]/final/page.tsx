@@ -13,9 +13,9 @@ import {
   assessmentAnswerIdempotencyKey,
   completeAssessmentSessionForCurrentSession,
   saveProgressToDb,
-  saveQuestionAttemptsForCurrentSession,
+  saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type CurrentSessionQuestionExposureResult,
+  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
 import { getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
@@ -66,7 +66,7 @@ export default function FinalExamPage() {
     answers: UserAnswer[];
     scored: FinalExamResult;
     attempt: ReturnType<typeof buildFinalExamAttempt>;
-    exposureResult?: CurrentSessionQuestionExposureResult;
+    exposureResult?: AuthenticatedQuestionExposureResult;
     updated?: ReturnType<typeof recordFinalExamAttempt>;
   } | null>(null);
 
@@ -182,7 +182,7 @@ export default function FinalExamPage() {
       pendingCompletionRef.current = pending;
       committedResult = pending.scored;
       const exposureResult = pending.exposureResult
-        ?? await saveQuestionAttemptsForCurrentSession(
+        ?? await saveAssessmentQuestionAttemptsForCurrentSession(
           pending.answers.map((answer) => ({
             questionId: answer.questionId,
             questionType: "mini_exam" as const,
@@ -192,7 +192,6 @@ export default function FinalExamPage() {
             answeredAt: answer.answeredAt,
             attemptGroupId: exam.attemptId,
           })),
-          state.answers,
         );
       pending.exposureResult = exposureResult;
       const { exposures, userId: uid } = exposureResult;

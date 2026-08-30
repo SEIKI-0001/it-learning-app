@@ -52,8 +52,8 @@ function supabaseStub() {
       maybeSingle: () => Promise.resolve({
         data:
           filters.get("user_id") === "user-1"
-          && (filters.get("session_id") === "group-1"
-            || filters.get("session_id") === "group-2")
+            && (filters.get("session_id") === "20000000-0000-4000-8000-000000000001"
+            || filters.get("session_id") === "20000000-0000-4000-8000-000000000002")
             ? {
                 session_id: filters.get("session_id"),
                 source: "official_past",
@@ -140,7 +140,7 @@ function officialAttempt(overrides: Attempt = {}): Attempt {
     selectedAnswer: "A",
     isCorrect: true,
     attemptMode: "exam",
-    attemptGroupId: "group-1",
+    attemptGroupId: "20000000-0000-4000-8000-000000000001",
     ...overrides,
   };
 }
@@ -192,8 +192,8 @@ describe("公式過去問の重複保存", () => {
   });
 
   it("演習が別なら（attempt_group_id が違えば）同じ問題でも保存する", async () => {
-    await save([officialAttempt({ attemptGroupId: "group-1" })]);
-    await save([officialAttempt({ attemptGroupId: "group-2" })]);
+    await save([officialAttempt({ attemptGroupId: "20000000-0000-4000-8000-000000000001" })]);
+    await save([officialAttempt({ attemptGroupId: "20000000-0000-4000-8000-000000000002" })]);
 
     // 解き直しは重複ではない。年度別演習を2回やれば2件残る。
     expect(stored).toHaveLength(2);

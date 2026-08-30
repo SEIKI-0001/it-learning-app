@@ -15,10 +15,12 @@ function recorderDefinition(): string {
 }
 
 describe("assessment attempt recording migration", () => {
-  it("adds the null-version grouped-attempt idempotency boundary", () => {
-    expect(sql()).toMatch(
-      /create unique index question_attempts_assessment_group_unique_idx[\s\S]*on public\.question_attempts\s*\(user_id, attempt_group_id, question_id\)[\s\S]*attempt_group_id is not null[\s\S]*question_version is null/i,
-    );
+  it("uses a receipt boundary instead of rejecting legacy grouped duplicates", () => {
+    expect(sql()).toMatch(/create table public\.assessment_attempt_receipts/i);
+    expect(sql()).toMatch(/primary key\s*\(user_id, session_id, question_id\)/i);
+    expect(sql()).toMatch(/references public\.question_attempts\(attempt_id\) on delete cascade/i);
+    expect(sql()).not.toMatch(/question_attempts_assessment_group_unique_idx/i);
+    expect(sql()).not.toMatch(/delete from public\.question_attempts/i);
   });
 
   it("locks the owned session before validating and recording the assessment batch", () => {

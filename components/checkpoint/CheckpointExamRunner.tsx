@@ -16,9 +16,9 @@ import {
   completeAssessmentSessionForCurrentSession,
   saveAnswersToDb,
   saveProgressToDb,
-  saveQuestionAttemptsForCurrentSession,
+  saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type CurrentSessionQuestionExposureResult,
+  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -38,7 +38,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   const pendingCompletionRef = useRef<{
     completedAt: string;
     tagged: UserAnswer[];
-    exposureResult?: CurrentSessionQuestionExposureResult;
+    exposureResult?: AuthenticatedQuestionExposureResult;
     next?: ReturnType<typeof recordCheckpointExamResult>;
     result: { correct: number; total: number; passed: boolean };
   } | null>(null);
@@ -119,7 +119,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
       pendingCompletionRef.current = pending;
       committedResult = pending.result;
       const exposureResult = pending.exposureResult
-        ?? await saveQuestionAttemptsForCurrentSession(
+        ?? await saveAssessmentQuestionAttemptsForCurrentSession(
           pending.tagged.map((answer) => ({
             questionId: answer.questionId,
             questionType: "mini_exam" as const,
@@ -129,7 +129,6 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
             answeredAt: answer.answeredAt,
             attemptGroupId: attemptId,
           })),
-          state.answers,
         );
       pending.exposureResult = exposureResult;
       const { exposures, userId } = exposureResult;

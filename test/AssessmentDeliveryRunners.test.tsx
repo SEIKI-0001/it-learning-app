@@ -138,6 +138,7 @@ function assessmentSuccess(action: string, sessionId: string): Response {
 function installFetch(
   startResponse?: Deferred,
   failures: Partial<Record<"start" | "complete" | "abandon", number>> = {},
+  attemptFailure?: "network" | "http" | "malformed" | "unknown",
 ) {
   vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
     if (url === "/api/assessment-sessions") {
@@ -152,6 +153,26 @@ function installFetch(
     }
     if (url === "/api/question-attempts/save") {
       const attempts = JSON.parse(String(init?.body)).attempts as Array<{ questionId: string }>;
+      if (attemptFailure) {
+        const failure = attemptFailure;
+        attemptFailure = undefined;
+        if (failure === "network") throw new TypeError("connection lost");
+        if (failure === "http") {
+          return new Response(JSON.stringify({ ok: false }), { status: 503 });
+        }
+        if (failure === "malformed") return new Response("not-json", { status: 200 });
+        return new Response(JSON.stringify({
+          ok: true,
+          userId: "user-1",
+          exposures: attempts.map((attempt) => ({
+            questionId: attempt.questionId,
+            state: "unknown",
+            attemptedBefore: false,
+            firstAttemptAt: "2026-08-23T00:05:00.000Z",
+            attemptCount: 1,
+          })),
+        }), { status: 200 });
+      }
       return new Response(JSON.stringify({
         ok: true,
         userId: "user-1",
@@ -376,5 +397,32 @@ describe("assessment delivery runners", () => {
       completedAt: completions[0].completedAt,
       answers: completions[0].answers,
     });
+  });
+
+  it.each([
+    ["network", () => render(<MockExamPage />), /模試を始める/],
+    ["http", () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />), /チェックポイント試験を始める/],
+    ["malformed", () => render(<FinalExamPage />), /突破試験に挑む/],
+    ["unknown", () => render(<MockExamPage />), /模試を始める/],
+  ] as const)("does not cache %s assessment exposure data and retries the identical batch", async (
+    failure,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch(undefined, {}, failure);
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(harness.setState).not.toHaveBeenCalled();
+    expect(requestBodies("/api/assessment-sessions").filter((body) => body.action === "complete")).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    await waitFor(() => expect(requestBodies("/api/progress/save")).toHaveLength(1));
+    const batches = requestBodies("/api/question-attempts/save");
+    expect(batches).toHaveLength(2);
+    expect(batches[1]).toEqual(batches[0]);
   });
 });

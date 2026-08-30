@@ -364,9 +364,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           });
           exposures = exposureResult.exposures;
           confirmedUserId = exposureResult.userId;
-          storageUserId = exposureResult.authState === "unknown"
-            ? await resolveMutationStorageUserId()
-            : exposureResult.userId;
+          storageUserId = exposureResult.userId;
         } else {
           storageUserId = await resolveMutationStorageUserId();
           exposures = getUnknownQuestionExposureStates(
@@ -479,6 +477,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         onFinish={finish}
         submitting={submitting}
         persistenceError={persistenceError}
+        onPersistenceError={setPersistenceError}
       />
     );
   }
@@ -610,6 +609,7 @@ function QuestionStage({
   onFinish,
   submitting,
   persistenceError,
+  onPersistenceError,
 }: {
   session: PastExamSession;
   questions: PastExamQuestionView[];
@@ -624,6 +624,7 @@ function QuestionStage({
   /** 採点処理が走り出したか。ボタンを無効化して連打の入口を塞ぐ。 */
   submitting: boolean;
   persistenceError: string | null;
+  onPersistenceError: (message: string | null) => void;
 }) {
   const isExam = session.mode === "exam";
   const index = Math.min(Math.max(0, session.currentIndex), questions.length - 1);
@@ -643,6 +644,7 @@ function QuestionStage({
   // 同一セッションで保存済みの問題。回答の確定は上の answerLocked で足りるが、
   // 再描画前に連打された場合まで含めて「1問1回」を守るための保険。
   const savedQuestionsRef = useRef<Set<string>>(new Set());
+  const [savedQuestionKeys, setSavedQuestionKeys] = useState<Set<string>>(() => new Set());
   const [classifying, setClassifying] = useState(false);
   const saveKey = `${session.sessionId}:${question.questionNumber}`;
 
@@ -660,7 +662,36 @@ function QuestionStage({
 
   const handleSelect = async (key: ChoiceKey) => {
     // UI 側でも選択肢を disabled にしているが、表示に依らずここでも弾く。
-    if (answerLocked || (!isExam && savedQuestionsRef.current.has(saveKey))) return;
+    if ((!isExam && savedQuestionsRef.current.has(saveKey)) || (isExam && answerLocked)) return;
+
+    // The practice answer itself is frozen after selection. If its strict
+    // persistence request failed, a second click resends that exact frozen
+    // answer instead of replacing it with the newly clicked choice.
+    if (answerLocked) {
+      const saved = session.answers[question.questionNumber];
+      if (!saved) return;
+      savedQuestionsRef.current.add(saveKey);
+      setSavedQuestionKeys(new Set(savedQuestionsRef.current));
+      setClassifying(true);
+      try {
+        const exposureResult = await saveSingleAttempt({
+          question,
+          answer: saved,
+          mode: session.mode,
+          sessionId: session.sessionId,
+          anonymousAnswers: loadAppState()?.answers ?? [],
+        });
+        onIdentity({ authState: exposureResult.authState, userId: exposureResult.userId });
+        onExposure(session.sessionId, question.questionNumber, exposureResult.exposures[question.id]?.state ?? "unknown");
+      } catch {
+        savedQuestionsRef.current.delete(saveKey);
+        setSavedQuestionKeys(new Set(savedQuestionsRef.current));
+        onPersistenceError("回答を保存できませんでした。もう一度お試しください。");
+      } finally {
+        setClassifying(false);
+      }
+      return;
+    }
 
     const now = Date.now();
     // effect が走る前に回答された場合（enteredAt が 0）は、経過時間を 0 とする。
@@ -674,26 +705,34 @@ function QuestionStage({
       const saved = next.answers[question.questionNumber];
       if (saved) {
         savedQuestionsRef.current.add(saveKey);
+        setSavedQuestionKeys(new Set(savedQuestionsRef.current));
         setClassifying(true);
-        const exposureResult = await saveSingleAttempt({
-          question,
-          answer: saved,
-          mode: session.mode,
-          sessionId: next.sessionId,
-          anonymousAnswers: loadAppState()?.answers ?? [],
-        });
-        if (exposureResult.authState !== "unknown") {
+        try {
+          const exposureResult = await saveSingleAttempt({
+            question,
+            answer: saved,
+            mode: session.mode,
+            sessionId: next.sessionId,
+            anonymousAnswers: loadAppState()?.answers ?? [],
+          });
           onIdentity({
             authState: exposureResult.authState,
             userId: exposureResult.userId,
           });
+          onExposure(
+            next.sessionId,
+            question.questionNumber,
+            exposureResult.exposures[question.id]?.state ?? "unknown",
+          );
+        } catch {
+          // A strict assessment save never yields unknown exposure data. Remove
+          // this in-memory guard so a mounted retry can send the same answer.
+          savedQuestionsRef.current.delete(saveKey);
+          setSavedQuestionKeys(new Set(savedQuestionsRef.current));
+          onPersistenceError("回答を保存できませんでした。もう一度お試しください。");
+        } finally {
+          setClassifying(false);
         }
-        onExposure(
-          next.sessionId,
-          question.questionNumber,
-          exposureResult.exposures[question.id]?.state ?? "unknown",
-        );
-        setClassifying(false);
       }
     }
   };
@@ -724,7 +763,7 @@ function QuestionStage({
         selected={selected}
         onSelect={handleSelect}
         revealAnswer={revealAnswer}
-        disabled={answerLocked || classifying || submitting || completionFrozen}
+        disabled={(answerLocked && savedQuestionKeys.has(saveKey)) || classifying || submitting || completionFrozen}
       />
 
       <nav className="flex items-center justify-between gap-2" aria-label="問題の移動">

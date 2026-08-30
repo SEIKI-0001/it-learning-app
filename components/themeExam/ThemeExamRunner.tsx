@@ -11,9 +11,9 @@ import {
   completeAssessmentSessionForCurrentSession,
   createAssessmentSessionId,
   saveProgressToDb,
-  saveQuestionAttemptsForCurrentSession,
+  saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type CurrentSessionQuestionExposureResult,
+  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
@@ -94,7 +94,7 @@ export default function ThemeExamRunner({
       isCorrect: boolean;
       answeredAt: string;
     }>;
-    exposureResult?: CurrentSessionQuestionExposureResult;
+    exposureResult?: AuthenticatedQuestionExposureResult;
     next?: AppState | null;
   } | null>(null);
 
@@ -193,7 +193,7 @@ export default function ThemeExamRunner({
     let factsCommitted = false;
     try {
       const exposureResult = pending.exposureResult
-        ?? await saveQuestionAttemptsForCurrentSession(attempts, appState?.answers ?? []);
+        ?? await saveAssessmentQuestionAttemptsForCurrentSession(attempts);
       pending.exposureResult = exposureResult;
       const { exposures, userId } = exposureResult;
       await completeAssessmentSessionForCurrentSession({

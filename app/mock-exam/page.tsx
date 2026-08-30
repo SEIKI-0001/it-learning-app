@@ -23,9 +23,9 @@ import {
   createAssessmentSessionId,
   saveAnswersToDb,
   saveProgressToDb,
-  saveQuestionAttemptsForCurrentSession,
+  saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type CurrentSessionQuestionExposureResult,
+  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import PageHeader from "@/components/ui/PageHeader";
@@ -56,7 +56,7 @@ export default function MockExamPage() {
     completedAt: string;
     tagged: UserAnswer[];
     scored: MockExamResult;
-    exposureResult?: CurrentSessionQuestionExposureResult;
+    exposureResult?: AuthenticatedQuestionExposureResult;
     next?: AppState;
   } | null>(null);
 
@@ -129,7 +129,7 @@ export default function MockExamPage() {
       pendingCompletionRef.current = pending;
       committedResult = pending.scored;
       const exposureResult = pending.exposureResult
-        ?? await saveQuestionAttemptsForCurrentSession(
+        ?? await saveAssessmentQuestionAttemptsForCurrentSession(
           pending.tagged.map((answer) => ({
             questionId: answer.questionId,
             questionType: "mock_exam" as const,
@@ -140,7 +140,6 @@ export default function MockExamPage() {
             answeredAt: answer.answeredAt,
             attemptGroupId: assessment.sessionId,
           })),
-          appState.answers,
         );
       pending.exposureResult = exposureResult;
       const { exposures, userId } = exposureResult;

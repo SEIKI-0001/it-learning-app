@@ -896,7 +896,8 @@ export async function saveAssessmentQuestionAttemptsForCurrentSession(
   if (
     parsed.some((exposure) => exposure === null)
     || parsed.some((exposure) =>
-      exposure!.attemptedBefore === null
+      exposure!.state === "unknown"
+      || exposure!.attemptedBefore === null
       || exposure!.attemptCount === null
       || exposure!.attemptCount < 0
     )
