@@ -17,6 +17,7 @@ import type {
   Pledge,
   QuestReroll,
   RewardState,
+  StudyAmountChoice,
   StreakMeta,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
@@ -97,6 +98,7 @@ function mergeGamefulState(
   const questReroll = mergeQuestReroll(a.questReroll, b.questReroll);
   const pledge = mergePledge(a.pledge, b.pledge);
   const mochitName = mergeMochitName(a.mochitName, b.mochitName);
+  const studyAmount = mergeStudyAmount(a.studyAmount, b.studyAmount);
 
   return {
     ...(shownCheckpointIds.length > 0 ? { growthCheck: { shownCheckpointIds } } : {}),
@@ -104,7 +106,22 @@ function mergeGamefulState(
     ...(questReroll ? { questReroll } : {}),
     ...(pledge ? { pledge } : {}),
     ...(mochitName ? { mochitName } : {}),
+    ...(studyAmount ? { studyAmount } : {}),
   };
+}
+
+/**
+ * 学習量の選択のマージ。新しい日を採用し、同じ日なら多い方を採る。
+ * 少ない方に寄せると、片方の端末で増やした分の学習候補が消えてしまうため。
+ */
+function mergeStudyAmount(
+  a: StudyAmountChoice | undefined,
+  b: StudyAmountChoice | undefined,
+): StudyAmountChoice | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  if (a.date !== b.date) return a.date > b.date ? a : b;
+  return a.minutes >= b.minutes ? a : b;
 }
 
 /**

@@ -793,6 +793,8 @@ export function generateLearningPlan(
   state: AppState,
   topics: Topic[] = getAllTopics(),
   now: Date = new Date(),
+  /** 当日の学習量の上書き（GF-P1-001）。省略時は従来どおりプロフィールの予算。 */
+  dailyMinutesOverride?: number,
 ): LearningPlan {
   const { profile, progress, answers } = state;
 
@@ -822,7 +824,14 @@ export function generateLearningPlan(
   const weekly = resolveWeeklyPlan(state, topics, now);
   const weeklyItems = buildWeeklyChecklist(weekly, state, now);
 
-  const todayMenu = generateTodayMenu(profile, progress, topics, answers);
+  const todayMenu = generateTodayMenu(
+    profile,
+    progress,
+    topics,
+    answers,
+    now,
+    dailyMinutesOverride,
+  );
   const primaryItem = todayMenu.items.find((i) => i.kind === "learn");
   const primary = primaryItem ? getTopic(primaryItem.topicId) : undefined;
   const todayReasons = buildTodayReasons(
