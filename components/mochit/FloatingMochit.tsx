@@ -34,7 +34,7 @@ import {
   type FloatingMochitPreferences,
 } from "./floatingMochitPreferences";
 import {
-  getFloatingMochitMessage,
+  buildMochitMessage,
   type FloatingMochitMessage,
 } from "./floatingMochitMessages";
 
@@ -174,10 +174,7 @@ export default function FloatingMochit({ reducedMotion }: Props) {
   const showBubbleForEvent = (signal: MochitEventSignal) => {
     if (menuOpen) return;
 
-    const message = getFloatingMochitMessage(
-      signal.type,
-      previousBubbleTextRef.current,
-    );
+    const message = buildMochitMessage(signal, previousBubbleTextRef.current);
     if (!message) return;
 
     if (bubbleTimerRef.current !== null) {
