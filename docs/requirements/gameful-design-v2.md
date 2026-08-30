@@ -220,10 +220,18 @@ LINEの定時pushリマインダーは現時点の既存返信機能とは別の
 - 保存する証拠は既存の分類・鮮度・重複排除ルールに従う。
 - CPゲート特別突破や合格準備度へのボーナス加点は行わない。
 
+### 用語注記（実装時に確認・2026-08-30）
+
+本書の`canonicalQuestionId`に対応する識別子は、現行リポジトリにはその名前で存在しない。
+実体は `question_attempts.question_id`（＝ `CheckQuestion.id`）であり、
+「1ユーザー × 1 canonical question につき最初の1件だけ `is_first_attempt`」という
+DB側の原子的判定がこの単位で行われている。
+以下の Acceptance Criteria における`canonicalQuestionId`は `questionId` と読み替える。
+
 ### Acceptance Criteria
 
 - [ ] 過去比較材料がないユーザーには表示しない。
-- [ ] 比較対象が同一トピックまたは`canonicalQuestionId`系統として説明可能である。
+- [ ] 比較対象が同一トピックまたは`canonicalQuestionId`（＝`questionId`）系統として説明可能である。
 - [ ] 既出問題で初見率が改善しない。
 - [ ] 結果画面に「前回 → 今回」が明示される。
 - [ ] 成長確認を行っただけでCP・必須バッジ条件が特別免除されない。

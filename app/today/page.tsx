@@ -18,6 +18,7 @@ import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { buildTodaysLearningQueue } from "@/lib/learningLoop";
 import { buildTodayPrimaryAction } from "@/lib/todayPrimary";
 import { buildActionImpact } from "@/lib/actionImpact";
+import { evaluateGrowthCheckGate } from "@/lib/growthCheck";
 import {
   getUserId,
   loadCachedProgressBootstrap,
@@ -36,6 +37,7 @@ import NextGoalCard from "@/components/today/NextGoalCard";
 import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayPolicyStrip from "@/components/today/TodayPolicyStrip";
 import TodayPrimaryCard from "@/components/today/TodayPrimaryCard";
+import GrowthCheckCard from "@/components/today/GrowthCheckCard";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import { buttonClass } from "@/components/ui/Button";
@@ -179,6 +181,8 @@ export default function TodayPage() {
     () => (state ? buildTodaysLearningQueue({ progress: state.progress, topics }) : []),
     [state, topics],
   );
+
+
   useEffect(() => {
     if (!state?.profile || !menu || !plan) return;
     if (nodes.length > 0) {
@@ -196,6 +200,9 @@ export default function TodayPage() {
 
   const currentCheckpoint = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
   const gate = buildCheckpointGate(state, currentCheckpoint.id);
+
+  // 成長確認（踊り場）はCPの中間で最大1回。緊急の復習が溜まっていれば延期する。
+  const growthCheckGate = evaluateGrowthCheckGate({ state, gate });
 
   // ホームの1画面目で「合格までの距離」と「今日のミッション」が分かるようにする。
   const readiness =
@@ -374,6 +381,9 @@ export default function TodayPage() {
             </div>
           )}
         </section>
+
+        {/* Secondary: 今日の学習導線の下に置く。Primary と競合させない。 */}
+        <GrowthCheckCard available={growthCheckGate.available} />
 
         <details className="rounded-xl border border-gray-200 bg-white">
           <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700 marker:content-none">

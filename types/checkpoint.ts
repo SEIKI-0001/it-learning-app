@@ -172,6 +172,26 @@ export type FinalExamAttempt = {
   wrongTopicIds: string[];
 };
 
+/**
+ * ゲームフル機能の状態（docs/requirements/gameful-design-v2.md）。
+ *
+ * checkpoint_progress(jsonb) 内に1つのサブオブジェクトとしてまとめる。
+ * フィールドを個別に散らすと lib/mergeAppState.ts の明示マージを更新し忘れて
+ * 端末間マージで消える事故が起きやすいため、マージ規則を1関数に閉じる。
+ *
+ * 新しいフィールドを足すときは必ず同時に:
+ *   1. ここに optional で追加（初期値は undefined＝旧データと同じ挙動）
+ *   2. lib/mergeAppState.ts の mergeGamefulState を更新
+ *   3. test/mergeCheckpointProgress.test.ts のキー一覧と fixture を更新
+ */
+export type GamefulState = {
+  /** 成長確認（踊り場）の表示状況。 */
+  growthCheck?: {
+    /** 成長確認を表示済みのチェックポイント。CPごとに1回だけ見せるための冪等キー。 */
+    shownCheckpointIds: CheckpointId[];
+  };
+};
+
 /** ロードマップ進行状態。UserProgress に格納し、localStorage / マージで保全する。 */
 export type CheckpointProgress = {
   currentCheckpointId: CheckpointId;
@@ -185,6 +205,8 @@ export type CheckpointProgress = {
   streakMeta?: StreakMeta;
   /** 今日の3ミッション。未使用なら undefined（旧データ互換）。 */
   dailyQuests?: DailyQuestState;
+  /** ゲームフル機能の状態。未使用なら undefined（旧データ互換）。 */
+  gameful?: GamefulState;
 };
 
 /** 既存ユーザー・新規ユーザー共通の初期値。 */

@@ -59,6 +59,9 @@ function fullCheckpointProgress(): CheckpointProgress {
       quests: [{ id: "complete_topic", goal: 1, progress: 1 }],
       claimed: true,
     },
+    gameful: {
+      growthCheck: { shownCheckpointIds: ["cp1", "cp2"] },
+    },
   };
 }
 
@@ -79,6 +82,7 @@ describe("checkpoint progress merge shape", () => {
       "dailyQuests",
       "earnedBadges",
       "finalExamAttempts",
+      "gameful",
       "rarePityCount",
       "streakMeta",
     ]);
@@ -267,6 +271,45 @@ describe("daily quest merge", () => {
 
     expect(merge(unclaimed, claimed).dailyQuests?.claimed).toBe(true);
     expect(merge(claimed, unclaimed).dailyQuests?.claimed).toBe(true);
+  });
+});
+
+describe("gameful state merge", () => {
+  const base = fullCheckpointProgress();
+
+  it("unions the checkpoints that already showed a growth check", () => {
+    const a = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp1" as const] } } };
+    const b = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp2" as const] } } };
+
+    expect(merge(a, b).gameful?.growthCheck?.shownCheckpointIds.sort()).toEqual(["cp1", "cp2"]);
+  });
+
+  it("is idempotent: merging the same state twice adds nothing", () => {
+    const once = merge(base, base);
+
+    expect(merge(once, base)).toEqual(once);
+  });
+
+  it("never forgets a checkpoint that one device already showed", () => {
+    // 片方の端末だけが表示済み → 未表示側とマージしても消えない
+    // （消えると同じCPで2回出てしまう）。
+    const shown = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp3" as const] } } };
+    const stale = { ...base, gameful: undefined };
+
+    expect(merge(shown, stale).gameful?.growthCheck?.shownCheckpointIds).toEqual(["cp3"]);
+    expect(merge(stale, shown).gameful?.growthCheck?.shownCheckpointIds).toEqual(["cp3"]);
+  });
+
+  it("leaves gameful undefined for older data that never had it", () => {
+    const legacy = { ...base, gameful: undefined };
+
+    expect(merge(legacy, legacy).gameful).toBeUndefined();
+  });
+
+  it("drops an empty growth check rather than storing an empty list", () => {
+    const empty = { ...base, gameful: { growthCheck: { shownCheckpointIds: [] } } };
+
+    expect(merge(empty, empty).gameful).toEqual({});
   });
 });
 
