@@ -2849,6 +2849,9 @@ ALTER TABLE "public"."ai_grading_records" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."ai_usage_logs" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."assessment_attempt_receipts" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."assessment_session_answers" ENABLE ROW LEVEL SECURITY;
 
 
@@ -3015,12 +3018,6 @@ GRANT ALL ON TABLE "public"."ai_grading_records" TO "service_role";
 GRANT ALL ON TABLE "public"."ai_usage_logs" TO "anon";
 GRANT ALL ON TABLE "public"."ai_usage_logs" TO "authenticated";
 GRANT ALL ON TABLE "public"."ai_usage_logs" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."assessment_attempt_receipts" TO "anon";
-GRANT ALL ON TABLE "public"."assessment_attempt_receipts" TO "authenticated";
-GRANT ALL ON TABLE "public"."assessment_attempt_receipts" TO "service_role";
 
 
 

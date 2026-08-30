@@ -1,6 +1,6 @@
 begin;
 
-select plan(44);
+select plan(48);
 
 select has_column(
   'public',
@@ -249,6 +249,29 @@ select has_table(
   'public',
   'assessment_attempt_receipts',
   'grouped assessment retries use receipts without constraining legacy attempts'
+);
+
+select ok(
+  (select relrowsecurity from pg_class where oid = 'public.assessment_attempt_receipts'::regclass),
+  'assessment attempt receipts enforce row-level security'
+);
+
+select is(
+  has_table_privilege('anon', 'public.assessment_attempt_receipts', 'select'),
+  false,
+  'anon cannot read assessment attempt receipts directly'
+);
+
+select is(
+  has_table_privilege('authenticated', 'public.assessment_attempt_receipts', 'select'),
+  false,
+  'authenticated cannot read assessment attempt receipts directly'
+);
+
+select is(
+  has_table_privilege('service_role', 'public.assessment_attempt_receipts', 'select'),
+  false,
+  'service_role uses the security-definer RPC rather than direct receipt access'
 );
 
 select has_function(

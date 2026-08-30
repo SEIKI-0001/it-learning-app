@@ -16,6 +16,14 @@ create table public.assessment_attempt_receipts (
   primary key (user_id, session_id, question_id)
 );
 
+-- Receipts are RPC implementation facts. The security-definer function runs
+-- as its owner, so no caller role needs direct table access or an RLS policy.
+alter table public.assessment_attempt_receipts enable row level security;
+revoke all on table public.assessment_attempt_receipts from public;
+revoke all on table public.assessment_attempt_receipts from anon;
+revoke all on table public.assessment_attempt_receipts from authenticated;
+revoke all on table public.assessment_attempt_receipts from service_role;
+
 create or replace function public.record_assessment_question_attempts_with_exposure(
   p_user_id uuid,
   p_session_id uuid,
