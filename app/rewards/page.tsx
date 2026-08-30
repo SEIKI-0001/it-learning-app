@@ -17,6 +17,7 @@ import {
   equipTitle,
   exchangeTitle,
   fragmentLabel,
+  getEarnedCommemoratives,
   getEquippedTitle,
   getFragments,
   listTitleAvailability,
@@ -51,6 +52,7 @@ export default function RewardsPage() {
   const pending = getPendingChoice(state);
   const fragments = getFragments(state);
   const titles = listTitleAvailability(state);
+  const commemoratives = getEarnedCommemoratives(state);
   const equipped = getEquippedTitle(state);
 
   return (
@@ -99,6 +101,46 @@ export default function RewardsPage() {
           )}
         </section>
 
+        {commemoratives.length > 0 && (
+          <section aria-labelledby="commemoratives-heading">
+            <h2 id="commemoratives-heading" className="text-base font-semibold text-gray-900">
+              突破の記念
+            </h2>
+            <p className="mt-1 text-xs text-gray-500">
+              チェックポイントを突破した記録です。かけらは使いません。
+            </p>
+            <ul className="mt-2 space-y-2">
+              {commemoratives.map((title) => (
+                <li
+                  key={title.id}
+                  className={`rounded-xl bg-white p-3.5 ${RARITY_FRAME_CLASS[title.rarity]}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-900">{title.label}</p>
+                      <p className="mt-0.5 text-xs text-gray-500">{title.description}</p>
+                    </div>
+                    <RarityMark rarity={title.rarity} />
+                  </div>
+                  <div className="mt-2.5 flex justify-end">
+                    {equipped?.id === title.id ? (
+                      <span className="text-xs font-semibold text-brand-700">表示中</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => persist(equipTitle(state, title.id))}
+                        className={buttonClass("secondary", "sm")}
+                      >
+                        表示する
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         <section aria-labelledby="titles-heading">
           <div className="flex items-baseline justify-between gap-3">
             <h2 id="titles-heading" className="text-base font-semibold text-gray-900">
@@ -125,7 +167,9 @@ export default function RewardsPage() {
 
                 <div className="mt-2.5 flex items-center justify-between gap-3">
                   <p className="text-xs tabular-nums text-gray-600">
-                    {fragmentLabel(title.cost.fragmentId)} ×{title.cost.count}
+                    {title.cost
+                      ? `${fragmentLabel(title.cost.fragmentId)} ×${title.cost.count}`
+                      : "記念称号"}
                     {!unlocked && missing > 0 && `（あと${missing}）`}
                   </p>
                   {unlocked ? (

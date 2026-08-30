@@ -41,6 +41,8 @@ function state(badgeFragments: BadgeFragment[] = [], rewards?: RewardState): App
 }
 
 const CHEAPEST = COSMETIC_TITLES.find((t) => t.id === "title-steady")!;
+/** 交換できる称号は必ず cost を持つ。 */
+const CHEAPEST_COST = CHEAPEST.cost!;
 
 describe("the catalogue can only sell cosmetics", () => {
   it("offers nothing that touches learning evaluation", () => {
@@ -53,10 +55,11 @@ describe("the catalogue can only sell cosmetics", () => {
     }
   });
 
-  it("prices every title in fragments only", () => {
+  it("prices every exchangeable title in fragments only", () => {
     for (const title of COSMETIC_TITLES) {
-      expect(title.cost.count).toBeGreaterThan(0);
-      expect(title.cost.fragmentId).toMatch(/^(frag|chest)-/);
+      expect(title.cost).toBeDefined();
+      expect(title.cost!.count).toBeGreaterThan(0);
+      expect(title.cost!.fragmentId).toMatch(/^(frag|chest)-/);
     }
   });
 
@@ -89,7 +92,7 @@ describe("fragment inventory", () => {
 });
 
 describe("exchanging a title", () => {
-  const affordable = () => state([{ fragmentId: CHEAPEST.cost.fragmentId, count: CHEAPEST.cost.count }]);
+  const affordable = () => state([{ fragmentId: CHEAPEST_COST.fragmentId, count: CHEAPEST_COST.count }]);
 
   it("spends the fragments and unlocks the title", () => {
     const after = exchangeTitle(affordable(), CHEAPEST.id);
@@ -104,7 +107,7 @@ describe("exchanging a title", () => {
 
   it("refuses when the fragments are short by one", () => {
     const short = state([
-      { fragmentId: CHEAPEST.cost.fragmentId, count: CHEAPEST.cost.count - 1 },
+      { fragmentId: CHEAPEST_COST.fragmentId, count: CHEAPEST_COST.count - 1 },
     ]);
 
     expect(exchangeTitle(short, CHEAPEST.id)).toBe(short);
@@ -152,12 +155,12 @@ describe("availability", () => {
 
     expect(cheapest.unlocked).toBe(false);
     expect(cheapest.affordable).toBe(false);
-    expect(cheapest.missing).toBe(CHEAPEST.cost.count - 2);
+    expect(cheapest.missing).toBe(CHEAPEST_COST.count - 2);
   });
 
   it("marks a title affordable once the fragments are there", () => {
     const rows = listTitleAvailability(
-      state([{ fragmentId: CHEAPEST.cost.fragmentId, count: CHEAPEST.cost.count }]),
+      state([{ fragmentId: CHEAPEST_COST.fragmentId, count: CHEAPEST_COST.count }]),
     );
 
     expect(rows.find((row) => row.title.id === CHEAPEST.id)?.affordable).toBe(true);
@@ -165,7 +168,7 @@ describe("availability", () => {
 
   it("stops asking for fragments once unlocked", () => {
     const after = exchangeTitle(
-      state([{ fragmentId: CHEAPEST.cost.fragmentId, count: CHEAPEST.cost.count }]),
+      state([{ fragmentId: CHEAPEST_COST.fragmentId, count: CHEAPEST_COST.count }]),
       CHEAPEST.id,
     );
     const row = listTitleAvailability(after).find((r) => r.title.id === CHEAPEST.id)!;

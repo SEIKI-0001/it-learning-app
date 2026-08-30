@@ -14,9 +14,12 @@ import { getCheckpoint } from "@/lib/checkpoints";
 import ConfettiBurst from "@/components/celebration/ConfettiBurst";
 
 // 全画面演出の優先度（同時発火時はランクアップを最初に見せる）。
+// 同時発火時はランクアップを最初に、次に CP突破 → モチットの成長段階、
+// という順で見せる（節目の大きい順）。
 const FULL_PRIORITY: Record<string, number> = {
-  rankUp: 3,
-  cpCleared: 2,
+  rankUp: 4,
+  cpCleared: 3,
+  mochitGrowth: 2,
   levelUp: 1,
 };
 const FULL_AUTO_ADVANCE_MS = 4000;
@@ -55,6 +58,14 @@ function fullContent(
         sub: "ロードマップが先へ進みました",
       };
     }
+    case "mochitGrowth":
+      // XP が増えたことではなく「段階が変わった」ことを主役にする（GF-P1-003）。
+      return {
+        emoji: "🌱",
+        heading: "モチットが成長した！",
+        title: c.label,
+        sub: `第${c.from}段階 → 第${c.to}段階`,
+      };
     default:
       return null;
   }
