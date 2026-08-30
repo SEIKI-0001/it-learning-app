@@ -135,6 +135,12 @@ export default function WordlistHubPage() {
               label="単語一覧を見る"
               meta={`${TOTAL}語`}
             />
+            <MenuRow
+              href="/glossary/collection"
+              icon="layers"
+              label="図鑑でふりかえる"
+              meta={`${counts.mastered}語 定着`}
+            />
           </ul>
         </section>
       </div>

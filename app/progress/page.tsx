@@ -28,6 +28,13 @@ import Icon from "@/components/ui/Icon";
 import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
 import NextUnlocks from "@/components/progress/NextUnlocks";
 import JourneyLedger from "@/components/progress/JourneyLedger";
+import LearningHeatmap from "@/components/history/LearningHeatmap";
+import {
+  buildJourneyTimeline,
+  buildLearningHeatmap,
+  buildLifetimeStats,
+} from "@/lib/learningHistory";
+import JourneyTimeline from "@/components/history/JourneyTimeline";
 import LoadingScreen from "@/components/LoadingScreen";
 import { useCountUp } from "@/lib/useCountUp";
 
@@ -124,6 +131,11 @@ export default function ProgressPage() {
   const { profile, progress } = state;
   const rank = getRankStatus(progress.exp);
   const topics = getAllTopics();
+
+  // ヒートマップ・累計・あゆみはすべて既存ログからの導出（保存しない）。
+  const heatmap = buildLearningHeatmap({ answers: state.answers });
+  const lifetime = buildLifetimeStats(state);
+  const journey = buildJourneyTimeline(state);
   const remaining = daysUntilExam(profile);
   const mastery = fieldMastery(progress, topics, state.answers);
   const summary = computeProgressSummary(topics, progress, state.answers);
@@ -275,6 +287,39 @@ export default function ProgressPage() {
 
         {/* 第3層: これまで進んだ道(チェックポイント台帳) */}
         <JourneyLedger state={state} />
+
+        {/* 日別の学習量と累計。既存ログからの導出だけで作る(二重保存しない) */}
+        <LearningHeatmap heatmap={heatmap} />
+
+        <dl className="grid grid-cols-4 divide-x divide-gray-200 border-y border-gray-200 text-center">
+          <div className="px-2 py-3">
+            <dt className="text-[11px] text-gray-600">総解答</dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+              {lifetime.totalAnswers}
+            </dd>
+          </div>
+          <div className="px-2 py-3">
+            <dt className="text-[11px] text-gray-600">総正解</dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+              {lifetime.totalCorrect}
+            </dd>
+          </div>
+          <div className="px-2 py-3">
+            <dt className="text-[11px] text-gray-600">学習日数</dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+              {lifetime.studyDayCount}
+            </dd>
+          </div>
+          <div className="px-2 py-3">
+            <dt className="text-[11px] text-gray-600">最長連続</dt>
+            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
+              {lifetime.longestStreak}
+            </dd>
+          </div>
+        </dl>
+
+        {/* あゆみ年表: 日時が確定しているイベントだけ */}
+        <JourneyTimeline events={journey} />
 
         {/* 数値サマリ: カードではなく学習手帳の罫線区切りで示す */}
         <dl className="grid grid-cols-3 divide-x divide-gray-200 border-y border-gray-200">
