@@ -43,6 +43,7 @@ const GROUPS: readonly {
     links: [
       { href: "/badges", icon: "award", title: "バッジ", description: "達成条件と獲得状況" },
       { href: "/rank", icon: "star", title: "ランク", description: "XPと成長の記録" },
+      { href: "/rewards", icon: "gift", title: "たからもの", description: "かけらと称号を見る" },
       { href: "/avatar", icon: "sprout", title: "モチット", description: "成長とバッジを見る" },
       { href: "/settings", icon: "settings", title: "設定", description: "試験日・学習時間など" },
     ],

@@ -61,6 +61,11 @@ function fullCheckpointProgress(): CheckpointProgress {
     },
     gameful: {
       growthCheck: { shownCheckpointIds: ["cp1", "cp2"] },
+      rewards: {
+        lastResolvedChoiceId: "2026-08-20T00:00:00.000Z",
+        unlockedCosmetics: ["title-steady"],
+        equippedTitleId: "title-steady",
+      },
     },
   };
 }
@@ -310,6 +315,94 @@ describe("gameful state merge", () => {
     const empty = { ...base, gameful: { growthCheck: { shownCheckpointIds: [] } } };
 
     expect(merge(empty, empty).gameful).toEqual({});
+  });
+});
+
+describe("reward state merge", () => {
+  const base = fullCheckpointProgress();
+
+  const choice = (id: string) => ({
+    id,
+    rarity: "rare" as const,
+    options: [
+      {
+        id: "opt-frag-rare",
+        label: "レアのかけら ×2",
+        rarity: "rare" as const,
+        emoji: "x",
+        fragment: { fragmentId: "frag-rare", count: 2 },
+      },
+    ],
+  });
+
+  it("never re-offers a choice that one device already resolved", () => {
+    // 片方で選択済み、もう片方には未選択のまま残っている状況。
+    // 復活させると同じ報酬を2回受け取れてしまう。
+    const resolved = {
+      ...base,
+      gameful: { rewards: { lastResolvedChoiceId: "2026-08-20T00:00:00.000Z" } },
+    };
+    const stale = {
+      ...base,
+      gameful: { rewards: { pendingChoice: choice("2026-08-20T00:00:00.000Z") } },
+    };
+
+    expect(merge(resolved, stale).gameful?.rewards?.pendingChoice).toBeUndefined();
+    expect(merge(stale, resolved).gameful?.rewards?.pendingChoice).toBeUndefined();
+  });
+
+  it("keeps a choice that is newer than the last resolved one", () => {
+    const resolved = {
+      ...base,
+      gameful: { rewards: { lastResolvedChoiceId: "2026-08-20T00:00:00.000Z" } },
+    };
+    const fresh = {
+      ...base,
+      gameful: { rewards: { pendingChoice: choice("2026-08-25T00:00:00.000Z") } },
+    };
+
+    expect(merge(resolved, fresh).gameful?.rewards?.pendingChoice?.id).toBe(
+      "2026-08-25T00:00:00.000Z",
+    );
+  });
+
+  it("takes the newest pending choice when both devices have one", () => {
+    const older = { ...base, gameful: { rewards: { pendingChoice: choice("2026-08-01T00:00:00.000Z") } } };
+    const newer = { ...base, gameful: { rewards: { pendingChoice: choice("2026-08-09T00:00:00.000Z") } } };
+
+    expect(merge(older, newer).gameful?.rewards?.pendingChoice?.id).toBe("2026-08-09T00:00:00.000Z");
+  });
+
+  it("moves the resolved marker forward only", () => {
+    const a = { ...base, gameful: { rewards: { lastResolvedChoiceId: "2026-08-25T00:00:00.000Z" } } };
+    const b = { ...base, gameful: { rewards: { lastResolvedChoiceId: "2026-08-01T00:00:00.000Z" } } };
+
+    expect(merge(a, b).gameful?.rewards?.lastResolvedChoiceId).toBe("2026-08-25T00:00:00.000Z");
+    expect(merge(b, a).gameful?.rewards?.lastResolvedChoiceId).toBe("2026-08-25T00:00:00.000Z");
+  });
+
+  it("unions unlocked cosmetics", () => {
+    const a = { ...base, gameful: { rewards: { unlockedCosmetics: ["title-steady"] } } };
+    const b = { ...base, gameful: { rewards: { unlockedCosmetics: ["title-explorer"] } } };
+
+    expect(merge(a, b).gameful?.rewards?.unlockedCosmetics?.sort()).toEqual([
+      "title-explorer",
+      "title-steady",
+    ]);
+  });
+
+  it("keeps the reward state of the side that has one", () => {
+    const owned = base;
+    const legacy = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp1" as const] } } };
+
+    expect(merge(owned, legacy).gameful?.rewards?.unlockedCosmetics).toEqual(["title-steady"]);
+    expect(merge(legacy, owned).gameful?.rewards?.unlockedCosmetics).toEqual(["title-steady"]);
+  });
+
+  it("leaves rewards undefined for older data that never had them", () => {
+    const legacy = { ...base, gameful: { growthCheck: { shownCheckpointIds: ["cp1" as const] } } };
+
+    expect(merge(legacy, legacy).gameful?.rewards).toBeUndefined();
   });
 });
 

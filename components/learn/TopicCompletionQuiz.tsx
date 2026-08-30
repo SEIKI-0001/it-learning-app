@@ -12,6 +12,7 @@ import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import {
+  getUserId,
   loadCachedProgressBootstrap,
   refreshIntegratedStatus,
   reportTopicQuizResult,
@@ -29,6 +30,8 @@ import { getMochitCompletionEvent } from "@/components/mochit/mochitEvents";
 import { useCountUp } from "@/lib/useCountUp";
 import { buildSessionOutcome } from "@/lib/sessionOutcome";
 import { buildMochitContext } from "@/lib/mochitContext";
+import { getPendingChoice, resolveDropChoice } from "@/lib/badgeDrops";
+import RewardChoiceCard from "@/components/rewards/RewardChoiceCard";
 import type { SessionOutcome } from "@/types/gameful";
 import SessionOutcomeCard from "@/components/learn/SessionOutcomeCard";
 
@@ -188,6 +191,9 @@ export default function TopicCompletionQuiz({
     }
   }
 
+  // 受け取り待ちの3択（保存済みの候補をそのまま描く。render 中に乱数を使わない）。
+  const pendingChoice = state ? getPendingChoice(state) : undefined;
+
   if (topic.checkQuestions.length === 0) {
     return (
       <section>
@@ -259,6 +265,23 @@ export default function TopicCompletionQuiz({
               </div>
             </>
           )}
+
+          {/* 3択報酬は補助。学習成果とXPの後に置き、選ぶまで消えない。 */}
+          {pendingChoice && (
+            <div className="mt-4 text-left">
+              <RewardChoiceCard
+                choice={pendingChoice}
+                onSelect={(option) => {
+                  const next = resolveDropChoice(state, option.id);
+                  saveAppState(next);
+                  setState(next);
+                  const userId = getUserId();
+                  if (userId) saveProgressToDb(userId, next.progress);
+                }}
+              />
+            </div>
+          )}
+
           {/* 次の行動は1つを主役にする: 次のレッスンがあればそれ、無ければ戻り先 */}
           <div className="mt-4 flex flex-col gap-2">
             {nextLessonHref && nextLessonLabel ? (

@@ -935,20 +935,20 @@ DB側の原子的判定がこの単位で行われている。
 
 | Requirement | Priority | Status | PR | Tests | Notes |
 |---|---:|---|---|---|---|
-| `GF-P0-001` | P0 | `NOT_STARTED` | - | - | Today Primary |
-| `GF-P0-002` | P0 | `NOT_STARTED` | - | - | Action impact |
-| `GF-P0-003` | P0 | `NOT_STARTED` | - | - | Growth challenge |
-| `GF-P0-004` | P0 | `NOT_STARTED` | - | - | Contextual Mochit |
-| `GF-P0-005` | P0 | `NOT_STARTED` | - | - | Session outcome |
-| `GF-P0-006` | P0 | `NOT_STARTED` | - | - | LINE reminder |
+| `GF-P0-001` | P0 | `IMPLEMENTED` | #24 | todayPrimary / TodayPrimaryCard | Today Primary |
+| `GF-P0-002` | P0 | `IMPLEMENTED` | #24 | actionImpact / TodayPrimaryCard | Action impact |
+| `GF-P0-003` | P0 | `IMPLEMENTED` | #26 | growthCheck / growthChallenge / GrowthCheckPage | Growth check（可視化主体・復習優先） |
+| `GF-P0-004` | P0 | `IMPLEMENTED` | #27 | mochitContext / contextualMochitMessages | Contextual Mochit |
+| `GF-P0-005` | P0 | `IMPLEMENTED` | #25 | sessionOutcome / SessionOutcomeCard | Session outcome |
+| `GF-P0-006` | P0 | `NOT_STARTED` | - | - | LINE reminder（migration 着地待ち） |
 | `GF-P1-001` | P1 | `NOT_STARTED` | - | - | Session length choice |
 | `GF-P1-002` | P1 | `NOT_STARTED` | - | - | Comeback mission |
 | `GF-P1-003` | P1 | `NOT_STARTED` | - | - | CP evolution |
-| `GF-P1-004` | P1 | `NOT_STARTED` | - | - | Heatmap/journey |
-| `GF-P1-005` | P1 | `NOT_STARTED` | - | - | Reward inventory |
-| `GF-P1-006` | P1 | `NOT_STARTED` | - | - | Rarity feedback |
+| `GF-P1-004` | P1 | `IMPLEMENTED` | #28 | learningHistory / LearningHeatmap | Heatmap/journey |
+| `GF-P1-005` | P1 | `IMPLEMENTED` | #29 | badgeDrops / rewardInventory / RewardChoiceCard | Reward inventory |
+| `GF-P1-006` | P1 | `IMPLEMENTED` | #29 | RewardChoiceCard（RarityMark） | Rarity feedback |
 | `GF-P1-007` | P1 | `NOT_STARTED` | - | - | Mochit naming |
-| `GF-P1-008` | P1 | `NOT_STARTED` | - | - | Glossary collection |
+| `GF-P1-008` | P1 | `IMPLEMENTED` | #28 | glossaryCollection | Glossary collection |
 | `GF-P1-009` | P1 | `NOT_STARTED` | - | - | Quest reroll |
 | `GF-P1-010` | P1 | `NOT_STARTED` | - | - | Pledge |
 | `GF-P1-011` | P1 | `NOT_STARTED` | - | - | Narrative consistency |
@@ -956,6 +956,10 @@ DB側の原子的判定がこの単位で行われている。
 | `GF-P2-002` | P2 | `DEFERRED` | - | - | Conditional experiment |
 | `GF-P2-003` | P2 | `DEFERRED` | - | - | Conditional sharing |
 | `GF-P2-004` | P2 | `DEFERRED` | - | - | Safe event only |
+
+**Status 更新日:** 2026-08-30。`IMPLEMENTED` は該当 Acceptance Criteria の
+テストが通り main にマージ済みであることを指す。実機確認を経ていないため
+`VERIFIED` へは昇格していない。
 
 ---
 

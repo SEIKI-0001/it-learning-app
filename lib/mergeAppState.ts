@@ -13,6 +13,7 @@ import type {
   EarnedBadge,
   FinalExamAttempt,
   GamefulState,
+  RewardState,
   StreakMeta,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
@@ -89,9 +90,54 @@ function mergeGamefulState(
       ...(b.growthCheck?.shownCheckpointIds ?? []),
     ]),
   ];
+  const rewards = mergeRewardState(a.rewards, b.rewards);
 
   return {
     ...(shownCheckpointIds.length > 0 ? { growthCheck: { shownCheckpointIds } } : {}),
+    ...(rewards ? { rewards } : {}),
+  };
+}
+
+/**
+ * 追加報酬の状態をマージする。
+ * - 解決済みの 3択 id は max（単調増加）。受け取り済みの報酬が復活しない。
+ * - 未選択の3択は「解決済み id より新しい」ものだけを残す。片方の端末で
+ *   選択済みなら、もう片方に残っていても再提示しない（二重付与の防止）。
+ * - 装飾は和集合。装備中の称号は、より新しい側（id が大きい方）を採る。
+ */
+function mergeRewardState(
+  a: RewardState | undefined,
+  b: RewardState | undefined,
+): RewardState | undefined {
+  if (!a) return b;
+  if (!b) return a;
+
+  const lastResolvedChoiceId =
+    (a.lastResolvedChoiceId ?? "") > (b.lastResolvedChoiceId ?? "")
+      ? a.lastResolvedChoiceId
+      : b.lastResolvedChoiceId;
+
+  const candidates = [a.pendingChoice, b.pendingChoice].filter(
+    (choice): choice is NonNullable<RewardState["pendingChoice"]> => Boolean(choice),
+  );
+  const newest = candidates.sort((x, y) => x.id.localeCompare(y.id)).pop();
+  const pendingChoice =
+    newest && (!lastResolvedChoiceId || newest.id > lastResolvedChoiceId) ? newest : undefined;
+
+  const unlockedCosmetics = [
+    ...new Set([...(a.unlockedCosmetics ?? []), ...(b.unlockedCosmetics ?? [])]),
+  ];
+
+  const equippedTitleId =
+    (a.equippedTitleId ?? "") > (b.equippedTitleId ?? "")
+      ? a.equippedTitleId
+      : b.equippedTitleId;
+
+  return {
+    ...(pendingChoice ? { pendingChoice } : {}),
+    ...(lastResolvedChoiceId ? { lastResolvedChoiceId } : {}),
+    ...(unlockedCosmetics.length > 0 ? { unlockedCosmetics } : {}),
+    ...(equippedTitleId ? { equippedTitleId } : {}),
   };
 }
 

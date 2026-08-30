@@ -190,6 +190,46 @@ export type GamefulState = {
     /** 成長確認を表示済みのチェックポイント。CPごとに1回だけ見せるための冪等キー。 */
     shownCheckpointIds: CheckpointId[];
   };
+  /** 追加報酬（3択・欠片・装飾）の状態。 */
+  rewards?: RewardState;
+};
+
+/** 3択報酬の1候補（すべて補助＝学習進行を壊さない）。 */
+export type PendingChoiceOption = {
+  id: string;
+  label: string;
+  rarity: BadgeRarity;
+  emoji: string;
+  fragment?: { fragmentId: string; count: number };
+};
+
+/**
+ * 受け取り待ちの3択。選ぶまで保持し、選んだら消す。
+ * id は発生時刻(ISO)で単調増加し、二重付与を防ぐ冪等キーになる。
+ */
+export type PendingChoice = {
+  id: string;
+  rarity: BadgeRarity;
+  options: PendingChoiceOption[];
+};
+
+/**
+ * 追加報酬の保有状態。
+ * ここに入るのはコスメ・称号などの補助報酬だけで、合格準備度・必須バッジ・
+ * CP進行に影響する値は決して持たない。
+ */
+export type RewardState = {
+  /** 未選択の3択。無ければ undefined。 */
+  pendingChoice?: PendingChoice;
+  /**
+   * 最後に選択を確定した3択の id。単調増加なのでマージは max でよく、
+   * これ以下の pendingChoice は「解決済み」として復活させない。
+   */
+  lastResolvedChoiceId?: string;
+  /** 交換・獲得した称号などの装飾ID。 */
+  unlockedCosmetics?: string[];
+  /** 表示中の称号ID。未設定なら称号なし。 */
+  equippedTitleId?: string;
 };
 
 /** ロードマップ進行状態。UserProgress に格納し、localStorage / マージで保全する。 */
