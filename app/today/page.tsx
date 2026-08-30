@@ -18,6 +18,7 @@ import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { buildTodaysLearningQueue } from "@/lib/learningLoop";
 import { buildTodayPrimaryAction } from "@/lib/todayPrimary";
 import { buildActionImpact } from "@/lib/actionImpact";
+import { buildGrowthChallenge } from "@/lib/growthChallenge";
 import {
   getUserId,
   loadCachedProgressBootstrap,
@@ -36,6 +37,7 @@ import NextGoalCard from "@/components/today/NextGoalCard";
 import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayPolicyStrip from "@/components/today/TodayPolicyStrip";
 import TodayPrimaryCard from "@/components/today/TodayPrimaryCard";
+import GrowthCheckCard from "@/components/today/GrowthCheckCard";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import { buttonClass } from "@/components/ui/Button";
@@ -178,6 +180,12 @@ export default function TodayPage() {
   const learningQueue = useMemo(
     () => (state ? buildTodaysLearningQueue({ progress: state.progress, topics }) : []),
     [state, topics],
+  );
+
+  // 成長確認の出題数。比較材料が無ければ 0 で、導線ごと出さない。
+  const growthCheckCount = useMemo(
+    () => (state ? buildGrowthChallenge({ state }).length : 0),
+    [state],
   );
   useEffect(() => {
     if (!state?.profile || !menu || !plan) return;
@@ -374,6 +382,9 @@ export default function TodayPage() {
             </div>
           )}
         </section>
+
+        {/* Secondary: 今日の学習導線の下に置く。Primary と競合させない。 */}
+        <GrowthCheckCard questionCount={growthCheckCount} />
 
         <details className="rounded-xl border border-gray-200 bg-white">
           <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700 marker:content-none">
