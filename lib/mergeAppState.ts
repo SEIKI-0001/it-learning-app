@@ -12,6 +12,7 @@ import type {
   DailyQuestState,
   EarnedBadge,
   FinalExamAttempt,
+  GamefulState,
   StreakMeta,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
@@ -69,6 +70,32 @@ function mergeDailyQuests(
 }
 
 /**
+ * ゲームフル機能の状態をマージする。
+ * どのフィールドも「一度起きた事実」を単調に足すだけにして、何度マージしても
+ * 増えも巻き戻りもしないようにする（成長確認をCPごとに1回に保つため）。
+ *
+ * GamefulState にフィールドを足したらここも必ず更新すること。
+ */
+function mergeGamefulState(
+  a: GamefulState | undefined,
+  b: GamefulState | undefined,
+): GamefulState | undefined {
+  if (!a) return b;
+  if (!b) return a;
+
+  const shownCheckpointIds = [
+    ...new Set([
+      ...(a.growthCheck?.shownCheckpointIds ?? []),
+      ...(b.growthCheck?.shownCheckpointIds ?? []),
+    ]),
+  ];
+
+  return {
+    ...(shownCheckpointIds.length > 0 ? { growthCheck: { shownCheckpointIds } } : {}),
+  };
+}
+
+/**
  * チェックポイント進行をマージする（端末間の同期・巻き戻し防止）。
  * - 現在地は「先に進んでいる方」を採用する。
  * - 獲得バッジ・クリア済みCP・最終問題履歴は取りこぼさない和集合。
@@ -119,6 +146,7 @@ function mergeCheckpointProgress(
     rarePityCount: Math.max(a.rarePityCount, b.rarePityCount),
     streakMeta: mergeStreakMeta(a.streakMeta, b.streakMeta),
     dailyQuests: mergeDailyQuests(a.dailyQuests, b.dailyQuests),
+    gameful: mergeGamefulState(a.gameful, b.gameful),
   };
 }
 

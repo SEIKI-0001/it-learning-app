@@ -1,15 +1,17 @@
 "use client";
 
-// `/today` から成長確認チャレンジ（GF-P0-003）への導線。
+// `/today` から成長確認（GF-P0-003）への導線。
 //
-// 置き場所は Primary（今日の最優先）より下の Secondary。今日やるべき学習の
-// 導線を上書きしない。比較材料が無いユーザーには何も出さない。
+// 成長確認は「実力を上げる学習」ではなく「成長を実感させるフィードバック」なので、
+// 置き場所は Primary（今日の最優先）より下の Secondary に固定する。
+// 出す・出さないの判定は lib/growthCheck の evaluateGrowthCheckGate が持ち、
+// ここは受け取った可否をそのまま表示するだけにする。
 
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 
-export default function GrowthCheckCard({ questionCount }: { questionCount: number }) {
-  if (questionCount <= 0) return null;
+export default function GrowthCheckCard({ available }: { available: boolean }) {
+  if (!available) return null;
 
   return (
     <Link
@@ -19,10 +21,10 @@ export default function GrowthCheckCard({ questionCount }: { questionCount: numb
       <Icon name="check-double" className="h-5 w-5 shrink-0 text-brand-600" />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-gray-900">
-          成長確認：以前つまずいた{questionCount}問
+          ここまでの成長をふりかえる
         </span>
         <span className="mt-0.5 block text-xs text-gray-500">
-          当時むずかしかった問題を解き直して、前回とくらべます
+          これまでの学習記録から「以前 → 現在」を見ます
         </span>
       </span>
       <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-400" />

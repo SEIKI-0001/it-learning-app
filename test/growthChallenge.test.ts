@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AppState, TopicMasteryStats, UserAnswer } from "@/types";
+import type { AppState, ReviewItem, TopicMasteryStats, UserAnswer } from "@/types";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { getAllTopics } from "@/lib/content";
 import {
@@ -8,6 +8,7 @@ import {
   hasGrowthChallenge,
   GROWTH_CHALLENGE_COOLDOWN_DAYS,
   GROWTH_CHALLENGE_SIZE,
+  REVIEW_OWNED_SEVERITY,
 } from "@/lib/growthChallenge";
 
 // GF-P0-003「成長確認チャレンジ」。要件書 §16.1 が求める
@@ -52,7 +53,11 @@ function stats(topicId: string, masteryScore: number): Record<string, TopicMaste
   };
 }
 
-function state(answers: UserAnswer[], masteryStats: Record<string, TopicMasteryStats> = {}): AppState {
+function state(
+  answers: UserAnswer[],
+  masteryStats: Record<string, TopicMasteryStats> = {},
+  reviewQueue: ReviewItem[] = [],
+): AppState {
   return {
     progress: {
       level: 1,
@@ -62,7 +67,7 @@ function state(answers: UserAnswer[], masteryStats: Record<string, TopicMasteryS
       completedTopics: [],
       topicMastery: {},
       topicMasteryStats: masteryStats,
-      reviewQueue: [],
+      reviewQueue,
       currentDay: 1,
       completedDays: [],
       checkpointProgress: { ...INITIAL_CHECKPOINT_PROGRESS, currentCheckpointId: "cp1" },
@@ -140,15 +145,11 @@ describe("selection", () => {
     expect(build(recovered)).toEqual([]);
   });
 
-  it("includes a previously correct question when the topic mastery stays low", () => {
-    const lowMastery = state(
-      [answer(QUESTION_A1.id, true, daysAgo(20))],
-      stats(TOPIC_A.id, 30),
-    );
-    const items = build(lowMastery);
+  it("does not use a topic that is merely low on mastery", () => {
+    // いま解けない内容は復習の担当。成長を示す材料にもならないので扱わない。
+    const lowMastery = state([answer(QUESTION_A1.id, true, daysAgo(20))], stats(TOPIC_A.id, 30));
 
-    expect(items).toHaveLength(1);
-    expect(items[0].reason).toBe("low_mastery");
+    expect(build(lowMastery)).toEqual([]);
   });
 
   it("does not include a previously correct question on a healthy topic", () => {
@@ -157,25 +158,26 @@ describe("selection", () => {
     expect(build(healthy)).toEqual([]);
   });
 
-  it("puts past misses before low-mastery reviews", () => {
-    const mixed = state(
-      [
-        answer(QUESTION_A1.id, true, daysAgo(40)), // low_mastery（より古い）
-        answer(QUESTION_B1.id, false, daysAgo(10)), // past_miss（新しいが優先）
-      ],
-      stats(TOPIC_A.id, 20),
-    );
+  it("only offers questions that were actually missed", () => {
+    const mixed = state([
+      answer(QUESTION_A1.id, true, daysAgo(40)),
+      answer(QUESTION_B1.id, false, daysAgo(10)),
+    ]);
 
-    expect(build(mixed).map((item) => item.reason)).toEqual(["past_miss", "low_mastery"]);
+    expect(build(mixed).map((item) => item.questionId)).toEqual([QUESTION_B1.id]);
   });
 
-  it("prefers the least recently answered within the same reason", () => {
+  it("prefers the least recently answered", () => {
     const both = state([
       answer(QUESTION_A1.id, false, daysAgo(10)),
       answer(QUESTION_B1.id, false, daysAgo(40)),
     ]);
 
     expect(build(both).map((item) => item.questionId)).toEqual([QUESTION_B1.id, QUESTION_A1.id]);
+  });
+
+  it("keeps the challenge short (a visualization aid, not a study set)", () => {
+    expect(GROWTH_CHALLENGE_SIZE).toBeLessThanOrEqual(3);
   });
 
   it("never returns more than the challenge size", () => {
@@ -205,6 +207,56 @@ describe("selection", () => {
     expect(items[0].topicId).toBe(TOPIC_A.id);
     expect(items[0].topicTitle).toBe(TOPIC_A.title);
     expect(items[0].question.id).toBe(QUESTION_A1.id);
+  });
+});
+
+describe("review keeps ownership", () => {
+  const past = () => [answer(QUESTION_A1.id, false, daysAgo(20))];
+
+  it("skips a topic that is sitting in the review queue", () => {
+    const queued = state(past(), {}, [
+      { topicId: TOPIC_A.id, dueAt: new Date(NOW.getTime() + 5 * DAY_MS).toISOString(), reason: "復習" },
+    ]);
+
+    expect(build(queued)).toEqual([]);
+  });
+
+  it("skips a topic whose review is already overdue", () => {
+    const overdue = state(past(), {}, [
+      { topicId: TOPIC_A.id, dueAt: new Date(NOW.getTime() - DAY_MS).toISOString(), reason: "復習" },
+    ]);
+
+    expect(build(overdue)).toEqual([]);
+  });
+
+  it("skips a high-severity weak topic", () => {
+    // summary_exam_miss は severity 95 で、しきい値を超える。
+    const weak = state(past(), {
+      [TOPIC_A.id]: {
+        topicId: TOPIC_A.id,
+        masteryScore: 30,
+        lastEvaluatedAt: daysAgo(5),
+        correctCount: 1,
+        incorrectCount: 6,
+        reviewSuccessCount: 0,
+        recentEvidence: [
+          { kind: "summary_exam", isCorrect: false, answeredAt: daysAgo(5), questionId: "q", exposureState: "seen" },
+        ],
+      } as TopicMasteryStats,
+    });
+    const items = build(weak);
+
+    expect(items.every((item) => item.topicId !== TOPIC_A.id)).toBe(true);
+  });
+
+  it("keeps a past stumble that review has already released", () => {
+    // 復習キューにも弱点にも無い＝復習系が手を離したもの。ここだけが対象。
+    expect(build(state(past())).map((item) => item.questionId)).toEqual([QUESTION_A1.id]);
+  });
+
+  it("uses a severity threshold that covers the review-owned reasons", () => {
+    // repeated_miss(80) / review_failure(90) / summary_exam_miss(95) を捕捉する。
+    expect(REVIEW_OWNED_SEVERITY).toBeLessThanOrEqual(80);
   });
 });
 

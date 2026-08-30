@@ -1,7 +1,16 @@
-// 成長確認チャレンジ（踊り場）の出題選定と前後比較（GF-P0-003・純関数・保存なし）。
+// 成長確認の「任意ミニチャレンジ」の出題選定と前後比較（GF-P0-003・純関数・保存なし）。
 //
-// 目的は「過去に難しかった問題をいま解ける」体験で、過去の自分との比較から
-// 成長を実感させること。学習評価の器ではないので、次の境界を厳守する。
+// 成長確認の本体は lib/growthCheck の可視化であり、ここは既存履歴からの比較材料が
+// 足りないときだけ使うフォールバックである。
+//
+// 復習との役割分担が最優先:
+//   復習（reviewQueue / 期限切れ / 高severity弱点） … 実力を上げる学習機能。常に優先。
+//   このチャレンジ                                   … 復習系がすでに手を離した
+//                                                      「かつてのつまずき」だけを扱う。
+// 除外は条件分岐ではなく母集団の定義として効かせる。同じ問題を復習と成長確認の
+// 両方で解かせない。
+//
+// さらに次の境界を厳守する。
 //
 //   - 既出問題しか出さない。したがって question exposure は必ず `seen` のままで、
 //     初見証拠には決してならない（判定自体は既存の
@@ -19,17 +28,18 @@
 import type { AppState, UserAnswer } from "@/types";
 import type { CheckQuestion } from "@/types/content";
 import { getAllTopics } from "@/lib/content";
+import { getDueReviewTopics, getWeakTopics } from "@/lib/learningLoop";
 
 /** 前回解いてからこの日数が経つまでは出題しない（直後の丸暗記確認を避ける）。 */
 export const GROWTH_CHALLENGE_COOLDOWN_DAYS = 3;
 
-/** 1回のチャレンジで出す最大問数（3〜5分で終わる分量）。 */
-export const GROWTH_CHALLENGE_SIZE = 5;
+/** 1回のチャレンジで出す最大問数。可視化の補助なので短く抑える。 */
+export const GROWTH_CHALLENGE_SIZE = 3;
+
+/** これ以上の severity の弱点トピックは復習が担当する（チャレンジから外す）。 */
+export const REVIEW_OWNED_SEVERITY = 80;
 
 const DAY_MS = 86_400_000;
-
-/** なぜこの問題が選ばれたか。 */
-export type GrowthChallengeReason = "past_miss" | "low_mastery";
 
 /** 出題1件と、その問題の「前回」。 */
 export type GrowthChallengeItem = {
@@ -37,7 +47,6 @@ export type GrowthChallengeItem = {
   topicId: string;
   topicTitle: string;
   question: CheckQuestion;
-  reason: GrowthChallengeReason;
   previous: {
     isCorrect: boolean;
     answeredAt: string;
@@ -78,6 +87,23 @@ function buildQuestionIndex(): Map<string, { topicId: string; topicTitle: string
   return index;
 }
 
+/**
+ * いま復習が担当しているトピック。ここに入るものはチャレンジから外し、
+ * 通常の復習を優先する（同じ問題を両方で解かせない）。
+ *   - 復習キューに載っている
+ *   - 期限切れの復習
+ *   - severity が高い弱点
+ */
+function buildReviewOwnedTopicIds(state: AppState, now: Date): Set<string> {
+  const owned = new Set<string>();
+  for (const item of state.progress.reviewQueue) owned.add(item.topicId);
+  for (const item of getDueReviewTopics(state.progress.reviewQueue, now)) owned.add(item.topicId);
+  for (const weak of getWeakTopics(state.progress.topicMasteryStats ?? {})) {
+    if (weak.severity >= REVIEW_OWNED_SEVERITY) owned.add(weak.topicId);
+  }
+  return owned;
+}
+
 /** questionId ごとの解答履歴（古い順）。 */
 function groupAnswersByQuestion(answers: UserAnswer[]): Map<string, UserAnswer[]> {
   const byQuestion = new Map<string, UserAnswer[]>();
@@ -92,18 +118,13 @@ function groupAnswersByQuestion(answers: UserAnswer[]): Map<string, UserAnswer[]
   return byQuestion;
 }
 
-/** 低習熟とみなすトピックの習熟度上限。lib/learningLoop の弱点判定より緩く取る。 */
-const LOW_MASTERY_MAX = 60;
-
 /**
- * 成長確認チャレンジを組み立てる。
- * 比較材料が無ければ空配列（呼び出し側は導線ごと出さない）。
+ * 任意ミニチャレンジを組み立てる。材料が無ければ空配列。
  *
- * 選定:
- *   1. 直近の解答が誤答だった既出問題（past_miss）を最優先
- *   2. 次に、習熟度が低いトピックの既出問題（low_mastery）
- *   いずれも「前回からクールダウン日数が経過している」ものだけ。
- *   同区分内では前回解答が古い順（久しく触れていないものを優先）。
+ * 対象は「直近の解答が誤答だった既出問題」だけに絞る。いま習熟度が低いトピックは
+ * 復習が担当すべきで、成長を示す材料にもならないため扱わない。
+ * さらに復習が担当中のトピック（キュー・期限切れ・高severity弱点）を母集団から
+ * 外し、前回からクールダウン日数が経過したものだけを、古い順に取る。
  */
 export function buildGrowthChallenge(input: {
   state: AppState;
@@ -118,32 +139,27 @@ export function buildGrowthChallenge(input: {
 
   const index = buildQuestionIndex();
   const byQuestion = groupAnswersByQuestion(input.state.answers);
-  const masteryStats = input.state.progress.topicMasteryStats ?? {};
+  const reviewOwned = buildReviewOwnedTopicIds(input.state, now);
 
   const candidates: GrowthChallengeItem[] = [];
 
   for (const [questionId, history] of byQuestion) {
     const entry = index.get(questionId);
     if (!entry) continue; // アプリ内の確認問題として解決できないものは扱わない
+    if (reviewOwned.has(entry.topicId)) continue; // 復習が担当中のトピックは出さない
 
     const last = history[history.length - 1];
     const lastAt = Date.parse(last.answeredAt);
     if (!Number.isFinite(lastAt) || lastAt > cutoff) continue; // クールダウン中
 
-    const mastery = masteryStats[entry.topicId]?.masteryScore;
-    const lowMastery = typeof mastery === "number" && mastery <= LOW_MASTERY_MAX;
-
-    let reason: GrowthChallengeReason | null = null;
-    if (!last.isCorrect) reason = "past_miss";
-    else if (lowMastery) reason = "low_mastery";
-    if (!reason) continue;
+    // かつてつまずいた問題だけを扱う（いま解けない問題は復習の担当）。
+    if (last.isCorrect) continue;
 
     candidates.push({
       questionId,
       topicId: entry.topicId,
       topicTitle: entry.topicTitle,
       question: entry.question,
-      reason,
       previous: {
         isCorrect: last.isCorrect,
         answeredAt: last.answeredAt,
@@ -152,11 +168,9 @@ export function buildGrowthChallenge(input: {
     });
   }
 
-  const rank = (item: GrowthChallengeItem) => (item.reason === "past_miss" ? 0 : 1);
   return candidates
     .sort(
       (a, b) =>
-        rank(a) - rank(b) ||
         a.previous.answeredAt.localeCompare(b.previous.answeredAt) ||
         a.questionId.localeCompare(b.questionId),
     )

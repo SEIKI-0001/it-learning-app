@@ -1,31 +1,45 @@
 "use client";
 
-// 成長確認チャレンジ（GF-P0-003）。
+// 成長確認（踊り場・GF-P0-003）。
 //
-// 過去に間違えた／習熟度が低いままの既出問題だけを短く出し直し、
-// 「前回 → 今回」で過去の自分と比べる。学習評価の器ではないので:
-//   - 出題はすべて既出。question exposure は既存の保存経路が `seen` を維持する
-//     （このページは exposure 判定を自前で持たない）。
+// 主役は「ここまでの成長」の可視化で、既存の学習・復習履歴から導出する。
+// 新しく問題を出すのは、比較材料が足りないときの任意ミニチャレンジだけ。
+//
+// 守る境界:
+//   - 復習を常に優先する。復習キュー・期限切れ・高severity弱点のトピックは
+//     ミニチャレンジから除外される（lib/growthChallenge が母集団から外す）。
 //   - completeStudySession は呼ばない。XP・バッジ・宝箱・ストリーク・
-//     デイリーミッションを一切動かさず、CP 進行にも影響させない。
-//   - 記録するのは question_attempts（測定証拠）だけで、既存の分類・重複排除
-//     ルールにそのまま乗る。
+//     デイリーミッション・CP進行を一切動かさない。
+//   - ミニチャレンジの記録は既存の保存経路のみ。初見判定は自前で持たない。
+//   - CPごとに1回だけ表示する（表示できた時点で記録する）。
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { UserAnswer } from "@/types";
 import { useAppState } from "@/lib/useAppState";
+import { saveAppState } from "@/lib/storage";
+import { buildCheckpointGate, getCheckpointProgress } from "@/lib/checkpoints";
+import {
+  buildGrowthEvidence,
+  hasSufficientEvidence,
+  markGrowthCheckShown,
+  type GrowthEvidence,
+} from "@/lib/growthCheck";
 import {
   buildGrowthChallenge,
   buildGrowthComparison,
+  type GrowthChallengeItem,
   type GrowthComparison,
 } from "@/lib/growthChallenge";
 import {
+  getUserId,
+  saveProgressToDb,
   saveQuestionAttemptsForCurrentSession,
   type QuestionAttemptInput,
 } from "@/lib/userSession";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import GrowthEvidenceList from "@/components/growth/GrowthEvidenceList";
 import GrowthComparisonResult from "@/components/growth/GrowthComparisonResult";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -35,26 +49,52 @@ import Icon from "@/components/ui/Icon";
 
 export default function GrowthCheckPage() {
   const router = useRouter();
-  const [state] = useAppState();
+  const [state, setState] = useAppState();
   const [comparison, setComparison] = useState<GrowthComparison | null>(null);
+  const [challengeStarted, setChallengeStarted] = useState(false);
+  const shownRecordedRef = useRef(false);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [router, state]);
 
-  // 出題はマウント時に一度だけ確定させる（解答中に候補が入れ替わらないように）。
-  const [challenge] = useState(() => (state ? buildGrowthChallenge({ state }) : []));
+  // 表示内容はマウント時に一度だけ確定させる（閲覧中に入れ替わらないように）。
+  const [view] = useState<{
+    evidence: GrowthEvidence[];
+    challenge: GrowthChallengeItem[];
+  } | null>(() => {
+    if (!state) return null;
+    const gate = buildCheckpointGate(state, getCheckpointProgress(state).currentCheckpointId);
+    const evidence = buildGrowthEvidence({ state, gate });
+    // 材料が十分なら出題しない。足りないときだけ任意ミニチャレンジを添える。
+    const challenge = hasSufficientEvidence(evidence)
+      ? []
+      : buildGrowthChallenge({ state });
+    return { evidence, challenge };
+  });
 
-  const questions = useMemo(() => challenge.map((item) => item.question), [challenge]);
-  const topicByQuestionId = useMemo(
-    () => new Map(challenge.map((item) => [item.questionId, item.topicId])),
-    [challenge],
-  );
+  // 実際に成長確認を見せられたCPだけを「表示済み」にする
+  // （/today にカードが出ただけでは消費させない）。
+  useEffect(() => {
+    if (!state || !view || shownRecordedRef.current) return;
+    if (view.evidence.length === 0 && view.challenge.length === 0) return;
+    shownRecordedRef.current = true;
 
-  if (state === undefined) return <LoadingScreen />;
-  if (state === null) return <LoadingScreen />;
+    const checkpointId = getCheckpointProgress(state).currentCheckpointId;
+    const next = markGrowthCheckShown(state, checkpointId);
+    if (next === state) return;
+    saveAppState(next);
+    setState(next);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, next.progress);
+  }, [setState, state, view]);
+
+  if (state === undefined || state === null || view === null) return <LoadingScreen />;
+
+  const { evidence, challenge } = view;
 
   async function handleComplete(answers: UserAnswer[]) {
+    const topicByQuestionId = new Map(challenge.map((item) => [item.questionId, item.topicId]));
     const tagged: UserAnswer[] = answers.map((answer) => ({
       ...answer,
       topicId: topicByQuestionId.get(answer.questionId) ?? answer.topicId,
@@ -71,8 +111,8 @@ export default function GrowthCheckPage() {
       isCorrect: answer.isCorrect,
       answeredAt: answer.answeredAt,
     }));
-    // 既存の保存経路をそのまま通す。初見判定(is_first_attempt)は
-    // サーバー側で原子的に決まるため、既出問題がここで初見に戻ることはない。
+    // 既存の保存経路をそのまま通す。初見判定(is_first_attempt)はサーバー側で
+    // 原子的に決まるため、既出問題がここで初見に戻ることはない。
     try {
       await saveQuestionAttemptsForCurrentSession(attempts, state!.answers);
     } catch {
@@ -80,14 +120,14 @@ export default function GrowthCheckPage() {
     }
   }
 
-  // 比較材料が無いユーザーには機能ごと見せない。
-  if (challenge.length === 0 && comparison === null) {
+  // 比較材料が何も無い場合。
+  if (evidence.length === 0 && challenge.length === 0) {
     return (
       <main className="min-h-screen pb-24">
         <PageHeader
           back={{ href: "/today", label: "今日の学習へ" }}
-          title="成長確認"
-          description="過去に解いた問題から、いま解き直せるものを出します。"
+          title="ここまでの成長"
+          description="これまでの学習記録から、以前と現在をくらべます。"
         />
         <div className="mx-auto w-full max-w-3xl px-4 py-6">
           <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
@@ -96,7 +136,7 @@ export default function GrowthCheckPage() {
               まだ比べられる記録がありません
             </p>
             <p className="mt-1 text-sm leading-relaxed text-gray-500">
-              確認問題を解いてしばらく経つと、当時むずかしかった問題を出し直します。
+              学習と復習を続けると、当時との違いをここに出せるようになります。
             </p>
             <Link href="/today" className={buttonClass("primary", "lg", "mt-4")}>
               今日の学習へ
@@ -112,41 +152,68 @@ export default function GrowthCheckPage() {
     <main className="min-h-screen pb-24">
       <PageHeader
         back={{ href: "/today", label: "今日の学習へ" }}
-        title="成長確認"
-        description={
-          comparison
-            ? "前回の結果と今回の結果をくらべます。"
-            : "以前つまずいた問題です。いまならどうでしょう。"
-        }
+        title="ここまでの成長"
+        description="これまでの学習記録から、以前と現在をくらべます。"
       />
-      <div className="mx-auto w-full max-w-3xl px-4 py-6">
-        {comparison ? (
-          <>
-            <GrowthComparisonResult comparison={comparison} />
-            <div className="mt-6 flex flex-col gap-2">
-              <Link href="/today" className={buttonClass("primary", "lg")}>
-                今日の学習に戻る
-              </Link>
-              <Link href="/review" className={buttonClass("secondary", "lg")}>
-                復習リストを見る
-              </Link>
-            </div>
-            <p className="mt-4 text-center text-xs leading-relaxed text-gray-500">
-              成長確認の結果は測定データに記録されます。
-              バッジやチェックポイントの条件は通常の学習で進みます。
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        <GrowthEvidenceList evidence={evidence} />
+
+        {comparison && <GrowthComparisonResult comparison={comparison} />}
+
+        {/* 材料が足りないときだけの任意ミニチャレンジ。スキップを同格に置く。 */}
+        {challenge.length > 0 && !comparison && (
+          <section aria-labelledby="growth-challenge-heading">
+            <h2 id="growth-challenge-heading" className="text-base font-semibold text-gray-900">
+              もう少し確かめる
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-gray-600">
+              以前つまずいた{challenge.length}問です。任意なので、スキップしても構いません。
             </p>
-          </>
-        ) : (
-          <TopicQuiz
-            topicId={challenge[0].topicId}
-            topicIdForQuestion={(question) =>
-              topicByQuestionId.get(question.id) ?? challenge[0].topicId
-            }
-            questions={questions}
-            onComplete={handleComplete}
-            completeLabel="結果をみる"
-          />
+            {challengeStarted ? (
+              <div className="mt-4">
+                <TopicQuiz
+                  topicId={challenge[0].topicId}
+                  topicIdForQuestion={(question) =>
+                    challenge.find((item) => item.questionId === question.id)?.topicId ??
+                    challenge[0].topicId
+                  }
+                  questions={challenge.map((item) => item.question)}
+                  onComplete={handleComplete}
+                  completeLabel="結果をみる"
+                />
+              </div>
+            ) : (
+              <div className="mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setChallengeStarted(true)}
+                  className={buttonClass("primary", "lg")}
+                >
+                  {challenge.length}問を解いてみる
+                </button>
+                <Link href="/today" className={buttonClass("secondary", "lg")}>
+                  スキップして今日の学習へ
+                </Link>
+              </div>
+            )}
+          </section>
         )}
+
+        {(comparison || challenge.length === 0) && (
+          <div className="flex flex-col gap-2">
+            <Link href="/today" className={buttonClass("primary", "lg")}>
+              今日の学習に戻る
+            </Link>
+            <Link href="/review" className={buttonClass("secondary", "lg")}>
+              復習リストを見る
+            </Link>
+          </div>
+        )}
+
+        <p className="text-center text-xs leading-relaxed text-gray-500">
+          成長確認は記録をふりかえる機能です。
+          バッジやチェックポイントの条件は、通常の学習と復習で進みます。
+        </p>
       </div>
       <BottomNav />
     </main>
