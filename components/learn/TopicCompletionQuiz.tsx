@@ -12,6 +12,8 @@ import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import {
+  loadCachedProgressBootstrap,
+  refreshIntegratedStatus,
   reportTopicQuizResult,
   saveAnswersToDb,
   saveProgressToDb,
@@ -25,6 +27,9 @@ import Icon from "@/components/ui/Icon";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import { getMochitCompletionEvent } from "@/components/mochit/mochitEvents";
 import { useCountUp } from "@/lib/useCountUp";
+import { buildSessionOutcome } from "@/lib/sessionOutcome";
+import type { SessionOutcome } from "@/types/gameful";
+import SessionOutcomeCard from "@/components/learn/SessionOutcomeCard";
 
 type CompletionTopic = Pick<
   Topic,
@@ -56,7 +61,13 @@ export default function TopicCompletionQuiz({
     gainedExp: number;
     streak: number;
   } | null>(null);
+  const [outcomes, setOutcomes] = useState<SessionOutcome[]>([]);
   const resultRef = useRef<HTMLDivElement>(null);
+  // 合格準備度の再計算は完了後に非同期で返る。結果表示は先に出し、届いたら差し替える。
+  const mountedRef = useRef(true);
+  useEffect(() => () => {
+    mountedRef.current = false;
+  }, []);
   // 獲得XPは0から自然に増えて見せる(reduced-motion時は即時表示)
   const shownExp = useCountUp(result?.gainedExp ?? 0);
 
@@ -68,6 +79,13 @@ export default function TopicCompletionQuiz({
 
   async function handleComplete(answers: UserAnswer[]) {
     if (!state) return;
+    // 比較可能な「前」の合格準備度は、当日分のキャッシュがあるときだけ使う
+    // （別日のスナップショットと突き合わせると比較基準が揃わないため）。
+    const cachedStatus = loadCachedProgressBootstrap()?.integratedStatus ?? null;
+    const readinessBefore =
+      cachedStatus && cachedStatus.statusDate === todayLocalDate()
+        ? cachedStatus.readinessScore
+        : null;
     const tagged: UserAnswer[] = answers.map((a) => ({
       ...a,
       tag: topic.tags[0] ?? topic.field,
@@ -121,12 +139,40 @@ export default function TopicCompletionQuiz({
     emitMochitEvent(completionEvent);
     setCompleted(true);
 
+    // 学習後の成果差分（GF-P0-005）。表示用の導出なので、ここで失敗しても
+    // 完了・保存・演出は既に済んでおり、学習記録には一切影響しない。
+    const outcomeInput = {
+      before: state,
+      after: next,
+      topicId: topic.id,
+      answers: tagged,
+    };
+    const safeOutcome = (readiness?: { before: number | null; after: number | null }) => {
+      try {
+        return buildSessionOutcome({ ...outcomeInput, readiness });
+      } catch {
+        return [];
+      }
+    };
+    setOutcomes(safeOutcome());
+
     if (userId) {
       saveProgressToDb(userId, next.progress);
       saveAnswersToDb(userId, 0, tagged);
       if (total > 0) {
         reportTopicQuizResult(userId, topic.id, correct, total, todayLocalDate());
       }
+      // 合格準備度のサーバー再計算。失敗しても null が返るだけで、
+      // ここまでの完了処理・保存・表示には影響しない。
+      void refreshIntegratedStatus(userId)
+        .then((status) => {
+          if (!status || !mountedRef.current) return;
+          setOutcomes(safeOutcome({ before: readinessBefore, after: status.readinessScore }));
+        })
+        .catch(() => {
+          // 再計算に失敗しても学習完了・保存・表示はすでに済んでいる。
+          // 準備度の X → Y を出さないだけで、成果差分は確定分のまま残す。
+        });
     }
   }
 
@@ -188,6 +234,8 @@ export default function TopicCompletionQuiz({
               <p className="mt-1 text-sm font-semibold text-emerald-700">
                 {result.total}問中 {result.correct}問正解
               </p>
+              {/* 学習成果を先に。XP・ストリークは補助報酬なのでこの下に置く。 */}
+              <SessionOutcomeCard outcomes={outcomes} />
               <div className="mt-3 flex justify-center gap-2">
                 <span className="rounded-full border border-brand-200 bg-white px-3 py-1 text-sm font-semibold tabular-nums text-brand-700">
                   +{shownExp} XP

@@ -56,3 +56,34 @@ export type ActionImpact = {
 
 /** Primary CTA の直前に出せる効果の最大件数（要件書 GF-P0-002）。 */
 export const ACTION_IMPACT_LIMIT = 3;
+
+// ---------------------------------------------------------------------------
+// 学習後の成果差分（GF-P0-005）
+// ---------------------------------------------------------------------------
+
+/**
+ * 学習完了で実際に変わったことの種類。
+ *
+ * ここに XP・レベル・ランク・バッジ獲得・CP突破・ストリーク節目は入れない。
+ * それらは既に lib/celebration.ts の演出が伝えており、同じ成果を2回通知しない
+ * （要件書 GF-P0-005「Celebration / Mochit event との二重通知を避ける」）。
+ */
+export type SessionOutcomeKind =
+  | "mastery"        // 習熟度が動いた
+  | "revenge"        // 前回間違えた問題に正解した
+  | "review_cleared" // 復習キューから外れた
+  | "weak_resolved"  // 弱点判定から外れた
+  | "checkpoint"     // 必須バッジの充足が進んだ
+  | "readiness"      // 合格準備度がサーバー再計算で動いた
+  | "measurement";   // 測定データを更新した（具体差分が出せないときの事実表現）
+
+/** 学習完了直後に見せる成果1件。 */
+export type SessionOutcome = {
+  kind: SessionOutcomeKind;
+  label: string;
+  /** 「58 → 66」のような実測差分。出せないときは null。 */
+  detail: string | null;
+};
+
+/** 学習後に一度に見せる成果の最大件数（要件書 GF-P0-005）。 */
+export const SESSION_OUTCOME_LIMIT = 4;
