@@ -5,9 +5,9 @@ import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { calculateLevel } from "@/lib/game";
 import {
   applyBadgeDrop,
-  applyDropChoice,
+  getPendingChoice,
+  resolveDropChoice,
   rollBadgeDrop,
-  type DropChoiceOption,
 } from "@/lib/badgeDrops";
 
 // 追加ドロップ（ランダム報酬）の特性テスト。
@@ -179,40 +179,90 @@ describe("applyBadgeDrop keeps learning progression untouched", () => {
   });
 });
 
-describe("applyDropChoice", () => {
-  const fragmentOption: DropChoiceOption = {
-    id: "opt-frag-rare",
-    label: "レア欠片 ×2",
-    rarity: "rare",
-    emoji: "🔷",
-    fragment: { fragmentId: "frag-rare", count: 2 },
-  };
-  const cosmeticOption: DropChoiceOption = {
-    id: "opt-cosmetic",
-    label: "称号フレーム（飾り）",
-    rarity: "rare",
-    emoji: "🏷️",
-  };
+describe("pending choice", () => {
+  /** choice ドロップが出た直後の state（rng 0.1, 0.9 で choice になる）。 */
+  function withPendingChoice() {
+    return applyBadgeDrop(state(), seq(0.1, 0.9), new Date("2026-08-30T00:00:00.000Z")).state;
+  }
+
+  it("keeps the three options until one is chosen", () => {
+    const pending = getPendingChoice(withPendingChoice());
+
+    expect(pending?.options).toHaveLength(3);
+    expect(pending?.id).toBe("2026-08-30T00:00:00.000Z");
+  });
+
+  it("grants nothing before a choice is made", () => {
+    expect(withPendingChoice().progress.checkpointProgress?.badgeFragments).toEqual([]);
+  });
+
+  it("does not create a pending choice for a plain fragment drop", () => {
+    const { state: after } = applyBadgeDrop(state(), seq(0.99, 0));
+
+    expect(getPendingChoice(after)).toBeUndefined();
+  });
 
   it("grants the chosen fragment", () => {
-    const after = applyDropChoice(state(), fragmentOption);
+    const after = resolveDropChoice(withPendingChoice(), "opt-frag-rare");
 
     expect(after.progress.checkpointProgress?.badgeFragments).toEqual([
       { fragmentId: "frag-rare", count: 2 },
     ]);
   });
 
-  it("returns the same state for a cosmetic-only option", () => {
-    const before = state();
+  it("accepts a cosmetic-only option without granting a fragment", () => {
+    const after = resolveDropChoice(withPendingChoice(), "opt-cosmetic");
 
-    expect(applyDropChoice(before, cosmeticOption)).toBe(before);
+    expect(after.progress.checkpointProgress?.badgeFragments).toEqual([]);
+    expect(getPendingChoice(after)).toBeUndefined();
   });
 
-  it("grants no XP and no badge for any choice", () => {
-    const before = state();
-    const after = applyDropChoice(before, fragmentOption);
+  it("clears the pending choice once resolved", () => {
+    const after = resolveDropChoice(withPendingChoice(), "opt-frag-rare");
+
+    expect(getPendingChoice(after)).toBeUndefined();
+    expect(after.progress.checkpointProgress?.gameful?.rewards?.lastResolvedChoiceId).toBe(
+      "2026-08-30T00:00:00.000Z",
+    );
+  });
+
+  it("is idempotent: choosing twice grants only once", () => {
+    const once = resolveDropChoice(withPendingChoice(), "opt-frag-rare");
+    const twice = resolveDropChoice(once, "opt-frag-rare");
+
+    expect(twice).toBe(once);
+    expect(twice.progress.checkpointProgress?.badgeFragments).toEqual([
+      { fragmentId: "frag-rare", count: 2 },
+    ]);
+  });
+
+  it("ignores an option that was not offered", () => {
+    const pendingState = withPendingChoice();
+
+    expect(resolveDropChoice(pendingState, "opt-not-offered")).toBe(pendingState);
+  });
+
+  it("does nothing when there is no pending choice", () => {
+    const plain = state();
+
+    expect(resolveDropChoice(plain, "opt-frag-rare")).toBe(plain);
+  });
+
+  it("grants no XP, badge or checkpoint progress for any choice", () => {
+    const before = withPendingChoice();
+    const after = resolveDropChoice(before, "opt-frag-rare");
 
     expect(after.progress.exp).toBe(before.progress.exp);
     expect(after.progress.checkpointProgress?.earnedBadges).toEqual([]);
+    expect(after.progress.checkpointProgress?.currentCheckpointId).toBe("cp0");
+    expect(after.progress.completedTopics).toEqual(before.progress.completedTopics);
+  });
+
+  it("does not mutate the state it was given", () => {
+    const before = withPendingChoice();
+    const snapshot = structuredClone(before);
+    resolveDropChoice(before, "opt-frag-rare");
+
+    expect(before).toEqual(snapshot);
   });
 });
