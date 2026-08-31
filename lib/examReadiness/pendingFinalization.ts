@@ -3,6 +3,8 @@ import type {
   CompleteAssessmentSessionInput,
   QuestionAttemptInput,
 } from "@/lib/userSession";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
+import type { AppState, UserAnswer } from "@/types";
 
 export type AssessmentFinalizationSource =
   | "checkpoint"
@@ -32,6 +34,14 @@ export type PendingAssessmentFinalizationStages<TBase, TNext, TResult> = {
   freeze?: (
     value: PendingAssessmentFinalization<TBase, TNext, TResult>,
   ) => PendingAssessmentFinalization<TBase, TNext, TResult>;
+  /**
+   * Each delivery surface owns the complete shape of its frozen base/result/P0
+   * values. The shared machine invokes this before it can execute a remote
+   * stage and after every durable acknowledgement transition.
+   */
+  validate?: (
+    value: PendingAssessmentFinalization<TBase, TNext, TResult>,
+  ) => boolean;
   saveAttempts: (
     attempts: QuestionAttemptInput[],
   ) => Promise<AuthenticatedQuestionExposureResult>;
@@ -54,19 +64,27 @@ export async function resumePendingAssessmentFinalization<TBase, TNext, TResult>
   stages: PendingAssessmentFinalizationStages<TBase, TNext, TResult>,
 ): Promise<PendingAssessmentFinalization<TBase, TNext, TResult>> {
   const freeze = stages.freeze ?? freezePendingAssessmentFinalization;
-  let frozen = freeze(pending);
+  const freezeValidated = (
+    value: PendingAssessmentFinalization<TBase, TNext, TResult>,
+  ): PendingAssessmentFinalization<TBase, TNext, TResult> => {
+    assertValidPendingAssessmentFinalization(value, stages.validate);
+    const frozen = freeze(value);
+    assertValidPendingAssessmentFinalization(frozen, stages.validate);
+    return frozen;
+  };
+  let frozen = freezeValidated(pending);
 
   if (frozen.exposureResult === undefined) {
     const exposureResult = await stages.saveAttempts(frozen.attempts);
     if (!isAuthenticatedExposureResult(exposureResult)) {
       throw new Error("Assessment attempt save did not acknowledge authoritative exposure");
     }
-    frozen = freeze({ ...frozen, exposureResult });
+    frozen = freezeValidated({ ...frozen, exposureResult });
   }
 
   if (frozen.completionAcknowledged !== true) {
     await stages.completeSession(frozen.completion);
-    frozen = freeze({ ...frozen, completionAcknowledged: true });
+    frozen = freezeValidated({ ...frozen, completionAcknowledged: true });
   }
 
   const exposureResult = frozen.exposureResult;
@@ -81,7 +99,7 @@ export async function resumePendingAssessmentFinalization<TBase, TNext, TResult>
       exposureResult,
       completion: frozen.completion,
     });
-    frozen = freeze({ ...frozen, nextState });
+    frozen = freezeValidated({ ...frozen, nextState });
   }
 
   if (frozen.progressAcknowledged !== true) {
@@ -93,7 +111,7 @@ export async function resumePendingAssessmentFinalization<TBase, TNext, TResult>
     if (!progressSaved) {
       throw new Error("Assessment progress finalization was not acknowledged");
     }
-    frozen = freeze({ ...frozen, progressAcknowledged: true });
+    frozen = freezeValidated({ ...frozen, progressAcknowledged: true });
   }
 
   return frozen;
@@ -140,13 +158,16 @@ export function savePendingAssessmentFinalization(
   }
 }
 
-export function clearPendingAssessmentFinalization(sessionId: string): void {
-  if (!isBrowser() || !isNonEmptyString(sessionId)) return;
+export function clearPendingAssessmentFinalization(sessionId: string): boolean {
+  if (!isBrowser() || !isNonEmptyString(sessionId)) return false;
+  const key = pendingAssessmentFinalizationStorageKey(sessionId);
   try {
-    window.localStorage.removeItem(pendingAssessmentFinalizationStorageKey(sessionId));
+    window.localStorage.removeItem(key);
+    return window.localStorage.getItem(key) === null;
   } catch {
     // Leaving the frozen record in place is safer than treating an unacknowledged
     // finalization as complete when browser storage is unavailable.
+    return false;
   }
 }
 
@@ -195,13 +216,218 @@ export function isValidPendingAssessmentFinalization(
     || (value.completionAcknowledged !== undefined && value.completionAcknowledged !== true)
     || (value.progressAcknowledged !== undefined && value.progressAcknowledged !== true)
   ) return false;
-  return value.exposureResult === undefined
-    || (isAuthenticatedExposureResult(value.exposureResult)
-      && hasExactAuthoritativeExposures(value.exposureResult, value.attempts));
+  const hasExposure = value.exposureResult !== undefined
+    && isAuthenticatedExposureResult(value.exposureResult)
+    && hasExactAuthoritativeExposures(value.exposureResult, value.attempts);
+  const hasNextState = Object.hasOwn(value, "nextState");
+  if (hasNextState && value.nextState === undefined) return false;
+  if (value.completionAcknowledged === true && !hasExposure) return false;
+  if (hasNextState && (!hasExposure || value.completionAcknowledged !== true)) return false;
+  if (
+    value.progressAcknowledged === true
+    && (!hasExposure || value.completionAcknowledged !== true || !hasNextState)
+  ) return false;
+  return value.exposureResult === undefined || hasExposure;
+}
+
+function assertValidPendingAssessmentFinalization<TBase, TNext, TResult>(
+  value: PendingAssessmentFinalization<TBase, TNext, TResult>,
+  validate: PendingAssessmentFinalizationStages<TBase, TNext, TResult>["validate"],
+): void {
+  if (
+    !isValidPendingAssessmentFinalization(value, value.sessionId, value.source)
+    || (validate !== undefined && !validate(value))
+  ) {
+    throw new Error("Cannot persist a malformed assessment finalization");
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * The frozen runners need a stable subset of AppState, not a permissive cast
+ * from localStorage. These are every nested fields the P0 recorders read or
+ * preserve, including timestamps that are later replayed into P0 evidence.
+ */
+export function isValidAssessmentAppState(value: unknown): value is AppState {
+  if (!isRecord(value) || !isRecord(value.progress) || !Array.isArray(value.answers)) return false;
+  return value.answers.every(isValidAssessmentUserAnswer)
+    && isValidAssessmentProgress(value.progress)
+    && (value.profile === undefined || isRecord(value.profile));
+}
+
+export function isValidAssessmentUserAnswers(value: unknown): value is UserAnswer[] {
+  return Array.isArray(value) && value.every(isValidAssessmentUserAnswer);
+}
+
+function isValidAssessmentUserAnswer(value: unknown): value is UserAnswer {
+  if (!isRecord(value)) return false;
+  return isNonEmptyString(value.questionId)
+    && (value.selectedChoice === undefined || isChoiceKey(value.selectedChoice))
+    && typeof value.isCorrect === "boolean"
+    && isStrictOffsetIsoTimestamp(value.answeredAt)
+    && isNonEmptyString(value.tag)
+    && (value.topicId === undefined || isNonEmptyString(value.topicId));
+}
+
+function isValidAssessmentProgress(value: Record<string, unknown>): boolean {
+  return isFiniteNumber(value.level)
+    && isFiniteNumber(value.exp)
+    && isFiniteNumber(value.streakCount)
+    && isStringArray(value.weakTags)
+    && isStringArray(value.completedTopics)
+    && isFiniteNumberRecord(value.topicMastery)
+    && (value.topicMasteryStats === undefined || isValidTopicMasteryStats(value.topicMasteryStats))
+    && Array.isArray(value.reviewQueue)
+    && value.reviewQueue.every(isValidReviewItem)
+    && (value.weeklyPlan === undefined || value.weeklyPlan === null || isValidWeeklyPlan(value.weeklyPlan))
+    && (value.lastPlayedAt === undefined || isStrictOffsetIsoTimestamp(value.lastPlayedAt))
+    && isFiniteNumber(value.currentDay)
+    && Array.isArray(value.completedDays)
+    && value.completedDays.every((day) => Number.isInteger(day) && day >= 0)
+    && (value.checkpointProgress === undefined || isValidCheckpointProgress(value.checkpointProgress));
+}
+
+function isValidTopicMasteryStats(value: unknown): boolean {
+  return isRecord(value) && Object.values(value).every((stat) => {
+    if (!isRecord(stat)) return false;
+    return isNonEmptyString(stat.topicId)
+      && isFiniteNumber(stat.masteryScore)
+      && isStrictOffsetIsoTimestamp(stat.lastEvaluatedAt)
+      && isNonNegativeInteger(stat.correctCount)
+      && isNonNegativeInteger(stat.incorrectCount)
+      && isNonNegativeInteger(stat.reviewSuccessCount)
+      && Array.isArray(stat.recentEvidence)
+      && stat.recentEvidence.every(isValidTopicMasteryEvidence);
+  });
+}
+
+function isValidTopicMasteryEvidence(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isNonEmptyString(value.questionId)
+    && isValidLearningEvidenceKind(value.kind)
+    && typeof value.isCorrect === "boolean"
+    && isStrictOffsetIsoTimestamp(value.answeredAt)
+    && typeof value.isFirstSeen === "boolean"
+    && (value.exposureState === undefined || isExposureState(value.exposureState));
+}
+
+function isValidReviewItem(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isNonEmptyString(value.topicId)
+    && isStrictOffsetIsoTimestamp(value.dueAt)
+    && isNonEmptyString(value.reason)
+    && (value.confirmationCount === undefined || isNonNegativeInteger(value.confirmationCount))
+    && (value.reviewStage === undefined || isNonNegativeInteger(value.reviewStage))
+    && (value.lastReviewedAt === undefined || isStrictOffsetIsoTimestamp(value.lastReviewedAt))
+    && (value.reasonCode === undefined || isReviewReasonCode(value.reasonCode));
+}
+
+function isValidWeeklyPlan(value: unknown): boolean {
+  return isRecord(value)
+    && isDateOnly(value.weekStartDate)
+    && isStringArray(value.topicIds)
+    && isStringArray(value.reviewIds);
+}
+
+function isValidCheckpointProgress(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isCheckpointId(value.currentCheckpointId)
+    && Array.isArray(value.clearedCheckpointIds)
+    && value.clearedCheckpointIds.every(isCheckpointId)
+    && Array.isArray(value.earnedBadges)
+    && value.earnedBadges.every((badge) => isRecord(badge)
+      && isNonEmptyString(badge.badgeId)
+      && isStrictOffsetIsoTimestamp(badge.earnedAt)
+      && (badge.fromDrop === undefined || typeof badge.fromDrop === "boolean"))
+    && Array.isArray(value.badgeFragments)
+    && value.badgeFragments.every((fragment) => isRecord(fragment)
+      && isNonEmptyString(fragment.fragmentId)
+      && isNonNegativeInteger(fragment.count))
+    && Array.isArray(value.finalExamAttempts)
+    && value.finalExamAttempts.every((attempt) => isRecord(attempt)
+      && isCheckpointId(attempt.checkpointId)
+      && typeof attempt.passed === "boolean"
+      && isNonNegativeInteger(attempt.correct)
+      && isNonNegativeInteger(attempt.total)
+      && isStrictOffsetIsoTimestamp(attempt.attemptedAt)
+      && isStringArray(attempt.wrongTopicIds))
+    && isNonNegativeInteger(value.rarePityCount)
+    && (value.streakMeta === undefined || isValidStreakMeta(value.streakMeta))
+    && (value.dailyQuests === undefined || isValidDailyQuests(value.dailyQuests));
+}
+
+function isValidStreakMeta(value: unknown): boolean {
+  return isRecord(value)
+    && Array.isArray(value.claimedMilestones)
+    && value.claimedMilestones.every(isNonNegativeInteger)
+    && isNonNegativeInteger(value.shieldsGranted)
+    && isNonNegativeInteger(value.shieldsUsed)
+    && isNonNegativeInteger(value.longestStreak)
+    && (value.lastShieldUsedAt === undefined || isStrictOffsetIsoTimestamp(value.lastShieldUsedAt));
+}
+
+function isValidDailyQuests(value: unknown): boolean {
+  return isRecord(value)
+    && isDateOnly(value.date)
+    && Array.isArray(value.quests)
+    && value.quests.every((quest) => isRecord(quest)
+      && isNonEmptyString(quest.id)
+      && isNonNegativeInteger(quest.goal)
+      && isNonNegativeInteger(quest.progress))
+    && typeof value.claimed === "boolean";
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function isFiniteNumberRecord(value: unknown): boolean {
+  return isRecord(value) && Object.values(value).every(isFiniteNumber);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(isNonEmptyString);
+}
+
+function isChoiceKey(value: unknown): boolean {
+  return value === "A" || value === "B" || value === "C" || value === "D";
+}
+
+function isExposureState(value: unknown): boolean {
+  return value === "first" || value === "seen" || value === "unknown";
+}
+
+function isValidLearningEvidenceKind(value: unknown): boolean {
+  return value === "confirmation"
+    || value === "review"
+    || value === "summary_exam"
+    || value === "mock_exam"
+    || value === "past_exam"
+    || value === "checkpoint";
+}
+
+function isReviewReasonCode(value: unknown): boolean {
+  return value === "scheduled"
+    || value === "low_mastery"
+    || value === "summary_exam_miss"
+    || value === "review_failure"
+    || value === "repeated_miss";
+}
+
+function isCheckpointId(value: unknown): boolean {
+  return value === "cp0" || value === "cp1" || value === "cp2" || value === "cp3"
+    || value === "cp4" || value === "cp5" || value === "cp6";
+}
+
+function isDateOnly(value: unknown): boolean {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -225,7 +451,7 @@ function isQuestionAttempt(value: unknown): value is QuestionAttemptInput {
     && optionalString(value.mistakeReason)
     && optionalFiniteNumber(value.timeSpentSeconds)
     && optionalString(value.sourceTaskId)
-    && optionalString(value.answeredAt)
+    && optionalStrictOffsetIsoTimestamp(value.answeredAt)
     && (value.attemptMode === undefined
       || value.attemptMode === null
       || value.attemptMode === "practice"
@@ -246,6 +472,10 @@ function optionalString(value: unknown): boolean {
   return value === undefined || value === null || typeof value === "string";
 }
 
+function optionalStrictOffsetIsoTimestamp(value: unknown): boolean {
+  return value === undefined || value === null || isStrictOffsetIsoTimestamp(value);
+}
+
 function optionalFiniteNumber(value: unknown): boolean {
   return value === undefined || value === null || (typeof value === "number" && Number.isFinite(value));
 }
@@ -254,8 +484,7 @@ function isCompletion(value: unknown, sessionId: string): value is CompleteAsses
   if (!isRecord(value)) return false;
   return value.action === "complete"
     && value.sessionId === sessionId
-    && typeof value.completedAt === "string"
-    && value.completedAt.length > 0
+    && isStrictOffsetIsoTimestamp(value.completedAt)
     && Array.isArray(value.answers)
     && value.answers.every(isAssessmentAnswer);
 }
@@ -266,8 +495,7 @@ function isAssessmentAnswer(value: unknown): boolean {
     && isNonEmptyString(value.canonicalQuestionId)
     && isNonEmptyString(value.topicId)
     && typeof value.isCorrect === "boolean"
-    && typeof value.answeredAt === "string"
-    && value.answeredAt.length > 0;
+    && isStrictOffsetIsoTimestamp(value.answeredAt);
 }
 
 function isAuthenticatedExposureResult(value: unknown): value is AuthenticatedQuestionExposureResult {
@@ -296,7 +524,7 @@ function isAuthoritativeExposure(value: unknown): boolean {
   return isNonEmptyString(value.questionId)
     && (value.state === "first" || value.state === "seen")
     && typeof value.attemptedBefore === "boolean"
-    && (value.firstAttemptAt === null || typeof value.firstAttemptAt === "string")
+    && (value.firstAttemptAt === null || isStrictOffsetIsoTimestamp(value.firstAttemptAt))
     && typeof value.attemptCount === "number"
     && Number.isInteger(value.attemptCount)
     && value.attemptCount >= 0;

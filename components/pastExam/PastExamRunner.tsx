@@ -28,6 +28,7 @@ import {
   formatRemaining,
   getResumableServerSnapshot,
   getResumableSnapshot,
+  isValidOfficialPastFinalizationForSession,
   loadSession,
   parseResumable,
   remainingSeconds,
@@ -48,7 +49,7 @@ import {
   type QuestionExposureIdentity,
 } from "@/lib/userSession";
 import { resumePendingAssessmentFinalization } from "@/lib/examReadiness/pendingFinalization";
-import type { ChoiceKey } from "@/types";
+import type { AppState, ChoiceKey } from "@/types";
 import type { QuestionExposureMap, QuestionExposureState } from "@/types";
 import {
   EXAM_MODE_DURATION_MINUTES,
@@ -92,6 +93,8 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   // state（submitting）はボタンを無効化する表示のためだけに使う。
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
+  const finalizingRef = useRef(false);
+  const [finalizing, setFinalizing] = useState(false);
   const [startingMode, setStartingMode] = useState<PastExamMode | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const pendingStartRef = useRef<Partial<Record<PastExamMode, PastExamSession>>>({});
@@ -162,6 +165,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     storageUserId: string | null,
     isActive: () => boolean = () => true,
   ): Promise<boolean> => {
+    if (finalizingRef.current) return false;
+    finalizingRef.current = true;
+    setFinalizing(true);
     submittedRef.current = true;
     setSubmitting(true);
     setPersistenceError(null);
@@ -169,6 +175,12 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       let persistedSession = current;
       try {
         const finalized = await resumePendingAssessmentFinalization(pending.finalization, {
+          validate: (value) => isValidOfficialPastFinalizationForSession(
+            value,
+            current.sessionId,
+            current.year,
+            current.mode,
+          ),
           // Official past exams already have a durable, user-scoped session
           // record. Keep this nested there instead of creating a competing key.
           freeze: (value) => {
@@ -230,6 +242,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         if (finalized.nextState === undefined) {
           throw new Error("Assessment finalization was not fully persisted");
         }
+        if (!clearSession(storageUserId, year, current.mode)) {
+          throw new Error("Assessment finalization could not be cleared");
+        }
         if (finalized.nextState.appState !== null) {
           saveAppState(finalized.nextState.appState);
         }
@@ -238,7 +253,6 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           setResult(finalized.result);
           setPhase("result");
         }
-        clearSession(storageUserId, year, current.mode);
         return true;
       } catch {
         submittedRef.current = false;
@@ -247,7 +261,11 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         }
         return false;
       } finally {
-        if (isActive()) setSubmitting(false);
+        finalizingRef.current = false;
+        if (isActive()) {
+          setSubmitting(false);
+          setFinalizing(false);
+        }
       }
     }
 
@@ -258,7 +276,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       questions,
       answers: pending.answerSnapshot,
     });
-    let factsCommitted = false;
+    let appStateToCommit: AppState | null = null;
     try {
       await completeAssessmentSessionForCurrentSession({
         action: "complete",
@@ -292,11 +310,13 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           );
           if (!progressSaved) throw new Error("Assessment progress finalization failed");
         }
-        saveAppState(next);
+        appStateToCommit = next;
       }
-      factsCommitted = true;
 
-      clearSession(storageUserId, year, current.mode);
+      if (!clearSession(storageUserId, year, current.mode)) {
+        throw new Error("Assessment finalization could not be cleared");
+      }
+      if (appStateToCommit !== null) saveAppState(appStateToCommit);
       if (isActive()) {
         setSession(null);
         setResult(graded);
@@ -304,22 +324,17 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       }
       return true;
     } catch {
-      if (factsCommitted) {
-        clearSession(storageUserId, year, current.mode);
-        if (isActive()) {
-          setSession(null);
-          setResult(graded);
-          setPhase("result");
-        }
-        return true;
-      }
       submittedRef.current = false;
       if (isActive()) {
         setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
       }
       return false;
     } finally {
-      if (isActive()) setSubmitting(false);
+      finalizingRef.current = false;
+      if (isActive()) {
+        setSubmitting(false);
+        setFinalizing(false);
+      }
     }
   }, [questions, year]);
 
@@ -346,6 +361,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     storageUserId: string | null,
     forceAbandon: boolean,
   ): Promise<"continue" | "settled" | "failed"> => {
+    if (finalizingRef.current) return "failed";
     if (existing.pendingMutation?.action === "complete") {
       const completed = await commitPendingCompletion(
         existing,
@@ -373,8 +389,10 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         sessionId: existing.sessionId,
         completedAt: pending.completedAt,
       });
+      if (!clearSession(storageUserId, year, existing.mode)) {
+        throw new Error("Could not clear completed session");
+      }
       setSession(null);
-      clearSession(storageUserId, year, existing.mode);
       return "settled";
     } catch {
       setPersistenceError("前回のセッションを終了できませんでした。もう一度お試しください。");
@@ -384,7 +402,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
 
   const start = useCallback(
     async (mode: PastExamMode) => {
-      if (startingMode !== null) return;
+      if (startingMode !== null || finalizingRef.current) return;
       setStartingMode(mode);
       setPersistenceError(null);
       let existing = userReady ? loadSession(sessionUserId, year, mode) : null;
@@ -423,7 +441,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
 
   const restart = useCallback(
     async (mode: PastExamMode) => {
-      if (startingMode !== null) return;
+      if (startingMode !== null || finalizingRef.current) return;
       setStartingMode(mode);
       setPersistenceError(null);
       const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
@@ -461,7 +479,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const finish = useCallback(
     async (current: PastExamSession) => {
       // 2回目以降は何もしない。ここを通すと保存も採点もやり直される。
-      if (submittedRef.current) return;
+      if (submittedRef.current || finalizingRef.current) return;
       submittedRef.current = true;
       setSubmitting(true);
       setPersistenceError(null);
@@ -653,6 +671,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       onStart={(mode) => void start(mode)}
       onRestart={(mode) => void restart(mode)}
       startingMode={startingMode}
+      finalizing={finalizing}
       persistenceError={persistenceError}
     />
   );
@@ -668,6 +687,7 @@ function ModeSelect({
   onStart,
   onRestart,
   startingMode,
+  finalizing,
   persistenceError,
 }: {
   total: number;
@@ -675,6 +695,7 @@ function ModeSelect({
   onStart: (mode: PastExamMode) => void;
   onRestart: (mode: PastExamMode) => void;
   startingMode: PastExamMode | null;
+  finalizing: boolean;
   persistenceError: string | null;
 }) {
   return (
@@ -696,7 +717,7 @@ function ModeSelect({
         resumable={resumable.practice}
         onStart={() => onStart("practice")}
         onRestart={() => onRestart("practice")}
-        disabled={startingMode !== null}
+        disabled={startingMode !== null || finalizing}
       />
       <ModeCard
         title="本番モード"
@@ -709,7 +730,7 @@ function ModeSelect({
         resumable={resumable.exam}
         onStart={() => onStart("exam")}
         onRestart={() => onRestart("exam")}
-        disabled={startingMode !== null}
+        disabled={startingMode !== null || finalizing}
       />
     </div>
   );

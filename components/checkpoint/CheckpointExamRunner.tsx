@@ -22,6 +22,8 @@ import {
 import {
   clearPendingAssessmentFinalization,
   findPendingAssessmentFinalization,
+  isValidAssessmentAppState,
+  isValidAssessmentUserAnswers,
   resumePendingAssessmentFinalization,
   type PendingAssessmentFinalization,
 } from "@/lib/examReadiness/pendingFinalization";
@@ -59,6 +61,38 @@ function isCheckpointPendingFinalization(
   return baseState.kind === "checkpoint" && baseState.checkpointId === checkpointId;
 }
 
+function isValidCheckpointFrozenFinalization(
+  value: CheckpointPendingFinalization,
+  expectedCheckpointId: string,
+): boolean {
+  const baseState = value.baseState;
+  if (
+    baseState.kind !== "checkpoint"
+    || baseState.checkpointId !== expectedCheckpointId
+    || !isValidAssessmentAppState(baseState.appState)
+    || !isValidAssessmentUserAnswers(baseState.tagged)
+    || !isValidCheckpointResult(value.result, baseState.tagged)
+  ) return false;
+  if (!Object.hasOwn(value, "nextState")) return true;
+  return value.nextState !== undefined && isValidAssessmentAppState(value.nextState.appState);
+}
+
+function isValidCheckpointResult(
+  value: CheckpointResult,
+  answers: readonly UserAnswer[],
+): boolean {
+  const correct = answers.filter((answer) => answer.isCorrect).length;
+  return isNonNegativeInteger(value.correct)
+    && isNonNegativeInteger(value.total)
+    && typeof value.passed === "boolean"
+    && value.total === answers.length
+    && value.correct === correct;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
 export default function CheckpointExamRunner({ checkpointId }: { checkpointId: string }) {
   const router = useRouter();
   const [state, setState] = useAppState();
@@ -87,6 +121,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     setPersistenceError(null);
     try {
       const finalized = await resumePendingAssessmentFinalization(pending, {
+        validate: (value) => isValidCheckpointFrozenFinalization(value, checkpointId),
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
@@ -111,6 +146,9 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
       if (finalized.nextState === undefined || finalized.exposureResult === undefined) {
         throw new Error("Assessment finalization was not fully persisted");
       }
+      if (!clearPendingAssessmentFinalization(finalized.sessionId)) {
+        throw new Error("Assessment finalization could not be cleared");
+      }
       saveAppState(finalized.nextState.appState);
       setState(finalized.nextState.appState);
       saveAnswersToDb(
@@ -119,7 +157,6 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
         finalized.baseState.tagged,
       );
       setResult(finalized.result);
-      clearPendingAssessmentFinalization(finalized.sessionId);
       pendingFinalizationRef.current = null;
       setPendingFinalization(null);
     } catch {
@@ -129,7 +166,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     } finally {
       finalizingRef.current = false;
     }
-  }, [setState]);
+  }, [checkpointId, setState]);
 
   useEffect(() => {
     const pending = findPendingAssessmentFinalization(

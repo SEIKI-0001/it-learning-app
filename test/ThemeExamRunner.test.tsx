@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import ThemeExamRunner from "@/components/themeExam/ThemeExamRunner";
 import type { ThemeExamQuestionView } from "@/types/themeExam";
+import { pendingAssessmentFinalizationStorageKey } from "@/lib/examReadiness/pendingFinalization";
 
 const flow = vi.hoisted(() => ({
   hasState: true,
@@ -147,6 +148,76 @@ afterEach(() => {
 });
 
 describe("ThemeExamRunner exposure integration", () => {
+  it("rejects a malformed frozen summary shape before attempts, completion, or P0", async () => {
+    const sessionId = "20000000-0000-4000-8000-000000000001";
+    window.localStorage.setItem(pendingAssessmentFinalizationStorageKey(sessionId), JSON.stringify({
+      version: 1,
+      sessionId,
+      source: "summary",
+      attempts: [{
+        questionId: question.id,
+        questionType: "theme_exam",
+        topicId: question.topicId,
+        selectedAnswer: "A",
+        isCorrect: true,
+        answeredAt: "2026-08-30T00:00:00.000Z",
+        attemptGroupId: sessionId,
+      }],
+      completion: {
+        action: "complete",
+        sessionId,
+        completedAt: "2026-08-30T00:00:01.000Z",
+        answers: [{
+          idempotencyKey: `assessment:${sessionId}:${question.id}`,
+          canonicalQuestionId: question.id,
+          topicId: question.topicId,
+          isCorrect: true,
+          answeredAt: "2026-08-30T00:00:00.000Z",
+        }],
+      },
+      baseState: {
+        appState: flow.before,
+        examId: "theme-exam-computer-basics",
+        themeSlug: 42,
+      },
+      result: {
+        sessionId,
+        themeSlug: "computer-basics",
+        total: 1,
+        correct: 1,
+        unanswered: 0,
+        rate: 100,
+        passed: true,
+        questions: [{
+          questionId: question.id,
+          questionNumber: 1,
+          selected: "A",
+          correctChoice: "A",
+          isCorrect: true,
+          isUnanswered: false,
+          topicId: question.topicId,
+          topicTitle: question.topicTitle,
+        }],
+        reviewTopics: [],
+      },
+    }));
+
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(saveAssessmentQuestionAttemptsForCurrentSession).not.toHaveBeenCalled();
+    expect(completeAssessmentSessionForCurrentSession).not.toHaveBeenCalled();
+    expect(saveProgressToDb).not.toHaveBeenCalled();
+  });
+
   it("persists start before showing questions", async () => {
     let releaseStart!: () => void;
     startAssessmentSessionForCurrentSession.mockImplementation(() =>
@@ -448,5 +519,34 @@ describe("ThemeExamRunner exposure integration", () => {
     expect([...storageValues.keys()].some((key) =>
       key.startsWith("fequest:assessmentFinalization:"),
     )).toBe(false);
+  });
+
+  it("keeps the frozen summary pending when localStorage removal fails", async () => {
+    const props = {
+      examId: "theme-exam-computer-basics",
+      themeSlug: "computer-basics",
+      themeTitle: "コンピュータ基礎",
+      passRate: 60,
+      questions: [question],
+    };
+    render(<ThemeExamRunner {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    const removeItem = vi.spyOn(window.localStorage, "removeItem").mockImplementation(() => {
+      throw new DOMException("storage is unavailable");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.queryByText("合格ライン到達")).not.toBeInTheDocument();
+    expect(flow.setAppState).not.toHaveBeenCalled();
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(true);
+
+    removeItem.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
+    expect(await screen.findByText("合格ライン到達")).toBeInTheDocument();
   });
 });

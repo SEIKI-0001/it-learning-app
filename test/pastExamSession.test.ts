@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   EXAM_MODE_DURATION_SECONDS,
@@ -67,6 +67,130 @@ afterEach(() => {
   window.localStorage.clear();
 });
 
+type MutableFrozenOfficialSession = {
+  schemaVersion: number;
+  sessionId: string;
+  year: number;
+  mode: string;
+  startedAt: string;
+  currentIndex: number;
+  answers: Record<number, { selected: "A"; answeredAt: string; timeSpentSeconds: number }>;
+  completed: boolean;
+  pendingMutation: {
+    action: string;
+    completedAt: string;
+    answerSnapshot: Record<number, { selected: "A"; answeredAt: string; timeSpentSeconds: number }>;
+    assessmentAnswers: Array<Record<string, unknown>>;
+    finalization: {
+      baseState: {
+        kind: string;
+        year: number;
+        mode: string;
+        appState: unknown;
+        answerSnapshot: Record<number, { selected: "A"; answeredAt: string; timeSpentSeconds: number }>;
+      };
+      result: {
+        questions: unknown[];
+        byField: Array<{
+          field: string;
+          total: number;
+          correct: number;
+          rate: number;
+        }>;
+      } & Record<string, unknown>;
+      exposureResult?: unknown;
+      completionAcknowledged?: true;
+      nextState?: { appState: unknown };
+    } & Record<string, unknown>;
+  };
+};
+
+function frozenOfficialSession(): MutableFrozenOfficialSession {
+  const sessionId = "20000000-0000-4000-8000-000000000021";
+  const answeredAt = "2026-08-30T00:00:00.000Z";
+  const completedAt = "2026-08-30T00:00:01.000Z";
+  const answerSnapshot = {
+    1: { selected: "A" as const, answeredAt, timeSpentSeconds: 1 },
+  };
+  const assessmentAnswers = [{
+    idempotencyKey: `assessment:${sessionId}:tech-binary-data-ex1`,
+    canonicalQuestionId: "tech-binary-data-ex1",
+    topicId: "tech-binary-data",
+    isCorrect: true,
+    answeredAt,
+  }];
+  const finalization = {
+    version: 1,
+    sessionId,
+    source: "official_past",
+    attempts: [{
+      questionId: "tech-binary-data-ex1",
+      questionType: "official_past",
+      topicId: "tech-binary-data",
+      selectedAnswer: "A",
+      isCorrect: true,
+      answeredAt,
+      attemptMode: "exam",
+      attemptGroupId: sessionId,
+    }],
+    completion: {
+      action: "complete",
+      sessionId,
+      completedAt,
+      answers: assessmentAnswers,
+    },
+    baseState: {
+      kind: "official-past",
+      year: 2026,
+      mode: "exam",
+      appState: null,
+      answerSnapshot,
+    },
+    result: {
+      sessionId,
+      year: 2026,
+      mode: "exam",
+      total: 1,
+      correct: 1,
+      unanswered: 0,
+      rate: 100,
+      byField: [
+        { field: "strategy", total: 1, correct: 1, rate: 100 },
+        { field: "management", total: 0, correct: 0, rate: 0 },
+        { field: "technology", total: 0, correct: 0, rate: 0 },
+      ],
+      byTopic: [{ topicId: "tech-binary-data", total: 1, correct: 1, rate: 100 }],
+      questions: [{
+        questionId: "tech-binary-data-ex1",
+        questionNumber: 1,
+        examField: "strategy",
+        selected: "A",
+        correctChoice: "A",
+        isCorrect: true,
+        isUnanswered: false,
+        topicId: "tech-binary-data",
+      }],
+    },
+  };
+  return {
+    schemaVersion: 1,
+    sessionId,
+    year: 2026,
+    mode: "exam",
+    startedAt: "2026-08-30T00:00:00.000Z",
+    currentIndex: 0,
+    answers: answerSnapshot,
+    completed: false,
+    pendingMutation: {
+      action: "complete",
+      completedAt,
+      answerSnapshot,
+      assessmentAnswers,
+      finalization,
+    },
+  };
+}
+
 describe("途中状態の保存キー", () => {
   it("fequest: プレフィクスなので、ログアウト時の一括削除で消える", () => {
     expect(sessionStorageKey("user-1", 2026, "practice")).toMatch(/^fequest:/);
@@ -124,8 +248,20 @@ describe("途中保存と再開", () => {
 
   it("clearSession で消える", () => {
     saveSession("user-1", createSession(2026, "practice"));
-    clearSession("user-1", 2026, "practice");
+    expect(clearSession("user-1", 2026, "practice")).toBe(true);
     expect(loadSession("user-1", 2026, "practice")).toBeNull();
+  });
+
+  it("clearSession が確認できないときは途中状態を成功扱いしない", () => {
+    saveSession("user-1", createSession(2026, "practice"));
+    const removeItem = vi.spyOn(window.localStorage, "removeItem").mockImplementation(() => {
+      throw new DOMException("storage is unavailable");
+    });
+
+    expect(clearSession("user-1", 2026, "practice")).toBe(false);
+    expect(loadSession("user-1", 2026, "practice")).not.toBeNull();
+
+    removeItem.mockRestore();
   });
 
   it("現在位置を保存して再開できる", () => {
@@ -179,6 +315,56 @@ describe("途中保存と再開", () => {
         confirmedUserId: "user-1",
       },
     };
+    window.localStorage.setItem(
+      sessionStorageKey("user-1", 2026, "exam"),
+      JSON.stringify(session),
+    );
+
+    expect(loadSession("user-1", 2026, "exam")).toBeNull();
+  });
+
+  it.each([
+    ["outer year and frozen base year", (session: ReturnType<typeof frozenOfficialSession>) => {
+      session.pendingMutation.finalization.baseState.year = 2025;
+    }],
+    ["outer mode and frozen base mode", (session: ReturnType<typeof frozenOfficialSession>) => {
+      session.pendingMutation.finalization.baseState.mode = "practice";
+    }],
+    ["frozen P0 base shape", (session: ReturnType<typeof frozenOfficialSession>) => {
+      session.pendingMutation.finalization.baseState.appState = { progress: {} };
+    }],
+    ["frozen result shape", (session: ReturnType<typeof frozenOfficialSession>) => {
+      session.pendingMutation.finalization.result.questions = [];
+    }],
+    ["frozen result aggregates", (session: ReturnType<typeof frozenOfficialSession>) => {
+      session.pendingMutation.finalization.result.byField[0] = {
+        field: "strategy",
+        total: 2,
+        correct: 1,
+        rate: 50,
+      };
+    }],
+    ["frozen next shape after acknowledgements", (session: ReturnType<typeof frozenOfficialSession>) => {
+      const finalization = session.pendingMutation.finalization;
+      finalization.exposureResult = {
+        authState: "authenticated",
+        userId: "user-1",
+        exposures: {
+          "tech-binary-data-ex1": {
+            questionId: "tech-binary-data-ex1",
+            state: "first",
+            attemptedBefore: false,
+            firstAttemptAt: "2026-08-30T00:00:00.000Z",
+            attemptCount: 1,
+          },
+        },
+      };
+      finalization.completionAcknowledged = true;
+      finalization.nextState = { appState: { progress: {} } };
+    }],
+  ])("rejects malformed official frozen %s before it becomes resumable", (_label, mutate) => {
+    const session = frozenOfficialSession();
+    mutate(session);
     window.localStorage.setItem(
       sessionStorageKey("user-1", 2026, "exam"),
       JSON.stringify(session),

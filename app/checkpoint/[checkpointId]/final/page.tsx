@@ -19,6 +19,8 @@ import {
 import {
   clearPendingAssessmentFinalization,
   findPendingAssessmentFinalization,
+  isValidAssessmentAppState,
+  isValidAssessmentUserAnswers,
   resumePendingAssessmentFinalization,
   type PendingAssessmentFinalization,
 } from "@/lib/examReadiness/pendingFinalization";
@@ -41,6 +43,7 @@ import {
 } from "@/lib/finalExam";
 import { emitCelebration } from "@/lib/celebration";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 import FinalExamCard from "@/components/checkpoints/FinalExamCard";
 import GateRequirementList from "@/components/checkpoints/GateRequirementList";
 import MissingBadgeList from "@/components/checkpoints/MissingBadgeList";
@@ -79,6 +82,144 @@ function isCheckpointFinalPendingFinalization(
   return baseState.kind === "checkpoint-final" && baseState.checkpointId === checkpointId;
 }
 
+function isValidCheckpointFinalFrozenFinalization(
+  value: CheckpointFinalPendingFinalization,
+  expectedCheckpointId: CheckpointId,
+): boolean {
+  const baseState = value.baseState;
+  if (
+    baseState.kind !== "checkpoint-final"
+    || baseState.checkpointId !== expectedCheckpointId
+    || !isValidAssessmentAppState(baseState.appState)
+    || !isValidFinalExam(baseState.exam, value.sessionId, expectedCheckpointId)
+    || !isValidAssessmentUserAnswers(baseState.answers)
+    || !isValidFinalExamAttempt(baseState.attempt, expectedCheckpointId)
+    || !isValidBadgeSignals(baseState.signals)
+    || !isValidFinalExamResult(value.result, baseState.attempt)
+  ) return false;
+  if (!Object.hasOwn(value, "nextState")) return true;
+  return value.nextState !== undefined && isValidAssessmentAppState(value.nextState.appState);
+}
+
+function isValidFinalExam(
+  value: FinalExam,
+  sessionId: string,
+  checkpointId: CheckpointId,
+): boolean {
+  if (
+    value.checkpointId !== checkpointId
+    || value.attemptId !== sessionId
+    || !isRecord(value.rule)
+    || !isNonNegativeInteger(value.rule.questionCount)
+    || !isNonNegativeInteger(value.rule.passThreshold)
+    || !isUnitInterval(value.rule.weakRatio)
+    || !isRecord(value.scope)
+    || !isStringArray(value.scope.eligibleCategories)
+    || !isValidDifficultyDistribution(value.scope.difficultyDistribution)
+    || !isNonNegativeInteger(value.scope.recentQuestionExclusionCount)
+    || !Array.isArray(value.questions)
+    || value.questions.length === 0
+    || !value.questions.every(isValidCheckQuestion)
+    || !isStringRecord(value.topicIdByQuestionId)
+    || !isStringArray(value.topicIds)
+    || typeof value.reusedRecentQuestion !== "boolean"
+  ) return false;
+  const ids = value.questions.map((question) => question.id);
+  return new Set(ids).size === ids.length
+    && Object.keys(value.topicIdByQuestionId).length === ids.length
+    && ids.every((id) => isNonEmptyString(value.topicIdByQuestionId[id]));
+}
+
+function isValidFinalExamAttempt(value: unknown, checkpointId: CheckpointId): boolean {
+  return isRecord(value)
+    && value.checkpointId === checkpointId
+    && typeof value.passed === "boolean"
+    && isNonNegativeInteger(value.correct)
+    && isNonNegativeInteger(value.total)
+    && isStrictOffsetIsoTimestamp(value.attemptedAt)
+    && isStringArray(value.wrongTopicIds);
+}
+
+function isValidFinalExamResult(
+  value: FinalExamResult,
+  attempt: CheckpointFinalizationBase["attempt"],
+): boolean {
+  return isNonNegativeInteger(value.correct)
+    && isNonNegativeInteger(value.total)
+    && typeof value.passed === "boolean"
+    && isStringArray(value.wrongTopicIds)
+    && value.correct === attempt.correct
+    && value.total === attempt.total
+    && value.passed === attempt.passed
+    && sameStrings(value.wrongTopicIds, attempt.wrongTopicIds);
+}
+
+function isValidBadgeSignals(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return (value.wordMasteredCount === undefined || isNonNegativeInteger(value.wordMasteredCount))
+    && (value.examLevelClearedTopicCount === undefined
+      || isNonNegativeInteger(value.examLevelClearedTopicCount))
+    && (value.examReadiness === undefined || value.examReadiness === null || isRecord(value.examReadiness))
+    && (value.examReadinessVerified === undefined || typeof value.examReadinessVerified === "boolean");
+}
+
+function isValidCheckQuestion(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isNonEmptyString(value.id)
+    && isNonEmptyString(value.prompt)
+    && Array.isArray(value.choices)
+    && value.choices.length > 0
+    && value.choices.every((choice) => isRecord(choice)
+      && isChoice(choice.key)
+      && isNonEmptyString(choice.text))
+    && isChoice(value.correctChoice)
+    && isNonEmptyString(value.explanation)
+    && isDifficulty(value.difficulty)
+    && (value.choiceExplanations === undefined || isStringRecord(value.choiceExplanations))
+    && (value.relatedTopicIds === undefined || isStringArray(value.relatedTopicIds))
+    && (value.reviewTags === undefined || isStringArray(value.reviewTags));
+}
+
+function isValidDifficultyDistribution(value: unknown): boolean {
+  return isRecord(value) && Object.values(value).every(isUnitInterval);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isStringRecord(value: unknown): boolean {
+  return isRecord(value) && Object.values(value).every(isNonEmptyString);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(isNonEmptyString);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function isUnitInterval(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
+function isChoice(value: unknown): boolean {
+  return value === "A" || value === "B" || value === "C" || value === "D";
+}
+
+function isDifficulty(value: unknown): boolean {
+  return value === 1 || value === 2 || value === 3;
+}
+
+function sameStrings(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
+}
+
 export default function FinalExamPage() {
   const router = useRouter();
   const params = useParams<{ checkpointId: string }>();
@@ -114,6 +255,7 @@ export default function FinalExamPage() {
     setPersistenceError(null);
     try {
       const finalized = await resumePendingAssessmentFinalization(pending, {
+        validate: (value) => isValidCheckpointFinalFrozenFinalization(value, checkpointId),
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
@@ -140,13 +282,15 @@ export default function FinalExamPage() {
       if (finalized.nextState === undefined) {
         throw new Error("Assessment finalization was not fully persisted");
       }
+      if (!clearPendingAssessmentFinalization(finalized.sessionId)) {
+        throw new Error("Assessment finalization could not be cleared");
+      }
       saveAppState(finalized.nextState.appState);
       setState(finalized.nextState.appState);
       setExam(finalized.baseState.exam);
       setResult(finalized.result);
       emitCelebration(finalized.baseState.appState, finalized.nextState.appState);
       emitMochitEvent(finalized.result.passed ? "checkpointClear" : "incorrect");
-      clearPendingAssessmentFinalization(finalized.sessionId);
       pendingFinalizationRef.current = null;
       setPendingFinalization(null);
     } catch {
@@ -156,7 +300,7 @@ export default function FinalExamPage() {
     } finally {
       finalizingRef.current = false;
     }
-  }, [setState]);
+  }, [checkpointId, setState]);
 
   useEffect(() => {
     const pending = findPendingAssessmentFinalization(

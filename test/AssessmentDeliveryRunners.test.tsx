@@ -3,6 +3,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { AppState, UserAnswer } from "@/types";
+import { pendingAssessmentFinalizationStorageKey } from "@/lib/examReadiness/pendingFinalization";
 
 const harness = vi.hoisted(() => ({
   state: undefined as unknown,
@@ -49,7 +50,13 @@ vi.mock("@/lib/useAppState", () => ({
 }));
 
 vi.mock("@/lib/useBadgeSync", () => ({ useBadgeSync: () => undefined }));
-vi.mock("@/lib/badgeSignals", () => ({ getClientBadgeSignals: () => undefined }));
+vi.mock("@/lib/badgeSignals", () => ({
+  getClientBadgeSignals: () => ({
+    wordMasteredCount: 0,
+    examReadiness: null,
+    examReadinessVerified: true,
+  }),
+}));
 vi.mock("@/components/checkpoints/FinalExamCard", () => ({
   default: () => <div data-testid="final-exam-card" />,
 }));
@@ -223,6 +230,42 @@ function installFetch(
   }));
 }
 
+function frozenFinalization(
+  sessionId: string,
+  source: "mock" | "checkpoint",
+  baseState: unknown,
+  result: unknown,
+) {
+  return {
+    version: 1,
+    sessionId,
+    source,
+    attempts: [{
+      questionId: "tech-binary-data-ex1",
+      questionType: source === "mock" ? "mock_exam" : "mini_exam",
+      topicId: "tech-binary-data",
+      selectedAnswer: "A",
+      isCorrect: true,
+      answeredAt: "2026-08-30T00:00:00.000Z",
+      attemptGroupId: sessionId,
+    }],
+    completion: {
+      action: "complete",
+      sessionId,
+      completedAt: "2026-08-30T00:00:01.000Z",
+      answers: [{
+        idempotencyKey: `assessment:${sessionId}:tech-binary-data-ex1`,
+        canonicalQuestionId: "tech-binary-data-ex1",
+        topicId: "tech-binary-data",
+        isCorrect: true,
+        answeredAt: "2026-08-30T00:00:00.000Z",
+      }],
+    },
+    baseState,
+    result,
+  };
+}
+
 function expectCompletionOrder() {
   const fetchMock = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
   const calls = fetchMock.mock.calls;
@@ -269,6 +312,88 @@ afterEach(() => {
 });
 
 describe("assessment delivery runners", () => {
+  it.each([
+    [
+      "mock",
+      () => render(<MockExamPage />),
+      () => frozenFinalization(
+        "20000000-0000-4000-8000-000000000011",
+        "mock",
+        { appState: makeState(), tagged: null },
+        {
+          correct: 1,
+          total: 1,
+          fieldScores: {
+            strategy: { correct: 0, total: 0 },
+            management: { correct: 0, total: 0 },
+            technology: { correct: 1, total: 1 },
+          },
+          topicScores: [{ topicId: "tech-binary-data", correct: 1, total: 1, rate: 100 }],
+          weakTopics: [],
+          wrongTopicIds: [],
+        },
+      ),
+    ],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      () => frozenFinalization(
+        "20000000-0000-4000-8000-000000000012",
+        "checkpoint",
+        {
+          kind: "checkpoint",
+          checkpointId: "cp-technology-foundations",
+          appState: makeState(),
+          tagged: null,
+        },
+        { correct: 1, total: 1, passed: true },
+      ),
+    ],
+    [
+      "checkpoint final",
+      () => render(<FinalExamPage />),
+      () => frozenFinalization(
+        "20000000-0000-4000-8000-000000000013",
+        "checkpoint",
+        {
+          kind: "checkpoint-final",
+          checkpointId: "cp1",
+          appState: makeState(),
+          exam: {},
+          answers: null,
+          attempt: {
+            checkpointId: "cp1",
+            passed: false,
+            correct: 0,
+            total: 1,
+            attemptedAt: "2026-08-30T00:00:01.000Z",
+            wrongTopicIds: [],
+          },
+        },
+        { correct: 0, total: 1, passed: false, wrongTopicIds: [] },
+      ),
+    ],
+  ] as const)("%s rejects a malformed frozen runner shape before attempts, completion, or P0", async (
+    _name,
+    renderRunner,
+    createPending,
+  ) => {
+    installFetch();
+    const pending = createPending();
+    window.localStorage.setItem(
+      pendingAssessmentFinalizationStorageKey(pending.sessionId),
+      JSON.stringify(pending),
+    );
+
+    renderRunner();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(requestBodies("/api/question-attempts/save")).toHaveLength(0);
+    expect(requestBodies("/api/assessment-sessions").filter((body) => body.action === "complete"))
+      .toHaveLength(0);
+    expect(requestBodies("/api/progress/save")).toHaveLength(0);
+  });
+
   it("mock persists start before questions and completes after classification", async () => {
     const start = deferredResponse();
     installFetch(start);
@@ -564,5 +689,39 @@ describe("assessment delivery runners", () => {
     expect([...storageValues.keys()].some((key) =>
       key.startsWith("fequest:assessmentFinalization:"),
     )).toBe(false);
+  });
+
+  it.each([
+    ["mock", () => render(<MockExamPage />), /模試を始める/],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+    ],
+    ["checkpoint final", () => render(<FinalExamPage />), /突破試験に挑む/],
+  ] as const)("%s keeps pending and hides local completion when finalization storage removal fails", async (
+    _name,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch();
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    const removeItem = vi.spyOn(window.localStorage, "removeItem").mockImplementation(() => {
+      throw new DOMException("storage is unavailable");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(harness.setState).not.toHaveBeenCalled();
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(true);
+
+    removeItem.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
+    await waitFor(() => expect(harness.setState).toHaveBeenCalledOnce());
   });
 });

@@ -980,6 +980,85 @@ describe("結果画面", () => {
     expect(completions[1]).toEqual(firstCompletion);
   });
 
+  it("自動再開中の再開・やり直し操作は同じ frozen finalization を並行送信しない", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    assessmentMalformed.complete = 1;
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+
+    cleanup();
+    const originalFetch = globalThis.fetch;
+    let resolveCompletion!: (response: Response) => void;
+    const pendingCompletion = new Promise<Response>((resolve) => {
+      resolveCompletion = resolve;
+    });
+    vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+      if (url === "/api/assessment-sessions") {
+        const body = JSON.parse(String(init?.body)) as { action: string };
+        if (body.action === "complete") return pendingCompletion;
+      }
+      return originalFetch(url, init);
+    }));
+
+    renderRunner();
+    await waitFor(() => expect(assessmentActions().filter((action) => action.action === "complete"))
+      .toHaveLength(1));
+    const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    const resume = within(card).getByRole("button", { name: "続きから再開する" });
+    const restart = within(card).getByRole("button", { name: "最初からやり直す" });
+    expect(resume).toBeDisabled();
+    expect(restart).toBeDisabled();
+    fireEvent.click(resume);
+    fireEvent.click(restart);
+
+    expect(assessmentActions().filter((action) => action.action === "complete")).toHaveLength(1);
+    expect(savedAttempts()).toHaveLength(0);
+    expect(progressSaves()).toHaveLength(0);
+
+    resolveCompletion(assessmentResponse("complete", String(
+      assessmentActions().find((action) => action.action === "complete")?.sessionId,
+    )));
+    expect(await screen.findByText("50%")).toBeInTheDocument();
+    expect(assessmentActions().filter((action) => action.action === "complete")).toHaveLength(1);
+    expect(progressSaves()).toHaveLength(1);
+  });
+
+  it("official finalization keeps its session and result hidden when session removal fails", async () => {
+    window.localStorage.setItem("fequest:userId", "user-1");
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    const removeItem = vi.spyOn(window.localStorage, "removeItem").mockImplementation(() => {
+      throw new DOMException("storage is unavailable");
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.queryByText("50%")).not.toBeInTheDocument();
+    expect([...storageValues.keys()].filter((key) => key.startsWith("fequest:pastExam")))
+      .toHaveLength(1);
+
+    removeItem.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
+    expect(await screen.findByText("50%")).toBeInTheDocument();
+  });
+
   it("P0応答の喪失後に端末状態が変わってもリロード再送する進捗本文を固定する", async () => {
     window.localStorage.setItem("fequest:userId", "user-1");
     initializeAppState({

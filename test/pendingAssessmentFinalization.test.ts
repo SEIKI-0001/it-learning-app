@@ -90,6 +90,7 @@ function pending(
         },
       },
     },
+    completionAcknowledged: true,
     nextState: { progress: "frozen" },
     result: { score: 100 },
   };
@@ -134,10 +135,36 @@ describe("pending assessment finalization storage", () => {
     expect(loadPendingAssessmentFinalization(second.sessionId)).toEqual(second);
   });
 
+  it("keeps the frozen record when localStorage removal cannot be acknowledged", () => {
+    const value = pending();
+    savePendingAssessmentFinalization(value);
+    const removeItem = vi.spyOn(window.localStorage, "removeItem").mockImplementation(() => {
+      throw new DOMException("storage is unavailable");
+    });
+
+    expect(clearPendingAssessmentFinalization(value.sessionId)).toBe(false);
+    expect(loadPendingAssessmentFinalization(value.sessionId)).toEqual(value);
+
+    removeItem.mockRestore();
+  });
+
+  it("does not claim a frozen payload was persisted when localStorage set fails", () => {
+    const value = pending();
+    const setItem = vi.spyOn(window.localStorage, "setItem").mockImplementation(() => {
+      throw new DOMException("storage is unavailable");
+    });
+
+    expect(() => savePendingAssessmentFinalization(value)).toThrow("Cannot persist");
+    expect(loadPendingAssessmentFinalization(value.sessionId)).toBeNull();
+
+    setItem.mockRestore();
+  });
+
   it("persists each acknowledgement before resuming the next frozen stage", async () => {
     const value = pending();
     delete value.exposureResult;
     delete value.nextState;
+    delete value.completionAcknowledged;
     const exposureResult = pending().exposureResult!;
     const saveAttempts = vi.fn().mockResolvedValue(exposureResult);
     const completeSession = vi.fn().mockResolvedValue(undefined);
@@ -175,6 +202,7 @@ describe("pending assessment finalization storage", () => {
     const value = pending();
     delete value.exposureResult;
     delete value.nextState;
+    delete value.completionAcknowledged;
     const completeSession = vi.fn();
 
     await expect(resumePendingAssessmentFinalization(value, {
@@ -214,6 +242,41 @@ describe("pending assessment finalization storage", () => {
     expect(saveProgress).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ["completion acknowledgement without an authoritative exposure", (value: ReturnType<typeof pending>) => {
+      delete value.exposureResult;
+      value.completionAcknowledged = true;
+    }],
+    ["frozen next state before completion acknowledgement", (value: ReturnType<typeof pending>) => {
+      delete value.completionAcknowledged;
+    }],
+    ["P0 acknowledgement without its frozen next state", (value: ReturnType<typeof pending>) => {
+      delete value.nextState;
+      value.completionAcknowledged = true;
+      value.progressAcknowledged = true;
+    }],
+    ["non-strict attempt timestamp", (value: ReturnType<typeof pending>) => {
+      value.attempts[0].answeredAt = "August 30, 2026";
+    }],
+  ])("rejects impossible %s before every remote stage", async (_label, mutate) => {
+    const value = pending();
+    mutate(value);
+    const saveAttempts = vi.fn();
+    const completeSession = vi.fn();
+    const saveProgress = vi.fn();
+
+    await expect(resumePendingAssessmentFinalization(value, {
+      saveAttempts,
+      completeSession,
+      deriveNextState: vi.fn(),
+      saveProgress,
+    })).rejects.toThrow("Cannot persist a malformed assessment finalization");
+
+    expect(saveAttempts).not.toHaveBeenCalled();
+    expect(completeSession).not.toHaveBeenCalled();
+    expect(saveProgress).not.toHaveBeenCalled();
+  });
+
   it.each(["attempt", "completion", "progress"] as const)(
     "replays the byte-identical frozen %s body after response loss",
     async (failedStage) => {
@@ -222,9 +285,11 @@ describe("pending assessment finalization storage", () => {
       if (failedStage === "attempt") {
         delete value.exposureResult;
         delete value.nextState;
+        delete value.completionAcknowledged;
       }
       if (failedStage === "completion") {
         delete value.nextState;
+        delete value.completionAcknowledged;
       }
       if (failedStage === "progress") {
         value.completionAcknowledged = true;

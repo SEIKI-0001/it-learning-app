@@ -14,7 +14,10 @@ import type { ChoiceKey, QuestionExposureState } from "@/types";
 import type { PastExamMode, PastExamSession } from "@/types/pastExam";
 import { EXAM_MODE_DURATION_MINUTES } from "@/types/pastExam";
 import { createAssessmentSessionId } from "@/lib/userSession";
-import { isValidPendingAssessmentFinalization } from "@/lib/examReadiness/pendingFinalization";
+import {
+  isValidAssessmentAppState,
+  isValidPendingAssessmentFinalization,
+} from "@/lib/examReadiness/pendingFinalization";
 import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 
 const KEY_PREFIX = "fequest:pastExam";
@@ -43,16 +46,26 @@ function isValidSession(value: unknown): value is PastExamSession {
     s.schemaVersion === 1 &&
     typeof s.sessionId === "string" &&
     typeof s.year === "number" &&
+    Number.isInteger(s.year) &&
+    s.year > 0 &&
     (s.mode === "practice" || s.mode === "exam") &&
     isStrictOffsetIsoTimestamp(s.startedAt) &&
     typeof s.currentIndex === "number" &&
+    Number.isInteger(s.currentIndex) &&
+    s.currentIndex >= 0 &&
     isValidAnswerSnapshot(s.answers) &&
     typeof s.completed === "boolean" &&
-    isValidPendingMutation(s.pendingMutation, s.sessionId)
+    isValidPendingMutation(s.pendingMutation, s.sessionId, s.year, s.mode, s.answers)
   );
 }
 
-function isValidPendingMutation(value: unknown, sessionId: string): boolean {
+function isValidPendingMutation(
+  value: unknown,
+  sessionId: string,
+  year: number,
+  mode: PastExamMode,
+  outerAnswers: unknown,
+): boolean {
   if (value === undefined) return true;
   if (typeof value !== "object" || value === null) return false;
   const pending = value as Record<string, unknown>;
@@ -62,11 +75,20 @@ function isValidPendingMutation(value: unknown, sessionId: string): boolean {
   ) return false;
   if (pending.action === "abandon") return true;
   if (pending.finalization !== undefined) {
-    return isValidPendingAssessmentFinalization(
+    if (!isValidPendingAssessmentFinalization(
       pending.finalization,
       sessionId,
       "official_past",
-    ) && isValidOfficialPastFinalizationBase(pending.finalization);
+    ) || !isValidOfficialPastFinalizationForSession(pending.finalization, sessionId, year, mode)) {
+      return false;
+    }
+    const finalization = pending.finalization as Record<string, unknown>;
+    const baseState = finalization.baseState as Record<string, unknown>;
+    const completion = finalization.completion as Record<string, unknown>;
+    return isSameAnswerSnapshot(outerAnswers, baseState.answerSnapshot)
+      && isSameAnswerSnapshot(pending.answerSnapshot, baseState.answerSnapshot)
+      && pending.completedAt === completion.completedAt
+      && isSameAssessmentAnswers(pending.assessmentAnswers, completion.answers);
   }
   return isValidAnswerSnapshot(pending.answerSnapshot)
     && Array.isArray(pending.assessmentAnswers)
@@ -81,17 +103,197 @@ function isValidPendingMutation(value: unknown, sessionId: string): boolean {
     );
 }
 
-function isValidOfficialPastFinalizationBase(value: unknown): boolean {
-  if (typeof value !== "object" || value === null) return false;
+/** Validates the complete official-past shape before a resume may touch a remote stage. */
+export function isValidOfficialPastFinalizationForSession(
+  value: unknown,
+  sessionId: string,
+  year: number,
+  mode: PastExamMode,
+): boolean {
+  if (!isValidPendingAssessmentFinalization(value, sessionId, "official_past")) return false;
+  if (!isRecord(value)) return false;
   const finalization = value as Record<string, unknown>;
-  if (typeof finalization.baseState !== "object" || finalization.baseState === null) return false;
-  const baseState = finalization.baseState as Record<string, unknown>;
+  if (!isValidOfficialPastFinalizationBase(finalization.baseState, year, mode)) return false;
+  if (!isValidOfficialPastExamResult(finalization.result, sessionId, year, mode)) return false;
+  if (!Object.hasOwn(finalization, "nextState")) return true;
+  return isValidOfficialPastFinalizationNext(finalization.nextState);
+}
+
+function isValidOfficialPastFinalizationBase(
+  value: unknown,
+  year: number,
+  mode: PastExamMode,
+): boolean {
+  if (!isRecord(value)) return false;
+  const baseState = value;
   return baseState.kind === "official-past"
-    && typeof baseState.year === "number"
-    && Number.isInteger(baseState.year)
-    && (baseState.mode === "practice" || baseState.mode === "exam")
-    && (baseState.appState === null || (typeof baseState.appState === "object" && baseState.appState !== null))
+    && baseState.year === year
+    && baseState.mode === mode
+    && (baseState.appState === null || isValidAssessmentAppState(baseState.appState))
     && isValidAnswerSnapshot(baseState.answerSnapshot);
+}
+
+function isValidOfficialPastFinalizationNext(value: unknown): boolean {
+  return isRecord(value)
+    && Object.hasOwn(value, "appState")
+    && (value.appState === null || isValidAssessmentAppState(value.appState));
+}
+
+function isValidOfficialPastExamResult(
+  value: unknown,
+  sessionId: string,
+  year: number,
+  mode: PastExamMode,
+): boolean {
+  if (!isRecord(value)) return false;
+  if (
+    value.sessionId !== sessionId
+    || value.year !== year
+    || value.mode !== mode
+    || !isNonNegativeInteger(value.total)
+    || !isNonNegativeInteger(value.correct)
+    || !isNonNegativeInteger(value.unanswered)
+    || !isRate(value.rate)
+    || !Array.isArray(value.byField)
+    || !Array.isArray(value.byTopic)
+    || !Array.isArray(value.questions)
+    || value.total !== value.questions.length
+    || !value.questions.every(isValidOfficialPastQuestionResult)
+    || !value.byField.every(isValidOfficialPastFieldSummary)
+    || !value.byTopic.every(isValidOfficialPastTopicSummary)
+  ) return false;
+  const questions = value.questions as Record<string, unknown>[];
+  const fields = value.byField as Record<string, unknown>[];
+  const topics = value.byTopic as Record<string, unknown>[];
+  const correct = questions.filter((question) => question.isCorrect).length;
+  const unanswered = questions.filter((question) => question.isUnanswered).length;
+  const fieldNames = ["strategy", "management", "technology"] as const;
+  const questionTopicIds = new Set(questions.map((question) => question.topicId as string));
+
+  return correct === value.correct
+    && unanswered === value.unanswered
+    && value.rate === calculatedRate(correct, questions.length)
+    && new Set(questions.map((question) => question.questionId)).size === questions.length
+    && new Set(questions.map((question) => question.questionNumber)).size === questions.length
+    && fields.length === fieldNames.length
+    && new Set(fields.map((field) => field.field)).size === fieldNames.length
+    && fieldNames.every((field) => matchesAggregate(
+      fields.find((summary) => summary.field === field),
+      questions.filter((question) => question.examField === field),
+    ))
+    && topics.length === questionTopicIds.size
+    && new Set(topics.map((topic) => topic.topicId)).size === topics.length
+    && [...questionTopicIds].every((topicId) => matchesAggregate(
+      topics.find((summary) => summary.topicId === topicId),
+      questions.filter((question) => question.topicId === topicId),
+    ));
+}
+
+function matchesAggregate(
+  summary: Record<string, unknown> | undefined,
+  questions: Record<string, unknown>[],
+): boolean {
+  if (!summary) return false;
+  const correct = questions.filter((question) => question.isCorrect).length;
+  return summary.total === questions.length
+    && summary.correct === correct
+    && summary.rate === calculatedRate(correct, questions.length);
+}
+
+function calculatedRate(correct: number, total: number): number {
+  return total === 0 ? 0 : Math.round((correct / total) * 100);
+}
+
+function isValidOfficialPastQuestionResult(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isNonEmptyString(value.questionId)
+    && isPositiveInteger(value.questionNumber)
+    && isTopicField(value.examField)
+    && isChoiceOrNull(value.selected)
+    && isChoiceKey(value.correctChoice)
+    && typeof value.isCorrect === "boolean"
+    && typeof value.isUnanswered === "boolean"
+    && value.isUnanswered === (value.selected === null)
+    && value.isCorrect === (value.selected !== null && value.selected === value.correctChoice)
+    && isNonEmptyString(value.topicId);
+}
+
+function isValidOfficialPastFieldSummary(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isTopicField(value.field)
+    && isNonNegativeInteger(value.total)
+    && isNonNegativeInteger(value.correct)
+    && isRate(value.rate)
+    && value.correct <= value.total;
+}
+
+function isValidOfficialPastTopicSummary(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return isNonEmptyString(value.topicId)
+    && isNonNegativeInteger(value.total)
+    && isNonNegativeInteger(value.correct)
+    && isRate(value.rate)
+    && value.correct <= value.total;
+}
+
+function isSameAnswerSnapshot(left: unknown, right: unknown): boolean {
+  if (!isValidAnswerSnapshot(left) || !isValidAnswerSnapshot(right)) return false;
+  const leftRecord = left as Record<string, Record<string, unknown>>;
+  const rightRecord = right as Record<string, Record<string, unknown>>;
+  const leftKeys = Object.keys(leftRecord);
+  const rightKeys = Object.keys(rightRecord);
+  return leftKeys.length === rightKeys.length && leftKeys.every((key) => {
+    const a = leftRecord[key];
+    const b = rightRecord[key];
+    return b !== undefined
+      && a.selected === b.selected
+      && a.answeredAt === b.answeredAt
+      && a.timeSpentSeconds === b.timeSpentSeconds
+      && a.exposureState === b.exposureState;
+  });
+}
+
+function isSameAssessmentAnswers(left: unknown, right: unknown): boolean {
+  if (!Array.isArray(left) || !Array.isArray(right)
+    || !left.every(isValidAssessmentAnswer) || !right.every(isValidAssessmentAnswer)
+  ) return false;
+  return left.length === right.length && left.every((answer, index) => {
+    const other = right[index] as Record<string, unknown>;
+    const current = answer as Record<string, unknown>;
+    return current.idempotencyKey === other.idempotencyKey
+      && current.canonicalQuestionId === other.canonicalQuestionId
+      && current.topicId === other.topicId
+      && current.isCorrect === other.isCorrect
+      && current.answeredAt === other.answeredAt;
+  });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return isNonNegativeInteger(value) && value > 0;
+}
+
+function isRate(value: unknown): value is number {
+  return isNonNegativeInteger(value) && value <= 100;
+}
+
+function isChoiceOrNull(value: unknown): boolean {
+  return value === null || isChoiceKey(value);
+}
+
+function isTopicField(value: unknown): boolean {
+  return value === "strategy" || value === "management" || value === "technology";
 }
 
 function isValidProgressSnapshot(value: unknown): boolean {
@@ -190,14 +392,17 @@ export function clearSession(
   userId: string | null,
   year: number,
   mode: PastExamMode,
-): void {
-  if (!isBrowser()) return;
+): boolean {
+  if (!isBrowser()) return false;
+  const key = sessionStorageKey(userId, year, mode);
   try {
-    window.localStorage.removeItem(sessionStorageKey(userId, year, mode));
+    window.localStorage.removeItem(key);
+    if (window.localStorage.getItem(key) !== null) return false;
   } catch {
-    /* ignore */
+    return false;
   }
   notifyChange();
+  return true;
 }
 
 // ---------------------------------------------------------------------------
