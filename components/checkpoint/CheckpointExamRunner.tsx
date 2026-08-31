@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { AppState, UserAnswer } from "@/types";
-import { getTopic } from "@/lib/content";
+import { getAllTopics, getTopic } from "@/lib/content";
 import {
   buildCheckpointExam,
+  getCheckpointExamDefinition,
   recordCheckpointExamResult,
 } from "@/lib/checkpointExam";
-import { saveAppState } from "@/lib/storage";
+import { saveAppStateVerified } from "@/lib/storage";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 import { useAppState } from "@/lib/useAppState";
 import {
   assessmentAnswerIdempotencyKey,
@@ -40,6 +42,7 @@ type CheckpointFinalizationBase = {
   checkpointId: string;
   appState: AppState;
   tagged: UserAnswer[];
+  exam: ReturnType<typeof buildCheckpointExam>;
 };
 type CheckpointFinalizationNext = {
   appState: ReturnType<typeof recordCheckpointExamResult>;
@@ -71,26 +74,83 @@ function isValidCheckpointFrozenFinalization(
     || baseState.checkpointId !== expectedCheckpointId
     || !isValidAssessmentAppState(baseState.appState)
     || !isValidAssessmentUserAnswers(baseState.tagged)
-    || !isValidCheckpointResult(value.result, baseState.tagged)
+    || rebuildCheckpointResult(value, expectedCheckpointId) === null
+    || !isSameJson(value.result, rebuildCheckpointResult(value, expectedCheckpointId))
   ) return false;
   if (!Object.hasOwn(value, "nextState")) return true;
   return value.nextState !== undefined && isValidAssessmentAppState(value.nextState.appState);
 }
 
-function isValidCheckpointResult(
-  value: CheckpointResult,
-  answers: readonly UserAnswer[],
-): boolean {
-  const correct = answers.filter((answer) => answer.isCorrect).length;
-  return isNonNegativeInteger(value.correct)
-    && isNonNegativeInteger(value.total)
-    && typeof value.passed === "boolean"
-    && value.total === answers.length
-    && value.correct === correct;
+/** Rebuilds score and validates the complete frozen checkpoint question frame. */
+function rebuildCheckpointResult(
+  value: Pick<CheckpointPendingFinalization, "sessionId" | "attempts" | "completion" | "baseState">,
+  expectedCheckpointId: string,
+): CheckpointResult | null {
+  const { exam, tagged } = value.baseState;
+  if (
+    !isValidFrozenCheckpointExam(exam, expectedCheckpointId, value.sessionId)
+    || new Set(tagged.map((answer) => answer.questionId)).size !== tagged.length
+    || value.attempts.length !== tagged.length
+    || new Set(value.attempts.map((attempt) => attempt.questionId)).size !== value.attempts.length
+  ) return null;
+  const questionsById = new Map(exam.questions.map((question) => [question.id, question]));
+  const attemptsByQuestionId = new Map(value.attempts.map((attempt) => [attempt.questionId, attempt]));
+  let correct = 0;
+  for (const answer of tagged) {
+    const question = questionsById.get(answer.questionId);
+    const attempt = attemptsByQuestionId.get(answer.questionId);
+    const isCorrect = answer.selectedChoice !== undefined
+      && question !== undefined
+      && answer.selectedChoice === question.correctChoice;
+    if (
+      question === undefined
+      || answer.topicId !== question.topicId
+      || answer.isCorrect !== isCorrect
+      || attempt === undefined
+      || attempt.questionType !== "mini_exam"
+      || attempt.topicId !== question.topicId
+      || attempt.selectedAnswer !== (answer.selectedChoice ?? null)
+      || attempt.isCorrect !== isCorrect
+      || attempt.answeredAt !== answer.answeredAt
+      || attempt.attemptGroupId !== value.sessionId
+      || !isStrictOffsetIsoTimestamp(attempt.answeredAt)
+    ) return null;
+    if (isCorrect) correct += 1;
+  }
+  return {
+    correct,
+    total: tagged.length,
+    passed: Math.round((correct / tagged.length) * 100) >= exam.definition.passingScore,
+  };
 }
 
-function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+function isValidFrozenCheckpointExam(
+  exam: ReturnType<typeof buildCheckpointExam>,
+  checkpointId: string,
+  sessionId: string,
+): boolean {
+  const definition = getCheckpointExamDefinition(checkpointId);
+  if (
+    definition === undefined
+    || exam.attemptId !== sessionId
+    || !isSameJson(exam.definition, definition)
+    || exam.questions.length !== definition.questionCount
+    || new Set(exam.questions.map((question) => question.id)).size !== exam.questions.length
+  ) return false;
+  const catalog = new Map(getAllTopics().flatMap((topic) => topic.checkQuestions.map((question) => [
+    question.id,
+    { question, topicId: topic.id },
+  ])));
+  return exam.questions.every((question) => {
+    const source = catalog.get(question.id);
+    return source !== undefined
+      && source.topicId === question.topicId
+      && isSameJson(question, { ...source.question, topicId: source.topicId });
+  });
+}
+
+function isSameJson(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 export default function CheckpointExamRunner({ checkpointId }: { checkpointId: string }) {
@@ -122,6 +182,14 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     try {
       const finalized = await resumePendingAssessmentFinalization(pending, {
         validate: (value) => isValidCheckpointFrozenFinalization(value, checkpointId),
+        rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
+          const result = rebuildCheckpointResult(
+            { baseState, attempts, completion, sessionId },
+            checkpointId,
+          );
+          if (result === null) throw new Error("Assessment finalization result is inconsistent");
+          return result;
+        },
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
@@ -146,10 +214,12 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
       if (finalized.nextState === undefined || finalized.exposureResult === undefined) {
         throw new Error("Assessment finalization was not fully persisted");
       }
+      if (!saveAppStateVerified(finalized.nextState.appState)) {
+        throw new Error("Assessment finalization local state could not be persisted");
+      }
       if (!clearPendingAssessmentFinalization(finalized.sessionId)) {
         throw new Error("Assessment finalization could not be cleared");
       }
-      saveAppState(finalized.nextState.appState);
       setState(finalized.nextState.appState);
       saveAnswersToDb(
         finalized.exposureResult.userId,
@@ -233,8 +303,17 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     const pending: CheckpointPendingFinalization =
       pendingFinalizationRef.current ?? (() => {
           const tagged = answers.map((answer) => {
-            const topic = getTopic(answer.topicId ?? "");
-            return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
+            const question = exam.questions.find((item) => item.id === answer.questionId);
+            const topicId = question?.topicId ?? answer.topicId;
+            const topic = getTopic(topicId ?? "");
+            return {
+              ...answer,
+              topicId,
+              tag: topic?.tags[0] ?? topic?.field ?? answer.tag,
+              isCorrect: answer.selectedChoice !== undefined
+                && question !== undefined
+                && answer.selectedChoice === question.correctChoice,
+            };
           });
           const correct = tagged.filter((answer) => answer.isCorrect).length;
           const completedAt = new Date().toISOString();
@@ -268,6 +347,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
               checkpointId,
               appState: state,
               tagged,
+              exam,
             },
             result: {
               correct,

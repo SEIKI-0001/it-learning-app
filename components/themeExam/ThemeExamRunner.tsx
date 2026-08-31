@@ -15,7 +15,8 @@ import {
   startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
 import { useAppState } from "@/lib/useAppState";
-import { saveAppState } from "@/lib/storage";
+import { saveAppStateVerified } from "@/lib/storage";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 import {
   clearPendingAssessmentFinalization,
   findPendingAssessmentFinalization,
@@ -71,75 +72,74 @@ function isThemePendingFinalization(
 function isValidThemeFrozenFinalization(
   value: ThemePendingFinalization,
   expectedExamId: string,
+  expectedThemeSlug: string,
+  questions: readonly ThemeExamQuestionView[],
+  passRate: number,
 ): boolean {
   const baseState = value.baseState;
   if (
     baseState.examId !== expectedExamId
-    || !isNonEmptyString(baseState.themeSlug)
+    || baseState.themeSlug !== expectedThemeSlug
     || (baseState.appState !== null && !isValidAssessmentAppState(baseState.appState))
-    || !isValidThemeExamResult(value.result, value.sessionId, baseState.themeSlug)
   ) return false;
+  const canonical = rebuildThemeExamResult(value, questions, passRate);
+  if (canonical === null || !isSameJson(value.result, canonical)) return false;
   if (!Object.hasOwn(value, "nextState")) return true;
   const nextState = value.nextState;
   return nextState !== undefined
     && (nextState.appState === null || isValidAssessmentAppState(nextState.appState));
 }
 
-function isValidThemeExamResult(
-  value: ThemeExamResult,
-  sessionId: string,
-  themeSlug: string,
-): boolean {
+function rebuildThemeExamResult(
+  value: Pick<ThemePendingFinalization, "sessionId" | "attempts" | "completion" | "baseState">,
+  questions: readonly ThemeExamQuestionView[],
+  passRate: number,
+): ThemeExamResult | null {
+  const attemptsByQuestionId = new Map(value.attempts.map((attempt) => [attempt.questionId, attempt]));
+  const completionByQuestionId = new Map(value.completion.answers.map((answer) => [
+    answer.canonicalQuestionId,
+    answer,
+  ]));
   if (
-    value.sessionId !== sessionId
-    || value.themeSlug !== themeSlug
-    || !isNonNegativeInteger(value.total)
-    || !isNonNegativeInteger(value.correct)
-    || !isNonNegativeInteger(value.unanswered)
-    || !isRate(value.rate)
-    || typeof value.passed !== "boolean"
-    || !Array.isArray(value.questions)
-    || !Array.isArray(value.reviewTopics)
-    || value.total !== value.questions.length
-  ) return false;
-  const correct = value.questions.filter((question) => question.isCorrect).length;
-  const unanswered = value.questions.filter((question) => question.isUnanswered).length;
-  return correct === value.correct
-    && unanswered === value.unanswered
-    && new Set(value.questions.map((question) => question.questionId)).size === value.questions.length
-    && value.questions.every((question) => isValidThemeQuestionResult(question))
-    && value.reviewTopics.every((topic) => isNonEmptyString(topic.topicId)
-      && isNonEmptyString(topic.topicTitle)
-      && isNonNegativeInteger(topic.incorrectCount));
-}
+    attemptsByQuestionId.size !== questions.length
+    || completionByQuestionId.size !== value.completion.answers.length
+    || !Number.isFinite(passRate)
+  ) return null;
 
-function isValidThemeQuestionResult(value: ThemeExamResult["questions"][number]): boolean {
-  return isNonEmptyString(value.questionId)
-    && isPositiveInteger(value.questionNumber)
-    && isChoiceOrNull(value.selected)
-    && isChoice(value.correctChoice)
-    && typeof value.isCorrect === "boolean"
-    && typeof value.isUnanswered === "boolean"
-    && value.isUnanswered === (value.selected === null)
-    && value.isCorrect === (value.selected !== null && value.selected === value.correctChoice)
-    && isNonEmptyString(value.topicId)
-    && isNonEmptyString(value.topicTitle);
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0;
-}
-
-function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-}
-
-function isPositiveInteger(value: unknown): value is number {
-  return isNonNegativeInteger(value) && value > 0;
-}
-
-function isRate(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+  const answers: Record<number, ChoiceKey | null> = {};
+  for (const question of questions) {
+    const attempt = attemptsByQuestionId.get(question.id);
+    if (
+      attempt === undefined
+      || attempt.questionType !== "theme_exam"
+      || attempt.topicId !== question.topicId
+      || !isChoiceOrNull(attempt.selectedAnswer)
+      || !isStrictOffsetIsoTimestamp(attempt.answeredAt)
+    ) return null;
+    const selected = attempt.selectedAnswer;
+    const isCorrect = selected !== null && selected === question.correctChoice;
+    if (attempt.isCorrect !== isCorrect) return null;
+    const completion = completionByQuestionId.get(question.id);
+    if (selected === null) {
+      if (completion !== undefined) return null;
+    } else if (
+      completion?.idempotencyKey !== assessmentAnswerIdempotencyKey(value.sessionId, question.id)
+      || completion.topicId !== question.topicId
+      || completion.isCorrect !== isCorrect
+      || completion.answeredAt !== attempt.answeredAt
+    ) return null;
+    answers[question.questionNumber] = selected;
+  }
+  if (completionByQuestionId.size !== Object.values(answers).filter((answer) => answer !== null).length) {
+    return null;
+  }
+  return gradeThemeExam({
+    sessionId: value.sessionId,
+    themeSlug: value.baseState.themeSlug,
+    questions: [...questions],
+    answers,
+    passRate,
+  });
 }
 
 function isChoice(value: unknown): value is ChoiceKey {
@@ -148,6 +148,10 @@ function isChoice(value: unknown): value is ChoiceKey {
 
 function isChoiceOrNull(value: unknown): value is ChoiceKey | null {
   return value === null || isChoice(value);
+}
+
+function isSameJson(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 /** 選択肢の並びを問題ごとに1度だけ決める（表示のたびに変わらないようにする）。 */
@@ -250,7 +254,22 @@ export default function ThemeExamRunner({
     setPersistenceError(null);
     try {
       const finalized = await resumePendingAssessmentFinalization(pending, {
-        validate: (value) => isValidThemeFrozenFinalization(value, examId),
+        validate: (value) => isValidThemeFrozenFinalization(
+          value,
+          examId,
+          themeSlug,
+          questions,
+          passRate,
+        ),
+        rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
+          const result = rebuildThemeExamResult(
+            { baseState, attempts, completion, sessionId },
+            questions,
+            passRate,
+          );
+          if (result === null) throw new Error("Assessment finalization result is inconsistent");
+          return result;
+        },
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
@@ -278,11 +297,15 @@ export default function ThemeExamRunner({
       if (!isActive()) return;
       const nextState = finalized.nextState;
       if (nextState === undefined) throw new Error("Assessment next state was not persisted");
+      if (nextState.appState !== null) {
+        if (!saveAppStateVerified(nextState.appState)) {
+          throw new Error("Assessment finalization local state could not be persisted");
+        }
+      }
       if (!clearPendingAssessmentFinalization(finalized.sessionId)) {
         throw new Error("Assessment finalization could not be cleared");
       }
       if (nextState.appState !== null) {
-        saveAppState(nextState.appState);
         setAppState(nextState.appState);
       }
       setResult(finalized.result);
@@ -298,7 +321,7 @@ export default function ThemeExamRunner({
       finalizingRef.current = false;
       if (isActive()) setSubmitting(false);
     }
-  }, [examId, setAppState]);
+  }, [examId, passRate, questions, setAppState, themeSlug]);
 
   useEffect(() => {
     const pending = findPendingAssessmentFinalization(

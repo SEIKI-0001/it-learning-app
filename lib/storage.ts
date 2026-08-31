@@ -83,6 +83,22 @@ export function saveAppState(state: AppState): void {
   }
 }
 
+/**
+ * Writes an AppState only when the browser can confirm that the exact frozen
+ * payload is readable again. Assessment finalization uses this before clearing
+ * its durable retry record; ordinary best-effort callers keep saveAppState.
+ */
+export function saveAppStateVerified(state: AppState): boolean {
+  if (!isBrowser()) return false;
+  try {
+    const serialized = JSON.stringify(state);
+    window.localStorage.setItem(STORAGE_KEY, serialized);
+    return window.localStorage.getItem(STORAGE_KEY) === serialized;
+  } catch {
+    return false;
+  }
+}
+
 /** すべての保存データを初期化する。 */
 export function resetAppState(): void {
   if (!isBrowser()) return;

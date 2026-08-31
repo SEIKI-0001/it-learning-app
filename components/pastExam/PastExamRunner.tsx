@@ -37,7 +37,8 @@ import {
   withAnswer,
   withAnswerExposure,
 } from "@/lib/pastExam/session";
-import { loadAppState, saveAppState } from "@/lib/storage";
+import { loadAppState, saveAppStateVerified } from "@/lib/storage";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 import {
   abandonAssessmentSessionForCurrentSession,
   assessmentAnswerIdempotencyKey,
@@ -76,6 +77,80 @@ function hasFrozenFinalization(
   return pending?.action === "complete" && pending.finalization !== undefined;
 }
 
+/**
+ * The official session schema can establish that its nested payload is shaped
+ * correctly, but only this runner has the immutable question frame needed to
+ * bind answer snapshots, strict attempts, and every result aggregate together.
+ */
+function rebuildOfficialPastExamResult(
+  value: Pick<PastExamPendingFinalization,
+    "sessionId" | "attempts" | "completion" | "baseState"
+  >,
+  questions: readonly PastExamQuestionView[],
+): PastExamResult | null {
+  const { baseState } = value;
+  if (
+    questions.length === 0
+    || new Set(questions.map((question) => question.id)).size !== questions.length
+    || new Set(questions.map((question) => question.questionNumber)).size !== questions.length
+    || !questions.every((question) => question.year === baseState.year)
+    || value.attempts.length !== questions.length
+    || new Set(value.attempts.map((attempt) => attempt.questionId)).size !== value.attempts.length
+  ) return null;
+  const questionsByNumber = new Map(questions.map((question) => [question.questionNumber, question]));
+  const questionIds = new Set(questions.map((question) => question.id));
+  if (!Object.keys(baseState.answerSnapshot).every((key) => {
+    const number = Number(key);
+    return Number.isInteger(number) && questionsByNumber.has(number);
+  })) return null;
+  const attemptsByQuestionId = new Map(value.attempts.map((attempt) => [attempt.questionId, attempt]));
+  for (const question of questions) {
+    const answer = baseState.answerSnapshot[question.questionNumber];
+    const attempt = attemptsByQuestionId.get(question.id);
+    const selected = answer?.selected ?? null;
+    const isCorrect = selected !== null && selected === question.correctChoice;
+    if (
+      attempt === undefined
+      || !questionIds.has(attempt.questionId)
+      || attempt.questionType !== "official_past"
+      || attempt.topicId !== question.topicId
+      || attempt.selectedAnswer !== selected
+      || attempt.isCorrect !== isCorrect
+      || attempt.attemptMode !== baseState.mode
+      || attempt.attemptGroupId !== value.sessionId
+      || attempt.timeSpentSeconds !== (answer?.timeSpentSeconds ?? null)
+      || attempt.answeredAt !== (answer?.answeredAt ?? null)
+      || (answer !== undefined && !isStrictOffsetIsoTimestamp(answer.answeredAt))
+    ) return null;
+  }
+  return gradePastExam({
+    sessionId: value.sessionId,
+    year: baseState.year,
+    mode: baseState.mode,
+    questions: [...questions],
+    answers: baseState.answerSnapshot,
+  });
+}
+
+function isValidOfficialPastFinalizationForRunner(
+  value: PastExamPendingFinalization,
+  session: PastExamSession,
+  questions: readonly PastExamQuestionView[],
+): boolean {
+  if (!isValidOfficialPastFinalizationForSession(
+    value,
+    session.sessionId,
+    session.year,
+    session.mode,
+  )) return false;
+  const canonical = rebuildOfficialPastExamResult(value, questions);
+  return canonical !== null && isSameJson(value.result, canonical);
+}
+
+function isSameJson(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const [phase, setPhase] = useState<Phase>("select");
   const [session, setSession] = useState<PastExamSession | null>(null);
@@ -94,7 +169,10 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const submittedRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const finalizingRef = useRef(false);
-  const [finalizing, setFinalizing] = useState(false);
+  const finalizingIdentityRef = useRef<string | null>(null);
+  const finalizationGenerationRef = useRef(0);
+  const identityGenerationRef = useRef<string | null>(null);
+  const [finalizingIdentity, setFinalizingIdentity] = useState<string | null>(null);
   const [startingMode, setStartingMode] = useState<PastExamMode | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const pendingStartRef = useRef<Partial<Record<PastExamMode, PastExamSession>>>({});
@@ -109,6 +187,14 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     || identity?.authState === "anonymous";
   const userId = identity?.authState === "authenticated" ? identity.userId : null;
   const sessionUserId = userReady ? userId : "__unverified__";
+  const finalizationIdentity = `${sessionUserId}:${year}`;
+  // A stale promise may retain its old state, but it must not disable controls
+  // for a new user/year identity while its old remote request settles.
+  const finalizing = finalizingIdentity === finalizationIdentity;
+  const isFinalizingCurrentIdentity = useCallback(
+    () => finalizingRef.current && finalizingIdentityRef.current === finalizationIdentity,
+    [finalizationIdentity],
+  );
 
   useEffect(() => {
     if (userReady && session) saveSession(sessionUserId, session);
@@ -165,9 +251,15 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     storageUserId: string | null,
     isActive: () => boolean = () => true,
   ): Promise<boolean> => {
-    if (finalizingRef.current) return false;
+    if (isFinalizingCurrentIdentity()) return false;
+    const operationIdentity = finalizationIdentity;
+    const operationGeneration = finalizationGenerationRef.current;
+    const isCurrentOperation = () => isActive()
+      && finalizingIdentityRef.current === operationIdentity
+      && finalizationGenerationRef.current === operationGeneration;
     finalizingRef.current = true;
-    setFinalizing(true);
+    finalizingIdentityRef.current = operationIdentity;
+    setFinalizingIdentity(operationIdentity);
     submittedRef.current = true;
     setSubmitting(true);
     setPersistenceError(null);
@@ -175,12 +267,15 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       let persistedSession = current;
       try {
         const finalized = await resumePendingAssessmentFinalization(pending.finalization, {
-          validate: (value) => isValidOfficialPastFinalizationForSession(
-            value,
-            current.sessionId,
-            current.year,
-            current.mode,
-          ),
+          validate: (value) => isValidOfficialPastFinalizationForRunner(value, current, questions),
+          rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
+            const result = rebuildOfficialPastExamResult(
+              { baseState, attempts, completion, sessionId },
+              questions,
+            );
+            if (result === null) throw new Error("Assessment finalization result is inconsistent");
+            return result;
+          },
           // Official past exams already have a durable, user-scoped session
           // record. Keep this nested there instead of creating a competing key.
           freeze: (value) => {
@@ -213,7 +308,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
               throw new Error("Could not reload pending assessment finalization");
             }
             persistedSession = restored;
-            if (isActive()) setSession(restored);
+            if (isCurrentOperation()) setSession(restored);
             return restored.pendingMutation.finalization;
           },
           saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
@@ -242,29 +337,36 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         if (finalized.nextState === undefined) {
           throw new Error("Assessment finalization was not fully persisted");
         }
+        if (finalized.nextState.appState !== null) {
+          if (!saveAppStateVerified(finalized.nextState.appState)) {
+            throw new Error("Assessment finalization local state could not be persisted");
+          }
+        }
         if (!clearSession(storageUserId, year, current.mode)) {
           throw new Error("Assessment finalization could not be cleared");
         }
-        if (finalized.nextState.appState !== null) {
-          saveAppState(finalized.nextState.appState);
-        }
-        if (isActive()) {
+        if (isCurrentOperation()) {
           setSession(null);
           setResult(finalized.result);
           setPhase("result");
         }
         return true;
       } catch {
-        submittedRef.current = false;
-        if (isActive()) {
+        if (isCurrentOperation()) {
+          submittedRef.current = false;
           setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
         }
         return false;
       } finally {
-        finalizingRef.current = false;
-        if (isActive()) {
+        const ownsOperation = isCurrentOperation();
+        if (finalizingIdentityRef.current === operationIdentity
+          && finalizationGenerationRef.current === operationGeneration) {
+          finalizingRef.current = false;
+          finalizingIdentityRef.current = null;
+        }
+        if (ownsOperation) {
           setSubmitting(false);
-          setFinalizing(false);
+          setFinalizingIdentity(null);
         }
       }
     }
@@ -313,37 +415,61 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         appStateToCommit = next;
       }
 
+      if (appStateToCommit !== null && !saveAppStateVerified(appStateToCommit)) {
+        throw new Error("Assessment finalization local state could not be persisted");
+      }
       if (!clearSession(storageUserId, year, current.mode)) {
         throw new Error("Assessment finalization could not be cleared");
       }
-      if (appStateToCommit !== null) saveAppState(appStateToCommit);
-      if (isActive()) {
+      if (isCurrentOperation()) {
         setSession(null);
         setResult(graded);
         setPhase("result");
       }
       return true;
     } catch {
-      submittedRef.current = false;
-      if (isActive()) {
+      if (isCurrentOperation()) {
+        submittedRef.current = false;
         setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
       }
       return false;
     } finally {
-      finalizingRef.current = false;
-      if (isActive()) {
+      const ownsOperation = isCurrentOperation();
+      if (finalizingIdentityRef.current === operationIdentity
+        && finalizationGenerationRef.current === operationGeneration) {
+        finalizingRef.current = false;
+        finalizingIdentityRef.current = null;
+      }
+      if (ownsOperation) {
         setSubmitting(false);
-        setFinalizing(false);
+        setFinalizingIdentity(null);
       }
     }
-  }, [questions, year]);
+  }, [finalizationIdentity, isFinalizingCurrentIdentity, questions, year]);
 
   useEffect(() => {
+    if (identityGenerationRef.current !== finalizationIdentity) {
+      identityGenerationRef.current = finalizationIdentity;
+      finalizationGenerationRef.current += 1;
+      autoResumedSessionRef.current = null;
+      // A completion for another identity may still finish remotely, but its
+      // UI/lock ownership ends at the identity boundary. Otherwise returning
+      // to the old year after it settles can resurrect its stale lock.
+      if (finalizingIdentityRef.current !== null
+        && finalizingIdentityRef.current !== finalizationIdentity) {
+        finalizingRef.current = false;
+        finalizingIdentityRef.current = null;
+        submittedRef.current = false;
+        setSubmitting(false);
+        setFinalizingIdentity(null);
+      }
+    }
     if (!userReady) return;
     const existing = loadSession(sessionUserId, year, "exam");
     if (!existing || !hasFrozenFinalization(existing.pendingMutation)) return;
-    if (autoResumedSessionRef.current === existing.sessionId) return;
-    autoResumedSessionRef.current = existing.sessionId;
+    const autoResumeKey = `${finalizationIdentity}:${existing.sessionId}`;
+    if (autoResumedSessionRef.current === autoResumeKey) return;
+    autoResumedSessionRef.current = autoResumeKey;
     let active = true;
     void commitPendingCompletion(
       existing,
@@ -354,14 +480,14 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     return () => {
       active = false;
     };
-  }, [commitPendingCompletion, sessionUserId, userReady, year]);
+  }, [commitPendingCompletion, finalizationIdentity, sessionUserId, userReady, year]);
 
   const settleExistingBeforeStart = useCallback(async (
     existing: PastExamSession,
     storageUserId: string | null,
     forceAbandon: boolean,
   ): Promise<"continue" | "settled" | "failed"> => {
-    if (finalizingRef.current) return "failed";
+    if (isFinalizingCurrentIdentity()) return "failed";
     if (existing.pendingMutation?.action === "complete") {
       const completed = await commitPendingCompletion(
         existing,
@@ -398,11 +524,11 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       setPersistenceError("前回のセッションを終了できませんでした。もう一度お試しください。");
       return "failed";
     }
-  }, [commitPendingCompletion, year]);
+  }, [commitPendingCompletion, isFinalizingCurrentIdentity, year]);
 
   const start = useCallback(
     async (mode: PastExamMode) => {
-      if (startingMode !== null || finalizingRef.current) return;
+      if (startingMode !== null || isFinalizingCurrentIdentity()) return;
       setStartingMode(mode);
       setPersistenceError(null);
       let existing = userReady ? loadSession(sessionUserId, year, mode) : null;
@@ -436,12 +562,12 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         setStartingMode(null);
       }
     },
-    [allowSubmit, persist, questions.length, sessionUserId, settleExistingBeforeStart, startingMode, userReady, year],
+    [allowSubmit, isFinalizingCurrentIdentity, persist, questions.length, sessionUserId, settleExistingBeforeStart, startingMode, userReady, year],
   );
 
   const restart = useCallback(
     async (mode: PastExamMode) => {
-      if (startingMode !== null || finalizingRef.current) return;
+      if (startingMode !== null || isFinalizingCurrentIdentity()) return;
       setStartingMode(mode);
       setPersistenceError(null);
       const existing = userReady ? loadSession(sessionUserId, year, mode) : null;
@@ -473,13 +599,13 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         setStartingMode(null);
       }
     },
-    [allowSubmit, persist, questions.length, sessionUserId, settleExistingBeforeStart, startingMode, userReady, year],
+    [allowSubmit, isFinalizingCurrentIdentity, persist, questions.length, sessionUserId, settleExistingBeforeStart, startingMode, userReady, year],
   );
 
   const finish = useCallback(
     async (current: PastExamSession) => {
       // 2回目以降は何もしない。ここを通すと保存も採点もやり直される。
-      if (submittedRef.current || finalizingRef.current) return;
+      if (submittedRef.current || isFinalizingCurrentIdentity()) return;
       submittedRef.current = true;
       setSubmitting(true);
       setPersistenceError(null);
@@ -631,7 +757,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         setSubmitting(false);
       }
     },
-    [commitPendingCompletion, questions, resolveMutationStorageUserId, userId, year],
+    [commitPendingCompletion, isFinalizingCurrentIdentity, questions, resolveMutationStorageUserId, userId, year],
   );
 
   if (phase === "result" && result) {

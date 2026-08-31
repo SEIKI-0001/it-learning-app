@@ -16,7 +16,8 @@ import {
   type MockExamResult,
 } from "@/lib/mockExam";
 import { useAppState } from "@/lib/useAppState";
-import { saveAppState } from "@/lib/storage";
+import { saveAppStateVerified } from "@/lib/storage";
+import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 import {
   assessmentAnswerIdempotencyKey,
   completeAssessmentSessionForCurrentSession,
@@ -48,6 +49,8 @@ const FIELDS: TopicField[] = ["strategy", "management", "technology"];
 type MockFinalizationBase = {
   appState: AppState;
   tagged: UserAnswer[];
+  /** The selected 100-question frame is part of the frozen result authority. */
+  exam: MockExam;
 };
 
 type MockFinalizationNext = { appState: AppState };
@@ -68,61 +71,81 @@ function isValidMockFrozenFinalization(value: MockPendingFinalization): boolean 
   if (
     !isValidAssessmentAppState(baseState.appState)
     || !isValidAssessmentUserAnswers(baseState.tagged)
-    || !isValidMockExamResult(value.result)
+    || rebuildMockExamResult(value) === null
+    || !isSameJson(value.result, rebuildMockExamResult(value))
   ) return false;
   if (!Object.hasOwn(value, "nextState")) return true;
   return value.nextState !== undefined && isValidAssessmentAppState(value.nextState.appState);
 }
 
-function isValidMockExamResult(value: MockExamResult): boolean {
+/**
+ * Rebuild the score from the durable question frame rather than accepting a
+ * browser-cached aggregate. The same validation also binds every strict
+ * attempt/completion answer to the immutable mock question it represents.
+ */
+function rebuildMockExamResult(value: Pick<MockPendingFinalization,
+  "sessionId" | "attempts" | "completion" | "baseState"
+>): MockExamResult | null {
+  const { exam, tagged } = value.baseState;
+  const catalog = new Map(getAllTopics().flatMap((topic) => topic.checkQuestions.map((question) => [
+    question.id,
+    { question, topicId: topic.id, field: topic.field },
+  ])));
   if (
-    !isNonNegativeInteger(value.correct)
-    || !isNonNegativeInteger(value.total)
-    || !isFieldScores(value.fieldScores)
-    || !Array.isArray(value.topicScores)
-    || !Array.isArray(value.weakTopics)
-    || !isStringArray(value.wrongTopicIds)
-  ) return false;
-  return value.topicScores.every((score) => isNonEmptyString(score.topicId)
-    && isNonNegativeInteger(score.correct)
-    && isNonNegativeInteger(score.total)
-    && isRate(score.rate))
-    && value.weakTopics.every((topic) => isNonEmptyString(topic.topicId)
-      && isRate(topic.severity)
-      && isWeakTopicReason(topic.reason));
+    !isValidFrozenMockExam(exam, catalog)
+    || new Set(tagged.map((answer) => answer.questionId)).size !== tagged.length
+    || new Set(value.attempts.map((attempt) => attempt.questionId)).size !== value.attempts.length
+    || value.attempts.length !== tagged.length
+  ) return null;
+
+  const taggedByQuestionId = new Map(tagged.map((answer) => [answer.questionId, answer]));
+  const attemptsByQuestionId = new Map(value.attempts.map((attempt) => [attempt.questionId, attempt]));
+  for (const [questionId, answer] of taggedByQuestionId) {
+    const source = catalog.get(questionId);
+    const attempt = attemptsByQuestionId.get(questionId);
+    if (
+      source === undefined
+      || answer.topicId !== source.topicId
+      || exam.topicIdByQuestionId[questionId] !== source.topicId
+      || attempt === undefined
+      || attempt.questionType !== "mock_exam"
+      || attempt.topicId !== source.topicId
+      || attempt.selectedAnswer !== (answer.selectedChoice ?? null)
+      || attempt.isCorrect !== (answer.selectedChoice !== undefined
+        && answer.selectedChoice === source.question.correctChoice)
+      || attempt.answeredAt !== answer.answeredAt
+      || attempt.attemptGroupId !== value.sessionId
+      || !isStrictOffsetIsoTimestamp(attempt.answeredAt)
+      || answer.isCorrect !== (answer.selectedChoice !== undefined
+        && answer.selectedChoice === source.question.correctChoice)
+    ) return null;
+  }
+
+  return scoreMockExam(exam, tagged);
 }
 
-function isFieldScores(value: unknown): boolean {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
-  return (["strategy", "management", "technology"] as const).every((field) => {
-    const score = (value as Record<string, unknown>)[field];
-    return typeof score === "object" && score !== null && !Array.isArray(score)
-      && isNonNegativeInteger((score as Record<string, unknown>).correct)
-      && isNonNegativeInteger((score as Record<string, unknown>).total);
+function isValidFrozenMockExam(
+  exam: MockExam,
+  catalog: ReadonlyMap<string, { question: MockExam["questions"][number]; topicId: string; field: TopicField }>,
+): boolean {
+  const ids = exam.questions.map((question) => question.id);
+  if (
+    exam.questions.length !== MOCK_EXAM_RULE.questionCount
+    || new Set(ids).size !== ids.length
+    || Object.keys(exam.topicIdByQuestionId).length !== ids.length
+    || Object.keys(exam.fieldByQuestionId).length !== ids.length
+  ) return false;
+  return exam.questions.every((question) => {
+    const source = catalog.get(question.id);
+    return source !== undefined
+      && isSameJson(question, source.question)
+      && exam.topicIdByQuestionId[question.id] === source.topicId
+      && exam.fieldByQuestionId[question.id] === source.field;
   });
 }
 
-function isWeakTopicReason(value: unknown): boolean {
-  return value === "low_mastery"
-    || value === "summary_exam_miss"
-    || value === "review_failure"
-    || value === "repeated_miss";
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.length > 0;
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(isNonEmptyString);
-}
-
-function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
-}
-
-function isRate(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+function isSameJson(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 export default function MockExamPage() {
@@ -159,6 +182,11 @@ export default function MockExamPage() {
     try {
       const finalized = await resumePendingAssessmentFinalization(pending, {
         validate: isValidMockFrozenFinalization,
+        rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
+          const result = rebuildMockExamResult({ baseState, attempts, completion, sessionId });
+          if (result === null) throw new Error("Assessment finalization result is inconsistent");
+          return result;
+        },
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
@@ -184,10 +212,12 @@ export default function MockExamPage() {
       if (finalized.nextState === undefined || finalized.exposureResult === undefined) {
         throw new Error("Assessment finalization was not fully persisted");
       }
+      if (!saveAppStateVerified(finalized.nextState.appState)) {
+        throw new Error("Assessment finalization local state could not be persisted");
+      }
       if (!clearPendingAssessmentFinalization(finalized.sessionId)) {
         throw new Error("Assessment finalization could not be cleared");
       }
-      saveAppState(finalized.nextState.appState);
       setState(finalized.nextState.appState);
       setResult(finalized.result);
       if (finalized.exposureResult.userId) {
@@ -305,7 +335,7 @@ export default function MockExamPage() {
                 answeredAt: answer.answeredAt,
               }]),
             },
-            baseState: { appState, tagged },
+            baseState: { appState, tagged, exam },
             result: scored,
           };
         })();

@@ -46,11 +46,12 @@ const saveAssessmentQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn()
 const saveProgressToDb = vi.hoisted(() => vi.fn());
 const startAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
 const completeAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
+const saveAppStateVerified = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/useAppState", () => ({
   useAppState: () => [flow.hasState ? flow.before : undefined, flow.setAppState],
 }));
-vi.mock("@/lib/storage", () => ({ saveAppState: vi.fn() }));
+vi.mock("@/lib/storage", () => ({ saveAppState: vi.fn(), saveAppStateVerified }));
 vi.mock("@/lib/userSession", () => ({
   assessmentAnswerIdempotencyKey: (sessionId: string, questionId: string) =>
     `assessment:${sessionId}:${questionId}`,
@@ -140,6 +141,7 @@ beforeEach(() => {
     status: "completed",
   });
   saveProgressToDb.mockResolvedValue(true);
+  saveAppStateVerified.mockReturnValue(true);
 });
 
 afterEach(() => {
@@ -199,6 +201,82 @@ describe("ThemeExamRunner exposure integration", () => {
           topicTitle: question.topicTitle,
         }],
         reviewTopics: [],
+      },
+    }));
+
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-computer-basics"
+        themeSlug="computer-basics"
+        themeTitle="コンピュータ基礎"
+        passRate={60}
+        questions={[question]}
+      />,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(saveAssessmentQuestionAttemptsForCurrentSession).not.toHaveBeenCalled();
+    expect(completeAssessmentSessionForCurrentSession).not.toHaveBeenCalled();
+    expect(saveProgressToDb).not.toHaveBeenCalled();
+  });
+
+  it("rejects a shape-valid summary result that disagrees with its frozen attempt frame", async () => {
+    const sessionId = "20000000-0000-4000-8000-000000000001";
+    window.localStorage.setItem(pendingAssessmentFinalizationStorageKey(sessionId), JSON.stringify({
+      version: 1,
+      sessionId,
+      source: "summary",
+      attempts: [{
+        questionId: question.id,
+        questionType: "theme_exam",
+        topicId: question.topicId,
+        selectedAnswer: "A",
+        isCorrect: true,
+        answeredAt: "2026-08-30T00:00:00.000Z",
+        attemptGroupId: sessionId,
+      }],
+      completion: {
+        action: "complete",
+        sessionId,
+        completedAt: "2026-08-30T00:00:00.000Z",
+        answers: [{
+          idempotencyKey: `assessment:${sessionId}:${question.id}`,
+          canonicalQuestionId: question.id,
+          topicId: question.topicId,
+          isCorrect: true,
+          answeredAt: "2026-08-30T00:00:00.000Z",
+        }],
+      },
+      baseState: {
+        appState: flow.before,
+        examId: "theme-exam-computer-basics",
+        themeSlug: "computer-basics",
+      },
+      // This is a complete result shape, but describes B/incorrect while the
+      // immutable strict-attempt payload describes A/correct.
+      result: {
+        sessionId,
+        themeSlug: "computer-basics",
+        total: 1,
+        correct: 0,
+        unanswered: 0,
+        rate: 0,
+        passed: false,
+        questions: [{
+          questionId: question.id,
+          questionNumber: 1,
+          selected: "B",
+          correctChoice: "A",
+          isCorrect: false,
+          isUnanswered: false,
+          topicId: question.topicId,
+          topicTitle: question.topicTitle,
+        }],
+        reviewTopics: [{
+          topicId: question.topicId,
+          topicTitle: question.topicTitle,
+          incorrectCount: 1,
+        }],
       },
     }));
 
@@ -548,5 +626,28 @@ describe("ThemeExamRunner exposure integration", () => {
     removeItem.mockRestore();
     fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
     expect(await screen.findByText("合格ライン到達")).toBeInTheDocument();
+  });
+
+  it("keeps the frozen summary pending when verified local AppState persistence fails", async () => {
+    saveAppStateVerified.mockReturnValue(false);
+    const props = {
+      examId: "theme-exam-computer-basics",
+      themeSlug: "computer-basics",
+      themeTitle: "コンピュータ基礎",
+      passRate: 60,
+      questions: [question],
+    };
+    render(<ThemeExamRunner {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.queryByText("合格ライン到達")).not.toBeInTheDocument();
+    expect(flow.setAppState).not.toHaveBeenCalled();
+    expect(saveAppStateVerified).toHaveBeenCalledOnce();
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(true);
   });
 });

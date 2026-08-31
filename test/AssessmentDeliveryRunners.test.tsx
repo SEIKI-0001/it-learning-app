@@ -144,6 +144,14 @@ type Deferred = {
   resolve: (response: Response) => void;
 };
 
+type MutableFrozenRunnerFinalization = {
+  result: Record<string, unknown>;
+  baseState: {
+    tagged?: Array<{ isCorrect: boolean }>;
+    answers?: Array<{ isCorrect: boolean }>;
+  };
+};
+
 function deferredResponse(): Deferred {
   let resolve!: (response: Response) => void;
   const promise = new Promise<Response>((done) => {
@@ -723,5 +731,145 @@ describe("assessment delivery runners", () => {
     removeItem.mockRestore();
     fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
     await waitFor(() => expect(harness.setState).toHaveBeenCalledOnce());
+  });
+
+  it.each([
+    ["mock", () => render(<MockExamPage />), /模試を始める/],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+    ],
+    ["checkpoint final", () => render(<FinalExamPage />), /突破試験に挑む/],
+  ] as const)("%s keeps the frozen record and result hidden when local AppState read-back fails", async (
+    _name,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch();
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    const setItem = vi.spyOn(window.localStorage, "setItem").mockImplementation((key, value) => {
+      if (key === "fequest:appstate") {
+        throw new DOMException("storage is unavailable");
+      }
+      storageValues.set(key, String(value));
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(harness.setState).not.toHaveBeenCalled();
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(true);
+
+    setItem.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
+    await waitFor(() => expect(harness.setState).toHaveBeenCalledOnce());
+  });
+
+  it.each([
+    [
+      "mock",
+      () => render(<MockExamPage />),
+      /模試を始める/,
+      (value: MutableFrozenRunnerFinalization) => {
+        value.result = { ...value.result, correct: 0 };
+      },
+    ],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+      (value: MutableFrozenRunnerFinalization) => {
+        const [answer] = value.baseState.tagged ?? [];
+        if (answer === undefined) throw new Error("missing checkpoint answer");
+        answer.isCorrect = false;
+        value.result = { ...value.result, correct: 0 };
+      },
+    ],
+    [
+      "checkpoint final",
+      () => render(<FinalExamPage />),
+      /突破試験に挑む/,
+      (value: MutableFrozenRunnerFinalization) => {
+        const [answer] = value.baseState.answers ?? [];
+        if (answer === undefined) throw new Error("missing final answer");
+        answer.isCorrect = false;
+      },
+    ],
+  ] as const)("%s rejects a shape-valid result/base frame that disagrees with frozen attempts before every remote replay", async (
+    _name,
+    renderRunner,
+    startName,
+    forge,
+  ) => {
+    installFetch(undefined, {}, undefined, 1);
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    const key = [...storageValues.keys()].find((item) =>
+      item.startsWith("fequest:assessmentFinalization:"),
+    );
+    expect(key).toBeDefined();
+    const frozen = JSON.parse(storageValues.get(key!)!) as MutableFrozenRunnerFinalization;
+    forge(frozen);
+    storageValues.set(key!, JSON.stringify(frozen));
+    const attemptCount = requestBodies("/api/question-attempts/save").length;
+    const completionCount = requestBodies("/api/assessment-sessions")
+      .filter((body) => body.action === "complete").length;
+    const progressCount = requestBodies("/api/progress/save").length;
+
+    cleanup();
+    renderRunner();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(requestBodies("/api/question-attempts/save")).toHaveLength(attemptCount);
+    expect(requestBodies("/api/assessment-sessions").filter((body) => body.action === "complete"))
+      .toHaveLength(completionCount);
+    expect(requestBodies("/api/progress/save")).toHaveLength(progressCount);
+  });
+
+  it("checkpoint final rejects a forged pass rule before it can replay a forged canonical result", async () => {
+    installFetch(undefined, {}, undefined, 1);
+    render(<FinalExamPage />);
+    fireEvent.click(screen.getByRole("button", { name: /突破試験に挑む/ }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    const key = [...storageValues.keys()].find((item) =>
+      item.startsWith("fequest:assessmentFinalization:"),
+    );
+    expect(key).toBeDefined();
+    const frozen = JSON.parse(storageValues.get(key!)!) as {
+      baseState: {
+        exam: { rule: { passThreshold: number } };
+        attempt: { passed: boolean };
+      };
+      result: { passed: boolean };
+    };
+    // Keep the browser payload internally self-consistent while changing the
+    // externally-defined pass rule. A runner must bind it to checkpoint data.
+    frozen.baseState.exam.rule.passThreshold = 0;
+    frozen.baseState.attempt.passed = true;
+    frozen.result.passed = true;
+    storageValues.set(key!, JSON.stringify(frozen));
+    const attemptCount = requestBodies("/api/question-attempts/save").length;
+    const completionCount = requestBodies("/api/assessment-sessions")
+      .filter((body) => body.action === "complete").length;
+    const progressCount = requestBodies("/api/progress/save").length;
+
+    cleanup();
+    render(<FinalExamPage />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(requestBodies("/api/question-attempts/save")).toHaveLength(attemptCount);
+    expect(requestBodies("/api/assessment-sessions").filter((body) => body.action === "complete"))
+      .toHaveLength(completionCount);
+    expect(requestBodies("/api/progress/save")).toHaveLength(progressCount);
   });
 });

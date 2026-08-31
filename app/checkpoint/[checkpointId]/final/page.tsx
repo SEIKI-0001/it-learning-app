@@ -8,7 +8,7 @@ import type { CheckpointId } from "@/types/checkpoint";
 import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
-import { saveAppState } from "@/lib/storage";
+import { saveAppStateVerified } from "@/lib/storage";
 import {
   assessmentAnswerIdempotencyKey,
   completeAssessmentSessionForCurrentSession,
@@ -24,7 +24,7 @@ import {
   resumePendingAssessmentFinalization,
   type PendingAssessmentFinalization,
 } from "@/lib/examReadiness/pendingFinalization";
-import { getTopic } from "@/lib/content";
+import { getAllTopics, getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
 import {
   CHECKPOINTS,
@@ -95,10 +95,63 @@ function isValidCheckpointFinalFrozenFinalization(
     || !isValidAssessmentUserAnswers(baseState.answers)
     || !isValidFinalExamAttempt(baseState.attempt, expectedCheckpointId)
     || !isValidBadgeSignals(baseState.signals)
-    || !isValidFinalExamResult(value.result, baseState.attempt)
+    || rebuildCheckpointFinalResult(value, expectedCheckpointId) === null
+    || !isSameJson(value.result, rebuildCheckpointFinalResult(value, expectedCheckpointId))
   ) return false;
   if (!Object.hasOwn(value, "nextState")) return true;
   return value.nextState !== undefined && isValidAssessmentAppState(value.nextState.appState);
+}
+
+/**
+ * Re-derives the final score from the frozen exam/answers and binds the
+ * durable strict-attempt payload to that same exact question frame.
+ */
+function rebuildCheckpointFinalResult(
+  value: Pick<CheckpointFinalPendingFinalization,
+    "sessionId" | "attempts" | "completion" | "baseState"
+  >,
+  checkpointId: CheckpointId,
+): FinalExamResult | null {
+  const { exam, answers, attempt } = value.baseState;
+  if (
+    !isValidFinalExam(exam, value.sessionId, checkpointId)
+    || new Set(answers.map((answer) => answer.questionId)).size !== answers.length
+    || value.attempts.length !== answers.length
+    || new Set(value.attempts.map((strictAttempt) => strictAttempt.questionId)).size
+      !== value.attempts.length
+  ) return null;
+  const questionsById = new Map(exam.questions.map((question) => [question.id, question]));
+  const attemptsByQuestionId = new Map(value.attempts.map((strictAttempt) => [
+    strictAttempt.questionId,
+    strictAttempt,
+  ]));
+  for (const answer of answers) {
+    const question = questionsById.get(answer.questionId);
+    const strictAttempt = attemptsByQuestionId.get(answer.questionId);
+    const isCorrect = answer.selectedChoice !== undefined
+      && question !== undefined
+      && answer.selectedChoice === question.correctChoice;
+    if (
+      question === undefined
+      || answer.topicId !== exam.topicIdByQuestionId[question.id]
+      || answer.isCorrect !== isCorrect
+      || strictAttempt === undefined
+      || strictAttempt.questionType !== "mini_exam"
+      || strictAttempt.topicId !== exam.topicIdByQuestionId[question.id]
+      || strictAttempt.selectedAnswer !== (answer.selectedChoice ?? null)
+      || strictAttempt.isCorrect !== isCorrect
+      || strictAttempt.answeredAt !== answer.answeredAt
+      || strictAttempt.attemptGroupId !== value.sessionId
+      || !isStrictOffsetIsoTimestamp(strictAttempt.answeredAt)
+    ) return null;
+  }
+  const result = scoreFinalExam(exam, answers);
+  const canonicalAttempt = buildFinalExamAttempt(
+    exam,
+    result,
+    new Date(value.completion.completedAt),
+  );
+  return isSameJson(attempt, canonicalAttempt) ? result : null;
 }
 
 function isValidFinalExam(
@@ -106,8 +159,11 @@ function isValidFinalExam(
   sessionId: string,
   checkpointId: CheckpointId,
 ): boolean {
+  const expectedRule = getCheckpoint(checkpointId).finalExam;
   if (
     value.checkpointId !== checkpointId
+    || expectedRule === null
+    || !isSameJson(value.rule, expectedRule)
     || value.attemptId !== sessionId
     || !isRecord(value.rule)
     || !isNonNegativeInteger(value.rule.questionCount)
@@ -125,9 +181,19 @@ function isValidFinalExam(
     || typeof value.reusedRecentQuestion !== "boolean"
   ) return false;
   const ids = value.questions.map((question) => question.id);
+  const catalog = new Map(getAllTopics().flatMap((topic) => topic.checkQuestions.map((question) => [
+    question.id,
+    { question, topicId: topic.id },
+  ])));
   return new Set(ids).size === ids.length
     && Object.keys(value.topicIdByQuestionId).length === ids.length
-    && ids.every((id) => isNonEmptyString(value.topicIdByQuestionId[id]));
+    && ids.every((id) => isNonEmptyString(value.topicIdByQuestionId[id]))
+    && value.questions.every((question) => {
+      const source = catalog.get(question.id);
+      return source !== undefined
+        && value.topicIdByQuestionId[question.id] === source.topicId
+        && isSameJson(question, source.question);
+    });
 }
 
 function isValidFinalExamAttempt(value: unknown, checkpointId: CheckpointId): boolean {
@@ -138,20 +204,6 @@ function isValidFinalExamAttempt(value: unknown, checkpointId: CheckpointId): bo
     && isNonNegativeInteger(value.total)
     && isStrictOffsetIsoTimestamp(value.attemptedAt)
     && isStringArray(value.wrongTopicIds);
-}
-
-function isValidFinalExamResult(
-  value: FinalExamResult,
-  attempt: CheckpointFinalizationBase["attempt"],
-): boolean {
-  return isNonNegativeInteger(value.correct)
-    && isNonNegativeInteger(value.total)
-    && typeof value.passed === "boolean"
-    && isStringArray(value.wrongTopicIds)
-    && value.correct === attempt.correct
-    && value.total === attempt.total
-    && value.passed === attempt.passed
-    && sameStrings(value.wrongTopicIds, attempt.wrongTopicIds);
 }
 
 function isValidBadgeSignals(value: unknown): boolean {
@@ -216,8 +268,8 @@ function isDifficulty(value: unknown): boolean {
   return value === 1 || value === 2 || value === 3;
 }
 
-function sameStrings(left: readonly string[], right: readonly string[]): boolean {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
+function isSameJson(left: unknown, right: unknown): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 export default function FinalExamPage() {
@@ -256,6 +308,14 @@ export default function FinalExamPage() {
     try {
       const finalized = await resumePendingAssessmentFinalization(pending, {
         validate: (value) => isValidCheckpointFinalFrozenFinalization(value, checkpointId),
+        rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
+          const result = rebuildCheckpointFinalResult(
+            { baseState, attempts, completion, sessionId },
+            checkpointId,
+          );
+          if (result === null) throw new Error("Assessment finalization result is inconsistent");
+          return result;
+        },
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
@@ -282,10 +342,12 @@ export default function FinalExamPage() {
       if (finalized.nextState === undefined) {
         throw new Error("Assessment finalization was not fully persisted");
       }
+      if (!saveAppStateVerified(finalized.nextState.appState)) {
+        throw new Error("Assessment finalization local state could not be persisted");
+      }
       if (!clearPendingAssessmentFinalization(finalized.sessionId)) {
         throw new Error("Assessment finalization could not be cleared");
       }
-      saveAppState(finalized.nextState.appState);
       setState(finalized.nextState.appState);
       setExam(finalized.baseState.exam);
       setResult(finalized.result);
@@ -412,8 +474,17 @@ export default function FinalExamPage() {
     const pending: CheckpointFinalPendingFinalization =
       pendingFinalizationRef.current ?? (() => {
           const completedAt = new Date().toISOString();
-          const scored = scoreFinalExam(exam, answers);
-          const frozenAnswers = answers.map((answer) => ({ ...answer }));
+          const frozenAnswers = answers.map((answer) => {
+            const question = exam.questions.find((item) => item.id === answer.questionId);
+            return {
+              ...answer,
+              topicId: question ? exam.topicIdByQuestionId[question.id] : answer.topicId,
+              isCorrect: answer.selectedChoice !== undefined
+                && question !== undefined
+                && answer.selectedChoice === question.correctChoice,
+            };
+          });
+          const scored = scoreFinalExam(exam, frozenAnswers);
           const attempt = buildFinalExamAttempt(exam, scored, new Date(completedAt));
           return {
             version: 1 as const,

@@ -42,6 +42,17 @@ export type PendingAssessmentFinalizationStages<TBase, TNext, TResult> = {
   validate?: (
     value: PendingAssessmentFinalization<TBase, TNext, TResult>,
   ) => boolean;
+  /**
+   * Rebuilds the display/result payload from the immutable request frame.
+   * A local result is never authoritative input to P0 derivation.
+   */
+  rederiveResult?: (params: {
+    baseState: TBase;
+    attempts: QuestionAttemptInput[];
+    completion: CompleteAssessmentSessionInput;
+    result: TResult;
+    sessionId: string;
+  }) => TResult;
   saveAttempts: (
     attempts: QuestionAttemptInput[],
   ) => Promise<AuthenticatedQuestionExposureResult>;
@@ -72,47 +83,57 @@ export async function resumePendingAssessmentFinalization<TBase, TNext, TResult>
     assertValidPendingAssessmentFinalization(frozen, stages.validate);
     return frozen;
   };
-  let frozen = freezeValidated(pending);
+  // Validate cross-field invariants before a replay can reach a remote stage,
+  // then replace any locally cached result with its deterministic source-of-
+  // truth reconstruction before the first durable transition.
+  assertValidPendingAssessmentFinalization(pending, stages.validate);
+  const canonicalResult = stages.rederiveResult?.({
+    baseState: pending.baseState,
+    attempts: pending.attempts,
+    completion: pending.completion,
+    result: pending.result,
+    sessionId: pending.sessionId,
+  }) ?? pending.result;
+  // Browser acknowledgement fields are never a receipt authority. Retain the
+  // immutable request frame only, then replace every receipt/next payload from
+  // fresh remote acknowledgements in this resume. This also prevents a forged
+  // local P0 snapshot from being persisted again before canonical derivation.
+  const requestFrame = { ...pending };
+  delete requestFrame.exposureResult;
+  delete requestFrame.completionAcknowledged;
+  delete requestFrame.nextState;
+  delete requestFrame.progressAcknowledged;
+  let frozen = freezeValidated({ ...requestFrame, result: canonicalResult });
 
-  if (frozen.exposureResult === undefined) {
-    const exposureResult = await stages.saveAttempts(frozen.attempts);
-    if (!isAuthenticatedExposureResult(exposureResult)) {
-      throw new Error("Assessment attempt save did not acknowledge authoritative exposure");
-    }
-    frozen = freezeValidated({ ...frozen, exposureResult });
+  // Local acknowledgements are a resume hint only. A browser record is not an
+  // authority for assessment receipts, so each resume replays every
+  // idempotent remote stage and replaces it with the server's current receipt.
+  const exposureResult = await stages.saveAttempts(frozen.attempts);
+  if (!isAuthenticatedExposureResult(exposureResult)) {
+    throw new Error("Assessment attempt save did not acknowledge authoritative exposure");
   }
+  frozen = freezeValidated({ ...frozen, exposureResult });
 
-  if (frozen.completionAcknowledged !== true) {
-    await stages.completeSession(frozen.completion);
-    frozen = freezeValidated({ ...frozen, completionAcknowledged: true });
-  }
+  await stages.completeSession(frozen.completion);
+  frozen = freezeValidated({ ...frozen, completionAcknowledged: true });
 
-  const exposureResult = frozen.exposureResult;
-  if (exposureResult === undefined) {
-    throw new Error("Assessment exposure acknowledgement was not persisted");
-  }
+  const nextState = stages.deriveNextState({
+    baseState: frozen.baseState,
+    result: frozen.result,
+    exposureResult,
+    completion: frozen.completion,
+  });
+  frozen = freezeValidated({ ...frozen, nextState });
 
-  if (!Object.hasOwn(frozen, "nextState")) {
-    const nextState = stages.deriveNextState({
-      baseState: frozen.baseState,
-      result: frozen.result,
-      exposureResult,
-      completion: frozen.completion,
-    });
-    frozen = freezeValidated({ ...frozen, nextState });
+  const progressSaved = await stages.saveProgress({
+    nextState,
+    exposureResult,
+    sessionId: frozen.sessionId,
+  });
+  if (!progressSaved) {
+    throw new Error("Assessment progress finalization was not acknowledged");
   }
-
-  if (frozen.progressAcknowledged !== true) {
-    const progressSaved = await stages.saveProgress({
-      nextState: frozen.nextState as TNext,
-      exposureResult,
-      sessionId: frozen.sessionId,
-    });
-    if (!progressSaved) {
-      throw new Error("Assessment progress finalization was not acknowledged");
-    }
-    frozen = freezeValidated({ ...frozen, progressAcknowledged: true });
-  }
+  frozen = freezeValidated({ ...frozen, progressAcknowledged: true });
 
   return frozen;
 }
@@ -209,6 +230,7 @@ export function isValidPendingAssessmentFinalization(
     || new Set(value.attempts.map((attempt) => attempt.questionId)).size !== value.attempts.length
     || !value.attempts.every((attempt) => attempt.attemptGroupId === sessionId)
     || !isCompletion(value.completion, sessionId)
+    || !hasCompletionAnswersMatchingAttempts(value.completion, value.attempts, sessionId)
     || !Object.hasOwn(value, "baseState")
     || value.baseState === undefined
     || !Object.hasOwn(value, "result")
@@ -496,6 +518,36 @@ function isAssessmentAnswer(value: unknown): boolean {
     && isNonEmptyString(value.topicId)
     && typeof value.isCorrect === "boolean"
     && isStrictOffsetIsoTimestamp(value.answeredAt);
+}
+
+/**
+ * Completion is a projection of the immutable attempt batch: exactly the
+ * answered attempts, with the same identity, topic, correctness, timestamp,
+ * and idempotency key. Rejecting a mismatch before the first retry prevents a
+ * locally forged completion from being replayed against a valid session.
+ */
+function hasCompletionAnswersMatchingAttempts(
+  completion: CompleteAssessmentSessionInput,
+  attempts: QuestionAttemptInput[],
+  sessionId: string,
+): boolean {
+  const attemptsByQuestionId = new Map(attempts.map((attempt) => [attempt.questionId, attempt]));
+  const answeredAttempts = attempts.filter(
+    (attempt) => attempt.selectedAnswer !== undefined && attempt.selectedAnswer !== null,
+  );
+  if (completion.answers.length !== answeredAttempts.length) return false;
+  const completionIds = new Set(completion.answers.map((answer) => answer.canonicalQuestionId));
+  if (completionIds.size !== completion.answers.length) return false;
+  return completion.answers.every((answer) => {
+    const attempt = attemptsByQuestionId.get(answer.canonicalQuestionId);
+    return attempt !== undefined
+      && attempt.selectedAnswer !== undefined
+      && attempt.selectedAnswer !== null
+      && answer.idempotencyKey === `assessment:${sessionId}:${attempt.questionId}`
+      && answer.topicId === attempt.topicId
+      && answer.isCorrect === attempt.isCorrect
+      && answer.answeredAt === attempt.answeredAt;
+  });
 }
 
 function isAuthenticatedExposureResult(value: unknown): value is AuthenticatedQuestionExposureResult {

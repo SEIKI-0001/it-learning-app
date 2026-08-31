@@ -224,9 +224,13 @@ function makeQuestions(): PastExamQuestionView[] {
   ];
 }
 
-function renderRunner() {
+function renderRunner(year = 2026) {
   return render(
-    <PastExamRunner year={2026} yearLabel="令和8年度" questions={makeQuestions()} />,
+    <PastExamRunner
+      year={year}
+      yearLabel={`令和${year - 2018}年度`}
+      questions={makeQuestions().map((question) => ({ ...question, year }))}
+    />,
   );
 }
 
@@ -980,6 +984,49 @@ describe("結果画面", () => {
     expect(completions[1]).toEqual(firstCompletion);
   });
 
+  it("shape-valid forged official results that disagree with the frozen question frame make zero replay mutations", async () => {
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    progressFailures = 1;
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    const persisted = [...storageValues.entries()]
+      .find(([key]) => key.startsWith("fequest:pastExam") && key.endsWith(":exam"));
+    expect(persisted).toBeDefined();
+    const session = JSON.parse(persisted![1]) as {
+      pendingMutation: { finalization: { result: { questions: Array<Record<string, unknown>> } } };
+    };
+    // q1 remains internally aggregate-valid, but no longer describes the
+    // authoritative q1 choice/correct answer in the frozen official frame.
+    session.pendingMutation.finalization.result.questions[0] = {
+      ...session.pendingMutation.finalization.result.questions[0],
+      selected: "A",
+      correctChoice: "A",
+      isCorrect: true,
+      isUnanswered: false,
+    };
+    storageValues.set(persisted![0], JSON.stringify(session));
+    const attemptCount = savedAttempts().length;
+    const completionCount = assessmentActions().filter((action) => action.action === "complete").length;
+    const progressCount = progressSaves().length;
+
+    cleanup();
+    renderRunner();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(savedAttempts()).toHaveLength(attemptCount);
+    expect(assessmentActions().filter((action) => action.action === "complete"))
+      .toHaveLength(completionCount);
+    expect(progressSaves()).toHaveLength(progressCount);
+  });
+
   it("自動再開中の再開・やり直し操作は同じ frozen finalization を並行送信しない", async () => {
     window.localStorage.setItem("fequest:userId", "user-1");
     initializeAppState({
@@ -1021,7 +1068,9 @@ describe("結果画面", () => {
     fireEvent.click(restart);
 
     expect(assessmentActions().filter((action) => action.action === "complete")).toHaveLength(1);
-    expect(savedAttempts()).toHaveLength(0);
+    // A resumed browser receipt is not trusted: the automatic single flight
+    // has already replayed the strict two-question batch before completion.
+    expect(savedAttempts()).toHaveLength(2);
     expect(progressSaves()).toHaveLength(0);
 
     resolveCompletion(assessmentResponse("complete", String(
@@ -1030,6 +1079,63 @@ describe("結果画面", () => {
     expect(await screen.findByText("50%")).toBeInTheDocument();
     expect(assessmentActions().filter((action) => action.action === "complete")).toHaveLength(1);
     expect(progressSaves()).toHaveLength(1);
+  });
+
+  it("年度変更で古い自動再開が残っても新しい年度のモード選択を finalizing のままにしない", async () => {
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    assessmentMalformed.complete = 1;
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    cleanup();
+
+    const originalFetch = globalThis.fetch;
+    let resolveCompletion!: (response: Response) => void;
+    const pendingCompletion = new Promise<Response>((resolve) => {
+      resolveCompletion = resolve;
+    });
+    vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+      if (url === "/api/assessment-sessions") {
+        const body = JSON.parse(String(init?.body)) as { action: string };
+        if (body.action === "complete") return pendingCompletion;
+      }
+      return originalFetch(url, init);
+    }));
+
+    const mounted = renderRunner(2026);
+    await waitFor(() => expect(assessmentActions().filter((action) => action.action === "complete"))
+      .toHaveLength(1));
+    mounted.rerender(
+      <PastExamRunner
+        year={2025}
+        yearLabel="令和7年度"
+        questions={makeQuestions().map((question) => ({ ...question, year: 2025 }))}
+      />,
+    );
+
+    const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
+    resolveCompletion(assessmentResponse("complete", String(
+      assessmentActions().find((action) => action.action === "complete")?.sessionId,
+    )));
+    await waitFor(() => expect([...storageValues.keys()].filter((key) => key.startsWith("fequest:pastExam")))
+      .toEqual([]));
+    mounted.rerender(
+      <PastExamRunner
+        year={2026}
+        yearLabel="令和8年度"
+        questions={makeQuestions()}
+      />,
+    );
+    const originalYearCard = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    expect(within(originalYearCard).getByRole("button", { name: "始める" })).toBeEnabled();
   });
 
   it("official finalization keeps its session and result hidden when session removal fails", async () => {
@@ -1057,6 +1163,33 @@ describe("結果画面", () => {
     removeItem.mockRestore();
     fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
     expect(await screen.findByText("50%")).toBeInTheDocument();
+  });
+
+  it("official finalization keeps its frozen session and result hidden when verified local AppState persistence fails", async () => {
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    const setItem = vi.spyOn(window.localStorage, "setItem").mockImplementation((key, value) => {
+      if (key === "fequest:appstate") throw new DOMException("storage is unavailable");
+      storageValues.set(key, String(value));
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.queryByText("50%")).not.toBeInTheDocument();
+    expect([...storageValues.keys()].some((key) => key.startsWith("fequest:pastExam"))).toBe(true);
+
+    setItem.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
+    expect(await screen.findByText("50%")).toBeInTheDocument();
+    expect([...storageValues.keys()].filter((key) => key.startsWith("fequest:pastExam"))).toEqual([]);
   });
 
   it("P0応答の喪失後に端末状態が変わってもリロード再送する進捗本文を固定する", async () => {

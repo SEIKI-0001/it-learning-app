@@ -242,6 +242,25 @@ describe("pending assessment finalization storage", () => {
     expect(saveProgress).not.toHaveBeenCalled();
   });
 
+  it("rejects a completion answer that disagrees with its frozen strict attempt before remote replay", async () => {
+    const value = pending();
+    value.completion.answers[0].isCorrect = false;
+    const saveAttempts = vi.fn();
+    const completeSession = vi.fn();
+    const saveProgress = vi.fn();
+
+    await expect(resumePendingAssessmentFinalization(value, {
+      saveAttempts,
+      completeSession,
+      deriveNextState: vi.fn(),
+      saveProgress,
+    })).rejects.toThrow("Cannot persist a malformed assessment finalization");
+
+    expect(saveAttempts).not.toHaveBeenCalled();
+    expect(completeSession).not.toHaveBeenCalled();
+    expect(saveProgress).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["completion acknowledgement without an authoritative exposure", (value: ReturnType<typeof pending>) => {
       delete value.exposureResult;
@@ -323,4 +342,108 @@ describe("pending assessment finalization storage", () => {
       expect(JSON.stringify(calls[1][0])).toBe(JSON.stringify(calls[0][0]));
     },
   );
+
+  it("replays every remote stage and replaces forged local receipts on resume", async () => {
+    const value = pending();
+    value.progressAcknowledged = true;
+    value.exposureResult = {
+      authState: "authenticated",
+      userId: "forged-user",
+      exposures: {
+        "tech-binary-data-ex1": {
+          questionId: "tech-binary-data-ex1",
+          state: "seen",
+          attemptedBefore: true,
+          firstAttemptAt: "2026-08-29T00:00:00.000Z",
+          attemptCount: 99,
+        },
+      },
+    };
+    value.nextState = { progress: "forged" };
+    const authoritativeExposure = {
+      authState: "authenticated" as const,
+      userId: "user-1",
+      exposures: {
+        "tech-binary-data-ex1": {
+          questionId: "tech-binary-data-ex1",
+          state: "first" as const,
+          attemptedBefore: false,
+          firstAttemptAt: "2026-08-30T00:00:00.000Z",
+          attemptCount: 1,
+        },
+      },
+    };
+    const saveAttempts = vi.fn().mockResolvedValue(authoritativeExposure);
+    const completeSession = vi.fn().mockResolvedValue(undefined);
+    const deriveNextState = vi.fn().mockReturnValue({ progress: "canonical" });
+    const saveProgress = vi.fn().mockResolvedValue(true);
+
+    const finalized = await resumePendingAssessmentFinalization(value, {
+      saveAttempts,
+      completeSession,
+      deriveNextState,
+      saveProgress,
+    });
+
+    expect(saveAttempts).toHaveBeenCalledOnce();
+    expect(saveAttempts).toHaveBeenCalledWith(value.attempts);
+    expect(completeSession).toHaveBeenCalledOnce();
+    expect(completeSession).toHaveBeenCalledWith(value.completion);
+    expect(deriveNextState).toHaveBeenCalledOnce();
+    expect(saveProgress).toHaveBeenCalledOnce();
+    expect(saveProgress).toHaveBeenCalledWith({
+      nextState: { progress: "canonical" },
+      exposureResult: authoritativeExposure,
+      sessionId: value.sessionId,
+    });
+    expect(finalized).toMatchObject({
+      exposureResult: authoritativeExposure,
+      completionAcknowledged: true,
+      nextState: { progress: "canonical" },
+      progressAcknowledged: true,
+    });
+  });
+
+  it("rebuilds the stored result before it derives canonical P0 state", async () => {
+    const value = pending();
+    value.result = { score: 999 };
+    const authoritativeExposure = pending().exposureResult!;
+    const rederiveResult = vi.fn().mockReturnValue({ score: 100 });
+    const deriveNextState = vi.fn().mockReturnValue({ progress: "canonical" });
+
+    const finalized = await resumePendingAssessmentFinalization(value, {
+      rederiveResult,
+      saveAttempts: vi.fn().mockResolvedValue(authoritativeExposure),
+      completeSession: vi.fn().mockResolvedValue(undefined),
+      deriveNextState,
+      saveProgress: vi.fn().mockResolvedValue(true),
+    });
+
+    expect(rederiveResult).toHaveBeenCalledOnce();
+    expect(finalized.result).toEqual({ score: 100 });
+    expect(deriveNextState).toHaveBeenCalledWith(expect.objectContaining({
+      result: { score: 100 },
+    }));
+  });
+
+  it("drops browser acknowledgement receipts before the first resumed durable transition", async () => {
+    const value = pending();
+    value.progressAcknowledged = true;
+    const frozen = vi.fn((next) => next);
+
+    await resumePendingAssessmentFinalization(value, {
+      freeze: frozen,
+      saveAttempts: vi.fn().mockResolvedValue(pending().exposureResult),
+      completeSession: vi.fn().mockResolvedValue(undefined),
+      deriveNextState: vi.fn().mockReturnValue({ progress: "canonical" }),
+      saveProgress: vi.fn().mockResolvedValue(true),
+    });
+
+    expect(frozen.mock.calls[0][0]).toEqual(expect.not.objectContaining({
+      exposureResult: expect.anything(),
+      completionAcknowledged: true,
+      nextState: expect.anything(),
+      progressAcknowledged: true,
+    }));
+  });
 });
