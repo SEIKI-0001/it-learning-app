@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { AppState, UserAnswer } from "@/types";
 
@@ -9,6 +9,35 @@ const harness = vi.hoisted(() => ({
   setState: vi.fn(),
   replace: vi.fn(),
 }));
+
+const storageValues = new Map<string, string>();
+const localStorageStub: Storage = {
+  get length() {
+    return storageValues.size;
+  },
+  clear() {
+    storageValues.clear();
+  },
+  getItem(key) {
+    return storageValues.get(key) ?? null;
+  },
+  key(index) {
+    return [...storageValues.keys()][index] ?? null;
+  },
+  removeItem(key) {
+    storageValues.delete(key);
+  },
+  setItem(key, value) {
+    storageValues.set(key, String(value));
+  },
+};
+
+beforeAll(() => {
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: localStorageStub,
+  });
+});
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: harness.replace }),
@@ -139,6 +168,7 @@ function installFetch(
   startResponse?: Deferred,
   failures: Partial<Record<"start" | "complete" | "abandon", number>> = {},
   attemptFailure?: "network" | "http" | "malformed" | "unknown",
+  progressFailures = 0,
 ) {
   vi.stubGlobal("fetch", vi.fn().mockImplementation(async (url: string, init?: RequestInit) => {
     if (url === "/api/assessment-sessions") {
@@ -185,6 +215,10 @@ function installFetch(
         })),
       }), { status: 200 });
     }
+    if (url === "/api/progress/save" && progressFailures > 0) {
+      progressFailures -= 1;
+      return new Response(JSON.stringify({ error: "response_lost" }), { status: 503 });
+    }
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
   }));
 }
@@ -221,6 +255,7 @@ function expectCompletionOrder() {
 }
 
 beforeEach(() => {
+  window.localStorage.clear();
   harness.state = makeState();
   harness.setState.mockReset();
   harness.replace.mockReset();
@@ -228,6 +263,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  window.localStorage.clear();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -424,5 +460,109 @@ describe("assessment delivery runners", () => {
     const batches = requestBodies("/api/question-attempts/save");
     expect(batches).toHaveLength(2);
     expect(batches[1]).toEqual(batches[0]);
+  });
+
+  it.each([
+    ["mock", () => render(<MockExamPage />), /模試を始める/],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+    ],
+    ["checkpoint final", () => render(<FinalExamPage />), /突破試験に挑む/],
+  ] as const)("%s resumes a frozen strict-save batch after a fresh mount", async (
+    _name,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch(undefined, {}, "network");
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    const frozenAttempts = JSON.stringify(requestBodies("/api/question-attempts/save")[0]);
+    expect(requestBodies("/api/assessment-sessions").filter((body) => body.action === "complete"))
+      .toHaveLength(0);
+
+    cleanup();
+    renderRunner();
+
+    await waitFor(() => expect(requestBodies("/api/question-attempts/save")).toHaveLength(2));
+    expect(JSON.stringify(requestBodies("/api/question-attempts/save")[1])).toBe(frozenAttempts);
+    await waitFor(() => expect(requestBodies("/api/progress/save")).toHaveLength(1));
+  });
+
+  it.each([
+    ["mock", () => render(<MockExamPage />), /模試を始める/],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+    ],
+    ["checkpoint final", () => render(<FinalExamPage />), /突破試験に挑む/],
+  ] as const)("%s does not start a second session while its frozen finalization resumes", async (
+    _name,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch(undefined, {}, "network");
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+
+    cleanup();
+    vi.useFakeTimers();
+    try {
+      renderRunner();
+      const start = screen.getByRole("button", { name: startName });
+
+      fireEvent.click(start);
+      expect(requestBodies("/api/assessment-sessions").filter((body) => body.action === "start"))
+        .toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([
+    ["mock", () => render(<MockExamPage />), /模試を始める/],
+    [
+      "checkpoint",
+      () => render(<CheckpointExamRunner checkpointId="cp-technology-foundations" />),
+      /チェックポイント試験を始める/,
+    ],
+    ["checkpoint final", () => render(<FinalExamPage />), /突破試験に挑む/],
+  ] as const)("%s keeps its result hidden and P0 payload frozen until acknowledgement", async (
+    _name,
+    renderRunner,
+    startName,
+  ) => {
+    installFetch(undefined, {}, undefined, 1);
+    renderRunner();
+    fireEvent.click(screen.getByRole("button", { name: startName }));
+    expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.getByTestId("topic-quiz")).toBeInTheDocument();
+    expect(harness.setState).not.toHaveBeenCalled();
+    const firstProgress = JSON.stringify(requestBodies("/api/progress/save")[0]);
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(true);
+
+    cleanup();
+    renderRunner();
+
+    await waitFor(() => expect(requestBodies("/api/progress/save")).toHaveLength(2));
+    expect(JSON.stringify(requestBodies("/api/progress/save")[1])).toBe(firstProgress);
+    await waitFor(() => expect(harness.setState).toHaveBeenCalledOnce());
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(false);
   });
 });

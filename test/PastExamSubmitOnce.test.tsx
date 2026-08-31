@@ -157,7 +157,7 @@ describe("本番モードの採点は1回だけ走る", () => {
       button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(saveCallCount()).toBe(1);
+    await waitFor(() => expect(saveCallCount()).toBe(1));
   });
 
   it("採点すると結果画面へ進み、問題数ぶんの回答だけが送られる", async () => {
@@ -166,8 +166,9 @@ describe("本番モードの採点は1回だけ走る", () => {
     fireEvent.click(gradeButton());
 
     // 2問ぶん。未回答も「未回答だった」という事実として送る。
-    expect(savedAttempts()).toHaveLength(2);
+    await waitFor(() => expect(savedAttempts()).toHaveLength(2));
     expect(savedAttempts().map((a) => a.questionId)).toEqual(["q1", "q2"]);
+    expect(await screen.findByRole("button", { name: /もう一度|戻る|選び直す/ })).toBeInTheDocument();
   });
 
   it("時間切れの自動採点と手動採点が競合しても保存は1回だけ", async () => {
@@ -205,7 +206,7 @@ describe("本番モードの採点は1回だけ走る", () => {
     renderRunner();
     await startExamMode();
     fireEvent.click(gradeButton());
-    expect(saveCallCount()).toBe(1);
+    await waitFor(() => expect(saveCallCount()).toBe(1));
 
     // 結果画面から戻って、もう一度本番モードを始める。
     fireEvent.click(await screen.findByRole("button", { name: /もう一度|戻る|選び直す/ }));
@@ -217,7 +218,7 @@ describe("本番モードの採点は1回だけ走る", () => {
     fireEvent.click(gradeButton());
 
     // 別セッションなので、こちらは新たに1回保存される。
-    expect(saveCallCount()).toBe(2);
+    await waitFor(() => expect(saveCallCount()).toBe(2));
   });
 });
 

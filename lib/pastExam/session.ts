@@ -14,6 +14,7 @@ import type { ChoiceKey, QuestionExposureState } from "@/types";
 import type { PastExamMode, PastExamSession } from "@/types/pastExam";
 import { EXAM_MODE_DURATION_MINUTES } from "@/types/pastExam";
 import { createAssessmentSessionId } from "@/lib/userSession";
+import { isValidPendingAssessmentFinalization } from "@/lib/examReadiness/pendingFinalization";
 import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 
 const KEY_PREFIX = "fequest:pastExam";
@@ -47,11 +48,11 @@ function isValidSession(value: unknown): value is PastExamSession {
     typeof s.currentIndex === "number" &&
     isValidAnswerSnapshot(s.answers) &&
     typeof s.completed === "boolean" &&
-    isValidPendingMutation(s.pendingMutation)
+    isValidPendingMutation(s.pendingMutation, s.sessionId)
   );
 }
 
-function isValidPendingMutation(value: unknown): boolean {
+function isValidPendingMutation(value: unknown, sessionId: string): boolean {
   if (value === undefined) return true;
   if (typeof value !== "object" || value === null) return false;
   const pending = value as Record<string, unknown>;
@@ -60,6 +61,13 @@ function isValidPendingMutation(value: unknown): boolean {
     || !isStrictOffsetIsoTimestamp(pending.completedAt)
   ) return false;
   if (pending.action === "abandon") return true;
+  if (pending.finalization !== undefined) {
+    return isValidPendingAssessmentFinalization(
+      pending.finalization,
+      sessionId,
+      "official_past",
+    ) && isValidOfficialPastFinalizationBase(pending.finalization);
+  }
   return isValidAnswerSnapshot(pending.answerSnapshot)
     && Array.isArray(pending.assessmentAnswers)
     && pending.assessmentAnswers.every(isValidAssessmentAnswer)
@@ -71,6 +79,19 @@ function isValidPendingMutation(value: unknown): boolean {
       || pending.progressSnapshot === null
       || isValidProgressSnapshot(pending.progressSnapshot)
     );
+}
+
+function isValidOfficialPastFinalizationBase(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const finalization = value as Record<string, unknown>;
+  if (typeof finalization.baseState !== "object" || finalization.baseState === null) return false;
+  const baseState = finalization.baseState as Record<string, unknown>;
+  return baseState.kind === "official-past"
+    && typeof baseState.year === "number"
+    && Number.isInteger(baseState.year)
+    && (baseState.mode === "practice" || baseState.mode === "exam")
+    && (baseState.appState === null || (typeof baseState.appState === "object" && baseState.appState !== null))
+    && isValidAnswerSnapshot(baseState.answerSnapshot);
 }
 
 function isValidProgressSnapshot(value: unknown): boolean {

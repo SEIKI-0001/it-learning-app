@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import ThemeExamRunner from "@/components/themeExam/ThemeExamRunner";
 import type { ThemeExamQuestionView } from "@/types/themeExam";
 
 const flow = vi.hoisted(() => ({
   hasState: true,
+  setAppState: vi.fn(),
   before: {
     progress: {
       level: 1,
@@ -46,7 +47,7 @@ const startAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
 const completeAssessmentSessionForCurrentSession = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/useAppState", () => ({
-  useAppState: () => [flow.hasState ? flow.before : undefined, vi.fn()],
+  useAppState: () => [flow.hasState ? flow.before : undefined, flow.setAppState],
 }));
 vi.mock("@/lib/storage", () => ({ saveAppState: vi.fn() }));
 vi.mock("@/lib/userSession", () => ({
@@ -81,8 +82,39 @@ const question: ThemeExamQuestionView = {
   tags: ["binary"],
 };
 
+const storageValues = new Map<string, string>();
+const localStorageStub: Storage = {
+  get length() {
+    return storageValues.size;
+  },
+  clear() {
+    storageValues.clear();
+  },
+  getItem(key) {
+    return storageValues.get(key) ?? null;
+  },
+  key(index) {
+    return [...storageValues.keys()][index] ?? null;
+  },
+  removeItem(key) {
+    storageValues.delete(key);
+  },
+  setItem(key, value) {
+    storageValues.set(key, String(value));
+  },
+};
+
+beforeAll(() => {
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: localStorageStub,
+  });
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
+  flow.setAppState.mockReset();
+  window.localStorage.clear();
   flow.hasState = true;
   recordThemeExamLearningResult.mockReturnValue(flow.next);
   saveAssessmentQuestionAttemptsForCurrentSession.mockResolvedValue({
@@ -109,7 +141,10 @@ beforeEach(() => {
   saveProgressToDb.mockResolvedValue(true);
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.localStorage.clear();
+});
 
 describe("ThemeExamRunner exposure integration", () => {
   it("persists start before showing questions", async () => {
@@ -336,5 +371,82 @@ describe("ThemeExamRunner exposure integration", () => {
     await waitFor(() => expect(recordThemeExamLearningResult).toHaveBeenCalledOnce());
     expect(saveAssessmentQuestionAttemptsForCurrentSession.mock.calls[1][0])
       .toEqual(saveAssessmentQuestionAttemptsForCurrentSession.mock.calls[0][0]);
+  });
+
+  it("remounts after a lost strict-save response and resumes the exact frozen finalization", async () => {
+    saveAssessmentQuestionAttemptsForCurrentSession
+      .mockRejectedValueOnce(new TypeError("connection lost"))
+      .mockResolvedValueOnce({
+        authState: "authenticated",
+        userId: "user-1",
+        exposures: {
+          "tech-binary-data-ex1": {
+            questionId: "tech-binary-data-ex1",
+            state: "first",
+            attemptedBefore: false,
+            firstAttemptAt: "2026-08-01T00:00:00.000Z",
+            attemptCount: 1,
+          },
+        },
+      });
+    const props = {
+      examId: "theme-exam-computer-basics",
+      themeSlug: "computer-basics",
+      themeTitle: "コンピュータ基礎",
+      passRate: 60,
+      questions: [question],
+    };
+    render(<ThemeExamRunner {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(completeAssessmentSessionForCurrentSession).not.toHaveBeenCalled();
+    const frozenAttempts = JSON.stringify(
+      saveAssessmentQuestionAttemptsForCurrentSession.mock.calls[0][0],
+    );
+
+    cleanup();
+    render(<ThemeExamRunner {...props} />);
+
+    await waitFor(() => expect(saveAssessmentQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(2));
+    expect(JSON.stringify(saveAssessmentQuestionAttemptsForCurrentSession.mock.calls[1][0]))
+      .toBe(frozenAttempts);
+    expect(await screen.findByText("合格ライン到達")).toBeInTheDocument();
+  });
+
+  it("keeps the summary result and pending record hidden until frozen P0 acknowledgement", async () => {
+    saveProgressToDb.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const props = {
+      examId: "theme-exam-computer-basics",
+      themeSlug: "computer-basics",
+      themeTitle: "コンピュータ基礎",
+      passRate: 60,
+      questions: [question],
+    };
+    render(<ThemeExamRunner {...props} />);
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    expect(screen.queryByText("合格ライン到達")).not.toBeInTheDocument();
+    expect(flow.setAppState).not.toHaveBeenCalled();
+    const firstP0 = JSON.stringify(saveProgressToDb.mock.calls[0]);
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(true);
+
+    cleanup();
+    render(<ThemeExamRunner {...props} />);
+
+    await waitFor(() => expect(saveProgressToDb).toHaveBeenCalledTimes(2));
+    expect(JSON.stringify(saveProgressToDb.mock.calls[1])).toBe(firstP0);
+    expect(await screen.findByText("合格ライン到達")).toBeInTheDocument();
+    expect(flow.setAppState).toHaveBeenCalledOnce();
+    expect([...storageValues.keys()].some((key) =>
+      key.startsWith("fequest:assessmentFinalization:"),
+    )).toBe(false);
   });
 });

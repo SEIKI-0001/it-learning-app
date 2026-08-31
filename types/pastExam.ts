@@ -5,12 +5,14 @@
 // 変換しない（選択肢のシャッフルや即時正答表示といった既存挙動を持ち込まないため）。
 
 import type {
+  AppState,
   ChoiceKey,
   QuestionExposureMap,
   QuestionExposureState,
   UserProgress,
 } from "@/types";
 import type { TopicField } from "@/types/content";
+import type { PendingAssessmentFinalization } from "@/lib/examReadiness/pendingFinalization";
 
 /**
  * 演習モード。
@@ -42,15 +44,38 @@ export type PastExamAssessmentAnswer = {
   answeredAt: string;
 };
 
+/** Frozen inputs used to resume official past-exam finalization after reload. */
+export type PastExamFinalizationBase = {
+  kind: "official-past";
+  year: number;
+  mode: PastExamMode;
+  appState: AppState | null;
+  answerSnapshot: Record<number, PastExamAnswer>;
+};
+
+export type PastExamFinalizationNext = { appState: AppState | null };
+
+export type PastExamPendingFinalization = PendingAssessmentFinalization<
+  PastExamFinalizationBase,
+  PastExamFinalizationNext,
+  PastExamResult
+>;
+
 export type PastExamPendingMutation = {
   action: "complete";
   completedAt: string;
   answerSnapshot: Record<number, PastExamAnswer>;
   assessmentAnswers: PastExamAssessmentAnswer[];
-  exposures: QuestionExposureMap;
-  confirmedUserId: string | null;
+  /** Present after the strict attempt save has been acknowledged. */
+  exposures?: QuestionExposureMap;
+  confirmedUserId?: string | null;
   /** Frozen P0 payload. Undefined is accepted only for pre-upgrade pending sessions. */
   progressSnapshot?: UserProgress | null;
+  /**
+   * The same frozen stage record used by other assessment runners. It remains
+   * nested in the existing official-past session, never in a second key.
+   */
+  finalization?: PastExamPendingFinalization;
 } | {
   action: "abandon";
   completedAt: string;

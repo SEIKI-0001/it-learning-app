@@ -20,7 +20,7 @@ import {
   gradePastExam,
   recordPastExamLearningResult,
 } from "@/lib/pastExam/scoring";
-import { saveAllAttempts, saveSingleAttempt } from "@/lib/pastExam/saveAttempts";
+import { saveSingleAttempt } from "@/lib/pastExam/saveAttempts";
 import { getUnknownQuestionExposureStates } from "@/lib/questionExposure";
 import {
   clearSession,
@@ -42,15 +42,18 @@ import {
   assessmentAnswerIdempotencyKey,
   completeAssessmentSessionForCurrentSession,
   resolveQuestionExposureIdentity,
+  saveAssessmentQuestionAttemptsForCurrentSession,
   saveProgressToDb,
   startAssessmentSessionForCurrentSession,
   type QuestionExposureIdentity,
 } from "@/lib/userSession";
+import { resumePendingAssessmentFinalization } from "@/lib/examReadiness/pendingFinalization";
 import type { ChoiceKey } from "@/types";
 import type { QuestionExposureMap, QuestionExposureState } from "@/types";
 import {
   EXAM_MODE_DURATION_MINUTES,
   type PastExamMode,
+  type PastExamPendingFinalization,
   type PastExamPendingMutation,
   type PastExamResult,
   type PastExamSession,
@@ -63,6 +66,14 @@ type Props = {
   yearLabel: string;
   questions: PastExamQuestionView[];
 };
+
+function hasFrozenFinalization(
+  pending: PastExamPendingMutation | undefined,
+): pending is Extract<PastExamPendingMutation, { action: "complete" }> & {
+  finalization: PastExamPendingFinalization;
+} {
+  return pending?.action === "complete" && pending.finalization !== undefined;
+}
 
 export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const [phase, setPhase] = useState<Phase>("select");
@@ -84,6 +95,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const [startingMode, setStartingMode] = useState<PastExamMode | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const pendingStartRef = useRef<Partial<Record<PastExamMode, PastExamSession>>>({});
+  const autoResumedSessionRef = useRef<string | null>(null);
   const [identity, setIdentity] = useState<QuestionExposureIdentity | null>(null);
   useEffect(() => {
     void resolveQuestionExposureIdentity().then(setIdentity);
@@ -148,10 +160,97 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     current: PastExamSession,
     pending: Extract<PastExamPendingMutation, { action: "complete" }>,
     storageUserId: string | null,
+    isActive: () => boolean = () => true,
   ): Promise<boolean> => {
     submittedRef.current = true;
     setSubmitting(true);
     setPersistenceError(null);
+    if (hasFrozenFinalization(pending)) {
+      let persistedSession = current;
+      try {
+        const finalized = await resumePendingAssessmentFinalization(pending.finalization, {
+          // Official past exams already have a durable, user-scoped session
+          // record. Keep this nested there instead of creating a competing key.
+          freeze: (value) => {
+            const nextMutation: Extract<PastExamPendingMutation, { action: "complete" }> = {
+              action: "complete",
+              completedAt: value.completion.completedAt,
+              answerSnapshot: value.baseState.answerSnapshot,
+              assessmentAnswers: value.completion.answers,
+              ...(value.exposureResult === undefined
+                ? {}
+                : {
+                    exposures: value.exposureResult.exposures,
+                    confirmedUserId: value.exposureResult.userId,
+                  }),
+              ...(Object.hasOwn(value, "nextState")
+                ? { progressSnapshot: value.nextState?.appState?.progress ?? null }
+                : {}),
+              finalization: value,
+            };
+            const nextSession: PastExamSession = {
+              ...persistedSession,
+              answers: value.baseState.answerSnapshot,
+              pendingMutation: nextMutation,
+            };
+            if (!saveSession(storageUserId, nextSession)) {
+              throw new Error("Could not persist pending assessment finalization");
+            }
+            const restored = loadSession(storageUserId, nextSession.year, nextSession.mode);
+            if (!restored || !hasFrozenFinalization(restored.pendingMutation)) {
+              throw new Error("Could not reload pending assessment finalization");
+            }
+            persistedSession = restored;
+            if (isActive()) setSession(restored);
+            return restored.pendingMutation.finalization;
+          },
+          saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
+          completeSession: async (completion) => {
+            await completeAssessmentSessionForCurrentSession(completion);
+          },
+          deriveNextState: ({ baseState, completion, exposureResult, result: graded }) => ({
+            appState: baseState.appState
+              ? recordPastExamLearningResult(
+                baseState.appState,
+                graded,
+                baseState.answerSnapshot,
+                exposureResult.exposures,
+                new Date(completion.completedAt),
+              )
+              : null,
+          }),
+          saveProgress: async ({ exposureResult, nextState, sessionId }) => {
+            if (nextState.appState === null) return true;
+            return saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
+              triggerType: "assessment",
+              triggerId: sessionId,
+            });
+          },
+        });
+        if (finalized.nextState === undefined) {
+          throw new Error("Assessment finalization was not fully persisted");
+        }
+        if (finalized.nextState.appState !== null) {
+          saveAppState(finalized.nextState.appState);
+        }
+        if (isActive()) {
+          setSession(null);
+          setResult(finalized.result);
+          setPhase("result");
+        }
+        clearSession(storageUserId, year, current.mode);
+        return true;
+      } catch {
+        submittedRef.current = false;
+        if (isActive()) {
+          setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+        }
+        return false;
+      } finally {
+        if (isActive()) setSubmitting(false);
+      }
+    }
+
     const graded = gradePastExam({
       sessionId: current.sessionId,
       year,
@@ -174,7 +273,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           currentState,
           graded,
           pending.answerSnapshot,
-          pending.exposures,
+          pending.exposures ?? getUnknownQuestionExposureStates(
+            questions.map((question) => question.id),
+          ),
           new Date(pending.completedAt),
         );
         const next = pending.progressSnapshot === undefined
@@ -195,26 +296,50 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       }
       factsCommitted = true;
 
-      setSession(null);
       clearSession(storageUserId, year, current.mode);
-      setResult(graded);
-      setPhase("result");
+      if (isActive()) {
+        setSession(null);
+        setResult(graded);
+        setPhase("result");
+      }
       return true;
     } catch {
       if (factsCommitted) {
-        setSession(null);
         clearSession(storageUserId, year, current.mode);
-        setResult(graded);
-        setPhase("result");
+        if (isActive()) {
+          setSession(null);
+          setResult(graded);
+          setPhase("result");
+        }
         return true;
       }
       submittedRef.current = false;
-      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      if (isActive()) {
+        setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      }
       return false;
     } finally {
-      setSubmitting(false);
+      if (isActive()) setSubmitting(false);
     }
   }, [questions, year]);
+
+  useEffect(() => {
+    if (!userReady) return;
+    const existing = loadSession(sessionUserId, year, "exam");
+    if (!existing || !hasFrozenFinalization(existing.pendingMutation)) return;
+    if (autoResumedSessionRef.current === existing.sessionId) return;
+    autoResumedSessionRef.current = existing.sessionId;
+    let active = true;
+    void commitPendingCompletion(
+      existing,
+      existing.pendingMutation,
+      sessionUserId,
+      () => active,
+    );
+    return () => {
+      active = false;
+    };
+  }, [commitPendingCompletion, sessionUserId, userReady, year]);
 
   const settleExistingBeforeStart = useCallback(async (
     existing: PastExamSession,
@@ -351,46 +476,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         }
 
         const currentState = loadAppState();
-        let exposures: QuestionExposureMap;
-        let confirmedUserId = userId;
-        let storageUserId: string | null;
-        if (current.mode === "exam") {
-          const exposureResult = await saveAllAttempts({
-            questions,
-            answers: current.answers,
-            mode: current.mode,
-            sessionId: current.sessionId,
-            anonymousAnswers: currentState?.answers ?? [],
-          });
-          exposures = exposureResult.exposures;
-          confirmedUserId = exposureResult.userId;
-          storageUserId = exposureResult.userId;
-        } else {
-          storageUserId = await resolveMutationStorageUserId();
-          exposures = getUnknownQuestionExposureStates(
-            questions.map((question) => question.id),
-          );
-          for (const question of questions) {
-            const exposureState = current.answers[question.questionNumber]?.exposureState;
-            if (!exposureState) continue;
-            exposures = {
-              ...exposures,
-              [question.id]: {
-                questionId: question.id,
-                state: exposureState,
-                attemptedBefore:
-                  exposureState === "first"
-                    ? false
-                    : exposureState === "seen"
-                      ? true
-                      : null,
-                firstAttemptAt: null,
-                attemptCount: null,
-              },
-            };
-          }
-        }
-
+        const storageUserId = await resolveMutationStorageUserId();
         const answerSnapshot = Object.fromEntries(
           Object.entries(current.answers).map(([number, answer]) => [number, { ...answer }]),
         );
@@ -402,6 +488,97 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           questions,
           answers: answerSnapshot,
         });
+        const assessmentAnswers = questions.flatMap((question) => {
+          const answer = answerSnapshot[question.questionNumber];
+          if (!answer || answer.selected === null) return [];
+          return [{
+            idempotencyKey: assessmentAnswerIdempotencyKey(current.sessionId, question.id),
+            canonicalQuestionId: question.id,
+            topicId: question.topicId,
+            isCorrect: answer.selected === question.correctChoice,
+            answeredAt: answer.answeredAt,
+          }];
+        });
+
+        if (current.mode === "exam") {
+          const finalization: PastExamPendingFinalization = {
+            version: 1,
+            sessionId: current.sessionId,
+            source: "official_past",
+            attempts: questions.map((question) => {
+              const answer = answerSnapshot[question.questionNumber];
+              const selectedAnswer = answer?.selected ?? null;
+              return {
+                questionId: question.id,
+                questionType: "official_past" as const,
+                topicId: question.topicId,
+                selectedAnswer,
+                isCorrect: selectedAnswer !== null && selectedAnswer === question.correctChoice,
+                timeSpentSeconds: answer?.timeSpentSeconds ?? null,
+                answeredAt: answer?.answeredAt ?? null,
+                attemptMode: "exam" as const,
+                attemptGroupId: current.sessionId,
+              };
+            }),
+            completion: {
+              action: "complete",
+              sessionId: current.sessionId,
+              completedAt,
+              answers: assessmentAnswers,
+            },
+            baseState: {
+              kind: "official-past",
+              year,
+              mode: current.mode,
+              appState: currentState,
+              answerSnapshot,
+            },
+            result: graded,
+          };
+          const pendingMutation: Extract<PastExamPendingMutation, { action: "complete" }> = {
+            action: "complete",
+            completedAt,
+            answerSnapshot,
+            assessmentAnswers,
+            finalization,
+          };
+          const pendingSession: PastExamSession = {
+            ...current,
+            answers: answerSnapshot,
+            pendingMutation,
+          };
+          // This is the durability boundary: no strict attempt mutation may run
+          // until the complete frozen payload is in the existing session record.
+          if (!saveSession(storageUserId, pendingSession)) {
+            throw new Error("Could not save pending assessment completion");
+          }
+          setSession(pendingSession);
+          await commitPendingCompletion(pendingSession, pendingMutation, storageUserId);
+          return;
+        }
+
+        let exposures: QuestionExposureMap = getUnknownQuestionExposureStates(
+          questions.map((question) => question.id),
+        );
+        for (const question of questions) {
+          const exposureState = answerSnapshot[question.questionNumber]?.exposureState;
+          if (!exposureState) continue;
+          exposures = {
+            ...exposures,
+            [question.id]: {
+              questionId: question.id,
+              state: exposureState,
+              attemptedBefore:
+                exposureState === "first"
+                  ? false
+                  : exposureState === "seen"
+                    ? true
+                    : null,
+              firstAttemptAt: null,
+              attemptCount: null,
+            },
+          };
+        }
         const progressSnapshot = currentState
           ? recordPastExamLearningResult(
             currentState,
@@ -415,22 +592,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           action: "complete",
           completedAt,
           answerSnapshot,
-          assessmentAnswers: questions.flatMap((question) => {
-            const answer = current.answers[question.questionNumber];
-            if (!answer || answer.selected === null) return [];
-            return [{
-              idempotencyKey: assessmentAnswerIdempotencyKey(
-                current.sessionId,
-                question.id,
-              ),
-              canonicalQuestionId: question.id,
-              topicId: question.topicId,
-              isCorrect: answer.selected === question.correctChoice,
-              answeredAt: answer.answeredAt,
-            }];
-          }),
+          assessmentAnswers,
           exposures,
-          confirmedUserId,
+          confirmedUserId: userId,
           progressSnapshot,
         };
         const pendingSession = {
@@ -804,7 +968,13 @@ function QuestionStage({
           onClick={() => void onFinish(session)}
           disabled={submitting || classifying}
         >
-          {submitting ? "採点中…" : classifying ? "回答保存中…" : "採点する"}
+          {submitting
+            ? "採点中…"
+            : classifying
+              ? "回答保存中…"
+              : completionFrozen && persistenceError
+                ? "保存を再試行する"
+                : "採点する"}
         </Button>
       </div>
     </div>

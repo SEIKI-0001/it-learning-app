@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import type { UserAnswer } from "@/types";
+import type { AppState, UserAnswer } from "@/types";
 import type { CheckpointId } from "@/types/checkpoint";
 import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
@@ -15,8 +15,13 @@ import {
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
+import {
+  clearPendingAssessmentFinalization,
+  findPendingAssessmentFinalization,
+  resumePendingAssessmentFinalization,
+  type PendingAssessmentFinalization,
+} from "@/lib/examReadiness/pendingFinalization";
 import { getTopic } from "@/lib/content";
 import { getLessonHref } from "@/lib/learningCatalog";
 import {
@@ -45,6 +50,35 @@ import LoadingScreen from "@/components/LoadingScreen";
 
 const VALID_IDS = new Set(CHECKPOINTS.map((c) => c.id));
 
+type CheckpointFinalizationBase = {
+  kind: "checkpoint-final";
+  checkpointId: CheckpointId;
+  appState: AppState;
+  exam: FinalExam;
+  answers: UserAnswer[];
+  attempt: ReturnType<typeof buildFinalExamAttempt>;
+  signals: ReturnType<typeof getClientBadgeSignals>;
+};
+type CheckpointFinalizationNext = {
+  appState: ReturnType<typeof recordFinalExamAttempt>;
+};
+type CheckpointFinalPendingFinalization = PendingAssessmentFinalization<
+  CheckpointFinalizationBase,
+  CheckpointFinalizationNext,
+  FinalExamResult
+>;
+
+function isCheckpointFinalPendingFinalization(
+  value: PendingAssessmentFinalization<unknown, unknown, unknown>,
+  checkpointId: CheckpointId,
+): value is CheckpointFinalPendingFinalization {
+  if (value.source !== "checkpoint" || typeof value.baseState !== "object" || value.baseState === null) {
+    return false;
+  }
+  const baseState = value.baseState as { kind?: unknown; checkpointId?: unknown };
+  return baseState.kind === "checkpoint-final" && baseState.checkpointId === checkpointId;
+}
+
 export default function FinalExamPage() {
   const router = useRouter();
   const params = useParams<{ checkpointId: string }>();
@@ -59,20 +93,87 @@ export default function FinalExamPage() {
   const [result, setResult] = useState<FinalExamResult | null>(null);
   const [examError, setExamError] = useState<string | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const [pendingFinalization, setPendingFinalization] = useState<CheckpointFinalPendingFinalization | null>(null);
   const [starting, setStarting] = useState(false);
   const pendingExamRef = useRef<{ exam: FinalExam; startedAt: string } | null>(null);
-  const pendingCompletionRef = useRef<{
-    completedAt: string;
-    answers: UserAnswer[];
-    scored: FinalExamResult;
-    attempt: ReturnType<typeof buildFinalExamAttempt>;
-    exposureResult?: AuthenticatedQuestionExposureResult;
-    updated?: ReturnType<typeof recordFinalExamAttempt>;
-  } | null>(null);
+  const pendingFinalizationRef = useRef<CheckpointFinalPendingFinalization | null>(null);
+  const finalizingRef = useRef(false);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [state, router]);
+
+  const resumeFinalization = useCallback(async (
+    pending: CheckpointFinalPendingFinalization,
+    isActive: () => boolean = () => true,
+  ) => {
+    if (finalizingRef.current) return;
+    finalizingRef.current = true;
+    pendingFinalizationRef.current = pending;
+    setPendingFinalization(pending);
+    setPersistenceError(null);
+    try {
+      const finalized = await resumePendingAssessmentFinalization(pending, {
+        saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
+        completeSession: async (completion) => {
+          await completeAssessmentSessionForCurrentSession(completion);
+        },
+        deriveNextState: ({ baseState, completion, exposureResult }) => ({
+          appState: recordFinalExamAttempt(
+            baseState.appState,
+            baseState.attempt,
+            baseState.answers,
+            exposureResult.exposures,
+            baseState.signals,
+            new Date(completion.completedAt),
+          ),
+        }),
+        saveProgress: async ({ exposureResult, nextState, sessionId }) =>
+          saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
+            triggerType: "assessment",
+            triggerId: sessionId,
+          }),
+      });
+      pendingFinalizationRef.current = finalized;
+      setPendingFinalization(finalized);
+      if (!isActive()) return;
+      if (finalized.nextState === undefined) {
+        throw new Error("Assessment finalization was not fully persisted");
+      }
+      saveAppState(finalized.nextState.appState);
+      setState(finalized.nextState.appState);
+      setExam(finalized.baseState.exam);
+      setResult(finalized.result);
+      emitCelebration(finalized.baseState.appState, finalized.nextState.appState);
+      emitMochitEvent(finalized.result.passed ? "checkpointClear" : "incorrect");
+      clearPendingAssessmentFinalization(finalized.sessionId);
+      pendingFinalizationRef.current = null;
+      setPendingFinalization(null);
+    } catch {
+      if (isActive()) {
+        setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      }
+    } finally {
+      finalizingRef.current = false;
+    }
+  }, [setState]);
+
+  useEffect(() => {
+    const pending = findPendingAssessmentFinalization(
+      "checkpoint",
+      (value) => isCheckpointFinalPendingFinalization(value, checkpointId),
+    );
+    if (pending === null || !isCheckpointFinalPendingFinalization(pending, checkpointId)) return;
+    let active = true;
+    pendingFinalizationRef.current = pending;
+    const timer = window.setTimeout(() => {
+      if (active) void resumeFinalization(pending, () => active);
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [checkpointId, resumeFinalization]);
 
   // 単語帳の進捗は AppState 外なので毎レンダー読み直す（軽量）。
   const signals = getClientBadgeSignals();
@@ -113,7 +214,7 @@ export default function FinalExamPage() {
   const next = nextId ? getCheckpoint(nextId) : null;
 
   async function startExam() {
-    if (!state || starting) return;
+    if (!state || starting || pendingFinalizationRef.current !== null) return;
     setStarting(true);
     setExamError(null);
     setPersistenceError(null);
@@ -164,81 +265,51 @@ export default function FinalExamPage() {
 
   async function handleComplete(answers: UserAnswer[]) {
     if (!state || !exam) return;
-    setPersistenceError(null);
-    let factsCommitted = false;
-    let committedResult: FinalExamResult | null = null;
-    try {
-      const pending: NonNullable<typeof pendingCompletionRef.current> =
-        pendingCompletionRef.current ?? (() => {
+    const pending: CheckpointFinalPendingFinalization =
+      pendingFinalizationRef.current ?? (() => {
           const completedAt = new Date().toISOString();
           const scored = scoreFinalExam(exam, answers);
+          const frozenAnswers = answers.map((answer) => ({ ...answer }));
+          const attempt = buildFinalExamAttempt(exam, scored, new Date(completedAt));
           return {
-            completedAt,
-            answers: answers.map((answer) => ({ ...answer })),
-            scored,
-            attempt: buildFinalExamAttempt(exam, scored, new Date(completedAt)),
+            version: 1 as const,
+            sessionId: exam.attemptId,
+            source: "checkpoint" as const,
+            attempts: frozenAnswers.map((answer) => ({
+              questionId: answer.questionId,
+              questionType: "mini_exam" as const,
+              topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
+              selectedAnswer: answer.selectedChoice ?? null,
+              isCorrect: answer.isCorrect,
+              answeredAt: answer.answeredAt,
+              attemptGroupId: exam.attemptId,
+            })),
+            completion: {
+              action: "complete" as const,
+              sessionId: exam.attemptId,
+              completedAt,
+              answers: frozenAnswers.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+                idempotencyKey: assessmentAnswerIdempotencyKey(exam.attemptId, answer.questionId),
+                canonicalQuestionId: answer.questionId,
+                topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
+                isCorrect: answer.isCorrect,
+                answeredAt: answer.answeredAt,
+              }]),
+            },
+            baseState: {
+              kind: "checkpoint-final" as const,
+              checkpointId,
+              appState: state,
+              exam,
+              answers: frozenAnswers,
+              attempt,
+              signals,
+            },
+            result: scored,
           };
         })();
-      pendingCompletionRef.current = pending;
-      committedResult = pending.scored;
-      const exposureResult = pending.exposureResult
-        ?? await saveAssessmentQuestionAttemptsForCurrentSession(
-          pending.answers.map((answer) => ({
-            questionId: answer.questionId,
-            questionType: "mini_exam" as const,
-            topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
-            selectedAnswer: answer.selectedChoice ?? null,
-            isCorrect: answer.isCorrect,
-            answeredAt: answer.answeredAt,
-            attemptGroupId: exam.attemptId,
-          })),
-        );
-      pending.exposureResult = exposureResult;
-      const { exposures, userId: uid } = exposureResult;
-      await completeAssessmentSessionForCurrentSession({
-        action: "complete",
-        sessionId: exam.attemptId,
-        completedAt: pending.completedAt,
-        answers: pending.answers.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
-          idempotencyKey: assessmentAnswerIdempotencyKey(exam.attemptId, answer.questionId),
-          canonicalQuestionId: answer.questionId,
-          topicId: exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId ?? checkpointId,
-          isCorrect: answer.isCorrect,
-          answeredAt: answer.answeredAt,
-        }]),
-      });
-      const updated = pending.updated ?? recordFinalExamAttempt(
-        state,
-        pending.attempt,
-        pending.answers,
-        exposures,
-        signals,
-        new Date(pending.completedAt),
-      );
-      pending.updated = updated;
-      if (uid) {
-        const progressSaved = await saveProgressToDb(uid, updated.progress, {
-          triggerType: "assessment",
-          triggerId: exam.attemptId,
-        });
-        if (!progressSaved) throw new Error("Assessment progress finalization failed");
-      }
-      factsCommitted = true;
-      pendingCompletionRef.current = null;
-      saveAppState(updated);
-      setState(updated);
-      setResult(pending.scored);
-      // CP突破の全画面演出（紙吹雪）。突破していなければ差分が無いので何も出ない。
-      emitCelebration(state, updated);
-      emitMochitEvent(pending.scored.passed ? "checkpointClear" : "incorrect");
-    } catch (error) {
-      if (factsCommitted) {
-        if (committedResult) setResult(committedResult);
-        return;
-      }
-      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
-      throw error;
-    }
+    pendingFinalizationRef.current = pending;
+    await resumeFinalization(pending);
   }
 
   return (
@@ -261,6 +332,15 @@ export default function FinalExamPage() {
           <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {persistenceError}
           </p>
+        )}
+        {persistenceError && pendingFinalization !== null && (
+          <button
+            type="button"
+            onClick={() => void resumeFinalization(pendingFinalization)}
+            className="w-full rounded-xl bg-white px-6 py-3 font-bold text-accent-700 ring-1 ring-accent-200"
+          >
+            保存を再試行する
+          </button>
         )}
 
         {/* --- 採点結果 --- */}
@@ -372,7 +452,7 @@ export default function FinalExamPage() {
                 <button
                   type="button"
                   onClick={() => void startExam()}
-                  disabled={starting}
+                  disabled={starting || pendingFinalization !== null}
                   className="rounded-xl bg-brand-600 px-6 py-3 font-bold text-white active:scale-[0.99]"
                 >
                   もう一度挑戦する
@@ -420,7 +500,7 @@ export default function FinalExamPage() {
             <button
               type="button"
               onClick={() => void startExam()}
-              disabled={starting}
+              disabled={starting || pendingFinalization !== null}
               className="animate-glow-ring mt-4 w-full rounded-xl bg-rose-500 px-6 py-3 font-bold text-white active:scale-[0.99]"
             >
               突破試験に挑む

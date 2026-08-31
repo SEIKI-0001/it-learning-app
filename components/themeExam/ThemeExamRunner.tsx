@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { AppState, ChoiceKey } from "@/types";
 import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
@@ -13,10 +13,15 @@ import {
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
+import {
+  clearPendingAssessmentFinalization,
+  findPendingAssessmentFinalization,
+  resumePendingAssessmentFinalization,
+  type PendingAssessmentFinalization,
+} from "@/lib/examReadiness/pendingFinalization";
 import { buttonClass } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 
@@ -39,6 +44,28 @@ type Props = {
 };
 
 const CHOICE_LABEL: Record<ChoiceKey, string> = { A: "ア", B: "イ", C: "ウ", D: "エ" };
+
+type ThemeFinalizationBase = {
+  appState: AppState | null;
+  examId: string;
+  themeSlug: string;
+};
+
+type ThemeFinalizationNext = { appState: AppState | null };
+type ThemePendingFinalization = PendingAssessmentFinalization<
+  ThemeFinalizationBase,
+  ThemeFinalizationNext,
+  ThemeExamResult
+>;
+
+function isThemePendingFinalization(
+  value: PendingAssessmentFinalization<unknown, unknown, unknown>,
+  examId: string,
+): value is ThemePendingFinalization {
+  if (value.source !== "summary") return false;
+  if (typeof value.baseState !== "object" || value.baseState === null) return false;
+  return (value.baseState as { examId?: unknown }).examId === examId;
+}
 
 /** 選択肢の並びを問題ごとに1度だけ決める（表示のたびに変わらないようにする）。 */
 function shuffledChoices(q: ThemeExamQuestionView) {
@@ -66,6 +93,7 @@ export default function ThemeExamRunner({
   const [submitting, setSubmitting] = useState(false);
   const [completionFrozen, setCompletionFrozen] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const [pendingFinalization, setPendingFinalization] = useState<ThemePendingFinalization | null>(null);
 
   // この演習1回を識別するID。question_attempts の attempt_group_id に使う。
   const sessionIdRef = useRef<string>("");
@@ -74,29 +102,8 @@ export default function ThemeExamRunner({
   // 問題ごとに費やした秒数。戻って解き直した場合は累計する。
   const timeSpentRef = useRef<Record<number, number>>({});
   const submittedRef = useRef(false);
-  const pendingCompletionRef = useRef<{
-    graded: ThemeExamResult;
-    answeredAt: string;
-    attempts: Array<{
-      questionId: string;
-      questionType: "theme_exam";
-      topicId: string;
-      selectedAnswer: ChoiceKey | null;
-      isCorrect: boolean;
-      timeSpentSeconds: number | null;
-      answeredAt: string;
-      attemptGroupId: string;
-    }>;
-    assessmentAnswers: Array<{
-      idempotencyKey: string;
-      canonicalQuestionId: string;
-      topicId: string;
-      isCorrect: boolean;
-      answeredAt: string;
-    }>;
-    exposureResult?: AuthenticatedQuestionExposureResult;
-    next?: AppState | null;
-  } | null>(null);
+  const pendingFinalizationRef = useRef<ThemePendingFinalization | null>(null);
+  const finalizingRef = useRef(false);
 
   // 選択肢の並びは開始時に1度だけ決める。表示のたびに入れ替わると見直しができない。
   const order = useMemo(
@@ -117,7 +124,7 @@ export default function ThemeExamRunner({
   }, [index, questions]);
 
   const start = async () => {
-    if (starting) return;
+    if (starting || pendingFinalizationRef.current !== null) return;
     setStarting(true);
     setPersistenceError(null);
     submittedRef.current = false;
@@ -146,36 +153,117 @@ export default function ThemeExamRunner({
     setIndex(Math.min(Math.max(to, 0), questions.length - 1));
   };
 
+  const resumeFinalization = useCallback(async (
+    pending: ThemePendingFinalization,
+    isActive: () => boolean = () => true,
+  ) => {
+    if (finalizingRef.current) return;
+    finalizingRef.current = true;
+    pendingFinalizationRef.current = pending;
+    setPendingFinalization(pending);
+    submittedRef.current = true;
+    setSubmitting(true);
+    setCompletionFrozen(true);
+    setPersistenceError(null);
+    try {
+      const finalized = await resumePendingAssessmentFinalization(pending, {
+        saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
+        completeSession: async (completion) => {
+          await completeAssessmentSessionForCurrentSession(completion);
+        },
+        deriveNextState: ({ baseState, completion, exposureResult, result: graded }) => ({
+          appState: baseState.appState
+            ? recordThemeExamLearningResult(
+              baseState.appState,
+              graded,
+              completion.completedAt,
+              exposureResult.exposures,
+            )
+            : null,
+        }),
+        saveProgress: async ({ exposureResult, nextState, sessionId }) => {
+          if (nextState.appState === null) return true;
+          return saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
+            triggerType: "assessment",
+            triggerId: sessionId,
+          });
+        },
+      });
+      pendingFinalizationRef.current = finalized;
+      setPendingFinalization(finalized);
+      if (!isActive()) return;
+      const nextState = finalized.nextState;
+      if (nextState === undefined) throw new Error("Assessment next state was not persisted");
+      if (nextState.appState !== null) {
+        saveAppState(nextState.appState);
+        setAppState(nextState.appState);
+      }
+      setResult(finalized.result);
+      setPhase("result");
+      clearPendingAssessmentFinalization(finalized.sessionId);
+      pendingFinalizationRef.current = null;
+      setPendingFinalization(null);
+    } catch {
+      if (isActive()) {
+        submittedRef.current = false;
+        setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      }
+    } finally {
+      finalizingRef.current = false;
+      if (isActive()) setSubmitting(false);
+    }
+  }, [setAppState]);
+
+  useEffect(() => {
+    const pending = findPendingAssessmentFinalization(
+      "summary",
+      (value) => isThemePendingFinalization(value, examId),
+    );
+    if (pending === null || !isThemePendingFinalization(pending, examId)) return;
+    let active = true;
+    pendingFinalizationRef.current = pending;
+    sessionIdRef.current = pending.sessionId;
+    const timer = window.setTimeout(() => {
+      if (active) void resumeFinalization(pending, () => active);
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [examId, resumeFinalization]);
+
   const finish = async () => {
     if (submittedRef.current) return;
     submittedRef.current = true;
-    setSubmitting(true);
-    setPersistenceError(null);
-    const pending: NonNullable<typeof pendingCompletionRef.current> =
-      pendingCompletionRef.current ?? (() => {
-        commitElapsed();
-        const graded = gradeThemeExam({
+    const pending = pendingFinalizationRef.current ?? (() => {
+      commitElapsed();
+      const graded = gradeThemeExam({
+        sessionId: sessionIdRef.current,
+        themeSlug,
+        questions,
+        answers,
+        passRate,
+      });
+      const completedAt = new Date().toISOString();
+      return {
+        version: 1 as const,
+        sessionId: sessionIdRef.current,
+        source: "summary" as const,
+        attempts: graded.questions.map((question) => ({
+          questionId: question.questionId,
+          questionType: "theme_exam" as const,
+          topicId: question.topicId,
+          selectedAnswer: question.selected,
+          isCorrect: question.isCorrect,
+          timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
+          answeredAt: completedAt,
+          attemptGroupId: sessionIdRef.current,
+        })),
+        completion: {
+          action: "complete" as const,
           sessionId: sessionIdRef.current,
-          themeSlug,
-          questions,
-          answers,
-          passRate,
-        });
-        const answeredAt = new Date().toISOString();
-        return {
-          graded,
-          answeredAt,
-          attempts: graded.questions.map((question) => ({
-            questionId: question.questionId,
-            questionType: "theme_exam" as const,
-            topicId: question.topicId,
-            selectedAnswer: question.selected,
-            isCorrect: question.isCorrect,
-            timeSpentSeconds: timeSpentRef.current[question.questionNumber] ?? null,
-            answeredAt,
-            attemptGroupId: sessionIdRef.current,
-          })),
-          assessmentAnswers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
+          completedAt,
+          answers: graded.questions.flatMap((question) => question.isUnanswered ? [] : [{
             idempotencyKey: assessmentAnswerIdempotencyKey(
               sessionIdRef.current,
               question.questionId,
@@ -183,57 +271,15 @@ export default function ThemeExamRunner({
             canonicalQuestionId: question.questionId,
             topicId: question.topicId,
             isCorrect: question.isCorrect,
-            answeredAt,
+            answeredAt: completedAt,
           }]),
-        };
-      })();
-    pendingCompletionRef.current = pending;
-    setCompletionFrozen(true);
-    const { graded, answeredAt, attempts, assessmentAnswers } = pending;
-    let factsCommitted = false;
-    try {
-      const exposureResult = pending.exposureResult
-        ?? await saveAssessmentQuestionAttemptsForCurrentSession(attempts);
-      pending.exposureResult = exposureResult;
-      const { exposures, userId } = exposureResult;
-      await completeAssessmentSessionForCurrentSession({
-        action: "complete",
-        sessionId: sessionIdRef.current,
-        completedAt: answeredAt,
-        answers: assessmentAnswers,
-      });
-      const next = pending.next !== undefined
-        ? pending.next
-        : appState
-          ? recordThemeExamLearningResult(appState, graded, answeredAt, exposures)
-          : null;
-      pending.next = next;
-      if (next && userId) {
-        const progressSaved = await saveProgressToDb(userId, next.progress, {
-          triggerType: "assessment",
-          triggerId: sessionIdRef.current,
-        });
-        if (!progressSaved) throw new Error("Assessment progress finalization failed");
-      }
-      factsCommitted = true;
-      pendingCompletionRef.current = null;
-      if (next) {
-        saveAppState(next);
-        setAppState(next);
-      }
-      setResult(graded);
-      setPhase("result");
-    } catch {
-      if (factsCommitted) {
-        setResult(graded);
-        setPhase("result");
-        return;
-      }
-      submittedRef.current = false;
-      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
-    } finally {
-      setSubmitting(false);
-    }
+        },
+        baseState: { appState: appState ?? null, examId, themeSlug },
+        result: graded,
+      };
+    })();
+    pendingFinalizationRef.current = pending;
+    await resumeFinalization(pending);
   };
 
   const retry = () => {
@@ -245,10 +291,16 @@ export default function ThemeExamRunner({
     setSubmitting(false);
     sessionIdRef.current = "";
     startedAtRef.current = 0;
-    pendingCompletionRef.current = null;
+    pendingFinalizationRef.current = null;
+    setPendingFinalization(null);
     setCompletionFrozen(false);
     timeSpentRef.current = {};
     setPhase("intro");
+  };
+
+  const retryFinalization = () => {
+    const pending = pendingFinalization;
+    if (pending !== null) void resumeFinalization(pending);
   };
 
   // --- 開始前 ---------------------------------------------------------------
@@ -270,10 +322,19 @@ export default function ThemeExamRunner({
             {persistenceError}
           </p>
         )}
+        {persistenceError && pendingFinalization !== null && (
+          <button
+            type="button"
+            onClick={retryFinalization}
+            className={buttonClass("secondary", "md", "mt-3 w-full")}
+          >
+            保存を再試行する
+          </button>
+        )}
         <button
           type="button"
           onClick={() => void start()}
-          disabled={starting}
+          disabled={starting || pendingFinalization !== null}
           className={buttonClass("primary", "lg", "mt-5 w-full")}
         >
           {starting ? "準備中…" : "試験を始める"}
@@ -294,6 +355,16 @@ export default function ThemeExamRunner({
           <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
             {persistenceError}
           </p>
+        )}
+        {persistenceError && pendingFinalization !== null && (
+          <button
+            type="button"
+            onClick={retryFinalization}
+            disabled={submitting}
+            className={buttonClass("secondary", "md", "w-full")}
+          >
+            保存を再試行する
+          </button>
         )}
         <Card as="section" className="p-4">
           <div className="flex items-center justify-between text-xs text-gray-600">
@@ -323,7 +394,7 @@ export default function ThemeExamRunner({
                     type="button"
                     disabled={submitting || completionFrozen}
                     onClick={() => {
-                      if (pendingCompletionRef.current !== null) return;
+                      if (pendingFinalizationRef.current !== null) return;
                       setAnswers((prev) => ({
                         ...prev,
                         [current.questionNumber]: isSelected ? null : choice.key,

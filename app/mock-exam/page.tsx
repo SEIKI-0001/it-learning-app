@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { AppState, UserAnswer } from "@/types";
@@ -25,8 +25,13 @@ import {
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
+import {
+  clearPendingAssessmentFinalization,
+  findPendingAssessmentFinalization,
+  resumePendingAssessmentFinalization,
+  type PendingAssessmentFinalization,
+} from "@/lib/examReadiness/pendingFinalization";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
@@ -38,6 +43,24 @@ import { getLessonHref } from "@/lib/learningCatalog";
 
 const FIELDS: TopicField[] = ["strategy", "management", "technology"];
 
+type MockFinalizationBase = {
+  appState: AppState;
+  tagged: UserAnswer[];
+};
+
+type MockFinalizationNext = { appState: AppState };
+type MockPendingFinalization = PendingAssessmentFinalization<
+  MockFinalizationBase,
+  MockFinalizationNext,
+  MockExamResult
+>;
+
+function isMockPendingFinalization(
+  value: PendingAssessmentFinalization<unknown, unknown, unknown>,
+): value is MockPendingFinalization {
+  return value.source === "mock";
+}
+
 export default function MockExamPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
@@ -48,28 +71,96 @@ export default function MockExamPage() {
   );
   const [starting, setStarting] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const [pendingFinalization, setPendingFinalization] = useState<MockPendingFinalization | null>(null);
   const pendingStartRef = useRef<{
     assessment: { sessionId: string; startedAt: string };
     exam: MockExam;
   } | null>(null);
-  const pendingCompletionRef = useRef<{
-    completedAt: string;
-    tagged: UserAnswer[];
-    scored: MockExamResult;
-    exposureResult?: AuthenticatedQuestionExposureResult;
-    next?: AppState;
-  } | null>(null);
+  const pendingFinalizationRef = useRef<MockPendingFinalization | null>(null);
+  const finalizingRef = useRef(false);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [router, state]);
+
+  const resumeFinalization = useCallback(async (
+    pending: MockPendingFinalization,
+    isActive: () => boolean = () => true,
+  ) => {
+    if (finalizingRef.current) return;
+    finalizingRef.current = true;
+    pendingFinalizationRef.current = pending;
+    setPendingFinalization(pending);
+    setPersistenceError(null);
+    try {
+      const finalized = await resumePendingAssessmentFinalization(pending, {
+        saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
+        completeSession: async (completion) => {
+          await completeAssessmentSessionForCurrentSession(completion);
+        },
+        deriveNextState: ({ baseState, completion, exposureResult, result: scored }) => ({
+          appState: recordMockExamResult(
+            baseState.appState,
+            baseState.tagged,
+            scored,
+            exposureResult.exposures,
+            new Date(completion.completedAt),
+          ),
+        }),
+        saveProgress: async ({ exposureResult, nextState, sessionId }) =>
+          saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
+            triggerType: "assessment",
+            triggerId: sessionId,
+          }),
+      });
+      pendingFinalizationRef.current = finalized;
+      setPendingFinalization(finalized);
+      if (!isActive()) return;
+      if (finalized.nextState === undefined || finalized.exposureResult === undefined) {
+        throw new Error("Assessment finalization was not fully persisted");
+      }
+      saveAppState(finalized.nextState.appState);
+      setState(finalized.nextState.appState);
+      setResult(finalized.result);
+      if (finalized.exposureResult.userId) {
+        saveAnswersToDb(
+          finalized.exposureResult.userId,
+          finalized.baseState.appState.progress.currentDay,
+          finalized.baseState.tagged,
+        );
+      }
+      clearPendingAssessmentFinalization(finalized.sessionId);
+      pendingFinalizationRef.current = null;
+      setPendingFinalization(null);
+    } catch {
+      if (isActive()) {
+        setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      }
+    } finally {
+      finalizingRef.current = false;
+    }
+  }, [setState]);
+
+  useEffect(() => {
+    const pending = findPendingAssessmentFinalization("mock");
+    if (pending === null || !isMockPendingFinalization(pending)) return;
+    let active = true;
+    pendingFinalizationRef.current = pending;
+    const timer = window.setTimeout(() => {
+      if (active) void resumeFinalization(pending, () => active);
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [resumeFinalization]);
 
   if (state === undefined || state === null) return <LoadingScreen />;
   const appState: AppState = state;
   const insights = result ? buildMockExamInsights(result, getAllTopics()) : null;
 
   async function startExam() {
-    if (starting) return;
+    if (starting || pendingFinalizationRef.current !== null) return;
     setStarting(true);
     setPersistenceError(null);
     // A failed response may still follow a committed start. Preserve the exact immutable
@@ -105,12 +196,8 @@ export default function MockExamPage() {
 
   async function handleComplete(answers: UserAnswer[]) {
     if (!exam || !assessment) return;
-    setPersistenceError(null);
-    let factsCommitted = false;
-    let committedResult: MockExamResult | null = null;
-    try {
-      const pending: NonNullable<typeof pendingCompletionRef.current> =
-        pendingCompletionRef.current ?? (() => {
+    const pending: MockPendingFinalization =
+      pendingFinalizationRef.current ?? (() => {
           const tagged = answers.map((answer) => {
             const topicId = exam.topicIdByQuestionId[answer.questionId] ?? answer.topicId;
             const topic = topicId ? getTopic(topicId) : undefined;
@@ -120,76 +207,43 @@ export default function MockExamPage() {
               tag: topic?.tags[0] ?? topic?.field ?? answer.tag,
             };
           });
+          const completedAt = new Date().toISOString();
+          const scored = scoreMockExam(exam, tagged);
           return {
-            completedAt: new Date().toISOString(),
-            tagged,
-            scored: scoreMockExam(exam, tagged),
+            version: 1 as const,
+            sessionId: assessment.sessionId,
+            source: "mock" as const,
+            attempts: tagged.map((answer) => ({
+              questionId: answer.questionId,
+              questionType: "mock_exam" as const,
+              topicId: answer.topicId ?? "mock-exam",
+              selectedAnswer: answer.selectedChoice ?? null,
+              isCorrect: answer.isCorrect,
+              mistakeReason: answer.isCorrect ? null : "模試の誤答",
+              answeredAt: answer.answeredAt,
+              attemptGroupId: assessment.sessionId,
+            })),
+            completion: {
+              action: "complete" as const,
+              sessionId: assessment.sessionId,
+              completedAt,
+              answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+                idempotencyKey: assessmentAnswerIdempotencyKey(
+                  assessment.sessionId,
+                  answer.questionId,
+                ),
+                canonicalQuestionId: answer.questionId,
+                topicId: answer.topicId ?? "mock-exam",
+                isCorrect: answer.isCorrect,
+                answeredAt: answer.answeredAt,
+              }]),
+            },
+            baseState: { appState, tagged },
+            result: scored,
           };
         })();
-      pendingCompletionRef.current = pending;
-      committedResult = pending.scored;
-      const exposureResult = pending.exposureResult
-        ?? await saveAssessmentQuestionAttemptsForCurrentSession(
-          pending.tagged.map((answer) => ({
-            questionId: answer.questionId,
-            questionType: "mock_exam" as const,
-            topicId: answer.topicId ?? "mock-exam",
-            selectedAnswer: answer.selectedChoice ?? null,
-            isCorrect: answer.isCorrect,
-            mistakeReason: answer.isCorrect ? null : "模試の誤答",
-            answeredAt: answer.answeredAt,
-            attemptGroupId: assessment.sessionId,
-          })),
-        );
-      pending.exposureResult = exposureResult;
-      const { exposures, userId } = exposureResult;
-      await completeAssessmentSessionForCurrentSession({
-        action: "complete",
-        sessionId: assessment.sessionId,
-        completedAt: pending.completedAt,
-        answers: pending.tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
-          idempotencyKey: assessmentAnswerIdempotencyKey(
-            assessment.sessionId,
-            answer.questionId,
-          ),
-          canonicalQuestionId: answer.questionId,
-          topicId: answer.topicId ?? "mock-exam",
-          isCorrect: answer.isCorrect,
-          answeredAt: answer.answeredAt,
-        }]),
-      });
-      const next = pending.next ?? recordMockExamResult(
-        appState,
-        pending.tagged,
-        pending.scored,
-        exposures,
-        new Date(pending.completedAt),
-      );
-      pending.next = next;
-      if (userId) {
-        const progressSaved = await saveProgressToDb(userId, next.progress, {
-          triggerType: "assessment",
-          triggerId: assessment.sessionId,
-        });
-        if (!progressSaved) throw new Error("Assessment progress finalization failed");
-      }
-      factsCommitted = true;
-      pendingCompletionRef.current = null;
-      saveAppState(next);
-      setState(next);
-      setResult(pending.scored);
-
-      if (userId) {
-        saveAnswersToDb(userId, appState.progress.currentDay, pending.tagged);
-      }
-    } catch (error) {
-      if (factsCommitted) {
-        if (committedResult) setResult(committedResult);
-        return;
-      }
-      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
-      throw error;
-    }
+    pendingFinalizationRef.current = pending;
+    await resumeFinalization(pending);
   }
 
   return (
@@ -205,6 +259,15 @@ export default function MockExamPage() {
           <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {persistenceError}
           </p>
+        )}
+        {persistenceError && pendingFinalization !== null && (
+          <button
+            type="button"
+            onClick={() => void resumeFinalization(pendingFinalization)}
+            className={buttonClass("secondary", "md", "w-full")}
+          >
+            保存を再試行する
+          </button>
         )}
         {!exam && !result && <RecordingLockNotice />}
         {!exam && !result && (
@@ -232,7 +295,7 @@ export default function MockExamPage() {
             <button
               type="button"
               onClick={() => void startExam()}
-              disabled={starting}
+              disabled={starting || pendingFinalization !== null}
               className={buttonClass("primary", "lg", "mt-4 w-full")}
             >
               模試を始める
@@ -317,7 +380,7 @@ export default function MockExamPage() {
               <button
                 type="button"
                 onClick={() => void startExam()}
-                disabled={starting}
+                disabled={starting || pendingFinalization !== null}
                 className={buttonClass("soft", "md")}
               >
                 もう一度挑戦

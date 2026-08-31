@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { UserAnswer } from "@/types";
+import type { AppState, UserAnswer } from "@/types";
 import { getTopic } from "@/lib/content";
 import {
   buildCheckpointExam,
@@ -18,13 +18,45 @@ import {
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
   startAssessmentSessionForCurrentSession,
-  type AuthenticatedQuestionExposureResult,
 } from "@/lib/userSession";
+import {
+  clearPendingAssessmentFinalization,
+  findPendingAssessmentFinalization,
+  resumePendingAssessmentFinalization,
+  type PendingAssessmentFinalization,
+} from "@/lib/examReadiness/pendingFinalization";
 import TopicQuiz from "@/components/learn/TopicQuiz";
 import LoadingScreen from "@/components/LoadingScreen";
 
 function newAttemptId(): string {
   return crypto.randomUUID();
+}
+
+type CheckpointResult = { correct: number; total: number; passed: boolean };
+type CheckpointFinalizationBase = {
+  kind: "checkpoint";
+  checkpointId: string;
+  appState: AppState;
+  tagged: UserAnswer[];
+};
+type CheckpointFinalizationNext = {
+  appState: ReturnType<typeof recordCheckpointExamResult>;
+};
+type CheckpointPendingFinalization = PendingAssessmentFinalization<
+  CheckpointFinalizationBase,
+  CheckpointFinalizationNext,
+  CheckpointResult
+>;
+
+function isCheckpointPendingFinalization(
+  value: PendingAssessmentFinalization<unknown, unknown, unknown>,
+  checkpointId: string,
+): value is CheckpointPendingFinalization {
+  if (value.source !== "checkpoint" || typeof value.baseState !== "object" || value.baseState === null) {
+    return false;
+  }
+  const baseState = value.baseState as { kind?: unknown; checkpointId?: unknown };
+  return baseState.kind === "checkpoint" && baseState.checkpointId === checkpointId;
 }
 
 export default function CheckpointExamRunner({ checkpointId }: { checkpointId: string }) {
@@ -34,21 +66,87 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
+  const [pendingFinalization, setPendingFinalization] = useState<CheckpointPendingFinalization | null>(null);
   const pendingStartedAtRef = useRef<string | null>(null);
-  const pendingCompletionRef = useRef<{
-    completedAt: string;
-    tagged: UserAnswer[];
-    exposureResult?: AuthenticatedQuestionExposureResult;
-    next?: ReturnType<typeof recordCheckpointExamResult>;
-    result: { correct: number; total: number; passed: boolean };
-  } | null>(null);
-  const [result, setResult] = useState<{ correct: number; total: number; passed: boolean } | null>(
-    null,
-  );
+  const pendingFinalizationRef = useRef<CheckpointPendingFinalization | null>(null);
+  const finalizingRef = useRef(false);
+  const [result, setResult] = useState<CheckpointResult | null>(null);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
   }, [router, state]);
+
+  const resumeFinalization = useCallback(async (
+    pending: CheckpointPendingFinalization,
+    isActive: () => boolean = () => true,
+  ) => {
+    if (finalizingRef.current) return;
+    finalizingRef.current = true;
+    pendingFinalizationRef.current = pending;
+    setPendingFinalization(pending);
+    setPersistenceError(null);
+    try {
+      const finalized = await resumePendingAssessmentFinalization(pending, {
+        saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
+        completeSession: async (completion) => {
+          await completeAssessmentSessionForCurrentSession(completion);
+        },
+        deriveNextState: ({ baseState, completion, exposureResult }) => ({
+          appState: recordCheckpointExamResult(
+            baseState.appState,
+            baseState.tagged,
+            exposureResult.exposures,
+            new Date(completion.completedAt),
+          ),
+        }),
+        saveProgress: async ({ exposureResult, nextState, sessionId }) =>
+          saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
+            triggerType: "assessment",
+            triggerId: sessionId,
+          }),
+      });
+      pendingFinalizationRef.current = finalized;
+      setPendingFinalization(finalized);
+      if (!isActive()) return;
+      if (finalized.nextState === undefined || finalized.exposureResult === undefined) {
+        throw new Error("Assessment finalization was not fully persisted");
+      }
+      saveAppState(finalized.nextState.appState);
+      setState(finalized.nextState.appState);
+      saveAnswersToDb(
+        finalized.exposureResult.userId,
+        0,
+        finalized.baseState.tagged,
+      );
+      setResult(finalized.result);
+      clearPendingAssessmentFinalization(finalized.sessionId);
+      pendingFinalizationRef.current = null;
+      setPendingFinalization(null);
+    } catch {
+      if (isActive()) {
+        setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+      }
+    } finally {
+      finalizingRef.current = false;
+    }
+  }, [setState]);
+
+  useEffect(() => {
+    const pending = findPendingAssessmentFinalization(
+      "checkpoint",
+      (value) => isCheckpointPendingFinalization(value, checkpointId),
+    );
+    if (pending === null || !isCheckpointPendingFinalization(pending, checkpointId)) return;
+    let active = true;
+    pendingFinalizationRef.current = pending;
+    const timer = window.setTimeout(() => {
+      if (active) void resumeFinalization(pending, () => active);
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [checkpointId, resumeFinalization]);
 
   const recentQuestionIds = useMemo(
     () =>
@@ -70,7 +168,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   if (state === undefined || state === null) return <LoadingScreen />;
 
   async function startExam() {
-    if (starting || startedAt !== null) return;
+    if (starting || startedAt !== null || pendingFinalizationRef.current !== null) return;
     setStarting(true);
     setPersistenceError(null);
     const nextStartedAt = pendingStartedAtRef.current ?? new Date().toISOString();
@@ -95,20 +193,45 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
 
   async function handleComplete(answers: UserAnswer[]) {
     if (!state || startedAt === null) return;
-    setPersistenceError(null);
-    let factsCommitted = false;
-    let committedResult: { correct: number; total: number; passed: boolean } | null = null;
-    try {
-      const pending: NonNullable<typeof pendingCompletionRef.current> =
-        pendingCompletionRef.current ?? (() => {
+    const pending: CheckpointPendingFinalization =
+      pendingFinalizationRef.current ?? (() => {
           const tagged = answers.map((answer) => {
             const topic = getTopic(answer.topicId ?? "");
             return { ...answer, tag: topic?.tags[0] ?? topic?.field ?? answer.tag };
           });
           const correct = tagged.filter((answer) => answer.isCorrect).length;
+          const completedAt = new Date().toISOString();
           return {
-            completedAt: new Date().toISOString(),
-            tagged,
+            version: 1 as const,
+            sessionId: attemptId,
+            source: "checkpoint" as const,
+            attempts: tagged.map((answer) => ({
+              questionId: answer.questionId,
+              questionType: "mini_exam" as const,
+              topicId: answer.topicId ?? checkpointId,
+              selectedAnswer: answer.selectedChoice ?? null,
+              isCorrect: answer.isCorrect,
+              answeredAt: answer.answeredAt,
+              attemptGroupId: attemptId,
+            })),
+            completion: {
+              action: "complete" as const,
+              sessionId: attemptId,
+              completedAt,
+              answers: tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
+                idempotencyKey: assessmentAnswerIdempotencyKey(attemptId, answer.questionId),
+                canonicalQuestionId: answer.questionId,
+                topicId: answer.topicId ?? checkpointId,
+                isCorrect: answer.isCorrect,
+                answeredAt: answer.answeredAt,
+              }]),
+            },
+            baseState: {
+              kind: "checkpoint" as const,
+              checkpointId,
+              appState: state,
+              tagged,
+            },
             result: {
               correct,
               total: tagged.length,
@@ -116,64 +239,8 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
             },
           };
         })();
-      pendingCompletionRef.current = pending;
-      committedResult = pending.result;
-      const exposureResult = pending.exposureResult
-        ?? await saveAssessmentQuestionAttemptsForCurrentSession(
-          pending.tagged.map((answer) => ({
-            questionId: answer.questionId,
-            questionType: "mini_exam" as const,
-            topicId: answer.topicId ?? checkpointId,
-            selectedAnswer: answer.selectedChoice ?? null,
-            isCorrect: answer.isCorrect,
-            answeredAt: answer.answeredAt,
-            attemptGroupId: attemptId,
-          })),
-        );
-      pending.exposureResult = exposureResult;
-      const { exposures, userId } = exposureResult;
-      await completeAssessmentSessionForCurrentSession({
-        action: "complete",
-        sessionId: attemptId,
-        completedAt: pending.completedAt,
-        answers: pending.tagged.flatMap((answer) => answer.selectedChoice === undefined ? [] : [{
-          idempotencyKey: assessmentAnswerIdempotencyKey(attemptId, answer.questionId),
-          canonicalQuestionId: answer.questionId,
-          topicId: answer.topicId ?? checkpointId,
-          isCorrect: answer.isCorrect,
-          answeredAt: answer.answeredAt,
-        }]),
-      });
-      const next = pending.next ?? recordCheckpointExamResult(
-        state,
-        pending.tagged,
-        exposures,
-        new Date(pending.completedAt),
-      );
-      pending.next = next;
-      if (userId) {
-        const progressSaved = await saveProgressToDb(userId, next.progress, {
-          triggerType: "assessment",
-          triggerId: attemptId,
-        });
-        if (!progressSaved) throw new Error("Assessment progress finalization failed");
-      }
-      factsCommitted = true;
-      pendingCompletionRef.current = null;
-      saveAppState(next);
-      setState(next);
-      if (userId) {
-        saveAnswersToDb(userId, 0, pending.tagged);
-      }
-      setResult(committedResult);
-    } catch (error) {
-      if (factsCommitted) {
-        if (committedResult) setResult(committedResult);
-        return;
-      }
-      setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
-      throw error;
-    }
+    pendingFinalizationRef.current = pending;
+    await resumeFinalization(pending);
   }
 
   if (result) {
@@ -205,7 +272,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
             setResult(null);
             setPersistenceError(null);
             pendingStartedAtRef.current = null;
-            pendingCompletionRef.current = null;
+            pendingFinalizationRef.current = null;
           }}
           className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white"
         >
@@ -228,6 +295,15 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
           {persistenceError}
         </p>
       )}
+      {persistenceError && pendingFinalization !== null && (
+        <button
+          type="button"
+          onClick={() => void resumeFinalization(pendingFinalization)}
+          className="w-full rounded-xl bg-white px-6 py-3 font-bold text-brand-600 ring-1 ring-brand-200"
+        >
+          保存を再試行する
+        </button>
+      )}
       <section className="rounded-xl bg-white p-4 border border-gray-200">
         <p className="text-sm font-bold text-gray-800">
           {exam.questions.length}問・{exam.definition.passingScore}%で合格
@@ -245,7 +321,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
         <button
           type="button"
           onClick={() => void startExam()}
-          disabled={starting}
+          disabled={starting || pendingFinalization !== null}
           className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white disabled:opacity-50"
         >
           チェックポイント試験を始める
