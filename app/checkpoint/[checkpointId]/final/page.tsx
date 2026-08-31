@@ -76,7 +76,7 @@ export default function FinalExamPage() {
         <div className="mx-auto max-w-md px-4 py-10 text-center">
           <p className="text-3xl">🧭</p>
           <p className="mt-2 text-base font-bold text-gray-800">
-            このチェックポイントに最終問題はありません
+            このチェックポイントに突破試験はありません
           </p>
           <Link
             href="/plan"
@@ -165,7 +165,7 @@ export default function FinalExamPage() {
             ← ロードマップ
           </Link>
           <p className="mt-1 text-[11px] font-semibold text-white/80">
-            突破試験（最終問題）
+            突破試験
           </p>
         </div>
       </header>

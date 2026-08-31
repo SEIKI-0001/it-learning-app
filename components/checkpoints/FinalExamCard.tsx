@@ -22,7 +22,7 @@ export default function FinalExamCard({
   const unlockedActive = gate.finalExamUnlocked && !gate.finalExamPassed;
   return (
     <section className="overflow-hidden rounded-xl bg-white border border-gray-200">
-      {/* ボス戦ヘッダ: 到達ポイントの突破試験として見せる */}
+      {/* 突破試験ヘッダ: 到達ポイントの試験として見せる */}
       <div
         className={`px-5 pb-4 pt-4 ${
           gate.finalExamPassed
@@ -57,7 +57,7 @@ export default function FinalExamCard({
             name={gate.finalExamUnlocked ? "flame" : checkpointIcon(checkpoint.id)}
             className="mr-1.5 inline-block h-4 w-4 align-[-2px] text-gray-500"
           />
-          {checkpoint.title} ボス戦
+          {checkpoint.title}
         </h1>
         <p
           className={`mt-1 text-sm ${

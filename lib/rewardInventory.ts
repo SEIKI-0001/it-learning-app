@@ -239,8 +239,12 @@ export function equipTitle(state: AppState, titleId: string | null): AppState {
   });
 }
 
-/** 3択候補の表示に使う、選ぶと何が増えるかの説明。 */
+/**
+ * 3択候補の表示に使う説明。
+ * 候補のラベル自体が「かけら ×N」なので、ここでは何に使えるかだけを言う
+ * （同じ名前を1枚のカードに二度出さない）。
+ */
 export function describeChoiceOption(option: PendingChoiceOption): string {
   if (!option.fragment) return "飾りとして手に入ります";
-  return `${fragmentLabel(option.fragment.fragmentId)} ×${option.fragment.count}`;
+  return "たからものに貯まり、称号と交換できます";
 }

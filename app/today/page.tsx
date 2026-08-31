@@ -260,7 +260,7 @@ export default function TodayPage() {
   const quests = resolveDailyQuests(state, todayLocalDate());
   const questDoneCount = quests.quests.filter((q) => q.progress >= q.goal).length;
   const finalReward = {
-    progressLabel: `ミッション ${questDoneCount}/${quests.quests.length}`,
+    progressLabel: `${questDoneCount}/${quests.quests.length} 達成`,
     xp: DAILY_QUEST_CLEAR_XP,
     state: quests.claimed
       ? ("claimed" as const)

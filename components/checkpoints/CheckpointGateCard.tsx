@@ -67,21 +67,25 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
       ? Math.round((gate.earnedRequiredCount / gate.requiredBadgeCount) * 100)
       : 100;
 
-  // おすすめ行動: 未解放なら不足バッジの獲得、解放済みなら最終問題へ。
+  // おすすめ行動: 未解放なら残っている解放条件、解放済みなら突破試験へ。
+  // 文言は lib/checkpoints.ts のロードマップ hint と同じ場合分けにそろえる
+  // （必須バッジが揃っていても未解放＝残りは分野の広がり側なので「あと0個」と出さない）。
   const recommend = gate.finalExamUnlocked
     ? gate.finalExamPassed
       ? next
-        ? `最終問題は突破済み。次は「${next.title}」へ進みましょう。`
-        : "最終問題は突破済み。合格に向けて総仕上げを続けましょう。"
-      : "必要バッジが揃いました。最終問題に挑戦して次のチェックポイントへ！"
-    : `あと${remaining}個の必須バッジを集めると最終問題が解放されます。`;
+        ? `突破試験は突破済み。次は「${next.title}」へ進みましょう。`
+        : "突破試験は突破済み。合格に向けて総仕上げを続けましょう。"
+      : "必要バッジが揃いました。突破試験に挑戦して次のチェックポイントへ！"
+    : remaining > 0
+      ? `あと${remaining}個の必須バッジを集めると突破試験が解放されます。`
+      : "3分野に手をつけると突破試験が解放されます。";
 
   return (
     <section className="overflow-hidden rounded-xl bg-white border border-gray-200">
       {/* クエストヘッダ: 旅の俯瞰と現在→次。現在地なので唯一の強調ブロックにする */}
       <div className="border-l-4 border-l-brand-500 bg-brand-50 px-5 pb-4 pt-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs font-semibold text-brand-700">クエスト進行中</p>
+          <p className="text-xs font-semibold text-brand-700">いま挑戦中のチェックポイント</p>
           <Link
             href="/badges"
             className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-brand-700 transition hover:text-brand-800"
@@ -140,7 +144,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
           </div>
           <p className="mt-1.5 text-xs text-gray-600">
             {remaining > 0
-              ? `残り ${remaining} 個で最終問題が解放`
+              ? `残り ${remaining} 個で突破試験が解放`
               : "必須バッジは全てそろいました"}
           </p>
         </div>

@@ -54,7 +54,7 @@ export const BADGE_CATEGORY_LABELS: Record<BadgeCategory, string> = {
   revenge: "苦手克服",
   word: "単語帳",
   kakomon: "過去問レベル",
-  final: "最終問題",
+  final: "突破試験",
   collection: "コレクション",
 };
 

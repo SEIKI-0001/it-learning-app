@@ -401,7 +401,7 @@ DB側の原子的判定がこの単位で行われている。
 | `GF-P1-008` | 単語帳図鑑 | カテゴリ別グリッド、コンプ率、カテゴリ達成 | `NOT_STARTED` |
 | `GF-P1-009` | デイリーミッションリロール | 3件中1枠を1日1回差替可能 | `NOT_STARTED` |
 | `GF-P1-010` | 合格宣言 | 試験日設定時に任意宣言。未宣言に不利益なし | `NOT_STARTED` |
-| `GF-P1-011` | 世界観・ストーリー統一 | CP/バッジ/モチット/突破試験/報酬の語彙・演出統一 | `NOT_STARTED` |
+| `GF-P1-011` | 世界観・ストーリー統一 | CP/バッジ/モチット/突破試験/報酬の語彙・演出統一 | `IMPLEMENTED` |
 
 ## GF-P1-001 学習量選択
 
@@ -598,9 +598,25 @@ DB側の原子的判定がこの単位で行われている。
 
 ### Acceptance Criteria
 
-- [ ] 主要画面の用語監査を実施する。
-- [ ] ゲーム語彙が学習上の意味を隠していない。
-- [ ] 初見ユーザーが各機能の目的を理解できる。
+- [x] 主要画面の用語監査を実施する。
+- [x] ゲーム語彙が学習上の意味を隠していない。
+- [x] 初見ユーザーが各機能の目的を理解できる。
+
+### 確定した語彙（ユーザー向け表示）
+
+| 概念 | 正の表示文言 | 廃止した表記 |
+|---|---|---|
+| CP進行のゲート試験 | **突破試験** | 最終問題 / ボス戦 / 突破試験（最終問題） |
+| /plan の現在CP見出し | **いま挑戦中のチェックポイント** | クエスト進行中 |
+| CPを進める条件 | **次のチェックポイントに進む条件** | （変更なし） |
+| デイリー3件 | **今日の3ミッション** | 3ミッション / ミッション n/3 |
+| 離脱後の再開導線 | **おかえりなさい**（表示に「ミッション」は出さない） | （変更なし） |
+| 補助報酬 | **かけら**（ノーマルのかけら / レアのかけら / 宝箱のかけら） | 欠片 / ノーマル欠片 / レア欠片 |
+| 分野横断の確認テスト（`/checkpoint/[id]`・CP進行と無関係） | **分野まとめテスト** | 突破試験（同名衝突） |
+
+内部識別子（`finalExam*`・`frag-common`・`badgeFragments`・`dailyQuests`・
+型・関数・DBカラム・JSONBキー）は変更していない。判定ロジック・解放条件・
+XP付与・報酬抽選にも差分はない。
 
 ---
 
@@ -951,13 +967,13 @@ DB側の原子的判定がこの単位で行われている。
 | `GF-P1-008` | P1 | `IMPLEMENTED` | #28 | glossaryCollection | Glossary collection |
 | `GF-P1-009` | P1 | `IMPLEMENTED` | #30 | questReroll | Quest reroll |
 | `GF-P1-010` | P1 | `IMPLEMENTED` | #30 | pledgeAndMochitName | Pledge |
-| `GF-P1-011` | P1 | `NOT_STARTED` | - | - | Narrative consistency |
+| `GF-P1-011` | P1 | `IMPLEMENTED` | #33 | RewardChoiceCard / QuestRouteComponent（表示文言） | 用語統一。突破試験/今日の3ミッション/かけらへ一本化 |
 | `GF-P2-001` | P2 | `DEFERRED` | - | - | Requires sufficient population |
 | `GF-P2-002` | P2 | `DEFERRED` | - | - | Conditional experiment |
 | `GF-P2-003` | P2 | `DEFERRED` | - | - | Conditional sharing |
 | `GF-P2-004` | P2 | `DEFERRED` | - | - | Safe event only |
 
-**Status 更新日:** 2026-08-30。`IMPLEMENTED` は該当 Acceptance Criteria の
+**Status 更新日:** 2026-09-01。`IMPLEMENTED` は該当 Acceptance Criteria の
 テストが通り main にマージ済みであることを指す。実機確認を経ていないため
 `VERIFIED` へは昇格していない。
 

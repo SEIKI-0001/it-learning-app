@@ -311,10 +311,10 @@ export function buildCheckpointRoadmap(state: AppState): PhaseProgress[] {
     const hint = gate.finalExamPassed
       ? "突破済み。次のチェックポイントへ進みましょう。"
       : gate.finalExamUnlocked
-        ? "最終問題に挑戦できます。"
+        ? "突破試験に挑戦できます。"
         : remaining > 0
-          ? `必須バッジをあと${remaining}個集めると最終問題が解放されます。`
-          : "3分野に手をつけると最終問題が解放されます。";
+          ? `必須バッジをあと${remaining}個集めると突破試験が解放されます。`
+          : "3分野に手をつけると突破試験が解放されます。";
 
     return { id: c.phaseId, status, progress, hint };
   });
@@ -479,7 +479,7 @@ export function recordFinalExamAttempt(
     : state;
   const base =
     validAnswers.length === 0 && !attempt.passed && attempt.wrongTopicIds.length > 0
-      ? addTopicsToReview(withEvidence, attempt.wrongTopicIds, "最終問題で間違えた", now)
+      ? addTopicsToReview(withEvidence, attempt.wrongTopicIds, "突破試験で間違えた", now)
       : withEvidence;
 
   const withAttempt: AppState = {
