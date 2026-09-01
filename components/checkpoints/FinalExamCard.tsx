@@ -65,7 +65,7 @@ export default function FinalExamCard({
           }`}
         >
           {unlockedActive
-            ? "ここを突破すれば次のチェックポイントへ進めます。"
+            ? "ここで合格すれば次のチェックポイントへ進めます。"
             : checkpoint.summary}
         </p>
       </div>

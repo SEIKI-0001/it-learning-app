@@ -73,8 +73,8 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
   const recommend = gate.finalExamUnlocked
     ? gate.finalExamPassed
       ? next
-        ? `突破試験は突破済み。次は「${next.title}」へ進みましょう。`
-        : "突破試験は突破済み。合格に向けて総仕上げを続けましょう。"
+        ? `突破試験は合格済み。次は「${next.title}」へ進みましょう。`
+        : "突破試験は合格済み。合格に向けて総仕上げを続けましょう。"
       : "必要バッジが揃いました。突破試験に挑戦して次のチェックポイントへ！"
     : remaining > 0
       ? `あと${remaining}個の必須バッジを集めると突破試験が解放されます。`
@@ -203,7 +203,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             }`}
           >
             {checkpoint.finalExam.questionCount}問中
-            {checkpoint.finalExam.passThreshold}問正解で突破 → CP
+            {checkpoint.finalExam.passThreshold}問正解で合格 → CP
             {checkpoint.order}をクリア
           </p>
         </div>

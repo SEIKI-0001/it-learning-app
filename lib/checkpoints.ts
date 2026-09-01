@@ -58,7 +58,7 @@ export const CHECKPOINTS: CheckpointDef[] = [
     requiredBadgeCount: 3,
     requiredFieldCoverage: ["technology", "management", "strategy"],
     finalExam: { questionCount: 6, passThreshold: 4, weakRatio: 0 },
-    winConditionLabel: "6問中4問以上の正解で突破です。",
+    winConditionLabel: "6問中4問以上の正解で合格です。",
   },
   {
     id: "cp2",
@@ -70,7 +70,7 @@ export const CHECKPOINTS: CheckpointDef[] = [
     requiredBadgeCount: 4,
     requiredFieldCoverage: ["technology", "management", "strategy"],
     finalExam: { questionCount: 10, passThreshold: 7, weakRatio: 0 },
-    winConditionLabel: "10問中7問以上の正解で突破です。",
+    winConditionLabel: "10問中7問以上の正解で合格です。",
   },
   {
     id: "cp3",
@@ -83,7 +83,7 @@ export const CHECKPOINTS: CheckpointDef[] = [
     requiredFieldCoverage: ["technology", "management", "strategy"],
     recentAccuracyMin: 0.6,
     finalExam: { questionCount: 12, passThreshold: 8, weakRatio: 0.2 },
-    winConditionLabel: "12問中8問以上の正解で突破です。",
+    winConditionLabel: "12問中8問以上の正解で合格です。",
   },
   {
     id: "cp4",
@@ -95,7 +95,7 @@ export const CHECKPOINTS: CheckpointDef[] = [
     requiredBadgeCount: 3,
     requiredFieldCoverage: [],
     finalExam: { questionCount: 10, passThreshold: 7, weakRatio: 0.4 },
-    winConditionLabel: "10問中7問以上の正解で突破です（苦手を多めに出題）。",
+    winConditionLabel: "10問中7問以上の正解で合格です（苦手を多めに出題）。",
   },
   {
     id: "cp5",
@@ -108,7 +108,7 @@ export const CHECKPOINTS: CheckpointDef[] = [
     requiredFieldCoverage: ["technology", "management", "strategy"],
     recentAccuracyMin: 0.65,
     finalExam: { questionCount: 15, passThreshold: 11, weakRatio: 0.4 },
-    winConditionLabel: "15問中11問以上の正解で突破です。",
+    winConditionLabel: "15問中11問以上の正解で合格です。",
   },
   {
     id: "cp6",
@@ -120,7 +120,7 @@ export const CHECKPOINTS: CheckpointDef[] = [
     requiredBadgeCount: 3,
     requiredFieldCoverage: [],
     finalExam: { questionCount: 20, passThreshold: 14, weakRatio: 0.5 },
-    winConditionLabel: "20問中14問以上の正解で突破です。",
+    winConditionLabel: "20問中14問以上の正解で合格です。",
   },
 ];
 
@@ -309,7 +309,7 @@ export function buildCheckpointRoadmap(state: AppState): PhaseProgress[] {
           : 0;
     const remaining = c.requiredBadgeCount - gate.earnedRequiredCount;
     const hint = gate.finalExamPassed
-      ? "突破済み。次のチェックポイントへ進みましょう。"
+      ? "このチェックポイントは突破済み。次へ進みましょう。"
       : gate.finalExamUnlocked
         ? "突破試験に挑戦できます。"
         : remaining > 0

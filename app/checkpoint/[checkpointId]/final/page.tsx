@@ -241,7 +241,7 @@ export default function FinalExamPage() {
             <section className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-amber-200">
               <p className="text-center text-4xl">💪</p>
               <p className="mt-2 text-center text-lg font-bold text-gray-800">
-                あと少し！次で突破できます
+                あと少し！次は合格できます
               </p>
               <p className="mt-1 text-center text-sm font-semibold text-gray-600">
                 {result.total}問中 {result.correct}問正解（合格まであと
@@ -319,7 +319,7 @@ export default function FinalExamPage() {
             )}
             <p className="text-3xl">⚔️</p>
             <p className="mt-2 text-sm font-semibold text-gray-700">
-              必要な条件は揃いました。突破すれば次のチェックポイントへ進めます。
+              必要な条件は揃いました。合格すれば次のチェックポイントへ進めます。
             </p>
             {examError && (
               <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
