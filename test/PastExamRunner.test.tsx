@@ -240,6 +240,14 @@ async function startMode(mode: "練習モード" | "本番モード") {
   await screen.findByText("問1の問題文");
 }
 
+async function flushFinalizationWork() {
+  await act(async () => {
+    // Response.json() and the frozen receipt transitions each queue a
+    // microtask. Drain those boundaries without advancing the exam timer.
+    for (let index = 0; index < 12; index += 1) await Promise.resolve();
+  });
+}
+
 describe("モード選択", () => {
   it("練習モードと本番モードを選べる", () => {
     renderRunner();
@@ -1081,7 +1089,7 @@ describe("結果画面", () => {
     expect(progressSaves()).toHaveLength(1);
   });
 
-  it("年度変更で古い自動再開が残っても新しい年度のモード選択を finalizing のままにしない", async () => {
+  it("年度変更後に古い frozen 自動再開が解決しても P0・端末確定・clear を実行しない", async () => {
     initializeAppState({
       itExperience: "none",
       dailyMinutes: "15",
@@ -1094,6 +1102,11 @@ describe("結果画面", () => {
     fireEvent.click(screen.getByText("選択肢エの本文"));
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    const oldSession = [...storageValues.entries()].find(([key]) =>
+      key.startsWith("fequest:pastExam") && key.endsWith(":exam"),
+    );
+    expect(oldSession).toBeDefined();
+    const appStateBeforeBoundary = storageValues.get("fequest:appstate");
     cleanup();
 
     const originalFetch = globalThis.fetch;
@@ -1125,17 +1138,185 @@ describe("結果画面", () => {
     resolveCompletion(assessmentResponse("complete", String(
       assessmentActions().find((action) => action.action === "complete")?.sessionId,
     )));
-    await waitFor(() => expect([...storageValues.keys()].filter((key) => key.startsWith("fequest:pastExam")))
-      .toEqual([]));
+    await flushFinalizationWork();
+
+    expect(progressSaves()).toHaveLength(0);
+    expect(storageValues.get("fequest:appstate")).toBe(appStateBeforeBoundary);
+    expect(storageValues.get(oldSession![0])).toBe(oldSession![1]);
+    expect(screen.queryByText("50%")).not.toBeInTheDocument();
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
+  });
+
+  it("年度変更後に古い frozen strict attempt が解決しても completion へ進まない", async () => {
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    attemptFailures = 1;
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    cleanup();
+
+    const originalFetch = globalThis.fetch;
+    let resolveAttempts!: (response: Response) => void;
+    let pendingAttempts: Array<{ questionId: string }> = [];
+    const pendingAttemptSave = new Promise<Response>((resolve) => {
+      resolveAttempts = resolve;
+    });
+    vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+      if (url === "/api/question-attempts/save") {
+        pendingAttempts = JSON.parse(String(init?.body)).attempts;
+        return pendingAttemptSave;
+      }
+      return originalFetch(url, init);
+    }));
+
+    const mounted = renderRunner(2026);
+    await waitFor(() => expect(savedAttempts()).toHaveLength(2));
+    const oldSession = [...storageValues.entries()].find(([key]) =>
+      key.startsWith("fequest:pastExam") && key.endsWith(":exam"),
+    );
+    expect(oldSession).toBeDefined();
+    const appStateBeforeBoundary = storageValues.get("fequest:appstate");
+
     mounted.rerender(
       <PastExamRunner
-        year={2026}
-        yearLabel="令和8年度"
-        questions={makeQuestions()}
+        year={2025}
+        yearLabel="令和7年度"
+        questions={makeQuestions().map((question) => ({ ...question, year: 2025 }))}
       />,
     );
-    const originalYearCard = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
-    expect(within(originalYearCard).getByRole("button", { name: "始める" })).toBeEnabled();
+    const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
+
+    resolveAttempts(new Response(JSON.stringify({
+      ok: true,
+      userId: "user-1",
+      saved: pendingAttempts.length,
+      exposures: pendingAttempts.map((attempt) => ({
+        questionId: attempt.questionId,
+        state: "first",
+        attemptedBefore: false,
+        firstAttemptAt: "2026-08-15T00:00:00.000Z",
+        attemptCount: 1,
+      })),
+    }), { status: 200 }));
+    await flushFinalizationWork();
+
+    expect(assessmentActions().filter((action) => action.action === "complete")).toHaveLength(0);
+    expect(progressSaves()).toHaveLength(0);
+    expect(storageValues.get("fequest:appstate")).toBe(appStateBeforeBoundary);
+    expect(storageValues.get(oldSession![0])).toBe(oldSession![1]);
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
+  });
+
+  it("年度変更後に開始済みの古い frozen P0 が解決しても端末確定・clear を実行しない", async () => {
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    assessmentMalformed.complete = 1;
+    renderRunner();
+    await startMode("本番モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("保存");
+    cleanup();
+
+    const originalFetch = globalThis.fetch;
+    let resolveProgress!: (response: Response) => void;
+    const pendingProgress = new Promise<Response>((resolve) => {
+      resolveProgress = resolve;
+    });
+    vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+      if (url === "/api/progress/save") return pendingProgress;
+      return originalFetch(url, init);
+    }));
+
+    const mounted = renderRunner(2026);
+    await waitFor(() => expect(progressSaves()).toHaveLength(1));
+    const oldSession = [...storageValues.entries()].find(([key]) =>
+      key.startsWith("fequest:pastExam") && key.endsWith(":exam"),
+    );
+    expect(oldSession).toBeDefined();
+    const appStateBeforeBoundary = storageValues.get("fequest:appstate");
+
+    mounted.rerender(
+      <PastExamRunner
+        year={2025}
+        yearLabel="令和7年度"
+        questions={makeQuestions().map((question) => ({ ...question, year: 2025 }))}
+      />,
+    );
+    const card = screen.getByRole("heading", { name: "本番モード" }).closest("section")!;
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
+
+    resolveProgress(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    await flushFinalizationWork();
+
+    expect(progressSaves()).toHaveLength(1);
+    expect(storageValues.get("fequest:appstate")).toBe(appStateBeforeBoundary);
+    expect(storageValues.get(oldSession![0])).toBe(oldSession![1]);
+    expect(screen.queryByText("50%")).not.toBeInTheDocument();
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
+  });
+
+  it("年度変更後に古い legacy 練習採点が解決しても P0・端末確定・clear を実行しない", async () => {
+    initializeAppState({
+      itExperience: "none",
+      dailyMinutes: "15",
+      examPlan: "undecided",
+      confidence: 1,
+    });
+    renderRunner();
+    await startMode("練習モード");
+    fireEvent.click(screen.getByText("選択肢エの本文"));
+    await waitFor(() => expect(savedAttempts()).toHaveLength(1));
+
+    const originalFetch = globalThis.fetch;
+    let resolveCompletion!: (response: Response) => void;
+    const pendingCompletion = new Promise<Response>((resolve) => {
+      resolveCompletion = resolve;
+    });
+    vi.stubGlobal("fetch", vi.fn((url: string, init?: RequestInit) => {
+      if (url === "/api/assessment-sessions") {
+        const body = JSON.parse(String(init?.body)) as { action: string };
+        if (body.action === "complete") return pendingCompletion;
+      }
+      return originalFetch(url, init);
+    }));
+
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+    await waitFor(() => expect(assessmentActions().filter((action) => action.action === "complete"))
+      .toHaveLength(1));
+    const oldSession = [...storageValues.entries()].find(([key]) =>
+      key.startsWith("fequest:pastExam") && key.endsWith(":practice"),
+    );
+    expect(oldSession).toBeDefined();
+    const appStateBeforeBoundary = storageValues.get("fequest:appstate");
+
+    cleanup();
+    renderRunner(2025);
+    const card = screen.getByRole("heading", { name: "練習モード" }).closest("section")!;
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
+
+    resolveCompletion(assessmentResponse("complete", String(
+      assessmentActions().find((action) => action.action === "complete")?.sessionId,
+    )));
+    await flushFinalizationWork();
+
+    expect(progressSaves()).toHaveLength(0);
+    expect(storageValues.get("fequest:appstate")).toBe(appStateBeforeBoundary);
+    expect(storageValues.get(oldSession![0])).toBe(oldSession![1]);
+    expect(screen.queryByText("50%")).not.toBeInTheDocument();
+    expect(within(card).getByRole("button", { name: "始める" })).toBeEnabled();
   });
 
   it("official finalization keeps its session and result hidden when session removal fails", async () => {

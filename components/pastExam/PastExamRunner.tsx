@@ -11,7 +11,7 @@
 //   running … 出題
 //   result  … 採点結果
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import Button from "@/components/ui/Button";
 import PastExamQuestionCard from "@/components/pastExam/PastExamQuestionCard";
 import PastExamResultView from "@/components/pastExam/PastExamResultView";
@@ -172,12 +172,23 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const finalizingIdentityRef = useRef<string | null>(null);
   const finalizationGenerationRef = useRef(0);
   const identityGenerationRef = useRef<string | null>(null);
+  const mountedRef = useRef(false);
   const [finalizingIdentity, setFinalizingIdentity] = useState<string | null>(null);
   const [startingMode, setStartingMode] = useState<PastExamMode | null>(null);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const pendingStartRef = useRef<Partial<Record<PastExamMode, PastExamSession>>>({});
   const autoResumedSessionRef = useRef<string | null>(null);
   const [identity, setIdentity] = useState<QuestionExposureIdentity | null>(null);
+  useLayoutEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      // A manual (legacy practice) completion does not have the auto-resume
+      // callback's active flag. Fence it at unmount so a response resolving
+      // after navigation cannot mutate shared storage for the old year.
+      mountedRef.current = false;
+      finalizationGenerationRef.current += 1;
+    };
+  }, []);
   useEffect(() => {
     void resolveQuestionExposureIdentity().then(setIdentity);
   }, []);
@@ -188,6 +199,13 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   const userId = identity?.authState === "authenticated" ? identity.userId : null;
   const sessionUserId = userReady ? userId : "__unverified__";
   const finalizationIdentity = `${sessionUserId}:${year}`;
+  const currentFinalizationIdentityRef = useRef(finalizationIdentity);
+  // A route prop can change before passive effects run. Updating this fence in
+  // the layout phase closes that gap for a response that resolves immediately
+  // after the new year has committed.
+  useLayoutEffect(() => {
+    currentFinalizationIdentityRef.current = finalizationIdentity;
+  }, [finalizationIdentity]);
   // A stale promise may retain its old state, but it must not disable controls
   // for a new user/year identity while its old remote request settles.
   const finalizing = finalizingIdentity === finalizationIdentity;
@@ -255,8 +273,21 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     const operationIdentity = finalizationIdentity;
     const operationGeneration = finalizationGenerationRef.current;
     const isCurrentOperation = () => isActive()
+      && mountedRef.current
+      && finalizationIdentity === operationIdentity
+      && currentFinalizationIdentityRef.current === operationIdentity
+      && finalizingRef.current
       && finalizingIdentityRef.current === operationIdentity
       && finalizationGenerationRef.current === operationGeneration;
+    const assertCurrentOperation = () => {
+      if (!isCurrentOperation()) {
+        // A stale user/year operation may have received an idempotent remote
+        // acknowledgement, but it must leave its frozen session available for
+        // that identity to resume. In particular, do not commit shared local
+        // state or clear that session after the identity boundary.
+        throw new Error("Past exam finalization is stale");
+      }
+    };
     finalizingRef.current = true;
     finalizingIdentityRef.current = operationIdentity;
     setFinalizingIdentity(operationIdentity);
@@ -266,6 +297,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     if (hasFrozenFinalization(pending)) {
       let persistedSession = current;
       try {
+        assertCurrentOperation();
         const finalized = await resumePendingAssessmentFinalization(pending.finalization, {
           validate: (value) => isValidOfficialPastFinalizationForRunner(value, current, questions),
           rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
@@ -279,6 +311,7 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
           // Official past exams already have a durable, user-scoped session
           // record. Keep this nested there instead of creating a competing key.
           freeze: (value) => {
+            assertCurrentOperation();
             const nextMutation: Extract<PastExamPendingMutation, { action: "complete" }> = {
               action: "complete",
               completedAt: value.completion.completedAt,
@@ -307,49 +340,68 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
             if (!restored || !hasFrozenFinalization(restored.pendingMutation)) {
               throw new Error("Could not reload pending assessment finalization");
             }
+            assertCurrentOperation();
             persistedSession = restored;
-            if (isCurrentOperation()) setSession(restored);
+            setSession(restored);
             return restored.pendingMutation.finalization;
           },
-          saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
-          completeSession: async (completion) => {
-            await completeAssessmentSessionForCurrentSession(completion);
+          saveAttempts: async (attempts) => {
+            assertCurrentOperation();
+            const exposureResult = await saveAssessmentQuestionAttemptsForCurrentSession(attempts);
+            assertCurrentOperation();
+            return exposureResult;
           },
-          deriveNextState: ({ baseState, completion, exposureResult, result: graded }) => ({
-            appState: baseState.appState
-              ? recordPastExamLearningResult(
-                baseState.appState,
-                graded,
-                baseState.answerSnapshot,
-                exposureResult.exposures,
-                new Date(completion.completedAt),
-              )
-              : null,
-          }),
+          completeSession: async (completion) => {
+            assertCurrentOperation();
+            await completeAssessmentSessionForCurrentSession(completion);
+            assertCurrentOperation();
+          },
+          deriveNextState: ({ baseState, completion, exposureResult, result: graded }) => {
+            assertCurrentOperation();
+            const nextState = {
+              appState: baseState.appState
+                ? recordPastExamLearningResult(
+                  baseState.appState,
+                  graded,
+                  baseState.answerSnapshot,
+                  exposureResult.exposures,
+                  new Date(completion.completedAt),
+                )
+                : null,
+            };
+            assertCurrentOperation();
+            return nextState;
+          },
           saveProgress: async ({ exposureResult, nextState, sessionId }) => {
+            assertCurrentOperation();
             if (nextState.appState === null) return true;
-            return saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
+            const saved = await saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
               triggerType: "assessment",
               triggerId: sessionId,
             });
+            assertCurrentOperation();
+            return saved;
           },
         });
+        assertCurrentOperation();
         if (finalized.nextState === undefined) {
           throw new Error("Assessment finalization was not fully persisted");
         }
         if (finalized.nextState.appState !== null) {
+          assertCurrentOperation();
           if (!saveAppStateVerified(finalized.nextState.appState)) {
             throw new Error("Assessment finalization local state could not be persisted");
           }
+          assertCurrentOperation();
         }
+        assertCurrentOperation();
         if (!clearSession(storageUserId, year, current.mode)) {
           throw new Error("Assessment finalization could not be cleared");
         }
-        if (isCurrentOperation()) {
-          setSession(null);
-          setResult(finalized.result);
-          setPhase("result");
-        }
+        assertCurrentOperation();
+        setSession(null);
+        setResult(finalized.result);
+        setPhase("result");
         return true;
       } catch {
         if (isCurrentOperation()) {
@@ -380,15 +432,18 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     });
     let appStateToCommit: AppState | null = null;
     try {
+      assertCurrentOperation();
       await completeAssessmentSessionForCurrentSession({
         action: "complete",
         sessionId: current.sessionId,
         completedAt: pending.completedAt,
         answers: pending.assessmentAnswers,
       });
+      assertCurrentOperation();
 
       const currentState = loadAppState();
       if (currentState && pending.progressSnapshot !== null) {
+        assertCurrentOperation();
         const recomputed = recordPastExamLearningResult(
           currentState,
           graded,
@@ -401,7 +456,9 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
         const next = pending.progressSnapshot === undefined
           ? recomputed
           : { ...recomputed, progress: pending.progressSnapshot };
+        assertCurrentOperation();
         if (pending.confirmedUserId) {
+          assertCurrentOperation();
           const progressSaved = await saveProgressToDb(
             pending.confirmedUserId,
             next.progress,
@@ -410,22 +467,27 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
               triggerId: current.sessionId,
             },
           );
+          assertCurrentOperation();
           if (!progressSaved) throw new Error("Assessment progress finalization failed");
         }
         appStateToCommit = next;
       }
 
-      if (appStateToCommit !== null && !saveAppStateVerified(appStateToCommit)) {
-        throw new Error("Assessment finalization local state could not be persisted");
+      if (appStateToCommit !== null) {
+        assertCurrentOperation();
+        if (!saveAppStateVerified(appStateToCommit)) {
+          throw new Error("Assessment finalization local state could not be persisted");
+        }
+        assertCurrentOperation();
       }
+      assertCurrentOperation();
       if (!clearSession(storageUserId, year, current.mode)) {
         throw new Error("Assessment finalization could not be cleared");
       }
-      if (isCurrentOperation()) {
-        setSession(null);
-        setResult(graded);
-        setPhase("result");
-      }
+      assertCurrentOperation();
+      setSession(null);
+      setResult(graded);
+      setPhase("result");
       return true;
     } catch {
       if (isCurrentOperation()) {
