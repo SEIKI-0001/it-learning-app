@@ -18,14 +18,14 @@ const CHOICE: PendingChoice = {
   options: [
     {
       id: "opt-frag-rare",
-      label: "レア欠片 ×2",
+      label: "レアのかけら ×2",
       rarity: "rare",
       emoji: "x",
       fragment: { fragmentId: "frag-rare", count: 2 },
     },
     {
       id: "opt-frag-common",
-      label: "ノーマル欠片 ×3",
+      label: "ノーマルのかけら ×3",
       rarity: "common",
       emoji: "x",
       fragment: { fragmentId: "frag-common", count: 3 },
@@ -58,7 +58,7 @@ describe("all three options are wins", () => {
   it("reports the chosen option to the caller", () => {
     const onSelect = vi.fn();
     render(<RewardChoiceCard choice={CHOICE} onSelect={onSelect} />);
-    fireEvent.click(screen.getByText("ノーマル欠片 ×3").closest("button")!);
+    fireEvent.click(screen.getByText("ノーマルのかけら ×3").closest("button")!);
 
     expect(onSelect).toHaveBeenCalledWith(
       expect.objectContaining({ id: "opt-frag-common" }),
@@ -102,7 +102,7 @@ describe("rarity is readable without colour", () => {
 
   it("marks each option in the card with its own rarity", () => {
     render(<RewardChoiceCard choice={CHOICE} onSelect={vi.fn()} />);
-    const commonOption = screen.getByText("ノーマル欠片 ×3").closest("button")!;
+    const commonOption = screen.getByText("ノーマルのかけら ×3").closest("button")!;
 
     expect(within(commonOption).getByText("ノーマル")).toBeInTheDocument();
   });

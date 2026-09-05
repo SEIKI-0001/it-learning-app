@@ -54,7 +54,7 @@ export const BADGE_CATEGORY_LABELS: Record<BadgeCategory, string> = {
   revenge: "苦手克服",
   word: "単語帳",
   kakomon: "過去問レベル",
-  final: "最終問題",
+  final: "突破試験",
   collection: "コレクション",
 };
 
@@ -345,12 +345,12 @@ export type FinalExamState = "locked" | "unlocked" | "passed";
 export const FINAL_EXAM_STATE_LABELS: Record<FinalExamState, string> = {
   locked: "🔒 突破試験：ロック中",
   unlocked: "⚔️ 突破試験：挑戦できます",
-  passed: "🏆 突破試験：クリア済み",
+  passed: "🏆 突破試験：合格済み",
 };
 
 /** 状態ラベル（ピル・バッジなど狭い場所向けの短縮形）。 */
 export const FINAL_EXAM_STATE_SHORT: Record<FinalExamState, string> = {
   locked: "🔒 ロック中",
   unlocked: "⚔️ 挑戦できます",
-  passed: "🏆 クリア済み",
+  passed: "🏆 合格済み",
 };

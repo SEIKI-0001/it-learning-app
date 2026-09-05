@@ -28,7 +28,7 @@ describe("QuestRoute current location", () => {
         ]}
         hrefFor={(node) => `/learn/${node.topicId}`}
         finalReward={{
-          progressLabel: "ミッション 0/3",
+          progressLabel: "0/3 達成",
           xp: 10,
           state: "locked",
           onClaim: vi.fn(),

@@ -15,6 +15,7 @@ import type {
   PendingChoice,
 } from "@/types/checkpoint";
 import { getCheckpointProgress } from "@/lib/checkpoints";
+import { fragmentLabel } from "@/lib/rewardInventory";
 import { grantExp } from "@/lib/game";
 
 const PITY_THRESHOLD = 5; // これ以上レアが出ていなければ次回レア確定
@@ -101,14 +102,14 @@ export function rollBadgeDrop(
         options: [
           {
             id: "opt-frag-rare",
-            label: "レア欠片 ×2",
+            label: `${fragmentLabel("frag-rare")} ×2`,
             rarity: "rare",
             emoji: "🔷",
             fragment: { fragmentId: "frag-rare", count: 2 },
           },
           {
             id: "opt-frag-common",
-            label: "ノーマル欠片 ×3",
+            label: `${fragmentLabel("frag-common")} ×3`,
             rarity: "common",
             emoji: "🔹",
             fragment: { fragmentId: "frag-common", count: 3 },
@@ -133,7 +134,7 @@ export function rollBadgeDrop(
       fragmentId,
       count,
       bonusXp: 0,
-      label: `ノーマル欠片 ×${count}`,
+      label: `${fragmentLabel(fragmentId)} ×${count}`,
       emoji: "🔹",
     };
   }

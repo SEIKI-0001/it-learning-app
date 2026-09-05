@@ -127,7 +127,7 @@ export default function NextUnlocks({ state }: { state: AppState }) {
     unlocks.push({
       icon: "award",
       title: `CP${currentCheckpoint.order}「${currentCheckpoint.title}」の突破試験に挑戦できます`,
-      detail: "突破するとモチットの成長と次の地点が近づく",
+      detail: "合格するとモチットの成長と次の地点が近づく",
       href: "/plan",
       challengeable: true,
     });
