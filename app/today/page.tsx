@@ -380,6 +380,8 @@ export default function TodayPage() {
                   ? `/ai-grading?topicId=${encodeURIComponent(node.topicId)}`
                   : null
               }
+              // Primary と同じ行動なら、ルート側に同じ開始ボタンを重ねない。
+              primaryHref={primary?.href ?? null}
               finalReward={finalReward}
             />
           )}

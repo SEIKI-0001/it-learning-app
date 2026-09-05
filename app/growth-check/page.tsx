@@ -13,10 +13,10 @@
 //   - ミニチャレンジの記録は既存の保存経路のみ。初見判定は自前で持たない。
 //   - CPごとに1回だけ表示する（表示できた時点で記録する）。
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { UserAnswer } from "@/types";
+import type { AppState, UserAnswer } from "@/types";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppState } from "@/lib/storage";
 import { buildCheckpointGate, getCheckpointProgress } from "@/lib/checkpoints";
@@ -47,6 +47,23 @@ import PageHeader from "@/components/ui/PageHeader";
 import { buttonClass } from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
 
+/** 成長確認の表示内容。evidence も challenge も空なら「比較材料なし」。 */
+export type GrowthCheckView = {
+  evidence: GrowthEvidence[];
+  challenge: GrowthChallengeItem[];
+};
+
+/**
+ * 表示内容を組み立てる（純関数）。
+ * 材料が十分なら出題しない。足りないときだけ任意ミニチャレンジを添える。
+ */
+export function buildGrowthCheckView(state: AppState): GrowthCheckView {
+  const gate = buildCheckpointGate(state, getCheckpointProgress(state).currentCheckpointId);
+  const evidence = buildGrowthEvidence({ state, gate });
+  const challenge = hasSufficientEvidence(evidence) ? [] : buildGrowthChallenge({ state });
+  return { evidence, challenge };
+}
+
 export default function GrowthCheckPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
@@ -58,20 +75,22 @@ export default function GrowthCheckPage() {
     if (state === null) router.replace("/onboarding");
   }, [router, state]);
 
-  // 表示内容はマウント時に一度だけ確定させる（閲覧中に入れ替わらないように）。
-  const [view] = useState<{
-    evidence: GrowthEvidence[];
-    challenge: GrowthChallengeItem[];
-  } | null>(() => {
-    if (!state) return null;
-    const gate = buildCheckpointGate(state, getCheckpointProgress(state).currentCheckpointId);
-    const evidence = buildGrowthEvidence({ state, gate });
-    // 材料が十分なら出題しない。足りないときだけ任意ミニチャレンジを添える。
-    const challenge = hasSufficientEvidence(evidence)
-      ? []
-      : buildGrowthChallenge({ state });
-    return { evidence, challenge };
-  });
+  // 表示内容は AppState が読めた最初の1回だけ確定させ、以後は入れ替えない
+  // （閲覧中に出題が差し替わらないようにする）。
+  //
+  // useState の初期化関数で組み立ててはいけない。useAppState は必ず undefined から
+  // 始まり effect で値を入れるため、初期化関数が走る初回レンダーでは state が無く、
+  // null が「二度と再計算されない初期値」として固定されてしまう（永久 Loading）。
+  // AppState が読めたら組み立てる。依存は「読めたかどうか」だけにして、閲覧中に
+  // state が更新されても（表示済みの記録など）出題が入れ替わらないようにする。
+  const loaded = state !== undefined && state !== null;
+  const view = useMemo<GrowthCheckView | null>(
+    () => (state ? buildGrowthCheckView(state) : null),
+    // state を依存に入れない意図的な選択。入れると閲覧中の state 更新で
+    // ミニ確認の問題が差し替わり、解答途中の内容が失われる。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [loaded],
+  );
 
   // 実際に成長確認を見せられたCPだけを「表示済み」にする
   // （/today にカードが出ただけでは消費させない）。
@@ -89,6 +108,9 @@ export default function GrowthCheckPage() {
     if (userId) saveProgressToDb(userId, next.progress);
   }, [setState, state, view]);
 
+  // 読み込み中（state 未確定 or 確定直後で view 組み立て前）。
+  // 「比較データなし」は view が確定したうえで evidence/challenge が空の状態であり、
+  // ここではなく下の空表示で扱う。
   if (state === undefined || state === null || view === null) return <LoadingScreen />;
 
   const { evidence, challenge } = view;

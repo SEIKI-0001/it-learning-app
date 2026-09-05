@@ -6,8 +6,9 @@ import { getLessonLocation } from "@/lib/learningCatalog";
 import {
   buildComebackMission,
   getDaysAway,
+  COMEBACK_MAX_ITEMS,
   COMEBACK_MIN_DAYS_AWAY,
-  COMEBACK_MISSION_SIZE,
+  COMEBACK_TARGET_MINUTES,
 } from "@/lib/comebackMission";
 
 // GF-P1-002。受け入れ基準:
@@ -102,8 +103,45 @@ describe("what it asks for", () => {
   it("keeps the mission short", () => {
     const mission = buildComebackMission({ state: returning(5, 8), now: NOW });
 
-    expect(mission?.items.length).toBeLessThanOrEqual(COMEBACK_MISSION_SIZE);
+    expect(mission?.items.length).toBeLessThanOrEqual(COMEBACK_MAX_ITEMS);
     expect(mission?.items.length).toBeGreaterThan(0);
+  });
+
+  // GF-P1-002「3〜5分の復帰ルート」。件数固定だと1件8分×2件で通常の学習量になる。
+  it("stays inside the minute budget whenever a unit fits", () => {
+    const short = LEARNABLE.filter((t) => t.estimatedMinutes <= COMEBACK_TARGET_MINUTES);
+    if (short.length === 0) return; // 予算に収まる単位が無い教材構成なら fallback 側で担保する
+    const appState = state({
+      lastPlayedAt: daysAgo(5),
+      completedTopics: short.map((t) => t.id),
+    });
+    const mission = buildComebackMission({ state: appState, now: NOW });
+
+    expect(mission?.totalMinutes).toBeLessThanOrEqual(COMEBACK_TARGET_MINUTES);
+  });
+
+  // フォールバック: 予算に収まる単位が1つも無いときは、いちばん短いものを1件だけ。
+  it("falls back to the single shortest unit when nothing fits the budget", () => {
+    const long = LEARNABLE.filter((t) => t.estimatedMinutes > COMEBACK_TARGET_MINUTES);
+    const appState = state({
+      lastPlayedAt: daysAgo(5),
+      completedTopics: long.map((t) => t.id),
+    });
+    const mission = buildComebackMission({ state: appState, now: NOW });
+    const shortest = Math.min(...long.map((t) => t.estimatedMinutes));
+
+    expect(mission?.items).toHaveLength(1);
+    expect(mission?.totalMinutes).toBe(shortest);
+  });
+
+  // 回帰: 8分級のトピックしか無くても、復帰直後に通常の学習量を積まない。
+  it("never stacks a normal-sized study load on a returning user", () => {
+    const mission = buildComebackMission({ state: returning(5, 8), now: NOW });
+    const shortest = Math.min(...LEARNABLE.map((t) => t.estimatedMinutes));
+
+    expect(mission?.totalMinutes).toBeLessThanOrEqual(
+      Math.max(COMEBACK_TARGET_MINUTES, shortest),
+    );
   });
 
   it("only revisits topics the user already finished", () => {
@@ -113,19 +151,36 @@ describe("what it asks for", () => {
     expect(mission?.items.every((item) => completed.has(item.topicId))).toBe(true);
   });
 
+  // 予算に収まる単位が複数あるときは、いちばん長く触れていないものから選ぶ。
   it("starts with the topic left untouched the longest", () => {
-    const topics = LEARNABLE.slice(0, 3);
+    const topics = LEARNABLE.filter(
+      (t) => t.estimatedMinutes <= COMEBACK_TARGET_MINUTES,
+    ).slice(0, 3);
+    if (topics.length < 2) return; // 予算内の教材が足りなければ fallback 側の担保に任せる
     const appState = state(
       { lastPlayedAt: daysAgo(5), completedTopics: topics.map((t) => t.id) },
-      [
-        answer(topics[0].id, daysAgo(6)),
-        answer(topics[1].id, daysAgo(40)),
-        answer(topics[2].id, daysAgo(20)),
-      ],
+      topics.map((t, i) => answer(t.id, daysAgo([6, 40, 20][i] ?? 10))),
     );
     const mission = buildComebackMission({ state: appState, now: NOW });
 
     expect(mission?.items[0].topicId).toBe(topics[1].id);
+  });
+
+  // フォールバック時は「短さ」が優先。同じ長さが並べば古い方が残る。
+  it("prefers the shortest over the stalest when nothing fits the budget", () => {
+    const long = LEARNABLE.filter((t) => t.estimatedMinutes > COMEBACK_TARGET_MINUTES);
+    const shortestMinutes = Math.min(...long.map((t) => t.estimatedMinutes));
+    const stalest = long.find((t) => t.estimatedMinutes > shortestMinutes);
+    const shortest = long.find((t) => t.estimatedMinutes === shortestMinutes);
+    if (!stalest || !shortest) return;
+    const appState = state(
+      { lastPlayedAt: daysAgo(5), completedTopics: [stalest.id, shortest.id] },
+      [answer(stalest.id, daysAgo(90)), answer(shortest.id, daysAgo(3))],
+    );
+    const mission = buildComebackMission({ state: appState, now: NOW });
+
+    expect(mission?.items).toHaveLength(1);
+    expect(mission?.items[0].topicId).toBe(shortest.id);
   });
 
   it("reports the total minutes it will take", () => {
