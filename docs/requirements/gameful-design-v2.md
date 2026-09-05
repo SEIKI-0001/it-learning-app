@@ -129,7 +129,7 @@ LINEの定時pushリマインダーは現時点の既存返信機能とは別の
 ## GF-P0-001 `/today` の主CTA統合
 
 **Priority:** P0  
-**Status:** `NOT_STARTED`
+**Status:** `VERIFIED`
 
 ### Purpose
 
@@ -168,7 +168,7 @@ LINEの定時pushリマインダーは現時点の既存返信機能とは別の
 ## GF-P0-002 行動効果の情報開示
 
 **Priority:** P0  
-**Status:** `NOT_STARTED`
+**Status:** `VERIFIED`
 
 ### Purpose
 
@@ -205,7 +205,7 @@ LINEの定時pushリマインダーは現時点の既存返信機能とは別の
 ## GF-P0-003 成長確認チャレンジ（踊り場）
 
 **Priority:** P0  
-**Status:** `NOT_STARTED`
+**Status:** `VERIFIED`
 
 ### Purpose
 
@@ -247,7 +247,7 @@ DB側の原子的判定がこの単位で行われている。
 ## GF-P0-004 モチットの理解者的コミュニケーション
 
 **Priority:** P0  
-**Status:** `NOT_STARTED`
+**Status:** `VERIFIED`
 
 ### Purpose
 
@@ -286,7 +286,7 @@ DB側の原子的判定がこの単位で行われている。
 ## GF-P0-005 学習後の成果差分フィードバック
 
 **Priority:** P0  
-**Status:** `NOT_STARTED`
+**Status:** `VERIFIED`
 
 ### Purpose
 
@@ -391,17 +391,17 @@ DB側の原子的判定がこの単位で行われている。
 
 | ID | Feature | Summary | Status |
 |---|---|---|---|
-| `GF-P1-001` | 学習量選択 | 5分/15分/30分等から量を選ぶ。何を学ぶかの優先順位はシステムが維持 | `NOT_STARTED` |
-| `GF-P1-002` | 復帰ミッション | 2〜3日以上空いたユーザーに3〜5分の短い復帰ルート | `NOT_STARTED` |
-| `GF-P1-003` | CP突破の非連続成長 | CP突破時にモチット成長・記念品・演出を連動 | `NOT_STARTED` |
-| `GF-P1-004` | 学習ヒートマップ＋あゆみ | 日別学習、累計スタッツ、重要イベント年表 | `NOT_STARTED` |
-| `GF-P1-005` | 報酬コレクション＋3択宝箱 | choice UI接続、欠片可視化、補助報酬への交換 | `NOT_STARTED` |
-| `GF-P1-006` | レアリティ演出 | common/rare/epicをカード・glow・紙吹雪等で明確化 | `NOT_STARTED` |
-| `GF-P1-007` | モチット命名 | 任意で命名・改名。未設定時は「モチット」 | `NOT_STARTED` |
-| `GF-P1-008` | 単語帳図鑑 | カテゴリ別グリッド、コンプ率、カテゴリ達成 | `NOT_STARTED` |
-| `GF-P1-009` | デイリーミッションリロール | 3件中1枠を1日1回差替可能 | `NOT_STARTED` |
-| `GF-P1-010` | 合格宣言 | 試験日設定時に任意宣言。未宣言に不利益なし | `NOT_STARTED` |
-| `GF-P1-011` | 世界観・ストーリー統一 | CP/バッジ/モチット/突破試験/報酬の語彙・演出統一 | `IMPLEMENTED` |
+| `GF-P1-001` | 学習量選択 | 5分/15分/30分等から量を選ぶ。何を学ぶかの優先順位はシステムが維持 | `VERIFIED` |
+| `GF-P1-002` | 復帰ミッション | 2〜3日以上空いたユーザーに3〜5分の短い復帰ルート | `VERIFIED` |
+| `GF-P1-003` | CP突破の非連続成長 | CP突破時にモチット成長・記念品・演出を連動 | `VERIFIED` |
+| `GF-P1-004` | 学習ヒートマップ＋あゆみ | 日別学習、累計スタッツ、重要イベント年表 | `VERIFIED` |
+| `GF-P1-005` | 報酬コレクション＋3択宝箱 | choice UI接続、欠片可視化、補助報酬への交換 | `VERIFIED` |
+| `GF-P1-006` | レアリティ演出 | common/rare/epicをカード・glow・紙吹雪等で明確化 | `VERIFIED` |
+| `GF-P1-007` | モチット命名 | 任意で命名・改名。未設定時は「モチット」 | `VERIFIED` |
+| `GF-P1-008` | 単語帳図鑑 | カテゴリ別グリッド、コンプ率、カテゴリ達成 | `VERIFIED` |
+| `GF-P1-009` | デイリーミッションリロール | 3件中1枠を1日1回差替可能 | `VERIFIED` |
+| `GF-P1-010` | 合格宣言 | 試験日設定時に任意宣言。未宣言に不利益なし | `VERIFIED` |
+| `GF-P1-011` | 世界観・ストーリー統一 | CP/バッジ/モチット/突破試験/報酬の語彙・演出統一 | `VERIFIED` |
 
 ## GF-P1-001 学習量選択
 
@@ -955,31 +955,38 @@ XP付与・報酬抽選にも差分はない。
 
 | Requirement | Priority | Status | PR | Tests | Notes |
 |---|---:|---|---|---|---|
-| `GF-P0-001` | P0 | `IMPLEMENTED` | #24 | todayPrimary / TodayPrimaryCard | Today Primary |
-| `GF-P0-002` | P0 | `IMPLEMENTED` | #24 | actionImpact / TodayPrimaryCard | Action impact |
-| `GF-P0-003` | P0 | `IMPLEMENTED` | #26 | growthCheck / growthChallenge / GrowthCheckPage | Growth check（可視化主体・復習優先） |
-| `GF-P0-004` | P0 | `IMPLEMENTED` | #27 | mochitContext / contextualMochitMessages | Contextual Mochit |
-| `GF-P0-005` | P0 | `IMPLEMENTED` | #25 | sessionOutcome / SessionOutcomeCard | Session outcome |
-| `GF-P0-006` | P0 | `NOT_STARTED` | - | - | LINE reminder（migration 着地待ち） |
-| `GF-P1-001` | P1 | `IMPLEMENTED` | #31 | studyAmount / StudyAmountPicker | Session length choice |
-| `GF-P1-002` | P1 | `IMPLEMENTED` | #31 | comebackMission / ComebackMissionCard | Comeback mission |
-| `GF-P1-003` | P1 | `IMPLEMENTED` | #32 | cpEvolution / mochitGrowthCelebration | CP evolution |
-| `GF-P1-004` | P1 | `IMPLEMENTED` | #28 | learningHistory / LearningHeatmap | Heatmap/journey |
-| `GF-P1-005` | P1 | `IMPLEMENTED` | #29 | badgeDrops / rewardInventory / RewardChoiceCard | Reward inventory |
-| `GF-P1-006` | P1 | `IMPLEMENTED` | #29 | RewardChoiceCard（RarityMark） | Rarity feedback |
-| `GF-P1-007` | P1 | `IMPLEMENTED` | #30 | pledgeAndMochitName | Mochit naming |
-| `GF-P1-008` | P1 | `IMPLEMENTED` | #28 | glossaryCollection | Glossary collection |
-| `GF-P1-009` | P1 | `IMPLEMENTED` | #30 | questReroll | Quest reroll |
-| `GF-P1-010` | P1 | `IMPLEMENTED` | #30 | pledgeAndMochitName | Pledge |
-| `GF-P1-011` | P1 | `IMPLEMENTED` | #33 | RewardChoiceCard / QuestRouteComponent（表示文言） | 用語統一。突破試験/今日の3ミッション/かけらへ一本化 |
+| `GF-P0-001` | P0 | `VERIFIED` | #24 | todayPrimary / TodayPrimaryCard | Today Primary |
+| `GF-P0-002` | P0 | `VERIFIED` | #24 | actionImpact / TodayPrimaryCard | Action impact |
+| `GF-P0-003` | P0 | `VERIFIED` | #26 | growthCheck / growthChallenge / GrowthCheckPage | Growth check（可視化主体・復習優先） |
+| `GF-P0-004` | P0 | `VERIFIED` | #27 | mochitContext / contextualMochitMessages | Contextual Mochit |
+| `GF-P0-005` | P0 | `VERIFIED` | #25 | sessionOutcome / SessionOutcomeCard | Session outcome |
+| `GF-P0-006` | P0 | `NOT_STARTED` | - | - | LINE reminder（migration は 281a024 で main へ着地済み。着手待ち） |
+| `GF-P1-001` | P1 | `VERIFIED` | #31 | studyAmount / StudyAmountPicker | Session length choice |
+| `GF-P1-002` | P1 | `VERIFIED` | #31 | comebackMission / ComebackMissionCard | Comeback mission |
+| `GF-P1-003` | P1 | `VERIFIED` | #32 | cpEvolution / mochitGrowthCelebration | CP evolution |
+| `GF-P1-004` | P1 | `VERIFIED` | #28 | learningHistory / LearningHeatmap | Heatmap/journey |
+| `GF-P1-005` | P1 | `VERIFIED` | #29 | badgeDrops / rewardInventory / RewardChoiceCard | Reward inventory |
+| `GF-P1-006` | P1 | `VERIFIED` | #29 | RewardChoiceCard（RarityMark） | Rarity feedback |
+| `GF-P1-007` | P1 | `VERIFIED` | #30 | pledgeAndMochitName | Mochit naming |
+| `GF-P1-008` | P1 | `VERIFIED` | #28 | glossaryCollection | Glossary collection |
+| `GF-P1-009` | P1 | `VERIFIED` | #30 | questReroll | Quest reroll |
+| `GF-P1-010` | P1 | `VERIFIED` | #30 | pledgeAndMochitName | Pledge |
+| `GF-P1-011` | P1 | `VERIFIED` | #33 | RewardChoiceCard / QuestRouteComponent（表示文言） | 用語統一。突破試験/今日の3ミッション/かけらへ一本化 |
 | `GF-P2-001` | P2 | `DEFERRED` | - | - | Requires sufficient population |
 | `GF-P2-002` | P2 | `DEFERRED` | - | - | Conditional experiment |
 | `GF-P2-003` | P2 | `DEFERRED` | - | - | Conditional sharing |
 | `GF-P2-004` | P2 | `DEFERRED` | - | - | Safe event only |
 
-**Status 更新日:** 2026-09-01。`IMPLEMENTED` は該当 Acceptance Criteria の
-テストが通り main にマージ済みであることを指す。実機確認を経ていないため
-`VERIFIED` へは昇格していない。
+**Status 更新日:** 2026-09-05。`IMPLEMENTED` は該当 Acceptance Criteria の
+テストが通り main にマージ済みであることを指す。
+
+`VERIFIED` は上記に加え、`docs/qa/gameful-v2-manual-qa.md` の手順による実機QAを
+通過したことを指す。2026-09-05 の再QA #2（`d04588a`）で P0/P1 の実装済み全要件が
+昇格した（結果は `docs/qa/gameful-v2-qa-results-2026-09-05.md`）。
+
+ただし今回の `VERIFIED` は **未ログイン・Chromium・production build** での確認に
+基づく。iPhone/Android 実機、ログイン済み（Google/LINE）経路、端末間マージは
+未確認のまま残る（同ファイル §4）。`GF-P0-006` は未実装のため対象外。
 
 ---
 
