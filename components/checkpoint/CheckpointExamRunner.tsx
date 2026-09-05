@@ -19,8 +19,13 @@ import {
   saveAnswersToDb,
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
-  startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
+import {
+  beginAssessmentSession,
+  finalizeAnonymousAssessment,
+  type AssessmentExposureResult,
+  type AssessmentMode,
+} from "@/lib/examReadiness/assessmentMode";
 import {
   clearPendingAssessmentFinalization,
   findPendingAssessmentFinalization,
@@ -159,6 +164,8 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
   const [attemptId, setAttemptId] = useState(newAttemptId);
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  // 未ログインでも試験は完遂できる。認証の有無は開始時に一度だけ決める。
+  const [assessmentMode, setAssessmentMode] = useState<AssessmentMode>("authenticated");
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [pendingFinalization, setPendingFinalization] = useState<CheckpointPendingFinalization | null>(null);
   const pendingStartedAtRef = useRef<string | null>(null);
@@ -179,29 +186,64 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     pendingFinalizationRef.current = pending;
     setPendingFinalization(pending);
     setPersistenceError(null);
+    // 認証あり/なしの両方で同じ導出を使う。
+    const rederiveResult = ({ baseState, attempts, completion, sessionId }: {
+      baseState: CheckpointPendingFinalization["baseState"];
+      attempts: CheckpointPendingFinalization["attempts"];
+      completion: CheckpointPendingFinalization["completion"];
+      sessionId: string;
+    }) => {
+      const result = rebuildCheckpointResult(
+        { baseState, attempts, completion, sessionId },
+        checkpointId,
+      );
+      if (result === null) throw new Error("Assessment finalization result is inconsistent");
+      return result;
+    };
+    const deriveNextState = ({ baseState, completion, exposureResult }: {
+      baseState: CheckpointPendingFinalization["baseState"];
+      completion: CheckpointPendingFinalization["completion"];
+      exposureResult: AssessmentExposureResult;
+    }) => ({
+      appState: recordCheckpointExamResult(
+        baseState.appState,
+        baseState.tagged,
+        exposureResult.exposures,
+        new Date(completion.completedAt),
+      ),
+    });
     try {
+      if (assessmentMode === "anonymous") {
+        // 未ログイン: サーバーの受領証は無い。ローカルだけで確定させる。
+        const finalized = finalizeAnonymousAssessment(
+          {
+            sessionId: pending.sessionId,
+            baseState: pending.baseState,
+            attempts: pending.attempts,
+            completion: pending.completion,
+            result: pending.result,
+            answers: pending.baseState.appState.answers,
+          },
+          { rederiveResult, deriveNextState },
+        );
+        if (!isActive()) return;
+        if (!saveAppStateVerified(finalized.nextState.appState)) {
+          throw new Error("Assessment finalization local state could not be persisted");
+        }
+        setState(finalized.nextState.appState);
+        setResult(finalized.result);
+        pendingFinalizationRef.current = null;
+        setPendingFinalization(null);
+        return;
+      }
       const finalized = await resumePendingAssessmentFinalization(pending, {
         validate: (value) => isValidCheckpointFrozenFinalization(value, checkpointId),
-        rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
-          const result = rebuildCheckpointResult(
-            { baseState, attempts, completion, sessionId },
-            checkpointId,
-          );
-          if (result === null) throw new Error("Assessment finalization result is inconsistent");
-          return result;
-        },
+        rederiveResult,
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
         },
-        deriveNextState: ({ baseState, completion, exposureResult }) => ({
-          appState: recordCheckpointExamResult(
-            baseState.appState,
-            baseState.tagged,
-            exposureResult.exposures,
-            new Date(completion.completedAt),
-          ),
-        }),
+        deriveNextState,
         saveProgress: async ({ exposureResult, nextState, sessionId }) =>
           saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
             triggerType: "assessment",
@@ -236,7 +278,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     } finally {
       finalizingRef.current = false;
     }
-  }, [checkpointId, setState]);
+  }, [assessmentMode, checkpointId, setState]);
 
   useEffect(() => {
     const pending = findPendingAssessmentFinalization(
@@ -281,14 +323,15 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
     const nextStartedAt = pendingStartedAtRef.current ?? new Date().toISOString();
     pendingStartedAtRef.current = nextStartedAt;
     try {
-      await startAssessmentSessionForCurrentSession({
+      // 未ログインなら匿名モードで続行する（試験の失敗として見せない）。
+      setAssessmentMode(await beginAssessmentSession({
         action: "start",
         sessionId: attemptId,
         source: "checkpoint",
         mode: "exam",
         startedAt: nextStartedAt,
         questionCount: exam.questions.length,
-      });
+      }));
       setStartedAt(nextStartedAt);
       pendingStartedAtRef.current = null;
     } catch {
