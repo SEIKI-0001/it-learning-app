@@ -69,14 +69,15 @@ test("opens the quick menu by tap and navigates to the exact shortcuts", async (
     ["進捗を見る", "/progress"],
     ["モチットの成長", "/avatar"],
   ] as const;
+  // モチットの吹き出しにも状況依存の導線（例:「今日の学習を見る」）が menuitem として
+  // 入るため、ショートカット名の部分一致だと複数へ解決してしまう。名前は完全一致で引く。
   for (const [name, href] of links) {
-    await expect(page.getByRole("menuitem", { name })).toHaveAttribute(
-      "href",
-      href,
-    );
+    await expect(
+      page.getByRole("menuitem", { name, exact: true }),
+    ).toHaveAttribute("href", href);
   }
 
-  await page.getByRole("menuitem", { name: "復習する" }).click();
+  await page.getByRole("menuitem", { name: "復習する", exact: true }).click();
   await expect(page).toHaveURL(/\/review$/);
   await expect(menu).toBeHidden();
 });
