@@ -198,6 +198,35 @@ describe("pending assessment finalization storage", () => {
     expect(loadPendingAssessmentFinalization(value.sessionId)).toEqual(completed);
   });
 
+  // 匿名対応（PR-B）で exposure の型を広げたが、認証済み経路の厳格さは変えない。
+  // 匿名 exposure は strict 版では受領証として認めない。
+  it("refuses an anonymous exposure as an authoritative receipt", async () => {
+    const value = pending();
+    delete value.exposureResult;
+    delete value.nextState;
+    delete value.completionAcknowledged;
+    const authoritative = pending().exposureResult!;
+    const saveAttempts = vi.fn().mockResolvedValue({
+      authState: "anonymous",
+      userId: null,
+      exposures: authoritative.exposures,
+    });
+    const completeSession = vi.fn().mockResolvedValue(undefined);
+    const deriveNextState = vi.fn().mockReturnValue({ progress: "frozen" });
+    const saveProgress = vi.fn().mockResolvedValue(true);
+
+    await expect(resumePendingAssessmentFinalization(value, {
+      saveAttempts,
+      completeSession,
+      deriveNextState,
+      saveProgress,
+    })).rejects.toThrow();
+
+    expect(completeSession).not.toHaveBeenCalled();
+    expect(deriveNextState).not.toHaveBeenCalled();
+    expect(saveProgress).not.toHaveBeenCalled();
+  });
+
   it("keeps the frozen record and does not advance after an ambiguous attempt save", async () => {
     const value = pending();
     delete value.exposureResult;

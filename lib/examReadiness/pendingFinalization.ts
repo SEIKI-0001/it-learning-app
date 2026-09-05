@@ -3,6 +3,7 @@ import type {
   CompleteAssessmentSessionInput,
   QuestionAttemptInput,
 } from "@/lib/userSession";
+import type { AssessmentExposureResult } from "@/lib/examReadiness/assessmentMode";
 import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 import type { AppState, UserAnswer } from "@/types";
 
@@ -60,7 +61,12 @@ export type PendingAssessmentFinalizationStages<TBase, TNext, TResult> = {
   deriveNextState: (params: {
     baseState: TBase;
     result: TResult;
-    exposureResult: AuthenticatedQuestionExposureResult;
+    /**
+     * 匿名モードの確定（finalizeAnonymousAssessment）からも同じ導出を使うため、
+     * ここは authenticated / anonymous の両方を受け取れる形にする。
+     * サーバーの受領証を要求する検証は strict 版のこの下流で行う。
+     */
+    exposureResult: AssessmentExposureResult;
     completion: CompleteAssessmentSessionInput;
   }) => TNext;
   saveProgress: (params: {

@@ -12,11 +12,16 @@ import {
   createAssessmentSessionId,
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
-  startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
 import { useAppState } from "@/lib/useAppState";
 import { saveAppStateVerified } from "@/lib/storage";
 import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
+import {
+  beginAssessmentSession,
+  finalizeAnonymousAssessment,
+  type AssessmentExposureResult,
+  type AssessmentMode,
+} from "@/lib/examReadiness/assessmentMode";
 import {
   clearPendingAssessmentFinalization,
   findPendingAssessmentFinalization,
@@ -177,6 +182,8 @@ export default function ThemeExamRunner({
   const [answers, setAnswers] = useState<Record<number, ChoiceKey | null>>({});
   const [result, setResult] = useState<ThemeExamResult | null>(null);
   const [starting, setStarting] = useState(false);
+  // 未ログインでも試験は完遂できる。認証の有無は開始時に一度だけ決める。
+  const [assessmentMode, setAssessmentMode] = useState<AssessmentMode>("authenticated");
   const [submitting, setSubmitting] = useState(false);
   const [completionFrozen, setCompletionFrozen] = useState(false);
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
@@ -218,14 +225,15 @@ export default function ThemeExamRunner({
     if (sessionIdRef.current === "") sessionIdRef.current = createAssessmentSessionId();
     if (startedAtRef.current === 0) startedAtRef.current = Date.now();
     try {
-      await startAssessmentSessionForCurrentSession({
+      // 未ログインなら匿名モードで続行する（試験の失敗として見せない）。
+      setAssessmentMode(await beginAssessmentSession({
         action: "start",
         sessionId: sessionIdRef.current,
         source: "summary",
         mode: "exam",
         startedAt: new Date(startedAtRef.current).toISOString(),
         questionCount: questions.length,
-      });
+      }));
       questionStartedAtRef.current = Date.now();
       setPhase("running");
     } catch {
@@ -252,7 +260,63 @@ export default function ThemeExamRunner({
     setSubmitting(true);
     setCompletionFrozen(true);
     setPersistenceError(null);
+    // 認証あり/なしの両方で同じ導出を使う。
+    const rederiveResult = ({ baseState, attempts, completion, sessionId }: {
+      baseState: ThemePendingFinalization["baseState"];
+      attempts: ThemePendingFinalization["attempts"];
+      completion: ThemePendingFinalization["completion"];
+      sessionId: string;
+    }) => {
+      const result = rebuildThemeExamResult(
+        { baseState, attempts, completion, sessionId },
+        questions,
+        passRate,
+      );
+      if (result === null) throw new Error("Assessment finalization result is inconsistent");
+      return result;
+    };
+    const deriveNextState = ({ baseState, completion, exposureResult, result: graded }: {
+      baseState: ThemePendingFinalization["baseState"];
+      completion: ThemePendingFinalization["completion"];
+      exposureResult: AssessmentExposureResult;
+      result: ThemeExamResult;
+    }) => ({
+      appState: baseState.appState
+        ? recordThemeExamLearningResult(
+          baseState.appState,
+          graded,
+          completion.completedAt,
+          exposureResult.exposures,
+        )
+        : null,
+    });
     try {
+      if (assessmentMode === "anonymous") {
+        // 未ログイン: サーバーの受領証は無い。ローカルだけで確定させる。
+        const finalized = finalizeAnonymousAssessment(
+          {
+            sessionId: pending.sessionId,
+            baseState: pending.baseState,
+            attempts: pending.attempts,
+            completion: pending.completion,
+            result: pending.result,
+            answers: pending.baseState.appState?.answers ?? [],
+          },
+          { rederiveResult, deriveNextState },
+        );
+        if (!isActive()) return;
+        if (finalized.nextState.appState !== null) {
+          if (!saveAppStateVerified(finalized.nextState.appState)) {
+            throw new Error("Assessment finalization local state could not be persisted");
+          }
+          setAppState(finalized.nextState.appState);
+        }
+        setResult(finalized.result);
+        setPhase("result");
+        pendingFinalizationRef.current = null;
+        setPendingFinalization(null);
+        return;
+      }
       const finalized = await resumePendingAssessmentFinalization(pending, {
         validate: (value) => isValidThemeFrozenFinalization(
           value,
@@ -261,29 +325,12 @@ export default function ThemeExamRunner({
           questions,
           passRate,
         ),
-        rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
-          const result = rebuildThemeExamResult(
-            { baseState, attempts, completion, sessionId },
-            questions,
-            passRate,
-          );
-          if (result === null) throw new Error("Assessment finalization result is inconsistent");
-          return result;
-        },
+        rederiveResult,
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
         },
-        deriveNextState: ({ baseState, completion, exposureResult, result: graded }) => ({
-          appState: baseState.appState
-            ? recordThemeExamLearningResult(
-              baseState.appState,
-              graded,
-              completion.completedAt,
-              exposureResult.exposures,
-            )
-            : null,
-        }),
+        deriveNextState,
         saveProgress: async ({ exposureResult, nextState, sessionId }) => {
           if (nextState.appState === null) return true;
           return saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
@@ -321,7 +368,7 @@ export default function ThemeExamRunner({
       finalizingRef.current = false;
       if (isActive()) setSubmitting(false);
     }
-  }, [examId, passRate, questions, setAppState, themeSlug]);
+  }, [assessmentMode, examId, passRate, questions, setAppState, themeSlug]);
 
   useEffect(() => {
     const pending = findPendingAssessmentFinalization(

@@ -25,8 +25,13 @@ import {
   saveAnswersToDb,
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
-  startAssessmentSessionForCurrentSession,
 } from "@/lib/userSession";
+import {
+  beginAssessmentSession,
+  finalizeAnonymousAssessment,
+  type AssessmentExposureResult,
+  type AssessmentMode,
+} from "@/lib/examReadiness/assessmentMode";
 import {
   clearPendingAssessmentFinalization,
   findPendingAssessmentFinalization,
@@ -157,6 +162,8 @@ export default function MockExamPage() {
     null,
   );
   const [starting, setStarting] = useState(false);
+  // 未ログインでも模試は完遂できる。認証の有無は開始時に一度だけ決める。
+  const [assessmentMode, setAssessmentMode] = useState<AssessmentMode>("authenticated");
   const [persistenceError, setPersistenceError] = useState<string | null>(null);
   const [pendingFinalization, setPendingFinalization] = useState<MockPendingFinalization | null>(null);
   const pendingStartRef = useRef<{
@@ -179,27 +186,63 @@ export default function MockExamPage() {
     pendingFinalizationRef.current = pending;
     setPendingFinalization(pending);
     setPersistenceError(null);
+    // 認証あり/なしの両方で同じ導出を使う。
+    const rederiveResult = ({ baseState, attempts, completion, sessionId }: {
+      baseState: MockPendingFinalization["baseState"];
+      attempts: MockPendingFinalization["attempts"];
+      completion: MockPendingFinalization["completion"];
+      sessionId: string;
+    }) => {
+      const result = rebuildMockExamResult({ baseState, attempts, completion, sessionId });
+      if (result === null) throw new Error("Assessment finalization result is inconsistent");
+      return result;
+    };
+    const deriveNextState = ({ baseState, completion, exposureResult, result: scored }: {
+      baseState: MockPendingFinalization["baseState"];
+      completion: MockPendingFinalization["completion"];
+      exposureResult: AssessmentExposureResult;
+      result: MockExamResult;
+    }) => ({
+      appState: recordMockExamResult(
+        baseState.appState,
+        baseState.tagged,
+        scored,
+        exposureResult.exposures,
+        new Date(completion.completedAt),
+      ),
+    });
     try {
+      if (assessmentMode === "anonymous") {
+        // 未ログイン: サーバーの受領証は無い。ローカルだけで確定させる。
+        const finalized = finalizeAnonymousAssessment(
+          {
+            sessionId: pending.sessionId,
+            baseState: pending.baseState,
+            attempts: pending.attempts,
+            completion: pending.completion,
+            result: pending.result,
+            answers: pending.baseState.appState.answers,
+          },
+          { rederiveResult, deriveNextState },
+        );
+        if (!isActive()) return;
+        if (!saveAppStateVerified(finalized.nextState.appState)) {
+          throw new Error("Assessment finalization local state could not be persisted");
+        }
+        setState(finalized.nextState.appState);
+        setResult(finalized.result);
+        pendingFinalizationRef.current = null;
+        setPendingFinalization(null);
+        return;
+      }
       const finalized = await resumePendingAssessmentFinalization(pending, {
         validate: isValidMockFrozenFinalization,
-        rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
-          const result = rebuildMockExamResult({ baseState, attempts, completion, sessionId });
-          if (result === null) throw new Error("Assessment finalization result is inconsistent");
-          return result;
-        },
+        rederiveResult,
         saveAttempts: saveAssessmentQuestionAttemptsForCurrentSession,
         completeSession: async (completion) => {
           await completeAssessmentSessionForCurrentSession(completion);
         },
-        deriveNextState: ({ baseState, completion, exposureResult, result: scored }) => ({
-          appState: recordMockExamResult(
-            baseState.appState,
-            baseState.tagged,
-            scored,
-            exposureResult.exposures,
-            new Date(completion.completedAt),
-          ),
-        }),
+        deriveNextState,
         saveProgress: async ({ exposureResult, nextState, sessionId }) =>
           saveProgressToDb(exposureResult.userId, nextState.appState.progress, {
             triggerType: "assessment",
@@ -236,7 +279,7 @@ export default function MockExamPage() {
     } finally {
       finalizingRef.current = false;
     }
-  }, [setState]);
+  }, [assessmentMode, setState]);
 
   useEffect(() => {
     const pending = findPendingAssessmentFinalization("mock");
@@ -272,14 +315,15 @@ export default function MockExamPage() {
     })();
     pendingStartRef.current = pending;
     try {
-      await startAssessmentSessionForCurrentSession({
+      // 未ログインなら匿名モードで続行する（模試の失敗として見せない）。
+      setAssessmentMode(await beginAssessmentSession({
         action: "start",
         sessionId: pending.assessment.sessionId,
         source: "mock",
         mode: "exam",
         startedAt: pending.assessment.startedAt,
         questionCount: pending.exam.questions.length,
-      });
+      }));
       setAssessment(pending.assessment);
       setExam(pending.exam);
       setResult(null);

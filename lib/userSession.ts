@@ -607,7 +607,9 @@ export type AssessmentSessionClientErrorCode =
   | "network"
   | "http"
   | "malformed_response"
-  | "unexpected_status";
+  | "unexpected_status"
+  /** 未ログイン。試験の失敗ではなく「匿名で続行する」合図として扱う。 */
+  | "authentication";
 
 export class AssessmentSessionClientError extends Error {
   constructor(
@@ -673,6 +675,15 @@ async function postAssessmentSession(
     throw new AssessmentSessionClientError(
       "network",
       cause instanceof Error ? cause.message : "Assessment session request failed",
+    );
+  }
+  if (response.status === 401) {
+    // 未ログイン。サーバー側の評価セッションは持てないが、学習・採点は
+    // ローカルで完遂できる。呼び出し側が匿名モードへ落とせるよう code で伝える。
+    clearUserId();
+    throw new AssessmentSessionClientError(
+      "authentication",
+      "Assessment session requires authentication",
     );
   }
   if (!response.ok) {

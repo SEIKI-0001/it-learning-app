@@ -46,10 +46,15 @@ import {
   resolveQuestionExposureIdentity,
   saveAssessmentQuestionAttemptsForCurrentSession,
   saveProgressToDb,
-  startAssessmentSessionForCurrentSession,
   type QuestionExposureIdentity,
 } from "@/lib/userSession";
 import { resumePendingAssessmentFinalization } from "@/lib/examReadiness/pendingFinalization";
+import {
+  beginAssessmentSession,
+  finalizeAnonymousAssessment,
+  type AssessmentExposureResult,
+  type AssessmentMode,
+} from "@/lib/examReadiness/assessmentMode";
 import type { AppState, ChoiceKey } from "@/types";
 import type { QuestionExposureMap, QuestionExposureState } from "@/types";
 import {
@@ -167,6 +172,8 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
   // state だけでは再描画を待つ隙に通り抜けるので、同期的に閉じる ref を正とし、
   // state（submitting）はボタンを無効化する表示のためだけに使う。
   const submittedRef = useRef(false);
+  // 未ログインでも試験は完遂できる。認証の有無は開始時に一度だけ決める。
+  const assessmentModeRef = useRef<AssessmentMode>("authenticated");
   const [submitting, setSubmitting] = useState(false);
   const finalizingRef = useRef(false);
   const finalizingIdentityRef = useRef<string | null>(null);
@@ -296,18 +303,95 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
     setPersistenceError(null);
     if (hasFrozenFinalization(pending)) {
       let persistedSession = current;
+      // 認証あり/なしで共通の導出。
+      const rederiveResult = ({ baseState, attempts, completion, sessionId }: {
+        baseState: PastExamPendingFinalization["baseState"];
+        attempts: PastExamPendingFinalization["attempts"];
+        completion: PastExamPendingFinalization["completion"];
+        sessionId: string;
+      }) => {
+        const result = rebuildOfficialPastExamResult(
+          { baseState, attempts, completion, sessionId },
+          questions,
+        );
+        if (result === null) throw new Error("Assessment finalization result is inconsistent");
+        return result;
+      };
+      const deriveAppState = (
+        baseState: PastExamPendingFinalization["baseState"],
+        graded: ReturnType<typeof rederiveResult>,
+        exposureResult: AssessmentExposureResult,
+        completedAt: string,
+      ) => baseState.appState
+        ? recordPastExamLearningResult(
+          baseState.appState,
+          graded,
+          baseState.answerSnapshot,
+          exposureResult.exposures,
+          new Date(completedAt),
+        )
+        : null;
+      if (assessmentModeRef.current === "anonymous") {
+        // 未ログイン: サーバーの受領証は無い。ローカルだけで確定させる。
+        try {
+          assertCurrentOperation();
+          const finalized = finalizeAnonymousAssessment(
+            {
+              sessionId: pending.finalization.sessionId,
+              baseState: pending.finalization.baseState,
+              attempts: pending.finalization.attempts,
+              completion: pending.finalization.completion,
+              result: pending.finalization.result,
+              answers: pending.finalization.baseState.appState?.answers ?? [],
+            },
+            {
+              rederiveResult,
+              deriveNextState: ({ baseState, completion, exposureResult, result: graded }: {
+                baseState: PastExamPendingFinalization["baseState"];
+                completion: PastExamPendingFinalization["completion"];
+                exposureResult: AssessmentExposureResult;
+                result: ReturnType<typeof rederiveResult>;
+              }) => ({
+                appState: deriveAppState(baseState, graded, exposureResult, completion.completedAt),
+              }),
+            },
+          );
+          assertCurrentOperation();
+          if (finalized.nextState.appState !== null
+            && !saveAppStateVerified(finalized.nextState.appState)) {
+            throw new Error("Assessment finalization local state could not be persisted");
+          }
+          assertCurrentOperation();
+          if (!clearSession(storageUserId, year, current.mode)) {
+            throw new Error("Assessment finalization could not be cleared");
+          }
+          setSession(null);
+          setResult(finalized.result);
+          setPhase("result");
+          return true;
+        } catch {
+          if (isCurrentOperation()) {
+            submittedRef.current = false;
+            setPersistenceError("採点結果を保存できませんでした。もう一度お試しください。");
+          }
+          return false;
+        } finally {
+          if (finalizingIdentityRef.current === operationIdentity
+            && finalizationGenerationRef.current === operationGeneration) {
+            finalizingRef.current = false;
+            finalizingIdentityRef.current = null;
+          }
+          if (isCurrentOperation()) {
+            setSubmitting(false);
+            setFinalizingIdentity(null);
+          }
+        }
+      }
       try {
         assertCurrentOperation();
         const finalized = await resumePendingAssessmentFinalization(pending.finalization, {
           validate: (value) => isValidOfficialPastFinalizationForRunner(value, current, questions),
-          rederiveResult: ({ baseState, attempts, completion, sessionId }) => {
-            const result = rebuildOfficialPastExamResult(
-              { baseState, attempts, completion, sessionId },
-              questions,
-            );
-            if (result === null) throw new Error("Assessment finalization result is inconsistent");
-            return result;
-          },
+          rederiveResult,
           // Official past exams already have a durable, user-scoped session
           // record. Keep this nested there instead of creating a competing key.
           freeze: (value) => {
@@ -606,7 +690,8 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       const next = existing ?? pendingStartRef.current[mode] ?? createSession(year, mode);
       pendingStartRef.current[mode] = next;
       try {
-        await startAssessmentSessionForCurrentSession({
+        // 未ログインなら匿名モードで続行する（試験の失敗として見せない）。
+        assessmentModeRef.current = await beginAssessmentSession({
           action: "start",
           sessionId: next.sessionId,
           source: "official_past",
@@ -643,7 +728,8 @@ export default function PastExamRunner({ year, yearLabel, questions }: Props) {
       const next = pendingStartRef.current[mode] ?? createSession(year, mode);
       pendingStartRef.current[mode] = next;
       try {
-        await startAssessmentSessionForCurrentSession({
+        // 未ログインなら匿名モードで続行する（試験の失敗として見せない）。
+        assessmentModeRef.current = await beginAssessmentSession({
           action: "start",
           sessionId: next.sessionId,
           source: "official_past",
