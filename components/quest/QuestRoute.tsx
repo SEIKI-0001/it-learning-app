@@ -5,6 +5,9 @@
 // - ノード状態: done(完了) / current(いま挑戦中) / up_next(次に挑戦できる) / locked(未到達)
 // - 最終ノードは「今日の宝箱」(デイリーミッションの実報酬。架空の報酬は置かない)
 // - 現在地は発光する専用マーカーで示し、キャラクター表示とは役割を分ける。
+// - 現在ノードが「今日の最優先」(TodayPrimaryCard)と同じ行動なら、ここに同じ
+//   開始ボタンを重ねない(GF-P0-001「Primary CTAは原則1つ」)。ルート上では
+//   現在地として示すだけにして、開始導線は上の Primary に一本化する。
 // 演出はprefers-reduced-motion時にCSS側で無効化する。
 
 import Link from "next/link";
@@ -44,6 +47,11 @@ type QuestRouteProps = {
   hrefFor: (node: QuestRouteNode) => string;
   /** 現在ノードにだけ出す「自分の言葉で説明する」導線(記述問題がある場合) */
   aiGradingHrefFor?: (node: QuestRouteNode) => string | null;
+  /**
+   * 「今日の最優先」が指しているリンク先。現在ノードがこれと同じなら、
+   * ルート側は開始ボタンを持たない(同じ行動のボタンを2つ置かない)。
+   */
+  primaryHref?: string | null;
   finalReward: QuestRouteFinalReward;
 };
 
@@ -51,6 +59,7 @@ export default function QuestRoute({
   nodes,
   hrefFor,
   aiGradingHrefFor,
+  primaryHref = null,
   finalReward,
 }: QuestRouteProps) {
   return (
@@ -60,6 +69,9 @@ export default function QuestRoute({
           const marker = NODE_MARKER[node.state];
           const stateLabel = NODE_STATE_LABEL[node.state];
           const isCurrent = node.state === "current";
+          const href = hrefFor(node);
+          // Primary と同じ行動なら、開始ボタンはここに置かない。
+          const isPrimaryDuplicate = isCurrent && primaryHref !== null && href === primaryHref;
           const aiHref = isCurrent ? aiGradingHrefFor?.(node) : null;
           const meta = `約${node.estimatedMinutes}分・${node.activity === "review" ? "復習" : "新規学習"}`;
 
@@ -141,29 +153,47 @@ export default function QuestRoute({
               </div>
 
               {isCurrent ? (
-                /* Primary: いま挑戦中のノードだけをbrand-50面+brand-200境界で唯一の強調にする */
+                /* いま挑戦中のノード。brand-50面+brand-200境界で現在地を示す */
                 <div
                   className="my-2 min-w-0 flex-1 rounded-lg border border-brand-200 bg-brand-50 p-3"
                 >
                   {body}
-                  <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <Link href={hrefFor(node)} className={buttonClass("primary", "sm")}>
-                      {node.activity === "review" ? "復習を始める" : "学習を始める"}
-                    </Link>
-                    {aiHref && (
-                      <Link
-                        href={aiHref}
-                        className="inline-flex items-center gap-1 text-sm text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
-                      >
-                        <Icon name="pen" className="h-3.5 w-3.5" />
-                        自分の言葉で説明する
+                  {isPrimaryDuplicate ? (
+                    /* 開始導線は上の「今日の最優先」に一本化する。ここでは在り処だけ示す */
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                      <p className="text-xs text-gray-600">
+                        上の「今日の最優先」から始められます
+                      </p>
+                      {aiHref && (
+                        <Link
+                          href={aiHref}
+                          className="inline-flex items-center gap-1 text-sm text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
+                        >
+                          <Icon name="pen" className="h-3.5 w-3.5" />
+                          自分の言葉で説明する
+                        </Link>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <Link href={href} className={buttonClass("primary", "sm")}>
+                        {node.activity === "review" ? "復習を始める" : "学習を始める"}
                       </Link>
-                    )}
-                  </div>
+                      {aiHref && (
+                        <Link
+                          href={aiHref}
+                          className="inline-flex items-center gap-1 text-sm text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
+                        >
+                          <Icon name="pen" className="h-3.5 w-3.5" />
+                          自分の言葉で説明する
+                        </Link>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Link
-                  href={hrefFor(node)}
+                  href={href}
                   className="group min-w-0 flex-1 py-3 pr-1 transition hover:bg-gray-50 active:bg-gray-100"
                 >
                   <span className="flex items-center justify-between gap-2">

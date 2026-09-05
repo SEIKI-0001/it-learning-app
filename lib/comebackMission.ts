@@ -2,6 +2,7 @@
 //
 // 数日空いたユーザーに、いきなり山積みの未完了タスクを見せない。
 // 過去に学んだ内容から3〜5分で終わる短い確認だけを出し、そこから通常学習へ戻す。
+// 分量は件数ではなく COMEBACK_TARGET_MINUTES で決める（件数固定だと通常の学習量になる）。
 //
 // 守る約束:
 //   - 責めない。空いた日数を事実として一度示すだけで、失敗や遅れとして扱わない。
@@ -17,8 +18,19 @@ const DAY_MS = 86_400_000;
 /** 何日空いたら復帰扱いにするか。 */
 export const COMEBACK_MIN_DAYS_AWAY = 2;
 
-/** 復帰ミッションに載せる最大件数（3〜5分で終わる分量）。 */
-export const COMEBACK_MISSION_SIZE = 2;
+/**
+ * 復帰ルートの所要時間の上限（分）。GF-P1-002「3〜5分の復帰ルートを提示する」。
+ *
+ * 件数ではなくこの分数が主制約。件数で固定すると、1件8分のトピックが2件選ばれて
+ * 通常の学習量と変わらない分量になってしまう（実測15分）。
+ */
+export const COMEBACK_TARGET_MINUTES = 5;
+
+/**
+ * 件数の上限。分数が主制約なので通常は先に予算で頭打ちになるが、
+ * ごく短い単位が増えたときに一覧が長くなりすぎないための保険。
+ */
+export const COMEBACK_MAX_ITEMS = 3;
 
 export type ComebackItem = {
   topicId: string;
@@ -69,25 +81,47 @@ export function buildComebackMission(input: {
     }
   }
 
-  const items: ComebackItem[] = state.progress.completedTopics
+  // 候補は「しばらく触れていない完了済みトピック」を古い順に。
+  const candidates: ComebackItem[] = state.progress.completedTopics
     .flatMap((topicId) => {
       const topic = getTopic(topicId);
       if (!topic || !getLessonLocation(topicId)) return [];
       return [{ topicId, topic, at: lastAnsweredAt.get(topicId) ?? "" }];
     })
     .sort((a, b) => a.at.localeCompare(b.at) || a.topicId.localeCompare(b.topicId))
-    .slice(0, COMEBACK_MISSION_SIZE)
     .map(({ topicId, topic }) => ({
       topicId,
       title: topic.title,
       estimatedMinutes: topic.estimatedMinutes,
     }));
 
-  if (items.length === 0) return null;
+  if (candidates.length === 0) return null;
+
+  // 予算に収まるものを古い順に詰める。
+  const items: ComebackItem[] = [];
+  let total = 0;
+  for (const candidate of candidates) {
+    if (items.length >= COMEBACK_MAX_ITEMS) break;
+    if (total + candidate.estimatedMinutes > COMEBACK_TARGET_MINUTES) continue;
+    items.push(candidate);
+    total += candidate.estimatedMinutes;
+  }
+
+  // フォールバック: 予算に収まる単位が1つも無い場合（学習単位が5分より大きいとき）は、
+  // いちばん短いものを1件だけにする。復帰直後に通常どおりの学習量を強制しないための
+  // 歯止めなので、ここでは「古い順」より「短い順」を優先する。
+  // 同じ長さが並ぶときは candidates が古い順なので、そのまま古い方が残る。
+  if (items.length === 0) {
+    const shortest = candidates.reduce((best, candidate) =>
+      candidate.estimatedMinutes < best.estimatedMinutes ? candidate : best,
+    );
+    items.push(shortest);
+    total = shortest.estimatedMinutes;
+  }
 
   return {
     daysAway,
     items,
-    totalMinutes: items.reduce((sum, item) => sum + item.estimatedMinutes, 0),
+    totalMinutes: total,
   };
 }

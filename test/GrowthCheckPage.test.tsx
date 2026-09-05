@@ -23,7 +23,11 @@ const saveProgressToDb = vi.hoisted(() => vi.fn());
 const emitCelebration = vi.hoisted(() => vi.fn());
 const saveAppState = vi.hoisted(() => vi.fn());
 const setAppState = vi.hoisted(() => vi.fn());
-const appState = vi.hoisted(() => ({ current: null as AppState | null }));
+const appState = vi.hoisted(() => ({
+  current: null as AppState | null,
+  /** true の間は useAppState と同じく undefined（＝読み込み中）を返す。 */
+  loading: false,
+}));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
@@ -31,7 +35,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/useAppState", () => ({
-  useAppState: () => [appState.current, setAppState],
+  useAppState: () => [appState.loading ? undefined : appState.current, setAppState],
 }));
 
 vi.mock("@/lib/storage", () => ({ saveAppState }));
@@ -111,9 +115,73 @@ beforeEach(() => {
     exposures: {},
   });
   appState.current = stateWith(richHistory());
+  appState.loading = false;
 });
 
 afterEach(cleanup);
+
+// 回帰: useAppState は必ず undefined から始まり、値は effect で後から入る。
+// 表示内容を useState の初期化関数で組み立てると、その initializer が走る初回レンダー
+// では state が無く、null が二度と再計算されない初期値として固定されて永久 Loading に
+// なる。「最初から AppState を返すモック」だけではこの経路を踏めないため、
+// 読み込み中→ロード完了の2フェーズをここで再現する。
+describe("state arrives after the first render", () => {
+  it("shows the growth summary once the app state has loaded", () => {
+    appState.loading = true;
+    const { rerender } = render(<GrowthCheckPage />);
+    expect(screen.getByText("読み込み中…")).toBeInTheDocument();
+
+    appState.loading = false;
+    rerender(<GrowthCheckPage />);
+
+    expect(screen.queryByText("読み込み中…")).toBeNull();
+    expect(screen.getByText("学習記録からの変化")).toBeInTheDocument();
+  });
+
+  it("falls back to the optional challenge when the evidence is thin", () => {
+    appState.current = stateWith(thinHistory());
+    appState.loading = true;
+    const { rerender } = render(<GrowthCheckPage />);
+    expect(screen.getByText("読み込み中…")).toBeInTheDocument();
+
+    appState.loading = false;
+    rerender(<GrowthCheckPage />);
+
+    expect(screen.queryByText("読み込み中…")).toBeNull();
+    expect(screen.getByText("もう少し確かめる")).toBeInTheDocument();
+  });
+
+  // 「読み込み中」と「比較材料なし」を別状態として扱う。
+  it("distinguishes an empty record from still loading", () => {
+    appState.current = stateWith([]);
+    appState.loading = true;
+    const { rerender } = render(<GrowthCheckPage />);
+    expect(screen.getByText("読み込み中…")).toBeInTheDocument();
+    expect(screen.queryByText("まだ比べられる記録がありません")).toBeNull();
+
+    appState.loading = false;
+    rerender(<GrowthCheckPage />);
+
+    expect(screen.queryByText("読み込み中…")).toBeNull();
+    expect(screen.getByText("まだ比べられる記録がありません")).toBeInTheDocument();
+  });
+
+  // 閲覧中に出題が差し替わらない（確定は最初の1回だけ）。
+  it("keeps the same challenge across later state updates", () => {
+    appState.current = stateWith(thinHistory());
+    appState.loading = true;
+    const { rerender } = render(<GrowthCheckPage />);
+    appState.loading = false;
+    rerender(<GrowthCheckPage />);
+    const first = screen.getByText(/問を解いてみる/).textContent;
+
+    // 別のレッスンを完了した等で state が入れ替わっても、表示中の内容は変えない。
+    appState.current = stateWith(richHistory());
+    rerender(<GrowthCheckPage />);
+
+    expect(screen.getByText(/問を解いてみる/).textContent).toBe(first);
+  });
+});
 
 describe("visualization comes first", () => {
   it("shows the growth summary without asking any question", () => {
