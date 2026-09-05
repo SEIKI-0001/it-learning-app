@@ -12,6 +12,12 @@ import type {
   DailyQuestState,
   EarnedBadge,
   FinalExamAttempt,
+  GamefulState,
+  MochitName,
+  Pledge,
+  QuestReroll,
+  RewardState,
+  StudyAmountChoice,
   StreakMeta,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
@@ -69,6 +75,136 @@ function mergeDailyQuests(
 }
 
 /**
+ * ゲームフル機能の状態をマージする。
+ * どのフィールドも「一度起きた事実」を単調に足すだけにして、何度マージしても
+ * 増えも巻き戻りもしないようにする（成長確認をCPごとに1回に保つため）。
+ *
+ * GamefulState にフィールドを足したらここも必ず更新すること。
+ */
+function mergeGamefulState(
+  a: GamefulState | undefined,
+  b: GamefulState | undefined,
+): GamefulState | undefined {
+  if (!a) return b;
+  if (!b) return a;
+
+  const shownCheckpointIds = [
+    ...new Set([
+      ...(a.growthCheck?.shownCheckpointIds ?? []),
+      ...(b.growthCheck?.shownCheckpointIds ?? []),
+    ]),
+  ];
+  const rewards = mergeRewardState(a.rewards, b.rewards);
+  const questReroll = mergeQuestReroll(a.questReroll, b.questReroll);
+  const pledge = mergePledge(a.pledge, b.pledge);
+  const mochitName = mergeMochitName(a.mochitName, b.mochitName);
+  const studyAmount = mergeStudyAmount(a.studyAmount, b.studyAmount);
+
+  return {
+    ...(shownCheckpointIds.length > 0 ? { growthCheck: { shownCheckpointIds } } : {}),
+    ...(rewards ? { rewards } : {}),
+    ...(questReroll ? { questReroll } : {}),
+    ...(pledge ? { pledge } : {}),
+    ...(mochitName ? { mochitName } : {}),
+    ...(studyAmount ? { studyAmount } : {}),
+  };
+}
+
+/**
+ * 学習量の選択のマージ。新しい日を採用し、同じ日なら多い方を採る。
+ * 少ない方に寄せると、片方の端末で増やした分の学習候補が消えてしまうため。
+ */
+function mergeStudyAmount(
+  a: StudyAmountChoice | undefined,
+  b: StudyAmountChoice | undefined,
+): StudyAmountChoice | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  if (a.date !== b.date) return a.date > b.date ? a : b;
+  return a.minutes >= b.minutes ? a : b;
+}
+
+/**
+ * ミッション差し替えのマージ。
+ * 新しい日を採用し、同じ日なら片方に決める（差し替えは1日1回なので、
+ * どちらを採っても「2回目のリロール」にはならない）。
+ */
+function mergeQuestReroll(
+  a: QuestReroll | undefined,
+  b: QuestReroll | undefined,
+): QuestReroll | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  if (a.date !== b.date) return a.date > b.date ? a : b;
+  // 同じ日に別々の端末で差し替えた場合は、結果IDで決定的に1つへ寄せる。
+  return a.newQuestId <= b.newQuestId ? a : b;
+}
+
+/**
+ * 合格宣言のマージ。より新しい宣言を採る。
+ * 片方で解除しても、もう片方に残っていれば復活しうるが、宣言は報酬も
+ * 不利益も伴わない表示専用の記録なので、ユーザーはいつでも再解除できる。
+ */
+function mergePledge(a: Pledge | undefined, b: Pledge | undefined): Pledge | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return a.pledgedAt >= b.pledgedAt ? a : b;
+}
+
+/** モチットの名前のマージ。後から改名した方を採る。 */
+function mergeMochitName(
+  a: MochitName | undefined,
+  b: MochitName | undefined,
+): MochitName | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return a.updatedAt >= b.updatedAt ? a : b;
+}
+
+/**
+ * 追加報酬の状態をマージする。
+ * - 解決済みの 3択 id は max（単調増加）。受け取り済みの報酬が復活しない。
+ * - 未選択の3択は「解決済み id より新しい」ものだけを残す。片方の端末で
+ *   選択済みなら、もう片方に残っていても再提示しない（二重付与の防止）。
+ * - 装飾は和集合。装備中の称号は、より新しい側（id が大きい方）を採る。
+ */
+function mergeRewardState(
+  a: RewardState | undefined,
+  b: RewardState | undefined,
+): RewardState | undefined {
+  if (!a) return b;
+  if (!b) return a;
+
+  const lastResolvedChoiceId =
+    (a.lastResolvedChoiceId ?? "") > (b.lastResolvedChoiceId ?? "")
+      ? a.lastResolvedChoiceId
+      : b.lastResolvedChoiceId;
+
+  const candidates = [a.pendingChoice, b.pendingChoice].filter(
+    (choice): choice is NonNullable<RewardState["pendingChoice"]> => Boolean(choice),
+  );
+  const newest = candidates.sort((x, y) => x.id.localeCompare(y.id)).pop();
+  const pendingChoice =
+    newest && (!lastResolvedChoiceId || newest.id > lastResolvedChoiceId) ? newest : undefined;
+
+  const unlockedCosmetics = [
+    ...new Set([...(a.unlockedCosmetics ?? []), ...(b.unlockedCosmetics ?? [])]),
+  ];
+
+  const equippedTitleId =
+    (a.equippedTitleId ?? "") > (b.equippedTitleId ?? "")
+      ? a.equippedTitleId
+      : b.equippedTitleId;
+
+  return {
+    ...(pendingChoice ? { pendingChoice } : {}),
+    ...(lastResolvedChoiceId ? { lastResolvedChoiceId } : {}),
+    ...(unlockedCosmetics.length > 0 ? { unlockedCosmetics } : {}),
+    ...(equippedTitleId ? { equippedTitleId } : {}),
+  };
+}
+
+/**
  * チェックポイント進行をマージする（端末間の同期・巻き戻し防止）。
  * - 現在地は「先に進んでいる方」を採用する。
  * - 獲得バッジ・クリア済みCP・最終問題履歴は取りこぼさない和集合。
@@ -119,6 +255,7 @@ function mergeCheckpointProgress(
     rarePityCount: Math.max(a.rarePityCount, b.rarePityCount),
     streakMeta: mergeStreakMeta(a.streakMeta, b.streakMeta),
     dailyQuests: mergeDailyQuests(a.dailyQuests, b.dailyQuests),
+    gameful: mergeGamefulState(a.gameful, b.gameful),
   };
 }
 

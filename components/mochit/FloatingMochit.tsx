@@ -33,8 +33,10 @@ import {
   type FloatingMochitPoint,
   type FloatingMochitPreferences,
 } from "./floatingMochitPreferences";
+import { getMochitDisplayName } from "@/lib/mochitName";
+import { loadAppState } from "@/lib/storage";
 import {
-  getFloatingMochitMessage,
+  buildMochitMessage,
   type FloatingMochitMessage,
 } from "./floatingMochitMessages";
 import type { MochitPresentation } from "@/lib/mochitPresentation";
@@ -109,6 +111,9 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   const [bubble, setBubble] = useState<FloatingMochitMessage | null>(null);
   const [dragRotation, setDragRotation] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  // 表示名は保存済みの AppState から一度だけ読む（このコンポーネントは
+  // 進捗を持たないため、購読せずマウント時のスナップショットで足りる）。
+  const [displayName] = useState(() => getMochitDisplayName(loadAppState()));
   const gestureRef = useRef<ActiveGesture | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -176,10 +181,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   const showBubbleForEvent = (signal: MochitEventSignal) => {
     if (menuOpen) return;
 
-    const message = getFloatingMochitMessage(
-      signal.type,
-      previousBubbleTextRef.current,
-    );
+    const message = buildMochitMessage(signal, previousBubbleTextRef.current);
     if (!message) return;
 
     if (bubbleTimerRef.current !== null) {
@@ -386,7 +388,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
       <button
         ref={petButtonRef}
         type="button"
-        aria-label="モチットを触る"
+        aria-label={`${displayName}を触る`}
         aria-haspopup="menu"
         aria-expanded={menuOpen}
         className="floating-mochit-body flex h-full w-full cursor-grab touch-none select-none items-center justify-center rounded-full active:cursor-grabbing"

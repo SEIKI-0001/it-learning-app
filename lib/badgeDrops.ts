@@ -12,8 +12,10 @@ import type {
   BadgeFragment,
   BadgeRarity,
   CheckpointProgress,
+  PendingChoice,
 } from "@/types/checkpoint";
 import { getCheckpointProgress } from "@/lib/checkpoints";
+import { fragmentLabel } from "@/lib/rewardInventory";
 import { grantExp } from "@/lib/game";
 
 const PITY_THRESHOLD = 5; // これ以上レアが出ていなければ次回レア確定
@@ -100,14 +102,14 @@ export function rollBadgeDrop(
         options: [
           {
             id: "opt-frag-rare",
-            label: "レア欠片 ×2",
+            label: `${fragmentLabel("frag-rare")} ×2`,
             rarity: "rare",
             emoji: "🔷",
             fragment: { fragmentId: "frag-rare", count: 2 },
           },
           {
             id: "opt-frag-common",
-            label: "ノーマル欠片 ×3",
+            label: `${fragmentLabel("frag-common")} ×3`,
             rarity: "common",
             emoji: "🔹",
             fragment: { fragmentId: "frag-common", count: 3 },
@@ -132,7 +134,7 @@ export function rollBadgeDrop(
       fragmentId,
       count,
       bonusXp: 0,
-      label: `ノーマル欠片 ×${count}`,
+      label: `${fragmentLabel(fragmentId)} ×${count}`,
       emoji: "🔹",
     };
   }
@@ -152,10 +154,20 @@ export function rollBadgeDrop(
 export function applyBadgeDrop(
   state: AppState,
   rng: () => number = Math.random,
+  now: Date = new Date(),
 ): { state: AppState; drop: BadgeDrop } {
   const cp = getCheckpointProgress(state);
   const roll = rollBadgeDrop(cp, rng);
   const { exp, level } = grantExp(state.progress.exp, roll.bonusXp);
+
+  // 3択は「候補の提示」までなので、選ばれるまで未選択として保存する。
+  // 画面を離れても選択機会が消えないようにするため。
+  // id は発生時刻で単調増加し、二重付与を防ぐ冪等キーになる。
+  const pendingChoice: PendingChoice | undefined =
+    roll.drop.kind === "choice"
+      ? { id: now.toISOString(), rarity: roll.drop.rarity, options: roll.drop.options }
+      : undefined;
+
   return {
     state: {
       ...state,
@@ -167,6 +179,14 @@ export function applyBadgeDrop(
           ...cp,
           badgeFragments: roll.badgeFragments,
           rarePityCount: roll.rarePityCount,
+          ...(pendingChoice
+            ? {
+                gameful: {
+                  ...cp.gameful,
+                  rewards: { ...cp.gameful?.rewards, pendingChoice },
+                },
+              }
+            : {}),
         },
       },
     },
@@ -174,24 +194,42 @@ export function applyBadgeDrop(
   };
 }
 
-/** 3択報酬の選択を反映する。 */
-export function applyDropChoice(
-  state: AppState,
-  option: DropChoiceOption,
-): AppState {
+/** 受け取り待ちの3択。無ければ undefined。 */
+export function getPendingChoice(state: AppState): PendingChoice | undefined {
+  return getCheckpointProgress(state).gameful?.rewards?.pendingChoice;
+}
+
+/**
+ * 3択の選択を確定する（冪等）。
+ *
+ * 未選択の3択が無い / 候補に無いIDを指定された場合は state をそのまま返す。
+ * 確定すると pendingChoice を消し、その id を lastResolvedChoiceId に記録するため、
+ * 再送・再描画・戻る操作で二重に付与されることがない。
+ */
+export function resolveDropChoice(state: AppState, optionId: string): AppState {
   const cp = getCheckpointProgress(state);
-  if (!option.fragment) return state;
+  const rewards = cp.gameful?.rewards;
+  const pending = rewards?.pendingChoice;
+  if (!pending) return state;
+
+  const option = pending.options.find((candidate) => candidate.id === optionId);
+  if (!option) return state;
+
+  const badgeFragments = option.fragment
+    ? addFragment(cp.badgeFragments, option.fragment.fragmentId, option.fragment.count)
+    : cp.badgeFragments;
+
+  const nextRewards = { ...rewards, lastResolvedChoiceId: pending.id };
+  delete nextRewards.pendingChoice;
+
   return {
     ...state,
     progress: {
       ...state.progress,
       checkpointProgress: {
         ...cp,
-        badgeFragments: addFragment(
-          cp.badgeFragments,
-          option.fragment.fragmentId,
-          option.fragment.count,
-        ),
+        badgeFragments,
+        gameful: { ...cp.gameful, rewards: nextRewards },
       },
     },
   };

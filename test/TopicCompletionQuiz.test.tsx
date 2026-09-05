@@ -18,7 +18,15 @@ const flow = vi.hoisted(() => {
       reviewQueue: [],
       currentDay: 1,
       completedDays: [],
-      checkpointProgress: { clearedCheckpointIds: [] },
+      topicMasteryStats: {},
+      checkpointProgress: {
+        currentCheckpointId: "cp1",
+        clearedCheckpointIds: [],
+        earnedBadges: [],
+        badgeFragments: [],
+        finalExamAttempts: [],
+        rarePityCount: 0,
+      },
     },
     answers: [],
   };
@@ -31,13 +39,21 @@ const flow = vi.hoisted(() => {
         ...before.progress,
         exp: 115,
         streakCount: 3,
-        checkpointProgress: { clearedCheckpointIds: [] as string[] },
+        checkpointProgress: {
+          currentCheckpointId: "cp1",
+          clearedCheckpointIds: [] as string[],
+          earnedBadges: [],
+          badgeFragments: [],
+          finalExamAttempts: [],
+          rarePityCount: 0,
+        },
       },
     },
   };
 });
 
 const completeStudySession = vi.hoisted(() => vi.fn());
+const refreshIntegratedStatus = vi.hoisted(() => vi.fn());
 const saveQuestionAttemptsForCurrentSession = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/useAppState", () => ({
@@ -67,6 +83,10 @@ vi.mock("@/lib/badgeSignals", () => ({
 }));
 
 vi.mock("@/lib/userSession", () => ({
+  // 成果差分（GF-P0-005）が使う合格準備度の前後値。
+  // 既定ではキャッシュ無し・再計算失敗の経路を通し、完了処理が影響を受けないことを保つ。
+  loadCachedProgressBootstrap: () => null,
+  refreshIntegratedStatus,
   reportTopicQuizResult: vi.fn(),
   saveAnswersToDb: vi.fn(),
   saveProgressToDb: vi.fn(),
@@ -106,6 +126,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   flow.userId = null;
   flow.next.progress.checkpointProgress.clearedCheckpointIds = [];
+  refreshIntegratedStatus.mockResolvedValue(null);
   completeStudySession.mockReturnValue({
     state: flow.next,
     newlyEarnedIds: [],
@@ -185,5 +206,82 @@ describe("TopicCompletionQuiz Mochit reactions", () => {
       "correct",
       "checkpointClear",
     ]);
+  });
+});
+
+describe("session outcome feedback (GF-P0-005)", () => {
+  async function completeAndSettle() {
+    render(<TopicCompletionQuiz topic={topic} />);
+    fireEvent.click(screen.getByText("完了テストの正解").closest("button")!);
+    fireEvent.click(screen.getByText("このレッスンを完了する").closest("button")!);
+    await waitFor(() => screen.getByText(/問正解$/));
+  }
+
+  it("shows what changed above the XP reward", async () => {
+    await completeAndSettle();
+
+    const panel = screen.getByText(/問正解$/).closest("div")!;
+    const text = panel.textContent ?? "";
+    expect(text).toContain("今回の変化");
+    expect(text.indexOf("今回の変化")).toBeLessThan(text.indexOf("XP"));
+  });
+
+  it("still completes when the readiness recalculation fails", async () => {
+    refreshIntegratedStatus.mockRejectedValue(new Error("network down"));
+
+    await completeAndSettle();
+
+    // 完了表示・XP・ストリークは通常どおり出る。
+    expect(screen.getByText(/問正解$/)).toBeInTheDocument();
+    expect(screen.getByText("今回の変化")).toBeInTheDocument();
+  });
+
+  it("does not show a readiness comparison without measured values", async () => {
+    await completeAndSettle();
+
+    // 「58% → 66%」のような実測比較が出ていないこと
+    // （「合格準備度への反映を見る」の既存リンクとは別物）。
+    const panel = screen.getByText(/問正解$/).closest("div")!;
+    expect(panel.textContent ?? "").not.toMatch(/\d+%\s*→\s*\d+%/);
+  });
+});
+
+describe("mochit context (GF-P0-004)", () => {
+  async function completeAndCaptureSignal() {
+    const signals: { type: string; context?: Record<string, unknown> }[] = [];
+    const unsubscribe = subscribeMochitEvent((signal) => signals.push(signal));
+    render(<TopicCompletionQuiz topic={topic} />);
+    fireEvent.click(screen.getByText("完了テストの正解").closest("button")!);
+    fireEvent.click(screen.getByText("このレッスンを完了する").closest("button")!);
+    await waitFor(() => screen.getByText(/問正解$/));
+    unsubscribe();
+    return signals;
+  }
+
+  it("attaches a context to the completion event", async () => {
+    const signals = await completeAndCaptureSignal();
+    const completion = signals.find((s) => s.type === "allCorrect" || s.type === "taskComplete");
+
+    expect(completion?.context).toBeDefined();
+  });
+
+  it("states no fact it does not have", async () => {
+    // fixture には過去の誤答も復習キューもストリーク更新も無い。
+    const signals = await completeAndCaptureSignal();
+    const completion = signals.find((s) => s.type === "allCorrect" || s.type === "taskComplete");
+
+    expect(completion?.context).not.toHaveProperty("recoveredCount");
+    expect(completion?.context).not.toHaveProperty("reviewCleared");
+    expect(completion?.context).not.toHaveProperty("personalBestStreak");
+    expect(completion?.context).not.toHaveProperty("streakShieldUsed");
+  });
+
+  it("keeps per-answer reactions free of context", async () => {
+    const signals = await completeAndCaptureSignal();
+    const perAnswer = signals.filter((s) => s.type === "correct" || s.type === "incorrect");
+
+    for (const signal of perAnswer) {
+      expect(signal.context).toBeUndefined();
+    }
   });
 });

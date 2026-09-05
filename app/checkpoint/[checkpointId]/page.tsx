@@ -25,7 +25,7 @@ export default async function CheckpointExamPage({
       <PageHeader
         back={{ href: "/plan", label: "学習計画へ" }}
         tone="brand"
-        eyebrow="突破試験"
+        eyebrow="分野まとめテスト"
         title={checkpoint.title}
         description={checkpoint.description}
       />

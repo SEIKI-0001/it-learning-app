@@ -23,7 +23,7 @@ import type { ExamReadinessResult } from "@/types/examReadiness";
 
 // 習熟度のしきい値。初回満点は約72、日を空けた再確認で定着度が上がる前提で調整。
 const QUIZ_CLEARED = 60; // 確認問題を「解ける」水準
-const MASTERED = 75; // 時間を空けて再確認した定着水準
+export const MASTERED = 75; // 時間を空けて再確認した定着水準
 
 // ---------------------------------------------------------------------------
 // バッジ定義（チェックポイント別）
@@ -77,12 +77,12 @@ export const BADGES: BadgeDef[] = [
   {
     id: "b-cp1-final",
     label: "全体像マスター",
-    description: "CP1の最終問題を突破した証。",
+    description: "CP1の突破試験に合格した証。",
     category: "final",
     rarity: "rare",
     checkpointId: "cp1",
     requiredForGate: false,
-    conditionLabel: "CP1の最終問題に合格する",
+    conditionLabel: "CP1の突破試験に合格する",
     xp: 40,
     emoji: "🗺️",
   },
@@ -154,12 +154,12 @@ export const BADGES: BadgeDef[] = [
   {
     id: "b-cp2-final",
     label: "基礎理解マスター",
-    description: "CP2の最終問題を突破した証。",
+    description: "CP2の突破試験に合格した証。",
     category: "final",
     rarity: "rare",
     checkpointId: "cp2",
     requiredForGate: false,
-    conditionLabel: "CP2の最終問題に合格する",
+    conditionLabel: "CP2の突破試験に合格する",
     xp: 50,
     emoji: "📗",
   },
@@ -231,12 +231,12 @@ export const BADGES: BadgeDef[] = [
   {
     id: "b-cp3-final",
     label: "定着マスター",
-    description: "CP3の最終問題を突破した証。",
+    description: "CP3の突破試験に合格した証。",
     category: "final",
     rarity: "epic",
     checkpointId: "cp3",
     requiredForGate: false,
-    conditionLabel: "CP3の最終問題に合格する",
+    conditionLabel: "CP3の突破試験に合格する",
     xp: 60,
     emoji: "✅",
   },
@@ -293,12 +293,12 @@ export const BADGES: BadgeDef[] = [
   {
     id: "b-cp4-final",
     label: "弱点克服マスター",
-    description: "CP4の最終問題を突破した証。",
+    description: "CP4の突破試験に合格した証。",
     category: "final",
     rarity: "epic",
     checkpointId: "cp4",
     requiredForGate: false,
-    conditionLabel: "CP4の最終問題に合格する",
+    conditionLabel: "CP4の突破試験に合格する",
     xp: 60,
     emoji: "🔁",
   },
@@ -358,12 +358,12 @@ export const BADGES: BadgeDef[] = [
   {
     id: "b-cp5-final",
     label: "過去問準備マスター",
-    description: "CP5の最終問題を突破した証。",
+    description: "CP5の突破試験に合格した証。",
     category: "final",
     rarity: "epic",
     checkpointId: "cp5",
     requiredForGate: false,
-    conditionLabel: "CP5の最終問題に合格する",
+    conditionLabel: "CP5の突破試験に合格する",
     xp: 70,
     emoji: "🎯",
   },
@@ -432,12 +432,12 @@ export const BADGES: BadgeDef[] = [
   {
     id: "b-cp6-final",
     label: "総仕上げマスター",
-    description: "CP6の最終問題を突破した、合格への最終関門クリアの証。",
+    description: "CP6の突破試験に合格した、最終関門クリアの証。",
     category: "final",
     rarity: "epic",
     checkpointId: "cp6",
     requiredForGate: false,
-    conditionLabel: "CP6の最終問題に合格する",
+    conditionLabel: "CP6の突破試験に合格する",
     xp: 80,
     emoji: "🏁",
   },
@@ -451,7 +451,7 @@ export const BADGES: BadgeDef[] = [
     rarity: "epic",
     checkpointId: "cp6",
     requiredForGate: false,
-    conditionLabel: "CP1〜CP6の最終問題をすべて突破する",
+    conditionLabel: "CP1〜CP6の突破試験にすべて合格する",
     xp: 100,
     emoji: "🎓",
   },

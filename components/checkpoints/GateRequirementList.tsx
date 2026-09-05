@@ -39,7 +39,7 @@ export default function GateRequirementList({ gate }: { gate: CheckpointGate }) 
     });
   }
   rows.push({
-    label: "最終問題を突破する",
+    label: "突破試験に合格する",
     met: gate.finalExamPassed,
     detail: checkpoint.winConditionLabel,
   });

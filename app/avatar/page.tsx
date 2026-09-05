@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { AppState } from "@/types";
 import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getMochitGrowthStage, getMochitUnlockSummary, MOCHIT_GROWTH_STAGE_LABELS, nextMochitGrowthStageInfo } from "@/lib/mochit";
@@ -11,6 +12,10 @@ import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { buildBadgeStatuses } from "@/lib/badges";
 import { badgeIcon } from "@/lib/badgeIcons";
 import Mochit from "@/components/mochit/Mochit";
+import MochitNameForm from "@/components/mochit/MochitNameForm";
+import { getMochitDisplayName } from "@/lib/mochitName";
+import { saveAppState } from "@/lib/storage";
+import { getUserId, saveProgressToDb } from "@/lib/userSession";
 import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
@@ -28,15 +33,23 @@ export default function AvatarPage() {
   const nextStage = nextMochitGrowthStageInfo(state);
   const summary = getMochitUnlockSummary(state);
   const cp = getCheckpointProgress(state);
+  const displayName = getMochitDisplayName(state);
+  const persist = (next: AppState) => {
+    saveAppState(next);
+    setState(next);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, next.progress);
+  };
   return (
     <main className="min-h-screen pb-24">
       <PageHeader
         back={{ href: "/today", label: "今日の学習" }}
-        title="モチット"
+        title={displayName}
         description="学びをそっと案内する相棒"
       />
 
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        <MochitNameForm state={state} onChange={persist} />
         {/* 成長段階＝この画面で唯一の強調ブロック */}
         <section className="rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 text-center">
           <div className="flex justify-center">

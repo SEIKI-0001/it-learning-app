@@ -5,6 +5,7 @@ import {
   OFFICIAL_EXAM_FIELDS,
   OFFICIAL_EXAM_FIELD_SCOPE,
   getOfficialExamField,
+  hasOfficialExamFieldRanges,
   isOfficialExamField,
 } from "@/lib/questionBank/officialExamField";
 
@@ -127,13 +128,14 @@ export function validateQuestion(q: QuestionRecord): QuestionBankIssue[] {
       );
     } else if (
       s.examType === OFFICIAL_EXAM_FIELD_SCOPE.examType &&
-      s.year === OFFICIAL_EXAM_FIELD_SCOPE.year &&
+      hasOfficialExamFieldRanges(s.year) &&
       Number.isInteger(s.questionNumber) &&
       s.questionNumber >= 1 &&
       s.questionNumber <= 100
     ) {
-      // 令和8年度 ITパスポートは公式冊子の並びが分かっているので、問番号と突き合わせる。
-      const expected = getOfficialExamField(s.questionNumber);
+      // 冊子の並びが分かっている年度は、問番号と突き合わせる。
+      // 未登録の年度は突き合わせずに素通りさせる（境目を推測しないため）。
+      const expected = getOfficialExamField(s.questionNumber, s.year);
       if (s.examField !== expected) {
         add(
           "official-exam-field-question-number",

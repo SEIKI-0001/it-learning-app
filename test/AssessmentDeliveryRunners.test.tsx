@@ -474,22 +474,22 @@ describe("assessment delivery runners", () => {
     fireEvent.click(screen.getByRole("button", { name: "突破試験に挑む" }));
     expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "test-complete" }));
-    expect(await screen.findByText("あと少し！次で突破できます")).toBeInTheDocument();
+    expect(await screen.findByText("あと少し！次は合格できます")).toBeInTheDocument();
     const completedSessionId = requestBodies("/api/assessment-sessions")
       .find((body) => body.action === "complete")?.sessionId;
 
     failures.start = 1;
     fireEvent.click(screen.getByRole("button", { name: "もう一度挑戦する" }));
 
-    expect(screen.getByText("あと少し！次で突破できます")).toBeInTheDocument();
+    expect(screen.getByText("あと少し！次は合格できます")).toBeInTheDocument();
     expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
     expect(await screen.findByRole("alert")).toHaveTextContent("開始");
-    expect(screen.getByText("あと少し！次で突破できます")).toBeInTheDocument();
+    expect(screen.getByText("あと少し！次は合格できます")).toBeInTheDocument();
     expect(screen.queryByTestId("topic-quiz")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "もう一度挑戦する" }));
     expect(await screen.findByTestId("topic-quiz")).toBeInTheDocument();
-    expect(screen.queryByText("あと少し！次で突破できます")).not.toBeInTheDocument();
+    expect(screen.queryByText("あと少し！次は合格できます")).not.toBeInTheDocument();
 
     const actions = requestBodies("/api/assessment-sessions");
     expect(actions.map((body) => body.action)).toEqual(["start", "complete", "start", "start"]);

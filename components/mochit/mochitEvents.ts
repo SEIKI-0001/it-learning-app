@@ -59,8 +59,40 @@ export const MOCHIT_EVENT_REACTION_MS: Record<MochitEvent, number> = {
   wakeUp: 800,
 };
 
+/**
+ * モチットの発言に添える学習コンテキスト（GF-P0-004）。
+ *
+ * ここに入れてよいのは「表示時点で確定している事実」だけ。推測した成長や
+ * 存在しない履歴を発言させないため、値が無い項目は undefined のままにする
+ * （0 と undefined は別物として扱う）。本文は永続化しない。
+ */
+export type MochitContext = {
+  /** 前回まちがえた問題のうち、今回正解した数。 */
+  recoveredCount?: number;
+  /** 現在のチェックポイントで残っている必須バッジ数。 */
+  remainingRequiredBadges?: number;
+  /** 今回の学習で突破試験が解放されたか。 */
+  finalExamUnlocked?: boolean;
+  /** 今回の学習で復習キューから外れたか。 */
+  reviewCleared?: boolean;
+  /** 自己ベストを更新した連続日数。 */
+  personalBestStreak?: number;
+  /** おまもりでストリークが守られたか。 */
+  streakShieldUsed?: boolean;
+  /**
+   * 今回バッジを獲得したか。true のときバッジ関連の発言は行わない
+   * （Celebration が既に演出しており、二重通知になるため）。
+   */
+  badgeJustEarned?: boolean;
+};
+
 // dev/preview で `event` prop として渡す形。id を変えると同種イベントを再発火できる。
-export type MochitEventSignal = { type: MochitEvent; id: number };
+// context は任意。無ければ従来どおり汎用メッセージにフォールバックする。
+export type MochitEventSignal = {
+  type: MochitEvent;
+  id: number;
+  context?: MochitContext;
+};
 
 export function getMochitCompletionEvent({
   checkpointCleared,

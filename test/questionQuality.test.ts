@@ -1005,11 +1005,30 @@ describe("既存の問題バンク", () => {
   });
 
   it("問題バンクに重複・酷似した問題が無い", () => {
+    const byId = new Map(ALL.map((q) => [q.id, q]));
+    /**
+     * 公式過去問どうしで問題文だけが一致するのは、IPA が同じ問題文を年度をまたいで
+     * 再利用しているためで、こちらの収録の誤りではない（例: 令和7年度 問88 と
+     * 令和8年度 問94 は問題文が同一で選択肢が総入れ替え）。原文は直せないので
+     * 品質ゲートも warning 止まりにしてある（lib/questionQuality/gate.ts）。
+     * ただし選択肢まで含めて完全一致（exact_duplicate）なら同じ問題の二重収録なので、
+     * ここで落とす。
+     */
+    const isOfficialReuse = (aId: string, bId: string, band: string) => {
+      const a = byId.get(aId);
+      const b = byId.get(bId);
+      if (!a || !b) return false;
+      if (a.origin !== "official_past" || b.origin !== "official_past") return false;
+      if (a.official?.year === b.official?.year) return false;
+      return band !== "exact_duplicate";
+    };
+
     const results = analyzeSimilarity(ALL);
     const serious: string[] = [];
     for (const [questionId, result] of results) {
       for (const match of [result.best, result.bestOfficial]) {
         if (!match) continue;
+        if (isOfficialReuse(questionId, match.matchedQuestionId, match.band)) continue;
         if (match.band === "exact_duplicate" || match.band === "block") {
           serious.push(`${questionId} <-> ${match.matchedQuestionId} (${match.scores.score.toFixed(3)})`);
         }

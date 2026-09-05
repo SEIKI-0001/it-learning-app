@@ -32,7 +32,7 @@ const NODE_STATE_LABEL: Record<QuestRouteNode["state"], string | null> = {
 };
 
 export type QuestRouteFinalReward = {
-  /** 例: "ミッション 2/3" (デイリーミッションの実進捗) */
+  /** 例: "1/3 達成" (今日の3ミッションの実進捗) */
   progressLabel: string;
   xp: number;
   state: "locked" | "claimable" | "claimed";
@@ -221,7 +221,8 @@ export default function QuestRoute({
               <>
                 <p className="text-[15px] text-gray-500">今日の宝箱</p>
                 <p className="mt-0.5 text-xs tabular-nums text-gray-500">
-                  3ミッション達成で開けられる（+{finalReward.xp} XP）・{finalReward.progressLabel}
+                  今日の3ミッション達成で開けられる（+{finalReward.xp} XP）・
+                  {finalReward.progressLabel}
                 </p>
               </>
             )}

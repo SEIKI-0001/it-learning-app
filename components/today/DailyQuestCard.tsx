@@ -8,6 +8,8 @@ import { useState } from "react";
 import type { AppState } from "@/types";
 import {
   allQuestsDone,
+  applyQuestReroll,
+  canRerollQuest,
   claimDailyQuestReward,
   getQuestDef,
   resolveDailyQuests,
@@ -27,9 +29,21 @@ export default function DailyQuestCard({
   setState: (s: AppState) => void;
 }) {
   const [justClaimed, setJustClaimed] = useState<string | null>(null); // ドロップ表示
-  const quests = resolveDailyQuests(state, todayLocalDate());
+  const today = todayLocalDate();
+  const quests = resolveDailyQuests(state, today);
   const doneCount = quests.quests.filter((q) => q.progress >= q.goal).length;
   const complete = allQuestsDone(quests);
+  // 差し替えは1日1回。着手済み・完了済みは進捗が消えるため対象にしない。
+  const rerollAvailable = canRerollQuest(state, today);
+
+  function handleReroll(questId: string) {
+    const next = applyQuestReroll(state, questId);
+    if (next === state) return;
+    saveAppState(next);
+    setState(next);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, next.progress);
+  }
 
   function handleClaim() {
     const claimed = claimDailyQuestReward(state);
@@ -89,10 +103,26 @@ export default function DailyQuestCard({
                   {q.progress}/{q.goal}
                 </span>
               )}
+              {rerollAvailable && !done && q.progress === 0 && (
+                <button
+                  type="button"
+                  onClick={() => handleReroll(q.id)}
+                  aria-label={`「${def.label}」を別のミッションに変える`}
+                  className="shrink-0 rounded-full border border-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-600 transition hover:border-brand-300 hover:text-brand-700"
+                >
+                  変える
+                </button>
+              )}
             </li>
           );
         })}
       </ul>
+
+      {rerollAvailable && (
+        <p className="mt-2 text-[11px] text-gray-400">
+          まだ手をつけていないミッションを、1日1つだけ変えられます
+        </p>
+      )}
 
       {quests.claimed || justClaimed ? (
         <div className="mt-3 border-t border-gray-100 pt-2.5">

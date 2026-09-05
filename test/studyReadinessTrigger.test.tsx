@@ -26,6 +26,8 @@ vi.mock("@/lib/celebration", () => ({
 }));
 vi.mock("@/lib/badgeSignals", () => ({ getClientBadgeSignals: () => ({}) }));
 vi.mock("@/lib/userSession", () => ({
+  loadCachedProgressBootstrap: () => null,
+  refreshIntegratedStatus: vi.fn().mockResolvedValue(null),
   saveProgressToDb: mocks.saveProgressToDb,
   saveQuestionAttemptsForCurrentSession: mocks.saveQuestionAttemptsForCurrentSession,
   reportTopicQuizResult: mocks.reportTopicQuizResult,

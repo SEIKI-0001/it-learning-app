@@ -147,7 +147,7 @@ export default function TodayPolicyStrip({
                 突破試験に挑戦できます
               </p>
               <p className="mt-0.5 text-xs text-accent-700">
-                {checkpoint.title}の最終問題。{checkpoint.winConditionLabel}
+                {checkpoint.title}の突破試験。{checkpoint.winConditionLabel}
               </p>
             </Link>
           </li>

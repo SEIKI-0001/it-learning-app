@@ -54,7 +54,7 @@ export const BADGE_CATEGORY_LABELS: Record<BadgeCategory, string> = {
   revenge: "苦手克服",
   word: "単語帳",
   kakomon: "過去問レベル",
-  final: "最終問題",
+  final: "突破試験",
   collection: "コレクション",
 };
 
@@ -172,6 +172,114 @@ export type FinalExamAttempt = {
   wrongTopicIds: string[];
 };
 
+/**
+ * ゲームフル機能の状態（docs/requirements/gameful-design-v2.md）。
+ *
+ * checkpoint_progress(jsonb) 内に1つのサブオブジェクトとしてまとめる。
+ * フィールドを個別に散らすと lib/mergeAppState.ts の明示マージを更新し忘れて
+ * 端末間マージで消える事故が起きやすいため、マージ規則を1関数に閉じる。
+ *
+ * 新しいフィールドを足すときは必ず同時に:
+ *   1. ここに optional で追加（初期値は undefined＝旧データと同じ挙動）
+ *   2. lib/mergeAppState.ts の mergeGamefulState を更新
+ *   3. test/mergeCheckpointProgress.test.ts のキー一覧と fixture を更新
+ */
+export type GamefulState = {
+  /** 成長確認（踊り場）の表示状況。 */
+  growthCheck?: {
+    /** 成長確認を表示済みのチェックポイント。CPごとに1回だけ見せるための冪等キー。 */
+    shownCheckpointIds: CheckpointId[];
+  };
+  /** 追加報酬（3択・欠片・装飾）の状態。 */
+  rewards?: RewardState;
+  /** デイリーミッションの差し替え（1日1回）。 */
+  questReroll?: QuestReroll;
+  /** 合格宣言。任意で、有無によって学習評価も機能も変わらない。 */
+  pledge?: Pledge;
+  /** モチットの名前。未設定なら既定名を使う。 */
+  mochitName?: MochitName;
+  /** その日の学習量の選択。未設定ならプロフィールの予算をそのまま使う。 */
+  studyAmount?: StudyAmountChoice;
+};
+
+/**
+ * 当日の学習量の選択（GF-P1-001）。
+ * 選ばなければこの記録自体が存在せず、従来どおりプロフィールの予算が使われる。
+ * 「何を学ぶか」の優先順位はシステム側が保つので、ここは分量だけを持つ。
+ */
+export type StudyAmountChoice = {
+  /** ローカル日付 "YYYY-MM-DD"。日をまたいだら選択は持ち越さない。 */
+  date: string;
+  minutes: number;
+};
+
+/**
+ * その日のミッション差し替え記録（GF-P1-009）。
+ * 1日1件だけ持ち、これがある日はもう差し替えられない。
+ */
+export type QuestReroll = {
+  /** ローカル日付 "YYYY-MM-DD"。 */
+  date: string;
+  /** 差し替えたミッションID。 */
+  replacedQuestId: string;
+  /** 差し替え後のミッションID。 */
+  newQuestId: string;
+};
+
+/**
+ * 合格宣言（GF-P1-010）。
+ * 宣言しても報酬は無く、しなくても不利益は無い。表示のためだけの記録。
+ */
+export type Pledge = {
+  pledgedAt: string; // ISO
+  /** 宣言した時点の試験日。後で試験日を変えても宣言の記録は動かさない。 */
+  examDate?: string;
+};
+
+/** モチットの名前（GF-P1-007）。改名の前後関係を保つため更新時刻を持つ。 */
+export type MochitName = {
+  value: string;
+  updatedAt: string; // ISO
+};
+
+/** 3択報酬の1候補（すべて補助＝学習進行を壊さない）。 */
+export type PendingChoiceOption = {
+  id: string;
+  label: string;
+  rarity: BadgeRarity;
+  emoji: string;
+  fragment?: { fragmentId: string; count: number };
+};
+
+/**
+ * 受け取り待ちの3択。選ぶまで保持し、選んだら消す。
+ * id は発生時刻(ISO)で単調増加し、二重付与を防ぐ冪等キーになる。
+ */
+export type PendingChoice = {
+  id: string;
+  rarity: BadgeRarity;
+  options: PendingChoiceOption[];
+};
+
+/**
+ * 追加報酬の保有状態。
+ * ここに入るのはコスメ・称号などの補助報酬だけで、合格準備度・必須バッジ・
+ * CP進行に影響する値は決して持たない。
+ */
+export type RewardState = {
+  /** 未選択の3択。無ければ undefined。 */
+  pendingChoice?: PendingChoice;
+  /**
+   * 最後に選択を確定した3択の id。単調増加なのでマージは max でよく、
+   * これ以下の pendingChoice は「解決済み」として復活させない。
+   */
+  lastResolvedChoiceId?: string;
+  /** 交換・獲得した称号などの装飾ID。 */
+  unlockedCosmetics?: string[];
+  /** 表示中の称号ID。未設定なら称号なし。 */
+  equippedTitleId?: string;
+};
+
 /** ロードマップ進行状態。UserProgress に格納し、localStorage / マージで保全する。 */
 export type CheckpointProgress = {
   currentCheckpointId: CheckpointId;
@@ -185,6 +293,8 @@ export type CheckpointProgress = {
   streakMeta?: StreakMeta;
   /** 今日の3ミッション。未使用なら undefined（旧データ互換）。 */
   dailyQuests?: DailyQuestState;
+  /** ゲームフル機能の状態。未使用なら undefined（旧データ互換）。 */
+  gameful?: GamefulState;
 };
 
 /** 既存ユーザー・新規ユーザー共通の初期値。 */
@@ -235,12 +345,12 @@ export type FinalExamState = "locked" | "unlocked" | "passed";
 export const FINAL_EXAM_STATE_LABELS: Record<FinalExamState, string> = {
   locked: "🔒 突破試験：ロック中",
   unlocked: "⚔️ 突破試験：挑戦できます",
-  passed: "🏆 突破試験：クリア済み",
+  passed: "🏆 突破試験：合格済み",
 };
 
 /** 状態ラベル（ピル・バッジなど狭い場所向けの短縮形）。 */
 export const FINAL_EXAM_STATE_SHORT: Record<FinalExamState, string> = {
   locked: "🔒 ロック中",
   unlocked: "⚔️ 挑戦できます",
-  passed: "🏆 クリア済み",
+  passed: "🏆 合格済み",
 };

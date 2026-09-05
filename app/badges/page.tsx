@@ -71,7 +71,7 @@ export default function BadgesPage() {
     <main className="min-h-screen pb-24">
       <PageHeader
         title="バッジ図鑑"
-        description="バッジを集めると最終問題が解放され、次のチェックポイントへ進めます。"
+        description="バッジを集めると突破試験が解放され、次のチェックポイントへ進めます。"
         accessory={
           <Link
             href="/plan"
@@ -109,7 +109,7 @@ export default function BadgesPage() {
             未獲得
           </span>
           <span className="font-semibold text-brand-700">
-            必須＝最終問題の解放に必要
+            必須＝突破試験の解放に必要
           </span>
           <span className="text-gray-500">任意＝追加報酬</span>
         </div>
@@ -190,7 +190,7 @@ export default function BadgesPage() {
               </div>
               <p className="mb-3 text-xs text-gray-500">
                 必須バッジ {gate.earnedRequiredCount}/{gate.requiredBadgeCount}{" "}
-                獲得（{gate.requiredBadgeCount} 個で最終問題が解放）
+                獲得（{gate.requiredBadgeCount} 個で突破試験が解放）
               </p>
               <BadgeList
                 statuses={statuses}

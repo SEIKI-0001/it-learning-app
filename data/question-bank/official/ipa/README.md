@@ -7,15 +7,20 @@
 
 | ファイル | 内容 | 件数 | status |
 | --- | --- | --- | --- |
-| `it-passport-2026.json` | 令和8年度 ITパスポート試験 公開問題 | 100問 | `content_verified` |
+| `it-passport-2022.json` | 令和4年度 ITパスポート試験 公開問題 | 100問 | `published` |
+| `it-passport-2023.json` | 令和5年度 ITパスポート試験 公開問題 | 100問 | `published` |
+| `it-passport-2024.json` | 令和6年度 ITパスポート試験 公開問題 | 100問 | `published` |
+| `it-passport-2025.json` | 令和7年度 ITパスポート試験 公開問題 | 100問 | `published` |
+| `it-passport-2026.json` | 令和8年度 ITパスポート試験 公開問題 | 100問 | `published` |
 
-`it-passport-2026.json` は**手で編集しない**。生成物なので、直したいときは入力側
+これらの JSON は**手で編集しない**。生成物なので、直したいときは入力側
 
 ```text
-data/question-bank/sources/official/ipa/it-passport-2026.source.json
+data/question-bank/sources/official/ipa/it-passport-<西暦>.source.json
+data/question-bank/explanations/official/ipa/it-passport-<西暦>.json
 ```
 
-を直して `npm run questions:import:ipa:2026` を実行する。
+を直して `npm run questions:import:ipa -- <西暦>` を実行する（年度を省くと全年度）。
 入力が同じなら出力も同じになる（実行時刻などを埋め込まない）。
 
 ## ファイル命名
@@ -66,17 +71,21 @@ official/ipa/it-passport-<年度>.json
 公式区分で `syllabusNode.field` を上書きすると、内容ベースの弱点分析が
 公式冊子の並びに引きずられて壊れる。逆も同じ。
 
-令和8年度 ITパスポートの区分の境目は
-`lib/questionBank/officialExamField.ts` の `getOfficialExamField()` が持つ。
+年度ごとの区分の境目は
+`lib/questionBank/officialExamField.ts` の `getOfficialExamField(問番号, 西暦)` が持つ。
 
 ```text
-問1〜34   ストラテジ   （34問）
-問35〜54  マネジメント （20問）
-問55〜100 テクノロジ   （46問）
+令和4年度  問1〜35 / 問36〜54 / 問55〜100  （35・19・46問）
+令和5年度  問1〜35 / 問36〜55 / 問56〜100  （35・20・45問）
+令和6年度  問1〜35 / 問36〜55 / 問56〜100  （35・20・45問）
+令和7年度  問1〜35 / 問36〜55 / 問56〜100  （35・20・45問）
+令和8年度  問1〜34 / 問35〜54 / 問55〜100  （34・20・46問）
 ```
 
 問番号から決まるので source.json に区分を手入力する必要はない。
-境目は年度・試験区分ごとに変わるため、他の年度を収録するときはこの範囲を使い回さないこと。
+**境目は年度ごとに動く**ので、新しい年度を収録するときは問題冊子の扉にある
+「問1から問○までは，ストラテジ系の問題です。」という案内文を根拠に1行足すこと。
+足し忘れると、その年度は区分の突き合わせ検証が素通りする。
 
 なお `official.examField` は出典側のメタ情報なので **`contentHash` の対象外**
 （対象は `prompt` / `choices` / `correctChoice` / `explanation` のみ）。

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { AppState } from "@/types";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
@@ -13,6 +14,18 @@ import {
   getCheckpoint,
   getCheckpointProgress,
 } from "@/lib/checkpoints";
+import { getClientBadgeSignals } from "@/lib/badgeSignals";
+import { buildTodaysLearningQueue } from "@/lib/learningLoop";
+import { buildTodayPrimaryAction } from "@/lib/todayPrimary";
+import { buildActionImpact } from "@/lib/actionImpact";
+import { evaluateGrowthCheckGate } from "@/lib/growthCheck";
+import { buildComebackMission } from "@/lib/comebackMission";
+import {
+  clearStudyAmount,
+  defaultDailyMinutes,
+  getSelectedMinutes,
+  setStudyAmount,
+} from "@/lib/studyAmount";
 import {
   getUserId,
   loadCachedProgressBootstrap,
@@ -30,6 +43,10 @@ import DailyQuestCard from "@/components/today/DailyQuestCard";
 import NextGoalCard from "@/components/today/NextGoalCard";
 import DailyProgressReport from "@/components/learn/DailyProgressReport";
 import TodayPolicyStrip from "@/components/today/TodayPolicyStrip";
+import TodayPrimaryCard from "@/components/today/TodayPrimaryCard";
+import GrowthCheckCard from "@/components/today/GrowthCheckCard";
+import StudyAmountPicker from "@/components/today/StudyAmountPicker";
+import ComebackMissionCard from "@/components/today/ComebackMissionCard";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import { buttonClass } from "@/components/ui/Button";
@@ -75,9 +92,14 @@ export default function TodayPage() {
     if (state === null) router.replace("/onboarding");
   }, [router, state]);
 
+  // 選ばれた学習量があればそれを予算にする。選んでいなければ従来どおり。
+  const selectedMinutes = state ? getSelectedMinutes(state, todayLocalDate()) : null;
   const plan = useMemo(
-    () => (state?.profile ? generateLearningPlan(state, topics) : null),
-    [state, topics],
+    () =>
+      state?.profile
+        ? generateLearningPlan(state, topics, new Date(), selectedMinutes ?? undefined)
+        : null,
+    [selectedMinutes, state, topics],
   );
   const menu = plan?.todayMenu;
 
@@ -167,6 +189,15 @@ export default function TodayPage() {
       saveStoredRoute(todayLocalDate(), nodes.map((node) => node.topicId));
     }
   }, [nodes]);
+
+  // Primary の推奨理由は既存キューが持つ reason をそのまま使う（文言を発明しない）。
+  // 純粋な再計算のみで、新しいネットワーク往復は増やさない。
+  const learningQueue = useMemo(
+    () => (state ? buildTodaysLearningQueue({ progress: state.progress, topics }) : []),
+    [state, topics],
+  );
+
+
   useEffect(() => {
     if (!state?.profile || !menu || !plan) return;
     if (nodes.length > 0) {
@@ -185,35 +216,48 @@ export default function TodayPage() {
   const currentCheckpoint = getCheckpoint(getCheckpointProgress(state).currentCheckpointId);
   const gate = buildCheckpointGate(state, currentCheckpoint.id);
 
+  // 成長確認（踊り場）はCPの中間で最大1回。緊急の復習が溜まっていれば延期する。
+  const growthCheckGate = evaluateGrowthCheckGate({ state, gate });
+
+  // 数日空いた人向けの短い再開点。対象外なら null で何も出さない。
+  const comeback = buildComebackMission({ state });
+
+  const persistState = (next: AppState) => {
+    if (next === state) return;
+    saveAppState(next);
+    setState(next);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, next.progress);
+  };
+
   // ホームの1画面目で「合格までの距離」と「今日のミッション」が分かるようにする。
   const examRemaining = daysUntilExam(state.profile);
   const totalMinutes = nodes.reduce((sum, node) => sum + node.estimatedMinutes, 0);
-  const currentNode = nodes.find((node) => node.state === "current") ?? null;
-  const doneCount = nodes.filter((node) => node.state === "done").length;
-  const startHref = currentNode
-    ? getLessonHref(currentNode.topicId, {
-        from: "today",
-        activity: currentNode.activity,
-        anchor: currentNode.activity === "review" ? "lesson-quiz" : "lesson-content",
-      })
-    : null;
-  // CTAには行動後の実際の成果を出す(実際の付与式から算出。架空の数字は出さない)
-  const ctaXpMax = currentNode ? estimateTaskXpMax(state, currentNode.topicId) : null;
 
-  // 今日の目的: 件数ではなく「何を達成するとどこへ進むか」を一文で示す
-  const missionText = gate.finalExamUnlocked && !gate.finalExamPassed
-    ? `CP${currentCheckpoint.order}「${currentCheckpoint.title}」の突破試験に挑戦できる状態です`
-    : currentNode
-      ? `「${currentNode.title}」${currentNode.activity === "review" ? "を復習して" : "を理解して"}、CP${currentCheckpoint.order}へのバッジを進める（${gate.earnedRequiredCount}/${gate.totalRequiredCount}）`
-      : nodes.length > 0
-        ? "今日のルートは踏破！復習やテーマ探索で上積みできます"
-        : null;
+  // 今日の最優先1件（GF-P0-001）。候補は既存の推奨ロジックが選んだものだけを使い、
+  // ここでは「どれを Primary として強調するか」しか決めない。
+  const primary = buildTodayPrimaryAction({
+    state,
+    nodes,
+    gate,
+    queue: learningQueue,
+    reviewItems: menu.reviewItems,
+  });
+  // 完了すると何が進むか（GF-P0-002）。確定している更新対象だけを最大3件。
+  const impacts = primary
+    ? buildActionImpact({ state, action: primary, gate, signals: getClientBadgeSignals() })
+    : [];
+  // 補助表示のXPは実際の付与式から算出する(架空の数字は出さない)。
+  const primaryMaxXp =
+    primary?.topicId !== null && primary?.topicId !== undefined
+      ? estimateTaskXpMax(state, primary.topicId)
+      : null;
 
   // 最終ノード=今日の宝箱(デイリーミッションの実報酬)
   const quests = resolveDailyQuests(state, todayLocalDate());
   const questDoneCount = quests.quests.filter((q) => q.progress >= q.goal).length;
   const finalReward = {
-    progressLabel: `ミッション ${questDoneCount}/${quests.quests.length}`,
+    progressLabel: `${questDoneCount}/${quests.quests.length} 達成`,
     xp: DAILY_QUEST_CLEAR_XP,
     state: quests.claimed
       ? ("claimed" as const)
@@ -270,64 +314,55 @@ export default function TodayPage() {
             <ExamReadinessSummary result={examReadiness} />
           </div>
 
-          {/* Primary: 今日のミッションを画面で唯一の強調ブロックにする(brand-50面+brand-200境界+左端brand-500線) */}
-          <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
-            <p className="text-xs font-semibold text-brand-700">今日のミッション</p>
-            {missionText ? (
+          {/* Primary: 画面で唯一の強調ブロック(brand-50面+brand-200境界+左端brand-500線) */}
+          {primary ? (
+            <TodayPrimaryCard action={primary} impacts={impacts} maxXp={primaryMaxXp} />
+          ) : (
+            /* 推奨対象が無い/取れないときは既存の学習導線へ安全にフォールバックする */
+            <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+              <p className="text-xs font-semibold text-brand-700">今日の最優先</p>
               <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">
-                <Link
-                  href="/plan"
-                  className="underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600 hover:text-brand-700"
-                >
-                  {missionText}
-                </Link>
+                今日のぶんは終わりました。復習やテーマ探索で上積みできます
               </p>
-            ) : (
-              <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">
-                今日は復習が中心。{" "}
-                <Link
-                  href="/plan"
-                  className="underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600 hover:text-brand-700"
-                >
-                  次の目標はCP{currentCheckpoint.order}「{currentCheckpoint.title}」（バッジ{" "}
-                  {gate.earnedRequiredCount}/{gate.totalRequiredCount}）
-                </Link>
-              </p>
-            )}
-            {currentNode && (
               <p className="mt-1 text-sm tabular-nums text-gray-600">
-                {currentNode.title}・約{currentNode.estimatedMinutes}分
-                {ctaXpMax !== null && `・全問正解で+${ctaXpMax} XP`}
+                次の目標はCP{currentCheckpoint.order}「{currentCheckpoint.title}」（必須バッジ{" "}
+                {gate.earnedRequiredCount}/{gate.totalRequiredCount}）
               </p>
-            )}
-
-            {/* 主CTA: 迷わず現在挑戦中のミッションから始める */}
-            {startHref && currentNode && (
-              <Link
-                href={startHref}
-                className="mt-3 flex w-full items-center justify-between rounded-lg bg-brand-600 px-5 py-3 text-white transition hover:bg-brand-700 active:scale-[0.99]"
-              >
-                <span className="text-base font-semibold">
-                  {currentNode.activity === "review"
-                    ? "復習ミッションから始める"
-                    : doneCount > 0
-                      ? "次のミッションに進む"
-                      : "最初のミッションを始める"}
-                </span>
-                <Icon name="arrow-right" className="ml-3 h-5 w-5 shrink-0" />
-              </Link>
-            )}
-          </div>
+              <div className="mt-3 flex gap-2">
+                <Link href="/review" className={buttonClass("warn", "md", "flex-1 justify-center")}>
+                  復習を見る
+                </Link>
+                <Link href="/learn" className={buttonClass("primary", "md", "flex-1 justify-center")}>
+                  テーマを探す
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        {/* Secondary の先頭: 久しぶりの人へ、重いルートより先に短い再開点を出す */}
+        {comeback && <ComebackMissionCard mission={comeback} />}
+
         <section>
           <div className="mb-2 flex items-baseline justify-between gap-3">
             <h2 className="text-base font-semibold text-gray-900">今日のルート</h2>
             <span className="text-xs tabular-nums text-gray-500">
               {nodes.length}件・約{totalMinutes}分
             </span>
+          </div>
+
+          {/* 学習量は任意。既定の「おまかせ」が最初から選ばれている。 */}
+          <div className="mb-3">
+            <StudyAmountPicker
+              selectedMinutes={selectedMinutes}
+              defaultMinutes={defaultDailyMinutes(state.profile)}
+              onSelect={(minutes) =>
+                persistState(setStudyAmount(state, todayLocalDate(), minutes))
+              }
+              onClear={() => persistState(clearStudyAmount(state, todayLocalDate()))}
+            />
           </div>
 
           {nodes.length > 0 && (
@@ -368,6 +403,9 @@ export default function TodayPage() {
             </div>
           )}
         </section>
+
+        {/* Secondary: 今日の学習導線の下に置く。Primary と競合させない。 */}
+        <GrowthCheckCard available={growthCheckGate.available} />
 
         <details className="rounded-xl border border-gray-200 bg-white">
           <summary className="cursor-pointer list-none px-4 py-3.5 text-sm font-semibold text-gray-700 marker:content-none">
