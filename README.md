@@ -120,16 +120,19 @@ Cloudflare Cron は UTC で起動しますが、**起動時刻をユーザー時
 3. **Scheduler Worker 側の設定**:
    - `APP_BASE_URL`（var・秘密ではない）… it-learning-app の基点 URL。
      `wrangler.jsonc` の `vars` はプレースホルダなので、実際の値は
-     `npx wrangler deploy --var APP_BASE_URL:https://<本番URL>` か Cloudflare ダッシュボードで設定します。
+     `npm run worker:deploy -- --var APP_BASE_URL:https://<本番URL>` か Cloudflare ダッシュボードで設定します。
      **本体を Cloudflare へ移す際は、この値だけを差し替えれば済みます。**
    - `CRON_SECRET`（secret）… it-learning-app と**同じ値**。
-     `npm run worker:deploy` 後に `npx wrangler secret put CRON_SECRET --config workers/line-reminder-cron/wrangler.jsonc`。
+     `npm run worker:deploy` 後に `npx --yes wrangler@4 secret put CRON_SECRET --config workers/line-reminder-cron/wrangler.jsonc`。
      秘密値は wrangler の設定ファイルへ平文でコミットしません。
 4. **デプロイ**: `npm run worker:deploy`（`wrangler.jsonc` の `triggers.crons` = `0 * * * *`）。
 
 ### ローカルで scheduled handler を実行する
 
 `wrangler dev --test-scheduled` で Cron 起動をローカルに再現できます。
+
+`wrangler` はアプリの依存に入れていません（Worker は別デプロイなので、
+Next.js 側の依存木を汚さないため）。`npm run worker:*` が `npx wrangler@4` を都度取得します。
 
 ```bash
 # 1) 通知APIの受け口（Next.js dev か、叩かれたことを見たいだけならスタブ）を用意しておく
