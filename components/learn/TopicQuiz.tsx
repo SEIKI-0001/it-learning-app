@@ -108,6 +108,9 @@ export default function TopicQuiz({
   const [order, setOrder] = useState<string[]>([]); // 回答した順(連続正解の判定に使う)
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // 完了処理が失敗したことをユーザーへ伝えるための表示用フラグ。
+  // 失敗しても押した結果が何も起きないように見える状態を作らない。
+  const [submitFailed, setSubmitFailed] = useState(false);
   const finishedRef = useRef(false);
   const failedSubmissionRef = useRef(false);
   const pendingAnswersRef = useRef<UserAnswer[] | null>(null);
@@ -169,6 +172,7 @@ export default function TopicQuiz({
     }
     finishedRef.current = true;
     failedSubmissionRef.current = false;
+    setSubmitFailed(false);
     setSubmitting(true);
     const answers = pendingAnswersRef.current ?? questions.map((q) => {
       const answeredAt = new Date().toISOString();
@@ -192,6 +196,7 @@ export default function TopicQuiz({
       // Keep an automatic timeout attempt latched even when parent callbacks rerender.
       // Only a direct user action may retry the exact frozen payload.
       failedSubmissionRef.current = true;
+      setSubmitFailed(true);
     } finally {
       setSubmitting(false);
     }
@@ -431,6 +436,12 @@ export default function TopicQuiz({
           {correctCount === total
             ? `全問正解！🎯 この勢いで完了しよう`
             : `${total}問クリア！ あと一押しで完了`}
+        </p>
+      )}
+
+      {submitFailed && !done && (
+        <p role="status" className="animate-pop-in text-center text-sm font-bold text-rose-600">
+          保存できませんでした。もう一度お試しください。
         </p>
       )}
 
