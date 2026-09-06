@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { UserAnswer } from "@/types";
+import type { QuestionExposureMap, UserAnswer } from "@/types";
 import type { CheckQuestion } from "@/types/content";
 import type { WordlistEntry } from "@/types/wordlist";
 import { buildQuizForEntry } from "@/lib/wordlist";
@@ -25,8 +25,22 @@ import { buttonClass } from "@/components/ui/Button";
 // 1) 基礎確認問題 → 2) 関連単語の確認 → 3) 過去問レベル問題 → 4) 結果 → 5) 次の推奨行動。
 // 既存の TopicQuiz を3回使い回す。用語・過去問レベルも4択に整えて同じ部品で出す。
 // API 失敗・Supabase 未設定・匿名でも、ローカル判定で結果まで到達できる（学習を止めない）。
+//
+// 「学習UX」と「正式な学習記録」は責務を分ける:
+//   - 回答保存の成否に関わらず、ステップ遷移と結果表示は必ず進む。
+//   - サーバー側の正式進捗（submitCheckPack → topic_progress / 合格準備度）は、
+//     回答が authoritative に保存できたセッションでだけ動かす。
+//   - 保存できなかったことは非ブロッキングの通知でユーザーに伝える。
 
 type Phase = "intro" | "quiz" | "flashcards" | "exam" | "result";
+
+/**
+ * 回答バッチの保存結果。
+ * - saved: サーバーが exposure を確定して返した（正式な学習記録として扱える）
+ * - skipped: 未ログイン。サーバー保存の対象外で、失敗ではない
+ * - unsaved: 401・障害・Supabase 未設定など。学習は続けるが記録には使わない
+ */
+type AttemptPersistence = "saved" | "skipped" | "unsaved";
 
 // 確認パック専用の制限時間。
 // 基礎確認は軽く、用語確認はテンポ重視、過去問レベルは本番感を出すため少し長めにする。
@@ -95,6 +109,10 @@ export default function CheckPackRunner({
     resultStatus: CheckPackResultStatus;
     nextAction: string;
   } | null>(null);
+  // 保存できなかった回答があるセッションかどうか。
+  // ref は finalize の判定用（同一イベント内で即時に読む必要がある）、state は通知の表示用。
+  const unsavedAnswersRef = useRef(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const startedAtRef = useRef<string>(new Date().toISOString());
 
   // 単語の4択は初回だけ生成する（設問が毎レンダーで変わらないように固定）。
@@ -106,12 +124,17 @@ export default function CheckPackRunner({
   const hasFlashcards = flashcardQuestions.length > 0;
   const hasExam = examQuestions.length > 0;
 
+  /**
+   * 回答バッチを保存し、正式な学習記録として扱えるかどうかだけを返す。
+   * 例外は投げない（保存の失敗で学習フローを止めないため）。
+   */
   async function saveAttempts(
     answers: UserAnswer[],
     questionType: QuestionAttemptInput["questionType"],
-  ): Promise<void> {
+  ): Promise<AttemptPersistence> {
     const userId = getUserId();
-    if (!userId) return;
+    // 未ログインはそもそもサーバー保存の対象外。「失敗」ではないので通知も出さない。
+    if (!userId) return "skipped";
     const attempts: QuestionAttemptInput[] = answers.map((a) => ({
       questionId: a.questionId,
       questionType,
@@ -120,20 +143,33 @@ export default function CheckPackRunner({
       isCorrect: a.isCorrect,
       answeredAt: a.answeredAt,
     }));
-    const exposures = await saveQuestionAttempts(userId, attempts);
-    if (attempts.some((attempt) => exposures[attempt.questionId]?.state === "unknown"
-      || exposures[attempt.questionId] === undefined)) {
-      throw new Error("question attempt persistence failed");
+    let exposures: QuestionExposureMap = {};
+    try {
+      exposures = await saveQuestionAttempts(userId, attempts);
+    } catch {
+      // ネットワーク断など。unknown と同じ「保存できなかった」扱いにする。
+      exposures = {};
     }
+    // unknown / 欠落は保存の受領証にならない（401・障害・Supabase 未設定を含む）。
+    const persisted = attempts.every((attempt) => {
+      const exposure = exposures[attempt.questionId];
+      return exposure !== undefined && exposure.state !== "unknown";
+    });
+    if (persisted) return "saved";
+    unsavedAnswersRef.current = true;
+    setSaveFailed(true);
+    return "unsaved";
   }
 
   async function handleQuizDone(answers: UserAnswer[]) {
     const correct = answers.filter((a) => a.isCorrect).length;
+    const rate = rateOf(correct, answers.length);
+    // 保存の結果は記録の話。成否に関わらず次のステップへ必ず進む。
     await saveAttempts(answers, "topic_quiz");
-    setQuizRate(rateOf(correct, answers.length));
+    setQuizRate(rate);
     setPhase(hasFlashcards ? "flashcards" : hasExam ? "exam" : "result");
     if (!hasFlashcards && !hasExam) {
-      await finalize(rateOf(correct, answers.length), null, null);
+      await finalize(rate, null, null);
     }
   }
 
@@ -164,6 +200,9 @@ export default function CheckPackRunner({
   ) {
     const userId = getUserId();
     if (!userId) return;
+    // 未保存の回答が混ざったセッションは、正式な到達度証拠にならない。
+    // stage（本番対応OK）・合格準備度をこの結果で動かさない。
+    if (unsavedAnswersRef.current) return;
     const res = await submitCheckPack(userId, {
       packId,
       topicId,
@@ -221,6 +260,7 @@ export default function CheckPackRunner({
   if (phase === "flashcards") {
     return (
       <StepShell step={2} title="関連用語の確認" note="用語が定着しているかチェック。">
+        {saveFailed && <SaveFailedNotice />}
         <TopicQuiz
           key={`${packId}:flashcards`}
           topicId={topicId}
@@ -244,6 +284,7 @@ export default function CheckPackRunner({
         title="過去問レベル問題"
         note="本番対応力のチェック。ここが「本番対応OK」の判定になります。"
       >
+        {saveFailed && <SaveFailedNotice />}
         <TopicQuiz
           key={`${packId}:exam`}
           topicId={topicId}
@@ -268,6 +309,7 @@ export default function CheckPackRunner({
 
   return (
     <div className="space-y-5">
+      {saveFailed && <SaveFailedNotice />}
       <div
         className={`animate-pop-in rounded-xl p-5 text-center ring-1 ${STATUS_TONE[resultStatus]}`}
       >
@@ -302,6 +344,24 @@ export default function CheckPackRunner({
           進捗を見る
         </Link>
       </div>
+    </div>
+  );
+}
+
+/**
+ * 保存できなかったことを伝える非ブロッキングの通知。
+ * 学習は続けられること、記録には反映されないことの両方を短く伝える。
+ */
+function SaveFailedNotice() {
+  return (
+    <div
+      role="status"
+      className="rounded-xl bg-accent-50 px-4 py-3 text-sm font-semibold text-accent-800 ring-1 ring-accent-200"
+    >
+      学習記録を保存できませんでした。学習はそのまま続けられます。
+      <span className="mt-0.5 block text-xs font-semibold text-accent-700">
+        この回の結果は進捗・合格準備度には反映されません。
+      </span>
     </div>
   );
 }
