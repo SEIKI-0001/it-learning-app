@@ -15,6 +15,24 @@ This pilot uses a validation-only Cloudflare Worker. It does not change producti
 
 All npm scripts below were run with `PATH` prefixed by `/Users/seikikobayashi/.npm/_npx/899bf9cc10daad37/node_modules/node/bin`; each command printed `node=v22.18.0` before it ran.
 
+### Isolation and runtime recheck
+
+Commands run before this Fix Round 1 documentation change:
+
+```text
+$ git branch --show-current
+codex/cloudflare-vinext-pilot-20260906
+$ git rev-parse HEAD
+7262acb1e5a1f46c54df6844c04b65b14b7c3619
+$ node --version
+v22.18.0
+$ npm --version
+11.16.0
+$ git status --short
+```
+
+`git status --short` returned no output, confirming a clean worktree before this documentation update. The commit above is descended from source commit `e71f6a947f08bb3113e1136f8232f147c01679dd`, as recorded by the initial baseline check (exit status `0`).
+
 ## Pre-migration baseline
 
 | Command | Exit status | Result |
