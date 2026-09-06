@@ -22,6 +22,8 @@
     "validate:blueprints": "node scripts/question-bank/blueprint.mjs validate",
     "questions:quality-report": "node scripts/question-bank/quality-report.mjs",
     "questions:analyze-quality": "node scripts/question-bank/analyze-quality.mjs",
+    "worker:dev": "wrangler dev --config workers/line-reminder-cron/wrangler.jsonc --test-scheduled",
+    "worker:deploy": "wrangler deploy --config workers/line-reminder-cron/wrangler.jsonc",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "richmenu:preview": "node scripts/richmenu/richmenu-image.mjs",
@@ -54,6 +56,7 @@
     "sharp": "0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.129.0"
   }
 }

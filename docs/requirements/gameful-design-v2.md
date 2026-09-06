@@ -389,8 +389,16 @@ DB側の原子的判定がこの単位で行われている。
   push 前に予約するので、送信中に落ちても二重送信にならない（代わりに当日は再送しない）。
 - **学習データとの境界**: 読むのは `user_progress` / `line_users` / `notification_preferences` のみ、
   書くのは `notification_deliveries` / `line_sessions` のみ。push も Cron も学習状態に触れない。
-- **Cron**: `vercel.json` の `0 * * * *` → `GET /api/cron/line-reminder`。
-  `Authorization: Bearer $CRON_SECRET` で保護し、`CRON_SECRET` 未設定なら 503 で実行しない。
+- **Cron**: **Cloudflare Workers Cron Trigger**（`workers/line-reminder-cron/`）の `0 * * * *` →
+  `GET /api/cron/line-reminder`。`Authorization: Bearer $CRON_SECRET` で保護し、
+  `CRON_SECRET` 未設定なら 503 で実行しない。
+  Worker は「叩くだけ」で、判定・Supabase・LINE 送信を複製しない（Single Source of Truth は
+  `runDueLineReminders()`）。したがって Supabase の鍵も LINE トークンも Worker には渡さない。
+  Cloudflare Cron は UTC 起動だが、**起動時刻をユーザー時刻として扱わない**。
+  誰にいつ送るかは既存の timezone / ローカル日付ロジックが決める。
+  本体を Cloudflare へ移す際は Worker の `APP_BASE_URL` だけを差し替える。
+  （当初 `vercel.json` の Vercel Cron で実装したが、毎時実行が Hobby プランの制限に触れて
+  Vercel Preview が失敗したため、`vercel.json` ごと削除して Cloudflare へ移した。）
 - **LINE 送信**: `lib/line/messaging.ts` に reply / push を集約し、Webhook の返信もここへ寄せた。
   アクセストークンはこのモジュールの外へ出さない。
 - **設定 UI**: `/settings` の「学習リマインダー」（`components/settings/NotificationSettings.tsx`）。
@@ -983,7 +991,7 @@ XP付与・報酬抽選にも差分はない。
 | `GF-P0-003` | P0 | `VERIFIED` | #26 | growthCheck / growthChallenge / GrowthCheckPage | Growth check（可視化主体・復習優先） |
 | `GF-P0-004` | P0 | `VERIFIED` | #27 | mochitContext / contextualMochitMessages | Contextual Mochit |
 | `GF-P0-005` | P0 | `VERIFIED` | #25 | sessionOutcome / SessionOutcomeCard | Session outcome |
-| `GF-P0-006` | P0 | `IMPLEMENTED` | #37 | notificationSchedule / notificationReminderRoute / notificationPreferenceRoute | LINE reminder（実機QA未実施のため VERIFIED ではない） |
+| `GF-P0-006` | P0 | `IMPLEMENTED` | #37 | notificationSchedule / notificationReminderRoute / notificationPreferenceRoute / lineReminderCronWorker | LINE reminder（Cloudflare Cron。実機QA未実施のため VERIFIED ではない） |
 | `GF-P1-001` | P1 | `VERIFIED` | #31 | studyAmount / StudyAmountPicker | Session length choice |
 | `GF-P1-002` | P1 | `VERIFIED` | #31 | comebackMission / ComebackMissionCard | Comeback mission |
 | `GF-P1-003` | P1 | `VERIFIED` | #32 | cpEvolution / mochitGrowthCelebration | CP evolution |
@@ -1013,8 +1021,10 @@ XP付与・報酬抽選にも差分はない。
 
 `GF-P0-006` は 2026-09-06 に実装し `IMPLEMENTED` へ移した。`VERIFIED` へ上げるには
 **実機の LINE 友だち追加 → オプトイン → 実際の時刻での push 受信**が要る。これは
-`CRON_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN` / `APP_BASE_URL` が揃った本番相当環境が前提で、
-ローカルでは通せない（Cron 実行・push 送信・実端末の3つが揃わないため）。
+`CRON_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN` / `APP_BASE_URL` が揃った本番相当環境と、
+デプロイ済みの Cloudflare Scheduler Worker が前提で、ローカルでは通せない。
+なお Cloudflare の scheduled handler 自体は `wrangler dev --test-scheduled` で
+ローカル実行を確認済み（手順は README）。
 
 ---
 

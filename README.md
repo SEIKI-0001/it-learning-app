@@ -90,18 +90,63 @@ Web 利用のアカウント本体を **Google ログイン（Supabase Auth）**
 当日まだ学習していないユーザーにだけ、LINE で1日1通までリマインドを送ります。
 明示オプトイン制で、既定は OFF。`/settings` の「学習リマインダー」から時刻変更・停止ができます。
 
+### 構成
+
+スケジューラーは **Cloudflare Workers Cron Trigger**（`workers/line-reminder-cron/`）です。
+Worker は毎時起動して `APP_BASE_URL/api/cron/line-reminder` を
+`Authorization: Bearer ${CRON_SECRET}` 付きで GET するだけの薄い層で、
+通知判定・Supabase アクセス・LINE 送信はいっさい持ちません。
+
+```
+Cloudflare Cron (0 * * * *, UTC)
+  └─ workers/line-reminder-cron   … GET するだけ。Supabase鍵もLINEトークンも持たない
+       └─ GET /api/cron/line-reminder   （it-learning-app 側）
+            └─ runDueLineReminders()    … 判定・冪等性・push の唯一の窓口
+```
+
+Cloudflare Cron は UTC で起動しますが、**起動時刻をユーザー時刻として扱いません**。
+誰にいつ送るかは既存の timezone / ローカル日付ロジック（`lib/notifications/schedule.ts`）が決めます。
+
 ### セットアップ
 
 1. **マイグレーション適用**: `supabase/migrations/20260906000000_line_notification_reminders.sql`
-   （`notification_preferences` / `notification_deliveries`）。
-2. **環境変数**:
+   （`notification_preferences` / `notification_deliveries`）。通知機能を有効化する前に必ず適用します。
+2. **it-learning-app 側の環境変数**:
    - `CRON_SECRET` … Cron endpoint の保護。未設定なら `/api/cron/line-reminder` は 503 を返し実行しません
      （誰でも叩ける口を作らないため）。`openssl rand -hex 32`
    - `LINE_CHANNEL_ACCESS_TOKEN` … push 送信（Webhook の返信と共通）。未設定なら送信しません。
+     **Scheduler Worker 側には渡しません。**
    - `APP_BASE_URL`（または `NEXT_PUBLIC_APP_URL`）… 通知に載せるリンクの基点。未設定なら送信しません。
-3. **Cron**: `vercel.json` で `0 * * * *`（毎時）に `/api/cron/line-reminder` を実行します。
-   Vercel Cron が `Authorization: Bearer $CRON_SECRET` を自動で付与します。
-   毎時実行は Hobby プランの制限（1日1回）を超えるため、**Pro プラン以上が前提**です。
+3. **Scheduler Worker 側の設定**:
+   - `APP_BASE_URL`（var・秘密ではない）… it-learning-app の基点 URL。
+     `wrangler.jsonc` の `vars` はプレースホルダなので、実際の値は
+     `npx wrangler deploy --var APP_BASE_URL:https://<本番URL>` か Cloudflare ダッシュボードで設定します。
+     **本体を Cloudflare へ移す際は、この値だけを差し替えれば済みます。**
+   - `CRON_SECRET`（secret）… it-learning-app と**同じ値**。
+     `npm run worker:deploy` 後に `npx wrangler secret put CRON_SECRET --config workers/line-reminder-cron/wrangler.jsonc`。
+     秘密値は wrangler の設定ファイルへ平文でコミットしません。
+4. **デプロイ**: `npm run worker:deploy`（`wrangler.jsonc` の `triggers.crons` = `0 * * * *`）。
+
+### ローカルで scheduled handler を実行する
+
+`wrangler dev --test-scheduled` で Cron 起動をローカルに再現できます。
+
+```bash
+# 1) 通知APIの受け口（Next.js dev か、叩かれたことを見たいだけならスタブ）を用意しておく
+npm run dev   # → http://localhost:3000
+
+# 2) Worker を起動（秘密値はコマンドラインの --var で渡し、ファイルに残さない）
+npm run worker:dev -- \
+  --var APP_BASE_URL:http://127.0.0.1:3000 \
+  --var CRON_SECRET:local-dev-secret
+
+# 3) 別ターミナルから scheduled イベントを発火させる
+curl "http://127.0.0.1:8787/cdn-cgi/local/scheduled?cron=0+*+*+*+*"
+# → "Ran scheduled event"。`/__scheduled` でも同じハンドラーが動く。
+```
+
+`GET /api/cron/line-reminder` に `Authorization: Bearer local-dev-secret` が付いて届けば成功です
+（アプリ側の `CRON_SECRET` も同じ値にしておくこと。違えば 401 が返ります）。
 
 ### 挙動
 
@@ -110,6 +155,9 @@ Web 利用のアカウント本体を **Google ログイン（Supabase Auth）**
 - 送信直前に当日学習済みかを再確認し、済んでいれば送りません（枠も消費しません）。
 - push / Cron の失敗は `notification_deliveries.status` に記録するだけで、
   進捗・ストリーク・XP などの学習データには一切書き戻しません。
+- Scheduler Worker は設定（`APP_BASE_URL` / `CRON_SECRET`）が欠けていれば通知APIを呼ばず、
+  例外も投げずに終了します。呼び出しが失敗しても Worker からは再送も書き込みも行わず、
+  次の毎時起動に任せます（冪等キーがあるので二重送信になりません）。
 
 ## Learn More
 
