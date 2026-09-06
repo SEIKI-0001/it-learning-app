@@ -14,6 +14,6 @@
   // it-learning-app の URL を指し、本体の Cloudflare 移行後はここだけ差し替える。
   // CRON_SECRET は秘密なので vars に書かず `wrangler secret put CRON_SECRET` で設定する。
   "vars": {
-    "APP_BASE_URL": "https://example.invalid"
+    "APP_BASE_URL": "https://it-learning-app.vercel.app"
   }
 }
