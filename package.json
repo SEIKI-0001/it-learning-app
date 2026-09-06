@@ -22,6 +22,8 @@
     "validate:blueprints": "node scripts/question-bank/blueprint.mjs validate",
     "questions:quality-report": "node scripts/question-bank/quality-report.mjs",
     "questions:analyze-quality": "node scripts/question-bank/analyze-quality.mjs",
+    "worker:dev": "npx --yes wrangler@4 dev --config workers/line-reminder-cron/wrangler.jsonc --test-scheduled",
+    "worker:deploy": "npx --yes wrangler@4 deploy --config workers/line-reminder-cron/wrangler.jsonc",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "richmenu:preview": "node scripts/richmenu/richmenu-image.mjs",

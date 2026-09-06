@@ -18,6 +18,7 @@ import type {
   ProgressLevel,
   ProgressReason,
 } from "@/types/studyProgress";
+import type { NotificationPreference } from "@/types/notification";
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import type { AiGradingBootstrapResult } from "@/types/aiGrading";
@@ -1184,5 +1185,46 @@ export async function saveFeedbackToDb(
     return res.ok;
   } catch {
     return false;
+  }
+}
+
+// ---- GF-P0-006 通知設定 -----------------------------------------------------
+
+/**
+ * 現在の通知設定を取得する。未ログイン・未設定・Supabase 未設定では null。
+ * 設定画面は null を「通知機能を使えない状態」として扱い、案内だけ出す。
+ */
+export async function fetchNotificationPreference(): Promise<NotificationPreference | null> {
+  try {
+    const res = await fetch("/api/notifications/preference");
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      preference?: NotificationPreference;
+    };
+    return data.ok && data.preference ? data.preference : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 通知設定を保存する。停止（optIn: false）も同じ経路。 */
+export async function saveNotificationPreference(
+  preference: NotificationPreference,
+): Promise<NotificationPreference | null> {
+  try {
+    const res = await fetch("/api/notifications/preference", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(preference),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      ok: boolean;
+      preference?: NotificationPreference;
+    };
+    return data.ok && data.preference ? data.preference : null;
+  } catch {
+    return null;
   }
 }

@@ -2,6 +2,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseServer";
+import { sendLineReply } from "@/lib/line/messaging";
 import { getCurrentReadiness } from "@/lib/examReadiness/service";
 import {
   primaryImprovementLabel,
@@ -351,30 +352,6 @@ function verifySignature(
   return timingSafeEqual(a, b);
 }
 
-/** LINE の reply API へ返信を送る。 */
-async function sendReply(
-  replyToken: string,
-  text: string,
-  accessToken: string,
-): Promise<void> {
-  const res = await fetch("https://api.line.me/v2/bot/message/reply", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({
-      replyToken,
-      messages: [{ type: "text", text }],
-    }),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    console.error(`LINE reply API error: ${res.status} ${detail}`);
-  }
-}
-
 export async function POST(request: Request) {
   const rawBody = await request.text();
 
@@ -419,7 +396,7 @@ export async function POST(request: Request) {
       const { token } = await linkUser(supabase, ev.source?.userId);
       const text = followText(baseUrl, token);
       plannedReplies.push({ replyToken: ev.replyToken, text });
-      if (accessToken && ev.replyToken) await sendReply(ev.replyToken, text, accessToken);
+      if (accessToken && ev.replyToken) await sendLineReply(ev.replyToken, text, accessToken);
       continue;
     }
 
@@ -437,7 +414,7 @@ export async function POST(request: Request) {
         answers,
       );
       plannedReplies.push({ replyToken: ev.replyToken, text });
-      if (accessToken && ev.replyToken) await sendReply(ev.replyToken, text, accessToken);
+      if (accessToken && ev.replyToken) await sendLineReply(ev.replyToken, text, accessToken);
     }
   }
 
