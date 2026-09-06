@@ -329,7 +329,7 @@ DB側の原子的判定がこの単位で行われている。
 ## GF-P0-006 LINE学習リマインダー
 
 **Priority:** P0  
-**Status:** `NOT_STARTED`
+**Status:** `IMPLEMENTED`
 
 ### Purpose
 
@@ -358,20 +358,43 @@ DB側の原子的判定がこの単位で行われている。
 
 ### Acceptance Criteria
 
-- [ ] 通知OFFユーザーには送信されない。
-- [ ] 当日学習済みユーザーへ通常リマインドが送信されない。
-- [ ] 同一ユーザー・同一種別・同一日の重複送信を防止できる。
-- [ ] 設定画面から時刻変更・停止が可能。
-- [ ] 通知から`/today`または復帰ミッションへ直接遷移できる。
-- [ ] Cron endpointが秘密情報で保護されている。
-- [ ] LINE token等がクライアントへ露出しない。
-- [ ] push失敗・Cron失敗時に学習状態へ副作用がない。
+- [x] 通知OFFユーザーには送信されない。
+- [x] 当日学習済みユーザーへ通常リマインドが送信されない。
+- [x] 同一ユーザー・同一種別・同一日の重複送信を防止できる。
+- [x] 設定画面から時刻変更・停止が可能。
+- [x] 通知から`/today`または復帰ミッションへ直接遷移できる。
+- [x] Cron endpointが秘密情報で保護されている。
+- [x] LINE token等がクライアントへ露出しない。
+- [x] push失敗・Cron失敗時に学習状態へ副作用がない。
 
 ### Implementation Notes
 
 - 既存LINE reply送信処理をpush対応に汎用化できるか実装時に確認する。
 - `vercel.json` / Cron / `CRON_SECRET` / Supabase抽出の具体構成は実装開始時のリポジトリ状態に合わせて設計する。
 - LP/login等で通知を訴求する場合、実機能と表現を一致させる。
+
+### 実装（確定した構成）
+
+- **テーブル**: `notification_preferences`（オプトイン・ローカル時刻の「時」・timezone・種別スイッチ）と
+  `notification_deliveries`（主キー `(user_id, notification_type, local_date)` がそのまま冪等キー）。
+  migration は `supabase/migrations/20260906000000_line_notification_reminders.sql`。
+- **判定は純関数**: `lib/notifications/schedule.ts` が I/O を持たず「誰に・いつ・どの1通か」を決める。
+  優先順位は 復帰 > ストリーク危機 > 定時リマインド。上位種別を停止していれば下位へ落ちる。
+- **上限**: 1ユーザー・1ローカル日につき通知は最大1通（`MAX_NOTIFICATIONS_PER_LOCAL_DAY`）。
+  種別横断の上限なので、通常/危機/復帰が同日に重ならない。
+- **時刻の粒度**: Cron が毎時実行のため設定は「時」のみを持ち、分は保持しない。
+  設定時刻より前に学習しないまま21時になった場合の保険として、`STREAK_RISK_HOUR` に
+  ストリーク危機だけを出す（設定時刻が21時より早いユーザーのみ）。
+- **送信順序**: 「配信枠を予約（insert）→ push → 結果で status 更新」。予約が主キー衝突なら送らない。
+  push 前に予約するので、送信中に落ちても二重送信にならない（代わりに当日は再送しない）。
+- **学習データとの境界**: 読むのは `user_progress` / `line_users` / `notification_preferences` のみ、
+  書くのは `notification_deliveries` / `line_sessions` のみ。push も Cron も学習状態に触れない。
+- **Cron**: `vercel.json` の `0 * * * *` → `GET /api/cron/line-reminder`。
+  `Authorization: Bearer $CRON_SECRET` で保護し、`CRON_SECRET` 未設定なら 503 で実行しない。
+- **LINE 送信**: `lib/line/messaging.ts` に reply / push を集約し、Webhook の返信もここへ寄せた。
+  アクセストークンはこのモジュールの外へ出さない。
+- **設定 UI**: `/settings` の「学習リマインダー」（`components/settings/NotificationSettings.tsx`）。
+  設定はサーバーのみに持ち localStorage には置かない（端末間で「止めたのに届く」を作らない）。
 
 ---
 
@@ -960,7 +983,7 @@ XP付与・報酬抽選にも差分はない。
 | `GF-P0-003` | P0 | `VERIFIED` | #26 | growthCheck / growthChallenge / GrowthCheckPage | Growth check（可視化主体・復習優先） |
 | `GF-P0-004` | P0 | `VERIFIED` | #27 | mochitContext / contextualMochitMessages | Contextual Mochit |
 | `GF-P0-005` | P0 | `VERIFIED` | #25 | sessionOutcome / SessionOutcomeCard | Session outcome |
-| `GF-P0-006` | P0 | `NOT_STARTED` | - | - | LINE reminder（migration は 281a024 で main へ着地済み。着手待ち） |
+| `GF-P0-006` | P0 | `IMPLEMENTED` | #37 | notificationSchedule / notificationReminderRoute / notificationPreferenceRoute | LINE reminder（実機QA未実施のため VERIFIED ではない） |
 | `GF-P1-001` | P1 | `VERIFIED` | #31 | studyAmount / StudyAmountPicker | Session length choice |
 | `GF-P1-002` | P1 | `VERIFIED` | #31 | comebackMission / ComebackMissionCard | Comeback mission |
 | `GF-P1-003` | P1 | `VERIFIED` | #32 | cpEvolution / mochitGrowthCelebration | CP evolution |
@@ -986,7 +1009,12 @@ XP付与・報酬抽選にも差分はない。
 
 ただし今回の `VERIFIED` は **未ログイン・Chromium・production build** での確認に
 基づく。iPhone/Android 実機、ログイン済み（Google/LINE）経路、端末間マージは
-未確認のまま残る（同ファイル §4）。`GF-P0-006` は未実装のため対象外。
+未確認のまま残る（同ファイル §4）。
+
+`GF-P0-006` は 2026-09-06 に実装し `IMPLEMENTED` へ移した。`VERIFIED` へ上げるには
+**実機の LINE 友だち追加 → オプトイン → 実際の時刻での push 受信**が要る。これは
+`CRON_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN` / `APP_BASE_URL` が揃った本番相当環境が前提で、
+ローカルでは通せない（Cron 実行・push 送信・実端末の3つが揃わないため）。
 
 ---
 

@@ -13,6 +13,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
+import NotificationSettings from "@/components/settings/NotificationSettings";
 
 // 設定変更。オンボーディングで入力した試験予定日・学習可能時間・理解度・苦手分野・
 // 学習スタイルを、あとから何度でも変更できるようにする。現在値をプリセットして編集し保存する。
@@ -224,6 +225,9 @@ function SettingsForm({
               })}
             </div>
           </fieldset>
+
+          {/* 学習リマインダー（GF-P0-006） */}
+          <NotificationSettings />
 
           {/* 学習スタイル */}
           <fieldset>

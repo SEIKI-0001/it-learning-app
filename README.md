@@ -85,6 +85,32 @@ Web 利用のアカウント本体を **Google ログイン（Supabase Auth）**
    - `SESSION_SECRET`（新認証の有効化スイッチ 兼 LINE 署名鍵。`openssl rand -hex 32`）。
    - `NEXT_PUBLIC_LINE_ADD_FRIEND_URL`（ログインページの「LINEから始める」ボタンのリンク先）。
 
+## LINE学習リマインダー（GF-P0-006）
+
+当日まだ学習していないユーザーにだけ、LINE で1日1通までリマインドを送ります。
+明示オプトイン制で、既定は OFF。`/settings` の「学習リマインダー」から時刻変更・停止ができます。
+
+### セットアップ
+
+1. **マイグレーション適用**: `supabase/migrations/20260906000000_line_notification_reminders.sql`
+   （`notification_preferences` / `notification_deliveries`）。
+2. **環境変数**:
+   - `CRON_SECRET` … Cron endpoint の保護。未設定なら `/api/cron/line-reminder` は 503 を返し実行しません
+     （誰でも叩ける口を作らないため）。`openssl rand -hex 32`
+   - `LINE_CHANNEL_ACCESS_TOKEN` … push 送信（Webhook の返信と共通）。未設定なら送信しません。
+   - `APP_BASE_URL`（または `NEXT_PUBLIC_APP_URL`）… 通知に載せるリンクの基点。未設定なら送信しません。
+3. **Cron**: `vercel.json` で `0 * * * *`（毎時）に `/api/cron/line-reminder` を実行します。
+   Vercel Cron が `Authorization: Bearer $CRON_SECRET` を自動で付与します。
+   毎時実行は Hobby プランの制限（1日1回）を超えるため、**Pro プラン以上が前提**です。
+
+### 挙動
+
+- 通知は1ユーザー・1ローカル日につき最大1通。種別は 復帰 > ストリーク危機 > 定時リマインド の優先順。
+- 重複防止は `notification_deliveries` の主キー `(user_id, notification_type, local_date)`。
+- 送信直前に当日学習済みかを再確認し、済んでいれば送りません（枠も消費しません）。
+- push / Cron の失敗は `notification_deliveries.status` に記録するだけで、
+  進捗・ストリーク・XP などの学習データには一切書き戻しません。
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
