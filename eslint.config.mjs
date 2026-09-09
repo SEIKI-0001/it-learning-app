@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated Cloudflare/vinext output and Wrangler declarations.
+    "dist/**",
+    ".vinext/**",
+    ".wrangler/**",
+    "cloudflare-env.d.ts",
     // git worktree（git worktree add の作業ツリー）。
     // リポジトリの別ブランチをまるごと展開したものなので、中身は同じコードの別版。
     // lint 対象に入れると、いま編集していないブランチの指摘まで出てくるうえ、

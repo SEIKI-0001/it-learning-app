@@ -48,11 +48,147 @@ The first sandboxed `npm run build` attempt exited `1`: Turbopack could not bind
 
 ## vinext compatibility check
 
-Not run in this baseline-record task.
+### Task 2 recovery (2026-09-09)
+
+The interrupted initializer left valid uncommitted configuration at Task 2 base
+`a586d884c5eeab14d375846c959e2177cc8537e1`. Its original checker output was not
+retained. The pre-initialization result below was **reconstructed**, not recovered:
+`git archive a586d884c5eeab14d375846c959e2177cc8537e1` was extracted into a temporary
+directory under the ignored task ledger, then the following command ran there:
+
+```sh
+env PATH=/Users/seikikobayashi/.npm/_npx/899bf9cc10daad37/node_modules/node/bin:$PATH \
+  sh -c 'node --version && npx vinext@1.0.0-beta.9 check'
+```
+
+Node printed `v22.18.0`; the checker exited `0`, reporting **94% compatible**:
+16 supported, 0 partial, 1 issue. The temporary source copy was removed afterward.
+The checker is advisory: its exit status alone does not mean no issues were found.
+
+| Finding and paths | Classification | Critical acceptance impact |
+| --- | --- | --- |
+| Missing `"type": "module"` in baseline `package.json`; the only baseline issue. | Fixable; initializer added ESM package mode. | Build prerequisite; no route/authentication behavior changes. |
+| Initializer-generated free `__dirname` in `vite.config.ts`; recovery check also scored 94% before repair. | Fixable; first changed to `import.meta.dirname`, then the entire unused alias was removed during self-review because its target did not exist. | Build configuration only. |
+| `next/navigation` (31 files), `next/link` (56), `next/server` (37), `next/headers` (3), `next/dynamic` (1), `next/image` (5), `server-only` (4). | Supported by the checker: 7/7 import families. | Static support does not prove runtime authorization, cookies, streaming, or signatures. |
+| `next.config.ts` redirects; App Router; 44 pages, 1 layout, 37 route handlers, 2 loading boundaries; `proxy.ts`. | Supported by the checker. | Proxy and redirect behavior still require local/deployed verification. The design's earlier 36-API count is a snapshot; this scan counts 37 handlers including `/auth/callback`. |
+| `@vercel/analytics` and Tailwind CSS. | Supported by the checker (2/2 libraries). | Analytics is a client script; analytics delivery on Workers remains unverified. |
+| Checker notes that `next/image` uses `@unpic/react` and has no local optimization. Paths: `components/questions/QuestionFigures.tsx`, `components/roadmap-map/MapBackground.tsx`, `components/roadmap-map/MapDetailSheet.tsx`, `components/roadmap-map/MapFog.tsx`, `components/mochit/MochitFallback.tsx`. | Supported import; image delivery/dimensions remain unverified. | Past-exam figures and roadmap images need runtime checks; Cloudflare Images was not provisioned. |
+
+After configuration repair, the pinned initializer's checker reported **100%
+compatible**, 16 supported, 0 partial, 0 issues. No application source was changed.
 
 ## Generated configuration review
 
-Not run in this baseline-record task.
+Recovery reran these dependency installations with Node 22.18.0 and npm 11.16.0:
+
+```sh
+npm install --save-exact react@19.2.6 react-dom@19.2.6
+npm install --save-dev --save-exact vinext@1.0.0-beta.9 @vinext/cloudflare@1.0.0-beta.7 vite@8.2.2 wrangler@4.129.0 @cloudflare/vite-plugin@1.54.4 @vitejs/plugin-react@6.1.1 @vitejs/plugin-rsc@0.5.34
+npx vinext@1.0.0-beta.9 init --platform=cloudflare --data-cache=none --cdn-cache=workers-cache --image-optimization=none
+```
+
+Each command used the same Node-22-prefixed `PATH` above, including child npm
+scripts. All exited `0`. `react-server-dom-webpack@19.2.6` was retained from the
+initializer and is pinned exactly alongside matching React/React DOM. `npm ls`
+confirmed the ten pilot dependencies match the exact package/lock versions, and
+Next.js remains `16.2.9`. Other direct dependencies were not upgraded. npm refreshed
+the transitive Vite/Rolldown toolchain and deduplicated its dependencies in the lock.
+
+The second initializer preserved the existing config and all original scripts.
+The added commands are `dev:vinext`, `build:vinext`, `deploy:vinext`, `cf:typegen`,
+and `verify:cloudflare` exactly as planned; generated `start:vinext` is retained
+for local preview. `verify:cloudflare` is intentionally wired ahead of its verifier
+implementation in Task 5 and is not yet a runnable verification gate.
+
+- `vite.config.ts` uses vinext, the Cloudflare Vite RSC/SSR environments, and the
+  Cloudflare CDN cache adapter. Its initializer-generated `sharp` alias pointed to
+  root `empty-stub.js`, which the initializer did not create. The unused alias and
+  its `node:path` import were removed during self-review. Authored `sharp` imports
+  occur only in `scripts/process-roadmap-map-assets.mjs` and
+  `scripts/richmenu/richmenu-image.mjs`; those offline tools still resolve the real
+  installed package. No native application functionality is stubbed or removed.
+- `wrangler.jsonc` names only `it-learning-app-vinext-pilot`, uses date `2026-09-06`,
+  `nodejs_compat`, and enabled observability. Initializer-required main
+  `vinext/server/fetch-handler`, assets `dist/client` / `ASSETS`, Workers Cache,
+  and `CF_VERSION_METADATA` are retained. There are no production routes, custom
+  domains, secret values, KV namespaces, or Cloudflare Images binding.
+- `cloudflare-env.d.ts` is unmodified Wrangler output containing only the declared
+  `ASSETS` and `CF_VERSION_METADATA` bindings plus generated runtime declarations.
+- `.gitignore` excludes `/dist/`, `.vinext/`, and `.wrangler/`.
+- No services were provisioned and no deployment command was run.
+
+### Type and lint boundaries
+
+Generated Wrangler declarations change the global `Body.json<T>()` default to
+`unknown`. The interrupted implementer reported 12 TS18046 errors in existing
+tests. Per the recorded ruling, `tsconfig.typecheck.json` excludes only root
+`cloudflare-env.d.ts`; all application/test inputs remain included and the
+generated declarations are not edited. `cf:typegen` and `build:vinext` verify the
+Cloudflare generation/bundle path. The ordinary Next build passed without changing
+`tsconfig.json` or application response typing.
+
+A fresh check after `build:vinext` found another artifact collision:
+`.next/types/validator.ts:5` could not import `AppRoutes`, `LayoutRoutes`, `ParamMap`,
+or `AppRouteHandlerRoutes` (four TS2305 errors). vinext beta.9's
+`node_modules/vinext/dist/typegen.js` hardcodes `.next/types/routes.d.ts` and writes
+its own declarations and `next-env.d.ts` there. It has no configurable output or
+disable option. The added `pretypecheck: "next typegen"` hook regenerates the
+authoritative Next route validators before the unchanged existing `typecheck`
+command. This uses the supported Next CLI, not a vinext patch. Maintenance cost:
+one route-generation step per npm typecheck; revisit this hook if vinext provides
+separate type output. Running raw `tsc` after vinext may still consume vinext's
+artifacts; use `npm run typecheck`. Do not run the two generators concurrently in
+the same checkout.
+
+The first post-build lint exited `1` with 225 errors and 6,286 warnings from bundled
+output and generated declarations (including two unused-disable warnings in
+`cloudflare-env.d.ts`).
+Examples include `dist/client/_next/static/*/_buildManifest.js`, minified files
+under `dist/client/_next/static/chunks/`, and `dist/server/ssr/vinext-client-assets.js`.
+`eslint.config.mjs` now ignores only generated pilot artifacts: `dist/**`,
+`.vinext/**`, `.wrangler/**`, and `cloudflare-env.d.ts`. Authored app, tests, and
+pilot config remain linted. The rerun exited `0` without warnings.
+
+### Task 2 verification and warnings
+
+| Node 22.18.0 command | Exit status | Evidence |
+| --- | --- | --- |
+| `npm run cf:typegen` | `0` | Wrangler 4.129.0 generated the two non-secret bindings and runtime declarations. |
+| `npm run typecheck` | `0` | Existing application/test typecheck passed after the root Cloudflare declaration boundary. |
+| `npm run build` | `0` | Next 16.2.9 compiled, finished TypeScript, generated 470 static pages. |
+| `npm run build:vinext` | `0` | All five Vite 8.2.2 phases passed, producing client and Worker bundles. |
+| `npm test` | `0` | 150 test files / 1,866 tests passed. |
+| `npm run lint` | `0` | Passed after generated-artifact ignores. |
+
+After removing the unused native-module alias, the complete sequence
+`npx vinext@1.0.0-beta.9 check && npm run build:vinext && npm run typecheck && npm run build && npm run typecheck && npm run lint`
+exited `0` under Node 22.18.0. This explicitly verifies that typechecking works
+after either build, with the automatic `next typegen` hook visible before both
+typecheck invocations. The final checker again reported 100% compatibility.
+
+Remaining diagnostics are recorded, not treated as runtime acceptance:
+
+- npm reported 13 dependency advisories (3 moderate, 9 high, 1 critical); no
+  unrequested `npm audit fix` or dependency upgrade was performed.
+- npm warned that install scripts for esbuild 0.28.1, fsevents 2.3.3/2.3.2,
+  sharp 0.34.5, unrs-resolver 1.12.2, and workerd 1.20260903.1 were not covered by
+  `allowScripts`. The required installed binaries worked in the successful builds.
+- Vite warned that `vitest.config.ts:6` uses `__dirname`, unsupported by its planned
+  future native config loader. Current Vitest 4.1.10 passed all tests; no unrelated
+  test config change was made.
+- Next repeated its baseline multiple-lockfile workspace-root warning.
+- vinext reported client chunks over 500 kB and unknown classification for some
+  pages because static analysis cannot detect all `headers()` / `cookies()` use.
+  Runtime rendering/cache behavior remains to be verified.
+- Wrangler's unedited generated declarations contain trailing spaces on lines
+  11956, 12470, 12538, 13060, and 13553. `git diff --check` reports these five
+  generator-owned warnings; authored files pass that check. The generated file
+  is kept byte-for-byte as produced by `cf:typegen` rather than hand-edited.
+- Sandboxed npm registry lookup failed with `ENOTFOUND`; the waiting install was
+  interrupted and rerun successfully outside that restriction. Sandboxed Wrangler
+  typegen generated types but could not write its user-level log (`EPERM`); a clean
+  rerun outside the restriction exited `0`. Builds used the same approved local
+  execution context that passed the baseline Turbopack port restriction.
 
 ## Local Workers verification
 
@@ -68,13 +204,20 @@ Not run in this baseline-record task.
 
 ## vinext versus OpenNext decision
 
-Not run in this baseline-record task.
+No comparison trigger has been established by Task 2. Both toolchains build; the
+fixes are confined to generated-artifact boundaries and configuration. They do
+not change authentication, patch vinext internals, replace a critical subsystem,
+or introduce vinext branches into request-time application code. Runtime security,
+filesystem access, limits, and external-service behavior remain unverified; a
+passing checker/build must not be used to waive the later comparison gate.
 
 ## Unverified items
 
-- vinext compatibility has not been checked.
-- No Workers configuration has been generated or reviewed.
 - No local Worker, validation deployment, or deployed-route verification has been run.
+- `proxy.ts` / Supabase cookie behavior, signed webhook raw bodies, Node crypto,
+  request-time image dimensions in `lib/pastExam/figureSize.ts`, external providers,
+  cache behavior, and validation-account platform limits need their planned checks.
+- The verifier script is scheduled for Task 5; `verify:cloudflare` is not yet run.
 
 ## Production prerequisites
 
