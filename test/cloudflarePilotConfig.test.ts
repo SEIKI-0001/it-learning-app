@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -26,5 +26,14 @@ describe("Cloudflare pilot configuration", () => {
     expect(wrangler).not.toMatch(/"routes"\s*:/);
     expect(wrangler).not.toMatch(/"custom_domains"\s*:/);
     expect(wrangler).not.toContain("vercel.app");
+  });
+
+  it("exposes a repeatable Cloudflare verifier", () => {
+    expect(pkg.scripts["verify:cloudflare"]).toBe(
+      "node scripts/cloudflare/verify-pilot.mjs",
+    );
+    expect(
+      existsSync(path.join(root, "scripts/cloudflare/verify-pilot.mjs")),
+    ).toBe(true);
   });
 });

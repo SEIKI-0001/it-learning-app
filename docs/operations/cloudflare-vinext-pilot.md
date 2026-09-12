@@ -192,6 +192,71 @@ Remaining diagnostics are recorded, not treated as runtime acceptance:
 
 ## Local Workers verification
 
+### Repeatable pilot smoke verifier
+
+`npm run verify:cloudflare` checks the validation origin without following
+redirects or printing response bodies, cookies, authorization headers, or secret
+values. `PILOT_BASE_URL` selects the origin. Set `PILOT_EXPECT_AUTH_GATE=1` only
+when validation-only Supabase public configuration and `SESSION_SECRET` are loaded;
+the `/today` redirect is otherwise reported as unverified.
+
+For a local vinext run, put dummy values that cannot reach production services in
+the ignored `.env.local` file. The Cloudflare Vite plugin loads Worker variables
+from that file; exporting them only in the parent shell did not populate the
+Worker runtime in this pilot.
+
+```dotenv
+# .env.local (validation-only example; do not use or commit production values)
+NEXT_PUBLIC_SUPABASE_URL="https://pilot.invalid"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="pilot-anon-key"
+SESSION_SECRET="pilot-only-session-secret-with-sufficient-entropy"
+APP_BASE_URL="http://localhost:3000"
+LINE_CHANNEL_SECRET="pilot-only-line-secret"
+```
+
+```sh
+npm run dev:vinext
+
+PILOT_BASE_URL=http://localhost:3000 \
+  PILOT_EXPECT_AUTH_GATE=1 \
+  LINE_CHANNEL_SECRET=pilot-only-line-secret \
+  npm run verify:cloudflare
+```
+
+When `LINE_CHANNEL_SECRET` is supplied to both the validation Worker and verifier,
+the verifier checks rejection of an invalid signature and acceptance of a signed
+empty event. Without it, LINE is explicitly reported as unverified. When
+`STRIPE_WEBHOOK_SECRET` is supplied to the Worker, the same value enables the
+invalid-signature check; without it, the mandatory check expects the endpoint to
+fail closed with HTTP 503. Use validation credentials only. The command emits a
+non-secret JSON summary and exits nonzero if any performed HTTP contract fails.
+
+Task 5 ran the verifier against vinext development on `http://localhost:4315`
+with Node `v22.18.0`, an unreachable `.invalid` Supabase URL, and dummy local
+session/LINE secrets loaded from a temporary `.env.local`. The temporary file was
+deleted after the run. The command exited `0` with these performed contracts:
+
+| Contract | HTTP status | Result |
+| --- | --- | --- |
+| Public `/login` | `200` | Passed. |
+| Unauthenticated `/today` with auth gate expected | `307` to `/login` | Passed. |
+| Unauthenticated `/api/progress/save` | `401` | Passed. |
+| Invalid LINE signature | `401` | Passed. |
+| Validly signed empty LINE event | `200` | Passed. |
+| Stripe webhook without configuration | `503` | Passed fail-closed check. |
+
+A second run omitted verifier-side LINE credentials and the auth-gate expectation;
+both checks were emitted with `verified: false` while the remaining mandatory
+checks passed and the command exited `0`. No validation Stripe secret was available,
+so Task 5 did not run the configured invalid-signature branch.
+
+The first local setup attempt exported Worker variables only in the parent shell.
+The verifier exited `1`, correctly reporting `/today` as `200` and the invalid LINE
+signature as `200`; after loading the same dummy values through `.env.local`, both
+security contracts passed. A separate sandboxed attempt against the local server
+reported connection failures because the loopback listener was outside that
+sandbox. Neither failure was treated as application acceptance evidence.
+
 ### Task 4 image filesystem compatibility (2026-09-12)
 
 The compatibility trigger fired before implementation. With the original
