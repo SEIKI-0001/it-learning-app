@@ -192,7 +192,54 @@ Remaining diagnostics are recorded, not treated as runtime acceptance:
 
 ## Local Workers verification
 
-Not run in this baseline-record task.
+### Task 4 image filesystem compatibility (2026-09-12)
+
+The compatibility trigger fired before implementation. With the original
+`lib/pastExam/figureSize.ts`, both vinext development and the built local Worker
+returned HTTP `200` for `/past-exams/2026`, but the serialized view for the real
+`/question-bank/official/ipa/it-passport/2026/q003-figure-1.png` contained
+`width: undefined` and `height: undefined`. The filesystem exception was swallowed
+by the existing fallback, so neither server log showed `ENOENT`. Both environments
+also returned HTTP `200` for `/check-pack/tech-binary-data`, exercising the
+`lib/questions/measureFigures.ts` page path. Current check-pack question data has
+no image figures, so that URL cannot itself demonstrate non-null dimensions.
+
+Task 4 therefore replaced request-time `node:fs` / `process.cwd()` reads with a
+checked-in manifest generated from the PNG IHDR data before vinext builds. The
+generator found 42 PNGs, validates the PNG signature and IHDR, sorts URL keys, and
+rejects any derived path outside `public/`. It does not modify `QuestionRecord`
+data, and `getPngSize(publicPath): FigureSize | null` remains the caller contract.
+
+The first Worker-safe test run failed as intended: with `node:fs` made unavailable,
+the existing implementation returned `null` instead of the hand-checked `900 x
+350` dimensions for the real 2022 question 11 fixture. After implementation, that
+test and the unknown/traversal cases passed. A before/regenerate/after SHA-256
+comparison produced identical manifest hashes:
+`85d333345bd538583cae7cf9f5ae663f625b859dff05c3e9d53cf196718f71cd`.
+
+Post-fix route probes returned HTTP `200` in both vinext development and the built
+local Worker. `/past-exams/2026` serialized the real 2026 question 3 figure as
+`width: 648, height: 170`; `/check-pack/tech-binary-data` remained successful.
+Neither response nor either runtime log contained `ENOENT`, `node:fs`,
+`process.cwd()`, or an internal-server error. The built figure-size module contains
+the generated data and no request-time PNG filesystem reader.
+
+| Node 22.18.0 command | Exit status | Evidence |
+| --- | --- | --- |
+| `npx vitest run test/pastExamFigureSize.test.ts test/pastExamQuestions.test.ts` | `0` | 2 files / 42 tests passed. |
+| `npm run typecheck` | `0` | Application and generated-manifest types passed. |
+| `npm run lint` | `0` | Passed without errors or warnings. |
+| `npm test` | `0` | 154 files / 1,876 tests passed. |
+| `npm run validate:questions` | `0` | 12 files / 338 question validation tests passed. |
+| `npm run build` | `0` | Next compiled, typechecked, and generated 470 static pages. |
+| `npm run build:vinext` | `0` | Prebuild regenerated 42 entries; all five vinext phases completed. |
+
+The first sandboxed Next build attempt reproduced the already-recorded Turbopack
+port restriction and exited `1`; the same Node 22 command rerun with local port
+permission exited `0`. An initial corrected-build probe used a PATH that omitted
+the npm executable, so `prebuild:vinext` stopped before running the generator or
+build; the complete rerun restored npm after the cached Node directory, used
+`set -e`, and exited `0`.
 
 ## Validation deployment
 
@@ -213,10 +260,11 @@ passing checker/build must not be used to waive the later comparison gate.
 
 ## Unverified items
 
-- No local Worker, validation deployment, or deployed-route verification has been run.
+- No validation deployment or deployed-route verification has been run.
 - `proxy.ts` / Supabase cookie behavior, signed webhook raw bodies, Node crypto,
-  request-time image dimensions in `lib/pastExam/figureSize.ts`, external providers,
-  cache behavior, and validation-account platform limits need their planned checks.
+  external providers, cache behavior, and validation-account platform limits need
+  their planned checks. Past-exam dimensions now pass local vinext development and
+  built-Worker verification; validation deployment remains pending.
 - The verifier script is scheduled for Task 5; `verify:cloudflare` is not yet run.
 
 ## Production prerequisites
