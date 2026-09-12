@@ -44,7 +44,11 @@ async function readPngSize(filePath) {
   if (buffer.length < 24 || buffer.toString("hex", 0, 8) !== pngSignature) {
     throw new Error(`Invalid PNG signature: ${filePath}`);
   }
-  if (buffer.readUInt32BE(8) !== 13 || buffer.toString("ascii", 12, 16) !== "IHDR") {
+  if (
+    buffer.length < 33 ||
+    buffer.readUInt32BE(8) !== 13 ||
+    buffer.toString("ascii", 12, 16) !== "IHDR"
+  ) {
     throw new Error(`Invalid PNG IHDR: ${filePath}`);
   }
 

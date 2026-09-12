@@ -241,6 +241,35 @@ the npm executable, so `prebuild:vinext` stopped before running the generator or
 build; the complete rerun restored npm after the cached Node directory, used
 `set -e`, and exited `0`.
 
+### Task 4 Fix Round 1 (2026-09-12)
+
+Review found two stale/invalid-manifest paths. Ordinary `npm run build` did not
+regenerate the checked-in manifest, and `deploy:vinext` invoked `vinext build`
+directly, bypassing npm's `prebuild:vinext` lifecycle. The package now adds
+`prebuild: "npm run generate:figure-manifest"` while preserving the exact
+`build: "next build"` command. `deploy:vinext` now starts with
+`npm run build:vinext`, so direct builds, vinext builds, and vinext deployments
+all reach the generator through npm lifecycle hooks.
+
+The PNG parser also accepted a 24-byte pseudo-PNG containing the signature, IHDR
+length/type, and width/height but not the complete 13-byte IHDR data or CRC. A
+focused integration test copies the real generator into a temporary project and
+feeds it the checked-in truncated-header hex fixture. Before the fix, the test
+failed because the generator exited `0` and wrote a manifest. The parser now
+requires at least 33 bytes before accepting the first IHDR chunk; the same test
+passes by observing a nonzero exit, `Invalid PNG IHDR`, and no output manifest.
+
+| Node 22.18.0 command | Exit status | Evidence |
+| --- | --- | --- |
+| focused generator, figure lookup, and Cloudflare config tests | `0` | 3 files / 5 tests passed after the expected 2-test RED run. |
+| two `npm run generate:figure-manifest` runs + SHA-256 comparison | `0` | Both generated `85d333345bd538583cae7cf9f5ae663f625b859dff05c3e9d53cf196718f71cd`. |
+| `npm run build` | `0` | `prebuild` regenerated 42 entries before unchanged `next build`; 470 static pages generated. |
+| `npm run build:vinext` | `0` | `prebuild:vinext` regenerated 42 entries; all five vinext phases completed. |
+| post-build manifest hash comparison | `0` | Manifest remained byte-identical. |
+| `npm run typecheck` | `0` | Passed after both build toolchains. |
+| `npm run lint` | `0` | Passed without errors or warnings. |
+| `npm test` | `0` | 155 files / 1,877 tests passed. |
+
 ## Validation deployment
 
 Not run in this baseline-record task.

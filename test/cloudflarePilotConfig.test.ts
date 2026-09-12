@@ -11,8 +11,13 @@ describe("Cloudflare pilot configuration", () => {
     expect(pkg.scripts.dev).toBe("next dev");
     expect(pkg.scripts.build).toBe("next build");
     expect(pkg.scripts.start).toBe("next start");
+    expect(pkg.scripts.prebuild).toBe("npm run generate:figure-manifest");
     expect(pkg.scripts["dev:vinext"]).toBe("vinext dev");
+    expect(pkg.scripts["prebuild:vinext"]).toBe("npm run generate:figure-manifest");
     expect(pkg.scripts["build:vinext"]).toBe("vinext build");
+    expect(pkg.scripts["deploy:vinext"]).toBe(
+      "npm run build:vinext && vinext-cloudflare deploy",
+    );
   });
 
   it("uses a validation-only Worker with Node compatibility", () => {
