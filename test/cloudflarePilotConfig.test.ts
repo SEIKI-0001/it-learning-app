@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -5,6 +6,20 @@ import { describe, expect, it } from "vitest";
 const root = path.resolve(import.meta.dirname, "..");
 const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
 const wrangler = readFileSync(path.join(root, "wrangler.jsonc"), "utf8");
+const verifier = path.join(root, "scripts/cloudflare/verify-pilot.mjs");
+
+function runVerifier(baseURL: string) {
+  return spawnSync(process.execPath, [verifier], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      LINE_CHANNEL_SECRET: "",
+      PILOT_BASE_URL: baseURL,
+      PILOT_EXPECT_AUTH_GATE: "",
+      STRIPE_WEBHOOK_SECRET: "",
+    },
+  });
+}
 
 describe("Cloudflare pilot configuration", () => {
   it("keeps the existing Next.js scripts and adds separate vinext scripts", () => {
@@ -35,5 +50,36 @@ describe("Cloudflare pilot configuration", () => {
     expect(
       existsSync(path.join(root, "scripts/cloudflare/verify-pilot.mjs")),
     ).toBe(true);
+  });
+
+  it("rejects an invalid pilot URL without disclosing its input", () => {
+    const secretInput = "https://pilot-user:do-not-print-this@[";
+    const result = runVerifier(secretInput);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).not.toContain(secretInput);
+    expect(JSON.parse(result.stdout)).toEqual({
+      baseURL: null,
+      results: [],
+      error: {
+        code: "INVALID_PILOT_BASE_URL",
+        message: "PILOT_BASE_URL must be a valid absolute URL",
+      },
+    });
+  });
+
+  it("marks a network failure as mandatory but unverified", () => {
+    const result = runVerifier("http://127.0.0.1:1");
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toBe("");
+    const summary = JSON.parse(result.stdout);
+    expect(summary.results[0]).toEqual({
+      name: "public login",
+      status: null,
+      passed: false,
+      verified: false,
+    });
   });
 });
