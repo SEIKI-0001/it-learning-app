@@ -1,0 +1,811 @@
+/* /today サンプル「進行表」
+   トークン:
+   ground #EDF1F5 方眼紙のような冷たい灰 / paper #FFFFFF
+   ink #122033 / ink-2 #4A5A6E / rule #D5DDE6
+   new #0868C9（アプリのブランド青）/ review #E27A12（アプリのアクセント橙）
+   done #0E8A5E（達成）
+   type: IBM Plex Sans JP（見出し・本文）＋ IBM Plex Mono（分・時刻） */
+
+.page {
+  --ground: #edf1f5;
+  --paper: #ffffff;
+  --ink: #122033;
+  --ink-2: #4a5a6e;
+  --ink-3: #6b7a8c;
+  --rule: #d5dde6;
+  --rule-strong: #aab6c3;
+  --new: #0868c9;
+  --new-text: #0756a8;
+  --new-tint: #dbe9f8;
+  --review: #e27a12;
+  --review-text: #a9530a;
+  --review-tint: #fbe6cf;
+  --done: #0e8a5e;
+
+  --sans: var(--font-plex-jp), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  --mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  min-height: 100vh;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-feature-settings: "palt";
+  -webkit-font-smoothing: antialiased;
+}
+
+.page :focus-visible {
+  outline: 2px solid var(--new);
+  outline-offset: 2px;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-feature-settings: normal;
+  letter-spacing: -0.01em;
+}
+
+.inner {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.sampleNote {
+  margin: 0;
+  padding: 8px 20px;
+  background: var(--ink);
+  color: #dfe6ee;
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ───────── hero ───────── */
+
+.hero {
+  padding: 28px 0 24px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+
+.eyebrowDate {
+  letter-spacing: 0.02em;
+}
+
+.headline {
+  margin: 14px 0 0;
+  font-size: clamp(24px, 6.4vw, 32px);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  word-break: auto-phrase;
+}
+
+.headlineNum {
+  display: inline-block;
+  min-width: 1.2ch;
+  margin: 0 0.08em;
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 1.28em;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--new);
+  font-feature-settings: normal;
+}
+
+.subline {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.subline .mono {
+  margin: 0 0.15em;
+  color: var(--ink);
+}
+
+.dot {
+  margin: 0 0.4em;
+  color: var(--rule-strong);
+}
+
+/* ───────── signature: minute ruler ───────── */
+
+.ruler {
+  margin: 26px 0 0;
+  padding: 26px 0 0;
+}
+
+.track {
+  position: relative;
+  height: 40px;
+}
+
+/* 1分ごとの細い目盛りと、5分ごとの長い目盛り */
+.track::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  height: 9px;
+  background-image:
+    linear-gradient(to right, var(--rule-strong) 1px, transparent 1px),
+    linear-gradient(to right, var(--rule-strong) 1px, transparent 1px);
+  background-size:
+    calc(500% / var(--total)) 9px,
+    calc(100% / var(--total)) 4px;
+  background-repeat: repeat-x;
+  box-shadow: inset -1px 0 0 var(--rule-strong);
+}
+
+.segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transform-origin: left center;
+  animation: grow 620ms cubic-bezier(0.2, 0.7, 0.15, 1) both;
+  animation-delay: calc(var(--i) * 80ms + 120ms);
+}
+
+.segment::before,
+.segmentFill {
+  content: "";
+  position: absolute;
+  inset: 0 1.5px;
+  border-radius: 5px;
+}
+
+.segment::before {
+  background-color: var(--tint);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 5px,
+    rgba(255, 255, 255, 0.7) 5px 7px
+  );
+}
+
+.segment[data-kind="new"] {
+  --tint: var(--new-tint);
+  --solid: var(--new);
+}
+
+.segment[data-kind="review"] {
+  --tint: var(--review-tint);
+  --solid: var(--review);
+}
+
+.segmentFill {
+  background: var(--solid);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 460ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.segment[data-state="done"] .segmentFill {
+  transform: scaleX(1);
+}
+
+.segment[data-state="now"]::before {
+  box-shadow: inset 0 0 0 2px var(--solid);
+  background-image: none;
+}
+
+.caret {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  transform: translateX(-1px);
+  padding-left: 7px;
+  border-left: 2px solid var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--ink);
+  transition: left 460ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.caret::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 100%;
+  width: 2px;
+  height: 52px;
+  background: var(--ink);
+}
+
+.ticks {
+  position: relative;
+  height: 18px;
+  margin-top: 16px;
+}
+
+.tickLabel {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.tickLabel[data-edge="start"] {
+  transform: none;
+}
+
+.tickLabel[data-edge="end"] {
+  transform: translateX(-100%);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendItem::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.legendItem[data-kind="new"]::before {
+  background: var(--new);
+}
+
+.legendItem[data-kind="review"]::before {
+  background: var(--review);
+}
+
+/* ───────── budget chips ───────── */
+
+.budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.budgetLabel {
+  margin-right: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.chip {
+  appearance: none;
+  padding: 6px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    border-color 160ms,
+    background-color 160ms,
+    color 160ms;
+}
+
+.chip:hover {
+  border-color: var(--rule-strong);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+
+/* ───────── sections ───────── */
+
+.sheet,
+.missions {
+  border-radius: 14px;
+  background: var(--paper);
+  padding: 18px 18px 8px;
+}
+
+.missions {
+  margin-top: 14px;
+  padding-bottom: 18px;
+}
+
+.sheetHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sectionMeta {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+/* ───────── cue sheet ───────── */
+
+.cues {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cue {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 28px 1fr;
+  column-gap: 12px;
+  padding: 14px 0;
+}
+
+.cue + .cue {
+  border-top: 1px solid var(--rule);
+}
+
+/* 丸どうしをつなぐ縦線 */
+.cue::before {
+  content: "";
+  position: absolute;
+  left: calc(40px + 12px + 13px);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--rule);
+}
+
+.cues > .cue:first-child::before {
+  top: 28px;
+}
+
+.cue[data-state^="finish"]::before {
+  bottom: auto;
+  height: 22px;
+}
+
+.offset {
+  padding-top: 5px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+.cue[data-state="now"] .offset {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.mark {
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid var(--rule-strong);
+  border-radius: 50%;
+  background: var(--paper);
+  cursor: pointer;
+  transition:
+    background-color 200ms,
+    border-color 200ms;
+}
+
+.mark svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  transition: stroke-dashoffset 260ms 80ms ease-out;
+}
+
+.mark:hover {
+  border-color: var(--ink-2);
+}
+
+.cue[data-state="now"] .mark {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--new-tint);
+}
+
+.cue[data-state="now"][data-kind="review"] .mark {
+  box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--review-tint);
+}
+
+.cue[data-state="done"] .mark {
+  border-color: var(--done);
+  background: var(--done);
+}
+
+.cue[data-state="done"] .mark svg {
+  stroke-dashoffset: 0;
+}
+
+.cueBody {
+  min-width: 0;
+}
+
+.cueLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cueTitle {
+  margin: 0;
+  word-break: auto-phrase;
+  padding-top: 3px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.cue[data-state="now"] .cueTitle {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.cue[data-state="done"] .cueTitle {
+  color: var(--ink-2);
+}
+
+.cueMinutes {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.cueMinutes .mono {
+  margin-right: 1px;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.cue[data-state="done"] .cueMinutes .mono {
+  color: var(--ink-2);
+}
+
+.cueMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.kind {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.kind[data-kind="new"] {
+  color: var(--new-text);
+}
+
+.kind[data-kind="review"] {
+  color: var(--review-text);
+}
+
+.doneText {
+  color: var(--done);
+  font-weight: 500;
+}
+
+.nowPanel {
+  margin-top: 12px;
+  animation: rise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.reason {
+  margin: 0;
+  word-break: auto-phrase;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.nowActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-top: 14px;
+}
+
+.start {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px 0 20px;
+  border-radius: 10px;
+  background: var(--new);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 160ms;
+}
+
+.start[data-kind="review"] {
+  background: #c7650b;
+}
+
+.start:hover {
+  background: #0756a8;
+}
+
+.start[data-kind="review"]:hover {
+  background: var(--review-text);
+}
+
+.start svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 160ms;
+}
+
+.start:hover svg {
+  transform: translateX(2px);
+}
+
+.nowHint {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.finishMark {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 12px;
+  height: 12px;
+  margin-top: 6px;
+  border-radius: 3px;
+  background: var(--rule-strong);
+  transform: rotate(45deg);
+}
+
+.cue[data-state="finish-done"] .finishMark {
+  background: var(--done);
+}
+
+.cue[data-state="finish-done"] .offset {
+  color: var(--done);
+  font-weight: 500;
+}
+
+.finishTitle {
+  margin: 0;
+  padding-top: 3px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.cue[data-state="finish-done"] .finishTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--done);
+}
+
+.finishActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 8px;
+}
+
+.textLink {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--new-text);
+  text-decoration: underline;
+  text-decoration-color: var(--new-tint);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.textLink:hover {
+  text-decoration-color: var(--new);
+}
+
+/* ───────── missions ───────── */
+
+.missionList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mission {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.missionLabel {
+  font-size: 14px;
+}
+
+.missionCount {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.mission[data-complete="true"] .missionCount {
+  color: var(--done);
+  font-weight: 500;
+}
+
+.missionBar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--ground);
+  overflow: hidden;
+}
+
+.missionBarFill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--ink-2);
+  transition: width 460ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+
+.mission[data-complete="true"] .missionBarFill {
+  background: var(--done);
+}
+
+.reward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.reward p {
+  margin: 0;
+}
+
+.reward[data-state="claimed"] {
+  color: var(--done);
+  font-weight: 500;
+}
+
+.reward[data-state="claimable"] {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.claim {
+  appearance: none;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #c7650b;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.claim:hover {
+  background: var(--review-text);
+}
+
+/* ───────── motion ───────── */
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (min-width: 720px) {
+  .hero {
+    padding: 44px 0 32px;
+  }
+
+  .sheet,
+  .missions {
+    padding: 22px 26px 10px;
+  }
+
+  .missions {
+    padding-bottom: 22px;
+  }
+
+  .track {
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
