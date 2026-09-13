@@ -113,7 +113,7 @@ function TodaySample() {
       </p>
 
       <header className={s.hero}>
-        <div className={s.inner}>
+        <div className={`${s.inner} ${s.heroGrid}`}>
           <p className={s.eyebrow}>
             <span>今日の学習</span>
             <span className={s.eyebrowDate}>{dateLabel}</span>
@@ -125,7 +125,7 @@ function TodaySample() {
             ) : (
               <>
                 あと<span className={s.headlineNum}>{remaining}</span>分で、
-                <br />
+                <br className={s.mobileBreak} />
                 今日のぶんが終わります。
               </>
             )}
@@ -159,6 +159,7 @@ function TodaySample() {
                   title={`${slot.title}（${slot.minutes}分）`}
                 >
                   <span className={s.segmentFill} />
+                  <span className={s.segmentLabel}>{slot.title}</span>
                 </div>
               ))}
               {current && (
@@ -218,7 +219,7 @@ function TodaySample() {
         </div>
       </header>
 
-      <div className={s.inner}>
+      <div className={`${s.inner} ${s.body}`}>
         {/* 進行表: 開始時刻つきで、上から順にやる */}
         <section className={s.sheet} aria-labelledby="cue-heading">
           <div className={s.sheetHead}>

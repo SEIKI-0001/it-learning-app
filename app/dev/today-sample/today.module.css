@@ -782,6 +782,10 @@
   }
 }
 
+.segmentLabel {
+  display: none;
+}
+
 @media (min-width: 720px) {
   .hero {
     padding: 44px 0 32px;
@@ -798,6 +802,184 @@
 
   .track {
     height: 48px;
+  }
+}
+
+/* ───────── desktop ─────────
+   定規を横いっぱいに使い、下段は「今日の順番」と「ミッション」の2カラム。 */
+@media (min-width: 1024px) {
+  .inner {
+    max-width: 1160px;
+    padding: 0 40px;
+  }
+
+  .sampleNote {
+    padding: 8px 40px;
+  }
+
+  .hero {
+    padding: 52px 0 40px;
+  }
+
+  .heroGrid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "eyebrow eyebrow"
+      "headline headline"
+      "subline budget"
+      "ruler ruler";
+    column-gap: 40px;
+  }
+
+  .eyebrow {
+    grid-area: eyebrow;
+    font-size: 13px;
+  }
+
+  .headline {
+    grid-area: headline;
+    margin-top: 16px;
+    font-size: 44px;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .mobileBreak {
+    display: none;
+  }
+
+  .subline {
+    grid-area: subline;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  .budget {
+    grid-area: budget;
+    align-self: center;
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+
+  .ruler {
+    grid-area: ruler;
+    margin-top: 40px;
+  }
+
+  .track {
+    height: 64px;
+  }
+
+  .segment::before,
+  .segmentFill {
+    inset: 0 2px;
+    border-radius: 8px;
+  }
+
+  /* 広い画面では区間の中に単元名を入れる */
+  .segmentLabel {
+    position: absolute;
+    inset: 0 2px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--ink);
+    transition: color 300ms;
+  }
+
+  .segment[data-state="done"] .segmentLabel {
+    color: #fff;
+  }
+
+  .caret::after {
+    height: 76px;
+  }
+
+  .tickLabel {
+    font-size: 12px;
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    align-items: start;
+    gap: 24px;
+  }
+
+  .sheet,
+  .missions {
+    padding: 26px 32px 12px;
+  }
+
+  .missions {
+    position: sticky;
+    top: 24px;
+    margin-top: 0;
+    padding: 26px 28px 26px;
+  }
+
+  .cue {
+    grid-template-columns: 52px 32px 1fr;
+    column-gap: 20px;
+    padding: 18px 0;
+  }
+
+  .cue::before {
+    left: calc(52px + 20px + 15px);
+  }
+
+  .cues > .cue:first-child::before {
+    top: 34px;
+  }
+
+  .cue[data-state^="finish"]::before {
+    height: 28px;
+  }
+
+  .offset {
+    font-size: 13px;
+    padding-top: 6px;
+  }
+
+  .mark {
+    width: 32px;
+    height: 32px;
+  }
+
+  .finishMark {
+    margin-top: 8px;
+  }
+
+  .cueTitle {
+    font-size: 16px;
+  }
+
+  .cue[data-state="now"] .cueTitle {
+    font-size: 20px;
+  }
+
+  .nowPanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 24px;
+  }
+
+  .reason {
+    font-size: 14px;
+  }
+
+  .nowActions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    margin-top: 0;
   }
 }
 
