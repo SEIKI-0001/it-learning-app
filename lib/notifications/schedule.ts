@@ -18,6 +18,15 @@ export const STREAK_RISK_HOUR = 21;
 /** ストリーク危機扱いにする最小の連続日数（1日では「危機」にしない）。 */
 export const STREAK_RISK_MIN_STREAK = 2;
 
+/**
+ * ストリークが「まだ続いている」とみなす最大の離脱日数。
+ *
+ * 最後の学習が2日以上前なら連続はすでに途切れており、「3分あれば今日も続けられます」は
+ * 事実に反する。91日離脱したユーザーに streakCount=7 のまま危機通知が出る状態だった
+ * （streakCount は学習時にしか更新されないため、途切れても古い値が残る）。
+ */
+export const STREAK_RISK_MAX_DAYS_AWAY = 1;
+
 /** 復帰通知の対象になる離脱日数。 */
 export const COMEBACK_MIN_DAYS_AWAY = 3;
 
@@ -158,7 +167,12 @@ export function decideNotification(
   if (!atRemindHour && !atStreakRiskHour) return null;
 
   const daysAway = daysAwayInTimeZone(lastPlayedAt, now, timeZone);
-  const streakAtRisk = streakCount >= STREAK_RISK_MIN_STREAK;
+  // 守れるストリークが実在するときだけ「危機」にする。すでに途切れていれば
+  // 復帰通知か通常リマインドの領分で、危機を名乗らせない。
+  const streakAtRisk =
+    streakCount >= STREAK_RISK_MIN_STREAK &&
+    daysAway !== null &&
+    daysAway <= STREAK_RISK_MAX_DAYS_AWAY;
 
   const ordered: NotificationType[] = [];
   if (atRemindHour) {

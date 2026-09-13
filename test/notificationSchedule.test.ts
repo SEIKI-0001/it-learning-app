@@ -162,6 +162,61 @@ describe("種別の優先順位", () => {
     expect(decision?.type).toBe("daily_reminder");
   });
 
+  it("すでに途切れたストリークを「危機」にしない", () => {
+    // streakCount は学習時にしか更新されないので、91日離脱しても古い値が残る。
+    // その状態で「3分あれば今日も続けられます」は事実に反する。
+    const lastPlayedAt = jst("2026-06-14T20:00:00").toISOString();
+    const at21 = jst("2026-09-13T21:00:00");
+
+    // 設定時刻では復帰通知が優先される（従来どおり）。
+    expect(
+      decideNotification(
+        candidate({
+          preference: preference({ remindHour: 18 }),
+          lastPlayedAt,
+          streakCount: 7,
+        }),
+        jst("2026-09-13T18:00:00"),
+      )?.type,
+    ).toBe("comeback");
+
+    // 21時の保険では、守れるストリークが無いので何も出さない。
+    expect(
+      decideNotification(
+        candidate({
+          preference: preference({ remindHour: 18 }),
+          lastPlayedAt,
+          streakCount: 7,
+        }),
+        at21,
+      ),
+    ).toBeNull();
+  });
+
+  it("昨日学習していればストリークは生きているので危機通知を出す", () => {
+    const decision = decideNotification(
+      candidate({
+        lastPlayedAt: jst("2026-09-05T20:00:00").toISOString(),
+        streakCount: 4,
+      }),
+      jst("2026-09-06T20:00:00"),
+    );
+    expect(decision?.type).toBe("streak_risk");
+    expect(decision?.daysAway).toBe(1);
+  });
+
+  it("2日空いていればストリークは途切れているので通常リマインドに落ちる", () => {
+    // 復帰通知は3日以上から。あいだの2日はどちらでもない。
+    const decision = decideNotification(
+      candidate({
+        lastPlayedAt: jst("2026-09-04T20:00:00").toISOString(),
+        streakCount: 9,
+      }),
+      jst("2026-09-06T20:00:00"),
+    );
+    expect(decision?.type).toBe("daily_reminder");
+  });
+
   it("設定時刻が早いユーザーには 21 時の保険としてストリーク危機だけ出す", () => {
     const early = preference({ remindHour: 8 });
     const at21 = jst(`2026-09-06T${String(STREAK_RISK_HOUR).padStart(2, "0")}:00:00`);
