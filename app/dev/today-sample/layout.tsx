@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans_JP } from "next/font/google";
+import { Geist_Mono, Murecho } from "next/font/google";
 
 // /today 改善デザインのサンプル（テスト環境専用・検索対象外）。
 // フォントはこのサンプル配下にだけ読み込み、本番ページへは影響させない。
 
-const plexJp = IBM_Plex_Sans_JP({
+const murecho = Murecho({
   weight: ["400", "500", "700"],
   subsets: ["latin"],
   preload: false,
-  variable: "--font-plex-jp",
+  variable: "--font-sample-sans",
 });
-const plexMono = IBM_Plex_Mono({
-  weight: ["400", "500"],
+const geistMono = Geist_Mono({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
-  variable: "--font-plex-mono",
+  variable: "--font-sample-mono",
 });
 
 export const metadata: Metadata = {
@@ -22,5 +22,5 @@ export const metadata: Metadata = {
 };
 
 export default function TodaySampleLayout({ children }: { children: React.ReactNode }) {
-  return <div className={`${plexJp.variable} ${plexMono.variable}`}>{children}</div>;
+  return <div className={`${murecho.variable} ${geistMono.variable}`}>{children}</div>;
 }

@@ -11,7 +11,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useMemo, useState } from "react";
-import BottomNav from "@/components/BottomNav";
 import {
   BUDGET_OPTIONS,
   DEFAULT_BUDGET,
@@ -20,6 +19,7 @@ import {
   buildRoute,
   type Task,
 } from "./data";
+import AppNav from "./nav";
 import s from "./today.module.css";
 
 type Slot = Task & { start: number; state: "done" | "now" | "next" };
@@ -36,7 +36,9 @@ export default function TodaySamplePage() {
 function TodaySample() {
   // null = おまかせ
   const [budget, setBudget] = useState<number | null>(null);
-  const [doneIds, setDoneIds] = useState<ReadonlySet<string>>(() => new Set(["lan-wan"]));
+  const [doneIds, setDoneIds] = useState<ReadonlySet<string>>(
+    () => new Set(["lan-wan"]),
+  );
   const [claimed, setClaimed] = useState(false);
 
   const route = useMemo(() => buildRoute(budget ?? DEFAULT_BUDGET), [budget]);
@@ -75,7 +77,10 @@ function TodaySample() {
     },
     {
       label: "復習を1件消化する",
-      progress: Math.min(1, doneSlots.filter((slot) => slot.kind === "review").length),
+      progress: Math.min(
+        1,
+        doneSlots.filter((slot) => slot.kind === "review").length,
+      ),
       goal: 1,
     },
   ];
@@ -107,255 +112,290 @@ function TodaySample() {
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
   return (
-    <main className={s.page}>
-      <p className={s.sampleNote}>
-        デザインサンプル：各行の丸をタップすると、完了状態の変化を試せます。
-      </p>
+    <div className={s.shell}>
+      <AppNav />
+      <main className={s.page}>
+        <header className={s.inner}>
+          <div className={s.hero}>
+            <p className={s.eyebrow}>
+              <span className={s.eyebrowTitle}>今日の学習</span>
+              <span className={s.eyebrowDate}>{dateLabel}</span>
+              <span className={s.sampleTag}>
+                サンプル：丸をタップで完了を試せます
+              </span>
+            </p>
 
-      <header className={s.hero}>
-        <div className={`${s.inner} ${s.heroGrid}`}>
-          <p className={s.eyebrow}>
-            <span>今日の学習</span>
-            <span className={s.eyebrowDate}>{dateLabel}</span>
-          </p>
-
-          <h1 className={s.headline} aria-live="polite">
-            {allDone ? (
-              <>今日のぶんは、ぜんぶ終わりました。</>
-            ) : (
-              <>
-                あと<span className={s.headlineNum}>{remaining}</span>分で、
-                <br className={s.mobileBreak} />
-                今日のぶんが終わります。
-              </>
-            )}
-          </h1>
-          <p className={s.subline}>
-            <span className={s.mono}>{slots.length}</span>件のうち
-            <span className={s.mono}>{doneSlots.length}</span>件完了
-            <span className={s.dot} aria-hidden>
-              ・
-            </span>
-            予定 <span className={s.mono}>{total}</span>分
-          </p>
-
-          {/* 署名要素: 分の定規。区間の長さ＝所要時間、塗り＝完了。 */}
-          <figure className={s.ruler} aria-label={`予定${total}分のうち${doneMinutes}分完了`}>
-            <div
-              className={s.track}
-              style={{ ["--total" as string]: total }}
-            >
-              {slots.map((slot, i) => (
-                <div
-                  key={slot.id}
-                  className={s.segment}
-                  data-kind={slot.kind}
-                  data-state={slot.state}
-                  style={{
-                    left: `${(slot.start / total) * 100}%`,
-                    width: `${(slot.minutes / total) * 100}%`,
-                    ["--i" as string]: i,
-                  }}
-                  title={`${slot.title}（${slot.minutes}分）`}
-                >
-                  <span className={s.segmentFill} />
-                  <span className={s.segmentLabel}>{slot.title}</span>
-                </div>
-              ))}
-              {current && (
-                <span
-                  className={s.caret}
-                  style={{ left: `${(current.start / total) * 100}%` }}
-                  aria-hidden
-                >
-                  いまここ
-                </span>
+            <h1 className={s.headline} aria-live="polite">
+              {allDone ? (
+                <>今日のぶんは、ぜんぶ終わりました。</>
+              ) : (
+                <>
+                  あと<span className={s.headlineNum}>{remaining}</span>分で、
+                  <br className={s.mobileBreak} />
+                  今日のぶんが終わります。
+                </>
               )}
-            </div>
-            <div className={s.ticks} aria-hidden>
-              {tickLabels.map((m) => (
-                <span
-                  key={m}
-                  className={s.tickLabel}
-                  style={{ left: `${(m / total) * 100}%` }}
-                  data-edge={m === 0 ? "start" : m === total ? "end" : undefined}
-                >
-                  {m}
-                </span>
-              ))}
-            </div>
-            <figcaption className={s.legend}>
-              <span className={s.legendItem} data-kind="new">
-                新規
+            </h1>
+            <p className={s.subline}>
+              <span className={s.mono}>{slots.length}</span>件のうち
+              <span className={s.mono}>{doneSlots.length}</span>件完了
+              <span className={s.dot} aria-hidden>
+                ・
               </span>
-              <span className={s.legendItem} data-kind="review">
-                復習
-              </span>
-            </figcaption>
-          </figure>
+              予定 <span className={s.mono}>{total}</span>分
+            </p>
 
-          <div className={s.budget} role="group" aria-label="今日の学習量">
-            <span className={s.budgetLabel}>学習量</span>
-            <button
-              type="button"
-              className={s.chip}
-              aria-pressed={budget === null}
-              onClick={() => setBudget(null)}
+            {/* 署名要素: 分の定規。区間の長さ＝所要時間、塗り＝完了。 */}
+            <figure
+              className={s.ruler}
+              aria-label={`予定${total}分のうち${doneMinutes}分完了`}
             >
-              おまかせ <span className={s.mono}>{DEFAULT_BUDGET}</span>分
-            </button>
-            {BUDGET_OPTIONS.map((minutes) => (
-              <button
-                key={minutes}
-                type="button"
-                className={s.chip}
-                aria-pressed={budget === minutes}
-                onClick={() => setBudget(minutes)}
-              >
-                <span className={s.mono}>{minutes}</span>分
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
+              <div className={s.track} style={{ ["--total" as string]: total }}>
+                {slots.map((slot, i) => (
+                  <div
+                    key={slot.id}
+                    className={s.segment}
+                    data-kind={slot.kind}
+                    data-state={slot.state}
+                    style={{
+                      left: `${(slot.start / total) * 100}%`,
+                      width: `${(slot.minutes / total) * 100}%`,
+                      ["--i" as string]: i,
+                    }}
+                    title={`${slot.title}（${slot.minutes}分）`}
+                  >
+                    <span className={s.segmentFill} />
+                    <span className={s.segmentLabel}>{slot.title}</span>
+                  </div>
+                ))}
+                {current && (
+                  <span
+                    className={s.caret}
+                    style={{ left: `${(current.start / total) * 100}%` }}
+                    aria-hidden
+                  >
+                    いまここ
+                  </span>
+                )}
+              </div>
+              <div className={s.ticks} aria-hidden>
+                {tickLabels.map((m) => (
+                  <span
+                    key={m}
+                    className={s.tickLabel}
+                    style={{ left: `${(m / total) * 100}%` }}
+                    data-edge={
+                      m === 0 ? "start" : m === total ? "end" : undefined
+                    }
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
+              <figcaption className={s.legend}>
+                <span className={s.legendItem} data-kind="new">
+                  新規
+                </span>
+                <span className={s.legendItem} data-kind="review">
+                  復習
+                </span>
+              </figcaption>
+            </figure>
 
-      <div className={`${s.inner} ${s.body}`}>
-        {/* 進行表: 開始時刻つきで、上から順にやる */}
-        <section className={s.sheet} aria-labelledby="cue-heading">
-          <div className={s.sheetHead}>
-            <h2 id="cue-heading" className={s.sectionTitle}>
-              今日の順番
-            </h2>
-            <span className={s.sectionMeta}>開始からの経過時間</span>
-          </div>
-
-          <ol className={s.cues}>
-            {slots.map((slot) => (
-              <li key={slot.id} className={s.cue} data-state={slot.state} data-kind={slot.kind}>
-                <span className={s.offset}>{formatOffset(slot.start)}</span>
-
+            <div className={s.budget} role="group" aria-label="今日の学習量">
+              <span className={s.budgetLabel}>学習量</span>
+              <span className={s.budgetTrack}>
                 <button
                   type="button"
-                  className={s.mark}
-                  onClick={() => toggleDone(slot.id)}
-                  aria-pressed={slot.state === "done"}
-                  aria-label={`${slot.title}を${slot.state === "done" ? "未完了に戻す" : "完了にする"}`}
+                  className={s.chip}
+                  aria-pressed={budget === null}
+                  onClick={() => setBudget(null)}
                 >
-                  <svg viewBox="0 0 20 20" aria-hidden>
-                    <path d="M5.5 10.5l3 3 6-7" />
-                  </svg>
+                  おまかせ <span className={s.mono}>{DEFAULT_BUDGET}</span>分
                 </button>
+                {BUDGET_OPTIONS.map((minutes) => (
+                  <button
+                    key={minutes}
+                    type="button"
+                    className={s.chip}
+                    aria-pressed={budget === minutes}
+                    onClick={() => setBudget(minutes)}
+                  >
+                    <span className={s.mono}>{minutes}</span>分
+                  </button>
+                ))}
+              </span>
+            </div>
+          </div>
+        </header>
 
-                <div className={s.cueBody}>
-                  <div className={s.cueLine}>
-                    <p className={s.cueTitle}>{slot.title}</p>
-                    <span className={s.cueMinutes}>
-                      <span className={s.mono}>{slot.minutes}</span>分
-                    </span>
-                  </div>
-                  <p className={s.cueMeta}>
-                    <span className={s.kind} data-kind={slot.kind}>
-                      {KIND_LABEL[slot.kind]}
-                    </span>
-                    <span>{slot.field}</span>
-                    {slot.state === "done" && <span className={s.doneText}>完了</span>}
-                  </p>
+        <div className={`${s.inner} ${s.body}`}>
+          {/* 進行表: 開始時刻つきで、上から順にやる */}
+          <section className={s.sheet} aria-labelledby="cue-heading">
+            <div className={s.sheetHead}>
+              <h2 id="cue-heading" className={s.sectionTitle}>
+                今日の順番
+              </h2>
+              <span className={s.sectionMeta}>開始からの経過時間</span>
+            </div>
 
-                  {slot.state === "now" && (
-                    <div className={s.nowPanel}>
-                      <p className={s.reason}>{slot.reason}</p>
-                      <div className={s.nowActions}>
-                        <Link href="/learn" className={s.start} data-kind={slot.kind}>
-                          {slot.kind === "review" ? "復習を始める" : "レッスンを始める"}
-                          <svg viewBox="0 0 20 20" aria-hidden>
-                            <path d="M7.5 4.5l5.5 5.5-5.5 5.5" />
-                          </svg>
-                        </Link>
-                        <span className={s.nowHint}>
-                          解説と確認問題 <span className={s.mono}>{slot.questions}</span>問
-                        </span>
+            <ol className={s.cues}>
+              {slots.map((slot) => (
+                <li
+                  key={slot.id}
+                  className={s.cue}
+                  data-state={slot.state}
+                  data-kind={slot.kind}
+                >
+                  <span className={s.offset}>{formatOffset(slot.start)}</span>
+
+                  <button
+                    type="button"
+                    className={s.mark}
+                    onClick={() => toggleDone(slot.id)}
+                    aria-pressed={slot.state === "done"}
+                    aria-label={`${slot.title}を${slot.state === "done" ? "未完了に戻す" : "完了にする"}`}
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden>
+                      <path d="M5.5 10.5l3 3 6-7" />
+                    </svg>
+                  </button>
+
+                  <div className={s.cueBody}>
+                    <div className={s.cueLine}>
+                      <p className={s.cueTitle}>{slot.title}</p>
+                      <span className={s.cueMinutes}>
+                        <span className={s.mono}>{slot.minutes}</span>分
+                      </span>
+                    </div>
+                    <p className={s.cueMeta}>
+                      <span className={s.kind} data-kind={slot.kind}>
+                        {KIND_LABEL[slot.kind]}
+                      </span>
+                      <span>{slot.field}</span>
+                      {slot.state === "done" && (
+                        <span className={s.doneText}>完了</span>
+                      )}
+                    </p>
+
+                    {slot.state === "now" && (
+                      <div className={s.nowPanel}>
+                        <p className={s.reason}>{slot.reason}</p>
+                        <div className={s.nowActions}>
+                          <Link
+                            href="/learn"
+                            className={s.start}
+                            data-kind={slot.kind}
+                          >
+                            {slot.kind === "review"
+                              ? "復習を始める"
+                              : "レッスンを始める"}
+                            <svg viewBox="0 0 20 20" aria-hidden>
+                              <path d="M7.5 4.5l5.5 5.5-5.5 5.5" />
+                            </svg>
+                          </Link>
+                          <span className={s.nowHint}>
+                            解説と確認問題{" "}
+                            <span className={s.mono}>{slot.questions}</span>問
+                          </span>
+                        </div>
                       </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+
+              <li
+                className={s.cue}
+                data-state={allDone ? "finish-done" : "finish"}
+              >
+                <span className={s.offset}>{formatOffset(total)}</span>
+                <span className={s.finishMark} aria-hidden />
+                <div className={s.cueBody}>
+                  <p className={s.finishTitle}>
+                    {allDone ? "今日のぶん、完了" : "おわり"}
+                  </p>
+                  {allDone && (
+                    <div className={s.finishActions}>
+                      <Link href="/review" className={s.textLink}>
+                        復習をもう少しやる
+                      </Link>
+                      <Link href="/learn" className={s.textLink}>
+                        テーマから選ぶ
+                      </Link>
                     </div>
                   )}
                 </div>
               </li>
-            ))}
+            </ol>
+          </section>
 
-            <li className={s.cue} data-state={allDone ? "finish-done" : "finish"}>
-              <span className={s.offset}>{formatOffset(total)}</span>
-              <span className={s.finishMark} aria-hidden />
-              <div className={s.cueBody}>
-                <p className={s.finishTitle}>
-                  {allDone ? "今日のぶん、完了" : "おわり"}
+          {/* 今日の達成状況: 今日だけで完結するもの */}
+          <section className={s.missions} aria-labelledby="mission-heading">
+            <div className={s.sheetHead}>
+              <h2 id="mission-heading" className={s.sectionTitle}>
+                今日のミッション
+              </h2>
+              <span className={s.sectionMeta}>
+                <span className={s.mono}>{missionsDone}</span> /{" "}
+                {missions.length} 達成
+              </span>
+            </div>
+
+            <ul className={s.missionList}>
+              {missions.map((mission) => {
+                const complete = mission.progress >= mission.goal;
+                return (
+                  <li
+                    key={mission.label}
+                    className={s.mission}
+                    data-complete={complete}
+                  >
+                    <span className={s.missionLabel}>{mission.label}</span>
+                    <span className={s.missionCount}>
+                      {mission.progress}/{mission.goal}
+                    </span>
+                    <span className={s.missionBar} aria-hidden>
+                      <span
+                        className={s.missionBarFill}
+                        style={{
+                          width: `${(mission.progress / mission.goal) * 100}%`,
+                        }}
+                      />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className={s.reward} data-state={rewardState}>
+              {rewardState === "claimed" ? (
+                <p>
+                  <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
+                  を受け取りました
                 </p>
-                {allDone && (
-                  <div className={s.finishActions}>
-                    <Link href="/review" className={s.textLink}>
-                      復習をもう少しやる
-                    </Link>
-                    <Link href="/learn" className={s.textLink}>
-                      テーマから選ぶ
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </li>
-          </ol>
-        </section>
-
-        {/* 今日の達成状況: 今日だけで完結するもの */}
-        <section className={s.missions} aria-labelledby="mission-heading">
-          <div className={s.sheetHead}>
-            <h2 id="mission-heading" className={s.sectionTitle}>
-              今日のミッション
-            </h2>
-            <span className={s.sectionMeta}>
-              <span className={s.mono}>{missionsDone}</span> / {missions.length} 達成
-            </span>
-          </div>
-
-          <ul className={s.missionList}>
-            {missions.map((mission) => {
-              const complete = mission.progress >= mission.goal;
-              return (
-                <li key={mission.label} className={s.mission} data-complete={complete}>
-                  <span className={s.missionLabel}>{mission.label}</span>
-                  <span className={s.missionCount}>
-                    {mission.progress}/{mission.goal}
-                  </span>
-                  <span className={s.missionBar} aria-hidden>
-                    <span
-                      className={s.missionBarFill}
-                      style={{ width: `${(mission.progress / mission.goal) * 100}%` }}
-                    />
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className={s.reward} data-state={rewardState}>
-            {rewardState === "claimed" ? (
-              <p>
-                <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP を受け取りました
-              </p>
-            ) : rewardState === "claimable" ? (
-              <>
-                <p>3つそろいました</p>
-                <button type="button" className={s.claim} onClick={() => setClaimed(true)}>
-                  <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP を受け取る
-                </button>
-              </>
-            ) : (
-              <p>
-                3つそろうと <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
-              </p>
-            )}
-          </div>
-        </section>
-      </div>
-
-      <BottomNav />
-    </main>
+              ) : rewardState === "claimable" ? (
+                <>
+                  <p>3つそろいました</p>
+                  <button
+                    type="button"
+                    className={s.claim}
+                    onClick={() => setClaimed(true)}
+                  >
+                    <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
+                    を受け取る
+                  </button>
+                </>
+              ) : (
+                <p>
+                  3つそろうと{" "}
+                  <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
   );
 }

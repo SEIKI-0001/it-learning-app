@@ -1,110 +1,179 @@
-/* /today サンプル「進行表」
+/* /today サンプル「進行表」v2
+   方針: 灰色の地に白カードを並べる構成をやめ、白い面の上に
+   「今日の定規」だけを淡い青のパネルで浮かせる。区切りは線より余白で。
    トークン:
-   ground #EDF1F5 方眼紙のような冷たい灰 / paper #FFFFFF
-   ink #122033 / ink-2 #4A5A6E / rule #D5DDE6
-   new #0868C9（アプリのブランド青）/ review #E27A12（アプリのアクセント橙）
-   done #0E8A5E（達成）
-   type: IBM Plex Sans JP（見出し・本文）＋ IBM Plex Mono（分・時刻） */
+   canvas #FFFFFF / wash #EEF4FF（ヒーロー面）
+   ink #10131A / ink-2 #4B5360 / ink-3 #6B7280 / line #E9ECF1
+   blue #0A6CDB（新規・主要操作）/ orange #F08A1C（復習）/ green #0F8F5E（完了）
+   type: Murecho（見出し・本文）＋ Geist Mono（分・時刻） */
 
-.page {
-  --ground: #edf1f5;
-  --paper: #ffffff;
-  --ink: #122033;
-  --ink-2: #4a5a6e;
-  --ink-3: #6b7a8c;
-  --rule: #d5dde6;
-  --rule-strong: #aab6c3;
-  --new: #0868c9;
-  --new-text: #0756a8;
-  --new-tint: #dbe9f8;
-  --review: #e27a12;
-  --review-text: #a9530a;
-  --review-tint: #fbe6cf;
-  --done: #0e8a5e;
+.shell {
+  --canvas: #ffffff;
+  --wash: #eef4ff;
+  --wash-line: #d8e5fa;
+  --ink: #10131a;
+  --ink-2: #4b5360;
+  --ink-3: #6b7280;
+  --line: #e9ecf1;
+  --line-strong: #c9d0da;
+  --blue: #0a6cdb;
+  --blue-700: #0756a8;
+  --blue-soft: #d3e3fa;
+  --orange: #f08a1c;
+  --orange-700: #a9530a;
+  --orange-soft: #fde4c8;
+  --green: #0f8f5e;
 
-  --sans: var(--font-plex-jp), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
-  --mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --sans: var(--font-sample-sans), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  --mono: var(--font-sample-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --ease: cubic-bezier(0.3, 0.7, 0.2, 1);
 
   min-height: 100vh;
-  padding-bottom: calc(96px + env(safe-area-inset-bottom));
-  background: var(--ground);
+  background: var(--canvas);
   color: var(--ink);
   font-family: var(--sans);
-  font-feature-settings: "palt";
   -webkit-font-smoothing: antialiased;
 }
 
-.page :focus-visible {
-  outline: 2px solid var(--new);
+.shell :focus-visible {
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
+}
+
+.page {
+  display: flow-root;
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
 }
 
 .mono {
   font-family: var(--mono);
   font-weight: 500;
-  font-feature-settings: normal;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .inner {
   width: 100%;
-  max-width: 640px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 12px;
 }
 
-.sampleNote {
+/* ───────── navigation（スマホ=下部バー / デスクトップ=左サイドバー） ───────── */
+
+.nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 20;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  display: none;
+}
+
+.navList {
+  display: flex;
   margin: 0;
-  padding: 8px 20px;
-  background: var(--ink);
-  color: #dfe6ee;
-  font-size: 12px;
-  text-align: center;
+  padding: 0;
+  list-style: none;
 }
 
-/* ───────── hero ───────── */
+.navList > li {
+  flex: 1;
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 0;
+  border-radius: 12px;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.navIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  transition: background-color 160ms;
+}
+
+.navSvg {
+  width: 21px;
+  height: 21px;
+}
+
+.navItem[aria-current="page"] {
+  color: var(--blue-700);
+  font-weight: 700;
+}
+
+.navItem[aria-current="page"] .navIcon {
+  background: var(--wash);
+}
+
+/* ───────── hero panel ───────── */
 
 .hero {
-  padding: 28px 0 24px;
+  margin-top: 12px;
+  padding: 22px 18px 24px;
+  border-radius: 24px;
+  background: var(--wash);
 }
 
 .eyebrow {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
   margin: 0;
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
   color: var(--ink-2);
 }
 
-.eyebrowDate {
-  letter-spacing: 0.02em;
+.eyebrowTitle {
+  font-weight: 700;
+  color: var(--blue-700);
+}
+
+.sampleTag {
+  display: none;
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  color: var(--ink-3);
 }
 
 .headline {
   margin: 14px 0 0;
-  font-size: clamp(24px, 6.4vw, 32px);
+  font-size: clamp(25px, 6.6vw, 34px);
   font-weight: 700;
-  line-height: 1.35;
-  letter-spacing: -0.01em;
+  line-height: 1.32;
+  letter-spacing: -0.02em;
   text-wrap: balance;
   word-break: auto-phrase;
 }
 
 .headlineNum {
   display: inline-block;
-  min-width: 1.2ch;
-  margin: 0 0.08em;
+  margin: 0 0.06em;
   font-family: var(--mono);
-  font-weight: 500;
-  font-size: 1.28em;
+  font-weight: 600;
+  font-size: 1.24em;
   line-height: 1;
-  letter-spacing: -0.04em;
-  color: var(--new);
-  font-feature-settings: normal;
+  letter-spacing: -0.05em;
+  color: var(--blue);
 }
 
 .subline {
@@ -119,38 +188,87 @@
 }
 
 .dot {
-  margin: 0 0.4em;
-  color: var(--rule-strong);
+  margin: 0 0.35em;
+  color: var(--line-strong);
+}
+
+/* 学習量: セグメントコントロール */
+.budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 18px;
+}
+
+.budgetLabel {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.budgetTrack {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(10, 108, 219, 0.08);
+}
+
+.chip {
+  appearance: none;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 180ms,
+    color 180ms,
+    box-shadow 180ms;
+}
+
+.chip:hover {
+  color: var(--ink);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--canvas);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.1);
 }
 
 /* ───────── signature: minute ruler ───────── */
 
 .ruler {
-  margin: 26px 0 0;
-  padding: 26px 0 0;
+  margin: 20px 0 0;
+  padding-top: 30px;
 }
 
 .track {
   position: relative;
-  height: 40px;
+  height: 44px;
 }
 
-/* 1分ごとの細い目盛りと、5分ごとの長い目盛り */
+/* 1分ごとの短い目盛りと、5分ごとの長い目盛り */
 .track::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 4px);
-  height: 9px;
+  top: calc(100% + 8px);
+  height: 7px;
   background-image:
-    linear-gradient(to right, var(--rule-strong) 1px, transparent 1px),
-    linear-gradient(to right, var(--rule-strong) 1px, transparent 1px);
+    linear-gradient(to right, var(--line-strong) 1px, transparent 1px),
+    linear-gradient(to right, var(--wash-line) 1px, transparent 1px);
   background-size:
-    calc(500% / var(--total)) 9px,
-    calc(100% / var(--total)) 4px;
+    calc(500% / var(--total)) 7px,
+    calc(100% / var(--total)) 3px;
   background-repeat: repeat-x;
-  box-shadow: inset -1px 0 0 var(--rule-strong);
+  box-shadow: inset -1px 0 0 var(--line-strong);
 }
 
 .segment {
@@ -158,42 +276,38 @@
   top: 0;
   bottom: 0;
   transform-origin: left center;
-  animation: grow 620ms cubic-bezier(0.2, 0.7, 0.15, 1) both;
+  animation: grow 640ms var(--ease) both;
   animation-delay: calc(var(--i) * 80ms + 120ms);
+}
+
+.segment[data-kind="new"] {
+  --solid: var(--blue);
+  --soft: var(--blue-soft);
+}
+
+.segment[data-kind="review"] {
+  --solid: var(--orange);
+  --soft: var(--orange-soft);
 }
 
 .segment::before,
 .segmentFill {
   content: "";
   position: absolute;
-  inset: 0 1.5px;
-  border-radius: 5px;
+  inset: 0 2px;
+  border-radius: 999px;
 }
 
 .segment::before {
-  background-color: var(--tint);
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent 0 5px,
-    rgba(255, 255, 255, 0.7) 5px 7px
-  );
-}
-
-.segment[data-kind="new"] {
-  --tint: var(--new-tint);
-  --solid: var(--new);
-}
-
-.segment[data-kind="review"] {
-  --tint: var(--review-tint);
-  --solid: var(--review);
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1.5px var(--soft);
 }
 
 .segmentFill {
   background: var(--solid);
   transform: scaleX(0);
   transform-origin: left center;
-  transition: transform 460ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  transition: transform 480ms var(--ease);
 }
 
 .segment[data-state="done"] .segmentFill {
@@ -201,39 +315,43 @@
 }
 
 .segment[data-state="now"]::before {
-  box-shadow: inset 0 0 0 2px var(--solid);
-  background-image: none;
+  box-shadow:
+    inset 0 0 0 2px var(--solid),
+    0 0 0 4px var(--soft);
+}
+
+.segmentLabel {
+  display: none;
 }
 
 .caret {
   position: absolute;
-  bottom: calc(100% + 6px);
-  transform: translateX(-1px);
-  padding-left: 7px;
-  border-left: 2px solid var(--ink);
+  bottom: calc(100% + 8px);
+  transform: translateX(-14px);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
   font-size: 11px;
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 0.04em;
+  line-height: 1.3;
   white-space: nowrap;
-  color: var(--ink);
-  transition: left 460ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  transition: left 480ms var(--ease);
 }
 
 .caret::after {
   content: "";
   position: absolute;
-  left: -2px;
+  left: 12px;
   top: 100%;
-  width: 2px;
-  height: 52px;
-  background: var(--ink);
+  border: 4px solid transparent;
+  border-top-color: var(--ink);
 }
 
 .ticks {
   position: relative;
-  height: 18px;
-  margin-top: 16px;
+  height: 16px;
+  margin-top: 22px;
 }
 
 .tickLabel {
@@ -252,14 +370,13 @@
 .tickLabel[data-edge="end"] {
   transform: translateX(-100%);
   color: var(--ink);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .legend {
   display: flex;
-  align-items: center;
   gap: 14px;
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 12px;
   color: var(--ink-2);
 }
@@ -272,73 +389,34 @@
 
 .legendItem::before {
   content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  width: 14px;
+  height: 8px;
+  border-radius: 999px;
 }
 
 .legendItem[data-kind="new"]::before {
-  background: var(--new);
+  background: var(--blue);
 }
 
 .legendItem[data-kind="review"]::before {
-  background: var(--review);
+  background: var(--orange);
 }
 
-/* ───────── budget chips ───────── */
+/* ───────── body ───────── */
 
-.budget {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  margin-top: 22px;
+.body {
+  margin-top: 8px;
 }
 
-.budgetLabel {
-  margin-right: 4px;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-
-.chip {
-  appearance: none;
-  padding: 6px 12px;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  background: var(--paper);
-  color: var(--ink-2);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  transition:
-    border-color 160ms,
-    background-color 160ms,
-    color 160ms;
-}
-
-.chip:hover {
-  border-color: var(--rule-strong);
-}
-
-.chip[aria-pressed="true"] {
-  border-color: var(--ink);
-  background: var(--ink);
-  color: #fff;
-}
-
-/* ───────── sections ───────── */
-
-.sheet,
-.missions {
-  border-radius: 14px;
-  background: var(--paper);
-  padding: 18px 18px 8px;
+.sheet {
+  padding: 20px 6px 0;
 }
 
 .missions {
-  margin-top: 14px;
-  padding-bottom: 18px;
+  margin-top: 20px;
+  padding: 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
 }
 
 .sheetHead {
@@ -346,19 +424,19 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--rule);
+  margin-bottom: 6px;
 }
 
 .sectionTitle {
   margin: 0;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .sectionMeta {
   font-size: 12px;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 /* ───────── cue sheet ───────── */
@@ -370,26 +448,26 @@
 }
 
 .cue {
+  --col-offset: 38px;
+  --col-mark: 28px;
+  --gap: 12px;
   position: relative;
   display: grid;
-  grid-template-columns: 40px 28px 1fr;
-  column-gap: 12px;
-  padding: 14px 0;
-}
-
-.cue + .cue {
-  border-top: 1px solid var(--rule);
+  grid-template-columns: var(--col-offset) var(--col-mark) 1fr;
+  column-gap: var(--gap);
+  padding: 14px 12px 14px 0;
+  border-radius: 18px;
 }
 
 /* 丸どうしをつなぐ縦線 */
 .cue::before {
   content: "";
   position: absolute;
-  left: calc(40px + 12px + 13px);
+  left: calc(var(--col-offset) + var(--gap) + var(--col-mark) / 2 - 1px);
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--rule);
+  background: var(--line);
 }
 
 .cues > .cue:first-child::before {
@@ -398,7 +476,12 @@
 
 .cue[data-state^="finish"]::before {
   bottom: auto;
-  height: 22px;
+  height: 24px;
+}
+
+.cue[data-state="now"] {
+  margin: 6px 0;
+  background: var(--wash);
 }
 
 .offset {
@@ -410,8 +493,8 @@
 }
 
 .cue[data-state="now"] .offset {
-  color: var(--ink);
-  font-weight: 500;
+  color: var(--blue-700);
+  font-weight: 600;
 }
 
 .mark {
@@ -420,24 +503,33 @@
   appearance: none;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: var(--col-mark);
+  height: var(--col-mark);
   padding: 0;
-  border: 2px solid var(--rule-strong);
+  border: 2px solid var(--line-strong);
   border-radius: 50%;
-  background: var(--paper);
+  background: var(--canvas);
   cursor: pointer;
   transition:
     background-color 200ms,
-    border-color 200ms;
+    border-color 200ms,
+    transform 200ms var(--ease);
+}
+
+.mark:hover {
+  border-color: var(--ink-2);
+}
+
+.mark:active {
+  transform: scale(0.92);
 }
 
 .mark svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   fill: none;
   stroke: #fff;
-  stroke-width: 2.4;
+  stroke-width: 2.6;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 16;
@@ -445,22 +537,17 @@
   transition: stroke-dashoffset 260ms 80ms ease-out;
 }
 
-.mark:hover {
-  border-color: var(--ink-2);
-}
-
 .cue[data-state="now"] .mark {
-  border-color: var(--ink);
-  box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--new-tint);
+  border-color: var(--blue);
 }
 
 .cue[data-state="now"][data-kind="review"] .mark {
-  box-shadow: 0 0 0 4px var(--paper), 0 0 0 6px var(--review-tint);
+  border-color: var(--orange);
 }
 
 .cue[data-state="done"] .mark {
-  border-color: var(--done);
-  background: var(--done);
+  border-color: var(--green);
+  background: var(--green);
 }
 
 .cue[data-state="done"] .mark svg {
@@ -480,26 +567,27 @@
 
 .cueTitle {
   margin: 0;
-  word-break: auto-phrase;
   padding-top: 3px;
   font-size: 15px;
   font-weight: 500;
   line-height: 1.45;
+  word-break: auto-phrase;
 }
 
 .cue[data-state="now"] .cueTitle {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .cue[data-state="done"] .cueTitle {
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .cueMinutes {
   flex-shrink: 0;
   font-size: 12px;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .cueMinutes .mono {
@@ -509,55 +597,64 @@
 }
 
 .cue[data-state="done"] .cueMinutes .mono {
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .cueMeta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
-  margin: 4px 0 0;
+  gap: 4px 8px;
+  margin: 6px 0 0;
   font-size: 12px;
   color: var(--ink-3);
 }
 
 .kind {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
 }
 
 .kind[data-kind="new"] {
-  color: var(--new-text);
+  background: var(--blue-soft);
+  color: var(--blue-700);
 }
 
 .kind[data-kind="review"] {
-  color: var(--review-text);
+  background: var(--orange-soft);
+  color: var(--orange-700);
+}
+
+.cue[data-state="done"] .kind {
+  background: var(--line);
+  color: var(--ink-2);
 }
 
 .doneText {
-  color: var(--done);
-  font-weight: 500;
+  color: var(--green);
+  font-weight: 700;
 }
 
 .nowPanel {
   margin-top: 12px;
-  animation: rise 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: rise 360ms var(--ease) both;
 }
 
 .reason {
   margin: 0;
-  word-break: auto-phrase;
   font-size: 13.5px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--ink-2);
+  word-break: auto-phrase;
 }
 
 .nowActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: 8px 14px;
   margin-top: 14px;
 }
 
@@ -565,15 +662,17 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
-  padding: 0 16px 0 20px;
-  border-radius: 10px;
-  background: var(--new);
+  min-height: 46px;
+  padding: 0 16px 0 22px;
+  border-radius: 999px;
+  background: var(--blue);
   color: #fff;
   font-size: 15px;
   font-weight: 700;
   text-decoration: none;
-  transition: background-color 160ms;
+  transition:
+    background-color 160ms,
+    transform 160ms var(--ease);
 }
 
 .start[data-kind="review"] {
@@ -581,11 +680,15 @@
 }
 
 .start:hover {
-  background: #0756a8;
+  background: var(--blue-700);
 }
 
 .start[data-kind="review"]:hover {
-  background: var(--review-text);
+  background: var(--orange-700);
+}
+
+.start:active {
+  transform: scale(0.98);
 }
 
 .start svg {
@@ -614,19 +717,19 @@
   justify-self: center;
   width: 12px;
   height: 12px;
-  margin-top: 6px;
-  border-radius: 3px;
-  background: var(--rule-strong);
-  transform: rotate(45deg);
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  box-shadow: 0 0 0 4px var(--canvas);
 }
 
 .cue[data-state="finish-done"] .finishMark {
-  background: var(--done);
+  background: var(--green);
 }
 
 .cue[data-state="finish-done"] .offset {
-  color: var(--done);
-  font-weight: 500;
+  color: var(--green);
+  font-weight: 600;
 }
 
 .finishTitle {
@@ -637,36 +740,37 @@
 }
 
 .cue[data-state="finish-done"] .finishTitle {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--done);
+  color: var(--green);
 }
 
 .finishActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .textLink {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--new-text);
-  text-decoration: underline;
-  text-decoration-color: var(--new-tint);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 160ms;
 }
 
 .textLink:hover {
-  text-decoration-color: var(--new);
+  border-color: var(--line-strong);
 }
 
 /* ───────── missions ───────── */
 
 .missionList {
-  margin: 0;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -675,9 +779,8 @@
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: baseline;
-  gap: 6px 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--rule);
+  gap: 8px 12px;
+  padding: 11px 0;
 }
 
 .missionLabel {
@@ -687,32 +790,33 @@
 .missionCount {
   font-family: var(--mono);
   font-size: 13px;
-  color: var(--ink-2);
+  font-weight: 500;
+  color: var(--ink-3);
 }
 
 .mission[data-complete="true"] .missionCount {
-  color: var(--done);
-  font-weight: 500;
+  color: var(--green);
+  font-weight: 600;
 }
 
 .missionBar {
   grid-column: 1 / -1;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--ground);
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
   overflow: hidden;
 }
 
 .missionBarFill {
   display: block;
   height: 100%;
-  border-radius: 2px;
-  background: var(--ink-2);
-  transition: width 460ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  border-radius: 999px;
+  background: var(--blue);
+  transition: width 480ms var(--ease);
 }
 
 .mission[data-complete="true"] .missionBarFill {
-  background: var(--done);
+  background: var(--green);
 }
 
 .reward {
@@ -721,7 +825,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f6f8fb;
   font-size: 13px;
   color: var(--ink-2);
 }
@@ -730,32 +837,34 @@
   margin: 0;
 }
 
-.reward[data-state="claimed"] {
-  color: var(--done);
-  font-weight: 500;
+.reward[data-state="claimable"] {
+  background: #fff4e6;
+  color: var(--ink);
+  font-weight: 700;
 }
 
-.reward[data-state="claimable"] {
-  color: var(--ink);
-  font-weight: 500;
+.reward[data-state="claimed"] {
+  background: #e8f6ef;
+  color: var(--green);
+  font-weight: 700;
 }
 
 .claim {
   appearance: none;
-  min-height: 40px;
+  min-height: 38px;
   padding: 0 16px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   background: #c7650b;
   color: #fff;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
 
 .claim:hover {
-  background: var(--review-text);
+  background: var(--orange-700);
 }
 
 /* ───────── motion ───────── */
@@ -782,46 +891,128 @@
   }
 }
 
-.segmentLabel {
-  display: none;
-}
+/* ───────── tablet ───────── */
 
 @media (min-width: 720px) {
+  .inner {
+    padding: 0 24px;
+  }
+
+  .sampleTag {
+    display: inline-block;
+  }
+
   .hero {
-    padding: 44px 0 32px;
-  }
-
-  .sheet,
-  .missions {
-    padding: 22px 26px 10px;
-  }
-
-  .missions {
-    padding-bottom: 22px;
+    margin-top: 24px;
+    padding: 32px 32px 30px;
+    border-radius: 28px;
   }
 
   .track {
-    height: 48px;
+    height: 52px;
+  }
+
+  .sheet {
+    padding: 28px 8px 0;
+  }
+
+  .missions {
+    padding: 24px;
   }
 }
 
-/* ───────── desktop ─────────
-   定規を横いっぱいに使い、下段は「今日の順番」と「ミッション」の2カラム。 */
+/* ───────── desktop: 左サイドバー＋広い定規＋2カラム ───────── */
+
 @media (min-width: 1024px) {
-  .inner {
-    max-width: 1160px;
-    padding: 0 40px;
+  .shell {
+    --nav-w: 240px;
   }
 
-  .sampleNote {
-    padding: 8px 40px;
+  .nav {
+    inset: 0 auto 0 0;
+    width: var(--nav-w);
+    padding: 24px 14px;
+    border-top: 0;
+    border-right: 1px solid var(--line);
+    background: var(--canvas);
+    backdrop-filter: none;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 28px;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .brandMark {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--blue);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .brandName {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .navList {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .navItem {
+    flex-direction: row;
+    gap: 12px;
+    padding: 10px 12px;
+    font-size: 14px;
+    transition: background-color 160ms;
+  }
+
+  .navItem:hover {
+    background: #f5f7fa;
+  }
+
+  .navIcon {
+    width: auto;
+    height: auto;
+    background: none;
+  }
+
+  .navItem[aria-current="page"] {
+    background: var(--wash);
+  }
+
+  .navItem[aria-current="page"] .navIcon {
+    background: none;
+  }
+
+  .navSvg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .page {
+    margin-left: var(--nav-w);
+    padding-bottom: 72px;
+  }
+
+  .inner {
+    padding: 0 48px;
   }
 
   .hero {
-    padding: 52px 0 40px;
-  }
-
-  .heroGrid {
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-areas:
@@ -829,7 +1020,10 @@
       "headline headline"
       "subline budget"
       "ruler ruler";
-    column-gap: 40px;
+    column-gap: 32px;
+    margin-top: 32px;
+    padding: 36px 40px 32px;
+    border-radius: 32px;
   }
 
   .eyebrow {
@@ -840,9 +1034,9 @@
   .headline {
     grid-area: headline;
     margin-top: 16px;
-    font-size: 44px;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
+    font-size: clamp(36px, 3.4vw, 48px);
+    line-height: 1.22;
+    letter-spacing: -0.03em;
   }
 
   .mobileBreak {
@@ -851,54 +1045,54 @@
 
   .subline {
     grid-area: subline;
-    margin-top: 12px;
+    align-self: center;
+    margin-top: 16px;
     font-size: 14px;
   }
 
   .budget {
     grid-area: budget;
-    align-self: center;
     justify-content: flex-end;
-    margin-top: 0;
+    margin-top: 16px;
   }
 
   .ruler {
     grid-area: ruler;
-    margin-top: 40px;
+    margin-top: 28px;
   }
 
   .track {
-    height: 64px;
+    height: 60px;
   }
 
   .segment::before,
   .segmentFill {
-    inset: 0 2px;
-    border-radius: 8px;
+    inset: 0 3px;
   }
 
   /* 広い画面では区間の中に単元名を入れる */
   .segmentLabel {
     position: absolute;
-    inset: 0 2px;
+    inset: 0 3px;
     display: flex;
     align-items: center;
-    padding: 0 14px;
+    padding: 0 20px;
     overflow: hidden;
     font-size: 13px;
     font-weight: 500;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--ink);
+    color: var(--ink-2);
     transition: color 300ms;
+  }
+
+  .segment[data-state="now"] .segmentLabel {
+    color: var(--ink);
+    font-weight: 700;
   }
 
   .segment[data-state="done"] .segmentLabel {
     color: #fff;
-  }
-
-  .caret::after {
-    height: 76px;
   }
 
   .tickLabel {
@@ -907,35 +1101,32 @@
 
   .body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 26vw, 340px);
     align-items: start;
-    gap: 24px;
+    gap: 40px;
+    margin-top: 12px;
   }
 
-  .sheet,
-  .missions {
-    padding: 26px 32px 12px;
+  .sheet {
+    padding: 32px 0 0;
   }
 
   .missions {
     position: sticky;
     top: 24px;
-    margin-top: 0;
-    padding: 26px 28px 26px;
+    margin-top: 32px;
+    padding: 24px;
   }
 
   .cue {
-    grid-template-columns: 52px 32px 1fr;
-    column-gap: 20px;
-    padding: 18px 0;
-  }
-
-  .cue::before {
-    left: calc(52px + 20px + 15px);
+    --col-offset: 48px;
+    --col-mark: 32px;
+    --gap: 18px;
+    padding: 16px 20px 16px 0;
   }
 
   .cues > .cue:first-child::before {
-    top: 34px;
+    top: 32px;
   }
 
   .cue[data-state^="finish"]::before {
@@ -943,25 +1134,24 @@
   }
 
   .offset {
+    padding-top: 7px;
     font-size: 13px;
-    padding-top: 6px;
-  }
-
-  .mark {
-    width: 32px;
-    height: 32px;
   }
 
   .finishMark {
-    margin-top: 8px;
+    margin-top: 9px;
   }
 
   .cueTitle {
     font-size: 16px;
   }
 
+  .cue[data-state="now"] {
+    padding: 22px 24px 22px 0;
+  }
+
   .cue[data-state="now"] .cueTitle {
-    font-size: 20px;
+    font-size: 21px;
   }
 
   .nowPanel {
@@ -984,9 +1174,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page *,
-  .page *::before,
-  .page *::after {
+  .shell *,
+  .shell *::before,
+  .shell *::after {
     animation: none !important;
     transition: none !important;
   }
