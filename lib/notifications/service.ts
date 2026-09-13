@@ -82,14 +82,22 @@ async function issueSessionToken(
   }
 }
 
-type PreferenceRowShape = {
+/**
+ * list_due_notification_candidates が返す1行。
+ * 判定に要る材料を1回の往復でまとめて受け取る（PostgREST の 504 に当たる面を減らす）。
+ */
+type CandidateRowShape = {
   user_id: string;
+  line_user_id: string | null;
   opt_in: boolean;
   remind_hour: number;
   timezone: string;
   daily_reminder: boolean;
   streak_risk: boolean;
   comeback: boolean;
+  last_played_at: string | null;
+  streak_count: number | null;
+  deliveries: { notification_type: NotificationType; local_date: string }[] | null;
 };
 
 /** UTC の前後1日ぶんの配信記録を引く（ユーザーごとのローカル日付が前後するため）。 */
@@ -228,87 +236,31 @@ export async function runDueLineReminders(
   const baseUrl = resolveBaseUrl();
   if (!baseUrl) return emptyResult("app url not configured");
 
-  const preferenceResult = await queryWithRetry<PreferenceRowShape>("preference", () =>
-    supabase
-      .from("notification_preferences")
-      .select(
-        "user_id, opt_in, remind_hour, timezone, daily_reminder, streak_risk, comeback",
-      )
-      .eq("opt_in", true)
-      .limit(MAX_USERS_PER_RUN),
-  );
-  if (preferenceResult.error) return emptyResult(preferenceResult.error);
-  const preferenceRows = preferenceResult.rows;
-
-  const preferences = preferenceRows;
-  if (preferences.length === 0) {
-    return { ok: true, scanned: 0, sent: 0, failed: 0, skipped: 0 };
-  }
-
-  const userIds = preferences.map((row) => row.user_id);
   const window = deliveryDateWindow(now);
 
-  // この3本は「誰に送るか」の前提そのもの。取れないまま進むと、
-  // 全員スキップ（宛先が空）や、当日学習済みの人への誤送信になりうる。
-  // 欠けた情報で送るより、その回は何もせず次の毎時実行に委ねる。
-  const [lineUsers, progressRows, deliveryRows] = await Promise.all([
-    queryWithRetry<{ id: string; line_user_id: string | null }>("line user", () =>
-      supabase.from("line_users").select("id, line_user_id").in("id", userIds),
-    ),
-    queryWithRetry<{
-      user_id: string;
-      last_played_at: string | null;
-      streak_count: number | null;
-    }>("progress", () =>
-      supabase
-        .from("user_progress")
-        .select("user_id, last_played_at, streak_count")
-        .in("user_id", userIds),
-    ),
-    queryWithRetry<{
-      user_id: string;
-      notification_type: NotificationType;
-      local_date: string;
-    }>("delivery", () =>
-      supabase
-        .from("notification_deliveries")
-        .select("user_id, notification_type, local_date")
-        .in("user_id", userIds)
-        .gte("local_date", window.from)
-        .lte("local_date", window.to),
-    ),
-  ]);
+  // 判定材料は1本の RPC でまとめて取る。REST を4本引いていた頃は、本番の PostgREST が
+  // 出す 504 に当たるたびにその回の通知が失われていた（4時間連続で出せなかった）。
+  // 取れなければ何もせず次の毎時実行に委ねる。欠けた情報で送るほうが危ないため。
+  const candidateResult = await queryWithRetry<CandidateRowShape>("candidate", () =>
+    supabase.rpc("list_due_notification_candidates", {
+      p_delivery_window_start: window.from,
+      p_delivery_window_end: window.to,
+      p_limit: MAX_USERS_PER_RUN,
+    }),
+  );
+  if (candidateResult.error) return emptyResult(candidateResult.error);
 
-  const batchError = lineUsers.error ?? progressRows.error ?? deliveryRows.error;
-  if (batchError) return emptyResult(batchError);
-
-  const lineUserIdByUser = new Map<string, string>();
-  for (const row of lineUsers.rows) {
-    if (row.line_user_id) lineUserIdByUser.set(row.id, row.line_user_id);
-  }
-
-  const progressByUser = new Map<string, { lastPlayedAt: string | null; streakCount: number }>();
-  for (const row of progressRows.rows) {
-    progressByUser.set(row.user_id, {
-      lastPlayedAt: row.last_played_at ?? null,
-      streakCount: Number(row.streak_count ?? 0),
-    });
-  }
-
-  const deliveriesByUserDate = new Map<string, NotificationType[]>();
-  for (const row of deliveryRows.rows) {
-    const key = `${row.user_id}:${row.local_date}`;
-    const list = deliveriesByUserDate.get(key) ?? [];
-    list.push(row.notification_type);
-    deliveriesByUserDate.set(key, list);
+  const candidates = candidateResult.rows;
+  if (candidates.length === 0) {
+    return { ok: true, scanned: 0, sent: 0, failed: 0, skipped: 0 };
   }
 
   let sent = 0;
   let failed = 0;
   let skipped = 0;
 
-  for (const row of preferences) {
-    const lineUserId = lineUserIdByUser.get(row.user_id);
+  for (const row of candidates) {
+    const lineUserId = row.line_user_id;
     if (!lineUserId) {
       // LINE 未連携。Web だけのユーザーには push する宛先が無い。
       skipped += 1;
@@ -317,15 +269,18 @@ export async function runDueLineReminders(
 
     const preference = preferenceRowToPreference(row);
     const timeZone = resolveTimeZone(preference.timezone);
-    const progress = progressByUser.get(row.user_id);
     const localDate = localDateInTimeZone(now, timeZone);
+
+    // 配信記録は前後1日ぶんが入っている。どれが「この人の今日」かはここで絞る。
+    const deliveredTypesToday = (row.deliveries ?? [])
+      .filter((delivery) => delivery.local_date === localDate)
+      .map((delivery) => delivery.notification_type);
 
     const candidate: NotificationCandidate = {
       preference,
-      lastPlayedAt: progress?.lastPlayedAt ?? null,
-      streakCount: progress?.streakCount ?? 0,
-      deliveredTypesToday:
-        deliveriesByUserDate.get(`${row.user_id}:${localDate}`) ?? [],
+      lastPlayedAt: row.last_played_at,
+      streakCount: Number(row.streak_count ?? 0),
+      deliveredTypesToday,
     };
 
     const decision = decideNotification(candidate, now);
@@ -371,5 +326,5 @@ export async function runDueLineReminders(
     }
   }
 
-  return { ok: true, scanned: preferences.length, sent, failed, skipped };
+  return { ok: true, scanned: candidates.length, sent, failed, skipped };
 }
