@@ -166,7 +166,7 @@ async function finishDelivery(
 }
 
 /** 一時障害を1回だけ待って引き直すまでの間隔。 */
-const PREFERENCE_RETRY_DELAY_MS = 1_500;
+const QUERY_RETRY_DELAY_MS = 1_500;
 
 function describeQueryError(error: { code?: string | null; message?: string | null }): string {
   const code = (error.code ?? "").trim();
@@ -174,43 +174,42 @@ function describeQueryError(error: { code?: string | null; message?: string | nu
   return [code, message].filter(Boolean).join(" ") || "unknown error";
 }
 
+type SupabaseQueryResult<T> = {
+  data: T[] | null;
+  error: { code?: string | null; message?: string | null } | null;
+};
+
 /**
- * オプトイン済みの設定を引く。失敗したら1回だけ引き直す。
+ * 読み取りを1回だけ引き直す。失敗したら理由を呼び出し側へ返す。
  *
  * リトライする理由: 定時リマインドはユーザーごとに1日1時間しか評価されないため、
  * その1回が一時障害に当たるとその日の通知が丸ごと失われる（次の評価は翌日）。
  * 実際に本番で Supabase が 504 を返し、3回続けて通知が出なかった。
  *
- * 失敗の中身を reason に載せる理由: 以前は "preference query failed" とだけ返しており、
+ * 失敗の中身を返す理由: 以前は "preference query failed" とだけ返しており、
  * 原因（権限・スキーマ・タイムアウトのどれか）が外から判別できなかった。
  */
-async function loadOptedInPreferences(
-  supabase: SupabaseClient,
-): Promise<{ rows: PreferenceRowShape[]; error?: string }> {
+async function queryWithRetry<T>(
+  label: string,
+  run: () => PromiseLike<SupabaseQueryResult<T>>,
+): Promise<{ rows: T[]; error?: string }> {
   let lastError = "";
 
   for (let attempt = 1; attempt <= 2; attempt += 1) {
-    const { data, error } = await supabase
-      .from("notification_preferences")
-      .select(
-        "user_id, opt_in, remind_hour, timezone, daily_reminder, streak_risk, comeback",
-      )
-      .eq("opt_in", true)
-      .limit(MAX_USERS_PER_RUN);
-
+    const { data, error } = await run();
     if (!error) {
-      if (attempt > 1) console.warn("notification preference query recovered on retry");
-      return { rows: (data ?? []) as PreferenceRowShape[] };
+      if (attempt > 1) console.warn(`${label} query recovered on retry`);
+      return { rows: data ?? [] };
     }
 
     lastError = describeQueryError(error);
-    console.error(`notification preference query failed (attempt ${attempt})`, error);
+    console.error(`${label} query failed (attempt ${attempt})`, error);
     if (attempt === 1) {
-      await new Promise((resolve) => setTimeout(resolve, PREFERENCE_RETRY_DELAY_MS));
+      await new Promise((resolve) => setTimeout(resolve, QUERY_RETRY_DELAY_MS));
     }
   }
 
-  return { rows: [], error: `preference query failed: ${lastError}` };
+  return { rows: [], error: `${label} query failed: ${lastError}` };
 }
 
 /**
@@ -229,7 +228,15 @@ export async function runDueLineReminders(
   const baseUrl = resolveBaseUrl();
   if (!baseUrl) return emptyResult("app url not configured");
 
-  const preferenceResult = await loadOptedInPreferences(supabase);
+  const preferenceResult = await queryWithRetry<PreferenceRowShape>("preference", () =>
+    supabase
+      .from("notification_preferences")
+      .select(
+        "user_id, opt_in, remind_hour, timezone, daily_reminder, streak_risk, comeback",
+      )
+      .eq("opt_in", true)
+      .limit(MAX_USERS_PER_RUN),
+  );
   if (preferenceResult.error) return emptyResult(preferenceResult.error);
   const preferenceRows = preferenceResult.rows;
 
@@ -241,31 +248,47 @@ export async function runDueLineReminders(
   const userIds = preferences.map((row) => row.user_id);
   const window = deliveryDateWindow(now);
 
+  // この3本は「誰に送るか」の前提そのもの。取れないまま進むと、
+  // 全員スキップ（宛先が空）や、当日学習済みの人への誤送信になりうる。
+  // 欠けた情報で送るより、その回は何もせず次の毎時実行に委ねる。
   const [lineUsers, progressRows, deliveryRows] = await Promise.all([
-    supabase.from("line_users").select("id, line_user_id").in("id", userIds),
-    supabase
-      .from("user_progress")
-      .select("user_id, last_played_at, streak_count")
-      .in("user_id", userIds),
-    supabase
-      .from("notification_deliveries")
-      .select("user_id, notification_type, local_date")
-      .in("user_id", userIds)
-      .gte("local_date", window.from)
-      .lte("local_date", window.to),
+    queryWithRetry<{ id: string; line_user_id: string | null }>("line user", () =>
+      supabase.from("line_users").select("id, line_user_id").in("id", userIds),
+    ),
+    queryWithRetry<{
+      user_id: string;
+      last_played_at: string | null;
+      streak_count: number | null;
+    }>("progress", () =>
+      supabase
+        .from("user_progress")
+        .select("user_id, last_played_at, streak_count")
+        .in("user_id", userIds),
+    ),
+    queryWithRetry<{
+      user_id: string;
+      notification_type: NotificationType;
+      local_date: string;
+    }>("delivery", () =>
+      supabase
+        .from("notification_deliveries")
+        .select("user_id, notification_type, local_date")
+        .in("user_id", userIds)
+        .gte("local_date", window.from)
+        .lte("local_date", window.to),
+    ),
   ]);
 
+  const batchError = lineUsers.error ?? progressRows.error ?? deliveryRows.error;
+  if (batchError) return emptyResult(batchError);
+
   const lineUserIdByUser = new Map<string, string>();
-  for (const row of (lineUsers.data ?? []) as { id: string; line_user_id: string | null }[]) {
+  for (const row of lineUsers.rows) {
     if (row.line_user_id) lineUserIdByUser.set(row.id, row.line_user_id);
   }
 
   const progressByUser = new Map<string, { lastPlayedAt: string | null; streakCount: number }>();
-  for (const row of (progressRows.data ?? []) as {
-    user_id: string;
-    last_played_at: string | null;
-    streak_count: number | null;
-  }[]) {
+  for (const row of progressRows.rows) {
     progressByUser.set(row.user_id, {
       lastPlayedAt: row.last_played_at ?? null,
       streakCount: Number(row.streak_count ?? 0),
@@ -273,11 +296,7 @@ export async function runDueLineReminders(
   }
 
   const deliveriesByUserDate = new Map<string, NotificationType[]>();
-  for (const row of (deliveryRows.data ?? []) as {
-    user_id: string;
-    notification_type: NotificationType;
-    local_date: string;
-  }[]) {
+  for (const row of deliveryRows.rows) {
     const key = `${row.user_id}:${row.local_date}`;
     const list = deliveriesByUserDate.get(key) ?? [];
     list.push(row.notification_type);

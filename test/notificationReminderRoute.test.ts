@@ -42,6 +42,8 @@ type Db = {
   recheckLastPlayedAt?: Record<string, string | null>;
   /** notification_preferences の取得で順に返すエラー（null は成功）。 */
   preferenceErrors?: ({ code?: string; message?: string } | null)[];
+  /** テーブル名ごとに、読み取りで順に返すエラー（null は成功）。 */
+  readErrors?: Record<string, ({ code?: string; message?: string } | null)[]>;
 };
 
 type Call = { fn: string; args: unknown[] };
@@ -69,11 +71,17 @@ function createSupabase(db: Db) {
     const isUpdate = calls.some((c) => c.fn === "update");
     if (isInsert || isUpdate) writtenTables.push(table);
 
+    if (!isInsert && !isUpdate && !single) {
+      const queued = db.readErrors?.[table]?.shift();
+      if (queued) return Promise.resolve({ data: null, error: queued });
+    }
+
     if (table === "notification_preferences") {
       const queued = db.preferenceErrors?.shift();
       if (queued) return Promise.resolve({ data: null, error: queued });
       return Promise.resolve({ data: db.preferences.filter((p) => p.opt_in), error: null });
     }
+
 
     if (table === "line_users") {
       const ids = inValuesOf(calls);
@@ -291,6 +299,49 @@ describe("runDueLineReminders", () => {
     expect(db.deliveries).toHaveLength(0);
     // 失敗しても学習データには触れない。
     expect(writtenTables).toEqual([]);
+  });
+
+  it("前提データの取得に失敗したら、欠けた情報で送らず何もしない", async () => {
+    // line_users が取れないと宛先が空になり「全員スキップ」に化ける。
+    // 黙って0件成功にせず、理由を返してその回は何もしない。
+    const db = makeDb({
+      readErrors: {
+        line_users: [
+          { code: "504", message: "Gateway Timeout" },
+          { code: "504", message: "Gateway Timeout" },
+        ],
+      },
+    });
+    mocks.getServiceSupabase.mockReturnValue(createSupabase(db));
+
+    vi.useFakeTimers();
+    const pending = runDueLineReminders(AT_REMIND_HOUR);
+    await vi.advanceTimersByTimeAsync(5_000);
+    const result = await pending;
+    vi.useRealTimers();
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain("line user query failed");
+    expect(result.reason).toContain("504");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(db.deliveries).toHaveLength(0);
+    expect(writtenTables).toEqual([]);
+  });
+
+  it("前提データの一時的な失敗は引き直して送信できる", async () => {
+    const db = makeDb({
+      readErrors: { notification_deliveries: [{ message: "Gateway Timeout" }] },
+    });
+    mocks.getServiceSupabase.mockReturnValue(createSupabase(db));
+
+    vi.useFakeTimers();
+    const pending = runDueLineReminders(AT_REMIND_HOUR);
+    await vi.advanceTimersByTimeAsync(5_000);
+    const result = await pending;
+    vi.useRealTimers();
+
+    expect(result).toMatchObject({ ok: true, sent: 1, failed: 0 });
+    expect(db.deliveries[0]).toMatchObject({ status: "sent" });
   });
 
   it("通知OFFのユーザーは対象にしない", async () => {
