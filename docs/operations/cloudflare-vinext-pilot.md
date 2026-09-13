@@ -390,12 +390,15 @@ export/import design is separately approved.
 - Upload: `9187.78 KiB` total / `2150.76 KiB` gzip; Worker startup `22 ms`;
   265 client assets discovered, 50 uploaded and 191 reused in the final upload
 
-The account/price boundary was resolved from the official Cloudflare pricing
-rule that Workers Free is available by default with 100,000 requests per day.
-Neither Wrangler deployment requested a paid upgrade, billing method, contract,
-or terms acceptance. The first upload created only the named `workers.dev`
-Worker. It was then rebuilt from the committed source above and deployed again
-after fixing the two public origin variables to that URL.
+Cloudflare documents general availability of Workers Free with 100,000 requests
+per day, and the controller authorized this bounded `workers.dev` trial on that
+basis. During deployment, Wrangler did not request a new contract, paid-plan
+activation, billing method, paid upgrade, or terms acceptance. This is not proof
+that this account is on the Free tier or that its marginal metered cost is zero:
+the actual Workers tier and account-specific cost remain unconfirmed because the
+dashboard required browser authentication. The first upload created only the
+named `workers.dev` Worker. It was then rebuilt from the committed source above
+and deployed again after fixing the two public origin variables to that URL.
 
 The only non-secret validation variables are `APP_BASE_URL`,
 `NEXT_PUBLIC_APP_URL`, and synthetic non-routable Supabase placeholders. The
