@@ -61,6 +61,12 @@ export async function triggerLineReminder(
       console.error(`line-reminder-cron: endpoint returned ${res.status}`);
       return { ok: false, reason: "request_failed", status: res.status };
     }
+    // 成功時も1行だけ残す（GF-P0-006 の Measurement）。無言だと
+    // 「正常に動いて対象0件」と「そもそも動いていない」を tail から区別できず、
+    // 実際に CRON_SECRET が空のまま3日間気づけなかった。
+    // 本文は通知APIの実行結果（scanned / sent / failed / skipped）で、個人情報を含まない。
+    const summary = await res.text().catch(() => "");
+    console.log(`line-reminder-cron: ok ${summary.slice(0, 300)}`.trim());
     return { ok: true, status: res.status };
   } catch (e) {
     console.error("line-reminder-cron: request failed", e);
