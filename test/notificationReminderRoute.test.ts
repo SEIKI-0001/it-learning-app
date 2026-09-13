@@ -40,6 +40,8 @@ type Db = {
   deliveries: DeliveryRow[];
   /** 送信直前の再確認で返す last_played_at（未指定なら progress と同じ）。 */
   recheckLastPlayedAt?: Record<string, string | null>;
+  /** notification_preferences の取得で順に返すエラー（null は成功）。 */
+  preferenceErrors?: ({ code?: string; message?: string } | null)[];
 };
 
 type Call = { fn: string; args: unknown[] };
@@ -68,6 +70,8 @@ function createSupabase(db: Db) {
     if (isInsert || isUpdate) writtenTables.push(table);
 
     if (table === "notification_preferences") {
+      const queued = db.preferenceErrors?.shift();
+      if (queued) return Promise.resolve({ data: null, error: queued });
       return Promise.resolve({ data: db.preferences.filter((p) => p.opt_in), error: null });
     }
 
@@ -242,6 +246,51 @@ describe("runDueLineReminders", () => {
         status: "sent",
       }),
     ]);
+  });
+
+  it("設定取得が一時的に失敗しても1回だけ引き直して送信する", async () => {
+    // 定時リマインドは1日1時間しか評価されない。その1回を一時障害で落とすと
+    // その日の通知が丸ごと失われるため、1度だけ引き直す。
+    const db = makeDb({
+      preferenceErrors: [{ code: "504", message: "Gateway Timeout" }],
+    });
+    mocks.getServiceSupabase.mockReturnValue(createSupabase(db));
+
+    vi.useFakeTimers();
+    const pending = runDueLineReminders(AT_REMIND_HOUR);
+    await vi.advanceTimersByTimeAsync(5_000);
+    const result = await pending;
+    vi.useRealTimers();
+
+    expect(result).toMatchObject({ ok: true, sent: 1, failed: 0 });
+    expect(db.deliveries[0]).toMatchObject({ status: "sent" });
+  });
+
+  it("引き直しても失敗したら理由に中身を載せ、何も送らない", async () => {
+    // "preference query failed" とだけ返していた頃は、権限・スキーマ・タイムアウトの
+    // どれが起きているのか外から判別できなかった。
+    const db = makeDb({
+      preferenceErrors: [
+        { code: "504", message: "Gateway Timeout" },
+        { code: "504", message: "Gateway Timeout" },
+      ],
+    });
+    mocks.getServiceSupabase.mockReturnValue(createSupabase(db));
+
+    vi.useFakeTimers();
+    const pending = runDueLineReminders(AT_REMIND_HOUR);
+    await vi.advanceTimersByTimeAsync(5_000);
+    const result = await pending;
+    vi.useRealTimers();
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain("preference query failed");
+    expect(result.reason).toContain("504");
+    expect(result.reason).toContain("Gateway Timeout");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(db.deliveries).toHaveLength(0);
+    // 失敗しても学習データには触れない。
+    expect(writtenTables).toEqual([]);
   });
 
   it("通知OFFのユーザーは対象にしない", async () => {

@@ -165,6 +165,54 @@ async function finishDelivery(
   if (error) console.error("notification delivery update failed", error);
 }
 
+/** 一時障害を1回だけ待って引き直すまでの間隔。 */
+const PREFERENCE_RETRY_DELAY_MS = 1_500;
+
+function describeQueryError(error: { code?: string | null; message?: string | null }): string {
+  const code = (error.code ?? "").trim();
+  const message = (error.message ?? "").trim().slice(0, 200);
+  return [code, message].filter(Boolean).join(" ") || "unknown error";
+}
+
+/**
+ * オプトイン済みの設定を引く。失敗したら1回だけ引き直す。
+ *
+ * リトライする理由: 定時リマインドはユーザーごとに1日1時間しか評価されないため、
+ * その1回が一時障害に当たるとその日の通知が丸ごと失われる（次の評価は翌日）。
+ * 実際に本番で Supabase が 504 を返し、3回続けて通知が出なかった。
+ *
+ * 失敗の中身を reason に載せる理由: 以前は "preference query failed" とだけ返しており、
+ * 原因（権限・スキーマ・タイムアウトのどれか）が外から判別できなかった。
+ */
+async function loadOptedInPreferences(
+  supabase: SupabaseClient,
+): Promise<{ rows: PreferenceRowShape[]; error?: string }> {
+  let lastError = "";
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const { data, error } = await supabase
+      .from("notification_preferences")
+      .select(
+        "user_id, opt_in, remind_hour, timezone, daily_reminder, streak_risk, comeback",
+      )
+      .eq("opt_in", true)
+      .limit(MAX_USERS_PER_RUN);
+
+    if (!error) {
+      if (attempt > 1) console.warn("notification preference query recovered on retry");
+      return { rows: (data ?? []) as PreferenceRowShape[] };
+    }
+
+    lastError = describeQueryError(error);
+    console.error(`notification preference query failed (attempt ${attempt})`, error);
+    if (attempt === 1) {
+      await new Promise((resolve) => setTimeout(resolve, PREFERENCE_RETRY_DELAY_MS));
+    }
+  }
+
+  return { rows: [], error: `preference query failed: ${lastError}` };
+}
+
 /**
  * いま送るべき通知を送る。Cron から1時間ごとに呼ばれる想定。
  * 例外を投げずに結果を返す（Cron の失敗が学習側へ伝播しない）。
@@ -181,17 +229,11 @@ export async function runDueLineReminders(
   const baseUrl = resolveBaseUrl();
   if (!baseUrl) return emptyResult("app url not configured");
 
-  const { data: preferenceRows, error: preferenceError } = await supabase
-    .from("notification_preferences")
-    .select(
-      "user_id, opt_in, remind_hour, timezone, daily_reminder, streak_risk, comeback",
-    )
-    .eq("opt_in", true)
-    .limit(MAX_USERS_PER_RUN);
+  const preferenceResult = await loadOptedInPreferences(supabase);
+  if (preferenceResult.error) return emptyResult(preferenceResult.error);
+  const preferenceRows = preferenceResult.rows;
 
-  if (preferenceError) return emptyResult("preference query failed");
-
-  const preferences = (preferenceRows ?? []) as PreferenceRowShape[];
+  const preferences = preferenceRows;
   if (preferences.length === 0) {
     return { ok: true, scanned: 0, sent: 0, failed: 0, skipped: 0 };
   }
