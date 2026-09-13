@@ -24,11 +24,18 @@ const ctx = { waitUntil: () => {} };
 
 let fetchMock: ReturnType<typeof vi.fn<FetchLike>>;
 let errorSpy: ReturnType<typeof vi.spyOn>;
+let logSpy: ReturnType<typeof vi.spyOn>;
+
+/** 通知APIの実行結果。Worker はこれをそのままログへ出す。 */
+const OK_BODY = '{"ok":true,"scanned":3,"sent":1,"failed":0,"skipped":2}';
 
 beforeEach(() => {
-  fetchMock = vi.fn<FetchLike>().mockResolvedValue({ ok: true, status: 200 } as Response);
+  fetchMock = vi
+    .fn<FetchLike>()
+    .mockResolvedValue({ ok: true, status: 200, text: async () => OK_BODY } as Response);
   vi.stubGlobal("fetch", fetchMock);
   errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -47,6 +54,21 @@ describe("scheduled invocation", () => {
     expect((init.headers as Record<string, string>).Authorization).toBe(`Bearer ${SECRET}`);
     // Worker はボディを組み立てない（判定はアプリ側の単一の窓口が行う）。
     expect(init.body).toBeUndefined();
+  });
+
+  it("成功時も実行結果を1行ログに残す", async () => {
+    // 無言だと「正常に動いて対象0件」と「そもそも動いていない」を tail から区別できない。
+    await worker.scheduled(controller, env(), ctx);
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    const line = String(logSpy.mock.calls[0][0]);
+    expect(line).toContain("line-reminder-cron: ok");
+    expect(line).toContain('"scanned":3');
+    expect(line).toContain('"sent":1');
+    expect(line).toContain('"skipped":2');
+    // 秘密情報を載せない。
+    expect(line).not.toContain(SECRET);
   });
 
   it("APP_BASE_URL の末尾スラッシュを二重にしない", async () => {
@@ -91,13 +113,14 @@ describe("設定が欠けているとき", () => {
 
 describe("通知APIが失敗したとき", () => {
   it("エラー応答を記録するだけで、リクエストは1本のまま", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 500 } as Response);
+    fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => "" } as Response);
 
     const result = await triggerLineReminder(env(), fetchMock);
 
     expect(result).toEqual({ ok: false, reason: "request_failed", status: 500 });
     // 再送も、別経路への書き込みも行わない。次の毎時起動へ任せる。
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(logSpy).not.toHaveBeenCalled();
   });
 
   it("ネットワーク失敗でも例外を投げない", async () => {
@@ -110,7 +133,7 @@ describe("通知APIが失敗したとき", () => {
   });
 
   it("Worker から Supabase・LINE へ直接アクセスしない", async () => {
-    fetchMock.mockResolvedValue({ ok: false, status: 401 } as Response);
+    fetchMock.mockResolvedValue({ ok: false, status: 401, text: async () => "" } as Response);
 
     await worker.scheduled(controller, env(), ctx);
 

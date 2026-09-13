@@ -1190,19 +1190,27 @@ export async function saveFeedbackToDb(
 
 // ---- GF-P0-006 通知設定 -----------------------------------------------------
 
+export type NotificationPreferenceState = {
+  preference: NotificationPreference;
+  /** LINE 連携済みか。未連携なら push の宛先が無く、設定しても届かない。 */
+  lineLinked: boolean;
+};
+
 /**
  * 現在の通知設定を取得する。未ログイン・未設定・Supabase 未設定では null。
  * 設定画面は null を「通知機能を使えない状態」として扱い、案内だけ出す。
  */
-export async function fetchNotificationPreference(): Promise<NotificationPreference | null> {
+export async function fetchNotificationPreference(): Promise<NotificationPreferenceState | null> {
   try {
     const res = await fetch("/api/notifications/preference");
     if (!res.ok) return null;
     const data = (await res.json()) as {
       ok: boolean;
       preference?: NotificationPreference;
+      lineLinked?: boolean;
     };
-    return data.ok && data.preference ? data.preference : null;
+    if (!data.ok || !data.preference) return null;
+    return { preference: data.preference, lineLinked: Boolean(data.lineLinked) };
   } catch {
     return null;
   }
