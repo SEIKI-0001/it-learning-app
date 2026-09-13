@@ -377,7 +377,58 @@ export/import design is separately approved.
 
 ## Validation deployment
 
-Not run in this baseline-record task.
+- URL: https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev
+- Worker: `it-learning-app-vinext-pilot`
+- Cloudflare account label: `Kobayasiseiki@gmail.com's Account` (account ID is
+  intentionally not recorded)
+- Source commit: `f0d3efd4acfd3a0fa1ed40953ca6b161d9b51443`
+- Deployment ID: `87a7ef9d-71a7-4af4-94c2-79b4a0739298`
+- Version ID: `1d30bbab-6efc-43dc-81be-6cfcb9ac13e9` (version 4, 100% of
+  this validation Worker)
+- Deployed: `2026-09-13T05:52:02.009038Z` /
+  `2026-09-13T14:52:02.009038+09:00`
+- Upload: `9187.78 KiB` total / `2150.76 KiB` gzip; Worker startup `22 ms`;
+  265 client assets discovered, 50 uploaded and 191 reused in the final upload
+
+The account/price boundary was resolved from the official Cloudflare pricing
+rule that Workers Free is available by default with 100,000 requests per day.
+Neither Wrangler deployment requested a paid upgrade, billing method, contract,
+or terms acceptance. The first upload created only the named `workers.dev`
+Worker. It was then rebuilt from the committed source above and deployed again
+after fixing the two public origin variables to that URL.
+
+The only non-secret validation variables are `APP_BASE_URL`,
+`NEXT_PUBLIC_APP_URL`, and synthetic non-routable Supabase placeholders. The
+only secrets registered are freshly generated synthetic `SESSION_SECRET` and
+`LINE_CHANNEL_SECRET`; their values were generated and consumed through stdin,
+were never printed or written to a file, and are not production credentials.
+No real Supabase, Stripe, LINE, or AI credential was available. The Stripe
+Projects CLI plugin was updated from 0.23.0 to 0.39.1 to meet its service minimum,
+but `status`, `show`, redacted `env`, and `env list` all reported that the local
+project association is uninitialized. No provider resource was provisioned,
+linked, removed, or rotated.
+
+`wrangler deployments status --json` confirmed the deployment/version pair
+above. Both `wrangler.jsonc` and its generated deployment config contain no
+routes or custom domains; the generated trigger object is empty. Searches for
+`routes`, `custom_domains`, and `vercel.app` returned no match. Production DNS,
+Vercel production, webhooks, and real-user data were not changed.
+
+The post-deployment verifier intentionally exited nonzero and the deployment is
+not accepted yet:
+
+| Contract | HTTP status | Result |
+| --- | --- | --- |
+| Public `/login` | `200` | Passed. |
+| Unauthenticated `/today` with auth gate expected | `200` | **Failed:** deployed vinext did not redirect to `/login`. |
+| Unauthenticated `/api/progress/save` | `401` | Passed fail-closed check. |
+| Invalid synthetic LINE signature | `401` | Passed. |
+| Valid synthetic signature with empty LINE event | `503` | **Failed:** expected `200`; no real LINE integration was invoked. |
+| Stripe webhook without configuration | `503` | Passed fail-closed check. |
+
+The two failures must be diagnosed in the deployed verification task. They are
+not bypassed by disabling the auth expectation, removing the synthetic secrets,
+or weakening the verifier.
 
 ## Deployed verification matrix
 
@@ -394,12 +445,14 @@ passing checker/build must not be used to waive the later comparison gate.
 
 ## Unverified items
 
-- No validation deployment or deployed-route verification has been run.
-- `proxy.ts` / Supabase cookie behavior, signed webhook raw bodies, Node crypto,
-  external providers, cache behavior, and validation-account platform limits need
-  their planned checks. Past-exam dimensions now pass local vinext development and
-  built-Worker verification; validation deployment remains pending.
-- The verifier script is scheduled for Task 5; `verify:cloudflare` is not yet run.
+- A validation deployment exists, but the deployed matrix is incomplete and its
+  page auth gate and valid synthetic LINE-event checks currently fail as recorded
+  above.
+- Real Supabase authentication/cookie refresh, save/restore, LINE delivery,
+  Stripe test mode, and AI grading remain unverified because validation
+  credentials are unavailable. No production credential may be substituted.
+- Past-exam dimensions pass local vinext development and built-Worker checks;
+  their deployed visual/image delivery check remains pending.
 
 ## Production prerequisites
 
