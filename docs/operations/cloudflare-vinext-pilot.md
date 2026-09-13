@@ -359,9 +359,11 @@ handling assessment is recorded in
   UI even when a server row exists.
 - `fequest:pastExam:*` and
   `fequest:assessmentFinalization:v1:*` can contain non-reconstructible pending
-  work. Their server-side assessment-session, attempt, progress, and answer rows
-  do not reconstruct the local cursor/retry frame. A different-origin cutover
-  must drain them or use a separately reviewed, schema-valid migration path.
+  work. Past-exam synchronization writes assessment-session, attempt, and
+  progress rows; other assessment UIs can additionally write answer rows. None
+  of those server records reconstructs the applicable local cursor/retry frame.
+  A different-origin cutover must drain them or use a separately reviewed,
+  schema-valid migration path.
 - `fequest:userId` is a client hint only. It is excluded from migration and is
   never authentication authority; the destination must resolve identity from a
   validated token or server cookie.
