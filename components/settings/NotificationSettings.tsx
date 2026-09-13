@@ -21,6 +21,8 @@ type LoadState = "loading" | "ready" | "unavailable";
 export default function NotificationSettings() {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [preference, setPreference] = useState<NotificationPreference | null>(null);
+  // LINE 未連携だと push の宛先が無い。設定は保存できるが届かないので警告する。
+  const [lineLinked, setLineLinked] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,8 @@ export default function NotificationSettings() {
         setLoadState("unavailable");
         return;
       }
-      setPreference(loaded);
+      setPreference(loaded.preference);
+      setLineLinked(loaded.lineLinked);
       setLoadState("ready");
     })();
     return () => {
@@ -88,6 +91,18 @@ export default function NotificationSettings() {
       <p className="mb-3 text-xs text-gray-500">
         当日まだ学習していないときだけ、LINE でそっとお知らせします。いつでも停止できます。
       </p>
+
+      {!lineLinked && (
+        <div className="mb-3 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-100">
+          <p className="text-sm font-semibold text-amber-950">
+            いまは LINE へ送れません
+          </p>
+          <p className="mt-1 text-xs text-amber-900">
+            このアカウントは LINE と連携していないため、受け取る設定にしても通知は届きません。
+            LINE で「はじめる」と送ると連携できます。設定はこのまま保存でき、連携後に有効になります。
+          </p>
+        </div>
+      )}
 
       <button
         type="button"

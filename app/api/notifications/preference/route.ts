@@ -16,6 +16,8 @@ const SELECT_COLUMNS =
 /**
  * GET /api/notifications/preference
  * 現在の通知設定を返す。行が無ければ既定値（オプトイン OFF）を返す。
+ * あわせて LINE 連携の有無（lineLinked）を返す。未連携だと push の宛先が無く、
+ * オプトインしても届かないため、設定画面で警告するのに使う。
  */
 export async function GET() {
   const userId = await getRequestUserId();
@@ -31,21 +33,27 @@ export async function GET() {
     );
   }
 
-  const { data, error } = await supabase
-    .from("notification_preferences")
-    .select(SELECT_COLUMNS)
-    .eq("user_id", userId)
-    .maybeSingle();
+  const [{ data, error }, { data: lineUser }] = await Promise.all([
+    supabase
+      .from("notification_preferences")
+      .select(SELECT_COLUMNS)
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase.from("line_users").select("line_user_id").eq("id", userId).maybeSingle(),
+  ]);
 
   if (error) {
     return NextResponse.json({ ok: false, error: "load failed" }, { status: 500 });
   }
 
+  // push の宛先は LINE userId しかない。未連携なら設定しても届かないので、
+  // 設定画面がその事実を伝えられるように返す（オプトイン自体は妨げない）。
   return NextResponse.json({
     ok: true,
     preference: data
       ? preferenceRowToPreference(data as Parameters<typeof preferenceRowToPreference>[0])
       : DEFAULT_NOTIFICATION_PREFERENCE,
+    lineLinked: Boolean(lineUser?.line_user_id),
   });
 }
 

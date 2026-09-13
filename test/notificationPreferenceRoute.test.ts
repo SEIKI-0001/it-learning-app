@@ -31,9 +31,12 @@ type Row = {
 let stored: Row | null = null;
 let upserted: Record<string, unknown> | null = null;
 
+/** line_users.line_user_id の有無（LINE 連携済みか）。 */
+let lineLinked = true;
+
 function createSupabase() {
   return {
-    from() {
+    from(table: string) {
       const chain: Record<string, unknown> = {};
       let pendingUpsert: Record<string, unknown> | null = null;
       for (const fn of ["select", "eq"]) {
@@ -43,7 +46,13 @@ function createSupabase() {
         pendingUpsert = row;
         return chain;
       };
-      chain.maybeSingle = () => Promise.resolve({ data: stored, error: null });
+      chain.maybeSingle = () =>
+        table === "line_users"
+          ? Promise.resolve({
+              data: lineLinked ? { line_user_id: "Uline0001" } : { line_user_id: null },
+              error: null,
+            })
+          : Promise.resolve({ data: stored, error: null });
       chain.then = (
         onFulfilled: (v: unknown) => unknown,
         onRejected?: (e: unknown) => unknown,
@@ -77,6 +86,7 @@ function postRequest(body: unknown) {
 beforeEach(() => {
   stored = null;
   upserted = null;
+  lineLinked = true;
   mocks.getRequestUserId.mockResolvedValue(USER);
   mocks.getServiceSupabase.mockReturnValue(createSupabase());
 });
@@ -92,7 +102,16 @@ describe("GET /api/notifications/preference", () => {
     expect(await res.json()).toEqual({
       ok: true,
       preference: DEFAULT_NOTIFICATION_PREFERENCE,
+      lineLinked: true,
     });
+  });
+
+  it("LINE 未連携なら lineLinked: false を返す", async () => {
+    // push の宛先が無い状態。設定画面はこれを見て「届かない」と警告する。
+    lineLinked = false;
+    const res = await GET();
+    const data = (await res.json()) as { lineLinked: boolean };
+    expect(data.lineLinked).toBe(false);
   });
 
   it("未ログインでは 401", async () => {
