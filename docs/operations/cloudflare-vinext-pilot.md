@@ -335,6 +335,44 @@ passes by observing a nonzero exit, `Invalid PNG IHDR`, and no output manifest.
 | `npm run lint` | `0` | Passed without errors or warnings. |
 | `npm test` | `0` | 155 files / 1,877 tests passed. |
 
+### Task 6 browser-storage migration assessment (2026-09-12)
+
+The source inventory command from the implementation plan was rerun across
+`app`, `components`, and `lib`. It identified 14 persisted `fequest:*` key
+patterns: 12 `localStorage` patterns and two legacy `sessionStorage` patterns.
+Five additional `fequest:*` literals are DOM event names rather than stored
+data, and were explicitly separated from the migration inventory.
+
+The key-by-key authority, synchronization, loss, recovery, and production
+handling assessment is recorded in
+`docs/operations/browser-storage-migration.md`. Important findings are:
+
+- `fequest:appstate`, `fequest:wordlistProgress`, and
+  `fequest:referenceBook` have authenticated server paths, but can still contain
+  anonymous or failed/fire-and-forget local writes; server backing alone is not
+  proof that every browser change is recoverable. Cookie-session AppState
+  restoration merges local/server state but writes back only merged progress,
+  while LINE token restoration replaces local AppState when a server snapshot
+  exists. Reference-book local deletion also has no server-delete path.
+- `fequest:dailyReport:<date>` writes authenticated reports to the server but
+  has no client rehydration path, so losing the local key changes the destination
+  UI even when a server row exists.
+- `fequest:pastExam:*` and
+  `fequest:assessmentFinalization:v1:*` can contain non-reconstructible pending
+  work. Their server-side assessment-session, attempt, progress, and answer rows
+  do not reconstruct the local cursor/retry frame. A different-origin cutover
+  must drain them or use a separately reviewed, schema-valid migration path.
+- `fequest:userId` is a client hint only. It is excluded from migration and is
+  never authentication authority; the destination must resolve identity from a
+  validated token or server cookie.
+
+The recommended production path is unchanged: retain the existing custom domain
+so the browser origin is preserved. The `workers.dev` pilot starts with empty
+browser storage and uses validation-only data. Production export/import remains
+outside this pilot; a changed production origin is blocked until synchronization
+or a schema-versioned, size-limited, integrity-checked and authenticated
+export/import design is separately approved.
+
 ## Validation deployment
 
 Not run in this baseline-record task.
