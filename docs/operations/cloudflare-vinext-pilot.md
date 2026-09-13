@@ -435,28 +435,74 @@ or weakening the verifier.
 
 ## Deployed verification matrix
 
-Not run in this baseline-record task.
+Correction (2026-09-13): Task 8's first attempt did not reproduce Task 7's
+failures: its network request failed before reaching the Worker. The inference
+that vinext environment propagation was the proven cause is withdrawn.
+
+The resumed Task 8 checked the same deployment 87a7ef9d-71a7-4af4-94c2-79b4a0739298,
+version 1d30bbab-6efc-43dc-81be-6cfcb9ac13e9 before any mutation.
+The verifier exited 0. No application compatibility changes were needed.
+
+| Check | Latest evidence | Result |
+| --- | --- | --- |
+| Login | HTTP 200 | Passed |
+| Unauthenticated today | HTTP 307; clean Playwright browser lands on /login with next=/today | Passed |
+| Unauthenticated progress save | HTTP 401 | Passed |
+| Admin with missing password | /admin and /api/admin/billing-webhooks HTTP 503 | Passed fail-closed |
+| AI unauthenticated | POST /api/ai-grading HTTP 401 | Passed |
+| Past-exam figure | 2026/q003-figure-1.png HTTP 200, image/png, browser natural dimensions 648×170 | Passed direct delivery; full question UI pending |
+| SVG | /globe.svg HTTP 200, image/svg+xml | Passed |
+| LINE invalid signature | HTTP 401 | Passed |
+| LINE signed empty event | HTTP 200 after synthetic secret update settled | Passed protocol check |
+| Stripe without configuration | HTTP 503 | Passed fail-closed |
+| Google login, Cookie refresh, authenticated save/restore and isolation | No approved non-production provider credentials | Unverified |
+| Real LINE, Stripe valid events/idempotency/Checkout/Portal, AI provider success | No approved validation credentials | Unverified |
+| Full question UI, Rive and complete static assets | Representative assets only | Unverified |
+
+The synthetic LINE secret was generated in memory and sent over stdin; it was
+not printed or stored. An immediate signed request after rotation returned 401.
+A subsequent synthetic rotation and five-second wait returned 200 on the first
+retry. This demonstrates a propagation consideration for immediate secret probes,
+but does not establish the cause of Task 7's original 503. No real LINE event,
+reply token, user data or provider credentials were used.
+
+After synthetic secret rotation the active deployment is
+`2d67d96b-a5d9-4ddb-8709-3aef4ce887c0`, version
+`c75cec0b-d90c-48d0-b0f7-5d01a2a40917` (100%), created
+`2026-09-13T10:53:17.619343Z`. Application source remains `f0d3efd`;
+only the synthetic LINE secret changed.
 
 ## vinext versus OpenNext decision
 
-No comparison trigger has been established by Task 2. Both toolchains build; the
-fixes are confined to generated-artifact boundaries and configuration. They do
-not change authentication, patch vinext internals, replace a critical subsystem,
-or introduce vinext branches into request-time application code. Runtime security,
-filesystem access, limits, and external-service behavior remain unverified; a
-passing checker/build must not be used to waive the later comparison gate.
+The earlier claim of proven vinext auth incompatibility is withdrawn: the same
+deployed code now passes the page gate. Continue vinext verification without an
+application-wide environment rewrite.
 
-## Unverified items
+| Aspect | vinext | OpenNext |
+| --- | --- | --- |
+| Existing Next path | Parallel scripts preserved | Adapts next build output |
+| Proxy | Deployed redirect and browser checks pass | Official Cloudflare guide still lists Node.js Middleware as unsupported; not a proven drop-in alternative for Next 16 proxy |
+| Observed maintenance | Figure manifest and generated-type/build boundaries | Separate adapter/configuration and proxy compatibility assessment required |
+| External verification | Needs non-production credentials | Same requirement |
+| Decision | Continue pilot; production acceptance pending | Revisit for a reproducible issue requiring invasive fixes |
 
-- A validation deployment exists, but the deployed matrix is incomplete and its
-  page auth gate and valid synthetic LINE-event checks currently fail as recorded
-  above.
-- Real Supabase authentication/cookie refresh, save/restore, LINE delivery,
-  Stripe test mode, and AI grading remain unverified because validation
-  credentials are unavailable. No production credential may be substituted.
-- Past-exam dimensions pass local vinext development and built-Worker checks;
-  their deployed visual/image delivery check remains pending.
+Sources consulted on 2026-09-13:
+[vinext guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/nextjs/)
+and [OpenNext guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/opennext/).
+No OpenNext installation or deployment was performed.
 
-## Production prerequisites
+## Unverified items and production prerequisites
 
-No production change was run in this baseline-record task.
+- Obtain approved non-production Supabase, Stripe, LINE and AI configurations
+  through a secure configuration channel; never place secret values in this report.
+- Complete Google login/Cookie refresh, authenticated save/restore and isolation,
+  real LINE integration, Stripe test flows and AI provider checks.
+- Complete full past-exam UI and remaining asset coverage.
+- Confirm actual Workers account tier/cost. The Cloudflare API connector returned
+  authentication error 10000; Wrangler OAuth remains functional. Billing unchanged.
+- Integrate current origin/main and rerun required checks before reviewed merge.
+  The latest fetch found 14 main commits absent from this pilot branch.
+- Preserve production browser origin or approve and implement the separate storage
+  migration described in browser-storage-migration.md.
+- Production DNS, Vercel routing and webhook cutover require the user's decision
+  after the completed verification report.
