@@ -906,6 +906,53 @@ $$;
 ALTER FUNCTION "public"."keep_assessment_session_question_count"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer DEFAULT 500) RETURNS TABLE("user_id" "uuid", "line_user_id" "text", "opt_in" boolean, "remind_hour" smallint, "timezone" "text", "daily_reminder" boolean, "streak_risk" boolean, "comeback" boolean, "last_played_at" timestamp with time zone, "streak_count" integer, "deliveries" "jsonb")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+  select
+    preference.user_id,
+    line_user.line_user_id,
+    preference.opt_in,
+    preference.remind_hour,
+    preference.timezone,
+    preference.daily_reminder,
+    preference.streak_risk,
+    preference.comeback,
+    progress.last_played_at,
+    coalesce(progress.streak_count, 0) as streak_count,
+    -- 配信記録は前後1日ぶんを渡す。ユーザーごとにローカル日付が前後するため、
+    -- どの行が「その人の今日」かの判定はアプリ側で行う。
+    coalesce(
+      (
+        select jsonb_agg(
+          jsonb_build_object(
+            'notification_type', delivery.notification_type,
+            'local_date', delivery.local_date
+          )
+        )
+        from public.notification_deliveries delivery
+        where delivery.user_id = preference.user_id
+          and delivery.local_date between p_delivery_window_start and p_delivery_window_end
+      ),
+      '[]'::jsonb
+    ) as deliveries
+  from public.notification_preferences preference
+  left join public.line_users line_user on line_user.id = preference.user_id
+  left join public.user_progress progress on progress.user_id = preference.user_id
+  where preference.opt_in
+  order by preference.user_id
+  limit greatest(coalesce(p_limit, 500), 0);
+$$;
+
+
+ALTER FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) IS 'GF-P0-006 collects opt-in preferences, LINE linkage, progress, and recent delivery records in one round trip. Decides nothing: scheduling stays in lib/notifications/schedule.ts.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."lock_question_exposure_answer_write"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog', 'public'
@@ -3050,6 +3097,11 @@ GRANT ALL ON FUNCTION "public"."fail_exam_readiness_recalculation"("p_job_id" "u
 
 
 REVOKE ALL ON FUNCTION "public"."keep_assessment_session_question_count"() FROM PUBLIC;
+
+
+
+REVOKE ALL ON FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) TO "service_role";
 
 
 
