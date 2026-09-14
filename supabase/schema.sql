@@ -1566,6 +1566,41 @@ COMMENT ON FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uui
 
 
 
+CREATE OR REPLACE FUNCTION "public"."reserve_notification_delivery"("p_user_id" "uuid", "p_notification_type" "text", "p_local_date" "date") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+declare
+  v_status text;
+begin
+  insert into public.notification_deliveries (user_id, notification_type, local_date, status)
+  values (p_user_id, p_notification_type, p_local_date, 'pending')
+  on conflict (user_id, notification_type, local_date) do nothing;
+
+  if found then
+    return true;
+  end if;
+
+  select delivery.status
+  into v_status
+  from public.notification_deliveries delivery
+  where delivery.user_id = p_user_id
+    and delivery.notification_type = p_notification_type
+    and delivery.local_date = p_local_date;
+
+  -- pending は応答を失った自分の予約。sent / failed はその日すでに扱っている。
+  return v_status = 'pending';
+end;
+$$;
+
+
+ALTER FUNCTION "public"."reserve_notification_delivery"("p_user_id" "uuid", "p_notification_type" "text", "p_local_date" "date") OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."reserve_notification_delivery"("p_user_id" "uuid", "p_notification_type" "text", "p_local_date" "date") IS 'GF-P0-006 idempotent reservation of one delivery slot. Safe to retry after a lost response: it reclaims its own pending row and refuses rows already sent or failed.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."save_user_progress_with_readiness_evidence"("p_user_id" "uuid", "p_progress" "jsonb", "p_trigger_type" "text" DEFAULT NULL::"text", "p_trigger_id" "text" DEFAULT NULL::"text") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog', 'public'
@@ -3126,6 +3161,11 @@ GRANT ALL ON FUNCTION "public"."record_stripe_subscription_event"("p_stripe_subs
 
 REVOKE ALL ON FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uuid", "p_event_key" "text") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."register_exam_readiness_evidence"("p_user_id" "uuid", "p_event_key" "text") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."reserve_notification_delivery"("p_user_id" "uuid", "p_notification_type" "text", "p_local_date" "date") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."reserve_notification_delivery"("p_user_id" "uuid", "p_notification_type" "text", "p_local_date" "date") TO "service_role";
 
 
 

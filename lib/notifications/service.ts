@@ -15,7 +15,6 @@
 import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServiceSupabase } from "@/lib/supabaseServer";
-import { isUniqueViolationError } from "@/lib/dbMappers";
 import { sendLinePush } from "@/lib/line/messaging";
 import { buildNotificationText, notificationLink } from "@/lib/notifications/messages";
 import {
@@ -139,15 +138,26 @@ async function reserveDelivery(
   type: NotificationType,
   localDate: string,
 ): Promise<boolean> {
-  const { error } = await supabase.from("notification_deliveries").insert({
-    user_id: userId,
-    notification_type: type,
-    local_date: localDate,
-    status: "pending",
-  });
-  if (!error) return true;
-  if (isUniqueViolationError(error)) return false;
-  console.error("notification delivery reservation failed", error);
+  // 予約は冪等な RPC 経由。504 で応答だけ失っても、同じ呼び出しを繰り返せば
+  // 自分が作った pending を引き継いで true を返す（素の INSERT を再試行すると
+  // 主キー衝突になり「その日はもう扱った」と誤判定して送れなくなる）。
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const { data, error } = await supabase.rpc("reserve_notification_delivery", {
+      p_user_id: userId,
+      p_notification_type: type,
+      p_local_date: localDate,
+    });
+
+    if (!error) {
+      if (attempt > 1) console.warn("delivery reservation recovered on retry");
+      return data === true;
+    }
+
+    console.error(`delivery reservation failed (attempt ${attempt})`, error);
+    if (attempt === 1) {
+      await new Promise((resolve) => setTimeout(resolve, QUERY_RETRY_DELAY_MS));
+    }
+  }
   return false;
 }
 
@@ -159,18 +169,28 @@ async function finishDelivery(
   status: "sent" | "failed",
   detail?: string,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("notification_deliveries")
-    .update({
-      status,
-      detail: detail ? detail.slice(0, 512) : null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", userId)
-    .eq("notification_type", type)
-    .eq("local_date", localDate);
-  // 記録の更新失敗は学習に影響しない。ログだけ残して続ける。
-  if (error) console.error("notification delivery update failed", error);
+  // 更新は同じ値を書くだけなので何度でも繰り返せる。落とすと push 済みの行が
+  // pending のまま残り、監査上の事実と食い違う。
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const { error } = await supabase
+      .from("notification_deliveries")
+      .update({
+        status,
+        detail: detail ? detail.slice(0, 512) : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("notification_type", type)
+      .eq("local_date", localDate);
+
+    if (!error) return;
+
+    // 記録の更新失敗は学習に影響しない。ログだけ残して続ける。
+    console.error(`notification delivery update failed (attempt ${attempt})`, error);
+    if (attempt === 1) {
+      await new Promise((resolve) => setTimeout(resolve, QUERY_RETRY_DELAY_MS));
+    }
+  }
 }
 
 /** 一時障害を1回だけ待って引き直すまでの間隔。 */
