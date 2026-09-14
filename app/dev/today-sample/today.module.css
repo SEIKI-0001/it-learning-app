@@ -24,6 +24,8 @@
   --orange-700: #8a5528;
   --orange-soft: #f1e5d9;
   --green: #3b7a5a;
+  --cta: #16191d;
+  --cta-hover: #000000;
 
   --sans: var(--font-sample-sans), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --num: var(--font-sample-num), "Helvetica Neue", Arial, sans-serif;
@@ -673,7 +675,7 @@
   min-height: 46px;
   padding: 0 16px 0 22px;
   border-radius: 8px;
-  background: var(--ink);
+  background: var(--cta);
   color: #fff;
   font-size: 15px;
   font-weight: 500;
@@ -683,16 +685,8 @@
     transform 160ms var(--ease);
 }
 
-.start[data-kind="review"] {
-  background: var(--ink);
-}
-
 .start:hover {
-  background: #000;
-}
-
-.start[data-kind="review"]:hover {
-  background: #000;
+  background: var(--cta-hover);
 }
 
 .start:active {
@@ -864,7 +858,7 @@
   padding: 0 16px;
   border: 0;
   border-radius: 8px;
-  background: var(--ink);
+  background: var(--cta);
   color: #fff;
   font: inherit;
   font-size: 13px;
@@ -873,7 +867,157 @@
 }
 
 .claim:hover {
-  background: #000;
+  background: var(--cta-hover);
+}
+
+/* ───────── 配色パターン（比較用） ─────────
+   どのパターンも「青=新規・橙系=復習・緑=完了」の意味は変えず、明るさと色相だけを振る。 */
+
+/* B クリア: 明るい青＋琥珀。ボタンは墨色のまま */
+.shell[data-palette="clear"] {
+  --wash: #f2f6fc;
+  --wash-line: #dfe7f3;
+  --blue: #2f6fdb;
+  --blue-700: #2257b0;
+  --blue-soft: #dce7fa;
+  --orange: #e08a34;
+  --orange-700: #9a5a18;
+  --orange-soft: #f9e5d0;
+  --green: #2f8f63;
+}
+
+/* C クリア＋青ボタン: B の主要ボタンをブランドの青に */
+.shell[data-palette="clear-blue"] {
+  --wash: #f2f6fc;
+  --wash-line: #dfe7f3;
+  --blue: #2f6fdb;
+  --blue-700: #2257b0;
+  --blue-soft: #dce7fa;
+  --orange: #e08a34;
+  --orange-700: #9a5a18;
+  --orange-soft: #f9e5d0;
+  --green: #2f8f63;
+  --cta: #2463d1;
+  --cta-hover: #1d51ad;
+}
+
+/* D オーシャン: 青緑寄りの青＋はちみつ色。爽やかで軽い */
+.shell[data-palette="ocean"] {
+  --wash: #eff7f9;
+  --wash-line: #d9e9ee;
+  --blue: #1a80bf;
+  --blue-700: #14628f;
+  --blue-soft: #d6ebf5;
+  --orange: #e3a03a;
+  --orange-700: #8f5f0e;
+  --orange-soft: #f8ead0;
+  --green: #259775;
+  --cta: #133a52;
+  --cta-hover: #0c2a3c;
+}
+
+/* E インディゴ: 青紫＋コーラル。やわらかく知的 */
+.shell[data-palette="indigo"] {
+  --wash: #f4f5fc;
+  --wash-line: #e2e5f3;
+  --blue: #4b5ed6;
+  --blue-700: #3646a8;
+  --blue-soft: #e0e4fa;
+  --orange: #e5825c;
+  --orange-700: #a14c2d;
+  --orange-soft: #fae2d8;
+  --green: #36976f;
+  --cta: #262a4d;
+  --cta-hover: #1a1d38;
+}
+
+/* ───────── 配色切り替え（サンプル専用の道具） ───────── */
+
+.paletteBar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: rgba(22, 25, 29, 0.92);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.18);
+  letter-spacing: 0;
+}
+
+.paletteTitle {
+  flex-shrink: 0;
+  padding: 0 8px 0 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.paletteOption {
+  appearance: none;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.paletteOption:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.paletteOption[aria-pressed="true"] {
+  background: #fff;
+  color: #16191d;
+}
+
+.paletteOption:focus-visible {
+  outline-color: #fff;
+}
+
+.swatches {
+  display: inline-flex;
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+}
+
+.swatch + .swatch {
+  margin-left: -4px;
+}
+
+@media (min-width: 1024px) {
+  .paletteBar {
+    left: 14px;
+    right: auto;
+    /* 左下は Next.js の開発用ボタンと重なるため少し上げる */
+    bottom: 76px;
+    width: 212px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+  }
+
+  .paletteTitle {
+    padding: 4px 8px 6px;
+  }
 }
 
 /* ───────── motion ───────── */
@@ -962,7 +1106,7 @@
     width: 30px;
     height: 30px;
     border-radius: 6px;
-    background: var(--ink);
+    background: var(--cta);
     color: #fff;
     font-family: var(--num);
     font-size: 12px;

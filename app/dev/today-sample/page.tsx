@@ -22,6 +22,36 @@ import {
 import AppNav from "./nav";
 import s from "./today.module.css";
 
+// 配色パターンの比較用。色の定義は today.module.css の [data-palette] にある。
+const PALETTES = [
+  {
+    id: "muted",
+    label: "A 落ち着き（現行）",
+    swatches: ["#2c5ea8", "#b9773f", "#16191d"],
+  },
+  {
+    id: "clear",
+    label: "B クリア",
+    swatches: ["#2f6fdb", "#e08a34", "#16191d"],
+  },
+  {
+    id: "clear-blue",
+    label: "C クリア＋青ボタン",
+    swatches: ["#2f6fdb", "#e08a34", "#2463d1"],
+  },
+  {
+    id: "ocean",
+    label: "D オーシャン",
+    swatches: ["#1a80bf", "#e3a03a", "#133a52"],
+  },
+  {
+    id: "indigo",
+    label: "E インディゴ",
+    swatches: ["#4b5ed6", "#e5825c", "#262a4d"],
+  },
+] as const;
+type PaletteId = (typeof PALETTES)[number]["id"];
+
 type Slot = Task & { start: number; state: "done" | "now" | "next" };
 
 function formatOffset(minutes: number) {
@@ -40,6 +70,7 @@ function TodaySample() {
     () => new Set(["lan-wan"]),
   );
   const [claimed, setClaimed] = useState(false);
+  const [palette, setPalette] = useState<PaletteId>("muted");
 
   const route = useMemo(() => buildRoute(budget ?? DEFAULT_BUDGET), [budget]);
 
@@ -112,8 +143,31 @@ function TodaySample() {
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
   return (
-    <div className={s.shell}>
+    <div className={s.shell} data-palette={palette}>
       <AppNav />
+      <div className={s.paletteBar} role="group" aria-label="配色パターン">
+        <span className={s.paletteTitle}>配色パターン</span>
+        {PALETTES.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className={s.paletteOption}
+            aria-pressed={palette === option.id}
+            onClick={() => setPalette(option.id)}
+          >
+            <span className={s.swatches} aria-hidden>
+              {option.swatches.map((color) => (
+                <span
+                  key={color}
+                  className={s.swatch}
+                  style={{ background: color }}
+                />
+              ))}
+            </span>
+            {option.label}
+          </button>
+        ))}
+      </div>
       <main className={s.page}>
         <header className={s.inner}>
           <div className={s.hero}>
