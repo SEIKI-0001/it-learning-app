@@ -1,7 +1,6 @@
-/* /progress サンプル（ダッシュボード）。
-   色・書体のトークンと、ナビ／見出しの部品は today サンプル
-   （../today-sample/today.module.css の .shell 配下）をそのまま使い、
-   ここには progress 固有の部品だけを置く。
+/* /progress（ダッシュボード）。デザインは 2026-09 にユーザー確認済みのダッシュボードサンプルに合わせている。
+   色トークンと、見出し・数字などの共通部品は components/today/todayView.module.css の
+   .view 配下を使い、ここには progress 固有の部品だけを置く。
 
    レイアウト: 上に全体像（道のり＋主要指標）、下に 12 カラムのタイル。
      [ 合格までの道のり ─────────────────────────── ]
@@ -307,6 +306,10 @@
   line-height: 1.4;
 }
 
+.kpiWord[data-tone="warn"] {
+  color: var(--orange-700);
+}
+
 .kpiWord[data-tone="good"] {
   color: var(--green);
 }
@@ -572,6 +575,21 @@
   line-height: 1.5;
   letter-spacing: -0.03em;
   word-break: auto-phrase;
+}
+
+.todoSub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  word-break: auto-phrase;
+}
+
+.emptyNote {
+  margin: 16px 0 4px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-2);
 }
 
 .todoProgress {

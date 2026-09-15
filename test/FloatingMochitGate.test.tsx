@@ -117,7 +117,7 @@ describe("FloatingMochitGate", () => {
     ).not.toBeInTheDocument();
   });
 
-  it.each(["/", "/login", "/onboarding", "/avatar", "/today", "/dev/mochit"])(
+  it.each(["/", "/login", "/onboarding", "/avatar", "/today", "/progress", "/dev/mochit"])(
     "hides the floating Mochit on %s",
     (pathname) => {
       routeState.pathname = pathname;
