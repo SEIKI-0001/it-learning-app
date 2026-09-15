@@ -520,3 +520,61 @@ recorded above; deployment evidence must not be attributed to the merged source.
   migration described in browser-storage-migration.md.
 - Production DNS, Vercel routing and webhook cutover require the user's decision
   after the completed verification report.
+
+## Post-merge validation (2026-09-15)
+
+PR #46 is merged as `63b3dab`; this includes the intervening notification retry
+fix from PR #45. A new isolated worktree, `cloudflare-pilot-validation-20260915`,
+was created from freshly fetched origin/main for Node 22 verification.
+
+Authenticated dashboard inspection identified the failed external
+`Workers Builds: it-learning-app` build `4b521117-cea8-4043-b2b5-a2a8d88e952c`:
+`npm run build` completed successfully, then `npx wrangler versions upload`
+failed because `vinext/server/fetch-handler` was not found. This was the Next
+build path followed by an unbuilt vinext entry point, not an auth incompatibility.
+The existing Worker was connected to main with `npx wrangler deploy` and all
+non-production branches with `npx wrangler versions upload`. It had no custom
+domains or zone routes.
+
+With explicit user approval, only that Worker's Git repository connection was
+disconnected. The dashboard then displayed the Git repository Connect button,
+confirming the disconnected state. Worker code, DNS, Vercel and other triggers
+were not changed by this action. Trial publication remains restricted to
+`it-learning-app-vinext-pilot`; no failed application test was bypassed.
+
+The authenticated Workers plans page now identifies Free as the current plan.
+This resolves the earlier unknown account tier. No upgrade or billing change
+was made; production performance/capacity acceptance remains separate.
+
+### Latest build and publication evidence
+
+- Application source: `63b3dab` (main merge commit for PR #46).
+- Node `22.18.0`: typecheck, lint, 159 test files / 1,943 tests, Next build
+  (471 static pages), and vinext build all passed in one exit-0 sequence.
+- Published the inspected `dist/server/wrangler.json` using
+  `wrangler deploy --config dist/server/wrangler.json`. This uses the completed
+  vinext bundle, not the unbuilt root entry point. Only the operations document
+  differed from the source commit; application/configuration files were clean.
+- URL: https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev
+- Deployment: `48cda429-1c08-4229-8114-86bc3747b8be`.
+- Version: `13613683-0900-423e-9559-539b5cf54a93`, 100%,
+  created `2026-09-15T07:48:13.387544Z`.
+- Upload: 9,205.36 KiB / gzip 2,154.21 KiB; startup 22 ms.
+- Generated configuration: pilot name only, no routes, empty triggers,
+  non-routable synthetic Supabase variables. Existing synthetic secrets retained.
+
+Post-publication verifier exited 0: login 200, unauthenticated today 307,
+unauthenticated progress save 401, unconfigured Stripe webhook 503. Additional
+HTTP probes passed: admin 503, unauthenticated AI POST 401, unconfigured reminder
+cron 503, representative 2026 PNG 200 with image/png. LINE signatures were
+explicitly skipped because the verifier-side synthetic secret was unavailable;
+the previous version's positive LINE evidence is not attributed to this version.
+
+Stripe Projects was updated from 0.39.1 to its required 0.40.0; status still
+reported an uninitialized association. No credentials were read from files or
+copied from production. Approved non-production provider configurations are
+still required for real login/Cookie refresh, authenticated learning save/restore,
+LINE, Stripe test flows and AI grading. Full authenticated question UI and browser
+storage transfer remain unverified. Dependency installation still reports 13
+advisories (3 moderate, 9 high, 1 critical); remediation and production impact
+assessment remain required, not waived by passing tests.
