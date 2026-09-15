@@ -1150,10 +1150,15 @@
     padding: 32px 0 0;
   }
 
-  .missions {
+  /* 右列: ミッションと参考書の進み具合をまとめて追従させる */
+  .side {
     position: sticky;
     top: 24px;
     margin-top: 32px;
+  }
+
+  .missions {
+    margin-top: 0;
     padding: 24px;
   }
 

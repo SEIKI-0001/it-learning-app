@@ -22,6 +22,7 @@ import {
   type Task,
 } from "./data";
 import AppNav from "./nav";
+import ReadingCheck from "./ReadingCheck";
 import s from "./today.module.css";
 
 type Slot = Task & { start: number; state: "done" | "now" | "next" };
@@ -364,70 +365,73 @@ function TodaySample() {
             </ol>
           </section>
 
-          {/* 今日の達成状況: 今日だけで完結するもの */}
-          <section className={s.missions} aria-labelledby="mission-heading">
-            <div className={s.sheetHead}>
-              <h2 id="mission-heading" className={s.sectionTitle}>
-                今日のミッション
-              </h2>
-              <span className={s.sectionMeta}>
-                <span className={s.mono}>{missionsDone}</span> /{" "}
-                {missions.length} 達成
-              </span>
-            </div>
+          <div className={s.side}>
+            {/* 今日の達成状況: 今日だけで完結するもの */}
+            <section className={s.missions} aria-labelledby="mission-heading">
+              <div className={s.sheetHead}>
+                <h2 id="mission-heading" className={s.sectionTitle}>
+                  今日のミッション
+                </h2>
+                <span className={s.sectionMeta}>
+                  <span className={s.mono}>{missionsDone}</span> /{" "}
+                  {missions.length} 達成
+                </span>
+              </div>
 
-            <ul className={s.missionList}>
-              {missions.map((mission) => {
-                const complete = mission.progress >= mission.goal;
-                return (
-                  <li
-                    key={mission.label}
-                    className={s.mission}
-                    data-complete={complete}
-                  >
-                    <span className={s.missionLabel}>{mission.label}</span>
-                    <span className={s.missionCount}>
-                      {mission.progress}/{mission.goal}
-                    </span>
-                    <span className={s.missionBar} aria-hidden>
-                      <span
-                        className={s.missionBarFill}
-                        style={{
-                          width: `${(mission.progress / mission.goal) * 100}%`,
-                        }}
-                      />
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+              <ul className={s.missionList}>
+                {missions.map((mission) => {
+                  const complete = mission.progress >= mission.goal;
+                  return (
+                    <li
+                      key={mission.label}
+                      className={s.mission}
+                      data-complete={complete}
+                    >
+                      <span className={s.missionLabel}>{mission.label}</span>
+                      <span className={s.missionCount}>
+                        {mission.progress}/{mission.goal}
+                      </span>
+                      <span className={s.missionBar} aria-hidden>
+                        <span
+                          className={s.missionBarFill}
+                          style={{
+                            width: `${(mission.progress / mission.goal) * 100}%`,
+                          }}
+                        />
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
 
-            <div className={s.reward} data-state={rewardState}>
-              {rewardState === "claimed" ? (
-                <p>
-                  <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
-                  を受け取りました
-                </p>
-              ) : rewardState === "claimable" ? (
-                <>
-                  <p>3つそろいました</p>
-                  <button
-                    type="button"
-                    className={s.claim}
-                    onClick={() => setClaimed(true)}
-                  >
+              <div className={s.reward} data-state={rewardState}>
+                {rewardState === "claimed" ? (
+                  <p>
                     <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
-                    を受け取る
-                  </button>
-                </>
-              ) : (
-                <p>
-                  3つそろうと{" "}
-                  <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
-                </p>
-              )}
-            </div>
-          </section>
+                    を受け取りました
+                  </p>
+                ) : rewardState === "claimable" ? (
+                  <>
+                    <p>3つそろいました</p>
+                    <button
+                      type="button"
+                      className={s.claim}
+                      onClick={() => setClaimed(true)}
+                    >
+                      <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
+                      を受け取る
+                    </button>
+                  </>
+                ) : (
+                  <p>
+                    3つそろうと{" "}
+                    <span className={s.mono}>+{MISSION_REWARD_XP}</span> XP
+                  </p>
+                )}
+              </div>
+            </section>
+            <ReadingCheck />
+          </div>
         </div>
       </main>
     </div>

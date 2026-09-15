@@ -72,7 +72,8 @@ export const CANDIDATES: Task[] = [
     kind: "review",
     minutes: 4,
     questions: 3,
-    reason: "1週間前に学んだ範囲です。計算問題は間隔をあけて解き直すと定着します。",
+    reason:
+      "1週間前に学んだ範囲です。計算問題は間隔をあけて解き直すと定着します。",
   },
 ];
 
@@ -92,3 +93,14 @@ export function buildRoute(budget: number): Task[] {
 }
 
 export const MISSION_REWARD_XP = 30;
+
+// 参考書の進み具合（1日1回の自己申告）。本番では daily_progress_reports に
+// selected_level（all / half / little / none / rest）として保存し、合格準備度の
+// 「インプット進捗」に使われる（参考書の章消化率と高い方が採用される）。
+// 「半分くらい」を自分で見積もらなくて済むよう、今日の範囲をページで示し、
+// 読み終えたページを選ぶだけで段階が決まるようにする。
+export const READING = {
+  chapter: "第9章 ネットワーク",
+  from: 402,
+  to: 425,
+};
