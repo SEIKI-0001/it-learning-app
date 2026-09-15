@@ -1,29 +1,29 @@
-/* /today サンプル「進行表」v3（大人っぽいトーン）
+/* /today サンプル「進行表」v4（クリア＋モチット）
    方針: 灰色の地に白カードを並べる構成をやめ、白い面の上に
    「今日の定規」だけを淡い青のパネルで浮かせる。区切りは線より余白で。
    トークン:
-   canvas #FFFFFF / wash #F4F6F9（ヒーロー面）
+   canvas #FFFFFF / wash #F2F6FC（ヒーロー面）
    ink #16191D / ink-2 #4D535C / ink-3 #6E747D / line #ECEEF2
-   cobalt #2C5EA8（新規）/ copper #B9773F（復習）/ green #3B7A5A（完了）
+   blue #2F6FDB（新規）/ amber #E08A34（復習）/ green #2F8F63（完了）
    主要操作は墨色。彩度を落とし、角丸は小さく、太さは 500 を基本にする。
    type: Zen Kaku Gothic New（和文）＋ Geist（数字）＋ Geist Mono（時刻・目盛り） */
 
 .shell {
   --canvas: #ffffff;
-  --wash: #f4f6f9;
-  --wash-line: #e3e7ee;
+  --wash: #f2f6fc;
+  --wash-line: #dfe7f3;
   --ink: #16191d;
   --ink-2: #4d535c;
   --ink-3: #6e747d;
   --line: #eceef2;
   --line-strong: #cdd2d9;
-  --blue: #2c5ea8;
-  --blue-700: #234b87;
-  --blue-soft: #dfe7f3;
-  --orange: #b9773f;
-  --orange-700: #8a5528;
-  --orange-soft: #f1e5d9;
-  --green: #3b7a5a;
+  --blue: #2f6fdb;
+  --blue-700: #2257b0;
+  --blue-soft: #dce7fa;
+  --orange: #e08a34;
+  --orange-700: #9a5a18;
+  --orange-soft: #f9e5d0;
+  --green: #2f8f63;
   --cta: #16191d;
   --cta-hover: #000000;
 
@@ -652,13 +652,6 @@
   animation: rise 360ms var(--ease) both;
 }
 
-.reason {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.75;
-  color: var(--ink-2);
-  word-break: auto-phrase;
-}
 
 .nowActions {
   display: flex;
@@ -870,39 +863,7 @@
   background: var(--cta-hover);
 }
 
-/* ───────── 配色パターン（比較用） ─────────
-   どのパターンも「青=新規・橙系=復習・緑=完了」の意味は変えず、明るさと色相だけを振る。 */
-
-/* B クリア: 明るい青＋琥珀。ボタンは墨色のまま */
-.shell[data-palette="clear"] {
-  --wash: #f2f6fc;
-  --wash-line: #dfe7f3;
-  --blue: #2f6fdb;
-  --blue-700: #2257b0;
-  --blue-soft: #dce7fa;
-  --orange: #e08a34;
-  --orange-700: #9a5a18;
-  --orange-soft: #f9e5d0;
-  --green: #2f8f63;
-}
-
-/* ブランド: アプリの brand / accent / emerald をそのまま使う。主要ボタンは brand-600 */
-.shell[data-palette="brand"],
-.shell[data-palette="mochit"] {
-  --wash: #f1f7fe;
-  --wash-line: #dbe8f7;
-  --blue: #187bd7;
-  --blue-700: #0756a8;
-  --blue-soft: #dbecff;
-  --orange: #f58a17;
-  --orange-700: #b45309;
-  --orange-soft: #ffedd5;
-  --green: #059669;
-  --cta: #0868c9;
-  --cta-hover: #0756a8;
-}
-
-/* モチット版: 次にやる行の理由をモチットが話す */
+/* モチット: 次にやる行の理由や、完了のひとことを話す */
 .mochitSay {
   display: flex;
   align-items: center;
@@ -943,95 +904,6 @@
 .finishActions + .mochitSay,
 .mochitSay + .finishActions {
   margin-top: 12px;
-}
-
-/* ───────── 配色切り替え（サンプル専用の道具） ───────── */
-
-.paletteBar {
-  position: fixed;
-  left: 12px;
-  right: 12px;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px;
-  overflow-x: auto;
-  border-radius: 12px;
-  background: rgba(22, 25, 29, 0.92);
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.18);
-  letter-spacing: 0;
-}
-
-.paletteTitle {
-  flex-shrink: 0;
-  padding: 0 8px 0 6px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.paletteOption {
-  appearance: none;
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.78);
-  font: inherit;
-  font-size: 12px;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.paletteOption:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.paletteOption[aria-pressed="true"] {
-  background: #fff;
-  color: #16191d;
-}
-
-.paletteOption:focus-visible {
-  outline-color: #fff;
-}
-
-.swatches {
-  display: inline-flex;
-}
-
-.swatch {
-  width: 12px;
-  height: 12px;
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-}
-
-.swatch + .swatch {
-  margin-left: -4px;
-}
-
-@media (min-width: 1024px) {
-  .paletteBar {
-    left: 14px;
-    right: auto;
-    /* 左下は Next.js の開発用ボタンと重なるため少し上げる */
-    bottom: 76px;
-    width: 212px;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 8px;
-  }
-
-  .paletteTitle {
-    padding: 4px 8px 6px;
-  }
 }
 
 /* ───────── motion ───────── */
@@ -1328,9 +1200,6 @@
     gap: 24px;
   }
 
-  .reason {
-    font-size: 14px;
-  }
 
   .nowActions {
     flex-direction: column;

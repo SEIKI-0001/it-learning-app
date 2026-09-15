@@ -22,7 +22,6 @@ import {
   type Task,
 } from "./data";
 import AppNav from "./nav";
-import { PaletteBar, usePalette } from "./palette";
 import s from "./today.module.css";
 
 type Slot = Task & { start: number; state: "done" | "now" | "next" };
@@ -43,12 +42,10 @@ function TodaySample() {
     () => new Set(["lan-wan"]),
   );
   const [claimed, setClaimed] = useState(false);
-  const [palette, setPalette] = usePalette();
-  // モチット版: 完了にしたとき、次の行で迎えるモチットにリアクションさせる
+  // 完了にしたとき、次の行で迎えるモチットにリアクションさせる
   const [mochitSignal, setMochitSignal] = useState<MochitEventSignal | null>(
     null,
   );
-  const withMochit = palette === "mochit";
 
   const route = useMemo(() => buildRoute(budget ?? DEFAULT_BUDGET), [budget]);
 
@@ -127,9 +124,8 @@ function TodaySample() {
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
   return (
-    <div className={s.shell} data-palette={palette}>
+    <div className={s.shell}>
       <AppNav active="today" />
-      <PaletteBar palette={palette} onChange={setPalette} />
       <main className={s.page}>
         <header className={s.inner}>
           <div className={s.hero}>
@@ -296,19 +292,15 @@ function TodaySample() {
 
                     {slot.state === "now" && (
                       <div className={s.nowPanel}>
-                        {withMochit ? (
-                          <div className={s.mochitSay}>
-                            <Mochit
-                              size="small"
-                              screenContext="today"
-                              event={mochitSignal}
-                              className={s.mochitFigure}
-                            />
-                            <p className={s.bubble}>{slot.reason}</p>
-                          </div>
-                        ) : (
-                          <p className={s.reason}>{slot.reason}</p>
-                        )}
+                        <div className={s.mochitSay}>
+                          <Mochit
+                            size="small"
+                            screenContext="today"
+                            event={mochitSignal}
+                            className={s.mochitFigure}
+                          />
+                          <p className={s.bubble}>{slot.reason}</p>
+                        </div>
                         <div className={s.nowActions}>
                           <Link
                             href="/learn"
@@ -343,7 +335,7 @@ function TodaySample() {
                   <p className={s.finishTitle}>
                     {allDone ? "今日のぶん、完了" : "おわり"}
                   </p>
-                  {allDone && withMochit && (
+                  {allDone && (
                     <div className={s.mochitSay}>
                       <Mochit
                         size="small"

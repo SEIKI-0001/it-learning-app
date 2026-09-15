@@ -1,12 +1,11 @@
 "use client";
 
-// /progress 改善デザインのサンプル。テスト環境専用。
+// /progress 改善デザインのサンプル（ダッシュボード）。テスト環境専用。
 //
-// このページが答えるのは「合格に対して、いまどこにいるか」だけ:
-//   1. 合格準備度と、いちばん伸ばせるところ（ヒーローの目盛り）
-//   2. その内訳（分野別・トピックの到達度）
-//   3. 道のり（チェックポイント・次の解放）
-//   4. 積み上げ（学習した日・累計）
+// 上から「全体像 → 内訳 → 詳細」の順に読めるようにする:
+//   1. 合格までの道のり（CP0〜試験日の道と、いまいる場所）＋主要指標4つ
+//   2. 合格準備度の内訳 と いま向かっている CP の突破条件
+//   3. トピックの到達度・積み上げ・次の解放・くわしく見る
 // 今日やること・所要時間・今日のミッションは /today に任せ、ここには置かない。
 
 import Link from "next/link";
@@ -14,20 +13,19 @@ import { notFound } from "next/navigation";
 import Mochit from "@/components/mochit/Mochit";
 import Icon from "@/components/ui/Icon";
 import AppNav from "../today-sample/nav";
-import { PaletteBar, usePalette } from "../today-sample/palette";
 import t from "../today-sample/today.module.css";
 import {
   CHECKPOINTS,
-  CURRENT_CHECKPOINT,
+  CLEARED_COUNT,
   EXAM,
+  EXPECTED_IN_SEGMENT,
   FIELDS,
-  GATE,
+  GATE_BADGES,
   HEATMAP_MINUTES,
   LINKS,
   PACE,
   READINESS,
   READINESS_BANDS,
-  SCORED_QUESTIONS,
   STATS,
   TOPICS,
   TOP_RISK,
@@ -36,6 +34,8 @@ import {
 import p from "./progress.module.css";
 
 const BAND_EDGES = [60, 75, 85];
+/** 道の列数: CP0〜CP6 の7つ ＋ 試験日 */
+const ROAD_COLUMNS = CHECKPOINTS.length + 1;
 
 function heatLevel(minutes: number): 0 | 1 | 2 | 3 | 4 {
   if (minutes === 0) return 0;
@@ -45,161 +45,212 @@ function heatLevel(minutes: number): 0 | 1 | 2 | 3 | 4 {
   return 4;
 }
 
+/** 道の上での位置（%）。index は列番号、within はその列から次の列までの進み具合。 */
+function roadPosition(index: number, within = 0) {
+  return ((index + 0.5 + within) / ROAD_COLUMNS) * 100;
+}
+
 export default function ProgressSamplePage() {
   if (process.env.NODE_ENV === "production") notFound();
   return <ProgressSample />;
 }
 
 function ProgressSample() {
-  const [palette, setPalette] = usePalette();
-  const withMochit = palette === "mochit";
-
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
+  const goal = CHECKPOINTS[CLEARED_COUNT];
+  const remainingCheckpoints = CHECKPOINTS.length - CLEARED_COUNT;
+  const earnedBadges = GATE_BADGES.filter((badge) => badge.earned).length;
+  const gateRatio = earnedBadges / GATE_BADGES.length;
+
+  // いまいる場所 = 最後に突破した CP から、次の CP までの区間を必須バッジの割合だけ進んだところ
+  const lastCleared = CLEARED_COUNT - 1;
+  const nowAt = roadPosition(lastCleared, gateRatio);
+  const expectedAt = roadPosition(lastCleared, EXPECTED_IN_SEGMENT);
+
   const score = READINESS.score;
-  const basicOnly = TOPICS.basic;
   const notStarted =
     TOPICS.total - TOPICS.examReady - TOPICS.basic - TOPICS.needsWork;
   const topicShare = (n: number) => `${(n / TOPICS.total) * 100}%`;
 
-  // 12週 × 7日。列が週、行が曜日。最後の列の今日より後ろは描かない。
   const weeks: number[][] = [];
   for (let i = 0; i < HEATMAP_MINUTES.length; i += 7) {
     weeks.push(HEATMAP_MINUTES.slice(i, i + 7));
   }
 
   return (
-    <div className={t.shell} data-palette={palette}>
+    <div className={t.shell}>
       <AppNav active="progress" />
-      <PaletteBar palette={palette} onChange={setPalette} />
 
       <main className={t.page}>
-        <header className={t.inner}>
-          <div className={`${t.hero} ${p.hero}`}>
+        <div className={`${t.inner} ${p.dashboard}`}>
+          {/* ───── 1. 全体像: 合格までの道のり ───── */}
+          <section className={p.overview} aria-labelledby="overview-heading">
             <p className={t.eyebrow}>
               <span className={t.eyebrowTitle}>進捗</span>
               <span className={t.eyebrowDate}>{dateLabel} 時点</span>
               <span className={t.sampleTag}>サンプル：数値はダミーです</span>
             </p>
 
-            <h1 className={t.headline}>
-              合格準備度は<span className={t.headlineNum}>{score}</span>。
-              <br className={t.mobileBreak} />
-              {READINESS.bandLabel}のところです。
-            </h1>
-
-            <p className={`${t.subline} ${p.pace}`}>
-              学習ペース <span className={p.paceLabel}>{PACE.label}</span>
-              <span className={t.dot} aria-hidden>
-                ・
-              </span>
-              {PACE.message}
-            </p>
-
-            <div className={p.exam}>
-              <span className={p.examLabel}>試験まで</span>
-              <span className={p.examDays}>
-                あと<span className={t.mono}>{EXAM.daysLeft}</span>日
-              </span>
-              <span className={p.examDate}>{EXAM.dateLabel}</span>
+            <div className={p.overviewHead}>
+              <h1 id="overview-heading" className={p.overviewTitle}>
+                合格までの道のり
+              </h1>
+              <p className={p.overviewLead}>
+                いまは{" "}
+                <strong>
+                  CP{goal.order}「{goal.title}」
+                </strong>{" "}
+                に向かう途中。残り
+                <span className={t.mono}>{remainingCheckpoints}</span>
+                つのチェックポイントを越えると、試験本番です。
+              </p>
             </div>
 
-            {/* 署名要素: 準備度の目盛り。today の「分の定規」と同じ語彙で、段階と現在地を示す */}
-            <figure
-              className={`${t.ruler} ${p.scale}`}
-              aria-label={`合格準備度 ${score}/100（${READINESS.bandLabel}）`}
-            >
-              <div className={p.track}>
-                {READINESS_BANDS.map((band, i) => {
-                  const width = band.to - band.from;
-                  const fill = Math.min(
-                    1,
-                    Math.max(0, (score - band.from) / width),
-                  );
-                  const current = score >= band.from && score < band.to;
+            <div className={p.road}>
+              <div className={p.roadLine} aria-hidden>
+                <span
+                  className={p.roadDone}
+                  style={{
+                    left: `${roadPosition(0)}%`,
+                    width: `${roadPosition(lastCleared) - roadPosition(0)}%`,
+                  }}
+                />
+                <span
+                  className={p.roadNow}
+                  style={{
+                    left: `${roadPosition(lastCleared)}%`,
+                    width: `${nowAt - roadPosition(lastCleared)}%`,
+                  }}
+                />
+              </div>
+
+              <div className={p.here} style={{ left: `${nowAt}%` }}>
+                <Mochit
+                  size="xs"
+                  screenContext="progress"
+                  className={p.hereMochit}
+                />
+                <span className={p.hereLabel}>いまここ</span>
+              </div>
+              <span className={p.expected} style={{ left: `${expectedAt}%` }}>
+                予定
+              </span>
+
+              <ol className={p.roadStops}>
+                {CHECKPOINTS.map((cp) => {
+                  const state =
+                    cp.order < CLEARED_COUNT
+                      ? "done"
+                      : cp.order === CLEARED_COUNT
+                        ? "goal"
+                        : "next";
                   return (
-                    <div
-                      key={band.id}
-                      className={p.zone}
-                      data-current={current}
-                      data-full={fill === 1}
-                      style={{
-                        left: `${band.from}%`,
-                        width: `${width}%`,
-                        ["--i" as string]: i,
-                        ["--fill" as string]: fill,
-                      }}
-                    >
-                      <span className={p.zoneFill} />
-                      <span className={p.zoneLabel}>{band.label}</span>
-                    </div>
+                    <li key={cp.order} className={p.stop} data-state={state}>
+                      <span className={p.stopDot} aria-hidden>
+                        {state === "done" && (
+                          <svg viewBox="0 0 20 20">
+                            <path d="M5.5 10.5l3 3 6-7" />
+                          </svg>
+                        )}
+                      </span>
+                      <span className={p.stopCode}>CP{cp.order}</span>
+                      <span className={p.stopTitle}>{cp.title}</span>
+                    </li>
                   );
                 })}
-                <span
-                  className={t.caret}
-                  style={{ left: `${score}%` }}
-                  aria-hidden
-                >
-                  いま {score}
-                </span>
-              </div>
-              <div className={`${t.ticks} ${p.ticks}`} aria-hidden>
-                {[0, ...BAND_EDGES, 100].map((m) => (
-                  <span
-                    key={m}
-                    className={t.tickLabel}
-                    style={{ left: `${m}%` }}
-                    data-edge={
-                      m === 0 ? "start" : m === 100 ? "end" : undefined
-                    }
-                  >
-                    {m}
+                <li className={p.stop} data-state="exam">
+                  <span className={p.stopDot} aria-hidden>
+                    <Icon name="target" className={p.flag} />
                   </span>
-                ))}
+                  <span className={p.stopCode}>試験</span>
+                  <span className={p.stopTitle}>{EXAM.dateLabel}</span>
+                </li>
+              </ol>
+            </div>
+
+            <dl className={p.kpis}>
+              <div className={p.kpi}>
+                <dt>合格準備度</dt>
+                <dd>
+                  <span className={p.kpiNum}>{score}</span>
+                  <span className={p.kpiUnit}>/100</span>
+                </dd>
+                <p className={p.kpiNote}>{READINESS.bandLabel}</p>
               </div>
-            </figure>
+              <div className={p.kpi}>
+                <dt>試験まで</dt>
+                <dd>
+                  <span className={p.kpiNum}>{EXAM.daysLeft}</span>
+                  <span className={p.kpiUnit}>日</span>
+                </dd>
+                <p className={p.kpiNote}>{EXAM.dateLabel}</p>
+              </div>
+              <div className={p.kpi}>
+                <dt>学習ペース</dt>
+                <dd className={p.kpiWord} data-tone="good">
+                  {PACE.label}
+                </dd>
+                <p className={p.kpiNote}>{PACE.detail}</p>
+              </div>
+              <div className={p.kpi}>
+                <dt>突破試験まで</dt>
+                <dd>
+                  <span className={p.kpiNum}>{earnedBadges}</span>
+                  <span className={p.kpiUnit}>
+                    /{GATE_BADGES.length} バッジ
+                  </span>
+                </dd>
+                <p className={p.kpiNote}>CP{goal.order}の必須バッジ</p>
+              </div>
+            </dl>
+          </section>
 
-            <div className={p.improve}>
-              {withMochit ? (
-                <div className={t.mochitSay}>
-                  <Mochit
-                    size="small"
-                    screenContext="progress"
-                    className={t.mochitFigure}
-                  />
-                  <p className={t.bubble}>
-                    {READINESS.improvement}。{READINESS.improvementReason}
-                  </p>
-                </div>
-              ) : (
-                <div className={p.improveText}>
-                  <p className={p.improveLabel}>いちばん伸ばせるところ</p>
-                  <p className={p.improveMain}>{READINESS.improvement}</p>
-                  <p className={p.improveReason}>
-                    {READINESS.improvementReason}
-                  </p>
-                </div>
-              )}
-              <Link href="/learn" className={p.improveAction}>
-                テクノロジの問題を解く
-                <Icon name="chevron-right" className={p.chev} />
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        <div className={`${t.inner} ${p.body}`}>
-          {/* 内訳: 分野別 */}
-          <section className={p.card} aria-labelledby="fields-heading">
+          {/* ───── 2. 内訳: 合格準備度 ───── */}
+          <section
+            className={`${p.card} ${p.spanReadiness}`}
+            aria-labelledby="readiness-heading"
+          >
             <div className={t.sheetHead}>
-              <h2 id="fields-heading" className={t.sectionTitle}>
-                分野別の準備度
+              <h2 id="readiness-heading" className={t.sectionTitle}>
+                合格準備度の内訳
               </h2>
-              <span className={t.sectionMeta}>
-                出題数は採点対象{SCORED_QUESTIONS}問のうち
-              </span>
+              <span className={t.sectionMeta}>実際の回答と定着から判定</span>
             </div>
+
+            <div className={p.scoreRow}>
+              <div
+                className={p.scale}
+                aria-label={`合格準備度 ${score}/100（${READINESS.bandLabel}）`}
+              >
+                <div className={p.scaleTrack}>
+                  {READINESS_BANDS.map((band) => {
+                    const width = band.to - band.from;
+                    const current = score >= band.from && score < band.to;
+                    return (
+                      <span
+                        key={band.id}
+                        className={p.scaleZone}
+                        data-current={current}
+                        style={{ left: `${band.from}%`, width: `${width}%` }}
+                      >
+                        <span className={p.scaleZoneLabel}>{band.label}</span>
+                      </span>
+                    );
+                  })}
+                  <span
+                    className={p.scaleFill}
+                    style={{ width: `${score}%` }}
+                  />
+                  <span
+                    className={p.scaleMarker}
+                    style={{ left: `${score}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
             <ul className={p.fieldList}>
               {FIELDS.map((field) => {
                 const band = READINESS_BANDS.find(
@@ -207,17 +258,13 @@ function ProgressSample() {
                 );
                 return (
                   <li key={field.id} className={p.field}>
-                    <div className={p.fieldHead}>
-                      <span className={p.fieldName}>{field.label}</span>
+                    <span className={p.fieldName}>
+                      {field.label}
                       <span className={p.fieldMeta}>
                         出題 <span className={t.mono}>{field.questions}</span>問
                       </span>
-                      <span className={p.fieldScore}>
-                        <span className={t.mono}>{field.score}</span>
-                        <span className={p.fieldBand}>{band?.label}</span>
-                      </span>
-                    </div>
-                    <div className={p.fieldBar} aria-hidden>
+                    </span>
+                    <span className={p.fieldBar} aria-hidden>
                       <span
                         className={p.fieldFill}
                         style={{ width: `${field.score}%` }}
@@ -229,15 +276,89 @@ function ProgressSample() {
                           style={{ left: `${edge}%` }}
                         />
                       ))}
-                    </div>
+                    </span>
+                    <span className={p.fieldScore}>
+                      <span className={t.mono}>{field.score}</span>
+                      <span className={p.fieldBand}>{band?.label}</span>
+                    </span>
                   </li>
                 );
               })}
             </ul>
+
+            <div className={p.improve}>
+              <div className={p.improveText}>
+                <p className={p.improveLabel}>いちばん伸ばせるところ</p>
+                <p className={p.improveMain}>{READINESS.improvement}</p>
+                <p className={p.improveReason}>{READINESS.improvementReason}</p>
+              </div>
+              <Link href="/learn" className={p.action}>
+                テクノロジの問題を解く
+                <Icon name="chevron-right" className={p.chev} />
+              </Link>
+            </div>
           </section>
 
-          {/* 内訳: トピックの到達度 */}
-          <section className={p.card} aria-labelledby="topics-heading">
+          {/* ───── 2. 内訳: いま向かっている CP の突破条件 ───── */}
+          <section
+            className={`${p.card} ${p.spanGate}`}
+            aria-labelledby="gate-heading"
+          >
+            <div className={t.sheetHead}>
+              <h2 id="gate-heading" className={t.sectionTitle}>
+                CP{goal.order}「{goal.title}」の突破条件
+              </h2>
+              <span className={t.sectionMeta}>
+                <span className={t.mono}>
+                  {earnedBadges}/{GATE_BADGES.length}
+                </span>{" "}
+                達成
+              </span>
+            </div>
+
+            <div className={p.gateBar} aria-hidden>
+              {GATE_BADGES.map((badge) => (
+                <span key={badge.id} data-earned={badge.earned} />
+              ))}
+            </div>
+
+            <ul className={p.badges}>
+              {GATE_BADGES.map((badge) => (
+                <li
+                  key={badge.id}
+                  className={p.badge}
+                  data-earned={badge.earned}
+                >
+                  <span className={p.badgeMark} aria-hidden>
+                    {badge.earned ? (
+                      <svg viewBox="0 0 20 20">
+                        <path d="M5.5 10.5l3 3 6-7" />
+                      </svg>
+                    ) : null}
+                  </span>
+                  <span className={p.badgeTitle}>{badge.title}</span>
+                  <span className={p.badgeDetail}>
+                    {badge.earned ? "獲得済み" : badge.detail}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p className={p.gateNote}>
+              4つそろうと突破試験に挑戦できます。合格すると CP{goal.order + 1}{" "}
+              へ進みます。
+            </p>
+            <Link href="/plan" className={p.textLink}>
+              ロードマップで条件を見る
+              <Icon name="chevron-right" className={p.chev} />
+            </Link>
+          </section>
+
+          {/* ───── 3. 詳細: トピックの到達度 ───── */}
+          <section
+            className={`${p.card} ${p.spanTopics}`}
+            aria-labelledby="topics-heading"
+          >
             <div className={t.sheetHead}>
               <h2 id="topics-heading" className={t.sectionTitle}>
                 トピックの到達度
@@ -253,7 +374,7 @@ function ProgressSample() {
               />
               <span
                 data-tone="basic"
-                style={{ width: topicShare(basicOnly) }}
+                style={{ width: topicShare(TOPICS.basic) }}
               />
               <span
                 data-tone="work"
@@ -263,7 +384,7 @@ function ProgressSample() {
             <dl className={p.legend}>
               {[
                 { tone: "ready", label: "本番対応OK", value: TOPICS.examReady },
-                { tone: "basic", label: "基礎理解OK", value: basicOnly },
+                { tone: "basic", label: "基礎理解OK", value: TOPICS.basic },
                 { tone: "work", label: "要復習", value: TOPICS.needsWork },
                 { tone: "rest", label: "これから", value: notStarted },
               ].map((item) => (
@@ -273,9 +394,7 @@ function ProgressSample() {
                   data-tone={item.tone}
                 >
                   <dt>{item.label}</dt>
-                  <dd>
-                    <span className={t.mono}>{item.value}</span>
-                  </dd>
+                  <dd className={p.legendNum}>{item.value}</dd>
                 </div>
               ))}
             </dl>
@@ -292,94 +411,11 @@ function ProgressSample() {
             </Link>
           </section>
 
-          {/* 道のり: チェックポイント */}
+          {/* ───── 3. 詳細: 積み上げ ───── */}
           <section
-            className={`${p.card} ${p.wide}`}
-            aria-labelledby="cp-heading"
+            className={`${p.card} ${p.spanHistory}`}
+            aria-labelledby="history-heading"
           >
-            <div className={t.sheetHead}>
-              <h2 id="cp-heading" className={t.sectionTitle}>
-                合格までの道のり
-              </h2>
-              <span className={t.sectionMeta}>
-                最終ゴールまで あと
-                <span className={t.mono}>
-                  {CHECKPOINTS.length - CURRENT_CHECKPOINT}
-                </span>
-                CP
-              </span>
-            </div>
-            <ol className={p.steps}>
-              {CHECKPOINTS.map((cp) => {
-                const state =
-                  cp.order < CURRENT_CHECKPOINT
-                    ? "done"
-                    : cp.order === CURRENT_CHECKPOINT
-                      ? "now"
-                      : "next";
-                return (
-                  <li key={cp.order} className={p.step} data-state={state}>
-                    <span className={p.stepDot} aria-hidden>
-                      {state === "done" && (
-                        <svg viewBox="0 0 20 20">
-                          <path d="M5.5 10.5l3 3 6-7" />
-                        </svg>
-                      )}
-                    </span>
-                    <span className={p.stepCode}>CP{cp.order}</span>
-                    <span className={p.stepTitle}>{cp.title}</span>
-                  </li>
-                );
-              })}
-            </ol>
-            <p className={p.stepNote}>
-              いまは{" "}
-              <strong>
-                CP{CURRENT_CHECKPOINT}「{CHECKPOINTS[CURRENT_CHECKPOINT].title}
-                」
-              </strong>
-              。 必須バッジ{" "}
-              <span className={t.mono}>
-                {GATE.earned}/{GATE.required}
-              </span>{" "}
-              をそろえると突破試験に挑戦できます。
-            </p>
-          </section>
-
-          {/* 道のり: 次の解放 */}
-          <section className={p.card} aria-labelledby="unlock-heading">
-            <div className={t.sheetHead}>
-              <h2 id="unlock-heading" className={t.sectionTitle}>
-                次の解放
-              </h2>
-            </div>
-            <ul className={p.unlocks}>
-              {UNLOCKS.map((unlock) => (
-                <li key={unlock.id}>
-                  <Link href={unlock.href} className={p.unlock}>
-                    {withMochit && unlock.id === "mochit" && (
-                      <Mochit
-                        size="xs"
-                        screenContext="progress"
-                        className={p.unlockMochit}
-                      />
-                    )}
-                    <span className={p.unlockBody}>
-                      <span className={p.unlockTitle}>{unlock.title}</span>
-                      <span className={p.unlockDetail}>{unlock.detail}</span>
-                      <span className={p.unlockBar} aria-hidden>
-                        <span style={{ width: `${unlock.ratio * 100}%` }} />
-                      </span>
-                    </span>
-                    <Icon name="chevron-right" className={p.chev} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/* 積み上げ */}
-          <section className={p.card} aria-labelledby="history-heading">
             <div className={t.sheetHead}>
               <h2 id="history-heading" className={t.sectionTitle}>
                 積み上げ
@@ -447,13 +483,57 @@ function ProgressSample() {
             </div>
           </section>
 
-          <nav className={`${p.links} ${p.wide}`} aria-label="くわしく見る">
-            {LINKS.map((link) => (
-              <Link key={link.href} href={link.href} className={p.linkItem}>
-                {link.label}
-                <Icon name="chevron-right" className={p.chev} />
-              </Link>
-            ))}
+          {/* ───── 3. 詳細: 次の解放 ───── */}
+          <section
+            className={`${p.card} ${p.spanUnlocks}`}
+            aria-labelledby="unlock-heading"
+          >
+            <div className={t.sheetHead}>
+              <h2 id="unlock-heading" className={t.sectionTitle}>
+                次の解放
+              </h2>
+            </div>
+            <ul className={p.rows}>
+              {UNLOCKS.map((unlock) => (
+                <li key={unlock.id}>
+                  <Link href={unlock.href} className={p.row}>
+                    <span className={p.rowBody}>
+                      <span className={p.rowTitle}>{unlock.title}</span>
+                      <span className={p.rowDetail}>{unlock.detail}</span>
+                      <span className={p.rowBar} aria-hidden>
+                        <span style={{ width: `${unlock.ratio * 100}%` }} />
+                      </span>
+                    </span>
+                    <Icon name="chevron-right" className={p.chev} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* ───── 3. 詳細: くわしく見る ───── */}
+          <nav
+            className={`${p.card} ${p.spanLinks}`}
+            aria-labelledby="links-heading"
+          >
+            <div className={t.sheetHead}>
+              <h2 id="links-heading" className={t.sectionTitle}>
+                くわしく見る
+              </h2>
+            </div>
+            <ul className={`${p.rows} ${p.linkGrid}`}>
+              {LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className={p.row}>
+                    <span className={p.rowBody}>
+                      <span className={p.rowTitle}>{link.label}</span>
+                      <span className={p.rowDetail}>{link.detail}</span>
+                    </span>
+                    <Icon name="chevron-right" className={p.chev} />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </nav>
         </div>
       </main>

@@ -1,10 +1,44 @@
 // /progress 改善デザインのサンプル用データ（テスト環境専用）。
-// 実ページでは ExamReadinessResult / IntegratedLearningStatus / checkpoints / rank /
+// 実ページでは checkpoints / ExamReadinessResult / IntegratedLearningStatus / rank /
 // learningHistory が返す値に置き換わる。
 
 export const EXAM = {
   daysLeft: 40,
   dateLabel: "10月25日",
+};
+
+export const CHECKPOINTS = [
+  { order: 0, title: "初回設定" },
+  { order: 1, title: "全体像把握" },
+  { order: 2, title: "基礎理解" },
+  { order: 3, title: "確認問題定着" },
+  { order: 4, title: "弱点克服" },
+  { order: 5, title: "過去問準備" },
+  { order: 6, title: "直前総仕上げ" },
+];
+
+/** 突破済みの CP 数（CP0〜CP2）。いまは CP3 に向かう途中。 */
+export const CLEARED_COUNT = 3;
+
+/** CP3 の突破条件になる必須バッジ。 */
+export const GATE_BADGES = [
+  { id: "b1", title: "基礎トピックを10個合格", detail: "10/10", earned: true },
+  { id: "b2", title: "7日連続で学習", detail: "7/7日", earned: true },
+  {
+    id: "b3",
+    title: "テクノロジ系の確認問題で正答率80%",
+    detail: "いま 72%",
+    earned: false,
+  },
+  { id: "b4", title: "復習を20件こなす", detail: "14/20件", earned: false },
+];
+
+/** 予定ではどこにいるはずか（CP2→CP3 の区間のうち、どこまで）。0〜1。 */
+export const EXPECTED_IN_SEGMENT = 0.35;
+
+export const PACE = {
+  label: "順調です",
+  detail: "予定より2トピック先",
 };
 
 /** 合格準備度の段階。境界は lib/examReadiness/calculator.ts と同じ。 */
@@ -19,12 +53,7 @@ export const READINESS = {
   score: 64,
   bandLabel: "あと一歩",
   improvement: "「テクノロジ」の問題を優先しましょう",
-  improvementReason: "配点がいちばん大きい分野で、準備度がまだ低めです。",
-};
-
-export const PACE = {
-  label: "順調です",
-  message: "予定より2トピック先に進んでいます。",
+  improvementReason: "出題数がいちばん多い分野で、準備度がまだ低めです。",
 };
 
 export const FIELDS = [
@@ -32,7 +61,6 @@ export const FIELDS = [
   { id: "management", label: "マネジメント", score: 66, questions: 18 },
   { id: "technology", label: "テクノロジ", score: 55, questions: 42 },
 ];
-export const SCORED_QUESTIONS = 92;
 
 export const TOPICS = {
   total: 69,
@@ -46,26 +74,7 @@ export const TOP_RISK = {
   count: 5,
 };
 
-export const CHECKPOINTS = [
-  { order: 0, title: "初回設定" },
-  { order: 1, title: "全体像把握" },
-  { order: 2, title: "基礎理解" },
-  { order: 3, title: "確認問題定着" },
-  { order: 4, title: "弱点克服" },
-  { order: 5, title: "過去問準備" },
-  { order: 6, title: "直前総仕上げ" },
-];
-export const CURRENT_CHECKPOINT = 3;
-export const GATE = { earned: 2, required: 4 };
-
 export const UNLOCKS = [
-  {
-    id: "gate",
-    title: "CP3「確認問題定着」の突破試験",
-    detail: "必須バッジ あと2つ",
-    ratio: GATE.earned / GATE.required,
-    href: "/plan",
-  },
   {
     id: "rank",
     title: "次のランク「上級チャレンジャー」",
@@ -100,8 +109,16 @@ export const HEATMAP_MINUTES = [
 ];
 
 export const LINKS = [
-  { href: "/mock-exam", label: "本番形式 100問模試" },
-  { href: "/report", label: "週間レポート" },
-  { href: "/badges", label: "バッジ図鑑 9/32" },
-  { href: "/plan", label: "ロードマップ" },
+  {
+    href: "/mock-exam",
+    label: "本番形式 100問模試",
+    detail: "3分野の実力をまとめて確かめる",
+  },
+  { href: "/report", label: "週間レポート", detail: "直近7日の積み上げを見る" },
+  { href: "/badges", label: "バッジ図鑑", detail: "9/32 獲得" },
+  {
+    href: "/plan",
+    label: "ロードマップ",
+    detail: "チェックポイントの条件を見る",
+  },
 ];
