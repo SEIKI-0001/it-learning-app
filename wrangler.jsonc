@@ -21,7 +21,7 @@
   "vars": {
     "APP_BASE_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",
     "NEXT_PUBLIC_APP_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://cloudflare-vinext-pilot.invalid",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "synthetic-validation-only"
+    "NEXT_PUBLIC_SUPABASE_URL": "https://ymarkdjwszlsmrjmtfpy.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_9TMa2i1596XTfZfRrhiIug_X-q_EFxS"
   }
 }
