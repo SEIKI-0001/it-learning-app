@@ -493,6 +493,21 @@ No OpenNext installation or deployment was performed.
 
 ## Unverified items and production prerequisites
 
+### Main integration verification (2026-09-15)
+
+Merged origin/main `1e6780e` into the isolated pilot branch as `0f70230`.
+The only conflict was .gitignore; both sets of generated-output and secret-file
+exclusions were retained. The production notification Worker configuration and
+its explicitly scoped scripts remain unchanged from main.
+Node 22.18.0 typecheck, lint, all 159 test files / 1,941 tests, Next build
+(471 static pages), and vinext build passed. Existing Vite __dirname and Next
+workspace-root warnings remain. Notification preferences added by main are
+server-owned and introduce no new browser-storage key.
+
+These are local checks of the integrated source. The currently published Worker
+still uses the earlier `f0d3efd` application build and the synthetic secret version
+recorded above; deployment evidence must not be attributed to the merged source.
+
 - Obtain approved non-production Supabase, Stripe, LINE and AI configurations
   through a secure configuration channel; never place secret values in this report.
 - Complete Google login/Cookie refresh, authenticated save/restore and isolation,
@@ -500,8 +515,7 @@ No OpenNext installation or deployment was performed.
 - Complete full past-exam UI and remaining asset coverage.
 - Confirm actual Workers account tier/cost. The Cloudflare API connector returned
   authentication error 10000; Wrangler OAuth remains functional. Billing unchanged.
-- Integrate current origin/main and rerun required checks before reviewed merge.
-  The latest fetch found 14 main commits absent from this pilot branch.
+- Complete independent review before merging the retained parallel pilot path.
 - Preserve production browser origin or approve and implement the separate storage
   migration described in browser-storage-migration.md.
 - Production DNS, Vercel routing and webhook cutover require the user's decision
