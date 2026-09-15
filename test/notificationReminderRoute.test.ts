@@ -42,6 +42,8 @@ type Db = {
   recheckLastPlayedAt?: Record<string, string | null>;
   /** 候補取得RPCで順に返すエラー（null は成功）。 */
   candidateErrors?: ({ code?: string; message?: string } | null)[];
+  /** 予約RPCで順に返すエラー（null は成功）。 */
+  reserveErrors?: ({ code?: string; message?: string } | null)[];
 };
 
 type Call = { fn: string; args: unknown[] };
@@ -108,23 +110,6 @@ function createSupabase(db: Db) {
     }
 
     if (table === "notification_deliveries") {
-      if (isInsert) {
-        const row = calls.find((c) => c.fn === "insert")!.args[0] as DeliveryRow;
-        const duplicate = db.deliveries.some(
-          (d) =>
-            d.user_id === row.user_id &&
-            d.notification_type === row.notification_type &&
-            d.local_date === row.local_date,
-        );
-        if (duplicate) {
-          return Promise.resolve({
-            data: null,
-            error: { code: "23505", message: "duplicate key value violates unique constraint" },
-          });
-        }
-        db.deliveries.push({ ...row });
-        return Promise.resolve({ data: null, error: null });
-      }
       if (isUpdate) {
         const patch = calls.find((c) => c.fn === "update")!.args[0] as Record<string, unknown>;
         const filters = filtersOf(calls);
@@ -157,6 +142,31 @@ function createSupabase(db: Db) {
   return {
     rpc(name: string, params: Record<string, string | number>) {
       rpcCalls.push(name);
+
+      if (name === "reserve_notification_delivery") {
+        const failure = db.reserveErrors?.shift();
+        if (failure) return Promise.resolve({ data: null, error: failure });
+        writtenTables.push("notification_deliveries");
+        const row = {
+          user_id: String(params.p_user_id),
+          notification_type: String(params.p_notification_type),
+          local_date: String(params.p_local_date),
+          status: "pending",
+        };
+        const existing = db.deliveries.find(
+          (d) =>
+            d.user_id === row.user_id &&
+            d.notification_type === row.notification_type &&
+            d.local_date === row.local_date,
+        );
+        // 実装と同じ判定: 新規なら予約成立、既存が pending なら引き継ぐ。
+        if (!existing) {
+          db.deliveries.push(row);
+          return Promise.resolve({ data: true, error: null });
+        }
+        return Promise.resolve({ data: existing.status === "pending", error: null });
+      }
+
       const queued = db.candidateErrors?.shift();
       if (queued) return Promise.resolve({ data: null, error: queued });
       const from = String(params.p_delivery_window_start);
@@ -338,7 +348,9 @@ describe("runDueLineReminders", () => {
 
     await runDueLineReminders(AT_REMIND_HOUR);
 
-    expect(rpcCalls).toEqual(["list_due_notification_candidates"]);
+    expect(rpcCalls.filter((name) => name === "list_due_notification_candidates")).toHaveLength(
+      1,
+    );
     // 設定・LINE連携・配信記録を個別に一覧取得しない（送信直前の再確認だけは残る）。
     expect(listReadTables).not.toContain("notification_preferences");
     expect(listReadTables).not.toContain("line_users");
@@ -388,6 +400,39 @@ describe("runDueLineReminders", () => {
     expect(result).toMatchObject({ sent: 0, skipped: 1 });
     expect(fetchMock).not.toHaveBeenCalled();
     // 予約もしないので枠を消費しない。
+    expect(db.deliveries).toHaveLength(0);
+  });
+
+  it("予約が一時的に失敗しても引き直して送信する", async () => {
+    // 判定も送信直前の再確認も通ったのに、予約の書き込みだけが 504 で落ちて
+    // 通知が出せない事象が本番で起きた（2026-09-14 18:00 JST）。
+    const db = makeDb({ reserveErrors: [{ message: "Gateway Timeout" }] });
+    mocks.getServiceSupabase.mockReturnValue(createSupabase(db));
+
+    vi.useFakeTimers();
+    const pending = runDueLineReminders(AT_REMIND_HOUR);
+    await vi.advanceTimersByTimeAsync(5_000);
+    const result = await pending;
+    vi.useRealTimers();
+
+    expect(result).toMatchObject({ ok: true, sent: 1, failed: 0 });
+    expect(db.deliveries[0]).toMatchObject({ status: "sent" });
+  });
+
+  it("予約が2回とも失敗したら送らない", async () => {
+    const db = makeDb({
+      reserveErrors: [{ message: "Gateway Timeout" }, { message: "Gateway Timeout" }],
+    });
+    mocks.getServiceSupabase.mockReturnValue(createSupabase(db));
+
+    vi.useFakeTimers();
+    const pending = runDueLineReminders(AT_REMIND_HOUR);
+    await vi.advanceTimersByTimeAsync(5_000);
+    const result = await pending;
+    vi.useRealTimers();
+
+    expect(result).toMatchObject({ ok: true, sent: 0, skipped: 1 });
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(db.deliveries).toHaveLength(0);
   });
 
