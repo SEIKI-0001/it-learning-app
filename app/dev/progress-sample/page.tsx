@@ -4,12 +4,13 @@
 //
 // 上から「全体像 → 内訳 → 詳細」の順に読めるようにする:
 //   1. 合格までの道のり（CP0〜試験日の道と、いまいる場所）＋主要指標4つ
-//   2. 合格準備度の内訳 と いま向かっている CP の突破条件
-//   3. トピックの到達度・積み上げ・次の解放・くわしく見る
+//   2. いまの目標（向かっている CP の突破条件）と 合格準備度の内訳
+//   3. トピックの到達度・学習した日・次の解放・くわしく見る
 // 今日やること・所要時間・今日のミッションは /today に任せ、ここには置かない。
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { useState } from "react";
 import Mochit from "@/components/mochit/Mochit";
 import Icon from "@/components/ui/Icon";
 import AppNav from "../today-sample/nav";
@@ -21,8 +22,9 @@ import {
   EXPECTED_IN_SEGMENT,
   FIELDS,
   GATE_BADGES,
-  HEATMAP_MINUTES,
+  DAILY_ANSWERS,
   LINKS,
+  NEXT_CHECKPOINT_TITLE,
   PACE,
   READINESS,
   READINESS_BANDS,
@@ -37,12 +39,55 @@ const BAND_EDGES = [60, 75, 85];
 /** 道の列数: CP0〜CP6 の7つ ＋ 試験日 */
 const ROAD_COLUMNS = CHECKPOINTS.length + 1;
 
-function heatLevel(minutes: number): 0 | 1 | 2 | 3 | 4 {
-  if (minutes === 0) return 0;
-  if (minutes < 12) return 1;
-  if (minutes < 18) return 2;
-  if (minutes < 24) return 3;
+const WEEKDAYS = ["月", "火", "水", "木", "金", "土", "日"];
+const HEAT_WEEKS = 12;
+const DAY_MS = 86_400_000;
+
+/** 解答数 → 濃さの段階。0 は解いていない日（警告色にはしない）。 */
+function heatLevel(answers: number): 0 | 1 | 2 | 3 | 4 {
+  if (answers === 0) return 0;
+  if (answers < 10) return 1;
+  if (answers < 20) return 2;
+  if (answers < 30) return 3;
   return 4;
+}
+
+type HeatDay = { date: Date; answers: number } | null;
+
+/**
+ * 直近12週を「列=週（月曜はじまり）× 行=曜日」に並べる。
+ * 今日より先のマスは null（描かない）。解答数は DAILY_ANSWERS の末尾を今日として割り当てる。
+ */
+function buildHeatWeeks(today: Date): HeatDay[][] {
+  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const weekdayIndex = (base.getDay() + 6) % 7;
+  const firstMonday = new Date(
+    base.getTime() - (weekdayIndex + (HEAT_WEEKS - 1) * 7) * DAY_MS,
+  );
+  const weeks: HeatDay[][] = [];
+  for (let w = 0; w < HEAT_WEEKS; w++) {
+    const week: HeatDay[] = [];
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(
+        firstMonday.getFullYear(),
+        firstMonday.getMonth(),
+        firstMonday.getDate() + w * 7 + d,
+      );
+      const daysAgo = Math.round((base.getTime() - date.getTime()) / DAY_MS);
+      if (daysAgo < 0) {
+        week.push(null);
+        continue;
+      }
+      const index = DAILY_ANSWERS.length - 1 - daysAgo;
+      week.push({ date, answers: index >= 0 ? DAILY_ANSWERS[index] : 0 });
+    }
+    weeks.push(week);
+  }
+  return weeks;
+}
+
+function dayLabel(date: Date) {
+  return `${date.getMonth() + 1}月${date.getDate()}日（${"日月火水木金土"[date.getDay()]}）`;
 }
 
 /** 道の上での位置（%）。index は列番号、within はその列から次の列までの進み具合。 */
@@ -56,6 +101,7 @@ export default function ProgressSamplePage() {
 }
 
 function ProgressSample() {
+  const [pickedDay, setPickedDay] = useState<NonNullable<HeatDay> | null>(null);
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
@@ -74,10 +120,33 @@ function ProgressSample() {
     TOPICS.total - TOPICS.examReady - TOPICS.basic - TOPICS.needsWork;
   const topicShare = (n: number) => `${(n / TOPICS.total) * 100}%`;
 
-  const weeks: number[][] = [];
-  for (let i = 0; i < HEATMAP_MINUTES.length; i += 7) {
-    weeks.push(HEATMAP_MINUTES.slice(i, i + 7));
+  const remainingBadges = GATE_BADGES.filter((badge) => !badge.earned);
+  const doneBadges = GATE_BADGES.filter((badge) => badge.earned);
+
+  const weeks = buildHeatWeeks(now);
+  const heatDays = weeks
+    .flat()
+    .filter((day): day is NonNullable<HeatDay> => day !== null);
+  const studyDays = heatDays.filter((day) => day.answers > 0).length;
+  const totalAnswers = heatDays.reduce((sum, day) => sum + day.answers, 0);
+  let streak = 0;
+  for (let i = heatDays.length - 1; i >= 0 && heatDays[i].answers > 0; i--)
+    streak++;
+  let longestStreak = 0;
+  let run = 0;
+  for (const day of heatDays) {
+    run = day.answers > 0 ? run + 1 : 0;
+    longestStreak = Math.max(longestStreak, run);
   }
+  // 月の見出し: その週に1日を含む列（先頭列は必ず）に月を出す
+  const monthLabels = weeks.map((week, wi) => {
+    const days = week.filter(
+      (day): day is NonNullable<HeatDay> => day !== null,
+    );
+    const first = days.find((day) => day.date.getDate() === 1);
+    if (first) return `${first.date.getMonth() + 1}月`;
+    return wi === 0 && days[0] ? `${days[0].date.getMonth() + 1}月` : "";
+  });
 
   return (
     <div className={t.shell}>
@@ -194,7 +263,7 @@ function ProgressSample() {
                 </dd>
                 <p className={p.kpiNote}>{PACE.detail}</p>
               </div>
-              <div className={p.kpi}>
+              <a href="#gate" className={`${p.kpi} ${p.kpiLink}`}>
                 <dt>突破試験まで</dt>
                 <dd>
                   <span className={p.kpiNum}>{earnedBadges}</span>
@@ -202,9 +271,85 @@ function ProgressSample() {
                     /{GATE_BADGES.length} バッジ
                   </span>
                 </dd>
-                <p className={p.kpiNote}>CP{goal.order}の必須バッジ</p>
-              </div>
+                <p className={p.kpiNote}>
+                  CP{goal.order}の必須バッジ
+                  <Icon name="chevron-right" className={p.kpiChev} />
+                </p>
+              </a>
             </dl>
+          </section>
+
+          {/* ───── 2. いまの目標: CP の突破条件（このページで唯一の強調ブロック） ───── */}
+          <section
+            id="gate"
+            className={`${p.card} ${p.gate} ${p.spanGate}`}
+            aria-labelledby="gate-heading"
+          >
+            <div className={p.gateHead}>
+              <span className={p.gateTag}>いまの目標</span>
+              <span className={p.gateCp}>
+                CP{goal.order}「{goal.title}」の突破
+              </span>
+              <span className={p.gateCount}>
+                <span className={t.mono}>{earnedBadges}</span>/
+                {GATE_BADGES.length}
+              </span>
+            </div>
+
+            <h2 id="gate-heading" className={p.gateTitle}>
+              あと<span className={p.gateNum}>{remainingBadges.length}</span>
+              つそろえば、突破試験に挑戦できます
+            </h2>
+
+            <div className={p.gateBar} aria-hidden>
+              {[...doneBadges, ...remainingBadges].map((badge) => (
+                <span key={badge.id} data-earned={badge.earned} />
+              ))}
+            </div>
+
+            <ol className={p.todo}>
+              {remainingBadges.map((badge) => (
+                <li key={badge.id} className={p.todoItem}>
+                  <span className={p.todoMark} aria-hidden />
+                  <div className={p.todoBody}>
+                    <p className={p.todoTitle}>{badge.title}</p>
+                    <div className={p.todoProgress}>
+                      <span className={p.todoBar} aria-hidden>
+                        <span style={{ width: `${badge.ratio * 100}%` }} />
+                      </span>
+                      <span className={p.todoValue}>{badge.progressLabel}</span>
+                    </div>
+                  </div>
+                  {badge.action && (
+                    <Link href={badge.action.href} className={p.todoAction}>
+                      {badge.action.label}
+                      <Icon name="chevron-right" className={p.chev} />
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ol>
+
+            <div className={p.gateDone}>
+              <span className={p.gateDoneLabel}>獲得済み</span>
+              {doneBadges.map((badge) => (
+                <span key={badge.id} className={p.gateDoneItem}>
+                  <svg viewBox="0 0 20 20" aria-hidden>
+                    <path d="M5.5 10.5l3 3 6-7" />
+                  </svg>
+                  {badge.title}
+                </span>
+              ))}
+            </div>
+
+            <p className={p.gateNote}>
+              突破試験に合格すると、CP{goal.order + 1}「{NEXT_CHECKPOINT_TITLE}
+              」へ進みます。
+              <Link href="/plan" className={p.textLink}>
+                ロードマップ
+                <Icon name="chevron-right" className={p.chev} />
+              </Link>
+            </p>
           </section>
 
           {/* ───── 2. 内訳: 合格準備度 ───── */}
@@ -292,66 +437,11 @@ function ProgressSample() {
                 <p className={p.improveMain}>{READINESS.improvement}</p>
                 <p className={p.improveReason}>{READINESS.improvementReason}</p>
               </div>
-              <Link href="/learn" className={p.action}>
+              <Link href="/learn" className={p.textLink}>
                 テクノロジの問題を解く
                 <Icon name="chevron-right" className={p.chev} />
               </Link>
             </div>
-          </section>
-
-          {/* ───── 2. 内訳: いま向かっている CP の突破条件 ───── */}
-          <section
-            className={`${p.card} ${p.spanGate}`}
-            aria-labelledby="gate-heading"
-          >
-            <div className={t.sheetHead}>
-              <h2 id="gate-heading" className={t.sectionTitle}>
-                CP{goal.order}「{goal.title}」の突破条件
-              </h2>
-              <span className={t.sectionMeta}>
-                <span className={t.mono}>
-                  {earnedBadges}/{GATE_BADGES.length}
-                </span>{" "}
-                達成
-              </span>
-            </div>
-
-            <div className={p.gateBar} aria-hidden>
-              {GATE_BADGES.map((badge) => (
-                <span key={badge.id} data-earned={badge.earned} />
-              ))}
-            </div>
-
-            <ul className={p.badges}>
-              {GATE_BADGES.map((badge) => (
-                <li
-                  key={badge.id}
-                  className={p.badge}
-                  data-earned={badge.earned}
-                >
-                  <span className={p.badgeMark} aria-hidden>
-                    {badge.earned ? (
-                      <svg viewBox="0 0 20 20">
-                        <path d="M5.5 10.5l3 3 6-7" />
-                      </svg>
-                    ) : null}
-                  </span>
-                  <span className={p.badgeTitle}>{badge.title}</span>
-                  <span className={p.badgeDetail}>
-                    {badge.earned ? "獲得済み" : badge.detail}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <p className={p.gateNote}>
-              4つそろうと突破試験に挑戦できます。合格すると CP{goal.order + 1}{" "}
-              へ進みます。
-            </p>
-            <Link href="/plan" className={p.textLink}>
-              ロードマップで条件を見る
-              <Icon name="chevron-right" className={p.chev} />
-            </Link>
           </section>
 
           {/* ───── 3. 詳細: トピックの到達度 ───── */}
@@ -411,72 +501,111 @@ function ProgressSample() {
             </Link>
           </section>
 
-          {/* ───── 3. 詳細: 積み上げ ───── */}
+          {/* ───── 3. 詳細: 学習した日 ───── */}
           <section
             className={`${p.card} ${p.spanHistory}`}
             aria-labelledby="history-heading"
           >
             <div className={t.sheetHead}>
               <h2 id="history-heading" className={t.sectionTitle}>
-                積み上げ
+                学習した日
               </h2>
-              <span className={t.sectionMeta}>直近12週</span>
+              <span className={t.sectionMeta}>
+                直近12週で <span className={t.mono}>{studyDays}</span>日
+              </span>
             </div>
             <div className={p.history}>
               <div className={p.heatBlock}>
                 <div
                   className={p.heat}
                   role="img"
-                  aria-label="直近12週の学習した日"
+                  aria-label={`直近12週の1日ごとの解答数。${studyDays}日学習し、合計${totalAnswers}問解きました。`}
                 >
-                  {weeks.map((week, wi) => (
-                    <div key={wi} className={p.heatWeek}>
-                      {week.map((minutes, di) => (
-                        <span
-                          key={di}
-                          className={p.heatDay}
-                          data-level={heatLevel(minutes)}
-                        />
-                      ))}
+                  <span className={p.heatCorner} aria-hidden />
+                  {monthLabels.map((label, wi) => (
+                    <span key={`m${wi}`} className={p.heatMonth} aria-hidden>
+                      {label}
+                    </span>
+                  ))}
+                  {WEEKDAYS.map((weekday, di) => (
+                    <div key={weekday} className={p.heatRow}>
+                      <span className={p.heatWeekday} aria-hidden>
+                        {di % 2 === 0 ? weekday : ""}
+                      </span>
+                      {weeks.map((week, wi) => {
+                        const day = week[di];
+                        if (!day)
+                          return <span key={wi} className={p.heatEmpty} />;
+                        const picked =
+                          pickedDay?.date.getTime() === day.date.getTime();
+                        return (
+                          <span
+                            key={wi}
+                            className={p.heatDay}
+                            data-level={heatLevel(day.answers)}
+                            data-picked={picked}
+                            title={`${dayLabel(day.date)} ${day.answers}問`}
+                            onPointerEnter={() => setPickedDay(day)}
+                            onClick={() => setPickedDay(day)}
+                          />
+                        );
+                      })}
                     </div>
                   ))}
                 </div>
-                <div className={p.heatLegend} aria-hidden>
-                  少ない
-                  {[0, 1, 2, 3, 4].map((level) => (
-                    <span
-                      key={level}
-                      className={p.heatDay}
-                      data-level={level}
-                    />
-                  ))}
-                  多い
+                <div className={p.heatFoot}>
+                  <p className={p.heatReadout} aria-live="polite">
+                    {pickedDay ? (
+                      <>
+                        {dayLabel(pickedDay.date)}{" "}
+                        <strong>
+                          <span className={t.mono}>{pickedDay.answers}</span>問
+                        </strong>
+                      </>
+                    ) : (
+                      "マスにふれると、その日の解答数が出ます"
+                    )}
+                  </p>
+                  <div className={p.heatLegend} aria-hidden>
+                    0問
+                    {[0, 1, 2, 3, 4].map((level) => (
+                      <span
+                        key={level}
+                        className={p.heatDay}
+                        data-level={level}
+                      />
+                    ))}
+                    30問〜
+                  </div>
                 </div>
               </div>
               <dl className={p.stats}>
                 <div>
                   <dt>連続学習</dt>
                   <dd>
-                    <span className={p.statNum}>{STATS.streak}</span>日
-                    <small>ベスト{STATS.longestStreak}日</small>
+                    <span className={p.statNum}>{streak}</span>日
+                    <small>12週のベスト {longestStreak}日</small>
                   </dd>
                 </div>
                 <div>
                   <dt>学習した日</dt>
                   <dd>
-                    <span className={p.statNum}>{STATS.studyDays}</span>日
+                    <span className={p.statNum}>{studyDays}</span>日
+                    <small>84日のうち</small>
                   </dd>
                 </div>
                 <div>
                   <dt>解いた問題</dt>
                   <dd>
-                    <span className={p.statNum}>{STATS.totalAnswers}</span>問
+                    <span className={p.statNum}>{totalAnswers}</span>問
+                    <small>12週の合計</small>
                   </dd>
                 </div>
                 <div>
                   <dt>正答率</dt>
                   <dd>
                     <span className={p.statNum}>{STATS.accuracy}</span>%
+                    <small>12週の平均</small>
                   </dd>
                 </div>
               </dl>

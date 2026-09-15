@@ -5,8 +5,8 @@
 
    レイアウト: 上に全体像（道のり＋主要指標）、下に 12 カラムのタイル。
      [ 合格までの道のり ─────────────────────────── ]
-     [ 合格準備度の内訳 (7)      ][ CP の突破条件 (5)  ]
-     [ トピックの到達度 (5) ][ 積み上げ (7)            ]
+     [ いまの目標＝CP の突破条件 (7) ][ 合格準備度の内訳 (5) ]
+     [ トピックの到達度 (5) ][ 学習した日 (7)          ]
      [ 次の解放 (5)         ][ くわしく見る (7)        ] */
 
 .dashboard {
@@ -312,9 +312,32 @@
 }
 
 .kpiNote {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   margin: 6px 0 0;
   font-size: 12px;
   color: var(--ink-2);
+}
+
+.kpiLink {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 160ms;
+}
+
+.kpiLink:hover {
+  background: color-mix(in srgb, var(--blue-soft) 45%, var(--canvas));
+}
+
+.kpiLink .kpiNote {
+  color: var(--blue-700);
+}
+
+.kpiChev {
+  width: 14px;
+  height: 14px;
 }
 
 /* ───────── 2. 合格準備度の内訳 ───────── */
@@ -498,9 +521,164 @@
   word-break: auto-phrase;
 }
 
-.action {
+
+
+/* ───────── 2. いまの目標（CP の突破条件） ─────────
+   このページで唯一の強調ブロック。青い枠と「いまの目標」タグで、
+   残りの条件＝やることを、取り組むボタンと一緒に先頭へ出す。 */
+
+.gate {
+  border: 1.5px solid var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-soft);
+}
+
+.gateHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.gateTag {
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.gateCp {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.gateCount {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.gateCount .mono {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.gateTitle {
+  margin: 14px 0 0;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.04em;
+  word-break: auto-phrase;
+}
+
+.gateNum {
+  margin: 0 2px;
+  font-family: var(--num);
+  font-size: 1.3em;
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.gateBar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.gateBar > span {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.gateBar > span[data-earned="true"] {
+  background: var(--green);
+}
+
+.todo {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todoItem {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-areas:
+    "mark body"
+    ". action";
+  align-items: start;
+  gap: 10px 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--wash);
+}
+
+.todoMark {
+  grid-area: mark;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 2px solid var(--blue);
+  border-radius: 50%;
+  background: var(--canvas);
+}
+
+.todoBody {
+  grid-area: body;
+  min-width: 0;
+}
+
+.todoTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.03em;
+  word-break: auto-phrase;
+}
+
+.todoProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.todoBar {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--wash-line);
+}
+
+.todoBar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--blue);
+}
+
+.todoValue {
+  flex-shrink: 0;
+  font-family: var(--num);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blue-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.todoAction {
+  grid-area: action;
   display: inline-flex;
-  align-self: flex-start;
+  justify-self: start;
   align-items: center;
   gap: 4px;
   min-height: 40px;
@@ -515,96 +693,60 @@
   transition: background-color 160ms;
 }
 
-.action:hover {
+.todoAction:hover {
   background: var(--cta-hover);
 }
 
-/* ───────── 2. CP の突破条件 ───────── */
-
-.gateBar {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
-  margin-top: 18px;
-}
-
-.gateBar > span {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--line);
-}
-
-.gateBar > span[data-earned="true"] {
-  background: var(--green);
-}
-
-.badges {
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.badge {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
+.gateDone {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--line);
+  gap: 6px 14px;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--ink-2);
 }
 
-.badgeMark {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border: 1.5px dashed var(--line-strong);
+.gateDoneLabel {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.gateDoneItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gateDoneItem svg {
+  width: 14px;
+  height: 14px;
+  padding: 2px;
   border-radius: 50%;
-}
-
-.badgeMark svg {
-  width: 12px;
-  height: 12px;
+  background: var(--green);
   fill: none;
   stroke: #fff;
-  stroke-width: 2.8;
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.badge[data-earned="true"] .badgeMark {
-  border: 0;
-  background: var(--green);
-}
-
-.badgeTitle {
-  font-size: 13.5px;
-  line-height: 1.5;
-  word-break: auto-phrase;
-}
-
-.badge[data-earned="true"] .badgeTitle {
-  color: var(--ink-2);
-}
-
-.badgeDetail {
-  font-family: var(--num);
-  font-size: 12px;
-  color: var(--blue-700);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.badge[data-earned="true"] .badgeDetail {
-  font-family: var(--sans);
-  color: var(--green);
-}
-
 .gateNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
   margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
   font-size: 12.5px;
   line-height: 1.7;
   color: var(--ink-2);
+}
+
+.gateNote .textLink {
+  margin-top: 0;
 }
 
 .textLink {
@@ -616,6 +758,7 @@
   font-size: 13px;
   font-weight: 500;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .textLink:hover {
@@ -749,22 +892,50 @@
   min-width: 0;
 }
 
+/* 列=週（月曜はじまり）、行=曜日。先頭列は曜日の見出し、先頭行は月の見出し */
 .heat {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: 16px repeat(12, minmax(0, 1fr));
   gap: 3px;
 }
 
-.heatWeek {
-  display: grid;
-  gap: 3px;
+.heatRow {
+  display: contents;
 }
 
-.heatDay {
+.heatCorner {
+  display: block;
+}
+
+.heatMonth {
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.heatWeekday {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--ink-3);
+  align-self: center;
+}
+
+.heatDay,
+.heatEmpty {
   display: block;
   aspect-ratio: 1;
   border-radius: 2px;
+}
+
+.heatDay {
   background: var(--line);
+  cursor: default;
+}
+
+.heatDay[data-picked="true"] {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
 }
 
 .heatDay[data-level="1"] {
@@ -783,12 +954,30 @@
   background: var(--blue);
 }
 
+.heatFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-top: 10px;
+}
+
+.heatReadout {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.heatReadout strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
 .heatLegend {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 3px;
-  margin-top: 8px;
   font-size: 11px;
   color: var(--ink-3);
 }
@@ -943,10 +1132,6 @@
     font-size: 12px;
   }
 
-  .scaleZoneLabel {
-    display: block;
-  }
-
   .kpis {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -961,8 +1146,23 @@
     justify-content: space-between;
   }
 
-  .action {
+  .improve .textLink {
     align-self: center;
+    margin-top: 0;
+  }
+
+  .todoItem {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    grid-template-areas: "mark body action";
+    align-items: center;
+  }
+
+  .todoMark {
+    align-self: start;
+  }
+
+  .gateTitle {
+    font-size: 22px;
   }
 
   .linkGrid {
@@ -1039,12 +1239,22 @@
     font-size: 34px;
   }
 
-  .spanReadiness {
+  .spanGate {
     grid-column: span 7;
   }
 
-  .spanGate {
+  .spanReadiness {
     grid-column: span 5;
+  }
+
+  /* 幅の狭いタイルでは、伸ばせるところの文とリンクを縦に積む */
+  .spanReadiness .improve {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .spanReadiness .improve .textLink {
+    align-self: flex-start;
   }
 
   .spanTopics {
@@ -1063,14 +1273,20 @@
     grid-column: span 7;
   }
 
+  /* ヒートマップの列は実寸（曜日16px＋17px×12週＋隙間）に固定し、残りを累計に回す */
   .history {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: 256px minmax(0, 1fr);
     align-items: start;
     gap: 24px;
   }
 
+  .heatFoot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .heat {
-    grid-template-columns: repeat(12, 17px);
+    grid-template-columns: 16px repeat(12, 17px);
   }
 }
 

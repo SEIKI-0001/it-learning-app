@@ -20,18 +20,43 @@ export const CHECKPOINTS = [
 /** 突破済みの CP 数（CP0〜CP2）。いまは CP3 に向かう途中。 */
 export const CLEARED_COUNT = 3;
 
-/** CP3 の突破条件になる必須バッジ。 */
+/** CP3 の突破条件になる必須バッジ。未獲得のものは、進み具合と取り組み先を持つ。 */
 export const GATE_BADGES = [
-  { id: "b1", title: "基礎トピックを10個合格", detail: "10/10", earned: true },
-  { id: "b2", title: "7日連続で学習", detail: "7/7日", earned: true },
   {
     id: "b3",
     title: "テクノロジ系の確認問題で正答率80%",
-    detail: "いま 72%",
+    progressLabel: "いま 72%",
+    ratio: 72 / 80,
     earned: false,
+    action: { label: "確認問題を解く", href: "/learn" },
   },
-  { id: "b4", title: "復習を20件こなす", detail: "14/20件", earned: false },
+  {
+    id: "b4",
+    title: "復習を20件こなす",
+    progressLabel: "14/20件",
+    ratio: 14 / 20,
+    earned: false,
+    action: { label: "復習する", href: "/review" },
+  },
+  {
+    id: "b1",
+    title: "基礎トピックを10個合格",
+    progressLabel: "10/10",
+    ratio: 1,
+    earned: true,
+    action: null,
+  },
+  {
+    id: "b2",
+    title: "7日連続で学習",
+    progressLabel: "7/7日",
+    ratio: 1,
+    earned: true,
+    action: null,
+  },
 ];
+
+export const NEXT_CHECKPOINT_TITLE = "弱点克服";
 
 /** 予定ではどこにいるはずか（CP2→CP3 の区間のうち、どこまで）。0〜1。 */
 export const EXPECTED_IN_SEGMENT = 0.35;
@@ -92,15 +117,11 @@ export const UNLOCKS = [
 ] as const;
 
 export const STATS = {
-  streak: 12,
-  longestStreak: 15,
-  studyDays: 38,
-  totalAnswers: 612,
   accuracy: 78,
 };
 
-/** 直近12週（84日）の学習分数。0 は学習していない日。最後の要素が今日。 */
-export const HEATMAP_MINUTES = [
+/** 直近84日の解答数（1日ごと）。0 は解いていない日。最後の要素が今日。 */
+export const DAILY_ANSWERS = [
   0, 12, 18, 0, 25, 9, 0, 14, 22, 0, 16, 30, 11, 0, 8, 19, 24, 0, 13, 27, 10, 0,
   0, 15, 18, 26, 12, 0, 20, 9, 17, 23, 14, 28, 0, 16, 21, 0, 12, 30, 18, 9, 0,
   24, 15, 19, 11, 26, 0, 13, 22, 17, 0, 28, 14, 20, 25, 0, 18, 12, 31, 16, 22,
