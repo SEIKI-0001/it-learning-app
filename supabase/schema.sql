@@ -906,6 +906,53 @@ $$;
 ALTER FUNCTION "public"."keep_assessment_session_question_count"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer DEFAULT 500) RETURNS TABLE("user_id" "uuid", "line_user_id" "text", "opt_in" boolean, "remind_hour" smallint, "timezone" "text", "daily_reminder" boolean, "streak_risk" boolean, "comeback" boolean, "last_played_at" timestamp with time zone, "streak_count" integer, "deliveries" "jsonb")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog', 'public'
+    AS $$
+  select
+    preference.user_id,
+    line_user.line_user_id,
+    preference.opt_in,
+    preference.remind_hour,
+    preference.timezone,
+    preference.daily_reminder,
+    preference.streak_risk,
+    preference.comeback,
+    progress.last_played_at,
+    coalesce(progress.streak_count, 0) as streak_count,
+    -- 配信記録は前後1日ぶんを渡す。ユーザーごとにローカル日付が前後するため、
+    -- どの行が「その人の今日」かの判定はアプリ側で行う。
+    coalesce(
+      (
+        select jsonb_agg(
+          jsonb_build_object(
+            'notification_type', delivery.notification_type,
+            'local_date', delivery.local_date
+          )
+        )
+        from public.notification_deliveries delivery
+        where delivery.user_id = preference.user_id
+          and delivery.local_date between p_delivery_window_start and p_delivery_window_end
+      ),
+      '[]'::jsonb
+    ) as deliveries
+  from public.notification_preferences preference
+  left join public.line_users line_user on line_user.id = preference.user_id
+  left join public.user_progress progress on progress.user_id = preference.user_id
+  where preference.opt_in
+  order by preference.user_id
+  limit greatest(coalesce(p_limit, 500), 0);
+$$;
+
+
+ALTER FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) IS 'GF-P0-006 collects opt-in preferences, LINE linkage, progress, and recent delivery records in one round trip. Decides nothing: scheduling stays in lib/notifications/schedule.ts.';
+
+
+
 CREATE OR REPLACE FUNCTION "public"."lock_question_exposure_answer_write"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog', 'public'
@@ -1999,6 +2046,49 @@ CREATE TABLE IF NOT EXISTS "public"."line_users" (
 ALTER TABLE "public"."line_users" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."notification_deliveries" (
+    "user_id" "uuid" NOT NULL,
+    "notification_type" "text" NOT NULL,
+    "local_date" "date" NOT NULL,
+    "status" "text" DEFAULT 'pending'::"text" NOT NULL,
+    "detail" "text",
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "notification_deliveries_detail_check" CHECK ((("detail" IS NULL) OR ("length"("detail") <= 512))),
+    CONSTRAINT "notification_deliveries_notification_type_check" CHECK (("notification_type" = ANY (ARRAY['daily_reminder'::"text", 'streak_risk'::"text", 'comeback'::"text"]))),
+    CONSTRAINT "notification_deliveries_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'sent'::"text", 'failed'::"text"])))
+);
+
+
+ALTER TABLE "public"."notification_deliveries" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."notification_deliveries" IS 'GF-P0-006 idempotency and audit record keyed by user, notification type, and the user local date. Never written back to learning state.';
+
+
+
+CREATE TABLE IF NOT EXISTS "public"."notification_preferences" (
+    "user_id" "uuid" NOT NULL,
+    "opt_in" boolean DEFAULT false NOT NULL,
+    "remind_hour" smallint DEFAULT 20 NOT NULL,
+    "timezone" "text" DEFAULT 'Asia/Tokyo'::"text" NOT NULL,
+    "daily_reminder" boolean DEFAULT true NOT NULL,
+    "streak_risk" boolean DEFAULT true NOT NULL,
+    "comeback" boolean DEFAULT true NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "statement_timestamp"() NOT NULL,
+    CONSTRAINT "notification_preferences_remind_hour_check" CHECK ((("remind_hour" >= 0) AND ("remind_hour" <= 23))),
+    CONSTRAINT "notification_preferences_timezone_check" CHECK ((("length"("btrim"("timezone")) > 0) AND ("length"("timezone") <= 64)))
+);
+
+
+ALTER TABLE "public"."notification_preferences" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."notification_preferences" IS 'GF-P0-006 opt-in state, local reminder hour, timezone, and per-type switches for LINE study reminders.';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."plan_adjustment_proposals" (
     "proposal_id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "user_id" "uuid" NOT NULL,
@@ -2425,6 +2515,16 @@ ALTER TABLE ONLY "public"."line_users"
 
 
 
+ALTER TABLE ONLY "public"."notification_deliveries"
+    ADD CONSTRAINT "notification_deliveries_pkey" PRIMARY KEY ("user_id", "notification_type", "local_date");
+
+
+
+ALTER TABLE ONLY "public"."notification_preferences"
+    ADD CONSTRAINT "notification_preferences_pkey" PRIMARY KEY ("user_id");
+
+
+
 ALTER TABLE ONLY "public"."plan_adjustment_proposals"
     ADD CONSTRAINT "plan_adjustment_proposals_pkey" PRIMARY KEY ("proposal_id");
 
@@ -2576,6 +2676,10 @@ CREATE INDEX "line_sessions_user_id_idx" ON "public"."line_sessions" USING "btre
 
 
 CREATE UNIQUE INDEX "line_users_auth_user_id_key" ON "public"."line_users" USING "btree" ("auth_user_id") WHERE ("auth_user_id" IS NOT NULL);
+
+
+
+CREATE INDEX "notification_deliveries_user_local_date_idx" ON "public"."notification_deliveries" USING "btree" ("user_id", "local_date");
 
 
 
@@ -2788,6 +2892,16 @@ ALTER TABLE ONLY "public"."line_sessions"
 
 
 
+ALTER TABLE ONLY "public"."notification_deliveries"
+    ADD CONSTRAINT "notification_deliveries_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."notification_preferences"
+    ADD CONSTRAINT "notification_preferences_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."plan_adjustment_proposals"
     ADD CONSTRAINT "plan_adjustment_proposals_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."line_users"("id") ON DELETE CASCADE;
 
@@ -2894,6 +3008,12 @@ ALTER TABLE "public"."line_sessions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."line_users" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."notification_deliveries" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."notification_preferences" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."plan_adjustment_proposals" ENABLE ROW LEVEL SECURITY;
 
 
@@ -2977,6 +3097,11 @@ GRANT ALL ON FUNCTION "public"."fail_exam_readiness_recalculation"("p_job_id" "u
 
 
 REVOKE ALL ON FUNCTION "public"."keep_assessment_session_question_count"() FROM PUBLIC;
+
+
+
+REVOKE ALL ON FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."list_due_notification_candidates"("p_delivery_window_start" "date", "p_delivery_window_end" "date", "p_limit" integer) TO "service_role";
 
 
 
@@ -3084,6 +3209,18 @@ GRANT ALL ON TABLE "public"."line_sessions" TO "service_role";
 GRANT ALL ON TABLE "public"."line_users" TO "anon";
 GRANT ALL ON TABLE "public"."line_users" TO "authenticated";
 GRANT ALL ON TABLE "public"."line_users" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."notification_deliveries" TO "anon";
+GRANT ALL ON TABLE "public"."notification_deliveries" TO "authenticated";
+GRANT ALL ON TABLE "public"."notification_deliveries" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."notification_preferences" TO "anon";
+GRANT ALL ON TABLE "public"."notification_preferences" TO "authenticated";
+GRANT ALL ON TABLE "public"."notification_preferences" TO "service_role";
 
 
 

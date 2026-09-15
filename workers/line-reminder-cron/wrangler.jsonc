@@ -1,0 +1,23 @@
+{
+  "name": "line-reminder-cron",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-06",
+  // Cron 専用で fetch ハンドラを持たないため、HTTP エンドポイントを公開しない。
+  // 公開したままだと workers.dev の URL が Error 1101（Worker threw exception）を返し、
+  // 異常のように見えるうえ、不要な公開面が残る。
+  "workers_dev": false,
+  // 毎時 UTC で起動する。ユーザーごとの通知時刻の判定はアプリ側の
+  // timezone / ローカル日付ロジックが行うので、この UTC 時刻は判定に使わない。
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+  "observability": {
+    "enabled": true
+  },
+  // APP_BASE_URL は秘密ではないので vars に置いてよい。移行中は現在アクセスできる
+  // it-learning-app の URL を指し、本体の Cloudflare 移行後はここだけ差し替える。
+  // CRON_SECRET は秘密なので vars に書かず `wrangler secret put CRON_SECRET` で設定する。
+  "vars": {
+    "APP_BASE_URL": "https://it-learning-app.vercel.app"
+  }
+}
