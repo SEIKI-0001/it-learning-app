@@ -40,7 +40,8 @@ const BAND_EDGES = [60, 75, 85];
 const ROAD_COLUMNS = CHECKPOINTS.length + 1;
 
 const WEEKDAYS = ["月", "火", "水", "木", "金", "土", "日"];
-const HEAT_WEEKS = 12;
+/** 表示する週数。隣のタイルと高さが揃う範囲で、新しい週から見せる。 */
+const HEAT_WEEKS = 8;
 const DAY_MS = 86_400_000;
 
 /** 解答数 → 濃さの段階。0 は解いていない日（警告色にはしない）。 */
@@ -55,7 +56,7 @@ function heatLevel(answers: number): 0 | 1 | 2 | 3 | 4 {
 type HeatDay = { date: Date; answers: number } | null;
 
 /**
- * 直近12週をカレンダーと同じ「行=週（月曜はじまり・上が古い）× 列=曜日」に並べる。
+ * 直近 HEAT_WEEKS 週をカレンダーと同じ「行=週（月曜はじまり・上が古い）× 列=曜日」に並べる。
  * 今日より先のマスは null（描かない）。解答数は DAILY_ANSWERS の末尾を今日として割り当てる。
  */
 function buildHeatWeeks(today: Date): HeatDay[][] {
@@ -479,7 +480,8 @@ function ProgressSample() {
                 学習した日
               </h2>
               <span className={t.sectionMeta}>
-                直近12週で <span className={t.mono}>{studyDays}</span>日
+                直近{HEAT_WEEKS}週で <span className={t.mono}>{studyDays}</span>
+                日
               </span>
             </div>
             <div className={p.history}>
@@ -487,7 +489,7 @@ function ProgressSample() {
                 <div
                   className={p.heat}
                   role="img"
-                  aria-label={`直近12週の1日ごとの解答数。${studyDays}日学習し、合計${totalAnswers}問解きました。`}
+                  aria-label={`直近${HEAT_WEEKS}週の1日ごとの解答数。${studyDays}日学習し、合計${totalAnswers}問解きました。`}
                 >
                   <span className={p.heatCorner} aria-hidden />
                   {WEEKDAYS.map((weekday) => (
@@ -551,28 +553,30 @@ function ProgressSample() {
                   <dt>連続学習</dt>
                   <dd>
                     <span className={p.statNum}>{streak}</span>日
-                    <small>12週のベスト {longestStreak}日</small>
+                    <small>
+                      {HEAT_WEEKS}週のベスト {longestStreak}日
+                    </small>
                   </dd>
                 </div>
                 <div>
                   <dt>学習した日</dt>
                   <dd>
                     <span className={p.statNum}>{studyDays}</span>日
-                    <small>84日のうち</small>
+                    <small>{heatDays.length}日のうち</small>
                   </dd>
                 </div>
                 <div>
                   <dt>解いた問題</dt>
                   <dd>
                     <span className={p.statNum}>{totalAnswers}</span>問
-                    <small>12週の合計</small>
+                    <small>{HEAT_WEEKS}週の合計</small>
                   </dd>
                 </div>
                 <div>
                   <dt>正答率</dt>
                   <dd>
                     <span className={p.statNum}>{STATS.accuracy}</span>%
-                    <small>12週の平均</small>
+                    <small>{HEAT_WEEKS}週の平均</small>
                   </dd>
                 </div>
               </dl>
