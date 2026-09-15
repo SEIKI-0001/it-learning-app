@@ -342,75 +342,8 @@
 
 /* ───────── 2. 合格準備度の内訳 ───────── */
 
-.scoreRow {
-  margin-top: 18px;
-}
-
-.scale {
-  padding-bottom: 22px;
-}
-
-.scaleTrack {
-  position: relative;
-  height: 10px;
-  border-radius: 3px;
-  background: var(--line);
-}
-
-.scaleFill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 3px 0 0 3px;
-  background: var(--blue);
-  transform-origin: left center;
-  animation: grow 800ms var(--ease) 200ms both;
-}
-
-.scaleZone {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 1;
-  border-left: 2px solid var(--canvas);
-}
-
-.scaleZone:first-child {
-  border-left: 0;
-}
-
-.scaleZoneLabel {
-  display: none;
-  position: absolute;
-  top: calc(100% + 7px);
-  left: 6px;
-  font-size: 11px;
-  color: var(--ink-3);
-  white-space: nowrap;
-}
-
-.scaleZone:first-child .scaleZoneLabel {
-  left: 0;
-}
-
-.scaleZone[data-current="true"] .scaleZoneLabel {
-  display: block;
-  color: var(--blue-700);
-  font-weight: 500;
-}
-
-.scaleMarker {
-  position: absolute;
-  top: -5px;
-  bottom: -5px;
-  z-index: 2;
-  width: 3px;
-  margin-left: -1.5px;
-  border-radius: 2px;
-  background: var(--ink);
-}
-
 .fieldList {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -424,6 +357,9 @@
   align-items: baseline;
   gap: 8px 12px;
   padding: 12px 0;
+}
+
+.field + .field {
   border-top: 1px solid var(--line);
 }
 
@@ -524,13 +460,8 @@
 
 
 /* ───────── 2. いまの目標（CP の突破条件） ─────────
-   このページで唯一の強調ブロック。青い枠と「いまの目標」タグで、
+   「いまの目標」タグと置き場所（道のりの直下・広いタイル）で目立たせ、
    残りの条件＝やることを、取り組むボタンと一緒に先頭へ出す。 */
-
-.gate {
-  border: 1.5px solid var(--blue);
-  box-shadow: 0 0 0 4px var(--blue-soft);
-}
 
 .gateHead {
   display: flex;
@@ -892,11 +823,11 @@
   min-width: 0;
 }
 
-/* 列=週（月曜はじまり）、行=曜日。先頭列は曜日の見出し、先頭行は月の見出し */
+/* カレンダーと同じ並び: 列=曜日（月〜日）、行=週（上が古い）。先頭行は曜日、先頭列は月の見出し */
 .heat {
   display: grid;
-  grid-template-columns: 16px repeat(12, minmax(0, 1fr));
-  gap: 3px;
+  grid-template-columns: 28px repeat(7, 24px);
+  gap: 4px;
 }
 
 .heatRow {
@@ -908,6 +839,7 @@
 }
 
 .heatMonth {
+  align-self: center;
   font-size: 10.5px;
   line-height: 1;
   color: var(--ink-3);
@@ -915,10 +847,11 @@
 }
 
 .heatWeekday {
-  font-size: 10px;
+  padding-bottom: 2px;
+  font-size: 10.5px;
   line-height: 1;
   color: var(--ink-3);
-  align-self: center;
+  text-align: center;
 }
 
 .heatDay,
@@ -1273,9 +1206,9 @@
     grid-column: span 7;
   }
 
-  /* ヒートマップの列は実寸（曜日16px＋17px×12週＋隙間）に固定し、残りを累計に回す */
+  /* ヒートマップの列は実寸（月見出し26px＋18px×7曜日＋隙間）に固定し、残りを累計に回す */
   .history {
-    grid-template-columns: 256px minmax(0, 1fr);
+    grid-template-columns: 180px minmax(0, 1fr);
     align-items: start;
     gap: 24px;
   }
@@ -1286,13 +1219,13 @@
   }
 
   .heat {
-    grid-template-columns: 16px repeat(12, 17px);
+    grid-template-columns: 26px repeat(7, 18px);
+    gap: 3px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .roadNow,
-  .scaleFill {
+  .roadNow {
     animation: none;
   }
 }

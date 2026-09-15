@@ -55,7 +55,7 @@ function heatLevel(answers: number): 0 | 1 | 2 | 3 | 4 {
 type HeatDay = { date: Date; answers: number } | null;
 
 /**
- * 直近12週を「列=週（月曜はじまり）× 行=曜日」に並べる。
+ * 直近12週をカレンダーと同じ「行=週（月曜はじまり・上が古い）× 列=曜日」に並べる。
  * 今日より先のマスは null（描かない）。解答数は DAILY_ANSWERS の末尾を今日として割り当てる。
  */
 function buildHeatWeeks(today: Date): HeatDay[][] {
@@ -138,7 +138,7 @@ function ProgressSample() {
     run = day.answers > 0 ? run + 1 : 0;
     longestStreak = Math.max(longestStreak, run);
   }
-  // 月の見出し: その週に1日を含む列（先頭列は必ず）に月を出す
+  // 月の見出し: その週に1日を含む行（先頭行は必ず）の左に月を出す
   const monthLabels = weeks.map((week, wi) => {
     const days = week.filter(
       (day): day is NonNullable<HeatDay> => day !== null,
@@ -364,38 +364,6 @@ function ProgressSample() {
               <span className={t.sectionMeta}>実際の回答と定着から判定</span>
             </div>
 
-            <div className={p.scoreRow}>
-              <div
-                className={p.scale}
-                aria-label={`合格準備度 ${score}/100（${READINESS.bandLabel}）`}
-              >
-                <div className={p.scaleTrack}>
-                  {READINESS_BANDS.map((band) => {
-                    const width = band.to - band.from;
-                    const current = score >= band.from && score < band.to;
-                    return (
-                      <span
-                        key={band.id}
-                        className={p.scaleZone}
-                        data-current={current}
-                        style={{ left: `${band.from}%`, width: `${width}%` }}
-                      >
-                        <span className={p.scaleZoneLabel}>{band.label}</span>
-                      </span>
-                    );
-                  })}
-                  <span
-                    className={p.scaleFill}
-                    style={{ width: `${score}%` }}
-                  />
-                  <span
-                    className={p.scaleMarker}
-                    style={{ left: `${score}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-
             <ul className={p.fieldList}>
               {FIELDS.map((field) => {
                 const band = READINESS_BANDS.find(
@@ -522,25 +490,24 @@ function ProgressSample() {
                   aria-label={`直近12週の1日ごとの解答数。${studyDays}日学習し、合計${totalAnswers}問解きました。`}
                 >
                   <span className={p.heatCorner} aria-hidden />
-                  {monthLabels.map((label, wi) => (
-                    <span key={`m${wi}`} className={p.heatMonth} aria-hidden>
-                      {label}
+                  {WEEKDAYS.map((weekday) => (
+                    <span key={weekday} className={p.heatWeekday} aria-hidden>
+                      {weekday}
                     </span>
                   ))}
-                  {WEEKDAYS.map((weekday, di) => (
-                    <div key={weekday} className={p.heatRow}>
-                      <span className={p.heatWeekday} aria-hidden>
-                        {di % 2 === 0 ? weekday : ""}
+                  {weeks.map((week, wi) => (
+                    <div key={wi} className={p.heatRow}>
+                      <span className={p.heatMonth} aria-hidden>
+                        {monthLabels[wi]}
                       </span>
-                      {weeks.map((week, wi) => {
-                        const day = week[di];
+                      {week.map((day, di) => {
                         if (!day)
-                          return <span key={wi} className={p.heatEmpty} />;
+                          return <span key={di} className={p.heatEmpty} />;
                         const picked =
                           pickedDay?.date.getTime() === day.date.getTime();
                         return (
                           <span
-                            key={wi}
+                            key={di}
                             className={p.heatDay}
                             data-level={heatLevel(day.answers)}
                             data-picked={picked}
@@ -563,7 +530,7 @@ function ProgressSample() {
                         </strong>
                       </>
                     ) : (
-                      "マスにふれると、その日の解答数が出ます"
+                      "マスにふれると解答数が出ます"
                     )}
                   </p>
                   <div className={p.heatLegend} aria-hidden>
