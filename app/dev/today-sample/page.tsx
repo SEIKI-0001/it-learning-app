@@ -22,27 +22,8 @@ import {
   type Task,
 } from "./data";
 import AppNav from "./nav";
+import { PaletteBar, usePalette } from "./palette";
 import s from "./today.module.css";
-
-// 配色パターンの比較用。色の定義は today.module.css の [data-palette] にある。
-const PALETTES = [
-  {
-    id: "clear",
-    label: "B クリア",
-    swatches: ["#2f6fdb", "#e08a34", "#16191d"],
-  },
-  {
-    id: "brand",
-    label: "ブランド",
-    swatches: ["#187bd7", "#f58a17", "#0868c9"],
-  },
-  {
-    id: "mochit",
-    label: "ブランド＋モチット",
-    swatches: ["#187bd7", "#f58a17", "#7dd3c0"],
-  },
-] as const;
-type PaletteId = (typeof PALETTES)[number]["id"];
 
 type Slot = Task & { start: number; state: "done" | "now" | "next" };
 
@@ -62,7 +43,7 @@ function TodaySample() {
     () => new Set(["lan-wan"]),
   );
   const [claimed, setClaimed] = useState(false);
-  const [palette, setPalette] = useState<PaletteId>("clear");
+  const [palette, setPalette] = usePalette();
   // モチット版: 完了にしたとき、次の行で迎えるモチットにリアクションさせる
   const [mochitSignal, setMochitSignal] = useState<MochitEventSignal | null>(
     null,
@@ -147,30 +128,8 @@ function TodaySample() {
 
   return (
     <div className={s.shell} data-palette={palette}>
-      <AppNav />
-      <div className={s.paletteBar} role="group" aria-label="配色パターン">
-        <span className={s.paletteTitle}>配色パターン</span>
-        {PALETTES.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            className={s.paletteOption}
-            aria-pressed={palette === option.id}
-            onClick={() => setPalette(option.id)}
-          >
-            <span className={s.swatches} aria-hidden>
-              {option.swatches.map((color) => (
-                <span
-                  key={color}
-                  className={s.swatch}
-                  style={{ background: color }}
-                />
-              ))}
-            </span>
-            {option.label}
-          </button>
-        ))}
-      </div>
+      <AppNav active="today" />
+      <PaletteBar palette={palette} onChange={setPalette} />
       <main className={s.page}>
         <header className={s.inner}>
           <div className={s.hero}>
