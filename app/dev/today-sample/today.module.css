@@ -27,9 +27,9 @@
   --cta: #16191d;
   --cta-hover: #000000;
 
-  --sans: var(--font-sample-sans), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
-  --num: var(--font-sample-num), "Helvetica Neue", Arial, sans-serif;
-  --mono: var(--font-sample-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --sans: var(--font-app-sans), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  --num: var(--font-app-num), "Helvetica Neue", Arial, sans-serif;
+  --mono: var(--font-app-mono), ui-monospace, "SF Mono", Menlo, monospace;
   --ease: cubic-bezier(0.3, 0.7, 0.2, 1);
 
   min-height: 100vh;

@@ -434,7 +434,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
             pendingStartedAtRef.current = null;
             pendingFinalizationRef.current = null;
           }}
-          className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white"
+          className="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white"
         >
           別の問題で再挑戦する
         </button>
@@ -482,7 +482,7 @@ export default function CheckpointExamRunner({ checkpointId }: { checkpointId: s
           type="button"
           onClick={() => void startExam()}
           disabled={starting || pendingFinalization !== null}
-          className="w-full rounded-xl bg-brand-600 px-6 py-3 font-bold text-white disabled:opacity-50"
+          className="w-full rounded-lg bg-gray-900 px-6 py-3 font-bold text-white disabled:opacity-50"
         >
           チェックポイント試験を始める
         </button>

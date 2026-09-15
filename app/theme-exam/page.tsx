@@ -43,7 +43,7 @@ export default function ThemeExamListPage() {
               </ul>
               <Link
                 href={`/theme-exam/${theme.slug}`}
-                className={buttonClass("primary", "md", "mt-3")}
+                className={buttonClass("secondary", "md", "mt-3")}
               >
                 試験へ進む
               </Link>

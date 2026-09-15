@@ -57,7 +57,7 @@ export default function TodayPrimaryCard({
   return (
     <section
       aria-labelledby="today-primary-heading"
-      className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4"
+      className="mt-4 rounded-xl bg-white p-4"
     >
       <div className="flex items-center justify-between gap-3">
         <p id="today-primary-heading" className="text-xs font-semibold text-brand-700">
@@ -102,7 +102,7 @@ export default function TodayPrimaryCard({
       {/* 4. この画面で唯一の Primary CTA */}
       <Link
         href={action.href}
-        className="mt-3 flex w-full items-center justify-between rounded-lg bg-brand-600 px-5 py-3 text-white transition hover:bg-brand-700 active:scale-[0.99]"
+        className="mt-3 flex w-full items-center justify-between rounded-lg bg-gray-900 px-5 py-3 text-white transition hover:bg-black active:scale-[0.99]"
       >
         <span className="text-base font-semibold">{CTA_LABELS[action.kind]}</span>
         <Icon name="arrow-right" className="ml-3 h-5 w-5 shrink-0" />

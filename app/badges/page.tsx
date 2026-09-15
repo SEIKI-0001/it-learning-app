@@ -118,7 +118,7 @@ export default function BadgesPage() {
         {recommended && (
           <Link
             href={badgeActionHref(recommended.def)}
-            className="group block rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
+            className="group block rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
           >
             <p className="text-xs font-semibold text-brand-700">次に狙うバッジ</p>
             <p className="mt-1 flex items-center gap-2 text-[15px] font-semibold leading-snug text-gray-900">

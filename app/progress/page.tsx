@@ -159,10 +159,11 @@ export default function ProgressPage() {
 
   return (
     <main className="min-h-screen pb-24">
-      <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
-        <div className="mx-auto w-full max-w-3xl">
+      <header className="pt-3 md:pt-6 lg:pt-8">
+        <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
+          <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           <div className="flex items-baseline justify-between gap-3">
-            <h1 className="text-xl font-bold tracking-tight text-gray-900">進捗</h1>
+            <h1 className="text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">進捗</h1>
             <p className="text-xs text-gray-500">
               {comebackLabel(gap)}・{gapText}
             </p>
@@ -264,6 +265,7 @@ export default function ProgressPage() {
           </div>
 
         </div>
+          </div>
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5">

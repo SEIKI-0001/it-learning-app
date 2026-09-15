@@ -137,7 +137,7 @@ export default function DailyQuestCard({
         <button
           type="button"
           onClick={handleClaim}
-          className="mt-3 w-full rounded-lg bg-accent-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-accent-700 active:scale-[0.99]"
+          className="mt-3 w-full rounded-lg bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-black active:scale-[0.99]"
         >
           宝箱を開ける（+{DAILY_QUEST_CLEAR_XP} XP）
         </button>

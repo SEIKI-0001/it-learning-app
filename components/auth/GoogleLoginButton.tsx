@@ -47,7 +47,7 @@ export default function GoogleLoginButton({ next = "/" }: { next?: string }) {
         {loading ? "Google に移動中…" : "Google でログイン"}
       </button>
       {error && (
-        <p className="mt-2 text-center text-sm font-semibold text-rose-200">{error}</p>
+        <p className="mt-2 text-center text-sm font-semibold text-rose-700">{error}</p>
       )}
     </div>
   );

@@ -283,8 +283,9 @@ export default function TodayPage() {
   return (
     <main className="min-h-screen pb-24">
       {/* 学習手帳: 日付・試験までの距離・準備度を数字で静かに示す */}
-      <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
-        <div className="mx-auto w-full max-w-3xl">
+      <header className="pt-3 md:pt-6 lg:pt-8">
+        <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
+          <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-xs text-gray-500">{dateLabel}</p>
             <p className="flex items-center gap-1 text-xs text-gray-600">
@@ -295,7 +296,7 @@ export default function TodayPage() {
               <span className="tabular-nums">連続{state.progress.streakCount}日</span>
             </p>
           </div>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">今日の学習</h1>
+          <h1 className="mt-2 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">今日の学習</h1>
 
           <div className="mt-4 grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-200">
             <div className="py-3 pr-4">
@@ -319,7 +320,7 @@ export default function TodayPage() {
             <TodayPrimaryCard action={primary} impacts={impacts} maxXp={primaryMaxXp} />
           ) : (
             /* 推奨対象が無い/取れないときは既存の学習導線へ安全にフォールバックする */
-            <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+            <div className="mt-4 rounded-xl bg-white p-4">
               <p className="text-xs font-semibold text-brand-700">今日の最優先</p>
               <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">
                 今日のぶんは終わりました。復習やテーマ探索で上積みできます
@@ -339,6 +340,7 @@ export default function TodayPage() {
             </div>
           )}
         </div>
+          </div>
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">

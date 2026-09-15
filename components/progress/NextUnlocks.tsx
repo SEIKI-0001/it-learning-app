@@ -28,14 +28,14 @@ type Unlock = {
 function PrimaryUnlock({ unlock }: { unlock: Unlock }) {
   const tone = unlock.challengeable
     ? {
-        box: "border-accent-200 border-l-accent-500 bg-accent-50 hover:bg-accent-100",
+        box: "bg-accent-50 hover:bg-accent-100",
         label: "text-accent-700",
         detail: "text-accent-700",
         icon: "text-accent-600",
         fill: "bg-accent-500",
       }
     : {
-        box: "border-brand-200 border-l-brand-500 bg-brand-50 hover:bg-brand-100",
+        box: "bg-brand-50 hover:bg-brand-100",
         label: "text-brand-700",
         detail: "text-brand-700",
         icon: "text-brand-600",
@@ -44,7 +44,7 @@ function PrimaryUnlock({ unlock }: { unlock: Unlock }) {
   return (
     <Link
       href={unlock.href}
-      className={`group flex items-start gap-3 rounded-lg border border-l-4 p-3 transition active:scale-[0.99] ${tone.box}`}
+      className={`group flex items-start gap-3 rounded-xl p-3 transition active:scale-[0.99] ${tone.box}`}
     >
       <Icon name={unlock.icon} className={`mt-0.5 h-5 w-5 shrink-0 ${tone.icon}`} />
       <span className="min-w-0 flex-1">

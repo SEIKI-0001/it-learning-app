@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { sampleFontClassName } from "./fonts";
 
 // /today 改善デザインのサンプル（テスト環境専用・検索対象外）。
 
@@ -13,5 +12,5 @@ export default function TodaySampleLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className={sampleFontClassName}>{children}</div>;
+  return children;
 }
