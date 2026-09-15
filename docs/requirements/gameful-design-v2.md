@@ -329,7 +329,7 @@ DB側の原子的判定がこの単位で行われている。
 ## GF-P0-006 LINE学習リマインダー
 
 **Priority:** P0  
-**Status:** `IMPLEMENTED`
+**Status:** `VERIFIED`
 
 ### Purpose
 
@@ -385,10 +385,20 @@ DB側の原子的判定がこの単位で行われている。
 - **時刻の粒度**: Cron が毎時実行のため設定は「時」のみを持ち、分は保持しない。
   設定時刻より前に学習しないまま21時になった場合の保険として、`STREAK_RISK_HOUR` に
   ストリーク危機だけを出す（設定時刻が21時より早いユーザーのみ）。
-- **送信順序**: 「配信枠を予約（insert）→ push → 結果で status 更新」。予約が主キー衝突なら送らない。
-  push 前に予約するので、送信中に落ちても二重送信にならない（代わりに当日は再送しない）。
-- **学習データとの境界**: 読むのは `user_progress` / `line_users` / `notification_preferences` のみ、
-  書くのは `notification_deliveries` / `line_sessions` のみ。push も Cron も学習状態に触れない。
+  **ストリーク危機は、守れる連続が実在するとき（最後の学習が前日まで）だけ**扱う。
+  `streakCount` は学習時にしか更新されず途切れても古い値が残るため、離脱日数と突き合わせる（PR #44）。
+- **判定材料の取得**: RPC `list_due_notification_candidates` の1往復で、設定・LINE連携・進捗・
+  直近の配信記録をまとめて取る（PR #43）。判定そのものは SQL に持ち込まない。
+- **送信順序**: 「配信枠を予約 → 送信直前の未学習再確認 → push → 結果で status 更新」。
+  予約は冪等な RPC `reserve_notification_delivery`（PR #45）。応答だけ失った再試行では
+  自分の `pending` を引き継ぎ、`sent` / `failed` は送らない。push 前に予約するので、
+  送信中に落ちても二重送信にならない（代わりに当日は再送しない）。
+- **一時障害への耐性**: 読み取り・予約・status 更新はいずれも1回だけ引き直す。失敗時は
+  欠けた情報で送らず、理由（code / message）を返してその回は何もしない（PR #40 / #42）。
+  本番の PostgREST が終日 504 を返す事象への対処で、原因は Supabase 側（§21 注記）。
+- **学習データとの境界**: 読むのは `user_progress` / `line_users` / `notification_preferences` /
+  `notification_deliveries` のみ、書くのは `notification_deliveries` / `line_sessions` のみ。
+  push も Cron も学習状態に触れない。
 - **Cron**: **Cloudflare Workers Cron Trigger**（`workers/line-reminder-cron/`）の `0 * * * *` →
   `GET /api/cron/line-reminder`。`Authorization: Bearer $CRON_SECRET` で保護し、
   `CRON_SECRET` 未設定なら 503 で実行しない。
@@ -403,6 +413,11 @@ DB側の原子的判定がこの単位で行われている。
   アクセストークンはこのモジュールの外へ出さない。
 - **設定 UI**: `/settings` の「学習リマインダー」（`components/settings/NotificationSettings.tsx`）。
   設定はサーバーのみに持ち localStorage には置かない（端末間で「止めたのに届く」を作らない）。
+  LINE 未連携のアカウントでは push の宛先が無いため、「いまは LINE へ送れません」と警告する
+  （オプトイン自体は妨げない。PR #39）。
+- **運用ログ**: Worker は成功時も通知APIの実行結果（scanned / sent / failed / skipped）を1行出す。
+  無言だと「正常に対象0件」と「動いていない」を区別できず、`CRON_SECRET` が空のまま数日
+  気づけなかった（PR #39）。
 
 ---
 
@@ -991,7 +1006,7 @@ XP付与・報酬抽選にも差分はない。
 | `GF-P0-003` | P0 | `VERIFIED` | #26 | growthCheck / growthChallenge / GrowthCheckPage | Growth check（可視化主体・復習優先） |
 | `GF-P0-004` | P0 | `VERIFIED` | #27 | mochitContext / contextualMochitMessages | Contextual Mochit |
 | `GF-P0-005` | P0 | `VERIFIED` | #25 | sessionOutcome / SessionOutcomeCard | Session outcome |
-| `GF-P0-006` | P0 | `IMPLEMENTED` | #37 | notificationSchedule / notificationReminderRoute / notificationPreferenceRoute / lineReminderCronWorker | LINE reminder（Cloudflare Cron。実機QA未実施のため VERIFIED ではない） |
+| `GF-P0-006` | P0 | `VERIFIED` | #37 #39 #40 #42 #43 #44 #45 | notificationSchedule / notificationReminderRoute / notificationPreferenceRoute / lineReminderCronWorker | LINE reminder（Cloudflare Cron）。2026-09-15 本番・実機で受信とログイン済み着地を確認 |
 | `GF-P1-001` | P1 | `VERIFIED` | #31 | studyAmount / StudyAmountPicker | Session length choice |
 | `GF-P1-002` | P1 | `VERIFIED` | #31 | comebackMission / ComebackMissionCard | Comeback mission |
 | `GF-P1-003` | P1 | `VERIFIED` | #32 | cpEvolution / mochitGrowthCelebration | CP evolution |
@@ -1019,12 +1034,15 @@ XP付与・報酬抽選にも差分はない。
 基づく。iPhone/Android 実機、ログイン済み（Google/LINE）経路、端末間マージは
 未確認のまま残る（同ファイル §4）。
 
-`GF-P0-006` は 2026-09-06 に実装し `IMPLEMENTED` へ移した。`VERIFIED` へ上げるには
-**実機の LINE 友だち追加 → オプトイン → 実際の時刻での push 受信**が要る。これは
-`CRON_SECRET` / `LINE_CHANNEL_ACCESS_TOKEN` / `APP_BASE_URL` が揃った本番相当環境と、
-デプロイ済みの Cloudflare Scheduler Worker が前提で、ローカルでは通せない。
-なお Cloudflare の scheduled handler 自体は `wrangler dev --test-scheduled` で
-ローカル実行を確認済み（手順は README）。
+`GF-P0-006` は 2026-09-06 に実装し、2026-09-15 に本番環境・実機で `VERIFIED` へ昇格した。
+LINE 連携済みアカウントでオプトインし、設定時刻（18:00 JST）に復帰通知が LINE に届き、
+通知リンクからログイン画面を経由せず `/today` に着地することを確認した
+（結果は `docs/qa/gameful-v2-qa-results-2026-09-05.md` の「GF-P0-006 実機QA」）。
+
+本番 Supabase の PostgREST が `Warp server error: Thread killed by timeout manager` を
+毎時2〜14件出しており、該当リクエストは 504 になる。アプリの不具合ではない（同一クエリを
+外部から叩くと 0.1〜0.5秒で 200）。通知側は往復の削減と冪等なリトライで吸収しているが、
+発生源は Supabase 側に残っており、報告が必要。
 
 ---
 
