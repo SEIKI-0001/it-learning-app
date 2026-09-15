@@ -3,8 +3,8 @@
 // 参考書の進み具合を1日1回記録するカード（旧 DailyProgressReport のサンプル版）。
 //
 // 入力の迷いを減らすために:
-//   - 何を答えるのか: 「今日の範囲（章・ページ）」を先に見せ、そこをどこまで読んだかだけを聞く
-//   - どの値を選ぶか: 「半分くらい」を自分で見積もらせず、読み終えたページで選ばせる
+//   - 何を答えるのか: 今日のレッスンのトピックを先に見せ、その範囲を参考書でどこまで読んだかだけを聞く
+//   - どの値を選ぶか: 4段階それぞれに量のゲージを付け、数字を見積もらなくても目で選べるようにする
 //   - 選んだら即記録。理由は「4分の1」「まだ」のときだけ、記録のあとに任意で聞く（答えなくてよい）
 //   - 休む日は選択肢の外に置き、4つの段階と混ざらないようにする
 
@@ -15,14 +15,11 @@ import r from "./reading.module.css";
 type Level = "none" | "little" | "half" | "all";
 type Reason = "no_time" | "difficult" | "tired" | "forgot" | "other";
 
-const span = READING.to - READING.from + 1;
-const pageAt = (ratio: number) => READING.from + Math.round(span * ratio) - 1;
-
-const OPTIONS: { level: Level; page: string; label: string }[] = [
-  { level: "none", page: "まだ", label: "読めていない" },
-  { level: "little", page: `p.${pageAt(0.25)}`, label: "4分の1" },
-  { level: "half", page: `p.${pageAt(0.5)}`, label: "半分" },
-  { level: "all", page: `p.${READING.to}`, label: "最後まで" },
+const OPTIONS: { level: Level; label: string; fill: number }[] = [
+  { level: "none", label: "まだ", fill: 0 },
+  { level: "little", label: "少し", fill: 0.25 },
+  { level: "half", label: "半分", fill: 0.5 },
+  { level: "all", label: "全部", fill: 1 },
 ];
 
 const REASONS: { value: Reason; label: string }[] = [
@@ -65,8 +62,8 @@ export default function ReadingCheck() {
     if (!saved) return null;
     if (saved.level === "rest") return "今日は読まない日として記録しました";
     const option = OPTIONS.find((o) => o.level === saved.level)!;
-    if (saved.level === "none") return "まだ読めていない、で記録しました";
-    return `${option.page}まで（${option.label}）で記録しました`;
+    if (saved.level === "none") return "「まだ」で記録しました";
+    return `「${option.label}」読んだ、で記録しました`;
   })();
 
   return (
@@ -79,17 +76,16 @@ export default function ReadingCheck() {
       </div>
 
       <div className={r.range}>
-        <span className={r.rangeLabel}>今日の範囲</span>
-        <span className={r.rangeBody}>
-          {READING.chapter}
-          <span className={r.pages}>
-            p.{READING.from}〜{READING.to}
-          </span>
-        </span>
+        <span className={r.rangeLabel}>今日のレッスンの範囲</span>
+        <ul className={r.topics}>
+          {READING.topics.map((topic) => (
+            <li key={topic}>{topic}</li>
+          ))}
+        </ul>
       </div>
 
       <p className={r.question} id="reading-question">
-        どのページまで読みましたか？
+        この範囲を、参考書でどこまで読みましたか？
       </p>
 
       <div
@@ -112,7 +108,9 @@ export default function ReadingCheck() {
             onPointerEnter={() => setHovered(index)}
             onClick={() => choose(option.level)}
           >
-            <span className={r.stepPage}>{option.page}</span>
+            <span className={r.gauge} aria-hidden>
+              <span style={{ width: `${option.fill * 100}%` }} />
+            </span>
             <span className={r.stepLabel}>{option.label}</span>
           </button>
         ))}
