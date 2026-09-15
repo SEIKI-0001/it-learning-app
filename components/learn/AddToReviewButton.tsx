@@ -34,7 +34,7 @@ export default function AddToReviewButton({ topicId }: { topicId: string }) {
       className={`flex w-full items-center justify-center gap-1.5 rounded-lg px-6 py-3.5 text-base font-semibold transition active:scale-[0.99] ${
         isAdded
           ? "border border-accent-200 bg-accent-50 text-accent-700"
-          : "bg-accent-600 text-white hover:bg-accent-700"
+          : "bg-accent-50 text-accent-700 hover:bg-accent-100"
       } disabled:opacity-70`}
     >
       <Icon name={isAdded ? "check" : "rotate"} className="h-4 w-4" />

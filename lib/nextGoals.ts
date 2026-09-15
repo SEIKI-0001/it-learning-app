@@ -5,7 +5,7 @@
 //   - 突破試験の解放まで: buildCheckpointGate の必須バッジ充足
 //   - 次のランクまで: getRankStatus の remaining/ratio
 //   - 次のストリーク節目まで: lib/streak の STREAK_MILESTONES
-// 「次のバッジ」のテキスト提示は TodayPolicyStrip が担うため、ここでは
+// 「次のバッジ」のテキスト提示は /progress の突破条件が担うため、ここでは
 // 数値バーで見せられるゴールだけを扱う（重複させない）。
 
 import type { AppState } from "@/types";

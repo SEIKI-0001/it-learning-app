@@ -33,15 +33,16 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
 
   return (
     <main className="min-h-screen pb-24">
-      <header className="border-b border-gray-200 bg-white px-4 py-5">
-        <div className="mx-auto w-full max-w-3xl">
+      <header className="pt-3 md:pt-6 lg:pt-8">
+        <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
+          <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           <nav aria-label="パンくず" className="text-xs text-gray-500">
             <Link href="/learn" className="text-brand-700 hover:underline">学ぶ</Link>
             <span aria-hidden> ＞ </span>
             <span>{theme.title}</span>
           </nav>
           <p className="mt-4 text-xs font-medium text-gray-500">第{theme.chapterNumber}章</p>
-          <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">{theme.title}</h1>
+          <h1 className="mt-2 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">{theme.title}</h1>
           <p className="mt-2 text-sm leading-relaxed text-gray-600">{theme.description}</p>
           <div className="mt-4 max-w-xl">
             <div className="flex items-center justify-between text-sm text-gray-600">
@@ -57,12 +58,13 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
           {nextLesson && (
             <Link
               href={getLessonHref(nextLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
             >
               続きから学ぶ：{nextLesson.title}
             </Link>
           )}
         </div>
+          </div>
       </header>
 
       <div className="mx-auto w-full max-w-3xl px-4 py-6">

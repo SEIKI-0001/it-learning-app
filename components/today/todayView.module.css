@@ -1,0 +1,1153 @@
+/* /today（進行表）。デザインは 2026-09 にユーザー確認済みの進行表サンプルに合わせている。
+   色はアプリのテーマトークン（globals.css の @theme）に結びつけ、ここで独自の値は持たない。 */
+
+.view {
+  --canvas: #ffffff;
+  --wash: var(--color-brand-50);
+  --wash-line: #dfe7f3;
+  --ink: var(--color-gray-900);
+  --ink-2: var(--color-gray-600);
+  --ink-3: var(--color-gray-500);
+  --line: var(--color-gray-200);
+  --line-strong: var(--color-gray-300);
+  --blue: var(--color-brand-500);
+  --blue-700: var(--color-brand-700);
+  --blue-soft: var(--color-brand-100);
+  --orange: var(--color-accent-500);
+  --orange-700: var(--color-accent-700);
+  --orange-soft: var(--color-accent-100);
+  --green: var(--color-emerald-500);
+  --cta: var(--color-gray-900);
+  --cta-hover: #000000;
+  --sans: var(--font-app-sans), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  --num: var(--font-app-num), "Helvetica Neue", Arial, sans-serif;
+  --mono: var(--font-app-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --ease: cubic-bezier(0.3, 0.7, 0.2, 1);
+
+  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  color: var(--ink);
+}
+
+@media (min-width: 1024px) {
+  .view {
+    padding-bottom: 72px;
+  }
+}
+
+.view :focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+
+
+.mono {
+  font-family: var(--num);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.inner {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+/* ───────── navigation（スマホ=下部バー / デスクトップ=左サイドバー） ───────── */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ───────── hero panel ───────── */
+
+.hero {
+  margin-top: 12px;
+  padding: 22px 18px 24px;
+  border-radius: 14px;
+  background: var(--wash);
+}
+
+.eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.eyebrowTitle {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+
+
+.headline {
+  margin: 14px 0 0;
+  font-size: clamp(25px, 6.6vw, 34px);
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  word-break: auto-phrase;
+}
+
+.headlineNum {
+  display: inline-block;
+  margin: 0 0.06em;
+  font-family: var(--num);
+  font-weight: 500;
+  font-size: 1.2em;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--blue);
+}
+
+.subline {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.subline .mono {
+  margin: 0 0.15em;
+  color: var(--ink);
+}
+
+.dot {
+  margin: 0 0.35em;
+  color: var(--line-strong);
+}
+
+/* 学習量: セグメントコントロール */
+.budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 18px;
+}
+
+.budgetLabel {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.budgetTrack {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(22, 25, 29, 0.06);
+}
+
+.chip {
+  appearance: none;
+  padding: 7px 13px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 180ms,
+    color 180ms,
+    box-shadow 180ms;
+}
+
+.chip:hover {
+  color: var(--ink);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--canvas);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+
+/* ───────── signature: minute ruler ───────── */
+
+.ruler {
+  margin: 20px 0 0;
+  padding-top: 30px;
+}
+
+.track {
+  position: relative;
+  height: 44px;
+}
+
+/* 1分ごとの短い目盛りと、5分ごとの長い目盛り */
+.track::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  height: 7px;
+  background-image:
+    linear-gradient(to right, var(--line-strong) 1px, transparent 1px),
+    linear-gradient(to right, var(--wash-line) 1px, transparent 1px);
+  background-size:
+    calc(500% / var(--total)) 7px,
+    calc(100% / var(--total)) 3px;
+  background-repeat: repeat-x;
+  box-shadow: inset -1px 0 0 var(--line-strong);
+}
+
+.segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transform-origin: left center;
+  animation: grow 640ms var(--ease) both;
+  animation-delay: calc(var(--i) * 80ms + 120ms);
+}
+
+.segment[data-kind="new"] {
+  --solid: var(--blue);
+  --soft: var(--blue-soft);
+}
+
+.segment[data-kind="review"] {
+  --solid: var(--orange);
+  --soft: var(--orange-soft);
+}
+
+.segment::before,
+.segmentFill {
+  content: "";
+  position: absolute;
+  inset: 0 2px;
+  border-radius: 4px;
+}
+
+.segment::before {
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--wash-line);
+}
+
+.segmentFill {
+  background: var(--solid);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 480ms var(--ease);
+}
+
+.segment[data-state="done"] .segmentFill {
+  transform: scaleX(1);
+}
+
+.segment[data-state="now"]::before {
+  background: var(--soft);
+  box-shadow: inset 0 0 0 1.5px var(--solid);
+}
+
+.segmentLabel {
+  display: none;
+}
+
+.caret {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  transform: translateX(-12px);
+  padding: 3px 9px;
+  border-radius: 3px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+  transition: left 480ms var(--ease);
+}
+
+.caret::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  top: 100%;
+  border: 4px solid transparent;
+  border-top-color: var(--ink);
+}
+
+.ticks {
+  position: relative;
+  height: 16px;
+  margin-top: 22px;
+}
+
+.tickLabel {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.tickLabel[data-edge="start"] {
+  transform: none;
+}
+
+.tickLabel[data-edge="end"] {
+  transform: translateX(-100%);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendItem::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.legendItem[data-kind="new"]::before {
+  background: var(--blue);
+}
+
+.legendItem[data-kind="review"]::before {
+  background: var(--orange);
+}
+
+/* ───────── body ───────── */
+
+.body {
+  margin-top: 8px;
+}
+
+.sheet {
+  padding: 20px 6px 0;
+}
+
+.missions {
+  margin-top: 20px;
+  padding: 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.sheetHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.sectionTitle {
+  margin: 0;
+  letter-spacing: -0.04em;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.sectionMeta {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.main {
+  min-width: 0;
+}
+
+.comeback {
+  margin-top: 20px;
+}
+
+.sideExtra {
+  margin-top: 14px;
+}
+
+/* ───────── cue sheet ───────── */
+
+.cues {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cue {
+  --col-offset: 38px;
+  --col-mark: 28px;
+  --gap: 12px;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--col-offset) var(--col-mark) 1fr;
+  column-gap: var(--gap);
+  padding: 14px 12px 14px 0;
+  border-radius: 10px;
+}
+
+/* 丸どうしをつなぐ縦線 */
+.cue::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--col-offset) + var(--gap) + var(--col-mark) / 2 - 1px);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+
+.cues > .cue:first-child::before {
+  top: 28px;
+}
+
+.cue[data-state^="finish"]::before {
+  bottom: auto;
+  height: 24px;
+}
+
+.cue[data-state="now"] {
+  margin: 6px 0;
+  background: var(--wash);
+}
+
+.offset {
+  padding-top: 5px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: right;
+}
+
+.cue[data-state="now"] .offset {
+  color: var(--blue-700);
+  font-weight: 500;
+}
+
+.mark {
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: var(--col-mark);
+  height: var(--col-mark);
+  padding: 0;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--canvas);
+  transition:
+    background-color 200ms,
+    border-color 200ms;
+}
+
+.mark svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  transition: stroke-dashoffset 260ms 80ms ease-out;
+}
+
+.cue[data-state="now"] .mark {
+  border-color: var(--blue);
+}
+
+.cue[data-state="now"][data-kind="review"] .mark {
+  border-color: var(--orange);
+}
+
+.cue[data-state="done"] .mark {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.cue[data-state="done"] .mark svg {
+  stroke-dashoffset: 0;
+}
+
+.cueBody {
+  min-width: 0;
+}
+
+.cueLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cueTitle {
+  margin: 0;
+  padding-top: 3px;
+  letter-spacing: -0.04em;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  word-break: auto-phrase;
+}
+
+.cue[data-state="now"] .cueTitle {
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.cue[data-state="done"] .cueTitle {
+  color: var(--ink-3);
+}
+
+/* 現在地以外の行もタップでそのレッスンへ行ける。見た目は文字のまま */
+.cueTitleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cueTitleLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nowSubLink {
+  font-size: 12px;
+  color: var(--blue-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cueMinutes {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.cueMinutes .mono {
+  margin-right: 1px;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.cue[data-state="done"] .cueMinutes .mono {
+  color: var(--ink-3);
+}
+
+.cueMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.kind {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.kind[data-kind="new"] {
+  background: var(--blue-soft);
+  color: var(--blue-700);
+}
+
+.kind[data-kind="review"] {
+  background: var(--orange-soft);
+  color: var(--orange-700);
+}
+
+.cue[data-state="done"] .kind {
+  background: var(--line);
+  color: var(--ink-2);
+}
+
+.doneText {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.nowPanel {
+  margin-top: 12px;
+  animation: rise 360ms var(--ease) both;
+}
+
+
+.nowActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 14px;
+}
+
+.start {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  padding: 0 16px 0 22px;
+  border-radius: 8px;
+  background: var(--cta);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 160ms,
+    transform 160ms var(--ease);
+}
+
+.start:hover {
+  background: var(--cta-hover);
+}
+
+.start:active {
+  transform: scale(0.98);
+}
+
+.start svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 160ms;
+}
+
+.start:hover svg {
+  transform: translateX(2px);
+}
+
+.nowHint {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.finishMark {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: 12px;
+  height: 12px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  box-shadow: 0 0 0 4px var(--canvas);
+}
+
+.cue[data-state="finish-done"] .finishMark {
+  background: var(--green);
+}
+
+.cue[data-state="finish-done"] .offset {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.finishTitle {
+  margin: 0;
+  padding-top: 3px;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.cue[data-state="finish-done"] .finishTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--green);
+}
+
+.finishActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.textLink {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 160ms;
+}
+
+.textLink:hover {
+  border-color: var(--line-strong);
+}
+
+/* ───────── missions ───────── */
+
+.missionList {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mission {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 11px 0;
+}
+
+.missionLabel {
+  font-size: 14px;
+}
+
+.missionCount {
+  font-family: var(--num);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+}
+
+.mission[data-complete="true"] .missionCount {
+  color: var(--green);
+  font-weight: 500;
+}
+
+.mission[data-complete="true"] .missionLabel {
+  color: var(--ink-3);
+}
+
+.missionCount {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.missionReroll {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--blue-700);
+  font: inherit;
+  font-family: var(--sans);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.missionNote {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.missionBar {
+  grid-column: 1 / -1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.missionBarFill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--blue);
+  transition: width 480ms var(--ease);
+}
+
+.mission[data-complete="true"] .missionBarFill {
+  background: var(--green);
+}
+
+.reward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--wash);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.reward p {
+  margin: 0;
+}
+
+.reward[data-state="claimable"] {
+  background: var(--orange-soft);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.reward[data-state="claimed"] {
+  background: #e6efe9;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.claim {
+  appearance: none;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--cta);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.claim:hover {
+  background: var(--cta-hover);
+}
+
+/* モチット: 次にやる行の理由や、完了のひとことを話す */
+.mochitSay {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mochitFigure {
+  flex-shrink: 0;
+  margin: -10px -6px -10px -14px;
+}
+
+.bubble {
+  position: relative;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--wash-line);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  word-break: auto-phrase;
+}
+
+.bubble::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-left: 1px solid var(--wash-line);
+  border-bottom: 1px solid var(--wash-line);
+  background: var(--canvas);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.finishActions + .mochitSay,
+.mochitSay + .finishActions {
+  margin-top: 12px;
+}
+
+/* ───────── motion ───────── */
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ───────── tablet ───────── */
+
+@media (min-width: 720px) {
+  .inner {
+    padding: 0 24px;
+  }
+
+  
+
+  .hero {
+    margin-top: 24px;
+    padding: 32px 32px 30px;
+    border-radius: 16px;
+  }
+
+  .track {
+    height: 52px;
+  }
+
+  .sheet {
+    padding: 28px 8px 0;
+  }
+
+  .missions {
+    padding: 24px;
+  }
+}
+
+/* ───────── desktop: 左サイドバー＋広い定規＋2カラム ───────── */
+
+@media (min-width: 1024px) {
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  .inner {
+    padding: 0 48px;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "eyebrow eyebrow"
+      "headline headline"
+      "subline budget"
+      "ruler ruler";
+    column-gap: 32px;
+    margin-top: 32px;
+    padding: 40px 44px 34px;
+    border-radius: 18px;
+  }
+
+  .eyebrow {
+    grid-area: eyebrow;
+    font-size: 13px;
+  }
+
+  .headline {
+    grid-area: headline;
+    margin-top: 16px;
+    font-size: clamp(34px, 3.2vw, 44px);
+    line-height: 1.25;
+    letter-spacing: -0.05em;
+  }
+
+  .mobileBreak {
+    display: none;
+  }
+
+  .subline {
+    grid-area: subline;
+    align-self: center;
+    margin-top: 16px;
+    font-size: 14px;
+  }
+
+  .budget {
+    grid-area: budget;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+
+  .ruler {
+    grid-area: ruler;
+    margin-top: 28px;
+  }
+
+  .track {
+    height: 52px;
+  }
+
+  .segment::before,
+.segmentFill {
+    inset: 0 3px;
+  }
+
+  /* 広い画面では区間の中に単元名を入れる */
+  .segmentLabel {
+    position: absolute;
+    inset: 0 3px;
+    display: block;
+    line-height: 52px;
+    padding: 0 16px;
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--ink-2);
+    transition: color 300ms;
+  }
+
+  .segment[data-state="now"] .segmentLabel {
+    color: var(--blue-700);
+    font-weight: 500;
+  }
+
+  .segment[data-state="done"] .segmentLabel {
+    color: #fff;
+  }
+
+  .tickLabel {
+    font-size: 12px;
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(280px, 26vw, 340px);
+    align-items: start;
+    gap: 40px;
+    margin-top: 12px;
+  }
+
+  .sheet {
+    padding: 32px 0 0;
+  }
+
+  /* 右列: ミッションと参考書の進み具合をまとめて追従させる */
+  .side {
+    position: sticky;
+    top: 24px;
+    margin-top: 32px;
+  }
+
+  .missions {
+    margin-top: 0;
+    padding: 24px;
+  }
+
+  .cue {
+    --col-offset: 48px;
+    --col-mark: 32px;
+    --gap: 18px;
+    padding: 16px 20px 16px 0;
+  }
+
+  .cues > .cue:first-child::before {
+    top: 32px;
+  }
+
+  .cue[data-state^="finish"]::before {
+    height: 28px;
+  }
+
+  .offset {
+    padding-top: 7px;
+    font-size: 13px;
+  }
+
+  .finishMark {
+    margin-top: 9px;
+  }
+
+  .cueTitle {
+    font-size: 16px;
+  }
+
+  .cue[data-state="now"] {
+    padding: 22px 24px 22px 0;
+  }
+
+  .cue[data-state="now"] .cueTitle {
+    font-size: 20px;
+  }
+
+  .nowPanel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 24px;
+  }
+
+
+  .nowActions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    margin-top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view *,
+.view *::before,
+.view *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

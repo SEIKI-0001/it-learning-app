@@ -51,7 +51,7 @@ export default function AvatarPage() {
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
         <MochitNameForm state={state} onChange={persist} />
         {/* 成長段階＝この画面で唯一の強調ブロック */}
-        <section className="rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 text-center">
+        <section className="rounded-xl bg-brand-50 p-4 text-center">
           <div className="flex justify-center">
             <Mochit state="normal" size="large" animation="idle" growthStage={stage} />
           </div>

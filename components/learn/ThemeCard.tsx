@@ -39,7 +39,8 @@ const STATE_CLASS: Record<
   LessonMasterState,
   { line: string; number: string; icon: string }
 > = {
-  not_started: { line: "bg-gray-300", number: "text-gray-500", icon: "text-gray-500" },
+  // 未着手は線を出さない（状態が進んだテーマだけが目に入るようにする）
+  not_started: { line: "bg-transparent", number: "text-gray-500", icon: "text-gray-500" },
   in_progress: { line: "bg-brand-500", number: "text-brand-700", icon: "text-brand-500" },
   review_due: { line: "bg-accent-500", number: "text-accent-700", icon: "text-accent-500" },
   mastered: { line: "bg-emerald-500", number: "text-emerald-700", icon: "text-emerald-500" },

@@ -140,10 +140,11 @@ export default function PlanPage() {
 
   return (
     <main className="min-h-screen pb-24">
-      <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
-        <div className="mx-auto w-full max-w-3xl">
+      <header className="pt-3 md:pt-6 lg:pt-8">
+        <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
+          <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold tracking-tight text-gray-900">学習計画</h1>
+            <h1 className="text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">学習計画</h1>
             <Link
               href="/settings"
               className="text-xs text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
@@ -165,6 +166,7 @@ export default function PlanPage() {
             </p>
           </div>
         </div>
+          </div>
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6">

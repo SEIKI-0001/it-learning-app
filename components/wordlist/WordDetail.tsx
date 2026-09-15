@@ -27,7 +27,7 @@ export default function WordDetail({ entry }: { entry: WordlistEntry }) {
       </section>
 
       {/* 一言意味＝この画面で唯一の強調ブロック */}
-      <section className="rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+      <section className="rounded-xl bg-brand-50 p-4">
         <h2 className="text-xs font-semibold text-brand-700">一言でいうと</h2>
         <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">
           {entry.oneLine}

@@ -1,5 +1,5 @@
-// 共通ページヘッダー。全ページ白背景 + 下罫線で統一する(グラデーションは使わない)。
-// tone="brand" は互換のために残し、eyebrow の色だけをブランド色にする。
+// 共通ページヘッダー。/today・/progress と同じ「白地に淡い青のパネル」で、
+// 見出しは太字にせず大きさと字詰めで立てる。tone は互換のために残す（見た目は同じ）。
 
 import type { ReactNode } from "react";
 import Link from "next/link";
@@ -20,7 +20,6 @@ type PageHeaderProps = {
 };
 
 export default function PageHeader({
-  tone = "plain",
   eyebrow,
   title,
   description,
@@ -29,42 +28,39 @@ export default function PageHeader({
   back,
   children,
 }: PageHeaderProps) {
-  const isBrand = tone === "brand";
   return (
-    <header className="border-b border-gray-200 bg-white px-4 py-5">
-      <div className={`mx-auto w-full ${widthClass}`}>
-        {back && (
-          <Link
-            href={back.href}
-            className="-ml-1 mb-2 inline-flex items-center gap-0.5 text-xs font-medium text-gray-500 transition hover:text-brand-600"
-          >
-            <Icon name="chevron-left" className="h-3.5 w-3.5" />
-            {back.label}
-          </Link>
-        )}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            {eyebrow && (
-              <p
-                className={`text-xs font-medium ${
-                  isBrand ? "text-brand-600" : "text-gray-500"
-                }`}
+    <header className="pt-3 md:pt-6 lg:pt-8">
+      <div className={`mx-auto w-full ${widthClass} px-3 md:px-4`}>
+        <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
+          {back && (
+            <Link
+              href={back.href}
+              className="-ml-1 mb-2 inline-flex items-center gap-0.5 text-xs text-gray-600 transition hover:text-gray-900"
+            >
+              <Icon name="chevron-left" className="h-3.5 w-3.5" />
+              {back.label}
+            </Link>
+          )}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              {eyebrow && (
+                <p className="text-xs font-medium text-gray-900">{eyebrow}</p>
+              )}
+              <h1
+                className={`${eyebrow ? "mt-2" : ""} text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]`}
               >
-                {eyebrow}
-              </p>
-            )}
-            <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">
-              {title}
-            </h1>
+                {title}
+              </h1>
+            </div>
+            {accessory && <div className="shrink-0 pt-1">{accessory}</div>}
           </div>
-          {accessory && <div className="shrink-0 pt-1">{accessory}</div>}
+          {description && (
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              {description}
+            </p>
+          )}
+          {children}
         </div>
-        {description && (
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">
-            {description}
-          </p>
-        )}
-        {children}
       </div>
     </header>
   );

@@ -70,8 +70,9 @@ export default async function LessonPage({
 
   return (
     <main className="min-h-screen pb-24">
-      <header className="border-b border-gray-200 bg-white px-4 py-5">
-        <div className="mx-auto w-full max-w-3xl">
+      <header className="pt-3 md:pt-6 lg:pt-8">
+        <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
+          <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           <nav aria-label="パンくず" className="flex flex-wrap gap-x-1 text-sm font-semibold text-gray-500">
             <Link href="/learn" className="hover:text-brand-600">学ぶ</Link>
             <span aria-hidden>＞</span>
@@ -82,7 +83,7 @@ export default async function LessonPage({
           <p className="mt-5 text-xs font-bold text-brand-600">
             {FIELD_LABELS[topic.field]}・第{theme.chapterNumber}章
           </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-gray-900">{topic.title}</h1>
+          <h1 className="mt-2 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">{topic.title}</h1>
           <p className="mt-2 text-sm leading-relaxed text-gray-600">{topic.summary}</p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-gray-600">
             <span className="rounded-full bg-gray-100 px-3 py-1.5">目安 {topic.estimatedMinutes}分</span>
@@ -108,6 +109,7 @@ export default async function LessonPage({
             </a>
           </nav>
         </div>
+          </div>
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-10 px-4 py-7">
@@ -139,7 +141,7 @@ export default async function LessonPage({
           <section id="lesson-check-pack" className="scroll-mt-24">
             <Link
               href={`/check-pack/${topic.id}`}
-              className="block rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
+              className="block rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
             >
               <p className="text-xs font-semibold text-brand-700">仕上げ</p>
               <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">確認パックを受ける</p>

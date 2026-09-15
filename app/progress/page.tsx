@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAppState } from "@/lib/useAppState";
 import { mergeAppState } from "@/lib/mergeAppState";
 import { saveAppState } from "@/lib/storage";
@@ -14,60 +13,82 @@ import {
 } from "@/lib/userSession";
 import { getAllTopics } from "@/lib/content";
 import { daysUntilExam } from "@/lib/aiPlanner";
-import { fieldMastery } from "@/lib/study";
-import { getStreakMeta, shieldsAvailable } from "@/lib/streak";
-import { computeProgressSummary } from "@/lib/progressSummary";
+import { getStreakMeta } from "@/lib/streak";
 import { getRankStatus } from "@/lib/rank";
-import { getCheckpointProgress } from "@/lib/checkpoints";
-import { BADGES } from "@/lib/badges";
-import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
-import { getMochitGrowthStage, MOCHIT_GROWTH_STAGE_LABELS } from "@/lib/mochit";
-import FieldMasteryBars from "@/components/FieldMasteryBars";
-import BottomNav from "@/components/BottomNav";
-import Icon from "@/components/ui/Icon";
-import IntegratedStatusCard from "@/components/progress/IntegratedStatusCard";
-import NextUnlocks from "@/components/progress/NextUnlocks";
-import JourneyLedger from "@/components/progress/JourneyLedger";
-import LearningHeatmap from "@/components/history/LearningHeatmap";
 import {
-  buildJourneyTimeline,
-  buildLearningHeatmap,
-  buildLifetimeStats,
-} from "@/lib/learningHistory";
-import JourneyTimeline from "@/components/history/JourneyTimeline";
+  buildCheckpointComparison,
+  buildCheckpointGate,
+  CHECKPOINTS,
+  getCheckpoint,
+  getCheckpointProgress,
+} from "@/lib/checkpoints";
+import { BADGES, buildBadgeStatuses } from "@/lib/badges";
+import { getClientBadgeSignals } from "@/lib/badgeSignals";
+import { getLessonHref } from "@/lib/learningCatalog";
+import {
+  getMochitGrowthStage,
+  MOCHIT_GROWTH_STAGE_LABELS,
+  nextMochitGrowthStageInfo,
+} from "@/lib/mochit";
+import {
+  primaryImprovementLabel,
+  readinessBandLabel,
+} from "@/lib/examReadiness/presentation";
+import { overallStatusLabel, type OverallStatus } from "@/types/integratedStatus";
+import type { ExamReadinessResult } from "@/types/examReadiness";
+import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
-import { useCountUp } from "@/lib/useCountUp";
-import ExamReadinessCard from "@/components/progress/ExamReadinessCard";
+import ProgressOverview, { type OverviewKpis } from "@/components/progress/ProgressOverview";
+import ProgressGateCard from "@/components/progress/ProgressGateCard";
+import {
+  ReadinessBreakdownCard,
+  RowListCard,
+  StudyDaysCard,
+  TopicReachCard,
+  type UnlockRow,
+} from "@/components/progress/ProgressDetailCards";
+import t from "@/components/today/todayView.module.css";
+import p from "@/components/progress/progressDashboard.module.css";
 
-// 最後の学習からの経過日数(暦日ベース)。lastPlayedAtが無ければnull。
-function daysSince(iso: string | undefined): number | null {
-  if (!iso) return null;
-  const then = new Date(iso);
-  if (Number.isNaN(then.getTime())) return null;
-  const startOfThen = new Date(
-    then.getFullYear(),
-    then.getMonth(),
-    then.getDate(),
-  ).getTime();
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  ).getTime();
-  const diff = Math.floor((startOfToday - startOfThen) / 86_400_000);
-  return diff < 0 ? 0 : diff;
+const PACE_TONE: Record<OverallStatus, "good" | "neutral" | "warn"> = {
+  on_track: "good",
+  slightly_delayed: "neutral",
+  delayed: "warn",
+  recovery_needed: "warn",
+  consultation_needed: "warn",
+};
+
+function paceNote(delta: number | null): string {
+  if (delta === null) return "試験日を決めると予定と比べます";
+  if (delta > 0) return "予定より先を進んでいます";
+  if (delta === 0) return "ほぼ予定どおりです";
+  if (delta === -1) return "予定より少し後ろです";
+  return "予定より後ろにいます";
 }
 
-// 最後の学習からの状態ラベル(ストリーク切れは強調しない)。
-function comebackLabel(gap: number | null): string {
-  if (gap === null) return "これから";
-  if (gap <= 1) return "継続中";
-  if (gap <= 6) return "おかえりなさい";
-  return "ゆっくり再開";
+/** いちばん伸ばせるところの取り組み先。判定の種類ごとに、既存の学習導線へつなぐ。 */
+function improvementHref(result: ExamReadinessResult): string {
+  const improvement = result.primaryImprovement;
+  if (!improvement) return "/learn";
+  switch (improvement.code) {
+    case "take_summative_assessment":
+      return "/mock-exam";
+    case "review_weak_topic":
+    case "improve_retention":
+      return improvement.topicId
+        ? getLessonHref(improvement.topicId, {
+            from: "progress",
+            activity: "review",
+            anchor: "lesson-quiz",
+          })
+        : "/review";
+    default:
+      return "/learn";
+  }
 }
 
-// 進捗画面。合格に対する現在地と数値サマリ/習熟度に絞る（復習の実行は /review に集約）。
+// 進捗画面。上から「合格までの道のり（全体像）→ いまの目標と合格準備度の内訳 → 詳細」の順に読む。
+// 今日やること・所要時間・今日のミッションは /today に任せ、ここには置かない。
 export default function ProgressPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
@@ -78,8 +99,6 @@ export default function ProgressPage() {
   );
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
   const bootstrappedKeyRef = useRef<string | null>(null);
-  // 累計XPは値の変化時だけ自然に増えて見せる(初回は即時・reduced-motion対応)
-  const shownExp = useCountUp(state?.progress.exp ?? 0);
 
   useEffect(() => {
     if (state === undefined) return;
@@ -91,27 +110,29 @@ export default function ProgressPage() {
     bootstrappedKeyRef.current = key;
     setBootstrapLoading(true);
 
-    void fetchProgressBootstrap(userId).then((data) => {
-      if (!alive) return;
-      if (data) {
-        setBootstrap({
-          integratedStatus: data.integratedStatus,
-          examReadiness: data.examReadiness,
-          planAdjustmentProposal: data.planAdjustmentProposal,
-        });
-      }
-      if (data?.userId) bootstrappedKeyRef.current = data.userId;
-
-      if (data?.appState) {
-        const next = state ? mergeAppState(state, data.appState) : data.appState;
-        if (JSON.stringify(next) !== JSON.stringify(state)) {
-          saveAppState(next);
-          setState(next);
+    void fetchProgressBootstrap(userId)
+      .then((data) => {
+        if (!alive) return;
+        if (data) {
+          setBootstrap({
+            integratedStatus: data.integratedStatus,
+            examReadiness: data.examReadiness,
+            planAdjustmentProposal: data.planAdjustmentProposal,
+          });
         }
-      }
-    }).finally(() => {
-      if (alive) setBootstrapLoading(false);
-    });
+        if (data?.userId) bootstrappedKeyRef.current = data.userId;
+
+        if (data?.appState) {
+          const next = state ? mergeAppState(state, data.appState) : data.appState;
+          if (JSON.stringify(next) !== JSON.stringify(state)) {
+            saveAppState(next);
+            setState(next);
+          }
+        }
+      })
+      .finally(() => {
+        if (alive) setBootstrapLoading(false);
+      });
 
     return () => {
       alive = false;
@@ -122,295 +143,172 @@ export default function ProgressPage() {
     if (state === null && !bootstrapLoading) router.replace("/onboarding");
   }, [state, bootstrapLoading, router]);
 
-  if (state === undefined || (state === null && bootstrapLoading)) {
-    return <LoadingScreen />;
-  }
-
-  if (state === null) {
+  if (state === undefined || state === null) {
     return <LoadingScreen />;
   }
 
   const { profile, progress } = state;
-  const rank = getRankStatus(progress.exp);
   const topics = getAllTopics();
-
-  // ヒートマップ・累計・あゆみはすべて既存ログからの導出（保存しない）。
-  const heatmap = buildLearningHeatmap({ answers: state.answers });
-  const lifetime = buildLifetimeStats(state);
-  const journey = buildJourneyTimeline(state);
-  const remaining = daysUntilExam(profile);
-  const mastery = fieldMastery(progress, topics, state.answers);
-  const summary = computeProgressSummary(topics, progress, state.answers);
-  const completedCount = summary.completedCount;
-  const earnedBadgeCount = getCheckpointProgress(state).earnedBadges.length;
+  const readiness = bootstrap?.examReadiness ?? null;
+  const status = bootstrap?.integratedStatus ?? null;
   const proposal = bootstrap?.planAdjustmentProposal ?? null;
 
-  const reviewQueue = progress.reviewQueue ?? [];
-  const reviewCount = reviewQueue.length;
-  const gap = daysSince(progress.lastPlayedAt);
-  const mochitGrowthStage = getMochitGrowthStage(state);
+  // ── 道のり ──
+  const cpProgress = getCheckpointProgress(state);
+  const current = getCheckpoint(cpProgress.currentCheckpointId);
+  const gate = buildCheckpointGate(state, current.id);
+  const comparison = buildCheckpointComparison(state);
+  const expectedOrder = comparison ? getCheckpoint(comparison.expectedId).order : null;
+  const gateRatio =
+    gate.requiredBadgeCount > 0
+      ? Math.min(1, gate.earnedRequiredCount / gate.requiredBadgeCount)
+      : gate.finalExamUnlocked
+        ? 1
+        : 0;
+  const nextCheckpoint = CHECKPOINTS.find((cp) => cp.order === current.order + 1) ?? null;
 
-  const gapText =
-    gap === null
-      ? "学習はこれから"
-      : gap === 0
-        ? "今日学習しました"
-        : `最後の学習から${gap}日`;
+  const badgeStatuses = buildBadgeStatuses(state, getClientBadgeSignals(), current.id);
+  const requiredStatuses = badgeStatuses.filter((status) => status.def.requiredForGate);
+  const earnedRequired = requiredStatuses.filter((s) => s.earned).map((s) => s.def);
+  const conditionMetIds = new Set(
+    requiredStatuses.filter((s) => !s.earned && s.conditionMet).map((s) => s.def.id),
+  );
+
+  // ── 主要指標 ──
+  const examDays = daysUntilExam(profile);
+  const examDateLabel = profile?.examDate
+    ? (() => {
+        const d = new Date(`${profile.examDate}T00:00:00`);
+        return `${d.getMonth() + 1}月${d.getDate()}日`;
+      })()
+    : null;
+  const kpis: OverviewKpis = {
+    readiness: {
+      score: readiness?.score ?? null,
+      bandLabel: readiness
+        ? readiness.score === null
+          ? "判定材料を集めています"
+          : readinessBandLabel(readiness.band)
+        : bootstrapLoading
+          ? "読み込んでいます"
+          : "問題に答えると判定します",
+    },
+    exam: { daysLeft: examDays, dateLabel: examDateLabel },
+    pace: status
+      ? {
+          label: overallStatusLabel(status.overallStatus),
+          note: paceNote(comparison?.delta ?? null),
+          tone: PACE_TONE[status.overallStatus],
+        }
+      : comparison
+        ? { label: paceNote(comparison.delta), note: "チェックポイントの予定と比べて", tone: "neutral" }
+        : null,
+    gate: {
+      earned: Math.min(gate.earnedRequiredCount, gate.requiredBadgeCount),
+      required: gate.requiredBadgeCount,
+      checkpointOrder: current.order,
+    },
+    // 立て直し提案の本体は /plan に置く。ここでは提案があるときだけ導線にする。
+    proposalHref: proposal && proposal.status !== "accepted" ? "/plan" : null,
+  };
+
+  const improvementLabel = readiness
+    ? primaryImprovementLabel(readiness.primaryImprovement, readiness)
+    : null;
+  const improvement =
+    readiness && improvementLabel
+      ? { label: improvementLabel, href: improvementHref(readiness) }
+      : null;
+
+  // ── 次の解放・くわしく見る ──
+  const rank = getRankStatus(progress.exp);
+  const growthStage = getMochitGrowthStage(state);
+  const nextGrowth = nextMochitGrowthStageInfo(state);
+  const unlocks: UnlockRow[] = [];
+  if (!rank.isMax && rank.next) {
+    unlocks.push({
+      id: "rank",
+      title: `次のランク「${rank.next.name}」`,
+      detail: `あと ${rank.remaining} XP（いまは「${rank.current.name}」）`,
+      ratio: rank.ratio,
+      href: "/rank",
+    });
+  }
+  unlocks.push(
+    nextGrowth
+      ? {
+          id: "mochit",
+          title: `モチットの成長段階${nextGrowth.stage}「${MOCHIT_GROWTH_STAGE_LABELS[nextGrowth.stage]}」`,
+          detail: nextGrowth.conditionLabel,
+          ratio: cpProgress.clearedCheckpointIds.length / (nextGrowth.stage === 2 ? 2 : 4),
+          href: "/avatar",
+        }
+      : {
+          id: "mochit",
+          title: `モチットは成長段階${growthStage}「${MOCHIT_GROWTH_STAGE_LABELS[growthStage]}」`,
+          detail: "いちばん上の段階まで育ちました",
+          href: "/avatar",
+        },
+  );
+  const links: UnlockRow[] = [
+    { id: "mock", title: "本番形式 100問模試", detail: "3分野の実力をまとめて確かめる", href: "/mock-exam" },
+    { id: "report", title: "週間レポート", detail: "直近7日の積み上げを見る", href: "/report" },
+    {
+      id: "badges",
+      title: "バッジ図鑑",
+      detail: `${cpProgress.earnedBadges.length}/${BADGES.length} 獲得`,
+      href: "/badges",
+    },
+    { id: "plan", title: "ロードマップ", detail: "チェックポイントの条件を見る", href: "/plan" },
+  ];
+
+  const now = new Date();
+  const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
   return (
-    <main className="min-h-screen pb-24">
-      <header className="border-b border-gray-200 bg-white px-4 pb-5 pt-5">
-        <div className="mx-auto w-full max-w-3xl">
-          <div className="flex items-baseline justify-between gap-3">
-            <h1 className="text-xl font-bold tracking-tight text-gray-900">進捗</h1>
-            <p className="text-xs text-gray-500">
-              {comebackLabel(gap)}・{gapText}
-            </p>
-          </div>
-
-          <div className="mt-4">
-            <ExamReadinessCard
-              result={bootstrap?.examReadiness ?? null}
-              loading={bootstrapLoading && !bootstrap?.examReadiness}
-            />
-          </div>
-
-          {/* Secondary: 試験までの日数・連続学習は準備度より一段弱く2列で示す */}
-          <dl className="mt-3 grid grid-cols-2 divide-x divide-gray-200 border-y border-gray-200">
-            <div className="py-3 pr-4">
-              <dt className="text-xs text-gray-600">試験まで</dt>
-              <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
-                {remaining === null ? (
-                  <span className="text-base font-normal text-gray-500">未設定</span>
-                ) : (
-                  <>
-                    あと{remaining}
-                    <span className="ml-0.5 text-sm font-normal text-gray-500">日</span>
-                  </>
-                )}
-              </dd>
-            </div>
-            <div className="py-3 pl-4">
-              <dt className="text-xs text-gray-600">連続学習</dt>
-              <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
-                {progress.streakCount}
-                <span className="ml-0.5 text-sm font-normal text-gray-500">日</span>
-              </dd>
-              <p className="mt-1 text-xs text-gray-500">
-                {shieldsAvailable(getStreakMeta(progress)) > 0 && (
-                  <span title="1日休んでも自動でストリークを守ります">
-                    おまもり ×{shieldsAvailable(getStreakMeta(progress))}
-                  </span>
-                )}
-                {getStreakMeta(progress).longestStreak > progress.streakCount && (
-                  <span className="ml-1">ベスト{getStreakMeta(progress).longestStreak}日</span>
-                )}
-              </p>
-            </div>
-          </dl>
-
-          <div className="mt-3 border-t border-gray-100 pt-3">
-            <div className="flex items-center gap-3">
-              <Icon name="sprout" className="h-5 w-5 shrink-0 text-brand-600" />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-gray-600">モチットの成長段階</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  段階{mochitGrowthStage}「
-                  {MOCHIT_GROWTH_STAGE_LABELS[mochitGrowthStage]}」
-                </p>
-              </div>
-              <Link
-                href="/avatar"
-                className="inline-flex items-center gap-1 text-sm font-semibold text-brand-700"
-              >
-                成長を見る
-                <Icon name="chevron-right" className="h-4 w-4" />
-              </Link>
-            </div>
-            <FloatingMochitVisibilityControl restoreOnly className="mt-3" />
-          </div>
-
-          {/* ランク進捗(次のランクまで)。EXP/レベル表示はランクに統合した。 */}
-          <div className="mt-3 border-t border-gray-100 pt-3">
-            <div className="mb-1 flex items-center justify-between text-xs text-gray-600">
-              <span>
-                ランク <span className="font-semibold text-gray-900">{rank.current.name}</span>
-                {!rank.isMax && ` ─ 次は${rank.next!.name}`}
-              </span>
-              <span className="tabular-nums">
-                {rank.isMax ? `${progress.exp} XP（MAX）` : `あと ${rank.remaining} XP`}
-              </span>
-            </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-              <div
-                className="h-full rounded-full bg-brand-600 transition-all duration-500"
-                style={{ width: `${Math.round(rank.ratio * 100)}%` }}
-              />
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs">
-              <Link
-                href="/rank"
-                className="text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
-              >
-                ランクの全体像をみる
-              </Link>
-              <Link
-                href="/badges"
-                className="tabular-nums text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
-              >
-                バッジ図鑑 {earnedBadgeCount}/{BADGES.length}
-              </Link>
-            </div>
-          </div>
-
-        </div>
-      </header>
-
-      <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-5">
-        {/* 第2層: 次の解放(実在する解放だけ: ランク/突破試験/モチット成長) */}
-        <NextUnlocks state={state} />
-
-        {/* 第3層: これまで進んだ道(チェックポイント台帳) */}
-        <JourneyLedger state={state} />
-
-        {/* 日別の学習量と累計。既存ログからの導出だけで作る(二重保存しない) */}
-        <LearningHeatmap heatmap={heatmap} />
-
-        <dl className="grid grid-cols-4 divide-x divide-gray-200 border-y border-gray-200 text-center">
-          <div className="px-2 py-3">
-            <dt className="text-[11px] text-gray-600">総解答</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
-              {lifetime.totalAnswers}
-            </dd>
-          </div>
-          <div className="px-2 py-3">
-            <dt className="text-[11px] text-gray-600">総正解</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
-              {lifetime.totalCorrect}
-            </dd>
-          </div>
-          <div className="px-2 py-3">
-            <dt className="text-[11px] text-gray-600">学習日数</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
-              {lifetime.studyDayCount}
-            </dd>
-          </div>
-          <div className="px-2 py-3">
-            <dt className="text-[11px] text-gray-600">最長連続</dt>
-            <dd className="mt-1 text-lg font-semibold tabular-nums text-gray-900">
-              {lifetime.longestStreak}
-            </dd>
-          </div>
-        </dl>
-
-        {/* あゆみ年表: 日時が確定しているイベントだけ */}
-        <JourneyTimeline events={journey} />
-
-        {/* 数値サマリ: カードではなく学習手帳の罫線区切りで示す */}
-        <dl className="grid grid-cols-3 divide-x divide-gray-200 border-y border-gray-200">
-          <div className="py-3 pr-3">
-            <dt className="text-xs text-gray-600">学習済み</dt>
-            <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
-              {completedCount}
-              <span className="text-sm font-normal text-gray-500">/{topics.length}</span>
-            </dd>
-          </div>
-          <Link href="/review" className="block px-3 py-3 transition active:bg-gray-100">
-            <dt className="flex items-center gap-1 text-xs text-gray-600">
-              復習待ち
-              <Icon name="chevron-right" className="h-3 w-3 text-gray-500" />
-            </dt>
-            <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
-              {reviewCount}
-              <span className="ml-0.5 text-sm font-normal text-gray-500">件</span>
-            </dd>
-          </Link>
-          <div className="py-3 pl-3">
-            <dt className="text-xs text-gray-600">累計XP</dt>
-            <dd className="mt-1 text-xl font-semibold tabular-nums text-gray-900">{shownExp}</dd>
-          </div>
-        </dl>
-
-        {/* 統合進捗カード（合格に対する現在地・主なリスク・今週の推奨配分） */}
-        <IntegratedStatusCard
-          status={bootstrap?.integratedStatus ?? null}
-          totalTopicCount={topics.length}
-          loading={bootstrapLoading && !bootstrap}
+    <main className={t.view}>
+      <div className={`${t.inner} ${p.dashboard}`}>
+        <ProgressOverview
+          dateLabel={dateLabel}
+          checkpoints={CHECKPOINTS}
+          clearedIds={cpProgress.clearedCheckpointIds}
+          currentId={current.id}
+          gateRatio={gateRatio}
+          expectedOrder={expectedOrder}
+          examDateLabel={examDateLabel}
+          kpis={kpis}
         />
 
-        {/* 計画の立て直し提案への導線（提案の本体は /plan に置く） */}
-        {proposal && (
-          <Link
-            href="/plan"
-            className={`flex items-center justify-between gap-3 rounded-xl border p-4 transition active:scale-[0.99] ${
-              proposal.status === "accepted"
-                ? "border-emerald-200 bg-emerald-50"
-                : "border-accent-200 bg-accent-50"
-            }`}
-          >
-            <div>
-              <p
-                className={`text-sm font-semibold ${
-                  proposal.status === "accepted" ? "text-emerald-800" : "text-accent-800"
-                }`}
-              >
-                {proposal.status === "accepted"
-                  ? "立て直しプランで進行中"
-                  : "計画の立て直し提案があります"}
-              </p>
-              <p
-                className={`mt-0.5 text-xs ${
-                  proposal.status === "accepted" ? "text-emerald-700" : "text-accent-700"
-                }`}
-              >
-                {proposal.status === "accepted"
-                  ? "内容はロードマップで確認できます"
-                  : "ロードマップで立て直し案を選べます"}
-              </p>
-            </div>
-            <Icon
-              name="chevron-right"
-              className={`h-4 w-4 shrink-0 ${
-                proposal.status === "accepted" ? "text-emerald-600" : "text-accent-600"
-              }`}
-            />
-          </Link>
-        )}
+        <ProgressGateCard
+          gate={gate}
+          earnedBadges={earnedRequired}
+          conditionMetIds={conditionMetIds}
+          nextCheckpointTitle={nextCheckpoint?.title ?? null}
+          className={p.spanGate}
+        />
+        <ReadinessBreakdownCard
+          result={readiness}
+          loading={bootstrapLoading}
+          improvement={improvement}
+          className={p.spanReadiness}
+        />
 
-        <div className="grid gap-4 md:grid-cols-2">
-        {/* 3分野習熟度 */}
-        <section className="rounded-xl bg-white p-4 border border-gray-200">
-          <h2 className="mb-3 text-sm font-semibold text-gray-900">
-            3分野別の習熟度
-          </h2>
-          <FieldMasteryBars mastery={mastery} />
-        </section>
+        <TopicReachCard
+          status={status}
+          totalTopicCount={topics.length}
+          loading={bootstrapLoading}
+          className={p.spanTopics}
+        />
+        <StudyDaysCard
+          answers={state.answers}
+          streak={progress.streakCount}
+          longestStreak={Math.max(getStreakMeta(progress).longestStreak, progress.streakCount)}
+          className={p.spanHistory}
+        />
 
-        <Link
-          href="/mock-exam"
-          className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50 active:scale-[0.99]"
-        >
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">本番形式 100問模試</p>
-            <p className="mt-0.5 text-xs text-gray-500">3分野の実力をまとめて確認する</p>
-          </div>
-          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-500" />
-        </Link>
-
-        {/* 今週の積み上げは別ページ(週間レポート)へ */}
-        <Link
-          href="/report"
-          className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50 active:scale-[0.99]"
-        >
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900">週間レポート</p>
-            <p className="mt-0.5 text-xs text-gray-500">直近7日間の積み上げをみる</p>
-          </div>
-          <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-gray-500" />
-        </Link>
-        </div>
+        <RowListCard title="次の解放" rows={unlocks} className={p.spanUnlocks} />
+        <RowListCard title="くわしく見る" rows={links} grid className={p.spanLinks} />
       </div>
-
       <BottomNav />
     </main>
   );

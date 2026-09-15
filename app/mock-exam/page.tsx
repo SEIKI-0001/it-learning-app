@@ -412,7 +412,7 @@ export default function MockExamPage() {
         )}
         {!exam && !result && <RecordingLockNotice />}
         {!exam && !result && (
-          <section className="rounded-xl border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+          <section className="rounded-xl bg-brand-50 p-4">
             <div className="flex items-start gap-3">
               <Icon name="flask" className="mt-0.5 h-5 w-5 shrink-0 text-brand-500" />
               <div className="min-w-0">

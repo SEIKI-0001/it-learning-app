@@ -31,39 +31,42 @@ export default async function LoginPage({
   const lineUrl = process.env.NEXT_PUBLIC_LINE_ADD_FRIEND_URL?.trim() || "";
   const lineActionClassName =
     campaignContinuation && googleEnabled
-      ? "flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-4 text-center text-base font-semibold text-brand-800 ring-1 ring-white/70 transition hover:bg-brand-50 active:scale-[0.99]"
+      ? "flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-4 text-center text-base font-medium text-gray-900 transition hover:bg-gray-50 active:scale-[0.99]"
       : "flex w-full items-center justify-center gap-2 rounded-lg bg-[#06C755] px-6 py-4 text-center text-base font-semibold text-white transition active:scale-[0.99]";
 
   return (
-    <main className="min-h-screen bg-brand-800 px-5 py-10 text-white">
+    <main className="min-h-screen bg-white px-4 py-6 text-gray-900 md:py-12">
       <div className="mx-auto flex w-full max-w-md flex-col items-center text-center">
-        <span className="mb-6 inline-block rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold tracking-wide">
+        {/* /today・/progress と同じ淡い青のパネルに、名前と説明をまとめる */}
+        <div className="flex w-full flex-col items-center rounded-2xl bg-brand-50 px-6 pb-7 pt-6">
+        <span className="mb-4 inline-block rounded bg-white px-2.5 py-1 text-xs font-medium text-gray-600">
           ITパスポート合格支援
         </span>
         <div className="mb-3 flex justify-center" aria-hidden>
           <Mochit size="medium" animation="idle" className="justify-center" />
         </div>
-        <h1 className="text-3xl font-bold leading-tight">ITパスポート学習コーチ</h1>
-        <p className="mt-3 text-sm leading-relaxed text-brand-100">
+        <h1 className="text-[28px] font-medium leading-tight tracking-[-0.04em]">ITパスポート学習コーチ</h1>
+        <p className="mt-3 text-sm leading-relaxed text-gray-600">
           試験日から逆算した学習プランで、ストラテジ・マネジメント・テクノロジの3分野を、
           やさしい言葉と図解・体験で少しずつ進められます。AI採点で「説明できる理解」も確認できます。
         </p>
+        </div>
 
         {campaignContinuation && (
-          <div className="mt-6 w-full rounded-xl bg-white/15 px-4 py-4 text-left">
-            <p className="font-bold">ログイン後、購入ページへ戻ります</p>
-            <p className="mt-1 text-sm leading-relaxed text-brand-100">
+          <div className="mt-4 w-full rounded-xl bg-brand-50 px-4 py-4 text-left">
+            <p className="font-medium">ログイン後、購入ページへ戻ります</p>
+            <p className="mt-1 text-sm leading-relaxed text-gray-600">
               Googleログインなら購入ページへ戻れます。LINEは購入後の相談特典の受け取りにも利用できます。
             </p>
           </div>
         )}
 
         {/* ログイン手段 */}
-        <div className="mt-8 w-full space-y-3">
+        <div className="mt-6 w-full space-y-3">
           {googleEnabled ? (
             <GoogleLoginButton next={next} />
           ) : (
-            <div className="rounded-xl bg-white/12 px-4 py-3 text-sm font-semibold text-brand-100">
+            <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
               Google ログインは現在準備中です。LINE から始めてください。
             </div>
           )}
@@ -76,15 +79,15 @@ export default async function LoginPage({
               LINE公式アカウントから始める
             </a>
           ) : (
-            <div className="rounded-xl bg-white/12 px-4 py-3 text-sm font-semibold text-brand-100">
+            <div className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
               LINE公式アカウントのURLが未設定です（NEXT_PUBLIC_LINE_ADD_FRIEND_URL）。
             </div>
           )}
         </div>
 
         {/* 使い分けの説明 */}
-        <div className="mt-7 w-full rounded-xl bg-white/10 px-4 py-4 text-left text-sm leading-relaxed text-brand-50">
-          <p className="font-bold text-white">はじめての方へ</p>
+        <div className="mt-6 w-full rounded-xl border border-gray-200 px-4 py-4 text-left text-sm leading-relaxed text-gray-600">
+          <p className="font-medium text-gray-900">はじめての方へ</p>
           <ul className="mt-2 space-y-1.5">
             <li>
               ① <span className="font-semibold">初回は LINE 登録がおすすめ</span>
@@ -100,7 +103,7 @@ export default async function LoginPage({
           </ul>
         </div>
 
-        <p className="mt-6 text-xs text-brand-200">
+        <p className="mt-6 text-xs text-gray-500">
           ログインすると学習履歴がアカウントに保存され、機種変更や再アクセスでも続けられます。
         </p>
       </div>

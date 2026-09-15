@@ -1,0 +1,1249 @@
+/* /progress（ダッシュボード）。デザインは 2026-09 にユーザー確認済みのダッシュボードサンプルに合わせている。
+   色トークンと、見出し・数字などの共通部品は components/today/todayView.module.css の
+   .view 配下を使い、ここには progress 固有の部品だけを置く。
+
+   レイアウト: 上に全体像（道のり＋主要指標）、下に 12 カラムのタイル。
+     [ 合格までの道のり ─────────────────────────── ]
+     [ いまの目標＝CP の突破条件 (7) ][ 合格準備度の内訳 (5) ]
+     [ トピックの到達度 (5) ][ 学習した日 (7)          ]
+     [ 次の解放 (5)         ][ くわしく見る (7)        ] */
+
+.dashboard {
+  display: grid;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.chev {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.card {
+  min-width: 0;
+  padding: 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--canvas);
+}
+
+/* ───────── 1. 全体像 ───────── */
+
+.overview {
+  min-width: 0;
+  padding: 22px 18px 18px;
+  border-radius: 14px;
+  background: var(--wash);
+}
+
+.overviewHead {
+  margin-top: 14px;
+}
+
+.overviewTitle {
+  margin: 0;
+  font-size: clamp(24px, 6vw, 30px);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.04em;
+}
+
+.overviewLead {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  word-break: auto-phrase;
+}
+
+.overviewLead strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* 道: 点（CP）と線。線の塗りは突破済み=緑、いま進んでいる区間=青、この先=点線 */
+.road {
+  --dot: 22px;
+  --lift: 64px;
+  position: relative;
+  margin-top: 18px;
+  padding-top: var(--lift);
+}
+
+.roadLine {
+  position: absolute;
+  top: calc(var(--lift) + var(--dot) / 2 - 1.5px);
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.roadLine::before {
+  content: "";
+  position: absolute;
+  inset: 0 calc(100% / 16);
+  background: repeating-linear-gradient(
+    to right,
+    var(--line-strong) 0 6px,
+    transparent 6px 10px
+  );
+}
+
+.roadDone,
+.roadNow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+}
+
+.roadDone {
+  background: var(--green);
+}
+
+.roadNow {
+  background: var(--blue);
+  transform-origin: left center;
+  animation: grow 800ms var(--ease) 300ms both;
+}
+
+.roadStops {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+
+.stopDot {
+  display: grid;
+  place-items: center;
+  width: var(--dot);
+  height: var(--dot);
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--canvas);
+}
+
+.stopDot svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.stop[data-state="done"] .stopDot {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.stop[data-state="goal"] .stopDot {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-soft);
+}
+
+.stop[data-state="exam"] .stopDot {
+  border-color: var(--ink);
+  border-radius: 6px;
+  background: var(--ink);
+}
+
+.flag {
+  width: 13px;
+  height: 13px;
+  color: #fff;
+}
+
+.stopCode {
+  margin-top: 18px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.stop[data-state="goal"] .stopCode {
+  color: var(--blue-700);
+  font-weight: 500;
+}
+
+.stop[data-state="exam"] .stopCode {
+  font-family: var(--sans);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.stopTitle {
+  display: none;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  word-break: auto-phrase;
+}
+
+.stop[data-state="goal"] .stopTitle,
+.stop[data-state="exam"] .stopTitle {
+  display: block;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* スマホでは列が狭いので、試験日は折り返さず小さく出す */
+.stop[data-state="exam"] .stopTitle {
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+/* いまここ: モチットが道の上に立つ */
+.here {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.hereMochit {
+  margin-top: -8px;
+}
+
+.hereLabel {
+  margin-top: -8px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* 予定: 道のすぐ下の小さな刻み */
+.expected {
+  position: absolute;
+  top: calc(var(--lift) + var(--dot) / 2 + 4px);
+  z-index: 1;
+  transform: translateX(-50%);
+  padding-top: 7px;
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.expected::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 5px;
+  background: var(--ink-3);
+}
+
+/* 主要指標 */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 24px 0 0;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--wash-line);
+}
+
+.kpi {
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--canvas);
+}
+
+.kpi dt {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.kpi dd {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin: 6px 0 0;
+}
+
+.kpiNum {
+  font-family: var(--num);
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpiUnit {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.kpiWord {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.kpiWord[data-tone="warn"] {
+  color: var(--orange-700);
+}
+
+.kpiWord[data-tone="good"] {
+  color: var(--green);
+}
+
+.kpiNote {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.kpiLink {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 160ms;
+}
+
+.kpiLink:hover {
+  background: color-mix(in srgb, var(--blue-soft) 45%, var(--canvas));
+}
+
+.kpiLink .kpiNote {
+  color: var(--blue-700);
+}
+
+.kpiChev {
+  width: 14px;
+  height: 14px;
+}
+
+/* ───────── 2. 合格準備度の内訳 ───────── */
+
+.fieldList {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name score"
+    "bar bar";
+  align-items: baseline;
+  gap: 8px 12px;
+  padding: 12px 0;
+}
+
+.field + .field {
+  border-top: 1px solid var(--line);
+}
+
+.fieldName {
+  grid-area: name;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fieldMeta {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-3);
+}
+
+.fieldBar {
+  grid-area: bar;
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.fieldFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: var(--blue);
+}
+
+/* 段階の境界（60 / 75 / 85）の刻み */
+.fieldEdge {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--canvas);
+}
+
+.fieldScore {
+  grid-area: score;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.fieldScore .mono {
+  font-size: 18px;
+}
+
+.fieldBand {
+  min-width: 4.2em;
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: right;
+}
+
+.improve {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--wash);
+}
+
+.improveText {
+  min-width: 0;
+}
+
+.improveLabel {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.improveMain {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  word-break: auto-phrase;
+}
+
+.improveReason {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  word-break: auto-phrase;
+}
+
+
+
+/* ───────── 2. いまの目標（CP の突破条件） ─────────
+   「いまの目標」タグと置き場所（道のりの直下・広いタイル）で目立たせ、
+   残りの条件＝やることを、取り組むボタンと一緒に先頭へ出す。 */
+
+.gateHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.gateTag {
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.gateCp {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.gateCount {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.gateCount .mono {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.gateTitle {
+  margin: 14px 0 0;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.04em;
+  word-break: auto-phrase;
+}
+
+.gateNum {
+  margin: 0 2px;
+  font-family: var(--num);
+  font-size: 1.3em;
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.gateBar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 14px;
+}
+
+.gateBar > span {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.gateBar > span[data-earned="true"] {
+  background: var(--green);
+}
+
+.todo {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.todoItem {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-areas:
+    "mark body"
+    ". action";
+  align-items: start;
+  gap: 10px 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--wash);
+}
+
+.todoMark {
+  grid-area: mark;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 2px solid var(--blue);
+  border-radius: 50%;
+  background: var(--canvas);
+}
+
+.todoBody {
+  grid-area: body;
+  min-width: 0;
+}
+
+.todoTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.03em;
+  word-break: auto-phrase;
+}
+
+.todoSub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  word-break: auto-phrase;
+}
+
+.emptyNote {
+  margin: 16px 0 4px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.todoProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.todoBar {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--wash-line);
+}
+
+.todoBar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--blue);
+}
+
+.todoValue {
+  flex-shrink: 0;
+  font-family: var(--num);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blue-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.todoAction {
+  grid-area: action;
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 12px 0 16px;
+  border-radius: 8px;
+  background: var(--cta);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 160ms;
+}
+
+.todoAction:hover {
+  background: var(--cta-hover);
+}
+
+.gateDone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.gateDoneLabel {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.gateDoneItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.gateDoneItem svg {
+  width: 14px;
+  height: 14px;
+  padding: 2px;
+  border-radius: 50%;
+  background: var(--green);
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.gateNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.gateNote .textLink {
+  margin-top: 0;
+}
+
+.textLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 8px;
+  color: var(--blue-700);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.textLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ───────── 3. トピックの到達度 ───────── */
+
+.stack {
+  display: flex;
+  height: 10px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.stack > span {
+  height: 100%;
+  background: var(--tone);
+}
+
+.stack > span + span {
+  border-left: 2px solid var(--canvas);
+}
+
+.stack > [data-tone="ready"],
+.legendItem[data-tone="ready"] {
+  --tone: var(--green);
+}
+
+.stack > [data-tone="basic"],
+.legendItem[data-tone="basic"] {
+  --tone: var(--blue);
+}
+
+.stack > [data-tone="work"],
+.legendItem[data-tone="work"] {
+  --tone: var(--orange);
+}
+
+.stack > [data-tone="rest"],
+.legendItem[data-tone="rest"] {
+  --tone: var(--line-strong);
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+  margin: 12px 0 0;
+}
+
+.legendItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.legendItem dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.legendItem dt::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--tone);
+}
+
+.legendNum {
+  margin: 0;
+  font-family: var(--num);
+  font-size: 17px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.risk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  background: var(--orange-soft);
+  color: var(--ink);
+  font-size: 12.5px;
+  text-decoration: none;
+}
+
+.riskIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--orange-700);
+}
+
+.riskText {
+  min-width: 0;
+  flex: 1;
+  word-break: auto-phrase;
+}
+
+.riskAction {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--orange-700);
+  font-weight: 500;
+}
+
+/* ───────── 3. 積み上げ ───────── */
+
+.history {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.heatBlock {
+  min-width: 0;
+}
+
+/* カレンダーと同じ並び: 列=曜日（月〜日）、行=週（上が古い）。先頭行は曜日、先頭列は月の見出し */
+.heat {
+  display: grid;
+  grid-template-columns: 28px repeat(7, 24px);
+  gap: 4px;
+}
+
+.heatRow {
+  display: contents;
+}
+
+.heatCorner {
+  display: block;
+}
+
+.heatMonth {
+  align-self: center;
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.heatWeekday {
+  padding-bottom: 2px;
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.heatDay,
+.heatEmpty {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 2px;
+}
+
+.heatDay {
+  background: var(--line);
+  cursor: default;
+}
+
+.heatDay[data-picked="true"] {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.heatDay[data-level="1"] {
+  background: var(--blue-soft);
+}
+
+.heatDay[data-level="2"] {
+  background: color-mix(in srgb, var(--blue) 40%, var(--canvas));
+}
+
+.heatDay[data-level="3"] {
+  background: color-mix(in srgb, var(--blue) 70%, var(--canvas));
+}
+
+.heatDay[data-level="4"] {
+  background: var(--blue);
+}
+
+.heatFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-top: 10px;
+}
+
+.heatReadout {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.heatReadout strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.heatLegend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.heatLegend .heatDay {
+  width: 9px;
+  height: 9px;
+}
+
+.heatLegend .heatDay:first-of-type {
+  margin-left: 4px;
+}
+
+.heatLegend .heatDay:last-of-type {
+  margin-right: 4px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--line);
+}
+
+.stats > div {
+  padding: 10px 12px;
+  background: var(--canvas);
+}
+
+.stats dt {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.stats dd {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.statNum {
+  margin-right: 2px;
+  font-family: var(--num);
+  font-size: 22px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.stats small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* ───────── 3. 次の解放・くわしく見る ───────── */
+
+.rows {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.row > .chev {
+  color: var(--ink-3);
+  transition: transform 160ms;
+}
+
+.row:hover > .chev {
+  transform: translateX(2px);
+}
+
+.rowBody {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowTitle {
+  font-size: 14px;
+  font-weight: 500;
+  word-break: auto-phrase;
+}
+
+.rowDetail {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.rowBar {
+  height: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.rowBar > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--blue);
+}
+
+@keyframes grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ───────── tablet ───────── */
+
+@media (min-width: 720px) {
+  .dashboard {
+    gap: 16px;
+    padding-top: 24px;
+  }
+
+  .overview {
+    padding: 28px 28px 24px;
+    border-radius: 16px;
+  }
+
+  .road {
+    --dot: 24px;
+  }
+
+  .stopTitle {
+    display: block;
+  }
+
+  .stop[data-state="exam"] .stopTitle {
+    font-size: 12px;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .card {
+    padding: 22px 24px;
+  }
+
+  .improve {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .improve .textLink {
+    align-self: center;
+    margin-top: 0;
+  }
+
+  .todoItem {
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    grid-template-areas: "mark body action";
+    align-items: center;
+  }
+
+  .todoMark {
+    align-self: start;
+  }
+
+  .gateTitle {
+    font-size: 22px;
+  }
+
+  .linkGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+
+  .linkGrid > li + li {
+    border-top: 0;
+  }
+
+  .linkGrid > li:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+}
+
+/* ───────── desktop: 12 カラムのタイル ───────── */
+
+@media (min-width: 1024px) {
+  .dashboard {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 20px;
+    padding-top: 32px;
+  }
+
+  .overview {
+    grid-column: 1 / -1;
+    padding: 30px 40px 28px;
+    border-radius: 18px;
+  }
+
+  .overviewHead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    margin-top: 12px;
+  }
+
+  .overviewTitle {
+    flex-shrink: 0;
+    font-size: 34px;
+  }
+
+  .overviewLead {
+    max-width: 30em;
+    margin: 0;
+    text-align: right;
+  }
+
+  .road {
+    --dot: 26px;
+    margin-top: 20px;
+  }
+
+  .stopCode {
+    font-size: 11.5px;
+  }
+
+  .stopTitle {
+    font-size: 12.5px;
+  }
+
+  .kpis {
+    margin-top: 28px;
+  }
+
+  .kpi {
+    padding: 16px 20px;
+  }
+
+  .kpiNum {
+    font-size: 34px;
+  }
+
+  .spanGate {
+    grid-column: span 7;
+  }
+
+  .spanReadiness {
+    grid-column: span 5;
+  }
+
+  /* 幅の狭いタイルでは、伸ばせるところの文とリンクを縦に積む */
+  .spanReadiness .improve {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .spanReadiness .improve .textLink {
+    align-self: flex-start;
+  }
+
+  .spanTopics {
+    grid-column: span 5;
+  }
+
+  .spanHistory {
+    grid-column: span 7;
+  }
+
+  .spanUnlocks {
+    grid-column: span 5;
+  }
+
+  .spanLinks {
+    grid-column: span 7;
+  }
+
+  /* ヒートマップの列は実寸（月見出し26px＋18px×7曜日＋隙間）に固定し、残りを累計に回す */
+  .history {
+    grid-template-columns: 180px minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+
+  .heatFoot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heat {
+    grid-template-columns: 26px repeat(7, 18px);
+    gap: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roadNow {
+    animation: none;
+  }
+}

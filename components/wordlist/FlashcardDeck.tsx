@@ -266,7 +266,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
           </div>
 
           {/* 一言意味（このカードで唯一の強調ブロック） */}
-          <div className="rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-3">
+          <div className="rounded-xl bg-brand-50 p-3">
             <p className="text-xs font-semibold text-brand-700">一言でいうと</p>
             <p className="mt-0.5 text-[15px] font-semibold leading-snug text-gray-900">
               {current.oneLine}
