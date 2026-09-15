@@ -108,6 +108,20 @@ beforeEach(() => {
 });
 
 describe("POST /api/progress/save readiness trigger", () => {
+  it("rejects an unauthenticated request before creating a service client", async () => {
+    mocks.getInternalUserId.mockResolvedValue(null);
+
+    const response = await request({ progress: progress(), readinessTrigger: TRIGGER });
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "unauthenticated",
+    });
+    expect(mocks.getServiceSupabase).not.toHaveBeenCalled();
+    expect(mocks.recalculateExamReadiness).not.toHaveBeenCalled();
+  });
+
   it("atomically saves changed P0 facts and registers the authenticated completion", async () => {
     const supabase = supabaseWithRpc({
       evidence_changed: true,
