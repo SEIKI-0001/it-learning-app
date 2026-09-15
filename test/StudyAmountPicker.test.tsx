@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import StudyAmountPicker from "@/components/today/StudyAmountPicker";
+import TodayHero from "@/components/today/TodayHero";
 import ComebackMissionCard from "@/components/today/ComebackMissionCard";
 
-// GF-P1-001 の中核: 選ばない人に決定を強いない。
+// GF-P1-001 の中核: 選ばない人に決定を強いない（学習量は /today のヒーロー内で選ぶ）。
 // GF-P1-002 の中核: 責めない・通常導線を消さない。
 
 afterEach(cleanup);
@@ -13,47 +13,51 @@ afterEach(cleanup);
 function renderPicker(selectedMinutes: number | null) {
   const onSelect = vi.fn();
   const onClear = vi.fn();
-  const { container } = render(
-    <StudyAmountPicker
+  render(
+    <TodayHero
+      dateLabel="9月15日（火）"
+      slots={[]}
       selectedMinutes={selectedMinutes}
       defaultMinutes={20}
-      onSelect={onSelect}
-      onClear={onClear}
+      onSelectMinutes={onSelect}
+      onClearMinutes={onClear}
     />,
   );
-  return { onSelect, onClear, container };
+  const group = screen.getByRole("group", { name: "今日の学習量" });
+  const button = (name: string | RegExp) => within(group).getByRole("button", { name });
+  return { onSelect, onClear, group, button };
 }
 
 describe("the default is already answered", () => {
   it("shows the automatic option as selected when nothing was chosen", () => {
-    renderPicker(null);
+    const { button } = renderPicker(null);
 
-    expect(screen.getByText(/おまかせ/).getAttribute("aria-pressed")).toBe("true");
+    expect(button(/おまかせ/).getAttribute("aria-pressed")).toBe("true");
   });
 
   it("tells the user how much the automatic option means", () => {
-    renderPicker(null);
+    const { button } = renderPicker(null);
 
-    expect(screen.getByText("おまかせ（20分）")).toBeInTheDocument();
+    expect(button(/おまかせ/).textContent).toBe("おまかせ 20分");
   });
 
   it("leaves every explicit amount unselected by default", () => {
-    renderPicker(null);
+    const { button } = renderPicker(null);
 
     for (const label of ["5分", "15分", "30分"]) {
-      expect(screen.getByText(label).getAttribute("aria-pressed")).toBe("false");
+      expect(button(label).getAttribute("aria-pressed")).toBe("false");
     }
   });
 
   it("never marks the longest amount as the default", () => {
-    renderPicker(null);
+    const { button } = renderPicker(null);
 
-    expect(screen.getByText("30分").getAttribute("aria-pressed")).toBe("false");
+    expect(button("30分").getAttribute("aria-pressed")).toBe("false");
   });
 
   it("asks no question and demands no confirmation", () => {
-    const { container } = renderPicker(null);
-    const text = container.textContent ?? "";
+    const { group } = renderPicker(null);
+    const text = group.textContent ?? "";
 
     expect(text).not.toMatch(/\?|選んでください|決めて|必須/);
   });
@@ -61,34 +65,32 @@ describe("the default is already answered", () => {
 
 describe("choosing and undoing", () => {
   it("reports the chosen amount", () => {
-    const { onSelect } = renderPicker(null);
-    fireEvent.click(screen.getByText("15分"));
+    const { onSelect, button } = renderPicker(null);
+    fireEvent.click(button("15分"));
 
     expect(onSelect).toHaveBeenCalledWith(15);
   });
 
   it("marks the chosen amount as selected", () => {
-    renderPicker(5);
+    const { button } = renderPicker(5);
 
-    expect(screen.getByText("5分").getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByText(/おまかせ/).getAttribute("aria-pressed")).toBe("false");
+    expect(button("5分").getAttribute("aria-pressed")).toBe("true");
+    expect(button(/おまかせ/).getAttribute("aria-pressed")).toBe("false");
   });
 
   it("can return to the automatic option", () => {
-    const { onClear } = renderPicker(30);
-    fireEvent.click(screen.getByText(/おまかせ/));
+    const { onClear, button } = renderPicker(30);
+    fireEvent.click(button(/おまかせ/));
 
     expect(onClear).toHaveBeenCalled();
   });
 
   it("styles every amount the same way", () => {
-    const { container } = renderPicker(null);
-    const classes = ["5分", "15分", "30分"].map(
-      (label) => screen.getByText(label).className,
-    );
+    const { group, button } = renderPicker(null);
+    const classes = ["5分", "15分", "30分"].map((label) => button(label).className);
 
     expect(new Set(classes).size).toBe(1);
-    expect(container.textContent).not.toMatch(/おすすめ|推奨/);
+    expect(group.textContent).not.toMatch(/おすすめ|推奨/);
   });
 });
 

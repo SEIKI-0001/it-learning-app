@@ -10,10 +10,12 @@ import {
 import { getMochitProgressPresentation } from "@/lib/mochitPresentation";
 import FloatingMochit from "./FloatingMochit";
 
+// /today は進行表の中にモチットがいる（いまやる行の理由を話す）ため、浮遊版を重ねない。
 const HIDDEN_ROUTE_PREFIXES = [
   "/login",
   "/onboarding",
   "/avatar",
+  "/today",
   "/dev",
 ] as const;
 
