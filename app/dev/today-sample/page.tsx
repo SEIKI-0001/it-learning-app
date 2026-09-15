@@ -11,6 +11,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useMemo, useState } from "react";
+import Mochit from "@/components/mochit/Mochit";
+import type { MochitEventSignal } from "@/components/mochit/mochitEvents";
 import {
   BUDGET_OPTIONS,
   DEFAULT_BUDGET,
@@ -25,29 +27,19 @@ import s from "./today.module.css";
 // 配色パターンの比較用。色の定義は today.module.css の [data-palette] にある。
 const PALETTES = [
   {
-    id: "muted",
-    label: "A 落ち着き（現行）",
-    swatches: ["#2c5ea8", "#b9773f", "#16191d"],
-  },
-  {
     id: "clear",
     label: "B クリア",
     swatches: ["#2f6fdb", "#e08a34", "#16191d"],
   },
   {
-    id: "clear-blue",
-    label: "C クリア＋青ボタン",
-    swatches: ["#2f6fdb", "#e08a34", "#2463d1"],
+    id: "brand",
+    label: "ブランド",
+    swatches: ["#187bd7", "#f58a17", "#0868c9"],
   },
   {
-    id: "ocean",
-    label: "D オーシャン",
-    swatches: ["#1a80bf", "#e3a03a", "#133a52"],
-  },
-  {
-    id: "indigo",
-    label: "E インディゴ",
-    swatches: ["#4b5ed6", "#e5825c", "#262a4d"],
+    id: "mochit",
+    label: "ブランド＋モチット",
+    swatches: ["#187bd7", "#f58a17", "#7dd3c0"],
   },
 ] as const;
 type PaletteId = (typeof PALETTES)[number]["id"];
@@ -70,7 +62,12 @@ function TodaySample() {
     () => new Set(["lan-wan"]),
   );
   const [claimed, setClaimed] = useState(false);
-  const [palette, setPalette] = useState<PaletteId>("muted");
+  const [palette, setPalette] = useState<PaletteId>("clear");
+  // モチット版: 完了にしたとき、次の行で迎えるモチットにリアクションさせる
+  const [mochitSignal, setMochitSignal] = useState<MochitEventSignal | null>(
+    null,
+  );
+  const withMochit = palette === "mochit";
 
   const route = useMemo(() => buildRoute(budget ?? DEFAULT_BUDGET), [budget]);
 
@@ -123,6 +120,12 @@ function TodaySample() {
       : "locked";
 
   const toggleDone = (id: string) => {
+    if (!doneIds.has(id)) {
+      setMochitSignal((prev) => ({
+        type: "taskComplete",
+        id: (prev?.id ?? 0) + 1,
+      }));
+    }
     setDoneIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -334,7 +337,19 @@ function TodaySample() {
 
                     {slot.state === "now" && (
                       <div className={s.nowPanel}>
-                        <p className={s.reason}>{slot.reason}</p>
+                        {withMochit ? (
+                          <div className={s.mochitSay}>
+                            <Mochit
+                              size="small"
+                              screenContext="today"
+                              event={mochitSignal}
+                              className={s.mochitFigure}
+                            />
+                            <p className={s.bubble}>{slot.reason}</p>
+                          </div>
+                        ) : (
+                          <p className={s.reason}>{slot.reason}</p>
+                        )}
                         <div className={s.nowActions}>
                           <Link
                             href="/learn"
@@ -369,6 +384,20 @@ function TodaySample() {
                   <p className={s.finishTitle}>
                     {allDone ? "今日のぶん、完了" : "おわり"}
                   </p>
+                  {allDone && withMochit && (
+                    <div className={s.mochitSay}>
+                      <Mochit
+                        size="small"
+                        state="happy"
+                        screenContext="today"
+                        event={mochitSignal}
+                        className={s.mochitFigure}
+                      />
+                      <p className={s.bubble}>
+                        今日のぶん、おつかれさま。この調子で明日も続けよう。
+                      </p>
+                    </div>
+                  )}
                   {allDone && (
                     <div className={s.finishActions}>
                       <Link href="/review" className={s.textLink}>

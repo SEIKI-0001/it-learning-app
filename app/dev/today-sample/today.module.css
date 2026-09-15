@@ -886,49 +886,63 @@
   --green: #2f8f63;
 }
 
-/* C クリア＋青ボタン: B の主要ボタンをブランドの青に */
-.shell[data-palette="clear-blue"] {
-  --wash: #f2f6fc;
-  --wash-line: #dfe7f3;
-  --blue: #2f6fdb;
-  --blue-700: #2257b0;
-  --blue-soft: #dce7fa;
-  --orange: #e08a34;
-  --orange-700: #9a5a18;
-  --orange-soft: #f9e5d0;
-  --green: #2f8f63;
-  --cta: #2463d1;
-  --cta-hover: #1d51ad;
+/* ブランド: アプリの brand / accent / emerald をそのまま使う。主要ボタンは brand-600 */
+.shell[data-palette="brand"],
+.shell[data-palette="mochit"] {
+  --wash: #f1f7fe;
+  --wash-line: #dbe8f7;
+  --blue: #187bd7;
+  --blue-700: #0756a8;
+  --blue-soft: #dbecff;
+  --orange: #f58a17;
+  --orange-700: #b45309;
+  --orange-soft: #ffedd5;
+  --green: #059669;
+  --cta: #0868c9;
+  --cta-hover: #0756a8;
 }
 
-/* D オーシャン: 青緑寄りの青＋はちみつ色。爽やかで軽い */
-.shell[data-palette="ocean"] {
-  --wash: #eff7f9;
-  --wash-line: #d9e9ee;
-  --blue: #1a80bf;
-  --blue-700: #14628f;
-  --blue-soft: #d6ebf5;
-  --orange: #e3a03a;
-  --orange-700: #8f5f0e;
-  --orange-soft: #f8ead0;
-  --green: #259775;
-  --cta: #133a52;
-  --cta-hover: #0c2a3c;
+/* モチット版: 次にやる行の理由をモチットが話す */
+.mochitSay {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-/* E インディゴ: 青紫＋コーラル。やわらかく知的 */
-.shell[data-palette="indigo"] {
-  --wash: #f4f5fc;
-  --wash-line: #e2e5f3;
-  --blue: #4b5ed6;
-  --blue-700: #3646a8;
-  --blue-soft: #e0e4fa;
-  --orange: #e5825c;
-  --orange-700: #a14c2d;
-  --orange-soft: #fae2d8;
-  --green: #36976f;
-  --cta: #262a4d;
-  --cta-hover: #1a1d38;
+.mochitFigure {
+  flex-shrink: 0;
+  margin: -10px -6px -10px -14px;
+}
+
+.bubble {
+  position: relative;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--canvas);
+  box-shadow: inset 0 0 0 1px var(--wash-line);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  word-break: auto-phrase;
+}
+
+.bubble::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-left: 1px solid var(--wash-line);
+  border-bottom: 1px solid var(--wash-line);
+  background: var(--canvas);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.finishActions + .mochitSay,
+.mochitSay + .finishActions {
+  margin-top: 12px;
 }
 
 /* ───────── 配色切り替え（サンプル専用の道具） ───────── */
