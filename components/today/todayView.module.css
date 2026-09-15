@@ -95,6 +95,8 @@
 }
 
 .eyebrowTitle {
+  margin: 0;
+  font-size: inherit;
   font-weight: 500;
   color: var(--ink);
 }

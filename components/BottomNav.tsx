@@ -47,10 +47,8 @@ export default function BottomNav() {
       data-app-nav
       className="fixed inset-x-0 bottom-0 z-20 border-t border-gray-200 bg-white/95 px-2 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom))] backdrop-blur lg:inset-y-0 lg:right-auto lg:w-60 lg:border-t-0 lg:border-r lg:bg-white lg:px-3.5 lg:py-6 lg:backdrop-blur-none"
     >
-      <Link
-        href="/today"
-        className="mb-7 hidden items-center gap-2.5 px-2.5 text-gray-900 lg:flex"
-      >
+      {/* サービス名（デスクトップのみ）。ナビの行き先は下の5つだけにするためリンクにしない */}
+      <div className="mb-7 hidden items-center gap-2.5 px-2.5 text-gray-900 lg:flex">
         <span
           aria-hidden
           className="grid h-[30px] w-[30px] place-items-center rounded-md bg-gray-900 text-xs font-medium tracking-tight text-white"
@@ -58,7 +56,7 @@ export default function BottomNav() {
           IP
         </span>
         <span className="text-[13px] font-medium tracking-tight">ITパスポート学習コーチ</span>
-      </Link>
+      </div>
       <ul className="mx-auto flex w-full max-w-md md:max-w-2xl lg:mx-0 lg:max-w-none lg:flex-col lg:gap-0.5">
         {ITEMS.map((item) => {
           const active =

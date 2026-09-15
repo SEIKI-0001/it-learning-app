@@ -43,12 +43,13 @@ export default function TodayHero({
   return (
     <header className={s.inner}>
       <div className={s.hero}>
-        <p className={s.eyebrow}>
-          <span className={s.eyebrowTitle}>今日の学習</span>
+        {/* ページの見出しは「今日の学習」。大きな一文は状況を伝える本文として置く */}
+        <div className={s.eyebrow}>
+          <h1 className={s.eyebrowTitle}>今日の学習</h1>
           <span className={s.eyebrowDate}>{dateLabel}</span>
-        </p>
+        </div>
 
-        <h1 className={s.headline} aria-live="polite">
+        <p className={s.headline} aria-live="polite">
           {!hasPlan ? (
             <>今日の新しい学習は、ひと段落です。</>
           ) : allDone ? (
@@ -60,7 +61,7 @@ export default function TodayHero({
               今日のぶんが終わります。
             </>
           )}
-        </h1>
+        </p>
         <p className={s.subline}>
           {hasPlan ? (
             <>
