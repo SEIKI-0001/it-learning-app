@@ -38,7 +38,7 @@ test.beforeEach(async ({ page }) => {
 test("shows a 108px floating Mochit only on configured app routes", async ({
   page,
 }) => {
-  await page.goto("/learn");
+  await page.goto("/today");
   const pet = page.getByRole("button", { name: "モチットを触る" });
   await expect(pet).toBeVisible();
   const box = await pet.boundingBox();
@@ -54,7 +54,7 @@ test("shows a 108px floating Mochit only on configured app routes", async ({
 test("opens the quick menu by tap and navigates to the exact shortcuts", async ({
   page,
 }) => {
-  await page.goto("/learn");
+  await page.goto("/today");
   const pet = page.getByRole("button", { name: "モチットを触る" });
   await pet.click();
 
@@ -83,7 +83,7 @@ test("opens the quick menu by tap and navigates to the exact shortcuts", async (
 });
 
 test("a hidden pet can still be restored from More", async ({ page }) => {
-  await page.goto("/learn");
+  await page.goto("/today");
   const pet = page.getByRole("button", { name: "モチットを触る" });
   await pet.click({ button: "right" });
   await page
@@ -103,7 +103,7 @@ test("a hidden pet can still be restored from More", async ({ page }) => {
 test("dragging moves the pet, does not open the menu, and preserves position", async ({
   page,
 }) => {
-  await page.goto("/learn");
+  await page.goto("/today");
   const pet = page.getByRole("button", { name: "モチットを触る" });
   const before = await pet.boundingBox();
   expect(before).not.toBeNull();
@@ -134,7 +134,7 @@ test("dragging moves the pet, does not open the menu, and preserves position", a
 });
 
 test("Escape and outside pointer close the quick menu", async ({ page }) => {
-  await page.goto("/learn");
+  await page.goto("/today");
   const pet = page.getByRole("button", { name: "モチットを触る" });
 
   await pet.focus();
@@ -162,7 +162,7 @@ test.describe("touch-sized viewport", () => {
   test("long-press opens the menu and the pet remains above bottom navigation", async ({
     page,
   }) => {
-    await page.goto("/learn");
+    await page.goto("/today");
     const pet = page.getByRole("button", { name: "モチットを触る" });
     const box = await pet.boundingBox();
     expect(box).not.toBeNull();
@@ -199,7 +199,7 @@ test.describe("reduced motion", () => {
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/learn");
+    await page.goto("/today");
     const pet = page.getByRole("button", { name: "モチットを触る" });
 
     expect(
