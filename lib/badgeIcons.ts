@@ -1,6 +1,6 @@
 // バッジ・チェックポイントの表示アイコン。
 // lib/badges.ts / lib/checkpoints.ts の emoji フィールドはデータとして残しつつ、
-// 画面では絵文字を使わず線画アイコンに統一する(lib/themeIcons.ts と同じ方針)。
+// 画面では絵文字を使わず線画アイコンに統一する(components/ui/Icon.tsx と同じ方針)。
 
 import type { IconName } from "@/components/ui/Icon";
 
