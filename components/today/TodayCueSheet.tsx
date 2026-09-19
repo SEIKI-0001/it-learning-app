@@ -7,7 +7,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Mochit from "@/components/mochit/Mochit";
-import ThemeAppIcon from "@/components/ui/ThemeAppIcon";
 import { getTopic } from "@/lib/content";
 import type { TodayPrimaryAction } from "@/types/gameful";
 import { formatOffset, type TodaySlot } from "./todaySlots";
@@ -132,23 +131,14 @@ export default function TodayCueSheet({
                 <CheckMark />
               </span>
               <div className={s.cueBody}>
-                <div className={s.cueLine} data-with-icon={slot.chapterNumber !== null || undefined}>
-                  <span className={s.cueTitleGroup}>
-                    {slot.chapterNumber !== null && (
-                      <ThemeAppIcon
-                        theme={{ chapterNumber: slot.chapterNumber }}
-                        size={state === "now" ? 40 : 28}
-                        className={s.cueIcon}
-                      />
-                    )}
-                    {state === "now" ? (
-                      <p className={s.cueTitle}>{slot.title}</p>
-                    ) : (
-                      <Link href={hrefFor(slot)} className={`${s.cueTitle} ${s.cueTitleLink}`}>
-                        {slot.title}
-                      </Link>
-                    )}
-                  </span>
+                <div className={s.cueLine}>
+                  {state === "now" ? (
+                    <p className={s.cueTitle}>{slot.title}</p>
+                  ) : (
+                    <Link href={hrefFor(slot)} className={`${s.cueTitle} ${s.cueTitleLink}`}>
+                      {slot.title}
+                    </Link>
+                  )}
                   <span className={s.cueMinutes}>
                     <span className={s.mono}>{slot.minutes}</span>分
                   </span>

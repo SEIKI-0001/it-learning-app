@@ -40,7 +40,7 @@ export type IconName =
   | "flask" // 模擬試験
   | "save" // 保存
   | "trash" // 削除
-  // ---- 旧 /learn テーマ識別アイコン(章の絵柄は components/ui/ThemeAppIcon.tsx へ移行) ----
+  // ---- /learn テーマ識別アイコン(lib/themeIcons.ts で18テーマに割当) ----
   | "building" // 企業活動
   | "scale" // 法務・標準化
   | "cart" // ビジネスインダストリ

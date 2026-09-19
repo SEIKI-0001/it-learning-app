@@ -32,7 +32,6 @@ import { saveAppState } from "@/lib/storage";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
-import ChapterCollection from "@/components/today/ChapterCollection";
 import ComebackMissionCard from "@/components/today/ComebackMissionCard";
 import GrowthCheckCard from "@/components/today/GrowthCheckCard";
 import ReadingCheck from "@/components/today/ReadingCheck";
@@ -264,12 +263,6 @@ export default function TodayPage() {
 
         <div className={s.side}>
           <TodayMissions state={state} setState={setState} />
-          <ChapterCollection
-            progress={state.progress}
-            todayChapterNumbers={slots.flatMap((slot) =>
-              slot.chapterNumber !== null && slot.state !== "done" ? [slot.chapterNumber] : [],
-            )}
-          />
           <ReadingCheck date={date} topics={readingTopics} />
           {growthCheckGate.available && (
             <div className={s.sideExtra}>
