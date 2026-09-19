@@ -453,12 +453,17 @@ function Swatch({
   );
 }
 
-/** カラーピッカー＋色番号（#RRGGBB）。入力途中の値は確定するまで反映しない。 */
+/** カラーピッカー＋色番号（#RRGGBB）。6桁そろった時点で反映し、3桁や途中の値は確定（Enter・欄外クリック）で反映する。 */
 function HexInput({ value, onChange }: { value: string; onChange: (hex: string) => void }) {
   const [draft, setDraft] = useState(value);
   const [focused, setFocused] = useState(false);
   const shown = focused ? draft : value;
   const valid = normalizeHex(shown) !== null;
+
+  const commit = (text: string) => {
+    const hex = normalizeHex(text);
+    if (hex && hex !== value) onChange(hex);
+  };
 
   return (
     <div className="flex shrink-0 items-center gap-1.5">
@@ -471,25 +476,36 @@ function HexInput({ value, onChange }: { value: string; onChange: (hex: string) 
       />
       <input
         type="text"
-        inputMode="text"
+        lang="en"
+        autoComplete="off"
+        autoCapitalize="off"
+        autoCorrect="off"
         spellCheck={false}
+        placeholder="#2f6fdb"
         value={shown}
         aria-label="色番号"
         aria-invalid={!valid}
-        onFocus={() => {
+        onFocus={(e) => {
           setDraft(value);
           setFocused(true);
+          e.currentTarget.select();
         }}
-        onBlur={() => setFocused(false)}
+        onBlur={() => {
+          commit(draft);
+          setFocused(false);
+        }}
         onChange={(e) => {
-          setDraft(e.target.value);
-          const hex = normalizeHex(e.target.value);
-          if (hex && e.target.value.replace("#", "").length === 6) onChange(hex);
+          const text = e.target.value;
+          setDraft(text);
+          // 6桁そろったら即反映（全角・空白まじりも normalizeHex がそろえる）
+          const hex = normalizeHex(text);
+          if (hex && text.normalize("NFKC").replace(/[\s#]/g, "").length === 6) commit(hex);
         }}
+        onCompositionEnd={(e) => commit(e.currentTarget.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            const hex = normalizeHex(draft);
-            if (hex) onChange(hex);
+          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+            commit(draft);
+            e.currentTarget.blur();
           }
         }}
         className={`w-[5.5rem] rounded-md border px-2 py-1.5 font-mono text-sm ${valid ? "border-gray-300" : "border-rose-400 text-rose-700"}`}

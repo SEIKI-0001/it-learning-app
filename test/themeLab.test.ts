@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { contrastRatio, deriveScale, hexToOklch, oklchToHex } from "@/lib/themeLab/color";
+import { contrastRatio, deriveScale, hexToOklch, normalizeHex, oklchToHex } from "@/lib/themeLab/color";
 import {
   CURRENT_SCALES,
   SCALE_ORDER,
@@ -59,6 +59,15 @@ describe("配色ラボのトークン", () => {
       expect(themeToCss(theme)).toContain("--color-brand-500:");
     }
     expect(parseTheme({ surfaces: {}, scales: {} })).toBeNull();
+  });
+
+  it("色番号は全角・空白まじり・# なし・3桁でも受け付ける", () => {
+    expect(normalizeHex("＃ＦＦｅｅｃｃ")).toBe("#ffeecc");
+    expect(normalizeHex(" #2F6FDB ")).toBe("#2f6fdb");
+    expect(normalizeHex("2f6fdb")).toBe("#2f6fdb");
+    expect(normalizeHex("#f0c")).toBe("#ff00cc");
+    expect(normalizeHex("#12345")).toBeNull();
+    expect(normalizeHex("blue")).toBeNull();
   });
 
   it("コントラスト比は白黒で 21", () => {

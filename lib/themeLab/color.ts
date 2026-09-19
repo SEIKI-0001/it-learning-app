@@ -5,8 +5,9 @@ export type Oklch = { l: number; c: number; h: number };
 
 const HEX_RE = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
+/** 色番号を #rrggbb にそろえる。全角（日本語入力のまま打った値）や空白まじりの貼り付けも受け付ける。 */
 export function normalizeHex(input: string): string | null {
-  const m = HEX_RE.exec(input.trim());
+  const m = HEX_RE.exec(input.normalize("NFKC").replace(/\s+/g, ""));
   if (!m) return null;
   let hex = m[1].toLowerCase();
   if (hex.length === 3) hex = hex.split("").map((ch) => ch + ch).join("");
