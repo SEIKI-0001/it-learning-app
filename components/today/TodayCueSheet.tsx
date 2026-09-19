@@ -132,7 +132,7 @@ export default function TodayCueSheet({
                 <CheckMark />
               </span>
               <div className={s.cueBody}>
-                <div className={s.cueLine}>
+                <div className={s.cueLine} data-with-icon={slot.chapterNumber !== null || undefined}>
                   <span className={s.cueTitleGroup}>
                     {slot.chapterNumber !== null && (
                       <ThemeAppIcon

@@ -511,7 +511,7 @@
 
 .cueLine {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
 }
@@ -522,6 +522,15 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
+}
+
+/* 章アイコンのある行だけ、アイコンと分数を上下中央でそろえる */
+.cueLine[data-with-icon] {
+  align-items: center;
+}
+
+.cueLine[data-with-icon] .cueTitle {
+  padding-top: 0;
 }
 
 .cue[data-state="now"] .cueTitleGroup {
