@@ -1,30 +1,63 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+// 配色ラボ本体。2つの表示方法を持つ:
+// - アプリ内（/dev/theme-lab）: 実物の /today・/progress を iframe で開く
+// - Artifact 版: snapshots（静的に固めた HTML/CSS）を srcdoc で開く
+// どちらも iframe の :root 変数を上書きして配色を差し替える。
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { contrastRatio, normalizeHex } from "@/lib/themeLab/color";
+import {
+  BACKDROP_SAMPLES,
+  PANEL_FILLS,
+  PARTS,
+  PART_ORDER,
+  backdropCss,
+  panelFillCss,
+  type PanelColorKey,
+  type PanelFill,
+  type PartKey,
+} from "@/lib/themeLab/decor";
 import {
   CURRENT_SCALES,
   CURRENT_SURFACES,
-  PANEL_FILLS,
+  PANEL_COLORS,
   SCALE_ORDER,
-  SURFACE_ORDER,
   THEME_PRESETS,
+  autoPanelHex,
+  autoPartHex,
   currentTheme,
   parseTheme,
   themeToCss,
   themeToGlobalsSnippet,
   withAnchor,
+  withBackdrop,
+  withColorsFrom,
+  withPanelColor,
+  withPanelFill,
+  withPart,
   withStop,
   withSurface,
-  withPanelFill,
-  type PanelFill,
   type ScaleKey,
   type ThemeState,
 } from "@/lib/themeLab/tokens";
 
+export type Snapshot = { css: string; htmlClass: string; body: string };
+
+type Props = {
+  /** 指定すると静的スナップショットで表示する（Artifact 版） */
+  snapshots?: Record<string, Snapshot>;
+  /** 背景サンプルの src を差し替える（Artifact 版はデータURL） */
+  assets?: Record<string, string>;
+};
+
+type SetTheme = React.Dispatch<React.SetStateAction<ThemeState>>;
+
 const LAB_STORAGE_KEY = "theme-lab:v1";
+const CUSTOM_IMAGE_KEY = "theme-lab:custom-image";
 const APP_STATE_KEY = "fequest:appstate";
 const STYLE_ID = "theme-lab-style";
+const BG_STYLE_ID = "theme-lab-bg";
 
 const PAGES = [
   { path: "/today", label: "今日" },
@@ -64,6 +97,35 @@ const SAMPLE_APP_STATE = {
   answers: [],
 };
 
+// ───────── スナップショット（Artifact 版）用の文書 ─────────
+
+const SNAPSHOT_EXTRA_CSS =
+  'html[class]{--font-app-num:"Geist"!important;--font-app-sans:"Zen Kaku Gothic New"!important;--font-app-mono:"Geist Mono"!important}' +
+  "a{pointer-events:none}";
+
+const SNAPSHOT_SCRIPT =
+  "addEventListener('message',function(e){var d=e.data;if(!d||d.type!=='theme-lab')return;" +
+  `document.getElementById('${STYLE_ID}').textContent=d.css;` +
+  `if(typeof d.bg==='string')document.getElementById('${BG_STYLE_ID}').textContent=d.bg;});`;
+
+const SNAPSHOT_FONTS =
+  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&family=Geist+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap">';
+
+function buildSrcDoc(snap: Snapshot, css: string, bg: string): string {
+  return [
+    `<!doctype html><html lang="ja" class="${snap.htmlClass}"><head><meta charset="utf-8">`,
+    '<meta name="viewport" content="width=device-width,initial-scale=1">',
+    SNAPSHOT_FONTS,
+    `<style>${snap.css}</style><style>${SNAPSHOT_EXTRA_CSS}</style>`,
+    `<style id="${STYLE_ID}">${css}</style><style id="${BG_STYLE_ID}">${bg}</style>`,
+    `<script>${SNAPSHOT_SCRIPT}</script></head>`,
+    snap.body,
+    "</html>",
+  ].join("");
+}
+
+// ───────── 保存（失敗しても表示は続ける） ─────────
+
 function readStorage(key: string): string | null {
   try {
     return window.localStorage.getItem(key);
@@ -72,61 +134,126 @@ function readStorage(key: string): string | null {
   }
 }
 
-function writeStorage(key: string, value: string) {
+function writeStorage(key: string, value: string | null) {
   try {
-    window.localStorage.setItem(key, value);
+    if (value === null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, value);
   } catch {
-    // プライベートモード等では保存しない（表示には影響しない）
+    // プライベートモードや容量超過では保存しない
   }
 }
 
-export default function ThemeLab() {
-  const [theme, setTheme] = useState<ThemeState>(currentTheme);
-  const [loaded, setLoaded] = useState(false);
+function loadSavedTheme(): ThemeState | null {
+  const saved = readStorage(LAB_STORAGE_KEY);
+  if (!saved) return null;
+  try {
+    return parseTheme(JSON.parse(saved));
+  } catch {
+    return null;
+  }
+}
+
+/** 手元の画像を長辺 1600px の JPEG に縮めてデータURLにする */
+function shrinkImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("画像を読み込めませんでした"));
+      img.onload = () => {
+        const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+export default function ThemeLab({ snapshots, assets }: Props) {
+  const snapshotMode = Boolean(snapshots);
+  const [theme, setTheme] = useState<ThemeState>(() =>
+    snapshotMode ? (loadSavedTheme() ?? currentTheme()) : currentTheme(),
+  );
+  const [customImage, setCustomImage] = useState<string | null>(() =>
+    snapshotMode ? readStorage(CUSTOM_IMAGE_KEY) : null,
+  );
+  const [loaded, setLoaded] = useState(snapshotMode);
   const [page, setPage] = useState<string>(PAGES[0].path);
   const [device, setDevice] = useState<DeviceId>("phone");
   const [framePath, setFramePath] = useState<string | null>(null);
   const [frameKey, setFrameKey] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const css = themeToCss(theme);
 
+  // アプリ内版は SSR と揃えるため、保存値は描画後に読む
   useEffect(() => {
-    const saved = readStorage(LAB_STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = parseTheme(JSON.parse(saved));
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- 保存済みの配色は描画後にだけ読める
-        if (parsed) setTheme(parsed);
-      } catch {
-        // 壊れた保存値は無視して現行配色から始める
-      }
-    }
+    if (snapshotMode) return;
+    const saved = loadSavedTheme();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 保存値は描画後にだけ読める
+    if (saved) setTheme(saved);
+    setCustomImage(readStorage(CUSTOM_IMAGE_KEY));
     setLoaded(true);
-  }, []);
+  }, [snapshotMode]);
 
   useEffect(() => {
     if (loaded) writeStorage(LAB_STORAGE_KEY, JSON.stringify(theme));
   }, [theme, loaded]);
 
-  const inject = useCallback(() => {
-    const doc = iframeRef.current?.contentDocument;
-    if (!doc?.head) return;
-    let el = doc.getElementById(STYLE_ID);
-    if (!el) {
-      el = doc.createElement("style");
-      el.id = STYLE_ID;
-      doc.head.appendChild(el);
+  const css = themeToCss(theme);
+  const sample = BACKDROP_SAMPLES.find((s) => s.id === theme.backdrop.imageId);
+  const bgSrc =
+    theme.backdrop.imageId === "custom" ? customImage : sample ? (assets?.[sample.id] ?? sample.src) : null;
+  const bgCss = backdropCss(theme.backdrop, bgSrc, sample?.mode ?? "cover");
+
+  const latest = useRef({ css, bgCss });
+  useEffect(() => {
+    latest.current = { css, bgCss };
+  });
+  const sentBg = useRef<string | null>(null);
+
+  const inject = useCallback((force = false) => {
+    const frame = iframeRef.current;
+    if (!frame) return;
+    const { css: nextCss, bgCss: nextBg } = latest.current;
+    const bgChanged = force || sentBg.current !== nextBg;
+    try {
+      const doc = frame.contentDocument;
+      if (!doc?.head) throw new Error("no document");
+      for (const [id, text] of [
+        [STYLE_ID, nextCss],
+        [BG_STYLE_ID, nextBg],
+      ] as const) {
+        let el = doc.getElementById(id);
+        if (!el) {
+          el = doc.createElement("style");
+          el.id = id;
+          doc.head.appendChild(el);
+        }
+        if (el.textContent !== text) el.textContent = text;
+      }
+    } catch {
+      // 中を直接さわれないときはメッセージで渡す（背景画像は変わったときだけ）
+      frame.contentWindow?.postMessage(
+        { type: "theme-lab", css: nextCss, ...(bgChanged ? { bg: nextBg } : {}) },
+        "*",
+      );
     }
-    if (el.textContent !== css) el.textContent = css;
-  }, [css]);
+    sentBg.current = nextBg;
+  }, []);
 
   useEffect(() => {
     inject();
-  }, [inject]);
+  }, [css, bgCss, inject]);
 
-  // プレビュー内の画面遷移（オンボーディングへの転送など）を追う
+  // アプリ内版: プレビュー内の転送（初回設定画面など）を追う
   useEffect(() => {
+    if (snapshotMode) return;
     const timer = window.setInterval(() => {
       try {
         const path = iframeRef.current?.contentWindow?.location.pathname ?? null;
@@ -137,9 +264,16 @@ export default function ThemeLab() {
       }
     }, 600);
     return () => window.clearInterval(timer);
-  }, [inject]);
+  }, [inject, snapshotMode]);
 
-  const needsSample = framePath?.startsWith("/onboarding") ?? false;
+  // スナップショットはページ・画面幅が変わったときだけ作り直す（色の変更は差し替えで反映）
+  const srcDoc = useMemo(() => {
+    if (!snapshots) return undefined;
+    const snap = snapshots[`${page}|${device}`];
+    return snap ? buildSrcDoc(snap, "", "") : undefined;
+  }, [snapshots, page, device]);
+
+  const needsSample = !snapshotMode && (framePath?.startsWith("/onboarding") ?? false);
 
   const loadSample = () => {
     if (!readStorage(APP_STATE_KEY)) writeStorage(APP_STATE_KEY, JSON.stringify(SAMPLE_APP_STATE));
@@ -149,10 +283,21 @@ export default function ThemeLab() {
   const copySnippet = async () => {
     try {
       await navigator.clipboard.writeText(themeToGlobalsSnippet(theme));
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
+      setCopied("done");
     } catch {
-      setCopied(false);
+      setCopied("failed");
+    }
+    window.setTimeout(() => setCopied("idle"), 2400);
+  };
+
+  const onUpload = async (file: File) => {
+    try {
+      const dataUrl = await shrinkImage(file);
+      setCustomImage(dataUrl);
+      writeStorage(CUSTOM_IMAGE_KEY, dataUrl);
+      setTheme((t) => withBackdrop(t, { imageId: "custom" }));
+    } catch {
+      // 読めない形式は無視（選択状態は変えない）
     }
   };
 
@@ -161,7 +306,9 @@ export default function ThemeLab() {
       <header className="border-b border-gray-200 bg-white">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <div className="min-w-0">
-            <p className="text-xs text-gray-500">テスト環境専用</p>
+            <p className="text-xs text-gray-500">
+              {snapshotMode ? "ITパスポート学習コーチ ・ サンプルデータで表示" : "テスト環境専用"}
+            </p>
             <h1 className="text-lg font-medium">配色ラボ</h1>
           </div>
           <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -170,24 +317,28 @@ export default function ThemeLab() {
               onClick={copySnippet}
               className="rounded-lg bg-gray-900 px-3 py-2 text-sm text-white hover:bg-black"
             >
-              {copied ? "コピーしました" : "この配色をCSSでコピー"}
+              {copied === "done"
+                ? "コピーしました"
+                : copied === "failed"
+                  ? "下の欄から選んでコピーしてください"
+                  : "この配色をCSSでコピー"}
             </button>
             <button
               type="button"
               onClick={() => setTheme(currentTheme())}
               className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 hover:bg-gray-50"
             >
-              現行に戻す
+              すべて現行に戻す
             </button>
           </div>
         </div>
         <div className="flex gap-2 overflow-x-auto px-4 pb-3">
-          <span className="shrink-0 self-center text-xs text-gray-500">プリセット</span>
+          <span className="shrink-0 self-center text-xs text-gray-500">配色プリセット</span>
           {THEME_PRESETS.map((preset) => (
             <button
               key={preset.id}
               type="button"
-              onClick={() => setTheme((t) => withPanelFill(preset.build(), t.panelFill))}
+              onClick={() => setTheme((t) => withColorsFrom(t, preset.build()))}
               className="flex shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-white py-1 pl-1.5 pr-3 text-sm hover:border-gray-400"
             >
               <PresetDots theme={preset.build()} />
@@ -215,13 +366,17 @@ export default function ThemeLab() {
               options={DEVICES.map((d) => ({ value: d.id, label: d.label }))}
               onChange={(value) => setDevice(value as DeviceId)}
             />
-            <button
-              type="button"
-              onClick={() => setFrameKey((k) => k + 1)}
-              className="ml-auto rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
-            >
-              再読み込み
-            </button>
+            {snapshotMode ? (
+              <span className="ml-auto text-xs text-gray-500">表示のみ（ボタンは動きません）</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setFrameKey((k) => k + 1)}
+                className="ml-auto rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
+              >
+                再読み込み
+              </button>
+            )}
           </div>
           {needsSample && (
             <div className="flex flex-wrap items-center gap-2 border-b border-accent-200 bg-accent-50 px-3 py-2 text-sm">
@@ -236,34 +391,66 @@ export default function ThemeLab() {
             </div>
           )}
           <PreviewFrame
-            key={`${page}-${frameKey}`}
-            ref={iframeRef}
-            src={page}
+            key={snapshotMode ? "snapshot" : `${page}-${frameKey}`}
+            frameRef={iframeRef}
+            src={snapshotMode ? undefined : page}
+            srcDoc={srcDoc}
             width={DEVICES.find((d) => d.id === device)!.width}
-            onLoad={inject}
+            onLoad={() => inject(true)}
           />
         </section>
 
         <aside
           aria-label="色の設定"
-          className="space-y-6 px-4 py-5 lg:order-1 lg:h-[calc(100vh-7.5rem)] lg:overflow-y-auto lg:border-r lg:border-gray-200 lg:bg-white"
+          className="space-y-7 px-4 py-5 lg:order-1 lg:h-[calc(100vh-7.5rem)] lg:overflow-y-auto lg:border-r lg:border-gray-200 lg:bg-white"
         >
-          <Group title="背景" note="画面の地と、カード・パネルの面。">
-            {SURFACE_ORDER.map((key) => {
-              const def = CURRENT_SURFACES[key];
-              return (
-                <ColorField
-                  key={key}
-                  label={def.label}
-                  role={def.role}
-                  value={theme.surfaces[key]}
-                  original={def.value}
-                  swatches={def.swatches}
-                  onChange={(hex) => setTheme((t) => withSurface(t, key, hex))}
-                />
-              );
-            })}
+          <Group title="背景" note="画面の地と、その後ろに敷く画像。">
+            <ColorField
+              label={CURRENT_SURFACES.page.label}
+              role={CURRENT_SURFACES.page.role}
+              value={theme.surfaces.page}
+              original={CURRENT_SURFACES.page.value}
+              swatches={CURRENT_SURFACES.page.swatches}
+              onChange={(hex) => setTheme((t) => withSurface(t, "page", hex))}
+            />
+            <BackdropField
+              theme={theme}
+              assets={assets}
+              customImage={customImage}
+              onSelect={(imageId) => setTheme((t) => withBackdrop(t, { imageId }))}
+              onPlacement={(placement) => setTheme((t) => withBackdrop(t, { placement }))}
+              onStrength={(strength) => setTheme((t) => withBackdrop(t, { strength }))}
+              onUpload={onUpload}
+            />
+          </Group>
+
+          <Group title="淡いパネル" note="「今日の学習」「合格までの道のり」などの枠。色は未指定ならテーマに連動します。">
             <PanelFillField theme={theme} onChange={(fill) => setTheme((t) => withPanelFill(t, fill))} />
+            {PANEL_FILLS.find((f) => f.id === theme.panel.fill)!.colors.map((key) => (
+              <PanelColorField key={key} theme={theme} colorKey={key} setTheme={setTheme} />
+            ))}
+            <ColorField
+              label={CURRENT_SURFACES.washLine.label}
+              role={CURRENT_SURFACES.washLine.role}
+              value={theme.surfaces.washLine}
+              original={CURRENT_SURFACES.washLine.value}
+              swatches={CURRENT_SURFACES.washLine.swatches}
+              onChange={(hex) => setTheme((t) => withSurface(t, "washLine", hex))}
+            />
+          </Group>
+
+          <Group title="カード・ナビ・ボタン" note="テーマとは別に、部品ごとに色を決められます。">
+            <ColorField
+              label={CURRENT_SURFACES.surface.label}
+              role={CURRENT_SURFACES.surface.role}
+              value={theme.surfaces.surface}
+              original={CURRENT_SURFACES.surface.value}
+              swatches={CURRENT_SURFACES.surface.swatches}
+              onChange={(hex) => setTheme((t) => withSurface(t, "surface", hex))}
+            />
+            {PART_ORDER.map((key) => (
+              <PartField key={key} theme={theme} partKey={key} setTheme={setTheme} />
+            ))}
           </Group>
 
           {SCALE_ORDER.map((key) => (
@@ -271,7 +458,11 @@ export default function ThemeLab() {
               key={key}
               scaleKey={key}
               theme={theme}
-              title={key === "emerald" || key === "gray" ? `その他：${CURRENT_SCALES[key].label}` : CURRENT_SCALES[key].label}
+              title={
+                key === "emerald" || key === "gray"
+                  ? `その他：${CURRENT_SCALES[key].label}`
+                  : CURRENT_SCALES[key].label
+              }
               onAnchor={(hex) => setTheme((t) => withAnchor(t, key, hex))}
               onStop={(stop, hex) => setTheme((t) => withStop(t, key, stop, hex))}
             />
@@ -339,13 +530,15 @@ function Segmented({
 }
 
 function PreviewFrame({
-  ref,
+  frameRef,
   src,
+  srcDoc,
   width,
   onLoad,
 }: {
-  ref: React.Ref<HTMLIFrameElement>;
-  src: string;
+  frameRef: React.RefObject<HTMLIFrameElement | null>;
+  src?: string;
+  srcDoc?: string;
   width: number;
   onLoad: () => void;
 }) {
@@ -370,8 +563,9 @@ function PreviewFrame({
     <div ref={boxRef} className="relative min-h-0 flex-1 overflow-hidden">
       <div className="absolute inset-x-0 top-0 flex justify-center">
         <iframe
-          ref={ref}
+          ref={frameRef}
           src={src}
+          srcDoc={srcDoc}
           title="配色プレビュー"
           onLoad={onLoad}
           className="origin-top border-x border-gray-200 bg-white"
@@ -401,6 +595,7 @@ function ColorField({
   original,
   swatches,
   onChange,
+  auto,
 }: {
   label: string;
   role: string;
@@ -408,8 +603,10 @@ function ColorField({
   original: string;
   swatches: string[];
   onChange: (hex: string) => void;
+  /** テーマ連動の色欄。linked=true のあいだは value がテーマから決まる */
+  auto?: { linked: boolean; label: string; onReset: () => void };
 }) {
-  const changed = value !== original;
+  const changed = auto ? !auto.linked : value !== original;
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3">
       <div className="flex items-start gap-3">
@@ -419,12 +616,26 @@ function ColorField({
             {changed && <span className="ml-2 text-xs text-brand-700">変更中</span>}
           </p>
           <p className="text-xs text-gray-500">{role}</p>
+          {auto &&
+            (auto.linked ? (
+              <p className="mt-1 text-xs text-gray-500">テーマ連動：{auto.label}</p>
+            ) : (
+              <button type="button" onClick={auto.onReset} className="mt-1 text-xs text-gray-600 underline">
+                テーマ連動（{auto.label}）に戻す
+              </button>
+            ))}
         </div>
         <HexInput value={value} onChange={onChange} />
       </div>
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {swatches.map((hex) => (
-          <Swatch key={hex} hex={hex} selected={hex === value} isOriginal={hex === original} onClick={() => onChange(hex)} />
+        {[...new Set(swatches)].map((hex) => (
+          <Swatch
+            key={hex}
+            hex={hex}
+            selected={hex === value && (!auto || !auto.linked)}
+            isOriginal={!auto && hex === original}
+            onClick={() => onChange(hex)}
+          />
         ))}
       </div>
     </div>
@@ -518,24 +729,33 @@ function HexInput({ value, onChange }: { value: string; onChange: (hex: string) 
   );
 }
 
+/** パネルの色に出す見本（今の配色から拾う） */
+function themeSwatches(theme: ThemeState): string[] {
+  const b = theme.scales.brand.stops;
+  const a = theme.scales.accent.stops;
+  const e = theme.scales.emerald.stops;
+  return [b["50"], b["100"], b["200"], b["300"], a["50"], a["100"], a["200"], e["100"], "#ffffff", theme.scales.gray.stops["100"]];
+}
+
 function PanelFillField({ theme, onChange }: { theme: ThemeState; onChange: (fill: PanelFill) => void }) {
   // 見本は選択中の配色で描く（トークン名をこの場の値に置き換える）
   const vars = {
     "--color-brand-50": theme.scales.brand.stops["50"],
     "--color-brand-100": theme.scales.brand.stops["100"],
+    "--color-brand-200": theme.scales.brand.stops["200"],
     "--color-brand-300": theme.scales.brand.stops["300"],
+    "--color-accent-200": theme.scales.accent.stops["200"],
     "--theme-surface": theme.surfaces.surface,
   } as React.CSSProperties;
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3">
       <p className="text-sm text-gray-900">
-        淡いパネルの塗り方
-        {theme.panelFill !== "flat" && <span className="ml-2 text-xs text-brand-700">変更中</span>}
+        塗り方
+        {theme.panel.fill !== "flat" && <span className="ml-2 text-xs text-brand-700">変更中</span>}
       </p>
-      <p className="text-xs text-gray-500">「今日の学習」「合格までの道のり」などの枠の背景</p>
       <div role="radiogroup" aria-label="淡いパネルの塗り方" className="mt-2 grid grid-cols-3 gap-2" style={vars}>
         {PANEL_FILLS.map((fill) => {
-          const active = theme.panelFill === fill.id;
+          const active = theme.panel.fill === fill.id;
           return (
             <button
               key={fill.id}
@@ -545,12 +765,169 @@ function PanelFillField({ theme, onChange }: { theme: ThemeState; onChange: (fil
               onClick={() => onChange(fill.id)}
               className={`flex flex-col gap-1 rounded-md p-1 text-left ${active ? "ring-2 ring-gray-900" : "hover:bg-gray-50"}`}
             >
-              <span className="h-12 rounded border border-black/10" style={{ background: fill.value }} />
+              <span className="relative block h-12 overflow-hidden rounded border border-black/10" style={{ background: theme.surfaces.page }}>
+                <span
+                  className="absolute inset-0"
+                  style={{ background: panelFillCss({ ...theme.panel, fill: fill.id }) }}
+                />
+                {fill.id === "none" && (
+                  <span className="absolute inset-1.5 rounded border border-dashed" style={{ borderColor: theme.surfaces.washLine }} />
+                )}
+              </span>
               <span className="text-xs text-gray-700">{fill.label}</span>
             </button>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function PanelColorField({ theme, colorKey, setTheme }: { theme: ThemeState; colorKey: PanelColorKey; setTheme: SetTheme }) {
+  const def = PANEL_COLORS[colorKey];
+  const custom = theme.panel.colors[colorKey];
+  const autoHex = autoPanelHex(theme, colorKey);
+  return (
+    <ColorField
+      label={def.label}
+      role={colorKey === "dot" ? "指定した色はそのままの濃さで打たれます" : "淡いパネルの色"}
+      value={custom ?? autoHex}
+      original={autoHex}
+      swatches={themeSwatches(theme)}
+      onChange={(hex) => setTheme((t) => withPanelColor(t, colorKey, hex))}
+      auto={{ linked: !custom, label: def.autoLabel, onReset: () => setTheme((t) => withPanelColor(t, colorKey, null)) }}
+    />
+  );
+}
+
+function PartField({ theme, partKey, setTheme }: { theme: ThemeState; partKey: PartKey; setTheme: SetTheme }) {
+  const def = PARTS[partKey];
+  const custom = theme.parts[partKey];
+  const autoHex = autoPartHex(theme, partKey);
+  const g = theme.scales.gray.stops;
+  const b = theme.scales.brand.stops;
+  const swatches =
+    partKey === "cta"
+      ? [g["900"], g["800"], b["600"], b["700"], b["800"], theme.scales.accent.stops["600"], theme.scales.emerald.stops["600"], "#000000"]
+      : ["#ffffff", g["50"], g["100"], b["50"], b["100"], theme.surfaces.page, g["900"]];
+  return (
+    <ColorField
+      label={def.label}
+      role={def.role}
+      value={custom ?? autoHex}
+      original={autoHex}
+      swatches={swatches}
+      onChange={(hex) => setTheme((t) => withPart(t, partKey, hex))}
+      auto={{ linked: !custom, label: def.autoLabel, onReset: () => setTheme((t) => withPart(t, partKey, null)) }}
+    />
+  );
+}
+
+function BackdropField({
+  theme,
+  assets,
+  customImage,
+  onSelect,
+  onPlacement,
+  onStrength,
+  onUpload,
+}: {
+  theme: ThemeState;
+  assets?: Record<string, string>;
+  customImage: string | null;
+  onSelect: (imageId: string | null) => void;
+  onPlacement: (placement: "full" | "top") => void;
+  onStrength: (strength: number) => void;
+  onUpload: (file: File) => void;
+}) {
+  const { imageId, placement, strength } = theme.backdrop;
+  const selected = BACKDROP_SAMPLES.find((s) => s.id === imageId);
+  const tile = (id: string | null, label: string, sub: string, background: string) => {
+    const active = imageId === id;
+    return (
+      <button
+        key={id ?? "none"}
+        type="button"
+        role="radio"
+        aria-checked={active}
+        onClick={() => onSelect(id)}
+        className={`flex flex-col gap-1 rounded-md p-1 text-left ${active ? "ring-2 ring-gray-900" : "hover:bg-gray-50"}`}
+      >
+        <span className="block h-14 rounded border border-black/10" style={{ background }} />
+        <span className="text-xs leading-tight text-gray-800">{label}</span>
+        <span className="text-[10px] leading-tight text-gray-500">{sub}</span>
+      </button>
+    );
+  };
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <p className="text-sm text-gray-900">
+        背景画像
+        {imageId && <span className="ml-2 text-xs text-brand-700">変更中</span>}
+      </p>
+      <p className="text-xs text-gray-500">ページの地の上、カードやパネルの後ろに敷きます</p>
+      <div role="radiogroup" aria-label="背景画像" className="mt-2 grid grid-cols-3 gap-2">
+        {tile(null, "なし", "現行", theme.surfaces.page)}
+        {BACKDROP_SAMPLES.map((s) => {
+          const src = assets?.[s.id] ?? s.src;
+          return tile(
+            s.id,
+            s.label,
+            s.kind,
+            s.mode === "tile" ? `url("${src}") 0 0 / 90px 90px repeat` : `url("${src}") center / cover no-repeat`,
+          );
+        })}
+        {customImage && tile("custom", "手元の画像", "アップロード", `url("${customImage}") center / cover no-repeat`)}
+      </div>
+      <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-800 hover:bg-gray-50">
+        <input
+          id="theme-lab-upload"
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) onUpload(file);
+            e.target.value = "";
+          }}
+        />
+        手元の画像を使う
+      </label>
+
+      {imageId && (
+        <div className="mt-3 space-y-3 border-t border-gray-200 pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs text-gray-600">敷き方</span>
+            <Segmented
+              label="敷き方"
+              value={placement}
+              options={[
+                { value: "full", label: "全面" },
+                { value: "top", label: "上部だけ" },
+              ]}
+              onChange={(v) => onPlacement(v as "full" | "top")}
+            />
+          </div>
+          <label htmlFor="theme-lab-strength" className="block">
+            <span className="flex items-center justify-between text-xs text-gray-600">
+              <span>画像の濃さ</span>
+              <span className="font-mono tabular-nums">{strength}%</span>
+            </span>
+            <input
+              id="theme-lab-strength"
+              type="range"
+              min={10}
+              max={100}
+              step={5}
+              value={strength}
+              onChange={(e) => onStrength(Number(e.target.value))}
+              className="mt-1 w-full accent-gray-900"
+            />
+          </label>
+          {selected && <p className="text-[10px] leading-snug text-gray-500">出典：{selected.credit}</p>}
+        </div>
+      )}
     </div>
   );
 }
@@ -632,18 +1009,23 @@ function ScaleGroup({
 function ContrastPanel({ theme }: { theme: ThemeState }) {
   const { brand, accent, emerald, gray } = theme.scales;
   const { page, surface } = theme.surfaces;
+  const cta = theme.parts.cta ?? gray.stops["900"];
+  const panelBase = theme.panel.fill === "none" ? page : (theme.panel.colors.base ?? brand.stops["50"]);
   const checks = [
     { label: "本文 / ページの地", fg: gray.stops["900"], bg: page },
     { label: "補足の文字 / カードの面", fg: gray.stops["500"], bg: surface },
     { label: "テーマ色の文字（700）/ カードの面", fg: brand.stops["700"], bg: surface },
-    { label: "本文 / 淡いパネル（テーマ50）", fg: gray.stops["900"], bg: brand.stops["50"] },
+    { label: "本文 / 淡いパネルの地", fg: gray.stops["900"], bg: panelBase },
     { label: "アクセントの文字（700）/ カードの面", fg: accent.stops["700"], bg: surface },
     { label: "達成の文字（700）/ カードの面", fg: emerald.stops["700"], bg: surface },
-    { label: "主ボタンの白文字 / 墨（900）", fg: "#ffffff", bg: gray.stops["900"] },
+    { label: "主ボタンの白文字", fg: "#ffffff", bg: cta },
     { label: "白文字 / テーマ色（600）", fg: "#ffffff", bg: brand.stops["600"] },
   ];
   return (
-    <Group title="読みやすさチェック" note="WCAG のコントラスト比。本文は 4.5 以上が目安。">
+    <Group
+      title="読みやすさチェック"
+      note="WCAG のコントラスト比。本文は 4.5 以上が目安。背景画像を敷いたときは画像しだいで変わるので、プレビューでも確かめてください。"
+    >
       <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
         {checks.map((check) => {
           const ratio = contrastRatio(check.fg, check.bg);

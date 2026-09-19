@@ -17,8 +17,8 @@
   --orange-700: var(--color-accent-700);
   --orange-soft: var(--color-accent-100);
   --green: var(--color-emerald-500);
-  --cta: var(--color-gray-900);
-  --cta-hover: #000000;
+  --cta: var(--theme-cta, var(--color-gray-900));
+  --cta-hover: var(--theme-cta-hover, #000000);
   --sans: var(--font-app-sans), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
   --num: var(--font-app-num), "Helvetica Neue", Arial, sans-serif;
   --mono: var(--font-app-mono), ui-monospace, "SF Mono", Menlo, monospace;
