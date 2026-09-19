@@ -1,43 +1,74 @@
 @import "tailwindcss";
 
 /*
- * デザイントークン。
- * - brand: 明るく鮮明な青。主CTA・選択中タブ・現在位置・進捗バーは500〜600、
- *   本文リンク・小さめの強調テキストは700を使う(500は白地の小テキストにはコントラスト不足)。
- * - accent: オレンジ。復習・ストリーク・あと少しの目標・受取可能な報酬・注意状態にだけ使う。
- *   テキスト用途は700以上、500は線・バー・アイコンに限定する。
- * - 装飾目的の多色使いはしない。成功/警告はテキスト・状態表示に限定する。
+ * デザイントークン（2026-09 刷新: /today・/progress の「クリア」配色に統一）。
+ * - 地は白。色の付いた面は brand-50（淡い青）だけにし、区切りは線より余白で取る。
+ * - brand: 明るい青 #2F6FDB。新規・現在地・進捗バー・リンク。テキストは 700 以上。
+ * - accent: 琥珀 #E08A34。復習・注意・受取可能な報酬。テキストは 700 以上。
+ * - emerald: 緑 #2F8F63。完了・正解・獲得済み。
+ * - gray: 墨色系の無彩色。主CTAは gray-900（墨）の塗り。
+ * - 書体: 英数字 Geist ＋ 和文 Zen Kaku Gothic New。太さは 400 / 500 を基本にする
+ *   （semibold / bold も 500 に寄せ、太字で強調しない）。
+ * - 装飾目的の多色使いはしない。
  */
 @theme {
-  --color-brand-50: #eff7ff;
-  --color-brand-100: #dbecff;
-  --color-brand-200: #b8d9ff;
-  --color-brand-300: #86bdff;
-  --color-brand-400: #4f9df2;
-  --color-brand-500: #187bd7;
-  --color-brand-600: #0868c9;
-  --color-brand-700: #0756a8;
-  --color-brand-800: #0b4687;
-  --color-brand-900: #103a6b;
-  --color-brand-950: #0a2445;
+  --color-brand-50: #f2f6fc;
+  --color-brand-100: #dce7fa;
+  --color-brand-200: #c3d5f4;
+  --color-brand-300: #97b6ec;
+  --color-brand-400: #5f8fe3;
+  --color-brand-500: #2f6fdb;
+  --color-brand-600: #2463d1;
+  --color-brand-700: #2257b0;
+  --color-brand-800: #1d4892;
+  --color-brand-900: #183a73;
+  --color-brand-950: #10264b;
 
-  --color-accent-50: #fff7ed;
-  --color-accent-100: #ffedd5;
-  --color-accent-200: #fed7aa;
-  --color-accent-300: #fdba74;
-  --color-accent-400: #fb923c;
-  --color-accent-500: #f58a17;
-  --color-accent-600: #d96c0b;
-  --color-accent-700: #b45309;
-  --color-accent-800: #8a3c08;
+  --color-accent-50: #fdf5ec;
+  --color-accent-100: #f9e5d0;
+  --color-accent-200: #f2cda6;
+  --color-accent-300: #eab07a;
+  --color-accent-400: #e59c55;
+  --color-accent-500: #e08a34;
+  --color-accent-600: #b35c12;
+  --color-accent-700: #9a5a18;
+  --color-accent-800: #7a4512;
 
-  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
-    "Yu Gothic", "Meiryo", ui-sans-serif, system-ui, sans-serif;
+  --color-emerald-50: #ebf6f0;
+  --color-emerald-100: #d3ecdf;
+  --color-emerald-200: #b0dcc6;
+  --color-emerald-300: #82c7a5;
+  --color-emerald-400: #4fab80;
+  --color-emerald-500: #2f8f63;
+  --color-emerald-600: #287a55;
+  --color-emerald-700: #22684a;
+  --color-emerald-800: #1c553d;
+  --color-emerald-900: #164330;
+
+  --color-gray-50: #f7f8fa;
+  --color-gray-100: #f1f3f6;
+  --color-gray-200: #eceef2;
+  --color-gray-300: #cdd2d9;
+  --color-gray-400: #9aa1ab;
+  --color-gray-500: #6e747d;
+  --color-gray-600: #4d535c;
+  --color-gray-700: #3a3f46;
+  --color-gray-800: #25292e;
+  --color-gray-900: #16191d;
+  --color-gray-950: #0d0f12;
+
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
+
+  --font-sans: var(--font-app-num), var(--font-app-sans), "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "Meiryo",
+    ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-app-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 :root {
-  --background: #f6f8fb;
-  --foreground: #152033;
+  --background: #ffffff;
+  --foreground: #16191d;
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -45,8 +76,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  /* Webフォントの分割配信では palt が効かないため、字間を少しだけ詰める */
+  font-feature-settings: "palt";
+  letter-spacing: -0.01em;
   /* 各要素が active:scale 等で押下フィードバックを持つため、OS標準のハイライトは消す */
   -webkit-tap-highlight-color: transparent;
+}
+
+/* デスクトップでは下部ナビが左サイドバーになるので、その幅だけ本文を右へずらす */
+@media (min-width: 1024px) {
+  body:has(nav[data-app-nav]) {
+    padding-left: 15rem;
+  }
 }
 
 /* キーボード操作時のフォーカスを常に見えるようにする */

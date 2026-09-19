@@ -6,7 +6,7 @@ import FloatingMochitGate from "@/components/mochit/FloatingMochitGate";
 import { makeExamReadinessResult } from "@/test/fixtures/examReadiness/result";
 
 const routeState = vi.hoisted(() => ({
-  pathname: "/today",
+  pathname: "/learn",
   appState: { profile: {} } as unknown,
 }));
 const fetchCurrentExamReadiness = vi.hoisted(() => vi.fn());
@@ -66,7 +66,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   storageValues.clear();
-  routeState.pathname = "/today";
+  routeState.pathname = "/learn";
   routeState.appState = { profile: {} };
 });
 
@@ -117,7 +117,7 @@ describe("FloatingMochitGate", () => {
     ).not.toBeInTheDocument();
   });
 
-  it.each(["/", "/login", "/onboarding", "/avatar", "/dev/mochit"])(
+  it.each(["/", "/login", "/onboarding", "/avatar", "/today", "/progress", "/dev/mochit"])(
     "hides the floating Mochit on %s",
     (pathname) => {
       routeState.pathname = pathname;

@@ -323,7 +323,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
             type="button"
             onClick={importToc}
             disabled={!toc.trim()}
-            className="mt-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+            className="mt-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
           >
             変換して章を追加
           </button>
@@ -338,7 +338,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
             <button
               type="button"
               onClick={addChapter}
-              className="rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-bold text-white"
+              className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-bold text-white"
             >
               ＋ 章を追加
             </button>
@@ -524,7 +524,7 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
           <button
             type="button"
             onClick={handleSave}
-            className="w-full rounded-xl bg-brand-600 px-6 py-3 text-base font-bold text-white shadow-lg transition active:scale-[0.98]"
+            className="w-full rounded-lg bg-gray-900 px-6 py-3 text-base font-bold text-white transition active:scale-[0.98]"
           >
             {saved ? "✓ 保存しました" : "💾 参考書を保存"}
           </button>
@@ -602,7 +602,7 @@ function PresetPicker({
                       <button
                         type="button"
                         onClick={() => onSelect(p.id)}
-                        className="shrink-0 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+                        className="shrink-0 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                         disabled={active}
                       >
                         {active ? "反映中" : "反映"}

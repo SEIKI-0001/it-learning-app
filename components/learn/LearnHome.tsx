@@ -152,7 +152,7 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
         {continueLesson && continueLocation && (
           <Link
             href={getLessonHref(continueLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-            className="flex items-center justify-between gap-3 rounded-xl border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4 transition hover:bg-brand-100"
+            className="flex items-center justify-between gap-3 rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100"
           >
             <div className="min-w-0">
               <p className="text-xs font-semibold text-brand-700">前回の続き</p>
@@ -170,7 +170,8 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
         )}
 
         <section aria-label="テーマの絞り込み" className="space-y-3">
-          <div className="flex w-full max-w-xl rounded-lg border border-gray-300 bg-white p-0.5">
+          {/* /today の学習量と同じセグメントコントロール（選択中だけ白く浮かせる） */}
+          <div className="flex w-full max-w-xl rounded-lg bg-gray-900/[0.06] p-[3px]">
             {FIELDS.map((field) => (
               <button
                 key={field.id}
@@ -179,8 +180,8 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
                 onClick={() => setFieldFilter(field.id)}
                 className={`flex-1 whitespace-nowrap rounded-md px-1 py-1.5 text-[13px] transition ${
                   fieldFilter === field.id
-                    ? "bg-brand-600 font-semibold text-white"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-white font-medium text-gray-900 shadow-[0_1px_2px_rgba(16,24,40,0.08)]"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 {field.label}

@@ -128,7 +128,7 @@ function BadgeCard({
             {!earned && (
               <Link
                 href={badgeActionHref(def)}
-                className="shrink-0 rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-brand-700 active:scale-95"
+                className="shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-900 transition hover:border-gray-400 active:scale-95"
               >
                 挑戦する
               </Link>

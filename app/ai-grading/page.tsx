@@ -517,14 +517,16 @@ function ModeTabs({
   onChange: (m: Mode) => void;
 }) {
   const base =
-    "flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition active:scale-[0.99]";
+    "flex-1 rounded-md px-4 py-2 text-sm transition active:scale-[0.99]";
   return (
-    <div className="flex gap-2 rounded-xl border border-gray-200 bg-white p-1.5">
+    <div className="flex gap-1 rounded-lg bg-gray-900/[0.06] p-[3px]">
       <button
         type="button"
         onClick={() => onChange("answer")}
         className={`${base} ${
-          mode === "answer" ? "bg-brand-600 text-white" : "text-gray-500"
+          mode === "answer"
+            ? "bg-white font-medium text-gray-900 shadow-[0_1px_2px_rgba(16,24,40,0.08)]"
+            : "text-gray-600 hover:text-gray-900"
         }`}
       >
         答える
@@ -533,7 +535,9 @@ function ModeTabs({
         type="button"
         onClick={() => onChange("review")}
         className={`${base} ${
-          mode === "review" ? "bg-brand-600 text-white" : "text-gray-500"
+          mode === "review"
+            ? "bg-white font-medium text-gray-900 shadow-[0_1px_2px_rgba(16,24,40,0.08)]"
+            : "text-gray-600 hover:text-gray-900"
         }`}
       >
         復習{reviewCount > 0 ? `（${reviewCount}）` : ""}

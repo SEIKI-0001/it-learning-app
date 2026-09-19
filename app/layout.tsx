@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { appFontVariables } from '@/lib/fonts';
 import CelebrationHost from '@/components/celebration/CelebrationHost';
 import FloatingMochitGate from '@/components/mochit/FloatingMochitGate';
 
@@ -15,13 +16,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0868c9',
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className="antialiased">
-      {/* 背景色は globals.css の --background(#f6f8fb) に一元化する */}
+    <html lang="ja" className={`antialiased ${appFontVariables}`}>
+      {/* 背景色は globals.css の --background(#ffffff) に一元化する */}
       <body className="min-h-screen">
         {children}
         <FloatingMochitGate />

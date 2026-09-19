@@ -42,7 +42,7 @@ describe("campaign login continuation", () => {
     const lineLink = screen.getByRole("link", {
       name: "LINE公式アカウントから始める",
     });
-    expect(lineLink).toHaveClass("bg-white", "text-brand-800");
+    expect(lineLink).toHaveClass("bg-white", "text-gray-900");
     expect(lineLink).not.toHaveClass("bg-[#06C755]");
   });
 

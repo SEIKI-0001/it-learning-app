@@ -83,7 +83,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
   return (
     <section className="overflow-hidden rounded-xl bg-white border border-gray-200">
       {/* クエストヘッダ: 旅の俯瞰と現在→次。現在地なので唯一の強調ブロックにする */}
-      <div className="border-l-4 border-l-brand-500 bg-brand-50 px-5 pb-4 pt-4">
+      <div className="bg-brand-50 px-5 pb-4 pt-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold text-brand-700">いま挑戦中のチェックポイント</p>
           <Link
@@ -162,7 +162,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             gate.finalExamUnlocked
               ? gate.finalExamPassed
                 ? "bg-emerald-50 ring-1 ring-emerald-200"
-                : "animate-sheen bg-accent-600 text-white"
+                : "animate-sheen bg-gray-900 text-white"
               : "bg-gray-50"
           }`}
         >

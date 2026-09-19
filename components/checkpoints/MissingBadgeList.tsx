@@ -39,7 +39,7 @@ export default function MissingBadgeList({
             </span>
             <Link
               href={badgeActionHref(b)}
-              className="shrink-0 rounded-full bg-brand-600 px-3 py-1 text-[11px] font-semibold text-white transition hover:bg-brand-700"
+              className="shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1 text-[11px] font-semibold text-gray-900 transition hover:border-gray-400"
             >
               挑戦
             </Link>

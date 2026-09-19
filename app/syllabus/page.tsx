@@ -243,7 +243,7 @@ export default function SyllabusPage() {
         description="ITパスポートシラバス Ver.6.5 との対応状況を確認できます。"
       >
         {/* この画面で唯一の強調ブロック＝全体のカバー率 */}
-        <div className="mt-4 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 p-4">
+        <div className="mt-4 rounded-xl bg-brand-50 p-4">
           <div className="flex items-baseline justify-between gap-3">
             <span className="text-xs font-semibold text-brand-700">
               シラバス項目カバー率
@@ -310,7 +310,7 @@ export default function SyllabusPage() {
           </div>
           <Link
             href="/learn"
-            className="mt-4 inline-flex rounded-xl bg-brand-600 px-4 py-2 text-sm font-bold text-white hover:bg-brand-700"
+            className="mt-4 inline-flex rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white hover:bg-black"
           >
             学ぶ画面から3分野の学習を始める
           </Link>

@@ -61,7 +61,7 @@ export default function RankCard({ exp }: { exp: number }) {
               key={r.id}
               className={
                 isCurrent
-                  ? "flex items-center gap-2.5 rounded-lg border border-brand-200 border-l-4 border-l-brand-500 bg-brand-50 px-3 py-2.5"
+                  ? "flex items-center gap-2.5 rounded-xl bg-brand-50 px-3 py-2.5"
                   : "flex items-center gap-2.5 px-3 py-1.5"
               }
               aria-current={isCurrent ? "step" : undefined}

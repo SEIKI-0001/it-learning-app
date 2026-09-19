@@ -69,7 +69,7 @@ export default function PastExamsPage() {
               <p className="mt-2 text-xs leading-relaxed text-gray-500">
                 問題文・選択肢はIPA公開問題です。解説は本サービス独自のものです。
               </p>
-              <Link href={`/past-exams/${year}`} className={buttonClass("primary", "md", "mt-4")}>
+              <Link href={`/past-exams/${year}`} className={buttonClass("secondary", "md", "mt-4")}>
                 年度別演習へ
               </Link>
             </section>
