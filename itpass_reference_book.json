@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
   "generatedAt": "2026-07-01T00:00:00+09:00",
   "policy": {
     "presetIsEditableTemplate": true,
@@ -11,6 +11,7 @@
       "chapter title",
       "section title"
     ],
+    "topicMappingNote": "2026-09-19: 全トピックを分野単位で各プリセットの章・節へ紐づけ直した（学習テーマ単位の節を一部追加）。本に対応する章が無い分野は紐づけない。登録済みの本へは lib/referenceBookPresets.ts の refreshPresetMappings が読み込み時に取り込む。",
     "note": "Webで確認できる章構成をベースにした初期テンプレート。章・節はユーザー編集前提で正規化している。参考書以外に、公式目次が確認できた補助ドリル・問題集も bookType で区別して収録。"
   },
   "presets": [
@@ -51,7 +52,14 @@
             ],
             "topicIds": [
               "tech-binary-data",
-              "tech-computer-core"
+              "tech-computer-core",
+              "tech-logic-operations",
+              "tech-computer-types",
+              "tech-parallel-systems",
+              "tech-io-devices",
+              "tech-ai-ml",
+              "tech-data-utilization",
+              "tech-iot"
             ],
             "done": false,
             "sections": [
@@ -66,7 +74,8 @@
                   "統計"
                 ],
                 "topicIds": [
-                  "tech-binary-data"
+                  "tech-binary-data",
+                  "tech-logic-operations"
                 ]
               },
               {
@@ -81,7 +90,10 @@
                   "入出力装置"
                 ],
                 "topicIds": [
-                  "tech-computer-core"
+                  "tech-computer-core",
+                  "tech-computer-types",
+                  "tech-parallel-systems",
+                  "tech-io-devices"
                 ]
               },
               {
@@ -93,7 +105,11 @@
                   "機械学習",
                   "データ活用"
                 ],
-                "topicIds": []
+                "topicIds": [
+                  "tech-ai-ml",
+                  "tech-data-utilization",
+                  "tech-iot"
+                ]
               }
             ]
           },
@@ -109,7 +125,15 @@
               "UI",
               "マルチメディア"
             ],
-            "topicIds": [],
+            "topicIds": [
+              "tech-os-software-hardware",
+              "tech-api",
+              "tech-file-system",
+              "tech-backup",
+              "tech-spreadsheet",
+              "tech-ui-ux",
+              "tech-multimedia-compression"
+            ],
             "done": false,
             "sections": [
               {
@@ -122,7 +146,8 @@
                   "ミドルウェア"
                 ],
                 "topicIds": [
-                  "tech-os-software-hardware"
+                  "tech-os-software-hardware",
+                  "tech-api"
                 ]
               },
               {
@@ -136,7 +161,9 @@
                   "相対参照"
                 ],
                 "topicIds": [
-                  "tech-spreadsheet"
+                  "tech-spreadsheet",
+                  "tech-file-system",
+                  "tech-backup"
                 ]
               }
             ]
@@ -152,7 +179,13 @@
               "稼働率",
               "RAID"
             ],
-            "topicIds": [],
+            "topicIds": [
+              "tech-cloud-models",
+              "tech-system-processing-architecture",
+              "tech-system-performance",
+              "tech-reliability-availability",
+              "tech-raid"
+            ],
             "done": false,
             "sections": [
               {
@@ -168,7 +201,9 @@
                   "IaaS"
                 ],
                 "topicIds": [
-                  "tech-cloud-service-models"
+                  "tech-cloud-models",
+                  "tech-system-processing-architecture",
+                  "tech-system-performance"
                 ]
               },
               {
@@ -181,7 +216,8 @@
                   "RAID"
                 ],
                 "topicIds": [
-                  "tech-system-reliability-rasis"
+                  "tech-reliability-availability",
+                  "tech-raid"
                 ]
               }
             ]
@@ -198,7 +234,13 @@
               "プロトコル"
             ],
             "topicIds": [
-              "tech-network-address"
+              "tech-network-address",
+              "tech-lan-wan",
+              "tech-web-internet-basics",
+              "tech-network-devices",
+              "tech-wireless-mobile",
+              "tech-email-protocol",
+              "tech-http-https"
             ],
             "done": false,
             "sections": [
@@ -212,7 +254,11 @@
                   "プロトコル"
                 ],
                 "topicIds": [
-                  "tech-network-lan-wan"
+                  "tech-lan-wan",
+                  "tech-web-internet-basics",
+                  "tech-network-devices",
+                  "tech-wireless-mobile",
+                  "tech-email-protocol"
                 ]
               },
               {
@@ -226,7 +272,8 @@
                   "HTTPS"
                 ],
                 "topicIds": [
-                  "tech-network-address"
+                  "tech-network-address",
+                  "tech-http-https"
                 ]
               }
             ]
@@ -244,7 +291,16 @@
               "暗号化"
             ],
             "topicIds": [
-              "tech-security-cia"
+              "tech-security-cia",
+              "tech-isms-risk",
+              "tech-auth-authz-mfa",
+              "tech-firewall-vpn-zero-trust",
+              "tech-encryption-hash",
+              "tech-common-key-crypto",
+              "tech-public-key-crypto",
+              "tech-digital-signature",
+              "tech-malware-phishing-ransomware",
+              "tech-cyber-attacks"
             ],
             "done": false,
             "sections": [
@@ -260,7 +316,8 @@
                   "リスク"
                 ],
                 "topicIds": [
-                  "tech-security-cia"
+                  "tech-security-cia",
+                  "tech-isms-risk"
                 ]
               },
               {
@@ -273,7 +330,8 @@
                   "多要素認証"
                 ],
                 "topicIds": [
-                  "tech-auth-authz"
+                  "tech-auth-authz-mfa",
+                  "tech-firewall-vpn-zero-trust"
                 ]
               },
               {
@@ -287,7 +345,12 @@
                   "標的型攻撃"
                 ],
                 "topicIds": [
-                  "tech-encryption-basics"
+                  "tech-encryption-hash",
+                  "tech-common-key-crypto",
+                  "tech-public-key-crypto",
+                  "tech-digital-signature",
+                  "tech-malware-phishing-ransomware",
+                  "tech-cyber-attacks"
                 ]
               }
             ]
@@ -304,8 +367,10 @@
               "正規化"
             ],
             "topicIds": [
-              "tech-db-keys",
-              "tech-db-sql"
+              "tech-keys",
+              "tech-database-sql",
+              "tech-normalization",
+              "tech-transaction"
             ],
             "done": false,
             "sections": [
@@ -319,7 +384,7 @@
                   "テーブル"
                 ],
                 "topicIds": [
-                  "tech-db-keys"
+                  "tech-keys"
                 ]
               },
               {
@@ -332,7 +397,9 @@
                   "データ操作"
                 ],
                 "topicIds": [
-                  "tech-db-sql"
+                  "tech-database-sql",
+                  "tech-normalization",
+                  "tech-transaction"
                 ]
               }
             ]
@@ -347,7 +414,11 @@
               "擬似言語",
               "配列"
             ],
-            "topicIds": [],
+            "topicIds": [
+              "tech-algorithm-flowchart",
+              "tech-programming-basics",
+              "tech-data-structure"
+            ],
             "done": false,
             "sections": [
               {
@@ -374,7 +445,8 @@
                   "擬似言語"
                 ],
                 "topicIds": [
-                  "tech-programming-basic"
+                  "tech-programming-basics",
+                  "tech-data-structure"
                 ]
               }
             ]
@@ -389,7 +461,23 @@
               "QCD"
             ],
             "topicIds": [
-              "mgmt-pm-qcd"
+              "mgmt-pm-qcd",
+              "mgmt-wbs-gantt",
+              "mgmt-pmbok-basics",
+              "mgmt-project-resource",
+              "mgmt-project-communication",
+              "mgmt-estimation",
+              "mgmt-risk-management",
+              "mgmt-pdca",
+              "mgmt-service-sla",
+              "mgmt-itil",
+              "mgmt-facility-management",
+              "mgmt-system-audit",
+              "mgmt-development-process",
+              "mgmt-requirements-definition",
+              "mgmt-system-design",
+              "mgmt-testing",
+              "mgmt-operation-maintenance"
             ],
             "done": false,
             "sections": [
@@ -403,7 +491,14 @@
                   "スケジュール"
                 ],
                 "topicIds": [
-                  "mgmt-pm-qcd"
+                  "mgmt-pm-qcd",
+                  "mgmt-wbs-gantt",
+                  "mgmt-pmbok-basics",
+                  "mgmt-project-resource",
+                  "mgmt-project-communication",
+                  "mgmt-estimation",
+                  "mgmt-risk-management",
+                  "mgmt-pdca"
                 ]
               },
               {
@@ -416,7 +511,29 @@
                   "ITIL"
                 ],
                 "topicIds": [
-                  "mgmt-service-management"
+                  "mgmt-service-sla",
+                  "mgmt-itil",
+                  "mgmt-facility-management",
+                  "mgmt-system-audit"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch08-s03",
+                "title": "システム開発・運用と保守",
+                "keywords": [
+                  "システム開発",
+                  "要件定義",
+                  "テスト",
+                  "ウォータフォール",
+                  "アジャイル",
+                  "保守"
+                ],
+                "topicIds": [
+                  "mgmt-development-process",
+                  "mgmt-requirements-definition",
+                  "mgmt-system-design",
+                  "mgmt-testing",
+                  "mgmt-operation-maintenance"
                 ]
               }
             ]
@@ -434,7 +551,17 @@
             ],
             "topicIds": [
               "strat-enterprise-activities",
-              "strat-legal-compliance"
+              "strat-legal-compliance",
+              "strat-corporation-management-organization",
+              "strat-bcp",
+              "strat-intellectual-property",
+              "strat-privacy-law",
+              "strat-security-laws",
+              "strat-labor-laws",
+              "strat-standardization",
+              "strat-financial-statements",
+              "strat-accounting-break-even",
+              "strat-decision-problem-solving"
             ],
             "done": false,
             "sections": [
@@ -448,7 +575,9 @@
                   "コーポレートガバナンス"
                 ],
                 "topicIds": [
-                  "strat-enterprise-activities"
+                  "strat-enterprise-activities",
+                  "strat-corporation-management-organization",
+                  "strat-bcp"
                 ]
               },
               {
@@ -462,7 +591,27 @@
                   "知的財産権"
                 ],
                 "topicIds": [
-                  "strat-legal-compliance"
+                  "strat-legal-compliance",
+                  "strat-intellectual-property",
+                  "strat-privacy-law",
+                  "strat-security-laws",
+                  "strat-labor-laws",
+                  "strat-standardization"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch09-s03",
+                "title": "会計・財務・業務分析",
+                "keywords": [
+                  "財務諸表",
+                  "損益分岐点",
+                  "意思決定",
+                  "業務分析"
+                ],
+                "topicIds": [
+                  "strat-financial-statements",
+                  "strat-accounting-break-even",
+                  "strat-decision-problem-solving"
                 ]
               }
             ]
@@ -481,7 +630,23 @@
             "topicIds": [
               "strat-swot",
               "strat-3c",
-              "strat-marketing-4p"
+              "strat-marketing-4p",
+              "strat-ppm",
+              "strat-value-chain",
+              "strat-corporate-strategy",
+              "strat-goal-evaluation",
+              "strat-technology-development-strategy",
+              "strat-system-strategy",
+              "strat-business-process",
+              "strat-solution-business",
+              "strat-generative-ai-dx",
+              "strat-system-planning-rfp",
+              "strat-business-systems",
+              "strat-engineering-systems",
+              "strat-production-management",
+              "strat-embedded-systems",
+              "strat-ebusiness",
+              "strat-management-systems"
             ],
             "done": false,
             "sections": [
@@ -496,7 +661,12 @@
                 ],
                 "topicIds": [
                   "strat-swot",
-                  "strat-3c"
+                  "strat-3c",
+                  "strat-ppm",
+                  "strat-value-chain",
+                  "strat-corporate-strategy",
+                  "strat-goal-evaluation",
+                  "strat-technology-development-strategy"
                 ]
               },
               {
@@ -511,7 +681,31 @@
                 ],
                 "topicIds": [
                   "strat-marketing-4p",
-                  "strat-dx"
+                  "strat-dx",
+                  "strat-system-strategy",
+                  "strat-business-process",
+                  "strat-solution-business",
+                  "strat-generative-ai-dx",
+                  "strat-system-planning-rfp"
+                ]
+              },
+              {
+                "id": "kayanoki-r08-ch10-s03",
+                "title": "ビジネスインダストリ・経営管理システム",
+                "keywords": [
+                  "e-ビジネス",
+                  "CRM",
+                  "SCM",
+                  "ERP",
+                  "組込みシステム"
+                ],
+                "topicIds": [
+                  "strat-business-systems",
+                  "strat-engineering-systems",
+                  "strat-production-management",
+                  "strat-embedded-systems",
+                  "strat-ebusiness",
+                  "strat-management-systems"
                 ]
               }
             ]
@@ -579,7 +773,11 @@
             ],
             "topicIds": [
               "tech-binary-data",
-              "tech-computer-core"
+              "tech-computer-core",
+              "tech-logic-operations",
+              "tech-computer-types",
+              "tech-parallel-systems",
+              "tech-io-devices"
             ],
             "done": false,
             "sections": [
@@ -595,7 +793,11 @@
                 ],
                 "topicIds": [
                   "tech-binary-data",
-                  "tech-computer-core"
+                  "tech-computer-core",
+                  "tech-logic-operations",
+                  "tech-computer-types",
+                  "tech-parallel-systems",
+                  "tech-io-devices"
                 ]
               }
             ]
@@ -611,7 +813,9 @@
               "圧縮"
             ],
             "topicIds": [
-              "tech-binary-data"
+              "tech-binary-data",
+              "tech-ui-ux",
+              "tech-multimedia-compression"
             ],
             "done": false,
             "sections": [
@@ -625,7 +829,10 @@
                   "圧縮",
                   "データ量"
                 ],
-                "topicIds": []
+                "topicIds": [
+                  "tech-ui-ux",
+                  "tech-multimedia-compression"
+                ]
               }
             ]
           },
@@ -639,7 +846,11 @@
               "ファイル"
             ],
             "topicIds": [
-              "tech-os-software-hardware"
+              "tech-os-software-hardware",
+              "tech-api",
+              "tech-file-system",
+              "tech-backup",
+              "tech-spreadsheet"
             ],
             "done": false,
             "sections": [
@@ -653,7 +864,11 @@
                   "ソフトウェア"
                 ],
                 "topicIds": [
-                  "tech-os-software-hardware"
+                  "tech-os-software-hardware",
+                  "tech-api",
+                  "tech-file-system",
+                  "tech-backup",
+                  "tech-spreadsheet"
                 ]
               }
             ]
@@ -699,8 +914,10 @@
               "SQL"
             ],
             "topicIds": [
-              "tech-db-keys",
-              "tech-db-sql"
+              "tech-keys",
+              "tech-database-sql",
+              "tech-normalization",
+              "tech-transaction"
             ],
             "done": false,
             "sections": [
@@ -714,8 +931,10 @@
                   "SQL"
                 ],
                 "topicIds": [
-                  "tech-db-keys",
-                  "tech-db-sql"
+                  "tech-keys",
+                  "tech-database-sql",
+                  "tech-normalization",
+                  "tech-transaction"
                 ]
               }
             ]
@@ -732,7 +951,12 @@
             ],
             "topicIds": [
               "tech-network-address",
-              "tech-network-lan-wan"
+              "tech-lan-wan",
+              "tech-web-internet-basics",
+              "tech-network-devices",
+              "tech-wireless-mobile",
+              "tech-email-protocol",
+              "tech-http-https"
             ],
             "done": false,
             "sections": [
@@ -748,7 +972,12 @@
                 ],
                 "topicIds": [
                   "tech-network-address",
-                  "tech-network-lan-wan"
+                  "tech-lan-wan",
+                  "tech-web-internet-basics",
+                  "tech-network-devices",
+                  "tech-wireless-mobile",
+                  "tech-email-protocol",
+                  "tech-http-https"
                 ]
               }
             ]
@@ -765,8 +994,15 @@
             ],
             "topicIds": [
               "tech-security-cia",
-              "tech-auth-authz",
-              "tech-encryption-basics"
+              "tech-auth-authz-mfa",
+              "tech-encryption-hash",
+              "tech-isms-risk",
+              "tech-firewall-vpn-zero-trust",
+              "tech-common-key-crypto",
+              "tech-public-key-crypto",
+              "tech-digital-signature",
+              "tech-malware-phishing-ransomware",
+              "tech-cyber-attacks"
             ],
             "done": false,
             "sections": [
@@ -782,8 +1018,15 @@
                 ],
                 "topicIds": [
                   "tech-security-cia",
-                  "tech-auth-authz",
-                  "tech-encryption-basics"
+                  "tech-auth-authz-mfa",
+                  "tech-encryption-hash",
+                  "tech-isms-risk",
+                  "tech-firewall-vpn-zero-trust",
+                  "tech-common-key-crypto",
+                  "tech-public-key-crypto",
+                  "tech-digital-signature",
+                  "tech-malware-phishing-ransomware",
+                  "tech-cyber-attacks"
                 ]
               }
             ]
@@ -799,7 +1042,11 @@
               "ウォータフォール"
             ],
             "topicIds": [
-              "mgmt-system-development"
+              "mgmt-development-process",
+              "mgmt-requirements-definition",
+              "mgmt-system-design",
+              "mgmt-testing",
+              "mgmt-operation-maintenance"
             ],
             "done": false,
             "sections": [
@@ -814,7 +1061,11 @@
                   "アジャイル"
                 ],
                 "topicIds": [
-                  "mgmt-system-development"
+                  "mgmt-development-process",
+                  "mgmt-requirements-definition",
+                  "mgmt-system-design",
+                  "mgmt-testing",
+                  "mgmt-operation-maintenance"
                 ]
               }
             ]
@@ -831,7 +1082,17 @@
             ],
             "topicIds": [
               "mgmt-pm-qcd",
-              "mgmt-service-management"
+              "mgmt-service-sla",
+              "mgmt-wbs-gantt",
+              "mgmt-pmbok-basics",
+              "mgmt-project-resource",
+              "mgmt-project-communication",
+              "mgmt-estimation",
+              "mgmt-risk-management",
+              "mgmt-pdca",
+              "mgmt-itil",
+              "mgmt-facility-management",
+              "mgmt-system-audit"
             ],
             "done": false,
             "sections": [
@@ -846,7 +1107,17 @@
                 ],
                 "topicIds": [
                   "mgmt-pm-qcd",
-                  "mgmt-service-management"
+                  "mgmt-service-sla",
+                  "mgmt-wbs-gantt",
+                  "mgmt-pmbok-basics",
+                  "mgmt-project-resource",
+                  "mgmt-project-communication",
+                  "mgmt-estimation",
+                  "mgmt-risk-management",
+                  "mgmt-pdca",
+                  "mgmt-itil",
+                  "mgmt-facility-management",
+                  "mgmt-system-audit"
                 ]
               }
             ]
@@ -861,8 +1132,9 @@
               "変数"
             ],
             "topicIds": [
-              "tech-programming-basic",
-              "tech-algorithm-flowchart"
+              "tech-programming-basics",
+              "tech-algorithm-flowchart",
+              "tech-data-structure"
             ],
             "done": false,
             "sections": [
@@ -876,8 +1148,9 @@
                   "変数"
                 ],
                 "topicIds": [
-                  "tech-programming-basic",
-                  "tech-algorithm-flowchart"
+                  "tech-programming-basics",
+                  "tech-algorithm-flowchart",
+                  "tech-data-structure"
                 ]
               }
             ]
@@ -893,8 +1166,11 @@
               "RAID"
             ],
             "topicIds": [
-              "tech-cloud-service-models",
-              "tech-system-reliability-rasis"
+              "tech-cloud-models",
+              "tech-reliability-availability",
+              "tech-system-processing-architecture",
+              "tech-system-performance",
+              "tech-raid"
             ],
             "done": false,
             "sections": [
@@ -909,8 +1185,11 @@
                   "RASIS"
                 ],
                 "topicIds": [
-                  "tech-cloud-service-models",
-                  "tech-system-reliability-rasis"
+                  "tech-cloud-models",
+                  "tech-reliability-availability",
+                  "tech-system-processing-architecture",
+                  "tech-system-performance",
+                  "tech-raid"
                 ]
               }
             ]
@@ -927,7 +1206,14 @@
             ],
             "topicIds": [
               "strat-enterprise-activities",
-              "strat-legal-compliance"
+              "strat-legal-compliance",
+              "strat-corporation-management-organization",
+              "strat-bcp",
+              "strat-intellectual-property",
+              "strat-privacy-law",
+              "strat-security-laws",
+              "strat-labor-laws",
+              "strat-standardization"
             ],
             "done": false,
             "sections": [
@@ -943,7 +1229,14 @@
                 ],
                 "topicIds": [
                   "strat-enterprise-activities",
-                  "strat-legal-compliance"
+                  "strat-legal-compliance",
+                  "strat-corporation-management-organization",
+                  "strat-bcp",
+                  "strat-intellectual-property",
+                  "strat-privacy-law",
+                  "strat-security-laws",
+                  "strat-labor-laws",
+                  "strat-standardization"
                 ]
               }
             ]
@@ -961,7 +1254,12 @@
             "topicIds": [
               "strat-swot",
               "strat-3c",
-              "strat-marketing-4p"
+              "strat-marketing-4p",
+              "strat-ppm",
+              "strat-value-chain",
+              "strat-corporate-strategy",
+              "strat-goal-evaluation",
+              "strat-technology-development-strategy"
             ],
             "done": false,
             "sections": [
@@ -977,7 +1275,12 @@
                 "topicIds": [
                   "strat-swot",
                   "strat-3c",
-                  "strat-marketing-4p"
+                  "strat-marketing-4p",
+                  "strat-ppm",
+                  "strat-value-chain",
+                  "strat-corporate-strategy",
+                  "strat-goal-evaluation",
+                  "strat-technology-development-strategy"
                 ]
               }
             ]
@@ -993,7 +1296,9 @@
               "損益計算書"
             ],
             "topicIds": [
-              "strat-finance-breakeven"
+              "strat-accounting-break-even",
+              "strat-financial-statements",
+              "strat-decision-problem-solving"
             ],
             "done": false,
             "sections": [
@@ -1007,7 +1312,9 @@
                   "損益分岐点"
                 ],
                 "topicIds": [
-                  "strat-finance-breakeven"
+                  "strat-accounting-break-even",
+                  "strat-financial-statements",
+                  "strat-decision-problem-solving"
                 ]
               }
             ]
@@ -1023,7 +1330,18 @@
               "調達"
             ],
             "topicIds": [
-              "strat-dx"
+              "strat-dx",
+              "strat-system-strategy",
+              "strat-business-process",
+              "strat-solution-business",
+              "strat-generative-ai-dx",
+              "strat-system-planning-rfp",
+              "strat-business-systems",
+              "strat-engineering-systems",
+              "strat-production-management",
+              "strat-embedded-systems",
+              "strat-ebusiness",
+              "strat-management-systems"
             ],
             "done": false,
             "sections": [
@@ -1038,7 +1356,18 @@
                   "調達"
                 ],
                 "topicIds": [
-                  "strat-dx"
+                  "strat-dx",
+                  "strat-system-strategy",
+                  "strat-business-process",
+                  "strat-solution-business",
+                  "strat-generative-ai-dx",
+                  "strat-system-planning-rfp",
+                  "strat-business-systems",
+                  "strat-engineering-systems",
+                  "strat-production-management",
+                  "strat-embedded-systems",
+                  "strat-ebusiness",
+                  "strat-management-systems"
                 ]
               }
             ]
@@ -1079,7 +1408,17 @@
             ],
             "topicIds": [
               "strat-enterprise-activities",
-              "strat-finance-breakeven"
+              "strat-accounting-break-even",
+              "strat-corporation-management-organization",
+              "strat-bcp",
+              "strat-legal-compliance",
+              "strat-intellectual-property",
+              "strat-privacy-law",
+              "strat-security-laws",
+              "strat-labor-laws",
+              "strat-standardization",
+              "strat-financial-statements",
+              "strat-decision-problem-solving"
             ],
             "done": false,
             "sections": [
@@ -1093,7 +1432,15 @@
                   "コーポレートガバナンス"
                 ],
                 "topicIds": [
-                  "strat-enterprise-activities"
+                  "strat-enterprise-activities",
+                  "strat-corporation-management-organization",
+                  "strat-bcp",
+                  "strat-legal-compliance",
+                  "strat-intellectual-property",
+                  "strat-privacy-law",
+                  "strat-security-laws",
+                  "strat-labor-laws",
+                  "strat-standardization"
                 ]
               },
               {
@@ -1106,7 +1453,9 @@
                   "損益分岐点"
                 ],
                 "topicIds": [
-                  "strat-finance-breakeven"
+                  "strat-accounting-break-even",
+                  "strat-financial-statements",
+                  "strat-decision-problem-solving"
                 ]
               }
             ]
@@ -1125,7 +1474,23 @@
               "strat-swot",
               "strat-3c",
               "strat-marketing-4p",
-              "strat-dx"
+              "strat-dx",
+              "strat-ppm",
+              "strat-value-chain",
+              "strat-corporate-strategy",
+              "strat-goal-evaluation",
+              "strat-technology-development-strategy",
+              "strat-business-systems",
+              "strat-engineering-systems",
+              "strat-production-management",
+              "strat-embedded-systems",
+              "strat-ebusiness",
+              "strat-management-systems",
+              "strat-system-strategy",
+              "strat-business-process",
+              "strat-solution-business",
+              "strat-generative-ai-dx",
+              "strat-system-planning-rfp"
             ],
             "done": false,
             "sections": [
@@ -1141,7 +1506,18 @@
                 "topicIds": [
                   "strat-swot",
                   "strat-3c",
-                  "strat-marketing-4p"
+                  "strat-marketing-4p",
+                  "strat-ppm",
+                  "strat-value-chain",
+                  "strat-corporate-strategy",
+                  "strat-goal-evaluation",
+                  "strat-technology-development-strategy",
+                  "strat-business-systems",
+                  "strat-engineering-systems",
+                  "strat-production-management",
+                  "strat-embedded-systems",
+                  "strat-ebusiness",
+                  "strat-management-systems"
                 ]
               },
               {
@@ -1154,7 +1530,12 @@
                   "調達"
                 ],
                 "topicIds": [
-                  "strat-dx"
+                  "strat-dx",
+                  "strat-system-strategy",
+                  "strat-business-process",
+                  "strat-solution-business",
+                  "strat-generative-ai-dx",
+                  "strat-system-planning-rfp"
                 ]
               }
             ]
@@ -1169,9 +1550,23 @@
               "システム監査"
             ],
             "topicIds": [
-              "mgmt-system-development",
+              "mgmt-development-process",
               "mgmt-pm-qcd",
-              "mgmt-service-management"
+              "mgmt-service-sla",
+              "mgmt-requirements-definition",
+              "mgmt-system-design",
+              "mgmt-testing",
+              "mgmt-operation-maintenance",
+              "mgmt-wbs-gantt",
+              "mgmt-pmbok-basics",
+              "mgmt-project-resource",
+              "mgmt-project-communication",
+              "mgmt-estimation",
+              "mgmt-risk-management",
+              "mgmt-pdca",
+              "mgmt-itil",
+              "mgmt-facility-management",
+              "mgmt-system-audit"
             ],
             "done": false,
             "sections": [
@@ -1186,7 +1581,11 @@
                   "ウォータフォール"
                 ],
                 "topicIds": [
-                  "mgmt-system-development"
+                  "mgmt-development-process",
+                  "mgmt-requirements-definition",
+                  "mgmt-system-design",
+                  "mgmt-testing",
+                  "mgmt-operation-maintenance"
                 ]
               },
               {
@@ -1200,7 +1599,17 @@
                 ],
                 "topicIds": [
                   "mgmt-pm-qcd",
-                  "mgmt-service-management"
+                  "mgmt-service-sla",
+                  "mgmt-wbs-gantt",
+                  "mgmt-pmbok-basics",
+                  "mgmt-project-resource",
+                  "mgmt-project-communication",
+                  "mgmt-estimation",
+                  "mgmt-risk-management",
+                  "mgmt-pdca",
+                  "mgmt-itil",
+                  "mgmt-facility-management",
+                  "mgmt-system-audit"
                 ]
               }
             ]
@@ -1220,7 +1629,19 @@
               "tech-binary-data",
               "tech-computer-core",
               "tech-os-software-hardware",
-              "tech-algorithm-flowchart"
+              "tech-algorithm-flowchart",
+              "tech-logic-operations",
+              "tech-computer-types",
+              "tech-parallel-systems",
+              "tech-io-devices",
+              "tech-api",
+              "tech-file-system",
+              "tech-backup",
+              "tech-spreadsheet",
+              "tech-ui-ux",
+              "tech-multimedia-compression",
+              "tech-programming-basics",
+              "tech-data-structure"
             ],
             "done": false,
             "sections": [
@@ -1234,7 +1655,8 @@
                   "基礎理論"
                 ],
                 "topicIds": [
-                  "tech-binary-data"
+                  "tech-binary-data",
+                  "tech-logic-operations"
                 ]
               },
               {
@@ -1249,7 +1671,14 @@
                 ],
                 "topicIds": [
                   "tech-computer-core",
-                  "tech-os-software-hardware"
+                  "tech-os-software-hardware",
+                  "tech-computer-types",
+                  "tech-parallel-systems",
+                  "tech-io-devices",
+                  "tech-api",
+                  "tech-file-system",
+                  "tech-backup",
+                  "tech-spreadsheet"
                 ]
               },
               {
@@ -1263,7 +1692,8 @@
                 ],
                 "topicIds": [
                   "tech-algorithm-flowchart",
-                  "tech-programming-basic"
+                  "tech-programming-basics",
+                  "tech-data-structure"
                 ]
               }
             ]
@@ -1281,10 +1711,22 @@
             ],
             "topicIds": [
               "tech-network-address",
-              "tech-network-lan-wan",
+              "tech-lan-wan",
               "tech-security-cia",
-              "tech-auth-authz",
-              "tech-encryption-basics"
+              "tech-auth-authz-mfa",
+              "tech-encryption-hash",
+              "tech-web-internet-basics",
+              "tech-network-devices",
+              "tech-wireless-mobile",
+              "tech-email-protocol",
+              "tech-http-https",
+              "tech-isms-risk",
+              "tech-firewall-vpn-zero-trust",
+              "tech-common-key-crypto",
+              "tech-public-key-crypto",
+              "tech-digital-signature",
+              "tech-malware-phishing-ransomware",
+              "tech-cyber-attacks"
             ],
             "done": false,
             "sections": [
@@ -1300,7 +1742,12 @@
                 ],
                 "topicIds": [
                   "tech-network-address",
-                  "tech-network-lan-wan"
+                  "tech-lan-wan",
+                  "tech-web-internet-basics",
+                  "tech-network-devices",
+                  "tech-wireless-mobile",
+                  "tech-email-protocol",
+                  "tech-http-https"
                 ]
               },
               {
@@ -1315,8 +1762,15 @@
                 ],
                 "topicIds": [
                   "tech-security-cia",
-                  "tech-auth-authz",
-                  "tech-encryption-basics"
+                  "tech-auth-authz-mfa",
+                  "tech-encryption-hash",
+                  "tech-isms-risk",
+                  "tech-firewall-vpn-zero-trust",
+                  "tech-common-key-crypto",
+                  "tech-public-key-crypto",
+                  "tech-digital-signature",
+                  "tech-malware-phishing-ransomware",
+                  "tech-cyber-attacks"
                 ]
               }
             ]
@@ -1332,10 +1786,15 @@
               "稼働率"
             ],
             "topicIds": [
-              "tech-db-keys",
-              "tech-db-sql",
-              "tech-cloud-service-models",
-              "tech-system-reliability-rasis"
+              "tech-keys",
+              "tech-database-sql",
+              "tech-cloud-models",
+              "tech-reliability-availability",
+              "tech-normalization",
+              "tech-transaction",
+              "tech-system-processing-architecture",
+              "tech-system-performance",
+              "tech-raid"
             ],
             "done": false,
             "sections": [
@@ -1350,8 +1809,10 @@
                   "SQL"
                 ],
                 "topicIds": [
-                  "tech-db-keys",
-                  "tech-db-sql"
+                  "tech-keys",
+                  "tech-database-sql",
+                  "tech-normalization",
+                  "tech-transaction"
                 ]
               },
               {
@@ -1365,8 +1826,11 @@
                   "RASIS"
                 ],
                 "topicIds": [
-                  "tech-cloud-service-models",
-                  "tech-system-reliability-rasis"
+                  "tech-cloud-models",
+                  "tech-reliability-availability",
+                  "tech-system-processing-architecture",
+                  "tech-system-performance",
+                  "tech-raid"
                 ]
               }
             ]
@@ -1432,7 +1896,17 @@
             ],
             "topicIds": [
               "strat-enterprise-activities",
-              "strat-legal-compliance"
+              "strat-legal-compliance",
+              "strat-corporation-management-organization",
+              "strat-bcp",
+              "strat-intellectual-property",
+              "strat-privacy-law",
+              "strat-security-laws",
+              "strat-labor-laws",
+              "strat-standardization",
+              "strat-financial-statements",
+              "strat-accounting-break-even",
+              "strat-decision-problem-solving"
             ],
             "done": false,
             "sections": [
@@ -1446,7 +1920,9 @@
                   "ガバナンス"
                 ],
                 "topicIds": [
-                  "strat-enterprise-activities"
+                  "strat-enterprise-activities",
+                  "strat-corporation-management-organization",
+                  "strat-bcp"
                 ]
               },
               {
@@ -1459,7 +1935,12 @@
                   "個人情報保護法"
                 ],
                 "topicIds": [
-                  "strat-legal-compliance"
+                  "strat-legal-compliance",
+                  "strat-intellectual-property",
+                  "strat-privacy-law",
+                  "strat-security-laws",
+                  "strat-labor-laws",
+                  "strat-standardization"
                 ]
               }
             ]
@@ -1478,7 +1959,23 @@
               "strat-swot",
               "strat-3c",
               "strat-marketing-4p",
-              "strat-dx"
+              "strat-dx",
+              "strat-ppm",
+              "strat-value-chain",
+              "strat-corporate-strategy",
+              "strat-goal-evaluation",
+              "strat-technology-development-strategy",
+              "strat-business-systems",
+              "strat-engineering-systems",
+              "strat-production-management",
+              "strat-embedded-systems",
+              "strat-ebusiness",
+              "strat-management-systems",
+              "strat-system-strategy",
+              "strat-business-process",
+              "strat-solution-business",
+              "strat-generative-ai-dx",
+              "strat-system-planning-rfp"
             ],
             "done": false,
             "sections": [
@@ -1494,7 +1991,18 @@
                 "topicIds": [
                   "strat-swot",
                   "strat-3c",
-                  "strat-marketing-4p"
+                  "strat-marketing-4p",
+                  "strat-ppm",
+                  "strat-value-chain",
+                  "strat-corporate-strategy",
+                  "strat-goal-evaluation",
+                  "strat-technology-development-strategy",
+                  "strat-business-systems",
+                  "strat-engineering-systems",
+                  "strat-production-management",
+                  "strat-embedded-systems",
+                  "strat-ebusiness",
+                  "strat-management-systems"
                 ]
               },
               {
@@ -1507,7 +2015,12 @@
                   "調達"
                 ],
                 "topicIds": [
-                  "strat-dx"
+                  "strat-dx",
+                  "strat-system-strategy",
+                  "strat-business-process",
+                  "strat-solution-business",
+                  "strat-generative-ai-dx",
+                  "strat-system-planning-rfp"
                 ]
               }
             ]
@@ -1523,8 +2036,22 @@
             ],
             "topicIds": [
               "mgmt-pm-qcd",
-              "mgmt-service-management",
-              "mgmt-system-development"
+              "mgmt-service-sla",
+              "mgmt-development-process",
+              "mgmt-requirements-definition",
+              "mgmt-system-design",
+              "mgmt-testing",
+              "mgmt-operation-maintenance",
+              "mgmt-wbs-gantt",
+              "mgmt-pmbok-basics",
+              "mgmt-project-resource",
+              "mgmt-project-communication",
+              "mgmt-estimation",
+              "mgmt-risk-management",
+              "mgmt-pdca",
+              "mgmt-itil",
+              "mgmt-facility-management",
+              "mgmt-system-audit"
             ],
             "done": false,
             "sections": [
@@ -1538,8 +2065,19 @@
                   "WBS"
                 ],
                 "topicIds": [
-                  "mgmt-system-development",
-                  "mgmt-pm-qcd"
+                  "mgmt-development-process",
+                  "mgmt-pm-qcd",
+                  "mgmt-requirements-definition",
+                  "mgmt-system-design",
+                  "mgmt-testing",
+                  "mgmt-operation-maintenance",
+                  "mgmt-wbs-gantt",
+                  "mgmt-pmbok-basics",
+                  "mgmt-project-resource",
+                  "mgmt-project-communication",
+                  "mgmt-estimation",
+                  "mgmt-risk-management",
+                  "mgmt-pdca"
                 ]
               },
               {
@@ -1552,7 +2090,10 @@
                   "ITIL"
                 ],
                 "topicIds": [
-                  "mgmt-service-management"
+                  "mgmt-service-sla",
+                  "mgmt-itil",
+                  "mgmt-facility-management",
+                  "mgmt-system-audit"
                 ]
               }
             ]
@@ -1570,7 +2111,22 @@
             "topicIds": [
               "tech-binary-data",
               "tech-computer-core",
-              "tech-os-software-hardware"
+              "tech-os-software-hardware",
+              "tech-logic-operations",
+              "tech-computer-types",
+              "tech-parallel-systems",
+              "tech-io-devices",
+              "tech-api",
+              "tech-file-system",
+              "tech-backup",
+              "tech-spreadsheet",
+              "tech-ui-ux",
+              "tech-multimedia-compression",
+              "tech-cloud-models",
+              "tech-system-processing-architecture",
+              "tech-system-performance",
+              "tech-reliability-availability",
+              "tech-raid"
             ],
             "done": false,
             "sections": [
@@ -1584,7 +2140,8 @@
                   "基礎理論"
                 ],
                 "topicIds": [
-                  "tech-binary-data"
+                  "tech-binary-data",
+                  "tech-logic-operations"
                 ]
               },
               {
@@ -1599,7 +2156,14 @@
                 ],
                 "topicIds": [
                   "tech-computer-core",
-                  "tech-os-software-hardware"
+                  "tech-os-software-hardware",
+                  "tech-computer-types",
+                  "tech-parallel-systems",
+                  "tech-io-devices",
+                  "tech-api",
+                  "tech-file-system",
+                  "tech-backup",
+                  "tech-spreadsheet"
                 ]
               },
               {
@@ -1613,8 +2177,11 @@
                   "RAID"
                 ],
                 "topicIds": [
-                  "tech-cloud-service-models",
-                  "tech-system-reliability-rasis"
+                  "tech-cloud-models",
+                  "tech-reliability-availability",
+                  "tech-system-processing-architecture",
+                  "tech-system-performance",
+                  "tech-raid"
                 ]
               }
             ]
@@ -1630,13 +2197,27 @@
               "DNS"
             ],
             "topicIds": [
-              "tech-db-keys",
-              "tech-db-sql",
+              "tech-keys",
+              "tech-database-sql",
               "tech-network-address",
-              "tech-network-lan-wan",
+              "tech-lan-wan",
               "tech-security-cia",
-              "tech-auth-authz",
-              "tech-encryption-basics"
+              "tech-auth-authz-mfa",
+              "tech-encryption-hash",
+              "tech-normalization",
+              "tech-transaction",
+              "tech-web-internet-basics",
+              "tech-network-devices",
+              "tech-wireless-mobile",
+              "tech-email-protocol",
+              "tech-http-https",
+              "tech-isms-risk",
+              "tech-firewall-vpn-zero-trust",
+              "tech-common-key-crypto",
+              "tech-public-key-crypto",
+              "tech-digital-signature",
+              "tech-malware-phishing-ransomware",
+              "tech-cyber-attacks"
             ],
             "done": false,
             "sections": [
@@ -1650,8 +2231,10 @@
                   "外部キー"
                 ],
                 "topicIds": [
-                  "tech-db-keys",
-                  "tech-db-sql"
+                  "tech-keys",
+                  "tech-database-sql",
+                  "tech-normalization",
+                  "tech-transaction"
                 ]
               },
               {
@@ -1666,7 +2249,12 @@
                 ],
                 "topicIds": [
                   "tech-network-address",
-                  "tech-network-lan-wan"
+                  "tech-lan-wan",
+                  "tech-web-internet-basics",
+                  "tech-network-devices",
+                  "tech-wireless-mobile",
+                  "tech-email-protocol",
+                  "tech-http-https"
                 ]
               },
               {
@@ -1681,8 +2269,15 @@
                 ],
                 "topicIds": [
                   "tech-security-cia",
-                  "tech-auth-authz",
-                  "tech-encryption-basics"
+                  "tech-auth-authz-mfa",
+                  "tech-encryption-hash",
+                  "tech-isms-risk",
+                  "tech-firewall-vpn-zero-trust",
+                  "tech-common-key-crypto",
+                  "tech-public-key-crypto",
+                  "tech-digital-signature",
+                  "tech-malware-phishing-ransomware",
+                  "tech-cyber-attacks"
                 ]
               }
             ]
@@ -1698,7 +2293,8 @@
             ],
             "topicIds": [
               "tech-algorithm-flowchart",
-              "tech-programming-basic"
+              "tech-programming-basics",
+              "tech-data-structure"
             ],
             "done": false,
             "sections": [
@@ -1713,7 +2309,8 @@
                 ],
                 "topicIds": [
                   "tech-algorithm-flowchart",
-                  "tech-programming-basic"
+                  "tech-programming-basics",
+                  "tech-data-structure"
                 ]
               }
             ]
@@ -1757,7 +2354,14 @@
             ],
             "topicIds": [
               "tech-binary-data",
-              "tech-computer-core"
+              "tech-computer-core",
+              "tech-logic-operations",
+              "tech-computer-types",
+              "tech-parallel-systems",
+              "tech-io-devices",
+              "tech-ai-ml",
+              "tech-data-utilization",
+              "tech-iot"
             ],
             "done": false,
             "sections": []
@@ -1773,7 +2377,12 @@
             ],
             "topicIds": [
               "tech-os-software-hardware",
-              "tech-spreadsheet"
+              "tech-spreadsheet",
+              "tech-api",
+              "tech-file-system",
+              "tech-backup",
+              "tech-ui-ux",
+              "tech-multimedia-compression"
             ],
             "done": false,
             "sections": []
@@ -1788,8 +2397,11 @@
               "RAID"
             ],
             "topicIds": [
-              "tech-cloud-service-models",
-              "tech-system-reliability-rasis"
+              "tech-cloud-models",
+              "tech-reliability-availability",
+              "tech-system-processing-architecture",
+              "tech-system-performance",
+              "tech-raid"
             ],
             "done": false,
             "sections": []
@@ -1806,7 +2418,12 @@
             ],
             "topicIds": [
               "tech-network-address",
-              "tech-network-lan-wan"
+              "tech-lan-wan",
+              "tech-web-internet-basics",
+              "tech-network-devices",
+              "tech-wireless-mobile",
+              "tech-email-protocol",
+              "tech-http-https"
             ],
             "done": false,
             "sections": []
@@ -1822,8 +2439,15 @@
             ],
             "topicIds": [
               "tech-security-cia",
-              "tech-auth-authz",
-              "tech-encryption-basics"
+              "tech-auth-authz-mfa",
+              "tech-encryption-hash",
+              "tech-isms-risk",
+              "tech-firewall-vpn-zero-trust",
+              "tech-common-key-crypto",
+              "tech-public-key-crypto",
+              "tech-digital-signature",
+              "tech-malware-phishing-ransomware",
+              "tech-cyber-attacks"
             ],
             "done": false,
             "sections": []
@@ -1838,8 +2462,10 @@
               "外部キー"
             ],
             "topicIds": [
-              "tech-db-keys",
-              "tech-db-sql"
+              "tech-keys",
+              "tech-database-sql",
+              "tech-normalization",
+              "tech-transaction"
             ],
             "done": false,
             "sections": []
@@ -1854,7 +2480,8 @@
             ],
             "topicIds": [
               "tech-algorithm-flowchart",
-              "tech-programming-basic"
+              "tech-programming-basics",
+              "tech-data-structure"
             ],
             "done": false,
             "sections": []
@@ -1870,8 +2497,22 @@
             ],
             "topicIds": [
               "mgmt-pm-qcd",
-              "mgmt-service-management",
-              "mgmt-system-development"
+              "mgmt-service-sla",
+              "mgmt-development-process",
+              "mgmt-requirements-definition",
+              "mgmt-system-design",
+              "mgmt-testing",
+              "mgmt-operation-maintenance",
+              "mgmt-wbs-gantt",
+              "mgmt-pmbok-basics",
+              "mgmt-project-resource",
+              "mgmt-project-communication",
+              "mgmt-estimation",
+              "mgmt-risk-management",
+              "mgmt-pdca",
+              "mgmt-itil",
+              "mgmt-facility-management",
+              "mgmt-system-audit"
             ],
             "done": false,
             "sections": []
@@ -1887,7 +2528,17 @@
             ],
             "topicIds": [
               "strat-enterprise-activities",
-              "strat-legal-compliance"
+              "strat-legal-compliance",
+              "strat-corporation-management-organization",
+              "strat-bcp",
+              "strat-intellectual-property",
+              "strat-privacy-law",
+              "strat-security-laws",
+              "strat-labor-laws",
+              "strat-standardization",
+              "strat-financial-statements",
+              "strat-accounting-break-even",
+              "strat-decision-problem-solving"
             ],
             "done": false,
             "sections": []
@@ -1906,7 +2557,23 @@
               "strat-swot",
               "strat-3c",
               "strat-marketing-4p",
-              "strat-dx"
+              "strat-dx",
+              "strat-ppm",
+              "strat-value-chain",
+              "strat-corporate-strategy",
+              "strat-goal-evaluation",
+              "strat-technology-development-strategy",
+              "strat-business-systems",
+              "strat-engineering-systems",
+              "strat-production-management",
+              "strat-embedded-systems",
+              "strat-ebusiness",
+              "strat-management-systems",
+              "strat-system-strategy",
+              "strat-business-process",
+              "strat-solution-business",
+              "strat-generative-ai-dx",
+              "strat-system-planning-rfp"
             ],
             "done": false,
             "sections": []
@@ -1955,7 +2622,32 @@
               "strat-3c",
               "strat-marketing-4p",
               "strat-dx",
-              "strat-finance-breakeven"
+              "strat-accounting-break-even",
+              "strat-corporation-management-organization",
+              "strat-bcp",
+              "strat-intellectual-property",
+              "strat-privacy-law",
+              "strat-security-laws",
+              "strat-labor-laws",
+              "strat-standardization",
+              "strat-financial-statements",
+              "strat-decision-problem-solving",
+              "strat-ppm",
+              "strat-value-chain",
+              "strat-corporate-strategy",
+              "strat-goal-evaluation",
+              "strat-technology-development-strategy",
+              "strat-business-systems",
+              "strat-engineering-systems",
+              "strat-production-management",
+              "strat-embedded-systems",
+              "strat-ebusiness",
+              "strat-management-systems",
+              "strat-system-strategy",
+              "strat-business-process",
+              "strat-solution-business",
+              "strat-generative-ai-dx",
+              "strat-system-planning-rfp"
             ],
             "done": false,
             "sections": [
@@ -1970,7 +2662,17 @@
                 ],
                 "topicIds": [
                   "strat-enterprise-activities",
-                  "strat-legal-compliance"
+                  "strat-legal-compliance",
+                  "strat-corporation-management-organization",
+                  "strat-bcp",
+                  "strat-intellectual-property",
+                  "strat-privacy-law",
+                  "strat-security-laws",
+                  "strat-labor-laws",
+                  "strat-standardization",
+                  "strat-financial-statements",
+                  "strat-accounting-break-even",
+                  "strat-decision-problem-solving"
                 ]
               },
               {
@@ -1987,7 +2689,23 @@
                   "strat-swot",
                   "strat-3c",
                   "strat-marketing-4p",
-                  "strat-dx"
+                  "strat-dx",
+                  "strat-ppm",
+                  "strat-value-chain",
+                  "strat-corporate-strategy",
+                  "strat-goal-evaluation",
+                  "strat-technology-development-strategy",
+                  "strat-business-systems",
+                  "strat-engineering-systems",
+                  "strat-production-management",
+                  "strat-embedded-systems",
+                  "strat-ebusiness",
+                  "strat-management-systems",
+                  "strat-system-strategy",
+                  "strat-business-process",
+                  "strat-solution-business",
+                  "strat-generative-ai-dx",
+                  "strat-system-planning-rfp"
                 ]
               }
             ]
@@ -2004,8 +2722,22 @@
             ],
             "topicIds": [
               "mgmt-pm-qcd",
-              "mgmt-service-management",
-              "mgmt-system-development"
+              "mgmt-service-sla",
+              "mgmt-development-process",
+              "mgmt-requirements-definition",
+              "mgmt-system-design",
+              "mgmt-testing",
+              "mgmt-operation-maintenance",
+              "mgmt-wbs-gantt",
+              "mgmt-pmbok-basics",
+              "mgmt-project-resource",
+              "mgmt-project-communication",
+              "mgmt-estimation",
+              "mgmt-risk-management",
+              "mgmt-pdca",
+              "mgmt-itil",
+              "mgmt-facility-management",
+              "mgmt-system-audit"
             ],
             "done": false,
             "sections": [
@@ -2019,9 +2751,23 @@
                   "システム監査"
                 ],
                 "topicIds": [
-                  "mgmt-system-development",
+                  "mgmt-development-process",
                   "mgmt-pm-qcd",
-                  "mgmt-service-management"
+                  "mgmt-service-sla",
+                  "mgmt-requirements-definition",
+                  "mgmt-system-design",
+                  "mgmt-testing",
+                  "mgmt-operation-maintenance",
+                  "mgmt-wbs-gantt",
+                  "mgmt-pmbok-basics",
+                  "mgmt-project-resource",
+                  "mgmt-project-communication",
+                  "mgmt-estimation",
+                  "mgmt-risk-management",
+                  "mgmt-pdca",
+                  "mgmt-itil",
+                  "mgmt-facility-management",
+                  "mgmt-system-audit"
                 ]
               }
             ]
@@ -2041,15 +2787,48 @@
               "tech-binary-data",
               "tech-computer-core",
               "tech-os-software-hardware",
-              "tech-db-keys",
-              "tech-db-sql",
+              "tech-keys",
+              "tech-database-sql",
               "tech-network-address",
-              "tech-network-lan-wan",
+              "tech-lan-wan",
               "tech-security-cia",
-              "tech-auth-authz",
-              "tech-encryption-basics",
+              "tech-auth-authz-mfa",
+              "tech-encryption-hash",
               "tech-algorithm-flowchart",
-              "tech-programming-basic"
+              "tech-programming-basics",
+              "tech-logic-operations",
+              "tech-computer-types",
+              "tech-parallel-systems",
+              "tech-io-devices",
+              "tech-api",
+              "tech-file-system",
+              "tech-backup",
+              "tech-spreadsheet",
+              "tech-ui-ux",
+              "tech-multimedia-compression",
+              "tech-ai-ml",
+              "tech-data-utilization",
+              "tech-iot",
+              "tech-cloud-models",
+              "tech-system-processing-architecture",
+              "tech-system-performance",
+              "tech-reliability-availability",
+              "tech-raid",
+              "tech-data-structure",
+              "tech-web-internet-basics",
+              "tech-network-devices",
+              "tech-wireless-mobile",
+              "tech-email-protocol",
+              "tech-http-https",
+              "tech-isms-risk",
+              "tech-firewall-vpn-zero-trust",
+              "tech-common-key-crypto",
+              "tech-public-key-crypto",
+              "tech-digital-signature",
+              "tech-malware-phishing-ransomware",
+              "tech-cyber-attacks",
+              "tech-normalization",
+              "tech-transaction"
             ],
             "done": false,
             "sections": [
@@ -2066,7 +2845,28 @@
                 "topicIds": [
                   "tech-binary-data",
                   "tech-computer-core",
-                  "tech-os-software-hardware"
+                  "tech-os-software-hardware",
+                  "tech-logic-operations",
+                  "tech-computer-types",
+                  "tech-parallel-systems",
+                  "tech-io-devices",
+                  "tech-api",
+                  "tech-file-system",
+                  "tech-backup",
+                  "tech-spreadsheet",
+                  "tech-ui-ux",
+                  "tech-multimedia-compression",
+                  "tech-ai-ml",
+                  "tech-data-utilization",
+                  "tech-iot",
+                  "tech-cloud-models",
+                  "tech-system-processing-architecture",
+                  "tech-system-performance",
+                  "tech-reliability-availability",
+                  "tech-raid",
+                  "tech-algorithm-flowchart",
+                  "tech-programming-basics",
+                  "tech-data-structure"
                 ]
               },
               {
@@ -2080,13 +2880,27 @@
                   "DNS"
                 ],
                 "topicIds": [
-                  "tech-db-keys",
-                  "tech-db-sql",
+                  "tech-keys",
+                  "tech-database-sql",
                   "tech-network-address",
-                  "tech-network-lan-wan",
+                  "tech-lan-wan",
                   "tech-security-cia",
-                  "tech-auth-authz",
-                  "tech-encryption-basics"
+                  "tech-auth-authz-mfa",
+                  "tech-encryption-hash",
+                  "tech-web-internet-basics",
+                  "tech-network-devices",
+                  "tech-wireless-mobile",
+                  "tech-email-protocol",
+                  "tech-http-https",
+                  "tech-isms-risk",
+                  "tech-firewall-vpn-zero-trust",
+                  "tech-common-key-crypto",
+                  "tech-public-key-crypto",
+                  "tech-digital-signature",
+                  "tech-malware-phishing-ransomware",
+                  "tech-cyber-attacks",
+                  "tech-normalization",
+                  "tech-transaction"
                 ]
               }
             ]
@@ -2153,7 +2967,97 @@
             "topicIds": [
               "strat-swot",
               "mgmt-pm-qcd",
-              "tech-security-cia"
+              "tech-security-cia",
+              "tech-binary-data",
+              "tech-logic-operations",
+              "tech-computer-core",
+              "tech-computer-types",
+              "tech-parallel-systems",
+              "tech-io-devices",
+              "tech-os-software-hardware",
+              "tech-api",
+              "tech-file-system",
+              "tech-backup",
+              "tech-spreadsheet",
+              "tech-ui-ux",
+              "tech-multimedia-compression",
+              "tech-ai-ml",
+              "tech-data-utilization",
+              "tech-iot",
+              "tech-cloud-models",
+              "tech-system-processing-architecture",
+              "tech-system-performance",
+              "tech-reliability-availability",
+              "tech-raid",
+              "tech-lan-wan",
+              "tech-web-internet-basics",
+              "tech-network-devices",
+              "tech-wireless-mobile",
+              "tech-email-protocol",
+              "tech-network-address",
+              "tech-http-https",
+              "tech-isms-risk",
+              "tech-auth-authz-mfa",
+              "tech-firewall-vpn-zero-trust",
+              "tech-encryption-hash",
+              "tech-common-key-crypto",
+              "tech-public-key-crypto",
+              "tech-digital-signature",
+              "tech-malware-phishing-ransomware",
+              "tech-cyber-attacks",
+              "tech-keys",
+              "tech-database-sql",
+              "tech-normalization",
+              "tech-transaction",
+              "tech-algorithm-flowchart",
+              "tech-programming-basics",
+              "tech-data-structure",
+              "mgmt-development-process",
+              "mgmt-requirements-definition",
+              "mgmt-system-design",
+              "mgmt-testing",
+              "mgmt-operation-maintenance",
+              "mgmt-wbs-gantt",
+              "mgmt-pmbok-basics",
+              "mgmt-project-resource",
+              "mgmt-project-communication",
+              "mgmt-estimation",
+              "mgmt-risk-management",
+              "mgmt-pdca",
+              "mgmt-service-sla",
+              "mgmt-itil",
+              "mgmt-facility-management",
+              "mgmt-system-audit",
+              "strat-enterprise-activities",
+              "strat-corporation-management-organization",
+              "strat-bcp",
+              "strat-financial-statements",
+              "strat-accounting-break-even",
+              "strat-decision-problem-solving",
+              "strat-legal-compliance",
+              "strat-intellectual-property",
+              "strat-privacy-law",
+              "strat-security-laws",
+              "strat-labor-laws",
+              "strat-standardization",
+              "strat-3c",
+              "strat-ppm",
+              "strat-value-chain",
+              "strat-corporate-strategy",
+              "strat-goal-evaluation",
+              "strat-technology-development-strategy",
+              "strat-marketing-4p",
+              "strat-business-systems",
+              "strat-engineering-systems",
+              "strat-production-management",
+              "strat-embedded-systems",
+              "strat-ebusiness",
+              "strat-management-systems",
+              "strat-system-strategy",
+              "strat-business-process",
+              "strat-solution-business",
+              "strat-generative-ai-dx",
+              "strat-system-planning-rfp"
             ],
             "done": false,
             "sections": [
@@ -2171,7 +3075,34 @@
                   "strat-swot",
                   "strat-3c",
                   "strat-marketing-4p",
-                  "strat-dx"
+                  "strat-dx",
+                  "strat-corporation-management-organization",
+                  "strat-bcp",
+                  "strat-financial-statements",
+                  "strat-accounting-break-even",
+                  "strat-decision-problem-solving",
+                  "strat-legal-compliance",
+                  "strat-intellectual-property",
+                  "strat-privacy-law",
+                  "strat-security-laws",
+                  "strat-labor-laws",
+                  "strat-standardization",
+                  "strat-ppm",
+                  "strat-value-chain",
+                  "strat-corporate-strategy",
+                  "strat-goal-evaluation",
+                  "strat-technology-development-strategy",
+                  "strat-business-systems",
+                  "strat-engineering-systems",
+                  "strat-production-management",
+                  "strat-embedded-systems",
+                  "strat-ebusiness",
+                  "strat-management-systems",
+                  "strat-system-strategy",
+                  "strat-business-process",
+                  "strat-solution-business",
+                  "strat-generative-ai-dx",
+                  "strat-system-planning-rfp"
                 ]
               },
               {
@@ -2185,8 +3116,22 @@
                 ],
                 "topicIds": [
                   "mgmt-pm-qcd",
-                  "mgmt-service-management",
-                  "mgmt-system-development"
+                  "mgmt-service-sla",
+                  "mgmt-development-process",
+                  "mgmt-requirements-definition",
+                  "mgmt-system-design",
+                  "mgmt-testing",
+                  "mgmt-operation-maintenance",
+                  "mgmt-wbs-gantt",
+                  "mgmt-pmbok-basics",
+                  "mgmt-project-resource",
+                  "mgmt-project-communication",
+                  "mgmt-estimation",
+                  "mgmt-risk-management",
+                  "mgmt-pdca",
+                  "mgmt-itil",
+                  "mgmt-facility-management",
+                  "mgmt-system-audit"
                 ]
               },
               {
@@ -2202,10 +3147,49 @@
                 "topicIds": [
                   "tech-binary-data",
                   "tech-computer-core",
-                  "tech-db-keys",
-                  "tech-db-sql",
+                  "tech-keys",
+                  "tech-database-sql",
                   "tech-network-address",
-                  "tech-security-cia"
+                  "tech-security-cia",
+                  "tech-logic-operations",
+                  "tech-computer-types",
+                  "tech-parallel-systems",
+                  "tech-io-devices",
+                  "tech-os-software-hardware",
+                  "tech-api",
+                  "tech-file-system",
+                  "tech-backup",
+                  "tech-spreadsheet",
+                  "tech-ui-ux",
+                  "tech-multimedia-compression",
+                  "tech-ai-ml",
+                  "tech-data-utilization",
+                  "tech-iot",
+                  "tech-cloud-models",
+                  "tech-system-processing-architecture",
+                  "tech-system-performance",
+                  "tech-reliability-availability",
+                  "tech-raid",
+                  "tech-lan-wan",
+                  "tech-web-internet-basics",
+                  "tech-network-devices",
+                  "tech-wireless-mobile",
+                  "tech-email-protocol",
+                  "tech-http-https",
+                  "tech-isms-risk",
+                  "tech-auth-authz-mfa",
+                  "tech-firewall-vpn-zero-trust",
+                  "tech-encryption-hash",
+                  "tech-common-key-crypto",
+                  "tech-public-key-crypto",
+                  "tech-digital-signature",
+                  "tech-malware-phishing-ransomware",
+                  "tech-cyber-attacks",
+                  "tech-normalization",
+                  "tech-transaction",
+                  "tech-algorithm-flowchart",
+                  "tech-programming-basics",
+                  "tech-data-structure"
                 ]
               }
             ]

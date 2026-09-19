@@ -324,12 +324,47 @@ describe("端末と DB の参考書", () => {
   });
 });
 
+describe("プリセットの紐づけ", () => {
+  it("各プリセットで、本に対応する章がある分野のトピックはすべて紐づいている", () => {
+    const topics = getAllTopics();
+    // 対応する章が無い分野（推測で割り当てない）
+    const AI = ["tech-ai-ml", "tech-data-utilization", "tech-iot"];
+    const noAiChapter = [
+      "gihyo-kitami-itpass-r08",
+      "gihyo-gokaku-kyohon-itpass-r08",
+      "gihyo-itpass-saisoku-gokaku-jutsu-rev7",
+    ];
+    for (const summary of listReferenceBookPresets()) {
+      const b = referenceBookFromPreset(summary.id)!;
+      const missing = topics
+        .filter((t) => !findReferenceLocation(b, t.id))
+        .map((t) => t.id)
+        .filter((id) => !(noAiChapter.includes(summary.id) && AI.includes(id)));
+      expect({ preset: summary.id, missing }).toEqual({ preset: summary.id, missing: [] });
+    }
+  });
+
+  it("節のある教科書では、紐づいたトピックの大半を「全部」で読了にできる", () => {
+    const ids = getAllTopics().map((t) => t.id);
+    const kayanoki = referenceBookFromPreset("gihyo-kayanoki-itpass-r08");
+    // 章単位だけの紐づけ（読了対象外）は ui-ux・マルチメディアの2件だけ
+    expect(referenceTargetsForTopics(kayanoki, ids).length).toBeGreaterThanOrEqual(25);
+    const unTargetable = ids.filter((id) => referenceTargetsForTopics(kayanoki, [id]).length === 0);
+    expect(unTargetable.sort()).toEqual(["tech-multimedia-compression", "tech-ui-ux"]);
+  });
+});
+
 describe("プリセットの旧トピック id", () => {
-  it("改名済みの旧 id は現行トピックとして照合される", () => {
-    const kitami = referenceBookFromPreset("gihyo-kitami-itpass-r08");
-    // プリセットには旧 id "tech-network-lan-wan" で入っている
-    const loc = findReferenceLocation(kitami, "tech-lan-wan");
-    expect(loc?.section?.id).toBe("kitami-r08-ch06-s01");
+  it("登録済みの本に残る旧 id は、現行トピックとして照合される", () => {
+    const saved = normalizeReferenceBook({
+      title: "拡充前に登録した本",
+      active: true,
+      updatedAt: NOW,
+      chapters: [
+        { id: "c", title: "ネットワーク", sections: [{ id: "s", title: "LAN", topicIds: ["tech-network-lan-wan"] }] },
+      ],
+    });
+    expect(findReferenceLocation(saved, "tech-lan-wan")?.section?.id).toBe("s");
   });
 
   it("読み替え先はすべて実在するトピックで、プリセットの未解決 id は曖昧な strat-dx だけ", () => {

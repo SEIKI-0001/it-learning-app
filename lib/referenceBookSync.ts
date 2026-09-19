@@ -7,6 +7,7 @@ import {
   pickNewerReferenceBook,
   saveReferenceBook,
 } from "@/lib/referenceBook";
+import { refreshPresetMappings } from "@/lib/referenceBookPresets";
 import { getUserId } from "@/lib/userSession";
 
 // ログイン時の参考書アウトラインの DB 同期（クライアント fetch）。
@@ -66,6 +67,14 @@ export function persistReferenceBook(book: ReferenceBook): ReferenceBook {
  *   - 端末が新しい: DB へ送り直す（前回の DB 保存が失敗していた場合の回復）
  */
 export async function loadReferenceBookSynced(): Promise<ReferenceBook | null> {
+  const picked = await pickSyncedReferenceBook();
+  if (!picked) return null;
+  // プリセットの紐づけ拡充を、登録済みの本にも取り込む（取り込んだら保存し直す）。
+  const refreshed = refreshPresetMappings(picked);
+  return refreshed === picked ? picked : persistReferenceBook(refreshed);
+}
+
+async function pickSyncedReferenceBook(): Promise<ReferenceBook | null> {
   const local = loadReferenceBook();
   const userId = getUserId();
   if (!userId) return local;

@@ -178,11 +178,40 @@ describe("Today の参考書カード", () => {
   });
 });
 
+describe("かやのき先生の参考書（報告のあった再現ケース）", () => {
+  it("「開発プロセス」「システムの運用と保守」の日に「全部」で進捗が進む", async () => {
+    storeBook(referenceBookFromPreset("gihyo-kayanoki-itpass-r08"));
+    const topics = ["mgmt-development-process", "mgmt-operation-maintenance"].map((id) => getTopic(id)!);
+    render(<ReadingCheck date="2026-09-19" topics={topics} />);
+    expect(await screen.findByText("システム開発・運用と保守")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: "全部" }));
+
+    expect(referenceBookProgress(storedBook())!.done).toBe(1);
+    expect(screen.getByText(/参考書の該当箇所を読了にしました/)).toBeInTheDocument();
+  });
+
+  it("拡充前に登録した本にも、読み込み時にプリセットの紐づけと節を取り込む", async () => {
+    const old = referenceBookFromPreset("gihyo-kayanoki-itpass-r08")!;
+    const ch8 = old.chapters.find((c) => c.id === "kayanoki-r08-ch08")!;
+    ch8.sections = ch8.sections!.filter((s) => s.id !== "kayanoki-r08-ch08-s03"); // 拡充前の形
+    ch8.sections[0] = { ...ch8.sections[0], done: true, completedAt: "2026-09-01T00:00:00.000Z" };
+    storeBook(old);
+
+    render(<ReadingCheck date="2026-09-19" topics={[getTopic("mgmt-development-process")!]} />);
+    expect(await screen.findByText("システム開発・運用と保守")).toBeInTheDocument();
+
+    const saved = storedBook()!.chapters.find((c) => c.id === "kayanoki-r08-ch08")!;
+    expect(saved.sections!.map((s) => s.id)).toContain("kayanoki-r08-ch08-s03");
+    expect(saved.sections![0].done).toBe(true); // 読了状態は保持
+  });
+});
+
 describe("参考書の章・節と対応づかない日", () => {
   it("「全部」でも進捗が動かないことを先に伝え、何も読了にしない", async () => {
-    storeBook(referenceBookFromPreset("gihyo-kayanoki-itpass-r08"));
-    const dev = getTopic("mgmt-development-process")!; // かやのきのプリセットには対応する節がない
-    render(<ReadingCheck date="2026-09-19" topics={[dev]} />);
+    storeBook(referenceBookFromPreset(KITAMI));
+    const ai = getTopic("tech-ai-ml")!; // キタミ式のプリセットには AI を扱う章・節がない
+    render(<ReadingCheck date="2026-09-19" topics={[ai]} />);
 
     expect(await screen.findByTestId("reference-unlinked")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "全部" }));
