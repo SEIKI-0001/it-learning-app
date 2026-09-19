@@ -19,12 +19,14 @@
 //   - 後から「半分」「まだ」に変えても、一度読了にした章・節は戻さない（取り消しは設定画面で）
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { Topic } from "@/types/content";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import TodayReferenceGuide from "@/components/learn/TodayReferenceGuide";
 import ReferenceBookNudge from "@/components/reference/ReferenceBookNudge";
 import {
   applyReadingLevel,
+  hasUsableReferenceBook,
   referenceBookProgress,
   referenceTargetsForTopics,
 } from "@/lib/referenceBook";
@@ -166,6 +168,10 @@ export default function ReadingCheck({
   })();
   const bookProgress = referenceBookProgress(book ?? null);
   const markedRead = saved?.level === "all" && (saved.readTargets?.length ?? 0) > 0;
+  // 参考書は登録済みだが、今日の範囲が章・節と紐づいていない（読了にできる場所がない）。
+  // 推測で章を読了にはしないので、「全部」を押しても参考書の進捗は動かないことを先に伝える。
+  const unlinked =
+    !!book && hasUsableReferenceBook(book) && topics.length > 0 && targets.length === 0;
 
   return (
     <section className={r.card} aria-labelledby="reading-heading">
@@ -187,6 +193,17 @@ export default function ReadingCheck({
         )}
       </div>
       <ReferenceBookNudge book={book} />
+
+      {unlinked && (
+        <p className={r.unlinked} data-testid="reference-unlinked">
+          今日の範囲は、登録した参考書の章・節と対応づいていません。ここでの回答は参考書の進捗には反映されません。
+          読み進めた章・節は
+          <Link href="/settings/reference-book" className={r.unlinkedLink}>
+            設定画面
+          </Link>
+          でまとめて読了にできます。
+        </p>
+      )}
 
       <p className={r.question} id="reading-question">
         この範囲を、参考書でどこまで読みましたか？

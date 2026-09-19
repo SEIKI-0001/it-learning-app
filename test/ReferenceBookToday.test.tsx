@@ -178,6 +178,27 @@ describe("Today の参考書カード", () => {
   });
 });
 
+describe("参考書の章・節と対応づかない日", () => {
+  it("「全部」でも進捗が動かないことを先に伝え、何も読了にしない", async () => {
+    storeBook(referenceBookFromPreset("gihyo-kayanoki-itpass-r08"));
+    const dev = getTopic("mgmt-development-process")!; // かやのきのプリセットには対応する節がない
+    render(<ReadingCheck date="2026-09-19" topics={[dev]} />);
+
+    expect(await screen.findByTestId("reference-unlinked")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "全部" }));
+
+    expect(referenceBookProgress(storedBook())!.done).toBe(0);
+    expect(screen.queryByText(/参考書の該当箇所を読了にしました/)).not.toBeInTheDocument();
+  });
+
+  it("対応づく日は注記を出さない", async () => {
+    storeBook(referenceBookFromPreset(KITAMI));
+    render(<ReadingCheck date="2026-09-19" topics={[NETWORK]} />);
+    await screen.findByText("Chapter 6 ネットワーク");
+    expect(screen.queryByTestId("reference-unlinked")).not.toBeInTheDocument();
+  });
+});
+
 describe("TodayReferenceGuide", () => {
   it("同じ節に紐づく複数トピックは1行にまとめる", () => {
     const book = referenceBookFromPreset(KITAMI);
