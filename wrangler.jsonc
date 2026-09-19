@@ -19,6 +19,7 @@
   },
   "observability": { "enabled": true },
   "vars": {
+    "NEXT_PUBLIC_LINE_ADD_FRIEND_URL": "https://lin.ee/wcVbUud",
     "APP_BASE_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",
     "NEXT_PUBLIC_APP_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",
     "NEXT_PUBLIC_SUPABASE_URL": "https://ymarkdjwszlsmrjmtfpy.supabase.co",
