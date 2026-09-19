@@ -3,7 +3,7 @@
 
 .view {
   --canvas: var(--theme-surface, #ffffff);
-  --wash: var(--color-brand-50);
+  --wash: var(--theme-wash, var(--color-brand-50));
   --wash-line: var(--theme-wash-line, #dfe7f3);
   --ink: var(--color-gray-900);
   --ink-2: var(--color-gray-600);

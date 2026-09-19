@@ -126,8 +126,34 @@ export const CURRENT_SURFACES: Record<SurfaceKey, SurfaceDef> = {
 
 export const SURFACE_ORDER: SurfaceKey[] = ["page", "surface", "washLine"];
 
+export type PanelFill = "flat" | "gradient" | "dots";
+
+/** 淡いパネル（テーマカラー50の面）の塗り方。色はトークン参照なので、配色を変えても追従する。 */
+export const PANEL_FILLS: { id: PanelFill; label: string; value: string }[] = [
+  { id: "flat", label: "ベタ塗り", value: "var(--color-brand-50)" },
+  {
+    id: "gradient",
+    label: "グラデーション",
+    value:
+      "linear-gradient(135deg, var(--color-brand-100) 0%, var(--color-brand-50) 55%, var(--theme-surface, #ffffff) 100%)",
+  },
+  {
+    id: "dots",
+    label: "ドット",
+    value:
+      "radial-gradient(circle, color-mix(in srgb, var(--color-brand-300) 55%, transparent) 1px, transparent 1.5px) 0 0 / 12px 12px, var(--color-brand-50)",
+  },
+];
+
+const PANEL_FILL_IDS = PANEL_FILLS.map((f) => f.id);
+
+export function panelFillValue(fill: PanelFill): string {
+  return (PANEL_FILLS.find((f) => f.id === fill) ?? PANEL_FILLS[0]).value;
+}
+
 export type ThemeState = {
   surfaces: Record<SurfaceKey, string>;
+  panelFill: PanelFill;
   scales: Record<ScaleKey, { anchor: string; stops: Record<string, string> }>;
 };
 
@@ -138,6 +164,7 @@ export function currentTheme(): ThemeState {
       surface: CURRENT_SURFACES.surface.value,
       washLine: CURRENT_SURFACES.washLine.value,
     },
+    panelFill: "flat",
     scales: Object.fromEntries(
       SCALE_ORDER.map((key) => {
         const def = CURRENT_SCALES[key];
@@ -175,6 +202,10 @@ export function withSurface(theme: ThemeState, key: SurfaceKey, hex: string): Th
   return { ...theme, surfaces: { ...theme.surfaces, [key]: value } };
 }
 
+export function withPanelFill(theme: ThemeState, fill: PanelFill): ThemeState {
+  return { ...theme, panelFill: fill };
+}
+
 export type ThemePreset = { id: string; label: string; build: () => ThemeState };
 
 function fromAnchors(anchors: Partial<Record<ScaleKey, string>>, surfaces?: Partial<Record<SurfaceKey, string>>) {
@@ -196,6 +227,7 @@ export const THEME_PRESETS: ThemePreset[] = [
     build: () => {
       const theme = currentTheme();
       return {
+        ...theme,
         surfaces: { ...theme.surfaces, page: "#f6f8fb" },
         scales: {
           ...theme.scales,
@@ -234,6 +266,7 @@ export function themeToCss(theme: ThemeState): string {
   const lines: string[] = [];
   for (const key of SURFACE_ORDER) lines.push(`  ${SURFACE_VARS[key]}: ${theme.surfaces[key]};`);
   lines.push(`  --foreground: ${theme.scales.gray.stops["900"]};`);
+  lines.push(`  --theme-wash: ${panelFillValue(theme.panelFill)};`);
   for (const key of SCALE_ORDER) {
     for (const [stop, hex] of Object.entries(theme.scales[key].stops)) {
       lines.push(`  --color-${key}-${stop}: ${hex};`);
@@ -265,6 +298,7 @@ export function themeToGlobalsSnippet(theme: ThemeState): string {
     `  --foreground: ${theme.scales.gray.stops["900"]};`,
     `  --theme-surface: ${theme.surfaces.surface};`,
     `  --theme-wash-line: ${theme.surfaces.washLine};`,
+    `  --theme-wash: ${panelFillValue(theme.panelFill)};`,
     "}",
     "",
   ].join("\n");
@@ -281,6 +315,8 @@ export function parseTheme(value: unknown): ThemeState | null {
     if (!hex) return null;
     base.surfaces[key] = hex;
   }
+  // 塗り方は後から足した項目なので、無ければベタ塗りとして読む
+  if (v.panelFill && PANEL_FILL_IDS.includes(v.panelFill)) base.panelFill = v.panelFill;
   for (const key of SCALE_ORDER) {
     const scale = v.scales[key];
     if (!scale) return null;

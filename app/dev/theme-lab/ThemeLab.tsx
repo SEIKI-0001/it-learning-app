@@ -5,6 +5,7 @@ import { contrastRatio, normalizeHex } from "@/lib/themeLab/color";
 import {
   CURRENT_SCALES,
   CURRENT_SURFACES,
+  PANEL_FILLS,
   SCALE_ORDER,
   SURFACE_ORDER,
   THEME_PRESETS,
@@ -15,6 +16,8 @@ import {
   withAnchor,
   withStop,
   withSurface,
+  withPanelFill,
+  type PanelFill,
   type ScaleKey,
   type ThemeState,
 } from "@/lib/themeLab/tokens";
@@ -184,7 +187,7 @@ export default function ThemeLab() {
             <button
               key={preset.id}
               type="button"
-              onClick={() => setTheme(preset.build())}
+              onClick={() => setTheme((t) => withPanelFill(preset.build(), t.panelFill))}
               className="flex shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-white py-1 pl-1.5 pr-3 text-sm hover:border-gray-400"
             >
               <PresetDots theme={preset.build()} />
@@ -260,6 +263,7 @@ export default function ThemeLab() {
                 />
               );
             })}
+            <PanelFillField theme={theme} onChange={(fill) => setTheme((t) => withPanelFill(t, fill))} />
           </Group>
 
           {SCALE_ORDER.map((key) => (
@@ -510,6 +514,43 @@ function HexInput({ value, onChange }: { value: string; onChange: (hex: string) 
         }}
         className={`w-[5.5rem] rounded-md border px-2 py-1.5 font-mono text-sm ${valid ? "border-gray-300" : "border-rose-400 text-rose-700"}`}
       />
+    </div>
+  );
+}
+
+function PanelFillField({ theme, onChange }: { theme: ThemeState; onChange: (fill: PanelFill) => void }) {
+  // 見本は選択中の配色で描く（トークン名をこの場の値に置き換える）
+  const vars = {
+    "--color-brand-50": theme.scales.brand.stops["50"],
+    "--color-brand-100": theme.scales.brand.stops["100"],
+    "--color-brand-300": theme.scales.brand.stops["300"],
+    "--theme-surface": theme.surfaces.surface,
+  } as React.CSSProperties;
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <p className="text-sm text-gray-900">
+        淡いパネルの塗り方
+        {theme.panelFill !== "flat" && <span className="ml-2 text-xs text-brand-700">変更中</span>}
+      </p>
+      <p className="text-xs text-gray-500">「今日の学習」「合格までの道のり」などの枠の背景</p>
+      <div role="radiogroup" aria-label="淡いパネルの塗り方" className="mt-2 grid grid-cols-3 gap-2" style={vars}>
+        {PANEL_FILLS.map((fill) => {
+          const active = theme.panelFill === fill.id;
+          return (
+            <button
+              key={fill.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(fill.id)}
+              className={`flex flex-col gap-1 rounded-md p-1 text-left ${active ? "ring-2 ring-gray-900" : "hover:bg-gray-50"}`}
+            >
+              <span className="h-12 rounded border border-black/10" style={{ background: fill.value }} />
+              <span className="text-xs text-gray-700">{fill.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
