@@ -12,6 +12,10 @@ export type ReferenceSection = {
   title: string;
   keywords?: string[]; // 関連キーワード
   topicIds?: string[]; // 紐づくアプリ内トピック id
+  // --- 読了状態（参考書の構造上の読了。日次の自己申告 daily_progress_reports とは別概念） ---
+  done?: boolean; // 読み終えたか。/today の「全部」で自動的に true になる
+  completedAt?: string; // 読了にした日時(ISO)
+  startedAt?: string; // 「少し」「半分」以上で最初に読み始めた日時(ISO)。部分読了の印
 };
 
 /** 参考書の章。 */
@@ -22,7 +26,9 @@ export type ReferenceChapter = {
   keywords?: string[]; // 関連キーワード
   topicIds?: string[]; // 紐づくアプリ内トピック id
   sections?: ReferenceSection[]; // 節
-  done?: boolean; // 読み終えたか（1周の進捗に使う）
+  // 読み終えたか。節がある章では「全節が読了」で自動的に true になる（旧データの手動チェックも尊重）。
+  done?: boolean;
+  completedAt?: string; // 読了にした日時(ISO)
 };
 
 /** ユーザーごとの参考書アウトライン。 */
@@ -44,7 +50,31 @@ export type ReferenceLocation = {
 
 /** 参考書1周の進捗。 */
 export type ReferenceBookProgress = {
+  /** 読了した単位数（節のある章は節、節のない章は章を1単位として数える） */
   done: number;
+  /** 全単位数 */
   total: number;
   ratio: number; // 0〜1
+  /** 読了した章の数（節がある章は全節読了で1章） */
+  doneChapters: number;
+  totalChapters: number;
 };
+
+/** その日の対象トピックから特定した、読了の対象（topicIds の紐づけで確定したものだけ）。 */
+export type ReferenceReadTarget = {
+  chapterId: string;
+  sectionId?: string;
+};
+
+/**
+ * トピックに対する参考書の案内（フォールバック順）。
+ *   1. mapped   … topicIds の紐づけで確定した章・節
+ *   2. candidate … 章・節の keywords と Topic.referenceHints が一致した候補（断定しない・保存しない）
+ *   3. keywords … 参考書で探すキーワード（Topic.referenceHints）
+ *   4. index    … 索引でトピック名を探す
+ */
+export type ReferenceGuide =
+  | { kind: "mapped"; location: ReferenceLocation }
+  | { kind: "candidate"; location: ReferenceLocation; keywords: string[] }
+  | { kind: "keywords"; keywords: string[] }
+  | { kind: "index"; term: string };

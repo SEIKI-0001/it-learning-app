@@ -109,15 +109,24 @@ export function ReadinessBreakdownCard({
 
 // ───────────────────────── トピックの到達度 ─────────────────────────
 
+/** 参考書インプットの内訳（参考書未設定なら null で出さない）。 */
+export type ReferenceInputSummary = {
+  percent: number;
+  doneChapters: number;
+  totalChapters: number;
+};
+
 export function TopicReachCard({
   status,
   totalTopicCount,
   loading,
+  referenceInput = null,
   className,
 }: {
   status: IntegratedLearningStatus | null;
   totalTopicCount: number;
   loading: boolean;
+  referenceInput?: ReferenceInputSummary | null;
   className?: string;
 }) {
   return (
@@ -137,6 +146,17 @@ export function TopicReachCard({
         </p>
       ) : (
         <TopicReachBody status={status} totalTopicCount={totalTopicCount} />
+      )}
+      {/* インプット進捗の内訳。主役は到達度なので、1行の補足にとどめる */}
+      {referenceInput && (
+        <Link href="/plan" className={p.referenceInput}>
+          <span>参考書インプット</span>
+          <span className={p.referenceInputValue}>
+            <span className={t.mono}>{referenceInput.percent}%</span>
+            （<span className={t.mono}>{referenceInput.doneChapters}</span>/
+            <span className={t.mono}>{referenceInput.totalChapters}</span>章読了）
+          </span>
+        </Link>
       )}
     </section>
   );

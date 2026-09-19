@@ -14,6 +14,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
 import NotificationSettings from "@/components/settings/NotificationSettings";
+import ReferenceBookSummary from "@/components/settings/ReferenceBookSummary";
 
 // 設定変更。オンボーディングで入力した試験予定日・学習可能時間・理解度・苦手分野・
 // 学習スタイルを、あとから何度でも変更できるようにする。現在値をプリセットして編集し保存する。
@@ -225,6 +226,9 @@ function SettingsForm({
               })}
             </div>
           </fieldset>
+
+          {/* 使用参考書（変更・読了の修正は /settings/reference-book） */}
+          <ReferenceBookSummary />
 
           {/* 学習リマインダー（GF-P0-006） */}
           <NotificationSettings />

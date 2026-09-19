@@ -246,3 +246,29 @@
     padding: 24px;
   }
 }
+
+/* 「全部」で参考書の該当箇所を読了にしたときの控えめな結果表示 */
+.bookNote {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.bookNoteNum {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+/* 今日の範囲が参考書の章・節と対応づいていないときの注記（「全部」でも進捗が動かない理由） */
+.unlinked {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+.unlinkedLink {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

@@ -1,5 +1,5 @@
 import type { ReferenceBook } from "@/types/referenceBook";
-import { normalizeReferenceBook } from "@/lib/referenceBook";
+import { createEmptyReferenceBook, normalizeReferenceBook } from "@/lib/referenceBook";
 import presetData from "@/itpass_reference_book.json";
 
 // ============================================================================
@@ -126,4 +126,76 @@ export function suggestPresetForText(
     bookType: e.bookType ?? "textbook",
     chapterCount: e.book.chapters?.length ?? 0,
   };
+}
+
+/** 参考書の選び方（オンボーディング・設定画面で共通）。 */
+export type ReferenceBookChoice =
+  | { kind: "preset"; presetId: string }
+  | { kind: "other"; title: string }
+  | { kind: "later" };
+
+/**
+ * 選択から保存する参考書を作る。「あとで」や空欄の「その他」は null（保存しない）。
+ * 「その他」は書名だけ登録し、章立ては設定画面で登録してもらう
+ * （未登録のあいだは Topic.referenceHints のキーワード案内で学習できる）。
+ */
+export function referenceBookFromChoice(
+  choice: ReferenceBookChoice,
+): ReferenceBook | null {
+  if (choice.kind === "preset") return referenceBookFromPreset(choice.presetId);
+  if (choice.kind === "other") {
+    const title = choice.title.trim();
+    if (!title) return null;
+    return { ...createEmptyReferenceBook(), title };
+  }
+  return null;
+}
+
+/**
+ * プリセットから作った参考書に、プリセット側で増えたトピックの紐づけと節を取り込む。
+ * 登録済みユーザーの本は登録時点のコピーなので、プリセットの紐づけを拡充しても
+ * そのままでは反映されない。書名が一致するプリセットの章・節 id を手がかりに、
+ *   - 既存の章・節には topicIds を足す（ユーザーが付けた紐づけは消さない）
+ *   - プリセットにあって手元に無い節は、その章の末尾に足す（未読として）
+ * 読了状態・タイトル・並び順などユーザーの編集には触れない。変化が無ければ同じ参照を返す。
+ */
+export function refreshPresetMappings(book: ReferenceBook): ReferenceBook {
+  const entry = presets.find((p) => p.book.title === book.title);
+  if (!entry) return book;
+  let changed = false;
+  const merge = (current: string[] | undefined, extra: string[] | undefined) => {
+    const base = current ?? [];
+    const add = (extra ?? []).filter((id) => !base.includes(id));
+    if (add.length === 0) return base;
+    changed = true;
+    return [...base, ...add];
+  };
+
+  const chapters = book.chapters.map((chapter) => {
+    const presetChapter = entry.book.chapters.find((c) => c.id === chapter.id);
+    if (!presetChapter) return chapter;
+    const sections = (chapter.sections ?? []).map((section) => {
+      const presetSection = presetChapter.sections?.find((s) => s.id === section.id);
+      if (!presetSection) return section;
+      const topicIds = merge(section.topicIds, presetSection.topicIds);
+      return topicIds === section.topicIds ? section : { ...section, topicIds };
+    });
+    for (const presetSection of presetChapter.sections ?? []) {
+      if (sections.some((s) => s.id === presetSection.id)) continue;
+      changed = true;
+      sections.push({
+        id: presetSection.id,
+        title: presetSection.title,
+        keywords: [...(presetSection.keywords ?? [])],
+        topicIds: [...(presetSection.topicIds ?? [])],
+      });
+    }
+    return {
+      ...chapter,
+      topicIds: merge(chapter.topicIds, presetChapter.topicIds),
+      sections,
+    };
+  });
+
+  return changed ? { ...book, chapters } : book;
 }

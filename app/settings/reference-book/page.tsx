@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import type { Topic } from "@/types/content";
 import type {
   ReferenceBook,
@@ -12,86 +11,305 @@ import { getAllTopics, getTopic } from "@/lib/content";
 import {
   createEmptyReferenceBook,
   genRefId,
-  loadReferenceBook,
+  hasReadingHistory,
+  isChapterRead,
+  isSectionRead,
   parseTableOfContents,
+  referenceBookProgress,
   saveReferenceBook,
+  setChapterRead,
+  setSectionRead,
+  switchReferenceBook,
 } from "@/lib/referenceBook";
+import { persistReferenceBook } from "@/lib/referenceBookSync";
 import {
-  loadReferenceBookFromDb,
-  saveReferenceBookToDb,
-} from "@/lib/referenceBookSync";
-import {
-  BOOK_TYPE_LABELS,
   listReferenceBookPresets,
-  referenceBookFromPreset,
-  suggestPresetForText,
-  type ReferenceBookPresetSummary,
+  referenceBookFromChoice,
+  type ReferenceBookChoice,
 } from "@/lib/referenceBookPresets";
-import { getUserId } from "@/lib/userSession";
+import { useReferenceBook } from "@/lib/useReferenceBook";
 import TopicPicker from "@/components/reference/TopicPicker";
+import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
+import PageHeader from "@/components/ui/PageHeader";
+import { buttonClass } from "@/components/ui/Button";
 
-// /settings/reference-book = 参考書アウトラインの編集。
-// 参考書名/出版社/版/使用中/章節の追加編集削除並び替え/メモ/キーワード/トピック紐づけ/
-// 目次テキスト貼り付け変換。localStorage を主に、ログイン時は DB へも同期する。
+// /settings/reference-book = 使用参考書の設定。
+// ふだんの読了記録は /today の「全部」で自動的に進むので、ここは次のときだけ使う:
+//   1. 使用中の参考書を確認する
+//   2. 別の参考書（登録済みプリセット／その他）へ変更する
+//   3. 読了状況を修正する（読了の取り消しはここでだけ行う）
+// 章立ての手動編集・トピックの紐づけなどの詳細設定は、折りたたんだ奥に置く。
+// 保存は端末（localStorage）を主に、ログイン時は DB（user_reference_books）へも同期する。
 // 参考書未登録でも学習は Topic.referenceHints にフォールバックするので、この設定は任意。
 
 export default function ReferenceBookSettingsPage() {
-  // undefined = 読み込み中 / ReferenceBook = 読み込み済み
-  const [book, setBook] = useState<ReferenceBook | undefined>(undefined);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function init() {
-      const local = loadReferenceBook();
-      if (local && !cancelled) setBook(local);
-      const userId = getUserId();
-      if (userId) {
-        const db = await loadReferenceBookFromDb(userId);
-        if (cancelled) return;
-        if (db && !local) {
-          saveReferenceBook(db);
-          setBook(db);
-          return;
-        }
-      }
-      if (!local && !cancelled) setBook(createEmptyReferenceBook());
-    }
-    void init();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (book === undefined) {
-    return <LoadingScreen />;
-  }
-
-  return <ReferenceBookEditor initial={book} />;
+  const { book } = useReferenceBook();
+  if (book === undefined) return <LoadingScreen />;
+  return <ReferenceBookSettings initial={book ?? createEmptyReferenceBook()} />;
 }
 
-function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
+function choiceForBook(book: ReferenceBook): ReferenceBookChoice {
+  const preset = listReferenceBookPresets().find((p) => p.title === book.title);
+  if (preset) return { kind: "preset", presetId: preset.id };
+  return { kind: "other", title: book.title };
+}
+
+function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
   const [book, setBook] = useState<ReferenceBook>(initial);
+  const hasBook = book.title.trim().length > 0 || book.chapters.length > 0;
+  const [choice, setChoice] = useState<ReferenceBookChoice>(() =>
+    hasBook ? choiceForBook(book) : { kind: "other", title: "" },
+  );
+  const [pendingSwitch, setPendingSwitch] = useState<ReferenceBook | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const progress = referenceBookProgress(book);
+
+  /** 端末と DB（ログイン時）へ保存して表示にも反映する。 */
+  function commit(next: ReferenceBook) {
+    setBook(persistReferenceBook(next));
+  }
+
+  // --- 参考書の変更 ---
+  const chosen = referenceBookFromChoice(choice);
+  const isSameAsCurrent =
+    chosen !== null && hasBook && chosen.title.trim() === book.title.trim();
+
+  function applyChoice() {
+    if (!chosen || isSameAsCurrent) return;
+    // 読了履歴がある本から切り替えるときは、履歴をどうするか確かめる。
+    if (hasBook && hasReadingHistory(book)) {
+      setPendingSwitch(chosen);
+      return;
+    }
+    finishSwitch(chosen, false);
+  }
+
+  function finishSwitch(next: ReferenceBook, keepHistory: boolean) {
+    const switched = switchReferenceBook(hasBook ? book : null, next, { keepHistory });
+    commit(switched);
+    setChoice(choiceForBook(switched));
+    setPendingSwitch(null);
+    setNotice(`「${switched.title}」に切り替えました`);
+  }
+
+  return (
+    <main className="min-h-screen pb-28">
+      <PageHeader
+        back={{ href: "/settings", label: "設定" }}
+        eyebrow="設定"
+        title="使用参考書"
+        description="毎日の「参考書のどこを読むか」の案内に使います。読んだ記録は今日のページで「全部」を選ぶと自動で進みます。"
+      />
+
+      <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6">
+        {/* 1. 使用中の参考書 */}
+        <section aria-labelledby="current-book-heading">
+          <h2 id="current-book-heading" className="mb-2 text-base font-semibold text-gray-900">
+            使用中の参考書
+          </h2>
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+            {hasBook ? (
+              <>
+                <p className="text-sm font-medium text-gray-900">{book.title || "（書名未入力）"}</p>
+                {progress ? (
+                  <>
+                    <p className="mt-1 text-xs text-gray-600">
+                      参考書進捗{" "}
+                      <span className="tabular-nums">{Math.round(progress.ratio * 100)}%</span>
+                      ・
+                      <span className="tabular-nums">
+                        {progress.doneChapters} / {progress.totalChapters}
+                      </span>
+                      章読了
+                    </p>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                      <div
+                        className="h-full rounded-full bg-brand-600"
+                        style={{ width: `${Math.round(progress.ratio * 100)}%` }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-600">
+                    章立てが未登録です。下の「詳細設定」で目次を貼り付けると登録できます。
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-gray-600">
+                まだ設定されていません。登録しなくても、各レッスンの「探すキーワード」で学習できます。
+              </p>
+            )}
+          </div>
+          {notice && (
+            <p className="mt-2 text-xs text-emerald-700" aria-live="polite">
+              {notice}
+            </p>
+          )}
+        </section>
+
+        {/* 2. 参考書を変更（プリセット／その他） */}
+        <section aria-labelledby="change-book-heading">
+          <h2 id="change-book-heading" className="mb-1 text-base font-semibold text-gray-900">
+            {hasBook ? "参考書を変更" : "参考書を選ぶ"}
+          </h2>
+          <p className="mb-3 text-xs text-gray-600">
+            登録済みの参考書は章立てと各レッスンとの対応が入っています。学習の順番はアプリが決めます。
+          </p>
+          <ReferenceBookPicker value={choice} onChange={setChoice} currentTitle={book.title} />
+
+          {pendingSwitch ? (
+            <div
+              role="alertdialog"
+              aria-labelledby="switch-confirm-heading"
+              className="mt-4 rounded-lg border border-gray-300 bg-white p-4"
+            >
+              <p id="switch-confirm-heading" className="text-sm text-gray-900">
+                参考書を変更すると、新しい参考書の章構成に切り替わります。現在の参考書の読了履歴は保持しますか？
+              </p>
+              <p className="mt-1 text-xs text-gray-600">
+                保持すると、あとで「{book.title}」に戻したときに読了状況が復元されます（この端末に保存）。
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => finishSwitch(pendingSwitch, true)}
+                  className={buttonClass("primary", "sm")}
+                >
+                  保持して切り替える
+                </button>
+                <button
+                  type="button"
+                  onClick={() => finishSwitch(pendingSwitch, false)}
+                  className={buttonClass("secondary", "sm")}
+                >
+                  保持せずに切り替える
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPendingSwitch(null)}
+                  className="px-2 text-sm text-gray-600 underline underline-offset-2"
+                >
+                  やめる
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={applyChoice}
+              disabled={!chosen || isSameAsCurrent}
+              className={buttonClass("primary", "md", "mt-4 w-full")}
+            >
+              {isSameAsCurrent ? "使用中の参考書です" : "この参考書を使う"}
+            </button>
+          )}
+        </section>
+
+        {/* 3. 読了状況の修正 */}
+        {book.chapters.length > 0 && (
+          <ReadingStatusEditor
+            book={book}
+            onChapter={(chapterId, read) => commit(setChapterRead(book, chapterId, read))}
+            onSection={(chapterId, sectionId, read) =>
+              commit(setSectionRead(book, chapterId, sectionId, read))
+            }
+          />
+        )}
+
+        {/* 4. 詳細設定（章立ての編集・トピック紐づけ） */}
+        <details className="rounded-lg border border-gray-200 bg-white">
+          <summary className="cursor-pointer px-4 py-3 text-sm text-gray-700">
+            詳細設定（章立ての編集・レッスンとの紐づけ）
+          </summary>
+          <div className="border-t border-gray-200 px-4 py-4">
+            <AdvancedEditor book={book} onChange={setBook} onSave={commit} />
+          </div>
+        </details>
+      </div>
+
+      <BottomNav />
+    </main>
+  );
+}
+
+function ReadingStatusEditor({
+  book,
+  onChapter,
+  onSection,
+}: {
+  book: ReferenceBook;
+  onChapter: (chapterId: string, read: boolean) => void;
+  onSection: (chapterId: string, sectionId: string, read: boolean) => void;
+}) {
+  return (
+    <section aria-labelledby="reading-status-heading">
+      <h2 id="reading-status-heading" className="mb-1 text-base font-semibold text-gray-900">
+        読了状況の修正
+      </h2>
+      <p className="mb-3 text-xs text-gray-600">
+        ふだんは今日のページの「全部」で自動的に読了になります。まちがいを直すとき、先に読み進めた分をまとめて付けるときに使います。
+      </p>
+      <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
+        {book.chapters.map((chapter) => (
+          <li key={chapter.id} className="px-4 py-3">
+            <label className="flex items-start gap-2.5 text-sm text-gray-900">
+              <input
+                type="checkbox"
+                checked={isChapterRead(chapter)}
+                onChange={(e) => onChapter(chapter.id, e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0"
+              />
+              <span>{chapter.title || "（無題の章）"}</span>
+            </label>
+            {(chapter.sections ?? []).length > 0 && (
+              <ul className="mt-2 space-y-1.5 pl-6">
+                {(chapter.sections ?? []).map((section) => (
+                  <li key={section.id}>
+                    <label className="flex items-start gap-2.5 text-xs text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={isSectionRead(chapter, section)}
+                        onChange={(e) => onSection(chapter.id, section.id, e.target.checked)}
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                      />
+                      <span>{section.title || "（無題の節）"}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function AdvancedEditor({
+  book,
+  onChange,
+  onSave,
+}: {
+  book: ReferenceBook;
+  onChange: (next: ReferenceBook) => void;
+  onSave: (next: ReferenceBook) => void;
+}) {
   const [toc, setToc] = useState("");
   const [saved, setSaved] = useState(false);
   const topics = getAllTopics();
 
-  // localStorage には即時反映（安価）。DB は保存ボタン/トグル時にまとめて同期する。
+  // 入力中は端末にだけ即時反映し、DB へは「保存」でまとめて送る。
   function update(next: ReferenceBook) {
-    setBook(next);
+    onChange(next);
     saveReferenceBook(next);
     setSaved(false);
   }
 
-  function persistToDb(next: ReferenceBook) {
-    const userId = getUserId();
-    if (userId) saveReferenceBookToDb(userId, next);
-  }
-
   function handleSave() {
-    saveReferenceBook(book);
-    persistToDb(book);
+    onSave(book);
     setSaved(true);
   }
 
@@ -172,450 +390,257 @@ function ReferenceBookEditor({ initial }: { initial: ReferenceBook }) {
     setToc("");
   }
 
-  // --- プリセット（登録済みの参考書）の章立てを反映 ---
-  // presetIsEditableTemplate: 反映後はたたき台。ユーザーが自由に編集できる。
-  // doNotOverwriteUserEditedBook: 既に章があるときは上書き確認する。
-  function applyPreset(id: string) {
-    const preset = referenceBookFromPreset(id);
-    if (!preset) return;
-    if (
-      book.chapters.length > 0 &&
-      !window.confirm(
-        `現在の章構成（${book.chapters.length}章）を「${preset.title}」の章立てに置き換えます。よろしいですか？`,
-      )
-    ) {
-      return;
-    }
-    // メタは空欄のみプリセットで補完し、埋まっていればユーザーの入力を尊重する。
-    const next: ReferenceBook = {
-      ...book,
-      title: book.title.trim() || preset.title,
-      publisher: book.publisher?.trim() || preset.publisher,
-      edition: book.edition?.trim() || preset.edition,
-      active: true,
-      chapters: preset.chapters,
-    };
-    update(next);
-    persistToDb(next);
-  }
-
-  // 参考書名などからプリセットを推測（該当があれば反映を提案）。
-  const suggestion = suggestPresetForText(
-    [book.title, book.publisher ?? "", book.edition ?? ""].join(" "),
-  );
-  const showSuggestion =
-    suggestion !== null && book.chapters.length === 0;
-
   return (
-    <main className="min-h-screen bg-gray-50 pb-28">
-      <div className="mx-auto w-full max-w-md px-4 py-8 md:max-w-2xl">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-brand-500">参考書の設定</p>
-          <Link
-            href="/plan"
-            className="text-sm font-medium text-gray-400 underline underline-offset-4"
-          >
-            もどる
-          </Link>
-        </div>
-        <h1 className="mt-1 text-2xl font-bold text-gray-800">
-          参考書アウトライン
-        </h1>
-        <p className="mt-2 text-sm text-gray-500">
-          お使いの参考書の章立てを登録すると、「今日読む場所」を案内できます。
-          登録しなくても、各トピックの「探すキーワード」で学習できます。
-        </p>
-
-        {/* 参考書メタ情報 */}
-        <section className="mt-6 space-y-3 rounded-xl bg-white p-4 border border-gray-200">
-          <Field label="参考書名">
+    <div className="space-y-6">
+      {/* 参考書メタ情報 */}
+      <div className="space-y-3">
+        <Field label="参考書名">
+          <input
+            type="text"
+            value={book.title}
+            onChange={(e) => update({ ...book, title: e.target.value })}
+            placeholder="例: いちばんやさしいITパスポート"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-800"
+          />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="出版社">
             <input
               type="text"
-              value={book.title}
-              onChange={(e) => update({ ...book, title: e.target.value })}
-              placeholder="例: いちばんやさしいITパスポート"
-              className="w-full rounded-xl border-2 border-gray-200 px-3 py-2.5 text-sm font-semibold text-gray-700"
+              value={book.publisher ?? ""}
+              onChange={(e) => update({ ...book, publisher: e.target.value })}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-800"
             />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="出版社">
-              <input
-                type="text"
-                value={book.publisher ?? ""}
-                onChange={(e) => update({ ...book, publisher: e.target.value })}
-                className="w-full rounded-xl border-2 border-gray-200 px-3 py-2.5 text-sm text-gray-700"
-              />
-            </Field>
-            <Field label="版">
-              <input
-                type="text"
-                value={book.edition ?? ""}
-                onChange={(e) => update({ ...book, edition: e.target.value })}
-                placeholder="例: 令和6年度版"
-                className="w-full rounded-xl border-2 border-gray-200 px-3 py-2.5 text-sm text-gray-700"
-              />
-            </Field>
-          </div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+          <Field label="版">
             <input
-              type="checkbox"
-              checked={book.active}
-              onChange={(e) => {
-                const next = { ...book, active: e.target.checked };
-                update(next);
-                persistToDb(next);
-              }}
-              className="h-4 w-4"
-            />
-            この参考書を使用中にする
-          </label>
-          <Field label="メモ（全体）">
-            <textarea
-              value={book.note ?? ""}
-              onChange={(e) => update({ ...book, note: e.target.value })}
-              rows={2}
-              className="w-full rounded-xl border-2 border-gray-200 px-3 py-2.5 text-sm text-gray-700"
+              type="text"
+              value={book.edition ?? ""}
+              onChange={(e) => update({ ...book, edition: e.target.value })}
+              placeholder="例: 令和6年度版"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-800"
             />
           </Field>
-        </section>
-
-        {/* 参考書名から推測したプリセットの反映提案 */}
-        {showSuggestion && suggestion && (
-          <div className="mt-4 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-200">
-            <p className="text-sm font-bold text-amber-800">
-              📚「{suggestion.title}」の章立てが登録されています
-            </p>
-            <p className="mt-1 text-xs text-amber-700">
-              この参考書の章構成（{suggestion.chapterCount}章）を反映できます。反映後は自由に編集できます。
-            </p>
-            <button
-              type="button"
-              onClick={() => applyPreset(suggestion.id)}
-              className="mt-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white"
-            >
-              章立てを反映する
-            </button>
-          </div>
-        )}
-
-        {/* 登録済みの参考書（プリセット）から選ぶ */}
-        <PresetPicker
-          onSelect={applyPreset}
-          selectedTitle={book.title}
-        />
-
-        {/* 目次テキスト貼り付け */}
-        <section className="mt-5 rounded-xl bg-brand-50 p-4 ring-1 ring-brand-100">
-          <p className="text-sm font-bold text-brand-700">
-            📋 目次を貼り付けて章を作る
-          </p>
-          <p className="mt-1 text-xs text-brand-600">
-            「第○章」「1.1」「Chapter○」などを自動で章・節にします。あとから編集できます。
-          </p>
-          <textarea
-            value={toc}
-            onChange={(e) => setToc(e.target.value)}
-            rows={4}
-            placeholder={"第1章 コンピュータの基礎\n1.1 2進数\n1.2 論理演算\n第2章 ネットワーク"}
-            className="mt-2 w-full rounded-xl border-2 border-brand-200 bg-white px-3 py-2.5 text-sm text-gray-700"
+        </div>
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={book.active}
+            onChange={(e) => {
+              const next = { ...book, active: e.target.checked };
+              onSave(next);
+            }}
+            className="h-4 w-4"
           />
-          <button
-            type="button"
-            onClick={importToc}
-            disabled={!toc.trim()}
-            className="mt-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
-          >
-            変換して章を追加
-          </button>
-        </section>
-
-        {/* 章構成 */}
-        <section className="mt-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-800">
-              章構成（{book.chapters.length}章）
-            </h2>
-            <button
-              type="button"
-              onClick={addChapter}
-              className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-bold text-white"
-            >
-              ＋ 章を追加
-            </button>
-          </div>
-
-          {book.chapters.length === 0 ? (
-            <p className="rounded-xl bg-white p-5 text-center text-sm text-gray-400 ring-1 ring-gray-100">
-              まだ章がありません。「＋ 章を追加」または目次の貼り付けで作成できます。
-            </p>
-          ) : (
-            <ul className="space-y-4">
-              {book.chapters.map((chapter, index) => (
-                <li
-                  key={chapter.id}
-                  className="rounded-xl bg-white p-4 border border-gray-200"
-                >
-                  <div className="flex items-start gap-2">
-                    <div className="flex flex-col gap-1 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => moveChapter(index, -1)}
-                        disabled={index === 0}
-                        aria-label="上へ"
-                        className="text-gray-400 disabled:opacity-30"
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveChapter(index, 1)}
-                        disabled={index === book.chapters.length - 1}
-                        aria-label="下へ"
-                        className="text-gray-400 disabled:opacity-30"
-                      >
-                        ▼
-                      </button>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <input
-                        type="text"
-                        value={chapter.title}
-                        onChange={(e) =>
-                          updateChapter(chapter.id, { title: e.target.value })
-                        }
-                        placeholder="章タイトル"
-                        className="w-full rounded-lg border-2 border-gray-200 px-2.5 py-2 text-sm font-bold text-gray-800"
-                      />
-                      <div className="mt-2 flex flex-wrap items-center gap-3">
-                        <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600">
-                          <input
-                            type="checkbox"
-                            checked={chapter.done ?? false}
-                            onChange={(e) => {
-                              const next = {
-                                ...book,
-                                chapters: book.chapters.map((c) =>
-                                  c.id === chapter.id
-                                    ? { ...c, done: e.target.checked }
-                                    : c,
-                                ),
-                              };
-                              update(next);
-                              persistToDb(next);
-                            }}
-                            className="h-4 w-4"
-                          />
-                          読んだ
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => removeChapter(chapter.id)}
-                          className="text-xs font-semibold text-rose-500 underline underline-offset-2"
-                        >
-                          章を削除
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* キーワード（章） */}
-                  <div className="mt-3">
-                    <KeywordsInput
-                      label="関連キーワード（カンマ区切り）"
-                      value={chapter.keywords ?? []}
-                      onChange={(kw) =>
-                        updateChapter(chapter.id, { keywords: kw })
-                      }
-                    />
-                  </div>
-
-                  {/* メモ（章） */}
-                  <input
-                    type="text"
-                    value={chapter.note ?? ""}
-                    onChange={(e) =>
-                      updateChapter(chapter.id, { note: e.target.value })
-                    }
-                    placeholder="メモ（任意）"
-                    className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-2 text-xs text-gray-600"
-                  />
-
-                  {/* トピック紐づけ（章） */}
-                  <div className="mt-2">
-                    <TopicPicker
-                      topics={topics}
-                      selected={chapter.topicIds ?? []}
-                      onChange={(ids) =>
-                        updateChapter(chapter.id, { topicIds: ids })
-                      }
-                    />
-                    <LinkedTopicList ids={chapter.topicIds ?? []} />
-                  </div>
-
-                  {/* 節 */}
-                  <div className="mt-3 border-t border-gray-100 pt-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs font-bold text-gray-500">
-                        節（{chapter.sections?.length ?? 0}）
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => addSection(chapter.id)}
-                        className="text-xs font-bold text-brand-600"
-                      >
-                        ＋ 節を追加
-                      </button>
-                    </div>
-                    <ul className="space-y-2.5">
-                      {(chapter.sections ?? []).map((section) => (
-                        <li
-                          key={section.id}
-                          className="rounded-xl bg-gray-50 p-2.5"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={section.title}
-                              onChange={(e) =>
-                                updateSection(chapter.id, section.id, {
-                                  title: e.target.value,
-                                })
-                              }
-                              placeholder="節タイトル"
-                              className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-700"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeSection(chapter.id, section.id)
-                              }
-                              aria-label="節を削除"
-                              className="shrink-0 text-xs font-semibold text-rose-400"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                          <div className="mt-2">
-                            <TopicPicker
-                              topics={topics}
-                              selected={section.topicIds ?? []}
-                              onChange={(ids) =>
-                                updateSection(chapter.id, section.id, {
-                                  topicIds: ids,
-                                })
-                              }
-                            />
-                            <LinkedTopicList ids={section.topicIds ?? []} />
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+          この参考書を使用中にする
+        </label>
+        <Field label="メモ（全体）">
+          <textarea
+            value={book.note ?? ""}
+            onChange={(e) => update({ ...book, note: e.target.value })}
+            rows={2}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-800"
+          />
+        </Field>
       </div>
 
-      {/* 保存バー（固定） */}
-      <div className="fixed inset-x-0 bottom-16 z-10 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto w-full max-w-md md:max-w-2xl">
+      {/* 目次テキスト貼り付け */}
+      <div className="rounded-lg bg-gray-50 p-4">
+        <p className="text-sm font-medium text-gray-900">目次を貼り付けて章を作る</p>
+        <p className="mt-1 text-xs text-gray-600">
+          「第○章」「1.1」「Chapter○」などを自動で章・節にします。あとから編集できます。
+        </p>
+        <textarea
+          value={toc}
+          onChange={(e) => setToc(e.target.value)}
+          rows={4}
+          placeholder={"第1章 コンピュータの基礎\n1.1 2進数\n1.2 論理演算\n第2章 ネットワーク"}
+          className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800"
+        />
+        <button
+          type="button"
+          onClick={importToc}
+          disabled={!toc.trim()}
+          className={buttonClass("secondary", "sm", "mt-2")}
+        >
+          変換して章を追加
+        </button>
+      </div>
+
+      {/* 章構成 */}
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-gray-900">
+            章構成（{book.chapters.length}章）
+          </p>
           <button
             type="button"
-            onClick={handleSave}
-            className="w-full rounded-lg bg-gray-900 px-6 py-3 text-base font-bold text-white transition active:scale-[0.98]"
+            onClick={addChapter}
+            className={buttonClass("secondary", "sm")}
           >
-            {saved ? "✓ 保存しました" : "💾 参考書を保存"}
+            章を追加
           </button>
         </div>
+
+        {book.chapters.length === 0 ? (
+          <p className="rounded-lg border border-gray-200 p-5 text-center text-sm text-gray-600">
+            まだ章がありません。「章を追加」または目次の貼り付けで作成できます。
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {book.chapters.map((chapter, index) => (
+              <li
+                key={chapter.id}
+                className="rounded-lg border border-gray-200 bg-white p-4"
+              >
+                <div className="flex items-start gap-2">
+                  <div className="flex flex-col gap-1 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => moveChapter(index, -1)}
+                      disabled={index === 0}
+                      aria-label="上へ"
+                      className="text-gray-500 disabled:opacity-30"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveChapter(index, 1)}
+                      disabled={index === book.chapters.length - 1}
+                      aria-label="下へ"
+                      className="text-gray-500 disabled:opacity-30"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <input
+                      type="text"
+                      value={chapter.title}
+                      onChange={(e) =>
+                        updateChapter(chapter.id, { title: e.target.value })
+                      }
+                      placeholder="章タイトル"
+                      className="w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm font-medium text-gray-900"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeChapter(chapter.id)}
+                      className="mt-2 text-xs text-rose-700 underline underline-offset-2"
+                    >
+                      章を削除
+                    </button>
+                  </div>
+                </div>
+
+                {/* キーワード（章） */}
+                <div className="mt-3">
+                  <KeywordsInput
+                    label="関連キーワード（カンマ区切り）"
+                    value={chapter.keywords ?? []}
+                    onChange={(kw) =>
+                      updateChapter(chapter.id, { keywords: kw })
+                    }
+                  />
+                </div>
+
+                {/* メモ（章） */}
+                <input
+                  type="text"
+                  value={chapter.note ?? ""}
+                  onChange={(e) =>
+                    updateChapter(chapter.id, { note: e.target.value })
+                  }
+                  placeholder="メモ（任意）"
+                  className="mt-2 w-full rounded-lg border border-gray-200 px-2.5 py-2 text-xs text-gray-700"
+                />
+
+                {/* トピック紐づけ（章） */}
+                <div className="mt-2">
+                  <TopicPicker
+                    topics={topics}
+                    selected={chapter.topicIds ?? []}
+                    onChange={(ids) =>
+                      updateChapter(chapter.id, { topicIds: ids })
+                    }
+                  />
+                  <LinkedTopicList ids={chapter.topicIds ?? []} />
+                </div>
+
+                {/* 節 */}
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-xs text-gray-600">
+                      節（{chapter.sections?.length ?? 0}）
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => addSection(chapter.id)}
+                      className="text-xs text-brand-700 underline underline-offset-2"
+                    >
+                      節を追加
+                    </button>
+                  </div>
+                  <ul className="space-y-2.5">
+                    {(chapter.sections ?? []).map((section) => (
+                      <li
+                        key={section.id}
+                        className="rounded-lg bg-gray-50 p-2.5"
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={section.title}
+                            onChange={(e) =>
+                              updateSection(chapter.id, section.id, {
+                                title: e.target.value,
+                              })
+                            }
+                            placeholder="節タイトル"
+                            className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-800"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              removeSection(chapter.id, section.id)
+                            }
+                            aria-label="節を削除"
+                            className="shrink-0 text-xs text-rose-700"
+                          >
+                            削除
+                          </button>
+                        </div>
+                        <div className="mt-2">
+                          <TopicPicker
+                            topics={topics}
+                            selected={section.topicIds ?? []}
+                            onChange={(ids) =>
+                              updateSection(chapter.id, section.id, {
+                                topicIds: ids,
+                              })
+                            }
+                          />
+                          <LinkedTopicList ids={section.topicIds ?? []} />
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <BottomNav />
-    </main>
-  );
-}
-
-function PresetPicker({
-  onSelect,
-  selectedTitle,
-}: {
-  onSelect: (id: string) => void;
-  selectedTitle: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const presets = listReferenceBookPresets();
-  if (presets.length === 0) return null;
-
-  // 種類ごとにまとめて表示（教科書 → ドリル → 問題集）。
-  const groups = presets.reduce<Record<string, ReferenceBookPresetSummary[]>>(
-    (acc, p) => {
-      (acc[p.bookType] ??= []).push(p);
-      return acc;
-    },
-    {},
-  );
-
-  return (
-    <section className="mt-5 rounded-xl bg-white p-4 border border-gray-200">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between text-left"
+        onClick={handleSave}
+        className={buttonClass("primary", "md", "w-full")}
       >
-        <span>
-          <span className="block text-sm font-bold text-gray-800">
-            📚 登録済みの参考書から選ぶ
-          </span>
-          <span className="mt-0.5 block text-xs text-gray-500">
-            主要な参考書は章立てが登録済み。選ぶと反映され、あとから編集できます。
-          </span>
-        </span>
-        <span className="ml-2 shrink-0 text-gray-400">{open ? "▲" : "▼"}</span>
+        {saved ? "保存しました" : "詳細設定を保存"}
       </button>
-
-      {open && (
-        <div className="mt-3 space-y-4">
-          {Object.entries(groups).map(([type, items]) => (
-            <div key={type}>
-              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-400">
-                {BOOK_TYPE_LABELS[type as keyof typeof BOOK_TYPE_LABELS] ?? type}
-              </p>
-              <ul className="space-y-2">
-                {items.map((p) => {
-                  const active = p.title === selectedTitle;
-                  return (
-                    <li
-                      key={p.id}
-                      className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-gray-700">
-                          {p.title}
-                        </p>
-                        <p className="mt-0.5 text-[11px] text-gray-400">
-                          {[p.publisher, p.edition, `${p.chapterCount}章`]
-                            .filter(Boolean)
-                            .join(" ・ ")}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onSelect(p.id)}
-                        className="shrink-0 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                        disabled={active}
-                      >
-                        {active ? "反映中" : "反映"}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
+    </div>
   );
 }
 
@@ -628,7 +653,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-bold text-gray-500">{label}</span>
+      <span className="mb-1 block text-xs text-gray-600">{label}</span>
       {children}
     </label>
   );
@@ -645,7 +670,7 @@ function KeywordsInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-bold text-gray-500">{label}</span>
+      <span className="mb-1 block text-xs text-gray-600">{label}</span>
       <input
         type="text"
         value={value.join("、")}
@@ -675,7 +700,7 @@ function LinkedTopicList({ ids }: { ids: string[] }) {
       {titles.map((t) => (
         <span
           key={t.id}
-          className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-600"
+          className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] text-brand-700"
         >
           {t.title}
         </span>

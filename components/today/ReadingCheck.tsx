@@ -2,7 +2,7 @@
 
 // 参考書の進み具合を1日1回記録するカード（旧 DailyProgressReport を置き換え）。
 // 保存先・値は従来どおり daily_progress_reports の selected_level（all/half/little/none/rest）。
-// 合格準備度の「インプット進捗」に使われる（参考書の章消化率と高い方が採用される）。
+// 合格準備度の「インプット進捗」に使われる（参考書の読了率と高い方が採用される）。
 //
 // 入力の迷いを減らすために:
 //   - 何を答えるのか: 今日のレッスンのトピックを先に見せ、その範囲を参考書でどこまで読んだかだけを聞く
@@ -10,11 +10,29 @@
 //   - どの値を選ぶか: 4段階それぞれに量のゲージを付け、数字を見積もらなくても目で選べるようにする
 //   - 選んだら即記録。理由は「少し」「まだ」のときだけ、記録のあとに任意で聞く
 //   - 休む日は選択肢の外に置き、4つの段階と混ざらないようにする
+//
+// 参考書との接続:
+//   - 範囲は「サービス側が決めた今日の新規トピック」。それを登録済み参考書の章・節へ変換して見せる
+//     （TodayReferenceGuide。未登録・紐づけなしはキーワード／索引へフォールバック）
+//   - 「全部」のときだけ、その章・節を参考書の読了にする（lib/referenceBook の applyReadingLevel）。
+//     日次の自己申告（daily_progress_reports）はこれまでどおり別に記録する
+//   - 後から「半分」「まだ」に変えても、一度読了にした章・節は戻さない（取り消しは設定画面で）
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import type { Topic } from "@/types/content";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
+import TodayReferenceGuide from "@/components/learn/TodayReferenceGuide";
+import ReferenceBookNudge from "@/components/reference/ReferenceBookNudge";
+import {
+  applyReadingLevel,
+  hasUsableReferenceBook,
+  referenceBookProgress,
+  referenceTargetsForTopics,
+} from "@/lib/referenceBook";
 import { getUserId, reportDailyProgress } from "@/lib/userSession";
 import { useBillingStatus } from "@/lib/useBillingStatus";
+import { useReferenceBook } from "@/lib/useReferenceBook";
 import type { ProgressLevel, ProgressReason } from "@/types/studyProgress";
 import r from "./readingCheck.module.css";
 
@@ -35,7 +53,12 @@ const REASONS: { value: ProgressReason; label: string }[] = [
   { value: "other", label: "その他" },
 ];
 
-type Saved = { level: ProgressLevel; reason: ProgressReason | null };
+type Saved = {
+  level: ProgressLevel;
+  reason: ProgressReason | null;
+  /** その日の回答で読了にした参考書の場所（"章id/節id"）。日次の申告と読了状態の紐付けの控え。 */
+  readTargets?: string[];
+};
 
 // 端末に控えを残し、再訪時に前回の選択を反映する（旧カードと同じキー）。
 function storageKey(date: string): string {
@@ -61,8 +84,21 @@ function writeSaved(date: string, saved: Saved): void {
   }
 }
 
-export default function ReadingCheck({ date, topics }: { date: string; topics: string[] }) {
+export default function ReadingCheck({
+  date,
+  topics,
+}: {
+  date: string;
+  /** サービス側が決めた今日の範囲（新規レッスンのトピック）。 */
+  topics: Pick<Topic, "id" | "title" | "referenceHints">[];
+}) {
   const { status: billingStatus } = useBillingStatus();
+  const { book, save: saveBook } = useReferenceBook();
+  const topicIds = useMemo(() => topics.map((t) => t.id), [topics]);
+  const targets = useMemo(
+    () => referenceTargetsForTopics(book ?? null, topicIds),
+    [book, topicIds],
+  );
   const [saved, setSaved] = useState<Saved | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const [reasonAnswered, setReasonAnswered] = useState(false);
@@ -77,7 +113,22 @@ export default function ReadingCheck({ date, topics }: { date: string; topics: s
     init();
   }, [date]);
 
-  const persist = (next: Saved) => {
+  const persist = (base: Saved) => {
+    let next = base;
+    // 参考書の読了状態へ反映（「全部」だけが読了。少し/半分は部分読了の印だけ）。
+    if (book && targets.length > 0) {
+      const updated = applyReadingLevel(book, targets, base.level);
+      if (updated !== book) saveBook(updated);
+      if (base.level === "all") {
+        next = {
+          ...base,
+          readTargets: targets.map((t) => `${t.chapterId}/${t.sectionId ?? ""}`),
+        };
+      }
+    }
+    if (!next.readTargets && saved?.readTargets) {
+      next = { ...next, readTargets: saved.readTargets };
+    }
     setSaved(next);
     writeSaved(date, next);
     const userId = getUserId();
@@ -115,28 +166,44 @@ export default function ReadingCheck({ date, topics }: { date: string; topics: s
     const option = OPTIONS.find((o) => o.level === saved.level);
     return `「${option?.label ?? ""}」読んだ、で記録しました`;
   })();
+  const bookProgress = referenceBookProgress(book ?? null);
+  const markedRead = saved?.level === "all" && (saved.readTargets?.length ?? 0) > 0;
+  // 参考書は登録済みだが、今日の範囲が章・節と紐づいていない（読了にできる場所がない）。
+  // 推測で章を読了にはしないので、「全部」を押しても参考書の進捗は動かないことを先に伝える。
+  const unlinked =
+    !!book && hasUsableReferenceBook(book) && topics.length > 0 && targets.length === 0;
 
   return (
     <section className={r.card} aria-labelledby="reading-heading">
       <div className={r.head}>
         <h2 id="reading-heading" className={r.title}>
-          参考書の進み具合
+          今日の参考書
         </h2>
         <span className={r.meta}>1日1回・あとから変更できます</span>
       </div>
 
       <div className={r.range}>
-        <span className={r.rangeLabel}>今日のレッスンの範囲</span>
         {topics.length > 0 ? (
-          <ul className={r.topics}>
-            {topics.map((topic) => (
-              <li key={topic}>{topic}</li>
-            ))}
-          </ul>
+          <TodayReferenceGuide topics={topics} book={book ?? null} framed={false} />
         ) : (
-          <p className={r.topicsEmpty}>今日読んだ範囲</p>
+          <>
+            <span className={r.rangeLabel}>今日のレッスンの範囲</span>
+            <p className={r.topicsEmpty}>今日読んだ範囲</p>
+          </>
         )}
       </div>
+      <ReferenceBookNudge book={book} />
+
+      {unlinked && (
+        <p className={r.unlinked} data-testid="reference-unlinked">
+          今日の範囲は、登録した参考書の章・節と対応づいていません。ここでの回答は参考書の進捗には反映されません。
+          読み進めた章・節は
+          <Link href="/settings/reference-book" className={r.unlinkedLink}>
+            設定画面
+          </Link>
+          でまとめて読了にできます。
+        </p>
+      )}
 
       <p className={r.question} id="reading-question">
         この範囲を、参考書でどこまで読みましたか？
@@ -217,6 +284,12 @@ export default function ReadingCheck({ date, topics }: { date: string; topics: s
           </button>
         )}
       </div>
+      {markedRead && bookProgress && (
+        <p className={r.bookNote}>
+          参考書の該当箇所を読了にしました（参考書進捗{" "}
+          <span className={r.bookNoteNum}>{Math.round(bookProgress.ratio * 100)}%</span>）
+        </p>
+      )}
     </section>
   );
 }
