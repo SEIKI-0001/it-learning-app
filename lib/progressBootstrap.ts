@@ -11,6 +11,7 @@ import {
   type IntegratedWordProgress,
 } from "@/lib/integratedStatus";
 import { buildPlanAdjustmentProposal } from "@/lib/planAdjustment";
+import { referenceBookRatioFromRow } from "@/lib/referenceBook";
 import {
   integratedStatusRowToStatus,
   integratedStatusToRow,
@@ -63,23 +64,6 @@ function isIsoDate(v: unknown): v is string {
 
 function todayKey(now: Date): string {
   return now.toISOString().slice(0, 10);
-}
-
-/**
- * user_reference_books.chapters（jsonb）から章消化率（0〜100）を求める。
- * 参考書が未登録・使用中でない・章が0件のときは null（指標に含めない）。
- * 計算は lib/referenceBook.ts の referenceBookProgress と同じ「done章 / 全章」。
- */
-function referenceBookRatioFromRow(
-  row: { active: boolean | null; chapters: unknown } | null,
-): number | null {
-  if (!row || row.active === false) return null;
-  const chapters = Array.isArray(row.chapters) ? row.chapters : [];
-  if (chapters.length === 0) return null;
-  const done = chapters.filter(
-    (c) => typeof c === "object" && c !== null && (c as { done?: boolean }).done === true,
-  ).length;
-  return Math.round((done / chapters.length) * 100);
 }
 
 export async function getLatestIntegratedStatusRow(

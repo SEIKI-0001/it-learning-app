@@ -67,7 +67,7 @@ export type IntegratedStatusInputs = {
   totalWordCount: number;
   recentReports: IntegratedDailyReport[];
   examLevelAttempts: IntegratedExamAttempt[];
-  /** 参考書の章消化率（0〜100）。参考書未登録・章0件・使用中でない場合は null。 */
+  /** 参考書の読了率（0〜100。節単位、節のない章は章単位）。参考書未登録・章0件・使用中でない場合は null。 */
   referenceBookRatio?: number | null;
   /** Sole source for the legacy readiness_score compatibility column. */
   examReadiness: ExamReadinessResult | null;
@@ -352,7 +352,7 @@ export function computeIntegratedStatus(
   const reportRates = inputs.recentReports
     .map((r) => r.estimatedCompletionRate)
     .filter((r): r is number => typeof r === "number");
-  // 自己申告平均と参考書の章消化率の高い方を採用する。
+  // 自己申告平均と参考書の読了率の高い方を採用する。
   // 申告を忘れていても、参考書を読み進めた実績が予定進捗に乗るようにするため。
   const selfReportRate = Math.round(average(reportRates));
   const inputProgressRate =

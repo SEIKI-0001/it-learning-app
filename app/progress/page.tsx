@@ -12,6 +12,8 @@ import {
   type ProgressBootstrapCache,
 } from "@/lib/userSession";
 import { getAllTopics } from "@/lib/content";
+import { hasUsableReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import { useReferenceBook } from "@/lib/useReferenceBook";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { getStreakMeta } from "@/lib/streak";
 import { getRankStatus } from "@/lib/rank";
@@ -92,6 +94,7 @@ function improvementHref(result: ExamReadinessResult): string {
 export default function ProgressPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
+  const { book: referenceBook } = useReferenceBook();
   // 前回のサーバー応答があれば即表示し（スケルトンを出さない）、最新値は背景で差し替える。
   // 初回描画は LoadingScreen（state===undefined）のため、遅延初期化でも hydration は一致する。
   const [bootstrap, setBootstrap] = useState<ProgressBootstrapCache | null>(() =>
@@ -262,6 +265,19 @@ export default function ProgressPage() {
     { id: "plan", title: "ロードマップ", detail: "チェックポイントの条件を見る", href: "/plan" },
   ];
 
+  // 参考書インプットの内訳（未設定なら出さない）。
+  const bookProgress =
+    referenceBook && hasUsableReferenceBook(referenceBook)
+      ? referenceBookProgress(referenceBook)
+      : null;
+  const referenceInput = bookProgress
+    ? {
+        percent: Math.round(bookProgress.ratio * 100),
+        doneChapters: bookProgress.doneChapters,
+        totalChapters: bookProgress.totalChapters,
+      }
+    : null;
+
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
@@ -297,6 +313,7 @@ export default function ProgressPage() {
           status={status}
           totalTopicCount={topics.length}
           loading={bootstrapLoading}
+          referenceInput={referenceInput}
           className={p.spanTopics}
         />
         <StudyDaysCard

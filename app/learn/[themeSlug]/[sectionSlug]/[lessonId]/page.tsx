@@ -4,6 +4,7 @@ import { FIELD_LABELS, IMPORTANCE_LABELS, type Topic } from "@/types/content";
 import BottomNav from "@/components/BottomNav";
 import TopicContent, { TopicReviewSections } from "@/components/learn/TopicContent";
 import TopicCompletionQuiz from "@/components/learn/TopicCompletionQuiz";
+import LessonReferenceGuide from "@/components/learn/LessonReferenceGuide";
 import { hasCheckPack } from "@/lib/checkPack";
 import { getTopic } from "@/lib/content";
 import Icon from "@/components/ui/Icon";
@@ -114,6 +115,9 @@ export default async function LessonPage({
 
       <div className="mx-auto w-full max-w-3xl space-y-10 px-4 py-7">
         <section id="lesson-content" className="scroll-mt-24" aria-label="レッスン本文">
+          <LessonReferenceGuide
+            topic={{ id: topic.id, title: topic.title, referenceHints: topic.referenceHints }}
+          />
           <TopicContent topic={topic} showCheckQuestions={false} />
         </section>
 

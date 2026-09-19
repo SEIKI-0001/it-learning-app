@@ -16,10 +16,19 @@ import {
   setUserId,
 } from "@/lib/userSession";
 import Icon from "@/components/ui/Icon";
+import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
+import {
+  referenceBookFromChoice,
+  type ReferenceBookChoice,
+} from "@/lib/referenceBookPresets";
+import { loadReferenceBook, switchReferenceBook } from "@/lib/referenceBook";
+import { persistReferenceBook } from "@/lib/referenceBookSync";
 
-// 初回設定。試験予定日・学習可能時間・理解度・苦手分野・学習スタイルを取得し、
+// 初回設定。試験予定日・学習可能時間・理解度・苦手分野・学習スタイル・使用する参考書を取得し、
 // AIプランナー(lib/aiPlanner.ts)が使えるプロフィールとして保存する。
 // 保存後はすぐ今日の学習へ進む。
+// 参考書は UserProfile に持たず、既存の ReferenceBook（localStorage＋user_reference_books）を正とする。
+// 「あとで設定する」でも完了できる（未設定でも referenceHints のキーワード案内で学習できる）。
 
 const WEEKDAY_OPTIONS = [10, 20, 30, 60];
 const HOLIDAY_OPTIONS = [15, 30, 60, 120];
@@ -34,6 +43,7 @@ export default function OnboardingPage() {
   const [confidence, setConfidence] = useState<number>(2);
   const [weakFields, setWeakFields] = useState<TopicField[]>([]);
   const [studyStyle, setStudyStyle] = useState<StudyStyle>("balanced");
+  const [bookChoice, setBookChoice] = useState<ReferenceBookChoice>({ kind: "later" });
 
   // LINE 経由(?t=トークン)ならユーザーを解決。設定済みならダッシュボードへ。
   useEffect(() => {
@@ -76,6 +86,14 @@ export default function OnboardingPage() {
     if (userId) {
       saveProfileToDb(userId, full);
       saveProgressToDb(userId, initial.progress);
+    }
+
+    // 参考書は既存の保存経路（端末＋ログイン時は DB）へ。「あとで」なら何もしない。
+    const book = referenceBookFromChoice(bookChoice);
+    if (book) {
+      persistReferenceBook(
+        switchReferenceBook(loadReferenceBook(), book, { keepHistory: true }),
+      );
     }
 
     router.push("/today");
@@ -221,6 +239,17 @@ export default function OnboardingPage() {
                 );
               })}
             </div>
+          </fieldset>
+
+          {/* 使用する参考書 */}
+          <fieldset>
+            <legend className="mb-1 text-[15px] font-semibold text-gray-900">
+              使用する参考書
+            </legend>
+            <p className="mb-3 text-xs text-gray-500">
+              選ぶと、毎日「参考書のどこを読むか」を案内します。学習の順番はアプリが決めます。
+            </p>
+            <ReferenceBookPicker value={bookChoice} onChange={setBookChoice} allowLater />
           </fieldset>
         </div>
 

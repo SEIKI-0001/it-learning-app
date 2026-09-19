@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { ReferenceBook } from "@/types/referenceBook";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics } from "@/lib/content";
@@ -17,7 +16,8 @@ import {
   saveProgressToDb,
   saveProfileToDb,
 } from "@/lib/userSession";
-import { loadReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import { referenceBookProgress } from "@/lib/referenceBook";
+import { useReferenceBook } from "@/lib/useReferenceBook";
 import PledgeCard from "@/components/pledge/PledgeCard";
 import {
   buildCheckpointComparison,
@@ -47,7 +47,8 @@ export default function PlanPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
   useBadgeSync(state, setState);
-  const [book, setBook] = useState<ReferenceBook | null>(null);
+  // /today の「全部」で更新された読了状態を、端末・DB の新しい方から読む。
+  const { book } = useReferenceBook();
   const [proposal, setProposal] = useState<PlanAdjustmentProposal | null>(null);
   const [proposalLoading, setProposalLoading] = useState(true);
 
@@ -111,18 +112,6 @@ export default function PlanPage() {
     }
   }, [state, setState]);
 
-  useEffect(() => {
-    let cancelled = false;
-    function init() {
-      const b = loadReferenceBook();
-      if (!cancelled) setBook(b);
-    }
-    init();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const topics = getAllTopics();
   const plan = useMemo(
     () => (state ? generateLearningPlan(state, topics) : null),
@@ -133,7 +122,7 @@ export default function PlanPage() {
     return <LoadingScreen />;
   }
 
-  const bookProgress = referenceBookProgress(book);
+  const bookProgress = referenceBookProgress(book ?? null);
   const weeklyDone = plan.weeklyItems.filter((i) => i.checked).length;
   // 予定（時間軸）と現在地（CP進行）の比較。試験日・開始日が未設定なら null。
   const comparison = buildCheckpointComparison(state);
@@ -306,13 +295,20 @@ export default function PlanPage() {
                 href="/settings/reference-book"
                 className="text-xs text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"
               >
-                {book && book.chapters.length > 0 ? "編集" : "登録する"}
+                {book && book.chapters.length > 0 ? "変更・修正" : "登録する"}
               </Link>
             </div>
             {bookProgress ? (
               <>
                 <p className="mt-1 text-[15px] font-semibold text-gray-900">
-                  {book?.title || "参考書"}：<span className="tabular-nums">{bookProgress.done} / {bookProgress.total}</span> 章
+                  参考書進捗 <span className="tabular-nums">{Math.round(bookProgress.ratio * 100)}%</span>
+                </p>
+                <p className="mt-0.5 text-xs text-gray-600">
+                  {book?.title || "参考書"}・
+                  <span className="tabular-nums">
+                    {bookProgress.doneChapters} / {bookProgress.totalChapters}
+                  </span>
+                  章読了
                 </p>
                 <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                   <div
@@ -320,6 +316,9 @@ export default function PlanPage() {
                     style={{ width: `${Math.round(bookProgress.ratio * 100)}%` }}
                   />
                 </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  今日のページで「全部」読んだと答えると、その章・節が読了になります。
+                </p>
               </>
             ) : (
               <p className="mt-1 text-sm text-gray-600">

@@ -246,3 +246,15 @@
     padding: 24px;
   }
 }
+
+/* 「全部」で参考書の該当箇所を読了にしたときの控えめな結果表示 */
+.bookNote {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.bookNoteNum {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}

@@ -223,8 +223,12 @@ export default function TodayPage() {
       : null;
 
   // 参考書の範囲は「今日の新規レッスン」のトピックで示す（なければ今日の全行）。
-  const newTopics = slots.filter((slot) => slot.kind === "new").map((slot) => slot.title);
-  const readingTopics = newTopics.length > 0 ? newTopics : slots.map((slot) => slot.title);
+  // トピックは既存の学習ロジックが決めたもの。参考書はそれを章・節へ変換して見せるだけで、順序には関与しない。
+  const newSlots = slots.filter((slot) => slot.kind === "new");
+  const readingTopics = (newSlots.length > 0 ? newSlots : slots).flatMap((slot) => {
+    const topic = getTopic(slot.topicId);
+    return topic ? [topic] : [];
+  });
 
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
