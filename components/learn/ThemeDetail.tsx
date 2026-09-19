@@ -11,7 +11,6 @@ import {
   getThemeProgress,
 } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
-import ThemeAppIcon from "@/components/ui/ThemeAppIcon";
 import { hasThemeExam } from "@/lib/themeExam";
 
 const STATUS = {
@@ -42,14 +41,8 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
             <span aria-hidden> ＞ </span>
             <span>{theme.title}</span>
           </nav>
-          {/* App Store の詳細画面のように、章のアイコンを見出しの横に大きく置く */}
-          <div className="mt-4 flex items-center gap-4">
-            <ThemeAppIcon theme={theme} size={72} />
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-gray-500">第{theme.chapterNumber}章</p>
-              <h1 className="mt-1 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">{theme.title}</h1>
-            </div>
-          </div>
+          <p className="mt-4 text-xs font-medium text-gray-500">第{theme.chapterNumber}章</p>
+          <h1 className="mt-2 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">{theme.title}</h1>
           <p className="mt-2 text-sm leading-relaxed text-gray-600">{theme.description}</p>
           <div className="mt-4 max-w-xl">
             <div className="flex items-center justify-between text-sm text-gray-600">

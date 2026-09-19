@@ -13,8 +13,6 @@ export type TodaySlot = {
   title: string;
   /** 章（テーマ）名。解決できなければ空文字。 */
   field: string;
-  /** 章番号（章アイコンの絵柄に使う）。解決できなければ null。 */
-  chapterNumber: number | null;
   kind: "new" | "review";
   activity: QuestRouteNode["activity"];
   minutes: number;
@@ -27,13 +25,11 @@ export function buildTodaySlots(nodes: QuestRouteNode[]): TodaySlot[] {
   let cursor = 0;
   return nodes.map((node) => {
     const minutes = Math.max(0, node.estimatedMinutes);
-    const theme = getLessonLocation(node.topicId)?.theme;
     const slot: TodaySlot = {
       id: node.topicId,
       topicId: node.topicId,
       title: node.title,
-      field: theme?.title ?? "",
-      chapterNumber: theme?.chapterNumber ?? null,
+      field: getLessonLocation(node.topicId)?.theme.title ?? "",
       kind: node.activity === "review" ? "review" : "new",
       activity: node.activity,
       minutes,
