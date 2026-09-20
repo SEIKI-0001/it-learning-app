@@ -66,6 +66,7 @@ export async function resolveInternalUserIdForAuthUser(params: {
       .update({ auth_user_id: authUserId, email: email ?? null })
       .eq("id", lineLinkUserId)
       .is("auth_user_id", null)
+      .is("merged_into", null)
       .select("id")
       .maybeSingle();
     if (linked.data?.id) {

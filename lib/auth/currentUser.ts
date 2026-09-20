@@ -1,3 +1,4 @@
+import { canonicalAccountId } from "@/lib/auth/canonicalAccount";
 import { cookies } from "next/headers";
 import { getServerSupabase } from "@/lib/supabase/serverClient";
 import {
@@ -89,7 +90,8 @@ async function readAuthUserFromClaims(
 async function readLineCookieUserId(): Promise<string | null> {
   try {
     const store = await cookies();
-    return verifyLineSession(store.get(LINE_SESSION_COOKIE)?.value);
+    const id = verifyLineSession(store.get(LINE_SESSION_COOKIE)?.value);
+    return id ? await canonicalAccountId(id) : null;
   } catch {
     return null;
   }

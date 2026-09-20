@@ -7,6 +7,8 @@ vi.mock("@/lib/supabaseServer", () => ({
   getServiceSupabase: () => ({ rpc, from }),
 }));
 
+vi.mock("@/lib/auth/canonicalAccount", () => ({ canonicalAccountId: async (id: string) => id }));
+
 import { applyOneTimePurchase } from "@/lib/billing/plan";
 
 const entry = {

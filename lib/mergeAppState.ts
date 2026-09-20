@@ -1,3 +1,4 @@
+import { COSMETIC_TITLES } from "@/lib/rewardInventory";
 import type {
   AppState,
   ReviewItem,
@@ -229,9 +230,21 @@ function mergeCheckpointProgress(
     attemptMap.set(`${at.checkpointId}@${at.attemptedAt}`, at);
   }
 
+  // Compare lifetime earned amounts, then subtract the union of purchases.
+  // Comparing remaining balances alone would restore spent fragments on sync.
+  const ownedA = new Set(a.gameful?.rewards?.unlockedCosmetics ?? []);
+  const ownedB = new Set(b.gameful?.rewards?.unlockedCosmetics ?? []);
+  const owned = new Set([...ownedA, ...ownedB]);
+  const spent = (ids: Set<string>, fragmentId: string) => COSMETIC_TITLES
+    .filter(t => ids.has(t.id) && t.cost?.fragmentId === fragmentId)
+    .reduce((sum, t) => sum + (t.cost?.count ?? 0), 0);
+  const fragmentIds = new Set([...a.badgeFragments, ...b.badgeFragments].map(f => f.fragmentId));
   const fragMap = new Map<string, number>();
-  for (const f of [...a.badgeFragments, ...b.badgeFragments]) {
-    fragMap.set(f.fragmentId, Math.max(fragMap.get(f.fragmentId) ?? 0, f.count));
+  for (const id of fragmentIds) {
+    const earnedA = (a.badgeFragments.find(f => f.fragmentId === id)?.count ?? 0) + spent(ownedA, id);
+    const earnedB = (b.badgeFragments.find(f => f.fragmentId === id)?.count ?? 0) + spent(ownedB, id);
+    const remaining = Math.max(0, Math.max(earnedA, earnedB) - spent(owned, id));
+    if (remaining > 0) fragMap.set(id, remaining);
   }
 
   const currentIdx = Math.max(

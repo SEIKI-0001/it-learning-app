@@ -19,6 +19,11 @@
   },
   "observability": { "enabled": true },
   "vars": {
+    "STRIPE_PRICE_ID_PRO_SUB": "price_1UHE9WC8AM1Ae2R28fY3ORlq",
+    "STRIPE_PRICE_ID_PRO_1M": "price_1UHPJaC8AM1Ae2R294rb0OXe",
+    "STRIPE_PRICE_ID_PRO_3M": "price_1UHPKJC8AM1Ae2R2589x2MCG",
+    "STRIPE_PRICE_ID_PRO_6M": "price_1UHPKMC8AM1Ae2R2lI8O0oxL",
+    "STRIPE_COUPON_FIRST_MONTH": "it_learning_first_month_20_20260919",
     "NEXT_PUBLIC_LINE_ADD_FRIEND_URL": "https://lin.ee/wcVbUud",
     "APP_BASE_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",
     "NEXT_PUBLIC_APP_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",

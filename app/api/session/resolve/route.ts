@@ -1,3 +1,4 @@
+import { canonicalAccountId } from "@/lib/auth/canonicalAccount";
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { loadAppStateForUser } from "@/lib/serverAppState";
@@ -80,7 +81,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const userId = session.user_id as string;
+  let userId: string;
+  try { userId = await canonicalAccountId(session.user_id as string); }
+  catch { return NextResponse.json({ ok: false, error: "account lookup failed" }, { status: 503 }); }
   const { data: consumed, error: consumeErr } = await supabase
     .from("line_sessions")
     .delete()
