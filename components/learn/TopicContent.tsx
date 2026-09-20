@@ -103,7 +103,7 @@ export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
   return explanationSlides;
 }
 
-// トピックの本文スタック（理解パート→[確認問題]→解説→復習→参考書→過去問分野）。
+// トピックの本文スタック（理解パート→解説→[確認問題]）。
 // トピック詳細ページと「今日の学習メニュー」で同一の内容を表示するため共有する。
 // directive を付けないことで、サーバ（トピック詳細）/クライアント（today）両方の
 // ツリーから描画できる。
@@ -150,11 +150,17 @@ export default function TopicContent({
   );
 }
 
-// 「あとで思い出すための復習・参考書で探すキーワード・関連する過去問分野」。
+// 「あとで思い出すための復習」。
 // today では「今日の学習を完了する」ボタンより下
 // （ページ最下部）に置きたいため、本文スタック（TopicContent）から切り出して
 // 独立コンポーネントにしている。トピック詳細では従来どおり本文の続き
 // （確認問題のあと）に並べて表示する。
+//
+// 「参考書で探すキーワード」(Topic.referenceHints) と「関連する過去問分野」
+// (Topic.kakomonFields) はここには出さない。参考書案内は「このセクション →
+// 参考書の○章○節」を直接示す LessonReferenceGuide / TodayReferenceGuide に一本化し、
+// kakomonFields は過去問出題・弱点分析・復習推薦・学習計画生成・分野別進捗判定で
+// 使う内部データとして残す（どちらもデータはそのまま、UI 表示だけを外している）。
 export function TopicReviewSections({ topic }: { topic: Topic }) {
   return (
     <div className="space-y-8">
@@ -171,47 +177,6 @@ export function TopicReviewSections({ topic }: { topic: Topic }) {
         <div className="mt-4">
           <AddToReviewButton topicId={topic.id} />
         </div>
-      </Section>
-
-      {/* ⑥ 参考書で探すキーワード（関連キーワード） */}
-      <Section emoji="📚" title="参考書で探すキーワード">
-        <p className="mb-3 text-xs text-gray-500">
-          章番号ではなく、索引でこの言葉を引いてみてください。
-        </p>
-        <ul className="space-y-3">
-          {topic.referenceHints.map((hint, i) => (
-            <li key={i}>
-              <div className="flex flex-wrap gap-1.5">
-                {hint.keywords.map((kw, ki) => (
-                  <span
-                    key={ki}
-                    className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700"
-                  >
-                    {kw}
-                  </span>
-                ))}
-              </div>
-              {hint.note && (
-                <p className="mt-1.5 text-xs text-gray-600">{hint.note}</p>
-              )}
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      {/* ⑦ 過去問道場で解くべき分野（関連する過去問分野） */}
-      <Section emoji="🎯" title="関連する過去問分野">
-        <ul className="space-y-2">
-          {topic.kakomonFields.map((f, i) => (
-            <li
-              key={i}
-              className="rounded-xl bg-white px-3 py-2.5 ring-1 ring-gray-200"
-            >
-              <p className="text-sm font-semibold text-gray-800">{f.label}</p>
-              {f.note && <p className="mt-0.5 text-xs text-gray-500">{f.note}</p>}
-            </li>
-          ))}
-        </ul>
       </Section>
     </div>
   );
