@@ -4,6 +4,9 @@ import type { NextConfig } from "next";
 // LINE Webhook 用の POST ルートハンドラ（/api/line/webhook）は静的書き出しと両立できないため外しています。
 // 本番デプロイ方針が固まったら、API を別ホスティングに分けるか、Node ランタイム前提のホスティングに切り替えてください。
 const nextConfig: NextConfig = {
+  // Use the same application type boundary as npm run typecheck. Wrangler
+  // runtime globals are checked by the Cloudflare build, not the Next build.
+  typescript: { tsconfigPath: "tsconfig.typecheck.json" },
   // 7日版(FE Quest)の旧URLを、ITパスポート学習コーチの新URLへ転送する。
   // redirects はファイルシステムより先に評価され、クエリ(?t=トークン)も引き継がれる。
   async redirects() {

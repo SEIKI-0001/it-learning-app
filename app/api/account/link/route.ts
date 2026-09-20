@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const db = getServiceSupabase();
   if (!db) return reply({ error: "接続を確認できません。" }, 503);
   let body: { action?: string; code?: string };
-  try { body = await request.json(); }
+  try { body = await request.json() as typeof body; }
   catch { return reply({ error: "入力を確認してください。" }, 400); }
   if (body?.action === "create") {
     const code = randomBytes(12).toString("hex").toUpperCase();

@@ -13,7 +13,7 @@ export default function AccountLinkSettings() {
     let active = true;
     fetch("/api/account/link", { cache: "no-store" }).then(async (r) => {
       if (!r.ok) throw new Error();
-      const value = await r.json();
+      const value = await r.json() as Status;
       if (active) setStatus(value);
     }).catch(() => { if (active) setMessage("ログイン状態を確認できません。画面を開き直してください。"); });
     return () => { active = false; };
@@ -25,9 +25,9 @@ export default function AccountLinkSettings() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, code }),
       });
-      const result = await r.json();
+      const result = await r.json() as { error?: string; code?: string };
       if (!r.ok) throw new Error(result.error ?? "連携できませんでした。");
-      if (action === "create") setIssued(result.code);
+      if (action === "create") setIssued(result.code ?? "");
       else window.location.assign("/?accountLinked=1");
     } catch (error) { setMessage(error instanceof Error ? error.message : "通信を確認してください。"); }
     finally { setBusy(false); }

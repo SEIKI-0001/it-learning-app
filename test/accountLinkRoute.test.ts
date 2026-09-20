@@ -16,7 +16,7 @@ it('requires an authenticated account',async()=>{
 });
 it('stores only a hash of the short-lived code',async()=>{
  mocks.rpc.mockResolvedValue({error:null});
- const r=await request({action:'create'});const body=await r.json();
+ const r=await request({action:'create'});const body=await r.json() as {code:string};
  expect(body.code).toMatch(/^[A-F0-9]{24}$/);
  expect(mocks.rpc).toHaveBeenCalledWith('create_account_link_code',{p_user_id:'google',p_hash:expect.stringMatching(/^[a-f0-9]{64}$/)});
  expect(r.headers.get('cache-control')).toBe('no-store');
