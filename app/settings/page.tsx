@@ -13,6 +13,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
+import AccountLinkSettings from "@/components/settings/AccountLinkSettings";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import ReferenceBookSummary from "@/components/settings/ReferenceBookSummary";
 
@@ -115,6 +116,7 @@ function SettingsForm({
 
       <div className="mx-auto w-full max-w-3xl px-4 py-6">
         <div className="space-y-7">
+          <AccountLinkSettings />
           {/* 試験予定日 */}
           <fieldset>
             <legend className="mb-2 flex items-center gap-2 text-base font-semibold text-gray-900">

@@ -92,6 +92,7 @@ function supabaseWithRpc(result: {
     client: {
       rpc,
       from: vi.fn((table: string) => ({
+        select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
         upsert: table === "user_profiles"
           ? profileUpsert
           : vi.fn().mockResolvedValue({ error: null }),
@@ -142,10 +143,10 @@ describe("POST /api/progress/save readiness trigger", () => {
     });
     expect(mocks.getInternalUserId).toHaveBeenCalledOnce();
     expect(supabase.rpc).toHaveBeenCalledWith(
-      "save_user_progress_with_readiness_evidence",
+      "save_shared_user_progress",
       expect.objectContaining({
         p_user_id: USER_ID,
-        p_progress: expect.objectContaining({
+        p_original: expect.objectContaining({
           topic_mastery_stats: progress().topicMasteryStats,
           review_queue: progress().reviewQueue,
         }),
@@ -235,7 +236,7 @@ describe("POST /api/progress/save readiness trigger", () => {
     expect(replay.status).toBe(200);
     expect(supabase.rpc).toHaveBeenNthCalledWith(
       1,
-      "save_user_progress_with_readiness_evidence",
+      "save_shared_user_progress",
       expect.objectContaining({
         p_trigger_type: "assessment",
         p_trigger_id: ASSESSMENT_TRIGGER.triggerId,

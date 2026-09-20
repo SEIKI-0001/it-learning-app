@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getInternalUserId } from "@/lib/auth/currentUser";
-import { profileToRow, progressToRow } from "@/lib/dbMappers";
+import { saveSharedProgress } from "@/lib/auth/sharedProgress";
+import { profileToRow } from "@/lib/dbMappers";
 import { recalculateExamReadiness } from "@/lib/examReadiness/service";
 import type { UserProfile, UserProgress } from "@/types";
 
@@ -56,19 +57,7 @@ export async function POST(request: Request) {
 
   let triggerRegistered = false;
   if (progress) {
-    const row = progressToRow(userId, progress);
-    const progressPayload: Record<string, unknown> = { ...row };
-    delete progressPayload.user_id;
-    delete progressPayload.updated_at;
-    const { data, error } = await supabase.rpc(
-      "save_user_progress_with_readiness_evidence",
-      {
-        p_user_id: userId,
-        p_progress: progressPayload,
-        p_trigger_type: readinessTrigger?.triggerType ?? null,
-        p_trigger_id: readinessTrigger?.triggerId ?? null,
-      },
-    );
+    const { data, error } = await saveSharedProgress(supabase, userId, progress, readinessTrigger);
     if (error) {
       return NextResponse.json({ ok: false, error: "progress save failed" }, { status: 500 });
     }

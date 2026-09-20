@@ -1,3 +1,4 @@
+import { canonicalAccountId } from "@/lib/auth/canonicalAccount";
 // プラン判定・エンタイトルメント（記録可否）・利用回数の集計・採点ログの記録（サーバー専用）。
 // すべて Supabase の service role 経由。未設定 / userId 無しのときは graceful に
 // フォールバック（plan=free / 利用 0 件 / ログ記録スキップ）して UI を止めない。
@@ -141,7 +142,7 @@ export async function setUserPlan(
   if (!supabase) throw new Error("Supabase is not configured");
 
   const row: Record<string, unknown> = {
-    user_id: userId,
+    user_id: await canonicalAccountId(userId),
     plan,
     plan_updated_at: new Date().toISOString(),
   };
@@ -213,7 +214,7 @@ export async function recordStripeSubscriptionEvent(entry: {
   const { data, error } = await supabase.rpc("record_stripe_subscription_event", {
     p_stripe_subscription_id: entry.stripeSubscriptionId,
     p_stripe_customer_id: entry.stripeCustomerId,
-    p_user_id: entry.userId,
+    p_user_id: entry.userId ? await canonicalAccountId(entry.userId) : null,
     p_price_id: entry.priceId,
     p_status: entry.status,
     p_latest_event_created: entry.eventCreated,
@@ -244,7 +245,7 @@ export async function applyOneTimePurchase(entry: {
   if (!supabase) throw new Error("Supabase is not configured");
 
   const { data, error } = await supabase.rpc("apply_one_time_purchase", {
-    p_user_id: entry.userId,
+    p_user_id: entry.userId ? await canonicalAccountId(entry.userId) : null,
     p_plan_key: entry.planKey,
     p_months: entry.months,
     p_amount_total: entry.amountTotal,
