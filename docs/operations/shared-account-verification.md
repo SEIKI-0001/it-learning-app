@@ -31,22 +31,35 @@ retained evidence on subsequent recalculation.
 4. Use the real LINE/Google pairing flow; verify both sets of completions,
    logout/login, and reopening the other device.
 
-The root Wrangler prices are **sandbox only**, belonging to Stripe account
-`acct_1TnJekC8AM1Ae2R2`. The sandbox webhook is
-`we_1UHPUMC8AM1Ae2R2THBJQTLI`; its signing secret is registered on the pilot Worker.
-`STRIPE_SECRET_KEY` must be the key for that same sandbox. Keep secrets out of Git.
-Before production billing, verify actual Checkout, webhook delivery, Pro
-entitlements, and Claude grading. Then configure a matching live account's prices,
-key and webhook together; sandbox IDs cannot be reused in live mode.
+The root Wrangler prices now target live Stripe account `acct_1TnJeZCPaZ1RH6Fh`.
+They reuse the existing Pro product and first-month 20% coupon `qrpW93tR`.
+The Cloudflare live webhook is `we_1UI0SUCPaZ1RH6FhxdemT7UK`, named
+`it-learning-cloudflare-live`, with checkout.session.completed and
+customer.subscription.updated/deleted events. Before deploying this configuration,
+register the matching live STRIPE_SECRET_KEY and this endpoint's
+STRIPE_WEBHOOK_SECRET on the Worker. Keep secrets out of Git.
 
-## Verification status (2026-09-20)
+The previous sandbox was `acct_1TnJekC8AM1Ae2R2`, with webhook
+`we_1UHPUMC8AM1Ae2R2THBJQTLI`. Its customer IDs cannot be reused in live mode.
+Archive the verified sandbox billing association before clearing it from the
+shared user profile; preserve all learning data. Verify live Checkout and portal
+after cutover, and retire the two old Vercel webhook destinations only after the
+Cloudflare receiver is ready. Do not replay old Vercel purchase events into the
+pilot database without verifying user mapping.
+
+## Verification status (2026-09-21)
 
 - Automated tests cover atomic SQL merging, aliases, composite ownership FKs,
   attempt receipts, first-attempt counts, code reuse, concurrent snapshot changes,
   public-role denial, origin checks, canonical IDs, stale progress, and fragment
   spending. They use a local PostgreSQL engine, not customer data.
 - Real Gemini grading on the pilot returned and persisted a non-dummy result.
-- Both Gemini and Anthropic secret names were verified on the pilot.
-- Actual paired-device linking, Stripe Checkout, Pro activation, and real Claude
-  grading remain pending deployment / sandbox secret registration. Do not treat
-  configuration or unit tests as proof of those end-to-end steps.
+- LINE/Google linking succeeded on the deployed main. Google re-login restored
+  three completed topics and 12 answers; the user confirmed the same counts on
+  the LINE phone. New post-link bidirectional writes still need a paired-device check.
+- Sandbox Checkout completed, its webhook succeeded, and Pro survived re-login
+  and linking. This does not prove live billing.
+- After replacing the Anthropic key with a workspace-scoped key, real Claude
+  Sonnet (`claude-sonnet-4-6`) returned 92/100 on the supervised-learning answer.
+- Live prices/coupon and the new webhook are prepared. Live secret registration,
+  deployment, sandbox billing cleanup, and live Checkout verification are pending.
