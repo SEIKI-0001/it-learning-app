@@ -1,0 +1,282 @@
+/* バリューチェーンのミニチュア企業。拠点の浮上・影は network を共用し、
+   ここでは「支援層」「製品トークン」「価値の柱」だけを足す。 */
+
+.scene {
+  --vc-stop: #e11d48;
+}
+
+/* ---------- 支援活動の層 ---------- */
+
+.layerFace {
+  fill: var(--layer);
+  stroke: #ffffff;
+  stroke-width: 0.6;
+  transition: fill 400ms ease;
+}
+
+.layerSide {
+  fill: var(--layer-side);
+  opacity: 0.55;
+  transition: fill 400ms ease;
+}
+
+.layerText {
+  fill: #334155;
+  letter-spacing: 0.04em;
+}
+
+.layer[data-state="focus"] .layerFace {
+  stroke: #1e293b;
+  stroke-width: 1;
+}
+
+.layer[data-state="off"] .layerFace {
+  fill: #ffe4e9;
+  stroke: var(--vc-stop);
+  stroke-dasharray: 3 2;
+}
+
+.layer[data-state="off"] .layerSide {
+  fill: var(--vc-stop);
+  opacity: 0.3;
+}
+
+.layer[data-state="off"] .layerText {
+  fill: #be123c;
+}
+
+/* ---------- ライン ---------- */
+
+.belt {
+  stroke: #94a3b8;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 2 3;
+  opacity: 0.6;
+}
+
+.stationBadge circle {
+  fill: #ffffff;
+  stroke: #94a3b8;
+  stroke-width: 0.9;
+  transition: fill 300ms ease, stroke 300ms ease;
+}
+
+.stationBadge text {
+  fill: #475569;
+  font-size: 7px;
+  font-weight: 800;
+}
+
+.stationBadge[data-state="active"] circle {
+  fill: #4f46e5;
+  stroke: #4f46e5;
+}
+
+.stationBadge[data-state="active"] text {
+  fill: #ffffff;
+}
+
+.stationBadge[data-state="error"] circle {
+  fill: var(--vc-stop);
+  stroke: var(--vc-stop);
+}
+
+.stationBadge[data-state="error"] text {
+  fill: #ffffff;
+}
+
+.note {
+  position: absolute;
+  z-index: 14;
+  transform: translate(-50%, -100%);
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-size: 8.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: vc-pop 400ms ease both;
+}
+
+.note[data-state="disabled"] {
+  background: #f1f5f9;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  color: #475569;
+}
+
+.note[data-state="warn"],
+.note[data-state="sending"] {
+  background: #fffbeb;
+  box-shadow: 0 0 0 1px #fcd34d;
+  color: #92400e;
+}
+
+/* ---------- 製品トークン ---------- */
+
+.product {
+  position: absolute;
+  z-index: 20;
+  transform: translate(-50%, -50%);
+  transition:
+    left 1100ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 1100ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.productShadow {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  width: 26px;
+  height: 6px;
+  margin-left: -13px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(30, 42, 64, 0.28), transparent);
+}
+
+.productBody {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #eef2ff);
+  box-shadow: 0 0 0 1.5px #a5b4fc, 0 8px 14px rgba(79, 70, 229, 0.22);
+  font-size: 17px;
+  line-height: 1;
+  animation: vc-morph 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.product[data-blocked="true"] .productBody {
+  background: #fff1f3;
+  box-shadow: 0 0 0 2px var(--vc-stop), 0 8px 14px rgba(225, 29, 72, 0.22);
+}
+
+/* ---------- 価値の柱 ---------- */
+
+.valueBox {
+  position: absolute;
+  right: 3%;
+  top: 4%;
+  z-index: 12;
+  display: flex;
+  width: 76px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  padding: 5px 6px 6px;
+  border: 1px solid #e3e8f0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 14px rgba(30, 42, 64, 0.08);
+}
+
+.valueTitle {
+  color: #4338ca;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.valueTrack {
+  display: flex;
+  height: 74px;
+  flex-direction: column-reverse;
+  overflow: hidden;
+  border-radius: 5px;
+  background: repeating-linear-gradient(0deg, #f1f5f9 0 7.3px, #ffffff 7.3px 7.4px);
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.valueBlock {
+  flex: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+  animation: vc-grow 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  transform-origin: bottom;
+}
+
+.valueCost,
+.valueMargin {
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.valueCost {
+  background: #8b5cf6;
+}
+
+.valueMargin {
+  min-height: 12px;
+  background: #10b981;
+  animation: vc-grow 700ms cubic-bezier(0.2, 0.8, 0.2, 1) 200ms both;
+  transform-origin: bottom;
+}
+
+.valueTotal {
+  color: #111827;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes vc-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes vc-morph {
+  0% {
+    transform: scale(0.6) rotate(-8deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes vc-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -80%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+}
+
+.scene[data-reduced-motion="true"] .product {
+  transition: none;
+}
+
+.scene[data-reduced-motion="true"] .productBody,
+.scene[data-reduced-motion="true"] .valueBlock,
+.scene[data-reduced-motion="true"] .valueMargin,
+.scene[data-reduced-motion="true"] .note {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product {
+    transition: none;
+  }
+
+  .productBody,
+  .valueBlock,
+  .valueMargin,
+  .note {
+    animation: none;
+  }
+}

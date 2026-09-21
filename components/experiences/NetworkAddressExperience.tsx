@@ -10,6 +10,7 @@ import {
   type NetworkNodeId,
 } from "./network/NetworkScene";
 import type { NodeState } from "./network/NetworkSceneBase";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 type NetworkPhase = {
@@ -147,23 +148,6 @@ function outagePhase(index: number, timedOut: boolean): NetworkPhase {
     lanes: { ...OUTAGE_LANES, query: timedOut ? "idle" : "active" },
     detail: OUTAGE_DETAIL,
   };
-}
-
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return;
-    }
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(query.matches);
-    update();
-    query.addEventListener?.("change", update);
-    return () => query.removeEventListener?.("change", update);
-  }, []);
-
-  return reduced;
 }
 
 const OCTETS = [

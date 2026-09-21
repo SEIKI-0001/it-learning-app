@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import type { NodeState } from "./network/NetworkSceneBase";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { Panel, SectionTitle } from "./ui";
+import { FactoryScene, STATIONS, type StationId, type SupportId } from "./valuechain/FactoryScene";
 
 // ============================================================================
 // 「バリューチェーン（価値連鎖）」専用の体験。
-//   ① 工場ラインを進める … 主活動を1歩ずつ進めると製品が姿を変え、
-//      価値バーが積み上がっていく（最後にマージン＝利益が見える）
-//   ② 支援活動 … タップすると「もし無かったら」ラインがどう困るかが分かる
+//   ① 工場ラインを進める … 2.5D のミニチュア企業（入荷→工場→倉庫・配送→店舗→顧客）を
+//      再生すると製品が姿を変え、VALUE の柱が積み上がる（最後にコスト＋マージンへ）
+//   ② 支援活動 … 同じ模型の土台（4層）を1つ止めると、影響を受ける拠点が止まる
 //   ③ 「主活動？支援活動？」仕分けクイズ
 // ============================================================================
 
@@ -20,31 +25,50 @@ const MAIN = [
   { emo: "🔧", name: "サービス", product: "😊", state: "顧客が満足！", d: "アフターサポートで価値を保つ", value: 90 },
 ];
 
+const DELTAS = [15, 25, 15, 20, 15];
+const COST = 70;
+const FLOW_STEPS = [...MAIN.map((m) => ({ title: m.name })), { title: "マージン" }];
+
+const idleStations = (): Record<StationId, NodeState> => ({
+  inbound: "idle",
+  operations: "idle",
+  outbound: "idle",
+  sales: "idle",
+  service: "idle",
+});
+
+const ALL_ON: Record<SupportId, "on" | "off" | "focus"> = { infra: "on", hr: "on", tech: "on", procurement: "on" };
+
 function MainFlow() {
-  const [idx, setIdx] = useState(0);
+  const reducedMotion = useReducedMotion();
+  const player = useStepPlayer(FLOW_STEPS.length, reducedMotion, 2400);
+  const idx = Math.min(player.index, MAIN.length - 1);
   const cur = MAIN[idx];
-  const atEnd = idx === MAIN.length - 1;
+  const atEnd = player.index === FLOW_STEPS.length - 1;
+  const stations = idleStations();
+  if (!atEnd) stations[STATIONS[idx]] = "active";
+
   return (
     <Panel>
       <SectionTitle step={1}>主活動 ― 工程を進めて価値を積み上げる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">主活動</b>は価値を直接生み出す流れ。いすを作る会社で「次へ」を押して、
+        <b className="text-gray-800">主活動</b>は価値を直接生み出す流れ。いすを作る会社のミニチュアで再生して、
         <b className="text-gray-800">材料が売り物に変わっていく</b>様子を見てみよう。
       </p>
 
-      {/* 工程チップ */}
+      {/* 工程チップ（模型の①〜⑤に対応） */}
       <div className="mt-3 flex gap-1">
         {MAIN.map((m, i) => (
           <div
             key={m.name}
-            className={`flex-1 rounded-md px-0.5 py-1.5 text-center transition ${
-              i === idx ? "bg-brand-600" : i < idx ? "bg-brand-100" : "bg-gray-100"
+            className={`min-w-0 flex-1 rounded-md px-0.5 py-1.5 text-center transition ${
+              i === idx && !atEnd ? "bg-brand-600" : i <= idx ? "bg-brand-100" : "bg-gray-100"
             }`}
           >
-            <div className="text-sm leading-none">{m.emo}</div>
+            <div className={`text-[10px] font-bold leading-none ${i === idx && !atEnd ? "text-white" : "text-gray-500"}`}>{i + 1}</div>
             <div
               className={`mt-0.5 text-[9px] font-bold leading-tight ${
-                i === idx ? "text-white" : i < idx ? "text-brand-600" : "text-gray-400"
+                i === idx && !atEnd ? "text-white" : i <= idx ? "text-brand-600" : "text-gray-400"
               }`}
             >
               {m.name.split("・")[0]}
@@ -53,45 +77,51 @@ function MainFlow() {
         ))}
       </div>
 
-      {/* 製品の今 */}
-      <div className="mt-3 rounded-xl bg-gray-50 p-4 text-center ring-1 ring-gray-200">
-        <div className="text-4xl transition-all">{cur.product}</div>
-        <div className="mt-1 text-sm font-bold text-gray-800">{cur.state}</div>
-        <div className="mt-0.5 text-xs text-gray-500">
-          {cur.emo} {cur.name}：{cur.d}
-        </div>
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <FactoryScene
+          stations={stations}
+          product={{ at: idx, emoji: cur.product, blocked: false }}
+          supports={ALL_ON}
+          value={{ blocks: DELTAS.slice(0, idx + 1), final: atEnd ? { cost: COST, margin: 90 - COST } : null }}
+          stationNotes={{}}
+          reducedMotion={reducedMotion}
+        />
       </div>
 
-      {/* 価値バー */}
-      <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-        <div className="flex items-center justify-between text-xs font-bold">
-          <span className="text-gray-600">💰 積み上がった価値</span>
-          <span className={atEnd ? "text-emerald-600" : "text-brand-600"}>
-            {atEnd ? "コスト＋マージン（利益）" : `価値 ${cur.value}`}
-          </span>
-        </div>
-        <div className="mt-1.5 flex h-3 w-full overflow-hidden rounded-full bg-gray-200">
-          <div
-            className="h-full bg-brand-500 transition-all duration-500"
-            style={{ width: `${atEnd ? 70 : cur.value}%` }}
-          />
-          {atEnd && <div className="h-full w-[20%] bg-emerald-500 transition-all duration-500" />}
-        </div>
-        {atEnd && (
-          <p className="mt-1.5 text-[11px] leading-relaxed text-emerald-700">
+      {/* 製品の今 */}
+      <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-center ring-1 ring-gray-200" aria-live="polite" data-testid="vc-state">
+        {atEnd ? (
+          <p className="text-sm leading-relaxed text-emerald-700">
             🎉 各工程で加わった価値の合計が売値に。<b>コスト（紫）を引いて残った緑がマージン（利益）</b>です。
           </p>
+        ) : (
+          <>
+            <div className="text-sm font-bold text-gray-800">
+              {cur.product} {cur.state}
+              <span className="ml-1.5 rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] text-brand-700">価値 +{DELTAS[idx]}</span>
+            </div>
+            <div className="mt-0.5 text-xs text-gray-500">
+              {cur.emo} {cur.name}：{cur.d}
+            </div>
+          </>
         )}
       </div>
 
-      <StepNav
-        index={idx}
-        total={MAIN.length}
-        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
-        onNext={() => setIdx((i) => Math.min(MAIN.length - 1, i + 1))}
-        onReset={() => setIdx(0)}
-        doneLabel="マージン 💰"
-      />
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={FLOW_STEPS}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="主活動を再生"
+          timelineLabel="主活動のタイムライン"
+          startCaption="原材料"
+          endCaption="マージン 💰"
+          stepTone={(i) => (i === FLOW_STEPS.length - 1 ? "bg-emerald-500" : "bg-brand-600")}
+        />
+      </div>
     </Panel>
   );
 }
@@ -104,22 +134,94 @@ const SUPPORT = [
   { emo: "🛍️", name: "調達", d: "設備や資材を買い入れる活動", without: "機械も資材も届かない。ラインがそもそも動かせない" },
 ];
 
+type Breakdown = {
+  support: SupportId;
+  stations: Partial<Record<StationId, NodeState>>;
+  notes: Partial<Record<StationId, string>>;
+  product: { at: number; emoji: string; blocked: boolean };
+  blocks: number[];
+  final: { cost: number; margin: number } | null;
+};
+
+// 支援活動を1つ止めたとき、主活動ラインに何が起きるか（因果の見え方）
+const BREAKDOWN: Record<SupportId, Breakdown> = {
+  procurement: {
+    support: "procurement",
+    stations: { inbound: "error", operations: "error", outbound: "disabled", sales: "disabled", service: "disabled" },
+    notes: { inbound: "原材料が届かない", operations: "製造停止" },
+    product: { at: -1, emoji: "🪵", blocked: true },
+    blocks: [],
+    final: null,
+  },
+  hr: {
+    support: "hr",
+    stations: { inbound: "idle", operations: "error", outbound: "disabled", sales: "error", service: "disabled" },
+    notes: { operations: "作る人がいない", sales: "売る人もいない" },
+    product: { at: 0, emoji: "🪵", blocked: true },
+    blocks: [15],
+    final: null,
+  },
+  tech: {
+    support: "tech",
+    stations: { operations: "error" },
+    notes: { operations: "古い製品のまま" },
+    product: { at: 4, emoji: "😐", blocked: false },
+    blocks: [15, 10, 15, 20, 15],
+    final: { cost: COST, margin: 5 },
+  },
+  infra: {
+    support: "infra",
+    stations: { inbound: "error", operations: "error", outbound: "error", sales: "error", service: "error" },
+    notes: { outbound: "お金・契約が混乱" },
+    product: { at: 2, emoji: "📦", blocked: true },
+    blocks: [15, 25],
+    final: null,
+  },
+};
+
+const SUPPORT_ID: SupportId[] = ["infra", "hr", "tech", "procurement"];
+
 function Support() {
+  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<number | null>(null);
+  const [tried, setTried] = useState<number[]>([]);
+  const off = sel === null ? null : BREAKDOWN[SUPPORT_ID[sel]];
+  const stations = { ...idleStations(), ...(off?.stations ?? {}) };
+  const supports = { ...ALL_ON, ...(off ? { [off.support]: "off" as const } : {}) };
+
+  function pick(i: number) {
+    setSel((cur) => (cur === i ? null : i));
+    setTried((cur) => (cur.includes(i) ? cur : [...cur, i]));
+  }
+
   return (
     <Panel>
       <SectionTitle step={2}>支援活動 ― 無くなるとラインが困る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">支援活動</b>は直接モノを作らないけれど、主活動の全工程を下支えします。
-        タップして<b className="text-gray-800">「もし無かったら」</b>を確かめてみよう。
+        <b className="text-gray-800">支援活動</b>は直接モノを作らないけれど、主活動の全工程を下から支えます。
+        模型の土台（4つの層）を1つ止めて、<b className="text-gray-800">「もし無かったら」</b>を確かめてみよう。
       </p>
+
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <FactoryScene
+          stations={stations}
+          product={off ? off.product : { at: 4, emoji: "😊", blocked: false }}
+          supports={supports}
+          value={off ? { blocks: off.blocks, final: off.final } : { blocks: DELTAS, final: { cost: COST, margin: 90 - COST } }}
+          stationNotes={off?.notes ?? {}}
+          reducedMotion={reducedMotion}
+        />
+      </div>
+
       <div className="mt-3 grid grid-cols-2 gap-2">
         {SUPPORT.map((s, i) => {
           const picked = sel === i;
           return (
             <button
               key={s.name}
-              onClick={() => setSel(picked ? null : i)}
+              type="button"
+              onClick={() => pick(i)}
+              aria-pressed={picked}
               className={`rounded-xl p-3 text-left ring-2 transition active:scale-95 ${
                 picked ? "bg-rose-50 ring-rose-300" : "bg-gray-50 ring-gray-200"
               }`}
@@ -128,14 +230,14 @@ function Support() {
                 <span className="text-lg">{picked ? "🚫" : s.emo}</span>
                 <span className={`text-sm font-bold ${picked ? "text-rose-700" : "text-gray-800"}`}>{s.name}</span>
               </div>
-              <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{s.d}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{picked ? "タップで元に戻す" : `${s.d}（止めてみる）`}</p>
             </button>
           );
         })}
       </div>
-      <div className="mt-3 min-h-[3.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
+      <div className="mt-3 min-h-[3.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200" aria-live="polite" data-testid="support-result">
         {sel === null ? (
-          <p className="text-sm leading-relaxed text-gray-400">どれかをタップすると、無くなったときの影響が出ます。</p>
+          <p className="text-sm leading-relaxed text-gray-400">どれかを止めると、無くなったときの影響が模型に出ます。</p>
         ) : (
           <p className="text-sm leading-relaxed text-rose-700">
             🚫 <b>{SUPPORT[sel].name}</b>が無いと… {SUPPORT[sel].without}。
@@ -143,6 +245,11 @@ function Support() {
           </p>
         )}
       </div>
+      {tried.length === SUPPORT.length && (
+        <p className="mt-2 rounded-xl bg-amber-50 px-4 py-2.5 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200" role="status">
+          💡 4つとも、止めると<b>マージン（利益）が減るか消える</b>。支援活動は価値を直接は作らないが、主活動ラインの土台です。
+        </p>
+      )}
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ 人事・技術開発・調達は「価値を直接生む流れ」ではなく、それを<b>支える</b>側＝支援活動。
         ここが主活動とよく取り違えられます。

@@ -1,0 +1,161 @@
+/* 業務フローの模型。机の浮上・影は network を共用し、
+   ここでは「書類トークン」「処理待ちトレイ」「工程時計」だけを足す。 */
+
+.scene {
+  --bp-slow: #d97706;
+  --bp-ok: #059669;
+}
+
+.path {
+  stroke: #cbd5e1;
+  stroke-width: 2.4;
+  stroke-dasharray: 2 4;
+  stroke-linecap: round;
+}
+
+.tray {
+  fill: #eef2f7;
+  stroke: #cbd5e1;
+  stroke-width: 0.8;
+  transition: fill 300ms ease, stroke 300ms ease;
+}
+
+.tray[data-full="true"] {
+  fill: #fef3c7;
+  stroke: var(--bp-slow);
+}
+
+/* ---------- 工程時計 ---------- */
+
+.clock {
+  position: absolute;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 6px 3px;
+  transform: translate(-50%, -100%);
+  border: 1px solid #e3e8f0;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 10px rgba(30, 42, 64, 0.08);
+  white-space: nowrap;
+  transition: border-color 300ms ease, background 300ms ease;
+}
+
+.clock[data-slow="true"] {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.clock[data-improved="true"] {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.clockName {
+  color: #374151;
+  font-size: 8.5px;
+  font-weight: 800;
+}
+
+.clockTime {
+  color: #111827;
+  font-size: 10.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock[data-slow="true"] .clockTime {
+  color: #b45309;
+}
+
+.clock[data-improved="true"] .clockTime {
+  color: var(--bp-ok);
+}
+
+.queueBadge {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--bp-slow);
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 800;
+}
+
+/* ---------- 書類トークン ---------- */
+
+.doc {
+  position: absolute;
+  z-index: 15;
+  transform: translate(-50%, -80%);
+  transition:
+    left 420ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 420ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    opacity 300ms ease;
+}
+
+.doc[data-kind="incoming"] {
+  opacity: 0;
+}
+
+.docSheet {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 17px;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #cbd5e1, 0 3px 5px rgba(30, 42, 64, 0.16);
+  transform: skewY(-12deg);
+}
+
+.docLines {
+  position: absolute;
+  inset: 4px 3px auto;
+  height: 7px;
+  background: repeating-linear-gradient(180deg, #94a3b8 0 1px, transparent 1px 3px);
+}
+
+.doc[data-kind="queue"] .docSheet {
+  box-shadow: 0 0 0 1px var(--bp-slow), 0 3px 5px rgba(217, 119, 6, 0.2);
+}
+
+.doc[data-kind="work"] .docSheet {
+  box-shadow: 0 0 0 1.5px #4f46e5, 0 4px 8px rgba(79, 70, 229, 0.25);
+}
+
+.doc[data-kind="work"] .docSheet::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: calc(var(--progress) * 100%);
+  height: 2px;
+  border-radius: 1px;
+  background: #4f46e5;
+}
+
+.doc[data-kind="done"] .docSheet {
+  box-shadow: 0 0 0 1px var(--bp-ok), 0 2px 4px rgba(5, 150, 105, 0.16);
+}
+
+.docCheck {
+  position: absolute;
+  right: -4px;
+  top: -5px;
+  color: var(--bp-ok);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.scene[data-reduced-motion="true"] .doc {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doc {
+    transition: none;
+  }
+}

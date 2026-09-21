@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { useState, type ReactNode } from "react";
+import { ApiScene, type ApiSceneProps } from "./api/ApiScene";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「API」専用の体験。
 //   ① レストランのたとえ（客＝アプリ / 注文口＝API / 厨房＝サービス内部）
-//   ② API連携の流れ（リクエスト→処理→レスポンス→表示）をStepで実演
+//   ② API連携の流れ（リクエスト→処理→レスポンス→表示）を 2.5D 模型で再生
+//      App → API → サービス。直接アクセスを試すとガラスケースに阻まれる＝決められた入口
 //   ③ これはAPI？ 仕分けクイズ
 // ============================================================================
 
@@ -46,68 +51,165 @@ function Restaurant() {
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         💡 だからAPIは「<b>機能を使うための決まった入口</b>」。内部を全部公開するわけではありません。
       </div>
+      <p className="mt-3 text-xs leading-relaxed text-gray-500">
+        次の解説では、この3者を <b>App → API → サービス</b> の模型に置き換えて、実際の頼みごとの流れを追います。
+      </p>
     </Panel>
   );
 }
 
-const NODES = [
-  { id: "app", emoji: "📱", name: "地図アプリ", sub: "あなた側" },
-  { id: "api", emoji: "🔌", name: "地図API", sub: "入口" },
-  { id: "svc", emoji: "🗺️", name: "地図サービス", sub: "内部" },
-];
+type FlowStep = {
+  title: string;
+  route: string;
+  nodes: ApiSceneProps["nodes"];
+  lanes: ApiSceneProps["lanes"];
+  capsule: ApiSceneProps["capsule"];
+  screen: string | null;
+  detail: ReactNode;
+};
 
-const STEPS = [
-  { active: ["app", "api"], holder: "api", dir: "→", html: "アプリが地図APIに<b>リクエスト</b>：「東京駅の地図がほしい」と決まった形式で頼む。" },
-  { active: ["api", "svc"], holder: "svc", dir: "→", html: "API経由でサービスが処理。<b>内部のしくみはアプリから見えない</b>。" },
-  { active: ["svc", "api"], holder: "api", dir: "←", html: "結果（地図データ）を<b>レスポンス</b>として返す。形式は決まっているので扱いやすい。" },
-  { active: ["api", "app"], holder: "app", dir: "←", html: "アプリが受け取った地図を<b>画面に表示</b>。地図機能を自分で作らずに使えた！" },
+const REQUEST = { kind: "request" as const, tag: "リクエスト", payload: "GET /weather" };
+const RESPONSE = { kind: "response" as const, tag: "レスポンス", payload: "{ temperature: 25 }" };
+
+const FLOW_STEPS: FlowStep[] = [
+  {
+    title: "アプリが天気を知りたい",
+    route: "天気アプリの中",
+    nodes: { app: "active", api: "idle", svc: "idle" },
+    lanes: {},
+    capsule: { stop: "app", ...REQUEST },
+    screen: "東京 --℃",
+    detail: <>天気アプリは気温を表示したい。でも天気データは<b>自分では持っていません</b>。決まった形式の頼みごと（リクエスト）を用意します。</>,
+  },
+  {
+    title: "APIへリクエスト",
+    route: "App → API：GET /weather",
+    nodes: { app: "sending", api: "active", svc: "idle" },
+    lanes: { req1: "active" },
+    capsule: { stop: "apiIn", ...REQUEST },
+    screen: null,
+    detail: <>アプリは天気APIの窓口に<b>リクエスト</b>「GET /weather」を送る。サービスの中には入らず、<b>決められた入口</b>に頼むだけ。</>,
+  },
+  {
+    title: "サービスが処理",
+    route: "API → サービス内部",
+    nodes: { app: "idle", api: "sending", svc: "active" },
+    lanes: { req2: "active" },
+    capsule: { stop: "svc", ...REQUEST },
+    screen: null,
+    detail: <>APIが中の天気サービスへ取り次ぎ、サーバとDBで処理。<b>内部のしくみはアプリから見えません</b>。</>,
+  },
+  {
+    title: "レスポンスを返す",
+    route: "サービス → API：結果",
+    nodes: { app: "idle", api: "active", svc: "sending" },
+    lanes: { res1: "active" },
+    capsule: { stop: "apiOut", ...RESPONSE },
+    screen: null,
+    detail: <>結果を<b>レスポンス</b>「{"{ temperature: 25 }"}」として返す。形式（JSON）が決まっているので扱いやすい。</>,
+  },
+  {
+    title: "アプリが表示",
+    route: "API → App：表示",
+    nodes: { app: "active", api: "idle", svc: "idle" },
+    lanes: { res2: "active" },
+    capsule: { stop: "appBack", ...RESPONSE },
+    screen: "東京 ☀ 25℃",
+    detail: <>アプリが受け取った気温を<b>画面に表示</b>。天気機能を自分で作らずに使えた！</>,
+  },
 ];
 
 function Flow() {
-  const [idx, setIdx] = useState(0);
-  const step = STEPS[idx];
+  const reducedMotion = useReducedMotion();
+  const player = useStepPlayer(FLOW_STEPS.length, reducedMotion);
+  const [bypass, setBypass] = useState(false);
+  const step = FLOW_STEPS[player.index];
+
+  function move(next: number) {
+    setBypass(false);
+    player.move(next);
+  }
+
   return (
     <Panel>
       <SectionTitle step={2}>API連携の流れ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        「地図を表示したいアプリ」が<b className="text-gray-800">地図API</b>を使う様子を1歩ずつ。
+        レストランの「客・注文口・厨房」を、システムに置き換えると <b className="text-gray-800">App → API → サービス</b>。
+        天気アプリが<b className="text-gray-800">天気API</b>を使う様子を再生しよう。
       </p>
 
-      <div className="mt-4 flex items-stretch justify-center gap-1.5">
-        {NODES.map((n, i) => {
-          const on = step.active.includes(n.id);
-          const holds = step.holder === n.id;
-          return (
-            <div key={n.id} className="flex items-center">
-              <div
-                className={`relative w-[92px] rounded-xl border-2 px-1 py-2.5 text-center transition ${
-                  on ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100" : "border-gray-200 bg-gray-50"
-                }`}
-              >
-                {holds && <span className="absolute -top-3 right-1 text-base">📨</span>}
-                <div className="text-2xl leading-none">{n.emoji}</div>
-                <div className="mt-1 text-[11px] font-bold text-gray-800">{n.name}</div>
-                <div className="text-[10px] leading-tight text-gray-500">{n.sub}</div>
-              </div>
-              {i < NODES.length - 1 && <span className="px-0.5 text-lg text-gray-300">{step.dir}</span>}
-            </div>
-          );
-        })}
+      <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold" aria-label="たとえとの対応">
+        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700 ring-1 ring-brand-200">🙋 客 ＝ App</span>
+        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 ring-1 ring-emerald-200">🧑‍🍳 注文口 ＝ API</span>
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700 ring-1 ring-gray-200">🍳 厨房 ＝ サービス内部</span>
       </div>
 
-      <p
-        className="mt-4 min-h-[3.5em] rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-emerald-200 [&_b]:text-gray-900"
-        dangerouslySetInnerHTML={{ __html: step.html }}
-      />
+      <div className="mt-3 min-w-0">
+        <p className={`text-[11px] font-bold ${bypass ? "text-rose-700" : "text-brand-700"}`}>
+          {bypass ? "実験：APIを通さずに入ろうとすると？" : `STEP ${player.index + 1} / ${FLOW_STEPS.length}`}
+        </p>
+        <p className="mt-0.5 text-sm font-bold text-gray-900" data-testid="api-step-title">
+          {bypass ? "内部へ直接アクセス → 入れない" : step.title}
+        </p>
+        <p className="mt-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-700" data-testid="api-route">
+          {bypass ? "App → サービス内部（APIを通さない）" : step.route}
+        </p>
+      </div>
 
-      <StepNav
-        index={idx}
-        total={STEPS.length}
-        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
-        onNext={() => setIdx((i) => Math.min(STEPS.length - 1, i + 1))}
-        onReset={() => setIdx(0)}
-        doneLabel="連携で完成 🎉"
-      />
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <ApiScene
+          nodes={bypass ? { app: "sending", api: "idle", svc: "error" } : step.nodes}
+          lanes={bypass ? { direct: "blocked" } : step.lanes}
+          capsule={bypass ? { stop: "wall", kind: "blocked", tag: "直接アクセス", payload: "SELECT * FROM 天気DB" } : step.capsule}
+          screen={bypass ? null : step.screen}
+          bypass={bypass}
+          reducedMotion={reducedMotion}
+        />
+      </div>
+
+      <div
+        className={`mt-3 rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${bypass ? "bg-rose-50 ring-rose-200" : "bg-emerald-50 ring-emerald-200"}`}
+        aria-live="polite"
+      >
+        {bypass ? (
+          <>
+            アプリがサービスの<b>中（DB）に直接</b>入ろうとしても、外からは届きません。
+            使えるのは<b>APIという決められた入口</b>だけ。だから内部の作りを変えても、入口が同じならアプリは困りません。
+          </>
+        ) : (
+          step.detail
+        )}
+      </div>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={FLOW_STEPS}
+          playing={player.playing && !bypass}
+          reducedMotion={reducedMotion}
+          onMove={move}
+          onTogglePlay={() => {
+            setBypass(false);
+            player.togglePlay();
+          }}
+          playLabel="API連携を再生"
+          timelineLabel="API連携のタイムライン"
+          startCaption="リクエスト"
+          endCaption="表示"
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setBypass((v) => !v)}
+        aria-pressed={bypass}
+        className={`mt-3 w-full rounded-full px-4 py-2 text-xs font-bold transition active:scale-95 ${
+          bypass ? "bg-white text-gray-700 ring-1 ring-gray-300" : "bg-white text-rose-700 ring-1 ring-rose-300"
+        }`}
+      >
+        {bypass ? "↩ 正しいルート（API経由）に戻す" : "🚫 APIを通さず、内部に直接アクセスしてみる"}
+      </button>
+
       <div className="mt-3 rounded-xl bg-gray-50 px-4 py-2.5 text-xs leading-relaxed text-gray-500 ring-1 ring-gray-200">
         頼む側＝<b>リクエスト</b>、返す側＝<b>レスポンス</b>。Webで使うAPIは <b>Web API</b> と呼ばれ、データは <b>JSON</b> などの形式でやり取りされます。
       </div>

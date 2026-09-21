@@ -36,13 +36,18 @@ export function CipherCapsule({
   state,
   at,
   label,
+  tag,
+  body: bodyText,
 }: {
   state: CapsuleState;
   at?: { left: string; top: string };
   /** スクリーンリーダー向けの補足 */
   label?: string;
+  /** 表示文言の差し替え（HTTPS 体験などで中身を利用者が入力する場合） */
+  tag?: string;
+  body?: string;
 }) {
-  const copy = COPY[state];
+  const copy = { tag: tag ?? COPY[state].tag, body: bodyText ?? COPY[state].body };
   const locked = state === "encrypted" || state === "failed";
   const body = (
     <span className={styles.capsule} data-state={state}>
