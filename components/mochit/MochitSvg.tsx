@@ -25,6 +25,12 @@
 //   - attention / attentionPoint: Semantic Attention。瞳のインラインtransform＝基底値へ反映し、
 //     リアクションの gaze トラック（composite:"add"）はその上に乗る。
 //     reduced-motion・停止中は補間なしで静的な視線位置だけを残す。compact では中央固定。
+//   - Macro Idle: 8〜20秒おきに lookAround / curious / stretch を自発的に1回再生する
+//     （mochitMacroIdle.ts=仕様・抽選、mochitMacroIdleController.ts=スケジューラ）。
+//     リアクションと同じ有限WAAPI（fill:"none"・恒等で開始/終了、gaze/antenna は add）なので
+//     Micro Idle を止めず、終了すれば現在の emotion / 視線 / 姿勢へそのまま戻る。
+//     自動発火は active ∧ ¬compact ∧ ¬Reaction ∧ attention=random のときだけ。
+//     macroIdleRequest で1回だけの明示再生もできる（devプレビュー用）。
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MOCHIT_SVG_MARKUP } from "./mochitSvgMarkup";
@@ -32,6 +38,12 @@ import { MOCHIT_TRIGGER_EVENTS } from "./mochitEvents";
 import type { MochitRiveTriggerInput } from "./mochitTypes";
 import type { MochitReactionProfile } from "./mochitTypes";
 import type { MochitAttention, MochitEmotion } from "./mochitBehavior";
+import { buildMacroIdleSpec, macroIdleMovesGaze, type MochitMacroIdleBehavior } from "./mochitMacroIdle";
+import {
+  createMacroIdleController,
+  type MacroIdleController,
+  type MacroIdlePlayer,
+} from "./mochitMacroIdleController";
 import {
   attentionPointToGazeOffset,
   resolveMochitGazeTarget,
@@ -89,7 +101,14 @@ type Props = {
   attention?: MochitAttention;
   /** content/result で見る位置（正規化座標 0〜1）。省略時は中央 */
   attentionPoint?: MochitAttentionPoint;
+  /**
+   * Macro Idle を1回だけ明示再生する（devプレビュー用）。id が変わるたびに再生する。
+   * 自動発火とは独立で attention は問わないが、reduced-motion・compact・Reaction中・停止中は再生しない。
+   */
+  macroIdleRequest?: MochitMacroIdleRequest;
 };
+
+export type MochitMacroIdleRequest = { behavior: MochitMacroIdleBehavior; id: number };
 
 function canAnimate(el: SVGGraphicsElement | null): el is SVGGraphicsElement {
   return !!el && typeof el.animate === "function";
@@ -185,6 +204,13 @@ type GazeController = {
   configure(profile: ReturnType<typeof getIdleProfile>, animate: boolean): void;
   /** 見る対象を変える。Living Idle の他のアニメーションには触れない。 */
   setTarget(target: MochitGazeTarget): void;
+  /** 今見えている基底視線（補間中なら途中位置） */
+  getBaseOffset(): GazeOffset;
+  /**
+   * Macro Idle の一時視線（add）の再生中は true。ランダム視線の移動だけを見送り、
+   * 乱数リズム（スケジューラ）は作り直さない。
+   */
+  holdRandom(hold: boolean): void;
   dispose(): void;
 };
 
@@ -202,6 +228,7 @@ function createGazeController(svg: SVGSVGElement): GazeController {
   let target: MochitGazeTarget = { kind: "random" };
   let current: GazeOffset = GAZE_CENTER;
   let timer: number | null = null;
+  let held = false;
   // 進行中の補間（次の切替を途中位置から始めるため）
   let moving: { from: GazeOffset; to: GazeOffset; startedAt: number; ms: number; animations: Animation[] } | null =
     null;
@@ -261,7 +288,8 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     if (!gaze) return;
     timer = window.setTimeout(() => {
       timer = null;
-      moveTo(nextGazeTarget(profile), gaze.moveMs);
+      const next = nextGazeTarget(profile);
+      if (!held) moveTo(next, gaze.moveMs);
       scheduleRandom();
     }, nextGazeHoldMs(profile));
   };
@@ -309,6 +337,12 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     setTarget(next) {
       target = next;
       apply();
+    },
+    getBaseOffset() {
+      return visibleOffset();
+    },
+    holdRandom(hold) {
+      held = hold;
     },
     dispose() {
       clearTimer();
@@ -407,7 +441,11 @@ type RunningReaction = {
  * リアクション仕様をDOMへ適用する。全キーフレームが基底状態で始まり基底状態で
  * 終わる契約（fill:"none"）のため、自然終了時は何も片付けなくてもIdleへ戻る。
  */
-function startReaction(svg: SVGSVGElement, spec: ReactionSpec, onEnd: () => void): RunningReaction {
+function startReaction(
+  svg: SVGSVGElement,
+  spec: Pick<ReactionSpec, "totalMs" | "tracks">,
+  onEnd: () => void,
+): RunningReaction {
   const entries: RunningReaction["entries"] = [];
   for (const track of spec.tracks) {
     const els: Element[] =
@@ -486,6 +524,7 @@ export default function MochitSvg({
   emotion = "neutral",
   attention = "random",
   attentionPoint,
+  macroIdleRequest,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [inViewport, setInViewport] = useState(true);
@@ -658,6 +697,82 @@ export default function MochitSvg({
     };
   }, [active, compact]);
 
+  // ---- Macro Idle ----
+  // スケジューラは1つだけ作り、条件の変化（稼働/compact/attention/Reaction）だけを届ける。
+  // 再生は外側<svg>・腕・視線(add)・アンテナ(add)への有限アニメで、Micro Idle には触れない。
+  const macroRef = useRef<MacroIdleController | null>(null);
+  const getMacro = (): MacroIdleController | null => {
+    if (macroRef.current) return macroRef.current;
+    const svg = svgRef.current;
+    if (failed || !svg || !svg.firstElementChild) return null;
+    const play: MacroIdlePlayer = (behavior, durationMs, onEnd) => {
+      const target = svgRef.current;
+      if (!target || typeof target.animate !== "function") return null;
+      const gaze = gazeRef.current;
+      const spec = buildMacroIdleSpec(behavior, { durationMs, gazeBase: gaze?.getBaseOffset() });
+      const holdGaze = macroIdleMovesGaze(spec);
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        if (holdGaze) gaze?.holdRandom(false);
+        delete target.dataset.macroIdle;
+      };
+      if (holdGaze) gaze?.holdRandom(true);
+      let running: RunningReaction;
+      try {
+        running = startReaction(target, spec, () => {
+          finish();
+          onEnd();
+        });
+      } catch (error) {
+        finish();
+        if (isDev) console.warn("[Mochit] Macro Idle の再生に失敗しました。", error);
+        return null;
+      }
+      // 検証・デバッグ用に再生中の Behavior を属性で示す（React はこの属性を管理しない）
+      target.dataset.macroIdle = behavior;
+      return {
+        stop(settleMs) {
+          stopReaction(running, settleMs);
+          finish();
+        },
+      };
+    };
+    macroRef.current = createMacroIdleController({ play });
+    return macroRef.current;
+  };
+  const getMacroRef = useRef(getMacro);
+  useEffect(() => {
+    getMacroRef.current = getMacro;
+  });
+  useEffect(() => {
+    const svg = svgRef.current;
+    getMacroRef.current()?.update({
+      active: active && !!svg && typeof svg.animate === "function",
+      reducedMotion,
+      compact,
+      attention,
+    });
+  }, [active, reducedMotion, compact, attention, failed]);
+  // マウント時点で既にある要求は再生しない（再マウントで古い要求が再生されないように）
+  const macroRequestId = macroIdleRequest?.id;
+  const macroRequestBehavior = macroIdleRequest?.behavior;
+  const handledMacroRequestRef = useRef(macroRequestId);
+  useEffect(() => {
+    if (macroRequestId === undefined || !macroRequestBehavior) return;
+    if (handledMacroRequestRef.current === macroRequestId) return;
+    handledMacroRequestRef.current = macroRequestId;
+    getMacroRef.current()?.playNow(macroRequestBehavior);
+  }, [macroRequestId, macroRequestBehavior]);
+  useEffect(
+    () => () => {
+      macroRef.current?.dispose();
+      macroRef.current = null;
+    },
+    [],
+  );
+
   // ---- リアクション再生 ----
   // reduced-motion では縮退版（表情/Core発光のみ）を再生するため gating には含めない。
   const reactionGated = failed || !inViewport || documentHidden;
@@ -689,6 +804,8 @@ export default function MochitSvg({
         reducedMotion: env.reducedMotion,
       });
       if (!baseSpec) return;
+      // Reaction > Macro Idle: 再生中の Macro を止め、Reaction 終了まで自動発火しない
+      macroRef.current?.update({ reacting: true });
       if (pendingStartRef.current !== null) {
         clearTimeout(pendingStartRef.current);
         pendingStartRef.current = null;
@@ -696,17 +813,23 @@ export default function MochitSvg({
       const begin = () => {
         pendingStartRef.current = null;
         const target = svgRef.current;
-        if (!target || reactionEnvRef.current.gated) return;
+        if (!target || reactionEnvRef.current.gated) {
+          macroRef.current?.update({ reacting: false });
+          return;
+        }
         // 開始直前に平常口を確定し、リアクションの口の基底をそれに付け替える
         syncRestingMouthRef.current(0);
         const spec = rebaseReactionMouths(baseSpec, appliedMouthRef.current ?? "neutral");
         try {
           runningRef.current = startReaction(target, spec, () => {
             runningRef.current = null;
+            // Macro Idle は新しい待ち時間（8秒以上）から数え直す
+            macroRef.current?.update({ reacting: false });
             // リアクション中に emotion が変わっていれば、終了後に新しい平常表情へ移る
             syncRestingMouthRef.current(transitionMsRef.current);
           });
         } catch (error) {
+          macroRef.current?.update({ reacting: false });
           if (isDev) console.warn("[Mochit] リアクションの再生に失敗しました。", error);
         }
       };
@@ -736,6 +859,7 @@ export default function MochitSvg({
       stopReaction(runningRef.current, 0);
       runningRef.current = null;
     }
+    macroRef.current?.update({ reacting: false });
     syncRestingMouthRef.current(0);
   }, [reactionGated]);
   useEffect(

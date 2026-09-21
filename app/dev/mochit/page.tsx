@@ -12,6 +12,8 @@ import type { MochitEvent, MochitEventSignal } from "@/components/mochit/mochitE
 import { MOCHIT_EVENT_PRIORITIES } from "@/components/mochit/mochitEvents";
 import type { MochitAttention, MochitEmotion } from "@/components/mochit/mochitBehavior";
 import type { MochitAttentionPoint } from "@/components/mochit/mochitAttention";
+import type { MochitMacroIdleBehavior } from "@/components/mochit/mochitMacroIdle";
+import type { MochitMacroIdleRequest } from "@/components/mochit/MochitSvg";
 
 const STATES: MochitState[] = ["normal", "happy", "thinking", "cheering"];
 const SIZES: MochitSize[] = ["small", "medium", "large"];
@@ -26,6 +28,8 @@ const ATTENTION_POINTS: Array<{ label: string; point: MochitAttentionPoint }> = 
   { label: "左下", point: { x: 0.15, y: 0.8 } },
   { label: "右下", point: { x: 0.85, y: 0.8 } },
 ];
+// idleBehavior の確認用。auto は自動 Macro Idle のみ（明示再生なし）
+const IDLE_BEHAVIORS: Array<"auto" | MochitMacroIdleBehavior> = ["auto", "lookAround", "curious", "stretch"];
 const CONTEXTS: MochitScreenContext[] = ["other", "today", "progress", "avatar", "quizResult", "checkpoint", "rank"];
 const EVENTS: MochitEvent[] = [
   "checkpointClear",
@@ -55,6 +59,8 @@ export default function MochitDevPreviewPage() {
   const [signal, setSignal] = useState<MochitEventSignal | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
   const [eventCompact, setEventCompact] = useState(false);
+  const [idleBehavior, setIdleBehavior] = useState<"auto" | MochitMacroIdleBehavior>("auto");
+  const [macroIdleRequest, setMacroIdleRequest] = useState<MochitMacroIdleRequest | undefined>(undefined);
   const eventIdRef = useRef(0);
   const testTimerIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -250,6 +256,7 @@ export default function MochitDevPreviewPage() {
                 compact
                 growthStage={stage}
                 event={signal}
+                macroIdleRequest={macroIdleRequest}
                 message="イベントボタンで反応を確認"
               />
             ) : (
@@ -260,9 +267,38 @@ export default function MochitDevPreviewPage() {
                 compact={false}
                 growthStage={stage}
                 event={signal}
+                macroIdleRequest={macroIdleRequest}
                 message="イベントボタンで反応を確認"
               />
             )}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-700">
+            <label className="flex items-center gap-2">
+              idleBehavior（Macro Idle・SVGのみ）:
+              <select
+                className="rounded-lg border border-gray-200 px-2 py-1"
+                value={idleBehavior}
+                onChange={(e) => setIdleBehavior(e.target.value as "auto" | MochitMacroIdleBehavior)}
+              >
+                {IDLE_BEHAVIORS.map((b) => (
+                  <option key={b} value={b}>{b === "auto" ? "auto / normal" : b}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              disabled={idleBehavior === "auto"}
+              onClick={() => {
+                if (idleBehavior === "auto") return;
+                setMacroIdleRequest((prev) => ({ behavior: idleBehavior, id: (prev?.id ?? 0) + 1 }));
+              }}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 disabled:opacity-40"
+            >
+              ▶ Play（1回）
+            </button>
+            <span className="text-xs font-normal text-gray-400">
+              auto: attention=random・compact以外で8〜20秒ごとに自動発火（Reaction後は8秒以上あける）
+            </span>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {EVENTS.map((event) => (
