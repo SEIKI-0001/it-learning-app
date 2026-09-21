@@ -126,12 +126,14 @@ function scaleOf(transform: string) {
 
 describe("buildMacroIdleSpec: 基底状態へ戻る契約", () => {
   const rng = seeded(7);
+  for (const floating of [false, true])
   for (const behavior of MOCHIT_MACRO_IDLE_BEHAVIORS) {
-    it(`${behavior}: 全トラックが恒等で始まり恒等で終わり、Idle 要素は add`, () => {
+    it(`${behavior}${floating ? "（floating）" : ""}: 全トラックが恒等で始まり恒等で終わり、Idle 要素は add`, () => {
       for (let i = 0; i < 20; i++) {
         const spec = buildMacroIdleSpec(behavior, {
           durationMs: macroIdleDurationMs(behavior, rng),
           gazeBase: { x: 3, y: -2 },
+          floating,
           rng,
         });
         expect(spec.totalMs).toBeGreaterThanOrEqual(MACRO_IDLE_DURATION_RANGE_MS[behavior][0]);

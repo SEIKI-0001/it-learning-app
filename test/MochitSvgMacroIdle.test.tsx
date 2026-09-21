@@ -146,6 +146,30 @@ describe("MochitSvg: 自動 Macro Idle", () => {
   });
 });
 
+describe("MochitSvg: floating（84px）の Macro Idle", () => {
+  it("floating は強めの振幅で再生し、スケジューラへ floating 条件を渡す", () => {
+    const { svg } = renderSvg({ reactionProfile: "floating" });
+    advance(8000);
+    const peakSy = Math.max(
+      ...bodyAnims(svg)[0].keyframes.map((k) => Number(/scale\([-\d.]+, ([-\d.]+)\)/.exec(String(k.transform))?.[1] ?? 1)),
+    );
+    expect(peakSy).toBeGreaterThanOrEqual(1.05);
+    const tunings = vi.mocked(macro.nextMacroIdleDelayMs).mock.calls.map((c) => c[1]);
+    expect(tunings.at(-1)).toBe(macro.FLOATING_MACRO_IDLE_TUNING);
+  });
+
+  it("full は従来の振幅・頻度のまま", () => {
+    const { svg } = renderSvg();
+    advance(8000);
+    const peakSy = Math.max(
+      ...bodyAnims(svg)[0].keyframes.map((k) => Number(/scale\([-\d.]+, ([-\d.]+)\)/.exec(String(k.transform))?.[1] ?? 1)),
+    );
+    expect(peakSy).toBeLessThan(1.04);
+    const tunings = vi.mocked(macro.nextMacroIdleDelayMs).mock.calls.map((c) => c[1]);
+    expect(tunings.at(-1)).toBe(macro.DEFAULT_MACRO_IDLE_TUNING);
+  });
+});
+
 describe("MochitSvg: Macro Idle は Micro Idle を再起動しない", () => {
   it("breathe / sway / antenna / blink を cancel も作り直しもしない・SVG も再生成しない", () => {
     const { svg, q } = renderSvg({ emotion: "sleepy" });

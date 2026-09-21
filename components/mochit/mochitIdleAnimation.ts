@@ -9,6 +9,39 @@
 
 export type RNG = () => number; // [0,1)
 
+/** 目が動いてから体・アンテナが追従するまでのタイミング（ms）。 */
+export type EmbodiedAttentionTiming = {
+  bodyDelayMs: number;
+  bodyMs: number;
+  antennaDelayMs: number;
+  antennaMs: number;
+};
+
+/**
+ * Semantic Attention の身体連動の振幅（master px / deg）。視線オフセットを
+ * 視線レンジで正規化した -1〜1 に掛けて使う（mochitEmbodiedAttention.ts）。
+ */
+export type EmbodiedAttentionTuning = {
+  /** 足元支点の傾き（最大） */
+  tiltDeg: number;
+  /** 対象側への平行移動（最大） */
+  leanX: number;
+  leanY: number;
+  /** 上下を見る時の足元支点の伸び縮み（最大・下を覗く=縮む／見上げる=伸びる） */
+  stretchY: number;
+  /**
+   * 横方向の応答カーブの指数（0〜1）。|n|^exponent で小さな横成分を持ち上げ、
+   * 「ほぼ真下だが少し左」のような対象でも向きが読めるようにする。1 で線形。
+   */
+  horizontalExponent: number;
+  /** アンテナの追加回転（最大）。体より少し大きく、遅れて追従する */
+  antennaDeg: number;
+  /** 対象を見る時（目→体→アンテナ） */
+  attend: EmbodiedAttentionTiming;
+  /** 基底へ戻る時（同じ順序で戻る） */
+  release: EmbodiedAttentionTiming;
+};
+
 /** 指定ピボットを中心に回転する CSS transform 文字列。 */
 export function rotateAbout(cx: number, cy: number, deg: number): string {
   return `translate(${cx}px, ${cy}px) rotate(${deg}deg) translate(${-cx}px, ${-cy}px)`;
@@ -55,6 +88,11 @@ export type IdleProfile = {
     rangeY: number;
     recenterChance: number;
   } | null;
+  /**
+   * Semantic Attention の身体連動（目→体→アンテナの時間差で対象へ向く）。
+   * floating（84px）だけが持ち、full / compact では null（視線のみ）。
+   */
+  embody: EmbodiedAttentionTuning | null;
 };
 
 const FULL_PROFILE: IdleProfile = {
@@ -85,6 +123,35 @@ const FULL_PROFILE: IdleProfile = {
     rangeY: 4,
     recenterChance: 0.5,
   },
+  embody: null,
+};
+
+/**
+ * floating（常時表示の 84px）。本体は full と同じ待機で、視線の振幅と身体連動だけを強める。
+ * 84px では master 1px ≒ CSS 0.067px なので full の ±7 は約 0.5px で見えない。
+ * 瞳は白目と同形の暗色ピルで clip-path により白目内へマスクされるため、はみ出しは起きない。
+ * 振幅は「反対側に白目の三日月が約1CSSpx見え、ハイライトが白目の縁で大きく欠けない」上限。
+ */
+const FLOATING_PROFILE: IdleProfile = {
+  ...FULL_PROFILE,
+  gaze: {
+    moveMs: 140,
+    minHoldMs: 900,
+    maxHoldMs: 2200,
+    rangeX: 16,
+    rangeY: 12,
+    recenterChance: 0.5,
+  },
+  embody: {
+    tiltDeg: 3,
+    leanX: 18,
+    leanY: 12,
+    stretchY: 0.018,
+    horizontalExponent: 0.6,
+    antennaDeg: 5.5,
+    attend: { bodyDelayMs: 100, bodyMs: 380, antennaDelayMs: 240, antennaMs: 520 },
+    release: { bodyDelayMs: 90, bodyMs: 420, antennaDelayMs: 230, antennaMs: 560 },
+  },
 };
 
 const COMPACT_PROFILE: IdleProfile = {
@@ -104,10 +171,13 @@ const COMPACT_PROFILE: IdleProfile = {
     doubleGapMs: 240,
   },
   gaze: null,
+  embody: null,
 };
 
-export function getIdleProfile(compact: boolean): IdleProfile {
-  return compact ? COMPACT_PROFILE : FULL_PROFILE;
+/** compact が優先（compact なら floating 指定でも控えめ）。floating は 84px 常時表示版。 */
+export function getIdleProfile(compact: boolean, floating = false): IdleProfile {
+  if (compact) return COMPACT_PROFILE;
+  return floating ? FLOATING_PROFILE : FULL_PROFILE;
 }
 
 // ---- 連続モーションのキーフレーム（direction: alternate 前提で2キー） ----

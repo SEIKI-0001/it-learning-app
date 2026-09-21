@@ -72,6 +72,8 @@ export default function MochitDevPreviewPage() {
   const [signal, setSignal] = useState<MochitEventSignal | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
   const [eventCompact, setEventCompact] = useState(false);
+  // 84px 常時表示版（FloatingMochit と同じ size/reactionProfile）で確認する
+  const [eventFloating, setEventFloating] = useState(false);
   const [idleBehavior, setIdleBehavior] = useState<"auto" | MochitMacroIdleBehavior>("auto");
   const [macroIdleRequest, setMacroIdleRequest] = useState<MochitMacroIdleRequest | undefined>(undefined);
   const [sleepEnabled, setSleepEnabled] = useState(true);
@@ -335,6 +337,15 @@ export default function MochitDevPreviewPage() {
             />
             compact表示で確認
           </label>
+          <label className="mt-1 flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <input
+              type="checkbox"
+              checked={eventFloating && !eventCompact}
+              disabled={eventCompact}
+              onChange={(e) => setEventFloating(e.target.checked)}
+            />
+            floating（84px・常時表示版）で確認
+          </label>
           <div ref={primaryStageRef} className="mx-auto mt-3 flex w-fit justify-center">
             {eventCompact ? (
               <Mochit
@@ -347,6 +358,17 @@ export default function MochitDevPreviewPage() {
                 event={signal}
                 macroIdleRequest={macroIdleRequest}
                 message="イベントボタンで反応を確認"
+              />
+            ) : eventFloating ? (
+              <Mochit
+                {...shared}
+                behavior={primaryBehavior}
+                state="normal"
+                size="floating"
+                reactionProfile="floating"
+                growthStage={stage}
+                event={signal}
+                macroIdleRequest={macroIdleRequest}
               />
             ) : (
               <Mochit
@@ -387,7 +409,7 @@ export default function MochitDevPreviewPage() {
               ▶ Play（1回）
             </button>
             <span className="text-xs font-normal text-gray-400">
-              auto: attention=random・compact以外で8〜20秒ごとに自動発火（Reaction後は8秒以上あける）
+              auto: attention=random・compact以外で8〜20秒ごと（floatingは7〜15秒・可視Behavior多め）に自動発火（Reaction後も同じ待ち時間から）
             </span>
           </div>
           <div

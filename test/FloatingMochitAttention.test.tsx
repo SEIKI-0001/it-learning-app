@@ -70,7 +70,8 @@ const advance = (ms: number) =>
   act(() => {
     vi.advanceTimersByTime(ms);
   });
-const gaze = getIdleProfile(false).gaze!;
+// FloatingMochit は floating プロファイル（84px 用に視線レンジを拡大）
+const gaze = getIdleProfile(false, true).gaze!;
 
 async function renderPet(reducedMotion = false) {
   render(<FloatingMochit reducedMotion={reducedMotion} />);
