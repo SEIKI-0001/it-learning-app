@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { MarketScene } from "./threec/MarketScene";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「3C分析」専用の体験。
-//   ① 市場マップ：クレープ屋の出店を例に、顧客/競合/自社の3視点をタップ調査。
-//      3つ全部そろうと「勝てる場所（作戦）」が見えるコンプリート体験
+//   ① 市場マップ：クレープ屋の出店を例に、2.5D の駅前の街で顧客/競合/自社を調査。
+//      見つけた事実がチップとして中央の作戦ボードへ集まり、3つそろうと作戦が組み上がる
 //      ＋ よくある罠「Cost（費用）は3Cに入らない」を強調
 //   ② 観点の振り分けクイズ
 // ============================================================================
@@ -15,7 +17,7 @@ type C = "customer" | "competitor" | "company";
 
 const CARDS: Record<
   C,
-  { name: string; emoji: string; who: string; q: string; found: string; color: string; pos: { left: string; top: string } }
+  { name: string; emoji: string; who: string; q: string; found: string }
 > = {
   customer: {
     name: "Customer（顧客）",
@@ -23,8 +25,6 @@ const CARDS: Record<
     who: "買ってくれる相手・市場",
     q: "誰が、何を求めてる？",
     found: "放課後の学生が多い。「安くて写真映えするおやつ」を探している！",
-    color: "sky",
-    pos: { left: "50%", top: "10%" },
   },
   competitor: {
     name: "Competitor（競合）",
@@ -32,8 +32,6 @@ const CARDS: Record<
     who: "同じお客を狙うライバル",
     q: "ライバルの強み・弱みは？",
     found: "隣のカフェはおしゃれだけど、値段が高くて提供が遅い。",
-    color: "rose",
-    pos: { left: "84%", top: "80%" },
   },
   company: {
     name: "Company（自社）",
@@ -41,32 +39,16 @@ const CARDS: Record<
     who: "自分たちの会社",
     q: "自社の強み・弱みは？",
     found: "うちは「早い・安い・トッピング豊富」が売り！",
-    color: "emerald",
-    pos: { left: "16%", top: "80%" },
   },
 };
 
-const TONE: Record<string, { on: string; off: string; done: string }> = {
-  sky: {
-    on: "bg-sky-500 text-white ring-sky-500",
-    off: "bg-sky-50 text-sky-700 ring-sky-200",
-    done: "bg-white text-sky-700 ring-sky-400",
-  },
-  rose: {
-    on: "bg-rose-500 text-white ring-rose-500",
-    off: "bg-rose-50 text-rose-700 ring-rose-200",
-    done: "bg-white text-rose-700 ring-rose-400",
-  },
-  emerald: {
-    on: "bg-emerald-500 text-white ring-emerald-500",
-    off: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    done: "bg-white text-emerald-700 ring-emerald-400",
-  },
-};
+const STRATEGY = "ワンコインの映えクレープを、待たせず出す";
 
 function MarketMap() {
+  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<C | null>(null);
   const [seen, setSeen] = useState<Record<C, boolean>>({ customer: false, competitor: false, company: false });
+  const [costTries, setCostTries] = useState(0);
   const order: C[] = ["customer", "competitor", "company"];
   const allSeen = order.every((c) => seen[c]);
   const card = sel ? CARDS[sel] : null;
@@ -81,48 +63,22 @@ function MarketMap() {
       <SectionTitle step={1}>3つの視点で市場を調査せよ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         あなたは<b className="text-gray-800">駅前にクレープ屋さんを出す</b>ことに。
-        マップの3か所を<b className="text-gray-800">全部タップ</b>して調査すると、勝てる作戦が見えてきます。
+        街の3か所を<b className="text-gray-800">全部調べる</b>と、見つけた事実が中央の作戦ボードに集まり、勝てる作戦が組み上がります。
       </p>
 
-      {/* 市場マップ: 上=顧客、下=自社と競合が顧客を取り合う */}
-      <div className="relative mx-auto mt-5 h-44 max-w-[300px]">
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-          {/* 自社→顧客 / 競合→顧客 : どちらも同じお客を狙う */}
-          <line x1="16" y1="80" x2="50" y2="10" stroke={sel === "company" ? "#10b981" : "#e5e7eb"} strokeWidth={sel === "company" ? 2.5 : 1.5} />
-          <line x1="84" y1="80" x2="50" y2="10" stroke={sel === "competitor" ? "#f43f5e" : "#e5e7eb"} strokeWidth={sel === "competitor" ? 2.5 : 1.5} />
-          <line x1="16" y1="80" x2="84" y2="80" stroke="#e5e7eb" strokeWidth="1.5" strokeDasharray="3 3" />
-        </svg>
-
-        {order.map((c) => {
-          const it = CARDS[c];
-          const on = sel === c;
-          const tone = TONE[it.color];
-          return (
-            <button
-              key={c}
-              onClick={() => tap(c)}
-              style={{ left: it.pos.left, top: it.pos.top }}
-              className={`absolute z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center ring-2 transition active:scale-95 ${
-                on ? tone.on : seen[c] ? tone.done : tone.off
-              }`}
-            >
-              <span className="text-xl leading-none">{it.emoji}</span>
-              <span className="mt-0.5 text-[9px] font-bold leading-tight">
-                {c === "customer" ? "顧客" : c === "competitor" ? "競合" : "自社"}
-              </span>
-              <span className="text-[8px] font-bold opacity-70">{seen[c] ? "調査済✓" : "タップ"}</span>
-            </button>
-          );
-        })}
-
-        {/* 取り合いの説明 */}
-        <span className="absolute left-1/2 top-[46%] -translate-x-1/2 text-[9px] font-bold text-gray-400">
-          同じお客を取り合う
-        </span>
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <MarketScene
+          researched={seen}
+          focus={sel}
+          costTries={costTries}
+          strategy={STRATEGY}
+          onResearch={tap}
+          reducedMotion={reducedMotion}
+        />
       </div>
 
       {/* 調査結果 */}
-      <div className="mt-3 min-h-[5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
+      <div className="mt-3 min-h-[5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200" aria-live="polite" data-testid="research-result">
         {card ? (
           <>
             <div className="text-sm font-bold text-gray-800">
@@ -132,7 +88,7 @@ function MarketMap() {
             <p className="mt-1.5 text-sm font-bold leading-relaxed text-gray-800">🔍 {card.found}</p>
           </>
         ) : (
-          <span className="text-sm text-gray-400">マップの丸をタップすると調査結果が出ます。</span>
+          <span className="text-sm text-gray-400">街の「🔍 調べる」を押すと調査結果が出ます。</span>
         )}
       </div>
 
@@ -141,13 +97,14 @@ function MarketMap() {
         className={`mt-3 rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 transition ${
           allSeen ? "bg-emerald-50 text-emerald-900 ring-emerald-300" : "bg-gray-50 text-gray-400 ring-gray-200"
         }`}
+        data-testid="strategy-summary"
       >
         {allSeen ? (
           <>
             ✨ <b>3つの調査がそろって、作戦が見えた！</b>
             <br />
             顧客は「安くて映える」を求め（C1）、競合は「高くて遅い」（C2）、自社は「早い・安い」が強み（C3）
-            → <b>「ワンコインの映えクレープを、待たせず出す」</b>で勝負！
+            → <b>「{STRATEGY}」</b>で勝負！
             このように3つを重ねて<b>勝てる場所</b>を探すのが3C分析です。
           </>
         ) : (
@@ -161,6 +118,13 @@ function MarketMap() {
       <div className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm leading-relaxed text-rose-900 ring-1 ring-rose-200">
         ⚠️ よくある罠：4つめのCに <b>Cost（費用）</b> を入れてしまう間違い。3Cは
         <b>顧客・競合・自社</b>の3つだけ。費用はQCDなど別の話です。
+        <button
+          type="button"
+          onClick={() => setCostTries((n) => n + 1)}
+          className="mt-2 block w-full rounded-full bg-white px-3 py-1.5 text-xs font-bold text-rose-700 ring-1 ring-rose-300 transition active:scale-95"
+        >
+          💰 「材料費300円」を作戦ボードに入れてみる
+        </button>
       </div>
     </Panel>
   );

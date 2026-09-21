@@ -1,0 +1,257 @@
+/* 3C の市場模型。地点の浮上・影・レールは network を共用し、
+   ここでは「調査ボタン」「事実チップ」「作戦ボード」だけを足す。 */
+
+.scene {
+  container-type: inline-size;
+}
+
+.rivalry {
+  position: absolute;
+  left: 74%;
+  top: 22%;
+  z-index: 5;
+  transform: translate(-50%, -50%);
+  color: #94a3b8;
+  font-size: 8.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ---------- 調査ボタン ---------- */
+
+.probe {
+  position: absolute;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 8px 4px;
+  transform: translateX(-50%);
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, #ffffff);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--tone) 20%, transparent);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 300ms ease, box-shadow 300ms ease;
+}
+
+.probe[data-researched="false"] {
+  animation: tc-invite 2.4s ease-in-out infinite;
+}
+
+.probe[data-focus="true"] {
+  background: color-mix(in srgb, var(--tone) 12%, #ffffff);
+  box-shadow: 0 0 0 2px var(--tone), 0 6px 14px color-mix(in srgb, var(--tone) 26%, transparent);
+}
+
+.probe:focus-visible {
+  outline: 2px solid var(--tone);
+  outline-offset: 2px;
+}
+
+.probeName {
+  color: #111827;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.probeAction {
+  color: color-mix(in srgb, var(--tone) 80%, #111827);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ---------- 作戦ボード ---------- */
+
+.board {
+  position: absolute;
+  z-index: 12;
+  display: flex;
+  width: 50%;
+  min-height: 26%;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 7px 7px;
+  transform: translate(-50%, -62%);
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 20px rgba(30, 42, 64, 0.1);
+  transition: border-color 400ms ease, background 400ms ease, box-shadow 400ms ease;
+}
+
+.board[data-complete="true"] {
+  border: 1.5px solid #10b981;
+  background: linear-gradient(180deg, #ffffff, #ecfdf5);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16), 0 12px 24px rgba(16, 185, 129, 0.22);
+  animation: tc-assemble 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.boardTitle {
+  color: #475569;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.board[data-complete="true"] .boardTitle {
+  color: #047857;
+}
+
+.boardSlots {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.slot {
+  height: 13px;
+  border: 1px dashed color-mix(in srgb, var(--tone) 40%, #e2e8f0);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--tone) 5%, #ffffff);
+}
+
+.slot[data-filled="true"] {
+  border-style: solid;
+}
+
+.boardStrategy {
+  color: #064e3b;
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.boardFrom {
+  display: flex;
+  gap: 2px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.times {
+  margin: 0 3px;
+  color: #94a3b8;
+}
+
+.reject {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  padding: 2px 7px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: tc-reject 600ms ease both;
+}
+
+/* ---------- 事実チップ ---------- */
+
+.fact {
+  position: absolute;
+  z-index: 16;
+  display: inline-flex;
+  max-width: 48%;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  transform: translate(-50%, -38%);
+  overflow: hidden;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--tone) 12%, #ffffff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone) 50%, #ffffff), 0 3px 8px color-mix(in srgb, var(--tone) 18%, transparent);
+  color: #111827;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: tc-fly 900ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+.fact b {
+  flex: none;
+  color: color-mix(in srgb, var(--tone) 85%, #111827);
+  font-weight: 800;
+}
+
+@keyframes tc-fly {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--from-x)), calc(-38% + var(--from-y))) scale(0.7);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -38%);
+  }
+}
+
+@keyframes tc-assemble {
+  0% {
+    transform: translate(-50%, -62%) scale(0.9);
+  }
+  60% {
+    transform: translate(-50%, -62%) scale(1.04);
+  }
+  100% {
+    transform: translate(-50%, -62%);
+  }
+}
+
+@keyframes tc-reject {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(calc(-50% - 4px), 0);
+  }
+  50% {
+    transform: translate(calc(-50% + 4px), 0);
+  }
+  70% {
+    transform: translate(calc(-50% - 2px), 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes tc-invite {
+  0%,
+  100% {
+    box-shadow: 0 4px 10px color-mix(in srgb, var(--tone) 20%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--tone) 18%, transparent), 0 4px 10px color-mix(in srgb, var(--tone) 20%, transparent);
+  }
+}
+
+.scene[data-reduced-motion="true"] .fact,
+.scene[data-reduced-motion="true"] .board,
+.scene[data-reduced-motion="true"] .reject,
+.scene[data-reduced-motion="true"] .probe {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fact,
+  .board[data-complete="true"],
+  .reject,
+  .probe[data-researched="false"] {
+    animation: none;
+  }
+}
