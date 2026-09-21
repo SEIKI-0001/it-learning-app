@@ -208,13 +208,11 @@ function DnsJourney() {
   }, [outage, step.from, step.to]);
 
   useEffect(() => {
-    if (!playing || outage || reducedMotion) return;
-    if (index >= FLOW_STEPS.length - 1) {
-      setPlaying(false);
-      return;
-    }
+    if (!playing || outage || reducedMotion || index >= FLOW_STEPS.length - 1) return;
     const timer = window.setTimeout(() => {
-      setIndex((current) => Math.min(current + 1, FLOW_STEPS.length - 1));
+      const next = Math.min(index + 1, FLOW_STEPS.length - 1);
+      setIndex(next);
+      if (next >= FLOW_STEPS.length - 1) setPlaying(false);
     }, 1500);
     return () => window.clearTimeout(timer);
   }, [index, outage, playing, reducedMotion]);
