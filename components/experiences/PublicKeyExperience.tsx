@@ -12,6 +12,7 @@ import {
 import { KeyGlyph, KeyTag, KeyToken, type KeyKind } from "./crypto/KeyToken";
 import styles from "./crypto/crypto.module.css";
 import type { NodeState } from "./network/NetworkSceneBase";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -24,23 +25,6 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 
 const AUTOPLAY_INTERVAL_MS = 3000;
-
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return;
-    }
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(query.matches);
-    update();
-    query.addEventListener?.("change", update);
-    return () => query.removeEventListener?.("change", update);
-  }, []);
-
-  return reduced;
-}
 
 // ---------------------------------------------------------------------------
 // ① 2つの鍵
