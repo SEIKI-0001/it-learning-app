@@ -4,7 +4,7 @@ import styles from "./network.module.css";
 // 通信データそのものを表す半透明カプセル。シーン座標でレール上に浮かび、
 // 押すと中身（種類・送信元→宛先・内容）を確認できる。
 
-export type CapsuleKind = "input" | "query" | "response" | "connect" | "connected" | "timeout";
+export type CapsuleKind = "input" | "query" | "response" | "connect" | "connected" | "page" | "timeout";
 
 export function DataCapsule({
   kind,

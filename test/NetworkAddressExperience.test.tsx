@@ -56,7 +56,7 @@ describe("NetworkAddressExperience", () => {
     fireEvent.click(screen.getByRole("button", { name: "解説2" }));
 
     expect(
-      screen.getByRole("heading", { name: "2名前解決を「再生」して追う" }),
+      screen.getByRole("heading", { name: "2URL入力から表示までを「再生」して追う" }),
     ).toBeInTheDocument();
     expect(screen.getByText("2 / 3")).toBeInTheDocument();
   });
@@ -68,7 +68,7 @@ describe("NetworkAddressExperience", () => {
     expect(scene.querySelector('[data-illustration="human"]')).not.toBeNull();
     expect(scene.querySelector('[data-illustration="dns"]')).not.toBeNull();
     expect(scene.querySelector('[data-illustration="web"]')).not.toBeNull();
-    expect(scene.querySelectorAll("[data-lane]")).toHaveLength(3);
+    expect(scene.querySelectorAll("[data-lane]")).toHaveLength(4);
   });
 
   it("steps from DNS query to DNS response with direction shown on the lanes", () => {
@@ -79,7 +79,7 @@ describe("NetworkAddressExperience", () => {
     expect(capsuleKind()).toBe("input");
 
     fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
-    expect(packet).toHaveTextContent("DNS QUERY");
+    expect(packet).toHaveTextContent("DNS問い合わせ");
     expect(packet).toHaveTextContent("example.com → ?");
     expect(screen.getByTestId("network-route")).toHaveTextContent("あなた → DNS");
     expect(stateOf('[data-lane="query"]')).toBe("active");
@@ -87,16 +87,32 @@ describe("NetworkAddressExperience", () => {
     expect(stateOf('[data-node="dns"]')).toBe("active");
 
     fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
-    expect(packet).toHaveTextContent("DNS RESPONSE");
+    expect(packet).toHaveTextContent("DNS応答");
     expect(packet).toHaveTextContent("93.184.216.34");
     expect(screen.getByTestId("network-route")).toHaveTextContent("DNS → あなた");
     expect(stateOf('[data-lane="response"]')).toBe("active");
     expect(stateOf('[data-lane="query"]')).toBe("idle");
 
     fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
-    expect(packet).toHaveTextContent("CONNECT");
+    expect(packet).toHaveTextContent("接続要求");
     expect(stateOf('[data-lane="web"]')).toBe("active");
     expect(stateOf('[data-node="web"]')).toBe("active");
+  });
+
+  it("continues past the web server until the page is displayed", () => {
+    renderJourney();
+    const forward = screen.getByRole("button", { name: "1ステップ進む" });
+    for (let i = 0; i < 5; i += 1) fireEvent.click(forward);
+
+    expect(screen.getByTestId("network-route")).toHaveTextContent("Webサーバ → あなた");
+    expect(capsuleKind()).toBe("page");
+    expect(stateOf('[data-lane="page"]')).toBe("active");
+    expect(screen.queryByTestId("browser-window")).not.toBeInTheDocument();
+
+    fireEvent.click(forward);
+    expect(screen.getByText("7 / 7")).toBeInTheDocument();
+    expect(screen.getByTestId("browser-window")).toHaveTextContent("example.com");
+    expect(forward).toBeDisabled();
   });
 
   it("lets learners inspect the data capsule", () => {
@@ -108,8 +124,8 @@ describe("NetworkAddressExperience", () => {
 
     expect(packet).toHaveAttribute("aria-expanded", "true");
     const inspector = screen.getByTestId("capsule-inspector");
-    expect(inspector).toHaveTextContent("DATA CAPSULE");
-    expect(inspector).toHaveTextContent("DNS QUERY");
+    expect(inspector).toHaveTextContent("データの中身");
+    expect(inspector).toHaveTextContent("DNS問い合わせ");
     expect(inspector).toHaveTextContent("あなた → DNS");
   });
 
@@ -129,30 +145,37 @@ describe("NetworkAddressExperience", () => {
     act(() => {
       vi.advanceTimersByTime(1500);
     });
+    // 0.5倍速: まだ応答待ち
+    expect(capsuleKind()).toBe("query");
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
     expect(capsuleKind()).toBe("timeout");
-    expect(screen.getByText("DNS timeout")).toBeInTheDocument();
-    expect(screen.getByText("IP address unknown")).toBeInTheDocument();
+    expect(screen.getByText("DNSタイムアウト")).toBeInTheDocument();
+    expect(screen.getByText("IPアドレスが分からない")).toBeInTheDocument();
 
     // 先へ進もうとしても Webサーバへの接続は発生しない
     const forward = screen.getByRole("button", { name: "1ステップ進む" });
     expect(forward).toBeDisabled();
     fireEvent.change(screen.getByRole("slider", { name: "名前解決のタイムライン" }), {
-      target: { value: "4" },
+      target: { value: "6" },
     });
     expect(stateOf('[data-lane="web"]')).toBe("blocked");
+    expect(stateOf('[data-lane="page"]')).toBe("blocked");
     expect(stateOf('[data-node="web"]')).toBe("disabled");
     expect(capsuleKind()).not.toBe("connect");
+    expect(screen.queryByTestId("browser-window")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "名前解決を再生" }));
     act(() => {
-      vi.advanceTimersByTime(6000);
+      vi.advanceTimersByTime(12000);
     });
     expect(stateOf('[data-lane="web"]')).toBe("blocked");
     expect(capsuleKind()).not.toBe("connect");
 
     fireEvent.click(screen.getByRole("button", { name: "正常に戻す" }));
     expect(stateOf('[data-node="dns"]')).toBe("active");
-    expect(screen.queryByText("DNS timeout")).not.toBeInTheDocument();
+    expect(screen.queryByText("DNSタイムアウト")).not.toBeInTheDocument();
   });
 
   it("stays fully operable with reduced motion", () => {
@@ -175,5 +198,53 @@ describe("NetworkAddressExperience", () => {
     fireEvent.click(screen.getByRole("button", { name: "DNSを止める" }));
     expect(stateOf('[data-node="dns"]')).toBe("error");
     expect(stateOf('[data-lane="web"]')).toBe("blocked");
+  });
+
+  it("advances autoplay at half speed", () => {
+    vi.useFakeTimers();
+    renderJourney();
+    fireEvent.click(screen.getByRole("button", { name: "名前解決を再生" }));
+
+    act(() => {
+      vi.advanceTimersByTime(1600);
+    });
+    expect(capsuleKind()).toBe("input");
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(capsuleKind()).toBe("query");
+  });
+
+  it("switches between private and global addresses on slide 1", () => {
+    render(
+      <ExperienceSlideDeck>
+        <NetworkAddressExperience />
+      </ExperienceSlideDeck>,
+    );
+
+    expect(screen.getByTestId("address-scope")).toHaveAttribute("data-scope", "private");
+    expect(screen.getByText("プライベートIPアドレス")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "インターネット側" }));
+    expect(screen.getByTestId("address-scope")).toHaveAttribute("data-scope", "global");
+    expect(screen.getByText("グローバルIPアドレス")).toBeInTheDocument();
+  });
+
+  it("gives feedback on the true/false checks on slide 3", () => {
+    render(
+      <ExperienceSlideDeck>
+        <NetworkAddressExperience />
+      </ExperienceSlideDeck>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "解説3" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "DNSはWebページのHTMLを返す：×" }));
+    expect(screen.getByText(/正解（答え：×）/)).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "192.168.1.10 はインターネット上で世界に1つだけの住所だ：○" }),
+    );
+    expect(screen.getByText(/不正解（答え：×）/)).toBeInTheDocument();
+    expect(screen.getByText("1 / 4 正解")).toBeInTheDocument();
   });
 });

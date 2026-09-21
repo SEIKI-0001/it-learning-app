@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BrowserWindow } from "./BrowserWindow";
 import { DataCapsule, type CapsuleKind } from "./DataCapsule";
 import { DnsServerIllustration } from "./DnsServerIllustration";
 import { NetworkHumanIllustration } from "./NetworkHumanIllustration";
@@ -21,9 +22,19 @@ import styles from "./network.module.css";
 // 構造（3ノードと3本のレール）は常に表示し、状態だけを props で切り替える。
 
 export type NetworkNodeId = "user" | "dns" | "web";
-export type LaneId = "query" | "response" | "web";
+export type LaneId = "query" | "response" | "web" | "page";
 export type LaneState = "idle" | "active" | "blocked";
-export type CapsuleStop = "input" | "userOut" | "dnsIn" | "dnsOut" | "userIn" | "webOut" | "webIn" | "dnsBlocked";
+export type CapsuleStop =
+  | "input"
+  | "userOut"
+  | "dnsIn"
+  | "dnsOut"
+  | "userIn"
+  | "webOut"
+  | "webIn"
+  | "pageOut"
+  | "pageIn"
+  | "dnsBlocked";
 
 const NODE_AT: Record<NetworkNodeId, WorldPoint> = {
   user: { x: -15, y: 72 },
@@ -55,7 +66,9 @@ const LANES: Record<LaneId, Lane> = {
   query: laneBetween(NODE_AT.user, NODE_AT.dns, LANE_OFFSET),
   // 復路は DNS → あなた の向き。同じ式で逆向きに引くと自然に反対車線になる。
   response: laneBetween(NODE_AT.dns, NODE_AT.user, LANE_OFFSET),
-  web: laneBetween(NODE_AT.user, NODE_AT.web, 0),
+  web: laneBetween(NODE_AT.user, NODE_AT.web, LANE_OFFSET),
+  // ページ本体は Webサーバ → あなた の反対車線で返ってくる
+  page: laneBetween(NODE_AT.web, NODE_AT.user, LANE_OFFSET),
 };
 
 function along(lane: Lane, t: number, z = 0): WorldPoint {
@@ -80,10 +93,12 @@ const STOPS: Record<CapsuleStop, ScreenPoint> = {
   userIn: nudge(iso(along(LANES.response, 0.46, CAPSULE_HEIGHT)), 14, 0),
   webOut: iso(along(LANES.web, 0.08, CAPSULE_HEIGHT)),
   webIn: iso(along(LANES.web, 0.66, CAPSULE_HEIGHT)),
+  pageOut: iso(along(LANES.page, 0.08, CAPSULE_HEIGHT)),
+  pageIn: iso(along(LANES.page, 0.6, CAPSULE_HEIGHT)),
   dnsBlocked: iso(along(LANES.query, 0.58, CAPSULE_HEIGHT)),
 };
 
-const LANE_NUMBER: Record<LaneId, string> = { query: "1", response: "2", web: "3" };
+const LANE_NUMBER: Record<LaneId, string> = { query: "1", response: "2", web: "3", page: "4" };
 
 const NODE_LABEL: Record<NetworkNodeId, { name: string; sub: string; at: ScreenPoint; align: "center" | "start" }> = {
   user: { name: "あなた", sub: "ブラウザ", at: { x: iso(NODE_AT.user).x, y: iso(NODE_AT.user).y + 24 }, align: "center" },
@@ -155,10 +170,13 @@ export function NetworkScene({
   reducedMotion,
   inspectOpen,
   onInspect,
+  showBrowser = false,
 }: {
   nodes: Record<NetworkNodeId, NodeState>;
   lanes: Record<LaneId, LaneState>;
-  capsule: { kind: CapsuleKind; tag: string; payload: string; stop: CapsuleStop };
+  capsule: { kind: CapsuleKind; tag: string; payload: string; stop: CapsuleStop } | null;
+  /** 最終段: ブラウザがページを表示したウィンドウを出す */
+  showBrowser?: boolean;
   trail: { id: string; kind: CapsuleKind; from: CapsuleStop; to: CapsuleStop } | null;
   outage: boolean;
   reducedMotion: boolean;
@@ -192,6 +210,7 @@ export function NetworkScene({
             state: nodes[id],
           }))}
         />
+        <LaneRail id="page" state={lanes.page} />
         <LaneRail id="web" state={lanes.web} />
         <LaneRail id="response" state={lanes.response} />
         <LaneRail id="query" state={lanes.query} />
@@ -252,19 +271,23 @@ export function NetworkScene({
 
       {outage && (
         <div className={styles.faultCallout} role="status">
-          <span className="font-mono font-bold">DNS timeout</span>
-          <span>IP address unknown</span>
+          <span className="font-bold">DNSタイムアウト</span>
+          <span>IPアドレスが分からない</span>
         </div>
       )}
 
-      <DataCapsule
-        kind={capsule.kind}
-        tag={capsule.tag}
-        payload={capsule.payload}
-        at={STOPS[capsule.stop]}
-        expanded={inspectOpen}
-        onToggle={onInspect}
-      />
+      {showBrowser && <BrowserWindow reducedMotion={reducedMotion} />}
+
+      {capsule && (
+        <DataCapsule
+          kind={capsule.kind}
+          tag={capsule.tag}
+          payload={capsule.payload}
+          at={STOPS[capsule.stop]}
+          expanded={inspectOpen}
+          onToggle={onInspect}
+        />
+      )}
     </div>
   );
 }
