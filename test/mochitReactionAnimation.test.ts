@@ -12,7 +12,7 @@ import {
   type MochitEvent,
 } from "@/components/mochit/mochitEvents";
 
-// REACTION_TOTAL_MS に振り付けが定義されている8イベント（wakeUpは対象外＝振り付け無し）。
+// REACTION_TOTAL_MS に振り付けが定義されている全イベント（Step5 で wakeUp を追加）。
 const EVENTS = Object.keys(REACTION_TOTAL_MS) as MochitEvent[];
 
 const FULL: ReactionMode = { compact: false, reducedMotion: false };
@@ -33,6 +33,7 @@ const SPEC_RANGE_MS: Partial<Record<MochitEvent, { min: number; max: number }>> 
   checkpointClear: { min: 1800, max: 2800 },
   tap: { min: 400, max: 700 },
   encourage: { min: 0, max: 1000 },
+  wakeUp: { min: 600, max: 800 },
 };
 
 function offsetsOf(track: ReactionTrack): number[] {
@@ -68,6 +69,11 @@ describe("buildReactionSpec: 時間", () => {
     for (const event of EVENTS) {
       for (const mode of [FULL, COMPACT, REDUCED]) {
         const spec = buildReactionSpec(event, mode);
+        // wakeUp の reduced-motion だけは意図的に再生しない（目を即座に開くだけ）
+        if (event === "wakeUp" && mode === REDUCED) {
+          expect(spec).toBeNull();
+          continue;
+        }
         expect(spec).not.toBeNull();
         expect(spec!.totalMs).toBe(REACTION_TOTAL_MS[event]);
       }
@@ -79,7 +85,8 @@ describe("buildReactionSpec: キーフレーム整合", () => {
   it("全トラックのoffsetは0で始まり1で終わり単調非減少", () => {
     for (const event of EVENTS) {
       for (const mode of [FULL, COMPACT, REDUCED]) {
-        const spec = buildReactionSpec(event, mode)!;
+        const spec = buildReactionSpec(event, mode);
+        if (!spec) continue;
         for (const track of spec.tracks) {
           const offsets = offsetsOf(track);
           expect(offsets[0]).toBe(0);
@@ -97,7 +104,8 @@ describe("buildReactionSpec: 基底復帰（位置飛びなし）", () => {
   it("transformを持つトラックは最初と最後のtransformが同一（基底に戻る）", () => {
     for (const event of EVENTS) {
       for (const mode of [FULL, COMPACT]) {
-        const spec = buildReactionSpec(event, mode)!;
+        const spec = buildReactionSpec(event, mode);
+        if (!spec) continue;
         for (const track of spec.tracks) {
           const first = track.keyframes[0];
           const last = track.keyframes[track.keyframes.length - 1];
@@ -111,8 +119,10 @@ describe("buildReactionSpec: 基底復帰（位置飛びなし）", () => {
   it("bodyトラックの基底はtranslateY(0%) rotate(0deg) scale(1, 1)", () => {
     for (const event of EVENTS) {
       for (const mode of [FULL, COMPACT]) {
-        const spec = buildReactionSpec(event, mode)!;
-        const body = spec.tracks.find((t) => t.target === "body")!;
+        const spec = buildReactionSpec(event, mode);
+        if (!spec) continue;
+        const body = spec.tracks.find((t) => t.target === "body");
+        if (!body) continue; // compact の wakeUp は体を動かさない
         expect(String(body.keyframes[0].transform)).toBe("translateY(0%) rotate(0deg) scale(1, 1)");
         expect(String(body.keyframes[body.keyframes.length - 1].transform)).toBe(
           "translateY(0%) rotate(0deg) scale(1, 1)",
@@ -126,7 +136,8 @@ describe("buildReactionSpec: 口の復帰", () => {
   it("mouthNeutralはoffset0/1でopacity1、変形口（Smile/Thinking/Open）はoffset0/1でopacity0", () => {
     for (const event of EVENTS) {
       for (const mode of [FULL, COMPACT, REDUCED]) {
-        const spec = buildReactionSpec(event, mode)!;
+        const spec = buildReactionSpec(event, mode);
+        if (!spec) continue;
         for (const track of spec.tracks) {
           if (track.target === "mouthNeutral") {
             expect(track.keyframes[0].opacity).toBe(1);
@@ -149,7 +160,8 @@ describe("buildReactionSpec: Core発光", () => {
   it("coreGlowのopacityは全キーフレームで0〜1", () => {
     for (const event of EVENTS) {
       for (const mode of [FULL, COMPACT, REDUCED]) {
-        const spec = buildReactionSpec(event, mode)!;
+        const spec = buildReactionSpec(event, mode);
+        if (!spec) continue;
         const glow = spec.tracks.find((t) => t.target === "coreGlow");
         if (!glow) continue;
         for (const kf of glow.keyframes) {
@@ -174,7 +186,8 @@ describe("buildReactionSpec: compact抑制", () => {
       const fullSpec = buildReactionSpec(event, FULL)!;
       const compactSpec = buildReactionSpec(event, COMPACT)!;
       const fullBody = fullSpec.tracks.find((t) => t.target === "body")!;
-      const compactBody = compactSpec.tracks.find((t) => t.target === "body")!;
+      const compactBody = compactSpec.tracks.find((t) => t.target === "body");
+      if (!compactBody) continue; // compact の wakeUp は体を動かさない
       const fullMax = Math.max(...translateYPercentValues(fullBody).map(Math.abs));
       const compactMax = Math.max(...translateYPercentValues(compactBody).map(Math.abs));
       expect(compactMax).toBeLessThan(fullMax);
@@ -232,7 +245,8 @@ describe("buildReactionSpec: floating強度", () => {
 describe("buildReactionSpec: reduced-motion", () => {
   it("全トラックのキーフレームにtransformプロパティが存在しない（opacityのみ）", () => {
     for (const event of EVENTS) {
-      const spec = buildReactionSpec(event, REDUCED)!;
+      const spec = buildReactionSpec(event, REDUCED);
+      if (!spec) continue;
       for (const track of spec.tracks) {
         for (const kf of track.keyframes) {
           expect(kf.transform).toBeUndefined();
@@ -243,7 +257,8 @@ describe("buildReactionSpec: reduced-motion", () => {
 
   it("coreGlowのピークは0.35以下", () => {
     for (const event of EVENTS) {
-      const spec = buildReactionSpec(event, REDUCED)!;
+      const spec = buildReactionSpec(event, REDUCED);
+      if (!spec) continue;
       const glow = spec.tracks.find((t) => t.target === "coreGlow");
       if (!glow) continue;
       const peak = Math.max(...glow.keyframes.map((kf) => kf.opacity as number));
@@ -277,10 +292,27 @@ describe("buildReactionSpec: checkpointClearのジャンプ", () => {
 });
 
 describe("buildReactionSpec: wakeUp", () => {
-  it("wakeUpは振り付けが無く常にnull", () => {
-    for (const mode of [FULL, COMPACT, REDUCED]) {
-      expect(buildReactionSpec("wakeUp", mode)).toBeNull();
-    }
+  it("約0.6〜0.8秒の軽い反応（跳ね＋アンテナ）で、口は変えない", () => {
+    const spec = buildReactionSpec("wakeUp", FULL)!;
+    expect(spec.totalMs).toBeGreaterThanOrEqual(600);
+    expect(spec.totalMs).toBeLessThanOrEqual(800);
+    const targets = spec.tracks.map((t) => t.target);
+    expect(targets).toContain("body");
+    expect(targets).toContain("antenna");
+    expect(targets.some((t) => t.startsWith("mouth"))).toBe(false);
+    // 大げさな驚きにしない: 跳ねは translateY -2% 以内
+    const body = spec.tracks.find((t) => t.target === "body")!;
+    const ys = body.keyframes.map((kf) => Number(/translateY\((-?[\d.]+)%\)/.exec(String(kf.transform))![1]));
+    expect(Math.min(...ys)).toBeGreaterThanOrEqual(-2);
+  });
+
+  it("reduced-motion では再生しない（目は即座に開くだけ）", () => {
+    expect(buildReactionSpec("wakeUp", REDUCED)).toBeNull();
+  });
+
+  it("compact では体を動かさずアンテナだけ", () => {
+    const spec = buildReactionSpec("wakeUp", COMPACT)!;
+    expect(spec.tracks.map((t) => t.target)).toEqual(["antenna"]);
   });
 });
 

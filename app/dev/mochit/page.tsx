@@ -14,6 +14,13 @@ import type { MochitAttention, MochitEmotion } from "@/components/mochit/mochitB
 import type { MochitAttentionPoint } from "@/components/mochit/mochitAttention";
 import type { MochitMacroIdleBehavior } from "@/components/mochit/mochitMacroIdle";
 import type { MochitMacroIdleRequest } from "@/components/mochit/MochitSvg";
+import { useMochitSleep } from "@/components/mochit/useMochitSleep";
+import { MOCHIT_SLEEP_TIMEOUT_MS, type MochitWakeReason } from "@/components/mochit/mochitSleep";
+
+// Sleep 操作ボタン自体のクリックは「ユーザー活動」に数えない（押した瞬間に起きないように）
+const SLEEP_CONTROL_ATTR = "data-mochit-sleep-control";
+const isSleepControlEvent = (event: Event) =>
+  event.target instanceof Element && event.target.closest(`[${SLEEP_CONTROL_ATTR}]`) !== null;
 
 const STATES: MochitState[] = ["normal", "happy", "thinking", "cheering"];
 const SIZES: MochitSize[] = ["small", "medium", "large"];
@@ -61,6 +68,8 @@ export default function MochitDevPreviewPage() {
   const [eventCompact, setEventCompact] = useState(false);
   const [idleBehavior, setIdleBehavior] = useState<"auto" | MochitMacroIdleBehavior>("auto");
   const [macroIdleRequest, setMacroIdleRequest] = useState<MochitMacroIdleRequest | undefined>(undefined);
+  const [sleepEnabled, setSleepEnabled] = useState(true);
+  const [wakeLog, setWakeLog] = useState<string[]>([]);
   const eventIdRef = useRef(0);
   const testTimerIdsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -80,6 +89,19 @@ export default function MochitDevPreviewPage() {
       return { rendererOverride: "rive" as const, riveSrcOverride: "/characters/mochit/__load-error-sim__.riv" };
     return {};
   }, [rendererMode]);
+
+  const usesPoint = attention === "content" || attention === "result";
+  // 本番の FloatingMochit と同じフックで primary インスタンスを眠らせる（60秒は本番値のまま）。
+  // content/result を見ている間は学習中とみなして自動 sleep を抑制する。
+  const sleep = useMochitSleep({
+    enabled: sleepEnabled,
+    suppressed: usesPoint,
+    isIgnoredActivity: isSleepControlEvent,
+    onWake: (reason: MochitWakeReason) => {
+      setWakeLog((log) => [`${new Date().toLocaleTimeString()} wake: ${reason}`, ...log].slice(0, 5));
+      if (reason === "activity") sendEvent("wakeUp");
+    },
+  });
 
   const sendEvent = (type: MochitEvent) => {
     eventIdRef.current += 1;
@@ -108,7 +130,16 @@ export default function MochitDevPreviewPage() {
     scheduleEvent("taskComplete", 250);
   };
 
-  const usesPoint = attention === "content" || attention === "result";
+  // FloatingMochit と同じ: 学習イベントは awake へ戻してから本来の Reaction を即再生
+  const sendLearningEventWhileSleepy = (type: MochitEvent) => {
+    sleep.sleepNow();
+    const id = setTimeout(() => {
+      sleep.notifyLearningEvent();
+      sendEvent(type);
+    }, 1500);
+    testTimerIdsRef.current.push(id);
+  };
+
   const shared = {
     ...rendererProps,
     reducedMotion,
@@ -117,6 +148,10 @@ export default function MochitDevPreviewPage() {
     behavior: { emotion, attention },
     attentionPoint: usesPoint ? ATTENTION_POINTS[pointIndex].point : undefined,
   };
+
+  const primaryBehavior = sleep.sleeping
+    ? { emotion: "sleepy" as const, idleBehavior: "sleepy" as const, attention }
+    : { emotion, attention };
 
   return (
     <main className="min-h-screen pb-24">
@@ -251,6 +286,7 @@ export default function MochitDevPreviewPage() {
             {eventCompact ? (
               <Mochit
                 {...shared}
+                behavior={primaryBehavior}
                 state="normal"
                 size="small"
                 compact
@@ -262,6 +298,7 @@ export default function MochitDevPreviewPage() {
             ) : (
               <Mochit
                 {...shared}
+                behavior={primaryBehavior}
                 state="normal"
                 size="large"
                 compact={false}
@@ -298,6 +335,53 @@ export default function MochitDevPreviewPage() {
             </button>
             <span className="text-xs font-normal text-gray-400">
               auto: attention=random・compact以外で8〜20秒ごとに自動発火（Reaction後は8秒以上あける）
+            </span>
+          </div>
+          <div
+            className="mt-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-700"
+            {...{ [SLEEP_CONTROL_ATTR]: "" }}
+          >
+            <span>
+              Sleep / Wake:{" "}
+              <span data-testid="mochit-sleep-phase" className={sleep.sleeping ? "text-indigo-700" : "text-emerald-700"}>
+                {sleep.sleeping ? "sleepy" : "awake"}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => sleep.wakeNow("manual")}
+              className="rounded-lg border border-gray-200 px-3 py-1.5"
+            >
+              Awake（静かに）
+            </button>
+            <button
+              type="button"
+              onClick={() => sleep.sleepNow()}
+              className="rounded-lg border border-gray-200 px-3 py-1.5"
+            >
+              Sleepy
+            </button>
+            <button
+              type="button"
+              onClick={() => sleep.wakeNow("activity")}
+              className="rounded-lg border border-gray-200 px-3 py-1.5"
+            >
+              Wake Up
+            </button>
+            <button
+              type="button"
+              onClick={() => sendLearningEventWhileSleepy("correct")}
+              className="rounded-lg border border-gray-200 px-3 py-1.5"
+            >
+              Sleepy→1.5秒後 correct
+            </button>
+            <label className="flex items-center gap-1">
+              <input type="checkbox" checked={sleepEnabled} onChange={(e) => setSleepEnabled(e.target.checked)} />
+              無操作タイマー（{MOCHIT_SLEEP_TIMEOUT_MS / 1000}秒）
+            </label>
+            <span className="text-xs font-normal text-gray-400">
+              pointerdown/keydown/touchstart/scroll で起きる（mousemove は数えない）。content/result 中は自動 sleep しない
+              {wakeLog.length > 0 ? ` ／ ${wakeLog[0]}` : ""}
             </span>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
