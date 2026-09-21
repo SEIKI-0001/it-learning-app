@@ -23,6 +23,7 @@ import type {
 import type { MochitEventSignal } from "./mochitEvents";
 import { createMochitBehaviorState, type MochitBehaviorState } from "./mochitBehavior";
 import type { MochitAttentionPoint } from "./mochitAttention";
+import type { MochitMacroIdleRequest } from "./MochitSvg";
 
 // 後方互換: 既存コードは型をこのモジュールからimportしている。
 export type { MochitAnimation, MochitGrowthStage, MochitSize, MochitState };
@@ -139,6 +140,8 @@ type Props = {
    * state（既存UI互換の表示状態）とは独立で、自動で同一視しない。
    * 現状は emotion（平常表情）と attention（視線）を SVG 描画へ反映する。
    * attention 未指定の場合は従来どおりのランダム視線（random 相当）。
+   * Macro Idle（lookAround/curious/stretch の自発動作）は SVG 描画が自動で差し込む。
+   * idleBehavior はまだ描画へ接続していない（normal 相当＝自動。sleepy は次Step）。
    */
   behavior?: Partial<MochitBehaviorState>;
   /**
@@ -147,6 +150,8 @@ type Props = {
    */
   attentionPoint?: MochitAttentionPoint;
   // ---- dev/テスト用の切替口 ----
+  /** devプレビュー用: Macro Idle を1回だけ再生する（id を変えると再生） */
+  macroIdleRequest?: MochitMacroIdleRequest;
   rendererOverride?: "rive" | "svg" | "fallback";
   riveSrcOverride?: string;
   /** devプレビュー用: SVG描画失敗を強制する */
@@ -169,6 +174,7 @@ export default function Mochit({
   onEventAccepted,
   behavior,
   attentionPoint,
+  macroIdleRequest,
   rendererOverride,
   riveSrcOverride,
   forceSvgFailure,
@@ -265,6 +271,7 @@ export default function Mochit({
                 emotion={emotion}
                 attention={attention}
                 attentionPoint={attentionPoint}
+                macroIdleRequest={macroIdleRequest}
                 onReady={() => setSvgReady(true)}
                 onLoadFailed={() => {
                   setSvgReady(false);
