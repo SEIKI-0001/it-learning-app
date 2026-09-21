@@ -141,7 +141,9 @@ type Props = {
    * 現状は emotion（平常表情）と attention（視線）を SVG 描画へ反映する。
    * attention 未指定の場合は従来どおりのランダム視線（random 相当）。
    * Macro Idle（lookAround/curious/stretch の自発動作）は SVG 描画が自動で差し込む。
-   * idleBehavior はまだ描画へ接続していない（normal 相当＝自動。sleepy は次Step）。
+   * idleBehavior は sleepy のときだけ描画へ接続する（Sleep の継続状態＝Macro Idle 停止・
+   * ランダム視線を休ませ・Micro Idle を静かに）。半目は emotion=sleepy で指定する。
+   * normal/lookAround/curious/stretch は従来どおり自動 Macro Idle に任せる。
    */
   behavior?: Partial<MochitBehaviorState>;
   /**
@@ -236,6 +238,7 @@ export default function Mochit({
   // attention を明示していない既存呼び出しは従来の Living Idle（ランダム視線）のまま。
   // Behavior State の既定値（user）は「意味上の既定」で、未指定の見た目は変えない。
   const attention = behavior?.attention === undefined ? "random" : normalizedBehavior.attention;
+  const sleeping = normalizedBehavior.idleBehavior === "sleepy";
 
   return (
     <div
@@ -272,6 +275,7 @@ export default function Mochit({
                 attention={attention}
                 attentionPoint={attentionPoint}
                 macroIdleRequest={macroIdleRequest}
+                sleeping={sleeping}
                 onReady={() => setSvgReady(true)}
                 onLoadFailed={() => {
                   setSvgReady(false);

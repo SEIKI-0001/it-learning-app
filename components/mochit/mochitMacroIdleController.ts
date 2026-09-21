@@ -1,10 +1,12 @@
 // Macro Idle の実行制御（スケジューラ）。DOM/React に依存せず、再生そのものは
 // 注入された play() に任せる。MochitSvg はここへ条件の変化を通知するだけ。
 //
-// 優先順位: Reaction > Semantic Attention > Macro Idle > Micro Idle
+// 優先順位: Reaction > Semantic Attention > Sleep > Macro Idle > Micro Idle
 //   - Reaction 開始（reacting=true）: 再生中の Macro を即停止し、タイマーも止める。
 //     Reaction 終了後は新しい待ち時間（8秒以上）から数え直す。
 //   - attention が random 以外: 自動発火しない。random 以外へ変わったら再生中の Macro も止める。
+//   - Sleep（sleeping=true）: 再生中の Macro を止め、タイマーも止める。起きたら即発火せず
+//     新しい待ち時間（8秒以上）から数え直す。
 //   - 非表示・ビューポート外・reduced-motion・compact: タイマー/再生を止め、
 //     復帰時は途中再開せず新しい待ち時間から始める。
 // Micro Idle（呼吸/ゆれ/アンテナ/まばたき）には一切触れない。
@@ -57,6 +59,7 @@ const INITIAL_CONDITIONS: MacroIdleConditions = {
   compact: false,
   reacting: false,
   attention: "random",
+  sleeping: false,
 };
 
 export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroIdleController {

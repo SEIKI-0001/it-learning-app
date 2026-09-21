@@ -298,14 +298,16 @@ export type MacroIdleConditions = {
   reacting: boolean;
   /** random 以外（Semantic Attention）では自動発火しない */
   attention: MochitAttention;
+  /** Sleep 状態（idleBehavior=sleepy の継続状態）。眠っている間は再生しない */
+  sleeping?: boolean;
 };
 
 /** Macro Idle を再生できる状態か（明示再生を含む）。attention は問わない */
 export function canPlayMacroIdle(c: MacroIdleConditions): boolean {
-  return c.active && !c.reducedMotion && !c.compact && !c.reacting;
+  return c.active && !c.reducedMotion && !c.compact && !c.reacting && !c.sleeping;
 }
 
-/** 自動 Macro Idle が有効か（active ∧ ¬reducedMotion ∧ ¬compact ∧ ¬Reaction ∧ attention=random） */
+/** 自動 Macro Idle が有効か（active ∧ ¬reducedMotion ∧ ¬compact ∧ ¬Reaction ∧ ¬Sleep ∧ attention=random） */
 export function isMacroIdleAutoEnabled(c: MacroIdleConditions): boolean {
   return canPlayMacroIdle(c) && c.attention === "random";
 }

@@ -40,6 +40,8 @@ import {
   type FloatingMochitMessage,
 } from "./floatingMochitMessages";
 import type { MochitPresentation } from "@/lib/mochitPresentation";
+import type { MochitBehaviorState } from "./mochitBehavior";
+import { useMochitSleep } from "./useMochitSleep";
 
 type MotionState =
   | "idle"
@@ -74,6 +76,12 @@ function usePrefersReducedMotion(): boolean {
 
   return prefers;
 }
+
+// Sleep 状態の Behavior。awake のときは behavior を渡さない（従来表示のまま）。
+const SLEEPY_BEHAVIOR: Partial<MochitBehaviorState> = Object.freeze({
+  emotion: "sleepy",
+  idleBehavior: "sleepy",
+});
 
 function positionForPreferences(
   preferences: FloatingMochitPreferences,
@@ -153,10 +161,24 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     };
   }, []);
 
+  // Sleep / Wake: しばらく操作が無いと眠そうにし、ユーザーが戻ると起きる。
+  // 単純に戻ってきた（操作した）時だけ wakeUp Reaction を出す。学習イベントで起きた時は
+  // wakeUp を挟まず、半目を解除してから本来の Reaction をそのまま再生する。
+  const { sleeping, notifyLearningEvent } = useMochitSleep({
+    enabled: !!preferences?.visible,
+    onWake: (reason) => {
+      if (reason === "activity") setReactionSignal(createMochitEventSignal("wakeUp"));
+    },
+  });
+
   useEffect(() => {
     if (!preferences?.visible) return;
-    return subscribeMochitEvent(setReactionSignal);
-  }, [preferences?.visible]);
+    return subscribeMochitEvent((signal) => {
+      // 学習イベントは Reaction より先に awake へ戻す（同じ描画で目も開く）
+      notifyLearningEvent();
+      setReactionSignal(signal);
+    });
+  }, [preferences?.visible, notifyLearningEvent]);
 
   useEffect(() => {
     if (motion !== "rebounding" && motion !== "settling") return;
@@ -394,6 +416,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
         className="floating-mochit-body flex h-full w-full cursor-grab touch-none select-none items-center justify-center rounded-full active:cursor-grabbing"
         data-motion={motion}
         data-reduced-motion={effectiveReducedMotion ? "true" : undefined}
+        data-sleep={sleeping ? "sleepy" : "awake"}
         style={
           {
             "--mochit-drag-rotate": `${dragRotation}deg`,
@@ -413,6 +436,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
           reactionProfile="floating"
           animation={presentation?.animation ?? "idle"}
           reducedMotion={effectiveReducedMotion}
+          behavior={sleeping ? SLEEPY_BEHAVIOR : undefined}
           event={reactionSignal}
           onEventAccepted={showBubbleForEvent}
           className="pointer-events-none justify-center"
