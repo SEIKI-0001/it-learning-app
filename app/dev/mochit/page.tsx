@@ -10,10 +10,12 @@ import Mochit from "@/components/mochit/Mochit";
 import type { MochitGrowthStage, MochitScreenContext, MochitSize, MochitState } from "@/components/mochit/mochitTypes";
 import type { MochitEvent, MochitEventSignal } from "@/components/mochit/mochitEvents";
 import { MOCHIT_EVENT_PRIORITIES } from "@/components/mochit/mochitEvents";
+import type { MochitEmotion } from "@/components/mochit/mochitBehavior";
 
 const STATES: MochitState[] = ["normal", "happy", "thinking", "cheering"];
 const SIZES: MochitSize[] = ["small", "medium", "large"];
 const STAGES: MochitGrowthStage[] = [1, 2, 3];
+const EMOTIONS: MochitEmotion[] = ["neutral", "happy", "curious", "thinking", "sleepy"];
 const CONTEXTS: MochitScreenContext[] = ["other", "today", "progress", "avatar", "quizResult", "checkpoint", "rank"];
 const EVENTS: MochitEvent[] = [
   "checkpointClear",
@@ -37,6 +39,7 @@ export default function MochitDevPreviewPage() {
   const [stage, setStage] = useState<MochitGrowthStage>(1);
   const [screenContext, setScreenContext] = useState<MochitScreenContext>("other");
   const [mood, setMood] = useState(0);
+  const [emotion, setEmotion] = useState<MochitEmotion>("neutral");
   const [signal, setSignal] = useState<MochitEventSignal | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
   const [eventCompact, setEventCompact] = useState(false);
@@ -87,7 +90,7 @@ export default function MochitDevPreviewPage() {
     scheduleEvent("taskComplete", 250);
   };
 
-  const shared = { ...rendererProps, reducedMotion, screenContext, mood };
+  const shared = { ...rendererProps, reducedMotion, screenContext, mood, behavior: { emotion } };
 
   return (
     <main className="min-h-screen pb-24">
@@ -146,6 +149,18 @@ export default function MochitDevPreviewPage() {
               >
                 {CONTEXTS.map((c) => (
                   <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2">
+              emotion（平常表情・SVGのみ）:
+              <select
+                className="rounded-lg border border-gray-200 px-2 py-1"
+                value={emotion}
+                onChange={(e) => setEmotion(e.target.value as MochitEmotion)}
+              >
+                {EMOTIONS.map((em) => (
+                  <option key={em} value={em}>{em}</option>
                 ))}
               </select>
             </label>
