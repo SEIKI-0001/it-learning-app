@@ -73,3 +73,36 @@ export function resolveMochitGazeTarget(
       return { kind: "point", point: { ...MOCHIT_ATTENTION_CENTER } };
   }
 }
+
+/** viewport 上の対象 → 正規化座標の変換パラメータ（CSS px） */
+export const MOCHIT_VIEWPORT_ATTENTION = Object.freeze({
+  /** これより近い対象（ほぼモチットに重なっている）は正面を見る */
+  deadZonePx: 24,
+  /** この距離以上離れた対象は、その方向の目いっぱいまで目を寄せる */
+  saturatePx: 220,
+});
+
+/**
+ * viewport 上の対象位置を、モチット（目の中心 = origin）から見た正規化座標へ変換する。
+ * 固定方向ではなく「モチットから見た方向」を保つ: 方向ベクトルを単位化し、距離に応じて
+ * 振幅を 0〜1 で決めて中央 (0.5, 0.5) から伸ばす。モチットが動けば同じ対象でも結果が変わる。
+ *   右上に遠い対象 → (≈0.85, ≈0.15)   真下に近い対象 → (0.5, 0.5〜1)
+ * 異常値（NaN・Infinity）は正面（中央）。結果は小数3桁に丸める（視線更新を安定させる）。
+ */
+export function viewportTargetToAttentionPoint(
+  target: { x: number; y: number } | null | undefined,
+  origin: { x: number; y: number },
+  options: { deadZonePx: number; saturatePx: number } = MOCHIT_VIEWPORT_ATTENTION,
+): MochitAttentionPoint {
+  if (!target) return { ...MOCHIT_ATTENTION_CENTER };
+  const dx = target.x - origin.x;
+  const dy = target.y - origin.y;
+  const distance = Math.hypot(dx, dy);
+  if (!Number.isFinite(distance) || distance <= options.deadZonePx) return { ...MOCHIT_ATTENTION_CENTER };
+  const reach = Math.min(1, distance / Math.max(options.saturatePx, options.deadZonePx + 1));
+  const round = (v: number) => Math.round(v * 1000) / 1000;
+  return clampMochitAttentionPoint({
+    x: round(0.5 + 0.5 * (dx / distance) * reach),
+    y: round(0.5 + 0.5 * (dy / distance) * reach),
+  });
+}

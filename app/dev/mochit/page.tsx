@@ -11,7 +11,7 @@ import type { MochitGrowthStage, MochitScreenContext, MochitSize, MochitState } 
 import type { MochitEvent, MochitEventSignal } from "@/components/mochit/mochitEvents";
 import { MOCHIT_EVENT_PRIORITIES } from "@/components/mochit/mochitEvents";
 import type { MochitAttention, MochitEmotion } from "@/components/mochit/mochitBehavior";
-import type { MochitAttentionPoint } from "@/components/mochit/mochitAttention";
+import { viewportTargetToAttentionPoint, type MochitAttentionPoint } from "@/components/mochit/mochitAttention";
 import type { MochitMacroIdleBehavior } from "@/components/mochit/mochitMacroIdle";
 import type { MochitMacroIdleRequest } from "@/components/mochit/MochitSvg";
 import { useMochitSleep } from "@/components/mochit/useMochitSleep";
@@ -63,6 +63,12 @@ export default function MochitDevPreviewPage() {
   const [emotion, setEmotion] = useState<MochitEmotion>("neutral");
   const [attention, setAttention] = useState<MochitAttention>("random");
   const [pointIndex, setPointIndex] = useState(0);
+  // Contextual Attention の確認: 画面上のクリック位置（viewport 座標）を Today の target に見立て、
+  // primary インスタンスの位置から見た attentionPoint へ変換する（FloatingMochit と同じ変換）。
+  const [viewportMode, setViewportMode] = useState(false);
+  const [viewportTarget, setViewportTarget] = useState<{ x: number; y: number } | null>(null);
+  const [viewportPoint, setViewportPoint] = useState<MochitAttentionPoint | null>(null);
+  const primaryStageRef = useRef<HTMLDivElement | null>(null);
   const [signal, setSignal] = useState<MochitEventSignal | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
   const [eventCompact, setEventCompact] = useState(false);
@@ -91,6 +97,30 @@ export default function MochitDevPreviewPage() {
   }, [rendererMode]);
 
   const usesPoint = attention === "content" || attention === "result";
+
+  useEffect(() => {
+    if (!viewportMode || !usesPoint) return;
+    const onPointerDown = (event: PointerEvent) => {
+      // 操作UI（ボタン・セレクト等）のクリックは target にしない
+      if (event.target instanceof Element && event.target.closest("button, select, input, label, a")) return;
+      // 吹き出しを除いた本体（Mochit の図の枠）の中心を目の位置とみなす
+      const figure = primaryStageRef.current?.querySelector(".mochit > div") ?? primaryStageRef.current;
+      const stage = figure?.getBoundingClientRect();
+      if (!stage) return;
+      const target = { x: event.clientX, y: event.clientY };
+      setViewportTarget(target);
+      setViewportPoint(
+        viewportTargetToAttentionPoint(target, { x: stage.left + stage.width / 2, y: stage.top + stage.height / 2 }),
+      );
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [viewportMode, usesPoint]);
+  const devAttentionPoint = usesPoint
+    ? viewportMode
+      ? viewportPoint ?? undefined
+      : ATTENTION_POINTS[pointIndex].point
+    : undefined;
   // 本番の FloatingMochit と同じフックで primary インスタンスを眠らせる（60秒は本番値のまま）。
   // content/result を見ている間は学習中とみなして自動 sleep を抑制する。
   const sleep = useMochitSleep({
@@ -146,7 +176,7 @@ export default function MochitDevPreviewPage() {
     screenContext,
     mood,
     behavior: { emotion, attention },
-    attentionPoint: usesPoint ? ATTENTION_POINTS[pointIndex].point : undefined,
+    attentionPoint: devAttentionPoint,
   };
 
   const primaryBehavior = sleep.sleeping
@@ -155,6 +185,13 @@ export default function MochitDevPreviewPage() {
 
   return (
     <main className="min-h-screen pb-24">
+      {viewportMode && usesPoint && viewportTarget && (
+        <span
+          aria-hidden
+          className="pointer-events-none fixed z-50 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 ring-2 ring-white"
+          style={{ left: viewportTarget.x, top: viewportTarget.y }}
+        />
+      )}
       <header className="bg-brand-600 px-4 py-4 text-white">
         <div className="mx-auto w-full max-w-3xl">
           <p className="text-lg font-bold">モチット開発プレビュー</p>
@@ -244,16 +281,32 @@ export default function MochitDevPreviewPage() {
                   <button
                     key={preset.label}
                     type="button"
-                    onClick={() => setPointIndex(i)}
+                    onClick={() => {
+                      setPointIndex(i);
+                      setViewportMode(false);
+                    }}
                     className={`rounded-lg border px-2 py-1 ${
-                      i === pointIndex ? "border-brand-600 bg-brand-600 text-white" : "border-gray-200"
+                      !viewportMode && i === pointIndex ? "border-brand-600 bg-brand-600 text-white" : "border-gray-200"
                     }`}
                   >
                     {preset.label}
                   </button>
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setViewportMode(true)}
+                  className={`rounded-lg border px-2 py-1 ${
+                    viewportMode ? "border-brand-600 bg-brand-600 text-white" : "border-gray-200"
+                  }`}
+                >
+                  画面クリック位置
+                </button>
                 <span className="text-xs font-normal text-gray-400">
-                  ({ATTENTION_POINTS[pointIndex].point.x}, {ATTENTION_POINTS[pointIndex].point.y})
+                  {viewportMode
+                    ? viewportPoint
+                      ? `(${viewportPoint.x}, ${viewportPoint.y}) ← primaryから見た位置`
+                      : "余白をクリック"
+                    : `(${ATTENTION_POINTS[pointIndex].point.x}, ${ATTENTION_POINTS[pointIndex].point.y})`}
                 </span>
               </div>
             )}
@@ -282,7 +335,7 @@ export default function MochitDevPreviewPage() {
             />
             compact表示で確認
           </label>
-          <div className="mt-3 flex justify-center">
+          <div ref={primaryStageRef} className="mx-auto mt-3 flex w-fit justify-center">
             {eventCompact ? (
               <Mochit
                 {...shared}
