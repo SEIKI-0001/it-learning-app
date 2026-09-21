@@ -22,6 +22,7 @@ import type {
 } from "./mochitTypes";
 import type { MochitEventSignal } from "./mochitEvents";
 import { createMochitBehaviorState, type MochitBehaviorState } from "./mochitBehavior";
+import type { MochitAttentionPoint } from "./mochitAttention";
 
 // 後方互換: 既存コードは型をこのモジュールからimportしている。
 export type { MochitAnimation, MochitGrowthStage, MochitSize, MochitState };
@@ -136,9 +137,15 @@ type Props = {
   /**
    * 平常時の Behavior State（Living Character）。省略時は既定値＝従来表示。
    * state（既存UI互換の表示状態）とは独立で、自動で同一視しない。
-   * 現状は emotion のみ SVG 描画の平常表情へ反映する。
+   * 現状は emotion（平常表情）と attention（視線）を SVG 描画へ反映する。
+   * attention 未指定の場合は従来どおりのランダム視線（random 相当）。
    */
   behavior?: Partial<MochitBehaviorState>;
+  /**
+   * behavior.attention が content/result のときに見る位置。正規化座標
+   * （0,0=左上 / 0.5,0.5=中央 / 1,1=右下）。DOM の pixel 座標ではない。省略時は中央。
+   */
+  attentionPoint?: MochitAttentionPoint;
   // ---- dev/テスト用の切替口 ----
   rendererOverride?: "rive" | "svg" | "fallback";
   riveSrcOverride?: string;
@@ -161,6 +168,7 @@ export default function Mochit({
   reactionProfile,
   onEventAccepted,
   behavior,
+  attentionPoint,
   rendererOverride,
   riveSrcOverride,
   forceSvgFailure,
@@ -217,7 +225,11 @@ export default function Mochit({
   const meta = MOCHIT_STATE_META[state];
   // 部分指定を完全な Behavior State へ正規化。子へは primitive だけ渡す
   // （behavior オブジェクトの同一性に依存して再描画・再適用させない）。
-  const emotion = createMochitBehaviorState(behavior).emotion;
+  const normalizedBehavior = createMochitBehaviorState(behavior);
+  const emotion = normalizedBehavior.emotion;
+  // attention を明示していない既存呼び出しは従来の Living Idle（ランダム視線）のまま。
+  // Behavior State の既定値（user）は「意味上の既定」で、未指定の見た目は変えない。
+  const attention = behavior?.attention === undefined ? "random" : normalizedBehavior.attention;
 
   return (
     <div
@@ -251,6 +263,8 @@ export default function Mochit({
                 forceFailure={forceSvgFailure}
                 registerTriggerFirer={registerTriggerFirer}
                 emotion={emotion}
+                attention={attention}
+                attentionPoint={attentionPoint}
                 onReady={() => setSvgReady(true)}
                 onLoadFailed={() => {
                   setSvgReady(false);

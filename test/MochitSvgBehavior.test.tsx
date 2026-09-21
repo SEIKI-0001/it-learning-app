@@ -213,11 +213,12 @@ describe("Mochit: behavior prop", () => {
     expect(svg.querySelector<SVGGraphicsElement>("#Mouth_Smile")!.style.opacity).toBe("1");
   });
 
-  it("energy / attention / idleBehavior はまだ SVG に影響しない", async () => {
+  // attention は Step 3 で視線へ接続済み（test/MochitSvgAttention.test.tsx）
+  it("energy / idleBehavior はまだ SVG に影響しない", async () => {
     const plain = (await renderMochit({})).innerHTML;
     cleanup();
     const withOthers = (
-      await renderMochit({ behavior: { energy: 0.05, attention: "result", idleBehavior: "stretch" } })
+      await renderMochit({ behavior: { energy: 0.05, idleBehavior: "stretch" } })
     ).innerHTML;
     expect(withOthers).toBe(plain);
   });
