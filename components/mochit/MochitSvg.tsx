@@ -35,6 +35,10 @@
 //     走っている呼吸/ゆれ/アンテナの速度・振幅だけを落とし、足元支点でごくわずかに沈ませる
 //     （add 合成の持続アニメ）。Macro Idle は停止、ランダム視線も中央で休ませる。
 //     半目は emotion=sleepy の平常表情が担う。reduced-motion では静的表情のみ。
+//   - floating（reactionProfile="floating" ∧ ¬compact・84px 常時表示）: 同じ仕組みのまま
+//     知覚できる振幅へ調整する。視線レンジ拡大・Semantic Attention の身体連動
+//     （目→約100ms後に体が傾く→さらに遅れてアンテナ。createAttentionPoseController）・
+//     Macro Idle の頻度/振幅強化。full / compact の見た目は変えない。
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MOCHIT_SVG_MARKUP } from "./mochitSvgMarkup";
@@ -54,6 +58,15 @@ import {
   type MochitAttentionPoint,
   type MochitGazeTarget,
 } from "./mochitAttention";
+import {
+  attentionAntennaKeyframes,
+  attentionBodyKeyframes,
+  attentionPoseForGaze,
+  interpolateAttentionPose,
+  isNeutralAttentionPose,
+  NEUTRAL_ATTENTION_POSE,
+  type AttentionPose,
+} from "./mochitEmbodiedAttention";
 import {
   getMochitRestingExpression,
   MOCHIT_RESTING_MOUTH_ELEMENT_IDS,
@@ -82,6 +95,8 @@ import {
   scaleAbout,
   shouldDoubleBlink,
   swayKeyframes,
+  type EmbodiedAttentionTiming,
+  type EmbodiedAttentionTuning,
   type GazeOffset,
 } from "./mochitIdleAnimation";
 
@@ -302,6 +317,124 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
   return { stop, setSleepy };
 }
 
+// ---- 身体連動（Embodied Attention） ----
+
+type PoseTransition = {
+  from: AttentionPose;
+  to: AttentionPose;
+  startedAt: number;
+  delayMs: number;
+  ms: number;
+  animation: Animation | null;
+};
+
+type AttentionPoseController = {
+  /**
+   * 対象姿勢へ向かう。tuning が null（full/compact）か animate=false（reduced-motion・停止中）の
+   * ときは身体を動かさない（進行中の姿勢も即座に消す）。
+   */
+  set(pose: AttentionPose, tuning: EmbodiedAttentionTuning | null, animate: boolean): void;
+  dispose(): void;
+};
+
+/**
+ * Semantic Attention の身体連動。体（Anim_Sway）とアンテナ（Anim_Antenna）へ
+ * composite:"add"・fill:"both" の持続アニメを1本ずつ重ねる（Micro Idle のループは作り直さない）。
+ * 目（gaze controller）が先に動き、体→アンテナの順に遅れて追従する。delay 中は fill:"both" で
+ * 直前の姿勢を保つので、途中で対象が変わっても位置飛びしない。
+ * Reaction / Macro Idle の body は外側<svg>、gaze/antenna は add なので、この姿勢の上に合成される。
+ */
+function createAttentionPoseController(svg: SVGSVGElement): AttentionPoseController {
+  const bodyEl = svg.querySelector<SVGGraphicsElement>("#Anim_Sway");
+  const antennaEl = svg.querySelector<SVGGraphicsElement>("#Anim_Antenna");
+  let body: PoseTransition | null = null;
+  let antenna: PoseTransition | null = null;
+  let target: AttentionPose = NEUTRAL_ATTENTION_POSE;
+  const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+
+  // 今見えている姿勢（delay 中は from、補間中は ease-out 近似の途中位置）
+  const visible = (tr: PoseTransition | null): AttentionPose => {
+    if (!tr) return NEUTRAL_ATTENTION_POSE;
+    const t = tr.ms > 0 ? (now() - tr.startedAt - tr.delayMs) / tr.ms : 1;
+    if (t <= 0) return tr.from;
+    if (t >= 1) return tr.to;
+    return interpolateAttentionPose(tr.from, tr.to, 1 - (1 - t) * (1 - t));
+  };
+  const cancel = (tr: PoseTransition | null) => {
+    try {
+      tr?.animation?.cancel();
+    } catch {
+      /* noop */
+    }
+  };
+  const run = (
+    el: SVGGraphicsElement | null,
+    prev: PoseTransition | null,
+    to: AttentionPose,
+    delayMs: number,
+    ms: number,
+    keyframes: (from: AttentionPose, to: AttentionPose) => Keyframe[],
+    easing: string,
+  ): PoseTransition | null => {
+    const from = visible(prev);
+    cancel(prev);
+    if (!canAnimate(el)) return null;
+    if (isNeutralAttentionPose(from) && isNeutralAttentionPose(to)) return null;
+    let animation: Animation | null = null;
+    try {
+      animation = el.animate(keyframes(from, to), {
+        duration: Math.max(1, ms),
+        delay: delayMs,
+        easing,
+        fill: "both",
+        composite: "add",
+      });
+      animation.persist?.();
+    } catch {
+      // composite 未対応などでは身体連動なし（視線だけは動く）
+      return null;
+    }
+    return { from, to, startedAt: now(), delayMs, ms, animation };
+  };
+  const clear = () => {
+    cancel(body);
+    cancel(antenna);
+    body = null;
+    antenna = null;
+    target = NEUTRAL_ATTENTION_POSE;
+  };
+
+  return {
+    set(pose, tuning, animate) {
+      if (!tuning || !animate) {
+        clear();
+        return;
+      }
+      const same =
+        pose.tilt === target.tilt &&
+        pose.leanX === target.leanX &&
+        pose.leanY === target.leanY &&
+        pose.sy === target.sy &&
+        pose.antenna === target.antenna;
+      if (same) return;
+      target = pose;
+      // 対象を見る時と基底へ戻る時でタイミングを分ける（どちらも目→体→アンテナの順）
+      const timing: EmbodiedAttentionTiming = isNeutralAttentionPose(pose) ? tuning.release : tuning.attend;
+      body = run(bodyEl, body, pose, timing.bodyDelayMs, timing.bodyMs, attentionBodyKeyframes, "ease-out");
+      antenna = run(
+        antennaEl,
+        antenna,
+        pose,
+        timing.antennaDelayMs,
+        timing.antennaMs,
+        (from, to) => attentionAntennaKeyframes(from.antenna, to.antenna),
+        "linear",
+      );
+    },
+    dispose: clear,
+  };
+}
+
 // ---- 視線（gaze controller） ----
 
 const GAZE_SELECTORS = ["#Pupil_L", "#Pupil_R", "#EyeHighlight_L", "#EyeHighlight_R"];
@@ -348,6 +481,8 @@ function createGazeController(svg: SVGSVGElement): GazeController {
   // 進行中の補間（次の切替を途中位置から始めるため）
   let moving: { from: GazeOffset; to: GazeOffset; startedAt: number; ms: number; animations: Animation[] } | null =
     null;
+  // 視線に追従する身体連動（profile.embody を持つ floating だけが動く）
+  const pose = createAttentionPoseController(svg);
 
   const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
   const clearTimer = () => {
@@ -410,7 +545,11 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     }, nextGazeHoldMs(profile));
   };
 
+  // 直前の apply が Semantic Attention（点を見ていた）か
+  let semantic = false;
   const apply = () => {
+    const leavingSemantic = semantic && target.kind === "random";
+    semantic = target.kind === "point";
     const gaze = profile.gaze;
     if (!gaze || nodes.length === 0) {
       // compact: 視線は中央固定（マークアップ既定値）
@@ -418,6 +557,7 @@ function createGazeController(svg: SVGSVGElement): GazeController {
       cancelMove();
       setBase("");
       current = GAZE_CENTER;
+      pose.set(NEUTRAL_ATTENTION_POSE, null, false);
       return;
     }
     if (target.kind === "random") {
@@ -427,14 +567,20 @@ function createGazeController(svg: SVGSVGElement): GazeController {
         cancelMove();
         setBase("");
         current = GAZE_CENTER;
+        pose.set(NEUTRAL_ATTENTION_POSE, null, false);
         return;
       }
+      // Semantic から戻った時は、目が先に動き、体・アンテナが遅れて基底へ戻る
+      pose.set(NEUTRAL_ATTENTION_POSE, profile.embody, animate);
       if (sleeping) {
         // Sleep: ランダム視線を止め、中央でじっとする
         clearTimer();
         moveTo(GAZE_CENTER, SLEEP_GAZE_SETTLE_MS);
         return;
       }
+      // 身体連動あり（floating）は Semantic から戻る時も目が先に正面へ戻り、体・アンテナが続く。
+      // 身体連動なし（full）は従来どおり今の位置からランダム視線を再開する。
+      if (timer === null && profile.embody && leavingSemantic) moveTo(GAZE_CENTER, gaze.moveMs);
       // 既に走っていれば乱数リズムを崩さない。Semantic から戻った時は今の位置から再開する。
       if (timer === null) {
         if (!moving) setBase(offsetTransform(current.x, current.y));
@@ -446,6 +592,9 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     clearTimer();
     const offset = attentionPointToGazeOffset(target.point, gaze);
     moveTo(offset, animate ? gaze.moveMs : 0);
+    // 目が先に対象を見て、体→アンテナが遅れて対象側へ向く（reduced-motion・停止中は目だけ）
+    const embody = profile.embody;
+    pose.set(embody ? attentionPoseForGaze(offset, gaze, embody) : NEUTRAL_ATTENTION_POSE, embody, animate);
   };
 
   return {
@@ -474,9 +623,11 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     dispose() {
       clearTimer();
       cancelMove();
+      pose.dispose();
     },
   };
 }
+
 
 // ---- 平常表情（Behavior emotion） ----
 
@@ -714,6 +865,8 @@ export default function MochitSvg({
   }, []);
 
   const active = !failed && !reducedMotion && inViewport && !documentHidden;
+  // 84px の常時表示版。視線の振幅・身体連動・Macro Idle の頻度/振幅だけを強める（compact が優先）
+  const floating = reactionProfile === "floating" && !compact;
 
   // ---- 平常表情 ----
   // desired: 最新の emotion から導いた平常表情。appliedMouth: 実際にインラインstyleへ
@@ -801,8 +954,8 @@ export default function MochitSvg({
     const gaze = getGazeRef.current();
     if (!svg || !gaze) return;
     // WAAPI 非対応環境では静的な視線だけ
-    gaze.configure(getIdleProfile(compact), active && typeof svg.animate === "function");
-  }, [active, compact, failed]);
+    gaze.configure(getIdleProfile(compact, floating), active && typeof svg.animate === "function");
+  }, [active, compact, floating, failed]);
   useEffect(
     () => () => {
       gazeRef.current?.dispose();
@@ -855,6 +1008,10 @@ export default function MochitSvg({
   // スケジューラは1つだけ作り、条件の変化（稼働/compact/attention/Reaction）だけを届ける。
   // 再生は外側<svg>・腕・視線(add)・アンテナ(add)への有限アニメで、Micro Idle には触れない。
   const macroRef = useRef<MacroIdleController | null>(null);
+  const floatingRef = useRef(floating);
+  useEffect(() => {
+    floatingRef.current = floating;
+  });
   const getMacro = (): MacroIdleController | null => {
     if (macroRef.current) return macroRef.current;
     const svg = svgRef.current;
@@ -863,7 +1020,11 @@ export default function MochitSvg({
       const target = svgRef.current;
       if (!target || typeof target.animate !== "function") return null;
       const gaze = gazeRef.current;
-      const spec = buildMacroIdleSpec(behavior, { durationMs, gazeBase: gaze?.getBaseOffset() });
+      const spec = buildMacroIdleSpec(behavior, {
+        durationMs,
+        gazeBase: gaze?.getBaseOffset(),
+        floating: floatingRef.current,
+      });
       const holdGaze = macroIdleMovesGaze(spec);
       let finished = false;
       const finish = () => {
@@ -908,8 +1069,9 @@ export default function MochitSvg({
       compact,
       attention,
       sleeping,
+      floating,
     });
-  }, [active, reducedMotion, compact, attention, sleeping, failed]);
+  }, [active, reducedMotion, compact, attention, sleeping, floating, failed]);
   // マウント時点で既にある要求は再生しない（再マウントで古い要求が再生されないように）
   const macroRequestId = macroIdleRequest?.id;
   const macroRequestBehavior = macroIdleRequest?.behavior;

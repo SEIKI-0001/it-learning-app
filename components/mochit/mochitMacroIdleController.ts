@@ -14,6 +14,7 @@
 import type { RNG } from "./mochitIdleAnimation";
 import {
   canPlayMacroIdle,
+  getMacroIdleTuning,
   isMacroIdleAutoEnabled,
   macroIdleDurationMs,
   nextMacroIdleDelayMs,
@@ -60,6 +61,7 @@ const INITIAL_CONDITIONS: MacroIdleConditions = {
   reacting: false,
   attention: "random",
   sleeping: false,
+  floating: false,
 };
 
 export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroIdleController {
@@ -90,12 +92,13 @@ export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroI
   const scheduleFresh = () => {
     cancelTimer();
     if (disposed || !isMacroIdleAutoEnabled(conditions)) return;
-    timer = setTimer(onTimer, nextMacroIdleDelayMs(rng));
+    timer = setTimer(onTimer, nextMacroIdleDelayMs(rng, getMacroIdleTuning(conditions.floating === true)));
   };
 
   const start = (behavior: MochitMacroIdleBehavior): boolean => {
     const myToken = ++token;
-    const playback = deps.play(behavior, macroIdleDurationMs(behavior, rng), () => {
+    const tuning = getMacroIdleTuning(conditions.floating === true);
+    const playback = deps.play(behavior, macroIdleDurationMs(behavior, rng, tuning), () => {
       if (!playing || playing.token !== myToken) return;
       playing = null;
       scheduleFresh();
@@ -109,7 +112,7 @@ export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroI
   function onTimer() {
     timer = null;
     if (disposed || playing || !isMacroIdleAutoEnabled(conditions)) return;
-    const choice = pickMacroIdleBehavior(lastBehavior, rng);
+    const choice = pickMacroIdleBehavior(lastBehavior, rng, getMacroIdleTuning(conditions.floating === true).weights);
     // normal は何もせず次回まで待つ
     if (choice === "normal" || !start(choice)) scheduleFresh();
   }
