@@ -17,9 +17,10 @@ import {
   createMochitEventSignal,
   subscribeMochitEvent,
 } from "./mochitEventBus";
-import type { MochitEventSignal } from "./mochitEvents";
+import { MOCHIT_EVENT_REACTION_MS, type MochitEventSignal } from "./mochitEvents";
 import {
   clampFloatingMochitPoint,
+  FLOATING_MOCHIT_HIT_SIZE,
   getDefaultFloatingMochitPoint,
   getFloatingMochitViewportMetrics,
   type FloatingViewportMetrics,
@@ -42,6 +43,8 @@ import {
 import type { MochitPresentation } from "@/lib/mochitPresentation";
 import type { MochitBehaviorState } from "./mochitBehavior";
 import { useMochitSleep } from "./useMochitSleep";
+import { useMochitContextualAttention } from "./useMochitContextualAttention";
+import { viewportTargetToAttentionPoint, type MochitAttentionPoint } from "./mochitAttention";
 
 type MotionState =
   | "idle"
@@ -77,7 +80,7 @@ function usePrefersReducedMotion(): boolean {
   return prefers;
 }
 
-// Sleep 状態の Behavior。awake のときは behavior を渡さない（従来表示のまま）。
+// Sleep 状態の Behavior。awake かつ Contextual Attention が無いときは behavior を渡さない（従来表示のまま）。
 const SLEEPY_BEHAVIOR: Partial<MochitBehaviorState> = Object.freeze({
   emotion: "sleepy",
   idleBehavior: "sleepy",
@@ -171,6 +174,14 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     },
   });
 
+  // Contextual Attention: ページ（Today など）が「今ここを見てほしい」と通知した対象を見る。
+  // Reaction 中は終わるまで待ち、Sleep 中の通知は起こさずに捨てる（判定は mochitContextualAttention）。
+  const contextualAttention = useMochitContextualAttention({
+    enabled: !!preferences?.visible,
+    sleeping,
+  });
+  const appliedAttention = sleeping ? null : contextualAttention.applied;
+
   useEffect(() => {
     if (!preferences?.visible) return;
     return subscribeMochitEvent((signal) => {
@@ -198,6 +209,11 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
       bubbleTimerRef.current = null;
     }
     setBubble(null);
+  };
+
+  const handleEventAccepted = (signal: MochitEventSignal) => {
+    contextualAttention.reactionStarted(MOCHIT_EVENT_REACTION_MS[signal.type]);
+    showBubbleForEvent(signal);
   };
 
   const showBubbleForEvent = (signal: MochitEventSignal) => {
@@ -401,6 +417,22 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
 
   if (!preferences?.visible) return null;
 
+  // 視線の基準は「置かれている位置」（保存済み位置）。ドラッグ中は更新を連発せず、
+  // ドラッグを終えて位置が保存された時点で同じ対象への向きを計算し直す。
+  const restingPosition = positionForPreferences(preferences, viewportMetrics);
+  let attentionPoint: MochitAttentionPoint | undefined;
+  if (appliedAttention && (appliedAttention.attention === "content" || appliedAttention.attention === "result")) {
+    attentionPoint = viewportTargetToAttentionPoint(appliedAttention.target, {
+      x: restingPosition.x + FLOATING_MOCHIT_HIT_SIZE / 2,
+      y: restingPosition.y + FLOATING_MOCHIT_HIT_SIZE / 2,
+    });
+  }
+  const behavior: Partial<MochitBehaviorState> | undefined = sleeping
+    ? SLEEPY_BEHAVIOR
+    : appliedAttention
+      ? { attention: appliedAttention.attention }
+      : undefined;
+
   return (
     <div
       ref={rootRef}
@@ -417,6 +449,8 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
         data-motion={motion}
         data-reduced-motion={effectiveReducedMotion ? "true" : undefined}
         data-sleep={sleeping ? "sleepy" : "awake"}
+        data-attention={appliedAttention?.attention ?? "random"}
+        data-attention-point={attentionPoint ? `${attentionPoint.x},${attentionPoint.y}` : undefined}
         style={
           {
             "--mochit-drag-rotate": `${dragRotation}deg`,
@@ -436,9 +470,10 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
           reactionProfile="floating"
           animation={presentation?.animation ?? "idle"}
           reducedMotion={effectiveReducedMotion}
-          behavior={sleeping ? SLEEPY_BEHAVIOR : undefined}
+          behavior={behavior}
+          attentionPoint={attentionPoint}
           event={reactionSignal}
-          onEventAccepted={showBubbleForEvent}
+          onEventAccepted={handleEventAccepted}
           className="pointer-events-none justify-center"
         />
       </button>

@@ -10,6 +10,7 @@ import Mochit from "@/components/mochit/Mochit";
 import { getTopic } from "@/lib/content";
 import type { TodayPrimaryAction } from "@/types/gameful";
 import { formatOffset, type TodaySlot } from "./todaySlots";
+import { useTodayMochitAttention } from "./useTodayMochitAttention";
 import s from "./todayView.module.css";
 
 const KIND_LABEL: Record<TodaySlot["kind"], string> = { new: "新規", review: "復習" };
@@ -57,6 +58,8 @@ export default function TodayCueSheet({
   const doneCount = slots.filter((slot) => slot.state === "done").length;
   // 画面を開いた時点の完了数。これより増えたときだけモチットに完了を喜ばせる。
   const [baselineDone] = useState(doneCount);
+  // 常駐モチットに「いまの1件」と「次に押すボタン」を控えめに見てもらう（表示だけ・判定は変えない）。
+  const { primaryRef, ctaRef } = useTodayMochitAttention();
   const mochitEvent =
     doneCount > baselineDone ? { type: "taskComplete" as const, id: doneCount } : null;
 
@@ -79,7 +82,7 @@ export default function TodayCueSheet({
             <span className={s.offset}>先に</span>
             <span className={s.mark} aria-hidden />
             <div className={s.cueBody}>
-              <div className={s.cueLine}>
+              <div ref={primaryRef} className={s.cueLine}>
                 <p className={s.cueTitle}>{finalExam.title}</p>
                 {finalExam.questionCount !== null && (
                   <span className={s.cueMinutes}>
@@ -103,7 +106,7 @@ export default function TodayCueSheet({
                   <p className={s.bubble}>{finalExam.reasonLabel}。いまなら挑戦できます。</p>
                 </div>
                 <div className={s.nowActions}>
-                  <Link href={finalExam.href} className={s.start}>
+                  <Link ref={ctaRef} href={finalExam.href} className={s.start}>
                     突破試験に挑戦する
                     <StartArrow />
                   </Link>
@@ -131,7 +134,7 @@ export default function TodayCueSheet({
                 <CheckMark />
               </span>
               <div className={s.cueBody}>
-                <div className={s.cueLine}>
+                <div ref={state === "now" ? primaryRef : undefined} className={s.cueLine}>
                   {state === "now" ? (
                     <p className={s.cueTitle}>{slot.title}</p>
                   ) : (
@@ -163,7 +166,7 @@ export default function TodayCueSheet({
                       <p className={s.bubble}>{spokenReason(reason)}</p>
                     </div>
                     <div className={s.nowActions}>
-                      <Link href={hrefFor(slot)} className={s.start} data-kind={slot.kind}>
+                      <Link ref={ctaRef} href={hrefFor(slot)} className={s.start} data-kind={slot.kind}>
                         {slot.kind === "review" ? "復習を始める" : "レッスンを始める"}
                         <StartArrow />
                       </Link>

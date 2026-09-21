@@ -3,7 +3,9 @@ import {
   attentionPointToGazeOffset,
   clampMochitAttentionPoint,
   MOCHIT_ATTENTION_CENTER,
+  MOCHIT_VIEWPORT_ATTENTION,
   resolveMochitGazeTarget,
+  viewportTargetToAttentionPoint,
 } from "@/components/mochit/mochitAttention";
 import { getIdleProfile } from "@/components/mochit/mochitIdleAnimation";
 
@@ -68,5 +70,49 @@ describe("resolveMochitGazeTarget", () => {
       kind: "point",
       point: { x: 1, y: 0.5 },
     });
+  });
+});
+
+describe("viewportTargetToAttentionPoint: viewport 上の対象 → モチット基準の正規化座標", () => {
+  const origin = { x: 300, y: 600 };
+
+  it("方向を保つ: 真上・右・左下", () => {
+    expect(viewportTargetToAttentionPoint({ x: 300, y: 100 }, origin)).toEqual({ x: 0.5, y: 0 });
+    expect(viewportTargetToAttentionPoint({ x: 800, y: 600 }, origin)).toEqual({ x: 1, y: 0.5 });
+    const p = viewportTargetToAttentionPoint({ x: 0, y: 900 }, origin);
+    expect(p.x).toBeCloseTo(0.5 - 0.5 * Math.SQRT1_2, 3);
+    expect(p.y).toBeCloseTo(0.5 + 0.5 * Math.SQRT1_2, 3);
+  });
+
+  it("遠い対象は振幅が飽和し、近い対象は控えめ", () => {
+    const far = viewportTargetToAttentionPoint({ x: 300, y: 600 - 1000 }, origin);
+    const near = viewportTargetToAttentionPoint({ x: 300, y: 600 - 110 }, origin);
+    expect(far.y).toBe(0);
+    expect(near.y).toBeCloseTo(0.5 - 0.5 * (110 / MOCHIT_VIEWPORT_ATTENTION.saturatePx), 3);
+  });
+
+  it("モチットに重なる対象・異常値・target なしは正面", () => {
+    expect(viewportTargetToAttentionPoint({ x: 310, y: 590 }, origin)).toEqual(MOCHIT_ATTENTION_CENTER);
+    expect(viewportTargetToAttentionPoint({ x: Number.NaN, y: 0 }, origin)).toEqual(MOCHIT_ATTENTION_CENTER);
+    expect(viewportTargetToAttentionPoint(undefined, origin)).toEqual(MOCHIT_ATTENTION_CENTER);
+  });
+
+  it("同じ対象でも、モチットの位置が変われば向きが変わる（固定方向ではない）", () => {
+    const task = { x: 200, y: 300 };
+    const fromBottomRight = viewportTargetToAttentionPoint(task, { x: 340, y: 760 });
+    const fromTopLeft = viewportTargetToAttentionPoint(task, { x: 60, y: 60 });
+    expect(fromBottomRight.x).toBeLessThan(0.5);
+    expect(fromBottomRight.y).toBeLessThan(0.5);
+    expect(fromTopLeft.x).toBeGreaterThan(0.5);
+    expect(fromTopLeft.y).toBeGreaterThan(0.5);
+  });
+
+  it("結果は常に 0〜1・小数3桁", () => {
+    const p = viewportTargetToAttentionPoint({ x: 123.456, y: 789.012 }, { x: 10.1, y: 5.5 });
+    for (const v of [p.x, p.y]) {
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+      expect(Math.round(v * 1000) / 1000).toBe(v);
+    }
   });
 });
