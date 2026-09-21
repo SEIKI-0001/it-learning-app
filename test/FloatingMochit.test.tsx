@@ -658,3 +658,77 @@ describe("FloatingMochit visibility menu", () => {
     expect(screen.queryByTestId("floating-mochit-bubble")).toBeNull();
   });
 });
+
+describe("FloatingMochit sleep / wake", () => {
+  const renderPet = async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    render(<FloatingMochit reducedMotion={false} />);
+    const pet = await screen.findByRole("button", { name: "モチットを触る" });
+    return { pet, mochit: pet.querySelector(".mochit")! };
+  };
+
+  it("60秒操作が無いと sleepy になり、60秒未満ではならない", async () => {
+    const { pet } = await renderPet();
+    act(() => {
+      vi.advanceTimersByTime(59_000);
+    });
+    expect(pet).toHaveAttribute("data-sleep", "awake");
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+    expect(pet).toHaveAttribute("data-sleep", "sleepy");
+  });
+
+  it("mousemove では起きず、ユーザー操作で wakeUp Reaction して awake へ戻る", async () => {
+    const { pet, mochit } = await renderPet();
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    fireEvent.mouseMove(document.body);
+    expect(pet).toHaveAttribute("data-sleep", "sleepy");
+    fireEvent.keyDown(document.body, { key: "a" });
+    expect(pet).toHaveAttribute("data-sleep", "awake");
+    await waitFor(() => {
+      expect(mochit).toHaveAttribute("data-active-event", "wakeUp");
+    });
+  });
+
+  it("sleepy 中の学習イベントは wakeUp を挟まず awake へ戻して即 Reaction", async () => {
+    const { pet, mochit } = await renderPet();
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(pet).toHaveAttribute("data-sleep", "sleepy");
+    act(() => {
+      emitMochitEvent("correct");
+    });
+    // 同じ更新で awake かつ correct を受理（遅延なし）
+    expect(pet).toHaveAttribute("data-sleep", "awake");
+    expect(mochit).toHaveAttribute("data-active-event", "correct");
+    expect(await screen.findByTestId("floating-mochit-bubble")).toBeInTheDocument();
+  });
+
+  it("タブ非表示中は眠らず、復帰後に新しく60秒数える", async () => {
+    const { pet } = await renderPet();
+    let hidden = false;
+    Object.defineProperty(document, "hidden", { configurable: true, get: () => hidden });
+    act(() => {
+      vi.advanceTimersByTime(30_000);
+      hidden = true;
+      document.dispatchEvent(new Event("visibilitychange"));
+      vi.advanceTimersByTime(20 * 60_000);
+      hidden = false;
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(pet).toHaveAttribute("data-sleep", "awake");
+    act(() => {
+      vi.advanceTimersByTime(59_000);
+    });
+    expect(pet).toHaveAttribute("data-sleep", "awake");
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+    expect(pet).toHaveAttribute("data-sleep", "sleepy");
+    delete (document as { hidden?: unknown }).hidden;
+  });
+});

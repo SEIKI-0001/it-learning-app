@@ -220,8 +220,9 @@ function buildReducedSpec(event: MochitEvent, totalMs: number): ReactionSpec | n
 // ---- 各リアクションの振り付け ----
 
 /**
- * イベントに対応するリアクション仕様を返す。対応する振り付けが無いイベント
- * （wakeUp等）は null（＝何もしない）。
+ * イベントに対応するリアクション仕様を返す。対応する振り付けが無い場合は null（＝何もしない）。
+ * wakeUp は reduced-motion では null（目は平常表情の切替で即座に開く）、
+ * compact では体を動かさずアンテナの反応だけにする。
  * totalMs は必ず MOCHIT_EVENT_REACTION_MS（優先度制御の占有時間）以下。
  */
 export function buildReactionSpec(event: MochitEvent, mode: ReactionMode): ReactionSpec | null {
@@ -237,7 +238,10 @@ export function buildReactionSpec(event: MochitEvent, mode: ReactionMode): React
         : FULL_SCALE;
   const build = CHOREOGRAPHIES[event];
   if (!build) return null;
-  const tracks = build(s);
+  let tracks = build(s);
+  if (event === "wakeUp" && profile === "compact") {
+    tracks = tracks.filter((track) => track.target === "antenna");
+  }
   if (event === "correct" && profile === "floating") {
     tracks.splice(1, 0, ...floatingCorrectAccentTracks(s));
   }
@@ -254,6 +258,7 @@ export const REACTION_TOTAL_MS: Partial<Record<MochitEvent, number>> = {
   checkpointClear: 2200,
   tap: 550,
   encourage: 900,
+  wakeUp: 700,
 };
 
 type Choreography = (s: MotionScale) => ReactionTrack[];
@@ -593,6 +598,44 @@ const CHOREOGRAPHIES: Partial<Record<MochitEvent, Choreography>> = {
     },
     ...mouthTracks([{ variant: "mouthSmile", on: 0.15, full: 0.25, hold: 0.8, off: 0.94 }]),
     glowTrack([[0.15, 0], [0.45, 0.4], [0.9, 0]]),
+  ],
+
+  // 9. 起床（wakeUp）: 眠そうな状態からユーザーが戻ってきた時の軽い反応。
+  //    目を開くのは平常表情（まぶた）の切替が担い、ここでは小さく一度だけ跳ねて
+  //    アンテナがぴくっと反応する程度に留める（驚きにはしない）。
+  wakeUp: (s) => [
+    {
+      target: "body",
+      keyframes: [
+        bodyFrame(0, {}, s, "ease-out"),
+        bodyFrame(0.18, { y: 0.4, sx: 1.015, sy: 0.985 }, s, "ease-out"),
+        bodyFrame(0.42, { y: -1.8, sx: 0.992, sy: 1.012 }, s, "ease-in"),
+        bodyFrame(0.66, { sx: 1.008, sy: 0.994 }, s, "ease-out"),
+        bodyFrame(1, {}, s),
+      ],
+    },
+    {
+      target: "antenna",
+      composite: "add",
+      keyframes: [
+        antennaFrame(0, 0, s, "ease-out"),
+        antennaFrame(0.2, 0, s, "ease-out"),
+        antennaFrame(0.4, 5, s, "ease-in-out"),
+        antennaFrame(0.6, -3, s, "ease-in-out"),
+        antennaFrame(0.8, 1.2, s, "ease-in-out"),
+        antennaFrame(1, 0, s),
+      ],
+    },
+    {
+      target: "gaze",
+      composite: "add",
+      keyframes: [
+        gazeFrame(0, 0, 0, s, "ease-out"),
+        gazeFrame(0.35, 0, -1.5, s),
+        gazeFrame(0.75, 0, -1.5, s, "ease-in-out"),
+        gazeFrame(1, 0, 0, s),
+      ],
+    },
   ],
 };
 

@@ -31,6 +31,10 @@
 //     Micro Idle を止めず、終了すれば現在の emotion / 視線 / 姿勢へそのまま戻る。
 //     自動発火は active ∧ ¬compact ∧ ¬Reaction ∧ attention=random のときだけ。
 //     macroIdleRequest で1回だけの明示再生もできる（devプレビュー用）。
+//   - sleeping: Sleep 状態（idleBehavior=sleepy の継続状態）。Micro Idle は作り直さず、
+//     走っている呼吸/ゆれ/アンテナの速度・振幅だけを落とし、足元支点でごくわずかに沈ませる
+//     （add 合成の持続アニメ）。Macro Idle は停止、ランダム視線も中央で休ませる。
+//     半目は emotion=sleepy の平常表情が担う。reduced-motion では静的表情のみ。
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MOCHIT_SVG_MARKUP } from "./mochitSvgMarkup";
@@ -75,6 +79,7 @@ import {
   nextGazeHoldMs,
   nextGazeTarget,
   offsetTransform,
+  scaleAbout,
   shouldDoubleBlink,
   swayKeyframes,
   type GazeOffset,
@@ -106,6 +111,11 @@ type Props = {
    * 自動発火とは独立で attention は問わないが、reduced-motion・compact・Reaction中・停止中は再生しない。
    */
   macroIdleRequest?: MochitMacroIdleRequest;
+  /**
+   * Sleep 状態（idleBehavior=sleepy）。Macro Idle とランダム視線を止め、Micro Idle を
+   * 静かにする。半目は emotion=sleepy で別に指定する。省略時 false。
+   */
+  sleeping?: boolean;
 };
 
 export type MochitMacroIdleRequest = { behavior: MochitMacroIdleBehavior; id: number };
@@ -114,35 +124,80 @@ function canAnimate(el: SVGGraphicsElement | null): el is SVGGraphicsElement {
   return !!el && typeof el.animate === "function";
 }
 
-// 待機アニメーション（呼吸/ゆれ/アンテナ/まばたき）を DOM へ適用し、停止関数を返す。
+// ---- Sleep 中の Micro Idle の静けさ ----
+
+/** Sleep 中の Micro Idle。ループは作り直さず、速度（playbackRate）と振幅だけを変える */
+export const MOCHIT_SLEEP_IDLE = {
+  /** 呼吸をゆっくり */
+  breatheRate: 0.72,
+  swayRate: 0.8,
+  antennaRate: 0.8,
+  /** ゆれ・アンテナの振幅係数 */
+  swayAmplitude: 0.5,
+  antennaAmplitude: 0.55,
+  /** 足元支点の沈み込み（scaleY 0.985 ≒ 頭頂が約1.5%下がる） */
+  sinkScaleX: 1.006,
+  sinkScaleY: 0.985,
+  /** 眠りに入る / 起きる時の沈み込みの補間時間 */
+  sinkInMs: 900,
+  sinkOutMs: 260,
+} as const;
+
+type IdleHandle = {
+  stop(): void;
+  /** Sleep の静けさを反映する（transitionMs=0 は即時） */
+  setSleepy(sleepy: boolean, transitionMs: number): void;
+};
+
+function setRate(animation: Animation | null, rate: number): void {
+  if (!animation) return;
+  try {
+    if (typeof animation.updatePlaybackRate === "function") animation.updatePlaybackRate(rate);
+    else animation.playbackRate = rate;
+  } catch {
+    /* noop */
+  }
+}
+
+function setLoopKeyframes(animation: Animation | null, keyframes: Keyframe[]): void {
+  const effect = animation?.effect as KeyframeEffect | null | undefined;
+  if (!effect || typeof effect.setKeyframes !== "function") return;
+  try {
+    effect.setKeyframes(keyframes);
+  } catch {
+    /* noop */
+  }
+}
+
+// 待機アニメーション（呼吸/ゆれ/アンテナ/まばたき）を DOM へ適用し、操作ハンドルを返す。
 // 視線はここに含めない（createGazeController が独立して持つ）。
 // getEyelidRest: 平常時のまぶたの閉じ量（emotion 変更でIdleを作り直さないよう毎回読む）。
-function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => number): () => void {
+function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => number): IdleHandle {
   const p = getIdleProfile(compact);
   const loops: Animation[] = [];
   const timers: number[] = [];
   const q = (sel: string) => svg.querySelector<SVGGraphicsElement>(sel);
 
   const loop = (el: SVGGraphicsElement | null, keyframes: Keyframe[], durationMs: number, delayMs = 0) => {
-    if (!canAnimate(el)) return;
-    loops.push(
-      el.animate(keyframes, {
-        duration: durationMs,
-        easing: "ease-in-out",
-        direction: "alternate",
-        iterations: Infinity,
-        delay: delayMs,
-      }),
-    );
+    if (!canAnimate(el)) return null;
+    const animation = el.animate(keyframes, {
+      duration: durationMs,
+      easing: "ease-in-out",
+      direction: "alternate",
+      iterations: Infinity,
+      delay: delayMs,
+    });
+    loops.push(animation);
+    return animation;
   };
 
   // 連続モーション
   const sway = q("#Anim_Sway");
   const breathe = q("#Anim_Breathe");
   const antenna = q("#Anim_Antenna");
-  loop(breathe, breatheKeyframes(p), p.breathe.durationMs);
-  loop(sway, swayKeyframes(p), p.sway.durationMs);
-  loop(antenna, antennaKeyframes(p), p.antenna.durationMs, p.antenna.delayMs);
+  const breatheLoop = loop(breathe, breatheKeyframes(p), p.breathe.durationMs);
+  const swayLoop = loop(sway, swayKeyframes(p), p.sway.durationMs);
+  const antennaLoop = loop(antenna, antennaKeyframes(p), p.antenna.durationMs, p.antenna.delayMs);
 
   // まばたき（不規則な間隔・時々ダブル）
   const eyelids = [
@@ -174,8 +229,62 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
   };
   if (eyelids.length > 0) scheduleBlink();
 
+  // Sleep: 足元支点でごくわずかに沈む。呼吸ループ（replace）の上に add で重ねる持続アニメ。
+  let sleepy = false;
+  let sink: Animation | null = null;
+  const S = MOCHIT_SLEEP_IDLE;
+  const sunk = scaleAbout(p.breathe.cx, p.sway.cy, S.sinkScaleX, S.sinkScaleY);
+  const level = scaleAbout(p.breathe.cx, p.sway.cy, 1, 1);
+  const cancelSink = () => {
+    try {
+      sink?.cancel();
+    } catch {
+      /* noop */
+    }
+    sink = null;
+  };
+  const setSleepy = (next: boolean, transitionMs: number) => {
+    if (sleepy === next) return;
+    sleepy = next;
+    setRate(breatheLoop, next ? S.breatheRate : 1);
+    setRate(swayLoop, next ? S.swayRate : 1);
+    setRate(antennaLoop, next ? S.antennaRate : 1);
+    setLoopKeyframes(
+      swayLoop,
+      swayKeyframes({ ...p, sway: { ...p.sway, deg: p.sway.deg * (next ? S.swayAmplitude : 1) } }),
+    );
+    setLoopKeyframes(
+      antennaLoop,
+      antennaKeyframes({ ...p, antenna: { ...p.antenna, deg: p.antenna.deg * (next ? S.antennaAmplitude : 1) } }),
+    );
+    if (!canAnimate(breathe)) return;
+    cancelSink();
+    try {
+      if (next) {
+        sink = breathe.animate([{ transform: level }, { transform: sunk }], {
+          duration: Math.max(1, transitionMs),
+          easing: "ease-in-out",
+          fill: "forwards",
+          composite: "add",
+        });
+        sink.persist?.();
+      } else if (transitionMs > 0) {
+        // 起きる: 沈んだ姿勢から短く戻す（終了後は何も残らない）
+        breathe.animate([{ transform: sunk }, { transform: level }], {
+          duration: transitionMs,
+          easing: "ease-out",
+          fill: "none",
+          composite: "add",
+        });
+      }
+    } catch {
+      /* 沈み込みは演出のみ。失敗しても他は続行 */
+    }
+  };
+
   // 停止＝静止ポーズへ戻す（まばたき途中で固まらないように opacity も戻す）。
-  return () => {
+  const stop = () => {
+    cancelSink();
     for (const a of loops) {
       try {
         a.cancel();
@@ -190,6 +299,7 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
       el.style.opacity = "";
     }
   };
+  return { stop, setSleepy };
 }
 
 // ---- 視線（gaze controller） ----
@@ -211,8 +321,13 @@ type GazeController = {
    * 乱数リズム（スケジューラ）は作り直さない。
    */
   holdRandom(hold: boolean): void;
+  /** Sleep 中はランダム視線を止めて中央で休ませる（Semantic Attention は優先してそのまま） */
+  setSleeping(sleeping: boolean): void;
   dispose(): void;
 };
+
+/** Sleep に入る時、視線を中央へ戻す補間時間 */
+const SLEEP_GAZE_SETTLE_MS = 500;
 
 /**
  * 瞳（とハイライト）の基底transformを一手に持つ命令的コントローラー。
@@ -229,6 +344,7 @@ function createGazeController(svg: SVGSVGElement): GazeController {
   let current: GazeOffset = GAZE_CENTER;
   let timer: number | null = null;
   let held = false;
+  let sleeping = false;
   // 進行中の補間（次の切替を途中位置から始めるため）
   let moving: { from: GazeOffset; to: GazeOffset; startedAt: number; ms: number; animations: Animation[] } | null =
     null;
@@ -313,6 +429,12 @@ function createGazeController(svg: SVGSVGElement): GazeController {
         current = GAZE_CENTER;
         return;
       }
+      if (sleeping) {
+        // Sleep: ランダム視線を止め、中央でじっとする
+        clearTimer();
+        moveTo(GAZE_CENTER, SLEEP_GAZE_SETTLE_MS);
+        return;
+      }
       // 既に走っていれば乱数リズムを崩さない。Semantic から戻った時は今の位置から再開する。
       if (timer === null) {
         if (!moving) setBase(offsetTransform(current.x, current.y));
@@ -344,6 +466,11 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     holdRandom(hold) {
       held = hold;
     },
+    setSleeping(next) {
+      if (sleeping === next) return;
+      sleeping = next;
+      apply();
+    },
     dispose() {
       clearTimer();
       cancelMove();
@@ -356,6 +483,8 @@ function createGazeController(svg: SVGSVGElement): GazeController {
 const RESTING_MOUTHS = Object.keys(MOCHIT_RESTING_MOUTH_ELEMENT_IDS) as MochitRestingMouth[];
 /** 平常表情の切替を補間する時間（reduced-motion・初回は即時） */
 const RESTING_TRANSITION_MS = 180;
+/** まぶたが下がる（sleepy へ入る）時の補間時間。とろんと閉じていく */
+const SLEEPY_EYELID_CLOSE_MS = 700;
 
 // 現在の見た目から新しい基底値へ短時間で補間する（fill:"none"＝終了後は基底値そのもの）。
 function transitionFrom(el: SVGGraphicsElement, from: Keyframe, to: Keyframe, durationMs: number): void {
@@ -525,6 +654,7 @@ export default function MochitSvg({
   attention = "random",
   attentionPoint,
   macroIdleRequest,
+  sleeping = false,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [inViewport, setInViewport] = useState(true);
@@ -615,19 +745,24 @@ export default function MochitSvg({
   });
 
   const eyelidsAppliedRef = useRef(false);
+  const appliedEyelidRestRef = useRef(0);
   useEffect(() => {
     desiredRef.current = expression;
     const svg = svgRef.current;
     if (failed || !svg || !svg.firstElementChild) return;
     const transitionMs = transitionMsRef.current;
+    // まぶたが下がる（眠くなる）時はゆっくり、開く（起きる）時は通常の速さ
+    const closing = expression.eyelidRest > appliedEyelidRestRef.current;
+    const eyelidMs = closing && transitionMs > 0 ? SLEEPY_EYELID_CLOSE_MS : transitionMs;
     applyRestingEyelids(
       svg,
       expression.eyelidRest,
       compact,
       idleRunningRef.current,
-      eyelidsAppliedRef.current ? transitionMs : 0,
+      eyelidsAppliedRef.current ? eyelidMs : 0,
     );
     eyelidsAppliedRef.current = true;
+    appliedEyelidRestRef.current = expression.eyelidRest;
     syncRestingMouthRef.current(transitionMs);
   }, [expression, compact, failed]);
 
@@ -676,21 +811,40 @@ export default function MochitSvg({
     [],
   );
 
+  // ---- Sleep ----
+  // Micro Idle は作り直さず、走っているループの速さ・振幅と沈み込みだけを切り替える。
+  const idleHandleRef = useRef<IdleHandle | null>(null);
+  const sleepingRef = useRef(sleeping);
+  useEffect(() => {
+    sleepingRef.current = sleeping;
+    const reduced = transitionMsRef.current === 0;
+    idleHandleRef.current?.setSleepy(
+      sleeping,
+      reduced ? 0 : sleeping ? MOCHIT_SLEEP_IDLE.sinkInMs : MOCHIT_SLEEP_IDLE.sinkOutMs,
+    );
+    getGazeRef.current()?.setSleeping(sleeping);
+  }, [sleeping, failed]);
+
   useEffect(() => {
     if (!active) return;
     const svg = svgRef.current;
     if (!svg) return;
     // WAAPI 非対応環境では静止SVGのまま（フォールバックはしない＝描画自体は成功）
     if (typeof svg.animate !== "function") return;
-    let stop: (() => void) | undefined;
+    let handle: IdleHandle | undefined;
     try {
-      stop = startIdle(svg, compact, () => desiredRef.current.eyelidRest);
+      handle = startIdle(svg, compact, () => desiredRef.current.eyelidRest);
       idleRunningRef.current = true;
+      idleHandleRef.current = handle;
+      // Sleep 中に再開した場合（タブ復帰など）は静かな状態から始める
+      if (sleepingRef.current) handle.setSleepy(true, 0);
     } catch (error) {
       if (isDev) console.warn("[Mochit] 待機アニメーションの初期化に失敗しました。静止表示にします。", error);
     }
+    const stop = handle?.stop;
     return () => {
       stop?.();
+      if (idleHandleRef.current === handle) idleHandleRef.current = null;
       idleRunningRef.current = false;
       // 停止後も平常時のまぶた（sleepy の半目など）は静的に残す
       if (stop) applyRestingEyelids(svg, desiredRef.current.eyelidRest, compact, false, 0);
@@ -753,8 +907,9 @@ export default function MochitSvg({
       reducedMotion,
       compact,
       attention,
+      sleeping,
     });
-  }, [active, reducedMotion, compact, attention, failed]);
+  }, [active, reducedMotion, compact, attention, sleeping, failed]);
   // マウント時点で既にある要求は再生しない（再マウントで古い要求が再生されないように）
   const macroRequestId = macroIdleRequest?.id;
   const macroRequestBehavior = macroIdleRequest?.behavior;

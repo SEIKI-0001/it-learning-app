@@ -235,3 +235,30 @@ describe("createMacroIdleController: 明示再生（preview）", () => {
     expect(controller.getState()).toMatchObject({ playing: null, scheduled: true });
   });
 });
+
+describe("createMacroIdleController: Sleep", () => {
+  it("Sleep に入ると再生中の Macro を止め、眠っている間は発火しない", () => {
+    const { controller, plays } = setup(queue([0, 0.95, 0], 0));
+    controller.update(ACTIVE);
+    vi.advanceTimersByTime(8000);
+    expect(plays).toHaveLength(1);
+    controller.update({ sleeping: true });
+    expect(plays[0].stop).toHaveBeenCalledWith(MACRO_IDLE_SETTLE_MS);
+    expect(controller.getState()).toMatchObject({ playing: null, scheduled: false });
+    vi.advanceTimersByTime(10 * 60_000);
+    expect(plays).toHaveLength(1);
+    expect(controller.playNow("stretch")).toBe(false);
+  });
+
+  it("起きた後は即発火せず、新しい待ち時間（8秒以上）から", () => {
+    const { controller, plays } = setup(queue([0, 0.95, 0], 0));
+    controller.update({ ...ACTIVE, sleeping: true });
+    vi.advanceTimersByTime(60_000);
+    controller.update({ sleeping: false });
+    expect(controller.getState().scheduled).toBe(true);
+    vi.advanceTimersByTime(7999);
+    expect(plays).toHaveLength(0);
+    vi.advanceTimersByTime(1);
+    expect(plays).toHaveLength(1);
+  });
+});
