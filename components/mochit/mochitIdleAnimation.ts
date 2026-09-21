@@ -138,17 +138,28 @@ export function antennaKeyframes(p: IdleProfile): Keyframe[] {
 
 // ---- まばたき ----
 
-/** 片目まぶたの1回のまばたきキーフレーム（scaleY 0→1→0、上端支点）。 */
-export function blinkKeyframes(p: IdleProfile, cx: number): Keyframe[] {
+// scaleY 0 だと変換行列が特異になるため、全開は極小値で表す。
+const EYELID_OPEN_SCALE = 0.0001;
+
+function eyelidScale(rest: number): number {
+  return Math.min(1, Math.max(EYELID_OPEN_SCALE, rest));
+}
+
+/**
+ * 片目まぶたの1回のまばたきキーフレーム（上端支点）。
+ * rest（平常時の閉じ量）→ 全閉 → rest。rest 省略時は全開（scaleY≈0）から。
+ */
+export function blinkKeyframes(p: IdleProfile, cx: number, rest = 0): Keyframe[] {
   const { pivotY, closeMs, holdMs, openMs } = p.blink;
   const total = closeMs + holdMs + openMs;
   const closeAt = closeMs / total;
   const holdAt = (closeMs + holdMs) / total;
+  const restScale = eyelidScale(rest);
   return [
-    { transform: scaleAbout(cx, pivotY, 1, 0.0001), offset: 0 },
+    { transform: scaleAbout(cx, pivotY, 1, restScale), offset: 0 },
     { transform: scaleAbout(cx, pivotY, 1, 1), offset: closeAt },
     { transform: scaleAbout(cx, pivotY, 1, 1), offset: holdAt },
-    { transform: scaleAbout(cx, pivotY, 1, 0.0001), offset: 1 },
+    { transform: scaleAbout(cx, pivotY, 1, restScale), offset: 1 },
   ];
 }
 
@@ -156,9 +167,9 @@ export function blinkDurationMs(p: IdleProfile): number {
   return p.blink.closeMs + p.blink.holdMs + p.blink.openMs;
 }
 
-/** まぶたの静止状態（開いている＝scaleY 0 で不可視）。 */
-export function eyelidRestTransform(p: IdleProfile, cx: number): string {
-  return scaleAbout(cx, p.blink.pivotY, 1, 0.0001);
+/** まぶたの静止状態。rest 省略時は全開（scaleY≈0 で不可視）。sleepy では少し閉じる。 */
+export function eyelidRestTransform(p: IdleProfile, cx: number, rest = 0): string {
+  return scaleAbout(cx, p.blink.pivotY, 1, eyelidScale(rest));
 }
 
 export function nextBlinkGapMs(p: IdleProfile, rng: RNG = Math.random): number {

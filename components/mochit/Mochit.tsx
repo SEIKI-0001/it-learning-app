@@ -21,6 +21,7 @@ import type {
   MochitState,
 } from "./mochitTypes";
 import type { MochitEventSignal } from "./mochitEvents";
+import { createMochitBehaviorState, type MochitBehaviorState } from "./mochitBehavior";
 
 // 後方互換: 既存コードは型をこのモジュールからimportしている。
 export type { MochitAnimation, MochitGrowthStage, MochitSize, MochitState };
@@ -132,6 +133,12 @@ type Props = {
   reactionProfile?: MochitReactionProfile;
   /** 既存優先度コントローラーがイベントを受理した時だけ通知する。 */
   onEventAccepted?: (signal: MochitEventSignal) => void;
+  /**
+   * 平常時の Behavior State（Living Character）。省略時は既定値＝従来表示。
+   * state（既存UI互換の表示状態）とは独立で、自動で同一視しない。
+   * 現状は emotion のみ SVG 描画の平常表情へ反映する。
+   */
+  behavior?: Partial<MochitBehaviorState>;
   // ---- dev/テスト用の切替口 ----
   rendererOverride?: "rive" | "svg" | "fallback";
   riveSrcOverride?: string;
@@ -153,6 +160,7 @@ export default function Mochit({
   compact,
   reactionProfile,
   onEventAccepted,
+  behavior,
   rendererOverride,
   riveSrcOverride,
   forceSvgFailure,
@@ -207,6 +215,9 @@ export default function Mochit({
   }, [event, dispatch]);
 
   const meta = MOCHIT_STATE_META[state];
+  // 部分指定を完全な Behavior State へ正規化。子へは primitive だけ渡す
+  // （behavior オブジェクトの同一性に依存して再描画・再適用させない）。
+  const emotion = createMochitBehaviorState(behavior).emotion;
 
   return (
     <div
@@ -239,6 +250,7 @@ export default function Mochit({
                 ariaLabel={meta.alt}
                 forceFailure={forceSvgFailure}
                 registerTriggerFirer={registerTriggerFirer}
+                emotion={emotion}
                 onReady={() => setSvgReady(true)}
                 onLoadFailed={() => {
                   setSvgReady(false);

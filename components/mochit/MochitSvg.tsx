@@ -14,12 +14,24 @@
 //   - reduced-motion ではIdle停止＋リアクションは表情/Core発光のみの縮退版
 //   - ビューポート外 / タブ非表示 では停止して静止ポーズを保つ
 //   - registerTriggerFirer: useMochitController のトリガー発火を受け取る口（Riveと同じ契約）
+//   - emotion: Behavior State の平常時感情。平常表情（口・まぶた）を既存ノードの
+//     インラインstyleへ命令的に反映する（SVGの再注入・再マウントはしない）。
+//     インラインstyleはIdle/リアクションの「基底値」なので、リアクション終了後は
+//     neutral ではなく現在の平常表情へ戻る。reduced-motion でも静的表情は残る。
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MOCHIT_SVG_MARKUP } from "./mochitSvgMarkup";
 import { MOCHIT_TRIGGER_EVENTS } from "./mochitEvents";
 import type { MochitRiveTriggerInput } from "./mochitTypes";
 import type { MochitReactionProfile } from "./mochitTypes";
+import type { MochitEmotion } from "./mochitBehavior";
+import {
+  getMochitRestingExpression,
+  MOCHIT_RESTING_MOUTH_ELEMENT_IDS,
+  rebaseReactionMouths,
+  type MochitRestingExpression,
+  type MochitRestingMouth,
+} from "./mochitRestingExpression";
 import {
   buildReactionSpec,
   MOCHIT_BODY_TRANSFORM_ORIGIN,
@@ -58,6 +70,8 @@ type Props = {
   forceFailure?: boolean;
   /** useMochitController のトリガー発火を受け取る（Riveと同じ契約） */
   registerTriggerFirer?: (firer: ((trigger: MochitRiveTriggerInput) => void) | null) => void;
+  /** Behavior State の平常時感情。省略時 neutral（従来表示と同一） */
+  emotion?: MochitEmotion;
 };
 
 function canAnimate(el: SVGGraphicsElement | null): el is SVGGraphicsElement {
@@ -65,7 +79,8 @@ function canAnimate(el: SVGGraphicsElement | null): el is SVGGraphicsElement {
 }
 
 // 待機アニメーション一式を DOM へ適用し、停止関数を返す。
-function startIdle(svg: SVGSVGElement, compact: boolean): () => void {
+// getEyelidRest: 平常時のまぶたの閉じ量（emotion 変更でIdleを作り直さないよう毎回読む）。
+function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => number): () => void {
   const p = getIdleProfile(compact);
   const loops: Animation[] = [];
   const timers: number[] = [];
@@ -101,11 +116,12 @@ function startIdle(svg: SVGSVGElement, compact: boolean): () => void {
   for (const { el, cx } of eyelids) {
     // まぶたは静止時 scaleY≈0 で不可視。マークアップの opacity:0 を外して制御下に置く。
     el.style.opacity = "1";
-    el.style.transform = eyelidRestTransform(p, cx);
+    el.style.transform = eyelidRestTransform(p, cx, getEyelidRest());
   }
   const blinkOnce = () => {
+    const rest = getEyelidRest();
     for (const { el, cx } of eyelids) {
-      el.animate(blinkKeyframes(p, cx), { duration: blinkDurationMs(p), easing: "ease-in-out" });
+      el.animate(blinkKeyframes(p, cx, rest), { duration: blinkDurationMs(p), easing: "ease-in-out" });
     }
   };
   const scheduleBlink = () => {
@@ -164,6 +180,71 @@ function startIdle(svg: SVGSVGElement, compact: boolean): () => void {
     }
     for (const el of gazeNodes) el.style.transform = "";
   };
+}
+
+// ---- 平常表情（Behavior emotion） ----
+
+const RESTING_MOUTHS = Object.keys(MOCHIT_RESTING_MOUTH_ELEMENT_IDS) as MochitRestingMouth[];
+/** 平常表情の切替を補間する時間（reduced-motion・初回は即時） */
+const RESTING_TRANSITION_MS = 180;
+
+// 現在の見た目から新しい基底値へ短時間で補間する（fill:"none"＝終了後は基底値そのもの）。
+function transitionFrom(el: SVGGraphicsElement, from: Keyframe, to: Keyframe, durationMs: number): void {
+  if (durationMs <= 0 || typeof el.animate !== "function") return;
+  try {
+    el.animate([from, to], { duration: durationMs, easing: "ease-out", fill: "none" });
+  } catch {
+    /* 補間できなくても基底値は反映済み */
+  }
+}
+
+/** 平常口をインラインstyleへ反映。neutral はマークアップ既定値（style無し）に戻す。 */
+function applyRestingMouth(svg: SVGSVGElement, mouth: MochitRestingMouth, transitionMs: number): void {
+  for (const candidate of RESTING_MOUTHS) {
+    const el = svg.querySelector<SVGGraphicsElement>(`#${MOCHIT_RESTING_MOUTH_ELEMENT_IDS[candidate]}`);
+    if (!el) continue;
+    const from = transitionMs > 0 ? getComputedStyle(el).opacity : null;
+    el.style.opacity = mouth === "neutral" ? "" : candidate === mouth ? "1" : "0";
+    if (from !== null) transitionFrom(el, { opacity: from }, { opacity: getComputedStyle(el).opacity }, transitionMs);
+  }
+}
+
+/**
+ * 平常時のまぶたをインラインstyleへ反映。Idle 実行中はまぶたが常に制御下
+ * （opacity:1・scaleY=rest）。停止中は閉じ量があるときだけ表示し、無ければ
+ * マークアップ既定値（不可視）に戻す。
+ */
+function applyRestingEyelids(
+  svg: SVGSVGElement,
+  rest: number,
+  compact: boolean,
+  idleRunning: boolean,
+  transitionMs: number,
+): void {
+  const p = getIdleProfile(compact);
+  for (const [sel, cx] of [
+    ["#Eyelid_L", p.blink.cxL],
+    ["#Eyelid_R", p.blink.cxR],
+  ] as const) {
+    const el = svg.querySelector<SVGGraphicsElement>(sel);
+    if (!el) continue;
+    const before = transitionMs > 0 ? getComputedStyle(el) : null;
+    // 不可視（マークアップ既定）のまぶたは「全開」扱い。computed の none は全閉なので使わない。
+    const fromTransform =
+      before && Number(before.opacity) > 0 && before.transform && before.transform !== "none"
+        ? before.transform
+        : eyelidRestTransform(p, cx, 0);
+    const visible = idleRunning || rest > 0;
+    if (visible) {
+      el.style.opacity = "1";
+      el.style.transform = eyelidRestTransform(p, cx, rest);
+      // まぶたの下がり/上がりだけを補間する
+      if (before) transitionFrom(el, { transform: fromTransform }, { transform: el.style.transform }, transitionMs);
+    } else {
+      el.style.transform = "";
+      el.style.opacity = "";
+    }
+  }
 }
 
 // ---- 学習イベントリアクション ----
@@ -267,6 +348,7 @@ export default function MochitSvg({
   className = "",
   forceFailure = false,
   registerTriggerFirer,
+  emotion = "neutral",
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [inViewport, setInViewport] = useState(true);
@@ -327,6 +409,52 @@ export default function MochitSvg({
 
   const active = !failed && !reducedMotion && inViewport && !documentHidden;
 
+  // ---- 平常表情 ----
+  // desired: 最新の emotion から導いた平常表情。appliedMouth: 実際にインラインstyleへ
+  // 反映済みの平常口（リアクションの口トラックはこれを基底として付け替える）。
+  const expression = useMemo(() => getMochitRestingExpression(emotion, { compact }), [emotion, compact]);
+  const desiredRef = useRef<MochitRestingExpression>(expression);
+  const appliedMouthRef = useRef<MochitRestingMouth | null>(null);
+  const idleRunningRef = useRef(false);
+  const transitionMsRef = useRef(0);
+  useEffect(() => {
+    transitionMsRef.current = reducedMotion ? 0 : RESTING_TRANSITION_MS;
+  });
+  const runningRef = useRef<RunningReaction | null>(null);
+
+  // リアクションが走っていない時だけ平常口を反映する（リアクション優先）。
+  // 走行中の変更はリアクション終了時に反映される。
+  const syncRestingMouth = (transitionMs: number) => {
+    const svg = svgRef.current;
+    if (!svg || runningRef.current) return;
+    const mouth = desiredRef.current.mouth;
+    if (appliedMouthRef.current === mouth) return;
+    // 初回反映（マウント直後）は補間しない
+    applyRestingMouth(svg, mouth, appliedMouthRef.current === null ? 0 : transitionMs);
+    appliedMouthRef.current = mouth;
+  };
+  const syncRestingMouthRef = useRef(syncRestingMouth);
+  useEffect(() => {
+    syncRestingMouthRef.current = syncRestingMouth;
+  });
+
+  const eyelidsAppliedRef = useRef(false);
+  useEffect(() => {
+    desiredRef.current = expression;
+    const svg = svgRef.current;
+    if (failed || !svg || !svg.firstElementChild) return;
+    const transitionMs = transitionMsRef.current;
+    applyRestingEyelids(
+      svg,
+      expression.eyelidRest,
+      compact,
+      idleRunningRef.current,
+      eyelidsAppliedRef.current ? transitionMs : 0,
+    );
+    eyelidsAppliedRef.current = true;
+    syncRestingMouthRef.current(transitionMs);
+  }, [expression, compact, failed]);
+
   useEffect(() => {
     if (!active) return;
     const svg = svgRef.current;
@@ -335,11 +463,17 @@ export default function MochitSvg({
     if (typeof svg.animate !== "function") return;
     let stop: (() => void) | undefined;
     try {
-      stop = startIdle(svg, compact);
+      stop = startIdle(svg, compact, () => desiredRef.current.eyelidRest);
+      idleRunningRef.current = true;
     } catch (error) {
       if (isDev) console.warn("[Mochit] 待機アニメーションの初期化に失敗しました。静止表示にします。", error);
     }
-    return () => stop?.();
+    return () => {
+      stop?.();
+      idleRunningRef.current = false;
+      // 停止後も平常時のまぶた（sleepy の半目など）は静的に残す
+      if (stop) applyRestingEyelids(svg, desiredRef.current.eyelidRest, compact, false, 0);
+    };
   }, [active, compact]);
 
   // ---- リアクション再生 ----
@@ -357,7 +491,6 @@ export default function MochitSvg({
       gated: reactionGated,
     };
   });
-  const runningRef = useRef<RunningReaction | null>(null);
   const pendingStartRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -369,11 +502,11 @@ export default function MochitSvg({
       if (env.gated) return;
       const event = MOCHIT_TRIGGER_EVENTS[trigger];
       if (!event) return;
-      const spec = buildReactionSpec(event, {
+      const baseSpec = buildReactionSpec(event, {
         profile: env.reactionProfile,
         reducedMotion: env.reducedMotion,
       });
-      if (!spec) return;
+      if (!baseSpec) return;
       if (pendingStartRef.current !== null) {
         clearTimeout(pendingStartRef.current);
         pendingStartRef.current = null;
@@ -382,9 +515,14 @@ export default function MochitSvg({
         pendingStartRef.current = null;
         const target = svgRef.current;
         if (!target || reactionEnvRef.current.gated) return;
+        // 開始直前に平常口を確定し、リアクションの口の基底をそれに付け替える
+        syncRestingMouthRef.current(0);
+        const spec = rebaseReactionMouths(baseSpec, appliedMouthRef.current ?? "neutral");
         try {
           runningRef.current = startReaction(target, spec, () => {
             runningRef.current = null;
+            // リアクション中に emotion が変わっていれば、終了後に新しい平常表情へ移る
+            syncRestingMouthRef.current(transitionMsRef.current);
           });
         } catch (error) {
           if (isDev) console.warn("[Mochit] リアクションの再生に失敗しました。", error);
@@ -416,6 +554,7 @@ export default function MochitSvg({
       stopReaction(runningRef.current, 0);
       runningRef.current = null;
     }
+    syncRestingMouthRef.current(0);
   }, [reactionGated]);
   useEffect(
     () => () => {
