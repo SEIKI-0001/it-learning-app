@@ -1,0 +1,212 @@
+/* 正規化の Morphing Table。
+   色＝項目のグループ（注文/顧客/商品/明細）で、段階が変わっても同じ色のまま移動する。 */
+
+.board {
+  --g-order: #4f46e5;
+  --g-customer: #0d9488;
+  --g-product: #ea580c;
+  --g-detail: #9333ea;
+  position: relative;
+  padding: 2px 2px 2px 14px;
+}
+
+.links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.link {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+  stroke-linecap: round;
+  animation: norm-link-in 600ms ease 700ms both;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 22px;
+  align-items: start;
+}
+
+.gridSingle {
+  display: grid;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  padding: 8px 8px 9px;
+  border: 1px solid #e3e8f0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 1px 0 #ffffff inset, 0 8px 18px rgba(30, 42, 64, 0.08), 0 2px 4px rgba(30, 42, 64, 0.05);
+}
+
+.cardTitle {
+  margin: 0 0 6px;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 6px 5px 9px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--group) 7%, #ffffff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--group) 18%, transparent);
+  will-change: transform;
+}
+
+.field::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 5px;
+  bottom: 5px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--group);
+}
+
+.field[data-repeating="true"] {
+  background: #faf5ff;
+  box-shadow: inset 0 0 0 1px #d8b4fe;
+  border: 1px dashed #c084fc;
+}
+
+.fieldHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+.fieldName {
+  color: color-mix(in srgb, var(--group) 80%, #111827);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.keyBadge,
+.fkBadge,
+.repeatBadge,
+.warnBadge {
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 8.5px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.keyBadge {
+  background: #f43f5e;
+  color: #ffffff;
+}
+
+.fkBadge {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.repeatBadge {
+  background: #9333ea;
+  color: #ffffff;
+}
+
+.warnBadge {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.bundle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 1px 2px;
+  border: 1px solid #d8b4fe;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.chip {
+  padding: 0 5px;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+  color: #1f2937;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  transition: background 300ms ease, color 300ms ease;
+}
+
+.chip[data-dup="true"] {
+  background: #fef3c7;
+  box-shadow: inset 0 0 0 1px #fcd34d;
+  color: #92400e;
+  font-weight: 800;
+}
+
+.chip[data-conflict="true"] {
+  background: #ffe4e9;
+  box-shadow: inset 0 0 0 1px #fb7185;
+  color: #be123c;
+  font-weight: 800;
+}
+
+.chip[data-changed="true"][data-conflict="false"] {
+  background: #d1fae5;
+  box-shadow: inset 0 0 0 1px #34d399;
+  color: #065f46;
+  font-weight: 800;
+}
+
+@keyframes norm-link-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.board[data-reduced-motion="true"] .link {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    animation: none;
+  }
+}
