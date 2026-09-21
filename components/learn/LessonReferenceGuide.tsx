@@ -7,7 +7,7 @@ import TodayReferenceGuide from "@/components/learn/TodayReferenceGuide";
 
 // レッスンページの「このトピックを参考書のどこで読むか」。
 // /today と同じ TodayReferenceGuide（同じ解決ロジック）を使う。
-// 参考書が未登録なら出さない（キーワードはページ下部の「参考書で探すキーワード」が担う）。
+// 参考書が未登録なら出さない（レッスン本文には参考書の案内を出さない）。
 export default function LessonReferenceGuide({
   topic,
 }: {

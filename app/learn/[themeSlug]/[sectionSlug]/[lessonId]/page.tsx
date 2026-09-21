@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { FIELD_LABELS, IMPORTANCE_LABELS, type Topic } from "@/types/content";
+import { IMPORTANCE_LABELS, type Topic } from "@/types/content";
 import BottomNav from "@/components/BottomNav";
 import TopicContent, { TopicReviewSections } from "@/components/learn/TopicContent";
 import TopicCompletionQuiz from "@/components/learn/TopicCompletionQuiz";
 import LessonReferenceGuide from "@/components/learn/LessonReferenceGuide";
+import LessonStatusBadge from "@/components/learn/LessonStatusBadge";
 import { hasCheckPack } from "@/lib/checkPack";
 import { getTopic } from "@/lib/content";
 import Icon from "@/components/ui/Icon";
@@ -13,6 +14,7 @@ import {
   getAllThemes,
   getLessonHref,
   getLessonLocation,
+  getLessonsForTheme,
 } from "@/lib/learningCatalog";
 
 const DIFFICULTY_LABEL: Record<Topic["difficulty"], string> = {
@@ -25,13 +27,20 @@ function readSingle(value: string | string[] | undefined): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+// label はレッスン完了後のボタン用（従来どおり）、shortLabel は見出し1行目の
+// 戻る導線用。1行目は横並びに詰めるので、そこでは短い方を使う。
 function returnLinkFor(
   from: string | undefined,
+  theme: { title: string },
   themeHref: string,
-): { href: string; label: string } {
-  if (from === "today") return { href: "/today", label: "今日のページへ戻る" };
-  if (from === "review") return { href: "/review", label: "復習一覧へ戻る" };
-  return { href: themeHref, label: "テーマに戻る" };
+): { href: string; label: string; shortLabel: string } {
+  if (from === "today") {
+    return { href: "/today", label: "今日のページへ戻る", shortLabel: "今日" };
+  }
+  if (from === "review") {
+    return { href: "/review", label: "復習一覧へ戻る", shortLabel: "復習" };
+  }
+  return { href: themeHref, label: "テーマに戻る", shortLabel: theme.title };
 }
 
 export function generateStaticParams() {
@@ -67,53 +76,77 @@ export default async function LessonPage({
 
   const themeHref = `/learn/${theme.slug}`;
   const adjacent = getAdjacentLessons(lessonId);
-  const returnLink = returnLinkFor(readSingle(query.from), themeHref);
+  const returnLink = returnLinkFor(readSingle(query.from), theme, themeHref);
+
+  // 見出し1行目に出す現在位置（この章の中で何レッスン目か）。
+  const themeLessons = getLessonsForTheme(theme);
+  const lessonNumber = themeLessons.findIndex((lesson) => lesson.id === topic.id) + 1;
+  // 戻り先がテーマ以外（today / review）のときだけ、章名を別に出す。
+  const showThemeCrumb = returnLink.href !== themeHref;
 
   return (
     <main className="min-h-screen pb-24">
-      <header className="pt-3 md:pt-6 lg:pt-8">
+      {/* 見出しは「現在位置(小) → タイトル → 補助情報(小)」の3行に絞り、
+          開いた直後に解説本文の冒頭が見える高さに収める。 */}
+      <header className="pt-3 md:pt-5">
         <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
-          <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
-          <nav aria-label="パンくず" className="flex flex-wrap gap-x-1 text-sm font-semibold text-gray-500">
-            <Link href="/learn" className="hover:text-brand-600">学ぶ</Link>
-            <span aria-hidden>＞</span>
-            <Link href={themeHref} className="hover:text-brand-600">{theme.title}</Link>
-            <span aria-hidden>＞</span>
-            <span>{section.title}</span>
-          </nav>
-          <p className="mt-5 text-xs font-bold text-brand-600">
-            {FIELD_LABELS[topic.field]}・第{theme.chapterNumber}章
-          </p>
-          <h1 className="mt-2 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">{topic.title}</h1>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">{topic.summary}</p>
-          <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-gray-600">
-            <span className="rounded-full bg-gray-100 px-3 py-1.5">目安 {topic.estimatedMinutes}分</span>
-            <span className="rounded-full bg-gray-100 px-3 py-1.5">重要度：{IMPORTANCE_LABELS[topic.importance]}</span>
-            <span className="rounded-full bg-gray-100 px-3 py-1.5">難易度：{DIFFICULTY_LABEL[topic.difficulty]}</span>
-          </div>
-
-          {/* このレッスンの流れ。理解→確認→仕上げの順で進むことを最初に示す */}
-          <nav aria-label="レッスンの流れ" className="mt-4 flex flex-wrap items-center gap-1.5 text-xs font-bold">
-            <a href="#lesson-content" className="rounded-full bg-brand-50 px-3 py-1.5 text-brand-700 ring-1 ring-brand-100 transition hover:bg-brand-100">
-              1. 解説で理解する
-            </a>
-            <Icon name="chevron-right" aria-hidden className="h-3.5 w-3.5 text-gray-400" />
-            <a href="#lesson-quiz" className="rounded-full bg-brand-50 px-3 py-1.5 text-brand-700 ring-1 ring-brand-100 transition hover:bg-brand-100">
-              2. 確認問題で確かめる
-            </a>
-            <Icon name="chevron-right" aria-hidden className="h-3.5 w-3.5 text-gray-400" />
-            <a
-              href={hasCheckPack(topic.id) ? "#lesson-check-pack" : "#lesson-review"}
-              className="rounded-full bg-brand-50 px-3 py-1.5 text-brand-700 ring-1 ring-brand-100 transition hover:bg-brand-100"
+          <div className="rounded-[14px] bg-brand-50 px-[18px] py-3.5 md:rounded-2xl md:px-7 md:py-4">
+            {/* 1行目: 戻る導線・現在位置・学習状態 */}
+            <nav
+              aria-label="現在位置"
+              className="flex items-center gap-1.5 text-xs text-gray-600"
             >
-              3. {hasCheckPack(topic.id) ? "過去問レベルで仕上げる" : "復習ポイントを押さえる"}
-            </a>
-          </nav>
-        </div>
+              <Link
+                href={returnLink.href}
+                className="-ml-1 flex max-w-[10rem] shrink-0 items-center gap-0.5 transition hover:text-gray-900"
+              >
+                <Icon name="chevron-left" aria-hidden className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{returnLink.shortLabel}</span>
+              </Link>
+              {showThemeCrumb && (
+                <>
+                  <span aria-hidden className="shrink-0 text-gray-400">・</span>
+                  <Link href={themeHref} className="truncate transition hover:text-gray-900">
+                    {theme.title}
+                  </Link>
+                </>
+              )}
+              <span aria-hidden className="hidden shrink-0 text-gray-400 sm:block">・</span>
+              <span className="hidden truncate sm:block">{section.title}</span>
+              {lessonNumber > 0 && (
+                <>
+                  <span aria-hidden className="shrink-0 text-gray-400">・</span>
+                  <span className="shrink-0 tabular-nums">
+                    {lessonNumber}/{themeLessons.length}
+                  </span>
+                </>
+              )}
+              <LessonStatusBadge lessonId={topic.id} />
+            </nav>
+
+            {/* 2行目: ページ内で最も視認性を高くする見出し */}
+            <h1 className="mt-1.5 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[28px]">
+              {topic.title}
+            </h1>
+
+            {/* 3行目: 補助情報。タイトルより目立たせない */}
+            <p className="mt-1 line-clamp-2 text-sm leading-snug text-gray-600">
+              {topic.summary}
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-xs text-gray-500">
+              <span>約{topic.estimatedMinutes}分</span>
+              <span aria-hidden className="text-gray-400">・</span>
+              <span>確認問題{topic.checkQuestions.length}問</span>
+              <span aria-hidden className="text-gray-400">・</span>
+              <span>重要度{IMPORTANCE_LABELS[topic.importance]}</span>
+              <span aria-hidden className="text-gray-400">・</span>
+              <span>{DIFFICULTY_LABEL[topic.difficulty]}</span>
+            </p>
           </div>
+        </div>
       </header>
 
-      <div className="mx-auto w-full max-w-3xl space-y-10 px-4 py-7">
+      <div className="mx-auto w-full max-w-3xl space-y-10 px-4 pb-7 pt-5">
         <section id="lesson-content" className="scroll-mt-24" aria-label="レッスン本文">
           <LessonReferenceGuide
             topic={{ id: topic.id, title: topic.title, referenceHints: topic.referenceHints }}
@@ -154,7 +187,7 @@ export default async function LessonPage({
           </section>
         )}
 
-        <section id="lesson-review" className="scroll-mt-24" aria-label="復習と参考情報">
+        <section id="lesson-review" className="scroll-mt-24" aria-label="復習">
           <TopicReviewSections topic={topic} />
         </section>
 
