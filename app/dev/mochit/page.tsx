@@ -10,12 +10,22 @@ import Mochit from "@/components/mochit/Mochit";
 import type { MochitGrowthStage, MochitScreenContext, MochitSize, MochitState } from "@/components/mochit/mochitTypes";
 import type { MochitEvent, MochitEventSignal } from "@/components/mochit/mochitEvents";
 import { MOCHIT_EVENT_PRIORITIES } from "@/components/mochit/mochitEvents";
-import type { MochitEmotion } from "@/components/mochit/mochitBehavior";
+import type { MochitAttention, MochitEmotion } from "@/components/mochit/mochitBehavior";
+import type { MochitAttentionPoint } from "@/components/mochit/mochitAttention";
 
 const STATES: MochitState[] = ["normal", "happy", "thinking", "cheering"];
 const SIZES: MochitSize[] = ["small", "medium", "large"];
 const STAGES: MochitGrowthStage[] = [1, 2, 3];
 const EMOTIONS: MochitEmotion[] = ["neutral", "happy", "curious", "thinking", "sleepy"];
+const ATTENTIONS: MochitAttention[] = ["random", "user", "content", "result"];
+// content/result の確認用プリセット（正規化座標 0〜1）
+const ATTENTION_POINTS: Array<{ label: string; point: MochitAttentionPoint }> = [
+  { label: "左上", point: { x: 0.15, y: 0.25 } },
+  { label: "中央", point: { x: 0.5, y: 0.5 } },
+  { label: "右上", point: { x: 0.85, y: 0.25 } },
+  { label: "左下", point: { x: 0.15, y: 0.8 } },
+  { label: "右下", point: { x: 0.85, y: 0.8 } },
+];
 const CONTEXTS: MochitScreenContext[] = ["other", "today", "progress", "avatar", "quizResult", "checkpoint", "rank"];
 const EVENTS: MochitEvent[] = [
   "checkpointClear",
@@ -40,6 +50,8 @@ export default function MochitDevPreviewPage() {
   const [screenContext, setScreenContext] = useState<MochitScreenContext>("other");
   const [mood, setMood] = useState(0);
   const [emotion, setEmotion] = useState<MochitEmotion>("neutral");
+  const [attention, setAttention] = useState<MochitAttention>("random");
+  const [pointIndex, setPointIndex] = useState(0);
   const [signal, setSignal] = useState<MochitEventSignal | null>(null);
   const [eventLog, setEventLog] = useState<string[]>([]);
   const [eventCompact, setEventCompact] = useState(false);
@@ -90,7 +102,15 @@ export default function MochitDevPreviewPage() {
     scheduleEvent("taskComplete", 250);
   };
 
-  const shared = { ...rendererProps, reducedMotion, screenContext, mood, behavior: { emotion } };
+  const usesPoint = attention === "content" || attention === "result";
+  const shared = {
+    ...rendererProps,
+    reducedMotion,
+    screenContext,
+    mood,
+    behavior: { emotion, attention },
+    attentionPoint: usesPoint ? ATTENTION_POINTS[pointIndex].point : undefined,
+  };
 
   return (
     <main className="min-h-screen pb-24">
@@ -164,6 +184,38 @@ export default function MochitDevPreviewPage() {
                 ))}
               </select>
             </label>
+            <label className="flex items-center gap-2">
+              attention（視線・SVGのみ）:
+              <select
+                className="rounded-lg border border-gray-200 px-2 py-1"
+                value={attention}
+                onChange={(e) => setAttention(e.target.value as MochitAttention)}
+              >
+                {ATTENTIONS.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </label>
+            {usesPoint && (
+              <div className="flex items-center gap-1" role="group" aria-label="attentionPoint">
+                attentionPoint:
+                {ATTENTION_POINTS.map((preset, i) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setPointIndex(i)}
+                    className={`rounded-lg border px-2 py-1 ${
+                      i === pointIndex ? "border-brand-600 bg-brand-600 text-white" : "border-gray-200"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+                <span className="text-xs font-normal text-gray-400">
+                  ({ATTENTION_POINTS[pointIndex].point.x}, {ATTENTION_POINTS[pointIndex].point.y})
+                </span>
+              </div>
+            )}
             <label className="flex items-center gap-2">
               mood {mood.toFixed(1)}:
               <input

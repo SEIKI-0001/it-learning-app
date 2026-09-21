@@ -7,6 +7,10 @@
 //     本体の動きは外側<svg>のCSS transform（Idleの内部グループとは別要素）なので
 //     Idleと自然に合成され、終了時は恒等変換＝位置飛びなしでIdleへ戻る。
 //     gaze/antenna は composite:"add" でIdleの変換に上乗せする。
+//   - 視線: Living Idle（呼吸/ゆれ/アンテナ/まばたき）とは独立した gaze controller が持つ。
+//     attention が random の時だけランダム視線、user/content/result（Semantic Attention）は
+//     正規化座標の1点を見続ける。attention の変更は gaze controller だけを更新し、
+//     Living Idle を再起動しない。
 //
 // 契約:
 //   - onReady: SVG が正しく描画できた（親はWebPフォールバックを外してよい）
@@ -18,13 +22,22 @@
 //     インラインstyleへ命令的に反映する（SVGの再注入・再マウントはしない）。
 //     インラインstyleはIdle/リアクションの「基底値」なので、リアクション終了後は
 //     neutral ではなく現在の平常表情へ戻る。reduced-motion でも静的表情は残る。
+//   - attention / attentionPoint: Semantic Attention。瞳のインラインtransform＝基底値へ反映し、
+//     リアクションの gaze トラック（composite:"add"）はその上に乗る。
+//     reduced-motion・停止中は補間なしで静的な視線位置だけを残す。compact では中央固定。
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MOCHIT_SVG_MARKUP } from "./mochitSvgMarkup";
 import { MOCHIT_TRIGGER_EVENTS } from "./mochitEvents";
 import type { MochitRiveTriggerInput } from "./mochitTypes";
 import type { MochitReactionProfile } from "./mochitTypes";
-import type { MochitEmotion } from "./mochitBehavior";
+import type { MochitAttention, MochitEmotion } from "./mochitBehavior";
+import {
+  attentionPointToGazeOffset,
+  resolveMochitGazeTarget,
+  type MochitAttentionPoint,
+  type MochitGazeTarget,
+} from "./mochitAttention";
 import {
   getMochitRestingExpression,
   MOCHIT_RESTING_MOUTH_ELEMENT_IDS,
@@ -72,13 +85,18 @@ type Props = {
   registerTriggerFirer?: (firer: ((trigger: MochitRiveTriggerInput) => void) | null) => void;
   /** Behavior State の平常時感情。省略時 neutral（従来表示と同一） */
   emotion?: MochitEmotion;
+  /** 何を見ているか。省略時 random（従来の Living Idle のランダム視線） */
+  attention?: MochitAttention;
+  /** content/result で見る位置（正規化座標 0〜1）。省略時は中央 */
+  attentionPoint?: MochitAttentionPoint;
 };
 
 function canAnimate(el: SVGGraphicsElement | null): el is SVGGraphicsElement {
   return !!el && typeof el.animate === "function";
 }
 
-// 待機アニメーション一式を DOM へ適用し、停止関数を返す。
+// 待機アニメーション（呼吸/ゆれ/アンテナ/まばたき）を DOM へ適用し、停止関数を返す。
+// 視線はここに含めない（createGazeController が独立して持つ）。
 // getEyelidRest: 平常時のまぶたの閉じ量（emotion 変更でIdleを作り直さないよう毎回読む）。
 function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => number): () => void {
   const p = getIdleProfile(compact);
@@ -137,32 +155,6 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
   };
   if (eyelids.length > 0) scheduleBlink();
 
-  // 視線移動（clipで瞳が白目からはみ出さない）。compact では無効。
-  const gazeNodes = ["#Pupil_L", "#Pupil_R", "#EyeHighlight_L", "#EyeHighlight_R"]
-    .map(q)
-    .filter(canAnimate);
-  if (p.gaze && gazeNodes.length > 0) {
-    for (const el of gazeNodes) el.style.transform = offsetTransform(0, 0);
-    let current: GazeOffset = GAZE_CENTER;
-    const scheduleGaze = () => {
-      const t = window.setTimeout(() => {
-        const target = nextGazeTarget(p);
-        for (const el of gazeNodes) {
-          el.animate(
-            [{ transform: offsetTransform(current.x, current.y) }, { transform: offsetTransform(target.x, target.y) }],
-            { duration: p.gaze!.moveMs, easing: "ease-out" },
-          );
-          // 基準スタイルを最終値にしておくと fill なしでもホールドされる
-          el.style.transform = offsetTransform(target.x, target.y);
-        }
-        current = target;
-        scheduleGaze();
-      }, nextGazeHoldMs(p));
-      timers.push(t);
-    };
-    scheduleGaze();
-  }
-
   // 停止＝静止ポーズへ戻す（まばたき途中で固まらないように opacity も戻す）。
   return () => {
     for (const a of loops) {
@@ -178,7 +170,150 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
       el.style.transform = "";
       el.style.opacity = "";
     }
-    for (const el of gazeNodes) el.style.transform = "";
+  };
+}
+
+// ---- 視線（gaze controller） ----
+
+const GAZE_SELECTORS = ["#Pupil_L", "#Pupil_R", "#EyeHighlight_L", "#EyeHighlight_R"];
+
+type GazeController = {
+  /**
+   * Idle の状態を反映する。profile.gaze が null（compact）なら視線は中央固定。
+   * animate=false（reduced-motion・停止中）はランダム視線を止め、静的な位置だけを残す。
+   */
+  configure(profile: ReturnType<typeof getIdleProfile>, animate: boolean): void;
+  /** 見る対象を変える。Living Idle の他のアニメーションには触れない。 */
+  setTarget(target: MochitGazeTarget): void;
+  dispose(): void;
+};
+
+/**
+ * 瞳（とハイライト）の基底transformを一手に持つ命令的コントローラー。
+ * 基底値＝インラインstyle なので、リアクションの gaze トラック（composite:"add"）は
+ * 常にこの上へ乗り、終了すれば現在の視線（random/semantic）へ自然に戻る。
+ */
+function createGazeController(svg: SVGSVGElement): GazeController {
+  const nodes = GAZE_SELECTORS.map((sel) => svg.querySelector<SVGGraphicsElement>(sel)).filter(
+    (el): el is SVGGraphicsElement => el !== null,
+  );
+  let profile = getIdleProfile(false);
+  let animate = false;
+  let target: MochitGazeTarget = { kind: "random" };
+  let current: GazeOffset = GAZE_CENTER;
+  let timer: number | null = null;
+  // 進行中の補間（次の切替を途中位置から始めるため）
+  let moving: { from: GazeOffset; to: GazeOffset; startedAt: number; ms: number; animations: Animation[] } | null =
+    null;
+
+  const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+  const clearTimer = () => {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+  };
+  const cancelMove = () => {
+    if (!moving) return;
+    for (const a of moving.animations) {
+      try {
+        a.cancel();
+      } catch {
+        /* noop */
+      }
+    }
+    moving = null;
+  };
+  // 現在見えている基底位置（補間中なら途中位置）
+  const visibleOffset = (): GazeOffset => {
+    if (!moving) return current;
+    const t = moving.ms > 0 ? Math.min(1, (now() - moving.startedAt) / moving.ms) : 1;
+    if (t >= 1) return moving.to;
+    const e = 1 - (1 - t) * (1 - t); // ease-out 近似
+    return {
+      x: moving.from.x + (moving.to.x - moving.from.x) * e,
+      y: moving.from.y + (moving.to.y - moving.from.y) * e,
+    };
+  };
+  const setBase = (value: string) => {
+    for (const el of nodes) el.style.transform = value;
+  };
+  const moveTo = (to: GazeOffset, ms: number) => {
+    const from = visibleOffset();
+    cancelMove();
+    // 基準スタイルを最終値にしておくと fill なしでもホールドされる
+    setBase(offsetTransform(to.x, to.y));
+    current = to;
+    if (ms <= 0 || (from.x === to.x && from.y === to.y)) return;
+    const animations: Animation[] = [];
+    for (const el of nodes) {
+      if (!canAnimate(el)) continue;
+      animations.push(
+        el.animate([{ transform: offsetTransform(from.x, from.y) }, { transform: offsetTransform(to.x, to.y) }], {
+          duration: ms,
+          easing: "ease-out",
+        }),
+      );
+    }
+    moving = { from, to, startedAt: now(), ms, animations };
+  };
+  // 従来の Living Idle のランダム視線（random のときだけ動く）
+  const scheduleRandom = () => {
+    const gaze = profile.gaze;
+    if (!gaze) return;
+    timer = window.setTimeout(() => {
+      timer = null;
+      moveTo(nextGazeTarget(profile), gaze.moveMs);
+      scheduleRandom();
+    }, nextGazeHoldMs(profile));
+  };
+
+  const apply = () => {
+    const gaze = profile.gaze;
+    if (!gaze || nodes.length === 0) {
+      // compact: 視線は中央固定（マークアップ既定値）
+      clearTimer();
+      cancelMove();
+      setBase("");
+      current = GAZE_CENTER;
+      return;
+    }
+    if (target.kind === "random") {
+      if (!animate) {
+        // 停止時は従来どおり中央（マークアップ既定値）の静止ポーズ
+        clearTimer();
+        cancelMove();
+        setBase("");
+        current = GAZE_CENTER;
+        return;
+      }
+      // 既に走っていれば乱数リズムを崩さない。Semantic から戻った時は今の位置から再開する。
+      if (timer === null) {
+        if (!moving) setBase(offsetTransform(current.x, current.y));
+        scheduleRandom();
+      }
+      return;
+    }
+    // Semantic Attention: ランダム視線は止め、指定位置を見続ける
+    clearTimer();
+    const offset = attentionPointToGazeOffset(target.point, gaze);
+    moveTo(offset, animate ? gaze.moveMs : 0);
+  };
+
+  return {
+    configure(nextProfile, nextAnimate) {
+      if (profile === nextProfile && animate === nextAnimate) return;
+      if (profile !== nextProfile) clearTimer(); // 周期・振幅が変わるので組み直す
+      profile = nextProfile;
+      animate = nextAnimate;
+      apply();
+    },
+    setTarget(next) {
+      target = next;
+      apply();
+    },
+    dispose() {
+      clearTimer();
+      cancelMove();
+    },
   };
 }
 
@@ -349,6 +484,8 @@ export default function MochitSvg({
   forceFailure = false,
   registerTriggerFirer,
   emotion = "neutral",
+  attention = "random",
+  attentionPoint,
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [inViewport, setInViewport] = useState(true);
@@ -454,6 +591,51 @@ export default function MochitSvg({
     eyelidsAppliedRef.current = true;
     syncRestingMouthRef.current(transitionMs);
   }, [expression, compact, failed]);
+
+  // ---- 視線（Semantic Attention） ----
+  // gaze controller は Living Idle とは独立に1つだけ作り、attention の変更はここだけに届ける。
+  const gazeRef = useRef<GazeController | null>(null);
+  const getGaze = (): GazeController | null => {
+    const svg = svgRef.current;
+    if (gazeRef.current) return gazeRef.current;
+    if (failed || !svg || !svg.firstElementChild) return null;
+    gazeRef.current = createGazeController(svg);
+    return gazeRef.current;
+  };
+  const getGazeRef = useRef(getGaze);
+  useEffect(() => {
+    getGazeRef.current = getGaze;
+  });
+  // point はオブジェクト同一性ではなく数値で比較する
+  const pointX = attentionPoint?.x;
+  const pointY = attentionPoint?.y;
+  const gazeTarget = useMemo(
+    () =>
+      resolveMochitGazeTarget(
+        attention,
+        pointX === undefined && pointY === undefined ? undefined : { x: pointX as number, y: pointY as number },
+      ),
+    [attention, pointX, pointY],
+  );
+  // 見る対象 → Idle の稼働状態 の順に反映する。マウント直後は静的に目標位置へ置いてから
+  // 動きを有効にするので、初期表示で視線がすべり込まない。
+  useEffect(() => {
+    getGazeRef.current()?.setTarget(gazeTarget);
+  }, [gazeTarget, failed]);
+  useEffect(() => {
+    const svg = svgRef.current;
+    const gaze = getGazeRef.current();
+    if (!svg || !gaze) return;
+    // WAAPI 非対応環境では静的な視線だけ
+    gaze.configure(getIdleProfile(compact), active && typeof svg.animate === "function");
+  }, [active, compact, failed]);
+  useEffect(
+    () => () => {
+      gazeRef.current?.dispose();
+      gazeRef.current = null;
+    },
+    [],
+  );
 
   useEffect(() => {
     if (!active) return;
