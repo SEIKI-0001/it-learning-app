@@ -38,11 +38,18 @@ export function useStepPlayer(stepCount: number, reducedMotion: boolean, interva
     setPlaying((current) => !current);
   }
 
+  /** 先頭から再生を始める（何度呼んでも再生中のまま＝StrictMode の二重実行でも安全） */
+  function play() {
+    setForward(true);
+    setIndex(0);
+    setPlaying(true);
+  }
+
   function reset() {
     setPlaying(false);
     setForward(false);
     setIndex(0);
   }
 
-  return { index, playing, forward, lastIndex, move, togglePlay, reset };
+  return { index, playing, forward, lastIndex, move, togglePlay, play, reset };
 }
