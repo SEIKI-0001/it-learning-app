@@ -45,9 +45,7 @@ describe("NetworkAddressExperience", () => {
     expect(packet).toHaveTextContent("example.com のIPは？");
 
     fireEvent.click(packet);
-    expect(
-      screen.getByText(/DNSはページ本体ではなく「接続先の住所」を返します/),
-    ).toBeInTheDocument();
+    expect(screen.getByText("DATA CAPSULE")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "DNSを止める" }));
     expect(screen.getByRole("button", { name: "正常に戻す" })).toBeInTheDocument();
