@@ -96,6 +96,62 @@
   color: #9f1239;
 }
 
+/* 書き換え：元の文面に取り消し線、新しい文面が赤く */
+.oldText {
+  color: #9ca3af;
+  font-size: 9px;
+  font-weight: 700;
+  text-decoration: line-through;
+  text-decoration-color: var(--sig-ng);
+  text-decoration-thickness: 1.5px;
+  white-space: nowrap;
+}
+
+.rewriteNote {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--sig-ng);
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: sig-flash 900ms ease-out;
+}
+
+.rewriteNote[data-phase="grab"] {
+  background: #fff1f3;
+  color: var(--sig-ng);
+  box-shadow: inset 0 0 0 1px var(--sig-ng);
+}
+
+.sealKeep {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 1px #cbd5e1;
+}
+
+.hashChip[data-ready="false"] {
+  opacity: 0.45;
+}
+
+.verifyPending {
+  align-self: center;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .tamperMark {
   position: absolute;
   right: -6px;
@@ -109,6 +165,7 @@
 }
 
 .sealPart {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 4px;

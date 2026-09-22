@@ -9,7 +9,7 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「サイバー攻撃の手口」専用の体験。
-//   ① 攻撃ラボ … 攻撃を選んで 2.5D の実験用の会社に撃ち込むと、攻撃物が
+//   ① 攻撃ラボ … 攻撃を選んで 2.5D の実験用の会社に撃ち込むと（各ステップの解説は図の枠内に表示）、攻撃物が
 //      インターネット→Webサーバ→DB／利用者／社員PC と手口ごとの経路を移動し、被害の出る場所が変わる
 //   ② 「これはどの攻撃？」仕分けクイズ
 //   ③ まとめ
@@ -248,32 +248,30 @@ function AttackLab() {
         })}
       </div>
 
-      <div className="mt-3 flex min-w-0 items-center justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold text-rose-700">{cur ? `STEP ${idx + 1} / ${steps.length}` : "実験用の会社"}</p>
-          <p className="mt-0.5 text-sm font-bold text-gray-900" data-testid="cyber-step-title">
-            {cur ? step.title : "↓ 攻撃を選ぶと、経路と被害が見えます"}
-          </p>
-        </div>
-        {cur && (
-          <span
-            className={`flex-none rounded-full px-2 py-0.5 text-[10px] font-bold ${
-              cur.target === "人をだます" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
-            }`}
-            data-testid="cyber-target"
-          >
-            狙い：{cur.target === "人をだます" ? "🧑 人" : "💻 機械"}
-          </span>
-        )}
-      </div>
-
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <CyberScene {...step.view} reducedMotion={reducedMotion} />
+        <CyberScene
+          {...step.view}
+          caption={{
+            label: cur ? `STEP ${idx + 1} / ${steps.length}　${cur.emo} ${cur.name}` : "🏢 実験用の会社",
+            title: cur ? step.title : "↑ 攻撃を選ぶと、通り道と被害がこの図に出ます",
+            badge: cur ? (
+              <span
+                className={`flex-none rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                  cur.target === "人をだます" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+                }`}
+                data-testid="cyber-target"
+              >
+                狙い：{cur.target === "人をだます" ? "🧑 人" : "💻 機械"}
+              </span>
+            ) : undefined,
+            note: cur?.scene,
+          }}
+          reducedMotion={reducedMotion}
+        />
       </div>
 
       {cur ? (
         <>
-          <div className="mt-3 rounded-lg bg-white px-2.5 py-1.5 text-center text-[11px] font-bold text-gray-700 ring-1 ring-gray-200">😈 {cur.scene}</div>
           <div className="mt-3">
             <SceneTimeline
               index={idx}

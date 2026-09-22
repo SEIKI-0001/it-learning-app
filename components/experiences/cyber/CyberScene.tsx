@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { CSSProperties } from "react";
 import { DeskPersonIllustration, EavesdropperIllustration } from "../crypto/CryptoPeopleIllustration";
 import {
@@ -113,7 +114,11 @@ function DatabaseIllustration({ state }: { state: NodeState }) {
 
 // ---------- シーン ----------
 
+/** 図解の枠内に表示する、いまのステップの解説 */
+export type CyberCaption = { label: string; title: string; badge?: ReactNode; /** 枠の下端に出す手口の説明 */ note?: string };
+
 export type CyberSceneProps = {
+  caption?: CyberCaption;
   nodes: Record<CyberNodeId, NodeState>;
   lanes: Partial<Record<CyberLaneId, LaneTone | "blocked">>;
   /** 移動するもの（命令文・罠・メール・データ…） */
@@ -131,8 +136,20 @@ const COMPANY = [
   { x: 0, y: 52 },
 ];
 
-export function CyberScene({ nodes, lanes, payload, flood, damage, reducedMotion }: CyberSceneProps) {
+export function CyberScene({ caption, nodes, lanes, payload, flood, damage, reducedMotion }: CyberSceneProps) {
   return (
+    <div className={styles.frame}>
+      {caption && (
+        <div className={styles.caption} aria-live="polite">
+          <div className={styles.captionHead}>
+            <span className={styles.captionLabel}>{caption.label}</span>
+            {caption.badge}
+          </div>
+          <p className={styles.captionTitle} data-testid="cyber-step-title">
+            {caption.title}
+          </p>
+        </div>
+      )}
     <div className={`${netStyles.scene} ${styles.scene}`} data-reduced-motion={reducedMotion ? "true" : "false"} data-testid="cyber-scene">
       <svg
         viewBox={`0 0 ${SCENE_WIDTH} ${SCENE_HEIGHT}`}
@@ -184,9 +201,7 @@ export function CyberScene({ nodes, lanes, payload, flood, damage, reducedMotion
         </SceneNode>
       </svg>
 
-      <span className={styles.companyTag}>
-        🏢 実験用の会社
-      </span>
+      {!caption && <span className={styles.companyTag}>🏢 実験用の会社</span>}
 
       {(Object.keys(LABEL) as CyberNodeId[]).map((id) => (
         <span
@@ -214,6 +229,8 @@ export function CyberScene({ nodes, lanes, payload, flood, damage, reducedMotion
           </span>
         </div>
       )}
+    </div>
+      {caption?.note && <p className={styles.captionNote}>😈 {caption.note}</p>}
     </div>
   );
 }

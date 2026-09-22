@@ -28,7 +28,6 @@ const SWIPE_THRESHOLD = 56;
 export function ExperienceSlideDeck({ children }: { children: ReactNode }) {
   const [ids, setIds] = useState<string[]>([]);
   const [active, setActive] = useState(0);
-  const [panelRevision, setPanelRevision] = useState(0);
   const touchStartX = useRef<number | null>(null);
   const panels = useRef(new Map<string, HTMLElement>());
   const register = useCallback(
@@ -36,14 +35,12 @@ export function ExperienceSlideDeck({ children }: { children: ReactNode }) {
       if (panels.current.get(id) === panel) return;
       panels.current.set(id, panel);
       setIds((current) => (current.includes(id) ? current : [...current, id]));
-      setPanelRevision((current) => current + 1);
     },
     [],
   );
   const unregister = useCallback((id: string, panel: HTMLElement) => {
     if (panels.current.get(id) !== panel) return;
     panels.current.delete(id);
-    setPanelRevision((current) => current + 1);
   }, []);
   const move = useCallback(
     (index: number) => setActive(Math.max(0, Math.min(index, ids.length - 1))),
@@ -53,55 +50,6 @@ export function ExperienceSlideDeck({ children }: { children: ReactNode }) {
     () => ({ active, ids, register, unregister }),
     [active, ids, register, unregister],
   );
-
-  useLayoutEffect(() => {
-    const groups = new Map<HTMLElement, HTMLElement[]>();
-    for (const panel of panels.current.values()) {
-      const root = panel.parentElement;
-      if (!root) continue;
-      groups.set(root, [...(groups.get(root) ?? []), panel]);
-    }
-
-    const originalStyles = new Map<HTMLElement, { minHeight: string; position: string }>();
-    const measure = () => {
-      for (const [root, groupPanels] of groups) {
-        if (groupPanels.length < 2) continue;
-
-        if (!originalStyles.has(root)) {
-          originalStyles.set(root, {
-            minHeight: root.style.minHeight,
-            position: root.style.position,
-          });
-        }
-        root.style.position = "relative";
-        root.style.minHeight = "";
-
-        const activePanel =
-          groupPanels.find((panel) => panel.dataset.experienceSlideId === ids[active]) ??
-          groupPanels[0];
-        const tallestPanel = Math.max(
-          ...groupPanels.map((panel) => panel.getBoundingClientRect().height),
-        );
-        root.style.minHeight = `${Math.ceil(activePanel.offsetTop + tallestPanel)}px`;
-      }
-    };
-
-    measure();
-    if (typeof ResizeObserver === "undefined") return;
-
-    const observer = new ResizeObserver(measure);
-    for (const [root, groupPanels] of groups) {
-      observer.observe(root);
-      groupPanels.forEach((panel) => observer.observe(panel));
-    }
-    return () => {
-      observer.disconnect();
-      for (const [root, style] of originalStyles) {
-        root.style.minHeight = style.minHeight;
-        root.style.position = style.position;
-      }
-    };
-  }, [active, ids, panelRevision]);
 
   function handleTouchStart(event: TouchEvent<HTMLDivElement>) {
     touchStartX.current =
@@ -212,7 +160,8 @@ export function Panel({ children }: { children: ReactNode }) {
       className={`rounded-xl bg-white p-5 ring-1 ring-gray-200 ${
         visible
           ? ""
-          : "pointer-events-none invisible absolute inset-x-0 top-0"
+          : // 非表示パネルは高さを持たせない（解説の縦幅は表示中のパネルだけで決める）
+            "pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden"
       }`}
     >
       {children}

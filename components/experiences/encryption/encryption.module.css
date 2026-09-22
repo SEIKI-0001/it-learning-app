@@ -1,10 +1,15 @@
-/* 暗号化とハッシュ化：2本のベルト。動くのは「カード（データ）」だけ。
-   門をくぐる途中で中身が切り替わる＝処理を通った、を表す。 */
+/* 暗号化とハッシュ化：2本のレーン（2D）。動くのは「カード（データ）」だけ。
+   処理の箱を通る途中で中身が切り替わる＝処理を通った、を表す。 */
 
 .scene {
   --enc: #4f46e5;
   --dec: #059669;
   --hash: #0f766e;
+}
+
+/* 2D：床のグラデーションをやめ、白い平面に */
+.scene[data-reduced-motion] {
+  background: #ffffff;
 }
 
 .lane {
@@ -20,35 +25,23 @@
 
 /* ---------- 門 ---------- */
 
-.gatePillar {
-  fill: #dbe3ee;
-  stroke: #b9c5d6;
-  stroke-width: 0.6;
-  transition: fill 400ms ease;
-}
-
-.gateTop {
-  fill: #cfd9e7;
-}
-
 .gateFace {
-  fill: #ffffff;
+  fill: color-mix(in srgb, var(--gate) 5%, #ffffff);
   stroke: var(--gate);
-  stroke-width: 1;
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
   transition: fill 400ms ease;
-}
-
-.gate[data-active="true"] .gatePillar {
-  fill: color-mix(in srgb, var(--gate) 30%, #ffffff);
 }
 
 .gate[data-active="true"] .gateFace {
   fill: color-mix(in srgb, var(--gate) 14%, #ffffff);
+  stroke-dasharray: none;
 }
 
-.gate[data-blocked="true"] .gatePillar {
-  fill: #fecdd3;
+.gate[data-blocked="true"] .gateFace {
+  fill: #fff1f2;
   stroke: #e11d48;
+  stroke-dasharray: none;
 }
 
 .gateLabel {
@@ -102,8 +95,7 @@
   padding: 4px 7px;
   border: 1px solid #cfd8e5;
   border-radius: 8px;
-  background: linear-gradient(180deg, #ffffff, #eef2f8);
-  box-shadow: 0 4px 0 #d3dbe7, 0 8px 14px rgba(30, 42, 64, 0.14);
+  background: #ffffff;
   transition: background 400ms ease 550ms, border-color 400ms ease 550ms, box-shadow 400ms ease 550ms;
 }
 
@@ -131,8 +123,7 @@
 
 .card[data-state="cipher"] .faces {
   border-color: #312e81;
-  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0 3px, transparent 3px 6px), linear-gradient(180deg, #4f46e5, #312e81);
-  box-shadow: 0 4px 0 #27246b, 0 8px 14px rgba(49, 46, 129, 0.3);
+  background: #3730a3;
 }
 
 .card[data-state="cipher"] .face {
@@ -141,15 +132,13 @@
 
 .card[data-state="restored"] .faces {
   border-color: #34d399;
-  background: linear-gradient(180deg, #ffffff, #e9fbf3);
-  box-shadow: 0 4px 0 #a7e9cc, 0 8px 14px rgba(16, 185, 129, 0.2);
+  background: #ecfdf5;
 }
 
 .card[data-state="digest"] .faces,
 .card[data-state="blocked"] .faces {
   border-color: #134e4a;
-  background: linear-gradient(180deg, #115e59, #0f3f3b);
-  box-shadow: 0 4px 0 #0b2e2b, 0 8px 14px rgba(15, 118, 110, 0.28);
+  background: #115e59;
 }
 
 .card[data-state="digest"] .face,
@@ -273,7 +262,6 @@
   color: #ffffff;
   font-size: 12px;
   font-weight: 900;
-  box-shadow: 0 3px 0 #9f1239;
 }
 
 .ghost {

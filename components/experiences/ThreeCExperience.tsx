@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useReducedMotion } from "./scene/useReducedMotion";
-import { MarketScene } from "./threec/MarketScene";
+import { VennScene } from "./threec/VennScene";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「3C分析」専用の体験。
-//   ① 市場マップ：クレープ屋の出店を例に、2.5D の駅前の街で顧客/競合/自社を調査。
-//      見つけた事実がチップとして中央の作戦ボードへ集まり、3つそろうと作戦が組み上がる
+//   ① 3つの円：クレープ屋の出店を例に、顧客/競合/自社の円を調査。
+//      見つけた事実が円の中に書き込まれ、3つそろうと重なり（中央）に作戦が浮かぶ
 //      ＋ よくある罠「Cost（費用）は3Cに入らない」を強調
 //   ② 観点の振り分けクイズ
 // ============================================================================
@@ -45,7 +44,6 @@ const CARDS: Record<
 const STRATEGY = "ワンコインの映えクレープを、待たせず出す";
 
 function MarketMap() {
-  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<C | null>(null);
   const [seen, setSeen] = useState<Record<C, boolean>>({ customer: false, competitor: false, company: false });
   const [costTries, setCostTries] = useState(0);
@@ -63,18 +61,11 @@ function MarketMap() {
       <SectionTitle step={1}>3つの視点で市場を調査せよ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         あなたは<b className="text-gray-800">駅前にクレープ屋さんを出す</b>ことに。
-        街の3か所を<b className="text-gray-800">全部調べる</b>と、見つけた事実が中央の作戦ボードに集まり、勝てる作戦が組み上がります。
+        3つの円を<b className="text-gray-800">全部調べる</b>と、円が重なる真ん中に勝てる作戦が浮かびます。
       </p>
 
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MarketScene
-          researched={seen}
-          focus={sel}
-          costTries={costTries}
-          strategy={STRATEGY}
-          onResearch={tap}
-          reducedMotion={reducedMotion}
-        />
+      <div className="mt-3">
+        <VennScene researched={seen} focus={sel} costTries={costTries} strategy={STRATEGY} onResearch={tap} />
       </div>
 
       {/* 調査結果 */}
@@ -88,7 +79,7 @@ function MarketMap() {
             <p className="mt-1.5 text-sm font-bold leading-relaxed text-gray-800">🔍 {card.found}</p>
           </>
         ) : (
-          <span className="text-sm text-gray-400">街の「🔍 調べる」を押すと調査結果が出ます。</span>
+          <span className="text-sm text-gray-400">円の「🔍 調べる」を押すと調査結果が出ます。</span>
         )}
       </div>
 
@@ -123,7 +114,7 @@ function MarketMap() {
           onClick={() => setCostTries((n) => n + 1)}
           className="mt-2 block w-full rounded-full bg-white px-3 py-1.5 text-xs font-bold text-rose-700 ring-1 ring-rose-300 transition active:scale-95"
         >
-          💰 「材料費300円」を作戦ボードに入れてみる
+          💰 「材料費300円」を4つめの円として入れてみる
         </button>
       </div>
     </Panel>

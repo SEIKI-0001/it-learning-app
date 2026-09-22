@@ -177,7 +177,7 @@ function DataFlow() {
     <Panel>
       <SectionTitle step={2}>データの流れを追う（文書を開く→編集→保存）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        PCの中の模型で、ファイルを開いて書き直して保存するまで、データが<b className="text-gray-800">どこを通るか</b>を1歩ずつ。
+        PCケースの中で、ファイルを開いて書き直して保存するまで、データが<b className="text-gray-800">どこを通るか</b>を1歩ずつ。
         途中で<b className="text-gray-800">⚡電源を切る</b>こともできます。
       </p>
 

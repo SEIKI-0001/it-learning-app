@@ -11,8 +11,8 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 // 「ディジタル署名・認証局(CA)」専用の体験。
 //   ① 署名検証ラボ：文書の届き方（そのまま/途中で改ざん/なりすまし）を選び、
-//      2.5D の 送信者 → 通信路 → 受信者 で「文書＋署名」を一緒に運んで検証まで進める。
-//      指紋（ハッシュ値）の一致/不一致で見破れることを体感。
+//      送信者 → 通信路 → 受信者 で「文書＋署名」を一緒に運び、書く→指紋→署名→送る→
+//      （改ざん：横取り→書き換え→届く）→ 検証①署名を開く→②指紋を計算→③比べる と細かく区切って進める。
 //   ② 認証局(CA)＝公開鍵が本物だと保証する第三者。本人 → CA → 電子証明書 → 利用者 を
 //      本人申請／偽者申請で比べる。PKIのひとこと。
 //   ③ 暗号化とのちがい（早見表）。
@@ -81,6 +81,7 @@ type LabStep = { title: string; route: string; detail: ReactNode; view: Omit<Sig
 function stepsFor(key: Scenario): LabStep[] {
   const s = SCENARIOS.find((x) => x.key === key)!;
   const fake = key === "fake";
+  const tamper = key === "tamper";
   const base = {
     senderName: s.senderName,
     forgedSender: fake,
@@ -90,71 +91,145 @@ function stepsFor(key: Scenario): LabStep[] {
     publicKey: "receiverHome" as const,
     verify: null,
   };
-  const env = (stop: "sender" | "mid" | "receiver", signed: boolean, arrived: boolean) => ({
+  const env = (
+    stop: "sender" | "mid" | "attacker" | "receiver",
+    signed: boolean,
+    arrived: boolean,
+    rewrite?: "grab" | "done",
+  ) => ({
     stop,
     text: arrived ? s.arrived : s.doc,
     tampered: arrived && s.arrived !== s.doc,
     signed,
     sealHash: s.sealHash,
     forged: fake,
+    rewrite: rewrite ? { from: s.doc, phase: rewrite } : undefined,
   });
   const idle = { sender: "idle", receiver: "idle", attacker: "idle" } as const;
-  return [
+  const senderState = fake ? "error" : "active";
+  const atReceiver = { ...base, nodes: { ...idle, receiver: "active" as const }, envelope: env("receiver", true, true), publicKey: "receiverVerify" as const };
+
+  // --- 送信側：書く → 指紋 → 署名 → 送り出す ---
+  const send: LabStep[] = [
     {
-      title: "文書の指紋（ハッシュ値）をとる",
+      title: "文書を書く",
       route: `${s.senderName}の手元`,
-      detail: <>{s.senderName}が「{s.doc}」を書き、文書から<b>指紋（ハッシュ値）{s.senderHash}</b> を計算します。</>,
-      view: { ...base, nodes: { ...idle, sender: fake ? "error" : "active" }, envelope: env("sender", false, false), senderHash: s.senderHash },
+      detail: fake ? (
+        <>🎭 偽者が山田さんになりすまし、「{s.doc}」という文書を作りました。</>
+      ) : (
+        <>{s.senderName}が「{s.doc}」という文書を書きました。これに<b>署名</b>を付けて送ります。</>
+      ),
+      view: { ...base, nodes: { ...idle, sender: senderState }, envelope: env("sender", false, false) },
     },
     {
-      title: fake ? "偽者が自分の秘密鍵で署名" : "自分の秘密鍵で署名",
+      title: "ハッシュ関数で文書の指紋をとる",
+      route: "文書 → ハッシュ関数 → 指紋",
+      detail: (
+        <>
+          文書をハッシュ関数に通して<b>指紋（ハッシュ値）{s.senderHash}</b> を計算。文書が1文字でも変われば、指紋もまったく別の値になります。
+        </>
+      ),
+      view: { ...base, nodes: { ...idle, sender: senderState }, envelope: env("sender", false, false), senderHash: s.senderHash },
+    },
+    {
+      title: fake ? "偽者が自分の秘密鍵で指紋を封じる" : "指紋を自分の秘密鍵で封じる＝署名",
       route: fake ? "偽者の秘密鍵 → 署名" : "山田さんの秘密鍵 → 署名",
       detail: fake ? (
-        <>偽者は山田さんの秘密鍵を<b>持っていない</b>ので、<b>自分の秘密鍵</b>で指紋を封じて「山田です」と署名を付けます。</>
+        <>偽者は山田さんの秘密鍵を<b>持っていない</b>ので、<b>自分の秘密鍵</b>で指紋を封じ、「山田です」と名乗って署名にします。</>
       ) : (
-        <>指紋を<b>自分（山田さん）の秘密鍵</b>で封じたものが<b>署名</b>。文書と署名を<b>一緒に</b>送ります。</>
+        <>
+          指紋 {s.sealHash} を<b>山田さんの秘密鍵</b>で封じたものが<b>署名</b>。秘密鍵は山田さんしか持っていないので、この署名は<b>山田さんにしか作れません</b>。
+        </>
       ),
-      view: { ...base, nodes: { ...idle, sender: fake ? "error" : "active" }, envelope: env("sender", true, false), senderHash: s.senderHash, privateKey: "senderSign" },
+      view: { ...base, nodes: { ...idle, sender: senderState }, envelope: env("sender", true, false), senderHash: s.senderHash, privateKey: "senderSign" },
     },
     {
-      title: key === "tamper" ? "通信の途中で書き換えられた！" : "文書＋署名を送る",
-      route: "送信者 → 通信路 → 受信者",
-      detail:
-        key === "tamper" ? (
-          <>😈 第三者が通信路で「1万円」を<b>「100万円」に書き換え</b>。でも署名の中身（封じた指紋 {s.sealHash}）は秘密鍵が無いので作り直せません。</>
-        ) : (
-          <>文書と署名がセットで通信路を進みます。</>
-        ),
-      view: {
-        ...base,
-        nodes: { sender: "sending", receiver: "idle", attacker: key === "tamper" ? "error" : "idle" },
-        laneActive: true,
-        envelope: env("mid", true, key === "tamper"),
-      },
+      title: "文書と署名をセットで送り出す",
+      route: "送信者 → 通信路",
+      detail: <>文書と署名を<b>1つにまとめて</b>送ります。受信者は、この2つを突き合わせて確かめることになります。</>,
+      view: { ...base, nodes: { ...idle, sender: "sending" }, laneActive: true, envelope: env("mid", true, false) },
+    },
+  ];
+
+  // --- 通信路：改ざんシナリオだけ「横取り → 書き換え → 素知らぬ顔で届ける」を分けて見せる ---
+  const channel: LabStep[] = tamper
+    ? [
+        {
+          title: "😈 第三者が通信の途中で横取り",
+          route: "通信路 → 第三者の手元",
+          detail: <>通信路の途中で、<b>第三者が文書と署名を横取り</b>しました。まだ中身は「{s.doc}」のままです。</>,
+          view: { ...base, nodes: { ...idle, attacker: "error" }, laneActive: true, envelope: env("attacker", true, false, "grab") },
+        },
+        {
+          title: `😈 「${s.doc.split(" ")[0]}」を「${s.arrived.split(" ")[0]}」に書き換える`,
+          route: "第三者が文書だけ書き換え",
+          detail: (
+            <>
+              第三者が文書を<b>「{s.arrived}」</b>に書き換えました。でも<b>署名（封じた指紋 {s.sealHash}）はそのまま</b>。
+              作り直すには山田さんの秘密鍵が必要なので、署名には手が出せません。
+            </>
+          ),
+          view: { ...base, nodes: { ...idle, attacker: "error" }, laneActive: true, envelope: env("attacker", true, true, "done") },
+        },
+        {
+          title: "何事もなかったように受信者へ届く",
+          route: "第三者 → 通信路 → 受信者",
+          detail: <>書き換えられた文書と、元のままの署名が届きました。<b>見た目だけでは</b>書き換えに気づけません。</>,
+          view: { ...base, nodes: { ...idle, receiver: "active" }, envelope: env("receiver", true, true) },
+        },
+      ]
+    : [
+        {
+          title: "受信者に届く",
+          route: "通信路 → あなたの手元",
+          detail: <>あなたの手元に「{s.arrived}」＋署名が届きました。<b>見た目だけでは</b>本物かどうか分かりません。</>,
+          view: { ...base, nodes: { ...idle, receiver: "active" }, envelope: env("receiver", true, true) },
+        },
+      ];
+
+  // --- 受信側の検証：① 署名を開く → ② 文書の指紋を計算 → ③ 比べる ---
+  const verify: LabStep[] = [
+    {
+      title: "検証①：山田さんの公開鍵で署名を開く",
+      route: "山田さんの公開鍵 → 署名の中の指紋",
+      detail: fake ? (
+        <>
+          山田さんの公開鍵で署名を開くと…<b>でたらめな値 {s.sigFp}</b>。署名が<b>山田さんの秘密鍵で作られていない</b>ので、山田さんの公開鍵ではきちんと開けません。
+        </>
+      ) : (
+        <>
+          山田さんの公開鍵で署名を開くと、<b>送る前の文書の指紋 {s.sigFp}</b> が取り出せます。公開鍵で開けた＝<b>山田さんの秘密鍵で作られた署名</b>です。
+        </>
+      ),
+      view: { ...atReceiver, verify: { sigHash: s.sigFp, docHash: null, verdict: null } },
     },
     {
-      title: "受信者に届く",
-      route: "あなたの手元",
-      detail: <>あなたの手元に「{s.arrived}」＋署名が届きました。見た目だけでは本物かどうか分かりません。</>,
-      view: { ...base, nodes: { ...idle, receiver: "active" }, envelope: env("receiver", true, true) },
+      title: "検証②：届いた文書から自分で指紋を計算",
+      route: "届いた文書 → ハッシュ関数 → 指紋",
+      detail: (
+        <>
+          届いた「{s.arrived}」を同じハッシュ関数に通すと、指紋は <b>{s.docFp}</b>。{tamper && <>文書が書き換えられているので、元の {s.sealHash} とは別の値です。</>}
+        </>
+      ),
+      view: { ...atReceiver, verify: { sigHash: s.sigFp, docHash: s.docFp, verdict: null } },
     },
     {
-      title: "山田さんの公開鍵で検証",
-      route: "山田さんの公開鍵 → 署名を開いて照合",
+      title: "検証③：2つの指紋を比べる",
+      route: "① 署名の中の指紋 と ② 計算した指紋",
       detail: (
         <>
           <b>{s.verdict}</b> {s.why}
         </>
       ),
       view: {
-        ...base,
+        ...atReceiver,
         nodes: { ...idle, receiver: s.sigFp === s.docFp ? "active" : "error" },
-        envelope: env("receiver", true, true),
-        publicKey: "receiverVerify",
         verify: { sigHash: s.sigFp, docHash: s.docFp, verdict: key },
       },
     },
   ];
+
+  return [...send, ...channel, ...verify];
 }
 
 function SignatureLab() {

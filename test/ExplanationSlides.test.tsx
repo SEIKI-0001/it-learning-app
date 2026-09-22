@@ -45,7 +45,7 @@ describe("ExplanationSlides", () => {
     expect(screen.getByText("スライド2")).toBeInTheDocument();
   });
 
-  it("keeps every slide mounted to reserve the tallest slide height", () => {
+  it("keeps every slide mounted but lets only the active slide set the height", () => {
     render(<ExplanationSlides slides={slides} />);
     const viewport = screen.getByTestId("explanation-slides-viewport");
     const inactiveSlide = viewport.querySelector('[aria-label="ポイント"]');
@@ -53,7 +53,7 @@ describe("ExplanationSlides", () => {
     expect(viewport.querySelectorAll('[role="group"]')).toHaveLength(3);
     expect(screen.getByRole("group", { name: "全体像" })).toBeVisible();
     expect(inactiveSlide).toHaveAttribute("aria-hidden", "true");
-    expect(inactiveSlide).toHaveClass("pointer-events-none");
+    expect(inactiveSlide).toHaveClass("pointer-events-none", "h-0", "overflow-hidden");
     expect(screen.queryByRole("group", { name: "ポイント" })).not.toBeInTheDocument();
   });
 

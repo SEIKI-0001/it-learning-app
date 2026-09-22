@@ -16,9 +16,18 @@ function renderDeck() {
 }
 
 const next = () => fireEvent.click(screen.getByRole("button", { name: "次へ進む →" }));
-const board = () => screen.getByTestId("morph-board");
+const board = () => screen.getByTestId("norm-board");
 const tableIds = () => [...board().querySelectorAll("[data-table]")].map((el) => el.getAttribute("data-table"));
-const field = (table: string, f: string) => board().querySelector(`[data-table="${table}"] [data-field="${f}"]`);
+/** 列見出し */
+const field = (table: string, f: string) => board().querySelector(`[data-table="${table}"] th[data-field="${f}"]`);
+/** その列のセル（全行） */
+const column = (table: string, f: string) => {
+  const cells = [...board().querySelectorAll(`[data-table="${table}"] td[data-field="${f}"]`)];
+  return {
+    count: (attr: string) => cells.reduce((n, td) => n + td.querySelectorAll(`[${attr}="true"]`).length, 0),
+    text: cells.map((td) => td.textContent).join(" "),
+  };
+};
 
 describe("NormalizationExperience", () => {
   it("walks 非正規形 → 1NF → 2NF → 3NF and splits the tables", () => {
@@ -29,7 +38,8 @@ describe("NormalizationExperience", () => {
     next();
     expect(tableIds()).toEqual(["flat"]);
     // 繰り返しを展開すると、注文・顧客・商品の情報が重複する
-    expect(field("flat", "custName")?.querySelectorAll('[data-dup="true"]')).toHaveLength(2);
+    expect(column("flat", "custName").count("data-dup")).toBe(2);
+    expect(board().querySelectorAll('[data-table="flat"] tbody tr')).toHaveLength(3);
 
     next();
     expect(screen.getByText("第2正規形：主キーの一部で決まる項目を分離")).toBeInTheDocument();
@@ -40,17 +50,16 @@ describe("NormalizationExperience", () => {
     expect(tableIds()).toEqual(["orders", "customers", "details", "products"]);
     expect(field("orders", "custName")).toBeNull();
     expect(field("customers", "custName")).not.toBeNull();
+    expect(field("orders", "custNo")).toHaveTextContent("→顧客表");
   });
 
-  it("keeps the same visual id and colour group for a field across stages", () => {
+  it("keeps the same colour group for a field across stages", () => {
     renderDeck();
-    const before = field("slip", "price");
-    expect(before).toHaveAttribute("data-flip-id", "price");
-    expect(before).toHaveAttribute("data-group", "product");
+    expect(field("slip", "price")).toHaveAttribute("data-group", "product");
+    expect(board().querySelectorAll('[data-table="slip"] tbody tr')).toHaveLength(2);
     next();
     next();
     next();
-    expect(field("products", "price")).toHaveAttribute("data-flip-id", "price");
     expect(field("products", "price")).toHaveAttribute("data-group", "product");
     expect(field("customers", "custName")).toHaveAttribute("data-group", "customer");
   });
@@ -59,13 +68,13 @@ describe("NormalizationExperience", () => {
     renderDeck();
     next();
     fireEvent.click(screen.getByRole("button", { name: "🍎 100円 → 120円に" }));
-    expect(field("flat", "price")?.querySelectorAll('[data-conflict="true"]')).toHaveLength(2);
+    expect(column("flat", "price").count("data-conflict")).toBe(2);
     expect(screen.getByTestId("price-result")).toHaveTextContent("食い違う");
 
     next();
     next();
-    expect(field("products", "price")?.querySelectorAll('[data-conflict="true"]')).toHaveLength(0);
-    expect(field("products", "price")).toHaveTextContent("120");
+    expect(column("products", "price").count("data-conflict")).toBe(0);
+    expect(column("products", "price").text).toContain("120");
     expect(screen.getByTestId("price-result")).toHaveTextContent("1か所");
   });
 

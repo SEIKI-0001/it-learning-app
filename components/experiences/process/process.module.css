@@ -1,161 +1,234 @@
-/* 業務フローの模型。机の浮上・影は network を共用し、
-   ここでは「書類トークン」「処理待ちトレイ」「工程時計」だけを足す。 */
+/* 業務フローのレーン（2D）。改善前・改善後を同じ形で並べる。 */
 
-.scene {
-  --bp-slow: #d97706;
-  --bp-ok: #059669;
+.lane {
+  --tone: #64748b;
+  padding: 8px 8px 10px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
 }
 
-.path {
-  stroke: #cbd5e1;
-  stroke-width: 2.4;
-  stroke-dasharray: 2 4;
-  stroke-linecap: round;
+.lane[data-kind="before"] {
+  --tone: #e11d48;
+  background: #fffafa;
+  box-shadow: inset 0 0 0 1.5px #fecdd3;
 }
 
-.tray {
-  fill: #eef2f7;
-  stroke: #cbd5e1;
-  stroke-width: 0.8;
-  transition: fill 300ms ease, stroke 300ms ease;
+.lane[data-kind="after"] {
+  --tone: #059669;
+  background: #f7fdfa;
+  box-shadow: inset 0 0 0 1.5px #a7f3d0;
 }
 
-.tray[data-full="true"] {
-  fill: #fef3c7;
-  stroke: var(--bp-slow);
-}
-
-/* ---------- 工程時計 ---------- */
-
-.clock {
-  position: absolute;
-  z-index: 12;
+.laneHead {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  padding: 2px 6px 3px;
-  transform: translate(-50%, -100%);
-  border: 1px solid #e3e8f0;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 4px 10px rgba(30, 42, 64, 0.08);
-  white-space: nowrap;
-  transition: border-color 300ms ease, background 300ms ease;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 11px;
 }
 
-.clock[data-slow="true"] {
-  border-color: #fcd34d;
-  background: #fffbeb;
-}
-
-.clock[data-improved="true"] {
-  border-color: #6ee7b7;
-  background: #ecfdf5;
-}
-
-.clockName {
-  color: #374151;
-  font-size: 8.5px;
+.laneTitle {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--tone);
+  color: #ffffff;
   font-weight: 800;
 }
 
-.clockTime {
-  color: #111827;
+.lanePerDoc {
+  color: #475569;
+  font-weight: 700;
+}
+
+.laneDone {
+  margin-left: auto;
+  color: #334155;
   font-size: 10.5px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
-.clock[data-slow="true"] .clockTime {
-  color: #b45309;
+.laneBody {
+  display: grid;
+  grid-template-columns: 22px repeat(4, minmax(0, 1fr)) 22px;
+  align-items: end;
+  gap: 4px;
 }
 
-.clock[data-improved="true"] .clockTime {
-  color: var(--bp-ok);
+.inbox,
+.outbox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 14px;
+  font-size: 14px;
 }
 
-.queueBadge {
-  padding: 0 5px;
-  border-radius: 999px;
-  background: var(--bp-slow);
-  color: #ffffff;
-  font-size: 8.5px;
+.inboxCount {
+  color: #475569;
+  font-size: 10px;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 書類トークン ---------- */
+.col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+}
 
-.doc {
+/* 処理待ちの山：書類が上へ積み上がる */
+.pile {
+  position: relative;
+  height: 42px;
+}
+
+.pileDoc {
   position: absolute;
-  z-index: 15;
-  transform: translate(-50%, -80%);
-  transition:
-    left 420ms cubic-bezier(0.45, 0.05, 0.25, 1),
-    top 420ms cubic-bezier(0.45, 0.05, 0.25, 1),
-    opacity 300ms ease;
+  left: 50%;
+  bottom: calc(var(--k) * 8px);
+  width: 22px;
+  height: 9px;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #94a3b8;
+  transform: translateX(-50%);
 }
 
-.doc[data-kind="incoming"] {
+.queueLabel {
+  margin: 2px 0 3px;
+  color: #475569;
+  font-size: 9.5px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.queueLabel[data-empty="true"] {
+  visibility: hidden;
+}
+
+.station {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 3px 5px;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+  text-align: center;
+}
+
+.stationName {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #1f2937;
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.stationName > span {
+  font-size: 14px;
+}
+
+.bar,
+.work {
+  display: block;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.lane[data-kind="after"] .bar > span {
+  background: #34d399;
+}
+
+.minutes {
+  color: #334155;
+  font-size: 11px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.work {
+  height: 3px;
   opacity: 0;
 }
 
-.docSheet {
-  position: relative;
+.work[data-busy="true"] {
+  opacity: 1;
+}
+
+.work > span {
   display: block;
-  width: 14px;
-  height: 17px;
-  border-radius: 2px;
-  background: #ffffff;
-  box-shadow: 0 0 0 1px #cbd5e1, 0 3px 5px rgba(30, 42, 64, 0.16);
-  transform: skewY(-12deg);
+  height: 100%;
+  background: var(--tone);
 }
 
-.docLines {
-  position: absolute;
-  inset: 4px 3px auto;
-  height: 7px;
-  background: repeating-linear-gradient(180deg, #94a3b8 0 1px, transparent 1px 3px);
+/* ---------- ボトルネック（改善前） ---------- */
+
+.col[data-bottleneck="true"] .station {
+  background: #ffe4e6;
+  box-shadow: inset 0 0 0 2px #e11d48, 0 0 0 3px rgba(225, 29, 72, 0.18);
+  animation: bp-alert 1.4s ease-in-out infinite;
 }
 
-.doc[data-kind="queue"] .docSheet {
-  box-shadow: 0 0 0 1px var(--bp-slow), 0 3px 5px rgba(217, 119, 6, 0.2);
+.col[data-bottleneck="true"] .stationName,
+.col[data-bottleneck="true"] .minutes {
+  color: #be123c;
 }
 
-.doc[data-kind="work"] .docSheet {
-  box-shadow: 0 0 0 1.5px #4f46e5, 0 4px 8px rgba(79, 70, 229, 0.25);
+.col[data-bottleneck="true"] .bar > span {
+  background: #e11d48;
 }
 
-.doc[data-kind="work"] .docSheet::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -4px;
-  width: calc(var(--progress) * 100%);
-  height: 2px;
-  border-radius: 1px;
-  background: #4f46e5;
+.col[data-bottleneck="true"] .pileDoc {
+  background: #fff1f2;
+  box-shadow: inset 0 0 0 1.5px #e11d48;
 }
 
-.doc[data-kind="done"] .docSheet {
-  box-shadow: 0 0 0 1px var(--bp-ok), 0 2px 4px rgba(5, 150, 105, 0.16);
+.col[data-bottleneck="true"] .queueLabel {
+  color: #be123c;
 }
 
-.docCheck {
-  position: absolute;
-  right: -4px;
-  top: -5px;
-  color: var(--bp-ok);
-  font-size: 9px;
+.bottleneckTag {
+  align-self: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 8.5px;
   font-weight: 900;
+  line-height: 1.6;
+  white-space: nowrap;
 }
 
-.scene[data-reduced-motion="true"] .doc {
-  transition: none;
+@keyframes bp-alert {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 2px #e11d48, 0 0 0 3px rgba(225, 29, 72, 0.18);
+  }
+  50% {
+    box-shadow: inset 0 0 0 2px #e11d48, 0 0 0 6px rgba(225, 29, 72, 0.08);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .doc {
-    transition: none;
+  .col[data-bottleneck="true"] .station {
+    animation: none;
   }
 }

@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ProgrammingBasicsExperience from "@/components/experiences/ProgrammingBasicsExperience";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
+
+beforeEach(() => {
+  vi.useFakeTimers();
+});
 
 afterEach(() => {
   cleanup();
@@ -19,62 +23,71 @@ function renderDeck() {
 }
 
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
+const wait = (ms: number) =>
+  act(() => {
+    vi.advanceTimersByTime(ms);
+  });
+/** いま光っているプログラムの行 */
+const currentLine = (testId: string) => screen.getByTestId(testId).querySelector('[data-current="true"]')?.textContent ?? "";
 
 describe("ProgrammingBasicsExperience", () => {
-  it("keeps the named-box analogy and the assignment warning", () => {
+  it("has three slides and never asks to press a button for each step", () => {
     renderDeck();
-    expect(screen.getByText("箱の名前：りんごの数")).toBeInTheDocument();
-    click("5個");
-    expect(screen.getByText("500円")).toBeInTheDocument();
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /1行実行|1回まわす|実行する/ })).toBeNull();
     expect(screen.getByText(/代入/, { selector: "b" })).toBeInTheDocument();
   });
 
-  it("assignment: 10 goes into score, then 20 replaces it", () => {
+  it("variable: rain goes into the 天気 box by itself, is read by name, then sunny overwrites it", () => {
     renderDeck();
-    expect(screen.queryByTestId("assign-value")).toBeNull();
-    click("▶ 1行実行");
-    expect(screen.getByTestId("assign-value")).toHaveTextContent("10");
-    click("▶ 1行実行");
-    expect(screen.getByTestId("assign-value")).toHaveTextContent("20");
-    expect(screen.getByTestId("assign-ejected")).toHaveTextContent("10");
-    expect(screen.getByTestId("assign-note")).toHaveTextContent("置き換わる");
-    expect(screen.getByRole("button", { name: "▶ 1行実行" })).toBeDisabled();
+    expect(screen.queryByTestId("var-value")).toBeNull();
+    wait(1900);
+    expect(screen.getByTestId("var-value")).toHaveAttribute("data-value", "rain");
+    expect(currentLine("var-program")).toContain("天気 ← \"雨\"");
+    wait(1900);
+    expect(screen.getByTestId("var-bubble")).toHaveTextContent("天気は「雨」");
+    wait(1900);
+    expect(screen.getByTestId("var-value")).toHaveAttribute("data-value", "sun");
+    expect(screen.getByTestId("var-ejected")).toHaveTextContent("雨");
+    expect(screen.getByTestId("var-caption")).toHaveTextContent("上書き");
+    wait(1900);
+    expect(screen.getByTestId("var-bubble")).toHaveTextContent("天気は「晴れ」");
+    expect(screen.getByRole("button", { name: "↺ もう一度見る" })).toBeEnabled();
   });
 
-  it("branch: the token takes the umbrella route when it rains and the direct route otherwise", () => {
+  it("branch: the walker takes the umbrella road on rain, and switching to sunny re-runs on the plain road", () => {
     renderDeck();
     click("解説2");
-    click("▶ 実行する");
+    wait(1300);
+    expect(currentLine("branch-program")).toContain("もし 天気 が 雨 なら");
+    wait(1300);
     expect(screen.getByTestId("rain-stage")).toHaveAttribute("data-route", "rain");
-    expect(screen.getByTestId("rain-result")).toHaveTextContent("はい：傘の道");
+    expect(currentLine("branch-program")).toContain("傘を持つ");
+    wait(1300);
+    expect(screen.getByTestId("rain-result")).toHaveTextContent("出発");
+
     click("☀️ 晴れ");
     expect(screen.getByTestId("rain-stage")).toHaveAttribute("data-route", "none");
-    click("▶ 実行する");
+    wait(1300);
+    expect(currentLine("branch-program")).toContain("そうでなければ");
+    wait(1300);
     expect(screen.getByTestId("rain-stage")).toHaveAttribute("data-route", "sun");
-    expect(screen.getByTestId("rain-result")).toHaveTextContent("いいえ");
+    expect(currentLine("branch-program")).toContain("そのまま");
   });
 
-  it("loop: the counter goes 1 → 5 and then the loop exits", () => {
+  it("loop: climbs one stair per repeat and stops after the chosen count", () => {
     renderDeck();
     click("解説3");
-    for (let i = 1; i <= 5; i++) {
-      click(/1回まわす/);
-      expect(screen.getByTestId("loop-counter")).toHaveTextContent(`${i}/ 5 回`);
+    click("3回");
+    for (let i = 1; i <= 3; i++) {
+      wait(850);
+      expect(screen.getByTestId("loop-counter")).toHaveTextContent(`${i}/ 3 回`);
+      expect(currentLine("loop-program")).toContain("1段のぼる");
     }
-    expect(screen.getByText("5回目：")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /完了/ })).toBeDisabled();
-  });
-
-  it("loop can run automatically five times", () => {
-    vi.useFakeTimers();
-    renderDeck();
-    click("解説3");
-    click("自動で5回");
-    for (let i = 0; i < 6; i++) {
-      act(() => {
-        vi.advanceTimersByTime(1200);
-      });
-    }
-    expect(screen.getByTestId("loop-stage")).toHaveAttribute("data-count", "5");
+    wait(850);
+    expect(currentLine("loop-program")).toContain("着いた");
+    expect(screen.getByTestId("loop-caption")).toHaveTextContent("くり返しが終わり");
+    wait(3000);
+    expect(screen.getByTestId("loop-stage")).toHaveAttribute("data-count", "3");
   });
 });

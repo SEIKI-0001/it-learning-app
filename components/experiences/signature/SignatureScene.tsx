@@ -21,7 +21,7 @@ import styles from "./signature.module.css";
 // 送信者の秘密鍵で封じたものが署名で、受信者は送信者の公開鍵で開いて照合する。
 
 export type SigNodeId = "sender" | "receiver" | "attacker";
-export type EnvelopeStop = "sender" | "mid" | "receiver";
+export type EnvelopeStop = "sender" | "mid" | "attacker" | "receiver";
 
 const AT: Record<SigNodeId, WorldPoint> = {
   sender: { x: -40, y: 72 },
@@ -35,6 +35,8 @@ const ENV_Z = 16;
 const ENVELOPE_AT: Record<EnvelopeStop, ScreenPoint> = {
   sender: nudge(iso(AT.sender), 30, -90),
   mid: iso(along(LANE, 0.5, ENV_Z)),
+  // 第三者が通信路から横取りして手元に引き寄せた位置
+  attacker: nudge(iso(AT.attacker), 8, -56),
   receiver: nudge(iso(AT.receiver), -30, -90),
 };
 
@@ -78,12 +80,15 @@ export type Envelope = {
   /** 署名に封じた指紋 */
   sealHash: string;
   forged: boolean;
+  /** 第三者による書き換え：grab＝横取りした（まだ元の文面）/ done＝書き換えた */
+  rewrite?: { from: string; phase: "grab" | "done" };
 };
 
+/** 検証は3段階：①署名を公開鍵で開く → ②届いた文書から指紋を計算 → ③比べる。まだの段階は null */
 export type Verify = {
-  sigHash: string;
-  docHash: string;
-  verdict: "ok" | "tamper" | "fake";
+  sigHash: string | null;
+  docHash: string | null;
+  verdict: "ok" | "tamper" | "fake" | null;
 } | null;
 
 export type SignatureSceneProps = {
@@ -195,15 +200,25 @@ export function SignatureScene({
         <span className={styles.envelope}>
           <span className={styles.docPart}>
             <span className={styles.docTag}>📄 文書</span>
+            {envelope.rewrite?.phase === "done" && (
+              <span className={styles.oldText} data-testid="rewritten-from">
+                {envelope.rewrite.from}
+              </span>
+            )}
             <span key={envelope.text} className={styles.docText}>
               {envelope.text}
             </span>
+            {envelope.rewrite && (
+              <span className={styles.rewriteNote} data-phase={envelope.rewrite.phase} data-testid="rewrite-note">
+                {envelope.rewrite.phase === "grab" ? "😈 横取り！" : "😈✏️ 書き換えた"}
+              </span>
+            )}
             {senderHash && (
               <span className={styles.hashNote} data-testid="sender-hash">
                 指紋 {senderHash}
               </span>
             )}
-            {envelope.tampered && <span className={styles.tamperMark}>書換</span>}
+            {envelope.tampered && !envelope.rewrite && <span className={styles.tamperMark}>書換</span>}
           </span>
           {envelope.signed && (
             <span className={styles.sealPart} data-forged={envelope.forged ? "true" : "false"}>
@@ -214,30 +229,35 @@ export function SignatureScene({
                 <span className={styles.sealTag}>署名</span>
                 <span className={styles.sealHash}>🔒{envelope.sealHash}</span>
               </span>
+              {envelope.rewrite?.phase === "done" && <span className={styles.sealKeep}>署名はそのまま</span>}
             </span>
           )}
         </span>
       </div>
 
       {verify && (
-        <div className={styles.verify} data-verdict={verify.verdict} role="status" data-testid="verify-panel">
+        <div className={styles.verify} data-verdict={verify.verdict ?? "pending"} role="status" data-testid="verify-panel">
           <div className={styles.verifyRow}>
-            <span className={styles.hashChip} data-kind="sig">
-              <span>署名を公開鍵で開く</span>
-              <b>{verify.sigHash}</b>
+            <span className={styles.hashChip} data-kind="sig" data-ready={verify.sigHash ? "true" : "false"} data-testid="verify-sig">
+              <span>① 署名を公開鍵で開く</span>
+              <b>{verify.sigHash ?? "？"}</b>
             </span>
-            <span className={styles.verifyEq} aria-label={verify.verdict === "ok" ? "一致" : "不一致"}>
-              {verify.verdict === "ok" ? "＝" : "≠"}
+            <span className={styles.verifyEq} aria-label={verify.verdict === null ? "比べる前" : verify.verdict === "ok" ? "一致" : "不一致"}>
+              {verify.verdict === null ? "?" : verify.verdict === "ok" ? "＝" : "≠"}
             </span>
-            <span className={styles.hashChip} data-kind="doc">
-              <span>届いた文書から計算</span>
-              <b>{verify.docHash}</b>
+            <span className={styles.hashChip} data-kind="doc" data-ready={verify.docHash ? "true" : "false"} data-testid="verify-doc">
+              <span>② 届いた文書から計算</span>
+              <b>{verify.docHash ?? "？"}</b>
             </span>
           </div>
-          <span className={styles.stamp} style={{ "--stamp": verify.verdict === "ok" ? "#059669" : "#E11D48" } as CSSProperties}>
-            {verify.verdict === "ok" ? "✅" : "❌"} {VERDICT[verify.verdict].stamp}
-            <span>{VERDICT[verify.verdict].sub}</span>
-          </span>
+          {verify.verdict ? (
+            <span className={styles.stamp} style={{ "--stamp": verify.verdict === "ok" ? "#059669" : "#E11D48" } as CSSProperties}>
+              {verify.verdict === "ok" ? "✅" : "❌"} {VERDICT[verify.verdict].stamp}
+              <span>{VERDICT[verify.verdict].sub}</span>
+            </span>
+          ) : (
+            <span className={styles.verifyPending}>③ 2つの指紋を比べる…</span>
+          )}
         </div>
       )}
     </div>
