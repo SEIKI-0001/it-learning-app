@@ -1,116 +1,116 @@
 "use client";
 
 import { useState } from "react";
+import { ExchangeMap, type Holder } from "./stakeholder/ExchangeMap";
+import styles from "./stakeholder/stakeholder.module.css";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「企業活動とステークホルダ」専用の体験。
-//   ① 自社を中心にした放射図。タップすると「与える⇄受け取る」の交換が見える
+//   ① 自社を中心にした放射図。相手をタップすると、その相手との2本の流れ
+//      （相手 → 自社、自社 → 相手）だけが順に動き、「おたがいさま」の交換が見える。
+//      「全部の交換を流す」で7者ぶんが一斉に集まって返り、会社が交換の束でできていると分かる
 //   ② ステークホルダに含まれる？ 仕分けクイズ（株主だけと思う罠）
 //   ③ CSR（社会的責任）のひとこと
 // ============================================================================
 
-type Holder = {
-  name: string;
-  emoji: string;
-  give: string; // 会社 → 相手
-  get: string; // 相手 → 会社
-};
-
-const HOLDERS: Holder[] = [
-  { name: "顧客", emoji: "🙋", give: "商品・サービス", get: "代金・信頼" },
-  { name: "株主", emoji: "💰", give: "配当・成長", get: "資金（出資）" },
-  { name: "従業員", emoji: "👷", give: "給料・働く場", get: "労働力・アイデア" },
-  { name: "取引先", emoji: "🤝", give: "代金・注文", get: "材料・協力" },
-  { name: "地域社会", emoji: "🏘️", give: "雇用・地域貢献", get: "働く人・活動の場" },
-  { name: "国・行政", emoji: "🏛️", give: "税金", get: "ルール・インフラ" },
-];
-
-// 放射図の配置（%指定、上から時計回りに6方向）
-const POSITIONS = [
-  { left: "50%", top: "0%" },
-  { left: "93%", top: "25%" },
-  { left: "93%", top: "75%" },
-  { left: "50%", top: "100%" },
-  { left: "7%", top: "75%" },
-  { left: "7%", top: "25%" },
+const HOLDERS: (Holder & { note?: string })[] = [
+  { name: "顧客", emoji: "🙋", give: "商品・サービス", get: "代金・信頼", inTok: { icon: "💴", label: "代金" }, outTok: { icon: "📦", label: "商品" } },
+  {
+    name: "株主",
+    emoji: "💰",
+    give: "配当・成長・情報開示",
+    get: "資金（出資）・経営の監視",
+    inTok: { icon: "💰", label: "出資" },
+    outTok: { icon: "💹", label: "配当" },
+    note: "株主には経営状況を公開し（ディスクロージャー）、社外取締役などが経営を監視・けん制します（コーポレートガバナンス）。",
+  },
+  { name: "従業員", emoji: "👷", give: "給料・働く場", get: "労働力・アイデア", inTok: { icon: "💪", label: "労働" }, outTok: { icon: "💴", label: "給料" } },
+  { name: "取引先", emoji: "🤝", give: "代金・注文", get: "材料・協力", inTok: { icon: "🧱", label: "材料" }, outTok: { icon: "💴", label: "代金" } },
+  { name: "金融機関", emoji: "🏦", give: "利息・返済", get: "融資（借入）", inTok: { icon: "🏦", label: "融資" }, outTok: { icon: "💴", label: "利息" } },
+  { name: "地域社会", emoji: "🏘️", give: "雇用・地域貢献", get: "働く人・活動の場", inTok: { icon: "🙌", label: "働き手" }, outTok: { icon: "🌱", label: "雇用" } },
+  { name: "国・行政", emoji: "🏛️", give: "税金", get: "ルール・インフラ", inTok: { icon: "🛣️", label: "道路等" }, outTok: { icon: "🧾", label: "税金" } },
 ];
 
 function Hub() {
-  const [sel, setSel] = useState<number | null>(null);
-  const h = sel !== null ? HOLDERS[sel] : null;
+  const reducedMotion = useReducedMotion();
+  const [sel, setSel] = useState<number | "all" | null>(null);
+  const [runKey, setRunKey] = useState(0);
+  const [seen, setSeen] = useState<Set<number>>(() => new Set());
+  const h = typeof sel === "number" ? HOLDERS[sel] : null;
+  const allSeen = seen.size === HOLDERS.length;
+
+  function pick(i: number) {
+    if (sel === i) {
+      setSel(null);
+      return;
+    }
+    setSel(i);
+    setRunKey((k) => k + 1);
+    setSeen((prev) => new Set(prev).add(i));
+  }
+
+  function playAll() {
+    setSel("all");
+    setRunKey((k) => k + 1);
+  }
+
+  // 文章の行は、対応するトークンが届いたころに現れる（reduced-motion では最初から出す）
+  const rowStyle = (delay: number) => (reducedMotion ? undefined : { animationDelay: `${delay}ms` });
+  const rowClass = reducedMotion ? "" : styles.rowIn;
 
   return (
     <Panel>
       <SectionTitle step={1}>会社は多くの相手とつながっている</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         会社に関わる人や組織を<b className="text-gray-800">ステークホルダ（利害関係者）</b>と呼びます。
-        まわりをタップすると、<b className="text-gray-800">おたがいに何をやり取りしているか</b>が見えます。
+        まわりをタップすると、<b className="text-gray-800">相手から受け取るもの</b>と<b className="text-gray-800">会社が返すもの</b>が流れます。
       </p>
 
-      {/* 放射図: 中心=自社、周囲6ノード */}
-      <div className="relative mx-auto mt-6 h-56 max-w-[300px]">
-        {/* つながりの線（中心から各ノードへ） */}
-        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-          {POSITIONS.map((p, i) => (
-            <line
-              key={i}
-              x1="50"
-              y1="50"
-              x2={parseFloat(p.left)}
-              y2={parseFloat(p.top)}
-              stroke={sel === i ? "#4f46e5" : "#e5e7eb"}
-              strokeWidth={sel === i ? 2.5 : 1.5}
-              strokeDasharray={sel === i ? "none" : "3 3"}
-            />
-          ))}
-        </svg>
+      <ExchangeMap holders={HOLDERS} sel={sel} runKey={runKey} reducedMotion={reducedMotion} onSelect={pick} />
 
-        {/* 中心=自社 */}
-        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-brand-600 text-center text-xs font-bold leading-tight text-white ring-4 ring-brand-100">
-            🏢
-            <br />
-            自社
-          </div>
-        </div>
-
-        {/* 周囲のステークホルダ */}
-        {HOLDERS.map((holder, i) => {
-          const on = sel === i;
-          return (
-            <button
-              key={holder.name}
-              onClick={() => setSel(on ? null : i)}
-              style={{ left: POSITIONS[i].left, top: POSITIONS[i].top }}
-              className={`absolute z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-center ring-2 transition active:scale-95 ${
-                on ? "bg-emerald-500 text-white ring-emerald-500" : "bg-emerald-50 text-emerald-800 ring-emerald-200"
-              }`}
-            >
-              <span className="text-base leading-none">{holder.emoji}</span>
-              <span className="mt-0.5 text-[9px] font-bold leading-tight">{holder.name}</span>
-            </button>
-          );
-        })}
+      <div className="mt-1 flex items-center justify-center gap-3 text-[11px] font-bold">
+        <span className="flex items-center gap-1 text-emerald-700">
+          <span className="inline-block h-0.5 w-4 bg-emerald-500" />
+          相手 → 自社
+        </span>
+        <span className="flex items-center gap-1 text-brand-700">
+          <span className="inline-block h-0.5 w-4 bg-brand-600" />
+          自社 → 相手
+        </span>
       </div>
 
       {/* 与える⇄受け取る の表示 */}
-      <div className="mt-4 min-h-[5.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
+      <div className="mt-3 min-h-[5.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200" aria-live="polite">
         {h ? (
-          <div>
+          <div key={runKey}>
             <div className="text-sm font-bold text-gray-800">
               {h.emoji} {h.name} とのやり取り
             </div>
             <div className="mt-2 space-y-1.5 text-sm">
-              <div className="flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-1.5">
-                <span className="text-xs font-bold text-brand-500">自社 →</span>
-                <span className="font-semibold text-gray-800">{h.give}</span>
-              </div>
-              <div className="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5">
-                <span className="text-xs font-bold text-emerald-600">→ 自社</span>
+              <div className={`flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 ${rowClass}`} style={rowStyle(900)}>
+                <span className="flex-none text-xs font-bold text-emerald-600">① → 自社</span>
                 <span className="font-semibold text-gray-800">{h.get}</span>
               </div>
+              <div className={`flex items-center gap-2 rounded-lg bg-brand-50 px-3 py-1.5 ${rowClass}`} style={rowStyle(2250)}>
+                <span className="flex-none text-xs font-bold text-brand-500">② 自社 →</span>
+                <span className="font-semibold text-gray-800">{h.give}</span>
+              </div>
+              {h.note && (
+                <p className={`pt-1 text-xs leading-relaxed text-gray-600 ${rowClass}`} style={rowStyle(2500)}>
+                  {h.note}
+                </p>
+              )}
             </div>
+          </div>
+        ) : sel === "all" ? (
+          <div key={runKey} className={rowClass} style={rowStyle(2700)} data-testid="stakeholder-all-summary">
+            <div className="text-sm font-bold text-gray-800">7者との交換が同時に回っている</div>
+            <p className="mt-1 text-xs leading-relaxed text-gray-600">
+              お金・労働・材料・融資・場所を<b>受け取り</b>、商品・給料・配当・税金などで<b>返す</b>。
+              どれか1本でも止まると、会社は活動を続けられません。
+            </p>
           </div>
         ) : (
           <p className="text-sm text-gray-400">
@@ -119,8 +119,23 @@ function Hub() {
         )}
       </div>
 
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <span className="text-xs font-bold text-gray-500" data-testid="stakeholder-seen">
+          見た相手 {seen.size} / {HOLDERS.length}
+        </span>
+        <button
+          type="button"
+          onClick={playAll}
+          className={`rounded-lg px-3 py-1.5 text-xs font-bold active:scale-95 ${
+            allSeen || sel === "all" ? "bg-brand-600 text-white" : "text-brand-700 ring-1 ring-brand-300"
+          }`}
+        >
+          🔁 全部の交換を流す
+        </button>
+      </div>
+
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 たとえると学校行事も、生徒だけでなく<b>先生・保護者・地域の人</b>に関係します。
+        💡 会社は<b>たくさんの相手との交換関係</b>で成り立っています。
         「ステークホルダ＝株主だけ」ではない点が試験のポイント。
       </div>
     </Panel>
