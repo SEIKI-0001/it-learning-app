@@ -16,8 +16,15 @@ function renderDeck() {
 }
 
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
+const next = (n = 1) => {
+  for (let i = 0; i < n; i++) click("1ステップ進む");
+};
 const toEnd = () => {
-  for (let i = 0; i < 4; i++) click("1ステップ進む");
+  for (let i = 0; i < 20; i++) {
+    const btn = screen.getByRole("button", { name: "1ステップ進む" });
+    if (btn.hasAttribute("disabled")) return;
+    fireEvent.click(btn);
+  }
 };
 const envelope = () => screen.getByTestId("signed-envelope");
 
@@ -31,32 +38,46 @@ describe("DigitalSignatureExperience", () => {
     expect(screen.getByText("本人確認＋改ざん検知")).toBeInTheDocument();
   });
 
-  it("carries document + signature together and verifies OK with the sender's public key", () => {
+  it("walks write → hash → sign → send → arrive → verify ①②③ and verifies OK", () => {
     renderDeck();
     expect(envelope()).toHaveAttribute("data-signed", "false");
+    expect(screen.queryByTestId("sender-hash")).toBeNull();
+    next();
     expect(screen.getByTestId("sender-hash")).toHaveTextContent("A4-9F");
-    click("1ステップ進む");
+    next();
     expect(envelope()).toHaveAttribute("data-signed", "true");
     expect(screen.getByRole("img", { name: "山田さんの秘密鍵" })).toHaveAttribute("data-spot", "senderSign");
-    click("1ステップ進む");
+    next();
     expect(envelope()).toHaveAttribute("data-stop", "mid");
-    click("1ステップ進む");
-    click("1ステップ進む");
+    next();
     expect(envelope()).toHaveAttribute("data-stop", "receiver");
+    next();
     expect(screen.getByRole("img", { name: "山田さんの公開鍵" })).toHaveAttribute("data-spot", "receiverVerify");
+    expect(screen.getByTestId("verify-panel")).toHaveAttribute("data-verdict", "pending");
+    expect(screen.getByTestId("verify-sig")).toHaveTextContent("A4-9F");
+    expect(screen.getByTestId("verify-doc")).toHaveAttribute("data-ready", "false");
+    next();
+    expect(screen.getByTestId("verify-doc")).toHaveTextContent("A4-9F");
+    next();
     expect(screen.getByTestId("verify-panel")).toHaveAttribute("data-verdict", "ok");
     expect(screen.getByTestId("verify-panel")).toHaveTextContent("VERIFY OK");
   });
 
-  it("detects tampering on the channel as a hash mismatch", () => {
+  it("shows the tampering as its own steps: grab, rewrite (signature untouched), then a hash mismatch", () => {
     renderDeck();
     click("😈 途中で書き換え");
-    click("1ステップ進む");
-    click("1ステップ進む");
+    next(4);
+    expect(envelope()).toHaveAttribute("data-stop", "attacker");
+    expect(envelope()).toHaveAttribute("data-tampered", "false");
+    expect(screen.getByTestId("rewrite-note")).toHaveTextContent("横取り");
+    next();
     expect(envelope()).toHaveAttribute("data-tampered", "true");
+    expect(screen.getByTestId("rewritten-from")).toHaveTextContent("1万円 支払います");
     expect(envelope()).toHaveTextContent("100万円");
-    click("1ステップ進む");
-    click("1ステップ進む");
+    expect(envelope()).toHaveTextContent("署名はそのまま");
+    next();
+    expect(envelope()).toHaveAttribute("data-stop", "receiver");
+    toEnd();
     const panel = screen.getByTestId("verify-panel");
     expect(panel).toHaveAttribute("data-verdict", "tamper");
     expect(panel).toHaveTextContent("A4-9F");
@@ -67,11 +88,9 @@ describe("DigitalSignatureExperience", () => {
   it("detects impersonation: a signature from another private key fails with the real public key", () => {
     renderDeck();
     click("🎭 別人がなりすまし");
-    click("1ステップ進む");
+    next(2);
     expect(screen.getByRole("img", { name: "偽者の秘密鍵" })).toHaveAttribute("data-forged", "true");
-    click("1ステップ進む");
-    click("1ステップ進む");
-    click("1ステップ進む");
+    toEnd();
     expect(screen.getByTestId("verify-panel")).toHaveAttribute("data-verdict", "fake");
     expect(screen.getByTestId("verify-panel")).toHaveTextContent("??-??");
   });
