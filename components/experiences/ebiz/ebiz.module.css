@@ -1,0 +1,86 @@
+/* e-ビジネスの取引マップ：動くのは「用語を選んだ直後に①②③の順で1回だけ流れるモノ・お金・情報」と、
+   その通り道が引かれる線だけ。以前の animate-pulse / animate-bounce（無限）は置かない。 */
+
+.lane {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: ebiz-draw 1100ms cubic-bezier(0.45, 0.05, 0.25, 1) forwards;
+}
+
+@keyframes ebiz-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.token {
+  opacity: 0;
+  transform: translate(var(--x1), var(--y1));
+  animation: ebiz-travel 1300ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+@keyframes ebiz-travel {
+  0% {
+    transform: translate(var(--x1), var(--y1));
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  45% {
+    transform: translate(var(--xm), var(--ym));
+  }
+  82% {
+    transform: translate(var(--x2), var(--y2));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x2), var(--y2));
+    opacity: 0;
+  }
+}
+
+.node {
+  transition: opacity 400ms ease;
+}
+
+/* 中継役（スマホ・仲介サービス）は、その取引を選んだときだけ現れる */
+.viaIn {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ebiz-pop 380ms ease both;
+}
+
+@keyframes ebiz-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.row {
+  animation: ebiz-row 320ms ease both;
+}
+
+@keyframes ebiz-row {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reduced .lane,
+.reduced .viaIn,
+.reduced .row {
+  animation: none;
+  stroke-dashoffset: 0;
+  opacity: 1;
+}
