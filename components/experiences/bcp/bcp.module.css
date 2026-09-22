@@ -1,0 +1,156 @@
+/* BCP 2.5D シーン。床・ノード・レールは network を共用し、
+   ここでは「被災した建物」「社員/データのトークン」「揺れ」だけを足す。 */
+
+.scene {
+  --bcp-ok: #059669;
+  --bcp-ng: #e11d48;
+}
+
+.world {
+  position: absolute;
+  inset: 0;
+}
+
+.world[data-shake="true"] {
+  animation: bcp-shake 700ms ease-in-out 2;
+}
+
+.window {
+  fill: #bfdbfe;
+  transition: fill 500ms ease;
+}
+
+.window[data-broken="true"] {
+  fill: #6b7280;
+}
+
+.crack {
+  fill: none;
+  stroke: #111827;
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.scene[data-disaster="true"] [data-illustration="building-hq"],
+.scene[data-disaster="true"] [data-illustration="system"] {
+  filter: saturate(0.3);
+}
+
+.label {
+  position: absolute;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transform: translate(-50%, -50%);
+  padding: 1px 5px;
+  border: 1px solid #e3e8f0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.label[data-present="false"] {
+  color: #9aa3b2;
+  border-style: dashed;
+}
+
+.ng {
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--bcp-ng);
+  color: #ffffff;
+  font-size: 8px;
+}
+
+.quake {
+  position: absolute;
+  left: 3%;
+  top: 4%;
+  z-index: 16;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #111827;
+  color: #fde68a;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+/* ---------- 社員・データのトークン ---------- */
+
+.token {
+  position: absolute;
+  z-index: 20;
+  transform: translate(-50%, -50%);
+  padding: 2px 8px;
+  border: 1px solid #d5dde9;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(30, 42, 64, 0.14);
+  transition:
+    left 1300ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 1300ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    background 400ms ease,
+    border-color 400ms ease;
+}
+
+.token[data-tone="ok"] {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.token[data-tone="ng"] {
+  border-color: #fda4af;
+  border-style: dashed;
+  background: #fff1f3;
+  color: #9f1239;
+}
+
+.dataToken {
+  z-index: 21;
+}
+
+@keyframes bcp-shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: translate(-3px, 1px) rotate(-0.4deg);
+  }
+  40% {
+    transform: translate(3px, -1px) rotate(0.4deg);
+  }
+  60% {
+    transform: translate(-2px, 1px);
+  }
+  80% {
+    transform: translate(2px, 0);
+  }
+}
+
+.scene[data-reduced-motion="true"] .world {
+  animation: none;
+}
+
+.scene[data-reduced-motion="true"] .token {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world[data-shake="true"] {
+    animation: none;
+  }
+
+  .token {
+    transition: none;
+  }
+}

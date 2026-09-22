@@ -1,179 +1,200 @@
 "use client";
 
-import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { useState, type ReactNode } from "react";
+import { MailRouteScene, MailSyncScene, type RouteSceneProps, type SyncSceneProps } from "./email/MailScene";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「電子メールのしくみ」専用の体験。
-//   ① 配達体験 … ✉️がノード（あなた→送信サーバ→受信サーバ→相手）を移動し、
-//      区間ごとに使うプロトコル（SMTP / POP・IMAP）が光る
-//   ② POPとIMAP … スマホで受信したあと、PCでも見えるかが方式で変わる
+//   ① 配達体験 … 2.5D の配送模型（あなた→送信サーバ→相手のメールサーバ→相手）を
+//      ✉️が移動し、路面の区間標識（SMTP / POP・IMAP）が光る＝経路だけで送受の違いが分かる
+//   ② POPとIMAP … スマホで受信→PCでも確認。POP=端末へ取り出す／IMAP=サーバ上で同期
 //   ③ To / CC / BCC の違い 仕分けクイズ
 // ============================================================================
 
-const NODES = [
-  { id: 0, emo: "🧑", name: "あなた" },
-  { id: 1, emo: "📮", name: "送信サーバ" },
-  { id: 2, emo: "📬", name: "受信サーバ" },
-  { id: 3, emo: "🧑", name: "相手" },
-];
+type FlowStep = {
+  title: string;
+  nodes: RouteSceneProps["nodes"];
+  segments: RouteSceneProps["segments"];
+  mail: RouteSceneProps["mail"];
+  proto: "SMTP" | "POP / IMAP" | null;
+  detail: ReactNode;
+};
 
-// 区間: 0-1=SMTP, 1-2=SMTP, 2-3=POP/IMAP
-type Step = { at: number; hop: number | null; proto: "SMTP" | "POP / IMAP" | null; html: string };
-
-const STEPS: Step[] = [
+const STEPS: FlowStep[] = [
   {
-    at: 0,
-    hop: null,
+    title: "メールを書いて送信",
+    nodes: { you: "active", smtp: "idle", mailbox: "idle", friend: "idle" },
+    segments: { send: "idle", relay: "idle", fetch: "idle" },
+    mail: { stop: "you", tone: "draft", label: "会議の件" },
     proto: null,
-    html: "🧑 あなたがメールを書いて「送信」を押しました。ここから✉️の旅が始まります。",
+    detail: <>🧑 あなたがメールを書いて「送信」を押しました。ここから✉️の旅が始まります。</>,
   },
   {
-    at: 1,
-    hop: 0,
+    title: "あなた → 送信サーバ",
+    nodes: { you: "sending", smtp: "active", mailbox: "idle", friend: "idle" },
+    segments: { send: "active", relay: "idle", fetch: "idle" },
+    mail: { stop: "smtp", tone: "smtp", label: "会議の件" },
     proto: "SMTP",
-    html: "📤 あなたの端末 → 送信サーバ。<b>送るときはSMTP</b>。ポストに投函するイメージ。",
+    detail: <>📤 あなたの端末 → 送信サーバ。<b>送るときはSMTP</b>。ポストに投函するイメージ。</>,
   },
   {
-    at: 2,
-    hop: 1,
+    title: "送信サーバ → 相手のメールサーバ",
+    nodes: { you: "idle", smtp: "sending", mailbox: "active", friend: "idle" },
+    segments: { send: "done", relay: "active", fetch: "idle" },
+    mail: { stop: "mailbox", tone: "smtp", label: "会議の件" },
     proto: "SMTP",
-    html: "🚚 送信サーバ → 相手の受信サーバ。<b>サーバ同士もSMTP</b>でバケツリレーして、相手のメールボックスへ。",
+    detail: <>🚚 送信サーバ → 相手の受信サーバ。<b>サーバ同士もSMTP</b>でバケツリレーして、相手のメールボックス（受信箱）へ。</>,
   },
   {
-    at: 3,
-    hop: 2,
+    title: "相手が受け取る",
+    nodes: { you: "idle", smtp: "idle", mailbox: "sending", friend: "active" },
+    segments: { send: "done", relay: "done", fetch: "active" },
+    mail: { stop: "friend", tone: "recv", label: "会議の件" },
     proto: "POP / IMAP",
-    html: "📥 相手がメールを読むとき、受信サーバから<b>POP または IMAP</b>で取り出します。ここだけプロトコルが変わる！",
+    detail: <>📥 相手がメールを読むとき、受信サーバから<b>POP または IMAP</b>で取り出します。ここだけプロトコルが変わる！</>,
   },
   {
-    at: 3,
-    hop: null,
+    title: "まとめ：経路で覚える",
+    nodes: { you: "idle", smtp: "idle", mailbox: "idle", friend: "idle" },
+    segments: { send: "done", relay: "done", fetch: "done" },
+    mail: { stop: "friend", tone: "read", label: "会議の件" },
     proto: null,
-    html: "💡 まとめ：<b>送る＝SMTP（あなた→サーバ→サーバ）、受け取る＝POP / IMAP</b>。「S」MTPのSを<b>Send（送信）</b>と結びつけて覚えよう。",
+    detail: (
+      <>
+        💡 まとめ：<b>送る＝SMTP（あなた→サーバ→サーバ）、受け取る＝POP / IMAP</b>。「S」MTPのSを<b>Send（送信）</b>と結びつけて覚えよう。
+      </>
+    ),
   },
 ];
 
 function MailFlow() {
-  const [i, setI] = useState(0);
-  const s = STEPS[i];
+  const reducedMotion = useReducedMotion();
+  const player = useStepPlayer(STEPS.length, reducedMotion);
+  const s = STEPS[player.index];
   return (
     <Panel>
       <SectionTitle step={1}>✉️ を配達してみよう</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         メールは<b className="text-gray-800">「送る」と「受け取る」で使う約束（プロトコル）が違います</b>。
-        「次へ」で✉️を運びながら、どこで何を使うか見てみよう。
+        ✉️を運びながら、どの区間で何を使うか見てみよう。
       </p>
 
-      {/* ノードと区間 */}
-      <div className="mt-4 flex items-center">
-        {NODES.map((n, ni) => (
-          <div key={n.id} className="flex flex-1 items-center">
-            <div
-              className={`relative w-full rounded-xl border-2 px-0.5 py-2 text-center transition ${
-                s.at === ni
-                  ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100"
-                  : "border-gray-200 bg-gray-50"
-              }`}
-            >
-              {s.at === ni && <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-lg">✉️</span>}
-              <div className="text-xl leading-none">{n.emo}</div>
-              <div className="mt-0.5 text-[9px] font-bold leading-tight text-gray-700">{n.name}</div>
-            </div>
-            {ni < NODES.length - 1 && (
-              <div className="w-6 flex-none px-0.5 text-center">
-                <div
-                  className={`h-0.5 w-full rounded transition ${
-                    s.hop === ni ? "animate-pulse bg-brand-500" : "bg-gray-200"
-                  }`}
-                />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* 区間のプロトコル表示 */}
-      <div className="mt-2 flex text-center text-[10px] font-bold">
-        <div className={`flex-[2] ${s.hop === 0 || s.hop === 1 ? "text-brand-600" : "text-gray-300"}`}>
-          ── SMTP（送る）──
+      <div className="mt-3 flex min-w-0 items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold text-brand-700">
+            STEP {player.index + 1} / {STEPS.length}
+          </p>
+          <p className="mt-0.5 text-sm font-bold text-gray-900" data-testid="mail-step-title">
+            {s.title}
+          </p>
         </div>
-        <div className={`flex-1 ${s.hop === 2 ? "text-sky-600" : "text-gray-300"}`}>─ POP/IMAP（受取）─</div>
-      </div>
-
-      {s.proto && (
-        <div className="mt-2 text-center">
+        {s.proto && (
           <span
-            className={`inline-block rounded-full px-3 py-1 font-mono text-xs font-bold text-white ${
-              s.proto === "SMTP" ? "bg-brand-600" : "bg-sky-600"
-            }`}
+            className={`flex-none rounded-full px-3 py-1 font-mono text-xs font-bold text-white ${s.proto === "SMTP" ? "bg-brand-600" : "bg-sky-600"}`}
+            data-testid="mail-proto"
           >
-            いま使っているのは {s.proto}
+            いま {s.proto}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
-      <p
-        className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
-        dangerouslySetInnerHTML={{ __html: s.html }}
-      />
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <MailRouteScene nodes={s.nodes} segments={s.segments} mail={s.mail} reducedMotion={reducedMotion} />
+      </div>
 
-      <StepNav
-        index={i}
-        total={STEPS.length}
-        onPrev={() => setI((v) => Math.max(0, v - 1))}
-        onNext={() => setI((v) => Math.min(STEPS.length - 1, v + 1))}
-        onReset={() => setI(0)}
-        doneLabel="配達完了 📬"
-      />
+      <p className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
+        {s.detail}
+      </p>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={STEPS}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="メール配送を再生"
+          timelineLabel="メール配送のタイムライン"
+          startCaption="送信"
+          endCaption="配達完了"
+          stepTone={(i) => (STEPS[i].proto === "POP / IMAP" ? "bg-sky-600" : "bg-brand-600")}
+        />
+      </div>
     </Panel>
   );
 }
 
+type SyncPhase = "idle" | "phone" | "pc";
+
+function syncView(proto: "POP" | "IMAP", phase: SyncPhase): Omit<SyncSceneProps, "proto" | "reducedMotion"> {
+  const pop = proto === "POP";
+  if (phase === "idle") {
+    return {
+      nodes: { server: "active", phone: "idle", pc: "idle" },
+      lanes: {},
+      boxes: { server: { mail: true, read: false }, phone: { mail: false, note: "まだ受信していない" }, pc: { mail: false, note: "まだ受信していない" } },
+      mail: { at: "server", tone: "recv", label: "新着 1通" },
+    };
+  }
+  if (phase === "phone") {
+    return pop
+      ? {
+          nodes: { server: "idle", phone: "active", pc: "idle" },
+          lanes: { phone: "active" },
+          boxes: { server: { mail: false, note: "空（取り出し済み）" }, phone: { mail: true, read: true }, pc: { mail: false, note: "まだ見ていない" } },
+          mail: { at: "phone", tone: "recv", label: "スマホへ移動" },
+        }
+      : {
+          nodes: { server: "active", phone: "active", pc: "idle" },
+          lanes: { phone: "active" },
+          boxes: { server: { mail: true, read: true }, phone: { mail: true, read: true }, pc: { mail: false, note: "まだ見ていない" } },
+          mail: { at: "server", tone: "read", label: "サーバに保管" },
+        };
+  }
+  return pop
+    ? {
+        nodes: { server: "idle", phone: "idle", pc: "error" },
+        lanes: { pc: "active" },
+        boxes: { server: { mail: false, note: "空（取り出し済み）" }, phone: { mail: true, read: true }, pc: { mail: false, note: "メールがない…😢" } },
+        mail: { at: "phone", tone: "recv", label: "スマホの中だけ" },
+      }
+    : {
+        nodes: { server: "active", phone: "active", pc: "active" },
+        lanes: { phone: "active", pc: "active" },
+        boxes: { server: { mail: true, read: true }, phone: { mail: true, read: true }, pc: { mail: true, read: true } },
+        mail: { at: "server", tone: "read", label: "既読も同期" },
+      };
+}
+
 function PopImap() {
+  const reducedMotion = useReducedMotion();
   const [proto, setProto] = useState<"POP" | "IMAP">("POP");
-  const [received, setReceived] = useState(false);
+  const [phase, setPhase] = useState<SyncPhase>("idle");
   const [tried, setTried] = useState<Set<string>>(new Set());
   const pop = proto === "POP";
   const bothTried = tried.has("POP") && tried.has("IMAP");
+  const view = syncView(proto, phase);
 
   const switchProto = (p: "POP" | "IMAP") => {
     setProto(p);
-    setReceived(false);
+    setPhase("idle");
   };
-  const receive = () => {
-    setReceived(true);
+  const checkPc = () => {
+    setPhase("pc");
     setTried((prev) => new Set(prev).add(proto));
   };
-
-  const device = (emo: string, name: string, body: string, tone: "ok" | "ng" | "idle") => (
-    <div
-      className={`flex-1 rounded-xl p-2.5 text-center ring-2 transition ${
-        tone === "ok"
-          ? "bg-emerald-50 ring-emerald-300"
-          : tone === "ng"
-            ? "bg-rose-50 ring-rose-300"
-            : "bg-gray-50 ring-gray-200"
-      }`}
-    >
-      <div className="text-2xl">{emo}</div>
-      <div className="mt-0.5 text-[11px] font-bold text-gray-800">{name}</div>
-      <div
-        className={`mt-1 min-h-[2.6em] text-[10px] font-bold leading-snug ${
-          tone === "ok" ? "text-emerald-700" : tone === "ng" ? "text-rose-700" : "text-gray-400"
-        }`}
-      >
-        {body}
-      </div>
-    </div>
-  );
 
   return (
     <Panel>
       <SectionTitle step={2}>POP と IMAP ― スマホで読んだら、PCでは？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         どちらも「受信」のプロトコルですが、<b className="text-gray-800">メールをどこに置くか</b>が違います。
-        方式を選んで「📱スマホで受信」してから、💻PCをのぞいてみよう。
+        方式を選んで「📱スマホで受信」してから、「💻PCでも確認」してみよう。
       </p>
 
       <div className="mt-3 flex gap-1.5">
@@ -181,6 +202,7 @@ function PopImap() {
           <button
             key={p}
             onClick={() => switchProto(p)}
+            aria-pressed={proto === p}
             className={`flex-1 rounded-lg py-2 font-mono text-sm font-bold transition active:scale-95 ${
               proto === p ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
             }`}
@@ -190,63 +212,62 @@ function PopImap() {
         ))}
       </div>
 
-      <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-        <div className="flex items-stretch gap-1.5">
-          {device(
-            "📬",
-            "受信サーバ",
-            !received ? "✉️ 新着メール1通" : pop ? "（スマホに渡して空っぽ）" : "✉️ メールを保管中",
-            !received ? "idle" : pop ? "ng" : "ok"
-          )}
-          {device(
-            "📱",
-            "スマホ",
-            !received ? "まだ受信していない" : "✉️ 読めた！",
-            !received ? "idle" : "ok"
-          )}
-          {device(
-            "💻",
-            "PC",
-            !received ? "まだ受信していない" : pop ? "メールがない…😢" : "✉️ 同じメールが見える😊",
-            !received ? "idle" : pop ? "ng" : "ok"
-          )}
-        </div>
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <MailSyncScene proto={proto} {...view} reducedMotion={reducedMotion} />
+      </div>
 
-        <button
-          onClick={receive}
-          disabled={received}
-          className={`mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition active:scale-95 ${
-            received ? "bg-gray-300" : "bg-brand-600"
+      <div className="mt-3 flex gap-2">
+        {phase === "idle" && (
+          <button type="button" onClick={() => setPhase("phone")} className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-95">
+            📱 スマホで受信する
+          </button>
+        )}
+        {phase === "phone" && (
+          <button type="button" onClick={checkPc} className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-95">
+            💻 PCでも確認する
+          </button>
+        )}
+        {phase !== "idle" && (
+          <button type="button" onClick={() => setPhase("idle")} className="flex-none rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-gray-600 ring-1 ring-gray-300 active:scale-95" aria-label="最初から">
+            ↺
+          </button>
+        )}
+      </div>
+
+      {phase !== "idle" && (
+        <div
+          className={`mt-3 rounded-lg px-3 py-2 text-xs leading-relaxed ring-1 ${
+            pop && phase === "pc" ? "bg-rose-50 text-rose-800 ring-rose-200" : pop ? "bg-amber-50 text-amber-900 ring-amber-200" : "bg-emerald-50 text-emerald-800 ring-emerald-200"
           }`}
+          aria-live="polite"
+          data-testid="popimap-result"
         >
-          📱 スマホで受信する
-        </button>
-
-        {received && (
-          <div
-            className={`mt-2 rounded-lg px-3 py-2 text-xs leading-relaxed ring-1 ${
-              pop
-                ? "bg-rose-50 text-rose-800 ring-rose-200"
-                : "bg-emerald-50 text-emerald-800 ring-emerald-200"
-            }`}
-          >
-            {pop ? (
+          {pop ? (
+            phase === "phone" ? (
+              <>
+                <b>POP</b>＝メールを<b>スマホにダウンロードして手元に保存</b>。サーバの受信箱は<b>空</b>になりました。では PC では…？
+              </>
+            ) : (
               <>
                 <b>POP</b>＝メールを<b>スマホにダウンロードして手元に保存</b>。サーバから取り出すので、
                 あとからPCで見ても届いていません。1台の決まった端末向き。
               </>
-            ) : (
-              <>
-                <b>IMAP</b>＝メールは<b>サーバに置いたまま</b>読みます。だからスマホでもPCでも
-                <b>同じ状態</b>で見られる。複数端末で使うならこちら。
-              </>
-            )}
-          </div>
-        )}
-      </div>
+            )
+          ) : phase === "phone" ? (
+            <>
+              <b>IMAP</b>＝メールは<b>サーバに置いたまま</b>読みます。スマホで読んだので、サーバ上でも<b>既読</b>に。では PC では…？
+            </>
+          ) : (
+            <>
+              <b>IMAP</b>＝メールは<b>サーバに置いたまま</b>読みます。だからスマホでもPCでも
+              <b>同じ状態（既読も）</b>で見られる。複数端末で使うならこちら。
+            </>
+          )}
+        </div>
+      )}
 
       {bothTried && (
-        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200" data-testid="popimap-insight">
           💡 <b>気づいた？</b>　違いは<b>「メールの置き場所」</b>。
           <b>POP＝手元に持ってくる（サーバから取り出す）／IMAP＝サーバに置いたまま</b>。
           スマホとPCで同じメールを見たいなら IMAP です。

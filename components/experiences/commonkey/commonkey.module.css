@@ -1,0 +1,61 @@
+/* 共通鍵暗号 2.5D シーン。人・レール・カプセル・鍵の器は crypto を共用し、
+   ここでは「金色の共通鍵」と「盗聴者の手元」だけを足す。 */
+
+.scene {
+  --ck: #d97706;
+  --ck-ink: #92400e;
+}
+
+.keyAnchor {
+  --key: var(--ck);
+  --key-ink: var(--ck-ink);
+}
+
+.keyAnchor[data-stolen="true"] {
+  --key: #e11d48;
+  --key-ink: #9f1239;
+}
+
+.keyTag {
+  color: var(--ck-ink);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.eveCallout {
+  left: auto;
+  right: 3%;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  transform: none;
+  animation-name: ck-pop;
+}
+
+@keyframes ck-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.eveKey {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.eveNote {
+  color: #9f1239;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
