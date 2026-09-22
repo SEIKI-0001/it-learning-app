@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { BreakEvenChart, breakEvenOf, MAX_QTY, useTweenedEcon, type Econ } from "./breakeven/BreakEvenChart";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「損益分岐点」専用の体験。
 //   ① 固定費 ⇄ 変動費 の違い
-//   ② 販売数スライダーで「売上」と「総費用」が動き、損益分岐点で黒字↔赤字が切り替わる
+//   ② 売上線と総費用線のグラフ。販売数を動かすと2本の差（利益/損失）が変わり、交点＝損益分岐点で
+//      黒字↔赤字が切り替わる。固定費・売価・変動費を1つ変えると線が動き、交点が左右にすべる
 //   ③ 固定費・変動費の見分けクイズ
 //
 //   例：フリマの出店（出店料＝固定費10000円 / 仕入れ＝変動費1個300円 / 売価500円）
@@ -16,8 +19,6 @@ import { Panel, SectionTitle } from "./ui";
 const PRICE = 500; // 売価（1個）
 const VC = 300; // 変動費（1個あたり仕入れ）
 const FIXED = 10000; // 固定費（出店料）
-const MAX_QTY = 100;
-const BREAK_EVEN = FIXED / (PRICE - VC); // 50個
 
 const yen = (n: number) => `${n.toLocaleString()}円`;
 
@@ -51,35 +52,63 @@ function FixedVsVariable() {
   );
 }
 
-function Simulator() {
-  const [qty, setQty] = useState(20);
+// 条件を1つだけ変えるシナリオ（交点が左右にすべる）
+const SCENARIOS: { id: string; label: string; econ: Econ; note: string }[] = [
+  { id: "base", label: "基本", econ: { fixed: FIXED, price: PRICE, vc: VC }, note: "" },
+  { id: "fixed", label: "出店料UP", econ: { fixed: 15000, price: PRICE, vc: VC }, note: "固定費が増えると費用線が上へ平行移動 → 交点は右へ（たくさん売らないと黒字にならない）" },
+  { id: "price", label: "値上げ", econ: { fixed: FIXED, price: 700, vc: VC }, note: "売価を上げると売上線が急になる → 交点は左へ（少ない数で黒字）" },
+  { id: "vc", label: "仕入れ値DOWN", econ: { fixed: FIXED, price: PRICE, vc: 250 }, note: "変動費を下げると費用線がゆるやかに → 交点は左へ" },
+];
 
-  const sales = PRICE * qty; // 売上
-  const variable = VC * qty; // 変動費合計
-  const cost = FIXED + variable; // 総費用
+function Simulator() {
+  const reducedMotion = useReducedMotion();
+  const [qty, setQty] = useState(20);
+  const [sid, setSid] = useState("base");
+  const [sweeping, setSweeping] = useState(false);
+  const sc = SCENARIOS.find((x) => x.id === sid)!;
+  const econ = sc.econ;
+  const shown = useTweenedEcon(econ, reducedMotion);
+  const bep = breakEvenOf(econ);
+  const margin = econ.price - econ.vc; // 限界利益（1個あたり）
+  const done = qty >= MAX_QTY;
+
+  // 0個→100個へ、販売数を増やしながら線の差を見せる（損益分岐点では少し止まる）
+  useEffect(() => {
+    if (!sweeping || reducedMotion || done) return;
+    const timer = window.setTimeout(() => setQty((q) => Math.min(MAX_QTY, q + 1)), qty === bep ? 1000 : 55);
+    return () => window.clearTimeout(timer);
+  }, [sweeping, qty, reducedMotion, bep, done]);
+
+  const sales = econ.price * qty; // 売上
+  const variable = econ.vc * qty; // 変動費合計
+  const cost = econ.fixed + variable; // 総費用
   const profit = sales - cost; // 利益（マイナスなら損失）
-  const max = PRICE * MAX_QTY; // バーのスケール用
-  const atBreak = qty === BREAK_EVEN;
+  const atBreak = qty === bep;
+  const running = sweeping && !done;
 
   return (
     <Panel>
       <SectionTitle step={2}>販売数を動かしてみる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        スライダーで<b className="text-gray-800">売れた数</b>を変えると、売上と費用が動きます。
+        スライダーで<b className="text-gray-800">売れた数</b>を変えると、売上線と総費用線の<b className="text-gray-800">差</b>が動きます。
+        2本が<b className="text-gray-800">交わる点</b>に注目。
       </p>
 
       {/* 状態バッジ */}
       <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
         <div>
           <div className="text-xs text-gray-500">売れた数</div>
-          <div className="text-2xl font-bold text-gray-800">{qty}個</div>
+          <div className="text-2xl font-bold text-gray-800" data-testid="be-qty">
+            {qty}個
+          </div>
         </div>
         <div className="text-right">
           <div className="text-xs text-gray-500">{profit >= 0 ? "利益" : "損失"}</div>
           <div
-            className={`text-2xl font-bold ${
+            className={`text-2xl font-bold tabular-nums ${
               profit > 0 ? "text-emerald-600" : profit < 0 ? "text-rose-600" : "text-gray-700"
             }`}
+            data-testid="be-profit"
           >
             {profit >= 0 ? "+" : "−"}
             {yen(Math.abs(profit))}
@@ -87,33 +116,75 @@ function Simulator() {
         </div>
       </div>
 
-      {/* スライダー */}
-      <input
-        type="range"
-        min={0}
-        max={MAX_QTY}
-        value={qty}
-        onChange={(e) => setQty(Number(e.target.value))}
-        className="mt-4 w-full accent-brand-600"
-        aria-label="販売数"
-      />
-      <div className="-mt-1 flex justify-between text-[10px] text-gray-400">
-        <span>0個</span>
-        <span className="font-bold text-brand-500">↑損益分岐点 {BREAK_EVEN}個</span>
-        <span>{MAX_QTY}個</span>
+      <div className="-mx-1 mt-3">
+        <BreakEvenChart econ={shown} qty={qty} />
       </div>
 
-      {/* 売上 vs 総費用 バー */}
-      <div className="mt-4 space-y-2.5">
-        <Bar label="売上" value={sales} max={max} color="bg-sky-400" note={`${yen(PRICE)}×${qty}個`} />
-        <Bar
-          label="総費用"
-          value={cost}
-          max={max}
-          color="bg-rose-300"
-          note={`固定${yen(FIXED)}＋変動${yen(variable)}`}
+      {/* スライダー */}
+      <div className="mt-1 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (running) return setSweeping(false);
+            setQty(0);
+            setSweeping(true);
+          }}
+          disabled={reducedMotion}
+          className="flex-none rounded-full bg-gray-900 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-40"
+          aria-label={running ? "一時停止" : "0個から100個まで売ってみる"}
+        >
+          {running ? "一時停止" : "▶ 0→100個"}
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={MAX_QTY}
+          value={qty}
+          onChange={(e) => {
+            setSweeping(false);
+            setQty(Number(e.target.value));
+          }}
+          className="min-w-0 flex-1 accent-brand-600"
+          aria-label="販売数"
         />
       </div>
+
+      {/* 条件を変える */}
+      <div className="mt-3 text-xs font-bold text-gray-700">条件を1つ変えると、交点はどっちへ動く？</div>
+      <div className="mt-1.5 grid grid-cols-4 gap-1">
+        {SCENARIOS.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            aria-pressed={x.id === sid}
+            onClick={() => setSid(x.id)}
+            className={`rounded-lg px-1 py-1.5 text-[11px] font-bold leading-tight transition active:scale-95 ${
+              x.id === sid ? "bg-gray-900 text-white" : "text-gray-700 ring-1 ring-gray-300"
+            }`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-1.5 grid grid-cols-3 gap-1 text-center text-[11px]">
+        {[
+          { k: "固定費", v: yen(econ.fixed), on: sid === "fixed" },
+          { k: "売価", v: `${yen(econ.price)}/個`, on: sid === "price" },
+          { k: "変動費", v: `${yen(econ.vc)}/個`, on: sid === "vc" },
+        ].map((x) => (
+          <div
+            key={x.k}
+            className={`rounded-md px-1 py-1 ring-1 ${x.on ? "bg-amber-50 font-bold text-amber-900 ring-amber-300" : "bg-white text-gray-600 ring-gray-200"}`}
+          >
+            {x.k} <span className="tabular-nums">{x.v}</span>
+          </div>
+        ))}
+      </div>
+      {sc.note && (
+        <p className="mt-1.5 text-xs font-bold leading-relaxed text-amber-800" data-testid="be-note">
+          → {sc.note}
+        </p>
+      )}
 
       <div
         className={`mt-4 rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 ${
@@ -123,23 +194,25 @@ function Simulator() {
               ? "bg-rose-50 text-rose-900 ring-rose-200"
               : "bg-brand-50 text-brand-900 ring-brand-200"
         }`}
+        aria-live="polite"
+        data-testid="be-status"
       >
         {profit > 0 && (
           <>
-            ⭕ <b>黒字</b>：売上が費用を上回っています。損益分岐点（{BREAK_EVEN}個）を
+            ⭕ <b>黒字</b>：売上線が総費用線より上。損益分岐点（{bep}個）を
             <b>超えた</b>ので、もうけが出ています。
           </>
         )}
         {profit < 0 && (
           <>
-            ❌ <b>赤字</b>：費用が売上を上回っています。あと
-            <b>{Math.ceil((cost - sales) / (PRICE - VC))}個</b>
-            売れば損益分岐点（{BREAK_EVEN}個）に届きます。
+            ❌ <b>赤字</b>：総費用線が売上線より上。あと
+            <b>{Math.ceil((cost - sales) / margin)}個</b>
+            売れば損益分岐点（{bep}個）に届きます。
           </>
         )}
         {profit === 0 && (
           <>
-            🎯 ちょうど<b>損益分岐点</b>！売上と費用が同じ（{yen(sales)}）で、もうけは0。
+            🎯 ちょうど<b>損益分岐点</b>！2本の線が交わり、売上と費用が同じ（{yen(sales)}）で、もうけは0。
             ここが<b>黒字と赤字の境目</b>です。
           </>
         )}
@@ -147,45 +220,21 @@ function Simulator() {
 
       {atBreak || (
         <button
-          onClick={() => setQty(BREAK_EVEN)}
+          onClick={() => {
+            setSweeping(false);
+            setQty(bep);
+          }}
           className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white active:scale-95"
         >
-          🎯 損益分岐点（{BREAK_EVEN}個）に合わせる
+          🎯 損益分岐点（{bep}個）に合わせる
         </button>
       )}
-      <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-400">
-        損益分岐点 ＝ 固定費 ÷（売価 − 変動費）＝ {yen(FIXED)} ÷ {yen(PRICE - VC)} ＝ {BREAK_EVEN}個
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-gray-500">
+        1個売るごとに残る <b>売価−変動費＝{yen(margin)}</b>（<b>限界利益</b>）で固定費を回収していく。
+        <br />
+        損益分岐点 ＝ 固定費 ÷ 限界利益 ＝ {yen(econ.fixed)} ÷ {yen(margin)} ＝ {bep}個
       </p>
     </Panel>
-  );
-}
-
-function Bar({
-  label,
-  value,
-  max,
-  color,
-  note,
-}: {
-  label: string;
-  value: number;
-  max: number;
-  color: string;
-  note: string;
-}) {
-  const pct = Math.min(100, (value / max) * 100);
-  return (
-    <div>
-      <div className="flex items-baseline justify-between text-xs">
-        <span className="font-bold text-gray-700">{label}</span>
-        <span className="text-gray-500">
-          {yen(value)} <span className="text-gray-400">（{note}）</span>
-        </span>
-      </div>
-      <div className="mt-1 h-5 overflow-hidden rounded-md bg-gray-100">
-        <div className={`h-full ${color} transition-all`} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
   );
 }
 
