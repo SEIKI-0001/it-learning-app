@@ -1,0 +1,40 @@
+/* WBS・ガント：動くのは「作業が分かれて出てくる」「遅れが依存先へ順に伝わって棒が右へずれる」だけ。 */
+
+.split {
+  animation: wbs-split 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes wbs-split {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.bar {
+  transition: left 650ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.link {
+  transition: left 650ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.slack {
+  transition:
+    left 650ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    width 650ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.finish {
+  transition: left 650ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.reduced,
+.reduced * {
+  transition: none !important;
+  animation: none !important;
+}
