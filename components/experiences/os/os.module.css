@@ -1,0 +1,213 @@
+/* OS 2.5D 分解図。3枚の板（アプリ/OS/ハードウェア）と、その間を上下に流れる要求・結果。 */
+
+.scene {
+  --os-block: #e11d48;
+}
+
+.slabTop {
+  stroke: color-mix(in srgb, var(--ink) 30%, #ffffff);
+  stroke-width: 1;
+  transition: stroke 400ms ease, stroke-width 400ms ease;
+}
+
+.slab[data-state="active"] .slabTop {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+
+.slab[data-barrier="true"] .slabTop {
+  stroke: var(--os-block);
+  stroke-width: 2.4;
+  animation: os-barrier 1.6s ease-in-out infinite;
+}
+
+.part {
+  transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 500ms ease;
+}
+
+.part[data-state="active"] {
+  transform-box: fill-box;
+  filter: drop-shadow(0 0 5px rgba(47, 111, 219, 0.5));
+}
+
+.part[data-state="error"] {
+  filter: drop-shadow(0 0 5px rgba(225, 29, 72, 0.55));
+}
+
+.link {
+  stroke: var(--link);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 3 4;
+  animation: os-flow 1.2s linear infinite;
+}
+
+.link[data-tone="result"] {
+  animation-direction: reverse;
+}
+
+.layerTag {
+  position: absolute;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(-50%);
+  padding: 1px 5px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #374151;
+  font-size: 9.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px #e3e8f0;
+}
+
+.layerTag span {
+  color: #6b7280;
+  font-size: 8px;
+}
+
+.layerTag[data-state="active"] {
+  box-shadow: 0 0 0 1.5px #6366f1;
+}
+
+.layerTag[data-state="error"] {
+  box-shadow: 0 0 0 1.5px var(--os-block);
+}
+
+.partTag {
+  position: absolute;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  transform: translate(-50%, -50%);
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+  font-size: 8.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px #e3e8f0;
+  transition: box-shadow 300ms ease;
+}
+
+.partTag[data-state="active"] {
+  box-shadow: 0 0 0 1.5px #2f6fdb;
+}
+
+.partTag[data-state="error"] {
+  box-shadow: 0 0 0 1.5px var(--os-block);
+}
+
+.user {
+  position: absolute;
+  z-index: 12;
+  transform: translate(-50%, -50%);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px #e3e8f0;
+}
+
+.user[data-hears="true"] {
+  background: #ecfdf5;
+  color: #065f46;
+  box-shadow: 0 0 0 1.5px #34d399;
+}
+
+.denied {
+  position: absolute;
+  z-index: 24;
+  transform: translate(-50%, -50%);
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--os-block);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(225, 29, 72, 0.3);
+  animation: os-pop 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.capsuleAnchor {
+  position: absolute;
+  z-index: 20;
+  transform: translate(-50%, -50%);
+  transition:
+    left 1200ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 1200ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.capsule {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--link) 45%, #ffffff);
+  border-radius: 999px;
+  background: #ffffff;
+  color: color-mix(in srgb, var(--link) 80%, #111827);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--link) 14%, transparent),
+    0 8px 16px color-mix(in srgb, var(--link) 26%, transparent);
+}
+
+@keyframes os-flow {
+  from {
+    stroke-dashoffset: 14;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes os-barrier {
+  0%,
+  100% {
+    stroke-width: 2;
+  }
+  50% {
+    stroke-width: 3.4;
+  }
+}
+
+@keyframes os-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.scene[data-reduced-motion="true"] .capsuleAnchor {
+  transition: none;
+}
+
+.scene[data-reduced-motion="true"] .link,
+.scene[data-reduced-motion="true"] .slabTop,
+.scene[data-reduced-motion="true"] .denied {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capsuleAnchor {
+    transition: none;
+  }
+
+  .link,
+  .slab[data-barrier="true"] .slabTop,
+  .denied {
+    animation: none;
+  }
+}
