@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { MorphingTables } from "./normalization/MorphingTables";
-import { useReducedMotion } from "./scene/useReducedMotion";
+import { NormalTables } from "./normalization/NormalTables";
 import { Panel } from "./ui";
 
 // ============================================================================
 // 「正規化」専用の体験。
 // 1枚の注文伝票が、第1〜第3正規形へと分割されていく様子を段階で追う。
 // 主キー（ピンク）・重複データ（黄）・繰り返し項目（紫）を色分けして気づかせる。
-// 表は Morphing Table：同じ項目は同じ色のまま、段階ごとに新しい表へ移動する。
-// 最終形では 注文／顧客／商品／注文明細 がキーの線でつながる。
+// 表はふつうの行×列の表。同じ項目は段階が変わっても同じ色の列見出しのまま。
+// 最終形では 注文明細・注文表の「→参照」で、どの表のキーを指しているかを示す。
 // ============================================================================
 
 type Panel2 = { kind: "" | "fix" | "problem"; lbl: string; html: string };
@@ -68,7 +67,6 @@ const STAGES: Stage[] = [
 export default function NormalizationExperience() {
   const [stage, setStage] = useState(0);
   const [priceUp, setPriceUp] = useState(false);
-  const reducedMotion = useReducedMotion();
   const s = STAGES[stage];
   const normalized = stage >= 2;
 
@@ -125,9 +123,9 @@ export default function NormalizationExperience() {
           })}
         </div>
 
-        {/* テーブル（段階が変わると、項目が同じ色のまま新しい表へ移動する） */}
+        {/* 表（列見出しの色＝項目のグループ。段階が変わっても同じ色） */}
         <div className="mt-4">
-          <MorphingTables stage={stage} priceUp={priceUp} reducedMotion={reducedMotion} />
+          <NormalTables stage={stage} priceUp={priceUp} />
         </div>
 
         {/* 更新異常を起こしてみる */}
@@ -190,12 +188,15 @@ export default function NormalizationExperience() {
           <span className="flex items-center gap-1.5">
             <i className="inline-block h-3 w-3 rounded border border-dashed border-purple-400 bg-purple-50" /> 繰り返し項目
           </span>
+          <span className="flex items-center gap-1.5">
+            <i className="inline-block h-3 w-3 rounded bg-rose-100 ring-1 ring-rose-300" /> 値の食い違い
+          </span>
           <span className="flex basis-full flex-wrap items-center gap-x-3 gap-y-1">
-            <span>項目の色＝</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-3 w-1 rounded bg-indigo-600" />注文</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-3 w-1 rounded bg-teal-600" />顧客</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-3 w-1 rounded bg-orange-600" />商品</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-3 w-1 rounded bg-purple-600" />明細</span>
+            <span>列見出しの色＝</span>
+            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-indigo-600" />注文</span>
+            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-teal-600" />顧客</span>
+            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-orange-600" />商品</span>
+            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-purple-600" />明細</span>
           </span>
         </div>
 
