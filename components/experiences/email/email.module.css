@@ -1,0 +1,245 @@
+/* 電子メール 2.5D シーン。床・ノード・レールは network を共用し、
+   ここでは「メール封筒」「区間のプロトコル標識」「受信箱の中身」だけを足す。 */
+
+.scene {
+  --mail-smtp: #4f46e5;
+  --mail-recv: #0284c7;
+  --mail-miss: #e11d48;
+}
+
+.sideLabel {
+  align-items: flex-end;
+  transform: translateX(-100%);
+}
+
+/* ---------- 区間のプロトコル標識 ---------- */
+
+.protoBadge {
+  position: absolute;
+  z-index: 9;
+  transform: translate(-50%, -50%);
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: color-mix(in srgb, var(--proto) 70%, #6b7280);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--proto) 35%, #e3e8f0);
+  transition: background 300ms ease, color 300ms ease, transform 300ms ease;
+}
+
+.protoBadge[data-state="active"] {
+  background: var(--proto);
+  color: #ffffff;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--proto) 45%, transparent);
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+.protoBadge[data-state="done"] {
+  background: color-mix(in srgb, var(--proto) 10%, #ffffff);
+}
+
+.legend {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  z-index: 8;
+  display: flex;
+  gap: 8px;
+  padding: 2px 8px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #374151;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.legend span::before {
+  content: "";
+  width: 12px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--proto);
+}
+
+/* ---------- メール封筒 ---------- */
+
+.mailAnchor {
+  position: absolute;
+  z-index: 20;
+  transform: translate(-50%, -50%);
+  transition:
+    left 1400ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 1400ms cubic-bezier(0.45, 0.05, 0.25, 1);
+  --mail: #5b6b82;
+}
+
+.mailAnchor[data-tone="smtp"] {
+  --mail: var(--mail-smtp);
+}
+
+.mailAnchor[data-tone="recv"],
+.mailAnchor[data-tone="read"] {
+  --mail: var(--mail-recv);
+}
+
+.mailAnchor[data-tone="missing"] {
+  --mail: var(--mail-miss);
+}
+
+.mailShadow {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 6px);
+  width: 40px;
+  height: 7px;
+  margin-left: -20px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(30, 42, 64, 0.26), transparent);
+}
+
+.mail {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 4px;
+  border: 1px solid color-mix(in srgb, var(--mail) 40%, #ffffff);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, color-mix(in srgb, var(--mail) 8%, #ffffff));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--mail) 14%, transparent),
+    0 8px 16px color-mix(in srgb, var(--mail) 26%, transparent);
+  white-space: nowrap;
+  animation: mail-float 5s ease-in-out infinite;
+}
+
+.mailAnchor[data-tone="missing"] .mail {
+  border-style: dashed;
+  background: #fff1f3;
+}
+
+.mailGlyph {
+  width: 16px;
+  height: 11px;
+  flex: none;
+  fill: #ffffff;
+  stroke: var(--mail);
+  stroke-width: 1.4;
+}
+
+.mailText {
+  color: #111827;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ---------- 端末 ---------- */
+
+.deviceScreen {
+  fill: #334155;
+  transition: fill 500ms ease;
+}
+
+.deviceScreen[data-lit="true"] {
+  fill: #7dd3fc;
+}
+
+.inbox {
+  font-size: 10px;
+}
+
+.inboxBody {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #5b6474;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.inbox[data-has-mail="true"] .inboxBody {
+  color: #0c4a6e;
+}
+
+.inbox[data-has-mail="false"] .inboxBody {
+  color: #9aa3b2;
+}
+
+.readChip {
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.readChip[data-read="true"] {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.protoTag {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px #fde68a;
+}
+
+.protoTag[data-proto="IMAP"] {
+  background: #f0f9ff;
+  color: #075985;
+  box-shadow: 0 0 0 1px #bae6fd;
+}
+
+@keyframes mail-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.scene[data-reduced-motion="true"] .mailAnchor {
+  transition: none;
+}
+
+.scene[data-reduced-motion="true"] .mail {
+  animation: none;
+}
+
+.scene[data-reduced-motion="true"] .protoBadge {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mailAnchor,
+  .protoBadge {
+    transition: none;
+  }
+
+  .mail {
+    animation: none;
+  }
+}
