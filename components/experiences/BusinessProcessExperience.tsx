@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ProcessScene } from "./process/ProcessScene";
-import { makespan, queueLengths, schedule, spotsAt } from "./process/processSim";
+import { ProcessLane, type LaneStation } from "./process/ProcessLane";
+import { makespan, queueLengths, schedule, spotsAt, type DocSpot, type DocTimeline } from "./process/processSim";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「業務プロセス改善」専用の体験。
-//   ① 業務フローを見える化し、時間のかかる工程（ボトルネック）を見つける
-//      受付→転記→承認→発送の机を書類が実際に流れ、遅い工程の前に書類が溜まる
-//   ② 見つけた工程を改善 → 書類がスムーズに流れ、全体の時間が短くなるのを体感
-//   ③ そのままシステム化の罠（まず見直す）クイズ
+//   ① 改善前と改善後の業務フローを「同じ形のレーン」で上下に並べ、同じ時計で注文を6件流す。
+//      改善前は遅い工程（ボトルネック）の前に書類が山積みになり、改善後は溜まらずに流れる
+//   ② そのままシステム化の罠（まず見直す）クイズ
 // ============================================================================
 
 type Step = { name: string; emoji: string; base: number; improved: number; fix: string };
@@ -23,23 +22,47 @@ const STEPS: Step[] = [
   { name: "発送", emoji: "📦", base: 5, improved: 5, fix: "" },
 ];
 
-const yen = (n: number) => `${n}分`;
+const BEFORE = STEPS.map((s) => s.base);
+const AFTER = STEPS.map((s) => s.improved);
+const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+/** 改善前でいちばん時間のかかる工程＝ボトルネック */
+const BOTTLENECK = BEFORE.indexOf(Math.max(...BEFORE));
 
-const TICK_MS = 55;
+const TICK_MS = 45;
+/** reduced-motion では「書類が溜まっている途中」を静止画で見せる */
+const STILL_T = 60;
+
+function laneView(docs: DocTimeline[], times: number[], t: number, withBottleneck: boolean) {
+  const spots: DocSpot[] = spotsAt(docs, t);
+  const queues = queueLengths(spots, STEPS.length);
+  const stations: LaneStation[] = STEPS.map((s, i) => {
+    const work = spots.find((d) => d.kind === "work" && d.station === i);
+    return {
+      name: s.name,
+      emoji: s.emoji,
+      minutes: times[i],
+      queue: queues[i],
+      work: work && work.kind === "work" ? work.progress : null,
+      bottleneck: withBottleneck && i === BOTTLENECK,
+    };
+  });
+  const end = makespan(docs);
+  return {
+    stations,
+    queues,
+    incoming: spots.filter((d) => d.kind === "incoming").length,
+    done: spots.filter((d) => d.kind === "done").length,
+    finishedAt: t >= end ? end : null,
+    end,
+  };
+}
+
+const beforeDocs = schedule(BEFORE);
+const afterDocs = schedule(AFTER);
 
 function Flow() {
   const reducedMotion = useReducedMotion();
-  const [fixed, setFixed] = useState<Set<number>>(new Set());
-  const improvable = STEPS.map((s, i) => i).filter((i) => STEPS[i].base !== STEPS[i].improved);
-  const times = STEPS.map((s, i) => (fixed.has(i) ? s.improved : s.base));
-  const total = times.reduce((sum, t) => sum + t, 0);
-  const baseTotal = STEPS.reduce((sum, s) => sum + s.base, 0);
-  const maxBase = Math.max(...STEPS.map((s) => s.base));
-  const allFixed = improvable.every((i) => fixed.has(i));
-
-  const docs = schedule(times);
-  const end = makespan(docs);
-  // 書類の流れ（シミュレーション時刻）。reduced-motion では自動で進めず、スライダーで動かす。
+  const end = Math.max(makespan(beforeDocs), makespan(afterDocs));
   const [clock, setClock] = useState({ t: 0, playing: false });
   const t = Math.min(clock.t, end);
 
@@ -51,49 +74,18 @@ function Flow() {
     return () => window.clearInterval(timer);
   }, [clock.playing, end, reducedMotion]);
 
-  const spots = spotsAt(docs, t);
-  const queues = queueLengths(spots, STEPS.length);
-  const busy = STEPS.map((_, i) => spots.some((s) => s.kind === "work" && s.station === i));
-  const bottleneck = queues.indexOf(Math.max(...queues));
-
-  // reduced-motion では「書類が溜まっている途中（60分後）」を静止画で見せる
-  const run = () => setClock(reducedMotion ? { t: 60, playing: false } : { t: 0, playing: true });
-
-  const toggle = (i: number) => {
-    if (STEPS[i].base === STEPS[i].improved) return; // 改善余地なし
-    setFixed((prev) => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
-      return next;
-    });
-    // 改善したら同じ6件をもう一度流して比べる
-    setClock({ t: reducedMotion ? 60 : 0, playing: !reducedMotion });
-  };
+  const before = laneView(beforeDocs, BEFORE, t, true);
+  const after = laneView(afterDocs, AFTER, t, false);
+  const run = () => setClock(reducedMotion ? { t: STILL_T, playing: false } : { t: 0, playing: true });
+  const pile = before.queues[BOTTLENECK];
 
   return (
     <Panel>
-      <SectionTitle step={1}>仕事の流れを「見える化」する</SectionTitle>
+      <SectionTitle step={1}>改善前と改善後を、同じ注文6件で比べる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        注文を処理する流れです。注文書を流すと、<b className="text-gray-800">時間がかかる工程の前に書類が溜まります</b>。
-        そこが改善のねらい目（ボトルネック）。
+        注文書が<b className="text-gray-800">10分ごとに1件</b>届きます。上が改善前、下が改善後。
+        同じ時計で流すと、<b className="text-gray-800">改善前は遅い工程の前に書類が山積み</b>になります。
       </p>
-
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <ProcessScene
-          stations={STEPS.map((s, i) => ({
-            name: s.name,
-            emoji: s.emoji,
-            minutes: times[i],
-            improved: fixed.has(i),
-            slow: s.base !== s.improved && !fixed.has(i),
-            queue: queues[i],
-            busy: busy[i],
-          }))}
-          docs={spots}
-          reducedMotion={reducedMotion}
-        />
-      </div>
 
       <div className="mt-3 flex items-center gap-2">
         <button
@@ -114,83 +106,90 @@ function Flow() {
           aria-label="経過時間"
           aria-valuetext={`${t}分経過`}
         />
-        <span className="w-14 flex-none text-right text-xs font-bold tabular-nums text-gray-600" data-testid="sim-time">
+        <span className="w-12 flex-none text-right text-xs font-bold tabular-nums text-gray-600" data-testid="sim-time">
           {t}分
         </span>
       </div>
-      <p className="mt-1.5 text-[11px] leading-relaxed text-gray-500" aria-live="polite" data-testid="sim-note">
-        {queues[bottleneck] > 0
-          ? `📄 いま「${STEPS[bottleneck].name}」の前に${queues[bottleneck]}件が溜まっている → ここがボトルネック`
-          : t >= end
-            ? `✅ 6件すべて発送まで ${end}分`
-            : "書類がどこで溜まるかを見てみよう（10分ごとに1件届く）"}
-      </p>
+
+      <div className="mt-3 space-y-2">
+        <ProcessLane
+          kind="before"
+          title="改善前"
+          stations={before.stations}
+          incoming={before.incoming}
+          done={before.done}
+          total={beforeDocs.length}
+          perDoc={sum(BEFORE)}
+          finishedAt={before.finishedAt}
+        />
+        <p
+          className={`rounded-lg px-3 py-2 text-xs leading-relaxed ${
+            pile > 0 ? "bg-rose-600 font-bold text-white" : "bg-rose-50 text-rose-800"
+          }`}
+          aria-live="polite"
+          data-testid="sim-note"
+        >
+          {pile > 0
+            ? `🚨 「${STEPS[BOTTLENECK].name}」の前に${pile}件が渋滞中。1件${BEFORE[BOTTLENECK]}分かかるので、10分ごとに届く書類をさばけない → ここがボトルネック`
+            : `🚨 ボトルネックは「${STEPS[BOTTLENECK].name}」（1件${BEFORE[BOTTLENECK]}分）。流すとこの前に書類が溜まっていく`}
+        </p>
+        <ProcessLane
+          kind="after"
+          title="改善後"
+          stations={after.stations}
+          incoming={after.incoming}
+          done={after.done}
+          total={afterDocs.length}
+          perDoc={sum(AFTER)}
+          finishedAt={after.finishedAt}
+        />
+      </div>
       {reducedMotion && (
-        <p className="mt-1 text-[10px] text-gray-500">
+        <p className="mt-1.5 text-[10px] text-gray-500">
           端末の「視差効果を減らす」設定に合わせ、自動再生は停止しています。スライダーで時間を進められます。
         </p>
       )}
 
-      <p className="mt-4 text-xs font-bold text-gray-600">工程ごとの時間（オレンジをタップして直す）</p>
-      <div className="mt-2 space-y-2">
-        {STEPS.map((s, i) => {
-          const cur = times[i];
-          const canFix = s.base !== s.improved;
-          const isFixed = fixed.has(i);
-          const pct = (cur / maxBase) * 100;
-          return (
-            <button
-              key={s.name}
-              type="button"
-              onClick={() => toggle(i)}
-              disabled={!canFix}
-              aria-pressed={canFix ? isFixed : undefined}
-              className={`block w-full rounded-xl p-2.5 text-left ring-1 transition active:scale-[0.99] ${
-                canFix
-                  ? isFixed
-                    ? "bg-emerald-50 ring-emerald-200"
-                    : "bg-amber-50 ring-amber-300"
-                  : "bg-gray-50 ring-gray-200"
-              }`}
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-700">
-                  {s.emoji} {s.name}
-                  {canFix && !isFixed && <span className="ml-1.5 text-amber-600">← 時間がかかる</span>}
-                  {isFixed && <span className="ml-1.5 text-emerald-600">✓ 改善した</span>}
-                </span>
-                <span className="text-gray-500">{yen(cur)}</span>
-              </div>
-              <div className="mt-1 h-3 overflow-hidden rounded bg-white/70">
-                <div
-                  className={`h-full transition-all ${isFixed ? "bg-emerald-400" : canFix ? "bg-amber-400" : "bg-gray-300"}`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              {canFix && (
-                <p className="mt-1 text-[11px] text-gray-500">{isFixed ? `✅ ${s.fix}` : `改善案：${s.fix}`}</p>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200" data-testid="lead-time">
-        <span className="text-sm font-bold text-gray-600">1件にかかる合計時間</span>
-        <span className="text-sm">
-          <b className={total < baseTotal ? "text-emerald-600" : "text-gray-800"}>{yen(total)}</b>
-          {total < baseTotal && <span className="ml-1 text-gray-400 line-through">{yen(baseTotal)}</span>}
-        </span>
+      {/* 何を直したか（改善前 → 改善後） */}
+      <div className="mt-4 overflow-hidden rounded-xl ring-1 ring-gray-200" data-testid="lead-time">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-gray-50 text-gray-500">
+              <th className="px-2.5 py-1.5 text-left font-bold"> </th>
+              <th className="px-2 py-1.5 font-bold text-rose-700">改善前</th>
+              <th className="px-2 py-1.5 font-bold text-emerald-700">改善後</th>
+            </tr>
+          </thead>
+          <tbody>
+            {STEPS.filter((s) => s.base !== s.improved).map((s) => (
+              <tr key={s.name} className="border-t border-gray-100">
+                <td className="px-2.5 py-1.5">
+                  <b className="text-gray-800">
+                    {s.emoji} {s.name}
+                  </b>
+                  <span className="block text-[10.5px] text-gray-500">{s.fix}</span>
+                </td>
+                <td className="px-2 py-1.5 text-center font-bold text-rose-700">{s.base}分</td>
+                <td className="px-2 py-1.5 text-center font-bold text-emerald-700">{s.improved}分</td>
+              </tr>
+            ))}
+            <tr className="border-t border-gray-200 bg-gray-50">
+              <td className="px-2.5 py-1.5 font-bold text-gray-700">1件にかかる合計</td>
+              <td className="px-2 py-1.5 text-center font-bold text-rose-700">{sum(BEFORE)}分</td>
+              <td className="px-2 py-1.5 text-center font-bold text-emerald-700">{sum(AFTER)}分</td>
+            </tr>
+            <tr className="border-t border-gray-100 bg-gray-50">
+              <td className="px-2.5 py-1.5 font-bold text-gray-700">6件すべて終わるまで</td>
+              <td className="px-2 py-1.5 text-center font-bold text-rose-700">{before.end}分</td>
+              <td className="px-2 py-1.5 text-center font-bold text-emerald-700">{after.end}分</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="bp-insight">
-        {allFixed ? (
-          <>🎉 ボトルネック（手書き転記・承認待ち）を直して <b>{baseTotal}分 → {total}分</b> に短縮！書類も溜まらず流れます。これが業務プロセス改善です。</>
-        ) : fixed.size > 0 ? (
-          <>👀 1か所直すと、<b>次に遅い工程の前</b>に書類が溜まり始めます。流れ全体を見て、ボトルネックを順に直そう。</>
-        ) : (
-          <>💡 いきなりITを入れるのではなく、まず<b>どこで時間がかかるか・書類が溜まるか</b>を見つけ、その工程を直すのがコツ。</>
-        )}
+        💡 いきなりITを入れるのではなく、まず<b>どこで書類が溜まるか（ボトルネック）</b>を見える化し、その工程を直す。
+        手書き転記と承認待ちを直すと <b>1件 {sum(BEFORE)}分 → {sum(AFTER)}分</b>、6件なら <b>{before.end}分 → {after.end}分</b>。これが業務プロセス改善です。
       </div>
     </Panel>
   );
