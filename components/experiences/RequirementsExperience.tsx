@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { useState, type ReactNode } from "react";
+import { REQS, RequirementsStage, type ReqMode } from "./requirements/RequirementsStage";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「要件定義」専用の体験。
 //   ① 要件定義 = 何を作るかを利用者と決めて合意する工程
-//   ② 開発シミュレータ：伝え方(あいまい/はっきり)で頭の中の絵がズレ、
-//      完成後に「これじゃない」→手戻りが起きるのをステップで体感
+//   ② 開発シミュレータ：依頼者の頭の中 → 言葉 → 開発者の理解 → 完成物 を1つのステージで動かす。
+//      あいまい＝ズレたまま完成して手戻り／はっきり＝要件カードが渡るほど一致度が上がり、
+//      完成物の周りに機能要件・非機能要件が積み上がる
 //   ③ 機能要件 / 非機能要件 の振り分けクイズ
 // ============================================================================
 
@@ -44,158 +49,126 @@ function WhatIs() {
 }
 
 // 開発シミュレータ：伝え方で結末が変わる
-const SIM = {
-  vague: {
-    order: "「いい感じの予約システムを作って！」",
-    userThink: { emoji: "📱", label: "スマホでサクッと予約" },
-    devThink: { emoji: "🖥️", label: "パソコンの管理画面" },
-    product: "🖥️",
-    productLabel: "パソコン用の予約システム",
+// 曖昧＝言葉にしなかった条件が届かず、ズレたまま完成 →「これじゃない」→ 手戻り。
+// 明確＝要件を1枚ずつ渡すたびに開発者のイメージが依頼者に近づき、機能／非機能要件が積み上がる。
+const VAGUE_STEPS: { title: string; text: ReactNode }[] = [
+  {
+    title: "頭の中",
+    text: <>依頼者の頭の中には「<b>スマホで日時を選んで予約・キャンセルでき、サッと表示される</b>」完成イメージ。開発者にはまだ何も見えていません。</>,
   },
-  clear: {
-    order: "「スマホで席を選び、前日まで予約・変更できるように」",
-    userThink: { emoji: "📱", label: "スマホでサクッと予約" },
-    devThink: { emoji: "📱", label: "スマホでサクッと予約" },
-    product: "📱",
-    productLabel: "スマホ用の予約システム",
+  {
+    title: "言葉で伝える",
+    text: <>伝えたのは「<b>使いやすい予約システムがほしい</b>」だけ。言葉にしなかった細かい条件は、<b>開発者に届きません</b>。</>,
   },
-};
+  {
+    title: "開発者が解釈",
+    text: <>開発者は「使いやすい＝大きな画面」と解釈し、足りない部分は<b>想像で埋めました</b>。一致度はたった25%。でも<b>2人ともズレに気づいていません</b>。</>,
+  },
+  {
+    title: "完成",
+    text: <>数か月後、開発者は理解どおり真面目に完成させました。頭の中と並べると ✕ だらけ…「<b>これじゃない！</b>」</>,
+  },
+  {
+    title: "手戻り",
+    text: <>要件定義まで<b>戻ってやり直し</b>（手戻り）。誤りは<b>後の工程で見つかるほど</b>、直す範囲が広がり時間もお金も大きくなります。</>,
+  },
+];
+
+const CLEAR_STEPS: { title: string; text: ReactNode }[] = [
+  { title: "頭の中", text: VAGUE_STEPS[0].text },
+  ...REQS.map((r) => ({
+    title: r.text,
+    text: (
+      <>
+        「<b>{r.text}</b>」を要件として書き出して合意。開発者のイメージにも反映され、一致度が上がります。
+        これは<b>{r.note}</b>の条件＝<b>{r.kind}要件</b>。
+      </>
+    ),
+  })),
+  {
+    title: "完成",
+    text: <>要件を明確にしたので、完成物は頭の中と<b>100%一致</b>。「これこれ！」で手戻りゼロ。周りに積み上がったのが<b>機能要件（何ができるか）</b>と<b>非機能要件（速さ・使いやすさ等）</b>です。</>,
+  },
+];
 
 function WhyMatters() {
-  const [vague, setVague] = useState(true);
-  const [step, setStep] = useState(0);
-  const s = vague ? SIM.vague : SIM.clear;
-  const TOTAL = 4; // 注文 → 頭の中 → 完成 → 結果
+  const reducedMotion = useReducedMotion();
+  const [mode, setMode] = useState<ReqMode>("vague");
+  const steps = mode === "vague" ? VAGUE_STEPS : CLEAR_STEPS;
+  const player = useStepPlayer(steps.length, reducedMotion);
+  const step = steps[player.index];
+  const last = player.index === player.lastIndex;
+  const [tried, setTried] = useState<Set<ReqMode>>(new Set());
+  if (last && !tried.has(mode)) setTried(new Set(tried).add(mode));
 
   return (
     <Panel>
       <SectionTitle step={2}>開発ごっこ：伝え方で結末が変わる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        あなたは予約システムを注文する<b className="text-gray-800">利用者🙋</b>。
-        伝え方を選んで「次へ」で進め、<b className="text-gray-800">結末の違い</b>を見比べよう。
+        あなたは予約システムを注文する<b className="text-gray-800">依頼者🙋</b>。
+        伝え方を選んで進め、<b className="text-gray-800">開発者の理解が頭の中とどうズレる／そろうか</b>を見比べよう。
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-1.5 rounded-xl bg-gray-100 p-1">
-        <button
-          onClick={() => setVague(true)}
-          className={`rounded-lg px-2 py-2 text-xs font-bold transition active:scale-95 ${
-            vague ? "bg-rose-500 text-white" : "text-gray-500"
-          }`}
-        >
-          😶‍🌫️ あいまいに伝える
-        </button>
-        <button
-          onClick={() => setVague(false)}
-          className={`rounded-lg px-2 py-2 text-xs font-bold transition active:scale-95 ${
-            !vague ? "bg-emerald-500 text-white" : "text-gray-500"
-          }`}
-        >
-          📝 はっきり伝える
-        </button>
+        {(
+          [
+            { v: "vague", label: "😶‍🌫️ あいまいに伝える", on: "bg-rose-600 text-white" },
+            { v: "clear", label: "📝 要件をはっきり", on: "bg-emerald-600 text-white" },
+          ] as const
+        ).map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            aria-pressed={mode === o.v}
+            onClick={() => {
+              setMode(o.v);
+              player.reset();
+            }}
+            className={`rounded-lg px-2 py-2 text-xs font-bold transition active:scale-95 ${mode === o.v ? o.on : "text-gray-600"}`}
+          >
+            {o.label}
+            {tried.has(o.v) && " ✓"}
+          </button>
+        ))}
       </div>
 
-      {/* 場面 */}
-      <div className="mt-3 min-h-[13em] rounded-xl bg-gray-50 p-4 ring-1 ring-gray-200">
-        {step === 0 && (
-          <div>
-            <p className="text-xs font-bold text-gray-400">場面1：注文する</p>
-            <div className="mt-3 flex items-start gap-2">
-              <span className="text-3xl">🙋</span>
-              <div
-                className={`rounded-xl rounded-tl-none px-3 py-2 text-sm font-bold ring-1 ${
-                  vague ? "bg-rose-50 text-rose-800 ring-rose-200" : "bg-emerald-50 text-emerald-800 ring-emerald-200"
-                }`}
-              >
-                {s.order}
-              </div>
-            </div>
-            <div className="mt-3 flex items-start justify-end gap-2">
-              <div className="rounded-xl rounded-tr-none bg-brand-50 px-3 py-2 text-sm font-bold text-brand-800 ring-1 ring-brand-200">
-                わかりました！作ってきます
-              </div>
-              <span className="text-3xl">🧑‍💻</span>
-            </div>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div>
-            <p className="text-xs font-bold text-gray-400">場面2：おたがいの頭の中は…</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div className="rounded-xl bg-white p-3 text-center ring-1 ring-gray-200">
-                <div className="text-xs font-bold text-gray-500">🙋 利用者の想像</div>
-                <div className="mt-1.5 text-3xl">💭{s.userThink.emoji}</div>
-                <div className="mt-1 text-[11px] font-bold text-gray-700">{s.userThink.label}</div>
-              </div>
-              <div className="rounded-xl bg-white p-3 text-center ring-1 ring-gray-200">
-                <div className="text-xs font-bold text-gray-500">🧑‍💻 開発者の想像</div>
-                <div className="mt-1.5 text-3xl">💭{s.devThink.emoji}</div>
-                <div className="mt-1 text-[11px] font-bold text-gray-700">{s.devThink.label}</div>
-              </div>
-            </div>
-            <div
-              className={`mt-3 rounded-lg px-3 py-2 text-center text-sm font-bold ${
-                vague ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"
-              }`}
-            >
-              {vague ? "⚡ 頭の中の絵がズレてる！（本人たちは気づかない）" : "✅ 頭の中の絵がそろった！"}
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div>
-            <p className="text-xs font-bold text-gray-400">場面3：数か月後、完成！</p>
-            <div className="mt-4 text-center">
-              <span className="text-5xl">{s.product}</span>
-              <p className="mt-2 text-sm font-bold text-gray-700">🧑‍💻「{s.productLabel}、できました！」</p>
-              <p className="mt-1 text-xs text-gray-400">開発者は想像どおりに、真面目に作りました</p>
-            </div>
-          </div>
-        )}
-
-        {step === 3 &&
-          (vague ? (
-            <div>
-              <p className="text-xs font-bold text-gray-400">場面4：結末</p>
-              <p className="mt-2 text-sm font-bold text-rose-700">🙋😣「スマホで使いたかったのに…これじゃない！」</p>
-              <div className="mt-3 flex items-center justify-center gap-1 text-[11px] font-bold">
-                {["要件", "設計", "開発", "完成"].map((t, i) => (
-                  <span key={t} className="flex items-center gap-1">
-                    <span className="rounded-lg bg-white px-2 py-1.5 text-gray-600 ring-1 ring-gray-200">{t}</span>
-                    {i < 3 && <span className="text-gray-300">→</span>}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-1.5 text-center text-sm font-bold text-rose-600">
-                ↩️ 最初まで大きく戻ってやり直し（手戻り）
-              </div>
-              <p className="mt-2 text-center text-xs font-bold text-rose-600">時間もお金もほぼ2倍に… 😱</p>
-            </div>
-          ) : (
-            <div>
-              <p className="text-xs font-bold text-gray-400">場面4：結末</p>
-              <p className="mt-2 text-sm font-bold text-emerald-700">🙋😊「これこれ！思ってたとおり！」</p>
-              <div className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-center ring-1 ring-emerald-200">
-                <span className="text-3xl">🎉</span>
-                <p className="mt-1 text-sm font-bold text-emerald-800">一発で合格！手戻りゼロ</p>
-              </div>
-            </div>
-          ))}
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-md">
+        <RequirementsStage mode={mode} phase={player.index} reducedMotion={reducedMotion} />
       </div>
 
-      <StepNav
-        index={step}
-        total={TOTAL}
-        onPrev={() => setStep((v) => Math.max(0, v - 1))}
-        onNext={() => setStep((v) => Math.min(TOTAL - 1, v + 1))}
-        onReset={() => setStep(0)}
-        doneLabel={vague ? "手戻り… 😣" : "一発OK 🎉"}
-      />
+      <div
+        className={`mt-3 min-h-[4.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
+          mode === "vague" && player.index >= 2 ? "bg-rose-50 ring-rose-200" : last ? "bg-emerald-50 ring-emerald-200" : "bg-sky-50 ring-sky-200"
+        }`}
+        aria-live="polite"
+      >
+        <b>
+          STEP {player.index + 1}／{step.title}
+        </b>
+        ：{step.text}
+      </div>
 
-      <p className="mt-3 text-center text-xs text-gray-400">
-        伝え方を切り替えて同じ場面を見比べてみよう。要件定義を丁寧にやるほど、後工程の手戻りが減る
-      </p>
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={steps}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="開発の流れを再生"
+          timelineLabel="開発の流れのタイムライン"
+          startCaption="頭の中"
+          endCaption={mode === "vague" ? "手戻り" : "完成"}
+        />
+      </div>
+
+      {tried.size === 2 && (
+        <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="req-lesson">
+          💡 <b>要件定義をしないとズレる。要件を明確にすると認識がそろう。</b>
+          丁寧に要件定義をするほど、後工程の手戻りが減ります。
+        </div>
+      )}
     </Panel>
   );
 }

@@ -1,14 +1,92 @@
 "use client";
 
 import { useState } from "react";
+import { AuthFlow, PEOPLE, PLACES, type Where, type Who } from "./auth/AuthFlow";
+import styles from "./auth/auth.module.css";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「認証・認可・多要素認証」専用の体験。
-//   ① 認証→認可の順番（あなたは誰？→何をしてよい？）
+//   ① 認証→認可の順番：利用者が「認証ゲート→認可ゲート→目的の画面」へ進む。
+//      本人確認に成功しても、権限のない画面の手前（認可）で止まる
 //   ② どっち？クイズ（認証／認可の仕分け）
-//   ③ 多要素認証 … 3要素（知識・所持・生体）から選び、異なる2種以上かを判定
+//   ③ 多要素認証 … 3要素（知識・所持・生体）から選ぶと錠の穴に入り、異なる2種以上で扉が開く
 // ============================================================================
+
+// ① 認証 → 認可 の順番 -----------------------------------------------------
+function Order() {
+  const reducedMotion = useReducedMotion();
+  const [who, setWho] = useState<Who>("tanaka");
+  const [where, setWhere] = useState<Where>("admin");
+  const player = useStepPlayer(4, reducedMotion, 1500);
+  const pick = (fn: () => void) => {
+    fn();
+    player.reset();
+  };
+  return (
+    <Panel>
+      <SectionTitle step={1}>認証 → 認可 の順番</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        だれが・どの画面を開こうとするかを選んで、<b className="text-gray-800">2つのゲート</b>を通れるか試そう。
+      </p>
+
+      <div className="mt-3 text-[11px] font-bold text-gray-500">だれが</div>
+      <div className="mt-1 grid grid-cols-3 gap-1">
+        {PEOPLE.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            aria-pressed={who === x.id}
+            onClick={() => pick(() => setWho(x.id))}
+            className={`rounded-lg px-1 py-1.5 text-[11px] font-bold leading-tight transition active:scale-95 ${who === x.id ? "bg-gray-900 text-white" : "text-gray-700 ring-1 ring-gray-300"}`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+      <div className="mt-2 text-[11px] font-bold text-gray-500">どこへ</div>
+      <div className="mt-1 grid grid-cols-2 gap-1">
+        {PLACES.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            aria-pressed={where === x.id}
+            onClick={() => pick(() => setWhere(x.id))}
+            className={`rounded-lg px-1 py-1.5 text-[11px] font-bold transition active:scale-95 ${where === x.id ? "bg-gray-900 text-white" : "text-gray-700 ring-1 ring-gray-300"}`}
+          >
+            {x.icon} {x.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3">
+        <AuthFlow who={who} where={where} phase={player.index} reducedMotion={reducedMotion} />
+      </div>
+      <button
+        type="button"
+        onClick={() => (reducedMotion ? player.move(player.lastIndex) : player.play())}
+        className="mt-2 w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white active:scale-95"
+      >
+        ▶ アクセスしてみる
+      </button>
+
+      <ul className="mt-3 space-y-2 text-sm">
+        <li className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
+          <b className="text-brand-700">認証</b>（Authentication）＝<b>本人確認</b>。「あなたは誰？」
+        </li>
+        <li className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
+          <b className="text-emerald-700">認可</b>（Authorization）＝<b>権限の許可</b>。「何をしてよい？」
+        </li>
+      </ul>
+      <p className="mt-2 text-xs text-gray-500">
+        ※ 必ず「認証してから認可」。誰かが分からなければ、何を許すかも決められません。
+        一度の認証で連携した複数のサービスを使えるしくみを <b>SSO（シングルサインオン）</b>といいます。
+      </p>
+    </Panel>
+  );
+}
 
 // ② 認証/認可クイズ -------------------------------------------------------
 const ITEMS: { t: string; ans: "認証" | "認可"; why: string }[] = [
@@ -82,6 +160,7 @@ const CAT_OF: Record<string, string> = {};
 FACTORS.forEach((g) => g.items.forEach((it) => (CAT_OF[it.id] = g.cat)));
 
 function Mfa() {
+  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<string[]>(["pw", "app"]);
   const cats = new Set(sel.map((id) => CAT_OF[id]));
   const distinct = cats.size;
@@ -125,6 +204,43 @@ function Mfa() {
         ))}
       </div>
 
+      {/* 錠の穴：選んだ要素が種類ごとの穴に入る。異なる2種がそろうと扉が開く */}
+      <div className={`mt-3 overflow-hidden rounded-xl ring-1 ring-gray-300 ${reducedMotion ? styles.reduced : ""}`} data-testid="mfa-door" data-open={isMfa ? "true" : "false"}>
+        <div className="grid grid-cols-3 divide-x divide-gray-200 bg-gray-50">
+          {FACTORS.map((g) => {
+            const inSlot = sel.filter((id) => CAT_OF[id] === g.cat);
+            return (
+              <div key={g.cat} className="min-h-[64px] p-1.5 text-center" data-testid={`mfa-slot-${g.cat}`} data-count={inSlot.length}>
+                <div className="text-[10px] font-bold text-gray-500">
+                  {g.emo} {g.cat.split("（")[0]}
+                </div>
+                <div className="mt-1 space-y-0.5">
+                  {inSlot.map((id, i) => (
+                    <div
+                      key={id}
+                      className={`${styles.chip} rounded px-1 py-0.5 text-[10px] font-bold ${i === 0 ? "bg-brand-600 text-white" : "bg-amber-100 text-amber-900"}`}
+                    >
+                      {g.items.find((it) => it.id === id)!.label}
+                      {i > 0 && "（同じ種類）"}
+                    </div>
+                  ))}
+                  {inSlot.length === 0 && <div className="mx-auto mt-1 h-4 w-4 rounded-full border-2 border-dashed border-gray-300" aria-hidden />}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="relative h-12 overflow-hidden bg-emerald-50">
+          <div className="absolute inset-0 grid place-items-center text-sm font-bold text-emerald-700">🔓 ログインできた</div>
+          <div className={`${styles.doorL} absolute inset-y-0 left-0 grid w-1/2 place-items-center border-r border-gray-400 bg-gray-200 text-xs font-bold text-gray-600`} data-open={isMfa ? "true" : "false"}>
+            🔒 閉じている
+          </div>
+          <div className={`${styles.doorR} absolute inset-y-0 right-0 grid w-1/2 place-items-center bg-gray-200 text-xs font-bold text-gray-600`} data-open={isMfa ? "true" : "false"}>
+            あと{Math.max(0, 2 - distinct)}種類
+          </div>
+        </div>
+      </div>
+
       <div
         className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ring-1 ${
           isMfa
@@ -160,37 +276,7 @@ export default function AuthExperience() {
         役職によって<b>「入ってよい部屋」が決まる＝認可</b>。まず認証、つぎに認可の順です。
       </div>
 
-      <Panel>
-        <SectionTitle step={1}>認証 → 認可 の順番</SectionTitle>
-        <div className="mt-3 flex items-center justify-center gap-1 text-center">
-          <div className="w-20 rounded-xl bg-gray-50 px-1 py-2.5 ring-1 ring-gray-200">
-            <div className="text-2xl">🧑</div>
-            <div className="text-[11px] font-bold text-gray-700">利用者</div>
-          </div>
-          <span className="text-gray-300">→</span>
-          <div className="flex-1 rounded-xl bg-brand-50 px-2 py-2.5 ring-1 ring-brand-200">
-            <div className="text-sm font-bold text-brand-700">① 認証</div>
-            <div className="text-[11px] text-gray-600">あなたは誰？</div>
-            <div className="text-[10px] text-gray-400">ID・パスワード／指紋</div>
-          </div>
-          <span className="text-gray-300">→</span>
-          <div className="flex-1 rounded-xl bg-emerald-50 px-2 py-2.5 ring-1 ring-emerald-200">
-            <div className="text-sm font-bold text-emerald-700">② 認可</div>
-            <div className="text-[11px] text-gray-600">何をしてよい？</div>
-            <div className="text-[10px] text-gray-400">権限・アクセス範囲</div>
-          </div>
-        </div>
-        <ul className="mt-3 space-y-2 text-sm">
-          <li className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-            <b className="text-brand-700">認証</b>（Authentication）＝<b>本人確認</b>。「あなたは誰？」
-          </li>
-          <li className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
-            <b className="text-emerald-700">認可</b>（Authorization）＝<b>権限の許可</b>。「何をしてよい？」
-          </li>
-        </ul>
-        <p className="mt-2 text-xs text-gray-500">※ 必ず「認証してから認可」。誰かが分からなければ、何を許すかも決められません。</p>
-      </Panel>
-
+      <Order />
       <Classifier />
       <Mfa />
     </div>

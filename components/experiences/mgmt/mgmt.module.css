@@ -1,0 +1,136 @@
+/* 経営管理システム：動くのは「管理範囲が形を変えて広がる」と、選んだ直後に一度だけ流れる
+   📦（モノの流れ）／💬（顧客とのやりとり）／データ（統合DBへ集まる）だけ。常時の点滅は置かない。 */
+
+.map {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+}
+
+.region {
+  transition:
+    left 750ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    width 750ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 750ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    height 750ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    opacity 400ms ease,
+    background-color 400ms ease,
+    box-shadow 400ms ease;
+}
+
+.label {
+  translate: -50% 0;
+  animation: mgmt-fade 400ms ease 500ms both;
+}
+
+@keyframes mgmt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.token {
+  translate: -50% -50%;
+  animation-duration: 2200ms;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: both;
+  animation-delay: 500ms;
+}
+
+.scmToken {
+  animation-name: mgmt-scm;
+}
+
+@keyframes mgmt-scm {
+  0% {
+    left: 8%;
+    top: 32px;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    left: 92%;
+    top: 32px;
+    opacity: 1;
+  }
+  100% {
+    left: 92%;
+    top: 32px;
+    opacity: 0;
+  }
+}
+
+.crmToken {
+  animation-name: mgmt-crm;
+}
+
+@keyframes mgmt-crm {
+  0% {
+    left: 92%;
+    top: 30px;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  35% {
+    left: 88%;
+    top: 132px;
+  }
+  65% {
+    left: 70%;
+    top: 100px;
+  }
+  92% {
+    left: 90%;
+    top: 30px;
+    opacity: 1;
+  }
+  100% {
+    left: 90%;
+    top: 30px;
+    opacity: 0;
+  }
+}
+
+.dot {
+  translate: -50% -50%;
+  left: 50%;
+  top: 100px;
+  opacity: 0;
+  animation: mgmt-dot 1100ms cubic-bezier(0.45, 0.05, 0.25, 1) 500ms both;
+}
+
+@keyframes mgmt-dot {
+  0% {
+    left: var(--fx);
+    top: var(--fy);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  90% {
+    left: 50%;
+    top: 100px;
+    opacity: 1;
+  }
+  100% {
+    left: 50%;
+    top: 100px;
+    opacity: 0;
+  }
+}
+
+.db {
+  animation: mgmt-fade 400ms ease 1300ms both;
+}
+
+.reduced,
+.reduced * {
+  transition: none !important;
+  animation: none !important;
+}

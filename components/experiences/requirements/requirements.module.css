@@ -1,0 +1,218 @@
+/* 要件定義：動くのは「伝えた言葉（要件カード）が依頼者から開発者へ渡る」
+   「開発者のイメージ（画面の形・中身）が変わる」「一致度メーターが伸びる」
+   「手戻りで工程を逆走する」だけ。常時アニメーションは置かない。 */
+
+.stage {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+}
+
+/* ---------- 画面スケッチ（スマホ ⇄ パソコンの形が変わる） ---------- */
+
+.device {
+  position: relative;
+  margin: 0 auto;
+  border-radius: 7px;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px #475569, 0 3px 0 #cbd5e1;
+  overflow: hidden;
+  transition:
+    width 700ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    height 700ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    border-radius 700ms ease,
+    box-shadow 400ms ease;
+}
+
+.device[data-device="phone"] {
+  width: 40px;
+  height: 60px;
+  border-radius: 8px;
+}
+
+.device[data-device="pc"] {
+  width: 76px;
+  height: 50px;
+  border-radius: 3px;
+}
+
+.device[data-device="unknown"] {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  box-shadow: 0 0 0 2px #cbd5e1;
+}
+
+.device[data-bad="true"] {
+  box-shadow: 0 0 0 2px #e11d48, 0 3px 0 #fecdd3;
+}
+
+.unknownMark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.bar {
+  height: 5px;
+  background: #cbd5e1;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 3px;
+}
+
+.cal {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+}
+
+.cal span {
+  height: 4px;
+  border-radius: 1px;
+  background: #bfdbfe;
+}
+
+.cal span:nth-child(6) {
+  background: #2563eb;
+}
+
+.cancel {
+  height: 5px;
+  width: 60%;
+  border-radius: 3px;
+  background: #fda4af;
+}
+
+.fast,
+.slow {
+  height: 3px;
+  border-radius: 2px;
+}
+
+.fast {
+  width: 100%;
+  background: #34d399;
+}
+
+.slow {
+  width: 30%;
+  background: #cbd5e1;
+}
+
+.part {
+  animation: req-part-in 420ms ease both;
+}
+
+@keyframes req-part-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- 依頼者 → 開発者へ渡る言葉（要件カード） ---------- */
+
+.fly {
+  position: absolute;
+  z-index: 20;
+  top: 50%;
+  left: 50%;
+  max-width: 34%;
+  transform: translate(-50%, -50%);
+  animation: req-fly 1100ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+@keyframes req-fly {
+  0% {
+    left: 22%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  78% {
+    left: 72%;
+    opacity: 1;
+  }
+  100% {
+    left: 76%;
+    opacity: 0;
+  }
+}
+
+/* ---------- 一致度メーター ---------- */
+
+.meterFill {
+  height: 100%;
+  border-radius: 999px;
+  transition:
+    width 800ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    background-color 400ms ease;
+}
+
+/* ---------- 積み上がる要件（機能 / 非機能） ---------- */
+
+.stackItem {
+  animation: req-drop 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes req-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- 手戻り：工程を逆走するコマ ---------- */
+
+.runner {
+  position: absolute;
+  z-index: 20;
+  top: -3px;
+  left: 12%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #e11d48;
+  box-shadow: 0 0 0 3px #fecdd3;
+  transform: translate(-50%, -50%);
+  animation: req-back 1600ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+@keyframes req-back {
+  from {
+    left: 88%;
+  }
+  to {
+    left: 12%;
+  }
+}
+
+.cost {
+  transition: height 700ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+/* 要件カードが渡りきってから、開発者の画面が変わる */
+.stage[data-flying="true"] .part {
+  animation-delay: 850ms;
+}
+
+.stage[data-flying="true"] .device {
+  transition-delay: 850ms;
+}

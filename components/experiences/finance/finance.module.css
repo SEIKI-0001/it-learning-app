@@ -1,0 +1,159 @@
+/* 財務諸表：動くのは「BSのブロックの高さが変わる」「PLに取引の行が積もる」
+   「売れた商品がBSからPLの費用へ移る」「PLの利益がBSの純資産へ流れ込む」だけ。 */
+
+.stage {
+  background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+}
+
+/* BSのブロック：高さ＝金額。左右の高さがいつもそろう＝つり合い */
+.block {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  transition:
+    height 900ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    opacity 500ms ease;
+}
+
+.block[data-changed="true"] {
+  box-shadow: 0 0 0 2px #2563eb;
+}
+
+/* 純資産のうち、PLから流れ込んだ利益の部分 */
+.profitPart {
+  position: absolute;
+  inset: 0 0 auto 0;
+  background: repeating-linear-gradient(135deg, #a7f3d0 0 4px, #6ee7b7 4px 8px);
+  transition: height 900ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.delta {
+  animation: fin-pop 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fin-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* PLに積もる行 */
+.row {
+  animation: fin-row 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fin-row {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* PLの期間バー（流れの長さ）が伸びる */
+.period {
+  transition: width 900ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+/* BSは「写真」：更新の瞬間だけシャッターのように一度光る */
+.shutter {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: 10px;
+  background: #ffffff;
+  pointer-events: none;
+  animation: fin-shutter 500ms ease-out both;
+}
+
+@keyframes fin-shutter {
+  from {
+    opacity: 0.85;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* BS ⇄ PL を渡るチップ（売れた商品 → 費用／利益 → 純資産） */
+.fly {
+  position: absolute;
+  z-index: 30;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  pointer-events: none;
+  animation-duration: 1300ms;
+  animation-timing-function: cubic-bezier(0.45, 0.05, 0.25, 1);
+  animation-fill-mode: both;
+  opacity: 0;
+}
+
+.toPl {
+  animation-name: fin-to-pl;
+}
+
+.toBs {
+  animation-name: fin-to-bs;
+  animation-delay: 1000ms;
+}
+
+@keyframes fin-to-pl {
+  0% {
+    left: 22%;
+    top: 62%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    left: 74%;
+    top: 58%;
+    opacity: 1;
+  }
+  100% {
+    left: 76%;
+    top: 58%;
+    opacity: 0;
+  }
+}
+
+@keyframes fin-to-bs {
+  0% {
+    left: 76%;
+    top: 88%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    left: 38%;
+    top: 30%;
+    opacity: 1;
+  }
+  100% {
+    left: 37%;
+    top: 30%;
+    opacity: 0;
+  }
+}

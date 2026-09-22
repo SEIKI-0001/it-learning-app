@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { CompanyFlowMap, type SysKey } from "./mgmt/CompanyFlowMap";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「経営管理システム（CRM・SCM・ERP）」専用の体験。
-//   ① 会社の地図（仕入先→自社4部門→顧客）でシステムをタップ
-//      → 管理する「範囲」が光り、対象の違いが絵で分かる
+//   ① 会社の地図（仕入先→調達→在庫→製造→販売→顧客＋会計・人事・サポート）でシステムをタップ
+//      → 管理する「範囲」が形を変えて広がり、📦／💬／データの動きで「何を管理するか」が分かる
 //   ② 「このシステムはどれ？」仕分けクイズ
 // ============================================================================
-
-type SysKey = "crm" | "scm" | "erp";
 
 const SYS: {
   key: SysKey;
@@ -58,32 +58,17 @@ const SYS: {
   },
 ];
 
-const DEPTS = [
-  { key: "acct", emo: "🧾", name: "会計" },
-  { key: "hr", emo: "👥", name: "人事" },
-  { key: "stock", emo: "📦", name: "在庫" },
-  { key: "sales", emo: "🛒", name: "販売" },
-];
-
-// 各システムが「光らせる」場所
-const COVER: Record<SysKey, { supplier: boolean; arrow1: boolean; depts: string[]; box: boolean; arrow2: boolean; customer: boolean }> = {
-  crm: { supplier: false, arrow1: false, depts: ["sales"], box: false, arrow2: true, customer: true },
-  scm: { supplier: true, arrow1: true, depts: ["stock", "sales"], box: false, arrow2: true, customer: true },
-  erp: { supplier: false, arrow1: false, depts: ["acct", "hr", "stock", "sales"], box: true, arrow2: false, customer: false },
-};
-
-const HI: Record<SysKey, { node: string; arrow: string; badge: string }> = {
-  crm: { node: "bg-rose-100 ring-rose-400", arrow: "text-rose-400", badge: "bg-rose-100 text-rose-700" },
-  scm: { node: "bg-sky-100 ring-sky-400", arrow: "text-sky-400", badge: "bg-sky-100 text-sky-700" },
-  erp: { node: "bg-emerald-100 ring-emerald-400", arrow: "text-emerald-400", badge: "bg-emerald-100 text-emerald-700" },
+const HI: Record<SysKey, { badge: string }> = {
+  crm: { badge: "bg-rose-100 text-rose-700" },
+  scm: { badge: "bg-sky-100 text-sky-700" },
+  erp: { badge: "bg-emerald-100 text-emerald-700" },
 };
 
 function CompanyMap() {
+  const reducedMotion = useReducedMotion();
   const [sys, setSys] = useState<SysKey | null>(null);
   const [tried, setTried] = useState<Set<SysKey>>(new Set());
   const active = SYS.find((s) => s.key === sys) ?? null;
-  const cover = sys ? COVER[sys] : null;
-  const hi = sys ? HI[sys] : null;
   const allTried = tried.size === SYS.length;
 
   const pick = (key: SysKey) => {
@@ -95,7 +80,7 @@ function CompanyMap() {
     <Panel>
       <SectionTitle step={1}>どこを管理する？ 会社の地図で見る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        名前が似た3つのシステム。<b className="text-gray-800">タップすると、管理する範囲が光ります</b>。
+        名前が似た3つのシステム。<b className="text-gray-800">タップすると、管理する範囲が広がります</b>。
         違いは「どこを管理するか」だけ！
       </p>
 
@@ -121,60 +106,11 @@ function CompanyMap() {
         })}
       </div>
 
-      {/* 会社の地図 */}
-      <div className="mt-3 rounded-xl bg-gray-50 p-2.5 ring-1 ring-gray-200">
-        <div className="flex items-center gap-1">
-          {/* 仕入先 */}
-          <div
-            className={`w-14 flex-none rounded-lg py-2 text-center ring-1 transition ${
-              cover?.supplier ? `${hi!.node} animate-pulse` : "bg-white ring-gray-200"
-            }`}
-          >
-            <div className="text-lg">🏭</div>
-            <div className="text-[9px] font-bold text-gray-600">仕入先</div>
-          </div>
-          <span className={`flex-none text-sm font-bold transition ${cover?.arrow1 ? `${hi!.arrow} animate-pulse` : "text-gray-200"}`}>
-            →
-          </span>
-          {/* 自社 */}
-          <div
-            className={`flex-1 rounded-lg p-1.5 ring-2 transition ${
-              cover?.box ? `${hi!.node}` : "bg-white ring-gray-200"
-            }`}
-          >
-            <div className="text-center text-[9px] font-bold text-gray-500">🏢 自社</div>
-            <div className="mt-1 grid grid-cols-2 gap-1">
-              {DEPTS.map((d) => {
-                const on = cover?.depts.includes(d.key);
-                return (
-                  <div
-                    key={d.key}
-                    className={`rounded-md py-1 text-center ring-1 transition ${
-                      on ? `${hi!.node} animate-pulse` : "bg-gray-50 ring-gray-200"
-                    }`}
-                  >
-                    <span className="text-xs">{d.emo}</span>
-                    <span className="ml-0.5 text-[10px] font-bold text-gray-700">{d.name}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <span className={`flex-none text-sm font-bold transition ${cover?.arrow2 ? `${hi!.arrow} animate-pulse` : "text-gray-200"}`}>
-            →
-          </span>
-          {/* 顧客 */}
-          <div
-            className={`w-14 flex-none rounded-lg py-2 text-center ring-1 transition ${
-              cover?.customer ? `${hi!.node} animate-pulse` : "bg-white ring-gray-200"
-            }`}
-          >
-            <div className="text-lg">🙋</div>
-            <div className="text-[9px] font-bold text-gray-600">顧客</div>
-          </div>
-        </div>
-        {!sys && <p className="mt-2 text-center text-[11px] text-gray-400">↑ ボタンをタップすると範囲が光ります</p>}
+      {/* 会社の地図：選んだシステムの管理範囲が広がる */}
+      <div className="-mx-2 mt-3 sm:mx-0">
+        <CompanyFlowMap sys={sys} reducedMotion={reducedMotion} />
       </div>
+      {!sys && <p className="mt-1.5 text-center text-[11px] text-gray-500">↑ ボタンをタップすると、管理する範囲が広がります</p>}
 
       {/* 説明 */}
       {active && (
@@ -203,6 +139,7 @@ function CompanyMap() {
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ 覚え方：<b>CRM＝顧客（Customer）</b>／<b>SCM＝供給の流れ（Supply Chain）</b>／
         <b>ERP＝社内資源（Enterprise）</b>。頭文字とセットで。
+        営業担当の商談や訪問記録を管理して営業活動を効率化する <b>SFA</b>（営業支援システム）は、CRMの仲間です。
       </p>
     </Panel>
   );

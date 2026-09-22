@@ -1,0 +1,77 @@
+/* 認証・認可：動くのは「利用者がゲートへ進む」「止められて跳ね返る」「本人の札が付く」
+   「要素が錠の穴に入る」「扉が開く」だけ。 */
+
+.stage {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f7fb 100%);
+}
+
+.walker {
+  transition: left 900ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.bump {
+  animation: auth-bump 420ms ease 900ms both;
+}
+
+@keyframes auth-bump {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(5px);
+  }
+  70% {
+    transform: translateX(-4px);
+  }
+}
+
+.pop {
+  animation: auth-pop 380ms cubic-bezier(0.2, 0.8, 0.2, 1) 850ms both;
+}
+
+@keyframes auth-pop {
+  from {
+    opacity: 0;
+    scale: 0.7;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* 多要素認証の扉：2枚が左右に開く */
+.doorL,
+.doorR {
+  transition: transform 700ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.doorL[data-open="true"] {
+  transform: translateX(-100%);
+}
+
+.doorR[data-open="true"] {
+  transform: translateX(100%);
+}
+
+.chip {
+  animation: auth-chip 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes auth-chip {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reduced,
+.reduced * {
+  transition: none !important;
+  animation: none !important;
+}
