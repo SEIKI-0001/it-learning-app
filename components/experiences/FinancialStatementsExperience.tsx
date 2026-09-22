@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { FIN_EVENTS, FinanceStage } from "./finance/FinanceStage";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「財務諸表（貸借対照表BS・損益計算書PL）」専用の体験。
 //   ① BS=ある時点の状態（左の資産=右の負債+純資産でつり合う）
 //   ② PL=一定期間のもうけ（収益-費用=利益）
-//   ③ 「BS？ PL？」仕分けクイズ
+//   ③ 1か月の取引を順に起こし、BS（その日時点の写真）とPL（期間中の流れ）がどう変わるかを動かす
+//      売った商品はBS→PLの費用へ、PLの利益はBSの純資産へ流れ込む。借入はPLを動かさない
+//   ④ 「BS？ PL？」仕分けクイズ
 // ============================================================================
 
 function BsView() {
@@ -129,6 +135,63 @@ function PlView() {
   );
 }
 
+// ③ 取引がBSとPLのどこに映るか ------------------------------------------
+const FLOW_TEXT: ReactNode[] = [
+  <>元手<b>100</b>を現金で用意して開業。BSは「現金100＝純資産100」でつり合っています。PLは期間が始まったばかりで<b>まだ空</b>。</>,
+  <>現金40が<b>商品40に姿を変えただけ</b>。資産の合計は100のまま、もうけも損もないので<b>PLは動きません</b>（まだ売れていない商品は費用ではない）。</>,
+  <>70で売れた！ 現金+70、PLに<b>売上70</b>。売れた商品40はBSから消えて<b>PLの費用（売上原価）</b>へ。差し引き<b>利益30がBSの純資産へ</b>流れ込みます。</>,
+  <>借りた50で現金+50、同時に<b>借入金（負債）も+50</b>。いずれ返すお金なので<b>もうけではない＝PLは変化なし</b>。左右は同じだけ増えてつり合ったまま。</>,
+  <>給料20を払うと現金−20、PLに<b>費用（給料）20</b>。利益は30→10に減り、<b>純資産も130→110</b>に減ります。</>,
+  <><b>BS＝4/30時点の状態</b>（資産160＝負債50＋純資産110）。<b>PL＝4/1〜4/30の流れ</b>（収益70−費用60＝利益10）。PLのもうけが、BSの純資産を元手100から110へ増やしました。</>,
+];
+
+function FlowView() {
+  const reducedMotion = useReducedMotion();
+  const player = useStepPlayer(FIN_EVENTS.length, reducedMotion, 3600);
+  return (
+    <Panel>
+      <SectionTitle step={3}>取引が起きると、BSとPLはどう動く？</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        お店の1か月を順に進めてみよう。<b className="text-gray-800">BSは“その日の写真”</b>で毎回撮り直し、
+        <b className="text-gray-800">PLは“期間の流れ”</b>で取引がたまっていきます。
+      </p>
+
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-md">
+        <FinanceStage phase={player.index} reducedMotion={reducedMotion} />
+      </div>
+
+      <div className="mt-3 min-h-[5.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
+        <b>
+          {FIN_EVENTS[player.index].date}／{FIN_EVENTS[player.index].title}
+        </b>
+        ：{FLOW_TEXT[player.index]}
+      </div>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={FIN_EVENTS}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="1か月の取引を再生"
+          timelineLabel="1か月の取引のタイムライン"
+          startCaption="4/1 開業"
+          endCaption="4/30 期末"
+        />
+      </div>
+
+      <div className="mt-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-900 ring-1 ring-brand-200">
+        📷 BSは状態、🎞️ PLは流れ。PLの利益は、BSの純資産を増やす。
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-gray-500">
+        ※ 現金や商品のように、1年以内に現金化できる資産を<b>流動資産</b>といいます。
+      </p>
+    </Panel>
+  );
+}
+
 const QUIZ: { t: string; ans: "BS" | "PL"; why: string }[] = [
   { t: "3月31日時点で、会社が持つ資産と借金の状態を示す表", ans: "BS", why: "ある時点の財政状態＝貸借対照表(BS)。" },
   { t: "4月〜翌3月の1年間で、いくら稼いでいくら利益が出たかを示す表", ans: "PL", why: "期間のもうけ＝損益計算書(PL)。" },
@@ -140,7 +203,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   return (
     <Panel>
-      <SectionTitle step={3}>これは BS？　PL？</SectionTitle>
+      <SectionTitle step={4}>これは BS？　PL？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {QUIZ.map((q, i) => {
           const chosen = answers[i];
@@ -195,6 +258,7 @@ export default function FinancialStatementsExperience() {
 
       <BsView />
       <PlView />
+      <FlowView />
       <Quiz />
     </div>
   );
