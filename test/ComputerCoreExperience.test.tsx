@@ -29,9 +29,9 @@ describe("ComputerCoreExperience", () => {
       </ExperienceSlideDeck>,
     );
     expect(screen.getByText("1 / 3")).toBeInTheDocument();
-    expect(screen.getByText("頭脳")).toBeInTheDocument();
-    expect(screen.getByText("作業机")).toBeInTheDocument();
-    expect(screen.getByText("引き出し")).toBeInTheDocument();
+    expect(screen.getAllByText("頭脳").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("作業机").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("引き出し").length).toBeGreaterThan(0);
     click("解説3");
     expect(screen.getByText("消える（揮発性）")).toBeInTheDocument();
     expect(screen.getByText("残る（不揮発性）")).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("ComputerCoreExperience", () => {
     click("⚡ 電源を切る");
     expect(screen.getByTestId("computer-scene")).toHaveAttribute("data-power", "off");
     expect(doc()).toHaveAttribute("data-status", "vanished");
-    expect(stored()).toHaveTextContent("v1：売上 100万円");
+    expect(stored()).toHaveTextContent(/v1.*売上 100万円/);
     expect(screen.getByTestId("cc-detail")).toHaveTextContent("編集（売上 120万円）が消えました");
 
     click("🔌 電源を入れて文書を開き直す");

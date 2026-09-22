@@ -1,78 +1,301 @@
-/* CPU・メモリ・ストレージ 2.5D シーン。床・ノード・レールは network を共用し、
-   ここでは「文書オブジェクト」「バス上の処理パケット」「電源OFF」だけを足す。 */
+/* CPU・メモリ・ストレージ：PCケースの断面図（2D）。
+   マザーボードの上に3つの部品が並び、文書（物体）がその上を移動する。 */
 
 .scene {
   --pc-dirty: #d97706;
   --pc-ok: #059669;
   --pc-lost: #e11d48;
+  position: relative;
+  padding-top: 80px; /* 文書・処理の札が浮かぶ場所 */
 }
 
-/* ---------- 模型の状態 ---------- */
+/* ---------- ケース ---------- */
 
-.ramChip {
-  fill: #1f2533;
-  transition: fill 500ms ease;
+.case {
+  position: relative;
+  padding: 6px 8px 8px;
+  border-radius: 14px;
+  background: #334155;
+  box-shadow: inset 0 0 0 2px #1e293b, 0 6px 16px rgba(15, 23, 42, 0.18);
 }
 
-.ramChip[data-state="active"] {
-  fill: #334155;
+.caseHead {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 2px 5px;
+  color: #e2e8f0;
+  font-size: 10px;
+  font-weight: 800;
 }
 
-.scene[data-power="off"] .ramChip {
-  fill: #475569;
+.caseTitle {
+  margin-right: auto;
 }
 
-.cpuTop {
-  fill: #b9c3d3;
-  stroke: #9aa6b9;
-  stroke-width: 0.6;
-  transition: fill 500ms ease;
+.powerLed {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #64748b;
+  transition: background 400ms ease, box-shadow 400ms ease;
 }
 
-.cpuTop[data-state="active"] {
-  fill: #8b5cf6;
+.powerLed[data-on="true"] {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
 }
 
-/* 電源OFF：部屋の明かりが落ちたように模型を暗くする（ストレージの札だけは明るいまま） */
-.scene[data-power="off"] svg {
-  filter: grayscale(0.55) brightness(0.8);
+.powerText {
+  color: #cbd5e1;
+  font-size: 9px;
+}
+
+.board {
+  position: relative;
+  padding: 12px 4px 10px;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(6, 95, 70, 0.12) 1px, transparent 1.2px) 0 0 / 10px 10px,
+    #dff3e8;
+  box-shadow: inset 0 0 0 1px #a7d8bd;
   transition: filter 600ms ease;
 }
 
-.scene[data-power="off"] [data-part-label="memory"],
-.scene[data-power="off"] [data-part-label="cpu"] {
-  opacity: 0.6;
+.air {
+  display: none;
+}
+
+/* ---------- 配線（バス） ---------- */
+
+.buses {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bus {
+  position: absolute;
+  top: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: #9fbfae;
+  transition: background 300ms ease;
+}
+
+.bus[data-bus="load"] {
+  top: 30px;
+}
+
+.bus[data-bus="save"] {
+  top: 48px;
+}
+
+.bus[data-bus="bus"] {
+  height: 8px;
+  top: 35px;
+}
+
+.bus[data-active="true"] {
+  background: repeating-linear-gradient(90deg, var(--bus) 0 8px, color-mix(in srgb, var(--bus) 55%, #ffffff) 8px 14px);
+  background-size: 28px 100%;
+  animation: pc-bus 700ms linear infinite;
+}
+
+.bus[data-bus="load"] {
+  --bus: #2f6fdb;
+}
+
+.bus[data-bus="save"] {
+  --bus: #059669;
+  animation-direction: reverse;
+}
+
+.bus[data-bus="bus"] {
+  --bus: #7c3aed;
+}
+
+.busTag {
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  color: #3f6b55;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.bus[data-bus="save"] .busTag {
+  top: 6px;
+}
+
+.bus[data-active="true"] .busTag {
+  color: var(--bus);
+}
+
+/* ---------- 部品 ---------- */
+
+.parts {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+
+.socket {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 56px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 0 0 1.5px #a7d8bd;
+  transition: box-shadow 300ms ease, background 300ms ease;
+}
+
+.part[data-state="active"] .socket {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 2px #4f46e5, 0 0 0 3px rgba(79, 70, 229, 0.18);
+}
+
+.part[data-state="sending"] .socket {
+  background: #ffffff;
+  box-shadow: inset 0 0 0 2px #93c5fd;
+}
+
+.part[data-state="disabled"] .socket {
+  opacity: 0.45;
+}
+
+.partName {
+  color: #1f2937;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.partName b {
+  font-weight: 900;
+}
+
+.partRole {
+  color: #4b5563;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.ssd {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 40px;
+  padding: 4px 4px 5px;
+  border-radius: 4px;
+  background: #f8fafc;
+  box-shadow: inset 0 0 0 1px #94a3b8;
+}
+
+.ssdLabel {
+  color: #475569;
+  font-size: 7px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.drawer {
+  height: 9px;
+  border-radius: 2px;
+  background: #e2e8f0;
+  box-shadow: inset 0 0 0 1px #94a3b8;
+}
+
+.ram {
+  display: flex;
+  gap: 2px;
+  padding: 5px 4px 7px;
+  border-radius: 2px;
+  background: #16a34a;
+  box-shadow: inset 0 -3px 0 #ca8a04;
+}
+
+.ramChip {
+  width: 8px;
+  height: 12px;
+  border-radius: 1px;
+  background: #1f2533;
+}
+
+.cpu {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(90deg, #ca8a04 0 2px, transparent 2px 5px) top / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, #ca8a04 0 2px, transparent 2px 5px) bottom / 100% 3px no-repeat,
+    #cbd5e1;
+}
+
+.cpuDie {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  background: #94a3b8;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 900;
+  transition: background 400ms ease;
+}
+
+.part[data-state="active"] .cpuDie {
+  background: #7c3aed;
+}
+
+/* 電源OFF：マザーボードが暗くなる（ストレージの保存版だけは残る） */
+.scene[data-power="off"] .board {
+  filter: grayscale(0.6) brightness(0.82);
+}
+
+.scene[data-power="off"] .storedChip {
+  box-shadow: 0 0 0 2px #6366f1;
+  filter: brightness(1.2);
 }
 
 .powerOff {
   position: absolute;
-  right: 3%;
-  top: 4%;
+  right: 2%;
+  top: 22px;
   z-index: 16;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 999px;
   background: #111827;
   color: #fde68a;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  box-shadow: 0 6px 14px rgba(17, 24, 39, 0.25);
   animation: pc-pop 400ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* ---------- ラベル ---------- */
-
-.partLabel {
-  font-size: 10px;
-}
-
 .storedChip {
-  margin-top: 1px;
   padding: 1px 6px;
-  border-radius: 999px;
+  border-radius: 8px;
   background: #eef2ff;
   color: #3730a3;
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 800;
+  line-height: 1.35;
   white-space: nowrap;
 }
 
@@ -82,30 +305,16 @@
   animation: pc-flash 900ms ease-out;
 }
 
-.scene[data-power="off"] .storedChip {
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.35);
-}
-
 /* ---------- 文書オブジェクト ---------- */
 
 .docAnchor {
   position: absolute;
+  top: 26px;
   z-index: 20;
   transform: translate(-50%, -50%);
   transition:
     left 1300ms cubic-bezier(0.45, 0.05, 0.25, 1),
     top 1300ms cubic-bezier(0.45, 0.05, 0.25, 1);
-}
-
-.docShadow {
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 6px);
-  width: 44px;
-  height: 7px;
-  margin-left: -22px;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(30, 42, 64, 0.26), transparent);
 }
 
 .doc {
@@ -117,9 +326,8 @@
   padding: 4px 8px 5px;
   border: 1px solid #c7d2fe;
   border-radius: 6px 6px 6px 6px;
-  background: linear-gradient(180deg, #ffffff, #f5f7ff);
-  box-shadow: 0 8px 16px rgba(47, 111, 219, 0.2), inset 0 1px 0 #ffffff;
-  animation: pc-float 5s ease-in-out infinite;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(47, 111, 219, 0.16);
 }
 
 .docHead {
@@ -200,14 +408,11 @@
   white-space: nowrap;
 }
 
-.docAnchor[data-status="vanished"] .docShadow {
-  display: none;
-}
-
 /* ---------- バス上の処理パケット ---------- */
 
 .packetAnchor {
   position: absolute;
+  top: 64px;
   z-index: 19;
   transform: translate(-50%, -50%);
   transition:
@@ -234,16 +439,6 @@
 
 .packetAnchor[data-kind="load"] .packet {
   background: #2f6fdb;
-}
-
-@keyframes pc-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
 }
 
 @keyframes pc-flash {
@@ -309,6 +504,37 @@
   .ghost,
   .storedChip[data-flash="true"],
   .powerOff {
+    animation: none;
+  }
+}
+
+/* 文書から真下の部品へ伸びるピン（どの部品の上にあるか） */
+.docPin {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 2px;
+  height: 30px;
+  margin-left: -1px;
+  background: linear-gradient(#a5b4fc, transparent);
+}
+
+.docAnchor[data-status="vanished"] .docPin {
+  background: linear-gradient(#fda4af, transparent);
+}
+
+@keyframes pc-bus {
+  to {
+    background-position: 28px 0;
+  }
+}
+
+.scene[data-reduced-motion="true"] .bus {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bus {
     animation: none;
   }
 }
