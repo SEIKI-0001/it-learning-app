@@ -1,90 +1,173 @@
 "use client";
 
-import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { useState, type ReactNode } from "react";
+import { CommonKeyScene, type CommonKeySceneProps, type KeySpot } from "./commonkey/CommonKeyScene";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「共通鍵暗号方式」専用の体験。
 //   ① 1本の鍵で暗号化も復号も（合鍵のたとえ）
-//   ② 送信の流れ … ①同じ鍵を共有（弱点＝鍵配送）→ ②暗号化して送る（1歩ずつ）
+//   ② 送信の流れ … ①同じ鍵を共有（弱点＝鍵配送）→ ②暗号化して送る（1歩ずつ）。
+//      公開鍵体験と同じ 2.5D の舞台で、正常ケース／鍵を盗まれたケースを切り替えて比べる
 //   ③ 公開鍵との使い分け
 // 公開鍵方式の体験と同じ図の見せ方にして、違いを対比できるようにする。
 // ============================================================================
 
-type WireDir = "toA" | "toB";
-type Step = {
-  phase: 1 | 2;
-  active: "A" | "B" | null;
-  wire: { item: string; dir: WireDir } | null;
-  warn?: boolean;
-  html: string;
-};
+type Mode = "safe" | "stolen";
+type FlowStep = { phase: 1 | 2; title: string; detail: ReactNode; scene: Omit<CommonKeySceneProps, "reducedMotion"> };
 
-const STEPS: Step[] = [
-  {
-    phase: 1,
-    active: null,
-    wire: { item: "🔑 共通鍵", dir: "toB" },
-    warn: true,
-    html: "【準備】AさんとBさんで <b>同じ共通鍵🔑</b> を使うため、Aが鍵をBへ渡します。⚠️ここが弱点：<b>渡す途中で😈に盗まれると暗号が破られます（鍵配送問題）</b>。",
-  },
-  {
-    phase: 2,
-    active: "A",
-    wire: null,
-    html: "【通信①】Aさんが <b>共通鍵🔑で暗号化🔒</b>。平文「会議は10時」→ 暗号文に。",
-  },
-  {
-    phase: 2,
-    active: null,
-    wire: { item: "🔒 暗号文", dir: "toB" },
-    html: "【通信②】暗号文を Aさん→Bさん へ送信。",
-  },
-  {
-    phase: 2,
-    active: "B",
-    wire: null,
-    html: "【通信③】Bさんが <b>同じ共通鍵🔑で復号</b>。「会議は10時」が読めた！",
-  },
-  {
-    phase: 2,
-    active: "B",
-    wire: null,
-    html: "💡 ポイント：1本の鍵だから <b>処理が速い</b>。ただし <b>その鍵を安全に渡すのが課題</b>（鍵配送問題）。",
-  },
-];
+const IDLE = { a: "idle", b: "idle", eve: "idle" } as const;
+
+function stepsFor(mode: Mode): FlowStep[] {
+  const stolen = mode === "stolen";
+  const aKey = (emphasis = false) => ({ owner: "A" as const, spot: (emphasis ? "aUse" : "aHome") as KeySpot, emphasis });
+  const bKey = (spot: KeySpot, emphasis = false) => ({ owner: "B" as const, spot, emphasis });
+  const eveKey = (spot: KeySpot) => ({ owner: "盗聴者" as const, spot });
+  const eveKeys = (spot: KeySpot) => (stolen ? [eveKey(spot)] : []);
+  return [
+    {
+      phase: 1,
+      title: "Aが共通鍵を用意",
+      detail: <>【準備】AさんとBさんは<b>同じ共通鍵🔑</b>で暗号化・復号します。まずAが鍵を1本用意しました。</>,
+      scene: { nodes: { ...IDLE, a: "active" }, lanes: { key: "idle", data: "idle" }, keys: [aKey()], capsule: null, tap: null, eve: null },
+    },
+    {
+      phase: 1,
+      title: stolen ? "鍵を送る途中で盗まれた！" : "共通鍵をBへ送る",
+      detail: stolen ? (
+        <>
+          Aが鍵をBへ送る途中、😈盗聴者が<b>鍵そのものをコピー</b>しました。⚠️これが<b>鍵配送問題</b>：共通鍵は相手に渡さないと使えないのに、渡す途中が危ない。
+        </>
+      ) : (
+        <>Aが<b>鍵そのもの</b>をBへ送ります。今回は盗まれずに届きました（でも、ここが一番危ない瞬間）。</>
+      ),
+      scene: {
+        nodes: { ...IDLE, a: "sending", eve: stolen ? "error" : "idle" },
+        lanes: { key: "active", data: "idle" },
+        keys: [aKey(), bKey("transit"), ...eveKeys("eveGrab")],
+        capsule: null,
+        tap: stolen ? "key" : null,
+        eve: stolen ? { key: true, reads: null, cipher: false } : null,
+      },
+    },
+    {
+      phase: 1,
+      title: stolen ? "同じ鍵が3人の手に" : "AとBが同じ鍵を持つ",
+      detail: stolen ? (
+        <>AもBも同じ鍵を持てた…と思っていますが、<b>盗聴者も同じ鍵</b>を持っています。</>
+      ) : (
+        <>AとBが<b>まったく同じ1本の鍵</b>を持ちました。共通鍵は「同じ鍵を2人が持つ」方式です。</>
+      ),
+      scene: {
+        nodes: { ...IDLE, a: "active", b: "active", eve: stolen ? "error" : "idle" },
+        lanes: { key: "done", data: "idle" },
+        keys: [aKey(), bKey("bHome"), ...eveKeys("eveHome")],
+        capsule: null,
+        tap: null,
+        eve: stolen ? { key: true, reads: null, cipher: false } : null,
+      },
+    },
+    {
+      phase: 2,
+      title: "Aが共通鍵で暗号化",
+      detail: <>【通信①】Aさんが<b>共通鍵🔑で暗号化🔒</b>。平文「会議は10時」→ 暗号文に。</>,
+      scene: {
+        nodes: { ...IDLE, a: "active" },
+        lanes: { key: "done", data: "idle" },
+        keys: [aKey(true), bKey("bHome"), ...eveKeys("eveHome")],
+        capsule: { stop: "aDesk", state: "encrypted" },
+        tap: null,
+        eve: stolen ? { key: true, reads: null, cipher: false } : null,
+      },
+    },
+    {
+      phase: 2,
+      title: "暗号文をBへ送る",
+      detail: stolen ? (
+        <>【通信②】暗号文を A→B へ送信。盗聴者は<b>暗号文もコピー</b>しました。</>
+      ) : (
+        <>【通信②】暗号文を A→B へ送信。盗聴者は暗号文をコピーしましたが、<b>鍵を持っていない</b>ので開けません。</>
+      ),
+      scene: {
+        nodes: { ...IDLE, a: "sending", eve: "error" },
+        lanes: { key: "done", data: "active" },
+        keys: [aKey(), bKey("bHome"), ...eveKeys("eveHome")],
+        capsule: { stop: "mid", state: "encrypted" },
+        tap: "data",
+        eve: { key: stolen, reads: null, cipher: true },
+      },
+    },
+    {
+      phase: 2,
+      title: stolen ? "Bが復号…盗聴者も復号できてしまう" : "Bが同じ共通鍵で復号",
+      detail: stolen ? (
+        <>
+          【通信③】Bが同じ鍵で復号して「会議は10時」が読めた。でも<b>盗聴者も同じ鍵で復号</b>できてしまう！ 鍵を盗まれたら、その後の暗号文は<b>全部読まれます</b>。
+        </>
+      ) : (
+        <>【通信③】Bさんが<b>同じ共通鍵🔑で復号</b>。「会議は10時」が読めた！ 盗聴者の手元の暗号文は<b>開かないまま</b>です。</>
+      ),
+      scene: {
+        nodes: { a: "idle", b: "active", eve: stolen ? "error" : "idle" },
+        lanes: { key: "done", data: "done" },
+        keys: [aKey(), bKey("bUse", true), ...eveKeys("eveUse")],
+        capsule: { stop: "bDesk", state: "decrypted" },
+        tap: null,
+        eve: { key: stolen, reads: stolen ? "会議は10時" : null, cipher: true },
+      },
+    },
+  ];
+}
 
 function Flow() {
-  const [idx, setIdx] = useState(0);
-  const step = STEPS[idx];
-
-  const actor = (id: "A" | "B", emo: string, name: string, sub: string) => {
-    const on = step.active === id;
-    return (
-      <div className={`w-[90px] flex-none rounded-xl border-2 px-1 py-2.5 text-center transition ${
-        on ? "border-brand-500 bg-brand-50 shadow-md shadow-brand-100" : "border-gray-200 bg-gray-50"
-      }`}>
-        <div className="text-2xl leading-none">{emo}</div>
-        <div className="mt-1 text-xs font-bold text-gray-800">{name}</div>
-        <div className="text-[10px] leading-tight text-gray-500">{sub}</div>
-      </div>
-    );
-  };
-
-  const lineColor = step.warn ? "bg-amber-500" : step.wire ? "bg-brand-500" : "bg-gray-300";
-  const arrowColor = step.warn ? "text-amber-600" : step.wire ? "text-brand-600" : "text-gray-400";
-  const badgeColor = step.warn ? "bg-amber-500" : "bg-brand-600";
+  const reducedMotion = useReducedMotion();
+  const [mode, setMode] = useState<Mode>("safe");
+  const steps = stepsFor(mode);
+  const player = useStepPlayer(steps.length, reducedMotion);
+  const step = steps[player.index];
+  const last = player.index === player.lastIndex;
+  const [tried, setTried] = useState<Set<Mode>>(new Set());
+  if (last && !tried.has(mode)) setTried(new Set(tried).add(mode));
 
   return (
     <Panel>
       <SectionTitle step={2}>送信の流れ（2段階：鍵を共有 → 暗号通信）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        AさんからBさんへ秘密のメッセージを送ります。<b className="text-gray-800">同じ鍵を共有してから</b>通信する流れを「次へ」で1歩ずつ。
+        AさんからBさんへ秘密のメッセージを送ります。<b className="text-gray-800">同じ鍵を共有してから</b>通信する流れを1歩ずつ。
+        <b className="text-gray-800">鍵を盗まれたケース</b>とも比べてみよう。
       </p>
 
+      <div className="mt-3 grid grid-cols-2 gap-1.5">
+        {(
+          [
+            { v: "safe", label: "✅ 正常ケース" },
+            { v: "stolen", label: "😈 鍵を盗まれたケース" },
+          ] as const
+        ).map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            aria-pressed={mode === o.v}
+            onClick={() => {
+              setMode(o.v);
+              player.reset();
+            }}
+            className={`rounded-lg px-2 py-1.5 text-xs font-bold transition active:scale-95 ${
+              mode === o.v ? (o.v === "stolen" ? "bg-rose-600 text-white" : "bg-brand-600 text-white") : "text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {o.label}
+            {tried.has(o.v) && " ✓"}
+          </button>
+        ))}
+      </div>
+
       {/* フェーズ表示（2段階） */}
-      <div className="mt-3 flex gap-2 text-center text-[11px] font-bold">
-        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 1 ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
+      <div className="mt-3 flex gap-2 text-center text-[11px] font-bold" data-testid="ck-phase" data-phase={step.phase}>
+        <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 1 ? "bg-amber-500 text-white ring-amber-500" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
           ① 同じ鍵を共有
         </div>
         <div className={`flex-1 rounded-lg px-2 py-1.5 ring-1 ${step.phase === 2 ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 text-gray-400 ring-gray-200"}`}>
@@ -92,42 +175,45 @@ function Flow() {
         </div>
       </div>
 
-      {/* 通信路でつないだ図 */}
-      <div className="mt-4 flex items-center">
-        {actor("A", "🅰️", "Aさん", "共通鍵🔑を持つ")}
-        <div className="flex-1 px-1 text-center">
-          <div className={`h-4 text-[11px] font-bold ${step.warn ? "text-amber-700" : "text-brand-700"}`}>
-            {step.wire ? step.wire.item : ""}
-          </div>
-          <div className={`h-0.5 w-full rounded ${lineColor}`} />
-          <div className={`mt-1 text-sm tracking-widest ${arrowColor}`}>
-            {step.wire ? (step.wire.dir === "toA" ? "◀ ◀ ◀" : "▶ ▶ ▶") : "😈"}
-          </div>
-        </div>
-        {actor("B", "🅱️", "Bさん", "共通鍵🔑を持つ")}
+      <p className="mt-3 text-sm font-bold text-gray-900" data-testid="ck-step-title">
+        STEP {player.index + 1}：{step.title}
+      </p>
+
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <CommonKeyScene {...step.scene} reducedMotion={reducedMotion} />
       </div>
-      {/* warn 用のバッジ色を使う（lint回避兼ねた明示） */}
-      {step.warn && (
-        <div className="mt-2 text-center">
-          <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold text-white ${badgeColor}`}>
-            ⚠️ 鍵配送問題
-          </span>
+
+      <div
+        className={`mt-3 min-h-[3.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
+          mode === "stolen" && player.index > 0 ? "bg-rose-50 ring-rose-200" : "bg-sky-50 ring-sky-200"
+        }`}
+        aria-live="polite"
+      >
+        {step.detail}
+      </div>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={steps}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="共通鍵暗号の流れを再生"
+          timelineLabel="共通鍵暗号の流れのタイムライン"
+          startCaption="①鍵を共有"
+          endCaption="②復号"
+          stepTone={(i) => (steps[i].phase === 1 ? "bg-amber-500" : "bg-brand-600")}
+        />
+      </div>
+
+      {tried.size === 2 && (
+        <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="ck-insight">
+          💡 ポイント：1本の鍵だから <b>処理が速い</b>。ただし<b>鍵そのものを盗まれると、その後の暗号文はすべて読まれる</b>。
+          だから <b>その鍵を安全に渡すのが課題</b>（鍵配送問題）。
         </div>
       )}
-
-      <p
-        className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
-        dangerouslySetInnerHTML={{ __html: step.html }}
-      />
-
-      <StepNav
-        index={idx}
-        total={STEPS.length}
-        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
-        onNext={() => setIdx((i) => Math.min(STEPS.length - 1, i + 1))}
-        onReset={() => setIdx(0)}
-        doneLabel="しくみ完成 💡"
-      />
     </Panel>
   );
 }
