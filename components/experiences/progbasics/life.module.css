@@ -112,6 +112,11 @@
   font-weight: 800;
 }
 
+.line[data-skipped="true"] {
+  color: #cbd5e1;
+  text-decoration: line-through;
+}
+
 .pc {
   width: 12px;
   flex: none;

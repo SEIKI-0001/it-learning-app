@@ -1,0 +1,380 @@
+/* プログラミング基礎：確認問題につなげる追加ステージ（2D・フロー配置）。
+   life.module.css の枠（frame / caption / program）の中に置く。 */
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 10px;
+}
+
+.arrow {
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* ---------- 変数の箱 ---------- */
+
+.varCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.varName {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.varValue {
+  display: grid;
+  place-items: center;
+  min-width: 52px;
+  height: 44px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 20px;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 2px #93c5fd;
+  animation: exam-pop 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes exam-pop {
+  from {
+    transform: scale(0.7);
+    opacity: 0.3;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ---------- 条件の判定 ---------- */
+
+.judge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 84px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: #f9fafb;
+  color: #374151;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  box-shadow: inset 0 0 0 1px #d1d5db;
+  transition: box-shadow 300ms ease, background 300ms ease;
+}
+
+.judge b {
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+}
+
+.judge[data-active="true"] {
+  box-shadow: inset 0 0 0 2px #f59e0b, 0 0 0 4px #fef3c7;
+}
+
+.judge[data-result="yes"] b {
+  color: #047857;
+}
+
+.judge[data-result="no"] b {
+  color: #be123c;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 48px;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #9ca3af;
+  font-size: 10px;
+  box-shadow: 0 3px 0 #111827;
+}
+
+.screen b {
+  min-height: 24px;
+  color: #fde68a;
+  font-size: 22px;
+  line-height: 24px;
+}
+
+.screen[data-on="true"] b {
+  animation: exam-pop 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ---------- 合計のくり返し ---------- */
+
+.sumStage .row {
+  padding-bottom: 4px;
+}
+
+.sumLine {
+  margin: 0 0 10px;
+  color: #4b5563;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.sumLine b {
+  color: #1d4ed8;
+}
+
+/* ---------- 関数 ---------- */
+
+.fnStage {
+  padding: 10px 12px;
+}
+
+.fnBox {
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+  transition: box-shadow 300ms ease;
+}
+
+.fnBox[data-active="true"] {
+  box-shadow: inset 0 0 0 2px #60a5fa;
+}
+
+.fnBox > ol {
+  border-top: none;
+}
+
+.fnHead {
+  margin: 0;
+  padding: 6px 10px 2px;
+  background: #f8fafc;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.fnHead b {
+  color: #1d4ed8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.fnJump {
+  margin: 4px 0;
+  color: #d1d5db;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  transition: color 300ms ease;
+}
+
+.fnJump[data-on="true"] {
+  color: #2563eb;
+}
+
+/* ---------- 翻訳 ---------- */
+
+.transStage {
+  padding: 10px 10px 12px;
+}
+
+.transHead {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.translator {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  transition: background 300ms ease, color 300ms ease, box-shadow 300ms ease;
+}
+
+.translator[data-working="true"] {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px #dbeafe;
+}
+
+.transRow {
+  display: grid;
+  grid-template-columns: 1fr 14px 1fr 16px;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.src,
+.bin {
+  overflow: hidden;
+  padding: 5px 6px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: background 300ms ease, color 300ms ease;
+}
+
+.src {
+  background: #f8fafc;
+  color: #1f2937;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+}
+
+.bin {
+  background: #f3f4f6;
+  color: #d1d5db;
+}
+
+.transRow[data-state="1"] .bin,
+.transRow[data-state="2"] .bin {
+  background: #1f2937;
+  color: #86efac;
+  animation: exam-pop 450ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.transRow[data-state="2"] .src {
+  color: #9ca3af;
+}
+
+.transArrow {
+  color: #d1d5db;
+  font-size: 10px;
+  text-align: center;
+}
+
+.transRow[data-state="1"] .transArrow,
+.transRow[data-state="2"] .transArrow {
+  color: #2563eb;
+}
+
+.ran {
+  color: #059669;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+  transition: background 300ms ease, color 300ms ease;
+}
+
+.link[data-on="true"] {
+  background: #fef3c7;
+  color: #92400e;
+  box-shadow: inset 0 0 0 1px #fcd34d;
+}
+
+/* ---------- データの書き方 ---------- */
+
+.fmtStage {
+  padding: 8px 12px 12px;
+}
+
+.fmtCode {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.7;
+  white-space: pre;
+  overflow-x: auto;
+  animation: exam-fade 350ms ease both;
+}
+
+@keyframes exam-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fmtCode .tKey {
+  color: #93c5fd;
+}
+
+.fmtCode .tVal {
+  color: #86efac;
+}
+
+.fmtCode .tTag {
+  color: #fca5a5;
+}
+
+.fmtLegend {
+  margin: 8px 0 0;
+  color: #6b7280;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.fmtLegend .tKey {
+  color: #1d4ed8;
+}
+
+.fmtLegend .tVal {
+  color: #047857;
+}
+
+.fmtLegend .tTag {
+  color: #be123c;
+}
+
+.fmtPoint {
+  margin: 6px 0 0;
+  color: #1f2937;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.fmtPoint b {
+  color: #1d4ed8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .varValue,
+  .screen b,
+  .bin,
+  .fmtCode {
+    animation: none !important;
+  }
+}
