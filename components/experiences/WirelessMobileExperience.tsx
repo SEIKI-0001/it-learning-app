@@ -1,17 +1,74 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { WifiScene, type WifiMode, type WifiPhase } from "./wireless/WifiScene";
 
 // ============================================================================
 // 「無線LAN・モバイル通信」専用の体験。
-//   ① 無線LAN：SSID＝ネットワークの名前。暗号化あり/なしトグルで盗聴を比較。
+//   ① 無線LAN：SSID＝電波の名前。2.5Dのカフェで、ノートPCの電波が周り全部へ広がり盗聴者にも届く様子を見せ、
+//      暗号化なし（ID/PASSが読める）／WPA2・WPA3（受信はされるが読めない）／有線（比較）を切り替えて比べる。
 //   ② モバイル用語の早見（5G / テザリング / MVNO）。
 //   ③ フリーWi-Fiの安全/危険 仕分けクイズ。
 // ============================================================================
 
-function WifiToggle() {
-  const [secure, setSecure] = useState(false);
+const WIFI_STEPS: { phase: WifiPhase; title: string }[] = [
+  { phase: "connect", title: "SSIDを選んでつなぐ" },
+  { phase: "send", title: "ID / PASSWORD を送信" },
+  { phase: "arrive", title: "届いた先を確かめる" },
+];
+
+const MODES: { v: WifiMode; label: string; on: string }[] = [
+  { v: "open", label: "🔓 暗号化なし", on: "bg-rose-500 text-white" },
+  { v: "wpa", label: "🔒 WPA2/WPA3", on: "bg-emerald-500 text-white" },
+  { v: "wired", label: "🔌 比較：有線", on: "bg-gray-700 text-white" },
+];
+
+function wifiDetail(mode: WifiMode, phase: WifiPhase): ReactNode {
+  if (phase === "connect") {
+    return mode === "wired" ? (
+      <>比較のため、ノートPCとアクセスポイントを<b>ケーブル</b>でつないだ場合も見てみます。</>
+    ) : (
+      <>
+        一覧から <b>SSID「cafe-wifi-2F」</b>を選んでつなぎます。SSIDは<b>電波の名前</b>にすぎません。
+        暗号化されているかどうかは、名前の横の<b>鍵マーク（{mode === "wpa" ? "WPA2/WPA3" : "なし"}）</b>で決まります。
+      </>
+    );
+  }
+  if (phase === "send") {
+    return mode === "wired" ? (
+      <>データは<b>ケーブルの中だけ</b>を通ってアクセスポイントへ向かいます。</>
+    ) : (
+      <>
+        データは<b>電波</b>になってノートPCから<b>周り全部へ広がります</b>。ケーブルと違い、アクセスポイントだけを狙って届くわけではありません。
+        {mode === "wpa" ? "ただし送る前に暗号化してあります。" : "しかも暗号化されていません。"}
+      </>
+    );
+  }
+  if (mode === "wired") return <>アクセスポイントには届き、盗聴者には<b>何も届きません</b>。電波が出ていないからです。</>;
+  return mode === "wpa" ? (
+    <>
+      盗聴者も<b>電波の受信自体はできました</b>。でも中身は<b>暗号文で読めません</b>。正しい鍵を持つアクセスポイントだけが復号できます。
+    </>
+  ) : (
+    <>
+      アクセスポイントにも盗聴者にも<b>同じ電波</b>が届き、盗聴者の画面には <b>ID / PASSWORD がそのまま</b>。暗号化なしのWi-Fiは入力内容を盗み見られます。
+    </>
+  );
+}
+
+function WifiFlow() {
+  const reducedMotion = useReducedMotion();
+  const [mode, setMode] = useState<WifiMode>("open");
+  const player = useStepPlayer(WIFI_STEPS.length, reducedMotion);
+  const step = WIFI_STEPS[player.index];
+  const last = player.index === player.lastIndex;
+  const [tried, setTried] = useState<Set<WifiMode>>(new Set());
+  if (last && !tried.has(mode)) setTried(new Set(tried).add(mode));
+
   return (
     <Panel>
       <SectionTitle step={1}>無線LANは「名前」と「暗号化」</SectionTitle>
@@ -20,58 +77,65 @@ function WifiToggle() {
         <b className="text-gray-800">SSID</b>、中身を守るのが<b className="text-gray-800">暗号化（WPA2/WPA3）</b>です。
       </p>
 
-      <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-gray-600">📶 SSID（ネットワーク名）</span>
-          <span className="rounded bg-white px-2 py-0.5 font-mono text-xs text-gray-700 ring-1 ring-gray-200">
-            cafe-wifi-2F
-          </span>
-        </div>
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        {MODES.map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            aria-pressed={mode === o.v}
+            onClick={() => {
+              setMode(o.v);
+              if (reducedMotion) player.reset();
+              else player.play();
+            }}
+            className={`rounded-lg px-1 py-2 text-xs font-bold transition active:scale-95 ${
+              mode === o.v ? o.on : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {o.label}
+            {tried.has(o.v) && " ✓"}
+          </button>
+        ))}
       </div>
 
-      <div className="mt-3 flex gap-2">
-        <button
-          onClick={() => setSecure(false)}
-          className={`flex-1 rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
-            !secure ? "bg-rose-500 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
-          }`}
-        >
-          🔓 暗号化なし
-        </button>
-        <button
-          onClick={() => setSecure(true)}
-          className={`flex-1 rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
-            secure ? "bg-emerald-500 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
-          }`}
-        >
-          🔒 暗号化あり(WPA2/3)
-        </button>
-      </div>
+      <p className="mt-3 text-sm font-bold text-gray-900" data-testid="wifi-step-title">
+        STEP {player.index + 1}：{step.title}
+      </p>
 
-      <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-gray-200">
-        <div className="text-[11px] font-bold text-gray-400">📡 電波を盗み見た人に見える内容</div>
-        <div
-          className={`mt-1.5 break-all rounded-lg px-3 py-2 font-mono text-sm ${
-            secure ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-          }`}
-        >
-          {secure ? "8f#2a@…X9q&(暗号化されて読めない)" : "ID: tanaka / PASS: spring123"}
-        </div>
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <WifiScene mode={mode} phase={step.phase} reducedMotion={reducedMotion} />
       </div>
 
       <div
-        className={`mt-3 rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 ${
-          secure
-            ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
-            : "bg-rose-50 text-rose-900 ring-rose-200"
+        className={`mt-3 min-h-[3.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
+          last && mode === "open" ? "bg-rose-50 ring-rose-200" : last && mode === "wpa" ? "bg-emerald-50 ring-emerald-200" : "bg-sky-50 ring-sky-200"
         }`}
+        aria-live="polite"
       >
-        {secure ? (
-          <>✅ 暗号化されていれば、電波を傍受されても中身は読めません。</>
-        ) : (
-          <>⚠️ 暗号化なし（鍵マークなし）のWi-Fiは、入力した内容を盗み見られる危険があります。</>
-        )}
+        {wifiDetail(mode, step.phase)}
       </div>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={WIFI_STEPS}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="Wi-Fiの送信を再生"
+          timelineLabel="Wi-Fiの送信のタイムライン"
+          startCaption="つなぐ"
+          endCaption="届いた先"
+        />
+      </div>
+
+      {tried.has("open") && tried.has("wpa") && (
+        <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="wifi-insight">
+          💡 電波は<b>誰でも受信できる</b>のが前提。だから守るのは「受信させないこと」ではなく<b>中身を暗号化（WPA2/WPA3）すること</b>。
+          SSIDはただの名前なので、<b>同じ名前でも暗号化なしのことがある</b>点に注意。
+        </div>
+      )}
     </Panel>
   );
 }
@@ -203,7 +267,7 @@ export default function WirelessMobileExperience() {
         意味をセットで覚えましょう。
       </div>
 
-      <WifiToggle />
+      <WifiFlow />
       <MobileTerms />
       <WifiQuiz />
     </div>
