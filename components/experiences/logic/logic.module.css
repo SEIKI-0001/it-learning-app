@@ -1,0 +1,54 @@
+/* 論理回路：動くのは「1 の信号が入力 → ゲート → 出力へ順に流れる」「ランプが届いてから点く」
+   「真理値表のハイライトが該当行へ移る」だけ。入力を変えたときに1回だけ動く。 */
+
+.flow {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: logic-flow 450ms linear forwards;
+}
+
+@keyframes logic-flow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.fadeIn {
+  animation: logic-fade 200ms ease both;
+}
+
+@keyframes logic-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lamp {
+  transition:
+    fill 250ms ease,
+    stroke 250ms ease;
+}
+
+.lampIcon {
+  transition: opacity 250ms ease;
+}
+
+.gate {
+  transition: d 350ms ease;
+}
+
+.highlight {
+  transition: transform 320ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lamp,
+  .lampIcon,
+  .gate,
+  .highlight {
+    transition: none !important;
+  }
+}
