@@ -1,136 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { DevRace } from "./devprocess/DevRace";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「開発プロセス」専用の体験。
-//   ① 仕様変更シミュレータ … WF/アジャイルを選んで開発を進めると、
-//      途中で「⚡変更したい！」が発生。後戻りの大きさの違いを体感する
+//   ① 仕様変更シミュレータ … 同じプロジェクトをWFとアジャイルの2本の時間軸で同時に進め、
+//      同じ瞬間に「⚡変更したい！」が発生。戻る距離・作り直す量・反映までの時間を並べて比べる
+//      （devprocess/DevRace）
 //   ② くらべて整理（向き・不向き）
 //   ③ これはどっち？ クイズ
 // ============================================================================
 
-const PHASES = ["要件定義", "設計", "製造", "テスト", "完成"] as const;
-
-type SimStep = {
-  active: number; // ハイライトする工程 index（-1=なし）
-  done: number[]; // 完了済み工程 index
-  tone: "normal" | "event" | "rework" | "goal";
-  msg: string;
-};
-
-const WF_STEPS: SimStep[] = [
-  { active: 0, done: [], tone: "normal", msg: "📝 最初に作るものを全部決めます。この計画どおり、工程を順番に下っていきます。" },
-  { active: 1, done: [0], tone: "normal", msg: "📐 決めた要件をもとに、作り方を細かく設計します。" },
-  { active: 2, done: [0, 1], tone: "normal", msg: "🔨 設計図どおりにプログラムを作ります。順調、順調…" },
-  { active: 2, done: [0, 1], tone: "event", msg: "⚡ お客様「やっぱり機能を変えたい！」——でも要件も設計も確定済み。さあどうする…？" },
-  { active: 1, done: [0], tone: "rework", msg: "↩️ 設計からやり直し（後戻り）！ 作ったプログラムの多くがムダに。時間もお金も大きくかかります。" },
-  { active: 4, done: [0, 1, 2, 3], tone: "goal", msg: "🏁 やり直して完成。⭕ 計画が立てやすい反面、⚠️ 途中の変更にとても弱い——これがウォーターフォール。" },
-];
-
-const AGILE_STEPS: SimStep[] = [
-  { active: 0, done: [], tone: "normal", msg: "🔁 スプリント1：まず一番大事な機能だけ「作る→見せる→直す」。小さく完成させます。" },
-  { active: 1, done: [0], tone: "normal", msg: "🔁 スプリント2：次の機能を追加して、また利用者に見せて確認します。" },
-  { active: 1, done: [0], tone: "event", msg: "⚡ お客様「やっぱり機能を変えたい！」——アジャイルなら「OK！次のスプリントの計画に入れましょう」。" },
-  { active: 2, done: [0, 1], tone: "rework", msg: "✅ スプリント3で変更を反映。作り直しは最小限。小さく区切っているから方向転換がしやすい！" },
-  { active: 3, done: [0, 1, 2], tone: "goal", msg: "🏁 反復を重ねて完成。⭕ 変更に強い反面、⚠️ 全体像が見えにくいことも——これがアジャイル。" },
-];
-
-const SPRINTS = ["スプリント1", "スプリント2", "スプリント3", "完成"] as const;
-
 function Simulator() {
-  const [mode, setMode] = useState<"wf" | "agile">("wf");
-  const [idx, setIdx] = useState(0);
-  const steps = mode === "wf" ? WF_STEPS : AGILE_STEPS;
-  const labels: readonly string[] = mode === "wf" ? PHASES : SPRINTS;
-  const step = steps[idx];
-
-  const pick = (m: "wf" | "agile") => {
-    setMode(m);
-    setIdx(0);
-  };
-
-  const msgTone =
-    step.tone === "event"
-      ? "bg-amber-50 ring-amber-200 text-amber-900"
-      : step.tone === "rework"
-        ? mode === "wf"
-          ? "bg-rose-50 ring-rose-200 text-rose-800"
-          : "bg-emerald-50 ring-emerald-200 text-emerald-800"
-        : step.tone === "goal"
-          ? "bg-sky-50 ring-sky-200 text-gray-700"
-          : "bg-gray-50 ring-gray-200 text-gray-700";
-
   return (
     <Panel>
       <SectionTitle step={1}>仕様変更シミュレータ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        開発の途中で<b className="text-gray-800">「⚡やっぱり変更したい！」</b>が来たらどうなる？
-        進め方を選んで「次へ」で開発を進め、<b className="text-gray-800">後戻りの大きさの違い</b>を体感しよう。
+        同じプロジェクトを<b className="text-gray-800">2つの進め方で同時に</b>進めます。途中で
+        <b className="text-gray-800">「⚡やっぱり変更したい！」</b>が来たとき、<b className="text-gray-800">どこまで戻り・どれだけ作り直し・いつ届くか</b>を比べよう。
       </p>
 
-      {/* モード切替 */}
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          onClick={() => pick("wf")}
-          className={`rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
-            mode === "wf" ? "bg-sky-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
-          }`}
-        >
-          🪜 ウォーターフォール
-        </button>
-        <button
-          onClick={() => pick("agile")}
-          className={`rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
-            mode === "agile" ? "bg-emerald-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
-          }`}
-        >
-          🔁 アジャイル
-        </button>
-      </div>
-
-      {/* 工程の見える化 */}
-      <div className="mt-3 flex items-center gap-1">
-        {labels.map((label, i) => {
-          const isActive = step.active === i;
-          const isDone = step.done.includes(i);
-          const isReworkTarget = step.tone === "rework" && isActive;
-          const tone = isReworkTarget
-            ? mode === "wf"
-              ? "bg-rose-500 text-white"
-              : "bg-emerald-500 text-white"
-            : isActive
-              ? "bg-brand-600 text-white"
-              : isDone
-                ? "bg-brand-100 text-brand-600"
-                : "bg-gray-100 text-gray-400";
-          return (
-            <div key={label} className="flex flex-1 items-center gap-1">
-              <div className={`w-full rounded-md px-0.5 py-2 text-center text-[10px] font-bold leading-tight transition ${tone}`}>
-                {isReworkTarget && mode === "wf" ? "↩️ " : ""}
-                {label}
-              </div>
-              {i < labels.length - 1 && <span className="flex-none text-[10px] text-gray-300">{mode === "wf" ? "▶" : "↻"}</span>}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 実況メッセージ */}
-      <p className={`mt-3 min-h-[5em] rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 ${msgTone}`}>{step.msg}</p>
-
-      <StepNav
-        index={idx}
-        total={steps.length}
-        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
-        onNext={() => setIdx((i) => Math.min(steps.length - 1, i + 1))}
-        onReset={() => setIdx(0)}
-        doneLabel={mode === "wf" ? "変更に弱い ⚠️" : "変更に強い 💪"}
-      />
+      <DevRace />
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 両方試すと違いが分かります。ちなみにアジャイルは<b>「無計画」ではありません</b>——計画を小さく区切って、こまめに見直すだけです。
+        💡 アジャイルは<b>「無計画」ではありません</b>——計画を小さく区切って、こまめに見直すだけです。
+        早い段階で試作品を見せて要求を固める<b>プロトタイピング</b>も、変更に早く気づくための工夫です。
       </div>
     </Panel>
   );
