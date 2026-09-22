@@ -1,100 +1,131 @@
 "use client";
 
-// 週間レポート本体。成績表ではなく「AI 学習コーチとの週次の振り返り」として読ませる。
-// 読み順: 今週の意味 → 成長 → 数字 → AIの気づき → うまくいかなかったこと → 来週 → モチット。
-// 文章を主、数字を従にする。カードを並べず、1本の読み物として区切り線でつなぐ。
+// 週間レポート本体。成績表ではなく、罫線ノートに書かれた「1週間の日記」として読ませる。
+// 読み順: 今週の意味 → 成長 → 数字 → 気づき → うまくいかなかったこと → 来週 → モチットより。
+// 文章を主、数字を従にする。紙・手書き書体・マーカー・付箋などの表現は
+// weeklyDiary.module.css に閉じ込め、アプリ共通の UI 規約には持ち出さない。
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { NextAction, WeeklyReportFacts } from "@/lib/weeklyReportFacts";
 import type { NarrativeItem } from "@/lib/weeklyReportNarrative";
 import { useWeeklyNarrative } from "@/lib/useWeeklyNarrative";
 import { getLessonHref } from "@/lib/learningCatalog";
 import { buttonClass } from "@/components/ui/Button";
-import Icon, { type IconName } from "@/components/ui/Icon";
+import Icon from "@/components/ui/Icon";
 import Mochit from "@/components/mochit/Mochit";
+import styles from "./weeklyDiary.module.css";
 
-export default function WeeklyReportView({ facts }: { facts: WeeklyReportFacts }) {
+export default function WeeklyReportView({
+  facts,
+}: {
+  facts: WeeklyReportFacts;
+}) {
   const { narrative, status } = useWeeklyNarrative(facts);
   const loading = status === "loading";
   const zero = facts.volume === "none";
 
   return (
-    <article className="space-y-9">
+    <article className={styles.sheet} aria-label="今週のふりかえり日記">
+      <time className={styles.date} dateTime={facts.period.end}>
+        {formatPeriod(facts)}
+      </time>
+
       {/* 1. 今週のあなた */}
       <section aria-labelledby="wr-you" className="animate-rise-in">
-        <p id="wr-you" className="text-xs font-medium text-gray-500">
+        <p id="wr-you" className={styles.eyebrow}>
           今週のあなた
         </p>
         {loading ? (
-          <TextSkeleton lines={3} large />
+          <Writing />
         ) : (
           <>
-            <h2 className="mt-2 text-xl font-medium leading-snug tracking-[-0.02em] text-gray-900">
-              {narrative.headline}
+            <h2 className={styles.headline}>
+              <span className={styles.marker}>{narrative.headline}</span>
             </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-gray-700">{narrative.summary}</p>
+            <p className={`${styles.body} mt-[32px]`}>{narrative.summary}</p>
           </>
         )}
-        <WeekStrip facts={facts} />
+        <WeekStamps facts={facts} />
       </section>
 
       {/* 2. 今週できるようになったこと */}
       {!zero && (
-        <Section id="wr-growth" icon="sprout" iconClass="text-emerald-600" title="今週できるようになったこと">
-          {loading ? <TextSkeleton lines={4} /> : <ItemList items={narrative.growth} />}
-        </Section>
+        <DiarySection id="wr-growth" title="今週できるようになったこと">
+          {loading ? (
+            <Writing />
+          ) : (
+            <ItemList items={narrative.growth} mark="check" />
+          )}
+        </DiarySection>
       )}
 
-      {/* 3. 数字で見る今週 */}
-      {!zero && <NumbersSection facts={facts} />}
+      {/* 3. 数字で見る今週（付箋） */}
+      {!zero && <NumbersNote facts={facts} />}
 
-      {/* 4. AIが見つけたこと */}
+      {/* 4. 気づいたこと（AI） */}
       {!zero && (
-        <Section id="wr-insight" icon="lightbulb" iconClass="text-brand-600" title="AIが見つけたこと">
+        <DiarySection id="wr-insight" title="気づいたこと">
           {loading ? (
-            <TextSkeleton lines={4} />
+            <Writing />
           ) : narrative.insights.length > 0 ? (
-            <ItemList items={narrative.insights} />
+            <ItemList items={narrative.insights} mark="arrow" />
           ) : (
-            <p className="text-sm leading-relaxed text-gray-600">
+            <p className={styles.soft}>
               傾向を読み取るには、まだデータが少ない週でした。来週も解いていくと、得意・苦手のくせが見えてきます。
             </p>
           )}
-        </Section>
+        </DiarySection>
       )}
 
-      {/* 5. うまくいかなかったこと（課題がない週は出さない） */}
+      {/* 5. うまくいかなかったこと（課題がない週は書かない） */}
       {!zero && narrative.struggle && (
-        <Section id="wr-struggle" icon="alert" iconClass="text-accent-600" title="うまくいかなかったこと">
-          {loading ? <TextSkeleton lines={3} /> : <ItemList items={[narrative.struggle]} />}
-        </Section>
+        <DiarySection id="wr-struggle" title="うまくいかなかったこと" pencil>
+          {loading ? (
+            <Writing />
+          ) : (
+            <ItemList items={[narrative.struggle]} mark="dash" />
+          )}
+        </DiarySection>
       )}
 
       {/* 6. 来週はこれだけ */}
-      <NextWeekSection facts={facts} note={loading ? null : narrative.nextActionNote} zero={zero} />
+      <NextWeek
+        facts={facts}
+        note={loading ? null : narrative.nextActionNote}
+        zero={zero}
+      />
 
-      {/* 7. モチットから一言 */}
-      <section aria-labelledby="wr-mochit" className="flex items-end gap-3">
-        <Mochit size="small" state={zero ? "normal" : "happy"} animation="idle" />
-        <div className="min-w-0 flex-1">
-          <p id="wr-mochit" className="text-xs font-medium text-gray-500">
-            モチットから一言
-          </p>
-          <div className="mt-1.5 rounded-xl rounded-bl-sm bg-gray-100 px-4 py-3">
-            {loading ? (
-              <TextSkeleton lines={2} />
-            ) : (
-              <p className="text-sm leading-relaxed text-gray-800">{narrative.mochit}</p>
-            )}
+      {/* 7. モチットより */}
+      <section aria-labelledby="wr-mochit" className="mt-[32px]">
+        <p id="wr-mochit" className={styles.eyebrow}>
+          モチットからひとこと
+        </p>
+        <SnapToLines>
+          <div className="flex items-start gap-2">
+            <p className={`${styles.body} min-w-0 flex-1 text-brand-700`}>
+              {loading ? (
+                <span className={styles.writing}>……</span>
+              ) : (
+                narrative.mochit
+              )}
+            </p>
+            <div className="-mr-1 shrink-0 pt-1">
+              <Mochit
+                size="small"
+                state={zero ? "normal" : "happy"}
+                animation="idle"
+              />
+            </div>
           </div>
-        </div>
+        </SnapToLines>
+        <p className={styles.signature}>── モチットより</p>
       </section>
 
       {!loading && (
-        <p className="text-center text-[11px] leading-relaxed text-gray-500">
+        <p className="mt-[32px] text-[12px] leading-[16px] text-[#7b7784]">
           {narrative.source === "ai"
-            ? "文章はAIが今週の学習記録をもとに書いています。数値はアプリが集計したものです。"
+            ? "文章はAIが今週の学習記録をもとに書いています。数字はアプリが集計したものです。"
             : "今週の学習記録から自動でまとめています。"}
         </p>
       )}
@@ -104,78 +135,197 @@ export default function WeeklyReportView({ facts }: { facts: WeeklyReportFacts }
 
 // ---------------------------------------------------------------------------
 
-function Section({
+const WEEKDAY_FULL = ["日", "月", "火", "水", "木", "金", "土"];
+
+function formatPeriod(facts: WeeklyReportFacts): string {
+  const parse = (iso: string) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    return { y, m, d, w: WEEKDAY_FULL[new Date(y, m - 1, d).getDay()] };
+  };
+  const a = parse(facts.period.start);
+  const b = parse(facts.period.end);
+  const end = a.m === b.m ? `${b.d}日（${b.w}）` : `${b.m}月${b.d}日（${b.w}）`;
+  return `${a.y}年${a.m}月${a.d}日（${a.w}）〜 ${end}`;
+}
+
+const LINE = 32;
+
+/**
+ * 高さが罫線の間隔にそろわないブロック（付箋・枠・モチット）を包み、
+ * 高さを 1 行ぶんの倍数に切り上げる。これで下に続く文字が罫線からずれない。
+ */
+function SnapToLines({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  const outer = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const o = outer.current;
+    const i = inner.current;
+    if (!o || !i) return;
+    const snap = () => {
+      o.style.height = `${Math.ceil(i.offsetHeight / LINE) * LINE}px`;
+    };
+    snap();
+    const ro = new ResizeObserver(snap);
+    ro.observe(i);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={outer} className={className}>
+      <div ref={inner}>{children}</div>
+    </div>
+  );
+}
+
+/** 生成を待つ間の表示。灰色の棒ではなく「書いている途中」として見せる。 */
+function Writing() {
+  return (
+    <p className={styles.writing} role="status">
+      モチットが日記を書いています……
+    </p>
+  );
+}
+
+function DiarySection({
   id,
-  icon,
-  iconClass,
   title,
+  pencil = false,
   children,
 }: {
   id: string;
-  icon: IconName;
-  iconClass: string;
   title: string;
+  pencil?: boolean;
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby={id} className="animate-rise-in border-t border-gray-200 pt-6">
-      <h2 id={id} className="flex items-center gap-2 text-base font-medium text-gray-900">
-        <Icon name={icon} className={`h-4 w-4 shrink-0 ${iconClass}`} />
+    <section aria-labelledby={id} className="animate-rise-in mt-[32px]">
+      <h2
+        id={id}
+        className={`${styles.sectionTitle} ${pencil ? styles.pencil : ""}`}
+      >
         {title}
+        <Squiggle className={styles.squiggle} />
       </h2>
-      <div className="mt-3">{children}</div>
+      <div className={pencil ? styles.soft : undefined}>{children}</div>
     </section>
   );
 }
 
-function ItemList({ items }: { items: NarrativeItem[] }) {
+function ItemList({
+  items,
+  mark,
+}: {
+  items: NarrativeItem[];
+  mark: "check" | "arrow" | "dash";
+}) {
   return (
-    <ul className="space-y-4">
+    <ul>
       {items.map((item) => (
-        <li key={item.signalId}>
-          <p className="text-[15px] font-medium leading-snug text-gray-900">{item.title}</p>
-          <p className="mt-1 text-sm leading-relaxed text-gray-600">{item.body}</p>
+        <li key={item.signalId} className="relative pl-6">
+          <span aria-hidden className="absolute left-0 top-[7px]">
+            {mark === "check" ? (
+              <HandCheck />
+            ) : mark === "arrow" ? (
+              <span className="text-brand-700">→</span>
+            ) : (
+              <span className={styles.pencil}>―</span>
+            )}
+          </span>
+          <p className={styles.itemTitle}>{item.title}</p>
+          <p className={styles.soft}>{item.body}</p>
         </li>
       ))}
     </ul>
   );
 }
 
-function TextSkeleton({ lines, large = false }: { lines: number; large?: boolean }) {
+// ---- 手描きの線 --------------------------------------------------------------
+
+function Squiggle({ className }: { className?: string }) {
   return (
-    <div className="mt-2 animate-pulse space-y-2" aria-label="振り返りを書いています" role="status">
-      {Array.from({ length: lines }, (_, i) => (
-        <div
-          key={i}
-          className={`rounded bg-gray-200 ${large && i === 0 ? "h-6 w-4/5" : "h-3.5"} ${
-            i === lines - 1 && !(large && i === 0) ? "w-3/5" : large && i === 0 ? "" : "w-full"
-          }`}
-        />
-      ))}
-    </div>
+    <svg
+      className={className}
+      viewBox="0 0 200 10"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      <path
+        d="M2 6 C 22 2, 42 9, 62 5 S 102 2, 122 6 S 162 9, 198 4"
+        fill="none"
+        stroke="#e08a34"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   );
 }
 
-/** 7日間の学習有無。今日を右端に置く。 */
-function WeekStrip({ facts }: { facts: WeeklyReportFacts }) {
+function HandCheck() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M3.5 13.5 C5.6 15.2 7.6 17.4 9.3 20.2 C12.2 13.1 16.4 7.2 21.2 3.2"
+        fill="none"
+        stroke="#287a55"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** 手で丸をつけたような円（始点と終点を少しずらして重ねる）。 */
+function HandCircle({ seed }: { seed: number }) {
+  const r = seed % 3;
+  const d = [
+    "M19 3.6c8.8-.6 15.8 5.9 16.2 14.6.4 9-6.4 16.4-15.4 16.8C11 35.4 3.9 28.8 3.6 20 3.3 11.6 9.2 4.8 17.4 3.9c3.1-.3 6.2.5 8.7 2.1",
+    "M21.5 4.2c8.2.4 14.3 7.3 13.8 15.8-.5 8.9-7.7 15.3-16.4 14.7C10.6 34.1 4.3 27.3 4.7 18.9 5.1 10.6 11.8 4.1 20.2 3.9c2.7 0 5.2.7 7.4 1.9",
+    "M17.8 4.4c9.1-1.1 16.6 5.1 17.4 13.7.8 9.1-5.7 16.8-14.7 17.4-8.6.6-16-5.8-16.6-14.3C3.3 12.8 9 5.9 16.8 4.7c3.4-.5 6.8.2 9.6 1.7",
+  ][r];
+  return (
+    <svg className={styles.stampCircle} viewBox="0 0 40 40" aria-hidden>
+      <path
+        d={d}
+        fill="none"
+        stroke="#e08a34"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** 7日間。学習した日に手描きの丸をつける。今日を右端に置く。 */
+function WeekStamps({ facts }: { facts: WeeklyReportFacts }) {
   const days = facts.period.days;
   return (
-    <ol className="mt-4 grid grid-cols-7 gap-1" aria-label="この7日間の学習記録">
+    <ol className="mt-[12px] grid grid-cols-7" aria-label="この7日間の学習記録">
       {days.map((d, i) => {
         const studied = d.answered > 0;
         const today = i === days.length - 1;
         return (
-          <li key={d.date} className="flex flex-col items-center gap-1">
-            <span
-              className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] tabular-nums ${
-                studied ? "bg-emerald-500 text-white" : "border border-dashed border-gray-300 text-gray-400"
-              }`}
-              aria-label={`${d.weekday}曜日 ${studied ? `${d.answered}問` : "記録なし"}`}
-            >
-              {studied ? d.answered : ""}
+          <li
+            key={d.date}
+            className="flex flex-col items-center"
+            aria-label={`${d.weekday}曜日 ${studied ? `${d.answered}問` : "記録なし"}`}
+          >
+            <span className={`${styles.stamp} ${studied ? "" : styles.pencil}`}>
+              {studied && <HandCircle seed={i} />}
+              <span className={today ? "font-semibold" : undefined}>
+                {today ? "今日" : d.weekday}
+              </span>
             </span>
-            <span className={`text-[11px] ${today ? "font-medium text-gray-900" : "text-gray-500"}`}>
-              {today ? "今日" : d.weekday}
+            <span
+              className={`text-[12px] leading-[16px] tabular-nums ${styles.pencil}`}
+            >
+              {studied ? `${d.answered}問` : "・"}
             </span>
           </li>
         );
@@ -185,17 +335,17 @@ function WeekStrip({ facts }: { facts: WeeklyReportFacts }) {
 }
 
 // ---------------------------------------------------------------------------
-// 数字で見る今週（重要な項目だけ・先週比は比較できるときだけ）
+// 数字のメモ（付箋）。重要な項目だけ・先週比は比較できるときだけ
 // ---------------------------------------------------------------------------
 
-type Stat = { label: string; value: string; delta?: { text: string; up: boolean } | null };
+type Stat = { label: string; value: string; delta?: string | null };
 
-function signed(n: number, unit: string): { text: string; up: boolean } | null {
-  if (n === 0) return { text: `±0${unit}`, up: false };
-  return { text: `${n > 0 ? "+" : "−"}${Math.abs(n)}${unit}`, up: n > 0 };
+function signed(n: number, unit: string): string {
+  if (n === 0) return `±0${unit}`;
+  return `${n > 0 ? "+" : "−"}${Math.abs(n)}${unit}`;
 }
 
-function NumbersSection({ facts }: { facts: WeeklyReportFacts }) {
+function NumbersNote({ facts }: { facts: WeeklyReportFacts }) {
   const t = facts.totals;
   const lw = facts.lastWeek;
   const stats: Stat[] = [
@@ -207,7 +357,10 @@ function NumbersSection({ facts }: { facts: WeeklyReportFacts }) {
     {
       label: "正答率",
       value: t.accuracy === null ? "—" : `${t.accuracy}%`,
-      delta: lw && lw.accuracy !== null && t.accuracy !== null ? signed(t.accuracy - lw.accuracy, "pt") : null,
+      delta:
+        lw && lw.accuracy !== null && t.accuracy !== null
+          ? signed(t.accuracy - lw.accuracy, "pt")
+          : null,
     },
     {
       label: "学習した日",
@@ -215,44 +368,47 @@ function NumbersSection({ facts }: { facts: WeeklyReportFacts }) {
       delta: lw ? signed(t.daysStudied - lw.daysStudied, "日") : null,
     },
   ];
-  if (facts.firstTry.accuracy !== null) {
-    stats.push({ label: "はじめての問題", value: `${facts.firstTry.accuracy}%`, delta: null });
-  }
-  if (facts.retry.accuracy !== null) {
-    stats.push({ label: "解き直した問題", value: `${facts.retry.accuracy}%`, delta: null });
-  }
-  stats.push({ label: "復習待ち", value: `${facts.reviews.waiting}件`, delta: null });
+  if (facts.firstTry.accuracy !== null)
+    stats.push({
+      label: "はじめての問題",
+      value: `${facts.firstTry.accuracy}%`,
+    });
+  if (facts.retry.accuracy !== null)
+    stats.push({ label: "解き直した問題", value: `${facts.retry.accuracy}%` });
+  stats.push({ label: "復習待ち", value: `${facts.reviews.waiting}件` });
 
   return (
-    <section aria-labelledby="wr-numbers" className="animate-rise-in border-t border-gray-200 pt-6">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id="wr-numbers" className="flex items-center gap-2 text-base font-medium text-gray-900">
-          <Icon name="chart" className="h-4 w-4 shrink-0 text-gray-500" />
-          数字で見る今週
-        </h2>
-        <span className="text-[11px] text-gray-500">{lw ? "右下は先週比" : "先週の記録なし"}</span>
-      </div>
-      <dl className="mt-3 grid grid-cols-3 gap-y-4 border-y border-gray-200 py-4">
-        {stats.slice(0, 6).map((s) => (
-          <div key={s.label} className="px-1 text-center">
-            <dt className="text-[11px] text-gray-600">{s.label}</dt>
-            <dd className="mt-1 text-lg font-medium tabular-nums text-gray-900">{s.value}</dd>
-            {s.delta && (
-              <dd
-                className={`text-[11px] tabular-nums ${s.delta.up ? "text-emerald-700" : "text-gray-500"}`}
-              >
-                {s.delta.text}
-              </dd>
-            )}
-          </div>
-        ))}
-      </dl>
-      {facts.volume === "low" && (
-        <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
-          今週は解いた数が少なめなので、正答率などは参考値です。
-        </p>
-      )}
-    </section>
+    <SnapToLines className="animate-rise-in mt-[32px]">
+      <section aria-labelledby="wr-numbers" className="pt-[16px]">
+        <div className={styles.note}>
+          <span className={styles.tape} aria-hidden />
+          <h2 id="wr-numbers" className="text-[15px] font-semibold">
+            数字のメモ
+            <span className={`ml-2 text-[12px] font-normal ${styles.pencil}`}>
+              {lw ? "（ ）は先週との差" : "先週の記録はまだありません"}
+            </span>
+          </h2>
+          <dl className="mt-2 grid grid-cols-3 gap-y-3">
+            {stats.slice(0, 6).map((s) => (
+              <div key={s.label} className="text-center">
+                <dt className={`text-[12px] ${styles.soft}`}>{s.label}</dt>
+                <dd className="text-[20px] tabular-nums">{s.value}</dd>
+                {s.delta && (
+                  <dd className={`text-[12px] tabular-nums ${styles.soft}`}>
+                    （{s.delta}）
+                  </dd>
+                )}
+              </div>
+            ))}
+          </dl>
+          {facts.volume === "low" && (
+            <p className={`mt-2 text-[12px] ${styles.pencil}`}>
+              ※ 今週は数が少なめなので、正答率などは参考値。
+            </p>
+          )}
+        </div>
+      </section>
+    </SnapToLines>
   );
 }
 
@@ -267,7 +423,7 @@ const ACTION_LABEL: Record<NextAction["kind"], string> = {
   comeback: "軽い復習",
 };
 
-function NextWeekSection({
+function NextWeek({
   facts,
   note,
   zero,
@@ -277,61 +433,74 @@ function NextWeekSection({
   zero: boolean;
 }) {
   const [primary, secondary] = facts.nextActions;
-  const primaryHref =
+  const href =
     primary?.kind === "comeback"
-      ? getLessonHref(primary.topicId, { from: "today", activity: "review", anchor: "lesson-quiz" })
+      ? getLessonHref(primary.topicId, {
+          from: "today",
+          activity: "review",
+          anchor: "lesson-quiz",
+        })
       : "/today";
 
   return (
-    <section
-      aria-labelledby="wr-next"
-      className="animate-rise-in rounded-xl border border-brand-200 bg-brand-50 p-4"
-    >
-      <h2 id="wr-next" className="flex items-center gap-2 text-base font-medium text-gray-900">
-        <Icon name="target" className="h-4 w-4 shrink-0 text-brand-600" />
+    <section aria-labelledby="wr-next" className="animate-rise-in mt-[32px]">
+      <h2 id="wr-next" className={styles.sectionTitle}>
         {zero ? "まずはここから" : "来週はこれだけ"}
+        <Squiggle className={styles.squiggle} />
       </h2>
-
-      {primary ? (
-        <>
-          <p className="mt-3 text-xs text-brand-700">{ACTION_LABEL[primary.kind]}</p>
-          <p className="mt-0.5 flex items-baseline justify-between gap-3">
-            <span className="min-w-0 text-[17px] font-medium leading-snug text-gray-900">
-              {primary.title}
-            </span>
-            <span className="shrink-0 text-xs tabular-nums text-gray-600">
-              約{primary.estimatedMinutes}分
-            </span>
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-gray-700">{note ?? primary.reason}</p>
-          {secondary && (
-            <p className="mt-3 border-t border-brand-200 pt-3 text-xs leading-relaxed text-gray-600">
-              余裕があれば：{ACTION_LABEL[secondary.kind]}「{secondary.title}」
+      <SnapToLines>
+        <div className={`${styles.roughBox} mt-[8px]`}>
+          {primary ? (
+            <>
+              <p className={`text-[13px] leading-[20px] ${styles.soft}`}>
+                {ACTION_LABEL[primary.kind]}
+              </p>
+              <p className="flex items-baseline justify-between gap-3 leading-[28px]">
+                <span className="min-w-0 text-[19px] font-semibold">
+                  <span className={styles.marker}>{primary.title}</span>
+                </span>
+                <span
+                  className={`shrink-0 text-[13px] tabular-nums ${styles.soft}`}
+                >
+                  約{primary.estimatedMinutes}分
+                </span>
+              </p>
+              <p className={`mt-1 leading-[28px] ${styles.soft}`}>
+                {note ?? primary.reason}
+              </p>
+              {secondary && (
+                <p
+                  className={`mt-1 text-[14px] leading-[24px] ${styles.pencil}`}
+                >
+                  余裕があれば：{ACTION_LABEL[secondary.kind]}「
+                  {secondary.title}」
+                </p>
+              )}
+            </>
+          ) : (
+            <p className={`leading-[28px] ${styles.soft}`}>
+              今日のメニューから、いつもどおり進めましょう。
             </p>
           )}
-          <div className="mt-4 flex flex-col gap-2">
-            <Link href={primaryHref} className={buttonClass("primary", "md", "w-full")}>
-              {primary.kind === "comeback" ? "1問だけ解いてみる" : "今日のメニューへ"}
-              <Icon name="arrow-right" className="h-4 w-4" />
-            </Link>
-            {!zero && (
-              <Link href="/plan" className="text-center text-xs text-gray-600 underline-offset-2 hover:underline">
-                学習計画を見る
-              </Link>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="mt-2 text-sm leading-relaxed text-gray-700">
-            今日のメニューから、いつもどおり進めましょう。
-          </p>
-          <Link href="/today" className={buttonClass("primary", "md", "mt-4 w-full")}>
-            今日のメニューへ
+          <Link
+            href={primary ? href : "/today"}
+            className={buttonClass("primary", "md", "mt-3 w-full font-sans")}
+          >
+            {primary?.kind === "comeback"
+              ? "1問だけ解いてみる"
+              : "今日のメニューへ"}
             <Icon name="arrow-right" className="h-4 w-4" />
           </Link>
-        </>
-      )}
+          {!zero && primary && (
+            <Link
+              href="/plan"
+              className={`mt-1 block text-center text-[13px] leading-[28px] underline decoration-dotted underline-offset-4 ${styles.soft}`}
+            >
+              学習計画を見る
+            </Link>
+          )}
+        </div>
+      </SnapToLines>
     </section>
   );
 }
