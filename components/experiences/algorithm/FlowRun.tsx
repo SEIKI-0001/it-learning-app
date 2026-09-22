@@ -105,16 +105,17 @@ export function FlowRun() {
   const animate = player.forward && !reducedMotion;
   const steps = trace.map((s) => ({ title: `${LABEL[s.node](limit)}${s.judge === undefined ? "" : s.judge ? " → はい" : " → いいえ"}` }));
 
-  return (
-    <section className="mt-5 border-t border-dashed border-gray-200 pt-4" aria-labelledby="flow-run-title">
-      <h4 id="flow-run-title" className="text-sm font-bold text-gray-900">
-        ▶ コンピュータになって最後まで実行
-      </h4>
-      <p className="mt-1 text-xs leading-relaxed text-gray-600">
-        黄色い●が「いま実行している場所」。矢印の上を進み、<b>条件の答えで進む道が変わり</b>、くり返しでは<b>条件へ戻り</b>ます。
-      </p>
+  // いまの一歩が「3つの基本構造」のどれか
+  const structure =
+    cur.node === "condition" && cur.from === "increment-current"
+      ? { name: "繰り返し", tone: "bg-sky-100 text-sky-800", note: "条件へ戻ってきた" }
+      : cur.node === "condition"
+        ? { name: "選択（分岐）", tone: "bg-emerald-100 text-emerald-800", note: "答えで道が分かれる" }
+        : { name: "順次", tone: "bg-amber-100 text-amber-800", note: "上から順に1つずつ" };
 
-      <div className="mt-2 flex items-center gap-1.5 text-xs">
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 text-xs">
         <span className="font-bold text-gray-500">くり返す上限：</span>
         {LIMITS.map((n) => (
           <button
@@ -212,7 +213,12 @@ export function FlowRun() {
       </div>
 
       <div className="mt-2 rounded-xl bg-gray-900 px-3 py-2 text-white" aria-live="polite" data-testid="flow-run-now">
-        <span className="block text-[10px] font-bold text-gray-400">いま実行した命令</span>
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-[10px] font-bold text-gray-400">いま実行した命令</span>
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${structure.tone}`} data-testid="flow-run-structure">
+            {structure.name}：{structure.note}
+          </span>
+        </span>
         <span className="font-mono text-sm font-bold">{code}</span>
         <span className="ml-2 text-xs text-amber-300">{calc}</span>
       </div>
@@ -232,6 +238,6 @@ export function FlowRun() {
           stepTone={(i) => (trace[i]?.node === "condition" ? (trace[i].judge ? "bg-emerald-600" : "bg-rose-500") : "bg-amber-500")}
         />
       </div>
-    </section>
+    </div>
   );
 }
