@@ -1,0 +1,462 @@
+/* プログラミング基礎の実行ステージ。動くのは「値が箱へ入る／押し出される」
+   「人が分かれ道を進む」「トークンがトラックを1周する」だけ。 */
+
+.assignStage,
+.routeStage,
+.loopStage {
+  position: relative;
+  width: 300px;
+  max-width: 100%;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 14px;
+  background: radial-gradient(120% 90% at 50% 10%, #ffffff 0%, #f3f6fb 70%, #eaeff7 100%);
+  box-shadow: inset 0 0 0 1px #e3e8f0;
+}
+
+/* ---------- 代入 ---------- */
+
+.assignStage {
+  height: 132px;
+}
+
+.codePanel {
+  position: absolute;
+  left: 10px;
+  top: 12px;
+  width: 150px;
+  height: 76px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #d5dde9, 0 4px 0 #dbe3ee;
+}
+
+.codeLine {
+  position: absolute;
+  left: 0;
+  display: flex;
+  width: 100%;
+  height: 24px;
+  align-items: center;
+  gap: 2px;
+  padding-inline: 6px;
+  margin-top: -12px;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.codeLine b {
+  color: #1d4ed8;
+}
+
+.codeLine[data-current="true"] {
+  background: #fef3c7;
+}
+
+.codeLine[data-done="true"] {
+  color: #94a3b8;
+}
+
+.codeLine[data-done="true"] b {
+  color: #94a3b8;
+}
+
+.pc {
+  width: 12px;
+  color: #d97706;
+  font-size: 10px;
+}
+
+.varBox {
+  position: absolute;
+  left: 196px;
+  top: 30px;
+  width: 78px;
+  height: 58px;
+}
+
+.varTop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 12px;
+  border-radius: 6px 6px 0 0;
+  background: #c7d2fe;
+  transform: skewX(-24deg);
+  transform-origin: 0 100%;
+}
+
+.varFront {
+  position: absolute;
+  inset: 12px 0 0;
+  border: 2px solid #818cf8;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, #eef2ff, #ffffff);
+}
+
+.varName {
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #4338ca;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* 値のチップ：コードの行の右端から、箱の中へ飛び込む */
+.valueChip {
+  position: absolute;
+  left: 235px;
+  top: 64px;
+  z-index: 5;
+  display: grid;
+  min-width: 38px;
+  height: 28px;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 16px;
+  font-weight: 900;
+  box-shadow: 0 3px 0 #1e3a8a;
+  animation: pb-fly-in 700ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+@keyframes pb-fly-in {
+  0% {
+    left: 132px;
+    top: var(--fy);
+  }
+  55% {
+    left: 235px;
+    top: 16px;
+  }
+  100% {
+    left: 235px;
+    top: 64px;
+  }
+}
+
+/* 上書き：前の値は箱から押し出されて外へ落ちる */
+.valueOut {
+  z-index: 4;
+  left: 278px;
+  top: 106px;
+  background: #cbd5e1;
+  color: #64748b;
+  box-shadow: none;
+  opacity: 0.55;
+  text-decoration: line-through;
+  animation: pb-eject 800ms cubic-bezier(0.45, 0.05, 0.25, 1) 350ms both;
+}
+
+@keyframes pb-eject {
+  0% {
+    left: 235px;
+    top: 64px;
+    opacity: 1;
+  }
+  35% {
+    left: 262px;
+    top: 30px;
+    opacity: 1;
+  }
+  100% {
+    left: 278px;
+    top: 106px;
+    opacity: 0.55;
+  }
+}
+
+.ejectNote,
+.emptyNote {
+  position: absolute;
+  left: 10px;
+  bottom: 12px;
+  color: #be123c;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.emptyNote {
+  left: 235px;
+  top: 64px;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* ---------- 分岐 ---------- */
+
+.routeStage {
+  height: 176px;
+  margin-top: 8px;
+}
+
+.routeStage[data-weather="rain"] {
+  background: radial-gradient(120% 90% at 50% 10%, #f8fafc 0%, #e8eef6 70%, #dde5f0 100%);
+}
+
+.routeSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.routePath {
+  fill: none;
+  stroke: #cbd5e1;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 400ms ease, opacity 400ms ease;
+}
+
+.routePath[data-taken="true"] {
+  stroke: #f59e0b;
+}
+
+.routePath[data-taken="false"] {
+  opacity: 0.35;
+}
+
+.drop {
+  stroke: #60a5fa;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.spot {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 16px;
+  line-height: 1.1;
+  box-shadow: 0 0 0 1px #d5dde9, 0 3px 0 #dbe3ee;
+  transition: opacity 400ms ease;
+}
+
+.spot small {
+  color: #374151;
+  font-size: 8.5px;
+  font-weight: 800;
+}
+
+.spot[data-dim="true"] {
+  opacity: 0.35;
+}
+
+.diamond {
+  width: 46px;
+  height: 46px;
+  justify-content: center;
+  padding: 0;
+  border-radius: 0;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: none;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.branchLabel {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  font-size: 9.5px;
+  font-weight: 900;
+}
+
+.yes {
+  color: #047857;
+}
+
+.no {
+  color: #be123c;
+}
+
+.walker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  font-size: 20px;
+  line-height: 1;
+  offset-rotate: 0deg;
+  offset-anchor: 50% 90%;
+  offset-distance: 100%;
+}
+
+.walker[data-animate="true"] {
+  animation: pb-walk 1800ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+@keyframes pb-walk {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.umbrella {
+  position: absolute;
+  left: 12px;
+  top: -10px;
+  font-size: 14px;
+}
+
+/* 傘は「傘を持つ」地点を通ってから手に持つ */
+.walker[data-animate="true"] .umbrella {
+  animation: pb-umbrella 1800ms linear both;
+}
+
+@keyframes pb-umbrella {
+  0%,
+  52% {
+    opacity: 0;
+  }
+  60%,
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ---------- 繰り返し ---------- */
+
+.loopStage {
+  height: 150px;
+}
+
+.track {
+  fill: none;
+  stroke: #c7d2fe;
+  stroke-width: 10;
+  stroke-linejoin: round;
+}
+
+.exit {
+  stroke: #cbd5e1;
+  stroke-width: 4;
+  stroke-dasharray: 3 3;
+}
+
+.exit[data-open="true"] {
+  stroke: #059669;
+  stroke-dasharray: none;
+}
+
+.station {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px #a5b4fc, 0 3px 0 #c7d2fe;
+}
+
+.exitLabel {
+  position: absolute;
+  right: 6px;
+  top: 92px;
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.exitLabel[data-open="true"] {
+  color: #047857;
+}
+
+.counter {
+  position: absolute;
+  left: 50%;
+  top: 80px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  transform: translate(-50%, -50%);
+}
+
+.counterValue {
+  display: inline-grid;
+  min-width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 8px;
+  background: #4338ca;
+  color: #ffffff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 20px;
+  font-weight: 900;
+  box-shadow: 0 3px 0 #312e81;
+  animation: pb-count 360ms cubic-bezier(0.2, 0.8, 0.2, 1) 850ms both;
+}
+
+@keyframes pb-count {
+  from {
+    transform: translateY(-6px);
+    opacity: 0.3;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.counterMax {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.lapToken {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 1px #d97706;
+  offset-rotate: 0deg;
+  offset-distance: 100%;
+}
+
+.lapToken[data-animate="true"] {
+  animation: pb-walk 900ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+.assignStage[data-reduced-motion="true"] *,
+.routeStage[data-reduced-motion="true"] *,
+.loopStage[data-reduced-motion="true"] * {
+  transition-duration: 0ms !important;
+  animation: none !important;
+}

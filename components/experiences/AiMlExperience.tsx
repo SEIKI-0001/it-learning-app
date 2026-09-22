@@ -1,12 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { useState, type ReactNode } from "react";
+import {
+  BOUNDARY_FINAL,
+  BOUNDARY_ROUGH,
+  LearningScene,
+  UNKNOWNS,
+  type LearningSceneProps,
+} from "./aiml/LearningScene";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「AIと機械学習」専用の体験。
 //   ① 包含図：AI ⊃ 機械学習 ⊃ 深層学習・生成AI
-//   ② 機械学習の流れ（例を集める→学ぶ→モデル→予測）をStepで実演
+//   ② 機械学習の流れ（例を集める→学ぶ→モデル→予測）を1つの 2.5D ステージで実演。
+//      犬/猫の学習データがモデルへ入り、判断の境界が形になり、未知の写真を「犬 92%」と判定する
 //   ③ 学習の3タイプ（教師あり／教師なし／強化）の早見
 // ============================================================================
 
@@ -36,75 +47,162 @@ function Nested() {
   );
 }
 
-const STEPS = [
+const PHASES = ["📥 データ", "🔁 学習", "📦 モデル", "🎯 予測"];
+
+type MlStep = {
+  phase: number;
+  title: string;
+  detail: ReactNode;
+  scene: Omit<LearningSceneProps, "unknown" | "reducedMotion">;
+};
+
+const STEPS: MlStep[] = [
   {
-    label: "① 例を集める",
-    html: "猫の写真を<b>たくさん</b>用意し「これは猫」とラベルを付けます。データの<b>量と質</b>が結果を左右します。",
-    art: ["🐱", "🐱", "🐱", "🐱"],
-    badge: "📥 データ",
+    phase: 0,
+    title: "例を集める",
+    detail: (
+      <>
+        犬と猫の写真を<b>たくさん</b>用意し、1枚ずつ「犬」「猫」と<b>正解ラベル</b>を付けます。
+        このときモデルは<b>まだ空っぽ</b>。AIは最初から答えを知っているわけではありません。
+      </>
+    ),
+    scene: { learned: 0, boundary: null, score: null, complete: false, unknownIn: false, showResult: false },
   },
   {
-    label: "② 特徴を学ぶ",
-    html: "コンピュータが共通点（耳の形・ひげ・輪郭…）を自分で見つけ、<b>パターン（コツ）</b>をつかみます。",
-    art: ["👂", "〰️", "⬭"],
-    badge: "🔁 学習",
+    phase: 1,
+    title: "学習する（最初の数枚）",
+    detail: (
+      <>
+        写真がモデルに入ると、<b>特徴（鼻の長さ・耳のとがり）</b>の平面に点として並びます。
+        まだ3枚だけなので、犬と猫を分ける<b>境界線はでたらめ</b>。1枚まちがえています。
+      </>
+    ),
+    scene: { learned: 3, boundary: BOUNDARY_ROUGH, score: { ok: 2, total: 3 }, complete: false, unknownIn: false, showResult: false },
   },
   {
-    label: "③ モデル完成",
-    html: "学んだコツが詰まった<b>モデル</b>ができます。これが「判断の型」です。",
-    art: ["🧠"],
-    badge: "📦 モデル",
+    phase: 1,
+    title: "学習する（くり返し）",
+    detail: (
+      <>
+        残りの写真も入れて、まちがいが減るように<b>境界線を少しずつ動かします</b>。
+        データが増えるほど、犬と猫をきれいに分ける向きに落ち着きます。
+      </>
+    ),
+    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: { ok: 8, total: 8 }, complete: false, unknownIn: false, showResult: false },
   },
   {
-    label: "④ 予測する",
-    html: "<b>初めて見る写真</b>をモデルに見せると「これは猫」と判定できます。これが機械学習の使い道です。",
-    art: ["❓", "→", "🐱"],
-    badge: "🎯 予測",
+    phase: 2,
+    title: "モデル完成",
+    detail: (
+      <>
+        学習で決まった「<b>ここから上は猫、下は犬</b>」という判断の型が<b>モデル</b>です。
+        学習データのカードはもう使いません。残るのはこの型だけ。
+      </>
+    ),
+    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: null, complete: true, unknownIn: false, showResult: false },
+  },
+  {
+    phase: 3,
+    title: "はじめて見る写真を入れる",
+    detail: (
+      <>
+        学習に使っていない<b>ラベルなしの写真</b>をモデルに入れます。特徴を測ると、平面のどこかに落ちます。
+      </>
+    ),
+    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: null, complete: true, unknownIn: true, showResult: false },
+  },
+  {
+    phase: 3,
+    title: "予測する",
+    detail: (
+      <>
+        落ちた場所が<b>境界線のどちら側か</b>で犬／猫を、<b>境界からどれだけ離れているか</b>で自信（％）を出します。
+        下のボタンで写真を変えてみよう。
+      </>
+    ),
+    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: null, complete: true, unknownIn: true, showResult: true },
   },
 ];
 
 function MlFlow() {
-  const [idx, setIdx] = useState(0);
-  const step = STEPS[idx];
+  const reducedMotion = useReducedMotion();
+  const player = useStepPlayer(STEPS.length, reducedMotion);
+  const step = STEPS[player.index];
+  const [unknownId, setUnknownId] = useState(UNKNOWNS[0].id);
+  const unknown = UNKNOWNS.find((u) => u.id === unknownId) ?? UNKNOWNS[0];
+  const last = player.index === player.lastIndex;
   return (
     <Panel>
       <SectionTitle step={2}>機械学習の流れ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        「<b className="text-gray-800">猫の写真を見分けるAI</b>」を例に、1歩ずつ進めてみよう。
+        「<b className="text-gray-800">犬と猫を見分けるAI</b>」を例に、データからモデルができて、そのモデルで新しい写真を判断するまでを追いかけよう。
       </p>
 
-      <div className="mt-3 flex gap-1.5">
-        {STEPS.map((s, i) => (
+      <div className="mt-3 flex gap-1.5" data-testid="ml-phase" data-phase={step.phase}>
+        {PHASES.map((label, i) => (
           <div
-            key={i}
+            key={label}
             className={`flex-1 rounded-lg px-1 py-1.5 text-center text-[10px] font-bold transition ${
-              i === idx ? "bg-brand-600 text-white" : i < idx ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
+              i === step.phase ? "bg-brand-600 text-white" : i < step.phase ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
             }`}
           >
-            {s.badge}
+            {label}
           </div>
         ))}
       </div>
 
-      <div className="mt-4 flex min-h-[64px] items-center justify-center gap-2 rounded-xl bg-gray-50 py-4 ring-1 ring-gray-200">
-        {step.art.map((a, i) => (
-          <span key={i} className="text-3xl">{a}</span>
-        ))}
+      <p className="mt-3 text-sm font-bold text-gray-900" data-testid="ml-step-title">
+        STEP {player.index + 1}：{step.title}
+      </p>
+
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <LearningScene {...step.scene} unknown={unknown} reducedMotion={reducedMotion} />
       </div>
 
-      <p
-        className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
-        dangerouslySetInnerHTML={{ __html: `<b>${step.label}</b>：${step.html}` }}
-      />
+      {last && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs" data-testid="ml-unknown-picker">
+          <span className="font-bold text-gray-500">入れる写真：</span>
+          {UNKNOWNS.map((u) => (
+            <button
+              key={u.id}
+              type="button"
+              aria-pressed={unknownId === u.id}
+              onClick={() => setUnknownId(u.id)}
+              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition active:scale-95 ${
+                unknownId === u.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 ring-1 ring-gray-300"
+              }`}
+            >
+              {u.emoji} {u.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <StepNav
-        index={idx}
-        total={STEPS.length}
-        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
-        onNext={() => setIdx((i) => Math.min(STEPS.length - 1, i + 1))}
-        onReset={() => setIdx(0)}
-        doneLabel="予測まで完成 🎉"
-      />
+      <div className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
+        {step.detail}
+      </div>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={STEPS}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="機械学習の流れを再生"
+          timelineLabel="機械学習の流れのタイムライン"
+          startCaption="データを集める"
+          endCaption="新しい写真を判断"
+        />
+      </div>
+
+      {last && (
+        <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="ml-insight">
+          💡 AIは答えを最初から知っているのではなく、<b>データからモデル（判断の型）を作り</b>、
+          <b>そのモデルで新しいデータを判断</b>します。だから学習データが偏っていれば、判断も偏ります。
+        </div>
+      )}
     </Panel>
   );
 }

@@ -15,6 +15,7 @@ import {
 } from "./learningModel";
 import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
+import { FlowRun } from "./FlowRun";
 
 type ProcedureStepProps = {
   order: NoodleActionId[];
@@ -528,6 +529,8 @@ export function FlowchartStep({
       >
         全体図を見る
       </button>
+
+      <FlowRun />
 
       {isModalOpen
         ? createPortal(
