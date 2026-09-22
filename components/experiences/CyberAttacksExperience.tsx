@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { CyberScene, type CyberSceneProps } from "./cyber/CyberScene";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「サイバー攻撃の手口」専用の体験。
-//   ① 攻撃ラボ … 攻撃を選んで実験用の会社に撃ち込むと、
-//      サーバ/DB/利用者/社員のどこで何が起きるかが攻撃ごとに変わる
+//   ① 攻撃ラボ … 攻撃を選んで 2.5D の実験用の会社に撃ち込むと、攻撃物が
+//      インターネット→Webサーバ→DB／利用者／社員PC と手口ごとの経路を移動し、被害の出る場所が変わる
 //   ② 「これはどの攻撃？」仕分けクイズ
 //   ③ まとめ
 // ============================================================================
@@ -65,72 +69,159 @@ const ATTACKS: Attack[] = [
   },
 ];
 
-// 攻撃ごとの各所の状態
-function nodeState(sel: AttackId | null) {
-  const ok = { tone: "ring-gray-200 bg-white", body: "", hit: false };
-  const s = {
-    server: { ...ok, body: "正常に稼働中" },
-    db: { ...ok, body: "データを保管中" },
-    users: { ...ok, body: "サイトを閲覧中" },
-    staff: { ...ok, body: "ふつうに仕事中" },
-  };
-  const hit = "ring-rose-400 bg-rose-50";
-  switch (sel) {
-    case "ddos":
-      s.server = { tone: hit, body: "🌊🌊🌊 アクセス殺到→💥ダウン", hit: true };
-      s.users = { tone: "ring-amber-300 bg-amber-50", body: "❌ つながらない…", hit: true };
-      break;
-    case "sqli":
-      s.server = { tone: "ring-amber-300 bg-amber-50", body: "入力欄に「' OR 1=1 --」", hit: true };
-      s.db = { tone: hit, body: "📄📄 会員データが流出！", hit: true };
-      break;
-    case "xss":
-      s.server = { tone: "ring-amber-300 bg-amber-50", body: "掲示板に🪤が仕込まれた", hit: true };
-      s.users = { tone: hit, body: "💥 罠が実行→🍪情報流出", hit: true };
-      break;
-    case "targeted":
-      s.staff = { tone: hit, body: "✉️「請求書.zip」開封→🐴侵入", hit: true };
-      break;
-    case "social":
-      s.staff = { tone: hit, body: "📞「システム部です」→🔑漏洩", hit: true };
-      break;
-  }
-  return s;
-}
+type AttackStep = { title: string; view: Omit<CyberSceneProps, "reducedMotion"> };
+
+const CALM: CyberSceneProps["nodes"] = { attacker: "idle", internet: "idle", web: "idle", db: "idle", user: "idle", staff: "idle" };
+const n = (over: Partial<CyberSceneProps["nodes"]>) => ({ ...CALM, ...over });
+
+// 攻撃ごとの「通り道」と「被害の出る場所」。STEP を進めると攻撃物が経路を移動する。
+const ROUTES: Record<AttackId, AttackStep[]> = {
+  ddos: [
+    {
+      title: "大量の機器から一斉アクセス",
+      view: { nodes: n({ attacker: "active", internet: "sending" }), lanes: { ai: "attack" }, flood: ["ai"], payload: { stop: "internet", tone: "attack", text: "×10000 アクセス" }, damage: [] },
+    },
+    {
+      title: "Webサーバに集中",
+      view: { nodes: n({ internet: "sending", web: "active" }), lanes: { ai: "attack", iw: "attack" }, flood: ["ai", "iw"], payload: { stop: "web", tone: "attack", text: "×10000 アクセス" }, damage: [] },
+    },
+    {
+      title: "サーバが停止 → 利用者もつながらない",
+      view: {
+        nodes: n({ web: "error", user: "error" }),
+        lanes: { ai: "attack", iw: "attack", ui: "blocked" },
+        flood: ["ai", "iw"],
+        payload: null,
+        damage: [
+          { at: "web", text: "ダウン" },
+          { at: "user", text: "つながらない" },
+        ],
+      },
+    },
+  ],
+  sqli: [
+    {
+      title: "入力欄に命令文を混ぜて送る",
+      view: { nodes: n({ attacker: "active", internet: "sending" }), lanes: { ai: "attack" }, flood: [], payload: { stop: "internet", tone: "attack", text: "' OR 1=1 --" }, damage: [] },
+    },
+    {
+      title: "Webサーバがそのまま DB へ渡す",
+      view: { nodes: n({ web: "active" }), lanes: { ai: "attack", iw: "attack" }, flood: [], payload: { stop: "web", tone: "attack", text: "' OR 1=1 --" }, damage: [] },
+    },
+    {
+      title: "DBが命令をうのみにする",
+      view: { nodes: n({ web: "sending", db: "error" }), lanes: { iw: "attack", wd: "attack" }, flood: [], payload: { stop: "db", tone: "attack", text: "' OR 1=1 --" }, damage: [] },
+    },
+    {
+      title: "会員データが流出",
+      view: {
+        nodes: n({ db: "error", attacker: "active" }),
+        lanes: { wd: "leak", iw: "leak", ai: "leak" },
+        flood: [],
+        payload: { stop: "attacker", tone: "leak", text: "📄 会員データ" },
+        damage: [{ at: "db", text: "データ流出" }],
+      },
+    },
+  ],
+  xss: [
+    {
+      title: "掲示板（Webサーバ）に罠を書き込む",
+      view: { nodes: n({ attacker: "active", web: "sending" }), lanes: { ai: "attack", iw: "attack" }, flood: [], payload: { stop: "web", tone: "attack", text: "🪤 <script>" }, damage: [] },
+    },
+    {
+      title: "利用者がそのページを見に来る",
+      view: { nodes: n({ user: "active", web: "sending" }), lanes: { ui: "normal", iw: "normal" }, flood: [], payload: { stop: "web", tone: "attack", text: "🪤 <script>" }, damage: [] },
+    },
+    {
+      title: "利用者のブラウザ上で罠が実行",
+      view: { nodes: n({ user: "error" }), lanes: { iw: "attack", ui: "attack" }, flood: [], payload: { stop: "user", tone: "attack", text: "🪤 実行！" }, damage: [] },
+    },
+    {
+      title: "利用者の情報が攻撃者へ",
+      view: {
+        nodes: n({ user: "error", attacker: "active" }),
+        lanes: { ui: "leak", ai: "leak" },
+        flood: [],
+        payload: { stop: "attacker", tone: "leak", text: "🍪 利用者の情報" },
+        damage: [{ at: "user", text: "情報を盗まれた" }],
+      },
+    },
+  ],
+  targeted: [
+    {
+      title: "取引先を装ったメールを送る",
+      view: { nodes: n({ attacker: "active", staff: "sending" }), lanes: { ai: "attack", is: "attack" }, flood: [], payload: { stop: "staff", tone: "attack", text: "✉ 請求書.zip" }, damage: [] },
+    },
+    {
+      title: "社員が添付を開封",
+      view: { nodes: n({ staff: "error" }), lanes: { is: "attack" }, flood: [], payload: { stop: "staff", tone: "attack", text: "🐴 ウイルス" }, damage: [{ at: "staff", text: "感染" }] },
+    },
+    {
+      title: "社内のサーバ・DBへ侵入",
+      view: {
+        nodes: n({ staff: "error", web: "error", db: "error" }),
+        lanes: { sw: "attack", wd: "attack" },
+        flood: [],
+        payload: { stop: "web", tone: "attack", text: "🐴 侵入" },
+        damage: [
+          { at: "staff", text: "感染" },
+          { at: "db", text: "侵入" },
+        ],
+      },
+    },
+  ],
+  social: [
+    {
+      title: "「システム部です」と電話",
+      view: { nodes: n({ attacker: "active", staff: "active" }), lanes: { as: "phone" }, flood: [], payload: { stop: "staff", tone: "phone", text: "📞 システム部です" }, damage: [] },
+    },
+    {
+      title: "社員が信じてしまう",
+      view: { nodes: n({ staff: "error" }), lanes: { as: "phone" }, flood: [], payload: { stop: "staff", tone: "phone", text: "🔑 パスワードは…" }, damage: [] },
+    },
+    {
+      title: "パスワードが攻撃者へ",
+      view: {
+        nodes: n({ staff: "error", attacker: "active" }),
+        lanes: { as: "leak" },
+        flood: [],
+        payload: { stop: "attacker", tone: "leak", text: "🔑 パスワード" },
+        damage: [{ at: "staff", text: "パスワード流出" }],
+      },
+    },
+  ],
+};
+
+const IDLE_VIEW: Omit<CyberSceneProps, "reducedMotion"> = { nodes: CALM, lanes: {}, flood: [], payload: null, damage: [] };
 
 function AttackLab() {
+  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<AttackId | null>(null);
   const [tried, setTried] = useState<Set<AttackId>>(new Set());
   const cur = ATTACKS.find((a) => a.id === sel) ?? null;
-  const nodes = nodeState(sel);
+  const steps = sel ? ROUTES[sel] : [{ title: "攻撃を選んでね", view: IDLE_VIEW }];
+  const player = useStepPlayer(steps.length, reducedMotion);
+  const idx = Math.min(player.index, steps.length - 1);
+  const step = steps[idx];
+  const atEnd = sel !== null && idx === steps.length - 1;
   const allTried = tried.size >= ATTACKS.length;
+
+  // 被害まで見届けた手口を記録（描画中の派生 state 更新）
+  if (atEnd && sel && !tried.has(sel)) setTried(new Set(tried).add(sel));
 
   const fire = (id: AttackId) => {
     setSel(id);
-    setTried((p) => new Set(p).add(id));
+    // 動きを減らす設定では自動再生せず、STEP 1 から手で進める
+    if (reducedMotion) player.reset();
+    else player.play();
   };
-
-  const nodeCard = (emo: string, name: string, st: { tone: string; body: string; hit: boolean }) => (
-    <div className={`rounded-xl p-2 ring-2 transition ${st.tone}`}>
-      <div className="text-[11px] font-bold text-gray-800">
-        {emo} {name}
-      </div>
-      <div
-        className={`mt-1 min-h-[2.4em] text-[10px] font-bold leading-snug ${
-          st.hit ? "text-rose-700" : "text-gray-400"
-        } ${st.hit ? "animate-pulse" : ""}`}
-      >
-        {st.body}
-      </div>
-    </div>
-  );
 
   return (
     <Panel>
       <SectionTitle step={1}>攻撃ラボ ― 撃ってみると違いが分かる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         実験用の会社に、攻撃者😈として5つの手口を撃ち込んでみよう。
-        <b className="text-gray-800">どこで・何が起きるか</b>が手口ごとに違います。
+        <b className="text-gray-800">どこを通って・どこに被害が出るか</b>が手口ごとに違います。
       </p>
 
       {/* 攻撃の選択 */}
@@ -141,6 +232,7 @@ function AttackLab() {
             <button
               key={a.id}
               onClick={() => fire(a.id)}
+              aria-pressed={on}
               className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition active:scale-95 ${
                 on
                   ? "bg-brand-600 text-white"
@@ -156,49 +248,62 @@ function AttackLab() {
         })}
       </div>
 
-      {/* 実験用の会社 */}
-      <div className="mt-4 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-gray-400">🏢 実験用の会社</span>
-          {cur && (
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                cur.target === "人をだます" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
-              }`}
-            >
-              狙い：{cur.target === "人をだます" ? "🧑 人" : "💻 機械"}
-            </span>
-          )}
+      <div className="mt-3 flex min-w-0 items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold text-rose-700">{cur ? `STEP ${idx + 1} / ${steps.length}` : "実験用の会社"}</p>
+          <p className="mt-0.5 text-sm font-bold text-gray-900" data-testid="cyber-step-title">
+            {cur ? step.title : "↓ 攻撃を選ぶと、経路と被害が見えます"}
+          </p>
         </div>
-
         {cur && (
-          <div className="mt-2 rounded-lg bg-white px-2.5 py-1.5 text-center text-[11px] font-bold text-gray-700 ring-1 ring-gray-200">
-            😈 {cur.scene}
-            <span className="mx-1 text-rose-500">──▶</span>
-          </div>
-        )}
-
-        <div className="mt-2 grid grid-cols-2 gap-1.5">
-          {nodeCard("🌐", "Webサーバ", nodes.server)}
-          {nodeCard("🗄️", "データベース", nodes.db)}
-          {nodeCard("🧑🧑", "サイトの利用者", nodes.users)}
-          {nodeCard("👩‍💼", "社員のPC", nodes.staff)}
-        </div>
-
-        {cur ? (
-          <div className="mt-2 rounded-lg bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 ring-1 ring-rose-200">
-            <b>
-              {cur.emo} {cur.name}
-            </b>
-            ：{cur.result}
-          </div>
-        ) : (
-          <p className="mt-2 text-center text-xs text-gray-400">↑ 攻撃を選んで撃ってみよう</p>
+          <span
+            className={`flex-none rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              cur.target === "人をだます" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+            }`}
+            data-testid="cyber-target"
+          >
+            狙い：{cur.target === "人をだます" ? "🧑 人" : "💻 機械"}
+          </span>
         )}
       </div>
 
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <CyberScene {...step.view} reducedMotion={reducedMotion} />
+      </div>
+
+      {cur ? (
+        <>
+          <div className="mt-3 rounded-lg bg-white px-2.5 py-1.5 text-center text-[11px] font-bold text-gray-700 ring-1 ring-gray-200">😈 {cur.scene}</div>
+          <div className="mt-3">
+            <SceneTimeline
+              index={idx}
+              steps={steps}
+              playing={player.playing}
+              reducedMotion={reducedMotion}
+              onMove={player.move}
+              onTogglePlay={player.togglePlay}
+              playLabel="攻撃の流れを再生"
+              timelineLabel="攻撃の流れのタイムライン"
+              startCaption="侵入口"
+              endCaption="被害"
+              stepTone={(i) => (i === steps.length - 1 ? "bg-rose-500" : "bg-brand-600")}
+            />
+          </div>
+          {atEnd && (
+            <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 ring-1 ring-rose-200" data-testid="cyber-result">
+              <b>
+                {cur.emo} {cur.name}
+              </b>
+              ：{cur.result}
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="mt-2 text-center text-xs text-gray-400">↑ 攻撃を選んで撃ってみよう</p>
+      )}
+
       {allTried && (
-        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200" data-testid="cyber-insight">
           💡 <b>気づいた？</b>　<b>DoS・SQLインジェクション・XSSは「機械」を攻める</b>ので仕組み（設定や修正）で防ぎ、
           <b>標的型・ソーシャルエンジニアリングは「人」をだます</b>のでルールと教育で防ぎます。
           狙いがどちらかを見分けるのが第一歩。
