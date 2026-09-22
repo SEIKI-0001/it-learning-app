@@ -1,131 +1,106 @@
 "use client";
 
-import { useState } from "react";
-import { Panel, SectionTitle, StepNav } from "./ui";
+import { useState, type ReactNode } from "react";
+import { DecisionStage, type DataMode } from "./datautil/DecisionStage";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「データ活用」専用の体験。
-//   ① 成績アップ大作戦 … 実データ（科目別の点数）が「数字の山→グラフ→気づき→改善」
-//      と変化していく様子をStepで体感（見える化すると苦手が浮かぶ）
+//   ① 成績アップ大作戦 … 実データ（科目別の点数）が「数字の山→グラフ→気づき→行動→結果」
+//      と変化していく様子を1つのステージで動かす（カードが列へ移動して棒グラフになる／数学が浮かぶ／
+//      行動カードが生まれる／次のテストで棒が伸びる）。比較用に「ためるだけ」も切り替えられる
 //   ② ためるだけ ⇄ 活用する の対比＋よく出る道具
 //   ③ 役割クイズ（BI・データ品質などの考え方）
 // ============================================================================
 
 // ① 成績アップ大作戦 --------------------------------------------------------
-const SUBJECTS = [
-  { name: "国語", score: 70 },
-  { name: "数学", score: 40 },
-  { name: "英語", score: 65 },
-  { name: "理科", score: 75 },
-  { name: "社会", score: 60 },
+const STEPS: { badge: string; title: string; use: ReactNode; store: ReactNode }[] = [
+  {
+    badge: "🎯 目的",
+    title: "目的を決める",
+    use: <>まず<b>目的</b>を決める：「テストの成績を上げたい」。目的がないと、何のデータを集めて何を見ればいいか分かりません。</>,
+    store: <>目的は同じ「テストの成績を上げたい」。ここから<b>ためるだけ</b>だとどうなるかを見てみます。</>,
+  },
+  {
+    badge: "📥 集める",
+    title: "点数を集める",
+    use: <>各科目の点数を集めました。でも<b>数字がバラバラに並んだまま</b>では、パッと見て何も分かりません…。</>,
+    store: <>各科目の点数を集めました。<b>数字がバラバラ</b>に並んでいます。</>,
+  },
+  {
+    badge: "📊 見える化",
+    title: "グラフにする",
+    use: <>同じ数字が<b>自分の列へ移動して棒グラフ</b>になりました。高い・低いがひと目で分かる。これが「見える化」。</>,
+    store: <>数字を<b>保存箱にしまいました</b>。データはちゃんと残っています…が、それだけ。</>,
+  },
+  {
+    badge: "💡 気づく",
+    title: "低いところが浮かぶ",
+    use: <>平均線を引くと…<b>数学だけ平均より大きく低い</b>！ 数字の山では埋もれていた傾向が浮かび上がりました。</>,
+    store: <>箱の中のデータを眺めても、<b>何も浮かんできません</b>。見える化していないからです。</>,
+  },
+  {
+    badge: "🔧 行動",
+    title: "行動に変える",
+    use: <>気づきから<b>行動</b>が生まれる：「<b>数学を重点学習</b>（毎日 +20分）」。ここで初めてデータが意思決定に変わります。</>,
+    store: <>気づきがないので、<b>やることも変わりません</b>。いつもどおりの勉強を続けます。</>,
+  },
+  {
+    badge: "📈 結果",
+    title: "次のテストで確かめる",
+    use: <>次のテストで<b>数学 45 → 68</b>。点線が前回の高さ（Before）です。<b>可視化 → 発見 → 行動</b>まで行ってこそデータ活用。</>,
+    store: <>次のテストでも<b>数学は 45 のまま</b>。データを保存しただけでは、価値は生まれません。</>,
+  },
 ];
-const WEAK = "数学";
-const IMPROVED = 65;
-
-const STEPS = [
-  { badge: "🎯 目的", html: "まず<b>目的</b>を決める：「テストの成績を上げたい」。目的がないと、何のデータを集めて何を見ればいいか分かりません。" },
-  { badge: "📥 集める", html: "目的に必要なデータ＝<b>各科目の点数</b>を集めました。でも数字の山のままでは、パッと見て何も分かりません…。" },
-  { badge: "📊 見える化", html: "同じ数字を<b>棒グラフに整理</b>。高い・低いがひと目で分かるようになりました。これが「見える化」の力。" },
-  { badge: "💡 気づく", html: "グラフを読むと…<b>数学だけ極端に低い</b>！ 数字の山では埋もれていた傾向が、見える化で浮かび上がりました。" },
-  { badge: "🔧 改善", html: "気づきを<b>行動に変える</b>：数学の勉強時間を増やした結果、40点→65点にアップ！ ここまでやって初めて「データ活用」です。" },
-];
-
-function Chart({ idx }: { idx: number }) {
-  // idx: 0=まだ何もない 1=数字の山 2=グラフ化 3=苦手が浮かぶ 4=改善後
-  if (idx === 0) {
-    return (
-      <div className="grid h-40 place-items-center rounded-xl bg-gray-50 ring-1 ring-gray-200">
-        <div className="text-center">
-          <div className="text-3xl">🎯</div>
-          <div className="mt-1 text-sm font-bold text-gray-700">成績を上げたい！</div>
-          <div className="mt-0.5 text-xs text-gray-400">→ まずは点数のデータを集めよう</div>
-        </div>
-      </div>
-    );
-  }
-  if (idx === 1) {
-    // 数字の山（バラバラに置かれたメモ）
-    const tilts = ["-rotate-3", "rotate-2", "rotate-6", "-rotate-2", "rotate-3"];
-    return (
-      <div className="flex h-40 flex-wrap content-center items-center justify-center gap-2 rounded-xl bg-gray-50 ring-1 ring-gray-200">
-        {SUBJECTS.map((s, i) => (
-          <span
-            key={s.name}
-            className={`rounded-lg bg-white px-2.5 py-1.5 text-sm font-bold text-gray-700 shadow-sm ring-1 ring-gray-300 ${tilts[i]}`}
-          >
-            {s.name} {s.score}点
-          </span>
-        ))}
-        <span className="w-full text-center text-xs text-gray-400">📥 集めた数字の山…このままでは読みにくい</span>
-      </div>
-    );
-  }
-  // 2以降: 棒グラフ
-  return (
-    <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-      <div className="flex h-32 items-end justify-around gap-2">
-        {SUBJECTS.map((s) => {
-          const isWeak = s.name === WEAK;
-          const score = idx >= 4 && isWeak ? IMPROVED : s.score;
-          const tone =
-            idx >= 4 && isWeak
-              ? "bg-emerald-500"
-              : idx === 3
-                ? isWeak
-                  ? "bg-rose-500"
-                  : "bg-brand-200"
-                : "bg-brand-500";
-          return (
-            <div key={s.name} className="flex w-10 flex-col items-center justify-end self-stretch">
-              <span
-                className={`text-[11px] font-bold ${
-                  idx >= 4 && isWeak ? "text-emerald-600" : idx === 3 && isWeak ? "text-rose-600" : "text-gray-500"
-                }`}
-              >
-                {score}
-                {idx >= 4 && isWeak && <span className="ml-0.5 text-[10px]">↑</span>}
-              </span>
-              <div
-                className={`w-7 rounded-t-md transition-all duration-500 ${tone}`}
-                style={{ height: `${score}%` }}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-1 flex justify-around gap-2">
-        {SUBJECTS.map((s) => (
-          <span
-            key={s.name}
-            className={`w-10 text-center text-[11px] font-bold ${
-              s.name === WEAK && idx >= 3 ? (idx >= 4 ? "text-emerald-700" : "text-rose-600") : "text-gray-500"
-            }`}
-          >
-            {s.name}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function Flow() {
-  const [idx, setIdx] = useState(0);
-  const step = STEPS[idx];
+  const reducedMotion = useReducedMotion();
+  const [mode, setMode] = useState<DataMode>("use");
+  const player = useStepPlayer(STEPS.length, reducedMotion);
+  const step = STEPS[player.index];
+  const last = player.index === player.lastIndex;
+  const [tried, setTried] = useState<Set<DataMode>>(new Set());
+  if (last && !tried.has(mode)) setTried(new Set(tried).add(mode));
   return (
     <Panel>
       <SectionTitle step={1}>成績アップ大作戦 ― データ活用の流れ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        データは<b className="text-gray-800">集めて終わりではありません</b>。「次へ」で1歩ずつ、
+        データは<b className="text-gray-800">集めて終わりではありません</b>。1歩ずつ進めて、
         数字の山が<b className="text-gray-800">行動</b>に変わるまでを見てみよう。
       </p>
+
+      <div className="mt-3 grid grid-cols-2 gap-1.5">
+        {(
+          [
+            { v: "use", label: "🚀 活用する", on: "bg-brand-600 text-white" },
+            { v: "store", label: "📦 比較：ためるだけ", on: "bg-gray-700 text-white" },
+          ] as const
+        ).map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            aria-pressed={mode === o.v}
+            onClick={() => {
+              setMode(o.v);
+              player.reset();
+            }}
+            className={`rounded-lg px-2 py-1.5 text-xs font-bold transition active:scale-95 ${mode === o.v ? o.on : "text-gray-600 ring-1 ring-gray-300"}`}
+          >
+            {o.label}
+            {tried.has(o.v) && " ✓"}
+          </button>
+        ))}
+      </div>
 
       <div className="mt-3 flex gap-1">
         {STEPS.map((s, i) => (
           <div
-            key={i}
+            key={s.badge}
             className={`flex-1 rounded-md px-0.5 py-1.5 text-center text-[10px] font-bold transition ${
-              i === idx ? "bg-brand-600 text-white" : i < idx ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
+              i === player.index ? "bg-brand-600 text-white" : i < player.index ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
             }`}
           >
             {s.badge}
@@ -133,23 +108,39 @@ function Flow() {
         ))}
       </div>
 
-      <div className="mt-3">
-        <Chart idx={idx} />
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <DecisionStage mode={mode} phase={player.index} reducedMotion={reducedMotion} />
       </div>
 
-      <p
-        className="mt-3 min-h-[4.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
-        dangerouslySetInnerHTML={{ __html: `<b>${step.badge}</b>：${step.html}` }}
-      />
+      <div
+        className={`mt-3 min-h-[4.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
+          mode === "store" && player.index >= 2 ? "bg-gray-50 ring-gray-200" : "bg-sky-50 ring-sky-200"
+        }`}
+        aria-live="polite"
+      >
+        <b>{step.badge}</b>：{mode === "use" ? step.use : step.store}
+      </div>
 
-      <StepNav
-        index={idx}
-        total={STEPS.length}
-        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
-        onNext={() => setIdx((i) => Math.min(STEPS.length - 1, i + 1))}
-        onReset={() => setIdx(0)}
-        doneLabel="改善まで到達 🎉"
-      />
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={STEPS}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="データ活用の流れを再生"
+          timelineLabel="データ活用の流れのタイムライン"
+          startCaption="目的"
+          endCaption="次のテスト"
+        />
+      </div>
+
+      {tried.size === 2 && (
+        <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="data-lesson">
+          💡 同じデータでも、<b>ためるだけ</b>では次のテストは変わらない。<b>可視化 → 発見 → 行動</b>まで進めて初めて「データ活用」になります。
+        </div>
+      )}
     </Panel>
   );
 }
