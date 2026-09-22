@@ -1,0 +1,81 @@
+/* 2.5D ステージ共通（第3弾: 暗号/AI/無線/アルゴリズム/データ構造/プログラミング/データ活用）。
+   床の上に置いた物体（HTML オーバーレイ）が left/top の遷移で「移動」する。
+   動きは説明になるものだけ：移動・状態変化・分岐。常時浮遊や意味のない回転は置かない。 */
+
+.stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+  background: radial-gradient(120% 90% at 50% 12%, #ffffff 0%, #f3f6fb 62%, #eaeff7 100%);
+  box-shadow: inset 0 0 0 1px #e3e8f0;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* 位置は left/top（%）で持ち、中心合わせ。移動そのものを遷移で見せる。 */
+.at {
+  position: absolute;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  transition:
+    left 1100ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 1100ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    opacity 500ms ease;
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #4b5563;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px #e3e8f0;
+}
+
+/* 物体の接地影（浮遊はさせない） */
+.shadow {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  width: 80%;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(30, 42, 64, 0.22), transparent);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+@keyframes stage-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.pop {
+  animation: stage-pop 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* reduced-motion：移動・遷移・一度きりの演出もすべて即時に（位置と状態だけで伝わる設計） */
+.stage[data-reduced-motion="true"] *,
+.stage[data-reduced-motion="true"] *::before,
+.stage[data-reduced-motion="true"] *::after {
+  transition-duration: 0ms !important;
+  transition-delay: 0ms !important;
+  animation: none !important;
+}

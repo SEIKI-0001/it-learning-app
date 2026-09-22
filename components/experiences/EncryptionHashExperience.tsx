@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { TwoRouteScene, type TwoRouteSceneProps } from "./encryption/TwoRouteScene";
+import { diffCount, hashHex, toyCipher } from "./encryption/toyCrypto";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「暗号化とハッシュ化」専用の体験。
-//   ① 暗号化 … 鍵で読めなくする → 鍵で元に戻せる（可逆）
-//   ② ハッシュ化 … データをミキサーにかけ固定長のスムージー(値)に → 元に戻せない（一方向）
-//   ③ くらべて整理
+//   ① 2つのルート … 同じ平文を暗号化ベルトとハッシュベルトへ流し、
+//      「鍵の門を2回くぐると元に戻る／ハッシュ関数の門は逆向きに通れない」を現象として見る。
+//      最後に入力を1文字変えて、ハッシュ値がまるごと変わることを確かめる
+//   ② 暗号化 … 鍵で読めなくする → 鍵で元に戻せる（可逆）
+//   ③ ハッシュ化 … データをミキサーにかけ固定長のスムージー(値)に → 元に戻せない（一方向）
+//   ④ くらべて整理
 // 学習用の簡易変換（本物の暗号ではない）で、可逆／不可逆の感覚をつかむ。
 // ============================================================================
 
@@ -17,16 +25,150 @@ function encryptHex(text: string, key: number): string {
     .join(" ");
 }
 
-function hashHex(s: string): string {
-  const mk = (seed: number) => {
-    let h = seed >>> 0;
-    for (let i = 0; i < s.length; i++) {
-      h ^= s.charCodeAt(i);
-      h = Math.imul(h, 0x01000193) >>> 0;
-    }
-    return (h >>> 0).toString(16).padStart(8, "0");
-  };
-  return (mk(0x811c9dc5) + mk(0x12345678)).toUpperCase();
+const PLAIN = "HELLO";
+const ROUTE_KEY = 3;
+const VARIANTS = ["HELLo", "HeLLO", "HELLO"] as const;
+
+type RouteStep = { title: string; detail: ReactNode; scene: Pick<TwoRouteSceneProps, "enc" | "hash" | "focus"> };
+
+const ROUTE_STEPS: RouteStep[] = [
+  {
+    title: "同じ平文を2つのルートへ",
+    detail: <>同じデータ「<b>HELLO</b>」を、上の<b>暗号化ルート</b>と下の<b>ハッシュルート</b>に1枚ずつ置きました。</>,
+    scene: { enc: { pos: "start", state: "plain", gate: null }, hash: { pos: "start", state: "plain", gate: false }, focus: "both" },
+  },
+  {
+    title: "鍵の門をくぐる → 暗号文",
+    detail: <>🔑<b>鍵で暗号化</b>。門をくぐった瞬間、HELLO は読めない記号の列（暗号文）に変わります。</>,
+    scene: { enc: { pos: "mid", state: "cipher", gate: "gate1" }, hash: { pos: "start", state: "plain", gate: false }, focus: "enc" },
+  },
+  {
+    title: "同じ鍵でもう一度 → 元に戻る",
+    detail: <>同じ🔑<b>鍵で復号</b>。暗号文が門をくぐると <b>HELLO がそのまま戻ってきました</b>。鍵があれば戻せる＝<b>可逆</b>。</>,
+    scene: { enc: { pos: "end", state: "restored", gate: "gate2" }, hash: { pos: "start", state: "plain", gate: false }, focus: "enc" },
+  },
+  {
+    title: "ハッシュ関数の門をくぐる → ハッシュ値",
+    detail: <>今度は下のルート。<b>ハッシュ関数</b>に通すと、決まった長さ（ここでは16桁）の<b>ハッシュ値</b>になります。鍵は使いません。</>,
+    scene: { enc: { pos: "end", state: "restored", gate: null }, hash: { pos: "digest", state: "digest", gate: true }, focus: "hash" },
+  },
+  {
+    title: "逆向きに戻そうとすると…通れない",
+    detail: (
+      <>
+        ハッシュ値を門へ押し戻しても<b>通れません</b>。ハッシュ関数は<b>一方向の門</b>で、ハッシュ値から HELLO を作り直す方法はない＝<b>不可逆</b>。
+        上のルートは戻れたのに、下のルートは戻れない。これが決定的な違いです。
+      </>
+    ),
+    scene: { enc: { pos: "end", state: "restored", gate: null }, hash: { pos: "back", state: "blocked", gate: false }, focus: "both" },
+  },
+  {
+    title: "入力を1文字だけ変える",
+    detail: <>入力を<b>1文字だけ</b>変えて、もう一度ハッシュ関数に流します。下のボタンで入力を切り替えて比べてみよう。</>,
+    scene: { enc: { pos: "end", state: "restored", gate: null }, hash: { pos: "digest", state: "digest", gate: true, rerun: true }, focus: "hash" },
+  },
+];
+
+function DiffDigest({ value, base }: { value: string; base: string }) {
+  return (
+    <span className="font-mono">
+      {[...value].map((c, i) => (
+        <span key={i} className={c !== base[i] ? "rounded-sm bg-rose-100 text-rose-700" : undefined}>
+          {c}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function TwoRoutes() {
+  const reducedMotion = useReducedMotion();
+  const player = useStepPlayer(ROUTE_STEPS.length, reducedMotion);
+  const step = ROUTE_STEPS[player.index];
+  const last = player.index === player.lastIndex;
+  const [variant, setVariant] = useState<(typeof VARIANTS)[number]>(VARIANTS[0]);
+  const hashInput = last ? variant : PLAIN;
+  const baseDigest = hashHex(PLAIN);
+  const digest = hashHex(hashInput);
+  const changed = diffCount(digest, baseDigest);
+
+  return (
+    <Panel>
+      <SectionTitle step={1}>同じデータを2つのルートに流す</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        「戻せる／戻せない」を、言葉ではなく<b className="text-gray-800">データの動き</b>で確かめます。
+      </p>
+
+      <p className="mt-3 text-sm font-bold text-gray-900" data-testid="route-step-title">
+        STEP {player.index + 1}：{step.title}
+      </p>
+
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <TwoRouteScene input={PLAIN} hashInput={hashInput} cipher={toyCipher(PLAIN, ROUTE_KEY)} digest={digest} {...step.scene} reducedMotion={reducedMotion} />
+      </div>
+
+      {last && (
+        <div className="mt-3 rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-200" data-testid="hash-compare">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            <span className="font-bold text-gray-500">入力：</span>
+            {VARIANTS.map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={variant === v}
+                onClick={() => setVariant(v)}
+                className={`rounded-lg px-2.5 py-1 font-mono text-xs font-bold transition active:scale-95 ${
+                  variant === v ? "bg-teal-700 text-white" : "bg-white text-gray-700 ring-1 ring-gray-300"
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          <dl className="mt-2.5 space-y-1 text-[11px] leading-relaxed">
+            <div className="flex gap-2">
+              <dt className="w-16 flex-none font-mono font-bold text-gray-500">{PLAIN}</dt>
+              <dd className="break-all font-mono text-gray-700">{baseDigest}</dd>
+            </div>
+            <div className="flex gap-2">
+              <dt className="w-16 flex-none font-mono font-bold text-teal-700">{variant}</dt>
+              <dd className="break-all text-gray-900" data-testid="hash-compare-digest">
+                <DiffDigest value={digest} base={baseDigest} />
+              </dd>
+            </div>
+          </dl>
+          <p
+            className={`mt-2 rounded-lg px-3 py-2 text-center text-xs font-bold ${changed ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-800"}`}
+            data-testid="hash-compare-result"
+          >
+            {changed
+              ? `入力は1文字の違いなのに、ハッシュ値は16桁中${changed}桁が変わった（似てさえいない）`
+              : "同じ入力なら、何度流しても完全に同じハッシュ値"}
+          </p>
+        </div>
+      )}
+
+      <div className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
+        {step.detail}
+      </div>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={ROUTE_STEPS}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="2つのルートを再生"
+          timelineLabel="2つのルートのタイムライン"
+          startCaption="同じ平文"
+          endCaption="1文字変える"
+          stepTone={(i) => (i >= 1 && i <= 2 ? "bg-indigo-600" : i >= 3 ? "bg-teal-700" : "bg-brand-600")}
+        />
+      </div>
+    </Panel>
+  );
 }
 
 function Encryption() {
@@ -37,7 +179,7 @@ function Encryption() {
 
   return (
     <Panel>
-      <SectionTitle step={1}>暗号化（鍵で戻せる＝可逆）</SectionTitle>
+      <SectionTitle step={2}>暗号化（鍵で戻せる＝可逆）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         暗号化は<b className="text-gray-800">鍵</b>を使って読めなくする処理。
         <b className="text-gray-800">同じ鍵で元に戻せます（復号）</b>。鍵付きの箱のイメージ。
@@ -116,7 +258,7 @@ function Hashing() {
 
   return (
     <Panel>
-      <SectionTitle step={2}>ハッシュ化（戻せない＝一方向）</SectionTitle>
+      <SectionTitle step={3}>ハッシュ化（戻せない＝一方向）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         ハッシュ化の大事な性質は、<b className="text-gray-800">同じ入力なら、いつ・何回やっても、必ず同じ値</b>になること。
         2つの欄に<b className="text-gray-800">同じ文章</b>を入れて、値がそろうか確かめよう。
@@ -183,11 +325,12 @@ export default function EncryptionHashExperience() {
         <b>ハッシュ化＝ミキサー</b>（材料を入れて回すとスムージーに。スムージーから元の果物には戻せない＝戻せない）。
       </div>
 
+      <TwoRoutes />
       <Encryption />
       <Hashing />
 
       <Panel>
-        <SectionTitle step={3}>くらべて整理</SectionTitle>
+        <SectionTitle step={4}>くらべて整理</SectionTitle>
         <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-300">
           <table className="w-full text-sm">
             <thead>

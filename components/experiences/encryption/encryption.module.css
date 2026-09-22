@@ -1,0 +1,307 @@
+/* 暗号化とハッシュ化：2本のベルト。動くのは「カード（データ）」だけ。
+   門をくぐる途中で中身が切り替わる＝処理を通った、を表す。 */
+
+.scene {
+  --enc: #4f46e5;
+  --dec: #059669;
+  --hash: #0f766e;
+}
+
+.lane {
+  transition: opacity 500ms ease;
+}
+
+.lane[data-dim="true"],
+.routeTitle[data-dim="true"],
+.gateLabel[data-dim="true"],
+.card[data-dim="true"] {
+  opacity: 0.28;
+}
+
+/* ---------- 門 ---------- */
+
+.gatePillar {
+  fill: #dbe3ee;
+  stroke: #b9c5d6;
+  stroke-width: 0.6;
+  transition: fill 400ms ease;
+}
+
+.gateTop {
+  fill: #cfd9e7;
+}
+
+.gateFace {
+  fill: #ffffff;
+  stroke: var(--gate);
+  stroke-width: 1;
+  transition: fill 400ms ease;
+}
+
+.gate[data-active="true"] .gatePillar {
+  fill: color-mix(in srgb, var(--gate) 30%, #ffffff);
+}
+
+.gate[data-active="true"] .gateFace {
+  fill: color-mix(in srgb, var(--gate) 14%, #ffffff);
+}
+
+.gate[data-blocked="true"] .gatePillar {
+  fill: #fecdd3;
+  stroke: #e11d48;
+}
+
+.gateLabel {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, -50%);
+  color: #1f2937;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: opacity 500ms ease;
+}
+
+.routeTitle {
+  position: absolute;
+  z-index: 6;
+  transform: translateY(-50%);
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: opacity 500ms ease;
+}
+
+.routeEnc {
+  background: var(--enc);
+}
+
+.routeHash {
+  background: var(--hash);
+}
+
+/* ---------- データカード ---------- */
+
+.scene .card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition:
+    left 1300ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    top 1300ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    opacity 500ms ease;
+}
+
+.faces {
+  display: grid;
+  min-width: 62px;
+  padding: 4px 7px;
+  border: 1px solid #cfd8e5;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #eef2f8);
+  box-shadow: 0 4px 0 #d3dbe7, 0 8px 14px rgba(30, 42, 64, 0.14);
+  transition: background 400ms ease 550ms, border-color 400ms ease 550ms, box-shadow 400ms ease 550ms;
+}
+
+.face {
+  grid-area: 1 / 1;
+  text-align: center;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: 0;
+  /* 門を通過するころ（移動の中盤）に中身が入れ替わる */
+  transition: opacity 250ms ease 550ms;
+}
+
+.face[data-on="true"] {
+  opacity: 1;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.card[data-state="cipher"] .faces {
+  border-color: #312e81;
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0 3px, transparent 3px 6px), linear-gradient(180deg, #4f46e5, #312e81);
+  box-shadow: 0 4px 0 #27246b, 0 8px 14px rgba(49, 46, 129, 0.3);
+}
+
+.card[data-state="cipher"] .face {
+  color: #ffffff;
+}
+
+.card[data-state="restored"] .faces {
+  border-color: #34d399;
+  background: linear-gradient(180deg, #ffffff, #e9fbf3);
+  box-shadow: 0 4px 0 #a7e9cc, 0 8px 14px rgba(16, 185, 129, 0.2);
+}
+
+.card[data-state="digest"] .faces,
+.card[data-state="blocked"] .faces {
+  border-color: #134e4a;
+  background: linear-gradient(180deg, #115e59, #0f3f3b);
+  box-shadow: 0 4px 0 #0b2e2b, 0 8px 14px rgba(15, 118, 110, 0.28);
+}
+
+.card[data-state="digest"] .face,
+.card[data-state="blocked"] .face {
+  color: #99f6e4;
+}
+
+/* 逆向きに押し戻そうとしても門で止まる（一度だけ跳ね返る） */
+.card[data-state="blocked"] .faces {
+  animation: enc-bump 520ms ease 1150ms both;
+}
+
+@keyframes enc-bump {
+  0%,
+  100% {
+    transform: none;
+  }
+  35% {
+    transform: translateX(-5px);
+  }
+  70% {
+    transform: translateX(3px);
+  }
+}
+
+.cardTag {
+  padding: 0 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4b5563;
+  font-size: 8.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.card[data-state="restored"] .cardTag {
+  color: #047857;
+}
+
+.card[data-state="blocked"] .cardTag {
+  color: #be123c;
+}
+
+/* 1文字変えた入力を流し直す：左端から門をくぐって、新しいハッシュ値として止まる */
+.rerun {
+  animation: enc-rerun 1300ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+}
+
+@keyframes enc-rerun {
+  from {
+    left: 14.375%;
+  }
+}
+
+.rerun .face[data-on="false"] {
+  animation: enc-face-out 1300ms linear both;
+}
+
+.rerun .face[data-on="true"] {
+  animation: enc-face-in 1300ms linear both;
+}
+
+.rerun .faces {
+  animation: enc-faces-in 1300ms linear both;
+}
+
+@keyframes enc-face-out {
+  0%,
+  38% {
+    opacity: 1;
+  }
+  52%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes enc-face-in {
+  0%,
+  42% {
+    opacity: 0;
+  }
+  56%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes enc-faces-in {
+  0%,
+  40% {
+    border-color: #cfd8e5;
+    background: #ffffff;
+  }
+}
+
+/* ---------- 逆向きの試み ---------- */
+
+.reverseLine {
+  fill: none;
+  stroke: #e11d48;
+  stroke-width: 1.6;
+  stroke-dasharray: 4 3;
+}
+
+.reverseHead {
+  fill: none;
+  stroke: #e11d48;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.barrier {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 6px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 3px 0 #9f1239;
+}
+
+.ghost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.ghostText {
+  min-width: 62px;
+  padding: 4px 7px;
+  border: 1.5px dashed #fda4af;
+  border-radius: 8px;
+  color: #e11d48;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ghost .cardTag {
+  color: #be123c;
+}
+
+/* ---------- 1文字の差の比較 ---------- */
+
+.diffChar {
+  border-radius: 2px;
+  background: #ffe4e6;
+  color: #be123c;
+}
