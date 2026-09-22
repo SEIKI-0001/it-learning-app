@@ -95,9 +95,10 @@ export default function ExplanationSlides({
                 className={`col-start-1 row-start-1 w-full transition duration-300 motion-reduce:transition-none ${
                   isActive
                     ? "relative z-10 translate-x-0 opacity-100"
-                    : index < activeIndex
-                      ? "pointer-events-none -translate-x-full opacity-0"
-                      : "pointer-events-none translate-x-full opacity-0"
+                    : // 非表示スライドは高さを持たせない（縦幅は表示中のスライドで決める）
+                      index < activeIndex
+                      ? "pointer-events-none h-0 -translate-x-full overflow-hidden opacity-0"
+                      : "pointer-events-none h-0 translate-x-full overflow-hidden opacity-0"
                 }`}
               >
                 {slide.content}
