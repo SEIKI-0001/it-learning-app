@@ -1,13 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { SceneTimeline } from "./scene/SceneTimeline";
+import { useReducedMotion } from "./scene/useReducedMotion";
+import { useStepPlayer } from "./scene/useStepPlayer";
+import { SQL_SCENARIOS, SqlStatement, SqlTable } from "./sql/SqlStage";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「データベースとSQL」専用の体験。
 //   ① SQLの形   … SELECT 列 FROM 表 WHERE 条件
-//   ② ミニSQL   … 列(SELECT)と条件(WHERE)を選ぶと、結果の表が変わる
-//   ③ おさらい  … 代表的な命令
+//   ② 表の変形  … SQL文の句が光るのと同時に、1つの表が変形する
+//                  SELECT=列がしぼむ／WHERE=行が抜けて詰まる／ORDER BY=行が並び替わる／組み合わせ
+//   ③ ミニSQL   … 列(SELECT)と条件(WHERE)を選ぶと、結果の表が変わる
+//   ④ おさらい  … 代表的な命令
 // 表計算より「欲しいデータを言葉で取り出す」感覚を、操作でつかむ。
 // ============================================================================
 
@@ -37,6 +43,72 @@ const CONDS: { label: string; expr: string | null; pred: (r: Row) => boolean }[]
   },
 ];
 
+// ② SQL文が表をどう変形するか ----------------------------------------------
+function Transform() {
+  const reducedMotion = useReducedMotion();
+  const [sid, setSid] = useState(SQL_SCENARIOS[0].id);
+  const scenario = SQL_SCENARIOS.find((s) => s.id === sid)!;
+  const player = useStepPlayer(scenario.frames.length, reducedMotion, 2600);
+  const frame = scenario.frames[player.index];
+  return (
+    <Panel>
+      <SectionTitle step={2}>SQLが表をどう変えるか</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        SQL文の<b className="text-gray-800">光っている句</b>が、下の表に何をするかを見てみよう。
+        同じ表が、句ごとに<b className="text-gray-800">しぼられ・選ばれ・並べ替わり</b>ます。
+      </p>
+
+      <div className="mt-3 grid grid-cols-4 gap-1" role="group" aria-label="SQLの句を選ぶ">
+        {SQL_SCENARIOS.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            aria-pressed={s.id === sid}
+            onClick={() => {
+              setSid(s.id);
+              player.reset();
+            }}
+            className={`rounded-lg px-1 py-1.5 font-mono text-[11px] font-bold transition active:scale-95 ${
+              s.id === sid ? "bg-gray-900 text-white" : "text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {s.tab}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3">
+        <SqlStatement scenario={scenario} clause={frame.clause} />
+      </div>
+      <div className="mt-2">
+        <SqlTable scenario={scenario} frame={frame} reducedMotion={reducedMotion} />
+      </div>
+
+      <div className="mt-3 min-h-[4.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
+        <b>
+          STEP {player.index + 1}／{frame.title}
+        </b>
+        ：{frame.text}
+      </div>
+
+      <div className="mt-3">
+        <SceneTimeline
+          index={player.index}
+          steps={scenario.frames}
+          playing={player.playing}
+          reducedMotion={reducedMotion}
+          onMove={player.move}
+          onTogglePlay={player.togglePlay}
+          playLabel="SQLの実行を再生"
+          timelineLabel="SQLの実行のタイムライン"
+          startCaption="元の表"
+          endCaption="結果"
+        />
+      </div>
+    </Panel>
+  );
+}
+
 function MiniSql() {
   const [selKeys, setSelKeys] = useState<string[]>(COLS.map((c) => c.key));
   const [condIdx, setCondIdx] = useState(1);
@@ -58,7 +130,7 @@ function MiniSql() {
 
   return (
     <Panel>
-      <SectionTitle step={2}>ミニSQL：選ぶと結果が変わる</SectionTitle>
+      <SectionTitle step={3}>ミニSQL：選ぶと結果が変わる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         <b className="text-gray-800">取り出す列</b>と<b className="text-gray-800">条件</b>を選ぶと、
         SQL文と<b className="text-gray-800">結果の表</b>が変わります。いろいろ試してみよう。
@@ -238,16 +310,18 @@ export default function SqlExperience() {
         </p>
       </Panel>
 
+      <Transform />
       <MiniSql />
 
       <Panel>
-        <SectionTitle step={3}>代表的な命令をおさらい</SectionTitle>
+        <SectionTitle step={4}>代表的な命令をおさらい</SectionTitle>
         <ul className="mt-3 space-y-2 text-sm">
           {[
             { k: "SELECT", d: "取り出す（検索）" },
             { k: "INSERT", d: "追加する" },
             { k: "UPDATE", d: "書きかえる" },
             { k: "DELETE", d: "消す" },
+            { k: "ORDER BY", d: "並べ替える（SELECT に付ける句）" },
           ].map((x) => (
             <li key={x.k} className="flex items-center gap-3 rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
               <span className="w-20 font-mono text-sm font-bold text-brand-700">{x.k}</span>
