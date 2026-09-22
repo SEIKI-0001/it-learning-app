@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import AlgorithmExperience from "@/components/experiences/AlgorithmExperience";
+import { buildFlowTrace } from "@/components/experiences/algorithm/flowTrace";
 import {
   addCurrentNumber,
   FLOWCHART,
@@ -199,8 +200,8 @@ describe("AlgorithmExperience beginner flow", () => {
       fireEvent.click(screen.getByRole("button", { name: "処理を進める" }));
     }
     expect(screen.getByText("現在の数字は5以下？")).toBeInTheDocument();
-    expect(screen.getByText("はい")).toBeInTheDocument();
-    expect(screen.getByText("いいえ")).toBeInTheDocument();
+    expect(within(screen.getByTestId("flow-window")).getByText("はい")).toBeInTheDocument();
+    expect(within(screen.getByTestId("flow-window")).getByText("いいえ")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "処理を進める" }));
     expect(screen.getByText("合計に現在の数字を足す")).toBeInTheDocument();
@@ -274,5 +275,56 @@ describe("AlgorithmExperience beginner flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "戻る" }));
     fireEvent.click(screen.getByRole("button", { name: "戻る" }));
     expect(screen.getByTestId("repeat-total")).toHaveTextContent("15");
+  });
+});
+
+describe("flowchart execution trace (token + variables)", () => {
+  it("walks start → init → (condition → add → increment) × N → condition(no) → display → end", () => {
+    const trace = buildFlowTrace(5);
+    expect(trace).toHaveLength(21);
+    expect(trace.filter((s) => s.node === "condition").map((s) => s.judge)).toEqual([true, true, true, true, true, false]);
+    expect(trace.at(-2)).toMatchObject({ node: "display-total", total: 15, i: 6 });
+    // くり返しは必ず条件へ戻る
+    const afterIncrement = trace.flatMap((s, i) => (s.node === "increment-current" ? [trace[i + 1].node] : []));
+    expect(new Set(afterIncrement)).toEqual(new Set(["condition"]));
+    expect(buildFlowTrace(3).at(-2)).toMatchObject({ total: 6 });
+  });
+
+  it("moves the token through the nodes and updates the variable boxes beside the chart", () => {
+    render(<AlgorithmExperience />);
+    advanceToFlowchartStep();
+    const run = () => screen.getByTestId("flow-run");
+    const next = () => fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
+    expect(run()).toHaveAttribute("data-node", "start");
+    expect(screen.getByTestId("flow-run-var-total")).toHaveTextContent("？");
+    next();
+    next();
+    expect(screen.getByTestId("flow-run-var-i")).toHaveTextContent("1");
+    expect(screen.getByTestId("flow-run-var-total")).toHaveTextContent("0");
+    next();
+    expect(run()).toHaveAttribute("data-node", "condition");
+    expect(screen.getByTestId("flow-run-judge")).toHaveTextContent("1 ≦ 5 → はい");
+    next();
+    expect(run()).toHaveAttribute("data-node", "add-current");
+    expect(screen.getByTestId("flow-run-var-total")).toHaveTextContent("1");
+    next();
+    expect(screen.getByTestId("flow-run-var-i")).toHaveTextContent("2");
+    next();
+    // i を増やしたあとは条件へ戻る（戻り道の矢印が「通った道」になる）
+    expect(run()).toHaveAttribute("data-node", "condition");
+    expect(run().querySelector('[data-edge="increment-current>condition"]')).toHaveAttribute("data-state", "taken");
+    expect(screen.getByTestId("flow-run-lap")).toHaveTextContent("2 周目");
+  });
+
+  it("the NO branch leads to display: the token path changes with the condition", () => {
+    render(<AlgorithmExperience />);
+    advanceToFlowchartStep();
+    fireEvent.click(screen.getByRole("button", { name: "i ≦ 3" }));
+    fireEvent.click(screen.getByRole("button", { name: "STEP 13：i ≦ 3 ? → いいえ" }));
+    expect(screen.getByTestId("flow-run-judge")).toHaveTextContent("4 ≦ 3 → いいえ");
+    expect(screen.getByTestId("flow-run").querySelector('[data-edge="condition>display-total"]')).toHaveAttribute("data-state", "next");
+    fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
+    expect(screen.getByTestId("flow-run")).toHaveAttribute("data-node", "display-total");
+    expect(screen.getByTestId("flow-run-output")).toHaveTextContent("6");
   });
 });
