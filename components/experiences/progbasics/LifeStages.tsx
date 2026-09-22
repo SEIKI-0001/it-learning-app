@@ -15,7 +15,7 @@ import styles from "./life.module.css";
 // ---------------------------------------------------------------------------
 
 /** 画面に見えている間だけ、場面を 0 → count-1 へ自動で進める。runKey が変わると最初から。 */
-function useAutoTimeline(count: number, stepMs: number, runKey: string, reducedMotion: boolean, ref: RefObject<HTMLElement | null>) {
+export function useAutoTimeline(count: number, stepMs: number, runKey: string, reducedMotion: boolean, ref: RefObject<HTMLElement | null>) {
   const fullKey = `${runKey}|${reducedMotion ? "still" : "motion"}`;
   const [phase, setPhase] = useState(0);
   const [key, setKey] = useState(fullKey);
@@ -53,14 +53,14 @@ function useAutoTimeline(count: number, stepMs: number, runKey: string, reducedM
   };
 }
 
-type Line = { text: ReactNode; indent?: boolean };
+export type Line = { text: ReactNode; indent?: boolean; /** 分岐で選ばれず実行されない行 */ skipped?: boolean };
 
 /** ステージの下に置くプログラム。いま実行している行を光らせる */
-function Program({ lines, current, testId }: { lines: Line[]; current: number | null; testId: string }) {
+export function Program({ lines, current, testId }: { lines: Line[]; current: number | null; testId: string }) {
   return (
     <ol className={styles.program} aria-label="プログラム" data-testid={testId}>
       {lines.map((l, i) => (
-        <li key={i} className={styles.line} data-current={current === i ? "true" : "false"} data-indent={l.indent ? "true" : "false"}>
+        <li key={i} className={styles.line} data-current={current === i ? "true" : "false"} data-indent={l.indent ? "true" : "false"} data-skipped={l.skipped ? "true" : "false"}>
           <span className={styles.pc} aria-hidden>
             {current === i ? "▶" : ""}
           </span>
@@ -71,7 +71,7 @@ function Program({ lines, current, testId }: { lines: Line[]; current: number | 
   );
 }
 
-function Frame({
+export function Frame({
   children,
   caption,
   captionTestId,
@@ -94,7 +94,7 @@ function Frame({
 }
 
 /** 最後まで動いたら「もう一度見る」。動きを減らす設定では場面スライダー */
-function Replay({
+export function Replay({
   done,
   onReplay,
   reducedMotion,

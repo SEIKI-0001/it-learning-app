@@ -73,6 +73,8 @@ const LABEL: Record<FlowNodeId, (limit: number) => string> = {
 };
 
 const LIMITS = [5, 3] as const;
+/** 1歩の間隔。トークンの移動（1.4s）→ 変数の書き換え → 読む間 を1歩に収める */
+const STEP_MS = 2800;
 
 function VarBox({ name, value, prev, testId }: { name: string; value: number | null; prev: number | null; testId: string }) {
   const changed = value !== prev;
@@ -93,7 +95,7 @@ export function FlowRun() {
   const reducedMotion = useReducedMotion();
   const [limit, setLimit] = useState<(typeof LIMITS)[number]>(5);
   const trace = buildFlowTrace(limit);
-  const player = useStepPlayer(trace.length, reducedMotion, 1500);
+  const player = useStepPlayer(trace.length, reducedMotion, STEP_MS);
   const index = Math.min(player.index, trace.length - 1);
   const cur = trace[index];
   const prev = index > 0 ? trace[index - 1] : undefined;
@@ -136,7 +138,7 @@ export function FlowRun() {
       </div>
 
       <div className="mt-3 overflow-x-auto">
-        <div className={styles.stage} data-reduced-motion={reducedMotion ? "true" : "false"} data-testid="flow-run" data-node={cur.node} data-index={index}>
+        <div className={styles.stage} data-reduced-motion={reducedMotion ? "true" : "false"} data-testid="flow-run" data-animate={animate ? "true" : "false"} data-node={cur.node} data-index={index}>
           <svg className={styles.edges} viewBox="0 0 320 336" aria-hidden>
             <defs>
               <marker id="flow-run-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">

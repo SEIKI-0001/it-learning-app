@@ -31,10 +31,10 @@ describe("processSim", () => {
 });
 
 describe("BusinessProcessExperience", () => {
-  it("compares before/after lanes in the same format, with lead time 60→20 and the BPR/BPM quiz", () => {
+  it("shows the 2.5D desks with a before/after switch at the top, lead time 60→20 and the BPR/BPM quiz", () => {
     renderDeck();
-    expect(screen.getByTestId("lane-before")).toHaveTextContent("1件 60分");
-    expect(screen.getByTestId("lane-after")).toHaveTextContent("1件 20分");
+    expect(screen.getByRole("radio", { name: "改善前" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByTestId("bp-scene")).toHaveAttribute("data-mode", "before");
     expect(screen.getByTestId("lead-time")).toHaveTextContent("60分");
     expect(screen.getByTestId("lead-time")).toHaveTextContent("20分");
     expect(screen.getByTestId("bp-insight")).toHaveTextContent("60分 → 20分");
@@ -43,19 +43,18 @@ describe("BusinessProcessExperience", () => {
     expect(screen.getByText(/BPR/)).toBeInTheDocument();
   });
 
-  it("piles documents at 手書き転記 only before the improvement, on the same clock", () => {
+  it("piles documents at 手書き転記 before the improvement, and none after switching", () => {
     renderDeck();
-    expect(screen.getByTestId("before-station-1")).toHaveAttribute("data-bottleneck", "true");
-    expect(screen.getByTestId("after-station-1")).toHaveAttribute("data-bottleneck", "false");
-
     scrub(60);
-    expect(screen.getByTestId("before-queue-1")).toBeInTheDocument();
-    expect(screen.queryByTestId("after-queue-1")).toBeNull();
     expect(screen.getByTestId("sim-note")).toHaveTextContent("手書き転記");
     expect(screen.getByTestId("sim-note")).toHaveTextContent("渋滞");
+    expect(screen.getByTestId("bp-steps")).toHaveTextContent("時間がかかる");
 
-    scrub(80);
-    expect(screen.getByTestId("done-after")).toHaveTextContent("6件完了");
-    expect(screen.getByTestId("done-before")).not.toHaveTextContent("完了");
+    fireEvent.click(screen.getByRole("radio", { name: "改善後" }));
+    expect(screen.getByRole("radio", { name: "改善後" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByTestId("bp-scene")).toHaveAttribute("data-mode", "after");
+    expect(screen.getByTestId("bp-steps")).toHaveTextContent("✓ 改善");
+    scrub(30);
+    expect(screen.getByTestId("sim-note")).not.toHaveTextContent("渋滞");
   });
 });
