@@ -1,0 +1,178 @@
+/* 週間レポート = 紙の日記。
+   アプリ共通の「フラット・影なし」規約の意図的な例外（RoadmapMap と同じ扱い）。
+   紙・罫線・付箋・テープ・マーカーはこのファイルの中だけで完結させる。 */
+
+.sheet {
+  --ink: #2c2b33;
+  --ink-soft: #5d5a66;
+  --pencil: #7b7784;
+  --rule: #dfe7f1;
+  --margin-line: #efc3b4;
+  --paper: #fcfaf4;
+  --line: 32px;
+
+  position: relative;
+  font-family: var(--font-diary), var(--font-app-sans), serif;
+  color: var(--ink);
+  background-color: var(--paper);
+  /* 横罫。文字の行送りを var(--line) に揃えて、字が罫線に乗るようにする */
+  background-image:
+    linear-gradient(to right, transparent 27px, var(--margin-line) 27px, var(--margin-line) 28px, transparent 28px),
+    repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
+  /* 罫線を行の下寄り（字の少し下）に引き、字が線に乗って見えるようにする */
+  background-position: 0 0, 0 7px;
+  border: 1px solid #ebe5d6;
+  border-radius: 4px 6px 5px 3px;
+  box-shadow:
+    0 1px 0 rgba(60, 50, 30, 0.04),
+    0 10px 24px -14px rgba(60, 50, 30, 0.35);
+  padding: 12px 18px 28px 40px;
+  line-height: var(--line);
+  font-size: 16px;
+  /* 小さい「ゃ」「っ」や句読点で行を始めない（手書きの自然さを崩さない） */
+  line-break: strict;
+}
+
+/* 綴じ穴 */
+.sheet::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 40px;
+  bottom: 40px;
+  width: 8px;
+  background-image: radial-gradient(circle at 4px 4px, #e6dfcf 3.2px, transparent 3.6px);
+  background-size: 8px 96px;
+  background-repeat: repeat-y;
+}
+
+.date {
+  display: block;
+  text-align: right;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.eyebrow {
+  font-size: 14px;
+  color: var(--pencil);
+}
+
+.headline {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: var(--line);
+  letter-spacing: 0.01em;
+}
+
+/* 蛍光マーカー。行の下半分だけ塗る */
+.marker {
+  background: linear-gradient(transparent 58%, rgba(242, 205, 166, 0.75) 58%, rgba(242, 205, 166, 0.75) 92%, transparent 92%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 0 2px;
+}
+
+.body {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.soft {
+  color: var(--ink-soft);
+}
+
+.pencil {
+  color: var(--pencil);
+}
+
+.sectionTitle {
+  position: relative;
+  display: inline-block;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.squiggle {
+  position: absolute;
+  left: -2px;
+  right: -4px;
+  bottom: -3px;
+  height: 8px;
+  width: calc(100% + 6px);
+  overflow: visible;
+}
+
+.itemTitle {
+  font-weight: 600;
+}
+
+/* 付箋（数字のメモ） */
+.note {
+  position: relative;
+  background: #eef4fb;
+  border-radius: 2px;
+  padding: 22px 14px 10px;
+  transform: rotate(-0.8deg);
+  box-shadow: 0 6px 14px -10px rgba(40, 60, 90, 0.45);
+  line-height: 1.4;
+}
+
+/* マスキングテープ */
+.tape {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 84px;
+  height: 22px;
+  margin-left: -42px;
+  background: rgba(224, 138, 52, 0.28);
+  transform: rotate(-3deg);
+  clip-path: polygon(0 8%, 6% 0, 12% 10%, 18% 0, 100% 4%, 95% 50%, 100% 96%, 88% 100%, 82% 90%, 76% 100%, 0 94%, 4% 50%);
+}
+
+/* 手描き風の枠（角の丸みを不揃いにする定番の手法） */
+.roughBox {
+  border: 1.6px solid var(--ink);
+  border-radius: 255px 14px 225px 14px / 14px 225px 14px 255px;
+  padding: 14px 16px 16px;
+  /* 枠の中は罫線を隠し、行送りの違う文字と線が重ならないようにする */
+  background: #fffdf8;
+}
+
+.stamp {
+  position: relative;
+  display: flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.stampCircle {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.signature {
+  text-align: right;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.writing {
+  color: var(--pencil);
+  animation: writing 1.6s ease-in-out infinite;
+}
+
+@keyframes writing {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .writing { animation: none; }
+  .note { transform: none; }
+}
