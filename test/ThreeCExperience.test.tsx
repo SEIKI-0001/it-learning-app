@@ -27,7 +27,7 @@ describe("ThreeCExperience", () => {
 
   it("collects facts from each spot and assembles the strategy only when all three are in", () => {
     renderDeck();
-    expect(screen.getByTestId("market-scene").querySelector('[data-illustration="crowd"]')).not.toBeNull();
+    expect(screen.getByTestId("venn-3c").querySelectorAll("[data-spot]").length).toBeGreaterThanOrEqual(3);
     expect(board()).toHaveAttribute("data-count", "0");
 
     fireEvent.click(screen.getByRole("button", { name: /顧客を調べる/ }));
