@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { AssignStage, LoopTrackStage, RainRouteStage, useAutoLoop } from "./progbasics/RunStages";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -11,6 +13,8 @@ import { Panel, SectionTitle } from "./ui";
 //
 // 方針: 黒いコード画面をやめ「身近なたとえ → プログラムだとこう → 操作」で
 //       やさしく。初心者がつまずく点（= は"入れる"の意味 等）を明示する。
+//       3つとも「実行」として動かす：値が箱へ飛び込む／人が分かれ道を進む／トラックを5周する。
+//       （処理の流れ全体を追うのはアルゴリズム体験。ここは部品の直感に絞る）
 // ============================================================================
 
 // やさしい擬似コード行（白背景・読みやすい等幅）
@@ -23,6 +27,7 @@ function CodeLine({ children }: { children: React.ReactNode }) {
 }
 
 function Variable() {
+  const reducedMotion = useReducedMotion();
   const [count, setCount] = useState(3);
   const PRICE = 100;
   const choices = [1, 3, 5, 10];
@@ -80,6 +85,11 @@ function Variable() {
         </p>
       </div>
 
+      <div className="mt-4">
+        <p className="mb-2 text-xs font-bold text-gray-500">▶ 代入を実行してみる（同じ箱に2回入れると？）</p>
+        <AssignStage reducedMotion={reducedMotion} />
+      </div>
+
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         ⚠️ 「<b>←</b>」や「<b>=</b>」は算数の<b>「等しい」ではありません</b>。
         「<b>右の値を箱に入れる</b>」という意味で、これを<b>代入</b>といいます。
@@ -89,6 +99,7 @@ function Variable() {
 }
 
 function Branch() {
+  const reducedMotion = useReducedMotion();
   const [score, setScore] = useState(75);
   const pass = score >= 60;
   return (
@@ -98,6 +109,10 @@ function Branch() {
         条件によって<b className="text-gray-800">やることを変える</b>仕組み。たとえば
         <b className="text-gray-800">「雨なら傘を持つ／降ってなければ持たない」</b>——これが条件分岐です。
       </p>
+
+      <div className="mt-3">
+        <RainRouteStage reducedMotion={reducedMotion} />
+      </div>
 
       <div className="mt-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
         <p className="text-xs font-bold text-gray-500">プログラムだとこう書く</p>
@@ -162,9 +177,13 @@ function Branch() {
 }
 
 function Loop() {
+  const reducedMotion = useReducedMotion();
   const [count, setCount] = useState(0);
-  const TIMES = 3;
+  const [auto, setAuto] = useState(false);
+  const TIMES = 5;
   const done = count >= TIMES;
+  const stepOnce = () => setCount((c) => Math.min(TIMES, c + 1));
+  useAutoLoop(auto && !reducedMotion, stepOnce, !done);
   return (
     <Panel>
       <SectionTitle step={3}>繰り返し ＝ 同じ作業を自動で</SectionTitle>
@@ -196,18 +215,14 @@ function Loop() {
         </div>
       </div>
 
-      {/* 実行の様子 */}
-      <div className="mt-3 flex items-center justify-center gap-2">
-        <span className="text-xs text-gray-500">いま何回目？</span>
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand-100 font-mono text-base font-bold text-brand-700">
-          {Math.min(count, TIMES)}
-        </span>
-        <span className="text-xs text-gray-400">/ {TIMES} 回</span>
+      {/* 実行の様子：トークンが1周するたびにカウンターが進む */}
+      <div className="mt-3">
+        <LoopTrackStage count={count} times={TIMES} reducedMotion={reducedMotion} />
       </div>
 
       <div className="mt-2 min-h-[64px] rounded-xl bg-white p-3 ring-1 ring-gray-200">
         {count === 0 ? (
-          <p className="text-center text-xs text-gray-400">「次へ」を押すと1回ずつ実行されます</p>
+          <p className="text-center text-xs text-gray-400">「1回まわす」を押すと1回ずつ実行されます</p>
         ) : (
           <ul className="space-y-1">
             {Array.from({ length: Math.min(count, TIMES) }, (_, i) => (
@@ -219,24 +234,35 @@ function Loop() {
         )}
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs text-gray-400">
           {done ? "決めた回数に達したので止まる" : `あと ${TIMES - count} 回`}
         </span>
         <div className="flex gap-2">
           <button
-            onClick={() => setCount(0)}
+            onClick={() => {
+              setCount(0);
+              setAuto(false);
+            }}
             className="rounded-lg px-3 py-1.5 text-sm font-bold text-gray-600 ring-1 ring-gray-300 active:scale-95"
             aria-label="最初から"
           >
             ↺
           </button>
           <button
-            onClick={() => setCount((c) => Math.min(TIMES, c + 1))}
-            disabled={done}
-            className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
+            type="button"
+            onClick={() => setAuto(true)}
+            disabled={done || auto || reducedMotion}
+            className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-bold text-brand-700 ring-1 ring-brand-300 active:scale-95 disabled:opacity-40"
           >
-            {done ? "完了 🎉" : "次へ →"}
+            自動で{TIMES}回
+          </button>
+          <button
+            onClick={stepOnce}
+            disabled={done}
+            className="whitespace-nowrap rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
+          >
+            {done ? "完了 🎉" : "1回まわす"}
           </button>
         </div>
       </div>
