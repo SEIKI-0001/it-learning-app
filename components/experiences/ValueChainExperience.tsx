@@ -1,18 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import type { NodeState } from "./network/NetworkSceneBase";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
-import { FactoryScene, STATIONS, type StationId, type SupportId } from "./valuechain/FactoryScene";
+import {
+  STATIONS,
+  ValueChainDiagram,
+  type StationId,
+  type StationState,
+  type SupportId,
+} from "./valuechain/ValueChainDiagram";
 
 // ============================================================================
 // 「バリューチェーン（価値連鎖）」専用の体験。
-//   ① 工場ラインを進める … 2.5D のミニチュア企業（入荷→工場→倉庫・配送→店舗→顧客）を
-//      再生すると製品が姿を変え、VALUE の柱が積み上がる（最後にコスト＋マージンへ）
-//   ② 支援活動 … 同じ模型の土台（4層）を1つ止めると、影響を受ける拠点が止まる
+//   ① 主活動を進める … ポーターのバリューチェーン図の上で、製品が主活動の5列を進み、
+//      VALUE バーが積み上がる（最後にコスト＋マージンへ）
+//   ② 支援活動 … 同じ図の上段の帯を1つ止めると、影響を受ける主活動の列が止まる
 //   ③ 「主活動？支援活動？」仕分けクイズ
 // ============================================================================
 
@@ -29,7 +34,7 @@ const DELTAS = [15, 25, 15, 20, 15];
 const COST = 70;
 const FLOW_STEPS = [...MAIN.map((m) => ({ title: m.name })), { title: "マージン" }];
 
-const idleStations = (): Record<StationId, NodeState> => ({
+const idleStations = (): Record<StationId, StationState> => ({
   inbound: "idle",
   operations: "idle",
   outbound: "idle",
@@ -37,7 +42,7 @@ const idleStations = (): Record<StationId, NodeState> => ({
   service: "idle",
 });
 
-const ALL_ON: Record<SupportId, "on" | "off" | "focus"> = { infra: "on", hr: "on", tech: "on", procurement: "on" };
+const ALL_ON: Record<SupportId, "on" | "off"> = { infra: "on", hr: "on", tech: "on", procurement: "on" };
 
 function MainFlow() {
   const reducedMotion = useReducedMotion();
@@ -52,39 +57,17 @@ function MainFlow() {
     <Panel>
       <SectionTitle step={1}>主活動 ― 工程を進めて価値を積み上げる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">主活動</b>は価値を直接生み出す流れ。いすを作る会社のミニチュアで再生して、
+        <b className="text-gray-800">主活動</b>は価値を直接生み出す流れ（図の下段）。いすを作る会社で再生して、
         <b className="text-gray-800">材料が売り物に変わっていく</b>様子を見てみよう。
       </p>
 
-      {/* 工程チップ（模型の①〜⑤に対応） */}
-      <div className="mt-3 flex gap-1">
-        {MAIN.map((m, i) => (
-          <div
-            key={m.name}
-            className={`min-w-0 flex-1 rounded-md px-0.5 py-1.5 text-center transition ${
-              i === idx && !atEnd ? "bg-brand-600" : i <= idx ? "bg-brand-100" : "bg-gray-100"
-            }`}
-          >
-            <div className={`text-[10px] font-bold leading-none ${i === idx && !atEnd ? "text-white" : "text-gray-500"}`}>{i + 1}</div>
-            <div
-              className={`mt-0.5 text-[9px] font-bold leading-tight ${
-                i === idx && !atEnd ? "text-white" : i <= idx ? "text-brand-600" : "text-gray-400"
-              }`}
-            >
-              {m.name.split("・")[0]}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <FactoryScene
+      <div className="mt-3 sm:mx-auto sm:max-w-xl">
+        <ValueChainDiagram
           stations={stations}
           product={{ at: idx, emoji: cur.product, blocked: false }}
           supports={ALL_ON}
           value={{ blocks: DELTAS.slice(0, idx + 1), final: atEnd ? { cost: COST, margin: 90 - COST } : null }}
           stationNotes={{}}
-          reducedMotion={reducedMotion}
         />
       </div>
 
@@ -136,7 +119,7 @@ const SUPPORT = [
 
 type Breakdown = {
   support: SupportId;
-  stations: Partial<Record<StationId, NodeState>>;
+  stations: Partial<Record<StationId, StationState>>;
   notes: Partial<Record<StationId, string>>;
   product: { at: number; emoji: string; blocked: boolean };
   blocks: number[];
@@ -182,7 +165,6 @@ const BREAKDOWN: Record<SupportId, Breakdown> = {
 const SUPPORT_ID: SupportId[] = ["infra", "hr", "tech", "procurement"];
 
 function Support() {
-  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<number | null>(null);
   const [tried, setTried] = useState<number[]>([]);
   const off = sel === null ? null : BREAKDOWN[SUPPORT_ID[sel]];
@@ -198,18 +180,17 @@ function Support() {
     <Panel>
       <SectionTitle step={2}>支援活動 ― 無くなるとラインが困る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">支援活動</b>は直接モノを作らないけれど、主活動の全工程を下から支えます。
-        模型の土台（4つの層）を1つ止めて、<b className="text-gray-800">「もし無かったら」</b>を確かめてみよう。
+        <b className="text-gray-800">支援活動</b>は直接モノを作らないけれど、主活動の全工程に横串でまたがって支えます。
+        図の上段（4本の帯）を1つ止めて、<b className="text-gray-800">「もし無かったら」</b>を確かめてみよう。
       </p>
 
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <FactoryScene
+      <div className="mt-3 sm:mx-auto sm:max-w-xl">
+        <ValueChainDiagram
           stations={stations}
           product={off ? off.product : { at: 4, emoji: "😊", blocked: false }}
           supports={supports}
           value={off ? { blocks: off.blocks, final: off.final } : { blocks: DELTAS, final: { cost: COST, margin: 90 - COST } }}
           stationNotes={off?.notes ?? {}}
-          reducedMotion={reducedMotion}
         />
       </div>
 
@@ -237,7 +218,7 @@ function Support() {
       </div>
       <div className="mt-3 min-h-[3.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200" aria-live="polite" data-testid="support-result">
         {sel === null ? (
-          <p className="text-sm leading-relaxed text-gray-400">どれかを止めると、無くなったときの影響が模型に出ます。</p>
+          <p className="text-sm leading-relaxed text-gray-400">どれかを止めると、無くなったときの影響が図に出ます。</p>
         ) : (
           <p className="text-sm leading-relaxed text-rose-700">
             🚫 <b>{SUPPORT[sel].name}</b>が無いと… {SUPPORT[sel].without}。

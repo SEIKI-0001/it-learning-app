@@ -15,7 +15,7 @@ function renderDeck() {
   );
 }
 
-const visibleScene = () => screen.getAllByTestId("factory-scene").find((el) => !el.closest("[aria-hidden='true']"))!;
+const visibleScene = () => screen.getAllByTestId("vc-diagram").find((el) => !el.closest("[aria-hidden='true']"))!;
 const inScene = (sel: string) => visibleScene().querySelector(sel);
 
 describe("ValueChainExperience", () => {
