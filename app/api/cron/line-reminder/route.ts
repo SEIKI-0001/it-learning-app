@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/cron/line-reminder
- * GF-P0-006 の定時実行口。Vercel Cron から毎時呼ばれる（vercel.json）。
+ * GF-P0-006 の定時実行口。Cloudflare Cron Worker から毎時呼ばれる。
  *
- * 認証: `Authorization: Bearer $CRON_SECRET`（Vercel Cron が自動で付与する形式）。
+ * 認証: `Authorization: Bearer $CRON_SECRET`（Cron Worker が付与する）。
  * production で CRON_SECRET が未設定なら実行せず 503（誰でも叩ける口を作らない）。
  *
  * 失敗しても学習データには触れない。送信記録の更新に失敗しても 200 を返し、

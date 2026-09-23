@@ -6,6 +6,10 @@ import { describe, expect, it } from "vitest";
 const root = path.resolve(import.meta.dirname, "..");
 const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
 const wrangler = readFileSync(path.join(root, "wrangler.jsonc"), "utf8");
+const reminder = readFileSync(
+  path.join(root, "workers/line-reminder-cron/wrangler.jsonc"),
+  "utf8",
+);
 const verifier = path.join(root, "scripts/cloudflare/verify-pilot.mjs");
 
 function runVerifier(baseURL: string) {
@@ -35,11 +39,19 @@ describe("Cloudflare pilot configuration", () => {
     );
   });
 
-  it("uses a validation-only Worker with Node compatibility", () => {
+  it("routes production links and the reminder to the Cloudflare domain", () => {
     expect(wrangler).toMatch(/"name"\s*:\s*"it-learning-app-vinext-pilot"/);
     expect(wrangler).toMatch(/"nodejs_compat"/);
-    expect(wrangler).not.toMatch(/"routes"\s*:/);
-    expect(wrangler).not.toMatch(/"custom_domains"\s*:/);
+    const config = JSON.parse(wrangler);
+    expect(config.vars.APP_BASE_URL).toBe("https://shikaku-mochit.com");
+    expect(config.vars.NEXT_PUBLIC_APP_URL).toBe("https://shikaku-mochit.com");
+    expect(config.vars.NEXT_PUBLIC_SUPABASE_URL).toBe(
+      "https://kebebakugaxdidehzjnh.supabase.co",
+    );
+    expect(config.vars.NEXT_PUBLIC_SUPABASE_ANON_KEY).toMatch(
+      /^sb_publishable_/,
+    );
+    expect(reminder).toContain('"APP_BASE_URL": "https://shikaku-mochit.com"');
     expect(wrangler).not.toContain("vercel.app");
   });
 

@@ -16,7 +16,7 @@ export type ExecutionContext = {
 };
 
 export type Env = {
-  /** it-learning-app の基点 URL。移行前は Vercel、移行後は Cloudflare の URL を入れる。 */
+  /** 本番アプリの基点 URL。Cloudflare の公開ドメインを指定する。 */
   APP_BASE_URL?: string;
   /** it-learning-app 側と同じ値。wrangler secret で設定し、設定ファイルへ平文で置かない。 */
   CRON_SECRET?: string;
