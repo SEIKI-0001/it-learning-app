@@ -38,4 +38,40 @@ describe("proxy admin and API authentication boundaries", () => {
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
+
+  describe("unauthenticated page gating", () => {
+    function stubGatingEnv() {
+      vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+      vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon-key");
+      vi.stubEnv("SESSION_SECRET", "test-session-secret");
+    }
+
+    it("sends first-time visitors of the site root to the landing page", async () => {
+      stubGatingEnv();
+
+      const response = await proxy(new NextRequest("https://example.test/"));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("https://example.test/lp");
+    });
+
+    it("still sends unauthenticated app screens to /login with next", async () => {
+      stubGatingEnv();
+
+      const response = await proxy(new NextRequest("https://example.test/today"));
+
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        "https://example.test/login?next=%2Ftoday",
+      );
+    });
+
+    it("lets a LINE token landing on the root through to the app", async () => {
+      stubGatingEnv();
+
+      const response = await proxy(new NextRequest("https://example.test/?t=line-token"));
+
+      expect(response.headers.get("x-middleware-next")).toBe("1");
+    });
+  });
 });

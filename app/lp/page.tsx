@@ -13,11 +13,109 @@ import './lp.css';
 // スタイルは app/lp/lp.css（全セレクタ .lp スコープ）に閉じる。
 // ============================================================================
 
+const SITE_URL = 'https://shikaku-mochit.com';
+const LP_TITLE = 'ITパスポート学習コーチ — さわって理解する試験対策アプリ';
+const LP_DESCRIPTION =
+  '参考書が途中で止まってしまう人のためのITパスポート試験対策。全93トピックを操作しながら学び、公式過去問500問で本番に慣れる。試験日から逆算した「今日やること」が毎日届きます。7日間無料。';
+
+// 検索結果・SNS共有（X/LINE/Facebook）のカード表示用。OG画像は public/og/lp.png（1200x630）。
 export const metadata: Metadata = {
-  title: 'ITパスポート学習コーチ — さわって理解する試験対策',
-  description:
-    '参考書が途中で止まってしまう人のためのITパスポート試験対策。全93トピックを操作しながら学び、公式過去問500問で本番に慣れる。試験日から逆算した「今日やること」が毎日届きます。7日間無料。',
+  metadataBase: new URL(SITE_URL),
+  title: LP_TITLE,
+  description: LP_DESCRIPTION,
+  alternates: { canonical: '/lp' },
+  openGraph: {
+    type: 'website',
+    locale: 'ja_JP',
+    url: '/lp',
+    siteName: 'ITパスポート学習コーチ',
+    title: LP_TITLE,
+    description: LP_DESCRIPTION,
+    images: [{ url: '/og/lp.png', width: 1200, height: 630, alt: '「読んで暗記」から「さわって理解」へ。ITパスポート学習コーチ' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: LP_TITLE,
+    description: LP_DESCRIPTION,
+    images: ['/og/lp.png'],
+  },
 };
+
+// FAQ は本文表示と構造化データ（FAQPage）の両方に使う。[前半, 太字, 後半] で持つ。
+const FAQS: { q: string; a: [string, string, string] }[] = [
+  {
+    q: 'ITの知識がゼロでも大丈夫ですか？',
+    a: [
+      'はい、',
+      'むしろゼロの人のために作られています',
+      '。全トピックが「まず操作してみる→画面の変化で気づく」の順で進むので、前提知識なしで始められます。カタカナ用語は英略語の単語帳104語でフォローします。',
+    ],
+  },
+  {
+    q: '1日どれくらい勉強すれば合格できますか？',
+    a: [
+      '1回の学習は',
+      '3分から',
+      '設計されています。試験日と1日に使える時間を入れると、アプリが毎日の分量を自動で配分します。忙しい週があっても、立て直し案で計画を引き直せます。',
+    ],
+  },
+  {
+    q: 'スマホだけで使えますか？アプリのインストールは？',
+    a: [
+      'スマホのブラウザでそのまま動きます。',
+      'インストールは不要',
+      'です。通勤・通学の空き時間で完結するように作られています。毎日の合図はLINEで受け取れます。',
+    ],
+  },
+  {
+    q: '過去問は入っていますか？',
+    a: [
+      'はい。IPAが公開している',
+      '令和4〜8年度の公式過去問500問',
+      'を、年度ごとに本番の並びのまま解けます。解説はアプリが独自に作成したものです。仕上げには本番形式の100問模試も使えます。',
+    ],
+  },
+  {
+    q: '無料期間が終わったらどうなりますか？',
+    a: [
+      '教材（93トピックの体験・解説）と公式過去問は',
+      '無料のまま学習を続けられます',
+      '。AI採点も1日3回まで無料です。解答結果や進捗を記録し続け、合格準備度や計画に反映させたい場合だけ、¥980からのプランを選んでください。',
+    ],
+  },
+  {
+    q: '解約はかんたんにできますか？',
+    a: [
+      '買い切りプランは',
+      'そもそも解約が不要',
+      'です（自動更新がありません）。月額プランは設定画面からいつでも解約でき、日割りの引き止めなどもありません。',
+    ],
+  },
+];
+
+// Google 検索のリッチリザルト用（FAQ・アプリ情報）。本文と同じデータから生成する。
+const STRUCTURED_DATA = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'ITパスポート学習コーチ',
+    url: `${SITE_URL}/lp`,
+    description: LP_DESCRIPTION,
+    applicationCategory: 'EducationalApplication',
+    operatingSystem: 'Web',
+    inLanguage: 'ja',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY', description: '7日間無料。以降も教材と公式過去問は無料' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a.join('') },
+    })),
+  },
+];
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +129,10 @@ export default function LandingPage() {
 
   return (
     <div className="lp">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+      />
       <Reveal />
 
       <header className="top">
@@ -411,48 +513,16 @@ export default function LandingPage() {
             <p className="eyebrow">よくある質問</p>
             <h2 className="sec-title">はじめる前の疑問に答えます。</h2>
             <div className="faq">
-              <details>
-                <summary>ITの知識がゼロでも大丈夫ですか？</summary>
-                <p className="a">
-                  はい、<b>むしろゼロの人のために作られています</b>
-                  。全トピックが「まず操作してみる→画面の変化で気づく」の順で進むので、前提知識なしで始められます。カタカナ用語は英略語の単語帳104語でフォローします。
-                </p>
-              </details>
-              <details>
-                <summary>1日どれくらい勉強すれば合格できますか？</summary>
-                <p className="a">
-                  1回の学習は<b>3分から</b>
-                  設計されています。試験日と1日に使える時間を入れると、アプリが毎日の分量を自動で配分します。忙しい週があっても、立て直し案で計画を引き直せます。
-                </p>
-              </details>
-              <details>
-                <summary>スマホだけで使えますか？アプリのインストールは？</summary>
-                <p className="a">
-                  スマホのブラウザでそのまま動きます。<b>インストールは不要</b>
-                  です。通勤・通学の空き時間で完結するように作られています。毎日の合図はLINEで受け取れます。
-                </p>
-              </details>
-              <details>
-                <summary>過去問は入っていますか？</summary>
-                <p className="a">
-                  はい。IPAが公開している<b>令和4〜8年度の公式過去問500問</b>
-                  を、年度ごとに本番の並びのまま解けます。解説はアプリが独自に作成したものです。仕上げには本番形式の100問模試も使えます。
-                </p>
-              </details>
-              <details>
-                <summary>無料期間が終わったらどうなりますか？</summary>
-                <p className="a">
-                  教材（93トピックの体験・解説）と公式過去問は<b>無料のまま学習を続けられます</b>
-                  。AI採点も1日3回まで無料です。解答結果や進捗を記録し続け、合格準備度や計画に反映させたい場合だけ、¥980からのプランを選んでください。
-                </p>
-              </details>
-              <details>
-                <summary>解約はかんたんにできますか？</summary>
-                <p className="a">
-                  買い切りプランは<b>そもそも解約が不要</b>
-                  です（自動更新がありません）。月額プランは設定画面からいつでも解約でき、日割りの引き止めなどもありません。
-                </p>
-              </details>
+              {FAQS.map(({ q, a: [before, bold, after] }) => (
+                <details key={q}>
+                  <summary>{q}</summary>
+                  <p className="a">
+                    {before}
+                    <b>{bold}</b>
+                    {after}
+                  </p>
+                </details>
+              ))}
             </div>
           </div>
         </section>
