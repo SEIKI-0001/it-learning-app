@@ -16,7 +16,7 @@ import './lp.css';
 export const metadata: Metadata = {
   title: 'ITパスポート学習コーチ — さわって理解する試験対策',
   description:
-    '参考書が途中で止まってしまう人のためのITパスポート試験対策。全69トピックを操作しながら学び、試験日から逆算した「今日やること」が毎日届きます。7日間無料。',
+    '参考書が途中で止まってしまう人のためのITパスポート試験対策。全93トピックを操作しながら学び、公式過去問500問で本番に慣れる。試験日から逆算した「今日やること」が毎日届きます。7日間無料。',
 };
 
 export const dynamic = 'force-dynamic';
@@ -79,7 +79,7 @@ export default function LandingPage() {
                 へ。
               </h1>
               <p className="hero-lead">
-                参考書が途中で止まってしまう人のための試験対策。全69トピックを操作しながら学び、試験日から逆算した「今日やること」が毎日届きます。
+                参考書が途中で止まってしまう人のための試験対策。全93トピックを操作しながら学び、公式過去問500問で本番に慣れる。試験日から逆算した「今日やること」が毎日届きます。
               </p>
               <div className="hero-cta">
                 <a className="btn" href={START_HREF}>
@@ -130,15 +130,15 @@ export default function LandingPage() {
         <section id="solve">
           <div className="col reveal">
             <p className="eyebrow">アプリができること</p>
-            <h2 className="sec-title">「理解する・続ける・合格に近づく」を、この1つで。</h2>
+            <h2 className="sec-title">「理解する」から「本番で解ける」まで、この1つで。</h2>
 
             <div className="solve">
               <div className="txt">
                 <p className="k">理解する</p>
-                <h3>全69トピックが、操作して学ぶ教材</h3>
+                <h3>全93トピックが、操作して学ぶ教材</h3>
                 <p className="d">
                   スライダーを動かし、ボタンを押し、画面の変化で仕組みをつかみます。2進数・SQL・損益分岐点・公開鍵暗号——文章では入ってこなかった単元が、手を動かすと腑に落ちる。仕上げは
-                  <b>過去問レベルの確認問題276問</b>（各トピック4問）と<b>英略語の単語帳103語</b>。
+                  <b>トピックごとの確認問題（計394問）</b>と<b>英略語の単語帳104語</b>。
                 </p>
               </div>
               <div className="mock" aria-hidden="true">
@@ -188,9 +188,44 @@ export default function LandingPage() {
                 <p className="k">続ける</p>
                 <h3>計画はアプリが立てて、LINEに届く</h3>
                 <p className="d">
-                  試験日を入れるだけで、あなたの1日の学習時間に合わせて「今日やること」を自動で組みます。毎日の合図はLINEに届くので、開く習慣づくりもアプリまかせ。遅れても責めません——
-                  <b>現実的な立て直し案</b>を提案して計画を引き直します。
+                  試験日を入れるだけで、あなたの1日の学習時間に合わせて「今日やること」を自動で組みます。毎日の合図はLINEに届くので、開く習慣づくりもアプリまかせ。間違えた問題は復習リストに自動で戻り、遅れても責めません——
+                  <b>現実的な立て直し案</b>を提案して計画を引き直します。チェックポイントを越えるたびにバッジが増え、相棒のモチットも育ちます。
                 </p>
+              </div>
+            </div>
+
+            <div className="solve">
+              <div className="txt">
+                <p className="k">本番で解ける</p>
+                <h3>公式過去問500問と100問模試で、本番に慣れる</h3>
+                <p className="d">
+                  IPAが公開している<b>令和4〜8年度の公式過去問500問</b>を、本番の並びのまま解けます。解説はすべてアプリ独自の書き下ろし。さらに3分野をバランスよく出す<b>本番形式の100問模試</b>と、章の内容を横断して解く<b>総まとめ試験180問</b>で、「分かる」を「本番で解ける」に変えます。
+                </p>
+              </div>
+              <div className="mock" aria-hidden="true">
+                <div className="mock-head">
+                  本番形式で解く<span className="date">公式問題・独自解説付き</span>
+                </div>
+                <div style={{ marginTop: 6 }}>
+                  <div className="task done">
+                    <span className="box">✓</span>
+                    <span className="t">公式過去問 令和7年度</span>
+                    <span className="min">100問</span>
+                  </div>
+                  <div className="task">
+                    <span className="box" />
+                    <span className="t">本番形式 100問模試</span>
+                    <span className="min">3分野</span>
+                  </div>
+                  <div className="task">
+                    <span className="box" />
+                    <span className="t">総まとめ試験「ネットワーク」</span>
+                    <span className="min">10問</span>
+                  </div>
+                </div>
+                <div className="mock-foot">
+                  模試の結果から、<b>強化が必要なトピック</b>と次にやることを示します。
+                </div>
               </div>
             </div>
 
@@ -275,6 +310,15 @@ export default function LandingPage() {
                     <td className="meh">固定カリキュラム</td>
                   </tr>
                   <tr>
+                    <th scope="row">本番形式の演習</th>
+                    <td className="you">
+                      <span className="good">◎</span> 公式過去問500問＋100問模試
+                    </td>
+                    <td className="meh">巻末の模擬問題</td>
+                    <td className="meh">過去問を解ける</td>
+                    <td className="meh">講座による</td>
+                  </tr>
+                  <tr>
                     <th scope="row">合格ラインとの距離</th>
                     <td className="you">
                       <span className="good">◎</span> 合格準備度スコアで可視化
@@ -316,12 +360,12 @@ export default function LandingPage() {
 
             <div className="free-banner">
               <p className="big">
-                最初の<span>7日間は全機能無料</span>
+                最初の<span>7日間は学習記録も無料</span>
               </p>
               <p>
-                学習記録もAI採点もすべて使えます。クレジットカードの登録は不要。無料期間が終わっても、
-                <b style={{ color: 'var(--ink)' }}>教材での学習は無料のまま</b>
-                続けられます（学習記録とAI採点が停止します）。
+                解答結果・進捗の記録も含めて使えます。クレジットカードの登録は不要。無料期間が終わっても、
+                <b style={{ color: 'var(--ink)' }}>教材・公式過去問・AI採点（1日3回）は無料のまま</b>
+                使えます。止まるのは学習記録の保存だけです。
               </p>
             </div>
 
@@ -349,14 +393,14 @@ export default function LandingPage() {
                 <p className="pprice">
                   ¥980<small>/月</small>
                 </p>
-                <p className="permo">初月20%オフ</p>
+                <p className="permo">初月20%オフ（¥784）</p>
                 <p className="pdesc">短期集中か迷っている人に。いつでも解約できます。</p>
               </div>
             </div>
 
             <p className="pay-note">
               <b>買い切りプランに自動更新はありません。</b>
-              期間が終わると自動で無料の状態に戻るだけなので、解約を忘れる心配がありません。
+              期間が終わると自動で無料の状態に戻るだけなので、解約を忘れる心配がありません。Proでは学習記録が無期限になり、AI採点が高精度のPro採点（1日10回まで）になります。
             </p>
           </div>
         </section>
@@ -371,7 +415,7 @@ export default function LandingPage() {
                 <summary>ITの知識がゼロでも大丈夫ですか？</summary>
                 <p className="a">
                   はい、<b>むしろゼロの人のために作られています</b>
-                  。全トピックが「まず操作してみる→画面の変化で気づく」の順で進むので、前提知識なしで始められます。カタカナ用語は英略語の単語帳103語でフォローします。
+                  。全トピックが「まず操作してみる→画面の変化で気づく」の順で進むので、前提知識なしで始められます。カタカナ用語は英略語の単語帳104語でフォローします。
                 </p>
               </details>
               <details>
@@ -389,10 +433,17 @@ export default function LandingPage() {
                 </p>
               </details>
               <details>
+                <summary>過去問は入っていますか？</summary>
+                <p className="a">
+                  はい。IPAが公開している<b>令和4〜8年度の公式過去問500問</b>
+                  を、年度ごとに本番の並びのまま解けます。解説はアプリが独自に作成したものです。仕上げには本番形式の100問模試も使えます。
+                </p>
+              </details>
+              <details>
                 <summary>無料期間が終わったらどうなりますか？</summary>
                 <p className="a">
-                  教材（69トピックの体験・解説）は<b>無料のまま学習を続けられます</b>
-                  。学習記録・合格準備度スコア・AI採点を使い続ける場合だけ、¥980からのプランを選んでください。
+                  教材（93トピックの体験・解説）と公式過去問は<b>無料のまま学習を続けられます</b>
+                  。AI採点も1日3回まで無料です。解答結果や進捗を記録し続け、合格準備度や計画に反映させたい場合だけ、¥980からのプランを選んでください。
                 </p>
               </details>
               <details>
