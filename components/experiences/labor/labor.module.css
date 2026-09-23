@@ -1,0 +1,239 @@
+/* 派遣／請負のオフィス模型。動くのは「指示の矢印が引かれる」「指示カプセルが矢印に沿って移動する」
+   「話している人が少し浮く」「吹き出しが出る」だけ。 */
+
+.scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 320 / 256;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.figure {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.figure[data-speaking="true"] {
+  transform: translateY(-3px);
+}
+
+/* ---------- 指示の矢印 ---------- */
+
+.arrowLine {
+  fill: none;
+  stroke: var(--arrow);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.arrowHead {
+  fill: var(--arrow);
+  opacity: 0;
+}
+
+.arrow[data-state="drawing"] .arrowLine {
+  animation: labor-draw 1100ms cubic-bezier(0.45, 0.05, 0.25, 1) forwards;
+}
+
+.arrow[data-state="drawing"] .arrowHead {
+  animation: labor-fade 200ms ease 1000ms forwards;
+}
+
+.arrow[data-state="on"] .arrowLine {
+  stroke-dashoffset: 0;
+}
+
+.arrow[data-state="on"] .arrowHead {
+  opacity: 1;
+}
+
+/* 偽装時に薄く残る「本来の経路」 */
+.arrow[data-state="ghost"] .arrowLine {
+  stroke-dasharray: 0.03 0.03;
+  stroke-dashoffset: 0;
+  stroke-width: 1.8;
+  opacity: 0.7;
+}
+
+.arrow[data-state="ghost"] .arrowHead {
+  opacity: 0.7;
+}
+
+.arrow[data-state="off"] {
+  display: none;
+}
+
+/* ---------- HTML の名札・ラベル ---------- */
+
+.nameTag {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, 8px);
+  padding: 1px 5px 2px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 6px rgba(30, 42, 64, 0.1);
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.nameTag b {
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.nameTag span {
+  font-size: 8px;
+  color: #6b7280;
+}
+
+.nameTag[data-tone="indigo"] {
+  border: 1px solid #a5b4fc;
+}
+
+.nameTag[data-tone="indigo"] b {
+  color: #4338ca;
+}
+
+.nameTag[data-tone="amber"] {
+  border: 1px solid #fcd34d;
+}
+
+.nameTag[data-tone="amber"] b {
+  color: #b45309;
+}
+
+.legend {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--zone);
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.legendItem i {
+  width: 12px;
+  height: 8px;
+  border: 1px dashed var(--zone);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--zone) 14%, transparent);
+}
+
+.relTag {
+  position: absolute;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.arrowTag {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, -115%);
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--arrow);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: labor-fade 260ms ease both;
+}
+
+/* ---------- 吹き出し ---------- */
+
+.bubble {
+  position: absolute;
+  z-index: 8;
+  max-width: 44%;
+  transform: translate(-50%, -100%);
+  padding: 4px 7px;
+  border-radius: 9px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 4px 10px rgba(30, 42, 64, 0.12);
+  color: #1f2937;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.35;
+  animation: labor-pop 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.bubble[data-who="client"] {
+  border-color: #818cf8;
+}
+
+.bubble[data-who="boss"],
+.bubble[data-who="worker"] {
+  border-color: #fbbf24;
+}
+
+@keyframes labor-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes labor-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes labor-pop {
+  from {
+    opacity: 0;
+    scale: 0.85;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .figure {
+    transition: none;
+  }
+  .arrow[data-state="drawing"] .arrowLine,
+  .arrow[data-state="drawing"] .arrowHead,
+  .arrowTag,
+  .bubble {
+    animation: none;
+  }
+}

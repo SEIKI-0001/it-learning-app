@@ -1,20 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { OfficeScene, type LaborMode, type Scenario } from "./labor/OfficeScene";
+import { useInView } from "./scene/useInView";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「労働・取引関連法規（派遣と請負）」専用の体験。
-//   ① 労働基準法＝働く人を守る基本ルール
-//   ② 発注側の担当者になり、派遣/請負それぞれで作業者に「直接指示」を
-//      出してみる → 派遣=OK / 請負=偽装請負🚨 と結果が変わる
-//   ③ 指示してよい？ ○×クイズ（偽装請負に注意）
+//   ① 同じオフィスの 2.5D 模型で、派遣／請負の「指示の矢印」の通り道を見比べる。
+//      請負では注文主が作業者へ直接指示してみる → 責任者を飛び越える赤い矢印＋指揮命令関係の警告
+//   ② 指示してよい？ ○×クイズ（偽装請負に注意）
+//   ③ 労働基準法＝働く人を守る基本ルール
 // ============================================================================
 
 function Basics() {
   return (
     <Panel>
-      <SectionTitle step={1}>労働基準法＝働く人を守る基本ルール</SectionTitle>
+      <SectionTitle step={3}>労働基準法＝働く人を守る基本ルール</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         <b className="text-gray-800">労働基準法</b>は、労働時間・休日・賃金などの最低限のルールを定め、
         働く人を守る基本の法律です。
@@ -35,134 +38,137 @@ function Basics() {
   );
 }
 
-type Mode = "派遣" | "請負";
+type Tab = { mode: LaborMode; label: string };
+const TABS: Tab[] = [
+  { mode: "haken", label: "派遣" },
+  { mode: "ukeoi", label: "請負" },
+];
 
-function InstructionLab() {
-  const [mode, setMode] = useState<Mode>("派遣");
-  const [fired, setFired] = useState(false); // 今のモードで指示を出したか
-  const [tried, setTried] = useState<Set<Mode>>(new Set());
-  const dispatch = mode === "派遣";
-  const bothTried = tried.has("派遣") && tried.has("請負");
+function InstructionOffice() {
+  const reducedMotion = useReducedMotion();
+  const [ref, inView] = useInView<HTMLDivElement>();
+  const [mode, setMode] = useState<LaborMode>("haken");
+  const [scenario, setScenario] = useState<Scenario>("haken");
+  const [runKey, setRunKey] = useState(0);
+  const [tried, setTried] = useState<Set<LaborMode>>(new Set(["haken"]));
+  const haken = mode === "haken";
+  const gisou = scenario === "gisou";
 
-  const switchMode = (m: Mode) => {
-    setMode(m);
-    setFired(false);
+  const play = (next: Scenario) => {
+    setScenario(next);
+    setRunKey((k) => k + 1);
   };
-
-  const fire = () => {
-    setFired(true);
-    setTried((p) => new Set(p).add(mode));
+  const choose = (m: LaborMode) => {
+    setMode(m);
+    setTried((p) => new Set(p).add(m));
+    play(m);
   };
 
   return (
     <Panel>
-      <SectionTitle step={2}>作業者に「直接指示」を出してみる</SectionTitle>
+      <SectionTitle step={1}>だれが、だれに指示を出す？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        あなたは<b className="text-gray-800">発注側🏢の担当者</b>。来てもらった作業者👷に
-        <b className="text-gray-800">同じ「直接指示」</b>を出すと、契約の形でどう変わる？
-        両方の契約で試してみよう。
+        同じオフィスで、<b className="text-gray-800">指示の矢印がどこを通るか</b>を見比べよう。
+        <span className="text-[11px] text-gray-500">（シャツの色＝雇っている会社）</span>
       </p>
 
-      {/* 契約の切替 */}
-      <div className="mt-3 flex gap-1.5">
-        {(["派遣", "請負"] as const).map((m) => (
+      <div className="mt-3 grid grid-cols-2 gap-1.5 rounded-xl bg-gray-100 p-1" role="tablist" aria-label="契約の形">
+        {TABS.map((t) => (
           <button
-            key={m}
-            onClick={() => switchMode(m)}
-            className={`flex-1 rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
-              mode === m ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+            key={t.mode}
+            type="button"
+            role="tab"
+            aria-selected={mode === t.mode}
+            onClick={() => choose(t.mode)}
+            className={`rounded-lg py-2 text-sm font-bold transition active:scale-95 ${
+              mode === t.mode ? "bg-brand-600 text-white" : "text-gray-500"
             }`}
           >
-            {m}契約 {tried.has(m) && "✓"}
+            {t.label} {tried.has(t.mode) && mode !== t.mode && "✓"}
           </button>
         ))}
       </div>
 
-      {/* 関係図 */}
-      <div className="mt-4 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-        <div className="flex items-stretch justify-between gap-1.5 text-center">
-          <div className="flex-1 rounded-lg bg-white p-2 ring-2 ring-brand-300">
-            <div className="text-2xl">🏢</div>
-            <div className="mt-0.5 text-[11px] font-bold text-gray-800">
-              発注側{dispatch ? "（派遣先）" : "（注文者）"}
-            </div>
-            <div className="text-[10px] font-bold text-brand-600">← あなた</div>
-          </div>
-          <div className="flex-1 rounded-lg bg-white p-2 ring-1 ring-gray-200">
-            <div className="text-2xl">{dispatch ? "🧑‍💼" : "🏭"}</div>
-            <div className="mt-0.5 text-[11px] font-bold text-gray-800">
-              {dispatch ? "派遣会社" : "請負会社"}
-            </div>
-            <div className="text-[10px] text-gray-400">作業者の雇い主</div>
-          </div>
-          <div className="flex-1 rounded-lg bg-white p-2 ring-1 ring-gray-200">
-            <div className="text-2xl">👷</div>
-            <div className="mt-0.5 text-[11px] font-bold text-gray-800">作業者</div>
-            <div className="text-[10px] text-gray-400">
-              {dispatch ? "派遣会社の社員" : "請負会社の社員"}
-            </div>
-          </div>
-        </div>
+      <div ref={ref} className="mx-auto mt-3 max-w-[420px]">
+        <OfficeScene key={`${scenario}-${runKey}`} mode={mode} scenario={scenario} reducedMotion={reducedMotion} active={inView} />
+      </div>
 
-        {/* 契約の線 */}
-        <div className="mt-2 space-y-1 text-center text-[11px] font-bold text-gray-500">
-          <div className="rounded bg-white px-2 py-1 ring-1 ring-gray-200">
-            🏢 ⇄ {dispatch ? "🧑‍💼" : "🏭"}：{mode}契約　／　{dispatch ? "🧑‍💼" : "🏭"} ⇄ 👷：雇用契約
-          </div>
-        </div>
-
-        {/* 指示ボタン */}
-        <button
-          onClick={fire}
-          className={`mt-3 w-full rounded-xl py-2.5 text-sm font-bold text-white transition active:scale-95 ${
-            fired ? "bg-gray-300" : "bg-brand-600"
-          }`}
-        >
-          📣 👷に直接指示を出す「その作業、先にやって！」
-        </button>
-
-        {/* 結果 */}
-        {fired && (
-          <div className="mt-3">
-            {dispatch ? (
-              <div className="rounded-xl bg-emerald-50 px-3 py-2.5 ring-1 ring-emerald-200">
-                <div className="text-center text-sm font-bold text-emerald-800 animate-pulse">
-                  🏢 ──📣──▶ 👷「わかりました！」
-                </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-emerald-800">
-                  ✅ <b>OK！</b>　派遣では<b>指揮命令の線が「派遣先（あなた）→ 作業者」</b>に引かれるので、
-                  現場で直接指示を出すのが正しい形です。
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-xl bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200">
-                <div className="text-center text-sm font-bold text-rose-700 animate-pulse">
-                  🏢 ──📣──▶ 👷 …🚨 偽装請負！
-                </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-rose-800">
-                  ❌ <b>NG！</b>　請負では<b>指揮命令の線は「請負会社 → 作業者」</b>。
-                  発注側が作業者に直接指示すると<b>偽装請負</b>という違法状態になります。
-                </p>
-                <div className="mt-2 rounded-lg bg-white px-2 py-1.5 text-center text-[11px] font-bold text-sky-700 ring-1 ring-sky-200">
-                  正しくは：🏢 ──「お願い」──▶ 🏭 ──📣 指示──▶ 👷
-                </div>
-              </div>
-            )}
-          </div>
+      {/* 矢印の通り道（＝覚えること） */}
+      <div className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-center text-xs font-bold ring-1 ring-gray-200" data-testid="route">
+        {haken ? (
+          <>
+            <span className="text-indigo-700">派遣先</span> <span className="text-indigo-500">──指示──▶</span>{" "}
+            <span className="text-amber-700">派遣社員</span>
+            <span className="ml-1 font-medium text-gray-500">（直接）</span>
+          </>
+        ) : gisou ? (
+          <>
+            <span className="text-indigo-700">注文主</span> <span className="text-rose-600">──直接指示──▶</span>{" "}
+            <span className="text-amber-700">社員</span>
+            <span className="ml-1 font-medium text-rose-600">（責任者を飛び越え）</span>
+            <div className="mt-0.5 text-[10.5px] font-medium text-gray-500">灰色の点線＝本来の経路（注文主 → 責任者 → 社員）</div>
+          </>
+        ) : (
+          <>
+            <span className="text-indigo-700">注文主</span> <span className="text-indigo-500">─依頼▶</span>{" "}
+            <span className="text-amber-700">請負会社の責任者</span> <span className="text-amber-600">─指示▶</span>{" "}
+            <span className="text-amber-700">社員</span>
+          </>
         )}
       </div>
 
-      {bothTried && (
-        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          💡 <b>気づいた？</b>　まったく同じ「直接指示」でも、<b>派遣ならOK・請負ならNG（偽装請負）</b>。
-          違いを決めるのは<b>契約の形＝指揮命令の線がどこに引かれるか</b>です。試験もここを聞いてきます。
+      {!haken && (
+        <div className="mt-2 flex gap-1.5">
+          {!gisou ? (
+            <button
+              type="button"
+              onClick={() => play("gisou")}
+              className="flex-1 rounded-xl bg-white py-2.5 text-sm font-bold text-rose-700 ring-2 ring-rose-300 transition active:scale-95"
+            >
+              ⚠ 注文主が、作業者へ直接指示する
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => play("ukeoi")}
+              className="flex-1 rounded-xl bg-white py-2.5 text-sm font-bold text-gray-700 ring-1 ring-gray-300 transition active:scale-95"
+            >
+              ↺ 本来の流れに戻す
+            </button>
+          )}
         </div>
       )}
 
-      <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        ※ <b>派遣</b>＝作業者は派遣会社の社員だが、指示は派遣先が出す。
-        <b>請負</b>＝仕事の完成を約束する契約で、進め方は請負会社が決める。
-      </p>
+      {/* 読み取ってほしいこと（短く） */}
+      <div className="mt-2" aria-live="polite">
+        {haken ? (
+          <p className="rounded-xl bg-indigo-50 px-3 py-2.5 text-xs leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
+            ✅ <b>派遣</b>では、<b>派遣先が派遣社員へ直接仕事の指示を出せます</b>。雇っているのは派遣元（シャツの色）でも、指示は派遣先から。
+          </p>
+        ) : gisou ? (
+          <div className="rounded-xl bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200" data-testid="gisou-warning">
+            <div className="text-sm font-bold text-rose-700">⚠ 指揮命令関係が発生</div>
+            <p className="mt-1 text-xs leading-relaxed text-rose-900">
+              請負契約なのに注文主が労働者へ直接指示している場合、実態によっては<b>偽装請負</b>と判断される可能性があります。
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-rose-900">
+              📝 <b>契約書の名称だけでなく、実際の働かせ方で判断されます。</b>
+            </p>
+          </div>
+        ) : (
+          <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
+            📦 <b>請負</b>では、注文主は<b>会社へ「仕事の完成」を依頼</b>します。社員への具体的な指示は<b>請負会社の責任者</b>から。
+            注文主 → 社員 の矢印はありません。
+          </p>
+        )}
+      </div>
+
+      {tried.has("haken") && tried.has("ukeoi") && (
+        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
+          💡 <b>派遣＝作業者へ直接指示</b>／<b>請負＝仕事の完成を会社へ依頼</b>。
+          試験は「指示の矢印がどこを通るか」を聞いてきます。
+        </div>
+      )}
     </Panel>
   );
 }
@@ -176,7 +182,7 @@ const QUIZ: { t: string; ans: "OK" | "NG"; why: string }[] = [
   {
     t: "【請負】注文した会社が、請負会社の作業者に毎日直接こまかく指示を出した。",
     ans: "NG",
-    why: "請負で発注側が作業者へ直接指示するのは偽装請負。指示は請負会社が行う。",
+    why: "請負では作業者への指示は請負会社が行う。注文主が日々直接指示していると、実態によっては偽装請負と判断されるおそれがある。",
   },
   {
     t: "【請負】仕事のやり方や進め方は、請負会社が自分たちで決めて進めた。",
@@ -189,7 +195,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   return (
     <Panel>
-      <SectionTitle step={3}>その指示、OK？　NG？</SectionTitle>
+      <SectionTitle step={2}>その指示、OK？　NG？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {QUIZ.map((q, i) => {
           const chosen = answers[i];
@@ -238,13 +244,13 @@ export default function LaborLawsExperience() {
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📜 働き方のルールでは、<b>派遣と請負の「誰が指示するか」</b>がよく問われます。
-        <b>派遣＝派遣先が直接指示／請負＝発注側は直接指示できない</b>。
+        📜 派遣と請負は、どちらも「よその会社の人に仕事をしてもらう」形。違いは<b>だれが作業者に指示を出すか</b>です。
+        まずはオフィスの模型で、指示の矢印の通り道を見てみよう。
       </div>
 
-      <Basics />
-      <InstructionLab />
+      <InstructionOffice />
       <Quiz />
+      <Basics />
     </div>
   );
 }
