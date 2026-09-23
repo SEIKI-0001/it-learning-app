@@ -36,7 +36,7 @@ node scripts/richmenu/setup-richmenu.mjs --dry-run
 1. **シークレット登録（初回のみ）**
    GitHub リポジトリ → Settings → Secrets and variables → Actions → New repository secret
    - Name: `LINE_CHANNEL_ACCESS_TOKEN`
-   - Secret: Vercel と同じ長期チャネルアクセストークン
+   - Secret: 本番 LINE チャネルの長期アクセストークン
 2. **実行**
    Actions タブ → 「LINE リッチメニュー公開」→ Run workflow
    - 様子見したいときは `dry_run` にチェック（送信せず画像だけ生成）
@@ -49,7 +49,7 @@ push やデプロイでは自動実行されない。
 ## 公開（ローカルから実行する場合）
 
 ```bash
-# Vercel と同じ長期チャネルアクセストークンが必要
+# 本番 LINE チャネルの長期アクセストークンが必要
 LINE_CHANNEL_ACCESS_TOKEN=xxxx npm run richmenu:setup
 # .env.local に LINE_CHANNEL_ACCESS_TOKEN を書いてあれば npm run richmenu:setup だけでOK
 ```
