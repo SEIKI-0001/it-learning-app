@@ -1,0 +1,56 @@
+/* 図解の最小限の動き。reduced-motion では呼び出し側が最終状態を出す（useBeats）ので、ここでは止めるだけ。 */
+
+/* 時間軸のグラフを左から右へ見せていく（clipPath の rect に付ける）。長さは --dur で渡す */
+.wipe {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: diagram-wipe var(--dur, 3000ms) linear both;
+}
+
+/* グラフの進行に合わせて出てくる印（animation-delay で時刻を合わせる） */
+.mark {
+  animation: diagram-mark 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* 循環の上を回るトークン（offset-path は呼び出し側で指定） */
+.orbit {
+  offset-rotate: 0deg;
+  animation: diagram-orbit var(--dur, 4000ms) linear both;
+}
+
+@keyframes diagram-wipe {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes diagram-mark {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes diagram-orbit {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wipe,
+  .mark,
+  .orbit {
+    animation: none;
+  }
+}

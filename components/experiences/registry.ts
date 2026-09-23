@@ -70,6 +70,11 @@ import FacilityManagementExperience from "./FacilityManagementExperience";
 import EstimationExperience from "./EstimationExperience";
 import RaidExperience from "./RaidExperience";
 import MultimediaExperience from "./MultimediaExperience";
+import CorporationOrganizationExperience from "./CorporationOrganizationExperience";
+import DecisionMethodsExperience from "./DecisionMethodsExperience";
+import TechRoadmapExperience from "./TechRoadmapExperience";
+import EngineeringSystemsExperience from "./EngineeringSystemsExperience";
+import ProductionManagementExperience from "./ProductionManagementExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -152,6 +157,11 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "mgmt-estimation": EstimationExperience,
   "tech-raid": RaidExperience,
   "tech-multimedia-compression": MultimediaExperience,
+  "strat-corporation-management-organization": CorporationOrganizationExperience,
+  "strat-decision-problem-solving": DecisionMethodsExperience,
+  "strat-technology-development-strategy": TechRoadmapExperience,
+  "strat-engineering-systems": EngineeringSystemsExperience,
+  "strat-production-management": ProductionManagementExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
