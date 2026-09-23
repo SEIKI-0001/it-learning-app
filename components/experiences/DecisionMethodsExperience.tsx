@@ -193,7 +193,7 @@ function DivergePanel() {
       <div className="mt-3 grid grid-cols-2 gap-2" data-testid="decision-diverge">
         <div className="rounded-xl bg-gray-50 p-2 ring-1 ring-gray-200">
           <div className="text-[13px] font-bold text-gray-800">ブレーンストーミング</div>
-          <svg viewBox="0 0 140 90" className="mt-1 w-full" role="img" aria-label="4人が机を囲み、次々に発言している">
+          <svg viewBox="0 0 140 90" className="mt-1 w-full mx-auto max-w-[14rem]" role="img" aria-label="4人が机を囲み、次々に発言している">
             <rect x="45" y="35" width="50" height="22" rx="4" className="fill-gray-200" />
             {[
               [30, 46, "🙂"],
@@ -223,7 +223,7 @@ function DivergePanel() {
         </div>
         <div className="rounded-xl bg-gray-50 p-2 ring-1 ring-gray-200">
           <div className="text-[13px] font-bold text-gray-800">ブレーンライティング</div>
-          <svg viewBox="0 0 140 90" className="mt-1 w-full" role="img" aria-label="各自が用紙に書いて隣へ回す">
+          <svg viewBox="0 0 140 90" className="mt-1 w-full mx-auto max-w-[14rem]" role="img" aria-label="各自が用紙に書いて隣へ回す">
             {[0, 1, 2].map((i) => (
               <g key={i}>
                 <rect x={8 + i * 44} y="14" width="36" height="46" rx="3" className="fill-white stroke-gray-400" />
@@ -312,6 +312,8 @@ const PARETO = [
 ];
 const PARETO_DELAYS = [900, 1300, 1300];
 // 合計100件なので、棒（件数）と折れ線（累積%）が同じ目盛りで読める
+// 累積件数（合計100件なので、そのまま累積%）
+const CUM = PARETO.map((_, i) => PARETO.slice(0, i + 1).reduce((a, p) => a + p.n, 0));
 const PX = 40;
 const PW = 42;
 const PY0 = 150;
@@ -319,15 +321,13 @@ const PH = 130;
 
 function ParetoPanel() {
   const { ref, beat, reducedMotion, replay } = useBeats(4, PARETO_DELAYS);
-  let acc = 0;
-  const cum = PARETO.map((p) => (acc += p.n));
-  const pts = cum.map((c, i) => `${PX + i * PW + PW / 2},${PY0 - (c / 100) * PH}`).join(" ");
+  const pts = CUM.map((c, i) => `${PX + i * PW + PW / 2},${PY0 - (c / 100) * PH}`).join(" ");
   return (
     <Panel>
       <SectionTitle step={4}>重点把握 ― パレート図で「上位で8割」</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">苦情100件を種類別に数え、<b className="text-gray-800">多い順</b>に並べます。</p>
       <div ref={ref} data-testid="decision-pareto" data-beat={beat}>
-        <svg viewBox="0 0 300 190" className="mt-2 w-full" role="img" aria-label="パレート図。待ち時間45件、接客25件で累積70%、品切れまでで85%">
+        <svg viewBox="0 0 300 190" className="mt-2 w-full mx-auto max-w-md" role="img" aria-label="パレート図。待ち時間45件、接客25件で累積70%、品切れまでで85%">
           {[0, 50, 100].map((v) => (
             <g key={v}>
               <line x1={PX} x2={PX + PW * 6} y1={PY0 - (v / 100) * PH} y2={PY0 - (v / 100) * PH} className="stroke-gray-200" />
@@ -372,7 +372,7 @@ function ParetoPanel() {
           {beat >= 2 && (
             <>
               <polyline points={pts} pathLength={1} className={`fill-none stroke-accent-500 ${styles.draw}`} strokeWidth="2.5" />
-              {cum.map((c, i) => (
+              {CUM.map((c, i) => (
                 <circle key={i} cx={PX + i * PW + PW / 2} cy={PY0 - (c / 100) * PH} r="3" className={`fill-accent-500 ${styles.fadeLate}`} />
               ))}
               <text x={PX + 1 * PW + PW / 2 + 6} y={PY0 - 0.7 * PH + 14} fontSize="11" className={`fill-accent-700 font-bold ${styles.fadeLate}`}>
@@ -420,7 +420,7 @@ function FishbonePanel() {
         パレート図で一番多かった<b className="text-gray-800">「待ち時間が長い」</b>を頭（結果）に置き、原因を骨の形で掘り下げます。
       </p>
       <div ref={ref} data-testid="decision-fishbone" data-beat={beat}>
-        <svg viewBox="0 0 300 200" className="mt-2 w-full" role="img" aria-label="特性要因図。結果「待ち時間が長い」に、人・方法・設備・材料の大骨と、具体的な原因の小骨がつながる">
+        <svg viewBox="0 0 300 200" className="mt-2 w-full mx-auto max-w-md" role="img" aria-label="特性要因図。結果「待ち時間が長い」に、人・方法・設備・材料の大骨と、具体的な原因の小骨がつながる">
           {/* 背骨と頭 */}
           <line x1="8" y1="100" x2="222" y2="100" className="stroke-gray-700" strokeWidth="3" />
           <path d="M222 100 L214 94 M222 100 L214 106" className="stroke-gray-700" strokeWidth="3" />

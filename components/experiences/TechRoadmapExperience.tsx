@@ -92,7 +92,7 @@ const PRODUCTS = ["遠隔監視", "故障予測", "自律保全"];
 const TECHS = ["IoT・通信", "予測AI", "自律制御AI"];
 // 研究開発の期間（時間軸の % 位置）。製品より前から始まっている
 const RND = [
-  { label: "センサー実証", from: 0, to: 30 },
+  { label: "センサー実証", from: 0, to: 38 },
   { label: "予測モデルの開発", from: 12, to: 62 },
   { label: "自律制御の研究→実証", from: 30, to: 96 },
 ];

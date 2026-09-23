@@ -176,7 +176,7 @@ function OverlapPanel() {
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         プロジェクトの始めから終わりまでの、各プロセス群の<b className="text-gray-800">活動の量</b>です。
       </p>
-      <svg viewBox="0 0 300 144" className="mt-3 w-full" role="img" aria-label="5つのプロセス群の活動量が時間に沿って重なっているグラフ。実行と監視コントロールは同時に高い" data-testid="pmbok-overlap">
+      <svg viewBox="0 0 300 144" className="mt-3 w-full mx-auto max-w-md" role="img" aria-label="5つのプロセス群の活動量が時間に沿って重なっているグラフ。実行と監視コントロールは同時に高い" data-testid="pmbok-overlap">
         <line x1={OX} x2={OX + OW} y1={OY} y2={OY} className="stroke-gray-400" />
         {CURVES.map((c) => (
           <polyline

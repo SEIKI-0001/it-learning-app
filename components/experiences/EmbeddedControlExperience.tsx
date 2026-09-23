@@ -135,7 +135,7 @@ function LoopPanel() {
               {beat === 0 ? "待機中" : done ? `${LAPS}周して目標に` : `${lap + 1}周目`}
             </span>
           </div>
-          <svg viewBox="0 0 280 74" className="w-full" role="img" aria-label="室温が30℃から25.2℃へ、目標25℃に近づいていく">
+          <svg viewBox="0 0 280 74" className="w-full mx-auto max-w-md" role="img" aria-label="室温が30℃から25.2℃へ、目標25℃に近づいていく">
             <line x1="30" x2="272" y1={ty(TARGET)} y2={ty(TARGET)} className="stroke-emerald-500" strokeDasharray="4 3" />
             <text x="26" y={ty(TARGET) + 4} textAnchor="end" fontSize="11" className="fill-emerald-700 font-bold">
               25

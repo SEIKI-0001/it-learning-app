@@ -190,7 +190,7 @@ function InventoryPanel() {
       </div>
 
       <div ref={ref} className="mt-2" data-testid="prod-inventory" data-mode={mode} data-beat={beat}>
-        <svg key={`${mode}-${run}`} viewBox="0 0 300 186" className="w-full" role="img" aria-label={mode === "fixedQty" ? "定量発注：在庫が発注点50を切るたびに毎回70個を発注" : "定期発注：10日ごとに、その時の在庫から計算した量を発注"}>
+        <svg key={`${mode}-${run}`} viewBox="0 0 300 186" className="w-full mx-auto max-w-md" role="img" aria-label={mode === "fixedQty" ? "定量発注：在庫が発注点50を切るたびに毎回70個を発注" : "定期発注：10日ごとに、その時の在庫から計算した量を発注"}>
           <defs>
             <clipPath id={`prod-clip-${mode}`}>
               <rect x={GX0} y="0" width={GW + 4} height="186" className={playing ? d.wipe : undefined} style={{ ["--dur" as string]: `${DUR}ms` }} />
@@ -230,7 +230,7 @@ function InventoryPanel() {
           <g clipPath={`url(#prod-clip-${mode})`}>
             <polyline points={sim.pts.map(([x, v]) => `${gx(x)},${gy(v)}`).join(" ")} className="fill-none stroke-brand-600" strokeWidth="2.2" strokeLinejoin="round" />
             {/* 最初の補充にだけ名前を付ける（形が同じなので2回目以降は線で読める） */}
-            <text x={gx(sim.arrivals[0].day) + 3} y={gy(sim.arrivals[0].low) + 2} fontSize="11" className="fill-emerald-700 font-bold">
+            <text x={gx(sim.arrivals[0].day)} y={gy(sim.arrivals[0].low) + 14} textAnchor="middle" fontSize="11" className="fill-emerald-700 font-bold">
               ↑届いて補充
             </text>
           </g>

@@ -12,8 +12,9 @@ import { DiskArray, Legend, SLOTS, survives, usableDisks, type RaidMode } from "
 //   ② パリティ ：3＋5＋2＝10 を持っておけば、1台消えても 10−3−2 で戻せる
 //   ③ RAID5    ：パリティは各ディスクに散らばるが、集めると1台分 → 4TB − 1TB ＝ 3TB
 //   ④ RAID6    ：パリティ2種類で2台分 → 4TB − 2TB ＝ 2TB、2台壊れても戻せる
-//   ⑤ 一般化   ：容量 ×（台数 − 引く台数）
-//   ⑥ 確認4問  ：誤答は「引く台数を間違えた」などつまずいた手順を返す
+//   ⑤ 4方式の比較は raid/RaidCompare.tsx
+//   ⑥ 一般化   ：容量 ×（台数 − 引く台数）
+//   ⑦ 確認4問  ：誤答は「引く台数を間違えた」などつまずいた手順を返す
 
 export const RAID_STEPS = ["① 方式を見る", "② 引く台数", "③ ×1台の容量"];
 
@@ -331,7 +332,7 @@ export function RaidFormulaStage() {
   const minus = row.minus(n);
   return (
     <Panel>
-      <SectionTitle step={5}>何台でも同じ式 ― 引く台数だけ覚える</SectionTitle>
+      <SectionTitle step={6}>何台でも同じ式 ― 引く台数だけ覚える</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">台数と1台の容量を変えてみよう。方式の行をタップすると、どれだけ引かれるかが下のディスクに出ます。</p>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-bold text-gray-500">
@@ -476,7 +477,7 @@ export const RAID_QUESTIONS: LeveledQuestion[] = [
 export function RaidPractice() {
   return (
     <LeveledPractice
-      step={6}
+      step={7}
       title="確認問題：4段階で本試験レベルへ"
       steps={RAID_STEPS}
       questions={RAID_QUESTIONS}
