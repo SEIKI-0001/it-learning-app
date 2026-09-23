@@ -42,7 +42,7 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
             <span>{theme.title}</span>
           </nav>
           <p className="mt-4 text-xs font-medium text-gray-500">第{theme.chapterNumber}章</p>
-          <h1 className="mt-2 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">{theme.title}</h1>
+          <h1 className="mt-2 text-2xl font-medium leading-snug tracking-[-0.015em] text-gray-900 md:text-[30px]">{theme.title}</h1>
           <p className="mt-2 text-sm leading-relaxed text-gray-600">{theme.description}</p>
           <div className="mt-4 max-w-xl">
             <div className="flex items-center justify-between text-sm text-gray-600">

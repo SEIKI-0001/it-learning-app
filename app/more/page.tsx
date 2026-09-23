@@ -15,20 +15,20 @@ const GROUPS: readonly {
     links: [
       { href: "/plan", icon: "map", title: "学習計画", description: "ロードマップと今週の目標" },
       { href: "/badges", icon: "circle-check", title: "CP達成条件", description: "突破試験に必要な学習" },
-      { href: "/mock-exam", icon: "check", title: "100問模試", description: "本番形式で実力を確認" },
+      { href: "/mock-exam", icon: "flask", title: "100問模試", description: "本番形式で実力を確認" },
       {
         href: "/past-exams",
-        icon: "library",
+        icon: "file-text",
         title: "公式過去問",
         description: "IPA公開問題を年度別に演習",
       },
       {
         href: "/theme-exam",
-        icon: "check",
+        icon: "check-double",
         title: "総まとめ試験",
         description: "章ごとに横断的な高難易度問題を解く",
       },
-      { href: "/report", icon: "chart", title: "週次レポート", description: "今週の振り返り" },
+      { href: "/report", icon: "calendar", title: "週次レポート", description: "今週の振り返り" },
     ],
   },
   {

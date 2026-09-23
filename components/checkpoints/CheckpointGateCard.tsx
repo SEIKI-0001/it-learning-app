@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { AppState } from "@/types";
-import { FINAL_EXAM_STATE_LABELS } from "@/types/checkpoint";
+import { FINAL_EXAM_STATE_LABELS, type FinalExamState } from "@/types/checkpoint";
 import {
   buildCheckpointGate,
   finalExamState,
@@ -13,9 +13,15 @@ import {
 import CheckpointStepper from "@/components/checkpoints/CheckpointStepper";
 import GateRequirementList from "@/components/checkpoints/GateRequirementList";
 import MissingBadgeList from "@/components/checkpoints/MissingBadgeList";
-import Icon from "@/components/ui/Icon";
+import Icon, { type IconName } from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
 import { checkpointIcon } from "@/lib/badgeIcons";
+
+const FINAL_EXAM_STATE_ICONS: Record<FinalExamState, IconName> = {
+  locked: "lock",
+  unlocked: "target",
+  passed: "award",
+};
 
 // /plan 用: 現在のチェックポイントのゲート状況を1枚で見せる。
 //   旅の俯瞰（CP0〜6ステッパー）/ 現在CP→次CP / 次に進むための条件チェックリスト /
@@ -168,7 +174,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
         >
           <div className="flex items-center justify-between">
             <p
-              className={`text-sm font-bold ${
+              className={`inline-flex items-center gap-1.5 text-sm font-semibold ${
                 gate.finalExamUnlocked
                   ? gate.finalExamPassed
                     ? "text-emerald-700"
@@ -176,6 +182,11 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
                   : "text-gray-500"
               }`}
             >
+              <Icon
+                name={FINAL_EXAM_STATE_ICONS[finalExamState(gate)]}
+                className="h-4 w-4 shrink-0"
+                aria-hidden
+              />
               {FINAL_EXAM_STATE_LABELS[finalExamState(gate)]}
             </p>
             <Link

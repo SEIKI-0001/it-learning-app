@@ -107,6 +107,45 @@ export function ReadinessBreakdownCard({
   );
 }
 
+// ───────────────────────── 内訳（判定前） ─────────────────────────
+
+/** 分野別・トピック別の内訳がまだ出せないときに、2枚の空カードの代わりに置く1枚。 */
+export function PendingBreakdownCard({
+  totalTopicCount,
+  className,
+}: {
+  totalTopicCount: number;
+  className?: string;
+}) {
+  const rows = [
+    { label: "分野ごとの合格準備度", meta: "ストラテジ・マネジメント・テクノロジ" },
+    { label: "トピックごとの到達度", meta: `全${totalTopicCount}トピック` },
+  ];
+  return (
+    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="pending-heading">
+      <div className={t.sheetHead}>
+        <h2 id="pending-heading" className={t.sectionTitle}>
+          内訳
+        </h2>
+      </div>
+      <ul className={p.pendingList}>
+        {rows.map((row) => (
+          <li key={row.label} className={p.pendingRow}>
+            <span className={p.pendingLabel}>{row.label}</span>
+            <span className={p.pendingMeta}>{row.meta}</span>
+            <span className={p.pendingBar} aria-hidden />
+          </li>
+        ))}
+      </ul>
+      <p className={p.pendingNote}>確認問題に答えると、ここに内訳が出ます。</p>
+      <Link href="/today" className={p.textLink}>
+        今日の学習へ
+        <Icon name="chevron-right" className={p.chev} />
+      </Link>
+    </section>
+  );
+}
+
 // ───────────────────────── トピックの到達度 ─────────────────────────
 
 /** 参考書インプットの内訳（参考書未設定なら null で出さない）。 */

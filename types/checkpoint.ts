@@ -343,9 +343,9 @@ export type FinalExamState = "locked" | "unlocked" | "passed";
 
 /** 状態ラベル（見出し・行内など幅のある場所向け）。 */
 export const FINAL_EXAM_STATE_LABELS: Record<FinalExamState, string> = {
-  locked: "🔒 突破試験：ロック中",
-  unlocked: "⚔️ 突破試験：挑戦できます",
-  passed: "🏆 突破試験：合格済み",
+  locked: "突破試験：ロック中",
+  unlocked: "突破試験：挑戦できます",
+  passed: "突破試験：合格済み",
 };
 
 /** 状態ラベル（ピル・バッジなど狭い場所向けの短縮形）。 */

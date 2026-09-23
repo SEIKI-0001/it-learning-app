@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import type { AppState } from "@/types";
 import { useAppState } from "@/lib/useAppState";
 import { getAllTopics, getTopic } from "@/lib/content";
@@ -247,11 +246,6 @@ export default function TodayPage() {
         onSelectMinutes={(minutes) => persistState(setStudyAmount(state, date, minutes))}
         onClearMinutes={() => persistState(clearStudyAmount(state, date))}
       />
-
-      <p className="mx-auto max-w-5xl px-4 pt-3 text-xs text-gray-600">
-        今日の学習と復習の結果が、合格準備度の判定につながります。
-        <Link href="/progress" className="ml-1 font-semibold text-brand-700 underline underline-offset-2">合格準備度を見る</Link>
-      </p>
 
       <div className={`${s.inner} ${s.body}`}>
         <div className={s.main}>
