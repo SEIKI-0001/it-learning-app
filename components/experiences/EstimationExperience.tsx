@@ -1,13 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import {
+  EstimationPractice,
+  MethodStage,
+  PersonMonthStage,
+  PhaseSumStage,
+  ProductivityStage,
+  StaffChangeStage,
+} from "./estimation/EstimationStages";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「見積り（FP法・人月）」専用の体験。
 //   ① FP法＝機能の数と複雑さから規模を出す（機能を増やすとFPが増える）
-//   ② 工数＝人月（人数 × 期間）
-//   ③ 見積り手法クイズ
+//   ②〜⑦ estimation/EstimationStages：人月は面積 → 生産性で割る → 工程ごとに足す
+//        → 途中で人数が変わる → 手法の使い分け → 確認5問
 // ============================================================================
 
 const FUNCS = [
@@ -80,102 +88,21 @@ function FpCounter() {
   );
 }
 
-function PersonMonth() {
-  return (
-    <Panel>
-      <SectionTitle step={2}>工数 ― 人月（人数 × 期間）</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        手間の大きさは<b className="text-gray-800">工数</b>で表し、よく
-        <b className="text-gray-800">人月（にんげつ）</b>を使います。
-        1人月＝1人が1か月でできる作業量です。
-      </p>
-      <div className="mt-3 rounded-xl bg-gray-50 p-4 text-center ring-1 ring-gray-200">
-        <div className="text-sm font-bold text-gray-700">
-          👥 3人 × 📅 4か月 ＝ <span className="text-brand-700">12人月</span>
-        </div>
-      </div>
-      <p className="mt-3 text-xs leading-relaxed text-gray-500">
-        ※ ただし<b>人を増やせば必ず早く終わるわけではない</b>（連携の手間が増える）点も問われます。
-      </p>
-    </Panel>
-  );
-}
-
-const QUIZ: { t: string; ans: string; opts: string[]; why: string }[] = [
-  {
-    t: "画面・帳票・データなど、利用者から見た機能の数と複雑さから開発規模を見積もる方法は？",
-    ans: "FP法",
-    opts: ["FP法", "クリティカルパス法", "PDCA"],
-    why: "機能から規模を見積もる＝FP法（ファンクションポイント法）。",
-  },
-  {
-    t: "「3人で4か月かかる」のように、人数と期間で手間を表す単位は？",
-    ans: "人月",
-    opts: ["人月", "FP", "稼働率"],
-    why: "工数を人数×期間で表す単位＝人月。",
-  },
-];
-
-function Quiz() {
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  return (
-    <Panel>
-      <SectionTitle step={3}>確認クイズ</SectionTitle>
-      <ul className="mt-3 space-y-3">
-        {QUIZ.map((q, i) => {
-          const chosen = answers[i];
-          const correct = chosen === q.ans;
-          return (
-            <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <div className="text-sm font-bold text-gray-800">{q.t}</div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {q.opts.map((opt) => {
-                  const picked = chosen === opt;
-                  const tone = !chosen
-                    ? "text-gray-600 ring-1 ring-gray-300"
-                    : picked
-                      ? opt === q.ans
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                      : opt === q.ans
-                        ? "ring-2 ring-emerald-400 text-emerald-700"
-                        : "text-gray-400 ring-1 ring-gray-200";
-                  return (
-                    <button
-                      key={opt}
-                      onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-bold transition active:scale-95 ${tone}`}
-                    >
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
-              {chosen && (
-                <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
-                  {q.why}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </Panel>
-  );
-}
-
 export default function EstimationExperience() {
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📐 見積りは、開発の<b>規模や手間を前もって数値化</b>すること。
-        <b>FP法＝機能の数から規模／人月＝人数×期間で工数</b>を表します。
+        <b>FP法＝機能の数から規模／人月＝人数×期間で工数</b>。計算のしかたと、手法の選び方まで進みます。
       </div>
 
       <FpCounter />
-      <PersonMonth />
-      <Quiz />
+      <PersonMonthStage />
+      <ProductivityStage />
+      <PhaseSumStage />
+      <StaffChangeStage />
+      <MethodStage />
+      <EstimationPractice />
     </div>
   );
 }

@@ -45,7 +45,9 @@ describe("corrected target topic content", () => {
       candidate.prompt.includes("販売費及び一般管理費が250万円"),
     );
 
-    expect(topic.checkQuestions).toHaveLength(5);
+    // 5問目までは既存。6問目に流動比率を末尾追加
+    expect(topic.checkQuestions).toHaveLength(6);
+    expect(topic.checkQuestions[5].prompt).toContain("流動比率");
     expect(
       topic.checkQuestions.some((candidate) =>
         candidate.prompt.includes("現金や預金、売掛金"),

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import FinancialStatementsExperience from "@/components/experiences/FinancialStatementsExperience";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
@@ -51,5 +51,59 @@ describe("FinancialStatementsExperience", () => {
     expect(screen.getByTestId("fin-balance")).toHaveTextContent("160 ＝ 50 ＋ 110");
     next();
     expect(screen.getByTestId("fin-summary")).toHaveTextContent("ある時点の状態");
+  });
+});
+
+describe("FinancialStatementsExperience ratios", () => {
+  function reduceMotion() {
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      matches: query.includes("reduce"),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+  }
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("1年ルール sorts items into 流動・固定", () => {
+    reduceMotion();
+    renderDeck();
+    click("解説5");
+    expect(screen.getByTestId("fin-split-ca")).toHaveTextContent("売掛金");
+    expect(screen.getByTestId("fin-split-fl")).toHaveTextContent("長期借入金");
+  });
+
+  it("流動比率 uses only the two current blocks → 200%; 自己資本比率 → 40%", () => {
+    reduceMotion();
+    renderDeck();
+    click("解説6");
+    expect(screen.getByTestId("fin-ratio-block-ca")).toHaveAttribute("data-glow", "true");
+    expect(screen.getByTestId("fin-ratio-block-fa")).not.toHaveAttribute("data-glow");
+    expect(screen.getByTestId("fin-ratio-eq")).toHaveTextContent("200%");
+    click("自己資本比率");
+    expect(screen.getByTestId("fin-ratio-eq")).toHaveTextContent("40%");
+  });
+
+  it("PL shows the five profit stages in order", () => {
+    reduceMotion();
+    renderDeck();
+    click("解説7");
+    expect(screen.getByTestId("fin-pl-営業利益")).toHaveTextContent("150");
+    expect(screen.getByTestId("fin-pl-当期純利益")).toHaveTextContent("80");
+  });
+
+  it("PL-only filter keeps only 売上高利益率", () => {
+    renderDeck();
+    click("解説8");
+    click("PLだけで計算できる？");
+    expect(screen.getByTestId("fin-ind-流動比率")).toHaveAttribute("data-dim", "true");
+    expect(screen.getByTestId("fin-ind-売上高○○利益率")).not.toHaveAttribute("data-dim");
+  });
+
+  it("practice: reversed division is flagged at the 割る step", () => {
+    renderDeck();
+    click("解説9");
+    click("50%");
+    expect(screen.getByText(/割る向きが逆/)).toBeInTheDocument();
   });
 });

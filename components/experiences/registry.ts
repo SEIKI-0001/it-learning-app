@@ -68,6 +68,8 @@ import StandardizationExperience from "./StandardizationExperience";
 import LaborLawsExperience from "./LaborLawsExperience";
 import FacilityManagementExperience from "./FacilityManagementExperience";
 import EstimationExperience from "./EstimationExperience";
+import RaidExperience from "./RaidExperience";
+import MultimediaExperience from "./MultimediaExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -148,6 +150,8 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "strat-labor-laws": LaborLawsExperience,
   "mgmt-facility-management": FacilityManagementExperience,
   "mgmt-estimation": EstimationExperience,
+  "tech-raid": RaidExperience,
+  "tech-multimedia-compression": MultimediaExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {

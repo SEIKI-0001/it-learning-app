@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { FormulaReadStage, IfStage, LogicStage, RangeStage, SheetPractice } from "./spreadsheet/SheetStages";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「表計算と相対参照・絶対参照」専用の体験。
 //   ① 税込価格を出す式を下にコピー。税率セルの参照を「相対」か「絶対」で切替。
 //      相対だと参照がズレて結果が壊れ、絶対($)だと固定されて正しく出るのを体感。
+//   ② $ の意味のまとめ
+//   ③〜⑦ spreadsheet/SheetStages：式を左から読む → IF → 論理積・論理和 → 範囲関数 → 確認5問
 // ============================================================================
 
 const PRICES = [100, 250, 400]; // B2, B3, B4
@@ -163,11 +166,16 @@ export default function SpreadsheetExperience() {
     <div className="space-y-5">
       <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📊 表計算で式をコピーすると、参照するセルが自動でズレるのが<b>相対参照</b>。
-        ズラしたくないセルは <b>$</b> で固定する<b>絶対参照</b>を使います。
+        ズラしたくないセルは <b>$</b> で固定する<b>絶対参照</b>を使います。後半では、IF などの<b>関数を読む力</b>をつけます。
       </div>
 
       <CopyDemo />
       <Summary />
+      <FormulaReadStage />
+      <IfStage />
+      <LogicStage />
+      <RangeStage />
+      <SheetPractice />
     </div>
   );
 }
