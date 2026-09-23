@@ -36,6 +36,8 @@ import ComebackMissionCard from "@/components/today/ComebackMissionCard";
 import GrowthCheckCard from "@/components/today/GrowthCheckCard";
 import ReadingCheck from "@/components/today/ReadingCheck";
 import TodayCueSheet from "@/components/today/TodayCueSheet";
+import TodayFocusCta from "@/components/today/TodayFocusCta";
+import { getMochitDisplayName } from "@/lib/mochitName";
 import TodayHero from "@/components/today/TodayHero";
 import TodayMissions from "@/components/today/TodayMissions";
 import { buildTodaySlots, type TodaySlot } from "@/components/today/todaySlots";
@@ -259,6 +261,7 @@ export default function TodayPage() {
             hrefFor={hrefFor}
             aiGradingHrefFor={aiGradingHrefFor}
           />
+          <TodayFocusCta displayName={getMochitDisplayName(state)} />
         </div>
 
         <div className={s.side}>

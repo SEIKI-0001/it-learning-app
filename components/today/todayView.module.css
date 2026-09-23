@@ -1151,3 +1151,46 @@
     transition: none !important;
   }
 }
+
+/* ───────── もちっとと集中する（控えめな入口） ───────── */
+
+.focusCta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 16px;
+}
+
+.focusCtaButton {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 160ms;
+}
+
+.focusCtaButton:hover {
+  border-color: var(--line-strong);
+}
+
+.focusCtaIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--blue-700);
+}
+
+.focusCtaNote {
+  font-size: 12px;
+  color: var(--ink-3);
+}

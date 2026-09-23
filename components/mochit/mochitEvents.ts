@@ -7,7 +7,9 @@ export type MochitEvent =
   | "checkpointClear"
   | "badgeEarned"
   | "taskComplete"
+  | "focusComplete"
   | "allCorrect"
+  | "correctStreak"
   | "correct"
   | "incorrect"
   | "encourage"
@@ -19,7 +21,9 @@ export const MOCHIT_EVENT_TRIGGERS: Record<MochitEvent, MochitRiveTriggerInput> 
   checkpointClear: "triggerCheckpointClear",
   badgeEarned: "triggerBadgeEarned",
   taskComplete: "triggerTaskComplete",
+  focusComplete: "triggerFocusComplete",
   allCorrect: "triggerAllCorrect",
+  correctStreak: "triggerCorrectStreak",
   correct: "triggerCorrect",
   incorrect: "triggerIncorrect",
   encourage: "triggerEncourage",
@@ -33,12 +37,14 @@ export const MOCHIT_TRIGGER_EVENTS: Record<MochitRiveTriggerInput, MochitEvent> 
 ) as Record<MochitRiveTriggerInput, MochitEvent>;
 
 // 優先度（大きいほど強い）。仕様の序列:
-// checkpoint > badge > task > 全問正解 > 個別回答 > 励まし > タップ > (idle)
+// checkpoint > badge > task > 集中完了 > 全問正解 > 連続正解 > 個別回答 > 励まし > タップ > (idle)
 export const MOCHIT_EVENT_PRIORITIES: Record<MochitEvent, number> = {
   checkpointClear: 100,
   badgeEarned: 90,
   taskComplete: 80,
+  focusComplete: 75,
   allCorrect: 70,
+  correctStreak: 65,
   correct: 60,
   incorrect: 60,
   encourage: 50,
@@ -51,7 +57,9 @@ export const MOCHIT_EVENT_REACTION_MS: Record<MochitEvent, number> = {
   checkpointClear: 2200,
   badgeEarned: 1800,
   taskComplete: 1400,
+  focusComplete: 1300,
   allCorrect: 1200,
+  correctStreak: 1000,
   correct: 900,
   incorrect: 900,
   encourage: 1000,

@@ -10,12 +10,17 @@ type Props = {
   message: FloatingMochitMessage;
   anchor: FloatingMochitPoint;
   viewport: FloatingViewportMetrics;
+  /** 足元（below）/ 頭上（above）に集中タイマーが出ている時は、その分だけ離して置く */
+  chipPlacement?: "below" | "above" | null;
+  chipHeight?: number;
 };
 
 export default function FloatingMochitBubble({
   message,
   anchor,
   viewport,
+  chipPlacement = null,
+  chipHeight = 0,
 }: Props) {
   const size = {
     width: Math.min(220, viewport.width - viewport.margin * 2),
@@ -24,9 +29,9 @@ export default function FloatingMochitBubble({
   const position = getFloatingOverlayPosition(
     {
       x: anchor.x,
-      y: anchor.y,
+      y: chipPlacement === "above" ? anchor.y - chipHeight : anchor.y,
       width: FLOATING_MOCHIT_HIT_SIZE,
-      height: FLOATING_MOCHIT_HIT_SIZE,
+      height: FLOATING_MOCHIT_HIT_SIZE + (chipPlacement ? chipHeight : 0),
     },
     size,
     viewport,

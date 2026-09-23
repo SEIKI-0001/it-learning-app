@@ -45,6 +45,11 @@ import type { MochitBehaviorState } from "./mochitBehavior";
 import { useMochitSleep } from "./useMochitSleep";
 import { useMochitContextualAttention } from "./useMochitContextualAttention";
 import { viewportTargetToAttentionPoint, type MochitAttentionPoint } from "./mochitAttention";
+import FloatingMochitFocusChip from "./FloatingMochitFocusChip";
+import { activityAllowsSleep, activityForFocusPhase } from "./mochitActivity";
+import { FOCUS_BREAK_OFFER_MS, hasFocusBreakOffer, type FocusSessionState } from "./mochitFocusSession";
+import { useMochitFocusSession, useMochitFocusSessionEvents } from "./useMochitFocusSession";
+import { createLearningStreakTracker, type LearningStreakTracker } from "./mochitLearningStreak";
 
 type MotionState =
   | "idle"
@@ -55,6 +60,17 @@ type MotionState =
 
 const DRAG_THRESHOLD_PX = 6;
 const LONG_PRESS_MS = 550;
+/** 足元の集中タイマー表示の高さ（下に置けない位置では上に出す判定に使う） */
+const FOCUS_CHIP_CLEARANCE_PX = 28;
+
+const hasFocusChip = (session: FocusSessionState) => session.phase !== "idle" || hasFocusBreakOffer(session);
+
+// Focus Session の節目にモチットが話すひとこと（学習イベントではないので Reaction は伴わない）
+const FOCUS_SESSION_BUBBLES = {
+  focusStarted: { text: "いっしょに集中しよう", durationMs: 1_800 },
+  breakStarted: { text: "ひと息つこう", durationMs: 1_800 },
+  breakCompleted: { text: "休憩おわり。また一緒にやろう", durationMs: 2_400 },
+} as const satisfies Record<string, FloatingMochitMessage>;
 
 type ActiveGesture = {
   pointerId: number;
@@ -164,11 +180,34 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     };
   }, []);
 
+  // Focus Session（もちっとと集中する）: 集中中は一緒に勉強（studying）、休憩中は一緒に休む（resting）。
+  // イベントの購読はセッション状態の購読より先に張る（購読開始時に確定した完了も受け取るため）。
+  const showBubbleRef = useRef<(message: FloatingMochitMessage, options?: { withMenu?: boolean }) => void>(
+    () => {},
+  );
+  useMochitFocusSessionEvents((event) => {
+    if (event.type === "focusCompleted") {
+      // 集中を終えて小さく達成 Reaction。ずっと後で気づいた完了（提案の期限切れ）は祝わない
+      if (Date.now() - event.at <= FOCUS_BREAK_OFFER_MS) {
+        setReactionSignal(createMochitEventSignal("focusComplete"));
+      }
+      return;
+    }
+    // 開始はメニュー操作から来る（同じ操作でメニューは閉じる）ので、開いていても話す
+    showBubbleRef.current(FOCUS_SESSION_BUBBLES[event.type], {
+      withMenu: event.type === "focusStarted" || event.type === "breakStarted",
+    });
+  }, !!preferences?.visible);
+  const focusSession = useMochitFocusSession();
+  const activity = activityForFocusPhase(focusSession.phase);
+
   // Sleep / Wake: しばらく操作が無いと眠そうにし、ユーザーが戻ると起きる。
   // 単純に戻ってきた（操作した）時だけ wakeUp Reaction を出す。学習イベントで起きた時は
   // wakeUp を挟まず、半目を解除してから本来の Reaction をそのまま再生する。
   const { sleeping, notifyLearningEvent } = useMochitSleep({
     enabled: !!preferences?.visible,
+    // 集中中・休憩中は眠らない（Activity > Sleep）
+    suppressed: !activityAllowsSleep(activity),
     onWake: (reason) => {
       if (reason === "activity") setReactionSignal(createMochitEventSignal("wakeUp"));
     },
@@ -182,12 +221,15 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   });
   const appliedAttention = sleeping ? null : contextualAttention.applied;
 
+  // 連続正解の節目の correct は、少し強い喜び（correctStreak）に置き換える
+  const streakRef = useRef<LearningStreakTracker | null>(null);
   useEffect(() => {
     if (!preferences?.visible) return;
+    const streak = (streakRef.current ??= createLearningStreakTracker());
     return subscribeMochitEvent((signal) => {
       // 学習イベントは Reaction より先に awake へ戻す（同じ描画で目も開く）
       notifyLearningEvent();
-      setReactionSignal(signal);
+      setReactionSignal(streak.process(signal));
     });
   }, [preferences?.visible, notifyLearningEvent]);
 
@@ -216,12 +258,8 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     showBubbleForEvent(signal);
   };
 
-  const showBubbleForEvent = (signal: MochitEventSignal) => {
-    if (menuOpen) return;
-
-    const message = buildMochitMessage(signal, previousBubbleTextRef.current);
-    if (!message) return;
-
+  const showBubble = (message: FloatingMochitMessage, options: { withMenu?: boolean } = {}) => {
+    if (menuOpen && !options.withMenu) return;
     if (bubbleTimerRef.current !== null) {
       window.clearTimeout(bubbleTimerRef.current);
     }
@@ -232,6 +270,15 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
       setBubble(null);
     }, message.durationMs);
   };
+
+  const showBubbleForEvent = (signal: MochitEventSignal) => {
+    const message = buildMochitMessage(signal, previousBubbleTextRef.current);
+    if (message) showBubble(message);
+  };
+
+  useEffect(() => {
+    showBubbleRef.current = showBubble;
+  });
 
   const openMenu = () => {
     clearLongPress();
@@ -433,6 +480,13 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
       ? { attention: appliedAttention.attention }
       : undefined;
 
+  // 足元の集中タイマー。画面下端（BottomNav の手前）で足元に置けない時は頭の上に出す
+  const chipPlacement =
+    position.y + FLOATING_MOCHIT_HIT_SIZE + FOCUS_CHIP_CLEARANCE_PX >
+    viewportMetrics.height - viewportMetrics.bottomClearance
+      ? "above"
+      : "below";
+
   return (
     <div
       ref={rootRef}
@@ -449,6 +503,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
         data-motion={motion}
         data-reduced-motion={effectiveReducedMotion ? "true" : undefined}
         data-sleep={sleeping ? "sleepy" : "awake"}
+        data-activity={activity}
         data-attention={appliedAttention?.attention ?? "random"}
         data-attention-point={attentionPoint ? `${attentionPoint.x},${attentionPoint.y}` : undefined}
         style={
@@ -472,16 +527,20 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
           reducedMotion={effectiveReducedMotion}
           behavior={behavior}
           attentionPoint={attentionPoint}
+          activity={activity}
           event={reactionSignal}
           onEventAccepted={handleEventAccepted}
           className="pointer-events-none justify-center"
         />
       </button>
+      <FloatingMochitFocusChip session={focusSession} placement={chipPlacement} onOpenMenu={openMenu} />
       {bubble ? (
         <FloatingMochitBubble
           message={bubble}
           anchor={position}
           viewport={viewportMetrics}
+          chipPlacement={hasFocusChip(focusSession) ? chipPlacement : null}
+          chipHeight={FOCUS_CHIP_CLEARANCE_PX - 8}
         />
       ) : null}
       {menuOpen ? (
@@ -490,6 +549,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
           viewport={viewportMetrics}
           firstItemRef={menuItemRef}
           presentation={presentation}
+          focus={{ session: focusSession, displayName }}
           onClose={() => setMenuOpen(false)}
           onHide={hidePet}
         />

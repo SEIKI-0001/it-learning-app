@@ -38,11 +38,11 @@ Number:
 `mood`（-1〜1想定） / `energy`（0〜1） / `growthStage`（1〜3） / `attentionX`（0〜1） / `attentionY`（0〜1） / `screenContext`（アプリ側 `MOCHIT_SCREEN_CONTEXT` の整数コード）
 
 Trigger:
-`triggerTap` / `triggerCorrect` / `triggerIncorrect` / `triggerAllCorrect` / `triggerEncourage` / `triggerTaskComplete` / `triggerBadgeEarned` / `triggerCheckpointClear` / `triggerWakeUp`
+`triggerTap` / `triggerCorrect` / `triggerIncorrect` / `triggerAllCorrect` / `triggerEncourage` / `triggerTaskComplete` / `triggerBadgeEarned` / `triggerCheckpointClear` / `triggerWakeUp` / `triggerCorrectStreak`（連続正解＝correct より少し強い喜び） / `triggerFocusComplete`（集中タイマー完了の小さな達成）
 
 - [ ] `reducedMotion=true` のとき: 呼吸・体の揺れ・バウンス・スクワッシュ・ポインタ追従を全停止し、静的な表情/ポーズ差分のみで反応（既存CSS実装のreduced-motionポリシーと同等）
 - [ ] `primaryInstance=false`（コンパクト表示）のとき: 呼吸などの常時アニメを減らした軽量プロファイル
-- [ ] トリガー反応の優先度はアプリ側で制御される（checkpoint > badge > task > allCorrect > answer > encourage > tap）。Rive側は各トリガーが割込み可能な短いワンショットとして作る
+- [ ] トリガー反応の優先度はアプリ側で制御される（checkpoint > badge > task > focusComplete > allCorrect > correctStreak > answer > encourage > tap > wakeUp）。Rive側は各トリガーが割込み可能な短いワンショットとして作る
 
 ## 5. 書き出しと配置
 

@@ -70,6 +70,8 @@ export const MOCHIT_RIVE_TRIGGER_INPUTS = [
   "triggerBadgeEarned",
   "triggerCheckpointClear",
   "triggerWakeUp",
+  "triggerCorrectStreak",
+  "triggerFocusComplete",
 ] as const;
 
 export type MochitRiveBooleanInput = (typeof MOCHIT_RIVE_BOOLEAN_INPUTS)[number];
