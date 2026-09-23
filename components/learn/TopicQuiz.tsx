@@ -178,10 +178,13 @@ export default function TopicQuiz({
       const answeredAt = new Date().toISOString();
       const sh = shuffled.get(q.id)!;
       const sel = selections[q.id];
+      // UI上のA/B/C/Dはシャッフル後の表示位置。永続化・親側の再採点には
+      // 元問題のchoice keyを返し、question.correctChoiceと同じ座標系に揃える。
+      const selectedSourceKey = sh.choices.find((choice) => choice.key === sel)?.sourceKey;
       return {
         questionId: q.id,
-        selectedChoice: sel,
-        isCorrect: sel === sh.correct,
+        selectedChoice: selectedSourceKey,
+        isCorrect: selectedSourceKey === q.correctChoice,
         answeredAt,
         tag: q.id, // 呼び出し側でトピックのタグに上書きしてもよい
         topicId: topicIdForQuestion?.(q) ?? topicId,
