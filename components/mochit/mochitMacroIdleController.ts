@@ -94,12 +94,12 @@ export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroI
   const scheduleFresh = () => {
     cancelTimer();
     if (disposed || !isMacroIdleAutoEnabled(conditions)) return;
-    timer = setTimer(onTimer, nextMacroIdleDelayMs(rng, getMacroIdleTuning(conditions.floating === true)));
+    timer = setTimer(onTimer, nextMacroIdleDelayMs(rng, getMacroIdleTuning(conditions.floating === true, conditions.lively)));
   };
 
   const start = (behavior: MochitMacroIdleBehavior): boolean => {
     const myToken = ++token;
-    const tuning = getMacroIdleTuning(conditions.floating === true);
+    const tuning = getMacroIdleTuning(conditions.floating === true, conditions.lively);
     const playback = deps.play(behavior, macroIdleDurationMs(behavior, rng, tuning), () => {
       if (!playing || playing.token !== myToken) return;
       playing = null;
@@ -114,7 +114,7 @@ export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroI
   function onTimer() {
     timer = null;
     if (disposed || playing || !isMacroIdleAutoEnabled(conditions)) return;
-    const choice = pickMacroIdleBehavior(lastBehavior, rng, getMacroIdleTuning(conditions.floating === true).weights);
+    const choice = pickMacroIdleBehavior(lastBehavior, rng, getMacroIdleTuning(conditions.floating === true, conditions.lively).weights);
     // normal は何もせず次回まで待つ
     if (choice === "normal" || !start(choice)) scheduleFresh();
   }
@@ -139,7 +139,7 @@ export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroI
       }
 
       if (!isAuto) cancelTimer();
-      else if (!wasAuto && !playing) scheduleFresh();
+      else if ((!wasAuto || prev.lively !== conditions.lively) && !playing) scheduleFresh();
     },
     playNow(behavior) {
       if (disposed || !canPlayMacroIdle(conditions)) return false;

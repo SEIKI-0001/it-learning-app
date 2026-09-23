@@ -83,6 +83,25 @@ const openMenu = (pet: HTMLElement) => {
 };
 
 describe("FloatingMochit: もちっとと集中する", () => {
+  it("低では従来の姿勢を維持し、正解の周囲演出は出さない", async () => {
+    window.localStorage.setItem("fequest:floatingMochit:v1", JSON.stringify({ visible: true, position: null, reactionLevel: "low" }));
+    await renderPet();
+    act(() => startMochitFocus());
+    expect(screen.queryByTestId("mochit-study-scene")).toBeNull();
+    act(() => emitMochitEvent("correct"));
+    expect(screen.queryByTestId("mochit-emotion-accent")).toBeNull();
+  });
+  it("正解に同期してきらめき、余韻の後に筆記へ戻る", async () => {
+    await renderPet();
+    act(() => startMochitFocus());
+    act(() => emitMochitEvent("correct"));
+    expect(await screen.findByTestId("mochit-emotion-accent")).toHaveAttribute("data-emotion", "celebrate");
+    expect(screen.getByTestId("mochit-study-scene")).toHaveAttribute("data-paused", "true");
+    advance(3400);
+    expect(screen.queryByTestId("mochit-emotion-accent")).toBeNull();
+    expect(screen.getByTestId("mochit-study-scene")).toHaveAttribute("data-paused", "false");
+  });
+
   it("メニューから集中を始めると studying になり、足元に FOCUS 25:00 を出す", async () => {
     const pet = await renderPet();
     expect(pet).toHaveAttribute("data-activity", "idle");
@@ -92,6 +111,7 @@ describe("FloatingMochit: もちっとと集中する", () => {
     expect(screen.queryByRole("menu")).toBeNull();
     expect(pet).toHaveAttribute("data-activity", "studying");
     expect(chip()).toHaveTextContent("FOCUS25:00");
+    expect(screen.getByTestId("mochit-study-scene")).toBeInTheDocument();
     expect(await screen.findByTestId("floating-mochit-bubble")).toHaveTextContent("いっしょに集中しよう");
   });
 
@@ -112,6 +132,7 @@ describe("FloatingMochit: もちっとと集中する", () => {
     fireEvent.click(within(menu).getByRole("menuitem", { name: "一時停止" }));
     expect(pet).toHaveAttribute("data-activity", "idle");
     expect(chip()).toHaveTextContent("PAUSE");
+    expect(screen.queryByTestId("mochit-study-scene")).toBeNull();
     advance(61_000);
     expect(pet).toHaveAttribute("data-sleep", "sleepy");
   });
@@ -145,6 +166,7 @@ describe("FloatingMochit: もちっとと集中する", () => {
     fireEvent.click(within(screen.getByRole("menu")).getByRole("menuitem", { name: "5分休憩する" }));
     expect(pet).toHaveAttribute("data-activity", "resting");
     expect(chip()).toHaveTextContent("BREAK05:00");
+    expect(screen.queryByTestId("mochit-study-scene")).toBeNull();
     advance(120_000);
     expect(pet).toHaveAttribute("data-sleep", "awake");
 

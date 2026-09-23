@@ -118,6 +118,7 @@ type Props = {
   reducedMotion: boolean;
   compact: boolean;
   reactionProfile: MochitReactionProfile;
+  lively?: boolean;
   ariaLabel: string;
   onReady?: () => void;
   onLoadFailed?: (error: unknown) => void;
@@ -880,6 +881,7 @@ export default function MochitSvg({
   reducedMotion,
   compact,
   reactionProfile,
+  lively = false,
   ariaLabel,
   onReady,
   onLoadFailed,
@@ -1163,9 +1165,10 @@ export default function MochitSvg({
       attention,
       sleeping,
       floating,
+      lively,
       activity,
     });
-  }, [active, reducedMotion, compact, attention, sleeping, floating, activity, failed]);
+  }, [active, reducedMotion, compact, attention, sleeping, floating, lively, activity, failed]);
   // マウント時点で既にある要求は再生しない（再マウントで古い要求が再生されないように）
   const macroRequestId = macroIdleRequest?.id;
   const macroRequestBehavior = macroIdleRequest?.behavior;
@@ -1251,12 +1254,14 @@ export default function MochitSvg({
   const reactionEnvRef = useRef({
     reducedMotion,
     reactionProfile,
+    lively,
     gated: reactionGated,
   });
   useEffect(() => {
     reactionEnvRef.current = {
       reducedMotion,
       reactionProfile,
+      lively,
       gated: reactionGated,
     };
   });
@@ -1273,6 +1278,7 @@ export default function MochitSvg({
       if (!event) return;
       const baseSpec = buildReactionSpec(event, {
         profile: env.reactionProfile,
+        lively: env.lively,
         reducedMotion: env.reducedMotion,
       });
       if (!baseSpec) return;

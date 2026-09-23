@@ -134,7 +134,15 @@ export const FLOATING_MACRO_IDLE_TUNING: MacroIdleTuning = Object.freeze({
   }),
 });
 
-export function getMacroIdleTuning(floating: boolean): MacroIdleTuning {
+export const LIVELY_MACRO_IDLE_TUNING: MacroIdleTuning = Object.freeze({
+  ...FLOATING_MACRO_IDLE_TUNING,
+  weights: Object.freeze({ normal: 0.08, lookAround: 0.38, curious: 0.34, stretch: 0.2 }),
+  minDelayMs: 2500,
+  maxDelayMs: 6000,
+});
+
+export function getMacroIdleTuning(floating: boolean, lively = false): MacroIdleTuning {
+  if (floating && lively) return LIVELY_MACRO_IDLE_TUNING;
   return floating ? FLOATING_MACRO_IDLE_TUNING : DEFAULT_MACRO_IDLE_TUNING;
 }
 
@@ -457,6 +465,7 @@ export type MacroIdleConditions = {
   sleeping?: boolean;
   /** 84px 常時表示版。自動発火の頻度・継続時間に FLOATING_MACRO_IDLE_TUNING を使う */
   floating?: boolean;
+  lively?: boolean;
   /** Activity（studying / resting）中は再生しない。一緒に集中・休憩している間に割り込ませない */
   activity?: MochitActivity;
 };

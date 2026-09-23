@@ -381,3 +381,37 @@ p, li, dd {
     opacity: 0;
   }
 }
+
+/* もちっとの「高」: 勉強道具と、受理した出来事にだけ同期する感情の余韻。 */
+.mochit-pencil { transform-box: fill-box; transform-origin: 20% 90%; animation: mochit-writing 2.6s ease-in-out infinite; }
+.mochit-study-scene[data-paused="true"] .mochit-pencil { animation-play-state: paused; }
+@keyframes mochit-writing {
+  0%, 8%, 64%, 100% { transform: translate(0, 0) rotate(0deg); }
+  18%, 38% { transform: translate(-3px, 1px) rotate(-9deg); }
+  28%, 48% { transform: translate(1px, 0) rotate(5deg); }
+  76%, 86% { transform: translate(0, -3px) rotate(8deg); }
+}
+.mochit-spark { position: absolute; left: calc(50% - 8px); top: 38%; width: 16px; height: 16px; opacity: 0; animation: mochit-spark-burst 1.2s ease-out var(--spark-delay) both; }
+@keyframes mochit-spark-burst {
+  0% { opacity: 0; transform: translate(calc(var(--spark-x) * .5), calc(var(--spark-y) * .5)) scale(.2) rotate(-30deg); }
+  20%, 50% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(1.15) rotate(40deg); }
+}
+.mochit-cheer-rays { animation: mochit-cheer-rays 900ms ease-out both; }
+@keyframes mochit-cheer-rays { 0% { opacity: 0; transform: scale(.8); } 25%, 60% { opacity: 1; } 100% { opacity: 0; transform: scale(1.08); } }
+.mochit-feeling { position: absolute; top: 7px; right: 3px; color: #e58a9f; font-size: 22px; font-weight: bold; animation: mochit-affection 1.8s ease-out both; }
+[data-emotion="care"] .mochit-feeling { color: #72a7bc; }
+@keyframes mochit-affection { 0% { opacity: 0; transform: translateY(5px) scale(.6); } 20%, 65% { opacity: 1; } 100% { opacity: 0; transform: translateY(-12px) scale(1); } }
+.mochit-companion[data-reduced-motion="true"] .mochit-pencil { animation: none; }
+.mochit-companion[data-reduced-motion="true"] .mochit-spark { animation: none; opacity: .8; transform: translate(var(--spark-x), var(--spark-y)); }
+.mochit-companion[data-reduced-motion="true"] .mochit-cheer-rays,
+.mochit-companion[data-reduced-motion="true"] .mochit-feeling { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .mochit-pencil, .mochit-spark, .mochit-cheer-rays, .mochit-feeling { animation: none; }
+  .mochit-spark { opacity: .8; transform: translate(var(--spark-x), var(--spark-y)); }
+}
+.mochit-speech-bubble::after { content: ""; position: absolute; width: 8px; height: 8px; background: white; transform: rotate(45deg); border: solid var(--color-brand-100); border-width: 0 1px 1px 0; }
+.mochit-speech-bubble[data-placement="top"]::after { bottom: -5px; left: var(--bubble-tip-x); }
+.mochit-speech-bubble[data-placement="bottom"]::after { top: -5px; left: var(--bubble-tip-x); transform: rotate(225deg); }
+.mochit-speech-bubble[data-placement="left"]::after { right: -5px; top: var(--bubble-tip-y); transform: rotate(-45deg); }
+.mochit-speech-bubble[data-placement="right"]::after { left: -5px; top: var(--bubble-tip-y); transform: rotate(135deg); }

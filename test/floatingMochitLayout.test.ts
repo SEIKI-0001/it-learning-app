@@ -90,3 +90,15 @@ describe("floating Mochit overlay placement", () => {
     ).toEqual({ left: 148, top: 40, placement: "right" });
   });
 });
+
+describe("bubble placement next to the focus timer", () => {
+  it("places a measured short bubble beside the pet when a timer occupies the vertical space", () => {
+    const position = getFloatingOverlayPosition(
+      { x: 278, y: 28, width: 84, height: 104 },
+      { width: 154, height: 38 },
+      { width: 390, height: 844, margin: 16, bottomClearance: 64 },
+      { preferHorizontal: true, gap: 4 },
+    );
+    expect(position).toEqual({ left: 120, top: 61, placement: "left" });
+  });
+});

@@ -1,5 +1,6 @@
 "use client";
 
+import MochitReactionLevelControl from "./MochitReactionLevelControl";
 import Link from "next/link";
 import type { RefObject } from "react";
 import Icon, { type IconName } from "@/components/ui/Icon";
@@ -48,7 +49,7 @@ export default function FloatingMochitMenu({
 }: Props) {
   const width = Math.min(288, viewport.width - viewport.margin * 2);
   const height = Math.min(
-    focus ? 330 : 260,
+    focus ? 460 : 390,
     viewport.height -
       viewport.bottomClearance -
       viewport.margin * 2,
@@ -115,6 +116,7 @@ export default function FloatingMochitMenu({
           </Link>
         ))}
       </div>
+      <MochitReactionLevelControl menu onChange={onClose} />
       <div className="mt-2 border-t border-gray-200 pt-2">
         <Link
           href="/avatar"

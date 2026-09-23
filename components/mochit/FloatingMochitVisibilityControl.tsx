@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import MochitReactionLevelControl from "./MochitReactionLevelControl";
 import Button from "@/components/ui/Button";
 import {
   getFloatingMochitPreferencesServerSnapshot,
@@ -58,6 +59,7 @@ export default function FloatingMochitVisibilityControl({
             : "フローティングモチットは表示中です"}
         </p>
       )}
+      {!restoreOnly && <MochitReactionLevelControl />}
     </section>
   );
 }

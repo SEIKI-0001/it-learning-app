@@ -14,6 +14,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
 import AccountLinkSettings from "@/components/settings/AccountLinkSettings";
+import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import ReferenceBookSummary from "@/components/settings/ReferenceBookSummary";
 
@@ -233,6 +234,8 @@ function SettingsForm({
 
           {/* 学習リマインダー（GF-P0-006） */}
           <NotificationSettings />
+
+          <FloatingMochitVisibilityControl />
 
           {/* 学習スタイル */}
           <fieldset>

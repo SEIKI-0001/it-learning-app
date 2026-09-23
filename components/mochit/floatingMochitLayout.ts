@@ -41,8 +41,9 @@ export function getFloatingOverlayPosition(
   anchor: FloatingOverlayAnchor,
   size: FloatingOverlaySize,
   viewport: FloatingViewportMetrics,
+  options: { preferHorizontal?: boolean; gap?: number } = {},
 ): FloatingOverlayPosition {
-  const gap = 8;
+  const gap = options.gap ?? 8;
   const available = {
     top: anchor.y - viewport.margin,
     right:
@@ -64,7 +65,9 @@ export function getFloatingOverlayPosition(
   ).filter((placement) => available[placement] >= size.width + gap);
 
   let placement: FloatingOverlayPlacement;
-  if (verticalFits.length > 0) {
+  if (options.preferHorizontal && horizontalFits.length > 0) {
+    placement = horizontalFits.reduce((best, candidate) => available[candidate] > available[best] ? candidate : best);
+  } else if (verticalFits.length > 0) {
     placement = verticalFits.reduce((best, candidate) =>
       available[candidate] > available[best] ? candidate : best,
     );

@@ -51,6 +51,7 @@ export type ReactionSpec = {
 export type ReactionMode = {
   compact?: boolean;
   profile?: MochitReactionProfile;
+  lively?: boolean;
   reducedMotion: boolean;
 };
 
@@ -234,7 +235,7 @@ export function buildReactionSpec(event: MochitEvent, mode: ReactionMode): React
   const profile = mode.profile ?? (mode.compact ? "compact" : "full");
   const s =
     profile === "floating"
-      ? FLOATING_SCALE
+      ? mode.lively ? { move: 1.25, squash: 1.15, rot: 1.2, arm: 1.25, gaze: 1, antenna: 1.2 } : FLOATING_SCALE
       : profile === "compact"
         ? COMPACT_SCALE
         : FULL_SCALE;

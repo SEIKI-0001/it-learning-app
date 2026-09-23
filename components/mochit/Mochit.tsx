@@ -134,6 +134,7 @@ type Props = {
   compact?: boolean;
   /** リアクション強度。常時表示版は floating を明示する。 */
   reactionProfile?: MochitReactionProfile;
+  lively?: boolean;
   /** 既存優先度コントローラーがイベントを受理した時だけ通知する。 */
   onEventAccepted?: (signal: MochitEventSignal) => void;
   /**
@@ -180,6 +181,7 @@ export default function Mochit({
   reducedMotion,
   compact,
   reactionProfile,
+  lively = false,
   onEventAccepted,
   behavior,
   attentionPoint,
@@ -277,6 +279,7 @@ export default function Mochit({
                 reducedMotion={effectiveReducedMotion}
                 compact={effectiveCompact}
                 reactionProfile={effectiveReactionProfile}
+                lively={lively}
                 ariaLabel={meta.alt}
                 forceFailure={forceSvgFailure}
                 registerTriggerFirer={registerTriggerFirer}

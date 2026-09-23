@@ -10,6 +10,8 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import MochitCompanionScene from "./MochitCompanionScene";
+import MochitEmotionAccent from "./MochitEmotionAccent";
 import Mochit from "./Mochit";
 import FloatingMochitBubble from "./FloatingMochitBubble";
 import FloatingMochitMenu from "./FloatingMochitMenu";
@@ -135,6 +137,9 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   const [motion, setMotion] = useState<MotionState>("idle");
   const [reactionSignal, setReactionSignal] =
     useState<MochitEventSignal | null>(null);
+  const lively = preferences?.reactionLevel !== "low";
+  const [acceptedReaction, setAcceptedReaction] = useState<MochitEventSignal | null>(null);
+  const emotionTimerRef = useRef<number | null>(null);
   const [bubble, setBubble] = useState<FloatingMochitMessage | null>(null);
   const [dragRotation, setDragRotation] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -254,6 +259,9 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   };
 
   const handleEventAccepted = (signal: MochitEventSignal) => {
+    setAcceptedReaction(signal);
+    if (emotionTimerRef.current !== null) window.clearTimeout(emotionTimerRef.current);
+    emotionTimerRef.current = window.setTimeout(() => setAcceptedReaction(null), MOCHIT_EVENT_REACTION_MS[signal.type] + 2400);
     contextualAttention.reactionStarted(MOCHIT_EVENT_REACTION_MS[signal.type]);
     showBubbleForEvent(signal);
   };
@@ -289,6 +297,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
 
   useEffect(() => {
     return () => {
+      if (emotionTimerRef.current !== null) window.clearTimeout(emotionTimerRef.current);
       if (longPressTimerRef.current !== null) {
         window.clearTimeout(longPressTimerRef.current);
       }
@@ -410,6 +419,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
         getFloatingMochitViewportMetrics(window),
       );
       saveFloatingMochitPreferences({
+        ...preferences,
         visible: true,
         position: savedPosition,
       });
@@ -457,6 +467,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     setMenuOpen(false);
     clearBubble();
     saveFloatingMochitPreferences({
+      ...preferences,
       visible: false,
       position,
     });
@@ -478,7 +489,9 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     ? SLEEPY_BEHAVIOR
     : appliedAttention
       ? { attention: appliedAttention.attention }
-      : undefined;
+      : lively && acceptedReaction
+        ? { emotion: acceptedReaction.type === "incorrect" ? "thinking" : "happy" }
+        : undefined;
 
   // 足元の集中タイマー。画面下端（BottomNav の手前）で足元に置けない時は頭の上に出す
   const chipPlacement =
@@ -490,7 +503,11 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   return (
     <div
       ref={rootRef}
-      className="fixed z-30 h-[108px] w-[108px]"
+      className="mochit-companion fixed z-30 h-[108px] w-[108px]"
+      data-lively={lively}
+      data-reduced-motion={effectiveReducedMotion}
+      data-activity={activity}
+      data-reacting={!!acceptedReaction}
       style={{ left: position.x, top: position.y }}
     >
       <button
@@ -523,6 +540,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
           state={presentation?.state}
           size="floating"
           reactionProfile="floating"
+          lively={lively}
           animation={presentation?.animation ?? "idle"}
           reducedMotion={effectiveReducedMotion}
           behavior={behavior}
@@ -532,7 +550,9 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
           onEventAccepted={handleEventAccepted}
           className="pointer-events-none justify-center"
         />
+        {lively && activity === "studying" && <MochitCompanionScene paused={!!acceptedReaction} />}
       </button>
+      {lively && acceptedReaction && <MochitEmotionAccent key={acceptedReaction.id} event={acceptedReaction.type} />}
       <FloatingMochitFocusChip session={focusSession} placement={chipPlacement} onOpenMenu={openMenu} />
       {bubble ? (
         <FloatingMochitBubble

@@ -5,6 +5,8 @@ export type FloatingMochitPoint = {
 
 export type FloatingMochitPreferences = {
   visible: boolean;
+  /** 未設定の既存データは high として扱う。 */
+  reactionLevel?: "high" | "low";
   position: FloatingMochitPoint | null;
 };
 
@@ -96,6 +98,8 @@ export function parseFloatingMochitPreferences(
 
     return {
       visible: candidate.visible,
+      ...(candidate.reactionLevel === "high" || candidate.reactionLevel === "low"
+        ? { reactionLevel: candidate.reactionLevel } : {}),
       position: isFinitePoint(candidate.position) ? candidate.position : null,
     };
   } catch {
