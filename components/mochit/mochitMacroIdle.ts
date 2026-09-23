@@ -14,6 +14,7 @@
 import type { MochitAttention, MochitIdleBehavior } from "./mochitBehavior";
 import { offsetTransform, randRange, rotateAbout, type GazeOffset, type RNG } from "./mochitIdleAnimation";
 import type { ReactionTrack } from "./mochitReactionAnimation";
+import { activityAllowsMacroIdle, type MochitActivity } from "./mochitActivity";
 
 /** 実際に動きを伴う Macro Idle（sleepy は次Step） */
 export type MochitMacroIdleBehavior = Extract<MochitIdleBehavior, "lookAround" | "curious" | "stretch">;
@@ -456,14 +457,23 @@ export type MacroIdleConditions = {
   sleeping?: boolean;
   /** 84px 常時表示版。自動発火の頻度・継続時間に FLOATING_MACRO_IDLE_TUNING を使う */
   floating?: boolean;
+  /** Activity（studying / resting）中は再生しない。一緒に集中・休憩している間に割り込ませない */
+  activity?: MochitActivity;
 };
 
 /** Macro Idle を再生できる状態か（明示再生を含む）。attention は問わない */
 export function canPlayMacroIdle(c: MacroIdleConditions): boolean {
-  return c.active && !c.reducedMotion && !c.compact && !c.reacting && !c.sleeping;
+  return (
+    c.active &&
+    !c.reducedMotion &&
+    !c.compact &&
+    !c.reacting &&
+    !c.sleeping &&
+    activityAllowsMacroIdle(c.activity ?? "idle")
+  );
 }
 
-/** 自動 Macro Idle が有効か（active ∧ ¬reducedMotion ∧ ¬compact ∧ ¬Reaction ∧ ¬Sleep ∧ attention=random） */
+/** 自動 Macro Idle が有効か（active ∧ ¬reducedMotion ∧ ¬compact ∧ ¬Reaction ∧ ¬Sleep ∧ Activity=idle ∧ attention=random） */
 export function isMacroIdleAutoEnabled(c: MacroIdleConditions): boolean {
   return canPlayMacroIdle(c) && c.attention === "random";
 }

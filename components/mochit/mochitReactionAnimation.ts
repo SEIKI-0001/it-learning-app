@@ -195,6 +195,8 @@ type ReducedRecipe = {
 
 const REDUCED_RECIPES: Partial<Record<MochitEvent, ReducedRecipe>> = {
   correct: { mouth: "mouthSmile", glowPeak: 0.3 },
+  correctStreak: { mouth: "mouthSmile", glowPeak: 0.33 },
+  focusComplete: { mouth: "mouthSmile", glowPeak: 0.3 },
   incorrect: { mouth: "mouthThinking" },
   allCorrect: { mouth: "mouthSmile", glowPeak: 0.35 },
   taskComplete: { mouth: "mouthSmile", glowPeak: 0.35 },
@@ -251,6 +253,8 @@ export function buildReactionSpec(event: MochitEvent, mode: ReactionMode): React
 /** アニメーション全長。占有時間（MOCHIT_EVENT_REACTION_MS）以下に収める。 */
 export const REACTION_TOTAL_MS: Partial<Record<MochitEvent, number>> = {
   correct: 800,
+  correctStreak: 950,
+  focusComplete: 1250,
   incorrect: 900,
   allCorrect: 1200,
   taskComplete: 1400,
@@ -315,6 +319,61 @@ const CHOREOGRAPHIES: Partial<Record<MochitEvent, Choreography>> = {
     },
     ...mouthTracks([{ variant: "mouthSmile", on: 0.1, full: 0.18, hold: 0.78, off: 0.93 }]),
     glowTrack([[0.15, 0], [0.42, 0.8], [0.75, 0.15], [1, 0]]),
+  ],
+
+  // 1b. 連続正解: 正解より少し強く（全問正解よりは控えめ）。一段高いバウンド＋両腕を小さく上げる
+  //     ＋口が開いてから笑顔＋Core 強め1回。
+  correctStreak: (s) => [
+    {
+      target: "body",
+      keyframes: [
+        bodyFrame(0, {}, s, "ease-in"),
+        bodyFrame(0.12, { y: 0.7, sx: 1.025, sy: 0.97 }, s, "ease-out"),
+        bodyFrame(0.38, { y: -4.2, sx: 0.98, sy: 1.028 }, s, "ease-in"),
+        bodyFrame(0.58, { sx: 1.025, sy: 0.978 }, s, "ease-out"),
+        bodyFrame(0.76, { y: -0.6 }, s, "ease-in"),
+        bodyFrame(1, {}, s),
+      ],
+    },
+    {
+      target: "armL",
+      keyframes: [
+        armFrame(0, "L", 0, s),
+        armFrame(0.14, "L", 0, s, "ease-out"),
+        armFrame(0.4, "L", 12, s),
+        armFrame(0.66, "L", 10, s, "ease-in-out"),
+        armFrame(0.92, "L", 0, s),
+        armFrame(1, "L", 0, s),
+      ],
+    },
+    {
+      target: "armR",
+      keyframes: [
+        armFrame(0, "R", 0, s),
+        armFrame(0.16, "R", 0, s, "ease-out"),
+        armFrame(0.42, "R", 12, s),
+        armFrame(0.68, "R", 10, s, "ease-in-out"),
+        armFrame(0.92, "R", 0, s),
+        armFrame(1, "R", 0, s),
+      ],
+    },
+    {
+      target: "antenna",
+      composite: "add",
+      keyframes: [
+        antennaFrame(0, 0, s),
+        antennaFrame(0.24, 0, s, "ease-out"),
+        antennaFrame(0.42, 5, s),
+        antennaFrame(0.6, -3, s),
+        antennaFrame(0.8, 1.5, s, "ease-in-out"),
+        antennaFrame(1, 0, s),
+      ],
+    },
+    ...mouthTracks([
+      { variant: "mouthOpen", on: 0.12, full: 0.2, hold: 0.5, off: 0.6 },
+      { variant: "mouthSmile", on: 0.58, full: 0.66, hold: 0.86, off: 0.95 },
+    ]),
+    glowTrack([[0.14, 0], [0.4, 0.9], [0.72, 0.2], [1, 0]]),
   ],
 
   // 2. 不正解: 説明側（吹き出し側=右）へ視線 → 軽い体の傾き → 考えている表情。
@@ -438,6 +497,46 @@ const CHOREOGRAPHIES: Partial<Record<MochitEvent, Choreography>> = {
     glowTrack([[0.08, 0], [0.25, 0.55], [0.45, 0.2], [0.62, 1], [0.85, 0.25], [1, 0]]),
   ],
 
+  // 4b. 集中完了（Focus Session の集中区間が最後まで終わった）: 小さな達成。
+  //     ふっと息をつく沈み → 控えめなホップ → 両腕を少し開いて「できた」→ 笑顔＋やわらかい発光。
+  //     taskComplete より静か（集中のあとなので騒がない）。
+  focusComplete: (s) => [
+    {
+      target: "body",
+      keyframes: [
+        bodyFrame(0, {}, s, "ease-in-out"),
+        bodyFrame(0.18, { y: 0.8, sx: 1.02, sy: 0.975 }, s, "ease-out"),
+        bodyFrame(0.42, { y: -2.6, sx: 0.988, sy: 1.018 }, s, "ease-in"),
+        bodyFrame(0.6, { sx: 1.018, sy: 0.985 }, s, "ease-out"),
+        bodyFrame(1, {}, s),
+      ],
+    },
+    {
+      target: "armL",
+      keyframes: [
+        armFrame(0, "L", 0, s),
+        armFrame(0.2, "L", 0, s, "ease-out"),
+        armFrame(0.44, "L", 14, s),
+        armFrame(0.74, "L", 12, s, "ease-in-out"),
+        armFrame(0.94, "L", 0, s),
+        armFrame(1, "L", 0, s),
+      ],
+    },
+    {
+      target: "armR",
+      keyframes: [
+        armFrame(0, "R", 0, s),
+        armFrame(0.22, "R", 0, s, "ease-out"),
+        armFrame(0.46, "R", 14, s),
+        armFrame(0.76, "R", 12, s, "ease-in-out"),
+        armFrame(0.94, "R", 0, s),
+        armFrame(1, "R", 0, s),
+      ],
+    },
+    ...mouthTracks([{ variant: "mouthSmile", on: 0.16, full: 0.26, hold: 0.86, off: 0.96 }]),
+    glowTrack([[0.12, 0], [0.32, 0.45], [0.5, 0.2], [0.66, 0.6], [0.88, 0.15], [1, 0]]),
+  ],
+
   // 5. バッジ獲得: タスク完了と同程度の喜びだが動きは別物。バッジ/メッセージの
   //    表示方向（右上）へ体を向け視線を送る。片腕だけ上げ、発光は控えめ。
   badgeEarned: (s) => [
@@ -446,7 +545,7 @@ const CHOREOGRAPHIES: Partial<Record<MochitEvent, Choreography>> = {
       keyframes: [
         bodyFrame(0, {}, s, "ease-in"),
         bodyFrame(0.1, { y: 0.7, sx: 1.025, sy: 0.97 }, s, "ease-out"),
-        bodyFrame(0.3, { y: -4.2, rot: 2.5, sx: 0.98, sy: 1.03 }, s, "ease-in"),
+        bodyFrame(0.3, { y: -5.6, rot: 2.5, sx: 0.975, sy: 1.035 }, s, "ease-in"),
         bodyFrame(0.48, { rot: 2.5, sx: 1.03, sy: 0.975 }, s, "ease-out"),
         bodyFrame(0.68, { rot: 2.5 }, s, "ease-in-out"),
         bodyFrame(0.92, {}, s, "ease-out"),
@@ -469,8 +568,8 @@ const CHOREOGRAPHIES: Partial<Record<MochitEvent, Choreography>> = {
       keyframes: [
         armFrame(0, "R", 0, s),
         armFrame(0.1, "R", 0, s, "ease-out"),
-        armFrame(0.35, "R", 18, s),
-        armFrame(0.6, "R", 16, s, "ease-in-out"),
+        armFrame(0.35, "R", 22, s),
+        armFrame(0.6, "R", 20, s, "ease-in-out"),
         armFrame(0.88, "R", 0, s),
         armFrame(1, "R", 0, s),
       ],
@@ -487,7 +586,7 @@ const CHOREOGRAPHIES: Partial<Record<MochitEvent, Choreography>> = {
       ],
     },
     ...mouthTracks([{ variant: "mouthSmile", on: 0.12, full: 0.2, hold: 0.85, off: 0.96 }]),
-    glowTrack([[0.15, 0], [0.4, 0.65], [0.75, 0.2], [1, 0]]),
+    glowTrack([[0.15, 0], [0.4, 0.85], [0.75, 0.25], [1, 0]]),
   ],
 
   // 6. チェックポイント完了: 最強のお祝い。深い予備動作 → 大きなジャンプ1回 →

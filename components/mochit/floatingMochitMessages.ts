@@ -33,6 +33,14 @@ const FLOATING_MOCHIT_MESSAGE_DEFINITIONS: Partial<
     ],
     durationMs: 1_800,
   },
+  correctStreak: {
+    candidates: ["連続正解！いい流れ！", "連続正解！冴えてるね"],
+    durationMs: 1_600,
+  },
+  focusComplete: {
+    candidates: ["集中おつかれさま！休憩する？"],
+    durationMs: 2_600,
+  },
   allCorrect: {
     candidates: ["全問正解！完璧！"],
     durationMs: 2_200,

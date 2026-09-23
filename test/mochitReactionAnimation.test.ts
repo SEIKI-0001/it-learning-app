@@ -34,6 +34,8 @@ const SPEC_RANGE_MS: Partial<Record<MochitEvent, { min: number; max: number }>> 
   tap: { min: 400, max: 700 },
   encourage: { min: 0, max: 1000 },
   wakeUp: { min: 600, max: 800 },
+  correctStreak: { min: 800, max: 1000 },
+  focusComplete: { min: 1000, max: 1300 },
 };
 
 function offsetsOf(track: ReactionTrack): number[] {
@@ -321,5 +323,39 @@ describe("mochitEvents: 逆引きマップ", () => {
     for (const event of Object.keys(MOCHIT_EVENT_TRIGGERS) as MochitEvent[]) {
       expect(MOCHIT_TRIGGER_EVENTS[MOCHIT_EVENT_TRIGGERS[event]]).toBe(event);
     }
+  });
+});
+
+describe("buildReactionSpec: 喜びの強さの序列（Step 8〜10）", () => {
+  const peakJump = (event: MochitEvent) => {
+    const body = buildReactionSpec(event, FULL)!.tracks.find((t) => t.target === "body")!;
+    return -Math.min(...translateYPercentValues(body));
+  };
+  const peakArm = (event: MochitEvent) => {
+    const arms = buildReactionSpec(event, FULL)!.tracks.filter((t) => t.target === "armL" || t.target === "armR");
+    return Math.max(
+      0,
+      ...arms.flatMap((t) =>
+        t.keyframes.map((kf) => Math.abs(Number(String(kf.transform).match(/rotate\(([-\d.]+)deg\)/)?.[1] ?? 0))),
+      ),
+    );
+  };
+
+  it("通常正解 < 連続正解 < 全問正解 < バッジ < チェックポイント の順にジャンプが高い", () => {
+    const order: MochitEvent[] = ["correct", "correctStreak", "allCorrect", "badgeEarned", "checkpointClear"];
+    const jumps = order.map(peakJump);
+    for (let i = 1; i < jumps.length; i++) expect(jumps[i]).toBeGreaterThan(jumps[i - 1]);
+  });
+
+  it("連続正解は通常正解に腕の動きを足し、全問正解より腕を上げない", () => {
+    expect(peakArm("correct")).toBe(0);
+    expect(peakArm("correctStreak")).toBeGreaterThan(0);
+    expect(peakArm("correctStreak")).toBeLessThan(peakArm("allCorrect"));
+  });
+
+  it("集中完了は小さな達成（taskComplete より低いジャンプ・優先度は checkpoint/badge/task より下）", () => {
+    expect(peakJump("focusComplete")).toBeLessThan(peakJump("taskComplete"));
+    expect(MOCHIT_EVENT_TRIGGERS.focusComplete).toBe("triggerFocusComplete");
+    expect(MOCHIT_EVENT_TRIGGERS.correctStreak).toBe("triggerCorrectStreak");
   });
 });

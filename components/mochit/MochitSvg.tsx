@@ -46,6 +46,17 @@ import { MOCHIT_TRIGGER_EVENTS } from "./mochitEvents";
 import type { MochitRiveTriggerInput } from "./mochitTypes";
 import type { MochitReactionProfile } from "./mochitTypes";
 import type { MochitAttention, MochitEmotion } from "./mochitBehavior";
+import {
+  ACTIVITY_LIFT_TIMING,
+  nextActivityGaze,
+  NORMAL_ACTIVITY_TEMPO,
+  staticActivityGaze,
+  type ActivityGazeCursor,
+  type ActivityGazeMode,
+  type ActivityTempo,
+  type MochitActivity,
+} from "./mochitActivity";
+import { createActivityController, type ActivityController } from "./mochitActivityController";
 import { buildMacroIdleSpec, macroIdleMovesGaze, type MochitMacroIdleBehavior } from "./mochitMacroIdle";
 import {
   createMacroIdleController,
@@ -131,6 +142,13 @@ type Props = {
    * 静かにする。半目は emotion=sleepy で別に指定する。省略時 false。
    */
   sleeping?: boolean;
+  /**
+   * Activity（長く続く行動状態）。studying=一緒に勉強（前傾・教材を読む視線・静かなアンテナ）、
+   * resting=意図的な休憩（力の抜けた姿勢・ゆっくり呼吸・ときどき見回す）。省略時 idle（従来表示）。
+   * Reaction / Semantic Attention の間は顔を上げ、終われば Activity の姿勢へ戻る。
+   * Macro Idle は Activity 中は再生しない。
+   */
+  activity?: MochitActivity;
 };
 
 export type MochitMacroIdleRequest = { behavior: MochitMacroIdleBehavior; id: number };
@@ -162,6 +180,8 @@ type IdleHandle = {
   stop(): void;
   /** Sleep の静けさを反映する（transitionMs=0 は即時） */
   setSleepy(sleepy: boolean, transitionMs: number): void;
+  /** Activity の速さ・振幅（Sleep 中は Sleep が優先） */
+  setTempo(tempo: ActivityTempo): void;
 };
 
 function setRate(animation: Animation | null, rate: number): void {
@@ -246,8 +266,43 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
 
   // Sleep: 足元支点でごくわずかに沈む。呼吸ループ（replace）の上に add で重ねる持続アニメ。
   let sleepy = false;
+  let tempo: ActivityTempo = NORMAL_ACTIVITY_TEMPO;
   let sink: Animation | null = null;
   const S = MOCHIT_SLEEP_IDLE;
+  // ループは作り直さず、速さ（playbackRate）と振幅（setKeyframes）だけを変える。Sleep が Activity より優先。
+  const applyTempo = () => {
+    const t: ActivityTempo = sleepy
+      ? {
+          breatheRate: S.breatheRate,
+          swayRate: S.swayRate,
+          antennaRate: S.antennaRate,
+          breatheAmplitude: 1,
+          swayAmplitude: S.swayAmplitude,
+          antennaAmplitude: S.antennaAmplitude,
+        }
+      : tempo;
+    setRate(breatheLoop, t.breatheRate);
+    setRate(swayLoop, t.swayRate);
+    setRate(antennaLoop, t.antennaRate);
+    const b = p.breathe;
+    setLoopKeyframes(
+      breatheLoop,
+      breatheKeyframes({
+        ...p,
+        breathe: { ...b, sx: 1 + (b.sx - 1) * t.breatheAmplitude, sy: 1 + (b.sy - 1) * t.breatheAmplitude },
+      }),
+    );
+    setLoopKeyframes(swayLoop, swayKeyframes({ ...p, sway: { ...p.sway, deg: p.sway.deg * t.swayAmplitude } }));
+    setLoopKeyframes(
+      antennaLoop,
+      antennaKeyframes({ ...p, antenna: { ...p.antenna, deg: p.antenna.deg * t.antennaAmplitude } }),
+    );
+  };
+  const setTempo = (next: ActivityTempo) => {
+    if (tempo === next) return;
+    tempo = next;
+    if (!sleepy) applyTempo();
+  };
   const sunk = scaleAbout(p.breathe.cx, p.sway.cy, S.sinkScaleX, S.sinkScaleY);
   const level = scaleAbout(p.breathe.cx, p.sway.cy, 1, 1);
   const cancelSink = () => {
@@ -261,17 +316,7 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
   const setSleepy = (next: boolean, transitionMs: number) => {
     if (sleepy === next) return;
     sleepy = next;
-    setRate(breatheLoop, next ? S.breatheRate : 1);
-    setRate(swayLoop, next ? S.swayRate : 1);
-    setRate(antennaLoop, next ? S.antennaRate : 1);
-    setLoopKeyframes(
-      swayLoop,
-      swayKeyframes({ ...p, sway: { ...p.sway, deg: p.sway.deg * (next ? S.swayAmplitude : 1) } }),
-    );
-    setLoopKeyframes(
-      antennaLoop,
-      antennaKeyframes({ ...p, antenna: { ...p.antenna, deg: p.antenna.deg * (next ? S.antennaAmplitude : 1) } }),
-    );
+    applyTempo();
     if (!canAnimate(breathe)) return;
     cancelSink();
     try {
@@ -314,7 +359,7 @@ function startIdle(svg: SVGSVGElement, compact: boolean, getEyelidRest: () => nu
       el.style.opacity = "";
     }
   };
-  return { stop, setSleepy };
+  return { stop, setSleepy, setTempo };
 }
 
 // ---- 身体連動（Embodied Attention） ----
@@ -456,6 +501,11 @@ type GazeController = {
   holdRandom(hold: boolean): void;
   /** Sleep 中はランダム視線を止めて中央で休ませる（Semantic Attention は優先してそのまま） */
   setSleeping(sleeping: boolean): void;
+  /**
+   * Activity の視線パターン（studying=教材を読む / resting=のんびり見回す / user=正面）。
+   * ランダム視線の代わりに使う。Semantic Attention は優先してそのまま。
+   */
+  setActivityMode(mode: ActivityGazeMode): void;
   dispose(): void;
 };
 
@@ -478,6 +528,8 @@ function createGazeController(svg: SVGSVGElement): GazeController {
   let timer: number | null = null;
   let held = false;
   let sleeping = false;
+  let activityMode: ActivityGazeMode = "none";
+  const readingCursor: ActivityGazeCursor = { index: 0 };
   // 進行中の補間（次の切替を途中位置から始めるため）
   let moving: { from: GazeOffset; to: GazeOffset; startedAt: number; ms: number; animations: Animation[] } | null =
     null;
@@ -488,6 +540,7 @@ function createGazeController(svg: SVGSVGElement): GazeController {
   const clearTimer = () => {
     if (timer !== null) clearTimeout(timer);
     timer = null;
+    activityPatternRunning = false;
   };
   const cancelMove = () => {
     if (!moving) return;
@@ -544,9 +597,23 @@ function createGazeController(svg: SVGSVGElement): GazeController {
       scheduleRandom();
     }, nextGazeHoldMs(profile));
   };
+  // Activity の視線パターン: 1手動いて、その位置で止まってから次の手へ
+  const stepActivity = () => {
+    const gaze = profile.gaze;
+    if (!gaze || activityMode === "none") return;
+    const step = nextActivityGaze(activityMode, gaze, readingCursor);
+    moveTo(step.offset, step.moveMs);
+    if (!Number.isFinite(step.holdMs)) return;
+    timer = window.setTimeout(() => {
+      timer = null;
+      stepActivity();
+    }, step.moveMs + step.holdMs);
+  };
 
   // 直前の apply が Semantic Attention（点を見ていた）か
   let semantic = false;
+  // Activity の視線パターンが動いているか（user は最後の1手で止まるのでタイマーだけでは判定できない）
+  let activityPatternRunning = false;
   const apply = () => {
     const leavingSemantic = semantic && target.kind === "random";
     semantic = target.kind === "point";
@@ -562,11 +629,13 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     }
     if (target.kind === "random") {
       if (!animate) {
-        // 停止時は従来どおり中央（マークアップ既定値）の静止ポーズ
+        // 停止時は従来どおり中央（マークアップ既定値）の静止ポーズ。
+        // Activity 中は静的な視線（studying=教材の方向）だけを残す。
         clearTimer();
         cancelMove();
-        setBase("");
-        current = GAZE_CENTER;
+        const still = activityMode === "none" ? GAZE_CENTER : staticActivityGaze(activityMode, gaze);
+        setBase(still.x === 0 && still.y === 0 ? "" : offsetTransform(still.x, still.y));
+        current = still;
         pose.set(NEUTRAL_ATTENTION_POSE, null, false);
         return;
       }
@@ -576,6 +645,14 @@ function createGazeController(svg: SVGSVGElement): GazeController {
         // Sleep: ランダム視線を止め、中央でじっとする
         clearTimer();
         moveTo(GAZE_CENTER, SLEEP_GAZE_SETTLE_MS);
+        return;
+      }
+      if (activityMode !== "none") {
+        // Activity の視線パターン（読む / 見回す / 正面）。切り替わった時だけ組み直す
+        if (timer === null && !activityPatternRunning) {
+          activityPatternRunning = true;
+          stepActivity();
+        }
         return;
       }
       // 身体連動あり（floating）は Semantic から戻る時も目が先に正面へ戻り、体・アンテナが続く。
@@ -618,6 +695,14 @@ function createGazeController(svg: SVGSVGElement): GazeController {
     setSleeping(next) {
       if (sleeping === next) return;
       sleeping = next;
+      apply();
+    },
+    setActivityMode(next) {
+      if (activityMode === next) return;
+      activityMode = next;
+      // 新しいパターン（またはランダム視線）で組み直す。読む位置は行頭から
+      clearTimer();
+      readingCursor.index = 0;
       apply();
     },
     dispose() {
@@ -806,6 +891,7 @@ export default function MochitSvg({
   attentionPoint,
   macroIdleRequest,
   sleeping = false,
+  activity = "idle",
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [inViewport, setInViewport] = useState(true);
@@ -899,24 +985,29 @@ export default function MochitSvg({
 
   const eyelidsAppliedRef = useRef(false);
   const appliedEyelidRestRef = useRef(0);
-  useEffect(() => {
-    desiredRef.current = expression;
+  // Activity（studying / resting）の平常表情。null の間は emotion の表情。
+  // Activity コントローラーが命令的に切り替える（顔を上げる間は目を開ける等）。
+  const activityExpressionRef = useRef<MochitRestingExpression | null>(null);
+  const emotionExpressionRef = useRef(expression);
+  const applyExpression = (next: MochitRestingExpression, transitionMs: number) => {
+    desiredRef.current = next;
     const svg = svgRef.current;
     if (failed || !svg || !svg.firstElementChild) return;
-    const transitionMs = transitionMsRef.current;
-    // まぶたが下がる（眠くなる）時はゆっくり、開く（起きる）時は通常の速さ
-    const closing = expression.eyelidRest > appliedEyelidRestRef.current;
+    // まぶたが下がる（眠くなる・教材へ目を落とす）時はゆっくり、開く（起きる）時は通常の速さ
+    const closing = next.eyelidRest > appliedEyelidRestRef.current;
     const eyelidMs = closing && transitionMs > 0 ? SLEEPY_EYELID_CLOSE_MS : transitionMs;
-    applyRestingEyelids(
-      svg,
-      expression.eyelidRest,
-      compact,
-      idleRunningRef.current,
-      eyelidsAppliedRef.current ? eyelidMs : 0,
-    );
+    applyRestingEyelids(svg, next.eyelidRest, compact, idleRunningRef.current, eyelidsAppliedRef.current ? eyelidMs : 0);
     eyelidsAppliedRef.current = true;
-    appliedEyelidRestRef.current = expression.eyelidRest;
+    appliedEyelidRestRef.current = next.eyelidRest;
     syncRestingMouthRef.current(transitionMs);
+  };
+  const applyExpressionRef = useRef(applyExpression);
+  useEffect(() => {
+    applyExpressionRef.current = applyExpression;
+  });
+  useEffect(() => {
+    emotionExpressionRef.current = expression;
+    applyExpressionRef.current(activityExpressionRef.current ?? expression, transitionMsRef.current);
   }, [expression, compact, failed]);
 
   // ---- 視線（Semantic Attention） ----
@@ -967,6 +1058,7 @@ export default function MochitSvg({
   // ---- Sleep ----
   // Micro Idle は作り直さず、走っているループの速さ・振幅と沈み込みだけを切り替える。
   const idleHandleRef = useRef<IdleHandle | null>(null);
+  const tempoRef = useRef<ActivityTempo>(NORMAL_ACTIVITY_TEMPO);
   const sleepingRef = useRef(sleeping);
   useEffect(() => {
     sleepingRef.current = sleeping;
@@ -989,7 +1081,8 @@ export default function MochitSvg({
       handle = startIdle(svg, compact, () => desiredRef.current.eyelidRest);
       idleRunningRef.current = true;
       idleHandleRef.current = handle;
-      // Sleep 中に再開した場合（タブ復帰など）は静かな状態から始める
+      // Sleep / Activity 中に再開した場合（タブ復帰など）は静かな状態から始める
+      handle.setTempo(tempoRef.current);
       if (sleepingRef.current) handle.setSleepy(true, 0);
     } catch (error) {
       if (isDev) console.warn("[Mochit] 待機アニメーションの初期化に失敗しました。静止表示にします。", error);
@@ -1070,8 +1163,9 @@ export default function MochitSvg({
       attention,
       sleeping,
       floating,
+      activity,
     });
-  }, [active, reducedMotion, compact, attention, sleeping, floating, failed]);
+  }, [active, reducedMotion, compact, attention, sleeping, floating, activity, failed]);
   // マウント時点で既にある要求は再生しない（再マウントで古い要求が再生されないように）
   const macroRequestId = macroIdleRequest?.id;
   const macroRequestBehavior = macroIdleRequest?.behavior;
@@ -1086,6 +1180,67 @@ export default function MochitSvg({
     () => () => {
       macroRef.current?.dispose();
       macroRef.current = null;
+    },
+    [],
+  );
+
+  // ---- Activity（studying / resting） ----
+  // コントローラーは1つだけ作り、Activity・稼働状態・プロファイルの変化だけを届ける。
+  // Micro Idle は作り直さず、姿勢（add の持続アニメ）・テンポ・表情・視線パターンを切り替える。
+  const activityRef = useRef<ActivityController | null>(null);
+  const getActivity = (): ActivityController | null => {
+    if (activityRef.current) return activityRef.current;
+    const svg = svgRef.current;
+    if (failed || !svg || !svg.firstElementChild) return null;
+    activityRef.current = createActivityController({
+      svg,
+      playFlourish: (spec, onEnd) => {
+        const target = svgRef.current;
+        // Reaction 再生中は振り付けを重ねない（Reaction が優先）
+        if (!target || typeof target.animate !== "function" || runningRef.current) return null;
+        try {
+          const running = startReaction(target, spec, onEnd);
+          return { stop: (settleMs) => stopReaction(running, settleMs) };
+        } catch (error) {
+          if (isDev) console.warn("[Mochit] Activity の振り付けの再生に失敗しました。", error);
+          return null;
+        }
+      },
+      setGazeMode: (mode) => getGazeRef.current()?.setActivityMode(mode),
+      setTempo: (tempo) => {
+        tempoRef.current = tempo;
+        idleHandleRef.current?.setTempo(tempo);
+      },
+      setExpression: (next, ms) => {
+        activityExpressionRef.current = next;
+        applyExpressionRef.current(next ?? emotionExpressionRef.current, transitionMsRef.current === 0 ? 0 : ms);
+      },
+    });
+    return activityRef.current;
+  };
+  const getActivityRef = useRef(getActivity);
+  useEffect(() => {
+    getActivityRef.current = getActivity;
+  });
+  useEffect(() => {
+    const svg = svgRef.current;
+    getActivityRef.current()?.configure({
+      activity,
+      animate: active && !!svg && typeof svg.animate === "function",
+      profile: reactionProfile,
+    });
+  }, [activity, active, reactionProfile, failed]);
+  // Contextual Attention > Activity: 対象を見ている間は姿勢を解いて顔を上げる
+  const attendingPoint = gazeTarget.kind === "point";
+  useEffect(() => {
+    const controller = getActivityRef.current();
+    if (attendingPoint) controller?.lift("attention");
+    else controller?.release("attention");
+  }, [attendingPoint, activity, failed]);
+  useEffect(
+    () => () => {
+      activityRef.current?.dispose();
+      activityRef.current = null;
     },
     [],
   );
@@ -1134,12 +1289,16 @@ export default function MochitSvg({
           macroRef.current?.update({ reacting: false });
           return;
         }
+        // Reaction > Activity: 勉強・休憩の姿勢を解いて顔を上げ、ユーザーを見る
+        activityRef.current?.lift("reaction");
         // 開始直前に平常口を確定し、リアクションの口の基底をそれに付け替える
         syncRestingMouthRef.current(0);
         const spec = rebaseReactionMouths(baseSpec, appliedMouthRef.current ?? "neutral");
         try {
           runningRef.current = startReaction(target, spec, () => {
             runningRef.current = null;
+            // 少しユーザーを見たまま待ってから、Reaction 前の Activity の姿勢へ戻る
+            activityRef.current?.release("reaction", ACTIVITY_LIFT_TIMING.resumeHoldMs);
             // Macro Idle は新しい待ち時間（8秒以上）から数え直す
             macroRef.current?.update({ reacting: false });
             // リアクション中に emotion が変わっていれば、終了後に新しい平常表情へ移る
@@ -1147,6 +1306,7 @@ export default function MochitSvg({
           });
         } catch (error) {
           macroRef.current?.update({ reacting: false });
+          activityRef.current?.release("reaction");
           if (isDev) console.warn("[Mochit] リアクションの再生に失敗しました。", error);
         }
       };
@@ -1177,6 +1337,7 @@ export default function MochitSvg({
       runningRef.current = null;
     }
     macroRef.current?.update({ reacting: false });
+    activityRef.current?.release("reaction");
     syncRestingMouthRef.current(0);
   }, [reactionGated]);
   useEffect(

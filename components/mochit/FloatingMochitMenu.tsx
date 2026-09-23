@@ -10,6 +10,8 @@ import {
 } from "./floatingMochitLayout";
 import type { FloatingMochitPoint } from "./floatingMochitPreferences";
 import type { MochitPresentation } from "@/lib/mochitPresentation";
+import FloatingMochitFocusControls from "./FloatingMochitFocusControls";
+import type { FocusSessionState } from "./mochitFocusSession";
 
 type Shortcut = {
   href: string;
@@ -29,6 +31,8 @@ type Props = {
   viewport: FloatingViewportMetrics;
   firstItemRef: RefObject<HTMLAnchorElement | null>;
   presentation?: MochitPresentation | null;
+  /** もちっとと集中する（Focus Session）の操作。省略時は出さない */
+  focus?: { session: FocusSessionState; displayName: string } | null;
   onClose: () => void;
   onHide: () => void;
 };
@@ -38,12 +42,13 @@ export default function FloatingMochitMenu({
   viewport,
   firstItemRef,
   presentation,
+  focus,
   onClose,
   onHide,
 }: Props) {
   const width = Math.min(288, viewport.width - viewport.margin * 2);
   const height = Math.min(
-    260,
+    focus ? 330 : 260,
     viewport.height -
       viewport.bottomClearance -
       viewport.margin * 2,
@@ -87,6 +92,9 @@ export default function FloatingMochitMenu({
             </Link>
           ) : null}
         </div>
+      ) : null}
+      {focus ? (
+        <FloatingMochitFocusControls session={focus.session} displayName={focus.displayName} onDone={onClose} />
       ) : null}
       <div className="grid grid-cols-2 gap-1.5">
         {PRIMARY_SHORTCUTS.map((item, index) => (

@@ -24,6 +24,7 @@ import type { MochitEventSignal } from "./mochitEvents";
 import { createMochitBehaviorState, type MochitBehaviorState } from "./mochitBehavior";
 import type { MochitAttentionPoint } from "./mochitAttention";
 import type { MochitMacroIdleRequest } from "./MochitSvg";
+import type { MochitActivity } from "./mochitActivity";
 
 // 後方互換: 既存コードは型をこのモジュールからimportしている。
 export type { MochitAnimation, MochitGrowthStage, MochitSize, MochitState };
@@ -151,6 +152,12 @@ type Props = {
    * （0,0=左上 / 0.5,0.5=中央 / 1,1=右下）。DOM の pixel 座標ではない。省略時は中央。
    */
   attentionPoint?: MochitAttentionPoint;
+  /**
+   * Activity（長く続く行動状態: idle / studying / resting）。Behavior State とは別の軸。
+   * studying / resting の間は Sleep（idleBehavior=sleepy）より優先し、Macro Idle も止まる。
+   * 省略時 idle（従来表示）。
+   */
+  activity?: MochitActivity;
   // ---- dev/テスト用の切替口 ----
   /** devプレビュー用: Macro Idle を1回だけ再生する（id を変えると再生） */
   macroIdleRequest?: MochitMacroIdleRequest;
@@ -176,6 +183,7 @@ export default function Mochit({
   onEventAccepted,
   behavior,
   attentionPoint,
+  activity = "idle",
   macroIdleRequest,
   rendererOverride,
   riveSrcOverride,
@@ -238,7 +246,8 @@ export default function Mochit({
   // attention を明示していない既存呼び出しは従来の Living Idle（ランダム視線）のまま。
   // Behavior State の既定値（user）は「意味上の既定」で、未指定の見た目は変えない。
   const attention = behavior?.attention === undefined ? "random" : normalizedBehavior.attention;
-  const sleeping = normalizedBehavior.idleBehavior === "sleepy";
+  // Activity > Sleep: 一緒に集中・休憩している間は眠らない
+  const sleeping = activity === "idle" && normalizedBehavior.idleBehavior === "sleepy";
 
   return (
     <div
@@ -276,6 +285,7 @@ export default function Mochit({
                 attentionPoint={attentionPoint}
                 macroIdleRequest={macroIdleRequest}
                 sleeping={sleeping}
+                activity={activity}
                 onReady={() => setSvgReady(true)}
                 onLoadFailed={() => {
                   setSvgReady(false);

@@ -15,6 +15,7 @@ import { viewportTargetToAttentionPoint, type MochitAttentionPoint } from "@/com
 import type { MochitMacroIdleBehavior } from "@/components/mochit/mochitMacroIdle";
 import type { MochitMacroIdleRequest } from "@/components/mochit/MochitSvg";
 import { useMochitSleep } from "@/components/mochit/useMochitSleep";
+import { MOCHIT_ACTIVITIES, type MochitActivity } from "@/components/mochit/mochitActivity";
 import { MOCHIT_SLEEP_TIMEOUT_MS, type MochitWakeReason } from "@/components/mochit/mochitSleep";
 
 // Sleep 操作ボタン自体のクリックは「ユーザー活動」に数えない（押した瞬間に起きないように）
@@ -42,7 +43,9 @@ const EVENTS: MochitEvent[] = [
   "checkpointClear",
   "badgeEarned",
   "taskComplete",
+  "focusComplete",
   "allCorrect",
+  "correctStreak",
   "correct",
   "incorrect",
   "encourage",
@@ -75,6 +78,7 @@ export default function MochitDevPreviewPage() {
   // 84px 常時表示版（FloatingMochit と同じ size/reactionProfile）で確認する
   const [eventFloating, setEventFloating] = useState(false);
   const [idleBehavior, setIdleBehavior] = useState<"auto" | MochitMacroIdleBehavior>("auto");
+  const [devActivity, setDevActivity] = useState<MochitActivity>("idle");
   const [macroIdleRequest, setMacroIdleRequest] = useState<MochitMacroIdleRequest | undefined>(undefined);
   const [sleepEnabled, setSleepEnabled] = useState(true);
   const [wakeLog, setWakeLog] = useState<string[]>([]);
@@ -351,6 +355,7 @@ export default function MochitDevPreviewPage() {
               <Mochit
                 {...shared}
                 behavior={primaryBehavior}
+                activity={devActivity}
                 state="normal"
                 size="small"
                 compact
@@ -363,6 +368,7 @@ export default function MochitDevPreviewPage() {
               <Mochit
                 {...shared}
                 behavior={primaryBehavior}
+                activity={devActivity}
                 state="normal"
                 size="floating"
                 reactionProfile="floating"
@@ -374,6 +380,7 @@ export default function MochitDevPreviewPage() {
               <Mochit
                 {...shared}
                 behavior={primaryBehavior}
+                activity={devActivity}
                 state="normal"
                 size="large"
                 compact={false}
@@ -410,6 +417,24 @@ export default function MochitDevPreviewPage() {
             </button>
             <span className="text-xs font-normal text-gray-400">
               auto: attention=random・compact以外で8〜20秒ごと（floatingは7〜15秒・可視Behavior多め）に自動発火（Reaction後も同じ待ち時間から）
+            </span>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-700">
+            <label className="flex items-center gap-2">
+              Activity（Step 8〜10）:
+              <select
+                data-testid="mochit-activity"
+                className="rounded-lg border border-gray-200 px-2 py-1"
+                value={devActivity}
+                onChange={(e) => setDevActivity(e.target.value as MochitActivity)}
+              >
+                {MOCHIT_ACTIVITIES.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </label>
+            <span className="text-xs font-normal text-gray-400">
+              studying=前傾・教材を読む視線・静かなアンテナ／resting=力の抜けた姿勢・ゆっくり呼吸・ときどき見回す。Activity 中は Macro Idle・Sleep なし。Reaction 中は顔を上げ、終わると Activity へ戻る
             </span>
           </div>
           <div

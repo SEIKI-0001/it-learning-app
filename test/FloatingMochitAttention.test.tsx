@@ -191,6 +191,8 @@ describe("FloatingMochit: Reaction / Macro Idle / Sleep との関係", () => {
   });
 
   it("Contextual Attention 中は自動 Macro Idle を止め、random へ戻ると再開する", async () => {
+    // 抽選を固定（normal を引き続けて 21 秒以内に発火しない揺らぎを避ける: 0.5 → lookAround・待ち11秒）
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.5);
     const { pet, svg } = await renderPet();
     act(() => {
       requestMochitAttention({ attention: "content", target: { x: 100, y: 500 } });
@@ -201,6 +203,7 @@ describe("FloatingMochit: Reaction / Macro Idle / Sleep との関係", () => {
     act(() => releaseMochitAttention());
     advance(21_000);
     expect(bodyAnims(svg).length).toBeGreaterThan(0);
+    random.mockRestore();
   });
 
   it("Sleep 中の通知では起こさず・視線も動かさない。起きた後にも反映しない", async () => {
