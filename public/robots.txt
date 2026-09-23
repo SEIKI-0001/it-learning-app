@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /lp
+Allow: /legal/
+Allow: /privacy
+Disallow: /api/
+Disallow: /admin
+Disallow: /auth/
+Disallow: /login
+
+Sitemap: https://shikaku-mochit.com/sitemap.xml

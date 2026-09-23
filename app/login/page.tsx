@@ -101,6 +101,9 @@ export default async function LoginPage({
               ③ LINEで始めた方も、あとから Google ログインすれば同じアカウントに紐づきます。
             </li>
           </ul>
+          <a href="/lp" className="mt-3 inline-block font-medium text-brand-700 underline underline-offset-2">
+            どんなアプリか、紹介ページで見る
+          </a>
         </div>
 
         <p className="mt-6 text-xs text-gray-500">

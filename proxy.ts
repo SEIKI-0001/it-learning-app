@@ -100,6 +100,18 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     return response;
   }
 
+  // 未ログインでドメイン直下へ来た人（検索・SNS・口コミ経由の初見）→ 紹介LPへ。
+  // LP の CTA が /login へ繋がるので、登録済みの人もそこからログインできる。
+  if (pathname === "/") {
+    const lpUrl = request.nextUrl.clone();
+    lpUrl.pathname = "/lp";
+    const redirect = NextResponse.redirect(lpUrl);
+    for (const cookie of response.cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
+    return redirect;
+  }
+
   // 未ログイン → /login（元の遷移先を next で保持）。
   const loginUrl = request.nextUrl.clone();
   loginUrl.pathname = "/login";
