@@ -5,6 +5,7 @@ import { FIN_EVENTS, FinanceStage } from "./finance/FinanceStage";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
+import { BsSplitStage, FinancePractice, IndicatorSourceStage, ProfitStagesStage, RatioStage } from "./finance/RatioStages";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -14,6 +15,7 @@ import { Panel, SectionTitle } from "./ui";
 //   ③ 1か月の取引を順に起こし、BS（その日時点の写真）とPL（期間中の流れ）がどう変わるかを動かす
 //      売った商品はBS→PLの費用へ、PLの利益はBSの純資産へ流れ込む。借入はPLを動かさない
 //   ④ 「BS？ PL？」仕分けクイズ
+//   ⑤〜⑨ finance/RatioStages：1年ルール → 流動比率・自己資本比率 → 利益の5段階 → 指標の出どころ → 確認5問
 // ============================================================================
 
 function BsView() {
@@ -253,13 +255,18 @@ export default function FinancialStatementsExperience() {
     <div className="space-y-5">
       <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📑 財務諸表には2つの主役。<b>BS＝ある時点の「持ち物のつり合い」</b>、
-        <b>PL＝期間中の「もうけ」</b>。何を見ている表かで区別しましょう。
+        <b>PL＝期間中の「もうけ」</b>。何を見ている表かで区別したら、後半は表から数字を取り出して<b>指標を計算</b>します。
       </div>
 
       <BsView />
       <PlView />
       <FlowView />
       <Quiz />
+      <BsSplitStage />
+      <RatioStage />
+      <ProfitStagesStage />
+      <IndicatorSourceStage />
+      <FinancePractice />
     </div>
   );
 }

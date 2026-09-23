@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { Panel, SectionTitle } from "../ui";
 import styles from "./calc.module.css";
 
 // 計算系の解説で共通の小さな部品。
@@ -29,12 +30,12 @@ export function Choices({
   /** 解き方の手順名。渡すと誤答時につまずいた手順を StepChips で示す */
   steps?: string[];
   onAnswer?: (ok: boolean) => void;
-  cols?: 2 | 3 | 4;
+  cols?: 1 | 2 | 3 | 4;
   testId?: string;
 }) {
   const [pick, setPick] = useState<number | null>(null);
   const chosen = pick === null ? null : choices[pick];
-  const grid = cols === 2 ? "grid-cols-2" : cols === 4 ? "grid-cols-4" : "grid-cols-3";
+  const grid = cols === 1 ? "grid-cols-1" : cols === 2 ? "grid-cols-2" : cols === 4 ? "grid-cols-4" : "grid-cols-3";
   return (
     <div data-testid={testId} data-result={chosen ? (chosen.ok ? "ok" : "ng") : "none"}>
       <div className={`grid gap-1.5 ${grid}`}>
@@ -151,5 +152,75 @@ export function Term({
       </span>
       {was !== undefined && <span className="mt-0.5 text-[10px] font-bold text-gray-400">{was}</span>}
     </span>
+  );
+}
+
+/** 正解を index 番目に置き直す（データは正解を先頭に書いてよい。表示で位置が偏らないようにする） */
+export function placeAnswer(choices: Choice[], index: number): Choice[] {
+  const ok = choices.find((c) => c.ok);
+  if (!ok) return choices;
+  const rest = choices.filter((c) => c !== ok);
+  const at = index % choices.length;
+  return [...rest.slice(0, at), ok, ...rest.slice(at)];
+}
+
+export type LeveledQuestion = { level: string; prompt: ReactNode; choices: Choice[]; solution: ReactNode; cols?: 1 | 2 | 3 | 4 };
+
+/** 段階つき確認問題（Lv.1 → 本試験レベル）。1問ずつ出し、答えると解き方と「次の問題へ」が出る。 */
+export function LeveledPractice({
+  step,
+  title,
+  steps,
+  questions,
+  done,
+  testId,
+}: {
+  step: number;
+  title: ReactNode;
+  steps?: string[];
+  questions: LeveledQuestion[];
+  /** 最後の問題に答えたあとのまとめ */
+  done: ReactNode;
+  testId?: string;
+}) {
+  const [index, setIndex] = useState(0);
+  const [answered, setAnswered] = useState(false);
+  const q = questions[index];
+  const last = index === questions.length - 1;
+  return (
+    <Panel>
+      <SectionTitle step={step}>{title}</SectionTitle>
+      {steps && (
+        <div className="mt-3">
+          <StepChips steps={steps} />
+        </div>
+      )}
+      <div className="mt-3 rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-200" data-testid={testId} data-index={index}>
+        <div className="flex items-center justify-between text-[11px] font-bold">
+          <span className="text-brand-700">{q.level}</span>
+          <span className="text-gray-400">
+            {index + 1} / {questions.length}
+          </span>
+        </div>
+        <div className="mt-1 text-sm font-bold leading-relaxed text-gray-800">{q.prompt}</div>
+        <div className="mt-2">
+          <Choices key={index} choices={placeAnswer(q.choices, index * 2 + 1)} steps={steps} cols={q.cols ?? (q.choices.length === 4 ? 2 : 3)} onAnswer={() => setAnswered(true)} />
+        </div>
+        {answered && <div className={`mt-2 text-xs leading-relaxed text-gray-600 ${styles.reveal}`}>{q.solution}</div>}
+      </div>
+      {answered && !last && (
+        <button
+          type="button"
+          onClick={() => {
+            setIndex(index + 1);
+            setAnswered(false);
+          }}
+          className="mt-3 w-full rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white active:scale-95"
+        >
+          次の問題へ →
+        </button>
+      )}
+      {answered && last && <Note tone="emerald">{done}</Note>}
+    </Panel>
   );
 }
