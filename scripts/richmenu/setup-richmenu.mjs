@@ -12,7 +12,7 @@
  * タップ時の挙動は既存の webhook（buildReplyText）がそのまま処理する。
  * → リッチメニュー追加によって既存のテキスト応答仕様は一切変えていない。
  *
- * 実行（LINE_CHANNEL_ACCESS_TOKEN が必要。Vercel と同じ長期トークン）:
+ * 実行（LINE_CHANNEL_ACCESS_TOKEN に本番 LINE チャネルの長期トークンが必要）:
  *   LINE_CHANNEL_ACCESS_TOKEN=xxxx node scripts/richmenu/setup-richmenu.mjs
  *   # もしくは .env.local に書いておけば自動で読み込む
  *
