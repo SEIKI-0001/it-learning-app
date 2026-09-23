@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import styles from "../calc/calc.module.css";
 
 // 売上線と総費用線のグラフ。主役は「2本が交わる点＝損益分岐点」。
 //   交点より左＝費用が上（赤字ゾーン）、右＝売上が上（黒字ゾーン）。
 //   販売数のカーソルに、2本の線の差（利益/損失）を太い縦棒で出す。
-//   条件（固定費・売価・変動費）を変えると、線が動いて交点が左右にすべる。
+//   draw=true のときは、2本の線を描き → 赤字/黒字ゾーンと交点を出す（親が key で描き直す）。
 
 export type Econ = { fixed: number; price: number; vc: number };
 
@@ -17,49 +17,16 @@ const Y = (v: number) => H - PAD.b - (Math.min(v, Y_MAX) / Y_MAX) * (H - PAD.t -
 
 export const breakEvenOf = (e: Econ) => e.fixed / (e.price - e.vc);
 
-/** 条件が変わったとき、線をなめらかに動かす（reduced-motion では即時） */
-export function useTweenedEcon(target: Econ, reducedMotion: boolean) {
-  const [shown, setShown] = useState(target);
-  // いま画面に出ている値（アニメーション途中で条件が変わっても、そこから動き出す）
-  const lastRef = useRef(target);
-
-  useEffect(() => {
-    if (reducedMotion) {
-      lastRef.current = target;
-      return;
-    }
-    const from = lastRef.current;
-    const start = performance.now();
-    const dur = 700;
-    let raf = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / dur);
-      const k = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-      const next = {
-        fixed: from.fixed + (target.fixed - from.fixed) * k,
-        price: from.price + (target.price - from.price) * k,
-        vc: from.vc + (target.vc - from.vc) * k,
-      };
-      lastRef.current = next;
-      setShown(next);
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target.fixed, target.price, target.vc, reducedMotion]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return reducedMotion ? target : shown;
-}
-
 const yen = (n: number) => `${Math.round(n).toLocaleString()}円`;
 
-export function BreakEvenChart({ econ, qty }: { econ: Econ; qty: number }) {
+export function BreakEvenChart({ econ, qty, draw = false }: { econ: Econ; qty: number; draw?: boolean }) {
   const bep = breakEvenOf(econ);
   const sales = (q: number) => econ.price * q;
   const cost = (q: number) => econ.fixed + econ.vc * q;
   const bepIn = bep <= MAX_QTY;
   const bx = Math.min(bep, MAX_QTY);
   const profit = sales(qty) - cost(qty);
+  const late = draw ? styles.fadeLate : undefined;
 
   // 赤字ゾーン（0〜交点：費用線と売上線のあいだ）、黒字ゾーン（交点〜右端）
   const loss = `${X(0)},${Y(cost(0))} ${X(bx)},${Y(cost(bx))} ${X(bx)},${Y(sales(bx))} ${X(0)},${Y(0)}`;
@@ -87,6 +54,7 @@ export function BreakEvenChart({ econ, qty }: { econ: Econ; qty: number }) {
         販売数（個）
       </text>
 
+      <g className={late}>
       <polygon points={loss} fill="#ffe4e6" opacity={0.85} />
       {gain && <polygon points={gain} fill="#d1fae5" opacity={0.9} />}
       {bep > 14 && (
@@ -99,16 +67,17 @@ export function BreakEvenChart({ econ, qty }: { econ: Econ; qty: number }) {
           黒字
         </text>
       )}
+      </g>
 
       {/* 固定費の床 */}
       <line x1={X(0)} x2={X(MAX_QTY)} y1={Y(econ.fixed)} y2={Y(econ.fixed)} stroke="#94a3b8" strokeDasharray="3 3" />
-      <text x={X(MAX_QTY) - 2} y={Y(econ.fixed) - 3} fontSize={9} textAnchor="end" fill="#64748b">
+      <text x={X(MAX_QTY) - 2} y={Y(econ.fixed) + 10} fontSize={9} textAnchor="end" fill="#64748b">
         固定費 {yen(econ.fixed)}
       </text>
 
       {/* 総費用線・売上線 */}
-      <line x1={X(0)} y1={Y(cost(0))} x2={X(MAX_QTY)} y2={Y(cost(MAX_QTY))} stroke="#e11d48" strokeWidth={2.5} data-testid="be-cost-line" />
-      <line x1={X(0)} y1={Y(0)} x2={X(MAX_QTY)} y2={Y(sales(MAX_QTY))} stroke="#2563eb" strokeWidth={2.5} data-testid="be-sales-line" />
+      <line x1={X(0)} y1={Y(cost(0))} x2={X(MAX_QTY)} y2={Y(cost(MAX_QTY))} stroke="#e11d48" strokeWidth={2.5} pathLength={1} className={draw ? styles.draw : undefined} data-testid="be-cost-line" />
+      <line x1={X(0)} y1={Y(0)} x2={X(MAX_QTY)} y2={Y(sales(MAX_QTY))} stroke="#2563eb" strokeWidth={2.5} pathLength={1} className={draw ? styles.draw : undefined} data-testid="be-sales-line" />
       <text x={X(MAX_QTY) - 2} y={Y(cost(MAX_QTY)) + 11} fontSize={10} fontWeight={800} stroke="#fff" strokeWidth={3} paintOrder="stroke" textAnchor="end" fill="#e11d48">
         総費用
       </text>
@@ -133,11 +102,18 @@ export function BreakEvenChart({ econ, qty }: { econ: Econ; qty: number }) {
 
       {/* 交点＝損益分岐点 */}
       {bepIn && (
-        <g data-testid="be-point" data-qty={Math.round(bep)}>
+        <g data-testid="be-point" data-qty={Math.round(bep)} className={late}>
           <line x1={X(bep)} x2={X(bep)} y1={Y(sales(bep))} y2={H - PAD.b} stroke="#111827" strokeDasharray="2 2" />
+          {qty === Math.round(bep) && (
+            <circle cx={X(bep)} cy={Y(sales(bep))} r={9} fill="none" stroke="#111827" strokeWidth={1.5} className={styles.ring} data-testid="be-point-ring" />
+          )}
           <circle cx={X(bep)} cy={Y(sales(bep))} r={5} fill="#fff" stroke="#111827" strokeWidth={2} />
-          <text x={X(bep)} y={Y(sales(bep)) - 9} fontSize={10} fontWeight={800} stroke="#fff" strokeWidth={3} paintOrder="stroke" textAnchor={bep > 80 ? "end" : "middle"} fill="#111827">
-            損益分岐点 {Math.round(bep)}個
+          {/* 交点の右下（2本の線より下）は空いているので、そこに2行で置く */}
+          <text x={bep > 60 ? X(bep) - 8 : X(bep) + 8} y={Y(sales(bep)) + 16} fontSize={10} fontWeight={800} stroke="#fff" strokeWidth={3} paintOrder="stroke" textAnchor={bep > 60 ? "end" : "start"} fill="#111827">
+            <tspan>損益分岐点 {Math.round(bep)}個</tspan>
+            <tspan x={bep > 60 ? X(bep) - 8 : X(bep) + 8} dy={12} fontWeight={700}>
+              売上 {yen(sales(bep))}
+            </tspan>
           </text>
         </g>
       )}

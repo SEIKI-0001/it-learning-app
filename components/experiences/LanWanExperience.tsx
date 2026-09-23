@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DivideStage, EfficiencyStage, SolveStage, TimeStage, TransferPractice, UnitStage } from "./transfer/TransferStages";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -8,6 +9,7 @@ import { Panel, SectionTitle } from "./ui";
 //   ① 宛先を選んでデータを送る → 通る経路（LAN内で完結 / WAN経由）が光る
 //   ② 比較表（範囲・例・だれが用意・速度）
 //   ③ これはどっち？ 仕分けクイズ（範囲で見分ける練習）
+//   ④〜⑨ 通信速度・転送時間（transfer/TransferStages）：割り算の意味 → Byte/bit → 利用効率 → 32秒 → 解き方 → 確認3問
 // ============================================================================
 
 type Dest = "printer" | "office" | "video";
@@ -273,11 +275,18 @@ export default function LanWanExperience() {
       <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🌐 ネットワークは「広さ」で呼び方が変わります。代表が <b>LAN（狭い）</b> と <b>WAN（広い）</b>。
         スマホ →（家のWi-Fi＝LAN）→ プロバイダ →（インターネット＝WAN）→ 相手、の順でつながっています。
+        後半（④〜）では、回線でファイルを送るのに<b>何秒かかるか</b>を計算できるようにします。
       </div>
 
       <PacketJourney />
       <CompareTable />
       <SortQuiz />
+      <DivideStage />
+      <UnitStage />
+      <EfficiencyStage />
+      <TimeStage />
+      <SolveStage />
+      <TransferPractice />
     </div>
   );
 }
