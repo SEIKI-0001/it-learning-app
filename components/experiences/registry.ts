@@ -75,6 +75,9 @@ import DecisionMethodsExperience from "./DecisionMethodsExperience";
 import TechRoadmapExperience from "./TechRoadmapExperience";
 import EngineeringSystemsExperience from "./EngineeringSystemsExperience";
 import ProductionManagementExperience from "./ProductionManagementExperience";
+import EmbeddedControlExperience from "./EmbeddedControlExperience";
+import SystemPlanningRfpExperience from "./SystemPlanningRfpExperience";
+import SystemDesignExperience from "./SystemDesignExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -162,6 +165,9 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "strat-technology-development-strategy": TechRoadmapExperience,
   "strat-engineering-systems": EngineeringSystemsExperience,
   "strat-production-management": ProductionManagementExperience,
+  "strat-embedded-systems": EmbeddedControlExperience,
+  "strat-system-planning-rfp": SystemPlanningRfpExperience,
+  "mgmt-system-design": SystemDesignExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
