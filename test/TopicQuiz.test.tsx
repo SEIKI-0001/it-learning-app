@@ -116,6 +116,31 @@ describe("TopicQuiz", () => {
     );
   });
 
+  it("returns the original choice key after shuffled display order", () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const onComplete = vi.fn();
+    try {
+      render(
+        <TopicQuiz topicId="topic-1" onComplete={onComplete} questions={[singleQuestion]} />,
+      );
+
+      // Math.random=0 moves the original correct choice A away from display position A.
+      fireEvent.click(screen.getByText("正解の答え").closest("button")!);
+      fireEvent.click(screen.getByRole("button", { name: "完了する" }));
+
+      expect(onComplete).toHaveBeenCalledOnce();
+      expect(onComplete.mock.calls[0][0][0]).toEqual(
+        expect.objectContaining({
+          questionId: singleQuestion.id,
+          selectedChoice: "A",
+          isCorrect: true,
+        }),
+      );
+    } finally {
+      random.mockRestore();
+    }
+  });
+
   it("completes only once when the finish event is dispatched repeatedly before render", () => {
     const onComplete = vi.fn();
     render(
