@@ -130,7 +130,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             次のチェックポイントに進む条件
           </p>
           <div className="mt-2">
-            <GateRequirementList gate={gate} />
+            <GateRequirementList state={state} gate={gate} />
           </div>
         </div>
 

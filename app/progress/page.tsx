@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/lib/useAppState";
 import { mergeAppState } from "@/lib/mergeAppState";
@@ -21,9 +21,14 @@ import {
   buildCheckpointComparison,
   buildCheckpointGate,
   CHECKPOINTS,
+  gateCompletionRatio,
   getCheckpoint,
   getCheckpointProgress,
+  getCheckpointStage,
+  type CheckpointStage,
 } from "@/lib/checkpoints";
+import { buildCheckpointDetail } from "@/lib/checkpointDetail";
+import type { CheckpointId } from "@/types/checkpoint";
 import { buildBadgeStatuses } from "@/lib/badges";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { getLessonHref } from "@/lib/learningCatalog";
@@ -37,6 +42,7 @@ import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import ProgressOverview, { type OverviewKpis } from "@/components/progress/ProgressOverview";
 import ProgressGateCard from "@/components/progress/ProgressGateCard";
+import CheckpointDetailSheet from "@/components/progress/CheckpointDetailSheet";
 import {
   PendingBreakdownCard,
   ReadinessBreakdownCard,
@@ -97,6 +103,9 @@ export default function ProgressPage() {
     loadCachedProgressBootstrap(),
   );
   const [bootstrapLoading, setBootstrapLoading] = useState(true);
+  // 詳細シートで開いている CP（閉じているときは null）。
+  const [openCheckpointId, setOpenCheckpointId] = useState<CheckpointId | null>(null);
+  const closeCheckpoint = useCallback(() => setOpenCheckpointId(null), []);
   const bootstrappedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -158,15 +167,14 @@ export default function ProgressPage() {
   const gate = buildCheckpointGate(state, current.id);
   const comparison = buildCheckpointComparison(state);
   const expectedOrder = comparison ? getCheckpoint(comparison.expectedId).order : null;
-  const gateRatio =
-    gate.requiredBadgeCount > 0
-      ? Math.min(1, gate.earnedRequiredCount / gate.requiredBadgeCount)
-      : gate.finalExamUnlocked
-        ? 1
-        : 0;
+  const gateRatio = gateCompletionRatio(gate);
+  const stages = Object.fromEntries(
+    CHECKPOINTS.map((cp) => [cp.id, getCheckpointStage(cpProgress, cp.id)]),
+  ) as Record<CheckpointId, CheckpointStage>;
   const nextCheckpoint = CHECKPOINTS.find((cp) => cp.order === current.order + 1) ?? null;
 
-  const badgeStatuses = buildBadgeStatuses(state, getClientBadgeSignals(), current.id);
+  const badgeSignals = getClientBadgeSignals();
+  const badgeStatuses = buildBadgeStatuses(state, badgeSignals, current.id);
   const requiredStatuses = badgeStatuses.filter((status) => status.def.requiredForGate);
   const earnedRequired = requiredStatuses.filter((s) => s.earned).map((s) => s.def);
   const conditionMetIds = new Set(
@@ -259,6 +267,11 @@ export default function ProgressPage() {
   const breakdownPending =
     !bootstrapLoading && !readiness && !status && !improvement && !referenceInput;
 
+  const openDetail = openCheckpointId
+    ? buildCheckpointDetail(state, openCheckpointId, badgeSignals)
+    : null;
+  const openIndex = openCheckpointId ? CHECKPOINTS.findIndex((cp) => cp.id === openCheckpointId) : -1;
+
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
@@ -268,8 +281,9 @@ export default function ProgressPage() {
         <ProgressOverview
           dateLabel={dateLabel}
           checkpoints={CHECKPOINTS}
-          clearedIds={cpProgress.clearedCheckpointIds}
+          stages={stages}
           currentId={current.id}
+          onSelectCheckpoint={setOpenCheckpointId}
           gateRatio={gateRatio}
           expectedOrder={expectedOrder}
           examDateLabel={examDateLabel}
@@ -281,6 +295,7 @@ export default function ProgressPage() {
           earnedBadges={earnedRequired}
           conditionMetIds={conditionMetIds}
           nextCheckpointTitle={nextCheckpoint?.title ?? null}
+          onShowDetail={() => setOpenCheckpointId(current.id)}
           className={p.spanGate}
         />
         {breakdownPending ? (
@@ -313,6 +328,18 @@ export default function ProgressPage() {
         <RowListCard title="モチットの成長" rows={unlocks} className={p.spanUnlocks} />
         <RowListCard title="くわしく見る" rows={links} grid className={p.spanLinks} />
       </div>
+      {openDetail && (
+        <CheckpointDetailSheet
+          detail={openDetail}
+          onClose={closeCheckpoint}
+          onPrev={openIndex > 0 ? () => setOpenCheckpointId(CHECKPOINTS[openIndex - 1].id) : null}
+          onNext={
+            openIndex >= 0 && openIndex < CHECKPOINTS.length - 1
+              ? () => setOpenCheckpointId(CHECKPOINTS[openIndex + 1].id)
+              : null
+          }
+        />
+      )}
       <BottomNav />
     </main>
   );

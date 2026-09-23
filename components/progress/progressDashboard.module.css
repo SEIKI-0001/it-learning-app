@@ -146,6 +146,46 @@
   text-align: center;
 }
 
+/* CP は押すと詳細シートを開く。見た目は道の停留所のまま、押せることは hover/focus で伝える */
+.stopButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 0 4px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.stopButton:hover .stopCode,
+.stopButton:hover .stopTitle {
+  color: var(--blue-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.stopButton:hover .stopDot {
+  border-color: var(--blue);
+}
+
+.stop[data-state="done"] .stopButton:hover .stopDot {
+  border-color: var(--green);
+}
+
+.roadHint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
 .stopDot {
   display: grid;
   place-items: center;
@@ -760,6 +800,20 @@
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
+}
+
+button.textLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.gateLinks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
 }
 
 .textLink:hover {

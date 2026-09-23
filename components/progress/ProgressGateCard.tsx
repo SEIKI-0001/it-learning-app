@@ -15,6 +15,7 @@ export default function ProgressGateCard({
   earnedBadges,
   conditionMetIds,
   nextCheckpointTitle,
+  onShowDetail,
   className,
 }: {
   gate: CheckpointGate;
@@ -23,6 +24,8 @@ export default function ProgressGateCard({
   /** まだ付与されていないが、条件はすでに満たしているCP達成条件の id。 */
   conditionMetIds: Set<string>;
   nextCheckpointTitle: string | null;
+  /** このCPの完了条件をすべて見る（/progress の詳細シートを開く）。 */
+  onShowDetail?: () => void;
   className?: string;
 }) {
   const cp = gate.checkpoint;
@@ -53,6 +56,9 @@ export default function ProgressGateCard({
           <>突破試験に合格しました</>
         ) : gate.finalExamUnlocked ? (
           <>CP達成条件がそろいました。突破試験に挑戦できます</>
+        ) : remainingCount === 0 ? (
+          // バッジはそろったが、分野・正答率の条件が残っている
+          <>CP達成条件はそろいました。残りの条件を満たすと突破試験に挑戦できます</>
         ) : (
           <>
             あと<span className={p.gateNum}>{remainingCount}</span>
@@ -128,10 +134,18 @@ export default function ProgressGateCard({
         {nextCheckpointTitle
           ? `突破試験に合格すると、CP${cp.order + 1}「${nextCheckpointTitle}」へ進みます。`
           : "突破試験に合格すると、すべてのチェックポイントを突破します。"}
-        <Link href="/plan" className={p.textLink}>
-          ロードマップ
-          <Icon name="chevron-right" className={p.chev} />
-        </Link>
+        <span className={p.gateLinks}>
+          {onShowDetail && (
+            <button type="button" onClick={onShowDetail} className={p.textLink} aria-haspopup="dialog">
+              完了条件をすべて見る
+              <Icon name="chevron-right" className={p.chev} />
+            </button>
+          )}
+          <Link href="/plan" className={p.textLink}>
+            ロードマップ
+            <Icon name="chevron-right" className={p.chev} />
+          </Link>
+        </span>
       </p>
     </section>
   );

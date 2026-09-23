@@ -165,6 +165,31 @@ function completedFieldSet(state: AppState): Set<TopicField> {
 
 // 直近正答率は lib/study.ts の recentAccuracy に一本化（badges の条件判定と共通）。
 
+/** ゲートのバッジ以外の条件（分野カバレッジ・直近正答率）を判定するための実測値。 */
+export type CheckpointMeasurements = {
+  /** requiredFieldCoverage のうち、まだ1トピックも完了していない分野。 */
+  missingFields: TopicField[];
+  /** 直近の正答率（0〜1）。正答率を条件にしない CP では測らない（null）。 */
+  recentAccuracy: number | null;
+};
+
+/**
+ * ゲート判定に使う実測値。buildCheckpointGate はこの値で判定し、
+ * 表示側（lib/checkpointDetail・lib/checkpointNeeds）も同じ値を使う。
+ */
+export function measureCheckpoint(
+  state: AppState,
+  checkpointId: CheckpointId,
+): CheckpointMeasurements {
+  const checkpoint = getCheckpoint(checkpointId);
+  const fields = completedFieldSet(state);
+  return {
+    missingFields: checkpoint.requiredFieldCoverage.filter((f) => !fields.has(f)),
+    recentAccuracy:
+      checkpoint.recentAccuracyMin === undefined ? null : recentAccuracy(state.answers),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // ゲート判定
 // ---------------------------------------------------------------------------
@@ -227,14 +252,12 @@ export function buildCheckpointGate(
   const missingBadges = required.filter((b) => !earnedIds.has(b.id));
   const earnedRequiredCount = required.length - missingBadges.length;
 
-  const fields = completedFieldSet(state);
-  const fieldCoverageMet = checkpoint.requiredFieldCoverage.every((f) =>
-    fields.has(f),
-  );
+  const measured = measureCheckpoint(state, checkpointId);
+  const fieldCoverageMet = measured.missingFields.length === 0;
   const accuracyMet =
-    checkpoint.recentAccuracyMin === undefined
+    checkpoint.recentAccuracyMin === undefined || measured.recentAccuracy === null
       ? true
-      : recentAccuracy(state.answers) >= checkpoint.recentAccuracyMin;
+      : measured.recentAccuracy >= checkpoint.recentAccuracyMin;
 
   const hasFinal = checkpoint.finalExam !== null;
   const finalExamUnlocked =
@@ -264,6 +287,44 @@ export function buildCheckpointGate(
     finalExamPassed,
     canAdvance,
   };
+}
+
+// ---------------------------------------------------------------------------
+// CPごとの位置づけ（突破済み / 現在 / 次 / その先）
+// ---------------------------------------------------------------------------
+
+/**
+ * ロードマップ上の CP の位置づけ。
+ * - cleared: 突破済み。clearedCheckpointIds に加え、現在地より前の CP も含む
+ *   （CP0 は初回設定の完了＝現在地が CP1 になることで突破扱いになり、clearedCheckpointIds には入らない）。
+ * - current: いま向かっている CP。
+ * - next: 現在の CP を突破すると学習対象になる CP。
+ * - locked: その先の CP。
+ */
+export type CheckpointStage = "cleared" | "current" | "next" | "locked";
+
+export function getCheckpointStage(
+  progress: CheckpointProgress,
+  checkpointId: CheckpointId,
+): CheckpointStage {
+  const order = getCheckpoint(checkpointId).order;
+  const currentOrder = getCheckpoint(progress.currentCheckpointId).order;
+  if (progress.clearedCheckpointIds.includes(checkpointId) || order < currentOrder) {
+    return "cleared";
+  }
+  if (order === currentOrder) return "current";
+  return order === currentOrder + 1 ? "next" : "locked";
+}
+
+/**
+ * CP達成条件の集まり具合（0〜1）。ロードマップの達成度・道のりの「いまここ」に使う。
+ * 必須バッジが無い CP（CP0）は、突破試験が無いか解放済みなら 1。
+ */
+export function gateCompletionRatio(gate: CheckpointGate): number {
+  if (gate.requiredBadgeCount > 0) {
+    return Math.min(1, gate.earnedRequiredCount / gate.requiredBadgeCount);
+  }
+  return gate.finalExamUnlocked || !gate.checkpoint.finalExam ? 1 : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -299,14 +360,7 @@ export function buildCheckpointRoadmap(state: AppState): PhaseProgress[] {
 
     // 現在CP: CP達成条件の充足度を達成度に、次の一手を hint にする。
     const gate = buildCheckpointGate(state, c.id);
-    const progress =
-      c.requiredBadgeCount > 0
-        ? Math.round(
-            (gate.earnedRequiredCount / c.requiredBadgeCount) * 100,
-          )
-        : gate.finalExamUnlocked || !c.finalExam
-          ? 100
-          : 0;
+    const progress = Math.round(gateCompletionRatio(gate) * 100);
     const remaining = c.requiredBadgeCount - gate.earnedRequiredCount;
     const hint = gate.finalExamPassed
       ? "このチェックポイントは突破済み。次へ進みましょう。"

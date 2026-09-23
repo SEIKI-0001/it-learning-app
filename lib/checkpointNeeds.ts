@@ -3,9 +3,7 @@ import type { BadgeDef, CheckpointGate } from "@/types/checkpoint";
 import type { TopicField } from "@/types/content";
 import type { BadgeGap, BadgeSignals } from "@/lib/badges";
 import { getRequiredBadgeGaps, MASTERED, QUIZ_CLEARED } from "@/lib/badges";
-import { buildCheckpointGate, getCheckpointProgress } from "@/lib/checkpoints";
-import { getAllTopics } from "@/lib/content";
-import { recentAccuracy } from "@/lib/study";
+import { buildCheckpointGate, getCheckpointProgress, measureCheckpoint } from "@/lib/checkpoints";
 import { masteryForTopic } from "@/lib/mastery";
 import type { Topic } from "@/types/content";
 
@@ -23,13 +21,10 @@ export function buildCheckpointNeeds(
   signals?: BadgeSignals,
   now: Date = new Date(),
 ): CheckpointNeeds {
-  const gate = buildCheckpointGate(state, getCheckpointProgress(state).currentCheckpointId);
-  const completed = new Set(state.progress.completedTopics);
-  const covered = new Set(getAllTopics()
-    .filter((topic) => completed.has(topic.id))
-    .map((topic) => topic.field));
+  const checkpointId = getCheckpointProgress(state).currentCheckpointId;
+  const gate = buildCheckpointGate(state, checkpointId);
+  const measured = measureCheckpoint(state, checkpointId);
   const target = gate.checkpoint.recentAccuracyMin;
-  const accuracy = recentAccuracy(state.answers);
 
   return {
     gate,
@@ -37,9 +32,9 @@ export function buildCheckpointNeeds(
       badge,
       paths: getRequiredBadgeGaps(badge.id, state, signals, now),
     })),
-    missingFieldCoverage: gate.checkpoint.requiredFieldCoverage.filter((field) => !covered.has(field)),
-    recentAccuracy: target !== undefined && !gate.accuracyMet
-      ? { current: accuracy, target }
+    missingFieldCoverage: measured.missingFields,
+    recentAccuracy: target !== undefined && measured.recentAccuracy !== null && !gate.accuracyMet
+      ? { current: measured.recentAccuracy, target }
       : null,
   };
 }
