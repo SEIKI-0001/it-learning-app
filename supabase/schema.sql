@@ -3096,8 +3096,6 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 REVOKE ALL ON FUNCTION "public"."admin_dashboard_summary"("p_today_start" timestamp with time zone, "p_user_limit" integer, "p_user_offset" integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION "public"."admin_dashboard_summary"("p_today_start" timestamp with time zone, "p_user_limit" integer, "p_user_offset" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."admin_dashboard_summary"("p_today_start" timestamp with time zone, "p_user_limit" integer, "p_user_offset" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."admin_dashboard_summary"("p_today_start" timestamp with time zone, "p_user_limit" integer, "p_user_offset" integer) TO "service_role";
 
 
