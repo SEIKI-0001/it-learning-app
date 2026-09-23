@@ -24,10 +24,10 @@
     "STRIPE_PRICE_ID_PRO_3M": "price_1TsOfwCPaZ1RH6Fh6aLohOYe",
     "STRIPE_PRICE_ID_PRO_6M": "price_1TsOfwCPaZ1RH6Fh79Xd7Hzq",
     "STRIPE_COUPON_FIRST_MONTH": "qrpW93tR",
-    "NEXT_PUBLIC_LINE_ADD_FRIEND_URL": "https://lin.ee/wcVbUud",
-    "APP_BASE_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",
-    "NEXT_PUBLIC_APP_URL": "https://it-learning-app-vinext-pilot.kobayasiseiki.workers.dev",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://ymarkdjwszlsmrjmtfpy.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_9TMa2i1596XTfZfRrhiIug_X-q_EFxS"
+    "NEXT_PUBLIC_LINE_ADD_FRIEND_URL": "https://lin.ee/Oc2SBlS",
+    "APP_BASE_URL": "https://shikaku-mochit.com",
+    "NEXT_PUBLIC_APP_URL": "https://shikaku-mochit.com",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://kebebakugaxdidehzjnh.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_L811hAfJcLSngHlUCYj3wg_Ne_ZvwuW"
   }
 }

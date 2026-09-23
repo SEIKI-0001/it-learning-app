@@ -22,14 +22,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to load Geist.
 
 ## AI採点（Gemini API）
 
 `/ai-grading` では、ITパスポートの記述問題に回答すると Gemini API が採点・解説します。
 
 - **APIキーの取得**: [Google AI Studio](https://aistudio.google.com/apikey) で Gemini APIキーを取得します。
-- **Vercel への設定**: Vercel のプロジェクト設定 → Environment Variables に以下を登録します（`.env.example` 参照）。
+- **Cloudflare への設定**: 本番 Worker の Secret に以下を登録します（`.env.example` 参照）。
   - `GEMINI_API_KEY`（必須・**サーバー専用**。クライアントへ露出しないこと）
   - `GEMINI_MODEL`（任意。未設定なら `gemini-3.1-flash-lite`）
 - **ローカル開発**: `.env.local` に同じ値を設定します。`GEMINI_API_KEY` が未設定の場合は、キーワード一致による「ダミー採点」が表示され、画面の動作確認だけは可能です。
@@ -38,7 +38,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 無料ユーザーは Gemini で「通常採点」、Pro ユーザーは Claude Sonnet で「Pro採点」を受けられます。採点処理は `lib/ai/gradeWrittenAnswer.ts` が provider を切り替えて呼び出し、プロバイダ固有処理は `lib/ai/providers/`（`geminiProvider.ts` / `claudeProvider.ts`）に閉じ込めています。
 
-- **Claude APIキー**: [Anthropic Console](https://console.anthropic.com/) で取得し、Vercel / `.env.local` に登録します。
+- **Claude APIキー**: [Anthropic Console](https://console.anthropic.com/) で取得し、Cloudflare Worker の Secret / `.env.local` に登録します。
   - `ANTHROPIC_API_KEY`（**サーバー専用**。クライアントへ露出しないこと）
   - `ANTHROPIC_MODEL`（任意。未設定なら `claude-sonnet-4-6`）
   - 未設定の場合、Pro 採点は失敗扱いとなり**自動的に Gemini（通常採点）へフォールバック**します（画面に「通常採点で表示しています」と表示）。
@@ -116,12 +116,10 @@ Cloudflare Cron は UTC で起動しますが、**起動時刻をユーザー時
      （誰でも叩ける口を作らないため）。`openssl rand -hex 32`
    - `LINE_CHANNEL_ACCESS_TOKEN` … push 送信（Webhook の返信と共通）。未設定なら送信しません。
      **Scheduler Worker 側には渡しません。**
-   - `APP_BASE_URL`（または `NEXT_PUBLIC_APP_URL`）… 通知に載せるリンクの基点。未設定なら送信しません。
+   - `APP_BASE_URL`（または `NEXT_PUBLIC_APP_URL`）… `https://shikaku-mochit.com`。未設定なら送信しません。
 3. **Scheduler Worker 側の設定**:
-   - `APP_BASE_URL`（var・秘密ではない）… it-learning-app の基点 URL。
-     `wrangler.jsonc` の `vars` はプレースホルダなので、実際の値は
-     `npm run worker:deploy -- --var APP_BASE_URL:https://<本番URL>` か Cloudflare ダッシュボードで設定します。
-     **本体を Cloudflare へ移す際は、この値だけを差し替えれば済みます。**
+   - `APP_BASE_URL`（var・秘密ではない）… `https://shikaku-mochit.com`。
+     `workers/line-reminder-cron/wrangler.jsonc` に設定済みです。
    - `CRON_SECRET`（secret）… it-learning-app と**同じ値**。
      `npm run worker:deploy` 後に `npx --yes wrangler@4 secret put CRON_SECRET --config workers/line-reminder-cron/wrangler.jsonc`。
      秘密値は wrangler の設定ファイルへ平文でコミットしません。
@@ -131,8 +129,7 @@ Cloudflare Cron は UTC で起動しますが、**起動時刻をユーザー時
 
 `wrangler dev --test-scheduled` で Cron 起動をローカルに再現できます。
 
-`wrangler` はアプリの依存に入れていません（Worker は別デプロイなので、
-Next.js 側の依存木を汚さないため）。`npm run worker:*` が `npx wrangler@4` を都度取得します。
+`npm run worker:*` は独立したCron Worker用で、`npx wrangler@4` を使います。
 
 ```bash
 # 1) 通知APIの受け口（Next.js dev か、叩かれたことを見たいだけならスタブ）を用意しておく
@@ -171,8 +168,18 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Cloudflare 本番デプロイ
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`origin/main` が本番の正です。GitHub `SEIKI-0001/it-learning-app` の `main` は
+Cloudflare Workers Builds に接続され、`npm run build:vinext` と
+`npx wrangler deploy --config dist/server/wrangler.json` で自動配信されます。
+本番ドメインは `https://shikaku-mochit.com` です。Worker名
+`it-learning-app-vinext-pilot` は既存のGitHub接続とドメインを維持するための旧名です。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`wrangler.jsonc` は公開URL、`fe-quest` の公開Supabase URL/キー、
+Stripeの価格IDを管理します。サーバー専用の
+`SUPABASE_SERVICE_ROLE_KEY`、`SESSION_SECRET`、`CRON_SECRET`、
+LINE・Stripe・AIの鍵は本番WorkerのSecretで管理し、Gitに入れません。
+Cron Workerは別デプロイで、アプリ側と同じ `CRON_SECRET` を設定します。
+配信後は `PILOT_BASE_URL=https://shikaku-mochit.com PILOT_EXPECT_AUTH_GATE=1 npm run verify:cloudflare`
+で公開経路を確認します。

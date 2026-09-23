@@ -9,7 +9,7 @@ const repositoryRoot = path.resolve(scriptDir, "../..");
 const outputDir = "/private/tmp/it-learning-app-august-campaign";
 const screenshotPath = path.join(outputDir, "campaign-mobile.png");
 const webmPath = path.join(outputDir, "august-2026-short.webm");
-const campaignUrl = "https://it-learning-app.vercel.app/campaign/august-2026";
+const campaignUrl = "https://shikaku-mochit.com/campaign/august-2026";
 
 const toDataUrl = async (filePath, mediaType) => {
   const contents = await readFile(filePath);

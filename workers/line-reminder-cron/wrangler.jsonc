@@ -14,10 +14,9 @@
   "observability": {
     "enabled": true
   },
-  // APP_BASE_URL は秘密ではないので vars に置いてよい。移行中は現在アクセスできる
-  // it-learning-app の URL を指し、本体の Cloudflare 移行後はここだけ差し替える。
+  // 本番の通知APIを呼ぶ。Worker本体の公開URLと常に一致させる。
   // CRON_SECRET は秘密なので vars に書かず `wrangler secret put CRON_SECRET` で設定する。
   "vars": {
-    "APP_BASE_URL": "https://it-learning-app.vercel.app"
+    "APP_BASE_URL": "https://shikaku-mochit.com"
   }
 }
