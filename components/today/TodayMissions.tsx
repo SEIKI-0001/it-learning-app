@@ -103,10 +103,6 @@ export default function TodayMissions({
           );
         })}
       </ul>
-      {rerollAvailable && (
-        <p className={s.missionNote}>まだ手をつけていないミッションを、1日1つだけ変えられます</p>
-      )}
-
       <div className={s.reward} data-state={rewardState}>
         {rewardState === "claimed" ? (
           <p>

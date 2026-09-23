@@ -109,7 +109,6 @@ function SettingsForm({
     <main className="min-h-screen">
       <PageHeader
         back={{ href: "/more", label: "その他" }}
-        eyebrow="設定の変更"
         title="学習プランの設定"
         description="試験日や学習時間はいつでも変更できます。"
       />

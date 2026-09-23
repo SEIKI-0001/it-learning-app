@@ -54,6 +54,13 @@ describe("floating Mochit viewport geometry", () => {
     });
   });
 
+  it("places the default pet at the lower-right on desktop widths", () => {
+    expect(getDefaultFloatingMochitPosition(1280, 900, 108, 108)).toEqual({
+      x: 1156,
+      y: 776,
+    });
+  });
+
   it("clamps the complete 108px hit area above the mobile bottom clearance", () => {
     expect(
       clampFloatingMochitPosition(

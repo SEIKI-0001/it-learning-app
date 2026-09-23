@@ -45,7 +45,7 @@ export default async function LoginPage({
         <div className="mb-3 flex justify-center" aria-hidden>
           <Mochit size="medium" animation="idle" className="justify-center" />
         </div>
-        <h1 className="text-[28px] font-medium leading-tight tracking-[-0.04em]">ITパスポート学習コーチ</h1>
+        <h1 className="text-[28px] font-medium leading-tight tracking-[-0.015em]">ITパスポート学習コーチ</h1>
         <p className="mt-3 text-sm leading-relaxed text-gray-600">
           試験日から逆算した学習プランで、ストラテジ・マネジメント・テクノロジの3分野を、
           やさしい言葉と図解・体験で少しずつ進められます。AI採点で「説明できる理解」も確認できます。

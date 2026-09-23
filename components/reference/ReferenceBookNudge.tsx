@@ -55,7 +55,7 @@ export default function ReferenceBookNudge({
   return (
     <div
       data-testid="reference-book-nudge"
-      className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-2.5"
+      className="mt-3 border-t border-gray-100 pt-3"
     >
       <p className="text-xs leading-relaxed text-gray-700">
         {title
@@ -65,7 +65,7 @@ export default function ReferenceBookNudge({
       <div className="mt-2 flex items-center gap-3">
         <Link
           href="/settings/reference-book"
-          className="rounded-md bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-black"
+          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-50"
         >
           参考書を設定する
         </Link>

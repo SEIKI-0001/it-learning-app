@@ -133,7 +133,7 @@ export default function PlanPage() {
         <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
           <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]">学習計画</h1>
+            <h1 className="text-2xl font-medium leading-snug tracking-[-0.015em] text-gray-900 md:text-[30px]">学習計画</h1>
             <Link
               href="/settings"
               className="text-xs text-brand-700 underline decoration-brand-200 underline-offset-2 hover:decoration-brand-600"

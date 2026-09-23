@@ -121,7 +121,7 @@ export default function BillingSection() {
 
   return (
     <section id="billing">
-      <h2 className="mb-2 text-sm font-bold text-gray-700">プラン・お支払い</h2>
+      <h2 className="mb-2 text-sm font-semibold text-gray-700">プラン・お支払い</h2>
       <div className="overflow-hidden rounded-xl bg-white border border-gray-200">
         <div className="space-y-4 p-4">
           {checkoutResult === "success" && (
@@ -150,7 +150,7 @@ export default function BillingSection() {
                 isPro ? "bg-brand-50 ring-brand-200" : "bg-gray-50 ring-gray-200"
               }`}
             >
-              <p className="text-sm font-bold text-gray-800">
+              <p className="text-sm font-semibold text-gray-800">
                 {isPro ? "Proプラン" : "無料プラン"}
               </p>
               <p className="mt-1 text-xs text-gray-600">
@@ -170,13 +170,20 @@ export default function BillingSection() {
                 ) : isPro ? (
                   <>Proが有効です</>
                 ) : entitlements?.canRecordStudy ? (
-                  <>
-                    学習記録の無料期間は残り{" "}
-                    <span className="font-bold text-brand-600">
-                      {entitlements.freeDaysLeft}日
-                    </span>
-                    （{formatDate(entitlements.freeRecordingUntil)}まで）です
-                  </>
+                  typeof entitlements.freeDaysLeft === "number" ? (
+                    <>
+                      学習記録の無料期間は残り{" "}
+                      <span className="font-semibold text-brand-600">
+                        {entitlements.freeDaysLeft}日
+                      </span>
+                      {formatDate(entitlements.freeRecordingUntil) && (
+                        <>（{formatDate(entitlements.freeRecordingUntil)}まで）</>
+                      )}
+                      です
+                    </>
+                  ) : (
+                    <>無料プランで利用中です</>
+                  )
                 ) : (
                   <>
                     無料の記録期間（7日間）が終了しました。学習は続けられますが、
@@ -198,7 +205,7 @@ export default function BillingSection() {
 
           {/* Pro特典の説明 */}
           <div className="rounded-xl bg-gray-50 px-4 py-3 text-xs leading-relaxed text-gray-600 ring-1 ring-gray-200">
-            <p className="font-bold text-gray-700">Proでできること</p>
+            <p className="font-semibold text-gray-700">Proでできること</p>
             <ul className="mt-1 list-disc space-y-0.5 pl-4">
               <li>学習記録が無期限（無料は登録から7日間のみ）</li>
               <li>AI採点がClaude Sonnetの高精度採点に（1日10回まで）</li>
@@ -216,7 +223,7 @@ export default function BillingSection() {
                 >
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="text-sm font-bold text-gray-800">{plan.label}</p>
+                    <p className="text-sm font-semibold text-gray-800">{plan.label}</p>
                     {plan.kind === "subscription" && (
                       <span className="rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-semibold text-accent-700">
                         初月20%オフ
@@ -248,7 +255,11 @@ export default function BillingSection() {
                       : !plan.enabled || busyPlan !== null
                   }
                   className={buttonClass(
-                    plan.kind === "subscription" ? "primary" : "secondary",
+                    !managesSubscription && !plan.enabled
+                      ? "secondary"
+                      : plan.kind === "subscription"
+                        ? "primary"
+                        : "secondary",
                     "sm",
                     "shrink-0",
                   )}
@@ -281,7 +292,7 @@ export default function BillingSection() {
           {/* 購入履歴 */}
           {purchases.length > 0 && (
             <div>
-              <p className="text-xs font-bold text-gray-700">購入履歴</p>
+              <p className="text-xs font-semibold text-gray-700">購入履歴</p>
               <ul className="mt-1.5 divide-y divide-gray-100 rounded-xl ring-1 ring-gray-200">
                 {purchases.map((p) => (
                   <li key={p.id} className="flex items-center justify-between px-3 py-2">
@@ -291,7 +302,7 @@ export default function BillingSection() {
                         ? "月額プラン"
                         : `${p.months ?? "-"}ヶ月プラン（買い切り）`}
                     </span>
-                    <span className="text-xs font-bold text-gray-700">
+                    <span className="text-xs font-semibold text-gray-700">
                       {formatYen(p.amountTotal)}
                     </span>
                   </li>

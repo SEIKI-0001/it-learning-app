@@ -57,12 +57,12 @@
   --color-gray-900: #16191d;
   --color-gray-950: #0d0f12;
 
-  --font-weight-semibold: 500;
-  --font-weight-bold: 500;
+  /* 見出しの階層は太さでも立てる（OS和文は 600 で W6 相当になる） */
+  --font-weight-semibold: 600;
+  --font-weight-bold: 600;
 
-  --font-sans: var(--font-app-num), var(--font-app-sans), "Hiragino Sans",
-    "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "Meiryo",
-    ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-app-num), var(--font-app-sans), ui-sans-serif,
+    system-ui, sans-serif;
   --font-mono: var(--font-app-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
 
@@ -70,17 +70,33 @@
   --background: #ffffff;
   --foreground: #16191d;
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  /* 和文は palt が効く OS 書体（lib/fonts.ts の説明を参照） */
+  --font-app-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    "Noto Sans CJK JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  /* Webフォントの分割配信では palt が効かないため、字間を少しだけ詰める */
+  /* palt で約物・かなを詰め、本文は読みやすさのために字間をわずかに開ける */
   font-feature-settings: "palt";
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
+  line-break: strict;
   /* 各要素が active:scale 等で押下フィードバックを持つため、OS標準のハイライトは消す */
   -webkit-tap-highlight-color: transparent;
+}
+
+/* 見出し・ボタン・短いラベルは文節で折り返し、「ま/す。」のような泣き別れを防ぐ */
+h1, h2, h3, h4, button, a, label, dt, th, .text-center {
+  word-break: auto-phrase;
+}
+h1, h2, h3 {
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+p, li, dd {
+  text-wrap: pretty;
 }
 
 /* デスクトップでは下部ナビが左サイドバーになるので、その幅だけ本文を右へずらす */

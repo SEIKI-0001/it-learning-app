@@ -66,9 +66,14 @@ export default function ProgressOverview({
       <div className={p.readinessFocus}>
         <div>
           <p className={p.readinessFocusLabel}>いちばん大切な指標 · 合格準備度</p>
-          <p className={p.readinessFocusValue}>
-            {kpis.readiness.score === null ? "測定中" : <>{kpis.readiness.score}<span>/100</span></>}
-          </p>
+          {kpis.readiness.score === null ? (
+            // 判定前は大きな数字の枠に「測定中」を置かず、判定が始まる条件を平叙で示す
+            <p className={p.readinessFocusPending}>まだ判定前です</p>
+          ) : (
+            <p className={p.readinessFocusValue}>
+              {kpis.readiness.score}<span>/100</span>
+            </p>
+          )}
           <p className={p.readinessFocusNote}>{kpis.readiness.bandLabel}</p>
         </div>
         <Link href="/today" className={p.readinessFocusLink}>今日の学習を進める →</Link>

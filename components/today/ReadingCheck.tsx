@@ -179,7 +179,6 @@ export default function ReadingCheck({
         <h2 id="reading-heading" className={r.title}>
           今日の参考書
         </h2>
-        <span className={r.meta}>1日1回・あとから変更できます</span>
       </div>
 
       <div className={r.range}>
@@ -269,7 +268,7 @@ export default function ReadingCheck({
             {summary}
           </p>
         ) : (
-          <p className={r.hint}>選ぶとそのまま記録されます</p>
+          <span />
         )}
         {saved?.level !== "rest" && (
           <button

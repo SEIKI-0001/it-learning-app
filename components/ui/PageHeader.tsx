@@ -47,7 +47,7 @@ export default function PageHeader({
                 <p className="text-xs font-medium text-gray-900">{eyebrow}</p>
               )}
               <h1
-                className={`${eyebrow ? "mt-2" : ""} text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[30px]`}
+                className={`${eyebrow ? "mt-2" : ""} text-2xl font-medium leading-snug tracking-[-0.015em] text-gray-900 md:text-[30px]`}
               >
                 {title}
               </h1>

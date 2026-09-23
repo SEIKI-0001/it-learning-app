@@ -38,6 +38,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import ProgressOverview, { type OverviewKpis } from "@/components/progress/ProgressOverview";
 import ProgressGateCard from "@/components/progress/ProgressGateCard";
 import {
+  PendingBreakdownCard,
   ReadinessBreakdownCard,
   RowListCard,
   StudyDaysCard,
@@ -189,7 +190,7 @@ export default function ProgressPage() {
           : readinessBandLabel(readiness.band)
         : bootstrapLoading
           ? "読み込んでいます"
-          : "問題に答えると判定します",
+          : "確認問題に答えると、100点満点で判定が始まります",
     },
     exam: { daysLeft: examDays, dateLabel: examDateLabel },
     pace: status
@@ -254,6 +255,10 @@ export default function ProgressPage() {
       }
     : null;
 
+  // 内訳（分野別・トピック別）がどちらも出せない状態。参考書の内訳があるときは到達度カードを残す。
+  const breakdownPending =
+    !bootstrapLoading && !readiness && !status && !improvement && !referenceInput;
+
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
 
@@ -278,25 +283,31 @@ export default function ProgressPage() {
           nextCheckpointTitle={nextCheckpoint?.title ?? null}
           className={p.spanGate}
         />
-        <ReadinessBreakdownCard
-          result={readiness}
-          loading={bootstrapLoading}
-          improvement={improvement}
-          className={p.spanReadiness}
-        />
-
-        <TopicReachCard
-          status={status}
-          totalTopicCount={topics.length}
-          loading={bootstrapLoading}
-          referenceInput={referenceInput}
-          className={p.spanTopics}
-        />
+        {breakdownPending ? (
+          // 判定材料がまだ無いときは、空の内訳カードを2枚並べず1枚にまとめる
+          <PendingBreakdownCard totalTopicCount={topics.length} className={p.spanReadiness} />
+        ) : (
+          <>
+            <ReadinessBreakdownCard
+              result={readiness}
+              loading={bootstrapLoading}
+              improvement={improvement}
+              className={p.spanReadiness}
+            />
+            <TopicReachCard
+              status={status}
+              totalTopicCount={topics.length}
+              loading={bootstrapLoading}
+              referenceInput={referenceInput}
+              className={p.spanTopics}
+            />
+          </>
+        )}
         <StudyDaysCard
           answers={state.answers}
           streak={progress.streakCount}
           longestStreak={Math.max(getStreakMeta(progress).longestStreak, progress.streakCount)}
-          className={p.spanHistory}
+          className={breakdownPending ? p.spanFull : p.spanHistory}
         />
 
         <RowListCard title="モチットの成長" rows={unlocks} className={p.spanUnlocks} />

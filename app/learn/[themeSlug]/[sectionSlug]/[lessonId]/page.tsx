@@ -125,7 +125,7 @@ export default async function LessonPage({
             </nav>
 
             {/* 2行目: ページ内で最も視認性を高くする見出し */}
-            <h1 className="mt-1.5 text-2xl font-medium leading-snug tracking-[-0.04em] text-gray-900 md:text-[28px]">
+            <h1 className="mt-1.5 text-2xl font-medium leading-snug tracking-[-0.015em] text-gray-900 md:text-[28px]">
               {topic.title}
             </h1>
 

@@ -83,9 +83,8 @@ export default function ReviewPage() {
   return (
     <main className="min-h-screen pb-24">
       <PageHeader
-        eyebrow="学び直すレッスン"
         title="復習"
-        description="復習対象を選ぶと、学ぶページの解説や確認問題へ移動します。"
+        description="間違えた問題や、忘れかけているレッスンを学び直します。"
         accessory={
           reviewItems.length > 0 ? (
             <span className="rounded-full border border-accent-200 bg-accent-50 px-3 py-1 text-xs font-semibold tabular-nums text-accent-700">

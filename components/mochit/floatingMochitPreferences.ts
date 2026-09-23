@@ -40,6 +40,9 @@ export function clampFloatingMochitPosition(
   };
 }
 
+/** これ以上の幅では下部ナビが左サイドバーになる（globals.css の lg と同じ） */
+const FLOATING_MOCHIT_DESKTOP_MIN_WIDTH = 1024;
+
 export function getDefaultFloatingMochitPosition(
   viewportWidth: number,
   viewportHeight: number,
@@ -48,10 +51,12 @@ export function getDefaultFloatingMochitPosition(
   margin = 16,
   bottomClearance = 0,
 ): FloatingMochitPoint {
+  // デスクトップ幅では右上に置くとページ見出しのパネルに重なるので、右下に置く。
+  const desktop = viewportWidth >= FLOATING_MOCHIT_DESKTOP_MIN_WIDTH;
   return clampFloatingMochitPosition(
     {
       x: viewportWidth - petWidth - margin,
-      y: margin,
+      y: desktop ? viewportHeight - petHeight - margin - bottomClearance : margin,
     },
     viewportWidth,
     viewportHeight,
