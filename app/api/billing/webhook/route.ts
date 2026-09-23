@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   applyOneTimePurchase,
   getStoredStripeSubscription,
+  getStripeCustomerIdsForUser,
   recordStripeSubscriptionEvent,
   setUserPlan,
   setUserPlanByCustomer,
@@ -196,23 +197,30 @@ async function handleSubscriptionEvent(
   });
   if (!accepted) return;
 
-  const currentSubscriptions = await fetchStripeSubscriptions(customerId);
-  if (!currentSubscriptions) {
-    throw new Error("Could not reconcile Stripe subscriptions for customer");
-  }
-
   const proPriceId = process.env.STRIPE_PRICE_ID_PRO_SUB?.trim();
   if (!proPriceId) {
     throw new Error("STRIPE_PRICE_ID_PRO_SUB is not configured");
   }
 
-  const keepsSubscriptionPro = hasActiveProSubscription(
-    currentSubscriptions,
-    proPriceId,
-  );
-  const plan = keepsSubscriptionPro ? "pro" : "free";
+  const customerIds = userId
+    ? await getStripeCustomerIdsForUser(userId)
+    : [customerId];
+  if (!customerIds.includes(customerId)) customerIds.push(customerId);
+  let activeCustomerId: string | null = null;
+  for (const id of customerIds) {
+    const subscriptions = await fetchStripeSubscriptions(id);
+    if (!subscriptions) {
+      throw new Error(`Could not reconcile Stripe subscriptions for customer ${id}`);
+    }
+    if (hasActiveProSubscription(subscriptions, proPriceId)) {
+      activeCustomerId = id;
+    }
+  }
+  const plan = activeCustomerId ? "pro" : "free";
   if (userId) {
-    await setUserPlan(userId, plan, { stripeCustomerId: customerId });
+    await setUserPlan(userId, plan, {
+      stripeCustomerId: activeCustomerId ?? customerId,
+    });
   } else {
     await setUserPlanByCustomer(customerId, plan);
   }
