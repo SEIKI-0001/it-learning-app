@@ -51,6 +51,9 @@ describe("Cloudflare pilot configuration", () => {
     expect(config.vars.NEXT_PUBLIC_SUPABASE_ANON_KEY).toMatch(
       /^sb_publishable_/,
     );
+    expect(config.vars.NEXT_PUBLIC_LINE_ADD_FRIEND_URL).toBe(
+      "https://lin.ee/Oc2SBlS",
+    );
     expect(reminder).toContain('"APP_BASE_URL": "https://shikaku-mochit.com"');
     expect(wrangler).not.toContain("vercel.app");
   });
