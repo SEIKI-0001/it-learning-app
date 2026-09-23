@@ -1,10 +1,12 @@
 "use client";
 
+import { RaidCompareStage } from "./raid/RaidCompare";
 import { ParityRaidStage, ParityStage, RaidBasicStage, RaidFormulaStage, RaidPractice } from "./raid/RaidStages";
 
 // ============================================================================
 // 「RAIDと実効容量」専用の体験。4台のディスクのマスを色分けし、容量の引き算を「見て」理解する。
-//   ① RAID0/1 → ② パリティで戻せるわけ → ③ RAID5＝1台分 → ④ RAID6＝2台分 → ⑤ 一般化 → ⑥ 確認4問
+//   ① RAID0/1 → ② パリティで戻せるわけ → ③ RAID5＝1台分 → ④ RAID6＝2台分 → ⑤ 4方式を並べて比較
+//   → ⑥ 一般化 → ⑦ 確認4問
 // ============================================================================
 
 export default function RaidExperience() {
@@ -18,6 +20,7 @@ export default function RaidExperience() {
       <ParityStage />
       <ParityRaidStage mode="raid5" />
       <ParityRaidStage mode="raid6" />
+      <RaidCompareStage step={5} />
       <RaidFormulaStage />
       <RaidPractice />
     </div>

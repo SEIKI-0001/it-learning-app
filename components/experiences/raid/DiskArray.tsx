@@ -60,6 +60,7 @@ export function DiskArray({
   onToggleDisk,
   highlight,
   testId,
+  compact = false,
 }: {
   mode: RaidMode;
   placed: number;
@@ -69,6 +70,8 @@ export function DiskArray({
   /** 強調するマスの種類（それ以外は薄くする） */
   highlight?: CellKind[];
   testId?: string;
+  /** 4方式を並べるときの小さい表示（見出しは番号だけ・マスを低く） */
+  compact?: boolean;
 }) {
   const layout = raidLayout(mode);
   const ok = survives(mode, broken);
@@ -76,7 +79,9 @@ export function DiskArray({
     <div className="grid grid-cols-4 gap-1.5" data-testid={testId} data-placed={placed} data-broken={broken.size}>
       {Array.from({ length: DISKS }, (_, d) => {
         const down = broken.has(d);
-        const head = (
+        const head = compact ? (
+          <>{d + 1}</>
+        ) : (
           <>
             <span aria-hidden>{down ? "💥" : "💽"}</span> {d + 1}
           </>
@@ -104,12 +109,12 @@ export function DiskArray({
             <div className="mt-1 space-y-1">
               {layout.map((stripe, s) => {
                 const cell = stripe[d];
-                if (s >= placed) return <div key={s} className="h-6 rounded border border-dashed border-gray-300" />;
+                if (s >= placed) return <div key={s} className={`${compact ? "h-5" : "h-6"} rounded border border-dashed border-gray-300`} />;
                 const dim = highlight && !highlight.includes(cell.kind);
                 return (
                   <div
                     key={s}
-                    className={`relative grid h-6 place-items-center rounded text-[11px] font-bold ${TONE[cell.kind]} ${styles.pop} ${dim ? "opacity-25" : ""} ${down ? "opacity-30" : ""}`}
+                    className={`relative grid ${compact ? "h-5" : "h-6"} place-items-center rounded text-[11px] font-bold ${TONE[cell.kind]} ${styles.pop} ${dim ? "opacity-25" : ""} ${down ? "opacity-30" : ""}`}
                     style={{ animationDelay: `${d * 90}ms` }}
                     data-kind={cell.kind}
                   >

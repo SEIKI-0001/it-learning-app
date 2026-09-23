@@ -70,6 +70,19 @@ import FacilityManagementExperience from "./FacilityManagementExperience";
 import EstimationExperience from "./EstimationExperience";
 import RaidExperience from "./RaidExperience";
 import MultimediaExperience from "./MultimediaExperience";
+import CorporationOrganizationExperience from "./CorporationOrganizationExperience";
+import DecisionMethodsExperience from "./DecisionMethodsExperience";
+import TechRoadmapExperience from "./TechRoadmapExperience";
+import EngineeringSystemsExperience from "./EngineeringSystemsExperience";
+import ProductionManagementExperience from "./ProductionManagementExperience";
+import EmbeddedControlExperience from "./EmbeddedControlExperience";
+import SystemPlanningRfpExperience from "./SystemPlanningRfpExperience";
+import SystemDesignExperience from "./SystemDesignExperience";
+import PmbokExperience from "./PmbokExperience";
+import RaciExperience from "./RaciExperience";
+import ProcessingArchitectureExperience from "./ProcessingArchitectureExperience";
+import BackupExperience from "./BackupExperience";
+import NetworkDevicesExperience from "./NetworkDevicesExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -152,6 +165,19 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "mgmt-estimation": EstimationExperience,
   "tech-raid": RaidExperience,
   "tech-multimedia-compression": MultimediaExperience,
+  "strat-corporation-management-organization": CorporationOrganizationExperience,
+  "strat-decision-problem-solving": DecisionMethodsExperience,
+  "strat-technology-development-strategy": TechRoadmapExperience,
+  "strat-engineering-systems": EngineeringSystemsExperience,
+  "strat-production-management": ProductionManagementExperience,
+  "strat-embedded-systems": EmbeddedControlExperience,
+  "strat-system-planning-rfp": SystemPlanningRfpExperience,
+  "mgmt-system-design": SystemDesignExperience,
+  "mgmt-pmbok-basics": PmbokExperience,
+  "mgmt-project-resource": RaciExperience,
+  "tech-system-processing-architecture": ProcessingArchitectureExperience,
+  "tech-backup": BackupExperience,
+  "tech-network-devices": NetworkDevicesExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {

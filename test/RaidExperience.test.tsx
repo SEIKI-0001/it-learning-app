@@ -107,9 +107,18 @@ describe("RaidExperience", () => {
     expect(screen.getByTestId("raid-verdict-raid6")).toHaveAttribute("data-ok", "true");
   });
 
-  it("the formula slide generalises to N disks", () => {
+  it("the comparison slide lines up all four levels: 4 / 2 / 3 / 2 TB", () => {
     renderDeck();
     click("解説5");
+    expect(screen.getByTestId("raid-compare-raid0")).toHaveTextContent("4TB");
+    expect(screen.getByTestId("raid-compare-raid1")).toHaveTextContent("2TB");
+    expect(screen.getByTestId("raid-compare-raid5")).toHaveTextContent("3TB");
+    expect(screen.getByTestId("raid-compare-raid6")).toHaveTextContent("2TB");
+  });
+
+  it("the formula slide generalises to N disks", () => {
+    renderDeck();
+    click("解説6");
     click("6台");
     click("4TB");
     expect(screen.getByTestId("raid-formula-raid5")).toHaveTextContent("20TB");
@@ -120,7 +129,7 @@ describe("RaidExperience", () => {
 
   it("practice: forgetting the parity is pointed out as the 引く台数 step", () => {
     renderDeck();
-    click("解説6");
+    click("解説7");
     click("4TB");
     expect(screen.getByText(/パリティ分を引き忘れ/)).toBeInTheDocument();
     expect(failedChip()).toHaveTextContent("② 引く台数");
