@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CriticalStage, LineStage, ParallelStage, PertPractice, PertSolveStage, TotalStage } from "./pert/PertStages";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 import styles from "./wbs/wbs.module.css";
@@ -11,6 +12,7 @@ import styles from "./wbs/wbs.module.css";
 //   ② ガントチャート = 「買い出しが2日遅れたら？」で、依存している作業の棒が順に右へずれ、
 //      全体の完了日が本番を越える。同じ2日でも余裕のある看板づくりは響かない（クリティカルパス）
 //   ③ これはどっち？ 仕分けクイズ（分解 or 日程）
+//   ④〜⑨ PERT・クリティカルパスの計算（pert/PertStages）：一本道 → 並行作業 → 全体日数 → 最長経路 → 解き方 → 確認3問
 // ============================================================================
 
 // ① WBS：タップした作業だけが、下の小さな作業に分かれていく ----------------------
@@ -397,11 +399,18 @@ export default function WbsGanttExperience() {
       <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         🗂️ <b>WBS＝作業を分解した一覧（何をやる）</b>、<b>ガントチャート＝横棒のスケジュール（いつやる）</b>。
         セットでプロジェクトの計画と進捗管理に使います。
+        後半（④〜）では、作業の順番から<b>全体で何日かかるか（PERT・クリティカルパス）</b>を計算できるようにします。
       </div>
 
       <Wbs />
       <Gantt />
       <Quiz />
+      <LineStage />
+      <ParallelStage />
+      <TotalStage />
+      <CriticalStage />
+      <PertSolveStage />
+      <PertPractice />
     </div>
   );
 }

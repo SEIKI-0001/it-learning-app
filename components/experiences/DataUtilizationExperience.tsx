@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { DecisionStage, type DataMode } from "./datautil/DecisionStage";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
+import { CenterStage, OutlierStage, ProbabilityStage, SpreadStage, StatsPractice, StatsSummaryStage } from "./stats/StatsStages";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 
@@ -14,6 +15,8 @@ import { Panel, SectionTitle } from "./ui";
 //      行動カードが生まれる／次のテストで棒が伸びる）。比較用に「ためるだけ」も切り替えられる
 //   ② ためるだけ ⇄ 活用する の対比＋よく出る道具
 //   ③ 役割クイズ（BI・データ品質などの考え方）
+//   ④〜⑨ 確率・統計（stats/StatsStages）。①〜③とは別の学習ブロック：
+//        確率 → 平均・中央値・最頻値 → 外れ値 → ばらつき（標準偏差）→ まとめ → 確認4問
 // ============================================================================
 
 // ① 成績アップ大作戦 --------------------------------------------------------
@@ -241,11 +244,18 @@ export default function DataUtilizationExperience() {
       <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         📊 <b>データ活用</b>は、集めて終わりではありません。テストの点数をただ保存するのではなく、
         <b>苦手科目を見つけて勉強計画を変える</b>——判断や改善につなげるまでが活用です。
+        後半（④〜）は別ブロックで、データを読むための<b>確率・統計</b>（平均・中央値・標準偏差など）を扱います。
       </div>
 
       <Flow />
       <Contrast />
       <Quiz />
+      <ProbabilityStage />
+      <CenterStage />
+      <OutlierStage />
+      <SpreadStage />
+      <StatsSummaryStage />
+      <StatsPractice />
     </div>
   );
 }
