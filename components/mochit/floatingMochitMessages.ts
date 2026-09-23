@@ -50,7 +50,7 @@ const FLOATING_MOCHIT_MESSAGE_DEFINITIONS: Partial<
     durationMs: 2_200,
   },
   badgeEarned: {
-    candidates: ["新しいバッジを獲得！"],
+    candidates: ["学習をひとつ達成したね！"],
     durationMs: 2_800,
   },
   checkpointClear: {
@@ -128,16 +128,16 @@ function pickContextualText(context: MochitContext): string | null {
   // 2. 合格への意味: バッジ獲得時は Celebration が演出済みなので触れない。
   if (!context.badgeJustEarned) {
     if (context.finalExamUnlocked) {
-      return "必須バッジがそろったよ。突破試験に挑戦できる！";
+      return "CP達成条件がそろったよ。突破試験に挑戦できる！";
     }
     if (context.remainingRequiredBadges === 1) {
-      return "必須バッジはあと1つ。ゴールが見えてきたね";
+      return "CP達成条件はあと1つ。ゴールが見えてきたね";
     }
     if (
       typeof context.remainingRequiredBadges === "number" &&
       context.remainingRequiredBadges > 1
     ) {
-      return `必須バッジはあと${context.remainingRequiredBadges}つ。一歩ずつ進もう`;
+      return `CP達成条件はあと${context.remainingRequiredBadges}つ。一歩ずつ進もう`;
     }
   }
 

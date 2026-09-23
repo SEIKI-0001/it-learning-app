@@ -51,4 +51,8 @@ describe("Mochit presentations", () => {
   it("emits a badge celebration once per badge id", () => {
     expect(badgeEarnedCelebrations(["b-cp1-touch-tech", "b-cp1-touch-tech"])).toHaveLength(1);
   });
+  it("CP達成条件とモチットの収集バッジを通知でも区別する", () => {
+    expect(badgeEarnedCelebrations(["b-cp1-touch-tech"])[0]).toMatchObject({ requiredForGate: true });
+    expect(badgeEarnedCelebrations(["b-cp1-final"])[0]).toMatchObject({ requiredForGate: false });
+  });
 });

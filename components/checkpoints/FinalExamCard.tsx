@@ -87,7 +87,7 @@ export default function FinalExamCard({
         <div className="col-span-2 rounded-xl bg-gray-50 px-3 py-2">
           <dt className="text-[11px] font-semibold text-gray-600">解放条件</dt>
           <dd className="font-semibold text-gray-700">
-            必須バッジ {gate.requiredBadgeCount} 個
+            CP達成条件 {gate.requiredBadgeCount} 件
             {checkpoint.requiredFieldCoverage.length > 0 && "＋3分野に着手"}
             {checkpoint.recentAccuracyMin !== undefined &&
               `＋直近正答率 ${Math.round(checkpoint.recentAccuracyMin * 100)}%`}

@@ -252,7 +252,7 @@ function progressText(
   const remaining = daysUntilExam(profile);
   lines.push(remaining === null ? "試験日：未設定" : `試験まであと${remaining}日`);
   if (progress) {
-    lines.push(`🔥 連続学習 ${progress.streakCount}日 / Lv.${progress.level}・${progress.exp}XP`);
+    lines.push(`🔥 連続学習 ${progress.streakCount}日 / モチット Lv.${progress.level}・${progress.exp}XP`);
   }
   if (improvement) lines.push(`次の一歩：${improvement}`);
   lines.push("詳しくはWebで👇", withToken(baseUrl, "/progress", token));

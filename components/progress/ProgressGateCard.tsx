@@ -18,9 +18,9 @@ export default function ProgressGateCard({
   className,
 }: {
   gate: CheckpointGate;
-  /** 獲得済みの必須バッジ。 */
+  /** 獲得済みのCP達成条件。 */
   earnedBadges: BadgeDef[];
-  /** まだ付与されていないが、条件はすでに満たしている必須バッジの id。 */
+  /** まだ付与されていないが、条件はすでに満たしているCP達成条件の id。 */
   conditionMetIds: Set<string>;
   nextCheckpointTitle: string | null;
   className?: string;
@@ -52,7 +52,7 @@ export default function ProgressGateCard({
         {gate.finalExamPassed ? (
           <>突破試験に合格しました</>
         ) : gate.finalExamUnlocked ? (
-          <>必須バッジがそろいました。突破試験に挑戦できます</>
+          <>CP達成条件がそろいました。突破試験に挑戦できます</>
         ) : (
           <>
             あと<span className={p.gateNum}>{remainingCount}</span>
@@ -96,7 +96,7 @@ export default function ProgressGateCard({
                   <div className={p.todoBody}>
                     <p className={p.todoTitle}>{badge.label}</p>
                     <p className={p.todoSub}>
-                      {met ? "条件は満たしています。次の学習のあとに獲得します" : badge.conditionLabel}
+                      {met ? "条件は満たしています。次の学習のあとに反映されます" : badge.conditionLabel}
                     </p>
                   </div>
                   <Link href={badgeActionHref(badge)} className={p.todoAction}>
@@ -112,7 +112,7 @@ export default function ProgressGateCard({
 
       {earnedBadges.length > 0 && (
         <div className={p.gateDone}>
-          <span className={p.gateDoneLabel}>獲得済み</span>
+          <span className={p.gateDoneLabel}>達成済み</span>
           {earnedBadges.map((badge) => (
             <span key={badge.id} className={p.gateDoneItem}>
               <svg viewBox="0 0 20 20" aria-hidden>

@@ -19,7 +19,7 @@ import { checkpointIcon } from "@/lib/badgeIcons";
 
 // /plan 用: 現在のチェックポイントのゲート状況を1枚で見せる。
 //   旅の俯瞰（CP0〜6ステッパー）/ 現在CP→次CP / 次に進むための条件チェックリスト /
-//   必要バッジの進捗 / 不足バッジ / 最終問題の解放状態 / おすすめ行動。
+//   達成条件の進捗 / 不足バッジ / 最終問題の解放状態 / おすすめ行動。
 
 export default function CheckpointGateCard({ state }: { state: AppState }) {
   const cpProgress = getCheckpointProgress(state);
@@ -69,15 +69,15 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
 
   // おすすめ行動: 未解放なら残っている解放条件、解放済みなら突破試験へ。
   // 文言は lib/checkpoints.ts のロードマップ hint と同じ場合分けにそろえる
-  // （必須バッジが揃っていても未解放＝残りは分野の広がり側なので「あと0個」と出さない）。
+  // （CP達成条件が揃っていても未解放＝残りは分野の広がり側なので「あと0個」と出さない）。
   const recommend = gate.finalExamUnlocked
     ? gate.finalExamPassed
       ? next
         ? `突破試験は合格済み。次は「${next.title}」へ進みましょう。`
         : "突破試験は合格済み。合格に向けて総仕上げを続けましょう。"
-      : "必要バッジが揃いました。突破試験に挑戦して次のチェックポイントへ！"
+      : "達成条件を満たしました。突破試験に挑戦して次のチェックポイントへ！"
     : remaining > 0
-      ? `あと${remaining}個の必須バッジを集めると突破試験が解放されます。`
+      ? `CP達成条件をあと${remaining}件満たすと突破試験が解放されます。`
       : "3分野に手をつけると突破試験が解放されます。";
 
   return (
@@ -91,7 +91,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-brand-700 transition hover:text-brand-800"
           >
             <Icon name="award" className="h-3.5 w-3.5" />
-            バッジ一覧
+            CP達成条件を見る
           </Link>
         </div>
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -128,10 +128,10 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
           </div>
         </div>
 
-        {/* 必要バッジの進捗 */}
+        {/* 達成条件の進捗 */}
         <div className="mt-3 rounded-lg border border-gray-200 px-3 py-3">
           <div className="flex items-center justify-between text-sm font-semibold text-gray-900">
-            <span>必須バッジ</span>
+            <span>CP達成条件</span>
             <span>
               {gate.earnedRequiredCount} / {gate.requiredBadgeCount}
             </span>
@@ -145,7 +145,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
           <p className="mt-1.5 text-xs text-gray-600">
             {remaining > 0
               ? `残り ${remaining} 個で突破試験が解放`
-              : "必須バッジは全てそろいました"}
+              : "CP達成条件はすべて満たしました"}
           </p>
         </div>
 

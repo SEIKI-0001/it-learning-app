@@ -35,12 +35,12 @@ export type Celebration =
       /** 到達した段階の呼び名。 */
       label: string;
     }
-  | { kind: "badgeEarned"; badgeId: string; label: string; emoji: string };
+  | { kind: "badgeEarned"; badgeId: string; label: string; emoji: string; requiredForGate: boolean };
 
 export function badgeEarnedCelebrations(badgeIds: string[]): Celebration[] {
   return [...new Set(badgeIds)].flatMap((badgeId) => {
     const badge = getBadge(badgeId);
-    return badge ? [{ kind: "badgeEarned" as const, badgeId, label: badge.label, emoji: badge.emoji }] : [];
+    return badge ? [{ kind: "badgeEarned" as const, badgeId, label: badge.label, emoji: badge.emoji, requiredForGate: badge.requiredForGate }] : [];
   });
 }
 

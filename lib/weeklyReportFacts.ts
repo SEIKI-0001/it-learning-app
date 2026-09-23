@@ -429,9 +429,9 @@ function buildSignals(f: FactsBase, weekAnswers: UserAnswer[]): WeeklySignal[] {
       kind: "badges",
       strength: 55 + n,
       tentative: false,
-      fact: `今週バッジを${n}個獲得。${f.checkpoint.label}の必須バッジは${f.checkpoint.earnedRequired}/${f.checkpoint.totalRequired}`,
-      title: `バッジを${n}個獲得しました`,
-      body: `${f.checkpoint.label}の必須バッジは${f.checkpoint.earnedRequired}/${f.checkpoint.totalRequired}です。突破までの道のりが、今週また短くなりました。`,
+      fact: `今週の学習達成を${n}件記録。${f.checkpoint.label}のCP達成条件は${f.checkpoint.earnedRequired}/${f.checkpoint.totalRequired}`,
+      title: `学習の達成を${n}件記録しました`,
+      body: `${f.checkpoint.label}のCP達成条件は${f.checkpoint.earnedRequired}/${f.checkpoint.totalRequired}です。突破までの道のりが、今週また短くなりました。`,
       numbers: [n, f.checkpoint.earnedRequired, f.checkpoint.totalRequired],
     });
   }

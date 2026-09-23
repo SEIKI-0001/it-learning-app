@@ -67,7 +67,7 @@ const EXAM_ACTION: TodayPrimaryAction = {
   title: "CP1「全体像把握」の突破試験",
   estimatedMinutes: null,
   questionCount: 6,
-  reasonLabel: "必須バッジ 3/3 が揃いました",
+  reasonLabel: "CP達成条件 3/3 が揃いました",
   href: "/checkpoint/cp1/final",
   activity: "learn",
 };
@@ -156,7 +156,7 @@ describe("required badge detection", () => {
     const impacts = build(state(), topicAction(TECH_TOPIC));
     const badge = impacts.find((i) => i.kind === "required_badge");
 
-    expect(badge?.label).toBe("必須バッジ「テクノロジ探訪」の条件を満たします");
+    expect(badge?.label).toBe("CP達成条件「テクノロジ探訪」を満たします");
   });
 
   it("agrees with the existing badge evaluation", () => {
@@ -183,7 +183,7 @@ describe("required badge detection", () => {
   });
 
   it("does not report a badge for a field that is not advanced", () => {
-    // 技術トピックを完了してもマネジメントの必須バッジは満たされない。
+    // 技術トピックを完了してもマネジメントのCP達成条件は満たされない。
     const impacts = build(state({ completedTopics: [MGMT_TOPIC] }), topicAction(MGMT_TOPIC));
 
     expect(impacts.map((i) => i.kind)).not.toContain("required_badge");

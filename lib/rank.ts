@@ -1,88 +1,60 @@
 import type { IconName } from "@/components/ui/Icon";
+import { calculateLevel, getLevelRange } from "@/lib/game";
 
-// 本人の「成長段階」を表すランク制度。累計EXPをもとに算出する。
-// 既存の Lv(lib/game.ts)とは別物で、長期的な積み上げの段階を示すモチベーション要素。
-// 他人比較・ランキングではなく、あくまで自分の歩みを段階で見せるためのもの。
-
+// 既存のランク名と到達XPを維持する。境界Lvは lib/game.ts のLv表に対応する。
 export type Rank = {
   id: string;
   name: string;
-  minExp: number; // このランクに到達する下限EXP
-  /** UI表示に使う線画アイコン。emoji はデータ互換のために残す(画面では使わない)。 */
+  minLevel: number;
+  minExp: number;
   icon: IconName;
   emoji: string;
 };
 
-// 最低ランク(0EXP)から最高ランクまで。名前はITパスポート学習コーチの雰囲気に合わせた。
-export const RANKS: Rank[] = [
-  { id: "step", name: "はじめの一歩", minExp: 0, icon: "sprout", emoji: "🌱" },
-  { id: "apprentice", name: "見習い", minExp: 60, icon: "shield", emoji: "🔰" },
-  { id: "novice", name: "初級冒険者", minExp: 180, icon: "compass", emoji: "🧭" },
-  { id: "explorer", name: "中級探索者", minExp: 400, icon: "map", emoji: "🗺️" },
-  {
-    id: "challenger",
-    name: "上級チャレンジャー",
-    minExp: 750,
-    icon: "flame",
-    emoji: "⚔️",
-  },
-  { id: "hunter", name: "合格圏ハンター", minExp: 1300, icon: "target", emoji: "🎯" },
-  {
-    id: "master",
-    name: "ITパスポートマスター",
-    minExp: 2200,
-    icon: "award",
-    emoji: "👑",
-  },
+const RANK_MILESTONES: Omit<Rank, "minExp">[] = [
+  { id: "step", name: "はじめの一歩", minLevel: 1, icon: "sprout", emoji: "🌱" },
+  { id: "apprentice", name: "見習い", minLevel: 3, icon: "shield", emoji: "🔰" },
+  { id: "novice", name: "初級冒険者", minLevel: 5, icon: "compass", emoji: "🧭" },
+  { id: "explorer", name: "中級探索者", minLevel: 8, icon: "map", emoji: "🗺️" },
+  { id: "challenger", name: "上級チャレンジャー", minLevel: 11, icon: "flame", emoji: "⚔️" },
+  { id: "hunter", name: "合格圏ハンター", minLevel: 14, icon: "target", emoji: "🎯" },
+  { id: "master", name: "ITパスポートマスター", minLevel: 17, icon: "award", emoji: "👑" },
 ];
+
+export const RANKS: Rank[] = RANK_MILESTONES.map((rank) => ({
+  ...rank,
+  minExp: getLevelRange(rank.minLevel).min,
+}));
 
 export type RankStatus = {
   current: Rank;
   next: Rank | null;
-  index: number; // 現在ランクの位置(0始まり)
+  level: number;
+  index: number;
   isMax: boolean;
-  expIntoRank: number; // 現在ランク内で稼いだEXP
-  expForNext: number; // 現在→次ランクの必要EXP幅(最高ランクは0)
-  remaining: number; // 次ランクまであと何EXP(最高ランクは0)
-  ratio: number; // 現在ランク内の進捗(0〜1、最高ランクは1)
+  expIntoRank: number;
+  expForNext: number;
+  remaining: number;
+  ratio: number;
 };
 
-/** 累計EXPから現在のランク状況を求める。最高ランク到達後も破綻しない。 */
+/** ランクはXPから求めたLvのみで選ぶ。次の節目の進捗にはXPを使う。 */
 export function getRankStatus(exp: number): RankStatus {
   const e = Math.max(0, Math.floor(Number.isFinite(exp) ? exp : 0));
+  const level = calculateLevel(e);
   let index = 0;
   for (let i = 0; i < RANKS.length; i++) {
-    if (e >= RANKS[i].minExp) index = i;
+    if (level >= RANKS[i].minLevel) index = i;
   }
   const current = RANKS[index];
   const next = RANKS[index + 1] ?? null;
-
   if (!next) {
-    return {
-      current,
-      next: null,
-      index,
-      isMax: true,
-      expIntoRank: e - current.minExp,
-      expForNext: 0,
-      remaining: 0,
-      ratio: 1,
-    };
+    return { current, next: null, level, index, isMax: true,
+      expIntoRank: e - current.minExp, expForNext: 0, remaining: 0, ratio: 1 };
   }
-
   const expForNext = next.minExp - current.minExp;
   const expIntoRank = e - current.minExp;
-  const remaining = Math.max(0, next.minExp - e);
-  const ratio = expForNext > 0 ? Math.min(1, Math.max(0, expIntoRank / expForNext)) : 1;
-
-  return {
-    current,
-    next,
-    index,
-    isMax: false,
-    expIntoRank,
-    expForNext,
-    remaining,
-    ratio,
-  };
+  return { current, next, level, index, isMax: false, expIntoRank, expForNext,
+    remaining: Math.max(0, next.minExp - e),
+    ratio: expForNext > 0 ? Math.min(1, Math.max(0, expIntoRank / expForNext)) : 1 };
 }

@@ -1,206 +1,71 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
-import { buildBadgeStatuses, selectNextBadges } from "@/lib/badges";
-import type { BadgeStatus } from "@/types/checkpoint";
-import {
-  CHECKPOINTS,
-  buildCheckpointGate,
-  getCheckpointProgress,
-} from "@/lib/checkpoints";
-import { badgeIcon, checkpointIcon } from "@/lib/badgeIcons";
-import BadgeList, { badgeActionHref } from "@/components/badges/BadgeList";
+import { buildBadgeStatuses } from "@/lib/badges";
+import { CHECKPOINTS, buildCheckpointGate, getCheckpointProgress } from "@/lib/checkpoints";
+import { badgeActionHref } from "@/components/badges/BadgeList";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
-// /badges = バッジ一覧。チェックポイント別に、獲得済み／未獲得（ロック）を
-// 必須／任意の区別・獲得条件つきで表示する。獲得条件は隠さない。
-
-export default function BadgesPage() {
+// URLは既存の導線との互換で /badges を維持する。画面上はCPの学習条件として扱う。
+export default function CheckpointConditionsPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
   useBadgeSync(state, setState);
+  useEffect(() => { if (state === null) router.replace("/onboarding"); }, [state, router]);
+  if (!state) return <LoadingScreen />;
 
-  useEffect(() => {
-    if (state === null) router.replace("/onboarding");
-  }, [state, router]);
-
-  // 単語帳の進捗は AppState 外（別 localStorage）なので毎レンダー読み直す。
+  const currentId = getCheckpointProgress(state).currentCheckpointId;
   const signals = getClientBadgeSignals();
-  const allStatuses = useMemo(
-    () => (state ? buildBadgeStatuses(state, signals) : []),
-    [state, signals],
+  const checkpoints = CHECKPOINTS.filter((cp) => cp.order > 0).sort((a, b) =>
+    Number(b.id === currentId) - Number(a.id === currentId) || a.order - b.order,
   );
-
-  if (state === undefined || state === null) {
-    return <LoadingScreen />;
-  }
-
-  const earnedCount = allStatuses.filter((s) => s.earned).length;
-  const totalCount = allStatuses.length;
-  const cpProgress = getCheckpointProgress(state);
-  const currentId = cpProgress.currentCheckpointId;
-
-  // cp0 はバッジ無し。バッジを持つ CP のみ表示。
-  const checkpoints = CHECKPOINTS.filter((c) => c.order >= 1);
-
-  // 一覧の並び: 未獲得の必須（条件達成間近を先）→ 未獲得の任意 → 獲得済み。
-  const sortStatuses = (list: BadgeStatus[]): BadgeStatus[] =>
-    [...list].sort((a, b) => {
-      if (a.earned !== b.earned) return a.earned ? 1 : -1;
-      if (a.def.requiredForGate !== b.def.requiredForGate) {
-        return a.def.requiredForGate ? -1 : 1;
-      }
-      return Number(b.conditionMet) - Number(a.conditionMet);
-    });
-
-  // 「次に狙うべきバッジ」= 現在CPの未獲得バッジの最優先（選定は共通ロジックに一本化）。
-  const recommended = selectNextBadges(
-    buildBadgeStatuses(state, signals, currentId),
-    1,
-  )[0];
 
   return (
     <main className="min-h-screen pb-24">
       <PageHeader
-        title="バッジ図鑑"
-        description="バッジを集めると突破試験が解放され、次のチェックポイントへ進めます。"
-        accessory={
-          <Link
-            href="/plan"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 transition hover:text-brand-800"
-          >
-            <Icon name="map" className="h-3.5 w-3.5" />
-            ロードマップ
-          </Link>
-        }
-      >
-        <div className="mt-4 border-y border-gray-200 py-3">
-          <p className="text-xs text-gray-600">獲得したバッジ</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
-            {earnedCount}
-            <span className="ml-0.5 text-sm font-normal text-gray-500">
-              {" "}/ {totalCount}
-            </span>
-          </p>
-        </div>
-      </PageHeader>
-
-      <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-6">
-        {/* 凡例: バッジの状態と種別の見分け方 */}
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 rounded-xl border border-gray-200 bg-white px-4 py-3 text-[11px]">
-          <span className="flex items-center gap-1 text-emerald-700">
-            <Icon name="circle-check" className="h-3.5 w-3.5" />
-            獲得済み
-          </span>
-          <span className="flex items-center gap-1 text-accent-700">
-            <Icon name="circle-dot" className="h-3.5 w-3.5" />
-            あと一歩
-          </span>
-          <span className="flex items-center gap-1 text-gray-500">
-            <Icon name="lock" className="h-3.5 w-3.5" />
-            未獲得
-          </span>
-          <span className="font-semibold text-brand-700">
-            必須＝突破試験の解放に必要
-          </span>
-          <span className="text-gray-500">任意＝追加報酬</span>
-        </div>
-
-        {/* 次に狙うべきバッジ（現在CPの最優先の1件）＝この画面で唯一の強調ブロック */}
-        {recommended && (
-          <Link
-            href={badgeActionHref(recommended.def)}
-            className="group block rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
-          >
-            <p className="text-xs font-semibold text-brand-700">次に狙うバッジ</p>
-            <p className="mt-1 flex items-center gap-2 text-[15px] font-semibold leading-snug text-gray-900">
-              <Icon
-                name={badgeIcon(recommended.def.id)}
-                className="h-5 w-5 shrink-0 text-brand-500"
-              />
-              {recommended.def.label}
-              {recommended.def.requiredForGate && (
-                <span className="rounded-full border border-brand-300 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-brand-700">
-                  必須
-                </span>
-              )}
-            </p>
-            <p className="mt-1 text-xs text-gray-600">
-              {recommended.def.conditionLabel}
-            </p>
-            <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-700">
-              挑戦しにいく
-              <Icon
-                name="arrow-right"
-                className="h-3.5 w-3.5 transition group-hover:translate-x-0.5"
-              />
-            </span>
-          </Link>
-        )}
-
+        back={{ href: "/plan", label: "学習計画" }}
+        title="CP達成条件"
+        description="各チェックポイントの突破試験に向けた学習条件です。"
+      />
+      <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        <p className="rounded-xl border border-gray-200 bg-white p-3 text-sm text-gray-600">
+          ここで示す条件はCP進行に必要な学習内容です。モチットの<Link href="/avatar#collection" className="ml-1 text-brand-700 underline">バッジコレクション</Link>とは別に表示しています。
+        </p>
         {checkpoints.map((cp) => {
-          const statuses = sortStatuses(buildBadgeStatuses(state, signals, cp.id));
-          const earned = statuses.filter((s) => s.earned).length;
-          // 必須バッジの充足はゲート判定と同一ソースにする（GateCard と数値がズレない）。
           const gate = buildCheckpointGate(state, cp.id);
-          const isCleared = cpProgress.clearedCheckpointIds.includes(cp.id);
-          const isCurrent = currentId === cp.id;
-
+          const statuses = buildBadgeStatuses(state, signals, cp.id).filter((status) => status.def.requiredForGate);
           return (
-            <section
-              key={cp.id}
-              className={isCleared ? "opacity-80" : undefined}
-            >
-              <div className="mb-3 flex items-baseline justify-between gap-3">
-                <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-                  <Icon
-                    name={checkpointIcon(cp.id)}
-                    className={`h-4 w-4 shrink-0 ${
-                      isCleared
-                        ? "text-emerald-600"
-                        : isCurrent
-                          ? "text-brand-500"
-                          : "text-gray-500"
-                    }`}
-                  />
-                  CP{cp.order} {cp.title}
-                  {isCleared && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                      <Icon name="check" className="h-3 w-3" />
-                      クリア済み
-                    </span>
-                  )}
-                  {isCurrent && !isCleared && (
-                    <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
-                      いまここ
-                    </span>
-                  )}
-                </h2>
-                <span className="shrink-0 text-xs tabular-nums text-gray-500">
-                  {earned}/{statuses.length}
-                </span>
+            <section key={cp.id} className="rounded-xl border border-gray-200 bg-white p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-base font-semibold text-gray-900">CP{cp.order} {cp.title}{cp.id === currentId && <span className="ml-2 text-xs text-brand-700">いまここ</span>}</h2>
+                <span className="text-sm tabular-nums text-gray-600">{gate.earnedRequiredCount}/{gate.requiredBadgeCount} 達成</span>
               </div>
-              <p className="mb-3 text-xs text-gray-500">
-                必須バッジ {gate.earnedRequiredCount}/{gate.requiredBadgeCount}{" "}
-                獲得（{gate.requiredBadgeCount} 個で突破試験が解放）
-              </p>
-              <BadgeList
-                statuses={statuses}
-                recommendedId={isCurrent ? recommended?.def.id : undefined}
-              />
+              <p className="mt-1 text-xs text-gray-600">すべての条件と分野の広がりなどを満たすと、突破試験が解放されます。</p>
+              <ul className="mt-3 space-y-2">
+                {statuses.map(({ def, earned, conditionMet }) => (
+                  <li key={def.id} className="flex items-start gap-3 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                    <Icon name={earned ? "circle-check" : conditionMet ? "circle-dot" : "lock"} className={`mt-0.5 h-4 w-4 shrink-0 ${earned ? "text-emerald-600" : "text-gray-500"}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-gray-900">{def.label}</p>
+                      <p className="mt-0.5 text-xs text-gray-600">{def.conditionLabel}</p>
+                      <p className="mt-1 text-xs text-gray-500">{earned ? "達成済み" : conditionMet ? "条件達成 · 次の学習後に反映" : "未達成"}</p>
+                    </div>
+                    {!earned && <Link href={badgeActionHref(def)} className="shrink-0 text-xs font-semibold text-brand-700 underline">取り組む</Link>}
+                  </li>
+                ))}
+              </ul>
             </section>
           );
         })}
       </div>
-
       <BottomNav />
     </main>
   );

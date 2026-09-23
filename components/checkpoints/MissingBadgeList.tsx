@@ -5,13 +5,13 @@ import type { BadgeDef } from "@/types/checkpoint";
 import { badgeActionHref } from "@/components/badges/BadgeList";
 import Icon from "@/components/ui/Icon";
 
-// 不足している必須バッジの一覧。ロードマップのゲートカードと最終問題ロック画面の
+// 不足しているCP達成条件の一覧。ロードマップのゲートカードと最終問題ロック画面の
 // 両方で同じ見た目・同じ導線を使うための共通部品（マークアップの二重管理を解消）。
 // 空なら何も描画しない。
 
 export default function MissingBadgeList({
   badges,
-  heading = "あと少しの必須バッジ",
+  heading = "あと少しのCP達成条件",
 }: {
   badges: BadgeDef[];
   heading?: string;

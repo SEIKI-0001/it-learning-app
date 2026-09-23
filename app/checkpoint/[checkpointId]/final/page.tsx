@@ -666,10 +666,10 @@ export default function FinalExamPage() {
                   🗺️ 地図で突破を確認する
                 </Link>
                 <Link
-                  href="/badges"
+                  href="/avatar#collection"
                   className="rounded-xl bg-white px-6 py-3 font-bold text-brand-600 ring-1 ring-brand-200"
                 >
-                  獲得バッジを見る
+                  モチットのコレクションを見る
                 </Link>
               </div>
             </section>
@@ -779,7 +779,7 @@ export default function FinalExamPage() {
               🔒 まだ解放されていません
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              下の条件を満たすと突破試験に挑戦できます。獲得条件は各バッジに表示しています。
+              下の学習条件を満たすと突破試験に挑戦できます。各条件の詳細を確認できます。
             </p>
 
             {/* 解放条件チェックリスト（達成/未達を一目で） */}
@@ -795,7 +795,7 @@ export default function FinalExamPage() {
               href="/badges"
               className="mt-4 inline-block rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-brand-600 ring-1 ring-brand-200"
             >
-              バッジ一覧で条件を見る
+              CP達成条件を見る
             </Link>
           </section>
         )}

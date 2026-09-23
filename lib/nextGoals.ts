@@ -2,7 +2,7 @@
 //
 // ゴールに近いほどモチベーションが上がる（目標勾配効果）ため、進捗率が
 // 0.5〜0.95 の「あと少し」のゴールを優先して見せる。ソースはすべて既存関数:
-//   - 突破試験の解放まで: buildCheckpointGate の必須バッジ充足
+//   - 突破試験の解放まで: buildCheckpointGate のCP達成条件充足
 //   - 次のランクまで: getRankStatus の remaining/ratio
 //   - 次のストリーク節目まで: lib/streak の STREAK_MILESTONES
 // 「次のバッジ」のテキスト提示は /progress の突破条件が担うため、ここでは
@@ -17,7 +17,7 @@ export type NextGoal = {
   kind: "gate" | "rank" | "streak";
   emoji: string;
   label: string;
-  /** 残りの具体量（例: 「必須バッジ あと1個」）。 */
+  /** 残りの具体量（例: 「CP達成条件 あと1件」）。 */
   detail: string;
   ratio: number; // 0〜1
   href: string;
@@ -27,7 +27,7 @@ export type NextGoal = {
 export function buildNextGoals(state: AppState): NextGoal[] {
   const goals: NextGoal[] = [];
 
-  // 突破試験の解放まで（必須バッジの充足度）
+  // 突破試験の解放まで（CP達成条件の充足度）
   const cpProgress = getCheckpointProgress(state);
   const gate = buildCheckpointGate(state, cpProgress.currentCheckpointId);
   if (gate.checkpoint.finalExam && !gate.finalExamUnlocked) {
@@ -37,7 +37,7 @@ export function buildNextGoals(state: AppState): NextGoal[] {
       kind: "gate",
       emoji: "⚔️",
       label: `突破試験（CP${gate.checkpoint.order}）の解放`,
-      detail: `必須バッジ あと${Math.max(0, target - current)}個`,
+      detail: `CP達成条件 あと${Math.max(0, target - current)}件`,
       ratio: target > 0 ? current / target : 0,
       href: "/badges",
     });
@@ -49,10 +49,10 @@ export function buildNextGoals(state: AppState): NextGoal[] {
     goals.push({
       kind: "rank",
       emoji: rank.next.emoji,
-      label: `次のランク「${rank.next.name}」`,
+      label: `モチットの次ランク「${rank.next.name}」`,
       detail: `あと ${rank.remaining} XP`,
       ratio: rank.ratio,
-      href: "/rank",
+      href: "/avatar#growth",
     });
   }
 

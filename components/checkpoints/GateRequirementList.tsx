@@ -21,7 +21,7 @@ export default function GateRequirementList({ gate }: { gate: CheckpointGate }) 
 
   const rows: Row[] = [
     {
-      label: `必須バッジを ${gate.requiredBadgeCount} 個そろえる`,
+      label: `CP達成条件を ${gate.requiredBadgeCount} 件満たす`,
       met: badgeMet,
       detail: `いま ${gate.earnedRequiredCount} / ${gate.requiredBadgeCount} 個`,
     },

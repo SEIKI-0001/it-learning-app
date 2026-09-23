@@ -115,7 +115,7 @@ export default function GlossaryCollectionPage() {
         ))}
 
         <p className="text-center text-xs leading-relaxed text-gray-500">
-          図鑑は覚えた語の記録です。ここでの達成が合格準備度やバッジを直接動かすことはありません。
+          図鑑は覚えた語の記録です。ここでの達成が合格準備度やCP達成条件を直接動かすことはありません。
         </p>
       </div>
 

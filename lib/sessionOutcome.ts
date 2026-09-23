@@ -119,7 +119,7 @@ export function buildSessionOutcome(input: {
     if (gateAfter.earnedRequiredCount > gateBefore.earnedRequiredCount) {
       outcomes.push({
         kind: "checkpoint",
-        label: `CP${gateAfter.checkpoint.order}の必須バッジ`,
+        label: `CP${gateAfter.checkpoint.order}の達成条件`,
         detail: `${gateBefore.earnedRequiredCount}/${gateBefore.totalRequiredCount} → ${gateAfter.earnedRequiredCount}/${gateAfter.totalRequiredCount}`,
       });
     }

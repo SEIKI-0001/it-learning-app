@@ -46,7 +46,7 @@ describe("floating Mochit reaction messages", () => {
   it.each([
     ["allCorrect", "全問正解！完璧！", 2_200],
     ["taskComplete", "学習完了！おつかれさま！", 2_200],
-    ["badgeEarned", "新しいバッジを獲得！", 2_800],
+    ["badgeEarned", "学習をひとつ達成したね！", 2_800],
     ["checkpointClear", "チェックポイント突破！", 2_800],
   ] as const)("%s has its fixed achievement copy and duration", (event, text, durationMs) => {
     expect(getFloatingMochitMessage(event, null, () => 0)).toEqual({

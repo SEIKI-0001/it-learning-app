@@ -17,8 +17,8 @@ import ConfettiBurst from "@/components/celebration/ConfettiBurst";
 // 同時発火時はランクアップを最初に、次に CP突破 → モチットの成長段階、
 // という順で見せる（節目の大きい順）。
 const FULL_PRIORITY: Record<string, number> = {
-  rankUp: 4,
-  cpCleared: 3,
+  cpCleared: 4,
+  rankUp: 3,
   mochitGrowth: 2,
   levelUp: 1,
 };
@@ -35,8 +35,8 @@ function fullContent(
     case "levelUp":
       return {
         emoji: "🎖️",
-        heading: "レベルアップ！",
-        title: `Lv.${c.level} ${c.name}`,
+        heading: "モチットがLvアップ！",
+        title: `${c.name} Lv.${c.level}`,
         sub: "学習の積み重ねが実を結びました",
       };
     case "rankUp": {
@@ -44,9 +44,9 @@ function fullContent(
       if (!rank) return null;
       return {
         emoji: rank.emoji,
-        heading: "ランクアップ！",
+        heading: "モチットがランクアップ！",
         title: rank.name,
-        sub: "称号が新しくなりました",
+        sub: "Lvの節目に到達しました",
       };
     }
     case "cpCleared": {
@@ -83,7 +83,9 @@ function miniText(c: Celebration): string | null {
     case "questClear":
       return `🎁 ${c.label}`;
     case "badgeEarned":
-      return `🏅「${c.label}」バッジ獲得！`;
+      return c.requiredForGate
+        ? `✓ CP達成条件「${c.label}」を達成！`
+        : `🏅 モチットのバッジ「${c.label}」を獲得！`;
     default:
       return null;
   }

@@ -8,6 +8,7 @@ import type {
 } from "@/types";
 import type { TopicField } from "@/types/content";
 import type { CheckpointProgress } from "@/types/checkpoint";
+import { calculateLevel } from "@/lib/game";
 import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
 // 型のみ import（"use client" のランタイムは取り込まれない＝サーバーから安全に参照できる）。
 import type { WordProgress } from "@/lib/wordlistProgress";
@@ -79,7 +80,7 @@ export type ProfileRow = {
 
 export function progressRowToProgress(row: ProgressRow): UserProgress {
   return {
-    level: row.level,
+    level: calculateLevel(row.exp),
     exp: row.exp,
     streakCount: row.streak_count,
     weakTags: row.weak_tags ?? [],
@@ -105,7 +106,7 @@ export function progressToRow(
     user_id: userId,
     current_day: p.currentDay ?? 1,
     exp: p.exp,
-    level: p.level,
+    level: calculateLevel(p.exp),
     completed_days: p.completedDays ?? [],
     streak_count: p.streakCount,
     weak_tags: p.weakTags,

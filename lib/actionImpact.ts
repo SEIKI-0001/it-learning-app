@@ -5,7 +5,7 @@
 //   - 合格準備度の上昇値は事前予測しない（完了後の実測差分だけが具体値を持てる）。
 //   - 出すのは「確定して更新対象になる項目」だけ。
 //
-// 必須バッジ・CP 進行の判定は独自条件を書かず、既存の buildBadgeStatuses に
+// CP達成条件・CP 進行の判定は独自条件を書かず、既存の buildBadgeStatuses に
 // 「そのトピックを完了しただけの仮想 state」を通して再評価する。
 // BADGE_CONDITIONS は BadgeMetrics の純粋な閾値述語なので、これは予測ではなく
 // 確定判定になる。仮想 state はその場で作って捨て、保存も副作用も持たない。
@@ -31,7 +31,7 @@ function withTopicCompleted(state: AppState, topicId: string): AppState {
 }
 
 /**
- * そのトピックを完了したときに新しく条件を満たす「未獲得の必須バッジ」。
+ * そのトピックを完了したときに新しく条件を満たす「未獲得のCP達成条件」。
  * completedTopics だけを動かした保守的な見積りなので、実際より多く出ることはない。
  */
 function badgesUnlockedBy(
@@ -93,18 +93,18 @@ export function buildActionImpact(input: {
     impacts.push({ kind: "weak_remeasure", label: "弱点トピックを再測定します" });
   }
 
-  // 3. 必須バッジの条件充足（既存のバッジ判定をそのまま再評価して確定判定する）。
+  // 3. CP達成条件の条件充足（既存のバッジ判定をそのまま再評価して確定判定する）。
   const unlocked = badgesUnlockedBy(state, topicId, signals);
   if (unlocked.length > 0) {
     impacts.push({
       kind: "required_badge",
       label:
         unlocked.length === 1
-          ? `必須バッジ「${unlocked[0].label}」の条件を満たします`
-          : `必須バッジ ${unlocked.length}件の条件を満たします`,
+          ? `CP達成条件「${unlocked[0].label}」を満たします`
+          : `CP達成条件を${unlocked.length}件満たします`,
     });
 
-    // 4. それが現在の CP に残る最後の必須バッジなら、突破試験が解放される。
+    // 4. それが現在の CP に残る最後のCP達成条件なら、突破試験が解放される。
     const unlockedIds = new Set(unlocked.map((badge) => badge.id));
     const stillMissing = gate.missingBadges.filter((badge) => !unlockedIds.has(badge.id));
     if (gate.checkpoint.finalExam && !gate.finalExamUnlocked && stillMissing.length === 0) {

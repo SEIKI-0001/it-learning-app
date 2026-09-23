@@ -46,20 +46,20 @@ describe("gate goal", () => {
     const goals = buildNextGoals(state(checkpoint({ earnedBadges: earned(2) })));
     const gate = goals.find((g) => g.kind === "gate");
 
-    expect(gate?.detail).toBe(`必須バッジ あと${CP1_REQUIRED.length - 2}個`);
+    expect(gate?.detail).toBe(`CP達成条件 あと${CP1_REQUIRED.length - 2}件`);
     expect(gate?.ratio).toBeCloseTo(2 / CP1_REQUIRED.length);
     expect(gate?.href).toBe("/badges");
   });
 
   it("drops the gate goal once the final exam is unlocked", () => {
-    // 必須バッジを全獲得し、分野カバレッジも満たした状態を作る。
+    // CP達成条件を全獲得し、分野カバレッジも満たした状態を作る。
     const allBadges = state(checkpoint({ earnedBadges: earned(CP1_REQUIRED.length) }), {
       completedTopics: [],
     });
     const gate = buildNextGoals(allBadges).find((g) => g.kind === "gate");
 
     // 分野カバレッジ未達なら解放されないため、まだゴールとして残る。
-    expect(gate?.detail).toBe("必須バッジ あと0個");
+    expect(gate?.detail).toBe("CP達成条件 あと0件");
   });
 
   it("reports a full ratio when every required badge is earned", () => {
@@ -75,7 +75,7 @@ describe("rank goal", () => {
 
     expect(rank?.detail).toBe("あと 30 XP");
     expect(rank?.ratio).toBeCloseTo(0.5);
-    expect(rank?.href).toBe("/rank");
+    expect(rank?.href).toBe("/avatar#growth");
   });
 
   it("omits the rank goal at the maximum rank", () => {

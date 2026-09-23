@@ -1,7 +1,7 @@
 // チェックポイント定義とゲート／進行ロジック（純粋関数）。
 //
 // 方針:
-//   - 既存 Phase 0〜6 を CP0〜CP6 として束ねる。進行は「必要バッジ → 最終問題解放 →
+//   - 既存 Phase 0〜6 を CP0〜CP6 として束ねる。進行は「達成条件 → 最終問題解放 →
 //     突破 → 次のCP」の順のみ。最終問題クリアによってのみ CP を進める。
 //   - 既存ユーザーの移行時だけ、既存データから初期チェックポイントを推定してよい。
 //   - 学習時間は進行の主条件にしない。
@@ -171,7 +171,7 @@ function completedFieldSet(state: AppState): Set<TopicField> {
 
 /**
  * 最終問題が解放されているか。
- * 条件: 必要バッジ数を満たす AND 必須バッジをすべて獲得 AND 分野カバレッジ AND
+ * 条件: 達成条件数を満たす AND CP達成条件をすべて獲得 AND 分野カバレッジ AND
  *       （指定があれば）直近正答率。
  */
 export function isFinalExamUnlocked(
@@ -272,7 +272,7 @@ export function buildCheckpointGate(
 
 /**
  * ロードマップ表示（RoadmapMap）を CP 進行から組み立てる。
- * フェーズ完了率ではなく「クリア済みCP・現在CP・必須バッジ充足」を唯一の真実とし、
+ * フェーズ完了率ではなく「クリア済みCP・現在CP・CP達成条件充足」を唯一の真実とし、
  * CheckpointGateCard と現在地・進捗が一致するようにする（表示の二重管理を解消）。
  * CP↔Phase は 1:1 なので、既存の PhaseProgress[] 形状で返し RoadmapMap を無改造で使う。
  */
@@ -297,7 +297,7 @@ export function buildCheckpointRoadmap(state: AppState): PhaseProgress[] {
       };
     }
 
-    // 現在CP: 必須バッジの充足度を達成度に、次の一手を hint にする。
+    // 現在CP: CP達成条件の充足度を達成度に、次の一手を hint にする。
     const gate = buildCheckpointGate(state, c.id);
     const progress =
       c.requiredBadgeCount > 0
@@ -313,7 +313,7 @@ export function buildCheckpointRoadmap(state: AppState): PhaseProgress[] {
       : gate.finalExamUnlocked
         ? "突破試験に挑戦できます。"
         : remaining > 0
-          ? `必須バッジをあと${remaining}個集めると突破試験が解放されます。`
+          ? `CP達成条件をあと${remaining}件満たすと突破試験が解放されます。`
           : "3分野に手をつけると突破試験が解放されます。";
 
     return { id: c.phaseId, status, progress, hint };
@@ -503,7 +503,7 @@ export function recordFinalExamAttempt(
 // 既存ユーザーの移行推定（初回のみ・normalizeAppState から呼ぶ）
 // ---------------------------------------------------------------------------
 
-/** そのチェックポイントの必須バッジ条件が「いま」すべて満たされているか。 */
+/** そのチェックポイントのCP達成条件条件が「いま」すべて満たされているか。 */
 function requiredConditionsMet(
   state: AppState,
   checkpointId: CheckpointId,
@@ -516,7 +516,7 @@ function requiredConditionsMet(
 /**
  * 既存の学習データから初期チェックポイント進行を推定する。
  * - profile が無ければ cp0 のまま。
- * - cp1 から順に、必須バッジ条件を満たしている CP を「クリア済み」とみなし、
+ * - cp1 から順に、CP達成条件条件を満たしている CP を「クリア済み」とみなし、
  *   最初に満たさない CP を現在地にする（cp6 まで満たすなら現在地は cp6）。
  * - 現時点で条件を満たすバッジは確定付与しておく（最終問題の証だけは付かない）。
  * 進行そのものは最終問題クリアで進める前提を崩さないよう、cp6 はクリア扱いにしない。

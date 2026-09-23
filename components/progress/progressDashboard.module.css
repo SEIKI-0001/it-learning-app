@@ -41,6 +41,25 @@
   margin-top: 14px;
 }
 
+.readinessFocus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--canvas);
+  border: 1px solid var(--wash-line);
+}
+
+.readinessFocusLabel { margin: 0; font-size: 13px; font-weight: 700; color: var(--blue-700); }
+.readinessFocusValue { margin: 6px 0 0; font: 600 clamp(36px, 9vw, 54px)/1 var(--num); color: var(--ink); }
+.readinessFocusValue span { margin-left: 4px; font-size: 16px; font-weight: 400; color: var(--ink-2); }
+.readinessFocusNote { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); }
+.readinessFocusLink { font-size: 13px; font-weight: 700; color: var(--blue-700); text-decoration: underline; text-underline-offset: 3px; }
+
 .overviewTitle {
   margin: 0;
   font-size: clamp(24px, 6vw, 30px);
@@ -1084,7 +1103,7 @@
   }
 
   .kpis {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .card {

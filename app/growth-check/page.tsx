@@ -234,7 +234,7 @@ export default function GrowthCheckPage() {
 
         <p className="text-center text-xs leading-relaxed text-gray-500">
           成長確認は記録をふりかえる機能です。
-          バッジやチェックポイントの条件は、通常の学習と復習で進みます。
+          チェックポイントの達成条件は、通常の学習と復習で進みます。
         </p>
       </div>
       <BottomNav />

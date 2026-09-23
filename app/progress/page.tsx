@@ -24,14 +24,9 @@ import {
   getCheckpoint,
   getCheckpointProgress,
 } from "@/lib/checkpoints";
-import { BADGES, buildBadgeStatuses } from "@/lib/badges";
+import { buildBadgeStatuses } from "@/lib/badges";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { getLessonHref } from "@/lib/learningCatalog";
-import {
-  getMochitGrowthStage,
-  MOCHIT_GROWTH_STAGE_LABELS,
-  nextMochitGrowthStageInfo,
-} from "@/lib/mochit";
 import {
   primaryImprovementLabel,
   readinessBandLabel,
@@ -225,41 +220,22 @@ export default function ProgressPage() {
 
   // ── 次の解放・くわしく見る ──
   const rank = getRankStatus(progress.exp);
-  const growthStage = getMochitGrowthStage(state);
-  const nextGrowth = nextMochitGrowthStageInfo(state);
-  const unlocks: UnlockRow[] = [];
-  if (!rank.isMax && rank.next) {
-    unlocks.push({
-      id: "rank",
-      title: `次のランク「${rank.next.name}」`,
-      detail: `あと ${rank.remaining} XP（いまは「${rank.current.name}」）`,
-      ratio: rank.ratio,
-      href: "/rank",
-    });
-  }
-  unlocks.push(
-    nextGrowth
-      ? {
-          id: "mochit",
-          title: `モチットの成長段階${nextGrowth.stage}「${MOCHIT_GROWTH_STAGE_LABELS[nextGrowth.stage]}」`,
-          detail: nextGrowth.conditionLabel,
-          ratio: cpProgress.clearedCheckpointIds.length / (nextGrowth.stage === 2 ? 2 : 4),
-          href: "/avatar",
-        }
-      : {
-          id: "mochit",
-          title: `モチットは成長段階${growthStage}「${MOCHIT_GROWTH_STAGE_LABELS[growthStage]}」`,
-          detail: "いちばん上の段階まで育ちました",
-          href: "/avatar",
-        },
-  );
+  const unlocks: UnlockRow[] = [{
+    id: "mochit",
+    title: `モチット Lv.${rank.level} · ${rank.current.name}`,
+    detail: rank.next
+      ? `次はLv.${rank.next.minLevel}「${rank.next.name}」 · あと${rank.remaining} XP`
+      : "最高ランクに到達しました。Lvはこれからも上がります",
+    ratio: rank.ratio,
+    href: "/avatar#growth",
+  }];
   const links: UnlockRow[] = [
     { id: "mock", title: "本番形式 100問模試", detail: "3分野の実力をまとめて確かめる", href: "/mock-exam" },
     { id: "report", title: "週間レポート", detail: "直近7日の積み上げを見る", href: "/report" },
     {
-      id: "badges",
-      title: "バッジ図鑑",
-      detail: `${cpProgress.earnedBadges.length}/${BADGES.length} 獲得`,
+      id: "conditions",
+      title: "CP達成条件",
+      detail: "次の突破試験に必要な学習を見る",
       href: "/badges",
     },
     { id: "plan", title: "ロードマップ", detail: "チェックポイントの条件を見る", href: "/plan" },
@@ -323,7 +299,7 @@ export default function ProgressPage() {
           className={p.spanHistory}
         />
 
-        <RowListCard title="次の解放" rows={unlocks} className={p.spanUnlocks} />
+        <RowListCard title="モチットの成長" rows={unlocks} className={p.spanUnlocks} />
         <RowListCard title="くわしく見る" rows={links} grid className={p.spanLinks} />
       </div>
       <BottomNav />

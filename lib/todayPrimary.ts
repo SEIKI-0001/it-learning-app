@@ -23,7 +23,7 @@ import { getLessonHref } from "@/lib/learningCatalog";
  * 同じものを使う。ここで新しい表現を作らない。
  */
 const FALLBACK_REASON: Record<TodayPrimaryKind, string> = {
-  final_exam: "必須バッジが揃いました",
+  final_exam: "CP達成条件が揃いました",
   review: "復習予定日です。",
   weak: "理解度が低い重要Topic",
   new_topic: "次の新規Topic",
@@ -87,7 +87,7 @@ export function buildTodayPrimaryAction(input: {
       questionCount: finalExam.questionCount,
       reasonLabel:
         gate.totalRequiredCount > 0
-          ? `必須バッジ ${gate.earnedRequiredCount}/${gate.totalRequiredCount} が揃いました`
+          ? `CP達成条件 ${gate.earnedRequiredCount}/${gate.totalRequiredCount} が揃いました`
           : FALLBACK_REASON.final_exam,
       href: `/checkpoint/${gate.checkpoint.id}/final`,
       activity: "learn",

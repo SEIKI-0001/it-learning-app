@@ -13,7 +13,7 @@ export default function RankCard({ exp }: { exp: number }) {
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-base font-semibold text-gray-900">ランク</h2>
+        <h2 className="text-base font-semibold text-gray-900">モチットのランク</h2>
         <span className="text-xs tabular-nums text-gray-500">
           累計 {Math.max(0, exp)} XP
         </span>
@@ -29,7 +29,7 @@ export default function RankCard({ exp }: { exp: number }) {
         ) : (
           <>
             <div className="mb-1.5 flex items-baseline justify-between gap-3 text-xs">
-              <span className="text-gray-600">次は {next!.name}</span>
+              <span className="text-gray-600">Lv.{next!.minLevel}で {next!.name}</span>
               <span className="font-semibold tabular-nums text-brand-700">
                 あと {remaining} XP
               </span>
@@ -37,7 +37,7 @@ export default function RankCard({ exp }: { exp: number }) {
             <div
               className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200"
               role="progressbar"
-              aria-label={`${next!.name}までの進捗`}
+                aria-label={`モチットの${next!.name}ランクまでの進捗`}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={pct}
@@ -80,7 +80,7 @@ export default function RankCard({ exp }: { exp: number }) {
                 {isCurrent ? (
                   <>
                     <span className="block text-xs font-semibold text-brand-700">
-                      いまのランク
+                      モチットの現在ランク
                     </span>
                     <span className="block font-semibold text-gray-900">
                       {r.name}
@@ -93,7 +93,7 @@ export default function RankCard({ exp }: { exp: number }) {
                 )}
               </span>
               <span className="shrink-0 text-xs tabular-nums text-gray-500">
-                {r.minExp} XP
+                Lv.{r.minLevel} · {r.minExp} XP
               </span>
               {reached && (
                 <Icon

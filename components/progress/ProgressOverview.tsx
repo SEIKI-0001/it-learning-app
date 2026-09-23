@@ -2,7 +2,7 @@
 
 // /progress の全体像: 合格までの道のり（CP0〜CP6 → 試験日）と主要指標4つ。
 // 道の上の「いまここ」はモチット。位置は「最後に突破した CP から、次の CP までの区間を
-// 必須バッジの集まり具合だけ進んだところ」。予定の位置は buildCheckpointComparison の
+// CP達成条件の集まり具合だけ進んだところ」。予定の位置は buildCheckpointComparison の
 // 期待 CP を、その区間の中央に置く。
 
 import Link from "next/link";
@@ -62,6 +62,17 @@ export default function ProgressOverview({
         <span className={t.eyebrowTitle}>進捗</span>
         <span className={t.eyebrowDate}>{dateLabel} 時点</span>
       </p>
+
+      <div className={p.readinessFocus}>
+        <div>
+          <p className={p.readinessFocusLabel}>いちばん大切な指標 · 合格準備度</p>
+          <p className={p.readinessFocusValue}>
+            {kpis.readiness.score === null ? "測定中" : <>{kpis.readiness.score}<span>/100</span></>}
+          </p>
+          <p className={p.readinessFocusNote}>{kpis.readiness.bandLabel}</p>
+        </div>
+        <Link href="/today" className={p.readinessFocusLink}>今日の学習を進める →</Link>
+      </div>
 
       <div className={p.overviewHead}>
         <h1 id="overview-heading" className={p.overviewTitle}>
@@ -138,18 +149,6 @@ export default function ProgressOverview({
       </div>
 
       <dl className={p.kpis}>
-        <div className={p.kpi}>
-          <dt>合格準備度</dt>
-          {kpis.readiness.score === null ? (
-            <dd className={p.kpiWord}>測定中</dd>
-          ) : (
-            <dd>
-              <span className={p.kpiNum}>{kpis.readiness.score}</span>
-              <span className={p.kpiUnit}>/100</span>
-            </dd>
-          )}
-          <p className={p.kpiNote}>{kpis.readiness.bandLabel}</p>
-        </div>
         {kpis.exam.daysLeft === null ? (
           <Link href="/settings" className={`${p.kpi} ${p.kpiLink}`}>
             <dt>試験まで</dt>
@@ -193,10 +192,10 @@ export default function ProgressOverview({
           <dt>突破試験まで</dt>
           <dd>
             <span className={p.kpiNum}>{kpis.gate.earned}</span>
-            <span className={p.kpiUnit}>/{kpis.gate.required} バッジ</span>
+            <span className={p.kpiUnit}>/{kpis.gate.required} 条件</span>
           </dd>
           <p className={p.kpiNote}>
-            CP{kpis.gate.checkpointOrder}の必須バッジ
+            CP{kpis.gate.checkpointOrder}の達成条件
             <Icon name="chevron-right" className={p.kpiChev} />
           </p>
         </a>

@@ -1,6 +1,7 @@
 import type { AppState, UserProfile } from "@/types";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { migrateCheckpointProgress } from "@/lib/checkpoints";
+import { calculateLevel } from "@/lib/game";
 
 // localStorage 操作をこのファイルに隠蔽する。
 // プロトタイプのため保存先は localStorage のみ（将来はDBへ差し替え予定）。
@@ -38,7 +39,7 @@ export function normalizeAppState(state: AppState): AppState {
   const normalized: AppState = {
     ...state,
     progress: {
-      level: p.level ?? 1,
+      level: calculateLevel(p.exp ?? 0),
       exp: p.exp ?? 0,
       streakCount: p.streakCount ?? 0,
       weakTags: p.weakTags ?? [],

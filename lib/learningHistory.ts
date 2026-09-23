@@ -155,7 +155,9 @@ export function buildJourneyTimeline(state: AppState): JourneyEvent[] {
     events.push({
       kind: "badge",
       at: earned.earnedAt,
-      label: `バッジ「${badge.label}」を獲得`,
+      label: badge.requiredForGate
+        ? `CP達成条件「${badge.label}」を達成`
+        : `モチットのバッジ「${badge.label}」を獲得`,
     });
   }
 

@@ -1,4 +1,5 @@
 import { COSMETIC_TITLES } from "@/lib/rewardInventory";
+import { calculateLevel } from "@/lib/game";
 import type {
   AppState,
   ReviewItem,
@@ -367,7 +368,7 @@ export function mergeProgress(a: UserProgress, b: UserProgress): UserProgress {
   }
 
   return {
-    level: Math.max(a.level, b.level),
+    level: calculateLevel(Math.max(a.exp, b.exp)),
     exp: Math.max(a.exp, b.exp),
     streakCount: latest.streakCount,
     weakTags: [...new Set([...a.weakTags, ...b.weakTags])],

@@ -1,47 +1,43 @@
-// レベル / EXP の計算ヘルパー。
-// ITパスポート学習コーチではトピック単位の学習(lib/study.ts)からこれらを使う。
-// レベル名はモチベーション要素(達成感)として残している。
+// モチットのLvは累計XPから決まる。既存のXP付与経路はこの関数を使い続ける。
+// 既存ランクのXP境界をLvの境界に含め、ランクをLvから一意に決められるようにする。
+const LEVEL_MIN_EXP = [
+  0, 50, 60, 120, 180, 200, 300, 400, 500, 620, 750,
+  900, 1100, 1300, 1600, 1900, 2200,
+] as const;
+const EXP_PER_LEVEL_AFTER_MASTER = 300;
 
-// レベルしきい値（下限EXP）とレベル名
-const LEVELS: { level: number; minExp: number; name: string }[] = [
-  { level: 1, minExp: 0, name: "IT見習い" },
-  { level: 2, minExp: 50, name: "新人エンジニア" },
-  { level: 3, minExp: 120, name: "ネットワーク探索者" },
-  { level: 4, minExp: 200, name: "セキュリティ守護者" },
-  { level: 5, minExp: 300, name: "アルゴリズム冒険者" },
-];
-
-/** 累計EXPから現在のレベル（1〜5）を求める */
+/** 累計XPからモチットのLvを求める。最高ランク後も成長する。 */
 export function calculateLevel(exp: number): number {
-  let level = 1;
-  for (const l of LEVELS) {
-    if (exp >= l.minExp) level = l.level;
+  const safeExp = Math.max(0, Math.floor(Number.isFinite(exp) ? exp : 0));
+  const lastIndex = LEVEL_MIN_EXP.length - 1;
+  if (safeExp >= LEVEL_MIN_EXP[lastIndex]) {
+    return LEVEL_MIN_EXP.length + Math.floor((safeExp - LEVEL_MIN_EXP[lastIndex]) / EXP_PER_LEVEL_AFTER_MASTER);
   }
-  return level;
+  for (let i = lastIndex - 1; i >= 0; i--) {
+    if (safeExp >= LEVEL_MIN_EXP[i]) return i + 1;
+  }
+  return 1;
 }
 
-/** レベル番号からレベル名を返す */
+/** レベルアップ通知用。称号とは別の名前を増やさない。 */
 export function getLevelName(level: number): string {
-  return LEVELS.find((l) => l.level === level)?.name ?? "IT見習い";
+  void level;
+  return "モチット";
 }
 
-/**
- * EXP を加算し、レベルを必ず再計算して返す（XP付与の単一窓口）。
- * トピック学習・バッジ確定付与・追加ドロップなど、EXP を足す処理はすべてこれを通す。
- * これにより exp と level が乖離しない（level 未更新のバグを防ぐ）。
- */
-export function grantExp(
-  exp: number,
-  amount: number,
-): { exp: number; level: number } {
+/** XP付与の単一窓口。保存するlevelをexpと同期する。 */
+export function grantExp(exp: number, amount: number): { exp: number; level: number } {
   const nextExp = exp + amount;
   return { exp: nextExp, level: calculateLevel(nextExp) };
 }
 
-/** EXPバー表示用：現在レベルの下限・次レベルの下限を返す（Lv5は上限=下限+1で満タン表示） */
+/** 現在Lvの下限と次Lvの下限。 */
 export function getLevelRange(level: number): { min: number; next: number } {
-  const idx = LEVELS.findIndex((l) => l.level === level);
-  const current = LEVELS[idx] ?? LEVELS[0];
-  const upper = LEVELS[idx + 1];
-  return { min: current.minExp, next: upper ? upper.minExp : current.minExp + 1 };
+  const safeLevel = Math.max(1, Math.floor(Number.isFinite(level) ? level : 1));
+  if (safeLevel >= LEVEL_MIN_EXP.length) {
+    const min = LEVEL_MIN_EXP[LEVEL_MIN_EXP.length - 1]
+      + (safeLevel - LEVEL_MIN_EXP.length) * EXP_PER_LEVEL_AFTER_MASTER;
+    return { min, next: min + EXP_PER_LEVEL_AFTER_MASTER };
+  }
+  return { min: LEVEL_MIN_EXP[safeLevel - 1], next: LEVEL_MIN_EXP[safeLevel] };
 }

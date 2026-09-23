@@ -14,6 +14,7 @@ const GROUPS: readonly {
     title: "計画・実力確認",
     links: [
       { href: "/plan", icon: "map", title: "学習計画", description: "ロードマップと今週の目標" },
+      { href: "/badges", icon: "circle-check", title: "CP達成条件", description: "突破試験に必要な学習" },
       { href: "/mock-exam", icon: "check", title: "100問模試", description: "本番形式で実力を確認" },
       {
         href: "/past-exams",
@@ -41,10 +42,7 @@ const GROUPS: readonly {
   {
     title: "成長・設定",
     links: [
-      { href: "/badges", icon: "award", title: "バッジ", description: "達成条件と獲得状況" },
-      { href: "/rank", icon: "star", title: "ランク", description: "XPと成長の記録" },
-      { href: "/rewards", icon: "gift", title: "たからもの", description: "かけらと称号を見る" },
-      { href: "/avatar", icon: "sprout", title: "モチット", description: "成長とバッジを見る" },
+      { href: "/avatar", icon: "sprout", title: "モチットのプロフィール", description: "Lv・ランク・称号・バッジコレクション" },
       { href: "/settings", icon: "settings", title: "設定", description: "試験日・学習時間など" },
     ],
   },

@@ -196,7 +196,7 @@ describe("recommendation reason", () => {
   it("states the badge count as the reason for the final exam", () => {
     const primary = build({ nodes: [], gate: unlockedGate() });
 
-    expect(primary?.reasonLabel).toBe("必須バッジ 3/3 が揃いました");
+    expect(primary?.reasonLabel).toBe("CP達成条件 3/3 が揃いました");
   });
 });
 
