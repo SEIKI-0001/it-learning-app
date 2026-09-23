@@ -78,6 +78,8 @@ import ProductionManagementExperience from "./ProductionManagementExperience";
 import EmbeddedControlExperience from "./EmbeddedControlExperience";
 import SystemPlanningRfpExperience from "./SystemPlanningRfpExperience";
 import SystemDesignExperience from "./SystemDesignExperience";
+import PmbokExperience from "./PmbokExperience";
+import RaciExperience from "./RaciExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -168,6 +170,8 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "strat-embedded-systems": EmbeddedControlExperience,
   "strat-system-planning-rfp": SystemPlanningRfpExperience,
   "mgmt-system-design": SystemDesignExperience,
+  "mgmt-pmbok-basics": PmbokExperience,
+  "mgmt-project-resource": RaciExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
