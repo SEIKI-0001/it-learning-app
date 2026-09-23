@@ -8,7 +8,9 @@
 import Link from "next/link";
 import Mochit from "@/components/mochit/Mochit";
 import Icon from "@/components/ui/Icon";
-import type { CheckpointDef } from "@/types/checkpoint";
+import type { CheckpointDef, CheckpointId } from "@/types/checkpoint";
+import type { CheckpointStage } from "@/lib/checkpoints";
+import { STAGE_LABELS } from "@/lib/checkpointDetail";
 import t from "@/components/today/todayView.module.css";
 import p from "./progressDashboard.module.css";
 
@@ -23,8 +25,9 @@ export type OverviewKpis = {
 export default function ProgressOverview({
   dateLabel,
   checkpoints,
-  clearedIds,
+  stages,
   currentId,
+  onSelectCheckpoint,
   gateRatio,
   expectedOrder,
   examDateLabel,
@@ -32,8 +35,11 @@ export default function ProgressOverview({
 }: {
   dateLabel: string;
   checkpoints: CheckpointDef[];
-  clearedIds: string[];
+  /** 各 CP の位置づけ（lib/checkpoints の getCheckpointStage）。 */
+  stages: Record<CheckpointId, CheckpointStage>;
   currentId: string;
+  /** CP を押したとき（詳細シートを開く）。 */
+  onSelectCheckpoint: (id: CheckpointId) => void;
   /** 次の CP へ向かう区間の進み具合（0〜1）。 */
   gateRatio: number;
   /** 予定では向かっているはずの CP の order。分からなければ null。 */
@@ -45,7 +51,7 @@ export default function ProgressOverview({
   const position = (index: number, within = 0) => ((index + 0.5 + within) / columns) * 100;
 
   const current = checkpoints.find((cp) => cp.id === currentId) ?? checkpoints[0];
-  const allCleared = checkpoints.every((cp) => clearedIds.includes(cp.id));
+  const allCleared = checkpoints.every((cp) => stages[cp.id] === "cleared");
   // 現在の CP に向かう区間は「ひとつ前の CP」から始まる。CP0 のときは CP0 の上に立つ。
   const fromIndex = Math.max(0, current.order - 1);
   const segmentRatio = current.order === 0 ? 0 : Math.min(1, Math.max(0, gateRatio));
@@ -54,7 +60,7 @@ export default function ProgressOverview({
     expectedOrder === null || allCleared
       ? null
       : position(Math.max(0, expectedOrder - 1), expectedOrder === 0 ? 0 : 0.5);
-  const remaining = checkpoints.filter((cp) => !clearedIds.includes(cp.id)).length;
+  const remaining = checkpoints.filter((cp) => stages[cp.id] !== "cleared").length;
 
   return (
     <section className={p.overview} aria-labelledby="overview-heading">
@@ -124,22 +130,27 @@ export default function ProgressOverview({
 
         <ol className={p.roadStops}>
           {checkpoints.map((cp) => {
-            const state = clearedIds.includes(cp.id)
-              ? "done"
-              : cp.id === currentId
-                ? "goal"
-                : "next";
+            const stage = stages[cp.id];
+            const state = stage === "cleared" ? "done" : stage === "current" ? "goal" : "next";
             return (
               <li key={cp.id} className={p.stop} data-state={state}>
-                <span className={p.stopDot} aria-hidden>
-                  {state === "done" && (
-                    <svg viewBox="0 0 20 20">
-                      <path d="M5.5 10.5l3 3 6-7" />
-                    </svg>
-                  )}
-                </span>
-                <span className={p.stopCode}>CP{cp.order}</span>
-                <span className={p.stopTitle}>{cp.title}</span>
+                <button
+                  type="button"
+                  className={p.stopButton}
+                  onClick={() => onSelectCheckpoint(cp.id)}
+                  aria-label={`CP${cp.order}「${cp.title}」（${STAGE_LABELS[stage]}）の完了条件を見る`}
+                  aria-haspopup="dialog"
+                >
+                  <span className={p.stopDot} aria-hidden>
+                    {state === "done" && (
+                      <svg viewBox="0 0 20 20">
+                        <path d="M5.5 10.5l3 3 6-7" />
+                      </svg>
+                    )}
+                  </span>
+                  <span className={p.stopCode}>CP{cp.order}</span>
+                  <span className={p.stopTitle}>{cp.title}</span>
+                </button>
               </li>
             );
           })}
@@ -152,6 +163,8 @@ export default function ProgressOverview({
           </li>
         </ol>
       </div>
+
+      <p className={p.roadHint}>チェックポイントを押すと、完了条件と達成状況を確認できます。</p>
 
       <dl className={p.kpis}>
         {kpis.exam.daysLeft === null ? (

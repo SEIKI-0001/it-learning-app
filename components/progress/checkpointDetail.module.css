@@ -1,0 +1,467 @@
+/* /progress の CP 詳細シート。色は親の .view（todayView.module.css）のトークンを使う。
+   スマホ＝下から出るシート、720px 以上＝右から出るパネル（幅 420px まで）。 */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(15 23 42 / 0.45);
+  animation: fade 160ms ease-out both;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 86dvh;
+  border-radius: 18px 18px 0 0;
+  background: var(--canvas);
+  box-shadow: 0 -8px 32px rgb(15 23 42 / 0.18);
+  animation: rise 220ms var(--ease) both;
+}
+
+.grip {
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.headText {
+  min-width: 0;
+  flex: 1;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.code {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--line);
+  color: var(--ink-2);
+}
+
+.pill[data-stage="current"] {
+  background: var(--blue-soft);
+  color: var(--blue-700);
+}
+
+.pill[data-stage="cleared"] {
+  background: color-mix(in srgb, var(--green) 16%, var(--canvas));
+  color: #047857;
+}
+
+.title {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.panel[data-stage="next"] .title,
+.panel[data-stage="locked"] .title {
+  color: var(--ink-2);
+}
+
+.summary {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--line);
+}
+
+.closeIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 18px;
+}
+
+/* ── 位置づけの案内 ── */
+
+.notice {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--wash);
+}
+
+.notice[data-tone="done"] {
+  background: color-mix(in srgb, var(--green) 10%, var(--canvas));
+}
+
+.noticeMain {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.noticeSub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+/* ── 集まり具合 ── */
+
+.meter {
+  padding: 2px 0 4px;
+}
+
+.meterLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.meterNum {
+  font-size: 18px;
+  color: var(--ink);
+}
+
+.meterBar {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.meterBar span {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.meterBar span[data-earned="true"] {
+  background: var(--blue);
+}
+
+/* ── ブロック ── */
+
+.block {
+  margin-top: 18px;
+}
+
+.block:first-child {
+  margin-top: 0;
+}
+
+.notice + .block,
+.meter + .block {
+  margin-top: 16px;
+}
+
+.blockTitle {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.todo {
+  margin: 0;
+  padding: 10px 14px 10px 28px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--blue-soft) 45%, var(--canvas));
+  list-style: disc;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.todo li::marker {
+  color: var(--blue);
+}
+
+.conditions,
+.badges {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.condition {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.condition + .condition {
+  border-top: 1px solid var(--line);
+}
+
+.conditionBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.conditionLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.condition[data-met="true"] > .conditionBody > .conditionLabel {
+  color: var(--ink-2);
+}
+
+.conditionCount {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.conditionDetail {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+.badges {
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: var(--wash);
+}
+
+.badge {
+  display: flex;
+  gap: 8px;
+  padding: 7px 0;
+}
+
+.badge + .badge {
+  border-top: 1px solid var(--wash-line);
+}
+
+.badgeLabel {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.badge[data-met="true"] .badgeLabel {
+  color: var(--ink-2);
+}
+
+.gap {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--blue-700);
+}
+
+.extra {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+/* ── 達成マーク ── */
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border: 2px solid var(--line-strong);
+  border-radius: 999px;
+  color: transparent;
+}
+
+.mark[data-met="true"] {
+  border-color: var(--green);
+  background: var(--green);
+  color: #fff;
+}
+
+.mark[data-locked="true"] {
+  border-color: transparent;
+  color: var(--ink-3);
+}
+
+.markIcon {
+  width: 13px;
+  height: 13px;
+}
+
+.mark[data-locked="true"] .markIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.badge .mark {
+  width: 16px;
+  height: 16px;
+}
+
+.badge .markIcon {
+  width: 11px;
+  height: 11px;
+}
+
+/* 先の CP は条件を「見られる」ことだけ伝え、いまの CP より控えめに見せる */
+.panel[data-stage="next"] .mark:not([data-met="true"]),
+.panel[data-stage="locked"] .mark:not([data-met="true"]) {
+  border-style: dashed;
+}
+
+/* ── 次の一歩・切り替え ── */
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.chev {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+
+.pagerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.pagerBtn:hover:not(:disabled) {
+  background: var(--line);
+}
+
+.pagerBtn:disabled {
+  color: var(--line-strong);
+  cursor: default;
+}
+
+@media (min-width: 720px) {
+  .backdrop {
+    justify-content: flex-end;
+    align-items: stretch;
+  }
+
+  .panel {
+    width: min(420px, 100%);
+    max-height: none;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: -8px 0 32px rgb(15 23 42 / 0.16);
+    animation-name: slide;
+  }
+
+  .grip {
+    display: none;
+  }
+
+  .head {
+    padding: 20px 20px 16px;
+  }
+
+  .body {
+    padding: 16px 20px 20px;
+  }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+}
+
+@keyframes rise {
+  from { transform: translateY(24px); opacity: 0; }
+}
+
+@keyframes slide {
+  from { transform: translateX(24px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel {
+    animation: none;
+  }
+}

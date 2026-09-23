@@ -784,7 +784,7 @@ export default function FinalExamPage() {
 
             {/* 解放条件チェックリスト（達成/未達を一目で） */}
             <div className="mt-3 rounded-xl bg-gray-50 px-3.5 py-3">
-              <GateRequirementList gate={gate} />
+              <GateRequirementList state={state} gate={gate} />
             </div>
 
             <div className="mt-3">
