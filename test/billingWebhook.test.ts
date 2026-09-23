@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const applyOneTimePurchase = vi.hoisted(() => vi.fn());
 const getStoredStripeSubscription = vi.hoisted(() => vi.fn());
+const getStripeCustomerIdsForUser = vi.hoisted(() => vi.fn());
 const recordStripeSubscriptionEvent = vi.hoisted(() => vi.fn());
 const setUserPlan = vi.hoisted(() => vi.fn());
 const setUserPlanByCustomer = vi.hoisted(() => vi.fn());
@@ -10,6 +11,7 @@ const getServiceSupabase = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/billing/plan", () => ({
   applyOneTimePurchase,
   getStoredStripeSubscription,
+  getStripeCustomerIdsForUser,
   recordStripeSubscriptionEvent,
   setUserPlan,
   setUserPlanByCustomer,
@@ -44,6 +46,7 @@ describe("subscription webhook reconciliation", () => {
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test");
     vi.stubEnv("STRIPE_PRICE_ID_PRO_SUB", "price_pro_sub");
     getStoredStripeSubscription.mockResolvedValue(null);
+    getStripeCustomerIdsForUser.mockResolvedValue(["cus_1"]);
     recordStripeSubscriptionEvent.mockResolvedValue(true);
     setUserPlan.mockResolvedValue(undefined);
     setUserPlanByCustomer.mockResolvedValue(undefined);
@@ -123,6 +126,25 @@ describe("subscription webhook reconciliation", () => {
     );
     expect(setUserPlan).toHaveBeenCalledWith("user-1", "free", {
       stripeCustomerId: "cus_1",
+    });
+  });
+
+  it("keeps Pro when a canceled customer and an active customer belong to the same account", async () => {
+    getStripeCustomerIdsForUser.mockResolvedValue(["cus_1", "cus_2"]);
+    vi.stubGlobal("fetch", vi.fn((url: string) =>
+      Promise.resolve(new Response(JSON.stringify({
+        data: url.includes("customer=cus_2")
+          ? [{ status: "active", items: { data: [{ price: { id: "price_pro_sub", object: "price" } }] } }]
+          : [],
+      }))),
+    ));
+
+    await processStripeWebhookEvent(
+      subscriptionEvent("customer.subscription.deleted", 203, "canceled"),
+    );
+
+    expect(setUserPlan).toHaveBeenCalledWith("user-1", "pro", {
+      stripeCustomerId: "cus_2",
     });
   });
 });

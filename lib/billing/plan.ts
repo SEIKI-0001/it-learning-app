@@ -225,6 +225,21 @@ export async function recordStripeSubscriptionEvent(entry: {
   return data !== false;
 }
 
+/** An account can have subscriptions under more than one Stripe customer after a DB migration. */
+export async function getStripeCustomerIdsForUser(userId: string): Promise<string[]> {
+  const supabase = getServiceSupabase();
+  if (!supabase) throw new Error("Supabase is not configured");
+
+  const { data, error } = await supabase
+    .from("billing_subscriptions")
+    .select("stripe_customer_id")
+    .eq("user_id", await canonicalAccountId(userId));
+  if (error) {
+    throw new Error(`Could not read Stripe customers: ${error.message}`);
+  }
+  return [...new Set((data ?? []).map((row) => row.stripe_customer_id).filter(Boolean))];
+}
+
 /**
  * 買い切り購入を反映する（webhook から呼ぶ）。
  * - pro_until を max(now, 現在の pro_until) + months ヶ月へ延長。
