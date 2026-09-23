@@ -8,8 +8,10 @@ import type {
   UserProgress,
   WeakTopic,
   WeakTopicReason,
+  AppState,
 } from "@/types";
 import type { Topic } from "@/types/content";
+import { assessTopicForCheckpoint, buildCheckpointNeeds } from "@/lib/checkpointNeeds";
 
 const DAY_MS = 86_400_000;
 export const LEARNING_LOOP_CONFIG = {
@@ -307,6 +309,7 @@ export function updateLearningLoopProgress(
 export function buildTodaysLearningQueue(input: {
   progress: UserProgress;
   topics: Topic[];
+  state?: AppState;
   now?: Date;
   includeFlashcards?: boolean;
   includeExtraPractice?: boolean;
@@ -315,6 +318,16 @@ export function buildTodaysLearningQueue(input: {
   const topicById = new Map(input.topics.map((topic) => [topic.id, topic]));
   const added = new Set<string>();
   const queue: TodaysLearningQueueItem[] = [];
+  const needs = input.state ? buildCheckpointNeeds(input.state, undefined, now) : null;
+  const impactByTopic = new Map<string, ReturnType<typeof assessTopicForCheckpoint>>();
+  const impactFor = (topic: Topic) => {
+    if (!input.state || !needs) return null;
+    const cached = impactByTopic.get(topic.id);
+    if (cached) return cached;
+    const impact = assessTopicForCheckpoint(input.state, topic, needs, now);
+    impactByTopic.set(topic.id, impact);
+    return impact;
+  };
   const addTopic = (
     topicId: string,
     kind: TodaysLearningQueueItem["kind"],
@@ -323,14 +336,18 @@ export function buildTodaysLearningQueue(input: {
   ) => {
     const topic = topicById.get(topicId);
     if (!topic || added.has(topicId)) return;
+    const impact = impactFor(topic);
+    const overdue = kind === "overdue_review";
     added.add(topicId);
     queue.push({
       id: `${kind}:${topicId}`,
       topicId,
       kind,
-      priority,
+      priority: overdue ? 6000 : Math.max(priority, impact?.priority ?? 0),
       estimatedMinutes: topic.estimatedMinutes,
-      reason,
+      reason: overdue
+        ? "復習期限を過ぎているため、今日は先に復習します"
+        : impact?.reason ?? reason,
     });
   };
 
@@ -362,6 +379,15 @@ export function buildTodaysLearningQueue(input: {
       390 + topic.importance * 10,
       "既存の誤答履歴に関連するTopic",
     );
+  }
+
+  // CP3以降の確認問題・定着条件は、完了済みTopicの再挑戦も候補に必要。
+  if (needs) {
+    for (const topic of input.topics) {
+      if (input.progress.completedTopics.includes(topic.id) && (impactFor(topic)?.steps ?? 0) > 0) {
+        addTopic(topic.id, "checkpoint_practice", 300, "確認問題を進めます");
+      }
+    }
   }
 
   const completed = new Set(input.progress.completedTopics);

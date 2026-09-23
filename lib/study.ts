@@ -97,11 +97,11 @@ function afterDays(now: Date, days: number): string {
   return new Date(now.getTime() + days * DAY_MS).toISOString();
 }
 
-/** weakTags を再計算(不正解だったタグの集合) */
+/** タグごとの直近解答から、まだ解消していない weakTags を再計算する。 */
 function recomputeWeakTags(answers: UserAnswer[]): string[] {
-  return Array.from(
-    new Set(answers.filter((a) => !a.isCorrect).map((a) => a.tag)),
-  );
+  const latestByTag = new Map<string, boolean>();
+  for (const answer of answers) latestByTag.set(answer.tag, answer.isCorrect);
+  return [...latestByTag].filter(([, correct]) => !correct).map(([tag]) => tag);
 }
 
 /**

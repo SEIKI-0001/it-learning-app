@@ -22,7 +22,7 @@ import { masteryForTopic } from "@/lib/mastery";
 import type { ExamReadinessResult } from "@/types/examReadiness";
 
 // 習熟度のしきい値。初回満点は約72、日を空けた再確認で定着度が上がる前提で調整。
-const QUIZ_CLEARED = 60; // 確認問題を「解ける」水準
+export const QUIZ_CLEARED = 60; // 確認問題を「解ける」水準
 export const MASTERED = 75; // 時間を空けて再確認した定着水準
 
 // ---------------------------------------------------------------------------
@@ -250,7 +250,7 @@ export const BADGES: BadgeDef[] = [
     rarity: "common",
     checkpointId: "cp4",
     requiredForGate: true,
-    conditionLabel: "10トピック以上学んだ上で、復習対象を3件以下にする",
+    conditionLabel: "10トピック以上学んだ上で、期限到来の復習対象を3件以下にする",
     xp: 25,
     emoji: "🧹",
   },
@@ -286,7 +286,7 @@ export const BADGES: BadgeDef[] = [
     rarity: "rare",
     checkpointId: "cp4",
     requiredForGate: false,
-    conditionLabel: "10トピック以上学んだ上で、復習対象を0件にする",
+    conditionLabel: "10トピック以上学んだ上で、期限到来の復習対象を0件にする",
     xp: 35,
     emoji: "🌟",
   },
@@ -389,7 +389,7 @@ export const BADGES: BadgeDef[] = [
     rarity: "rare",
     checkpointId: "cp6",
     requiredForGate: true,
-    conditionLabel: "30トピック以上学んだ上で、復習対象を2件以下にする",
+    conditionLabel: "30トピック以上学んだ上で、期限到来の復習対象を2件以下にする",
     xp: 40,
     emoji: "🧽",
   },
@@ -487,7 +487,7 @@ export type BadgeSignals = {
   examReadinessVerified?: boolean;
 };
 
-type BadgeMetrics = {
+export type BadgeMetrics = {
   completedTotal: number;
   completedByField: Record<TopicField, number>;
   quizClearedTotal: number;
@@ -506,6 +506,85 @@ type BadgeMetrics = {
 };
 
 const FIELDS: TopicField[] = ["technology", "management", "strategy"];
+
+export type BadgeMetricKey =
+  | "completedTotal" | "completedByField" | "quizClearedTotal" | "quizClearedByField"
+  | "masteredCount" | "reviewCount" | "weakTagCount" | "fieldMasteryAvg"
+  | "recentAccuracy" | "examLevelClearedTopicCount" | "highReadiness";
+
+export type BadgeGap = {
+  metric: BadgeMetricKey;
+  field?: TopicField;
+  current: number;
+  target: number;
+  direction: "increase" | "decrease";
+};
+
+type Criterion = Omit<BadgeGap, "current">;
+type BadgeRule = Criterion[][]; // outer: alternative paths; inner: all criteria must be met
+const up = (metric: BadgeMetricKey, target: number, field?: TopicField): Criterion =>
+  ({ metric, target, field, direction: "increase" });
+const down = (metric: BadgeMetricKey, target: number): Criterion =>
+  ({ metric, target, direction: "decrease" });
+
+// Required badge thresholds live here; both award checks and Today gaps consume these rules.
+const REQUIRED_BADGE_RULES: Record<string, BadgeRule> = {
+  "b-cp1-touch-tech": [[up("completedByField", 1, "technology")]],
+  "b-cp1-touch-mgmt": [[up("completedByField", 1, "management")]],
+  "b-cp1-touch-strat": [[up("completedByField", 1, "strategy")]],
+  "b-cp2-basics-tech": [[up("completedByField", 6, "technology")]],
+  "b-cp2-basics-mgmt": [[up("completedByField", 3, "management")]],
+  "b-cp2-basics-strat": [[up("completedByField", 4, "strategy")]],
+  "b-cp2-topics-15": [[up("completedTotal", 15)]],
+  "b-cp3-quiz-tech": [[up("quizClearedByField", 8, "technology")]],
+  "b-cp3-quiz-mgmt": [[up("quizClearedByField", 4, "management")]],
+  "b-cp3-quiz-strat": [[up("quizClearedByField", 5, "strategy")]],
+  "b-cp3-quiz-20": [[up("quizClearedTotal", 20)]],
+  "b-cp4-review-light": [[up("completedTotal", 10), down("reviewCount", 3)]],
+  "b-cp4-weak-reduce": [[up("completedTotal", 10), down("weakTagCount", 2)]],
+  "b-cp4-mastered-30": [[up("masteredCount", 30)]],
+  "b-cp5-mastered-45": [[up("masteredCount", 45)]],
+  "b-cp5-fields-solid": [[...FIELDS.map((field) => up("fieldMasteryAvg", 60, field))]],
+  "b-cp5-kakomon-ready": [
+    [up("examLevelClearedTopicCount", 8)],
+    [up("completedTotal", 40), up("recentAccuracy", 0.7)],
+  ],
+  "b-cp6-mastered-60": [[up("masteredCount", 60)]],
+  "b-cp6-review-clean": [[up("completedTotal", 30), down("reviewCount", 2)]],
+  "b-cp6-high-readiness": [[up("highReadiness", 1)]],
+};
+
+function criterionValue(metrics: BadgeMetrics, criterion: Criterion): number {
+  const value = metrics[criterion.metric];
+  if (typeof value === "number") return value;
+  if (typeof value === "boolean") return Number(value);
+  return criterion.field ? value[criterion.field] : 0;
+}
+
+function gapsForRule(metrics: BadgeMetrics, rule: BadgeRule): BadgeGap[][] {
+  return rule.map((path) => path.flatMap((criterion) => {
+    const current = criterionValue(metrics, criterion);
+    const unmet = criterion.direction === "increase"
+      ? current < criterion.target
+      : current > criterion.target;
+    return unmet ? [{ ...criterion, current }] : [];
+  }));
+}
+
+/** Returns each viable path's unmet criteria for a required badge. */
+export function getRequiredBadgeGaps(
+  badgeId: string,
+  state: AppState,
+  signals?: BadgeSignals,
+  now: Date = new Date(),
+): BadgeGap[][] {
+  const rule = REQUIRED_BADGE_RULES[badgeId];
+  return rule ? gapsForRule(computeMetrics(state, signals, now), rule) : [];
+}
+
+function requiredRuleMet(id: string, metrics: BadgeMetrics): boolean {
+  return gapsForRule(metrics, REQUIRED_BADGE_RULES[id]).some((path) => path.length === 0);
+}
 
 function computeMetrics(
   state: AppState,
@@ -565,7 +644,12 @@ function computeMetrics(
     quizClearedByField,
     masteredCount,
     perfectCount,
-    reviewCount: (progress.reviewQueue ?? []).length,
+    // Scheduled future checks stay in reviewQueue for spaced repetition; only due
+    // items are unresolved review work for the CP4/CP6 reduction badges.
+    reviewCount: (progress.reviewQueue ?? []).filter((item) => {
+      const due = Date.parse(item.dueAt);
+      return Number.isFinite(due) && due <= now.getTime();
+    }).length,
     weakTagCount: (progress.weakTags ?? []).length,
     fieldMasteryAvg: fieldMastery(progress, topics, state.answers),
     recentAccuracy: recentAccuracy(state.answers),
@@ -593,42 +677,40 @@ function computeMetrics(
 
 const BADGE_CONDITIONS: Record<string, (m: BadgeMetrics) => boolean> = {
   // CP1
-  "b-cp1-touch-tech": (m) => m.completedByField.technology >= 1,
-  "b-cp1-touch-mgmt": (m) => m.completedByField.management >= 1,
-  "b-cp1-touch-strat": (m) => m.completedByField.strategy >= 1,
+  "b-cp1-touch-tech": (m) => requiredRuleMet("b-cp1-touch-tech", m),
+  "b-cp1-touch-mgmt": (m) => requiredRuleMet("b-cp1-touch-mgmt", m),
+  "b-cp1-touch-strat": (m) => requiredRuleMet("b-cp1-touch-strat", m),
   "b-cp1-final": (m) => m.finalPassedCheckpointIds.has("cp1"),
   // CP2
-  "b-cp2-basics-tech": (m) => m.completedByField.technology >= 6,
-  "b-cp2-basics-mgmt": (m) => m.completedByField.management >= 3,
-  "b-cp2-basics-strat": (m) => m.completedByField.strategy >= 4,
-  "b-cp2-topics-15": (m) => m.completedTotal >= 15,
+  "b-cp2-basics-tech": (m) => requiredRuleMet("b-cp2-basics-tech", m),
+  "b-cp2-basics-mgmt": (m) => requiredRuleMet("b-cp2-basics-mgmt", m),
+  "b-cp2-basics-strat": (m) => requiredRuleMet("b-cp2-basics-strat", m),
+  "b-cp2-topics-15": (m) => requiredRuleMet("b-cp2-topics-15", m),
   "b-cp2-topics-25": (m) => m.completedTotal >= 25,
   "b-cp2-final": (m) => m.finalPassedCheckpointIds.has("cp2"),
   // CP3
-  "b-cp3-quiz-tech": (m) => m.quizClearedByField.technology >= 8,
-  "b-cp3-quiz-mgmt": (m) => m.quizClearedByField.management >= 4,
-  "b-cp3-quiz-strat": (m) => m.quizClearedByField.strategy >= 5,
-  "b-cp3-quiz-20": (m) => m.quizClearedTotal >= 20,
+  "b-cp3-quiz-tech": (m) => requiredRuleMet("b-cp3-quiz-tech", m),
+  "b-cp3-quiz-mgmt": (m) => requiredRuleMet("b-cp3-quiz-mgmt", m),
+  "b-cp3-quiz-strat": (m) => requiredRuleMet("b-cp3-quiz-strat", m),
+  "b-cp3-quiz-20": (m) => requiredRuleMet("b-cp3-quiz-20", m),
   "b-cp3-perfect-5": (m) => m.perfectCount >= 5,
   "b-cp3-final": (m) => m.finalPassedCheckpointIds.has("cp3"),
   // CP4
-  "b-cp4-review-light": (m) => m.completedTotal >= 10 && m.reviewCount <= 3,
-  "b-cp4-weak-reduce": (m) => m.completedTotal >= 10 && m.weakTagCount <= 2,
-  "b-cp4-mastered-30": (m) => m.masteredCount >= 30,
+  "b-cp4-review-light": (m) => requiredRuleMet("b-cp4-review-light", m),
+  "b-cp4-weak-reduce": (m) => requiredRuleMet("b-cp4-weak-reduce", m),
+  "b-cp4-mastered-30": (m) => requiredRuleMet("b-cp4-mastered-30", m),
   "b-cp4-revenge-zero": (m) => m.completedTotal >= 10 && m.reviewCount === 0,
   "b-cp4-final": (m) => m.finalPassedCheckpointIds.has("cp4"),
   // CP5
-  "b-cp5-mastered-45": (m) => m.masteredCount >= 45,
-  "b-cp5-fields-solid": (m) => FIELDS.every((f) => m.fieldMasteryAvg[f] >= 60),
-  "b-cp5-kakomon-ready": (m) =>
-    m.examLevelClearedTopicCount >= 8 ||
-    (m.completedTotal >= 40 && m.recentAccuracy >= 0.7),
+  "b-cp5-mastered-45": (m) => requiredRuleMet("b-cp5-mastered-45", m),
+  "b-cp5-fields-solid": (m) => requiredRuleMet("b-cp5-fields-solid", m),
+  "b-cp5-kakomon-ready": (m) => requiredRuleMet("b-cp5-kakomon-ready", m),
   "b-cp5-word-50": (m) => m.wordMasteredCount >= 50,
   "b-cp5-final": (m) => m.finalPassedCheckpointIds.has("cp5"),
   // CP6
-  "b-cp6-mastered-60": (m) => m.masteredCount >= 60,
-  "b-cp6-review-clean": (m) => m.completedTotal >= 30 && m.reviewCount <= 2,
-  "b-cp6-high-readiness": (m) => m.highReadiness,
+  "b-cp6-mastered-60": (m) => requiredRuleMet("b-cp6-mastered-60", m),
+  "b-cp6-review-clean": (m) => requiredRuleMet("b-cp6-review-clean", m),
+  "b-cp6-high-readiness": (m) => requiredRuleMet("b-cp6-high-readiness", m),
   "b-cp6-word-100": (m) => m.wordMasteredCount >= 100,
   "b-cp6-perfect-20": (m) => m.perfectCount >= 20,
   "b-cp6-final": (m) => m.finalPassedCheckpointIds.has("cp6"),

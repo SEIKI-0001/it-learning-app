@@ -131,6 +131,7 @@ export type TodaysLearningQueueKind =
   | "overdue_review"
   | "summary_weak"
   | "low_mastery"
+  | "checkpoint_practice"
   | "new_topic"
   | "flashcard"
   | "extra_practice";

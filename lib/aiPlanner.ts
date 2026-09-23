@@ -138,13 +138,16 @@ export function generateTodayMenu(
     .slice(-10)
     .filter((a) => !a.isCorrect).length;
 
-  const ranked = buildTodaysLearningQueue({ progress, topics, now });
+  const ranked = buildTodaysLearningQueue({
+    state: { profile, progress, answers }, progress, topics, now,
+  });
   const reviewAll = ranked
     .filter((item) =>
       item.topicId &&
       (item.kind === "overdue_review" ||
         item.kind === "summary_weak" ||
-        item.kind === "low_mastery"),
+        item.kind === "low_mastery" ||
+        item.kind === "checkpoint_practice"),
     )
     .map((item): ReviewItem => {
       const existing = progress.reviewQueue.find((review) => review.topicId === item.topicId);

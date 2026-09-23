@@ -81,6 +81,10 @@ export default function TodayPage() {
     [selectedMinutes, state, topics],
   );
   const menu = plan?.todayMenu;
+  const learningQueue = useMemo(
+    () => (state ? buildTodaysLearningQueue({ state, progress: state.progress, topics }) : []),
+    [state, topics],
+  );
 
   // 既存の daily_study_tasks 保存を維持する。教材は保存せず、topicIdだけを参照する。
   useEffect(() => {
@@ -91,6 +95,8 @@ export default function TodayPage() {
     if (savedTasksDateRef.current === date) return;
 
     const defaultReason = plan?.todayReasons.join(" / ") || undefined;
+    const reasons = new Map(learningQueue.flatMap((item) =>
+      item.topicId ? [[item.topicId, item.reason] as const] : []));
     const inputs: DailyStudyTaskInput[] = [];
     const savedTopicIds = new Set<string>();
     for (const item of menu.items) {
@@ -100,7 +106,7 @@ export default function TodayPage() {
         topicId: item.topicId,
         title: item.title,
         estimatedMinutes: item.estimatedMinutes,
-        reason: defaultReason,
+        reason: reasons.get(item.topicId) ?? defaultReason,
         source: "today_menu",
       });
     }
@@ -120,13 +126,15 @@ export default function TodayPage() {
       savedTasksDateRef.current = date;
       void saveDailyTasksToDb(userId, date, inputs);
     }
-  }, [menu, plan?.todayReasons, state?.profile]);
+  }, [menu, plan?.todayReasons, state?.profile, learningQueue]);
 
   const tasks = useMemo((): TodayTask[] => {
     if (!menu) return [];
     const seen = new Set<string>();
     const result: TodayTask[] = [];
     const defaultReason = plan?.todayReasons[0] ?? "今日の学習を進めましょう。";
+    const reasons = new Map(learningQueue.flatMap((item) =>
+      item.topicId ? [[item.topicId, item.reason] as const] : []));
 
     for (const item of menu.items) {
       if (seen.has(item.topicId) || !getLessonLocation(item.topicId)) continue;
@@ -135,7 +143,7 @@ export default function TodayPage() {
         topicId: item.topicId,
         title: item.title,
         estimatedMinutes: item.estimatedMinutes,
-        reason: defaultReason,
+        reason: reasons.get(item.topicId) ?? defaultReason,
         activity: item.kind === "review" ? "review" : "learn",
       });
     }
@@ -153,7 +161,7 @@ export default function TodayPage() {
       });
     }
     return result;
-  }, [menu, plan?.todayReasons]);
+  }, [menu, plan?.todayReasons, learningQueue]);
 
   // 今日のルート: メニューは進捗で毎回再生成され完了タスクが消えるため、
   // その日のルート順序をlocalStorageに固定し、完了した行を消さずに前進を見せる。
@@ -168,12 +176,6 @@ export default function TodayPage() {
       saveStoredRoute(todayLocalDate(), nodes.map((node) => node.topicId));
     }
   }, [nodes]);
-
-  // Primary の推奨理由は既存キューが持つ reason をそのまま使う（文言を発明しない）。
-  const learningQueue = useMemo(
-    () => (state ? buildTodaysLearningQueue({ progress: state.progress, topics }) : []),
-    [state, topics],
-  );
 
   useEffect(() => {
     if (!state?.profile || !menu || !plan) return;

@@ -32,6 +32,7 @@ const FALLBACK_REASON: Record<TodayPrimaryKind, string> = {
 /** キューの種別を Primary の種別へ寄せる。 */
 function kindFromQueue(kind: TodaysLearningQueueItem["kind"]): TodayPrimaryKind | null {
   if (kind === "overdue_review") return "review";
+  if (kind === "checkpoint_practice") return "review";
   if (kind === "summary_weak" || kind === "low_mastery") return "weak";
   if (kind === "new_topic") return "new_topic";
   return null; // flashcard / extra_practice はトピック学習ではない
@@ -74,7 +75,7 @@ export function buildTodayPrimaryAction(input: {
   const currentAction = current ? toTopicAction(current) : null;
 
   // 1. 期限切れ復習を最優先にする。
-  if (currentAction?.kind === "review") return currentAction;
+  if (current && queueByTopic.get(current.topicId)?.kind === "overdue_review") return currentAction;
 
   // 2. CP 進行条件が揃っている（＝突破試験が解放済みで未突破）なら、それを Primary にする。
   const finalExam = gate.checkpoint.finalExam;
