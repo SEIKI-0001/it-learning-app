@@ -1,5 +1,5 @@
 /* 稼働率：動くのは「スライダーに合わせて稼働／修理の区間の幅が伸び縮みする」「時計の針が時間軸を進む」
-   「直列／並列の図で、リクエストが1回だけ流れて止まる／迂回する」だけ。 */
+   「導出でラベルが MTBF / MTTR に置き換わる」「直列／並列の図で、リクエストが1回だけ流れて止まる／迂回する」だけ。 */
 
 .width {
   transition: width 350ms cubic-bezier(0.45, 0.05, 0.25, 1);
@@ -9,9 +9,74 @@
   transition: left 350ms cubic-bezier(0.45, 0.05, 0.25, 1);
 }
 
+/* 帯の右端「また稼働…」＝これから先の時間 */
+.tail {
+  background: repeating-linear-gradient(135deg, #a7f3d0 0 5px, #d1fae5 5px 10px);
+}
+
+/* 新しい行・答えが出てくる */
+.reveal {
+  animation: rel-reveal 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ラベルの置き換え（動いていた時間 → MTBF） */
+.flip {
+  display: inline-block;
+  animation: rel-flip 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* ⚡故障 の瞬間 */
+.pop {
+  animation: rel-pop 480ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* 稼働率メーターの伸び縮み */
+.meter {
+  transition: width 400ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+@keyframes rel-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rel-flip {
+  from {
+    opacity: 0;
+    transform: rotateX(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rel-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .width,
-  .left {
+  .left,
+  .meter {
     transition: none;
+  }
+  .reveal,
+  .flip,
+  .pop {
+    animation: none;
   }
 }
