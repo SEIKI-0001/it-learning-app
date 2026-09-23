@@ -1,0 +1,25 @@
+/* クラウドの提供範囲：動くのは「事業者が管理する範囲（下から伸びる空色の領域）と、その境界線」と
+   「境界線が通過した層のバッジが、下から（戻るときは上から）順に持ち主を変える」だけ。 */
+
+.region {
+  transition: height 700ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.boundary {
+  transition: bottom 700ms cubic-bezier(0.45, 0.05, 0.25, 1);
+}
+
+.flip {
+  transition:
+    background-color 250ms ease,
+    color 250ms ease,
+    box-shadow 250ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .region,
+  .boundary,
+  .flip {
+    transition: none !important;
+  }
+}

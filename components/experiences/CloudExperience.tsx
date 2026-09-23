@@ -1,32 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import styles from "./cloud/cloud.module.css";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「クラウド・SaaS・PaaS・IaaS」専用の体験。
 //   ① そもそもクラウドとは（自前で全部持つ ⇄ 借りる）
-//   ② 提供範囲スタック：モデルを選ぶと「事業者が用意する層／自分でやる層」が変わる
+//   ② 提供範囲スタック：モデルを選ぶと「自分が管理／事業者が管理」の境界線が上下し、
+//      線が通過した層から順に持ち主が変わる（オンプレ→IaaS→PaaS→SaaS の順送り再生つき）
 //   ③ これはどれ？ 仕分けクイズ（SaaS/PaaS/IaaSを見分ける）
 // ============================================================================
 
 // スタックは上＝完成品に近い、下＝機械に近い。
-// 各モデルは「下から何層を事業者が用意するか」で表す。
+// 各モデルは「下から何層を事業者が管理するか」で表す（＝境界線の高さ）。
 const LAYERS = [
   { name: "アプリ", emoji: "📱", note: "メール・会計ソフトなど完成した機能" },
-  { name: "データ", emoji: "🗂️", note: "自分たちの入力・保存内容" },
-  { name: "開発・実行環境", emoji: "🛠️", note: "OS・プログラムを動かす土台" },
-  { name: "サーバ・設備", emoji: "🖥️", note: "機械・ネットワーク・置き場所" },
+  { name: "データ", emoji: "🗂️", note: "アプリで扱う内容・設定" },
+  { name: "開発・実行環境", emoji: "🛠️", note: "ミドルウェア・プログラムを動かす土台" },
+  { name: "OS", emoji: "🪟", note: "Windows・Linux など" },
+  { name: "サーバ・ネットワーク", emoji: "🖥️", note: "機械・回線・置き場所（設備）" },
 ];
 
 type Model = "オンプレ" | "IaaS" | "PaaS" | "SaaS";
 
-// 下から数えて、事業者が用意する層数
+// 下から数えて、事業者が管理する層数（左の縦帯・境界線の高さ）
 const PROVIDER_COVERS: Record<Model, number> = {
   オンプレ: 0,
-  IaaS: 1, // サーバ・設備
-  PaaS: 2, // ＋開発・実行環境
-  SaaS: 4, // 全部
+  IaaS: 1, // サーバ・ネットワーク（設備）
+  PaaS: 3, // ＋OS・開発実行環境
+  SaaS: 5, // 全部（利用者は使うだけ）
 };
 
 const MODEL_FOOD: Record<Model, string> = {
@@ -57,7 +61,7 @@ function WhatIsCloud() {
           <div className="text-2xl">☁️</div>
           <div className="mt-1 text-sm font-bold text-sky-700">クラウド</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
-            必要な分だけ<b>借りて使う</b>。すぐ始められ、使った分だけ払う。
+            必要な分だけ<b>借りて使う</b>。すぐ始められ、使った分だけ払う（<b>従量課金</b>）。
           </p>
         </div>
       </div>
@@ -68,16 +72,60 @@ function WhatIsCloud() {
   );
 }
 
+const ROW_H = 48;
+const GAP = 6;
+const FLIP_STAGGER = 140;
+
 function Stack() {
-  const [model, setModel] = useState<Model>("SaaS");
+  const reducedMotion = useReducedMotion();
+  const [model, setModel] = useState<Model>("オンプレ");
+  const [prevCovers, setPrevCovers] = useState(0);
+  const [touring, setTouring] = useState(false);
+  const timers = useRef<number[]>([]);
   const covers = PROVIDER_COVERS[model];
+  const n = LAYERS.length;
+
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+
+  function choose(m: Model) {
+    setPrevCovers(covers);
+    setModel(m);
+  }
+
+  function pick(m: Model) {
+    timers.current.forEach((t) => window.clearTimeout(t));
+    setTouring(false);
+    choose(m);
+  }
+
+  // オンプレ → IaaS → PaaS → SaaS と1回だけ順に切り替え、境界線が上っていく様子を見せる
+  function tour() {
+    timers.current.forEach((t) => window.clearTimeout(t));
+    setTouring(true);
+    setPrevCovers(covers);
+    setModel("オンプレ");
+    let before = 0;
+    timers.current = MODELS.slice(1).map((m, i) =>
+      window.setTimeout(() => {
+        setPrevCovers(before);
+        setModel(m);
+        before = PROVIDER_COVERS[m];
+        if (i === MODELS.length - 2) setTouring(false);
+      }, 900 + i * 1700),
+    );
+  }
+
+  const stackH = n * ROW_H + (n - 1) * GAP;
+  const providerH = covers === 0 ? 0 : covers * ROW_H + (covers - 1) * GAP;
+  const regionH = covers === 0 ? 0 : providerH + 12;
+  const rising = covers >= prevCovers;
 
   return (
     <Panel>
       <SectionTitle step={2}>事業者が用意する範囲</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        モデルを選ぶと、<b className="text-sky-700">事業者が用意する層</b>と
-        <b className="text-brand-700">自分でやる層</b>が変わります。
+        モデルを切り替えると、<b className="text-brand-700">自分で管理する範囲</b>と
+        <b className="text-sky-700">事業者に任せる範囲</b>の<b className="text-gray-800">境界線</b>が動きます。
       </p>
 
       {/* モデル選択 */}
@@ -85,55 +133,96 @@ function Stack() {
         {MODELS.map((m) => (
           <button
             key={m}
-            onClick={() => setModel(m)}
+            onClick={() => pick(m)}
+            aria-pressed={model === m}
             className={`rounded-lg px-1 py-2 text-xs font-bold transition active:scale-95 ${
-              model === m
-                ? "bg-brand-600 text-white"
-                : "text-gray-600 ring-1 ring-gray-300"
+              model === m ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
             {m}
           </button>
         ))}
       </div>
+      {!reducedMotion && (
+        <button
+          type="button"
+          onClick={tour}
+          disabled={touring}
+          className="mt-2 w-full rounded-lg py-1.5 text-xs font-bold text-brand-700 ring-1 ring-brand-300 active:scale-95 disabled:opacity-50"
+        >
+          ▶ オンプレ → IaaS → PaaS → SaaS と順に見る
+        </button>
+      )}
 
-      {/* スタック（上から表示。下=機械に近い） */}
-      <div className="mt-4 space-y-1.5">
-        {LAYERS.map((layer, i) => {
-          // i=0 が一番上(アプリ)、i=3 が一番下(サーバ)。下からcovers層が事業者。
-          const fromBottom = LAYERS.length - 1 - i;
-          const byProvider = fromBottom < covers;
-          return (
-            <div
-              key={layer.name}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1 transition ${
-                byProvider
-                  ? "bg-sky-50 ring-sky-300"
-                  : "bg-brand-50 ring-brand-300"
-              }`}
-            >
-              <span className="text-xl">{layer.emoji}</span>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold text-gray-800">{layer.name}</div>
-                <div className="truncate text-[11px] text-gray-500">{layer.note}</div>
-              </div>
-              <span
-                className={`flex-none rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                  byProvider ? "bg-sky-200 text-sky-800" : "bg-brand-200 text-brand-800"
-                }`}
+      {/* スタック（上から表示。下=機械に近い）。事業者の範囲は下から伸びる空色の領域。
+          左の縦帯は「あなた／事業者」の持ち分で、境界線と一緒に伸び縮みする */}
+      <div className="relative mt-4 pl-7" style={{ height: stackH }} data-testid="cloud-stack" data-covers={covers}>
+        <div
+          className={`${styles.region} absolute bottom-[-6px] left-6 right-[-6px] rounded-xl bg-sky-100 ring-1 ring-sky-300`}
+          style={{ height: regionH, opacity: covers ? 1 : 0 }}
+          aria-hidden
+        />
+        <div
+          className={`${styles.region} absolute left-0 top-0 flex w-5 items-center justify-center overflow-hidden rounded-md bg-brand-600 text-[10px] font-bold text-white`}
+          style={{ height: Math.max(0, stackH - providerH - (covers ? 3 : 0)), writingMode: "vertical-rl" }}
+          data-testid="cloud-you-band"
+        >
+          {covers < n && "🙋 あなた"}
+        </div>
+        <div
+          className={`${styles.region} absolute bottom-0 left-0 flex w-5 items-center justify-center overflow-hidden rounded-md bg-sky-600 text-[10px] font-bold text-white`}
+          style={{ height: providerH, writingMode: "vertical-rl" }}
+          data-testid="cloud-provider-band"
+        >
+          {covers > 0 && "☁️ 事業者"}
+        </div>
+        {/* 所有の境界線 */}
+        {covers > 0 && covers < n && (
+          <div className={`${styles.boundary} absolute left-0 right-[-6px] z-20 h-0.5 bg-gray-800`} style={{ bottom: regionH - 6 + GAP / 2 - 4 }} data-testid="cloud-boundary" />
+        )}
+
+        <div className="relative z-10 flex h-full flex-col" style={{ gap: GAP }}>
+          {LAYERS.map((layer, i) => {
+            // i=0 が一番上(アプリ)、i=n-1 が一番下(サーバ)。下からcovers層が事業者。
+            const fromBottom = n - 1 - i;
+            const byProvider = fromBottom < covers;
+            // 境界線が通過した層だけ、通過順に持ち主が変わる
+            const changed = rising ? fromBottom >= prevCovers && fromBottom < covers : fromBottom >= covers && fromBottom < prevCovers;
+            const order = rising ? fromBottom - prevCovers : prevCovers - 1 - fromBottom;
+            const delay = changed && !reducedMotion ? `${120 + order * FLIP_STAGGER}ms` : "0ms";
+            return (
+              <div
+                key={layer.name}
+                className={`${styles.flip} flex flex-none items-center gap-3 rounded-xl px-3 ring-1 ${byProvider ? "bg-white/80 ring-sky-300" : "bg-brand-50 ring-brand-300"}`}
+                style={{ height: ROW_H, transitionDelay: delay }}
+                data-testid={`cloud-layer-${i}`}
+                data-owner={byProvider ? "provider" : "you"}
               >
-                {byProvider ? "☁️ 事業者" : "🙋 あなた"}
-              </span>
-            </div>
-          );
-        })}
+                <span className="text-xl">{layer.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold leading-tight text-gray-800">{layer.name}</div>
+                  <div className="truncate text-[11px] text-gray-500">{layer.note}</div>
+                </div>
+                <span
+                  className={`${styles.flip} flex-none rounded-full px-2 py-0.5 text-[11px] font-bold ${byProvider ? "bg-sky-200 text-sky-800" : "bg-brand-200 text-brand-800"}`}
+                  style={{ transitionDelay: delay }}
+                >
+                  {byProvider ? "☁️ 事業者" : "🙋 あなた"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200">
-        <b className="text-gray-900">{model}</b> は… {MODEL_FOOD[model]}
+      <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200" aria-live="polite">
+        <b className="text-gray-900">{model}</b>：あなたが管理するのは <b className="text-brand-700">{n - covers}層</b>／{n}層
+        {model === "SaaS" && "（あとは使うだけ）"}
+        <br />
+        {MODEL_FOOD[model]}
       </div>
       <p className="mt-2 text-center text-xs text-gray-400">
-        上に行くほど完成品に近く、下に行くほど機械に近い
+        大事なのはサービス名より「どこまで相手に任せるか」。上に行くほど完成品に近い
       </p>
     </Panel>
   );
