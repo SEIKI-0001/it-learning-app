@@ -6,12 +6,14 @@ import {
   getLessonHref,
   getLessonStatus,
   getLessonsForSection,
+  getLessonsForTheme,
   getNextLessonForTheme,
   getThemeBySlug,
   getThemeProgress,
 } from "@/lib/learningCatalog";
 import BottomNav from "@/components/BottomNav";
 import { hasThemeExam } from "@/lib/themeExam";
+import { getThemeExamRecord, getUnderstandingFollowUps } from "@/lib/chapterReview";
 
 const STATUS = {
   not_started: { symbol: "○", label: "未着手", className: "text-gray-400" },
@@ -30,6 +32,12 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
   const openSectionId = nextLesson
     ? theme.sections.find((section) => section.lessonIds.includes(nextLesson.id))?.id
     : theme.sections[0]?.id;
+  const examRecord = getThemeExamRecord(state?.progress, theme.slug);
+  const lessons = getLessonsForTheme(theme);
+  const lessonTitles = new Map(lessons.map((lesson) => [lesson.id, lesson.title]));
+  const followUps = getUnderstandingFollowUps(state?.progress, {
+    topicIds: lessons.map((lesson) => lesson.id),
+  });
 
   return (
     <main className="min-h-screen pb-24">
@@ -116,17 +124,64 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
         {/* 章を通した仕上げ。各レッスンの確認パックとは役割が違うので、セクションの後に置く。 */}
         {hasThemeExam(theme.slug) && (
           <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
-            <h2 className="text-base font-semibold text-gray-900">総まとめ試験</h2>
+            <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+              総まとめ試験
+              {examRecord?.passed && (
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                  ✓ 合格済み
+                </span>
+              )}
+            </h2>
+            {examRecord && (
+              <p className="mt-1 text-sm tabular-nums text-gray-700">
+                最新 {examRecord.latestRate}%（{examRecord.latestCorrect}/{examRecord.latestTotal}問）・最高 {examRecord.bestRate}%
+              </p>
+            )}
             <p className="mt-1 text-sm leading-relaxed text-gray-600">
               この章の内容を横断した、本試験に近い形式の試験です。
               組合せ型・計算・資料の読み取りを含みます。
+              {examRecord && "何度でも再受験できます。"}
             </p>
             <Link
               href={`/theme-exam/${theme.slug}`}
               className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition hover:bg-gray-50"
             >
-              章の総まとめ試験へ
+              {examRecord ? "もう一度受ける" : "章の総まとめ試験へ"}
             </Link>
+
+            {/* AI理解チェックで説明しきれなかったトピック。補助シグナルなので「要確認」にとどめる。 */}
+            {followUps.length > 0 && (
+              <div className="mt-4 border-t border-gray-100 pt-3">
+                <h3 className="text-sm font-semibold text-gray-900">説明を確かめたいところ</h3>
+                <p className="mt-0.5 text-xs text-gray-500">AI理解チェックで抜けが見つかったトピックです。</p>
+                <ul className="mt-2 space-y-2">
+                  {followUps.map((item) => {
+                    const topic = lessonTitles.get(item.topicId);
+                    if (!topic) return null;
+                    return (
+                      <li key={item.topicId}>
+                        <Link
+                          href={getLessonHref(item.topicId, { from: "review", activity: "learn", anchor: "lesson-content" })}
+                          className="block rounded-lg border border-gray-200 px-3 py-2.5 hover:bg-gray-50"
+                        >
+                          <span className="flex items-center justify-between gap-2 text-sm font-medium text-gray-800">
+                            {topic}
+                            <span className="shrink-0 text-xs font-semibold text-accent-700">
+                              {item.corroborated ? "四択でも誤答・要復習" : "要確認"}
+                            </span>
+                          </span>
+                          {item.missingPoints[0] && (
+                            <span className="mt-0.5 block text-xs leading-relaxed text-gray-500">
+                              {item.missingPoints[0]}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </section>
         )}
       </div>

@@ -6,7 +6,7 @@
 // - pro ユーザー : Claude Sonnet（Pro採点）
 // - Claude が失敗 / キー未設定なら Gemini へ自動フォールバックし fallback=true を返す。
 
-import type { GradeResult, WrittenQuestion } from "@/types/aiGrading";
+import type { AiGradingMode, GradeResult, WrittenQuestion } from "@/types/aiGrading";
 import {
   GradingError,
   getClaudeModel,
@@ -49,19 +49,20 @@ function geminiOutcome(result: GradeResult, fallback: boolean): GradeOutcome {
 export async function gradeWrittenAnswer(
   question: WrittenQuestion,
   userAnswer: string,
-  options?: { provider?: GradeProviderId }
+  options?: { provider?: GradeProviderId; mode?: AiGradingMode }
 ): Promise<GradeOutcome> {
   const maskedAnswer = maskPersonalInfo(userAnswer);
   const provider = options?.provider ?? "gemini";
+  const mode = options?.mode ?? "standard";
 
   if (provider !== "claude") {
-    const result = await gradeWithGemini(question, maskedAnswer);
+    const result = await gradeWithGemini(question, maskedAnswer, mode);
     return geminiOutcome(result, false);
   }
 
   // Pro 採点（Claude）。失敗時は Gemini にフォールバックして体験を止めない。
   try {
-    const result = await gradeWithClaude(question, maskedAnswer);
+    const result = await gradeWithClaude(question, maskedAnswer, mode);
     return { result, provider: "claude", model: getClaudeModel(), fallback: false };
   } catch (e) {
     if (e instanceof GradingError) {
@@ -69,7 +70,7 @@ export async function gradeWrittenAnswer(
     } else {
       console.error("[ai-grading] claude unexpected error, falling back to gemini:", e);
     }
-    const result = await gradeWithGemini(question, maskedAnswer);
+    const result = await gradeWithGemini(question, maskedAnswer, mode);
     return geminiOutcome(result, true);
   }
 }

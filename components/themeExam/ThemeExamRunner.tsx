@@ -4,17 +4,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { AppState, ChoiceKey } from "@/types";
 import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
-import { gradeThemeExam, recordThemeExamLearningResult } from "@/lib/themeExam";
+import { gradeThemeExam, percentage, recordThemeExamLearningResult } from "@/lib/themeExam";
 import { getLessonHref } from "@/lib/learningCatalog";
+import { recordUnderstandingSignal, understandingLevelFor } from "@/lib/chapterReview";
 import {
   assessmentAnswerIdempotencyKey,
   completeAssessmentSessionForCurrentSession,
   createAssessmentSessionId,
   saveProgressToDb,
   saveAssessmentQuestionAttemptsForCurrentSession,
+  getUserId,
 } from "@/lib/userSession";
 import { useAppState } from "@/lib/useAppState";
-import { saveAppStateVerified } from "@/lib/storage";
+import { saveAppState, saveAppStateVerified } from "@/lib/storage";
 import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 import {
   beginAssessmentSession,
@@ -31,6 +33,10 @@ import {
 } from "@/lib/examReadiness/pendingFinalization";
 import { buttonClass } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Icon from "@/components/ui/Icon";
+import UnderstandingCheck from "@/components/themeExam/UnderstandingCheck";
+import type { UnderstandingCheckPick } from "@/lib/chapterReview";
+import type { GradeResult } from "@/types/aiGrading";
 
 // テーマ別 高難易度試験の実施フロー（クライアント）。
 //
@@ -41,6 +47,9 @@ import Card from "@/components/ui/Card";
 //
 // 採点はクライアントで完結する（lib/themeExam.ts の純関数を使う）。
 // 共通評価セッションの保存が確定してから結果と復習導線へ進む。
+//
+// 結果画面では、合否のあとに「AI理解チェック」を1問出す（UnderstandingCheck）。
+// これは総まとめ試験とは別の補助評価で、合否・章クリアには使わない。
 
 type Props = {
   examId: string;
@@ -157,6 +166,14 @@ function isChoiceOrNull(value: unknown): value is ChoiceKey | null {
 
 function isSameJson(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+/** 合格に必要な最少正答数。採点と同じ丸め（percentage）で判定する。 */
+function correctNeededToPass(total: number, passRate: number): number {
+  for (let correct = 0; correct <= total; correct += 1) {
+    if (percentage(correct, total) >= passRate) return correct;
+  }
+  return total;
 }
 
 /** 選択肢の並びを問題ごとに1度だけ決める（表示のたびに変わらないようにする）。 */
@@ -459,6 +476,26 @@ export default function ThemeExamRunner({
     if (pending !== null) void resumeFinalization(pending);
   };
 
+  // AI理解チェックの結果は補助シグナルとしてだけ残す（合否・Mastery・復習キューは触らない）。
+  const recordUnderstanding = (pick: UnderstandingCheckPick, graded: GradeResult, checkedAt: string) => {
+    if (!appState) return;
+    const next: AppState = {
+      ...appState,
+      progress: recordUnderstandingSignal(appState.progress, {
+        topicId: pick.topicId,
+        questionId: pick.question.id,
+        themeSlug,
+        level: understandingLevelFor(graded),
+        missingPoints: graded.missingPoints,
+        checkedAt,
+      }),
+    };
+    saveAppState(next);
+    setAppState(next);
+    const userId = getUserId();
+    if (userId) void saveProgressToDb(userId, next.progress);
+  };
+
   // --- 開始前 ---------------------------------------------------------------
   if (phase === "intro") {
     return (
@@ -621,27 +658,44 @@ export default function ThemeExamRunner({
 
   // --- 結果 -----------------------------------------------------------------
   if (phase === "result" && result) {
+    const needed = correctNeededToPass(result.total, passRate);
     return (
       <div className="space-y-4">
-        <Card as="section" className="p-5">
-          <span
+        <Card as="section" className="p-5" aria-labelledby="theme-exam-result-title">
+          <p className="text-xs font-semibold text-gray-500">{themeTitle}の総まとめ試験</p>
+          <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">
+            {result.correct} / {result.total}
+            <span className="ml-1 text-base font-semibold text-gray-600">問正解</span>
+          </p>
+          <p className="mt-0.5 text-sm tabular-nums text-gray-600">正答率 {result.rate}%</p>
+          <div
             className={[
-              "inline-flex rounded-full px-2.5 py-1 text-xs font-bold ring-1",
-              result.passed
-                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                : "bg-accent-50 text-accent-700 ring-accent-200",
+              "mt-4 flex items-center gap-2 rounded-xl px-4 py-3",
+              result.passed ? "bg-emerald-50 text-emerald-800" : "bg-accent-50 text-accent-800",
             ].join(" ")}
           >
-            {result.passed ? "合格ライン到達" : "もう一歩"}
-          </span>
-          <p className="mt-3 text-2xl font-bold text-gray-900">
-            {result.correct} / {result.total}
-            <span className="ml-2 text-base font-semibold text-gray-600">（{result.rate}%）</span>
-          </p>
+            <Icon name={result.passed ? "circle-check" : "target"} className="h-6 w-6 shrink-0" />
+            <div>
+              <p id="theme-exam-result-title" className="text-xl font-bold">
+                {result.passed ? "合格！" : "もう一歩"}
+              </p>
+              <p className="text-sm tabular-nums">
+                合格ライン {passRate}%
+                {!result.passed && `（${needed}問正解で合格・あと${needed - result.correct}問）`}
+              </p>
+            </div>
+          </div>
           {result.unanswered > 0 && (
-            <p className="mt-1 text-xs text-gray-500">未回答 {result.unanswered}問</p>
+            <p className="mt-2 text-xs text-gray-500">未回答 {result.unanswered}問</p>
           )}
         </Card>
+
+        <UnderstandingCheck
+          themeSlug={themeSlug}
+          examQuestions={result.questions}
+          progress={appState?.progress}
+          onGraded={recordUnderstanding}
+        />
 
         {result.reviewTopics.length > 0 && (
           <Card as="section" className="p-5">
@@ -699,18 +753,28 @@ export default function ThemeExamRunner({
           </ol>
         </Card>
 
-        <div className="flex gap-2">
-          <button type="button" onClick={retry} className={buttonClass("secondary", "md", "flex-1")}>
-            もう一度解く
-          </button>
-          <Link
-            href={`/learn/${themeSlug}`}
-            className={buttonClass("primary", "md", "flex-1")}
-            data-exam-id={examId}
-          >
-            この章へ戻る
-          </Link>
-        </div>
+        <Card as="section" className="p-5">
+          <h3 className="text-base font-bold text-gray-900">
+            {result.passed ? "章の学習完了" : "章の学習、おつかれさまでした"}
+          </h3>
+          <p className="mt-1 text-sm leading-relaxed text-gray-600">
+            {result.passed
+              ? "総まとめ試験に合格しました。合格の記録は章の一覧に残ります。"
+              : "結果は章の一覧に残ります。復習してから、何度でも挑戦できます。"}
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button type="button" onClick={retry} className={buttonClass("secondary", "md", "flex-1")}>
+              もう一度解く
+            </button>
+            <Link
+              href={`/learn/${themeSlug}`}
+              className={buttonClass("primary", "md", "flex-1")}
+              data-exam-id={examId}
+            >
+              この章へ戻る
+            </Link>
+          </div>
+        </Card>
       </div>
     );
   }

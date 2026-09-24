@@ -20,6 +20,8 @@ import {
   saveCachedAiGradingBootstrap,
   setUserId,
 } from "@/lib/userSession";
+import { requestAiGrading, type AiGradingMeta } from "@/lib/ai/gradingClient";
+import { AI_GRADING_MIN_ANSWER_LENGTH } from "@/types/aiGrading";
 import type {
   AiGradingBillingStatus,
   GradeResult,
@@ -49,13 +51,7 @@ const GRADE_META: Record<WrittenGrade, { ring: string; text: string }> = {
   D: { ring: "ring-rose-200 bg-rose-50", text: "text-rose-700" },
 };
 
-type GradeMeta = {
-  plan: "free" | "pro";
-  provider: "gemini" | "claude";
-  model: string;
-  fallback: boolean;
-  usage: { used: number; limit: number; remaining: number };
-};
+type GradeMeta = AiGradingMeta;
 
 // ResultView が実際に使うメタ情報だけの軽量型（履歴の表示にも使う）。
 type ResultMeta = {
@@ -165,7 +161,10 @@ export default function AiGradingPage() {
 
   const question = QUESTIONS[index];
   const diff = DIFFICULTY_META[question.difficulty] ?? DIFFICULTY_META.normal;
-  const canGrade = useMemo(() => answer.trim().length >= 20, [answer]);
+  const canGrade = useMemo(
+    () => answer.trim().length >= AI_GRADING_MIN_ANSWER_LENGTH,
+    [answer],
+  );
 
   // 回答済みの問題ID集合。
   const answeredIds = useMemo(
@@ -281,25 +280,14 @@ export default function AiGradingPage() {
     setResult(null);
     setMeta(null);
     try {
-      const res = await fetch("/api/ai-grading", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionId: question.id,
-          userAnswer: answer.trim(),
-          userId,
-        }),
+      const data = await requestAiGrading({
+        questionId: question.id,
+        userAnswer: answer,
+        userId,
       });
-      const data = (await res.json().catch(() => null)) as
-        | { ok: true; result: GradeResult; meta: GradeMeta }
-        | { ok: false; error: string }
-        | null;
 
-      if (!res.ok || !data || data.ok === false) {
-        setError(
-          (data && "error" in data && data.error) ||
-            "採点に失敗しました。時間をおいてもう一度試してください。"
-        );
+      if (!data.ok) {
+        setError(data.error);
         // 回数表示を最新化（429 のときなど）。
         void loadStatus(userId);
         return;
@@ -425,7 +413,7 @@ export default function AiGradingPage() {
                     className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-sm leading-relaxed text-gray-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
                   />
                   <p className="text-right text-[11px] font-semibold text-gray-500">
-                    {answer.trim().length} 文字（20文字以上で採点できます）
+                    {answer.trim().length} 文字（{AI_GRADING_MIN_ANSWER_LENGTH}文字以上で採点できます）
                   </p>
                 </section>
 

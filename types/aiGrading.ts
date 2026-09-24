@@ -2,6 +2,17 @@
 // 問題データは data/writtenQuestions.ts、採点処理は lib/ai/gradeWrittenAnswer.ts。
 // クライアント(app/ai-grading/page.tsx)・API Route・採点ロジックで共通利用する。
 
+/**
+ * 採点の目的。
+ *   standard            … /ai-grading の通常の記述採点
+ *   understanding_check … 章末のAI理解チェック。合否ではなく理解の抜けを具体的に指摘させる
+ */
+export type AiGradingMode = "standard" | "understanding_check";
+
+/** 回答の文字数の下限・上限。API と各画面で同じ値を使う。 */
+export const AI_GRADING_MIN_ANSWER_LENGTH = 20;
+export const AI_GRADING_MAX_ANSWER_LENGTH = 2000;
+
 /** 記述問題の難易度。 */
 export type WrittenDifficulty = "normal" | "hard";
 

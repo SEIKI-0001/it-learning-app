@@ -10,11 +10,13 @@ import { getRequestUserId } from "@/lib/apiUser";
 import { isAuthEnabled } from "@/lib/auth/lineSession";
 import { DAILY_LIMITS, PLAN_PROVIDER } from "@/lib/billing/constants";
 import { countTodayUsage, getUserPlan, logUsage } from "@/lib/billing/plan";
+import {
+  AI_GRADING_MAX_ANSWER_LENGTH as MAX_ANSWER_LENGTH,
+  AI_GRADING_MIN_ANSWER_LENGTH as MIN_ANSWER_LENGTH,
+  type AiGradingMode,
+} from "@/types/aiGrading";
 
 export const runtime = "nodejs";
-
-const MIN_ANSWER_LENGTH = 20;
-const MAX_ANSWER_LENGTH = 2000;
 
 function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
@@ -23,7 +25,10 @@ function isProduction(): boolean {
 /**
  * POST /api/ai-grading
  * 記述問題の回答を AI で採点する。
- * body: { questionId: string, userAnswer: string, userId?: string }
+ * body: { questionId: string, userAnswer: string, userId?: string, mode?: AiGradingMode }
+ *
+ * - mode="understanding_check": 章末のAI理解チェック。不足点を具体的に指摘させる指示を足す。
+ *   回数制限・ログイン要否・履歴保存は通常採点と同じ（同じ1回として数える）。
  *
  * - free ユーザー: Gemini（通常採点） / pro ユーザー: Claude Sonnet（Pro採点）
  * - userAnswer が空 / 20文字未満: 400（AI は呼ばない）
@@ -35,12 +40,13 @@ function isProduction(): boolean {
  * APIキーはサーバー側（lib/ai/*）でのみ使用し、クライアントへ露出しない。
  */
 export async function POST(request: Request) {
-  let body: { questionId?: string; userAnswer?: string; userId?: string } = {};
+  let body: { questionId?: string; userAnswer?: string; userId?: string; mode?: string } = {};
   try {
     body = (await request.json()) as {
       questionId?: string;
       userAnswer?: string;
       userId?: string;
+      mode?: string;
     };
   } catch {
     return NextResponse.json(
@@ -51,6 +57,8 @@ export async function POST(request: Request) {
 
   const questionId = (body.questionId ?? "").trim();
   const userAnswer = (body.userAnswer ?? "").trim();
+  // 未知の値は通常採点として扱う（古いクライアントや改ざんで採点を止めない）。
+  const mode: AiGradingMode = body.mode === "understanding_check" ? "understanding_check" : "standard";
   const userId = await getRequestUserId(body);
 
   // production では匿名AI採点を禁止。非productionでは既存の auth-enabled ゲートを維持する。
@@ -116,7 +124,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const outcome = await gradeWrittenAnswer(question, userAnswer, { provider });
+    const outcome = await gradeWrittenAnswer(question, userAnswer, { provider, mode });
 
     await logUsage({
       userId,

@@ -332,6 +332,51 @@ describe("ThemeExamRunner exposure integration", () => {
     );
   });
 
+  it("shows an explicit pass with the pass line, then offers the AI understanding check", async () => {
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-network"
+        themeSlug="network"
+        themeTitle="ネットワーク"
+        passRate={60}
+        questions={[{ ...question, topicId: "tech-http-https", topicTitle: "HTTPとHTTPS" }]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /正しい選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByText("合格！")).toBeInTheDocument();
+    expect(screen.getByText("合格ライン 60%")).toBeInTheDocument();
+    expect(screen.getByText("正答率 100%")).toBeInTheDocument();
+    expect(screen.getByText("AI理解チェック")).toBeInTheDocument();
+    expect(screen.getByText(/四択で正解できた「HTTPとHTTPS」/)).toBeInTheDocument();
+    expect(screen.getByText("章の学習完了")).toBeInTheDocument();
+  });
+
+  it("states the pass line and the remaining questions when the exam is not passed", async () => {
+    render(
+      <ThemeExamRunner
+        examId="theme-exam-network"
+        themeSlug="network"
+        themeTitle="ネットワーク"
+        passRate={60}
+        questions={[{ ...question, topicId: "tech-http-https", topicTitle: "HTTPとHTTPS" }]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    fireEvent.click(await screen.findByRole("button", { name: /誤った選択肢/ }));
+    fireEvent.click(screen.getByRole("button", { name: "採点する" }));
+
+    expect(await screen.findByText("もう一歩")).toBeInTheDocument();
+    expect(screen.getByText("合格ライン 60%（1問正解で合格・あと1問）")).toBeInTheDocument();
+    expect(screen.queryByText("合格！")).not.toBeInTheDocument();
+    // AI理解チェックは不合格でも出す（合否とは別の補助評価）。
+    expect(screen.getByText(/総まとめ試験で間違えた「HTTPとHTTPS」/)).toBeInTheDocument();
+  });
+
   it("awaits one classification batch before updating summary-exam Mastery", async () => {
     render(
       <ThemeExamRunner
@@ -562,7 +607,7 @@ describe("ThemeExamRunner exposure integration", () => {
     await waitFor(() => expect(saveAssessmentQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(2));
     expect(JSON.stringify(saveAssessmentQuestionAttemptsForCurrentSession.mock.calls[1][0]))
       .toBe(frozenAttempts);
-    expect(await screen.findByText("合格ライン到達")).toBeInTheDocument();
+    expect(await screen.findByText("合格！")).toBeInTheDocument();
   });
 
   it("keeps the summary result and pending record hidden until frozen P0 acknowledgement", async () => {
@@ -580,7 +625,7 @@ describe("ThemeExamRunner exposure integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("保存");
-    expect(screen.queryByText("合格ライン到達")).not.toBeInTheDocument();
+    expect(screen.queryByText("合格！")).not.toBeInTheDocument();
     expect(flow.setAppState).not.toHaveBeenCalled();
     const firstP0 = JSON.stringify(saveProgressToDb.mock.calls[0]);
     expect([...storageValues.keys()].some((key) =>
@@ -592,7 +637,7 @@ describe("ThemeExamRunner exposure integration", () => {
 
     await waitFor(() => expect(saveProgressToDb).toHaveBeenCalledTimes(2));
     expect(JSON.stringify(saveProgressToDb.mock.calls[1])).toBe(firstP0);
-    expect(await screen.findByText("合格ライン到達")).toBeInTheDocument();
+    expect(await screen.findByText("合格！")).toBeInTheDocument();
     expect(flow.setAppState).toHaveBeenCalledOnce();
     expect([...storageValues.keys()].some((key) =>
       key.startsWith("fequest:assessmentFinalization:"),
@@ -617,7 +662,7 @@ describe("ThemeExamRunner exposure integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("保存");
-    expect(screen.queryByText("合格ライン到達")).not.toBeInTheDocument();
+    expect(screen.queryByText("合格！")).not.toBeInTheDocument();
     expect(flow.setAppState).not.toHaveBeenCalled();
     expect([...storageValues.keys()].some((key) =>
       key.startsWith("fequest:assessmentFinalization:"),
@@ -625,7 +670,7 @@ describe("ThemeExamRunner exposure integration", () => {
 
     removeItem.mockRestore();
     fireEvent.click(screen.getByRole("button", { name: "保存を再試行する" }));
-    expect(await screen.findByText("合格ライン到達")).toBeInTheDocument();
+    expect(await screen.findByText("合格！")).toBeInTheDocument();
   });
 
   it("keeps the frozen summary pending when verified local AppState persistence fails", async () => {
@@ -643,7 +688,7 @@ describe("ThemeExamRunner exposure integration", () => {
     fireEvent.click(screen.getByRole("button", { name: "採点する" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("保存");
-    expect(screen.queryByText("合格ライン到達")).not.toBeInTheDocument();
+    expect(screen.queryByText("合格！")).not.toBeInTheDocument();
     expect(flow.setAppState).not.toHaveBeenCalled();
     expect(saveAppStateVerified).toHaveBeenCalledOnce();
     expect([...storageValues.keys()].some((key) =>

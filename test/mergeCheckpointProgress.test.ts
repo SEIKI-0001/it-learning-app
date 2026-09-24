@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { UserProgress } from "@/types";
 import type { CheckpointProgress } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
+import type { ThemeExamRecord, UnderstandingSignal } from "@/types/chapterReview";
 import { mergeProgress } from "@/lib/mergeAppState";
 import { progressRowToProgress, progressToRow, type ProgressRow } from "@/lib/dbMappers";
 import { normalizeAppState } from "@/lib/storage";
@@ -75,6 +76,29 @@ function fullCheckpointProgress(): CheckpointProgress {
       mochitName: { value: "もちすけ", updatedAt: "2026-08-18T00:00:00.000Z" },
       studyAmount: { date: "2026-08-20", minutes: 15 },
     },
+    chapterReview: {
+      themeExams: {
+        network: {
+          latestRate: 90,
+          latestCorrect: 9,
+          latestTotal: 10,
+          bestRate: 90,
+          passed: true,
+          firstPassedAt: "2026-08-12T00:00:00.000Z",
+          lastAttemptAt: "2026-08-12T00:00:00.000Z",
+        },
+      },
+      understandingSignals: {
+        "tech-common-key-crypto": {
+          topicId: "tech-common-key-crypto",
+          questionId: "sec-02",
+          themeSlug: "information-security",
+          level: "almost",
+          missingPoints: ["鍵配送の問題"],
+          checkedAt: "2026-08-13T00:00:00.000Z",
+        },
+      },
+    },
   };
 }
 
@@ -90,6 +114,7 @@ describe("checkpoint progress merge shape", () => {
 
     expect(Object.keys(merge(full, full)).sort()).toEqual([
       "badgeFragments",
+      "chapterReview",
       "clearedCheckpointIds",
       "currentCheckpointId",
       "dailyQuests",
@@ -521,5 +546,76 @@ describe("checkpoint progress persistence round-trip", () => {
     const restored = progressRowToProgress(row as ProgressRow);
 
     expect(mergeProgress(progress(full), restored).checkpointProgress).toEqual(full);
+  });
+});
+
+describe("chapter review merge", () => {
+  const record = (overrides: Partial<ThemeExamRecord>): ThemeExamRecord => ({
+    latestRate: 50,
+    latestCorrect: 5,
+    latestTotal: 10,
+    bestRate: 50,
+    passed: false,
+    lastAttemptAt: "2026-09-01T00:00:00.000Z",
+    ...overrides,
+  });
+  const withExam = (exam: ThemeExamRecord): CheckpointProgress => ({
+    ...INITIAL_CHECKPOINT_PROGRESS,
+    chapterReview: { themeExams: { network: exam } },
+  });
+
+  it("keeps a pass and the best score even when the newer attempt failed", () => {
+    const passedEarlier = record({
+      latestRate: 90,
+      latestCorrect: 9,
+      bestRate: 90,
+      passed: true,
+      firstPassedAt: "2026-09-01T00:00:00.000Z",
+    });
+    const failedLater = record({ latestRate: 40, latestCorrect: 4, bestRate: 40, lastAttemptAt: "2026-09-03T00:00:00.000Z" });
+
+    for (const merged of [
+      merge(withExam(passedEarlier), withExam(failedLater)),
+      merge(withExam(failedLater), withExam(passedEarlier)),
+    ]) {
+      expect(merged.chapterReview?.themeExams?.network).toEqual({
+        latestRate: 40,
+        latestCorrect: 4,
+        latestTotal: 10,
+        bestRate: 90,
+        passed: true,
+        firstPassedAt: "2026-09-01T00:00:00.000Z",
+        lastAttemptAt: "2026-09-03T00:00:00.000Z",
+      });
+    }
+  });
+
+  it("keeps the newest understanding signal per topic and unions topics", () => {
+    const signal = (topicId: string, checkedAt: string, level: UnderstandingSignal["level"]): UnderstandingSignal => ({
+      topicId,
+      questionId: "q",
+      themeSlug: "network",
+      level,
+      missingPoints: [],
+      checkedAt,
+    });
+    const a: CheckpointProgress = {
+      ...INITIAL_CHECKPOINT_PROGRESS,
+      chapterReview: {
+        understandingSignals: {
+          x: signal("x", "2026-09-01T00:00:00.000Z", "review"),
+          y: signal("y", "2026-09-01T00:00:00.000Z", "almost"),
+        },
+      },
+    };
+    const b: CheckpointProgress = {
+      ...INITIAL_CHECKPOINT_PROGRESS,
+      chapterReview: { understandingSignals: { x: signal("x", "2026-09-02T00:00:00.000Z", "solid") } },
+    };
+
+    const merged = merge(a, b).chapterReview?.understandingSignals;
+    expect(merged?.x.level).toBe("solid");
+    expect(merged?.y.level).toBe("almost");
+    expect(merge(b, a).chapterReview?.understandingSignals).toEqual(merged);
   });
 });

@@ -5,7 +5,7 @@
 // - 採点 JSON の形式は Gemini 版と完全に共通（gradingCore の normalizeResult を再利用）。
 
 import Anthropic from "@anthropic-ai/sdk";
-import type { GradeResult, WrittenQuestion } from "@/types/aiGrading";
+import type { AiGradingMode, GradeResult, WrittenQuestion } from "@/types/aiGrading";
 import {
   GradingError,
   buildSystemPrompt,
@@ -35,7 +35,8 @@ export class ClaudeNotConfiguredError extends GradingError {
  */
 export async function gradeWithClaude(
   question: WrittenQuestion,
-  maskedAnswer: string
+  maskedAnswer: string,
+  mode: AiGradingMode = "standard"
 ): Promise<GradeResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) {
@@ -50,7 +51,7 @@ export async function gradeWithClaude(
     response = await client.messages.create({
       model,
       max_tokens: 2048,
-      system: buildSystemPrompt(),
+      system: buildSystemPrompt(mode),
       messages: [
         { role: "user", content: buildUserPrompt(question, maskedAnswer) },
       ],
