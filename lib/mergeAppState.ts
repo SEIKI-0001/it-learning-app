@@ -23,6 +23,11 @@ import type {
   StreakMeta,
 } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
+import type {
+  ChapterReviewState,
+  ThemeExamRecord,
+  UnderstandingSignal,
+} from "@/types/chapterReview";
 
 const CP_ORDER: CheckpointId[] = ["cp0", "cp1", "cp2", "cp3", "cp4", "cp5", "cp6"];
 
@@ -270,7 +275,66 @@ function mergeCheckpointProgress(
     streakMeta: mergeStreakMeta(a.streakMeta, b.streakMeta),
     dailyQuests: mergeDailyQuests(a.dailyQuests, b.dailyQuests),
     gameful: mergeGamefulState(a.gameful, b.gameful),
+    chapterReview: mergeChapterReview(a.chapterReview, b.chapterReview),
   };
+}
+
+/**
+ * 章の仕上げ記録のマージ。
+ * - 総まとめ試験: 合格は一度でも合格なら残す（OR）、最高は max、最新は受験日時が新しい方。
+ * - AI理解チェック: トピックごとに確認日時が新しい方。
+ *
+ * ChapterReviewState にフィールドを足したらここも必ず更新すること。
+ */
+function mergeChapterReview(
+  a: ChapterReviewState | undefined,
+  b: ChapterReviewState | undefined,
+): ChapterReviewState | undefined {
+  if (!a) return b;
+  if (!b) return a;
+
+  const themeExams = mergeRecordBy(a.themeExams, b.themeExams, mergeThemeExamRecord);
+  const understandingSignals = mergeRecordBy(
+    a.understandingSignals,
+    b.understandingSignals,
+    (x: UnderstandingSignal, y: UnderstandingSignal) => (x.checkedAt >= y.checkedAt ? x : y),
+  );
+  return {
+    ...(themeExams ? { themeExams } : {}),
+    ...(understandingSignals ? { understandingSignals } : {}),
+  };
+}
+
+function mergeThemeExamRecord(a: ThemeExamRecord, b: ThemeExamRecord): ThemeExamRecord {
+  const latest = a.lastAttemptAt >= b.lastAttemptAt ? a : b;
+  const passedAts = [a.firstPassedAt, b.firstPassedAt].filter(
+    (value): value is string => value !== undefined,
+  );
+  const firstPassedAt = passedAts.sort()[0];
+  return {
+    latestRate: latest.latestRate,
+    latestCorrect: latest.latestCorrect,
+    latestTotal: latest.latestTotal,
+    bestRate: Math.max(a.bestRate, b.bestRate),
+    passed: a.passed || b.passed,
+    ...(firstPassedAt ? { firstPassedAt } : {}),
+    lastAttemptAt: latest.lastAttemptAt,
+  };
+}
+
+/** キーごとに pick で1件に決める。片側にしか無いキーはそのまま残す。 */
+function mergeRecordBy<T>(
+  a: Record<string, T> | undefined,
+  b: Record<string, T> | undefined,
+  pick: (x: T, y: T) => T,
+): Record<string, T> | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  const merged: Record<string, T> = { ...a };
+  for (const [key, value] of Object.entries(b)) {
+    merged[key] = key in merged ? pick(merged[key], value) : value;
+  }
+  return merged;
 }
 
 // ============================================================================

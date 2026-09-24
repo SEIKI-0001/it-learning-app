@@ -12,6 +12,7 @@
 
 import type { StudyPhaseId } from "@/types/plan";
 import type { TopicField } from "@/types/content";
+import type { ChapterReviewState } from "@/types/chapterReview";
 
 // ---------------------------------------------------------------------------
 // チェックポイント
@@ -295,6 +296,8 @@ export type CheckpointProgress = {
   dailyQuests?: DailyQuestState;
   /** ゲームフル機能の状態。未使用なら undefined（旧データ互換）。 */
   gameful?: GamefulState;
+  /** 章の総まとめ試験とAI理解チェックの記録。未使用なら undefined（旧データ互換）。 */
+  chapterReview?: ChapterReviewState;
 };
 
 /** 既存ユーザー・新規ユーザー共通の初期値。 */

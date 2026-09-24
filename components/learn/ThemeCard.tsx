@@ -15,6 +15,7 @@ import {
   getLessonsForSection,
 } from "@/lib/learningCatalog";
 import { getThemeIcon } from "@/lib/themeIcons";
+import { getThemeExamRecord } from "@/lib/chapterReview";
 import type { UserProgress } from "@/types";
 import type { LearningTheme, ThemeProgress } from "@/types/learningCatalog";
 import type { ThemeExamSummary } from "@/types/themeExam";
@@ -74,6 +75,7 @@ export default function ThemeCard({
     masterState !== "fully_mastered" && nextLessonTitle && nextLessonHref;
   const stateClass = STATE_CLASS[masterState];
   const panelId = `${theme.id}-lessons`;
+  const examRecord = getThemeExamRecord(userProgress, theme.slug);
 
   return (
     <article
@@ -213,9 +215,19 @@ export default function ThemeCard({
             >
               <Icon name="award" className="h-4 w-4 shrink-0 text-brand-600" />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-gray-900">総まとめ試験</span>
+                <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                  総まとめ試験
+                  {examRecord?.passed && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">
+                      <Icon name="check" className="h-3 w-3" />
+                      合格済み
+                    </span>
+                  )}
+                </span>
                 <span className="mt-0.5 block text-xs tabular-nums text-gray-500">
-                  {themeExam.questionCount}問・合格ライン {themeExam.passRate}%・章を横断した出題
+                  {examRecord
+                    ? `最新 ${examRecord.latestRate}%・最高 ${examRecord.bestRate}%・合格ライン ${themeExam.passRate}%`
+                    : `${themeExam.questionCount}問・合格ライン ${themeExam.passRate}%・章を横断した出題`}
                 </span>
               </span>
               <Icon name="chevron-right" className="h-4 w-4 text-gray-300" />

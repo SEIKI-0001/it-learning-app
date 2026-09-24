@@ -3,7 +3,7 @@
 // - GEMINI_API_KEY があるときだけ Gemini を呼ぶ。未設定なら開発確認用のダミー採点を返す。
 // - API キーはサーバー側でのみ使い、クライアントへ露出させない（x-goog-api-key ヘッダー）。
 
-import type { GradeResult, WrittenQuestion } from "@/types/aiGrading";
+import type { AiGradingMode, GradeResult, WrittenQuestion } from "@/types/aiGrading";
 import {
   GradingError,
   buildSystemPrompt,
@@ -19,7 +19,8 @@ async function callGemini(
   apiKey: string,
   model: string,
   question: WrittenQuestion,
-  maskedAnswer: string
+  maskedAnswer: string,
+  mode: AiGradingMode
 ): Promise<GradeResult> {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
     model
@@ -34,7 +35,7 @@ async function callGemini(
         "x-goog-api-key": apiKey,
       },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
+        systemInstruction: { parts: [{ text: buildSystemPrompt(mode) }] },
         contents: [
           {
             role: "user",
@@ -127,11 +128,12 @@ function buildDummyResult(
  */
 export async function gradeWithGemini(
   question: WrittenQuestion,
-  maskedAnswer: string
+  maskedAnswer: string,
+  mode: AiGradingMode = "standard"
 ): Promise<GradeResult> {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
     return buildDummyResult(question, maskedAnswer);
   }
-  return callGemini(apiKey, getGeminiModel(), question, maskedAnswer);
+  return callGemini(apiKey, getGeminiModel(), question, maskedAnswer, mode);
 }

@@ -19,6 +19,7 @@ import type {
 import { THEME_EXAM_PASS_RATE } from "@/types/themeExam";
 import { updateLearningLoopProgress } from "@/lib/learningLoop";
 import { exposureStateFor } from "@/lib/questionExposure";
+import { recordThemeExamAttempt } from "@/lib/chapterReview";
 
 // ============================================================================
 // テーマ別 高難易度試験のデータアクセスと採点（純粋関数）。
@@ -165,7 +166,10 @@ export function gradeThemeExam(params: {
   };
 }
 
-/** Record a chapter-wide summary exam in the shared P0 learning loop. */
+/**
+ * Record a chapter-wide summary exam in the shared P0 learning loop,
+ * and keep the chapter's latest / best score and pass state for the /learn list.
+ */
 export function recordThemeExamLearningResult(
   state: AppState,
   result: ThemeExamResult,
@@ -204,5 +208,9 @@ export function recordThemeExamLearningResult(
     })),
     now,
   );
-  return { ...state, answers: allAnswers, progress };
+  return {
+    ...state,
+    answers: allAnswers,
+    progress: recordThemeExamAttempt(progress, result, answeredAt),
+  };
 }
