@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   saveQuestionAttempts: vi.fn(),
   submitCheckPack: vi.fn(),
   recordQuizResult: vi.fn(),
+  loadAppState: vi.fn(),
 }));
 
 vi.mock("@/lib/userSession", () => ({
@@ -18,6 +19,8 @@ vi.mock("@/lib/userSession", () => ({
   submitCheckPack: mocks.submitCheckPack,
   todayLocalDate: () => "2026-08-23",
 }));
+
+vi.mock("@/lib/storage", () => ({ loadAppState: mocks.loadAppState }));
 
 vi.mock("@/lib/wordlistProgress", () => ({ recordQuizResult: mocks.recordQuizResult }));
 
@@ -124,6 +127,7 @@ const answerExamStep = () =>
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.getUserId.mockReturnValue("user-1");
+  mocks.loadAppState.mockReturnValue(null);
   mocks.submitCheckPack.mockResolvedValue({
     stage: "basic_understood",
     resultStatus: "review_needed",
@@ -271,5 +275,132 @@ describe("CheckPackRunner evidence discipline", () => {
     expect(mocks.submitCheckPack).not.toHaveBeenCalled();
     // 未ログインは「保存失敗」ではないので、通知は出さない。
     expect(screen.queryByText(/学習記録を保存できませんでした/)).toBeNull();
+  });
+});
+
+/** 確認問題（レッスン末尾）の回答が端末に記録された状態を作る。 */
+function withConfirmationAnswers(results: Record<number, boolean>) {
+  const answeredAt = new Date(Date.now() - 60_000).toISOString();
+  mocks.loadAppState.mockReturnValue({
+    progress: { reviewQueue: [] },
+    answers: Object.entries(results).map(([n, isCorrect]) => ({
+      questionId: `quiz-q${n}`,
+      isCorrect,
+      answeredAt,
+      tag: "tech",
+      topicId: "tech-binary-data",
+    })),
+  });
+}
+
+describe("CheckPackRunner skips questions already solved in the confirmation quiz", () => {
+  it("Case 1: 全問正解済みならステップ1を自動完了し、回答を複製せず次へ進む", async () => {
+    withConfirmationAnswers({ 1: true, 2: true, 3: true, 4: true });
+    mocks.saveQuestionAttempts.mockResolvedValueOnce(examSaved());
+
+    renderRunner();
+
+    expect(await screen.findByText("関連用語の確認")).toBeTruthy();
+    expect(screen.getByText(/確認問題ですべて理解できています/)).toBeTruthy();
+    // 省いた問題の回答は保存しない（確認問題の記録がそのまま根拠）。
+    expect(mocks.saveQuestionAttempts).not.toHaveBeenCalled();
+
+    answerFlashcardStep();
+    await screen.findByText("過去問レベル問題");
+    answerExamStep();
+    await screen.findByText("確認パックの結果");
+
+    await waitFor(() => expect(mocks.submitCheckPack).toHaveBeenCalledTimes(1));
+    expect(mocks.saveQuestionAttempts).toHaveBeenCalledTimes(1);
+    expect(mocks.saveQuestionAttempts.mock.calls[0][1].every(
+      (a: { questionType: string }) => a.questionType === "exam_level",
+    )).toBe(true);
+    // 基礎確認は未実施（null）ではなく満たした扱い: stage が不利にならない。
+    expect(mocks.submitCheckPack).toHaveBeenCalledWith("user-1", expect.objectContaining({
+      quizRate: 100,
+    }));
+  });
+
+  it("Case 2: 不正解だった1問だけを出題し、進捗表示も 1/1 で整合する", async () => {
+    withConfirmationAnswers({ 1: true, 2: false, 3: true, 4: true });
+    mocks.saveQuestionAttempts
+      .mockResolvedValueOnce(savedExposures(["quiz-q2"]))
+      .mockResolvedValueOnce(examSaved());
+
+    renderRunner();
+
+    await screen.findByText(/正解済みの3問は省いています/);
+    expect(screen.getByText(/quiz の問題2/)).toBeTruthy();
+    expect(screen.queryByText(/quiz の問題1/)).toBeNull();
+    expect(screen.getByText(/問題 1 \/ 1/)).toBeTruthy();
+
+    answerStep(["quiz-q2-正解"], "次へ（用語の確認）");
+    await screen.findByText("関連用語の確認");
+
+    const [, quizAttempts] = mocks.saveQuestionAttempts.mock.calls[0];
+    expect(quizAttempts.map((a: { questionId: string }) => a.questionId)).toEqual(["quiz-q2"]);
+
+    answerFlashcardStep();
+    await screen.findByText("過去問レベル問題");
+    answerExamStep();
+    await waitFor(() => expect(mocks.submitCheckPack).toHaveBeenCalledTimes(1));
+    expect(mocks.submitCheckPack).toHaveBeenCalledWith("user-1", expect.objectContaining({
+      quizRate: 100,
+    }));
+  });
+
+  it("Case 3: 未回答の2問だけを出題し、率は省いた正解を含めて計算する", async () => {
+    withConfirmationAnswers({ 1: true, 3: true });
+    mocks.saveQuestionAttempts
+      .mockResolvedValueOnce(savedExposures(["quiz-q2", "quiz-q4"]))
+      .mockResolvedValueOnce(examSaved());
+
+    renderRunner();
+
+    await screen.findByText(/正解済みの2問は省いています/);
+    // q2 は正解、q4 は誤答 → (2 + 1) / 4 = 75%
+    fireEvent.click(screen.getByText("quiz-q2-正解").closest("button")!);
+    fireEvent.click(screen.getByRole("button", { name: "次へ" }));
+    fireEvent.click(screen.getByText("quiz-q4-誤答B").closest("button")!);
+    fireEvent.click(screen.getByRole("button", { name: "次へ（用語の確認）" }));
+    await screen.findByText("関連用語の確認");
+
+    const [, quizAttempts] = mocks.saveQuestionAttempts.mock.calls[0];
+    expect(quizAttempts.map((a: { questionId: string }) => a.questionId)).toEqual([
+      "quiz-q2",
+      "quiz-q4",
+    ]);
+
+    answerFlashcardStep();
+    await screen.findByText("過去問レベル問題");
+    answerExamStep();
+    await screen.findByText("確認パックの結果");
+    await waitFor(() => expect(mocks.submitCheckPack).toHaveBeenCalledTimes(1));
+    expect(mocks.submitCheckPack).toHaveBeenCalledWith("user-1", expect.objectContaining({
+      quizRate: 75,
+    }));
+  });
+
+  it("Case 4: 復習期限が来ているトピックは正解済みでも全問出題する", async () => {
+    withConfirmationAnswers({ 1: true, 2: true, 3: true, 4: true });
+    const state = mocks.loadAppState();
+    mocks.loadAppState.mockReturnValue({
+      ...state,
+      progress: {
+        reviewQueue: [{
+          topicId: "tech-binary-data",
+          dueAt: new Date(Date.now() - 3_600_000).toISOString(),
+          reason: "復習期限",
+        }],
+      },
+    });
+    mocks.saveQuestionAttempts.mockResolvedValue(quizSaved());
+
+    renderRunner();
+    answerQuizStep();
+
+    await screen.findByText("関連用語の確認");
+    expect(mocks.saveQuestionAttempts.mock.calls[0][1]).toHaveLength(QUIZ_COUNT);
+    expect(screen.queryByText(/確認問題ですべて理解できています/)).toBeNull();
   });
 });

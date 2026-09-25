@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { QuestionExposureMap, UserAnswer } from "@/types";
 import type { CheckQuestion } from "@/types/content";
@@ -15,6 +15,12 @@ import {
   type QuestionAttemptInput,
 } from "@/lib/userSession";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
+import {
+  combinedQuizRate,
+  planPackQuizQuestions,
+  type PackQuizPlan,
+} from "@/lib/checkPackCarryOver";
+import { loadAppState } from "@/lib/storage";
 import { getLessonHref } from "@/lib/learningCatalog";
 import type { CheckPackResultStatus } from "@/types/checkPack";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
@@ -25,6 +31,10 @@ import { buttonClass } from "@/components/ui/Button";
 // 1) 基礎確認問題 → 2) 関連単語の確認 → 3) 過去問レベル問題 → 4) 結果 → 5) 次の推奨行動。
 // 既存の TopicQuiz を3回使い回す。用語・過去問レベルも4択に整えて同じ部品で出す。
 // API 失敗・Supabase 未設定・匿名でも、ローカル判定で結果まで到達できる（学習を止めない）。
+//
+// 基礎確認問題は、同じ日に確認問題で正解済みの問題を省く（lib/checkPackCarryOver）。
+// 省いた問題は確認問題の回答記録を根拠に正解として率へ含め、パック側では新たな回答を作らない。
+// 全問省けたときはステップ1を自動で完了扱いにして、次のステップから始める。
 //
 // 「学習UX」と「正式な学習記録」は責務を分ける:
 //   - 回答保存の成否に関わらず、ステップ遷移と結果表示は必ず進む。
@@ -57,6 +67,17 @@ function stepLimitSeconds(count: number, secondsPerItem: number): number {
 function rateOf(correct: number, total: number): number | null {
   if (total <= 0) return null;
   return Math.round((correct / total) * 100);
+}
+
+/** この端末に記録された確認問題の回答から、ステップ1の出題を決める。 */
+function planQuiz(questions: CheckQuestion[], topicId: string): PackQuizPlan {
+  const state = loadAppState();
+  return planPackQuizQuestions(
+    questions,
+    topicId,
+    state?.answers,
+    state?.progress.reviewQueue,
+  );
 }
 
 /** 単語エントリを4択の CheckQuestion に整える（TopicQuiz で出題するため）。 */
@@ -114,6 +135,20 @@ export default function CheckPackRunner({
   const unsavedAnswersRef = useRef(false);
   const [saveFailed, setSaveFailed] = useState(false);
   const startedAtRef = useRef<string>(new Date().toISOString());
+  // 基礎確認問題の出題計画。静的ページなので端末の記録はマウント後に読む。
+  const [quizPlan, setQuizPlan] = useState<PackQuizPlan>({
+    toAsk: quizQuestions,
+    carried: [],
+  });
+  // ステップ1を全問省いて自動完了したか（次のステップで短く伝える）。
+  const [quizAutoCompleted, setQuizAutoCompleted] = useState(false);
+
+  useEffect(() => {
+    function init() {
+      setQuizPlan(planQuiz(quizQuestions, topicId));
+    }
+    init();
+  }, [quizQuestions, topicId]);
 
   // 単語の4択は初回だけ生成する（設問が毎レンダーで変わらないように固定）。
   const flashcardQuestions = useMemo(
@@ -161,10 +196,31 @@ export default function CheckPackRunner({
     return "unsaved";
   }
 
+  async function handleStart() {
+    // 開始時点の記録で出題を確定する（intro 表示後に回答が増えた場合も拾う）。
+    const plan = planQuiz(quizQuestions, topicId);
+    setQuizPlan(plan);
+    if (plan.toAsk.length > 0 || plan.carried.length === 0) {
+      setPhase("quiz");
+      return;
+    }
+    // 確認問題で全問正解済み: ステップ1は解き直さず完了扱いにする。
+    // 回答は保存しない（確認問題の記録がすでに根拠として保存されている）。
+    const rate = combinedQuizRate(plan.carried.length, 0, 0);
+    setQuizAutoCompleted(true);
+    setQuizRate(rate);
+    setPhase(hasFlashcards ? "flashcards" : hasExam ? "exam" : "result");
+    if (!hasFlashcards && !hasExam) {
+      await finalize(rate, null, null);
+    }
+  }
+
   async function handleQuizDone(answers: UserAnswer[]) {
     const correct = answers.filter((a) => a.isCorrect).length;
-    const rate = rateOf(correct, answers.length);
+    // 省いた問題（確認問題で正解済み）も含めた、パック全体の設問に対する正答率。
+    const rate = combinedQuizRate(quizPlan.carried.length, correct, answers.length);
     // 保存の結果は記録の話。成否に関わらず次のステップへ必ず進む。
+    // 保存するのはこのパックで実際に解いた回答だけ（同じ回答を二重に記録しない）。
     await saveAttempts(answers, "topic_quiz");
     setQuizRate(rate);
     setPhase(hasFlashcards ? "flashcards" : hasExam ? "exam" : "result");
@@ -223,13 +279,14 @@ export default function CheckPackRunner({
         <RecordingLockNotice variant="compact" />
         <IntroCard
           topicTitle={topicTitle}
-          quizCount={quizQuestions.length}
+          quizCount={quizPlan.toAsk.length}
+          quizCarriedCount={quizPlan.carried.length}
           flashcardCount={flashcardQuestions.length}
           examCount={examQuestions.length}
         />
         <button
           type="button"
-          onClick={() => setPhase("quiz")}
+          onClick={() => void handleStart()}
           className={buttonClass("primary", "lg", "w-full")}
         >
           確認パックを始める
@@ -240,16 +297,24 @@ export default function CheckPackRunner({
 
   if (phase === "quiz") {
     return (
-      <StepShell step={1} title="基礎確認問題" note="まずは基礎理解のチェック。">
+      <StepShell
+        step={1}
+        title="基礎確認問題"
+        note={
+          quizPlan.carried.length > 0
+            ? `確認問題で正解済みの${quizPlan.carried.length}問は省いています。`
+            : "まずは基礎理解のチェック。"
+        }
+      >
         <TopicQuiz
           key={`${packId}:quiz`}
           topicId={topicId}
-          questions={quizQuestions}
+          questions={quizPlan.toAsk}
           onComplete={handleQuizDone}
           completeLabel="次へ（用語の確認）"
           dense
           timeLimitSeconds={stepLimitSeconds(
-            quizQuestions.length,
+            quizPlan.toAsk.length,
             QUIZ_SECONDS_PER_QUESTION,
           )}
         />
@@ -260,6 +325,7 @@ export default function CheckPackRunner({
   if (phase === "flashcards") {
     return (
       <StepShell step={2} title="関連用語の確認" note="用語が定着しているかチェック。">
+        {quizAutoCompleted && <QuizCarriedNotice />}
         {saveFailed && <SaveFailedNotice />}
         <TopicQuiz
           key={`${packId}:flashcards`}
@@ -284,6 +350,7 @@ export default function CheckPackRunner({
         title="過去問レベル問題"
         note="本番対応力のチェック。ここが「本番対応OK」の判定になります。"
       >
+        {quizAutoCompleted && !hasFlashcards && <QuizCarriedNotice />}
         {saveFailed && <SaveFailedNotice />}
         <TopicQuiz
           key={`${packId}:exam`}
@@ -309,6 +376,7 @@ export default function CheckPackRunner({
 
   return (
     <div className="space-y-5">
+      {quizAutoCompleted && !hasFlashcards && !hasExam && <QuizCarriedNotice />}
       {saveFailed && <SaveFailedNotice />}
       <div
         className={`animate-pop-in rounded-xl p-5 text-center ring-1 ${STATUS_TONE[resultStatus]}`}
@@ -366,17 +434,37 @@ function SaveFailedNotice() {
   );
 }
 
+/** 基礎確認問題を全問省いて完了扱いにしたことを短く伝える。 */
+function QuizCarriedNotice() {
+  return (
+    <div
+      role="status"
+      className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200"
+    >
+      確認問題ですべて理解できています。基礎確認はクリア済みです。
+    </div>
+  );
+}
+
 function IntroCard({
   topicTitle,
   quizCount,
+  quizCarriedCount,
   flashcardCount,
   examCount,
 }: {
   topicTitle: string;
   quizCount: number;
+  quizCarriedCount: number;
   flashcardCount: number;
   examCount: number;
 }) {
+  const quizHint =
+    quizCarriedCount === 0
+      ? "基礎理解"
+      : quizCount === 0
+        ? "確認問題でクリア済み"
+        : `${quizCarriedCount}問は確認問題でクリア済み`;
   return (
     <div className="rounded-xl bg-white p-5 border border-gray-200">
       <h2 className="text-base font-bold text-gray-800">
@@ -386,7 +474,11 @@ function IntroCard({
         3つのチェックで、いまの到達度と「本番対応OK」かどうかを確かめます。
       </p>
       <ul className="mt-4 space-y-2 text-sm">
-        <StepLine n={1} label="基礎確認問題" count={quizCount} unit="問" hint="基礎理解" />
+        {quizCarriedCount > 0 && quizCount === 0 ? (
+          <StepLine n={1} label="基礎確認問題" hint={quizHint} />
+        ) : (
+          <StepLine n={1} label="基礎確認問題" count={quizCount} unit="問" hint={quizHint} />
+        )}
         <StepLine n={2} label="関連用語の確認" count={flashcardCount} unit="語" hint="用語定着" />
         <StepLine n={3} label="過去問レベル問題" count={examCount} unit="問" hint="本番対応力" />
       </ul>
@@ -403,8 +495,8 @@ function StepLine({
 }: {
   n: number;
   label: string;
-  count: number;
-  unit: string;
+  count?: number;
+  unit?: string;
   hint: string;
 }) {
   return (
@@ -414,8 +506,7 @@ function StepLine({
       </span>
       <span className="font-semibold text-gray-800">{label}</span>
       <span className="ml-auto text-xs text-gray-500">
-        {count}
-        {unit}・{hint}
+        {count === undefined ? hint : `${count}${unit}・${hint}`}
       </span>
     </li>
   );
