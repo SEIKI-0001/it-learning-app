@@ -24,7 +24,7 @@
 }
 
 .pop {
-  animation: test-pop 300ms ease both;
+  animation: test-pop 440ms ease both;
 }
 
 @keyframes test-pop {
@@ -39,7 +39,7 @@
 }
 
 .fadeIn {
-  animation: test-fade 350ms ease both;
+  animation: test-fade 520ms ease both;
 }
 
 @keyframes test-fade {
@@ -54,7 +54,7 @@
 .draw {
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  animation: test-draw 550ms cubic-bezier(0.45, 0.05, 0.25, 1) forwards;
+  animation: test-draw 820ms cubic-bezier(0.45, 0.05, 0.25, 1) forwards;
 }
 
 @keyframes test-draw {
