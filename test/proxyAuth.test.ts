@@ -51,7 +51,7 @@ describe("proxy admin and API authentication boundaries", () => {
 
       const response = await proxy(new NextRequest("https://example.test/"));
 
-      expect(response.status).toBe(307);
+      expect(response.status).toBe(308);
       expect(response.headers.get("location")).toBe("https://example.test/lp");
     });
 
