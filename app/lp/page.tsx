@@ -23,6 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: LP_TITLE,
   description: LP_DESCRIPTION,
+  robots: { index: true, follow: true },
   alternates: { canonical: '/lp' },
   openGraph: {
     type: 'website',

@@ -101,11 +101,12 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
 
   // 未ログインでドメイン直下へ来た人（検索・SNS・口コミ経由の初見）→ 紹介LPへ。
+  // 検索エンジンには /lp を正規URLとして統合させるため、恒久リダイレクト(308)にする。
   // LP の CTA が /login へ繋がるので、登録済みの人もそこからログインできる。
   if (pathname === "/") {
     const lpUrl = request.nextUrl.clone();
     lpUrl.pathname = "/lp";
-    const redirect = NextResponse.redirect(lpUrl);
+    const redirect = NextResponse.redirect(lpUrl, 308);
     for (const cookie of response.cookies.getAll()) {
       redirect.cookies.set(cookie);
     }
