@@ -148,6 +148,12 @@ describe("Today の学習キューへの統合", () => {
     const drill = first.find((a) => a.kind === "past_exam_drill")!;
     const after = activitiesFor(s, { done: [drill] });
     expect(after.active.some((a) => a.id === drill.id)).toBe(false);
+    // 出したが終えていないタスクは pinned（当日中は予算の再計算で消さない）
+    const offered = buildTodayActivities({
+      state: s, topics, now, budgetMinutes: 30, wordProgress: {}, topicStages: {}, upcomingTopicIds: [],
+      log: { offered: { [drill.id]: drill }, done: {} },
+    });
+    expect(offered.pinned).toEqual([drill]);
     const nodes = buildQuestRoute(s, [], [drill.id], now, after.done);
     expect(nodes).toEqual([expect.objectContaining({ topicId: drill.id, state: "done", task: drill })]);
   });

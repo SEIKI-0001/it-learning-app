@@ -94,7 +94,7 @@ export default function TodayPage() {
   const selectedMinutes = state ? getSelectedMinutes(state, todayLocalDate()) : null;
   // トピック以外のタスク（関連用語・公式過去問）。学習キューへ同じ優先度の物差しで並べる。
   const activities = useMemo(() => {
-    if (!state?.profile) return { active: [], done: [] };
+    if (!state?.profile) return { active: [], done: [], pinned: [] };
     const now = new Date();
     const upcomingTopicIds = buildTodaysLearningQueue({ state, progress: state.progress, topics, now })
       .flatMap((item) => (item.topicId ? [item.topicId] : []))
@@ -226,8 +226,14 @@ export default function TodayPage() {
         activity: "review",
       });
     }
+    // 今日いちど出したタスクは、予算の再計算で押し出されても当日中は残す。
+    for (const activity of activities.pinned) {
+      if (seen.has(activity.id)) continue;
+      seen.add(activity.id);
+      result.push({ ...activityRouteTask(activity), reason: activity.reason });
+    }
     return result;
-  }, [menu, plan?.todayReasons, learningQueue]);
+  }, [activities.pinned, menu, plan?.todayReasons, learningQueue]);
 
   // 今日のルート: メニューは進捗で毎回再生成され完了タスクが消えるため、
   // その日のルート順序をlocalStorageに固定し、完了した行を消さずに前進を見せる。

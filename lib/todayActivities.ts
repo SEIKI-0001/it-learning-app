@@ -36,6 +36,11 @@ export type TodayActivitiesResult = {
   active: TodayActivity[];
   /** 今日すでに終えたタスク（ルート上に「済み」として残す）。 */
   done: TodayActivity[];
+  /**
+   * 今日すでに Today に出した、まだ終えていないタスク。時間予算の再計算で
+   * メニューから押し出されても、その日のうちはルートに残す（出したり消したりしない）。
+   */
+  pinned: TodayActivity[];
 };
 
 export function buildTodayActivities(input: TodayActivitiesInput): TodayActivitiesResult {
@@ -64,5 +69,9 @@ export function buildTodayActivities(input: TodayActivitiesInput): TodayActiviti
     .filter((activity) => !log.done[activity.id])
     // 今日すでに出したものは、そのときの中身（対象の単語・問題）を使い続ける。
     .map((activity) => log.offered[activity.id] ?? activity);
-  return { active, done: Object.values(log.done) };
+  return {
+    active,
+    done: Object.values(log.done),
+    pinned: active.filter((activity) => Boolean(log.offered[activity.id])),
+  };
 }
