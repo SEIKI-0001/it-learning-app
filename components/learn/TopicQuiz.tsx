@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ChoiceKey, UserAnswer } from "@/types";
 import type { CheckQuestion } from "@/types/content";
 import ChoiceButton from "@/components/ChoiceButton";
@@ -9,6 +9,9 @@ import { buttonClass } from "@/components/ui/Button";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import OfficialQuestionSource from "@/components/questions/OfficialQuestionSource";
 import QuestionFigures from "@/components/questions/QuestionFigures";
+import AskMochitButton from "@/components/mochit/AskMochitButton";
+import { publishMochitQuestion } from "@/components/mochit/mochitConsultStore";
+import type { MochitQuestionContext } from "@/lib/mochitAi/types";
 
 // トピックの確認問題を順に解き、結果(UserAnswer[])を onComplete で親へ返す。
 // /today・/review の「解いて進める」体験に使う(表示専用の CheckQuestionCard とは別物)。
@@ -70,6 +73,29 @@ function keepOrder(q: CheckQuestion): Shuffled {
  */
 function prepareChoices(q: CheckQuestion): Shuffled {
   return q.shuffleChoices === false ? keepOrder(q) : shuffle(q);
+}
+
+/** 回答後の問題を、画面に出ている順・記号のままモチット相談へ渡す形にする。 */
+function mochitQuestionContext(
+  q: CheckQuestion,
+  sh: Shuffled,
+  selected: ChoiceKey | null,
+  topicId: string,
+): MochitQuestionContext {
+  const selectedChoice = sh.choices.find((choice) => choice.key === selected);
+  const selectedExplanation =
+    selectedChoice && selected !== sh.correct ? q.choiceExplanations?.[selectedChoice.sourceKey] : undefined;
+  return {
+    questionId: q.id,
+    topicId,
+    prompt: q.prompt,
+    choices: sh.choices.map((c) => ({ label: c.key, text: c.text })),
+    correctLabel: sh.correct,
+    selectedLabel: selected,
+    explanation: q.explanation,
+    ...(selectedExplanation ? { selectedChoiceExplanation: selectedExplanation } : {}),
+    ...(q.official ? { sourceLabel: `${q.official.year}年度 公開問題 問${q.official.questionNumber}` } : {}),
+  };
 }
 
 function formatTime(seconds: number): string {
@@ -230,6 +256,19 @@ export default function TopicQuiz({
   const currentSelection = selections[currentQuestion.id] ?? null;
   const currentRevealed = currentSelection !== null;
   const showNav = currentRevealed || done || timeLimitReached;
+  const currentTopicId = topicIdForQuestion?.(currentQuestion) ?? topicId;
+  const currentMochitContext = useMemo(() => {
+    if (currentSelection === null) return null;
+    const sh = shuffled.get(currentQuestion.id);
+    return sh ? mochitQuestionContext(currentQuestion, sh, currentSelection, currentTopicId) : null;
+  }, [currentQuestion, currentSelection, currentTopicId, shuffled]);
+
+  // 回答後の問題だけをモチットへ公開する（未回答の問題の正解は渡さない）
+  const mochitOwner = useId();
+  useEffect(() => {
+    publishMochitQuestion(mochitOwner, currentMochitContext);
+  }, [mochitOwner, currentMochitContext]);
+  useEffect(() => () => publishMochitQuestion(mochitOwner, null), [mochitOwner]);
 
   return (
     <div className="space-y-4">
@@ -414,6 +453,7 @@ export default function TopicQuiz({
                     選んだ選択肢が違う理由：{selectedChoiceExplanation}
                   </p>
                 )}
+                {currentMochitContext && <AskMochitButton context={currentMochitContext} className="mt-3" />}
               </div>
             )}
             {/*

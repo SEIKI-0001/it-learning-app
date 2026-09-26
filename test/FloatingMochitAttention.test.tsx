@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { resetMochitConsultStoreForTest } from "@/components/mochit/mochitConsultStore";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import FloatingMochit from "@/components/mochit/FloatingMochit";
@@ -59,6 +60,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  resetMochitConsultStoreForTest();
   releaseMochitAttention();
   window.localStorage.clear();
   vi.clearAllTimers();
@@ -75,7 +77,7 @@ const gaze = getIdleProfile(false, true).gaze!;
 
 async function renderPet(reducedMotion = false) {
   render(<FloatingMochit reducedMotion={reducedMotion} />);
-  const pet = await screen.findByRole("button", { name: "モチットを触る" });
+  const pet = await screen.findByRole("button", { name: "モチットに相談する" });
   await waitFor(() => expect(pet.querySelector("#Pupil_L")).not.toBeNull());
   const svg = pet.querySelector<SVGSVGElement>("svg")!;
   const pupil = pet.querySelector<SVGGraphicsElement>("#Pupil_L")!;

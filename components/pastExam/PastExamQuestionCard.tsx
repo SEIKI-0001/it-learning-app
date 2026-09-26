@@ -7,6 +7,7 @@
 // 内部キーは A〜D のままで、画面上の記号だけ ア〜エ にする。
 
 import Link from "next/link";
+import AskMochitButton from "@/components/mochit/AskMochitButton";
 import OfficialQuestionSource from "@/components/questions/OfficialQuestionSource";
 import QuestionFigures from "@/components/questions/QuestionFigures";
 import { CHOICE_LABELS, type PastExamQuestionView } from "@/lib/pastExam/questionView";
@@ -94,6 +95,19 @@ export default function PastExamQuestionCard({
                 {question.explanation}
               </p>
             </div>
+
+            <AskMochitButton
+              context={{
+                questionId: question.id,
+                topicId: question.topicId,
+                prompt: question.prompt,
+                choices: question.choices.map((choice) => ({ label: CHOICE_LABELS[choice.key], text: choice.text })),
+                correctLabel: CHOICE_LABELS[question.correctChoice],
+                selectedLabel: selected === null ? null : CHOICE_LABELS[selected],
+                explanation: question.explanation,
+                sourceLabel: `${question.year}年度 公開問題 問${question.questionNumber}`,
+              }}
+            />
 
             {question.topicTitle && (
               <Link
