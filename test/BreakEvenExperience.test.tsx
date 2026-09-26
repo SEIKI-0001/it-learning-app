@@ -115,9 +115,9 @@ describe("BreakEvenExperience animation", () => {
     click("解説2");
     expect(screen.getByTestId("be-margin")).toHaveAttribute("data-beat", "0");
     expect(screen.queryByTestId("be-margin-eq")).not.toBeInTheDocument();
-    act(() => vi.advanceTimersByTime(1000));
-    expect(screen.getByTestId("be-margin-cost")).toHaveTextContent("仕入れ −300円");
     act(() => vi.advanceTimersByTime(1500));
+    expect(screen.getByTestId("be-margin-cost")).toHaveTextContent("仕入れ −300円");
+    act(() => vi.advanceTimersByTime(2250));
     expect(screen.getByTestId("be-margin-eq")).toBeInTheDocument();
   });
 

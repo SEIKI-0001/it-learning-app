@@ -112,10 +112,10 @@ describe("transfer time animation", () => {
     renderDeck();
     click("解説4");
     expect(screen.getByTestId("tr-arrived")).toHaveTextContent("届いた 0MB");
-    act(() => vi.advanceTimersByTime(900));
+    act(() => vi.advanceTimersByTime(1350));
     expect(screen.getByTestId("tr-arrived")).toHaveTextContent("届いた 4MB");
-    act(() => vi.advanceTimersByTime(1100));
-    act(() => vi.advanceTimersByTime(1100));
+    act(() => vi.advanceTimersByTime(1650));
+    act(() => vi.advanceTimersByTime(1650));
     expect(screen.getByTestId("tr-arrived")).toHaveTextContent("届いた 12MB");
   });
 
@@ -124,7 +124,7 @@ describe("transfer time animation", () => {
     renderDeck();
     click("解説5");
     expect(screen.queryByTestId("tr-unit-warn")).not.toBeInTheDocument();
-    act(() => vi.advanceTimersByTime(1300));
+    act(() => vi.advanceTimersByTime(1950));
     expect(screen.getByTestId("tr-unit-warn")).toHaveTextContent("このままでは単位が違う");
   });
 });

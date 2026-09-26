@@ -85,9 +85,9 @@ describe("RaidExperience", () => {
     renderDeck();
     click("解説3");
     expect(screen.getByTestId("raid-raid5")).toHaveAttribute("data-beat", "0");
-    act(() => vi.advanceTimersByTime(800));
+    act(() => vi.advanceTimersByTime(1200));
     expect(screen.getByTestId("raid-raid5-array")).toHaveAttribute("data-placed", "1");
-    for (let i = 0; i < 8; i++) act(() => vi.advanceTimersByTime(1800));
+    for (let i = 0; i < 8; i++) act(() => vi.advanceTimersByTime(2700));
     expect(screen.getByTestId("raid-raid5-gather")).toBeInTheDocument();
     expect(screen.getByTestId("raid-raid5-eq")).toHaveTextContent("3TB");
   });

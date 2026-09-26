@@ -42,11 +42,11 @@ describe("SpreadsheetExperience", () => {
     vi.useFakeTimers();
     renderDeck();
     click("解説3");
-    act(() => vi.advanceTimersByTime(1100));
+    act(() => vi.advanceTimersByTime(1650));
     expect(screen.getByTestId("sheet-read-grid-B4")).toHaveAttribute("data-mark", "brand");
-    act(() => vi.advanceTimersByTime(1700));
+    act(() => vi.advanceTimersByTime(2550));
     expect(screen.getByTestId("sheet-read-grid-B1")).toHaveAttribute("data-mark", "amber");
-    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(1700));
+    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(2550));
     expect(screen.getByTestId("sheet-read-grid-C4")).toHaveTextContent("220");
     click("⬇ C5・C6 へ複写する");
     expect(screen.getByTestId("sheet-read-copies")).toHaveTextContent("B6＊(1＋B$1)");

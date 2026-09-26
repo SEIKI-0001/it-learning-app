@@ -41,11 +41,11 @@ describe("EstimationExperience", () => {
     vi.useFakeTimers();
     renderDeck();
     click("解説2");
-    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(1300));
+    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(1950));
     expect(screen.getByTestId("est-pm-mul")).toHaveTextContent("12人月");
-    for (let i = 0; i < 3; i++) act(() => vi.advanceTimersByTime(1400));
+    for (let i = 0; i < 3; i++) act(() => vi.advanceTimersByTime(2100));
     expect(screen.getByTestId("est-pm-months")).toHaveTextContent(/[1-4]か月目/);
-    for (let i = 0; i < 5; i++) act(() => vi.advanceTimersByTime(1500));
+    for (let i = 0; i < 5; i++) act(() => vi.advanceTimersByTime(2250));
     expect(screen.getByTestId("est-pm-div")).toHaveTextContent("10 ÷ 2 ＝ 5か月");
   });
 
