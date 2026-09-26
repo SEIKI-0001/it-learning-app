@@ -21,7 +21,13 @@ import {
   type MochitPageKind,
   type MochitTodaySnapshot,
 } from "@/lib/mochitAi/types";
-import { countTodayMochitMessages, getMochitDailyLimit, logMochitEvent } from "@/lib/mochitAi/usage";
+import { resolveMochitClientDay } from "@/lib/mochitAi/clientDay";
+import {
+  countMochitMessagesSince,
+  getMochitDailyLimit,
+  getMochitRollingLimit,
+  logMochitEvent,
+} from "@/lib/mochitAi/usage";
 
 export const runtime = "nodejs";
 
@@ -71,11 +77,6 @@ function sanitizeDisplayName(value: unknown): string {
   return name || DEFAULT_MOCHIT_NAME;
 }
 
-function clientLocalDate(body: MochitChatRequest, offset: number, now: Date): string {
-  if (typeof body.localDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.localDate)) return body.localDate;
-  return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10);
-}
-
 /**
  * POST /api/mochit/chat
  * 常駐モチットへの相談1往復。
@@ -119,15 +120,18 @@ export async function POST(request: Request) {
       ? body.intent
       : inferMochitIntent({ message, page, hasQuestion: question !== null, hasLearnTopic: learnTopicId !== null });
 
+  // 「今日」はユーザーのローカル日付（日本時間なら 0:00 JST で上限がリセットされる）
+  const now = new Date();
+  const day = resolveMochitClientDay(now, body.localDate, body.timezoneOffsetMinutes);
   const limit = getMochitDailyLimit();
-  const used = await countTodayMochitMessages(userId);
-  if (used >= limit) {
+  const [usedToday, usedLast24h] = await Promise.all([
+    countMochitMessagesSince(userId, new Date(day.dayStartMs)),
+    countMochitMessagesSince(userId, new Date(now.getTime() - 86_400_000)),
+  ]);
+  if (usedToday >= limit || usedLast24h >= getMochitRollingLimit(limit)) {
     return fail(429, "rate_limited", "今日はたくさん相談したね。続きはまた明日にしよう。学習はそのまま続けられるよ。");
   }
 
-  const now = new Date();
-  const offset = Math.max(-840, Math.min(840, Math.round(Number(body.timezoneOffsetMinutes) || 0)));
-  const localDate = clientLocalDate(body, offset, now);
   const supabase = getServiceSupabase();
 
   try {
@@ -138,8 +142,8 @@ export async function POST(request: Request) {
           now,
           intent,
           page,
-          localDate,
-          timezoneOffsetMinutes: offset,
+          localDate: day.localDate,
+          timezoneOffsetMinutes: day.timezoneOffsetMinutes,
           question,
           learnTopicId,
           today: sanitizeToday(body.today),

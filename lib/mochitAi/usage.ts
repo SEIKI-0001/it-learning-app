@@ -6,10 +6,18 @@ import "server-only";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import type { MochitAnalyticsEvent } from "./types";
 
-/** 1ユーザーの1日（UTC）あたりの送信上限。MOCHIT_AI_DAILY_LIMIT で上書きできる。 */
+/** 1ユーザーの1日（ユーザーのローカル日付）あたりの送信上限。MOCHIT_AI_DAILY_LIMIT で上書きできる。 */
 export function getMochitDailyLimit(): number {
   const raw = Number(process.env.MOCHIT_AI_DAILY_LIMIT);
   return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 30;
+}
+
+/**
+ * 直近24時間の送信上限（日次上限の2倍）。timezoneOffsetMinutes は端末の自己申告なので、
+ * 送るたびに offset を変えて「今日」の起点をずらしても、ここで総量を抑える。
+ */
+export function getMochitRollingLimit(dailyLimit: number): number {
+  return dailyLimit * 2;
 }
 
 export const MOCHIT_ANALYTICS_EVENTS: readonly MochitAnalyticsEvent[] = [
@@ -46,18 +54,19 @@ export async function logMochitEvent(entry: {
   if (error) console.error("[mochit-ai] event log failed:", error.message);
 }
 
-/** 今日（UTC）の送信成功数。数えられないときは 0（相談を止めない）。 */
-export async function countTodayMochitMessages(userId: string, now = new Date()): Promise<number> {
+/**
+ * since 以降の送信成功数。数えられないときは 0（相談を止めない）。
+ * 「今日」の起点はユーザーのローカル日付の 0:00（lib/mochitAi/clientDay.ts）を渡す。
+ */
+export async function countMochitMessagesSince(userId: string, since: Date): Promise<number> {
   const supabase = getServiceSupabase();
   if (!supabase) return 0;
-  const start = new Date(now);
-  start.setUTCHours(0, 0, 0, 0);
   const { count, error } = await supabase
     .from("mochit_ai_events")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("event", "mochit_message_sent")
-    .gte("created_at", start.toISOString());
+    .gte("created_at", since.toISOString());
   if (error) {
     console.error("[mochit-ai] usage count failed:", error.message);
     return 0;

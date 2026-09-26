@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   getServiceSupabase: vi.fn(),
   buildMochitLearningContext: vi.fn(),
   generateMochitReply: vi.fn(),
-  countTodayMochitMessages: vi.fn(),
+  countMochitMessagesSince: vi.fn(),
   logMochitEvent: vi.fn(),
 }));
 
@@ -23,7 +23,7 @@ vi.mock("@/lib/mochitAi/learningContext", () => ({
 vi.mock("@/lib/ai/mochitChat", () => ({ generateMochitReply: mocks.generateMochitReply }));
 vi.mock("@/lib/mochitAi/usage", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/mochitAi/usage")>()),
-  countTodayMochitMessages: mocks.countTodayMochitMessages,
+  countMochitMessagesSince: mocks.countMochitMessagesSince,
   logMochitEvent: mocks.logMochitEvent,
 }));
 
@@ -45,7 +45,7 @@ beforeEach(() => {
   mocks.getRequestUserId.mockResolvedValue("user-1");
   mocks.getRequestUserIdFast.mockResolvedValue("user-1");
   mocks.getServiceSupabase.mockReturnValue(supabase);
-  mocks.countTodayMochitMessages.mockResolvedValue(0);
+  mocks.countMochitMessagesSince.mockResolvedValue(0);
   mocks.buildMochitLearningContext.mockResolvedValue({
     facts: { readiness: { band: "あと一歩", score: 58 } },
     band: "あと一歩",
@@ -79,10 +79,56 @@ describe("POST /api/mochit/chat", () => {
 
   it("1日の上限に達したら 429 で AI を呼ばない", async () => {
     process.env.MOCHIT_AI_DAILY_LIMIT = "2";
-    mocks.countTodayMochitMessages.mockResolvedValue(2);
+    mocks.countMochitMessagesSince.mockResolvedValue(2);
     const res = await POST(request({ message: "今の実力は？", page: "today", source: "free_input" }));
     expect(res.status).toBe(429);
     expect(mocks.generateMochitReply).not.toHaveBeenCalled();
+  });
+
+  describe("日次上限はユーザーのローカル日付で数える", () => {
+    afterEach(() => vi.useRealTimers());
+
+    const jstRequest = (localDate: string) =>
+      request({ message: "今の実力は？", page: "today", source: "free_input", localDate, timezoneOffsetMinutes: -540 });
+
+    it("日本時間 0:30 は、その日の 0:00 JST（前日 15:00Z）から数え、学習データも同じ日付で読む", async () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-09-26T15:30:00.000Z")); // 2026-09-27 00:30 JST
+      await POST(jstRequest("2026-09-27"));
+      const since = mocks.countMochitMessagesSince.mock.calls.map(([, d]) => (d as Date).toISOString());
+      expect(since).toContain("2026-09-26T15:00:00.000Z");
+      expect(mocks.buildMochitLearningContext).toHaveBeenCalledWith(
+        expect.objectContaining({ localDate: "2026-09-27", timezoneOffsetMinutes: -540 }),
+      );
+    });
+
+    it("日本時間 23:59 までは前日の 0:00 JST から数える（UTC 0:00 では切り替わらない）", async () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-09-27T14:59:00.000Z")); // 2026-09-27 23:59 JST
+      await POST(jstRequest("2026-09-27"));
+      const since = mocks.countMochitMessagesSince.mock.calls.map(([, d]) => (d as Date).toISOString());
+      expect(since).toContain("2026-09-26T15:00:00.000Z");
+    });
+
+    it("端末が別の日付を名乗っても、サーバー時刻と offset から求めた日付で数える", async () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-09-26T15:30:00.000Z"));
+      await POST(jstRequest("2026-09-28"));
+      const since = mocks.countMochitMessagesSince.mock.calls.map(([, d]) => (d as Date).toISOString());
+      expect(since).toContain("2026-09-26T15:00:00.000Z");
+    });
+
+    it("offset を変えて起点をずらしても、直近24時間は上限の2倍までに抑える", async () => {
+      process.env.MOCHIT_AI_DAILY_LIMIT = "2";
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-09-26T15:30:00.000Z"));
+      mocks.countMochitMessagesSince.mockImplementation(async (_user: string, since: Date) =>
+        since.getTime() === Date.now() - 86_400_000 ? 4 : 0,
+      );
+      const res = await POST(jstRequest("2026-09-27"));
+      expect(res.status).toBe(429);
+      expect(mocks.generateMochitReply).not.toHaveBeenCalled();
+    });
   });
 
   it("成功時はガードを通した返答を返し、送信を記録する（本文は記録しない）", async () => {
