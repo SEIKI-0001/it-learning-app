@@ -6,7 +6,10 @@ test("a new learner can complete onboarding and open today's learning", async ({
     timeout: 15_000,
   });
 
-  await page.getByRole("link", { name: /学習をはじめる/ }).click();
+  await expect(page.getByRole("heading", { name: "まず、勉強の進め方を知ろう" })).toBeVisible();
+  await page.getByRole("link", { name: "1分で使い方を見る ▶" }).click();
+  await expect(page.getByRole("heading", { name: "勉強の進め方を知ろう" })).toBeVisible();
+  await page.getByRole("link", { name: "スキップして設定を始める" }).click();
   await expect(
     page.getByRole("heading", { name: "あなたに合わせて学習プランを作ります" }),
   ).toBeVisible();

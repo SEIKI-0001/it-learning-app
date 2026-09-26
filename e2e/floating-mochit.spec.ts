@@ -123,7 +123,7 @@ test("dragging moves the pet, does not open the menu, and preserves position", a
   const afterDrag = await pet.boundingBox();
   expect(afterDrag).not.toBeNull();
   expect(afterDrag!.x).toBeLessThan(before!.x - 100);
-  expect(afterDrag!.y).toBeGreaterThan(before!.y + 100);
+  expect(afterDrag!.y).toBeLessThan(before!.y - 100);
 
   await page.goto("/review");
   const afterNavigation = await page
