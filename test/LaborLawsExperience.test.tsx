@@ -32,6 +32,15 @@ const scene = () => screen.getByTestId("office-scene");
 const arrow = (id: string) => scene().querySelector(`[data-arrow="${id}"]`);
 
 describe("LaborLawsExperience office scene", () => {
+  it("opens with a static 3-party diagram: 派遣 has 派遣先→派遣社員 command, 請負 has none", () => {
+    renderDeck();
+    const diagram = screen.getByTestId("labor-relation");
+    expect(diagram).toHaveTextContent("派遣元企業");
+    expect(diagram).toHaveTextContent("派遣先企業");
+    expect(screen.getByRole("img", { name: /派遣先企業から派遣社員へは指揮命令/ })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /発注元（注文者）から請負会社の作業者へは指揮命令しない/ })).toBeInTheDocument();
+  });
+
   it("派遣: the instruction arrow runs straight from 派遣先 to 派遣社員", () => {
     reduceMotion();
     renderDeck();
@@ -47,6 +56,7 @@ describe("LaborLawsExperience office scene", () => {
   it("請負: order goes to the contractor, the contractor instructs its own worker, no direct arrow", () => {
     reduceMotion();
     renderDeck();
+    fireEvent.click(screen.getByRole("button", { name: "解説2" }));
     fireEvent.click(screen.getByRole("tab", { name: /請負/ }));
     expect(scene()).toHaveAttribute("data-mode", "ukeoi");
     expect(arrow("order")).toHaveAttribute("data-state", "on");
@@ -61,6 +71,7 @@ describe("LaborLawsExperience office scene", () => {
   it("direct instruction in 請負 draws a red bypass arrow with a careful warning", () => {
     reduceMotion();
     renderDeck();
+    fireEvent.click(screen.getByRole("button", { name: "解説2" }));
     fireEvent.click(screen.getByRole("tab", { name: /請負/ }));
     fireEvent.click(screen.getByRole("button", { name: /作業者へ直接指示する/ }));
     expect(scene()).toHaveAttribute("data-scenario", "gisou");

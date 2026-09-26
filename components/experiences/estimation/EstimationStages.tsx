@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import styles from "../calc/calc.module.css";
 import { Choices, LeveledPractice, Note, Replay, placeAnswer, type Choice, type LeveledQuestion } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
@@ -8,7 +8,7 @@ import { Panel, SectionTitle } from "../ui";
 
 // 見積り（人月・生産性・手法）。FPカウンターの後ろに足す。
 //   ② 人月は長方形の面積：3人×4か月＝12マス。逆に10マスを2人で並べると横に5列＝5か月
-//   ③ 生産性：120kステップを「1人月でできる6k」の束に切ると20束＝20人月
+//   ③ 生産性：例題 → ①数字の整理 ②6kの束がいくつ入るか ③120÷6＝20人月 → 結論（静的）
 //   ④ 工程ごと：工程ごとに割ってから足す（生産性を先に足さない）
 //   ⑤ 人数が途中で変わる：総工数（面積）は同じ。できた分を引いて、残りの日数で割る
 //   ⑥ 手法の使い分け：その時点で何が分かっているか
@@ -118,60 +118,71 @@ export function PersonMonthStage() {
 // ③ 生産性 ― 1人月でできる量で割る
 // ---------------------------------------------------------------------------
 
-const PROD_DELAYS = [1300, 1500, 2300, 1500];
 const CHUNKS = 20;
 
+// 目的：「工数（人月）＝ 作る量 ÷ 生産性」を、なぜ割り算になるかも含めて1つの例題で押さえる。
+// 再生しないと答えが出なかった旧版をやめ、例題 → ①②③ → 結論 を最初から全部見せる。
+function StepRow({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+  return (
+    <li className="grid grid-cols-[1.75rem_1fr] gap-x-2.5 border-t border-gray-200 py-3">
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-gray-900 text-sm font-bold text-white">{n}</span>
+      <div>
+        <div className="text-[15px] font-bold leading-snug text-gray-900">{title}</div>
+        <div className="mt-1.5">{children}</div>
+      </div>
+    </li>
+  );
+}
+
 export function ProductivityStage() {
-  const { ref, beat: b, reducedMotion, replay } = useBeats(5, PROD_DELAYS);
-  const cut = b >= 2;
   return (
     <Panel>
-      <SectionTitle step={3}>生産性から工数 ― なぜ割り算？</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">120kステップ</b>（12万行）のプログラムを作ります。1人が1か月で書ける量＝<b className="text-gray-800">生産性は 6kステップ/人月</b>。
-      </p>
+      <SectionTitle step={3}>生産性から工数を求める</SectionTitle>
+      <div className="mt-3 rounded-xl bg-gray-50 p-3.5 ring-1 ring-gray-200">
+        <div className="text-xs font-bold text-gray-500">例題</div>
+        <p className="mt-0.5 text-[15px] leading-relaxed text-gray-900">
+          <b>120kステップ</b>（12万行）のプログラムを作る。1人が1か月で書ける量（<b>生産性</b>）は <b>6kステップ</b>。必要な工数は何人月？
+        </p>
+      </div>
 
-      <div ref={ref} className="mt-3" data-testid="est-prod" data-beat={b}>
-        <div className="flex items-baseline justify-between text-[11px] font-bold">
-          <span className="text-gray-500">作る量 120kステップ</span>
-          <span className="tabular-nums text-brand-700" data-testid="est-prod-count">
-            {cut ? `${CHUNKS}束` : ""}
-          </span>
-        </div>
-        <div className="mt-1 flex h-9 gap-px overflow-hidden rounded-lg bg-gray-200 ring-1 ring-gray-300">
-          {Array.from({ length: CHUNKS }, (_, i) => {
-            const first = i === 0 && b >= 1;
-            const on = cut || first;
-            return (
+      <ol className="mt-3" data-testid="est-prod">
+        <StepRow n={1} title="分かっている数字を整理する">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+            <dt className="text-gray-600">作る量</dt>
+            <dd className="font-bold tabular-nums text-gray-900">120kステップ</dd>
+            <dt className="text-gray-600">生産性</dt>
+            <dd className="font-bold tabular-nums text-gray-900">6kステップ／人月（＝1人月で6k作れる）</dd>
+          </dl>
+        </StepRow>
+        <StepRow n={2} title="「1人月分（6k）」が、全体にいくつ入るか考える">
+          <div className="flex h-8 gap-px overflow-hidden rounded-md bg-gray-200 ring-1 ring-gray-300" aria-hidden>
+            {Array.from({ length: CHUNKS }, (_, i) => (
               <span
                 key={i}
-                className={`grid flex-1 place-items-center text-[9px] font-bold ${on ? `${first ? "bg-amber-400 text-amber-950" : "bg-brand-500 text-white"} ${cut && !first ? styles.pop : ""}` : "bg-brand-200"}`}
-                style={{ animationDelay: `${i * 90}ms` }}
+                className={`grid flex-1 place-items-center text-[10px] font-bold ${i === 0 ? "bg-gray-900 text-white" : "bg-brand-100 text-brand-800"}`}
               >
-                {cut && (i + 1) % 5 === 0 ? i + 1 : ""}
+                {(i + 1) % 5 === 0 ? i + 1 : ""}
               </span>
-            );
-          })}
-        </div>
-        {b >= 1 && (
-          <p className={`mt-1 text-[11px] font-bold text-amber-800 ${styles.reveal}`}>
-            ▲ 黄色の1束＝6kステップ＝<b>1人月</b>でできる量
-          </p>
-        )}
-        {cut && (
-          <p className={`mt-1 text-center text-xs font-bold text-gray-600 ${styles.reveal}`}>6kずつ切っていくと、ちょうど {CHUNKS} 束</p>
-        )}
-        {b >= 3 && (
-          <div className={`mt-3 rounded-xl bg-white px-3 py-2 text-center text-lg font-bold ring-1 ring-gray-200 ${styles.reveal}`} data-testid="est-prod-eq">
-            120 ÷ 6 ＝ <span className="text-brand-600">20人月</span>
+            ))}
           </div>
-        )}
-        {b >= 4 && (
-          <Note>
-            💡 <b>全体の量 ÷ 1人月でできる量 ＝ 必要な人月</b>。「1束が何個あるか」を数えるのが割り算です（転送時間の「量 ÷ 速さ」と同じ形）。
-          </Note>
-        )}
-        <Replay onClick={replay} hidden={reducedMotion} />
+          <p className="mt-1.5 text-sm text-gray-700">
+            120kを6kずつに切ると、<b className="text-gray-900">ちょうど20個</b>。1個＝1人月なので、20個＝20人月分の仕事です。
+          </p>
+        </StepRow>
+        <StepRow n={3} title="割り算で計算する">
+          <div className="rounded-lg bg-white px-3 py-2 text-center text-lg font-bold tabular-nums ring-1 ring-gray-300" data-testid="est-prod-eq">
+            120 ÷ 6 ＝ <span className="text-brand-700">20人月</span>
+          </div>
+          <p className="mt-1.5 text-xs text-gray-600">「いくつ入るか」を数えるのが割り算。転送時間の「量 ÷ 速さ」と同じ形です。</p>
+        </StepRow>
+      </ol>
+
+      <div className="mt-1 rounded-xl p-3.5 ring-2 ring-brand-600">
+        <div className="text-xs font-bold text-brand-700">結論</div>
+        <p className="mt-0.5 text-base font-bold text-gray-900">工数（人月）＝ 作る量 ÷ 生産性</p>
+        <p className="mt-1 text-sm text-gray-700">
+          この例では <b className="text-gray-900">20人月</b>。4人で取り組めば 20 ÷ 4 ＝ <b className="text-gray-900">5か月</b>かかる、と期間も出せます。
+        </p>
       </div>
     </Panel>
   );

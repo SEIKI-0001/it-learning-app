@@ -13,7 +13,7 @@ export default function SystemPlanningRfpExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        📑 システムを買う（調達する）ときは、<b>発注側が何をしたいか決めてから</b>、ベンダに提案を頼み、比べて選びます。家を建てるときに、希望をまとめて複数の工務店に提案を頼むのと同じ流れです。
+        システムを買う（調達する）ときは、<b>発注側が何をしたいか決めてから</b>、ベンダに提案を頼み、比べて選びます。家を建てるときに、希望をまとめて複数の工務店に提案を頼むのと同じ流れです。
       </Lead>
       <FlowPanel />
       <DocsPanel />

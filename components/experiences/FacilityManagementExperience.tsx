@@ -169,8 +169,8 @@ function Quiz() {
 export default function FacilityManagementExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🏗️ ファシリティマネジメントは<b>電源・空調・入退室などの設備を管理</b>してシステムを守る活動。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        ファシリティマネジメントは<b>電源・空調・入退室などの設備を管理</b>してシステムを守る活動。
         とくに<b>UPS＝停電時に一時的に電力を供給する装置</b>が頻出です。
       </div>
 

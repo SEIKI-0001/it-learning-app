@@ -241,8 +241,8 @@ function Quiz() {
 export default function DataUtilizationExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📊 <b>データ活用</b>は、集めて終わりではありません。テストの点数をただ保存するのではなく、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>データ活用</b>は、集めて終わりではありません。テストの点数をただ保存するのではなく、
         <b>苦手科目を見つけて勉強計画を変える</b>——判断や改善につなげるまでが活用です。
         後半（④〜）は別ブロックで、データを読むための<b>確率・統計</b>（平均・中央値・標準偏差など）を扱います。
       </div>

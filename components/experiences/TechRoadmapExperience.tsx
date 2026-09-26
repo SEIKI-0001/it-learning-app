@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import styles from "./calc/calc.module.css";
 import { Note, Replay } from "./calc/CalcParts";
 import { useBeats } from "./calc/useBeats";
-import { Arrow, Box, Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
+import { Arrow, Box, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
 
 // 「技術開発戦略とロードマップ」。時間軸が本質なので、ロードマップだけ段階表示にする。
@@ -18,7 +18,7 @@ export default function TechRoadmapExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        🗺️ 技術開発は<b>「いつ・何を売るか」から逆算</b>して、必要な技術と研究の時期を決めます。その計画図が<b>技術ロードマップ</b>です。
+        技術開発は<b>「いつ・何を売るか」から逆算</b>して、必要な技術と研究の時期を決めます。その計画図が<b>技術ロードマップ</b>です。
       </Lead>
       <StagesPanel />
       <RoadmapPanel />
@@ -61,7 +61,7 @@ function StagesPanel() {
             {i > 0 && (
               <div className="flex items-center gap-2 py-1 pl-5" aria-hidden>
                 <span className="text-base font-bold leading-none text-brand-500">↓</span>
-                <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-800 ring-1 ring-sky-200">
+                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-700 ring-1 ring-gray-300">
                   〰 {GAPS[i - 1]}（越えるのが難しい壁）
                 </span>
               </div>
@@ -205,14 +205,25 @@ function RoadmapPanel() {
 // ③ オープンイノベーションと特許戦略
 // ---------------------------------------------------------------------------
 
+// 「オープンイノベーション」「特許戦略」の見出し：先に「何の話か」がひと目で分かるよう、
+// 見出し＋一言の定義をセットで出す（本文・図はそのあとに続く）。
+function ConceptHeading({ title, definition, className = "" }: { title: string; definition: string; className?: string }) {
+  return (
+    <div className={className}>
+      <h4 className="text-lg font-bold leading-snug text-gray-900">{title}</h4>
+      <p className="mt-0.5 text-[13px] leading-snug text-gray-600">{definition}</p>
+    </div>
+  );
+}
+
 function OpenPatentPanel() {
   return (
     <Panel>
       <SectionTitle step={3}>外の力を使う・発明を守る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">ロードマップの穴を、全部自社で埋める必要はありません。</p>
 
-      <Caption className="mt-3">オープンイノベーション</Caption>
-      <div className="mt-1 grid grid-cols-2 gap-2" data-testid="roadmap-open">
+      <ConceptHeading title="オープンイノベーション" definition="自社だけでなく、大学や他社など外部の技術・知識も取り込んで価値を生み出す考え方。" />
+      <div className="mt-2 grid grid-cols-2 gap-2" data-testid="roadmap-open">
         <div className="rounded-xl bg-gray-50 p-2 ring-1 ring-gray-200">
           <div className="text-center text-[12px] font-bold text-gray-500">自社だけで開発</div>
           <div className="mt-2 flex flex-col items-center gap-0.5">
@@ -233,8 +244,8 @@ function OpenPatentPanel() {
         </div>
       </div>
 
-      <Caption className="mt-4">特許戦略</Caption>
-      <div className="mt-1 flex items-center gap-1.5" data-testid="roadmap-patent">
+      <ConceptHeading className="mt-5" title="特許戦略" definition="発明を権利化して模倣を防ぎ、他社へのライセンスにも活用する考え方。" />
+      <div className="mt-2 flex items-center gap-1.5" data-testid="roadmap-patent">
         <Box tone="soft" className="w-16 flex-none">発明</Box>
         <Arrow dir="right" label="出願" />
         <Box tone="brand" className="w-20 flex-none">特許権</Box>

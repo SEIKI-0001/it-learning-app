@@ -280,8 +280,8 @@ function Quiz() {
 export default function ApiExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🔌 <b>API</b> は、あるソフトの機能やデータを別のソフトから使うための<b>決まった入口</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>API</b> は、あるソフトの機能やデータを別のソフトから使うための<b>決まった入口</b>。
         レストランの注文口のように、客（アプリ）は厨房に入らず、決まった頼み方で料理（機能）を受け取ります。
       </div>
 

@@ -245,8 +245,8 @@ function Quiz() {
 export default function BreakEvenExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚖️ <b>損益分岐点</b>は、売上と費用がちょうど同じで<b>もうけが0</b>になる販売数（売上高）。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>損益分岐点</b>は、売上と費用がちょうど同じで<b>もうけが0</b>になる販売数（売上高）。
         公式は最後に出てきます。まずは1個売ったときのお金の動きから。
       </div>
 

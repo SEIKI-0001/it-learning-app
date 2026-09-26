@@ -212,8 +212,8 @@ function Quiz() {
 export default function SystemStrategyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🧩 <b>システム戦略</b>は、会社の目標を達成するためにITを<b>どう活用するか</b>を考えること。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>システム戦略</b>は、会社の目標を達成するためにITを<b>どう活用するか</b>を考えること。
         ITを入れること自体が目的ではなく、あくまで<b>手段</b>です。
       </div>
 

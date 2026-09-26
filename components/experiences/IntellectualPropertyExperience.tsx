@@ -210,8 +210,8 @@ function Quiz() {
 export default function IntellectualPropertyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🛡️ <b>知的財産権</b>は、人の創作やアイデアを守る権利の総称。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>知的財産権</b>は、人の創作やアイデアを守る権利の総称。
         <b>著作権＝作品</b>、<b>特許権＝発明</b>、<b>商標権＝名前・ロゴ</b>、と「何を守るか」で分かれます。
       </div>
 

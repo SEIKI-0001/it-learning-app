@@ -179,8 +179,8 @@ export function SectionTitle({
   children: ReactNode;
 }) {
   return (
-    <h3 className="flex items-center gap-2.5 text-base font-bold text-gray-800">
-      <span className="grid h-7 w-7 flex-none place-items-center rounded-lg bg-brand-100 font-mono text-sm text-brand-700">
+    <h3 className="flex items-start gap-2.5 text-lg font-bold leading-snug text-gray-900 [word-break:auto-phrase]">
+      <span className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-md bg-gray-900 font-mono text-xs text-white">
         {step ?? emoji}
       </span>
       {children}

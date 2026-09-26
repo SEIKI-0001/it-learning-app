@@ -72,8 +72,8 @@ export default function NormalizationExperience() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🗂️ 正規化とは、<b>1つの表に詰め込んだデータを、重複やムダのない複数の表に分けていく</b>整理作業。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        正規化とは、<b>1つの表に詰め込んだデータを、重複やムダのない複数の表に分けていく</b>整理作業。
         目的は<b>データの重複をなくし、更新時の矛盾（更新異常）を防ぐ</b>こと。下のボタンで段階を進めてみよう。
       </div>
 

@@ -119,7 +119,7 @@ export function TradeFlowMap({ sel, runKey, reducedMotion }: { sel: TermKey | nu
 
   return (
     <div
-      className={`relative mt-3 w-full rounded-xl bg-gray-50 ring-1 ring-gray-200 ${reducedMotion ? styles.reduced : ""}`}
+      className={`relative mx-auto mt-3 w-full max-w-[280px] rounded-xl bg-gray-50 ring-1 ring-gray-200 ${reducedMotion ? styles.reduced : ""}`}
       style={{ aspectRatio: `${W} / ${H}` }}
       data-testid="ebiz-map"
       data-sel={sel ?? "none"}

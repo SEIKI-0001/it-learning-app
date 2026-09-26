@@ -122,7 +122,7 @@ export function Note({ children, tone = "amber" }: { children: ReactNode; tone?:
       ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
       : tone === "sky"
         ? "bg-sky-50 text-sky-900 ring-sky-200"
-        : "bg-amber-50 text-amber-900 ring-amber-200";
+        : "bg-gray-50 text-gray-800 ring-gray-200";
   return <div className={`mt-3 rounded-xl px-4 py-2.5 text-sm leading-relaxed ring-1 ${color} ${styles.reveal}`}>{children}</div>;
 }
 

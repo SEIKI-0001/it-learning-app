@@ -580,8 +580,8 @@ function Comparison() {
 export default function PublicKeyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📮 たとえると<b>郵便受け</b>。<b>公開鍵＝投入口</b>（誰でも手紙を入れられる＝暗号化できる）、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        たとえると<b>郵便受け</b>。<b>公開鍵＝投入口</b>（誰でも手紙を入れられる＝暗号化できる）、
         <b>秘密鍵＝持ち主だけの開錠鍵</b>（中身を取り出せる＝復号できる）。鍵は<b>2本でペア</b>です。
       </div>
 

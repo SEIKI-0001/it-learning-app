@@ -26,8 +26,15 @@ const link = (id: string) => screen.getByTestId(`goal-link-${id}`).getAttribute(
 const settle = () => act(() => void vi.advanceTimersByTime(4000));
 
 describe("GoalEvaluationExperience causal chain", () => {
+  it("opens with a static KGI → CSF → KPI hierarchy (KGI on top) before any interaction", () => {
+    renderDeck();
+    const tiers = screen.getByTestId("goal-hierarchy").querySelectorAll("[data-testid^='goal-tier-']");
+    expect(Array.from(tiers).map((t) => t.getAttribute("data-testid"))).toEqual(["goal-tier-KGI", "goal-tier-CSF", "goal-tier-KPI"]);
+  });
+
   it("propagates 施策 → KPI → CSF → KGI one step at a time", () => {
     renderDeck();
+    click("解説2");
     click(/接客トレーニング/);
     expect(stage()).toBe("0");
     expect(link("kpi")).toBe("off");
@@ -49,6 +56,7 @@ describe("GoalEvaluationExperience causal chain", () => {
 
   it("an SNS follower boost moves its own number but breaks before CSF and leaves KGI", () => {
     renderDeck();
+    click("解説2");
     click(/SNSのフォロワー数だけ増やす/);
     settle();
     expect(screen.getByTestId("goal-vanity")).toHaveTextContent("SNSフォロワー");
@@ -59,6 +67,7 @@ describe("GoalEvaluationExperience causal chain", () => {
 
   it("shows the insight after CSF actions and a vanity action", () => {
     renderDeck();
+    click("解説2");
     click(/ポイントカード/);
     settle();
     click(/LINEで新作/);
@@ -70,9 +79,9 @@ describe("GoalEvaluationExperience causal chain", () => {
 
   it("keeps BSC and the quiz", () => {
     renderDeck();
-    click("解説2");
-    expect(screen.getByRole("heading", { name: /BSC/ })).toBeInTheDocument();
     click("解説3");
+    expect(screen.getByRole("heading", { name: /BSC/ })).toBeInTheDocument();
+    click("解説4");
     expect(screen.getByRole("heading", { name: /どの指標？/ })).toBeInTheDocument();
   });
 });

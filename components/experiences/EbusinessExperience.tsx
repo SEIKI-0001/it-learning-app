@@ -36,8 +36,8 @@ const TERMS: Term[] = [
     d: "インターネット上での売買（電子商取引）。ネット通販など、主に企業が消費者へ売る取引。",
     ex: "例：ネットショップで服を買う",
     note: "※ 企業→消費者＝BtoC、企業どうし＝BtoB、フリマアプリのような個人どうしの売買＝CtoC。",
-    chip: "bg-sky-600 text-white",
-    badge: "bg-sky-50 text-sky-900 ring-sky-200",
+    chip: "bg-brand-600 text-white",
+    badge: "bg-gray-50 text-gray-900 ring-gray-200",
   },
   {
     key: "edi",
@@ -47,8 +47,8 @@ const TERMS: Term[] = [
     flow: "取引データを交換",
     d: "企業どうしが、注文・納品・請求などのデータを決まった形式で電子的にやり取りするしくみ（電子データ交換）。",
     ex: "例：取引先へ発注データを自動送信",
-    chip: "bg-emerald-600 text-white",
-    badge: "bg-emerald-50 text-emerald-900 ring-emerald-200",
+    chip: "bg-brand-600 text-white",
+    badge: "bg-gray-50 text-gray-900 ring-gray-200",
   },
   {
     key: "fintech",
@@ -59,7 +59,7 @@ const TERMS: Term[] = [
     d: "金融（Finance）×IT（Technology）。銀行に行かなくても、スマホで支払い・送金・家計管理ができる。",
     ex: "例：スマホのQRコード決済で支払う",
     chip: "bg-brand-600 text-white",
-    badge: "bg-brand-50 text-brand-900 ring-brand-200",
+    badge: "bg-gray-50 text-gray-900 ring-gray-200",
   },
   {
     key: "sharing",
@@ -250,8 +250,8 @@ function Quiz() {
 export default function EbusinessExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🌐 ネットを使った取引は<b>相手が誰か</b>で呼び名が変わります。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        ネットを使った取引は<b>相手が誰か</b>で呼び名が変わります。
         <b>EC＝消費者向け売買／EDI＝企業間データ交換／フィンテック＝金融×IT／シェアリング＝個人間共有</b>。
       </div>
 

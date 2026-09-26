@@ -18,7 +18,7 @@ export default function EmbeddedControlExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        🔌 エアコンや自動車の中には、<b>その機能のためだけのコンピュータ</b>が入っています。これが組込みシステム。<b>測る → 決める → 動かす → また測る</b>を繰り返して機械を制御します。
+        エアコンや自動車の中には、<b>その機能のためだけのコンピュータ</b>が入っています。これが組込みシステム。<b>測る → 決める → 動かす → また測る</b>を繰り返して機械を制御します。
       </Lead>
       <LoopPanel />
       <IoPanel />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -17,10 +17,10 @@ const CELLS: Record<
   CellKey,
   { emo: string; name: string; growth: "高" | "低"; share: "高" | "低"; tone: string }
 > = {
-  star: { emo: "⭐", name: "花形", growth: "高", share: "高", tone: "bg-amber-50 ring-amber-300" },
-  question: { emo: "❓", name: "問題児", growth: "高", share: "低", tone: "bg-sky-50 ring-sky-300" },
-  cow: { emo: "🐄", name: "金のなる木", growth: "低", share: "高", tone: "bg-emerald-50 ring-emerald-300" },
-  dog: { emo: "🐕", name: "負け犬", growth: "低", share: "低", tone: "bg-gray-50 ring-gray-300" },
+  star: { emo: "⭐", name: "花形", growth: "高", share: "高", tone: "bg-white ring-gray-300" },
+  question: { emo: "❓", name: "問題児", growth: "高", share: "低", tone: "bg-white ring-gray-300" },
+  cow: { emo: "🐄", name: "金のなる木", growth: "低", share: "高", tone: "bg-white ring-gray-300" },
+  dog: { emo: "🐕", name: "負け犬", growth: "低", share: "低", tone: "bg-white ring-gray-300" },
 };
 
 // 左上=花形 右上=問題児 / 左下=金のなる木 右下=負け犬
@@ -65,6 +65,74 @@ const INVEST_RESULT: Record<
   },
 };
 
+// 2軸の枠。象限より先に「縦＝市場成長率（上ほど高い）」「横＝相対的市場占有率（左ほど高い）」を読ませる。
+function PpmAxes({ children }: { children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[2.75rem_1fr] gap-x-2" data-testid="ppm-axes">
+      {/* 縦軸：市場成長率 */}
+      <div className="flex flex-col items-center">
+        <span className="text-sm font-bold text-gray-900">高</span>
+        <div className="relative my-1 flex w-full flex-1 justify-center">
+          <span aria-hidden className="absolute inset-y-0 left-1/2 w-[3px] -translate-x-1/2 bg-gray-900" />
+          <span aria-hidden className="absolute -top-1 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[7px] border-b-[10px] border-x-transparent border-b-gray-900" />
+          <span className="relative z-10 self-center bg-white py-1 text-base font-bold leading-tight tracking-wider text-gray-900 [writing-mode:vertical-rl]">
+            市場成長率
+          </span>
+        </div>
+        <span className="text-sm font-bold text-gray-900">低</span>
+      </div>
+      <div>{children}</div>
+      {/* 横軸：相対的市場占有率（左ほど高い） */}
+      <div />
+      <div className="mt-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-gray-900">高</span>
+          <div className="relative h-[3px] flex-1 bg-gray-900" aria-hidden>
+            <span className="absolute -left-1 top-1/2 h-0 w-0 -translate-y-1/2 border-y-[7px] border-r-[10px] border-y-transparent border-r-gray-900" />
+          </div>
+          <span className="text-sm font-bold text-gray-900">低</span>
+        </div>
+        <div className="mt-1 text-center text-base font-bold text-gray-900">相対的市場占有率（シェア）</div>
+      </div>
+    </div>
+  );
+}
+
+const MEANING: Record<CellKey, { role: string; act: string }> = {
+  star: { role: "成長市場で勝っている主力", act: "投資してシェアを守る" },
+  question: { role: "伸びる市場で、まだ負けている", act: "投資して育てるか判断" },
+  cow: { role: "成熟市場で勝っている＝資金源", act: "投資は控えめ、稼ぎを回す" },
+  dog: { role: "伸びない市場で負けている", act: "撤退・縮小を検討" },
+};
+
+function AxesPanel() {
+  return (
+    <Panel>
+      <SectionTitle step={1}>PPMの地図は「2本の軸」で読む</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        象限の名前より先に軸を確認します。<b className="text-gray-800">縦＝市場成長率（上ほど伸びている市場）</b>、
+        <b className="text-gray-800">横＝相対的市場占有率（左ほどシェアが高い）</b>。横軸は左が「高」なので注意。
+      </p>
+      <div className="mt-4">
+        <PpmAxes>
+          <div className="grid grid-cols-2 gap-2">
+            {GRID.map((k) => (
+              <div key={k} className={`rounded-xl p-2.5 ring-1 ${k === "cow" ? "bg-brand-50 ring-brand-300" : "bg-white ring-gray-300"}`} data-testid={`ppm-cell-${k}`}>
+                <div className="text-base font-bold text-gray-900">{CELLS[k].name}</div>
+                <div className="mt-0.5 text-xs font-bold text-gray-500">
+                  成長{CELLS[k].growth}・シェア{CELLS[k].share}
+                </div>
+                <div className="mt-1 text-xs leading-snug text-gray-700">{MEANING[k].role}</div>
+                <div className="mt-0.5 text-xs font-bold leading-snug text-brand-700">→ {MEANING[k].act}</div>
+              </div>
+            ))}
+          </div>
+        </PpmAxes>
+      </div>
+    </Panel>
+  );
+}
+
 function MoneyCycle() {
   const [phase, setPhase] = useState<"earn" | "invest">("earn");
   const [earnPick, setEarnPick] = useState<CellKey | null>(null);
@@ -100,17 +168,16 @@ function MoneyCycle() {
         onClick={() => pick(k)}
         disabled={disabled}
         className={`relative rounded-xl p-2.5 text-left ring-1 transition active:scale-[0.98] ${c.tone} ${
-          picked ? "ring-2" : ""
+          picked ? "ring-2 ring-brand-600" : ""
         } ${disabled ? "opacity-70" : ""}`}
       >
-        <div className="text-lg">{c.emo}</div>
-        <div className="mt-0.5 text-sm font-bold text-gray-800">{c.name}</div>
-        <div className="mt-0.5 text-[10px] font-bold text-gray-400">
+        <div className="text-base font-bold text-gray-900">{c.name}</div>
+        <div className="mt-0.5 text-xs font-bold text-gray-500">
           成長{c.growth}・シェア{c.share}
         </div>
         {phase === "invest" && isCow && (
-          <span className="absolute -top-2 right-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-            💰 財布
+          <span className="absolute -top-2 right-1 rounded-full bg-gray-900 px-1.5 py-0.5 text-[10px] font-bold text-white">
+            資金源
           </span>
         )}
         {invested.has(k) && phase === "invest" && (
@@ -124,10 +191,9 @@ function MoneyCycle() {
 
   return (
     <Panel>
-      <SectionTitle step={1}>会社のお金をめぐらせよう</SectionTitle>
+      <SectionTitle step={2}>会社のお金をめぐらせよう</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        あなたは4つの事業を持つ社長。PPMは
-        <b className="text-gray-800">市場成長率（縦）× 市場占有率（横）</b>の地図です。
+        あなたは4つの事業を持つ社長。解説1の地図を使って、
         まずは<b className="text-gray-800">投資のお金を生んでくれる事業</b>を探そう。
       </p>
 
@@ -137,20 +203,10 @@ function MoneyCycle() {
       </div>
 
       {/* 2x2 マトリクス */}
-      <div className="mt-3 flex gap-2">
-        <div className="flex flex-col items-center justify-center">
-          <span className="text-[10px] font-bold text-gray-400">成長率</span>
-          <span className="text-[11px] font-bold text-gray-500">高 ↑</span>
-          <span className="my-1 text-[11px] text-gray-300">｜</span>
-          <span className="text-[11px] font-bold text-gray-500">低 ↓</span>
-        </div>
-        <div className="flex-1">
+      <div className="mt-3">
+        <PpmAxes>
           <div className="grid grid-cols-2 gap-2">{GRID.map(cell)}</div>
-          <div className="mt-1 flex items-center justify-between px-1 text-[11px] font-bold text-gray-500">
-            <span>← 占有率 高</span>
-            <span>占有率 低 →</span>
-          </div>
-        </div>
+        </PpmAxes>
       </div>
 
       {/* フェーズAのフィードバック */}
@@ -253,7 +309,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   return (
     <Panel>
-      <SectionTitle step={2}>この事業はどのタイプ？</SectionTitle>
+      <SectionTitle step={3}>この事業はどのタイプ？</SectionTitle>
       <ul className="mt-3 space-y-3">
         {QUIZ.map((q, i) => {
           const chosen = answers[i];
@@ -301,16 +357,17 @@ function Quiz() {
 export default function PpmExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📊 PPMは、いくつもの事業を<b>「成長率」と「占有率」の2軸</b>で4つに分け、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        PPMは、いくつもの事業を<b>「市場成長率」と「相対的市場占有率」の2軸</b>で4つに分け、
         <b>どこにお金を使い、どこから手を引くか</b>を考える地図です。
       </div>
 
+      <AxesPanel />
       <MoneyCycle />
       <Quiz />
 
       <Panel>
-        <SectionTitle emoji="🔑">まとめ</SectionTitle>
+        <SectionTitle step={4}>まとめ</SectionTitle>
         <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-gray-700">
           <li>・<b>花形</b>：高成長・高シェア → 投資して伸ばす。</li>
           <li>・<b>金のなる木</b>：低成長・高シェア → 安定して稼ぎ、資金源になる。</li>

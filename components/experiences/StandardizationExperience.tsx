@@ -185,8 +185,8 @@ function Quiz() {
 export default function StandardizationExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📏 標準化は<b>「形やルールを共通にそろえる」</b>こと。そろえると組み合わせ・交換・大量生産がしやすくなります。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        標準化は<b>「形やルールを共通にそろえる」</b>こと。そろえると組み合わせ・交換・大量生産がしやすくなります。
         規格は<b>JIS（日本）／ISO（国際）／デファクト（事実上）</b>。
       </div>
 

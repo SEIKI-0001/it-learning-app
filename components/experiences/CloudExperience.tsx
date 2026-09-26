@@ -293,8 +293,8 @@ function Quiz() {
 export default function CloudExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ☁️ クラウドは「機械を持たず<b>借りて使う</b>」考え方。借りる範囲が広い順に <b>SaaS（完成アプリ）→ PaaS（開発土台）→ IaaS（サーバ資源）</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        クラウドは「機械を持たず<b>借りて使う</b>」考え方。借りる範囲が広い順に <b>SaaS（完成アプリ）→ PaaS（開発土台）→ IaaS（サーバ資源）</b>。
         料理でいうと <b>完成弁当 → キッチン → 食材・設備</b> のイメージです。
       </div>
 

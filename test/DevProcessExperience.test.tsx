@@ -15,46 +15,27 @@ function renderDeck() {
   );
 }
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
-const attr = (id: string, a: string) => screen.getByTestId(id).getAttribute(a);
 
-describe("DevProcessExperience two-track race", () => {
-  it("before the change both tracks just move forward", () => {
+describe("DevProcessExperience static explanation", () => {
+  it("shows the artifact chain 要件定義書 → 設計書 → プログラム → テスト結果 without interaction", () => {
     renderDeck();
-    fireEvent.change(screen.getByRole("slider", { name: "経過週" }), { target: { value: "4" } });
-    expect(attr("dev-arc-wf", "data-on")).toBe("false");
-    expect(screen.queryAllByTestId("dev-block-redo")).toHaveLength(0);
+    expect(screen.getByTestId("dev-chain")).toHaveTextContent(/要件定義書.*設計書.*プログラム.*テスト結果/);
   });
 
-  it("at the change WF jumps back to requirements while agile queues it for the next sprint", () => {
+  it("a late change ripples back to every earlier artifact, an early one touches only the first", () => {
     renderDeck();
-    click("⚡変更");
-    expect(attr("dev-arc-wf", "data-on")).toBe("true");
-    expect(attr("dev-arc-agile", "data-on")).toBe("true");
-    expect(screen.getByTestId("dev-caption")).toHaveTextContent("要件定義まで戻る");
-    expect(screen.getByTestId("dev-caption")).toHaveTextContent("次のスプリント（S4）");
-    expect(screen.getAllByTestId("dev-block-waste").length).toBe(2);
-  });
-
-  it("agile reflects the change long before WF, then the metrics compare both", () => {
-    renderDeck();
-    click("アジャイル反映");
-    expect(attr("dev-span-agile", "data-done")).toBe("true");
-    expect(attr("dev-span-wf", "data-done")).toBe("false");
-    expect(screen.queryByTestId("dev-metrics")).not.toBeInTheDocument();
-
-    click("WF反映");
-    expect(attr("dev-span-wf", "data-done")).toBe("true");
-    const m = screen.getByTestId("dev-metrics");
-    expect(m).toHaveTextContent("8.5週");
-    expect(m).toHaveTextContent("2.5週");
-    expect(m).toHaveTextContent("戻らない");
+    const early = screen.getByTestId("dev-ripple-0").querySelectorAll("[data-status='none']");
+    const late = screen.getByTestId("dev-ripple-1").querySelectorAll("[data-status='none']");
+    expect(early).toHaveLength(3);
+    expect(late).toHaveLength(0);
+    expect(screen.getByTestId("dev-ripple-1")).toHaveTextContent("直すのは 4つすべて");
   });
 
   it("keeps the comparison table and the quiz", () => {
     renderDeck();
-    click("解説2");
-    expect(screen.getByRole("heading", { name: /くらべて整理/ })).toBeInTheDocument();
     click("解説3");
+    expect(screen.getByRole("heading", { name: /ウォーターフォールとアジャイルをくらべる/ })).toBeInTheDocument();
+    click("解説4");
     expect(screen.getByRole("heading", { name: /これはどっち？/ })).toBeInTheDocument();
   });
 });

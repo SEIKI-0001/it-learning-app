@@ -232,8 +232,8 @@ export default function LogicOperationsExperience() {
   const set = (patch: Partial<State>) => setState((s) => ({ ...s, ...patch }));
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🔌 <b>論理演算</b>は 0（偽）と 1（真）を組み合わせる計算。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>論理演算</b>は 0（偽）と 1（真）を組み合わせる計算。
         <b>AND＝両方1で1</b>、<b>OR＝どちらか1で1</b>、<b>NOT＝反転</b>、<b>XOR＝違うとき1</b>。
       </div>
 

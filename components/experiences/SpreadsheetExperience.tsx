@@ -164,8 +164,8 @@ function Summary() {
 export default function SpreadsheetExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📊 表計算で式をコピーすると、参照するセルが自動でズレるのが<b>相対参照</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        表計算で式をコピーすると、参照するセルが自動でズレるのが<b>相対参照</b>。
         ズラしたくないセルは <b>$</b> で固定する<b>絶対参照</b>を使います。後半では、IF などの<b>関数を読む力</b>をつけます。
       </div>
 

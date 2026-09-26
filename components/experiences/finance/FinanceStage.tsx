@@ -146,21 +146,21 @@ export function FinanceStage({ phase, reducedMotion }: { phase: number; reducedM
         {/* BS：その日時点の写真 */}
         <div className="relative rounded-xl bg-white p-2 ring-1 ring-gray-200" data-testid="fin-bs">
           {!reducedMotion && ev.changed.length > 0 && <span key={phase} className={styles.shutter} aria-hidden />}
-          <div className="text-[11px] font-bold text-gray-800">📷 BS</div>
+          <div className="text-[11px] font-bold text-gray-800">BS</div>
           <div className="text-[10px] text-gray-500">
             <b className="tabular-nums text-gray-700">{ev.date}</b> 時点の状態
           </div>
           <div className="mt-1.5 grid h-[122px] grid-cols-2 items-end gap-1">
             <div className="flex flex-col justify-end gap-0.5">
-              <Block label="商品" value={now.bs.goods} tone="bg-sky-200 text-sky-900" changed={ch("goods")} delta={d("goods")} testId="fin-goods" />
-              <Block label="現金" value={now.bs.cash} tone="bg-sky-400 text-white" changed={ch("cash")} delta={d("cash")} testId="fin-cash" />
+              <Block label="商品" value={now.bs.goods} tone="bg-brand-100 text-brand-900" changed={ch("goods")} delta={d("goods")} testId="fin-goods" />
+              <Block label="現金" value={now.bs.cash} tone="bg-brand-500 text-white" changed={ch("cash")} delta={d("cash")} testId="fin-cash" />
             </div>
             <div className="flex flex-col justify-end gap-0.5">
-              <Block label="借入金" value={now.bs.loan} tone="bg-amber-300 text-amber-950" changed={ch("loan")} delta={d("loan")} testId="fin-loan" />
+              <Block label="借入金" value={now.bs.loan} tone="bg-gray-200 text-gray-900" changed={ch("loan")} delta={d("loan")} testId="fin-loan" />
               <Block
                 label="純資産"
                 value={now.equity}
-                tone="bg-emerald-500 text-white"
+                tone="bg-gray-700 text-white"
                 changed={ch("profit")}
                 delta={d("profit")}
                 testId="fin-equity"
@@ -180,7 +180,7 @@ export function FinanceStage({ phase, reducedMotion }: { phase: number; reducedM
 
         {/* PL：期間中の流れ */}
         <div className="rounded-xl bg-white p-2 ring-1 ring-gray-200" data-testid="fin-pl">
-          <div className="text-[11px] font-bold text-gray-800">🎞️ PL</div>
+          <div className="text-[11px] font-bold text-gray-800">PL</div>
           <div className="text-[10px] text-gray-500">
             4/1〜<b className="tabular-nums text-gray-700">{ev.date}</b> の流れ
           </div>
@@ -192,7 +192,7 @@ export function FinanceStage({ phase, reducedMotion }: { phase: number; reducedM
               <li
                 key={r.label}
                 className={`${styles.row} flex items-center justify-between gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold leading-tight ${
-                  r.kind === "revenue" ? "bg-sky-50 text-sky-800" : "bg-amber-50 text-amber-800"
+                  r.kind === "revenue" ? "bg-brand-50 text-brand-800" : "bg-gray-100 text-gray-700"
                 }`}
               >
                 <span>{r.kind === "revenue" ? "収益" : "費用"}：{r.label}</span>
@@ -208,7 +208,7 @@ export function FinanceStage({ phase, reducedMotion }: { phase: number; reducedM
           </ul>
           <div
             className={`mt-1 flex items-center justify-between rounded px-1.5 py-0.5 text-[11px] font-bold ${
-              now.profit >= 0 ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-800"
+              now.profit >= 0 ? "bg-gray-900 text-white" : "bg-rose-50 text-rose-800"
             }`}
             data-testid="fin-profit"
           >
@@ -220,16 +220,16 @@ export function FinanceStage({ phase, reducedMotion }: { phase: number; reducedM
         {/* 渡るチップ：売った商品 → PLの費用、利益 → BSの純資産 */}
         {!reducedMotion && phase === 2 && (
           <>
-            <span key="goods" className={`${styles.fly} ${styles.toPl} rounded bg-sky-200 px-1.5 py-0.5 text-[10px] font-bold text-sky-900 ring-1 ring-sky-300`}>
+            <span key="goods" className={`${styles.fly} ${styles.toPl} rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-900 ring-1 ring-brand-300`}>
               商品40 → 費用へ
             </span>
-            <span key="profit" className={`${styles.fly} ${styles.toBs} rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 ring-1 ring-emerald-300`}>
+            <span key="profit" className={`${styles.fly} ${styles.toBs} rounded bg-gray-700 px-1.5 py-0.5 text-[10px] font-bold text-white ring-1 ring-gray-700`}>
               利益+30 → 純資産へ
             </span>
           </>
         )}
         {!reducedMotion && phase === 4 && (
-          <span key="salary" className={`${styles.fly} ${styles.toBs} rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 ring-1 ring-rose-200`}>
+          <span key="salary" className={`${styles.fly} ${styles.toBs} rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-gray-700 ring-1 ring-gray-300`}>
             利益−20 → 純資産も減る
           </span>
         )}
@@ -237,8 +237,8 @@ export function FinanceStage({ phase, reducedMotion }: { phase: number; reducedM
 
       {last && (
         <div className={`${styles.row} mt-2 grid grid-cols-2 gap-2 text-center text-[10px] font-bold leading-snug`} data-testid="fin-summary">
-          <div className="rounded-lg bg-sky-50 px-1.5 py-1 text-sky-900 ring-1 ring-sky-200">BS＝4/30の「写真」<br />ある時点の状態</div>
-          <div className="rounded-lg bg-brand-50 px-1.5 py-1 text-brand-900 ring-1 ring-brand-200">PL＝4/1〜4/30の「動画」<br />期間中のもうけ</div>
+          <div className="rounded-lg bg-gray-50 px-1.5 py-1 text-gray-900 ring-1 ring-gray-200">BS＝4/30の「写真」<br />ある時点の状態</div>
+          <div className="rounded-lg bg-gray-50 px-1.5 py-1 text-gray-900 ring-1 ring-gray-200">PL＝4/1〜4/30の「動画」<br />期間中のもうけ</div>
         </div>
       )}
     </div>

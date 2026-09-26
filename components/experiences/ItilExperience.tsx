@@ -254,8 +254,8 @@ function Quiz() {
 export default function ItilExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📚 <b>ITIL</b>は、ITサービス管理の<b>ベストプラクティス（うまいやり方）をまとめた知識体系</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>ITIL</b>は、ITサービス管理の<b>ベストプラクティス（うまいやり方）をまとめた知識体系</b>。
         障害対応・変更・改善などの進め方が整理されています。
       </div>
 

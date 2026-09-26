@@ -89,6 +89,7 @@ describe("FinancialStatementsExperience ratios", () => {
     renderDeck();
     click("解説7");
     expect(screen.getByTestId("fin-pl-営業利益")).toHaveTextContent("150");
+    expect(screen.getByTestId("fin-pl-営業利益")).toHaveTextContent("＝ 本業で稼いだ利益");
     expect(screen.getByTestId("fin-pl-当期純利益")).toHaveTextContent("80");
   });
 
