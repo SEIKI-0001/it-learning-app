@@ -410,10 +410,15 @@ function mergeWeeklyPlan(
   if (!a) return b ?? null;
   if (!b) return a;
   if (a.weekStartDate === b.weekStartDate) {
+    // 設定変更で作り直した計画は、同じ週の旧条件の計画と混ぜない（新しい方を採用）。
+    if ((a.revisedAt ?? "") !== (b.revisedAt ?? "")) {
+      return (a.revisedAt ?? "") > (b.revisedAt ?? "") ? a : b;
+    }
     return {
       weekStartDate: a.weekStartDate,
       topicIds: [...new Set([...a.topicIds, ...b.topicIds])],
       reviewIds: [...new Set([...a.reviewIds, ...b.reviewIds])],
+      ...(a.revisedAt ? { revisedAt: a.revisedAt } : {}),
     };
   }
   return a.weekStartDate > b.weekStartDate ? a : b;

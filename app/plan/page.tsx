@@ -108,7 +108,7 @@ export default function PlanPage() {
     const uid = getUserId();
     if (uid) {
       if (needsWeekly) saveProgressToDb(uid, next.progress);
-      if (needsStart && next.profile) saveProfileToDb(uid, next.profile);
+      if (needsStart && next.profile) void saveProfileToDb(uid, next.profile);
     }
   }, [state, setState]);
 

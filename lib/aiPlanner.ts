@@ -17,6 +17,7 @@ import {
   getTopic,
 } from "@/lib/content";
 import { buildTodaysLearningQueue } from "@/lib/learningLoop";
+import { daysUntilExamDate } from "@/lib/planningInputs";
 
 // ============================================================================
 // AIプランナー抽象層
@@ -50,11 +51,7 @@ export function daysUntilExam(
   profile?: UserProfile,
   now: Date = new Date(),
 ): number | null {
-  if (!profile?.examDate) return null;
-  const exam = new Date(`${profile.examDate}T00:00:00`);
-  if (Number.isNaN(exam.getTime())) return null;
-  const ms = exam.getTime() - now.getTime();
-  return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+  return daysUntilExamDate(profile?.examDate, now);
 }
 
 /** 分野ごとの重み(合計1)。苦手分野を厚くする。 */
