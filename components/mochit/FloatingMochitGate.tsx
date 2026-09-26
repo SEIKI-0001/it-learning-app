@@ -15,6 +15,8 @@ const HIDDEN_ROUTE_PREFIXES = [
   "/onboarding",
   "/avatar",
   "/dev",
+  // 公開ガイドは読み物。本文に重なる常駐キャラは出さない。
+  "/guide",
 ] as const;
 
 function isPathWithin(pathname: string, prefix: string): boolean {

@@ -1,0 +1,423 @@
+/* ============================================================================
+   公開ガイド(/guide)専用スタイル。LP(app/lp/lp.css)と同じ配色・書体で、
+   読み物向けに本文幅を絞り行間を広げる。全セレクタを .guide 配下にスコープする。
+   ========================================================================== */
+
+.guide {
+  --white: #ffffff;
+  --ink: #1a2340; /* 墨紺: 本文 */
+  --ai: #2946ce; /* 藍: リンク・CTA */
+  --ai-dark: #1f37a6;
+  --shu: #d9442c; /* 朱: 強調 */
+  --wash: #f2f5fe; /* 淡藍: 囲み */
+  --sub: #5a6285; /* 灰紺: 補助テキスト */
+  --line: #dde2f0;
+  --disp: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --body-face: "Hiragino Kaku Gothic ProN", "Yu Gothic Medium", "Yu Gothic",
+    "Noto Sans JP", sans-serif;
+
+  color-scheme: light;
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--body-face);
+  font-size: 16px;
+  line-height: 1.95;
+  min-height: 100vh;
+  overflow-wrap: anywhere;
+}
+
+.guide *,
+.guide *::before,
+.guide *::after {
+  box-sizing: border-box;
+}
+.guide a {
+  color: var(--ai);
+}
+.guide :focus-visible {
+  outline: 3px solid var(--ai);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.guide .g-col {
+  width: min(720px, calc(100% - 2rem));
+  margin-inline: auto;
+}
+
+/* ---- ヘッダー / フッター ---- */
+.guide .g-top {
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+}
+.guide .g-top-in {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+}
+.guide .g-logo {
+  font-family: var(--disp);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+.guide .g-top-link {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--sub);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.guide .g-top-link:hover {
+  color: var(--ink);
+}
+.guide .g-foot {
+  border-top: 1px solid var(--line);
+  margin-top: 64px;
+  padding: 28px 0 40px;
+  color: var(--sub);
+  font-size: 0.8rem;
+  text-align: center;
+  line-height: 2.1;
+}
+.guide .g-foot a {
+  color: var(--sub);
+}
+
+/* ---- 記事 ---- */
+.guide .g-main {
+  padding: 20px 0 0;
+}
+.guide .g-crumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--sub);
+  line-height: 1.6;
+}
+.guide .g-crumbs li + li::before {
+  content: "›";
+  margin: 0 8px;
+  color: var(--line);
+}
+.guide .g-crumbs a {
+  color: var(--sub);
+}
+
+.guide h1,
+.guide h2,
+.guide h3 {
+  font-family: var(--disp);
+  font-weight: 600;
+  line-height: 1.55;
+  text-wrap: balance;
+  margin: 0;
+}
+.guide h1 {
+  font-size: clamp(1.5rem, 5.4vw, 2rem);
+  margin-top: 18px;
+}
+.guide .g-updated {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--sub);
+}
+.guide .g-lead {
+  margin: 22px 0 0;
+  padding: 16px 18px;
+  border-left: 4px solid var(--ai);
+  background: var(--wash);
+  border-radius: 0 10px 10px 0;
+}
+.guide .g-lead p {
+  margin: 0;
+}
+.guide .g-lead p + p {
+  margin-top: 8px;
+}
+
+.guide .g-points {
+  margin: 28px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.guide .g-points h2 {
+  font-family: var(--body-face);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--sub);
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.guide .g-points ol {
+  margin: 8px 0 0;
+  padding-left: 1.3em;
+}
+.guide .g-points li {
+  margin: 2px 0;
+}
+
+.guide .g-body h2 {
+  font-size: clamp(1.28rem, 4.4vw, 1.5rem);
+  margin: 56px 0 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 16px;
+}
+.guide .g-body h3 {
+  font-size: 1.12rem;
+  margin: 32px 0 0;
+}
+.guide .g-body p {
+  margin: 16px 0 0;
+}
+.guide .g-body ul,
+.guide .g-body ol {
+  margin: 14px 0 0;
+  padding-left: 1.4em;
+}
+.guide .g-body li {
+  margin: 6px 0;
+}
+.guide .g-body li > ul {
+  margin-top: 4px;
+}
+.guide .g-body strong {
+  font-weight: 700;
+  background: linear-gradient(transparent 62%, #fde7c8 62%);
+}
+.guide .g-note {
+  font-size: 0.84rem;
+  color: var(--sub);
+  line-height: 1.8;
+}
+
+/* 表: スマホでは横スクロール */
+.guide .g-table {
+  margin: 18px 0 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.guide .g-table table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.guide .g-table th,
+.guide .g-table td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+.guide .g-table tr:last-child th,
+.guide .g-table tr:last-child td {
+  border-bottom: 0;
+}
+.guide .g-table thead th {
+  background: var(--wash);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.guide .g-table tbody th {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.guide .g-table caption {
+  caption-side: bottom;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--sub);
+}
+
+/* 手順 */
+.guide .g-body ol.g-steps {
+  counter-reset: step;
+  list-style: none;
+  padding-left: 0 !important;
+}
+.guide .g-steps > li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.6em;
+  margin: 18px 0 !important;
+}
+.guide .g-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0.15em;
+  width: 1.8em;
+  height: 1.8em;
+  border-radius: 50%;
+  background: var(--ai);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+/* このサービスを使う場合 */
+.guide .g-service {
+  margin: 56px 0 0;
+  padding: 4px 20px 22px;
+  background: var(--wash);
+  border-radius: 14px;
+}
+.guide .g-service h2 {
+  border-bottom-color: #cdd5f3;
+}
+
+/* 出典 */
+.guide .g-sources {
+  margin: 40px 0 0;
+  font-size: 0.8rem;
+  color: var(--sub);
+  line-height: 1.8;
+}
+.guide .g-sources h2 {
+  font-family: var(--body-face);
+  font-size: 0.86rem;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.guide .g-sources ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+}
+
+/* 関連ガイド / 一覧 */
+.guide .g-related h2 {
+  font-size: 1.2rem;
+}
+.guide .g-cards {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.guide .g-cards a {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+.guide .g-cards a:hover {
+  border-color: var(--ai);
+}
+.guide .g-cards .t {
+  display: block;
+  font-weight: 700;
+  color: var(--ai);
+  line-height: 1.6;
+}
+.guide .g-cards .d {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.86rem;
+  color: var(--sub);
+  line-height: 1.7;
+}
+
+/* CTA */
+.guide .g-cta {
+  margin: 56px 0 0;
+  padding: 26px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+}
+.guide .g-cta h2 {
+  font-size: 1.2rem;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.guide .g-cta p {
+  margin: 10px 0 0;
+  font-size: 0.92rem;
+  color: var(--sub);
+}
+.guide .g-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+  align-items: center;
+  margin-top: 18px;
+}
+.guide .g-btn {
+  display: inline-block;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: var(--ai);
+  color: var(--white);
+  font-weight: 700;
+  text-decoration: none;
+}
+.guide .g-btn:hover {
+  background: var(--ai-dark);
+}
+.guide .g-cta-sub {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.guide .g-related {
+  margin: 56px 0 0;
+}
+.guide .g-body .g-steps h3 {
+  margin: 0;
+}
+.guide .g-body .g-steps p {
+  margin-top: 6px;
+}
+
+/* Tailwind の preflight が list-style を消すので戻す */
+.guide .g-body ul,
+.guide .g-sources ul {
+  list-style: disc;
+}
+.guide .g-body ol,
+.guide .g-points ol {
+  list-style: decimal;
+}
+.guide .g-body li::marker,
+.guide .g-points li::marker {
+  color: var(--sub);
+}
+.guide .g-table .nw {
+  white-space: nowrap;
+}
+.guide .g-table.compact table {
+  min-width: 0;
+}
+.guide .g-table.compact th,
+.guide .g-table.compact td {
+  padding: 10px 8px;
+}
+.guide .g-table.compact thead th {
+  white-space: normal;
+}

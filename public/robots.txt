@@ -16,6 +16,7 @@ User-agent: *
 Allow: /lp
 Allow: /legal/
 Allow: /privacy
+Allow: /guide
 Disallow: /api/
 Disallow: /admin
 Disallow: /auth/
