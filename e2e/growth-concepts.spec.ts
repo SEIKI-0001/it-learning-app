@@ -44,7 +44,7 @@ for (const width of [390, 1280]) {
 
     await page.goto("/today");
     await expect(page.getByRole("heading", { name: "今日の学習" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "合格準備度を見る" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "今日の順番" })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath("today.png"), fullPage: true });
 
     await page.goto("/progress");
