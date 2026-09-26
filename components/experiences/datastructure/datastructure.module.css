@@ -55,9 +55,9 @@
   font-size: 16px;
   box-shadow: 0 0 0 1px #cbd5e1, 0 4px 0 #cbd5e1;
   transition:
-    bottom 500ms cubic-bezier(0.45, 0.05, 0.25, 1),
-    left 500ms cubic-bezier(0.45, 0.05, 0.25, 1),
-    box-shadow 300ms ease;
+    bottom 740ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    left 740ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    box-shadow 440ms ease;
 }
 
 .book[data-top="true"] {
@@ -73,7 +73,7 @@
 
 /* push：上から落ちてきて、着地で少し沈む */
 .book[data-fresh="true"] {
-  animation: ds-drop 620ms cubic-bezier(0.3, 0, 0.2, 1) both;
+  animation: ds-drop 920ms cubic-bezier(0.3, 0, 0.2, 1) both;
 }
 
 @keyframes ds-drop {
@@ -120,7 +120,7 @@
   left: 198px;
   bottom: 126px;
   box-shadow: 0 0 0 2px #e11d48, 0 4px 0 #fda4af;
-  animation: ds-lift 800ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+  animation: ds-lift 1200ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
 }
 
 @keyframes ds-lift {
@@ -233,7 +233,7 @@
   width: 38px;
   flex-direction: column;
   align-items: center;
-  transition: left 650ms cubic-bezier(0.45, 0.05, 0.25, 1);
+  transition: left 960ms cubic-bezier(0.45, 0.05, 0.25, 1);
 }
 
 .personIcon {
@@ -262,7 +262,7 @@
 
 /* enqueue：列のうしろから歩いて入ってくる */
 .person[data-fresh="true"] {
-  animation: ds-walk-in 650ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: ds-walk-in 960ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 @keyframes ds-walk-in {
@@ -279,7 +279,7 @@
 /* dequeue：先頭がレジの前から抜けていく */
 .personOut {
   z-index: 6;
-  animation: ds-leave 900ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
+  animation: ds-leave 1300ms cubic-bezier(0.45, 0.05, 0.25, 1) both;
 }
 
 .personOut .personNo {
