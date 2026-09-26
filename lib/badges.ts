@@ -19,6 +19,8 @@ import type { TopicField } from "@/types/content";
 import { getAllTopics } from "@/lib/content";
 import { fieldMastery, recentAccuracy } from "@/lib/study";
 import { masteryForTopic } from "@/lib/mastery";
+import { summarizeOfficialHistory } from "@/lib/pastExam/officialHistory";
+import { KAKOMON_FIELD_DRILL_TARGET } from "@/lib/pastExam/kakomonRules";
 import type { ExamReadinessResult } from "@/types/examReadiness";
 
 // 習熟度のしきい値。初回満点は約72、日を空けた再確認で定着度が上がる前提で調整。
@@ -329,17 +331,18 @@ export const BADGES: BadgeDef[] = [
     emoji: "🌈",
   },
   {
+    // ID は既存データ（獲得済みバッジ）互換のため旧名のまま。意味は「公式過去問を
+    // 3分野で一通り演習した」に変えた（CP5 過去問実戦の実績条件）。旧条件で獲得済みの
+    // 人からは剥奪しない（earnedBadges に残っていればゲートはそのまま通る）。
     id: "b-cp5-kakomon-ready",
-    label: "過去問レディ",
-    description: "過去問レベルに挑戦できる状態になった証。",
+    label: "3分野実戦",
+    description: "公式過去問を3分野で一通り演習した証。",
     category: "kakomon",
     rarity: "rare",
     checkpointId: "cp5",
     requiredForGate: true,
-    // TODO: question_attempts（過去問レベル）を集計して examLevelCleared で厳密判定する。
-    //       現状は確認問題の正答率と学習量の代理指標＋シグナルで判定する。
     conditionLabel:
-      "過去問レベル問題を8トピックでクリア（または40テーマ習得＋直近正答率70%）",
+      `ストラテジ・マネジメント・テクノロジの公式過去問をそれぞれ${KAKOMON_FIELD_DRILL_TARGET}問以上解く`,
     xp: 35,
     emoji: "🎲",
   },
@@ -501,6 +504,8 @@ export type BadgeMetrics = {
   highReadiness: boolean;
   wordMasteredCount: number;
   examLevelClearedTopicCount: number;
+  /** 公式出題区分ごとの、解いたことのある公式過去問の数（重複なし）。 */
+  officialAnsweredByField: Record<TopicField, number>;
   finalPassedCheckpointIds: Set<CheckpointId>;
   clearedCheckpointIds: Set<CheckpointId>;
 };
@@ -510,7 +515,8 @@ const FIELDS: TopicField[] = ["technology", "management", "strategy"];
 export type BadgeMetricKey =
   | "completedTotal" | "completedByField" | "quizClearedTotal" | "quizClearedByField"
   | "masteredCount" | "reviewCount" | "weakTagCount" | "fieldMasteryAvg"
-  | "recentAccuracy" | "examLevelClearedTopicCount" | "highReadiness";
+  | "recentAccuracy" | "examLevelClearedTopicCount" | "highReadiness"
+  | "officialAnsweredByField";
 
 export type BadgeGap = {
   metric: BadgeMetricKey;
@@ -545,9 +551,10 @@ const REQUIRED_BADGE_RULES: Record<string, BadgeRule> = {
   "b-cp4-mastered-30": [[up("masteredCount", 30)]],
   "b-cp5-mastered-45": [[up("masteredCount", 45)]],
   "b-cp5-fields-solid": [[...FIELDS.map((field) => up("fieldMasteryAvg", 60, field))]],
+  // 正答率は問わない（理解度は CP5 の3分野習熟度バッジと突破試験が見る）。
+  // ここは「公式過去問を実際に使ったか」だけを保証する。前倒し解禁中の実績もそのまま数える。
   "b-cp5-kakomon-ready": [
-    [up("examLevelClearedTopicCount", 8)],
-    [up("completedTotal", 40), up("recentAccuracy", 0.7)],
+    FIELDS.map((field) => up("officialAnsweredByField", KAKOMON_FIELD_DRILL_TARGET, field)),
   ],
   "b-cp6-mastered-60": [[up("masteredCount", 60)]],
   "b-cp6-review-clean": [[up("completedTotal", 30), down("reviewCount", 2)]],
@@ -584,6 +591,16 @@ export function getRequiredBadgeGaps(
 
 function requiredRuleMet(id: string, metrics: BadgeMetrics): boolean {
   return gapsForRule(metrics, REQUIRED_BADGE_RULES[id]).some((path) => path.length === 0);
+}
+
+/** 公式過去問の回答実績（lib/pastExam/officialHistory の集計をそのまま使う）。 */
+function officialAnsweredByField(answers: AppState["answers"], now: Date): Record<TopicField, number> {
+  const { byField } = summarizeOfficialHistory(answers, now);
+  return {
+    technology: byField.technology.answered,
+    management: byField.management.answered,
+    strategy: byField.strategy.answered,
+  };
 }
 
 function computeMetrics(
@@ -662,6 +679,7 @@ function computeMetrics(
     ),
     wordMasteredCount: signals?.wordMasteredCount ?? 0,
     examLevelClearedTopicCount: signals?.examLevelClearedTopicCount ?? 0,
+    officialAnsweredByField: officialAnsweredByField(state.answers, now),
     finalPassedCheckpointIds: new Set(
       (cp?.finalExamAttempts ?? [])
         .filter((a) => a.passed)

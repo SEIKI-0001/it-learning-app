@@ -4243,5 +4243,469 @@
       "word_part",
       "confusion"
     ]
+  },
+  {
+    "id": "raid",
+    "acronym": "RAID",
+    "fullName": "Redundant Arrays of Independent Disks",
+    "japanese": "レイド（ディスクの冗長化構成）",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Redundant",
+        "meaning": "冗長な"
+      },
+      {
+        "word": "Arrays",
+        "meaning": "配列"
+      },
+      {
+        "word": "Independent",
+        "meaning": "独立した"
+      },
+      {
+        "word": "Disks",
+        "meaning": "ディスク"
+      }
+    ],
+    "oneLine": "複数のディスクを1台のように束ね、信頼性や速度を高める技術。",
+    "examKeywords": [
+      "ストライピング",
+      "ミラーリング",
+      "パリティ"
+    ],
+    "confusedWith": [
+      "NAS",
+      "SAN"
+    ],
+    "differenceAxis": "ディスクを束ねる構成か、ネットワーク経由でストレージを使う形態か",
+    "trapExplanations": {
+      "NAS": "NASはネットワークに直接つないで使うファイルサーバ型のストレージで、ディスクの束ね方ではない。",
+      "SAN": "SANはサーバとストレージを専用ネットワークで結ぶ形態で、RAIDのレベル（0/1/5など）とは別の話。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "pos",
+    "acronym": "POS",
+    "fullName": "Point Of Sales",
+    "japanese": "販売時点情報管理",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Point",
+        "meaning": "時点"
+      },
+      {
+        "word": "Of",
+        "meaning": "〜の"
+      },
+      {
+        "word": "Sales",
+        "meaning": "販売"
+      }
+    ],
+    "oneLine": "商品が売れた時点で、何がいつ売れたかを記録・集計するしくみ。",
+    "examKeywords": [
+      "販売時点",
+      "バーコード",
+      "売れ筋分析"
+    ],
+    "confusedWith": [
+      "EDI",
+      "EC"
+    ],
+    "differenceAxis": "店頭の販売記録か、企業間のデータ交換か、ネット上の取引か",
+    "trapExplanations": {
+      "EDI": "EDIは企業間で受発注などのデータを電子的に交換するしくみ。",
+      "EC": "ECはインターネットなどを使った電子商取引そのもの。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rfq",
+    "acronym": "RFQ",
+    "fullName": "Request For Quotation",
+    "japanese": "見積依頼書",
+    "category": "management",
+    "words": [
+      {
+        "word": "Request",
+        "meaning": "依頼"
+      },
+      {
+        "word": "For",
+        "meaning": "〜のための"
+      },
+      {
+        "word": "Quotation",
+        "meaning": "見積"
+      }
+    ],
+    "oneLine": "調達先の候補に、価格などの見積りを出すよう依頼する文書。",
+    "examKeywords": [
+      "見積依頼",
+      "調達",
+      "価格"
+    ],
+    "confusedWith": [
+      "RFP",
+      "RFI"
+    ],
+    "differenceAxis": "見積りを求めるか、提案を求めるか、情報を求めるか",
+    "trapExplanations": {
+      "RFP": "RFPは導入するシステムの提案を求める提案依頼書。",
+      "RFI": "RFIは提案の前に、製品や技術の情報提供を求める情報提供依頼書。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "pmbok",
+    "acronym": "PMBOK",
+    "fullName": "Project Management Body Of Knowledge",
+    "japanese": "プロジェクトマネジメント知識体系",
+    "category": "management",
+    "words": [
+      {
+        "word": "Project",
+        "meaning": "プロジェクト"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      },
+      {
+        "word": "Body",
+        "meaning": "体系"
+      },
+      {
+        "word": "Of",
+        "meaning": "〜の"
+      },
+      {
+        "word": "Knowledge",
+        "meaning": "知識"
+      }
+    ],
+    "oneLine": "プロジェクトマネジメントの知識や手法を体系的にまとめたガイド。",
+    "examKeywords": [
+      "知識エリア",
+      "プロセス群",
+      "プロジェクトマネジメント"
+    ],
+    "confusedWith": [
+      "ITIL"
+    ],
+    "differenceAxis": "プロジェクト管理の知識体系か、ITサービス管理の実践集か",
+    "trapExplanations": {
+      "ITIL": "ITILはITサービスマネジメントのベストプラクティス集で、プロジェクト管理の体系ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "csr",
+    "acronym": "CSR",
+    "fullName": "Corporate Social Responsibility",
+    "japanese": "企業の社会的責任",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Corporate",
+        "meaning": "企業の"
+      },
+      {
+        "word": "Social",
+        "meaning": "社会的"
+      },
+      {
+        "word": "Responsibility",
+        "meaning": "責任"
+      }
+    ],
+    "oneLine": "企業が利益だけでなく、環境や社会、利害関係者に対して負う責任。",
+    "examKeywords": [
+      "社会的責任",
+      "ステークホルダ",
+      "環境"
+    ],
+    "confusedWith": [
+      "ESG",
+      "SDGs"
+    ],
+    "differenceAxis": "企業が果たす責任そのものか、投資の観点か、国際的な開発目標か",
+    "trapExplanations": {
+      "ESG": "ESGは環境・社会・ガバナンスの観点で企業を評価する考え方（ESG投資など）。",
+      "SDGs": "SDGsは国連が定めた持続可能な開発目標で、企業の責任そのものの呼び名ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "mrp",
+    "acronym": "MRP",
+    "fullName": "Material Requirements Planning",
+    "japanese": "資材所要量計画",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Material",
+        "meaning": "資材"
+      },
+      {
+        "word": "Requirements",
+        "meaning": "所要量"
+      },
+      {
+        "word": "Planning",
+        "meaning": "計画"
+      }
+    ],
+    "oneLine": "生産計画と部品構成表から、必要な資材の量と発注時期を計算する手法。",
+    "examKeywords": [
+      "部品構成表",
+      "所要量",
+      "生産計画"
+    ],
+    "confusedWith": [
+      "ERP",
+      "SCM"
+    ],
+    "differenceAxis": "生産に必要な資材の計算か、経営資源全体の統合管理か、供給連鎖全体の管理か",
+    "trapExplanations": {
+      "ERP": "ERPは企業全体の経営資源を統合的に管理する考え方・システム。",
+      "SCM": "SCMは調達から販売までの供給連鎖全体を最適化する管理手法。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rpo",
+    "acronym": "RPO",
+    "fullName": "Recovery Point Objective",
+    "japanese": "目標復旧時点",
+    "category": "management",
+    "words": [
+      {
+        "word": "Recovery",
+        "meaning": "復旧"
+      },
+      {
+        "word": "Point",
+        "meaning": "時点"
+      },
+      {
+        "word": "Objective",
+        "meaning": "目標"
+      }
+    ],
+    "oneLine": "障害時に、どの時点までのデータを取り戻すかという目標。",
+    "examKeywords": [
+      "データ損失",
+      "バックアップ間隔",
+      "復旧時点"
+    ],
+    "confusedWith": [
+      "RTO",
+      "BCP"
+    ],
+    "differenceAxis": "どの時点のデータまで戻すかか、どれだけの時間で戻すかか",
+    "trapExplanations": {
+      "RTO": "RTOは障害からどれだけの時間で復旧させるかという目標時間。",
+      "BCP": "BCPは事業を継続するための計画全体で、RPOはその中で決める目標値の一つ。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "rto",
+    "acronym": "RTO",
+    "fullName": "Recovery Time Objective",
+    "japanese": "目標復旧時間",
+    "category": "management",
+    "words": [
+      {
+        "word": "Recovery",
+        "meaning": "復旧"
+      },
+      {
+        "word": "Time",
+        "meaning": "時間"
+      },
+      {
+        "word": "Objective",
+        "meaning": "目標"
+      }
+    ],
+    "oneLine": "障害が起きてから、業務やシステムを再開させるまでの目標時間。",
+    "examKeywords": [
+      "復旧時間",
+      "業務再開",
+      "事業継続"
+    ],
+    "confusedWith": [
+      "RPO",
+      "SLA"
+    ],
+    "differenceAxis": "どれだけの時間で戻すかか、どの時点のデータまで戻すかか",
+    "trapExplanations": {
+      "RPO": "RPOはどの時点までのデータを取り戻すかという目標で、時間の長さではない。",
+      "SLA": "SLAは提供者と利用者の間で合意するサービス品質の取り決め。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "nfc",
+    "acronym": "NFC",
+    "fullName": "Near Field Communication",
+    "japanese": "近距離無線通信",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Near",
+        "meaning": "近い"
+      },
+      {
+        "word": "Field",
+        "meaning": "領域"
+      },
+      {
+        "word": "Communication",
+        "meaning": "通信"
+      }
+    ],
+    "oneLine": "10cm程度まで近づけて通信する無線通信。ICカードやスマホ決済に使う。",
+    "examKeywords": [
+      "かざす",
+      "非接触",
+      "ICカード"
+    ],
+    "confusedWith": [
+      "Bluetooth",
+      "RFID"
+    ],
+    "differenceAxis": "かざす程度の近距離通信か、数m〜の無線通信か、電子タグの読取りか",
+    "trapExplanations": {
+      "Bluetooth": "Bluetoothは数m〜数十m程度で機器をつなぐ無線通信規格。",
+      "RFID": "RFIDは電子タグの情報を無線で読み取る技術全般で、NFCはその一部の規格を含む近距離通信。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ar",
+    "acronym": "AR",
+    "fullName": "Augmented Reality",
+    "japanese": "拡張現実",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Augmented",
+        "meaning": "拡張された"
+      },
+      {
+        "word": "Reality",
+        "meaning": "現実"
+      }
+    ],
+    "oneLine": "現実の風景に、デジタルの情報や映像を重ねて表示する技術。",
+    "examKeywords": [
+      "現実に重ねる",
+      "スマートフォン",
+      "拡張"
+    ],
+    "confusedWith": [
+      "VR",
+      "MR"
+    ],
+    "differenceAxis": "現実に情報を重ねるか、仮想空間に入り込むか、両者を融合するか",
+    "trapExplanations": {
+      "VR": "VRは現実の代わりに、コンピュータが作った仮想空間を体験させる技術。",
+      "MR": "MRは現実と仮想を融合し、仮想の物体を現実空間で操作できるようにする技術。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "vr",
+    "acronym": "VR",
+    "fullName": "Virtual Reality",
+    "japanese": "仮想現実",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Virtual",
+        "meaning": "仮想の"
+      },
+      {
+        "word": "Reality",
+        "meaning": "現実"
+      }
+    ],
+    "oneLine": "コンピュータが作った仮想空間に、あたかも入り込んだように体験させる技術。",
+    "examKeywords": [
+      "仮想空間",
+      "ヘッドマウントディスプレイ",
+      "没入感"
+    ],
+    "confusedWith": [
+      "AR",
+      "MR"
+    ],
+    "differenceAxis": "仮想空間に入り込むか、現実に情報を重ねるか、両者を融合するか",
+    "trapExplanations": {
+      "AR": "ARは現実の風景にデジタル情報を重ねる技術で、仮想空間に入り込むわけではない。",
+      "MR": "MRは現実と仮想を融合させる技術。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
   }
 ]

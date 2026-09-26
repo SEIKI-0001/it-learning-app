@@ -17,6 +17,10 @@ import {
   type DrillSelectionStage,
 } from "@/lib/pastExam/drillSelection";
 import { buttonClass } from "@/components/ui/Button";
+import { attachDrillQuestions } from "@/lib/todayActivitySync";
+import { rememberDrillQuestions } from "@/lib/todayActivityLog";
+import { ACTIVITY_KEYS } from "@/lib/todayActivitySpec";
+import { todayLocalDate } from "@/lib/userSession";
 
 export default function OfficialDrillPicker({
   stage,
@@ -58,9 +62,28 @@ export default function OfficialDrillPicker({
       setEmpty(true);
       return;
     }
-    const next = new URLSearchParams(query);
-    next.set("ids", ids.join(","));
-    router.replace(`/past-exams/drill?${next.toString()}`);
+    let cancelled = false;
+    const open = (chosen: string[]) => {
+      if (cancelled) return;
+      const next = new URLSearchParams(query);
+      next.set("ids", chosen.join(","));
+      router.replace(`/past-exams/drill?${next.toString()}`);
+    };
+    // Today の演習タスクなら、選んだ問題をその日のタスクに固定する。別端末で先に
+    // 開いていれば、その端末が選んだ問題が返ってくるので、そちらで開く。
+    const taskId = query.task === ACTIVITY_KEYS.past_exam_drill ? query.task : null;
+    if (!taskId) {
+      open(ids);
+      return;
+    }
+    void attachDrillQuestions(todayLocalDate(), ids).then((fixed) => {
+      const chosen = fixed ?? ids;
+      rememberDrillQuestions(taskId, chosen);
+      open(chosen);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [count, field, index, query, router, stage]);
 
   if (empty) {

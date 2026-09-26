@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import BottomNav from "@/components/BottomNav";
 import PageHeader from "@/components/ui/PageHeader";
+import { formatJapaneseExamYear } from "@/lib/pastExam/yearLabel";
 import PastExamRunner from "@/components/pastExam/PastExamRunner";
 import {
   getPlayableOfficialExamYears,
@@ -10,14 +11,8 @@ import {
 } from "@/lib/questionBank";
 import { toPastExamQuestionView } from "@/lib/pastExam/viewModel";
 
-/** 西暦 → 和暦の表示名。収録年度が増えたらここに足す。 */
-const YEAR_LABELS: Record<number, string> = {
-  2026: "令和8年度",
-};
-
-function yearLabel(year: number): string {
-  return YEAR_LABELS[year] ?? `${year}年度`;
-}
+/** 西暦 → 和暦の表示名（lib/pastExam/yearLabel が正）。 */
+const yearLabel = formatJapaneseExamYear;
 
 /** 収録済みの年度だけを静的に生成する。 */
 export function generateStaticParams() {

@@ -182,6 +182,7 @@ const GAP_SUBJECT: Record<BadgeGap["metric"], string> = {
   recentAccuracy: "直近の正答率",
   examLevelClearedTopicCount: "過去問レベルをクリアしたトピック",
   highReadiness: "合格準備度",
+  officialAnsweredByField: "解いた公式過去問",
 };
 
 /**

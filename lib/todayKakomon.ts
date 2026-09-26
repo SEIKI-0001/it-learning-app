@@ -14,18 +14,23 @@
 import type { TodayActivity, UserAnswer, UserProgress } from "@/types";
 import type { Topic, TopicField } from "@/types/content";
 import { FIELD_LABELS } from "@/types/content";
-import {
-  buildKakomonStages,
-  kakomonAccessFor,
-  KAKOMON_FIELD_DRILL_TARGET,
-} from "@/lib/studyPlanner";
+import { buildKakomonStages, kakomonAccessFor } from "@/lib/studyPlanner";
+import { KAKOMON_FIELD_DRILL_TARGET } from "@/lib/pastExam/kakomonRules";
 import { checkpointOrderOf } from "@/lib/kakomonAccess";
 import { summarizeOfficialHistory, type OfficialHistory } from "@/lib/pastExam/officialHistory";
 import { OFFICIAL_EXAM_FIELD_SCOPE, OFFICIAL_EXAM_FIELDS } from "@/lib/questionBank/officialExamField";
 import { TODAY_ACTIVITY_PRIORITY } from "@/lib/learningLoop";
+import { formatJapaneseExamYear } from "@/lib/pastExam/yearLabel";
+import {
+  ACTIVITY_KEYS,
+  type DrillReason,
+  type PastExamDrillSpec,
+  type PastExamMockSpec,
+  type PastExamRetrySpec,
+} from "@/lib/todayActivitySpec";
 
-export const PAST_EXAM_DRILL_ACTIVITY_ID = "act:past-exam";
-export const PAST_EXAM_RETRY_ACTIVITY_ID = "act:past-exam-retry";
+export const PAST_EXAM_DRILL_ACTIVITY_ID = ACTIVITY_KEYS.past_exam_drill;
+export const PAST_EXAM_RETRY_ACTIVITY_ID = ACTIVITY_KEYS.past_exam_retry;
 
 /** 本番は100問120分。1問あたり約1.2分で見積もる。 */
 const MINUTES_PER_QUESTION = 1.2;
@@ -96,15 +101,96 @@ function nextMockYear(history: OfficialHistory): number {
     .sort((a, b) => (history.answeredByYear[a] ?? 0) - (history.answeredByYear[b] ?? 0) || b - a)[0];
 }
 
-function wareki(year: number): string {
-  return year >= 2019 ? `令和${year - 2018}年度` : `${year}年度`;
+const DRILL_REASON_TEXT: Record<DrillReason, string> = {
+  // CP5 では分野別の回答数そのものが突破条件（3分野実戦）なので、それを理由に出す。
+  cp5_field: `CP5突破に必要な「3分野実戦」（各分野${KAKOMON_FIELD_DRILL_TARGET}問）を進めます`,
+  standard: "公式過去問で、本番で解ける力をつけます",
+  early_exam_near: "試験日が近いので、公式過去問を前倒しで始めます",
+  early_strong: "学習が十分進んでいるので、公式過去問を前倒しで始めます",
+};
+
+/** spec から Today のタスクを組み立てる（生成時も、別端末での復元時も同じ関数）。 */
+export function kakomonActivityFromSpec(
+  spec: PastExamRetrySpec | PastExamDrillSpec | PastExamMockSpec,
+): TodayActivity {
+  if (spec.kind === "past_exam_retry") {
+    const n = spec.questionIds.length;
+    return {
+      id: PAST_EXAM_RETRY_ACTIVITY_ID,
+      kind: "past_exam_retry",
+      title: "前回の過去問の誤答を解き直す",
+      detail: spec.pendingTotal > n
+        ? `間違えた問題のうち古い順に${n}問`
+        : "間違えた公式過去問だけを、もう一度",
+      countLabel: `${n}問`,
+      estimatedMinutes: questionMinutes(n),
+      priority: TODAY_ACTIVITY_PRIORITY.pastExamRetry,
+      reason: "間違えた過去問は、翌日以降に解き直すと定着します",
+      href: drillHref({ stage: "retry-wrong", ids: spec.questionIds, task: PAST_EXAM_RETRY_ACTIVITY_ID }),
+      ctaLabel: "誤答を解き直す",
+      primaryEligible: true,
+      spec,
+    };
+  }
+
+  if (spec.kind === "past_exam_mock") {
+    return {
+      id: PAST_EXAM_DRILL_ACTIVITY_ID,
+      kind: "past_exam_mock",
+      title: `${formatJapaneseExamYear(spec.year)}の公式問題100問に挑戦`,
+      detail: "本番と同じ100問・120分。終わったら誤答を復習に回します",
+      countLabel: "100問",
+      estimatedMinutes: 120,
+      priority: TODAY_ACTIVITY_PRIORITY.pastExamDrill,
+      reason: "本番と同じ形式で、時間配分まで練習します",
+      href: `/past-exams/${spec.year}`,
+      ctaLabel: "100問に挑戦する",
+      primaryEligible: true,
+      spec,
+    };
+  }
+
+  const fieldLabel = spec.field ? FIELD_LABELS[spec.field] : "";
+  const title = spec.stage === "field-drill"
+    ? `${fieldLabel}の公式問題を${spec.count}問解く`
+    : spec.stage === "mixed"
+      ? `3分野の公式問題を${spec.count}問解く`
+      : `公式問題をランダムに${spec.count}問解く`;
+  const detail = spec.stage === "field-drill"
+    ? `分野別演習（${fieldLabel} ${spec.answered ?? 0}/${KAKOMON_FIELD_DRILL_TARGET}問）`
+    : spec.stage === "mixed"
+      ? "3分野をバランスよく混ぜた演習"
+      : "年度も分野も混ぜた実戦演習";
+  return {
+    id: PAST_EXAM_DRILL_ACTIVITY_ID,
+    kind: "past_exam_drill",
+    title,
+    detail,
+    countLabel: `${spec.count}問`,
+    estimatedMinutes: questionMinutes(spec.count),
+    priority: TODAY_ACTIVITY_PRIORITY.pastExamDrill,
+    reason: DRILL_REASON_TEXT[spec.reason],
+    // 問題が決まっていれば（別端末で先に開いた場合も）同じ問題で開く。
+    href: drillHref({
+      stage: spec.stage,
+      field: spec.field,
+      count: spec.count,
+      ids: spec.questionIds,
+      task: PAST_EXAM_DRILL_ACTIVITY_ID,
+    }),
+    ctaLabel: "公式問題を解く",
+    primaryEligible: true,
+    spec,
+  };
 }
 
 /**
- * 今日の公式過去問タスク（最大2件: 誤答の解き直し＋演習）。
+ * 今日の公式過去問タスクの spec（最大2件: 誤答の解き直し＋演習）。
  * 公式過去問がまだ解禁されていなければ空（条件未達の人に過去問を強制しない）。
  */
-export function buildKakomonActivities(input: KakomonTaskInput): TodayActivity[] {
+export function selectKakomonSpecs(
+  input: KakomonTaskInput,
+): (PastExamRetrySpec | PastExamDrillSpec | PastExamMockSpec)[] {
   const { topics, progress, answers, daysRemaining, budgetMinutes, now } = input;
   const access = kakomonAccessFor(topics, progress, answers, daysRemaining);
   if (!access.unlocked) return [];
@@ -114,87 +200,51 @@ export function buildKakomonActivities(input: KakomonTaskInput): TodayActivity[]
   );
   const history = summarizeOfficialHistory(answers, now);
   const order = checkpointOrderOf(progress) ?? 0;
-  const activities: TodayActivity[] = [];
+  const specs: (PastExamRetrySpec | PastExamDrillSpec | PastExamMockSpec)[] = [];
 
   if (stages.get("retry-wrong")?.unlocked) {
-    const ids = history.pendingWrongIds.slice(0, RETRY_MAX);
-    activities.push({
-      id: PAST_EXAM_RETRY_ACTIVITY_ID,
+    specs.push({
       kind: "past_exam_retry",
-      title: "前回の過去問の誤答を解き直す",
-      detail: history.pendingWrongIds.length > ids.length
-        ? `間違えた問題のうち古い順に${ids.length}問`
-        : "間違えた公式過去問だけを、もう一度",
-      countLabel: `${ids.length}問`,
-      estimatedMinutes: questionMinutes(ids.length),
-      priority: TODAY_ACTIVITY_PRIORITY.pastExamRetry,
-      reason: "間違えた過去問は、翌日以降に解き直すと定着します",
-      href: drillHref({ stage: "retry-wrong", ids, task: PAST_EXAM_RETRY_ACTIVITY_ID }),
-      ctaLabel: "誤答を解き直す",
-      primaryEligible: true,
+      questionIds: history.pendingWrongIds.slice(0, RETRY_MAX),
+      pendingTotal: history.pendingWrongIds.length,
     });
   }
 
-  const reason = access.route === "early"
-    ? access.reason === "exam_near"
-      ? "試験日が近いので、公式過去問を前倒しで始めます"
-      : "学習が十分進んでいるので、公式過去問を前倒しで始めます"
-    : "公式過去問で、本番で解ける力をつけます";
+  const reason: DrillReason = access.route === "early"
+    ? access.reason === "exam_near" ? "early_exam_near" : "early_strong"
+    : "standard";
 
   // CP6（または試験直前）で時間がある日は、既存の年度別100問に挑戦する。
   if (stages.get("mock")?.unlocked && order >= 6 && budgetMinutes >= 120) {
-    const year = nextMockYear(history);
-    activities.push({
-      id: PAST_EXAM_DRILL_ACTIVITY_ID,
-      kind: "past_exam_mock",
-      title: `${wareki(year)}の公式問題100問に挑戦`,
-      detail: "本番と同じ100問・120分。終わったら誤答を復習に回します",
-      countLabel: "100問",
-      estimatedMinutes: 120,
-      priority: TODAY_ACTIVITY_PRIORITY.pastExamDrill,
-      reason: "本番と同じ形式で、時間配分まで練習します",
-      href: `/past-exams/${year}`,
-      ctaLabel: "100問に挑戦する",
-      primaryEligible: true,
-    });
-    return activities;
+    specs.push({ kind: "past_exam_mock", year: nextMockYear(history) });
+    return specs;
   }
 
   const field = nextDrillField(history);
   if (field && stages.get("field-drill")?.unlocked) {
-    const count = drillQuestionCount("field", budgetMinutes);
-    activities.push({
-      id: PAST_EXAM_DRILL_ACTIVITY_ID,
+    specs.push({
       kind: "past_exam_drill",
-      title: `${FIELD_LABELS[field]}の公式問題を${count}問解く`,
-      detail: `分野別演習（${FIELD_LABELS[field]} ${history.byField[field].answered}/${KAKOMON_FIELD_DRILL_TARGET}問）`,
-      countLabel: `${count}問`,
-      estimatedMinutes: questionMinutes(count),
-      priority: TODAY_ACTIVITY_PRIORITY.pastExamDrill,
-      reason,
-      href: drillHref({ stage: "field-drill", field, count, task: PAST_EXAM_DRILL_ACTIVITY_ID }),
-      ctaLabel: "公式問題を解く",
-      primaryEligible: true,
+      stage: "field-drill",
+      field,
+      count: drillQuestionCount("field", budgetMinutes),
+      answered: history.byField[field].answered,
+      reason: order === 5 ? "cp5_field" : reason,
     });
-    return activities;
+    return specs;
   }
 
   if (stages.get("random")?.unlocked || !field) {
     const mixed = history.totalAnswered < KAKOMON_MIXED_TARGET;
-    const count = drillQuestionCount(mixed ? "mixed" : "random", budgetMinutes);
-    activities.push({
-      id: PAST_EXAM_DRILL_ACTIVITY_ID,
+    specs.push({
       kind: "past_exam_drill",
-      title: mixed ? `3分野の公式問題を${count}問解く` : `公式問題をランダムに${count}問解く`,
-      detail: mixed ? "3分野をバランスよく混ぜた演習" : "年度も分野も混ぜた実戦演習",
-      countLabel: `${count}問`,
-      estimatedMinutes: questionMinutes(count),
-      priority: TODAY_ACTIVITY_PRIORITY.pastExamDrill,
+      stage: mixed ? "mixed" : "random",
+      count: drillQuestionCount(mixed ? "mixed" : "random", budgetMinutes),
       reason,
-      href: drillHref({ stage: mixed ? "mixed" : "random", count, task: PAST_EXAM_DRILL_ACTIVITY_ID }),
-      ctaLabel: "公式問題を解く",
-      primaryEligible: true,
     });
   }
-  return activities;
+  return specs;
+}
+
+export function buildKakomonActivities(input: KakomonTaskInput): TodayActivity[] {
+  return selectKakomonSpecs(input).map(kakomonActivityFromSpec);
 }

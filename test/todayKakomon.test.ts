@@ -74,7 +74,8 @@ describe("Today の公式過去問タスク", () => {
       kind: "past_exam_drill",
       primaryEligible: true,
       priority: TODAY_ACTIVITY_PRIORITY.pastExamDrill,
-      reason: "公式過去問で、本番で解ける力をつけます",
+      // CP5 では分野別の回答数が突破条件（3分野実戦）そのもの
+      reason: "CP5突破に必要な「3分野実戦」（各分野15問）を進めます",
     });
     // 回答数が同じなら正答率→区分の並びで決まる。タイトルは機能名ではなく行動で書く。
     expect(tasks[0].title).toMatch(/^(テクノロジ|マネジメント|ストラテジ)系の公式問題を\d+問解く$/);

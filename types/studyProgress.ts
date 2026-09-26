@@ -16,7 +16,11 @@ export type DailyTaskType =
   | "topic_quiz"
   | "flashcard"
   | "exam_level"
-  | "review";
+  | "review"
+  // Today のトピック以外のタスク（関連用語は flashcard を使う）
+  | "past_exam_drill"
+  | "past_exam_retry"
+  | "past_exam_mock";
 
 /** タスクの達成状態 */
 export type DailyTaskStatus =

@@ -39,9 +39,15 @@ function build(input: {
 }
 
 describe("Today の単語タスク", () => {
-  it("トピックと単語の関連付けは確認パックの flashcardIds を使う", () => {
+  it("トピックと単語の関連付けは data/topicWordLinks（確認パックの有無とは独立）", () => {
     expect(relatedWordIdsForTopic(NETWORK)).toEqual(["nat", "dns", "dhcp"]);
-    expect(relatedWordIdsForTopic("tech-raid")).toEqual([]); // 確認パックの無いトピック
+    expect(relatedWordIdsForTopic("tech-raid")).toEqual(["raid"]); // 確認パックの無いトピック
+    expect(relatedWordIdsForTopic("tech-file-system")).toEqual([]); // 扱うべき略語が無いトピック
+  });
+
+  it("確認パックの無いトピックでも、関連語があれば Today に出る", () => {
+    const task = build({ cp: 2, upcoming: ["strat-system-planning-rfp"] });
+    expect(task).toMatchObject({ detail: "RFP / RFI / RFQ", anchorTopicId: "strat-system-planning-rfp" });
   });
 
   it("CP1 では（期限切れ・苦手があっても）出さない", () => {

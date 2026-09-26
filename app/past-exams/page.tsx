@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import BottomNav from "@/components/BottomNav";
 import PageHeader from "@/components/ui/PageHeader";
+import { formatJapaneseExamYear } from "@/lib/pastExam/yearLabel";
 import { buttonClass } from "@/components/ui/Button";
 import { FIELD_LABELS } from "@/types/content";
 import { OFFICIAL_EXAM_FIELDS } from "@/lib/questionBank/officialExamField";
@@ -17,18 +18,8 @@ export const metadata: Metadata = {
     "IPAが公開しているITパスポート試験の過去問を、年度ごとに本番の並びのまま演習できます。",
 };
 
-/** 西暦 → 和暦の表示名。収録年度が増えたらここに足す。 */
-const YEAR_LABELS: Record<number, string> = {
-  2022: "令和4年度",
-  2023: "令和5年度",
-  2024: "令和6年度",
-  2025: "令和7年度",
-  2026: "令和8年度",
-};
-
-function yearLabel(year: number): string {
-  return YEAR_LABELS[year] ?? `${year}年度`;
-}
+/** 西暦 → 和暦の表示名（lib/pastExam/yearLabel が正）。 */
+const yearLabel = formatJapaneseExamYear;
 
 export default function PastExamsPage() {
   const years = getPlayableOfficialExamYears();

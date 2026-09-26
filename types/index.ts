@@ -8,6 +8,7 @@
 
 import type { TopicField } from "@/types/content";
 import type { CheckpointProgress } from "@/types/checkpoint";
+import type { TodayActivitySpec } from "@/lib/todayActivitySpec";
 
 export type ChoiceKey = "A" | "B" | "C" | "D";
 
@@ -186,6 +187,11 @@ export type TodayActivity = {
   primaryEligible: boolean;
   /** このトピックの学習と組になるタスク（そのトピックが今日のメニューにあるときだけ出す）。 */
   anchorTopicId?: string;
+  /**
+   * 復元に必要な最小限の中身（lib/todayActivitySpec）。daily_study_tasks.activity_payload に
+   * 保存され、別端末でも同じ spec から同じタスクを組み立て直す。
+   */
+  spec: TodayActivitySpec;
 };
 
 /**

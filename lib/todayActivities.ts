@@ -11,8 +11,9 @@ import type { TopicStage } from "@/types/studyProgress";
 import type { WordProgressMap } from "@/lib/wordProgressModel";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { checkpointOrderOf } from "@/lib/kakomonAccess";
-import { buildVocabActivity } from "@/lib/todayVocab";
-import { buildKakomonActivities } from "@/lib/todayKakomon";
+import { buildVocabActivity, vocabActivityFromSpec } from "@/lib/todayVocab";
+import { buildKakomonActivities, kakomonActivityFromSpec } from "@/lib/todayKakomon";
+import type { TodayActivitySpec } from "@/lib/todayActivitySpec";
 
 export type TodayActivityLogInput = {
   offered: Record<string, TodayActivity>;
@@ -65,13 +66,58 @@ export function buildTodayActivities(input: TodayActivitiesInput): TodayActiviti
     }),
   );
 
-  const active = generated
-    .filter((activity) => !log.done[activity.id])
-    // 今日すでに出したものは、そのときの中身（対象の単語・問題）を使い続ける。
-    .map((activity) => log.offered[activity.id] ?? activity);
+  // その日に一度出した（サーバまたは端末に記録がある）未完了タスクは、その中身のまま出す。
+  // 再計算で対象が変わっても入れ替えない（Today はその日の学習計画として固定）。
+  const offered = Object.values(log.offered).filter((activity) => !log.done[activity.id]);
+  const fresh = generated.filter((activity) => !log.done[activity.id] && !log.offered[activity.id]);
   return {
-    active,
+    active: [...offered, ...fresh],
     done: Object.values(log.done),
-    pinned: active.filter((activity) => Boolean(log.offered[activity.id])),
+    pinned: offered,
   };
+}
+
+/** 保存済みの spec から Today のタスクを組み立て直す（別端末での復元）。 */
+export function activityFromSpec(spec: TodayActivitySpec): TodayActivity | null {
+  return spec.kind === "vocab" ? vocabActivityFromSpec(spec) : kakomonActivityFromSpec(spec);
+}
+
+/** サーバ（daily_study_tasks）から取った1件。lib/todayActivitySync の RemoteActivity と同じ形。 */
+export type RemoteActivityState = {
+  key: string;
+  payload: TodayActivitySpec;
+  done: boolean;
+};
+
+export type MergedActivityLog = TodayActivityLogInput & {
+  /** 端末では完了したが、サーバにはまだ届いていない（再送する）もの。 */
+  unsyncedDone: TodayActivity[];
+};
+
+/**
+ * 端末のキャッシュとサーバの状態を突き合わせる（純粋関数）。
+ *   - サーバから取れなかった（null）… 端末のキャッシュだけで続ける
+ *   - サーバにあるタスク … サーバの中身（spec）を正として組み立て直す
+ *   - 完了 … どちらかで完了していれば完了。端末だけの完了はサーバへ再送する
+ *   - 端末にしか無い未完了タスク（オフライン中に出したもの）… 残す
+ */
+export function mergeActivityLogs(
+  local: TodayActivityLogInput,
+  remote: RemoteActivityState[] | null,
+): MergedActivityLog {
+  if (!remote) return { ...local, unsyncedDone: [] };
+  const offered: Record<string, TodayActivity> = { ...local.offered };
+  const done: Record<string, TodayActivity> = { ...local.done };
+  const remoteDone = new Set<string>();
+  for (const item of remote) {
+    const activity = activityFromSpec(item.payload);
+    if (!activity || activity.id !== item.key) continue;
+    offered[activity.id] = activity;
+    if (item.done) {
+      done[activity.id] = activity;
+      remoteDone.add(activity.id);
+    }
+  }
+  const unsyncedDone = Object.values(local.done).filter((activity) => !remoteDone.has(activity.id));
+  return { offered, done, unsyncedDone };
 }

@@ -8,12 +8,11 @@
 //     受け取りは claimed フラグで冪等。
 // データは CheckpointProgress.dailyQuests（jsonb内・DBマイグレーション不要）に持つ。
 
-import type { AppState, UserAnswer } from "@/types";
+import type { AppState, TodayActivityKind, UserAnswer } from "@/types";
 import type { DailyQuestState, QuestReroll } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { grantExp } from "@/lib/game";
 import { applyBadgeDrop } from "@/lib/badgeDrops";
-import { checkpointOrderOf } from "@/lib/kakomonAccess";
 
 /** 3件コンプリート時の固定XP（宝箱ドロップとは別）。 */
 export const DAILY_QUEST_CLEAR_XP = 10;
@@ -36,11 +35,25 @@ export type DailyQuestEvent = {
   maxCombo: number;
   /** 単語帳で「覚えた」「正解」になった語数（kind: "words" のときだけ）。 */
   wordsCleared?: number;
+  /** Today の用語タスクとして学んだセッションか（用語ミッションはこれだけを数える）。 */
+  fromTodayTask?: boolean;
 };
 
 const isTopicEvent = (e: DailyQuestEvent) => (e.kind ?? "topic") === "topic";
 /** 問題を解いた成果（トピックの確認問題か、公式過去問）。 */
 const isAnswerEvent = (e: DailyQuestEvent) => isTopicEvent(e) || e.kind === "past_exam";
+
+/**
+ * ミッションを選ぶときの、その日の Today の状況。
+ * 「Today に出ている学習」に結びつくミッションは、その学習が今日のルートにある日だけ出す
+ * （ミッションのために追加の学習をさせない）。
+ */
+export type DailyQuestContext = {
+  /** 今日のルートにある（済みを含む）トピック以外のタスクの種類。 */
+  todayActivityKinds?: ReadonlySet<TodayActivityKind>;
+  /** 今日の用語タスクの語数（用語ミッションの目標をこれ以下にする）。 */
+  todayVocabWordCount?: number;
+};
 
 export type DailyQuestDef = {
   id: string;
@@ -48,7 +61,14 @@ export type DailyQuestDef = {
   label: string;
   goal: number;
   /** その日の出題候補にできるか（復習が無い日に復習ミッションを出さない等）。 */
-  isAvailable?: (state: AppState) => boolean;
+  isAvailable?: (state: AppState, context: DailyQuestContext) => boolean;
+  /**
+   * Today のこの種類のタスクと結びついたミッション。そのタスクが今日のルートにある日だけ
+   * 候補になり、ある日は3件のうち1件として必ず採用する（Today とミッションを一致させる）。
+   */
+  todayActivity?: TodayActivityKind;
+  /** その日の目標（Today のタスクの大きさに合わせる）。省略時は goal。 */
+  goalFor?: (context: DailyQuestContext) => number;
   /** 完了イベントからの進捗増分。 */
   gain: (event: DailyQuestEvent) => number;
 };
@@ -92,13 +112,16 @@ export const QUEST_DEFS: DailyQuestDef[] = [
   },
   {
     // 開くだけでは進まない。単語帳で「覚えた」を付けた語・4択で正解した語だけを数える。
-    // 用語を Today に出すのは CP2 以降なので、ミッションも CP2 以降に限る。
-    id: "words_5",
+    // 今日の Today に用語タスクがある日だけ出す（Today で既に求めている単語学習で進む）。
+    // 目標は最大3語。今日の用語タスクがそれより少なければ、その語数（Today の分だけで達成できる）。
+    id: "words_today",
     emoji: "🔤",
-    label: "用語を5語クリアする（覚えた・正解）",
-    goal: 5,
-    isAvailable: (state) => (checkpointOrderOf(state.progress) ?? 0) >= 2,
-    gain: (e) => (e.kind === "words" ? e.wordsCleared ?? 0 : 0),
+    label: "今日の用語をクリアする（覚えた・正解）",
+    goal: 3,
+    todayActivity: "vocab",
+    goalFor: (context) => Math.max(1, Math.min(3, context.todayVocabWordCount ?? 3)),
+    isAvailable: (_state, context) => context.todayActivityKinds?.has("vocab") ?? false,
+    gain: (e) => (e.kind === "words" && e.fromTodayTask ? e.wordsCleared ?? 0 : 0),
   },
 ];
 
@@ -121,15 +144,29 @@ function hashString(s: string): number {
   return Math.abs(h);
 }
 
-/** その日の3ミッションを決定的に選ぶ（保存不要・毎日入れ替わる）。 */
-export function buildTodayQuests(state: AppState, date: string): DailyQuestState {
-  const candidates = QUEST_DEFS.filter((q) => q.isAvailable?.(state) ?? true);
-  const picked = [...candidates]
-    .sort((a, b) => hashString(`${date}:${a.id}`) - hashString(`${date}:${b.id}`))
-    .slice(0, QUEST_COUNT);
+function available(def: DailyQuestDef, state: AppState, context: DailyQuestContext): boolean {
+  return def.isAvailable?.(state, context) ?? true;
+}
+
+/**
+ * その日の3ミッションを決定的に選ぶ（日付ハッシュ・毎日入れ替わる）。
+ * Today のタスクに結びついたミッション（用語など）は、そのタスクが今日あるときだけ候補になり、
+ * あるときは1件を必ず採用する。無い日の選び方は従来と同じ。
+ */
+export function buildTodayQuests(
+  state: AppState,
+  date: string,
+  context: DailyQuestContext = {},
+): DailyQuestState {
+  const byHash = (a: DailyQuestDef, b: DailyQuestDef) =>
+    hashString(`${date}:${a.id}`) - hashString(`${date}:${b.id}`);
+  const candidates = QUEST_DEFS.filter((q) => available(q, state, context));
+  const anchored = candidates.filter((q) => q.todayActivity).sort(byHash).slice(0, 1);
+  const rest = candidates.filter((q) => !q.todayActivity).sort(byHash);
+  const picked = [...anchored, ...rest].slice(0, QUEST_COUNT);
   return {
     date,
-    quests: picked.map((q) => ({ id: q.id, goal: q.goal, progress: 0 })),
+    quests: picked.map((q) => ({ id: q.id, goal: q.goalFor?.(context) ?? q.goal, progress: 0 })),
     claimed: false,
   };
 }
@@ -149,15 +186,42 @@ function applyReroll(quests: DailyQuestState, reroll: QuestReroll | undefined): 
 
   const next = [...quests.quests];
   next[index] = { id: def.id, goal: def.goal, progress: 0 };
+  // （Today のタスクに結びつくミッションは差し替え候補にしないので、goalFor はここでは使わない）
   return { ...quests, quests: next };
 }
 
 /** 保存済み状態を今日の分に解決する（日付が変わっていたら作り直す）。 */
-export function resolveDailyQuests(state: AppState, date: string): DailyQuestState {
+export function resolveDailyQuests(
+  state: AppState,
+  date: string,
+  context: DailyQuestContext = {},
+): DailyQuestState {
   const reroll = state.progress.checkpointProgress?.gameful?.questReroll;
   const saved = state.progress.checkpointProgress?.dailyQuests;
-  const base = saved && saved.date === date ? saved : buildTodayQuests(state, date);
+  const base = saved && saved.date === date ? saved : buildTodayQuests(state, date, context);
   return applyReroll(base, reroll);
+}
+
+/**
+ * Today がその日のタスクを確定したときに、今日の3ミッションを保存して固定する。
+ * 以後はどこで学習しても（Today を経由しない学習完了でも）同じ3件で進む。
+ * すでに今日の分が保存されていれば何もしない（state をそのまま返す）。
+ */
+export function pinDailyQuests(
+  state: AppState,
+  date: string,
+  context: DailyQuestContext,
+): AppState {
+  const saved = state.progress.checkpointProgress?.dailyQuests;
+  if (saved && saved.date === date) return state;
+  const cp = state.progress.checkpointProgress ?? { ...INITIAL_CHECKPOINT_PROGRESS };
+  return {
+    ...state,
+    progress: {
+      ...state.progress,
+      checkpointProgress: { ...cp, dailyQuests: buildTodayQuests(state, date, context) },
+    },
+  };
 }
 
 /** その日にまだ差し替えられるか（1日1回）。 */
@@ -170,10 +234,15 @@ export function canRerollQuest(state: AppState, date: string): boolean {
  * 差し替え候補。今日の3件に入っていない、その日に出題可能なミッションから
  * 日付ハッシュで決定的に1件選ぶ（render 中の乱数を増やさない）。
  */
-export function pickRerollCandidate(state: AppState, date: string): DailyQuestDef | null {
-  const current = new Set(resolveDailyQuests(state, date).quests.map((quest) => quest.id));
+export function pickRerollCandidate(
+  state: AppState,
+  date: string,
+  context: DailyQuestContext = {},
+): DailyQuestDef | null {
+  const current = new Set(resolveDailyQuests(state, date, context).quests.map((quest) => quest.id));
+  // Today のタスクに結びつくミッションは差し替えでは出さない（採用はその日の選出時だけ）。
   const candidates = QUEST_DEFS.filter(
-    (def) => !current.has(def.id) && (def.isAvailable?.(state) ?? true),
+    (def) => !current.has(def.id) && !def.todayActivity && available(def, state, context),
   );
   if (candidates.length === 0) return null;
   return [...candidates].sort(
@@ -193,15 +262,16 @@ export function applyQuestReroll(
   state: AppState,
   questId: string,
   now: Date = new Date(),
+  context: DailyQuestContext = {},
 ): AppState {
   const date = localDateOf(now);
   if (!canRerollQuest(state, date)) return state;
 
-  const resolved = resolveDailyQuests(state, date);
+  const resolved = resolveDailyQuests(state, date, context);
   const target = resolved.quests.find((quest) => quest.id === questId);
   if (!target || target.progress > 0) return state;
 
-  const replacement = pickRerollCandidate(state, date);
+  const replacement = pickRerollCandidate(state, date, context);
   if (!replacement) return state;
 
   const cp = state.progress.checkpointProgress ?? { ...INITIAL_CHECKPOINT_PROGRESS };

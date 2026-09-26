@@ -28,6 +28,7 @@ import {
   type KakomonAccess,
 } from "@/lib/kakomonAccess";
 import { summarizeOfficialHistory } from "@/lib/pastExam/officialHistory";
+import { KAKOMON_FIELD_DRILL_TARGET } from "@/lib/pastExam/kakomonRules";
 
 // ============================================================================
 // 学習計画エンジン（studyPlanner）
@@ -297,8 +298,8 @@ export function kakomonAccessFor(
   });
 }
 
-/** 分野別演習を「ひと通り終えた」とみなす、1分野あたりの公式過去問の回答数。 */
-export const KAKOMON_FIELD_DRILL_TARGET = 15;
+/** 分野別演習を「ひと通り終えた」とみなす回答数（lib/pastExam/kakomonRules が正）。 */
+export { KAKOMON_FIELD_DRILL_TARGET };
 
 /**
  * 過去問演習の段階（トピック確認問題→分野別→ランダム→模試→誤答再演習）。

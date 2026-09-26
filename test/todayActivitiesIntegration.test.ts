@@ -168,6 +168,7 @@ describe("Today Primary との関係", () => {
       id: "act:vocab", kind: "vocab", title: "今日の単語復習", detail: "DNS", countLabel: "期限が来た1語",
       estimatedMinutes: 2, priority: 250, reason: "期限", href: "/glossary/study?mode=task&ids=dns",
       ctaLabel: "用語を確認する", primaryEligible: false,
+      spec: { kind: "vocab", variant: "review", wordIds: ["dns"], dueCount: 1 },
     };
     const topic = getTopic(NETWORK)!;
     const nodes = buildQuestRoute(s, [

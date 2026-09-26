@@ -34,8 +34,18 @@ import {
   saveStoredRoute,
   type TodayRouteTask,
 } from "@/lib/questRoute";
-import { buildTodayActivities } from "@/lib/todayActivities";
-import { loadTodayActivityLog, rememberOfferedActivities } from "@/lib/todayActivityLog";
+import { buildTodayActivities, mergeActivityLogs } from "@/lib/todayActivities";
+import {
+  loadTodayActivityLog,
+  rememberOfferedActivities,
+  saveTodayActivityLog,
+  type TodayActivityLog,
+} from "@/lib/todayActivityLog";
+import {
+  completeRemoteActivity,
+  fetchRemoteActivities,
+  offerRemoteActivities,
+} from "@/lib/todayActivitySync";
 import {
   getWordProgressMap,
   subscribeWordProgress,
@@ -43,6 +53,7 @@ import {
 } from "@/lib/wordlistProgress";
 import { loadCachedTopicStages, refreshTopicStages } from "@/lib/topicStageCache";
 import { saveAppState } from "@/lib/storage";
+import { pinDailyQuests, type DailyQuestContext } from "@/lib/dailyQuests";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -90,6 +101,30 @@ export default function TodayPage() {
     return unsubscribe;
   }, []);
 
+  // 今日のトピック以外のタスクの状態。正はサーバ（daily_study_tasks）で、端末のキャッシュを
+  // 先に出しておき、サーバから取れたら置き換える。取れない（未ログイン・失敗）ときは端末だけで続ける。
+  const [activityLog, setActivityLog] = useState<TodayActivityLog>(() =>
+    loadTodayActivityLog(todayLocalDate()));
+  const [activitySynced, setActivitySynced] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const date = todayLocalDate();
+    void fetchRemoteActivities(date).then((remote) => {
+      if (cancelled) return;
+      const merged = mergeActivityLogs(loadTodayActivityLog(date), remote);
+      if (remote) {
+        saveTodayActivityLog(merged, date);
+        // 端末では終えたがサーバへ届いていなかった完了を再送する。
+        for (const activity of merged.unsyncedDone) void completeRemoteActivity(date, activity);
+      }
+      setActivityLog({ offered: merged.offered, done: merged.done });
+      setActivitySynced(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // 選ばれた学習量があればそれを予算にする。選んでいなければ従来どおり。
   const selectedMinutes = state ? getSelectedMinutes(state, todayLocalDate()) : null;
   // トピック以外のタスク（関連用語・公式過去問）。学習キューへ同じ優先度の物差しで並べる。
@@ -107,9 +142,9 @@ export default function TodayPage() {
       wordProgress,
       topicStages,
       upcomingTopicIds,
-      log: loadTodayActivityLog(todayLocalDate()),
+      log: activityLog,
     });
-  }, [selectedMinutes, state, topicStages, topics, wordProgress]);
+  }, [activityLog, selectedMinutes, state, topicStages, topics, wordProgress]);
   const plan = useMemo(
     () =>
       state?.profile
@@ -136,12 +171,25 @@ export default function TodayPage() {
     [activities.active, state, topics],
   );
 
-  // 今日のメニューに載ったタスクは、その日のうちは中身（対象の単語・問題）を固定する。
+  // 今日のメニューに初めて載ったタスクを保存し、その日のうちは中身（対象の単語・問題）を固定する。
+  // サーバの状態を読み終えてから行う（別端末が先に出した中身を上書きしないため）。
   useEffect(() => {
-    const offered = (menu?.sequence ?? []).flatMap((entry) =>
-      entry.type === "activity" ? [entry.activity] : []);
-    if (offered.length > 0) rememberOfferedActivities(offered, todayLocalDate());
-  }, [menu]);
+    if (!activitySynced) return;
+    const fresh = (menu?.sequence ?? []).flatMap((entry) =>
+      entry.type === "activity" && !activityLog.offered[entry.activity.id] && !activityLog.done[entry.activity.id]
+        ? [entry.activity]
+        : []);
+    if (fresh.length === 0) return;
+    const date = todayLocalDate();
+    rememberOfferedActivities(fresh, date);
+    // サーバの保存結果（別端末と競合したらそちらの中身）で置き換える。
+    // 保存できなかった（未ログイン・失敗）ときは端末の記録で固定する。
+    void offerRemoteActivities(date, fresh).then((remote) => {
+      const merged = mergeActivityLogs(loadTodayActivityLog(date), remote);
+      if (remote) saveTodayActivityLog(merged, date);
+      setActivityLog({ offered: merged.offered, done: merged.done });
+    });
+  }, [activityLog, activitySynced, menu]);
 
   // 既存の daily_study_tasks 保存を維持する。教材は保存せず、topicIdだけを参照する。
   useEffect(() => {
@@ -249,6 +297,28 @@ export default function TodayPage() {
     }
   }, [nodes]);
 
+  // 今日の3ミッションは今日のルートと一致させる（用語タスクがある日だけ用語ミッション）。
+  const questContext = useMemo((): DailyQuestContext => {
+    const tasks = nodes.flatMap((node) => (node.task ? [node.task] : []));
+    const vocab = tasks.find((task) => task.spec.kind === "vocab");
+    return {
+      todayActivityKinds: new Set(tasks.map((task) => task.kind)),
+      todayVocabWordCount: vocab?.spec.kind === "vocab" ? vocab.spec.wordIds.length : undefined,
+    };
+  }, [nodes]);
+  // タスクがサーバと同期できたら、その日の3ミッションを保存して固定する
+  // （Today を経由しない学習完了でも同じ3件で進むように）。
+  useEffect(() => {
+    if (!activitySynced || !state?.profile) return;
+    const date = todayLocalDate();
+    const pinned = pinDailyQuests(state, date, questContext);
+    if (pinned === state) return;
+    saveAppState(pinned);
+    setState(pinned);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, pinned.progress);
+  }, [activitySynced, questContext, setState, state]);
+
   useEffect(() => {
     if (!state?.profile || !menu || !plan) return;
     if (nodes.length > 0) {
@@ -341,7 +411,7 @@ export default function TodayPage() {
         </div>
 
         <div className={s.side}>
-          <TodayMissions state={state} setState={setState} />
+          <TodayMissions state={state} setState={setState} context={questContext} />
           <ReadingCheck date={date} topics={readingTopics} />
           {growthCheckGate.available && (
             <div className={s.sideExtra}>
