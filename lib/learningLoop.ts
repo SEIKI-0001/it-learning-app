@@ -146,6 +146,8 @@ export function scheduleTopicReview(
   previous: ReviewItem | undefined,
   now: Date = new Date(),
   failureReason: ReviewReasonCode = "review_failure",
+  /** 失敗理由の表示文言を差し替える（公式過去問の誤答など。reasonCode は変えない）。 */
+  failureLabel?: string,
 ): ReviewItem {
   const previousStage = previous?.reviewStage ?? 0;
   const reviewStage = success ? previousStage + 1 : 0;
@@ -156,9 +158,9 @@ export function scheduleTopicReview(
       ? reviewStage === 1
         ? "定着確認"
         : `${reviewStage}回目の定着確認`
-      : failureReason === "summary_exam_miss"
+      : failureLabel ?? (failureReason === "summary_exam_miss"
         ? "総まとめ試験で間違えた"
-        : "復習で間違えた",
+        : "復習で間違えた"),
     confirmationCount: Math.max(0, reviewStage - 1),
     reviewStage,
     lastReviewedAt: now.toISOString(),
@@ -232,6 +234,15 @@ export function getWeakTopics(
   return result.sort((a, b) => b.severity - a.severity || a.topicId.localeCompare(b.topicId));
 }
 
+/** 公式過去問の誤答は、復習理由をそのまま伝える（判定上は総まとめ試験と同じ扱い）。 */
+export const PAST_EXAM_MISS_LABEL = "公式過去問で間違えた";
+
+function failureLabelFor(evidence: LearningEvidence[]): string | undefined {
+  return evidence.some((item) => item.kind === "past_exam" && !item.isCorrect)
+    ? PAST_EXAM_MISS_LABEL
+    : undefined;
+}
+
 function failureReasonFor(evidence: LearningEvidence[]): ReviewReasonCode {
   if (evidence.some((item) => isSummativeEvaluation(item.kind) && !item.isCorrect)) {
     return "summary_exam_miss";
@@ -294,6 +305,7 @@ export function updateLearningLoopProgress(
           previousReview,
           now,
           failureReasonFor(appliedEvidence),
+          success ? undefined : failureLabelFor(appliedEvidence),
         ),
       );
     }
@@ -313,17 +325,23 @@ export function updateLearningLoopProgress(
  * 「期限切れ復習 → 過去問誤答 → CP進行に必要な課題 → 公式過去問 → 単語 → 新規学習」の
  * 基本順になるようにしてある。固定順ではなく、同じキューの中で他の候補と並べる。
  *
- *   overdue_review (6000) > pastExamRetry > CP 必要課題 (1000+) > pastExamDrill
- *     > termsStabilizing > 総まとめ誤答・弱点 (400〜600) > wordsReviewLate
+ *   overdue_review (6000) > pastExamRetry (5000)
+ *     > CP のバッジを直接そろえるトピック (1500+) > pastExamDrill (1450)
+ *     > termsStabilizing (1150) ≒ CP 必要課題のトピック (1000〜1400)
+ *     > 総まとめ誤答・弱点 (400〜600) > wordsReviewLate
  *     > 新規・CP練習 (300〜350) > wordsReview > wordsRelated
+ *
+ * 公式過去問を CP 必要課題の大半より上に置くのは、CP5 以降では公式過去問の回答そのものが
+ * 習熟度・分野バランス・直近正答率（= CP5/6 の突破条件）を進めるから。ただしバッジを
+ * その場でそろえるトピックよりは下にする。
  */
 export const TODAY_ACTIVITY_PRIORITY = {
   /** 前日までに間違えた公式過去問の解き直し。期限切れ復習の次。 */
   pastExamRetry: 5000,
-  /** 公式過去問の演習。CP 進行に必要なトピック課題の次。 */
-  pastExamDrill: 900,
+  /** 公式過去問の演習。バッジを直接そろえるトピックの次。 */
+  pastExamDrill: 1450,
   /** 確認パックが用語定着待ち（terms_stabilizing）のトピックの関連用語。Primary 候補。 */
-  termsStabilizing: 700,
+  termsStabilizing: 1150,
   /** CP5 以降の復習語・苦手語。弱点トピックの後、新規学習の前。 */
   wordsReviewLate: 380,
   /** CP2〜4 の復習語・苦手語。その日のトピック学習の後に回す。 */
@@ -388,7 +406,14 @@ export function buildTodaysLearningQueue(input: {
 
   const weak = getWeakTopics(input.progress.topicMasteryStats ?? {});
   for (const item of weak.filter((candidate) => candidate.reason === "summary_exam_miss")) {
-    addTopic(item.topicId, "summary_weak", 500 + item.severity, "総まとめ試験の誤答");
+    const recent = input.progress.topicMasteryStats?.[item.topicId]?.recentEvidence ?? [];
+    const lastMiss = [...recent].reverse().find((e) => !e.isCorrect && isSummativeEvaluation(e.kind));
+    addTopic(
+      item.topicId,
+      "summary_weak",
+      500 + item.severity,
+      lastMiss?.kind === "past_exam" ? "公式過去問の誤答" : "総まとめ試験の誤答",
+    );
   }
   for (const item of weak.filter((candidate) => candidate.reason !== "summary_exam_miss")) {
     const topic = topicById.get(item.topicId);

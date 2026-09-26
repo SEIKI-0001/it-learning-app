@@ -276,14 +276,14 @@ export default function PlanPage() {
             <p className="text-xs font-semibold text-gray-500">過去問演習</p>
             <p className="mt-1 text-[15px] font-semibold text-gray-900">
               {plan.kakomonReady
-                ? "今から過去問を始めてOK"
+                ? "今日の学習に公式過去問が入ります"
                 : plan.kakomonStartDate
                   ? `開始目安：${formatDate(plan.kakomonStartDate)}ごろ`
                   : "主要テーマが進んだら始めましょう"}
             </p>
             <p className="mt-1 text-sm text-gray-600">
-              参考書を全部読み終えてからではなく、頻出テーマに一通り触れたら
-              少しずつ過去問道場で解き始めます。
+              基本はCP5「過去問実戦」から、分野別→3分野混合→ランダム→年度別100問の順に
+              公式過去問を解きます。試験日が近いときや実力が十分なときは前倒しで始まります。
             </p>
           </section>
 

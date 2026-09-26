@@ -270,3 +270,53 @@ describe("helpers", () => {
     expect(localDateOf(new Date(2026, 7, 20, 0, 30, 0))).toBe("2026-08-20");
   });
 });
+
+describe("単語・公式過去問の成果（今日の3ミッション）", () => {
+  const date = "2026-09-26";
+  const at = new Date(2026, 8, 26, 12, 0, 0);
+  const cp = (id: "cp1" | "cp2" | "cp5") => ({
+    checkpointProgress: { ...INITIAL_CHECKPOINT_PROGRESS, currentCheckpointId: id },
+  });
+  const withQuests = (ids: string[], id: "cp1" | "cp2" | "cp5" = "cp2") =>
+    state({
+      checkpointProgress: {
+        ...INITIAL_CHECKPOINT_PROGRESS,
+        currentCheckpointId: id,
+        dailyQuests: { date, quests: ids.map((q) => ({ id: q, goal: QUEST_DEFS.find((d) => d.id === q)!.goal, progress: 0 })), claimed: false },
+      },
+    });
+  const progressOf = (s: AppState, id: string) =>
+    resolveDailyQuests(s, date).quests.find((q) => q.id === id)?.progress;
+
+  it("用語ミッションは CP2 以降だけに出る", () => {
+    const words = QUEST_DEFS.find((d) => d.id === "words_5")!;
+    expect(words.isAvailable?.(state(cp("cp1")))).toBe(false);
+    expect(words.isAvailable?.(state(cp("cp2")))).toBe(true);
+  });
+
+  it("単語帳は開くだけでは進まず、覚えた・正解した語数だけ進む", () => {
+    const s = withQuests(["words_5", "complete_topic", "correct_8"]);
+    const none = applyDailyQuestProgress(s, { kind: "words", correct: 0, total: 0, isReview: false, maxCombo: 0, wordsCleared: 0 }, at);
+    expect(progressOf(none, "words_5")).toBe(0);
+    const three = applyDailyQuestProgress(s, { kind: "words", correct: 0, total: 0, isReview: false, maxCombo: 0, wordsCleared: 3 }, at);
+    expect(progressOf(three, "words_5")).toBe(3);
+    // 単語の学習はトピック完了・正解数ミッションに数えない
+    expect(progressOf(three, "complete_topic")).toBe(0);
+    expect(progressOf(three, "correct_8")).toBe(0);
+  });
+
+  it("公式過去問の演習は正解数・正答率のミッションを進め、トピック完了には数えない", () => {
+    const s = withQuests(["correct_8", "accuracy_80", "complete_topic"], "cp5");
+    const next = applyDailyQuestProgress(s, { kind: "past_exam", correct: 9, total: 10, isReview: false, maxCombo: 4 }, at);
+    expect(progressOf(next, "correct_8")).toBe(8);
+    expect(progressOf(next, "accuracy_80")).toBe(1);
+    expect(progressOf(next, "complete_topic")).toBe(0);
+  });
+
+  it("トピック学習（kind 省略）は従来どおり", () => {
+    const s = withQuests(["words_5", "complete_topic"]);
+    const next = applyDailyQuestProgress(s, { correct: 3, total: 4, isReview: false, maxCombo: 2 }, at);
+    expect(progressOf(next, "complete_topic")).toBe(1);
+    expect(progressOf(next, "words_5")).toBe(0);
+  });
+});
