@@ -203,6 +203,11 @@ export type WeeklyPlan = {
   weekStartDate: string; // その週の月曜(ISO "YYYY-MM-DD"・ローカル)
   topicIds: string[]; // 今週進めたい新規学習トピック
   reviewIds: string[]; // 今週こなしたい復習トピック
+  /**
+   * 週の途中で planning inputs（試験日・学習可能時間）変更により作り直した時刻（ISO）。
+   * 同じ週の旧スナップショットと和集合でマージせず、新しい方を採用するための印。
+   */
+  revisedAt?: string;
 };
 
 export type UserProgress = {

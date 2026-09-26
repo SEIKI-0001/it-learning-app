@@ -605,6 +605,19 @@ export function resolveWeeklyPlan(
 }
 
 /**
+ * planning inputs（試験日・学習可能時間）の変更時だけ、同じ週でも今週のタスクリストを
+ * 新しい条件で作り直す。通常の学習中は resolveWeeklyPlan で週途中の入れ替えをしない。
+ * revisedAt により、端末間マージで旧条件の同週スナップショットと混ざらない。
+ */
+export function rebuildWeeklyPlanForPlanningChange(
+  state: AppState,
+  topics: Topic[] = getAllTopics(),
+  now: Date = new Date(),
+): WeeklyPlan {
+  return { ...buildWeeklyPlan(state, topics, now), revisedAt: now.toISOString() };
+}
+
+/**
  * 週次リストを表示用（チェック状態つき）に展開する。
  * チェック状態は保存せず、completedTopics / 現在の復習対象から都度導出する。
  */

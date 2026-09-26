@@ -10,6 +10,7 @@ import {
 } from "@/lib/dbMappers";
 import { buildPlanAdjustmentProposal } from "@/lib/planAdjustment";
 import { getCurrentReadiness } from "@/lib/examReadiness/service";
+import { daysUntilExamDate } from "@/lib/planningInputs";
 
 export const runtime = "nodejs";
 
@@ -23,14 +24,6 @@ export const runtime = "nodejs";
 // - 提案不要（on_track・重大リスクなし）: proposal:null
 // - 同日に proposed / accepted の提案が既にあれば、それを再利用する（重複生成しない）
 // - AI API は呼ばない（すべてルールベース）。
-
-/** exam_date（"YYYY-MM-DD"）から試験までの残り日数を求める。 */
-function daysUntil(examDate: string | null, now: Date): number | null {
-  if (!examDate) return null;
-  const exam = new Date(`${examDate}T00:00:00`);
-  if (Number.isNaN(exam.getTime())) return null;
-  return Math.max(0, Math.ceil((exam.getTime() - now.getTime()) / 86_400_000));
-}
 
 export async function POST(request: Request) {
   let body: { userId?: string } = {};
@@ -103,7 +96,7 @@ export async function POST(request: Request) {
   const generated = buildPlanAdjustmentProposal({
     statusDate,
     status,
-    daysUntilExam: daysUntil(examDate, now),
+    daysUntilExam: daysUntilExamDate(examDate, now),
   }, readiness);
 
   // 提案不要。
