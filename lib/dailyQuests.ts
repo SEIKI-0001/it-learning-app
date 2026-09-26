@@ -13,6 +13,7 @@ import type { DailyQuestState, QuestReroll } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { grantExp } from "@/lib/game";
 import { applyBadgeDrop } from "@/lib/badgeDrops";
+import { checkpointOrderOf } from "@/lib/kakomonAccess";
 
 /** 3件コンプリート時の固定XP（宝箱ドロップとは別）。 */
 export const DAILY_QUEST_CLEAR_XP = 10;
@@ -20,13 +21,26 @@ const QUEST_COUNT = 3;
 
 /** 学習完了1回ぶんの成果。ミッション進捗はこのイベントだけから加算する。 */
 export type DailyQuestEvent = {
+  /**
+   * 何の学習の成果か。省略時は "topic"（トピックの確認問題・復習）。
+   * "words" は単語帳の1セッションで、用語ミッション以外は進めない。
+   * "past_exam" は公式過去問の演習で、正解数・正答率・コンボのミッションだけを進める
+   * （トピック完了・復習消化には数えない）。
+   */
+  kind?: "topic" | "words" | "past_exam";
   correct: number;
   total: number;
   /** 復習キューにあったトピックの学習だったか。 */
   isReview: boolean;
   /** 今回の回答での最長連続正解。 */
   maxCombo: number;
+  /** 単語帳で「覚えた」「正解」になった語数（kind: "words" のときだけ）。 */
+  wordsCleared?: number;
 };
+
+const isTopicEvent = (e: DailyQuestEvent) => (e.kind ?? "topic") === "topic";
+/** 問題を解いた成果（トピックの確認問題か、公式過去問）。 */
+const isAnswerEvent = (e: DailyQuestEvent) => isTopicEvent(e) || e.kind === "past_exam";
 
 export type DailyQuestDef = {
   id: string;
@@ -45,14 +59,14 @@ export const QUEST_DEFS: DailyQuestDef[] = [
     emoji: "✅",
     label: "確認問題を1トピック完了する",
     goal: 1,
-    gain: () => 1,
+    gain: (e) => (isTopicEvent(e) ? 1 : 0),
   },
   {
     id: "accuracy_80",
     emoji: "🎯",
     label: "正答率80%以上を1回出す",
     goal: 1,
-    gain: (e) => (e.total > 0 && e.correct / e.total >= 0.8 ? 1 : 0),
+    gain: (e) => (isAnswerEvent(e) && e.total > 0 && e.correct / e.total >= 0.8 ? 1 : 0),
   },
   {
     id: "review_one",
@@ -60,21 +74,31 @@ export const QUEST_DEFS: DailyQuestDef[] = [
     label: "復習を1件消化する",
     goal: 1,
     isAvailable: (state) => state.progress.reviewQueue.length > 0,
-    gain: (e) => (e.isReview ? 1 : 0),
+    gain: (e) => (isTopicEvent(e) && e.isReview ? 1 : 0),
   },
   {
     id: "combo_3",
     emoji: "🔥",
     label: "3コンボ（3連続正解）を出す",
     goal: 1,
-    gain: (e) => (e.maxCombo >= 3 ? 1 : 0),
+    gain: (e) => (isAnswerEvent(e) && e.maxCombo >= 3 ? 1 : 0),
   },
   {
     id: "correct_8",
     emoji: "✏️",
     label: "合計8問正解する",
     goal: 8,
-    gain: (e) => e.correct,
+    gain: (e) => (isAnswerEvent(e) ? e.correct : 0),
+  },
+  {
+    // 開くだけでは進まない。単語帳で「覚えた」を付けた語・4択で正解した語だけを数える。
+    // 用語を Today に出すのは CP2 以降なので、ミッションも CP2 以降に限る。
+    id: "words_5",
+    emoji: "🔤",
+    label: "用語を5語クリアする（覚えた・正解）",
+    goal: 5,
+    isAvailable: (state) => (checkpointOrderOf(state.progress) ?? 0) >= 2,
+    gain: (e) => (e.kind === "words" ? e.wordsCleared ?? 0 : 0),
   },
 ];
 

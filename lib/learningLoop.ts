@@ -3,6 +3,7 @@ import type {
   LearningEvidenceKind,
   ReviewItem,
   ReviewReasonCode,
+  TodayActivity,
   TodaysLearningQueueItem,
   TopicMasteryStats,
   UserProgress,
@@ -306,6 +307,31 @@ export function updateLearningLoopProgress(
   };
 }
 
+/**
+ * トピック学習以外のタスク（関連用語・公式過去問）の優先度。
+ * トピック側の優先度（このファイルの addTopic と lib/checkpointNeeds）と同じ物差しに置き、
+ * 「期限切れ復習 → 過去問誤答 → CP進行に必要な課題 → 公式過去問 → 単語 → 新規学習」の
+ * 基本順になるようにしてある。固定順ではなく、同じキューの中で他の候補と並べる。
+ *
+ *   overdue_review (6000) > pastExamRetry > CP 必要課題 (1000+) > pastExamDrill
+ *     > termsStabilizing > 総まとめ誤答・弱点 (400〜600) > wordsReviewLate
+ *     > 新規・CP練習 (300〜350) > wordsReview > wordsRelated
+ */
+export const TODAY_ACTIVITY_PRIORITY = {
+  /** 前日までに間違えた公式過去問の解き直し。期限切れ復習の次。 */
+  pastExamRetry: 5000,
+  /** 公式過去問の演習。CP 進行に必要なトピック課題の次。 */
+  pastExamDrill: 900,
+  /** 確認パックが用語定着待ち（terms_stabilizing）のトピックの関連用語。Primary 候補。 */
+  termsStabilizing: 700,
+  /** CP5 以降の復習語・苦手語。弱点トピックの後、新規学習の前。 */
+  wordsReviewLate: 380,
+  /** CP2〜4 の復習語・苦手語。その日のトピック学習の後に回す。 */
+  wordsReview: 250,
+  /** CP2〜3 の「今日のトピックの関連語」。いちばん最後（新規学習を圧迫しない）。 */
+  wordsRelated: 240,
+} as const;
+
 export function buildTodaysLearningQueue(input: {
   progress: UserProgress;
   topics: Topic[];
@@ -313,6 +339,11 @@ export function buildTodaysLearningQueue(input: {
   now?: Date;
   includeFlashcards?: boolean;
   includeExtraPractice?: boolean;
+  /**
+   * トピック学習以外のタスク（lib/todayActivities が作る）。渡したときだけ同じキューへ並べる。
+   * 優先度は各タスクの priority（TODAY_ACTIVITY_PRIORITY）をそのまま使う。
+   */
+  activities?: TodayActivity[];
 }): TodaysLearningQueueItem[] {
   const now = input.now ?? new Date();
   const topicById = new Map(input.topics.map((topic) => [topic.id, topic]));
@@ -397,7 +428,20 @@ export function buildTodaysLearningQueue(input: {
     addTopic(topic.id, "new_topic", 300 + topic.importance * 10, "次の新規Topic");
   }
 
-  if (input.includeFlashcards) {
+  for (const activity of input.activities ?? []) {
+    queue.push({
+      id: activity.id,
+      kind: activity.kind === "vocab"
+        ? "flashcard"
+        : activity.kind === "past_exam_retry" ? "past_exam_retry" : "past_exam",
+      priority: activity.priority,
+      estimatedMinutes: activity.estimatedMinutes,
+      reason: activity.reason,
+      activity,
+    });
+  }
+
+  if (input.includeFlashcards && !(input.activities ?? []).some((a) => a.kind === "vocab")) {
     queue.push({ id: "flashcard", kind: "flashcard", priority: 200, estimatedMinutes: 5, reason: "単語帳" });
   }
   if (input.includeExtraPractice) {

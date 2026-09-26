@@ -13,7 +13,12 @@ import { formatOffset, type TodaySlot } from "./todaySlots";
 import { useTodayMochitAttention } from "./useTodayMochitAttention";
 import s from "./todayView.module.css";
 
-const KIND_LABEL: Record<TodaySlot["kind"], string> = { new: "新規", review: "復習" };
+const KIND_LABEL: Record<TodaySlot["kind"], string> = {
+  new: "新規",
+  review: "復習",
+  vocab: "用語",
+  exam: "過去問",
+};
 
 // 推奨理由の一部は内部向けの短いラベル（lib/todayPrimary の FALLBACK_REASON 等）なので、
 // モチットの吹き出しで読める文に言い換える。理由の中身は変えない。
@@ -119,14 +124,23 @@ export default function TodayCueSheet({
         {slots.map((slot) => {
           // 突破試験を先頭に出しているときは、ルート側の現在地は開かない。
           const state = finalExam && slot.state === "now" ? "next" : slot.state;
-          const questionCount = getTopic(slot.topicId)?.checkQuestions.length ?? 0;
+          const task = slot.task;
+          const questionCount = task ? 0 : getTopic(slot.topicId)?.checkQuestions.length ?? 0;
           const reason =
             primary && primary.topicId === slot.topicId
               ? primary.reasonLabel
-              : slot.kind === "review"
-                ? "復習予定日です。"
-                : "今日の学習の続きです。";
-          const aiGradingHref = aiGradingHrefFor(slot);
+              : task
+                ? task.reason
+                : slot.kind === "review"
+                  ? "復習予定日です。"
+                  : "今日の学習の続きです。";
+          const aiGradingHref = task ? null : aiGradingHrefFor(slot);
+          const href = task ? task.href : hrefFor(slot);
+          const ctaLabel = task
+            ? task.ctaLabel
+            : slot.kind === "review"
+              ? "復習を始める"
+              : "レッスンを始める";
           return (
             <li key={slot.id} className={s.cue} data-state={state} data-kind={slot.kind}>
               <span className={s.offset}>{formatOffset(slot.start)}</span>
@@ -138,7 +152,7 @@ export default function TodayCueSheet({
                   {state === "now" ? (
                     <p className={s.cueTitle}>{slot.title}</p>
                   ) : (
-                    <Link href={hrefFor(slot)} className={`${s.cueTitle} ${s.cueTitleLink}`}>
+                    <Link href={href} className={`${s.cueTitle} ${s.cueTitleLink}`}>
                       {slot.title}
                     </Link>
                   )}
@@ -166,12 +180,14 @@ export default function TodayCueSheet({
                       <p className={s.bubble}>{spokenReason(reason)}</p>
                     </div>
                     <div className={s.nowActions}>
-                      <Link ref={ctaRef} href={hrefFor(slot)} className={s.start} data-kind={slot.kind}>
-                        {slot.kind === "review" ? "復習を始める" : "レッスンを始める"}
+                      <Link ref={ctaRef} href={href} className={s.start} data-kind={slot.kind}>
+                        {ctaLabel}
                         <StartArrow />
                       </Link>
                       <span className={s.nowHint}>
-                        {questionCount > 0 ? (
+                        {task ? (
+                          task.detail
+                        ) : questionCount > 0 ? (
                           <>
                             解説と確認問題 <span className={s.mono}>{questionCount}</span>問
                           </>

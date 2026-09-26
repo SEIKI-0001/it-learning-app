@@ -30,7 +30,7 @@ const BADGE_ICONS: Record<string, IconName> = {
   "b-cp4-mastered-30": "shield",
   "b-cp4-revenge-zero": "star",
   "b-cp4-final": "check-double",
-  // CP5 過去問準備
+  // CP5 過去問実戦
   "b-cp5-mastered-45": "settings",
   "b-cp5-fields-solid": "palette",
   "b-cp5-kakomon-ready": "puzzle",

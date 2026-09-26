@@ -134,6 +134,8 @@ export type TodaysLearningQueueKind =
   | "checkpoint_practice"
   | "new_topic"
   | "flashcard"
+  | "past_exam"
+  | "past_exam_retry"
   | "extra_practice";
 
 export type TodaysLearningQueueItem = {
@@ -143,6 +145,47 @@ export type TodaysLearningQueueItem = {
   priority: number;
   estimatedMinutes: number;
   reason: string;
+  /** トピック学習ではないタスク（関連用語・公式過去問）の中身。 */
+  activity?: TodayActivity;
+};
+
+/**
+ * Today に出す「トピック学習以外」のタスクの種類。
+ *   vocab           … 関連用語・期限の来た単語・苦手単語を固める（単語帳）
+ *   past_exam_drill … 公式過去問の部分演習（分野別・混合・ランダム）
+ *   past_exam_retry … 前回までに間違えた公式過去問の解き直し
+ *   past_exam_mock  … 公式過去問の年度別100問
+ */
+export type TodayActivityKind =
+  | "vocab"
+  | "past_exam_drill"
+  | "past_exam_retry"
+  | "past_exam_mock";
+
+/**
+ * Today のタスク1件（トピック学習以外）。機能名ではなく「次に何をやるか」で表す。
+ * 1日に出すのは種類ごとに1件まで。id は種類ごとに固定（"act:vocab" など）。
+ */
+export type TodayActivity = {
+  id: string;
+  kind: TodayActivityKind;
+  /** 例:「ネットワークの関連用語を固める」「テクノロジの公式問題を12問解く」 */
+  title: string;
+  /** 例:「DNS / DHCP / NAT / VPN」 */
+  detail: string;
+  /** 例:「4語」「12問」 */
+  countLabel: string;
+  estimatedMinutes: number;
+  /** lib/learningLoop の TODAY_ACTIVITY_PRIORITY に従う。 */
+  priority: number;
+  /** なぜ今日これをやるか。 */
+  reason: string;
+  href: string;
+  ctaLabel: string;
+  /** 「今日の最優先」に立ててよいか（通常の単語学習は false）。 */
+  primaryEligible: boolean;
+  /** このトピックの学習と組になるタスク（そのトピックが今日のメニューにあるときだけ出す）。 */
+  anchorTopicId?: string;
 };
 
 /**
@@ -226,4 +269,13 @@ export type TodayMenu = {
   items: TodayMenuItem[]; // 学習トピック
   reviewItems: ReviewItem[]; // 復習対象(問題)
   message: string; // 一言メッセージ
+  /**
+   * トピック学習と、トピック以外のタスク（関連用語・公式過去問）を優先度順に並べたもの。
+   * activities を渡して生成したときだけ入る（渡さなければ従来どおり items だけ）。
+   */
+  sequence?: TodayMenuEntry[];
 };
+
+export type TodayMenuEntry =
+  | { type: "topic"; item: TodayMenuItem }
+  | { type: "activity"; activity: TodayActivity };

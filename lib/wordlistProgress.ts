@@ -1,6 +1,13 @@
 "use client";
 
 import { getUserId } from "@/lib/userSession";
+import {
+  mergeWordProgressMaps,
+  type SelfRating,
+  type WordProgress,
+  type WordProgressMap,
+  type WordStatus,
+} from "@/lib/wordProgressModel";
 
 // 英略語の単語帳の学習進捗を localStorage に保存する小さなストア。
 // ミニゲーム(lib/minigameProgress)と同じ方針で、
@@ -11,25 +18,8 @@ import { getUserId } from "@/lib/userSession";
 // localStorage は更新済みなので UI は止まらない（フォールバック方針）。
 // 直接アクセス（user_id 無し）は従来どおり localStorage のみで動く。
 
-export type WordStatus = "new" | "learning" | "weak" | "mastered";
-
-/** カード裏面の自己評価。 */
-export type SelfRating = "remembered" | "vague" | "forgot";
-
-export type WordProgress = {
-  acronymId: string;
-  status: WordStatus;
-  correctCount: number;
-  wrongCount: number;
-  reviewCount: number;
-  /** 直近に学習した日時（epoch ms）。 */
-  lastReviewedAt: number | null;
-  /** 次に復習する目安の日時（epoch ms）。これ以前なら「今日の復習対象」。 */
-  nextReviewAt: number | null;
-  lastSelfRating: SelfRating | null;
-};
-
-export type WordProgressMap = Record<string, WordProgress>;
+export type { SelfRating, WordProgress, WordProgressMap, WordStatus } from "@/lib/wordProgressModel";
+export { isValidWordProgress, mergeWordProgressMaps } from "@/lib/wordProgressModel";
 
 const STORAGE_KEY = "fequest:wordlistProgress";
 const EVENT_NAME = "fequest:wordlistProgress:change";
@@ -186,15 +176,29 @@ export function recordQuizResult(id: string, correct: boolean): WordProgress {
   return next;
 }
 
+/** 端末にしか無い進捗を DB へまとめて送る（1回あたりの件数を抑える）。 */
+const UPLOAD_BATCH_SIZE = 100;
+
+async function uploadWordProgress(userId: string, list: WordProgress[]): Promise<void> {
+  for (let i = 0; i < list.length; i += UPLOAD_BATCH_SIZE) {
+    const res = await fetch("/api/word-progress/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, progresses: list.slice(i, i + UPLOAD_BATCH_SIZE) }),
+    });
+    if (!res.ok) return; // 次回の同期で再送される（端末側は消していない）
+  }
+}
+
 /**
- * Supabase から単語帳進捗を取得し、localStorage にマージ同期する。
- * - user_id が無ければ（直接アクセス）何もせず false。
+ * Supabase と localStorage の単語帳進捗を双方向に同期する。
+ * - user_id が無ければ（未ログイン）何もせず false。localStorage だけで従来どおり動く。
  * - 取得失敗・未設定・401・503 でも false を返すだけで、既存 localStorage は保持。
- * - マージ方針：localStorage 側にしか無い進捗は消さない。両方にある単語は
- *   lastReviewedAt が新しい方を採用する（単純マージ）。
- * - 同期に成功して何か変化があれば true。
+ * - DB の進捗を端末へ取り込み（別端末の学習を反映）、端末の方が新しい進捗は DB へ送る
+ *   （localStorage にしか無かった既存ユーザーのデータを正式なユーザーデータへ移す）。
+ * - 同期に成功すれば true。
  */
-export async function syncWordProgressFromDb(): Promise<boolean> {
+export async function syncWordProgress(): Promise<boolean> {
   if (typeof window === "undefined") return false;
   const userId = getUserId();
   if (!userId) return false;
@@ -213,27 +217,37 @@ export async function syncWordProgressFromDb(): Promise<boolean> {
     };
     if (!data.ok || !data.progress) return false;
 
-    const remote = data.progress;
-    const local = readAll();
-    const merged: WordProgressMap = { ...local };
-
-    for (const [id, r] of Object.entries(remote)) {
-      const l = local[id];
-      if (!l) {
-        merged[id] = r;
-      } else {
-        // lastReviewedAt が新しい方を優先（null は 0 扱い）。
-        const lTime = l.lastReviewedAt ?? 0;
-        const rTime = r.lastReviewedAt ?? 0;
-        merged[id] = rTime > lTime ? r : l;
-      }
-    }
-
+    // 取得中に端末側で記録が増えていても消さないよう、マージ直前に読み直す。
+    const { merged, toUpload } = mergeWordProgressMaps(readAll(), data.progress);
     writeAll(merged);
+    if (toUpload.length > 0) await uploadWordProgress(userId, toUpload);
     return true;
   } catch {
     return false;
   }
+}
+
+/** 旧名（単語帳画面から呼ばれている）。双方向同期と同じ。 */
+export const syncWordProgressFromDb = syncWordProgress;
+
+let sessionSync: { userId: string; promise: Promise<boolean> } | null = null;
+
+/**
+ * 画面を開くたびに通信しないよう、SPA セッション中はユーザーごとに1回だけ同期する（Today 用）。
+ * アカウントが切り替わったら（userId が変わったら）その人のぶんを改めて同期する。
+ * 単語帳の各画面は従来どおり毎回 syncWordProgress() を呼ぶ。
+ */
+export function syncWordProgressOnce(): Promise<boolean> {
+  const userId = typeof window === "undefined" ? null : getUserId();
+  if (!userId) return Promise.resolve(false);
+  if (sessionSync?.userId !== userId) {
+    const promise = syncWordProgress().then((ok) => {
+      if (!ok && sessionSync?.promise === promise) sessionSync = null; // 次の画面で再試行
+      return ok;
+    });
+    sessionSync = { userId, promise };
+  }
+  return sessionSync.promise;
 }
 
 /** 状態別の件数。allIds を渡すと未学習(new)も総数から差し引いて数える。 */

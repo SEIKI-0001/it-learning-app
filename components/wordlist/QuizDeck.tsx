@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import type { ChoiceKey } from "@/types";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/lib/wordlistProgress";
 import ChoiceButton from "@/components/ChoiceButton";
 import Icon from "@/components/ui/Icon";
+import { completeWordStudySession } from "@/lib/wordStudySession";
 import { buttonClass } from "@/components/ui/Button";
 
 // 英略語の4択確認モード。
@@ -96,6 +97,18 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
     // mode は固定（ページ遷移で再マウント）。初回のみ生成。
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // セッションを終えたら1回だけ、正解した語数を今日のミッションへ反映する。
+  const completedSessionRef = useRef<QuizQuestion[] | null>(null);
+  const sessionDone = mounted && questions.length > 0 && index >= questions.length;
+  useEffect(() => {
+    if (!sessionDone || completedSessionRef.current === questions) return;
+    completedSessionRef.current = questions;
+    completeWordStudySession({
+      cleared: Object.values(results).filter(Boolean).length,
+      todayTaskId: null,
+    });
+  }, [questions, results, sessionDone]);
 
   function restart() {
     setQuestions(buildQuestions());

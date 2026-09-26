@@ -17,6 +17,13 @@
   --orange-700: var(--color-accent-700);
   --orange-soft: var(--color-accent-100);
   --green: var(--color-emerald-500);
+  /* トピック以外のタスク: 関連用語（vocab）と公式過去問（exam） */
+  --vocab: var(--color-emerald-600);
+  --vocab-700: var(--color-emerald-800);
+  --vocab-soft: var(--color-emerald-50);
+  --exam: var(--color-brand-900);
+  --exam-700: var(--color-brand-900);
+  --exam-soft: var(--color-brand-50);
   --cta: var(--color-gray-900);
   --cta-hover: #000000;
   --sans: var(--font-app-num), var(--font-app-sans), system-ui, sans-serif;
@@ -239,6 +246,16 @@
   --soft: var(--orange-soft);
 }
 
+.segment[data-kind="vocab"] {
+  --solid: var(--vocab);
+  --soft: var(--vocab-soft);
+}
+
+.segment[data-kind="exam"] {
+  --solid: var(--exam);
+  --soft: var(--exam-soft);
+}
+
 .segment::before,
 .segmentFill {
   content: "";
@@ -348,6 +365,14 @@
 
 .legendItem[data-kind="review"]::before {
   background: var(--orange);
+}
+
+.legendItem[data-kind="vocab"]::before {
+  background: var(--vocab);
+}
+
+.legendItem[data-kind="exam"]::before {
+  background: var(--exam);
 }
 
 /* ───────── body ───────── */
@@ -496,6 +521,14 @@
   border-color: var(--orange);
 }
 
+.cue[data-state="now"][data-kind="vocab"] .mark {
+  border-color: var(--vocab);
+}
+
+.cue[data-state="now"][data-kind="exam"] .mark {
+  border-color: var(--exam);
+}
+
 .cue[data-state="done"] .mark {
   border-color: var(--green);
   background: var(--green);
@@ -595,6 +628,16 @@
 .kind[data-kind="review"] {
   background: var(--orange-soft);
   color: var(--orange-700);
+}
+
+.kind[data-kind="vocab"] {
+  background: var(--vocab-soft);
+  color: var(--vocab-700);
+}
+
+.kind[data-kind="exam"] {
+  background: var(--exam-soft);
+  color: var(--exam-700);
 }
 
 .cue[data-state="done"] .kind {

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { WORDLIST_CATEGORY_LABELS, type WordlistEntry } from "@/types/wordlist";
-import { getAllWords } from "@/lib/wordlist";
+import { getAllWords, getWord } from "@/lib/wordlist";
+import { completeWordStudySession } from "@/lib/wordStudySession";
 import {
   getWordProgressMap,
   getWeakIds,
@@ -22,7 +23,11 @@ import { buttonClass } from "@/components/ui/Button";
 // localStorage(lib/wordlistProgress)へ保存する。
 // 並び順は毎セッション・クライアント側でシャッフル（マウント後に確定＝SSR不整合を避ける）。
 
-export type StudyMode = "today" | "weak" | "all";
+/**
+ * today/weak/all は単語帳からの自由学習。task は Today などから「この単語だけ」を
+ * 指定して学ぶモード（全単語からランダムには出さない）。
+ */
+export type StudyMode = "today" | "weak" | "all" | "task";
 
 const SESSION_SIZE = 8; // 1セッション 5〜10語程度
 
@@ -30,6 +35,7 @@ const EMPTY_HINT: Record<StudyMode, string> = {
   today: "今日の復習対象はありません。「すべてから学習」で新しい単語を覚えましょう。",
   weak: "苦手な単語はまだありません。学習や4択で間違えた単語がここに集まります。",
   all: "単語がありません。",
+  task: "指定された用語が見つかりませんでした。単語帳トップから学習できます。",
 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -41,7 +47,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function buildPool(mode: StudyMode): WordlistEntry[] {
+function buildPool(mode: StudyMode, taskIds: string[]): WordlistEntry[] {
+  if (mode === "task") {
+    return taskIds.map((id) => getWord(id)).filter((e): e is WordlistEntry => Boolean(e));
+  }
   const all = getAllWords();
   if (mode === "all") return all;
   const map = getWordProgressMap();
@@ -53,7 +62,20 @@ function buildPool(mode: StudyMode): WordlistEntry[] {
   return all.filter((e) => ids.has(e.id));
 }
 
-export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
+export default function FlashcardDeck({
+  mode,
+  ids = [],
+  todayTaskId = null,
+  topicId = null,
+}: {
+  mode: StudyMode;
+  /** mode="task" のときに学ぶ単語（wordlist の id）。 */
+  ids?: string[];
+  /** Today のタスクから来たときのタスク id。終えたら Today 側で「済み」になる。 */
+  todayTaskId?: string | null;
+  /** 関連語の元になったトピック（確認パックへの導線に使う）。 */
+  topicId?: string | null;
+}) {
   const [mounted, setMounted] = useState(false);
   const [pool, setPool] = useState<WordlistEntry[]>([]);
   const [deck, setDeck] = useState<WordlistEntry[]>([]);
@@ -61,6 +83,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
   const [flipped, setFlipped] = useState(false);
   // このセッションでの自己評価（id -> rating）。
   const [results, setResults] = useState<Record<string, SelfRating>>({});
+  const idsKey = ids.join(",");
 
   // マウント後に進捗を読んでプール・出題を作る（SSR一致のため）。
   // 先に Supabase 同期を試み、today/weak 判定に DB の進捗を反映する。
@@ -70,7 +93,7 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
     async function init() {
       await syncWordProgressFromDb();
       if (cancelled) return;
-      const p = buildPool(mode);
+      const p = buildPool(mode, idsKey ? idsKey.split(",") : []);
       setPool(p);
       setDeck(shuffle(p).slice(0, SESSION_SIZE));
       setMounted(true);
@@ -79,7 +102,19 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
     return () => {
       cancelled = true;
     };
-  }, [mode]);
+  }, [mode, idsKey]);
+
+  // セッションを終えたら1回だけ後処理（Today のタスク完了・今日のミッション）。
+  const completedSessionRef = useRef<WordlistEntry[] | null>(null);
+  const sessionDone = mounted && deck.length > 0 && index >= deck.length;
+  useEffect(() => {
+    if (!sessionDone || completedSessionRef.current === deck) return;
+    completedSessionRef.current = deck;
+    completeWordStudySession({
+      cleared: Object.values(results).filter((r) => r === "remembered").length,
+      todayTaskId,
+    });
+  }, [deck, results, sessionDone, todayTaskId]);
 
   function startSession(list: WordlistEntry[]) {
     setDeck(shuffle(list).slice(0, SESSION_SIZE));
@@ -183,7 +218,20 @@ export default function FlashcardDeck({ mode }: { mode: StudyMode }) {
               あいまい・覚えてない {retryList.length}枚をもう一度
             </button>
           )}
-          {pool.length > total && (
+          {todayTaskId && (
+            <Link href="/today" className={buttonClass("primary", "md", "w-full")}>
+              今日の学習に戻る
+            </Link>
+          )}
+          {topicId && (
+            <Link
+              href={`/check-pack/${encodeURIComponent(topicId)}`}
+              className={buttonClass("secondary", "md", "w-full")}
+            >
+              確認パックで仕上がりを確かめる
+            </Link>
+          )}
+          {mode !== "task" && pool.length > total && (
             <button
               type="button"
               onClick={() => startSession(pool)}

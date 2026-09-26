@@ -303,7 +303,7 @@ export const BADGES: BadgeDef[] = [
     emoji: "🔁",
   },
 
-  // ---- CP5 過去問準備 ------------------------------------------------------
+  // ---- CP5 過去問実戦 ------------------------------------------------------
   {
     id: "b-cp5-mastered-45",
     label: "定着45テーマ",
@@ -357,7 +357,7 @@ export const BADGES: BadgeDef[] = [
   },
   {
     id: "b-cp5-final",
-    label: "過去問準備マスター",
+    label: "過去問実戦マスター",
     description: "CP5の突破試験に合格した証。",
     category: "final",
     rarity: "epic",

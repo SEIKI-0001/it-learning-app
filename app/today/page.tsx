@@ -27,7 +27,21 @@ import {
 } from "@/lib/userSession";
 import type { DailyStudyTaskInput } from "@/types/studyProgress";
 import { getLessonHref, getLessonLocation } from "@/lib/learningCatalog";
-import { buildQuestRoute, loadStoredRoute, saveStoredRoute } from "@/lib/questRoute";
+import {
+  activityRouteTask,
+  buildQuestRoute,
+  loadStoredRoute,
+  saveStoredRoute,
+  type TodayRouteTask,
+} from "@/lib/questRoute";
+import { buildTodayActivities } from "@/lib/todayActivities";
+import { loadTodayActivityLog, rememberOfferedActivities } from "@/lib/todayActivityLog";
+import {
+  getWordProgressMap,
+  subscribeWordProgress,
+  syncWordProgressOnce,
+} from "@/lib/wordlistProgress";
+import { loadCachedTopicStages, refreshTopicStages } from "@/lib/topicStageCache";
 import { saveAppState } from "@/lib/storage";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import BottomNav from "@/components/BottomNav";
@@ -43,13 +57,7 @@ import TodayMissions from "@/components/today/TodayMissions";
 import { buildTodaySlots, type TodaySlot } from "@/components/today/todaySlots";
 import s from "@/components/today/todayView.module.css";
 
-type TodayTask = {
-  topicId: string;
-  title: string;
-  estimatedMinutes: number;
-  reason: string;
-  activity: "learn" | "review";
-};
+type TodayTask = TodayRouteTask & { reason: string };
 
 // 今日の役割は「何を、どれくらいで、どこまで終えたか」を見せること。
 // 試験日・合格準備度・ストリーク・CP などの進捗情報は /progress に置き、ここには出さない。
@@ -70,20 +78,70 @@ export default function TodayPage() {
     if (userId) void refreshIntegratedStatus(userId);
   }, []);
 
+  // 単語帳の進捗（端末＋DB同期）と、確認パックのトピック別ステージ。
+  // どちらも Today の「関連用語を固める」タスクを決める材料で、取れなければ出さないだけ。
+  const [wordProgress, setWordProgress] = useState(() => getWordProgressMap());
+  const [topicStages, setTopicStages] = useState(() => loadCachedTopicStages());
+  useEffect(() => {
+    const refresh = () => setWordProgress(getWordProgressMap());
+    const unsubscribe = subscribeWordProgress(refresh);
+    void syncWordProgressOnce().then(refresh);
+    void refreshTopicStages().then(setTopicStages);
+    return unsubscribe;
+  }, []);
+
   // 選ばれた学習量があればそれを予算にする。選んでいなければ従来どおり。
   const selectedMinutes = state ? getSelectedMinutes(state, todayLocalDate()) : null;
+  // トピック以外のタスク（関連用語・公式過去問）。学習キューへ同じ優先度の物差しで並べる。
+  const activities = useMemo(() => {
+    if (!state?.profile) return { active: [], done: [] };
+    const now = new Date();
+    const upcomingTopicIds = buildTodaysLearningQueue({ state, progress: state.progress, topics, now })
+      .flatMap((item) => (item.topicId ? [item.topicId] : []))
+      .slice(0, 5);
+    return buildTodayActivities({
+      state,
+      topics,
+      now,
+      budgetMinutes: selectedMinutes ?? defaultDailyMinutes(state.profile),
+      wordProgress,
+      topicStages,
+      upcomingTopicIds,
+      log: loadTodayActivityLog(todayLocalDate()),
+    });
+  }, [selectedMinutes, state, topicStages, topics, wordProgress]);
   const plan = useMemo(
     () =>
       state?.profile
-        ? generateLearningPlan(state, topics, new Date(), selectedMinutes ?? undefined)
+        ? generateLearningPlan(
+          state,
+          topics,
+          new Date(),
+          selectedMinutes ?? undefined,
+          activities.active,
+        )
         : null,
-    [selectedMinutes, state, topics],
+    [activities.active, selectedMinutes, state, topics],
   );
   const menu = plan?.todayMenu;
   const learningQueue = useMemo(
-    () => (state ? buildTodaysLearningQueue({ state, progress: state.progress, topics }) : []),
-    [state, topics],
+    () => (state
+      ? buildTodaysLearningQueue({
+        state,
+        progress: state.progress,
+        topics,
+        activities: activities.active,
+      })
+      : []),
+    [activities.active, state, topics],
   );
+
+  // 今日のメニューに載ったタスクは、その日のうちは中身（対象の単語・問題）を固定する。
+  useEffect(() => {
+    const offered = (menu?.sequence ?? []).flatMap((entry) =>
+      entry.type === "activity" ? [entry.activity] : []);
+    if (offered.length > 0) rememberOfferedActivities(offered, todayLocalDate());
+  }, [menu]);
 
   // 既存の daily_study_tasks 保存を維持する。教材は保存せず、topicIdだけを参照する。
   useEffect(() => {
@@ -135,7 +193,16 @@ export default function TodayPage() {
     const reasons = new Map(learningQueue.flatMap((item) =>
       item.topicId ? [[item.topicId, item.reason] as const] : []));
 
-    for (const item of menu.items) {
+    // activities を渡したメニューは sequence（トピックと関連用語・公式過去問を優先度順に並べたもの）を持つ。
+    const sequence = menu.sequence ?? menu.items.map((item) => ({ type: "topic" as const, item }));
+    for (const entry of sequence) {
+      if (entry.type === "activity") {
+        if (seen.has(entry.activity.id)) continue;
+        seen.add(entry.activity.id);
+        result.push({ ...activityRouteTask(entry.activity), reason: entry.activity.reason });
+        continue;
+      }
+      const item = entry.item;
       if (seen.has(item.topicId) || !getLessonLocation(item.topicId)) continue;
       seen.add(item.topicId);
       result.push({
@@ -167,8 +234,8 @@ export default function TodayPage() {
   const [storedRouteIds] = useState(() => loadStoredRoute(todayLocalDate()));
   const completionReactionSentRef = useRef(false);
   const nodes = useMemo(
-    () => (state ? buildQuestRoute(state, tasks, storedRouteIds) : []),
-    [state, tasks, storedRouteIds],
+    () => (state ? buildQuestRoute(state, tasks, storedRouteIds, new Date(), activities.done) : []),
+    [activities.done, state, tasks, storedRouteIds],
   );
   useEffect(() => {
     if (nodes.length > 0) {
@@ -229,7 +296,8 @@ export default function TodayPage() {
   // 参考書の範囲は「今日の新規レッスン」のトピックで示す（なければ今日の全行）。
   // トピックは既存の学習ロジックが決めたもの。参考書はそれを章・節へ変換して見せるだけで、順序には関与しない。
   const newSlots = slots.filter((slot) => slot.kind === "new");
-  const readingTopics = (newSlots.length > 0 ? newSlots : slots).flatMap((slot) => {
+  const topicSlots = slots.filter((slot) => !slot.task);
+  const readingTopics = (newSlots.length > 0 ? newSlots : topicSlots).flatMap((slot) => {
     const topic = getTopic(slot.topicId);
     return topic ? [topic] : [];
   });

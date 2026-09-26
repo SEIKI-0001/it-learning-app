@@ -8,7 +8,7 @@ import {
   XP_PER_COMPLETION,
   XP_PER_CORRECT,
 } from "@/lib/study";
-import type { AppState } from "@/types";
+import type { AppState, TodayActivity } from "@/types";
 
 // ============================================================================
 // /today の「今日のルート」表示向けヘルパー。今日のタスク一覧（アプリ側で毎回
@@ -20,11 +20,14 @@ import type { AppState } from "@/types";
 export type QuestNodeState = "done" | "current" | "up_next" | "locked";
 
 export type QuestRouteNode = {
+  /** トピックID。トピック以外のタスクでは TodayActivity.id（"act:..."）。 */
   topicId: string;
   title: string;
   estimatedMinutes: number;
   activity: "learn" | "review";
   state: QuestNodeState;
+  /** トピック学習以外のタスク（関連用語・公式過去問）のときだけ入る。 */
+  task?: TodayActivity;
 };
 
 export type TodayRouteTask = {
@@ -32,7 +35,19 @@ export type TodayRouteTask = {
   title: string;
   estimatedMinutes: number;
   activity: "learn" | "review";
+  task?: TodayActivity;
 };
+
+/** トピック以外のタスクをルートの1行にする。 */
+export function activityRouteTask(activity: TodayActivity): TodayRouteTask {
+  return {
+    topicId: activity.id,
+    title: activity.title,
+    estimatedMinutes: activity.estimatedMinutes,
+    activity: activity.kind === "past_exam_retry" ? "review" : "learn",
+    task: activity,
+  };
+}
 
 /** ローカル日付（年/月/日）が一致するか。UTC/ISOスライスでは日本時間の日境界とずれるため使わない。 */
 function sameLocalDate(a: Date, b: Date): boolean {
@@ -69,8 +84,15 @@ export function buildQuestRoute(
   tasks: TodayRouteTask[],
   storedTopicIds: string[] | null,
   now: Date = new Date(),
+  /**
+   * 今日終えたトピック以外のタスク（lib/todayActivityLog）。これらは「済み」として残す。
+   * トピックは従来どおり「今日そのトピックに解答したか」で済みを判定する。
+   */
+  doneActivities: TodayActivity[] = [],
 ): QuestRouteNode[] {
-  const taskById = new Map(tasks.map((task) => [task.topicId, task]));
+  const doneTasks = doneActivities.map(activityRouteTask);
+  const doneTaskIds = new Set(doneTasks.map((task) => task.topicId));
+  const taskById = new Map([...tasks, ...doneTasks].map((task) => [task.topicId, task]));
   const seen = new Set<string>();
   const ordered: Omit<QuestRouteNode, "state">[] = [];
 
@@ -82,6 +104,8 @@ export function buildQuestRoute(
       ordered.push({ ...task });
       continue;
     }
+    // トピック以外のタスクは、今日の分として出ていない（済みでもない）なら落とす。
+    if (topicId.startsWith("act:")) continue;
     // tasks に無くなった id（今日の解答で完了しタスク一覧から外れた、など）。
     // 済みノードとして残したい場合も含め、getTopic/getLessonLocation で解決できる
     // 限りフォールバック情報で残す。解決できないid（不正な値など）だけ落とす。
@@ -97,22 +121,28 @@ export function buildQuestRoute(
     });
   }
 
-  for (const task of tasks) {
+  for (const task of [...tasks, ...doneTasks]) {
     if (seen.has(task.topicId)) continue;
     seen.add(task.topicId);
     ordered.push({ ...task });
   }
 
-  let nonDoneSeen = 0;
+  const isDone = (node: Omit<QuestRouteNode, "state">) =>
+    node.task ? doneTaskIds.has(node.topicId) : isTaskDoneToday(state, node.topicId, now);
+  // 現在地は「今日の最優先」に立ててよい最初の行。通常の単語学習は、ほかに
+  // 未完了の行がある限り現在地にしない（トピック学習を差し置いて単語帳を最優先にしない）。
+  const pending = ordered.filter((node) => !isDone(node));
+  const current = pending.find((node) => node.task?.primaryEligible !== false) ?? pending[0];
+  const upNext = pending.find((node) => node !== current);
+
   return ordered.map((node) => {
-    const done = isTaskDoneToday(state, node.topicId, now);
-    let nodeState: QuestNodeState;
-    if (done) {
-      nodeState = "done";
-    } else {
-      nonDoneSeen += 1;
-      nodeState = nonDoneSeen === 1 ? "current" : nonDoneSeen === 2 ? "up_next" : "locked";
-    }
+    const nodeState: QuestNodeState = !pending.includes(node)
+      ? "done"
+      : node === current
+        ? "current"
+        : node === upNext
+          ? "up_next"
+          : "locked";
     return { ...node, state: nodeState };
   });
 }

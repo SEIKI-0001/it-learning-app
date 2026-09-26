@@ -126,6 +126,16 @@ export default function TodayHero({
               <span className={s.legendItem} data-kind="review">
                 復習
               </span>
+              {slots.some((slot) => slot.kind === "vocab") && (
+                <span className={s.legendItem} data-kind="vocab">
+                  用語
+                </span>
+              )}
+              {slots.some((slot) => slot.kind === "exam") && (
+                <span className={s.legendItem} data-kind="exam">
+                  過去問
+                </span>
+              )}
             </figcaption>
           </figure>
         )}
