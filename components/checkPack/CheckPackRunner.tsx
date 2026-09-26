@@ -15,6 +15,8 @@ import {
   type QuestionAttemptInput,
 } from "@/lib/userSession";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
+import { rememberTopicStage } from "@/lib/topicStageCache";
+import type { TopicStage } from "@/types/studyProgress";
 import {
   combinedQuizRate,
   planPackQuizQuestions,
@@ -254,6 +256,12 @@ export default function CheckPackRunner({
     f: number | null,
     e: number | null,
   ) {
+    // Today が「関連用語を固める」を出すかの参考に、端末にも判定を残す（サーバ結果で上書き）。
+    const localDecision = decidePackStage(
+      judgeRates({ quizRate: q, flashcardRate: f, examLevelRate: e }),
+      0,
+    );
+    if (localDecision.resultStatus !== "incomplete") rememberTopicStage(topicId, localDecision.stage);
     const userId = getUserId();
     if (!userId) return;
     // 未保存の回答が混ざったセッションは、正式な到達度証拠にならない。
@@ -268,7 +276,10 @@ export default function CheckPackRunner({
       startedAt: startedAtRef.current,
       date: todayLocalDate(),
     });
-    if (res) setServerStatus({ resultStatus: res.resultStatus, nextAction: res.nextAction });
+    if (res) {
+      rememberTopicStage(topicId, res.stage as TopicStage);
+      setServerStatus({ resultStatus: res.resultStatus, nextAction: res.nextAction });
+    }
   }
 
   // ---- 表示 ---------------------------------------------------------------

@@ -9,6 +9,9 @@ import {
   localDateOf,
   maxComboOf,
   resolveDailyQuests,
+  pinDailyQuests,
+  pickRerollCandidate,
+  applyQuestReroll,
   DAILY_QUEST_CLEAR_XP,
   QUEST_DEFS,
 } from "@/lib/dailyQuests";
@@ -268,5 +271,85 @@ describe("helpers", () => {
   it("localDateOf uses the local calendar date, not the UTC one", () => {
     expect(localDateOf(new Date(2026, 7, 20, 23, 30, 0))).toBe("2026-08-20");
     expect(localDateOf(new Date(2026, 7, 20, 0, 30, 0))).toBe("2026-08-20");
+  });
+});
+
+describe("今日の3ミッションと Today のタスクの一致", () => {
+  const date = "2026-09-26";
+  const at = new Date(2026, 8, 26, 12, 0, 0);
+  const vocabDay = { todayActivityKinds: new Set(["vocab"] as const), todayVocabWordCount: 4 };
+  const noVocab = { todayActivityKinds: new Set(["past_exam_drill"] as const) };
+  const ids = (s: AppState, ctx = {}) => resolveDailyQuests(s, date, ctx).quests.map((q) => q.id);
+  const progressOf = (s: AppState, id: string) =>
+    resolveDailyQuests(s, date).quests.find((q) => q.id === id)?.progress;
+  const words = (cleared: number, fromTodayTask = true) =>
+    ({ kind: "words" as const, correct: 0, total: 0, isReview: false, maxCombo: 0, wordsCleared: cleared, fromTodayTask });
+
+  it("Today に用語タスクが無ければ用語ミッションを出さない（選び方は従来と同じ）", () => {
+    for (const d of ["2026-09-01", "2026-09-02", "2026-09-03", "2026-09-26"]) {
+      const without = buildTodayQuests(state(), d, noVocab).quests.map((q) => q.id);
+      expect(without).not.toContain("words_today");
+      expect(without).toEqual(buildTodayQuests(state(), d).quests.map((q) => q.id));
+    }
+  });
+
+  it("Today に用語タスクがあれば、3件のうち1件を用語ミッションにする（決定的）", () => {
+    const a = buildTodayQuests(state(), date, vocabDay);
+    expect(a.quests).toHaveLength(3);
+    expect(a.quests.map((q) => q.id)).toContain("words_today");
+    expect(buildTodayQuests(state(), date, vocabDay)).toEqual(a);
+  });
+
+  it("用語ミッションの目標は今日の用語タスクの語数以内（Today の分だけで達成できる）", () => {
+    const goal = (n: number) => buildTodayQuests(state(), date, { ...vocabDay, todayVocabWordCount: n })
+      .quests.find((q) => q.id === "words_today")!.goal;
+    expect(goal(1)).toBe(1);
+    expect(goal(2)).toBe(2);
+    expect(goal(8)).toBe(3);
+  });
+
+  it("Today のタスクで確定した3件を保存すると、以後は文脈なしでも同じ3件", () => {
+    const pinned = pinDailyQuests(state(), date, vocabDay);
+    expect(ids(pinned)).toContain("words_today");
+    expect(pinDailyQuests(pinned, date, noVocab)).toBe(pinned); // 保存済みは変えない
+  });
+
+  it("Today の用語タスクを終えた成果で進み、開いただけ・Today 外の学習では進まない", () => {
+    const s = pinDailyQuests(state(), date, vocabDay);
+    expect(progressOf(applyDailyQuestProgress(s, words(0), at), "words_today")).toBe(0);
+    expect(progressOf(applyDailyQuestProgress(s, words(3, false), at), "words_today")).toBe(0);
+    const done = applyDailyQuestProgress(s, words(4), at);
+    expect(progressOf(done, "words_today")).toBe(3);
+    // 単語の成果はトピック・正解数ミッションに数えない
+    for (const id of ids(done).filter((q) => q !== "words_today")) {
+      expect(progressOf(done, id)).toBe(0);
+    }
+  });
+
+  it("差し替えで用語ミッションは出さず、用語ミッションの差し替え・報酬は従来どおり動く", () => {
+    const s = pinDailyQuests(state(), date, vocabDay);
+    expect(pickRerollCandidate(s, date, vocabDay)?.id).not.toBe("words_today");
+    const rerolled = applyQuestReroll(s, "words_today", at, vocabDay);
+    expect(ids(rerolled)).not.toContain("words_today");
+    expect(ids(rerolled)).toHaveLength(3);
+  });
+
+  it("公式過去問の演習は正解数・正答率のミッションを進め、トピック完了には数えない", () => {
+    const s = state({
+      checkpointProgress: {
+        ...INITIAL_CHECKPOINT_PROGRESS,
+        dailyQuests: {
+          date,
+          quests: ["correct_8", "accuracy_80", "complete_topic"].map((id) => ({
+            id, goal: QUEST_DEFS.find((d) => d.id === id)!.goal, progress: 0,
+          })),
+          claimed: false,
+        },
+      },
+    });
+    const next = applyDailyQuestProgress(s, { kind: "past_exam", correct: 9, total: 10, isReview: false, maxCombo: 4 }, at);
+    expect(progressOf(next, "correct_8")).toBe(8);
+    expect(progressOf(next, "accuracy_80")).toBe(1);
+    expect(progressOf(next, "complete_topic")).toBe(0);
   });
 });

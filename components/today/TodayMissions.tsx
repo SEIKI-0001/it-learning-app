@@ -14,6 +14,7 @@ import {
   getQuestDef,
   resolveDailyQuests,
   DAILY_QUEST_CLEAR_XP,
+  type DailyQuestContext,
 } from "@/lib/dailyQuests";
 import { emitCelebration } from "@/lib/celebration";
 import { saveAppState } from "@/lib/storage";
@@ -24,13 +25,16 @@ import s from "./todayView.module.css";
 export default function TodayMissions({
   state,
   setState,
+  context,
 }: {
   state: AppState;
   setState: (next: AppState) => void;
+  /** 今日のルートにあるタスク（用語ミッションを出すかの判断に使う）。 */
+  context: DailyQuestContext;
 }) {
   const [dropLabel, setDropLabel] = useState<string | null>(null);
   const today = todayLocalDate();
-  const quests = resolveDailyQuests(state, today);
+  const quests = resolveDailyQuests(state, today, context);
   const doneCount = quests.quests.filter((q) => q.progress >= q.goal).length;
   const complete = allQuestsDone(quests);
   const rerollAvailable = canRerollQuest(state, today);
@@ -43,7 +47,7 @@ export default function TodayMissions({
   };
 
   const handleReroll = (questId: string) => {
-    const next = applyQuestReroll(state, questId);
+    const next = applyQuestReroll(state, questId, new Date(), context);
     if (next !== state) persist(next);
   };
 

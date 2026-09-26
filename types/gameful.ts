@@ -6,7 +6,15 @@
 // 学習評価（合格準備度・習熟度・初見判定）はこれらの型から一切変更しない。
 
 /** `/today` の「今日の最優先」1件の種別。 */
-export type TodayPrimaryKind = "final_exam" | "review" | "weak" | "new_topic";
+export type TodayPrimaryKind =
+  | "final_exam"
+  | "review"
+  | "weak"
+  | "new_topic"
+  /** 用語定着が必要なトピックの関連用語（確認パック terms_stabilizing のときだけ）。 */
+  | "vocab"
+  /** 公式過去問（誤答の解き直し・CP5 以降の演習）。 */
+  | "past_exam";
 
 /** 種別の表示ラベル（画面で「今やること」の性質を1語で示す）。 */
 export const TODAY_PRIMARY_KIND_LABELS: Record<TodayPrimaryKind, string> = {
@@ -14,6 +22,8 @@ export const TODAY_PRIMARY_KIND_LABELS: Record<TodayPrimaryKind, string> = {
   review: "復習",
   weak: "弱点",
   new_topic: "新規学習",
+  vocab: "関連用語",
+  past_exam: "公式過去問",
 };
 
 /**

@@ -27,6 +27,8 @@ const FALLBACK_REASON: Record<TodayPrimaryKind, string> = {
   review: "復習予定日です。",
   weak: "理解度が低い重要Topic",
   new_topic: "次の新規Topic",
+  vocab: "関連用語を固めます",
+  past_exam: "公式過去問で実戦力をつけます",
 };
 
 /** キューの種別を Primary の種別へ寄せる。 */
@@ -35,7 +37,8 @@ function kindFromQueue(kind: TodaysLearningQueueItem["kind"]): TodayPrimaryKind 
   if (kind === "checkpoint_practice") return "review";
   if (kind === "summary_weak" || kind === "low_mastery") return "weak";
   if (kind === "new_topic") return "new_topic";
-  return null; // flashcard / extra_practice はトピック学習ではない
+  if (kind === "past_exam" || kind === "past_exam_retry") return "past_exam";
+  return null; // flashcard は下の toActivityAction で扱う。extra_practice は Primary にしない
 }
 
 function lessonHref(node: QuestRouteNode): string {
@@ -72,10 +75,16 @@ export function buildTodayPrimaryAction(input: {
 
   const current = nodes.find((node) => node.state === "current") ?? null;
 
-  const currentAction = current ? toTopicAction(current) : null;
+  const currentAction = current
+    ? current.task
+      ? toActivityAction(current, current.task)
+      : toTopicAction(current)
+    : null;
 
   // 1. 期限切れ復習を最優先にする。
   if (current && queueByTopic.get(current.topicId)?.kind === "overdue_review") return currentAction;
+  // 前日までの公式過去問の誤答も、突破試験より先に解き直す（キューでも期限切れ復習の次）。
+  if (current?.task?.kind === "past_exam_retry") return currentAction;
 
   // 2. CP 進行条件が揃っている（＝突破試験が解放済みで未突破）なら、それを Primary にする。
   const finalExam = gate.checkpoint.finalExam;
@@ -97,6 +106,25 @@ export function buildTodayPrimaryAction(input: {
 
   // 3〜4. 弱点・新規はルートの現在地をそのまま使う。
   return currentAction;
+
+  /**
+   * 関連用語・公式過去問を Primary にする。通常の単語学習は lib/questRoute が
+   * 現在地に選ばない（primaryEligible=false）ので、ここに来るのは用語定着待ちの
+   * トピックの関連語か、公式過去問だけ。タイトルは機能名ではなく「次に何をやるか」。
+   */
+  function toActivityAction(node: QuestRouteNode, task: NonNullable<QuestRouteNode["task"]>): TodayPrimaryAction {
+    const questionCount = task.kind === "vocab" ? null : Number.parseInt(task.countLabel, 10) || null;
+    return {
+      kind: task.kind === "vocab" ? "vocab" : "past_exam",
+      topicId: node.topicId,
+      title: task.title,
+      estimatedMinutes: task.estimatedMinutes,
+      questionCount,
+      reasonLabel: task.reason || FALLBACK_REASON[task.kind === "vocab" ? "vocab" : "past_exam"],
+      href: task.href,
+      activity: node.activity,
+    };
+  }
 
   function toTopicAction(node: QuestRouteNode): TodayPrimaryAction {
     const queued = queueByTopic.get(node.topicId);

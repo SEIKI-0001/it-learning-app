@@ -15,6 +15,8 @@ const PRIMARY:Record<string,string[]>={user_profiles:['user_id'],user_progress:[
 function latest(a:AccountRow,b:AccountRow){return String(a.updated_at??a.created_at??'')>String(b.updated_at??b.created_at??'')?a:b;}
 function mergeDuplicate(table:string,a:AccountRow,b:AccountRow,target:string):AccountRow {
  let result:AccountRow={...a,...latest(a,b)};
+ // The same Today activity on both accounts: keep the one that was actually completed.
+ if(table==='daily_study_tasks'&&a.activity_key!=null&&isActuallyDone(a)!==isActuallyDone(b)) result={...(isActuallyDone(a)?a:b)};
  if(table==='user_progress') result={...b,...progressToRow(target,mergeProgress(progressRowToProgress(a as ProgressRow),progressRowToProgress(b as ProgressRow)))};
  else if(table==='user_profiles') {
    if(a.stripe_customer_id && b.stripe_customer_id && a.stripe_customer_id!==b.stripe_customer_id) throw new Error('BILLING_CONFLICT');
@@ -42,6 +44,15 @@ function mergeDuplicate(table:string,a:AccountRow,b:AccountRow,target:string):Ac
  result.user_id=target;
  return result;
 }
+/**
+ * Today activities (activity_key) are unique per user/date/key, independent of title.
+ * Topic tasks keep the legacy natural key.
+ */
+function naturalKey(table:string,keys:string[],row:AccountRow):string {
+ if(table==='daily_study_tasks'&&row.activity_key!=null) return JSON.stringify(['activity',row.date,row.activity_key]);
+ return JSON.stringify(keys.map(k=>row[k]??null));
+}
+const isActuallyDone=(row:AccountRow)=>row.status==='completed'&&row.completion_source==='app_actual';
 /** Pure, server-only plan. SQL compares the entire snapshot again under locks. */
 export function planAccountMerge(snapshot:AccountSnapshot):Record<string,AccountRow[]> {
  const plan:Record<string,AccountRow[]>={};
@@ -54,7 +65,7 @@ export function planAccountMerge(snapshot:AccountSnapshot):Record<string,Account
    // Source first, then Google. Preserve Google's stable row IDs on collision.
    const ordered=[...rows.filter(r=>r.user_id===snapshot.source),...rows.filter(r=>r.user_id===snapshot.target)];
    for(const row of ordered){
-     const key=JSON.stringify(keys.map(k=>row[k]??null));
+     const key=naturalKey(table,keys,row);
      const prev=grouped.get(key);
      if(prev && table==='daily_study_tasks') taskIds.set(prev.task_id,row.task_id);
      grouped.set(key,prev?mergeDuplicate(table,prev,row,snapshot.target):{...row,user_id:snapshot.target});

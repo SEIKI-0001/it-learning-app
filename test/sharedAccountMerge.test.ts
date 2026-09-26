@@ -31,3 +31,24 @@ it('uses actual answer time, not UUID order, and demotes prior legacy exposure',
  ]}});
  expect(result.question_attempts.map(r=>[r.attempt_id,r.is_first_attempt])).toEqual([['a',false],['z',true],['b',false]]);
 });
+
+it('keeps one Today activity per date/activity_key, preferring the actually completed one', () => {
+  const row = (user: string, id: string, title: string, status: string, source: string) => ({
+    task_id: id, user_id: user, date: '2026-09-26', task_type: 'flashcard', topic_id: '', title,
+    status, completion_source: source, activity_key: 'act:vocab', activity_payload: { v: 1 }, updated_at: '2026-09-26T01:00:00Z',
+  });
+  const topic = (user: string, id: string) => ({
+    task_id: id, user_id: user, date: '2026-09-26', task_type: 'topic_quiz', topic_id: 't', title: 'T',
+    status: 'pending', completion_source: 'self_report', activity_key: null, updated_at: '2026-09-26T00:00:00Z',
+  });
+  const result = planAccountMerge({ source: 'line', target: 'google', tables: { daily_study_tasks: [
+    row('line', 'l1', '今日の単語復習', 'completed', 'app_actual'),
+    row('google', 'g1', '苦手な用語を固める', 'pending', 'self_report'),
+    topic('line', 'l2'), topic('google', 'g2'),
+  ] } });
+  const tasks = result.daily_study_tasks;
+  expect(tasks).toHaveLength(2);
+  const vocab = tasks.find((t) => t.activity_key === 'act:vocab')!;
+  expect(vocab).toMatchObject({ user_id: 'google', task_id: 'g1', status: 'completed', completion_source: 'app_actual', title: '今日の単語復習' });
+  expect(tasks.find((t) => t.activity_key === null)).toMatchObject({ task_id: 'g2', user_id: 'google' });
+});

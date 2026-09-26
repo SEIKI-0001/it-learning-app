@@ -110,7 +110,7 @@ describe("CheckpointDetailSheet", () => {
     const dialog = open("cp6");
     expect(within(dialog).getByRole("button", { name: /次のCP/ }).hasAttribute("disabled")).toBe(true);
     fireEvent.click(within(dialog).getByRole("button", { name: /前のCP/ }));
-    expect(within(screen.getByRole("dialog")).getByRole("heading", { level: 2 }).textContent).toBe("過去問準備");
+    expect(within(screen.getByRole("dialog")).getByRole("heading", { level: 2 }).textContent).toBe("過去問実戦");
   });
 
   it("closes with Escape, the close button and the backdrop, returning focus to the opener", () => {

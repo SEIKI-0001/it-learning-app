@@ -3,7 +3,9 @@ import { FIELD_LABELS } from "@/types/content";
 import type {
   ReviewItem,
   StudyPlan,
+  TodayActivity,
   TodayMenu,
+  TodayMenuEntry,
   TodayMenuItem,
   UserAnswer,
   UserProfile,
@@ -126,6 +128,12 @@ export function generateTodayMenu(
    * 「何を」の優先順位（復習期限 > 弱点 > 新規）は変えない。
    */
   dailyMinutesOverride?: number,
+  /**
+   * トピック学習以外のタスク（関連用語・公式過去問。lib/todayActivities が作る）。
+   * 渡したときだけ同じ優先度キューに並べ、時間予算の中で sequence に入れる。
+   * 省略時は従来と完全に同じメニューになる。
+   */
+  activities?: TodayActivity[],
 ): TodayMenu {
   const budget =
     typeof dailyMinutesOverride === "number" && dailyMinutesOverride > 0
@@ -139,7 +147,7 @@ export function generateTodayMenu(
     .filter((a) => !a.isCorrect).length;
 
   const ranked = buildTodaysLearningQueue({
-    state: { profile, progress, answers }, progress, topics, now,
+    state: { profile, progress, answers }, progress, topics, now, activities,
   });
   const reviewAll = ranked
     .filter((item) =>
@@ -164,23 +172,47 @@ export function generateTodayMenu(
   const reviewItems: ReviewItem[] = reviewAll.slice(0, reviewCap);
 
   // 共通キューの順を保ったまま、Topic候補を時間予算へ収める。
+  // トピックは従来どおり「予算を超えたらそこで打ち切り」。トピック以外のタスクは
+  // 収まるものだけ入れる（短い単語タスクが大きなトピックの後ろで締め出されないように）。
   const items: TodayMenuItem[] = [];
+  const sequence: TodayMenuEntry[] = [];
   let used = 0;
+  let topicsClosed = false;
   for (const candidate of ranked) {
-    if (!candidate.topicId) continue;
+    if (candidate.activity) {
+      const activity = candidate.activity;
+      if (sequence.length > 0 && used + activity.estimatedMinutes > budget) continue;
+      sequence.push({ type: "activity", activity });
+      used += activity.estimatedMinutes;
+      continue;
+    }
+    if (topicsClosed || !candidate.topicId) continue;
     const t = getTopic(candidate.topicId);
     if (!t) continue;
-    if (items.length > 0 && used + t.estimatedMinutes > budget) break;
-    items.push({
+    if (sequence.length > 0 && used + t.estimatedMinutes > budget) {
+      topicsClosed = true;
+      continue;
+    }
+    const item: TodayMenuItem = {
       topicId: t.id,
       title: t.title,
       field: t.field,
       estimatedMinutes: t.estimatedMinutes,
       kind: candidate.kind === "new_topic" ? "learn" : "review",
-    });
+    };
+    items.push(item);
+    sequence.push({ type: "topic", item });
     used += t.estimatedMinutes;
-    if (used >= budget) break;
+    if (used >= budget) topicsClosed = true;
   }
+  // 「今日のトピックの関連語」は、そのトピックが今日のメニューに入ったときだけ出す。
+  const menuTopicIds = new Set(items.map((item) => item.topicId));
+  const finalSequence = sequence.filter((entry) => {
+    if (entry.type !== "activity" || !entry.activity.anchorTopicId) return true;
+    if (menuTopicIds.has(entry.activity.anchorTopicId)) return true;
+    used -= entry.activity.estimatedMinutes;
+    return false;
+  });
 
   const primary = items[0] ? getTopic(items[0].topicId) : undefined;
   const theme = primary
@@ -205,5 +237,6 @@ export function generateTodayMenu(
     items,
     reviewItems,
     message,
+    ...(activities ? { sequence: finalSequence } : {}),
   };
 }

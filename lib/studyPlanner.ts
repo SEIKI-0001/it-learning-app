@@ -1,6 +1,6 @@
 import type { Topic, TopicField } from "@/types/content";
 import { FIELD_LABELS } from "@/types/content";
-import type { AppState, UserAnswer, UserProfile, UserProgress } from "@/types";
+import type { AppState, TodayActivity, UserAnswer, UserProfile, UserProgress } from "@/types";
 import type {
   DelayLevel,
   KakomonStage,
@@ -22,6 +22,13 @@ import {
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { fieldMastery } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
+import {
+  checkpointOrderOf,
+  evaluateKakomonAccess,
+  type KakomonAccess,
+} from "@/lib/kakomonAccess";
+import { summarizeOfficialHistory } from "@/lib/pastExam/officialHistory";
+import { KAKOMON_FIELD_DRILL_TARGET } from "@/lib/pastExam/kakomonRules";
 
 // ============================================================================
 // 学習計画エンジン（studyPlanner）
@@ -128,8 +135,8 @@ export const STUDY_PHASES: StudyPhaseDef[] = [
     id: "phase5",
     order: 5,
     emoji: "🎯",
-    title: "過去問演習",
-    summary: "分野別→ランダム→模試の順に過去問を解いて実戦力をつけます。",
+    title: "過去問実戦",
+    summary: "公式過去問を分野別→混合→ランダム→年度別の順に解いて、本番で解ける力をつけます。",
     detail:
       "ここからは本番形式に近い問題で、知識を使う練習を増やします。最初は分野別で弱いところを確認し、慣れてきたらランダム演習や模試形式に進みます。過去問は解く量だけでなく、間違えた問題をどれだけ回収できるかが大事です。",
     checkpoints: [
@@ -263,10 +270,9 @@ function recentAccuracy(answers: UserAnswer[], take = 20): number | null {
 
 /**
  * 過去問フェーズを始めてよいか。
- * 参考書完走を待たず、以下のいずれかを満たしたら開始可能とする:
- *   - 主要テーマを一定数完了（完了率 >= 0.5）
- *   - 試験日が近い（<= 14日）かつ ある程度進んでいる（完了率 >= 0.25）
- *   - 分野別確認問題で一定の正答率（直近 >= 0.7）かつ ある程度進んでいる
+ * 判定本体は lib/kakomonAccess（Single Source of Truth）にある。ここは学習計画から
+ * 呼ぶための薄い窓口で、完了率・直近正答率・CP 進行を集めて渡すだけ。
+ * 基本は CP5 から。試験日が近い／実力が十分なら CP3〜4 でも前倒しで解禁する。
  */
 export function isKakomonReady(
   topics: Topic[],
@@ -274,27 +280,48 @@ export function isKakomonReady(
   answers: UserAnswer[],
   daysRemaining: number | null,
 ): boolean {
-  const ratio = completedRatio(topics, progress);
-  const acc = recentAccuracy(answers);
-  if (ratio >= 0.5) return true;
-  if (daysRemaining !== null && daysRemaining <= 14 && ratio >= 0.25) {
-    return true;
-  }
-  if (acc !== null && acc >= 0.7 && ratio >= 0.35) return true;
-  return false;
+  return kakomonAccessFor(topics, progress, answers, daysRemaining).unlocked;
 }
 
-/** 過去問演習の段階（トピック確認問題→分野別→ランダム→模試→誤答再演習）。 */
+/** 学習計画の入力から公式過去問の開始可否（理由つき）を求める。 */
+export function kakomonAccessFor(
+  topics: Topic[],
+  progress: UserProgress,
+  answers: UserAnswer[],
+  daysRemaining: number | null,
+): KakomonAccess {
+  return evaluateKakomonAccess({
+    checkpointOrder: checkpointOrderOf(progress),
+    completedRatio: completedRatio(topics, progress),
+    recentAccuracy: recentAccuracy(answers),
+    daysRemaining,
+  });
+}
+
+/** 分野別演習を「ひと通り終えた」とみなす回答数（lib/pastExam/kakomonRules が正）。 */
+export { KAKOMON_FIELD_DRILL_TARGET };
+
+/**
+ * 過去問演習の段階（トピック確認問題→分野別→ランダム→模試→誤答再演習）。
+ * 開始可否は lib/kakomonAccess、段階の進み具合は公式過去問の回答履歴
+ * （lib/pastExam/officialHistory）で決める。Today の過去問タスクはこの結果を使う。
+ */
 export function buildKakomonStages(
   topics: Topic[],
   progress: UserProgress,
   answers: UserAnswer[],
   daysRemaining: number | null,
+  now: Date = new Date(),
 ): KakomonStage[] {
   const ratio = completedRatio(topics, progress);
-  const ready = isKakomonReady(topics, progress, answers, daysRemaining);
+  const access = kakomonAccessFor(topics, progress, answers, daysRemaining);
+  const ready = access.unlocked;
   const near = daysRemaining !== null && daysRemaining <= 21;
-  const hasWrong = progress.reviewQueue.length > 0 || progress.weakTags.length > 0;
+  const order = checkpointOrderOf(progress) ?? 0;
+  const history = summarizeOfficialHistory(answers, now);
+  const fieldsDrilled = Object.values(history.byField).every(
+    (stats) => stats.answered >= KAKOMON_FIELD_DRILL_TARGET,
+  );
   return [
     {
       id: "topic-check",
@@ -307,29 +334,29 @@ export function buildKakomonStages(
       id: "field-drill",
       order: 2,
       title: "分野別過去問",
-      description: "分野をしぼって過去問道場で演習します。",
+      description: "分野をしぼって公式過去問を解きます。",
       unlocked: ready,
     },
     {
       id: "random",
       order: 3,
       title: "ランダム演習",
-      description: "分野をまぜてランダムに解き、実戦感覚を養います。",
-      unlocked: ready && ratio >= 0.6,
+      description: "分野をまぜて公式過去問を解き、実戦感覚を養います。",
+      unlocked: ready && (fieldsDrilled || ratio >= 0.6),
     },
     {
       id: "mock",
       order: 4,
-      title: "模擬試験形式",
-      description: "本番と同じ100問形式で時間を計って解きます。",
-      unlocked: ready && (near || ratio >= 0.8),
+      title: "年度別100問",
+      description: "本番と同じ100問を、年度ごとに時間を計って解きます。",
+      unlocked: ready && (order >= 6 || near || ratio >= 0.8),
     },
     {
       id: "retry-wrong",
       order: 5,
       title: "間違えた問題の再演習",
-      description: "間違えた問題だけを繰り返し、確実につぶします。",
-      unlocked: hasWrong,
+      description: "間違えた公式過去問だけを解き直し、確実につぶします。",
+      unlocked: history.pendingWrongIds.length > 0,
     },
   ];
 }
@@ -795,6 +822,8 @@ export function generateLearningPlan(
   now: Date = new Date(),
   /** 当日の学習量の上書き（GF-P1-001）。省略時は従来どおりプロフィールの予算。 */
   dailyMinutesOverride?: number,
+  /** 今日のトピック以外のタスク（関連用語・公式過去問）。Today だけが渡す。 */
+  activities?: TodayActivity[],
 ): LearningPlan {
   const { profile, progress, answers } = state;
 
@@ -831,6 +860,7 @@ export function generateLearningPlan(
     answers,
     now,
     dailyMinutesOverride,
+    activities,
   );
   const primaryItem = todayMenu.items.find((i) => i.kind === "learn");
   const primary = primaryItem ? getTopic(primaryItem.topicId) : undefined;
