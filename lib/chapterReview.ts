@@ -1,15 +1,15 @@
-import { getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
-import { getLessonsForTheme, getThemeBySlug } from "@/lib/learningCatalog";
-import { LOW_MASTERY_THRESHOLD } from "@/lib/learningLoop";
+import { getChapterUnderstandingChecks } from "@/data/chapterUnderstandingChecks";
+import { getWrittenQuestion } from "@/data/writtenQuestions";
+import { getTopic } from "@/lib/content";
 import type { UserProgress } from "@/types";
 import type { GradeResult, WrittenQuestion } from "@/types/aiGrading";
 import type {
   ChapterReviewState,
   ThemeExamRecord,
+  UnderstandingCheckRecord,
   UnderstandingLevel,
   UnderstandingSignal,
 } from "@/types/chapterReview";
-import type { Topic } from "@/types/content";
 import type { ThemeExamResult } from "@/types/themeExam";
 
 // ============================================================================
@@ -83,106 +83,127 @@ export function recordThemeExamAttempt(
 
 /**
  * なぜこの問題を選んだか。画面の一言説明にも使う。
- *   exam_miss        … 総まとめ試験で誤答したトピック
- *   low_mastery      … 理解度（Mastery）が低いトピック
- *   explain_correct  … 四択では正解したトピック（説明できるかを確かめる）
- *   representative   … 章を代表する重要トピック
+ *   first_time … この章でまだ確かめていない問題
+ *   revisit    … 前に「あと一歩」「ここを確認しよう」だった問題（一巡後）
+ *   refresh    … すべて「理解できている」だったので、確かめてから最も時間が経った問題
+ *
+ * 総まとめ試験の正誤や Mastery は理由にしない。章末チェックは弱点の復習ではなく、
+ * 「四択では解けるが説明できない」分かったつもりを見つけるためのもの。
  */
-export type UnderstandingCheckReason =
-  | "exam_miss"
-  | "low_mastery"
-  | "explain_correct"
-  | "representative";
+export type UnderstandingCheckReason = "first_time" | "revisit" | "refresh";
 
 export type UnderstandingCheckPick = {
   question: WrittenQuestion;
   topicId: string;
   topicTitle: string;
+  /** この問題で確かめる「曖昧になりやすい理解」。 */
+  focus: string;
   reason: UnderstandingCheckReason;
 };
 
-/** 章のトピックのうち、記述問題を持つものを章の並び順で返す。 */
-export function getUnderstandingCheckTopics(themeSlug: string): Topic[] {
-  const theme = getThemeBySlug(themeSlug);
-  if (!theme) return [];
-  return getLessonsForTheme(theme).filter(
-    (topic) => getWrittenQuestionsForTopic(topic.id).length > 0,
-  );
+type CheckHistory = Pick<UnderstandingCheckRecord, "questionId" | "level" | "checkedAt">;
+
+/**
+ * 章の候補問題ごとの最新の確認記録を返す。
+ * understandingChecks（問題単位）を正とし、それ以前の記録（understandingSignals の questionId）も
+ * 実施済みとして数える。
+ */
+function checkHistoryForTheme(
+  progress: UserProgress | null | undefined,
+  themeSlug: string,
+  candidateIds: ReadonlySet<string>,
+): Map<string, CheckHistory> {
+  const history = new Map<string, CheckHistory>();
+  if (!progress) return history;
+  const review = chapterReviewOf(progress);
+  const entries: CheckHistory[] = [
+    ...Object.values(review.understandingChecks ?? {}),
+    ...Object.values(review.understandingSignals ?? {}).filter((signal) => signal.themeSlug === themeSlug),
+  ];
+  for (const entry of entries) {
+    if (!candidateIds.has(entry.questionId)) continue;
+    const previous = history.get(entry.questionId);
+    if (!previous || entry.checkedAt > previous.checkedAt) history.set(entry.questionId, entry);
+  }
+  return history;
+}
+
+/** 章の候補問題を、問題本文とトピックに解決して返す（定義順）。 */
+export function getUnderstandingCheckCandidates(themeSlug: string) {
+  return getChapterUnderstandingChecks(themeSlug).flatMap((entry) => {
+    const question = getWrittenQuestion(entry.questionId);
+    const topic = getTopic(entry.topicId);
+    return question && topic ? [{ ...entry, question, topicTitle: topic.title }] : [];
+  });
 }
 
 /**
- * AI理解チェックで出す1問を選ぶ。完全なランダムにはしない。
+ * AI理解チェックで出す1問を、章の専用候補（data/chapterUnderstandingChecks.ts）から選ぶ。
  *
- * 優先順位:
- *   1. 総まとめ試験で誤答した重要トピック（誤答数 → 重要度）
- *   2. Mastery が低いトピック
- *   3. 総まとめ試験では正解したトピック（重要度が高い順）
- *   4. 章を代表する重要トピック
+ *   1. まだ確かめていない問題を、定義順に
+ *   2. 一巡したら、前回「あと一歩」「ここを確認しよう」だった問題（ここを確認しよう → 古い順）
+ *   3. すべて「理解できている」なら、確かめてから最も時間が経った問題
  *
- * 各段で、直近のAI理解チェックで「理解できている」だったトピックは後ろへ回す
- * （同じ問題を繰り返し出さず、まだ確かめていない理解を見に行くため）。
- * 同じトピックに複数の設問があれば、前回と違う設問を選ぶ。
+ * どの段でも、この章で直前に出した問題は避ける（候補が1問しかない場合を除く）。
+ * 総まとめ試験の正誤・Mastery には依存しない。
  */
 export function pickUnderstandingCheck(input: {
   themeSlug: string;
-  examQuestions: readonly { topicId: string; isCorrect: boolean }[];
   progress?: UserProgress | null;
 }): UnderstandingCheckPick | null {
-  const topics = getUnderstandingCheckTopics(input.themeSlug);
-  if (topics.length === 0) return null;
+  const candidates = getUnderstandingCheckCandidates(input.themeSlug);
+  if (candidates.length === 0) return null;
 
-  const signals = input.progress
-    ? chapterReviewOf(input.progress).understandingSignals ?? {}
-    : {};
-  const stats = input.progress?.topicMasteryStats ?? {};
-  const order = new Map(topics.map((topic, index) => [topic.id, index]));
+  const history = checkHistoryForTheme(
+    input.progress,
+    input.themeSlug,
+    new Set(candidates.map((c) => c.questionId)),
+  );
+  const lastQuestionId = [...history.values()]
+    .sort((a, b) => b.checkedAt.localeCompare(a.checkedAt))[0]?.questionId;
+  const pool = candidates.length > 1
+    ? candidates.filter((c) => c.questionId !== lastQuestionId)
+    : candidates;
 
-  const missed = new Map<string, number>();
-  const answeredCorrectly = new Set<string>();
-  for (const q of input.examQuestions) {
-    if (q.isCorrect) answeredCorrectly.add(q.topicId);
-    else missed.set(q.topicId, (missed.get(q.topicId) ?? 0) + 1);
-  }
+  const toPick = (candidate: (typeof candidates)[number], reason: UnderstandingCheckReason): UnderstandingCheckPick => ({
+    question: candidate.question,
+    topicId: candidate.topicId,
+    topicTitle: candidate.topicTitle,
+    focus: candidate.focus,
+    reason,
+  });
 
-  const alreadySolid = (topicId: string) => signals[topicId]?.level === "solid";
-  const byPriority = (key: (topic: Topic) => number) => (a: Topic, b: Topic) =>
-    Number(alreadySolid(a.id)) - Number(alreadySolid(b.id))
-    || key(b) - key(a)
-    || b.importance - a.importance
-    || (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0);
+  const unchecked = pool.find((c) => !history.has(c.questionId));
+  if (unchecked) return toPick(unchecked, "first_time");
 
-  const tiers: [UnderstandingCheckReason, Topic[]][] = [
-    [
-      "exam_miss",
-      topics
-        .filter((topic) => missed.has(topic.id))
-        .sort(byPriority((topic) => missed.get(topic.id) ?? 0)),
-    ],
-    [
-      "low_mastery",
-      topics
-        .filter((topic) => {
-          const s = stats[topic.id];
-          return s !== undefined && s.lastEvaluatedAt !== "" && s.masteryScore < LOW_MASTERY_THRESHOLD;
-        })
-        .sort(byPriority((topic) => LOW_MASTERY_THRESHOLD - (stats[topic.id]?.masteryScore ?? 0))),
-    ],
-    [
-      "explain_correct",
-      topics.filter((topic) => answeredCorrectly.has(topic.id)).sort(byPriority(() => 0)),
-    ],
-    ["representative", [...topics].sort(byPriority(() => 0))],
-  ];
+  const checkedAt = (c: (typeof candidates)[number]) => history.get(c.questionId)?.checkedAt ?? "";
+  const oldestFirst = (a: (typeof candidates)[number], b: (typeof candidates)[number]) =>
+    checkedAt(a).localeCompare(checkedAt(b));
+  const levelOf = (c: (typeof candidates)[number]) => history.get(c.questionId)?.level;
 
-  for (const [reason, candidates] of tiers) {
-    const topic = candidates[0];
-    if (!topic) continue;
-    const questions = getWrittenQuestionsForTopic(topic.id);
-    const previousQuestionId = signals[topic.id]?.questionId;
-    const question = questions.find((q) => q.id !== previousQuestionId) ?? questions[0];
-    return { question, topicId: topic.id, topicTitle: topic.title, reason };
-  }
-  return null;
+  const revisit = pool
+    .filter((c) => levelOf(c) !== "solid")
+    .sort((a, b) => Number(levelOf(b) === "review") - Number(levelOf(a) === "review") || oldestFirst(a, b))[0];
+  if (revisit) return toPick(revisit, "revisit");
+
+  return toPick([...pool].sort(oldestFirst)[0], "refresh");
+}
+
+/**
+ * AI理解チェック1回ぶんの出題履歴を記録する（章末の出題選びに使う）。
+ * 補助シグナル（recordUnderstandingSignal）と同じく、合否・Mastery・復習キューは触らない。
+ */
+export function recordUnderstandingCheck(
+  progress: UserProgress,
+  record: UnderstandingCheckRecord,
+): UserProgress {
+  const review = chapterReviewOf(progress);
+  const previous = review.understandingChecks?.[record.questionId];
+  if (previous && previous.checkedAt > record.checkedAt) return progress;
+  return withChapterReview(progress, {
+    ...review,
+    understandingChecks: { ...review.understandingChecks, [record.questionId]: record },
+  });
 }
 
 // --- AI理解チェックの結果 ------------------------------------------------------

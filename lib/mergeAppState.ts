@@ -26,6 +26,7 @@ import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import type {
   ChapterReviewState,
   ThemeExamRecord,
+  UnderstandingCheckRecord,
   UnderstandingSignal,
 } from "@/types/chapterReview";
 
@@ -282,7 +283,7 @@ function mergeCheckpointProgress(
 /**
  * 章の仕上げ記録のマージ。
  * - 総まとめ試験: 合格は一度でも合格なら残す（OR）、最高は max、最新は受験日時が新しい方。
- * - AI理解チェック: トピックごとに確認日時が新しい方。
+ * - AI理解チェック: トピックごと（signals）・問題ごと（checks）に確認日時が新しい方。
  *
  * ChapterReviewState にフィールドを足したらここも必ず更新すること。
  */
@@ -299,9 +300,15 @@ function mergeChapterReview(
     b.understandingSignals,
     (x: UnderstandingSignal, y: UnderstandingSignal) => (x.checkedAt >= y.checkedAt ? x : y),
   );
+  const understandingChecks = mergeRecordBy(
+    a.understandingChecks,
+    b.understandingChecks,
+    (x: UnderstandingCheckRecord, y: UnderstandingCheckRecord) => (x.checkedAt >= y.checkedAt ? x : y),
+  );
   return {
     ...(themeExams ? { themeExams } : {}),
     ...(understandingSignals ? { understandingSignals } : {}),
+    ...(understandingChecks ? { understandingChecks } : {}),
   };
 }
 

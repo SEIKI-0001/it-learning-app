@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { UserProgress } from "@/types";
 import type { CheckpointProgress } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
-import type { ThemeExamRecord, UnderstandingSignal } from "@/types/chapterReview";
+import type { ThemeExamRecord, UnderstandingCheckRecord, UnderstandingSignal } from "@/types/chapterReview";
 import { mergeProgress } from "@/lib/mergeAppState";
 import { progressRowToProgress, progressToRow, type ProgressRow } from "@/lib/dbMappers";
 import { normalizeAppState } from "@/lib/storage";
@@ -95,6 +95,15 @@ function fullCheckpointProgress(): CheckpointProgress {
           themeSlug: "information-security",
           level: "almost",
           missingPoints: ["鍵配送の問題"],
+          checkedAt: "2026-08-13T00:00:00.000Z",
+        },
+      },
+      understandingChecks: {
+        "sec-02": {
+          questionId: "sec-02",
+          themeSlug: "information-security",
+          topicId: "tech-public-key-crypto",
+          level: "almost",
           checkedAt: "2026-08-13T00:00:00.000Z",
         },
       },
@@ -617,5 +626,33 @@ describe("chapter review merge", () => {
     expect(merged?.x.level).toBe("solid");
     expect(merged?.y.level).toBe("almost");
     expect(merge(b, a).chapterReview?.understandingSignals).toEqual(merged);
+  });
+
+  it("keeps the newest check per question and unions questions", () => {
+    const check = (questionId: string, checkedAt: string, level: UnderstandingCheckRecord["level"]): UnderstandingCheckRecord => ({
+      questionId,
+      themeSlug: "network",
+      topicId: "tech-http-https",
+      level,
+      checkedAt,
+    });
+    const a: CheckpointProgress = {
+      ...INITIAL_CHECKPOINT_PROGRESS,
+      chapterReview: {
+        understandingChecks: {
+          "net-04": check("net-04", "2026-09-01T00:00:00.000Z", "review"),
+          "net-05": check("net-05", "2026-09-01T00:00:00.000Z", "almost"),
+        },
+      },
+    };
+    const b: CheckpointProgress = {
+      ...INITIAL_CHECKPOINT_PROGRESS,
+      chapterReview: { understandingChecks: { "net-04": check("net-04", "2026-09-02T00:00:00.000Z", "solid") } },
+    };
+
+    const merged = merge(a, b).chapterReview?.understandingChecks;
+    expect(merged?.["net-04"].level).toBe("solid");
+    expect(merged?.["net-05"].level).toBe("almost");
+    expect(merge(b, a).chapterReview?.understandingChecks).toEqual(merged);
   });
 });

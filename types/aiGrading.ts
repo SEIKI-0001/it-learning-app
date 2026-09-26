@@ -19,6 +19,8 @@ export type WrittenDifficulty = "normal" | "hard";
 /** 記述問題1問ぶんのデータ。公式過去問は転載せずオリジナル設問とする。 */
 export type WrittenQuestion = {
   id: string;
+  /** 一覧に出す短い題名（確認する概念が分かる言い方）。本文は選択後に表示する。 */
+  title: string;
   category: string;
   difficulty: WrittenDifficulty;
   question: string;
