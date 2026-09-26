@@ -60,8 +60,8 @@ describe("BinaryExperience", () => {
     goToStep(2);
     expect(heading("STEP 2 なぜ 8・4・2・1 なのか")).toBeInTheDocument();
     expect(screen.getByTestId("binary-weights")).toHaveAttribute("data-beat", "0");
-    act(() => vi.advanceTimersByTime(800));
-    act(() => vi.advanceTimersByTime(800));
+    act(() => vi.advanceTimersByTime(1200));
+    act(() => vi.advanceTimersByTime(1200));
     expect(screen.getByText(/このランプは 2/)).toBeInTheDocument();
   });
 

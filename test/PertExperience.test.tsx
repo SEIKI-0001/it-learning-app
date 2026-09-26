@@ -111,10 +111,10 @@ describe("PERT animation", () => {
     renderDeck();
     click("解説4");
     expect(inStage("pert-line").getByTestId("pert-bar-A")).toHaveAttribute("data-on", "false");
-    act(() => vi.advanceTimersByTime(700));
+    act(() => vi.advanceTimersByTime(1050));
     expect(inStage("pert-line").getByTestId("pert-bar-A")).toHaveAttribute("data-on", "true");
     expect(inStage("pert-line").getByTestId("pert-bar-B")).toHaveAttribute("data-on", "false");
-    act(() => vi.advanceTimersByTime(3 * 380 + 500));
+    act(() => vi.advanceTimersByTime((3 * 560 + 500) * 1.5));
     expect(inStage("pert-line").getByTestId("pert-bar-B")).toHaveAttribute("data-on", "true");
     expect(screen.queryByTestId("pert-line-eq")).not.toBeInTheDocument();
   });

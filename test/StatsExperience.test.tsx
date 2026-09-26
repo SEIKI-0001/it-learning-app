@@ -110,9 +110,9 @@ describe("statistics animation", () => {
     renderDeck();
     click("解説5");
     expect(screen.getByTestId("st-center")).toHaveAttribute("data-view", "raw");
-    act(() => vi.advanceTimersByTime(1300));
+    act(() => vi.advanceTimersByTime(1950));
     expect(screen.getByTestId("st-center")).toHaveAttribute("data-view", "mean");
-    act(() => vi.advanceTimersByTime(2800));
+    act(() => vi.advanceTimersByTime(4200));
     expect(screen.getByTestId("st-center")).toHaveAttribute("data-view", "median");
   });
 
@@ -121,10 +121,10 @@ describe("statistics animation", () => {
     renderDeck();
     click("解説6");
     expect(screen.getByTestId("st-outlier")).toHaveAttribute("data-last", "70");
-    act(() => vi.advanceTimersByTime(1200));
+    act(() => vi.advanceTimersByTime(1800));
     expect(screen.getByTestId("st-outlier")).toHaveAttribute("data-last", "335");
     expect(screen.getByTestId("st-outlier")).toHaveAttribute("data-mean", "54");
-    act(() => vi.advanceTimersByTime(1400));
+    act(() => vi.advanceTimersByTime(2100));
     expect(screen.getByTestId("st-outlier")).toHaveAttribute("data-mean", "107");
   });
 });

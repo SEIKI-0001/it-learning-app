@@ -120,9 +120,9 @@ describe("backup", () => {
     click("解説2");
     expect(screen.getByTestId("backup-restore")).toHaveAttribute("data-mode", "incr");
     expect(screen.getByTestId("backup-restored")).toHaveAttribute("data-count", "0");
-    act(() => vi.advanceTimersByTime(800));
+    act(() => vi.advanceTimersByTime(1200));
     expect(screen.getByTestId("backup-restored")).toHaveAttribute("data-count", "1");
-    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(1000));
+    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(1500));
     expect(screen.getByTestId("backup-restored")).toHaveAttribute("data-count", "4");
     expect(screen.getByText(/日曜フル → 月 → 火 → 水/)).toBeInTheDocument();
   });
@@ -143,12 +143,12 @@ describe("embedded control", () => {
     vi.useFakeTimers();
     renderDeck(EmbeddedControlExperience);
     const loop = () => screen.getByTestId("embedded-loop");
-    act(() => vi.advanceTimersByTime(700));
+    act(() => vi.advanceTimersByTime(1050));
     expect(loop()).toHaveAttribute("data-phase", "sense");
-    act(() => vi.advanceTimersByTime(1000));
+    act(() => vi.advanceTimersByTime(1500));
     expect(loop()).toHaveAttribute("data-phase", "decide");
     expect(screen.getByTestId("loop-decide")).toHaveTextContent("+5.0℃");
-    for (let i = 0; i < 12; i++) act(() => vi.advanceTimersByTime(1000));
+    for (let i = 0; i < 12; i++) act(() => vi.advanceTimersByTime(1500));
     expect(screen.getByTestId("loop-result")).toHaveTextContent("25.2℃");
     expect(screen.getByText(/結果を戻して調整する/)).toBeInTheDocument();
   });
