@@ -552,6 +552,8 @@ export default function LandingPage() {
         <br />
         <a href={START_HREF}>ログイン / 無料登録</a>
         {" / "}
+        <a href="/guide">ITパスポート学習ガイド</a>
+        {" / "}
         <a href="/legal/tokusho">特定商取引法に基づく表示</a>
         {" / "}
         <a href="/privacy">プライバシーポリシー</a>
