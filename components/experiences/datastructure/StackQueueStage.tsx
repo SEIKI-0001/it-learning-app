@@ -13,7 +13,7 @@ export type Thing = { id: number; icon: string; label: string };
 const STACK_ICONS = ["📕", "📗", "📘", "📙", "📓", "📔"];
 const QUEUE_ICONS = ["🧑", "👩", "👨‍🦱", "👧", "🧓", "👦"];
 export const MAX_ITEMS = 5;
-const LEAVE_MS = 900;
+const LEAVE_MS = 1300;
 
 /** 取り出した物を、アニメーションの間だけ画面に残す */
 function useLeaving(reducedMotion: boolean) {

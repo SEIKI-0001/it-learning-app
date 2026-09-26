@@ -23,8 +23,8 @@ export type Stage = {
 export const PROD_COST = 100;
 export const ROW_H = 54;
 const TOP_H = 40;
-export const FALL_MS_PER_ROW = 380;
-export const STAGGER_MS = 260;
+export const FALL_MS_PER_ROW = 560;
+export const STAGGER_MS = 380;
 
 export function arrivalMs(i: number, caught: boolean, count: number) {
   const rows = caught ? i + 1 : count + 1;

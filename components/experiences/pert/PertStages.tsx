@@ -19,7 +19,7 @@ export const PERT_STEPS = ["① 経路を探す", "② 日数を足す", "③ �
 
 const MAX_DAY = 12;
 /** 棒が1日ぶん伸びる時間（ms） */
-const DAY_MS = 380;
+const DAY_MS = 560;
 const pct = (day: number) => `${(day / MAX_DAY) * 100}%`;
 
 type Tone = "brand" | "sky" | "emerald" | "amber" | "gray";

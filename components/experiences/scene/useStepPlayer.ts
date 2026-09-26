@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-export const AUTOPLAY_INTERVAL_MS = 3000;
+// 図解の説明を目で追えるよう、従来3秒より余裕を持たせる（約0.68倍速）。
+export const AUTOPLAY_INTERVAL_MS = 4400;
 
 /**
  * ステップ式シーンの再生状態（Play / Step / Scrub）。
