@@ -57,11 +57,21 @@ export default function Home() {
           ))}
         </ul>
 
+        <div className="mt-9 w-full rounded-xl bg-white/10 px-5 py-5 text-left">
+          <h2 className="text-lg font-bold">まず、勉強の進め方を知ろう</h2>
+          <p className="mt-2 text-sm leading-relaxed text-brand-100">
+            このアプリでどう勉強すればいいかを約1分で紹介します。
+          </p>
+        </div>
+
         <Link
-          href="/onboarding"
-          className="mt-9 w-full rounded-lg bg-white px-6 py-4 text-center text-base font-semibold text-brand-800 transition hover:bg-brand-50 active:scale-[0.99]"
+          href="/tutorial"
+          className="mt-4 w-full rounded-lg bg-white px-6 py-4 text-center text-base font-semibold text-brand-800 transition hover:bg-brand-50 active:scale-[0.99]"
         >
-          学習をはじめる
+          1分で使い方を見る ▶
+        </Link>
+        <Link href="/onboarding" className="mt-4 text-sm font-medium text-brand-100 underline underline-offset-4">
+          スキップして設定を始める
         </Link>
         <Link href="/learn" className="mt-3 text-sm font-medium text-brand-100 underline underline-offset-4">
           まずはテーマを見てみる
