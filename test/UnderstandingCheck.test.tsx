@@ -9,12 +9,11 @@ const requestAiGrading = vi.hoisted(() => vi.fn<(...args: unknown[]) => Promise<
 vi.mock("@/lib/ai/gradingClient", () => ({ requestAiGrading }));
 vi.mock("@/lib/userSession", () => ({ getUserId: () => "user-1" }));
 
-const examQuestions = [{ topicId: "tech-email-protocol", isCorrect: false }];
 const longAnswer = "SMTPでメールを送信し、POPやIMAPで受信します。IMAPはサーバ上で管理します。";
 
 function renderCheck(onGraded = vi.fn()) {
   render(
-    <UnderstandingCheck themeSlug="network" examQuestions={examQuestions} progress={null} onGraded={onGraded} />,
+    <UnderstandingCheck themeSlug="network" progress={null} onGraded={onGraded} />,
   );
   return onGraded;
 }
@@ -28,10 +27,12 @@ beforeEach(() => requestAiGrading.mockReset());
 afterEach(() => cleanup());
 
 describe("UnderstandingCheck", () => {
-  it("誤答したトピックから出題し、合否に影響しないと明示する", () => {
+  it("章の曖昧になりやすい理解を確かめる、と伝え、合否に影響しないと明示する", () => {
     renderCheck();
-    expect(screen.getByText(/総まとめ試験で間違えた「電子メールのしくみ」/)).toBeInTheDocument();
+    expect(screen.getByText(/分かったつもりになりやすいところ/)).toBeInTheDocument();
+    expect(screen.getByText(/確かめること：DNSがドメイン名とIPアドレスを結ぶ流れ/)).toBeInTheDocument();
     expect(screen.getByText(/合否には影響しません/)).toBeInTheDocument();
+    expect(screen.queryByText(/間違えた/)).not.toBeInTheDocument();
   });
 
   it("20文字未満では送信できない", () => {
@@ -69,11 +70,11 @@ describe("UnderstandingCheck", () => {
     expect(screen.queryByText(/72/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /この部分を復習する/ })).toHaveAttribute(
       "href",
-      expect.stringContaining("tech-email-protocol"),
+      expect.stringContaining("tech-network-address"),
     );
     expect(requestAiGrading).toHaveBeenCalledWith(expect.objectContaining({ mode: "understanding_check" }));
     expect(onGraded).toHaveBeenCalledTimes(1);
-    expect(onGraded.mock.calls[0][0].topicId).toBe("tech-email-protocol");
+    expect(onGraded.mock.calls[0][0].topicId).toBe("tech-network-address");
   });
 
   it("未ログインでは、模範的な説明との自己確認に切り替えて学習を止めない", async () => {

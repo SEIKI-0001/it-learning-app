@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { getWrittenQuestion, getWrittenQuestions, getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
 import { getLessonsForTheme, getThemeBySlug, learningThemes } from "@/lib/learningCatalog";
+import { CHAPTER_UNDERSTANDING_CHECKS } from "@/data/chapterUnderstandingChecks";
 import {
   getThemeExamRecord,
-  getUnderstandingCheckTopics,
+  getUnderstandingCheckCandidates,
   getUnderstandingFollowUps,
   pickUnderstandingCheck,
   recordThemeExamAttempt,
+  recordUnderstandingCheck,
   recordUnderstandingSignal,
   understandingLevelFor,
 } from "@/lib/chapterReview";
@@ -14,7 +16,7 @@ import { getAllThemeExams, recordThemeExamLearningResult } from "@/lib/themeExam
 import { LOW_MASTERY_THRESHOLD } from "@/lib/learningLoop";
 import type { TopicMasteryStats, UserProgress } from "@/types";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
-import type { UnderstandingSignal } from "@/types/chapterReview";
+import type { UnderstandingLevel, UnderstandingSignal } from "@/types/chapterReview";
 import type { ThemeExamResult } from "@/types/themeExam";
 
 function progress(overrides: Partial<UserProgress> = {}): UserProgress {
@@ -74,18 +76,42 @@ function signal(overrides: Partial<UnderstandingSignal> = {}): UnderstandingSign
 }
 
 describe("AI理解チェックの設問カバレッジ", () => {
-  it("総まとめ試験のある全章で、最低1問は出題できる", () => {
-    const missing = getAllThemeExams()
-      .map((exam) => exam.themeSlug)
-      .filter((slug) => getUnderstandingCheckTopics(slug).length === 0);
-    expect(missing).toEqual([]);
+  it("学ぶ画面の全章・総まとめ試験のある全章で、専用候補から2問以上出題できる", () => {
+    const slugs = new Set([
+      ...learningThemes.map((theme) => theme.slug),
+      ...getAllThemeExams().map((exam) => exam.themeSlug),
+    ]);
+    const short = [...slugs].filter((slug) => getUnderstandingCheckCandidates(slug).length < 2);
+    expect(short).toEqual([]);
   });
 
-  it("学ぶ画面の全章で、最低1問は出題できる", () => {
-    const missing = learningThemes
-      .filter((theme) => getUnderstandingCheckTopics(theme.slug).length === 0)
-      .map((theme) => theme.slug);
-    expect(missing).toEqual([]);
+  it("各章の候補は2〜4問で、定義した問題・トピックがすべて解決できる", () => {
+    for (const [slug, entries] of Object.entries(CHAPTER_UNDERSTANDING_CHECKS)) {
+      expect(getThemeBySlug(slug), slug).toBeDefined();
+      expect(entries.length, slug).toBeGreaterThanOrEqual(2);
+      expect(entries.length, slug).toBeLessThanOrEqual(4);
+      expect(getUnderstandingCheckCandidates(slug)).toHaveLength(entries.length);
+    }
+  });
+
+  it("候補のトピックはその章のもので、問題はそのトピックに紐づく記述問題（本文を二重定義しない）", () => {
+    for (const [slug, entries] of Object.entries(CHAPTER_UNDERSTANDING_CHECKS)) {
+      const theme = getThemeBySlug(slug)!;
+      const topicIds = new Set(getLessonsForTheme(theme).map((t) => t.id));
+      for (const entry of entries) {
+        expect(topicIds.has(entry.topicId), `${slug}/${entry.questionId}`).toBe(true);
+        expect(
+          getWrittenQuestionsForTopic(entry.topicId).map((q) => q.id),
+          `${slug}/${entry.questionId}`,
+        ).toContain(entry.questionId);
+        expect(entry.focus.length, entry.questionId).toBeGreaterThan(5);
+      }
+    }
+  });
+
+  it("同じ問題を複数の章に置かない（出題履歴を章ごとに数えるため）", () => {
+    const ids = Object.values(CHAPTER_UNDERSTANDING_CHECKS).flat().map((e) => e.questionId);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it("トピックに紐づけた設問IDはすべて実在し、どの設問もどこかのトピックから出題される", () => {
@@ -95,10 +121,12 @@ describe("AI理解チェックの設問カバレッジ", () => {
     expect(unmapped).toEqual([]);
   });
 
-  it("設問は採点に必要な材料（模範解答・3観点以上・キーワード）を持ち、IDは重複しない", () => {
+  it("設問は採点に必要な材料（題名・模範解答・3観点以上・キーワード）を持ち、IDは重複しない", () => {
     const questions = getWrittenQuestions();
     expect(new Set(questions.map((q) => q.id)).size).toBe(questions.length);
     for (const q of questions) {
+      expect(q.title.length, q.id).toBeGreaterThan(3);
+      expect(q.title.length, q.id).toBeLessThanOrEqual(30);
       expect(q.question.length, q.id).toBeGreaterThan(20);
       expect(q.modelAnswer.length, q.id).toBeGreaterThan(80);
       expect(q.rubric.length, q.id).toBeGreaterThanOrEqual(3);
@@ -181,124 +209,177 @@ describe("総まとめ試験の記録", () => {
 
 describe("AI理解チェックの出題選び", () => {
   const themeSlug = "network";
-  const topics = getUnderstandingCheckTopics(themeSlug).map((t) => t.id);
+  const candidateIds = CHAPTER_UNDERSTANDING_CHECKS[themeSlug].map((e) => e.questionId);
 
-  it("前提: ネットワーク章には複数の出題候補トピックがある", () => {
-    expect(topics.length).toBeGreaterThanOrEqual(3);
-  });
-
-  it("1. 総まとめ試験で誤答したトピックを最優先する", () => {
-    const pick = pickUnderstandingCheck({
-      themeSlug,
-      examQuestions: [
-        { topicId: "tech-http-https", isCorrect: true },
-        { topicId: "tech-email-protocol", isCorrect: false },
-      ],
-      progress: progress({ topicMasteryStats: { "tech-http-https": stats("tech-http-https", 10) } }),
-    });
-    expect(pick).toMatchObject({ topicId: "tech-email-protocol", reason: "exam_miss" });
-  });
-
-  it("誤答が複数トピックにあれば、誤答数の多い方を選ぶ", () => {
-    const pick = pickUnderstandingCheck({
-      themeSlug,
-      examQuestions: [
-        { topicId: "tech-email-protocol", isCorrect: false },
-        { topicId: "tech-http-https", isCorrect: false },
-        { topicId: "tech-http-https", isCorrect: false },
-      ],
-    });
-    expect(pick?.topicId).toBe("tech-http-https");
-  });
-
-  it("2. 誤答が無ければ Mastery が低いトピック", () => {
-    const pick = pickUnderstandingCheck({
-      themeSlug,
-      examQuestions: [{ topicId: "tech-http-https", isCorrect: true }],
-      progress: progress({
-        topicMasteryStats: {
-          "tech-email-protocol": stats("tech-email-protocol", LOW_MASTERY_THRESHOLD - 1),
-          "tech-http-https": stats("tech-http-https", 90),
+  function withChecks(
+    checks: { questionId: string; level: UnderstandingLevel; checkedAt: string }[],
+    extra: Partial<UserProgress> = {},
+  ): UserProgress {
+    const entries = CHAPTER_UNDERSTANDING_CHECKS[themeSlug];
+    return progress({
+      ...extra,
+      checkpointProgress: {
+        ...INITIAL_CHECKPOINT_PROGRESS,
+        chapterReview: {
+          understandingChecks: Object.fromEntries(
+            checks.map((c) => [
+              c.questionId,
+              { ...c, themeSlug, topicId: entries.find((e) => e.questionId === c.questionId)!.topicId },
+            ]),
+          ),
         },
-      }),
+      },
     });
-    expect(pick).toMatchObject({ topicId: "tech-email-protocol", reason: "low_mastery" });
+  }
+
+  it("前提: ネットワーク章には複数の専用候補がある", () => {
+    expect(candidateIds.length).toBeGreaterThanOrEqual(3);
   });
 
-  it("未評価のトピックは Mastery が低いとはみなさない", () => {
-    const pick = pickUnderstandingCheck({
+  it("章の専用候補からのみ出題する（TOPIC_WRITTEN_QUESTION_IDS だけにある問題は出さない）", () => {
+    // net-03（DHCP）・net-06（OSI）はネットワーク章のトピックに紐づくが、章末の候補ではない。
+    const seen = new Set<string>();
+    let state = progress();
+    for (let i = 0; i < 12; i += 1) {
+      const pick = pickUnderstandingCheck({ themeSlug, progress: state })!;
+      seen.add(pick.question.id);
+      state = recordUnderstandingCheck(state, {
+        questionId: pick.question.id,
+        themeSlug,
+        topicId: pick.topicId,
+        level: i % 3 === 0 ? "review" : "solid",
+        checkedAt: new Date(Date.UTC(2026, 8, 1, i)).toISOString(),
+      });
+    }
+    expect([...seen].every((id) => candidateIds.includes(id))).toBe(true);
+    expect(seen.has("net-03")).toBe(false);
+    expect(seen.has("net-06")).toBe(false);
+  });
+
+  it("誤答トピックや低Masteryを自動で優先しない（試験の正誤・Masteryに依存しない）", () => {
+    const plain = pickUnderstandingCheck({ themeSlug, progress: progress() });
+    const lowMastery = pickUnderstandingCheck({
       themeSlug,
-      examQuestions: [{ topicId: "tech-http-https", isCorrect: true }],
       progress: progress({
-        topicMasteryStats: { "tech-email-protocol": stats("tech-email-protocol", 0, { lastEvaluatedAt: "" }) },
+        topicMasteryStats: { "tech-email-protocol": stats("tech-email-protocol", LOW_MASTERY_THRESHOLD - 30) },
+        topicMastery: { "tech-email-protocol": 5 },
       }),
     });
-    expect(pick?.reason).toBe("explain_correct");
+    expect(plain?.question.id).toBe(candidateIds[0]);
+    expect(lowMastery?.question.id).toBe(plain?.question.id);
   });
 
-  it("3. 四択で正解したトピックを、説明できるか確かめる", () => {
+  it("未実施の問題を優先する（定義順）", () => {
     const pick = pickUnderstandingCheck({
       themeSlug,
-      examQuestions: [{ topicId: "tech-http-https", isCorrect: true }],
+      progress: withChecks([{ questionId: candidateIds[0], level: "review", checkedAt: "2026-09-01T00:00:00.000Z" }]),
     });
-    expect(pick).toMatchObject({ topicId: "tech-http-https", reason: "explain_correct" });
+    expect(pick).toMatchObject({ question: { id: candidateIds[1] }, reason: "first_time" });
   });
 
-  it("4. 手がかりが無ければ章を代表する重要トピック", () => {
-    const pick = pickUnderstandingCheck({ themeSlug, examQuestions: [] });
-    expect(pick?.reason).toBe("representative");
-    expect(topics).toContain(pick?.topicId);
-  });
-
-  it("直近で「理解できている」だったトピックは後ろへ回す", () => {
-    const solid = progress({
+  it("以前の記録（understandingSignals の questionId）も実施済みとして数える", () => {
+    const legacy = progress({
       checkpointProgress: {
         ...INITIAL_CHECKPOINT_PROGRESS,
         chapterReview: {
           understandingSignals: {
-            "tech-http-https": signal({ topicId: "tech-http-https", questionId: "net-04", level: "solid" }),
+            "tech-network-address": signal({ questionId: candidateIds[0], topicId: "tech-network-address" }),
           },
         },
       },
     });
-    const pick = pickUnderstandingCheck({
-      themeSlug,
-      examQuestions: [
-        { topicId: "tech-http-https", isCorrect: true },
-        { topicId: "tech-email-protocol", isCorrect: true },
-      ],
-      progress: solid,
-    });
-    expect(pick?.topicId).toBe("tech-email-protocol");
+    expect(pickUnderstandingCheck({ themeSlug, progress: legacy })?.question.id).toBe(candidateIds[1]);
   });
 
-  it("同じトピックに複数の設問があれば、前回と違う設問を出す", () => {
-    const [first, second] = getWrittenQuestionsForTopic("tech-network-address");
-    expect(second).toBeDefined();
+  it("一巡後は「ここを確認しよう」→「あと一歩」の順に、直近の問題を避けて出す", () => {
+    const [a, b, c, d] = candidateIds;
     const pick = pickUnderstandingCheck({
       themeSlug,
-      examQuestions: [{ topicId: "tech-network-address", isCorrect: false }],
-      progress: progress({
-        checkpointProgress: {
-          ...INITIAL_CHECKPOINT_PROGRESS,
-          chapterReview: { understandingSignals: { "tech-network-address": signal({ questionId: first.id }) } },
-        },
-      }),
+      progress: withChecks([
+        { questionId: a, level: "almost", checkedAt: "2026-09-01T00:00:00.000Z" },
+        { questionId: b, level: "solid", checkedAt: "2026-09-02T00:00:00.000Z" },
+        { questionId: c, level: "review", checkedAt: "2026-09-03T00:00:00.000Z" },
+        { questionId: d, level: "solid", checkedAt: "2026-09-04T00:00:00.000Z" },
+      ]),
     });
-    expect(pick?.question.id).toBe(second.id);
+    expect(pick).toMatchObject({ question: { id: c }, reason: "revisit" });
   });
 
-  it("章に無いトピックの誤答は無視して章内から選ぶ", () => {
+  it("直近と同じ問題は、未解決でも続けて出さない", () => {
+    const [a, b, c, d] = candidateIds;
     const pick = pickUnderstandingCheck({
       themeSlug,
-      examQuestions: [{ topicId: "tech-binary-data", isCorrect: false }],
+      progress: withChecks([
+        { questionId: a, level: "solid", checkedAt: "2026-09-01T00:00:00.000Z" },
+        { questionId: b, level: "almost", checkedAt: "2026-09-02T00:00:00.000Z" },
+        { questionId: c, level: "solid", checkedAt: "2026-09-03T00:00:00.000Z" },
+        { questionId: d, level: "review", checkedAt: "2026-09-04T00:00:00.000Z" },
+      ]),
     });
-    expect(topics).toContain(pick?.topicId);
+    expect(pick).toMatchObject({ question: { id: b }, reason: "revisit" });
+  });
+
+  it("すべて「理解できている」なら、確かめてから最も時間が経った問題（直近は除く）", () => {
+    const [a, b, c, d] = candidateIds;
+    const pick = pickUnderstandingCheck({
+      themeSlug,
+      progress: withChecks([
+        { questionId: a, level: "solid", checkedAt: "2026-09-05T00:00:00.000Z" },
+        { questionId: b, level: "solid", checkedAt: "2026-09-02T00:00:00.000Z" },
+        { questionId: c, level: "solid", checkedAt: "2026-09-03T00:00:00.000Z" },
+        { questionId: d, level: "solid", checkedAt: "2026-09-04T00:00:00.000Z" },
+      ]),
+    });
+    expect(pick).toMatchObject({ question: { id: b }, reason: "refresh" });
+  });
+
+  it("出題理由として、確かめる概念（focus）とトピックを返す", () => {
+    const pick = pickUnderstandingCheck({ themeSlug, progress: progress() })!;
+    const entry = CHAPTER_UNDERSTANDING_CHECKS[themeSlug][0];
+    expect(pick.focus).toBe(entry.focus);
+    expect(pick.topicId).toBe(entry.topicId);
+    expect(pick.topicTitle.length).toBeGreaterThan(0);
   });
 
   it("存在しない章では出題しない", () => {
     expect(getThemeBySlug("no-such-theme")).toBeUndefined();
-    expect(pickUnderstandingCheck({ themeSlug: "no-such-theme", examQuestions: [] })).toBeNull();
+    expect(pickUnderstandingCheck({ themeSlug: "no-such-theme" })).toBeNull();
+  });
+});
+
+describe("AI理解チェックの出題履歴", () => {
+  const record = {
+    questionId: "net-04",
+    themeSlug: "network",
+    topicId: "tech-http-https",
+    level: "almost" as const,
+    checkedAt: "2026-09-10T00:00:00.000Z",
+  };
+
+  it("問題ごとに最新の1件を持ち、古い記録で上書きしない", () => {
+    const once = recordUnderstandingCheck(progress(), record);
+    const older = recordUnderstandingCheck(once, { ...record, level: "solid", checkedAt: "2026-09-01T00:00:00.000Z" });
+    expect(older.checkpointProgress?.chapterReview?.understandingChecks?.["net-04"]?.level).toBe("almost");
+  });
+
+  it("合否・Mastery・復習キュー・補助シグナルには触れない", () => {
+    const before = recordThemeExamAttempt(
+      progress({
+        topicMastery: { "tech-http-https": 70 },
+        topicMasteryStats: { "tech-http-https": stats("tech-http-https", 70) },
+        reviewQueue: [],
+      }),
+      examResult(),
+      "2026-09-01T00:00:00.000Z",
+    );
+    const after = recordUnderstandingCheck(before, { ...record, level: "review" });
+    expect(after.topicMastery).toEqual(before.topicMastery);
+    expect(after.topicMasteryStats).toEqual(before.topicMasteryStats);
+    expect(after.reviewQueue).toEqual(before.reviewQueue);
+    expect(getThemeExamRecord(after, "network")).toEqual(getThemeExamRecord(before, "network"));
+    expect(after.checkpointProgress?.chapterReview?.understandingSignals).toEqual(
+      before.checkpointProgress?.chapterReview?.understandingSignals,
+    );
   });
 });
 

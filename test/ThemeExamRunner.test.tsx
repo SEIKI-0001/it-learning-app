@@ -351,7 +351,8 @@ describe("ThemeExamRunner exposure integration", () => {
     expect(screen.getByText("合格ライン 60%")).toBeInTheDocument();
     expect(screen.getByText("正答率 100%")).toBeInTheDocument();
     expect(screen.getByText("AI理解チェック")).toBeInTheDocument();
-    expect(screen.getByText(/四択で正解できた「HTTPとHTTPS」/)).toBeInTheDocument();
+    // 出題は章の専用候補から。試験で正解したトピック（HTTPとHTTPS）には引きずられない。
+    expect(screen.getByText(/確かめること：DNSがドメイン名とIPアドレスを結ぶ流れ/)).toBeInTheDocument();
     expect(screen.getByText("章の学習完了")).toBeInTheDocument();
   });
 
@@ -374,7 +375,9 @@ describe("ThemeExamRunner exposure integration", () => {
     expect(screen.getByText("合格ライン 60%（1問正解で合格・あと1問）")).toBeInTheDocument();
     expect(screen.queryByText("合格！")).not.toBeInTheDocument();
     // AI理解チェックは不合格でも出す（合否とは別の補助評価）。
-    expect(screen.getByText(/総まとめ試験で間違えた「HTTPとHTTPS」/)).toBeInTheDocument();
+    // 誤答トピック（HTTPとHTTPS）を自動で優先せず、合格時と同じく章の候補から出す。
+    expect(screen.getByText(/確かめること：DNSがドメイン名とIPアドレスを結ぶ流れ/)).toBeInTheDocument();
+    expect(screen.queryByText(/間違えた「/)).not.toBeInTheDocument();
   });
 
   it("awaits one classification batch before updating summary-exam Mastery", async () => {

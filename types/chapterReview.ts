@@ -7,6 +7,8 @@
 //   themeExams          … 四択の総まとめ試験の結果。合否はここだけが決める。
 //   understandingSignals … AI理解チェックの結果。学習支援用の補助シグナルで、
 //                          合否・章クリア・Mastery には一切使わない（LLM判定は揺らぐため）。
+//   understandingChecks  … AI理解チェックで「どの問題を・いつ・どの段階で」確かめたか。
+//                          章末の出題選び（未実施優先・直近回避）にだけ使う。
 //
 // フィールドを足すときは必ず同時に:
 //   1. ここに optional で追加
@@ -49,9 +51,21 @@ export type UnderstandingSignal = {
   checkedAt: string;
 };
 
+/** 章末AI理解チェックの出題履歴（問題単位で最新の1件を持つ）。 */
+export type UnderstandingCheckRecord = {
+  questionId: string;
+  themeSlug: string;
+  topicId: string;
+  level: UnderstandingLevel;
+  /** 確認した日時（ISO）。 */
+  checkedAt: string;
+};
+
 export type ChapterReviewState = {
   /** themeSlug → 総まとめ試験の記録。 */
   themeExams?: Record<string, ThemeExamRecord>;
   /** topicId → 最新のAI理解チェック結果。 */
   understandingSignals?: Record<string, UnderstandingSignal>;
+  /** questionId → その問題の最新のAI理解チェック。 */
+  understandingChecks?: Record<string, UnderstandingCheckRecord>;
 };

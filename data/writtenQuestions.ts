@@ -7,6 +7,7 @@ import type { WrittenQuestion } from "@/types/aiGrading";
 const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   {
     id: "sec-01",
+    title: "多要素認証がパスワードだけより安全な理由",
     category: "セキュリティ",
     difficulty: "hard",
     question:
@@ -22,6 +23,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "net-01",
+    title: "Webページ表示までのDNSの役割",
     category: "ネットワーク",
     difficulty: "normal",
     question:
@@ -37,6 +39,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "db-01",
+    title: "在庫減算と注文登録を1トランザクションにする理由",
     category: "データベース",
     difficulty: "hard",
     question:
@@ -52,6 +55,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "str-01",
+    title: "SWOT分析で整理できること",
     category: "ストラテジ",
     difficulty: "normal",
     question:
@@ -67,6 +71,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ai-01",
+    title: "教師あり学習と教師なし学習",
     category: "AI・データ活用",
     difficulty: "hard",
     question:
@@ -82,6 +87,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
     {
     id: "sec-02",
+    title: "共通鍵暗号と公開鍵暗号を組み合わせる理由",
     category: "セキュリティ",
     difficulty: "hard",
     question:
@@ -98,6 +104,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sec-03",
+    title: "デジタル署名と暗号化の違い",
     category: "セキュリティ",
     difficulty: "hard",
     question:
@@ -114,6 +121,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sec-04",
+    title: "SQLインジェクションの仕組みと対策",
     category: "セキュリティ",
     difficulty: "hard",
     question:
@@ -130,6 +138,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sec-05",
+    title: "フィッシングと標的型攻撃の違い",
     category: "セキュリティ",
     difficulty: "normal",
     question:
@@ -146,6 +155,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sec-06",
+    title: "ランサムウェア対策でバックアップだけでは足りない理由",
     category: "セキュリティ",
     difficulty: "hard",
     question:
@@ -162,6 +172,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sec-07",
+    title: "機密性・完全性・可用性をファイルサーバで説明",
     category: "セキュリティ",
     difficulty: "normal",
     question:
@@ -178,6 +189,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sec-08",
+    title: "ゼロトラストと境界防御の違い",
     category: "セキュリティ",
     difficulty: "hard",
     question:
@@ -194,6 +206,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "net-02",
+    title: "ルータ・スイッチ・ハブの違い",
     category: "ネットワーク",
     difficulty: "normal",
     question:
@@ -210,6 +223,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "net-03",
+    title: "DHCPの役割と手動設定との違い",
     category: "ネットワーク",
     difficulty: "normal",
     question:
@@ -226,6 +240,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "net-04",
+    title: "HTTPとHTTPSの違いとHTTPSが重要な場面",
     category: "ネットワーク",
     difficulty: "hard",
     question:
@@ -242,6 +257,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "net-05",
+    title: "SMTP・POP・IMAPの役割の違い",
     category: "ネットワーク",
     difficulty: "hard",
     question:
@@ -258,6 +274,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "net-06",
+    title: "OSI基本参照モデルで通信を階層に分ける意味",
     category: "ネットワーク",
     difficulty: "hard",
     question:
@@ -274,6 +291,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "db-02",
+    title: "主キーと外部キーの違い",
     category: "データベース",
     difficulty: "normal",
     question:
@@ -290,6 +308,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "db-03",
+    title: "正規化を行う目的",
     category: "データベース",
     difficulty: "hard",
     question:
@@ -306,6 +325,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "db-04",
+    title: "選択・射影・結合の違い",
     category: "データベース",
     difficulty: "normal",
     question:
@@ -322,6 +342,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "db-05",
+    title: "排他制御が必要になる理由",
     category: "データベース",
     difficulty: "hard",
     question:
@@ -338,6 +359,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ai-02",
+    title: "教師あり・教師なし・強化学習の違い",
     category: "AI・データ活用",
     difficulty: "normal",
     question:
@@ -354,6 +376,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ai-03",
+    title: "生成AIを業務で使うときのリスク",
     category: "AI・データ活用",
     difficulty: "hard",
     question:
@@ -370,6 +393,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ai-04",
+    title: "過学習と新しいデータへの影響",
     category: "AI・データ活用",
     difficulty: "hard",
     question:
@@ -386,6 +410,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ai-05",
+    title: "相関関係と因果関係の違い",
     category: "AI・データ活用",
     difficulty: "normal",
     question:
@@ -402,6 +427,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ai-06",
+    title: "順次・選択・繰返しの基本構造",
     category: "AI・データ活用",
     difficulty: "hard",
     question:
@@ -418,6 +444,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sys-01",
+    title: "直列構成と並列構成で稼働率が変わる理由",
     category: "システム構成",
     difficulty: "hard",
     question:
@@ -434,6 +461,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sys-02",
+    title: "MTBF・MTTRと稼働率の関係",
     category: "システム構成",
     difficulty: "normal",
     question:
@@ -450,6 +478,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sys-03",
+    title: "RAID0・RAID1・RAID5の違い",
     category: "システム構成",
     difficulty: "hard",
     question:
@@ -466,6 +495,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "pm-01",
+    title: "WBSで作業を分解する目的",
     category: "マネジメント",
     difficulty: "hard",
     question:
@@ -486,6 +516,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   // --------------------------------------------------------------------------
   {
     id: "ent-01",
+    title: "「バックアップがあるからBCPは不要」の誤り",
     category: "ストラテジ",
     difficulty: "normal",
     question:
@@ -501,6 +532,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ent-02",
+    title: "貸借対照表と損益計算書の違い",
     category: "ストラテジ",
     difficulty: "hard",
     question:
@@ -516,6 +548,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "biz-01",
+    title: "CRM・SCM・ERPがまとめて管理するもの",
     category: "ストラテジ",
     difficulty: "normal",
     question:
@@ -532,6 +565,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "biz-02",
+    title: "パレート図と特性要因図の使い分け",
     category: "ストラテジ",
     difficulty: "normal",
     question:
@@ -547,6 +581,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "law-01",
+    title: "派遣と請負で指示を出せる相手の違い",
     category: "法務",
     difficulty: "hard",
     question:
@@ -563,6 +598,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "law-02",
+    title: "著作権と特許権の違い",
     category: "法務",
     difficulty: "normal",
     question:
@@ -579,6 +615,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "law-03",
+    title: "個人情報を第三者に渡すときに必要なこと",
     category: "法務",
     difficulty: "hard",
     question:
@@ -595,6 +632,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ind-01",
+    title: "定量発注方式と定期発注方式の違い",
     category: "ストラテジ",
     difficulty: "normal",
     question:
@@ -610,6 +648,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "ind-02",
+    title: "EDIで企業間取引の何が変わるか",
     category: "ストラテジ",
     difficulty: "normal",
     question:
@@ -625,6 +664,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sst-01",
+    title: "RFI・RFPの順番と、価格だけで選ばない理由",
     category: "ストラテジ",
     difficulty: "normal",
     question:
@@ -640,6 +680,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sst-02",
+    title: "書類をPDF化するだけではDXと言いにくい理由",
     category: "ストラテジ",
     difficulty: "hard",
     question:
@@ -655,6 +696,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "dev-01",
+    title: "ウォータフォールとアジャイルの違い",
     category: "マネジメント",
     difficulty: "normal",
     question:
@@ -671,6 +713,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "dev-02",
+    title: "4段階のテストで確かめることと順番の理由",
     category: "マネジメント",
     difficulty: "hard",
     question:
@@ -688,6 +731,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "svc-01",
+    title: "SLAを数値で合意する目的",
     category: "マネジメント",
     difficulty: "normal",
     question:
@@ -703,6 +747,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "svc-02",
+    title: "インシデント管理と問題管理の違い",
     category: "マネジメント",
     difficulty: "hard",
     question:
@@ -719,6 +764,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "aud-01",
+    title: "システム監査人に独立性が必要な理由",
     category: "マネジメント",
     difficulty: "normal",
     question:
@@ -734,6 +780,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "aud-02",
+    title: "内部統制とシステム監査の関係",
     category: "マネジメント",
     difficulty: "hard",
     question:
@@ -749,6 +796,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sw-01",
+    title: "差分バックアップと増分バックアップの復旧手順",
     category: "ソフトウェア",
     difficulty: "hard",
     question:
@@ -765,6 +813,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "sw-02",
+    title: "SaaS・PaaS・IaaSで利用者が管理する範囲",
     category: "ソフトウェア",
     difficulty: "normal",
     question:
@@ -781,6 +830,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "dsg-01",
+    title: "UIとUXの違い",
     category: "情報デザイン・メディア",
     difficulty: "normal",
     question:
@@ -796,6 +846,7 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
   },
   {
     id: "dsg-02",
+    title: "可逆圧縮と非可逆圧縮の使い分け",
     category: "情報デザイン・メディア",
     difficulty: "normal",
     question:
@@ -808,6 +859,118 @@ const WRITTEN_QUESTIONS: WrittenQuestion[] = [
       "それぞれの用途と形式の例を、理由とともに挙げている",
     ],
     keywords: ["可逆圧縮", "非可逆圧縮", "復元", "ZIP", "JPEG", "MP3", "劣化"],
+  },
+  {
+    id: "ent-03",
+    title: "固定費が大きい会社ほど売上減に弱い理由",
+    category: "ストラテジ",
+    difficulty: "hard",
+    question:
+      "固定費が大きく変動費が小さい会社Aと、固定費が小さく変動費が大きい会社Bがあります。売上が大きく落ち込んだとき、赤字になりやすいのはどちらかを、固定費・変動費・損益分岐点の関係から説明してください。",
+    modelAnswer:
+      "赤字になりやすいのは会社Aです。固定費は売上が減っても同じ額がかかり続ける費用で、変動費は売上に比例して減る費用です。売上から変動費を引いた残り（限界利益）で固定費をまかなえた分だけ利益が出ますが、固定費が大きい会社Aは、まかなうべき額が大きいため損益分岐点の売上高が高くなりやすく、売上が落ちるとすぐに損益分岐点を下回って赤字になります。会社Bは売上が減ると変動費も一緒に減り、固定費も小さいので、売上が落ちても赤字になりにくいです。",
+    rubric: [
+      "固定費は売上が減っても減らない費用、変動費は売上に応じて減る費用だと区別している",
+      "固定費が大きいほど損益分岐点の売上高が高くなりやすいことを説明している",
+      "そのため売上が減ると損益分岐点を下回りやすい（赤字になりやすい）という因果を説明している",
+    ],
+    keywords: ["固定費", "変動費", "損益分岐点", "限界利益", "赤字"],
+  },
+  {
+    id: "str-02",
+    title: "PPMで金のなる木の資金を問題児に回す理由",
+    category: "ストラテジ",
+    difficulty: "hard",
+    question:
+      "PPMでは、「金のなる木」で得た資金を「問題児」に投資する考え方がよく取られます。なぜそうするのかを、市場成長率と市場占有率の2軸と、各事業の今後の見通しに触れて説明してください。",
+    modelAnswer:
+      "PPMは事業を市場成長率と市場占有率の2軸で分類します。金のなる木は市場成長率が低く占有率が高い事業で、市場が伸びないため大きな追加投資が要らず、高いシェアから安定した資金を生みます。問題児は市場成長率が高いのに占有率が低い事業で、シェアを取るために多くの投資が必要ですが、成功すれば花形になり、市場の成長が落ち着いた後には次の金のなる木になる可能性があります。今の稼ぎ頭である金のなる木もいずれ市場が縮むため、そこで得た資金を将来の柱になりうる問題児へ回し、会社全体として事業を入れ替えながら成長を続けるためです。",
+    rubric: [
+      "金のなる木＝低成長・高シェアで、投資があまり要らず資金を生むことを説明している",
+      "問題児＝高成長・低シェアで、シェア拡大に投資が必要だが将来の花形候補であることを説明している",
+      "今の資金源を将来の成長事業へ回し、事業の世代交代を図るという目的に触れている",
+    ],
+    keywords: ["PPM", "市場成長率", "市場占有率", "金のなる木", "問題児", "花形", "投資"],
+  },
+  {
+    id: "str-03",
+    title: "KGIとKPIの関係とKPIを置く理由",
+    category: "ストラテジ",
+    difficulty: "normal",
+    question:
+      "ある通販サイトが「年間売上を2億円にする」という目標を立てました。KGIとKPIはそれぞれ何にあたるかを例を挙げて説明し、KGIだけでなくKPIも設定する理由を述べてください。",
+    modelAnswer:
+      "KGI（重要目標達成指標）は最終的に達成したいゴールを測る指標で、この例では「年間売上2億円」がKGIです。KPI（重要業績評価指標）は、そのゴールに向かう途中の進み具合を測る中間指標で、例えば「月間の購入者数」「購入率（コンバージョン率）」「平均購入単価」などがあたります。KGIは年度末にならないと達成できたか分からないため、それだけでは途中で遅れに気づけません。KPIを決めて月ごとなどに測ることで、どこがうまくいっていないかを早く見つけ、手を打つことができます。",
+    rubric: [
+      "KGIを最終的なゴールの指標として、例の中から正しく挙げている",
+      "KPIをゴールに向かう途中経過を測る中間指標として、具体例を挙げている",
+      "KPIがあると途中で遅れや問題に気づき対策できる、という理由を説明している",
+    ],
+    keywords: ["KGI", "KPI", "最終目標", "中間指標", "進捗", "CSF"],
+  },
+  {
+    id: "pm-02",
+    title: "QCDの1つを動かすと他に影響する理由",
+    category: "マネジメント",
+    difficulty: "normal",
+    question:
+      "開発プロジェクトの途中で、顧客から「納期を1か月早めてほしい」と頼まれました。QCD（品質・コスト・納期）の関係に触れて、納期だけを変えることができない理由と、プロジェクトマネージャが検討すべきことを説明してください。",
+    modelAnswer:
+      "QCDの3つは互いに影響し合うため、1つだけを動かすことはできません。納期を1か月早めると、同じ作業量をより短い期間でこなす必要があります。そのためには要員を増やしたり残業したりしてコストを増やすか、テストなどを削って品質を下げるか、作る機能（範囲）を減らすかのいずれかが必要になります。プロジェクトマネージャは、納期短縮によってコストや品質、範囲がどう変わるかを見積もり、どれを優先するかを顧客と合意したうえで計画を変更するべきです。",
+    rubric: [
+      "品質・コスト・納期が互いに影響し合う（トレードオフ）ことを説明している",
+      "納期を縮めるとコスト増・品質低下・範囲縮小のいずれかが起こることを具体的に説明している",
+      "影響を見積もって優先順位を顧客と合意する、という対応に触れている",
+    ],
+    keywords: ["QCD", "品質", "コスト", "納期", "トレードオフ", "スコープ"],
+  },
+  {
+    id: "pm-03",
+    title: "リスク対応の回避・軽減・移転・受容の違い",
+    category: "マネジメント",
+    difficulty: "hard",
+    question:
+      "プロジェクトのリスク対応には「回避」「軽減」「移転」「受容」があります。それぞれどのような対応かを、具体例を挙げて説明してください。また、どの対応を選ぶかを何で判断するかにも触れてください。",
+    modelAnswer:
+      "回避は、リスクの原因そのものをなくす対応で、例えば実績のない新技術を使わず、慣れた技術で開発することです。軽減は、発生する確率や起きたときの影響を小さくする対応で、例えばテストを増やす、要員の予備を確保することです。移転は、リスクの影響を他者に移す対応で、例えば保険に入る、作業を専門業者に委託して損失の負担を移すことです。受容は、特に対策を取らずに起きたら対処すると決めて受け入れる対応で、影響が小さいリスクに使います。どれを選ぶかは、リスクの発生確率と影響度の大きさ、および対策にかかる費用とのバランスで判断します。",
+    rubric: [
+      "回避・軽減・移転・受容のそれぞれを区別して説明している",
+      "少なくとも2つ以上の対応に具体例を挙げている",
+      "発生確率と影響度（と対策費用）で対応を選ぶことに触れている",
+    ],
+    keywords: ["リスク", "回避", "軽減", "移転", "受容", "発生確率", "影響度"],
+  },
+  {
+    id: "alg-01",
+    title: "スタックとキューの違いと使いどころ",
+    category: "アルゴリズム",
+    difficulty: "normal",
+    question:
+      "スタックとキューの違いを、データを入れる順番と取り出す順番に触れて説明してください。また、それぞれが向いている具体的な処理の例を1つずつ挙げ、なぜその構造が向いているのかも述べてください。",
+    modelAnswer:
+      "スタックは、最後に入れたデータを最初に取り出すLIFO（後入れ先出し）の構造です。キューは、最初に入れたデータを最初に取り出すFIFO（先入れ先出し）の構造です。スタックは、ブラウザの「戻る」操作に向いています。直前に見たページから順にさかのぼりたいので、最後に入れたものを先に取り出す仕組みが合っています。キューは、プリンタの印刷待ちに向いています。先に依頼された印刷から順番に処理したいので、入れた順に取り出す仕組みが合っています。",
+    rubric: [
+      "スタックを後入れ先出し（LIFO）として説明している",
+      "キューを先入れ先出し（FIFO）として説明している",
+      "それぞれの具体例を挙げ、取り出し順が処理の目的に合っている理由を説明している",
+    ],
+    keywords: ["スタック", "キュー", "LIFO", "FIFO", "後入れ先出し", "先入れ先出し"],
+  },
+  {
+    id: "alg-02",
+    title: "コンパイラとインタプリタの違い",
+    category: "アルゴリズム",
+    difficulty: "hard",
+    question:
+      "プログラムを実行するための翻訳方式である「コンパイラ方式」と「インタプリタ方式」の違いを、翻訳するタイミングに触れて説明してください。また、それぞれの長所を1つずつ挙げてください。",
+    modelAnswer:
+      "コンパイラ方式は、実行する前にプログラム全体をまとめて機械語に翻訳しておき、その翻訳結果を実行する方式です。インタプリタ方式は、プログラムを1命令ずつ解釈・翻訳しながら、その場で実行していく方式です。コンパイラ方式は、実行時には翻訳が終わっているので実行速度が速いという長所があります。インタプリタ方式は、事前に全体を翻訳する必要がないため、書いたらすぐに動かして確かめやすいという長所があります。",
+    rubric: [
+      "コンパイラは実行前に全体をまとめて翻訳することを説明している",
+      "インタプリタは1命令ずつ翻訳しながら実行することを説明している",
+      "それぞれの長所（実行速度／すぐ試せる等）を挙げている",
+    ],
+    keywords: ["コンパイラ", "インタプリタ", "機械語", "翻訳", "実行速度"],
   },
 ];
 
@@ -844,9 +1007,16 @@ const TOPIC_WRITTEN_QUESTION_IDS: Record<string, string[]> = {
   "tech-data-utilization": ["ai-03", "ai-05"],
   "tech-algorithm-flowchart": ["ai-06"],
   "tech-reliability-availability": ["sys-01", "sys-02", "sys-03"],
+  "tech-data-structure": ["alg-01"],
+  "tech-programming-basics": ["alg-02"],
   "strat-swot": ["str-01"],
+  "strat-ppm": ["str-02"],
+  "strat-goal-evaluation": ["str-03"],
   "mgmt-wbs-gantt": ["pm-01"],
+  "mgmt-pm-qcd": ["pm-02"],
+  "mgmt-risk-management": ["pm-03"],
   "strat-bcp": ["ent-01"],
+  "strat-accounting-break-even": ["ent-03"],
   "strat-financial-statements": ["ent-02"],
   "strat-management-systems": ["biz-01"],
   "strat-decision-problem-solving": ["biz-02"],
@@ -873,4 +1043,11 @@ export function getWrittenQuestionsForTopic(topicId: string): WrittenQuestion[] 
   return questionIds
     .map((id) => getWrittenQuestion(id))
     .filter((question): question is WrittenQuestion => question !== undefined);
+}
+
+/** 記述問題が紐づくトピックIDを、対応表の並び順で返す（一覧の章・Topic表示に使う）。 */
+export function getTopicIdsForWrittenQuestion(questionId: string): string[] {
+  return Object.entries(TOPIC_WRITTEN_QUESTION_IDS)
+    .filter(([, questionIds]) => questionIds.includes(questionId))
+    .map(([topicId]) => topicId);
 }

@@ -6,7 +6,7 @@ import type { AppState, ChoiceKey } from "@/types";
 import type { ThemeExamQuestionView, ThemeExamResult } from "@/types/themeExam";
 import { gradeThemeExam, percentage, recordThemeExamLearningResult } from "@/lib/themeExam";
 import { getLessonHref } from "@/lib/learningCatalog";
-import { recordUnderstandingSignal, understandingLevelFor } from "@/lib/chapterReview";
+import { recordUnderstandingCheck, recordUnderstandingSignal, understandingLevelFor } from "@/lib/chapterReview";
 import {
   assessmentAnswerIdempotencyKey,
   completeAssessmentSessionForCurrentSession,
@@ -479,14 +479,22 @@ export default function ThemeExamRunner({
   // AI理解チェックの結果は補助シグナルとしてだけ残す（合否・Mastery・復習キューは触らない）。
   const recordUnderstanding = (pick: UnderstandingCheckPick, graded: GradeResult, checkedAt: string) => {
     if (!appState) return;
+    const level = understandingLevelFor(graded);
+    const withSignal = recordUnderstandingSignal(appState.progress, {
+      topicId: pick.topicId,
+      questionId: pick.question.id,
+      themeSlug,
+      level,
+      missingPoints: graded.missingPoints,
+      checkedAt,
+    });
     const next: AppState = {
       ...appState,
-      progress: recordUnderstandingSignal(appState.progress, {
-        topicId: pick.topicId,
+      progress: recordUnderstandingCheck(withSignal, {
         questionId: pick.question.id,
         themeSlug,
-        level: understandingLevelFor(graded),
-        missingPoints: graded.missingPoints,
+        topicId: pick.topicId,
+        level,
         checkedAt,
       }),
     };
@@ -692,7 +700,6 @@ export default function ThemeExamRunner({
 
         <UnderstandingCheck
           themeSlug={themeSlug}
-          examQuestions={result.questions}
           progress={appState?.progress}
           onGraded={recordUnderstanding}
         />

@@ -22,7 +22,9 @@ import type { UnderstandingLevel } from "@/types/chapterReview";
 // 総まとめ試験の直後に出す「AI理解チェック」（1問）。
 //
 // 総まとめ試験とは別の評価で、合否・章クリア・次の学習への進行には一切使わない。
-// 四択では正解できても説明しきれない箇所に、本人が気づくための補助。
+// 目的は誤答の復習ではなく、四択では正解できても自分の言葉では説明しきれない
+// 「分かったつもり」に本人が気づくこと。出題は章ごとの専用候補
+// （data/chapterUnderstandingChecks.ts）から選び、試験の正誤には依存させない。
 // そのため:
 //   - いつでもスキップできる（章の学習は止めない）
 //   - AIが使えないとき（未ログイン・上限・失敗）は、模範的な説明と見比べる自己確認に切り替える
@@ -30,8 +32,7 @@ import type { UnderstandingLevel } from "@/types/chapterReview";
 
 type Props = {
   themeSlug: string;
-  examQuestions: readonly { topicId: string; isCorrect: boolean }[];
-  /** 出題を選ぶための学習状態（採点確定後のもの）。 */
+  /** 出題を選ぶための学習状態（これまでのAI理解チェックの記録を見る）。 */
   progress: UserProgress | null | undefined;
   /** AIの採点が返ったときに呼ぶ。補助シグナルの記録は呼び出し側が行う。 */
   onGraded?: (pick: UnderstandingCheckPick, result: GradeResult, checkedAt: string) => void;
@@ -44,11 +45,10 @@ type Phase =
   | { kind: "unavailable"; reason: AiGradingFailure; message: string }
   | { kind: "skipped" };
 
-const REASON_LABEL: Record<UnderstandingCheckReason, (topic: string) => string> = {
-  exam_miss: (topic) => `総まとめ試験で間違えた「${topic}」から出題しています。`,
-  low_mastery: (topic) => `理解度がまだ低めの「${topic}」から出題しています。`,
-  explain_correct: (topic) => `四択で正解できた「${topic}」を、自分の言葉で説明できるか確かめます。`,
-  representative: (topic) => `この章の重要テーマ「${topic}」から出題しています。`,
+const REASON_LABEL: Record<UnderstandingCheckReason, string> = {
+  first_time: "この章で分かったつもりになりやすいところです。",
+  revisit: "前回「もう一段」だったところを、もう一度確かめます。",
+  refresh: "前に説明できたところを、時間をおいて確かめ直します。",
 };
 
 const LEVEL_STYLE: Record<UnderstandingLevel, { chip: string; icon: "circle-check" | "target" | "lightbulb" }> = {
@@ -57,9 +57,9 @@ const LEVEL_STYLE: Record<UnderstandingLevel, { chip: string; icon: "circle-chec
   review: { chip: "bg-accent-50 text-accent-700 ring-accent-200", icon: "lightbulb" },
 };
 
-export default function UnderstandingCheck({ themeSlug, examQuestions, progress, onGraded }: Props) {
+export default function UnderstandingCheck({ themeSlug, progress, onGraded }: Props) {
   // 出題はマウント時に1度だけ決める。採点後に学習状態が変わっても問題を差し替えない。
-  const [pick] = useState(() => pickUnderstandingCheck({ themeSlug, examQuestions, progress }));
+  const [pick] = useState(() => pickUnderstandingCheck({ themeSlug, progress }));
   const [answer, setAnswer] = useState("");
   const [phase, setPhase] = useState<Phase>({ kind: "answering" });
   const [inputError, setInputError] = useState<string | null>(null);
@@ -117,11 +117,15 @@ export default function UnderstandingCheck({ themeSlug, examQuestions, progress,
         AI理解チェック
       </h3>
       <p className="mt-1 text-xs leading-relaxed text-gray-500">
-        {REASON_LABEL[pick.reason](pick.topicTitle)}
-        総まとめ試験の合否には影響しません。
+        四択で解けても、自分の言葉で説明できるとは限りません。
+        {REASON_LABEL[pick.reason]}総まとめ試験の合否には影響しません。
+      </p>
+      <p className="mt-3 flex items-start gap-1.5 text-sm font-semibold text-brand-800">
+        <Icon name="target" className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+        <span>確かめること：{pick.focus}</span>
       </p>
 
-      <p className="mt-4 rounded-lg bg-gray-50 px-3 py-3 text-[15px] font-semibold leading-relaxed text-gray-900">
+      <p className="mt-3 rounded-lg bg-gray-50 px-3 py-3 text-[15px] font-semibold leading-relaxed text-gray-900">
         {pick.question.question}
       </p>
 

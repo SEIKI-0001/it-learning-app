@@ -6,11 +6,16 @@ import BottomNav from "@/components/BottomNav";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { buttonClass } from "@/components/ui/Button";
+import QuestionPicker, {
+  INITIAL_PICKER_FILTER,
+  type QuestionPickerFilter,
+} from "@/components/aiGrading/QuestionPicker";
+import { getWrittenQuestion, getWrittenQuestions } from "@/data/writtenQuestions";
 import {
-  getWrittenQuestion,
-  getWrittenQuestions,
-  getWrittenQuestionsForTopic,
-} from "@/data/writtenQuestions";
+  getAiGradingQuestionHref,
+  getWrittenQuestionEntries,
+  resolveRequestedQuestionId,
+} from "@/lib/writtenQuestionCatalog";
 import {
   fetchAiGradingBootstrap,
   getUserId,
@@ -31,10 +36,33 @@ import type {
 
 // AI採点ページ。記述問題に回答し、AIが採点・解説する。
 // 無料ユーザーは Gemini（通常採点）、Proユーザーは Claude Sonnet（Pro採点）。
-// 「答える」モードでは未回答の問題を優先して出題し、「復習」モードで回答済みを見直せる。
+// 「答える」モードでは、おまかせ（未回答を優先して巡回）か一覧から自分で選んで出題し、
+// 「復習」モードで回答済みを見直せる。
+// 特定の問題は /ai-grading?questionId=… で直接開ける（?topicId=… はそのトピックの問題）。
 // 体裁は共通の PageHeader（白背景＋下罫線）＋max-w-3xl＋BottomNav に合わせる。
 
 const QUESTIONS = getWrittenQuestions();
+const PLACEMENTS = new Map(getWrittenQuestionEntries().map((e) => [e.question.id, e.placements[0]]));
+
+// URL の ?questionId= / ?topicId= を読む（Today・一覧・今後の学習導線で共通）。
+function readRequestedQuestion(): { questionId: string | null; topicId: string | null } {
+  if (typeof window === "undefined") return { questionId: null, topicId: null };
+  const params = new URLSearchParams(window.location.search);
+  return { questionId: params.get("questionId"), topicId: params.get("topicId") };
+}
+
+function indexOfQuestion(questionId: string | undefined): number {
+  return questionId ? QUESTIONS.findIndex((q) => q.id === questionId) : -1;
+}
+
+// 表示中の問題を URL に反映する（再読み込み・共有で同じ問題が開く）。
+function syncQuestionUrl(questionId: string) {
+  if (typeof window === "undefined") return;
+  const href = getAiGradingQuestionHref(questionId);
+  if (`${window.location.pathname}${window.location.search}` !== href) {
+    window.history.replaceState(window.history.state, "", href);
+  }
+}
 
 // 難易度バッジの色。
 const DIFFICULTY_META: Record<string, { label: string; badge: string }> = {
@@ -148,6 +176,9 @@ export default function AiGradingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  // 問題一覧（自分で選ぶ）の開閉と絞り込み。閉じても絞り込みは覚えておく。
+  const [picking, setPicking] = useState(false);
+  const [pickerFilter, setPickerFilter] = useState<QuestionPickerFilter>(INITIAL_PICKER_FILTER);
 
   const [userId, setUid] = useState<string | null>(null);
   const [status, setStatus] = useState<BillingStatus | null>(null);
@@ -160,6 +191,7 @@ export default function AiGradingPage() {
   const touchedRef = useRef(false);
 
   const question = QUESTIONS[index];
+  const placement = PLACEMENTS.get(question.id);
   const diff = DIFFICULTY_META[question.difficulty] ?? DIFFICULTY_META.normal;
   const canGrade = useMemo(
     () => answer.trim().length >= AI_GRADING_MIN_ANSWER_LENGTH,
@@ -174,6 +206,12 @@ export default function AiGradingPage() {
   const allAnswered =
     answeredIds.size > 0 && answeredIds.size >= QUESTIONS.length;
   const isCurrentAnswered = answeredIds.has(question.id);
+  // 問題ごとの最新グレード（records は新しい順）。
+  const latestGrades = useMemo(() => {
+    const grades = new Map<string, WrittenGrade>();
+    for (const r of records) if (!grades.has(r.questionId)) grades.set(r.questionId, r.result.grade);
+    return grades;
+  }, [records]);
 
   // プラン・利用状況を読み込む。
   const loadStatus = useCallback(async (uid: string | null) => {
@@ -187,16 +225,12 @@ export default function AiGradingPage() {
     let cancelled = false;
     (async () => {
       setInitializing(true);
-      const requestedTopicId =
-        typeof window === "undefined"
-          ? null
-          : new URLSearchParams(window.location.search).get("topicId");
-      const requestedQuestionId = requestedTopicId
-        ? getWrittenQuestionsForTopic(requestedTopicId)[0]?.id
-        : undefined;
-      const requestedIndex = requestedQuestionId
-        ? QUESTIONS.findIndex((q) => q.id === requestedQuestionId)
-        : -1;
+      const requested = readRequestedQuestion();
+      // ?topicId= はトピック内の未回答を優先するため、履歴が分かってから解決する。
+      const requestedIndex = (history: GradingRecord[]) =>
+        indexOfQuestion(
+          resolveRequestedQuestionId(requested, new Set(history.map((r) => r.questionId))),
+        );
       let uid = getUserId();
       const token = readTokenFromUrl();
       if (!uid && token) {
@@ -213,9 +247,10 @@ export default function AiGradingPage() {
         setUid(cached.userId ?? uid);
         setStatus(cached.billingStatus);
         setRecords(cached.gradingHistory);
+        const fromUrl = requestedIndex(cached.gradingHistory);
         setIndex(
-          requestedIndex >= 0
-            ? requestedIndex
+          fromUrl >= 0
+            ? fromUrl
             : normalizeQuestionIndex(cached.initialQuestionIndex),
         );
         setInitializing(false);
@@ -231,9 +266,10 @@ export default function AiGradingPage() {
         // （採点直後のローカル追記や選び直した問題を巻き戻さない）。
         if (!touchedRef.current) {
           setRecords(bootstrap.gradingHistory);
+          const fromUrl = requestedIndex(bootstrap.gradingHistory);
           setIndex(
-            requestedIndex >= 0
-              ? requestedIndex
+            fromUrl >= 0
+              ? fromUrl
               : normalizeQuestionIndex(bootstrap.initialQuestionIndex),
           );
         }
@@ -248,9 +284,10 @@ export default function AiGradingPage() {
         if (nextRecords && !touchedRef.current) {
           setRecords(nextRecords);
           const answered = new Set(nextRecords.map((r) => r.questionId));
+          const fromUrl = requestedIndex(nextRecords);
           setIndex(
-            requestedIndex >= 0
-              ? requestedIndex
+            fromUrl >= 0
+              ? fromUrl
               : firstUnansweredIndex(answered),
           );
         }
@@ -262,14 +299,28 @@ export default function AiGradingPage() {
     };
   }, []);
 
-  // 次の問題へ（未回答を優先して巡回）。入力・結果はリセットする。
-  function handleNext() {
+  // 出題を切り替える。入力・結果はリセットし、URL も表示中の問題に合わせる。
+  function showQuestion(nextIndex: number) {
     touchedRef.current = true;
-    setIndex((prev) => pickNextIndex(prev, answeredIds));
+    setIndex(nextIndex);
+    setPicking(false);
     setAnswer("");
     setResult(null);
     setMeta(null);
     setError(null);
+    syncQuestionUrl(QUESTIONS[nextIndex].id);
+  }
+
+  // おまかせで1問（未回答を優先して巡回）。
+  function handleNext() {
+    showQuestion(pickNextIndex(index, answeredIds));
+  }
+
+  // 一覧から選んだ問題を開く。
+  function handleSelect(questionId: string) {
+    const i = indexOfQuestion(questionId);
+    if (i >= 0) showQuestion(i);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function handleGrade() {
@@ -359,9 +410,32 @@ export default function AiGradingPage() {
 
             {mode === "answer" ? (
               <>
+                {/* 出題の選び方：おまかせ／一覧から選ぶ */}
+                <QuestionSourceBar
+                  picking={picking}
+                  disabled={loading}
+                  onRandom={handleNext}
+                  onTogglePicker={() => {
+                    touchedRef.current = true;
+                    setPicking((v) => !v);
+                  }}
+                />
+
+                {picking ? (
+                  <QuestionPicker
+                    filter={pickerFilter}
+                    onFilterChange={setPickerFilter}
+                    answeredIds={answeredIds}
+                    latestGrades={latestGrades}
+                    currentQuestionId={question.id}
+                    onSelect={handleSelect}
+                    onClose={() => setPicking(false)}
+                  />
+                ) : (
+                  <>
                 {/* 問題カード */}
                 <section className="rounded-xl border border-gray-200 bg-white p-4">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-brand-100 px-2.5 py-1 text-[11px] font-bold text-brand-700">
                       {question.category}
                     </span>
@@ -383,7 +457,15 @@ export default function AiGradingPage() {
                       回答済み {answeredIds.size} / {QUESTIONS.length} 問
                     </span>
                   </div>
-                  <p className="mt-3 text-[15px] font-bold leading-relaxed text-gray-800">
+                  <h2 className="mt-3 text-base font-bold leading-snug text-gray-900">
+                    {question.title}
+                  </h2>
+                  {placement && (
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      第{placement.chapterNumber}章 {placement.themeTitle}・{placement.topicTitle}
+                    </p>
+                  )}
+                  <p className="mt-3 rounded-lg bg-gray-50 px-3 py-3 text-[15px] font-semibold leading-relaxed text-gray-800">
                     {question.question}
                   </p>
                   {allAnswered && (
@@ -418,28 +500,18 @@ export default function AiGradingPage() {
                 </section>
 
                 {/* ボタン */}
-                <div className="flex gap-2.5">
-                  <button
-                    type="button"
-                    onClick={handleGrade}
-                    disabled={!canGrade || loading}
-                    className={buttonClass("primary", "lg", "flex-1 disabled:bg-gray-300 disabled:text-gray-500")}
-                  >
-                    {loading
-                      ? "採点中…"
-                      : isPro
-                        ? "Claude Sonnetで採点する"
-                        : "採点する"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNext}
-                    disabled={loading}
-                    className={buttonClass("secondary", "lg")}
-                  >
-                    別の問題
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleGrade}
+                  disabled={!canGrade || loading}
+                  className={buttonClass("primary", "lg", "w-full disabled:bg-gray-300 disabled:text-gray-500")}
+                >
+                  {loading
+                    ? "採点中…"
+                    : isPro
+                      ? "Claude Sonnetで採点する"
+                      : "採点する"}
+                </button>
 
                 {/* エラー表示 */}
                 {error && (
@@ -449,10 +521,34 @@ export default function AiGradingPage() {
                 )}
 
                 {/* 採点結果 */}
-                {result && <ResultView result={result} meta={meta} />}
+                {result && (
+                  <>
+                    <ResultView result={result} meta={meta} />
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-500">次の問題</p>
+                      <QuestionSourceBar
+                        picking={false}
+                        disabled={loading}
+                        onRandom={handleNext}
+                        onTogglePicker={() => {
+                          setPicking(true);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+                  </>
+                )}
               </>
             ) : (
-              <ReviewList records={records} />
+              <ReviewList
+                records={records}
+                onRetry={(questionId) => {
+                  setMode("answer");
+                  handleSelect(questionId);
+                }}
+              />
             )}
           </>
         )}
@@ -463,7 +559,43 @@ export default function AiGradingPage() {
   );
 }
 
-/** 答える / 復習 の切り替えタブ。 */
+/** 出題の選び方（おまかせで1問／一覧から選ぶ）。 */
+function QuestionSourceBar({
+  picking,
+  disabled,
+  onRandom,
+  onTogglePicker,
+}: {
+  picking: boolean;
+  disabled: boolean;
+  onRandom: () => void;
+  onTogglePicker: () => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        type="button"
+        onClick={onRandom}
+        disabled={disabled}
+        className={buttonClass("secondary", "md")}
+      >
+        <Icon name="rotate" className="h-4 w-4" />
+        おまかせで1問
+      </button>
+      <button
+        type="button"
+        onClick={onTogglePicker}
+        disabled={disabled}
+        aria-expanded={picking}
+        className={buttonClass(picking ? "soft" : "secondary", "md")}
+      >
+        <Icon name="list" className="h-4 w-4" />
+        一覧から選ぶ
+      </button>
+    </div>
+  );
+}
+
 function AiGradingInitialSkeleton() {
   return (
     <div className="space-y-5">
@@ -495,6 +627,7 @@ function SkeletonCard({ label, lines }: { label: string; lines: number }) {
   );
 }
 
+/** 答える / 復習 の切り替えタブ。 */
 function ModeTabs({
   mode,
   reviewCount,
@@ -535,7 +668,13 @@ function ModeTabs({
 }
 
 /** 回答済みの記録一覧（タップで採点結果の詳細を開閉）。 */
-function ReviewList({ records }: { records: GradingRecord[] }) {
+function ReviewList({
+  records,
+  onRetry,
+}: {
+  records: GradingRecord[];
+  onRetry: (questionId: string) => void;
+}) {
   const [openId, setOpenId] = useState<string | null>(null);
 
   if (records.length === 0) {
@@ -587,7 +726,7 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
                   </span>
                 </div>
                 <p className="mt-1 truncate text-sm font-bold text-gray-800">
-                  {q?.question ?? rec.questionId}
+                  {q?.title ?? rec.questionId}
                 </p>
               </div>
               <Icon
@@ -614,6 +753,16 @@ function ReviewList({ records }: { records: GradingRecord[] }) {
                     fallback: false,
                   }}
                 />
+                {q && (
+                  <button
+                    type="button"
+                    onClick={() => onRetry(rec.questionId)}
+                    className={buttonClass("secondary", "md", "w-full")}
+                  >
+                    <Icon name="pen" className="h-4 w-4" />
+                    この問題をもう一度解く
+                  </button>
+                )}
               </div>
             )}
           </div>
