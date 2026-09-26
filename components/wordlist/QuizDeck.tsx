@@ -3,9 +3,12 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import type { ChoiceKey } from "@/types";
+import type { WordlistEntry } from "@/types/wordlist";
 import {
+  buildQuizForEntry,
   buildQuizSession,
   getAllWords,
+  getWord,
   type QuizQuestion,
 } from "@/lib/wordlist";
 import {
@@ -25,8 +28,13 @@ import { buttonClass } from "@/components/ui/Button";
 // 正誤を localStorage(lib/wordlistProgress)に記録し、解説には oneLine/examKeywords/
 // differenceAxis/trapExplanations を使う（生成は lib/wordlist 側）。
 // 出題はクライアントでマウント後に生成する（SSR不整合を避ける）。
+//
+// all / weak / today は単語帳からの自由学習（1セッション SESSION_SIZE 問）。
+// task は Today の単語タスク: 指定された ids だけを1語1問で出す（再抽選しない・件数は ids の数）。
+// 最後の問題まで答えた時点で Today のタスクを完了にする（正答率は問わない。誤答は weak になり
+// 次回の復習対象になる）。今日のミッションへは正解した語数だけを渡す。
 
-export type QuizMode = "all" | "weak" | "today";
+export type QuizMode = "all" | "weak" | "today" | "task";
 
 const SESSION_SIZE = 8;
 
@@ -41,6 +49,7 @@ const EMPTY_HINT: Record<QuizMode, string> = {
   today: "今日の復習対象はありません。「すべてから学習」で単語を増やしましょう。",
   weak: "苦手な単語はまだありません。",
   all: "単語がありません。",
+  task: "指定された用語が見つかりませんでした。単語帳トップから学習できます。",
 };
 
 function buildPool() {
@@ -54,7 +63,28 @@ function buildPool() {
   };
 }
 
-export default function QuizDeck({ mode }: { mode: QuizMode }) {
+/** task モード: 指定された単語だけを、1語1問・順番だけシャッフルして出す。 */
+function buildTaskQuestions(ids: string[]): QuizQuestion[] {
+  const entries = [...new Set(ids)]
+    .map((id) => getWord(id))
+    .filter((e): e is WordlistEntry => Boolean(e));
+  return shuffle(entries).map((entry) => buildQuizForEntry(entry));
+}
+
+export default function QuizDeck({
+  mode,
+  ids = [],
+  todayTaskId = null,
+  topicId = null,
+}: {
+  mode: QuizMode;
+  /** mode="task" のときに出す単語（Today のタスクに固定された wordIds）。 */
+  ids?: string[];
+  /** Today のタスクから来たときのタスク id。最後まで答えたら Today 側で「済み」になる。 */
+  todayTaskId?: string | null;
+  /** 関連語の元になったトピック（確認パックへの導線に使う）。 */
+  topicId?: string | null;
+}) {
   const [mounted, setMounted] = useState(false);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [index, setIndex] = useState(0);
@@ -63,6 +93,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
   const [results, setResults] = useState<Record<string, boolean>>({});
 
   function buildQuestions(): QuizQuestion[] {
+    if (mode === "task") return buildTaskQuestions(ids);
     const { all, weakSet, dueSet } = buildPool();
     let pool;
     if (mode === "weak") {
@@ -99,6 +130,7 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
   }, []);
 
   // セッションを終えたら1回だけ、正解した語数を今日のミッションへ反映する。
+  // Today のタスクは、全問に答えた時点で（正答率に関係なく）完了にする。
   const completedSessionRef = useRef<QuizQuestion[] | null>(null);
   const sessionDone = mounted && questions.length > 0 && index >= questions.length;
   useEffect(() => {
@@ -106,9 +138,9 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
     completedSessionRef.current = questions;
     completeWordStudySession({
       cleared: Object.values(results).filter(Boolean).length,
-      todayTaskId: null,
+      todayTaskId: mode === "task" ? todayTaskId : null,
     });
-  }, [questions, results, sessionDone]);
+  }, [mode, questions, results, sessionDone, todayTaskId]);
 
   function restart() {
     setQuestions(buildQuestions());
@@ -155,6 +187,46 @@ export default function QuizDeck({ mode }: { mode: QuizMode }) {
 
   if (done) {
     const correct = Object.values(results).filter(Boolean).length;
+    const missed = total - correct;
+    if (mode === "task") {
+      return (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
+          <Icon name="circle-check" className="mx-auto h-6 w-6 text-emerald-600" />
+          <p className="mt-2 text-base font-semibold text-gray-900">
+            {total}問 おつかれさま
+          </p>
+          <p className="mt-3 text-3xl font-semibold tabular-nums text-gray-900">
+            {correct}
+            <span className="ml-0.5 text-base font-normal text-gray-500">
+              {" "}/ {total} 正解
+            </span>
+          </p>
+          {missed > 0 && (
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              間違えた{missed}語は苦手な用語として、次回の復習に出ます。
+            </p>
+          )}
+          <div className="mt-6 space-y-2.5">
+            {todayTaskId && (
+              <Link href="/today" className={buttonClass("primary", "md", "w-full")}>
+                今日の学習に戻る
+              </Link>
+            )}
+            {topicId && (
+              <Link
+                href={`/check-pack/${encodeURIComponent(topicId)}`}
+                className={buttonClass("secondary", "md", "w-full")}
+              >
+                確認パックで仕上がりを確かめる
+              </Link>
+            )}
+            <Link href="/glossary" className={buttonClass("secondary", "md", "w-full")}>
+              単語帳トップへ
+            </Link>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="rounded-xl border border-gray-200 bg-white p-6 text-center">
         <Icon name="circle-check" className="mx-auto h-6 w-6 text-emerald-600" />

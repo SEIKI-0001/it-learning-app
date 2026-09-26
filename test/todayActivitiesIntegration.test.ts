@@ -166,8 +166,8 @@ describe("Today Primary との関係", () => {
     const s = state("cp3");
     const vocab: TodayActivity = {
       id: "act:vocab", kind: "vocab", title: "今日の単語復習", detail: "DNS", countLabel: "期限が来た1語",
-      estimatedMinutes: 2, priority: 250, reason: "期限", href: "/glossary/study?mode=task&ids=dns",
-      ctaLabel: "用語を確認する", primaryEligible: false,
+      estimatedMinutes: 1, priority: 250, reason: "期限", href: "/glossary/quiz?mode=task&ids=dns",
+      ctaLabel: "4択で復習する", primaryEligible: false,
       spec: { kind: "vocab", variant: "review", wordIds: ["dns"], dueCount: 1 },
     };
     const topic = getTopic(NETWORK)!;
@@ -184,7 +184,7 @@ describe("Today Primary との関係", () => {
     expect(only[0].state).toBe("current");
   });
 
-  it("terms_stabilizing の関連語は「○○の関連用語を固める」として Primary になれる", () => {
+  it("terms_stabilizing の関連語は「○○の関連用語を4択で確認」として Primary になれる", () => {
     const s = state("cp3");
     const { active } = activitiesFor(s, { stages: { [NETWORK]: "terms_stabilizing" }, upcoming: [] });
     const vocab = active.find((a) => a.kind === "vocab")!;
@@ -193,7 +193,7 @@ describe("Today Primary との関係", () => {
     const primary = buildTodayPrimaryAction({ state: s, nodes, gate: gateFor(s), queue: [], reviewItems: [] });
     expect(primary).toMatchObject({
       kind: "vocab",
-      title: `${getTopic(NETWORK)!.title}の関連用語を固める`,
+      title: `${getTopic(NETWORK)!.title}の関連用語を4択で確認`,
       href: vocab.href,
     });
   });

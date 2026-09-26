@@ -27,7 +27,7 @@ const FALLBACK_REASON: Record<TodayPrimaryKind, string> = {
   review: "復習予定日です。",
   weak: "理解度が低い重要Topic",
   new_topic: "次の新規Topic",
-  vocab: "関連用語を固めます",
+  vocab: "関連用語を4択で確認します",
   past_exam: "公式過去問で実戦力をつけます",
 };
 

@@ -33,7 +33,7 @@ export type DailyQuestEvent = {
   isReview: boolean;
   /** 今回の回答での最長連続正解。 */
   maxCombo: number;
-  /** 単語帳で「覚えた」「正解」になった語数（kind: "words" のときだけ）。 */
+  /** 単語帳で「覚えた」「正解」になった語数（kind: "words" のときだけ）。Today の4択では正解数。 */
   wordsCleared?: number;
   /** Today の用語タスクとして学んだセッションか（用語ミッションはこれだけを数える）。 */
   fromTodayTask?: boolean;
@@ -111,12 +111,13 @@ export const QUEST_DEFS: DailyQuestDef[] = [
     gain: (e) => (isAnswerEvent(e) ? e.correct : 0),
   },
   {
-    // 開くだけでは進まない。単語帳で「覚えた」を付けた語・4択で正解した語だけを数える。
+    // 開くだけでは進まない。Today の用語タスク（4択）で正解した語だけを数える
+    // （20問解いて14問正解なら14語。回答数ではなく正解数）。
     // 今日の Today に用語タスクがある日だけ出す（Today で既に求めている単語学習で進む）。
     // 目標は最大3語。今日の用語タスクがそれより少なければ、その語数（Today の分だけで達成できる）。
     id: "words_today",
     emoji: "🔤",
-    label: "今日の用語をクリアする（覚えた・正解）",
+    label: "今日の用語を4択で正解する",
     goal: 3,
     todayActivity: "vocab",
     goalFor: (context) => Math.max(1, Math.min(3, context.todayVocabWordCount ?? 3)),
