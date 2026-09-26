@@ -25,6 +25,8 @@ import {
   type RemoteActivityState,
 } from "@/lib/todayActivities";
 import { buildVocabActivity } from "@/lib/todayVocab";
+import { getAllWords } from "@/lib/wordlist";
+import type { WordProgressMap } from "@/lib/wordProgressModel";
 import { buildKakomonActivities, kakomonActivityFromSpec } from "@/lib/todayKakomon";
 import { activityRowInput } from "@/lib/todayActivitySync";
 import { getAllTopics } from "@/lib/content";
@@ -173,9 +175,54 @@ describe("POST /api/daily-tasks/activities（別端末相当）", () => {
     expect(db.rows.map((r) => [r.activity_key, r.task_type, r.status, r.completion_source]).sort()).toEqual([
       ["act:past-exam", "past_exam_drill", "pending", "self_report"],
       ["act:past-exam-retry", "past_exam_retry", "pending", "self_report"],
-      ["act:vocab", "flashcard", "pending", "self_report"],
+      ["act:vocab", "vocab_quiz", "pending", "self_report"],
     ]);
     expect(db.rows.find((r) => r.activity_key === "act:vocab")?.topic_id).toBe("tech-raid");
+  });
+
+  it("以前 flashcard で保存した Today の単語タスクも、そのまま読めて完了できる（変換不要）", async () => {
+    const v = vocab();
+    db.rows.push({
+      user_id: USER, date: DATE, task_type: "flashcard", topic_id: "tech-raid", title: "旧タスク",
+      status: "pending", completion_source: "self_report",
+      activity_key: "act:vocab", activity_payload: toActivityPayload(v.spec),
+    });
+    const listed = (await call({ action: "list" })).json.activities as RemoteActivityState[];
+    expect(listed).toEqual([{ key: "act:vocab", payload: v.spec, done: false }]);
+    // 復元したタスクは4択へ遷移する
+    expect(activityFromSpec(listed[0].payload)!.href).toMatch(/^\/glossary\/quiz\?mode=task&/);
+
+    await call({ action: "complete", key: "act:vocab", activity: activityRowInput(v) });
+    expect(db.rows).toHaveLength(1);
+    expect(db.rows[0]).toMatchObject({ task_type: "flashcard", status: "completed", completion_source: "app_actual" });
+  });
+
+  it("20語の単語タスクも、別端末で同じ word IDs・同じ4択リンクで復元できる", async () => {
+    const words: WordProgressMap = {};
+    for (const id of getAllWords().slice(0, 25).map((w) => w.id)) {
+      words[id] = {
+        acronymId: id, status: "weak", correctCount: 0, wrongCount: 1, reviewCount: 1,
+        lastReviewedAt: now.getTime(), nextReviewAt: now.getTime() + 86_400_000, lastSelfRating: null,
+      };
+    }
+    const first = buildVocabActivity({
+      checkpointOrder: 4, wordProgress: words, topicStages: {}, upcomingTopicIds: [], now,
+    })!;
+    expect(first.spec.kind === "vocab" && first.spec.wordIds).toHaveLength(20);
+    await call({ action: "offer", activities: [activityRowInput(first)] });
+
+    // 別端末: 端末キャッシュは空・単語の進捗も違う（生成すれば別の語になる）が、保存済みの語で出す
+    const remote = (await call({ action: "list" })).json.activities as RemoteActivityState[];
+    const merged = mergeActivityLogs({ offered: {}, done: {} }, remote);
+    const s = cp5State();
+    const { active } = buildTodayActivities({
+      state: { ...s, progress: { ...s.progress, checkpointProgress: { ...INITIAL_CHECKPOINT_PROGRESS, currentCheckpointId: "cp4" } } },
+      topics, now, budgetMinutes: 30, wordProgress: {}, topicStages: {}, upcomingTopicIds: [], log: merged,
+    });
+    const restored = active.find((a) => a.id === "act:vocab")!;
+    expect(restored.spec).toEqual(first.spec);
+    expect(restored.href).toBe(first.href);
+    expect(restored.estimatedMinutes).toBe(5);
   });
 
   it("完了で completed / app_actual になり、別端末の取得では完了済み（再表示しない）", async () => {

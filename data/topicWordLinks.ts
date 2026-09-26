@@ -1,7 +1,7 @@
 // トピック ↔ 関連単語（英略語単語帳）の対応。Single Source of Truth。
 //
 // 「確認パックがあるから単語がある」のではなく、トピック・関連単語・確認パックは別の概念。
-//   - Today の「関連用語を固める／確認する」（lib/todayVocab）
+//   - Today の「関連用語を4択で確認」（lib/todayVocab）
 //   - 確認パックの用語ステップ（data/topicCheckPacks の flashcardIds）
 // はどちらもこの表を参照する。確認パックの無いトピックでも、ここに書けば Today に出る。
 //

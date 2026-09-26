@@ -1,9 +1,10 @@
 "use client";
 
 // 単語帳の1セッションを終えたときの後処理（カード学習・4択の共通）。
-//   - Today から来たタスクなら、今日のタスクを「済み」にする（lib/todayActivityLog）
+//   - Today から来たタスク（4択の task モード）なら、今日のタスクを「済み」にする
+//     （lib/todayActivityLog）。全問に答えた時点で呼ぶので、正答率は問わない。
 //   - 「覚えた」「正解」になった語数を今日のミッションへ反映する（開くだけでは進まない）。
-//     用語ミッションは Today の用語タスクとして学んだ分だけを数える。
+//     用語ミッションは Today の用語タスクとして正解した分だけを数える（回答数ではない）。
 // 単語ごとの進捗（lib/wordlistProgress）は回答のたびに記録済みなので、ここでは触らない。
 
 import { applyDailyQuestProgress } from "@/lib/dailyQuests";
@@ -15,7 +16,7 @@ import { ACTIVITY_KEYS } from "@/lib/todayActivitySpec";
 const VOCAB_TASK_ID: string = ACTIVITY_KEYS.vocab;
 
 export function completeWordStudySession(params: {
-  /** 「覚えた」「正解」になった語数。 */
+  /** 「覚えた」「正解」になった語数（Today の4択では正解数）。 */
   cleared: number;
   /** Today のタスク id（Today から来ていなければ null）。 */
   todayTaskId: string | null;

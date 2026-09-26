@@ -14,12 +14,16 @@ export const ACTIVITY_PAYLOAD_VERSION = 1;
 
 export type VocabSpec = {
   kind: "vocab";
-  /** stabilizing=用語定着待ち / review=期限・苦手 / related=今日のトピックの未学習語 */
+  /**
+   * stabilizing=用語定着待ち（topicId の関連語を先頭に、余った枠を期限・苦手・今日の関連語で埋める）
+   * review=期限・苦手 / related=今日のトピック（複数可）の未学習語
+   */
   variant: "stabilizing" | "review" | "related";
+  /** 4択で出題する単語（1語1問・この順で固定。最大 lib/todayVocab の TODAY_VOCAB_MAX_WORDS）。 */
   wordIds: string[];
   /** review のうち期限が来ている語数（残りは苦手語）。 */
   dueCount?: number;
-  /** stabilizing / related の元トピック。 */
+  /** stabilizing の対象トピック / related の最初のトピック（Today でこの後に並べる）。 */
   topicId?: string;
   /** CP5 以降の復習語（優先度が変わる）。 */
   late?: boolean;
@@ -71,15 +75,22 @@ export function isActivityKey(value: unknown): value is TodayActivityKey {
   return ALL_ACTIVITY_KEYS.includes(value as TodayActivityKey);
 }
 
-/** daily_study_tasks.task_type（vocab は既存の flashcard を再利用する）。 */
+/**
+ * daily_study_tasks.task_type。
+ * Today の単語タスクは4択（/glossary/quiz?mode=task）なので vocab_quiz。
+ * 以前は flashcard で保存していた。task_type に CHECK 制約は無く、Today のタスクは
+ * activity_key で引くので、既存の flashcard 行は変換しなくてもそのまま読める・完了できる。
+ */
 export const ACTIVITY_TASK_TYPES = {
-  vocab: "flashcard",
+  vocab: "vocab_quiz",
   past_exam_drill: "past_exam_drill",
   past_exam_retry: "past_exam_retry",
   past_exam_mock: "past_exam_mock",
 } as const satisfies Record<TodayActivityKind, string>;
 
-const MAX_IDS = 30;
+/** 1件の spec に持てる ID の上限（Today の単語タスクは20語まで出すので余裕を持たせてある）。 */
+export const MAX_ACTIVITY_IDS = 30;
+const MAX_IDS = MAX_ACTIVITY_IDS;
 const ID = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
 const FIELDS: readonly TopicField[] = ["strategy", "management", "technology"];
 

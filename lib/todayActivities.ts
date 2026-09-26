@@ -66,13 +66,16 @@ export function buildTodayActivities(input: TodayActivitiesInput): TodayActiviti
     }),
   );
 
-  // その日に一度出した（サーバまたは端末に記録がある）未完了タスクは、その中身のまま出す。
+  // その日に一度出した（サーバまたは端末に記録がある）未完了タスクは、その中身（spec）のまま出す。
   // 再計算で対象が変わっても入れ替えない（Today はその日の学習計画として固定）。
-  const offered = Object.values(log.offered).filter((activity) => !log.done[activity.id]);
+  // 表示文言・リンクは spec から組み立て直す（端末に古い文言・リンクが残っていても最新にする）。
+  const offered = Object.values(log.offered)
+    .filter((activity) => !log.done[activity.id])
+    .map((activity) => activityFromSpec(activity.spec) ?? activity);
   const fresh = generated.filter((activity) => !log.done[activity.id] && !log.offered[activity.id]);
   return {
     active: [...offered, ...fresh],
-    done: Object.values(log.done),
+    done: Object.values(log.done).map((activity) => activityFromSpec(activity.spec) ?? activity),
     pinned: offered,
   };
 }

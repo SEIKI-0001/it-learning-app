@@ -17,7 +17,9 @@ export type DailyTaskType =
   | "flashcard"
   | "exam_level"
   | "review"
-  // Today のトピック以外のタスク（関連用語は flashcard を使う）
+  // Today のトピック以外のタスク。関連用語は4択の vocab_quiz
+  // （2026-09-26 以前に保存した Today の単語タスクは flashcard のまま残っている）
+  | "vocab_quiz"
   | "past_exam_drill"
   | "past_exam_retry"
   | "past_exam_mock";

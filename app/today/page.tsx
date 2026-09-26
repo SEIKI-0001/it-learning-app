@@ -90,7 +90,7 @@ export default function TodayPage() {
   }, []);
 
   // 単語帳の進捗（端末＋DB同期）と、確認パックのトピック別ステージ。
-  // どちらも Today の「関連用語を固める」タスクを決める材料で、取れなければ出さないだけ。
+  // どちらも Today の「関連用語を4択で確認」タスクを決める材料で、取れなければ出さないだけ。
   const [wordProgress, setWordProgress] = useState(() => getWordProgressMap());
   const [topicStages, setTopicStages] = useState(() => loadCachedTopicStages());
   useEffect(() => {
