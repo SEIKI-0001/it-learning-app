@@ -44,18 +44,18 @@
 /* 棒グラフ ⇄ 積み上げチップの変形（代表値）。位置と大きさをまとめて動かす */
 .morph {
   transition:
-    left 800ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    left 1200ms cubic-bezier(0.45, 0.05, 0.25, 1),
     bottom 1200ms cubic-bezier(0.45, 0.05, 0.25, 1),
     width 1200ms cubic-bezier(0.45, 0.05, 0.25, 1),
     height 1200ms cubic-bezier(0.45, 0.05, 0.25, 1),
     border-radius 1200ms ease,
-    background-color 400ms ease;
+    background-color 600ms ease;
 }
 
 /* SVG の線・点の移動（平均線・経路の色） */
 .svgMove {
   transition:
-    transform 800ms cubic-bezier(0.45, 0.05, 0.25, 1),
+    transform 1200ms cubic-bezier(0.45, 0.05, 0.25, 1),
     stroke 600ms ease,
     stroke-width 600ms ease,
     opacity 600ms ease;
