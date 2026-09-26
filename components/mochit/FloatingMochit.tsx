@@ -52,6 +52,11 @@ import { activityAllowsSleep, activityForFocusPhase } from "./mochitActivity";
 import { FOCUS_BREAK_OFFER_MS, hasFocusBreakOffer, type FocusSessionState } from "./mochitFocusSession";
 import { useMochitFocusSession, useMochitFocusSessionEvents } from "./useMochitFocusSession";
 import { createLearningStreakTracker, type LearningStreakTracker } from "./mochitLearningStreak";
+import {
+  getMochitConsultSnapshot,
+  openMochitConsult,
+  subscribeMochitConsult,
+} from "./mochitConsultStore";
 
 type MotionState =
   | "idle"
@@ -64,6 +69,13 @@ const DRAG_THRESHOLD_PX = 6;
 const LONG_PRESS_MS = 550;
 /** 足元の集中タイマー表示の高さ（下に置けない位置では上に出す判定に使う） */
 const FOCUS_CHIP_CLEARANCE_PX = 28;
+
+/** Today 完了のリアクションが終わってから、振り返りの誘いを出すまでの間。 */
+const REFLECTION_BUBBLE_DELAY_MS = 2_600;
+const REFLECTION_BUBBLE: FloatingMochitMessage = {
+  text: "今日のミッション完了！ タップで30秒ふりかえり",
+  durationMs: 6_000,
+};
 
 const hasFocusChip = (session: FocusSessionState) => session.phase !== "idle" || hasFocusBreakOffer(session);
 
@@ -143,6 +155,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   const [bubble, setBubble] = useState<FloatingMochitMessage | null>(null);
   const [dragRotation, setDragRotation] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const consult = useSyncExternalStore(subscribeMochitConsult, getMochitConsultSnapshot, getMochitConsultSnapshot);
   // 表示名は保存済みの AppState から一度だけ読む（このコンポーネントは
   // 進捗を持たないため、購読せずマウント時のスナップショットで足りる）。
   const [displayName] = useState(() => getMochitDisplayName(loadAppState()));
@@ -288,6 +301,25 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     showBubbleRef.current = showBubble;
   });
 
+  // Today の完了で振り返りが差し出されたら、完了リアクションのあとに一度だけ誘う（強制しない）
+  const reflectionOffered = consult.reflection.status === "offered";
+  const reflectionDate = consult.reflection.date;
+  useEffect(() => {
+    if (!preferences?.visible || !reflectionOffered) return;
+    const timer = window.setTimeout(() => {
+      if (!getMochitConsultSnapshot().open) showBubbleRef.current(REFLECTION_BUBBLE);
+    }, REFLECTION_BUBBLE_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [preferences?.visible, reflectionOffered, reflectionDate]);
+
+  // タップ（Enter / Space）は相談シートを開く。長押し・右クリック・Shift+F10 は従来のメニュー。
+  const openConsult = () => {
+    clearLongPress();
+    clearBubble();
+    setMenuOpen(false);
+    openMochitConsult({ from: "pet" });
+  };
+
   const openMenu = () => {
     clearLongPress();
     clearBubble();
@@ -429,7 +461,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     }
 
     setReactionSignal(createMochitEventSignal("tap"));
-    openMenu();
+    openConsult();
     setMotion(effectiveReducedMotion ? "idle" : "rebounding");
   };
 
@@ -459,7 +491,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     setReactionSignal(createMochitEventSignal("tap"));
-    openMenu();
+    openConsult();
     setMotion(effectiveReducedMotion ? "idle" : "rebounding");
   };
 
@@ -513,9 +545,9 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
       <button
         ref={petButtonRef}
         type="button"
-        aria-label={`${displayName}を触る`}
-        aria-haspopup="menu"
-        aria-expanded={menuOpen}
+        aria-label={`${displayName}に相談する`}
+        aria-haspopup="dialog"
+        aria-expanded={consult.open || menuOpen}
         className="floating-mochit-body flex h-full w-full cursor-grab touch-none select-none items-center justify-center rounded-full active:cursor-grabbing"
         data-motion={motion}
         data-reduced-motion={effectiveReducedMotion ? "true" : undefined}
@@ -554,7 +586,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
       </button>
       {lively && acceptedReaction && <MochitEmotionAccent key={acceptedReaction.id} event={acceptedReaction.type} />}
       <FloatingMochitFocusChip session={focusSession} placement={chipPlacement} onOpenMenu={openMenu} />
-      {bubble ? (
+      {bubble && !consult.open ? (
         <FloatingMochitBubble
           message={bubble}
           anchor={position}

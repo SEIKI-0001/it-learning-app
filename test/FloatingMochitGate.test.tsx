@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { resetMochitConsultStoreForTest } from "@/components/mochit/mochitConsultStore";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import FloatingMochitGate from "@/components/mochit/FloatingMochitGate";
@@ -65,6 +66,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  resetMochitConsultStoreForTest();
   storageValues.clear();
   routeState.pathname = "/today";
   routeState.appState = { profile: {} };
@@ -75,7 +77,7 @@ describe("FloatingMochitGate", () => {
     render(<FloatingMochitGate />);
 
     expect(
-      await screen.findByRole("button", { name: "モチットを触る" }),
+      await screen.findByRole("button", { name: "モチットに相談する" }),
     ).toBeInTheDocument();
   });
 
@@ -95,7 +97,7 @@ describe("FloatingMochitGate", () => {
     }));
     render(<FloatingMochitGate />);
 
-    const pet = await screen.findByRole("button", { name: "モチットを触る" });
+    const pet = await screen.findByRole("button", { name: "モチットに相談する" });
     await waitFor(() => expect(fetchCurrentExamReadiness).toHaveBeenCalledOnce());
     fireEvent.contextMenu(pet);
 
@@ -113,7 +115,7 @@ describe("FloatingMochitGate", () => {
     render(<FloatingMochitGate />);
 
     expect(
-      screen.queryByRole("button", { name: "モチットを触る" }),
+      screen.queryByRole("button", { name: "モチットに相談する" }),
     ).not.toBeInTheDocument();
   });
 
@@ -124,7 +126,7 @@ describe("FloatingMochitGate", () => {
       render(<FloatingMochitGate />);
 
       expect(
-        screen.queryByRole("button", { name: "モチットを触る" }),
+        screen.queryByRole("button", { name: "モチットに相談する" }),
       ).not.toBeInTheDocument();
     },
   );

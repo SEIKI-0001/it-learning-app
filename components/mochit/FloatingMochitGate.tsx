@@ -8,7 +8,9 @@ import {
   loadCachedProgressBootstrap,
 } from "@/lib/userSession";
 import { getMochitProgressPresentation } from "@/lib/mochitPresentation";
+import { DEFAULT_MOCHIT_NAME, getMochitDisplayName } from "@/lib/mochitName";
 import FloatingMochit from "./FloatingMochit";
+import MochitConsultSheet from "./MochitConsultSheet";
 
 const HIDDEN_ROUTE_PREFIXES = [
   "/login",
@@ -70,7 +72,13 @@ function ConfiguredFloatingMochit({ pathname }: { pathname: string }) {
     planAdjustmentProposal: presentationSources.hasPlanAdjustment,
     lastPlayedAt: state?.progress?.lastPlayedAt,
   });
-  return <FloatingMochit presentation={presentation} />;
+  return (
+    <>
+      <FloatingMochit presentation={presentation} />
+      {/* 相談シートはペットを非表示にしていても「モチットに聞く」ボタンから開ける */}
+      <MochitConsultSheet displayName={state?.progress ? getMochitDisplayName(state) : DEFAULT_MOCHIT_NAME} />
+    </>
+  );
 }
 
 export default function FloatingMochitGate() {
