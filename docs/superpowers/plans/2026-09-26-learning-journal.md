@@ -69,3 +69,13 @@ Interfaces: JournalTimeline(records,month,type), JournalDetail(record)。週次�
 - [ ] 独立レビューでDB/API/UIとユーザーの5点を確認し、重要な指摘を修正。
 - [ ] migration適用・cron接続を既存サービスで検証。新規サービスは追加しない。
 - [ ] origin/mainを再fetchし、必要な統合と検証を済ませmainへマージ・push。共有作業ツリーの変更は触らない。
+
+## 2026-09-27 検証記録
+
+- origin/main（5705ef9）を統合。Progressと現行の週間期間を維持。
+- Node 22.18.0で typecheck / lint / 全279ファイル3077テスト成功。
+- Playwrightでモバイル・PC、月と種類の切り替え、未読CTA、詳細表示後の既読を確認。
+- 独立レビューで指摘された選択中フィルターの再クリック、timezone更新を修正。
+- 画面表示中の回答時間を計測し、未計測の旧データは欠測のまま保存。
+- AI再試行は既存cronで5分ごと、通知処理は従来どおり毎時。
+- mainへの反映、実DB migration、公開環境の確認はこれから実施。

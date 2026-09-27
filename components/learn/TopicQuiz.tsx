@@ -184,7 +184,7 @@ export default function TopicQuiz({
     // selections/order が変わるたび再計算
   }, [order, selections, shuffled]);
 
-  function select(qId: string, key: ChoiceKey) {
+  const select = useCallback((qId: string, key: ChoiceKey) => {
     if (done || submitting || timeLimitReached) return;
     if (
       selections[qId] !== undefined ||
@@ -197,7 +197,7 @@ export default function TopicQuiz({
     emitMochitEvent(key === shuffled.get(qId)?.correct ? "correct" : "incorrect");
     setSelections((s) => ({ ...s, [qId]: key }));
     setOrder((o) => (o.includes(qId) ? o : [...o, qId]));
-  }
+  }, [done, submitting, timeLimitReached, selections, shuffled]);
 
   function goNext() {
     setCurrentIndex((i) => Math.min(i + 1, total - 1));

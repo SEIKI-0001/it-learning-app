@@ -2,7 +2,7 @@ import type {SupabaseClient} from '@supabase/supabase-js';
 import {progressRowToProgress,type ProgressRow} from '@/lib/dbMappers';
 import {getCheckpoint, getNextCheckpointId} from '@/lib/checkpoints';
 import {mergeJournalAnswers,buildJournalSnapshot} from './facts';
-import {dateInZone,shiftDate,validTimezone} from './dates';
+import {dateInZone,shiftDate,startInZone,validTimezone} from './dates';
 import {allRows,assertDb} from './repository';
 import {completeNarrative,templateFor} from './narrative';
 import type {JournalRecord,JournalSnapshot} from './model';
@@ -41,7 +41,7 @@ export async function ensureJournal(db:SupabaseClient,userId:string,timezone:str
       if(previous) {const result=await db.from('learning_journal_records').update(values).eq('id',previous.id).eq('user_id',userId).is('finalized_at',null);assertDb(result.error);}
       else {
         const last=answers.filter(a=>dateInZone(new Date(a.answeredAt),timezone)===date).at(-1)?.answeredAt;
-        const result=await db.from('learning_journal_records').upsert({...values,user_id:userId,record_type:'daily',record_key:`${userId}:daily:${date}`,period_start:date,period_end:date,occurred_at:last??`${date}T12:00:00Z`,timezone},{onConflict:'user_id,record_type,record_key',ignoreDuplicates:true});assertDb(result.error);
+        const result=await db.from('learning_journal_records').upsert({...values,user_id:userId,record_type:'daily',record_key:`${userId}:daily:${date}`,period_start:date,period_end:date,occurred_at:last??startInZone(date,timezone).toISOString(),timezone},{onConflict:'user_id,record_type,record_key',ignoreDuplicates:true});assertDb(result.error);
       }
     }
     let nextWeekly=schedule.next_weekly_date;
@@ -50,7 +50,7 @@ export async function ensureJournal(db:SupabaseClient,userId:string,timezone:str
       for(let i=0;i<4&&nextWeekly<=today;i++) {
         const date=nextWeekly;
         const snapshot=buildJournalSnapshot({state,answers,type:'weekly',date,timezone,now,activityDates,historical:date<today})!;
-        const result=await db.from('learning_journal_records').upsert({user_id:userId,record_type:'weekly',record_key:`${userId}:weekly:${date}`,period_start:shiftDate(date,-6),period_end:date,occurred_at:date===today?now.toISOString():new Date(Date.parse(`${date}T12:00:00Z`)).toISOString(),timezone,snapshot,narrative:templateFor({snapshot,record_type:'weekly'}),narrative_status:snapshot.metrics.answered?'pending':'not_needed',finalized_at:now.toISOString()},{onConflict:'user_id,record_type,record_key',ignoreDuplicates:true});assertDb(result.error);
+        const result=await db.from('learning_journal_records').upsert({user_id:userId,record_type:'weekly',record_key:`${userId}:weekly:${date}`,period_start:shiftDate(date,-6),period_end:date,occurred_at:date===today?now.toISOString():new Date(startInZone(shiftDate(date,1),timezone).getTime()-1).toISOString(),timezone,snapshot,narrative:templateFor({snapshot,record_type:'weekly'}),narrative_status:snapshot.metrics.answered?'pending':'not_needed',finalized_at:now.toISOString()},{onConflict:'user_id,record_type,record_key',ignoreDuplicates:true});assertDb(result.error);
         nextWeekly=shiftDate(nextWeekly,7);
       }
     }
