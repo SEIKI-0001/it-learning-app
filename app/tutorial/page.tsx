@@ -20,13 +20,13 @@ export default function TutorialPage() {
           controls
           playsInline
           preload="metadata"
-          src="/tutorial/first-study-guide.mp4"
+          src="/tutorial/first-study-guide-v2.mp4"
           onEnded={() => setFinished(true)}
           aria-label="it-learning-app はじめての学習ガイド"
         >
           <track
             kind="captions"
-            src="/tutorial/first-study-guide.vtt"
+            src="/tutorial/first-study-guide-v2.vtt"
             srcLang="ja"
             label="日本語字幕"
           />
