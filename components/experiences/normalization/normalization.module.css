@@ -1,10 +1,13 @@
-/* 正規化の表（2D）。列見出しの色＝項目のグループ（注文/顧客/商品/明細）。 */
+/* 正規化の表（2D）。表は白〜グレーだけで描き、色はその段階で見てほしい所（data-focus）にだけ使う。
+   --dup：重複・繰り返し（黄）／--link：表どうしをつなぐキー（青） */
 
 .board {
-  --g-order: #4f46e5;
-  --g-customer: #0d9488;
-  --g-product: #ea580c;
-  --g-detail: #9333ea;
+  --dup-bg: #fef3c7;
+  --dup-ink: #92400e;
+  --dup-line: #f59e0b;
+  --link-bg: #e0f2fe;
+  --link-ink: #075985;
+  --link-line: #0284c7;
   display: grid;
   gap: 12px;
   animation: norm-in 320ms ease-out both;
@@ -35,9 +38,9 @@
 
 .table th {
   padding: 5px 6px 4px;
-  border-top: 3px solid var(--group);
-  background: color-mix(in srgb, var(--group) 8%, #ffffff);
-  color: color-mix(in srgb, var(--group) 80%, #111827);
+  border-top: 3px solid transparent;
+  background: #f9fafb;
+  color: #374151;
   font-weight: 800;
   text-align: center;
   vertical-align: top;
@@ -77,18 +80,37 @@
 }
 
 .table td[data-key="true"] {
-  background: #fff1f2;
-  font-weight: 700;
+  font-weight: 800;
+  color: #111827;
 }
 
-.table th[data-repeating="true"],
-.table td[data-repeating="true"] {
-  background: #faf5ff;
+.table th[data-key="true"] .fieldName {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.table td[data-repeating="true"] {
-  outline: 1px dashed #c084fc;
+/* 非正規形：繰り返し項目 */
+.board[data-focus="repeating"] .table th[data-repeating="true"] {
+  border-top-color: var(--dup-line);
+  background: var(--dup-bg);
+  color: var(--dup-ink);
+}
+
+.board[data-focus="repeating"] .table td[data-repeating="true"] {
+  background: var(--dup-bg);
+  outline: 1px dashed var(--dup-line);
   outline-offset: -3px;
+}
+
+/* 第2・第3正規形：表をつなぐキー（外部キーと、それが指す主キー） */
+.board[data-focus="link"] .table th[data-link="true"] {
+  border-top-color: var(--link-line);
+  background: var(--link-bg);
+  color: var(--link-ink);
+}
+
+.board[data-focus="link"] .table td[data-link="true"] {
+  background: var(--link-bg);
 }
 
 .fieldName {
@@ -114,18 +136,25 @@
 }
 
 .keyBadge {
-  background: #f43f5e;
+  background: #111827;
   color: #ffffff;
 }
 
 .fkBadge {
-  background: #e2e8f0;
-  color: #334155;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #9ca3af;
+  color: #374151;
+}
+
+.board[data-focus="link"] .fkBadge {
+  background: var(--link-line);
+  box-shadow: none;
+  color: #ffffff;
 }
 
 .warnBadge {
-  background: #fef3c7;
-  color: #92400e;
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .value {
@@ -140,8 +169,8 @@
 }
 
 .value[data-dup="true"] {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--dup-bg);
+  color: var(--dup-ink);
   font-weight: 800;
 }
 

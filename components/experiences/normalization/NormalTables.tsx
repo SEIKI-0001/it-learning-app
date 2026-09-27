@@ -1,22 +1,21 @@
-import type { CSSProperties } from "react";
 import styles from "./normalization.module.css";
 
-// 正規化の各段階の表を、行×列のふつうの表（2D）で描く。
-// 列見出しの色＝項目のグループ（注文/顧客/商品/明細）。段階が変わっても同じ項目は同じ色。
-// 重複セル＝黄、値上げの食い違い＝赤、1か所の修正＝緑。
+// 正規化の各段階の表を、行×列のふつうの表（2D）で描く。表そのものは白〜グレーだけ。
+// 色は「その段階で見てほしい所」1種類だけに使う（focus）：
+//   非正規形＝繰り返し項目／第1正規形＝重複しているデータ（黄）／第2・第3正規形＝表どうしをつなぐキー（青）
+// 主キーは色ではなく黒いバッジと太字で示す。値上げの食い違い＝赤、1か所の修正＝緑（試したときだけ）。
 
 export type FieldId = "orderNo" | "orderDate" | "custNo" | "custName" | "prodNo" | "prodName" | "price" | "qty";
-type Group = "order" | "customer" | "product" | "detail";
 
-export const FIELDS: Record<FieldId, { label: string; group: Group }> = {
-  orderNo: { label: "注文番号", group: "order" },
-  orderDate: { label: "注文日", group: "order" },
-  custNo: { label: "顧客番号", group: "customer" },
-  custName: { label: "顧客名", group: "customer" },
-  prodNo: { label: "商品番号", group: "product" },
-  prodName: { label: "商品名", group: "product" },
-  price: { label: "単価", group: "product" },
-  qty: { label: "数量", group: "detail" },
+export const FIELDS: Record<FieldId, { label: string }> = {
+  orderNo: { label: "注文番号" },
+  orderDate: { label: "注文日" },
+  custNo: { label: "顧客番号" },
+  custName: { label: "顧客名" },
+  prodNo: { label: "商品番号" },
+  prodName: { label: "商品名" },
+  price: { label: "単価" },
+  qty: { label: "数量" },
 };
 
 type Rec = Record<FieldId, string>;
@@ -136,10 +135,28 @@ function tableRows(table: TableDef, priceUp: boolean): Cell[][][] {
 
 // ---------- 描画 ----------
 
+export type Focus = "repeating" | "dup" | "link";
+export const STAGE_FOCUS: Focus[] = ["repeating", "dup", "link", "link"];
+
+/** 外部キーと、その外部キーが指している主キー（＝表どうしをつなぐ列）。"表ID:項目" の集合 */
+function linkedColumns(tables: TableDef[]): Set<string> {
+  const linked = new Set<string>();
+  for (const t of tables) {
+    for (const [f, target] of Object.entries(t.fks ?? {})) {
+      linked.add(`${t.id}:${f}`);
+      const to = tables.find((x) => x.name === target);
+      if (to) linked.add(`${to.id}:${f}`);
+    }
+  }
+  return linked;
+}
+
 export function NormalTables({ stage, priceUp }: { stage: number; priceUp: boolean }) {
   const tables = STAGE_TABLES[stage];
+  const focus = STAGE_FOCUS[stage];
+  const linked = focus === "link" ? linkedColumns(tables) : new Set<string>();
   return (
-    <div className={styles.board} data-stage={stage} data-testid="norm-board" key={stage}>
+    <div className={styles.board} data-stage={stage} data-focus={focus} data-testid="norm-board" key={stage}>
       {tables.map((table) => {
         const rows = tableRows(table, priceUp);
         return (
@@ -159,10 +176,9 @@ export function NormalTables({ stage, priceUp }: { stage: number; priceUp: boole
                           key={f}
                           scope="col"
                           data-field={f}
-                          data-group={meta.group}
                           data-key={isKey ? "true" : "false"}
                           data-repeating={repeating ? "true" : "false"}
-                          style={{ "--group": `var(--g-${meta.group})` } as CSSProperties}
+                          data-link={linked.has(`${table.id}:${f}`) ? "true" : "false"}
                         >
                           <span className={styles.fieldName}>
                             {/* 列が多い表は見出しを2文字ずつ折り返し、390px幅に収める */}
@@ -199,12 +215,13 @@ export function NormalTables({ stage, priceUp }: { stage: number; priceUp: boole
                             data-field={f}
                             data-key={table.keys.includes(f) ? "true" : "false"}
                             data-repeating={table.repeating?.includes(f) ? "true" : "false"}
+                            data-link={linked.has(`${table.id}:${f}`) ? "true" : "false"}
                           >
                             {cells.map((c, ci) => (
                               <span
                                 key={ci}
                                 className={styles.value}
-                                data-dup={c.dup ? "true" : "false"}
+                                data-dup={c.dup && focus === "dup" ? "true" : "false"}
                                 data-conflict={c.conflict ? "true" : "false"}
                                 data-changed={c.changed ? "true" : "false"}
                               >

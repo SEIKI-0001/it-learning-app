@@ -53,12 +53,12 @@ describe("LogicOperationsExperience", () => {
     expect(screen.getByTestId("logic-rule")).toHaveTextContent("どちらも0 → 0");
   });
 
-  it("the full truth table on slide 2 shares the same input and operation", () => {
+  it("the full truth table on slide 2 shares the operation but highlights no row", () => {
     renderDeck();
     click(/^NOT$/);
     click("解説2");
     const table = screen.getByTestId("logic-table");
     expect(table).toHaveTextContent("NOT の出力");
-    expect(table.querySelector('[aria-current="true"]')).toHaveTextContent("10");
+    expect(table.querySelector('[aria-current="true"]')).toBeNull();
   });
 });
