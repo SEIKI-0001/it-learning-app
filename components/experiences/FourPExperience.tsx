@@ -209,8 +209,8 @@ function Quiz() {
 export default function FourPExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🛍️ <b>4P分析</b>は <b>Product（製品）・Price（価格）・Place（流通）・Promotion（販売促進）</b>
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>4P分析</b>は <b>Product（製品）・Price（価格）・Place（流通）・Promotion（販売促進）</b>
         の4つで売り方を整理する方法。「何を・いくらで・どこで・どう知らせて」売るかです。
       </div>
 

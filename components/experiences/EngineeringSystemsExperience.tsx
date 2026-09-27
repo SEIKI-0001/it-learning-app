@@ -14,7 +14,7 @@ export default function EngineeringSystemsExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        ⚙️ 製品づくりでは、<b>1つの設計データ</b>が「設計 → 解析 → 製造」へ受け渡されます。どの工程をコンピュータで支援するかで、名前が変わります。
+        製品づくりでは、<b>1つの設計データ</b>が「設計 → 解析 → 製造」へ受け渡されます。どの工程をコンピュータで支援するかで、名前が変わります。
       </Lead>
       <FlowPanel />
       <LetterPanel />

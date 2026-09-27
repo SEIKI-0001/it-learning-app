@@ -83,6 +83,7 @@ import RaciExperience from "./RaciExperience";
 import ProcessingArchitectureExperience from "./ProcessingArchitectureExperience";
 import BackupExperience from "./BackupExperience";
 import NetworkDevicesExperience from "./NetworkDevicesExperience";
+import BusinessSystemsExperience from "./BusinessSystemsExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -178,6 +179,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-system-processing-architecture": ProcessingArchitectureExperience,
   "tech-backup": BackupExperience,
   "tech-network-devices": NetworkDevicesExperience,
+  "strat-business-systems": BusinessSystemsExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {

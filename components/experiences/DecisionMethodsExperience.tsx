@@ -21,7 +21,7 @@ export default function DecisionMethodsExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        🧭 6つの手法は<b>「何のための道具か」</b>で分かれます。パン屋の苦情を減らす話を例に、道具を順番に使っていきます。
+        6つの手法は<b>「何のための道具か」</b>で分かれます。パン屋の苦情を減らす話を例に、道具を順番に使っていきます。
       </Lead>
       <RoleMapPanel />
       <DivergePanel />

@@ -24,8 +24,8 @@ export default function ProgrammingBasicsExperience() {
   const reducedMotion = useReducedMotion();
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💻 プログラムは、コンピュータへの<b>作業手順書</b>。組み合わせる部品は基本この3つだけ：
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        プログラムは、コンピュータへの<b>作業手順書</b>。組み合わせる部品は基本この3つだけ：
         <b>変数（値を入れる箱）</b>・<b>条件分岐（もし〜なら）</b>・<b>繰り返し（同じことを何回も）</b>。
         どれも<b>朝、家を出るまでに毎日やっていること</b>です。
         後半では、手順をまとめる<b>関数</b>、機械語への<b>翻訳</b>、<b>データの書き方</b>も見ていきます。

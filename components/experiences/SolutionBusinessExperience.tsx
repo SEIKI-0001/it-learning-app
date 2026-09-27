@@ -242,8 +242,8 @@ function Quiz() {
 export default function SolutionBusinessExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🧩 <b>ソリューションビジネス</b>は、製品を売るのではなく<b>顧客の課題を解決</b>するビジネス。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>ソリューションビジネス</b>は、製品を売るのではなく<b>顧客の課題を解決</b>するビジネス。
         悩みを聞き、ITやサービスを組み合わせて提案します。
       </div>
 

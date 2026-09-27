@@ -287,8 +287,8 @@ function Quiz() {
 export default function SwotExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🧭 <b>SWOT分析</b>は、<b>強み・弱み（内）</b>と<b>機会・脅威（外）</b>の4つで現状を整理する方法。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>SWOT分析</b>は、<b>強み・弱み（内）</b>と<b>機会・脅威（外）</b>の4つで現状を整理する方法。
         「内か外か」を分けるのが最大のポイントです。
       </div>
 

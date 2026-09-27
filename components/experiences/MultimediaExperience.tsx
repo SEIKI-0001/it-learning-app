@@ -10,8 +10,8 @@ import { CompressStage, FormatStage, LossStage, MediaPractice, RatioStage, Terms
 export default function MultimediaExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🎞️ 画像・音声・動画はデータがとても大きい。だから<b>圧縮</b>して小さくします。<b>元に戻せるか</b>で2種類に分かれ、用途で使い分けます。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        画像・音声・動画はデータがとても大きい。だから<b>圧縮</b>して小さくします。<b>元に戻せるか</b>で2種類に分かれ、用途で使い分けます。
       </div>
 
       <CompressStage />

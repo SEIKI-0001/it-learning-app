@@ -35,8 +35,8 @@ const STRUCTURES = [
 export default function AlgorithmExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🧭 <b>アルゴリズム</b>＝問題を解くための手順。<b>フローチャート</b>＝その手順を、箱と矢印で描いた図です。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>アルゴリズム</b>＝問題を解くための手順。<b>フローチャート</b>＝その手順を、箱と矢印で描いた図です。
         コンピュータは図のとおり、<b>1つずつ・書いてある順に</b>実行します。
       </div>
 

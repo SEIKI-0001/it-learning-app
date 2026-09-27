@@ -223,8 +223,8 @@ function CsrSummary() {
 export default function EnterpriseActivitiesExperience() {
   return (
     <div>
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🏢 会社は商品やサービスで価値を生み、利益を得ながら社会に役立ちます。会社に関わる人・組織が
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        会社は商品やサービスで価値を生み、利益を得ながら社会に役立ちます。会社に関わる人・組織が
         <b>ステークホルダ（利害関係者）</b>。株主だけでなく、顧客・従業員・地域なども含みます。
       </div>
       <Hub />

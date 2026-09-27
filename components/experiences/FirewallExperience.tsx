@@ -462,8 +462,8 @@ function Vpn() {
 export default function FirewallExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🛡️ 守り方の整理：<b>ファイアウォール＝通信の門番</b>（許可だけ通す）、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        守り方の整理：<b>ファイアウォール＝通信の門番</b>（許可だけ通す）、
         <b>WAF＝Webアプリの門番</b>（中身を検査）、<b>VPN＝安全な通り道</b>（暗号トンネル）、
         <b>ゼロトラスト＝何も最初から信じない</b>（毎回確認）。
       </div>

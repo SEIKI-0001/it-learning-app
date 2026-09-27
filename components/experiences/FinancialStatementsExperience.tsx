@@ -35,37 +35,37 @@ function BsView() {
         </div>
         <div className="grid grid-cols-2">
           {/* 左：資産 */}
-          <div className="border-r border-gray-200 bg-sky-50 p-3">
-            <div className="text-xs font-bold text-sky-800">資産</div>
-            <div className="mt-1.5 text-[11px] leading-relaxed text-sky-700">
+          <div className="border-r border-gray-200 bg-brand-50 p-3">
+            <div className="text-sm font-bold text-brand-900">資産</div>
+            <div className="mt-1.5 text-xs leading-relaxed text-gray-700">
               現金・建物・商品など<br />会社が持っているもの
             </div>
-            <div className="mt-2 rounded-lg bg-white/70 px-2 py-1 text-center text-sm font-bold text-sky-800">
+            <div className="mt-2 rounded-lg bg-white px-2 py-1 text-center text-sm font-bold tabular-nums text-brand-900">
               100
             </div>
           </div>
           {/* 右：負債＋純資産 */}
-          <div className="bg-amber-50 p-3">
-            <div className="text-xs font-bold text-amber-800">負債</div>
-            <div className="text-[11px] leading-relaxed text-amber-700">借入金など返すお金</div>
-            <div className="mt-1 rounded-lg bg-white/70 px-2 py-0.5 text-center text-sm font-bold text-amber-800">
+          <div className="bg-white p-3">
+            <div className="text-sm font-bold text-gray-900">負債</div>
+            <div className="text-xs leading-relaxed text-gray-700">借入金など返すお金</div>
+            <div className="mt-1 rounded-lg bg-gray-50 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-gray-900 ring-1 ring-gray-200">
               60
             </div>
-            <div className="mt-2 text-xs font-bold text-emerald-800">純資産</div>
-            <div className="text-[11px] leading-relaxed text-emerald-700">自分のお金（返さない）</div>
-            <div className="mt-1 rounded-lg bg-white/70 px-2 py-0.5 text-center text-sm font-bold text-emerald-800">
+            <div className="mt-2 text-sm font-bold text-gray-900">純資産</div>
+            <div className="text-xs leading-relaxed text-gray-700">自分のお金（返さない）</div>
+            <div className="mt-1 rounded-lg bg-gray-50 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-gray-900 ring-1 ring-gray-200">
               40
             </div>
           </div>
         </div>
         <div className="grid grid-cols-2 border-t border-gray-200 text-center text-sm font-bold">
-          <div className="border-r border-gray-200 bg-sky-100 py-1.5 text-sky-800">資産 100</div>
-          <div className="bg-amber-100 py-1.5 text-amber-800">負債+純資産 100</div>
+          <div className="border-r border-gray-200 bg-brand-100 py-1.5 text-brand-900">資産 100</div>
+          <div className="bg-gray-100 py-1.5 text-gray-900">負債+純資産 100</div>
         </div>
       </div>
 
       <div className="mt-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-900 ring-1 ring-brand-200">
-        ⚖️ 資産 ＝ 負債 ＋ 純資産（左右が必ずつり合う）
+        資産 ＝ 負債 ＋ 純資産（左右が必ずつり合う）
       </div>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
         ※ BSは「ある時点」のスナップ写真。<b>純資産＝資産−負債</b>（自分の正味の取り分）。
@@ -105,18 +105,18 @@ function PlView() {
       </div>
 
       <div className="mt-3 space-y-1.5 text-sm">
-        <div className="flex justify-between rounded-lg bg-sky-50 px-3 py-2 ring-1 ring-sky-200">
-          <span className="font-bold text-sky-800">収益（売上）</span>
-          <span className="font-mono font-bold text-sky-800">{sales}</span>
+        <div className="flex justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200">
+          <span className="font-bold text-gray-900">収益（売上）</span>
+          <span className="font-mono font-bold text-gray-900">{sales}</span>
         </div>
-        <div className="flex justify-between rounded-lg bg-amber-50 px-3 py-2 ring-1 ring-amber-200">
-          <span className="font-bold text-amber-800">− 費用</span>
-          <span className="font-mono font-bold text-amber-800">{cost}</span>
+        <div className="flex justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200">
+          <span className="font-bold text-gray-900">− 費用</span>
+          <span className="font-mono font-bold text-gray-900">{cost}</span>
         </div>
         <div
           className={`flex justify-between rounded-lg px-3 py-2 ring-1 ${
             black
-              ? "bg-emerald-50 text-emerald-800 ring-emerald-200"
+              ? "bg-brand-50 text-brand-900 ring-brand-300"
               : "bg-rose-50 text-rose-800 ring-rose-200"
           }`}
         >
@@ -128,7 +128,7 @@ function PlView() {
       </div>
 
       <div className="mt-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-900 ring-1 ring-brand-200">
-        🧮 利益 ＝ 収益 − 費用
+        利益 ＝ 収益 − 費用
       </div>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
         ※ PLは「一定期間」のもうけの記録。BSの“ある時点の状態”とは見ているものが違います。
@@ -162,7 +162,7 @@ function FlowView() {
         <FinanceStage phase={player.index} reducedMotion={reducedMotion} />
       </div>
 
-      <div className="mt-3 min-h-[5.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
+      <div className="mt-3 min-h-[5.5em] rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200 [&_b]:text-gray-900" aria-live="polite">
         <b>
           {FIN_EVENTS[player.index].date}／{FIN_EVENTS[player.index].title}
         </b>
@@ -185,7 +185,7 @@ function FlowView() {
       </div>
 
       <div className="mt-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-900 ring-1 ring-brand-200">
-        📷 BSは状態、🎞️ PLは流れ。PLの利益は、BSの純資産を増やす。
+        BSは状態、PLは流れ。PLの利益は、BSの純資産を増やす。
       </div>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
         ※ 現金や商品のように、1年以内に現金化できる資産を<b>流動資産</b>といいます。
@@ -253,8 +253,8 @@ function Quiz() {
 export default function FinancialStatementsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📑 財務諸表には2つの主役。<b>BS＝ある時点の「持ち物のつり合い」</b>、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        財務諸表には2つの主役。<b>BS＝ある時点の「持ち物のつり合い」</b>、
         <b>PL＝期間中の「もうけ」</b>。何を見ている表かで区別したら、後半は表から数字を取り出して<b>指標を計算</b>します。
       </div>
 

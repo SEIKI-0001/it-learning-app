@@ -132,7 +132,7 @@ export default function TopicContent({
       )}
 
       {/* 解説: 内容を1枚ずつ横に進める */}
-      <ExplanationSlides title="📖 解説" slides={explanationSlides} />
+      <ExplanationSlides title="解説" slides={explanationSlides} />
 
       {/* ③ 確認問題（today では完了クイズを別に出すため非表示にできる） */}
       {showCheckQuestions && (

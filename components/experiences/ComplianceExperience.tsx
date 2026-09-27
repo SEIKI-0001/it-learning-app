@@ -194,8 +194,8 @@ function Quiz() {
 export default function ComplianceExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🧑‍⚖️ <b>コンプライアンス</b>は、<b>法律・社内ルール・社会の約束</b>を守ること。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>コンプライアンス</b>は、<b>法律・社内ルール・社会の約束</b>を守ること。
         ITでは個人情報・著作権・不正アクセスなど、情報の扱いがよく問われます。
       </div>
 

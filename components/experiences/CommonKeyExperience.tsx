@@ -228,8 +228,8 @@ export default function CommonKeyExperience() {
   ];
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🔑 たとえると<b>「合鍵」</b>。AさんもBさんも<b>同じ1本の鍵</b>を持ち、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        たとえると<b>「合鍵」</b>。AさんもBさんも<b>同じ1本の鍵</b>を持ち、
         その鍵で<b>閉める（暗号化）も開ける（復号）も</b>できます。便利で速い反面、
         <b>合鍵を相手にどう安全に渡すか</b>が悩みどころです。
       </div>

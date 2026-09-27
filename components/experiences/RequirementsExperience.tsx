@@ -4,8 +4,12 @@ import { useState, type ReactNode } from "react";
 import { REQS, RequirementsStage, type ReqMode } from "./requirements/RequirementsStage";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
-import { useStepPlayer } from "./scene/useStepPlayer";
+import { AUTOPLAY_INTERVAL_MS, useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+
+// 解説2（開発ごっこ）だけ1.5倍速で再生する。テキストが出るステップは
+// 最低でも約2.2秒は表示されるよう下限を設ける（この間隔は常にそれを超える）。
+const WHY_MATTERS_INTERVAL_MS = Math.max(2200, Math.round(AUTOPLAY_INTERVAL_MS / 1.5));
 
 // ============================================================================
 // 「要件定義」専用の体験。
@@ -95,7 +99,7 @@ function WhyMatters() {
   const reducedMotion = useReducedMotion();
   const [mode, setMode] = useState<ReqMode>("vague");
   const steps = mode === "vague" ? VAGUE_STEPS : CLEAR_STEPS;
-  const player = useStepPlayer(steps.length, reducedMotion);
+  const player = useStepPlayer(steps.length, reducedMotion, WHY_MATTERS_INTERVAL_MS);
   const step = steps[player.index];
   const last = player.index === player.lastIndex;
   const [tried, setTried] = useState<Set<ReqMode>>(new Set());
@@ -138,7 +142,7 @@ function WhyMatters() {
 
       <div
         className={`mt-3 min-h-[4.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
-          mode === "vague" && player.index >= 2 ? "bg-rose-50 ring-rose-200" : last ? "bg-emerald-50 ring-emerald-200" : "bg-sky-50 ring-sky-200"
+          mode === "vague" && player.index >= 2 ? "bg-rose-50 ring-rose-200" : last ? "bg-emerald-50 ring-emerald-200" : "bg-gray-50 ring-gray-200"
         }`}
         aria-live="polite"
       >
@@ -236,8 +240,8 @@ function Quiz() {
 export default function RequirementsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📝 <b>要件定義</b>は、作り始める前に<b>「何を作るか」を利用者と決めて合意する</b>工程。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>要件定義</b>は、作り始める前に<b>「何を作るか」を利用者と決めて合意する</b>工程。
         ここがあいまいだと、完成後に「思ってたのと違う」が起きやすくなります。
       </div>
 

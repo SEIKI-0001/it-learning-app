@@ -189,8 +189,8 @@ function Quiz() {
 export default function ThreeCExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🔭 <b>3C分析</b>は <b>Customer（顧客）・Competitor（競合）・Company（自社）</b> の3つで事業環境を見る方法。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>3C分析</b>は <b>Customer（顧客）・Competitor（競合）・Company（自社）</b> の3つで事業環境を見る方法。
         「Cost（費用）」は<b>入らない</b>のが引っかけポイント。
       </div>
 
