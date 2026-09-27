@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     ".vinext/**",
     ".wrangler/**",
     "cloudflare-env.d.ts",
+    // チュートリアル動画の生成プロジェクト（Remotion・独自の package.json を持つ）。
+    "video/**",
     // git worktree（git worktree add の作業ツリー）。
     // リポジトリの別ブランチをまるごと展開したものなので、中身は同じコードの別版。
     // lint 対象に入れると、いま編集していないブランチの指摘まで出てくるうえ、

@@ -1,0 +1,22 @@
+{
+  "name": "tutorial-video",
+  "private": true,
+  "description": "/tutorial の紹介動画を Remotion で生成する独立プロジェクト（アプリ本体のビルド対象外）",
+  "scripts": {
+    "voice": "node scripts/voice.mjs",
+    "audio": "node scripts/synth-audio.mjs",
+    "studio": "npm run audio && remotion studio src/index.ts",
+    "render": "npm run audio && remotion render src/index.ts Tutorial out/tutorial.mp4 --codec h264 --crf 18 --audio-codec aac --audio-bitrate 192k && sh scripts/finalize.sh",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.529",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "remotion": "4.0.529"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "speaker": "春日部つむぎ/ノーマル",
+  "defaults": { "speedScale": 1.12, "intonationScale": 1.45, "pitchScale": 0.02, "volumeScale": 1.0, "prePhonemeLength": 0.05, "postPhonemeLength": 0.12 },
+  "lines": [
+    { "id": "hook1", "scene": "hook", "text": "ITパスポート、何から始めればいいか、迷ってない？", "caption": "ITパスポート、何から始めればいいか、迷ってない？", "speedScale": 1.08 },
+    { "id": "hook2", "scene": "hook", "text": "だいじょうぶ！ぼくが、合格まで案内するよ！", "caption": "だいじょうぶ！ぼくが、合格まで案内するよ！", "intonationScale": 1.6, "pitchScale": 0.04 },
+    { "id": "map", "scene": "map", "text": "試験日を決めたら、合格までの、冒険マップが完成！", "caption": "試験日を決めたら、合格までの冒険マップが完成！" },
+    { "id": "today", "scene": "today", "text": "今日やることは、毎日ぼくが、用意しておくね。", "caption": "今日やることは、毎日ぼくが用意しておくね。" },
+    { "id": "learn", "scene": "learn", "text": "動く図解で、むずかしい用語も、スッと分かる！", "caption": "動く図解で、むずかしい用語もスッと分かる！" },
+    { "id": "quiz", "scene": "quiz", "text": "問題を解けば、コンボ！XPも、どんどん貯まる！", "caption": "問題を解けば、コンボ！XPもどんどん貯まる！", "speedScale": 1.18, "intonationScale": 1.6 },
+    { "id": "grow", "scene": "grow", "text": "続けるほど、バッジが増えて、ぼくも成長するんだ。", "caption": "続けるほど、バッジが増えて、ぼくも成長するんだ。" },
+    { "id": "goal", "scene": "goal", "text": "合格の城まで、あと少し。進んでいるのが、ちゃんと見える！", "caption": "合格の城まで、あと少し。進んでいるのが、ちゃんと見える！" },
+    { "id": "cta", "scene": "cta", "text": "さあ、ぼくといっしょに、冒険をはじめよう！", "caption": "さあ、ぼくといっしょに冒険をはじめよう！", "intonationScale": 1.65, "pitchScale": 0.04, "speedScale": 1.05 }
+  ]
+}
