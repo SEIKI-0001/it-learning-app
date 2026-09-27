@@ -28,7 +28,9 @@ export async function saveSharedProgress(db:SupabaseClient,userId:string,progres
   });
   // Rolling deployment: old databases have no aliases yet, so preserve their existing RPC.
   if(result.error?.code==='PGRST202')return db.rpc('save_user_progress_with_readiness_evidence',{p_user_id:userId,p_progress:payload(userId,progress),p_trigger_type:trigger?.triggerType??null,p_trigger_id:trigger?.triggerId??null});
-  if(result.error?.code!=='40001')return result;
+  const retryableConflict = result.error?.code === '40001'
+   || (result.error?.code === 'P0001' && /(?:PROGRESS_CHANGED_RETRY|ACCOUNT_CHANGED_RETRY)/.test(result.error.message ?? ''));
+  if(!retryableConflict)return result;
  }
- return {data:null,error:{code:'40001',message:'progress changed; retry'}};
+ return {data:null,error:{code:'P0001',message:'progress changed; retry'}};
 }
