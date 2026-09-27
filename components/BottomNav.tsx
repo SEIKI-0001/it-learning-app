@@ -32,6 +32,7 @@ const ITEMS: readonly NavItem[] = [
       "/settings",
       "/syllabus",
       "/report",
+      "/journal",
     ],
   },
 ] as const;

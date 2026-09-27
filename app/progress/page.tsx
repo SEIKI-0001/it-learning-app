@@ -239,6 +239,7 @@ export default function ProgressPage() {
     href: "/avatar#growth",
   }];
   const links: UnlockRow[] = [
+    { id: "journal", title: "学習の記録", detail: "日々の学び・週次の振り返り・突破の歩み", href: "/journal" },
     { id: "mock", title: "本番形式 100問模試", detail: "3分野の実力をまとめて確かめる", href: "/mock-exam" },
     { id: "report", title: "週間レポート", detail: "直近7日の積み上げを見る", href: "/report" },
     {

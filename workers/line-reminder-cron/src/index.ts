@@ -19,6 +19,7 @@
 
 import {
   triggerLineReminder,
+  triggerLearningJournal,
   type Env,
   type ExecutionContext,
   type ScheduledController,
@@ -36,7 +37,7 @@ type ScheduledHandler = {
 // Cron 起動のたびに通知APIを1回叩く。ここに判定を足さないこと。
 const handler: ScheduledHandler = {
   async scheduled(_controller, env) {
-    await triggerLineReminder(env);
+    await Promise.all([triggerLineReminder(env), triggerLearningJournal(env)]);
   },
 };
 

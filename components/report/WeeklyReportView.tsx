@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 import type { NextAction, WeeklyReportFacts } from "@/lib/weeklyReportFacts";
-import type { NarrativeItem } from "@/lib/weeklyReportNarrative";
+import type { NarrativeItem, WeeklyNarrative } from "@/lib/weeklyReportNarrative";
 import { useWeeklyNarrative } from "@/lib/useWeeklyNarrative";
 import { getLessonHref } from "@/lib/learningCatalog";
 import { buttonClass } from "@/components/ui/Button";
@@ -18,10 +18,14 @@ import styles from "./weeklyDiary.module.css";
 
 export default function WeeklyReportView({
   facts,
+  savedNarrative,
+  historical = false,
 }: {
   facts: WeeklyReportFacts;
+  savedNarrative?: WeeklyNarrative;
+  historical?: boolean;
 }) {
-  const { narrative, status } = useWeeklyNarrative(facts);
+  const { narrative, status } = useWeeklyNarrative(facts, savedNarrative);
   const loading = status === "loading";
   const zero = facts.volume === "none";
 
@@ -61,7 +65,7 @@ export default function WeeklyReportView({
       )}
 
       {/* 3. 数字で見る今週（付箋） */}
-      {!zero && <NumbersNote facts={facts} />}
+      {!zero && <NumbersNote facts={facts} historical={historical} />}
 
       {/* 4. 気づいたこと（AI） */}
       {!zero && (
@@ -345,7 +349,7 @@ function signed(n: number, unit: string): string {
   return `${n > 0 ? "+" : "−"}${Math.abs(n)}${unit}`;
 }
 
-function NumbersNote({ facts }: { facts: WeeklyReportFacts }) {
+function NumbersNote({ facts, historical }: { facts: WeeklyReportFacts; historical: boolean }) {
   const t = facts.totals;
   const lw = facts.lastWeek;
   const stats: Stat[] = [
@@ -375,7 +379,7 @@ function NumbersNote({ facts }: { facts: WeeklyReportFacts }) {
     });
   if (facts.retry.accuracy !== null)
     stats.push({ label: "解き直した問題", value: `${facts.retry.accuracy}%` });
-  stats.push({ label: "復習待ち", value: `${facts.reviews.waiting}件` });
+  if (!historical) stats.push({ label: "復習待ち", value: `${facts.reviews.waiting}件` });
 
   return (
     <SnapToLines className="animate-rise-in mt-[32px]">

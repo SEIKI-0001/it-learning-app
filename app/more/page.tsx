@@ -28,6 +28,7 @@ const GROUPS: readonly {
         title: "総まとめ試験",
         description: "章ごとに横断的な高難易度問題を解く",
       },
+      { href: "/journal", icon: "book-open", title: "学習の記録", description: "日次・週次・CHECKPOINTの歩み" },
       { href: "/report", icon: "calendar", title: "週次レポート", description: "今週の振り返り" },
     ],
   },

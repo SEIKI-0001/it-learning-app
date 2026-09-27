@@ -47,7 +47,8 @@ describe("scheduled invocation", () => {
   it("通知APIを CRON_SECRET 付きで GET する", async () => {
     await worker.scheduled(controller, env(), ctx);
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toBe(`${BASE_URL}/api/cron/learning-journal`);
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe(`${BASE_URL}${REMINDER_PATH}`);
     expect(init.method).toBe("GET");
@@ -137,9 +138,9 @@ describe("通知APIが失敗したとき", () => {
 
     await worker.scheduled(controller, env(), ctx);
 
-    // 送信先は通知APIの1本だけ。DB も LINE も Worker からは触れない。
+    // 送信先はアプリの通知・学習記録APIのみ。DBやLINEへは直接接続しない。
     const urls = fetchMock.mock.calls.map((call) => String(call[0]));
-    expect(urls).toEqual([`${BASE_URL}${REMINDER_PATH}`]);
+    expect(urls).toEqual([`${BASE_URL}${REMINDER_PATH}`, `${BASE_URL}/api/cron/learning-journal`]);
     expect(urls.some((u) => u.includes("supabase"))).toBe(false);
     expect(urls.some((u) => u.includes("api.line.me"))).toBe(false);
   });
