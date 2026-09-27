@@ -1,0 +1,16 @@
+import {it,expect,vi,beforeEach} from 'vitest';
+const m=vi.hoisted(()=>({user:vi.fn(),db:vi.fn(),list:vi.fn(),read:vi.fn(),view:vi.fn(),ensure:vi.fn(),process:vi.fn()}));
+vi.mock('@/lib/auth/currentUser',()=>({getInternalUserId:m.user}));
+vi.mock('@/lib/supabaseServer',()=>({getServiceSupabase:m.db}));
+vi.mock('@/lib/journal/repository',()=>({listJournal:m.list,readJournal:m.read,markJournalViewed:m.view}));
+vi.mock('@/lib/journal/service',()=>({ensureJournal:m.ensure,processJournalNarratives:m.process}));
+vi.mock('next/server',async()=>{const actual=await vi.importActual('next/server');return {...actual,after:vi.fn()};});
+import {GET,POST} from '@/app/api/journal/route';
+import {POST as view} from '@/app/api/journal/[recordId]/view/route';
+const id='30000000-0000-4000-8000-000000000001';
+beforeEach(()=>{vi.clearAllMocks();m.user.mockResolvedValue('internal');m.db.mockReturnValue({});m.list.mockResolvedValue({records:[],months:[]});m.ensure.mockResolvedValue({pending:false});});
+it('does not accept body userId as authentication',async()=>{m.user.mockResolvedValue(null);expect((await POST(new Request('http://a/api/journal',{method:'POST',body:JSON.stringify({userId:'victim',timezone:'Asia/Tokyo'})}))).status).toBe(401);expect(m.ensure).not.toHaveBeenCalled();});
+it('validates month and filter',async()=>{expect((await GET(new Request('http://a/api/journal?month=2026-99'))).status).toBe(400);});
+it('never marks read during list retrieval',async()=>{expect((await GET(new Request('http://a/api/journal?month=2026-09'))).status).toBe(200);expect(m.view).not.toHaveBeenCalled();expect(m.list.mock.calls[0][1]).toBe('internal');});
+it('does not mark another users record',async()=>{m.read.mockResolvedValue(null);expect((await view(new Request('http://a'),{params:Promise.resolve({recordId:id})})).status).toBe(404);expect(m.view).not.toHaveBeenCalled();});
+it('returns a failure rather than claiming empty history when DB fails',async()=>{m.list.mockRejectedValue(new Error('db'));expect((await GET(new Request('http://a/api/journal?month=2026-09'))).status).toBe(503);});

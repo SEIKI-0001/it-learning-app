@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/lib/useAppState";
@@ -39,6 +40,7 @@ export default function ReportPage() {
       />
 
       <div className="mx-auto w-full max-w-2xl px-4 py-6">
+        <p className="mb-5 text-sm"><Link href="/journal" className="text-brand-700 underline underline-offset-4">学習の記録で、過去の振り返りを読む →</Link></p>
         <WeeklyReportView facts={facts} />
       </div>
 

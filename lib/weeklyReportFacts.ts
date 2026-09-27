@@ -12,6 +12,7 @@
 //
 // 期間は「今日を含む直近7暦日（ローカル時刻）」。先週はその前の7暦日。
 
+import { dateInZone, shiftDate, startInZone } from "@/lib/journal/dates";
 import type { AppState, UserAnswer } from "@/types";
 import type { TopicField } from "@/types/content";
 import { getAllTopics, getTopic } from "@/lib/content";
@@ -153,10 +154,12 @@ const FIELD_LABEL: Record<TopicField, string> = {
 // 本体
 // ---------------------------------------------------------------------------
 
-export function buildWeeklyReportFacts(state: AppState, now: Date = new Date()): WeeklyReportFacts {
-  const today = startOfLocalDay(now);
-  const weekStart = addDays(today, -6);
-  const lastWeekStart = addDays(today, -13);
+export function buildWeeklyReportFacts(state: AppState, now: Date = new Date(), options: { timeZone?: string; days?: 1 | 7 } = {}): WeeklyReportFacts {
+  const count = options.days ?? 7;
+  const key = (d: Date) => options.timeZone ? dateInZone(d, options.timeZone) : localDateKey(d);
+  const today = options.timeZone ? startInZone(key(now), options.timeZone) : startOfLocalDay(now);
+  const weekStart = options.timeZone ? startInZone(shiftDate(key(now), -(count - 1)), options.timeZone) : addDays(today, -(count - 1));
+  const lastWeekStart = options.timeZone ? startInZone(shiftDate(key(now), -(count * 2 - 1)), options.timeZone) : addDays(today, -(count * 2 - 1));
   const weekStartMs = weekStart.getTime();
   const lastWeekStartMs = lastWeekStart.getTime();
   const nowMs = now.getTime();
@@ -172,12 +175,12 @@ export function buildWeeklyReportFacts(state: AppState, now: Date = new Date()):
 
   // --- 日別 ---
   const days: DayActivity[] = [];
-  for (let i = 0; i < 7; i++) {
-    const d = addDays(weekStart, i);
-    const key = localDateKey(d);
-    const items = thisWeek.filter((x) => localDateKey(new Date(x.t)) === key);
+  for (let i = 0; i < count; i++) {
+    const dayKey = shiftDate(key(weekStart), i);
+    const d = new Date(`${dayKey}T12:00:00`);
+    const items = thisWeek.filter((x) => key(new Date(x.t)) === dayKey);
     days.push({
-      date: key,
+      date: dayKey,
       weekday: WEEKDAYS[d.getDay()],
       answered: items.length,
       correct: items.filter((x) => x.a.isCorrect).length,
@@ -196,7 +199,7 @@ export function buildWeeklyReportFacts(state: AppState, now: Date = new Date()):
     lastWeekItems.length > 0
       ? {
           ...rate(lastWeekItems.map((x) => x.a)),
-          daysStudied: new Set(lastWeekItems.map((x) => localDateKey(new Date(x.t)))).size,
+          daysStudied: new Set(lastWeekItems.map((x) => key(new Date(x.t)))).size,
         }
       : null;
 
@@ -265,7 +268,7 @@ export function buildWeeklyReportFacts(state: AppState, now: Date = new Date()):
     .slice(0, 3);
 
   // --- 再開（2日以上空いたあと、今週中に戻ってきた） ---
-  const studyDates = [...new Set(timed.map((x) => localDateKey(new Date(x.t))))].sort();
+  const studyDates = [...new Set(timed.map((x) => key(new Date(x.t))))].sort();
   let comeback: WeeklyReportFacts["comeback"] = null;
   for (let i = 1; i < studyDates.length; i++) {
     const prev = new Date(`${studyDates[i - 1]}T00:00:00`);
@@ -315,7 +318,7 @@ export function buildWeeklyReportFacts(state: AppState, now: Date = new Date()):
     totals.answered === 0 ? "none" : totals.answered < LOW_DATA_ANSWERS ? "low" : "ok";
 
   const base = {
-    period: { start: localDateKey(weekStart), end: localDateKey(today), days },
+    period: { start: key(weekStart), end: key(today), days },
     isFirstWeek: before.length === 0,
     volume,
     totals,
@@ -338,7 +341,7 @@ export function buildWeeklyReportFacts(state: AppState, now: Date = new Date()):
 
   return {
     ...base,
-    signals: buildSignals(base, thisWeek.map((x) => x.a)),
+    signals: buildSignals(base, thisWeek.map((x) => x.a), options.timeZone),
     nextActions: buildNextActions(state, now, volume),
   };
 }
@@ -353,7 +356,7 @@ function hedge(tentative: boolean): string {
   return tentative ? "まだ数が少ないので参考程度ですが、" : "";
 }
 
-function buildSignals(f: FactsBase, weekAnswers: UserAnswer[]): WeeklySignal[] {
+function buildSignals(f: FactsBase, weekAnswers: UserAnswer[], timeZone?: string): WeeklySignal[] {
   const signals: WeeklySignal[] = [];
   if (f.volume === "none") return signals;
   const low = f.volume === "low";
@@ -370,7 +373,7 @@ function buildSignals(f: FactsBase, weekAnswers: UserAnswer[]): WeeklySignal[] {
       tentative: n < 2,
       fact: `以前まちがえた問題のうち${n}問に、今週は正解した${top ? `（最多は「${top.title}」で${top.count}問）` : ""}`,
       title: "前にまちがえた問題が解けるようになっています",
-      body: `以前つまずいた問題のうち${n}問に、今週は正解できました。${top ? `「${top.title}」` : "一度間違えたところ"}の理解が、あいまいな記憶から使える知識に変わってきています。`,
+      body: `以前つまずいた問題のうち${n}問に、今週は正解できました。${top ? `「${top.title}」` : "一度間違えたところ"}で、以前の誤答から正解への変化が見られました。時間をあけた復習でも確かめていきましょう。`,
       numbers: [n, ...(top ? [top.count] : [])],
     });
   }
@@ -503,7 +506,7 @@ function buildSignals(f: FactsBase, weekAnswers: UserAnswer[]): WeeklySignal[] {
     { key: "夜", test: (h: number) => h >= 17 || h < 5 },
   ].map((b) => ({
     key: b.key,
-    ...rate(weekAnswers.filter((a) => b.test(new Date(a.answeredAt).getHours()))),
+    ...rate(weekAnswers.filter((a) => b.test(timeZone ? Number(new Intl.DateTimeFormat("en", {timeZone, hour:"numeric", hourCycle:"h23"}).format(new Date(a.answeredAt))) : new Date(a.answeredAt).getHours()))),
   }));
   const comparable = bands.filter((b) => b.answered >= MIN_COMPARE_SAMPLE && b.accuracy !== null);
   if (comparable.length >= 2) {
@@ -553,7 +556,7 @@ function buildSignals(f: FactsBase, weekAnswers: UserAnswer[]): WeeklySignal[] {
       tentative: low,
       fact: `解答数は先週${lw.answered}問→今週${f.totals.answered}問に減ったが、正答率は${lw.accuracy}%→${f.totals.accuracy}%で下がっていない`,
       title: "量は減っても、理解は落ちていません",
-      body: `解いた数は先週の${lw.answered}問から${f.totals.answered}問に減りましたが、正答率は${lw.accuracy}%から${f.totals.accuracy}%と保てています。忙しい週でも、積み上げは崩れていません。`,
+      body: `解いた数は先週の${lw.answered}問から${f.totals.answered}問に減りましたが、正答率は${lw.accuracy}%から${f.totals.accuracy}%と保てています。回答数の減少と正答率の変化は分けて見られます。次回も同じ範囲で理解を確かめましょう。`,
       numbers: [lw.answered, f.totals.answered, lw.accuracy, f.totals.accuracy],
     });
   }
@@ -586,7 +589,7 @@ function buildSignals(f: FactsBase, weekAnswers: UserAnswer[]): WeeklySignal[] {
         tentative: false,
         fact: `正答率が先週${lw.accuracy}%→今週${f.totals.accuracy}%（-${d}pt）`,
         title: "正答率は先週より下がりました",
-        body: `正答率は${lw.accuracy}%から${f.totals.accuracy}%になりました。新しい範囲に進んだ週は一時的に下がるのが普通です。まちがえた問題を解き直すと、ここは戻せます。`,
+        body: `正答率は${lw.accuracy}%から${f.totals.accuracy}%になりました。問題の内容や難しさも関係するため、数値だけでは原因は断定できません。まず今回間違えた問題の解説を確認し、次の復習で理解を確かめましょう。`,
         numbers: [lw.accuracy, f.totals.accuracy, d],
       });
     }

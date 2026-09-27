@@ -73,3 +73,14 @@ export async function triggerLineReminder(
     return { ok: false, reason: "request_failed" };
   }
 }
+
+/** Same scheduler, separate endpoint: journal failures never suppress reminders. */
+export async function triggerLearningJournal(env: Env, fetchImpl: FetchLike = fetch): Promise<void> {
+  const base=(env.APP_BASE_URL??'').trim().replace(/\/+$/,'');
+  const secret=env.CRON_SECRET?.trim();
+  if(!base||!secret)return;
+  try {
+    const response=await fetchImpl(`${base}/api/cron/learning-journal`,{method:'GET',headers:{Authorization:`Bearer ${secret}`}});
+    if(!response.ok)console.error(`learning-journal-cron: endpoint returned ${response.status}`);
+  } catch { console.error('learning-journal-cron: request failed'); }
+}

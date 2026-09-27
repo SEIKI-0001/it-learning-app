@@ -52,15 +52,15 @@ function writeCache(key: string, part: AiNarrativePart) {
 
 export type NarrativeStatus = "loading" | "ready";
 
-export function useWeeklyNarrative(facts: WeeklyReportFacts): {
+export function useWeeklyNarrative(facts: WeeklyReportFacts, saved?: WeeklyNarrative): {
   narrative: WeeklyNarrative;
   status: NarrativeStatus;
 } {
-  const template = useMemo(() => buildTemplateNarrative(facts), [facts]);
+  const template = useMemo(() => saved ?? buildTemplateNarrative(facts), [facts, saved]);
   const payload = useMemo(() => buildAiPayload(facts), [facts]);
   const key = useMemo(
-    () => (facts.volume === "none" ? null : hash(`${facts.period.end}|${JSON.stringify(payload)}`)),
-    [facts, payload],
+    () => (saved || facts.volume === "none" ? null : hash(`${facts.period.end}|${JSON.stringify(payload)}`)),
+    [facts, payload, saved],
   );
 
   const [result, setResult] = useState<{ key: string | null; part: AiNarrativePart | null } | null>(

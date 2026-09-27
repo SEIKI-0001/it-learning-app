@@ -235,6 +235,8 @@ export type UserProgress = {
 };
 
 export type UserAnswer = {
+  /** Foreground answer time; missing for legacy history. */
+  timeSpentSeconds?: number | null;
   questionId: string;
   // 時間切れで未回答のまま保存される場合があるため optional。
   // DB の selected_choice も nullable。

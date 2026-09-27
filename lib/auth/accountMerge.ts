@@ -5,13 +5,13 @@ export type AccountSnapshot = { source: string; target: string; tables: Record<s
 // These projections can be recalculated; their original rows stay in the merge archive.
 export const DERIVED_ACCOUNT_TABLES = ['exam_readiness_current','exam_readiness_evidence_events','exam_readiness_evidence_state','exam_readiness_recalculation_jobs','exam_readiness_snapshots','integrated_learning_status','plan_adjustment_proposals'];
 const NATURAL_KEYS: Record<string,string[]> = {
- user_profiles:[],user_progress:[],user_reference_books:[],notification_preferences:[],
+ learning_journal_schedule:[],user_profiles:[],user_progress:[],user_reference_books:[],notification_preferences:[],
  user_word_progress:['word_id'],topic_progress:['topic_id'],daily_progress_reports:['date'],
  daily_study_tasks:['date','task_type','topic_id','title'],notification_deliveries:['notification_type','local_date'],
  progress_readiness_completions:['trigger_type','trigger_id'],assessment_session_answers:['idempotency_key'],
  assessment_attempt_receipts:['session_id','question_id'],
 };
-const PRIMARY:Record<string,string[]>={user_profiles:['user_id'],user_progress:['user_id'],user_reference_books:['user_id'],notification_preferences:['user_id'],user_word_progress:['user_id','word_id'],topic_progress:['id'],daily_progress_reports:['report_id'],daily_study_tasks:['task_id'],notification_deliveries:['user_id','notification_type','local_date'],progress_readiness_completions:['user_id','trigger_type','trigger_id'],assessment_session_answers:['answer_id'],assessment_attempt_receipts:['user_id','session_id','question_id']};
+const PRIMARY:Record<string,string[]>={learning_journal_schedule:["user_id"],user_profiles:['user_id'],user_progress:['user_id'],user_reference_books:['user_id'],notification_preferences:['user_id'],user_word_progress:['user_id','word_id'],topic_progress:['id'],daily_progress_reports:['report_id'],daily_study_tasks:['task_id'],notification_deliveries:['user_id','notification_type','local_date'],progress_readiness_completions:['user_id','trigger_type','trigger_id'],assessment_session_answers:['answer_id'],assessment_attempt_receipts:['user_id','session_id','question_id']};
 function latest(a:AccountRow,b:AccountRow){return String(a.updated_at??a.created_at??'')>String(b.updated_at??b.created_at??'')?a:b;}
 function mergeDuplicate(table:string,a:AccountRow,b:AccountRow,target:string):AccountRow {
  let result:AccountRow={...a,...latest(a,b)};

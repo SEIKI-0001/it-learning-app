@@ -31,6 +31,7 @@ export function isWeeklyReportAiConfigured(): boolean {
 
 export async function generateWeeklyNarrative(
   payload: WeeklyAiPayload,
+  periodKind: "daily" | "weekly" = "weekly",
 ): Promise<{ part: AiNarrativePart; model: string }> {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) throw new WeeklyReportAiError("GEMINI_API_KEY is not set", "not_configured");
@@ -46,7 +47,7 @@ export async function generateWeeklyNarrative(
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: buildWeeklyReportSystemPrompt() }] },
+        systemInstruction: { parts: [{ text: buildWeeklyReportSystemPrompt() + (periodKind === "daily" ? "\n今回は1日の記録です。入力は今日と前日の集計です。今週・先週・1週間という表現を使わず、今日・前日と表現してください。" : "") }] },
         contents: [{ role: "user", parts: [{ text: buildWeeklyReportUserPrompt(payload) }] }],
         generationConfig: { temperature: 0.5, responseMimeType: "application/json" },
       }),

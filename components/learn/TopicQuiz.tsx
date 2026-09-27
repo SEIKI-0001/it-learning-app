@@ -17,6 +17,7 @@ import type { MochitQuestionContext } from "@/lib/mochitAi/types";
 // /today・/review の「解いて進める」体験に使う(表示専用の CheckQuestionCard とは別物)。
 // 正解するたびに小さな達成感が返るよう、ポップ表示・ほめ言葉・コンボ・積み上がりバーで報酬感を出す。
 
+import { QuestionTimer } from "@/lib/questionTimer";
 import { XP_PER_COMBO } from "@/lib/study";
 
 const KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
@@ -147,6 +148,19 @@ export default function TopicQuiz({
   );
   const timeLimitReached = timeLimited && timeLeft === 0;
 
+  const questionTimer = useRef(new QuestionTimer());
+  const visibleQuestionId = questions[currentIndex]?.id;
+  useEffect(() => {
+    const timer = questionTimer.current;
+    const visibility = () => {
+      if (document.visibilityState === "hidden" || !visibleQuestionId || done || submitting) timer.pause(performance.now());
+      else timer.show(visibleQuestionId, performance.now());
+    };
+    visibility();
+    document.addEventListener("visibilitychange", visibility);
+    return () => { timer.pause(performance.now()); document.removeEventListener("visibilitychange", visibility); };
+  }, [visibleQuestionId, done, submitting]);
+
   const total = questions.length;
   const allAnswered = questions.every((q) => selections[q.id] !== undefined);
   const currentQuestion = questions[currentIndex];
@@ -170,7 +184,7 @@ export default function TopicQuiz({
     // selections/order が変わるたび再計算
   }, [order, selections, shuffled]);
 
-  function select(qId: string, key: ChoiceKey) {
+  const select = useCallback((qId: string, key: ChoiceKey) => {
     if (done || submitting || timeLimitReached) return;
     if (
       selections[qId] !== undefined ||
@@ -179,10 +193,11 @@ export default function TopicQuiz({
       return;
     }
     answeredQuestionIdsRef.current.add(qId);
+    questionTimer.current.answer(qId, performance.now());
     emitMochitEvent(key === shuffled.get(qId)?.correct ? "correct" : "incorrect");
     setSelections((s) => ({ ...s, [qId]: key }));
     setOrder((o) => (o.includes(qId) ? o : [...o, qId]));
-  }
+  }, [done, submitting, timeLimitReached, selections, shuffled]);
 
   function goNext() {
     setCurrentIndex((i) => Math.min(i + 1, total - 1));
@@ -200,6 +215,7 @@ export default function TopicQuiz({
     failedSubmissionRef.current = false;
     setSubmitFailed(false);
     setSubmitting(true);
+    questionTimer.current.pause(performance.now());
     const answers = pendingAnswersRef.current ?? questions.map((q) => {
       const answeredAt = new Date().toISOString();
       const sh = shuffled.get(q.id)!;
@@ -209,6 +225,7 @@ export default function TopicQuiz({
       const selectedSourceKey = sh.choices.find((choice) => choice.key === sel)?.sourceKey;
       return {
         questionId: q.id,
+        timeSpentSeconds: questionTimer.current.seconds(q.id),
         selectedChoice: selectedSourceKey,
         isCorrect: selectedSourceKey === q.correctChoice,
         answeredAt,
