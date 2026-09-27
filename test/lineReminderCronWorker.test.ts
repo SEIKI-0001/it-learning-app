@@ -44,6 +44,11 @@ afterEach(() => {
 });
 
 describe("scheduled invocation", () => {
+  it("5分ごとの起動では通知を送らず学習記録のみ処理する", async () => {
+    await worker.scheduled({ ...controller, cron: "*/5 * * * *" }, env(), ctx);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe(`${BASE_URL}/api/cron/learning-journal`);
+  });
   it("通知APIを CRON_SECRET 付きで GET する", async () => {
     await worker.scheduled(controller, env(), ctx);
 

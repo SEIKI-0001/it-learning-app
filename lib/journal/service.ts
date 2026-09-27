@@ -72,7 +72,7 @@ async function release(db:SupabaseClient,schedule:JournalSchedule,nextWeekly?:st
   const result=await db.from('learning_journal_schedule').update({lease_until:null,...(success?{last_checked_at:new Date().toISOString()}:{}),...(nextWeekly!==undefined?{next_weekly_date:nextWeekly}:{})}).eq('user_id',schedule.user_id).eq('lease_until',schedule.lease_until);assertDb(result.error);
 }
 export async function processJournalNarratives(db:SupabaseClient,userId?:string) {
-  const result=await db.rpc('claim_journal_narratives',{p_user_id:userId??null,p_limit:2});assertDb(result.error);
+  const result=await db.rpc('claim_journal_narratives',{p_user_id:userId??null,p_limit:5});assertDb(result.error);
   await Promise.all((result.data as JournalRecord[]).map(async record=>{
     const update=await completeNarrative(record);
     const saved=await db.from('learning_journal_records').update(update).eq('id',record.id).eq('user_id',record.user_id).eq('lease_until',record.lease_until).neq('narrative_status','ready');assertDb(saved.error);

@@ -179,6 +179,7 @@ export default function CheckPackRunner({
       selectedAnswer: a.selectedChoice ?? null,
       isCorrect: a.isCorrect,
       answeredAt: a.answeredAt,
+      timeSpentSeconds: a.timeSpentSeconds ?? null,
     }));
     let exposures: QuestionExposureMap = {};
     try {

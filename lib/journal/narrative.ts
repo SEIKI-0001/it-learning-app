@@ -5,6 +5,10 @@ import type { JournalRecord } from './model';
 export function templateFor(record:Pick<JournalRecord,'snapshot'|'record_type'>):WeeklyNarrative|null {
   if(!record.snapshot.facts) return null;
   const template=buildTemplateNarrative(record.snapshot.facts);
+  if(record.snapshot.facts.totals.answered===0 && record.snapshot.facts.totals.daysStudied>0) {
+    template.headline='学習の歩みが残りました';
+    template.summary=record.snapshot.comment;
+  }
   if(record.record_type==='daily') {
     return JSON.parse(dailyWords(JSON.stringify({...template,summary:record.snapshot.comment}))) as WeeklyNarrative;
   }

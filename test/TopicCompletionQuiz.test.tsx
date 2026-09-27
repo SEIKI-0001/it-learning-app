@@ -177,6 +177,7 @@ describe("TopicCompletionQuiz Mochit reactions", () => {
 
     await waitFor(() => expect(completeStudySession).toHaveBeenCalled());
     expect(saveQuestionAttemptsForCurrentSession).toHaveBeenCalledTimes(1);
+    expect(saveQuestionAttemptsForCurrentSession.mock.calls[0][0][0].timeSpentSeconds).toEqual(expect.any(Number));
     expect(completeStudySession.mock.invocationCallOrder[0]).toBeGreaterThan(
       saveQuestionAttemptsForCurrentSession.mock.invocationCallOrder[0],
     );

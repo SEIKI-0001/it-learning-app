@@ -132,6 +132,7 @@ export default function GrowthCheckPage() {
       selectedAnswer: answer.selectedChoice ?? null,
       isCorrect: answer.isCorrect,
       answeredAt: answer.answeredAt,
+      timeSpentSeconds: answer.timeSpentSeconds ?? null,
     }));
     // 既存の保存経路をそのまま通す。初見判定(is_first_attempt)はサーバー側で
     // 原子的に決まるため、既出問題がここで初見に戻ることはない。

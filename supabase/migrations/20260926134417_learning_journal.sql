@@ -113,7 +113,7 @@ returns setof public.learning_journal_schedule language plpgsql set search_path=
 begin
  if not exists(select 1 from pg_timezone_names where name=p_timezone) then raise exception 'INVALID_TIMEZONE';end if;
  insert into public.learning_journal_schedule(user_id,timezone) values(p_user_id,p_timezone) on conflict do nothing;
- return query update public.learning_journal_schedule set lease_until=now()+interval '5 minutes'
+ return query update public.learning_journal_schedule set timezone=p_timezone,lease_until=now()+interval '5 minutes'
  where user_id=p_user_id and (lease_until is null or lease_until<now()) returning *;
 end $$;
 revoke all on function public.claim_journal_user(uuid,text) from public,anon,authenticated;

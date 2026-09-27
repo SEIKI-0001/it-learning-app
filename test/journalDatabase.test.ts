@@ -31,3 +31,7 @@ it('has no direct client read/write permission and uses RLS',async()=>{
  await db.exec('set role anon'); await expect(db.query('select * from learning_journal_records')).rejects.toThrow();await db.exec('reset role');
  await db.exec('set role authenticated'); await expect(db.query('select * from claim_journal_narratives(null,1)')).rejects.toThrow();await db.exec('reset role');
 });
+it('uses browser-confirmed timezone for future generation after cron enrollment',async()=>{
+ await db.query(`insert into learning_journal_schedule(user_id,timezone) values($1,'Asia/Tokyo') on conflict(user_id) do update set timezone='Asia/Tokyo',lease_until=null`,[uid]);
+ const result=await db.query<{timezone:string}>('select * from claim_journal_user($1,$2)',[uid,'America/Los_Angeles']);expect(result.rows[0].timezone).toBe('America/Los_Angeles');
+});

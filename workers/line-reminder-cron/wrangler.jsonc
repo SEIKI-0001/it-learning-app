@@ -6,10 +6,10 @@
   // 公開したままだと workers.dev の URL が Error 1101（Worker threw exception）を返し、
   // 異常のように見えるうえ、不要な公開面が残る。
   "workers_dev": false,
-  // 毎時 UTC で起動する。ユーザーごとの通知時刻の判定はアプリ側の
+  // 通知は毎時、学習記録は5分ごとに UTC で起動する。ユーザーごとの通知時刻の判定はアプリ側の
   // timezone / ローカル日付ロジックが行うので、この UTC 時刻は判定に使わない。
   "triggers": {
-    "crons": ["0 * * * *"]
+    "crons": ["0 * * * *", "*/5 * * * *"]
   },
   "observability": {
     "enabled": true

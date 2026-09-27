@@ -1,7 +1,7 @@
 // GF-P0-006 のスケジューラー（Cloudflare Cron Trigger 専用の薄い Worker）。
 //
-// この Worker がやることは1つだけ:
-//   毎時起動され、it-learning-app の /api/cron/line-reminder を
+// 通知は毎時、学習記録は5分ごとにアプリの各 cron API を呼ぶ。
+//   it-learning-app の API を
 //   `Authorization: Bearer ${CRON_SECRET}` 付きで GET する。
 //
 // 意図的に持たないもの（Single Source of Truth を割らないため）:
@@ -34,10 +34,13 @@ type ScheduledHandler = {
   ): Promise<void>;
 };
 
-// Cron 起動のたびに通知APIを1回叩く。ここに判定を足さないこと。
+// 通知対象や学習記録の生成判定はアプリ側で行う。
 const handler: ScheduledHandler = {
   async scheduled(_controller, env) {
-    await Promise.all([triggerLineReminder(env), triggerLearningJournal(env)]);
+    await Promise.all([
+      ...(_controller.cron === "0 * * * *" ? [triggerLineReminder(env)] : []),
+      triggerLearningJournal(env),
+    ]);
   },
 };
 

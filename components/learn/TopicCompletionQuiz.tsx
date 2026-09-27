@@ -101,6 +101,7 @@ export default function TopicCompletionQuiz({
       selectedAnswer: answer.selectedChoice ?? null,
       isCorrect: answer.isCorrect,
       answeredAt: answer.answeredAt,
+      timeSpentSeconds: answer.timeSpentSeconds ?? null,
     }));
     const exposureResult = await saveQuestionAttemptsForCurrentSession(
       attempts,
