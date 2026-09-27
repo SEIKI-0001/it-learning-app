@@ -53,7 +53,10 @@ export async function POST(request: Request) {
         p_target: userId, p_hash: hash(code), p_snapshot: data, p_plan: plan,
       });
       if (!result.error) return reply({ ok: true });
-      if (result.error.code === "40001") continue;
+      if (
+        result.error.code === "40001"
+        || (result.error.code === "P0001" && result.error.message.includes("ACCOUNT_CHANGED_RETRY"))
+      ) continue;
       if (result.error.message.includes("FINISH_ACTIVE_SESSION")) {
         return reply({ error: "両方の端末で実力診断を終了し、少し待ってからもう一度連携してください。" }, 409);
       }
