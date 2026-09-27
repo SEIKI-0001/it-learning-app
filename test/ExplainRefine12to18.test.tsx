@@ -132,7 +132,11 @@ describe("12〜18章：静的な図解に作り直したテーマ", () => {
     expect(screen.getByTestId("phishing-flow")).toHaveTextContent(/偽メール.*偽のログイン画面.*ID・パスワードを入力.*攻撃者に届く/);
     expect(screen.getByTestId("ransom-flow")).toHaveTextContent(/侵入.*暗号化.*開けない.*金銭を要求/);
     slide(2);
-    expect(screen.getByTestId("malware-kinds")).toHaveTextContent("ワーム");
+    const kinds = screen.getByTestId("malware-kinds");
+    expect(screen.getByText("代表的なマルウェアを特徴で見分ける")).toBeInTheDocument();
+    expect(kinds.querySelector('[data-malware="ワーム"]')).toHaveTextContent("単独で自己複製して広がる");
+    expect(kinds.querySelector('[data-malware="スパイウェア"]')).toHaveTextContent("情報を収集・送信する");
+    expect(kinds).not.toHaveTextContent("増えない");
     slide(3);
     expect(within(screen.getByTestId("phishing-signs")).getAllByRole("listitem")).toHaveLength(3);
   });
