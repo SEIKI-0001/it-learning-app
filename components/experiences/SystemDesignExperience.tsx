@@ -1,12 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { Lead, PointsPanel } from "./diagram/DiagramParts";
+import { VModel } from "./diagram/VModel";
 import { Panel, SectionTitle } from "./ui";
 
 // 「システム設計（外部設計・内部設計）」。混同を防ぐのが目的なので、静的な図で「境界線」を引く。
-//   ① 工程の流れ：要件定義 → 外部設計 → 内部設計 → 実装。右へ行くほど「作る側」に近い
-//   ② 1つの注文システムを「利用者から見える線」で上下に切る：上＝外部設計（画面・帳票・IF・データ）、下＝内部設計（モジュール）
+//   ① V字モデル上の位置：外部設計→システムテスト、内部設計→結合テスト（全体のどこにいるか）
+//   ② 外部設計｜内部設計 の2カラム。大見出し＋一言定義、画面・帳票は小さなイラストで
 //   ③ 決めることの仕分け表（家づくりのたとえ付き）
 //   ④ 試験ポイント
 
@@ -14,7 +14,7 @@ export default function SystemDesignExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        📐 設計は2段階。まず<b>利用者から見える部分</b>を決め（外部設計）、次にそれを<b>中でどう動かすか</b>を決めます（内部設計）。
+        設計は2段階。まず<b>利用者から見える部分</b>を決め（外部設計）、次にそれを<b>中でどう動かすか</b>を決めます（内部設計）。
       </Lead>
       <FlowPanel />
       <BoundaryPanel />
@@ -36,126 +36,140 @@ export default function SystemDesignExperience() {
 }
 
 // ---------------------------------------------------------------------------
-// ① 工程の流れ
+// ① V字モデル上の位置：外部設計・内部設計が、後のどのテストで確かめられるか
 // ---------------------------------------------------------------------------
-
-const PHASES = [
-  { name: "要件定義", q: "何が必要？", who: "利用者と" },
-  { name: "外部設計", q: "どう見える？", who: "利用者と" },
-  { name: "内部設計", q: "中でどう動く？", who: "開発者が" },
-  { name: "実装", q: "コードを書く", who: "開発者が" },
-];
 
 function FlowPanel() {
   return (
     <Panel>
-      <SectionTitle step={1}>要件から実装へ、だんだん細かく</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">右へ進むほど、利用者の言葉から<b className="text-gray-800">作る人の言葉</b>に変わります。</p>
-      <div className="mt-3 grid grid-cols-4 gap-1" data-testid="design-flow">
-        {PHASES.map((p, i) => (
-          <div key={p.name} className="relative">
-            <div
-              className={`rounded-lg px-0.5 py-2 text-center ${
-                i === 1 ? "bg-brand-600 text-white" : i === 2 ? "bg-gray-700 text-white" : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              <div className="text-[13px] font-bold leading-tight">{p.name}</div>
-              <div className={`mt-1 text-[11px] leading-tight ${i === 1 || i === 2 ? "text-white/85" : "text-gray-500"}`}>{p.q}</div>
-            </div>
-            <div className={`mt-1 text-center text-[11px] font-bold ${p.who === "利用者と" ? "text-brand-700" : "text-gray-600"}`}>{p.who}</div>
-            {i < PHASES.length - 1 && (
-              <span className="absolute -right-1.5 top-4 z-10 text-sm font-bold text-gray-400" aria-hidden>
-                ▸
-              </span>
-            )}
-          </div>
-        ))}
+      <SectionTitle step={1}>外部設計・内部設計は、開発全体のどこ？</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        V字モデルは、左で<b className="text-gray-800">設計したこと</b>を、右の<b className="text-gray-800">同じ高さのテスト</b>で確かめる、という対応を表します。
+        今回学ぶのは青い2つです。
+      </p>
+      <div className="mx-auto mt-3 max-w-md" data-testid="design-flow">
+        <VModel
+          highlight={[1, 2]}
+          side="design"
+          label="V字モデル。要件定義は受入テスト、外部設計はシステムテスト、内部設計は結合テスト、プログラミングは単体テストで確かめる。外部設計と内部設計を強調。"
+        />
       </div>
-      <div className="mt-2 flex items-center gap-1 text-[11px] font-bold text-gray-500" aria-hidden>
-        <span className="text-brand-700">利用者に近い</span>
-        <span className="h-1.5 flex-1 rounded-full bg-gradient-to-r from-brand-400 to-gray-600" />
-        <span className="text-gray-700">作る側に近い</span>
-      </div>
+      <dl className="mt-3 divide-y divide-gray-200 border-y border-gray-200 text-sm">
+        <div className="grid grid-cols-[5.5rem_1fr] gap-2 py-2">
+          <dt className="font-bold text-gray-900">外部設計</dt>
+          <dd className="text-gray-700">要件定義の次。決めた内容は<b className="text-gray-900">システムテスト</b>で確かめる</dd>
+        </div>
+        <div className="grid grid-cols-[5.5rem_1fr] gap-2 py-2">
+          <dt className="font-bold text-gray-900">内部設計</dt>
+          <dd className="text-gray-700">外部設計の次・プログラミングの前。決めた内容は<b className="text-gray-900">結合テスト</b>で確かめる</dd>
+        </div>
+      </dl>
+      <p className="mt-2 text-xs leading-relaxed text-gray-500">外部設計は「基本設計」、内部設計は「詳細設計」と呼ばれることもあります。</p>
     </Panel>
   );
 }
 
 // ---------------------------------------------------------------------------
-// ② 見える線で切る
+// ② 外部設計｜内部設計 を大きく2つに分ける
 // ---------------------------------------------------------------------------
 
-function Tag({ children }: { children: ReactNode }) {
-  return <span className="rounded bg-brand-600 px-1 text-[11px] font-bold text-white">{children}</span>;
+function ScreenIllust() {
+  return (
+    <svg viewBox="0 0 96 64" className="h-14 w-auto flex-none" aria-hidden>
+      <rect x="2" y="2" width="92" height="60" rx="6" fill="#fff" stroke="#111827" strokeWidth="2" />
+      <line x1="2" y1="14" x2="94" y2="14" stroke="#111827" strokeWidth="1.5" />
+      <circle cx="9" cy="8" r="1.8" fill="#111827" />
+      <circle cx="15" cy="8" r="1.8" fill="#111827" />
+      <rect x="10" y="21" width="34" height="7" rx="2" fill="#e5e7eb" />
+      <rect x="50" y="21" width="36" height="7" rx="2" fill="#fff" stroke="#9ca3af" />
+      <rect x="10" y="33" width="34" height="7" rx="2" fill="#e5e7eb" />
+      <rect x="50" y="33" width="20" height="7" rx="2" fill="#fff" stroke="#9ca3af" />
+      <rect x="54" y="47" width="32" height="10" rx="3" fill="#0868c9" />
+    </svg>
+  );
+}
+
+function FormIllust() {
+  return (
+    <svg viewBox="0 0 64 72" className="h-14 w-auto flex-none" aria-hidden>
+      <path d="M4 2 H48 L60 14 V70 H4 Z" fill="#fff" stroke="#111827" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M48 2 V14 H60" fill="none" stroke="#111827" strokeWidth="1.5" />
+      <rect x="14" y="10" width="24" height="5" rx="1" fill="#111827" />
+      {[26, 34, 42].map((yy) => (
+        <g key={yy}>
+          <line x1="11" y1={yy} x2="38" y2={yy} stroke="#9ca3af" strokeWidth="2" />
+          <line x1="44" y1={yy} x2="53" y2={yy} stroke="#9ca3af" strokeWidth="2" />
+        </g>
+      ))}
+      <line x1="11" y1="52" x2="53" y2="52" stroke="#111827" strokeWidth="1.5" />
+      <line x1="36" y1="60" x2="53" y2="60" stroke="#0868c9" strokeWidth="3" />
+    </svg>
+  );
+}
+
+function ModuleIllust() {
+  return (
+    <svg viewBox="0 0 110 64" className="h-14 w-auto flex-none" aria-hidden>
+      <rect x="37" y="2" width="36" height="18" rx="4" fill="#374151" />
+      {[4, 40, 76].map((x) => (
+        <g key={x}>
+          <line x1="55" y1="20" x2={x + 15} y2="42" stroke="#6b7280" strokeWidth="1.5" />
+          <rect x={x} y="42" width="30" height="18" rx="4" fill="#fff" stroke="#374151" strokeWidth="1.8" />
+        </g>
+      ))}
+    </svg>
+  );
 }
 
 function BoundaryPanel() {
   return (
     <Panel>
-      <SectionTitle step={2}>「見える線」で上下に切る</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">ネットショップの注文システムを1枚の図にしました。点線より上が外部設計、下が内部設計です。</p>
-
-      <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-300" data-testid="design-boundary">
-        {/* 外部設計 */}
-        <div className="bg-brand-50 p-2" data-testid="design-external">
-          <div className="mb-1.5 text-[12px] font-bold text-brand-800">外部設計 ― 利用者・接続先から見える</div>
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className="rounded-lg bg-white p-1.5 ring-1 ring-brand-200">
-              <Tag>画面</Tag>
-              <div className="mt-1 space-y-0.5 rounded-md border border-gray-300 p-1 text-[11px] text-gray-700">
-                <div>商品：<span className="text-gray-500">ノート ▾</span></div>
-                <div>数量：<span className="rounded border border-gray-300 px-1">2</span></div>
-                <div className="rounded bg-accent-500 py-0.5 text-center font-bold text-white">注文する</div>
+      <SectionTitle step={2}>外部設計と内部設計のちがい</SectionTitle>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2" data-testid="design-boundary">
+        <section className="rounded-xl p-3.5 ring-2 ring-brand-600" data-testid="design-external">
+          <h4 className="text-2xl font-bold text-gray-900">外部設計</h4>
+          <p className="mt-1 text-[15px] font-bold leading-snug text-brand-800">ユーザーから見える部分を決める</p>
+          <p className="mt-0.5 text-xs text-gray-600">利用者と相談しながら決める</p>
+          <ul className="mt-3 space-y-2">
+            <li className="flex items-center gap-3">
+              <ScreenIllust />
+              <div>
+                <div className="text-sm font-bold text-gray-900">画面</div>
+                <div className="text-xs text-gray-600">項目・ボタン・操作の流れ</div>
               </div>
-            </div>
-            <div className="rounded-lg bg-white p-1.5 ring-1 ring-brand-200">
-              <Tag>帳票</Tag>
-              <div className="mt-1 rounded-md border border-gray-300 p-1 text-[11px] leading-snug text-gray-700">
-                <div className="text-center font-bold">納品書</div>
-                <div>ノート ×2 … 400円</div>
-                <div className="border-t border-gray-200 text-right">合計 400円</div>
+            </li>
+            <li className="flex items-center gap-3">
+              <FormIllust />
+              <div>
+                <div className="text-sm font-bold text-gray-900">帳票</div>
+                <div className="text-xs text-gray-600">納品書・請求書などの印刷物</div>
               </div>
-            </div>
-            <div className="rounded-lg bg-white p-1.5 ring-1 ring-brand-200">
-              <Tag>インタフェース</Tag>
-              <div className="mt-1 text-[11px] leading-snug text-gray-700">配送会社のシステムへ、出荷データを送る形式</div>
-            </div>
-            <div className="rounded-lg bg-white p-1.5 ring-1 ring-brand-200">
-              <Tag>入出力データ</Tag>
-              <div className="mt-1 text-[11px] leading-snug text-gray-700">注文番号・商品・数量・届け先</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative border-t-2 border-dashed border-gray-400 bg-white">
-          <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-2 text-[11px] font-bold text-gray-600 ring-1 ring-gray-300">
-            ここから下は利用者には見えない
-          </span>
-        </div>
-
-        {/* 内部設計 */}
-        <div className="bg-gray-50 p-2 pt-3" data-testid="design-internal">
-          <div className="mb-1.5 text-[12px] font-bold text-gray-800">内部設計 ― 中でどう動かすか</div>
-          <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-0.5 text-center">
-            {["在庫確認", "決済", "発送指示"].map((m, i) => (
-              <div key={m} className="contents">
-                {i > 0 && (
-                  <div className="flex flex-col items-center text-gray-400" aria-hidden>
-                    <span className="text-[11px] font-bold leading-none text-gray-500">{i === 1 ? "OK" : "済"}</span>
-                    <span className="text-sm font-bold leading-none">→</span>
-                  </div>
-                )}
-                <div className="rounded-lg bg-gray-700 px-0.5 py-2 text-[12px] font-bold text-white">
-                  {m}
-                  <div className="text-[11px] font-normal text-white/80">モジュール</div>
-                </div>
+            </li>
+            <li className="text-sm text-gray-800">
+              <b className="text-gray-900">他システムとのインタフェース</b>・<b className="text-gray-900">入出力データ</b>
+            </li>
+          </ul>
+        </section>
+        <section className="rounded-xl bg-gray-50 p-3.5 ring-1 ring-gray-300" data-testid="design-internal">
+          <h4 className="text-2xl font-bold text-gray-900">内部設計</h4>
+          <p className="mt-1 text-[15px] font-bold leading-snug text-gray-800">システム内部の作り方を決める</p>
+          <p className="mt-0.5 text-xs text-gray-600">開発者（作る側）が決める</p>
+          <ul className="mt-3 space-y-2">
+            <li className="flex items-center gap-3">
+              <ModuleIllust />
+              <div>
+                <div className="text-sm font-bold text-gray-900">モジュール分割</div>
+                <div className="text-xs text-gray-600">処理をどの部品に分けるか</div>
               </div>
-            ))}
-          </div>
-          <p className="mt-1.5 text-[11px] leading-snug text-gray-600">処理をどの<b>モジュール</b>に分けるか、どの順に呼び、何のデータを渡すか。</p>
-        </div>
+            </li>
+            <li className="text-sm text-gray-800">
+              <b className="text-gray-900">モジュール間のデータの受け渡し</b>・<b className="text-gray-900">処理手順</b>
+            </li>
+          </ul>
+        </section>
       </div>
-      <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
-        💡 迷ったら「<b className="text-gray-800">利用者と相談して決める？</b>」と考える。相談するなら外部設計、開発者だけで決めるなら内部設計。
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        迷ったら「<b className="text-gray-900">利用者が目にする？</b>」。目にするなら外部設計、利用者には見えない中身なら内部設計です。
       </p>
     </Panel>
   );
@@ -180,11 +194,11 @@ function SortPanel() {
       <div className="mt-3 grid grid-cols-2 gap-x-1.5 gap-y-1 text-[12px]" data-testid="design-sort">
         <div className="rounded-lg bg-brand-600 py-1.5 text-center text-[13px] font-bold text-white">
           外部設計
-          <div className="text-[11px] font-normal text-white/85">🏠 間取り・窓の位置</div>
+          <div className="text-[11px] font-normal text-white/85">間取り・窓の位置</div>
         </div>
         <div className="rounded-lg bg-gray-700 py-1.5 text-center text-[13px] font-bold text-white">
           内部設計
-          <div className="text-[11px] font-normal text-white/85">🔩 柱の組み方・配線</div>
+          <div className="text-[11px] font-normal text-white/85">柱の組み方・配線</div>
         </div>
         {ROWS.map(([ext, int]) => (
           <div key={ext} className="contents">

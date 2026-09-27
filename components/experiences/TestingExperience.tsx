@@ -1,220 +1,137 @@
 "use client";
 
 import { useState } from "react";
-import { useReducedMotion } from "./scene/useReducedMotion";
-import { BugLegend, BugPipeline, PROD_COST, arrivalMs, type Stage } from "./testing/BugPipeline";
-import styles from "./testing/testing.module.css";
-import { VDiagram, type Pair } from "./testing/VDiagram";
+import { VModel } from "./diagram/VModel";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「テスト」専用の体験。
-//   ① テスト工程シミュレータ … 4段階をやる/省くを決めてリリースすると、種類の違う4匹のバグが
-//      上から落ちてくる。対応する関所がやる設定なら捕まり、省いていれば本番まで落ちて💥。
-//      下の行で捕まるほど直す範囲・修正コストが大きい（testing/BugPipeline）
-//   ② V字モデル：設計工程を選ぶと、同じ高さの対応するテストへ線が伸びる（testing/VDiagram）
+//   ① テストの対象が広がる … 同じネットショップの図で、単体（部品1つ）→ 結合（部品のつながり）
+//      → システム（全体）→ 受入（実際の利用・業務）と、確かめる範囲が段階的に広がる（静的）
+//   ② V字モデル：設計工程と、それを確かめるテストの対応（静的。diagram/VModel）
 //   ③ どの段階？ クイズ
+// 旧「テスト工程シミュレータ」（やる/省くを選んでリリース）は、操作しないと要点が見えなかったため廃止。
 // ============================================================================
 
-const STAGES: readonly Stage[] = [
-  {
-    id: "unit",
-    name: "単体テスト",
-    emoji: "🧩",
-    food: "材料の味見",
-    bug: "計算ボタンの部品が誤動作",
-    bugIcon: "🧩",
-    bugKind: "部品の中のバグ",
-    scope: "部品1つ",
-    cost: 1,
-    catchNote: "部品の段階で発見、その場ですぐ修正",
-    missNote: "電卓機能が壊れたまま世に出た",
-  },
-  {
-    id: "integration",
-    name: "結合テスト",
-    emoji: "🔗",
-    food: "合わせ味見",
-    bug: "カートと決済のつなぎ目でエラー",
-    bugIcon: "🔗",
-    bugKind: "部品のつなぎ目のバグ",
-    scope: "つなぎ目",
-    cost: 3,
-    catchNote: "部品をつないだ段階で発見",
-    missNote: "「買えない！」と苦情が殺到",
-  },
-  {
-    id: "system",
-    name: "システムテスト",
-    emoji: "🖥️",
-    food: "完成品の試食",
-    bug: "利用者が増えると全体が極端に遅い",
-    bugIcon: "🖥️",
-    bugKind: "システム全体のバグ",
-    scope: "システム全体",
-    cost: 10,
-    catchNote: "全体を通しで動かして発見",
-    missNote: "公開初日にアクセス集中でダウン",
-  },
-  {
-    id: "accept",
-    name: "受入テスト",
-    emoji: "🙆",
-    food: "注文者の確認",
-    bug: "依頼者が求めた機能と違っていた",
-    bugIcon: "📋",
-    bugKind: "要件とのズレ",
-    scope: "要件から",
-    cost: 30,
-    catchNote: "利用者目線の最終確認で発見",
-    missNote: "「頼んだものと違う」と作り直しに",
-  },
+type Scope = "unit" | "integration" | "system" | "accept";
+
+const LEVELS: { id: Scope; name: string; sub?: string; target: string; check: string; food: string }[] = [
+  { id: "unit", name: "単体テスト", target: "部品1つ", check: "部品（プログラム）単体が、仕様どおりに動くか", food: "材料の味見" },
+  { id: "integration", name: "結合テスト", target: "部品どうしのつながり", check: "部品をつないだとき、データを正しく受け渡せるか", food: "合わせ味見" },
+  { id: "system", name: "システムテスト", target: "システム全体", check: "全体が、性能もふくめて設計どおりに動くか", food: "完成品の試食" },
+  { id: "accept", name: "受入テスト", sub: "運用テスト", target: "実際の利用・業務", check: "利用者の要求を満たし、実際の業務で使えるか", food: "注文した人の確認" },
 ];
 
-function Simulator() {
-  const reducedMotion = useReducedMotion();
-  const [on, setOn] = useState<Record<string, boolean>>({
-    unit: true,
-    integration: true,
-    system: true,
-    accept: true,
-  });
-  const [released, setReleased] = useState(false);
-  const [runKey, setRunKey] = useState(0);
-  const [sawPerfect, setSawPerfect] = useState(false);
-  const [sawMiss, setSawMiss] = useState(false);
+const PARTS = [
+  { x: 14, label: "商品一覧" },
+  { x: 74, label: "カート" },
+  { x: 134, label: "決済" },
+];
 
-  const missedCount = STAGES.filter((s) => !on[s.id]).length;
-  const skippedAll = STAGES.every((s) => !on[s.id]);
-  const totalCost = STAGES.reduce((sum, s) => sum + (on[s.id] ? s.cost : PROD_COST), 0);
-  const bestCost = STAGES.reduce((sum, s) => sum + s.cost, 0);
-  const worstCost = STAGES.length * PROD_COST;
-  // 結果の文章は、最後のバグが着地してから出す
-  const settleMs = reducedMotion ? 0 : Math.max(...STAGES.map((s, i) => arrivalMs(i, on[s.id], STAGES.length))) + 150;
-  const fade = reducedMotion ? undefined : { animationDelay: `${settleMs}ms` };
-  const fadeClass = reducedMotion ? "" : styles.fadeIn;
+// 同じネットショップの図。scope に応じて、強調する範囲が広がる
+function ScopeIllust({ scope }: { scope: Scope }) {
+  const on = (i: number) =>
+    scope === "unit" ? i === 1 : scope === "integration" ? i === 1 || i === 2 : true;
+  const linkOn = (i: number) => (scope === "integration" ? i === 1 : scope !== "unit");
+  const frameOn = scope === "system" || scope === "accept";
+  const userOn = scope === "accept";
+  return (
+    <svg viewBox="0 0 250 92" className="block h-auto w-full" aria-hidden>
+      {/* システムの枠 */}
+      <rect x="4" y="8" width="192" height="76" rx="10" fill={frameOn ? "#eff7ff" : "#ffffff"} stroke={frameOn ? "#0868c9" : "#d1d5db"} strokeWidth={frameOn ? 2 : 1.2} strokeDasharray={frameOn ? undefined : "4 4"} />
+      <text x="12" y="22" fontSize="10" fontWeight="700" fill={frameOn ? "#0756a8" : "#9ca3af"}>
+        ネットショップ
+      </text>
+      {/* 部品どうしのつながり */}
+      {[0, 1].map((i) => (
+        <line key={i} x1={PARTS[i].x + 52} y1="54" x2={PARTS[i + 1].x} y2="54" stroke={linkOn(i) ? "#0868c9" : "#d1d5db"} strokeWidth={linkOn(i) ? 3 : 1.5} />
+      ))}
+      {PARTS.map((p, i) => (
+        <g key={p.label}>
+          <rect x={p.x} y="36" width="52" height="36" rx="6" fill={on(i) ? "#0868c9" : "#ffffff"} stroke={on(i) ? "#0868c9" : "#9ca3af"} strokeWidth="1.5" />
+          <text x={p.x + 26} y="58" textAnchor="middle" fontSize="11" fontWeight="700" fill={on(i) ? "#ffffff" : "#6b7280"}>
+            {p.label}
+          </text>
+        </g>
+      ))}
+      {/* 実際に使う人 */}
+      <g opacity={userOn ? 1 : 0.35}>
+        <line x1="198" y1="54" x2="212" y2="54" stroke={userOn ? "#0868c9" : "#d1d5db"} strokeWidth={userOn ? 3 : 1.5} />
+        <circle cx="230" cy="36" r="9" fill={userOn ? "#111827" : "#d1d5db"} />
+        <path d="M214 74 Q230 44 246 74 Z" fill={userOn ? "#111827" : "#d1d5db"} />
+        <text x="230" y="88" textAnchor="middle" fontSize="10" fontWeight="700" fill={userOn ? "#111827" : "#9ca3af"}>
+          利用者
+        </text>
+      </g>
+    </svg>
+  );
+}
 
-  const toggle = (id: string) => {
-    setOn((p) => ({ ...p, [id]: !p[id] }));
-    setReleased(false);
-  };
-  const release = () => {
-    setReleased(true);
-    setRunKey((k) => k + 1);
-    if (missedCount === 0) setSawPerfect(true);
-    else setSawMiss(true);
-  };
-
+function ScopePanel() {
   return (
     <Panel>
-      <SectionTitle step={1}>テスト工程シミュレータ</SectionTitle>
+      <SectionTitle step={1}>テストで「見る範囲」は、だんだん広がる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        あなたは開発リーダー。作ったシステムには<b className="text-gray-800">種類の違う4匹のバグ</b>が潜んでいます。
-        どのテストを<b className="text-gray-800">やるか・省くか</b>決めてリリースすると、バグが上から落ちてきます。
+        同じネットショップを4回テストします。青い部分が、その段階で確かめる対象です。
+        <b className="text-gray-800">部品 → 部品のつながり → システム全体 → 実際の利用</b>と広がります。
       </p>
-
-      <BugPipeline stages={STAGES} on={on} released={released} runKey={runKey} reducedMotion={reducedMotion} onToggle={toggle} />
-      <BugLegend stages={STAGES} />
-
-      {!released ? (
-        <button
-          onClick={release}
-          className="mt-3 w-full rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-95"
-        >
-          🚀 リリースする！
-        </button>
-      ) : (
-        <div key={runKey} className={`mt-3 space-y-2 ${fadeClass}`} style={fade} data-testid="test-result">
-          <ul className="space-y-1">
-            {STAGES.map((s) => (
-              <li key={s.id} className={`rounded-lg px-3 py-1.5 text-xs font-medium ${on[s.id] ? "bg-emerald-50 text-emerald-800" : "bg-rose-50 text-rose-700"}`}>
-                {on[s.id] ? (
-                  <>✅ {s.name}で「{s.bug}」をキャッチ（×{s.cost}）。{s.catchNote}。</>
-                ) : (
-                  <>💥 「{s.bug}」がすり抜け（×{PROD_COST}）→ {s.missNote}。</>
-                )}
-              </li>
-            ))}
-          </ul>
-          <div className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200" data-testid="test-cost">
-            <div className="flex items-baseline justify-between text-xs font-bold text-gray-700">
-              <span>修正コストの合計</span>
-              <span className={`font-mono text-sm ${missedCount ? "text-rose-700" : "text-emerald-700"}`}>×{totalCost}</span>
+      <ol className="mt-4 grid gap-3 sm:grid-cols-2" data-testid="test-scope">
+        {LEVELS.map((l, i) => (
+          <li key={l.id} className="rounded-xl p-3 ring-1 ring-gray-300" data-testid={`test-scope-${l.id}`}>
+            <div className="flex items-baseline gap-2">
+              <span className="font-mono text-xs font-bold text-gray-500">{i + 1}</span>
+              <span className="text-base font-bold text-gray-900">{l.name}</span>
+              {l.sub && <span className="text-xs text-gray-600">（{l.sub}）</span>}
             </div>
-            <div className="relative mt-1.5 h-2.5 overflow-hidden rounded-full bg-gray-200">
-              <div
-                className={`h-full rounded-full ${missedCount ? "bg-rose-500" : "bg-emerald-500"}`}
-                style={{ width: `${(totalCost / worstCost) * 100}%` }}
-              />
+            <p className="mt-0.5 text-[15px] font-bold text-brand-800">見る対象：{l.target}</p>
+            <div className="mt-2">
+              <ScopeIllust scope={l.id} />
             </div>
-            <div className="mt-1 text-[10px] text-gray-500">全部テストした場合 ×{bestCost} ／ 全部省いた場合 ×{worstCost}</div>
-          </div>
-          <div
-            className={`rounded-xl px-4 py-3 text-sm font-bold ring-1 ${
-              missedCount === 0 ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-rose-50 text-rose-800 ring-rose-200"
-            }`}
-          >
-            {missedCount === 0 ? (
-              <>🎉 4つのバグをぜんぶ世に出る前に発見！ 安心のリリースです。</>
-            ) : skippedAll ? (
-              <>🔥 ノーテストでリリース…4つのバグが全部本番で爆発。修正は開発中の何倍も高くつきます。</>
-            ) : (
-              <>⚠️ {missedCount}件のバグがリリース後に発覚。世に出てからの修正は、開発中に直すより何倍も高くつきます。</>
-            )}
-          </div>
-          <button
-            onClick={() => setReleased(false)}
-            className="w-full rounded-xl py-2 text-sm font-bold text-gray-600 ring-1 ring-gray-300 transition active:scale-95"
-          >
-            ↺ 選び直してもう一度
-          </button>
-        </div>
-      )}
-
-      {sawPerfect && sawMiss && (
-        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          💡 気づきましたか？ 段階ごとに<b>見つけられるバグが違う</b>んです（どの関所も自分の列しか網を張っていない）。だから
-          <b>単体→結合→システム→受入</b>と、小さい所から大きい所へ順にぜんぶ確認します。
-        </div>
-      )}
+            <p className="mt-1.5 text-sm leading-snug text-gray-800">{l.check}</p>
+            <p className="mt-0.5 text-xs text-gray-500">料理なら：{l.food}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        範囲が広い段階で見つかった不具合ほど、原因をさかのぼって直す範囲が大きくなります。だから<b className="text-gray-900">小さい範囲から順に</b>確かめます。
+      </p>
     </Panel>
   );
 }
 
-// V字: 左(設計)と右(テスト)の対応ペア。
-const PAIRS: Pair[] = [
-  { id: 0, left: "要件定義", right: "受入テスト", note: "「求めたものか」を確かめる", bug: "📋 要件とのズレ" },
-  { id: 1, left: "基本設計", right: "システムテスト", note: "全体が設計どおり動くか", bug: "🖥️ システム全体のバグ" },
-  { id: 2, left: "詳細設計", right: "結合テスト", note: "部品のつなぎ目が設計どおりか", bug: "🔗 つなぎ目のバグ" },
-  { id: 3, left: "製造（部品）", right: "単体テスト", note: "部品単体が正しく動くか", bug: "🧩 部品の中のバグ" },
+const PAIRS: { design: string; test: string; note: string }[] = [
+  { design: "要件定義", test: "受入テスト", note: "利用者が求めたものになっているか" },
+  { design: "外部設計（基本設計）", test: "システムテスト", note: "全体が設計どおり動くか" },
+  { design: "内部設計（詳細設計）", test: "結合テスト", note: "部品のつなぎ目が設計どおりか" },
+  { design: "プログラミング", test: "単体テスト", note: "部品単体が正しく動くか" },
 ];
 
-function VModel() {
-  const reducedMotion = useReducedMotion();
-  const [sel, setSel] = useState<number | null>(null);
+function VModelPanel() {
   return (
     <Panel>
       <SectionTitle step={2}>V字モデル（設計とテストの対応）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         <b className="text-gray-800">作る工程（左の辺を下る）</b>と<b className="text-gray-800">確かめるテスト（右の辺を上る）</b>は、同じ高さどうしが対になっています。
-        どちらかをタップすると、相手へ線が伸びます。
       </p>
-
-      <VDiagram pairs={PAIRS} sel={sel} onSelect={(i) => setSel(i === sel ? null : i)} reducedMotion={reducedMotion} />
-
-      <div className="mt-3 min-h-[3em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200" aria-live="polite">
-        {sel !== null ? (
-          <>
-            <b className="text-gray-900">{PAIRS[sel].left}</b> で決めたことを{" "}
-            <b className="text-gray-900">{PAIRS[sel].right}</b> で確認 ── {PAIRS[sel].note}。
-            <span className="mt-1 block text-xs text-gray-500">① で捕まえたバグ：{PAIRS[sel].bug}</span>
-          </>
-        ) : (
-          <span className="text-gray-400">左右どちらかをタップすると、対応するペアが分かります。</span>
-        )}
+      <div className="mx-auto mt-3 max-w-md">
+        <VModel
+          highlight={[0, 1, 2, 3]}
+          side="test"
+          label="V字モデル。要件定義は受入テスト、外部設計はシステムテスト、内部設計は結合テスト、プログラミングは単体テストで確かめる。"
+        />
       </div>
+      <ul className="mt-3 divide-y divide-gray-200 border-y border-gray-200 text-sm" data-testid="v-pairs">
+        {PAIRS.map((p) => (
+          <li key={p.test} className="py-2">
+            <div className="font-bold text-gray-900">
+              {p.design} <span className="text-gray-500">→</span> {p.test}
+            </div>
+            <div className="text-xs text-gray-600">{p.note}</div>
+          </li>
+        ))}
+      </ul>
 
-      <p className="mt-3 text-xs leading-relaxed text-gray-500">
+      <p className="mt-3 text-xs leading-relaxed text-gray-600">
         ※ <b>ホワイトボックステスト</b>＝プログラム内部の分岐・経路を見て確かめる（主に単体テスト）。
         <b>ブラックボックステスト</b>＝入力と出力だけで確かめる。
         <b>回帰（リグレッション）テスト</b>＝修正のあと、前は動いていた所が壊れていないか確かめる。
@@ -282,13 +199,13 @@ function Quiz() {
 export default function TestingExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ✅ テストは<b>単体→結合→システム→受入</b>と段階を踏みます。料理でいうと
-        <b>材料の味見→合わせ味見→完成品の試食→注文者の確認</b>。省くとどうなるか、まず体験してみましょう。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        テストは<b>単体→結合→システム→受入</b>と段階を踏みます。料理でいうと
+        <b>材料の味見→合わせ味見→完成品の試食→注文者の確認</b>。段階ごとに<b>見る範囲</b>が広がっていきます。
       </div>
 
-      <Simulator />
-      <VModel />
+      <ScopePanel />
+      <VModelPanel />
       <Quiz />
     </div>
   );

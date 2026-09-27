@@ -16,7 +16,7 @@ export default function ProcessingArchitectureExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        🧩 この単元の用語は、<b>4つの別々の軸</b>の答えです。「いつ処理する？」「回線につなぐ？」「どこで処理する？」「役割をどう分ける？」――1枚ずつ見ていきます。
+        この単元の用語は、<b>4つの別々の軸</b>の答えです。「いつ処理する？」「回線につなぐ？」「どこで処理する？」「役割をどう分ける？」――1枚ずつ見ていきます。
       </Lead>
       <TimingPanel />
       <ConnectionPanel />

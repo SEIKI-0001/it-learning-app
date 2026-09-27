@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LaborRelationDiagram } from "./labor/RelationDiagram";
 import { OfficeScene, type LaborMode, type Scenario } from "./labor/OfficeScene";
 import { useInView } from "./scene/useInView";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -17,23 +18,44 @@ import { Panel, SectionTitle } from "./ui";
 function Basics() {
   return (
     <Panel>
-      <SectionTitle step={3}>労働基準法＝働く人を守る基本ルール</SectionTitle>
+      <SectionTitle step={4}>労働基準法＝働く人を守る基本ルール</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         <b className="text-gray-800">労働基準法</b>は、労働時間・休日・賃金などの最低限のルールを定め、
         働く人を守る基本の法律です。
       </p>
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        {[
-          { emo: "⏰", t: "労働時間" },
-          { emo: "📅", t: "休日・休暇" },
-          { emo: "💴", t: "賃金" },
-        ].map((x) => (
-          <div key={x.t} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="text-xl">{x.emo}</div>
-            <div className="mt-1 text-xs font-bold text-gray-700">{x.t}</div>
+        {["労働時間", "休日・休暇", "賃金"].map((t) => (
+          <div key={t} className="rounded-xl bg-gray-50 px-2 py-3 text-sm font-bold text-gray-800 ring-1 ring-gray-200">
+            {t}
           </div>
         ))}
       </div>
+    </Panel>
+  );
+}
+
+function RelationPanel() {
+  return (
+    <Panel>
+      <SectionTitle step={1}>派遣と請負：3者の関係</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        上段が契約を結ぶ2つの会社、下段が実際に働く人。<b className="text-gray-800">右上の会社から働く人への線</b>だけを見比べてください。
+      </p>
+      <LaborRelationDiagram />
+      <dl className="mt-4 divide-y divide-gray-200 border-y border-gray-200 text-sm">
+        <div className="grid grid-cols-[4.5rem_1fr] gap-2 py-2.5">
+          <dt className="font-bold text-gray-900">派遣</dt>
+          <dd className="text-gray-700">
+            雇うのは<b className="text-gray-900">派遣元</b>、仕事の指示（指揮命令）を出すのは<b className="text-gray-900">派遣先</b>。
+          </dd>
+        </div>
+        <div className="grid grid-cols-[4.5rem_1fr] gap-2 py-2.5">
+          <dt className="font-bold text-gray-900">請負</dt>
+          <dd className="text-gray-700">
+            雇うのも指示するのも<b className="text-gray-900">請負会社</b>。発注元は<b className="text-gray-900">作業者へ直接指示しない</b>（仕事の完成を会社に頼むだけ）。
+          </dd>
+        </div>
+      </dl>
     </Panel>
   );
 }
@@ -66,7 +88,7 @@ function InstructionOffice() {
 
   return (
     <Panel>
-      <SectionTitle step={1}>だれが、だれに指示を出す？</SectionTitle>
+      <SectionTitle step={2}>オフィスで確かめる：指示の通り道</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         同じオフィスで、<b className="text-gray-800">指示の矢印がどこを通るか</b>を見比べよう。
         <span className="text-[11px] text-gray-500">（シャツの色＝雇っている会社）</span>
@@ -97,22 +119,22 @@ function InstructionOffice() {
       <div className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-center text-xs font-bold ring-1 ring-gray-200" data-testid="route">
         {haken ? (
           <>
-            <span className="text-indigo-700">派遣先</span> <span className="text-indigo-500">──指示──▶</span>{" "}
-            <span className="text-amber-700">派遣社員</span>
+            <span className="text-gray-900">派遣先</span> <span className="text-brand-700">──指示──▶</span>{" "}
+            <span className="text-gray-900">派遣社員</span>
             <span className="ml-1 font-medium text-gray-500">（直接）</span>
           </>
         ) : gisou ? (
           <>
-            <span className="text-indigo-700">注文主</span> <span className="text-rose-600">──直接指示──▶</span>{" "}
-            <span className="text-amber-700">社員</span>
+            <span className="text-gray-900">注文主</span> <span className="text-rose-600">──直接指示──▶</span>{" "}
+            <span className="text-gray-900">社員</span>
             <span className="ml-1 font-medium text-rose-600">（責任者を飛び越え）</span>
             <div className="mt-0.5 text-[10.5px] font-medium text-gray-500">灰色の点線＝本来の経路（注文主 → 責任者 → 社員）</div>
           </>
         ) : (
           <>
-            <span className="text-indigo-700">注文主</span> <span className="text-indigo-500">─依頼▶</span>{" "}
-            <span className="text-amber-700">請負会社の責任者</span> <span className="text-amber-600">─指示▶</span>{" "}
-            <span className="text-amber-700">社員</span>
+            <span className="text-gray-900">注文主</span> <span className="text-gray-500">─依頼▶</span>{" "}
+            <span className="text-gray-900">請負会社の責任者</span> <span className="text-brand-700">─指示▶</span>{" "}
+            <span className="text-gray-900">社員</span>
           </>
         )}
       </div>
@@ -142,8 +164,8 @@ function InstructionOffice() {
       {/* 読み取ってほしいこと（短く） */}
       <div className="mt-2" aria-live="polite">
         {haken ? (
-          <p className="rounded-xl bg-indigo-50 px-3 py-2.5 text-xs leading-relaxed text-indigo-900 ring-1 ring-indigo-200">
-            ✅ <b>派遣</b>では、<b>派遣先が派遣社員へ直接仕事の指示を出せます</b>。雇っているのは派遣元（シャツの色）でも、指示は派遣先から。
+          <p className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-800 ring-1 ring-gray-200">
+            <b>派遣</b>では、<b>派遣先が派遣社員へ直接仕事の指示を出せます</b>。雇っているのは派遣元（シャツの色）でも、指示は派遣先から。
           </p>
         ) : gisou ? (
           <div className="rounded-xl bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200" data-testid="gisou-warning">
@@ -156,8 +178,8 @@ function InstructionOffice() {
             </p>
           </div>
         ) : (
-          <p className="rounded-xl bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
-            📦 <b>請負</b>では、注文主は<b>会社へ「仕事の完成」を依頼</b>します。社員への具体的な指示は<b>請負会社の責任者</b>から。
+          <p className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-800 ring-1 ring-gray-200">
+            <b>請負</b>では、注文主は<b>会社へ「仕事の完成」を依頼</b>します。社員への具体的な指示は<b>請負会社の責任者</b>から。
             注文主 → 社員 の矢印はありません。
           </p>
         )}
@@ -195,7 +217,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   return (
     <Panel>
-      <SectionTitle step={2}>その指示、OK？　NG？</SectionTitle>
+      <SectionTitle step={3}>その指示、OK？　NG？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {QUIZ.map((q, i) => {
           const chosen = answers[i];
@@ -243,11 +265,12 @@ function Quiz() {
 export default function LaborLawsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📜 派遣と請負は、どちらも「よその会社の人に仕事をしてもらう」形。違いは<b>だれが作業者に指示を出すか</b>です。
-        まずはオフィスの模型で、指示の矢印の通り道を見てみよう。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        派遣と請負は、どちらも「よその会社の人に仕事をしてもらう」形。違いは<b>だれが作業者に指示を出すか</b>です。
+        まず3者の関係図で違いをつかみ、次にオフィスの模型で確かめます。
       </div>
 
+      <RelationPanel />
       <InstructionOffice />
       <Quiz />
       <Basics />

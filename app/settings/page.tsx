@@ -8,7 +8,17 @@ import type { TopicField } from "@/types/content";
 import { FIELD_LABELS } from "@/types/content";
 import { saveAppState } from "@/lib/storage";
 import { useAppState } from "@/lib/useAppState";
-import { getUserId, saveProfileToDb } from "@/lib/userSession";
+import {
+  getUserId,
+  invalidateProgressBootstrapCache,
+  saveProfileToDb,
+  saveProgressToDb,
+} from "@/lib/userSession";
+import {
+  havePlanningInputsChanged,
+  planningInputsFromProfile,
+} from "@/lib/planningInputs";
+import { rebuildWeeklyPlanForPlanningChange } from "@/lib/studyPlanner";
 import LoadingScreen from "@/components/LoadingScreen";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
@@ -20,11 +30,17 @@ import ReferenceBookSummary from "@/components/settings/ReferenceBookSummary";
 
 // 設定変更。オンボーディングで入力した試験予定日・学習可能時間・理解度・苦手分野・
 // 学習スタイルを、あとから何度でも変更できるようにする。現在値をプリセットして編集し保存する。
+//
+// 試験予定日・平日/休日の学習可能時間（planning inputs）の変更は学習計画の再計算イベント。
+// DB保存とサーバー側の再計算（統合進捗・立て直し案）の完了を待ち、今週の計画も
+// 新しい条件で作り直してから画面遷移する。失敗時は遷移せずエラーを出す。
 
 const WEEKDAY_OPTIONS = [10, 20, 30, 60];
 const HOLIDAY_OPTIONS = [15, 30, 60, 120];
 const FIELDS: TopicField[] = ["strategy", "management", "technology"];
 const STYLES: StudyStyle[] = ["balanced", "weakness", "rush"];
+const SAVE_ERROR_MESSAGE =
+  "保存できませんでした。通信状況を確認して、もう一度お試しください。";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -76,6 +92,8 @@ function SettingsForm({
     profile.studyStyle ?? "balanced",
   );
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function toggleField(field: TopicField) {
     setWeakFields((prev) =>
@@ -83,7 +101,8 @@ function SettingsForm({
     );
   }
 
-  function handleSave() {
+  async function handleSave() {
+    if (saving || saved) return;
     const updated: UserProfile = {
       ...profile,
       examDate: examDate || undefined,
@@ -96,12 +115,48 @@ function SettingsForm({
       dailyMinutes: String(weekdayMinutes),
       examPlan: examDate ? "decided" : "undecided",
     };
-    const next = { ...state, profile: updated };
-    saveAppState(next);
+    const planningChanged = havePlanningInputsChanged(
+      planningInputsFromProfile(profile),
+      planningInputsFromProfile(updated),
+    );
+
+    setSaving(true);
+    setSaveError(null);
 
     const userId = getUserId();
-    if (userId) saveProfileToDb(userId, updated);
+    let replanned = planningChanged;
+    if (userId) {
+      const result = await saveProfileToDb(userId, updated, {
+        replan: planningChanged,
+      });
+      if (!result.ok) {
+        setSaving(false);
+        setSaveError(SAVE_ERROR_MESSAGE);
+        return;
+      }
+      replanned = planningChanged || result.planningInputsChanged;
+    }
 
+    let next: AppState = { ...state, profile: updated };
+    if (replanned) {
+      // 同じ週でも旧条件の週次計画は維持せず、新しい条件で引き直す。
+      next = {
+        ...next,
+        progress: {
+          ...next.progress,
+          weeklyPlan: rebuildWeeklyPlanForPlanningChange(next),
+        },
+      };
+      invalidateProgressBootstrapCache();
+      if (userId && !(await saveProgressToDb(userId, next.progress))) {
+        setSaving(false);
+        setSaveError(SAVE_ERROR_MESSAGE);
+        return;
+      }
+    }
+
+    saveAppState(next);
+    setSaving(false);
     setSaved(true);
     onSaved(next);
   }
@@ -264,14 +319,25 @@ function SettingsForm({
           </fieldset>
         </div>
 
+        {saveError && (
+          <p role="alert" className="mt-9 rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {saveError}
+          </p>
+        )}
         <button
           type="button"
-          onClick={handleSave}
-          disabled={saved}
-          className={buttonClass("primary", "lg", "mt-9 w-full disabled:opacity-60")}
+          onClick={() => void handleSave()}
+          disabled={saved || saving}
+          className={buttonClass(
+            "primary",
+            "lg",
+            `${saveError ? "mt-3" : "mt-9"} w-full disabled:opacity-60`,
+          )}
         >
           {saved ? (
             "保存しました"
+          ) : saving ? (
+            "保存中…"
           ) : (
             <>
               <Icon name="save" className="h-5 w-5" />

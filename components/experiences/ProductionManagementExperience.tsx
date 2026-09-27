@@ -20,7 +20,7 @@ export default function ProductionManagementExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        🏭 「何台作るか」が決まると、<b>必要な部品の数</b>が決まり、<b>手元の在庫を引いた分だけ</b>発注します。そのあと在庫を切らさないための発注のしかたを見ます。
+        「何台作るか」が決まると、<b>必要な部品の数</b>が決まり、<b>手元の在庫を引いた分だけ</b>発注します。そのあと在庫を切らさないための発注のしかたを見ます。
       </Lead>
       <MrpPanel />
       <InventoryPanel />
@@ -53,6 +53,7 @@ function MrpPanel() {
   return (
     <Panel>
       <SectionTitle step={1}>MRP ― 需要から発注量を逆算する</SectionTitle>
+      <p className="mt-1 text-[13px] font-bold leading-snug text-brand-700">MRP ＝ Material Requirements Planning（資材所要量計画）</p>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">いすを<b className="text-gray-800">40台</b>作ります。いす1台に<b className="text-gray-800">脚の部品が3本</b>（部品表）。</p>
 
       <div ref={ref} className="mt-3 space-y-0.5" data-testid="prod-mrp" data-beat={beat}>

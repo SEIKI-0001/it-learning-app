@@ -275,8 +275,8 @@ function Acid() {
 export default function TransactionExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💳 <b>トランザクション</b>は分けられない一連の処理。全部成功で確定する<b>コミット</b>、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>トランザクション</b>は分けられない一連の処理。全部成功で確定する<b>コミット</b>、
         失敗時に開始前へ戻す<b>ロールバック</b>がカギです。
       </div>
 

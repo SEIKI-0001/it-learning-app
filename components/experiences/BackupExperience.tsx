@@ -19,7 +19,7 @@ export default function BackupExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        💾 バックアップは<b>「何を保存するか」</b>で3種類。保存が軽い方式ほど、<b>戻すときに手間がかかる</b>――この裏表を、日ごとの図で見ます。
+        バックアップは<b>「何を保存するか」</b>で3種類。保存が軽い方式ほど、<b>戻すときに手間がかかる</b>――この裏表を、日ごとの図で見ます。
       </Lead>
       <TakePanel />
       <RestorePanel />

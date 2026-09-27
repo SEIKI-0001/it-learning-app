@@ -253,8 +253,8 @@ function Quiz() {
 export default function CorporateStrategyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🚀 会社が成長する手は<b>「自前で磨く（コアコンピタンス）／他社と組む（アライアンス）／買い取る（M&A）／外に出す（アウトソーシング）」</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        会社が成長する手は<b>「自前で磨く（コアコンピタンス）／他社と組む（アライアンス）／買い取る（M&A）／外に出す（アウトソーシング）」</b>。
         どれも“どう力を得るか”の違いです。
       </div>
 

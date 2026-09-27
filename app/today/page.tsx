@@ -53,7 +53,7 @@ import {
 } from "@/lib/wordlistProgress";
 import { loadCachedTopicStages, refreshTopicStages } from "@/lib/topicStageCache";
 import { saveAppState } from "@/lib/storage";
-import { pinDailyQuests, type DailyQuestContext } from "@/lib/dailyQuests";
+import { allQuestsDone, pinDailyQuests, resolveDailyQuests, type DailyQuestContext } from "@/lib/dailyQuests";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -65,6 +65,7 @@ import TodayFocusCta from "@/components/today/TodayFocusCta";
 import { getMochitDisplayName } from "@/lib/mochitName";
 import TodayHero from "@/components/today/TodayHero";
 import TodayMissions from "@/components/today/TodayMissions";
+import TodayMochitContext from "@/components/today/TodayMochitContext";
 import { buildTodaySlots, type TodaySlot } from "@/components/today/todaySlots";
 import s from "@/components/today/todayView.module.css";
 
@@ -412,6 +413,12 @@ export default function TodayPage() {
 
         <div className={s.side}>
           <TodayMissions state={state} setState={setState} context={questContext} />
+          <TodayMochitContext
+            date={date}
+            slots={slots}
+            primary={primary}
+            missionsComplete={allQuestsDone(resolveDailyQuests(state, date, questContext))}
+          />
           <ReadingCheck date={date} topics={readingTopics} />
           {growthCheckGate.available && (
             <div className={s.sideExtra}>

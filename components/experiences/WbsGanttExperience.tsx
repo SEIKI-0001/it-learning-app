@@ -396,8 +396,8 @@ function Quiz() {
 export default function WbsGanttExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🗂️ <b>WBS＝作業を分解した一覧（何をやる）</b>、<b>ガントチャート＝横棒のスケジュール（いつやる）</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>WBS＝作業を分解した一覧（何をやる）</b>、<b>ガントチャート＝横棒のスケジュール（いつやる）</b>。
         セットでプロジェクトの計画と進捗管理に使います。
         後半（④〜）では、作業の順番から<b>全体で何日かかるか（PERT・クリティカルパス）</b>を計算できるようにします。
       </div>

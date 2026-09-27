@@ -21,11 +21,12 @@ export const FIN_STEPS = ["① 使う数字を選ぶ", "② 割る／引く", "�
 
 type Box = "ca" | "fa" | "cl" | "fl" | "eq";
 const BOX: Record<Box, { name: string; tone: string; head: string }> = {
-  ca: { name: "流動資産", tone: "bg-sky-50 ring-sky-300", head: "text-sky-800" },
-  fa: { name: "固定資産", tone: "bg-indigo-50 ring-indigo-300", head: "text-indigo-800" },
-  cl: { name: "流動負債", tone: "bg-amber-50 ring-amber-300", head: "text-amber-800" },
-  fl: { name: "固定負債", tone: "bg-orange-50 ring-orange-300", head: "text-orange-800" },
-  eq: { name: "純資産", tone: "bg-emerald-50 ring-emerald-300", head: "text-emerald-800" },
+  // 色は「資産＝brand／負債・純資産＝グレー」の2系統だけ。流動・固定は濃淡で分ける
+  ca: { name: "流動資産", tone: "bg-brand-100 ring-brand-300", head: "text-brand-900" },
+  fa: { name: "固定資産", tone: "bg-brand-50 ring-brand-200", head: "text-brand-900" },
+  cl: { name: "流動負債", tone: "bg-gray-100 ring-gray-300", head: "text-gray-900" },
+  fl: { name: "固定負債", tone: "bg-gray-50 ring-gray-300", head: "text-gray-900" },
+  eq: { name: "純資産", tone: "bg-white ring-gray-400", head: "text-gray-900" },
 };
 const ITEMS: { name: string; box: Box; why: string }[] = [
   { name: "現金・預金", box: "ca", why: "すぐ使える" },
@@ -171,12 +172,12 @@ export function RatioStage() {
             <div className="text-center text-[10px] font-bold text-gray-500">取り出して比べる</div>
             {b >= 2 && cur && (
               <div className={`mt-1 flex items-end justify-center gap-1 ${styles.reveal}`}>
-                <div className="w-9 rounded bg-sky-200 ring-1 ring-sky-400" style={{ height: BS.ca * PX }} />
+                <div className="w-9 rounded bg-brand-200 ring-1 ring-brand-400" style={{ height: BS.ca * PX }} />
                 <div className="flex w-9 flex-col-reverse gap-px">
                   {[0, 1].map((i) => (
                     <div
                       key={i}
-                      className={`grid place-items-center rounded bg-amber-200 text-[10px] font-bold text-amber-900 ring-1 ring-amber-400 ${styles.pop}`}
+                      className={`grid place-items-center rounded bg-gray-200 text-[10px] font-bold text-gray-900 ring-1 ring-gray-400 ${styles.pop}`}
                       style={{ height: BS.cl * PX - 1, animationDelay: `${i * 500}ms` }}
                     >
                       {i + 1}個
@@ -186,9 +187,9 @@ export function RatioStage() {
               </div>
             )}
             {b >= 2 && !cur && (
-              <div className={`mx-auto mt-1 w-10 overflow-hidden rounded bg-sky-100 ring-1 ring-sky-300 ${styles.reveal}`} style={{ height: TOTAL * PX }}>
+              <div className={`mx-auto mt-1 w-10 overflow-hidden rounded bg-brand-100 ring-1 ring-brand-300 ${styles.reveal}`} style={{ height: TOTAL * PX }}>
                 <div className="h-[60%]" />
-                <div className={`grid h-[40%] place-items-center bg-emerald-300 text-[10px] font-bold text-emerald-900 ${styles.pop}`}>4割</div>
+                <div className={`grid h-[40%] place-items-center bg-gray-700 text-[10px] font-bold text-white ${styles.pop}`}>4割</div>
               </div>
             )}
             {b >= 2 && (
@@ -213,7 +214,7 @@ export function RatioStage() {
           </div>
         )}
         {b >= 4 && (
-          <p className={`mt-2 rounded-lg bg-sky-50 px-3 py-2 text-xs leading-relaxed text-sky-900 ring-1 ring-sky-200 ${styles.reveal}`}>
+          <p className={`mt-2 rounded-lg bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-800 ring-1 ring-gray-200 ${styles.reveal}`}>
             {cur ? (
               <>
                 <b>なぜ割る？</b> 近いうちに払う<b>1円</b>に対して、近いうちに使える資産を<b>何円</b>持っているかを見たいから。3,000 ÷ 1,500 ＝ 2 → <b>1円の支払いに2円の備え</b>。
@@ -248,61 +249,57 @@ export function RatioStage() {
 // ⑦ 利益の5段階
 // ---------------------------------------------------------------------------
 
-type PlStep = { op?: string; item: string; amount: number; profit: string; value: number; meaning: string };
+type PlStep = { op?: string; item: string; amount: number; profit: string; value: number; meaning: string; detail: string };
 export const PL_STEPS: PlStep[] = [
-  { op: "−", item: "売上原価", amount: 600, profit: "売上総利益", value: 400, meaning: "商品そのもののもうけ（粗利）" },
-  { op: "−", item: "販売費及び一般管理費", amount: 250, profit: "営業利益", value: 150, meaning: "本業のもうけ（人件費・広告費も引いた）" },
-  { op: "＋−", item: "営業外収益30・営業外費用20", amount: 10, profit: "経常利益", value: 160, meaning: "利息など本業以外もふくめた、ふだんのもうけ" },
-  { op: "＋−", item: "特別利益10・特別損失40", amount: -30, profit: "税引前当期純利益", value: 130, meaning: "災害など臨時の損益もふくめた" },
-  { op: "−", item: "法人税等", amount: 50, profit: "当期純利益", value: 80, meaning: "最後に会社に残るもうけ" },
+  { op: "−", item: "売上原価 600", amount: 600, profit: "売上総利益", value: 400, meaning: "商品そのもので稼いだ利益（粗利）", detail: "売上から、売った商品の仕入れ・製造にかかった分だけを引く" },
+  { op: "−", item: "販売費及び一般管理費 250", amount: 250, profit: "営業利益", value: 150, meaning: "本業で稼いだ利益", detail: "人件費・広告費・家賃など、商売を回す費用まで引く" },
+  { op: "＋−", item: "営業外収益 30・営業外費用 20", amount: 10, profit: "経常利益", value: 160, meaning: "本業＋本業以外（利息など）をふくめた、ふだんの利益", detail: "受取利息・支払利息など、毎期ふつうに起きる本業以外の損益を足し引き" },
+  { op: "＋−", item: "特別利益 10・特別損失 40", amount: -30, profit: "税引前当期純利益", value: 130, meaning: "臨時の損益までふくめた、税金を払う前の利益", detail: "災害の損失や土地の売却益など、その期だけの出来事を反映" },
+  { op: "−", item: "法人税等 50", amount: 50, profit: "当期純利益", value: 80, meaning: "税金を払ったあと、最後に会社に残る利益", detail: "株主への配当や、次の投資の元手になる" },
 ];
 const SALES = 1000;
-const PL_DELAYS = [1300, 1500, 1500, 1500, 1500, 1500];
-
+// 利益の「意味」を最初から全部読めるように、段階表示のアニメーションはしない
 export function ProfitStagesStage() {
-  const { ref, beat: b, reducedMotion, replay } = useBeats(7, PL_DELAYS);
-  const shown = Math.min(b, PL_STEPS.length);
   return (
     <Panel>
       <SectionTitle step={7}>損益計算書の「5つの利益」</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         PL は売上高から<b className="text-gray-800">上から順に引いたり足したり</b>して、途中の利益に名前を付けていきます。
+        大事なのは金額より、<b className="text-gray-800">それぞれの利益が何を表すか</b>です。
       </p>
 
-      <div ref={ref} className="mt-3 space-y-1" data-testid="fin-pl" data-beat={b}>
-        <Bar label="売上高" value={SALES} tone="bg-sky-400" />
-        {PL_STEPS.slice(0, shown).map((s) => (
-          <div key={s.profit} className={styles.reveal} data-testid={`fin-pl-${s.profit}`}>
-            <p className="pl-1 text-[10px] font-bold text-gray-500">
+      <div className="mt-3" data-testid="fin-pl">
+      <ol>
+        <li className="flex items-baseline justify-between border-b border-gray-200 pb-2">
+          <span className="text-sm font-bold text-gray-900">売上高</span>
+          <span className="text-sm font-bold tabular-nums text-gray-900">{SALES.toLocaleString()}</span>
+        </li>
+        {PL_STEPS.map((s, i) => (
+          <li key={s.profit} className="border-b border-gray-200 py-2.5" data-testid={`fin-pl-${s.profit}`}>
+            <p className="text-xs tabular-nums text-gray-500">
               {s.op} {s.item}
-              {s.op === "−" ? ` ${s.amount}` : ""}
             </p>
-            <Bar label={s.profit} value={s.value} tone="bg-emerald-500" meaning={s.meaning} />
-          </div>
+            <div className="mt-1 flex items-baseline justify-between gap-3">
+              <h4 className="text-base font-bold text-gray-900">
+                <span className="mr-1.5 font-mono text-xs text-gray-400">{i + 1}</span>
+                {s.profit}
+              </h4>
+              <span className="text-sm font-bold tabular-nums text-gray-700">{s.value.toLocaleString()}</span>
+            </div>
+            <p className="mt-0.5 text-[15px] font-bold leading-snug text-brand-800">＝ {s.meaning}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-gray-600">{s.detail}</p>
+            {/* 金額の大きさは補助情報。細い線で「売上のうちどれだけ残ったか」だけ示す */}
+            <div className="mt-1.5 h-[3px] rounded-full bg-gray-100" aria-hidden>
+              <div className="h-full rounded-full bg-gray-400" style={{ width: `${(s.value / SALES) * 100}%` }} />
+            </div>
+          </li>
         ))}
-        {b >= 6 && (
-          <Note>
-            💡 順番は<b>売上総利益 → 営業利益 → 経常利益 → 税引前当期純利益 → 当期純利益</b>。空欄がある問題も、この順に式を1本立てれば逆算できます。
-          </Note>
-        )}
-        <Replay onClick={replay} hidden={reducedMotion} />
+      </ol>
       </div>
+      <Note>
+        順番は<b>売上総利益 → 営業利益 → 経常利益 → 税引前当期純利益 → 当期純利益</b>。空欄がある問題も、この順に式を1本立てれば逆算できます。
+      </Note>
     </Panel>
-  );
-}
-
-function Bar({ label, value, tone, meaning }: { label: string; value: number; tone: string; meaning?: string }) {
-  return (
-    <div className="rounded-lg bg-gray-50 px-2 py-1 ring-1 ring-gray-200">
-      <div className="flex items-baseline justify-between text-xs font-bold">
-        <span className="text-gray-800">{label}</span>
-        <span className="tabular-nums text-gray-800">{value.toLocaleString()}</span>
-      </div>
-      <div className="mt-0.5 h-2 rounded-full bg-gray-200">
-        <div className={`h-full rounded-full ${tone} ${styles.width}`} style={{ width: `${(value / SALES) * 100}%` }} />
-      </div>
-      {meaning && <p className="mt-0.5 text-[10px] text-gray-500">{meaning}</p>}
-    </div>
   );
 }
 
@@ -319,7 +316,7 @@ const INDICATORS: { name: string; top: [string, "BS" | "PL"]; bottom: [string, "
 ];
 
 function Src({ s }: { s: "BS" | "PL" }) {
-  return <span className={`ml-0.5 rounded px-1 text-[9px] font-bold ${s === "BS" ? "bg-sky-100 text-sky-800" : "bg-emerald-100 text-emerald-800"}`}>{s}</span>;
+  return <span className={`ml-0.5 rounded px-1 text-[9px] font-bold ${s === "BS" ? "bg-gray-900 text-white" : "bg-brand-100 text-brand-800"}`}>{s}</span>;
 }
 
 export function IndicatorSourceStage() {
@@ -350,7 +347,7 @@ export function IndicatorSourceStage() {
           return (
             <li
               key={it.name}
-              className={`rounded-lg px-2.5 py-1.5 ring-1 transition-opacity duration-300 ${dim ? "bg-gray-50 opacity-40 ring-gray-200" : only === "PL" ? "bg-emerald-50 ring-emerald-300" : "bg-white ring-gray-200"}`}
+              className={`rounded-lg px-2.5 py-1.5 ring-1 transition-opacity duration-300 ${dim ? "bg-gray-50 opacity-40 ring-gray-200" : only === "PL" ? "bg-brand-50 ring-brand-300" : "bg-white ring-gray-200"}`}
               data-testid={`fin-ind-${it.name}`}
               data-dim={dim ? "true" : undefined}
             >

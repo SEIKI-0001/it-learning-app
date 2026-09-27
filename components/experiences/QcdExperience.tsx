@@ -192,8 +192,8 @@ function Tradeoff() {
 export default function QcdExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🎯 <b>プロジェクト</b>は「期限のある一度きりの仕事」。その出来ばえは
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>プロジェクト</b>は「期限のある一度きりの仕事」。その出来ばえは
         <b>品質(Q)・費用(C)・納期(D)</b> の3つで見ます。この3つは<b>引っ張り合う</b>のがポイント。
       </div>
 

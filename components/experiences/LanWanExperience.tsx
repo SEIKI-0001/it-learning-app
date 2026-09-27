@@ -272,8 +272,8 @@ function SortQuiz() {
 export default function LanWanExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🌐 ネットワークは「広さ」で呼び方が変わります。代表が <b>LAN（狭い）</b> と <b>WAN（広い）</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        ネットワークは「広さ」で呼び方が変わります。代表が <b>LAN（狭い）</b> と <b>WAN（広い）</b>。
         スマホ →（家のWi-Fi＝LAN）→ プロバイダ →（インターネット＝WAN）→ 相手、の順でつながっています。
         後半（④〜）では、回線でファイルを送るのに<b>何秒かかるか</b>を計算できるようにします。
       </div>

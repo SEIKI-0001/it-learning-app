@@ -6,8 +6,8 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 // 「リスク管理」専用の体験。
 //   ① リスクとは（まだ起きてない・起きるかも・影響する）
-//   ② 確率 × 影響 で優先度（スライダーで色が変わるマトリクス）
-//   ③ リスク対応の4分類（回避・低減・移転・受容）＋クイズ
+//   ② 発生確率 × 影響度 で優先度（代表的なリスクを最初から配置した静的マトリクス。軸を大きく）
+//   ③ リスク対応の4分類（回避・低減・移転・受容）をカード（名称／一言の意味／具体例）で＋クイズ
 // ============================================================================
 
 function WhatIsRisk() {
@@ -36,88 +36,94 @@ function WhatIsRisk() {
           <div className="text-[10px] text-gray-400">＝備え</div>
         </div>
       </div>
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚠️ すでに起きた障害は「リスク」ではありません。リスクは<b>これから起きるかもしれない不確実なこと</b>です。
+      <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-800 ring-1 ring-gray-200">
+        すでに起きた障害は「リスク」ではありません。リスクは<b>これから起きるかもしれない不確実なこと</b>です。
       </div>
     </Panel>
   );
 }
 
+// 代表的なリスクを最初からマトリクスに置いておく（操作なしで「確率×影響度で優先順位」が読める）
+// p＝発生確率 1..3（低→高）、im＝影響度 1..3（小→大）
+const RISKS: { p: number; im: number; t: string }[] = [
+  { p: 3, im: 3, t: "仕様変更が続き、納期に間に合わない" },
+  { p: 1, im: 3, t: "大地震でデータセンターが止まる" },
+  { p: 2, im: 2, t: "外注先の納品が数日遅れる" },
+  { p: 3, im: 1, t: "会議室が取れず打合せがずれる" },
+  { p: 1, im: 1, t: "予備のあるテスト用PCが故障" },
+];
+
+const priority = (p: number, im: number) => {
+  const sc = p * im;
+  return sc >= 6 ? "high" : sc >= 3 ? "mid" : "low";
+};
+const PRIORITY = {
+  high: { label: "優先度 高", cell: "bg-rose-50 ring-rose-300", tag: "text-rose-700" },
+  mid: { label: "優先度 中", cell: "bg-gray-100 ring-gray-300", tag: "text-gray-700" },
+  low: { label: "優先度 低", cell: "bg-white ring-gray-200", tag: "text-gray-500" },
+} as const;
+
 function Matrix() {
-  const [prob, setProb] = useState(2); // 1..3 発生確率
-  const [impact, setImpact] = useState(2); // 1..3 影響度
-  const score = prob * impact;
-  const level =
-    score >= 6 ? { t: "最優先で対策", tone: "bg-rose-500 text-white", emoji: "🔴" } : score >= 3 ? { t: "対策を検討", tone: "bg-amber-400 text-white", emoji: "🟡" } : { t: "様子見でOK", tone: "bg-emerald-500 text-white", emoji: "🟢" };
-
-  const cellTone = (p: number, im: number) => {
-    const s = p * im;
-    const here = p === prob && im === impact;
-    const base = s >= 6 ? "bg-rose-200" : s >= 3 ? "bg-amber-200" : "bg-emerald-200";
-    return `${base} ${here ? "ring-2 ring-brand-600" : "ring-1 ring-white"}`;
-  };
-
   return (
     <Panel>
-      <SectionTitle step={2}>確率 × 影響 で優先度を決める</SectionTitle>
+      <SectionTitle step={2}>発生確率 × 影響度 で優先順位を決める</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        リスクは数が多いので、<b className="text-gray-800">起こりやすさ</b>と<b className="text-gray-800">起きたときの大きさ</b>の
-        かけ算で、対策の優先度を決めます。
+        リスクは数が多いので、<b className="text-gray-800">起こりやすさ（発生確率）</b>と<b className="text-gray-800">起きたときの大きさ（影響度）</b>の2軸で並べ、
+        <b className="text-gray-800">右上ほど先に対策</b>します。システム開発プロジェクトの例です。
       </p>
 
-      {/* マトリクス */}
-      <div className="mt-4 flex gap-2">
-        <div className="flex flex-col items-center justify-center">
-          <span className="text-[10px] font-bold text-gray-500 [writing-mode:vertical-rl]">影響度 大 →</span>
+      <div className="mt-4 grid grid-cols-[2.25rem_1fr] gap-x-1.5" data-testid="risk-matrix">
+        {/* 縦軸：影響度（上ほど大） */}
+        <div className="flex flex-col items-center">
+          <span className="text-sm font-bold text-gray-900">大</span>
+          <div className="relative my-1 flex w-full flex-1 justify-center">
+            <span aria-hidden className="absolute inset-y-0 left-1/2 w-[3px] -translate-x-1/2 bg-gray-900" />
+            <span aria-hidden className="absolute -top-1 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[7px] border-b-[10px] border-x-transparent border-b-gray-900" />
+            <span className="relative z-10 self-center bg-white py-1 text-base font-bold leading-tight tracking-wider text-gray-900 [writing-mode:vertical-rl]">影響度</span>
+          </div>
+          <span className="text-sm font-bold text-gray-900">小</span>
         </div>
-        <div className="flex-1">
-          <div className="grid grid-cols-3 gap-1">
-            {[3, 2, 1].map((im) =>
-              [1, 2, 3].map((p) => (
-                <div
-                  key={`${p}-${im}`}
-                  className={`grid h-12 place-items-center rounded-md text-xs font-bold text-gray-700 ${cellTone(p, im)}`}
-                >
-                  {p === prob && im === impact ? "ここ" : ""}
+        <div className="grid grid-cols-3 gap-1">
+          {[3, 2, 1].map((im) =>
+            [1, 2, 3].map((p) => {
+              const pr = PRIORITY[priority(p, im)];
+              const risk = RISKS.find((r) => r.p === p && r.im === im);
+              return (
+                <div key={`${p}-${im}`} className={`flex min-h-[5.25rem] flex-col rounded-md p-1.5 ring-1 ${pr.cell}`} data-priority={priority(p, im)}>
+                  <span className={`text-[11px] font-bold ${pr.tag}`}>{pr.label}</span>
+                  {risk && <span className="mt-0.5 text-xs font-bold leading-snug text-gray-900" data-testid="risk-item">{risk.t}</span>}
                 </div>
-              ))
-            )}
+              );
+            }),
+          )}
+        </div>
+        {/* 横軸：発生確率（右ほど高） */}
+        <div />
+        <div className="mt-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-gray-900">低</span>
+            <div className="relative h-[3px] flex-1 bg-gray-900" aria-hidden>
+              <span className="absolute -right-1 top-1/2 h-0 w-0 -translate-y-1/2 border-y-[7px] border-l-[10px] border-y-transparent border-l-gray-900" />
+            </div>
+            <span className="text-sm font-bold text-gray-900">高</span>
           </div>
-          <div className="mt-1 text-center text-[10px] font-bold text-gray-500">発生確率 大 →</div>
+          <div className="mt-1 text-center text-base font-bold text-gray-900">発生確率</div>
         </div>
       </div>
 
-      {/* スライダー */}
-      <div className="mt-4 space-y-3">
-        <div>
-          <div className="flex justify-between text-xs font-bold text-gray-600">
-            <span>発生確率</span>
-            <span className="text-brand-700">{["低", "中", "高"][prob - 1]}</span>
-          </div>
-          <input type="range" min={1} max={3} value={prob} onChange={(e) => setProb(Number(e.target.value))} className="mt-1 w-full accent-brand-600" />
-        </div>
-        <div>
-          <div className="flex justify-between text-xs font-bold text-gray-600">
-            <span>影響度</span>
-            <span className="text-brand-700">{["小", "中", "大"][impact - 1]}</span>
-          </div>
-          <input type="range" min={1} max={3} value={impact} onChange={(e) => setImpact(Number(e.target.value))} className="mt-1 w-full accent-brand-600" />
-        </div>
-      </div>
-
-      <div className={`mt-3 rounded-xl px-4 py-3 text-center text-sm font-bold ${level.tone}`}>
-        {level.emoji} このリスクは「{level.t}」
-      </div>
-      <p className="mt-2 text-center text-xs text-gray-400">確率も影響も大きいほど、優先して対策する</p>
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        「仕様変更が続く」は起こりやすく影響も大きい＝<b className="text-rose-700">最優先</b>。
+        「大地震」は影響は大きいが起こりにくいので、<b className="text-gray-900">確率と影響の両方</b>を見て順番を決めます。
+      </p>
     </Panel>
   );
 }
 
 const RESP = [
-  { name: "回避", emoji: "🚫", desc: "リスクの原因をやめる", ex: "危ない計画自体を中止する" },
-  { name: "低減", emoji: "🛡️", desc: "確率や影響を小さくする", ex: "バックアップを取る・二重チェック" },
-  { name: "移転", emoji: "🤝", desc: "他者に肩代わりしてもらう", ex: "保険に入る・外部に委託" },
-  { name: "受容", emoji: "🤷", desc: "小さいので受け入れる", ex: "起きても困らない範囲はそのまま" },
+  { name: "回避", alias: "", desc: "リスクの原因そのものをなくす", ex: "危険すぎる機能の開発をやめる" },
+  { name: "低減", alias: "軽減", desc: "起きる確率や、起きたときの影響を小さくする", ex: "毎日バックアップを取る・二重チェックする" },
+  { name: "移転", alias: "転嫁", desc: "損失を他者に肩代わりしてもらう", ex: "保険に入る・専門業者に委託する" },
+  { name: "受容", alias: "保有", desc: "影響が小さいので、対策せずに受け入れる", ex: "起きても困らない範囲はそのままにする" },
 ];
 
 const ITEMS: { t: string; ans: string; why: string }[] = [
@@ -133,18 +139,21 @@ function Responses() {
   return (
     <Panel>
       <SectionTitle step={3}>リスクへの対応は4種類</SectionTitle>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2" data-testid="risk-responses">
         {RESP.map((r) => (
-          <div key={r.name} className="rounded-xl bg-gray-50 p-2.5 ring-1 ring-gray-200">
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">{r.emoji}</span>
-              <span className="text-sm font-bold text-gray-800">{r.name}</span>
+          <li key={r.name} className="rounded-xl bg-white p-3 ring-1 ring-gray-300">
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-bold text-gray-900">{r.name}</span>
+              {r.alias && <span className="text-xs text-gray-500">（{r.alias}ともいう）</span>}
             </div>
-            <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">{r.desc}</p>
-            <p className="mt-0.5 text-[10px] text-gray-400">例：{r.ex}</p>
-          </div>
+            <p className="mt-0.5 text-[15px] font-bold leading-snug text-brand-800">{r.desc}</p>
+            <p className="mt-1 text-sm text-gray-700">
+              <span className="mr-1 text-xs font-bold text-gray-500">例</span>
+              {r.ex}
+            </p>
+          </li>
         ))}
-      </div>
+      </ul>
 
       <p className="mt-4 text-sm font-bold text-gray-700">これはどの対応？</p>
       <ul className="mt-2 space-y-2.5">
@@ -194,8 +203,8 @@ function Responses() {
 export default function RiskExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🎲 <b>リスク</b>は「これから起きるかもしれない問題」。<b>発生確率×影響度</b>で優先度を決め、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>リスク</b>は「これから起きるかもしれない問題」。<b>発生確率×影響度</b>で優先度を決め、
         <b>回避・低減・移転・受容</b>から対応を選んで備えます。
       </div>
 

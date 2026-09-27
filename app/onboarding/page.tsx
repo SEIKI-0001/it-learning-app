@@ -84,7 +84,7 @@ export default function OnboardingPage() {
 
     const userId = getUserId();
     if (userId) {
-      saveProfileToDb(userId, full);
+      void saveProfileToDb(userId, full);
       saveProgressToDb(userId, initial.progress);
     }
 

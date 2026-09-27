@@ -57,7 +57,7 @@ const TOPICS: [string, ComponentType, string[]][] = [
   ["strat-system-planning-rfp", SystemPlanningRfpExperience, ["rfp-flow", "rfp-docs", "rfp-eval"]],
   ["mgmt-system-design", SystemDesignExperience, ["design-flow", "design-boundary", "design-sort"]],
   ["mgmt-pmbok-basics", PmbokExperience, ["pmbok-matrix", "pmbok-overlap", "pmbok-tailoring"]],
-  ["mgmt-project-resource", RaciExperience, ["raci-one", "raci-table", "raci-bad", "raci-staffing"]],
+  ["mgmt-project-resource", RaciExperience, ["raci-roles", "raci-table", "raci-bad", "raci-staffing"]],
   ["tech-system-processing-architecture", ProcessingArchitectureExperience, ["arch-timing", "arch-grid", "arch-place", "arch-roles", "arch-scenes"]],
   ["tech-backup", BackupExperience, ["backup-take", "backup-restore", "backup-rpo", "backup-generations"]],
   ["tech-network-devices", NetworkDevicesExperience, ["netdev-ladder", "netdev-hubswitch", "netdev-map"]],

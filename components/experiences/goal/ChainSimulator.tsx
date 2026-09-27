@@ -62,18 +62,18 @@ function csfOf(used: Set<string>) {
   return Math.max(0, Math.min(5, Math.round(((kpiOf(used) - KPI_START) / (KPI_GOAL - KPI_START)) * 5)));
 }
 
-// 伝わっていく矢印。active になった瞬間に上から下へ伸びる。broken は ✕ で途切れる。
+// 伝わっていく矢印。KGIを上に置くため、影響は下（施策）から上（KGI）へ伸びる。broken は ✕ で途切れる。
 function Link({ active, broken, label, testId }: { active: boolean; broken?: boolean; label: string; testId: string }) {
   return (
     <div className="flex h-7 items-center justify-center gap-2" data-testid={testId} data-state={broken ? "broken" : active ? "on" : "off"}>
       <div className="relative h-full w-1 overflow-hidden rounded-full bg-gray-200">
         <div
-          className={`absolute inset-x-0 top-0 rounded-full transition-[height] duration-500 ease-out motion-reduce:transition-none ${broken ? "bg-rose-300" : "bg-emerald-500"}`}
+          className={`absolute inset-x-0 bottom-0 rounded-full transition-[height] duration-500 ease-out motion-reduce:transition-none ${broken ? "bg-rose-300" : "bg-brand-500"}`}
           style={{ height: active || broken ? (broken ? "45%" : "100%") : "0%" }}
         />
       </div>
-      <span className={`text-[11px] font-bold ${broken ? "text-rose-600" : active ? "text-emerald-700" : "text-gray-400"}`}>
-        {broken ? "✕ " : "↓ "}
+      <span className={`text-[11px] font-bold ${broken ? "text-rose-600" : active ? "text-brand-700" : "text-gray-500"}`}>
+        {broken ? "✕ " : "↑ "}
         {label}
       </span>
     </div>
@@ -91,9 +91,9 @@ function Bar({ value, goal, max, tone }: { value: number; goal: number; max: num
 
 function Box({ tag, tagTone, title, children, lit, testId }: { tag: string; tagTone: string; title: string; children?: React.ReactNode; lit: boolean; testId: string }) {
   return (
-    <div className={`rounded-xl p-3 ring-1 transition-colors duration-300 ${lit ? "bg-white ring-2 ring-emerald-400" : "bg-gray-50 ring-gray-200"}`} data-testid={testId}>
-      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700">
-        <span className={`flex-none whitespace-nowrap rounded px-1.5 py-0.5 font-mono text-[10px] font-bold text-white ${tagTone}`}>{tag}</span>
+    <div className={`rounded-xl p-3 ring-1 transition-colors duration-300 ${lit ? "bg-white ring-2 ring-brand-500" : "bg-gray-50 ring-gray-200"}`} data-testid={testId}>
+      <div className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
+        <span className={`flex-none whitespace-nowrap rounded px-1.5 py-0.5 font-mono text-xs font-bold text-white ${tagTone}`}>{tag}</span>
         {title}
       </div>
       {children}
@@ -144,28 +144,28 @@ export function ChainSimulator() {
 
   return (
     <Panel>
-      <SectionTitle step={1}>店長になって、ゴールまでの数字をつなげよう</SectionTitle>
+      <SectionTitle step={2}>動かしてみよう：施策の効果はKGIまで届く？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        あなたはクレープ屋の店長。<b className="text-gray-800">ゴール（KGI）＝年間売上150</b>。
-        分析の結果、<b className="text-gray-800">成功のカギ（CSF）＝リピート客を増やすこと</b>と分かりました。
-        施策を打つと、影響が<b className="text-gray-800">上から順に</b>伝わっていきます。
+        解説1のクレープ屋で、施策を打ってみます。影響は<b className="text-gray-800">いちばん下の施策から、KPI → CSF → KGI へ下から順に</b>伝わります。
+        CSFにつながらない施策も混ざっています。
       </p>
 
-      <div className="mt-3" data-testid="goal-chain" data-stage={shownStage}>
+      {/* DOM は施策→KGIの順（伝わる順）。見た目は flex-col-reverse で KGI を最上段に置く */}
+      <div className="mt-3 flex flex-col-reverse" data-testid="goal-chain" data-stage={shownStage}>
         {/* 施策 */}
         <Box tag="施策" tagTone="bg-gray-500" title={last ? `${last.emo} ${last.t}` : "下のボタンから施策を選ぶ"} lit={!!last && shownStage >= 0} testId="goal-action" />
         <Link active={!!last && shownStage >= 1} label={vanity ? `${vanity.label}が増える` : "リピート率が動く"} testId="goal-link-kpi" />
 
         {/* KPI（と、CSFにつながらない「それっぽい数字」） */}
         <div className={vanity ? "grid grid-cols-2 gap-1.5" : ""}>
-          <Box tag="KPI" tagTone="bg-emerald-500" title="リピート率" lit={!!last && hits && shownStage >= 1} testId="goal-kpi">
+          <Box tag="KPI" tagTone="bg-gray-700" title="リピート率" lit={!!last && hits && shownStage >= 1} testId="goal-kpi">
             <div className="mt-1 flex items-baseline justify-between">
               <span className="font-mono text-lg font-bold text-gray-800" data-testid="goal-kpi-value">
                 {Math.round(kpi)}%
               </span>
               <span className="text-[10px] font-bold text-gray-400">目標 {KPI_GOAL}%</span>
             </div>
-            <Bar value={kpi} goal={KPI_GOAL} max={40} tone="bg-emerald-500" />
+            <Bar value={kpi} goal={KPI_GOAL} max={40} tone="bg-gray-700" />
           </Box>
           {vanity && (
             <div className="rounded-xl bg-rose-50 p-3 ring-1 ring-rose-200" data-testid="goal-vanity">
@@ -186,10 +186,10 @@ export function ChainSimulator() {
         />
 
         {/* CSF */}
-        <Box tag="CSF" tagTone="bg-amber-500" title="🗝️ 顧客定着（リピート客を増やす）" lit={!!last && hits && shownStage >= 2} testId="goal-csf">
+        <Box tag="CSF" tagTone="bg-gray-700" title="顧客定着（リピート客を増やす）" lit={!!last && hits && shownStage >= 2} testId="goal-csf">
           <div className="mt-1.5 flex items-center gap-1" data-testid="goal-csf-level" data-level={csf}>
             {Array.from({ length: 5 }, (_, i) => (
-              <span key={i} className={`h-2.5 flex-1 rounded-full transition-colors duration-300 motion-reduce:transition-none ${i < csf ? "bg-amber-400" : "bg-gray-200"}`} />
+              <span key={i} className={`h-2.5 flex-1 rounded-full transition-colors duration-300 motion-reduce:transition-none ${i < csf ? "bg-gray-700" : "bg-gray-200"}`} />
             ))}
             <span className="ml-1 text-[10px] font-bold text-gray-500">定着度 {csf}/5</span>
           </div>
@@ -197,20 +197,20 @@ export function ChainSimulator() {
         <Link active={!!last && hits && shownStage >= 3} broken={!!last && !hits && shownStage >= 3} label={hits ? "常連が増えて売上が積み上がる" : "ゴールは動かない"} testId="goal-link-kgi" />
 
         {/* KGI */}
-        <Box tag="KGI" tagTone="bg-brand-500" title="年間売上（最終ゴール）" lit={!!last && hits && shownStage >= 3} testId="goal-kgi">
+        <Box tag="KGI" tagTone="bg-brand-600" title="年間売上（最終ゴール）" lit={!!last && hits && shownStage >= 3} testId="goal-kgi">
           <div className="mt-1 flex items-baseline justify-between">
-            <span className={`font-mono text-lg font-bold ${kgi >= KGI_GOAL ? "text-emerald-600" : "text-gray-800"}`} data-testid="goal-kgi-value">
+            <span className={`font-mono text-lg font-bold ${kgi >= KGI_GOAL ? "text-brand-700" : "text-gray-800"}`} data-testid="goal-kgi-value">
               {Math.round(kgi)}
-              {kgi >= KGI_GOAL && " 🎉"}
+              {kgi >= KGI_GOAL && " 達成"}
             </span>
             <span className="text-[10px] font-bold text-gray-400">目標 {KGI_GOAL}</span>
           </div>
-          <Bar value={kgi} goal={KGI_GOAL} max={170} tone="bg-brand-500" />
+          <Bar value={kgi} goal={KGI_GOAL} max={170} tone="bg-brand-600" />
         </Box>
       </div>
 
       {/* 施策ボタン */}
-      <p className="mt-4 text-xs font-bold text-gray-500">打てる施策（それぞれ1回）：</p>
+      <p className="mt-4 text-sm font-bold text-gray-700">打てる施策（それぞれ1回）：</p>
       <div className="mt-1.5 grid grid-cols-2 gap-1.5">
         {ACTIONS.map((a) => {
           const done = used.has(a.id);

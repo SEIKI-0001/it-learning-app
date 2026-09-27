@@ -85,8 +85,8 @@ function Others() {
 export default function DataStructureExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🗂️ <b>データ構造</b>はデータの並べ方・取り出し方。代表が<b>スタック（後入れ先出し・LIFO）</b>と
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>データ構造</b>はデータの並べ方・取り出し方。代表が<b>スタック（後入れ先出し・LIFO）</b>と
         <b>キュー（先入れ先出し・FIFO）</b>。出入りの順番が逆なのがポイント。
       </div>
 

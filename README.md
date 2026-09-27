@@ -34,6 +34,16 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
   - `GEMINI_MODEL`（任意。未設定なら `gemini-3.1-flash-lite`）
 - **ローカル開発**: `.env.local` に同じ値を設定します。`GEMINI_API_KEY` が未設定の場合は、キーワード一致による「ダミー採点」が表示され、画面の動作確認だけは可能です。
 
+## モチット AI 相談（常駐モチット）
+
+常駐モチットをタップすると相談シートが開き、学習状況・今日やること・表示中の問題・1日の振り返りを相談できます（長押し・右クリックは従来のクイックメニュー）。
+
+- **構成**: `components/mochit/MochitConsultSheet.tsx`（UI）→ `app/api/mochit/chat`（サーバー）→ `lib/mochitAi/learningContext.ts`（Learning Context 層：実力・学習ペース・回答集計・ミッションを既存ロジックから集める）→ `lib/ai/mochitChat.ts`（Gemini REST）。
+- **役割分担**: 実力・計画・正誤はアプリの判定が正。LLM には集計済みの事実だけを渡し、`lib/mochitAi/prompt.ts` のガードで「事実に無い数字」「判定を超える合格断定」を落とします。
+- **環境変数**（サーバー専用）: `GEMINI_API_KEY`（AI 採点と共用）、`MOCHIT_AI_MODEL`（任意。未設定なら `GEMINI_MODEL` と同じ）、`MOCHIT_AI_DAILY_LIMIT`（任意。1ユーザー1日の送信上限・既定30）。
+- **DB**: `supabase/migrations/20260926151209_mochit_ai_events.sql`（計測イベント＋送信回数。会話本文は保存しない。本番適用済み）。日次上限はユーザーのローカル日付で数え（日本時間なら 0:00 でリセット）、直近24時間は日次上限の2倍までに抑える。未適用でも相談は動きますが、回数制限と計測が効きません。
+- **ローカル開発**: `GEMINI_API_KEY` 未設定時は固定文を返します（画面確認用・production では 502）。
+
 ## AI採点 Pro（Claude Sonnet・有料ユーザー向け）
 
 無料ユーザーは Gemini で「通常採点」、Pro ユーザーは Claude Sonnet で「Pro採点」を受けられます。採点処理は `lib/ai/gradeWrittenAnswer.ts` が provider を切り替えて呼び出し、プロバイダ固有処理は `lib/ai/providers/`（`geminiProvider.ts` / `claudeProvider.ts`）に閉じ込めています。

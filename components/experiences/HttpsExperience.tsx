@@ -274,8 +274,8 @@ function CompareTable() {
 export default function HttpsExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ✉️ たとえると——<b>HTTP＝ハガキ</b>（運ぶ人に中身が見える）、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        たとえると——<b>HTTP＝ハガキ</b>（運ぶ人に中身が見える）、
         <b>HTTPS＝封筒に入れた手紙</b>（中身が見えない＝暗号化）。鍵マーク🔒が付いていれば HTTPS です。
       </div>
 

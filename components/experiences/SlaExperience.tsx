@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -52,6 +52,14 @@ function Availability() {
   const cur = LEVELS[idx];
   const h = Math.floor(cur.downMin / 60);
   const m = cur.downMin % 60;
+
+  // 1年 ＝ 365日 × 24時間 ＝ 8,760時間（525,600分）を「全サービス時間」として、
+  // 停止時間を引いた「実際に稼働していた時間」の割合を、常に①〜⑤の順で見せる。
+  const TOTAL_MIN = 365 * 24 * 60;
+  const workMin = TOTAL_MIN - cur.downMin;
+  const ratio = workMin / TOTAL_MIN;
+  const ratePercent = (ratio * 100).toFixed(2);
+
   return (
     <Panel>
       <SectionTitle step={2}>SLAで決める「稼働率」</SectionTitle>
@@ -74,18 +82,63 @@ function Availability() {
         ))}
       </div>
 
-      <div className="mt-4 rounded-xl bg-gray-50 p-4 text-center ring-1 ring-gray-200">
-        <div className="text-xs text-gray-500">稼働率 {cur.rate}（{cur.label}）なら、1年で止まってよいのは…</div>
+      <div className="mt-4 rounded-xl bg-gray-50 p-3 text-center ring-1 ring-gray-200">
+        <div className="text-xs text-gray-500">
+          稼働率 {cur.rate}（{cur.label}）なら、1年で止まってよいのは…
+        </div>
         <div className="mt-1 text-2xl font-bold text-brand-700">
-          約 {h > 0 ? `${h}時間` : ""}{m > 0 ? `${m}分` : ""}
+          約 {h > 0 ? `${h}時間` : ""}
+          {m > 0 ? `${m}分` : ""}
         </div>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-200">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: cur.rate }} />
-        </div>
-        <div className="mt-1 text-[10px] text-gray-400">緑＝動いている割合（実際はごくわずかの停止）</div>
       </div>
+
+      <div className="mt-3 space-y-1" data-testid="sla-calc" data-rate={cur.rate}>
+        <CalcStep n={1} label="全サービス時間" note="365日 × 24時間 × 60分" value="525,600分" />
+        <CalcStep n={2} label="停止時間" note="止まっていた時間" value={`${cur.downMin.toLocaleString()}分`} />
+        <CalcStep n={3} label="実際に稼働していた時間" note="① − ②" value={`${workMin.toLocaleString()}分`} />
+        <CalcStep n={4} label="稼働時間 ÷ 全サービス時間" note={`${workMin.toLocaleString()} ÷ 525,600`} value={ratio.toFixed(4)} />
+        <CalcStep n={5} label="稼働率(%)" note="④ × 100" value={`${ratePercent}%`} highlight />
+      </div>
+      <p className="mt-2 text-center text-[13px] font-bold text-gray-600">全体の時間のうち、実際に使えた割合</p>
       <p className="mt-3 text-center text-xs text-gray-400">高い稼働率ほど安心だが、設備や費用も増える</p>
     </Panel>
+  );
+}
+
+function CalcStep({
+  n,
+  label,
+  note,
+  value,
+  highlight,
+}: {
+  n: number;
+  label: string;
+  note?: ReactNode;
+  value: ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 ring-1 ${
+        highlight ? "bg-brand-50 ring-brand-300" : "bg-white ring-gray-200"
+      }`}
+    >
+      <span
+        className={`grid h-5 w-5 flex-none place-items-center rounded-full text-[11px] font-bold ${
+          highlight ? "bg-brand-600 text-white" : "bg-gray-200 text-gray-700"
+        }`}
+      >
+        {n}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[12px] font-bold leading-tight text-gray-700">{label}</span>
+        {note && <span className="block truncate text-[11px] leading-tight text-gray-400">{note}</span>}
+      </span>
+      <span className={`flex-none text-right text-[16px] font-bold tabular-nums ${highlight ? "text-brand-700" : "text-gray-900"}`}>
+        {value}
+      </span>
+    </div>
   );
 }
 
@@ -155,8 +208,8 @@ function Quiz() {
 export default function SlaExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🤝 <b>サービスマネジメント</b>はITサービスを安定して届ける運用管理。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>サービスマネジメント</b>はITサービスを安定して届ける運用管理。
         <b>SLA</b>は提供者と利用者で決める<b>品質の約束</b>（稼働率や応答時間など）。スマホ回線の契約で通信範囲やサポート時間を約束するのと同じです。
       </div>
 

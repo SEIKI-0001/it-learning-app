@@ -165,8 +165,8 @@ function Classifier() {
 export default function SecurityCiaExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🛡️ 情報セキュリティは<b>3つの柱（CIA）</b>で守ります——
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        情報セキュリティは<b>3つの柱（CIA）</b>で守ります——
         <b>機密性</b>（見せない）・<b>完全性</b>（正しく保つ）・<b>可用性</b>（止めない）。
       </div>
 

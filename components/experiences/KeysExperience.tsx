@@ -438,8 +438,8 @@ function JoinPanel() {
 export default function KeysExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🏫 学校でたとえると——名簿を管理する<b>先生＝DBMS</b>、<b>学生番号＝主キー</b>（1人を確実に見分ける）、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        学校でたとえると——名簿を管理する<b>先生＝DBMS</b>、<b>学生番号＝主キー</b>（1人を確実に見分ける）、
         成績表に書かれた<b>学生番号＝外部キー</b>（名簿とつなぐ）。番号で名簿と成績表が結びつきます。
       </div>
 

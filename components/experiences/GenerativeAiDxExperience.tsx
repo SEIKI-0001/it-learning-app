@@ -6,7 +6,7 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 // 「生成AIとDX」専用の体験。
 //   ① AIに聞いてみたラボ … 頼み方を変える→回答の質が変わる＋ハルシネーションを暴く
-//   ② DX階段 … パン屋の施策をタップ→デジタイゼーション/デジタライゼーション/DXのどの段か光る
+//   ② DXの3段階 … 操作なしの比較図。変える対象が 情報→業務→ビジネスそのもの と広がる入れ子＋例
 //   ③ 生成AIの使い方 適切/不適切クイズ
 // ============================================================================
 
@@ -147,99 +147,81 @@ function AiLab() {
   );
 }
 
-// ② DX階段 -----------------------------------------------------------------
-const DX_STEPS = [
-  { emo: "📄", name: "デジタイゼーション", d: "道具をデジタルに置き換えるだけ", level: "入口" },
-  { emo: "🔁", name: "デジタライゼーション", d: "業務の流れをデジタルで効率化", level: "途中" },
-  { emo: "🚀", name: "DX", d: "しくみごと変えて新しい価値を生む", level: "ゴール" },
+// ② DXの3段階 ― 操作なしで「変える対象が 情報 → 業務 → ビジネスそのもの と広がる」ことを見せる
+const DX_LEVELS: { name: string; target: string; def: string; ex: [string, string]; bakery: string }[] = [
+  {
+    name: "デジタイゼーション",
+    target: "情報",
+    def: "アナログの情報をデジタルにする",
+    ex: ["紙の書類", "PDF"],
+    bakery: "紙の売上ノートを Excel に置き換えた",
+  },
+  {
+    name: "デジタライゼーション",
+    target: "業務",
+    def: "業務プロセスをデジタル技術で改善する",
+    ex: ["紙で回していた申請", "Web申請"],
+    bakery: "注文〜支払いをアプリで完結できるようにした",
+  },
+  {
+    name: "DX（デジタルトランスフォーメーション）",
+    target: "ビジネスそのもの",
+    def: "デジタル技術で、ビジネス・組織・顧客価値そのものを変革する",
+    ex: ["業務の効率化", "新しいサービス・ビジネスモデル"],
+    bakery: "購入データで好みを分析し、パン定期便という新事業を始めた",
+  },
 ];
 
-const MOVES = [
-  { id: "excel", emo: "📄", t: "紙の売上ノートをExcelに置き換えた", stage: 0, why: "道具が紙→デジタルになっただけ。仕事のやり方は同じ。" },
-  { id: "app", emo: "📲", t: "注文〜支払いをアプリで完結できるようにした", stage: 1, why: "業務の流れ（注文・会計）がデジタルで効率化された。" },
-  { id: "subsc", emo: "🥐", t: "購入データで好みを分析し、パン定期便という新事業を開始", stage: 2, why: "データを使って事業そのものを変え、新しい価値を生んだ＝DX。" },
-];
-
-function DxLadder() {
-  const [sel, setSel] = useState<string | null>(null);
-  const [tried, setTried] = useState<Set<string>>(new Set());
-  const move = MOVES.find((m) => m.id === sel) ?? null;
-
-  const pick = (id: string) => {
-    setSel(id === sel ? null : id);
-    setTried((p) => new Set(p).add(id));
-  };
-
+function DxLevels() {
   return (
     <Panel>
-      <SectionTitle step={2}>DX階段（パン屋の一手はどの段？）</SectionTitle>
+      <SectionTitle step={2}>デジタイゼーション・デジタライゼーション・DX</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        DXは単なる「紙の電子化」ではありません。パン屋さんの施策をタップして、
-        <b className="text-gray-800">階段のどの段にあたるか</b>見てみましょう。
+        3つの違いは<b className="text-gray-800">「何を変えるか」</b>。変える対象が
+        <b className="text-gray-800">情報 → 業務 → ビジネスそのもの</b>へと広がります。
       </p>
 
-      {/* 施策カード */}
-      <div className="mt-3 space-y-1.5">
-        {MOVES.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => pick(m.id)}
-            className={`block w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-bold transition active:scale-[0.99] ${
-              sel === m.id ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-200"
-            }`}
-          >
-            {m.emo} {m.t}
-          </button>
-        ))}
-      </div>
-
-      {/* 階段 */}
-      <div className="mt-4 space-y-1">
-        {[...DX_STEPS].reverse().map((s, i) => {
-          const idx = DX_STEPS.length - 1 - i;
-          const lit = move?.stage === idx;
-          return (
-            <div key={s.name} style={{ marginLeft: `${idx * 24}px` }}>
-              <div
-                className={`rounded-xl px-3 py-2 ring-1 transition ${
-                  lit ? "bg-emerald-50 ring-2 ring-emerald-400 shadow-md shadow-emerald-100" : "bg-gray-50 ring-gray-200"
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span className={lit ? "animate-bounce text-lg" : "text-lg"}>{s.emo}</span>
-                  <span className={`text-sm font-bold ${lit ? "text-emerald-800" : "text-gray-700"}`}>
-                    {s.name}
-                  </span>
-                  <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-gray-500 ring-1 ring-gray-200">
-                    {s.level}
-                  </span>
-                </div>
-                <p className={`mt-0.5 text-[11px] leading-relaxed ${lit ? "text-emerald-800" : "text-gray-500"}`}>
-                  {s.d}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* 判定理由 */}
-      <div className="mt-3 min-h-[3em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200">
-        {move ? (
-          <>
-            <b className="text-gray-900">{DX_STEPS[move.stage].name}</b> です ── {move.why}
-          </>
-        ) : (
-          <span className="text-gray-400">施策をタップすると、階段のどの段か光ります。</span>
-        )}
-      </div>
-
-      {tried.size === MOVES.length && (
-        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-          💡 <b>道具の置き換え→流れの効率化→しくみの変革</b>、と段が上がるほどDXに近づきます。
-          「紙をPDFにしただけ」をDXと呼ぶのは定番のひっかけ！
+      {/* 入れ子の図：内側ほど狭い対象、外側ほど広い対象 */}
+      <div className="mt-4 rounded-xl p-2.5 ring-2 ring-brand-600" data-testid="dx-scope">
+        <div className="px-1 pb-2 text-sm font-bold text-brand-800">
+          DX<span className="font-normal text-gray-600">｜変える対象＝</span>ビジネス・組織・顧客価値
         </div>
-      )}
+        <div className="rounded-lg bg-white p-2.5 ring-1 ring-gray-500">
+          <div className="px-1 pb-2 text-sm font-bold text-gray-900">
+            デジタライゼーション<span className="font-normal text-gray-600">｜変える対象＝</span>業務プロセス
+          </div>
+          <div className="rounded-md bg-gray-900 px-3 py-2.5 text-sm font-bold text-white">
+            デジタイゼーション<span className="font-normal text-gray-300">｜変える対象＝</span>情報
+          </div>
+        </div>
+      </div>
+
+      <ol className="mt-4 space-y-2.5" data-testid="dx-levels">
+        {DX_LEVELS.map((l, i) => (
+          <li key={l.name} className={`rounded-xl p-3 ring-1 ${i === 2 ? "ring-brand-300" : "ring-gray-200"}`}>
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-base font-bold text-gray-900">{l.name}</span>
+              <span className={`rounded px-1.5 py-0.5 text-xs font-bold ${i === 2 ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-800"}`}>
+                対象：{l.target}
+              </span>
+            </div>
+            <p className="mt-1 text-[15px] font-bold leading-snug text-gray-900">{l.def}</p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-gray-700">
+              <span className="text-xs font-bold text-gray-500">例</span>
+              <span className="rounded bg-gray-50 px-1.5 py-0.5 ring-1 ring-gray-200">{l.ex[0]}</span>
+              <span aria-hidden className="font-bold text-gray-900">→</span>
+              <span className="sr-only">から</span>
+              <span className="rounded bg-gray-50 px-1.5 py-0.5 font-bold text-gray-900 ring-1 ring-gray-200">{l.ex[1]}</span>
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-gray-600">パン屋なら：{l.bakery}</p>
+          </li>
+        ))}
+      </ol>
+
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        DXは単なる効率化ではなく、<b className="text-gray-900">新しいサービスやビジネスモデルを生む</b>こと。
+        「紙をPDFにしただけ」をDXと呼ぶのは定番のひっかけです。
+      </p>
     </Panel>
   );
 }
@@ -319,13 +301,13 @@ function Quiz() {
 export default function GenerativeAiDxExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🤖 生成AIは<b>便利だが誤る（ハルシネーション）</b>ので人の確認が必須。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        生成AIは<b>便利だが誤る（ハルシネーション）</b>ので人の確認が必須。
         DXは<b>電子化だけでなく、しくみごと変えて新しい価値を生む</b>こと。
       </div>
 
       <AiLab />
-      <DxLadder />
+      <DxLevels />
       <Quiz />
     </div>
   );

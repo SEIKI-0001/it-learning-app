@@ -244,8 +244,8 @@ function Quiz() {
 export default function SystemAuditExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🧑‍⚖️ <b>システム監査</b>は、システムが正しく安全に使われているかを<b>独立した第三者</b>が客観的に確認する活動。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>システム監査</b>は、システムが正しく安全に使われているかを<b>独立した第三者</b>が客観的に確認する活動。
         <b>内部統制</b>は、ミスや不正を防ぐ社内の仕組みです。テストを先生が採点基準で確認するイメージ。
       </div>
 

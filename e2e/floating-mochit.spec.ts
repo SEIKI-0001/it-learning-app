@@ -39,7 +39,7 @@ test("shows a 108px floating Mochit only on configured app routes", async ({
   page,
 }) => {
   await page.goto("/today");
-  const pet = page.getByRole("button", { name: "モチットを触る" });
+  const pet = page.getByRole("button", { name: "モチットに相談する" });
   await expect(pet).toBeVisible();
   const box = await pet.boundingBox();
   expect(Math.round(box!.width)).toBe(108);
@@ -47,16 +47,23 @@ test("shows a 108px floating Mochit only on configured app routes", async ({
 
   await page.goto("/avatar");
   await expect(
-    page.getByRole("button", { name: "モチットを触る" }),
+    page.getByRole("button", { name: "モチットに相談する" }),
   ).toBeHidden();
 });
 
-test("opens the quick menu by tap and navigates to the exact shortcuts", async ({
+test("tap opens the consult sheet; right-click opens the quick menu with exact shortcuts", async ({
   page,
 }) => {
   await page.goto("/today");
-  const pet = page.getByRole("button", { name: "モチットを触る" });
+  const pet = page.getByRole("button", { name: "モチットに相談する" });
+  // タップは相談シート、右クリック（長押し）が従来のクイックメニュー
   await pet.click();
+  const sheet = page.getByRole("dialog", { name: "モチットに相談する" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.getByRole("button", { name: "今の学習状況を見る" })).toBeVisible();
+  await sheet.getByRole("button", { name: "閉じる" }).click();
+  await expect(sheet).toBeHidden();
+  await pet.click({ button: "right" });
 
   const menu = page.getByRole("menu", {
     name: "モチットクイックメニュー",
@@ -84,7 +91,7 @@ test("opens the quick menu by tap and navigates to the exact shortcuts", async (
 
 test("a hidden pet can still be restored from More", async ({ page }) => {
   await page.goto("/today");
-  const pet = page.getByRole("button", { name: "モチットを触る" });
+  const pet = page.getByRole("button", { name: "モチットに相談する" });
   await pet.click({ button: "right" });
   await page
     .getByRole("menuitem", { name: "モチットを非表示" })
@@ -96,7 +103,7 @@ test("a hidden pet can still be restored from More", async ({ page }) => {
     .getByRole("button", { name: "フローティングモチットを表示" })
     .click();
   await expect(
-    page.getByRole("button", { name: "モチットを触る" }),
+    page.getByRole("button", { name: "モチットに相談する" }),
   ).toBeVisible();
 });
 
@@ -104,7 +111,7 @@ test("dragging moves the pet, does not open the menu, and preserves position", a
   page,
 }) => {
   await page.goto("/today");
-  const pet = page.getByRole("button", { name: "モチットを触る" });
+  const pet = page.getByRole("button", { name: "モチットに相談する" });
   const before = await pet.boundingBox();
   expect(before).not.toBeNull();
 
@@ -127,7 +134,7 @@ test("dragging moves the pet, does not open the menu, and preserves position", a
 
   await page.goto("/review");
   const afterNavigation = await page
-    .getByRole("button", { name: "モチットを触る" })
+    .getByRole("button", { name: "モチットに相談する" })
     .boundingBox();
   expect(afterNavigation?.x).toBeCloseTo(afterDrag!.x, 0);
   expect(afterNavigation?.y).toBeCloseTo(afterDrag!.y, 0);
@@ -135,10 +142,10 @@ test("dragging moves the pet, does not open the menu, and preserves position", a
 
 test("Escape and outside pointer close the quick menu", async ({ page }) => {
   await page.goto("/today");
-  const pet = page.getByRole("button", { name: "モチットを触る" });
+  const pet = page.getByRole("button", { name: "モチットに相談する" });
 
   await pet.focus();
-  await page.keyboard.press("Enter");
+  await page.keyboard.press("Shift+F10");
   const menu = page.getByRole("menu", {
     name: "モチットクイックメニュー",
   });
@@ -147,7 +154,7 @@ test("Escape and outside pointer close the quick menu", async ({ page }) => {
   await expect(menu).toBeHidden();
   await expect(pet).toBeFocused();
 
-  await page.keyboard.press("Space");
+  await pet.click({ button: "right" });
   await expect(menu).toBeVisible();
   await page.locator("main").first().click({ position: { x: 8, y: 8 } });
   await expect(menu).toBeHidden();
@@ -163,7 +170,7 @@ test.describe("touch-sized viewport", () => {
     page,
   }) => {
     await page.goto("/today");
-    const pet = page.getByRole("button", { name: "モチットを触る" });
+    const pet = page.getByRole("button", { name: "モチットに相談する" });
     const box = await pet.boundingBox();
     expect(box).not.toBeNull();
     expect(box!.x).toBeGreaterThanOrEqual(16);
@@ -200,7 +207,7 @@ test.describe("reduced motion", () => {
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/today");
-    const pet = page.getByRole("button", { name: "モチットを触る" });
+    const pet = page.getByRole("button", { name: "モチットに相談する" });
 
     expect(
       await page.evaluate(
@@ -211,7 +218,7 @@ test.describe("reduced motion", () => {
     await pet.click();
     await expect(pet).toHaveAttribute("data-motion", "idle");
     await expect(
-      page.getByRole("menu", { name: "モチットクイックメニュー" }),
+      page.getByRole("dialog", { name: "モチットに相談する" }),
     ).toBeVisible();
   });
 });

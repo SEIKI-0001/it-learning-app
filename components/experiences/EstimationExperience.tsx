@@ -91,8 +91,8 @@ function FpCounter() {
 export default function EstimationExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        📐 見積りは、開発の<b>規模や手間を前もって数値化</b>すること。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        見積りは、開発の<b>規模や手間を前もって数値化</b>すること。
         <b>FP法＝機能の数から規模／人月＝人数×期間で工数</b>。計算のしかたと、手法の選び方まで進みます。
       </div>
 

@@ -320,8 +320,8 @@ export default function EncryptionHashExperience() {
   ];
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🔐 ふたつは似て非なるもの。<b>暗号化＝鍵付きの箱</b>（鍵で開けて中身を読める＝戻せる）、
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        ふたつは似て非なるもの。<b>暗号化＝鍵付きの箱</b>（鍵で開けて中身を読める＝戻せる）、
         <b>ハッシュ化＝ミキサー</b>（材料を入れて回すとスムージーに。スムージーから元の果物には戻せない＝戻せない）。
       </div>
 

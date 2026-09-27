@@ -315,8 +315,8 @@ function Reinforcement() {
 export default function AiMlExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🤖 <b>AI</b> は知的な処理の総称。その代表が、データからパターンを学ぶ <b>機械学習</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>AI</b> は知的な処理の総称。その代表が、データからパターンを学ぶ <b>機械学習</b>。
         問題集をたくさん解いて傾向をつかむ学習者のように、<b>データを見て判断のコツを覚えます</b>。
       </div>
 

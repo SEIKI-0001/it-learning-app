@@ -1,32 +1,109 @@
 "use client";
 
 import { useState } from "react";
-import { DevRace } from "./devprocess/DevRace";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「開発プロセス」専用の体験。
-//   ① 仕様変更シミュレータ … 同じプロジェクトをWFとアジャイルの2本の時間軸で同時に進め、
-//      同じ瞬間に「⚡変更したい！」が発生。戻る距離・作り直す量・反映までの時間を並べて比べる
-//      （devprocess/DevRace）
-//   ② くらべて整理（向き・不向き）
-//   ③ これはどっち？ クイズ
+//   ① 成果物のつながり … 要件定義書 → 設計書 → プログラム → テスト。後の成果物は前の成果物をもとに作る
+//   ② 仕様変更はどこまで波及する？ … 同じ変更に「要件定義中」と「テスト中」に気づいた場合を静的に並べる
+//      （後で気づくほど、前工程の成果物までさかのぼって直す）
+//   ③ くらべて整理（ウォーターフォール／アジャイル）
+//   ④ これはどっち？ クイズ
+// 旧「仕様変更シミュレータ」（2本の時間軸を再生して比べる）は、操作・再生しないと要点が見えなかったため廃止。
 // ============================================================================
 
-function Simulator() {
+const PHASES: { phase: string; artifact: string; what: string }[] = [
+  { phase: "要件定義", artifact: "要件定義書", what: "何を作るか" },
+  { phase: "設計", artifact: "設計書", what: "どう作るか" },
+  { phase: "実装", artifact: "プログラム", what: "実際に作る" },
+  { phase: "テスト", artifact: "テスト結果", what: "正しく動くか確かめる" },
+];
+
+function ArtifactChain() {
   return (
     <Panel>
-      <SectionTitle step={1}>仕様変更シミュレータ</SectionTitle>
+      <SectionTitle step={1}>工程は「成果物」でつながっている</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        同じプロジェクトを<b className="text-gray-800">2つの進め方で同時に</b>進めます。途中で
-        <b className="text-gray-800">「⚡やっぱり変更したい！」</b>が来たとき、<b className="text-gray-800">どこまで戻り・どれだけ作り直し・いつ届くか</b>を比べよう。
+        各工程は、<b className="text-gray-800">前の工程の成果物をもとに</b>次の成果物を作ります。
+        設計書は要件定義書を、プログラムは設計書を土台にしています。
       </p>
+      <ol className="mt-4 grid gap-1 sm:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] sm:items-stretch sm:gap-1.5" data-testid="dev-chain">
+        {PHASES.map((p, i) => (
+          <li key={p.phase} className="contents">
+            <div className="rounded-xl bg-white p-3 ring-1 ring-gray-300">
+              <div className="text-xs font-bold text-gray-500">{p.phase}</div>
+              <div className="mt-0.5 text-base font-bold leading-snug text-gray-900">{p.artifact}</div>
+              <div className="mt-0.5 text-xs text-gray-600">{p.what}</div>
+            </div>
+            {i < PHASES.length - 1 && (
+              <div className="flex items-center justify-center gap-1.5 py-0.5 text-xs font-bold text-gray-600 sm:flex-col sm:py-0" aria-hidden>
+                <span className="text-lg leading-none text-gray-900 sm:hidden">↓</span>
+                <span className="hidden text-lg leading-none text-gray-900 sm:inline">→</span>
+                <span className="sm:hidden">これをもとに作る</span>
+              </div>
+            )}
+          </li>
+        ))}
+      </ol>
+    </Panel>
+  );
+}
 
-      <DevRace />
+// 同じ仕様変更「会員ランク機能を追加したい」に、いつ気づいたか
+const WHEN: { when: string; sub: string; status: ("fix" | "none" | "redo")[]; cost: string }[] = [
+  {
+    when: "要件定義中に気づいた",
+    sub: "まだ要件定義書しかない",
+    status: ["fix", "none", "none", "none"],
+    cost: "直すのは 1つ",
+  },
+  {
+    when: "テスト中に気づいた",
+    sub: "すべての成果物ができている",
+    status: ["fix", "fix", "fix", "redo"],
+    cost: "直すのは 4つすべて",
+  },
+];
+const STATUS_LABEL = { fix: "修正", none: "まだない", redo: "やり直し" } as const;
 
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 アジャイルは<b>「無計画」ではありません</b>——計画を小さく区切って、こまめに見直すだけです。
-        早い段階で試作品を見せて要求を固める<b>プロトタイピング</b>も、変更に早く気づくための工夫です。
+function ChangeRipple() {
+  return (
+    <Panel>
+      <SectionTitle step={2}>仕様変更は、前の工程まで波及する</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        例：<b className="text-gray-800">「会員ランク機能を追加したい」</b>という同じ変更。気づいたタイミングで、直す量がこれだけ変わります。
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2" data-testid="dev-ripple">
+        {WHEN.map((w, wi) => (
+          <div key={w.when} className={`rounded-xl p-3 ring-1 ${wi === 1 ? "ring-rose-300" : "ring-gray-300"}`} data-testid={`dev-ripple-${wi}`}>
+            <div className="text-base font-bold text-gray-900">{w.when}</div>
+            <div className="text-xs text-gray-600">{w.sub}</div>
+            <ul className="mt-2.5 space-y-1">
+              {PHASES.map((p, i) => {
+                const st = w.status[i];
+                return (
+                  <li
+                    key={p.artifact}
+                    className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-sm ${
+                      st === "none" ? "bg-gray-50 text-gray-500" : "bg-rose-50 font-bold text-rose-800 ring-1 ring-rose-200"
+                    }`}
+                    data-status={st}
+                  >
+                    <span>{p.artifact}</span>
+                    <span className="text-xs font-bold">{STATUS_LABEL[st]}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className={`mt-2.5 text-center text-[15px] font-bold ${wi === 1 ? "text-rose-700" : "text-gray-900"}`}>{w.cost}</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-800 ring-1 ring-gray-200">
+        <b className="text-gray-900">後の工程で仕様を変えるほど、前の工程の成果物までさかのぼって直す（手戻り）</b>ので、時間と費用がふくらみます。
+        工程を順番に進める<b className="text-gray-900">ウォーターフォール</b>はこの手戻りに弱く、
+        <b className="text-gray-900">アジャイル</b>や<b className="text-gray-900">プロトタイピング</b>は、早く作って見せることで変更に早く気づく工夫です。
       </div>
     </Panel>
   );
@@ -41,22 +118,22 @@ function Compare() {
   ];
   return (
     <Panel>
-      <SectionTitle step={2}>くらべて整理</SectionTitle>
+      <SectionTitle step={3}>ウォーターフォールとアジャイルをくらべる</SectionTitle>
       <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-300">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-2 py-2 text-left font-bold"> </th>
-              <th className="px-2 py-2 text-center font-bold text-sky-700">🪜 WF</th>
-              <th className="px-2 py-2 text-center font-bold text-emerald-700">🔁 アジャイル</th>
+              <th className="px-2 py-2 text-center font-bold text-gray-900">ウォーターフォール</th>
+              <th className="px-2 py-2 text-center font-bold text-gray-900">アジャイル</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={r.k} className={i % 2 ? "bg-gray-50" : "bg-white"}>
                 <td className="whitespace-nowrap px-2 py-2 font-bold text-gray-700">{r.k}</td>
-                <td className="px-2 py-2 text-center text-xs text-gray-700">{r.wf}</td>
-                <td className="px-2 py-2 text-center text-xs text-gray-700">{r.agile}</td>
+                <td className="px-2 py-2 text-center text-sm text-gray-700">{r.wf}</td>
+                <td className="px-2 py-2 text-center text-sm text-gray-700">{r.agile}</td>
               </tr>
             ))}
           </tbody>
@@ -81,7 +158,7 @@ function Quiz() {
   const label = (k: "WF" | "Agile") => (k === "WF" ? "ウォーターフォール" : "アジャイル");
   return (
     <Panel>
-      <SectionTitle step={3}>これはどっち？</SectionTitle>
+      <SectionTitle step={4}>これはどっち？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {ITEMS.map((it, i) => {
           const chosen = answers[i];
@@ -129,12 +206,13 @@ function Quiz() {
 export default function DevProcessExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🛠️ システム開発は<b>要件定義→設計→製造→テスト→運用</b>の流れ。進め方には
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        システム開発は<b>要件定義→設計→製造→テスト→運用</b>の流れ。進め方には
         <b>ウォーターフォール（順番に）</b>と<b>アジャイル（小さく反復）</b>の2つがあります。
       </div>
 
-      <Simulator />
+      <ArtifactChain />
+      <ChangeRipple />
       <Compare />
       <Quiz />
     </div>

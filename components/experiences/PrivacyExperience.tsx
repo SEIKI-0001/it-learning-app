@@ -162,8 +162,8 @@ function HandlingQuiz() {
 export default function PrivacyExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🪪 <b>個人情報</b>は、氏名・住所・顔写真など<b>特定の個人を識別できる情報</b>。
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        <b>個人情報</b>は、氏名・住所・顔写真など<b>特定の個人を識別できる情報</b>。
         集めるときは目的を明確にし、必要な範囲で、安全に扱うのがルールです。
       </div>
 

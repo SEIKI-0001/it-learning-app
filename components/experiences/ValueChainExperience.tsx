@@ -299,8 +299,8 @@ function Quiz() {
 export default function ValueChainExperience() {
   return (
     <div className="space-y-5">
-      <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🔗 バリューチェーン（価値連鎖）は、会社の活動を<b>「価値を直接生む主活動」</b>と
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        バリューチェーン（価値連鎖）は、会社の活動を<b>「価値を直接生む主活動」</b>と
         <b>「それを支える支援活動」</b>に分け、<b>どこに強みがあるか</b>を見える化します。
       </div>
 

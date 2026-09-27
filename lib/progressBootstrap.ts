@@ -25,6 +25,7 @@ import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import type { TopicStage } from "@/types/studyProgress";
 import { getCurrentReadiness } from "@/lib/examReadiness/service";
 import type { ExamReadinessResult } from "@/types/examReadiness";
+import { daysUntilExamDate } from "@/lib/planningInputs";
 
 export type IntegratedStatusBootstrapResult = {
   status: IntegratedLearningStatus | null;
@@ -48,14 +49,6 @@ export async function getProgressBootstrapExamReadiness(
     console.error("progress bootstrap exam readiness failed", error);
     return null;
   }
-}
-
-/** exam_date（"YYYY-MM-DD"）から試験までの残り日数を求める。 */
-function daysUntil(examDate: string | null, now: Date): number | null {
-  if (!examDate) return null;
-  const exam = new Date(`${examDate}T00:00:00`);
-  if (Number.isNaN(exam.getTime())) return null;
-  return Math.max(0, Math.ceil((exam.getTime() - now.getTime()) / 86_400_000));
 }
 
 function isIsoDate(v: unknown): v is string {
@@ -163,7 +156,7 @@ export async function refreshIntegratedStatusForUser(
   const status = computeIntegratedStatus({
     statusDate,
     now,
-    daysUntilExam: daysUntil(examDate, now),
+    daysUntilExam: daysUntilExamDate(examDate, now),
     topics,
     topicProgress,
     wordProgress,
@@ -272,7 +265,7 @@ export async function generatePlanAdjustmentForUser(
   const generated = buildPlanAdjustmentProposal({
     statusDate,
     status,
-    daysUntilExam: daysUntil(examDate, now),
+    daysUntilExam: daysUntilExamDate(examDate, now),
   }, currentReadiness);
 
   if (!generated) return null;
@@ -328,4 +321,63 @@ export async function getLatestOrGeneratePlanAdjustment(
     now,
     examReadiness,
   );
+}
+
+/**
+ * 現在有効な立て直し案（proposed / accepted）を expired にする。
+ * 削除はせず履歴として残す（accepted の selected_option_id / accepted_at もそのまま）。
+ * 失敗時は throw（古い案が「最新」として残るのを保存成功扱いにしないため）。
+ */
+export async function expireActivePlanAdjustmentProposals(
+  supabase: SupabaseClient,
+  userId: string,
+  now = new Date(),
+): Promise<void> {
+  const { error } = await supabase
+    .from("plan_adjustment_proposals")
+    .update({ status: "expired", updated_at: now.toISOString() })
+    .eq("user_id", userId)
+    .in("status", ["proposed", "accepted"]);
+  if (error) throw new Error("plan adjustment expire failed");
+}
+
+export type ReplanResult = {
+  integratedStatus: IntegratedLearningStatus | null;
+  planAdjustmentProposal: PlanAdjustmentProposal | null;
+};
+
+/**
+ * planning inputs（試験日・学習可能時間）変更時の再計算。
+ * 通常の「当日分があれば再利用」（getLatestOrRefreshIntegratedStatus）や
+ * 「有効な提案があれば再利用」を通さず、変更後の exam_date で当日分を作り直す。
+ *   1. integrated_learning_status を強制再計算して当日分を upsert
+ *   2. 旧条件の立て直し案を expired にする
+ *   3. 再計算した統合進捗と最新の試験日で、必要なら新しい立て直し案を生成
+ * 一次データ（topic_progress・回答履歴・Exam Readiness 等）には書き込まない。
+ */
+export async function replanForPlanningInputsChange(
+  supabase: SupabaseClient,
+  userId: string,
+  now = new Date(),
+): Promise<ReplanResult> {
+  const examReadiness = getProgressBootstrapExamReadiness(supabase, userId, now);
+  const integrated = await refreshIntegratedStatusForUser(supabase, userId, {
+    now,
+    examReadiness,
+  });
+  if (!integrated.saved || !integrated.row) {
+    throw new Error("integrated status refresh failed");
+  }
+
+  await expireActivePlanAdjustmentProposals(supabase, userId, now);
+
+  const planAdjustmentProposal = await generatePlanAdjustmentForUser(
+    supabase,
+    userId,
+    integrated.row,
+    now,
+    examReadiness,
+  );
+
+  return { integratedStatus: integrated.status, planAdjustmentProposal };
 }

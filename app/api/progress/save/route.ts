@@ -4,6 +4,14 @@ import { getInternalUserId } from "@/lib/auth/currentUser";
 import { saveSharedProgress } from "@/lib/auth/sharedProgress";
 import { profileToRow } from "@/lib/dbMappers";
 import { recalculateExamReadiness } from "@/lib/examReadiness/service";
+import {
+  PLANNING_INPUT_COLUMNS,
+  havePlanningInputsChanged,
+  planningInputsFromProfile,
+  planningInputsFromRow,
+  type PlanningInputsRow,
+} from "@/lib/planningInputs";
+import { replanForPlanningInputsChange } from "@/lib/progressBootstrap";
 import type { UserProfile, UserProgress } from "@/types";
 
 export const runtime = "nodejs";
@@ -18,13 +26,24 @@ type ProgressSaveBody = {
   progress?: UserProgress;
   profile?: UserProfile;
   readinessTrigger?: ReadinessTriggerInput;
+  /**
+   * クライアントが planning inputs の変更を検知したときの再計算要求。
+   * 前回の保存でプロフィールだけ書けて再計算に失敗した場合、DB 上は既に新しい値で
+   * サーバー側の比較では差分が出ないため、再試行時にこれで再計算を確実に走らせる。
+   */
+  replan?: boolean;
 };
 
 /**
  * POST /api/progress/save
  * 進捗と任意でプロフィールを UPSERT する。
  * ユーザーはセッション（Google / LINE Cookie）から解決する。
- * body: { progress?: UserProgress, profile?: UserProfile, readinessTrigger? }
+ * body: { progress?: UserProgress, profile?: UserProfile, readinessTrigger?, replan? }
+ *
+ * プロフィールの planning inputs（試験日・平日/休日の学習可能時間）が変わったときは
+ * 学習計画の再計算イベントとして扱い、統合進捗の当日分を作り直し、旧条件の立て直し案を
+ * expired にして新しい案を生成するまで待ってから応答する（planningInputsChanged: true）。
+ * 再計算に失敗したら ok:false（保存できたように見せない）。
  */
 export async function POST(request: Request) {
   let progress: UserProgress | undefined;
@@ -67,12 +86,38 @@ export async function POST(request: Request) {
     triggerRegistered = data.trigger_registered;
   }
 
+  let planningInputsChanged = false;
   if (profile) {
+    const { data: before, error: beforeError } = await supabase
+      .from("user_profiles")
+      .select(PLANNING_INPUT_COLUMNS)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (beforeError) {
+      return NextResponse.json({ ok: false, error: "profile save failed" }, { status: 500 });
+    }
     const { error } = await supabase
       .from("user_profiles")
       .upsert(profileToRow(userId, profile), { onConflict: "user_id" });
     if (error) {
       return NextResponse.json({ ok: false, error: "profile save failed" }, { status: 500 });
+    }
+    planningInputsChanged =
+      body.replan === true ||
+      havePlanningInputsChanged(
+        planningInputsFromRow(before as PlanningInputsRow | null),
+        planningInputsFromProfile(profile),
+      );
+  }
+
+  if (planningInputsChanged) {
+    try {
+      await replanForPlanningInputsChange(supabase, userId);
+    } catch {
+      return NextResponse.json(
+        { ok: false, error: "replan failed", profileSaved: true },
+        { status: 500 },
+      );
     }
   }
 
@@ -90,7 +135,11 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, readinessUpdated });
+  return NextResponse.json({
+    ok: true,
+    readinessUpdated,
+    ...(profile ? { planningInputsChanged } : {}),
+  });
 }
 
 function parseReadinessTrigger(value: unknown): ReadinessTriggerInput | undefined {

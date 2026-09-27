@@ -15,7 +15,7 @@ export default function CorporationOrganizationExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        🏢 会社の<b>「持ち主」と「動かす人」は別</b>です。まず上から下への関係を見て、そのあと部署の分け方（組織形態）を並べて比べます。
+        会社の<b>「持ち主」と「動かす人」は別</b>です。まず上から下への関係を見て、そのあと部署の分け方（組織形態）を並べて比べます。
       </Lead>
       <OwnershipPanel />
       <PurposePanel />

@@ -226,6 +226,19 @@ export function loadCachedProgressBootstrap(): ProgressBootstrapCache | null {
   return readBootstrapCache<ProgressBootstrapCache>(PROGRESS_BOOTSTRAP_CACHE_KEY);
 }
 
+/**
+ * /progress 初期表示キャッシュを破棄する。試験日・学習可能時間の変更後に、
+ * 旧条件の統合進捗・立て直し案を初期表示へ出さないために使う（サーバー側の値は消さない）。
+ */
+export function invalidateProgressBootstrapCache(): void {
+  if (!isBrowser()) return;
+  try {
+    window.localStorage.removeItem(PROGRESS_BOOTSTRAP_CACHE_KEY);
+  } catch {
+    /* 削除できなくても表示は継続（TTL で失効する） */
+  }
+}
+
 export function saveCachedProgressBootstrap(
   userId: string | null,
   data: ProgressBootstrapCache,
@@ -346,15 +359,44 @@ export async function saveProgressToDb(
   }
 }
 
-/** プロフィールをDBへ保存（オンボーディング完了時）。 */
-export function saveProfileToDb(userId: string, profile: UserProfile): void {
-  void fetch("/api/progress/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, profile }),
-  }).catch(() => {
-    /* fire-and-forget */
-  });
+export type ProfileSaveResult = {
+  ok: boolean;
+  /** サーバーが planning inputs の変更として再計算まで済ませたか。 */
+  planningInputsChanged: boolean;
+};
+
+/**
+ * プロフィールをDBへ保存する。オンボーディング等は返り値を待たず fire-and-forget で使え、
+ * 設定画面は await して「DB保存 → 学習計画の再計算 → 画面遷移」の順を守る。
+ * replan: クライアント側で planning inputs の変更を検知したとき true（再試行でも再計算させる）。
+ * 再計算を伴う保存が成功したら、古い /progress 初期表示キャッシュを破棄する。
+ */
+export async function saveProfileToDb(
+  userId: string,
+  profile: UserProfile,
+  options: { replan?: boolean } = {},
+): Promise<ProfileSaveResult> {
+  try {
+    const response = await fetch("/api/progress/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        profile,
+        replan: options.replan ? true : undefined,
+      }),
+    });
+    const data = (await response.json().catch(() => null)) as {
+      ok?: boolean;
+      planningInputsChanged?: boolean;
+    } | null;
+    const ok = response.ok && data?.ok === true;
+    const planningInputsChanged = ok && data?.planningInputsChanged === true;
+    if (planningInputsChanged) invalidateProgressBootstrapCache();
+    return { ok, planningInputsChanged };
+  } catch {
+    return { ok: false, planningInputsChanged: false };
+  }
 }
 
 /** 回答履歴をDBへ保存。 */

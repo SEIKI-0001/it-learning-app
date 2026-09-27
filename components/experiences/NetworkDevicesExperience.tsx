@@ -14,7 +14,7 @@ export default function NetworkDevicesExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        🔌 ネットワーク機器は、<b>何を見て、何を送るか</b>で見分けます。宛先を見ない（信号）→ MACアドレスを見る（フレーム）→ IPアドレスを見る（パケット）→ 仕組みごと変換する、の順に賢くなります。
+        ネットワーク機器は、<b>何を見て、何を送るか</b>で見分けます。宛先を見ない（信号）→ MACアドレスを見る（フレーム）→ IPアドレスを見る（パケット）→ 仕組みごと変換する、の順に賢くなります。
       </Lead>
       <LadderPanel />
       <HubSwitchPanel />
