@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { NormalTables } from "./normalization/NormalTables";
+import { NormalTables, STAGE_FOCUS, type Focus } from "./normalization/NormalTables";
 import { Panel } from "./ui";
 
 // ============================================================================
 // 「正規化」専用の体験。
 // 1枚の注文伝票が、第1〜第3正規形へと分割されていく様子を段階で追う。
-// 主キー（ピンク）・重複データ（黄）・繰り返し項目（紫）を色分けして気づかせる。
-// 表はふつうの行×列の表。同じ項目は段階が変わっても同じ色の列見出しのまま。
-// 最終形では 注文明細・注文表の「→参照」で、どの表のキーを指しているかを示す。
+// 表は白〜グレーだけ。色はその段階で見てほしい所1種類だけに付ける：
+//   非正規形＝繰り返し項目／1NF＝重複しているデータ（黄）／2NF・3NF＝表どうしをつなぐキー（青）
+// 主キーは黒い「主キー」バッジ、外部キーは「→参照先の表」バッジで示す。
 // ============================================================================
 
 type Panel2 = { kind: "" | "fix" | "problem"; lbl: string; html: string };
@@ -38,7 +38,7 @@ const STAGES: Stage[] = [
     title: "第1正規形：繰り返しをバラす",
     explain: [
       { kind: "fix", lbl: "やったこと", html: "繰り返す明細を1行ずつに展開。<b>1マス1値・1行1明細</b>のフラットな表に。主キーは〔注文番号＋商品番号〕。" },
-      { kind: "problem", lbl: "でもまだ困る（更新異常）", html: "黄色のセルに注目。<b>同じ注文情報・商品情報が何度も重複</b>。「りんご」値上げで2か所直す必要があり、直し忘れると値段が食い違う＝更新異常。" },
+      { kind: "problem", lbl: "でもまだ困る（更新異常）", html: "黄色のデータに注目。<b>同じ注文情報・商品情報が何度も重複</b>。「りんご」値上げで2か所直す必要があり、直し忘れると値段が食い違う＝更新異常。" },
     ],
     fd: ["注文番号 → 注文日, 顧客番号, 顧客名", "商品番号 → 商品名, 単価", "注文番号＋商品番号 → 数量"],
   },
@@ -63,6 +63,12 @@ const STAGES: Stage[] = [
     fd: ["注文表: 注文番号 → 注文日, 顧客番号", "顧客表: 顧客番号 → 顧客名", "商品表: 商品番号 → 商品名, 単価", "注文明細: 注文番号＋商品番号 → 数量"],
   },
 ];
+
+const FOCUS_LEGEND: Record<Focus, { swatch: string; label: string }> = {
+  repeating: { swatch: "border border-dashed border-amber-500 bg-amber-100", label: "繰り返し項目（1マスに複数の値）" },
+  dup: { swatch: "bg-amber-100", label: "何度も重複しているデータ" },
+  link: { swatch: "bg-sky-100 ring-1 ring-sky-600", label: "表どうしをつなぐキー（外部キー → 主キー）" },
+};
 
 export default function NormalizationExperience() {
   const [stage, setStage] = useState(0);
@@ -105,15 +111,10 @@ export default function NormalizationExperience() {
         {/* 解説パネル */}
         <div className="mt-2 space-y-2">
           {s.explain.map((p, i) => {
-            const tone =
-              p.kind === "fix"
-                ? "bg-emerald-50 ring-emerald-200 [&_.lbl]:text-emerald-700"
-                : p.kind === "problem"
-                  ? "bg-amber-50 ring-amber-200 [&_.lbl]:text-amber-700"
-                  : "bg-gray-50 ring-gray-200 [&_.lbl]:text-brand-700";
+            const tone = p.kind === "fix" ? "text-emerald-700" : p.kind === "problem" ? "text-rose-700" : "text-gray-500";
             return (
-              <div key={i} className={`rounded-xl px-3.5 py-2.5 text-sm ring-1 ${tone}`}>
-                <div className="lbl mb-0.5 font-bold">{p.lbl}</div>
+              <div key={i} className="border-l-2 border-gray-200 py-0.5 pl-3 text-sm">
+                <div className={`mb-0.5 text-xs font-bold ${tone}`}>{p.lbl}</div>
                 <p
                   className="leading-relaxed text-gray-700 [&_b]:text-gray-900"
                   dangerouslySetInnerHTML={{ __html: p.html }}
@@ -123,7 +124,7 @@ export default function NormalizationExperience() {
           })}
         </div>
 
-        {/* 表（列見出しの色＝項目のグループ。段階が変わっても同じ色） */}
+        {/* 表（色はこの段階で見てほしい所だけ） */}
         <div className="mt-4">
           <NormalTables stage={stage} priceUp={priceUp} />
         </div>
@@ -177,26 +178,13 @@ export default function NormalizationExperience() {
           </div>
         )}
 
-        {/* 凡例 */}
-        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-100 pt-3 text-[11px] text-gray-500">
+        {/* 凡例：この段階で使っている色だけ */}
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-100 pt-3 text-[11px] text-gray-600" data-testid="norm-legend">
           <span className="flex items-center gap-1.5">
-            <i className="inline-block h-3 w-3 rounded bg-rose-300" /> 主キー
+            <i className="rounded bg-gray-900 px-1 text-[9px] font-bold not-italic text-white">主キー</i> 行を1つに決める項目
           </span>
           <span className="flex items-center gap-1.5">
-            <i className="inline-block h-3 w-3 rounded bg-amber-300" /> 重複データ
-          </span>
-          <span className="flex items-center gap-1.5">
-            <i className="inline-block h-3 w-3 rounded border border-dashed border-purple-400 bg-purple-50" /> 繰り返し項目
-          </span>
-          <span className="flex items-center gap-1.5">
-            <i className="inline-block h-3 w-3 rounded bg-rose-100 ring-1 ring-rose-300" /> 値の食い違い
-          </span>
-          <span className="flex basis-full flex-wrap items-center gap-x-3 gap-y-1">
-            <span>列見出しの色＝</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-indigo-600" />注文</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-teal-600" />顧客</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-orange-600" />商品</span>
-            <span className="flex items-center gap-1"><i className="inline-block h-1 w-3 rounded bg-purple-600" />明細</span>
+            <i className={`inline-block h-3 w-3 rounded ${FOCUS_LEGEND[STAGE_FOCUS[stage]].swatch}`} /> {FOCUS_LEGEND[STAGE_FOCUS[stage]].label}
           </span>
         </div>
 

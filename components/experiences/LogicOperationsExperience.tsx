@@ -11,7 +11,7 @@ import { Panel, SectionTitle } from "./ui";
 //   ① A・Bのスイッチ(0/1)と演算(AND/OR/NOT/XOR)を選ぶと、1 の信号が
 //      スイッチ → ゲート → ランプ の順に線を流れて出力ランプが点く。
 //      すぐ下の真理値表は同じ状態を表し、ハイライトが今の入力の行へ移る（行タップでスイッチも変わる）
-//   ② 選んだ演算の真理値表で全パターンを見る（①と同じ入力の行がハイライト）
+//   ② 選んだ演算の真理値表で全パターンを見る。ここは特定の行を強調しない（全行を同じ重みで読む）
 // ============================================================================
 
 const OPS: { op: Op; label: string; desc: string }[] = [
@@ -80,11 +80,12 @@ function Switch({ value, onToggle, label }: { value: number; onToggle: () => voi
   );
 }
 
-// 真理値表。ハイライトは行から行へ滑って移る。行をタップすると、その入力になる。
+// 真理値表。①（compact）ではハイライトが今の入力の行へ滑って移り、行をタップするとその入力になる。
+// ②の全パターン表はどの行も強調しない。
 function Table({ state, onPick, compact }: { state: State; onPick?: (a: number, b: number) => void; compact?: boolean }) {
   const { op, a, b } = state;
   const rows = tableRows(op);
-  const cur = rowIndex(op, a, b);
+  const cur = compact ? rowIndex(op, a, b) : -1;
   const rowH = compact ? 30 : 36;
   const cols = op === "NOT" ? "grid-cols-2" : "grid-cols-3";
   return (
@@ -95,17 +96,19 @@ function Table({ state, onPick, compact }: { state: State; onPick?: (a: number, 
         <span className="text-brand-700">{op} の出力</span>
       </div>
       <div className="relative" style={{ height: rows.length * rowH }}>
-        <div
-          className={`${styles.highlight} absolute inset-x-0 top-0 bg-amber-100 ring-2 ring-inset ring-amber-400`}
-          style={{ height: rowH, transform: `translateY(${cur * rowH}px)` }}
-          aria-hidden
-        />
+        {compact && (
+          <div
+            className={`${styles.highlight} absolute inset-x-0 top-0 bg-amber-100 ring-2 ring-inset ring-amber-400`}
+            style={{ height: rowH, transform: `translateY(${cur * rowH}px)` }}
+            aria-hidden
+          />
+        )}
         {rows.map((r, i) => {
           const content = (
             <>
               <span className="font-mono">{r.a}</span>
               {op !== "NOT" && <span className="font-mono">{r.b}</span>}
-              <span className={`font-mono font-bold ${r.out === 1 ? "text-amber-600" : "text-gray-400"}`}>{r.out}</span>
+              <span className={`font-mono font-bold ${r.out === 1 ? "text-gray-900" : "text-gray-400"}`}>{r.out}</span>
             </>
           );
           const cls = `relative grid ${cols} w-full items-center border-t border-gray-100`;
@@ -219,8 +222,8 @@ function TruthTable({ state, set }: { state: State; set: (s: Partial<State>) => 
       <div className="mt-3">
         <Table state={state} />
       </div>
-      <p className="mt-2 text-center text-[11px] text-gray-400">
-        出力が1の行（オレンジ）に注目すると、その演算の性格が分かります。枠は ① の回路と同じ入力の行です。
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        出力が<b className="text-gray-900">1になる行</b>だけを見ると、その演算の性格が分かります。
       </p>
     </Panel>
   );

@@ -1,6 +1,11 @@
 import type { ComponentType } from "react";
 import BinaryExperience from "./BinaryExperience";
 import AlgorithmExperience from "./AlgorithmExperience";
+import ComputerTypesExperience from "./ComputerTypesExperience";
+import ParallelSystemsExperience from "./ParallelSystemsExperience";
+import IoDevicesExperience from "./IoDevicesExperience";
+import SystemPerformanceExperience from "./SystemPerformanceExperience";
+import UiUxExperience from "./UiUxExperience";
 import NormalizationExperience from "./NormalizationExperience";
 import ComputerCoreExperience from "./ComputerCoreExperience";
 import KeysExperience from "./KeysExperience";
@@ -98,6 +103,11 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-binary-data": BinaryExperience,
   "tech-algorithm-flowchart": AlgorithmExperience,
   "tech-normalization": NormalizationExperience,
+  "tech-computer-types": ComputerTypesExperience,
+  "tech-parallel-systems": ParallelSystemsExperience,
+  "tech-io-devices": IoDevicesExperience,
+  "tech-system-performance": SystemPerformanceExperience,
+  "tech-ui-ux": UiUxExperience,
   "tech-computer-core": ComputerCoreExperience,
   "tech-keys": KeysExperience,
   "tech-os-software-hardware": OsExperience,

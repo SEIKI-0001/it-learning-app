@@ -53,15 +53,28 @@ describe("NormalizationExperience", () => {
     expect(field("orders", "custNo")).toHaveTextContent("→顧客表");
   });
 
-  it("keeps the same colour group for a field across stages", () => {
+  it("colours only what the current stage is about: repeating → duplicates → linking keys", () => {
     renderDeck();
-    expect(field("slip", "price")).toHaveAttribute("data-group", "product");
+    expect(board()).toHaveAttribute("data-focus", "repeating");
+    // 非正規形では重複はまだ強調しない（見るのは繰り返し項目だけ）
+    expect(column("slip", "price").count("data-dup")).toBe(0);
     expect(board().querySelectorAll('[data-table="slip"] tbody tr')).toHaveLength(2);
+    expect(screen.getByTestId("norm-legend")).toHaveTextContent("繰り返し項目");
+
+    next();
+    expect(board()).toHaveAttribute("data-focus", "dup");
+    expect(screen.getByTestId("norm-legend")).toHaveTextContent("重複");
+
     next();
     next();
-    next();
-    expect(field("products", "price")).toHaveAttribute("data-group", "product");
-    expect(field("customers", "custName")).toHaveAttribute("data-group", "customer");
+    expect(board()).toHaveAttribute("data-focus", "link");
+    // 外部キー（注文表.顧客番号）と、それが指す主キー（顧客表.顧客番号）だけが「つなぐキー」
+    expect(field("orders", "custNo")).toHaveAttribute("data-link", "true");
+    expect(field("customers", "custNo")).toHaveAttribute("data-link", "true");
+    expect(field("details", "prodNo")).toHaveAttribute("data-link", "true");
+    expect(field("products", "prodNo")).toHaveAttribute("data-link", "true");
+    expect(field("products", "price")).toHaveAttribute("data-link", "false");
+    expect(field("customers", "custName")).toHaveAttribute("data-link", "false");
   });
 
   it("shows the update anomaly in 1NF and a single fix in 3NF", () => {
