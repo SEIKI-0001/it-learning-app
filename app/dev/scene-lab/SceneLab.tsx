@@ -100,9 +100,12 @@ export default function SceneLab({ initialVariant }: { initialVariant: LabVarian
 
   function selectVariant(next: LabVariant) {
     setVariant(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set("v", next);
-    window.history.replaceState(null, "", url);
+    // URL に残すのは便利機能だけ（埋め込み先などで history が使えなくても切替は動かす）
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("v", next);
+      window.history.replaceState(null, "", url);
+    } catch {}
   }
 
   return (
