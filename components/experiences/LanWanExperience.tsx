@@ -2,30 +2,30 @@
 
 import { useState } from "react";
 import { DivideStage, EfficiencyStage, SolveStage, TimeStage, TransferPractice, UnitStage } from "./transfer/TransferStages";
+import { LanWanDioramaScene, type LanWanDest } from "./lanwan/LanWanDioramaScene";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「LANとWAN」専用の体験。
-//   ① 宛先を選んでデータを送る → 通る経路（LAN内で完結 / WAN経由）が光る
+//   ① 宛先を選んでデータを送る → 自宅・電柱・局舎・会社・海外データセンターの3D模型の中を小包がたどる（LAN内で完結 / WAN経由）
 //   ② 比較表（範囲・例・だれが用意・速度）
 //   ③ これはどっち？ 仕分けクイズ（範囲で見分ける練習）
 //   ④〜⑨ 通信速度・転送時間（transfer/TransferStages）：割り算の意味 → Byte/bit → 利用効率 → 32秒 → 解き方 → 確認3問
 // ============================================================================
 
-type Dest = "printer" | "office" | "video";
+type Dest = LanWanDest;
 
 const DESTS: {
   key: Dest;
   label: string;
   usesWan: boolean;
-  remote: { emoji: string; name: string; devices: string } | null;
   result: string;
 }[] = [
   {
     key: "printer",
     label: "🖨️ 同じ家のプリンタ",
     usesWan: false,
-    remote: null,
     result:
       "家の中のネットワーク（LAN）だけで届いた！ WANは通っていません。近い相手はLAN内で完結するので速い。",
   },
@@ -33,7 +33,6 @@ const DESTS: {
     key: "office",
     label: "🏢 遠くの会社のサーバ",
     usesWan: true,
-    remote: { emoji: "🏢", name: "会社（LAN）", devices: "🖥️🗄️" },
     result:
       "家のLANを出て、通信会社の回線（WAN）を通り、会社のLANへ届いた！ 離れたLANどうしを結ぶのがWANです。",
   },
@@ -41,7 +40,6 @@ const DESTS: {
     key: "video",
     label: "🌍 海外の動画サイト",
     usesWan: true,
-    remote: { emoji: "🌍", name: "動画サイト", devices: "🗄️🎬" },
     result:
       "インターネット（世界最大のWAN）を通って海外まで届いた！ どんなに遠くても、WANがLANとLANを結んでくれます。",
   },
@@ -54,8 +52,11 @@ function PacketJourney() {
   const triedLan = [...tried].some((k) => !DESTS.find((x) => x.key === k)!.usesWan);
   const triedWan = [...tried].some((k) => DESTS.find((x) => x.key === k)!.usesWan);
 
+  const reducedMotion = useReducedMotion();
+  const [runKey, setRunKey] = useState(0);
   const send = (key: Dest) => {
     setDest(key);
+    setRunKey((k) => k + 1);
     setTried((prev) => new Set(prev).add(key));
   };
 
@@ -63,8 +64,8 @@ function PacketJourney() {
     <Panel>
       <SectionTitle step={1}>宛先を選んで、データを送ってみる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        あなたのスマホ📱から送信します。<b className="text-gray-800">宛先をタップ</b>すると、
-        データがどこを通るかが光ります。
+        自宅のソファにいるあなたのスマホから送信します。<b className="text-gray-800">宛先をタップ</b>すると、
+        データが家の中・電柱・通信事業者の局舎…と、実際にどこを通るかが分かります。
       </p>
 
       {/* 宛先選択 */}
@@ -82,63 +83,8 @@ function PacketJourney() {
         ))}
       </div>
 
-      {/* 経路の図 */}
-      <div className="mt-3 flex items-stretch justify-center gap-1">
-        {/* 家のLAN */}
-        <div
-          className={`flex-1 rounded-xl border-2 border-dashed px-1.5 py-2.5 text-center transition ${
-            dest ? "border-brand-400 bg-brand-50" : "border-gray-300 bg-gray-50"
-          }`}
-        >
-          <div className="text-[11px] font-bold text-brand-700">🏠 家（LAN）</div>
-          <div className="mt-1.5 flex justify-center gap-1 text-base">
-            <span className={dest ? "rounded bg-brand-200 px-0.5" : ""}>📱</span>
-            <span className={dest === "printer" ? "animate-pulse rounded bg-emerald-200 px-0.5" : ""}>🖨️</span>
-            <span>💻</span>
-          </div>
-          {dest === "printer" && (
-            <div className="mt-1 text-[10px] font-bold text-emerald-600">📱→🖨️ 家の中で完結！</div>
-          )}
-        </div>
-
-        {/* WAN */}
-        <div className="flex items-center">
-          <span className={`text-sm font-bold ${d?.usesWan ? "animate-pulse text-sky-500" : "text-gray-200"}`}>⇄</span>
-        </div>
-        <div
-          className={`w-[72px] rounded-full border-2 px-1 py-2.5 text-center transition ${
-            d?.usesWan ? "border-sky-400 bg-sky-50" : "border-gray-200 bg-gray-50 opacity-60"
-          }`}
-        >
-          <div className="text-lg">🌐</div>
-          <div className={`text-[10px] font-bold ${d?.usesWan ? "text-sky-700" : "text-gray-400"}`}>WAN</div>
-          <div className="text-[9px] leading-tight text-gray-400">通信会社の回線</div>
-        </div>
-        <div className="flex items-center">
-          <span className={`text-sm font-bold ${d?.usesWan ? "animate-pulse text-sky-500" : "text-gray-200"}`}>⇄</span>
-        </div>
-
-        {/* 相手側 */}
-        <div
-          className={`flex-1 rounded-xl border-2 border-dashed px-1.5 py-2.5 text-center transition ${
-            d?.usesWan ? "border-brand-400 bg-brand-50" : "border-gray-200 bg-gray-50 opacity-60"
-          }`}
-        >
-          {d?.remote ? (
-            <>
-              <div className="text-[11px] font-bold text-brand-700">
-                {d.remote.emoji} {d.remote.name}
-              </div>
-              <div className="mt-1.5 animate-pulse text-base">{d.remote.devices}</div>
-              <div className="mt-1 text-[10px] font-bold text-emerald-600">届いた！</div>
-            </>
-          ) : (
-            <>
-              <div className="text-[11px] font-bold text-gray-400">遠くの相手</div>
-              <div className="mt-1.5 text-base opacity-30">🏢🌍</div>
-            </>
-          )}
-        </div>
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <LanWanDioramaScene dest={dest} runKey={runKey} reducedMotion={reducedMotion} />
       </div>
 
       {/* 結果 */}

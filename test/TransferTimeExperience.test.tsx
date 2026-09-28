@@ -42,6 +42,22 @@ describe("transfer time slides in the LAN/WAN experience (reduced motion)", () =
     expect(screen.getByText("これはどっち？（範囲で見分ける）")).toBeInTheDocument();
   });
 
+  it("① the printer stays inside the home LAN (star around the router); the office and overseas site go over the WAN", () => {
+    reduceMotion();
+    renderDeck();
+    expect(screen.getByTestId("lanwan-plate")).toHaveTextContent("宛先を選んでください");
+    click(/同じ家のプリンタ/);
+    expect(screen.getByTestId("lanwan-scene")).toHaveAttribute("data-wan", "false");
+    expect(screen.getByTestId("lanwan-plate")).toHaveTextContent("LAN内で完結");
+    expect(screen.getByTestId("lanwan-star")).toHaveTextContent("スター型");
+    click(/遠くの会社のサーバ/);
+    expect(screen.getByTestId("lanwan-scene")).toHaveAttribute("data-wan", "true");
+    expect(screen.getByTestId("lanwan-wan")).toHaveAttribute("data-on", "true");
+    click(/海外の動画サイト/);
+    expect(screen.getByTestId("lanwan-scene")).toHaveAttribute("data-dest", "video");
+    expect(screen.getByText("海底ケーブル")).toBeInTheDocument();
+  });
+
   it("④ explains the division with MB only: 12MB at 4MB per second takes 3 seconds", () => {
     reduceMotion();
     renderDeck();
