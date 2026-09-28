@@ -2,13 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { CipherCapsule, type CapsuleState } from "./crypto/CipherCapsule";
-import {
-  CryptoScene,
-  type CryptoLaneId,
-  type CryptoLaneState,
-  type CryptoNodeId,
-  type CryptoSceneProps,
-} from "./crypto/CryptoScene";
+import type { CryptoLaneId, CryptoLaneState, CryptoNodeId, CryptoSceneProps } from "./crypto/CryptoScene";
+import { PublicKeyDioramaScene } from "./crypto/PublicKeyDioramaScene";
 import { KeyGlyph, KeyTag, KeyToken, type KeyKind } from "./crypto/KeyToken";
 import styles from "./crypto/crypto.module.css";
 import type { NodeState } from "./network/NetworkSceneBase";
@@ -336,8 +331,6 @@ function Flow() {
     setPlaying((current) => !current);
   }
 
-  const trail =
-    forward && step.moves && !reducedMotion ? { id: `step-${index}`, lane: step.moves } : null;
 
   return (
     <Panel>
@@ -372,7 +365,7 @@ function Flow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <CryptoScene {...step.scene} trail={trail} reducedMotion={reducedMotion} />
+        <PublicKeyDioramaScene {...step.scene} forward={forward} reducedMotion={reducedMotion} />
       </div>
 
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">

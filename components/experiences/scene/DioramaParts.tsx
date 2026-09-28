@@ -739,11 +739,14 @@ export function FloorRoute({
   z = 0.8,
   testId,
   data,
+  fast = false,
 }: {
   points: Vec3[];
   width?: number;
   tone?: RouteTone;
   active?: boolean;
+  /** 大量の通信（DDoS など）：模様を速く・密に流す */
+  fast?: boolean;
   z?: number;
   testId?: string;
   data?: Record<`data-${string}`, string | undefined>;
@@ -760,6 +763,7 @@ export function FloorRoute({
             className={styles.route}
             data-tone={tone}
             data-active={active ? "true" : "false"}
+            data-fast={fast ? "true" : undefined}
             style={{
               width: `${r2(length + width / 2)}px`,
               height: width,
@@ -932,10 +936,11 @@ export function Envelope({ tone = "plain", sealed = false }: { tone?: CarryTone;
   );
 }
 
-/** 鍵（カメラを向く板）。kind で色と形：public=青、private=赤、common=金。 */
+/** 鍵（カメラを向く板）。kind で色：public=緑、private=赤、common=金。 */
 export function KeyGlyph({ kind, size = 1, ghost = false }: { kind: "public" | "private" | "common"; size?: number; ghost?: boolean }) {
-  const fill = kind === "public" ? "#2f6fdb" : kind === "private" ? "#d64545" : "#e0a526";
-  const dark = kind === "public" ? "#1d4ea8" : kind === "private" ? "#9f2d2d" : "#a6761a";
+  // アプリ全体の約束：公開鍵＝緑、秘密鍵＝赤、共通鍵＝金
+  const fill = kind === "public" ? "#16a37a" : kind === "private" ? "#e11d48" : "#e0a526";
+  const dark = kind === "public" ? "#0b7457" : kind === "private" ? "#9f1239" : "#a6761a";
   return (
     <Billboard x={0} y={0} z={0} w={34 * size} h={20 * size}>
       <svg viewBox="0 0 34 20" className="h-full w-full" aria-hidden style={{ opacity: ghost ? 0.4 : 1 }}>

@@ -567,6 +567,11 @@
   animation: parts-flow 0.9s linear infinite;
 }
 
+.route[data-fast="true"] .routeFlow {
+  background: repeating-linear-gradient(90deg, transparent 0 4px, var(--flow) 4px 8px);
+  animation-duration: 0.3s;
+}
+
 .cableStrip {
   background-color: color-mix(in srgb, #4a5263 var(--lit), #0a0d13);
 }
