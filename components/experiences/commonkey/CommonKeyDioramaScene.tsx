@@ -95,7 +95,7 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
             </DioramaToken>
           ))}
           <DioramaToken id="msg">
-            {capsule && <Parcel tone={capsule.state === "encrypted" ? "warn" : capsule.state === "decrypted" ? "ok" : "plain"} icon={capsule.state === "encrypted" ? "🔒" : "✉"} />}
+            {capsule && <Parcel tone={capsule.state === "encrypted" ? "warn" : capsule.state === "decrypted" ? "ok" : "plain"} mark={capsule.state === "encrypted" ? "lock" : capsule.state === "decrypted" ? "check" : "none"} />}
           </DioramaToken>
         </>
       }
