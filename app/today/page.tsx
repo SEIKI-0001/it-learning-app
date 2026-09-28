@@ -56,6 +56,7 @@ import { saveAppState } from "@/lib/storage";
 import { allQuestsDone, pinDailyQuests, resolveDailyQuests, type DailyQuestContext } from "@/lib/dailyQuests";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import BottomNav from "@/components/BottomNav";
+import FirstRunGuide from "@/components/guide/FirstRunGuide";
 import LoadingScreen from "@/components/LoadingScreen";
 import ComebackMissionCard from "@/components/today/ComebackMissionCard";
 import GrowthCheckCard from "@/components/today/GrowthCheckCard";
@@ -428,6 +429,7 @@ export default function TodayPage() {
         </div>
       </div>
       <BottomNav />
+      <FirstRunGuide />
     </main>
   );
 }

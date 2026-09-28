@@ -2,14 +2,25 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAppState } from "@/lib/useAppState";
+import { FIRST_RUN_GUIDE_HREF } from "@/lib/firstRunGuide";
 
+// 初回（未設定）はオンボーディングへの入口、設定済みの人は「その他」からの見返しとして出し分ける。
 export default function TutorialPage() {
   const [finished, setFinished] = useState(false);
+  const [state] = useAppState();
+  const returning = Boolean(state?.profile);
 
   return (
     <main className="min-h-screen bg-brand-800 px-4 py-8 text-white md:py-12">
       <div className="mx-auto max-w-5xl">
-        <p className="text-sm font-medium text-brand-100">はじめての方へ</p>
+        {returning ? (
+          <Link href="/more" className="text-sm font-medium text-brand-100 underline underline-offset-4">
+            ← その他に戻る
+          </Link>
+        ) : (
+          <p className="text-sm font-medium text-brand-100">はじめての方へ</p>
+        )}
         <h1 className="mt-2 text-2xl font-bold md:text-3xl">勉強の進め方を知ろう</h1>
         <p className="mt-3 text-sm leading-relaxed text-brand-100">
           Todayから始めて、理解する・問題を解く・実力を測る流れを見てみましょう。
@@ -32,17 +43,33 @@ export default function TutorialPage() {
           />
         </video>
 
-        {finished && (
-          <Link
-            href="/onboarding"
-            className="mt-6 block rounded-lg bg-white px-6 py-4 text-center text-base font-semibold text-brand-800 transition hover:bg-brand-50"
-          >
-            自分の学習プランをつくる
-          </Link>
+        {returning ? (
+          <>
+            <Link
+              href={FIRST_RUN_GUIDE_HREF}
+              className="mt-6 block rounded-lg bg-white px-6 py-4 text-center text-base font-semibold text-brand-800 transition hover:bg-brand-50"
+            >
+              画面の操作ガイドを見る
+            </Link>
+            <Link href="/today" className="mt-5 block text-center text-sm font-medium text-brand-100 underline underline-offset-4">
+              今日の学習に戻る
+            </Link>
+          </>
+        ) : (
+          <>
+            {finished && (
+              <Link
+                href="/onboarding"
+                className="mt-6 block rounded-lg bg-white px-6 py-4 text-center text-base font-semibold text-brand-800 transition hover:bg-brand-50"
+              >
+                自分の学習プランをつくる
+              </Link>
+            )}
+            <Link href="/onboarding" className="mt-5 block text-center text-sm font-medium text-brand-100 underline underline-offset-4">
+              スキップして設定を始める
+            </Link>
+          </>
         )}
-        <Link href="/onboarding" className="mt-5 block text-center text-sm font-medium text-brand-100 underline underline-offset-4">
-          スキップして設定を始める
-        </Link>
         <p className="mt-8 text-center text-xs text-brand-100/70">ナレーション：VOICEVOX:春日部つむぎ</p>
       </div>
     </main>
