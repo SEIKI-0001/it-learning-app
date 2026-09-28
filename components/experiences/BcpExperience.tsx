@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { BcpScene, type BcpSceneProps } from "./bcp/BcpScene";
+import { BcpDioramaScene } from "./bcp/BcpDioramaScene";
+import type { BcpSceneProps } from "./bcp/bcpTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -213,7 +214,7 @@ function Lab() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <BcpScene {...(struck ? step.view : calm)} prep={on} reducedMotion={reducedMotion} />
+        <BcpDioramaScene {...(struck ? step.view : calm)} prep={on} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
       {/* 備えトグル */}

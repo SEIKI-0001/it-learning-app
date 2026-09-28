@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ProcessScene } from "./process/ProcessScene";
+import { ProcessDioramaScene } from "./process/ProcessDioramaScene";
 import { makespan, queueLengths, schedule, spotsAt } from "./process/processSim";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
@@ -126,7 +126,7 @@ function Flow() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl" data-testid="bp-scene" data-mode={mode}>
-        <ProcessScene
+        <ProcessDioramaScene
           stations={STEPS.map((s, i) => ({
             name: s.name,
             emoji: s.emoji,

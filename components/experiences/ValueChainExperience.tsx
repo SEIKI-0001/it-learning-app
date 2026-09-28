@@ -5,13 +5,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
-import {
-  STATIONS,
-  ValueChainDiagram,
-  type StationId,
-  type StationState,
-  type SupportId,
-} from "./valuechain/ValueChainDiagram";
+import { ValueChainDiorama } from "./valuechain/ValueChainDiorama";
+import { STATIONS, type StationId, type StationState, type SupportId } from "./valuechain/valueChainTypes";
 
 // ============================================================================
 // 「バリューチェーン（価値連鎖）」専用の体験。
@@ -62,7 +57,9 @@ function MainFlow() {
       </p>
 
       <div className="mt-3 sm:mx-auto sm:max-w-xl">
-        <ValueChainDiagram
+        <ValueChainDiorama
+          reducedMotion={reducedMotion}
+          forward={player.forward}
           stations={stations}
           product={{ at: idx, emoji: cur.product, blocked: false }}
           supports={ALL_ON}
@@ -165,6 +162,7 @@ const BREAKDOWN: Record<SupportId, Breakdown> = {
 const SUPPORT_ID: SupportId[] = ["infra", "hr", "tech", "procurement"];
 
 function Support() {
+  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<number | null>(null);
   const [tried, setTried] = useState<number[]>([]);
   const off = sel === null ? null : BREAKDOWN[SUPPORT_ID[sel]];
@@ -185,7 +183,8 @@ function Support() {
       </p>
 
       <div className="mt-3 sm:mx-auto sm:max-w-xl">
-        <ValueChainDiagram
+        <ValueChainDiorama
+          reducedMotion={reducedMotion}
           stations={stations}
           product={off ? off.product : { at: 4, emoji: "😊", blocked: false }}
           supports={supports}
