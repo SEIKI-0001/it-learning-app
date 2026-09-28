@@ -31,18 +31,19 @@ const SHIRTS = ["#4f86e8", "#e0803a", "#8b5cf6", "#3f9a73"];
 function docAt(spot: DocSpot): Vec3 {
   switch (spot.kind) {
     case "incoming":
-      return { x: 50, y: 270, z: 20 };
+      return { x: 76, y: 270, z: 24 };
     case "queue":
       // 机の手前（左）の未処理トレイに縦に積む
-      return { x: STATION_X[spot.station] - 40, y: DESK_Y + 74, z: 34 + spot.slot * 3.6 };
+      // 積み上がりが見えるよう、1枚ごとに少しずらして高く積む
+      return { x: STATION_X[spot.station] - 40 + (spot.slot % 2) * 3, y: DESK_Y + 74 - (spot.slot % 3) * 2, z: 40 + spot.slot * 7 };
     case "work":
       return { x: STATION_X[spot.station] - 6 + spot.progress * 12, y: DESK_Y + 18, z: 50 };
     case "done":
-      return { x: 772, y: 260, z: 34 + spot.slot * 2.4 };
+      return { x: 732, y: 260, z: 36 + spot.slot * 2.4 };
   }
 }
 
-const SHOT: Camera = { yaw: -14, pitch: 54, zoom: 0.94, fx: 410, fy: 210, fz: 50 };
+const SHOT: Camera = { yaw: -14, pitch: 54, zoom: 1.0, fx: 400, fy: 200, fz: 50 };
 
 export function ProcessDioramaScene({ stations, docs, reducedMotion }: { stations: StationView[]; docs: DocSpot[]; reducedMotion: boolean }) {
   return (
@@ -53,6 +54,8 @@ export function ProcessDioramaScene({ stations, docs, reducedMotion }: { station
       shotKey="process"
       forward={false}
       reducedMotion={reducedMotion}
+      aspect="20 / 13"
+      aspectMobile="10 / 9"
       tokens={Object.fromEntries(docs.map((spot, k) => [`doc${k}`, { at: docAt(spot), jump: true }]))}
       world={
         <>
@@ -66,21 +69,21 @@ export function ProcessDioramaScene({ stations, docs, reducedMotion }: { station
 
           {/* 受付の前の「届いた注文」置き場と、発送済みの箱 */}
           <Group z={5}>
-            <Box x={26} y={250} w={48} d={40} h={16} color="#b08968" />
-            <Box x={748} y={238} w={50} d={44} h={30} color="#c89a6c" />
-            <Box x={748} y={238} z={30} w={50} d={44} h={2} color="#a67c52" />
+            <Box x={52} y={250} w={48} d={40} h={16} color="#b08968" />
+            <Box x={708} y={238} w={50} d={44} h={30} color="#c89a6c" />
+            <Box x={708} y={238} z={30} w={50} d={44} h={2} color="#a67c52" />
             <Plant x={790} y={120} size={0.85} />
           </Group>
 
           {/* 書類の通り道 */}
           <FloorRoute
             points={[
-              { x: 70, y: 262, z: 3 },
+              { x: 96, y: 262, z: 3 },
               ...STATION_X.flatMap((x) => [
                 { x: x - 40, y: DESK_Y + 90, z: 3 },
                 { x: x + 40, y: DESK_Y + 90, z: 3 },
               ]),
-              { x: 750, y: 262, z: 3 },
+              { x: 712, y: 262, z: 3 },
             ]}
             width={6}
             z={5.8}

@@ -50,14 +50,15 @@ const LANE: Record<TxLaneId, Vec3[]> = {
 };
 
 /** お金が今の場所へ動くときに通る道（巻き戻しは逆向き） */
-function moneyPath(to: MoneySpot, reverse: boolean): Vec3[] {
+function moneyPath(to: MoneySpot, reverse: boolean, fromB: boolean): Vec3[] {
   const lift = (p: Vec3[]) => p.map((q) => ({ ...q, z: 20 }));
-  if (to === "engine") return reverse ? [...lift([...LANE.credit].reverse()), MONEY_AT.engine] : [...lift(LANE.debit), MONEY_AT.engine];
+  // B 側から戻ってくるとき（巻き戻し・Bへ足した後の障害）は credit の車線を逆にたどる
+  if (to === "engine") return reverse || fromB ? [...lift([...LANE.credit].reverse()), MONEY_AT.engine] : [...lift(LANE.debit), MONEY_AT.engine];
   if (to === "b") return [...lift(LANE.credit), MONEY_AT.b];
   return [...lift([...LANE.debit].reverse()), MONEY_AT.a];
 }
 
-const SHOT: Camera = { yaw: -16, pitch: 54, zoom: 0.98, fx: 440, fy: 200, fz: 50 };
+const SHOT: Camera = { yaw: -16, pitch: 54, zoom: 0.92, fx: 400, fy: 220, fz: 50 };
 const SHOT_ENGINE: Camera = { yaw: -16, pitch: 50, zoom: 1.2, fx: 460, fy: 170, fz: 60 };
 
 const MONEY_WORD = { settled: "確定", crashed: "障害で停止", returning: "巻き戻し", pending: "未確定" } as const;
@@ -76,7 +77,7 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
       shotKey={`${money?.spot ?? "-"}-${money?.state ?? ""}-${nodes.engine}-${reverse ? "r" : ""}`}
       forward
       reducedMotion={reducedMotion}
-      tokens={{ money: { at: money ? MONEY_AT[money.spot] : null, path: money ? moneyPath(money.spot, reverse) : undefined } }}
+      tokens={{ money: { at: money ? MONEY_AT[money.spot] : null, path: money ? moneyPath(money.spot, reverse, money.state === "crashed") : undefined } }}
       world={
         <>
           <Floor x={0} y={20} w={800} d={410} h={16} material="plain" />
@@ -160,7 +161,7 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
           {(["a", "b"] as const).map((id) => {
             const acc = accounts[id];
             return (
-              <DioramaLabel key={id} at={{ ...AT[id], y: AT[id].y + 34, z: 0 }} place="below">
+              <DioramaLabel key={id} at={{ ...AT[id], x: AT[id].x + (id === "a" ? -40 : 40), z: 40 }} place={id === "a" ? "left" : "right"}>
                 <div
                   className={styles.balance}
                   data-account={id}

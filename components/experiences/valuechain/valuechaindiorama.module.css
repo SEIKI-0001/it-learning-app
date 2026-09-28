@@ -95,3 +95,19 @@
 .station[data-state="disabled"] {
   color: #94a3b8;
 }
+
+.group {
+  padding: 2px 8px 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1px #c7d2fe;
+  color: #4338ca;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.group[data-group="support"] {
+  box-shadow: 0 0 0 1px #99f6e4;
+  color: #0f766e;
+}
