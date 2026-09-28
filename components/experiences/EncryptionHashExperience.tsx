@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { TwoRouteScene, type TwoRouteSceneProps } from "./encryption/TwoRouteScene";
-import { diffCount, hashHex, toyCipher } from "./encryption/toyCrypto";
+import { ADDRESS, MemberSiteDioramaScene, PASSWORD, PASSWORD_HASH, type MemberPhase } from "./encryption/MemberSiteDioramaScene";
+import { diffCount, hashHex } from "./encryption/toyCrypto";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -10,9 +10,9 @@ import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「暗号化とハッシュ化」専用の体験。
-//   ① 2つのルート … 同じ平文を暗号化ベルトとハッシュベルトへ流し、
-//      「鍵の門を2回くぐると元に戻る／ハッシュ関数の門は逆向きに通れない」を現象として見る。
-//      最後に入力を1文字変えて、ハッシュ値がまるごと変わることを確かめる
+//   ① 通販サイトの裏側（3D模型）… 会員登録で届いた住所は鍵で暗号化、パスワードはハッシュ値だけ保存。
+//      発送では住所を鍵で復号して使い（可逆）、ログインでは入力をハッシュして比べるだけ（戻さない）。
+//      1文字違いの入力で値が激変すること、DBが盗まれても読めないことまでを実例で見る
 //   ② 暗号化 … 鍵で読めなくする → 鍵で元に戻せる（可逆）
 //   ③ ハッシュ化 … データをミキサーにかけ固定長のスムージー(値)に → 元に戻せない（一方向）
 //   ④ くらべて整理
@@ -24,50 +24,6 @@ function encryptHex(text: string, key: number): string {
     .map((c) => ((c.charCodeAt(0) + key) & 0xffff).toString(16).padStart(4, "0"))
     .join(" ");
 }
-
-const PLAIN = "HELLO";
-const ROUTE_KEY = 3;
-const VARIANTS = ["HELLo", "HeLLO", "HELLO"] as const;
-
-type RouteStep = { title: string; detail: ReactNode; scene: Pick<TwoRouteSceneProps, "enc" | "hash" | "focus"> };
-
-const ROUTE_STEPS: RouteStep[] = [
-  {
-    title: "同じ平文を2つのルートへ",
-    detail: <>同じデータ「<b>HELLO</b>」を、上の<b>暗号化ルート</b>と下の<b>ハッシュルート</b>に1枚ずつ置きました。</>,
-    scene: { enc: { pos: "start", state: "plain", gate: null }, hash: { pos: "start", state: "plain", gate: false }, focus: "both" },
-  },
-  {
-    title: "鍵の門をくぐる → 暗号文",
-    detail: <>🔑<b>鍵で暗号化</b>。門をくぐった瞬間、HELLO は読めない記号の列（暗号文）に変わります。</>,
-    scene: { enc: { pos: "mid", state: "cipher", gate: "gate1" }, hash: { pos: "start", state: "plain", gate: false }, focus: "enc" },
-  },
-  {
-    title: "同じ鍵でもう一度 → 元に戻る",
-    detail: <>同じ🔑<b>鍵で復号</b>。暗号文が門をくぐると <b>HELLO がそのまま戻ってきました</b>。鍵があれば戻せる＝<b>可逆</b>。</>,
-    scene: { enc: { pos: "end", state: "restored", gate: "gate2" }, hash: { pos: "start", state: "plain", gate: false }, focus: "enc" },
-  },
-  {
-    title: "ハッシュ関数の門をくぐる → ハッシュ値",
-    detail: <>今度は下のルート。<b>ハッシュ関数</b>に通すと、決まった長さ（ここでは16桁）の<b>ハッシュ値</b>になります。鍵は使いません。</>,
-    scene: { enc: { pos: "end", state: "restored", gate: null }, hash: { pos: "digest", state: "digest", gate: true }, focus: "hash" },
-  },
-  {
-    title: "逆向きに戻そうとすると…通れない",
-    detail: (
-      <>
-        ハッシュ値を門へ押し戻しても<b>通れません</b>。ハッシュ関数は<b>一方向の門</b>で、ハッシュ値から HELLO を作り直す方法はない＝<b>不可逆</b>。
-        上のルートは戻れたのに、下のルートは戻れない。これが決定的な違いです。
-      </>
-    ),
-    scene: { enc: { pos: "end", state: "restored", gate: null }, hash: { pos: "back", state: "blocked", gate: false }, focus: "both" },
-  },
-  {
-    title: "入力を1文字だけ変える",
-    detail: <>入力を<b>1文字だけ</b>変えて、もう一度ハッシュ関数に流します。下のボタンで入力を切り替えて比べてみよう。</>,
-    scene: { enc: { pos: "end", state: "restored", gate: null }, hash: { pos: "digest", state: "digest", gate: true, rerun: true }, focus: "hash" },
-  },
-];
 
 function DiffDigest({ value, base }: { value: string; base: string }) {
   return (
@@ -81,37 +37,103 @@ function DiffDigest({ value, base }: { value: string; base: string }) {
   );
 }
 
-function TwoRoutes() {
+const LOGIN_VARIANTS = ["spring124", "Spring123", PASSWORD] as const;
+
+type MemberStep = { phase: MemberPhase; title: string; detail: ReactNode };
+
+const MEMBER_STEPS: MemberStep[] = [
+  {
+    phase: "register",
+    title: "会員登録：住所とパスワードを送る",
+    detail: (
+      <>
+        通販サイトの会員登録。スマホから<b>住所</b>と<b>パスワード</b>を送ります（通信はhttpsで守られている前提）。
+        ここからが本題：<b>届いた2つの情報を、サイトはどんな形で保存するか？</b>
+      </>
+    ),
+  },
+  {
+    phase: "store",
+    title: "住所は暗号化、パスワードはハッシュ化して保存",
+    detail: (
+      <>
+        住所は<b>🔑鍵で暗号化</b>、パスワードは<b>ハッシュ関数</b>に通して保存します。データベースに残るのは
+        <b>暗号文とハッシュ値だけ</b>。鍵はデータベースとは別の<b>金庫</b>に保管します。
+      </>
+    ),
+  },
+  {
+    phase: "ship",
+    title: "発送：住所は鍵で元に戻して使う",
+    detail: (
+      <>
+        商品を送るときは住所の<b>中身が必要</b>。倉庫のシステムが<b>同じ鍵で復号</b>すると、暗号文が「{ADDRESS}」に戻り、送り状を印刷できます。
+        鍵があれば戻せる＝<b>暗号化は可逆</b>。だから後で中身を使う情報に向いています。
+      </>
+    ),
+  },
+  {
+    phase: "login",
+    title: "ログイン：入力をハッシュして比べるだけ",
+    detail: (
+      <>
+        ログインでは、入力された「{PASSWORD}」を<b>同じハッシュ関数</b>に通し、保存してあるハッシュ値と<b>比べるだけ</b>。
+        同じ入力なら必ず同じ値になるので、<b>元のパスワードに戻さなくても本人か確かめられます</b>。
+      </>
+    ),
+  },
+  {
+    phase: "typo",
+    title: "1文字だけ違うと…",
+    detail: (
+      <>
+        入力を<b>1文字だけ</b>変えてみよう（下のボタン）。ハッシュ値は<b>まるごと別物</b>になり、ログインできません。
+        この「少しの違いで激変する」性質は、ファイルの<b>改ざん検知</b>にも使われます。
+      </>
+    ),
+  },
+  {
+    phase: "leak",
+    title: "もしデータベースが盗まれたら",
+    detail: (
+      <>
+        攻撃者が手に入れたのは<b>暗号文とハッシュ値だけ</b>。住所は<b>鍵が金庫にあるので読めない</b>、パスワードは
+        <b>ハッシュ値から元に戻す計算ができない</b>（一方向）。だからお店の人でさえパスワードは分からず、忘れたときは「教えてもらう」ではなく
+        <b>再設定</b>になります。
+      </>
+    ),
+  },
+];
+
+function MemberSite() {
   const reducedMotion = useReducedMotion();
-  const player = useStepPlayer(ROUTE_STEPS.length, reducedMotion);
-  const step = ROUTE_STEPS[player.index];
-  const last = player.index === player.lastIndex;
-  const [variant, setVariant] = useState<(typeof VARIANTS)[number]>(VARIANTS[0]);
-  const hashInput = last ? variant : PLAIN;
-  const baseDigest = hashHex(PLAIN);
-  const digest = hashHex(hashInput);
-  const changed = diffCount(digest, baseDigest);
+  const player = useStepPlayer(MEMBER_STEPS.length, reducedMotion);
+  const step = MEMBER_STEPS[player.index];
+  const [variant, setVariant] = useState<(typeof LOGIN_VARIANTS)[number]>(LOGIN_VARIANTS[0]);
+  const loginInput = step.phase === "typo" ? variant : PASSWORD;
+  const changed = diffCount(hashHex(loginInput), PASSWORD_HASH);
 
   return (
     <Panel>
-      <SectionTitle step={1}>同じデータを2つのルートに流す</SectionTitle>
+      <SectionTitle step={1}>通販サイトは、住所とパスワードをどう守る？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        「戻せる／戻せない」を、言葉ではなく<b className="text-gray-800">データの動き</b>で確かめます。
+        同じ登録フォームから来た情報でも、<b className="text-gray-800">後で中身を使うものは暗号化</b>、
+        <b className="text-gray-800">照合できれば十分なものはハッシュ化</b>。実際のサイトの裏側で確かめます。
       </p>
 
-      <p className="mt-3 text-sm font-bold text-gray-900" data-testid="route-step-title">
+      <p className="mt-3 text-sm font-bold text-gray-900" data-testid="member-step-title">
         STEP {player.index + 1}：{step.title}
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <TwoRouteScene input={PLAIN} hashInput={hashInput} cipher={toyCipher(PLAIN, ROUTE_KEY)} digest={digest} {...step.scene} reducedMotion={reducedMotion} />
+        <MemberSiteDioramaScene phase={step.phase} loginInput={loginInput} reducedMotion={reducedMotion} />
       </div>
 
-      {last && (
+      {step.phase === "typo" && (
         <div className="mt-3 rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-200" data-testid="hash-compare">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="font-bold text-gray-500">入力：</span>
-            {VARIANTS.map((v) => (
+            <span className="font-bold text-gray-500">ログインの入力：</span>
+            {LOGIN_VARIANTS.map((v) => (
               <button
                 key={v}
                 type="button"
@@ -127,13 +149,13 @@ function TwoRoutes() {
           </div>
           <dl className="mt-2.5 space-y-1 text-[11px] leading-relaxed">
             <div className="flex gap-2">
-              <dt className="w-16 flex-none font-mono font-bold text-gray-500">{PLAIN}</dt>
-              <dd className="break-all font-mono text-gray-700">{baseDigest}</dd>
+              <dt className="w-20 flex-none font-mono font-bold text-gray-500">{PASSWORD}</dt>
+              <dd className="break-all font-mono text-gray-700">{PASSWORD_HASH}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="w-16 flex-none font-mono font-bold text-teal-700">{variant}</dt>
+              <dt className="w-20 flex-none font-mono font-bold text-teal-700">{variant}</dt>
               <dd className="break-all text-gray-900" data-testid="hash-compare-digest">
-                <DiffDigest value={digest} base={baseDigest} />
+                <DiffDigest value={hashHex(variant)} base={PASSWORD_HASH} />
               </dd>
             </div>
           </dl>
@@ -143,7 +165,7 @@ function TwoRoutes() {
           >
             {changed
               ? `入力は1文字の違いなのに、ハッシュ値は16桁中${changed}桁が変わった（似てさえいない）`
-              : "同じ入力なら、何度流しても完全に同じハッシュ値"}
+              : "同じ入力なら、何度ハッシュしても完全に同じ値 → ログインできる"}
           </p>
         </div>
       )}
@@ -155,18 +177,21 @@ function TwoRoutes() {
       <div className="mt-3">
         <SceneTimeline
           index={player.index}
-          steps={ROUTE_STEPS}
+          steps={MEMBER_STEPS}
           playing={player.playing}
           reducedMotion={reducedMotion}
           onMove={player.move}
           onTogglePlay={player.togglePlay}
-          playLabel="2つのルートを再生"
-          timelineLabel="2つのルートのタイムライン"
-          startCaption="同じ平文"
-          endCaption="1文字変える"
-          stepTone={(i) => (i >= 1 && i <= 2 ? "bg-indigo-600" : i >= 3 ? "bg-teal-700" : "bg-brand-600")}
+          playLabel="通販サイトの裏側を再生"
+          timelineLabel="通販サイトの裏側のタイムライン"
+          startCaption="登録"
+          endCaption="盗まれたら"
+          stepTone={(i) => (i === 2 ? "bg-emerald-700" : i >= 3 && i <= 4 ? "bg-blue-700" : "bg-brand-600")}
         />
       </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
+        ※ 学習用の簡易変換です（本物の暗号・ハッシュではありません）。実際のハッシュ値は SHA-256 なら64桁など、もっと長くなります。
+      </p>
     </Panel>
   );
 }
@@ -321,11 +346,11 @@ export default function EncryptionHashExperience() {
   return (
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
-        ふたつは似て非なるもの。<b>暗号化＝鍵付きの箱</b>（鍵で開けて中身を読める＝戻せる）、
-        <b>ハッシュ化＝ミキサー</b>（材料を入れて回すとスムージーに。スムージーから元の果物には戻せない＝戻せない）。
+        ふたつは似て非なるもの。通販サイトでは<b>住所は暗号化</b>（発送のとき鍵で元に戻して使う＝戻せる）、
+        <b>パスワードはハッシュ化</b>（照合できれば十分なので、戻せない値だけ保存する）。使い道で使い分けます。
       </div>
 
-      <TwoRoutes />
+      <MemberSite />
       <Encryption />
       <Hashing />
 
