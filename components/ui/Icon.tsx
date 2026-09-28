@@ -41,6 +41,7 @@ export type IconName =
   | "save" // 保存
   | "trash" // 削除
   | "file-text" // 過去問・書類
+  | "play" // 動画
   // ---- /learn テーマ識別アイコン(lib/themeIcons.ts で18テーマに割当) ----
   | "building" // 企業活動
   | "scale" // 法務・標準化
@@ -338,6 +339,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
       <path d="M14 3v4h4" />
       <path d="M9 12.5h6M9 16h6" />
+    </>
+  ),
+  play: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M10 8.8v6.4l5.2-3.2z" />
     </>
   ),
 };
