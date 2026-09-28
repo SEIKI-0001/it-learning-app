@@ -1,0 +1,59 @@
+{
+  "speaker": "春日部つむぎ/ノーマル",
+  "lines": [
+    {
+      "id": "hook1",
+      "scene": "hook",
+      "caption": "ITパスポート、何から始めればいいか、迷ってない？",
+      "seconds": 4.181
+    },
+    {
+      "id": "hook2",
+      "scene": "hook",
+      "caption": "だいじょうぶ！ぼくが、合格まで案内するよ！",
+      "seconds": 3.296
+    },
+    {
+      "id": "map",
+      "scene": "map",
+      "caption": "試験日を決めたら、合格までの冒険マップが完成！",
+      "seconds": 3.936
+    },
+    {
+      "id": "today",
+      "scene": "today",
+      "caption": "今日やることは、毎日ぼくが用意しておくね。",
+      "seconds": 3.435
+    },
+    {
+      "id": "learn",
+      "scene": "learn",
+      "caption": "動く図解で、むずかしい用語もスッと分かる！",
+      "seconds": 3.435
+    },
+    {
+      "id": "quiz",
+      "scene": "quiz",
+      "caption": "問題を解けば、コンボ！XPもどんどん貯まる！",
+      "seconds": 4.043
+    },
+    {
+      "id": "grow",
+      "scene": "grow",
+      "caption": "続けるほど、バッジが増えて、ぼくも成長するんだ。",
+      "seconds": 3.712
+    },
+    {
+      "id": "goal",
+      "scene": "goal",
+      "caption": "合格の城まで、あと少し。進んでいるのが、ちゃんと見える！",
+      "seconds": 4.469
+    },
+    {
+      "id": "cta",
+      "scene": "cta",
+      "caption": "さあ、ぼくといっしょに冒険をはじめよう！",
+      "seconds": 3.531
+    }
+  ]
+}

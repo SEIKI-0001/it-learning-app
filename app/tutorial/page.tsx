@@ -20,13 +20,13 @@ export default function TutorialPage() {
           controls
           playsInline
           preload="metadata"
-          src="/tutorial/first-study-guide-v2.mp4"
+          src="/tutorial/first-study-guide-v3.mp4"
           onEnded={() => setFinished(true)}
           aria-label="it-learning-app はじめての学習ガイド"
         >
           <track
             kind="captions"
-            src="/tutorial/first-study-guide-v2.vtt"
+            src="/tutorial/first-study-guide-v3.vtt"
             srcLang="ja"
             label="日本語字幕"
           />
@@ -43,6 +43,7 @@ export default function TutorialPage() {
         <Link href="/onboarding" className="mt-5 block text-center text-sm font-medium text-brand-100 underline underline-offset-4">
           スキップして設定を始める
         </Link>
+        <p className="mt-8 text-center text-xs text-brand-100/70">ナレーション：VOICEVOX:春日部つむぎ</p>
       </div>
     </main>
   );
