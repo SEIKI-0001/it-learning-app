@@ -35,7 +35,7 @@ function wifiDetail(mode: WifiMode, phase: WifiPhase): ReactNode {
     ) : (
       <>
         一覧から <b>SSID「cafe-wifi-2F」</b>を選んでつなぎます。SSIDは<b>電波の名前</b>にすぎません。
-        暗号化されているかどうかは、名前の横の<b>鍵マーク（{mode === "wpa" ? "WPA2/WPA3" : "なし"}）</b>で決まります。
+        暗号化されているかどうかは、名前の横の<b>鍵マーク（{mode === "wpa" ? "WPA2/WPA3" : "なし"}）</b>で分かります（決めているのはアクセスポイントの設定）。
       </>
     );
   }

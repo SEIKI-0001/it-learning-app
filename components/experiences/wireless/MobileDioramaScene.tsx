@@ -156,7 +156,7 @@ export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; 
           {DEVICES.map((d) => {
             const on = lit(d.id);
             return (
-              <Group key={d.id} data={{ "data-radio": d.id, "data-on": on ? "true" : "false" }} className={styles.radio}>
+              <Group key={d.id} data={{ "data-radio": d.id, "data-on": on ? "true" : "false" }}>
                 <Cylinder from={TOWER} to={d.at} z={0} r={1.4} segments={4} stripClassName={styles.beamStrip} />
                 <CablePulses from={TOWER} to={d.at} r={1.4} count={is5g ? 4 : 3} on={on && !reducedMotion} color={is5g ? "#60a5fa" : mvno ? "#34d399" : "#fbbf24"} />
               </Group>
@@ -198,7 +198,7 @@ export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; 
             <DioramaLabel at={{ x: 700, y: 340, z: 0 }} place="below">
               <div className={styles.note} data-tone="violet" data-testid="mobile-lease-note">
                 <b>回線を借りる契約</b>
-                <span>基地局・交換局は大手のものを使う</span>
+                <span>基地局などの設備は大手のものを使う</span>
               </div>
             </DioramaLabel>
           )}

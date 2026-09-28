@@ -34,6 +34,7 @@ describe("EncryptionHashExperience", () => {
   it("store: the database keeps only the address ciphertext and the password hash", () => {
     renderDeck();
     expect(screen.getByTestId("member-form")).toHaveTextContent(ADDRESS);
+    expect(screen.queryByTestId("member-db-row")).toBeNull();
     next();
     const row = screen.getByTestId("member-db-row");
     expect(row).toHaveTextContent(ADDRESS_CIPHER);
@@ -56,6 +57,8 @@ describe("EncryptionHashExperience", () => {
     next();
     expect(screen.getByTestId("member-compare")).toHaveAttribute("data-match", "false");
     expect(screen.getByTestId("hash-compare-result")).toHaveTextContent("1文字の違いなのに");
+    click("Spring123");
+    expect(screen.getByTestId("member-compare")).toHaveAttribute("data-match", "false");
     click(PASSWORD);
     expect(screen.getByTestId("member-compare")).toHaveAttribute("data-match", "true");
     expect(screen.getByTestId("hash-compare-result")).toHaveTextContent("完全に同じ値");

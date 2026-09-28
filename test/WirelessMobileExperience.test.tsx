@@ -28,12 +28,16 @@ describe("WirelessMobileExperience", () => {
     click("解説2");
     expect(screen.getByTestId("mobile-scene")).toBeInTheDocument();
     expect(screen.getByTestId("mobile-5g")).toHaveTextContent("多数同時接続");
+    const radioOn = () => [...document.querySelectorAll('[data-radio][data-on="true"]')].map((el) => el.getAttribute("data-radio"));
+    expect(radioOn()).toHaveLength(4);
     click(/テザリング/);
+    expect(radioOn()).toEqual(["phone"]);
     expect(screen.getByTestId("mobile-mode")).toHaveTextContent("スマホが親機");
     expect(screen.getByTestId("mobile-hotspot")).toBeInTheDocument();
     expect(screen.getByTestId("mobile-tether")).toHaveTextContent("SIMなし");
     click(/MVNO/);
     expect(screen.getByTestId("mobile-lease-note")).toHaveTextContent("大手のもの");
+    expect(screen.getByTestId("mobile-sim")).toHaveTextContent("格安SIM");
     expect(screen.getByText("MVNO（格安SIM）")).toBeInTheDocument();
     click("解説3");
     expect(screen.getByText("フリーWi-Fi、安全？危険？")).toBeInTheDocument();
@@ -43,6 +47,11 @@ describe("WirelessMobileExperience", () => {
     renderDeck();
     expect(screen.getByTestId("wifi-list")).toHaveTextContent("cafe-wifi-2F");
     expect(screen.getByTestId("wifi-list")).toHaveTextContent("Free_WiFi");
+    // 同じ SSID のまま、鍵の札だけが変わる
+    expect(screen.getByTestId("wifi-list").querySelector('[data-picked="true"]')).toHaveTextContent("鍵なし");
+    click(/WPA2\/WPA3/);
+    expect(screen.getByTestId("wifi-list").querySelector('[data-picked="true"]')).toHaveTextContent("cafe-wifi-2F");
+    expect(screen.getByTestId("wifi-list").querySelector('[data-picked="true"]')).toHaveTextContent("WPA2/3");
   });
 
   it("SSID is just the name of the radio — the lock is a separate tag", () => {

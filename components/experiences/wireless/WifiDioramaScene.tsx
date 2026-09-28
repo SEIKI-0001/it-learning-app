@@ -248,7 +248,7 @@ export function WifiDioramaScene({
                     <span key={s.name} className={styles.wifiRow} data-picked={picked ? "true" : "false"}>
                       <span className={styles.wifiName}>{s.name}</span>
                       <span className={styles.wifiLock} data-lock={lock}>
-                        {lock === "wpa" ? "🔒 WPA2" : "鍵なし"}
+                        {lock === "wpa" ? "🔒 WPA2/3" : "鍵なし"}
                       </span>
                     </span>
                   );
@@ -331,7 +331,7 @@ export function WifiDioramaScene({
           </DioramaLabel>
           {!arrived && (
             <DioramaLabel at={{ x: 646, y: 186, z: 118 }} place="above" optional>
-              <NameChip name="盗聴者" sub="店の外のベンチ" status={eveGets ? "受信中" : undefined} tone="danger" />
+              <NameChip name="盗聴者" sub="店の外のベンチ" status={radio ? "受信中" : undefined} tone="danger" />
             </DioramaLabel>
           )}
           <DioramaLabel at={{ x: 650, y: 380, z: 4 }} place="above" optional>

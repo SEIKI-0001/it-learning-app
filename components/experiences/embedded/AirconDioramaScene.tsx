@@ -65,7 +65,6 @@ export function AirconDioramaScene({
       forward
       reducedMotion={reducedMotion}
       aspectMobile="1 / 1.05"
-      className={styles.stage}
       dataAttrs={{ "data-phase": phase, "data-fan": fan }}
       corner={
         <span className={styles.remote} data-testid="aircon-target">
@@ -102,12 +101,12 @@ export function AirconDioramaScene({
             {/* 奥の板（壁に付く面） */}
             <Box x={UNIT.x} y={UNIT.y} z={UNIT.z} w={UNIT.w} d={4} h={UNIT.h} color="#e9edf2" />
             {/* 温度センサー（吸い込み口のそば） */}
-            <Group data={{ "data-part": "sensor", "data-on": phase === "sense" ? "true" : "false" }} className={styles.part}>
+            <Group data={{ "data-part": "sensor", "data-on": phase === "sense" ? "true" : "false" }}>
               <Box x={SENSOR.x - 4} y={SENSOR.y - 4} z={SENSOR.z - 4} w={8} d={8} h={8} color={phase === "sense" ? "#ef4444" : "#334155"} />
               <Box x={SENSOR.x - 1} y={SENSOR.y - 16} z={SENSOR.z - 2} w={2} d={12} h={2} color="#94a3b8" />
             </Group>
             {/* 制御基板とマイコン */}
-            <Group data={{ "data-part": "board", "data-on": phase === "decide" ? "true" : "false" }} className={styles.part}>
+            <Group data={{ "data-part": "board", "data-on": phase === "decide" ? "true" : "false" }}>
               <Box x={BOARD.x - 22} y={BOARD.y - 4} z={BOARD.z - 16} w={44} d={4} h={32} color={phase === "decide" ? "#22c55e" : "#15803d"} faceClass={{ front: styles.pcb }} />
               <Box x={BOARD.x - 8} y={BOARD.y} z={BOARD.z - 6} w={16} d={4} h={12} color="#111827" />
             </Group>
@@ -133,7 +132,6 @@ export function AirconDioramaScene({
               d={UNIT.d}
               h={UNIT.h}
               color="#ffffff"
-              className={styles.cover}
               faceClass={{ top: styles.glass, front: styles.glass, left: styles.glass, right: styles.glass }}
               omit={["back"]}
             />

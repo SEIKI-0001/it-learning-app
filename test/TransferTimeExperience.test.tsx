@@ -50,11 +50,15 @@ describe("transfer time slides in the LAN/WAN experience (reduced motion)", () =
     expect(screen.getByTestId("lanwan-scene")).toHaveAttribute("data-wan", "false");
     expect(screen.getByTestId("lanwan-plate")).toHaveTextContent("LAN内で完結");
     expect(screen.getByTestId("lanwan-star")).toHaveTextContent("スター型");
+    expect(screen.getByTestId("lanwan-wan")).toHaveAttribute("data-on", "false");
     click(/遠くの会社のサーバ/);
     expect(screen.getByTestId("lanwan-scene")).toHaveAttribute("data-wan", "true");
     expect(screen.getByTestId("lanwan-wan")).toHaveAttribute("data-on", "true");
+    expect(screen.getByTestId("lanwan-line-office")).toHaveAttribute("data-active", "true");
     click(/海外の動画サイト/);
     expect(screen.getByTestId("lanwan-scene")).toHaveAttribute("data-dest", "video");
+    expect(screen.getByTestId("lanwan-scene")).toHaveAttribute("data-wan", "true");
+    expect(screen.getByTestId("lanwan-line-sea")).toHaveAttribute("data-active", "true");
     expect(screen.getByText("海底ケーブル")).toBeInTheDocument();
   });
 
