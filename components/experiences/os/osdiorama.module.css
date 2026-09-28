@@ -1,0 +1,176 @@
+/* OS の 3D 分解模型（OsDioramaScene）。基板・部品の素材、アプリの画面、札。 */
+
+[data-face][data-face].pcb {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(250, 204, 21, 0.18) 22px 23px),
+    repeating-linear-gradient(180deg, transparent 0 16px, rgba(250, 204, 21, 0.14) 16px 17px),
+    linear-gradient(135deg, #166534 0%, #14532d 100%);
+}
+
+[data-face][data-face].fins {
+  background: repeating-linear-gradient(90deg, #cbd5e1 0 2px, #94a3b8 2px 3px);
+}
+
+[data-face][data-face].ssd {
+  background: linear-gradient(90deg, #1f2937 0 70%, #d4a017 70% 72%, #1f2937 72%);
+}
+
+[data-face][data-face].speaker {
+  display: grid;
+  place-items: center;
+  background: #1f2937;
+}
+
+.cone {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #6b7280 0 25%, #374151 30% 60%, #111827 62%);
+}
+
+.cone[data-on="true"] {
+  animation: os-thump 0.4s ease-in-out infinite;
+}
+
+[data-face][data-face].core {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #6366f1 0%, #4338ca 100%);
+}
+
+.coreLeds {
+  width: 70%;
+  height: 4px;
+  border-radius: 2px;
+  background: #312e81;
+}
+
+.coreLeds[data-on="true"] {
+  background: linear-gradient(90deg, #a5b4fc, #e0e7ff, #a5b4fc);
+  box-shadow: 0 0 6px #a5b4fc;
+}
+
+[data-face][data-face].window {
+  padding: 2px;
+  background: #1f2937;
+}
+
+.appUi {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px;
+}
+
+.appTitle {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.appArt {
+  flex: 1;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #bae6fd 0%, #7dd3fc 100%);
+}
+
+.appUi[data-app="files"] .appArt {
+  background: repeating-linear-gradient(180deg, #ffffff 0 10px, #e2e8f0 10px 12px);
+}
+
+.link {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+}
+
+.capsule {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1.5px var(--tone), 0 4px 10px rgba(15, 23, 42, 0.14);
+  color: var(--tone);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.denied {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e11d48;
+  box-shadow: 0 6px 14px rgba(225, 29, 72, 0.3);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.user {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  color: #111827;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.user[data-hears="true"] {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1.5px #34d399;
+}
+
+.layerTag {
+  display: flex;
+  flex-direction: column;
+  padding: 3px 8px 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  color: #334155;
+  font-size: 9.5px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.layerTag b {
+  color: #111827;
+  font-size: 11px;
+}
+
+.layerTag[data-layer-tag="os"] b {
+  color: #4338ca;
+}
+
+.layerTag[data-state="error"] {
+  box-shadow: 0 0 0 1.5px #fb7185;
+}
+
+.partTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08);
+  color: #1f2937;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.partTag[data-state="active"],
+.partTag[data-state="sending"] {
+  box-shadow: 0 0 0 1.5px #60a5fa;
+}
+
+@keyframes os-thump {
+  50% {
+    transform: scale(1.12);
+  }
+}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ComputerScene, DOC_TEXT, type ComputerSceneProps, type DocVersion } from "./computer/ComputerScene";
+import { ComputerDioramaScene } from "./computer/ComputerDioramaScene";
+import { DOC_TEXT, type ComputerSceneProps, type DocVersion } from "./computer/computerTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -197,7 +198,7 @@ function DataFlow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <ComputerScene {...scene} />
+        <ComputerDioramaScene {...scene} forward={player.forward} />
       </div>
 
       <div
