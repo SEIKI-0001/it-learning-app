@@ -148,7 +148,7 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
                 data-stolen={k.owner === "盗聴者" ? "true" : "false"}
               >
                 <span className={styles.keyTag}>COMMON</span>
-                <span className={cryptoStyles.keyCaption} data-tone={k.owner === "盗聴者" ? "danger" : "own"}>
+                <span className={cryptoStyles.keyCaption} data-tone={k.owner === "盗聴者" ? "danger" : "common"}>
                   {k.owner === "盗聴者" ? "盗まれたコピー" : `${k.owner}の共通鍵`}
                 </span>
               </span>
