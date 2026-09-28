@@ -228,3 +228,18 @@
     background: #f1f5f9;
   }
 }
+
+/* 保存してから電源を切った：失ったものはない（灰色・取り消し線なし） */
+.ghost[data-safe="true"] {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.ghost[data-safe="true"] .ghostTitle {
+  color: #475569;
+}
+
+.ghost[data-safe="true"] .ghostBody {
+  color: #047857;
+  text-decoration: none;
+}
