@@ -185,15 +185,19 @@ export default function LandingPage() {
                 参考書が途中で止まってしまう人のための試験対策。全93トピックを操作しながら学び、公式過去問500問で本番に慣れる。試験日から逆算した「今日やること」が毎日届きます。
               </p>
               <div className="hero-cta">
-                <a className="btn" href={START_HREF}>
-                  7日間無料で始める
+                <a className="btn" href="/lp/try">
+                  登録なしで教材を体験する
                 </a>
                 <span className="hero-note">
-                  クレジットカード不要
+                  AND・ORをスイッチで体験・無料
                   <br />
-                  GoogleかLINEで登録
+                  インストール不要
                 </span>
               </div>
+              <p className="hero-note" style={{ marginTop: 16 }}>
+                <a href={START_HREF}>無料登録して学習を始める →</a>
+                <br />教材と公式過去問は無料。学習記録の保存も最初の7日間無料です。
+              </p>
             </div>
           </div>
         </section>
