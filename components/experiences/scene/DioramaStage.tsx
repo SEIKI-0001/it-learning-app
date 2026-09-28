@@ -31,6 +31,8 @@ export type TokenSpec = {
   delay?: number;
   /** 前へ進んでも動かさず、その場へ置く */
   jump?: boolean;
+  /** 直前まで隠れていた物が現れるとき、ここから動き出す（例：回線から分かれるコピー） */
+  start?: Vec3;
 };
 
 export type LabelPlace = "above" | "below" | "left" | "right";
@@ -434,15 +436,18 @@ export function DioramaStage({
     }
     // 前へ進んだときだけ経路に沿って動かす（戻る・飛ばすときは瞬間移動）
     const moves = Object.entries(specs).map(([id, t]) => {
-      const from = posMap[id] ?? null;
+      const from = posMap[id] ?? (t.start && t.at ? t.start : null);
       const to = t.at;
       const travel = forward && !t.jump && from && to && !samePoint(from, to);
       const path = travel ? (t.path && t.path.length > 0 ? [from, ...t.path] : [from, to]) : null;
       if (!travel) posMap[id] = to;
+      else posMap[id] = from;
       const delay = 150 + (t.delay ?? 0);
       const ms = path ? 900 + pathLength(path) * 2.6 : 0;
       return { id, to, path, delay, ms };
     });
+    // 動かない物（現れる・消える・瞬間移動）は、次のフレームを待たずにすぐ置く
+    apply();
     const camMs = 1500;
     const total = Math.max(camMs, ...moves.map((m) => (m.path ? m.delay + m.ms : 0)));
     const start = performance.now();
