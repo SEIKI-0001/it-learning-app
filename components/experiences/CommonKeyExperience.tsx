@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { CommonKeyScene, type CommonKeySceneProps, type KeySpot } from "./commonkey/CommonKeyScene";
+import { CommonKeyDioramaScene } from "./commonkey/CommonKeyDioramaScene";
+import type { CommonKeySceneProps, KeySpot } from "./commonkey/CommonKeyScene";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -180,7 +181,7 @@ function Flow() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <CommonKeyScene {...step.scene} reducedMotion={reducedMotion} />
+        <CommonKeyDioramaScene {...step.scene} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
       <div

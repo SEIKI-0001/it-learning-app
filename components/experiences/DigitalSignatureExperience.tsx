@@ -4,8 +4,10 @@ import { useState, type ReactNode } from "react";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
-import { CaFlow, type CaFlowView } from "./signature/CaFlow";
-import { SignatureScene, type SignatureSceneProps } from "./signature/SignatureScene";
+import type { CaFlowView } from "./signature/CaFlow";
+import { CaDioramaScene } from "./signature/CaDioramaScene";
+import { SignatureDioramaScene } from "./signature/SignatureDioramaScene";
+import type { SignatureSceneProps } from "./signature/SignatureScene";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -287,7 +289,7 @@ function SignatureLab() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <SignatureScene {...step.view} reducedMotion={reducedMotion} />
+        <SignatureDioramaScene {...step.view} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
       <div
@@ -418,7 +420,7 @@ function CaPanel() {
         STEP {player.index + 1}：{step.title}
       </p>
       <div className="mt-2">
-        <CaFlow view={view} reducedMotion={reducedMotion} />
+        <CaDioramaScene view={view} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
       <div
         className={`mt-3 min-h-[3em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${

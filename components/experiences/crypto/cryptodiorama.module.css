@@ -1,0 +1,86 @@
+/* 暗号・署名の 3D 模型で共通の札（鍵の名札、第三者の手元）。 */
+
+.keyLabel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.keyLabel[data-emphasis="true"] > :first-child {
+  box-shadow: 0 0 0 2px #fde68a, 0 4px 10px rgba(15, 23, 42, 0.2);
+}
+
+.keyCaption {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.eveCallout {
+  display: flex;
+  max-width: 210px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 9px 7px;
+  border: 1px solid #fecdd6;
+  border-radius: 12px;
+  background: #fff1f3;
+  box-shadow: 0 8px 18px rgba(225, 29, 72, 0.16);
+}
+
+.eveCallout[data-tone="danger"] {
+  border-color: #fb7185;
+  background: #ffe4e6;
+}
+
+.calloutTitle {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #9f1239;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.facts li::before {
+  content: "・";
+}
+
+.screen {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #111827;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.screen[data-tone="cipher"] {
+  background: #0f172a;
+  color: #6ee7b7;
+}
+
+.screen[data-tone="danger"] {
+  background: #fff1f3;
+  color: #be123c;
+}
