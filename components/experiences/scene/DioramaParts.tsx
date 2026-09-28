@@ -563,6 +563,46 @@ export function GlassWall({
   );
 }
 
+/** 水平のガラスの床（分解図の層・展示台）。tone で色味、alarm で赤く光る。(x,y) は奥・左の角。 */
+export function GlassSlab({
+  x,
+  y,
+  z = 0,
+  w,
+  d,
+  h = 6,
+  tone = "clear",
+  alarm = false,
+  testId,
+  data,
+}: {
+  x: number;
+  y: number;
+  z?: number;
+  w: number;
+  d: number;
+  h?: number;
+  tone?: "clear" | "indigo" | "sky";
+  alarm?: boolean;
+  testId?: string;
+  data?: Record<`data-${string}`, string | undefined>;
+}) {
+  return (
+    <div className={styles.group} data-testid={testId} data-alarm={alarm ? "true" : "false"} data-slab={tone} {...data}>
+      <Box
+        x={x}
+        y={y}
+        z={z}
+        w={w}
+        d={d}
+        h={h}
+        color="#bcd7ee"
+        faceClass={{ top: styles.slabTop, front: styles.slabEdge, left: styles.slabEdge, right: styles.slabEdge, back: styles.slabEdge }}
+      />
+    </div>
+  );
+}
+
 /** データベース（円筒を3段重ねた、いつもの DB の形）。 */
 export function Database({ x, y, z = 0, r = 20, state = "idle", testId }: At & { r?: number; state?: PartState; testId?: string }) {
   return (
