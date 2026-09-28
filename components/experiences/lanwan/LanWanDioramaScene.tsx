@@ -157,8 +157,8 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
           </Group>
           {/* 家の中のLANケーブル（ルータから星形に） */}
           <Group data={{ "data-star": "true" }} testId="lanwan-lan">
-            <Cable from={up(ROUTER, 4)} to={{ x: 150, y: 300, z: 7 }} r={1.6} tone={lanOn ? "request" : "idle"} segments={5} />
-            <Cable from={{ x: 150, y: 300, z: 7 }} to={{ x: 210, y: 330, z: 7 }} r={1.6} tone={lanOn ? "request" : "idle"} segments={5} />
+            <Cable from={up(ROUTER, 4)} to={{ x: 150, y: 300, z: 7 }} r={1.6} tone="idle" segments={5} />
+            <Cable from={{ x: 150, y: 300, z: 7 }} to={{ x: 210, y: 330, z: 7 }} r={1.6} tone="idle" segments={5} />
             <Cable from={up(ROUTER, 4)} to={{ x: 86, y: 262, z: 30 }} r={1.6} tone={dest === "printer" ? "request" : "idle"} segments={5} />
             <Cable from={up(ROUTER, 6)} to={up(ONU, 12)} r={1.6} tone={wan ? "request" : "idle"} segments={5} />
           </Group>

@@ -151,7 +151,6 @@ export function MemberSiteDioramaScene({
       shotKey={`${phase}-${phase === "typo" ? loginInput : ""}`}
       forward
       reducedMotion={reducedMotion}
-      className={styles.stage}
       dataAttrs={{ "data-phase": phase }}
       tokens={tokensFor(phase)}
       corner={

@@ -47,19 +47,15 @@
   background: repeating-linear-gradient(90deg, #a37d56 0 20px, #8a6a4a 20px 22px);
 }
 
-/* 電波の線：使っていない機器への線は薄く */
-.radio {
-  transition: opacity 400ms ease;
-}
-
-.radio[data-on="false"] {
-  opacity: 0.12;
-}
-
-[data-face].beamStrip,
+/* 電波の線：使っていない機器への線は薄く（opacity は3Dの親に掛けると平面化するので、帯そのものに掛ける） */
 .beamStrip {
   background: color-mix(in srgb, var(--beam) 70%, white) !important;
   box-shadow: 0 0 6px var(--beam);
+  transition: opacity 400ms ease;
+}
+
+[data-on="false"] .beamStrip {
+  opacity: 0.12;
 }
 
 /* テザリング：スマホを中心に広がる小さな Wi-Fi の輪 */
