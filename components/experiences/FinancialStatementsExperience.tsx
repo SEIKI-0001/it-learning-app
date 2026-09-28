@@ -1,251 +1,199 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { FIN_EVENTS, FinanceStage } from "./finance/FinanceStage";
-import { SceneTimeline } from "./scene/SceneTimeline";
-import { useReducedMotion } from "./scene/useReducedMotion";
-import { useStepPlayer } from "./scene/useStepPlayer";
-import { BsSplitStage, FinancePractice, IndicatorSourceStage, ProfitStagesStage, RatioStage } from "./finance/RatioStages";
+import { Lead } from "./diagram/DiagramParts";
+import { BsChart, CAFE, INDICATORS, PL, PlLadder, RatioLine, TOTAL_ASSETS, Takeaway } from "./finance/cafe";
+import { FinancePractice } from "./finance/FinancePractice";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
-// 「財務諸表（貸借対照表BS・損益計算書PL）」専用の体験。
-//   ① BS=ある時点の状態（左の資産=右の負債+純資産でつり合う）
-//   ② PL=一定期間のもうけ（収益-費用=利益）
-//   ③ 1か月の取引を順に起こし、BS（その日時点の写真）とPL（期間中の流れ）がどう変わるかを動かす
-//      売った商品はBS→PLの費用へ、PLの利益はBSの純資産へ流れ込む。借入はPLを動かさない
-//   ④ 「BS？ PL？」仕分けクイズ
-//   ⑤〜⑨ finance/RatioStages：1年ルール → 流動比率・自己資本比率 → 利益の5段階 → 指標の出どころ → 確認5問
+// 「財務諸表（貸借対照表BS・損益計算書PL）」専用の体験。1軒のカフェの同じ1年を通して読む。
+//   ① 2つの表は答える問いが違う（BS＝ある1日の写真／PL＝1年間の成績表）
+//   ② BS（左右のつり合い・1年ルール） ③ PL（5つの利益）
+//   ④ PLの当期純利益がBSの純資産に積もる／借入れは資産を増やすが、もうけではない
+//   ⑤ 同じ数字で指標（流動比率・自己資本比率・売上高営業利益率・ROE） ⑥ 確認5問
+//   数字は最後まで変えない（節ごとに例が変わると、BS・PL・指標が1つの会社の話としてつながらない）。
 // ============================================================================
 
-function BsView() {
+function Timeline() {
+  return (
+    <div className="mt-4 px-1" data-testid="story-timeline" aria-hidden>
+      <div className="relative h-[92px]">
+        {/* 期間の線 */}
+        <div className="absolute inset-x-6 top-[30px] h-[3px] rounded-full bg-gray-300" />
+        {/* 両端の「写真」 */}
+        {[
+          { at: "left-0", date: "4/1" },
+          { at: "right-0", date: "3/31" },
+        ].map((pin) => (
+          <div key={pin.date} className={`absolute top-0 ${pin.at} flex w-12 flex-col items-center`}>
+            <span className="rounded bg-gray-900 px-1.5 py-0.5 text-[11px] font-bold text-white">BS</span>
+            <span className="mt-1 h-3 w-3 rounded-full border-[3px] border-gray-900 bg-white" />
+            <span className="mt-0.5 text-[11px] font-bold tabular-nums text-gray-700">{pin.date}</span>
+          </div>
+        ))}
+        {/* PL＝あいだ全体 */}
+        <div className="absolute inset-x-6 top-[58px]">
+          <div className="h-2 rounded-b-md border-x-2 border-b-2 border-brand-600" />
+          <div className="mt-1 text-center text-[12px] font-bold text-brand-700">PL ＝ 4/1〜3/31 の1年間ぜんぶ</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuestionsSlide() {
   return (
     <Panel>
-      <SectionTitle step={1}>貸借対照表（BS）― 今の「持ち物」のつり合い</SectionTitle>
+      <SectionTitle step={1}>2つの表は、答える「問い」が違う</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">貸借対照表（BS）</b>は、ある時点で
-        <b className="text-gray-800">「何を持ち、どう用意したか」</b>を表します。
-        左右は必ず同じ金額でつり合います。
+        {CAFE.name}の1年目が終わりました。オーナーが知りたいことは2つあります。
       </p>
-
-      <div className="mt-4 overflow-hidden rounded-xl ring-1 ring-gray-300">
-        <div className="grid grid-cols-2 text-center text-[11px] font-bold text-gray-500">
-          <div className="border-r border-gray-200 bg-gray-50 py-1.5">使い道（左）</div>
-          <div className="bg-gray-50 py-1.5">集め方（右）</div>
+      <Timeline />
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-xl bg-white p-3 ring-1 ring-gray-300">
+          <div className="text-[12px] font-bold text-gray-500">問い①</div>
+          <p className="mt-0.5 text-[15px] font-bold leading-snug text-gray-900">「いま、何を持っていて、そのお金はどこから来た？」</p>
+          <p className="mt-1.5 text-sm text-gray-700">
+            → <b>貸借対照表（BS）</b>。ある<b>1日</b>を撮った写真
+          </p>
         </div>
-        <div className="grid grid-cols-2">
-          {/* 左：資産 */}
-          <div className="border-r border-gray-200 bg-brand-50 p-3">
-            <div className="text-sm font-bold text-brand-900">資産</div>
-            <div className="mt-1.5 text-xs leading-relaxed text-gray-700">
-              現金・建物・商品など<br />会社が持っているもの
-            </div>
-            <div className="mt-2 rounded-lg bg-white px-2 py-1 text-center text-sm font-bold tabular-nums text-brand-900">
-              100
-            </div>
-          </div>
-          {/* 右：負債＋純資産 */}
-          <div className="bg-white p-3">
-            <div className="text-sm font-bold text-gray-900">負債</div>
-            <div className="text-xs leading-relaxed text-gray-700">借入金など返すお金</div>
-            <div className="mt-1 rounded-lg bg-gray-50 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-gray-900 ring-1 ring-gray-200">
-              60
-            </div>
-            <div className="mt-2 text-sm font-bold text-gray-900">純資産</div>
-            <div className="text-xs leading-relaxed text-gray-700">自分のお金（返さない）</div>
-            <div className="mt-1 rounded-lg bg-gray-50 px-2 py-0.5 text-center text-sm font-bold tabular-nums text-gray-900 ring-1 ring-gray-200">
-              40
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 border-t border-gray-200 text-center text-sm font-bold">
-          <div className="border-r border-gray-200 bg-brand-100 py-1.5 text-brand-900">資産 100</div>
-          <div className="bg-gray-100 py-1.5 text-gray-900">負債+純資産 100</div>
+        <div className="rounded-xl bg-white p-3 ring-1 ring-brand-300">
+          <div className="text-[12px] font-bold text-brand-700">問い②</div>
+          <p className="mt-0.5 text-[15px] font-bold leading-snug text-gray-900">「この1年で、いくら稼いで、いくら残った？」</p>
+          <p className="mt-1.5 text-sm text-gray-700">
+            → <b>損益計算書（PL）</b>。<b>1年間</b>の成績表
+          </p>
         </div>
       </div>
-
-      <div className="mt-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-900 ring-1 ring-brand-200">
-        資産 ＝ 負債 ＋ 純資産（左右が必ずつり合う）
-      </div>
-      <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        ※ BSは「ある時点」のスナップ写真。<b>純資産＝資産−負債</b>（自分の正味の取り分）。
-      </p>
+      <Takeaway>問題文に「○月○日時点」→ BS、「○年間の」→ PL。</Takeaway>
     </Panel>
   );
 }
 
-function PlView() {
-  const [sales, setSales] = useState(120);
-  const cost = 80; // 固定の費用
-  const profit = sales - cost;
-  const black = profit >= 0;
+function BsSlide() {
   return (
     <Panel>
-      <SectionTitle step={2}>損益計算書（PL）― 期間中の「もうけ」</SectionTitle>
+      <SectionTitle step={2}>3/31の写真 ＝ 貸借対照表（BS）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">損益計算書（PL）</b>は、1年などの期間で
-        <b className="text-gray-800">「いくら稼ぎ、いくら使い、いくら残ったか」</b>を表します。
-        売上（収益）を動かしてみましょう。
+        右は<b className="text-gray-800">お金をどこから集めたか</b>、左はそのお金が<b className="text-gray-800">いま何に姿を変えているか</b>。
+        同じお金を2つの向きから見ているので、左右の合計は必ず同じです。
       </p>
-
-      <div className="mt-4">
-        <div className="flex items-center justify-between text-xs font-bold text-gray-500">
-          <span>収益（売上）</span>
-          <span className="font-mono text-sm text-gray-800">{sales}</span>
-        </div>
-        <input
-          type="range"
-          min={40}
-          max={160}
-          step={10}
-          value={sales}
-          onChange={(e) => setSales(Number(e.target.value))}
-          className="mt-1 w-full accent-brand-600"
-        />
-      </div>
-
-      <div className="mt-3 space-y-1.5 text-sm">
-        <div className="flex justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200">
-          <span className="font-bold text-gray-900">収益（売上）</span>
-          <span className="font-mono font-bold text-gray-900">{sales}</span>
-        </div>
-        <div className="flex justify-between rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200">
-          <span className="font-bold text-gray-900">− 費用</span>
-          <span className="font-mono font-bold text-gray-900">{cost}</span>
-        </div>
-        <div
-          className={`flex justify-between rounded-lg px-3 py-2 ring-1 ${
-            black
-              ? "bg-brand-50 text-brand-900 ring-brand-300"
-              : "bg-rose-50 text-rose-800 ring-rose-200"
-          }`}
-        >
-          <span className="font-bold">＝ 利益</span>
-          <span className="font-mono font-bold">
-            {profit >= 0 ? `+${profit}` : profit}（{black ? "黒字" : "赤字"}）
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-900 ring-1 ring-brand-200">
-        利益 ＝ 収益 − 費用
-      </div>
-      <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        ※ PLは「一定期間」のもうけの記録。BSの“ある時点の状態”とは見ているものが違います。
-      </p>
-    </Panel>
-  );
-}
-
-// ③ 取引がBSとPLのどこに映るか ------------------------------------------
-const FLOW_TEXT: ReactNode[] = [
-  <>元手<b>100</b>を現金で用意して開業。BSは「現金100＝純資産100」でつり合っています。PLは期間が始まったばかりで<b>まだ空</b>。</>,
-  <>現金40が<b>商品40に姿を変えただけ</b>。資産の合計は100のまま、もうけも損もないので<b>PLは動きません</b>（まだ売れていない商品は費用ではない）。</>,
-  <>70で売れた！ 現金+70、PLに<b>売上70</b>。売れた商品40はBSから消えて<b>PLの費用（売上原価）</b>へ。差し引き<b>利益30がBSの純資産へ</b>流れ込みます。</>,
-  <>借りた50で現金+50、同時に<b>借入金（負債）も+50</b>。いずれ返すお金なので<b>もうけではない＝PLは変化なし</b>。左右は同じだけ増えてつり合ったまま。</>,
-  <>給料20を払うと現金−20、PLに<b>費用（給料）20</b>。利益は30→10に減り、<b>純資産も130→110</b>に減ります。</>,
-  <><b>BS＝4/30時点の状態</b>（資産160＝負債50＋純資産110）。<b>PL＝4/1〜4/30の流れ</b>（収益70−費用60＝利益10）。PLのもうけが、BSの純資産を元手100から110へ増やしました。</>,
-];
-
-function FlowView() {
-  const reducedMotion = useReducedMotion();
-  const player = useStepPlayer(FIN_EVENTS.length, reducedMotion, 3600);
-  return (
-    <Panel>
-      <SectionTitle step={3}>取引が起きると、BSとPLはどう動く？</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        お店の1か月を順に進めてみよう。<b className="text-gray-800">BSは“その日の写真”</b>で毎回撮り直し、
-        <b className="text-gray-800">PLは“期間の流れ”</b>で取引がたまっていきます。
-      </p>
-
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-md">
-        <FinanceStage phase={player.index} reducedMotion={reducedMotion} />
-      </div>
-
-      <div className="mt-3 min-h-[5.5em] rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200 [&_b]:text-gray-900" aria-live="polite">
-        <b>
-          {FIN_EVENTS[player.index].date}／{FIN_EVENTS[player.index].title}
-        </b>
-        ：{FLOW_TEXT[player.index]}
-      </div>
-
       <div className="mt-3">
-        <SceneTimeline
-          index={player.index}
-          steps={FIN_EVENTS}
-          playing={player.playing}
-          reducedMotion={reducedMotion}
-          onMove={player.move}
-          onTogglePlay={player.togglePlay}
-          playLabel="1か月の取引を再生"
-          timelineLabel="1か月の取引のタイムライン"
-          startCaption="4/1 開業"
-          endCaption="4/30 期末"
-        />
+        <BsChart />
       </div>
-
-      <div className="mt-3 rounded-xl bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-900 ring-1 ring-brand-200">
-        BSは状態、PLは流れ。PLの利益は、BSの純資産を増やす。
-      </div>
-      <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        ※ 現金や商品のように、1年以内に現金化できる資産を<b>流動資産</b>といいます。
-      </p>
+      <ul className="mt-3 space-y-1 text-[13px] leading-relaxed text-gray-700">
+        <li>
+          ・上の段＝<b>流動</b>（1年以内にお金になる／払う）、下の段＝<b>固定</b>（1年より先）。これを<b>1年ルール</b>といいます
+        </li>
+        <li>
+          ・<b>負債</b>はいつか返すお金、<b>純資産</b>は返さなくてよいお金
+        </li>
+      </ul>
+      <Takeaway>
+        資産 {TOTAL_ASSETS.toLocaleString()} ＝ 負債 {CAFE.bs.cl + CAFE.bs.fl} ＋ 純資産 {CAFE.bs.eq}
+      </Takeaway>
     </Panel>
   );
 }
 
-const QUIZ: { t: string; ans: "BS" | "PL"; why: string }[] = [
-  { t: "3月31日時点で、会社が持つ資産と借金の状態を示す表", ans: "BS", why: "ある時点の財政状態＝貸借対照表(BS)。" },
-  { t: "4月〜翌3月の1年間で、いくら稼いでいくら利益が出たかを示す表", ans: "PL", why: "期間のもうけ＝損益計算書(PL)。" },
-  { t: "「資産＝負債＋純資産」で左右がつり合う表", ans: "BS", why: "左右がつり合うのはBSの特徴。" },
-  { t: "「収益−費用＝利益」を計算して示す表", ans: "PL", why: "利益を計算するのはPL。" },
-];
-
-function Quiz() {
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+function PlSlide() {
   return (
     <Panel>
-      <SectionTitle step={4}>これは BS？　PL？</SectionTitle>
-      <ul className="mt-3 space-y-2.5">
-        {QUIZ.map((q, i) => {
-          const chosen = answers[i];
-          const correct = chosen === q.ans;
-          return (
-            <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <div className="text-sm font-bold text-gray-800">{q.t}</div>
-              <div className="mt-2 flex gap-1.5">
-                {(["BS", "PL"] as const).map((opt) => {
-                  const picked = chosen === opt;
-                  const tone = !chosen
-                    ? "text-gray-600 ring-1 ring-gray-300"
-                    : picked
-                      ? opt === q.ans
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                      : opt === q.ans
-                        ? "ring-2 ring-emerald-400 text-emerald-700"
-                        : "text-gray-400 ring-1 ring-gray-200";
-                  return (
-                    <button
-                      key={opt}
-                      onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
-                      className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-bold transition active:scale-95 ${tone}`}
-                    >
-                      {opt}（{opt === "BS" ? "貸借対照表" : "損益計算書"}）
-                    </button>
-                  );
-                })}
-              </div>
-              {chosen && (
-                <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
-                  {q.why}
-                </p>
-              )}
-            </li>
-          );
-        })}
+      <SectionTitle step={3}>1年間の成績 ＝ 損益計算書（PL）</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        売上から、<b className="text-gray-800">上から順に</b>費用を引いていきます。途中で出てくる利益にはそれぞれ名前があります。
+      </p>
+      <div className="mt-3">
+        <PlLadder />
+      </div>
+      <Takeaway>
+        売上 {CAFE.pl.sales.toLocaleString()} のうち、最後に残ったのは {PL.net}。売上は利益ではない。
+      </Takeaway>
+    </Panel>
+  );
+}
+
+function LinkSlide() {
+  return (
+    <Panel>
+      <SectionTitle step={4}>PLのもうけは、BSの純資産に積もる</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        4/1の純資産は開業資金の {CAFE.openingEquity}。1年で稼いだ当期純利益 {PL.net} がそこに加わり、3/31には {CAFE.bs.eq} になりました。
+      </p>
+      <div className="mt-3 flex items-center justify-center gap-2 text-center text-[13px] font-bold tabular-nums" data-testid="story-link">
+        <div className="rounded-lg bg-gray-100 px-2.5 py-1.5 text-gray-900">
+          <div className="text-[11px] text-gray-500">4/1 の純資産</div>
+          {CAFE.openingEquity}
+        </div>
+        <span className="text-gray-400">＋</span>
+        <div className="rounded-lg bg-brand-600 px-2.5 py-1.5 text-white">
+          <div className="text-[11px] text-white/80">PLの当期純利益</div>
+          {PL.net}
+        </div>
+        <span className="text-gray-400">＝</span>
+        <div className="rounded-lg bg-gray-700 px-2.5 py-1.5 text-white">
+          <div className="text-[11px] text-white/80">3/31 の純資産</div>
+          {CAFE.bs.eq}
+        </div>
+      </div>
+      <div className="mx-auto mt-3 max-w-sm">
+        <BsChart height={180} detail={false} equitySplit highlight={["eq"]} testId="story-bs" />
+      </div>
+
+      <h4 className="mt-5 text-sm font-bold text-gray-900">では、銀行から100借りたら「もうかった」？</h4>
+      <div className="mt-2 grid grid-cols-2 gap-2 text-[13px] leading-relaxed" data-testid="story-borrow">
+        <div className="rounded-xl p-3 ring-1 ring-gray-300">
+          <div className="font-bold text-gray-900">100借りる</div>
+          <div className="mt-1 text-gray-700">
+            資産 <b>+100</b>（現金）
+            <br />
+            負債 <b>+100</b>
+            <br />
+            純資産 <b>±0</b>
+            <br />
+            PL <b>変化なし</b>
+          </div>
+        </div>
+        <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-300">
+          <div className="font-bold text-brand-900">1年で70稼ぐ</div>
+          <div className="mt-1 text-gray-700">
+            資産 <b>+70</b>
+            <br />
+            負債 <b>±0</b>
+            <br />
+            純資産 <b>+70</b>
+            <br />
+            PL 当期純利益 <b>70</b>
+          </div>
+        </div>
+      </div>
+      <Takeaway>資産が増えても、もうかったとは限らない。もうけたときだけ純資産が増える。</Takeaway>
+    </Panel>
+  );
+}
+
+function CheckupSlide() {
+  return (
+    <Panel>
+      <SectionTitle step={5}>同じカフェを「健康診断」する</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        指標は、ここまでの表から2つの数字を取り出して割るだけ。数字はすべて上のBS・PLと同じです。
+      </p>
+      <ul className="mt-3 space-y-2" data-testid="story-indicators">
+        {INDICATORS.map((ind) => (
+          <li key={ind.key} className="rounded-xl p-3 ring-1 ring-gray-200" data-testid={`story-ind-${ind.key}`}>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+              <span className="text-[15px] font-bold text-gray-900">{ind.name}</span>
+              <span className="text-[12px] font-bold text-gray-500">{ind.ask}</span>
+            </div>
+            <div className="mt-1.5">
+              <RatioLine ind={ind} />
+            </div>
+            <p className="mt-1 text-[12px] leading-relaxed text-gray-600">→ {ind.read}</p>
+          </li>
+        ))}
       </ul>
+      <Takeaway>「安全？」はBSどうし、「もうかる？」はPLが入る。</Takeaway>
     </Panel>
   );
 }
@@ -253,20 +201,16 @@ function Quiz() {
 export default function FinancialStatementsExperience() {
   return (
     <div className="space-y-5">
-      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
-        財務諸表には2つの主役。<b>BS＝ある時点の「持ち物のつり合い」</b>、
-        <b>PL＝期間中の「もうけ」</b>。何を見ている表かで区別したら、後半は表から数字を取り出して<b>指標を計算</b>します。
-      </div>
-
-      <BsView />
-      <PlView />
-      <FlowView />
-      <Quiz />
-      <BsSplitStage />
-      <RatioStage />
-      <ProfitStagesStage />
-      <IndicatorSourceStage />
-      <FinancePractice />
+      <Lead>
+        1軒のカフェの<b>同じ1年</b>を、最後まで同じ数字で追いかけます。<b>BS＝ある1日の写真</b>、<b>PL＝1年間の成績表</b>。
+        この2つがどうつながり、指標がどこから出てくるかを見ていきます。
+      </Lead>
+      <QuestionsSlide />
+      <BsSlide />
+      <PlSlide />
+      <LinkSlide />
+      <CheckupSlide />
+      <FinancePractice step={6} />
     </div>
   );
 }
