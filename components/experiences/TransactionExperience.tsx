@@ -3,7 +3,8 @@
 import { useState } from "react";
 import type { NodeState } from "./network/NetworkSceneBase";
 import { useReducedMotion } from "./scene/useReducedMotion";
-import { TransactionScene, type TransactionSceneProps } from "./transaction/TransactionScene";
+import { TransactionDioramaScene } from "./transaction/TransactionDioramaScene";
+import type { TransactionSceneProps } from "./transaction/transactionTypes";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -140,7 +141,7 @@ function TransferDemo() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <TransactionScene
+        <TransactionDioramaScene
           nodes={view.nodes}
           accounts={{
             a: { balance: view.a, pending: pendingA, locked: inProgress, settled: phase === "committed" },
