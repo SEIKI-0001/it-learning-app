@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ApiScene, type ApiSceneProps } from "./api/ApiScene";
+import { ApiDioramaScene } from "./api/ApiDioramaScene";
+import type { ApiSceneProps } from "./api/ApiScene";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -157,7 +158,8 @@ function Flow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <ApiScene
+        <ApiDioramaScene
+          forward={player.forward}
           nodes={bypass ? { app: "sending", api: "idle", svc: "error" } : step.nodes}
           lanes={bypass ? { direct: "blocked" } : step.lanes}
           capsule={bypass ? { stop: "wall", kind: "blocked", tag: "直接アクセス", payload: "SELECT * FROM 天気DB" } : step.capsule}

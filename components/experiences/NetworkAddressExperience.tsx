@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import type { CapsuleKind } from "./network/DataCapsule";
-import {
-  NetworkScene,
-  type CapsuleStop,
-  type LaneId,
-  type LaneState,
-  type NetworkNodeId,
+import { DnsDioramaScene } from "./network/DnsDioramaScene";
+import type {
+  CapsuleStop,
+  LaneId,
+  LaneState,
+  NetworkNodeId,
 } from "./network/NetworkScene";
 import type { NodeState } from "./network/NetworkSceneBase";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -341,10 +341,6 @@ function DnsJourney() {
     setPlaying((current) => !current);
   }
 
-  const trail =
-    forward && phase.trail && phase.capsule && !reducedMotion
-      ? { id: `${outage ? "outage" : "flow"}-${index}`, kind: phase.capsule.kind, ...phase.trail }
-      : null;
 
   return (
     <Panel>
@@ -381,12 +377,12 @@ function DnsJourney() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <NetworkScene
+        <DnsDioramaScene
           nodes={phase.nodes}
           lanes={phase.lanes}
           capsule={phase.capsule}
           showBrowser={phase.showBrowser}
-          trail={trail}
+          forward={forward}
           outage={outage && timedOut}
           reducedMotion={reducedMotion}
           inspectOpen={inspectPacket}

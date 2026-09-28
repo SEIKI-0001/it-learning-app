@@ -1,0 +1,58 @@
+/* インターネット・パケットの 3D 模型（PacketDioramaScene）。パケットの札と受信者の画面。 */
+
+.packet {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 7px 3px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+  color: #1f2937;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.packet[data-route="mid"] {
+  border-color: #ddd6fe;
+}
+
+.packet[data-route="bot"] {
+  border-color: #fde68a;
+}
+
+.packet b {
+  color: #1d4ed8;
+  font-weight: 900;
+}
+
+.packet[data-route="mid"] b {
+  color: #6d28d9;
+}
+
+.packet[data-route="bot"] b {
+  color: #b45309;
+}
+
+.dest {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.data {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 800;
+  white-space: pre;
+}
+
+.screen {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: #111827;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 22px;
+  font-weight: 900;
+}

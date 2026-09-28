@@ -1,0 +1,47 @@
+/* API の 3D 模型（ApiDioramaScene）。スマホの天気アプリの画面。 */
+
+.app {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: linear-gradient(180deg, #5aa7f0 0%, #9fd0fb 100%);
+  color: #ffffff;
+}
+
+.appCity {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.appSun {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.appSun[data-ready="true"] {
+  background: radial-gradient(circle, #fde68a 0 45%, #fbbf24 46% 60%, rgba(251, 191, 36, 0) 62%);
+}
+
+.appTemp {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.appRows {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.appRows i {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.45);
+}
