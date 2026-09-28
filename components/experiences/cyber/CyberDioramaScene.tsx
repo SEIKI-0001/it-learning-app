@@ -1,6 +1,6 @@
 "use client";
 
-import type { Camera, Vec3 } from "../scene/Diorama3D";
+import { CablePulses, type Camera, type Vec3 } from "../scene/Diorama3D";
 import {
   Appliance,
   Database,
@@ -81,7 +81,7 @@ const LABEL: Record<CyberNodeId, { name: string; sub: string; at: Vec3; place: "
   attacker: { name: "😈 攻撃者", sub: "社外", at: { ...AT.attacker, y: AT.attacker.y - 10, z: 100 }, place: "above" },
   internet: { name: "🌐 インターネット", sub: "通信会社のルータ", at: { ...AT.internet, y: AT.internet.y + 30 }, place: "below" },
   web: { name: "Webサーバ", sub: "会社の公開サイト", at: { ...AT.web, z: 124 }, place: "above" },
-  db: { name: "DB", sub: "会員データ", at: { ...AT.db, y: AT.db.y + 36 }, place: "below" },
+  db: { name: "DB", sub: "会員データ", at: { ...AT.db, z: 80 }, place: "above" },
   user: { name: "利用者のブラウザ", sub: "自宅", at: { ...AT.user, y: AT.user.y + 72 }, place: "below" },
   staff: { name: "社員PC", sub: "執務室", at: { ...AT.staff, y: AT.staff.y + 74 }, place: "below" },
 };
@@ -95,16 +95,47 @@ function shotOf(stop: CyberNodeId | null): Camera {
   return { yaw: -20, pitch: 52, zoom: 1.0, fx: (p.x + 420) / 2, fy: (p.y + 240) / 2, fz: 40 };
 }
 
-/** 前の場所から今の場所までの道のり（隣り合うときは道に沿って） */
-function pathBetween(from: CyberNodeId | null, to: CyberNodeId): Vec3[] | undefined {
+/** 前の場所から今の場所までの道のり。いま使われている道だけをたどって（無ければどの道でも）つなぐ */
+function pathBetween(from: CyberNodeId | null, to: CyberNodeId, lanes: CyberSceneProps["lanes"]): Vec3[] | undefined {
   if (!from || from === to) return undefined;
-  for (const [id, [a, b]] of Object.entries(ENDS) as [CyberLaneId, [CyberNodeId, CyberNodeId]][]) {
-    const pts = LANE_POINTS[id].map((p) => ({ ...p, z: 18 }));
-    if (a === from && b === to) return [...pts, STOP[to]];
-    if (b === from && a === to) return [...[...pts].reverse(), STOP[to]];
-  }
-  return undefined;
+  const search = (usable: (id: CyberLaneId) => boolean) => {
+    const prev = new Map<CyberNodeId, { node: CyberNodeId; lane: CyberLaneId; reverse: boolean }>();
+    const queue: CyberNodeId[] = [from];
+    const seen = new Set<CyberNodeId>([from]);
+    while (queue.length) {
+      const cur = queue.shift()!;
+      if (cur === to) break;
+      for (const [id, [a, b]] of Object.entries(ENDS) as [CyberLaneId, [CyberNodeId, CyberNodeId]][]) {
+        if (!usable(id)) continue;
+        const next = a === cur ? b : b === cur ? a : null;
+        if (!next || seen.has(next)) continue;
+        seen.add(next);
+        prev.set(next, { node: cur, lane: id, reverse: b === cur });
+        queue.push(next);
+      }
+    }
+    if (!seen.has(to)) return null;
+    const legs: Vec3[][] = [];
+    for (let n = to; n !== from; ) {
+      const step = prev.get(n)!;
+      const pts = LANE_POINTS[step.lane].map((p) => ({ ...p, z: 18 }));
+      legs.unshift(step.reverse ? [...pts].reverse() : pts);
+      n = step.node;
+    }
+    return [...legs.flat(), STOP[to]];
+  };
+  return (
+    search((id) => !!lanes[id] && lanes[id] !== "blocked") ?? search(() => true) ?? undefined
+  );
 }
+
+/** 大量アクセス（DDoS）で踏み台にされた機器：攻撃者の部屋のまわりに並ぶ */
+const BOTS: Vec3[] = [
+  { x: 44, y: 190, z: 4 },
+  { x: 84, y: 204, z: 4 },
+  { x: 204, y: 60, z: 4 },
+  { x: 214, y: 196, z: 4 },
+];
 
 export function CyberDioramaScene({
   caption,
@@ -135,10 +166,18 @@ export function CyberDioramaScene({
         testId="cyber-scene"
         ariaLabel="ある会社の模型。奥のサーバ室にWebサーバとデータベース、手前の執務室に社員PC。社外にインターネット（通信会社のルータ）、攻撃者の部屋、自宅の利用者がいる"
         shot={shotOf(stop)}
-        shotKey={`${stop ?? "-"}-${payload?.text ?? ""}-${damage.map((d) => d.at).join(",")}`}
+        shotKey={`${stop ?? "-"}-${damage.map((d) => d.at).join(",")}`}
         forward={forward}
         reducedMotion={reducedMotion}
-        tokens={{ payload: { at: stop ? STOP[stop] : null, path: stop ? pathBetween(previousStop, stop) : undefined } }}
+        tokens={{
+          payload: {
+            at: stop ? STOP[stop] : null,
+            path: stop ? pathBetween(previousStop ?? "attacker", stop, lanes) : undefined,
+            // 攻撃の最初の一手は、攻撃者の手元から道をたどって出ていく
+            start: STOP.attacker,
+            restart: previousStop === null,
+          },
+        }}
         world={
           <>
             <Floor x={0} y={20} w={820} d={420} h={16} material="plain" />
@@ -206,6 +245,19 @@ export function CyberDioramaScene({
                 />
               );
             })}
+
+            {/* DDoS：大量の通信の粒が道を埋める（transform だけのアニメ） */}
+            {flood.map((id) =>
+              LANE_POINTS[id].slice(1).map((to, i) => (
+                <CablePulses key={`${id}-${i}`} from={{ ...LANE_POINTS[id][i], z: 8 }} to={{ ...to, z: 8 }} r={2} count={5} on color="#e11d48" />
+              )),
+            )}
+            {flood.length > 0 &&
+              BOTS.map((b, i) => (
+                <Group key={i} x={b.x} y={b.y} z={b.z} data={{ "data-illustration": "bot" }}>
+                  <Laptop x={0} y={0} z={0} w={34} tone="dark" glow />
+                </Group>
+              ))}
 
             <DioramaToken id="payload">
               {payload && <Parcel tone={CARRY[payload.tone]} mark={payload.tone === "attack" ? "alert" : "none"} />}

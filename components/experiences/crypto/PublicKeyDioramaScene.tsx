@@ -54,7 +54,7 @@ export function PublicKeyDioramaScene({
   intercepted,
   reducedMotion,
   forward = true,
-}: Omit<CryptoSceneProps, "trail"> & { forward?: boolean }) {
+}: CryptoSceneProps & { forward?: boolean }) {
   const shot = shotOf({ publicKey, capsule });
   const msgAt = capsule ? (capsule.stop === "aDesk" ? MSG_A : MSG_B) : null;
 
@@ -92,7 +92,7 @@ export function PublicKeyDioramaScene({
       labels={
         <>
           {capsule && (
-            <DioramaLabel token="msg" dz={16} place={capsule.stop === "aDesk" ? "right" : "left"}>
+            <DioramaLabel token="msg" dz={16} place={capsule.stop === "aDesk" ? "right" : "above"}>
               <div
                 role="img"
                 data-capsule-state={capsule.state}
@@ -128,10 +128,14 @@ export function PublicKeyDioramaScene({
               <KeyTag kind="public" />
             </span>
           </DioramaLabel>
-          <DioramaLabel token="priv" dz={12} place={privateKey === "bHome" ? "left" : "above"}>
+          <DioramaLabel token="priv" dz={12} place="above">
             <span className={styles.keyLabel} role="img" aria-label="Bの秘密鍵" data-key="private" data-spot={privateKey} data-emphasis={privateKey === "bUse" ? "true" : "false"}>
               <KeyTag kind="private" />
-              {privateKey === "bHome" && <span className={styles.keyCaption}>Bだけが保持</span>}
+              {privateKey === "bHome" && (
+                <span className={styles.keyCaption} data-tone="private">
+                  Bだけが保持
+                </span>
+              )}
             </span>
           </DioramaLabel>
 

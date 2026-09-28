@@ -162,9 +162,8 @@ type FlowStep = {
   title: string;
   /** 通信の向き・場所。色に頼らず文字でも示す。 */
   route: string;
-  scene: Omit<CryptoSceneProps, "trail" | "reducedMotion">;
+  scene: Omit<CryptoSceneProps, "reducedMotion">;
   /** このステップで移動が起きるレーン（軌跡を描く） */
-  moves: CryptoLaneId | null;
   detail: ReactNode;
 };
 
@@ -184,7 +183,6 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: null,
       intercepted: false,
     },
-    moves: null,
     detail: (
       <>
         Bさんが鍵を <b>2本ペア</b> で作成。<b>公開鍵</b>（PUBLIC）と<b>秘密鍵</b>（PRIVATE）。
@@ -204,7 +202,6 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: null,
       intercepted: false,
     },
-    moves: "key",
     detail: (
       <>
         ①のレーンで <b>公開鍵だけ</b> が Bさん → Aさんへ移動します。公開鍵は誰に見られてもOK。
@@ -224,7 +221,6 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "plain", stop: "aDesk" },
       intercepted: false,
     },
-    moves: null,
     detail: (
       <>
         Aさんが送りたいメッセージ「<b>会議は10時</b>」を用意。まだ誰でも読める <b>平文</b>（錠前が開いた状態）です。
@@ -243,7 +239,6 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "encrypted", stop: "aDesk" },
       intercepted: false,
     },
-    moves: null,
     detail: (
       <>
         受け取った <b>Bさんの公開鍵で暗号化</b>。同じカプセルが錠前つきの <b>暗号文</b>（ENCRYPTED DATA）に変わりました。
@@ -262,7 +257,6 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "encrypted", stop: "bDesk" },
       intercepted: true,
     },
-    moves: "data",
     detail: (
       <>
         ②のレーンで暗号文が Aさん → Bさんへ。途中で第三者にコピーされても、中身は読めない暗号文。
@@ -282,7 +276,6 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "decrypted", stop: "bDesk" },
       intercepted: false,
     },
-    moves: null,
     detail: (
       <>
         Bさんが <b>対の秘密鍵で復号</b>。「会議は10時」が元どおり読めた！
@@ -330,7 +323,6 @@ function Flow() {
     }
     setPlaying((current) => !current);
   }
-
 
   return (
     <Panel>

@@ -1,0 +1,16 @@
+/* 認証局（CA）の 3D 模型（CaDioramaScene）。鍵の札と CA 印。 */
+.tokenText {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #0b6b50;
+  font-size: 11px;
+  font-weight: 800;
+}
+.caSeal {
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #b45309;
+  color: #ffffff;
+  font-size: 9.5px;
+}

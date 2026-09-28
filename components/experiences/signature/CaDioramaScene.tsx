@@ -16,7 +16,7 @@ import {
 } from "../scene/DioramaParts";
 import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import { CA_STATIONS, type CaFlowView, type CaStation } from "./signatureTypes";
-import styles from "./ca.module.css";
+import styles from "./cadiorama.module.css";
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
 
 // 認証局（CA）の図解：山田さんのオフィス → 認証局の窓口 → 電子証明書の発行台 → 利用者（あなた）のPC。
@@ -57,7 +57,7 @@ const SHOTS: Record<CaStation, Camera> = {
   owner: { yaw: -16, pitch: 52, zoom: 1.15, fx: 200, fy: 300, fz: 50 },
   ca: { yaw: -18, pitch: 50, zoom: 1.1, fx: 320, fy: 250, fz: 60 },
   cert: { yaw: -20, pitch: 52, zoom: 1.05, fx: 470, fy: 250, fz: 50 },
-  user: { yaw: -20, pitch: 54, zoom: 0.86, fx: 430, fy: 250, fz: 40 },
+  user: { yaw: -18, pitch: 50, zoom: 1.12, fx: 620, fy: 230, fz: 50 },
 };
 
 export function CaDioramaScene({ view, reducedMotion, forward = true }: { view: CaFlowView; reducedMotion: boolean; forward?: boolean }) {
@@ -93,7 +93,8 @@ export function CaDioramaScene({ view, reducedMotion, forward = true }: { view: 
           <Group z={3} data={{ "data-station": "ca", "data-active": view.active.includes("ca") ? "true" : "false", "data-rejected": rejectedAtCa ? "true" : "false" }}>
             <Building x={AT.ca.x} y={AT.ca.y - 76} w={170} d={90} h={120} kind="bank" state={rejectedAtCa ? "error" : view.active.includes("ca") ? "active" : "idle"} />
             <Desk x={AT.ca.x} y={AT.ca.y + 20} w={120} d={40} h={44} tone="counter" />
-            <Person x={AT.ca.x + 30} y={AT.ca.y - 12} pose="stand" shirt="#1e3a8a" />
+            {/* 窓口の係員（本人確認をする人） */}
+            <Person x={AT.ca.x + 78} y={AT.ca.y + 40} pose="stand" shirt="#1e3a8a" />
             {/* 本人確認の印鑑 */}
             <Box x={AT.ca.x - 44} y={AT.ca.y + 20} z={44} w={10} d={10} h={14} color={rejectedAtCa ? "#e11d48" : "#b91c1c"} />
           </Group>
@@ -125,7 +126,7 @@ export function CaDioramaScene({ view, reducedMotion, forward = true }: { view: 
       }
       labels={
         <>
-          <DioramaLabel token="key" dz={14} place="above">
+          <DioramaLabel token="key" dz={14} place={view.at === "user" ? "left" : "above"}>
             <div
               className={cryptoStyles.keyLabel}
               data-at={view.at}

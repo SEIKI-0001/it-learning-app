@@ -19,11 +19,33 @@
   padding: 1px 6px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 0 0 1px #fecdd6;
-  color: #be123c;
+  box-shadow: 0 0 0 1px #cbd5e1;
+  color: #475569;
   font-size: 9px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+/* 鍵の色の約束（公開＝緑・秘密＝赤・共通＝金）に札の色も合わせる。盗まれたコピーは赤地で目立たせる */
+.keyCaption[data-tone="public"] {
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+.keyCaption[data-tone="private"] {
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+}
+
+.keyCaption[data-tone="common"] {
+  box-shadow: 0 0 0 1px #fcd34d;
+  color: #92400e;
+}
+
+.keyCaption[data-tone="danger"] {
+  background: #e11d48;
+  box-shadow: none;
+  color: #ffffff;
 }
 
 .eveCallout {
@@ -65,26 +87,3 @@
   content: "・";
 }
 
-.screen {
-  display: flex;
-  height: 100%;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: #ffffff;
-  color: #111827;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 15px;
-  font-weight: 800;
-}
-
-.screen[data-tone="cipher"] {
-  background: #0f172a;
-  color: #6ee7b7;
-}
-
-.screen[data-tone="danger"] {
-  background: #fff1f3;
-  color: #be123c;
-}

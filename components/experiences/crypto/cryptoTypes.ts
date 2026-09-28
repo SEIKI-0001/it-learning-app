@@ -21,7 +21,6 @@ export type CryptoSceneProps = {
   publicKey: PublicKeySpot;
   privateKey: PrivateKeySpot;
   capsule: { state: CapsuleState; stop: CapsuleStop } | null;
-  trail: { id: string; lane: CryptoLaneId } | null;
   /** 第三者が暗号文のコピーを取った状態 */
   intercepted: boolean;
   reducedMotion: boolean;
