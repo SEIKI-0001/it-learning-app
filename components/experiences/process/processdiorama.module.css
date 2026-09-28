@@ -1,0 +1,55 @@
+/* 業務プロセス改善の 3D 模型（ProcessDioramaScene）。書類の動きと、机ごとの時計の札。 */
+
+/* 書類はシミュレーションの時刻ごとに置き直すので、間を短い transition でつなぐ */
+.doc {
+  transition: transform 260ms linear;
+}
+
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 3px 8px 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  color: #111827;
+  white-space: nowrap;
+}
+
+.clock[data-slow="true"] {
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.18), 0 0 0 1.5px #fda4af;
+}
+
+.clock[data-improved="true"] {
+  box-shadow: 0 4px 12px rgba(22, 163, 122, 0.18), 0 0 0 1.5px #6ee7b7;
+}
+
+.clockName {
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.clockTime {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.clock[data-slow="true"] .clockTime {
+  color: #be123c;
+}
+
+.clock[data-improved="true"] .clockTime {
+  color: #047857;
+}
+
+.queueBadge {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+}
