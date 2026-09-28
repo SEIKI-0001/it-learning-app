@@ -18,7 +18,7 @@ import type { BcpSceneProps, DataSpot, StaffSpot } from "./bcpTypes";
 import styles from "./bcpdiorama.module.css";
 
 // BCP（事業継続計画）の図解：ある会社のまわりの街区。
-//   左奥＝本社ビル（中にシステムとデータのサーバ室）、手前の広場＝社員、右手前＝代替拠点のオフィス、右奥＝バックアップのデータセンター。
+//   左奥＝本社ビルと、隣のシステム・データのサーバ、手前の広場＝社員、右手前＝代替拠点のオフィス、右奥＝バックアップのデータセンター。
 // 大地震で本社は立入禁止・システム停止。あとは事前の備え（連絡網・代替拠点・バックアップ）の有無で、
 // 社員が代替拠点へ移れるか、データを復元できるか、いつ営業を再開できるかが決まる。
 // 備えていないもの（代替拠点・バックアップ）は半透明の「まだ無い」建物で見せる。
@@ -27,18 +27,18 @@ const AT = {
   hq: { x: 180, y: 150, z: 0 },
   system: { x: 330, y: 122, z: 0 },
   staff: { x: 200, y: 340, z: 0 },
-  alt: { x: 600, y: 300, z: 0 },
-  vault: { x: 650, y: 110, z: 0 },
+  alt: { x: 560, y: 320, z: 0 },
+  vault: { x: 720, y: 96, z: 0 },
 } satisfies Record<string, Vec3>;
 
 const STAFF_AT: Record<StaffSpot, Vec3> = {
   staff: { x: 210, y: 350, z: 0 },
-  alt: { x: 610, y: 400, z: 0 },
+  alt: { x: 540, y: 410, z: 0 },
   hq: { x: 190, y: 236, z: 0 },
 };
 const DATA_AT: Record<DataSpot, Vec3> = {
-  vault: { x: 650, y: 170, z: 84 },
-  alt: { x: 610, y: 262, z: 104 },
+  vault: { x: 720, y: 150, z: 84 },
+  alt: { x: 570, y: 282, z: 104 },
   lost: { x: 330, y: 150, z: 96 },
 };
 
@@ -47,17 +47,17 @@ const LANE: Record<"move" | "restore" | "sync", Vec3[]> = {
   move: [
     { x: 250, y: 350, z: G },
     { x: 380, y: 370, z: G },
-    { x: 580, y: 400, z: G },
+    { x: 510, y: 410, z: G },
   ],
   restore: [
-    { x: 640, y: 172, z: G },
-    { x: 620, y: 220, z: G },
-    { x: 610, y: 244, z: G },
+    { x: 700, y: 150, z: G },
+    { x: 640, y: 210, z: G },
+    { x: 590, y: 262, z: G },
   ],
   sync: [
     { x: 360, y: 140, z: G },
-    { x: 470, y: 132, z: G },
-    { x: 580, y: 120, z: G },
+    { x: 500, y: 110, z: G },
+    { x: 650, y: 100, z: G },
   ],
 };
 
@@ -154,7 +154,7 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
             </DioramaLabel>
           )}
 
-          <DioramaLabel at={{ ...AT.hq, y: AT.hq.y + 60, z: 0 }} place="below">
+          <DioramaLabel at={{ ...AT.hq, y: AT.hq.y + 60, z: 150 }} place="above">
             <span className={styles.label} data-state={nodes.hq}>
               本社{disaster && <b className={styles.ng}>立入禁止</b>}
             </span>
@@ -174,7 +174,7 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
               代替拠点{prep.site ? "" : "（なし）"}
             </span>
           </DioramaLabel>
-          <DioramaLabel at={{ ...AT.staff, y: AT.staff.y + 40 }} place="below" optional>
+          <DioramaLabel token="staff" dz={-4} place="below" optional>
             <span className={styles.label} data-present={prep.contact ? "true" : "false"}>
               社員{prep.contact ? " 📞連絡網あり" : ""}
             </span>
