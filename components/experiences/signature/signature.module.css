@@ -370,3 +370,21 @@
     animation: none;
   }
 }
+
+/* ---------- 3D 模型（SignatureDioramaScene）で使うとき ---------- */
+
+.sigDoc {
+  position: relative;
+  max-width: 190px;
+}
+
+.verify.verifyInline {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  width: 250px;
+  max-width: calc(100cqw - 24px);
+  transform: none;
+  animation: none;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+}
