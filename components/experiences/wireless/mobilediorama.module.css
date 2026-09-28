@@ -1,0 +1,150 @@
+/* モバイル通信の 3D 模型（MobileDioramaScene）。基地局からの電波・テザリングの小さな Wi-Fi・札。 */
+
+.stage {
+  --beam: #60a5fa;
+}
+
+.stage[data-mode="tether"] {
+  --beam: #fbbf24;
+}
+
+.stage[data-mode="mvno"] {
+  --beam: #34d399;
+}
+
+.modePlate {
+  display: inline-block;
+  max-width: 240px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px #bfdbfe;
+  color: #1e40af;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.modePlate[data-mode="tether"] {
+  background: #fffbeb;
+  box-shadow: 0 0 0 1px #fde68a;
+  color: #92400e;
+}
+
+.modePlate[data-mode="mvno"] {
+  background: #f5f3ff;
+  box-shadow: 0 0 0 1px #ddd6fe;
+  color: #5b21b6;
+}
+
+[data-face][data-face].road {
+  background:
+    repeating-linear-gradient(90deg, #f8fafc 0 26px, transparent 26px 52px) 0 50% / 100% 3px no-repeat,
+    #5b6270;
+}
+
+[data-face][data-face].benchTop {
+  background: repeating-linear-gradient(90deg, #a37d56 0 20px, #8a6a4a 20px 22px);
+}
+
+/* 電波の線：使っていない機器への線は薄く */
+.radio {
+  transition: opacity 400ms ease;
+}
+
+.radio[data-on="false"] {
+  opacity: 0.12;
+}
+
+[data-face].beamStrip,
+.beamStrip {
+  background: color-mix(in srgb, var(--beam) 70%, white) !important;
+  box-shadow: 0 0 6px var(--beam);
+}
+
+/* テザリング：スマホを中心に広がる小さな Wi-Fi の輪 */
+.hotspot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.hotspot span {
+  position: absolute;
+  left: -90px;
+  top: -90px;
+  width: 180px;
+  height: 180px;
+  border: 3px solid rgba(245, 158, 11, 0.8);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.1);
+  animation: mobile-hotspot 2.2s ease-out infinite;
+}
+
+.hotspot span:nth-child(2) {
+  animation-delay: 1.1s;
+}
+
+[data-reduced-motion="true"] .hotspot span {
+  opacity: 0.8;
+  transform: scale(0.8);
+}
+
+@keyframes mobile-hotspot {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  max-width: 220px;
+}
+
+.note {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 9px 5px;
+  border-radius: 10px;
+  background: #fffbeb;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14), 0 0 0 1px #fde68a;
+  color: #78350f;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.note b {
+  font-size: 10.5px;
+  font-weight: 900;
+}
+
+.note[data-tone="violet"] {
+  background: #f5f3ff;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14), 0 0 0 1px #ddd6fe;
+  color: #4c1d95;
+}
+
+.sim {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px 12px 6px 6px;
+  background: #ede9fe;
+  box-shadow: 0 0 0 1px #c4b5fd;
+  color: #5b21b6;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}

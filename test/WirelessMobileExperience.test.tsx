@@ -23,12 +23,26 @@ const toEnd = () => {
 };
 
 describe("WirelessMobileExperience", () => {
-  it("keeps the mobile terms and the free Wi-Fi quiz", () => {
+  it("mobile slide: 5G / tethering / MVNO switch the route on the street model, and the quiz is kept", () => {
     renderDeck();
     click("解説2");
-    for (const t of ["5G", "テザリング", "MVNO（格安SIM）"]) expect(screen.getByText(t)).toBeInTheDocument();
+    expect(screen.getByTestId("mobile-scene")).toBeInTheDocument();
+    expect(screen.getByTestId("mobile-5g")).toHaveTextContent("多数同時接続");
+    click(/テザリング/);
+    expect(screen.getByTestId("mobile-mode")).toHaveTextContent("スマホが親機");
+    expect(screen.getByTestId("mobile-hotspot")).toBeInTheDocument();
+    expect(screen.getByTestId("mobile-tether")).toHaveTextContent("SIMなし");
+    click(/MVNO/);
+    expect(screen.getByTestId("mobile-lease-note")).toHaveTextContent("大手のもの");
+    expect(screen.getByText("MVNO（格安SIM）")).toBeInTheDocument();
     click("解説3");
     expect(screen.getByText("フリーWi-Fi、安全？危険？")).toBeInTheDocument();
+  });
+
+  it("step 1 shows the laptop's Wi-Fi list: SSID names and lock marks are separate", () => {
+    renderDeck();
+    expect(screen.getByTestId("wifi-list")).toHaveTextContent("cafe-wifi-2F");
+    expect(screen.getByTestId("wifi-list")).toHaveTextContent("Free_WiFi");
   });
 
   it("SSID is just the name of the radio — the lock is a separate tag", () => {
@@ -48,7 +62,7 @@ describe("WirelessMobileExperience", () => {
     next();
     expect(screen.getByTestId("wifi-ap-result")).toHaveTextContent("受信");
     expect(screen.getByTestId("wifi-eve")).toHaveAttribute("data-reads", "true");
-    expect(screen.getByTestId("wifi-eve")).toHaveTextContent("PASS: spring123");
+    expect(screen.getByTestId("wifi-eve")).toHaveTextContent("pass=spring123");
   });
 
   it("with WPA2/WPA3 the eavesdropper still receives the radio but only sees ciphertext", () => {
