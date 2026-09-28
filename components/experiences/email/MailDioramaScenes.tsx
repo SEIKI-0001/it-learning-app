@@ -89,13 +89,15 @@ const ROUTE_SHOT: Record<MailStop, Camera> = {
 
 export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward = true }: RouteSceneProps & { forward?: boolean }) {
   const inMailbox = mail.stop === "mailbox";
+  // まとめ（全区間を通り終えた）では、送る側から受け取る側まで道全体を映す
+  const summary = (Object.keys(segments) as RouteSeg[]).every((id) => segments[id] === "done");
   const segState = (id: RouteSeg) => segments[id];
   return (
     <DioramaStage
       testId="mail-route-scene"
       ariaLabel="メール配送の模型。左手前の自宅のあなたから、左奥のプロバイダの送信サーバ、右奥の相手のメールサーバを通って、右手前の相手の会社のPCに届く。送る2区間はSMTP、受け取る区間はPOPまたはIMAP"
-      shot={ROUTE_SHOT[mail.stop]}
-      shotKey={`${mail.stop}-${mail.tone}`}
+      shot={summary ? { yaw: -18, pitch: 54, zoom: 0.84, fx: 400, fy: 230, fz: 40 } : ROUTE_SHOT[mail.stop]}
+      shotKey={`${mail.stop}-${mail.tone}-${summary ? "all" : ""}`}
       forward={forward}
       reducedMotion={reducedMotion}
       tokens={{ mail: { at: MAIL_AT[mail.stop], path: routePath(mail.stop) } }}
@@ -228,7 +230,9 @@ function InboxLabel({ id, name, box }: { id: SyncNodeId; name: string; box: Inbo
 }
 
 export function MailSyncDiorama({ proto, nodes, lanes, boxes, mail, reducedMotion, forward = true }: SyncSceneProps & { forward?: boolean }) {
-  const laneTone = (id: "phone" | "pc"): RouteTone => (lanes[id] === "blocked" ? "blocked" : lanes[id] === "active" ? (proto === "POP" ? "amber" : "request") : "idle");
+  // POP で取り出し済みの後に PC が見に行っても、届く物はない → 途切れた道で見せる
+  const laneTone = (id: "phone" | "pc"): RouteTone =>
+    lanes[id] === "blocked" || (lanes[id] === "active" && !boxes[id].mail) ? "blocked" : lanes[id] === "active" ? (proto === "POP" ? "amber" : "request") : "idle";
   return (
     <DioramaStage
       testId="mail-sync-scene"
@@ -256,7 +260,7 @@ export function MailSyncDiorama({ proto, nodes, lanes, boxes, mail, reducedMotio
           {/* スマホを持つ人（外出先） */}
           <Floor x={60} y={260} w={260} d={160} h={4} z={4} material="paving" />
           <Group z={4} data={{ "data-node": "phone", "data-state": nodes.phone }}>
-            <Phone x={SYNC_AT.phone.x + 20} y={SYNC_AT.phone.y - 6} z={48} scale={0.9} glow={boxes.phone.mail} />
+            <Phone x={SYNC_AT.phone.x + 20} y={SYNC_AT.phone.y - 6} z={50} scale={0.7} glow={boxes.phone.mail} />
             <Person x={SYNC_AT.phone.x - 6} y={SYNC_AT.phone.y + 12} pose="back" shirt="#e0803a" />
           </Group>
           {/* 会社のPC */}
