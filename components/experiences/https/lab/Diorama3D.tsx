@@ -71,7 +71,8 @@ export function Box({
   );
 }
 
-/** 2点を結ぶ円柱（ケーブル・ガラス管）。帯を N 枚、軸まわりに回して並べる。 */
+/** 2点を結ぶ円柱（ケーブル・ガラス管）。帯を N 枚、軸まわりに回して並べる。
+ *  from.z / to.z を渡すと傾いた円柱（空中の経路）になる。省略時は z の高さで水平。 */
 export function Cylinder({
   from,
   to,
@@ -93,14 +94,22 @@ export function Cylinder({
   style?: CSSProperties;
   testId?: string;
 }) {
-  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  const z0 = from.z ?? z;
+  const z1 = to.z ?? z;
+  const flat = Math.hypot(to.x - from.x, to.y - from.y);
+  const length = Math.hypot(flat, z1 - z0);
   const angle = (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI;
+  // rotateY(-e) で軸（ローカル x）を上向きに e 度起こす
+  const elevation = (Math.atan2(z1 - z0, flat) * 180) / Math.PI;
   const step = 360 / segments;
   const strip = (2 * Math.PI * r) / segments + 0.8;
   return (
     <div
       className={`${styles.obj} ${className ?? ""}`}
-      style={{ transform: `translate3d(${from.x}px, ${from.y}px, ${z}px) rotateZ(${angle}deg)`, ...style }}
+      style={{
+        transform: `translate3d(${from.x}px, ${from.y}px, ${z0}px) rotateZ(${angle}deg) rotateY(${-elevation}deg)`,
+        ...style,
+      }}
       data-testid={testId}
     >
       {Array.from({ length: segments }, (_, i) => {

@@ -20,7 +20,6 @@ function chunks(text: string): string[] {
 
 export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMotion }: LabSceneProps) {
   const https = mode === "https";
-  const sent = index >= 1;
   const captured = step.intercepted;
   const arrived = step.stop === "arrived";
   const pieces = chunks(plain);
@@ -40,39 +39,7 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
           {index === 0 && <span className={styles.chip}>入力中</span>}
           {index === 1 && <span className={styles.chip}>送信</span>}
         </p>
-        <div className={styles.browser}>
-          <div className={styles.browserTabs}>
-            <span className={styles.dots} aria-hidden>
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className={styles.tab}>ログイン | shop.example</span>
-          </div>
-          <div className={styles.urlBar}>
-            <span className={styles.urlBadge} data-mode={mode}>
-              {https ? "🔒" : "⚠︎ 保護されていない通信"}
-            </span>
-            <span className={styles.urlText}>
-              <b data-mode={mode}>{https ? "https://" : "http://"}</b>shop.example/login
-            </span>
-          </div>
-          <div className={styles.page}>
-            <p className={styles.pageTitle}>ログイン</p>
-            <div className={styles.field} data-typing={index === 0 ? "true" : "false"}>
-              <span
-                key={`${plain}-${index === 0}`}
-                className={styles.typed}
-                style={{ "--n": plain.length } as CSSProperties}
-              >
-                {plain}
-              </span>
-            </div>
-            <div className={styles.submit} data-sent={sent ? "true" : "false"}>
-              {sent ? "送信しました ✓" : "ログイン"}
-            </div>
-          </div>
-        </div>
+        <BrowserScreen mode={mode} index={index} plain={plain} />
       </section>
 
       {/* ---------- 通信路 ---------- */}
@@ -115,41 +82,7 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
             <span aria-hidden>😈</span> 盗聴者のPC
             {captured && <span className={styles.chip} data-tone="danger">盗聴中</span>}
           </p>
-          <div className={styles.terminal}>
-            <div className={styles.termBar}>
-              <span className={styles.dots} aria-hidden>
-                <i />
-                <i />
-                <i />
-              </span>
-              <span>sniffer — wlan0</span>
-            </div>
-            <div className={styles.termBody}>
-              <p>
-                <span className={styles.prompt}>$</span> sniff wlan0
-              </p>
-              <p className={styles.dim}>listening on wlan0…</p>
-              {captured ? (
-                <>
-                  <p className={styles.line} style={{ animationDelay: "0.1s" }}>
-                    <span className={styles.dim}>14:02:11</span> {https ? "TLSv1.3 :443 Application Data" : "HTTP :80 POST /login"}
-                  </p>
-                  <p className={styles.line} style={{ animationDelay: "0.5s" }}>
-                    <span className={styles.hit} data-mode={mode}>
-                      {https ? cipher || "…" : plain}
-                    </span>
-                  </p>
-                  <p className={`${styles.line} ${styles.verdict}`} data-mode={mode} style={{ animationDelay: "0.9s" }}>
-                    {https ? ">> 暗号化されていて読めない…" : ">> 読めた！パスワード入手"}
-                  </p>
-                </>
-              ) : (
-                <p>
-                  <span className={styles.cursor} />
-                </p>
-              )}
-            </div>
-          </div>
+          <SnifferScreen mode={mode} captured={captured} plain={plain} cipher={cipher} />
         </section>
 
         {/* ---------- Webサーバ ---------- */}
@@ -158,29 +91,133 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
             <span aria-hidden>🗄️</span> Webサーバ
             {arrived && <span className={styles.chip} data-tone="ok">受信</span>}
           </p>
-          <div className={styles.log}>
-            <div className={styles.logBar}>access.log</div>
-            <div className={styles.logBody}>
-              {arrived ? (
-                <>
-                  {https && (
-                    <p className={styles.line} style={{ animationDelay: "0.1s" }}>
-                      <span className={styles.ok}>TLS 復号 ✓</span>
-                    </p>
-                  )}
-                  <p className={styles.line} style={{ animationDelay: https ? "0.5s" : "0.1s" }}>
-                    POST /login <span className={styles.ok}>200</span>
-                  </p>
-                  <p className={styles.line} style={{ animationDelay: https ? "0.9s" : "0.5s" }}>
-                    <span className={styles.body}>{plain}</span>
-                  </p>
-                </>
-              ) : (
-                <p className={styles.dim}>待機中…</p>
-              )}
-            </div>
-          </div>
+          <ServerLogScreen mode={mode} arrived={arrived} plain={plain} />
         </section>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 画面の部品（3Dカフェの「画面を拡大」版でも使う）
+// ---------------------------------------------------------------------------
+
+type ScreenMode = LabSceneProps["mode"];
+
+export function BrowserScreen({ mode, index, plain }: { mode: ScreenMode; index: number; plain: string }) {
+  const https = mode === "https";
+  const sent = index >= 1;
+  return (
+    <div className={styles.browser}>
+      <div className={styles.browserTabs}>
+        <span className={styles.dots} aria-hidden>
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className={styles.tab}>ログイン | shop.example</span>
+      </div>
+      <div className={styles.urlBar}>
+        <span className={styles.urlBadge} data-mode={mode}>
+          {https ? "🔒" : "⚠︎ 保護されていない通信"}
+        </span>
+        <span className={styles.urlText}>
+          <b data-mode={mode}>{https ? "https://" : "http://"}</b>shop.example/login
+        </span>
+      </div>
+      <div className={styles.page}>
+        <p className={styles.pageTitle}>ログイン</p>
+        <div className={styles.field} data-typing={index === 0 ? "true" : "false"}>
+          <span
+            key={`${plain}-${index === 0}`}
+            className={styles.typed}
+            style={{ "--n": plain.length } as CSSProperties}
+          >
+            {plain}
+          </span>
+        </div>
+        <div className={styles.submit} data-sent={sent ? "true" : "false"}>
+          {sent ? "送信しました ✓" : "ログイン"}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function SnifferScreen({
+  mode,
+  captured,
+  plain,
+  cipher,
+}: {
+  mode: ScreenMode;
+  captured: boolean;
+  plain: string;
+  cipher: string;
+}) {
+  const https = mode === "https";
+  return (
+    <div className={styles.terminal}>
+      <div className={styles.termBar}>
+        <span className={styles.dots} aria-hidden>
+          <i />
+          <i />
+          <i />
+        </span>
+        <span>sniffer — wlan0</span>
+      </div>
+      <div className={styles.termBody}>
+        <p>
+          <span className={styles.prompt}>$</span> sniff wlan0
+        </p>
+        <p className={styles.dim}>listening on wlan0…</p>
+        {captured ? (
+          <>
+            <p className={styles.line} style={{ animationDelay: "0.1s" }}>
+              <span className={styles.dim}>14:02:11</span> {https ? "TLSv1.3 :443 Application Data" : "HTTP :80 POST /login"}
+            </p>
+            <p className={styles.line} style={{ animationDelay: "0.5s" }}>
+              <span className={styles.hit} data-mode={mode}>
+                {https ? cipher || "…" : plain}
+              </span>
+            </p>
+            <p className={`${styles.line} ${styles.verdict}`} data-mode={mode} style={{ animationDelay: "0.9s" }}>
+              {https ? ">> 暗号化されていて読めない…" : ">> 読めた！パスワード入手"}
+            </p>
+          </>
+        ) : (
+          <p>
+            <span className={styles.cursor} />
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ServerLogScreen({ mode, arrived, plain }: { mode: ScreenMode; arrived: boolean; plain: string }) {
+  const https = mode === "https";
+  return (
+    <div className={styles.log}>
+      <div className={styles.logBar}>access.log</div>
+      <div className={styles.logBody}>
+        {arrived ? (
+          <>
+            {https && (
+              <p className={styles.line} style={{ animationDelay: "0.1s" }}>
+                <span className={styles.ok}>TLS 復号 ✓</span>
+              </p>
+            )}
+            <p className={styles.line} style={{ animationDelay: https ? "0.5s" : "0.1s" }}>
+              POST /login <span className={styles.ok}>200</span>
+            </p>
+            <p className={styles.line} style={{ animationDelay: https ? "0.9s" : "0.5s" }}>
+              <span className={styles.body}>{plain}</span>
+            </p>
+          </>
+        ) : (
+          <p className={styles.dim}>待機中…</p>
+        )}
       </div>
     </div>
   );

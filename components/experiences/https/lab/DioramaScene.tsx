@@ -534,7 +534,7 @@ export function DioramaScene({ mode, index, step, plain, cipher, forward, reduce
 }
 
 /** 後ろから見た、椅子に座ってノートPCに向かう人 */
-function UserFromBehind() {
+export function UserFromBehind() {
   return (
     <svg viewBox="0 0 82 112" className="h-full w-full" aria-hidden>
       <defs>
@@ -567,7 +567,7 @@ function UserFromBehind() {
 }
 
 /** 立ってモニターを見張る盗聴者（フード＋ヘッドホン） */
-function EavesdropperStanding({ active }: { active: boolean }) {
+export function EavesdropperStanding({ active }: { active: boolean }) {
   return (
     <svg viewBox="0 0 62 118" className="h-full w-full" aria-hidden>
       <defs>

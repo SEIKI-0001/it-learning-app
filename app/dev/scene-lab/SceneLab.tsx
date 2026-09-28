@@ -3,7 +3,9 @@
 import { useState, type ComponentType } from "react";
 import { FLOW_STEPS, scramble } from "@/components/experiences/HttpsExperience";
 import { HttpsScene, type HttpsMode } from "@/components/experiences/https/HttpsScene";
+import { CafeDioramaScene, CafeScreensScene } from "@/components/experiences/https/lab/CafeDiorama";
 import { DioramaScene } from "@/components/experiences/https/lab/DioramaScene";
+import { IsoCafeScene } from "@/components/experiences/https/lab/IsoCafeScene";
 import { LetterScene } from "@/components/experiences/https/lab/LetterScene";
 import { ScreenStoryScene } from "@/components/experiences/https/lab/ScreenStoryScene";
 import type { LabSceneProps, LabVariant } from "@/components/experiences/https/lab/labTypes";
@@ -85,6 +87,30 @@ const VARIANTS: Record<LabVariant, VariantInfo> = {
     cost: "中：絵の作り込みが必要。テーマごとにたとえの絵を描き起こす形になる。",
     Scene: LetterScene,
   },
+  d: {
+    label: "D 2.5D改",
+    name: "D. 2.5D のアップグレード（フリーWi-Fi のカフェ）",
+    aim: "現行と同じアイソメトリックの見せ方のまま、舞台を「盗聴が実際に起きやすいフリーWi-Fiのカフェ」にして作り込む。電波が床いっぱいに広がり、隣の席にも届くのが一目で分かる。",
+    how: "SVG のアイソメ投影。面ごとの陰影・やわらかい影・壁と家具・広がる電波の輪・光る小包。拡大しても線がにじまない。",
+    cost: "低〜中：今の 2.5D 部品の延長で作れ、本番の他の図解もそのまま底上げできる。",
+    Scene: IsoCafeScene,
+  },
+  e: {
+    label: "E 3Dカフェ",
+    name: "E. リアル 3D（フリーWi-Fi のカフェ）",
+    aim: "A の 3D を実際の場面に置き換え。カフェの席からの電波が壁のフリーWi-Fiと隣の席の盗聴者の両方に届き、インターネットを通ってデータセンターの Webサーバへ。",
+    how: "A と同じ CSS 3D 部品。空中の電波の経路は傾いた円柱、電波はカメラを向く輪。HTTPS では PC からサーバまでガラスのトンネルが通る。",
+    cost: "中：A の部品をそのまま使える。",
+    Scene: CafeDioramaScene,
+  },
+  f: {
+    label: "F 3D＋画面",
+    name: "F. 3D カフェ ＋ 画面を拡大",
+    aim: "E の 3D に、B の実物そっくりの画面を拡大してつなげる。「どこで」（3D）と「何が見えるか」（画面）を同時に見せる。",
+    how: "ステップの主役の機器から、下の拡大画面へ光の帯を伸ばす（3D の点を毎フレーム投影）。画面は B の部品をそのまま使用。",
+    cost: "中：E と B の部品の組み合わせ。文字は常に読める大きさ。",
+    Scene: CafeScreensScene,
+  },
 };
 
 export default function SceneLab({ initialVariant }: { initialVariant: LabVariant }) {
@@ -120,7 +146,7 @@ export default function SceneLab({ initialVariant }: { initialVariant: LabVarian
       </header>
 
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-5">
-        <div className="grid grid-cols-4 gap-1 rounded-xl bg-white p-1 ring-1 ring-gray-200" role="tablist" aria-label="表示パターン">
+        <div className="grid grid-cols-4 gap-1 rounded-xl bg-white p-1 ring-1 ring-gray-200 sm:grid-cols-7" role="tablist" aria-label="表示パターン">
           {(Object.keys(VARIANTS) as LabVariant[]).map((key) => (
             <button
               key={key}
