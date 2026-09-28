@@ -1,0 +1,771 @@
+/* CSS 3D ジオラマの共通部品の素材（DioramaParts.tsx）。
+   preserve-3d の親に opacity / filter / overflow を付けると平面化されるので、見た目の切替は葉（面・帯）に付ける。
+   繰り返しアニメは transform / opacity だけ。 */
+
+.group {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+
+/* ---------- 床・台座 ---------- */
+
+[data-face][data-face].plinthEdge {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, #1c2330) 0%, color-mix(in srgb, var(--c) 40%, #111722) 100%);
+}
+
+.floorTexture {
+  position: absolute;
+  inset: 0;
+}
+
+.floorTexture[data-material="wood"] {
+  background:
+    repeating-linear-gradient(90deg, rgba(92, 60, 30, 0.12) 0 1px, transparent 1px 120px) 0 0 / 100% 40px,
+    repeating-linear-gradient(180deg, #c9a47c 0 38px, #bf9870 38px 40px);
+}
+
+.floorTexture[data-material="carpet"] {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 48px 48px,
+    radial-gradient(circle at 30% 30%, #98a2b3 0%, #8a94a6 100%);
+}
+
+.floorTexture[data-material="tile"] {
+  background:
+    linear-gradient(rgba(120, 130, 145, 0.16) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, rgba(120, 130, 145, 0.16) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(135deg, #eef0f3 0%, #e1e5ea 100%);
+}
+
+.floorTexture[data-material="dc"] {
+  background:
+    linear-gradient(rgba(90, 105, 125, 0.2) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(90, 105, 125, 0.2) 1px, transparent 1px) 0 0 / 32px 32px,
+    #dfe5ec;
+}
+
+.floorTexture[data-material="asphalt"] {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 46px, rgba(255, 255, 255, 0.55) 46px 70px) center / 100% 4px no-repeat,
+    radial-gradient(circle at 20% 30%, #646b78 0%, #555c68 100%);
+}
+
+.floorTexture[data-material="grass"] {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0 2px, transparent 3px) 0 0 / 22px 22px,
+    linear-gradient(135deg, #9ccb86 0%, #86b872 100%);
+}
+
+.floorTexture[data-material="concrete"] {
+  background:
+    linear-gradient(rgba(100, 100, 100, 0.12) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(90deg, rgba(100, 100, 100, 0.12) 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(135deg, #d0d2d5 0%, #c2c4c8 100%);
+}
+
+.floorTexture[data-material="paving"] {
+  background:
+    linear-gradient(rgba(140, 120, 90, 0.2) 1px, transparent 1px) 0 0 / 24px 12px,
+    linear-gradient(90deg, rgba(140, 120, 90, 0.2) 1px, transparent 1px) 0 0 / 24px 24px,
+    #ddd6c8;
+}
+
+.floorTexture[data-material="plain"] {
+  background: linear-gradient(135deg, #eef1f5 0%, #e1e6ec 100%);
+}
+
+/* ---------- 壁 ---------- */
+
+[data-face][data-face].wallFace {
+  background: linear-gradient(180deg, var(--wall) 0%, color-mix(in srgb, var(--wall) 88%, #8b95a3) 100%);
+  box-shadow: inset 0 -7px 0 color-mix(in srgb, var(--wall) 70%, #6b7584);
+}
+
+.window {
+  position: absolute;
+  border: 4px solid #ffffff;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #8fc0ef 0%, #cfe6fa 65%, #eef6fd 100%);
+  box-shadow: inset 0 0 0 1px #c5d3e3, 0 1px 0 #cfd6e0;
+}
+
+.window::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  margin-left: -2px;
+  background: #ffffff;
+}
+
+.board {
+  position: absolute;
+  border-radius: 3px;
+}
+
+.board[data-kind="whiteboard"] {
+  border: 3px solid #b9c1cc;
+  background:
+    linear-gradient(90deg, transparent 12%, rgba(47, 111, 219, 0.35) 12% 40%, transparent 40%) 0 30% / 100% 2px no-repeat,
+    linear-gradient(90deg, transparent 12%, rgba(47, 111, 219, 0.25) 12% 62%, transparent 62%) 0 50% / 100% 2px no-repeat,
+    linear-gradient(90deg, transparent 12%, rgba(225, 29, 72, 0.3) 12% 32%, transparent 32%) 0 70% / 100% 2px no-repeat,
+    #fbfcfd;
+}
+
+.board[data-kind="cork"] {
+  border: 3px solid #8a6a4a;
+  background:
+    linear-gradient(#fff7d6, #fff7d6) 18% 25% / 16% 28% no-repeat,
+    linear-gradient(#dbeafe, #dbeafe) 44% 40% / 16% 28% no-repeat,
+    linear-gradient(#fde2e4, #fde2e4) 70% 22% / 16% 28% no-repeat,
+    #c9a27a;
+}
+
+.board[data-kind="screen"] {
+  border: 3px solid #2b2f38;
+  background: linear-gradient(135deg, #1e3a8a 0%, #2f6fdb 100%);
+}
+
+/* ---------- 家具 ---------- */
+
+[data-face][data-face].officeTop {
+  background: linear-gradient(135deg, #f7f8fa 0%, #e6e9ee 100%);
+}
+
+[data-face][data-face].woodTop {
+  background: linear-gradient(135deg, #deb487 0%, #c89a6c 100%);
+}
+
+[data-face][data-face].counterTop {
+  background: linear-gradient(135deg, #f5f2ed 0%, #e4ded4 100%);
+}
+
+[data-face][data-face].keyboardTop {
+  background: linear-gradient(180deg, #dde2e8 0%, #cbd2db 100%);
+}
+
+[data-face][data-face].keyboardTop::before {
+  content: "";
+  position: absolute;
+  left: 13%;
+  right: 13%;
+  top: 12%;
+  height: 62%;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 5.5px, #cfd5dd 5.5px 7px),
+    repeating-linear-gradient(90deg, #3b424e 0 6.5px, #cfd5dd 6.5px 8px);
+}
+
+[data-face][data-face].keysTop {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 3px, #c6ccd4 3px 4px),
+    repeating-linear-gradient(90deg, #f7f8fa 0 4px, #c6ccd4 4px 5px);
+}
+
+/* ---------- 画面 ---------- */
+
+.lidMount {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+
+.lid {
+  position: absolute;
+  left: 0;
+  padding: 2px 2px 3px;
+  border-radius: 4px 4px 1px 1px;
+  background: linear-gradient(180deg, #353b47, #22262e);
+  transform-origin: 50% 100%;
+  transform: rotateX(-76deg);
+}
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1px;
+  background: #ffffff;
+}
+
+.screen[data-tone="dark"] {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.screen[data-tone="off"] {
+  background: linear-gradient(135deg, #1a1d24 0%, #2a2f3a 60%, #1a1d24 100%);
+}
+
+.screen[data-glow="true"] {
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
+}
+
+.screenInner {
+  width: 312%;
+  height: 312%;
+  transform: scale(0.32);
+  transform-origin: 0 0;
+  font-size: 11px;
+}
+
+[data-face][data-face].monitorFace {
+  padding: 2px 2px 4px;
+  background: #1f232b;
+}
+
+[data-face][data-face].phoneFace {
+  padding: 3px 1.5px 4px;
+  border-radius: 3px;
+  background: #1b1e25;
+}
+
+.phoneScreen {
+  border-radius: 2px;
+}
+
+/* ---------- サーバラック ---------- */
+
+[data-face][data-face].rackFront {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 5px;
+  background: linear-gradient(180deg, #353d4b 0%, #262c37 100%);
+}
+
+[data-face][data-face].rackSide {
+  background: repeating-linear-gradient(180deg, #2a303b 0 3px, #20252e 3px 4.5px);
+}
+
+.rackBays {
+  position: relative;
+  display: grid;
+  gap: 3px;
+}
+
+.rackAccent {
+  height: 3px;
+  margin-bottom: 1px;
+  border-radius: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 4px var(--accent);
+}
+
+.rackBay {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  height: 12px;
+  padding-right: 4px;
+  border-radius: 1.5px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.25) 0 1px, transparent 1px 4px) 5px 3px / 30px 6px no-repeat,
+    linear-gradient(180deg, #414a5b 0%, #333b49 100%);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.led {
+  width: 3px;
+  height: 3px;
+  flex: none;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 3px #22c55e;
+  animation: parts-blink 1.6s steps(2, jump-none) infinite;
+}
+
+.led[data-alt] {
+  background: #60a5fa;
+  box-shadow: 0 0 3px #60a5fa;
+}
+
+.rackBays[data-state="active"] .led,
+.rackBays[data-state="sending"] .led,
+.appliancePanel[data-state="active"] .led {
+  animation-duration: 0.35s;
+}
+
+.rackBays[data-state="error"] .led,
+.appliancePanel[data-state="error"] .led,
+.ledRow[data-on="false"] .led {
+  background: #ef4444;
+  box-shadow: 0 0 4px #ef4444;
+  animation-duration: 0.8s;
+}
+
+.rackBays[data-state="disabled"] .led {
+  background: #475569;
+  box-shadow: none;
+  animation: none;
+}
+
+/* ---------- ネットワーク機器 ---------- */
+
+[data-face][data-face].routerFront {
+  display: flex;
+  align-items: center;
+  padding-left: 6px;
+  background: linear-gradient(180deg, #f5f6f8 0%, #dfe3e8 100%);
+}
+
+.ledRow {
+  display: flex;
+  gap: 4px;
+}
+
+[data-face][data-face].applianceFront {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 92%, #ffffff) 0%, var(--c) 100%);
+}
+
+.appliancePanel {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 3px;
+}
+
+.portGrid {
+  flex: 1;
+  height: 7px;
+  border-radius: 1px;
+  background:
+    repeating-linear-gradient(90deg, #161a21 0 4px, transparent 4px 5.5px) 0 0 / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, #161a21 0 4px, transparent 4px 5.5px) 0 4px / 100% 3px no-repeat;
+}
+
+[data-face][data-face].standFront {
+  background: repeating-linear-gradient(90deg, #7d8694 0 3px, #8f98a6 3px 6px);
+}
+
+/* ---------- 建物 ---------- */
+
+.building[data-dim="true"] [data-face] {
+  opacity: 0.38;
+}
+
+[data-face][data-face].facadeFace {
+  padding: 0;
+}
+
+[data-face][data-face].roofTop {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--c) 86%, #6b7584) 0%, color-mix(in srgb, var(--c) 78%, #6b7584) 100%);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--c) 70%, #ffffff);
+}
+
+.facade {
+  position: absolute;
+  inset: 0;
+}
+
+/* 窓の格子（オフィスは横長の連窓、銀行は縦長、住宅は小窓） */
+.facade[data-kind="office"],
+.facade[data-kind="tower"] {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 7px, rgba(143, 192, 239, 0.95) 7px 19px, transparent 19px 26px) 6px 4px / calc(100% - 12px) calc(100% - 20px) no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 14px, rgba(255, 255, 255, 0.9) 14px 16px) 6px 4px / calc(100% - 12px) calc(100% - 20px) no-repeat;
+}
+
+.facade[data-kind="bank"] {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8px, rgba(143, 192, 239, 0.9) 8px 18px, transparent 18px 24px) 6px 8px / calc(100% - 12px) calc(100% - 30px) no-repeat,
+    linear-gradient(180deg, transparent calc(100% - 16px), #c9bfae calc(100% - 16px));
+}
+
+.facade[data-kind="house"] {
+  background:
+    linear-gradient(rgba(143, 192, 239, 0.9), rgba(143, 192, 239, 0.9)) 18% 30% / 22% 26% no-repeat,
+    linear-gradient(rgba(143, 192, 239, 0.9), rgba(143, 192, 239, 0.9)) 78% 30% / 22% 26% no-repeat,
+    linear-gradient(#8a6a4a, #8a6a4a) 50% 100% / 18% 42% no-repeat;
+}
+
+.facade[data-kind="store"] {
+  background:
+    linear-gradient(rgba(143, 192, 239, 0.95), rgba(214, 232, 250, 0.95)) 50% 100% / calc(100% - 16px) 46% no-repeat,
+    repeating-linear-gradient(180deg, transparent 0 7px, rgba(143, 192, 239, 0.8) 7px 16px, transparent 16px 22px) 8px 6px / calc(100% - 16px) 36% no-repeat;
+}
+
+.facade[data-kind="factory"],
+.facade[data-kind="warehouse"] {
+  background:
+    repeating-linear-gradient(180deg, #b9bfc7 0 2px, transparent 2px 6px) 50% 100% / 40% 60% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 10px, rgba(143, 192, 239, 0.8) 10px 20px) 6px 8px / calc(100% - 12px) 12px no-repeat;
+}
+
+.facade[data-kind="datacenter"] {
+  background:
+    repeating-linear-gradient(90deg, rgba(90, 100, 115, 0.2) 0 1px, transparent 1px 22px),
+    linear-gradient(90deg, transparent 0, transparent 40%, #7f8a99 40%, #7f8a99 60%, transparent 60%) 50% 100% / 30% 38% no-repeat,
+    linear-gradient(180deg, rgba(47, 111, 219, 0.7), rgba(47, 111, 219, 0.7)) 0 12px / 100% 3px no-repeat;
+}
+
+.facade[data-state="active"] {
+  box-shadow: inset 0 0 0 2px rgba(47, 111, 219, 0.7);
+}
+
+.facade[data-state="error"] {
+  box-shadow: inset 0 0 0 2px rgba(225, 29, 72, 0.8);
+}
+
+/* 被災：ひびと割れ窓 */
+.facade[data-damaged="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(118deg, transparent 47%, #4b5563 47.5% 48.5%, transparent 49%) 0 0 / 60% 70% no-repeat,
+    linear-gradient(64deg, transparent 47%, #4b5563 47.5% 48.5%, transparent 49%) 100% 30% / 50% 60% no-repeat,
+    rgba(71, 85, 105, 0.35);
+}
+
+[data-face][data-face].ventTop {
+  background: radial-gradient(circle, #6b7584 0 38%, #aab2bd 40%);
+}
+
+[data-face][data-face].awning {
+  background: repeating-linear-gradient(90deg, #d8483d 0 10px, #fbfbf8 10px 20px);
+}
+
+[data-face][data-face].awningFront {
+  background: repeating-linear-gradient(90deg, #b8392f 0 10px, #e6e6e2 10px 20px);
+}
+
+.gable {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+
+.gableA,
+.gableB {
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  background: repeating-linear-gradient(90deg, #9b4a36 0 6px, #8c412f 6px 7px);
+  transform-origin: 50% 100%;
+}
+
+.gableA {
+  top: -4px;
+  transform-origin: 50% 100%;
+  transform: rotateX(28deg);
+}
+
+.gableB {
+  transform-origin: 50% 0;
+  transform: rotateX(-28deg);
+  background: repeating-linear-gradient(90deg, #b25a42 0 6px, #a14f39 6px 7px);
+}
+
+/* ---------- 車両 ---------- */
+
+[data-face][data-face].truckSide {
+  background:
+    linear-gradient(180deg, transparent 60%, #2f6fdb 60% 70%, transparent 70%),
+    linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+[data-face][data-face].truckCab {
+  background: linear-gradient(180deg, #bfdbfe 0 45%, #2f6fdb 45%);
+}
+
+.tireStrip {
+  background: #1f2329;
+}
+
+/* ---------- 経路 ---------- */
+
+.route {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 999px;
+  transform-origin: 0 50%;
+  background: rgba(148, 163, 184, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(100, 116, 139, 0.25);
+  --flow: #64748b;
+}
+
+.route[data-tone="request"] {
+  background: rgba(47, 111, 219, 0.22);
+  --flow: #2f6fdb;
+}
+
+.route[data-tone="response"],
+.route[data-tone="done"] {
+  background: rgba(22, 163, 122, 0.22);
+  --flow: #16a37a;
+}
+
+.route[data-tone="secure"] {
+  background: rgba(16, 185, 129, 0.25);
+  --flow: #059669;
+}
+
+.route[data-tone="danger"] {
+  background: rgba(225, 29, 72, 0.22);
+  --flow: #e11d48;
+}
+
+.route[data-tone="warn"] {
+  background: rgba(245, 158, 11, 0.25);
+  --flow: #d97706;
+}
+
+.route[data-tone="violet"] {
+  background: rgba(124, 58, 237, 0.22);
+  --flow: #7c3aed;
+}
+
+.route[data-tone="amber"] {
+  background: rgba(217, 119, 6, 0.24);
+  --flow: #d97706;
+}
+
+.route[data-tone="blocked"] {
+  background: repeating-linear-gradient(90deg, rgba(225, 29, 72, 0.4) 0 8px, rgba(225, 29, 72, 0.12) 8px 14px);
+  --flow: transparent;
+}
+
+.routeFlow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40px;
+  right: 0;
+  opacity: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 14px,
+    var(--flow) 14px 20px,
+    transparent 20px 26px,
+    var(--flow) 26px 32px,
+    transparent 32px 40px
+  );
+  -webkit-mask: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+
+.route[data-active="true"] .routeFlow {
+  opacity: 0.85;
+  animation: parts-flow 0.9s linear infinite;
+}
+
+.cableStrip {
+  background-color: color-mix(in srgb, #4a5263 var(--lit), #0a0d13);
+}
+
+[data-tone="request"] > .obj .cableStrip,
+[data-tone="request"] .cableStrip {
+  background-color: color-mix(in srgb, #2f6fdb var(--lit), #0a1530);
+}
+
+[data-tone="response"] .cableStrip,
+[data-tone="done"] .cableStrip {
+  background-color: color-mix(in srgb, #16a37a var(--lit), #062a1f);
+}
+
+[data-tone="danger"] .cableStrip,
+[data-tone="blocked"] .cableStrip {
+  background-color: color-mix(in srgb, #e11d48 var(--lit), #2a0610);
+}
+
+[data-tone="secure"] .cableStrip {
+  background-color: color-mix(in srgb, #059669 var(--lit), #062a1f);
+}
+
+.glassStrip {
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.05) 0%, rgba(52, 211, 153, 0.2) 50%, rgba(52, 211, 153, 0.05) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.glassStrip[data-up="true"] {
+  background: linear-gradient(90deg, rgba(167, 243, 208, 0.12) 0%, rgba(209, 250, 229, 0.4) 50%, rgba(167, 243, 208, 0.12) 100%);
+}
+
+[data-tone="danger"] > * > .glassStrip {
+  background: linear-gradient(90deg, rgba(251, 113, 133, 0.05) 0%, rgba(251, 113, 133, 0.24) 50%, rgba(251, 113, 133, 0.05) 100%);
+}
+
+[data-tone="info"] > * > .glassStrip {
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.05) 0%, rgba(96, 165, 250, 0.22) 50%, rgba(96, 165, 250, 0.05) 100%);
+}
+
+[data-on="true"] > * > .glassStrip {
+  opacity: 1;
+}
+
+.barrier {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  border: 2px solid rgba(225, 29, 72, 0.8);
+  border-radius: 4px;
+  background: repeating-linear-gradient(135deg, rgba(225, 29, 72, 0.28) 0 8px, rgba(225, 29, 72, 0.12) 8px 16px);
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.barrier[data-on="true"] {
+  opacity: 1;
+}
+
+/* ---------- 運ぶ物 ---------- */
+
+[data-face][data-face].parcelTop {
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.parcelIcon {
+  color: #334155;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.parcelIcon[data-tone="secure"],
+.parcelIcon[data-tone="ok"],
+.parcelIcon[data-tone="danger"],
+.parcelIcon[data-tone="info"] {
+  color: #ffffff;
+}
+
+[data-face][data-face].paperTop {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 4px, rgba(100, 116, 139, 0.35) 4px 5px) 4px 5px / calc(100% - 8px) 60% no-repeat,
+    #fdfdfb;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.12);
+}
+
+.stamp {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid #e11d48;
+  border-radius: 50%;
+}
+
+.stamp[data-tone="ok"] {
+  border-color: #16a37a;
+}
+
+.stamp[data-tone="info"] {
+  border-color: #2f6fdb;
+}
+
+[data-face][data-face].envelopeTop {
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.18);
+}
+
+.envelopeFlap {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(33deg, transparent 49%, rgba(100, 116, 139, 0.45) 50%, transparent 51%),
+    linear-gradient(-33deg, transparent 49%, rgba(100, 116, 139, 0.45) 50%, transparent 51%);
+  background-size: 50% 100%;
+  background-position: 0 0, 100% 0;
+  background-repeat: no-repeat;
+}
+
+.envelopeFlap[data-sealed="true"]::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px;
+  border-radius: 50%;
+  background: #b91c1c;
+}
+
+.coinStrip {
+  background-color: color-mix(in srgb, var(--coin, #e0a526) var(--lit), #3b2a07);
+}
+
+.coinTop {
+  position: absolute;
+  left: -11px;
+  top: -11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.12), inset 0 0 0 5px rgba(255, 255, 255, 0.25);
+  transform: translateZ(5px);
+}
+
+@keyframes parts-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes parts-flow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(40px);
+  }
+}
+
+/* ---------- ガラス・データベース ---------- */
+
+[data-face][data-face].glassPane {
+  background: linear-gradient(135deg, rgba(210, 232, 250, 0.34) 0%, rgba(170, 205, 235, 0.22) 60%, rgba(255, 255, 255, 0.4) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  transition: background 400ms ease;
+}
+
+[data-alarm="true"] [data-face][data-face].glassPane {
+  background: linear-gradient(135deg, rgba(251, 113, 133, 0.42) 0%, rgba(244, 63, 94, 0.26) 100%);
+  box-shadow: inset 0 0 0 1px rgba(225, 29, 72, 0.6);
+}
+
+.dbStrip {
+  background-color: color-mix(in srgb, #3f6fb8 var(--lit), #0c1a33);
+}
+
+[data-state="active"] > * > .dbStrip,
+[data-state="sending"] > * > .dbStrip {
+  background-color: color-mix(in srgb, #2f86db var(--lit), #0c1a33);
+}
+
+[data-state="error"] > * > .dbStrip {
+  background-color: color-mix(in srgb, #c2334d var(--lit), #2a0610);
+}
+
+.dbCap {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #8fb4ea 0%, #5b87c9 70%, #4671b3 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.35);
+}
+
+[data-state="error"] > .dbCap {
+  background: radial-gradient(circle at 40% 35%, #f5a3b3 0%, #d9546c 70%);
+}

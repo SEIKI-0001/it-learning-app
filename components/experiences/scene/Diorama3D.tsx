@@ -7,6 +7,9 @@ import styles from "./diorama3d.module.css";
 
 export type Vec3 = { x: number; y: number; z?: number };
 
+/** 計算した座標・角度の丸め（サーバとブラウザで小数の書き方が違っても hydration がずれないように） */
+const f2 = (n: number) => n.toFixed(2);
+
 type FaceName = "top" | "front" | "back" | "left" | "right";
 
 /** 直方体。(x,y,z) は奥・左・下の角。faces で各面に中身（画面・LED など）を貼れる。 */
@@ -49,7 +52,7 @@ export function Box({
   return (
     <div
       className={`${styles.obj} ${className ?? ""}`}
-      style={{ transform: `translate3d(${x}px, ${y}px, ${z}px)`, "--c": color, ...style } as CSSProperties}
+      style={{ transform: `translate3d(${f2(x)}px, ${f2(y)}px, ${f2(z)}px)`, "--c": color, ...style } as CSSProperties}
       data-testid={testId}
     >
       {(Object.keys(transforms) as FaceName[])
@@ -107,7 +110,7 @@ export function Cylinder({
     <div
       className={`${styles.obj} ${className ?? ""}`}
       style={{
-        transform: `translate3d(${from.x}px, ${from.y}px, ${z0}px) rotateZ(${angle}deg) rotateY(${-elevation}deg)`,
+        transform: `translate3d(${f2(from.x)}px, ${f2(from.y)}px, ${f2(z0)}px) rotateZ(${f2(angle)}deg) rotateY(${f2(-elevation)}deg)`,
         ...style,
       }}
       data-testid={testId}
@@ -123,10 +126,10 @@ export function Cylinder({
             data-up={light > 0.35 ? "true" : "false"}
             style={
               {
-                width: length,
-                height: strip,
-                top: -strip / 2,
-                transform: `rotateX(${a}deg) translateZ(${r}px)`,
+                width: `${f2(length)}px`,
+                height: `${f2(strip)}px`,
+                top: `${f2(-strip / 2)}px`,
+                transform: `rotateX(${f2(a)}deg) translateZ(${r}px)`,
                 "--lit": `${Math.round(58 + 42 * Math.max(light, -0.4))}%`,
               } as CSSProperties
             }
@@ -163,7 +166,7 @@ export function CablePulses({
     <div
       className={styles.obj}
       style={{
-        transform: `translate3d(${from.x}px, ${from.y}px, ${z0}px) rotateZ(${angle}deg) rotateY(${-elevation}deg)`,
+        transform: `translate3d(${f2(from.x)}px, ${f2(from.y)}px, ${f2(z0)}px) rotateZ(${f2(angle)}deg) rotateY(${f2(-elevation)}deg)`,
       }}
     >
       {on &&
@@ -173,7 +176,7 @@ export function CablePulses({
             className={styles.pulse}
             style={
               {
-                "--len": `${length - 16}px`,
+                "--len": `${f2(length - 16)}px`,
                 "--r": `${r + 0.6}px`,
                 "--pulse": color,
                 animationDelay: `${(-i * 1.6) / count}s`,
@@ -204,7 +207,7 @@ export function Billboard({
   children: ReactNode;
 }) {
   return (
-    <div className={styles.obj} style={{ transform: `translate3d(${x}px, ${y}px, ${z}px)` }}>
+    <div className={styles.obj} style={{ transform: `translate3d(${f2(x)}px, ${f2(y)}px, ${f2(z)}px)` }}>
       <div
         className={`${styles.billboard} ${className ?? ""}`}
         style={{ width: w, height: h, left: -w / 2, top: -h }}
@@ -221,7 +224,7 @@ export function FloorShadow({ x, y, w, d, opacity = 0.35 }: { x: number; y: numb
   return (
     <div
       className={styles.shadow}
-      style={{ width: w, height: d, transform: `translate3d(${x}px, ${y}px, 0.6px)`, opacity }}
+      style={{ width: w, height: d, transform: `translate3d(${f2(x)}px, ${f2(y)}px, 0.6px)`, opacity }}
     />
   );
 }
@@ -246,10 +249,10 @@ export function FloorStrip({
     <div
       className={`${styles.floorStrip} ${className ?? ""}`}
       style={{
-        width: length,
+        width: `${f2(length)}px`,
         height: width,
         top: -width / 2,
-        transform: `translate3d(${from.x}px, ${from.y}px, ${z}px) rotateZ(${angle}deg)`,
+        transform: `translate3d(${f2(from.x)}px, ${f2(from.y)}px, ${z}px) rotateZ(${f2(angle)}deg)`,
       }}
     />
   );
