@@ -1,0 +1,622 @@
+/* パターンB：実物に近い画面（ブラウザ／盗聴ツール／サーバログ）と、その間の通信路。 */
+
+.story {
+  --leak: #e11d48;
+  --tls: #10b981;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 12px;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 70% at 50% 0%, #f8fafc 0%, #eef2f7 60%, #e3e9f1 100%);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+/* ---------- 画面の枠とスポットライト ---------- */
+
+.device {
+  min-width: 0;
+  opacity: 0.5;
+  filter: saturate(0.6);
+  transition: opacity 500ms ease, filter 500ms ease, transform 500ms ease;
+}
+
+.device[data-focus="true"] {
+  opacity: 1;
+  filter: none;
+  transform: translateY(-1px);
+}
+
+.deviceLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 5px 2px;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.chip {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #2463d1;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.chip[data-tone="danger"] {
+  background: var(--leak);
+}
+
+.chip[data-tone="ok"] {
+  background: #16a37a;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5f57;
+}
+
+.dots i:nth-child(2) {
+  background: #febc2e;
+}
+
+.dots i:nth-child(3) {
+  background: #28c840;
+}
+
+/* ---------- ブラウザ ---------- */
+
+.browser {
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 12px 28px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(15, 23, 42, 0.1);
+}
+
+.device[data-focus="true"] .browser {
+  box-shadow:
+    0 16px 36px rgba(36, 99, 209, 0.22),
+    0 0 0 2px #2463d1;
+}
+
+.browserTabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 30px;
+  padding: 0 10px;
+  background: #e5e9ef;
+}
+
+.browserTabs .dots {
+  align-self: center;
+}
+
+.tab {
+  overflow: hidden;
+  max-width: 60%;
+  padding: 5px 12px 6px;
+  border-radius: 8px 8px 0 0;
+  background: #f6f7f9;
+  color: #374151;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.urlBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f6f7f9;
+}
+
+.urlBadge {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #ffe4e6;
+  color: #be123c;
+  font-size: 10px;
+  font-weight: 800;
+  transition: background 400ms ease, color 400ms ease;
+}
+
+.urlBadge[data-mode="https"] {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.urlText {
+  overflow: hidden;
+  min-width: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+  color: #374151;
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.urlText b {
+  color: #be123c;
+}
+
+.urlText b[data-mode="https"] {
+  color: #047857;
+}
+
+.page {
+  padding: 12px 16px 14px;
+}
+
+.pageTitle {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  height: 34px;
+  margin-top: 8px;
+  padding: 0 10px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.field[data-typing="true"] {
+  border-color: #2463d1;
+  box-shadow: 0 0 0 3px rgba(36, 99, 209, 0.15);
+}
+
+.typed {
+  display: inline-block;
+  overflow: hidden;
+  max-width: 100%;
+  color: #111827;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.field[data-typing="true"] .typed {
+  border-right: 2px solid #2463d1;
+  animation:
+    ss-type 1.6s steps(var(--n), end) backwards,
+    ss-caret 0.8s step-end infinite;
+}
+
+.submit {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  background: #2463d1;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  transition: background 400ms ease;
+}
+
+.submit[data-sent="true"] {
+  background: #16a37a;
+}
+
+/* ---------- 通信路 ---------- */
+
+.wire {
+  position: relative;
+  padding: 14px 2px 0;
+  opacity: 0.6;
+  transition: opacity 500ms ease;
+}
+
+.wire[data-focus="true"],
+.wire[data-active="true"] {
+  opacity: 1;
+}
+
+.wireLabel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.tlsChip {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #047857;
+  font-size: 10px;
+}
+
+.pipeWrap {
+  position: relative;
+  height: 76px;
+}
+
+.pipe {
+  position: relative;
+  overflow: hidden;
+  height: 36px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #6b7384 0%, #3a414e 45%, #262b34 70%, #3f4654 100%);
+  box-shadow:
+    0 8px 16px rgba(15, 23, 42, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* HTTPS：ケーブルを包む緑のガラス */
+.shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(209, 250, 229, 0.55) 0%, rgba(16, 185, 129, 0.25) 45%, rgba(4, 120, 87, 0.35) 100%);
+  box-shadow: inset 0 0 0 2px rgba(16, 185, 129, 0.8), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 600ms ease;
+}
+
+.story[data-mode="https"] .shield {
+  opacity: 1;
+}
+
+.packet {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  z-index: 1;
+  padding: 3px 8px;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  background: #fff7e6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: pre;
+  animation: ss-flow 2.2s linear infinite both;
+}
+
+.story[data-mode="https"] .packet {
+  border-color: #34d399;
+  background: #064e3b;
+  color: #a7f3d0;
+}
+
+/* 盗聴クリップと線（左の列＝盗聴者のPCへ） */
+.tap {
+  position: absolute;
+  top: 26px;
+  left: 25%;
+  bottom: -14px;
+  width: 0;
+}
+
+.clip {
+  position: absolute;
+  top: -4px;
+  left: -9px;
+  z-index: 3;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #9aa3b2, #6b7280);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tap[data-on="true"] .clip {
+  background: linear-gradient(180deg, #fb7185, #e11d48);
+}
+
+.story[data-mode="https"] .tap[data-on="true"] .clip {
+  background: linear-gradient(180deg, #9aa3b2, #6b7280);
+}
+
+.tapLine {
+  position: absolute;
+  top: 14px;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background: repeating-linear-gradient(180deg, #9aa3b2 0 5px, transparent 5px 9px);
+}
+
+.tap[data-on="true"] .tapLine {
+  background: repeating-linear-gradient(180deg, var(--leak) 0 5px, transparent 5px 9px);
+  animation: ss-drip 0.6s linear infinite;
+}
+
+.story[data-mode="https"] .tap[data-on="true"] .tapLine {
+  background: repeating-linear-gradient(180deg, #6b7280 0 5px, transparent 5px 9px);
+}
+
+.tapCopy {
+  position: absolute;
+  left: -11px;
+  top: 14px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 6px;
+  background: #fff7e6;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  animation: ss-drop 1.4s ease-in infinite;
+}
+
+.story[data-mode="https"] .tapCopy {
+  background: #064e3b;
+}
+
+/* 出口（右の列＝Webサーバへ） */
+.exit {
+  position: absolute;
+  top: 36px;
+  right: 25%;
+  bottom: -14px;
+  width: 0;
+}
+
+.exitLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -3px;
+  width: 6px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(180deg, #3a414e, #6b7384);
+  transition: background 400ms ease;
+}
+
+.exit[data-on="true"] .exitLine {
+  background: linear-gradient(180deg, #3a414e, #16a37a);
+  box-shadow: 0 0 10px rgba(22, 163, 122, 0.6);
+}
+
+/* ---------- 下段：盗聴者のPC ／ Webサーバ ---------- */
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.terminal,
+.log {
+  overflow: hidden;
+  height: 100%;
+  min-height: 132px;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.2);
+}
+
+.terminal {
+  background: #0d1117;
+}
+
+.device[data-focus="true"] .terminal {
+  box-shadow: 0 14px 30px rgba(225, 29, 72, 0.25), 0 0 0 2px var(--leak);
+}
+
+.story[data-mode="https"] .device[data-focus="true"] .terminal {
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.25), 0 0 0 2px #6b7280;
+}
+
+.termBar,
+.logBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 22px;
+  padding: 0 8px;
+  background: #1c2230;
+  color: #8b949e;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.termBar .dots i {
+  width: 7px;
+  height: 7px;
+}
+
+.termBody,
+.logBody {
+  padding: 7px 8px 9px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.termBody {
+  color: #c9d1d9;
+}
+
+.prompt {
+  color: #7ee787;
+}
+
+.dim {
+  color: #6e7681;
+}
+
+.line {
+  animation: ss-line 400ms ease both;
+}
+
+.hit {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 123, 114, 0.18);
+  color: #ff7b72;
+  font-weight: 800;
+}
+
+.hit[data-mode="https"] {
+  background: rgba(139, 148, 158, 0.18);
+  color: #9aa4af;
+  font-weight: 600;
+}
+
+.verdict {
+  color: #ff7b72;
+  font-weight: 800;
+}
+
+.verdict[data-mode="https"] {
+  color: #7ee787;
+}
+
+.cursor {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  vertical-align: -2px;
+  background: #7ee787;
+  animation: ss-caret 1s step-end infinite;
+}
+
+.log {
+  background: #ffffff;
+}
+
+.device[data-focus="true"] .log {
+  box-shadow: 0 14px 30px rgba(22, 163, 122, 0.25), 0 0 0 2px #16a37a;
+}
+
+.logBar {
+  background: #eef1f5;
+  color: #64748b;
+}
+
+.logBody {
+  color: #334155;
+}
+
+.ok {
+  color: #16a37a;
+  font-weight: 800;
+}
+
+.body {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-weight: 800;
+}
+
+@keyframes ss-type {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
+
+@keyframes ss-caret {
+  50% {
+    border-color: transparent;
+    opacity: 0;
+  }
+}
+
+@keyframes ss-flow {
+  from {
+    transform: translateX(-110%);
+    left: 0;
+  }
+  to {
+    transform: translateX(0);
+    left: 100%;
+  }
+}
+
+@keyframes ss-drip {
+  to {
+    background-position-y: 9px;
+  }
+}
+
+@keyframes ss-drop {
+  0% {
+    transform: translateY(-8px) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(34px) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes ss-line {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.story[data-reduced-motion="true"] *,
+.story[data-reduced-motion="true"] *::before,
+.story[data-reduced-motion="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story *,
+  .story *::before,
+  .story *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
