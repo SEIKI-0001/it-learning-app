@@ -82,10 +82,10 @@ export function PublicKeyDioramaScene({
             <KeyGlyph kind="private" size={1.1} />
           </DioramaToken>
           <DioramaToken id="msg">
-            {capsule && <Parcel tone={capsule.state === "encrypted" ? "secure" : capsule.state === "decrypted" ? "ok" : "plain"} icon={capsule.state === "encrypted" ? "🔒" : "✉"} />}
+            {capsule && <Parcel tone={capsule.state === "encrypted" ? "secure" : capsule.state === "decrypted" ? "ok" : "plain"} mark={capsule.state === "encrypted" ? "lock" : capsule.state === "decrypted" ? "check" : "none"} />}
           </DioramaToken>
           <DioramaToken id="copy">
-            <Parcel tone="muted" icon="🔒" size={0.8} />
+            <Parcel tone="muted" mark="lock" size={0.8} />
           </DioramaToken>
         </>
       }
