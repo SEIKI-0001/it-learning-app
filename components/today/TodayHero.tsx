@@ -141,7 +141,7 @@ export default function TodayHero({
         )}
 
         {/* 学習量は任意。既定の「おまかせ」が最初から選ばれている。 */}
-        <div className={s.budget} role="group" aria-label="今日の学習量">
+        <div className={s.budget} role="group" aria-label="今日の学習量" data-guide="today-budget">
           <span className={s.budgetLabel}>学習量</span>
           <span className={s.budgetTrack}>
             <button

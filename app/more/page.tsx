@@ -5,6 +5,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import LogoutLink from "@/components/auth/LogoutLink";
 import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
+import { FIRST_RUN_GUIDE_HREF } from "@/lib/firstRunGuide";
 
 const GROUPS: readonly {
   title: string;
@@ -45,6 +46,18 @@ const GROUPS: readonly {
     links: [
       { href: "/avatar", icon: "sprout", title: "モチットのプロフィール", description: "Lv・ランク・称号・バッジコレクション" },
       { href: "/settings", icon: "settings", title: "設定", description: "試験日・学習時間など" },
+    ],
+  },
+  {
+    title: "使い方",
+    links: [
+      { href: "/tutorial", icon: "play", title: "使い方動画", description: "このアプリでの勉強の進め方（約1分）" },
+      {
+        href: FIRST_RUN_GUIDE_HREF,
+        icon: "lightbulb",
+        title: "操作ガイド",
+        description: "「今日」の画面で、使い方をもう一度案内します",
+      },
     ],
   },
 ] as const;

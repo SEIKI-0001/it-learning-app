@@ -64,7 +64,7 @@ export default function TodayMissions({
   const rewardState = quests.claimed || dropLabel ? "claimed" : complete ? "claimable" : "locked";
 
   return (
-    <section className={`${s.missions} relative`} aria-labelledby="mission-heading">
+    <section className={`${s.missions} relative`} aria-labelledby="mission-heading" data-guide="today-missions">
       {dropLabel && <ConfettiBurst />}
       <div className={s.sheetHead}>
         <h2 id="mission-heading" className={s.sectionTitle}>

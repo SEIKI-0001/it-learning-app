@@ -248,7 +248,7 @@ describe("オンボーディングの参考書選択", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "この内容でプランを作る" }));
 
-    expect(push).toHaveBeenCalledWith("/today");
+    expect(push).toHaveBeenCalledWith("/today?guide=1");
     expect(storedBook()).toBeNull();
   });
 

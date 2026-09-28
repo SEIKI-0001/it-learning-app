@@ -23,6 +23,7 @@ import {
 } from "@/lib/referenceBookPresets";
 import { loadReferenceBook, switchReferenceBook } from "@/lib/referenceBook";
 import { persistReferenceBook } from "@/lib/referenceBookSync";
+import { FIRST_RUN_GUIDE_HREF } from "@/lib/firstRunGuide";
 
 // 初回設定。試験予定日・学習可能時間・理解度・苦手分野・学習スタイル・使用する参考書を取得し、
 // AIプランナー(lib/aiPlanner.ts)が使えるプロフィールとして保存する。
@@ -96,7 +97,8 @@ export default function OnboardingPage() {
       );
     }
 
-    router.push("/today");
+    // 設定直後の Today で、実画面の上に初回操作ガイドを重ねる。
+    router.push(FIRST_RUN_GUIDE_HREF);
   }
 
   return (

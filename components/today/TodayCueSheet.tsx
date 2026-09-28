@@ -73,7 +73,7 @@ export default function TodayCueSheet({
   const finalExam = primary?.kind === "final_exam" ? primary : null;
 
   return (
-    <section className={s.sheet} aria-labelledby="cue-heading">
+    <section className={s.sheet} aria-labelledby="cue-heading" data-guide="today-cues">
       <div className={s.sheetHead}>
         <h2 id="cue-heading" className={s.sectionTitle}>
           今日の順番
