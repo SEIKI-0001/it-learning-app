@@ -513,7 +513,7 @@
   height: 12px;
   vertical-align: -2px;
   background: #7ee787;
-  animation: ss-caret 1s step-end infinite;
+  animation: ss-blink 1s step-end infinite;
 }
 
 .log {
@@ -559,6 +559,11 @@
 @keyframes ss-caret {
   50% {
     border-color: transparent;
+  }
+}
+
+@keyframes ss-blink {
+  50% {
     opacity: 0;
   }
 }

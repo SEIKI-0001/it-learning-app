@@ -1,0 +1,438 @@
+/* パターンD：2.5D（アイソメ SVG）のカフェ。絵は SVG、読ませる文字は HTML に載せる。 */
+
+.scene {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 400 / 300;
+  border-radius: 18px;
+  background: #eef1f6;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- 壁の文字 ---------- */
+
+.chalkTitle {
+  fill: #f1f5f0;
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.chalkText {
+  fill: #d6e2d8;
+  font-size: 3.6px;
+}
+
+.signTitle {
+  fill: #1d4ed8;
+  font-size: 4.6px;
+  font-weight: 900;
+}
+
+.signText {
+  fill: #1d4ed8;
+  font-size: 2.7px;
+  font-weight: 700;
+}
+
+.screenUrl {
+  fill: #be123c;
+  font-size: 1.9px;
+  font-weight: 800;
+}
+
+.screenUrl[data-mode="https"] {
+  fill: #047857;
+}
+
+.screenField {
+  fill: #111827;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.7px;
+  font-weight: 700;
+}
+
+/* ---------- アクセスポイント・インターネット ---------- */
+
+.routerLed {
+  fill: #94a3b8;
+}
+
+.router[data-active="true"] .routerLed {
+  fill: #22c55e;
+  animation: ic-blink 0.5s steps(2, jump-none) infinite;
+}
+
+.internet {
+  fill: none;
+  stroke: #64748b;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 5 4;
+}
+
+.internet[data-active="true"] {
+  stroke: var(--tone);
+  animation: ic-dash 0.8s linear infinite;
+}
+
+.rackLed {
+  fill: #22c55e;
+  animation: ic-blink 1.6s steps(2, jump-none) infinite;
+}
+
+/* ---------- 盗聴者 ---------- */
+
+.eveLed {
+  fill: #6b7280;
+}
+
+.eve[data-active="true"] .eveLed {
+  fill: #f43f5e;
+}
+
+.antennaTip {
+  fill: #475569;
+}
+
+.scene[data-step="2"] .antennaTip,
+.scene[data-step="3"] .antennaTip {
+  fill: var(--tone);
+  animation: ic-blink 0.6s steps(2, jump-none) infinite;
+}
+
+.copyLine {
+  stroke: var(--tone);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 3;
+  animation: ic-dash 0.6s linear infinite;
+}
+
+.scene[data-mode="https"] .copyLine {
+  stroke: #94a3b8;
+}
+
+/* ---------- 電波 ---------- */
+
+.wave {
+  fill: color-mix(in srgb, var(--tone) 7%, transparent);
+  stroke: var(--tone);
+  stroke-width: 2;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.05);
+}
+
+.waves[data-on="true"] .wave {
+  animation: ic-wave 2.4s ease-out infinite;
+}
+
+/* ---------- TLS トンネル ---------- */
+
+.tunnel {
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.tunnel[data-on="true"] {
+  opacity: 1;
+}
+
+.tunnelTube {
+  fill: none;
+  stroke: rgba(16, 185, 129, 0.28);
+  stroke-width: 13;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.tunnelShine {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.75);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---------- 小包 ---------- */
+
+.packetGlow {
+  fill: #fbbf24;
+  transition: cx 1.5s cubic-bezier(0.6, 0.05, 0.3, 1), cy 1.5s cubic-bezier(0.6, 0.05, 0.3, 1), fill 400ms ease;
+}
+
+.packetGlow[data-state="encrypted"],
+.packetGlow[data-state="decrypted"] {
+  fill: #10b981;
+}
+
+.packet {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  max-width: 42%;
+  flex-direction: column;
+  padding: 3px 8px 4px;
+  border: 1px solid #f3d9a4;
+  border-radius: 10px;
+  background: #fffdf6;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.16);
+  transform: translate(-50%, calc(-100% - 8px));
+  transition:
+    left 1.5s cubic-bezier(0.6, 0.05, 0.3, 1),
+    top 1.5s cubic-bezier(0.6, 0.05, 0.3, 1),
+    background 400ms ease,
+    border-color 400ms ease;
+}
+
+.packet[data-place="below"] {
+  transform: translate(-50%, 0);
+}
+
+.packet[data-place="left"] {
+  transform: translate(calc(-100% - 10px), -50%);
+}
+
+.packet[data-state="encrypted"] {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.packet[data-state="decrypted"] {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.packetTag {
+  color: #b45309;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.packet[data-state="encrypted"] .packetTag,
+.packet[data-state="decrypted"] .packetTag {
+  color: #047857;
+}
+
+.packetBody {
+  overflow: hidden;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 名前札など ---------- */
+
+.chip {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  color: #111827;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translate(-50%, 0);
+}
+
+.chipAbove {
+  transform: translate(-50%, -100%);
+}
+
+.chip i {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #2463d1;
+  color: #ffffff;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.chip[data-state="error"] i {
+  background: #e11d48;
+}
+
+.chip[data-state="active"] i {
+  background: #16a37a;
+}
+
+.chip[data-state="sending"] {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 60%, transparent), 0 3px 10px rgba(15, 23, 42, 0.12);
+}
+
+.caption {
+  position: absolute;
+  z-index: 3;
+  color: #64748b;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.radioChip {
+  position: absolute;
+  z-index: 4;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translate(0, -100%);
+}
+
+.radioChip[data-mode="https"] {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+.eveScreen {
+  position: absolute;
+  top: 3%;
+  left: 3%;
+  z-index: 7;
+  display: flex;
+  max-width: 46%;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 9px 6px;
+  border: 1px solid #fecdd6;
+  border-radius: 12px;
+  background: #fff1f3;
+  box-shadow: 0 8px 18px rgba(225, 29, 72, 0.16);
+  animation: ic-pop 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.eveScreen[data-mode="https"] {
+  border-color: #cfd6e0;
+  background: #f5f7fa;
+  box-shadow: 0 8px 18px rgba(30, 42, 64, 0.12);
+}
+
+.eveTitle {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.eveBody {
+  overflow: hidden;
+  color: #9f1239;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eveScreen[data-mode="https"] .eveBody {
+  color: #4b5563;
+}
+
+.eveVerdict {
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.eveScreen[data-mode="https"] .eveVerdict {
+  background: #16a37a;
+}
+
+.urlPlate {
+  position: absolute;
+  right: 3%;
+  bottom: 3%;
+  z-index: 5;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: pre;
+}
+
+.urlPlate[data-mode="https"] {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+@keyframes ic-wave {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes ic-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes ic-dash {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+
+@keyframes ic-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.scene[data-reduced-motion="true"] *,
+.scene[data-reduced-motion="true"] *::before,
+.scene[data-reduced-motion="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene *,
+  .scene *::before,
+  .scene *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
