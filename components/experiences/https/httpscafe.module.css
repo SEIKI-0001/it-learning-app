@@ -1,10 +1,11 @@
-/* パターンA：CSS 3D のジオラマ。
-   preserve-3d の親に opacity / filter / overflow を付けると平面化されるので、見た目の切替は葉（面・帯）に付ける。 */
+/* HTTP/HTTPS：フリーWi-Fi のカフェ（CSS 3D）。立体の部品は scene/diorama3d.module.css。
+   ここはステージ・カメラ、カフェの素材、画面に重ねるラベル、電波、（図解ラボ用の）拡大画面への光。 */
 
 .stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 20 / 17;
+  --wave: rgba(244, 63, 94, 0.75);
+  aspect-ratio: 20 / 16;
   overflow: hidden;
   border-radius: 18px;
   background:
@@ -31,67 +32,12 @@
   transform-style: preserve-3d;
 }
 
-.obj,
 .group {
   position: absolute;
   left: 0;
   top: 0;
   transform-origin: 0 0;
   transform-style: preserve-3d;
-}
-
-/* ---------- 直方体の面（光は左上奥から） ---------- */
-
-.face {
-  position: absolute;
-  left: 0;
-  top: 0;
-  overflow: hidden;
-  transform-origin: 0 0;
-}
-
-.face[data-face="top"] {
-  background: var(--c);
-}
-
-.face[data-face="front"] {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--c) 88%, #0b1220) 0%,
-    color-mix(in srgb, var(--c) 72%, #0b1220) 100%
-  );
-}
-
-.face[data-face="left"] {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--c) 78%, #0b1220) 0%,
-    color-mix(in srgb, var(--c) 64%, #0b1220) 100%
-  );
-}
-
-.face[data-face="right"] {
-  background: color-mix(in srgb, var(--c) 64%, #0b1220);
-}
-
-.face[data-face="back"] {
-  background: color-mix(in srgb, var(--c) 60%, #0b1220);
-}
-
-/* ---------- 部屋 ---------- */
-
-[data-face][data-face].floorTop {
-  background-color: #eef1f5;
-  background-image:
-    linear-gradient(rgba(110, 125, 150, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(110, 125, 150, 0.1) 1px, transparent 1px),
-    radial-gradient(ellipse at 38% 40%, #f8f9fb 0%, #e4e9f0 100%);
-  background-size: 40px 40px, 40px 40px, 100% 100%;
-}
-
-[data-face][data-face].wallFront {
-  background: linear-gradient(180deg, #f6f7fa 0%, #e8ecf2 100%);
-  box-shadow: inset 0 -7px 0 #d3dae4;
 }
 
 .window {
@@ -111,12 +57,6 @@
   width: 4px;
   margin-left: -2px;
   background: #ffffff;
-}
-
-[data-face][data-face].woodTop {
-  background:
-    linear-gradient(90deg, rgba(90, 55, 25, 0.06) 1px, transparent 1px) 0 0 / 24px 100%,
-    linear-gradient(160deg, #d6a87b 0%, #bb8a5e 100%);
 }
 
 [data-face][data-face].keyboardTop {
@@ -149,15 +89,13 @@
   box-shadow: inset 0 0 0 0.5px #aeb6c2;
 }
 
-/* ---------- ノートPCのふた（画面） ---------- */
-
 .lid {
   position: absolute;
   left: 0;
-  top: -68px;
-  width: 104px;
-  height: 68px;
-  padding: 3px 3px 5px;
+  top: -44px;
+  width: 66px;
+  height: 44px;
+  padding: 2px 2px 3px;
   border-radius: 4px 4px 1px 1px;
   background: linear-gradient(180deg, #353b47, #22262e);
   transform-origin: 50% 100%;
@@ -178,11 +116,11 @@
   box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
 }
 
-/* 画面の中身は2倍で組んで半分に縮める（最小フォントサイズ対策・にじみ軽減） */
+/* 画面の中身は約3倍で組んで縮める（最小フォントサイズ対策・にじみ軽減） */
 .browser {
-  width: 200%;
-  height: 200%;
-  transform: scale(0.5);
+  width: 312%;
+  height: 312%;
+  transform: scale(0.32);
   transform-origin: 0 0;
   background: #ffffff;
   color: #111827;
@@ -248,26 +186,8 @@
   background: #16a37a;
 }
 
-/* ---------- ケーブルと TLS のガラス管 ---------- */
-
-.strip {
-  position: absolute;
-  left: 0;
-  transform-origin: 0 50%;
-}
-
 .cableStrip {
   background-color: color-mix(in srgb, #4a5263 var(--lit), #0a0d13);
-}
-
-.group[data-flow="true"] .cableStrip[data-up="true"] {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent 0 16px,
-    var(--flow) 16px 30px,
-    transparent 30px 44px
-  );
-  animation: dio-flow 0.7s linear infinite;
 }
 
 .glassStrip {
@@ -294,77 +214,6 @@
 .group[data-tunnel="on"] .glassStrip {
   opacity: 1;
 }
-
-/* ---------- 盗聴クリップ・線 ---------- */
-
-.floorStrip {
-  position: absolute;
-  left: 0;
-  transform-origin: 0 50%;
-}
-
-.tapWire {
-  border-radius: 2px;
-  background: repeating-linear-gradient(90deg, #7b8190 0 6px, transparent 6px 10px);
-  opacity: 0.7;
-}
-
-.stage[data-intercepted="true"] .tapWire {
-  background: repeating-linear-gradient(90deg, #e11d48 0 6px, transparent 6px 10px);
-  opacity: 1;
-  animation: dio-flow-rev 0.6s linear infinite;
-}
-
-.stage[data-intercepted="true"][data-mode="https"] .tapWire {
-  background: repeating-linear-gradient(90deg, #6b7280 0 6px, transparent 6px 10px);
-}
-
-/* ---------- 盗聴者のモニター ---------- */
-
-[data-face][data-face].monitorFace {
-  padding: 3px;
-  background: #11151c;
-}
-
-.terminal {
-  width: 200%;
-  height: 200%;
-  padding: 5px 7px;
-  transform: scale(0.5);
-  transform-origin: 0 0;
-  background: #0d1117;
-  color: #7ee787;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  line-height: 1.4;
-  white-space: nowrap;
-}
-
-.terminal[data-on="true"][data-mode="http"] {
-  box-shadow: inset 0 0 0 2px rgba(248, 113, 113, 0.7);
-}
-
-.termDim {
-  color: #8b949e;
-}
-
-.termHit {
-  overflow: hidden;
-  margin-top: 1px;
-  padding: 1px 3px;
-  border-radius: 2px;
-  background: rgba(255, 123, 114, 0.16);
-  color: #ff7b72;
-  font-weight: 800;
-  text-overflow: ellipsis;
-}
-
-.terminal[data-mode="https"] .termHit {
-  background: rgba(139, 148, 158, 0.16);
-  color: #9aa4af;
-}
-
-/* ---------- サーバラック ---------- */
 
 [data-face][data-face].rackFront {
   display: flex;
@@ -415,8 +264,6 @@
   animation-duration: 0.35s;
 }
 
-/* ---------- データの小包 ---------- */
-
 [data-face][data-face].packetTop {
   display: grid;
   place-items: center;
@@ -429,25 +276,6 @@
   color: #16a37a;
   font-weight: 900;
 }
-
-/* ---------- 人物（カメラを向く板） ---------- */
-
-.billboard {
-  position: absolute;
-  transform-origin: 50% 100%;
-  transform: rotateZ(calc(var(--yaw) * -1)) rotateX(calc(var(--pitch) * -1));
-}
-
-.shadow {
-  position: absolute;
-  left: 0;
-  top: 0;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(20, 28, 44, 0.5), rgba(20, 28, 44, 0));
-  transform-origin: 0 0;
-}
-
-/* ---------- 投影した HTML ラベル ---------- */
 
 .anchor {
   position: absolute;
@@ -658,18 +486,6 @@
   font-weight: 800;
 }
 
-@keyframes dio-flow {
-  to {
-    background-position-x: 44px;
-  }
-}
-
-@keyframes dio-flow-rev {
-  to {
-    background-position-x: -10px;
-  }
-}
-
 @keyframes dio-blink {
   50% {
     opacity: 0.25;
@@ -698,4 +514,207 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- カフェ ---------- */
+
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stage[data-mode="https"] {
+  --wave: rgba(16, 185, 129, 0.75);
+}
+
+/* ---------- 素材 ---------- */
+
+[data-face][data-face].woodFloor {
+  background:
+    repeating-linear-gradient(90deg, rgba(92, 60, 30, 0.12) 0 1px, transparent 1px 120px) 0 0 / 100% 40px,
+    repeating-linear-gradient(180deg, #c9a47c 0 38px, #bf9870 38px 40px);
+}
+
+
+[data-face][data-face].cafeWall {
+  background: linear-gradient(180deg, #faf6ef 0%, #efe6d8 100%);
+  box-shadow: inset 0 -8px 0 #d9c7ad;
+}
+
+.menuBoard {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 4px solid #8a6a4a;
+  border-radius: 3px;
+  background: #2f3a33;
+  color: #f1f5f0;
+  font-size: 7px;
+}
+
+.menuBoard b {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+}
+
+.wifiSign {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #2563eb;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font-size: 6.5px;
+  font-weight: 700;
+}
+
+.wifiSign b {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+[data-face][data-face].counterTop {
+  background: linear-gradient(135deg, #f5f2ed 0%, #e4ded4 100%);
+}
+
+[data-face][data-face].tableTop {
+  background: linear-gradient(135deg, #deb487 0%, #c89a6c 100%);
+}
+
+[data-face][data-face].dcFloor {
+  background:
+    linear-gradient(rgba(90, 105, 125, 0.18) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(90, 105, 125, 0.18) 1px, transparent 1px) 0 0 / 32px 32px,
+    #dfe5ec;
+}
+
+/* 盗聴者のノートPC（こちらには背面が見える） */
+.evilLid {
+  top: -34px;
+  width: 52px;
+  height: 34px;
+  padding: 0;
+  background: linear-gradient(180deg, #3a3f4b, #22262e);
+}
+
+/* ---------- 電波 ---------- */
+
+.waves {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.waves span {
+  position: absolute;
+  inset: 0;
+  border: 4px solid var(--wave);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, transparent 55%, color-mix(in srgb, var(--wave) 30%, transparent) 100%);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--wave) 50%, transparent);
+  opacity: 0;
+  transform: scale(0.05);
+}
+
+.waves[data-on="true"] span {
+  animation: cafe-wave 2.4s ease-out infinite;
+}
+
+.waves[data-on="true"] span:nth-child(2) {
+  animation-delay: 0.8s;
+}
+
+.waves[data-on="true"] span:nth-child(3) {
+  animation-delay: 1.6s;
+}
+
+.radioChip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.radioChip[data-mode="https"] {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+/* ---------- F：拡大画面と、3D の機器をつなぐ光 ---------- */
+
+.beamLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.beam {
+  --tone: #2463d1;
+  fill: color-mix(in srgb, var(--tone) 9%, transparent);
+  stroke: color-mix(in srgb, var(--tone) 55%, transparent);
+  stroke-dasharray: 4 3;
+  stroke-width: 1.4;
+  transition: fill 400ms ease;
+}
+
+.beamDot {
+  --tone: #2463d1;
+  fill: var(--tone);
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.beam[data-tone="leak"],
+.beamDot[data-tone="leak"] {
+  --tone: #e11d48;
+}
+
+.beam[data-tone="safe"],
+.beamDot[data-tone="safe"] {
+  --tone: #6b7280;
+}
+
+.beam[data-tone="ok"],
+.beamDot[data-tone="ok"] {
+  --tone: #16a37a;
+}
+
+.panel {
+  position: relative;
+  z-index: 8;
+}
+
+@keyframes cafe-wave {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.05);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.stage[data-paused="true"] *,
+.stage[data-paused="true"] *::before,
+.stage[data-paused="true"] *::after {
+  animation-play-state: paused !important;
 }

@@ -69,6 +69,16 @@ describe("HttpsExperience", () => {
     expect(scene().querySelector('[role="img"][data-capsule-state]')).toHaveTextContent("password: himitsu123");
   });
 
+  it("sets the scene in a free Wi-Fi café where the radio reaches the next table", () => {
+    renderDeck();
+    expect(within(scene()).getByText("フリーWi-Fi")).toBeInTheDocument();
+    expect(within(scene()).queryByText("📶 電波は周り全部に届く")).toBeNull();
+    next();
+    expect(within(scene()).getByText("📶 電波は周り全部に届く")).toBeInTheDocument();
+    next();
+    expect(screen.getByTestId("eve-screen")).toHaveTextContent("password: himitsu123");
+  });
+
   it("uses the user's own input as the payload", () => {
     renderDeck();
     fireEvent.change(screen.getByLabelText("送る内容："), { target: { value: "card: 1234" } });

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { HttpsScene, type HttpsCapsuleStop, type HttpsMode, type HttpsNodeId } from "./https/HttpsScene";
-import type { NodeState } from "./network/NetworkSceneBase";
+import { useState } from "react";
+import { HttpsCafeScene } from "./https/HttpsCafeScene";
+import type { HttpsMode } from "./https/HttpsScene";
+import { FLOW_STEPS, scramble } from "./https/httpsFlow";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -11,91 +12,15 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 // 「HTTPとHTTPS」専用の体験。
 //   ① 盗み見くらべ … 同じ送信内容を HTTP/HTTPS で切替、盗聴者に何が見えるか
-//      2.5D 模型（あなた → 通信路 → Webサーバ、途中に盗聴者）でカプセルを送り、見え方を比べる
+//      フリーWi-Fi のカフェの 3D 模型（あなたの席 →（電波）→ フリーWi-Fi → インターネット → Webサーバ、
+//      隣の席に盗聴者）でデータを送り、盗聴者に何が見えるかを比べる
 //   ② 比較表
 //   ③ おさらい（S=Secure / HTTPSでも詐欺はありうる）
 // ============================================================================
 
-// 見た目用の「暗号化っぽい」変換（本物の暗号ではなく、読めなくなる様子の可視化）
-export function scramble(text: string): string {
-  const hex = [...text]
-    .map((c) => c.charCodeAt(0).toString(16).padStart(2, "0"))
-    .join("")
-    .toUpperCase();
-  return (hex.match(/.{1,4}/g) ?? []).join(" ");
-}
-
-type Mode = HttpsMode;
-
-export type FlowStep = {
-  title: string;
-  stop: HttpsCapsuleStop;
-  nodes: Record<HttpsNodeId, NodeState>;
-  laneActive: boolean;
-  intercepted: boolean;
-  moves: boolean;
-  detail: Record<Mode, ReactNode>;
-};
-
-export const FLOW_STEPS: FlowStep[] = [
-  {
-    title: "あなたが入力",
-    stop: "desk",
-    nodes: { user: "active", web: "idle", eve: "idle" },
-    laneActive: false,
-    intercepted: false,
-    moves: false,
-    detail: {
-      http: <>ログイン画面にパスワードを入力。まだ<b>あなたのPCの中</b>にあるので、誰にも見えていません。</>,
-      https: <>ログイン画面にパスワードを入力。まだ<b>あなたのPCの中</b>。ここまでは HTTP と同じです。</>,
-    },
-  },
-  {
-    title: "通信路へ送り出す",
-    stop: "out",
-    nodes: { user: "sending", web: "idle", eve: "idle" },
-    laneActive: true,
-    intercepted: false,
-    moves: false,
-    detail: {
-      http: <>HTTP は<b>そのまま</b>送り出します。カプセルの中身は入力した文字のまま＝<b>平文</b>。</>,
-      https: <>HTTPS は送り出す直前に<b>SSL/TLSで暗号化</b>。同じカプセルが <b>ENCRYPTED DATA</b> に変わり、通信路は暗号のトンネルに包まれます。</>,
-    },
-  },
-  {
-    title: "途中で盗み見される",
-    stop: "middle",
-    nodes: { user: "idle", web: "idle", eve: "error" },
-    laneActive: true,
-    intercepted: true,
-    moves: true,
-    detail: {
-      http: <>通信路の途中で盗聴者がデータをコピー。<b>パスワードがそのまま読めてしまいます</b>。</>,
-      https: <>盗聴者はコピーを取れても、中身は<b>ぐちゃぐちゃの暗号文</b>。鍵がないので読めません。</>,
-    },
-  },
-  {
-    title: "サーバに届く",
-    stop: "arrived",
-    nodes: { user: "idle", web: "active", eve: "error" },
-    laneActive: false,
-    intercepted: true,
-    moves: true,
-    detail: {
-      http: <>Webサーバに届いた。でも途中で<b>盗聴者にも同じ内容が渡っています</b>。</>,
-      https: (
-        <>
-          正規のWebサーバだけが<b>復号して元の内容</b>を受け取ります。HTTPS が守るのは<b>通信路の途中</b>。
-          届け先が詐欺サイトなら、その相手には読まれてしまう点に注意。
-        </>
-      ),
-    },
-  },
-];
-
 function Eavesdrop() {
   const [text, setText] = useState("password: himitsu123");
-  const [mode, setMode] = useState<Mode>("http");
+  const [mode, setMode] = useState<HttpsMode>("http");
   const reducedMotion = useReducedMotion();
   const player = useStepPlayer(FLOW_STEPS.length, reducedMotion);
   const step = FLOW_STEPS[player.index];
@@ -103,21 +28,6 @@ function Eavesdrop() {
   const shown = text || "（空）";
   const cipher = scramble(text);
   const seen = https ? cipher : text;
-
-  const capsule =
-    !https || step.stop === "desk"
-      ? { state: "plain" as const, tag: https ? "入力（まだPCの中）" : "平文（HTTP）", body: shown, label: `平文のデータ：${shown}` }
-      : step.stop === "arrived"
-        ? { state: "decrypted" as const, tag: "サーバで復号", body: shown, label: `サーバで復号されたデータ：${shown}` }
-        : {
-            state: "encrypted" as const,
-            tag: "ENCRYPTED DATA",
-            body: cipher.length > 14 ? `${cipher.slice(0, 14)}…` : cipher || "…",
-            label: "暗号化されたデータ",
-          };
-
-  const eveSees = step.intercepted ? (https ? cipher || "…" : shown) : null;
-  const trail = player.forward && step.moves && !reducedMotion ? `${mode}-${player.index}` : null;
 
   return (
     <Panel>
@@ -171,13 +81,13 @@ function Eavesdrop() {
       </div>
 
       <div className="-mx-2 mt-2 sm:mx-auto sm:max-w-xl">
-        <HttpsScene
+        <HttpsCafeScene
           mode={mode}
-          nodes={step.nodes}
-          laneActive={step.laneActive}
-          capsule={{ stop: step.stop, ...capsule }}
-          eveSees={eveSees}
-          trail={trail}
+          index={player.index}
+          step={step}
+          plain={shown}
+          cipher={cipher}
+          forward={player.forward}
           reducedMotion={reducedMotion}
         />
       </div>
