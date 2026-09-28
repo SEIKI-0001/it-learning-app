@@ -15,7 +15,7 @@ import {
   type Camera,
   type Vec3,
 } from "../../scene/Diorama3D";
-import { EavesdropperStanding, UserFromBehind } from "../CafePeople";
+import { EavesdropperStanding, UserFromBehind } from "../../scene/DioramaPeople";
 import type { LabSceneProps } from "./labTypes";
 import styles from "./diorama.module.css";
 

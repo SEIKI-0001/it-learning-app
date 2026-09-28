@@ -1,43 +1,25 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
-import {
-  Billboard,
-  Box,
-  CablePulses,
-  Cylinder,
-  FloorShadow,
-  cameraTransform,
-  easeInOutCubic,
-  mixCamera,
-  project,
-  type Camera,
-  type Vec3,
-} from "../scene/Diorama3D";
-import { EavesdropperStanding, UserFromBehind } from "./CafePeople";
+import { useRef, type ReactNode } from "react";
+import { Billboard, Box, CablePulses, Cylinder, FloorShadow, type Vec3 } from "../scene/Diorama3D";
+import { Parcel } from "../scene/DioramaParts";
+import { EavesdropperStanding, UserFromBehind } from "../scene/DioramaPeople";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3 } from "../scene/DioramaStage";
+import type { Camera } from "../scene/Diorama3D";
 import type { HttpsCapsuleStop } from "./HttpsScene";
-import type { HttpsSceneInput } from "./httpsFlow";
+import { FLOW_STEPS, type HttpsSceneInput } from "./httpsFlow";
 import styles from "./httpscafe.module.css";
 
 // HTTP/HTTPS ① 盗み見くらべの図解：フリーWi-Fi のカフェ（実際に盗聴が起きやすい場面）を CSS 3D で再現する。
 //   あなたの席のノートPC →（電波）→ 壁のフリーWi-Fi →（インターネット）→ データセンターの Webサーバ
 //   電波は周り全部へ届くので、隣の席で受信機を付けたノートPCを開く盗聴者にも同じデータが届く。
-// ステップごとにカメラが主役へ寄り、ドラッグで視点を回せる。文字は 3D に貼らず、
-// 3D の点を画面へ投影した HTML ラベルに載せる（どの角度・ズームでも読める）。
-// 重さ対策：毎フレームはレイアウトを読まない（ラベルの大きさは描画ごとに測る）、
-// 繰り返しアニメは transform / opacity だけ、画面外では止める。
+// カメラ・ドラッグ・投影ラベル・小包の移動は共通の舞台（scene/DioramaStage）が受け持つ。
 // zoom を渡すと（図解ラボ用）、ステップの主役の機器からステージ下の拡大パネルへ光の帯を伸ばす。
 
 const L: Vec3 = { x: 143, y: 240, z: 72 }; // あなたのノートPCの画面
 const R: Vec3 = { x: 460, y: 8, z: 114 }; // 壁のフリーWi-Fi（アクセスポイント）
 const A: Vec3 = { x: 375, y: 206, z: 64 }; // 盗聴者のノートPC
 const S: Vec3 = { x: 690, y: 150, z: 122 }; // Webサーバ（ラック上面）
-
-const lerp3 = (a: Vec3, b: Vec3, t: number): Vec3 => ({
-  x: a.x + (b.x - a.x) * t,
-  y: a.y + (b.y - a.y) * t,
-  z: (a.z ?? 0) + ((b.z ?? 0) - (a.z ?? 0)) * t,
-});
 
 // 小包が通る点の列。middle → arrived はアクセスポイントを経由する。
 const ROUTE: Vec3[] = [
@@ -69,34 +51,10 @@ const STATUS: Record<string, Partial<Record<string, string>>> = {
   web: { active: "受信" },
   eve: { error: "盗聴中" },
 };
+const STATUS_TONE: Partial<Record<string, "info" | "ok" | "danger">> = { active: "ok", sending: "info", error: "danger" };
 
 /** zoom を渡したとき、ステップごとに拡大パネルとつなぐ機器（3D の中の点） */
 const ZOOM_AT: Vec3[] = [L, L, A, S];
-
-type Rect = { l: number; t: number; r: number; b: number };
-
-function pathLength(points: Vec3[]) {
-  let total = 0;
-  for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1];
-    const b = points[i];
-    total += Math.hypot(b.x - a.x, b.y - a.y, (b.z ?? 0) - (a.z ?? 0));
-  }
-  return total;
-}
-
-function pointOnPath(points: Vec3[], t: number): Vec3 {
-  if (points.length === 1) return points[0];
-  let remain = pathLength(points) * t;
-  for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1];
-    const b = points[i];
-    const seg = Math.hypot(b.x - a.x, b.y - a.y, (b.z ?? 0) - (a.z ?? 0));
-    if (remain <= seg || i === points.length - 1) return lerp3(a, b, seg ? Math.min(1, remain / seg) : 1);
-    remain -= seg;
-  }
-  return points[points.length - 1];
-}
 
 export function HttpsCafeScene({
   mode,
@@ -110,281 +68,14 @@ export function HttpsCafeScene({
 }: HttpsSceneInput & { zoom?: ReactNode }) {
   const https = mode === "https";
   const withScreens = zoom !== undefined;
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const cameraRef = useRef<HTMLDivElement>(null);
-  const packetRef = useRef<HTMLDivElement>(null);
-  const copyRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const beamRef = useRef<SVGPolygonElement>(null);
   const dotRef = useRef<SVGCircleElement>(null);
-  const size = useRef({ w: 640, h: 520, fit: 1, perspective: 1400 });
-  const cam = useRef<Camera>(SHOTS[index]);
-  const packet = useRef<Vec3>(ROUTE[ROUTE_INDEX[step.stop]]);
-  const copy = useRef<Vec3 | null>(step.intercepted ? COPY_AT : null);
-  const drag = useRef({ yaw: 0, pitch: 0 });
-  const pointer = useRef<{ id: number; x: number; y: number } | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const [moved, setMoved] = useState(false);
 
-  const target = (): Camera => {
-    const shot = SHOTS[index];
-    return {
-      ...shot,
-      yaw: shot.yaw + drag.current.yaw,
-      pitch: Math.max(18, Math.min(78, shot.pitch + drag.current.pitch)),
-    };
-  };
-
-  // 毎フレームの処理でレイアウトを読まないよう、ラベルの大きさ・固定札の位置は描画ごとに1回だけ測っておく
-  type Anchor = { el: HTMLElement; w: number; h: number; shown: boolean | null };
-  const layout = useRef<{ anchors: Anchor[]; obstacles: Rect[]; billboards: HTMLElement[] }>({
-    anchors: [],
-    obstacles: [],
-    billboards: [],
-  });
-
-  const measureLayout = () => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    const box = stage.getBoundingClientRect();
-    layout.current = {
-      anchors: Array.from(stage.querySelectorAll<HTMLElement>("[data-anchor]")).map((el) => ({
-        el,
-        w: el.offsetWidth,
-        h: el.offsetHeight,
-        shown: null,
-      })),
-      obstacles: Array.from(stage.querySelectorAll<HTMLElement>("[data-obstacle]")).map((el) => {
-        const r = el.getBoundingClientRect();
-        return { l: r.left - box.left, t: r.top - box.top, r: r.right - box.left, b: r.bottom - box.top };
-      }),
-      billboards: Array.from(stage.querySelectorAll<HTMLElement>("[data-billboard]")),
-    };
-  };
-
-  const apply = () => {
-    const camera = cameraRef.current;
-    if (!camera) return;
-    const { fit, perspective, w: stageW, h: stageH } = size.current;
-    const c = cam.current;
-    camera.style.transform = cameraTransform(c, fit);
-    // 人物の板はカメラの回転を打ち消してこちらを向ける（CSS 変数だと全要素のスタイル再計算が走るので直接書く）
-    const face = `rotateZ(${(-c.yaw).toFixed(3)}deg) rotateX(${(-c.pitch).toFixed(3)}deg)`;
-    for (const el of layout.current.billboards) el.style.transform = face;
-    const p = packet.current;
-    if (packetRef.current) packetRef.current.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z ?? 0}px)`;
-    const cp = copy.current;
-    if (copyRef.current) {
-      copyRef.current.style.visibility = cp ? "visible" : "hidden";
-      if (cp) copyRef.current.style.transform = `translate3d(${cp.x}px, ${cp.y}px, ${cp.z ?? 0}px)`;
-    }
-
-    // 画面に重ねる HTML ラベル（固定札を障害物にして、重ならない位置へずらす）
-    const placed: Rect[] = [...layout.current.obstacles];
-    const show = (a: Anchor, visible: boolean) => {
-      if (a.shown === visible) return;
-      a.shown = visible;
-      a.el.style.visibility = visible ? "visible" : "hidden";
-    };
-    for (const a of layout.current.anchors) {
-      const el = a.el;
-      const kind = el.dataset.anchor;
-      const dz = Number(el.dataset.dz ?? 0);
-      const base = kind === "packet" ? p : kind === "copy" ? cp : { x: Number(el.dataset.wx), y: Number(el.dataset.wy), z: Number(el.dataset.wz) };
-      if (!base) {
-        show(a, false);
-        continue;
-      }
-      const s = project({ ...base, z: (base.z ?? 0) + dz }, c, fit, size.current, perspective);
-      const { w, h } = a;
-      const place = el.dataset.place ?? "above";
-      let left = s.x - w / 2;
-      let top = s.y - h - 8;
-      if (place === "below") top = s.y + 6;
-      if (place === "right") {
-        left = s.x + 14;
-        top = s.y - h / 2;
-      }
-      if (place === "left") {
-        left = s.x - w - 14;
-        top = s.y - h / 2;
-      }
-      const clamp = (l: number, t: number): Rect => {
-        const cl = Math.max(6, Math.min(stageW - w - 6, l));
-        const ct = Math.max(6, Math.min(stageH - h - 6, t));
-        return { l: cl, t: ct, r: cl + w, b: ct + h };
-      };
-      const hits = (r: Rect) => placed.some((q) => r.l < q.r + 3 && r.r > q.l - 3 && r.t < q.b + 3 && r.b > q.t - 3);
-      const optional = el.dataset.optional !== undefined;
-      const offscreen = s.x < -10 || s.x > stageW + 10 || s.y < -10 || s.y > stageH + 10;
-      const away = place === "above" ? -1 : 1;
-      let rect: Rect | undefined;
-      search: for (const k of [0, 1, -1, 2, -2, 3]) {
-        for (const m of [0, 0.6, -0.6, 1.2, -1.2]) {
-          const r = clamp(left + m * (w + 4), top + away * k * (h + 4));
-          if (!hits(r)) {
-            rect = r;
-            break search;
-          }
-        }
-      }
-      if ((optional && (offscreen || !rect)) || (!rect && offscreen)) {
-        show(a, false);
-        continue;
-      }
-      const chosen = rect ?? clamp(left, top);
-      placed.push(chosen);
-      show(a, true);
-      el.style.transform = `translate3d(${chosen.l.toFixed(1)}px, ${chosen.t.toFixed(1)}px, 0)`;
-    }
-
-    // F：3D の中の機器から、下の拡大画面へ光の帯を伸ばす
-    const panel = panelRef.current;
-    const beam = beamRef.current;
-    if (withScreens && panel && beam && dotRef.current) {
-      const s = project(ZOOM_AT[index], c, fit, size.current, perspective);
-      const sx = Math.max(4, Math.min(stageW - 4, s.x));
-      const sy = Math.max(4, Math.min(stageH - 4, s.y));
-      const top = panel.offsetTop + 2;
-      const left = panel.offsetLeft + 10;
-      const right = panel.offsetLeft + panel.offsetWidth - 10;
-      beam.setAttribute("points", `${sx},${sy} ${left},${top} ${right},${top}`);
-      dotRef.current.setAttribute("cx", `${sx}`);
-      dotRef.current.setAttribute("cy", `${sy}`);
-    }
-  };
-
-  useLayoutEffect(() => {
-    const stage = stageRef.current;
-    const wrap = wrapRef.current;
-    if (!stage || !wrap) return;
-    const measure = () => {
-      const w = stage.clientWidth;
-      const h = stage.clientHeight;
-      size.current = { w, h, fit: w / 640, perspective: Math.max(900, w * 2.4) };
-      stage.style.perspective = `${size.current.perspective}px`;
-      measureLayout();
-      apply();
-    };
-    measure();
-    if (typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(stage);
-    ro.observe(wrap);
-    return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useLayoutEffect(() => {
-    measureLayout();
-    apply();
-  });
-
-  // 画面外にいる間は、点滅・電波などの繰り返しアニメーションを止める
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting));
-    io.observe(stage);
-    return () => io.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const fromCam = cam.current;
-    const toCam = target();
-    const fromIndex = ROUTE.findIndex((pt) => pt === packet.current);
-    const toIndex = ROUTE_INDEX[step.stop];
-    const toPacket = ROUTE[toIndex];
-    const settleCopy = () => {
-      copy.current = step.intercepted ? COPY_AT : null;
-    };
-    if (reducedMotion) {
-      cam.current = toCam;
-      packet.current = toPacket;
-      settleCopy();
-      apply();
-      return;
-    }
-    // 前へ1段ずつ進むときだけ経路に沿って動かす（戻る・飛ばすときは瞬間移動）
-    const path =
-      forward && fromIndex >= 0 && toIndex > fromIndex ? ROUTE.slice(fromIndex, toIndex + 1) : [toPacket];
-    const growCopy = forward && step.stop === "middle" && path.length > 1;
-    if (!growCopy) settleCopy();
-    const start = performance.now();
-    const camMs = 1500;
-    const packetMs = 900 + pathLength(path) * 2.6;
-    const copyStart = 150 + packetMs * 0.7;
-    const copyMs = 900;
-    const total = Math.max(camMs, 150 + packetMs, growCopy ? copyStart + copyMs : 0);
-    let raf = 0;
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      const tc = Math.min(1, elapsed / camMs);
-      const tp = Math.min(1, Math.max(0, (elapsed - 150) / packetMs));
-      cam.current = mixCamera(fromCam, toCam, easeInOutCubic(tc));
-      packet.current = tp >= 1 ? toPacket : pointOnPath(path, easeInOutCubic(tp));
-      if (growCopy) {
-        // 同じ電波が盗聴者の受信機にも届く（小包が中間に来てから分かれる）
-        const k = Math.min(1, Math.max(0, (elapsed - copyStart) / copyMs));
-        copy.current = k <= 0 ? null : k >= 1 ? COPY_AT : lerp3(ROUTE[2], COPY_AT, easeInOutCubic(k));
-      }
-      apply();
-      if (elapsed < total) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, reducedMotion]);
-
-  function onPointerDown(event: PointerEvent<HTMLDivElement>) {
-    if ((event.target as HTMLElement).closest("button")) return;
-    pointer.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging(true);
-  }
-
-  function onPointerMove(event: PointerEvent<HTMLDivElement>) {
-    const start = pointer.current;
-    if (!start || start.id !== event.pointerId) return;
-    const dx = event.clientX - start.x;
-    const dy = event.clientY - start.y;
-    pointer.current = { ...start, x: event.clientX, y: event.clientY };
-    drag.current = {
-      yaw: Math.max(-80, Math.min(80, drag.current.yaw - dx * 0.35)),
-      pitch: Math.max(-35, Math.min(25, drag.current.pitch - dy * 0.25)),
-    };
-    cam.current = target();
-    setMoved(true);
-    apply();
-  }
-
-  function onPointerUp(event: PointerEvent<HTMLDivElement>) {
-    if (pointer.current?.id !== event.pointerId) return;
-    pointer.current = null;
-    setDragging(false);
-  }
-
-  function resetView() {
-    drag.current = { yaw: 0, pitch: 0 };
-    setMoved(false);
-    const fromCam = cam.current;
-    const toCam = target();
-    if (reducedMotion) {
-      cam.current = toCam;
-      apply();
-      return;
-    }
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / 700);
-      cam.current = mixCamera(fromCam, toCam, easeInOutCubic(t));
-      apply();
-      if (t < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }
+  // 前へ1段ずつ進むときだけ経路に沿って動かす（戻る・飛ばすときは瞬間移動）
+  const to = ROUTE_INDEX[step.stop];
+  const prev = index > 0 ? ROUTE_INDEX[FLOW_STEPS[index - 1].stop] : to;
+  const packetPath = to > prev ? ROUTE.slice(prev + 1, to + 1) : undefined;
 
   const capsule =
     !https || step.stop === "desk"
@@ -402,28 +93,50 @@ export function HttpsCafeScene({
   const beamTone = index === 2 ? (https ? "safe" : "leak") : index === 3 ? "ok" : "you";
 
   return (
-    <div ref={wrapRef} className={styles.wrap}>
-      <div
-        ref={stageRef}
-        className={styles.stage}
-        data-testid="https-scene"
-        data-mode={mode}
-        data-dragging={dragging ? "true" : "false"}
-        data-intercepted={step.intercepted ? "true" : "false"}
-        data-reduced-motion={reducedMotion ? "true" : "false"}
-        data-paused={visible ? "false" : "true"}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-        role="img"
-        aria-label={
-          https
-            ? "カフェの模型。あなたのノートPCからフリーWi-Fiを通ってデータセンターのWebサーバまで、緑の暗号のトンネル（TLS）がつながっている。隣の席の盗聴者も電波を受信している"
-            : "カフェの模型。あなたのノートPCが出す電波は、壁のフリーWi-Fiだけでなく隣の席の盗聴者のノートPCにも届いている"
-        }
-      >
-        <div ref={cameraRef} className={styles.camera}>
+    <DioramaStage
+      testId="https-scene"
+      ariaLabel={
+        https
+          ? "カフェの模型。あなたのノートPCからフリーWi-Fiを通ってデータセンターのWebサーバまで、緑の暗号のトンネル（TLS）がつながっている。隣の席の盗聴者も電波を受信している"
+          : "カフェの模型。あなたのノートPCが出す電波は、壁のフリーWi-Fiだけでなく隣の席の盗聴者のノートPCにも届いている"
+      }
+      shot={SHOTS[index]}
+      shotKey={index}
+      forward={forward}
+      reducedMotion={reducedMotion}
+      dataAttrs={{ "data-mode": mode, "data-intercepted": step.intercepted ? "true" : "false" }}
+      className={styles.cafeStage}
+      tokens={{
+        packet: { at: ROUTE[to], path: packetPath },
+        // 同じ電波が盗聴者の受信機にも届く（小包が中間に来てから分かれる）
+        copy: { at: step.intercepted ? COPY_AT : null, start: ROUTE[2], path: [COPY_AT], delay: 1100 },
+      }}
+      corner={
+        <span className={`${styles.urlPlate} ${styles.urlPlateInline}`} data-mode={mode}>
+          {https ? "https://  🔒" : "http://  ⚠︎"}
+        </span>
+      }
+      onFrame={
+        withScreens
+          ? ({ project, width, height }) => {
+              // F：3D の中の機器から、下の拡大画面へ光の帯を伸ばす
+              const panel = panelRef.current;
+              const beam = beamRef.current;
+              if (!panel || !beam || !dotRef.current) return;
+              const s = project(ZOOM_AT[index]);
+              const sx = Math.max(4, Math.min(width - 4, s.x));
+              const sy = Math.max(4, Math.min(height - 4, s.y));
+              const top = panel.offsetTop + 2;
+              const left = panel.offsetLeft + 10;
+              const right = panel.offsetLeft + panel.offsetWidth - 10;
+              beam.setAttribute("points", `${sx},${sy} ${left},${top} ${right},${top}`);
+              dotRef.current.setAttribute("cx", `${sx}`);
+              dotRef.current.setAttribute("cy", `${sy}`);
+            }
+          : undefined
+      }
+      world={
+        <>
           {/* ---------- カフェの床と壁 ---------- */}
           <Box x={0} y={0} z={-18} w={600} d={380} h={18} color="#c9b39a" faceClass={{ top: styles.woodFloor }} />
           <Box
@@ -586,116 +299,87 @@ export function HttpsCafeScene({
           <Box x={730} y={132} w={30} d={48} h={80} color="#3a414f" />
 
           {/* ---------- 小包と、盗聴者に届いたコピー ---------- */}
-          <div ref={packetRef} className={styles.group} data-testid="https-packet">
-            <Box
-              x={-12}
-              y={-8}
-              w={24}
-              d={16}
-              h={12}
-              color={capsule.state === "encrypted" ? "#0f9f76" : "#fbf4e2"}
-              faceClass={{ top: styles.packetTop }}
-              faces={{
-                top: <span className={styles.packetIcon}>{capsule.state === "encrypted" ? "🔒" : capsule.state === "decrypted" ? "✓" : "✉"}</span>,
-              }}
-            />
-          </div>
-          <div ref={copyRef} className={styles.group}>
-            <Box x={-9} y={-6} w={18} d={12} h={9} color={https ? "#0f9f76" : "#fecdd3"} />
-          </div>
-        </div>
-
-        {/* ---------- 投影した HTML ラベル（先に置いたものが優先） ---------- */}
-        <div
-          className={styles.anchor}
-          data-anchor="packet"
-          data-dz={step.stop === "desk" ? 6 : 0}
-          data-place={step.stop === "desk" ? "right" : step.stop === "out" ? "below" : "left"}
-        >
-          <div
-            className={styles.packetLabel}
-            data-state={capsule.state}
-            data-capsule-state={capsule.state}
-            role="img"
-            aria-label={capsule.label}
-          >
-            <span className={styles.packetTag}>{capsule.tag}</span>
-            <span className={styles.packetBody}>{capsule.body}</span>
-          </div>
-        </div>
-
-        {!withScreens && eveSees !== null && (
-          <div className={styles.anchor} data-anchor="copy" data-dz={30}>
-            <div className={styles.eveBubble} data-mode={mode} role="status" data-testid="eve-screen">
-              <span className={styles.eveBubbleTitle}>😈 盗聴者の画面</span>
-              <span className={styles.eveBubbleBody}>{eveSees}</span>
-              <span className={styles.eveBubbleVerdict}>{https ? "読めない…" : "読めた！"}</span>
+          <DioramaToken id="packet">
+            <div className={styles.group} data-testid="https-packet">
+              <Parcel
+                tone={capsule.state === "encrypted" ? "secure" : "plain"}
+                mark={capsule.state === "encrypted" ? "lock" : capsule.state === "decrypted" ? "check" : "none"}
+              />
             </div>
-          </div>
-        )}
-
-        {https && index > 0 && (
-          <div className={styles.anchor} data-anchor="world" data-wx={lerp3(R, S, 0.5).x} data-wy={lerp3(R, S, 0.5).y} data-wz={124} data-place="above">
-            <span className={styles.tlsBadge}>TLS 暗号化トンネル</span>
-          </div>
-        )}
-
-        {radio && (
-          <div className={styles.anchor} data-anchor="world" data-wx={L.x + 40} data-wy={L.y - 60} data-wz={30} data-place="below" data-optional>
-            <span className={styles.radioChip} data-mode={mode}>
-              📶 電波は周り全部に届く
-            </span>
-          </div>
-        )}
-
-        {LABELS.filter((label) => !(label.id === "eve" && eveSees !== null && !withScreens)).map((label) => {
-          const state = label.id === "ap" ? (radio ? "sending" : "idle") : step.nodes[label.id as keyof typeof step.nodes];
-          const status = STATUS[label.id]?.[state];
-          return (
-            <div
-              key={label.id}
-              className={styles.anchor}
-              data-anchor="world"
-              data-wx={label.at.x}
-              data-wy={label.at.y}
-              data-wz={label.at.z}
-              data-place={label.place}
-              data-optional
-            >
-              <div className={styles.nameChip} data-state={state}>
-                <b>{label.name}</b>
-                {status && <span className={styles.statusChip}>{status}</span>}
-                <span className={styles.nameSub}>{label.sub}</span>
-              </div>
-            </div>
-          );
-        })}
-
-        <span className={styles.urlPlate} data-mode={mode} data-obstacle>
-          {https ? "https://  🔒" : "http://  ⚠︎"}
-        </span>
-        <div className={styles.viewHint} data-obstacle>
-          {moved ? (
-            <button type="button" onClick={resetView} className={styles.resetButton}>
-              視点をもどす
-            </button>
-          ) : (
-            <span>⟲ ドラッグで回転</span>
-          )}
-        </div>
-      </div>
-
-      {withScreens && (
-        <>
-          <svg className={styles.beamLayer} aria-hidden>
-            <polygon ref={beamRef} className={styles.beam} data-tone={beamTone} />
-            <circle ref={dotRef} r={5} className={styles.beamDot} data-tone={beamTone} />
-          </svg>
-          <div ref={panelRef} className={styles.panel} data-testid="https-zoom-panel">
-            {zoom}
-          </div>
+          </DioramaToken>
+          <DioramaToken id="copy">
+            <Parcel tone={https ? "secure" : "danger"} size={0.75} />
+          </DioramaToken>
         </>
-      )}
-    </div>
+      }
+      labels={
+        <>
+          {/* 先に置いたものが優先 */}
+          <DioramaLabel
+            token="packet"
+            dz={step.stop === "desk" ? 6 : 0}
+            place={step.stop === "desk" ? "right" : step.stop === "out" ? "below" : "left"}
+          >
+            <div
+              className={styles.packetLabel}
+              data-state={capsule.state}
+              data-capsule-state={capsule.state}
+              role="img"
+              aria-label={capsule.label}
+            >
+              <span className={styles.packetTag}>{capsule.tag}</span>
+              <span className={styles.packetBody}>{capsule.body}</span>
+            </div>
+          </DioramaLabel>
+
+          {!withScreens && eveSees !== null && (
+            <DioramaLabel token="copy" dz={30}>
+              <div className={styles.eveBubble} data-mode={mode} role="status" data-testid="eve-screen">
+                <span className={styles.eveBubbleTitle}>😈 盗聴者の画面</span>
+                <span className={styles.eveBubbleBody}>{eveSees}</span>
+                <span className={styles.eveBubbleVerdict}>{https ? "読めない…" : "読めた！"}</span>
+              </div>
+            </DioramaLabel>
+          )}
+
+          {https && index > 0 && (
+            <DioramaLabel at={{ ...lerp3(R, S, 0.5), z: 124 }} place="above">
+              <span className={styles.tlsBadge}>TLS 暗号化トンネル</span>
+            </DioramaLabel>
+          )}
+
+          {radio && (
+            <DioramaLabel at={{ x: L.x + 40, y: L.y - 60, z: 30 }} place="below" optional>
+              <span className={styles.radioChip} data-mode={mode}>
+                📶 電波は周り全部に届く
+              </span>
+            </DioramaLabel>
+          )}
+
+          {LABELS.filter((label) => !(label.id === "eve" && eveSees !== null && !withScreens)).map((label) => {
+            const state = label.id === "ap" ? (radio ? "sending" : "idle") : step.nodes[label.id as keyof typeof step.nodes];
+            const status = STATUS[label.id]?.[state];
+            return (
+              <DioramaLabel key={label.id} at={label.at} place={label.place} optional>
+                <NameChip name={label.name} sub={label.sub} status={status} tone={STATUS_TONE[state]} />
+              </DioramaLabel>
+            );
+          })}
+        </>
+      }
+      after={
+        withScreens && (
+          <>
+            <svg className={styles.beamLayer} aria-hidden>
+              <polygon ref={beamRef} className={styles.beam} data-tone={beamTone} />
+              <circle ref={dotRef} r={5} className={styles.beamDot} data-tone={beamTone} />
+            </svg>
+            <div ref={panelRef} className={styles.panel} data-testid="https-zoom-panel">
+              {zoom}
+            </div>
+          </>
+        )
+      }
+    />
   );
 }

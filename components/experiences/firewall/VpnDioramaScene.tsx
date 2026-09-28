@@ -18,7 +18,7 @@ import {
   WifiRouter,
 } from "../scene/DioramaParts";
 import { Badge, Callout, DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import type { VpnSceneProps, VpnStop } from "./VpnScene";
+import type { VpnSceneProps, VpnStop } from "./firewallTypes";
 import styles from "./firewalldiorama.module.css";
 
 // VPN の図解：自宅の部屋（リモートワーク）→ インターネットの公衆回線 → 会社のオフィス。
@@ -51,9 +51,10 @@ const PATHS: Record<VpnStop, Vec3[]> = {
 };
 
 const SHOTS: Record<VpnStop, Camera> = {
-  home: { yaw: -18, pitch: 52, zoom: 0.86, fx: 320, fy: 240, fz: 40 },
-  mid: { yaw: -18, pitch: 52, zoom: 0.9, fx: 350, fy: 240, fz: 40 },
-  office: { yaw: -22, pitch: 52, zoom: 0.86, fx: 380, fy: 220, fz: 40 },
+  // 送る前＝自宅に寄る／途中＝盗聴者のいる通信設備／届いた＝会社の VPN 装置
+  home: { yaw: -16, pitch: 50, zoom: 1.2, fx: 170, fy: 300, fz: 50 },
+  mid: { yaw: -18, pitch: 52, zoom: 1.1, fx: 380, fy: 250, fz: 40 },
+  office: { yaw: -22, pitch: 52, zoom: 1.1, fx: 560, fy: 190, fz: 50 },
 };
 
 export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneProps) {
@@ -142,7 +143,7 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
           )}
 
           <DioramaToken id="doc">
-            <Parcel tone={capsuleState === "encrypted" ? "secure" : "plain"} icon={capsuleState === "encrypted" ? "🔒" : "▤"} />
+            <Parcel tone={capsuleState === "encrypted" ? "secure" : "plain"} mark={capsuleState === "encrypted" ? "lock" : "none"} />
           </DioramaToken>
         </>
       }

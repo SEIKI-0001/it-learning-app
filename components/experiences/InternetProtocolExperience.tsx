@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { PacketDioramaScene } from "./packet/PacketDioramaScene";
-import type { PacketSceneProps, PacketSpot, RouteId } from "./packet/PacketScene";
+import type { PacketSceneProps, PacketSpot, RouteId } from "./packet/packetTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";

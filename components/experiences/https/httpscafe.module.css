@@ -1,36 +1,5 @@
-/* HTTP/HTTPS：フリーWi-Fi のカフェ（CSS 3D）。立体の部品は scene/diorama3d.module.css。
-   ここはステージ・カメラ、カフェの素材、画面に重ねるラベル、電波、（図解ラボ用の）拡大画面への光。 */
-
-.stage {
-  position: relative;
-  width: 100%;
-  --wave: rgba(244, 63, 94, 0.75);
-  aspect-ratio: 20 / 16;
-  overflow: hidden;
-  border-radius: 18px;
-  background:
-    radial-gradient(120% 80% at 50% 0%, #fefefe 0%, #eef1f5 45%, #d9dfe8 100%);
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
-  container-type: inline-size;
-  cursor: grab;
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.stage[data-dragging="true"] {
-  cursor: grabbing;
-}
-
-.camera {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 0;
-  height: 0;
-  transform-origin: 0 0;
-  transform-style: preserve-3d;
-}
+/* HTTP/HTTPS：フリーWi-Fi のカフェ（CSS 3D）。舞台・カメラ・名札は scene/DioramaStage、立体の部品は scene/Diorama3D。
+   ここはカフェの素材、ノートPCの画面、小包・盗聴者の札、電波、（図解ラボ用の）拡大画面への光。 */
 
 .group {
   position: absolute;
@@ -264,77 +233,6 @@
   animation-duration: 0.35s;
 }
 
-[data-face][data-face].packetTop {
-  display: grid;
-  place-items: center;
-  font-size: 11px;
-  line-height: 1;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-
-.packetIcon {
-  color: #16a37a;
-  font-weight: 900;
-}
-
-.anchor {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 5;
-  width: max-content;
-  pointer-events: none;
-}
-
-.nameChip {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 2px 8px 3px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
-  color: #111827;
-  font-size: 11px;
-  line-height: 1.25;
-  white-space: nowrap;
-}
-
-.nameChip b {
-  font-weight: 800;
-}
-
-.nameSub {
-  display: none;
-  margin-left: 5px;
-  color: #6b7280;
-  font-size: 9.5px;
-}
-
-@container (min-width: 520px) {
-  .nameSub {
-    display: inline;
-  }
-}
-
-.statusChip {
-  margin-left: 4px;
-  padding: 0 5px;
-  border-radius: 999px;
-  background: #2463d1;
-  color: #ffffff;
-  font-size: 9px;
-  font-weight: 800;
-}
-
-.nameChip[data-state="error"] .statusChip {
-  background: #e11d48;
-}
-
-.nameChip[data-state="active"] .statusChip {
-  background: #16a37a;
-}
-
 .packetLabel {
   position: relative;
   display: flex;
@@ -468,24 +366,6 @@
   color: #047857;
 }
 
-.viewHint {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  z-index: 6;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.8);
-  color: #64748b;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.resetButton {
-  color: #2463d1;
-  font-weight: 800;
-}
-
 @keyframes dio-blink {
   50% {
     opacity: 0.25;
@@ -503,19 +383,6 @@
   }
 }
 
-.stage[data-reduced-motion="true"] *,
-.stage[data-reduced-motion="true"] *::before {
-  animation: none !important;
-  transition: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .stage * {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-
 /* ---------- カフェ ---------- */
 
 .wrap {
@@ -525,8 +392,17 @@
   gap: 14px;
 }
 
-.stage[data-mode="https"] {
+.cafeStage[data-mode="https"] {
   --wave: rgba(16, 185, 129, 0.75);
+}
+
+/* 共通の舞台（DioramaStage）に載せたときの電波の色 */
+.cafeStage {
+  --wave: rgba(244, 63, 94, 0.75);
+}
+
+.urlPlate.urlPlateInline {
+  position: static;
 }
 
 /* ---------- 素材 ---------- */
@@ -536,7 +412,6 @@
     repeating-linear-gradient(90deg, rgba(92, 60, 30, 0.12) 0 1px, transparent 1px 120px) 0 0 / 100% 40px,
     repeating-linear-gradient(180deg, #c9a47c 0 38px, #bf9870 38px 40px);
 }
-
 
 [data-face][data-face].cafeWall {
   background: linear-gradient(180deg, #faf6ef 0%, #efe6d8 100%);
@@ -713,8 +588,3 @@
   }
 }
 
-.stage[data-paused="true"] *,
-.stage[data-paused="true"] *::before,
-.stage[data-paused="true"] *::after {
-  animation-play-state: paused !important;
-}

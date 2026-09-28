@@ -1,15 +1,18 @@
-// 3D 模型（CSS 3D）の中でカメラを向く板に貼る人物。HTTPS のカフェの図解と図解ラボで使う。
+import { useId } from "react";
+
+// 3D 模型（CSS 3D）の中でカメラを向く板に貼る人物（ジオラマ共通）。HTTPS のカフェ・各テーマの模型・図解ラボで使う。
 
 /** 後ろから見た、椅子に座ってノートPCに向かう人 */
 export function UserFromBehind() {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return (
     <svg viewBox="0 0 82 112" className="h-full w-full" aria-hidden>
       <defs>
-        <linearGradient id="dio-hoodie" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`dio-hoodie-${uid}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#4f86e8" />
           <stop offset="1" stopColor="#2c5fc4" />
         </linearGradient>
-        <radialGradient id="dio-hair" cx="0.4" cy="0.3" r="0.8">
+        <radialGradient id={`dio-hair-${uid}`} cx="0.4" cy="0.3" r="0.8">
           <stop offset="0" stopColor="#5a4033" />
           <stop offset="1" stopColor="#2e2019" />
         </radialGradient>
@@ -18,7 +21,7 @@ export function UserFromBehind() {
       <rect x="38" y="90" width="6" height="14" rx="2" fill="#3a3f4b" />
       <ellipse cx="41" cy="106" rx="20" ry="5" fill="#2c313c" />
       {/* 体（肩〜背中） */}
-      <path d="M12 74 C 12 54, 22 44, 41 44 C 60 44, 70 54, 70 74 L 70 86 L 12 86 Z" fill="url(#dio-hoodie)" />
+      <path d="M12 74 C 12 54, 22 44, 41 44 C 60 44, 70 54, 70 74 L 70 86 L 12 86 Z" fill={`url(#dio-hoodie-${uid})`} />
       <path d="M30 46 C 34 54, 48 54, 52 46" stroke="#2350a8" strokeWidth="2" fill="none" />
       {/* 椅子の背もたれ（体の手前） */}
       <rect x="18" y="62" width="46" height="32" rx="9" fill="#343a46" />
@@ -27,7 +30,7 @@ export function UserFromBehind() {
       <rect x="35" y="36" width="12" height="10" rx="4" fill="#e7b995" />
       <ellipse cx="25.5" cy="28" rx="3" ry="4.5" fill="#e7b995" />
       <ellipse cx="56.5" cy="28" rx="3" ry="4.5" fill="#e7b995" />
-      <ellipse cx="41" cy="24" rx="15.5" ry="17" fill="url(#dio-hair)" />
+      <ellipse cx="41" cy="24" rx="15.5" ry="17" fill={`url(#dio-hair-${uid})`} />
       <path d="M30 12 C 36 8, 46 8, 52 12" stroke="#6b4c3d" strokeWidth="1.6" fill="none" opacity="0.7" />
     </svg>
   );
@@ -35,10 +38,11 @@ export function UserFromBehind() {
 
 /** 立ってモニターを見張る盗聴者（フード＋ヘッドホン） */
 export function EavesdropperStanding({ active }: { active: boolean }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return (
     <svg viewBox="0 0 62 118" className="h-full w-full" aria-hidden>
       <defs>
-        <linearGradient id="dio-eve" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`dio-eve-${uid}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#4b5160" />
           <stop offset="1" stopColor="#2a2e38" />
         </linearGradient>
@@ -49,7 +53,7 @@ export function EavesdropperStanding({ active }: { active: boolean }) {
       <ellipse cx="24" cy="113" rx="7" ry="3" fill="#15171d" />
       <ellipse cx="38" cy="113" rx="7" ry="3" fill="#15171d" />
       {/* 胴（パーカー） */}
-      <path d="M12 50 C 12 38, 20 32, 31 32 C 42 32, 50 38, 50 50 L 52 84 L 10 84 Z" fill="url(#dio-eve)" />
+      <path d="M12 50 C 12 38, 20 32, 31 32 C 42 32, 50 38, 50 50 L 52 84 L 10 84 Z" fill={`url(#dio-eve-${uid})`} />
       {/* 腕組み */}
       <path d="M14 58 C 22 66, 40 66, 48 58 L 48 66 C 40 72, 22 72, 14 66 Z" fill="#3a3f4c" />
       {/* フード＋顔 */}

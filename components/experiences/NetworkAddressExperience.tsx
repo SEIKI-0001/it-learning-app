@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { CapsuleKind } from "./network/DataCapsule";
+import type { CapsuleKind } from "./network/dnsTypes";
 import { DnsDioramaScene } from "./network/DnsDioramaScene";
 import type {
   CapsuleStop,
   LaneId,
   LaneState,
   NetworkNodeId,
-} from "./network/NetworkScene";
+} from "./network/dnsTypes";
 import type { NodeState } from "./network/NetworkSceneBase";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
@@ -340,7 +340,6 @@ function DnsJourney() {
     if (!playing && index >= lastIndex) goTo(0);
     setPlaying((current) => !current);
   }
-
 
   return (
     <Panel>

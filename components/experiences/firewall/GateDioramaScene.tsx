@@ -5,6 +5,7 @@ import {
   Appliance,
   Barrier,
   Desk,
+  Monitor,
   Floor,
   FloorRoute,
   Group,
@@ -17,7 +18,7 @@ import {
   slicePath,
 } from "../scene/DioramaParts";
 import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import type { GateSceneProps, PacketStop } from "./GateScene";
+import type { GateSceneProps, PacketStop } from "./firewallTypes";
 import styles from "./firewalldiorama.module.css";
 
 // ファイアウォール／WAF の図解：社外のPC → インターネット（通信会社のルータ）→ 会社の境界。
@@ -103,6 +104,12 @@ export function GateDioramaScene({
             <Group data={{ "data-illustration": "gate-waf", "data-state": gates.waf.state }}>
               <Appliance x={WAF.x} y={WAF.y + 10} kind="waf" stand={36} w={50} rot={90} state={gates.waf.state} />
             </Group>
+            {/* 社内の執務スペース（守られている側の日常） */}
+            <Desk x={430} y={170} w={100} d={52} />
+            <Monitor x={430} y={164} w={50} />
+            <Person x={430} y={222} pose="sit" shirt="#6b7fd6" size={0.9} />
+            <Desk x={560} y={150} w={100} d={52} />
+            <Monitor x={560} y={144} w={50} />
             <Group data={{ "data-illustration": "web", "data-state": appState }}>
               <ServerRack x={APP.x} y={APP.y - 40} state={appState} accent="#2f6fdb" />
               <ServerRack x={APP.x + 70} y={APP.y - 40} state={appState === "active" ? "active" : "idle"} />
@@ -114,7 +121,7 @@ export function GateDioramaScene({
           <Barrier x={WAF.x - 22} y={280} z={4} w={60} h={70} axis="y" on={blockedAt === "waf"} />
 
           <DioramaToken id="packet">
-            <Parcel tone={packet.blocked ? "danger" : attacker ? "warn" : "info"} icon={packet.blocked ? "✕" : attacker ? "!" : "✉"} />
+            <Parcel tone={packet.blocked ? "danger" : attacker ? "warn" : "info"} mark={packet.blocked || attacker ? "alert" : "none"} />
           </DioramaToken>
         </>
       }

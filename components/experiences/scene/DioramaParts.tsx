@@ -1,6 +1,6 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import { Billboard, Box, Cylinder, FloorShadow, type Vec3 } from "./Diorama3D";
-import { EavesdropperStanding } from "../https/CafePeople";
+import { EavesdropperStanding } from "./DioramaPeople";
 import styles from "./dioramaParts.module.css";
 
 // CSS 3D ジオラマの共通部品（机・PC・サーバラック・建物・人・運ぶ物）。
@@ -870,8 +870,10 @@ const CARRY_COLOR: Record<CarryTone, string> = {
   muted: "#cbd2dc",
 };
 
-/** データの小包（パケット・リクエスト）。icon は上面の印（1文字の記号）。 */
-export function Parcel({ tone = "plain", icon, size = 1, testId }: { tone?: CarryTone; icon?: ReactNode; size?: number; testId?: string }) {
+export type ParcelMark = "lock" | "check" | "alert" | "none";
+
+/** データの小包（パケット・リクエスト）。上面の印は文字ではなく形（鍵・チェック・注意）で描く。 */
+export function Parcel({ tone = "plain", mark = "none", size = 1, testId }: { tone?: CarryTone; mark?: ParcelMark; size?: number; testId?: string }) {
   const w = 24 * size;
   const d = 16 * size;
   return (
@@ -884,7 +886,7 @@ export function Parcel({ tone = "plain", icon, size = 1, testId }: { tone?: Carr
         h={12 * size}
         color={CARRY_COLOR[tone]}
         faceClass={{ top: styles.parcelTop }}
-        faces={{ top: icon ? <span className={styles.parcelIcon} data-tone={tone}>{icon}</span> : undefined }}
+        faces={{ top: mark !== "none" ? <span className={styles.parcelMark} data-mark={mark} data-tone={tone} aria-hidden /> : undefined }}
       />
     </div>
   );
@@ -1005,12 +1007,13 @@ export function Person({
 }
 
 function SeatedFromBehind({ shirt, hair }: { shirt: string; hair: string }) {
+  const shade = `dp-shade-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
     <svg viewBox="0 0 82 112" className="h-full w-full" aria-hidden>
       <rect x="38" y="90" width="6" height="14" rx="2" fill="#3a3f4b" />
       <ellipse cx="41" cy="106" rx="20" ry="5" fill="#2c313c" />
       <path d="M12 74 C 12 54, 22 44, 41 44 C 60 44, 70 54, 70 74 L 70 86 L 12 86 Z" fill={shirt} />
-      <path d="M12 74 C 12 54, 22 44, 41 44 C 60 44, 70 54, 70 74 L 70 86 L 12 86 Z" fill="url(#dp-shade)" />
+      <path d="M12 74 C 12 54, 22 44, 41 44 C 60 44, 70 54, 70 74 L 70 86 L 12 86 Z" fill={`url(#${shade})`} />
       <rect x="18" y="62" width="46" height="32" rx="9" fill="#343a46" />
       <rect x="22" y="66" width="38" height="4" rx="2" fill="#4a5160" />
       <rect x="35" y="36" width="12" height="10" rx="4" fill="#e7b995" />
@@ -1018,7 +1021,7 @@ function SeatedFromBehind({ shirt, hair }: { shirt: string; hair: string }) {
       <ellipse cx="56.5" cy="28" rx="3" ry="4.5" fill="#e7b995" />
       <ellipse cx="41" cy="24" rx="15.5" ry="17" fill={hair} />
       <defs>
-        <linearGradient id="dp-shade" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={shade} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#ffffff" stopOpacity="0.12" />
           <stop offset="1" stopColor="#000000" stopOpacity="0.18" />
         </linearGradient>
@@ -1028,6 +1031,7 @@ function SeatedFromBehind({ shirt, hair }: { shirt: string; hair: string }) {
 }
 
 function Standing({ shirt, hair, back }: { shirt: string; hair: string; back: boolean }) {
+  const body = `dp-body-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
     <svg viewBox="0 0 44 108" className="h-full w-full" aria-hidden>
       {/* 脚 */}
@@ -1036,7 +1040,7 @@ function Standing({ shirt, hair, back }: { shirt: string; hair: string; back: bo
       <ellipse cx="27.5" cy="104.5" rx="4.5" ry="2.2" fill="#1f2937" />
       {/* 胴 */}
       <path d="M8 40 C 8 30, 14 26, 22 26 C 30 26, 36 30, 36 40 L 35 70 L 9 70 Z" fill={shirt} />
-      <path d="M8 40 C 8 30, 14 26, 22 26 C 30 26, 36 30, 36 40 L 35 70 L 9 70 Z" fill="url(#dp-body)" />
+      <path d="M8 40 C 8 30, 14 26, 22 26 C 30 26, 36 30, 36 40 L 35 70 L 9 70 Z" fill={`url(#${body})`} />
       {/* 腕 */}
       <path d="M8 40 L 5 64 L 9 65 L 12 44 Z" fill={shirt} />
       <path d="M36 40 L 39 64 L 35 65 L 32 44 Z" fill={shirt} />
@@ -1054,7 +1058,7 @@ function Standing({ shirt, hair, back }: { shirt: string; hair: string; back: bo
         </>
       )}
       <defs>
-        <linearGradient id="dp-body" x1="0" y1="0" x2="1" y2="0">
+        <linearGradient id={body} x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#ffffff" stopOpacity="0.14" />
           <stop offset="1" stopColor="#000000" stopOpacity="0.2" />
         </linearGradient>

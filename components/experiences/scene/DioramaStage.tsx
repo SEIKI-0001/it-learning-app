@@ -33,6 +33,8 @@ export type TokenSpec = {
   jump?: boolean;
   /** 直前まで隠れていた物が現れるとき、ここから動き出す（例：回線から分かれるコピー） */
   start?: Vec3;
+  /** 毎回 start から動き直す（切り替えのたびに同じ動きを見せ直すとき） */
+  restart?: boolean;
 };
 
 export type LabelPlace = "above" | "below" | "left" | "right";
@@ -106,7 +108,7 @@ export function DioramaLabel({
   return (
     <div
       className={styles.anchor}
-      style={interactive ? { pointerEvents: "auto" } : undefined}
+      style={{ visibility: "hidden", pointerEvents: interactive ? "auto" : undefined }}
       data-no-drag={interactive ? "" : undefined}
       data-anchor={token ? `token:${token}` : "world"}
       data-wx={at?.x}
@@ -318,6 +320,13 @@ export function DioramaStage({
 
     const toScreen = (p: Vec3) => project(p, c, fit, size.current, perspective);
     const placed: Rect[] = [...layout.current.obstacles];
+    // 動く物そのものもラベルで隠さない（札が自分の小包・鍵を覆わないように）
+    for (const id of layout.current.tokens.keys()) {
+      const p = pos.current[id];
+      if (!p) continue;
+      const s = toScreen(p);
+      placed.push({ l: s.x - 11, t: s.y - 13, r: s.x + 11, b: s.y + 7 });
+    }
     const show = (a: Anchor, on: boolean) => {
       if (a.shown === on) return;
       a.shown = on;
@@ -358,8 +367,11 @@ export function DioramaStage({
       const offscreen = s.x < -10 || s.x > stageW + 10 || s.y < -10 || s.y > stageH + 10;
       const away = place === "above" ? -1 : 1;
       let rect: Rect | undefined;
-      search: for (const k of [0, 1, -1, 2, -2, 3]) {
-        for (const m of [0, 0.6, -0.6, 1.2, -1.2]) {
+      // 名札（optional）は元の場所から大きく離すと別の物の名前に見えるので、近くに置けなければ隠す
+      const rows = optional ? [0, 1, -1] : [0, 1, -1, 2, -2, 3];
+      const cols = optional ? [0, 0.5, -0.5] : [0, 0.6, -0.6, 1.2, -1.2];
+      search: for (const k of rows) {
+        for (const m of cols) {
           const r = clamp(left + m * (w + 4), top + away * k * (h + 4));
           if (!hits(r)) {
             rect = r;
@@ -436,7 +448,7 @@ export function DioramaStage({
     }
     // 前へ進んだときだけ経路に沿って動かす（戻る・飛ばすときは瞬間移動）
     const moves = Object.entries(specs).map(([id, t]) => {
-      const from = posMap[id] ?? (t.start && t.at ? t.start : null);
+      const from = t.restart && t.start ? t.start : (posMap[id] ?? (t.start && t.at ? t.start : null));
       const to = t.at;
       const travel = forward && !t.jump && from && to && !samePoint(from, to);
       const path = travel ? (t.path && t.path.length > 0 ? [from, ...t.path] : [from, to]) : null;
@@ -500,11 +512,15 @@ export function DioramaStage({
     setDragging(false);
   }
 
+  const resetRaf = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(resetRaf.current), []);
+
   function resetView() {
     drag.current = { yaw: 0, pitch: 0 };
     setMoved(false);
     const fromCam = cam.current;
     const toCam = withDrag(latest.current.shot);
+    cancelAnimationFrame(resetRaf.current);
     if (reducedMotion) {
       cam.current = toCam;
       apply();
@@ -515,9 +531,9 @@ export function DioramaStage({
       const t = Math.min(1, (now - start) / 700);
       cam.current = mixCamera(fromCam, toCam, easeInOutCubic(t));
       apply();
-      if (t < 1) requestAnimationFrame(tick);
+      if (t < 1) resetRaf.current = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    resetRaf.current = requestAnimationFrame(tick);
   }
 
   return (
@@ -534,11 +550,10 @@ export function DioramaStage({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
-        role="img"
-        aria-label={ariaLabel}
         {...dataAttrs}
       >
-        <div ref={cameraRef} className={styles.camera}>
+        {/* 模型そのものが1枚の絵。ラベル（押せる札を含む）は絵の外に置き、読み上げ・操作できるようにする */}
+        <div ref={cameraRef} className={styles.camera} role="img" aria-label={ariaLabel}>
           {world}
         </div>
         {labels}

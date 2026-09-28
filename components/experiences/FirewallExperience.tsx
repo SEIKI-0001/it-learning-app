@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { GateDioramaScene } from "./firewall/GateDioramaScene";
-import type { GateId, Inspect, PacketStop } from "./firewall/GateScene";
+import type { GateId, Inspect, PacketStop, VpnStop } from "./firewall/firewallTypes";
 import { VpnDioramaScene } from "./firewall/VpnDioramaScene";
-import type { VpnStop } from "./firewall/VpnScene";
 import { ZeroTrustDioramaScene, type TrustMode } from "./firewall/ZeroTrustDioramaScene";
 import type { NodeState } from "./network/NetworkSceneBase";
 import { SceneTimeline } from "./scene/SceneTimeline";
@@ -487,7 +486,7 @@ function ZeroTrustModel() {
           </button>
         ))}
       </div>
-      <div className="-mx-2 mt-2 sm:mx-0">
+      <div className="-mx-2 mt-2 sm:mx-auto sm:max-w-xl">
         <ZeroTrustDioramaScene mode={mode} reducedMotion={reducedMotion} />
       </div>
     </div>
