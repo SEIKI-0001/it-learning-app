@@ -4,10 +4,10 @@ import { useState, type ReactNode } from "react";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
-import type { CaFlowView } from "./signature/CaFlow";
+import type { CaFlowView } from "./signature/signatureTypes";
 import { CaDioramaScene } from "./signature/CaDioramaScene";
 import { SignatureDioramaScene } from "./signature/SignatureDioramaScene";
-import type { SignatureSceneProps } from "./signature/SignatureScene";
+import type { SignatureSceneProps } from "./signature/signatureTypes";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================

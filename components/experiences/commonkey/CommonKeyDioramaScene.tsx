@@ -6,7 +6,7 @@ import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../sc
 import { CipherCapsule } from "../crypto/CipherCapsule";
 import { A_DESK, B_DESK, EVE_AT, JUNCTION, SPOT, TwoOfficesWorld, laneTo } from "../crypto/TwoOfficesWorld";
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
-import type { CapsuleStop, CommonKeySceneProps, KeySpot } from "./CommonKeyScene";
+import type { CapsuleStop, CommonKeySceneProps, KeySpot } from "./commonKeyTypes";
 import styles from "./commonkeydiorama.module.css";
 
 // 共通鍵暗号の図解：公開鍵暗号と同じ舞台（A社 ⇄ 公衆回線 ⇄ B社、途中に盗聴者）。
@@ -136,7 +136,7 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
           )}
 
           {keys.map((k) => (
-            <DioramaLabel key={k.owner} token={`key-${k.owner}`} dz={12} place={k.owner === "A" ? "left" : k.owner === "B" ? "right" : "above"}>
+            <DioramaLabel key={k.owner} token={`key-${k.owner}`} dz={12} place={k.owner === "A" ? "left" : "right"}>
               <span
                 className={cryptoStyles.keyLabel}
                 role="img"

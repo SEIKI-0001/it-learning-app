@@ -20,7 +20,7 @@ import {
   type RouteTone,
 } from "../scene/DioramaParts";
 import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import type { CyberLaneId, CyberNodeId, CyberSceneProps, LaneTone } from "./CyberScene";
+import type { CyberLaneId, CyberNodeId, CyberSceneProps, LaneTone } from "./cyberTypes";
 import styles from "./cyber.module.css";
 import dio from "./cyberdiorama.module.css";
 
