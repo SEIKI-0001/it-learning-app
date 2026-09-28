@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   BOUNDARY_FINAL,
   BOUNDARY_ROUGH,
@@ -8,6 +8,9 @@ import {
   UNKNOWNS,
   type LearningSceneProps,
 } from "./aiml/LearningScene";
+import VariantMap from "./aiml/VariantMap";
+import VariantShop from "./aiml/VariantShop";
+import VariantTeacher from "./aiml/VariantTeacher";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -312,7 +315,7 @@ function Reinforcement() {
   );
 }
 
-export default function AiMlExperience() {
+function CurrentAiMl() {
   return (
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
@@ -324,6 +327,58 @@ export default function AiMlExperience() {
       <MlFlow />
       <DataLearning />
       <Reinforcement />
+    </div>
+  );
+}
+
+// ---- 解説の3案比較（開発中のみ）。?aiml=a|b|c で切り替える。----
+// スライドデッキはパネルを useId で登録するので、同じページ内で差し替えると枚数がずれる。
+// 切替はページ遷移（リンク）で行い、決まるまで何も描かない。
+const VARIANTS = [
+  { key: "current", label: "現行", Component: CurrentAiMl },
+  { key: "a", label: "A パン屋で通す", Component: VariantShop },
+  { key: "b", label: "B 先生になる", Component: VariantTeacher },
+  { key: "c", label: "C 地図と3つの質問", Component: VariantMap },
+] as const;
+
+const noopSubscribe = () => () => {};
+
+function useVariantKey() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => new URLSearchParams(window.location.search).get("aiml") ?? "current",
+    () => null,
+  );
+}
+
+function VariantSwitcher({ active }: { active: string }) {
+  return (
+    <nav className="flex flex-wrap items-center gap-1.5 rounded-xl bg-amber-50 p-2 text-xs ring-1 ring-amber-300" aria-label="解説の案を切り替え">
+      <span className="font-bold text-amber-900">比較用：</span>
+      {VARIANTS.map((v) => (
+        <a
+          key={v.key}
+          href={`?aiml=${v.key}`}
+          aria-current={v.key === active ? "page" : undefined}
+          className={`rounded-lg px-2.5 py-1 font-bold ${v.key === active ? "bg-gray-900 text-white" : "bg-white text-gray-700 ring-1 ring-gray-300"}`}
+        >
+          {v.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+export default function AiMlExperience() {
+  const key = useVariantKey();
+  if (process.env.NODE_ENV === "production") return <CurrentAiMl />;
+  if (key === null) return null;
+  const variant = VARIANTS.find((v) => v.key === key) ?? VARIANTS[0];
+  const { Component } = variant;
+  return (
+    <div className="space-y-4">
+      <VariantSwitcher active={variant.key} />
+      <Component />
     </div>
   );
 }
