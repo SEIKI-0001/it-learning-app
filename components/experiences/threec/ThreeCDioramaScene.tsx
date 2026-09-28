@@ -8,16 +8,23 @@ import { SPOTS, SPOT_META, type Spot, type VennSceneProps } from "./threeCTypes"
 import styles from "./threecdiorama.module.css";
 
 // 3C分析の図解：駅前の商圏。
-//   顧客＝駅から出てくる放課後の学生たち／競合＝通りの向かいのクレープ店／自社＝こちらのクレープの屋台
+//   顧客＝駅から出てくる放課後の学生たち／競合＝隣のおしゃれなカフェ／自社＝こちらのクレープの屋台
+// 3つの場所には色の円が床に描かれ、真ん中の作戦ボードの上で重なる（3C の円の重なり＝勝ち筋）。
 // 3つを調べると、それぞれの事実がメモになって真ん中の「作戦ボード」へ集まり、3つそろうと作戦が浮かぶ。
 // 「材料費（コスト）」を4つめとして入れようとすると、ボードが受け付けない（3C＝顧客・競合・自社）。
 
 const AT: Record<Spot, Vec3> = {
   customer: { x: 150, y: 250, z: 0 },
   competitor: { x: 640, y: 120, z: 0 },
-  company: { x: 610, y: 340, z: 0 },
+  company: { x: 560, y: 370, z: 0 },
 };
 const BOARD: Vec3 = { x: 390, y: 250, z: 0 };
+/** 床の円の中心（3つとも半径150で、作戦ボードの位置で重なる） */
+const ZONE: Record<Spot, Vec3> = {
+  customer: { x: 270, y: 250 },
+  competitor: { x: 470, y: 180 },
+  company: { x: 450, y: 330 },
+};
 const MEMO_AT: Record<Spot, Vec3> = {
   customer: { x: BOARD.x - 26, y: BOARD.y + 4, z: 70 },
   competitor: { x: BOARD.x, y: BOARD.y + 4, z: 70 },
@@ -50,7 +57,7 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
   return (
     <DioramaStage
       testId="venn-3c"
-      ariaLabel="駅前の商圏の模型。左に駅と放課後の学生（顧客）、右奥に通りの向かいのクレープ店（競合）、右手前に自社のクレープの屋台、真ん中に作戦ボード"
+      ariaLabel="駅前の商圏の模型。左に駅と放課後の学生（顧客）、右奥に隣のカフェ（競合）、右手前に自社のクレープの屋台。3つの場所の色の円が真ん中の作戦ボードで重なる"
       shot={shot}
       shotKey={`${focus ?? "-"}-${count}`}
       forward
@@ -86,7 +93,7 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
             active={researched.customer}
           />
 
-          {/* ---------- 競合：通りの向かいのクレープ店 ---------- */}
+          {/* ---------- 競合：隣のおしゃれなカフェ ---------- */}
           <Group z={4} data={{ "data-spot-model": "competitor" }}>
             <Building x={AT.competitor.x} y={AT.competitor.y} w={150} d={90} h={80} kind="store" color="#f7e3e6" />
             <Person x={AT.competitor.x - 30} y={AT.competitor.y + 76} pose="back" shirt="#64748b" size={0.8} />
@@ -101,6 +108,16 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
             <Box x={AT.company.x - 64} y={AT.company.y - 40} z={94} w={128} d={30} h={4} color="#16a37a" faceClass={{ top: styles.awning }} />
             <Person x={AT.company.x + 10} y={AT.company.y - 30} pose="stand" shirt="#16a37a" size={0.9} />
           </Group>
+
+          {/* ---------- 3つの円（床に描いた色の円が、作戦ボードの上で重なる） ---------- */}
+          {SPOTS.map((s) => (
+            <div
+              key={s}
+              className={styles.zone}
+              data-researched={researched[s] ? "true" : "false"}
+              style={{ "--tone": SPOT_META[s].tone, transform: `translate3d(${ZONE[s].x - 150}px, ${ZONE[s].y - 150}px, 4.6px)` } as CSSProperties}
+            />
+          ))}
 
           {/* ---------- 作戦ボード ---------- */}
           <Group z={4} data={{ "data-board": "true" }}>
@@ -147,7 +164,7 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
 
           {/* 3つの調べる場所（押して調べる） */}
           {SPOTS.map((s) => (
-            <DioramaLabel key={s} at={LABEL_AT[s]} place={s === "competitor" ? "above" : "below"} interactive pinned>
+            <DioramaLabel key={s} at={LABEL_AT[s]} place={s === "competitor" ? "left" : "below"} interactive pinned>
               <div className={styles.spotBox} data-spot={s} data-focus={focus === s ? "true" : "false"} style={{ "--tone": SPOT_META[s].tone } as CSSProperties}>
                 <span className={styles.spotName}>
                   {SPOT_META[s].label}
