@@ -34,6 +34,13 @@
   cursor: grabbing;
 }
 
+/* 模型の奥行き（perspective）はここだけで持つ。ラベルは viewport の外に重ねる */
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
 .camera {
   position: absolute;
   left: 50%;
