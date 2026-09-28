@@ -251,10 +251,10 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
           <DioramaLabel at={up(CARRIER, 90)} place="above" optional>
             <NameChip name="通信事業者の局舎" sub="回線を貸す" tone={wan ? "info" : "muted"} />
           </DioramaLabel>
-          <DioramaLabel at={up(OFFICE_RACK, 76)} place="above" optional>
+          <DioramaLabel at={up(OFFICE_RACK, 76)} place="above" optional={dest !== "office"}>
             <NameChip name="会社のLAN" sub="本社のサーバ" status={dest === "office" ? "届いた" : undefined} tone={dest === "office" ? "ok" : "muted"} />
           </DioramaLabel>
-          <DioramaLabel at={up(DC, 96)} place="above" optional>
+          <DioramaLabel at={up(DC, 96)} place="above" optional={dest !== "video"}>
             <NameChip name="海外の動画サイト" sub="データセンター" status={dest === "video" ? "届いた" : undefined} tone={dest === "video" ? "ok" : "muted"} />
           </DioramaLabel>
           {dest === "video" && (

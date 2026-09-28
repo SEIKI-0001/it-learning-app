@@ -186,7 +186,7 @@ export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; 
             </DioramaLabel>
           )}
           {tether && (
-            <DioramaLabel at={up(LAPTOP, 40)} place="left">
+            <DioramaLabel at={{ x: LAPTOP.x + 20, y: LAPTOP.y + 50, z: 0 }} place="below">
               <div className={styles.note} data-testid="mobile-tether">
                 <b>ノートPC（SIMなし）</b>
                 <span>→ Wi-Fi でスマホへ</span>
