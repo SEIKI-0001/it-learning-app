@@ -45,28 +45,37 @@ const BUS: Record<BusId, Vec3[]> = {
   ],
 };
 
-const SHOT: Camera = { yaw: -12, pitch: 48, zoom: 1.45, fx: 400, fy: 250, fz: 70 };
-const SHOT_OFF: Camera = { yaw: -12, pitch: 50, zoom: 1.35, fx: 390, fy: 240, fz: 80 };
+// ステップの主役の部品に寄る（ストレージ → メモリ → CPU → メモリ → ストレージ）
+const SHOT_AT: Record<PartId, Camera> = {
+  storage: { yaw: -12, pitch: 50, zoom: 1.75, fx: 330, fy: 262, fz: 64 },
+  memory: { yaw: -12, pitch: 50, zoom: 1.75, fx: 400, fy: 250, fz: 70 },
+  cpu: { yaw: -14, pitch: 50, zoom: 1.75, fx: 460, fy: 252, fz: 66 },
+};
+const SHOT_OFF: Camera = { yaw: -12, pitch: 50, zoom: 1.4, fx: 390, fy: 240, fz: 80 };
 
 export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, packet, power, reducedMotion, forward = true }: ComputerSceneProps & { forward?: boolean }) {
   const on = power === "on";
   const vanished = doc?.status === "vanished";
-  const docAt = doc ? DOC_AT[doc.spot] : null;
+  // 保存してから電源を切った：メモリは空になったが、同じ版がストレージに残っているので失ったものはない
+  const safeOff = vanished && !!doc && stored === doc.version;
+  const focus: PartId = packet?.spot ?? (doc?.spot === "memory" ? (lanes.save === "active" ? "storage" : "memory") : "storage");
   const busTone = (id: BusId): RouteTone => (lanes[id] === "active" ? (id === "save" ? "response" : "request") : "idle");
 
   return (
     <DioramaStage
       testId="computer-scene"
       ariaLabel="机の上のオープンフレームPC。マザーボードの上に、左からストレージ（M.2 SSD＝引き出し）、メモリ（作業机）、CPU（クーラーの下＝頭脳）が並び、金色の配線でつながっている。奥のモニターに同じ文書が映る"
-      shot={on ? SHOT : SHOT_OFF}
+      shot={on ? SHOT_AT[focus] : SHOT_OFF}
       shotKey={`${doc?.spot ?? "-"}-${doc?.status ?? ""}-${packet?.spot ?? "-"}-${power}`}
       forward={forward}
       reducedMotion={reducedMotion}
       dataAttrs={{ "data-power": power }}
       tokens={{
         doc: {
-          at: docAt && !vanished ? docAt : null,
-          path: doc?.spot === "memory" ? [{ ...DOC_AT.storage, z: TOP + 30 }, ...BUS.load.map((p) => ({ ...p, z: TOP + 30 })), DOC_AT.memory] : undefined,
+          at: doc?.spot === "memory" && !vanished ? DOC_AT.memory : null,
+          // 読み込みは「コピー」：保存版はストレージに置いたまま、写しがメモリへ運ばれる
+          start: DOC_AT.storage,
+          path: doc?.spot === "memory" ? [...BUS.load.map((p) => ({ ...p, z: TOP + 30 })), DOC_AT.memory] : undefined,
         },
         packet: { at: packet ? PACKET_AT[packet.spot] : null, path: packet ? [...BUS[packet.kind].map((p) => ({ ...p, z: TOP + 16 })), PACKET_AT[packet.spot]] : undefined },
       }}
@@ -128,8 +137,13 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
           ))}
 
           {/* キーボードと、使っている人 */}
-          <Box x={340} y={330} z={44} w={120} d={30} h={4} color="#e5e7eb" />
+          <Box x={340} y={352} z={44} w={120} d={26} h={4} color="#e5e7eb" />
           <Person x={400} y={400} pose="sit" shirt="#4f86e8" />
+
+          {/* ストレージの保存版（いつもここに残る。保存すると版が上がる） */}
+          <Group x={DOC_AT.storage.x} y={DOC_AT.storage.y} z={TOP + 3}>
+            <Paper count={2} stamp={stored === 2 ? "ok" : undefined} />
+          </Group>
 
           <DioramaToken id="doc">
             <Paper count={2} stamp={doc?.status === "saved" ? "ok" : doc?.status === "dirty" ? "danger" : undefined} />
@@ -150,7 +164,7 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
           )}
 
           {doc && (
-            <DioramaLabel at={{ ...DOC_AT[doc.spot], z: DOC_AT[doc.spot].z! + 18 }} place="above">
+            <DioramaLabel at={{ ...DOC_AT[doc.spot], x: DOC_AT[doc.spot].x + (doc.spot === "memory" ? 36 : -36), z: DOC_AT[doc.spot].z! }} place={doc.spot === "memory" ? "right" : "left"} pinned>
               <div
                 className={styles.docAnchor}
                 data-spot={doc.spot}
@@ -160,7 +174,14 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
                 role="img"
                 aria-label={vanished ? "メモリ上の文書は電源OFFで消えた" : `${doc.spot === "memory" ? "メモリ上" : "ストレージ上"}の文書 v${doc.version}（${DOC_TEXT[doc.version]}）`}
               >
-                {vanished ? (
+                {safeOff ? (
+                  <span className={styles.ghost} data-safe="true">
+                    <span className={styles.ghostTitle}>メモリは空に</span>
+                    <span className={styles.ghostBody}>
+                      v{doc.version}（{DOC_TEXT[doc.version]}）はストレージに保存済み
+                    </span>
+                  </span>
+                ) : vanished ? (
                   <span className={styles.ghost}>
                     <span className={styles.ghostTitle}>消えた</span>
                     <span className={styles.ghostBody}>
@@ -191,7 +212,7 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
             </DioramaLabel>
           )}
 
-          <DioramaLabel at={{ ...AT.storage, y: AT.storage.y + 30, z: TOP }} place="below">
+          <DioramaLabel at={{ ...AT.storage, y: AT.storage.y + 14, z: TOP }} place="below" pinned>
             <div className={styles.part} data-part-label="storage" data-state={nodes.storage}>
               <b>ストレージ</b>＝引き出し
               <span key={stored} className={styles.storedChip} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
@@ -201,13 +222,13 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
               </span>
             </div>
           </DioramaLabel>
-          <DioramaLabel at={{ ...AT.memory, y: AT.memory.y + 40, z: TOP }} place="below" optional>
+          <DioramaLabel at={{ ...AT.memory, y: AT.memory.y + 20, z: TOP }} place="below" optional>
             <div className={styles.part} data-part-label="memory" data-state={nodes.memory}>
               <b>メモリ</b>＝作業机
               <span className={styles.partRole}>{on ? "今使うものを広げる" : "電気が無いと保てない"}</span>
             </div>
           </DioramaLabel>
-          <DioramaLabel at={{ ...AT.cpu, y: AT.cpu.y + 30, z: TOP }} place="below" optional>
+          <DioramaLabel at={{ ...AT.cpu, y: AT.cpu.y + 24, z: TOP }} place="below" optional>
             <div className={styles.part} data-part-label="cpu" data-state={nodes.cpu}>
               <b>CPU</b>＝頭脳
               <span className={styles.partRole}>計算・処理する</span>

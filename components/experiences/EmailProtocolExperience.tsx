@@ -104,7 +104,7 @@ function MailFlow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MailRouteDiorama nodes={s.nodes} segments={s.segments} mail={s.mail} reducedMotion={reducedMotion} />
+        <MailRouteDiorama nodes={s.nodes} segments={s.segments} mail={s.mail} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
       <p className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">

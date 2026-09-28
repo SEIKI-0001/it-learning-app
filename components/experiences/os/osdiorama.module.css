@@ -174,3 +174,10 @@
     transform: scale(1.12);
   }
 }
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+}
