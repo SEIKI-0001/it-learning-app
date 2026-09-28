@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { Box, type Camera, type Vec3 } from "../scene/Diorama3D";
-import { Cable, Desk, Floor, GlassSlab, Group, Parcel, Person, Screen, type RouteTone } from "../scene/DioramaParts";
+import { Cable, Desk, Floor, GlassSlab, Group, Laptop, Parcel, Person, Screen, type RouteTone } from "../scene/DioramaParts";
 import { DioramaLabel, DioramaStage, DioramaToken } from "../scene/DioramaStage";
 import type { NodeState } from "../network/NetworkSceneBase";
 import type { OsLayer, OsPart, OsSceneProps } from "./osTypes";
@@ -16,7 +16,7 @@ import styles from "./osdiorama.module.css";
 // アプリが OS を飛ばして直接ハードに触ろうとすると、アプリの真下の OS の床で止まる。
 
 const FOOT = { x: 250, y: 170, w: 300, d: 170 };
-const LEVEL_Z: Record<OsLayer, number> = { hw: 10, os: 110, app: 206 };
+const LEVEL_Z: Record<OsLayer, number> = { hw: 10, os: 130, app: 250 };
 
 type BlockPart = Exclude<OsPart, "user" | "wallL" | "wallR">;
 const PART: Record<BlockPart, { layer: OsLayer; x: number; y: number; icon: string; name: string }> = {
@@ -55,9 +55,11 @@ function linkEnd(part: OsPart, upper: boolean): Vec3 {
 }
 
 function shotFor(at: OsPart | null): Camera {
-  if (!at || at === "user") return { yaw: -18, pitch: 30, zoom: 0.96, fx: 380, fy: 260, fz: 120 };
+  // 横から見上げる角度（pitch は真上からの傾き）で、3つの階が縦に並んで見えるようにする
+  if (!at || at === "user") return { yaw: -26, pitch: 64, zoom: 0.9, fx: 390, fy: 250, fz: 140 };
   const layer = at === "wallL" || at === "wallR" ? "os" : PART[at].layer;
-  return { yaw: -18, pitch: 30, zoom: 1.0, fx: 390, fy: 260, fz: Math.min(150, Math.max(90, LEVEL_Z[layer] + 30)) };
+  // 3つの階は常に画面に入れたまま、いま動いている階へ少し寄る
+  return { yaw: -26, pitch: 64, zoom: 1.0, fx: 390, fy: 250, fz: (LEVEL_Z[layer] + 30 + 140) / 2 };
 }
 
 const partState = (s: NodeState | undefined) => s ?? "idle";
@@ -72,15 +74,27 @@ export function OsDioramaScene({ layers, parts, links, capsule, barrier, userHea
       shotKey={`${capsule?.at ?? "-"}-${barrier ? "b" : ""}`}
       forward={forward}
       reducedMotion={reducedMotion}
-      aspect="20 / 17"
-      aspectMobile="10 / 11"
+      aspect="20 / 18"
+      aspectMobile="10 / 13"
       dataAttrs={{ "data-barrier": barrier ? "true" : "false" }}
+      corner={
+        // 階の順番は動かさない（上から アプリ → OS → ハードウェア）
+        <span className={styles.legend}>
+          {(["app", "os", "hw"] as OsLayer[]).map((layer) => (
+            <span key={layer} className={styles.layerTag} data-layer-tag={layer} data-state={layers[layer]}>
+              <b>{LAYER_META[layer].name}</b>
+              <span>{LAYER_META[layer].sub}</span>
+            </span>
+          ))}
+        </span>
+      }
       tokens={{ capsule: { at } }}
       world={
         <>
           <Floor x={80} y={80} w={640} d={340} h={16} material="wood" />
           {/* 手前でパソコンを使う人 */}
           <Desk x={190} y={320} w={100} d={52} tone="wood" />
+          <Laptop x={190} y={318} z={44} glow />
           <Person x={186} y={384} pose="sit" shirt="#4f86e8" />
 
           {/* ---------- 下の階：ハードウェア（マザーボード） ---------- */}
@@ -166,16 +180,8 @@ export function OsDioramaScene({ layers, parts, links, capsule, barrier, userHea
               🙂{userHears ? ` ${userHears}` : " ユーザー"}
             </span>
           </DioramaLabel>
-          {(Object.keys(LAYER_META) as OsLayer[]).map((layer) => (
-            <DioramaLabel key={layer} at={{ x: FOOT.x + FOOT.w, y: FOOT.y + FOOT.d / 2, z: LEVEL_Z[layer] }} place="right" pinned>
-              <span className={styles.layerTag} data-layer-tag={layer} data-state={layers[layer]}>
-                <b>{LAYER_META[layer].name}</b>
-                <span>{LAYER_META[layer].sub}</span>
-              </span>
-            </DioramaLabel>
-          ))}
           {(Object.keys(PART) as BlockPart[]).map((id) => (
-            <DioramaLabel key={id} at={{ ...partAt(id), y: partAt(id).y + 26, z: LEVEL_Z[PART[id].layer] }} place="below" optional>
+            <DioramaLabel key={id} at={partAt(id)} place={PART[id].x < 400 ? "left" : "right"} optional>
               <span className={styles.partTag} data-part-tag={id} data-state={parts[id] ?? "idle"}>
                 <span aria-hidden>{PART[id].icon}</span>
                 {PART[id].name}
