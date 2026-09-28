@@ -90,6 +90,7 @@ export function DioramaLabel({
   dz = 0,
   optional = false,
   interactive = false,
+  pinned = false,
   children,
   testId,
 }: {
@@ -102,6 +103,8 @@ export function DioramaLabel({
   optional?: boolean;
   /** 中にボタンを置く（押せるようにし、ドラッグの開始点にしない） */
   interactive?: boolean;
+  /** 指す点が画面外でも、端に寄せて必ず出す（画面全体の状態を知らせる札など） */
+  pinned?: boolean;
   children: ReactNode;
   testId?: string;
 }) {
@@ -117,6 +120,7 @@ export function DioramaLabel({
       data-dz={dz}
       data-place={place}
       data-optional={optional ? "" : undefined}
+      data-pinned={pinned ? "" : undefined}
       data-testid={testId}
     >
       {children}
@@ -365,12 +369,18 @@ export function DioramaStage({
       };
       const hits = (r: Rect) => placed.some((q) => r.l < q.r + 3 && r.r > q.l - 3 && r.t < q.b + 3 && r.b > q.t - 3);
       const optional = el.dataset.optional !== undefined;
+      const onToken = kind.startsWith("token:");
       const offscreen = s.x < -10 || s.x > stageW + 10 || s.y < -10 || s.y > stageH + 10;
+      // 指している物が画面の外なら出さない（端に寄せて貼ると、別の物の札に見える）
+      if (offscreen && el.dataset.pinned === undefined) {
+        show(a, false);
+        continue;
+      }
       const away = place === "above" ? -1 : 1;
       let rect: Rect | undefined;
       // 名札（optional）は元の場所から大きく離すと別の物の名前に見えるので、近くに置けなければ隠す
-      const rows = optional ? [0, 1, -1] : [0, 1, -1, 2, -2, 3];
-      const cols = optional ? [0, 0.5, -0.5] : [0, 0.6, -0.6, 1.2, -1.2];
+      const rows = optional ? [0, 1, -1] : onToken ? [0, 1, -1, 2] : [0, 1, -1, 2, -2, 3];
+      const cols = optional || onToken ? [0, 0.5, -0.5] : [0, 0.6, -0.6, 1.2, -1.2];
       search: for (const k of rows) {
         for (const m of cols) {
           const r = clamp(left + m * (w + 4), top + away * k * (h + 4));
