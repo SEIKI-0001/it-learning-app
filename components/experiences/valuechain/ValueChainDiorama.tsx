@@ -14,11 +14,11 @@ import styles from "./valuechaindiorama.module.css";
 // 支援を止めると帯が赤く途切れ、影響を受けた現場が止まる。価値の積み上がりは模型の下の棒グラフ。
 
 const META: Record<StationId, { name: string; kind: BuildingKind; w: number; d: number; h: number; color?: string }> = {
-  inbound: { name: "購買物流", kind: "warehouse", w: 104, d: 76, h: 60 },
-  operations: { name: "製造", kind: "factory", w: 112, d: 84, h: 70 },
-  outbound: { name: "出荷物流", kind: "warehouse", w: 96, d: 70, h: 52, color: "#dbe3ec" },
-  sales: { name: "販売・マーケ", kind: "store", w: 104, d: 74, h: 60 },
-  service: { name: "サービス", kind: "office", w: 92, d: 70, h: 56, color: "#e6eef8" },
+  inbound: { name: "購買物流", kind: "warehouse", w: 104, d: 70, h: 46 },
+  operations: { name: "製造", kind: "factory", w: 112, d: 76, h: 54 },
+  outbound: { name: "出荷物流", kind: "warehouse", w: 96, d: 64, h: 42, color: "#dbe3ec" },
+  sales: { name: "販売・マーケ", kind: "store", w: 104, d: 68, h: 48 },
+  service: { name: "サービス", kind: "office", w: 92, d: 64, h: 44, color: "#e6eef8" },
 };
 const SUPPORT_META: Record<SupportId, { name: string; kind: BuildingKind; color: string }> = {
   infra: { name: "全般管理", kind: "office", color: "#e2e8f0" },
@@ -32,7 +32,7 @@ const ST_Y = 300;
 const PATH_Y = 372;
 const SUPPORT_X = [150, 320, 490, 660];
 const SUPPORT_Y = 70;
-const BAND_Y = [178, 194, 210, 226];
+const BAND_Y = [150, 166, 182, 198];
 
 const productAt = (at: number): Vec3 => (at < 0 ? { x: 20, y: PATH_Y, z: 8 } : { x: X[at], y: PATH_Y, z: 8 });
 
@@ -158,6 +158,17 @@ export function ValueChainDiorama({ stations, product, supports, value, stationN
                 <NameChip name={supports[id] === "off" ? `✕ ${SUPPORT_META[id].name}（停止）` : SUPPORT_META[id].name} tone={supports[id] === "off" ? "danger" : "muted"} />
               </DioramaLabel>
             ))}
+            {/* 図のどこが主活動・支援活動か（説明文の「下段／上段の帯」と対応） */}
+            <DioramaLabel at={{ x: 30, y: BAND_Y[0] - 10, z: 6 }} place="above" optional>
+              <span className={styles.group} data-group="support">
+                支援活動＝奥の本社と4本の帯（全工程を支える）
+              </span>
+            </DioramaLabel>
+            <DioramaLabel at={{ x: 30, y: PATH_Y + 30, z: 0 }} place="below" optional>
+              <span className={styles.group} data-group="primary">
+                主活動＝手前の5つの現場 →
+              </span>
+            </DioramaLabel>
             {marginOn && (
               <DioramaLabel at={{ x: 780, y: PATH_Y, z: 10 }} place="above" optional>
                 <Badge tone="ok">マージン</Badge>
