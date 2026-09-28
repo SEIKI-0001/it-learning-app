@@ -18,7 +18,7 @@ import {
   type RouteTone,
 } from "../scene/DioramaParts";
 import { Badge, Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import type { PacketSceneProps, PacketSpot, RouteId } from "./PacketScene";
+import type { PacketSceneProps, PacketSpot, RouteId } from "./packetTypes";
 import styles from "./packetdiorama.module.css";
 
 // インターネット・パケットの図解：左のオフィスの送信者A → 3台の通信会社のルータ（3本の道）→ 右のオフィスの受信者B。
@@ -174,7 +174,7 @@ export function PacketDioramaScene(props: PacketSceneProps & { forward?: boolean
 
           {packets.map((p) => (
             <DioramaToken key={p.no} id={`p${p.no}`}>
-              <Parcel tone={PACKET_TONE[p.route]} icon={String(p.no)} size={0.9} />
+              <Parcel tone={PACKET_TONE[p.route]} size={0.9} />
             </DioramaToken>
           ))}
         </>

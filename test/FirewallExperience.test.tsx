@@ -96,4 +96,20 @@ describe("FirewallExperience", () => {
     expect(screen.getByTestId("vpn-eve-screen")).toHaveTextContent("トンネルの中は読めない");
     expect(screen.getByTestId("vpn-eve-screen")).not.toHaveTextContent("会議資料");
   });
+
+  it("zero trust model: the intruder inside passes the perimeter but is stopped by per-access checks", () => {
+    renderDeck();
+    fireEvent.click(screen.getByRole("button", { name: "解説4" }));
+    expect(screen.getByRole("button", { name: "境界防御で守る" })).toHaveAttribute("aria-pressed", "true");
+    // 境界防御：社内にいる侵入者は通れてしまい、在宅の社員は入れない
+    expect(screen.getByTestId("zt-intruder")).toHaveAttribute("data-ok", "true");
+    expect(screen.getByTestId("zt-intruder")).toHaveTextContent("社内なので通れてしまう");
+    expect(screen.getByTestId("zt-remote")).toHaveAttribute("data-ok", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: "ゼロトラストで守る" }));
+    expect(screen.getByTestId("zero-trust-scene")).toHaveAttribute("data-mode", "zerotrust");
+    expect(screen.getByTestId("zt-intruder")).toHaveAttribute("data-ok", "false");
+    expect(screen.getByTestId("zt-remote")).toHaveAttribute("data-ok", "true");
+    expect(screen.getByTestId("zt-staff")).toHaveAttribute("data-ok", "true");
+  });
 });

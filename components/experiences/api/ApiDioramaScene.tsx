@@ -21,7 +21,7 @@ import {
 } from "../scene/DioramaParts";
 import { Callout, DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import type { NodeState } from "../network/NetworkSceneBase";
-import type { ApiLaneId, ApiSceneProps, ApiStop } from "./ApiScene";
+import type { ApiLaneId, ApiSceneProps, ApiStop } from "./apiTypes";
 import styles from "./apidiorama.module.css";
 
 // API の図解：歩道でスマホの天気アプリを開く人 → 天気会社のデータセンター。
@@ -97,8 +97,9 @@ const SHOTS: Record<ApiStop | "bypass", Camera> = {
   svc: { yaw: -24, pitch: 54, zoom: 1.02, fx: 450, fy: 240, fz: 50 },
   apiOut: { yaw: -22, pitch: 54, zoom: 1.02, fx: 400, fy: 250, fz: 50 },
   appBack: { yaw: -16, pitch: 52, zoom: 1.2, fx: 230, fy: 280, fz: 50 },
-  wall: { yaw: -20, pitch: 52, zoom: 0.92, fx: 380, fy: 270, fz: 40 },
-  bypass: { yaw: -20, pitch: 52, zoom: 0.92, fx: 380, fy: 270, fz: 40 },
+  // 直接アクセス：止められたガラスの境界と、本来の入口（Gateway）が両方見える位置
+  wall: { yaw: -16, pitch: 50, zoom: 1.1, fx: 300, fy: 280, fz: 50 },
+  bypass: { yaw: -16, pitch: 50, zoom: 1.1, fx: 300, fy: 280, fz: 50 },
 };
 
 function WeatherScreen({ text }: { text: string | null }) {
@@ -209,7 +210,7 @@ export function ApiDioramaScene({
           <FloorRoute points={[{ x: SVC.x + 20, y: SVC.y + 40, z: G }, { x: DB.x - 16, y: DB.y - 10, z: G }]} width={4} z={4.8} tone={nodes.svc === "active" ? "request" : "idle"} active={nodes.svc === "active"} />
 
           <DioramaToken id="req">
-            {capsule && <Parcel tone={capsule.kind === "response" ? "ok" : capsule.kind === "blocked" ? "danger" : "info"} icon={capsule.kind === "response" ? "{}" : capsule.kind === "blocked" ? "✕" : "?"} />}
+            {capsule && <Parcel tone={capsule.kind === "response" ? "ok" : capsule.kind === "blocked" ? "danger" : "info"} mark={capsule.kind === "response" ? "check" : capsule.kind === "blocked" ? "alert" : "none"} />}
           </DioramaToken>
         </>
       }
@@ -224,7 +225,7 @@ export function ApiDioramaScene({
           )}
 
           {bypass && (
-            <DioramaLabel at={{ x: 300, y: 330, z: 100 }} place="above">
+            <DioramaLabel at={{ x: 420, y: 380, z: 0 }} place="below">
               <div role="status" data-testid="bypass-denied">
                 <Callout tone="danger" title="⛔ 内部には直接入れない" verdict="入口は API だけ" />
               </div>

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { ApiDioramaScene } from "./api/ApiDioramaScene";
-import type { ApiSceneProps } from "./api/ApiScene";
+import type { ApiSceneProps } from "./api/apiTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";

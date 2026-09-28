@@ -18,12 +18,13 @@ import {
   offsetPath,
   slicePath,
   type CarryTone,
+  type ParcelMark,
   type RouteTone,
 } from "../scene/DioramaParts";
 import { Badge, Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import type { CapsuleKind } from "./DataCapsule";
+import type { CapsuleKind } from "./dnsTypes";
 import type { NodeState } from "./NetworkSceneBase";
-import type { CapsuleStop, LaneId, LaneState, NetworkNodeId } from "./NetworkScene";
+import type { CapsuleStop, LaneId, LaneState, NetworkNodeId } from "./dnsTypes";
 import styles from "./dnsdiorama.module.css";
 
 // IPアドレス・DNS の図解：自宅の部屋のノートPC → Wi-Fiルータ → インターネット（通信会社）→ DNSサーバ／Webサーバ。
@@ -84,14 +85,14 @@ function stopPath(stop: CapsuleStop): Vec3[] {
   return slicePath(LANE_PATH[lane], t, Z_PARCEL);
 }
 
-const PARCEL: Record<CapsuleKind, { tone: CarryTone; icon: string }> = {
-  input: { tone: "plain", icon: "✎" },
-  query: { tone: "info", icon: "?" },
-  response: { tone: "ok", icon: "#" },
-  connect: { tone: "info", icon: "→" },
-  connected: { tone: "info", icon: "✓" },
-  page: { tone: "ok", icon: "▤" },
-  timeout: { tone: "danger", icon: "!" },
+const PARCEL: Record<CapsuleKind, { tone: CarryTone; mark: ParcelMark }> = {
+  input: { tone: "plain", mark: "none" },
+  query: { tone: "info", mark: "none" },
+  response: { tone: "ok", mark: "check" },
+  connect: { tone: "info", mark: "none" },
+  connected: { tone: "info", mark: "check" },
+  page: { tone: "ok", mark: "check" },
+  timeout: { tone: "danger", mark: "alert" },
 };
 
 const LANE_TONE: Record<LaneId, RouteTone> = { query: "request", response: "response", web: "request", page: "response" };
@@ -249,7 +250,7 @@ export function DnsDioramaScene({
             <Group x={ROUTER.x} y={ROUTER.y}>
               <Desk x={0} y={0} w={52} d={34} h={34} tone="wood" />
             </Group>
-            <WifiRouter x={ROUTER.x} y={ROUTER.y} z={34} on={!dnsDown || true} />
+            <WifiRouter x={ROUTER.x} y={ROUTER.y} z={34} />
             <Plant x={52} y={214} />
           </Group>
 
@@ -290,7 +291,7 @@ export function DnsDioramaScene({
 
           {/* ---------- 流れるデータ ---------- */}
           <DioramaToken id="packet">
-            {parcel && <Parcel tone={parcel.tone} icon={parcel.icon} />}
+            {parcel && <Parcel tone={parcel.tone} mark={parcel.mark} />}
           </DioramaToken>
         </>
       }
