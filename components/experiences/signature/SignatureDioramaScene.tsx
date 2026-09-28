@@ -186,7 +186,9 @@ export function SignatureDioramaScene({
               data-forged={forgedSender ? "true" : "false"}
             >
               <KeyTag kind="private" />
-              <span className={cryptoStyles.keyCaption}>{forgedSender ? "偽者の秘密鍵" : "山田さんの秘密鍵"}</span>
+              <span className={cryptoStyles.keyCaption} data-tone="private">
+                {forgedSender ? "偽者の秘密鍵" : "山田さんの秘密鍵"}
+              </span>
             </span>
           </DioramaLabel>
           <DioramaLabel token="pub" dz={12} place={publicKey === "receiverVerify" ? "above" : "right"}>
