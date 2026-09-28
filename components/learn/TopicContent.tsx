@@ -118,14 +118,20 @@ export default function TopicContent({
 
   return (
     <div className="space-y-8">
-      {/* 導入: 用語説明の前に「なぜこの概念が必要か」を問いかけて引き込む。 */}
+      {/* 導入: 用語説明の前に「なぜこの概念が必要か」を問いかけて引き込む。
+          見た目は解説パネル冒頭（experiences/ui の Panel + SectionTitle + 説明文）に揃える。 */}
       {topic.hookQuestion && (
-        <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-brand-100">
-          <p className="flex items-center gap-1.5 text-xs font-bold text-brand-600">
-            <span aria-hidden>🤔</span>
+        <section className="rounded-xl bg-white p-5 ring-1 ring-gray-200">
+          <h2 className="flex items-start gap-2.5 text-lg font-bold leading-snug text-gray-900 [word-break:auto-phrase]">
+            <span
+              aria-hidden
+              className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-md bg-gray-900 font-mono text-xs text-white"
+            >
+              🤔
+            </span>
             最初に考えてみよう
-          </p>
-          <p className="mt-2 text-base font-bold leading-relaxed text-gray-800">
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-gray-600">
             {topic.hookQuestion}
           </p>
         </section>
