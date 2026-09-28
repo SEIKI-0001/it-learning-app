@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
-import type { HttpsCapsuleStop } from "../HttpsScene";
+import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import {
   Billboard,
   Box,
+  CablePulses,
   Cylinder,
   FloorShadow,
   cameraTransform,
@@ -13,19 +13,20 @@ import {
   project,
   type Camera,
   type Vec3,
-} from "./Diorama3D";
-import { EavesdropperStanding, UserFromBehind } from "./DioramaScene";
-import type { LabSceneProps } from "./labTypes";
-import { BrowserScreen, ServerLogScreen, SnifferScreen } from "./ScreenStoryScene";
-import dio from "./diorama.module.css";
-import styles from "./cafe.module.css";
-import ss from "./screenstory.module.css";
+} from "../scene/Diorama3D";
+import { EavesdropperStanding, UserFromBehind } from "./CafePeople";
+import type { HttpsCapsuleStop } from "./HttpsScene";
+import type { HttpsSceneInput } from "./httpsFlow";
+import styles from "./httpscafe.module.css";
 
-// パターンE／F：フリーWi-Fi のカフェ（実際に盗聴が起きやすい場面）を CSS 3D で再現する。
+// HTTP/HTTPS ① 盗み見くらべの図解：フリーWi-Fi のカフェ（実際に盗聴が起きやすい場面）を CSS 3D で再現する。
 //   あなたの席のノートPC →（電波）→ 壁のフリーWi-Fi →（インターネット）→ データセンターの Webサーバ
 //   電波は周り全部へ届くので、隣の席で受信機を付けたノートPCを開く盗聴者にも同じデータが届く。
-// withScreens=true（F）は、ステップの主役の「画面」を B のブラウザ／盗聴ツール／サーバログで
-// ステージの下に拡大表示し、3D の中の機器から拡大図へ“虫めがねの光”を伸ばしてつなぐ。
+// ステップごとにカメラが主役へ寄り、ドラッグで視点を回せる。文字は 3D に貼らず、
+// 3D の点を画面へ投影した HTML ラベルに載せる（どの角度・ズームでも読める）。
+// 重さ対策：毎フレームはレイアウトを読まない（ラベルの大きさは描画ごとに測る）、
+// 繰り返しアニメは transform / opacity だけ、画面外では止める。
+// zoom を渡すと（図解ラボ用）、ステップの主役の機器からステージ下の拡大パネルへ光の帯を伸ばす。
 
 const L: Vec3 = { x: 143, y: 240, z: 72 }; // あなたのノートPCの画面
 const R: Vec3 = { x: 460, y: 8, z: 114 }; // 壁のフリーWi-Fi（アクセスポイント）
@@ -69,13 +70,8 @@ const STATUS: Record<string, Partial<Record<string, string>>> = {
   eve: { error: "盗聴中" },
 };
 
-/** F のとき、ステップごとに拡大する画面とその持ち主（3D の中の点） */
-const ZOOM: { at: Vec3; who: string; icon: string }[] = [
-  { at: L, who: "あなたのPCの画面", icon: "🧑" },
-  { at: L, who: "あなたのPCの画面", icon: "🧑" },
-  { at: A, who: "隣の席の盗聴者の画面", icon: "😈" },
-  { at: S, who: "Webサーバのログ", icon: "🗄️" },
-];
+/** zoom を渡したとき、ステップごとに拡大パネルとつなぐ機器（3D の中の点） */
+const ZOOM_AT: Vec3[] = [L, L, A, S];
 
 type Rect = { l: number; t: number; r: number; b: number };
 
@@ -102,7 +98,7 @@ function pointOnPath(points: Vec3[], t: number): Vec3 {
   return points[points.length - 1];
 }
 
-export function CafeDiorama({
+export function HttpsCafeScene({
   mode,
   index,
   step,
@@ -110,9 +106,10 @@ export function CafeDiorama({
   cipher,
   forward,
   reducedMotion,
-  withScreens,
-}: LabSceneProps & { withScreens: boolean }) {
+  zoom,
+}: HttpsSceneInput & { zoom?: ReactNode }) {
   const https = mode === "https";
+  const withScreens = zoom !== undefined;
   const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const cameraRef = useRef<HTMLDivElement>(null);
@@ -139,15 +136,42 @@ export function CafeDiorama({
     };
   };
 
-  const apply = () => {
+  // 毎フレームの処理でレイアウトを読まないよう、ラベルの大きさ・固定札の位置は描画ごとに1回だけ測っておく
+  type Anchor = { el: HTMLElement; w: number; h: number; shown: boolean | null };
+  const layout = useRef<{ anchors: Anchor[]; obstacles: Rect[]; billboards: HTMLElement[] }>({
+    anchors: [],
+    obstacles: [],
+    billboards: [],
+  });
+
+  const measureLayout = () => {
     const stage = stageRef.current;
+    if (!stage) return;
+    const box = stage.getBoundingClientRect();
+    layout.current = {
+      anchors: Array.from(stage.querySelectorAll<HTMLElement>("[data-anchor]")).map((el) => ({
+        el,
+        w: el.offsetWidth,
+        h: el.offsetHeight,
+        shown: null,
+      })),
+      obstacles: Array.from(stage.querySelectorAll<HTMLElement>("[data-obstacle]")).map((el) => {
+        const r = el.getBoundingClientRect();
+        return { l: r.left - box.left, t: r.top - box.top, r: r.right - box.left, b: r.bottom - box.top };
+      }),
+      billboards: Array.from(stage.querySelectorAll<HTMLElement>("[data-billboard]")),
+    };
+  };
+
+  const apply = () => {
     const camera = cameraRef.current;
-    if (!stage || !camera) return;
+    if (!camera) return;
     const { fit, perspective, w: stageW, h: stageH } = size.current;
     const c = cam.current;
     camera.style.transform = cameraTransform(c, fit);
-    camera.style.setProperty("--yaw", `${c.yaw}deg`);
-    camera.style.setProperty("--pitch", `${c.pitch}deg`);
+    // 人物の板はカメラの回転を打ち消してこちらを向ける（CSS 変数だと全要素のスタイル再計算が走るので直接書く）
+    const face = `rotateZ(${(-c.yaw).toFixed(3)}deg) rotateX(${(-c.pitch).toFixed(3)}deg)`;
+    for (const el of layout.current.billboards) el.style.transform = face;
     const p = packet.current;
     if (packetRef.current) packetRef.current.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z ?? 0}px)`;
     const cp = copy.current;
@@ -157,23 +181,23 @@ export function CafeDiorama({
     }
 
     // 画面に重ねる HTML ラベル（固定札を障害物にして、重ならない位置へずらす）
-    const box = stage.getBoundingClientRect();
-    const placed: Rect[] = [];
-    stage.querySelectorAll<HTMLElement>("[data-obstacle]").forEach((el) => {
-      const r = el.getBoundingClientRect();
-      placed.push({ l: r.left - box.left, t: r.top - box.top, r: r.right - box.left, b: r.bottom - box.top });
-    });
-    stage.querySelectorAll<HTMLElement>("[data-anchor]").forEach((el) => {
+    const placed: Rect[] = [...layout.current.obstacles];
+    const show = (a: Anchor, visible: boolean) => {
+      if (a.shown === visible) return;
+      a.shown = visible;
+      a.el.style.visibility = visible ? "visible" : "hidden";
+    };
+    for (const a of layout.current.anchors) {
+      const el = a.el;
       const kind = el.dataset.anchor;
       const dz = Number(el.dataset.dz ?? 0);
       const base = kind === "packet" ? p : kind === "copy" ? cp : { x: Number(el.dataset.wx), y: Number(el.dataset.wy), z: Number(el.dataset.wz) };
       if (!base) {
-        el.style.visibility = "hidden";
-        return;
+        show(a, false);
+        continue;
       }
       const s = project({ ...base, z: (base.z ?? 0) + dz }, c, fit, size.current, perspective);
-      const w = el.offsetWidth;
-      const h = el.offsetHeight;
+      const { w, h } = a;
       const place = el.dataset.place ?? "above";
       let left = s.x - w / 2;
       let top = s.y - h - 8;
@@ -195,25 +219,31 @@ export function CafeDiorama({
       const optional = el.dataset.optional !== undefined;
       const offscreen = s.x < -10 || s.x > stageW + 10 || s.y < -10 || s.y > stageH + 10;
       const away = place === "above" ? -1 : 1;
-      const candidates = [0, 1, -1, 2, -2, 3].flatMap((k) =>
-        [0, 0.6, -0.6, 1.2, -1.2].map((m) => clamp(left + m * (w + 4), top + away * k * (h + 4))),
-      );
-      const rect = candidates.find((r) => !hits(r));
-      if ((optional && (offscreen || !rect)) || (!rect && offscreen)) {
-        el.style.visibility = "hidden";
-        return;
+      let rect: Rect | undefined;
+      search: for (const k of [0, 1, -1, 2, -2, 3]) {
+        for (const m of [0, 0.6, -0.6, 1.2, -1.2]) {
+          const r = clamp(left + m * (w + 4), top + away * k * (h + 4));
+          if (!hits(r)) {
+            rect = r;
+            break search;
+          }
+        }
       }
-      const chosen = rect ?? candidates[0];
+      if ((optional && (offscreen || !rect)) || (!rect && offscreen)) {
+        show(a, false);
+        continue;
+      }
+      const chosen = rect ?? clamp(left, top);
       placed.push(chosen);
-      el.style.visibility = "visible";
+      show(a, true);
       el.style.transform = `translate3d(${chosen.l.toFixed(1)}px, ${chosen.t.toFixed(1)}px, 0)`;
-    });
+    }
 
     // F：3D の中の機器から、下の拡大画面へ光の帯を伸ばす
     const panel = panelRef.current;
     const beam = beamRef.current;
     if (withScreens && panel && beam && dotRef.current) {
-      const s = project(ZOOM[index].at, c, fit, size.current, perspective);
+      const s = project(ZOOM_AT[index], c, fit, size.current, perspective);
       const sx = Math.max(4, Math.min(stageW - 4, s.x));
       const sy = Math.max(4, Math.min(stageH - 4, s.y));
       const top = panel.offsetTop + 2;
@@ -234,9 +264,11 @@ export function CafeDiorama({
       const h = stage.clientHeight;
       size.current = { w, h, fit: w / 640, perspective: Math.max(900, w * 2.4) };
       stage.style.perspective = `${size.current.perspective}px`;
+      measureLayout();
       apply();
     };
     measure();
+    if (typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(measure);
     ro.observe(stage);
     ro.observe(wrap);
@@ -245,8 +277,19 @@ export function CafeDiorama({
   }, []);
 
   useLayoutEffect(() => {
+    measureLayout();
     apply();
   });
+
+  // 画面外にいる間は、点滅・電波などの繰り返しアニメーションを止める
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting));
+    io.observe(stage);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const fromCam = cam.current;
@@ -345,24 +388,30 @@ export function CafeDiorama({
 
   const capsule =
     !https || step.stop === "desk"
-      ? { state: "plain", tag: https ? "入力（まだPCの中）" : "平文（HTTP）", body: plain }
+      ? { state: "plain", tag: https ? "入力（まだPCの中）" : "平文（HTTP）", body: plain, label: `平文のデータ：${plain}` }
       : step.stop === "arrived"
-        ? { state: "decrypted", tag: "サーバで復号", body: plain }
-        : { state: "encrypted", tag: "ENCRYPTED DATA", body: cipher.length > 14 ? `${cipher.slice(0, 14)}…` : cipher || "…" };
+        ? { state: "decrypted", tag: "サーバで復号", body: plain, label: `サーバで復号されたデータ：${plain}` }
+        : {
+            state: "encrypted",
+            tag: "ENCRYPTED DATA",
+            body: cipher.length > 14 ? `${cipher.slice(0, 14)}…` : cipher || "…",
+            label: "暗号化されたデータ",
+          };
   const eveSees = step.intercepted ? (https ? cipher || "…" : plain) : null;
   const radio = index === 1 || index === 2;
-  const zoom = ZOOM[index];
   const beamTone = index === 2 ? (https ? "safe" : "leak") : index === 3 ? "ok" : "you";
 
   return (
-    <div ref={wrapRef} className={styles.wrap} data-screens={withScreens ? "true" : "false"} data-testid="cafe-scene">
+    <div ref={wrapRef} className={styles.wrap}>
       <div
         ref={stageRef}
-        className={`${dio.stage} ${styles.stage}`}
+        className={styles.stage}
+        data-testid="https-scene"
         data-mode={mode}
         data-dragging={dragging ? "true" : "false"}
         data-intercepted={step.intercepted ? "true" : "false"}
         data-reduced-motion={reducedMotion ? "true" : "false"}
+        data-paused={visible ? "false" : "true"}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -374,7 +423,7 @@ export function CafeDiorama({
             : "カフェの模型。あなたのノートPCが出す電波は、壁のフリーWi-Fiだけでなく隣の席の盗聴者のノートPCにも届いている"
         }
       >
-        <div ref={cameraRef} className={dio.camera}>
+        <div ref={cameraRef} className={styles.camera}>
           {/* ---------- カフェの床と壁 ---------- */}
           <Box x={0} y={0} z={-18} w={600} d={380} h={18} color="#c9b39a" faceClass={{ top: styles.woodFloor }} />
           <Box
@@ -392,7 +441,7 @@ export function CafeDiorama({
                     <b>CAFE MENU</b>
                     <span>ブレンド 450 ／ ラテ 520</span>
                   </div>
-                  <div className={dio.window} style={{ left: 250, top: 22, width: 120, height: 74 }} />
+                  <div className={styles.window} style={{ left: 250, top: 22, width: 120, height: 74 }} />
                   <div className={styles.wifiSign} style={{ left: 396, top: 78, width: 128, height: 34 }}>
                     <b>FREE Wi-Fi</b>
                     <span>SSID: CAFE_FREE ／ パスワードなし</span>
@@ -429,19 +478,19 @@ export function CafeDiorama({
           <FloorShadow x={86} y={236} w={120} d={80} />
           <Box x={134} y={259} w={12} d={12} h={44} color="#3b3f47" />
           <Box x={90} y={226} w={106} d={74} h={5} z={44} color="#c89a6c" faceClass={{ top: styles.tableTop }} />
-          <Box x={110} y={244} w={66} d={40} h={3} z={49} color="#cfd5dd" faceClass={{ top: dio.keyboardTop }} />
-          <div className={dio.obj} style={{ transform: "translate3d(110px, 244px, 52px)" }}>
-            <div className={`${dio.lid} ${styles.lid}`} data-state={step.nodes.user}>
-              <div className={dio.lidScreen}>
-                <div className={dio.browser} data-mode={mode}>
-                  <div className={dio.browserBar}>
-                    <span className={dio.browserLock}>{https ? "🔒" : "⚠︎"}</span>
+          <Box x={110} y={244} w={66} d={40} h={3} z={49} color="#cfd5dd" faceClass={{ top: styles.keyboardTop }} />
+          <div className={styles.group} style={{ transform: "translate3d(110px, 244px, 52px)" }}>
+            <div className={`${styles.lid} ${styles.lid}`} data-state={step.nodes.user}>
+              <div className={styles.lidScreen}>
+                <div className={styles.browser} data-mode={mode}>
+                  <div className={styles.browserBar}>
+                    <span className={styles.browserLock}>{https ? "🔒" : "⚠︎"}</span>
                     <span>{https ? "https://" : "http://"}shop.example</span>
                   </div>
-                  <div className={dio.browserBody}>
-                    <p className={dio.browserTitle}>ログイン</p>
-                    <div className={dio.browserField}>{plain}</div>
-                    <div className={dio.browserButton} data-pressed={index >= 1 ? "true" : "false"}>
+                  <div className={styles.browserBody}>
+                    <p className={styles.browserTitle}>ログイン</p>
+                    <div className={styles.browserField}>{plain}</div>
+                    <div className={styles.browserButton} data-pressed={index >= 1 ? "true" : "false"}>
                       {index >= 1 ? "送信済み" : "送信"}
                     </div>
                   </div>
@@ -452,19 +501,23 @@ export function CafeDiorama({
           <Box x={180} y={284} w={9} d={9} h={10} z={49} color="#fafafa" />
           <FloorShadow x={104} y={318} w={70} d={40} opacity={0.3} />
           <Billboard x={128} y={340} w={78} h={106}>
-            <UserFromBehind />
+            <div data-illustration="human" className="h-full w-full">
+              <UserFromBehind />
+            </div>
           </Billboard>
 
           {/* ---------- 隣の席の盗聴者 ---------- */}
           <FloorShadow x={336} y={140} w={110} d={96} />
           <Billboard x={372} y={162} w={60} h={112}>
-            <EavesdropperStanding active={step.intercepted} />
+            <div data-illustration="eavesdropper" className="h-full w-full">
+              <EavesdropperStanding active={step.intercepted} />
+            </div>
           </Billboard>
           <Box x={369} y={196} w={12} d={12} h={44} color="#3b3f47" />
           <Box x={330} y={170} w={96} d={64} h={5} z={44} color="#c89a6c" faceClass={{ top: styles.tableTop }} />
           <Box x={350} y={190} w={52} d={34} h={3} z={49} color="#2f3440" />
-          <div className={dio.obj} style={{ transform: "translate3d(402px, 224px, 52px) rotateZ(180deg)" }}>
-            <div className={`${dio.lid} ${styles.evilLid}`} />
+          <div className={styles.group} style={{ transform: "translate3d(402px, 224px, 52px) rotateZ(180deg)" }}>
+            <div className={`${styles.lid} ${styles.evilLid}`} />
           </div>
           {/* USB の受信アンテナ */}
           <Box x={404} y={196} w={4} d={4} h={4} z={49} color="#111827" />
@@ -489,44 +542,51 @@ export function CafeDiorama({
           </Billboard>
 
           {/* ---------- インターネット（APからデータセンターへ） ---------- */}
-          <div className={dio.group} data-flow={step.stop === "arrived" || index === 2 ? "true" : "false"} style={{ "--flow": https ? "#34d399" : "#fb7185" } as CSSProperties}>
-            <Cylinder from={{ ...R, z: 112 }} to={{ ...S, z: 118 }} z={112} r={3.5} segments={8} stripClassName={dio.cableStrip} />
-          </div>
+          <Cylinder from={{ ...R, z: 112 }} to={{ ...S, z: 118 }} z={112} r={3.5} segments={8} stripClassName={styles.cableStrip} />
+          <CablePulses
+            from={{ ...R, z: 112 }}
+            to={{ ...S, z: 118 }}
+            r={3.5}
+            on={step.stop === "arrived" || index === 2}
+            color={https ? "#34d399" : "#fb7185"}
+          />
 
           {/* ---------- TLS：あなたのブラウザからサーバまでの暗号のトンネル ---------- */}
-          <div className={dio.group} data-tunnel={https ? "on" : "off"} data-testid="cafe-tunnel">
-            <Cylinder from={lerp3(L, R, 0.06)} to={R} z={0} r={11} segments={14} stripClassName={dio.glassStrip} />
-            <Cylinder from={{ ...R, z: 112 }} to={{ ...S, z: 118 }} z={0} r={11} segments={14} stripClassName={dio.glassStrip} />
+          <div className={styles.group} data-tunnel={https ? "on" : "off"} data-on={https ? "true" : "false"} data-testid="tls-tunnel">
+            <Cylinder from={lerp3(L, R, 0.06)} to={R} z={0} r={11} segments={14} stripClassName={styles.glassStrip} />
+            <Cylinder from={{ ...R, z: 112 }} to={{ ...S, z: 118 }} z={0} r={11} segments={14} stripClassName={styles.glassStrip} />
           </div>
 
           {/* ---------- データセンター ---------- */}
           <Box x={620} y={70} z={-18} w={150} d={150} h={18} color="#cfd6e0" faceClass={{ top: styles.dcFloor }} />
           <FloorShadow x={652} y={124} w={120} d={70} />
-          <Box
-            x={655}
-            y={120}
-            w={70}
-            d={60}
-            h={116}
-            color="#2a303c"
-            faceClass={{ front: dio.rackFront, left: dio.rackSide }}
-            faces={{
-              front: (
-                <div className={dio.rackBays} data-state={step.nodes.web}>
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <div key={i} className={dio.rackBay}>
-                      <span className={dio.led} style={{ animationDelay: `${i * 170}ms` }} />
-                      <span className={dio.led} data-alt style={{ animationDelay: `${i * 90 + 300}ms` }} />
-                    </div>
-                  ))}
-                </div>
-              ),
-            }}
-          />
+          <div className={styles.group} data-illustration="web">
+            <Box
+              x={655}
+              y={120}
+              w={70}
+              d={60}
+              h={116}
+              color="#2a303c"
+              faceClass={{ front: styles.rackFront, left: styles.rackSide }}
+              faces={{
+                front: (
+                  <div className={styles.rackBays} data-state={step.nodes.web}>
+                    {Array.from({ length: 6 }, (_, i) => (
+                      <div key={i} className={styles.rackBay}>
+                        <span className={styles.led} style={{ animationDelay: `${i * 170}ms` }} />
+                        <span className={styles.led} data-alt style={{ animationDelay: `${i * 90 + 300}ms` }} />
+                      </div>
+                    ))}
+                  </div>
+                ),
+              }}
+            />
+          </div>
           <Box x={730} y={132} w={30} d={48} h={80} color="#3a414f" />
 
           {/* ---------- 小包と、盗聴者に届いたコピー ---------- */}
-          <div ref={packetRef} className={dio.obj} data-testid="cafe-packet">
+          <div ref={packetRef} className={styles.group} data-testid="https-packet">
             <Box
               x={-12}
               y={-8}
@@ -534,48 +594,54 @@ export function CafeDiorama({
               d={16}
               h={12}
               color={capsule.state === "encrypted" ? "#0f9f76" : "#fbf4e2"}
-              faceClass={{ top: dio.packetTop }}
+              faceClass={{ top: styles.packetTop }}
               faces={{
-                top: <span className={dio.packetIcon}>{capsule.state === "encrypted" ? "🔒" : capsule.state === "decrypted" ? "✓" : "✉"}</span>,
+                top: <span className={styles.packetIcon}>{capsule.state === "encrypted" ? "🔒" : capsule.state === "decrypted" ? "✓" : "✉"}</span>,
               }}
             />
           </div>
-          <div ref={copyRef} className={dio.obj}>
+          <div ref={copyRef} className={styles.group}>
             <Box x={-9} y={-6} w={18} d={12} h={9} color={https ? "#0f9f76" : "#fecdd3"} />
           </div>
         </div>
 
         {/* ---------- 投影した HTML ラベル（先に置いたものが優先） ---------- */}
         <div
-          className={dio.anchor}
+          className={styles.anchor}
           data-anchor="packet"
           data-dz={step.stop === "desk" ? 6 : 0}
-          data-place={step.stop === "desk" ? "right" : step.stop === "arrived" ? "left" : "below"}
+          data-place={step.stop === "desk" ? "right" : step.stop === "out" ? "below" : "left"}
         >
-          <div className={dio.packetLabel} data-state={capsule.state} data-testid="cafe-packet-label">
-            <span className={dio.packetTag}>{capsule.tag}</span>
-            <span className={dio.packetBody}>{capsule.body}</span>
+          <div
+            className={styles.packetLabel}
+            data-state={capsule.state}
+            data-capsule-state={capsule.state}
+            role="img"
+            aria-label={capsule.label}
+          >
+            <span className={styles.packetTag}>{capsule.tag}</span>
+            <span className={styles.packetBody}>{capsule.body}</span>
           </div>
         </div>
 
         {!withScreens && eveSees !== null && (
-          <div className={dio.anchor} data-anchor="copy" data-dz={30}>
-            <div className={dio.eveBubble} data-mode={mode} role="status" data-testid="cafe-eve-bubble">
-              <span className={dio.eveBubbleTitle}>😈 盗聴者の画面</span>
-              <span className={dio.eveBubbleBody}>{eveSees}</span>
-              <span className={dio.eveBubbleVerdict}>{https ? "読めない…" : "読めた！"}</span>
+          <div className={styles.anchor} data-anchor="copy" data-dz={30}>
+            <div className={styles.eveBubble} data-mode={mode} role="status" data-testid="eve-screen">
+              <span className={styles.eveBubbleTitle}>😈 盗聴者の画面</span>
+              <span className={styles.eveBubbleBody}>{eveSees}</span>
+              <span className={styles.eveBubbleVerdict}>{https ? "読めない…" : "読めた！"}</span>
             </div>
           </div>
         )}
 
         {https && index > 0 && (
-          <div className={dio.anchor} data-anchor="world" data-wx={lerp3(R, S, 0.5).x} data-wy={lerp3(R, S, 0.5).y} data-wz={124} data-place="above">
-            <span className={dio.tlsBadge}>TLS 暗号化トンネル</span>
+          <div className={styles.anchor} data-anchor="world" data-wx={lerp3(R, S, 0.5).x} data-wy={lerp3(R, S, 0.5).y} data-wz={124} data-place="above">
+            <span className={styles.tlsBadge}>TLS 暗号化トンネル</span>
           </div>
         )}
 
         {radio && (
-          <div className={dio.anchor} data-anchor="world" data-wx={L.x + 40} data-wy={L.y - 60} data-wz={30} data-place="below" data-optional>
+          <div className={styles.anchor} data-anchor="world" data-wx={L.x + 40} data-wy={L.y - 60} data-wz={30} data-place="below" data-optional>
             <span className={styles.radioChip} data-mode={mode}>
               📶 電波は周り全部に届く
             </span>
@@ -588,7 +654,7 @@ export function CafeDiorama({
           return (
             <div
               key={label.id}
-              className={dio.anchor}
+              className={styles.anchor}
               data-anchor="world"
               data-wx={label.at.x}
               data-wy={label.at.y}
@@ -596,21 +662,21 @@ export function CafeDiorama({
               data-place={label.place}
               data-optional
             >
-              <div className={dio.nameChip} data-state={state}>
+              <div className={styles.nameChip} data-state={state}>
                 <b>{label.name}</b>
-                {status && <span className={dio.statusChip}>{status}</span>}
-                <span className={dio.nameSub}>{label.sub}</span>
+                {status && <span className={styles.statusChip}>{status}</span>}
+                <span className={styles.nameSub}>{label.sub}</span>
               </div>
             </div>
           );
         })}
 
-        <span className={dio.urlPlate} data-mode={mode} data-obstacle>
+        <span className={styles.urlPlate} data-mode={mode} data-obstacle>
           {https ? "https://  🔒" : "http://  ⚠︎"}
         </span>
-        <div className={dio.viewHint} data-obstacle>
+        <div className={styles.viewHint} data-obstacle>
           {moved ? (
-            <button type="button" onClick={resetView} className={dio.resetButton}>
+            <button type="button" onClick={resetView} className={styles.resetButton}>
               視点をもどす
             </button>
           ) : (
@@ -625,28 +691,11 @@ export function CafeDiorama({
             <polygon ref={beamRef} className={styles.beam} data-tone={beamTone} />
             <circle ref={dotRef} r={5} className={styles.beamDot} data-tone={beamTone} />
           </svg>
-          <div ref={panelRef} className={`${ss.story} ${styles.panel}`} data-mode={mode} data-tone={beamTone} data-testid="cafe-zoom-panel">
-            <section className={ss.device} data-focus="true" aria-label={zoom.who}>
-              <p className={ss.deviceLabel}>
-                <span aria-hidden>{zoom.icon}</span> {zoom.who}（拡大）
-                {index === 2 && <span className={ss.chip} data-tone="danger">盗聴中</span>}
-                {index === 3 && <span className={ss.chip} data-tone="ok">受信</span>}
-              </p>
-              {index <= 1 && <BrowserScreen mode={mode} index={index} plain={plain} />}
-              {index === 2 && <SnifferScreen mode={mode} captured={step.intercepted} plain={plain} cipher={cipher} />}
-              {index === 3 && <ServerLogScreen mode={mode} arrived plain={plain} />}
-            </section>
+          <div ref={panelRef} className={styles.panel} data-testid="https-zoom-panel">
+            {zoom}
           </div>
         </>
       )}
     </div>
   );
-}
-
-export function CafeDioramaScene(props: LabSceneProps) {
-  return <CafeDiorama {...props} withScreens={false} />;
-}
-
-export function CafeScreensScene(props: LabSceneProps) {
-  return <CafeDiorama {...props} withScreens />;
 }

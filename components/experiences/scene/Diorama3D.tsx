@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import styles from "./diorama.module.css";
+import styles from "./diorama3d.module.css";
 
 // CSS 3D（perspective + preserve-3d）で組む本物の奥行きの部品。
 // ワールド座標: x=右、y=手前、z=上（床の div の法線方向）。単位は px。
@@ -137,6 +137,54 @@ export function Cylinder({
   );
 }
 
+/** ケーブルの上を流れる光の粒。transform だけを動かすので、毎フレームの再描画が起きない。 */
+export function CablePulses({
+  from,
+  to,
+  r,
+  count = 3,
+  on,
+  color,
+}: {
+  from: Vec3;
+  to: Vec3;
+  r: number;
+  count?: number;
+  on: boolean;
+  color: string;
+}) {
+  const z0 = from.z ?? 0;
+  const z1 = to.z ?? 0;
+  const flat = Math.hypot(to.x - from.x, to.y - from.y);
+  const length = Math.hypot(flat, z1 - z0);
+  const angle = (Math.atan2(to.y - from.y, to.x - from.x) * 180) / Math.PI;
+  const elevation = (Math.atan2(z1 - z0, flat) * 180) / Math.PI;
+  return (
+    <div
+      className={styles.obj}
+      style={{
+        transform: `translate3d(${from.x}px, ${from.y}px, ${z0}px) rotateZ(${angle}deg) rotateY(${-elevation}deg)`,
+      }}
+    >
+      {on &&
+        Array.from({ length: count }, (_, i) => (
+          <span
+            key={i}
+            className={styles.pulse}
+            style={
+              {
+                "--len": `${length - 16}px`,
+                "--r": `${r + 0.6}px`,
+                "--pulse": color,
+                animationDelay: `${(-i * 1.6) / count}s`,
+              } as CSSProperties
+            }
+          />
+        ))}
+    </div>
+  );
+}
+
 /** 常にカメラを向く板（人物のイラスト）。(x,y,z) が足元の中心。 */
 export function Billboard({
   x,
@@ -157,7 +205,11 @@ export function Billboard({
 }) {
   return (
     <div className={styles.obj} style={{ transform: `translate3d(${x}px, ${y}px, ${z}px)` }}>
-      <div className={`${styles.billboard} ${className ?? ""}`} style={{ width: w, height: h, left: -w / 2, top: -h }}>
+      <div
+        className={`${styles.billboard} ${className ?? ""}`}
+        style={{ width: w, height: h, left: -w / 2, top: -h }}
+        data-billboard
+      >
         {children}
       </div>
     </div>

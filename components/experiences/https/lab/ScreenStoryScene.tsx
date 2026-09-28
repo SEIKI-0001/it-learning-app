@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { scramble } from "../../HttpsExperience";
+import { scramble } from "../httpsFlow";
 import type { LabSceneProps } from "./labTypes";
 import styles from "./screenstory.module.css";
 

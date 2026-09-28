@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, type ComponentType } from "react";
-import { FLOW_STEPS, scramble } from "@/components/experiences/HttpsExperience";
+import { FLOW_STEPS, scramble } from "@/components/experiences/https/httpsFlow";
+import { HttpsCafeScene } from "@/components/experiences/https/HttpsCafeScene";
 import { HttpsScene, type HttpsMode } from "@/components/experiences/https/HttpsScene";
-import { CafeDioramaScene, CafeScreensScene } from "@/components/experiences/https/lab/CafeDiorama";
+import { CafeScreensScene } from "@/components/experiences/https/lab/CafeScreensScene";
 import { DioramaScene } from "@/components/experiences/https/lab/DioramaScene";
 import { IsoCafeScene } from "@/components/experiences/https/lab/IsoCafeScene";
 import { LetterScene } from "@/components/experiences/https/lab/LetterScene";
@@ -101,7 +102,7 @@ const VARIANTS: Record<LabVariant, VariantInfo> = {
     aim: "A の 3D を実際の場面に置き換え。カフェの席からの電波が壁のフリーWi-Fiと隣の席の盗聴者の両方に届き、インターネットを通ってデータセンターの Webサーバへ。",
     how: "A と同じ CSS 3D 部品。空中の電波の経路は傾いた円柱、電波はカメラを向く輪。HTTPS では PC からサーバまでガラスのトンネルが通る。",
     cost: "中：A の部品をそのまま使える。",
-    Scene: CafeDioramaScene,
+    Scene: HttpsCafeScene,
   },
   f: {
     label: "F 3D＋画面",
