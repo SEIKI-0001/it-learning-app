@@ -578,6 +578,33 @@ export function Database({ x, y, z = 0, r = 20, state = "idle", testId }: At & {
   );
 }
 
+/** 金庫（銀行の口座・貴重品）。state=error で扉が赤く光る。open で扉が少し開く。 */
+export function Safe({ x, y, z = 0, rot, w = 60, h = 70, state = "idle", testId, data }: At & { w?: number; h?: number; state?: PartState; testId?: string; data?: Record<`data-${string}`, string | undefined> }) {
+  const d = Math.round(w * 0.8);
+  return (
+    <Group x={x} y={y} z={z} rot={rot} testId={testId} data={data}>
+      <FloorShadow x={-w / 2 - 6} y={-d / 2 + 6} w={w + 22} d={d + 10} opacity={0.32} />
+      <Box
+        x={-w / 2}
+        y={-d / 2}
+        w={w}
+        d={d}
+        h={h}
+        color="#5b6474"
+        faceClass={{ front: styles.safeFront, top: styles.safeTop }}
+        faces={{
+          front: (
+            <div className={styles.safeDoor} data-state={state}>
+              <span className={styles.safeDial} />
+              <span className={styles.safeHandle} />
+            </div>
+          ),
+        }}
+      />
+    </Group>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // 建物（屋根を外したカットモデルにもできる）
 // ---------------------------------------------------------------------------

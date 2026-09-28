@@ -1,0 +1,115 @@
+/* トランザクションの 3D 模型（TransactionDioramaScene）。口座の残高札・お金の札・銀行アプリの画面。 */
+
+.balance {
+  display: flex;
+  min-width: 96px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 4px 9px 5px;
+  border: 1px solid #e3e8f0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+.balance[data-pending="true"] {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.balance[data-settled="true"] {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.balanceHead {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.lockChip {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.balanceValue {
+  color: #111827;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  font-weight: 900;
+  animation: tx-flash 700ms ease;
+}
+
+.balanceNote {
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fde68a;
+  color: #92400e;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.balanceNoteOk {
+  background: #a7f3d0;
+  color: #065f46;
+}
+
+.money {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid #fcd34d;
+  border-radius: 999px;
+  background: #fffbeb;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.money[data-money-state="crashed"] {
+  border-color: #fecdd6;
+  background: #fff1f3;
+  color: #be123c;
+}
+
+.money[data-money-state="settled"] {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.moneyState {
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.bankApp {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  background: linear-gradient(180deg, #0f766e 0%, #14b8a6 100%);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+@keyframes tx-flash {
+  from {
+    background: #fde68a;
+  }
+  to {
+    background: transparent;
+  }
+}
