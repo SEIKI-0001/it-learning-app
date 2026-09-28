@@ -5,10 +5,14 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  padding: 3px 7px 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
-.keyLabel[data-emphasis="true"] > :first-child {
-  box-shadow: 0 0 0 2px #fde68a, 0 4px 10px rgba(15, 23, 42, 0.2);
+.keyLabel[data-emphasis="true"] {
+  box-shadow: 0 0 0 2px #fbbf24, 0 6px 14px rgba(15, 23, 42, 0.2);
 }
 
 .keyCaption {

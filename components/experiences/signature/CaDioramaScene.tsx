@@ -15,7 +15,7 @@ import {
   type RouteTone,
 } from "../scene/DioramaParts";
 import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import { CA_STATIONS, type CaFlowView, type CaStation } from "./CaFlow";
+import { CA_STATIONS, type CaFlowView, type CaStation } from "./signatureTypes";
 import styles from "./ca.module.css";
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
 

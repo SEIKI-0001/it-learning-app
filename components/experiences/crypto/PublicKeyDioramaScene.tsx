@@ -4,7 +4,7 @@ import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { KeyGlyph, Parcel } from "../scene/DioramaParts";
 import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import { CipherCapsule } from "./CipherCapsule";
-import type { CryptoSceneProps } from "./CryptoScene";
+import type { CryptoSceneProps } from "./cryptoTypes";
 import { KeyTag } from "./KeyToken";
 import { A_DESK, B_DESK, EVE_AT, SPOT, TwoOfficesWorld, laneTo } from "./TwoOfficesWorld";
 import styles from "./cryptodiorama.module.css";
