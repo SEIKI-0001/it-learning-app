@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { GateScene, type GateId, type Inspect, type PacketStop } from "./firewall/GateScene";
-import { VpnScene, type VpnStop } from "./firewall/VpnScene";
+import { GateDioramaScene } from "./firewall/GateDioramaScene";
+import type { GateId, Inspect, PacketStop } from "./firewall/GateScene";
+import { VpnDioramaScene } from "./firewall/VpnDioramaScene";
+import type { VpnStop } from "./firewall/VpnScene";
+import { ZeroTrustDioramaScene, type TrustMode } from "./firewall/ZeroTrustDioramaScene";
 import type { NodeState } from "./network/NetworkSceneBase";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -165,7 +168,8 @@ function GateFlow({ traffic, onFinish }: { traffic: Traffic; onFinish: (id: Traf
         </p>
       </div>
       <div className="-mx-2 mt-2 sm:mx-auto sm:max-w-xl">
-        <GateScene
+        <GateDioramaScene
+          forward={player.forward}
           sender={traffic.sender}
           packet={{ stop: step.stop, port: traffic.port, body: traffic.body, inspect: step.inspect, blocked: step.blocked, kind: traffic.kind }}
           gates={{ fw: gateView(traffic, steps, player.index, "fw"), waf: gateView(traffic, steps, player.index, "waf") }}
@@ -430,7 +434,7 @@ function Vpn() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <VpnScene vpn={on} stop={stop} sending={sending} reducedMotion={reducedMotion} />
+        <VpnDioramaScene vpn={on} stop={stop} sending={sending} reducedMotion={reducedMotion} />
       </div>
 
       <button
@@ -459,6 +463,37 @@ function Vpn() {
   );
 }
 
+/** ゼロトラストの模型：同じ3人のアクセスを「境界防御」と「ゼロトラスト」で見比べる */
+function ZeroTrustModel() {
+  const reducedMotion = useReducedMotion();
+  const [mode, setMode] = useState<TrustMode>("perimeter");
+  return (
+    <div className="mt-3">
+      <div className="flex gap-1.5" role="group" aria-label="守り方">
+        {(
+          [
+            ["perimeter", "境界防御で守る"],
+            ["zerotrust", "ゼロトラストで守る"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setMode(id)}
+            aria-pressed={mode === id}
+            className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition ${mode === id ? "bg-gray-900 text-white" : "border border-gray-300 bg-white text-gray-700"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="-mx-2 mt-2 sm:mx-0">
+        <ZeroTrustDioramaScene mode={mode} reducedMotion={reducedMotion} />
+      </div>
+    </div>
+  );
+}
+
 export default function FirewallExperience() {
   return (
     <div className="space-y-5">
@@ -478,6 +513,7 @@ export default function FirewallExperience() {
           昔は「社外は危険・社内は安全」と考えました（境界防御）。でもクラウドやリモートワークで
           <b className="text-gray-800">「社内＝安全」が崩れた</b>ため、新しい考え方が広まりました。
         </p>
+        <ZeroTrustModel />
         <div className="mt-3 grid grid-cols-1 gap-2">
           <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="text-sm font-bold text-gray-700">🏰 従来（境界防御）</div>
