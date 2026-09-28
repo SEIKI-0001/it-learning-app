@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { CommonKeyDioramaScene } from "./commonkey/CommonKeyDioramaScene";
-import type { CommonKeySceneProps, KeySpot } from "./commonkey/CommonKeyScene";
+import type { CommonKeySceneProps, KeySpot } from "./commonkey/commonKeyTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CyberDioramaScene } from "./cyber/CyberDioramaScene";
-import type { CyberSceneProps } from "./cyber/CyberScene";
+import type { CyberSceneProps } from "./cyber/cyberTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
