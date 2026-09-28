@@ -33,7 +33,7 @@ const AT = {
 
 const STAFF_AT: Record<StaffSpot, Vec3> = {
   staff: { x: 210, y: 350, z: 0 },
-  alt: { x: 560, y: 372, z: 0 },
+  alt: { x: 610, y: 400, z: 0 },
   hq: { x: 190, y: 236, z: 0 },
 };
 const DATA_AT: Record<DataSpot, Vec3> = {
@@ -47,7 +47,7 @@ const LANE: Record<"move" | "restore" | "sync", Vec3[]> = {
   move: [
     { x: 250, y: 350, z: G },
     { x: 380, y: 370, z: G },
-    { x: 530, y: 372, z: G },
+    { x: 580, y: 400, z: G },
   ],
   restore: [
     { x: 640, y: 172, z: G },
@@ -115,7 +115,7 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
           <Group z={4} data={{ "data-node": "vault", "data-state": nodes.vault }}>
             <Building x={AT.vault.x} y={AT.vault.y} w={150} d={90} h={76} kind="datacenter" dim={!prep.backup} state={nodes.vault === "sending" ? "active" : "idle"} />
           </Group>
-          <Truck x={500} y={420} rot={0} />
+          <Truck x={330} y={410} rot={0} />
 
           {(Object.keys(LANE) as (keyof typeof LANE)[]).map((id) => (
             <FloorRoute key={id} points={LANE[id]} width={10} z={4.8} tone={laneTone(id)} active={lanes[id] === "active"} data={{ "data-lane": id, "data-state": lanes[id] ?? "idle" }} />

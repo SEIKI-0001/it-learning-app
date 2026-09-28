@@ -147,7 +147,7 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
 
           {/* 3つの調べる場所（押して調べる） */}
           {SPOTS.map((s) => (
-            <DioramaLabel key={s} at={LABEL_AT[s]} place={s === "competitor" ? "above" : "below"} interactive>
+            <DioramaLabel key={s} at={LABEL_AT[s]} place={s === "competitor" ? "above" : "below"} interactive pinned>
               <div className={styles.spotBox} data-spot={s} data-focus={focus === s ? "true" : "false"} style={{ "--tone": SPOT_META[s].tone } as CSSProperties}>
                 <span className={styles.spotName}>
                   {SPOT_META[s].label}
