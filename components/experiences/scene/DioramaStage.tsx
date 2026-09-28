@@ -249,6 +249,7 @@ export function DioramaStage({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const cameraRef = useRef<HTMLDivElement>(null);
   const size = useRef({ w: baseWidth, h: baseWidth * 0.8, fit: 1, perspective: 1400 });
   const drag = useRef({ yaw: 0, pitch: 0 });
@@ -399,7 +400,7 @@ export function DioramaStage({
       const w = stage.clientWidth;
       const h = stage.clientHeight;
       size.current = { w, h, fit: w / baseWidth, perspective: Math.max(900, w * 2.4) };
-      stage.style.perspective = `${size.current.perspective}px`;
+      if (viewportRef.current) viewportRef.current.style.perspective = `${size.current.perspective}px`;
       measureLayout();
       apply();
     };
@@ -552,9 +553,12 @@ export function DioramaStage({
         onPointerCancel={onPointerUp}
         {...dataAttrs}
       >
-        {/* 模型そのものが1枚の絵。ラベル（押せる札を含む）は絵の外に置き、読み上げ・操作できるようにする */}
-        <div ref={cameraRef} className={styles.camera} role="img" aria-label={ariaLabel}>
-          {world}
+        {/* 模型そのものが1枚の絵。ラベル（押せる札を含む）は絵の外に置き、読み上げ・操作できるようにする。
+            奥行きは viewport の中だけで計算し、その外のラベルは常に模型より手前に描く（手前に浮いた鍵などに隠されない） */}
+        <div ref={viewportRef} className={styles.viewport}>
+          <div ref={cameraRef} className={styles.camera} role="img" aria-label={ariaLabel}>
+            {world}
+          </div>
         </div>
         {labels}
         {corner && (
