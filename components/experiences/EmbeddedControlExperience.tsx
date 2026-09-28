@@ -1,14 +1,15 @@
 "use client";
 
-import type { ReactNode } from "react";
 import styles from "./calc/calc.module.css";
 import { Note, Replay } from "./calc/CalcParts";
 import { useBeats } from "./calc/useBeats";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
+import { AirconDioramaScene, type FanLevel, type LoopPhase } from "./embedded/AirconDioramaScene";
 import { Panel, SectionTitle } from "./ui";
 
 // 「組込みシステムと制御」。
-//   ① フィードバック制御の循環：センサー → 制御部 → アクチュエータ → 結果 → センサー を3周（軽い段階アニメ）
+//   ① フィードバック制御の循環：壁掛けエアコンの3D模型（カバー透明）で、吸い込み口の温度センサー → 制御基板のマイコン
+//      → ファンのモーター（アクチュエータ）→ 部屋の温度 → また測る を3周
 //      室温 30℃ → 27.5 → 26 → 25.2 と目標 25℃ に近づき、ずれが小さくなるとファンも弱まる
 //   ② 入力と出力：センサー（測る）とアクチュエータ（動かす）の例を左右に（静的）
 //   ③ リアルタイム制御：「平均が速い」ではなく「毎回期限内」を棒で比べる（静的）
@@ -45,42 +46,19 @@ export default function EmbeddedControlExperience() {
 
 const TARGET = 25;
 const TEMPS = [30, 27.5, 26, 25.2];
-const fan = (diff: number) => (diff >= 4 ? "強" : diff >= 1.5 ? "中" : "弱");
+const fan = (diff: number): FanLevel => (diff >= 4 ? "強" : diff >= 1.5 ? "中" : "弱");
 const LAPS = TEMPS.length - 1;
 // beat 0 は待機。1周＝4拍（測る → 比べる → 動かす → 結果）。最後にまとめ
 const LOOP_BEATS = LAPS * 4 + 2;
 const LOOP_DELAYS = [700, 1000, 1000, 1000, 1000];
 
-type Phase = "sense" | "decide" | "act" | "result" | "idle";
+type Phase = LoopPhase;
 
 function phaseOf(beat: number): { lap: number; phase: Phase } {
   if (beat === 0) return { lap: 0, phase: "idle" };
   if (beat > LAPS * 4) return { lap: LAPS - 1, phase: "idle" };
   const i = beat - 1;
   return { lap: Math.floor(i / 4), phase: (["sense", "decide", "act", "result"] as const)[i % 4] };
-}
-
-function LoopNode({ active, title, icon, children, testId }: { active: boolean; title: string; icon: string; children: ReactNode; testId: string }) {
-  return (
-    <div
-      className={`rounded-xl px-1.5 py-1.5 text-center transition-all duration-300 ${active ? "bg-brand-600 text-white shadow-md ring-2 ring-brand-300" : "bg-white text-gray-700 ring-1 ring-gray-300"}`}
-      data-testid={testId}
-      data-active={active ? "true" : undefined}
-    >
-      <div className="text-[13px] font-bold">
-        <span aria-hidden>{icon}</span> {title}
-      </div>
-      <div className={`mt-0.5 min-h-[2.1rem] text-[12px] leading-snug ${active ? "text-white" : "text-gray-500"}`}>{children}</div>
-    </div>
-  );
-}
-
-function LoopArrow({ glyph, on }: { glyph: string; on: boolean }) {
-  return (
-    <div className={`grid place-items-center text-xl font-bold leading-none transition-colors duration-300 ${on ? "text-brand-500" : "text-gray-300"}`} aria-hidden>
-      {glyph}
-    </div>
-  );
 }
 
 function LoopPanel() {
@@ -97,34 +75,20 @@ function LoopPanel() {
     <Panel>
       <SectionTitle step={1}>測る → 決める → 動かす → また測る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        部屋を<b className="text-gray-800">目標25℃</b>に保つエアコン。いまは30℃です。光っている所が、いま働いている部品です。
+        リビングの壁掛けエアコンを、<b className="text-gray-800">カバーを透明にして</b>のぞきます。目標は<b className="text-gray-800">25℃</b>、いまは30℃。青く光る札が、いま働いている部品です。
       </p>
 
       <div ref={ref} className="mt-3" data-testid="embedded-loop" data-beat={beat} data-phase={phase}>
-        <div className="grid grid-cols-[1fr_1.6rem_1fr] grid-rows-[auto_2.2rem_auto] gap-y-0.5">
-          <LoopNode testId="loop-sense" active={phase === "sense"} title="センサー" icon="🌡️">
-            測る：<b className="tabular-nums">{before.toFixed(1)}℃</b>
-          </LoopNode>
-          <LoopArrow glyph="→" on={phase === "decide"} />
-          <LoopNode testId="loop-decide" active={phase === "decide"} title="制御部" icon="🧠">
-            目標より<b className="tabular-nums">+{diff.toFixed(1)}℃</b>
-            <br />→ ファン「{fan(diff)}」
-          </LoopNode>
-
-          <LoopArrow glyph="↑" on={phase === "sense" && lap > 0} />
-          <div />
-          <LoopArrow glyph="↓" on={phase === "act"} />
-
-          <LoopNode testId="loop-result" active={phase === "result"} title="結果（室温）" icon="🏠">
-            <b className="tabular-nums">{shownTemp.toFixed(1)}℃</b>
-            {showResult && beat > 0 && <> に下がる</>}
-          </LoopNode>
-          <LoopArrow glyph="←" on={phase === "result"} />
-          <LoopNode testId="loop-act" active={phase === "act"} title="アクチュエータ" icon="🌀">
-            モーターで
-            <br />
-            ファンを「{fan(diff)}」
-          </LoopNode>
+        <div className="-mx-2 sm:mx-auto sm:max-w-xl">
+          <AirconDioramaScene
+            phase={phase}
+            measured={before}
+            diff={diff}
+            fan={fan(diff)}
+            roomTemp={shownTemp}
+            resultShown={showResult && beat > 0}
+            reducedMotion={reducedMotion}
+          />
         </div>
 
         {/* 室温の記録。目標線に近づき、ずれが小さくなる */}
