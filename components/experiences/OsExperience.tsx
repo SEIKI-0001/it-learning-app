@@ -2,7 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import type { NodeState } from "./network/NetworkSceneBase";
-import { OsScene, type OsSceneProps } from "./os/OsScene";
+import { OsDioramaScene } from "./os/OsDioramaScene";
+import type { OsSceneProps } from "./os/osTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -239,7 +240,7 @@ function Relay() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <OsScene {...view} reducedMotion={reducedMotion} />
+        <OsDioramaScene forward={player.forward} {...view} reducedMotion={reducedMotion} />
       </div>
 
       <div

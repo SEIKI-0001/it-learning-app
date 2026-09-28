@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { MailRouteScene, MailSyncScene, type RouteSceneProps, type SyncSceneProps } from "./email/MailScene";
+import { MailRouteDiorama, MailSyncDiorama } from "./email/MailDioramaScenes";
+import type { RouteSceneProps, SyncSceneProps } from "./email/mailTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -103,7 +104,7 @@ function MailFlow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MailRouteScene nodes={s.nodes} segments={s.segments} mail={s.mail} reducedMotion={reducedMotion} />
+        <MailRouteDiorama nodes={s.nodes} segments={s.segments} mail={s.mail} reducedMotion={reducedMotion} />
       </div>
 
       <p className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
@@ -213,7 +214,7 @@ function PopImap() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MailSyncScene proto={proto} {...view} reducedMotion={reducedMotion} />
+        <MailSyncDiorama proto={proto} {...view} reducedMotion={reducedMotion} />
       </div>
 
       <div className="mt-3 flex gap-2">
