@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CyberScene, type CyberSceneProps } from "./cyber/CyberScene";
+import { CyberDioramaScene } from "./cyber/CyberDioramaScene";
+import type { CyberSceneProps } from "./cyber/CyberScene";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -249,8 +250,10 @@ function AttackLab() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <CyberScene
+        <CyberDioramaScene
           {...step.view}
+          forward={player.forward}
+          previousStop={player.forward && idx > 0 ? (steps[idx - 1]?.view.payload?.stop ?? null) : null}
           caption={{
             label: cur ? `STEP ${idx + 1} / ${steps.length}　${cur.emo} ${cur.name}` : "🏢 実験用の会社",
             title: cur ? step.title : "↑ 攻撃を選ぶと、通り道と被害がこの図に出ます",

@@ -1,0 +1,48 @@
+/* サイバー攻撃の 3D 模型（CyberDioramaScene）。運ばれる攻撃物と被害の札。 */
+
+.payload {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  padding: 3px 9px 4px;
+  border: 1px solid #fecdd6;
+  border-radius: 10px;
+  background: #fff1f3;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+  color: #9f1239;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payload[data-tone="normal"] {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.payload[data-tone="leak"] {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.payload[data-tone="phone"] {
+  border-color: #e9d5ff;
+  background: #faf5ff;
+  color: #7e22ce;
+}
+
+.damage {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e11d48;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
