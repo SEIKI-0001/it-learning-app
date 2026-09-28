@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import EncryptionHashExperience from "@/components/experiences/EncryptionHashExperience";
+import { ADDRESS, ADDRESS_CIPHER, PASSWORD, PASSWORD_HASH } from "@/components/experiences/encryption/MemberSiteDioramaScene";
 import { hashHex } from "@/components/experiences/encryption/toyCrypto";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
@@ -18,7 +19,6 @@ function renderDeck() {
 
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
 const next = () => click("1ステップ進む");
-const card = (id: "enc-card" | "hash-card") => screen.getByTestId(id);
 
 describe("EncryptionHashExperience", () => {
   it("keeps the existing encryption / hashing / comparison slides", () => {
@@ -31,38 +31,41 @@ describe("EncryptionHashExperience", () => {
     expect(screen.getByText("戻せない（一方向）")).toBeInTheDocument();
   });
 
-  it("encryption route: HELLO becomes ciphertext at the key gate and comes back as HELLO", () => {
+  it("store: the database keeps only the address ciphertext and the password hash", () => {
     renderDeck();
-    expect(card("enc-card")).toHaveAttribute("data-state", "plain");
+    expect(screen.getByTestId("member-form")).toHaveTextContent(ADDRESS);
     next();
-    expect(card("enc-card")).toHaveAttribute("data-pos", "mid");
-    expect(card("enc-card")).toHaveAttribute("data-state", "cipher");
-    expect(card("enc-card").getAttribute("aria-label")).not.toContain("HELLO");
-    next();
-    expect(card("enc-card")).toHaveAttribute("data-pos", "end");
-    expect(screen.getByRole("img", { name: "元に戻った平文：HELLO" })).toBeInTheDocument();
+    const row = screen.getByTestId("member-db-row");
+    expect(row).toHaveTextContent(ADDRESS_CIPHER);
+    expect(row).toHaveTextContent(PASSWORD_HASH);
+    expect(row).not.toHaveTextContent(ADDRESS);
+    expect(row).not.toHaveTextContent(PASSWORD);
   });
 
-  it("hash route: the digest cannot be pushed back through the hash function", () => {
+  it("ship: the same key decrypts the address back for the shipping label (reversible)", () => {
+    renderDeck();
+    next();
+    next();
+    expect(screen.getByTestId("member-ship")).toHaveTextContent(`お届け先：${ADDRESS}`);
+  });
+
+  it("login compares hashes; a one-letter change gives a totally different value and fails", () => {
     renderDeck();
     for (let i = 0; i < 3; i++) next();
-    expect(card("hash-card")).toHaveAttribute("data-state", "digest");
-    expect(screen.getByRole("img", { name: `ハッシュ値：${hashHex("HELLO")}` })).toBeInTheDocument();
+    expect(screen.getByTestId("member-compare")).toHaveAttribute("data-match", "true");
     next();
-    expect(card("hash-card")).toHaveAttribute("data-state", "blocked");
-    expect(screen.getByTestId("hash-barrier")).toBeInTheDocument();
-    expect(screen.getByTestId("hash-ghost")).toHaveTextContent("元の入力は作れない");
-    // 同じ瞬間、暗号化ルートは元に戻れている（対比）
-    expect(card("enc-card")).toHaveAttribute("data-state", "restored");
+    expect(screen.getByTestId("member-compare")).toHaveAttribute("data-match", "false");
+    expect(screen.getByTestId("hash-compare-result")).toHaveTextContent("1文字の違いなのに");
+    click(PASSWORD);
+    expect(screen.getByTestId("member-compare")).toHaveAttribute("data-match", "true");
+    expect(screen.getByTestId("hash-compare-result")).toHaveTextContent("完全に同じ値");
   });
 
-  it("changing one character changes the hash value almost entirely; the same input gives the same value", () => {
+  it("leak: the thief only gets ciphertext and a hash", () => {
     renderDeck();
     for (let i = 0; i < 5; i++) next();
-    expect(screen.getByTestId("hash-compare-result")).toHaveTextContent("1文字の違いなのに");
-    expect(screen.getByRole("img", { name: `ハッシュ値：${hashHex("HELLo")}` })).toBeInTheDocument();
-    click("HELLO");
-    expect(screen.getByTestId("hash-compare-result")).toHaveTextContent("完全に同じハッシュ値");
+    expect(screen.getByTestId("member-db-row")).toHaveAttribute("data-leaked", "true");
+    expect(screen.getByTestId("member-leak")).toHaveTextContent("ハッシュは戻せない");
   });
 
   it("toy hash avalanches on a one-letter change", () => {
