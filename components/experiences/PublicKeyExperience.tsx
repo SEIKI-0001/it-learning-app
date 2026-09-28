@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { CipherCapsule, type CapsuleState } from "./crypto/CipherCapsule";
-import type { CryptoLaneId, CryptoLaneState, CryptoNodeId, CryptoSceneProps } from "./crypto/CryptoScene";
+import type { CryptoLaneId, CryptoLaneState, CryptoNodeId, CryptoSceneProps } from "./crypto/cryptoTypes";
 import { PublicKeyDioramaScene } from "./crypto/PublicKeyDioramaScene";
 import { KeyGlyph, KeyTag, KeyToken, type KeyKind } from "./crypto/KeyToken";
 import styles from "./crypto/crypto.module.css";

@@ -7,7 +7,7 @@ import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/Dio
 import { KeyTag } from "../crypto/KeyToken";
 import { A_DESK, B_DESK, EVE_AT, SPOT, TwoOfficesWorld, laneTo } from "../crypto/TwoOfficesWorld";
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
-import type { EnvelopeStop, SigKeySpot, SignatureSceneProps } from "./SignatureScene";
+import type { EnvelopeStop, SigKeySpot, SignatureSceneProps } from "./signatureTypes";
 import styles from "./signature.module.css";
 
 // ディジタル署名の図解（電子契約）：手前の取引先のオフィス（送信者）⇄ 公衆回線 ⇄ 奥のあなたのオフィス（受信者）。
