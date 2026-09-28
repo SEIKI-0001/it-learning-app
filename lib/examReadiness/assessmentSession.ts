@@ -411,7 +411,7 @@ function assertUniqueAnswerIdentities(
 function mapRpcError(error: unknown): AssessmentSessionPersistenceError {
   const code = errorCode(error);
   if (code === "P0002") return sessionNotFound();
-  if (code === "23505" || code === "40001") {
+  if (code === "23505" || code === "40001" || code === "P0001") {
     return sessionConflict("Assessment session is terminal or conflicts with stored facts");
   }
   if (code === "22023") {

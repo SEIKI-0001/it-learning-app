@@ -601,7 +601,7 @@ begin
 
   if not found then
     raise exception 'assessment session transition lost its lock'
-      using errcode = '40001';
+     ;
   end if;
 
   return jsonb_build_object(
@@ -1085,7 +1085,7 @@ begin
       where attempt.attempt_id = v_receipt.attempt_id;
       if not found then
         raise exception 'assessment attempt receipt lost its canonical row'
-          using errcode = '40001';
+         ;
       end if;
       question_id := v_receipt.question_id;
       state := case when v_persisted.is_first_attempt then 'first' else 'seen' end;
@@ -1126,7 +1126,7 @@ begin
 
     if not found then
       raise exception 'assessment attempt persistence lost its idempotent row'
-        using errcode = '40001';
+       ;
     end if;
 
     insert into public.assessment_attempt_receipts (
