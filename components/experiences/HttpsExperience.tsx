@@ -17,7 +17,7 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 
 // 見た目用の「暗号化っぽい」変換（本物の暗号ではなく、読めなくなる様子の可視化）
-function scramble(text: string): string {
+export function scramble(text: string): string {
   const hex = [...text]
     .map((c) => c.charCodeAt(0).toString(16).padStart(2, "0"))
     .join("")
@@ -27,7 +27,7 @@ function scramble(text: string): string {
 
 type Mode = HttpsMode;
 
-type FlowStep = {
+export type FlowStep = {
   title: string;
   stop: HttpsCapsuleStop;
   nodes: Record<HttpsNodeId, NodeState>;
@@ -37,7 +37,7 @@ type FlowStep = {
   detail: Record<Mode, ReactNode>;
 };
 
-const FLOW_STEPS: FlowStep[] = [
+export const FLOW_STEPS: FlowStep[] = [
   {
     title: "あなたが入力",
     stop: "desk",

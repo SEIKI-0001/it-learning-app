@@ -1,0 +1,701 @@
+/* パターンA：CSS 3D のジオラマ。
+   preserve-3d の親に opacity / filter / overflow を付けると平面化されるので、見た目の切替は葉（面・帯）に付ける。 */
+
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 20 / 17;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #fefefe 0%, #eef1f5 45%, #d9dfe8 100%);
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+  container-type: inline-size;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stage[data-dragging="true"] {
+  cursor: grabbing;
+}
+
+.camera {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+
+.obj,
+.group {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  transform-style: preserve-3d;
+}
+
+/* ---------- 直方体の面（光は左上奥から） ---------- */
+
+.face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  transform-origin: 0 0;
+}
+
+.face[data-face="top"] {
+  background: var(--c);
+}
+
+.face[data-face="front"] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c) 88%, #0b1220) 0%,
+    color-mix(in srgb, var(--c) 72%, #0b1220) 100%
+  );
+}
+
+.face[data-face="left"] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--c) 78%, #0b1220) 0%,
+    color-mix(in srgb, var(--c) 64%, #0b1220) 100%
+  );
+}
+
+.face[data-face="right"] {
+  background: color-mix(in srgb, var(--c) 64%, #0b1220);
+}
+
+.face[data-face="back"] {
+  background: color-mix(in srgb, var(--c) 60%, #0b1220);
+}
+
+/* ---------- 部屋 ---------- */
+
+.face.floorTop {
+  background-color: #eef1f5;
+  background-image:
+    linear-gradient(rgba(110, 125, 150, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(110, 125, 150, 0.1) 1px, transparent 1px),
+    radial-gradient(ellipse at 38% 40%, #f8f9fb 0%, #e4e9f0 100%);
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+}
+
+.face.wallFront {
+  background: linear-gradient(180deg, #f6f7fa 0%, #e8ecf2 100%);
+  box-shadow: inset 0 -7px 0 #d3dae4;
+}
+
+.window {
+  position: absolute;
+  border: 4px solid #ffffff;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #8fc0ef 0%, #cfe6fa 65%, #eef6fd 100%);
+  box-shadow: inset 0 0 0 1px #c5d3e3, 0 1px 0 #cfd6e0;
+}
+
+.window::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  margin-left: -2px;
+  background: #ffffff;
+}
+
+.face.woodTop {
+  background:
+    linear-gradient(90deg, rgba(90, 55, 25, 0.06) 1px, transparent 1px) 0 0 / 24px 100%,
+    linear-gradient(160deg, #d6a87b 0%, #bb8a5e 100%);
+}
+
+.face.keyboardTop {
+  background: linear-gradient(180deg, #dde2e8 0%, #cbd2db 100%);
+}
+
+.face.keyboardTop::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  top: 5px;
+  height: 27px;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 5.5px, #cfd5dd 5.5px 7px),
+    repeating-linear-gradient(90deg, #3b424e 0 6.5px, #cfd5dd 6.5px 8px);
+}
+
+.face.keyboardTop::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 32px;
+  height: 14px;
+  margin-left: -16px;
+  border-radius: 2px;
+  background: #c1c8d2;
+  box-shadow: inset 0 0 0 0.5px #aeb6c2;
+}
+
+/* ---------- ノートPCのふた（画面） ---------- */
+
+.lid {
+  position: absolute;
+  left: 0;
+  top: -68px;
+  width: 104px;
+  height: 68px;
+  padding: 3px 3px 5px;
+  border-radius: 4px 4px 1px 1px;
+  background: linear-gradient(180deg, #353b47, #22262e);
+  transform-origin: 50% 100%;
+  transform: rotateX(-76deg);
+}
+
+.lidScreen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1px;
+  background: #ffffff;
+}
+
+.lid[data-state="active"] .lidScreen,
+.lid[data-state="sending"] .lidScreen {
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.6);
+}
+
+/* 画面の中身は2倍で組んで半分に縮める（最小フォントサイズ対策・にじみ軽減） */
+.browser {
+  width: 200%;
+  height: 200%;
+  transform: scale(0.5);
+  transform-origin: 0 0;
+  background: #ffffff;
+  color: #111827;
+}
+
+.browserBar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
+  border-bottom: 1px solid #d8dde5;
+  background: #eef1f5;
+  color: #b91c1c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.browser[data-mode="https"] .browserBar {
+  color: #047857;
+}
+
+.browserLock {
+  font-size: 9px;
+}
+
+.browserBody {
+  padding: 8px 12px;
+}
+
+.browserTitle {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.browserField {
+  margin-top: 6px;
+  overflow: hidden;
+  padding: 4px 6px;
+  border: 1.5px solid #9db8ea;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.browserButton {
+  margin-top: 7px;
+  padding: 4px;
+  border-radius: 3px;
+  background: #2463d1;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.browserButton[data-pressed="true"] {
+  background: #16a37a;
+}
+
+/* ---------- ケーブルと TLS のガラス管 ---------- */
+
+.strip {
+  position: absolute;
+  left: 0;
+  transform-origin: 0 50%;
+}
+
+.cableStrip {
+  background-color: color-mix(in srgb, #4a5263 var(--lit), #0a0d13);
+}
+
+.group[data-flow="true"] .cableStrip[data-up="true"] {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 16px,
+    var(--flow) 16px 30px,
+    transparent 30px 44px
+  );
+  animation: dio-flow 0.7s linear infinite;
+}
+
+.glassStrip {
+  background: linear-gradient(
+    90deg,
+    rgba(52, 211, 153, 0.05) 0%,
+    rgba(52, 211, 153, 0.2) 50%,
+    rgba(52, 211, 153, 0.05) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.glassStrip[data-up="true"] {
+  background: linear-gradient(
+    90deg,
+    rgba(167, 243, 208, 0.12) 0%,
+    rgba(209, 250, 229, 0.4) 50%,
+    rgba(167, 243, 208, 0.12) 100%
+  );
+}
+
+.group[data-tunnel="on"] .glassStrip {
+  opacity: 1;
+}
+
+/* ---------- 盗聴クリップ・線 ---------- */
+
+.floorStrip {
+  position: absolute;
+  left: 0;
+  transform-origin: 0 50%;
+}
+
+.tapWire {
+  border-radius: 2px;
+  background: repeating-linear-gradient(90deg, #7b8190 0 6px, transparent 6px 10px);
+  opacity: 0.7;
+}
+
+.stage[data-intercepted="true"] .tapWire {
+  background: repeating-linear-gradient(90deg, #e11d48 0 6px, transparent 6px 10px);
+  opacity: 1;
+  animation: dio-flow-rev 0.6s linear infinite;
+}
+
+.stage[data-intercepted="true"][data-mode="https"] .tapWire {
+  background: repeating-linear-gradient(90deg, #6b7280 0 6px, transparent 6px 10px);
+}
+
+/* ---------- 盗聴者のモニター ---------- */
+
+.face.monitorFace {
+  padding: 3px;
+  background: #11151c;
+}
+
+.terminal {
+  width: 200%;
+  height: 200%;
+  padding: 5px 7px;
+  transform: scale(0.5);
+  transform-origin: 0 0;
+  background: #0d1117;
+  color: #7ee787;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.terminal[data-on="true"][data-mode="http"] {
+  box-shadow: inset 0 0 0 2px rgba(248, 113, 113, 0.7);
+}
+
+.termDim {
+  color: #8b949e;
+}
+
+.termHit {
+  overflow: hidden;
+  margin-top: 1px;
+  padding: 1px 3px;
+  border-radius: 2px;
+  background: rgba(255, 123, 114, 0.16);
+  color: #ff7b72;
+  font-weight: 800;
+  text-overflow: ellipsis;
+}
+
+.terminal[data-mode="https"] .termHit {
+  background: rgba(139, 148, 158, 0.16);
+  color: #9aa4af;
+}
+
+/* ---------- サーバラック ---------- */
+
+.face.rackFront {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 5px;
+  background: linear-gradient(180deg, #353d4b 0%, #262c37 100%);
+}
+
+.face.rackSide {
+  background: repeating-linear-gradient(180deg, #2a303b 0 3px, #20252e 3px 4.5px);
+}
+
+.rackBays {
+  display: grid;
+  gap: 3px;
+}
+
+.rackBay {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  height: 13px;
+  padding-right: 4px;
+  border-radius: 1.5px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.25) 0 1px, transparent 1px 4px) 5px 3px / 30px 7px no-repeat,
+    linear-gradient(180deg, #414a5b 0%, #333b49 100%);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.led {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 3px #22c55e;
+  animation: dio-blink 1.6s steps(2, jump-none) infinite;
+}
+
+.led[data-alt] {
+  background: #60a5fa;
+  box-shadow: 0 0 3px #60a5fa;
+}
+
+.rackBays[data-state="active"] .led {
+  animation-duration: 0.35s;
+}
+
+/* ---------- データの小包 ---------- */
+
+.face.packetTop {
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.packetIcon {
+  color: #16a37a;
+  font-weight: 900;
+}
+
+/* ---------- 人物（カメラを向く板） ---------- */
+
+.billboard {
+  position: absolute;
+  transform-origin: 50% 100%;
+  transform: rotateZ(calc(var(--yaw) * -1)) rotateX(calc(var(--pitch) * -1));
+}
+
+.shadow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(20, 28, 44, 0.5), rgba(20, 28, 44, 0));
+  transform-origin: 0 0;
+}
+
+/* ---------- 投影した HTML ラベル ---------- */
+
+.anchor {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  width: max-content;
+  pointer-events: none;
+}
+
+.nameChip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 2px 8px 3px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  color: #111827;
+  font-size: 11px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.nameChip b {
+  font-weight: 800;
+}
+
+.nameSub {
+  display: none;
+  margin-left: 5px;
+  color: #6b7280;
+  font-size: 9.5px;
+}
+
+@container (min-width: 520px) {
+  .nameSub {
+    display: inline;
+  }
+}
+
+.statusChip {
+  margin-left: 4px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #2463d1;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.nameChip[data-state="error"] .statusChip {
+  background: #e11d48;
+}
+
+.nameChip[data-state="active"] .statusChip {
+  background: #16a37a;
+}
+
+.packetLabel {
+  position: relative;
+  display: flex;
+  min-width: 92px;
+  max-width: 180px;
+  flex-direction: column;
+  padding: 4px 9px 5px;
+  border: 1px solid #f3d9a4;
+  border-radius: 10px;
+  background: #fffdf6;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+}
+
+.packetLabel[data-state="encrypted"] {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.packetLabel[data-state="decrypted"] {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.packetTag {
+  color: #b45309;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.packetLabel[data-state="encrypted"] .packetTag,
+.packetLabel[data-state="decrypted"] .packetTag {
+  color: #047857;
+}
+
+.packetBody {
+  overflow: hidden;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tlsBadge {
+  position: relative;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #16a37a;
+  box-shadow: 0 4px 10px rgba(22, 163, 122, 0.3);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.eveBubble {
+  position: relative;
+  display: flex;
+  max-width: 200px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 9px 6px;
+  border: 1px solid #fecdd6;
+  border-radius: 12px;
+  background: #fff1f3;
+  box-shadow: 0 8px 18px rgba(225, 29, 72, 0.16);
+  animation: dio-pop 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.eveBubble[data-mode="https"] {
+  border-color: #cfd6e0;
+  background: #f5f7fa;
+  box-shadow: 0 8px 18px rgba(30, 42, 64, 0.12);
+}
+
+.eveBubbleTitle {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.eveBubbleBody {
+  overflow: hidden;
+  color: #9f1239;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eveBubble[data-mode="https"] .eveBubbleBody {
+  color: #4b5563;
+}
+
+.eveBubbleVerdict {
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.eveBubble[data-mode="https"] .eveBubbleVerdict {
+  background: #16a37a;
+}
+
+.urlPlate {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 6;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: pre;
+}
+
+.urlPlate[data-mode="https"] {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+.viewHint {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 6;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.resetButton {
+  color: #2463d1;
+  font-weight: 800;
+}
+
+@keyframes dio-flow {
+  to {
+    background-position-x: 44px;
+  }
+}
+
+@keyframes dio-flow-rev {
+  to {
+    background-position-x: -10px;
+  }
+}
+
+@keyframes dio-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes dio-pop {
+  from {
+    opacity: 0;
+    scale: 0.9;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+.stage[data-reduced-motion="true"] *,
+.stage[data-reduced-motion="true"] *::before {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

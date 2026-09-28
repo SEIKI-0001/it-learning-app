@@ -1,0 +1,415 @@
+/* パターンC：ハガキと封筒のイラスト。絵は SVG、読ませる文字（ハガキの文面・虫めがね・到着）は HTML に載せる。 */
+
+.scene {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 400 / 250;
+  border-radius: 18px;
+  background: #dff1fd;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cloudA {
+  animation: lt-drift 14s ease-in-out infinite alternate;
+}
+
+.cloudB {
+  animation: lt-drift 18s ease-in-out -6s infinite alternate-reverse;
+}
+
+.sign {
+  fill: #ffffff;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 盗聴者 ---------- */
+
+.eveBody {
+  transform: translateY(12px);
+  transition: transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.eve[data-peek="true"] .eveBody {
+  transform: translateY(0);
+}
+
+.glass circle {
+  transition: fill 400ms ease, stroke 400ms ease;
+}
+
+.scene[data-mode="http"] .eve[data-peek="true"] .glass circle {
+  fill: rgba(254, 205, 211, 0.8);
+  stroke: #e11d48;
+}
+
+.eveMark {
+  fill: #e11d48;
+  font-size: 15px;
+  font-weight: 900;
+  opacity: 0;
+  transition: opacity 300ms ease 300ms;
+}
+
+.scene[data-mode="https"] .eveMark {
+  fill: #64748b;
+}
+
+.eve[data-peek="true"] .eveMark {
+  opacity: 1;
+}
+
+/* ---------- 配達員 ---------- */
+
+.scene[data-moving="true"] .courier {
+  animation: lt-bob 260ms ease-in-out infinite alternate;
+}
+
+/* ---------- 名前札 ---------- */
+
+.place {
+  position: absolute;
+  z-index: 3;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  color: #1f2937;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.place[data-tone="danger"] {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.place[data-tone="ok"] {
+  background: #16a37a;
+  color: #ffffff;
+}
+
+/* ---------- 運ぶ物 ---------- */
+
+.item {
+  position: absolute;
+  z-index: 4;
+  width: 0;
+  height: 0;
+}
+
+.card,
+.envelope {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transition:
+    opacity 450ms ease,
+    transform 650ms cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.card {
+  display: flex;
+  width: 100px;
+  flex-direction: column;
+  padding: 4px 7px 5px;
+  border: 1px solid #e8dcc4;
+  border-radius: 4px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 13px, rgba(180, 160, 120, 0.18) 13px 14px) 0 20px / 100% 100% no-repeat,
+    #fffdf7;
+  box-shadow: 0 6px 14px rgba(60, 40, 10, 0.2);
+  transform: translateX(-50%) rotate(-3deg);
+}
+
+.stamp {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  display: grid;
+  width: 13px;
+  height: 15px;
+  place-items: center;
+  border: 1.5px dashed #e76f51;
+  border-radius: 2px;
+  color: #e76f51;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.cardTo {
+  overflow: hidden;
+  padding-right: 14px;
+  color: #8a7a5c;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 7.5px;
+  font-weight: 700;
+}
+
+.cardText {
+  overflow-wrap: anywhere;
+  margin-top: 2px;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.envelope {
+  width: 62px;
+  height: 40px;
+  border: 1px solid #dccaa5;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #fffaf0 0%, #f2e6cf 100%);
+  box-shadow: 0 6px 14px rgba(60, 40, 10, 0.22);
+  opacity: 0;
+  perspective: 200px;
+  transform: translateX(-50%) translateY(8px) scale(0.8);
+}
+
+.envelope::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(160deg, transparent 49%, rgba(160, 130, 80, 0.25) 50%, transparent 52%),
+    linear-gradient(200deg, transparent 49%, rgba(160, 130, 80, 0.25) 50%, transparent 52%);
+}
+
+.flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 58%;
+  background: linear-gradient(180deg, #efe1c4 0%, #e6d4b0 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: 50% 0;
+  transform: rotateX(180deg);
+  transition: transform 500ms ease 250ms;
+}
+
+.seal {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e0474f, #9f1d25);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  font-size: 10px;
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 250ms ease 650ms, transform 350ms cubic-bezier(0.3, 1.6, 0.5, 1) 650ms;
+}
+
+.envelopeNote {
+  position: absolute;
+  left: 50%;
+  bottom: -15px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+/* 封をする：ハガキが封筒に吸い込まれ、ふたが閉じて封蝋が付く */
+.item[data-item="envelope"] .card {
+  opacity: 0;
+  transform: translateX(-50%) translateY(26px) scale(0.5) rotate(0deg);
+}
+
+.item[data-item="envelope"] .envelope,
+.item[data-item="opened"] .envelope {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+
+.item[data-item="envelope"] .flap {
+  transform: rotateX(0deg);
+}
+
+.item[data-item="envelope"] .seal {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 開封：ふたが開き、中の手紙（元の文面）が出てくる */
+.item[data-item="opened"] .card {
+  z-index: 2;
+  transform: translateX(-50%) translateY(-30px) rotate(-2deg);
+}
+
+.item[data-item="opened"] .envelope {
+  z-index: 1;
+}
+
+.item[data-item="opened"] .envelopeNote {
+  background: #2463d1;
+}
+
+/* ---------- 虫めがね ---------- */
+
+.lens {
+  position: absolute;
+  top: 5%;
+  left: 3%;
+  z-index: 5;
+  display: flex;
+  width: 34%;
+  max-width: 150px;
+  aspect-ratio: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px;
+  border: 5px solid #e11d48;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #fff1f3 70%, #fde2e7 100%);
+  box-shadow: 0 10px 22px rgba(225, 29, 72, 0.25);
+  text-align: center;
+  animation: lt-pop 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.lens::after {
+  content: "";
+  position: absolute;
+  right: -14%;
+  bottom: -10%;
+  width: 30%;
+  height: 9px;
+  border-radius: 5px;
+  background: #6b4a2f;
+  transform: rotate(45deg);
+}
+
+.lens[data-mode="https"] {
+  border-color: #94a3b8;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f1f5f9 70%, #e2e8f0 100%);
+  box-shadow: 0 10px 22px rgba(30, 42, 64, 0.2);
+}
+
+.lensTitle {
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.lensText {
+  overflow-wrap: anywhere;
+  color: #9f1239;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.lensEnvelope {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.lensCipher {
+  overflow-wrap: anywhere;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.lensVerdict {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.lens[data-mode="https"] .lensVerdict {
+  background: #16a37a;
+}
+
+.modePlate {
+  position: absolute;
+  bottom: 3%;
+  left: 50%;
+  z-index: 3;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.modePlate[data-mode="https"] {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+@keyframes lt-drift {
+  to {
+    transform: translateX(26px);
+  }
+}
+
+@keyframes lt-bob {
+  to {
+    transform: translateY(-1.6px);
+  }
+}
+
+@keyframes lt-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.scene[data-reduced-motion="true"] *,
+.scene[data-reduced-motion="true"] *::before,
+.scene[data-reduced-motion="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene *,
+  .scene *::before,
+  .scene *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
