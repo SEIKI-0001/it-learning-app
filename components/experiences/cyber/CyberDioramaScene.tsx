@@ -208,7 +208,7 @@ export function CyberDioramaScene({
             })}
 
             <DioramaToken id="payload">
-              {payload && <Parcel tone={CARRY[payload.tone]} icon={payload.tone === "phone" ? "☎" : payload.tone === "leak" ? "▤" : "!"} />}
+              {payload && <Parcel tone={CARRY[payload.tone]} mark={payload.tone === "attack" ? "alert" : "none"} />}
             </DioramaToken>
           </>
         }
