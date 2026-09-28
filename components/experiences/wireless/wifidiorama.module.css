@@ -1,0 +1,390 @@
+/* 無線LAN の 3D 模型（WifiDioramaScene）。電波の輪・SSID の一覧・盗聴者の画面。 */
+
+.stage {
+  --wave: rgba(244, 63, 94, 0.7);
+}
+
+.stage[data-mode="wpa"] {
+  --wave: rgba(16, 185, 129, 0.7);
+}
+
+/* ---------- 右上の札：いまつないでいる SSID と、鍵の有無（別々の札） ---------- */
+
+.ssidPlate {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.ssidName {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #cfd6e0;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ssidLock {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ssidPlate[data-lock="wpa"] .ssidLock {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+.ssidPlate[data-lock="wired"] .ssidLock {
+  background: #f3f4f6;
+  box-shadow: 0 0 0 1px #d1d5db;
+  color: #374151;
+}
+
+/* ---------- 壁の掲示 ---------- */
+
+.menuBoard {
+  position: absolute;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 9px, rgba(255, 255, 255, 0.35) 9px 10px) 8px 10px / calc(100% - 16px) calc(100% - 16px) no-repeat,
+    #2f3a33;
+  box-shadow: 0 0 0 3px #7a5638;
+}
+
+.wifiSign {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1.5px #2f6fdb;
+  color: #1e3a8a;
+  line-height: 1.1;
+}
+
+.wifiSign b {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.wifiSign span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+[data-face][data-face].benchTop {
+  background: repeating-linear-gradient(90deg, #a37d56 0 20px, #8a6a4a 20px 22px);
+}
+
+/* ---------- 電波の輪（床に水平な輪。ノートPCを中心に広がる） ---------- */
+
+.waveOrigin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.wave,
+.waveStatic {
+  position: absolute;
+  left: -520px;
+  top: -520px;
+  width: 1040px;
+  height: 1040px;
+  border-radius: 50%;
+}
+
+.wave {
+  border: 5px solid var(--wave);
+  background: radial-gradient(closest-side, transparent 70%, color-mix(in srgb, var(--wave) 22%, transparent) 100%);
+  opacity: 0;
+  transform: scale(0.04);
+  animation: wifi-wave 2.7s ease-out infinite;
+}
+
+.wave:nth-child(2) {
+  animation-delay: 0.9s;
+}
+
+.wave:nth-child(3) {
+  animation-delay: 1.8s;
+}
+
+/* reduced-motion のときだけ：広がり切った範囲を静止で示す */
+.waveStatic {
+  display: none;
+  border: 3px dashed var(--wave);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--wave) 10%, transparent) 0%, color-mix(in srgb, var(--wave) 16%, transparent) 100%);
+}
+
+[data-reduced-motion="true"] .waveStatic {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waveStatic {
+    display: block;
+  }
+}
+
+@keyframes wifi-wave {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.04);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+/* ---------- ノートPCの画面（Wi-Fi の一覧） ---------- */
+
+.osScreen {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: linear-gradient(160deg, #dbeafe 0%, #eef2ff 100%);
+  font-size: 15px;
+}
+
+.osBar {
+  color: #1e3a8a;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.osRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #1f2937;
+  font-weight: 700;
+}
+
+.osRow[data-picked="true"] {
+  background: #2f6fdb;
+  color: #ffffff;
+}
+
+/* ---------- 投影ラベル ---------- */
+
+.wifiList {
+  display: flex;
+  min-width: 168px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 8px 7px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.wifiListTitle {
+  color: #6b7280;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.wifiRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 7px;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
+.wifiRow[data-picked="true"] {
+  background: #2f6fdb;
+  box-shadow: 0 3px 8px rgba(47, 111, 219, 0.35);
+}
+
+.wifiName {
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.wifiRow[data-picked="true"] .wifiName {
+  color: #ffffff;
+}
+
+.wifiLock {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #fff1f3;
+  color: #be123c;
+  font-size: 9.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.wifiLock[data-lock="wpa"] {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.wifiWired {
+  color: #374151;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.dataTag {
+  display: flex;
+  max-width: 190px;
+  flex-direction: column;
+  padding: 3px 8px 4px;
+  border: 1px solid #f3d9a4;
+  border-radius: 10px;
+  background: #fffdf6;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.14);
+}
+
+.dataTag[data-tone="danger"] {
+  border-color: #fecdd6;
+  background: #fff1f3;
+}
+
+.dataTag[data-tone="secure"] {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.dataTagHead {
+  color: #b45309;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.dataTag[data-tone="danger"] .dataTagHead {
+  color: #be123c;
+}
+
+.dataTag[data-tone="secure"] .dataTagHead {
+  color: #047857;
+}
+
+.dataTagBody {
+  overflow: hidden;
+  color: #1f2937;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eveScreen {
+  display: flex;
+  max-width: 210px;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 9px 7px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: #0f172a;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.3);
+  animation: wifi-pop 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.eveTitle {
+  color: #94a3b8;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.eveLine {
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.eveLine[data-secret] {
+  color: #fda4af;
+  font-weight: 900;
+}
+
+.eveNothing {
+  color: #cbd5e1;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.eveVerdict {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.eveVerdict[data-tone="ok"] {
+  background: #16a37a;
+}
+
+.radioChip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff1f3;
+  box-shadow: 0 0 0 1px #fecdd6;
+  color: #be123c;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.radioChip[data-mode="wpa"] {
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #a7f3d0;
+  color: #047857;
+}
+
+.radioChip[data-mode="wired"] {
+  background: #f3f4f6;
+  box-shadow: 0 0 0 1px #d1d5db;
+  color: #374151;
+}
+
+@keyframes wifi-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

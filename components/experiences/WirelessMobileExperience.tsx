@@ -5,13 +5,14 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
-import { WifiScene, type WifiMode, type WifiPhase } from "./wireless/WifiScene";
+import { MobileDioramaScene, type MobileMode } from "./wireless/MobileDioramaScene";
+import { WifiDioramaScene, type WifiMode, type WifiPhase } from "./wireless/WifiDioramaScene";
 
 // ============================================================================
 // 「無線LAN・モバイル通信」専用の体験。
-//   ① 無線LAN：SSID＝電波の名前。2.5Dのカフェで、ノートPCの電波が周り全部へ広がり盗聴者にも届く様子を見せ、
+//   ① 無線LAN：SSID＝電波の名前。駅前カフェ2階の3D模型で、ノートPCの電波がガラスも越えて店の外の盗聴者にも届く様子を見せ、
 //      暗号化なし（ID/PASSが読める）／WPA2・WPA3（受信はされるが読めない）／有線（比較）を切り替えて比べる。
-//   ② モバイル用語の早見（5G / テザリング / MVNO）。
+//   ② モバイル通信：街角の3D模型で 5G / テザリング / MVNO のデータの通り道を切り替えて見る。
 //   ③ フリーWi-Fiの安全/危険 仕分けクイズ。
 // ============================================================================
 
@@ -43,7 +44,7 @@ function wifiDetail(mode: WifiMode, phase: WifiPhase): ReactNode {
       <>データは<b>ケーブルの中だけ</b>を通ってアクセスポイントへ向かいます。</>
     ) : (
       <>
-        データは<b>電波</b>になってノートPCから<b>周り全部へ広がります</b>。ケーブルと違い、アクセスポイントだけを狙って届くわけではありません。
+        データは<b>電波</b>になってノートPCから<b>周り全部へ広がります</b>。ガラスや壁も越えて、店の外まで届きます。アクセスポイントだけを狙って届くわけではありません。
         {mode === "wpa" ? "ただし送る前に暗号化してあります。" : "しかも暗号化されていません。"}
       </>
     );
@@ -56,6 +57,7 @@ function wifiDetail(mode: WifiMode, phase: WifiPhase): ReactNode {
   ) : (
     <>
       アクセスポイントにも盗聴者にも<b>同じ電波</b>が届き、盗聴者の画面には <b>ID / PASSWORD がそのまま</b>。暗号化なしのWi-Fiは入力内容を盗み見られます。
+      （サイト自体が https なら中身はさらにTLSで守られますが、Wi-Fiの暗号化とは別のしくみです）
     </>
   );
 }
@@ -103,7 +105,7 @@ function WifiFlow() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <WifiScene mode={mode} phase={step.phase} reducedMotion={reducedMotion} />
+        <WifiDioramaScene mode={mode} phase={step.phase} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
       <div
@@ -140,45 +142,77 @@ function WifiFlow() {
   );
 }
 
-const TERMS = [
+const MOBILE_MODES: { v: MobileMode; label: string; on: string; name: string; d: ReactNode }[] = [
   {
-    emo: "🚀",
+    v: "5g",
+    label: "📶 5G",
+    on: "bg-sky-600 text-white",
     name: "5G",
-    tag: "次世代モバイル回線",
-    d: "高速・大容量／低遅延（遅れが少ない）／多数同時接続が特徴。4G(LTE)の次の世代。",
+    d: (
+      <>
+        1つの基地局が、スマホだけでなく<b>車・監視カメラ・歩く人のスマホ</b>へ同時に電波を届けます。
+        5Gの特徴は<b>高速・大容量</b>／<b>低遅延</b>（遅れが少ない＝車や遠隔操作にも使える）／<b>多数同時接続</b>（街じゅうのIoT機器もつなげる）。4G（LTE）の次の世代です。
+      </>
+    ),
   },
   {
-    emo: "📲",
+    v: "tether",
+    label: "📲 テザリング",
+    on: "bg-amber-500 text-white",
     name: "テザリング",
-    tag: "スマホを親機に",
-    d: "スマホのモバイル回線を中継して、パソコンやタブレットをインターネットにつなぐ機能。",
+    d: (
+      <>
+        ベンチのノートPCには<b>SIMが入っていない</b>ので、自分では基地局とつながれません。そこで
+        <b>スマホを親機（アクセスポイント）</b>にして、ノートPC →（Wi-Fi）→ スマホ →（モバイル回線）→ 基地局 とつなぎます。これがテザリングです。
+      </>
+    ),
   },
   {
-    emo: "💴",
+    v: "mvno",
+    label: "💴 MVNO",
+    on: "bg-violet-600 text-white",
     name: "MVNO（格安SIM）",
-    tag: "回線を借りて提供",
-    d: "大手キャリアの通信網を借りて、自社ブランドで安く通信サービスを提供する事業者。",
+    d: (
+      <>
+        格安SIMのスマホも、電波は<b>大手キャリア（MNO）の基地局・交換局</b>を通ります。右手前の格安SIMの会社は
+        <b>基地局を持たず、大手の回線を借りて</b>自社ブランドで安く売っています。これがMVNO（仮想移動体通信事業者）です。
+      </>
+    ),
   },
 ];
 
 function MobileTerms() {
+  const reducedMotion = useReducedMotion();
+  const [mode, setMode] = useState<MobileMode>("5g");
+  const current = MOBILE_MODES.find((m) => m.v === mode)!;
   return (
     <Panel>
-      <SectionTitle step={2}>モバイル通信の用語</SectionTitle>
-      <ul className="mt-3 space-y-2.5">
-        {TERMS.map((t) => (
-          <li key={t.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xl">{t.emo}</span>
-              <span className="text-sm font-bold text-gray-800">{t.name}</span>
-              <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-700">
-                {t.tag}
-              </span>
-            </div>
-            <p className="mt-1 text-sm leading-relaxed text-gray-600">{t.d}</p>
-          </li>
+      <SectionTitle step={2}>モバイル通信を街の模型で見る</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        スマホの電波は、街のビルの屋上にある<b className="text-gray-800">基地局</b>へ飛びます。ボタンを切り替えて、データの通り道を比べよう。
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
+        {MOBILE_MODES.map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            aria-pressed={mode === o.v}
+            onClick={() => setMode(o.v)}
+            className={`rounded-lg px-1 py-2 text-xs font-bold transition active:scale-95 ${
+              mode === o.v ? o.on : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {o.label}
+          </button>
         ))}
-      </ul>
+      </div>
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <MobileDioramaScene mode={mode} reducedMotion={reducedMotion} />
+      </div>
+      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
+        <p className="text-sm font-bold text-gray-900">{current.name}</p>
+        <p className="mt-1">{current.d}</p>
+      </div>
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         ※ 覚え方：<b>5G＝速い・遅延少・多数接続</b>／<b>テザリング＝スマホ経由でネット共有</b>／
         <b>MVNO＝回線を借りる格安SIM</b>。
