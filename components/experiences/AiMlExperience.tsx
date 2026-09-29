@@ -1,384 +1,244 @@
 "use client";
 
-import { useState, useSyncExternalStore, type ReactNode } from "react";
-import {
-  BOUNDARY_FINAL,
-  BOUNDARY_ROUGH,
-  LearningScene,
-  UNKNOWNS,
-  type LearningSceneProps,
-} from "./aiml/LearningScene";
-import VariantMap from "./aiml/VariantMap";
-import VariantShop from "./aiml/VariantShop";
-import VariantTeacher from "./aiml/VariantTeacher";
-import { SceneTimeline } from "./scene/SceneTimeline";
-import { useReducedMotion } from "./scene/useReducedMotion";
-import { useStepPlayer } from "./scene/useStepPlayer";
+import type { ReactNode } from "react";
+import { DogCatPlot, NEW_PET, predictPet } from "./aiml/DogCatPlot";
+import { Takeaway, Term } from "./aiml/parts";
+import { MlPractice, Phrases, TermMap } from "./aiml/TermSlides";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
-// 「AIと機械学習」専用の体験。
-//   ① 包含図：AI ⊃ 機械学習 ⊃ 深層学習・生成AI
-//   ② 機械学習の流れ（例を集める→学ぶ→モデル→予測）を1つの 2.5D ステージで実演。
-//      犬/猫の学習データがモデルへ入り、判断の境界が形になり、未知の写真を「犬 92%」と判定する
-//   ③ 学習の3タイプ（教師あり／教師なし／強化）の早見
+// 「AIと機械学習」専用の体験。全体 → 3分類 → 各分類の詳細 → 用語 の順に降りていく。
+//   ① 用語の地図（AI ⊃ 機械学習 ⊃ ディープラーニング ⊃ 生成AI）
+//   ② 機械学習の3分類を1ページで（何を渡すかで分かれる）
+//   ③ 教師あり・④ 教師なし は同じ犬猫8枚で。違いは「正解が付いているか」だけ
+//   ⑤ 強化学習（迷路のロボット） ⑥ 問題文の言い回し → 用語 ⑦ 確認6問
 // ============================================================================
 
-function Nested() {
-  return (
-    <Panel>
-      <SectionTitle step={1}>言葉の大きさを整理</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        AI・機械学習・生成AIは<b className="text-gray-800">大きさの違う入れ子</b>の関係です。
-      </p>
-      <div className="mt-4 rounded-xl bg-brand-50 p-3 ring-2 ring-brand-300">
-        <div className="text-xs font-bold text-brand-700">🤖 AI（人工知能）</div>
-        <div className="mt-0.5 text-[11px] text-brand-600/80">人の知的な判断に近い処理ぜんぶ</div>
-        <div className="mt-2.5 rounded-xl bg-brand-50 p-3 ring-2 ring-brand-300">
-          <div className="text-xs font-bold text-brand-700">📊 機械学習</div>
-          <div className="mt-0.5 text-[11px] text-brand-600/80">データからパターンを学ぶ代表的な方法</div>
-          <div className="mt-2.5 rounded-lg bg-sky-100 p-3 ring-2 ring-sky-300">
-            <div className="text-xs font-bold text-sky-700">🧠 深層学習・生成AI</div>
-            <div className="mt-0.5 text-[11px] text-sky-600/80">機械学習をさらに発展させた方法</div>
-          </div>
-        </div>
-      </div>
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 一番大きいのが <b>AI</b>。その中の代表が <b>機械学習</b>。さらにその中に <b>生成AI</b> がいます。
-      </div>
-    </Panel>
-  );
-}
-
-const PHASES = ["📥 データ", "🔁 学習", "📦 モデル", "🎯 予測"];
-
-type MlStep = {
-  phase: number;
-  title: string;
-  detail: ReactNode;
-  scene: Omit<LearningSceneProps, "unknown" | "reducedMotion">;
+type TypeCard = {
+  name: string;
+  give: string;
+  visual: ReactNode;
+  can: string;
+  ex: string;
 };
 
-const STEPS: MlStep[] = [
+const TYPES: TypeCard[] = [
   {
-    phase: 0,
-    title: "例を集める",
-    detail: (
+    name: "教師あり学習",
+    give: "データ ＋ 正解",
+    visual: (
       <>
-        犬と猫の写真を<b>たくさん</b>用意し、1枚ずつ「犬」「猫」と<b>正解ラベル</b>を付けます。
-        このときモデルは<b>まだ空っぽ</b>。AIは最初から答えを知っているわけではありません。
+        🐶<span className="text-[10px] font-bold text-brand-700">犬</span> 🐱<span className="text-[10px] font-bold text-brand-700">猫</span>
       </>
     ),
-    scene: { learned: 0, boundary: null, score: null, complete: false, unknownIn: false, showResult: false },
+    can: "分類・回帰（正解を当てる）",
+    ex: "迷惑メールの判定、売上の予測",
   },
   {
-    phase: 1,
-    title: "学習する（最初の数枚）",
-    detail: (
+    name: "教師なし学習",
+    give: "データだけ",
+    visual: (
       <>
-        写真がモデルに入ると、<b>特徴（鼻の長さ・耳のとがり）</b>の平面に点として並びます。
-        まだ3枚だけなので、犬と猫を分ける<b>境界線はでたらめ</b>。1枚まちがえています。
+        🐶🐶 <span className="text-gray-300">|</span> 🐱🐱
       </>
     ),
-    scene: { learned: 3, boundary: BOUNDARY_ROUGH, score: { ok: 2, total: 3 }, complete: false, unknownIn: false, showResult: false },
+    can: "クラスタリング（似たもの同士をまとめる）",
+    ex: "買い方が似た顧客のグループ分け",
   },
   {
-    phase: 1,
-    title: "学習する（くり返し）",
-    detail: (
+    name: "強化学習",
+    give: "行動した結果の報酬",
+    visual: (
       <>
-        残りの写真も入れて、まちがいが減るように<b>境界線を少しずつ動かします</b>。
-        データが増えるほど、犬と猫をきれいに分ける向きに落ち着きます。
+        🤖 <span className="text-[11px] font-bold text-emerald-600">+10</span> <span className="text-[11px] font-bold text-rose-600">−1</span>
       </>
     ),
-    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: { ok: 8, total: 8 }, complete: false, unknownIn: false, showResult: false },
-  },
-  {
-    phase: 2,
-    title: "モデル完成",
-    detail: (
-      <>
-        学習で決まった「<b>ここから上は猫、下は犬</b>」という判断の型が<b>モデル</b>です。
-        学習データのカードはもう使いません。残るのはこの型だけ。
-      </>
-    ),
-    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: null, complete: true, unknownIn: false, showResult: false },
-  },
-  {
-    phase: 3,
-    title: "はじめて見る写真を入れる",
-    detail: (
-      <>
-        学習に使っていない<b>ラベルなしの写真</b>をモデルに入れます。特徴を測ると、平面のどこかに落ちます。
-      </>
-    ),
-    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: null, complete: true, unknownIn: true, showResult: false },
-  },
-  {
-    phase: 3,
-    title: "予測する",
-    detail: (
-      <>
-        落ちた場所が<b>境界線のどちら側か</b>で犬／猫を、<b>境界からどれだけ離れているか</b>で自信（％）を出します。
-        下のボタンで写真を変えてみよう。
-      </>
-    ),
-    scene: { learned: 8, boundary: BOUNDARY_FINAL, score: null, complete: true, unknownIn: true, showResult: true },
+    can: "報酬が増える行動を覚える",
+    ex: "ゲームAI、ロボットの制御",
   },
 ];
 
-function MlFlow() {
-  const reducedMotion = useReducedMotion();
-  const player = useStepPlayer(STEPS.length, reducedMotion);
-  const step = STEPS[player.index];
-  const [unknownId, setUnknownId] = useState(UNKNOWNS[0].id);
-  const unknown = UNKNOWNS.find((u) => u.id === unknownId) ?? UNKNOWNS[0];
-  const last = player.index === player.lastIndex;
+function ThreeTypes() {
   return (
     <Panel>
-      <SectionTitle step={2}>機械学習の流れ</SectionTitle>
+      <SectionTitle step={2}>機械学習の3分類を1ページで</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        「<b className="text-gray-800">犬と猫を見分けるAI</b>」を例に、データからモデルができて、そのモデルで新しい写真を判断するまでを追いかけよう。
+        3つの違いは、学ぶときに<b className="text-gray-800">何を渡すか</b>だけです。
       </p>
-
-      <div className="mt-3 flex gap-1.5" data-testid="ml-phase" data-phase={step.phase}>
-        {PHASES.map((label, i) => (
-          <div
-            key={label}
-            className={`flex-1 rounded-lg px-1 py-1.5 text-center text-[10px] font-bold transition ${
-              i === step.phase ? "bg-brand-600 text-white" : i < step.phase ? "bg-brand-100 text-brand-600" : "bg-gray-100 text-gray-400"
-            }`}
-          >
-            {label}
-          </div>
-        ))}
-      </div>
-
-      <p className="mt-3 text-sm font-bold text-gray-900" data-testid="ml-step-title">
-        STEP {player.index + 1}：{step.title}
-      </p>
-
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <LearningScene {...step.scene} unknown={unknown} reducedMotion={reducedMotion} />
-      </div>
-
-      {last && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs" data-testid="ml-unknown-picker">
-          <span className="font-bold text-gray-500">入れる写真：</span>
-          {UNKNOWNS.map((u) => (
-            <button
-              key={u.id}
-              type="button"
-              aria-pressed={unknownId === u.id}
-              onClick={() => setUnknownId(u.id)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-bold transition active:scale-95 ${
-                unknownId === u.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 ring-1 ring-gray-300"
-              }`}
-            >
-              {u.emoji} {u.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
-        {step.detail}
-      </div>
-
-      <div className="mt-3">
-        <SceneTimeline
-          index={player.index}
-          steps={STEPS}
-          playing={player.playing}
-          reducedMotion={reducedMotion}
-          onMove={player.move}
-          onTogglePlay={player.togglePlay}
-          playLabel="機械学習の流れを再生"
-          timelineLabel="機械学習の流れのタイムライン"
-          startCaption="データを集める"
-          endCaption="新しい写真を判断"
-        />
-      </div>
-
-      {last && (
-        <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="ml-insight">
-          💡 AIは答えを最初から知っているのではなく、<b>データからモデル（判断の型）を作り</b>、
-          <b>そのモデルで新しいデータを判断</b>します。だから学習データが偏っていれば、判断も偏ります。
-        </div>
-      )}
-    </Panel>
-  );
-}
-
-// 教師あり／教師なしは「正解ラベルがあるか」で対比できる、いちばん大事なペア。
-function DataLearning() {
-  return (
-    <Panel>
-      <SectionTitle step={3}>データから学ぶ2タイプ</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        いちばんよく出るのがこの2つ。ちがいは<b className="text-gray-800">「正解（ラベル）が付いているか」</b>だけです。
-      </p>
-
-      {/* 教師あり */}
-      <div className="mt-4 rounded-xl bg-brand-50 p-3.5 ring-1 ring-brand-200">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🏷️</span>
-          <span className="text-sm font-bold text-brand-800">教師あり学習</span>
-          <span className="rounded-full bg-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-800">正解あり</span>
-        </div>
-        <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
-          <b>答え付きの問題集</b>で練習するイメージ。「この写真は猫」「このメールは迷惑」と
-          <b>正解をセットで</b>大量に見せ、当てられるようにします。
-        </p>
-        <dl className="mt-2.5 space-y-1 text-xs leading-relaxed text-gray-600">
-          <div><dt className="inline font-bold text-brand-700">学び方：</dt> 入力と正解のペアから、対応のルールを覚える</div>
-          <div><dt className="inline font-bold text-brand-700">できること：</dt> 分類（迷惑メールか否か）・予測（来月の売上）</div>
-          <div><dt className="inline font-bold text-brand-700">見分け方：</dt> 学習データに「正解ラベル」が付いている</div>
-        </dl>
-      </div>
-
-      {/* 教師なし */}
-      <div className="mt-3 rounded-xl bg-emerald-50 p-3.5 ring-1 ring-emerald-200">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🧩</span>
-          <span className="text-sm font-bold text-emerald-800">教師なし学習</span>
-          <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-800">正解なし</span>
-        </div>
-        <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
-          正解は教えず、<b>似たもの同士を自分でグループ分け</b>するイメージ。
-          バラバラのお客さんを、買い物の傾向が近い人ごとにまとめます。
-        </p>
-        <dl className="mt-2.5 space-y-1 text-xs leading-relaxed text-gray-600">
-          <div><dt className="inline font-bold text-emerald-700">学び方：</dt> 正解なしで、データの似ている／離れているを見る</div>
-          <div><dt className="inline font-bold text-emerald-700">できること：</dt> グループ分け（顧客の分類）・傾向の発見</div>
-          <div><dt className="inline font-bold text-emerald-700">見分け方：</dt> 学習データに「正解ラベル」がない</div>
-        </dl>
-      </div>
-
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 ひとことで：<b>正解を教える＝教師あり</b>、<b>教えず仲間分け＝教師なし</b>。
-      </div>
-    </Panel>
-  );
-}
-
-// 強化学習はデータを見るのではなく「やってみて学ぶ」別タイプなので項目を分ける。
-function Reinforcement() {
-  return (
-    <Panel>
-      <SectionTitle step={4}>やってみて学ぶタイプ</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        上の2つは用意したデータから学びました。<b className="text-gray-800">強化学習</b>は、
-        実際に<b className="text-gray-800">行動してみて、その結果から学ぶ</b>のがちがいです。
-      </p>
-
-      <div className="mt-4 rounded-xl bg-brand-50 p-3.5 ring-1 ring-brand-200">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🎮</span>
-          <span className="text-sm font-bold text-brand-800">強化学習</span>
-          <span className="rounded-full bg-brand-200 px-2 py-0.5 text-[10px] font-bold text-brand-800">ごほうびで上達</span>
-        </div>
-        <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
-          ゲームで<b>上手な手にはスコア（報酬）</b>、まずい手には減点。
-          試行錯誤をくり返し、<b>報酬が増える行動</b>を自分で見つけて上達します。
-        </p>
-      </div>
-
-      {/* 試行錯誤のループ */}
-      <div className="mt-3 flex items-center justify-center gap-1.5 text-center">
-        {[
-          { e: "🤖", t: "行動する" },
-          { e: "🌍", t: "結果が出る" },
-          { e: "🍬", t: "報酬／減点" },
-          { e: "📈", t: "次に活かす" },
-        ].map((s, i, arr) => (
-          <div key={i} className="flex items-center">
-            <div className="w-[64px] rounded-lg bg-gray-50 px-1 py-2 ring-1 ring-gray-200">
-              <div className="text-xl leading-none">{s.e}</div>
-              <div className="mt-1 text-[10px] font-bold text-gray-600">{s.t}</div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3" data-testid="ml-types">
+        {TYPES.map((t) => (
+          <div key={t.name} className="rounded-xl p-3 ring-1 ring-gray-200">
+            <div className="text-[15px] font-bold text-gray-900">{t.name}</div>
+            <div className="mt-1.5 rounded-lg bg-brand-50 px-2 py-1 text-[13px] font-bold text-brand-800 ring-1 ring-brand-200">渡す：{t.give}</div>
+            <div className="mt-2 text-center text-xl leading-none" aria-hidden>
+              {t.visual}
             </div>
-            {i < arr.length - 1 && <span className="px-0.5 text-gray-300">→</span>}
+            <dl className="mt-2 space-y-0.5 text-[12px] leading-relaxed text-gray-600">
+              <div>
+                <dt className="inline font-bold text-gray-700">できる：</dt>
+                <dd className="inline">{t.can}</dd>
+              </div>
+              <div>
+                <dt className="inline font-bold text-gray-700">例：</dt>
+                <dd className="inline">{t.ex}</dd>
+              </div>
+            </dl>
           </div>
         ))}
       </div>
-      <p className="mt-2 text-center text-[11px] text-gray-400">このループをくり返して、だんだん賢くなる</p>
 
-      <dl className="mt-3 space-y-1 rounded-xl bg-gray-50 p-3 text-xs leading-relaxed text-gray-600 ring-1 ring-gray-200">
-        <div><dt className="inline font-bold text-brand-700">できること：</dt> ゲームAI・ロボットの制御・自動運転の判断</div>
-        <div><dt className="inline font-bold text-brand-700">見分け方：</dt> 正解データではなく「報酬」で良し悪しを教える</div>
-      </dl>
-
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚠️ AIは<b>魔法ではない</b>。どのタイプも、学ぶデータや報酬の決め方に偏り・誤りがあれば結果も間違えます。
-      </div>
+      <h4 className="mt-4 text-sm font-bold text-gray-900">過去問の選択肢に当てはめると</h4>
+      <ul className="mt-2 space-y-1.5 text-[12px] leading-snug" data-testid="ml-examples">
+        {[
+          { ex: "乳児の泣き声と「泣いている原因」の組を集めて、原因を推測する", ans: "正解付き → 教師あり" },
+          { ex: "送られた服の画像の特徴から、利用者の好みの傾向をつかむ", ans: "正解なし → 教師なし" },
+          { ex: "盛り付けの動作を何度も繰り返し、上手になるロボット", ans: "試行錯誤 → 強化学習" },
+          { ex: "気温や積雪から、用意したルールでゲレンデの状態を判断する", ans: "学んでいない → ルールベース" },
+        ].map((r) => (
+          <li key={r.ex} className="rounded-lg px-2.5 py-1.5 ring-1 ring-gray-200">
+            <span className="text-gray-700">{r.ex}</span>
+            <span className="ml-1 font-bold text-brand-700">→ {r.ans}</span>
+          </li>
+        ))}
+      </ul>
+      <Takeaway>正解を渡す → 教師あり／データだけ → 教師なし／報酬を渡す → 強化学習</Takeaway>
     </Panel>
   );
 }
 
-function CurrentAiMl() {
+function Supervised() {
   return (
-    <div className="space-y-5">
-      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
-        <b>AI</b> は知的な処理の総称。その代表が、データからパターンを学ぶ <b>機械学習</b>。
-        問題集をたくさん解いて傾向をつかむ学習者のように、<b>データを見て判断のコツを覚えます</b>。
+    <Panel>
+      <SectionTitle step={3}>教師あり学習：正解付きの写真で学ぶ</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        犬と猫の写真8枚に、人が<b className="text-gray-800">「犬」「猫」の正解</b>を付けて渡します。
+        写真を「鼻の長さ」と「耳のとがり」で並べると、こうなります。
+      </p>
+      <div className="mx-auto mt-3 max-w-sm rounded-xl p-2 ring-1 ring-gray-200">
+        <DogCatPlot mode="labeled" boundary showNew testId="ml-supervised" />
+        <p className="mt-1 text-center text-[12px] font-bold text-brand-700" data-testid="ml-supervised-result">
+          <span className="mr-1 inline-grid h-4 w-4 place-items-center rounded-full ring-2 ring-brand-600">?</span>
+          正解の付いていない新しい写真 → 犬の側 → 「犬」（{predictPet(NEW_PET).pct}%）
+        </p>
       </div>
-
-      <Nested />
-      <MlFlow />
-      <DataLearning />
-      <Reinforcement />
-    </div>
+      <ol className="mt-3 space-y-1.5 text-[13px] leading-relaxed text-gray-700">
+        <li>
+          <b className="text-gray-900">① 正解を付ける</b>：写真1枚ずつに「犬」「猫」の印。この作業が <Term>アノテーション</Term>
+        </li>
+        <li>
+          <b className="text-gray-900">② 学ぶ</b>：犬と猫を分ける線（点線）を引く。この線が<b>モデル（判断の型）</b>
+        </li>
+        <li>
+          <b className="text-gray-900">③ 予測する</b>：正解の付いていない新しい写真が、線の犬の側に落ちた → 「犬」
+        </li>
+      </ol>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-[12px] leading-relaxed">
+        <div className="rounded-xl p-2.5 ring-1 ring-gray-200">
+          <div className="font-bold text-gray-900">分類</div>
+          <div className="text-gray-600">答えが<b>種類</b>。「この写真は犬？猫？」</div>
+        </div>
+        <div className="rounded-xl p-2.5 ring-1 ring-gray-200">
+          <div className="font-bold text-gray-900">回帰</div>
+          <div className="text-gray-600">答えが<b>数</b>。「この犬の体重は何kg？」</div>
+        </div>
+      </div>
+      <Takeaway>正解付きのデータで学び、新しいデータの正解を当てる ＝ 教師あり学習</Takeaway>
+    </Panel>
   );
 }
 
-// ---- 解説の3案比較（開発中のみ）。?aiml=a|b|c で切り替える。----
-// スライドデッキはパネルを useId で登録するので、同じページ内で差し替えると枚数がずれる。
-// 切替はページ遷移（リンク）で行い、決まるまで何も描かない。
-const VARIANTS = [
-  { key: "current", label: "現行", Component: CurrentAiMl },
-  { key: "a", label: "A パン屋で通す", Component: VariantShop },
-  { key: "b", label: "B 先生になる", Component: VariantTeacher },
-  { key: "c", label: "C 地図と3つの質問", Component: VariantMap },
-] as const;
-
-const noopSubscribe = () => () => {};
-
-function useVariantKey() {
-  return useSyncExternalStore(
-    noopSubscribe,
-    () => new URLSearchParams(window.location.search).get("aiml") ?? "current",
-    () => null,
-  );
-}
-
-function VariantSwitcher({ active }: { active: string }) {
+function Unsupervised() {
   return (
-    <nav className="flex flex-wrap items-center gap-1.5 rounded-xl bg-amber-50 p-2 text-xs ring-1 ring-amber-300" aria-label="解説の案を切り替え">
-      <span className="font-bold text-amber-900">比較用：</span>
-      {VARIANTS.map((v) => (
-        <a
-          key={v.key}
-          href={`?aiml=${v.key}`}
-          aria-current={v.key === active ? "page" : undefined}
-          className={`rounded-lg px-2.5 py-1 font-bold ${v.key === active ? "bg-gray-900 text-white" : "bg-white text-gray-700 ring-1 ring-gray-300"}`}
-        >
-          {v.label}
-        </a>
-      ))}
-    </nav>
+    <Panel>
+      <SectionTitle step={4}>教師なし学習：正解なしで仲間分け</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        同じ8枚を、今度は<b className="text-gray-800">正解を付けずに</b>渡します。AIに見えているのは、鼻の長さと耳のとがりだけです。
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl p-1.5 ring-1 ring-gray-200">
+          <div className="text-center text-[12px] font-bold text-gray-500">渡すデータ（正解なし）</div>
+          <DogCatPlot mode="raw" testId="ml-unsupervised-raw" />
+        </div>
+        <div className="rounded-xl p-1.5 ring-1 ring-brand-200">
+          <div className="text-center text-[12px] font-bold text-brand-700">AIが見つけたまとまり</div>
+          <DogCatPlot mode="grouped" testId="ml-unsupervised-grouped" />
+        </div>
+      </div>
+      <p className="mt-3 text-[13px] leading-relaxed text-gray-700">
+        近い点同士をまとめると、2つのグループに分かれました。でもAIは、それが<b>犬と猫だとは知りません</b>。
+        「グループAは犬だね」と<b>名前を付けるのは人</b>です。この仲間分けを <Term>クラスタリング</Term> といいます。
+      </p>
+      <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2 text-[12px] leading-relaxed text-gray-600 ring-1 ring-gray-200">
+        ③と同じ写真なのに、最初から🐶🐱が付いていたか（教師あり）、付いていないか（教師なし）だけが違います。
+      </div>
+      <Takeaway>正解なしで、似たもの同士をまとめる ＝ 教師なし学習</Takeaway>
+    </Panel>
+  );
+}
+
+function Reinforcement() {
+  const tries = [
+    { n: "1回目", act: "でたらめに進む", result: "20歩のうち壁に5回ぶつかり、ゴールできず", reward: "−7" },
+    { n: "2回目", act: "壁は避けたが遠回り", result: "30歩でゴール", reward: "+7" },
+    { n: "50回目", act: "報酬の多かった道を選ぶ", result: "8歩でゴール", reward: "+9.2" },
+  ];
+  return (
+    <Panel>
+      <SectionTitle step={5}>強化学習：やってみて、報酬で上達</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        迷路のゴールを目指すロボット。「正しい道順」という正解は渡しません。
+        代わりに、<b className="text-gray-800">行動した結果に点数（報酬）</b>を返します。
+      </p>
+      <div className="mt-3 rounded-lg bg-gray-100 px-3 py-1.5 text-[12px] font-bold text-gray-700">
+        報酬のルール：ゴール <span className="text-emerald-700">+10</span>／壁にぶつかる <span className="text-rose-600">−1</span>／1歩ごとに <span className="text-rose-600">−0.1</span>
+      </div>
+      <table className="mt-2 w-full border-collapse text-[12px]" data-testid="ml-rl">
+        <thead>
+          <tr className="bg-gray-100 text-left text-gray-600">
+            <th className="px-1.5 py-1 font-bold">回</th>
+            <th className="px-1.5 py-1 font-bold">行動</th>
+            <th className="px-1.5 py-1 font-bold">結果</th>
+            <th className="px-1.5 py-1 text-right font-bold">報酬</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tries.map((t) => (
+            <tr key={t.n} className="border-b border-gray-100 align-top">
+              <td className="whitespace-nowrap px-1.5 py-1 font-bold text-gray-700">{t.n}</td>
+              <td className="px-1.5 py-1 text-gray-800">{t.act}</td>
+              <td className="px-1.5 py-1 text-gray-600">{t.result}</td>
+              <td className={`px-1.5 py-1 text-right font-bold tabular-nums ${t.reward.startsWith("+") ? "text-emerald-700" : "text-rose-600"}`}>{t.reward}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-1 text-center text-[12px] font-bold text-gray-700" aria-hidden>
+        {["行動する", "結果を見る", "報酬をもらう", "次の行動を変える"].map((s, i, arr) => (
+          <span key={s} className="flex items-center gap-1">
+            <span className="rounded-lg bg-gray-100 px-2 py-1">{s}</span>
+            {i < arr.length - 1 && <span className="text-gray-400">→</span>}
+          </span>
+        ))}
+      </div>
+      <p className="mt-3 text-[12px] leading-relaxed text-gray-600">使われる場面：ゲームAI、ロボットの制御、自動運転の判断など。</p>
+      <Takeaway>正解ではなく、試した結果の「報酬」が増える行動を覚える ＝ 強化学習</Takeaway>
+    </Panel>
   );
 }
 
 export default function AiMlExperience() {
-  const key = useVariantKey();
-  if (process.env.NODE_ENV === "production") return <CurrentAiMl />;
-  if (key === null) return null;
-  const variant = VARIANTS.find((v) => v.key === key) ?? VARIANTS[0];
-  const { Component } = variant;
   return (
-    <div className="space-y-4">
-      <VariantSwitcher active={variant.key} />
-      <Component />
+    <div className="space-y-5">
+      <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
+        まず<b>AIの用語の全体地図</b>を見て、次に<b>機械学習の3つの学び方</b>を1つずつ見ていきます。
+      </div>
+      <TermMap step={1} />
+      <ThreeTypes />
+      <Supervised />
+      <Unsupervised />
+      <Reinforcement />
+      <Phrases step={6} />
+      <MlPractice step={7} />
     </div>
   );
 }
