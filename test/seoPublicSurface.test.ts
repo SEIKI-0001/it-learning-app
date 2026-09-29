@@ -1,10 +1,17 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import sitemap from "@/app/sitemap";
 import { GUIDES, GUIDE_BASE_PATH, guidePath } from "@/lib/guide/guides";
+import { KAKOMON_BASE_PATH, getAllKakomonQuestions, getKakomonYears } from "@/lib/publicPages/kakomon";
+import { WORDS_BASE_PATH } from "@/lib/publicPages/words";
+import { getAllWords } from "@/lib/wordlist";
 
 function read(path: string): string {
   return readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 }
+
+const SITE = "https://shikaku-mochit.com";
+const sitemapUrls = () => sitemap().map((entry) => entry.url);
 
 describe("public SEO surface", () => {
   it("keeps the canonical LP crawlable by search and AI search bots", () => {
@@ -16,10 +23,15 @@ describe("public SEO surface", () => {
   });
 
   it("publishes only HTTPS canonical URLs in the sitemap", () => {
-    const sitemap = read("public/sitemap.xml");
+    const urls = sitemapUrls();
 
-    expect(sitemap).toContain("<loc>https://shikaku-mochit.com/lp</loc>");
-    expect(sitemap).not.toContain("<loc>http://");
+    expect(urls).toContain(`${SITE}/lp`);
+    for (const u of urls) expect(u.startsWith(`${SITE}/`)).toBe(true);
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
+  it("generates the sitemap from app/sitemap.ts only (no static file shadowing it)", () => {
+    expect(() => read("public/sitemap.xml")).toThrow();
   });
 
   it("marks the landing page indexable and canonical", () => {
@@ -37,14 +49,30 @@ describe("public SEO surface", () => {
   });
 
   it("lists the guide index and every guide article in the sitemap", () => {
-    const sitemap = read("public/sitemap.xml");
+    const urls = sitemapUrls();
 
     for (const path of [GUIDE_BASE_PATH, ...GUIDES.map((g) => guidePath(g.slug))]) {
-      expect(sitemap).toContain(`<loc>https://shikaku-mochit.com${path}</loc>`);
+      expect(urls).toContain(`${SITE}${path}`);
     }
     // 既存の公開ページを落とさない。
-    expect(sitemap).toContain("<loc>https://shikaku-mochit.com/legal/tokusho</loc>");
-    expect(sitemap).toContain("<loc>https://shikaku-mochit.com/privacy</loc>");
+    expect(urls).toContain(`${SITE}/legal/tokusho`);
+    expect(urls).toContain(`${SITE}/privacy`);
+  });
+
+  it("lists every public past-exam question and acronym page in the sitemap", () => {
+    const urls = new Set(sitemapUrls());
+
+    expect(urls.has(`${SITE}${KAKOMON_BASE_PATH}`)).toBe(true);
+    for (const year of getKakomonYears()) expect(urls.has(`${SITE}${KAKOMON_BASE_PATH}/${year}`)).toBe(true);
+    for (const q of getAllKakomonQuestions()) expect(urls.has(`${SITE}${q.path}`)).toBe(true);
+    expect(urls.has(`${SITE}${WORDS_BASE_PATH}`)).toBe(true);
+    for (const w of getAllWords()) expect(urls.has(`${SITE}${WORDS_BASE_PATH}/${w.id}`)).toBe(true);
+  });
+
+  it("keeps past-exam and acronym pages crawlable", () => {
+    const robots = read("public/robots.txt");
+    expect(robots).toContain("Allow: /kakomon");
+    expect(robots).toContain("Allow: /words");
   });
 
   it("keeps guides crawlable and linked from the LP", () => {

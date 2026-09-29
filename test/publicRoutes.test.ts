@@ -12,11 +12,16 @@ describe("public route matching", () => {
     "/guide",
     "/guide/it-passport-study-method",
     "/guide/past-exam-strategy",
+    "/kakomon",
+    "/kakomon/2025",
+    "/kakomon/2025/26",
+    "/words",
+    "/words/kpi",
   ])("allows %s without an app session", (pathname) => {
     expect(isPublicPath(pathname)).toBe(true);
   });
 
-  it.each(["/", "/more", "/campaigning", "/legalese", "/privacy-policy", "/guides", "/guidebook"])(
+  it.each(["/", "/more", "/campaigning", "/legalese", "/privacy-policy", "/guides", "/guidebook", "/kakomonx", "/wordsearch"])(
     "does not broaden matching to %s",
     (pathname) => {
       expect(isPublicPath(pathname)).toBe(false);

@@ -52,10 +52,15 @@
 }
 .guide .g-top-in {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 6px 16px;
   padding: 12px 0;
+}
+.guide .g-top-nav {
+  display: flex;
+  gap: 14px;
 }
 .guide .g-logo {
   font-family: var(--disp);
@@ -420,4 +425,187 @@
 }
 .guide .g-table.compact thead th {
   white-space: normal;
+}
+
+/* ============================================================================
+   公開過去問（/kakomon）・英略語（/words）
+   ========================================================================== */
+.guide .k-meta {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--sub);
+}
+.guide .k-question {
+  margin: 22px 0 0;
+  padding: 18px 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.guide .k-prompt {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.guide .k-figures {
+  margin-top: 16px;
+}
+.guide .k-choices {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.guide .k-choices li {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  line-height: 1.7;
+}
+.guide .k-choices .k-key {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--ai);
+}
+.guide .k-choices .k-text {
+  white-space: pre-wrap;
+}
+.guide .k-answer {
+  margin: 18px 0 0;
+  border-radius: 12px;
+  background: var(--wash);
+}
+.guide .k-answer > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--ai);
+}
+.guide .k-answer > summary::-webkit-details-marker {
+  display: none;
+}
+.guide .k-answer[open] > summary {
+  border-bottom: 1px solid #cdd5f3;
+}
+.guide .k-answer-body {
+  padding: 4px 18px 18px;
+}
+.guide .k-correct {
+  margin: 12px 0 0;
+  font-weight: 700;
+}
+.guide .k-explanation {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+}
+.guide .k-source {
+  margin: 14px 0 0;
+  font-size: 0.8rem;
+  color: var(--sub);
+  line-height: 1.8;
+}
+.guide .k-source p {
+  margin: 0;
+}
+.guide .k-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 28px 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.guide .k-pager .next {
+  margin-left: auto;
+  text-align: right;
+}
+.guide .k-section {
+  margin: 44px 0 0;
+}
+.guide .k-section h2 {
+  font-size: 1.2rem;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.guide .k-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.guide .k-list li {
+  border-bottom: 1px solid var(--line);
+}
+.guide .k-list a {
+  display: flex;
+  gap: 12px;
+  padding: 10px 2px;
+  text-decoration: none;
+  line-height: 1.6;
+}
+.guide .k-list .n {
+  flex-shrink: 0;
+  min-width: 3.2em;
+  color: var(--sub);
+  font-size: 0.86rem;
+}
+.guide .k-list .t {
+  color: var(--ink);
+}
+.guide .k-list a:hover .t {
+  color: var(--ai);
+}
+.guide .k-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.guide .k-tags a,
+.guide .k-tags span {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+.guide .k-def {
+  margin: 16px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.guide .k-def div {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.guide .k-def div:last-child {
+  border-bottom: 0;
+}
+.guide .k-def dt {
+  font-weight: 700;
+  color: var(--sub);
+  font-size: 0.86rem;
+}
+.guide .k-def dd {
+  margin: 0;
+}
+.guide .k-section p {
+  margin: 12px 0 0;
+}
+.guide .k-section > ul:not([class]) {
+  list-style: disc;
+  margin: 12px 0 0;
+  padding-left: 1.4em;
+}
+.guide .k-section > ul:not([class]) li {
+  margin: 6px 0;
 }

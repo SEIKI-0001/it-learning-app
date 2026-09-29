@@ -17,6 +17,8 @@ Allow: /lp
 Allow: /legal/
 Allow: /privacy
 Allow: /guide
+Allow: /kakomon
+Allow: /words
 Disallow: /api/
 Disallow: /admin
 Disallow: /auth/

@@ -55,13 +55,19 @@ export function RelatedGuides({ slugs }: { slugs: string[] }) {
   );
 }
 
-export function GuideCTA() {
+const DEFAULT_CTA = {
+  title: "計画づくりと「今日やること」をアプリに任せる",
+  body: "試験日と1日に使える時間を入れると、ITパスポート学習コーチが毎日の学習を組み立てます。最初の7日間は学習記録も無料です。",
+};
+
+export function GuideCTA({
+  title = DEFAULT_CTA.title,
+  body = DEFAULT_CTA.body,
+}: { title?: string; body?: string } = {}) {
   return (
     <section className="g-cta" aria-labelledby="guide-cta">
-      <h2 id="guide-cta">計画づくりと「今日やること」をアプリに任せる</h2>
-      <p>
-        試験日と1日に使える時間を入れると、ITパスポート学習コーチが毎日の学習を組み立てます。最初の7日間は学習記録も無料です。
-      </p>
+      <h2 id="guide-cta">{title}</h2>
+      <p>{body}</p>
       <div className="g-cta-actions">
         <a className="g-btn" href="/login">
           無料で始める

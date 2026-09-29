@@ -10,9 +10,9 @@ export const SITE_URL = "https://shikaku-mochit.com";
 export const SERVICE_NAME = "ITパスポート学習コーチ";
 const OG_IMAGE = { url: "/og/lp.png", width: 1200, height: 630 };
 
-type PageSeo = { path: string; title: string; description: string; type: "article" | "website" };
+export type PageSeo = { path: string; title: string; description: string; type: "article" | "website" };
 
-function buildMetadata({ path, title, description, type }: PageSeo): Metadata {
+export function buildMetadata({ path, title, description, type }: PageSeo): Metadata {
   return {
     metadataBase: new URL(SITE_URL),
     title,

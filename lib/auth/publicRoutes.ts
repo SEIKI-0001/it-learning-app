@@ -6,6 +6,8 @@ export const PUBLIC_PREFIXES = [
   "/legal",
   "/privacy",
   "/guide",
+  "/kakomon",
+  "/words",
 ] as const;
 
 export function isPublicPath(pathname: string): boolean {
