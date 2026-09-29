@@ -51,6 +51,9 @@ export async function gradeWithClaude(
     response = await client.messages.create({
       model,
       max_tokens: 2048,
+      // Sonnet 5.5 は既定で adaptive thinking（effort=high）が有効。
+      // 採点は短い JSON を返すだけなので low にして待ち時間とコストを抑える。
+      output_config: { effort: "low" },
       system: buildSystemPrompt(mode),
       messages: [
         { role: "user", content: buildUserPrompt(question, maskedAnswer) },
