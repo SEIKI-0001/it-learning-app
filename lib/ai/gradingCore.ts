@@ -17,7 +17,7 @@ export type GradeProviderId = "gemini" | "claude";
 /** Gemini の既定モデル（GEMINI_MODEL 未設定時）。 */
 export const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
 /** Claude の既定モデル（ANTHROPIC_MODEL 未設定時）。 */
-export const DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6";
+export const DEFAULT_CLAUDE_MODEL = "claude-sonnet-5-5";
 
 /** 採点処理の失敗を表す例外。route 側で簡潔なメッセージに変換する。 */
 export class GradingError extends Error {

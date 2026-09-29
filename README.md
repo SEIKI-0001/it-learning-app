@@ -50,7 +50,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 - **Claude APIキー**: [Anthropic Console](https://console.anthropic.com/) で取得し、Cloudflare Worker の Secret / `.env.local` に登録します。
   - `ANTHROPIC_API_KEY`（**サーバー専用**。クライアントへ露出しないこと）
-  - `ANTHROPIC_MODEL`（任意。未設定なら `claude-sonnet-4-6`）
+  - `ANTHROPIC_MODEL`（任意。未設定なら `claude-sonnet-5-5`）
   - 未設定の場合、Pro 採点は失敗扱いとなり**自動的に Gemini（通常採点）へフォールバック**します（画面に「通常採点で表示しています」と表示）。
 - **Pro 判定（Stripe 連携前の動作確認）**: ユーザーのプランは `user_profiles.plan`（`free` / `pro`）で判定します。Stripe を設定しなくても、Supabase で対象ユーザーの `plan` を `'pro'` に更新すれば Claude 採点を確認できます。
   ```sql
