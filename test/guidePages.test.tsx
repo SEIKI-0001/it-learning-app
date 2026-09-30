@@ -12,6 +12,7 @@ import * as StudyTime from "@/app/guide/study-time/page";
 import * as StudyPlan from "@/app/guide/study-plan/page";
 import * as CantContinue from "@/app/guide/cant-continue-studying/page";
 import * as PastExam from "@/app/guide/past-exam-strategy/page";
+import * as ExamChanges2027 from "@/app/guide/exam-changes-2027/page";
 
 type PageModule = { default: ComponentType; metadata: Metadata };
 
@@ -21,6 +22,7 @@ const ARTICLES: Record<string, PageModule> = {
   "study-plan": StudyPlan,
   "cant-continue-studying": CantContinue,
   "past-exam-strategy": PastExam,
+  "exam-changes-2027": ExamChanges2027,
 };
 
 const PAGES: { path: string; mod: PageModule }[] = [

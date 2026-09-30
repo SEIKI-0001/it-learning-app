@@ -31,9 +31,9 @@ export const GUIDE_INDEX = {
   title: "ITパスポート学習ガイド｜勉強法・勉強時間・計画・過去問の使い方",
   h1: "ITパスポート学習ガイド",
   description:
-    "ITパスポート試験の勉強法、勉強時間の見積もり方、試験日から逆算する学習計画、勉強が続かないときの立て直し方、過去問の使い方をまとめたガイドです。",
+    "ITパスポート試験の勉強法、勉強時間の見積もり方、試験日から逆算する学習計画、勉強が続かないときの立て直し方、過去問の使い方、2027年度からの新試験の変更点をまとめたガイドです。",
   datePublished: "2026-09-26",
-  dateModified: "2026-09-26",
+  dateModified: "2026-09-30",
 } as const;
 
 export const GUIDES: GuideArticle[] = [
@@ -91,6 +91,17 @@ export const GUIDES: GuideArticle[] = [
     datePublished: "2026-09-26",
     dateModified: "2026-09-26",
     related: ["it-passport-study-method", "study-plan", "study-time"],
+  },
+  {
+    slug: "exam-changes-2027",
+    title: "ITパスポートは2027年度から何が変わる？新試験の変更点と今受けるべきかを解説",
+    h1: "ITパスポート試験は2027年度から何が変わる？",
+    description:
+      "ITパスポート試験は2027年度春頃から新制度に移行し、出題分野が「ビジネス」「テクノロジ」「セキュリティ・倫理」の3つに再編される予定です。試験時間120分・100問・合格基準は変わりません。IPAの公表内容をもとに新旧の違いを表で整理し、現行試験で受けるか新試験を待つかの判断材料を解説します。",
+    summary: "新旧の出題分野の違い、変わらない点、いつまで現行試験を受けられるか、今受けるか待つか。",
+    datePublished: "2026-09-30",
+    dateModified: "2026-09-30",
+    related: ["study-plan", "study-time", "it-passport-study-method"],
   },
 ];
 
