@@ -18,6 +18,7 @@ import {
   kakomonYearPath,
   type KakomonQuestion,
 } from "@/lib/publicPages/kakomon";
+import { getKaisetsuTopic, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
 import { wordPath } from "@/lib/publicPages/words";
 import { FIELD_LABELS } from "@/types/content";
 
@@ -69,6 +70,7 @@ export default async function KakomonQuestionPage({ params }: Props) {
   const { prev, next } = getAdjacentKakomon(q);
   const related = getRelatedKakomon(q);
   const words = getWordsInKakomon(q);
+  const topic = getKaisetsuTopic(view.topicId);
 
   return (
     <article className="g-col">
@@ -129,6 +131,20 @@ export default async function KakomonQuestionPage({ params }: Props) {
           </a>
         )}
       </nav>
+
+      {topic && (
+        <section className="k-section" aria-labelledby="k-topic">
+          <h2 id="k-topic">この問題のテーマを基礎から学ぶ</h2>
+          <ul className="k-list">
+            <li>
+              <a href={kaisetsuPath(topic.id)}>
+                <span className="n">解説</span>
+                <span className="t">{topic.title}とは？わかりやすく解説</span>
+              </a>
+            </li>
+          </ul>
+        </section>
+      )}
 
       {words.length > 0 && (
         <section className="k-section" aria-labelledby="k-words">

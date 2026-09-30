@@ -4,6 +4,7 @@ import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
 import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { getKakomonForWord } from "@/lib/publicPages/kakomon";
+import { getTopicsForWord, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
 import {
   WORDS_BASE_PATH,
   isWordLikeEntry,
@@ -47,6 +48,7 @@ export default async function WordPage({ params }: Props) {
   ];
   const questions = getKakomonForWord(w.id);
   const traps = Object.entries(w.trapExplanations);
+  const topics = getTopicsForWord(w.id);
 
   return (
     <article className="g-col">
@@ -111,6 +113,21 @@ export default async function WordPage({ params }: Props) {
               })}
             </ul>
           )}
+        </section>
+      )}
+
+      {topics.length > 0 && (
+        <section className="k-section" aria-labelledby="w-topics">
+          <h2 id="w-topics">{w.acronym}が出てくるテーマの解説</h2>
+          <ul className="k-list">
+            {topics.map((t) => (
+              <li key={t.id}>
+                <a href={kaisetsuPath(t.id)}>
+                  <span className="t">{t.title}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

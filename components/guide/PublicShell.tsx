@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 
-// 公開ページ（/guide・/kakomon・/words）の共通の外枠。未ログインで閲覧可
+// 公開ページ（/guide・/kaisetsu・/kakomon・/words）の共通の外枠。未ログインで閲覧可
 // （lib/auth/publicRoutes の PUBLIC_PREFIXES に登録）。読み物として軽く保つため JS を使わない。
 // スタイルは app/guide/guide.css（.guide スコープ）。各 layout がその CSS を読み込む。
 
 const NAV = [
   { href: "/guide", label: "学習ガイド" },
+  { href: "/kaisetsu", label: "テーマ別解説" },
   { href: "/kakomon", label: "過去問解説" },
   { href: "/words", label: "英略語" },
 ] as const;

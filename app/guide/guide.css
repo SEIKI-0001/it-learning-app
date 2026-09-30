@@ -609,3 +609,24 @@
 .guide .k-section > ul:not([class]) li {
   margin: 6px 0;
 }
+
+/* ============================================================================
+   公開テーマ別解説（/kaisetsu）
+   ========================================================================== */
+.guide .ks-diagram {
+  margin: 18px 0 0;
+}
+.guide .ks-cat {
+  margin: 22px 0 0;
+  font-size: 0.95rem;
+  color: var(--sub);
+}
+.guide .k-list .c {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--sub);
+  font-size: 0.8rem;
+}
+.guide .k-section .k-question + .k-question {
+  margin-top: 14px;
+}

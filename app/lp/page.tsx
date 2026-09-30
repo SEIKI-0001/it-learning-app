@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import {
   isAugust2026BonusActive,
   isAugust2026BonusOpen,
@@ -557,6 +558,12 @@ export default function LandingPage() {
         <a href={START_HREF}>ログイン / 無料登録</a>
         {" / "}
         <a href="/guide">ITパスポート学習ガイド</a>
+        {" / "}
+        <Link href="/kaisetsu">テーマ別解説</Link>
+        {" / "}
+        <Link href="/kakomon">過去問解説</Link>
+        {" / "}
+        <Link href="/words">英略語一覧</Link>
         {" / "}
         <a href="/legal/tokusho">特定商取引法に基づく表示</a>
         {" / "}

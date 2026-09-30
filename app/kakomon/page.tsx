@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import {
@@ -57,7 +58,9 @@ export default function KakomonIndexPage() {
       <p className="g-note" style={{ marginTop: 28 }}>
         問題文・選択肢はIPA公開問題の原文です。解説は本サービスが独自に作成したもので、IPAの公式解説ではありません。過去問の進め方は
         <a href="/guide/past-exam-strategy">ITパスポートの過去問はいつから・何年分解くべきか</a>
-        を参照してください。
+        を参照してください。解説を読んでも分からなかったテーマは
+        <Link href="/kaisetsu">テーマ別解説</Link>
+        で基礎から確認できます。
       </p>
 
       <GuideCTA />

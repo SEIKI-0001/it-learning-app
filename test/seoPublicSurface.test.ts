@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import sitemap from "@/app/sitemap";
 import { GUIDES, GUIDE_BASE_PATH, guidePath } from "@/lib/guide/guides";
 import { KAKOMON_BASE_PATH, getAllKakomonQuestions, getKakomonYears } from "@/lib/publicPages/kakomon";
+import { KAISETSU_BASE_PATH, getKaisetsuTopics, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
 import { WORDS_BASE_PATH } from "@/lib/publicPages/words";
 import { getAllWords } from "@/lib/wordlist";
 
@@ -67,6 +68,19 @@ describe("public SEO surface", () => {
     for (const q of getAllKakomonQuestions()) expect(urls.has(`${SITE}${q.path}`)).toBe(true);
     expect(urls.has(`${SITE}${WORDS_BASE_PATH}`)).toBe(true);
     for (const w of getAllWords()) expect(urls.has(`${SITE}${WORDS_BASE_PATH}/${w.id}`)).toBe(true);
+  });
+
+  it("lists the topic explanation index and every topic page in the sitemap", () => {
+    const urls = new Set(sitemapUrls());
+
+    expect(urls.has(`${SITE}${KAISETSU_BASE_PATH}`)).toBe(true);
+    for (const t of getKaisetsuTopics()) expect(urls.has(`${SITE}${kaisetsuPath(t.id)}`)).toBe(true);
+  });
+
+  it("keeps topic explanation pages crawlable and linked from the LP", () => {
+    expect(read("public/robots.txt")).toContain("Allow: /kaisetsu");
+    const landingPage = read("app/lp/page.tsx");
+    for (const href of ["/kaisetsu", "/kakomon", "/words"]) expect(landingPage).toContain(`href="${href}"`);
   });
 
   it("keeps past-exam and acronym pages crawlable", () => {

@@ -7,11 +7,12 @@ import {
   getKakomonYears,
   kakomonYearPath,
 } from "@/lib/publicPages/kakomon";
+import { KAISETSU_BASE_PATH, getKaisetsuTopics, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
 import { WORDS_BASE_PATH, wordPath } from "@/lib/publicPages/words";
 import { getAllWords } from "@/lib/wordlist";
 
 // /sitemap.xml。未ログインで読める公開ページだけを載せる（アプリ画面はログイン必須なので載せない）。
-// 公開過去問・英略語はデータから組み立てるので、問題や用語を足せば自動で載る。
+// テーマ別解説・公開過去問・英略語はデータから組み立てるので、問題や用語を足せば自動で載る。
 // lastModified は内容の更新日が分かるページ（LP・ガイド）にだけ付ける。ビルド日時を入れると
 // 「毎回更新された」と誤って伝えるため、データ由来のページには付けない。
 
@@ -31,6 +32,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: g.dateModified,
       changeFrequency: "monthly" as const,
       priority: 0.8,
+    })),
+    { url: url(KAISETSU_BASE_PATH), changeFrequency: "monthly", priority: 0.8 },
+    ...getKaisetsuTopics().map((t) => ({
+      url: url(kaisetsuPath(t.id)),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     })),
     { url: url(KAKOMON_BASE_PATH), changeFrequency: "monthly", priority: 0.8 },
     ...getKakomonYears().map((year) => ({

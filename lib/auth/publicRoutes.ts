@@ -7,6 +7,7 @@ export const PUBLIC_PREFIXES = [
   "/privacy",
   "/guide",
   "/kakomon",
+  "/kaisetsu",
   "/words",
 ] as const;
 

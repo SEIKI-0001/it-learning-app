@@ -17,11 +17,13 @@ describe("public route matching", () => {
     "/kakomon/2025/26",
     "/words",
     "/words/kpi",
+    "/kaisetsu",
+    "/kaisetsu/strat-swot",
   ])("allows %s without an app session", (pathname) => {
     expect(isPublicPath(pathname)).toBe(true);
   });
 
-  it.each(["/", "/more", "/campaigning", "/legalese", "/privacy-policy", "/guides", "/guidebook", "/kakomonx", "/wordsearch"])(
+  it.each(["/", "/more", "/campaigning", "/legalese", "/privacy-policy", "/guides", "/guidebook", "/kakomonx", "/wordsearch", "/kaisetsux"])(
     "does not broaden matching to %s",
     (pathname) => {
       expect(isPublicPath(pathname)).toBe(false);
