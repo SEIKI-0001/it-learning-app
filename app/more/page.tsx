@@ -5,7 +5,8 @@ import PageHeader from "@/components/ui/PageHeader";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import LogoutLink from "@/components/auth/LogoutLink";
 import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
-import { FIRST_RUN_GUIDE_HREF } from "@/lib/firstRunGuide";
+import FirstRunGuide from "@/components/guide/FirstRunGuide";
+import { FIRST_RUN_GUIDE_HREF, pageGuideHref } from "@/lib/firstRunGuide";
 
 const GROUPS: readonly {
   title: string;
@@ -58,6 +59,24 @@ const GROUPS: readonly {
         title: "操作ガイド",
         description: "「今日」の画面で、使い方をもう一度案内します",
       },
+      {
+        href: pageGuideHref("learn"),
+        icon: "library",
+        title: "「学ぶ」の見方",
+        description: "教材の探し方と、章・レッスンの開き方",
+      },
+      {
+        href: pageGuideHref("progress"),
+        icon: "chart",
+        title: "「進捗」の見方",
+        description: "合格準備度と、合格までの道のりの読み方",
+      },
+      {
+        href: pageGuideHref("more"),
+        icon: "ellipsis",
+        title: "「その他」の見方",
+        description: "このページにある機能の使い分け",
+      },
     ],
   },
 ] as const;
@@ -72,7 +91,7 @@ export default function MorePage() {
 
       <div className="mx-auto w-full max-w-3xl space-y-7 px-4 py-6">
         {GROUPS.map((group) => (
-          <section key={group.title}>
+          <section key={group.title} data-guide={`more-${group.title}`}>
             <h2 className="mb-2 text-xs font-semibold text-gray-500">{group.title}</h2>
             <div className="overflow-hidden rounded-xl bg-white border border-gray-200">
               {group.links.map((link) => (
@@ -103,6 +122,7 @@ export default function MorePage() {
       </div>
 
       <BottomNav />
+      <FirstRunGuide guide="more" />
     </main>
   );
 }

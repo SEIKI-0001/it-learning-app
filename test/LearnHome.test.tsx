@@ -10,6 +10,8 @@ vi.mock("@/lib/useAppState", () => ({
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/learn",
+  useRouter: () => ({ replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 afterEach(cleanup);
