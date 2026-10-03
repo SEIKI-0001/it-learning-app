@@ -358,18 +358,18 @@ export async function POST(request: Request) {
   const channelSecret = process.env.LINE_CHANNEL_SECRET?.trim();
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN?.trim();
 
-  if (isProduction() && !channelSecret) {
+  // 署名鍵が無ければ環境を問わず受け付けない。署名なしで通すと、任意の LINE userId を
+  // 名乗ってその人のログインリンク（?t=）を発行させられる。
+  if (!channelSecret) {
     return NextResponse.json(
       { ok: false, error: "line webhook not configured" },
       { status: 503 },
     );
   }
 
-  if (channelSecret) {
-    const signature = request.headers.get("x-line-signature");
-    if (!verifySignature(rawBody, signature, channelSecret)) {
-      return NextResponse.json({ ok: false, error: "invalid signature" }, { status: 401 });
-    }
+  const signature = request.headers.get("x-line-signature");
+  if (!verifySignature(rawBody, signature, channelSecret)) {
+    return NextResponse.json({ ok: false, error: "invalid signature" }, { status: 401 });
   }
 
   let body: LineWebhookBody = {};

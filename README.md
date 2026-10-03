@@ -78,7 +78,7 @@ Web 利用のアカウント本体を **Google ログイン（Supabase Auth）**
   - 既存テーブルの外部キーは今までどおり `line_users.id` を指したまま無変更。
 - **ユーザー解決の共通化**: サーバー側は `lib/auth/currentUser.ts` の `getInternalUserId()` が唯一の解決口です（Google セッション → `auth_user_id` を `line_users` へ写像 → 無ければ LINE 署名 Cookie）。API は `lib/apiUser.ts` の `getRequestUserId()` 経由でこれを使います。各画面・API に解決処理を散らしません。
 - **紐づけ・復元**:
-  - LINE で始めたユーザーが Google ログインすると、既存ユーザーに Google が紐づきます（`fq_line` Cookie の指す行へ後付け）。
+  - LINE で始めたユーザーと Google のユーザーは、設定画面の連携コード（`/api/account/link`）で統合します。`fq_line` Cookie があるだけでは Google を紐づけません（他人の LINE リンクを開かされたブラウザでの乗っ取りを防ぐため）。
   - Web 直接アクセスで Google ログインすると、既存の紐づけがあれば同じユーザーを復元、無ければ新規ユーザーを開始します。
 - **全画面ログイン必須**: 未ログインでアプリ画面（`/today` `/review` `/glossary` `/ai-grading` など）へ来ると `proxy.ts` が `/login` へ誘導します。匿名では保存系・AI採点が動きません（API は 401）。
 - **段階的ロールアウト（既存を壊さない）**: 厳格ゲーティング・匿名遮断・LINE 署名 Cookie は `SESSION_SECRET` 設定時のみ有効です。未設定の間は従来どおり素通しします。
@@ -94,6 +94,7 @@ Web 利用のアカウント本体を **Google ログイン（Supabase Auth）**
    - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`（Google ログインで使用）。
    - `SESSION_SECRET`（新認証の有効化スイッチ 兼 LINE 署名鍵。`openssl rand -hex 32`）。
    - `NEXT_PUBLIC_LINE_ADD_FRIEND_URL`（ログインページの「LINEから始める」ボタンのリンク先）。
+   - `ALLOW_BODY_USER_ID`（ローカル開発専用。`true` のときだけ、セッションが無い API リクエストで本文の `userId` を本人として扱う。production では無視される。デプロイ環境には設定しない）。
 
 ## LINE学習リマインダー（GF-P0-006）
 
