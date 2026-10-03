@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminMutationFailure } from "@/lib/auth/adminAuth";
 import {
   processStripeWebhookEvent,
   type StripeEvent,
@@ -23,12 +24,15 @@ type RecoverableEventRow = {
 
 /**
  * 失敗または停止したStripeイベントを管理者が再処理する。
- * /api/admin/* は proxy.ts のBasic認証で保護される。
+ * proxy.ts とこのハンドラの両方で Basic 認証し、別オリジンからの POST は拒否する。
  */
 export async function POST(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ eventId: string }> },
 ) {
+  const denied = adminMutationFailure(request);
+  if (denied) return denied;
+
   const { eventId } = await context.params;
   if (!eventId) {
     return NextResponse.json({ ok: false, error: "invalid event id" }, { status: 400 });

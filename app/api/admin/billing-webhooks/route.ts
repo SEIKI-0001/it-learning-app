@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
+import { adminAuthFailure } from "@/lib/auth/adminAuth";
 import { STALE_WEBHOOK_PROCESSING_SECONDS } from "@/lib/billing/webhookState";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
 /** 管理画面向けに、手動再処理が必要な失敗・停止Stripeイベントを返す。 */
-export async function GET() {
+export async function GET(request: Request) {
+  const denied = adminAuthFailure(request);
+  if (denied) return denied;
+
   const supabase = getServiceSupabase();
   if (!supabase) {
     return NextResponse.json({ ok: false, error: "supabase not configured" }, { status: 503 });

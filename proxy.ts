@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { isPublicPath } from "@/lib/auth/publicRoutes";
+import { adminAuthFailure } from "@/lib/auth/adminAuth";
 
 // ============================================================================
 // Proxy (Next.js 16 で middleware から改名)。ルート描画前に実行される。
@@ -29,13 +30,13 @@ const LINE_SESSION_COOKIE = "fq_line";
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
 
-  // 1) /admin 系は Basic 認証（従来どおり）。
+  // 1) /admin 系は Basic 認証。/api/admin/* は各 Route Handler でも同じ判定を行う。
   if (
     pathname === "/admin" ||
     pathname.startsWith("/admin/") ||
     pathname.startsWith("/api/admin")
   ) {
-    return adminBasicAuth(request);
+    return adminAuthFailure(request) ?? NextResponse.next();
   }
 
   // 2) その他の API は各 Route Handler が自前で認証する。ここではゲートしない。
@@ -127,45 +128,4 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     redirect.cookies.set(cookie);
   }
   return redirect;
-}
-
-// ---- /admin Basic 認証（従来ロジックを関数化） ----
-function adminBasicAuth(request: NextRequest): NextResponse {
-  const password = process.env.ADMIN_PASSWORD?.trim();
-
-  // パスワード未設定では保護できないため、公開せず 503。
-  if (!password) {
-    return new NextResponse(
-      "管理画面は無効です（ADMIN_PASSWORD が未設定）。環境変数を設定してください。",
-      { status: 503, headers: { "Cache-Control": "no-store" } },
-    );
-  }
-
-  const expectedUser = process.env.ADMIN_USER?.trim() || "admin";
-  const header = request.headers.get("authorization");
-  if (header?.startsWith("Basic ")) {
-    let decoded = "";
-    try {
-      decoded = atob(header.slice(6));
-    } catch {
-      return unauthorized();
-    }
-    const sep = decoded.indexOf(":");
-    const user = sep >= 0 ? decoded.slice(0, sep) : "";
-    const pass = sep >= 0 ? decoded.slice(sep + 1) : "";
-    if (user === expectedUser && pass === password) {
-      return NextResponse.next();
-    }
-  }
-  return unauthorized();
-}
-
-function unauthorized(): NextResponse {
-  return new NextResponse("認証が必要です。", {
-    status: 401,
-    headers: {
-      "WWW-Authenticate": 'Basic realm="admin", charset="UTF-8"',
-      "Cache-Control": "no-store",
-    },
-  });
 }

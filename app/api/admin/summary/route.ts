@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adminAuthFailure } from "@/lib/auth/adminAuth";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getAllTopics } from "@/lib/content";
 import { FIELD_LABELS, type TopicField } from "@/types/content";
@@ -58,6 +59,9 @@ function pageFromRequest(request: Request): number {
 }
 
 export async function GET(request: Request) {
+  const denied = adminAuthFailure(request);
+  if (denied) return denied;
+
   const supabase = getServiceSupabase();
   if (!supabase) {
     return NextResponse.json(
