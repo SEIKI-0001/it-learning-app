@@ -1,5 +1,6 @@
 "use client";
 
+import ShareOnX from "@/components/growth/ShareOnX";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -484,6 +485,13 @@ export default function MockExamPage() {
             <p className="mt-4 text-sm leading-relaxed text-gray-600">
               間違えた {result.wrongTopicIds.length} トピックを「復習」に追加しました。まず苦手分野を1つ解き直しましょう。
             </p>
+            <ShareOnX
+              className="mt-3 inline-flex min-h-11 items-center rounded-full border border-gray-300 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              text={`ITパスポートの100問模試、${result.correct}/${result.total}問正解でした。`}
+              path="/lp"
+              campaign="mock_exam_share"
+              label="結果をXでシェア"
+            />
             {insights && insights.topics.length > 0 && (
               <div className="mt-5 rounded-xl border border-accent-200 bg-accent-50 p-4 text-left">
                 <h3 className="text-sm font-semibold text-gray-900">強化が必要なTopic</h3>
