@@ -1,15 +1,16 @@
 "use client";
 
-// 初回操作ガイド。/today の実画面の上で、大事な場所を順に照らして説明する（コーチマーク）。
-// ?guide=1 のときだけ出す。台本は lib/firstRunGuide.ts。
+// 操作ガイド。実画面の上で、大事な場所を順に照らして説明する（コーチマーク）。
+// ?guide=<そのページの値> のときだけ出す（/today は ?guide=1）。台本は lib/firstRunGuide.ts。
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Mochit from "@/components/mochit/Mochit";
 import {
   FIRST_RUN_GUIDE_PARAM,
-  FIRST_RUN_GUIDE_STEPS,
+  PAGE_GUIDES,
   type FirstRunGuideStep,
+  type PageGuideId,
 } from "@/lib/firstRunGuide";
 
 type Box = { top: number; left: number; width: number; height: number };
@@ -68,17 +69,30 @@ function layout(target: DOMRect, cardHeight: number): { spot: Box; card: { top: 
   return { spot: spot(), card: { top: bottom + GAP, left: clampX(centerX - width / 2), width } };
 }
 
-export default function FirstRunGuide() {
+// useSearchParams はサーバー描画のページ（/more など）で Suspense 境界を要求するので、ここで閉じ込める。
+export default function FirstRunGuide({ guide = "today" }: { guide?: PageGuideId }) {
+  return (
+    <Suspense fallback={null}>
+      <GuideOverlay guide={guide} />
+    </Suspense>
+  );
+}
+
+function GuideOverlay({ guide }: { guide: PageGuideId }) {
   const router = useRouter();
   const pathname = usePathname();
-  // /today は保存状態を読むまで LoadingScreen なので、このガイドは常にクライアントで初回描画される。
-  // （useSearchParams はページ全体に Suspense 境界を要求するため使わない）
-  const [open, setOpen] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get(FIRST_RUN_GUIDE_PARAM) === "1",
-  );
+  const { param, steps, doneLabel } = PAGE_GUIDES[guide];
+  // URL に従って開く。同じページ内のリンク（「その他」→「その他」の見方）でも開けるように、
+  // 初回だけでなく URL の変化を追う。閉じたら URL の反映を待たずにすぐ消す。
+  const requested = useSearchParams().get(FIRST_RUN_GUIDE_PARAM) === param;
+  const [dismissed, setDismissed] = useState(false);
   const [index, setIndex] = useState(0);
+  // URL から外れたら次に開いたときのために巻き戻す（描画中の調整＝effect を挟まない）。
+  if (!requested && (dismissed || index !== 0)) {
+    setDismissed(false);
+    setIndex(0);
+  }
+  const open = requested && !dismissed;
   // 計測した照らす位置。どのステップのものかを持ち、前のステップの位置でちらつかせない。
   const [measured, setMeasured] = useState<{ stepId: string; rect: DOMRect } | null>(null);
   const [cardHeight, setCardHeight] = useState(180);
@@ -87,29 +101,32 @@ export default function FirstRunGuide() {
   const directionRef = useRef<1 | -1>(1);
 
   const close = useCallback(() => {
-    setOpen(false);
+    setDismissed(true);
     const params = new URLSearchParams(window.location.search);
     params.delete(FIRST_RUN_GUIDE_PARAM);
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [pathname, router]);
 
-  const step = FIRST_RUN_GUIDE_STEPS[index];
-  const isLast = index === FIRST_RUN_GUIDE_STEPS.length - 1;
+  const step = steps[index];
+  const isLast = index === steps.length - 1;
 
   // 照らす要素へスクロールし、以後はスクロール・リサイズに追従する。
   // 要素が無い（モチット非表示など）ステップは飛ばす。
   useEffect(() => {
     if (!open || !step?.target) return;
-    let frame = 0;
+    // 要素探しと計測のフレームは分けて持つ（前のステップのスクロールが続いていると、
+    // 計測側の取り消しで要素探しまで消え、ガイドが出ないままになる）。
+    let findFrame = 0;
+    let measureFrame = 0;
     let el: HTMLElement | null = null;
     const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
+      cancelAnimationFrame(measureFrame);
+      measureFrame = requestAnimationFrame(() => {
         if (el) setMeasured({ stepId: step.id, rect: el.getBoundingClientRect() });
       });
     };
-    frame = requestAnimationFrame(() => {
+    findFrame = requestAnimationFrame(() => {
       el = findTarget(step);
       if (!el) {
         if (directionRef.current === 1 && isLast) close();
@@ -126,7 +143,8 @@ export default function FirstRunGuide() {
     window.addEventListener("scroll", measure, { passive: true });
     window.addEventListener("resize", measure);
     return () => {
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(findFrame);
+      cancelAnimationFrame(measureFrame);
       window.removeEventListener("scroll", measure);
       window.removeEventListener("resize", measure);
     };
@@ -199,7 +217,7 @@ export default function FirstRunGuide() {
           </div>
         )}
         <p className="text-[11px] font-semibold text-brand-600">
-          使い方ガイド <span className="font-mono">{index + 1}</span> / {FIRST_RUN_GUIDE_STEPS.length}
+          使い方ガイド <span className="font-mono">{index + 1}</span> / {steps.length}
         </p>
         <h2 id="first-run-guide-title" className="mt-1 text-base font-bold leading-snug">
           {step.title}
@@ -231,7 +249,7 @@ export default function FirstRunGuide() {
             onClick={next}
             className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
           >
-            {index === 0 ? "はじめる" : isLast ? "学習を始める" : "次へ"}
+            {index === 0 ? "はじめる" : isLast ? doneLabel : "次へ"}
           </button>
         </div>
       </div>

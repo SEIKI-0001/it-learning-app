@@ -17,6 +17,7 @@ import BottomNav from "@/components/BottomNav";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
 import ThemeCard from "@/components/learn/ThemeCard";
+import FirstRunGuide from "@/components/guide/FirstRunGuide";
 import { getThemeMasterState } from "@/lib/lessonState";
 import type { ThemeExamSummary } from "@/types/themeExam";
 
@@ -126,7 +127,7 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
         description="試験範囲を参考書の章立てで整理しています。気になる章から開けます。"
         widthClass="max-w-3xl"
       >
-        <div className="mt-4">
+        <div className="mt-4" data-guide="learn-overall">
           <div className="flex items-baseline justify-between text-sm">
             <span className="text-gray-600">
               学習済み <span className="font-semibold tabular-nums text-gray-900">{completedLessons} / {totalLessons}</span>レッスン
@@ -153,6 +154,7 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
           <Link
             href={getLessonHref(continueLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
             className="flex items-center justify-between gap-3 rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100"
+            data-guide="learn-continue"
           >
             <div className="min-w-0">
               <p className="text-xs font-semibold text-brand-700">前回の続き</p>
@@ -169,7 +171,7 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
           </Link>
         )}
 
-        <section aria-label="テーマの絞り込み" className="space-y-3">
+        <section aria-label="テーマの絞り込み" className="space-y-3" data-guide="learn-filter">
           {/* /today の学習量と同じセグメントコントロール（選択中だけ白く浮かせる） */}
           <div className="flex w-full max-w-xl rounded-lg bg-gray-900/[0.06] p-[3px]">
             {FIELDS.map((field) => (
@@ -215,6 +217,8 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
 
         {FIELD_ORDER.map((field) => {
           const fieldThemes = visibleThemes.filter((theme) => theme.field === field);
+          // 操作ガイドで照らすのは、最初に見えている分野だけ（全分野だと縦に長すぎる）
+          const isFirstField = field === FIELD_ORDER.find((f) => visibleThemes.some((t) => t.field === f));
           if (fieldThemes.length === 0) return null;
           const fieldProgress = fieldThemes.map((theme) => getThemeProgress(theme, progress));
           const fieldLessons = fieldProgress.reduce((sum, item) => sum + item.totalLessons, 0);
@@ -222,7 +226,11 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
           const fieldPercent = fieldLessons === 0 ? 0 : Math.round((fieldCompleted / fieldLessons) * 100);
 
           return (
-            <section key={field} aria-labelledby={`${field}-heading`}>
+            <section
+              key={field}
+              aria-labelledby={`${field}-heading`}
+              data-guide={isFirstField ? "learn-themes" : undefined}
+            >
               <div className="mb-2 flex items-baseline justify-between gap-2">
                 <h2 id={`${field}-heading`} className="text-base font-semibold text-gray-900">
                   {FIELD_LABELS[field]}
@@ -267,6 +275,7 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
           <section
             aria-labelledby="theme-exam-heading"
             className="rounded-xl border border-gray-200 bg-white p-4"
+            data-guide="learn-theme-exam"
           >
             <div className="flex items-start gap-3">
               <Icon name="award" className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
@@ -312,6 +321,7 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
         )}
       </div>
       <BottomNav />
+      <FirstRunGuide guide="learn" />
     </main>
   );
 }

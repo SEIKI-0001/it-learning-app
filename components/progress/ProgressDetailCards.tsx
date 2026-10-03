@@ -49,7 +49,7 @@ export function ReadinessBreakdownCard({
   };
 
   return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="readiness-heading">
+    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="readiness-heading" data-guide="progress-breakdown">
       <div className={t.sheetHead}>
         <h2 id="readiness-heading" className={t.sectionTitle}>
           合格準備度の内訳
@@ -122,7 +122,7 @@ export function PendingBreakdownCard({
     { label: "トピックごとの到達度", meta: `全${totalTopicCount}トピック` },
   ];
   return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="pending-heading">
+    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="pending-heading" data-guide="progress-breakdown">
       <div className={t.sheetHead}>
         <h2 id="pending-heading" className={t.sectionTitle}>
           内訳
@@ -454,15 +454,18 @@ export function RowListCard({
   rows,
   grid = false,
   className,
+  guide,
 }: {
   title: string;
   rows: UnlockRow[];
   grid?: boolean;
   className?: string;
+  /** 操作ガイドで照らすときの目印（data-guide） */
+  guide?: string;
 }) {
   const headingId = `${title}-heading`;
   return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby={headingId}>
+    <section className={`${p.card} ${className ?? ""}`} aria-labelledby={headingId} data-guide={guide}>
       <div className={t.sheetHead}>
         <h2 id={headingId} className={t.sectionTitle}>
           {title}

@@ -43,6 +43,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import ProgressOverview, { type OverviewKpis } from "@/components/progress/ProgressOverview";
 import ProgressGateCard from "@/components/progress/ProgressGateCard";
 import CheckpointDetailSheet from "@/components/progress/CheckpointDetailSheet";
+import FirstRunGuide from "@/components/guide/FirstRunGuide";
 import {
   PendingBreakdownCard,
   ReadinessBreakdownCard,
@@ -327,7 +328,7 @@ export default function ProgressPage() {
         />
 
         <RowListCard title="モチットの成長" rows={unlocks} className={p.spanUnlocks} />
-        <RowListCard title="くわしく見る" rows={links} grid className={p.spanLinks} />
+        <RowListCard title="くわしく見る" rows={links} grid className={p.spanLinks} guide="progress-links" />
       </div>
       {openDetail && (
         <CheckpointDetailSheet
@@ -342,6 +343,7 @@ export default function ProgressPage() {
         />
       )}
       <BottomNav />
+      <FirstRunGuide guide="progress" />
     </main>
   );
 }
