@@ -4,13 +4,17 @@ import { getInternalUserId, getInternalUserIdFast } from "@/lib/auth/currentUser
 //
 // セッション（Google ログイン / LINE 署名 Cookie）から内部 user_id を解決する。
 // - セッションがあればそれを最優先する。body の userId は信用しない（なりすまし防止）。
-// - production では body.userId fallback を絶対に採用しない。
-// - development / test の間だけ、後方互換で body.userId を採用する
-//   （開発用の後方互換。本番では禁止）。
+// - body.userId fallback は、ローカル開発で ALLOW_BODY_USER_ID=true を明示したときだけ採用する。
+//   NODE_ENV だけで判定すると、production 以外で動くプレビュー/検証環境が
+//   「本文の userId を名乗れば誰にでもなれる」状態になるため。production では常に禁止。
 // - どちらも無ければ null（＝匿名）。保存系・AI採点は呼び出し側で拒否する。
 
 function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
+}
+
+function bodyUserIdAllowed(): boolean {
+  return !isProduction() && process.env.ALLOW_BODY_USER_ID?.trim() === "true";
 }
 
 /** 現在のリクエストの内部 user_id を解決する。匿名なら null。 */
@@ -32,9 +36,8 @@ export async function getRequestUserIdFast(body?: { userId?: string }): Promise<
 }
 
 function fallbackFromBody(body?: { userId?: string }): string | null {
-  if (isProduction()) return null;
+  if (!bodyUserIdAllowed()) return null;
 
-  // 開発用の後方互換。本番では body.userId fallback は禁止。
   const fromBody = (body?.userId ?? "").trim();
   return fromBody || null;
 }

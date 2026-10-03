@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeExamReadinessResult } from "@/test/fixtures/examReadiness/result";
 
@@ -53,18 +54,26 @@ function progress() {
   };
 }
 
+const CHANNEL_SECRET = "test-channel-secret";
+
 async function requestProgress(): Promise<string> {
+  const rawBody = JSON.stringify({
+    events: [{
+      type: "message",
+      replyToken: "reply-1",
+      source: { type: "user", userId: "line-user-1" },
+      message: { type: "text", text: "進捗" },
+    }],
+  });
+  const signature = createHmac("sha256", CHANNEL_SECRET).update(rawBody).digest("base64");
   const response = await POST(new Request("https://example.test/api/line/webhook", {
     method: "POST",
-    headers: { "Content-Type": "application/json", host: "example.test" },
-    body: JSON.stringify({
-      events: [{
-        type: "message",
-        replyToken: "reply-1",
-        source: { type: "user", userId: "line-user-1" },
-        message: { type: "text", text: "進捗" },
-      }],
-    }),
+    headers: {
+      "Content-Type": "application/json",
+      host: "example.test",
+      "x-line-signature": signature,
+    },
+    body: rawBody,
   }));
   const body = await response.json() as {
     plannedReplies: Array<{ text: string }>;
@@ -75,7 +84,7 @@ async function requestProgress(): Promise<string> {
 describe("LINE Exam Readiness", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    delete process.env.LINE_CHANNEL_SECRET;
+    process.env.LINE_CHANNEL_SECRET = CHANNEL_SECRET;
     delete process.env.LINE_CHANNEL_ACCESS_TOKEN;
     const supabase = supabaseDouble();
     mocks.getServiceSupabase.mockReturnValue(supabase);
@@ -137,5 +146,28 @@ describe("LINE Exam Readiness", () => {
     expect(text).not.toContain("合格準備度 0/100");
     expect(text).not.toContain("学習済み");
     expect(text).not.toContain("連続学習");
+  });
+
+  it("署名鍵が未設定なら非production でも受け付けない", async () => {
+    delete process.env.LINE_CHANNEL_SECRET;
+
+    const response = await POST(new Request("https://example.test/api/line/webhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ events: [] }),
+    }));
+
+    expect(response.status).toBe(503);
+    expect(mocks.getServiceSupabase).not.toHaveBeenCalled();
+  });
+
+  it("署名が無いリクエストを拒否する", async () => {
+    const response = await POST(new Request("https://example.test/api/line/webhook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ events: [] }),
+    }));
+
+    expect(response.status).toBe(401);
   });
 });
