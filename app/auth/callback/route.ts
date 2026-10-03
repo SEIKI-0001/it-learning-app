@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSupabase } from "@/lib/supabase/serverClient";
 import { getInternalUserId } from "@/lib/auth/currentUser";
+import {
+  ATTRIBUTION_COOKIE,
+  parseAttributionCookie,
+  recordSignupAttribution,
+} from "@/lib/growth/attribution";
 
 export const runtime = "nodejs";
 
@@ -41,9 +46,31 @@ export async function GET(request: Request) {
   }
 
   // 内部ユーザー（line_users.id）へ写像。必要なら作成 / LINE 紐づけが行われる。
-  await getInternalUserId();
+  const userId = await getInternalUserId();
 
-  return NextResponse.redirect(`${base}${next}`);
+  // 新規登録なら流入元（first-touch）を記録する。失敗してもログインは続行。
+  const attribution = parseAttributionCookie(readCookie(request, ATTRIBUTION_COOKIE));
+  if (userId && attribution) {
+    try {
+      await recordSignupAttribution(userId, attribution);
+    } catch (e) {
+      console.error("[auth/callback] attribution failed:", e);
+    }
+  }
+
+  const response = NextResponse.redirect(`${base}${next}`);
+  if (userId && attribution) response.cookies.delete(ATTRIBUTION_COOKIE);
+  return response;
+}
+
+function readCookie(request: Request, name: string): string | null {
+  const header = request.headers.get("cookie");
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const [k, ...rest] = part.trim().split("=");
+    if (k === name) return rest.join("=");
+  }
+  return null;
 }
 
 /** オープンリダイレクト防止: アプリ内パス（/... 単独）だけ許可。 */

@@ -3,6 +3,7 @@ import './globals.css';
 import { appFontVariables } from '@/lib/fonts';
 import CelebrationHost from '@/components/celebration/CelebrationHost';
 import FloatingMochitGate from '@/components/mochit/FloatingMochitGate';
+import AttributionCapture from '@/components/growth/AttributionCapture';
 
 export const metadata: Metadata = {
   title: 'ITパスポート学習コーチ',
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <FloatingMochitGate />
         <CelebrationHost />
+        <AttributionCapture />
       </body>
     </html>
   );
