@@ -32,15 +32,14 @@ function writeCachedMapping(authUserId: string, id: string): void {
  *
  * 優先順位:
  *   1. 既に Google 紐づけ済み（auth_user_id 一致）→ そのユーザーを復元。
- *   2. LINE 起点ユーザーへ紐づけ（lineLinkUserId が指す行が未紐づけのときだけ）。
- *   3. どちらも無ければ新規ユーザーを作成（line_user_id NULL ＝ Google 単独）。
+ *   2. 無ければ新規ユーザーを作成（line_user_id NULL ＝ Google 単独）。
+ * LINE 起点ユーザーとの統合はここでは行わない（連携コードの /api/account/link で行う）。
  */
 export async function resolveInternalUserIdForAuthUser(params: {
   authUserId: string;
   email?: string | null;
-  lineLinkUserId?: string | null;
 }): Promise<string | null> {
-  const { authUserId, email, lineLinkUserId } = params;
+  const { authUserId, email } = params;
 
   const cached = readCachedMapping(authUserId);
   if (cached) return cached;
@@ -59,23 +58,7 @@ export async function resolveInternalUserIdForAuthUser(params: {
     return existing.data.id as string;
   }
 
-  // 2) LINE 起点ユーザーへ後付けで紐づけ（auth_user_id が NULL の行のみ＝乗っ取り防止）。
-  if (lineLinkUserId) {
-    const linked = await supabase
-      .from("line_users")
-      .update({ auth_user_id: authUserId, email: email ?? null })
-      .eq("id", lineLinkUserId)
-      .is("auth_user_id", null)
-      .is("merged_into", null)
-      .select("id")
-      .maybeSingle();
-    if (linked.data?.id) {
-      writeCachedMapping(authUserId, linked.data.id as string);
-      return linked.data.id as string;
-    }
-  }
-
-  // 3) 新規作成。
+  // 2) 新規作成。
   const created = await supabase
     .from("line_users")
     .insert({ auth_user_id: authUserId, email: email ?? null })

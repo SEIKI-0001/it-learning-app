@@ -12,7 +12,7 @@ import { resolveInternalUserIdForAuthUser } from "@/lib/auth/userMapping";
  * Server Component / Route Handler の双方から使える（next/headers の Cookie を読む）。
  *
  * 解決順:
- *   1. Google（Supabase Auth）セッション → auth.users.id を line_users へ写像（無ければ作成/紐づけ）。
+ *   1. Google（Supabase Auth）セッション → auth.users.id を line_users へ写像（無ければ作成）。
  *   2. LINE 署名 Cookie（fq_line）。
  *   3. どちらも無ければ null（＝未ログイン）。
  *
@@ -45,12 +45,12 @@ async function resolveCurrentUser(options: { fast: boolean }): Promise<string | 
         ? await readAuthUserFromClaims(supabase)
         : await readAuthUserFromServer(supabase);
       if (authUser) {
-        // LINE 起点ユーザーが Google ログインした場合は、その既存ユーザーへ紐づける。
-        const lineLinkUserId = await readLineCookieUserId();
+        // LINE 起点ユーザーとの統合は連携コード（/api/account/link）でだけ行う。
+        // fq_line Cookie だけを根拠に紐づけると、他人の LINE リンクを開かされた
+        // ブラウザで Google ログインした人の Google が他人の LINE ユーザーへ結び付く。
         const internalId = await resolveInternalUserIdForAuthUser({
           authUserId: authUser.id,
           email: authUser.email,
-          lineLinkUserId,
         });
         if (internalId) return internalId;
       }
