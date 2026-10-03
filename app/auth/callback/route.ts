@@ -15,8 +15,8 @@ export const runtime = "nodejs";
  * 認可コードをセッションへ交換し（Cookie を発行）、内部ユーザーへ写像してからアプリへ戻す。
  *
  * - 既に Google 紐づけ済みのユーザー → 既存の内部ユーザーを復元。
- * - LINE 起点ユーザーが fq_line Cookie を持っていれば、その既存ユーザーへ Google を紐づけ。
- * - どちらも無ければ新規ユーザーを作成（getInternalUserId 内で実行）。
+ * - 無ければ新規ユーザーを作成（getInternalUserId 内で実行）。
+ *   LINE 起点ユーザーとの統合は設定画面の連携コードで行う。
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${base}/login?error=exchange`);
   }
 
-  // 内部ユーザー（line_users.id）へ写像。必要なら作成 / LINE 紐づけが行われる。
+  // 内部ユーザー（line_users.id）へ写像。必要なら作成される。
   const userId = await getInternalUserId();
 
   // 新規登録なら流入元（first-touch）を記録する。失敗してもログインは続行。
