@@ -14,7 +14,7 @@ import type {
   FinalExamRule,
 } from "@/types/checkpoint";
 import { getAllTopics } from "@/lib/content";
-import { getCheckpoint } from "@/lib/checkpoints";
+import { getCheckpoint, usesBookPacedExamScope } from "@/lib/checkpoints";
 
 type FinalExamScope = {
   /** このCPで出題してよい中分類。未学習トピックはこの範囲内でも出題しない。 */
@@ -201,10 +201,12 @@ export function generateFinalExam(
   const scope = FINAL_EXAM_SCOPES[checkpointId];
   const attemptId = options.attemptId ?? "final-exam";
   const completedTopicIds = new Set(state.progress.completedTopics);
+  // 参考書順の CP1〜3 は「本で学んだ範囲」の確認: 中分類で絞らず、完了トピック全体から出す。
+  const bookPaced = usesBookPacedExamScope(state, checkpointId);
   const topics = getAllTopics().filter(
     (topic) =>
       completedTopicIds.has(topic.id) &&
-      scope.eligibleCategories.includes(topic.category) &&
+      (bookPaced || scope.eligibleCategories.includes(topic.category)) &&
       topic.checkQuestions.length > 0,
   );
   const candidates = topics.flatMap((topic) =>

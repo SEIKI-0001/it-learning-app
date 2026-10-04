@@ -22,6 +22,7 @@ import { masteryForTopic } from "@/lib/mastery";
 import { summarizeOfficialHistory } from "@/lib/pastExam/officialHistory";
 import { KAKOMON_FIELD_DRILL_TARGET } from "@/lib/pastExam/kakomonRules";
 import type { ExamReadinessResult } from "@/types/examReadiness";
+import { isBookPaced } from "@/lib/studyModeState";
 
 // 習熟度のしきい値。初回満点は約72、日を空けた再確認で定着度が上がる前提で調整。
 export const QUIZ_CLEARED = 60; // 確認問題を「解ける」水準
@@ -508,6 +509,8 @@ export type BadgeMetrics = {
   officialAnsweredByField: Record<TopicField, number>;
   finalPassedCheckpointIds: Set<CheckpointId>;
   clearedCheckpointIds: Set<CheckpointId>;
+  /** 参考書順で進めているか（CP1〜3 の必須バッジの判定ルートが変わる）。指標ではない。 */
+  bookPaced: boolean;
 };
 
 const FIELDS: TopicField[] = ["technology", "management", "strategy"];
@@ -561,6 +564,50 @@ const REQUIRED_BADGE_RULES: Record<string, BadgeRule> = {
   "b-cp6-high-readiness": [[up("highReadiness", 1)]],
 };
 
+/**
+ * 参考書順（Book mode）での CP1〜3 の必須バッジ。
+ * 参考書の順に進むと分野が偏る（例: ストラテジから始まる本）ため、分野別の件数ではなく
+ * 「学んだ範囲の総数」で判定する。目標の総数は分野別の合計と同じ（CP1: 1+1+1, CP2: 6+3+4, CP3: 8+4+5）。
+ * バッジ id は変えないので、獲得済みバッジ・突破済み CP はモードを切り替えても失われない。
+ * CP4 以降は従来と同じ条件（CP5 の3分野習熟度は、本を1周した後の確認として残す）。
+ */
+const BOOK_PACED_REQUIRED_BADGE_RULES: Record<string, BadgeRule> = {
+  "b-cp1-touch-tech": [[up("completedTotal", 3)]],
+  "b-cp1-touch-mgmt": [[up("completedTotal", 3)]],
+  "b-cp1-touch-strat": [[up("completedTotal", 3)]],
+  "b-cp2-basics-tech": [[up("completedTotal", 13)]],
+  "b-cp2-basics-mgmt": [[up("completedTotal", 13)]],
+  "b-cp2-basics-strat": [[up("completedTotal", 13)]],
+  "b-cp3-quiz-tech": [[up("quizClearedTotal", 17)]],
+  "b-cp3-quiz-mgmt": [[up("quizClearedTotal", 17)]],
+  "b-cp3-quiz-strat": [[up("quizClearedTotal", 17)]],
+};
+
+/** 参考書順のときの、CP1〜3 の必須バッジの条件文（表示用）。 */
+export const BOOK_PACED_CONDITION_LABELS: Record<string, string> = {
+  "b-cp1-touch-tech": "参考書の順でトピックを3つ完了する",
+  "b-cp1-touch-mgmt": "参考書の順でトピックを3つ完了する",
+  "b-cp1-touch-strat": "参考書の順でトピックを3つ完了する",
+  "b-cp2-basics-tech": "参考書の順でトピックを13個完了する",
+  "b-cp2-basics-mgmt": "参考書の順でトピックを13個完了する",
+  "b-cp2-basics-strat": "参考書の順でトピックを13個完了する",
+  "b-cp3-quiz-tech": "参考書で学んだトピックの確認問題を17個クリアする",
+  "b-cp3-quiz-mgmt": "参考書で学んだトピックの確認問題を17個クリアする",
+  "b-cp3-quiz-strat": "参考書で学んだトピックの確認問題を17個クリアする",
+};
+
+/** いまの学習モードでのバッジの条件文。 */
+export function badgeConditionLabel(
+  def: BadgeDef,
+  state: Pick<AppState, "progress">,
+): string {
+  return (isBookPaced(state) && BOOK_PACED_CONDITION_LABELS[def.id]) || def.conditionLabel;
+}
+
+function requiredRuleFor(id: string, bookPaced: boolean): BadgeRule | undefined {
+  return (bookPaced && BOOK_PACED_REQUIRED_BADGE_RULES[id]) || REQUIRED_BADGE_RULES[id];
+}
+
 function criterionValue(metrics: BadgeMetrics, criterion: Criterion): number {
   const value = metrics[criterion.metric];
   if (typeof value === "number") return value;
@@ -585,12 +632,12 @@ export function getRequiredBadgeGaps(
   signals?: BadgeSignals,
   now: Date = new Date(),
 ): BadgeGap[][] {
-  const rule = REQUIRED_BADGE_RULES[badgeId];
+  const rule = requiredRuleFor(badgeId, isBookPaced(state));
   return rule ? gapsForRule(computeMetrics(state, signals, now), rule) : [];
 }
 
 function requiredRuleMet(id: string, metrics: BadgeMetrics): boolean {
-  return gapsForRule(metrics, REQUIRED_BADGE_RULES[id]).some((path) => path.length === 0);
+  return gapsForRule(metrics, requiredRuleFor(id, metrics.bookPaced)!).some((path) => path.length === 0);
 }
 
 /** 公式過去問の回答実績（lib/pastExam/officialHistory の集計をそのまま使う）。 */
@@ -686,6 +733,7 @@ function computeMetrics(
         .map((a) => a.checkpointId),
     ),
     clearedCheckpointIds: new Set(cp?.clearedCheckpointIds ?? []),
+    bookPaced: isBookPaced(state),
   };
 }
 
