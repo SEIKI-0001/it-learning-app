@@ -41,6 +41,8 @@ export type ReferenceBookPresetSummary = {
   edition?: string;
   bookType: PresetBookType;
   chapterCount: number;
+  /** 節の数（0なら章だけの本＝章ごとに進む） */
+  sectionCount: number;
 };
 
 const BOOK_TYPE_ORDER: PresetBookType[] = [
@@ -65,6 +67,7 @@ export function listReferenceBookPresets(): ReferenceBookPresetSummary[] {
       edition: p.book.edition,
       bookType: p.bookType ?? "textbook",
       chapterCount: p.book.chapters?.length ?? 0,
+      sectionCount: countSections(p.book.chapters),
     }))
     .sort(
       (a, b) =>
@@ -89,6 +92,10 @@ export function referenceBookFromPreset(id: string): ReferenceBook | null {
     active: true,
     updatedAt: new Date().toISOString(),
   });
+}
+
+function countSections(chapters: ReferenceChapter[] | undefined): number {
+  return (chapters ?? []).reduce((sum, c) => sum + (c.sections?.length ?? 0), 0);
 }
 
 function normalizeForMatch(s: string): string {
@@ -131,6 +138,7 @@ export function suggestPresetForText(
     edition: e.book.edition,
     bookType: e.bookType ?? "textbook",
     chapterCount: e.book.chapters?.length ?? 0,
+    sectionCount: countSections(e.book.chapters),
   };
 }
 

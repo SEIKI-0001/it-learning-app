@@ -4,8 +4,9 @@ import { referenceLocationLabel, resolveReferenceGuide } from "@/lib/referenceBo
 import Icon from "@/components/ui/Icon";
 
 // 「今日の参考書」ブロック。/today の参考書カードとレッスンページで共用する。
-// サービス側（既存の学習ロジック）が決めたトピックを、ユーザーの参考書上の場所へ変換して見せる。
-// 学習順序は変えない。案内のフォールバック順は lib/referenceBook.ts の resolveReferenceGuide:
+// 今日のトピックを、ユーザーの参考書上の場所へ変換して見せる。
+// トピックの順番は学習コンテキストが決める（参考書順なら本の順、アプリ順なら従来のおすすめ順。
+// lib/studyContext）。ここは場所の案内だけ。案内のフォールバック順は lib/referenceBook.ts の resolveReferenceGuide:
 //   topicIds の紐づけ → 章・節のキーワード一致（候補・断定しない）→ referenceHints → 索引。
 
 type GuideTopic = Pick<Topic, "id" | "title" | "referenceHints">;

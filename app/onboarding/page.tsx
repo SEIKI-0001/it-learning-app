@@ -17,6 +17,10 @@ import {
 } from "@/lib/userSession";
 import Icon from "@/components/ui/Icon";
 import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
+import { bookOrderFlag } from "@/lib/bookOrderFlag";
+import { getAllTopics } from "@/lib/content";
+import { buildBookStudyOrder } from "@/lib/bookStudyOrder";
+import { assessBookQuality } from "@/lib/bookQuality";
 import {
   referenceBookFromChoice,
   type ReferenceBookChoice,
@@ -45,6 +49,14 @@ export default function OnboardingPage() {
   const [weakFields, setWeakFields] = useState<TopicField[]>([]);
   const [studyStyle, setStudyStyle] = useState<StudyStyle>("balanced");
   const [bookChoice, setBookChoice] = useState<ReferenceBookChoice>({ kind: "later" });
+  // 参考書の順で進めるか（機能フラグが on で、順番の背骨に使える本のときだけ聞く。既定は OFF）。
+  const [followBook, setFollowBook] = useState(false);
+  const bookOrderOffered = (() => {
+    if (bookOrderFlag() !== "optin") return false;
+    const candidate = referenceBookFromChoice(bookChoice);
+    if (!candidate) return false;
+    return assessBookQuality(buildBookStudyOrder(candidate, getAllTopics()), getAllTopics()).eligible;
+  })();
 
   // LINE 経由(?t=トークン)ならユーザーを解決。設定済みならダッシュボードへ。
   useEffect(() => {
@@ -80,6 +92,7 @@ export default function OnboardingPage() {
       itExperience: "none",
       dailyMinutes: String(weekdayMinutes),
       examPlan: examDate ? "decided" : "undecided",
+      ...(bookOrderOffered && followBook ? { studyOrderPreference: "book" as const } : {}),
     };
     const initial = initializeAppState(full);
 
@@ -249,9 +262,26 @@ export default function OnboardingPage() {
               使用する参考書
             </legend>
             <p className="mb-3 text-xs text-gray-500">
-              選ぶと、毎日「参考書のどこを読むか」を案内します。学習の順番はアプリが決めます。
+              選ぶと、毎日「参考書のどこを読むか」を案内します。
+              {bookOrderFlag() === "off" && "学習の順番はアプリが決めます。"}
             </p>
             <ReferenceBookPicker value={bookChoice} onChange={setBookChoice} allowLater />
+            {bookOrderOffered && (
+              <label className="mt-3 flex items-start gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900">
+                <input
+                  type="checkbox"
+                  checked={followBook}
+                  onChange={(e) => setFollowBook(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <span>
+                  この参考書の章・節の順に学ぶ（おすすめ）
+                  <span className="mt-0.5 block text-xs text-gray-600">
+                    新しく学ぶテーマを本の順に出します。復習や本に無い試験範囲の補足はアプリが組み込みます。あとで設定から変えられます。
+                  </span>
+                </span>
+              </label>
+            )}
           </fieldset>
         </div>
 

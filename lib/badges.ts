@@ -604,6 +604,15 @@ export function badgeConditionLabel(
   return (isBookPaced(state) && BOOK_PACED_CONDITION_LABELS[def.id]) || def.conditionLabel;
 }
 
+/**
+ * 表示用に、条件文をいまの学習モードのものへ差し替えた定義を返す。
+ * アプリ順・差し替えの無いバッジは同じ参照のまま（従来と同一）。
+ */
+export function badgeDefForMode(def: BadgeDef, state: Pick<AppState, "progress">): BadgeDef {
+  const label = badgeConditionLabel(def, state);
+  return label === def.conditionLabel ? def : { ...def, conditionLabel: label };
+}
+
 function requiredRuleFor(id: string, bookPaced: boolean): BadgeRule | undefined {
   return (bookPaced && BOOK_PACED_REQUIRED_BADGE_RULES[id]) || REQUIRED_BADGE_RULES[id];
 }
@@ -863,7 +872,7 @@ export function buildBadgeStatuses(
     const earned = earnedMap.get(def.id);
     const cond = BADGE_CONDITIONS[def.id];
     return {
-      def,
+      def: badgeDefForMode(def, state),
       earned: !!earned,
       conditionMet: cond ? cond(metrics) : false,
       earnedAt: earned?.earnedAt,

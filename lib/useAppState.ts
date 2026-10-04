@@ -149,6 +149,14 @@ export function useAppState() {
     () => (state && ready ? withStudyMode(state, context.effectiveMode) : state),
     [context.effectiveMode, ready, state],
   );
+  // 保存された写しが今の判定と違えば書き戻す（サーバー側の判定・別画面と食い違わないように）。
+  // アプリ順で写しを持たないユーザーは applied === state なので何もしない。
+  useEffect(() => {
+    if (!state || !applied || applied === state) return;
+    saveAppState(applied);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, applied.progress);
+  }, [applied, state]);
 
   return [applied, setState] as const;
 }
