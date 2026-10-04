@@ -669,6 +669,11 @@ function bookKey(book: Pick<ReferenceBook, "title">): string {
   return normalizeKeyword(book.title ?? "");
 }
 
+/** 書名の正規化キー（照合用。本の identity ではない）。 */
+export function referenceBookTitleKey(book: Pick<ReferenceBook, "title">): string {
+  return bookKey(book);
+}
+
 /** 読了した節・章が1つでもあるか（アーカイブする価値があるか）。 */
 export function hasReadingHistory(book: ReferenceBook | null): boolean {
   return (referenceBookProgress(book)?.done ?? 0) > 0;
