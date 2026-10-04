@@ -5,6 +5,10 @@ import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import { fetchTopicStage, getUserId } from "@/lib/userSession";
 import { hasCheckPack } from "@/lib/checkPack";
+import {
+  formatCheckPackDate,
+  useCheckPackHistory,
+} from "@/components/checkPack/CheckPackHistory";
 
 // /today の「今日のメニュー」に、対象トピックの状態に応じた確認パック導線を出す。
 // パックが無いトピックでは何も表示しない。
@@ -58,6 +62,7 @@ function ctaForStage(stage: string | null): Cta {
 
 export default function TodayCheckPackCta({ topicId }: { topicId: string }) {
   const [stage, setStage] = useState<string | null>(null);
+  const history = useCheckPackHistory(topicId);
 
   useEffect(() => {
     let alive = true;
@@ -100,6 +105,11 @@ export default function TodayCheckPackCta({ topicId }: { topicId: string }) {
         >
           {cta.body}
         </span>
+        {history && (
+          <span className="mt-1 block text-[11px] text-gray-500">
+            前回 {formatCheckPackDate(history.lastCompletedAt)}に実施
+          </span>
+        )}
       </span>
       <Icon
         name="chevron-right"

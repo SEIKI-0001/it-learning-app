@@ -7,6 +7,7 @@ import TopicCompletionQuiz from "@/components/learn/TopicCompletionQuiz";
 import LessonReferenceGuide from "@/components/learn/LessonReferenceGuide";
 import LessonStatusBadge from "@/components/learn/LessonStatusBadge";
 import { hasCheckPack } from "@/lib/checkPack";
+import LessonCheckPackCard from "@/components/checkPack/LessonCheckPackCard";
 import { getTopic } from "@/lib/content";
 import Icon from "@/components/ui/Icon";
 import {
@@ -176,14 +177,7 @@ export default async function LessonPage({
 
         {hasCheckPack(topic.id) && (
           <section id="lesson-check-pack" className="scroll-mt-24">
-            <Link
-              href={`/check-pack/${topic.id}`}
-              className="block rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
-            >
-              <p className="text-xs font-semibold text-brand-700">仕上げ</p>
-              <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">確認パックを受ける</p>
-              <p className="mt-1 text-sm text-gray-600">基礎確認から過去問レベルまで解いて、本番対応OKを目指します。</p>
-            </Link>
+            <LessonCheckPackCard topicId={topic.id} />
           </section>
         )}
 
