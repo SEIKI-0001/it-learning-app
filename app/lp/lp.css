@@ -725,3 +725,24 @@ html.lp-anim .lp .reveal.in {
   opacity: 1;
   translate: 0 0;
 }
+.lp .story-section {
+  padding: 48px 0 72px;
+}
+
+.lp .story-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  margin-top: 28px;
+  border: 1px solid #dbe2eb;
+  border-radius: 16px;
+  background: #152233;
+}
+
+.lp .story-note {
+  margin-top: 12px;
+  color: #596575;
+  font-size: 12px;
+  line-height: 1.8;
+}
