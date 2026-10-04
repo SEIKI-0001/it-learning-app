@@ -25,6 +25,7 @@ type SaveBody = {
  * POST /api/reference-book/save
  * ユーザーの参考書アウトラインを UPSERT する（1ユーザー1冊）。
  * body: { userId?, book, archive?, studyPlan? }（production ではセッション / fq_line Cookie からのみ解決）
+ *       { userId?, studyPlan } だけなら、使用中の本の計画だけを更新する（本が違えば 409）
  * 返却: { ok: true, bookId?: string }  … DB 上の本の永続 id（クライアントはこれに揃える）
  *
  * book_id は同じ本なら既存の id を保ち、別の本へ切り替えたら新しい id にする（resolveSavedReferenceBookId）。
@@ -46,7 +47,8 @@ export async function POST(request: Request) {
   }
 
   const book = body.book;
-  if (!book || !Array.isArray(book.chapters)) {
+  const planOnly = !book && body.studyPlan !== undefined && body.studyPlan !== null;
+  if (!planOnly && (!book || !Array.isArray(book.chapters))) {
     return NextResponse.json({ ok: false, error: "book invalid" }, { status: 400 });
   }
   const archive = body.archive === undefined ? undefined : parseArchivePayload(body.archive);
@@ -76,6 +78,22 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (readError) {
     return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
+  }
+
+  if (planOnly || !book) {
+    // 計画だけの保存。使用中の本の計画でなければ受け付けない（切替直後の古い計画で上書きしない）。
+    const storedId = (existing as { book_id?: string | null } | null)?.book_id;
+    if (!studyPlan || !storedId || storedId !== studyPlan.bookId) {
+      return NextResponse.json({ ok: false, error: "book mismatch" }, { status: 409 });
+    }
+    const { error: planError } = await supabase
+      .from("user_reference_books")
+      .update({ study_plan: studyPlan })
+      .eq("user_id", userId);
+    if (planError) {
+      return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, bookId: storedId });
   }
 
   const bookId = resolveSavedReferenceBookId(

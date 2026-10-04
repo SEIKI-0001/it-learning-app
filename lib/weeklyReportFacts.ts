@@ -12,6 +12,7 @@
 //
 // 期間は「今日を含む直近7暦日（ローカル時刻）」。先週はその前の7暦日。
 
+import type { BookQueueOptions } from "@/lib/bookStudyPlan";
 import { dateInZone, shiftDate, startInZone } from "@/lib/journal/dates";
 import type { AppState, UserAnswer } from "@/types";
 import type { TopicField } from "@/types/content";
@@ -154,7 +155,12 @@ const FIELD_LABEL: Record<TopicField, string> = {
 // 本体
 // ---------------------------------------------------------------------------
 
-export function buildWeeklyReportFacts(state: AppState, now: Date = new Date(), options: { timeZone?: string; days?: 1 | 7 } = {}): WeeklyReportFacts {
+export function buildWeeklyReportFacts(
+  state: AppState,
+  now: Date = new Date(),
+  // book: 参考書順（Book mode）のときだけ渡す。次の新規トピックを本の順で選ぶ。
+  options: { timeZone?: string; days?: 1 | 7; book?: BookQueueOptions | null } = {},
+): WeeklyReportFacts {
   const count = options.days ?? 7;
   const key = (d: Date) => options.timeZone ? dateInZone(d, options.timeZone) : localDateKey(d);
   const today = options.timeZone ? startInZone(key(now), options.timeZone) : startOfLocalDay(now);
@@ -342,7 +348,7 @@ export function buildWeeklyReportFacts(state: AppState, now: Date = new Date(), 
   return {
     ...base,
     signals: buildSignals(base, thisWeek.map((x) => x.a), options.timeZone),
-    nextActions: buildNextActions(state, now, volume),
+    nextActions: buildNextActions(state, now, volume, options.book ?? null),
   };
 }
 
@@ -620,6 +626,7 @@ function buildNextActions(
   state: AppState,
   now: Date,
   volume: WeeklyReportFacts["volume"],
+  book: BookQueueOptions | null,
 ): NextAction[] {
   const actions: NextAction[] = [];
 
@@ -639,7 +646,12 @@ function buildNextActions(
     }
   }
 
-  const queue = buildTodaysLearningQueue({ progress: state.progress, topics: getAllTopics(), now });
+  const queue = buildTodaysLearningQueue({
+    progress: state.progress,
+    topics: getAllTopics(),
+    now,
+    ...(book ? { book } : {}),
+  });
   const kindOf = (k: string): NextAction["kind"] | null =>
     k === "overdue_review"
       ? "review"

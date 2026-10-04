@@ -16,6 +16,8 @@ import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { getCheckpoint, phaseToCheckpointId } from "@/lib/checkpoints";
 import { computeProgressSummary } from "@/lib/progressSummary";
+import { loadServerStudyContext } from "@/lib/serverStudyContext";
+import type { BookQueueOptions } from "@/lib/bookStudyPlan";
 
 /**
  * LINE Messaging API の Webhook 受け口（ITパスポート学習コーチ）。
@@ -154,6 +156,7 @@ function planText(
   profile?: UserProfile,
   progress?: UserProgress,
   answers: UserAnswer[] = [],
+  bookQueue: BookQueueOptions | null = null,
 ): string {
   if (!profile || !progress) {
     return [
@@ -165,6 +168,10 @@ function planText(
   const plan = generateLearningPlan(
     { profile, progress, answers },
     getAllTopics(),
+    undefined,
+    undefined,
+    undefined,
+    bookQueue ? { book: bookQueue } : undefined,
   );
   // 現在地は Web と同じ CP（チェックポイント）語彙で伝える。
   const cp = getCheckpoint(
@@ -208,6 +215,7 @@ function todayText(
   profile?: UserProfile,
   progress?: UserProgress,
   answers: UserAnswer[] = [],
+  bookQueue: BookQueueOptions | null = null,
 ): string {
   if (!profile || !progress) {
     return [
@@ -216,7 +224,16 @@ function todayText(
       withToken(baseUrl, "/today", token),
     ].join("\n");
   }
-  const menu = generateTodayMenu(profile, progress, getAllTopics(), answers);
+  const menu = generateTodayMenu(
+    profile,
+    progress,
+    getAllTopics(),
+    answers,
+    undefined,
+    undefined,
+    undefined,
+    bookQueue ? { book: bookQueue } : undefined,
+  );
   const lines = [`📖 今日のテーマ：${menu.theme}`, `⏱️ 目安 ${menu.totalMinutes}分`];
   const learn = menu.items.filter((i) => i.kind === "learn");
   if (learn.length > 0) {
@@ -312,10 +329,12 @@ async function buildReplyText(
     text.includes("ロードマップ") ||
     text.includes("今週")
   ) {
-    return planText(baseUrl, token, profile, progress, answers);
+    const { bookQueue } = await loadServerStudyContext(supabase, userId, profile);
+    return planText(baseUrl, token, profile, progress, answers, bookQueue);
   }
   if (text.includes("今日") || text.includes("学習") || text.includes("メニュー")) {
-    return todayText(baseUrl, token, profile, progress, answers);
+    const { bookQueue } = await loadServerStudyContext(supabase, userId, profile);
+    return todayText(baseUrl, token, profile, progress, answers, bookQueue);
   }
   if (text.includes("進捗") || text.includes("状況")) {
     // HTTP 自己呼び出しをせず、唯一の期限境界を持つ共有 current service を直接使う。

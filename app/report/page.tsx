@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAppState } from "@/lib/useAppState";
+import { useStudyContext } from "@/lib/useStudyContext";
 import { buildWeeklyReportFacts } from "@/lib/weeklyReportFacts";
 import PageHeader from "@/components/ui/PageHeader";
 import WeeklyReportView from "@/components/report/WeeklyReportView";
@@ -25,7 +26,11 @@ export default function ReportPage() {
     if (state === null) router.replace("/onboarding");
   }, [state, router]);
 
-  const facts = useMemo(() => (state ? buildWeeklyReportFacts(state) : null), [state]);
+  const { ready: studyReady, bookQueue } = useStudyContext(state);
+  const facts = useMemo(
+    () => (state && studyReady ? buildWeeklyReportFacts(state, new Date(), { book: bookQueue }) : null),
+    [bookQueue, state, studyReady],
+  );
 
   if (state === undefined || state === null || !facts) {
     return <LoadingScreen />;

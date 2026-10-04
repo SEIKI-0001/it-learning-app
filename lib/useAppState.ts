@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { AppState } from "@/types";
 import { loadAppState, saveAppState } from "@/lib/storage";
 import { mergeAppState } from "@/lib/mergeAppState";
@@ -13,6 +13,8 @@ import {
   saveProgressToDb,
   setUserId,
 } from "@/lib/userSession";
+import { useStudyContext } from "@/lib/useStudyContext";
+import { withStudyMode } from "@/lib/studyModeState";
 
 // サーバー状態とのマージ（＋必要なら書き戻し）を SPA セッション内で一度だけに
 // するためのフラグ。restoreFromSessionOnce の結果はセッション開始時点のスナップ
@@ -139,5 +141,14 @@ export function useAppState() {
     };
   }, []);
 
-  return [state, setState] as const;
+  // チェックポイント判定（バッジ・ゲート・最終問題）へ、いまの学習モード（参考書順/アプリ順）を写す。
+  // 正は resolveStudyContext。アプリ順のユーザーは何も読み込まず、同じ参照のまま返る（従来と同一）。
+  // 参考書順の材料を読み込み中は、保存済みの写しをそのまま使う。
+  const { context, ready } = useStudyContext(state);
+  const applied = useMemo(
+    () => (state && ready ? withStudyMode(state, context.effectiveMode) : state),
+    [context.effectiveMode, ready, state],
+  );
+
+  return [applied, setState] as const;
 }

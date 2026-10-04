@@ -18,7 +18,7 @@ function isIsoDate(v: unknown): v is string {
 /**
  * POST /api/daily-tasks/upsert
  * /today の今日のメニューを daily_study_tasks に保存する（重複作成しない）。
- * body: { userId?: string, date?: string("YYYY-MM-DD"), tasks: DailyStudyTaskInput[] }
+ * body: { userId?: string, date?: string("YYYY-MM-DD"), tasks: DailyStudyTaskInput[], replacePendingTodayMenu?: boolean }
  *
  * fire-and-forget 前提。失敗しても学習画面は止めない。
  * - 既存タスク（= 同 user/date/種別/topic/title）は上書きしない（ignoreDuplicates）。
@@ -26,7 +26,13 @@ function isIsoDate(v: unknown): v is string {
  * - Supabase 未設定: 503 / userId なし: 401 / body 不正: 400
  */
 export async function POST(request: Request) {
-  let body: { userId?: string; date?: string; tasks?: DailyStudyTaskInput[] } = {};
+  let body: {
+    userId?: string;
+    date?: string;
+    tasks?: DailyStudyTaskInput[];
+    /** 学習順の前提が変わった日（参考書順への切替・本の切替）だけ true。古い未着手の今日のメニューを入れ替える */
+    replacePendingTodayMenu?: boolean;
+  } = {};
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -62,6 +68,22 @@ export async function POST(request: Request) {
 
   if (rows.length === 0) {
     return NextResponse.json({ ok: true, saved: 0 });
+  }
+
+  if (body.replacePendingTodayMenu === true) {
+    // 自動で作った未着手の行だけを消す（完了・達成度報告・立て直し提案・単語/過去問タスクは触らない）。
+    const { error: deleteError } = await supabase
+      .from("daily_study_tasks")
+      .delete()
+      .eq("user_id", userId)
+      .eq("date", date)
+      .eq("source", "today_menu")
+      .eq("status", "pending")
+      .eq("completion_source", "self_report")
+      .is("activity_key", null);
+    if (deleteError) {
+      return NextResponse.json({ ok: false, error: "save failed" }, { status: 500 });
+    }
   }
 
   // ignoreDuplicates: 既存行は触らず、新規メニュー項目だけ追加する。
