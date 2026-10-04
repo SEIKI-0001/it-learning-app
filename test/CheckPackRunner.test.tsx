@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { WordlistEntry } from "@/types/wordlist";
 import CheckPackRunner from "@/components/checkPack/CheckPackRunner";
 
@@ -38,6 +38,36 @@ vi.mock("@/lib/wordlist", () => ({
     explanation: "用語の解説",
   }),
 }));
+
+// 前回の結果は端末（localStorage）にも残る。テストごとに空から始める。
+const storageValues = new Map<string, string>();
+const localStorageStub: Storage = {
+  get length() {
+    return storageValues.size;
+  },
+  clear() {
+    storageValues.clear();
+  },
+  getItem(key) {
+    return storageValues.get(key) ?? null;
+  },
+  key(index) {
+    return [...storageValues.keys()][index] ?? null;
+  },
+  removeItem(key) {
+    storageValues.delete(key);
+  },
+  setItem(key, value) {
+    storageValues.set(key, String(value));
+  },
+};
+
+beforeAll(() => {
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: localStorageStub,
+  });
+});
 
 const QUIZ_COUNT = 4;
 const EXAM_COUNT = 2;
@@ -126,6 +156,7 @@ const answerExamStep = () =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
   mocks.getUserId.mockReturnValue("user-1");
   mocks.loadAppState.mockReturnValue(null);
   mocks.submitCheckPack.mockResolvedValue({
@@ -402,5 +433,40 @@ describe("CheckPackRunner skips questions already solved in the confirmation qui
     await screen.findByText("関連用語の確認");
     expect(mocks.saveQuestionAttempts.mock.calls[0][1]).toHaveLength(QUIZ_COUNT);
     expect(screen.queryByText(/確認問題ですべて理解できています/)).toBeNull();
+  });
+});
+
+describe("CheckPackRunner history", () => {
+  it("解き終えたパックは、次に開いたとき前回の結果として見返せる", async () => {
+    mocks.getUserId.mockReturnValue(null);
+
+    renderRunner();
+    answerQuizStep();
+    await screen.findByText("関連用語の確認");
+    answerFlashcardStep();
+    await screen.findByText("過去問レベル問題");
+    answerExamStep();
+    await screen.findByText("確認パックの結果");
+    cleanup();
+
+    render(
+      <CheckPackRunner
+        packId="pack-tech-binary"
+        topicId="tech-binary-data"
+        topicTitle="二進数"
+        quizQuestions={quizQuestions}
+        flashcardEntries={flashcardEntries}
+        examQuestions={examQuestions}
+      />,
+    );
+
+    expect(await screen.findByRole("region", { name: "前回の結果" })).toBeTruthy();
+    expect(screen.getByText("本番対応OK")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "もう一度受ける" })).toBeTruthy();
+  });
+
+  it("まだ解いていないパックには前回の結果を出さない", () => {
+    renderRunner();
+    expect(screen.queryByRole("region", { name: "前回の結果" })).toBeNull();
   });
 });

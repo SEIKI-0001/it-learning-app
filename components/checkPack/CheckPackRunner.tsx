@@ -16,6 +16,10 @@ import {
 } from "@/lib/userSession";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
 import { rememberTopicStage } from "@/lib/topicStageCache";
+import {
+  recordCheckPackCompletion,
+  updateLastCheckPackStatus,
+} from "@/lib/checkPackHistory";
 import type { TopicStage } from "@/types/studyProgress";
 import {
   combinedQuizRate,
@@ -27,6 +31,10 @@ import { getLessonHref } from "@/lib/learningCatalog";
 import type { CheckPackResultStatus } from "@/types/checkPack";
 import RecordingLockNotice from "@/components/billing/RecordingLockNotice";
 import TopicQuiz from "@/components/learn/TopicQuiz";
+import {
+  CheckPackPreviousResult,
+  useCheckPackHistory,
+} from "@/components/checkPack/CheckPackHistory";
 import { buttonClass } from "@/components/ui/Button";
 
 // 確認パックの実施フロー（クライアント）。
@@ -144,6 +152,8 @@ export default function CheckPackRunner({
   });
   // ステップ1を全問省いて自動完了したか（次のステップで短く伝える）。
   const [quizAutoCompleted, setQuizAutoCompleted] = useState(false);
+  // 以前に解き終えたことがあるか（開始画面で前回の結果を見せる）。
+  const history = useCheckPackHistory(topicId);
 
   useEffect(() => {
     function init() {
@@ -263,6 +273,14 @@ export default function CheckPackRunner({
       0,
     );
     if (localDecision.resultStatus !== "incomplete") rememberTopicStage(topicId, localDecision.stage);
+    // 後から「このパックを解いたか」を見返せるよう、保存の成否に関わらず端末に残す。
+    recordCheckPackCompletion(topicId, {
+      completedAt: new Date().toISOString(),
+      resultStatus: localDecision.resultStatus,
+      quizRate: q,
+      flashcardRate: f,
+      examLevelRate: e,
+    });
     const userId = getUserId();
     if (!userId) return;
     // 未保存の回答が混ざったセッションは、正式な到達度証拠にならない。
@@ -279,6 +297,7 @@ export default function CheckPackRunner({
     });
     if (res) {
       rememberTopicStage(topicId, res.stage as TopicStage);
+      updateLastCheckPackStatus(topicId, res.resultStatus);
       setServerStatus({ resultStatus: res.resultStatus, nextAction: res.nextAction });
     }
   }
@@ -289,6 +308,7 @@ export default function CheckPackRunner({
     return (
       <div className="space-y-5">
         <RecordingLockNotice variant="compact" />
+        {history && <CheckPackPreviousResult entry={history} />}
         <IntroCard
           topicTitle={topicTitle}
           quizCount={quizPlan.toAsk.length}
@@ -301,7 +321,7 @@ export default function CheckPackRunner({
           onClick={() => void handleStart()}
           className={buttonClass("primary", "lg", "w-full")}
         >
-          確認パックを始める
+          {history ? "もう一度受ける" : "確認パックを始める"}
         </button>
       </div>
     );
