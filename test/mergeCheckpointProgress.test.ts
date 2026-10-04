@@ -35,6 +35,8 @@ function fullCheckpointProgress(): CheckpointProgress {
   return {
     currentCheckpointId: "cp3",
     clearedCheckpointIds: ["cp1", "cp2"],
+    studyMode: "book",
+    bookUnlockedFinalExamIds: ["cp3"],
     earnedBadges: [{ badgeId: "b-cp1-touch-tech", earnedAt: "2026-08-01T00:00:00.000Z" }],
     badgeFragments: [{ fragmentId: "frag-common", count: 4 }],
     finalExamAttempts: [
@@ -123,6 +125,7 @@ describe("checkpoint progress merge shape", () => {
 
     expect(Object.keys(merge(full, full)).sort()).toEqual([
       "badgeFragments",
+      "bookUnlockedFinalExamIds",
       "chapterReview",
       "clearedCheckpointIds",
       "currentCheckpointId",
@@ -132,6 +135,7 @@ describe("checkpoint progress merge shape", () => {
       "gameful",
       "rarePityCount",
       "streakMeta",
+      "studyMode",
     ]);
   });
 
