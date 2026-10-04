@@ -205,7 +205,7 @@ export default function LandingPage() {
 
         <section className="story-section" aria-labelledby="story-heading">
           <div className="col">
-            <p className="eyebrow">90秒でわかる、新しい勉強の進め方</p>
+            <p className="eyebrow">約75秒でわかる、新しい勉強の進め方</p>
             <h2 id="story-heading" className="sec-title">
               「分からない」と「迷う」をなくして、合格まで。
             </h2>
@@ -218,23 +218,23 @@ export default function LandingPage() {
               controls
               playsInline
               preload="none"
-              poster="/lp/story/poster.webp"
+              poster="/lp/story/story-v2-poster.webp"
               width={1920}
               height={1080}
-              aria-label="理解する・測る・次を決める：90秒のサービス紹介動画"
+              aria-label="理解する・測る・次を決める：約75秒のサービス紹介動画"
               aria-describedby="story-note"
             >
-              <source src="/lp/story/it-learning-story.mp4" type="video/mp4" />
+              <source src="/lp/story/story-v2.mp4" type="video/mp4" />
               <track
                 kind="captions"
-                src="/lp/story/captions.ja.vtt"
+                src="/lp/story/story-v2.ja.vtt"
                 srcLang="ja"
                 label="日本語"
               />
-              <a href="/lp/story/it-learning-story.mp4">紹介動画を再生する</a>
+              <a href="/lp/story/story-v2.mp4">紹介動画を再生する</a>
             </video>
             <p id="story-note" className="story-note">
-              日本語音声・字幕付き（VOICEVOX：春日部つむぎ）。画面内の学習データと数値の変化は説明用の一例です。
+              日本語音声・字幕付き（音声：VOICEVOX:春日部つむぎ）。画面内の学習データは撮影用の一例です。
             </p>
           </div>
         </section>
