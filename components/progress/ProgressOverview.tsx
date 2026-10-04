@@ -69,7 +69,7 @@ export default function ProgressOverview({
         <span className={t.eyebrowDate}>{dateLabel} 時点</span>
       </p>
 
-      <div className={p.readinessFocus}>
+      <div className={p.readinessFocus} data-guide="progress-readiness">
         <div>
           <p className={p.readinessFocusLabel}>いちばん大切な指標 · 合格準備度</p>
           {kpis.readiness.score === null ? (
@@ -102,7 +102,7 @@ export default function ProgressOverview({
         </p>
       </div>
 
-      <div className={p.road}>
+      <div className={p.road} data-guide="progress-road">
         <div className={p.roadLine} aria-hidden>
           {current.order > 1 && (
             <span
@@ -166,7 +166,7 @@ export default function ProgressOverview({
 
       <p className={p.roadHint}>チェックポイントを押すと、完了条件と達成状況を確認できます。</p>
 
-      <dl className={p.kpis}>
+      <dl className={p.kpis} data-guide="progress-kpis">
         {kpis.exam.daysLeft === null ? (
           <Link href="/settings" className={`${p.kpi} ${p.kpiLink}`}>
             <dt>試験まで</dt>
