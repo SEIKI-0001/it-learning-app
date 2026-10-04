@@ -181,6 +181,12 @@ const MORE_GUIDE_STEPS: readonly FirstRunGuideStep[] = [
     body: "使い方動画と、各ページの操作ガイドをいつでも見返せます。",
   },
   {
+    id: "opinions",
+    target: '[data-guide="more-opinions"]',
+    title: "気づいたことは意見箱へ",
+    body: "分かりにくい所や欲しい機能があれば、ここから送れます。",
+  },
+  {
     id: "billing",
     target: "#billing",
     title: "プランの確認",

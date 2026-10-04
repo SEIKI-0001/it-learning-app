@@ -161,9 +161,11 @@ function GuideOverlay({ guide }: { guide: PageGuideId }) {
     observerRef.current = observer;
   }, []);
 
+  // カードは照らす要素の計測後に出るので、計測できたステップが変わったときにも当て直す。
+  const measuredStepId = measured?.stepId;
   useEffect(() => {
     if (open) primaryRef.current?.focus({ preventScroll: true });
-  }, [index, open]);
+  }, [index, open, measuredStepId]);
 
   useEffect(() => {
     if (!open) return;
@@ -187,8 +189,9 @@ function GuideOverlay({ guide }: { guide: PageGuideId }) {
   };
   const targetRect = measured?.stepId === step.id ? measured.rect : null;
   const placed = step.target && targetRect ? layout(targetRect, cardHeight) : null;
-  // 照らす要素の計測前は何も出さない（前のステップの位置でちらつかせない）。
-  if (step.target && !placed) return null;
+  // 照らす要素の計測前は幕もカードも出さない（前のステップの位置でちらつかせない）。
+  // ただし透明な受け皿は残し、「次へ」の連打が背面のリンクを押さないようにする。
+  if (step.target && !placed) return <div className="fixed inset-0 z-50" aria-hidden />;
 
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="first-run-guide-title">
