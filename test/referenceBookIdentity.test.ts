@@ -78,13 +78,18 @@ describe("book identity", () => {
 
   it("records the preset as the source and refreshes mappings by source id", () => {
     const preset = referenceBookFromPreset("gihyo-kitami-itpass-r08")!;
-    expect(preset.source).toEqual({ kind: "preset", id: "gihyo-kitami-itpass-r08" });
+    expect(preset.source).toEqual({ kind: "preset", id: "gihyo-kitami-itpass-r08", version: 2 });
     expect(preset.id).toBeTruthy();
     // 書名を変えても作成元のプリセットで紐づけを取り込める
-    const renamed = { ...preset, title: "キタミ式（自分用）", chapters: preset.chapters.map((c) => ({ ...c, topicIds: [] })) };
+    const renamed = {
+      ...preset,
+      title: "キタミ式（自分用）",
+      chapters: preset.chapters.map((c) => ({ ...c, sections: (c.sections ?? []).map((s) => ({ ...s, topicIds: [] })) })),
+    };
     const refreshed = refreshPresetMappings(renamed);
     expect(refreshed).not.toBe(renamed);
     expect(refreshed.title).toBe("キタミ式（自分用）");
+    expect(refreshed.chapters.flatMap((c) => c.sections ?? []).some((s) => (s.topicIds ?? []).length > 0)).toBe(true);
   });
 
   it("treats the same title with different editions as different books, and ids win when both exist", () => {

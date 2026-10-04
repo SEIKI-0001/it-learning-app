@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ReferenceBook } from "@/types/referenceBook";
 import { loadReferenceBook } from "@/lib/referenceBook";
-import { refreshPresetMappings } from "@/lib/referenceBookPresets";
+import { upgradePresetBook } from "@/lib/referenceBookPresets";
 import { loadReferenceBookSynced, persistReferenceBook } from "@/lib/referenceBookSync";
 
 /**
@@ -23,7 +23,7 @@ export function useReferenceBook(): {
     async function init() {
       // 端末の版を先に出して、DB との照合は裏で行う（初期表示を待たせない）。
       const local = loadReferenceBook();
-      setBook(local ? refreshPresetMappings(local) : null);
+      setBook(local ? upgradePresetBook(local) : null);
       const synced = await loadReferenceBookSynced();
       if (!cancelled) setBook(synced);
     }

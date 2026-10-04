@@ -95,8 +95,10 @@ describe("トピック → 参考書の場所", () => {
   it("プリセットでも Topic ID から章・節を引ける", () => {
     const kitami = referenceBookFromPreset("gihyo-kitami-itpass-r08");
     const loc = findReferenceLocation(kitami, "tech-network-address");
+    // 公式目次: Chapter7 ネットワーク ／ 7-4 TCP/IPを使ったネットワーク（小見出しに IPアドレス・DNS）
     expect(loc?.chapter.title).toContain("ネットワーク");
-    expect(loc?.section?.title).toContain("IPアドレス");
+    expect(loc?.section?.title).toBe("7-4 TCP/IPを使ったネットワーク");
+    expect(loc?.section?.keywords).toContain("ドメイン名とDNS");
   });
 
   it("紐づけがあれば mapped（断定）で案内する", () => {
@@ -325,32 +327,26 @@ describe("端末と DB の参考書", () => {
 });
 
 describe("プリセットの紐づけ", () => {
-  it("各プリセットで、本に対応する章がある分野のトピックはすべて紐づいている", () => {
-    const topics = getAllTopics();
-    // 対応する章が無い分野（推測で割り当てない）
-    const AI = ["tech-ai-ml", "tech-data-utilization", "tech-iot"];
-    const noAiChapter = [
-      "gihyo-kitami-itpass-r08",
-      "gihyo-gokaku-kyohon-itpass-r08",
-      "gihyo-itpass-saisoku-gokaku-jutsu-rev7",
-    ];
+  it("各プリセットで、トピックは実在する id だけを1か所（最初に扱う節）にだけ紐づける", () => {
+    const ids = new Set(getAllTopics().map((t) => t.id));
     for (const summary of listReferenceBookPresets()) {
       const b = referenceBookFromPreset(summary.id)!;
-      const missing = topics
-        .filter((t) => !findReferenceLocation(b, t.id))
-        .map((t) => t.id)
-        .filter((id) => !(noAiChapter.includes(summary.id) && AI.includes(id)));
-      expect({ preset: summary.id, missing }).toEqual({ preset: summary.id, missing: [] });
+      const all = b.chapters.flatMap((c) => [...(c.topicIds ?? []), ...(c.sections ?? []).flatMap((s) => s.topicIds ?? [])]);
+      expect({ preset: summary.id, unknown: all.filter((id) => !ids.has(id)) }).toEqual({ preset: summary.id, unknown: [] });
+      expect({ preset: summary.id, duplicated: all.length - new Set(all).size }).toEqual({ preset: summary.id, duplicated: 0 });
+      // 学習単位は公式目次の節。章に直接トピックを付けない
+      expect(b.chapters.every((c) => (c.topicIds ?? []).length === 0)).toBe(true);
     }
   });
 
-  it("節のある教科書では、紐づいたトピックの大半を「全部」で読了にできる", () => {
+  it("節のある教科書では、紐づいたトピックはすべて「全部」で読了にできる", () => {
     const ids = getAllTopics().map((t) => t.id);
-    const kayanoki = referenceBookFromPreset("gihyo-kayanoki-itpass-r08");
-    // 章単位だけの紐づけ（読了対象外）は ui-ux・マルチメディアの2件だけ
-    expect(referenceTargetsForTopics(kayanoki, ids).length).toBeGreaterThanOrEqual(25);
+    const kayanoki = referenceBookFromPreset("gihyo-kayanoki-itpass-r08")!;
     const unTargetable = ids.filter((id) => referenceTargetsForTopics(kayanoki, [id]).length === 0);
-    expect(unTargetable.sort()).toEqual(["tech-multimedia-compression", "tech-ui-ux"]);
+    const unmapped = ids.filter((id) => !findReferenceLocation(kayanoki, id));
+    // 読了にできないのは、目次から扱う節を判断できず紐づけなかったトピックだけ
+    expect(unTargetable).toEqual(unmapped);
+    expect(unmapped.sort()).toEqual(["mgmt-pdca", "strat-bcp", "tech-parallel-systems"]);
   });
 });
 
@@ -367,7 +363,7 @@ describe("プリセットの旧トピック id", () => {
     expect(findReferenceLocation(saved, "tech-lan-wan")?.section?.id).toBe("s");
   });
 
-  it("読み替え先はすべて実在するトピックで、プリセットの未解決 id は曖昧な strat-dx だけ", () => {
+  it("読み替え先はすべて実在するトピックで、プリセットに未解決の id は無い", () => {
     const ids = new Set(getAllTopics().map((t) => t.id));
     for (const to of Object.values(LEGACY_TOPIC_ID_ALIASES)) expect(ids.has(to)).toBe(true);
 
@@ -380,6 +376,7 @@ describe("プリセットの旧トピック id", () => {
         }
       }
     }
-    expect([...unresolved]).toEqual(["strat-dx"]);
+    // 公式目次へ作り直したときに、曖昧だった strat-dx も含めて現行 id だけにした
+    expect([...unresolved]).toEqual([]);
   });
 });

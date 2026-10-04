@@ -24,6 +24,7 @@ import { buildBookStudyOrder } from "@/lib/bookStudyOrder";
 import { assessBookQuality } from "@/lib/bookQuality";
 import {
   referenceBookFromChoice,
+  referenceBookType,
   type ReferenceBookChoice,
 } from "@/lib/referenceBookPresets";
 import { loadReferenceBook, switchReferenceBook } from "@/lib/referenceBook";
@@ -56,7 +57,9 @@ export default function OnboardingPage() {
     if (bookOrderFlag() !== "optin") return false;
     const candidate = referenceBookFromChoice(bookChoice);
     if (!candidate) return false;
-    return assessBookQuality(buildBookStudyOrder(candidate, getAllTopics()), getAllTopics()).eligible;
+    return assessBookQuality(buildBookStudyOrder(candidate, getAllTopics()), getAllTopics(), {
+      bookType: referenceBookType(candidate),
+    }).eligible;
   })();
 
   // LINE 経由(?t=トークン)ならユーザーを解決。設定済みならダッシュボードへ。

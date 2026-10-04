@@ -4,6 +4,7 @@ import { buildBookStudyOrder, type BookStudyOrder } from "@/lib/bookStudyOrder";
 import { assessBookQuality, type BookQuality } from "@/lib/bookQuality";
 import { hasUsableReferenceBook, referenceBookTitleKey } from "@/lib/referenceBook";
 import { stableHash } from "@/lib/stableHash";
+import { referenceBookType } from "@/lib/referenceBookPresets";
 
 // ============================================================================
 // 学習コンテキスト = 「いま新規学習の順番を何で決めるか」の唯一の判定（純粋関数）。
@@ -69,7 +70,9 @@ export function resolveStudyContext(input: ResolveStudyContextInput): StudyConte
   const book = input.book ?? null;
   const usable = hasUsableReferenceBook(book);
   const order = usable ? buildBookStudyOrder(book, input.topics) ?? undefined : undefined;
-  const quality = usable ? assessBookQuality(order ?? null, input.topics) : undefined;
+  const quality = usable
+    ? assessBookQuality(order ?? null, input.topics, { bookType: referenceBookType(book) })
+    : undefined;
   const bookId = usable && book ? referenceBookIdentity(book) : undefined;
 
   let reason: StudyContextReason;

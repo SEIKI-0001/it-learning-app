@@ -9,7 +9,8 @@ import { initializeAppState } from "@/lib/storage";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { buildCheckpointGate, getCheckpointProgress } from "@/lib/checkpoints";
 import { referenceBookFromPreset } from "@/lib/referenceBookPresets";
-import { referenceBookProgress } from "@/lib/referenceBook";
+import { normalizeReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import legacy from "./fixtures/legacy-presets-v1.json";
 import ReadingCheck from "@/components/today/ReadingCheck";
 import TodayReferenceGuide from "@/components/learn/TodayReferenceGuide";
 import OnboardingPage from "@/app/onboarding/page";
@@ -54,8 +55,8 @@ function storedBook(): ReferenceBook | null {
 }
 
 function networkSection(book: ReferenceBook | null) {
-  const chapter = book?.chapters.find((c) => c.id === "kitami-r08-ch06");
-  return chapter?.sections?.find((s) => s.id === "kitami-r08-ch06-s01");
+  const chapter = book?.chapters.find((c) => c.id === "kitami-r08-c07");
+  return chapter?.sections?.find((s) => s.id === "kitami-r08-7-4");
 }
 
 // Node の組み込み localStorage が jsdom の実装を隠すため、Map ベースのスタブを入れる（既存テストと同じ方式）。
@@ -101,8 +102,8 @@ describe("Today の参考書カード", () => {
     storeBook(referenceBookFromPreset(KITAMI));
     render(<ReadingCheck date="2026-09-19" topics={[NETWORK]} />);
 
-    expect(await screen.findByText("Chapter 6 ネットワーク")).toBeInTheDocument();
-    expect(screen.getByText("LAN・WAN・IPアドレス・DNS")).toBeInTheDocument();
+    expect(await screen.findByText("Chapter7 ネットワーク")).toBeInTheDocument();
+    expect(screen.getByText("7-4 TCP/IPを使ったネットワーク")).toBeInTheDocument();
     expect(
       screen.getByText("先にここを読んでから、アプリの解説・図解で確認しましょう。"),
     ).toBeInTheDocument();
@@ -137,7 +138,7 @@ describe("Today の参考書カード", () => {
     storeBook(referenceBookFromPreset(KITAMI));
     const before = referenceBookProgress(storedBook())!;
     render(<ReadingCheck date="2026-09-19" topics={[NETWORK]} />);
-    await screen.findByText("Chapter 6 ネットワーク");
+    await screen.findByText("Chapter7 ネットワーク");
 
     fireEvent.click(screen.getByRole("radio", { name: "全部" }));
 
@@ -145,17 +146,18 @@ describe("Today の参考書カード", () => {
     // /plan・/progress が読む進捗（同じ referenceBookProgress）も進む
     const after = referenceBookProgress(storedBook())!;
     expect(after.done).toBe(before.done + 1);
-    expect(after.doneChapters).toBe(before.doneChapters + 1);
+    // 公式目次では Chapter7 に節が8つあるので、1節読んだだけでは章は読了にならない
+    expect(after.doneChapters).toBe(before.doneChapters);
     expect(screen.getByText(/参考書の該当箇所を読了にしました/)).toBeInTheDocument();
     const daily = JSON.parse(window.localStorage.getItem("fequest:dailyReport:2026-09-19")!);
     expect(daily.level).toBe("all");
-    expect(daily.readTargets).toEqual(["kitami-r08-ch06/kitami-r08-ch06-s01"]);
+    expect(daily.readTargets).toEqual(["kitami-r08-c07/kitami-r08-7-4"]);
   });
 
   it("「半分」「少し」では読了にならない", async () => {
     storeBook(referenceBookFromPreset(KITAMI));
     render(<ReadingCheck date="2026-09-19" topics={[NETWORK]} />);
-    await screen.findByText("Chapter 6 ネットワーク");
+    await screen.findByText("Chapter7 ネットワーク");
 
     fireEvent.click(screen.getByRole("radio", { name: "半分" }));
     expect(networkSection(storedBook())?.done).toBeUndefined();
@@ -167,7 +169,7 @@ describe("Today の参考書カード", () => {
   it("一度読了になった節は、回答を「半分」「まだ」に変えても未読に戻らない", async () => {
     storeBook(referenceBookFromPreset(KITAMI));
     render(<ReadingCheck date="2026-09-19" topics={[NETWORK]} />);
-    await screen.findByText("Chapter 6 ネットワーク");
+    await screen.findByText("Chapter7 ネットワーク");
 
     fireEvent.click(screen.getByRole("radio", { name: "全部" }));
     fireEvent.click(screen.getByRole("radio", { name: "半分" }));
@@ -183,35 +185,46 @@ describe("かやのき先生の参考書（報告のあった再現ケース）"
     storeBook(referenceBookFromPreset("gihyo-kayanoki-itpass-r08"));
     const topics = ["mgmt-development-process", "mgmt-operation-maintenance"].map((id) => getTopic(id)!);
     render(<ReadingCheck date="2026-09-19" topics={topics} />);
-    expect(await screen.findByText("システム開発・運用と保守")).toBeInTheDocument();
+    // 公式目次では別の節（8-02 開発プロセス / 8-03 テスト手法と運用・保守プロセス）
+    expect(await screen.findByText("8-02 開発プロセス")).toBeInTheDocument();
+    expect(screen.getByText("8-03 テスト手法と運用・保守プロセス")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("radio", { name: "全部" }));
 
-    expect(referenceBookProgress(storedBook())!.done).toBe(1);
+    expect(referenceBookProgress(storedBook())!.done).toBe(2);
     expect(screen.getByText(/参考書の該当箇所を読了にしました/)).toBeInTheDocument();
   });
 
-  it("拡充前に登録した本にも、読み込み時にプリセットの紐づけと節を取り込む", async () => {
-    const old = referenceBookFromPreset("gihyo-kayanoki-itpass-r08")!;
+  it("旧い章立て（アプリ向けにまとめた節）で登録した本は、読み込み時に公式目次へ移行し、読了を引き継ぐ", async () => {
+    const old = normalizeReferenceBook({
+      ...(legacy.books["gihyo-kayanoki-itpass-r08"] as ReferenceBook),
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    });
+    // 旧い「システム開発・運用と保守」（開発プロセス・運用保守ほか）を読了にしておく
     const ch8 = old.chapters.find((c) => c.id === "kayanoki-r08-ch08")!;
-    ch8.sections = ch8.sections!.filter((s) => s.id !== "kayanoki-r08-ch08-s03"); // 拡充前の形
-    ch8.sections[0] = { ...ch8.sections[0], done: true, completedAt: "2026-09-01T00:00:00.000Z" };
+    const devSection = ch8.sections!.find((s) => (s.topicIds ?? []).includes("mgmt-development-process"))!;
+    devSection.done = true;
+    devSection.completedAt = "2026-09-01T00:00:00.000Z";
     storeBook(old);
 
     render(<ReadingCheck date="2026-09-19" topics={[getTopic("mgmt-development-process")!]} />);
-    expect(await screen.findByText("システム開発・運用と保守")).toBeInTheDocument();
+    expect(await screen.findByText("8-02 開発プロセス")).toBeInTheDocument();
 
-    const saved = storedBook()!.chapters.find((c) => c.id === "kayanoki-r08-ch08")!;
-    expect(saved.sections!.map((s) => s.id)).toContain("kayanoki-r08-ch08-s03");
-    expect(saved.sections![0].done).toBe(true); // 読了状態は保持
+    const saved = storedBook()!;
+    expect(saved.source).toMatchObject({ kind: "preset", id: "gihyo-kayanoki-itpass-r08", version: 2 });
+    const ch = saved.chapters.find((c) => c.id === "kayanoki-r08-c08")!;
+    expect(ch.sections!.map((s) => s.title)[0]).toBe("8-01 企画・要件定義プロセス");
+    expect(ch.sections!.find((s) => s.id === "kayanoki-r08-8-02")?.done).toBe(true);
+    // 旧い節が扱っていなかったトピックだけの節は読了にしない
+    expect(saved.chapters.find((c) => c.id === "kayanoki-r08-c01")!.sections!.some((s) => s.done)).toBe(false);
   });
 });
 
 describe("参考書の章・節と対応づかない日", () => {
   it("「全部」でも進捗が動かないことを先に伝え、何も読了にしない", async () => {
     storeBook(referenceBookFromPreset(KITAMI));
-    const ai = getTopic("tech-ai-ml")!; // キタミ式のプリセットには AI を扱う章・節がない
-    render(<ReadingCheck date="2026-09-19" topics={[ai]} />);
+    const cloud = getTopic("tech-cloud-models")!; // キタミ式の公式目次からはクラウドを扱う節が判断できない
+    render(<ReadingCheck date="2026-09-19" topics={[cloud]} />);
 
     expect(await screen.findByTestId("reference-unlinked")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("radio", { name: "全部" }));
@@ -223,7 +236,7 @@ describe("参考書の章・節と対応づかない日", () => {
   it("対応づく日は注記を出さない", async () => {
     storeBook(referenceBookFromPreset(KITAMI));
     render(<ReadingCheck date="2026-09-19" topics={[NETWORK]} />);
-    await screen.findByText("Chapter 6 ネットワーク");
+    await screen.findByText("Chapter7 ネットワーク");
     expect(screen.queryByTestId("reference-unlinked")).not.toBeInTheDocument();
   });
 });
@@ -231,10 +244,12 @@ describe("参考書の章・節と対応づかない日", () => {
 describe("TodayReferenceGuide", () => {
   it("同じ節に紐づく複数トピックは1行にまとめる", () => {
     const book = referenceBookFromPreset(KITAMI);
+    // 7-1 LANとWAN（小見出しに無線LAN）は LAN・WAN と無線LANの両方を扱う
     const lan = getTopic("tech-lan-wan")!;
-    render(<TodayReferenceGuide topics={[NETWORK, lan]} book={book} />);
-    expect(screen.getAllByText("Chapter 6 ネットワーク")).toHaveLength(1);
-    expect(screen.getByText(`${NETWORK.title}、${lan.title}`)).toBeInTheDocument();
+    const wireless = getTopic("tech-wireless-mobile")!;
+    render(<TodayReferenceGuide topics={[lan, wireless]} book={book} />);
+    expect(screen.getAllByText("Chapter7 ネットワーク")).toHaveLength(1);
+    expect(screen.getByText(`${lan.title}、${wireless.title}`)).toBeInTheDocument();
   });
 });
 

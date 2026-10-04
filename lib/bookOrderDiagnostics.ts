@@ -8,6 +8,7 @@ import {
   nextBookTopicIds,
 } from "@/lib/bookStudyOrder";
 import { assessBookQuality, type BookQuality } from "@/lib/bookQuality";
+import { referenceBookType } from "@/lib/referenceBookPresets";
 
 // ============================================================================
 // 参考書順（Book mode）の Shadow 比較（管理画面専用・純粋関数）。
@@ -57,7 +58,7 @@ export function diagnoseBookOrder(input: {
   try {
     const { book, topics } = input;
     const order = buildBookStudyOrder(book, topics);
-    const quality = assessBookQuality(order, topics);
+    const quality = assessBookQuality(order, topics, { bookType: referenceBookType(book) });
     const topicById = new Map(topics.map((topic) => [topic.id, topic]));
     const completed = input.state?.progress.completedTopics ?? [];
 

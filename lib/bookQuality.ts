@@ -22,6 +22,7 @@ export const BOOK_QUALITY_THRESHOLDS = {
 } as const;
 
 export type BookQualityFailure =
+  | "book_type"
   | "mapped_ratio"
   | "important_mapped_ratio"
   | "field_coverage"
@@ -48,10 +49,15 @@ export type BookQuality = {
 
 const IMPORTANT = 3;
 
-/** order が null（紐づけ0件・本なし）のときは不適格として返す。 */
+/**
+ * order が null（紐づけ0件・本なし）のときは不適格として返す。
+ * bookType が教科書以外（準拠ドリル・問題集）のときは、紐づけが十分でも参考書順には使わない
+ * （新しく学ぶ順番の背骨は教科書に限る。ドリル・問題集は読了の記録と案内には使える）。
+ */
 export function assessBookQuality(
   order: BookStudyOrder | null,
   topics: Topic[],
+  options: { bookType?: "textbook" | "workbook" | "question_bank" } = {},
 ): BookQuality {
   const catalogSize = topics.length;
   const mapped = new Set(order?.mappedTopicIds ?? []);
@@ -75,6 +81,7 @@ export function assessBookQuality(
 
   const failures: BookQualityFailure[] = [];
   const t = BOOK_QUALITY_THRESHOLDS;
+  if (options.bookType && options.bookType !== "textbook") failures.push("book_type");
   if (mappedRatio < t.minMappedRatio) failures.push("mapped_ratio");
   if (importantMappedRatio < t.minImportantMappedRatio) failures.push("important_mapped_ratio");
   if (Object.values(mappedByField).some((count) => count < t.minMappedPerField)) {
@@ -102,6 +109,7 @@ export function assessBookQuality(
 
 /** 不適格の理由をユーザー向けの言葉にする。 */
 export const BOOK_QUALITY_FAILURE_LABELS: Record<BookQualityFailure, string> = {
+  book_type: "ドリルや問題集は、新しく学ぶ順番には使いません（教科書タイプの参考書で使えます）",
   mapped_ratio: "アプリの学習テーマと結びついている章・節がまだ少ないです",
   important_mapped_ratio: "試験でよく出るテーマの多くが、まだ本の章・節と結びついていません",
   field_coverage: "3分野（テクノロジ・マネジメント・ストラテジ）のどれかが本と結びついていません",

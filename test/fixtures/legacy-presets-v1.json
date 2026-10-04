@@ -1,0 +1,1334 @@
+{
+ "note": "2026-10-05 以前（structureVersion 1）のプリセットの章立て。登録済みの本を新しい公式目次へ移行するテスト用。",
+ "books": {
+  "gihyo-kitami-itpass-r08": {
+   "title": "キタミ式イラストIT塾 ITパスポート 令和08年",
+   "publisher": "技術評論社",
+   "edition": "令和08年",
+   "active": true,
+   "note": "公式目次をもとにした初期テンプレート。ユーザーが実際の本に合わせて自由に編集する前提。",
+   "updatedAt": "2026-07-01T00:00:00+09:00",
+   "chapters": [
+    {
+     "id": "kitami-r08-ch00",
+     "title": "Chapter 0 ITってなんだ？",
+     "keywords": [
+      "IT",
+      "情報処理",
+      "試験概要",
+      "全体像"
+     ],
+     "topicIds": [],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch00-s01",
+       "title": "ITパスポートの全体像",
+       "keywords": [
+        "IT",
+        "試験概要",
+        "ストラテジ",
+        "マネジメント",
+        "テクノロジ"
+       ],
+       "topicIds": []
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch01",
+     "title": "Chapter 1 コンピュータ",
+     "keywords": [
+      "コンピュータ",
+      "ハードウェア",
+      "CPU",
+      "メモリ",
+      "2進数"
+     ],
+     "topicIds": [
+      "tech-binary-data",
+      "tech-computer-core",
+      "tech-logic-operations",
+      "tech-computer-types",
+      "tech-parallel-systems",
+      "tech-io-devices"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch01-s01",
+       "title": "2進数・データ量・ハードウェア",
+       "keywords": [
+        "2進数",
+        "ビット",
+        "バイト",
+        "CPU",
+        "メモリ"
+       ],
+       "topicIds": [
+        "tech-binary-data",
+        "tech-computer-core",
+        "tech-logic-operations",
+        "tech-computer-types",
+        "tech-parallel-systems",
+        "tech-io-devices"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch02",
+     "title": "Chapter 2 デジタルデータ",
+     "keywords": [
+      "デジタルデータ",
+      "文字コード",
+      "画像",
+      "音声",
+      "圧縮"
+     ],
+     "topicIds": [
+      "tech-binary-data",
+      "tech-ui-ux",
+      "tech-multimedia-compression"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch02-s01",
+       "title": "文字・画像・音声・圧縮",
+       "keywords": [
+        "文字コード",
+        "画像",
+        "音声",
+        "圧縮",
+        "データ量"
+       ],
+       "topicIds": [
+        "tech-ui-ux",
+        "tech-multimedia-compression"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch03",
+     "title": "Chapter 3 OSとアプリケーション",
+     "keywords": [
+      "OS",
+      "アプリケーション",
+      "ソフトウェア",
+      "ファイル"
+     ],
+     "topicIds": [
+      "tech-os-software-hardware",
+      "tech-api",
+      "tech-file-system",
+      "tech-backup",
+      "tech-spreadsheet"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch03-s01",
+       "title": "OS・アプリケーション・ファイル管理",
+       "keywords": [
+        "OS",
+        "アプリケーション",
+        "ファイル",
+        "ソフトウェア"
+       ],
+       "topicIds": [
+        "tech-os-software-hardware",
+        "tech-api",
+        "tech-file-system",
+        "tech-backup",
+        "tech-spreadsheet"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch04",
+     "title": "Chapter 4 表計算",
+     "keywords": [
+      "表計算",
+      "セル",
+      "関数",
+      "絶対参照",
+      "相対参照"
+     ],
+     "topicIds": [
+      "tech-spreadsheet"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch04-s01",
+       "title": "表計算ソフト・関数・参照",
+       "keywords": [
+        "表計算",
+        "関数",
+        "相対参照",
+        "絶対参照"
+       ],
+       "topicIds": [
+        "tech-spreadsheet"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch05",
+     "title": "Chapter 5 データベース",
+     "keywords": [
+      "データベース",
+      "DBMS",
+      "主キー",
+      "外部キー",
+      "SQL"
+     ],
+     "topicIds": [
+      "tech-keys",
+      "tech-database-sql",
+      "tech-normalization",
+      "tech-transaction"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch05-s01",
+       "title": "関係データベース・キー・SQL",
+       "keywords": [
+        "関係データベース",
+        "主キー",
+        "外部キー",
+        "SQL"
+       ],
+       "topicIds": [
+        "tech-keys",
+        "tech-database-sql",
+        "tech-normalization",
+        "tech-transaction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch06",
+     "title": "Chapter 6 ネットワーク",
+     "keywords": [
+      "ネットワーク",
+      "LAN",
+      "WAN",
+      "IPアドレス",
+      "DNS"
+     ],
+     "topicIds": [
+      "tech-network-address",
+      "tech-lan-wan",
+      "tech-web-internet-basics",
+      "tech-network-devices",
+      "tech-wireless-mobile",
+      "tech-email-protocol",
+      "tech-http-https"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch06-s01",
+       "title": "LAN・WAN・IPアドレス・DNS",
+       "keywords": [
+        "LAN",
+        "WAN",
+        "IPアドレス",
+        "DNS",
+        "プロトコル"
+       ],
+       "topicIds": [
+        "tech-network-address",
+        "tech-lan-wan",
+        "tech-web-internet-basics",
+        "tech-network-devices",
+        "tech-wireless-mobile",
+        "tech-email-protocol",
+        "tech-http-https"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch07",
+     "title": "Chapter 7 セキュリティ",
+     "keywords": [
+      "セキュリティ",
+      "CIA",
+      "認証",
+      "暗号化",
+      "マルウェア"
+     ],
+     "topicIds": [
+      "tech-security-cia",
+      "tech-auth-authz-mfa",
+      "tech-encryption-hash",
+      "tech-isms-risk",
+      "tech-firewall-vpn-zero-trust",
+      "tech-common-key-crypto",
+      "tech-public-key-crypto",
+      "tech-digital-signature",
+      "tech-malware-phishing-ransomware",
+      "tech-cyber-attacks"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch07-s01",
+       "title": "情報セキュリティ・認証・暗号化",
+       "keywords": [
+        "情報セキュリティ",
+        "CIA",
+        "認証",
+        "暗号化",
+        "マルウェア"
+       ],
+       "topicIds": [
+        "tech-security-cia",
+        "tech-auth-authz-mfa",
+        "tech-encryption-hash",
+        "tech-isms-risk",
+        "tech-firewall-vpn-zero-trust",
+        "tech-common-key-crypto",
+        "tech-public-key-crypto",
+        "tech-digital-signature",
+        "tech-malware-phishing-ransomware",
+        "tech-cyber-attacks"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch08",
+     "title": "Chapter 8 システム開発",
+     "keywords": [
+      "システム開発",
+      "要件定義",
+      "テスト",
+      "アジャイル",
+      "ウォータフォール"
+     ],
+     "topicIds": [
+      "mgmt-development-process",
+      "mgmt-requirements-definition",
+      "mgmt-system-design",
+      "mgmt-testing",
+      "mgmt-operation-maintenance"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch08-s01",
+       "title": "開発プロセス・要件定義・テスト",
+       "keywords": [
+        "要件定義",
+        "設計",
+        "テスト",
+        "ウォータフォール",
+        "アジャイル"
+       ],
+       "topicIds": [
+        "mgmt-development-process",
+        "mgmt-requirements-definition",
+        "mgmt-system-design",
+        "mgmt-testing",
+        "mgmt-operation-maintenance"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch09",
+     "title": "Chapter 9 マネジメント",
+     "keywords": [
+      "マネジメント",
+      "プロジェクトマネジメント",
+      "サービスマネジメント",
+      "QCD",
+      "システム監査"
+     ],
+     "topicIds": [
+      "mgmt-pm-qcd",
+      "mgmt-service-sla",
+      "mgmt-wbs-gantt",
+      "mgmt-pmbok-basics",
+      "mgmt-project-resource",
+      "mgmt-project-communication",
+      "mgmt-estimation",
+      "mgmt-risk-management",
+      "mgmt-pdca",
+      "mgmt-itil",
+      "mgmt-facility-management",
+      "mgmt-system-audit"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch09-s01",
+       "title": "プロジェクト・サービス・監査",
+       "keywords": [
+        "プロジェクトマネジメント",
+        "QCD",
+        "サービスマネジメント",
+        "システム監査"
+       ],
+       "topicIds": [
+        "mgmt-pm-qcd",
+        "mgmt-service-sla",
+        "mgmt-wbs-gantt",
+        "mgmt-pmbok-basics",
+        "mgmt-project-resource",
+        "mgmt-project-communication",
+        "mgmt-estimation",
+        "mgmt-risk-management",
+        "mgmt-pdca",
+        "mgmt-itil",
+        "mgmt-facility-management",
+        "mgmt-system-audit"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch10",
+     "title": "Chapter 10 プログラミング",
+     "keywords": [
+      "プログラミング",
+      "アルゴリズム",
+      "配列",
+      "変数"
+     ],
+     "topicIds": [
+      "tech-programming-basics",
+      "tech-algorithm-flowchart",
+      "tech-data-structure"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch10-s01",
+       "title": "プログラミング・アルゴリズム",
+       "keywords": [
+        "プログラミング",
+        "アルゴリズム",
+        "配列",
+        "変数"
+       ],
+       "topicIds": [
+        "tech-programming-basics",
+        "tech-algorithm-flowchart",
+        "tech-data-structure"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch11",
+     "title": "Chapter 11 システム構成",
+     "keywords": [
+      "システム構成",
+      "クラウド",
+      "仮想化",
+      "稼働率",
+      "RAID"
+     ],
+     "topicIds": [
+      "tech-cloud-models",
+      "tech-reliability-availability",
+      "tech-system-processing-architecture",
+      "tech-system-performance",
+      "tech-raid"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch11-s01",
+       "title": "クラウド・仮想化・信頼性",
+       "keywords": [
+        "クラウド",
+        "仮想化",
+        "稼働率",
+        "RAID",
+        "RASIS"
+       ],
+       "topicIds": [
+        "tech-cloud-models",
+        "tech-reliability-availability",
+        "tech-system-processing-architecture",
+        "tech-system-performance",
+        "tech-raid"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch12",
+     "title": "Chapter 12 企業活動",
+     "keywords": [
+      "企業活動",
+      "ステークホルダ",
+      "CSR",
+      "法務",
+      "コンプライアンス"
+     ],
+     "topicIds": [
+      "strat-enterprise-activities",
+      "strat-legal-compliance",
+      "strat-corporation-management-organization",
+      "strat-bcp",
+      "strat-intellectual-property",
+      "strat-privacy-law",
+      "strat-security-laws",
+      "strat-labor-laws",
+      "strat-standardization"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch12-s01",
+       "title": "企業活動・法務・社会的責任",
+       "keywords": [
+        "企業活動",
+        "ステークホルダ",
+        "CSR",
+        "コンプライアンス",
+        "知的財産権"
+       ],
+       "topicIds": [
+        "strat-enterprise-activities",
+        "strat-legal-compliance",
+        "strat-corporation-management-organization",
+        "strat-bcp",
+        "strat-intellectual-property",
+        "strat-privacy-law",
+        "strat-security-laws",
+        "strat-labor-laws",
+        "strat-standardization"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch13",
+     "title": "Chapter 13 経営戦略",
+     "keywords": [
+      "経営戦略",
+      "SWOT",
+      "3C",
+      "マーケティング",
+      "4P"
+     ],
+     "topicIds": [
+      "strat-swot",
+      "strat-3c",
+      "strat-marketing-4p",
+      "strat-ppm",
+      "strat-value-chain",
+      "strat-corporate-strategy",
+      "strat-goal-evaluation",
+      "strat-technology-development-strategy"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch13-s01",
+       "title": "SWOT・3C・マーケティング",
+       "keywords": [
+        "SWOT分析",
+        "3C分析",
+        "マーケティング",
+        "4P"
+       ],
+       "topicIds": [
+        "strat-swot",
+        "strat-3c",
+        "strat-marketing-4p",
+        "strat-ppm",
+        "strat-value-chain",
+        "strat-corporate-strategy",
+        "strat-goal-evaluation",
+        "strat-technology-development-strategy"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch14",
+     "title": "Chapter 14 財務会計",
+     "keywords": [
+      "財務会計",
+      "損益分岐点",
+      "財務諸表",
+      "貸借対照表",
+      "損益計算書"
+     ],
+     "topicIds": [
+      "strat-accounting-break-even",
+      "strat-financial-statements",
+      "strat-decision-problem-solving"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch14-s01",
+       "title": "財務諸表・損益分岐点",
+       "keywords": [
+        "財務諸表",
+        "貸借対照表",
+        "損益計算書",
+        "損益分岐点"
+       ],
+       "topicIds": [
+        "strat-accounting-break-even",
+        "strat-financial-statements",
+        "strat-decision-problem-solving"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kitami-r08-ch15",
+     "title": "Chapter 15 システム戦略",
+     "keywords": [
+      "システム戦略",
+      "DX",
+      "業務プロセス",
+      "要件定義",
+      "調達"
+     ],
+     "topicIds": [
+      "strat-dx",
+      "strat-system-strategy",
+      "strat-business-process",
+      "strat-solution-business",
+      "strat-generative-ai-dx",
+      "strat-system-planning-rfp",
+      "strat-business-systems",
+      "strat-engineering-systems",
+      "strat-production-management",
+      "strat-embedded-systems",
+      "strat-ebusiness",
+      "strat-management-systems"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kitami-r08-ch15-s01",
+       "title": "システム戦略・DX・調達",
+       "keywords": [
+        "システム戦略",
+        "DX",
+        "業務プロセス",
+        "RFP",
+        "調達"
+       ],
+       "topicIds": [
+        "strat-dx",
+        "strat-system-strategy",
+        "strat-business-process",
+        "strat-solution-business",
+        "strat-generative-ai-dx",
+        "strat-system-planning-rfp",
+        "strat-business-systems",
+        "strat-engineering-systems",
+        "strat-production-management",
+        "strat-embedded-systems",
+        "strat-ebusiness",
+        "strat-management-systems"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  "gihyo-kayanoki-itpass-r08": {
+   "title": "令和08年 イメージ＆クレバー方式でよくわかる かやのき先生のITパスポート教室",
+   "publisher": "技術評論社",
+   "edition": "令和08年",
+   "active": true,
+   "note": "公式目次をもとにした初期テンプレート。ユーザーが実際の本に合わせて自由に編集する前提。",
+   "updatedAt": "2026-07-01T00:00:00+09:00",
+   "chapters": [
+    {
+     "id": "kayanoki-r08-ch01",
+     "title": "第1章 ハードウェアと基礎理論［テクノロジ系］",
+     "keywords": [
+      "ハードウェア",
+      "基礎理論",
+      "CPU",
+      "メモリ",
+      "2進数",
+      "AI",
+      "統計"
+     ],
+     "topicIds": [
+      "tech-binary-data",
+      "tech-computer-core",
+      "tech-logic-operations",
+      "tech-computer-types",
+      "tech-parallel-systems",
+      "tech-io-devices",
+      "tech-ai-ml",
+      "tech-data-utilization",
+      "tech-iot"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch01-s01",
+       "title": "情報理論・2進数・基数変換・統計",
+       "keywords": [
+        "2進数",
+        "基数変換",
+        "ビット",
+        "バイト",
+        "統計"
+       ],
+       "topicIds": [
+        "tech-binary-data",
+        "tech-logic-operations"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch01-s02",
+       "title": "CPU・主記憶・補助記憶・入出力装置",
+       "keywords": [
+        "CPU",
+        "メモリ",
+        "ストレージ",
+        "主記憶",
+        "補助記憶",
+        "入出力装置"
+       ],
+       "topicIds": [
+        "tech-computer-core",
+        "tech-computer-types",
+        "tech-parallel-systems",
+        "tech-io-devices"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch01-s03",
+       "title": "AI・データ活用の基礎",
+       "keywords": [
+        "AI",
+        "生成AI",
+        "機械学習",
+        "データ活用"
+       ],
+       "topicIds": [
+        "tech-ai-ml",
+        "tech-data-utilization",
+        "tech-iot"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch02",
+     "title": "第2章 ソフトウェア［テクノロジ系］",
+     "keywords": [
+      "ソフトウェア",
+      "OS",
+      "ファイル",
+      "バックアップ",
+      "表計算",
+      "UI",
+      "マルチメディア"
+     ],
+     "topicIds": [
+      "tech-os-software-hardware",
+      "tech-api",
+      "tech-file-system",
+      "tech-backup",
+      "tech-spreadsheet",
+      "tech-ui-ux",
+      "tech-multimedia-compression"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch02-s01",
+       "title": "OS・ソフトウェアの役割",
+       "keywords": [
+        "OS",
+        "ソフトウェア",
+        "アプリケーション",
+        "ミドルウェア"
+       ],
+       "topicIds": [
+        "tech-os-software-hardware",
+        "tech-api"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch02-s02",
+       "title": "ファイル管理・バックアップ・表計算",
+       "keywords": [
+        "ファイル",
+        "バックアップ",
+        "表計算",
+        "絶対参照",
+        "相対参照"
+       ],
+       "topicIds": [
+        "tech-spreadsheet",
+        "tech-file-system",
+        "tech-backup"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch03",
+     "title": "第3章 システム構成［テクノロジ系］",
+     "keywords": [
+      "システム構成",
+      "クライアントサーバ",
+      "クラウド",
+      "仮想化",
+      "稼働率",
+      "RAID"
+     ],
+     "topicIds": [
+      "tech-cloud-models",
+      "tech-system-processing-architecture",
+      "tech-system-performance",
+      "tech-reliability-availability",
+      "tech-raid"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch03-s01",
+       "title": "システム構成・処理形態・クラウド",
+       "keywords": [
+        "クライアントサーバ",
+        "集中処理",
+        "分散処理",
+        "クラウド",
+        "SaaS",
+        "PaaS",
+        "IaaS"
+       ],
+       "topicIds": [
+        "tech-cloud-models",
+        "tech-system-processing-architecture",
+        "tech-system-performance"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch03-s02",
+       "title": "信頼性・稼働率・RAID",
+       "keywords": [
+        "信頼性",
+        "稼働率",
+        "RASIS",
+        "RAID"
+       ],
+       "topicIds": [
+        "tech-reliability-availability",
+        "tech-raid"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch04",
+     "title": "第4章 ネットワーク［テクノロジ系］",
+     "keywords": [
+      "ネットワーク",
+      "LAN",
+      "WAN",
+      "IPアドレス",
+      "DNS",
+      "プロトコル"
+     ],
+     "topicIds": [
+      "tech-network-address",
+      "tech-lan-wan",
+      "tech-web-internet-basics",
+      "tech-network-devices",
+      "tech-wireless-mobile",
+      "tech-email-protocol",
+      "tech-http-https"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch04-s01",
+       "title": "LAN・WAN・通信プロトコル",
+       "keywords": [
+        "LAN",
+        "WAN",
+        "TCP/IP",
+        "プロトコル"
+       ],
+       "topicIds": [
+        "tech-lan-wan",
+        "tech-web-internet-basics",
+        "tech-network-devices",
+        "tech-wireless-mobile",
+        "tech-email-protocol"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch04-s02",
+       "title": "IPアドレス・DNS・Webのしくみ",
+       "keywords": [
+        "IPアドレス",
+        "DNS",
+        "ドメイン名",
+        "HTTP",
+        "HTTPS"
+       ],
+       "topicIds": [
+        "tech-network-address",
+        "tech-http-https"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch05",
+     "title": "第5章 セキュリティ［テクノロジ系］",
+     "keywords": [
+      "セキュリティ",
+      "機密性",
+      "完全性",
+      "可用性",
+      "認証",
+      "認可",
+      "暗号化"
+     ],
+     "topicIds": [
+      "tech-security-cia",
+      "tech-isms-risk",
+      "tech-auth-authz-mfa",
+      "tech-firewall-vpn-zero-trust",
+      "tech-encryption-hash",
+      "tech-common-key-crypto",
+      "tech-public-key-crypto",
+      "tech-digital-signature",
+      "tech-malware-phishing-ransomware",
+      "tech-cyber-attacks"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch05-s01",
+       "title": "情報セキュリティの3要素・リスク管理",
+       "keywords": [
+        "情報セキュリティ",
+        "CIA",
+        "機密性",
+        "完全性",
+        "可用性",
+        "リスク"
+       ],
+       "topicIds": [
+        "tech-security-cia",
+        "tech-isms-risk"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch05-s02",
+       "title": "認証・認可・アクセス制御",
+       "keywords": [
+        "認証",
+        "認可",
+        "アクセス制御",
+        "多要素認証"
+       ],
+       "topicIds": [
+        "tech-auth-authz-mfa",
+        "tech-firewall-vpn-zero-trust"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch05-s03",
+       "title": "暗号化・マルウェア・攻撃手法",
+       "keywords": [
+        "暗号化",
+        "公開鍵",
+        "共通鍵",
+        "マルウェア",
+        "標的型攻撃"
+       ],
+       "topicIds": [
+        "tech-encryption-hash",
+        "tech-common-key-crypto",
+        "tech-public-key-crypto",
+        "tech-digital-signature",
+        "tech-malware-phishing-ransomware",
+        "tech-cyber-attacks"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch06",
+     "title": "第6章 データベース［テクノロジ系］",
+     "keywords": [
+      "データベース",
+      "DBMS",
+      "主キー",
+      "外部キー",
+      "SQL",
+      "正規化"
+     ],
+     "topicIds": [
+      "tech-keys",
+      "tech-database-sql",
+      "tech-normalization",
+      "tech-transaction"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch06-s01",
+       "title": "関係データベース・主キー・外部キー",
+       "keywords": [
+        "関係データベース",
+        "主キー",
+        "外部キー",
+        "テーブル"
+       ],
+       "topicIds": [
+        "tech-keys"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch06-s02",
+       "title": "SQL・データ操作・正規化",
+       "keywords": [
+        "SQL",
+        "SELECT",
+        "正規化",
+        "データ操作"
+       ],
+       "topicIds": [
+        "tech-database-sql",
+        "tech-normalization",
+        "tech-transaction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch07",
+     "title": "第7章 アルゴリズムとプログラミング［テクノロジ系］",
+     "keywords": [
+      "アルゴリズム",
+      "プログラミング",
+      "フローチャート",
+      "擬似言語",
+      "配列"
+     ],
+     "topicIds": [
+      "tech-algorithm-flowchart",
+      "tech-programming-basics",
+      "tech-data-structure"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch07-s01",
+       "title": "アルゴリズム・フローチャート",
+       "keywords": [
+        "アルゴリズム",
+        "フローチャート",
+        "順次",
+        "分岐",
+        "反復"
+       ],
+       "topicIds": [
+        "tech-algorithm-flowchart"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch07-s02",
+       "title": "プログラミング・データ構造",
+       "keywords": [
+        "プログラミング",
+        "配列",
+        "変数",
+        "擬似言語"
+       ],
+       "topicIds": [
+        "tech-programming-basics",
+        "tech-data-structure"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch08",
+     "title": "第8章 マネジメント［マネジメント系］",
+     "keywords": [
+      "プロジェクトマネジメント",
+      "サービスマネジメント",
+      "システム監査",
+      "QCD"
+     ],
+     "topicIds": [
+      "mgmt-pm-qcd",
+      "mgmt-wbs-gantt",
+      "mgmt-pmbok-basics",
+      "mgmt-project-resource",
+      "mgmt-project-communication",
+      "mgmt-estimation",
+      "mgmt-risk-management",
+      "mgmt-pdca",
+      "mgmt-service-sla",
+      "mgmt-itil",
+      "mgmt-facility-management",
+      "mgmt-system-audit",
+      "mgmt-development-process",
+      "mgmt-requirements-definition",
+      "mgmt-system-design",
+      "mgmt-testing",
+      "mgmt-operation-maintenance"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch08-s01",
+       "title": "プロジェクトマネジメント・QCD",
+       "keywords": [
+        "プロジェクト",
+        "QCD",
+        "WBS",
+        "スケジュール"
+       ],
+       "topicIds": [
+        "mgmt-pm-qcd",
+        "mgmt-wbs-gantt",
+        "mgmt-pmbok-basics",
+        "mgmt-project-resource",
+        "mgmt-project-communication",
+        "mgmt-estimation",
+        "mgmt-risk-management",
+        "mgmt-pdca"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch08-s02",
+       "title": "サービスマネジメント・システム監査",
+       "keywords": [
+        "サービスマネジメント",
+        "SLA",
+        "システム監査",
+        "ITIL"
+       ],
+       "topicIds": [
+        "mgmt-service-sla",
+        "mgmt-itil",
+        "mgmt-facility-management",
+        "mgmt-system-audit"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch08-s03",
+       "title": "システム開発・運用と保守",
+       "keywords": [
+        "システム開発",
+        "要件定義",
+        "テスト",
+        "ウォータフォール",
+        "アジャイル",
+        "保守"
+       ],
+       "topicIds": [
+        "mgmt-development-process",
+        "mgmt-requirements-definition",
+        "mgmt-system-design",
+        "mgmt-testing",
+        "mgmt-operation-maintenance"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch09",
+     "title": "第9章 企業活動と法務［ストラテジ系］",
+     "keywords": [
+      "企業活動",
+      "法務",
+      "CSR",
+      "コンプライアンス",
+      "知的財産権",
+      "個人情報保護法"
+     ],
+     "topicIds": [
+      "strat-enterprise-activities",
+      "strat-legal-compliance",
+      "strat-corporation-management-organization",
+      "strat-bcp",
+      "strat-intellectual-property",
+      "strat-privacy-law",
+      "strat-security-laws",
+      "strat-labor-laws",
+      "strat-standardization",
+      "strat-financial-statements",
+      "strat-accounting-break-even",
+      "strat-decision-problem-solving"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch09-s01",
+       "title": "企業活動・ステークホルダ・CSR",
+       "keywords": [
+        "企業活動",
+        "ステークホルダ",
+        "CSR",
+        "コーポレートガバナンス"
+       ],
+       "topicIds": [
+        "strat-enterprise-activities",
+        "strat-corporation-management-organization",
+        "strat-bcp"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch09-s02",
+       "title": "法務・コンプライアンス・知的財産権",
+       "keywords": [
+        "法務",
+        "コンプライアンス",
+        "著作権",
+        "個人情報保護法",
+        "知的財産権"
+       ],
+       "topicIds": [
+        "strat-legal-compliance",
+        "strat-intellectual-property",
+        "strat-privacy-law",
+        "strat-security-laws",
+        "strat-labor-laws",
+        "strat-standardization"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch09-s03",
+       "title": "会計・財務・業務分析",
+       "keywords": [
+        "財務諸表",
+        "損益分岐点",
+        "意思決定",
+        "業務分析"
+       ],
+       "topicIds": [
+        "strat-financial-statements",
+        "strat-accounting-break-even",
+        "strat-decision-problem-solving"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "kayanoki-r08-ch10",
+     "title": "第10章 経営戦略とシステム戦略［ストラテジ系］",
+     "keywords": [
+      "経営戦略",
+      "SWOT",
+      "3C",
+      "マーケティング",
+      "システム戦略",
+      "DX"
+     ],
+     "topicIds": [
+      "strat-swot",
+      "strat-3c",
+      "strat-marketing-4p",
+      "strat-ppm",
+      "strat-value-chain",
+      "strat-corporate-strategy",
+      "strat-goal-evaluation",
+      "strat-technology-development-strategy",
+      "strat-system-strategy",
+      "strat-business-process",
+      "strat-solution-business",
+      "strat-generative-ai-dx",
+      "strat-system-planning-rfp",
+      "strat-business-systems",
+      "strat-engineering-systems",
+      "strat-production-management",
+      "strat-embedded-systems",
+      "strat-ebusiness",
+      "strat-management-systems"
+     ],
+     "done": false,
+     "sections": [
+      {
+       "id": "kayanoki-r08-ch10-s01",
+       "title": "経営戦略・SWOT分析・3C分析",
+       "keywords": [
+        "経営戦略",
+        "SWOT分析",
+        "3C分析",
+        "競争戦略"
+       ],
+       "topicIds": [
+        "strat-swot",
+        "strat-3c",
+        "strat-ppm",
+        "strat-value-chain",
+        "strat-corporate-strategy",
+        "strat-goal-evaluation",
+        "strat-technology-development-strategy"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch10-s02",
+       "title": "マーケティング・4P・システム戦略・DX",
+       "keywords": [
+        "マーケティング",
+        "4P",
+        "システム戦略",
+        "DX",
+        "業務プロセス"
+       ],
+       "topicIds": [
+        "strat-marketing-4p",
+        "strat-dx",
+        "strat-system-strategy",
+        "strat-business-process",
+        "strat-solution-business",
+        "strat-generative-ai-dx",
+        "strat-system-planning-rfp"
+       ]
+      },
+      {
+       "id": "kayanoki-r08-ch10-s03",
+       "title": "ビジネスインダストリ・経営管理システム",
+       "keywords": [
+        "e-ビジネス",
+        "CRM",
+        "SCM",
+        "ERP",
+        "組込みシステム"
+       ],
+       "topicIds": [
+        "strat-business-systems",
+        "strat-engineering-systems",
+        "strat-production-management",
+        "strat-embedded-systems",
+        "strat-ebusiness",
+        "strat-management-systems"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
