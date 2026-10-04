@@ -25,6 +25,7 @@ const NEW_COLUMNS = ["book_id", "source", "study_plan", "archived_books"];
 let stored: Record<string, unknown> | null = null;
 let migrated = true;
 const upserts: Record<string, unknown>[] = [];
+const updates: Record<string, unknown>[] = [];
 
 function createSupabase() {
   return {
@@ -35,6 +36,12 @@ function createSupabase() {
       chain.upsert = (row: Record<string, unknown>) => {
         pendingUpsert = row;
         return chain;
+      };
+      chain.update = (row: Record<string, unknown>) => {
+        updates.push(row);
+        const done: Record<string, unknown> = {};
+        done.eq = () => Promise.resolve({ data: null, error: null });
+        return done;
       };
       chain.maybeSingle = () => Promise.resolve({ data: stored, error: null });
       chain.then = (onFulfilled: (v: unknown) => unknown) => {
@@ -74,6 +81,7 @@ beforeEach(() => {
   stored = null;
   migrated = true;
   upserts.length = 0;
+  updates.length = 0;
   mocks.getRequestUserId.mockResolvedValue(USER);
   mocks.getServiceSupabase.mockReturnValue(createSupabase());
 });
@@ -121,6 +129,34 @@ describe("POST /api/reference-book/save", () => {
     expect(upserts).toHaveLength(2);
     expect(NEW_COLUMNS.some((c) => c in upserts[1])).toBe(false);
     expect(upserts[1].title).toBe("教本");
+  });
+});
+
+describe("POST /api/reference-book/save (plan only)", () => {
+  const plan = {
+    bookId: "db-id",
+    structureHash: "h",
+    revision: 2,
+    revisedAt: "2026-10-04T00:00:00.000Z",
+    startDate: "2026-10-04",
+    inputEndDate: "2026-11-30",
+    units: [{ unitId: "sec:s1", plannedDate: "2026-10-05" }],
+  };
+
+  it("updates only the study plan of the book in use", async () => {
+    stored = { user_id: USER, book_id: "db-id", title: "教本", chapters: [] };
+    const res = await SAVE(req({ studyPlan: plan }));
+    expect(await res.json()).toEqual({ ok: true, bookId: "db-id" });
+    expect(updates).toEqual([{ study_plan: plan }]);
+    expect(upserts).toHaveLength(0);
+  });
+
+  it("refuses a plan for another book (e.g. right after switching)", async () => {
+    stored = { user_id: USER, book_id: "other", title: "別", chapters: [] };
+    expect((await SAVE(req({ studyPlan: plan }))).status).toBe(409);
+    stored = null;
+    expect((await SAVE(req({ studyPlan: plan }))).status).toBe(409);
+    expect(updates).toHaveLength(0);
   });
 });
 

@@ -429,6 +429,7 @@ function mergeWeeklyPlan(
       topicIds: [...new Set([...a.topicIds, ...b.topicIds])],
       reviewIds: [...new Set([...a.reviewIds, ...b.reviewIds])],
       ...(a.revisedAt ? { revisedAt: a.revisedAt } : {}),
+      ...(a.orderKey && a.orderKey === b.orderKey ? { orderKey: a.orderKey } : {}),
     };
   }
   return a.weekStartDate > b.weekStartDate ? a : b;
