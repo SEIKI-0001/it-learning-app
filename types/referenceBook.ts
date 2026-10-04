@@ -68,6 +68,9 @@ export type ReferenceStudyPlan = {
   startDate: string; // YYYY-MM-DD
   /** 新規学習（インプット）を終える予定日。以後は過去問・総復習 */
   inputEndDate: string; // YYYY-MM-DD
+  /** 計画を作ったときの試験日・1日平均の学習時間（変わったら引き直す） */
+  examDate?: string;
+  dailyMinutes?: number;
   units: { unitId: string; plannedDate: string }[];
 };
 
