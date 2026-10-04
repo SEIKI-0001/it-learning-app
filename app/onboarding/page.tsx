@@ -18,6 +18,7 @@ import {
 import Icon from "@/components/ui/Icon";
 import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
 import { bookOrderFlag } from "@/lib/bookOrderFlag";
+import { shareReferenceBookChoice } from "@/lib/referenceBookCatalogClient";
 import { getAllTopics } from "@/lib/content";
 import { buildBookStudyOrder } from "@/lib/bookStudyOrder";
 import { assessBookQuality } from "@/lib/bookQuality";
@@ -105,9 +106,11 @@ export default function OnboardingPage() {
     // 参考書は既存の保存経路（端末＋ログイン時は DB）へ。「あとで」なら何もしない。
     const book = referenceBookFromChoice(bookChoice);
     if (book) {
-      persistReferenceBook(
+      const saved = persistReferenceBook(
         switchReferenceBook(loadReferenceBook(), book, { keepHistory: true }),
       );
+      // 目次を読み取って登録した章立ては共有カタログへ（ログイン中のみ）。カタログを使ったら利用回数を数える。
+      shareReferenceBookChoice(bookChoice, saved);
     }
 
     // 設定直後の Today で、実画面の上に初回操作ガイドを重ねる。
