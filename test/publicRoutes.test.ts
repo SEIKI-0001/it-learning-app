@@ -9,6 +9,7 @@ describe("public route matching", () => {
     "/campaign/august-2026",
     "/legal/tokusho",
     "/privacy",
+    "/terms",
     "/guide",
     "/guide/it-passport-study-method",
     "/guide/past-exam-strategy",

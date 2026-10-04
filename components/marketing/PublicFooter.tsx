@@ -7,6 +7,7 @@ export default function PublicFooter() {
       <nav className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2" aria-label="法務情報">
         <Link href="/lp">サービス紹介</Link>
         <Link href="/legal/tokusho">特定商取引法に基づく表示</Link>
+        <Link href="/terms">利用規約</Link>
         <Link href="/privacy">プライバシーポリシー</Link>
       </nav>
     </footer>

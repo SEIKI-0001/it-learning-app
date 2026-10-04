@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 import Mochit from "@/components/mochit/Mochit";
 import { getInternalUserId } from "@/lib/auth/currentUser";
@@ -84,6 +85,15 @@ export default async function LoginPage({
             </div>
           )}
         </div>
+
+        {/* 利用開始時の規約同意 */}
+        <p className="mt-4 text-xs leading-relaxed text-gray-500">
+          ログイン、またはLINE公式アカウントから始めることで、
+          <Link href="/terms" className="underline underline-offset-2">利用規約</Link>
+          と
+          <Link href="/privacy" className="underline underline-offset-2">プライバシーポリシー</Link>
+          に同意したものとみなします。
+        </p>
 
         {/* 使い分けの説明 */}
         <div className="mt-6 w-full rounded-xl border border-gray-200 px-4 py-4 text-left text-sm leading-relaxed text-gray-600">

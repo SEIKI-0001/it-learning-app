@@ -5,6 +5,7 @@ export const PUBLIC_PREFIXES = [
   "/campaign",
   "/legal",
   "/privacy",
+  "/terms",
   "/guide",
   "/kakomon",
   "/kaisetsu",
