@@ -17,6 +17,7 @@ import { generateLearningPlan } from "@/lib/studyPlanner";
 import { getCheckpoint, phaseToCheckpointId } from "@/lib/checkpoints";
 import { computeProgressSummary } from "@/lib/progressSummary";
 import { loadServerStudyContext } from "@/lib/serverStudyContext";
+import { withStudyMode } from "@/lib/studyModeState";
 import type { BookQueueOptions } from "@/lib/bookStudyPlan";
 
 /**
@@ -308,6 +309,12 @@ function reviewText(
   ].join("\n");
 }
 
+/** CP 判定に使う学習モードを、保存された写しではなく今の判定で上書きする（Web と同じ）。 */
+function withProgressMode(progress: UserProgress | undefined, mode: "app" | "book"): UserProgress | undefined {
+  if (!progress) return progress;
+  return withStudyMode({ progress, answers: [] }, mode).progress;
+}
+
 /** 受け取ったテキストからコマンドを判定し、返信文を組み立てる。 */
 async function buildReplyText(
   rawText: string,
@@ -329,12 +336,12 @@ async function buildReplyText(
     text.includes("ロードマップ") ||
     text.includes("今週")
   ) {
-    const { bookQueue } = await loadServerStudyContext(supabase, userId, profile);
-    return planText(baseUrl, token, profile, progress, answers, bookQueue);
+    const { bookQueue, context } = await loadServerStudyContext(supabase, userId, profile);
+    return planText(baseUrl, token, profile, withProgressMode(progress, context.effectiveMode), answers, bookQueue);
   }
   if (text.includes("今日") || text.includes("学習") || text.includes("メニュー")) {
-    const { bookQueue } = await loadServerStudyContext(supabase, userId, profile);
-    return todayText(baseUrl, token, profile, progress, answers, bookQueue);
+    const { bookQueue, context } = await loadServerStudyContext(supabase, userId, profile);
+    return todayText(baseUrl, token, profile, withProgressMode(progress, context.effectiveMode), answers, bookQueue);
   }
   if (text.includes("進捗") || text.includes("状況")) {
     // HTTP 自己呼び出しをせず、唯一の期限境界を持つ共有 current service を直接使う。

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { AppState } from "@/types";
 import type { ReferenceBook, ReferenceStudyPlan } from "@/types/referenceBook";
 import { getAllTopics } from "@/lib/content";
@@ -50,6 +50,8 @@ export type StudyContextState = {
   /** 計画に依存する保存物の前提の鍵（lib/studyContext の studyOrderKey） */
   orderKey: string;
   plan: ReferenceStudyPlan | null;
+  /** 予定日を今日から引き直す（参考書順のときだけ。/plan の「計画を引き直す」） */
+  replan: () => void;
 };
 
 export function useStudyContext(state: AppState | null | undefined): StudyContextState {
@@ -123,6 +125,21 @@ export function useStudyContext(state: AppState | null | undefined): StudyContex
     if (plan && plan !== storedPlan) persistReferenceStudyPlan(plan);
   }, [plan, storedPlan]);
 
+  const replan = useCallback(() => {
+    if (context.effectiveMode !== "book" || !context.order || !context.bookId) return;
+    const next = buildReferenceStudyPlan({
+      order: context.order,
+      bookId: context.bookId,
+      topics,
+      profile,
+      completedTopicIds: state?.progress.completedTopics ?? [],
+      now: new Date(),
+      previous: plan,
+    });
+    persistReferenceStudyPlan(next);
+    setPlans((current) => ({ ...current, [next.bookId]: next }));
+  }, [context.bookId, context.effectiveMode, context.order, plan, profile, state?.progress.completedTopics, topics]);
+
   const bookQueue = useMemo((): BookQueueOptions | null => {
     if (context.effectiveMode !== "book" || !context.order) return null;
     const deadline = supplementDeadlineFor(plan);
@@ -135,5 +152,6 @@ export function useStudyContext(state: AppState | null | undefined): StudyContex
     bookQueue,
     orderKey: studyOrderKey(context, plan?.revision),
     plan,
+    replan,
   };
 }
