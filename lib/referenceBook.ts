@@ -698,7 +698,8 @@ function saveReferenceBookArchive(list: ReferenceBook[]): void {
  * 使用中の本を別の本へ切り替えた結果を返す（保存は呼び出し側）。
  *   - keepHistory: 今の本の読了履歴を端末内に残す（同じ本へ戻したら復元）
  *   - 切り替え先の読了履歴がアーカイブにあれば、それを復元して使う
- *   - 同じ本（書名一致）を選び直したときは、今の本（読了状態）をそのまま使う
+ *   - 同じ本（書名一致）を選び直したときは、今の本（読了状態）をそのまま使う。
+ *     ただし今の本に章立てが無く、選び直した側にある（目次の読み取り）ときはその章立てを使う
  */
 export function switchReferenceBook(
   current: ReferenceBook | null,
@@ -707,7 +708,8 @@ export function switchReferenceBook(
 ): ReferenceBook {
   // 同じ本を選び直しただけなら、読了状態ごと今の本を使い続ける。
   if (current && bookKey(current) && bookKey(current) === bookKey(next)) {
-    return { ...current, active: true };
+    const chapters = current.chapters.length > 0 ? current.chapters : next.chapters;
+    return { ...current, chapters, active: true };
   }
   let archive = loadReferenceBookArchive();
   if (current && bookKey(current)) {
