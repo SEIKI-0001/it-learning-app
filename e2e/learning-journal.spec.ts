@@ -24,6 +24,8 @@ test('journal months, filters, unread CTA, stored detail and mobile layout',asyn
   if(url.pathname==='/api/journal'){const m=url.searchParams.get('month'),t=url.searchParams.get('type');return route.fulfill({json:{records:records.filter(r=>r.period_end.startsWith(m!)&&(t==='all'||r.record_type===t)),months:['2026-09','2026-08'],unread:weekly.first_viewed_at?null:{id:weekly.id,month:'2026-09'}}});}
   const r=records.find(r=>url.pathname.endsWith(r.id));return route.fulfill({json:{record:r}});
  });
+ // 画面は「今月」を初期表示する。フィクスチャの月（2026年9月）に時計を固定し、実行日に左右されないようにする。
+ await page.clock.setFixedTime(new Date('2026-09-27T09:00:00+09:00'));
  await page.setViewportSize({width:390,height:844});await page.goto('/journal');
  await expect(page.getByText('今週の振り返りが届いています')).toBeVisible();
  await expect(page.getByRole('link',{name:'進捗',exact:true})).toBeVisible();
