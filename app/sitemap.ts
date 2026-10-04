@@ -58,5 +58,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     { url: url("/legal/tokusho"), lastModified: "2026-09-26", priority: 0.2 },
     { url: url("/privacy"), lastModified: "2026-09-26", priority: 0.2 },
+    { url: url("/terms"), lastModified: "2026-10-04", priority: 0.2 },
   ];
 }

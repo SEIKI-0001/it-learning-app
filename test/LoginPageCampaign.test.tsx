@@ -74,4 +74,15 @@ describe("campaign login continuation", () => {
     expect(screen.getByTestId("google-next")).toHaveTextContent("/");
     expect(screen.queryByText("ログイン後、購入ページへ戻ります")).not.toBeInTheDocument();
   });
+
+  it("shows terms and privacy consent where the learner starts", async () => {
+    render(await LoginPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByText(/に同意したものとみなします/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "利用規約" })).toHaveAttribute("href", "/terms");
+    expect(screen.getByRole("link", { name: "プライバシーポリシー" })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
+  });
 });
