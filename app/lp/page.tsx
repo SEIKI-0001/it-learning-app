@@ -1,9 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { GUIDE_FACTS } from '@/lib/guide/facts';
+import { getWordlistCount } from '@/lib/wordlist';
+import { themeExams } from '@/data/themeExams';
+import { MOCK_EXAM_RULE } from '@/lib/mockExam';
 import {
-  isAugust2026BonusActive,
-  isAugust2026BonusOpen,
-} from '@/lib/campaign/august2026';
+  BILLING_PLANS,
+  DAILY_LIMITS,
+  FREE_RECORDING_DAYS,
+  type BillingPlanKey,
+} from '@/lib/billing/constants';
 import Reveal from './Reveal';
 import './lp.css';
 
@@ -12,12 +18,31 @@ import './lp.css';
 // 購入検討ユーザーの疑問に順に答える構成:
 //   誰向けか → 何をどう解決するか → 他の勉強法との違い → 料金 → FAQ → CTA
 // スタイルは app/lp/lp.css（全セレクタ .lp スコープ）に閉じる。
+// 収録数・料金・回数はベタ書きせず、教材データと課金定数から読む（数字だけ古くなるのを防ぐ）。
 // ============================================================================
 
 const SITE_URL = 'https://shikaku-mochit.com';
+
+const N = {
+  topics: GUIDE_FACTS.topicCount,
+  checkQuestions: GUIDE_FACTS.checkQuestionCount,
+  official: GUIDE_FACTS.officialQuestionCount,
+  officialRange: GUIDE_FACTS.officialYearRange,
+  words: getWordlistCount(),
+  mock: MOCK_EXAM_RULE.questionCount,
+  themeExamQuestions: themeExams.reduce((s, e) => s + e.questionIds.length, 0),
+  freeDays: FREE_RECORDING_DAYS,
+  freeGrading: DAILY_LIMITS.free,
+  proGrading: DAILY_LIMITS.pro,
+};
+
+const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
+const plan = (key: BillingPlanKey) => BILLING_PLANS.find((p) => p.key === key)!;
+const MONTHLY = plan('sub_monthly');
+const LOWEST_PRICE = Math.min(...BILLING_PLANS.map((p) => p.totalJpy));
+
 const LP_TITLE = 'ITパスポート学習コーチ — さわって理解する試験対策アプリ';
-const LP_DESCRIPTION =
-  '参考書が途中で止まってしまう人のためのITパスポート試験対策。全93トピックを操作しながら学び、公式過去問500問で本番に慣れる。試験日から逆算した「今日やること」が毎日届きます。7日間無料。';
+const LP_DESCRIPTION = `参考書が途中で止まってしまう人のためのITパスポート試験対策。全${N.topics}トピックを操作しながら学び、公式過去問${N.official}問で本番に慣れる。試験日から逆算した「今日やること」をアプリが毎日組み立てます。${N.freeDays}日間無料。`;
 
 // 検索結果・SNS共有（X/LINE/Facebook）のカード表示用。OG画像は public/og/lp.png（1200x630）。
 export const metadata: Metadata = {
@@ -50,15 +75,15 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     a: [
       'はい、',
       'むしろゼロの人のために作られています',
-      '。全トピックが「まず操作してみる→画面の変化で気づく」の順で進むので、前提知識なしで始められます。カタカナ用語は英略語の単語帳104語でフォローします。',
+      `。全トピックが「まず操作してみる→画面の変化で気づく」の順で進むので、前提知識なしで始められます。カタカナ用語は英略語の単語帳${N.words}語でフォローします。`,
     ],
   },
   {
     q: '1日どれくらい勉強すれば合格できますか？',
     a: [
-      '1回の学習は',
-      '3分から',
-      '設計されています。試験日と1日に使える時間を入れると、アプリが毎日の分量を自動で配分します。忙しい週があっても、立て直し案で計画を引き直せます。',
+      '試験日と1日に使える時間を入れると、アプリが毎日の分量を自動で配分します。平日は',
+      '1日10分から',
+      '計画でき、余裕がない日はその日だけ「5分」に減らすこともできます。忙しい週が続いても、立て直し案で計画を引き直せます。',
     ],
   },
   {
@@ -66,23 +91,23 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     a: [
       'スマホのブラウザでそのまま動きます。',
       'インストールは不要',
-      'です。通勤・通学の空き時間で完結するように作られています。毎日の合図はLINEで受け取れます。',
+      'です。通勤・通学の空き時間で完結するように作られています。LINEと連携すると、毎日の合図をLINEで受け取れます。',
     ],
   },
   {
     q: '過去問は入っていますか？',
     a: [
       'はい。IPAが公開している',
-      '令和4〜8年度の公式過去問500問',
-      'を、年度ごとに本番の並びのまま解けます。解説はアプリが独自に作成したものです。仕上げには本番形式の100問模試も使えます。',
+      `${N.officialRange}の公式過去問${N.official}問`,
+      `を、年度ごとに本番の並びのまま解けます。解説はアプリが独自に作成したものです。仕上げには本番形式の${N.mock}問模試も使えます。`,
     ],
   },
   {
     q: '無料期間が終わったらどうなりますか？',
     a: [
-      '教材（93トピックの体験・解説）と公式過去問は',
+      `教材（${N.topics}トピックの体験・解説）と公式過去問は`,
       '無料のまま学習を続けられます',
-      '。AI採点も1日3回まで無料です。解答結果や進捗を記録し続け、合格準備度や計画に反映させたい場合だけ、¥980からのプランを選んでください。',
+      `。AI採点も1日${N.freeGrading}回まで無料です。解答結果や進捗を記録し続け、合格準備度や計画に反映させたい場合だけ、${yen(LOWEST_PRICE)}からのプランを選んでください。`,
     ],
   },
   {
@@ -90,7 +115,7 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     a: [
       '買い切りプランは',
       'そもそも解約が不要',
-      'です（自動更新がありません）。月額プランは設定画面からいつでも解約でき、日割りの引き止めなどもありません。',
+      'です（自動更新がありません）。月額プランは設定画面からいつでも解約でき、解約しても期間の終わりまではそのまま使えます。',
     ],
   },
 ];
@@ -106,7 +131,7 @@ const STRUCTURED_DATA = [
     applicationCategory: 'EducationalApplication',
     operatingSystem: 'Web',
     inLanguage: 'ja',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY', description: '7日間無料。以降も教材と公式過去問は無料' },
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY', description: `${N.freeDays}日間無料。以降も教材と公式過去問は無料` },
   },
   {
     '@context': 'https://schema.org',
@@ -119,16 +144,32 @@ const STRUCTURED_DATA = [
   },
 ];
 
-export const dynamic = 'force-dynamic';
-
 const START_HREF = '/login';
+const TRY_HREF = '/lp/try';
+
+const STATS: { value: number; unit: string; label: string }[] = [
+  { value: N.topics, unit: 'トピック', label: '操作して学ぶ教材' },
+  { value: N.official, unit: '問', label: `公式過去問（${N.officialRange}）` },
+  { value: N.checkQuestions, unit: '問', label: 'トピックごとの確認問題' },
+  { value: N.words, unit: '語', label: '英略語の単語帳' },
+];
+
+const PLANS: { key: BillingPlanKey; name: string; desc: string; reco?: boolean }[] = [
+  { key: 'one_1m', name: '買い切り 1ヶ月', desc: '直前の追い込みに。自動更新なし・解約手続き不要。' },
+  { key: 'one_3m', name: '買い切り 3ヶ月', desc: '標準的な学習期間にあわせて。自動更新なし。' },
+  { key: 'one_6m', name: '買い切り 6ヶ月', desc: 'じっくり確実に。自動更新なし・解約手続き不要。', reco: true },
+  { key: 'sub_monthly', name: '月額プラン', desc: '期間を決めかねている人に。いつでも解約できます。' },
+];
+
+function Check() {
+  return (
+    <svg className="ck" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3.5 8.5l3 3 6-7" />
+    </svg>
+  );
+}
 
 export default function LandingPage() {
-  const bonusActive = isAugust2026BonusActive({
-    now: new Date(),
-    bonusOpen: isAugust2026BonusOpen(process.env.AUGUST_2026_BONUS_OPEN),
-  });
-
   return (
     <div className="lp">
       <script
@@ -155,22 +196,12 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {bonusActive && (
-        <aside className="campaign-banner" aria-label="期間限定キャンペーン">
-          <p>
-            <strong>8月10日まで・先着6名</strong>
-            6か月Pro 3,480円に、20分の学習計画相談が付きます。
-          </p>
-          <a href="/campaign/august-2026">6か月Proキャンペーンを見る</a>
-        </aside>
-      )}
-
       <main id="top">
         {/* ヒーロー */}
         <section className="hero">
-          <div className="col">
+          <div className="col hero-grid">
             <div className="hero-txt">
-              <p className="eyebrow">ITパスポート試験 学習アプリ</p>
+              <p className="eyebrow">ITパスポート試験の学習アプリ</p>
               <h1>
                 「読んで暗記」から、
                 <br />
@@ -183,59 +214,74 @@ export default function LandingPage() {
                 へ。
               </h1>
               <p className="hero-lead">
-                参考書が途中で止まってしまう人のための試験対策。全93トピックを操作しながら学び、公式過去問500問で本番に慣れる。試験日から逆算した「今日やること」が毎日届きます。
+                参考書が途中で止まってしまう人のための試験対策。全{N.topics}トピックを操作しながら学び、公式過去問{N.official}問で本番に慣れる。試験日から逆算した「今日やること」を、アプリが毎日組み立てます。
               </p>
               <div className="hero-cta">
-                <a className="btn" href="/lp/try">
+                <a className="btn" href={TRY_HREF}>
                   登録なしで教材を体験する
                 </a>
-                <span className="hero-note">
-                  AND・ORをスイッチで体験・無料
-                  <br />
-                  インストール不要
-                </span>
+                <a className="btn ghost" href={START_HREF}>
+                  無料登録して始める
+                </a>
               </div>
-              <p className="hero-note" style={{ marginTop: 16 }}>
-                <a href={START_HREF}>無料登録して学習を始める →</a>
-                <br />教材と公式過去問は無料。学習記録の保存も最初の7日間無料です。
-              </p>
+              <ul className="hero-points">
+                <li>
+                  <Check />
+                  教材と公式過去問はずっと無料
+                </li>
+                <li>
+                  <Check />
+                  学習記録も最初の{N.freeDays}日間無料
+                </li>
+                <li>
+                  <Check />
+                  インストール不要・カード登録不要
+                </li>
+              </ul>
             </div>
-          </div>
-        </section>
 
-        <section className="story-section" aria-labelledby="story-heading">
+            <figure className="hero-media">
+              <video
+                className="story-video"
+                controls
+                playsInline
+                preload="none"
+                poster="/lp/story/story-v2-poster.webp"
+                width={1920}
+                height={1080}
+                aria-label="理解する・測る・次を決める：約75秒のサービス紹介動画"
+                aria-describedby="story-note"
+              >
+                <source src="/lp/story/story-v2.mp4" type="video/mp4" />
+                <track
+                  kind="captions"
+                  src="/lp/story/story-v2.ja.vtt"
+                  srcLang="ja"
+                  label="日本語"
+                />
+                <a href="/lp/story/story-v2.mp4">紹介動画を再生する</a>
+              </video>
+              <figcaption>
+                <span className="cap-title">約75秒でわかる、新しい勉強の進め方</span>
+                <span id="story-note" className="story-note">
+                  日本語音声・字幕付き（音声：VOICEVOX:春日部つむぎ）。画面内の学習データは撮影用の一例です。
+                </span>
+              </figcaption>
+            </figure>
+          </div>
+
           <div className="col">
-            <p className="eyebrow">約75秒でわかる、新しい勉強の進め方</p>
-            <h2 id="story-heading" className="sec-title">
-              「分からない」と「迷う」をなくして、合格まで。
-            </h2>
-            <p className="sec-lead">
-              正解できても、理解した自信がない。次に何を学べばいいか迷う。
-              そんな勉強を「理解する・測る・次を決める」のサイクルに変えていきます。
-            </p>
-            <video
-              className="story-video"
-              controls
-              playsInline
-              preload="none"
-              poster="/lp/story/story-v2-poster.webp"
-              width={1920}
-              height={1080}
-              aria-label="理解する・測る・次を決める：約75秒のサービス紹介動画"
-              aria-describedby="story-note"
-            >
-              <source src="/lp/story/story-v2.mp4" type="video/mp4" />
-              <track
-                kind="captions"
-                src="/lp/story/story-v2.ja.vtt"
-                srcLang="ja"
-                label="日本語"
-              />
-              <a href="/lp/story/story-v2.mp4">紹介動画を再生する</a>
-            </video>
-            <p id="story-note" className="story-note">
-              日本語音声・字幕付き（音声：VOICEVOX:春日部つむぎ）。画面内の学習データは撮影用の一例です。
-            </p>
+            <dl className="stats" aria-label="収録内容">
+              {STATS.map((s) => (
+                <div key={s.label}>
+                  <dt>{s.label}</dt>
+                  <dd>
+                    {s.value.toLocaleString('ja-JP')}
+                    <small>{s.unit}</small>
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
 
@@ -248,68 +294,87 @@ export default function LandingPage() {
               ITパスポートは半分以上がカタカナ用語と抽象概念。文章を読むだけで理解するのは、IT未経験者にはそもそも難しい試験です。
             </p>
             <div className="pains">
-              <div className="pain">
-                <p className="q">
-                  「参考書を買ったけど、<em>3章あたりで止まった</em>。カタカナ用語が右から左へ抜けていく」
-                </p>
-                <p className="who">― 文系の大学3年生。就活で資格欄を埋めたい</p>
-              </div>
-              <div className="pain">
-                <p className="q">
-                  「<em>何をどの順番で、どれだけ</em>やればいいのか分からない。計画を立てた時点で疲れる」
-                </p>
-                <p className="who">― 事務職2年目。会社に取得を勧められた</p>
-              </div>
-              <div className="pain">
-                <p className="q">
-                  「過去問サイトを開いてみたけど、<em>今の自分が合格に近いのか遠いのか</em>すら分からない」
-                </p>
-                <p className="who">― 転職準備中。IT業界に足がかりが欲しい</p>
-              </div>
+              <figure className="pain">
+                <blockquote className="q">
+                  参考書を買ったけど、<em>3章あたりで止まった</em>。カタカナ用語が右から左へ抜けていく。
+                </blockquote>
+                <figcaption className="who">文系の大学3年生。就活で資格欄を埋めたい</figcaption>
+              </figure>
+              <figure className="pain">
+                <blockquote className="q">
+                  <em>何をどの順番で、どれだけ</em>やればいいのか分からない。計画を立てた時点で疲れる。
+                </blockquote>
+                <figcaption className="who">事務職2年目。会社に取得を勧められた</figcaption>
+              </figure>
+              <figure className="pain">
+                <blockquote className="q">
+                  過去問サイトを開いてみたけど、<em>今の自分が合格に近いのか遠いのか</em>すら分からない。
+                </blockquote>
+                <figcaption className="who">転職準備中。IT業界に足がかりが欲しい</figcaption>
+              </figure>
             </div>
+            <p className="pain-note">※ よくある悩みを、利用者像ごとにまとめた例です。</p>
           </div>
         </section>
 
         {/* 解決 */}
         <section id="solve">
-          <div className="col reveal">
-            <p className="eyebrow">アプリができること</p>
-            <h2 className="sec-title">「理解する」から「本番で解ける」まで、この1つで。</h2>
+          <div className="col">
+            <div className="reveal">
+              <p className="eyebrow">アプリができること</p>
+              <h2 className="sec-title">「理解する」から「本番で解ける」まで、この1つで。</h2>
+            </div>
 
-            <div className="solve">
+            <div className="solve reveal">
               <div className="txt">
-                <p className="k">理解する</p>
-                <h3>全93トピックが、操作して学ぶ教材</h3>
+                <p className="k">
+                  <span className="no">01</span>理解する
+                </p>
+                <h3>全{N.topics}トピックが、操作して学ぶ教材</h3>
                 <p className="d">
                   スライダーを動かし、ボタンを押し、画面の変化で仕組みをつかみます。2進数・SQL・損益分岐点・公開鍵暗号——文章では入ってこなかった単元が、手を動かすと腑に落ちる。仕上げは
-                  <b>トピックごとの確認問題（計394問）</b>と<b>英略語の単語帳104語</b>。
+                  <b>トピックごとの確認問題（計{N.checkQuestions}問）</b>と<b>英略語の単語帳{N.words}語</b>。
                 </p>
+                <a className="more" href={TRY_HREF}>
+                  教材をひとつ体験してみる
+                </a>
               </div>
               <div className="mock" aria-hidden="true">
                 <div className="mock-head">
                   体験でまなぶ「IPアドレスとDNS」<span className="date">10分</span>
                 </div>
-                <div className="chat" style={{ marginTop: 14 }}>
-                  <div className="bubble user" style={{ maxWidth: '100%' }}>
-                    example.com と入力すると……
-                    <br />
-                    ブラウザ → DNS「住所は？」→ <b>93.184.216.34</b>
-                  </div>
-                  <div className="bubble ai-b" style={{ maxWidth: '100%' }}>
-                    <b>気づき:</b> ドメイン名は人間用のあだ名。機械は番号で会話している
-                  </div>
+                <div className="dns">
+                  <span className="node">example.com</span>
+                  <span className="arrow">DNSに問い合わせ</span>
+                  <span className="node ip">93.184.216.34</span>
+                </div>
+                <div className="insight">
+                  <b>気づき</b>
+                  ドメイン名は人間用のあだ名。機械は番号で会話している
                 </div>
               </div>
             </div>
 
-            <div className="solve">
+            <div className="solve flip reveal">
+              <div className="txt">
+                <p className="k">
+                  <span className="no">02</span>続ける
+                </p>
+                <h3>毎日の計画は、アプリが立てる</h3>
+                <p className="d">
+                  試験日を入れるだけで、あなたの1日の学習時間に合わせて「今日やること」を自動で組みます。LINEと連携すれば毎日の合図も届くので、開く習慣づくりもアプリまかせ。間違えた問題は復習リストに自動で戻り、遅れても責めません——
+                  <b>現実的な立て直し案</b>を提案して計画を引き直します。チェックポイントを越えるたびにバッジが増え、相棒のモチットも育ちます。
+                </p>
+              </div>
               <div className="mock" aria-hidden="true">
                 <div className="mock-head">
-                  今日やること<span className="date">7月13日（月）・試験まで62日</span>
+                  今日やること<span className="date">試験まで62日</span>
                 </div>
-                <div style={{ marginTop: 6 }}>
+                <div className="tasks">
                   <div className="task done">
-                    <span className="box">✓</span>
+                    <span className="box">
+                      <Check />
+                    </span>
                     <span className="t">体験でまなぶ「損益分岐点」</span>
                     <span className="min">10分</span>
                   </div>
@@ -328,37 +393,38 @@ export default function LandingPage() {
                   今週の進み具合: <b>順調</b>。この配分なら試験1週間前に総仕上げに入れます。
                 </div>
               </div>
-              <div className="txt">
-                <p className="k">続ける</p>
-                <h3>計画はアプリが立てて、LINEに届く</h3>
-                <p className="d">
-                  試験日を入れるだけで、あなたの1日の学習時間に合わせて「今日やること」を自動で組みます。毎日の合図はLINEに届くので、開く習慣づくりもアプリまかせ。間違えた問題は復習リストに自動で戻り、遅れても責めません——
-                  <b>現実的な立て直し案</b>を提案して計画を引き直します。チェックポイントを越えるたびにバッジが増え、相棒のモチットも育ちます。
-                </p>
-              </div>
             </div>
 
-            <div className="solve">
+            <div className="solve reveal">
               <div className="txt">
-                <p className="k">本番で解ける</p>
-                <h3>公式過去問500問と100問模試で、本番に慣れる</h3>
-                <p className="d">
-                  IPAが公開している<b>令和4〜8年度の公式過去問500問</b>を、本番の並びのまま解けます。解説はすべてアプリ独自の書き下ろし。さらに3分野をバランスよく出す<b>本番形式の100問模試</b>と、章の内容を横断して解く<b>総まとめ試験180問</b>で、「分かる」を「本番で解ける」に変えます。
+                <p className="k">
+                  <span className="no">03</span>本番で解ける
                 </p>
+                <h3>
+                  公式過去問{N.official}問と{N.mock}問模試で、本番に慣れる
+                </h3>
+                <p className="d">
+                  IPAが公開している<b>{N.officialRange}の公式過去問{N.official}問</b>を、本番の並びのまま解けます。解説はすべてアプリ独自の書き下ろし。さらに3分野をバランスよく出す<b>本番形式の{N.mock}問模試</b>と、章の内容を横断して解く<b>総まとめ試験{N.themeExamQuestions}問</b>で、「分かる」を「本番で解ける」に変えます。
+                </p>
+                <Link className="more" href="/kakomon">
+                  過去問の解説を見てみる
+                </Link>
               </div>
               <div className="mock" aria-hidden="true">
                 <div className="mock-head">
                   本番形式で解く<span className="date">公式問題・独自解説付き</span>
                 </div>
-                <div style={{ marginTop: 6 }}>
+                <div className="tasks">
                   <div className="task done">
-                    <span className="box">✓</span>
+                    <span className="box">
+                      <Check />
+                    </span>
                     <span className="t">公式過去問 令和7年度</span>
                     <span className="min">100問</span>
                   </div>
                   <div className="task">
                     <span className="box" />
-                    <span className="t">本番形式 100問模試</span>
+                    <span className="t">本番形式 {N.mock}問模試</span>
                     <span className="min">3分野</span>
                   </div>
                   <div className="task">
@@ -373,9 +439,11 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="solve">
+            <div className="solve flip reveal">
               <div className="txt">
-                <p className="k">合格に近づく</p>
+                <p className="k">
+                  <span className="no">04</span>合格に近づく
+                </p>
                 <h3>「今の自分は受かるのか」に、数字で答える</h3>
                 <p className="d">
                   実際の問題への回答と定着から判定する<b>合格準備度スコア</b>
@@ -384,10 +452,10 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="mock" aria-hidden="true">
-                <div className="ringrow">
-                  <div className="ring">
+                <div className="gaugerow">
+                  <div className="gauge">
                     <div>
-                      <span className="pct num">68/100</span>
+                      <span className="pct">68/100</span>
                       <span className="cap">合格準備度</span>
                       <span className="cap">あと一歩</span>
                     </div>
@@ -397,7 +465,7 @@ export default function LandingPage() {
                     テクノロジ系は仕上げ段階です。
                   </p>
                 </div>
-                <div className="chat" style={{ marginTop: 18 }}>
+                <div className="chat">
                   <div className="bubble user">
                     <span className="who">あなたの説明</span>
                     クラウドとは、自分でサーバーを持たずにネット経由で借りて使う仕組み……
@@ -437,55 +505,49 @@ export default function LandingPage() {
                 <tbody>
                   <tr>
                     <th scope="row">理解のしかた</th>
-                    <td className="you">
-                      <span className="good">◎</span> さわって体験する
-                    </td>
-                    <td className="meh">読む</td>
-                    <td className="meh">解くだけ</td>
-                    <td className="meh">視聴する</td>
+                    <td className="you">さわって体験する</td>
+                    <td>読む</td>
+                    <td>解くだけ</td>
+                    <td>視聴する</td>
                   </tr>
                   <tr>
                     <th scope="row">学習計画</th>
-                    <td className="you">
-                      <span className="good">◎</span> 試験日から自動で毎日組む
-                    </td>
-                    <td className="meh">自分で立てる</td>
-                    <td className="meh">なし</td>
-                    <td className="meh">固定カリキュラム</td>
+                    <td className="you">試験日から自動で毎日組む</td>
+                    <td>自分で立てる</td>
+                    <td>なし</td>
+                    <td>固定カリキュラム</td>
                   </tr>
                   <tr>
                     <th scope="row">本番形式の演習</th>
                     <td className="you">
-                      <span className="good">◎</span> 公式過去問500問＋100問模試
+                      公式過去問{N.official}問＋{N.mock}問模試
                     </td>
-                    <td className="meh">巻末の模擬問題</td>
-                    <td className="meh">過去問を解ける</td>
-                    <td className="meh">講座による</td>
+                    <td>巻末の模擬問題</td>
+                    <td>過去問を解ける</td>
+                    <td>講座による</td>
                   </tr>
                   <tr>
                     <th scope="row">合格ラインとの距離</th>
-                    <td className="you">
-                      <span className="good">◎</span> 合格準備度スコアで可視化
-                    </td>
-                    <td className="meh">分からない</td>
-                    <td className="meh">正答率のみ</td>
-                    <td className="meh">分からない</td>
+                    <td className="you">合格準備度スコアで可視化</td>
+                    <td>分からない</td>
+                    <td>正答率のみ</td>
+                    <td>分からない</td>
                   </tr>
                   <tr>
                     <th scope="row">続ける仕組み</th>
-                    <td className="you">
-                      <span className="good">◎</span> LINE通知・遅れたら立て直し案
-                    </td>
-                    <td className="meh">意志力しだい</td>
-                    <td className="meh">意志力しだい</td>
-                    <td className="meh">意志力しだい</td>
+                    <td className="you">LINEの合図・遅れたら立て直し案</td>
+                    <td>意志力しだい</td>
+                    <td>意志力しだい</td>
+                    <td>意志力しだい</td>
                   </tr>
                   <tr>
                     <th scope="row">費用のめやす</th>
-                    <td className="you">無料〜月¥980</td>
-                    <td className="meh">1,500〜2,000円</td>
-                    <td className="meh">無料</td>
-                    <td className="meh">数千〜数万円</td>
+                    <td className="you plain">
+                      無料〜月{yen(MONTHLY.perMonthJpy)}
+                    </td>
+                    <td>1,500〜2,000円</td>
+                    <td>無料</td>
+                    <td>数千〜数万円</td>
                   </tr>
                 </tbody>
               </table>
@@ -500,51 +562,85 @@ export default function LandingPage() {
         <section id="price">
           <div className="col reveal">
             <p className="eyebrow">料金</p>
-            <h2 className="sec-title">まず7日間、全部無料で。合わなければそのままで大丈夫。</h2>
+            <h2 className="sec-title">
+              まず{N.freeDays}日間、全部無料で。合わなければそのままで大丈夫。
+            </h2>
 
-            <div className="free-banner">
-              <p className="big">
-                最初の<span>7日間は学習記録も無料</span>
-              </p>
-              <p>
-                解答結果・進捗の記録も含めて使えます。クレジットカードの登録は不要。無料期間が終わっても、
-                <b style={{ color: 'var(--ink)' }}>教材・公式過去問・AI採点（1日3回）は無料のまま</b>
-                使えます。止まるのは学習記録の保存だけです。
-              </p>
+            <div className="tiers">
+              <div className="tier">
+                <p className="tier-name">無料のまま使えるもの</p>
+                <p className="tier-price">
+                  ¥0<small>・カード登録不要</small>
+                </p>
+                <ul>
+                  <li>
+                    <Check />全{N.topics}トピックの体験教材と解説
+                  </li>
+                  <li>
+                    <Check />
+                    公式過去問{N.official}問（独自解説付き）
+                  </li>
+                  <li>
+                    <Check />
+                    AI採点 1日{N.freeGrading}回
+                  </li>
+                  <li>
+                    <Check />
+                    <span>
+                      学習記録の保存は<b>登録から{N.freeDays}日間</b>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+              <div className="tier pro">
+                <p className="tier-name">Proで増えること</p>
+                <p className="tier-price">
+                  {yen(LOWEST_PRICE)}
+                  <small>から</small>
+                </p>
+                <ul>
+                  <li>
+                    <Check />
+                    学習記録を期間中ずっと保存
+                  </li>
+                  <li>
+                    <Check />
+                    記録が合格準備度と毎日の計画に反映され続ける
+                  </li>
+                  <li>
+                    <Check />
+                    AI採点が高精度のPro採点に（1日{N.proGrading}回）
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <div className="plans">
-              <div className="plan">
-                <p className="pname">買い切り 1ヶ月</p>
-                <p className="pprice">¥980</p>
-                <p className="pdesc">直前の追い込みに。自動更新なし・解約手続き不要。</p>
-              </div>
-              <div className="plan">
-                <p className="pname">買い切り 3ヶ月</p>
-                <p className="pprice">¥2,340</p>
-                <p className="permo">月あたり¥780</p>
-                <p className="pdesc">標準的な学習期間にあわせて。自動更新なし。</p>
-              </div>
-              <div className="plan reco">
-                <span className="flag">いちばんお得</span>
-                <p className="pname">買い切り 6ヶ月</p>
-                <p className="pprice">¥3,480</p>
-                <p className="permo">月あたり¥580</p>
-                <p className="pdesc">じっくり確実に。自動更新なし・解約手続き不要。</p>
-              </div>
-              <div className="plan">
-                <p className="pname">月額プラン</p>
-                <p className="pprice">
-                  ¥980<small>/月</small>
-                </p>
-                <p className="permo">初月20%オフ（¥784）</p>
-                <p className="pdesc">短期集中か迷っている人に。いつでも解約できます。</p>
-              </div>
+              {PLANS.map(({ key, name, desc, reco }) => {
+                const p = plan(key);
+                const sub = p.kind === 'subscription';
+                return (
+                  <div key={key} className={reco ? 'plan reco' : 'plan'}>
+                    {reco && <span className="flag">いちばんお得</span>}
+                    <p className="pname">{name}</p>
+                    <p className="pprice">
+                      {yen(p.totalJpy)}
+                      {sub && <small>/月</small>}
+                    </p>
+                    {sub ? (
+                      <p className="permo">初月20%オフ（{yen(Math.round(p.totalJpy * 0.8))}）</p>
+                    ) : p.months > 1 ? (
+                      <p className="permo">月あたり{yen(p.perMonthJpy)}</p>
+                    ) : null}
+                    <p className="pdesc">{desc}</p>
+                  </div>
+                );
+              })}
             </div>
 
             <p className="pay-note">
               <b>買い切りプランに自動更新はありません。</b>
-              期間が終わると自動で無料の状態に戻るだけなので、解約を忘れる心配がありません。Proでは学習記録が無期限になり、AI採点が高精度のPro採点（1日10回まで）になります。
+              期間が終わると自動で無料の状態に戻るだけなので、解約を忘れる心配がありません。
             </p>
           </div>
         </section>
@@ -571,39 +667,50 @@ export default function LandingPage() {
 
         {/* 最後のCTA */}
         <section className="last">
-          <div className="narrow reveal">
-            <h2>今日の3分から、合格までの計画が始まります。</h2>
-            <p>
-              試験日を入れれば、今日やることはアプリが決めます。
-              <br />
-              あなたは開いて、さわるだけ。
-            </p>
-            <a className="btn" href={START_HREF}>
-              7日間無料で始める
-            </a>
-            <span className="hero-note">
-              クレジットカード不要・GoogleかLINEで登録・買い切りプランは自動更新なし
-            </span>
+          <div className="col">
+            <div className="last-panel reveal">
+              <h2>今日の10分から、合格までの計画が始まります。</h2>
+              <p>
+                試験日を入れれば、今日やることはアプリが決めます。
+                <br />
+                あなたは開いて、さわるだけ。
+              </p>
+              <div className="last-cta">
+                <a className="btn on-dark" href={START_HREF}>
+                  {N.freeDays}日間無料で始める
+                </a>
+                <a className="btn line" href={TRY_HREF}>
+                  先に教材を体験する
+                </a>
+              </div>
+              <span className="last-note">
+                クレジットカード不要・GoogleかLINEで登録・買い切りプランは自動更新なし
+              </span>
+            </div>
           </div>
         </section>
       </main>
 
       <footer>
-        ITパスポート学習コーチ
-        <br />
-        <a href={START_HREF}>ログイン / 無料登録</a>
-        {" / "}
-        <a href="/guide">ITパスポート学習ガイド</a>
-        {" / "}
-        <Link href="/kaisetsu">テーマ別解説</Link>
-        {" / "}
-        <Link href="/kakomon">過去問解説</Link>
-        {" / "}
-        <Link href="/words">英略語一覧</Link>
-        {" / "}
-        <a href="/legal/tokusho">特定商取引法に基づく表示</a>
-        {" / "}
-        <a href="/privacy">プライバシーポリシー</a>
+        <div className="col foot-in">
+          <div className="foot-brand">
+            <p className="logo">ITパスポート学習コーチ</p>
+            <p>さわって理解する、ITパスポート試験の学習アプリ。</p>
+          </div>
+          <nav className="foot-nav" aria-label="無料で読める解説">
+            <p className="foot-h">無料で読める解説</p>
+            <a href="/guide">ITパスポート学習ガイド</a>
+            <Link href="/kaisetsu">テーマ別解説</Link>
+            <Link href="/kakomon">過去問解説</Link>
+            <Link href="/words">英略語一覧</Link>
+          </nav>
+          <nav className="foot-nav" aria-label="サービス">
+            <p className="foot-h">サービス</p>
+            <a href={START_HREF}>ログイン / 無料登録</a>
+            <a href="/legal/tokusho">特定商取引法に基づく表示</a>
+            <a href="/privacy">プライバシーポリシー</a>
+          </nav>
+        </div>
       </footer>
     </div>
   );

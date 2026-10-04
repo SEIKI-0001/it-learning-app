@@ -12,6 +12,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  // 8月キャンペーン期間中の日時でも、終了済みのバナーは出ないことを確かめる。
   vi.stubEnv("AUGUST_2026_BONUS_OPEN", "true");
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-08-01T00:00:00.000Z"));
@@ -23,7 +24,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("landing page campaign route", () => {
+describe("landing page", () => {
   it("presents Exam Readiness as an evidence score rather than a probability", () => {
     render(<LandingPage />);
 
@@ -35,11 +36,8 @@ describe("landing page campaign route", () => {
     expect(screen.getByText(/次の一歩：.*経営のことば/)).toBeInTheDocument();
   });
 
-  it("links to the approved offer without replacing normal pricing", () => {
+  it("shows normal pricing derived from the billing constants and the legal links", () => {
     render(<LandingPage />);
-    expect(
-      screen.getByRole("link", { name: "6か月Proキャンペーンを見る" }),
-    ).toHaveAttribute("href", "/campaign/august-2026");
     expect(screen.getByText("¥3,480")).toBeInTheDocument();
     expect(screen.getAllByText("¥980").length).toBeGreaterThan(0);
     expect(
@@ -50,21 +48,10 @@ describe("landing page campaign route", () => {
     ).toHaveAttribute("href", "/privacy");
   });
 
-  it.each([
-    ["the deadline has passed", "true", "2026-08-10T15:00:00.000Z"],
-    ["the campaign is manually closed", "false", "2026-08-01T00:00:00.000Z"],
-  ])("removes the bonus banner when %s", (_name, bonusOpen, now) => {
-    vi.stubEnv("AUGUST_2026_BONUS_OPEN", bonusOpen);
-    vi.setSystemTime(new Date(now));
-
+  it("no longer shows the ended August 2026 campaign banner", () => {
     render(<LandingPage />);
-
-    expect(
-      screen.queryByRole("complementary", { name: "期間限定キャンペーン" }),
-    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "6か月Proキャンペーンを見る" }),
     ).not.toBeInTheDocument();
-    expect(screen.getAllByText("¥980").length).toBeGreaterThan(0);
   });
 });
