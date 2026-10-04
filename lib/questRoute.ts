@@ -1,3 +1,4 @@
+import { isSameOrderKey } from "@/lib/studyContext";
 import { getTopic } from "@/lib/content";
 import { getLessonLocation } from "@/lib/learningCatalog";
 import {
@@ -182,20 +183,29 @@ export const TODAY_ROUTE_STORAGE_KEY = "fequest:todayRoute:v1";
 type StoredRoute = {
   date: string;
   topicIds: string[];
+  /**
+   * どの学習順の前提で固定したか（lib/studyContext の studyOrderKey）。アプリ順では持たない。
+   * 参考書順への切替・本の切替・計画の改訂があった日は、固定した並びを捨てて組み直す。
+   */
+  orderKey?: string;
 };
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
 }
 
-/** 保存済みの今日のルート順序を読み込む。日付が一致しない・読み込み失敗なら null。 */
-export function loadStoredRoute(date: string): string[] | null {
+/**
+ * 保存済みの今日のルート順序を読み込む。日付が一致しない・学習順の前提（orderKey）が
+ * 違う・読み込み失敗なら null。orderKey を省略したときは従来どおり日付だけで判定する。
+ */
+export function loadStoredRoute(date: string, orderKey = "app"): string[] | null {
   if (!isBrowser()) return null;
   try {
     const raw = window.localStorage.getItem(TODAY_ROUTE_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredRoute;
     if (parsed.date !== date) return null;
+    if (!isSameOrderKey(parsed.orderKey, orderKey)) return null;
     return parsed.topicIds;
   } catch {
     return null;
@@ -203,10 +213,15 @@ export function loadStoredRoute(date: string): string[] | null {
 }
 
 /** 今日のルート順序を保存する。容量超過などの失敗は握りつぶす（表示に必須ではないため）。 */
-export function saveStoredRoute(date: string, topicIds: string[]): void {
+export function saveStoredRoute(date: string, topicIds: string[], orderKey = "app"): void {
   if (!isBrowser()) return;
   try {
-    const payload: StoredRoute = { date, topicIds };
+    const payload: StoredRoute = {
+      date,
+      topicIds,
+      // アプリ順は従来と同じ形（鍵なし）で保存する。
+      ...(orderKey !== "app" ? { orderKey } : {}),
+    };
     window.localStorage.setItem(TODAY_ROUTE_STORAGE_KEY, JSON.stringify(payload));
   } catch {
     // 保存できなくても致命的ではない（毎回 tasks から組み立て直せる）

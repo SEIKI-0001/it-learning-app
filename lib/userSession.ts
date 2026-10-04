@@ -444,12 +444,19 @@ export function saveDailyTasksToDb(
   userId: string,
   date: string,
   tasks: DailyStudyTaskInput[],
+  /** 学習順の前提が変わった日だけ true（その日の未着手の自動メニューを入れ替える） */
+  options: { replacePendingTodayMenu?: boolean } = {},
 ): void {
   if (tasks.length === 0) return;
   void fetch("/api/daily-tasks/upsert", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, date, tasks }),
+    body: JSON.stringify({
+      userId,
+      date,
+      tasks,
+      ...(options.replacePendingTodayMenu ? { replacePendingTodayMenu: true } : {}),
+    }),
   }).catch(() => {
     /* fire-and-forget */
   });

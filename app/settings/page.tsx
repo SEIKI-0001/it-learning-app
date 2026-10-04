@@ -19,6 +19,8 @@ import {
   planningInputsFromProfile,
 } from "@/lib/planningInputs";
 import { rebuildWeeklyPlanForPlanningChange } from "@/lib/studyPlanner";
+import { getAllTopics } from "@/lib/content";
+import { useStudyContext } from "@/lib/useStudyContext";
 import LoadingScreen from "@/components/LoadingScreen";
 import PageHeader from "@/components/ui/PageHeader";
 import Icon from "@/components/ui/Icon";
@@ -76,6 +78,8 @@ function SettingsForm({
   state: AppState;
   onSaved: (next: AppState) => void;
 }) {
+  // 参考書順なら、引き直す週の計画も本の順で選ぶ（アプリ順なら従来どおり）。
+  const { bookQueue } = useStudyContext(state);
   const profile = state.profile!;
   const [examDate, setExamDate] = useState<string>(profile.examDate ?? "");
   const [weekdayMinutes, setWeekdayMinutes] = useState<number>(
@@ -144,7 +148,12 @@ function SettingsForm({
         ...next,
         progress: {
           ...next.progress,
-          weeklyPlan: rebuildWeeklyPlanForPlanningChange(next),
+          weeklyPlan: rebuildWeeklyPlanForPlanningChange(
+            next,
+            getAllTopics(),
+            new Date(),
+            bookQueue ? { book: bookQueue } : undefined,
+          ),
         },
       };
       invalidateProgressBootstrapCache();

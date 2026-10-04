@@ -220,6 +220,11 @@ export type WeeklyPlan = {
    * 同じ週の旧スナップショットと和集合でマージせず、新しい方を採用するための印。
    */
   revisedAt?: string;
+  /**
+   * どの学習順の前提で作ったか（lib/studyContext の studyOrderKey）。アプリ順で作った週は持たない。
+   * 参考書順への切替・本の切替・計画の改訂で変わったら、その週でも作り直す。
+   */
+  orderKey?: string;
 };
 
 export type UserProgress = {

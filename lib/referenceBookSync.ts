@@ -1,6 +1,10 @@
 "use client";
 
-import type { ReferenceBook, ReferenceBookArchiveEntry } from "@/types/referenceBook";
+import type {
+  ReferenceBook,
+  ReferenceBookArchiveEntry,
+  ReferenceStudyPlan,
+} from "@/types/referenceBook";
 import {
   isSameReferenceBook,
   loadReferenceBook,
@@ -21,7 +25,85 @@ import { getUserId } from "@/lib/userSession";
 type DbReferenceBookState = {
   book: ReferenceBook | null;
   archive: ReferenceBookArchiveEntry[];
+  studyPlan: ReferenceStudyPlan | null;
 };
+
+// ---------------------------------------------------------------------------
+// 参考書順の計画（予定日のスナップショット）の端末保存。本の永続 id ごとに持つので、
+// 本を切り替えて戻しても、その本の計画がそのまま使える（DB は使用中の本＝study_plan、
+// 切替履歴の本＝archived_books[].studyPlan に入る）。
+// ---------------------------------------------------------------------------
+
+const STUDY_PLANS_KEY = "fequest:referenceStudyPlans";
+const STUDY_PLANS_LIMIT = 8;
+
+export function loadLocalStudyPlans(): Record<string, ReferenceStudyPlan> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(STUDY_PLANS_KEY);
+    const parsed = raw ? (JSON.parse(raw) as Record<string, ReferenceStudyPlan>) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalStudyPlans(plans: Record<string, ReferenceStudyPlan>): void {
+  if (typeof window === "undefined") return;
+  const kept = Object.values(plans)
+    .sort((a, b) => b.revisedAt.localeCompare(a.revisedAt))
+    .slice(0, STUDY_PLANS_LIMIT);
+  try {
+    window.localStorage.setItem(
+      STUDY_PLANS_KEY,
+      JSON.stringify(Object.fromEntries(kept.map((plan) => [plan.bookId, plan]))),
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 計画を端末へ取り込む（同じ本は revisedAt の新しい方）。取り込んだら true。 */
+function mergeLocalStudyPlans(incoming: (ReferenceStudyPlan | null | undefined)[]): boolean {
+  const plans = loadLocalStudyPlans();
+  let changed = false;
+  for (const plan of incoming) {
+    if (!plan?.bookId) continue;
+    const current = plans[plan.bookId];
+    if (!current || plan.revisedAt > current.revisedAt) {
+      plans[plan.bookId] = plan;
+      changed = true;
+    }
+  }
+  if (changed) saveLocalStudyPlans(plans);
+  return changed;
+}
+
+/**
+ * 参考書順の計画を保存する（端末＋ログイン中は DB）。DB は使用中の本の計画だけを受け付ける。
+ */
+export function persistReferenceStudyPlan(plan: ReferenceStudyPlan): void {
+  const plans = loadLocalStudyPlans();
+  plans[plan.bookId] = plan;
+  saveLocalStudyPlans(plans);
+  const userId = getUserId();
+  if (!userId) return;
+  void fetch("/api/reference-book/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, studyPlan: plan }),
+  }).catch(() => {
+    /* fire-and-forget */
+  });
+}
+
+/** 切替履歴に、端末にある各本の計画を添える（DB の archived_books[].studyPlan へ）。 */
+function archiveWithPlans(): ReferenceBookArchiveEntry[] {
+  const plans = loadLocalStudyPlans();
+  return loadReferenceBookArchive().map((entry) =>
+    entry.id && plans[entry.id] ? { ...entry, studyPlan: plans[entry.id] } : entry,
+  );
+}
 
 /** DB から参考書と切替履歴を取得（取れなければ null）。userId が無ければ呼ばない。 */
 export async function loadReferenceBookFromDb(
@@ -38,9 +120,14 @@ export async function loadReferenceBookFromDb(
       ok: boolean;
       book?: ReferenceBook | null;
       archive?: ReferenceBookArchiveEntry[];
+      studyPlan?: ReferenceStudyPlan | null;
     };
     if (!data.ok) return null;
-    return { book: data.book ?? null, archive: Array.isArray(data.archive) ? data.archive : [] };
+    return {
+      book: data.book ?? null,
+      archive: Array.isArray(data.archive) ? data.archive : [],
+      studyPlan: data.studyPlan ?? null,
+    };
   } catch {
     return null;
   }
@@ -66,7 +153,13 @@ export function saveReferenceBookToDb(
   void fetch("/api/reference-book/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, book, archive: loadReferenceBookArchive() }),
+    body: JSON.stringify({
+      userId,
+      book,
+      archive: archiveWithPlans(),
+      // 端末にこの本の計画があれば一緒に送る（無ければ DB の計画をそのまま残す）。
+      ...(book.id && loadLocalStudyPlans()[book.id] ? { studyPlan: loadLocalStudyPlans()[book.id] } : {}),
+    }),
   })
     .then(async (res) => {
       if (!res.ok) return;
@@ -87,7 +180,25 @@ export function persistReferenceBook(book: ReferenceBook): ReferenceBook {
   saveReferenceBook(next, { touch: false });
   const userId = getUserId();
   if (userId) saveReferenceBookToDb(userId, next);
+  notifyReferenceBookChanged(next);
   return next;
+}
+
+// ---------------------------------------------------------------------------
+// 参考書の変更通知（学習コンテキストを持つ画面へ、保存した本を即座に反映するため）
+// ---------------------------------------------------------------------------
+
+const bookListeners = new Set<(book: ReferenceBook | null) => void>();
+
+export function subscribeReferenceBookChanges(listener: (book: ReferenceBook | null) => void): () => void {
+  bookListeners.add(listener);
+  return () => {
+    bookListeners.delete(listener);
+  };
+}
+
+function notifyReferenceBookChanged(book: ReferenceBook | null): void {
+  for (const listener of bookListeners) listener(book);
 }
 
 /**
@@ -109,6 +220,11 @@ async function pickSyncedReferenceBook(): Promise<ReferenceBook | null> {
   if (!userId) return local;
   const fetched = await loadReferenceBookFromDb(userId);
   const remote = fetched?.book ? normalizeReferenceBook(fetched.book) : null;
+
+  // 参考書順の計画: DB の計画（使用中の本・切替履歴の本）を端末へ取り込む。
+  if (fetched) {
+    mergeLocalStudyPlans([fetched.studyPlan, ...fetched.archive.map((entry) => entry.studyPlan)]);
+  }
 
   // 切替履歴: 端末と DB を合わせる（DB 版を取得できたときだけ）。
   let archiveChanged = false;
