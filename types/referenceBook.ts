@@ -31,8 +31,20 @@ export type ReferenceChapter = {
   completedAt?: string; // 読了にした日時(ISO)
 };
 
+/** 本をどこから作ったか（照合・カタログ利用回数に使う）。手入力・目次読み取りは無し。 */
+export type ReferenceBookSource = {
+  kind: "preset" | "catalog";
+  id: string;
+};
+
 /** ユーザーごとの参考書アウトライン。 */
 export type ReferenceBook = {
+  /**
+   * 本そのものの永続 id（uuid）。書名や版が同じでも別の本なら別 id。
+   * 旧データには無い（DB 同期で DB 側の id を受け取る）。構造変化の検知には使わない。
+   */
+  id?: string;
+  source?: ReferenceBookSource;
   title: string; // 参考書名
   publisher?: string; // 出版社
   edition?: string; // 版
@@ -40,6 +52,28 @@ export type ReferenceBook = {
   note?: string; // 全体メモ
   chapters: ReferenceChapter[]; // 章構成
   updatedAt: string; // 更新日時(ISO)
+};
+
+/**
+ * 参考書順の計画（予定日のスナップショット）。順番そのものは本から毎回導出し、
+ * 「先行／遅れ」の基準になる予定日だけを保存する。章構成とは別に更新される。
+ */
+export type ReferenceStudyPlan = {
+  bookId: string;
+  /** 計画を作ったときのユニット構成（lib/bookStudyOrder の structureHash） */
+  structureHash: string;
+  /** 予定日を引き直すたびに増える */
+  revision: number;
+  revisedAt: string; // ISO
+  startDate: string; // YYYY-MM-DD
+  /** 新規学習（インプット）を終える予定日。以後は過去問・総復習 */
+  inputEndDate: string; // YYYY-MM-DD
+  units: { unitId: string; plannedDate: string }[];
+};
+
+/** 切り替え前の本（読了状態・計画ごと保存し、同じ本へ戻したら復元する）。 */
+export type ReferenceBookArchiveEntry = ReferenceBook & {
+  studyPlan?: ReferenceStudyPlan | null;
 };
 
 /** /today で「今日の参考書」を出すための解決結果。 */
