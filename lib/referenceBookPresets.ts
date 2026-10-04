@@ -1,4 +1,5 @@
 import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
+import { referenceBookFromCatalog, type CatalogEntry } from "@/lib/referenceBookCatalog";
 import {
   createEmptyReferenceBook,
   genReferenceBookId,
@@ -147,6 +148,8 @@ export type ReferenceBookChoice =
   | { kind: "preset"; presetId: string }
   // chapters: 目次のスクショから読み取った章立て（読み取っていなければ省略）
   | { kind: "other"; title: string; chapters?: ReferenceChapter[] }
+  // ほかの利用者が目次の読み取りで登録した章立て（共有カタログ）を使う
+  | { kind: "catalog"; entry: CatalogEntry }
   | { kind: "later" };
 
 /**
@@ -158,6 +161,7 @@ export function referenceBookFromChoice(
   choice: ReferenceBookChoice,
 ): ReferenceBook | null {
   if (choice.kind === "preset") return referenceBookFromPreset(choice.presetId);
+  if (choice.kind === "catalog") return referenceBookFromCatalog(choice.entry);
   if (choice.kind === "other") {
     const title = choice.title.trim();
     if (!title) return null;
