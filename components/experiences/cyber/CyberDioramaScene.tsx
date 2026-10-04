@@ -77,13 +77,13 @@ const LANE_POINTS: Record<CyberLaneId, Vec3[]> = {
 const TONE: Record<LaneTone, RouteTone> = { attack: "danger", normal: "request", leak: "amber", phone: "violet" };
 const CARRY: Record<LaneTone, CarryTone> = { attack: "danger", normal: "info", leak: "warn", phone: "muted" };
 
-const LABEL: Record<CyberNodeId, { name: string; sub: string; at: Vec3; place: "above" | "below" }> = {
-  attacker: { name: "😈 攻撃者", sub: "社外", at: { ...AT.attacker, y: AT.attacker.y - 10, z: 100 }, place: "above" },
-  internet: { name: "🌐 インターネット", sub: "通信会社のルータ", at: { ...AT.internet, y: AT.internet.y + 30 }, place: "below" },
-  web: { name: "Webサーバ", sub: "会社の公開サイト", at: { ...AT.web, z: 124 }, place: "above" },
-  db: { name: "DB", sub: "会員データ", at: { ...AT.db, z: 80 }, place: "above" },
-  user: { name: "利用者のブラウザ", sub: "自宅", at: { ...AT.user, y: AT.user.y + 72 }, place: "below" },
-  staff: { name: "社員PC", sub: "執務室", at: { ...AT.staff, y: AT.staff.y + 74 }, place: "below" },
+const LABEL: Record<CyberNodeId, { name: string; at: Vec3; place: "above" | "below" }> = {
+  attacker: { name: "😈 攻撃者", at: { ...AT.attacker, y: AT.attacker.y - 10, z: 100 }, place: "above" },
+  internet: { name: "🌐 インターネット", at: { ...AT.internet, y: AT.internet.y + 30 }, place: "below" },
+  web: { name: "Webサーバ", at: { ...AT.web, z: 124 }, place: "above" },
+  db: { name: "DB", at: { ...AT.db, z: 80 }, place: "above" },
+  user: { name: "利用者のブラウザ", at: { ...AT.user, y: AT.user.y + 72 }, place: "below" },
+  staff: { name: "社員PC", at: { ...AT.staff, y: AT.staff.y + 74 }, place: "below" },
 };
 
 const SHOT_WIDE: Camera = { yaw: -20, pitch: 54, zoom: 0.84, fx: 420, fy: 240, fz: 40 };
@@ -282,18 +282,16 @@ export function CyberDioramaScene({
                 </span>
               </DioramaLabel>
             ))}
-            {(Object.keys(LABEL) as CyberNodeId[]).map((id) => (
-              <DioramaLabel key={id} at={LABEL[id].at} place={LABEL[id].place} optional>
-                <div data-node-label={id} data-state={nodes[id]}>
-                  <NameChip name={LABEL[id].name} sub={LABEL[id].sub} tone={nodes[id] === "error" ? "danger" : nodes[id] === "idle" ? "muted" : "info"} />
-                </div>
-              </DioramaLabel>
-            ))}
-            {!caption && (
-              <DioramaLabel at={{ x: 625, y: 40, z: 124 }} place="above" optional>
-                <NameChip name="🏢 実験用の会社" tone="muted" />
-              </DioramaLabel>
-            )}
+            {/* 名札は、攻撃に関わる場所だけ（全体を見せるときは全部） */}
+            {(Object.keys(LABEL) as CyberNodeId[])
+              .filter((id) => !caption || nodes[id] !== "idle")
+              .map((id) => (
+                <DioramaLabel key={id} at={LABEL[id].at} place={LABEL[id].place} optional>
+                  <div data-node-label={id} data-state={nodes[id]}>
+                    <NameChip name={LABEL[id].name} tone={nodes[id] === "error" ? "danger" : nodes[id] === "idle" ? "muted" : "info"} />
+                  </div>
+                </DioramaLabel>
+              ))}
           </>
         }
       />

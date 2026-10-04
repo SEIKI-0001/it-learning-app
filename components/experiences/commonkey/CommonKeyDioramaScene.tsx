@@ -130,7 +130,6 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
                 {eve.cipher && (
                   <CipherCapsule state={eve.reads ? "decrypted" : "failed"} body={eve.reads ?? undefined} tag={eve.reads ? "盗み読み" : undefined} label="盗聴者が取った暗号文" />
                 )}
-                {!eve.cipher && eve.key && <span className={styles.eveNote}>このあとの暗号文を待つ…</span>}
               </div>
             </DioramaLabel>
           )}
@@ -171,14 +170,14 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
           )}
 
           <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Aさん" sub="送信者・A社" tone="info" />
+            <NameChip name="Aさん" tone="info" />
           </DioramaLabel>
           <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Bさん" sub="受信者・B社" tone="info" />
+            <NameChip name="Bさん" tone="info" />
           </DioramaLabel>
           {!eve && (
             <DioramaLabel at={{ ...EVE_AT, z: 118 }} place="above" optional>
-              <NameChip name="盗聴者" sub="通信を盗み見" tone="muted" />
+              <NameChip name="盗聴者" tone="muted" />
             </DioramaLabel>
           )}
         </>

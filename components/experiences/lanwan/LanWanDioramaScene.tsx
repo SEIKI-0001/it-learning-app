@@ -236,27 +236,35 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
             </DioramaLabel>
           )}
 
+          {/* 名札は、いま通る道の機器だけ */}
           <DioramaLabel at={up(ROUTER, 50)} place="right" optional>
-            <NameChip name="Wi-Fiルータ" sub="LANとWANの境目" tone={lanOn ? "info" : "muted"} />
+            <NameChip name="Wi-Fiルータ" tone={lanOn ? "info" : "muted"} />
           </DioramaLabel>
-          <DioramaLabel at={up(ONU, 30)} place="above" optional>
-            <NameChip name="ONU" sub="光回線の入口" tone={wan ? "info" : "muted"} />
-          </DioramaLabel>
-          <DioramaLabel at={up(PRINTER, 30)} place="above" optional>
-            <NameChip name="プリンタ" status={dest === "printer" ? "印刷" : undefined} tone="ok" />
-          </DioramaLabel>
-          <DioramaLabel at={up(PHONE, 40)} place="left" optional>
-            <NameChip name="あなたのスマホ" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={up(CARRIER, 90)} place="above" optional>
-            <NameChip name="通信事業者の局舎" sub="回線を貸す" tone={wan ? "info" : "muted"} />
-          </DioramaLabel>
-          <DioramaLabel at={up(OFFICE_RACK, 76)} place="above" optional={dest !== "office"}>
-            <NameChip name="会社のLAN" sub="本社のサーバ" status={dest === "office" ? "届いた" : undefined} tone={dest === "office" ? "ok" : "muted"} />
-          </DioramaLabel>
-          <DioramaLabel at={up(DC, 96)} place="above" optional={dest !== "video"}>
-            <NameChip name="海外の動画サイト" sub="データセンター" status={dest === "video" ? "届いた" : undefined} tone={dest === "video" ? "ok" : "muted"} />
-          </DioramaLabel>
+          {dest === "printer" && (
+            <DioramaLabel at={up(PRINTER, 30)} place="above" optional>
+              <NameChip name="プリンタ" status="印刷" tone="ok" />
+            </DioramaLabel>
+          )}
+          {wan && (
+            <>
+              <DioramaLabel at={up(ONU, 30)} place="above" optional>
+                <NameChip name="ONU" tone="info" />
+              </DioramaLabel>
+              <DioramaLabel at={up(CARRIER, 90)} place="above" optional>
+                <NameChip name="通信事業者の局舎" tone="info" />
+              </DioramaLabel>
+            </>
+          )}
+          {dest === "office" && (
+            <DioramaLabel at={up(OFFICE_RACK, 76)} place="above">
+              <NameChip name="会社のLAN" status="届いた" tone="ok" />
+            </DioramaLabel>
+          )}
+          {dest === "video" && (
+            <DioramaLabel at={up(DC, 96)} place="above">
+              <NameChip name="海外の動画サイト" status="届いた" tone="ok" />
+            </DioramaLabel>
+          )}
           {dest === "video" && (
             <DioramaLabel at={{ x: 620, y: 100, z: 2 }} place="below" optional>
               <Badge tone="info">海底ケーブル</Badge>

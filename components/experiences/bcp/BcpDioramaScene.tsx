@@ -13,7 +13,7 @@ import {
   Truck,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken } from "../scene/DioramaStage";
 import type { BcpSceneProps, DataSpot, StaffSpot } from "./bcpTypes";
 import styles from "./bcpdiorama.module.css";
 
@@ -179,11 +179,6 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
               社員{prep.contact ? " 📞連絡網あり" : ""}
             </span>
           </DioramaLabel>
-          {lanes.move === "active" && (
-            <DioramaLabel at={LANE.move[1]} place="below" optional>
-              <Badge tone="ok">移動</Badge>
-            </DioramaLabel>
-          )}
         </>
       }
     />

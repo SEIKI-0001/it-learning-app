@@ -72,9 +72,10 @@ describe("HttpsExperience", () => {
   it("sets the scene in a free Wi-Fi café where the radio reaches the next table", () => {
     renderDeck();
     expect(within(scene()).getByText("フリーWi-Fi")).toBeInTheDocument();
-    expect(within(scene()).queryByText("📶 電波は周り全部に届く")).toBeNull();
+    const waves = () => scene().querySelector('[data-on]');
+    expect(waves()).toHaveAttribute("data-on", "false");
     next();
-    expect(within(scene()).getByText("📶 電波は周り全部に届く")).toBeInTheDocument();
+    expect(waves()).toHaveAttribute("data-on", "true");
     next();
     expect(screen.getByTestId("eve-screen")).toHaveTextContent("password: himitsu123");
   });

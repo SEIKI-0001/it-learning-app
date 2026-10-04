@@ -16,7 +16,7 @@ import {
   Truck,
   type CarryTone,
 } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip, type TokenSpec } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type TokenSpec } from "../scene/DioramaStage";
 import styles from "./mobilediorama.module.css";
 
 // モバイル通信の図解：街角の模型。
@@ -176,29 +176,10 @@ export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; 
       }
       labels={
         <>
-          {is5g && (
-            <DioramaLabel at={up(TOWER, 20)} place="above">
-              <div className={styles.badges} data-testid="mobile-5g">
-                <Badge tone="info">高速・大容量</Badge>
-                <Badge tone="info">低遅延</Badge>
-                <Badge tone="info">多数同時接続</Badge>
-              </div>
-            </DioramaLabel>
-          )}
           {tether && (
             <DioramaLabel at={{ x: LAPTOP.x + 20, y: LAPTOP.y + 50, z: 0 }} place="below">
-              <div className={styles.note} data-testid="mobile-tether">
-                <b>ノートPC（SIMなし）</b>
-                <span>→ Wi-Fi でスマホへ</span>
-                <span>→ スマホの回線で基地局へ</span>
-              </div>
-            </DioramaLabel>
-          )}
-          {mvno && (
-            <DioramaLabel at={{ x: 700, y: 340, z: 0 }} place="below">
-              <div className={styles.note} data-tone="violet" data-testid="mobile-lease-note">
-                <b>回線を借りる契約</b>
-                <span>基地局などの設備は大手のものを使う</span>
+              <div data-testid="mobile-tether">
+                <NameChip name="ノートPC" status="SIMなし" tone="info" />
               </div>
             </DioramaLabel>
           )}
@@ -210,23 +191,26 @@ export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; 
             </DioramaLabel>
           )}
 
+          {/* 名札は、そのモードで主役の物だけ */}
           <DioramaLabel at={up(TOWER, 4)} place="right" optional>
-            <NameChip name="基地局" sub="大手キャリア（MNO）" status={is5g ? "5G" : undefined} tone="info" />
+            <NameChip name="基地局" status={is5g ? "5G" : mvno ? "大手（MNO）" : undefined} tone="info" />
           </DioramaLabel>
-          <DioramaLabel at={up(CORE, 16)} place="above" optional>
-            <NameChip name="交換局" sub="→ インターネット" tone="muted" />
-          </DioramaLabel>
-          <DioramaLabel at={up(MVNO, 60)} place="above" optional>
-            <NameChip name="格安SIMの会社" sub="基地局を持たない" status={mvno ? "MVNO" : undefined} tone={mvno ? "warn" : "muted"} />
-          </DioramaLabel>
-          <DioramaLabel at={up(PHONE, 60)} place="right" optional>
-            <NameChip name="スマホ" status={tether ? "親機" : undefined} tone={tether ? "warn" : "info"} />
-          </DioramaLabel>
-          {DEVICES.filter((d) => d.id !== "phone").map((d) => (
-            <DioramaLabel key={d.id} at={up(d.at, 8)} place="above" optional>
-              <NameChip name={d.name} tone={is5g ? "info" : "muted"} />
+          {mvno && (
+            <DioramaLabel at={up(MVNO, 60)} place="above" optional>
+              <NameChip name="格安SIMの会社" status="MVNO" tone="warn" />
             </DioramaLabel>
-          ))}
+          )}
+          {tether && (
+            <DioramaLabel at={up(PHONE, 60)} place="right" optional>
+              <NameChip name="スマホ" status="親機" tone="warn" />
+            </DioramaLabel>
+          )}
+          {is5g &&
+            DEVICES.map((d) => (
+              <DioramaLabel key={d.id} at={up(d.at, 8)} place="above" optional>
+                <NameChip name={d.name} tone="info" />
+              </DioramaLabel>
+            ))}
         </>
       }
     />

@@ -68,7 +68,7 @@ describe("EncryptionHashExperience", () => {
     renderDeck();
     for (let i = 0; i < 5; i++) next();
     expect(screen.getByTestId("member-db-row")).toHaveAttribute("data-leaked", "true");
-    expect(screen.getByTestId("member-leak")).toHaveTextContent("ハッシュは戻せない");
+    expect(screen.getByTestId("member-db-row")).toHaveTextContent(PASSWORD_HASH);
   });
 
   it("toy hash avalanches on a one-letter change", () => {

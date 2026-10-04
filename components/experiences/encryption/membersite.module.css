@@ -1,17 +1,5 @@
 /* 暗号化とハッシュ化の 3D 模型（MemberSiteDioramaScene）。登録フォーム・DB の中身・照合・送り状。 */
 
-.plate {
-  display: inline-block;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: #ffffff;
-  box-shadow: 0 0 0 1px #cfd6e0;
-  color: #374151;
-  font-size: 10.5px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .form,
 .table,
 .compare,
@@ -79,12 +67,6 @@
 .table[data-leaked="true"] {
   background: #fff1f3;
   box-shadow: 0 8px 20px rgba(225, 29, 72, 0.18), 0 0 0 1px #fecdd6;
-}
-
-.tableNote {
-  color: #047857;
-  font-size: 9.5px;
-  font-weight: 800;
 }
 
 .gate {

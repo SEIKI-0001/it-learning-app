@@ -209,18 +209,18 @@ export function SignatureDioramaScene({
 
           <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
             <div data-node-label="sender" data-forged={forgedSender ? "true" : "false"}>
-              <NameChip name={senderName} sub="送信者・取引先" tone={forgedSender ? "danger" : "info"} />
+              <NameChip name={senderName} tone={forgedSender ? "danger" : "info"} />
             </div>
           </DioramaLabel>
           <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
             <div data-node-label="receiver">
-              <NameChip name="あなた" sub="受信者" tone="info" />
+              <NameChip name="あなた" tone="info" />
             </div>
           </DioramaLabel>
           {attacking && (
             <DioramaLabel at={{ ...EVE_AT, z: 118 }} place="right" optional>
               <div data-node-label="attacker" data-state={nodes.attacker}>
-                <NameChip name="第三者" sub="文書を書き換え" tone="danger" />
+                <NameChip name="第三者" tone="danger" />
               </div>
             </DioramaLabel>
           )}

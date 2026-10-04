@@ -161,12 +161,12 @@ export function ValueChainDiorama({ stations, product, supports, value, stationN
             {/* 図のどこが主活動・支援活動か（説明文の「下段／上段の帯」と対応） */}
             <DioramaLabel at={{ x: 30, y: BAND_Y[0] - 10, z: 6 }} place="above" optional>
               <span className={styles.group} data-group="support">
-                支援活動＝奥の本社と4本の帯（全工程を支える）
+                支援活動（奥の本社と帯）
               </span>
             </DioramaLabel>
             <DioramaLabel at={{ x: 30, y: PATH_Y + 30, z: 0 }} place="below" optional>
               <span className={styles.group} data-group="primary">
-                主活動＝手前の5つの現場 →
+                主活動 →
               </span>
             </DioramaLabel>
             {marginOn && (

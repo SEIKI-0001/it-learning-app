@@ -39,11 +39,11 @@ const SHOTS: Camera[] = [
   { yaw: -30, pitch: 54, zoom: 0.74, fx: 540, fy: 150, fz: 70 },
 ];
 
-const LABELS: { id: string; at: Vec3; place: "above" | "below"; name: string; sub: string }[] = [
-  { id: "user", at: { x: 96, y: 372, z: 0 }, place: "below", name: "あなた", sub: "カフェでログイン" },
-  { id: "eve", at: { x: 372, y: 160, z: 116 }, place: "above", name: "盗聴者", sub: "隣の席で電波を受信" },
-  { id: "ap", at: { x: 460, y: 8, z: 146 }, place: "above", name: "フリーWi-Fi", sub: "暗号化なしの電波" },
-  { id: "web", at: { x: 690, y: 150, z: 132 }, place: "above", name: "Webサーバ", sub: "データセンター" },
+const LABELS: { id: string; at: Vec3; place: "above" | "below"; name: string }[] = [
+  { id: "user", at: { x: 96, y: 372, z: 0 }, place: "below", name: "あなた" },
+  { id: "eve", at: { x: 372, y: 160, z: 116 }, place: "above", name: "盗聴者" },
+  { id: "ap", at: { x: 460, y: 8, z: 146 }, place: "above", name: "フリーWi-Fi" },
+  { id: "web", at: { x: 690, y: 150, z: 132 }, place: "above", name: "Webサーバ" },
 ];
 
 const STATUS: Record<string, Partial<Record<string, string>>> = {
@@ -348,20 +348,12 @@ export function HttpsCafeScene({
             </DioramaLabel>
           )}
 
-          {radio && (
-            <DioramaLabel at={{ x: L.x + 40, y: L.y - 60, z: 30 }} place="below" optional>
-              <span className={styles.radioChip} data-mode={mode}>
-                📶 電波は周り全部に届く
-              </span>
-            </DioramaLabel>
-          )}
-
           {LABELS.filter((label) => !(label.id === "eve" && eveSees !== null && !withScreens)).map((label) => {
             const state = label.id === "ap" ? (radio ? "sending" : "idle") : step.nodes[label.id as keyof typeof step.nodes];
             const status = STATUS[label.id]?.[state];
             return (
               <DioramaLabel key={label.id} at={label.at} place={label.place} optional>
-                <NameChip name={label.name} sub={label.sub} status={status} tone={STATUS_TONE[state]} />
+                <NameChip name={label.name} status={status} tone={STATUS_TONE[state]} />
               </DioramaLabel>
             );
           })}

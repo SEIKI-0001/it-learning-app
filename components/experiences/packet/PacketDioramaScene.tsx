@@ -184,7 +184,7 @@ export function PacketDioramaScene(props: PacketSceneProps & { forward?: boolean
           {whole && (
             <DioramaLabel at={{ x: SENDER.x, y: SENDER.y - 10, z: 110 }} place="above">
               <div data-testid="packet-whole">
-                <Callout tone="info" title="送るデータ（1かたまり）" body={whole} />
+                <Callout tone="info" title="送るデータ" body={whole} />
               </div>
             </DioramaLabel>
           )}
@@ -235,11 +235,6 @@ export function PacketDioramaScene(props: PacketSceneProps & { forward?: boolean
           <DioramaLabel at={{ x: RECEIVER.x + 60, y: RECEIVER.y + 40, z: 90 }} place="above" optional>
             <NameChip name="受信者B" tone="info" />
           </DioramaLabel>
-          {(Object.keys(ROUTER) as RouteId[]).map((id, i) => (
-            <DioramaLabel key={id} at={{ ...ROUTER[id], z: 52 }} place="above" optional>
-              <NameChip name={`ルータ${"①②③"[i]}`} tone="muted" />
-            </DioramaLabel>
-          ))}
         </>
       }
     />

@@ -114,11 +114,7 @@ export function PublicKeyDioramaScene({
               <div className={styles.eveCallout} role="status" data-testid="eve-callout">
                 <span className={styles.calloutTitle}>😈 第三者の手元</span>
                 <CipherCapsule state="failed" label="第三者が取った暗号文のコピー" />
-                <ul className={styles.facts}>
-                  <li>暗号文は見える</li>
-                  <li>公開鍵では開かない</li>
-                  <li>秘密鍵を持っていない</li>
-                </ul>
+                <span className={styles.facts}>秘密鍵がないので開けない</span>
               </div>
             </DioramaLabel>
           )}
@@ -155,14 +151,14 @@ export function PublicKeyDioramaScene({
           )}
 
           <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Aさん" sub="送信者・A社" tone="info" />
+            <NameChip name="Aさん" tone="info" />
           </DioramaLabel>
           <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Bさん" sub="受信者・B社" tone="info" />
+            <NameChip name="Bさん" tone="info" />
           </DioramaLabel>
           {!intercepted && (
             <DioramaLabel at={{ ...EVE_AT, z: 118 }} place="above" optional>
-              <NameChip name="第三者" sub="通信を盗み見" tone="muted" />
+              <NameChip name="第三者" tone="muted" />
             </DioramaLabel>
           )}
         </>

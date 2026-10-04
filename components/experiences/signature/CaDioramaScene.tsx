@@ -158,13 +158,13 @@ export function CaDioramaScene({ view, reducedMotion, forward = true }: { view: 
           )}
 
           <DioramaLabel at={{ ...AT.owner, y: AT.owner.y + 80 }} place="below" optional>
-            <NameChip name={fake ? "偽者" : "本人（山田さん）"} sub="公開鍵を申請" tone={fake ? "danger" : "info"} />
+            <NameChip name={fake ? "偽者" : "本人（山田さん）"} tone={fake ? "danger" : "info"} />
           </DioramaLabel>
           <DioramaLabel at={{ ...AT.ca, y: AT.ca.y - 76, z: 124 }} place="above" optional>
-            <NameChip name="認証局(CA)" sub="本人確認して証明" tone="info" />
+            <NameChip name="認証局(CA)" tone="info" />
           </DioramaLabel>
           <DioramaLabel at={{ ...AT.cert, y: AT.cert.y + 20, z: 0 }} place="below" optional>
-            <NameChip name="電子証明書" sub="CA印つきの公開鍵" tone="muted" />
+            <NameChip name="電子証明書" tone="muted" />
           </DioramaLabel>
           <DioramaLabel at={{ ...AT.user, y: AT.user.y + 80 }} place="below" optional>
             <NameChip name="利用者（あなた）" tone="info" />

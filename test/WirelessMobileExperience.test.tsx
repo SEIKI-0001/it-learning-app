@@ -27,7 +27,7 @@ describe("WirelessMobileExperience", () => {
     renderDeck();
     click("解説2");
     expect(screen.getByTestId("mobile-scene")).toBeInTheDocument();
-    expect(screen.getByTestId("mobile-5g")).toHaveTextContent("多数同時接続");
+    expect(screen.getByTestId("mobile-mode")).toHaveTextContent("多数同時接続");
     const radioOn = () => [...document.querySelectorAll('[data-radio][data-on="true"]')].map((el) => el.getAttribute("data-radio"));
     expect(radioOn()).toHaveLength(4);
     click(/テザリング/);
@@ -36,7 +36,7 @@ describe("WirelessMobileExperience", () => {
     expect(screen.getByTestId("mobile-hotspot")).toBeInTheDocument();
     expect(screen.getByTestId("mobile-tether")).toHaveTextContent("SIMなし");
     click(/MVNO/);
-    expect(screen.getByTestId("mobile-lease-note")).toHaveTextContent("大手のもの");
+    expect(screen.getByTestId("mobile-mode")).toHaveTextContent("大手の回線を借りる");
     expect(screen.getByTestId("mobile-sim")).toHaveTextContent("格安SIM");
     expect(screen.getByText("MVNO（格安SIM）")).toBeInTheDocument();
     click("解説3");
@@ -69,7 +69,6 @@ describe("WirelessMobileExperience", () => {
     expect(screen.getByTestId("wifi-waves")).toBeInTheDocument();
     expect(screen.getByTestId("wifi-packet-copy")).toBeInTheDocument();
     next();
-    expect(screen.getByTestId("wifi-ap-result")).toHaveTextContent("受信");
     expect(screen.getByTestId("wifi-eve")).toHaveAttribute("data-reads", "true");
     expect(screen.getByTestId("wifi-eve")).toHaveTextContent("pass=spring123");
   });
@@ -81,7 +80,6 @@ describe("WirelessMobileExperience", () => {
     expect(screen.getByTestId("wifi-eve")).toHaveAttribute("data-gets", "true");
     expect(screen.getByTestId("wifi-eve")).toHaveAttribute("data-reads", "false");
     expect(screen.getByTestId("wifi-eve")).not.toHaveTextContent("spring123");
-    expect(screen.getByTestId("wifi-ap-result")).toHaveTextContent("正しい鍵で復号");
   });
 
   it("a cable (for comparison) carries data only along the wire", () => {

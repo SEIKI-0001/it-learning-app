@@ -21,7 +21,7 @@ import {
   type ParcelMark,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { Badge, Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import type { CapsuleKind } from "./dnsTypes";
 import type { NodeState } from "./NetworkSceneBase";
 import type { CapsuleStop, LaneId, LaneState, NetworkNodeId } from "./dnsTypes";
@@ -313,20 +313,6 @@ export function DnsDioramaScene({
             </DioramaLabel>
           )}
 
-          {outage && (
-            <DioramaLabel at={{ ...DNS, z: 150 }} place="above">
-              <div data-testid="dns-alarm">
-                <Callout tone="danger" title="⚠ DNSサーバ" body="DNSタイムアウト" verdict="IPアドレスが分からない" role="status" />
-              </div>
-            </DioramaLabel>
-          )}
-
-          {showBrowser && (
-            <DioramaLabel at={{ x: LAPTOP.x, y: LAPTOP.y - 20, z: 110 }} place="above">
-              <Badge tone="ok">ページを表示</Badge>
-            </DioramaLabel>
-          )}
-
           {activeLanes.map((id) => {
             const mid = LANE_PATH[id][2];
             return (
@@ -337,22 +323,13 @@ export function DnsDioramaScene({
           })}
 
           <DioramaLabel at={{ x: 108, y: 360, z: 0 }} place="below" optional>
-            <NameChip name="あなた" sub="自宅のPC・ブラウザ" status={STATUS_WORD[nodes.user]} tone={STATUS_TONE[nodes.user]} />
+            <NameChip name="あなた" status={STATUS_WORD[nodes.user]} tone={STATUS_TONE[nodes.user]} />
           </DioramaLabel>
           <DioramaLabel at={{ ...DNS, z: 118 }} place="above" optional>
-            <NameChip name="DNSサーバ" sub="名前 → IP" status={STATUS_WORD[nodes.dns]} tone={STATUS_TONE[nodes.dns]} />
+            <NameChip name="DNSサーバ" status={STATUS_WORD[nodes.dns]} tone={STATUS_TONE[nodes.dns]} />
           </DioramaLabel>
           <DioramaLabel at={{ ...WEB, z: 124 }} place="above" optional>
-            <NameChip name="Webサーバ" sub="93.184.216.34" status={STATUS_WORD[nodes.web]} tone={STATUS_TONE[nodes.web]} />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...ROUTER, z: 72 }} place="above" optional>
-            <NameChip name="Wi-Fiルータ" tone="muted" />
-          </DioramaLabel>
-          <DioramaLabel at={{ x: 700, y: 140, z: 128 }} place="above" optional>
-            <NameChip name="データセンター" tone="muted" />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...ISP, y: ISP.y + 28, z: 0 }} place="below" optional>
-            <NameChip name="インターネット" sub="通信会社のルータ" tone="muted" />
+            <NameChip name="Webサーバ" status={STATUS_WORD[nodes.web]} tone={STATUS_TONE[nodes.web]} />
           </DioramaLabel>
         </>
       }

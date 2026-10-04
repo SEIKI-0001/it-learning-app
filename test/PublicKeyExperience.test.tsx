@@ -146,9 +146,7 @@ describe("PublicKeyExperience", () => {
     expect(laneState("key")).toBe("done");
     expect(capsuleState()).toBe("encrypted");
     const eve = screen.getByTestId("eve-callout");
-    expect(eve).toHaveTextContent("暗号文は見える");
-    expect(eve).toHaveTextContent("公開鍵では開かない");
-    expect(eve).toHaveTextContent("秘密鍵を持っていない");
+    expect(eve).toHaveTextContent("秘密鍵がないので開けない");
     expect(keySpot("private")).toBe("bHome");
 
     next();

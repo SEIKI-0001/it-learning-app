@@ -151,8 +151,8 @@ describe("NetworkAddressExperience", () => {
       vi.advanceTimersByTime(1500);
     });
     expect(capsuleKind()).toBe("timeout");
-    expect(screen.getByText("DNSタイムアウト")).toBeInTheDocument();
-    expect(screen.getByText("IPアドレスが分からない")).toBeInTheDocument();
+    expect(screen.getByText("DNS 停止中")).toBeInTheDocument();
+    expect(screen.getByText("応答なし")).toBeInTheDocument();
 
     // 先へ進もうとしても Webサーバへの接続は発生しない
     const forward = screen.getByRole("button", { name: "1ステップ進む" });

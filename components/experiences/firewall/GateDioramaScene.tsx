@@ -174,16 +174,10 @@ export function GateDioramaScene({
           })}
 
           <DioramaLabel at={{ x: SENDER.x, y: SENDER.y + 80, z: 0 }} place="below" optional>
-            <NameChip name={sender} sub="社外のPC" tone={attacker ? "danger" : "info"} />
+            <NameChip name={sender} tone={attacker ? "danger" : "info"} />
           </DioramaLabel>
           <DioramaLabel at={{ ...APP, x: APP.x + 36, z: 130 }} place="above" optional>
-            <NameChip name="Webアプリ" status={appState === "active" ? "✅ 正常に到達" : undefined} sub="守る対象" tone="ok" />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...ISP, y: ISP.y + 26, z: 0 }} place="below" optional>
-            <NameChip name="インターネット" tone="muted" />
-          </DioramaLabel>
-          <DioramaLabel at={{ x: 570, y: 100, z: 124 }} place="above" optional>
-            <NameChip name="会社の敷地" sub="社内ネットワーク" tone="muted" />
+            <NameChip name="Webアプリ" status={appState === "active" ? "✅ 正常に到達" : undefined} tone="ok" />
           </DioramaLabel>
         </>
       }
