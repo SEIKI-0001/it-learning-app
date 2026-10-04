@@ -630,8 +630,8 @@ function findKeywordCandidate(
 }
 
 /**
- * サービス側で決めたトピックを、ユーザーの参考書上の案内へ変換する。
- * 学習順序は変えない（トピックは呼び出し側が既存ロジックで決めたもの）。
+ * 今日のトピックを、ユーザーの参考書上の案内へ変換する。
+ * 順番はここでは決めない（参考書順のときの順番は lib/bookStudyOrder、判定は lib/studyContext）。
  * フォールバック順: topicIds → 章・節の keywords（候補）→ referenceHints → 索引。
  */
 export function resolveReferenceGuide(
