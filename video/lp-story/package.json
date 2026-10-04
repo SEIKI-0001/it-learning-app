@@ -1,0 +1,24 @@
+{
+  "name": "lp-story-video",
+  "private": true,
+  "description": "LP（/lp）の紹介動画を Remotion で生成する独立プロジェクト（アプリ本体のビルド対象外）",
+  "type": "module",
+  "scripts": {
+    "capture": "node scripts/capture.mjs",
+    "voice": "node scripts/voice.mjs",
+    "audio": "node scripts/synth-audio.mjs",
+    "studio": "npm run audio && remotion studio src/index.ts",
+    "render": "npm run audio && remotion render src/index.ts LpStory out/lp-story.mp4 --codec h264 --crf 14 --audio-codec aac --audio-bitrate 320k && sh scripts/finalize.sh",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.529",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "remotion": "4.0.529"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}

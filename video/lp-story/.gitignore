@@ -1,0 +1,4 @@
+node_modules/
+out/
+# scripts/synth-audio.mjs で毎回同じものを再生成できるのでコミットしない
+public/audio/

@@ -1,0 +1,19 @@
+{
+  "speaker": "春日部つむぎ/ノーマル",
+  "defaults": { "speedScale": 1.0, "intonationScale": 1.2, "pitchScale": 0.0, "volumeScale": 1.0, "prePhonemeLength": 0.05, "postPhonemeLength": 0.1 },
+  "lines": [
+    { "id": "hook1", "needOnsets": 2, "scene": "hook", "text": "参考書を読んだ。過去問も、解いた。", "caption": "参考書を読んだ。過去問も、解いた。", "speedScale": 0.96 },
+    { "id": "hook2", "needOnsets": 3, "scene": "hook", "text": "でも、本当に、理解できていますか？", "caption": "でも、本当に理解できていますか？", "speedScale": 0.94, "intonationScale": 1.3 },
+    { "id": "term1", "needOnsets": 3, "scene": "term", "text": "ティーシーピーアイピー。正規化。公開鍵暗号。", "caption": "TCP/IP。正規化。公開鍵暗号。" },
+    { "id": "term2", "needOnsets": 2, "scene": "term", "text": "文字だけでは仕組みが浮かばず、丸暗記になりがちです。", "caption": "文字だけでは仕組みが浮かばず、丸暗記になりがちです。" },
+    { "id": "lost1", "needOnsets": 3, "scene": "lost", "text": "それに、次に何をすればいいのかも、分からない。", "caption": "それに、次に何をすればいいのかも分からない。" },
+    { "id": "lost2", "needOnsets": 4, "scene": "lost", "text": "復習か、過去問か。このペースで、間に合うのか。", "caption": "復習か、過去問か。このペースで間に合うのか。" },
+    { "id": "pivot", "needOnsets": 4, "scene": "pivot", "text": "アイティーパスポート学習コーチは、分からないと、迷うを、まとめて解決します。", "caption": "ITパスポート学習コーチは、「分からない」と「迷う」をまとめて解決します。", "intonationScale": 1.3, "pitchScale": 0.01 },
+    { "id": "learn", "needOnsets": 2, "scene": "learn", "text": "動く図解で、仕組みから理解する。", "caption": "動く図解で、仕組みから理解する。", "intonationScale": 1.3 },
+    { "id": "measure", "needOnsets": 2, "scene": "measure", "text": "確認問題で、本当に分かったかを確かめる。", "caption": "確認問題で、本当に分かったかを確かめる。", "intonationScale": 1.3 },
+    { "id": "next1", "needOnsets": 4, "scene": "next", "text": "その結果から、今の実力と、足りないところが見えて、", "caption": "その結果から、今の実力と足りないところが見えて、" },
+    { "id": "next2", "needOnsets": 2, "scene": "next", "text": "試験日から逆算した、今日やることが決まります。", "caption": "試験日から逆算した「今日やること」が決まります。", "intonationScale": 1.3 },
+    { "id": "cycle", "needOnsets": 5, "scene": "cycle", "text": "理解する。測る。次を決める。このサイクルを、合格の日まで。", "caption": "理解する。測る。次を決める。このサイクルを、合格の日まで。", "speedScale": 0.97, "intonationScale": 1.3 },
+    { "id": "cta", "needOnsets": 3, "scene": "cta", "text": "教材と公式過去問は、無料。今日の一歩を、ここから始めましょう。", "caption": "教材と公式過去問は無料。今日の一歩を、ここから始めましょう。", "intonationScale": 1.35, "pitchScale": 0.01 }
+  ]
+}
