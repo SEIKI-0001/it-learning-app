@@ -20,6 +20,8 @@ import {
   getTopic,
 } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
+import { nextBookTopicIds } from "@/lib/bookStudyOrder";
+import type { BookQueueOptions } from "@/lib/bookStudyPlan";
 import { fieldMastery } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
 import {
@@ -558,6 +560,8 @@ export function buildWeeklyPlan(
   state: AppState,
   topics: Topic[] = getAllTopics(),
   now: Date = new Date(),
+  /** 参考書順（Book mode）。渡したときだけ、今週の新規トピックを本の順で選ぶ（今日の順と一致させる）。 */
+  options?: PlanBookOptions,
 ): WeeklyPlan {
   const { profile, progress, answers } = state;
   const daysRemaining = daysUntilExam(profile, now);
@@ -570,12 +574,14 @@ export function buildWeeklyPlan(
   );
   const goal = buildWeeklyGoal(topics, profile, progress, currentPhase, daysRemaining);
 
-  const topicIds = getRecommendedTopicsForUser({
-    progress,
-    weakFields: profile?.weakFields,
-  })
-    .slice(0, goal.targetTopicCount)
-    .map((t) => t.id);
+  const topicIds = options?.book
+    ? nextBookTopicIds(options.book.order, progress.completedTopics, goal.targetTopicCount)
+    : getRecommendedTopicsForUser({
+        progress,
+        weakFields: profile?.weakFields,
+      })
+        .slice(0, goal.targetTopicCount)
+        .map((t) => t.id);
 
   const reviewIds = getReviewItemsForUser(
     { progress, weakFields: profile?.weakFields },
@@ -596,12 +602,13 @@ export function resolveWeeklyPlan(
   state: AppState,
   topics: Topic[] = getAllTopics(),
   now: Date = new Date(),
+  options?: PlanBookOptions,
 ): WeeklyPlan {
   const existing = state.progress.weeklyPlan;
   if (existing && existing.weekStartDate === weekStartKey(now)) {
     return existing;
   }
-  return buildWeeklyPlan(state, topics, now);
+  return buildWeeklyPlan(state, topics, now, options);
 }
 
 /**
@@ -613,8 +620,9 @@ export function rebuildWeeklyPlanForPlanningChange(
   state: AppState,
   topics: Topic[] = getAllTopics(),
   now: Date = new Date(),
+  options?: PlanBookOptions,
 ): WeeklyPlan {
-  return { ...buildWeeklyPlan(state, topics, now), revisedAt: now.toISOString() };
+  return { ...buildWeeklyPlan(state, topics, now, options), revisedAt: now.toISOString() };
 }
 
 /**
@@ -670,6 +678,27 @@ export function buildWeeklyChecklist(
  * 今日の学習メニューの主テーマについて、「なぜ今日これをやるか」を組み立てる。
  * 必ず1つ以上返す（/today で常時表示する前提）。
  */
+/** 計画系の関数に渡す参考書順（Book mode）の入力。省略時はアプリ順。 */
+export type PlanBookOptions = { book?: BookQueueOptions | null };
+
+/** 参考書順のときの「今日これをやる理由」。主な理由は本の順であること。 */
+export function buildBookTodayReasons(
+  primary: Topic,
+  unitLabel: string | undefined,
+  book: BookQueueOptions,
+): string[] {
+  if (book.order.supplementTopicIds.includes(primary.id)) {
+    return [
+      "使っている参考書には載っていないテーマですが、試験に出るので補足として学びます。",
+    ];
+  }
+  return [
+    unitLabel
+      ? `参考書の順に進めています（${unitLabel}）。`
+      : "参考書の順に進めています。",
+  ];
+}
+
 export function buildTodayReasons(
   primary: Topic | undefined,
   progress: UserProgress,
@@ -837,6 +866,8 @@ export function generateLearningPlan(
   dailyMinutesOverride?: number,
   /** 今日のトピック以外のタスク（関連用語・公式過去問）。Today だけが渡す。 */
   activities?: TodayActivity[],
+  /** 参考書順（Book mode）。省略時は従来と完全に同じ計画。 */
+  options?: PlanBookOptions,
 ): LearningPlan {
   const { profile, progress, answers } = state;
 
@@ -863,7 +894,7 @@ export function generateLearningPlan(
     daysRemaining,
   );
 
-  const weekly = resolveWeeklyPlan(state, topics, now);
+  const weekly = resolveWeeklyPlan(state, topics, now, options);
   const weeklyItems = buildWeeklyChecklist(weekly, state, now);
 
   const todayMenu = generateTodayMenu(
@@ -874,16 +905,19 @@ export function generateLearningPlan(
     now,
     dailyMinutesOverride,
     activities,
+    options?.book ? { book: options.book } : undefined,
   );
   const primaryItem = todayMenu.items.find((i) => i.kind === "learn");
   const primary = primaryItem ? getTopic(primaryItem.topicId) : undefined;
-  const todayReasons = buildTodayReasons(
-    primary,
-    progress,
-    profile,
-    daysRemaining,
-    currentPhase,
-  );
+  const todayReasons = options?.book && primary
+    ? buildBookTodayReasons(primary, todayMenu.bookUnitLabel, options.book)
+    : buildTodayReasons(
+        primary,
+        progress,
+        profile,
+        daysRemaining,
+        currentPhase,
+      );
 
   const ready = isKakomonReady(topics, progress, answers, daysRemaining);
   const kakomonStart = kakomonStartDate(profile, daysRemaining, ready, now);

@@ -13,6 +13,7 @@ import type {
 } from "@/types";
 import type { Topic } from "@/types/content";
 import { assessTopicForCheckpoint, buildCheckpointNeeds } from "@/lib/checkpointNeeds";
+import { localDateKey, type BookQueueOptions } from "@/lib/bookStudyPlan";
 
 const DAY_MS = 86_400_000;
 export const LEARNING_LOOP_CONFIG = {
@@ -350,6 +351,13 @@ export const TODAY_ACTIVITY_PRIORITY = {
   wordsRelated: 240,
 } as const;
 
+/**
+ * 参考書順の新規トピックの priority（固定）。本の中の順番は bookOrderIndex で表し、ここには足さない。
+ * 期限切れ復習(6000)・総まとめの誤答(500+)・理解度の低い Topic(390+)・CP5以降の復習語(380) より下、
+ * CP2〜4の復習語(250)・関連語(240) より上。アプリ順の新規（310〜330）と同じ帯に置く。
+ */
+export const BOOK_NEW_TOPIC_PRIORITY = 330;
+
 export function buildTodaysLearningQueue(input: {
   progress: UserProgress;
   topics: Topic[];
@@ -362,8 +370,14 @@ export function buildTodaysLearningQueue(input: {
    * 優先度は各タスクの priority（TODAY_ACTIVITY_PRIORITY）をそのまま使う。
    */
   activities?: TodayActivity[];
+  /**
+   * 参考書順（Book mode）。渡したときだけ、新規トピックを本の章・節の順に並べる。
+   * 省略時（アプリ順）は従来と完全に同じキューになる。
+   */
+  book?: BookQueueOptions | null;
 }): TodaysLearningQueueItem[] {
   const now = input.now ?? new Date();
+  const book = input.book ?? null;
   const topicById = new Map(input.topics.map((topic) => [topic.id, topic]));
   const added = new Set<string>();
   const queue: TodaysLearningQueueItem[] = [];
@@ -382,10 +396,12 @@ export function buildTodaysLearningQueue(input: {
     kind: TodaysLearningQueueItem["kind"],
     priority: number,
     reason: string,
+    bookPosition?: { index: number; unitId: string },
   ) => {
     const topic = topicById.get(topicId);
     if (!topic || added.has(topicId)) return;
-    const impact = impactFor(topic);
+    // 参考書順の新規トピックは CP の必要度で並びを変えない（本の順を厳守する）。
+    const impact = bookPosition ? null : impactFor(topic);
     const overdue = kind === "overdue_review";
     added.add(topicId);
     queue.push({
@@ -397,6 +413,7 @@ export function buildTodaysLearningQueue(input: {
       reason: overdue
         ? "復習期限を過ぎているため、今日は先に復習します"
         : impact?.reason ?? reason,
+      ...(bookPosition ? { bookOrderIndex: bookPosition.index, bookUnitId: bookPosition.unitId } : {}),
     });
   };
 
@@ -426,8 +443,11 @@ export function buildTodaysLearningQueue(input: {
   }
 
   const legacyWeakTags = new Set(input.progress.weakTags);
+  const learned = new Set(input.progress.completedTopics);
   for (const topic of input.topics.filter((item) =>
-    item.tags.some((tag) => legacyWeakTags.has(tag)),
+    item.tags.some((tag) => legacyWeakTags.has(tag)) &&
+    // 参考書順では、まだ学んでいないトピックを苦手補強として前倒ししない（新規は本の順）。
+    (!book || learned.has(item.id)),
   )) {
     addTopic(
       topic.id,
@@ -447,10 +467,36 @@ export function buildTodaysLearningQueue(input: {
   }
 
   const completed = new Set(input.progress.completedTopics);
-  for (const topic of input.topics
-    .filter((item) => !completed.has(item.id))
-    .sort((a, b) => b.importance - a.importance || a.difficulty - b.difficulty)) {
-    addTopic(topic.id, "new_topic", 300 + topic.importance * 10, "次の新規Topic");
+  if (book) {
+    // 参考書順: priority は固定（BOOK_NEW_TOPIC_PRIORITY）、並びは bookOrderIndex（別の軸）。
+    // 補足の安全弁の日を過ぎたら、本に無い重要テーマを本の残りより先に出す。
+    const pastDeadline =
+      book.supplementDeadline !== undefined && localDateKey(now) >= book.supplementDeadline;
+    const supplementIds = new Set(book.order.supplementTopicIds);
+    const unitById = new Map(book.order.units.map((unit) => [unit.unitId, unit]));
+    for (const topic of input.topics) {
+      if (completed.has(topic.id)) continue;
+      const index = book.order.orderIndex.get(topic.id);
+      const unitId = book.order.unitOfTopic.get(topic.id);
+      if (index === undefined || unitId === undefined) continue;
+      const urgentSupplement = pastDeadline && supplementIds.has(topic.id) && topic.importance >= 3;
+      const unit = unitById.get(unitId);
+      addTopic(
+        topic.id,
+        "new_topic",
+        BOOK_NEW_TOPIC_PRIORITY,
+        urgentSupplement
+          ? "参考書に無い頻出テーマを、試験までに押さえておきます"
+          : `参考書の順：${unit?.label ?? ""}`,
+        { index: urgentSupplement ? index - book.order.orderIndex.size : index, unitId },
+      );
+    }
+  } else {
+    for (const topic of input.topics
+      .filter((item) => !completed.has(item.id))
+      .sort((a, b) => b.importance - a.importance || a.difficulty - b.difficulty)) {
+      addTopic(topic.id, "new_topic", 300 + topic.importance * 10, "次の新規Topic");
+    }
   }
 
   for (const activity of input.activities ?? []) {
@@ -473,5 +519,10 @@ export function buildTodaysLearningQueue(input: {
     queue.push({ id: "extra-practice", kind: "extra_practice", priority: 100, estimatedMinutes: 10, reason: "追加演習" });
   }
 
-  return queue.sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id));
+  return queue.sort(
+    (a, b) =>
+      b.priority - a.priority ||
+      (a.bookOrderIndex ?? Number.POSITIVE_INFINITY) - (b.bookOrderIndex ?? Number.POSITIVE_INFINITY) ||
+      a.id.localeCompare(b.id),
+  );
 }
