@@ -153,6 +153,13 @@ export type TodaysLearningQueueItem = {
   reason: string;
   /** トピック学習ではないタスク（関連用語・公式過去問）の中身。 */
   activity?: TodayActivity;
+  /**
+   * 参考書順（Book mode）の新規トピックだけに付く、本の中での通し番号。
+   * priority とは別の軸で、同じ priority の中を本の順に並べるためだけに使う。
+   */
+  bookOrderIndex?: number;
+  /** 参考書順の新規トピックが属するユニット（lib/bookStudyOrder の unitId） */
+  bookUnitId?: string;
 };
 
 /**
@@ -292,6 +299,8 @@ export type TodayMenu = {
    * activities を渡して生成したときだけ入る（渡さなければ従来どおり items だけ）。
    */
   sequence?: TodayMenuEntry[];
+  /** 参考書順（Book mode）のとき、今日の新規トピックがある本の範囲（「第1章 … ／ 1-1 …」） */
+  bookUnitLabel?: string;
 };
 
 export type TodayMenuEntry =
