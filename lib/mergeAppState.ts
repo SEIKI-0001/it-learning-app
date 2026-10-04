@@ -277,6 +277,16 @@ function mergeCheckpointProgress(
     dailyQuests: mergeDailyQuests(a.dailyQuests, b.dailyQuests),
     gameful: mergeGamefulState(a.gameful, b.gameful),
     chapterReview: mergeChapterReview(a.chapterReview, b.chapterReview),
+    // 学習モードの写し。読み込み時に resolveStudyContext で上書きされるので、どちらかが book なら book。
+    ...(a.studyMode === "book" || b.studyMode === "book" ? { studyMode: "book" as const } : {}),
+    // 参考書順で解放した最終問題は閉じない（和集合）。
+    ...(a.bookUnlockedFinalExamIds || b.bookUnlockedFinalExamIds
+      ? {
+          bookUnlockedFinalExamIds: [
+            ...new Set([...(a.bookUnlockedFinalExamIds ?? []), ...(b.bookUnlockedFinalExamIds ?? [])]),
+          ],
+        }
+      : {}),
   };
 }
 

@@ -298,6 +298,17 @@ export type CheckpointProgress = {
   gameful?: GamefulState;
   /** 章の総まとめ試験とAI理解チェックの記録。未使用なら undefined（旧データ互換）。 */
   chapterReview?: ChapterReviewState;
+  /**
+   * 新規学習を参考書の順で進めているか（"book"）。未設定はアプリ順。
+   * 正は lib/studyContext の resolveStudyContext で、画面・サーバーの読み込み時に
+   * withStudyMode で毎回上書きする（ここはチェックポイント判定へ渡すための写し）。
+   */
+  studyMode?: "book";
+  /**
+   * 参考書順で一度解放された最終問題（CP）。モードを切り替えても閉じない（ラッチ）。
+   * アプリ順だけのユーザーは持たない（挙動は従来どおり）。
+   */
+  bookUnlockedFinalExamIds?: CheckpointId[];
 };
 
 /** 既存ユーザー・新規ユーザー共通の初期値。 */

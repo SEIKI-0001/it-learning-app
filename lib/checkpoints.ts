@@ -25,6 +25,7 @@ import { addTopicsToReview, recentAccuracy } from "@/lib/study";
 import { updateLearningLoopProgress } from "@/lib/learningLoop";
 import { exposureStateFor } from "@/lib/questionExposure";
 import type { BadgeSignals } from "@/lib/badges";
+import { isBookPaced, isBookUnlockLatched } from "@/lib/studyModeState";
 import {
   evaluateBadgeAwards,
   getRequiredBadges,
@@ -165,6 +166,28 @@ function completedFieldSet(state: AppState): Set<TopicField> {
 
 // 直近正答率は lib/study.ts の recentAccuracy に一本化（badges の条件判定と共通）。
 
+/** 参考書順で「学んだ範囲の確認」になる CP（分野の条件を外し、出題範囲を完了トピック全体にする）。 */
+export const BOOK_PACED_CHECKPOINTS: readonly CheckpointId[] = ["cp1", "cp2", "cp3"];
+
+/**
+ * 参考書順の最終問題を、いまの完了トピックから組めるか（出題元の問題数）。
+ * 出題範囲は lib/finalExam の bookPacedScope と同じ（完了トピックのうち確認問題を持つもの全体）。
+ */
+export function bookPacedExamPoolSize(state: AppState): number {
+  const completed = new Set(state.progress.completedTopics);
+  return getAllTopics()
+    .filter((topic) => completed.has(topic.id))
+    .reduce((sum, topic) => sum + topic.checkQuestions.length, 0);
+}
+
+/** その CP の最終問題を、参考書順の出題範囲（学んだ範囲全体）で出すか。 */
+export function usesBookPacedExamScope(state: AppState, checkpointId: CheckpointId): boolean {
+  return (
+    BOOK_PACED_CHECKPOINTS.includes(checkpointId) &&
+    (isBookPaced(state) || isBookUnlockLatched(state, checkpointId))
+  );
+}
+
 /** ゲートのバッジ以外の条件（分野カバレッジ・直近正答率）を判定するための実測値。 */
 export type CheckpointMeasurements = {
   /** requiredFieldCoverage のうち、まだ1トピックも完了していない分野。 */
@@ -183,8 +206,14 @@ export function measureCheckpoint(
 ): CheckpointMeasurements {
   const checkpoint = getCheckpoint(checkpointId);
   const fields = completedFieldSet(state);
+  // 参考書順の CP1〜3 は「本で学んだ範囲」の確認なので、3分野がそろうことを求めない
+  // （本の章立てによっては、ある分野が後半まで出てこない）。CP5 の分野条件は残す。
+  const fieldCoverage =
+    isBookPaced(state) && BOOK_PACED_CHECKPOINTS.includes(checkpointId)
+      ? []
+      : checkpoint.requiredFieldCoverage;
   return {
-    missingFields: checkpoint.requiredFieldCoverage.filter((f) => !fields.has(f)),
+    missingFields: fieldCoverage.filter((f) => !fields.has(f)),
     recentAccuracy:
       checkpoint.recentAccuracyMin === undefined ? null : recentAccuracy(state.answers),
   };
@@ -260,12 +289,21 @@ export function buildCheckpointGate(
       : measured.recentAccuracy >= checkpoint.recentAccuracyMin;
 
   const hasFinal = checkpoint.finalExam !== null;
+  // 参考書順では、学んだ範囲から最終問題を組めるだけの問題数があることも条件にする。
+  const bookPoolMet =
+    !isBookPaced(state) ||
+    !BOOK_PACED_CHECKPOINTS.includes(checkpointId) ||
+    !checkpoint.finalExam ||
+    bookPacedExamPoolSize(state) >= checkpoint.finalExam.questionCount;
   const finalExamUnlocked =
     hasFinal &&
-    missingBadges.length === 0 &&
-    earnedRequiredCount >= checkpoint.requiredBadgeCount &&
-    fieldCoverageMet &&
-    accuracyMet;
+    // 参考書順で一度解放した最終問題は、モードを切り替えても閉じない。
+    (isBookUnlockLatched(state, checkpointId) ||
+      (missingBadges.length === 0 &&
+        earnedRequiredCount >= checkpoint.requiredBadgeCount &&
+        fieldCoverageMet &&
+        accuracyMet &&
+        bookPoolMet));
 
   const latest = latestFinalAttempt(cp, checkpointId);
   const finalExamPassed = !!latest?.passed;
@@ -440,7 +478,7 @@ export function applyBadgeProgress(
     now,
   );
   if (result.newlyEarned.length === 0 && state.progress.checkpointProgress) {
-    return { state, newlyEarnedIds: [] };
+    return { state: latchBookUnlockedFinalExam(state), newlyEarnedIds: [] };
   }
   const { exp, level } = grantExp(state.progress.exp, result.gainedXp);
   const nextState: AppState = {
@@ -456,8 +494,32 @@ export function applyBadgeProgress(
     },
   };
   return {
-    state: nextState,
+    state: latchBookUnlockedFinalExam(nextState),
     newlyEarnedIds: result.newlyEarned.map((b) => b.id),
+  };
+}
+
+/**
+ * 参考書順でいまの CP の最終問題が解放されたら、その事実を記録する（ラッチ）。
+ * 以後アプリ順へ切り替えても、分野の条件などで最終問題が閉じないようにするため。
+ * アプリ順のときは何もしない（従来どおり）。変化が無ければ同じ参照を返す。
+ */
+export function latchBookUnlockedFinalExam(state: AppState): AppState {
+  if (!isBookPaced(state)) return state;
+  const cp = state.progress.checkpointProgress;
+  if (!cp) return state;
+  const id = cp.currentCheckpointId;
+  if (!BOOK_PACED_CHECKPOINTS.includes(id) || isBookUnlockLatched(state, id)) return state;
+  if (!buildCheckpointGate(state, id).finalExamUnlocked) return state;
+  return {
+    ...state,
+    progress: {
+      ...state.progress,
+      checkpointProgress: {
+        ...cp,
+        bookUnlockedFinalExamIds: [...(cp.bookUnlockedFinalExamIds ?? []), id],
+      },
+    },
   };
 }
 
