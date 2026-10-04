@@ -1,5 +1,7 @@
 import { mergeProgress } from '@/lib/mergeAppState';
 import { progressRowToProgress, progressToRow, type ProgressRow } from '@/lib/dbMappers';
+import { mergeReferenceBookArchives } from '@/lib/referenceBook';
+import type { ReferenceBookArchiveEntry } from '@/types/referenceBook';
 export type AccountRow = Record<string, unknown>;
 export type AccountSnapshot = { source: string; target: string; tables: Record<string, AccountRow[]> };
 // These projections can be recalculated; their original rows stay in the merge archive.
@@ -31,6 +33,8 @@ function mergeDuplicate(table:string,a:AccountRow,b:AccountRow,target:string):Ac
  } else if(table==='user_reference_books') {
    // A single active-book slot cannot represent two different user-authored books.
    if(JSON.stringify(a.chapters)!==JSON.stringify(b.chapters) || a.title!==b.title) throw new Error('REFERENCE_BOOK_CONFLICT');
+   // Same book on both accounts: keep the switch history of both (newest per book, max 5).
+   if(Array.isArray(a.archived_books)||Array.isArray(b.archived_books)) result.archived_books=mergeReferenceBookArchives((a.archived_books??[]) as ReferenceBookArchiveEntry[],(b.archived_books??[]) as ReferenceBookArchiveEntry[]);
  } else if(table==='topic_progress'||table==='user_word_progress') {
    for(const key of Object.keys(a)) if(key.endsWith('_count')) result[key]=Math.max(Number(a[key]??0),Number(b[key]??0));
    result.next_review_at=[a.next_review_at,b.next_review_at].filter(Boolean).sort()[0]??null;

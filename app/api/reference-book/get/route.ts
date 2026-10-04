@@ -5,6 +5,7 @@ import {
   referenceBookRowToBook,
   type ReferenceBookRow,
 } from "@/lib/dbMappers";
+import { parseArchivePayload, parseStudyPlanPayload } from "@/lib/referenceBookPayload";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,8 @@ export const runtime = "nodejs";
  * POST /api/reference-book/get
  * ユーザーの参考書アウトラインを取得する（1ユーザー1冊）。
  * body: { userId?: string }（production ではセッション / fq_line Cookie からのみ解決）
- * 返却: { ok: true, book: ReferenceBook | null }
+ * 返却: { ok: true, book: ReferenceBook | null, archive: ReferenceBookArchiveEntry[], studyPlan: ReferenceStudyPlan | null }
+ *   archive / studyPlan は migration 20261004120000 適用前の環境では空（[] / null）。
  *
  * Supabase 未設定: 503（クライアントは localStorage で継続） / userId なし: 401
  */
@@ -37,9 +39,10 @@ export async function POST(request: Request) {
     );
   }
 
+  // 追加列の有無（migration 適用前後）に関係なく読めるよう * で取る。
   const { data, error } = await supabase
     .from("user_reference_books")
-    .select("title, publisher, edition, active, note, chapters, updated_at")
+    .select("*")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -47,8 +50,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "get failed" }, { status: 500 });
   }
 
+  const row = (data as ReferenceBookRow | null) ?? null;
   return NextResponse.json({
     ok: true,
-    book: data ? referenceBookRowToBook(data as ReferenceBookRow) : null,
+    book: row ? referenceBookRowToBook(row) : null,
+    archive: (row && parseArchivePayload(row.archived_books ?? [])) ?? [],
+    studyPlan: (row?.study_plan && parseStudyPlanPayload(row.study_plan)) ?? null,
   });
 }

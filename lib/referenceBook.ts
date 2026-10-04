@@ -2,6 +2,7 @@ import type { Topic } from "@/types/content";
 import type { ProgressLevel } from "@/types/studyProgress";
 import type {
   ReferenceBook,
+  ReferenceBookArchiveEntry,
   ReferenceBookProgress,
   ReferenceChapter,
   ReferenceGuide,
@@ -29,9 +30,24 @@ export function genRefId(prefix = "ch"): string {
     .slice(2, 7)}`;
 }
 
+/**
+ * 本そのものの永続 id（uuid）を作る。ブラウザ・サーバーの両方で使える。
+ * 書名や版が同じでも、別の本として登録したら別 id になる。
+ */
+export function genReferenceBookId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  if (c?.randomUUID) return c.randomUUID();
+  // 古い実行環境向け（uuid v4 形式）
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (ch) => {
+    const r = (Math.random() * 16) | 0;
+    return (ch === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
 /** 空の参考書アウトラインを作る。 */
 export function createEmptyReferenceBook(): ReferenceBook {
   return {
+    id: genReferenceBookId(),
     title: "",
     publisher: "",
     edition: "",
@@ -57,6 +73,10 @@ export function loadReferenceBook(): ReferenceBook | null {
 /** 欠けたフィールドを補完する（後方互換）。 */
 export function normalizeReferenceBook(book: ReferenceBook): ReferenceBook {
   return {
+    ...(book.id ? { id: book.id } : {}),
+    ...(book.source?.id && (book.source.kind === "preset" || book.source.kind === "catalog")
+      ? { source: { kind: book.source.kind, id: book.source.id } }
+      : {}),
     title: book.title ?? "",
     publisher: book.publisher ?? "",
     edition: book.edition ?? "",
@@ -656,11 +676,12 @@ export function chapterTopicIds(chapter: ReferenceChapter): string[] {
 export type { ReferenceSection };
 
 // ---------------------------------------------------------------------------
-// 参考書の切り替え（アクティブ1冊 ＋ 端末内の読了履歴アーカイブ）
+// 参考書の切り替え（アクティブ1冊 ＋ 読了履歴アーカイブ）
 // ---------------------------------------------------------------------------
-// DB（user_reference_books）は1ユーザー1冊のまま。切り替え前の本の読了履歴は、
-// 「保持する」を選んだときだけ端末内にアーカイブし、同じ本へ戻したときに復元する。
-// 将来の複数冊管理では、このアーカイブを DB 側の一覧に置き換える想定。
+// 使用中の本は1ユーザー1冊（user_reference_books）。切り替え前の本の読了履歴は、
+// 「保持する」を選んだときだけアーカイブし、同じ本へ戻したときに復元する。
+// アーカイブは端末（localStorage）に置き、ログイン中は同じ行の archived_books へも同期する
+// （lib/referenceBookSync.ts）。同じ本かどうかは永続 id（旧データは書名＋版）で判定する。
 
 const ARCHIVE_KEY = "fequest:referenceBookArchive";
 const ARCHIVE_LIMIT = 5;
@@ -674,23 +695,50 @@ export function referenceBookTitleKey(book: Pick<ReferenceBook, "title">): strin
   return bookKey(book);
 }
 
+/**
+ * 2冊が同じ本か。
+ *   - 両方に永続 id があれば id で判定する
+ *   - 片方でも id が無い旧データは、書名（正規化）が同じで、版が食い違わないこと
+ *     （版がどちらも書いてあって違うときは別の本＝年度違い・改訂版を取り違えない）
+ */
+export function isSameReferenceBook(
+  a: Pick<ReferenceBook, "id" | "title" | "edition" | "source">,
+  b: Pick<ReferenceBook, "id" | "title" | "edition" | "source">,
+): boolean {
+  if (a.id && b.id) return a.id === b.id;
+  // 作成元（プリセット・カタログ）が両方分かっていて違うなら別の本。
+  if (a.source && b.source && (a.source.kind !== b.source.kind || a.source.id !== b.source.id)) {
+    return false;
+  }
+  const ka = bookKey(a);
+  if (!ka || ka !== bookKey(b)) return false;
+  const ea = normalizeKeyword(a.edition ?? "");
+  const eb = normalizeKeyword(b.edition ?? "");
+  return !ea || !eb || ea === eb;
+}
+
 /** 読了した節・章が1つでもあるか（アーカイブする価値があるか）。 */
 export function hasReadingHistory(book: ReferenceBook | null): boolean {
   return (referenceBookProgress(book)?.done ?? 0) > 0;
 }
 
-export function loadReferenceBookArchive(): ReferenceBook[] {
+function normalizeArchiveEntry(entry: ReferenceBookArchiveEntry): ReferenceBookArchiveEntry {
+  const book = normalizeReferenceBook(entry);
+  return entry.studyPlan ? { ...book, studyPlan: entry.studyPlan } : book;
+}
+
+export function loadReferenceBookArchive(): ReferenceBookArchiveEntry[] {
   if (!isBrowser()) return [];
   try {
     const raw = window.localStorage.getItem(ARCHIVE_KEY);
-    const list = raw ? (JSON.parse(raw) as ReferenceBook[]) : [];
-    return Array.isArray(list) ? list.map(normalizeReferenceBook) : [];
+    const list = raw ? (JSON.parse(raw) as ReferenceBookArchiveEntry[]) : [];
+    return Array.isArray(list) ? list.map(normalizeArchiveEntry) : [];
   } catch {
     return [];
   }
 }
 
-function saveReferenceBookArchive(list: ReferenceBook[]): void {
+export function saveReferenceBookArchive(list: ReferenceBookArchiveEntry[]): void {
   if (!isBrowser()) return;
   try {
     window.localStorage.setItem(ARCHIVE_KEY, JSON.stringify(list.slice(0, ARCHIVE_LIMIT)));
@@ -700,10 +748,35 @@ function saveReferenceBookArchive(list: ReferenceBook[]): void {
 }
 
 /**
+ * 端末と DB の切替履歴を1つにまとめる。同じ本は updatedAt の新しい方を採用し、
+ * 新しい順に最大5冊。どちらにも無い本を勝手に増やすことはない。
+ */
+export function mergeReferenceBookArchives(
+  local: ReferenceBookArchiveEntry[],
+  remote: ReferenceBookArchiveEntry[],
+): ReferenceBookArchiveEntry[] {
+  const merged: ReferenceBookArchiveEntry[] = [];
+  for (const entry of [...remote, ...local]) {
+    const index = merged.findIndex((b) => isSameReferenceBook(b, entry));
+    if (index < 0) {
+      merged.push(entry);
+      continue;
+    }
+    const current = merged[index];
+    if (Date.parse(entry.updatedAt) > Date.parse(current.updatedAt)) merged[index] = entry;
+  }
+  return merged
+    .sort((a, b) => (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0))
+    .slice(0, ARCHIVE_LIMIT);
+}
+
+/**
  * 使用中の本を別の本へ切り替えた結果を返す（保存は呼び出し側）。
- *   - keepHistory: 今の本の読了履歴を端末内に残す（同じ本へ戻したら復元）
- *   - 切り替え先の読了履歴がアーカイブにあれば、それを復元して使う
- *   - 同じ本（書名一致）を選び直したときは、今の本（読了状態）をそのまま使う。
+ * next は選択から作ったばかりの候補（id は作りたて）なので、照合では next の id を使わず
+ * 書名・版・作成元で判定する。今の本・履歴の側は保存済みの id を保つ。
+ *   - keepHistory: 今の本の読了履歴を残す（同じ本へ戻したら復元）。端末に保存し、ログイン中は DB にも同期する
+ *   - 切り替え先の読了履歴がアーカイブにあれば、それを復元して使う（同じ本かは isSameReferenceBook）
+ *   - 同じ本を選び直したときは、今の本（読了状態）をそのまま使う。
  *     ただし今の本に章立てが無く、選び直した側にある（目次の読み取り）ときはその章立てを使う
  */
 export function switchReferenceBook(
@@ -711,20 +784,44 @@ export function switchReferenceBook(
   next: ReferenceBook,
   options: { keepHistory: boolean },
 ): ReferenceBook {
+  const candidate = { ...next, id: undefined };
   // 同じ本を選び直しただけなら、読了状態ごと今の本を使い続ける。
-  if (current && bookKey(current) && bookKey(current) === bookKey(next)) {
+  if (current && bookKey(current) && isSameReferenceBook(current, candidate)) {
     const chapters = current.chapters.length > 0 ? current.chapters : next.chapters;
     return { ...current, chapters, active: true };
   }
   let archive = loadReferenceBookArchive();
   if (current && bookKey(current)) {
-    archive = archive.filter((b) => bookKey(b) !== bookKey(current));
+    archive = archive.filter((b) => !isSameReferenceBook(b, current));
     if (options.keepHistory && hasReadingHistory(current)) {
       archive = [{ ...current, active: false }, ...archive];
     }
   }
-  const restored = archive.find((b) => bookKey(b) === bookKey(next));
-  archive = archive.filter((b) => bookKey(b) !== bookKey(next));
+  const restored = archive.find((b) => isSameReferenceBook(b, candidate));
+  archive = archive.filter((b) => !isSameReferenceBook(b, candidate));
   saveReferenceBookArchive(archive);
-  return restored ? { ...restored, active: true } : { ...next, active: true };
+  if (!restored) return { ...next, id: next.id ?? genReferenceBookId(), active: true };
+  // 計画は切替先の本の列（study_plan）で扱うので、本の中には持ち込まない。
+  const { studyPlan: _plan, ...book } = restored;
+  void _plan;
+  return { ...book, id: book.id ?? next.id ?? genReferenceBookId(), active: true };
+}
+
+/**
+ * DB 保存時の book_id を決める（/api/reference-book/save 専用・純粋関数）。
+ *   - 既存行が無い: 送られてきた id（無ければ DB の default に任せる = undefined）
+ *   - 既存行と同じ本: 既存行の id を保つ（端末ごとに別 id を作っても DB 側の id に揃う）
+ *   - 別の本へ切り替えた: 送られてきた id、無ければ新しく作る
+ * 既存行に book_id 列が無い（migration 適用前）ときは undefined（列を送らない）。
+ */
+export function resolveSavedReferenceBookId(
+  existing: { book_id?: string | null; title?: string | null; edition?: string | null } | null,
+  incoming: Pick<ReferenceBook, "id" | "title" | "edition">,
+): string | undefined {
+  if (!existing) return incoming.id;
+  if (!("book_id" in existing) || !existing.book_id) return incoming.id;
+  const stored = { id: undefined, title: existing.title ?? "", edition: existing.edition ?? "" };
+  if (existing.book_id === incoming.id) return existing.book_id;
+  if (isSameReferenceBook(stored, { ...incoming, id: undefined })) return existing.book_id;
+  return incoming.id ?? genReferenceBookId();
 }

@@ -39,6 +39,11 @@ export type UserProfile = {
   holidayMinutes?: number; // 休日の学習可能時間(分)
   weakFields?: TopicField[]; // 苦手分野(3分野から複数可)
   studyStyle?: StudyStyle; // 学習スタイルの希望
+  /**
+   * 新規学習の順番の希望。"book" = 参考書の章・節の順。未設定は従来どおりアプリ順。
+   * 実際に使うモードは lib/studyContext の resolveStudyContext が決める（希望と実効は別）。
+   */
+  studyOrderPreference?: "app" | "book";
 };
 
 // ---------------------------------------------------------------------------
