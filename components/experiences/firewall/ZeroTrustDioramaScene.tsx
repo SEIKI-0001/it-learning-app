@@ -244,11 +244,11 @@ export function ZeroTrustDioramaScene({ mode, reducedMotion }: { mode: TrustMode
             );
           })}
           <DioramaLabel at={{ ...SERVER, x: SERVER.x + 36, y: SERVER.y - 30, z: 124 }} place="above" optional>
-            <NameChip name="社内システム" sub="サーバ" tone="info" />
+            <NameChip name="社内システム" tone="info" />
           </DioramaLabel>
           {zt ? (
             <DioramaLabel at={{ ...CHECK, z: 80 }} place="above" optional>
-              <NameChip name="毎回の確認" sub="認証・認可" tone="ok" />
+              <NameChip name="毎回の確認" tone="ok" />
             </DioramaLabel>
           ) : (
             <DioramaLabel at={{ x: WALL_X, y: 360, z: 46 }} place="above" optional>

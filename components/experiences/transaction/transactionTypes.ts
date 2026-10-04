@@ -25,6 +25,6 @@ export type TransactionSceneProps = {
   /** 巻き戻し中はレールの向きを逆に見せる */
   reverse: boolean;
   money: { spot: MoneySpot; state: MoneyState } | null;
-  alert: { tone: "warn" | "crash" | "ok"; title: string; body: string } | null;
+  alert: { tone: "warn" | "crash" | "ok"; title: string } | null;
   reducedMotion: boolean;
 };

@@ -153,7 +153,7 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
           {alert && (
             <DioramaLabel at={{ ...AT.engine, x: AT.engine.x + 33, z: 150 }} place="above">
               <div role="status" data-testid="tx-alert">
-                <Callout tone={alert.tone === "ok" ? "ok" : "danger"} title={alert.title} body={alert.body} />
+                <Callout tone={alert.tone === "ok" ? "ok" : "danger"} title={alert.title} />
               </div>
             </DioramaLabel>
           )}
@@ -189,11 +189,11 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
 
           <DioramaLabel at={{ ...AT.engine, x: AT.engine.x + 33, z: 124 }} place="above" optional>
             <div data-state={nodes.engine}>
-              <NameChip name="Transaction Engine" sub="勘定系・まとめて確定／取消" tone={crashed ? "danger" : nodes.engine === "idle" ? "muted" : "info"} status={crashed ? "障害" : undefined} />
+              <NameChip name="Transaction Engine" tone={crashed ? "danger" : nodes.engine === "idle" ? "muted" : "info"} status={crashed ? "障害" : undefined} />
             </div>
           </DioramaLabel>
           <DioramaLabel at={{ x: 110, y: 400, z: 0 }} place="below" optional>
-            <NameChip name="あなた" sub="銀行アプリで振込" tone="info" />
+            <NameChip name="あなた" tone="info" />
           </DioramaLabel>
         </>
       }

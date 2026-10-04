@@ -227,7 +227,7 @@ export function ApiDioramaScene({
           {bypass && (
             <DioramaLabel at={{ x: 420, y: 380, z: 0 }} place="below">
               <div role="status" data-testid="bypass-denied">
-                <Callout tone="danger" title="⛔ 内部には直接入れない" verdict="入口は API だけ" />
+                <Callout tone="danger" title="⛔ 入口は API だけ" />
               </div>
             </DioramaLabel>
           )}
@@ -235,23 +235,25 @@ export function ApiDioramaScene({
           {screen && (
             <DioramaLabel at={{ x: PHONE.x - 30, y: PHONE.y, z: 90 }} place="left">
               <div role="status" data-testid="app-screen">
-                <Callout tone={screen.includes("--") ? "muted" : "ok"} title="📱 天気アプリ" body={screen} />
+                <Callout tone={screen.includes("--") ? "muted" : "ok"} body={screen} />
               </div>
             </DioramaLabel>
           )}
 
           <DioramaLabel at={{ x: PHONE.x, y: PHONE.y + 60, z: 0 }} place="below" optional>
-            <NameChip name="天気アプリ" sub="スマホ" status={STATUS[nodes.app]?.word} tone={STATUS[nodes.app]?.tone} />
+            <NameChip name="天気アプリ" status={STATUS[nodes.app]?.word} tone={STATUS[nodes.app]?.tone} />
           </DioramaLabel>
           <DioramaLabel at={{ ...GATE, z: 96 }} place="above" optional>
-            <NameChip name="API Gateway" sub="決まった入口" status={STATUS[nodes.api]?.word} tone={STATUS[nodes.api]?.tone} />
+            <NameChip name="API Gateway" status={STATUS[nodes.api]?.word} tone={STATUS[nodes.api]?.tone} />
           </DioramaLabel>
           <DioramaLabel at={{ ...SVC, x: SVC.x + 36, z: 126 }} place="above" optional>
-            <NameChip name="天気サービス" sub="サーバ" status={STATUS[nodes.svc]?.word} tone={STATUS[nodes.svc]?.tone} />
+            <NameChip name="天気サービス" status={STATUS[nodes.svc]?.word} tone={STATUS[nodes.svc]?.tone} />
           </DioramaLabel>
-          <DioramaLabel at={{ ...DB, y: DB.y + 24, z: 0 }} place="below" optional>
-            <NameChip name="天気DB" sub="内部" tone="muted" />
-          </DioramaLabel>
+          {bypass && (
+            <DioramaLabel at={{ ...DB, y: DB.y + 24, z: 0 }} place="below" optional>
+              <NameChip name="天気DB" tone="muted" />
+            </DioramaLabel>
+          )}
         </>
       }
     />

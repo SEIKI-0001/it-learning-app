@@ -53,7 +53,7 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
         msg: "① A −500 完了。まだ確定していません。次にBへ足します。",
         money: { spot: "engine", state: "pending" },
         lanes: { debit: "active", credit: "idle" }, reverse: false, nodes: n("idle", "active", "idle"),
-        alert: { tone: "warn", title: "⚠ 片方だけ更新された状態", body: "A=500 / B=0。合計が500円減っている" },
+        alert: { tone: "warn", title: "⚠ 片方だけ更新された状態" },
       };
     case "credited":
       return {
@@ -61,14 +61,14 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
         msg: "② B +500 完了。確定（コミット）か、取り消し（ロールバック）を選んでください。",
         money: { spot: "b", state: "pending" },
         lanes: { debit: "idle", credit: "active" }, reverse: false, nodes: n("idle", "active", "active"),
-        alert: { tone: "warn", title: "両方更新・まだ未確定", body: "コミットするまで仮の状態" },
+        alert: { tone: "warn", title: "両方更新・まだ未確定" },
       };
     case "committed":
       return {
         a: START_A - AMOUNT, b: START_B + AMOUNT,
         msg: "✅ コミット：両方の変更を確定しました。振込成立！",
         money: { spot: "b", state: "settled" }, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "idle", "idle"),
-        alert: { tone: "ok", title: "✅ COMMIT", body: "A=500 / B=500 を確定" },
+        alert: { tone: "ok", title: "✅ COMMIT" },
       };
     case "rolledBack":
       return {
@@ -76,7 +76,7 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
         msg: "↩️ ロールバック：開始前の状態に巻き戻しました。お金は消えも増えもしません。",
         money: { spot: "a", state: "returning" },
         lanes: { debit: "active", credit: "active" }, reverse: true, nodes: n("active", "idle", "idle"),
-        alert: { tone: "ok", title: "↩ ROLLBACK", body: "A=1000 / B=0 に戻した" },
+        alert: { tone: "ok", title: "↩ ROLLBACK" },
       };
     case "crashed":
       return {
@@ -86,7 +86,7 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
             ? "⚡ Aから引いた直後にシステム障害！Bにはまだ届いていません。このまま止まると500円が消えてしまいます。"
             : "⚡ コミット前にシステム障害！変更はまだ確定していません。",
         money: { spot: "engine", state: "crashed" }, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "error", "idle"),
-        alert: { tone: "crash", title: "⚡ 障害発生：処理が途中で停止", body: "確定前の変更が残ったまま" },
+        alert: { tone: "crash", title: "⚡ 障害発生：処理が途中で停止" },
       };
     case "recovered":
       return {
@@ -94,7 +94,7 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
         msg: "🔄 再起動時に、確定していなかった変更を自動でロールバック。A=1000 / B=0 に戻り、お金は消えませんでした。",
         money: { spot: "a", state: "returning" },
         lanes: { debit: "active", credit: "idle" }, reverse: true, nodes: n("active", "idle", "idle"),
-        alert: { tone: "ok", title: "🔄 自動ロールバック", body: "全部なし＝開始前に戻った" },
+        alert: { tone: "ok", title: "🔄 自動ロールバック" },
       };
   }
 }

@@ -225,13 +225,11 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
           <DioramaLabel at={{ ...AT.memory, y: AT.memory.y + 20, z: TOP }} place="below" optional>
             <div className={styles.part} data-part-label="memory" data-state={nodes.memory}>
               <b>メモリ</b>＝作業机
-              <span className={styles.partRole}>{on ? "今使うものを広げる" : "電気が無いと保てない"}</span>
             </div>
           </DioramaLabel>
           <DioramaLabel at={{ ...AT.cpu, y: AT.cpu.y + 24, z: TOP }} place="below" optional>
             <div className={styles.part} data-part-label="cpu" data-state={nodes.cpu}>
               <b>CPU</b>＝頭脳
-              <span className={styles.partRole}>計算・処理する</span>
             </div>
           </DioramaLabel>
         </>

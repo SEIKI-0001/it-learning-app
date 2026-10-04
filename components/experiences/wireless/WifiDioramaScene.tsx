@@ -18,7 +18,7 @@ import {
   WallWindow,
   WifiRouter,
 } from "../scene/DioramaParts";
-import { Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3 } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3 } from "../scene/DioramaStage";
 import styles from "./wifidiorama.module.css";
 
 // 無線LAN の図解：駅前カフェの2階（本物の公衆Wi-Fiで盗聴が起きる場面）を CSS 3D で再現する。
@@ -268,14 +268,6 @@ export function WifiDioramaScene({
           )}
 
           {arrived && (
-            <DioramaLabel at={{ ...AP, z: AP.z! + 40 }} place="above">
-              <div data-testid="wifi-ap-result" role="status">
-                <Callout tone="ok" title="✓ アクセスポイントが受信" body={encrypted ? "正しい鍵で復号して、店の回線へ" : "そのまま店の回線へ"} />
-              </div>
-            </DioramaLabel>
-          )}
-
-          {arrived && (
             <DioramaLabel at={{ ...EVE, z: EVE.z! + 60 }} place="above" pinned>
               <div
                 className={styles.eveScreen}
@@ -308,35 +300,17 @@ export function WifiDioramaScene({
             </DioramaLabel>
           )}
 
-          {radio && (
-            <DioramaLabel at={{ x: 500, y: 330, z: 20 }} place="above" optional>
-              <span className={styles.radioChip} data-mode={mode}>
-                📶 電波はガラスも越えて外まで届く
-              </span>
-            </DioramaLabel>
-          )}
-          {!wireless && sending && (
-            <DioramaLabel at={{ ...WIRE[2], z: 12 }} place="right" optional>
-              <span className={styles.radioChip} data-mode="wired">
-                🔌 ケーブルの中だけ
-              </span>
-            </DioramaLabel>
-          )}
-
           <DioramaLabel at={{ x: 130, y: 350, z: 0 }} place="below" optional>
-            <NameChip name="あなた" sub="窓ぎわの席" status={phase === "connect" ? "接続中" : sending ? "送信" : undefined} tone={sending ? "info" : "ok"} />
+            <NameChip name="あなた" status={phase === "connect" ? "接続中" : sending ? "送信" : undefined} tone={sending ? "info" : "ok"} />
           </DioramaLabel>
           <DioramaLabel at={{ ...AP, z: AP.z! + 28 }} place="above" optional>
-            <NameChip name="アクセスポイント" sub="Wi-Fiの親機" />
+            <NameChip name="アクセスポイント" />
           </DioramaLabel>
           {!arrived && (
             <DioramaLabel at={{ x: 646, y: 186, z: 118 }} place="above" optional>
-              <NameChip name="盗聴者" sub="店の外のベンチ" status={radio ? "受信中" : undefined} tone="danger" />
+              <NameChip name="盗聴者" status={radio ? "受信中" : undefined} tone="danger" />
             </DioramaLabel>
           )}
-          <DioramaLabel at={{ x: 650, y: 380, z: 4 }} place="above" optional>
-            <NameChip name="店の外" tone="muted" />
-          </DioramaLabel>
         </>
       }
     />

@@ -19,7 +19,7 @@ import {
   Wall,
   type CarryTone,
 } from "../scene/DioramaParts";
-import { Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip, type TokenSpec } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type TokenSpec } from "../scene/DioramaStage";
 import { hashHex, toyCipher } from "./toyCrypto";
 import styles from "./membersite.module.css";
 
@@ -153,11 +153,6 @@ export function MemberSiteDioramaScene({
       reducedMotion={reducedMotion}
       dataAttrs={{ "data-phase": phase }}
       tokens={tokensFor(phase)}
-      corner={
-        <span className={styles.plate} data-testid="member-plate">
-          🛒 通販サイト「example-shop」
-        </span>
-      }
       world={
         <>
           <Floor x={-10} y={-20} w={840} d={480} h={16} material="concrete" />
@@ -244,7 +239,7 @@ export function MemberSiteDioramaScene({
             </DioramaLabel>
           )}
 
-          {row.addr !== "none" && (
+          {(phase === "store" || phase === "leak") && (
             <DioramaLabel at={up(DB, 70)} place={phase === "leak" ? "left" : "above"} pinned>
               <div className={styles.table} data-testid="member-db-row" data-leaked={phase === "leak" ? "true" : "false"}>
                 <span className={styles.tableTitle}>{phase === "leak" ? "😈 盗まれた会員データベース" : "会員データベース（保存される中身）"}</span>
@@ -256,7 +251,6 @@ export function MemberSiteDioramaScene({
                   <i>パスワード</i>
                   <b data-kind="hash">{PASSWORD_HASH}</b>
                 </span>
-                {phase === "store" && <span className={styles.tableNote}>元の住所・パスワードは、どこにも保存しない</span>}
               </div>
             </DioramaLabel>
           )}
@@ -288,7 +282,7 @@ export function MemberSiteDioramaScene({
           {loggingIn && (
             <DioramaLabel at={up(HASH, 50)} place="left">
               <div className={styles.compare} data-match={match ? "true" : "false"} data-testid="member-compare">
-                <span className={styles.compareTitle}>ログイン：入力をハッシュして比べる</span>
+                <span className={styles.compareTitle}>入力をハッシュして比べる</span>
                 <span className={styles.compareRow}>
                   <i>入力「{loginInput}」</i>
                   <b>{loginHash}</b>
@@ -297,53 +291,37 @@ export function MemberSiteDioramaScene({
                   <i>保存してある値</i>
                   <b>{PASSWORD_HASH}</b>
                 </span>
-                <span className={styles.compareVerdict}>{match ? "✓ 一致 → 本人としてログイン" : "✕ 不一致 → ログインできない"}</span>
+                <span className={styles.compareVerdict}>{match ? "✓ 一致 → ログイン" : "✕ 不一致 → ログインできない"}</span>
               </div>
             </DioramaLabel>
           )}
 
+          {/* 名札は、そのステップで関わる物だけ */}
+          {(phase === "register" || loggingIn) && (
+            <DioramaLabel at={up(PHONE, 10)} place="left" optional>
+              <NameChip name="あなた" tone="info" />
+            </DioramaLabel>
+          )}
+          {phase === "register" && (
+            <DioramaLabel at={up(WEB, 124)} place="above" optional>
+              <NameChip name="Webサーバ" tone="muted" />
+            </DioramaLabel>
+          )}
+          {phase === "ship" && (
+            <DioramaLabel at={up(DB, 60)} place="above" optional>
+              <NameChip name="データベース" tone="muted" />
+            </DioramaLabel>
+          )}
+          {(phase === "store" || phase === "leak") && (
+            <DioramaLabel at={up(SAFE, 0)} place="below" optional>
+              <NameChip name="鍵の金庫" tone="warn" />
+            </DioramaLabel>
+          )}
           {phase === "leak" && (
-            <DioramaLabel at={up(ATTACKER, 120)} place="above" pinned>
-              <div data-testid="member-leak">
-                <Callout
-                  tone="ok"
-                  title="😈 攻撃者の手元"
-                  body="住所は暗号文、パスワードはハッシュ値"
-                  verdict="鍵は金庫の中・ハッシュは戻せない"
-                  role="status"
-                />
-              </div>
+            <DioramaLabel at={up(ATTACKER, 116)} place="above" optional>
+              <NameChip name="攻撃者" tone="danger" />
             </DioramaLabel>
           )}
-
-          <DioramaLabel at={up(PHONE, 10)} place="left" optional>
-            <NameChip name="あなた" sub="スマホで登録" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={up(WEB, 124)} place="above" optional>
-            <NameChip name="Webサーバ" tone="muted" />
-          </DioramaLabel>
-          {phase !== "store" && (
-            <DioramaLabel at={up(ENC, 40)} place="above" optional>
-              <NameChip name="🔑 暗号化" sub="鍵を使う" tone="muted" />
-            </DioramaLabel>
-          )}
-          {phase !== "store" && !loggingIn && (
-            <DioramaLabel at={up(HASH, 0)} place="below" optional>
-              <NameChip name="ハッシュ関数" sub="鍵は使わない" tone="muted" />
-            </DioramaLabel>
-          )}
-          <DioramaLabel at={up(DB, 60)} place="above" optional>
-            <NameChip name="データベース" sub="会員情報" tone={phase === "leak" ? "danger" : "muted"} />
-          </DioramaLabel>
-          <DioramaLabel at={up(SAFE, 0)} place="below" optional>
-            <NameChip name="鍵の金庫" sub="DBとは別に保管" tone="warn" />
-          </DioramaLabel>
-          <DioramaLabel at={up(WAREHOUSE, 0)} place="below" optional>
-            <NameChip name="発送倉庫" tone="muted" />
-          </DioramaLabel>
-          <DioramaLabel at={up(ATTACKER, 116)} place="above" optional>
-            <NameChip name="攻撃者" tone="danger" />
-          </DioramaLabel>
         </>
       }
     />

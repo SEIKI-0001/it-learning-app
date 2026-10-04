@@ -165,7 +165,6 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
                   tone={vpn ? "muted" : "danger"}
                   title="😈 盗聴者の画面"
                   body={vpn ? "9F2C 7A1E 04B8…" : "会議資料.pdf／パスワード"}
-                  verdict={vpn ? "トンネルの中は読めない" : "丸見え"}
                 />
               </div>
             </DioramaLabel>
@@ -180,13 +179,13 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
           )}
 
           <DioramaLabel at={{ x: PC.x, y: PC.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="自宅" sub="リモートワーク" tone="info" />
+            <NameChip name="自宅" tone="info" />
           </DioramaLabel>
           <DioramaLabel at={{ x: 680, y: 30, z: 120 }} place="above" optional>
-            <NameChip name="会社" sub="社内ネットワーク" tone="info" />
+            <NameChip name="会社" tone="info" />
           </DioramaLabel>
           <DioramaLabel at={{ x: 330, y: 170, z: 0 }} place="above" optional>
-            <NameChip name="インターネット" sub="公衆回線" tone="muted" />
+            <NameChip name="インターネット" tone="muted" />
           </DioramaLabel>
         </>
       }

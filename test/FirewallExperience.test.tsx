@@ -93,7 +93,7 @@ describe("FirewallExperience", () => {
     expect(screen.getByTestId("vpn-tunnel")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "📤 会議資料を会社へ送る" }));
     act(() => vi.advanceTimersByTime(300));
-    expect(screen.getByTestId("vpn-eve-screen")).toHaveTextContent("トンネルの中は読めない");
+    expect(screen.getByTestId("vpn-eve-screen")).toHaveTextContent("9F2C 7A1E 04B8");
     expect(screen.getByTestId("vpn-eve-screen")).not.toHaveTextContent("会議資料");
   });
 

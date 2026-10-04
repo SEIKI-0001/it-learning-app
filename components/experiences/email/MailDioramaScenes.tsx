@@ -160,22 +160,22 @@ export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward
           ))}
           <DioramaLabel at={{ ...ROUTE_AT.you, y: ROUTE_AT.you.y + 74 }} place="below" optional>
             <div data-node-label="you">
-              <NameChip name="あなた" sub="送る人・自宅" tone="info" />
+              <NameChip name="あなた" tone="info" />
             </div>
           </DioramaLabel>
           <DioramaLabel at={{ ...ROUTE_AT.smtp, z: 110 }} place="above" optional>
             <div data-node-label="smtp">
-              <NameChip name="送信サーバ" sub="SMTPサーバ" tone="muted" />
+              <NameChip name="送信サーバ" tone="muted" />
             </div>
           </DioramaLabel>
           <DioramaLabel at={{ ...ROUTE_AT.mailbox, z: 110 }} place="above" optional>
             <div data-node-label="mailbox">
-              <NameChip name="相手のサーバ" sub={`受信箱${inMailbox ? "：✉ 1通" : ""}`} tone="muted" />
+              <NameChip name="相手のサーバ" status={inMailbox ? "✉ 1通" : undefined} tone="muted" />
             </div>
           </DioramaLabel>
           <DioramaLabel at={{ ...ROUTE_AT.friend, y: ROUTE_AT.friend.y + 74 }} place="below" optional>
             <div data-node-label="friend">
-              <NameChip name="相手" sub="受け取る人・会社" tone="info" />
+              <NameChip name="相手" tone="info" />
             </div>
           </DioramaLabel>
         </>

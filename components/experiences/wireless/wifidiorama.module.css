@@ -354,30 +354,6 @@
   background: #16a37a;
 }
 
-.radioChip {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #fff1f3;
-  box-shadow: 0 0 0 1px #fecdd6;
-  color: #be123c;
-  font-size: 10px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.radioChip[data-mode="wpa"] {
-  background: #ecfdf5;
-  box-shadow: 0 0 0 1px #a7f3d0;
-  color: #047857;
-}
-
-.radioChip[data-mode="wired"] {
-  background: #f3f4f6;
-  box-shadow: 0 0 0 1px #d1d5db;
-  color: #374151;
-}
-
 @keyframes wifi-pop {
   from {
     opacity: 0;

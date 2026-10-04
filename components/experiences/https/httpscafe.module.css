@@ -511,24 +511,6 @@
   animation-delay: 1.6s;
 }
 
-.radioChip {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #fff1f3;
-  box-shadow: 0 0 0 1px #fecdd6;
-  color: #be123c;
-  font-size: 10px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.radioChip[data-mode="https"] {
-  background: #ecfdf5;
-  box-shadow: 0 0 0 1px #a7f3d0;
-  color: #047857;
-}
-
 /* ---------- F：拡大画面と、3D の機器をつなぐ光 ---------- */
 
 .beamLayer {
