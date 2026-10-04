@@ -98,7 +98,7 @@ export default async function LoginPage({
               で、Webを直接開いても同じ続きから使えます（学習履歴・復習・単語帳・AI採点 Pro を引き継ぎ）。
             </li>
             <li>
-              ③ LINEで始めた方も、あとから Google ログインすれば同じアカウントに紐づきます。
+              ③ LINEで始めた方は、Google ログイン後に「設定」の連携コードで LINE の学習記録とまとめられます。
             </li>
           </ul>
           <a href="/lp" className="mt-3 inline-block font-medium text-brand-700 underline underline-offset-2">
