@@ -33,6 +33,7 @@ import { saveAppState } from "@/lib/storage";
 import { getUserId, saveProfileToDb } from "@/lib/userSession";
 import type { AppState } from "@/types";
 import StudyOrderCard from "@/components/reference/StudyOrderCard";
+import { shareReferenceBookChoice } from "@/lib/referenceBookCatalogClient";
 import { bookOrderFlag } from "@/lib/bookOrderFlag";
 import TopicPicker from "@/components/reference/TopicPicker";
 import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
@@ -119,6 +120,7 @@ function ReferenceBookSettings({
     if (!chosen || isSameAsCurrent) return;
     if (isChapterUpdate) {
       commit({ ...book, chapters: chosen.chapters, active: true });
+      shareReferenceBookChoice(choice, { ...book, chapters: chosen.chapters });
       setChoice({ kind: "other", title: book.title });
       setNotice(`「${book.title}」の章立てを${chosen.chapters.length}章で登録しました`);
       return;
@@ -134,6 +136,7 @@ function ReferenceBookSettings({
   function finishSwitch(next: ReferenceBook, keepHistory: boolean) {
     const switched = switchReferenceBook(hasBook ? book : null, next, { keepHistory });
     commit(switched);
+    shareReferenceBookChoice(choice, switched);
     setChoice(choiceForBook(switched));
     setPendingSwitch(null);
     setNotice(`「${switched.title}」に切り替えました`);
