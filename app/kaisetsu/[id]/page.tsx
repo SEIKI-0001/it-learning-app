@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
+import ShareOnX from "@/components/growth/ShareOnX";
 import KakomonList from "@/components/guide/KakomonList";
 import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { CHOICE_LABELS } from "@/lib/pastExam/questionView";
@@ -213,6 +214,16 @@ export default async function KaisetsuTopicPage({ params }: Props) {
           </ul>
         </section>
       )}
+
+      <p className="g-share">
+        <ShareOnX
+          className="g-share-btn"
+          text={`ITパスポートの「${t.title}」、図解でまとまっていて分かりやすい解説`}
+          path={kaisetsuPath(t.id)}
+          campaign="kaisetsu_share"
+          label="この解説をXでシェア"
+        />
+      </p>
 
       <GuideCTA
         title="このテーマをアプリで学ぶ"

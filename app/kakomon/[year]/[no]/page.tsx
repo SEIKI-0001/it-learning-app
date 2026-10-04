@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import QuestionFigures from "@/components/questions/QuestionFigures";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
+import ShareOnX from "@/components/growth/ShareOnX";
 import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { CHOICE_LABELS } from "@/lib/pastExam/questionView";
 import {
@@ -122,6 +123,16 @@ export default async function KakomonQuestionPage({ params }: Props) {
           )}
         </div>
       </section>
+
+      <p className="g-share">
+        <ShareOnX
+          className="g-share-btn"
+          text={`${yearLabel} ITパスポート 問${view.questionNumber}。分かりますか？（正解と解説つき）`}
+          path={q.path}
+          campaign="kakomon_share"
+          label="この問題をXで出題する"
+        />
+      </p>
 
       <nav className="k-pager" aria-label="前後の問題">
         {prev && <a href={prev.path}>← 問{prev.view.questionNumber}</a>}

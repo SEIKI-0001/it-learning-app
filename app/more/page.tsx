@@ -5,6 +5,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import LogoutLink from "@/components/auth/LogoutLink";
 import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
+import OpinionBox from "@/components/opinions/OpinionBox";
 import FirstRunGuide from "@/components/guide/FirstRunGuide";
 import { FIRST_RUN_GUIDE_HREF, pageGuideHref } from "@/lib/firstRunGuide";
 
@@ -111,6 +112,11 @@ export default function MorePage() {
             </div>
           </section>
         ))}
+
+        <section data-guide="more-opinions">
+          <h2 className="mb-2 text-xs font-semibold text-gray-500">意見箱</h2>
+          <OpinionBox />
+        </section>
 
         <FloatingMochitVisibilityControl restoreOnly />
 
