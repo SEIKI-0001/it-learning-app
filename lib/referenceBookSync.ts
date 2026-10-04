@@ -1,11 +1,15 @@
 "use client";
 
-import type { ReferenceBook } from "@/types/referenceBook";
+import type { ReferenceBook, ReferenceBookArchiveEntry } from "@/types/referenceBook";
 import {
+  isSameReferenceBook,
   loadReferenceBook,
+  loadReferenceBookArchive,
+  mergeReferenceBookArchives,
   normalizeReferenceBook,
   pickNewerReferenceBook,
   saveReferenceBook,
+  saveReferenceBookArchive,
 } from "@/lib/referenceBook";
 import { refreshPresetMappings } from "@/lib/referenceBookPresets";
 import { getUserId } from "@/lib/userSession";
@@ -14,10 +18,15 @@ import { getUserId } from "@/lib/userSession";
 // localStorage が主。ここは fire-and-forget の保存＋別端末向けの読み込み。
 // 単語帳（word-progress）と同じ設計。Supabase 未設定でも UI は localStorage で動く。
 
-/** DB から参考書を取得（無ければ null）。userId が無ければ呼ばない。 */
+type DbReferenceBookState = {
+  book: ReferenceBook | null;
+  archive: ReferenceBookArchiveEntry[];
+};
+
+/** DB から参考書と切替履歴を取得（取れなければ null）。userId が無ければ呼ばない。 */
 export async function loadReferenceBookFromDb(
   userId: string,
-): Promise<ReferenceBook | null> {
+): Promise<DbReferenceBookState | null> {
   try {
     const res = await fetch("/api/reference-book/get", {
       method: "POST",
@@ -28,14 +37,28 @@ export async function loadReferenceBookFromDb(
     const data = (await res.json()) as {
       ok: boolean;
       book?: ReferenceBook | null;
+      archive?: ReferenceBookArchiveEntry[];
     };
-    return data.ok ? (data.book ?? null) : null;
+    if (!data.ok) return null;
+    return { book: data.book ?? null, archive: Array.isArray(data.archive) ? data.archive : [] };
   } catch {
     return null;
   }
 }
 
-/** DB へ参考書を保存（fire-and-forget。失敗しても UI は止めない）。 */
+/**
+ * DB が決めた本の永続 id を端末の本に写す（同じ本のときだけ）。
+ * 同じ本を端末ごとに別 id で作っても、DB 側の id に揃う。
+ */
+function adoptSavedBookId(saved: ReferenceBook, bookId: string): void {
+  const local = loadReferenceBook();
+  if (!local || local.id === bookId) return;
+  if (local.id && local.id !== saved.id) return; // 保存後に別の本へ切り替えた
+  if (!isSameReferenceBook({ ...local, id: undefined }, { ...saved, id: undefined })) return;
+  saveReferenceBook({ ...local, id: bookId }, { touch: false });
+}
+
+/** DB へ参考書（＋端末の切替履歴）を保存（fire-and-forget。失敗しても UI は止めない）。 */
 export function saveReferenceBookToDb(
   userId: string,
   book: ReferenceBook,
@@ -43,10 +66,16 @@ export function saveReferenceBookToDb(
   void fetch("/api/reference-book/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, book }),
-  }).catch(() => {
-    /* fire-and-forget */
-  });
+    body: JSON.stringify({ userId, book, archive: loadReferenceBookArchive() }),
+  })
+    .then(async (res) => {
+      if (!res.ok) return;
+      const data = (await res.json()) as { ok?: boolean; bookId?: string };
+      if (data.ok && data.bookId) adoptSavedBookId(book, data.bookId);
+    })
+    .catch(() => {
+      /* fire-and-forget */
+    });
 }
 
 /**
@@ -75,15 +104,32 @@ export async function loadReferenceBookSynced(): Promise<ReferenceBook | null> {
 }
 
 async function pickSyncedReferenceBook(): Promise<ReferenceBook | null> {
-  const local = loadReferenceBook();
+  let local = loadReferenceBook();
   const userId = getUserId();
   if (!userId) return local;
   const fetched = await loadReferenceBookFromDb(userId);
-  const remote = fetched ? normalizeReferenceBook(fetched) : null;
+  const remote = fetched?.book ? normalizeReferenceBook(fetched.book) : null;
+
+  // 切替履歴: 端末と DB を合わせる（DB 版を取得できたときだけ）。
+  let archiveChanged = false;
+  if (fetched) {
+    const localArchive = loadReferenceBookArchive();
+    const merged = mergeReferenceBookArchives(localArchive, fetched.archive);
+    saveReferenceBookArchive(merged);
+    archiveChanged = JSON.stringify(merged) !== JSON.stringify(fetched.archive);
+  }
+
+  // 旧データ（id 無し）の端末の本は、同じ本なら DB の id を受け取る。
+  if (local && remote?.id && local.id !== remote.id && isSameReferenceBook({ ...local, id: undefined }, remote)) {
+    local = { ...local, id: remote.id };
+    saveReferenceBook(local, { touch: false });
+  }
+
   const picked = pickNewerReferenceBook(local, remote);
   if (remote && picked === remote) {
     saveReferenceBook(remote, { touch: false });
-  } else if (remote && local && picked === local) {
+    if (archiveChanged) saveReferenceBookToDb(userId, remote);
+  } else if (local && picked === local && (remote || archiveChanged)) {
     saveReferenceBookToDb(userId, local);
   }
   return picked;

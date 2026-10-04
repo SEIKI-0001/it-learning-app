@@ -9,7 +9,13 @@ import type {
 import type { TopicField } from "@/types/content";
 import type { CheckpointProgress } from "@/types/checkpoint";
 import { calculateLevel } from "@/lib/game";
-import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
+import type {
+  ReferenceBook,
+  ReferenceBookArchiveEntry,
+  ReferenceBookSource,
+  ReferenceChapter,
+  ReferenceStudyPlan,
+} from "@/types/referenceBook";
 // 型のみ import（"use client" のランタイムは取り込まれない＝サーバーから安全に参照できる）。
 import type { WordProgress } from "@/lib/wordlistProgress";
 import type {
@@ -76,6 +82,7 @@ export type ProfileRow = {
   holiday_minutes: number | null;
   weak_fields: string[] | null;
   study_style: string | null;
+  study_order_preference?: string | null;
 };
 
 export function progressRowToProgress(row: ProgressRow): UserProgress {
@@ -133,6 +140,9 @@ export function profileRowToProfile(row: ProfileRow): UserProfile {
     holidayMinutes: row.holiday_minutes ?? undefined,
     weakFields: (row.weak_fields ?? undefined) as TopicField[] | undefined,
     studyStyle: (row.study_style ?? undefined) as StudyStyle | undefined,
+    ...(row.study_order_preference === "app" || row.study_order_preference === "book"
+      ? { studyOrderPreference: row.study_order_preference }
+      : {}),
   };
 }
 
@@ -152,6 +162,9 @@ export function profileToRow(
     holiday_minutes: p.holidayMinutes ?? null,
     weak_fields: p.weakFields ?? null,
     study_style: p.studyStyle ?? null,
+    // 列は migration 20261004120000 で追加。値があるときだけ送る（適用前の環境でも保存が壊れない）。
+    // 希望を戻すときは null ではなく "app" を保存する。
+    ...(p.studyOrderPreference ? { study_order_preference: p.studyOrderPreference } : {}),
     updated_at: new Date().toISOString(),
   };
 }
@@ -227,10 +240,23 @@ export type ReferenceBookRow = {
   chapters: ReferenceChapter[] | null;
   created_at?: string | null;
   updated_at?: string | null;
+  // 以下は migration 20261004120000 で追加（適用前の環境では列が無い）
+  book_id?: string | null;
+  source?: ReferenceBookSource | null;
+  study_plan?: ReferenceStudyPlan | null;
+  archived_books?: ReferenceBookArchiveEntry[] | null;
 };
+
+function isBookSource(value: unknown): value is ReferenceBookSource {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (v.kind === "preset" || v.kind === "catalog") && typeof v.id === "string" && v.id !== "";
+}
 
 export function referenceBookRowToBook(row: ReferenceBookRow): ReferenceBook {
   return {
+    ...(row.book_id ? { id: row.book_id } : {}),
+    ...(isBookSource(row.source) ? { source: { kind: row.source.kind, id: row.source.id } } : {}),
     title: row.title ?? "",
     publisher: row.publisher ?? "",
     edition: row.edition ?? "",
@@ -241,12 +267,18 @@ export function referenceBookRowToBook(row: ReferenceBookRow): ReferenceBook {
   };
 }
 
+/**
+ * 参考書の行を作る。book_id・source は値があるときだけ入れる
+ * （book_id の最終決定は /api/reference-book/save が行い、ここへ渡す）。
+ */
 export function referenceBookToRow(
   userId: string,
   b: ReferenceBook,
 ): ReferenceBookRow & { updated_at: string } {
   return {
     user_id: userId,
+    ...(b.id ? { book_id: b.id } : {}),
+    ...(b.source ? { source: b.source } : {}),
     title: b.title || null,
     publisher: b.publisher || null,
     edition: b.edition || null,
