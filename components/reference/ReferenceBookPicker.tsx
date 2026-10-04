@@ -8,9 +8,11 @@ import {
   type ReferenceBookPresetSummary,
 } from "@/lib/referenceBookPresets";
 import Icon from "@/components/ui/Icon";
+import TocImageImport from "@/components/reference/TocImageImport";
+import { chaptersFromToc } from "@/lib/referenceToc";
 
 // 使用する参考書の選択（オンボーディングと参考書設定で共用）。
-// 登録済みプリセット → その他の参考書（書名だけ）→ あとで設定する、の順に並べる。
+// 登録済みプリセット → その他の参考書（書名＋目次のスクショ読み取り）→ あとで設定する、の順に並べる。
 // ここは選ぶだけ。保存は呼び出し側が referenceBookFromChoice で作って行う。
 
 const OPTION_BASE =
@@ -40,6 +42,7 @@ export default function ReferenceBookPicker({
     {},
   );
   const otherTitle = value.kind === "other" ? value.title : "";
+  const otherChapters = value.kind === "other" ? value.chapters : undefined;
   // 「その他」に打った書名が登録済みの本なら、そちらを選べるように提案する。
   const suggestion =
     value.kind === "other" ? suggestPresetForText(otherTitle) : null;
@@ -89,7 +92,7 @@ export default function ReferenceBookPicker({
           type="button"
           role="radio"
           aria-checked={value.kind === "other"}
-          onClick={() => onChange({ kind: "other", title: otherTitle })}
+          onClick={() => onChange({ kind: "other", title: otherTitle, chapters: otherChapters })}
           className={`${OPTION_BASE} ${value.kind === "other" ? OPTION_ON : OPTION_OFF}`}
         >
           <span className={`text-sm ${value.kind === "other" ? "font-semibold text-brand-800" : "text-gray-800"}`}>
@@ -106,12 +109,14 @@ export default function ReferenceBookPicker({
               <input
                 type="text"
                 value={otherTitle}
-                onChange={(e) => onChange({ kind: "other", title: e.target.value })}
+                onChange={(e) =>
+                  onChange({ kind: "other", title: e.target.value, chapters: otherChapters })
+                }
                 placeholder="例: いちばんやさしいITパスポート"
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               />
             </label>
-            {suggestion ? (
+            {suggestion && (
               <button
                 type="button"
                 onClick={() => onChange({ kind: "preset", presetId: suggestion.id })}
@@ -119,11 +124,39 @@ export default function ReferenceBookPicker({
               >
                 「{suggestion.title}」なら章立てが登録済みです。こちらを選ぶ
               </button>
-            ) : (
-              <p className="mt-2 text-xs text-gray-500">
-                章立てはあとから設定画面で登録できます。登録するまでは、各レッスンの「探すキーワード」で案内します。
-              </p>
             )}
+            <div className="mt-3">
+              {otherChapters && otherChapters.length > 0 ? (
+                <div className="flex items-start justify-between gap-2 rounded-lg bg-brand-50 px-3 py-2.5">
+                  <p className="text-xs text-brand-800">
+                    目次から{otherChapters.length}章の章立てを読み取りました。
+                    {!otherTitle.trim() && "参考書名を入れると登録できます。"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ kind: "other", title: otherTitle })}
+                    className="shrink-0 text-xs text-gray-600 underline underline-offset-2"
+                  >
+                    取り消す
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <TocImageImport
+                    onUse={(toc) =>
+                      onChange({
+                        kind: "other",
+                        title: otherTitle.trim() || toc.bookTitle || "",
+                        chapters: chaptersFromToc(toc),
+                      })
+                    }
+                  />
+                  <p className="mt-2 text-xs text-gray-500">
+                    読み取らなくても登録できます。章立てはあとから設定画面でも登録でき、それまでは各レッスンの「探すキーワード」で案内します。
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         )}
 

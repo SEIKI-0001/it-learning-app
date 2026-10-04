@@ -42,6 +42,7 @@ export type IconName =
   | "trash" // 削除
   | "file-text" // 過去問・書類
   | "play" // 動画
+  | "camera" // 撮影・画像から読み取る
   // ---- /learn テーマ識別アイコン(lib/themeIcons.ts で18テーマに割当) ----
   | "building" // 企業活動
   | "scale" // 法務・標準化
@@ -345,6 +346,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <circle cx="12" cy="12" r="9" />
       <path d="M10 8.8v6.4l5.2-3.2z" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="13" r="3.5" />
     </>
   ),
 };

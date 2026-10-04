@@ -30,6 +30,8 @@ import {
 import { useReferenceBook } from "@/lib/useReferenceBook";
 import TopicPicker from "@/components/reference/TopicPicker";
 import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
+import TocImageImport from "@/components/reference/TocImageImport";
+import { chaptersFromToc } from "@/lib/referenceToc";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 import PageHeader from "@/components/ui/PageHeader";
@@ -73,11 +75,20 @@ function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
 
   // --- 参考書の変更 ---
   const chosen = referenceBookFromChoice(choice);
-  const isSameAsCurrent =
+  const isCurrentTitle =
     chosen !== null && hasBook && chosen.title.trim() === book.title.trim();
+  // 使用中の本に、目次から読み取った章立てを入れ直す（書名はそのまま）。
+  const isChapterUpdate = isCurrentTitle && chosen.chapters.length > 0;
+  const isSameAsCurrent = isCurrentTitle && !isChapterUpdate;
 
   function applyChoice() {
     if (!chosen || isSameAsCurrent) return;
+    if (isChapterUpdate) {
+      commit({ ...book, chapters: chosen.chapters, active: true });
+      setChoice({ kind: "other", title: book.title });
+      setNotice(`「${book.title}」の章立てを${chosen.chapters.length}章で登録しました`);
+      return;
+    }
     // 読了履歴がある本から切り替えるときは、履歴をどうするか確かめる。
     if (hasBook && hasReadingHistory(book)) {
       setPendingSwitch(chosen);
@@ -133,7 +144,7 @@ function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
                   </>
                 ) : (
                   <p className="mt-1 text-xs text-gray-600">
-                    章立てが未登録です。下の「詳細設定」で目次を貼り付けると登録できます。
+                    章立てが未登録です。下の「その他の参考書」で目次のスクショを読み取ると登録できます。
                   </p>
                 )}
               </>
@@ -203,8 +214,19 @@ function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
               disabled={!chosen || isSameAsCurrent}
               className={buttonClass("primary", "md", "mt-4 w-full")}
             >
-              {isSameAsCurrent ? "使用中の参考書です" : "この参考書を使う"}
+              {isSameAsCurrent
+                ? "使用中の参考書です"
+                : isChapterUpdate
+                  ? book.chapters.length > 0
+                    ? "読み取った章立てに置き換える"
+                    : "読み取った章立てを登録する"
+                  : "この参考書を使う"}
             </button>
+          )}
+          {!pendingSwitch && isChapterUpdate && hasReadingHistory(book) && (
+            <p className="mt-2 text-xs text-gray-600">
+              置き換えると、今の章立てで付けた読了記録はリセットされます。
+            </p>
           )}
         </section>
 
@@ -443,6 +465,12 @@ function AdvancedEditor({
           />
         </Field>
       </div>
+
+      {/* 目次のスクショ読み取り */}
+      <TocImageImport
+        useLabel="読み取った章を追加"
+        onUse={(toc) => update({ ...book, chapters: [...book.chapters, ...chaptersFromToc(toc)] })}
+      />
 
       {/* 目次テキスト貼り付け */}
       <div className="rounded-lg bg-gray-50 p-4">

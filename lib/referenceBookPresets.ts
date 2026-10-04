@@ -1,4 +1,4 @@
-import type { ReferenceBook } from "@/types/referenceBook";
+import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
 import { createEmptyReferenceBook, normalizeReferenceBook } from "@/lib/referenceBook";
 import presetData from "@/itpass_reference_book.json";
 
@@ -131,13 +131,14 @@ export function suggestPresetForText(
 /** 参考書の選び方（オンボーディング・設定画面で共通）。 */
 export type ReferenceBookChoice =
   | { kind: "preset"; presetId: string }
-  | { kind: "other"; title: string }
+  // chapters: 目次のスクショから読み取った章立て（読み取っていなければ省略）
+  | { kind: "other"; title: string; chapters?: ReferenceChapter[] }
   | { kind: "later" };
 
 /**
  * 選択から保存する参考書を作る。「あとで」や空欄の「その他」は null（保存しない）。
- * 「その他」は書名だけ登録し、章立ては設定画面で登録してもらう
- * （未登録のあいだは Topic.referenceHints のキーワード案内で学習できる）。
+ * 「その他」は書名と、目次のスクショから読み取った章立て（あれば）を登録する。
+ * 章立てが無ければ設定画面で登録してもらう（未登録のあいだは Topic.referenceHints のキーワード案内で学習できる）。
  */
 export function referenceBookFromChoice(
   choice: ReferenceBookChoice,
@@ -146,7 +147,7 @@ export function referenceBookFromChoice(
   if (choice.kind === "other") {
     const title = choice.title.trim();
     if (!title) return null;
-    return { ...createEmptyReferenceBook(), title };
+    return { ...createEmptyReferenceBook(), title, chapters: choice.chapters ?? [] };
   }
   return null;
 }
