@@ -1,5 +1,9 @@
 import type { ReferenceBook, ReferenceChapter } from "@/types/referenceBook";
-import { createEmptyReferenceBook, normalizeReferenceBook } from "@/lib/referenceBook";
+import {
+  createEmptyReferenceBook,
+  genReferenceBookId,
+  normalizeReferenceBook,
+} from "@/lib/referenceBook";
 import presetData from "@/itpass_reference_book.json";
 
 // ============================================================================
@@ -80,6 +84,8 @@ export function referenceBookFromPreset(id: string): ReferenceBook | null {
   const copy = JSON.parse(JSON.stringify(entry.book)) as ReferenceBook;
   return normalizeReferenceBook({
     ...copy,
+    id: genReferenceBookId(),
+    source: { kind: "preset", id: entry.id },
     active: true,
     updatedAt: new Date().toISOString(),
   });
@@ -155,13 +161,17 @@ export function referenceBookFromChoice(
 /**
  * プリセットから作った参考書に、プリセット側で増えたトピックの紐づけと節を取り込む。
  * 登録済みユーザーの本は登録時点のコピーなので、プリセットの紐づけを拡充しても
- * そのままでは反映されない。書名が一致するプリセットの章・節 id を手がかりに、
+ * そのままでは反映されない。作成元（source）か書名が一致するプリセットの章・節 id を手がかりに、
  *   - 既存の章・節には topicIds を足す（ユーザーが付けた紐づけは消さない）
  *   - プリセットにあって手元に無い節は、その章の末尾に足す（未読として）
  * 読了状態・タイトル・並び順などユーザーの編集には触れない。変化が無ければ同じ参照を返す。
  */
 export function refreshPresetMappings(book: ReferenceBook): ReferenceBook {
-  const entry = presets.find((p) => p.book.title === book.title);
+  // 作成元のプリセットが分かればそれを、旧データは書名の完全一致で探す。
+  const entry =
+    book.source?.kind === "preset"
+      ? presets.find((p) => p.id === book.source?.id)
+      : presets.find((p) => p.book.title === book.title);
   if (!entry) return book;
   let changed = false;
   const merge = (current: string[] | undefined, extra: string[] | undefined) => {
