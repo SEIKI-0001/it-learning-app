@@ -10,7 +10,8 @@ type Listing={records:JournalRecord[];months:string[];unread:{id:string;month:st
 const filters:[JournalType|'all',string][]=[['all','すべて'],['daily','日次の記録'],['weekly','週次の振り返り'],['checkpoint','節目']];
 function monthNow(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
 export default function JournalPage(){
-  const [month,setMonth]=useState(monthNow),[type,setType]=useState<JournalType|'all'>('all');
+  // 「今月」は閲覧者の端末の時刻で決める。サーバー描画（UTC）で決めると月初0〜9時(JST)に月がずれ、ハイドレーションが食い違う。
+  const [month,setMonth]=useState(''),[type,setType]=useState<JournalType|'all'>('all');
   const [listing,setListing]=useState<Listing|null>(null),[error,setError]=useState(''),[syncError,setSyncError]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);
   const sync=useCallback(async(signal?:AbortSignal)=>{
     return fetch('/api/journal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({timezone:Intl.DateTimeFormat().resolvedOptions().timeZone}),signal}).then(async response=>{
@@ -19,7 +20,10 @@ export default function JournalPage(){
     }).catch(e=>{if(!signal?.aborted)setSyncError(e instanceof Error?e.message:'記録の保存に失敗しました。');});
   },[]);
   useEffect(()=>{const controller=new AbortController();void sync(controller.signal);return()=>controller.abort();},[sync]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- 端末の時刻はマウント後にしか読めない
+  useEffect(()=>{setMonth(monthNow());},[]);
   useEffect(()=>{
+    if(!month)return;
     const controller=new AbortController();
     fetch(`/api/journal?month=${month}&type=${type}`,{signal:controller.signal}).then(async res=>{if(!res.ok)throw new Error(res.status===401?'記録を見るにはログインしてください。':'記録を読み込めませんでした。時間をおいて再試行してください。');return res.json();}).then((data:Listing)=>{setListing(data);setError('');setLoading(false);}).catch(e=>{if(!controller.signal.aborted){setError(e.message);setLoading(false);}});
     return()=>controller.abort();
@@ -27,7 +31,7 @@ export default function JournalPage(){
   const changeMonth=(value:string)=>{setMonth(value);setLoading(true);};
   return <main className={styles.page}><div className={styles.frame}>
     <header className={styles.header}><Icon name="compass" className={styles.compass}/><div className={styles.headingRow}><h1>学習の記録</h1><p className={styles.english}>LEARNING<br/>JOURNAL</p></div><div className={styles.flourish} aria-hidden>◇ ✧ ◇</div><p className={styles.subtitle}>積み重ねた学びを、あとから何度でも振り返れます。</p></header>
-    <div className={styles.controls}><label className={styles.month}><span className="sr-only">表示する月</span><select value={month} onChange={e=>changeMonth(e.target.value)}>{(listing?.months??[month]).map(m=><option key={m} value={m}>{Number(m.slice(0,4))}年{Number(m.slice(5))}月</option>)}</select></label><div className={styles.filters} role="group" aria-label="記録の種類">{filters.map(([value,label])=><button key={value} aria-pressed={type===value} onClick={()=>{if(type!==value){setType(value);setLoading(true);}}}>{label}</button>)}</div></div>
+    <div className={styles.controls}><label className={styles.month}><span className="sr-only">表示する月</span><select value={month} onChange={e=>changeMonth(e.target.value)}>{(listing?.months??(month?[month]:[])).map(m=><option key={m} value={m}>{Number(m.slice(0,4))}年{Number(m.slice(5))}月</option>)}</select></label><div className={styles.filters} role="group" aria-label="記録の種類">{filters.map(([value,label])=><button key={value} aria-pressed={type===value} onClick={()=>{if(type!==value){setType(value);setLoading(true);}}}>{label}</button>)}</div></div>
     {listing?.unread&&listing.unread.month!==month&&<p className={styles.notice}>新しい振り返りが届いています。<br/><Link className={styles.textLink} href={`/journal/${listing.unread.id}`}>レポートを見る →</Link></p>}
     {syncError&&<p className={styles.notice} role="status">{syncError} <button className={styles.textLink} onClick={()=>void sync()}>更新する</button></p>}
     {error?<p role="alert" className={styles.notice}>{error} <button className={styles.textLink} onClick={()=>setRevision(n=>n+1)}>再試行</button> <Link href="/login" className={styles.textLink}>ログイン</Link></p>:loading?<p className={styles.empty} role="status">記録をひらいています…</p>:listing?.records.length?<JournalTimeline records={listing.records}/>:<div className={styles.empty}><Icon name="book-open"/><p>{type==='all'?'この月には、まだ記録がありません。':'この月に、選択した種類の記録はありません。'}</p><p>学んだ日々の歩みを、ここに残していきます。</p><Link href="/today" className={styles.textLink}>今日の学習へ</Link></div>}
