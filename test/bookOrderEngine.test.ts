@@ -101,13 +101,16 @@ describe("today queue in book mode", () => {
   });
 
   it("brings important supplements forward once the safety deadline has passed", () => {
-    const supplement = kitami.supplementTopicIds[0];
-    expect(topics.find((t) => t.id === supplement)!.importance).toBe(3);
+    const importantSupplements = new Set(
+      kitami.supplementTopicIds.filter((id) => topics.find((t) => t.id === id)!.importance >= 3),
+    );
+    expect(importantSupplements.size).toBeGreaterThan(0);
     const p = progress();
     const before = buildTodaysLearningQueue({ progress: p, topics, state: state(p), now: NOW, book: { order: kitami, supplementDeadline: "2026-10-05" } });
-    expect(newTopicIds(before)[0]).not.toBe(supplement);
+    expect(importantSupplements.has(newTopicIds(before)[0])).toBe(false);
     const after = buildTodaysLearningQueue({ progress: p, topics, state: state(p), now: NOW, book: { order: kitami, supplementDeadline: "2026-10-04" } });
-    expect(newTopicIds(after)[0]).toBe(supplement);
+    const firstNew = newTopicIds(after).slice(0, importantSupplements.size);
+    expect(new Set(firstNew)).toEqual(importantSupplements);
   });
 });
 

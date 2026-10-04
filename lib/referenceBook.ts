@@ -75,7 +75,13 @@ export function normalizeReferenceBook(book: ReferenceBook): ReferenceBook {
   return {
     ...(book.id ? { id: book.id } : {}),
     ...(book.source?.id && (book.source.kind === "preset" || book.source.kind === "catalog")
-      ? { source: { kind: book.source.kind, id: book.source.id } }
+      ? {
+          source: {
+            kind: book.source.kind,
+            id: book.source.id,
+            ...(typeof book.source.version === "number" ? { version: book.source.version } : {}),
+          },
+        }
       : {}),
     title: book.title ?? "",
     publisher: book.publisher ?? "",

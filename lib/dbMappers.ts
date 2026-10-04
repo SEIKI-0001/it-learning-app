@@ -256,7 +256,15 @@ function isBookSource(value: unknown): value is ReferenceBookSource {
 export function referenceBookRowToBook(row: ReferenceBookRow): ReferenceBook {
   return {
     ...(row.book_id ? { id: row.book_id } : {}),
-    ...(isBookSource(row.source) ? { source: { kind: row.source.kind, id: row.source.id } } : {}),
+    ...(isBookSource(row.source)
+      ? {
+          source: {
+            kind: row.source.kind,
+            id: row.source.id,
+            ...(typeof row.source.version === "number" ? { version: row.source.version } : {}),
+          },
+        }
+      : {}),
     title: row.title ?? "",
     publisher: row.publisher ?? "",
     edition: row.edition ?? "",

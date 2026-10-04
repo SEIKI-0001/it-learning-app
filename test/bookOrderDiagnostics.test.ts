@@ -40,7 +40,7 @@ describe("diagnoseBookOrder", () => {
     expect(d.quality?.eligible).toBe(true);
     expect(d.nextBook).toHaveLength(5);
     expect(d.nextApp?.length).toBeGreaterThan(0);
-    expect(d.currentUnitLabel).toContain("Chapter 1");
+    expect(d.currentUnitLabel).toContain("Chapter1");
     expect(d.units?.maxTopicsPerUnit).toBeGreaterThan(0);
   });
 

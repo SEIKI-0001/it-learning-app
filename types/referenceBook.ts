@@ -35,6 +35,11 @@ export type ReferenceChapter = {
 export type ReferenceBookSource = {
   kind: "preset" | "catalog";
   id: string;
+  /**
+   * 作成元プリセットの構造の版（itpass_reference_book.json の structureVersion）。
+   * 旧い版で作った本は、読み込み時に新しい章立てへ移行する（読了状態は可能な範囲で引き継ぐ）。
+   */
+  version?: number;
 };
 
 /** ユーザーごとの参考書アウトライン。 */

@@ -25,6 +25,8 @@ type PresetEntry = {
   id: string;
   matchKeywords?: string[];
   bookType?: PresetBookType;
+  /** 章立ての版。上がったら登録済みの本を upgradePresetBook で新しい章立てへ移行する */
+  structureVersion?: number;
   book: ReferenceBook;
 };
 
@@ -89,7 +91,7 @@ export function referenceBookFromPreset(id: string): ReferenceBook | null {
   return normalizeReferenceBook({
     ...copy,
     id: genReferenceBookId(),
-    source: { kind: "preset", id: entry.id },
+    source: { kind: "preset", id: entry.id, version: entry.structureVersion ?? 1 },
     active: true,
     updatedAt: new Date().toISOString(),
   });
@@ -179,12 +181,10 @@ export function referenceBookFromChoice(
  * 読了状態・タイトル・並び順などユーザーの編集には触れない。変化が無ければ同じ参照を返す。
  */
 export function refreshPresetMappings(book: ReferenceBook): ReferenceBook {
-  // 作成元のプリセットが分かればそれを、旧データは書名の完全一致で探す。
-  const entry =
-    book.source?.kind === "preset"
-      ? presets.find((p) => p.id === book.source?.id)
-      : presets.find((p) => p.book.title === book.title);
+  const entry = presetForBook(book);
   if (!entry) return book;
+  // 章立ての版が違う本には足さない（旧い章立てに新しい節が混ざらないように）。移行は upgradePresetBook。
+  if (bookStructureVersion(book) !== (entry.structureVersion ?? 1)) return book;
   let changed = false;
   const merge = (current: string[] | undefined, extra: string[] | undefined) => {
     const base = current ?? [];
@@ -221,4 +221,120 @@ export function refreshPresetMappings(book: ReferenceBook): ReferenceBook {
   });
 
   return changed ? { ...book, chapters } : book;
+}
+
+// ---------------------------------------------------------------------------
+// プリセットの章立ての版の移行・本の種類
+// ---------------------------------------------------------------------------
+
+/** 作成元のプリセット（source が分かればそれ、旧データは書名の完全一致）。 */
+function presetForBook(book: Pick<ReferenceBook, "source" | "title">): PresetEntry | undefined {
+  if (book.source?.kind === "catalog") return undefined;
+  return book.source?.kind === "preset"
+    ? presets.find((p) => p.id === book.source?.id)
+    : presets.find((p) => p.book.title === book.title);
+}
+
+function bookStructureVersion(book: ReferenceBook): number {
+  return book.source?.kind === "preset" ? book.source.version ?? 1 : 1;
+}
+
+/**
+ * 本の種類。プリセットから作った本はそのプリセットの種類、それ以外（目次の読み取り・手入力・
+ * 共有カタログ）は教科書として扱う。参考書順（新規学習の順番の背骨）に使えるのは教科書だけ。
+ */
+export function referenceBookType(book: Pick<ReferenceBook, "source" | "title"> | null): PresetBookType {
+  if (!book) return "textbook";
+  return presetForBook(book)?.bookType ?? "textbook";
+}
+
+function coreTitle(title: string): string {
+  return title
+    .normalize("NFKC")
+    .replace(/^(第\s*\d+\s*章|chapter\s*\d+|\d+\s*章)/i, "")
+    .replace(/[\s［］\[\]()（）]/g, "")
+    .toLowerCase();
+}
+
+/**
+ * プリセットから作った本を、プリセットの新しい章立て（structureVersion）へ移行する。
+ *   - 章・節はプリセットの新しい章立てに置き換える（アプリ向けにまとめた旧い節は残さない）
+ *   - 読了は次の範囲で引き継ぐ:
+ *       ・旧い本で読了だった節・章に入っていたトピックをすべて含む新しい節は読了
+ *       ・同じ章（章名が同じ）が旧い本で読了だった場合、その章の新しい節はすべて読了
+ *       ・読み始め（startedAt）は、旧い本で読み始めた節のトピックを含む節に付ける
+ *     学習の実績（Topic の完了）は本とは別に保存されているので失われない
+ *   - 章・節を自分で追加・編集した本（プリセット由来でない id を含む）は作り直さない
+ *   - 本の id・書名・メモ・使用中かどうかは保つ。参考書計画は構造の変化として自動で引き直される
+ * 変化が無ければ同じ参照を返す。
+ */
+export function upgradePresetBook(book: ReferenceBook, now: string = new Date().toISOString()): ReferenceBook {
+  const entry = presetForBook(book);
+  if (!entry) return book;
+  const target = entry.structureVersion ?? 1;
+  const current = bookStructureVersion(book);
+  if (current >= target) return refreshPresetMappings(book);
+
+  const prefix = entry.book.chapters[0]?.id.replace(/-c\d+$/, "") ?? "";
+  const customized = book.chapters.some(
+    (c) => !c.id.startsWith(`${prefix}-`) || (c.sections ?? []).some((s) => !s.id.startsWith(`${prefix}-`)),
+  );
+  const source = { kind: "preset" as const, id: entry.id, version: target };
+  if (customized) {
+    // 自分で編集した本は章立てを変えない（新しい章立てへは設定画面で選び直してもらう）。
+    return { ...book, source };
+  }
+
+  const read = new Set<string>();
+  const started = new Map<string, string>();
+  const readChapterTitles = new Set<string>();
+  const completedAtOf = new Map<string, string>();
+  for (const chapter of book.chapters) {
+    const sections = chapter.sections ?? [];
+    const chapterRead = chapter.done === true || (sections.length > 0 && sections.every((s) => s.done === true));
+    if (chapterRead) readChapterTitles.add(coreTitle(chapter.title));
+    const chapterTopics = [...(chapter.topicIds ?? []), ...sections.flatMap((s) => s.topicIds ?? [])];
+    if (chapterRead) for (const id of chapterTopics) {
+      read.add(id);
+      if (chapter.completedAt) completedAtOf.set(id, chapter.completedAt);
+    }
+    for (const section of sections) {
+      if (section.done || chapter.done) for (const id of section.topicIds ?? []) {
+        read.add(id);
+        const at = section.completedAt ?? chapter.completedAt;
+        if (at) completedAtOf.set(id, at);
+      }
+      if (section.startedAt) for (const id of section.topicIds ?? []) {
+        const prev = started.get(id);
+        if (!prev || section.startedAt < prev) started.set(id, section.startedAt);
+      }
+    }
+  }
+
+  const copy = JSON.parse(JSON.stringify(entry.book.chapters)) as ReferenceChapter[];
+  const chapters: ReferenceChapter[] = copy.map((chapter) => {
+    const wholeChapterRead = readChapterTitles.has(coreTitle(chapter.title));
+    const oldChapter = book.chapters.find((c) => coreTitle(c.title) === coreTitle(chapter.title));
+    const sections = (chapter.sections ?? []).map((section) => {
+      const ids = section.topicIds ?? [];
+      const done = wholeChapterRead || (ids.length > 0 && ids.every((id) => read.has(id)));
+      const startedAt = ids.map((id) => started.get(id)).filter((v): v is string => Boolean(v)).sort()[0];
+      const completedAt = ids.map((id) => completedAtOf.get(id)).filter((v): v is string => Boolean(v)).sort().pop();
+      return {
+        ...section,
+        ...(done ? { done: true, completedAt: completedAt ?? now } : {}),
+        ...(startedAt ? { startedAt } : {}),
+      };
+    });
+    const allRead = sections.length > 0 && sections.every((s) => s.done === true);
+    return {
+      ...chapter,
+      ...(oldChapter?.note ? { note: oldChapter.note } : {}),
+      done: allRead,
+      ...(allRead ? { completedAt: oldChapter?.completedAt ?? now } : {}),
+      sections,
+    };
+  });
+
+  return normalizeReferenceBook({ ...book, source, chapters, updatedAt: now });
 }
