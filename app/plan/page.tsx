@@ -18,6 +18,7 @@ import {
 } from "@/lib/userSession";
 import { referenceBookProgress } from "@/lib/referenceBook";
 import { useReferenceBook } from "@/lib/useReferenceBook";
+import { useStudyContext } from "@/lib/useStudyContext";
 import PledgeCard from "@/components/pledge/PledgeCard";
 import {
   buildCheckpointComparison,
@@ -49,6 +50,12 @@ export default function PlanPage() {
   useBadgeSync(state, setState);
   // /today の「全部」で更新された読了状態を、端末・DB の新しい方から読む。
   const { book } = useReferenceBook();
+  // 新規学習の順番（参考書順かアプリ順か）。アプリ順なら planOptions は undefined で従来と同じ。
+  const { ready: studyReady, bookQueue, orderKey } = useStudyContext(state);
+  const planOptions = useMemo(
+    () => (bookQueue ? { book: bookQueue, orderKey } : undefined),
+    [bookQueue, orderKey],
+  );
   const [proposal, setProposal] = useState<PlanAdjustmentProposal | null>(null);
   const [proposalLoading, setProposalLoading] = useState(true);
 
@@ -84,8 +91,8 @@ export default function PlanPage() {
   // - 週次リスト: 週初め/未確定のときだけ再生成（途中で内容が変わらない）。
   // - 学習開始日: プロフィールはあるが planStartDate 未設定なら当日で補完（実質「今日から」）。
   useEffect(() => {
-    if (!state) return;
-    const resolved = resolveWeeklyPlan(state);
+    if (!state || !studyReady) return;
+    const resolved = resolveWeeklyPlan(state, getAllTopics(), new Date(), planOptions);
     const needsWeekly = resolved !== state.progress.weeklyPlan;
     const needsStart = !!state.profile && !state.profile.planStartDate;
     if (!needsWeekly && !needsStart) return;
@@ -110,15 +117,15 @@ export default function PlanPage() {
       if (needsWeekly) saveProgressToDb(uid, next.progress);
       if (needsStart && next.profile) void saveProfileToDb(uid, next.profile);
     }
-  }, [state, setState]);
+  }, [planOptions, state, setState, studyReady]);
 
   const topics = getAllTopics();
   const plan = useMemo(
-    () => (state ? generateLearningPlan(state, topics) : null),
-    [state, topics],
+    () => (state ? generateLearningPlan(state, topics, undefined, undefined, undefined, planOptions) : null),
+    [planOptions, state, topics],
   );
 
-  if (state === undefined || state === null || !plan) {
+  if (state === undefined || state === null || !plan || !studyReady) {
     return <LoadingScreen />;
   }
 

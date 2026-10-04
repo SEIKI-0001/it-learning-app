@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AppState } from "@/types";
 import { useAppState } from "@/lib/useAppState";
+import { useStudyContext } from "@/lib/useStudyContext";
 import { getAllTopics, getTopic } from "@/lib/content";
 import { getWrittenQuestionsForTopic } from "@/data/writtenQuestions";
 import { generateLearningPlan } from "@/lib/studyPlanner";
@@ -80,6 +81,8 @@ export default function TodayPage() {
   const [state, setState] = useAppState();
   const topics = useMemo(() => getAllTopics(), []);
   const savedTasksDateRef = useRef<string | null>(null);
+  // 新規学習の順番（参考書順かアプリ順か）。アプリ順なら bookQueue=null・ready=true で従来と同じ。
+  const { ready: studyReady, bookQueue, orderKey } = useStudyContext(state);
 
   useEffect(() => {
     if (state === null) router.replace("/onboarding");
@@ -133,7 +136,9 @@ export default function TodayPage() {
   const activities = useMemo(() => {
     if (!state?.profile) return { active: [], done: [], pinned: [] };
     const now = new Date();
-    const upcomingTopicIds = buildTodaysLearningQueue({ state, progress: state.progress, topics, now })
+    const upcomingTopicIds = buildTodaysLearningQueue({
+      state, progress: state.progress, topics, now, ...(bookQueue ? { book: bookQueue } : {}),
+    })
       .flatMap((item) => (item.topicId ? [item.topicId] : []))
       .slice(0, 5);
     return buildTodayActivities({
@@ -146,7 +151,7 @@ export default function TodayPage() {
       upcomingTopicIds,
       log: activityLog,
     });
-  }, [activityLog, selectedMinutes, state, topicStages, topics, wordProgress]);
+  }, [activityLog, bookQueue, selectedMinutes, state, topicStages, topics, wordProgress]);
   const plan = useMemo(
     () =>
       state?.profile
@@ -156,9 +161,10 @@ export default function TodayPage() {
           new Date(),
           selectedMinutes ?? undefined,
           activities.active,
+          bookQueue ? { book: bookQueue, orderKey } : undefined,
         )
         : null,
-    [activities.active, selectedMinutes, state, topics],
+    [activities.active, bookQueue, orderKey, selectedMinutes, state, topics],
   );
   const menu = plan?.todayMenu;
   const learningQueue = useMemo(
@@ -168,9 +174,10 @@ export default function TodayPage() {
         progress: state.progress,
         topics,
         activities: activities.active,
+        ...(bookQueue ? { book: bookQueue } : {}),
       })
       : []),
-    [activities.active, state, topics],
+    [activities.active, bookQueue, state, topics],
   );
 
   // 今日のメニューに初めて載ったタスクを保存し、その日のうちは中身（対象の単語・問題）を固定する。
@@ -195,11 +202,14 @@ export default function TodayPage() {
 
   // 既存の daily_study_tasks 保存を維持する。教材は保存せず、topicIdだけを参照する。
   useEffect(() => {
-    if (!state?.profile || !menu) return;
+    // 参考書順の材料を読み込み中は保存しない（アプリ順の並びで先に保存してしまわないため）。
+    if (!state?.profile || !menu || !studyReady) return;
     const userId = getUserId();
     if (!userId) return;
     const date = todayLocalDate();
-    if (savedTasksDateRef.current === date) return;
+    if (savedTasksDateRef.current === `${date}|${orderKey}`) return;
+    // その日に保存したメニューと学習順の前提が違えば、未着手の自動メニューを入れ替える。
+    const replacePendingTodayMenu = !isSameDailyTaskOrderKey(date, orderKey);
 
     const defaultReason = plan?.todayReasons.join(" / ") || undefined;
     const reasons = new Map(learningQueue.flatMap((item) =>
@@ -230,10 +240,11 @@ export default function TodayPage() {
       });
     }
     if (inputs.length > 0) {
-      savedTasksDateRef.current = date;
-      void saveDailyTasksToDb(userId, date, inputs);
+      savedTasksDateRef.current = `${date}|${orderKey}`;
+      rememberDailyTaskOrderKey(date, orderKey);
+      void saveDailyTasksToDb(userId, date, inputs, { replacePendingTodayMenu });
     }
-  }, [menu, plan?.todayReasons, state?.profile, learningQueue]);
+  }, [menu, orderKey, plan?.todayReasons, state?.profile, learningQueue, studyReady]);
 
   const tasks = useMemo((): TodayTask[] => {
     if (!menu) return [];
@@ -287,17 +298,22 @@ export default function TodayPage() {
 
   // 今日のルート: メニューは進捗で毎回再生成され完了タスクが消えるため、
   // その日のルート順序をlocalStorageに固定し、完了した行を消さずに前進を見せる。
-  const [storedRouteIds] = useState(() => loadStoredRoute(todayLocalDate()));
+  // 学習順の前提（orderKey）が違う日に固定した並びは使わない（参考書順への切替・本の切替の日）。
+  const storedRouteIds = useMemo(
+    () => (studyReady ? loadStoredRoute(todayLocalDate(), orderKey) : null),
+    // 並びは当日中は固定する。前提が変わったときだけ読み直す。
+    [studyReady, orderKey],
+  );
   const completionReactionSentRef = useRef(false);
   const nodes = useMemo(
     () => (state ? buildQuestRoute(state, tasks, storedRouteIds, new Date(), activities.done) : []),
     [activities.done, state, tasks, storedRouteIds],
   );
   useEffect(() => {
-    if (nodes.length > 0) {
-      saveStoredRoute(todayLocalDate(), nodes.map((node) => node.topicId));
+    if (studyReady && nodes.length > 0) {
+      saveStoredRoute(todayLocalDate(), nodes.map((node) => node.topicId), orderKey);
     }
-  }, [nodes]);
+  }, [nodes, orderKey, studyReady]);
 
   // 今日の3ミッションは今日のルートと一致させる（用語タスクがある日だけ用語ミッション）。
   const questContext = useMemo((): DailyQuestContext => {
@@ -332,7 +348,7 @@ export default function TodayPage() {
     emitMochitEvent("taskComplete");
   }, [menu, nodes.length, plan, state?.profile]);
 
-  if (state === undefined || state === null || !menu || !plan) {
+  if (state === undefined || state === null || !menu || !plan || !studyReady) {
     return <LoadingScreen />;
   }
 
@@ -432,4 +448,27 @@ export default function TodayPage() {
       <FirstRunGuide />
     </main>
   );
+}
+
+// その日の daily_study_tasks をどの学習順の前提で保存したか（端末ごと）。
+// 前提が変わった日だけ、未着手の自動メニューを入れ替える（アプリ順のままなら従来どおり追加のみ）。
+const DAILY_TASK_ORDER_KEY = "fequest:dailyTasksOrderKey";
+
+function isSameDailyTaskOrderKey(date: string, orderKey: string): boolean {
+  try {
+    const raw = window.localStorage.getItem(DAILY_TASK_ORDER_KEY);
+    const saved = raw ? (JSON.parse(raw) as { date?: string; orderKey?: string }) : null;
+    if (!saved || saved.date !== date) return orderKey === "app";
+    return saved.orderKey === orderKey;
+  } catch {
+    return true;
+  }
+}
+
+function rememberDailyTaskOrderKey(date: string, orderKey: string): void {
+  try {
+    window.localStorage.setItem(DAILY_TASK_ORDER_KEY, JSON.stringify({ date, orderKey }));
+  } catch {
+    /* ignore */
+  }
 }

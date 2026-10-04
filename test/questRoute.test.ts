@@ -208,3 +208,21 @@ describe("loadStoredRoute / saveStoredRoute", () => {
     expect(loadStoredRoute("2026-07-20")).toBeNull();
   });
 });
+
+describe("stored route and the study order key", () => {
+  it("keeps the legacy shape and behavior for app order", () => {
+    saveStoredRoute("2026-10-04", ["a"]);
+    expect(JSON.parse(window.localStorage.getItem(TODAY_ROUTE_STORAGE_KEY)!)).toEqual({ date: "2026-10-04", topicIds: ["a"] });
+    expect(loadStoredRoute("2026-10-04")).toEqual(["a"]);
+    expect(loadStoredRoute("2026-10-04", "app")).toEqual(["a"]);
+  });
+
+  it("drops a route fixed under another study order the same day", () => {
+    saveStoredRoute("2026-10-04", ["a"]);
+    expect(loadStoredRoute("2026-10-04", "book:b:h:1")).toBeNull();
+    saveStoredRoute("2026-10-04", ["b"], "book:b:h:1");
+    expect(loadStoredRoute("2026-10-04", "book:b:h:1")).toEqual(["b"]);
+    expect(loadStoredRoute("2026-10-04", "book:b:h:2")).toBeNull();
+    expect(loadStoredRoute("2026-10-04", "app")).toBeNull();
+  });
+});

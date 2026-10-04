@@ -112,3 +112,22 @@ export function resolveStudyContext(input: ResolveStudyContextInput): StudyConte
 export function effectiveBookOrder(context: StudyContext | null | undefined): BookStudyOrder | null {
   return context?.effectiveMode === "book" ? context.order ?? null : null;
 }
+
+/**
+ * 計画に依存する保存物（今日の固定ルート・今日のタスク・週の計画）の「前提の鍵」。
+ *   - アプリ順は常に "app"（従来の保存物＝鍵なしも "app" とみなす。アプリ順の挙動を変えない）
+ *   - 参考書順は 本・構造・計画の改訂番号 で決まる。本の切替・章立ての編集・
+ *     試験日や学習時間の変更（計画の改訂）で変わり、古い保存物を作り直す合図になる
+ */
+export function studyOrderKey(
+  context: Pick<StudyContext, "effectiveMode" | "bookId" | "order">,
+  planRevision?: number,
+): string {
+  if (context.effectiveMode !== "book") return "app";
+  return `book:${context.bookId ?? ""}:${context.order?.structureHash ?? ""}:${planRevision ?? 0}`;
+}
+
+/** 保存物の鍵が今の前提と同じか（鍵の無い旧データはアプリ順で作られたものとして扱う）。 */
+export function isSameOrderKey(stored: string | undefined | null, current: string): boolean {
+  return (stored ?? "app") === current;
+}

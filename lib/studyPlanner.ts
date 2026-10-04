@@ -22,6 +22,7 @@ import {
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
 import { nextBookTopicIds } from "@/lib/bookStudyOrder";
 import type { BookQueueOptions } from "@/lib/bookStudyPlan";
+import { isSameOrderKey } from "@/lib/studyContext";
 import { fieldMastery } from "@/lib/study";
 import { computeProgressSummary } from "@/lib/progressSummary";
 import {
@@ -590,7 +591,13 @@ export function buildWeeklyPlan(
     .slice(0, goal.reviewCount)
     .map((r) => r.topicId);
 
-  return { weekStartDate: weekStartKey(now), topicIds, reviewIds };
+  return {
+    weekStartDate: weekStartKey(now),
+    topicIds,
+    reviewIds,
+    // アプリ順の週は従来どおり鍵を持たない（鍵なし＝アプリ順）。
+    ...(options?.orderKey && options.orderKey !== "app" ? { orderKey: options.orderKey } : {}),
+  };
 }
 
 /**
@@ -605,8 +612,16 @@ export function resolveWeeklyPlan(
   options?: PlanBookOptions,
 ): WeeklyPlan {
   const existing = state.progress.weeklyPlan;
-  if (existing && existing.weekStartDate === weekStartKey(now)) {
+  if (
+    existing &&
+    existing.weekStartDate === weekStartKey(now) &&
+    isSameOrderKey(existing.orderKey, options?.orderKey ?? "app")
+  ) {
     return existing;
+  }
+  // 学習順の前提が変わった週は、週の途中でも作り直す（端末間マージで新しい方が勝つよう revisedAt を付ける）。
+  if (existing && existing.weekStartDate === weekStartKey(now)) {
+    return { ...buildWeeklyPlan(state, topics, now, options), revisedAt: now.toISOString() };
   }
   return buildWeeklyPlan(state, topics, now, options);
 }
@@ -678,8 +693,12 @@ export function buildWeeklyChecklist(
  * 今日の学習メニューの主テーマについて、「なぜ今日これをやるか」を組み立てる。
  * 必ず1つ以上返す（/today で常時表示する前提）。
  */
-/** 計画系の関数に渡す参考書順（Book mode）の入力。省略時はアプリ順。 */
-export type PlanBookOptions = { book?: BookQueueOptions | null };
+/**
+ * 計画系の関数に渡す参考書順（Book mode）の入力。省略時はアプリ順。
+ *   - book     … 本の順序（effective mode が book のときだけ）
+ *   - orderKey … 今の学習順の前提（lib/studyContext の studyOrderKey）。週の計画の作り直しの判定に使う
+ */
+export type PlanBookOptions = { book?: BookQueueOptions | null; orderKey?: string };
 
 /** 参考書順のときの「今日これをやる理由」。主な理由は本の順であること。 */
 export function buildBookTodayReasons(
