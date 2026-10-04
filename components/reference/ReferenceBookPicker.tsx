@@ -43,6 +43,7 @@ export default function ReferenceBookPicker({
   );
   const otherTitle = value.kind === "other" ? value.title : "";
   const otherChapters = value.kind === "other" ? value.chapters : undefined;
+  const otherSectionCount = (otherChapters ?? []).reduce((sum, c) => sum + (c.sections?.length ?? 0), 0);
   // 「その他」に打った書名が登録済みの本なら、そちらを選べるように提案する。
   const suggestion =
     value.kind === "other" ? suggestPresetForText(otherTitle) : null;
@@ -73,7 +74,10 @@ export default function ReferenceBookPicker({
                       {p.title}
                     </span>
                     <span className="mt-0.5 block text-xs text-gray-500">
-                      {[p.publisher, `${p.chapterCount}章`].filter(Boolean).join("・")}
+                      {[
+                        p.publisher,
+                        p.sectionCount > 0 ? `${p.chapterCount}章・${p.sectionCount}節` : `${p.chapterCount}章`,
+                      ].filter(Boolean).join("・")}
                       {currentTitle === p.title && "・使用中"}
                     </span>
                   </span>
@@ -129,7 +133,9 @@ export default function ReferenceBookPicker({
               {otherChapters && otherChapters.length > 0 ? (
                 <div className="flex items-start justify-between gap-2 rounded-lg bg-brand-50 px-3 py-2.5">
                   <p className="text-xs text-brand-800">
-                    目次から{otherChapters.length}章の章立てを読み取りました。
+                    目次から{otherChapters.length}章
+                    {otherSectionCount > 0 ? `・${otherSectionCount}節` : ""}
+                    の章立てを読み取りました。
                     {!otherTitle.trim() && "参考書名を入れると登録できます。"}
                   </p>
                   <button

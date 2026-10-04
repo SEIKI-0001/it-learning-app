@@ -27,6 +27,7 @@ import { exposureStateFor } from "@/lib/questionExposure";
 import type { BadgeSignals } from "@/lib/badges";
 import { isBookPaced, isBookUnlockLatched } from "@/lib/studyModeState";
 import {
+  badgeDefForMode,
   evaluateBadgeAwards,
   getRequiredBadges,
   isBadgeConditionMet,
@@ -278,7 +279,10 @@ export function buildCheckpointGate(
   const earnedIds = new Set(cp.earnedBadges.map((e) => e.badgeId));
 
   const required = getRequiredBadges(checkpointId);
-  const missingBadges = required.filter((b) => !earnedIds.has(b.id));
+  // 表示用に、参考書順のときは条件文を差し替える（アプリ順は同じ定義のまま）。
+  const missingBadges = required
+    .filter((b) => !earnedIds.has(b.id))
+    .map((b) => badgeDefForMode(b, state));
   const earnedRequiredCount = required.length - missingBadges.length;
 
   const measured = measureCheckpoint(state, checkpointId);

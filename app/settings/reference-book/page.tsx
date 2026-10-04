@@ -28,6 +28,12 @@ import {
   type ReferenceBookChoice,
 } from "@/lib/referenceBookPresets";
 import { useReferenceBook } from "@/lib/useReferenceBook";
+import { useAppState } from "@/lib/useAppState";
+import { saveAppState } from "@/lib/storage";
+import { getUserId, saveProfileToDb } from "@/lib/userSession";
+import type { AppState } from "@/types";
+import StudyOrderCard from "@/components/reference/StudyOrderCard";
+import { bookOrderFlag } from "@/lib/bookOrderFlag";
 import TopicPicker from "@/components/reference/TopicPicker";
 import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
 import TocImageImport from "@/components/reference/TocImageImport";
@@ -48,8 +54,27 @@ import { buttonClass } from "@/components/ui/Button";
 
 export default function ReferenceBookSettingsPage() {
   const { book } = useReferenceBook();
-  if (book === undefined) return <LoadingScreen />;
-  return <ReferenceBookSettings initial={book ?? createEmptyReferenceBook()} />;
+  const [state, setState] = useAppState();
+  if (book === undefined || state === undefined) return <LoadingScreen />;
+
+  /** 新しく学ぶ順番の希望を保存する（端末＋ログイン中は DB）。 */
+  function savePreference(preference: "app" | "book") {
+    if (!state?.profile) return;
+    const profile = { ...state.profile, studyOrderPreference: preference };
+    const next: AppState = { ...state, profile };
+    saveAppState(next);
+    setState(next);
+    const userId = getUserId();
+    if (userId) void saveProfileToDb(userId, profile);
+  }
+
+  return (
+    <ReferenceBookSettings
+      initial={book ?? createEmptyReferenceBook()}
+      appState={state}
+      onPreferenceChange={savePreference}
+    />
+  );
 }
 
 function choiceForBook(book: ReferenceBook): ReferenceBookChoice {
@@ -58,7 +83,15 @@ function choiceForBook(book: ReferenceBook): ReferenceBookChoice {
   return { kind: "other", title: book.title };
 }
 
-function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
+function ReferenceBookSettings({
+  initial,
+  appState,
+  onPreferenceChange,
+}: {
+  initial: ReferenceBook;
+  appState: AppState | null;
+  onPreferenceChange: (preference: "app" | "book") => void;
+}) {
   const [book, setBook] = useState<ReferenceBook>(initial);
   const hasBook = book.title.trim().length > 0 || book.chapters.length > 0;
   const [choice, setChoice] = useState<ReferenceBookChoice>(() =>
@@ -67,6 +100,7 @@ function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
   const [pendingSwitch, setPendingSwitch] = useState<ReferenceBook | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const progress = referenceBookProgress(book);
+  const sectionCount = book.chapters.reduce((sum, c) => sum + (c.sections?.length ?? 0), 0);
 
   /** 端末と DB（ログイン時）へ保存して表示にも反映する。 */
   function commit(next: ReferenceBook) {
@@ -135,6 +169,10 @@ function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
                       </span>
                       章読了
                     </p>
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      登録: {book.chapters.length}章
+                      {sectionCount > 0 ? `・${sectionCount}節` : "（節なし・章ごとに進みます）"}
+                    </p>
                     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
                       <div
                         className="h-full rounded-full bg-brand-600"
@@ -161,13 +199,19 @@ function ReferenceBookSettings({ initial }: { initial: ReferenceBook }) {
           )}
         </section>
 
+        {/* 学ぶ順番（参考書の順にするか）。機能フラグが off のときは出ない */}
+        {appState?.profile && (
+          <StudyOrderCard book={book} state={appState} onPreferenceChange={onPreferenceChange} />
+        )}
+
         {/* 2. 参考書を変更（プリセット／その他） */}
         <section aria-labelledby="change-book-heading">
           <h2 id="change-book-heading" className="mb-1 text-base font-semibold text-gray-900">
             {hasBook ? "参考書を変更" : "参考書を選ぶ"}
           </h2>
           <p className="mb-3 text-xs text-gray-600">
-            登録済みの参考書は章立てと各レッスンとの対応が入っています。学習の順番はアプリが決めます。
+            登録済みの参考書は章立てと各レッスンとの対応が入っています。
+            {bookOrderFlag() === "off" && "学習の順番はアプリが決めます。"}
           </p>
           <ReferenceBookPicker value={choice} onChange={setChoice} currentTitle={book.title} />
 
@@ -396,6 +440,15 @@ function AdvancedEditor({
     });
   }
 
+  function moveSection(chapterId: string, index: number, dir: -1 | 1) {
+    const chapter = book.chapters.find((c) => c.id === chapterId);
+    const sections = [...(chapter?.sections ?? [])];
+    const target = index + dir;
+    if (target < 0 || target >= sections.length) return;
+    [sections[index], sections[target]] = [sections[target], sections[index]];
+    updateChapter(chapterId, { sections });
+  }
+
   function removeSection(chapterId: string, sectionId: string) {
     const chapter = book.chapters.find((c) => c.id === chapterId);
     if (!chapter) return;
@@ -611,12 +664,32 @@ function AdvancedEditor({
                     </button>
                   </div>
                   <ul className="space-y-2.5">
-                    {(chapter.sections ?? []).map((section) => (
+                    {(chapter.sections ?? []).map((section, sectionIndex) => (
                       <li
                         key={section.id}
                         className="rounded-lg bg-gray-50 p-2.5"
                       >
                         <div className="flex items-center gap-2">
+                          <div className="flex shrink-0 flex-col">
+                            <button
+                              type="button"
+                              onClick={() => moveSection(chapter.id, sectionIndex, -1)}
+                              disabled={sectionIndex === 0}
+                              aria-label="節を上へ"
+                              className="text-[11px] leading-none text-gray-500 disabled:opacity-30"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveSection(chapter.id, sectionIndex, 1)}
+                              disabled={sectionIndex === (chapter.sections ?? []).length - 1}
+                              aria-label="節を下へ"
+                              className="text-[11px] leading-none text-gray-500 disabled:opacity-30"
+                            >
+                              ▼
+                            </button>
+                          </div>
                           <input
                             type="text"
                             value={section.title}
@@ -638,6 +711,15 @@ function AdvancedEditor({
                           >
                             削除
                           </button>
+                        </div>
+                        <div className="mt-2">
+                          <KeywordsInput
+                            label="関連キーワード（節）"
+                            value={section.keywords ?? []}
+                            onChange={(kw) =>
+                              updateSection(chapter.id, section.id, { keywords: kw })
+                            }
+                          />
                         </div>
                         <div className="mt-2">
                           <TopicPicker

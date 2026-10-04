@@ -29,6 +29,7 @@ import { useBadgeSync } from "@/lib/useBadgeSync";
 import BottomNav from "@/components/BottomNav";
 import RoadmapMap from "@/components/RoadmapMap";
 import CheckpointGateCard from "@/components/checkpoints/CheckpointGateCard";
+import BookPlanSection from "@/components/plan/BookPlanSection";
 import PlanAdjustmentCard from "@/components/progress/PlanAdjustmentCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import Icon from "@/components/ui/Icon";
@@ -51,7 +52,7 @@ export default function PlanPage() {
   // /today の「全部」で更新された読了状態を、端末・DB の新しい方から読む。
   const { book } = useReferenceBook();
   // 新規学習の順番（参考書順かアプリ順か）。アプリ順なら planOptions は undefined で従来と同じ。
-  const { ready: studyReady, bookQueue, orderKey } = useStudyContext(state);
+  const { ready: studyReady, bookQueue, orderKey, plan: bookPlan, replan } = useStudyContext(state);
   const planOptions = useMemo(
     () => (bookQueue ? { book: bookQueue, orderKey } : undefined),
     [bookQueue, orderKey],
@@ -168,6 +169,15 @@ export default function PlanPage() {
       <div className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6">
         {/* バッジゲート型ロードマップ: 現在CP・必要バッジ・不足・最終問題の解放状態（詳細） */}
         <CheckpointGateCard state={state} />
+
+        {bookQueue && bookPlan && (
+          <BookPlanSection
+            order={bookQueue.order}
+            plan={bookPlan}
+            completedTopicIds={state.progress.completedTopics}
+            onReplan={replan}
+          />
+        )}
 
         {/* 合格宣言(任意)。宣言の有無で学習も報酬も変わらない。 */}
         <PledgeCard

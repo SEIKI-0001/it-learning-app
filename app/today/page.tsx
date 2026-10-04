@@ -62,6 +62,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import ComebackMissionCard from "@/components/today/ComebackMissionCard";
 import GrowthCheckCard from "@/components/today/GrowthCheckCard";
 import ReadingCheck from "@/components/today/ReadingCheck";
+import TodayBookScope from "@/components/today/TodayBookScope";
 import TodayCueSheet from "@/components/today/TodayCueSheet";
 import TodayFocusCta from "@/components/today/TodayFocusCta";
 import { getMochitDisplayName } from "@/lib/mochitName";
@@ -436,6 +437,7 @@ export default function TodayPage() {
             primary={primary}
             missionsComplete={allQuestsDone(resolveDailyQuests(state, date, questContext))}
           />
+          {menu.bookUnitLabel && <TodayBookScope label={menu.bookUnitLabel} />}
           <ReadingCheck date={date} topics={readingTopics} />
           {growthCheckGate.available && (
             <div className={s.sideExtra}>
