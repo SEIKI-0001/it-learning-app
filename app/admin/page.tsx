@@ -184,9 +184,23 @@ export default function AdminPage() {
             ダッシュボードへ →
           </Link>
         </div>
-        <p className="mb-6 text-xs text-gray-400">
+        <p className="mb-3 text-xs text-gray-400">
           Supabase の集計（全ユーザー）と、この端末の localStorage 状態を表示します。
         </p>
+        <nav className="mb-6 flex flex-wrap gap-2 text-sm">
+          <Link
+            href="/admin/opinions"
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 font-medium text-gray-700"
+          >
+            意見箱
+          </Link>
+          <Link
+            href="/admin/book-catalog"
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 font-medium text-gray-700"
+          >
+            目次の共有カタログ
+          </Link>
+        </nav>
 
         {/* ============ Supabase 集計 ============ */}
         <section className="mb-8">
