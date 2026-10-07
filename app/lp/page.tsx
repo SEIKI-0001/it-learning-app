@@ -68,10 +68,11 @@ export const metadata: Metadata = {
   },
 };
 
-// FAQ は本文表示と構造化データ（FAQPage）の両方に使う。[前半, 太字, 後半] で持つ。
+// FAQ は本文表示と構造化データ（FAQPage）の両方に使う。a は [前半, 太字, 後半] で持つ。
+// q の「|」は表示時の折り返し位置（ph）で、構造化データでは取り除く。
 const FAQS: { q: string; a: [string, string, string] }[] = [
   {
-    q: 'ITの知識がゼロでも大丈夫ですか？',
+    q: 'ITの知識が|ゼロでも|大丈夫ですか？',
     a: [
       'はい、',
       'むしろゼロの人のために作られています',
@@ -79,7 +80,7 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     ],
   },
   {
-    q: '1日どれくらい勉強すれば合格できますか？',
+    q: '1日どれくらい|勉強すれば|合格できますか？',
     a: [
       '試験日と1日に使える時間を入れると、アプリが毎日の分量を自動で配分します。平日は',
       '1日10分から',
@@ -87,7 +88,7 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     ],
   },
   {
-    q: 'スマホだけで使えますか？アプリのインストールは？',
+    q: 'スマホだけで|使えますか？|アプリの|インストールは？',
     a: [
       'スマホのブラウザでそのまま動きます。',
       'インストールは不要',
@@ -95,7 +96,7 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     ],
   },
   {
-    q: '過去問は入っていますか？',
+    q: '過去問は|入っていますか？',
     a: [
       'はい。IPAが公開している',
       `${N.officialRange}の公式過去問${N.official}問`,
@@ -103,7 +104,7 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     ],
   },
   {
-    q: '無料期間が終わったらどうなりますか？',
+    q: '無料期間が|終わったら|どうなりますか？',
     a: [
       `教材（${N.topics}トピックの体験・解説）と公式過去問は`,
       '無料のまま学習を続けられます',
@@ -111,7 +112,7 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     ],
   },
   {
-    q: '解約はかんたんにできますか？',
+    q: '解約は|かんたんに|できますか？',
     a: [
       '買い切りプランは',
       'そもそも解約が不要',
@@ -138,7 +139,7 @@ const STRUCTURED_DATA = [
     '@type': 'FAQPage',
     mainEntity: FAQS.map(({ q, a }) => ({
       '@type': 'Question',
-      name: q,
+      name: q.replaceAll('|', ''),
       acceptedAnswer: { '@type': 'Answer', text: a.join('') },
     })),
   },
@@ -149,16 +150,52 @@ const TRY_HREF = '/lp/try';
 
 const STATS: { value: number; unit: string; label: string }[] = [
   { value: N.topics, unit: 'トピック', label: '操作して学ぶ教材' },
-  { value: N.official, unit: '問', label: `公式過去問（${N.officialRange}）` },
-  { value: N.checkQuestions, unit: '問', label: 'トピックごとの確認問題' },
+  { value: N.official, unit: '問', label: `公式過去問|（${N.officialRange}）` },
+  { value: N.checkQuestions, unit: '問', label: 'トピックごとの|確認問題' },
   { value: N.words, unit: '語', label: '英略語の単語帳' },
 ];
 
 const PLANS: { key: BillingPlanKey; name: string; desc: string; reco?: boolean }[] = [
-  { key: 'one_1m', name: '買い切り 1ヶ月', desc: '直前の追い込みに。自動更新なし・解約手続き不要。' },
-  { key: 'one_3m', name: '買い切り 3ヶ月', desc: '標準的な学習期間にあわせて。自動更新なし。' },
-  { key: 'one_6m', name: '買い切り 6ヶ月', desc: 'じっくり確実に。自動更新なし・解約手続き不要。', reco: true },
-  { key: 'sub_monthly', name: '月額プラン', desc: '期間を決めかねている人に。いつでも解約できます。' },
+  { key: 'one_1m', name: '買い切り 1ヶ月', desc: '直前の|追い込みに。|自動更新なし・|解約手続き不要。' },
+  { key: 'one_3m', name: '買い切り 3ヶ月', desc: '標準的な|学習期間に|あわせて。|自動更新なし。' },
+  { key: 'one_6m', name: '買い切り 6ヶ月', desc: 'じっくり確実に。|自動更新なし・|解約手続き不要。', reco: true },
+  { key: 'sub_monthly', name: '月額プラン', desc: '期間を|決めかねている|人に。|いつでも|解約できます。' },
+];
+
+// 見出しなどを文節で折り返す。Safari は word-break: auto-phrase に未対応で、スマホ幅だと
+// 「あなたのせいで|はありません」のように語の途中で改行されるため、「|」で区切った文節を
+// inline-block にして文節の切れ目でだけ折り返させる。
+function ph(text: string) {
+  return text.split('|').map((s, i) => (
+    <span key={i} className="ph">
+      {s}
+    </span>
+  ));
+}
+
+// 比較表。スマホ幅では行ごとのカードに組み替えるため、他の勉強法のセルに列名（短縮形）を data-label で持たせる。
+// セルの「|」は ph の折り返し位置。
+const CMP_OTHERS = [
+  { name: '参考書', short: '参考書' },
+  { name: '無料の過去問サイト', short: '過去問サイト' },
+  { name: '動画講座', short: '動画講座' },
+];
+const CMP_ROWS: { label: string; you: string; plain?: boolean; others: [string, string, string] }[] = [
+  { label: '理解のしかた', you: 'さわって|体験する', others: ['読む', '解くだけ', '視聴する'] },
+  { label: '学習計画', you: '試験日から|自動で毎日組む', others: ['自分で|立てる', 'なし', '固定|カリキュラム'] },
+  {
+    label: '本番形式の演習',
+    you: `公式過去問${N.official}問＋|${N.mock}問模試`,
+    others: ['巻末の|模擬問題', '過去問を|解ける', '講座に|よる'],
+  },
+  { label: '合格ラインとの距離', you: '合格準備度スコアで|可視化', others: ['分から|ない', '正答率|のみ', '分から|ない'] },
+  { label: '続ける仕組み', you: 'LINEの合図・|遅れたら|立て直し案', others: ['意志力|しだい', '意志力|しだい', '意志力|しだい'] },
+  {
+    label: '費用のめやす',
+    you: `無料〜月${yen(MONTHLY.perMonthJpy)}`,
+    plain: true,
+    others: ['1,500〜|2,000円', '無料', '数千〜|数万円'],
+  },
 ];
 
 function Check() {
@@ -203,15 +240,17 @@ export default function LandingPage() {
             <div className="hero-txt">
               <p className="eyebrow">ITパスポート試験の学習アプリ</p>
               <h1>
-                「読んで暗記」から、
+                <span className="ph">「読んで暗記」から、</span>
                 <br />
-                <span className="marked">
-                  「さわって理解」
-                  <svg viewBox="0 0 100 40" aria-hidden="true" preserveAspectRatio="none">
-                    <ellipse cx="50" cy="20" rx="48" ry="17" pathLength="100" />
-                  </svg>
+                <span className="ph">
+                  <span className="marked">
+                    「さわって理解」
+                    <svg viewBox="0 0 100 40" aria-hidden="true" preserveAspectRatio="none">
+                      <ellipse cx="50" cy="20" rx="48" ry="17" pathLength="100" />
+                    </svg>
+                  </span>
+                  へ。
                 </span>
-                へ。
               </h1>
               <p className="hero-lead">
                 参考書が途中で止まってしまう人のための試験対策。全{N.topics}トピックを操作しながら学び、公式過去問{N.official}問で本番に慣れる。試験日から逆算した「今日やること」を、アプリが毎日組み立てます。
@@ -264,7 +303,7 @@ export default function LandingPage() {
               <figcaption>
                 <span className="cap-title">約75秒でわかる、新しい勉強の進め方</span>
                 <span id="story-note" className="story-note">
-                  日本語音声・字幕付き（音声：VOICEVOX:春日部つむぎ）。画面内の学習データは撮影用の一例です。
+                  {ph('日本語音声・字幕付き|（音声：VOICEVOX:春日部つむぎ）。|画面内の学習データは|撮影用の一例です。')}
                 </span>
               </figcaption>
             </figure>
@@ -274,7 +313,7 @@ export default function LandingPage() {
             <dl className="stats" aria-label="収録内容">
               {STATS.map((s) => (
                 <div key={s.label}>
-                  <dt>{s.label}</dt>
+                  <dt>{ph(s.label)}</dt>
                   <dd>
                     {s.value.toLocaleString('ja-JP')}
                     <small>{s.unit}</small>
@@ -289,7 +328,7 @@ export default function LandingPage() {
         <section className="wash" id="pain">
           <div className="col reveal">
             <p className="eyebrow">こんな人のためのアプリです</p>
-            <h2 className="sec-title">参考書で挫折したのは、あなたのせいではありません。</h2>
+            <h2 className="sec-title">{ph('参考書で|挫折したのは、|あなたのせいでは|ありません。')}</h2>
             <p className="sec-lead">
               ITパスポートは半分以上がカタカナ用語と抽象概念。文章を読むだけで理解するのは、IT未経験者にはそもそも難しい試験です。
             </p>
@@ -322,7 +361,7 @@ export default function LandingPage() {
           <div className="col">
             <div className="reveal">
               <p className="eyebrow">アプリができること</p>
-              <h2 className="sec-title">「理解する」から「本番で解ける」まで、この1つで。</h2>
+              <h2 className="sec-title">{ph('「理解する」から|「本番で解ける」まで、|この1つで。')}</h2>
             </div>
 
             <div className="solve reveal">
@@ -330,7 +369,7 @@ export default function LandingPage() {
                 <p className="k">
                   <span className="no">01</span>理解する
                 </p>
-                <h3>全{N.topics}トピックが、操作して学ぶ教材</h3>
+                <h3>{ph(`全${N.topics}トピックが、|操作して学ぶ教材`)}</h3>
                 <p className="d">
                   スライダーを動かし、ボタンを押し、画面の変化で仕組みをつかみます。2進数・SQL・損益分岐点・公開鍵暗号——文章では入ってこなかった単元が、手を動かすと腑に落ちる。仕上げは
                   <b>トピックごとの確認問題（計{N.checkQuestions}問）</b>と<b>英略語の単語帳{N.words}語</b>。
@@ -360,7 +399,7 @@ export default function LandingPage() {
                 <p className="k">
                   <span className="no">02</span>続ける
                 </p>
-                <h3>毎日の計画は、アプリが立てる</h3>
+                <h3>{ph('毎日の計画は、|アプリが立てる')}</h3>
                 <p className="d">
                   試験日を入れるだけで、あなたの1日の学習時間に合わせて「今日やること」を自動で組みます。LINEと連携すれば毎日の合図も届くので、開く習慣づくりもアプリまかせ。間違えた問題は復習リストに自動で戻り、遅れても責めません——
                   <b>現実的な立て直し案</b>を提案して計画を引き直します。チェックポイントを越えるたびにバッジが増え、相棒のモチットも育ちます。
@@ -385,12 +424,12 @@ export default function LandingPage() {
                   </div>
                   <div className="task">
                     <span className="box" />
-                    <span className="t">英略語カード 5語（BCP、SLA…）</span>
+                    <span className="t">{ph('英略語カード 5語|（BCP、SLA…）')}</span>
                     <span className="min">3分</span>
                   </div>
                 </div>
                 <div className="mock-foot">
-                  今週の進み具合: <b>順調</b>。この配分なら試験1週間前に総仕上げに入れます。
+                  今週の進み具合: <b>順調</b>。{ph('この配分なら|試験1週間前に|総仕上げに入れます。')}
                 </div>
               </div>
             </div>
@@ -400,9 +439,7 @@ export default function LandingPage() {
                 <p className="k">
                   <span className="no">03</span>本番で解ける
                 </p>
-                <h3>
-                  公式過去問{N.official}問と{N.mock}問模試で、本番に慣れる
-                </h3>
+                <h3>{ph(`公式過去問${N.official}問と|${N.mock}問模試で、|本番に慣れる`)}</h3>
                 <p className="d">
                   IPAが公開している<b>{N.officialRange}の公式過去問{N.official}問</b>を、本番の並びのまま解けます。解説はすべてアプリ独自の書き下ろし。さらに3分野をバランスよく出す<b>本番形式の{N.mock}問模試</b>と、章の内容を横断して解く<b>総まとめ試験{N.themeExamQuestions}問</b>で、「分かる」を「本番で解ける」に変えます。
                 </p>
@@ -444,7 +481,7 @@ export default function LandingPage() {
                 <p className="k">
                   <span className="no">04</span>合格に近づく
                 </p>
-                <h3>「今の自分は受かるのか」に、数字で答える</h3>
+                <h3>{ph('「今の自分は|受かるのか」に、|数字で答える')}</h3>
                 <p className="d">
                   実際の問題への回答と定着から判定する<b>合格準備度スコア</b>
                   で、弱い分野と次の一歩まで示します。さらにAI採点で「クラウドとは？」を自分の言葉で説明してみる——
@@ -462,7 +499,7 @@ export default function LandingPage() {
                   </div>
                   <p className="advice">
                     <b>次の一歩：「経営のことば」を優先しましょう。</b>
-                    テクノロジ系は仕上げ段階です。
+                    {ph('テクノロジ系は|仕上げ段階です。')}
                   </p>
                 </div>
                 <div className="chat">
@@ -485,7 +522,7 @@ export default function LandingPage() {
         <section className="wash" id="diff">
           <div className="col reveal">
             <p className="eyebrow">ほかの勉強法との違い</p>
-            <h2 className="sec-title">「教材」ではなく、計画と進捗まで持つ「コーチ」です。</h2>
+            <h2 className="sec-title">{ph('「教材」ではなく、|計画と進捗まで持つ|「コーチ」です。')}</h2>
             <p className="sec-lead">
               参考書にも過去問サイトにも良さがあります。違いは、理解のさせ方と、合格までの道のりを誰が管理するかです。
             </p>
@@ -497,58 +534,25 @@ export default function LandingPage() {
                     <th scope="col" className="you">
                       このアプリ
                     </th>
-                    <th scope="col">参考書</th>
-                    <th scope="col">無料の過去問サイト</th>
-                    <th scope="col">動画講座</th>
+                    {CMP_OTHERS.map(({ name }) => (
+                      <th key={name} scope="col">
+                        {name}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <th scope="row">理解のしかた</th>
-                    <td className="you">さわって体験する</td>
-                    <td>読む</td>
-                    <td>解くだけ</td>
-                    <td>視聴する</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">学習計画</th>
-                    <td className="you">試験日から自動で毎日組む</td>
-                    <td>自分で立てる</td>
-                    <td>なし</td>
-                    <td>固定カリキュラム</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">本番形式の演習</th>
-                    <td className="you">
-                      公式過去問{N.official}問＋{N.mock}問模試
-                    </td>
-                    <td>巻末の模擬問題</td>
-                    <td>過去問を解ける</td>
-                    <td>講座による</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">合格ラインとの距離</th>
-                    <td className="you">合格準備度スコアで可視化</td>
-                    <td>分からない</td>
-                    <td>正答率のみ</td>
-                    <td>分からない</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">続ける仕組み</th>
-                    <td className="you">LINEの合図・遅れたら立て直し案</td>
-                    <td>意志力しだい</td>
-                    <td>意志力しだい</td>
-                    <td>意志力しだい</td>
-                  </tr>
-                  <tr>
-                    <th scope="row">費用のめやす</th>
-                    <td className="you plain">
-                      無料〜月{yen(MONTHLY.perMonthJpy)}
-                    </td>
-                    <td>1,500〜2,000円</td>
-                    <td>無料</td>
-                    <td>数千〜数万円</td>
-                  </tr>
+                  {CMP_ROWS.map(({ label, you, plain, others }) => (
+                    <tr key={label}>
+                      <th scope="row">{label}</th>
+                      <td className={plain ? 'you plain' : 'you'}>{ph(you)}</td>
+                      {others.map((v, i) => (
+                        <td key={CMP_OTHERS[i].name} data-label={CMP_OTHERS[i].short}>
+                          {ph(v)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -562,9 +566,7 @@ export default function LandingPage() {
         <section id="price">
           <div className="col reveal">
             <p className="eyebrow">料金</p>
-            <h2 className="sec-title">
-              まず{N.freeDays}日間、全部無料で。合わなければそのままで大丈夫。
-            </h2>
+            <h2 className="sec-title">{ph(`まず${N.freeDays}日間、|全部無料で。|合わなければ|そのままで大丈夫。`)}</h2>
 
             <div className="tiers">
               <div className="tier">
@@ -574,11 +576,12 @@ export default function LandingPage() {
                 </p>
                 <ul>
                   <li>
-                    <Check />全{N.topics}トピックの体験教材と解説
+                    <Check />
+                    <span>{ph(`全${N.topics}トピックの|体験教材と解説`)}</span>
                   </li>
                   <li>
                     <Check />
-                    公式過去問{N.official}問（独自解説付き）
+                    <span>{ph(`公式過去問${N.official}問|（独自解説付き）`)}</span>
                   </li>
                   <li>
                     <Check />
@@ -587,7 +590,8 @@ export default function LandingPage() {
                   <li>
                     <Check />
                     <span>
-                      学習記録の保存は<b>登録から{N.freeDays}日間</b>
+                      <span className="ph">学習記録の保存は</span>
+                      <b className="ph">登録から{N.freeDays}日間</b>
                     </span>
                   </li>
                 </ul>
@@ -605,11 +609,11 @@ export default function LandingPage() {
                   </li>
                   <li>
                     <Check />
-                    記録が合格準備度と毎日の計画に反映され続ける
+                    <span>{ph('記録が合格準備度と|毎日の計画に|反映され続ける')}</span>
                   </li>
                   <li>
                     <Check />
-                    AI採点が高精度のPro採点に（1日{N.proGrading}回）
+                    <span>{ph(`AI採点が高精度の|Pro採点に|（1日${N.proGrading}回）`)}</span>
                   </li>
                 </ul>
               </div>
@@ -628,11 +632,11 @@ export default function LandingPage() {
                       {sub && <small>/月</small>}
                     </p>
                     {sub ? (
-                      <p className="permo">初月20%オフ（{yen(Math.round(p.totalJpy * 0.8))}）</p>
+                      <p className="permo">{ph(`初月20%オフ|（${yen(Math.round(p.totalJpy * 0.8))}）`)}</p>
                     ) : p.months > 1 ? (
                       <p className="permo">月あたり{yen(p.perMonthJpy)}</p>
                     ) : null}
-                    <p className="pdesc">{desc}</p>
+                    <p className="pdesc">{ph(desc)}</p>
                   </div>
                 );
               })}
@@ -649,11 +653,13 @@ export default function LandingPage() {
         <section className="wash" id="faq">
           <div className="narrow reveal">
             <p className="eyebrow">よくある質問</p>
-            <h2 className="sec-title">はじめる前の疑問に答えます。</h2>
+            <h2 className="sec-title">{ph('はじめる前の|疑問に答えます。')}</h2>
             <div className="faq">
               {FAQS.map(({ q, a: [before, bold, after] }) => (
                 <details key={q}>
-                  <summary>{q}</summary>
+                  <summary>
+                    <span>{ph(q)}</span>
+                  </summary>
                   <p className="a">
                     {before}
                     <b>{bold}</b>
@@ -669,11 +675,11 @@ export default function LandingPage() {
         <section className="last">
           <div className="col">
             <div className="last-panel reveal">
-              <h2>今日の10分から、合格までの計画が始まります。</h2>
+              <h2>{ph('今日の10分から、|合格までの計画が|始まります。')}</h2>
               <p>
-                試験日を入れれば、今日やることはアプリが決めます。
+                {ph('試験日を入れれば、|今日やることは|アプリが決めます。')}
                 <br />
-                あなたは開いて、さわるだけ。
+                {ph('あなたは開いて、|さわるだけ。')}
               </p>
               <div className="last-cta">
                 <a className="btn on-dark" href={START_HREF}>
@@ -684,7 +690,7 @@ export default function LandingPage() {
                 </a>
               </div>
               <span className="last-note">
-                クレジットカード不要・GoogleかLINEで登録・買い切りプランは自動更新なし
+                {ph('クレジットカード不要・|GoogleかLINEで登録・|買い切りプランは自動更新なし')}
               </span>
             </div>
           </div>
@@ -707,7 +713,7 @@ export default function LandingPage() {
           <nav className="foot-nav" aria-label="サービス">
             <p className="foot-h">サービス</p>
             <a href={START_HREF}>ログイン / 無料登録</a>
-            <a href="/legal/tokusho">特定商取引法に基づく表示</a>
+            <a href="/legal/tokusho">{ph('特定商取引法に|基づく表示')}</a>
             <a href="/privacy">プライバシーポリシー</a>
           </nav>
         </div>
