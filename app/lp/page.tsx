@@ -10,7 +10,9 @@ import {
   FREE_RECORDING_DAYS,
   type BillingPlanKey,
 } from '@/lib/billing/constants';
+import CompareTable, { type CompareRow } from './CompareTable';
 import Reveal from './Reveal';
+import { ph } from './ph';
 import './lp.css';
 
 // ============================================================================
@@ -162,36 +164,19 @@ const PLANS: { key: BillingPlanKey; name: string; desc: string; reco?: boolean }
   { key: 'sub_monthly', name: '月額プラン', desc: '期間を|決めかねている|人に。|いつでも|解約できます。' },
 ];
 
-// 見出しなどを文節で折り返す。Safari は word-break: auto-phrase に未対応で、スマホ幅だと
-// 「あなたのせいで|はありません」のように語の途中で改行されるため、「|」で区切った文節を
-// inline-block にして文節の切れ目でだけ折り返させる。
-function ph(text: string) {
-  return text.split('|').map((s, i) => (
-    <span key={i} className="ph">
-      {s}
-    </span>
-  ));
-}
-
-// 比較表。スマホ幅では行ごとのカードに組み替えるため、他の勉強法のセルに列名（短縮形）を data-label で持たせる。
-// セルの「|」は ph の折り返し位置。
-const CMP_OTHERS = [
-  { name: '参考書', short: '参考書' },
-  { name: '無料の過去問サイト', short: '過去問サイト' },
-  { name: '動画講座', short: '動画講座' },
-];
-const CMP_ROWS: { label: string; you: string; plain?: boolean; others: [string, string, string] }[] = [
-  { label: '理解のしかた', you: 'さわって|体験する', others: ['読む', '解くだけ', '視聴する'] },
+// 比較表の中身（表示は CompareTable）。「|」は ph の折り返し位置。
+const CMP_ROWS: CompareRow[] = [
+  { label: '理解の|しかた', you: 'さわって|体験する', others: ['読む', '解くだけ', '視聴する'] },
   { label: '学習計画', you: '試験日から|自動で毎日組む', others: ['自分で|立てる', 'なし', '固定|カリキュラム'] },
   {
-    label: '本番形式の演習',
-    you: `公式過去問${N.official}問＋|${N.mock}問模試`,
+    label: '本番形式の|演習',
+    you: `公式過去問|${N.official}問＋|${N.mock}問模試`,
     others: ['巻末の|模擬問題', '過去問を|解ける', '講座に|よる'],
   },
-  { label: '合格ラインとの距離', you: '合格準備度スコアで|可視化', others: ['分から|ない', '正答率|のみ', '分から|ない'] },
-  { label: '続ける仕組み', you: 'LINEの合図・|遅れたら|立て直し案', others: ['意志力|しだい', '意志力|しだい', '意志力|しだい'] },
+  { label: '合格ライン|との距離', you: '合格準備度|スコアで可視化', others: ['分からない', '正答率のみ', '分からない'] },
+  { label: '続ける|仕組み', you: 'LINEの合図・|遅れたら|立て直し案', others: ['意志力しだい', '意志力しだい', '意志力しだい'] },
   {
-    label: '費用のめやす',
+    label: '費用の|めやす',
     you: `無料〜月${yen(MONTHLY.perMonthJpy)}`,
     plain: true,
     others: ['1,500〜|2,000円', '無料', '数千〜|数万円'],
@@ -526,36 +511,7 @@ export default function LandingPage() {
             <p className="sec-lead">
               参考書にも過去問サイトにも良さがあります。違いは、理解のさせ方と、合格までの道のりを誰が管理するかです。
             </p>
-            <div className="tbl-scroll">
-              <table className="cmp">
-                <thead>
-                  <tr>
-                    <th scope="col" />
-                    <th scope="col" className="you">
-                      このアプリ
-                    </th>
-                    {CMP_OTHERS.map(({ name }) => (
-                      <th key={name} scope="col">
-                        {name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {CMP_ROWS.map(({ label, you, plain, others }) => (
-                    <tr key={label}>
-                      <th scope="row">{label}</th>
-                      <td className={plain ? 'you plain' : 'you'}>{ph(you)}</td>
-                      {others.map((v, i) => (
-                        <td key={CMP_OTHERS[i].name} data-label={CMP_OTHERS[i].short}>
-                          {ph(v)}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <CompareTable rows={CMP_ROWS} />
             <p className="tbl-note">
               ※ 参考書・過去問サイト・動画講座は一般的なサービスの傾向です。併用ももちろん有効です。
             </p>

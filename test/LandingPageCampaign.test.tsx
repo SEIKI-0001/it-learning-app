@@ -28,7 +28,7 @@ describe("landing page", () => {
   it("presents Exam Readiness as an evidence score rather than a probability", () => {
     render(<LandingPage />);
 
-    const readinessCaption = screen.getByText("合格準備度");
+    const readinessCaption = screen.getByText("合格準備度", { selector: ".cap" });
     expect(readinessCaption.parentElement).toHaveTextContent("68/100");
     expect(readinessCaption.parentElement).toHaveTextContent("あと一歩");
     expect(readinessCaption.parentElement?.textContent).not.toMatch(/合格率|合格確率|%/);
