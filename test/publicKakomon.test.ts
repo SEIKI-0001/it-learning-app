@@ -3,13 +3,15 @@ import {
   getAllKakomonQuestions,
   getKakomonForWord,
   getKakomonQuestion,
+  countKakomonAskingWord,
   getKakomonYears,
   getWordsInKakomon,
+  kakomonYearRangeLabel,
   kakomonQuestionDescription,
   kakomonQuestionSeoTitle,
   kakomonQuestionTitle,
 } from "@/lib/publicPages/kakomon";
-import { isWordLikeEntry, wordTitle } from "@/lib/publicPages/words";
+import { isWordLikeEntry, wordComparisonEntries, wordDescription, wordTitle } from "@/lib/publicPages/words";
 import { getPublishedOfficialQuestionsByYear } from "@/lib/questionBank";
 import { getWord } from "@/lib/wordlist";
 
@@ -72,5 +74,26 @@ describe("public acronym pages (/words)", () => {
     const zeroTrust = getWord("zerotrust")!;
     expect(isWordLikeEntry(zeroTrust)).toBe(true);
     expect(wordTitle(zeroTrust)).toContain("Zero Trust（ゼロトラスト）とは？");
+  });
+
+  it("names up to two confused terms in the title and leads the description with the difference", () => {
+    const rpo = getWord("rpo")!;
+    expect(wordTitle(rpo)).toBe("RPO（Recovery Point Objective）とは？意味とRTO・BCPとの違い");
+    expect(wordDescription(rpo).startsWith("RPOは「目標復旧時点」、RTOは「")).toBe(true);
+    expect(wordComparisonEntries(rpo).map((w) => w.acronym)).toEqual(["RTO", "BCP"]);
+  });
+
+  it("compares only terms that exist in the wordlist", () => {
+    const lan = getWord("lan")!;
+    expect(lan.confusedWith).toContain("MAN");
+    expect(wordComparisonEntries(lan).some((w) => w.acronym === "MAN")).toBe(false);
+  });
+
+  it("counts only questions whose prompt or choices contain the acronym", () => {
+    expect(kakomonYearRangeLabel()).toMatch(/^令和\d+〜\d+年度$/);
+    for (const id of ["kpi", "rpo", "sor"]) {
+      const asked = countKakomonAskingWord(id);
+      expect(asked).toBeLessThanOrEqual(getKakomonForWord(id).length);
+    }
   });
 });
