@@ -5,7 +5,7 @@ import {
   genReferenceBookId,
   normalizeReferenceBook,
 } from "@/lib/referenceBook";
-import presetData from "@/itpass_reference_book.json";
+import presetData from "@/itpass_reference_book.json" with { type: "json" };
 
 // ============================================================================
 // 参考書プリセット（itpass_reference_book.json）の読み込みとマッチング。

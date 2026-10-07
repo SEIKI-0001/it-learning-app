@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Fragment } from "react";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import ShareOnX from "@/components/growth/ShareOnX";
@@ -13,10 +14,12 @@ import {
   getKaisetsuTopics,
   getKakomonForTopic,
   getLinkedTopics,
+  getRelatedKakomonForTopic,
   getWordsForTopic,
   kaisetsuDescription,
   kaisetsuPath,
   kaisetsuTitle,
+  relatedTermHref,
 } from "@/lib/publicPages/kaisetsu";
 import { wordPath } from "@/lib/publicPages/words";
 import { FIELD_LABELS } from "@/types/content";
@@ -52,6 +55,7 @@ export default async function KaisetsuTopicPage({ params }: Props) {
     { name: t.title, path: kaisetsuPath(t.id) },
   ];
   const kakomon = getKakomonForTopic(t.id);
+  const relatedKakomon = getRelatedKakomonForTopic(t.id);
   const words = getWordsForTopic(t.id);
   const quizzes = getKaisetsuQuizzes(t);
   const before = getLinkedTopics(t.prerequisites);
@@ -132,7 +136,17 @@ export default async function KaisetsuTopicPage({ params }: Props) {
         {t.relatedTerms && t.relatedTerms.length > 0 && (
           <>
             <h2>関連用語</h2>
-            <p>{t.relatedTerms.join("、")}</p>
+            <p>
+              {t.relatedTerms.map((term, i) => {
+                const href = relatedTermHref(term, t.id);
+                return (
+                  <Fragment key={term}>
+                    {i > 0 && "、"}
+                    {href ? <a href={href}>{term}</a> : term}
+                  </Fragment>
+                );
+              })}
+            </p>
           </>
         )}
       </div>
@@ -173,6 +187,18 @@ export default async function KaisetsuTopicPage({ params }: Props) {
           </h2>
           <p>IPAが公開しているITパスポート試験の公開問題から、このテーマの問題を集めました。</p>
           <KakomonList questions={kakomon} withYear />
+        </section>
+      )}
+
+      {relatedKakomon.length > 0 && (
+        <section className="k-section" aria-labelledby="ks-kakomon">
+          <h2 id="ks-kakomon">
+            「{t.title}」に関連する過去問（{relatedKakomon.length}問）
+          </h2>
+          <p>
+            このテーマが主題の問題はまだありませんが、関連する用語が問題文や選択肢に出てくる公開問題を集めました。
+          </p>
+          <KakomonList questions={relatedKakomon} withYear />
         </section>
       )}
 
