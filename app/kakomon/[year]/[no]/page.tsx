@@ -14,6 +14,7 @@ import {
   getRelatedKakomon,
   getWordsInKakomon,
   kakomonQuestionDescription,
+  kakomonQuestionSeoTitle,
   kakomonQuestionTitle,
   kakomonYearLabel,
   kakomonYearPath,
@@ -49,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!q) return {};
   return buildMetadata({
     path: q.path,
-    title: kakomonQuestionTitle(q),
+    title: kakomonQuestionSeoTitle(q),
     description: kakomonQuestionDescription(q),
     type: "article",
   });
