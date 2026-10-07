@@ -130,6 +130,28 @@ export function getKakomonForWord(wordId: string): KakomonQuestion[] {
   return getWordIndex().byWord.get(wordId) ?? [];
 }
 
+/**
+ * その英略語が問題文か選択肢に出てくる公開過去問の数。
+ * getKakomonForWord は本サービスの解説文も含めて探すので、「試験に出た」と言える数はこちらで数える。
+ */
+export function countKakomonAskingWord(wordId: string): number {
+  const word = getAllWords().find((w) => w.id === wordId);
+  if (!word) return 0;
+  const re = acronymPattern(word.acronym);
+  return getKakomonForWord(wordId).filter((q) =>
+    re.test([q.view.prompt, ...q.view.choices.map((c) => c.text)].join("\n")),
+  ).length;
+}
+
+/** 例: "令和4〜8年度"。 */
+export function kakomonYearRangeLabel(): string {
+  const years = getKakomonYears();
+  if (years.length === 0) return "";
+  const lo = kakomonYearLabel(Math.min(...years));
+  const hi = kakomonYearLabel(Math.max(...years));
+  return lo === hi ? lo : `${lo.replace(/年度$/, "")}〜${hi.replace(/^令和/, "")}`;
+}
+
 // ---- 表示文言 ---------------------------------------------------------------
 
 export function kakomonYearLabel(year: number): string {

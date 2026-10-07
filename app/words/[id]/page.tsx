@@ -3,11 +3,17 @@ import { notFound } from "next/navigation";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
 import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
-import { getKakomonForWord } from "@/lib/publicPages/kakomon";
+import {
+  countKakomonAskingWord,
+  getAllKakomonQuestions,
+  getKakomonForWord,
+  kakomonYearRangeLabel,
+} from "@/lib/publicPages/kakomon";
 import { getTopicsForWord, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
 import {
   WORDS_BASE_PATH,
   isWordLikeEntry,
+  wordComparisonEntries,
   wordDescription,
   wordPath,
   wordTitle,
@@ -49,6 +55,8 @@ export default async function WordPage({ params }: Props) {
   const questions = getKakomonForWord(w.id);
   const traps = Object.entries(w.trapExplanations);
   const topics = getTopicsForWord(w.id);
+  const compared = wordComparisonEntries(w);
+  const asked = countKakomonAskingWord(w.id);
 
   return (
     <article className="g-col">
@@ -99,8 +107,59 @@ export default async function WordPage({ params }: Props) {
 
       {(w.confusedWith.length > 0 || traps.length > 0) && (
         <section className="k-section" aria-labelledby="w-diff">
-          <h2 id="w-diff">似た用語との違い</h2>
+          <h2 id="w-diff">
+            {w.confusedWith.length > 0
+              ? `${w.acronym}と${w.confusedWith.join("・")}の違い`
+              : "似た用語との違い"}
+          </h2>
           {w.differenceAxis && <p>見分けるポイントは「{w.differenceAxis}」です。</p>}
+          {compared.length > 0 && (
+            <div className="g-table compact">
+              <table>
+                <thead>
+                  <tr>
+                    <td />
+                    <th scope="col">{w.acronym}</th>
+                    {compared.map((c) => (
+                      <th key={c.id} scope="col">
+                        <a href={wordPath(c.id)}>{c.acronym}</a>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">日本語</th>
+                    <td>{w.japanese}</td>
+                    {compared.map((c) => (
+                      <td key={c.id}>{c.japanese}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <th scope="row">正式名称</th>
+                    <td>{w.fullName}</td>
+                    {compared.map((c) => (
+                      <td key={c.id}>{c.fullName}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <th scope="row">ひとことで</th>
+                    <td>{w.oneLine}</td>
+                    {compared.map((c) => (
+                      <td key={c.id}>{c.oneLine}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <th scope="row">試験のキーワード</th>
+                    <td>{w.examKeywords.join("、")}</td>
+                    {compared.map((c) => (
+                      <td key={c.id}>{c.examKeywords.join("、")}</td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
           {traps.length > 0 && (
             <ul>
               {traps.map(([name, text]) => {
@@ -136,6 +195,12 @@ export default async function WordPage({ params }: Props) {
           <h2 id="w-questions">
             {w.acronym}が出てくる過去問（{questions.length}問）
           </h2>
+          <p>
+            公式過去問（{kakomonYearRangeLabel()}・全{getAllKakomonQuestions().length}問）のうち、
+            {asked > 0
+              ? `${w.acronym}が問題文か選択肢に出てくるのは${asked}問です。`
+              : `${w.acronym}は問題文・選択肢には直接出てきませんが、解説で触れている問題があります。`}
+          </p>
           <KakomonList questions={questions.slice(0, MAX_QUESTIONS)} withYear />
         </section>
       )}
