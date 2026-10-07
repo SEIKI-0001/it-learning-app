@@ -142,9 +142,25 @@ export function kakomonQuestionTitle(q: KakomonQuestion): string {
   return q.topicLabel ? `${base}「${q.topicLabel}」の解説` : `${base}の解説`;
 }
 
-/** 検索結果に出る説明文。問題文の冒頭＋正解と解説がある旨。 */
+/**
+ * 検索結果に出す title。h1（kakomonQuestionTitle）とは分ける。
+ * 例: "ITパスポート過去問 令和7年度 問26「売掛金」正解と解説"。
+ * 「過去問」は検索語としてよく打たれるのに h1 には無いので先頭に置き、
+ * 末尾は「正解と解説」にして答え合わせ目的の人に中身が伝わるようにする。
+ */
+export function kakomonQuestionSeoTitle(q: KakomonQuestion): string {
+  const base = `ITパスポート過去問 ${kakomonYearLabel(q.view.year)} 問${q.view.questionNumber}`;
+  return q.topicLabel ? `${base}「${q.topicLabel}」正解と解説` : `${base} 正解と解説`;
+}
+
+/**
+ * 検索結果に出る説明文。問題文を先頭に置く。
+ * 流入の多くは問題文をそのまま打った検索で、Google は一致した部分を太字にするため、
+ * 冒頭が問題文だと「探していた問題だ」と一目で分かる（旧版は年度・問番号が先で問題文が後ろに切れていた）。
+ * 正解の記号は載せない（検索結果だけで用が済み、解説まで読まれなくなるため）。
+ */
 export function kakomonQuestionDescription(q: KakomonQuestion): string {
   const head = q.view.prompt.replace(/\s+/g, " ").trim();
-  const excerpt = head.length > 70 ? `${head.slice(0, 70)}…` : head;
-  return `${kakomonYearLabel(q.view.year)} ITパスポート試験 問${q.view.questionNumber}。${excerpt} 正解と解説付き。`;
+  const excerpt = head.length > 80 ? `${head.slice(0, 80)}…` : head;
+  return `${excerpt}（${kakomonYearLabel(q.view.year)} ITパスポート試験 問${q.view.questionNumber}）正解と、なぜその選択肢になるのかの解説付き。`;
 }

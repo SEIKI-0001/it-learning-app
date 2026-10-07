@@ -6,6 +6,7 @@ import {
   getKakomonYears,
   getWordsInKakomon,
   kakomonQuestionDescription,
+  kakomonQuestionSeoTitle,
   kakomonQuestionTitle,
 } from "@/lib/publicPages/kakomon";
 import { isWordLikeEntry, wordTitle } from "@/lib/publicPages/words";
@@ -39,7 +40,15 @@ describe("public past-exam pages (/kakomon)", () => {
   it("builds a title and description that name the year, number and topic", () => {
     const q = getKakomonQuestion(2025, 26)!;
     expect(kakomonQuestionTitle(q)).toBe(`令和7年度 ITパスポート 問26「${q.topicLabel}」の解説`);
+    expect(kakomonQuestionSeoTitle(q)).toBe(`ITパスポート過去問 令和7年度 問26「${q.topicLabel}」正解と解説`);
     expect(kakomonQuestionDescription(q)).toContain("令和7年度 ITパスポート試験 問26");
+  });
+
+  it("starts the description with the question text so question-text searches match", () => {
+    for (const q of getAllKakomonQuestions()) {
+      const head = q.view.prompt.replace(/\s+/g, " ").trim();
+      expect(kakomonQuestionDescription(q).startsWith(head.slice(0, 20))).toBe(true);
+    }
   });
 
   it("links acronyms only when they appear as standalone words", () => {
