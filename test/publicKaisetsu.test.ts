@@ -8,11 +8,13 @@ import {
   getKaisetsuTopics,
   getKaisetsuTopicsByField,
   getKakomonForTopic,
+  getRelatedKakomonForTopic,
   getTopicsForWord,
   getWordsForTopic,
   kaisetsuDescription,
   kaisetsuPath,
   kaisetsuTitle,
+  relatedTermHref,
   KAISETSU_FIELD_ORDER,
 } from "@/lib/publicPages/kaisetsu";
 
@@ -69,5 +71,32 @@ describe("public topic explanation pages (/kaisetsu)", () => {
     }
     // 教材データは正解が常に A。公開ページでは4つの位置すべてに散らばる。
     expect(positions).toEqual(new Set(["A", "B", "C", "D"]));
+  });
+
+  it("fills the past-question section only for topics with no primary questions", () => {
+    let filled = 0;
+    for (const t of getKaisetsuTopics()) {
+      const related = getRelatedKakomonForTopic(t.id);
+      if (getKakomonForTopic(t.id).length > 0) expect(related).toEqual([]);
+      if (related.length > 0) filled += 1;
+      expect(related.length).toBeLessThanOrEqual(10);
+    }
+    expect(filled).toBeGreaterThan(0);
+    // テーマ名の略語（SWOT）が選択肢に出る問題を拾う
+    const swot = getRelatedKakomonForTopic("strat-swot");
+    expect(swot.length).toBeGreaterThan(0);
+    for (const q of swot) {
+      expect([q.view.prompt, ...q.view.choices.map((c) => c.text)].join("\n")).toMatch(/SWOT/);
+    }
+  });
+
+  it("links related terms to acronym pages or other topics, never to itself", () => {
+    expect(relatedTermHref("PPM", "strat-ppm")).toBe("/words/ppm");
+    expect(relatedTermHref("金のなる木", "strat-ppm")).toBeNull();
+    for (const t of getKaisetsuTopics()) {
+      for (const term of t.relatedTerms ?? []) {
+        expect(relatedTermHref(term, t.id)).not.toBe(kaisetsuPath(t.id));
+      }
+    }
   });
 });

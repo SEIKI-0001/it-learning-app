@@ -8,7 +8,8 @@
 
 import { getAllTopics, getTopic } from "@/lib/content";
 import { getAllKakomonQuestions, type KakomonQuestion } from "@/lib/publicPages/kakomon";
-import { getWord } from "@/lib/wordlist";
+import { getAllWords, getWord, getWordByAcronym } from "@/lib/wordlist";
+import { wordPath } from "@/lib/publicPages/words";
 import { TOPIC_WORD_LINKS } from "@/data/topicWordLinks";
 import { FIELD_LABELS, type Topic, type TopicField } from "@/types/content";
 import type { WordlistEntry } from "@/types/wordlist";
@@ -57,6 +58,44 @@ export function getKakomonForTopic(topicId: string): KakomonQuestion[] {
   return kakomonByTopic.get(topicId) ?? [];
 }
 
+const RELATED_KAKOMON_MAX = 10;
+
+/**
+ * 略語が独立した語として出てくるか。直前が英数字・漢字・かなのときは別の用語の一部とみなす
+ * （"無線LAN" の LAN は LAN/WAN のテーマの問題ではない）。
+ */
+function standalone(acronym: string): RegExp {
+  const escaped = acronym.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![A-Za-z0-9\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}])${escaped}(?![A-Za-z0-9])`, "u");
+}
+
+/**
+ * 主題の過去問が1問も無いテーマに出す「関連する過去問」。
+ * 過去問は primaryTopicId だけで束ねているので、SWOT分析・PPM・HTTPS のように
+ * 他テーマの問題の選択肢としてだけ出るテーマは過去問欄が空になる。そこを、取り違えの少ない一致だけで補う:
+ * - 過去問のタグが、テーマの関連用語と完全に一致する
+ * - テーマ名に入っている英略語（"SWOT分析" の SWOT）が、問題文か選択肢に単独の語として出てくる
+ * 主題の過去問があるテーマでは空（そちらで足りるし、混ぜると「このテーマの問題」と誤読される）。
+ */
+export function getRelatedKakomonForTopic(topicId: string): KakomonQuestion[] {
+  const t = getTopic(topicId);
+  if (!t || getKakomonForTopic(topicId).length > 0) return [];
+  const terms = new Set(t.relatedTerms ?? []);
+  const titleAcronyms = getWordsForTopic(topicId)
+    .map((w) => w.acronym)
+    .filter((a) => standalone(a).test(t.title))
+    .map(standalone);
+  return getAllKakomonQuestions()
+    .filter(
+      (q) =>
+        q.tags.some((tag) => terms.has(tag)) ||
+        titleAcronyms.some((re) =>
+          re.test([q.view.prompt, ...q.view.choices.map((c) => c.text)].join("\n")),
+        ),
+    )
+    .slice(0, RELATED_KAKOMON_MAX);
+}
+
 // ---- 英略語との相互リンク --------------------------------------------------
 
 /** そのテーマの関連英略語（data/topicWordLinks が正）。 */
@@ -78,6 +117,17 @@ export function getLinkedTopics(ids: readonly string[] | undefined): Topic[] {
     .filter((t): t is Topic => t !== undefined);
 }
 
+/**
+ * 関連用語のリンク先。英略語ページ（略語か日本語名が一致）→ 別テーマの解説（タイトルが一致）の順。
+ * どちらにも無い語は null（本文中ではリンクなしの文字のまま出す）。
+ */
+export function relatedTermHref(term: string, selfTopicId: string): string | null {
+  const word = getWordByAcronym(term) ?? getAllWords().find((w) => w.japanese === term);
+  if (word) return wordPath(word.id);
+  const topic = getAllTopics().find((x) => x.title === term && x.id !== selfTopicId);
+  return topic ? kaisetsuPath(topic.id) : null;
+}
+
 // ---- 表示文言 ---------------------------------------------------------------
 
 /** 例: "SWOT分析とは？わかりやすく解説【ITパスポート】"。 */
@@ -87,7 +137,7 @@ export function kaisetsuTitle(t: Topic): string {
 
 /** 検索結果に出る説明文。一覧用の要約＋過去問の数。 */
 export function kaisetsuDescription(t: Topic): string {
-  const count = getKakomonForTopic(t.id).length;
+  const count = getKakomonForTopic(t.id).length + getRelatedKakomonForTopic(t.id).length;
   const kakomon = count > 0 ? `関連する公式過去問${count}問へのリンク付き。` : "";
   return `${FIELD_LABELS[t.field]}「${t.title}」をITパスポート試験向けに解説。${t.summary}たとえ・試験のポイント・間違えやすい点・確認問題をまとめています。${kakomon}`;
 }
