@@ -18,7 +18,7 @@ const SWIPE_THRESHOLD = 56;
 
 export default function ExplanationSlides({
   slides,
-  title = "📖 解説",
+  title = "解説",
 }: {
   slides: ExplanationSlide[];
   title?: string | null;

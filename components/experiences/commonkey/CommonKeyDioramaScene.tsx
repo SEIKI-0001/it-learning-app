@@ -125,8 +125,8 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
           {eve && (
             <DioramaLabel at={{ ...EVE_AT, z: 124 }} place="above">
               <div className={cryptoStyles.eveCallout} data-tone={eve.reads ? "danger" : undefined} role="status" data-testid="ck-eve" data-reads={eve.reads ? "true" : "false"}>
-                <span className={cryptoStyles.calloutTitle}>😈 盗聴者の手元</span>
-                {eve.key && <span className={styles.eveKey}>🔑 鍵のコピー</span>}
+                <span className={cryptoStyles.calloutTitle}>盗聴者の手元</span>
+                {eve.key && <span className={styles.eveKey}>鍵のコピー</span>}
                 {eve.cipher && (
                   <CipherCapsule state={eve.reads ? "decrypted" : "failed"} body={eve.reads ?? undefined} tag={eve.reads ? "盗み読み" : undefined} label="盗聴者が取った暗号文" />
                 )}

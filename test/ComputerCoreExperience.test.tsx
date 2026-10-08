@@ -64,13 +64,13 @@ describe("ComputerCoreExperience", () => {
     next();
     next();
     next();
-    click("⚡ 電源を切る");
+    click("電源を切る");
     expect(screen.getByTestId("computer-scene")).toHaveAttribute("data-power", "off");
     expect(doc()).toHaveAttribute("data-status", "vanished");
     expect(stored()).toHaveTextContent(/v1.*売上 100万円/);
     expect(screen.getByTestId("cc-detail")).toHaveTextContent("編集（売上 120万円）が消えました");
 
-    click("🔌 電源を入れて文書を開き直す");
+    click("電源を入れて文書を開き直す");
     expect(doc()).toHaveAttribute("data-version", "1");
     expect(doc()).toHaveTextContent("売上 100万円");
   });
@@ -80,13 +80,13 @@ describe("ComputerCoreExperience", () => {
     next();
     next();
     next();
-    click("⚡ 電源を切る");
+    click("電源を切る");
     click("↩ 電源OFFの前に戻る");
     next();
-    click("⚡ 電源を切る");
+    click("電源を切る");
     expect(stored()).toHaveTextContent("v2");
     expect(screen.getByTestId("cc-insight")).toHaveTextContent("揮発性");
-    click("🔌 電源を入れて文書を開き直す");
+    click("電源を入れて文書を開き直す");
     expect(doc()).toHaveTextContent("売上 120万円");
   });
 });

@@ -7,6 +7,7 @@ import { DioramaLabel, DioramaStage, DioramaToken } from "../scene/DioramaStage"
 import type { NodeState } from "../network/NetworkSceneBase";
 import type { OsLayer, OsPart, OsSceneProps } from "./osTypes";
 import styles from "./osdiorama.module.css";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // OS の図解：パソコンを3つの階に分けた分解模型。
 //   上の階＝アプリ（画面に並ぶ音楽App・メモApp。手前のユーザーが操作する）
@@ -19,13 +20,13 @@ const FOOT = { x: 250, y: 170, w: 300, d: 170 };
 const LEVEL_Z: Record<OsLayer, number> = { hw: 10, os: 130, app: 250 };
 
 type BlockPart = Exclude<OsPart, "user" | "wallL" | "wallR">;
-const PART: Record<BlockPart, { layer: OsLayer; x: number; y: number; icon: string; name: string }> = {
-  music: { layer: "app", x: 330, y: 250, icon: "🎵", name: "音楽App" },
-  files: { layer: "app", x: 470, y: 250, icon: "📝", name: "メモApp" },
-  core: { layer: "os", x: 400, y: 250, icon: "⚙️", name: "OS" },
-  cpu: { layer: "hw", x: 320, y: 250, icon: "🧠", name: "CPU" },
-  speaker: { layer: "hw", x: 400, y: 262, icon: "🔊", name: "スピーカー" },
-  storage: { layer: "hw", x: 480, y: 250, icon: "💾", name: "ストレージ" },
+const PART: Record<BlockPart, { layer: OsLayer; x: number; y: number; icon: IconName; name: string }> = {
+  music: { layer: "app", x: 330, y: 250, icon: "music", name: "音楽App" },
+  files: { layer: "app", x: 470, y: 250, icon: "file-text", name: "メモApp" },
+  core: { layer: "os", x: 400, y: 250, icon: "settings", name: "OS" },
+  cpu: { layer: "hw", x: 320, y: 250, icon: "cpu", name: "CPU" },
+  speaker: { layer: "hw", x: 400, y: 262, icon: "volume", name: "スピーカー" },
+  storage: { layer: "hw", x: 480, y: 250, icon: "save", name: "ストレージ" },
 };
 const LAYER_META: Record<OsLayer, { name: string; sub: string }> = {
   app: { name: "アプリ", sub: "応用ソフト" },
@@ -171,19 +172,19 @@ export function OsDioramaScene({ layers, parts, links, capsule, barrier, userHea
           {barrier && (
             <DioramaLabel at={{ x: 400, y: FOOT.y + FOOT.d, z: LEVEL_Z.os }} place="below" pinned>
               <span className={styles.denied} role="status" data-testid="os-denied">
-                ⛔ OSを経由してください
+                OSを経由してください
               </span>
             </DioramaLabel>
           )}
           <DioramaLabel at={{ x: 190, y: 330, z: 110 }} place="above" pinned>
             <span className={styles.user} data-hears={userHears ? "true" : "false"} data-testid="os-user">
-              🙂{userHears ? ` ${userHears}` : " ユーザー"}
+              <Icon name="user" className="mr-1 inline-block h-3.5 w-3.5 align-middle" />{userHears ? ` ${userHears}` : " ユーザー"}
             </span>
           </DioramaLabel>
           {(Object.keys(PART) as BlockPart[]).map((id) => (
             <DioramaLabel key={id} at={partAt(id)} place={PART[id].x < 400 ? "left" : "right"} optional>
               <span className={styles.partTag} data-part-tag={id} data-state={parts[id] ?? "idle"}>
-                <span aria-hidden>{PART[id].icon}</span>
+                <span aria-hidden><Icon name={PART[id].icon} className="h-3.5 w-3.5" /></span>
                 {PART[id].name}
               </span>
             </DioramaLabel>

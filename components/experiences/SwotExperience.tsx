@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「SWOT分析」専用の体験。
@@ -12,11 +13,11 @@ import { Panel, SectionTitle } from "./ui";
 
 type Q = "S" | "W" | "O" | "T";
 
-const CELLS: Record<Q, { name: string; short: string; emoji: string; axis: string; color: string }> = {
-  S: { name: "強み (Strength)", short: "強み", emoji: "💪", axis: "内部 × プラス", color: "emerald" },
-  W: { name: "弱み (Weakness)", short: "弱み", emoji: "😓", axis: "内部 × マイナス", color: "rose" },
-  O: { name: "機会 (Opportunity)", short: "機会", emoji: "🌱", axis: "外部 × プラス", color: "sky" },
-  T: { name: "脅威 (Threat)", short: "脅威", emoji: "🌪️", axis: "外部 × マイナス", color: "amber" },
+const CELLS: Record<Q, { name: string; short: string; axis: string; color: string }> = {
+  S: { name: "強み (Strength)", short: "強み", axis: "内部 × プラス", color: "emerald" },
+  W: { name: "弱み (Weakness)", short: "弱み", axis: "内部 × マイナス", color: "rose" },
+  O: { name: "機会 (Opportunity)", short: "機会", axis: "外部 × プラス", color: "sky" },
+  T: { name: "脅威 (Threat)", short: "脅威", axis: "外部 × マイナス", color: "amber" },
 };
 
 const TONE: Record<string, { filled: string; empty: string }> = {
@@ -27,11 +28,11 @@ const TONE: Record<string, { filled: string; empty: string }> = {
 };
 
 // クレープ屋の店長として出来事を仕分ける
-const EVENTS: { emo: string; t: string; inside: boolean; plus: boolean; ans: Q }[] = [
-  { emo: "🥞", t: "うちには他店にない自家製ソースのレシピがある", inside: true, plus: true, ans: "S" },
-  { emo: "🏗️", t: "駅前の再開発で、店の前の人通りが増えそうだ", inside: false, plus: true, ans: "O" },
-  { emo: "📱", t: "うちはSNSでの宣伝が苦手で、発信できていない", inside: true, plus: false, ans: "W" },
-  { emo: "📈", t: "小麦粉やバターの値段が世界的に上がってきた", inside: false, plus: false, ans: "T" },
+const EVENTS: { t: string; inside: boolean; plus: boolean; ans: Q }[] = [
+  { t: "うちには他店にない自家製ソースのレシピがある", inside: true, plus: true, ans: "S" },
+  { t: "駅前の再開発で、店の前の人通りが増えそうだ", inside: false, plus: true, ans: "O" },
+  { t: "うちはSNSでの宣伝が苦手で、発信できていない", inside: true, plus: false, ans: "W" },
+  { t: "小麦粉やバターの値段が世界的に上がってきた", inside: false, plus: false, ans: "T" },
 ];
 
 function judge(inside: boolean, plus: boolean): Q {
@@ -43,7 +44,7 @@ function Sorter() {
   const [idx, setIdx] = useState(0);
   const [ansIn, setAnsIn] = useState<boolean | null>(null);
   const [ansPlus, setAnsPlus] = useState<boolean | null>(null);
-  const [placed, setPlaced] = useState<Partial<Record<Q, { emo: string; t: string }>>>({});
+  const [placed, setPlaced] = useState<Partial<Record<Q, { t: string }>>>({});
 
   const done = idx >= EVENTS.length;
   const ev = done ? null : EVENTS[idx];
@@ -53,7 +54,7 @@ function Sorter() {
 
   const next = () => {
     if (!ev) return;
-    setPlaced((p) => ({ ...p, [ev.ans]: { emo: ev.emo, t: ev.t } }));
+    setPlaced((p) => ({ ...p, [ev.ans]: { t: ev.t } }));
     setIdx((i) => i + 1);
     setAnsIn(null);
     setAnsPlus(null);
@@ -78,12 +79,12 @@ function Sorter() {
         }`}
       >
         <div className="text-[11px] font-bold text-gray-700">
-          {c.emoji} {c.short}
+          {c.short}
           <span className="ml-1 font-mono text-[10px] text-gray-400">{q}</span>
         </div>
         {item ? (
           <div className="mt-1 rounded-lg bg-white/80 px-1.5 py-1 text-[10px] font-bold leading-tight text-gray-700">
-            {item.emo} {item.t}
+            {item.t}
           </div>
         ) : (
           <div className="mt-1 text-center text-[10px] text-gray-300">（まだ空き）</div>
@@ -103,16 +104,16 @@ function Sorter() {
       {/* 2x2 マトリクス */}
       <div className="mt-4">
         <div className="ml-10 grid grid-cols-2 text-center text-[11px] font-bold text-gray-500">
-          <span>😀 プラス</span>
-          <span>😟 マイナス</span>
+          <span>プラス</span>
+          <span>マイナス</span>
         </div>
         <div className="mt-1 flex items-stretch gap-1">
           <div className="flex w-10 flex-col">
             <div className="flex flex-1 items-center justify-center text-[11px] font-bold text-gray-500">
-              <span className="-rotate-90 whitespace-nowrap">🏠 内部</span>
+              <span className="-rotate-90 whitespace-nowrap">内部</span>
             </div>
             <div className="flex flex-1 items-center justify-center text-[11px] font-bold text-gray-500">
-              <span className="-rotate-90 whitespace-nowrap">🌍 外部</span>
+              <span className="-rotate-90 whitespace-nowrap">外部</span>
             </div>
           </div>
           <div className="grid flex-1 grid-cols-2 gap-1.5">
@@ -131,7 +132,7 @@ function Sorter() {
             出来事 {idx + 1} / {EVENTS.length}
           </div>
           <p className="mt-1 text-sm font-bold text-gray-800">
-            {ev.emo} {ev.t}
+            {ev.t}
           </p>
 
           <div className="mt-3 space-y-2">
@@ -146,7 +147,7 @@ function Sorter() {
                       ansIn === v ? "bg-brand-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
                     }`}
                   >
-                    {v ? "🏠 会社の中（内部）" : "🌍 世の中（外部）"}
+                    {v ? "会社の中（内部）" : "世の中（外部）"}
                   </button>
                 ))}
               </div>
@@ -162,7 +163,7 @@ function Sorter() {
                       ansPlus === v ? "bg-brand-600 text-white" : "bg-white text-gray-600 ring-1 ring-gray-300"
                     }`}
                   >
-                    {v ? "😀 追い風（プラス）" : "😟 向かい風（マイナス）"}
+                    {v ? "追い風（プラス）" : "向かい風（マイナス）"}
                   </button>
                 ))}
               </div>
@@ -179,14 +180,14 @@ function Sorter() {
             >
               {correct ? (
                 <>
-                  ⭕ その通り！　<b>{CELLS[myCell].axis}</b> ＝ {CELLS[myCell].emoji}{" "}
+                  その通り！　<b>{CELLS[myCell].axis}</b> ＝{" "}
                   <b>{CELLS[myCell].name}</b> のマスに入ります。
                 </>
               ) : (
                 <>
-                  ❌ おしい。この出来事は <b>{ev.inside ? "会社の中（内部）" : "世の中（外部）"}</b> ×{" "}
+                  おしい。この出来事は <b>{ev.inside ? "会社の中（内部）" : "世の中（外部）"}</b> ×{" "}
                   <b>{ev.plus ? "追い風（プラス）" : "向かい風（マイナス）"}</b> なので、
-                  {CELLS[ev.ans].emoji} <b>{CELLS[ev.ans].name}</b> のマスです。
+                  <b>{CELLS[ev.ans].name}</b> のマスです。
                 </>
               )}
               <button
@@ -203,7 +204,7 @@ function Sorter() {
       {done && (
         <div className="mt-4">
           <div className="rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-            💡 <b>気づいた？</b>　どんな出来事も<b>「内か外か」「＋か−か」の2つの質問だけ</b>で
+            <InlineIcon name="lightbulb" /><b>気づいた？</b>　どんな出来事も<b>「内か外か」「＋か−か」の2つの質問だけ</b>で
             必ず4マスのどこかに入ります。埋めたマトリクスから
             <b>「強み×機会」を組み合わせて作戦を立てる</b>のがSWOT分析の使い方です。
           </div>
@@ -217,7 +218,7 @@ function Sorter() {
       )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 <b>強み・弱み＝内部</b>（自分で変えられる）、<b>機会・脅威＝外部</b>（自分では変えにくい）。
+        <InlineIcon name="lightbulb" /><b>強み・弱み＝内部</b>（自分で変えられる）、<b>機会・脅威＝外部</b>（自分では変えにくい）。
       </div>
     </Panel>
   );
@@ -264,7 +265,6 @@ function Quiz() {
                       onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
                       className={`flex-1 rounded-lg px-1 py-1.5 text-xs font-bold transition active:scale-95 ${tone}`}
                     >
-                      {CELLS[opt].emoji}
                       <span className="ml-0.5">{opt}</span>
                     </button>
                   );
@@ -272,7 +272,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${CELLS[it.ans].name}。 `}
+                  {correct ? "正解！ " : `正解は ${CELLS[it.ans].name}。 `}
                   {it.why}
                 </p>
               )}

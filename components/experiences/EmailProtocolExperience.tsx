@@ -7,11 +7,12 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「電子メールのしくみ」専用の体験。
 //   ① 配達体験 … 2.5D の配送模型（あなた→送信サーバ→相手のメールサーバ→相手）を
-//      ✉️が移動し、路面の区間標識（SMTP / POP・IMAP）が光る＝経路だけで送受の違いが分かる
+//      メールが移動し、路面の区間標識（SMTP / POP・IMAP）が光る＝経路だけで送受の違いが分かる
 //   ② POPとIMAP … スマホで受信→PCでも確認。POP=端末へ取り出す／IMAP=サーバ上で同期
 //   ③ To / CC / BCC の違い 仕分けクイズ
 // ============================================================================
@@ -32,7 +33,7 @@ const STEPS: FlowStep[] = [
     segments: { send: "idle", relay: "idle", fetch: "idle" },
     mail: { stop: "you", tone: "draft", label: "会議の件" },
     proto: null,
-    detail: <>🧑 あなたがメールを書いて「送信」を押しました。ここから✉️の旅が始まります。</>,
+    detail: <>あなたがメールを書いて「送信」を押しました。ここからメールの旅が始まります。</>,
   },
   {
     title: "あなた → 送信サーバ",
@@ -40,7 +41,7 @@ const STEPS: FlowStep[] = [
     segments: { send: "active", relay: "idle", fetch: "idle" },
     mail: { stop: "smtp", tone: "smtp", label: "会議の件" },
     proto: "SMTP",
-    detail: <>📤 あなたの端末 → 送信サーバ。<b>送るときはSMTP</b>。ポストに投函するイメージ。</>,
+    detail: <>あなたの端末 → 送信サーバ。<b>送るときはSMTP</b>。ポストに投函するイメージ。</>,
   },
   {
     title: "送信サーバ → 相手のメールサーバ",
@@ -48,7 +49,7 @@ const STEPS: FlowStep[] = [
     segments: { send: "done", relay: "active", fetch: "idle" },
     mail: { stop: "mailbox", tone: "smtp", label: "会議の件" },
     proto: "SMTP",
-    detail: <>🚚 送信サーバ → 相手の受信サーバ。<b>サーバ同士もSMTP</b>でバケツリレーして、相手のメールボックス（受信箱）へ。</>,
+    detail: <>送信サーバ → 相手の受信サーバ。<b>サーバ同士もSMTP</b>でバケツリレーして、相手のメールボックス（受信箱）へ。</>,
   },
   {
     title: "相手が受け取る",
@@ -56,7 +57,7 @@ const STEPS: FlowStep[] = [
     segments: { send: "done", relay: "done", fetch: "active" },
     mail: { stop: "friend", tone: "recv", label: "会議の件" },
     proto: "POP / IMAP",
-    detail: <>📥 相手がメールを読むとき、受信サーバから<b>POP または IMAP</b>で取り出します。ここだけプロトコルが変わる！</>,
+    detail: <>相手がメールを読むとき、受信サーバから<b>POP または IMAP</b>で取り出します。ここだけプロトコルが変わる！</>,
   },
   {
     title: "まとめ：経路で覚える",
@@ -66,7 +67,7 @@ const STEPS: FlowStep[] = [
     proto: null,
     detail: (
       <>
-        💡 まとめ：<b>送る＝SMTP（あなた→サーバ→サーバ）、受け取る＝POP / IMAP</b>。「S」MTPのSを<b>Send（送信）</b>と結びつけて覚えよう。
+        <InlineIcon name="lightbulb" />まとめ：<b>送る＝SMTP（あなた→サーバ→サーバ）、受け取る＝POP / IMAP</b>。「S」MTPのSを<b>Send（送信）</b>と結びつけて覚えよう。
       </>
     ),
   },
@@ -78,10 +79,10 @@ function MailFlow() {
   const s = STEPS[player.index];
   return (
     <Panel>
-      <SectionTitle step={1}>✉️ を配達してみよう</SectionTitle>
+      <SectionTitle step={1}>メールを配達してみよう</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         メールは<b className="text-gray-800">「送る」と「受け取る」で使う約束（プロトコル）が違います</b>。
-        ✉️を運びながら、どの区間で何を使うか見てみよう。
+        メールを運びながら、どの区間で何を使うか見てみよう。
       </p>
 
       <div className="mt-3 flex min-w-0 items-center justify-between gap-2">
@@ -161,7 +162,7 @@ function syncView(proto: "POP" | "IMAP", phase: SyncPhase): Omit<SyncSceneProps,
     ? {
         nodes: { server: "idle", phone: "idle", pc: "error" },
         lanes: { pc: "active" },
-        boxes: { server: { mail: false, note: "空（取り出し済み）" }, phone: { mail: true, read: true }, pc: { mail: false, note: "メールがない…😢" } },
+        boxes: { server: { mail: false, note: "空（取り出し済み）" }, phone: { mail: true, read: true }, pc: { mail: false, note: "メールがない…" } },
         mail: { at: "phone", tone: "recv", label: "スマホの中だけ" },
       }
     : {
@@ -195,7 +196,7 @@ function PopImap() {
       <SectionTitle step={2}>POP と IMAP ― スマホで読んだら、PCでは？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         どちらも「受信」のプロトコルですが、<b className="text-gray-800">メールをどこに置くか</b>が違います。
-        方式を選んで「📱スマホで受信」してから、「💻PCでも確認」してみよう。
+        方式を選んで「スマホで受信」してから、「PCでも確認」してみよう。
       </p>
 
       <div className="mt-3 flex gap-1.5">
@@ -208,7 +209,7 @@ function PopImap() {
               proto === p ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
             }`}
           >
-            {p === "POP" ? "📥 POP" : "☁️ IMAP"} {tried.has(p) && "✓"}
+            {p === "POP" ? "POP" : "IMAP"} {tried.has(p) && "✓"}
           </button>
         ))}
       </div>
@@ -220,12 +221,12 @@ function PopImap() {
       <div className="mt-3 flex gap-2">
         {phase === "idle" && (
           <button type="button" onClick={() => setPhase("phone")} className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-95">
-            📱 スマホで受信する
+            スマホで受信する
           </button>
         )}
         {phase === "phone" && (
           <button type="button" onClick={checkPc} className="flex-1 rounded-xl bg-brand-600 py-2.5 text-sm font-bold text-white transition active:scale-95">
-            💻 PCでも確認する
+            PCでも確認する
           </button>
         )}
         {phase !== "idle" && (
@@ -269,7 +270,7 @@ function PopImap() {
 
       {bothTried && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200" data-testid="popimap-insight">
-          💡 <b>気づいた？</b>　違いは<b>「メールの置き場所」</b>。
+          <InlineIcon name="lightbulb" /><b>気づいた？</b>　違いは<b>「メールの置き場所」</b>。
           <b>POP＝手元に持ってくる（サーバから取り出す）／IMAP＝サーバに置いたまま</b>。
           スマホとPCで同じメールを見たいなら IMAP です。
         </div>
@@ -340,7 +341,7 @@ function CcBccQuiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}
@@ -349,7 +350,7 @@ function CcBccQuiz() {
         })}
       </ul>
       <div className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm leading-relaxed text-rose-900 ring-1 ring-rose-200">
-        🚩 一斉送信でうっかり<b>To/CCに全員のアドレス</b>を入れると、メールアドレスの漏えいに。
+        <InlineIcon name="flag" />一斉送信でうっかり<b>To/CCに全員のアドレス</b>を入れると、メールアドレスの漏えいに。
         個人情報を守るなら<b>BCC</b>。
       </div>
     </Panel>

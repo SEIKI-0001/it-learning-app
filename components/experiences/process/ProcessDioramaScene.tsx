@@ -1,5 +1,6 @@
 "use client";
 
+import Icon from "@/components/ui/Icon";
 import { Box, type Camera, type Vec3 } from "../scene/Diorama3D";
 import {
   Chair,
@@ -119,12 +120,13 @@ export function ProcessDioramaScene({ stations, docs, reducedMotion }: { station
             <DioramaLabel key={s.name} at={{ x: STATION_X[i], y: DESK_Y - 30, z: 116 }} place="above">
               <div className={styles.clock} data-slow={s.slow ? "true" : "false"} data-improved={s.improved ? "true" : "false"} data-testid={`clock-${i}`}>
                 <span className={styles.clockName}>
-                  {s.emoji} {s.name}
+                  <Icon name={s.icon} className="mr-0.5 inline-block h-3 w-3 align-[-1px]" />
+                  {s.name}
                 </span>
-                <span className={styles.clockTime}>⏱ {s.minutes}分</span>
+                <span className={styles.clockTime}>{s.minutes}分</span>
                 {s.queue > 0 && (
                   <span className={styles.queueBadge} data-testid={`queue-${i}`}>
-                    📄×{s.queue} 待ち
+                    書類×{s.queue} 待ち
                   </span>
                 )}
               </div>

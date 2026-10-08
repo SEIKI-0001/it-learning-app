@@ -7,6 +7,7 @@ import { useBeats } from "./calc/useBeats";
 import d from "./diagram/diagram.module.css";
 import { Arrow, Box, Caption, Lead, PointsPanel, Seg } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「生産管理と発注方式」。
 //   ① MRP：完成品の需要 → 部品の総所要量 → 在庫を差し引く → 発注、を数字が流れる形で（段階表示）
@@ -59,7 +60,7 @@ function MrpPanel() {
       <div ref={ref} className="mt-3 space-y-0.5" data-testid="prod-mrp" data-beat={beat}>
         <div className={on(1)}>
           <Row label="① 需要" sub="生産計画">
-            <Box tone="soft">🪑 いす 40台</Box>
+            <Box tone="soft">いす 40台</Box>
           </Row>
         </div>
         <div className={on(2)}>
@@ -86,7 +87,7 @@ function MrpPanel() {
           </Row>
         </div>
       </div>
-      {beat >= 4 && <Note>💡 在庫は<b>引く</b>。「必要な数 − 手元にある数 ＝ 注文する数」です。</Note>}
+      {beat >= 4 && <Note><InlineIcon name="lightbulb" />在庫は<b>引く</b>。「必要な数 − 手元にある数 ＝ 注文する数」です。</Note>}
       <Replay onClick={replay} hidden={reducedMotion} />
     </Panel>
   );
@@ -269,11 +270,11 @@ function InventoryPanel() {
           <Note>
             {mode === "fixedQty" ? (
               <>
-                💡 ▲の<b>間隔はばらばら</b>、でも<b>量は毎回同じ</b>。発注点 ＝ 1日の使用量10 × 調達期間3日 ＋ 安全在庫20 ＝ <b>50</b>。届くまでの3日分を残して発注します。
+                <InlineIcon name="lightbulb" />▲の<b>間隔はばらばら</b>、でも<b>量は毎回同じ</b>。発注点 ＝ 1日の使用量10 × 調達期間3日 ＋ 安全在庫20 ＝ <b>50</b>。届くまでの3日分を残して発注します。
               </>
             ) : (
               <>
-                💡 ▲は<b>10日おきに等間隔</b>、でも<b>量は毎回ちがう</b>。その日の在庫を見て「次の補充まで足りる量」を計算します。
+                <InlineIcon name="lightbulb" />▲は<b>10日おきに等間隔</b>、でも<b>量は毎回ちがう</b>。その日の在庫を見て「次の補充まで足りる量」を計算します。
               </>
             )}
           </Note>
@@ -315,7 +316,7 @@ function ComparePanel() {
         ))}
       </div>
       <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
-        💡 定<b className="text-gray-800">量</b>＝量が固定、定<b className="text-gray-800">期</b>＝時期が固定。濃い枠が「固定されている方」です。
+        <InlineIcon name="lightbulb" />定<b className="text-gray-800">量</b>＝量が固定、定<b className="text-gray-800">期</b>＝時期が固定。濃い枠が「固定されている方」です。
       </p>
     </Panel>
   );

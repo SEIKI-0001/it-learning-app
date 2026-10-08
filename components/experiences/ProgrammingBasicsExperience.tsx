@@ -5,6 +5,7 @@ import { CodeLines, FlowDiagram } from "./algorithm/FlowDiagram";
 import { DataFormatStage, TranslateStage } from "./progbasics/ExamStages";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「プログラミング基礎」専用の解説。
@@ -510,7 +511,7 @@ export default function ProgrammingBasicsExperience() {
           <DataFormatStage />
         </div>
         <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-          📌 見分け方：<b>キーと値の組</b>→JSON ／ <b>自由に決めたタグ</b>→XML ／ <b>Webページの構造</b>→HTML ／ <b>カンマ区切りの表</b>→CSV
+          <InlineIcon name="flag" />見分け方：<b>キーと値の組</b>→JSON ／ <b>自由に決めたタグ</b>→XML ／ <b>Webページの構造</b>→HTML ／ <b>カンマ区切りの表</b>→CSV
         </div>
       </Panel>
     </div>

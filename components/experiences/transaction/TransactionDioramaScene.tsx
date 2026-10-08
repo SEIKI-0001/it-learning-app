@@ -19,6 +19,7 @@ import {
 import { Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import type { MoneySpot, TransactionSceneProps, TxLaneId } from "./transactionTypes";
 import styles from "./transactiondiorama.module.css";
+import Icon from "@/components/ui/Icon";
 
 // トランザクションの図解：ネットバンキングの振込（口座A → 口座B に500円）。
 // 手前の自宅でスマホの銀行アプリから振込を頼むと、銀行のデータセンターの勘定系システム（Transaction Engine）が
@@ -173,7 +174,7 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
                     口座{id.toUpperCase()}
                     {acc.locked && (
                       <span className={styles.lockChip} data-testid={`lock-${id}`}>
-                        🔒 ロック中
+                        <Icon name="lock" className="mr-0.5 inline-block h-3 w-3 align-[-1px]" />ロック中
                       </span>
                     )}
                   </span>

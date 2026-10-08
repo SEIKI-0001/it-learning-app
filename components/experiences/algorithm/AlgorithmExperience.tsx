@@ -41,7 +41,7 @@ export default function AlgorithmExperience() {
       </div>
 
       <Panel>
-        <SectionTitle emoji="▶">コンピュータになって最後まで実行</SectionTitle>
+        <SectionTitle icon="play">コンピュータになって最後まで実行</SectionTitle>
         <p className="mt-2 text-sm leading-relaxed text-gray-600">
           お題は<b className="text-gray-800">「1 から 5 までを足す」</b>。黄色い●が「いま実行している場所」です。
           再生すると●が矢印の上を進み、<b className="text-gray-800">条件の答えで道が変わり</b>、
@@ -53,7 +53,7 @@ export default function AlgorithmExperience() {
       </Panel>
 
       <Panel>
-        <SectionTitle emoji="📌">いま動かした図に、3つの基本構造がそろっている</SectionTitle>
+        <SectionTitle icon="layers">いま動かした図に、3つの基本構造がそろっている</SectionTitle>
         <ul className="mt-3 space-y-2">
           {STRUCTURES.map((s) => (
             <li key={s.name} className={`rounded-xl px-3.5 py-2.5 text-sm ring-1 ${s.tone}`}>

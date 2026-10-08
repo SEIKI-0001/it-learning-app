@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「生成AIとDX」専用の体験。
@@ -24,7 +26,7 @@ type Prompt = {
 const PROMPTS: Prompt[] = [
   {
     id: "vague",
-    label: "😶 あいまいに頼む",
+    label: "あいまいに頼む",
     q: "なんかいい感じの文章書いて",
     a: "「いつもお世話になっております。皆様のご健勝をお祈り申し上げます…」",
     tone: "amber",
@@ -33,20 +35,20 @@ const PROMPTS: Prompt[] = [
   },
   {
     id: "specific",
-    label: "🎯 具体的に頼む",
+    label: "具体的に頼む",
     q: "中学生向けに、遠足の持ち物リストを5つ、理由つきで",
     a: "「①水筒（熱中症対策）②雨がっぱ（急な雨でも両手が空く）③タオル…」",
     tone: "emerald",
-    verdict: "✅ ねらいどおりの回答",
+    verdict: "ねらいどおりの回答",
     note: "プロンプトが具体的なほど、ねらった答えが返りやすい。相手・目的・形式を伝えるのがコツ。",
   },
   {
     id: "fact",
-    label: "📅 事実をたずねる",
+    label: "事実をたずねる",
     q: "みどり市の花火大会は今年いつ開催？",
     a: "「みどり市花火大会は毎年8月15日、みどり川河川敷で開催されています！」（自信満々）",
     tone: "rose",
-    verdict: "😨 もっともらしいけど…？",
+    verdict: "もっともらしいけど…？",
     note: "",
     factCheck:
       "実際に調べると…そんな花火大会は存在しませんでした。これがハルシネーション——AIが事実と違う内容を自信ありげに作ってしまう現象。学習データにない・古いことは特に危険。",
@@ -104,7 +106,7 @@ function AiLab() {
           </div>
           {/* AIの回答 */}
           <div className="flex items-start gap-1.5">
-            <span className="mt-0.5 text-lg">🤖</span>
+            <Icon name="bot" className="mt-0.5 h-5 w-5 text-gray-600" />
             <div className="max-w-[85%] rounded-xl rounded-tl-sm bg-gray-100 px-3.5 py-2 text-[13px] leading-relaxed text-gray-800">
               {p.a}
             </div>
@@ -120,14 +122,14 @@ function AiLab() {
           {p.factCheck &&
             (checked ? (
               <div className="rounded-xl bg-rose-50 px-3.5 py-2.5 text-sm leading-relaxed text-rose-900 ring-2 ring-rose-300">
-                🚨 {p.factCheck}
+                <InlineIcon name="alert" />{p.factCheck}
               </div>
             ) : (
               <button
                 onClick={() => setChecked(true)}
                 className="w-full rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white transition active:scale-95"
               >
-                🔍 本当か、事実を確認してみる
+                本当か、事実を確認してみる
               </button>
             ))}
         </div>
@@ -139,7 +141,7 @@ function AiLab() {
 
       {done && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          💡 分かったこと：<b>①プロンプト次第で答えの質が変わる</b>／<b>②AIは平気で間違える（ハルシネーション）</b>。
+          <InlineIcon name="lightbulb" />分かったこと：<b>①プロンプト次第で答えの質が変わる</b>／<b>②AIは平気で間違える（ハルシネーション）</b>。
           だから、そのまま使わず<b>人が事実を確認する</b>のが鉄則です。
         </div>
       )}
@@ -279,14 +281,14 @@ function Quiz() {
                       onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
                       className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-bold transition active:scale-95 ${tone}`}
                     >
-                      {opt === "適切" ? "⭕ 適切" : "❌ 不適切"}
+                      {opt === "適切" ? "適切" : "不適切"}
                     </button>
                   );
                 })}
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

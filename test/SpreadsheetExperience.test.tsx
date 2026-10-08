@@ -34,7 +34,7 @@ describe("SpreadsheetExperience", () => {
   it("keeps the relative / absolute copy demo", () => {
     renderDeck();
     click("絶対参照 $E$1");
-    click("⬇ 下にコピーして埋める");
+    click("↓ 下にコピーして埋める");
     expect(screen.getByText(/コピーしても税率の参照が固定/)).toBeInTheDocument();
   });
 
@@ -48,7 +48,7 @@ describe("SpreadsheetExperience", () => {
     expect(screen.getByTestId("sheet-read-grid-B1")).toHaveAttribute("data-mark", "amber");
     for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(2550));
     expect(screen.getByTestId("sheet-read-grid-C4")).toHaveTextContent("220");
-    click("⬇ C5・C6 へ複写する");
+    click("↓ C5・C6 へ複写する");
     expect(screen.getByTestId("sheet-read-copies")).toHaveTextContent("B6＊(1＋B$1)");
     expect(screen.getByTestId("sheet-read-grid-C5")).toHaveTextContent("550");
   });

@@ -1,4 +1,5 @@
 import styles from "./logic.module.css";
+import Icon from "@/components/ui/Icon";
 
 // 入力スイッチ → 論理ゲート → 出力ランプ の回路図。
 // 1 の信号は線が「入力側から」黄色く満たされていき、ゲートに届いてから出力線、最後にランプが点く。
@@ -103,9 +104,16 @@ export function GateCircuit({ op, a, b, out, runKey, reducedMotion }: { op: Op; 
         data-testid="logic-lamp"
         data-lit={out ? "true" : "false"}
       />
-      <text x={LAMP.x} y={LAMP.y} textAnchor="middle" dominantBaseline="central" fontSize={20} className={styles.lampIcon} style={{ opacity: out ? 1 : 0, transitionDelay: `${lampDelay}ms` }}>
-        💡
-      </text>
+      <Icon
+        name="lightbulb"
+        x={LAMP.x - 11}
+        y={LAMP.y - 11}
+        width={22}
+        height={22}
+        color="#b45309"
+        className={styles.lampIcon}
+        style={{ opacity: out ? 1 : 0, transitionDelay: `${lampDelay}ms` }}
+      />
       <text x={LAMP.x} y={LAMP.y} textAnchor="middle" dominantBaseline="central" fontSize={16} fill="#9ca3af" className={styles.lampIcon} style={{ opacity: out ? 0 : 1, transitionDelay: `${lampDelay}ms` }}>
         ○
       </text>

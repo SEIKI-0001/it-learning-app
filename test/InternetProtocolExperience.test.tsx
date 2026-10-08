@@ -26,9 +26,9 @@ describe("InternetProtocolExperience", () => {
         <InternetProtocolExperience />
       </ExperienceSlideDeck>,
     );
-    expect(screen.getByText("❌ 言葉がちがう → 通じない…")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "🇯🇵 日本語" }));
-    expect(screen.getByText("⭕ 同じ言葉どうし → 通じる！")).toBeInTheDocument();
+    expect(screen.getByText("言葉がちがう → 通じない…")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "日本語" }));
+    expect(screen.getByText("同じ言葉どうし → 通じる！")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "解説2" }));
     expect(screen.getByText("TCP / IP")).toBeInTheDocument();
   });

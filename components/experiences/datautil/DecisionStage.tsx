@@ -1,6 +1,8 @@
 import type { CSSProperties } from "react";
 import stage from "../scene/stage.module.css";
 import styles from "./datautil.module.css";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「データが意思決定に変わる過程」を1つのステージで動かす。
 //   数字のカードがバラバラに置かれる → カードが自分の列へ移動し棒グラフが伸びる →
@@ -58,7 +60,7 @@ export function DecisionStage({ mode, phase, reducedMotion }: DecisionStageProps
     >
       {phase === 0 && (
         <div className={styles.goal}>
-          <span className={styles.goalIcon}>🎯</span>
+          <span className={styles.goalIcon}><Icon name="target" className="h-7 w-7" /></span>
           <span className={styles.goalText}>成績を上げたい！</span>
           <span className={styles.goalSub}>→ まず点数のデータを集めよう</span>
         </div>
@@ -127,27 +129,27 @@ export function DecisionStage({ mode, phase, reducedMotion }: DecisionStageProps
       {!use && phase >= 2 && (
         <div className={styles.box} data-testid="data-box">
           <span className={styles.boxLid} aria-hidden />
-          <span className={styles.boxLabel}>📦 保存済み（{SUBJECTS.length}件）</span>
+          <span className={styles.boxLabel}>保存済み（{SUBJECTS.length}件）</span>
         </div>
       )}
-      {!use && phase >= 3 && <span className={`${styles.note} ${stage.pop}`}>👀 眺めるだけ…何も見えてこない</span>}
+      {!use && phase >= 3 && <span className={`${styles.note} ${stage.pop}`}>眺めるだけ…何も見えてこない</span>}
 
       {/* 気づき → 行動 */}
       {insight && !action && (
         <span className={`${styles.callout} ${stage.pop}`} style={{ left: `${COL(0) + 18}%`, top: 44 }} data-testid="data-insight">
-          ⚠ 数学だけ平均より {AVERAGE - SUBJECTS[0].score} 点低い
+          <InlineIcon name="alert" />数学だけ平均より {AVERAGE - SUBJECTS[0].score} 点低い
         </span>
       )}
       {action && (
         <span className={styles.action} data-testid="data-action">
-          📘 行動：数学を重点学習
+          行動：数学を重点学習
           <small>毎日の勉強に数学 +20分</small>
         </span>
       )}
 
       {after && (
         <span className={styles.nextTest} data-testid="data-next">
-          {use ? `📈 次のテスト：数学 ${SUBJECTS[0].score} → ${IMPROVED}` : `次のテスト：数学 ${SUBJECTS[0].score} → ${SUBJECTS[0].score}（変化なし）`}
+          {use ? `次のテスト：数学 ${SUBJECTS[0].score} → ${IMPROVED}` : `次のテスト：数学 ${SUBJECTS[0].score} → ${SUBJECTS[0].score}（変化なし）`}
         </span>
       )}
     </div>

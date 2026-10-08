@@ -127,10 +127,10 @@ export function ValueChainDiorama({ stations, product, supports, value, stationN
                 data-blocked={product.blocked ? "true" : "false"}
                 data-testid="product"
                 role="img"
-                aria-label={`いま製品は ${product.emoji}`}
+                aria-label={`いま製品は ${product.label}`}
               >
-                <span key={product.emoji} className={styles.productBody}>
-                  {product.emoji}
+                <span key={product.label} className={styles.productBody}>
+                  {product.label}
                 </span>
                 {product.blocked && <span className={styles.blocked}>止まった</span>}
               </div>

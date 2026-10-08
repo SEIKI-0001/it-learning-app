@@ -6,6 +6,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { AUTOPLAY_INTERVAL_MS, useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 解説2（開発ごっこ）だけ1.5倍速で再生する。テキストが出るステップは
 // 最低でも約2.2秒は表示されるよう下限を設ける（この間隔は常にそれを超える）。
@@ -30,23 +32,23 @@ function WhatIs() {
       </p>
       <div className="mt-4 flex items-center justify-center gap-2">
         <div className="rounded-xl bg-gray-50 px-3 py-3 text-center ring-1 ring-gray-200">
-          <div className="text-2xl">🙋</div>
+          <Icon name="user" className="mx-auto h-7 w-7 text-gray-700" />
           <div className="mt-1 text-[11px] font-bold text-gray-700">利用者</div>
           <div className="text-[10px] text-gray-500">ほしい物を伝える</div>
         </div>
         <div className="flex flex-col items-center">
           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">合意</span>
-          <span className="text-lg text-gray-300">🤝</span>
+          <Icon name="handshake" className="h-5 w-5 text-gray-300" />
         </div>
         <div className="rounded-xl bg-brand-50 px-3 py-3 text-center ring-1 ring-brand-200">
-          <div className="text-2xl">🧑‍💻</div>
+          <Icon name="laptop" className="mx-auto h-7 w-7 text-brand-700" />
           <div className="mt-1 text-[11px] font-bold text-brand-700">開発者</div>
           <div className="text-[10px] text-gray-500">作れる形に整理</div>
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 料理の注文と同じ。「何を・何人分・いつまでに」を先に確認しておくイメージです。
-        ⚠️ 開発者だけで決めず、利用者と合意するのが大切。
+        <InlineIcon name="lightbulb" />料理の注文と同じ。「何を・何人分・いつまでに」を先に確認しておくイメージです。
+        <InlineIcon name="alert" />開発者だけで決めず、利用者と合意するのが大切。
       </div>
     </Panel>
   );
@@ -109,15 +111,15 @@ function WhyMatters() {
     <Panel>
       <SectionTitle step={2}>開発ごっこ：伝え方で結末が変わる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        あなたは予約システムを注文する<b className="text-gray-800">依頼者🙋</b>。
+        あなたは予約システムを注文する<b className="text-gray-800">依頼者</b>。
         伝え方を選んで進め、<b className="text-gray-800">開発者の理解が頭の中とどうズレる／そろうか</b>を見比べよう。
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-1.5 rounded-xl bg-gray-100 p-1">
         {(
           [
-            { v: "vague", label: "😶‍🌫️ あいまいに伝える", on: "bg-rose-600 text-white" },
-            { v: "clear", label: "📝 要件をはっきり", on: "bg-emerald-600 text-white" },
+            { v: "vague", label: "あいまいに伝える", on: "bg-rose-600 text-white" },
+            { v: "clear", label: "要件をはっきり", on: "bg-emerald-600 text-white" },
           ] as const
         ).map((o) => (
           <button
@@ -169,7 +171,7 @@ function WhyMatters() {
 
       {tried.size === 2 && (
         <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="req-lesson">
-          💡 <b>要件定義をしないとズレる。要件を明確にすると認識がそろう。</b>
+          <InlineIcon name="lightbulb" /><b>要件定義をしないとズレる。要件を明確にすると認識がそろう。</b>
           丁寧に要件定義をするほど、後工程の手戻りが減ります。
         </div>
       )}
@@ -225,7 +227,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}要件。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}要件。 `}
                   {it.why}
                 </p>
               )}

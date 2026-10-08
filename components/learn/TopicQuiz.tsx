@@ -346,7 +346,7 @@ export default function TopicQuiz({
           <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className={isTimeLow ? "text-rose-600" : "text-gray-500"}>
-                ⏱ 制限時間
+                制限時間
               </span>
               <span className={isTimeLow ? "text-rose-600" : "text-gray-700"}>
                 残り {formatTime(timeLeft)}
@@ -494,7 +494,7 @@ export default function TopicQuiz({
       {isLast && allAnswered && !done && (
         <p className="animate-pop-in text-center text-sm font-bold text-green-700">
           {correctCount === total
-            ? `全問正解！🎯 この勢いで完了しよう`
+            ? `全問正解！ この勢いで完了しよう`
             : `${total}問クリア！ あと一押しで完了`}
         </p>
       )}

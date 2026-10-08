@@ -34,7 +34,7 @@ describe("ApiExperience", () => {
 
   it("sends GET /weather through the API and shows the response in the app", () => {
     renderFlow();
-    expect(screen.getByText("🧑‍🍳 注文口 ＝ API")).toBeInTheDocument();
+    expect(screen.getByText("注文口 ＝ API")).toBeInTheDocument();
     expect(capsule()).toHaveTextContent("GET /weather");
     expect(capsule()).toHaveAttribute("data-stop", "app");
 
@@ -53,7 +53,7 @@ describe("ApiExperience", () => {
 
   it("direct access to the service internals is blocked (only the API is the entrance)", () => {
     renderFlow();
-    fireEvent.click(screen.getByRole("button", { name: "🚫 APIを通さず、内部に直接アクセスしてみる" }));
+    fireEvent.click(screen.getByRole("button", { name: "APIを通さず、内部に直接アクセスしてみる" }));
     expect(screen.getByTestId("api-scene")).toHaveAttribute("data-bypass", "true");
     expect(capsule()).toHaveAttribute("data-stop", "wall");
     expect(screen.getByTestId("bypass-denied")).toHaveTextContent("入口は API だけ");

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { QueueStage, StackStage } from "./datastructure/StackQueueStage";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「データ構造（スタック・キュー）」専用の体験。
@@ -26,7 +28,7 @@ function StackDemo() {
       </div>
       {lastOut ? (
         <div className="mt-2 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="stack-insight">
-          💡 いま出たのは<b>最後に積んだ {lastOut}</b>。最後に積んだものが最初に出る＝<b>LIFO（Last In First Out）</b>。
+          <InlineIcon name="lightbulb" />いま出たのは<b>最後に積んだ {lastOut}</b>。最後に積んだものが最初に出る＝<b>LIFO（Last In First Out）</b>。
         </div>
       ) : (
         <p className="mt-2 text-center text-xs text-gray-500">まず push と pop を押して、どの箱が出てくるか見てみよう。</p>
@@ -49,7 +51,7 @@ function QueueDemo() {
       </div>
       {lastOut ? (
         <div className="mt-2 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="queue-insight">
-          💡 いま出たのは<b>先頭で待っていた {lastOut}</b>。最初に並んだものが最初に出る＝<b>FIFO（First In First Out）</b>。
+          <InlineIcon name="lightbulb" />いま出たのは<b>先頭で待っていた {lastOut}</b>。最初に並んだものが最初に出る＝<b>FIFO（First In First Out）</b>。
         </div>
       ) : (
         <p className="mt-2 text-center text-xs text-gray-500">enqueue と dequeue を押して、だれが列から出るか見てみよう。</p>
@@ -59,10 +61,10 @@ function QueueDemo() {
 }
 
 function Others() {
-  const list = [
-    { emoji: "🔢", t: "配列", d: "番号（添字）で位置を指定して並べる" },
-    { emoji: "🔗", t: "リスト", d: "各データが次のデータの場所を指してつながる" },
-    { emoji: "🌳", t: "木構造", d: "枝分かれして階層を表す（フォルダなど）" },
+  const list: { icon: IconName; t: string; d: string }[] = [
+    { icon: "binary", t: "配列", d: "番号（添字）で位置を指定して並べる" },
+    { icon: "link", t: "リスト", d: "各データが次のデータの場所を指してつながる" },
+    { icon: "tree", t: "木構造", d: "枝分かれして階層を表す（フォルダなど）" },
   ];
   return (
     <Panel>
@@ -70,7 +72,7 @@ function Others() {
       <div className="mt-3 space-y-2">
         {list.map((l) => (
           <div key={l.t} className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <span className="grid h-9 w-9 flex-none place-items-center rounded-lg bg-white text-lg ring-1 ring-gray-200">{l.emoji}</span>
+            <span className="grid h-9 w-9 flex-none place-items-center rounded-lg bg-white ring-1 ring-gray-200"><Icon name={l.icon} className="h-5 w-5 text-gray-700" /></span>
             <div>
               <div className="text-sm font-bold text-gray-800">{l.t}</div>
               <div className="text-xs text-gray-500">{l.d}</div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Icon, { type IconName } from "@/components/ui/Icon";
 import {
   createContext,
   useCallback,
@@ -171,17 +172,17 @@ export function Panel({ children }: { children: ReactNode }) {
 
 export function SectionTitle({
   step,
-  emoji,
+  icon,
   children,
 }: {
   step?: number;
-  emoji?: string;
+  icon?: IconName;
   children: ReactNode;
 }) {
   return (
     <h3 className="flex items-start gap-2.5 text-lg font-bold leading-snug text-gray-900 [word-break:auto-phrase]">
       <span className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-md bg-gray-900 font-mono text-xs text-white">
-        {step ?? emoji}
+        {step ?? (icon && <Icon name={icon} className="h-3.5 w-3.5" />)}
       </span>
       {children}
     </h3>
@@ -195,7 +196,7 @@ export function StepNav({
   onPrev,
   onNext,
   onReset,
-  doneLabel = "完成 🎉",
+  doneLabel = "完成",
 }: {
   index: number;
   total: number;

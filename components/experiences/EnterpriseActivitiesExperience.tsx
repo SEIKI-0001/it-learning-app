@@ -5,6 +5,7 @@ import { ExchangeMap, type Holder } from "./stakeholder/ExchangeMap";
 import styles from "./stakeholder/stakeholder.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「企業活動とステークホルダ」専用の体験。
@@ -16,21 +17,21 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 
 const HOLDERS: (Holder & { note?: string })[] = [
-  { name: "顧客", emoji: "🙋", give: "商品・サービス", get: "代金・信頼", inTok: { icon: "💴", label: "代金" }, outTok: { icon: "📦", label: "商品" } },
+  { name: "顧客", icon: "user", give: "商品・サービス", get: "代金・信頼", inTok: { icon: "yen", label: "代金" }, outTok: { icon: "package", label: "商品" } },
   {
     name: "株主",
-    emoji: "💰",
+    icon: "briefcase",
     give: "配当・成長・情報開示",
     get: "資金（出資）・経営の監視",
-    inTok: { icon: "💰", label: "出資" },
-    outTok: { icon: "💹", label: "配当" },
+    inTok: { icon: "yen", label: "出資" },
+    outTok: { icon: "trend-up", label: "配当" },
     note: "株主には経営状況を公開し（ディスクロージャー）、社外取締役などが経営を監視・けん制します（コーポレートガバナンス）。",
   },
-  { name: "従業員", emoji: "👷", give: "給料・働く場", get: "労働力・アイデア", inTok: { icon: "💪", label: "労働" }, outTok: { icon: "💴", label: "給料" } },
-  { name: "取引先", emoji: "🤝", give: "代金・注文", get: "材料・協力", inTok: { icon: "🧱", label: "材料" }, outTok: { icon: "💴", label: "代金" } },
-  { name: "金融機関", emoji: "🏦", give: "利息・返済", get: "融資（借入）", inTok: { icon: "🏦", label: "融資" }, outTok: { icon: "💴", label: "利息" } },
-  { name: "地域社会", emoji: "🏘️", give: "雇用・地域貢献", get: "働く人・活動の場", inTok: { icon: "🙌", label: "働き手" }, outTok: { icon: "🌱", label: "雇用" } },
-  { name: "国・行政", emoji: "🏛️", give: "税金", get: "ルール・インフラ", inTok: { icon: "🛣️", label: "道路等" }, outTok: { icon: "🧾", label: "税金" } },
+  { name: "従業員", icon: "users", give: "給料・働く場", get: "労働力・アイデア", inTok: { icon: "tool", label: "労働" }, outTok: { icon: "yen", label: "給料" } },
+  { name: "取引先", icon: "handshake", give: "代金・注文", get: "材料・協力", inTok: { icon: "layers", label: "材料" }, outTok: { icon: "yen", label: "代金" } },
+  { name: "金融機関", icon: "landmark", give: "利息・返済", get: "融資（借入）", inTok: { icon: "landmark", label: "融資" }, outTok: { icon: "yen", label: "利息" } },
+  { name: "地域社会", icon: "home", give: "雇用・地域貢献", get: "働く人・活動の場", inTok: { icon: "users", label: "働き手" }, outTok: { icon: "sprout", label: "雇用" } },
+  { name: "国・行政", icon: "flag", give: "税金", get: "ルール・インフラ", inTok: { icon: "map", label: "道路等" }, outTok: { icon: "file-text", label: "税金" } },
 ];
 
 function Hub() {
@@ -86,7 +87,7 @@ function Hub() {
         {h ? (
           <div key={runKey}>
             <div className="text-sm font-bold text-gray-800">
-              {h.emoji} {h.name} とのやり取り
+              <InlineIcon name={h.icon} className="text-gray-600" />{h.name} とのやり取り
             </div>
             <div className="mt-2 space-y-1.5 text-sm">
               <div className={`flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 ${rowClass}`} style={rowStyle(900)}>
@@ -130,12 +131,12 @@ function Hub() {
             allSeen || sel === "all" ? "bg-brand-600 text-white" : "text-brand-700 ring-1 ring-brand-300"
           }`}
         >
-          🔁 全部の交換を流す
+          全部の交換を流す
         </button>
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 会社は<b>たくさんの相手との交換関係</b>で成り立っています。
+        <InlineIcon name="lightbulb" />会社は<b>たくさんの相手との交換関係</b>で成り立っています。
         「ステークホルダ＝株主だけ」ではない点が試験のポイント。
       </div>
     </Panel>
@@ -167,8 +168,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "⭕ あたる" },
-                  { v: false, label: "❌ ちがう" },
+                  { v: true, label: "あたる" },
+                  { v: false, label: "ちがう" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -193,7 +194,7 @@ function Quiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}
@@ -213,7 +214,7 @@ function CsrSummary() {
         会社は利益を出すだけでなく、社会の一員としての責任（<b className="text-gray-800">CSR</b>）も果たします。
       </p>
       <div className="mt-4 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        🌍 ステークホルダには株主だけでなく、顧客・従業員・取引先・地域社会なども含まれます。
+        <InlineIcon name="flag" />ステークホルダには株主だけでなく、顧客・従業員・取引先・地域社会なども含まれます。
         信頼を得て活動を続けるために、利益とCSRの両方を大切にします。
       </div>
     </Panel>

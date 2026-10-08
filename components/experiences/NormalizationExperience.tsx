@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { NormalTables, STAGE_FOCUS, type Focus } from "./normalization/NormalTables";
 import { Panel } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「正規化」専用の体験。
@@ -141,7 +142,7 @@ export default function NormalizationExperience() {
                 priceUp ? "bg-white text-gray-700 ring-1 ring-gray-300" : "bg-gray-900 text-white"
               }`}
             >
-              {priceUp ? "元の100円に戻す" : "🍎 100円 → 120円に"}
+              {priceUp ? "元の100円に戻す" : "100円 → 120円に"}
             </button>
           </div>
           {priceUp && (
@@ -202,13 +203,13 @@ export default function NormalizationExperience() {
             disabled={stage === STAGES.length - 1}
             className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
           >
-            {stage === STAGES.length - 1 ? "完成 🎉" : "次へ進む →"}
+            {stage === STAGES.length - 1 ? "完成" : "次へ進む →"}
           </button>
         </div>
       </Panel>
 
       <Panel>
-        <h3 className="text-base font-bold text-gray-800">📌 3行で覚える正規形</h3>
+        <h3 className="text-base font-bold text-gray-800"><InlineIcon name="flag" />3行で覚える正規形</h3>
         <ul className="mt-2 space-y-2 text-sm">
           <li className="rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
             <b>第1正規形</b>：繰り返し項目をなくし、1マス1値にする。

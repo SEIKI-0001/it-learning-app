@@ -78,8 +78,8 @@ const TONE: Record<LaneTone, RouteTone> = { attack: "danger", normal: "request",
 const CARRY: Record<LaneTone, CarryTone> = { attack: "danger", normal: "info", leak: "warn", phone: "muted" };
 
 const LABEL: Record<CyberNodeId, { name: string; at: Vec3; place: "above" | "below" }> = {
-  attacker: { name: "😈 攻撃者", at: { ...AT.attacker, y: AT.attacker.y - 10, z: 100 }, place: "above" },
-  internet: { name: "🌐 インターネット", at: { ...AT.internet, y: AT.internet.y + 30 }, place: "below" },
+  attacker: { name: "攻撃者", at: { ...AT.attacker, y: AT.attacker.y - 10, z: 100 }, place: "above" },
+  internet: { name: "インターネット", at: { ...AT.internet, y: AT.internet.y + 30 }, place: "below" },
   web: { name: "Webサーバ", at: { ...AT.web, z: 124 }, place: "above" },
   db: { name: "DB", at: { ...AT.db, z: 80 }, place: "above" },
   user: { name: "利用者のブラウザ", at: { ...AT.user, y: AT.user.y + 72 }, place: "below" },
@@ -278,7 +278,7 @@ export function CyberDioramaScene({
             {damage.map((d) => (
               <DioramaLabel key={d.at} at={{ ...STOP[d.at], z: STOP[d.at].z! - 20 }} place="below">
                 <span className={dio.damage} data-damage={d.at} data-testid={`damage-${d.at}`}>
-                  💥 {d.text}
+                  {d.text}
                 </span>
               </DioramaLabel>
             ))}
@@ -295,7 +295,7 @@ export function CyberDioramaScene({
           </>
         }
       />
-      {caption?.note && <p className={styles.captionNote}>😈 {caption.note}</p>}
+      {caption?.note && <p className={styles.captionNote}>{caption.note}</p>}
     </div>
   );
 }

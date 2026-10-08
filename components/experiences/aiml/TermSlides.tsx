@@ -166,7 +166,7 @@ export function MlPractice({ step }: { step: number }) {
       testId="ml-practice"
       done={
         <>
-          🎉 ここまで解ければ、本試験のAIの問題に対応できます。<b>枠を決める → 何を渡すかで見分ける</b>。
+          ここまで解ければ、本試験のAIの問題に対応できます。<b>枠を決める → 何を渡すかで見分ける</b>。
         </>
       }
     />

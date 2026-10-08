@@ -8,6 +8,7 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「HTTPとHTTPS」専用の体験。
@@ -67,7 +68,7 @@ function Eavesdrop() {
             https ? "bg-emerald-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
           }`}
         >
-          HTTPS 🔒（暗号化）
+          HTTPS（暗号化）
         </button>
       </div>
 
@@ -123,24 +124,24 @@ function Eavesdrop() {
       >
         <dl className="space-y-2 text-sm">
           <div>
-            <dt className="text-xs font-bold text-gray-500">🧑 あなたが送った内容</dt>
+            <dt className="text-xs font-bold text-gray-500">あなたが送った内容</dt>
             <dd className="mt-0.5 break-all font-mono text-gray-800">{shown}</dd>
           </div>
           <div>
-            <dt className={`text-xs font-bold ${https ? "text-emerald-700" : "text-rose-700"}`}>😈 盗聴者に見える内容：</dt>
+            <dt className={`text-xs font-bold ${https ? "text-emerald-700" : "text-rose-700"}`}>盗聴者に見える内容：</dt>
             <dd className="mt-0.5 break-all font-mono text-gray-800" data-testid="eve-sees">
               {seen || "（空）"}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-bold text-gray-500">🗄️ 正規のWebサーバが受け取る内容</dt>
+            <dt className="text-xs font-bold text-gray-500">正規のWebサーバが受け取る内容</dt>
             <dd className="mt-0.5 break-all font-mono text-gray-800">{shown}</dd>
           </div>
         </dl>
         <div className={`mt-2 text-sm font-bold ${https ? "text-emerald-700" : "text-rose-700"}`}>
           {https
-            ? "🔒 ぐちゃぐちゃで読めない！ → 盗まれても中身は分からない（安全）"
-            : "⚠️ 丸見え！ → パスワードがそのまま盗まれる危険"}
+            ? "ぐちゃぐちゃで読めない！ → 盗まれても中身は分からない（安全）"
+            : "丸見え！ → パスワードがそのまま盗まれる危険"}
         </div>
       </div>
     </Panel>
@@ -151,7 +152,7 @@ function CompareTable() {
   const rows = [
     { k: "暗号化", http: "なし", https: "あり（SSL/TLS）" },
     { k: "盗み見", http: "中身が読める", https: "読めない" },
-    { k: "URL", http: "http://", https: "https:// 🔒" },
+    { k: "URL", http: "http://", https: "https://" },
     { k: "使う場面", http: "公開情報の閲覧など", https: "ログイン・買い物・個人情報" },
   ];
   return (
@@ -163,7 +164,7 @@ function CompareTable() {
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-3 py-2 text-left font-bold"> </th>
               <th className="px-3 py-2 text-center font-bold text-rose-700">HTTP</th>
-              <th className="px-3 py-2 text-center font-bold text-emerald-700">HTTPS 🔒</th>
+              <th className="px-3 py-2 text-center font-bold text-emerald-700">HTTPS</th>
             </tr>
           </thead>
           <tbody>
@@ -186,7 +187,7 @@ export default function HttpsExperience() {
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
         たとえると——<b>HTTP＝ハガキ</b>（運ぶ人に中身が見える）、
-        <b>HTTPS＝封筒に入れた手紙</b>（中身が見えない＝暗号化）。鍵マーク🔒が付いていれば HTTPS です。
+        <b>HTTPS＝封筒に入れた手紙</b>（中身が見えない＝暗号化）。鍵マークが付いていれば HTTPS です。
       </div>
 
       <Eavesdrop />
@@ -199,10 +200,10 @@ export default function HttpsExperience() {
             <b>HTTPS ＝ HTTP ＋ 暗号化（SSL/TLS）</b>。S は <b>Secure（安全）</b> の S（速度のSではない）。
           </li>
           <li className="rounded-xl bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200">
-            ログイン・買い物・個人情報の入力では、URLが <b className="text-emerald-700">https:// 🔒</b> かを確認。
+            ログイン・買い物・個人情報の入力では、URLが <b className="text-emerald-700">https://</b> かを確認。
           </li>
           <li className="rounded-xl bg-amber-50 px-3 py-2.5 ring-1 ring-amber-200 text-amber-900">
-            ⚠️ ただし「HTTPSだから絶対に安全なサイト」とは限りません。HTTPSが守るのは<b>通信の中身</b>で、
+            <InlineIcon name="alert" />ただし「HTTPSだから絶対に安全なサイト」とは限りません。HTTPSが守るのは<b>通信の中身</b>で、
             <b>サイト自体が詐欺でない保証ではない</b>点に注意。
           </li>
         </ul>

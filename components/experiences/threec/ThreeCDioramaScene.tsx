@@ -139,7 +139,7 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
           {/* 真ん中の作戦ボード */}
           <DioramaLabel at={{ ...BOARD, z: 110 }} place="above">
             <div className={styles.board} data-count={count} data-complete={complete ? "true" : "false"} data-testid="strategy-board">
-              <span className={styles.boardTitle}>{complete ? "✨ 作戦" : `作戦 ${count}/3`}</span>
+              <span className={styles.boardTitle}>{complete ? "作戦" : `作戦 ${count}/3`}</span>
               {complete ? (
                 <span className={styles.boardStrategy} data-testid="strategy">
                   {strategy}
@@ -157,7 +157,7 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
           {costTries > 0 && (
             <DioramaLabel at={{ ...BOARD, y: BOARD.y + 40, z: 0 }} place="below">
               <span key={costTries} className={styles.reject} role="status" data-testid="cost-reject">
-                💰 材料費300円 → ✕ Cost（費用）は3Cに入らない
+                材料費300円 → ✕ Cost（費用）は3Cに入らない
               </span>
             </DioramaLabel>
           )}
@@ -176,7 +176,7 @@ export function ThreeCDioramaScene({ researched, focus, costTries, strategy, onR
                   </button>
                 ) : (
                   <button type="button" onClick={() => onResearch(s)} className={styles.probe} aria-pressed={false}>
-                    🔍 {SPOT_META[s].action}
+                    {SPOT_META[s].action}
                   </button>
                 )}
               </div>

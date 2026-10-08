@@ -28,7 +28,7 @@ const TYPES: TypeCard[] = [
     give: "データ ＋ 正解",
     visual: (
       <>
-        🐶<span className="text-[10px] font-bold text-brand-700">犬</span> 🐱<span className="text-[10px] font-bold text-brand-700">猫</span>
+        <span className="text-[10px] font-bold text-brand-700">● 犬</span> <span className="text-[10px] font-bold text-brand-700">▲ 猫</span>
       </>
     ),
     can: "分類・回帰（正解を当てる）",
@@ -39,7 +39,7 @@ const TYPES: TypeCard[] = [
     give: "データだけ",
     visual: (
       <>
-        🐶🐶 <span className="text-gray-300">|</span> 🐱🐱
+        <span className="text-[12px]">● ●</span> <span className="text-gray-300">|</span> <span className="text-[12px]">▲ ▲</span>
       </>
     ),
     can: "クラスタリング（似たもの同士をまとめる）",
@@ -50,7 +50,7 @@ const TYPES: TypeCard[] = [
     give: "行動した結果の報酬",
     visual: (
       <>
-        🤖 <span className="text-[11px] font-bold text-emerald-600">+10</span> <span className="text-[11px] font-bold text-rose-600">−1</span>
+        <span className="text-[11px] font-bold text-emerald-600">+10</span> <span className="text-[11px] font-bold text-rose-600">−1</span>
       </>
     ),
     can: "報酬が増える行動を覚える",
@@ -169,7 +169,7 @@ function Unsupervised() {
         「グループAは犬だね」と<b>名前を付けるのは人</b>です。この仲間分けを <Term>クラスタリング</Term> といいます。
       </p>
       <div className="mt-2 rounded-xl bg-gray-50 px-3 py-2 text-[12px] leading-relaxed text-gray-600 ring-1 ring-gray-200">
-        ③と同じ写真なのに、最初から🐶🐱が付いていたか（教師あり）、付いていないか（教師なし）だけが違います。
+        ③と同じ写真なのに、最初から「犬」「猫」の名前（正解）が付いていたか（教師あり）、付いていないか（教師なし）だけが違います。
       </div>
       <Takeaway>正解なしで、似たもの同士をまとめる ＝ 教師なし学習</Takeaway>
     </Panel>

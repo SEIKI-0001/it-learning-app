@@ -4,14 +4,15 @@ import { HttpsCafeScene } from "../HttpsCafeScene";
 import type { LabSceneProps } from "./labTypes";
 import { BrowserScreen, ServerLogScreen, SnifferScreen } from "./ScreenStoryScene";
 import ss from "./screenstory.module.css";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // パターンF：本番の 3D カフェ（E）の下に、B の画面（ブラウザ／盗聴ツール／サーバログ）を拡大して付ける。
 
-const WHO = [
-  { who: "あなたのPCの画面", icon: "🧑" },
-  { who: "あなたのPCの画面", icon: "🧑" },
-  { who: "隣の席の盗聴者の画面", icon: "😈" },
-  { who: "Webサーバのログ", icon: "🗄️" },
+const WHO: { who: string; icon: IconName }[] = [
+  { who: "あなたのPCの画面", icon: "user" },
+  { who: "あなたのPCの画面", icon: "user" },
+  { who: "隣の席の盗聴者の画面", icon: "attacker" },
+  { who: "Webサーバのログ", icon: "server" },
 ];
 
 export function CafeScreensScene(props: LabSceneProps) {
@@ -24,7 +25,7 @@ export function CafeScreensScene(props: LabSceneProps) {
         <div className={ss.story} data-mode={mode}>
           <section className={ss.device} data-focus="true" aria-label={zoom.who}>
             <p className={ss.deviceLabel}>
-              <span aria-hidden>{zoom.icon}</span> {zoom.who}（拡大）
+              <Icon name={zoom.icon} aria-hidden className="inline h-3.5 w-3.5 align-text-bottom" /> {zoom.who}（拡大）
               {index === 2 && (
                 <span className={ss.chip} data-tone="danger">
                   盗聴中

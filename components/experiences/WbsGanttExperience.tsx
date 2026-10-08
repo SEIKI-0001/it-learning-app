@@ -5,6 +5,7 @@ import { CriticalStage, LineStage, ParallelStage, PertPractice, PertSolveStage, 
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 import styles from "./wbs/wbs.module.css";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「WBSとガントチャート」専用の体験。
@@ -56,7 +57,7 @@ function Wbs() {
               root ? "" : "ring-4 ring-brand-200"
             }`}
           >
-            文化祭の出し物 {!root && "👆"}
+            文化祭の出し物
           </button>
         </div>
 
@@ -84,7 +85,7 @@ function Wbs() {
                           isOpen ? "" : "ring-2 ring-brand-300"
                         }`}
                       >
-                        {c.t} {!isOpen && "👆"}
+                        {c.t}
                       </button>
                       {isOpen && (
                         <div className="mt-1 space-y-1" data-testid={`wbs-subs-${c.t}`}>
@@ -118,7 +119,7 @@ function Wbs() {
       </div>
       {done && (
         <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-xs font-bold leading-relaxed text-brand-800 ring-1 ring-brand-200" data-testid="wbs-next">
-          📋 WBSは「何をやるか」の一覧。まだ<b>日付はない</b>。→ 次のガントチャートで「いつやるか」を決める。
+          WBSは「何をやるか」の一覧。まだ<b>日付はない</b>。→ 次のガントチャートで「いつやるか」を決める。
         </p>
       )}
       <div className="mt-2 flex items-center justify-between">
@@ -155,9 +156,9 @@ const ROW = 30; // 1行の高さ(px)
 const CRITICAL = ["買い出し", "飾りつけ", "リハーサル"];
 
 const CASES = [
-  { id: "plan", label: "📅 予定どおり", task: null, days: 0 },
-  { id: "shop", label: "⚡ 買い出し +2日", task: "買い出し", days: 2 },
-  { id: "sign", label: "⚡ 看板 +2日", task: "看板づくり", days: 2 },
+  { id: "plan", label: "予定どおり", task: null, days: 0 },
+  { id: "shop", label: "買い出し +2日", task: "買い出し", days: 2 },
+  { id: "sign", label: "看板 +2日", task: "看板づくり", days: 2 },
 ] as const;
 
 /** 遅れた作業から、依存している後続作業へ遅れを伝える */
@@ -224,7 +225,7 @@ function Gantt() {
           <div className="grid flex-1" style={{ gridTemplateColumns: `repeat(${DAYS}, 1fr)` }}>
             {Array.from({ length: DAYS }, (_, i) => (
               <div key={i} className={`text-center text-[10px] ${i + 1 === DEADLINE ? "font-bold text-rose-500" : "text-gray-500"}`}>
-                {i + 1 === DEADLINE ? "🎪" : `${i + 1}`}
+                {i + 1 === DEADLINE ? "本番" : `${i + 1}`}
               </div>
             ))}
           </div>
@@ -307,7 +308,7 @@ function Gantt() {
           </div>
         </div>
       </div>
-      <p className="mt-1 text-right text-[10px] text-gray-500">🎪＝7日目の文化祭本番　赤い縦線＝「終わってから始める」つながり</p>
+      <p className="mt-1 text-right text-[10px] text-gray-500">本番＝7日目の文化祭本番　赤い縦線＝「終わってから始める」つながり</p>
 
       <div
         className={`mt-3 rounded-xl px-4 py-3 text-sm font-medium leading-relaxed ring-1 ${
@@ -316,16 +317,16 @@ function Gantt() {
         aria-live="polite"
         data-testid="gantt-verdict"
       >
-        {cid === "plan" && <>✅ すべての棒が🎪より左＝全作業が本番に間に合う予定。</>}
+        {cid === "plan" && <><InlineIcon name="check" className="text-emerald-600" />すべての棒が本番の日より左＝全作業が本番に間に合う予定。</>}
         {cid === "shop" && (
           <>
-            ❌ 材料がないと飾りつけも、その後のリハーサルもできない…。<b>買い出しの遅れが後ろの作業に連鎖</b>して、
-            本番🎪に<b>2日</b>間に合わない！ この「連鎖」が一目で見えるのがガントチャートの強み。
+            <InlineIcon name="x" className="text-rose-600" />材料がないと飾りつけも、その後のリハーサルもできない…。<b>買い出しの遅れが後ろの作業に連鎖</b>して、
+            本番に<b>2日</b>間に合わない！ この「連鎖」が一目で見えるのがガントチャートの強み。
           </>
         )}
         {cid === "sign" && (
           <>
-            ✅ 看板づくりは同じ2日遅れでも、後ろにつながる作業がなく<b>余裕</b>があるので本番に間に合う。
+            <InlineIcon name="check" className="text-emerald-600" />看板づくりは同じ2日遅れでも、後ろにつながる作業がなく<b>余裕</b>があるので本番に間に合う。
             買い出し→飾りつけ→リハーサルのように、<b>1日も遅れが許されない経路</b>を<b>クリティカルパス</b>といいます。
           </>
         )}
@@ -381,7 +382,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
                   {it.why}
                 </p>
               )}

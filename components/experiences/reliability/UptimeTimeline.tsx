@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import styles from "./reliability.module.css";
+import Icon from "@/components/ui/Icon";
 
 // 稼働率の式を「実際の時間」に置き換える時間軸。
-//   600時間を同じ縮尺で並べ、🟩稼働（MTBF）→⚡故障→🟥修理（MTTR）→✅復旧→🟩… を繰り返す。
+//   600時間を同じ縮尺で並べ、緑=稼働（MTBF）→故障→赤=修理（MTTR）→復旧→緑… を繰り返す。
 //   MTBF を伸ばすと緑の区間が横に伸び、MTTR を縮めると赤の区間が縮む（幅が連続して変わる）。
 //   ▶ で時計を進めると、稼働時間・停止時間が積み上がり、サイクルの終わりごとに式の答えと一致する。
 
@@ -122,7 +123,7 @@ export function UptimeTimeline({ mtbf, mttr, focus, reducedMotion }: { mtbf: num
               style={{ width: pct(s.len) }}
               data-testid={`seg-${s.kind}`}
             >
-              {s.kind === "down" && s.len >= 14 && <span className="absolute inset-0 grid place-items-center text-[10px]">🔧</span>}
+              {s.kind === "down" && s.len >= 14 && <span className="absolute inset-0 grid place-items-center"><Icon name="tool" className="h-3 w-3 text-white" /></span>}
             </div>
           ))}
         </div>
@@ -142,7 +143,7 @@ export function UptimeTimeline({ mtbf, mttr, focus, reducedMotion }: { mtbf: num
               style={{ left: pct(mtbf) }}
               data-testid="label-mttr"
             >
-              ⚡故障→🔧修理 MTTR {mttr}h→✅復旧
+              故障→修理 MTTR {mttr}h→復旧
             </span>
           </>
         )}
@@ -170,7 +171,7 @@ export function UptimeTimeline({ mtbf, mttr, focus, reducedMotion }: { mtbf: num
       <div className="mt-2 flex items-center gap-2">
         {!reducedMotion && (
           <button type="button" onClick={play} className="flex-none rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white active:scale-95">
-            {playing ? "⏸ 止める" : "▶ 時計を進める"}
+            {playing ? "止める" : "▶ 時計を進める"}
           </button>
         )}
         <input
@@ -186,7 +187,7 @@ export function UptimeTimeline({ mtbf, mttr, focus, reducedMotion }: { mtbf: num
       </div>
       <div className="mt-1.5 grid grid-cols-3 gap-1 text-center text-[11px]" data-testid="uptime-acc">
         <div className={`rounded-lg px-1 py-1 font-bold ${!cur ? "bg-brand-50 text-brand-800" : cur.kind === "up" ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
-          {Math.round(shown)}h：{!cur ? `✅ 復旧（${segs.length / 2}サイクル）` : cur.kind === "up" ? "🟩 稼働中" : "🟥 修理中"}
+          {Math.round(shown)}h：{!cur ? `復旧（${segs.length / 2}サイクル）` : cur.kind === "up" ? "稼働中" : "修理中"}
         </div>
         <div className="rounded-lg bg-gray-50 px-1 py-1 text-gray-700 ring-1 ring-gray-200">
           稼働 <b className="text-emerald-700">{Math.round(acc.up)}h</b> / 停止 <b className="text-rose-700">{Math.round(acc.down)}h</b>

@@ -61,7 +61,7 @@ describe("CommonKeyExperience", () => {
 
   it("stolen case: the key is copied in phase 1, so later ciphertext is decrypted by the eavesdropper", () => {
     renderFlow();
-    click("😈 鍵を盗まれたケース");
+    click("鍵を盗まれたケース");
     next();
     expect(screen.getByTestId("ck-tap")).toHaveAttribute("data-tap", "key");
     expect(key("盗聴者")).toBeInTheDocument();

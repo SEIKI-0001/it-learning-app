@@ -1,3 +1,4 @@
+import Icon, { type IconName } from "@/components/ui/Icon";
 import styles from "./auth.module.css";
 
 // 利用者が「認証ゲート → 認可ゲート → 目的の画面」へ進む流れ。
@@ -14,9 +15,9 @@ export const PEOPLE: { id: Who; label: string; name: string; role: string; passO
   { id: "fake", label: "パスワード違い", name: "？？？", role: "", passOk: false },
 ];
 
-export const PLACES: { id: Where; label: string; icon: string; allowed: string[] }[] = [
-  { id: "payslip", label: "自分の給与明細", icon: "📄", allowed: ["一般社員", "管理者"] },
-  { id: "admin", label: "管理画面", icon: "⚙️", allowed: ["管理者"] },
+export const PLACES: { id: Where; label: string; icon: IconName; allowed: string[] }[] = [
+  { id: "payslip", label: "自分の給与明細", icon: "file-text", allowed: ["一般社員", "管理者"] },
+  { id: "admin", label: "管理画面", icon: "settings", allowed: ["管理者"] },
 ];
 
 /** どこで止まるか：1=認証で止まる 2=認可で止まる 3=目的地に着く */
@@ -57,14 +58,14 @@ export function AuthFlow({ who, where, phase, reducedMotion }: { who: Who; where
       <Gate x={X[2]} title="② 認可" sub="何をしてよい？" tone="emerald" state={!authzDone ? "idle" : authzOk ? "ok" : "ng"} testId="auth-gate-authz" />
       {/* 目的地 */}
       <div className="absolute top-[34px] -translate-x-1/2 text-center" style={{ left: `${GOAL}%` }}>
-        <div className={`grid h-12 w-12 place-items-center rounded-xl bg-white text-2xl ring-2 ${phase >= 3 && stop === 3 ? "ring-emerald-500" : "ring-gray-300"}`}>{place.icon}</div>
+        <div className={`grid h-12 w-12 place-items-center rounded-xl bg-white ring-2 ${phase >= 3 && stop === 3 ? "ring-emerald-500" : "ring-gray-300"}`}><Icon name={place.icon} className="h-7 w-7 text-gray-700" /></div>
         <div className="mt-1 w-16 text-[10px] font-bold leading-tight text-gray-700">{place.label}</div>
       </div>
 
       {/* 利用者（移動する） */}
       <div className={`${styles.walker} absolute top-[44px] z-20 -translate-x-1/2 text-center`} style={{ left: `${X[at]}%` }} data-testid="auth-walker">
-        <div className={`grid h-9 w-9 place-items-center rounded-full bg-white text-xl ring-2 ${blocked ? "ring-rose-500" : "ring-gray-400"} ${blocked ? styles.bump : ""}`}>
-          {who === "fake" ? "🕵️" : "🧑"}
+        <div className={`grid h-9 w-9 place-items-center rounded-full bg-white ring-2 ${blocked ? "ring-rose-500" : "ring-gray-400"} ${blocked ? styles.bump : ""}`}>
+          <Icon name={who === "fake" ? "attacker" : "user"} className={`h-5 w-5 ${who === "fake" ? "text-rose-600" : "text-gray-700"}`} />
         </div>
         {/* 認証が通ると「誰か」の札が付く */}
         {authDone && authOk && (
@@ -84,10 +85,10 @@ export function AuthFlow({ who, where, phase, reducedMotion }: { who: Who; where
       >
         {phase === 0 && `${p.label} が「${place.label}」を開こうとしています`}
         {phase >= 1 && !authOk && "✕ 認証で止まる：パスワードが違い、本人と確認できない"}
-        {phase === 1 && authOk && `⭕ 認証OK：「${p.name}」本人と確認できた`}
+        {phase === 1 && authOk && `認証OK：「${p.name}」本人と確認できた`}
         {phase >= 2 && authOk && !authzOk && `✕ 認可で止まる：本人確認はOK。でも${p.role}に「${place.label}」の権限はない`}
-        {phase === 2 && authzOk && `⭕ 認可OK：${p.role}は「${place.label}」を見てよい`}
-        {phase >= 3 && authzOk && `🎉 「${place.label}」を開けた（認証→認可の両方を通過）`}
+        {phase === 2 && authzOk && `認可OK：${p.role}は「${place.label}」を見てよい`}
+        {phase >= 3 && authzOk && `「${place.label}」を開けた（認証→認可の両方を通過）`}
       </div>
     </div>
   );

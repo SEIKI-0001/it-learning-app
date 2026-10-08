@@ -59,7 +59,79 @@ export type IconName =
   | "palette" // 情報デザイン・情報メディア
   | "database" // データベース
   | "globe" // ネットワーク
-  | "lock"; // 情報セキュリティ
+  | "lock" // 情報セキュリティ
+  // ---- 解説用ピクトグラム(教材の絵文字を置き換える) ----
+  | "user"
+  | "users"
+  | "attacker"
+  | "mail"
+  | "key"
+  | "unlock"
+  | "smartphone"
+  | "laptop"
+  | "monitor"
+  | "server"
+  | "wifi"
+  | "signal"
+  | "plug"
+  | "package"
+  | "yen"
+  | "truck"
+  | "store"
+  | "factory"
+  | "home"
+  | "landmark"
+  | "briefcase"
+  | "handshake"
+  | "megaphone"
+  | "message"
+  | "bot"
+  | "bug"
+  | "zap"
+  | "bell"
+  | "eye"
+  | "trend-up"
+  | "trend-down"
+  | "cloud"
+  | "sun"
+  | "storm"
+  | "ban"
+  | "upload"
+  | "download"
+  | "link"
+  | "clipboard"
+  | "hourglass"
+  | "printer"
+  | "car"
+  | "train"
+  | "door"
+  | "map-pin"
+  | "flag"
+  | "tag"
+  | "gem"
+  | "help"
+  | "smile"
+  | "frown"
+  | "thermometer"
+  | "music"
+  | "fingerprint"
+  | "headphones"
+  | "goggles"
+  | "snowflake"
+  | "battery"
+  | "heart"
+  | "heart-pulse"
+  | "git-branch"
+  | "tree"
+  | "undo"
+  | "plus"
+  | "minus"
+  | "arrow-down"
+  | "fishhook"
+  | "ambulance"
+  | "microscope"
+  | "grid"
+  | "sparkle";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   "book-open": (
@@ -375,6 +447,463 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M16 9.5l5 5M21 9.5l-5 5" />
     </>
   ),
+  // ---- 解説用ピクトグラム(教材内の絵文字を置き換える。人・モノ・場所・記号) ----
+  user: (
+    <>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M5 20.5a7 7 0 0 1 14 0" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="8.5" r="3.2" />
+      <path d="M3 20a6 6 0 0 1 12 0" />
+      <path d="M15.5 5.6a3.2 3.2 0 0 1 0 5.8" />
+      <path d="M17.5 14.4A6 6 0 0 1 21 20" />
+    </>
+  ),
+  attacker: (
+    <>
+      <path d="M5 20.5a7 7 0 0 1 14 0" />
+      <path d="M6.5 8a5.5 5.5 0 0 1 11 0" />
+      <path d="M5 8h14" />
+      <rect x="7.5" y="9.5" width="9" height="3.5" rx="1.75" />
+      <path d="M12 9.5v3.5" />
+    </>
+  ),
+  mail: (
+    <>
+      <rect x="3" y="5.5" width="18" height="13" rx="1.5" />
+      <path d="m3.5 6.5 8.5 6.5 8.5-6.5" />
+    </>
+  ),
+  key: (
+    <>
+      <circle cx="7.5" cy="15.5" r="4" />
+      <path d="m10.4 12.6 9.1-9.1" />
+      <path d="m16 7 2.5 2.5M18.5 4.5 21 7" />
+    </>
+  ),
+  unlock: (
+    <>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 7.7-1.5" />
+    </>
+  ),
+  smartphone: (
+    <>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2" />
+      <path d="M11 18.5h2" />
+    </>
+  ),
+  laptop: (
+    <>
+      <rect x="4.5" y="5" width="15" height="10" rx="1" />
+      <path d="M2.5 19h19l-1.5-4h-16z" />
+    </>
+  ),
+  monitor: (
+    <>
+      <rect x="3" y="4" width="18" height="12" rx="1.5" />
+      <path d="M9 20h6M12 16v4" />
+    </>
+  ),
+  server: (
+    <>
+      <rect x="4" y="3.5" width="16" height="7" rx="1.5" />
+      <rect x="4" y="13.5" width="16" height="7" rx="1.5" />
+      <path d="M8 7h.01M8 17h.01" />
+      <path d="M12 7h4M12 17h4" />
+    </>
+  ),
+  wifi: (
+    <>
+      <path d="M3 9a13 13 0 0 1 18 0" />
+      <path d="M6 12.5a8.5 8.5 0 0 1 12 0" />
+      <path d="M9 16a4 4 0 0 1 6 0" />
+      <circle cx="12" cy="19.2" r="0.6" />
+    </>
+  ),
+  signal: (
+    <>
+      <path d="M5 20v-3M10 20v-7M15 20V9M20 20V5" />
+    </>
+  ),
+  plug: (
+    <>
+      <path d="M9 3v4M15 3v4" />
+      <path d="M6 7h12v4a6 6 0 0 1-12 0z" />
+      <path d="M12 17v4" />
+    </>
+  ),
+  package: (
+    <>
+      <path d="M12 3 20 7v10l-8 4-8-4V7z" />
+      <path d="m4 7 8 4 8-4" />
+      <path d="M12 11v10" />
+      <path d="m8 5 8 4" />
+    </>
+  ),
+  yen: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.5 7 3.5 5 3.5-5" />
+      <path d="M12 12v5.5M9 12.5h6M9 15h6" />
+    </>
+  ),
+  truck: (
+    <>
+      <path d="M2.5 6h11v10h-11z" />
+      <path d="M13.5 9.5H18l3 3.5v3h-7.5" />
+      <circle cx="6.5" cy="17.5" r="1.8" />
+      <circle cx="17" cy="17.5" r="1.8" />
+    </>
+  ),
+  store: (
+    <>
+      <path d="M4 10v10h16V10" />
+      <path d="M3 10 5 4h14l2 6a2.7 2.7 0 0 1-4.5 1.6A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-4.5-.4A2.7 2.7 0 0 1 3 10z" />
+      <path d="M10 20v-5h4v5" />
+    </>
+  ),
+  factory: (
+    <>
+      <path d="M3 21V10l5 3V10l5 3V5h4l1 16" />
+      <path d="M3 21h18" />
+      <path d="M7 17h2M12 17h2" />
+    </>
+  ),
+  home: (
+    <>
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+      <path d="M10 21v-6h4v6" />
+    </>
+  ),
+  landmark: (
+    <>
+      <path d="M3 9.5 12 4l9 5.5z" />
+      <path d="M5.5 10v8M10 10v8M14 10v8M18.5 10v8" />
+      <path d="M3 21h18M4 18h16" />
+    </>
+  ),
+  briefcase: (
+    <>
+      <rect x="3" y="7" width="18" height="13" rx="1.5" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M3 12.5h18" />
+    </>
+  ),
+  handshake: (
+    <>
+      <path d="M2.5 8h3v8h-3" />
+      <path d="M21.5 8h-3v8h3" />
+      <path d="M5.5 9.5 8.5 7.5h3.2l1.6 1.3" />
+      <path d="M18.5 9.5 15.5 7.5h-1.6L10 11a1.3 1.3 0 0 0 1.8 1.8l2.4-1.8 3.3 3.3" />
+      <path d="M5.5 14.5 9.5 18a1.2 1.2 0 0 0 1.7-1.7" />
+      <path d="m11.2 16.3.8.7a1.2 1.2 0 0 0 1.7-1.7" />
+      <path d="m13.7 15.3.3.2a1.2 1.2 0 0 0 1.7-1.7l-.9-1" />
+      <path d="m17.5 14.3 1-.8" />
+    </>
+  ),
+  megaphone: (
+    <>
+      <path d="M3 10v4h3l9 5V5L6 10z" />
+      <path d="M18 9.5a3.5 3.5 0 0 1 0 5" />
+      <path d="m6.5 14 1.5 6h2.5l-1-5.5" />
+    </>
+  ),
+  message: (
+    <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-9l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+  ),
+  bot: (
+    <>
+      <rect x="4" y="8" width="16" height="12" rx="2.5" />
+      <path d="M12 8V4.5M10.5 4h3" />
+      <path d="M9 13h.01M15 13h.01" />
+      <path d="M9.5 16.5h5" />
+      <path d="M2 13v3M22 13v3" />
+    </>
+  ),
+  bug: (
+    <>
+      <rect x="7.5" y="8" width="9" height="12" rx="4.5" />
+      <path d="M9.5 8a2.5 2.5 0 0 1 5 0" />
+      <path d="M12 12v8" />
+      <path d="M3.5 13.5h4M16.5 13.5h4M4.5 8.5l3 2M19.5 8.5l-3 2M4.5 19l3-2M19.5 19l-3-2" />
+    </>
+  ),
+  zap: <path d="M13 2.5 4.5 13.5H12l-1 8 8.5-11H12z" />,
+  bell: (
+    <>
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  "trend-up": (
+    <>
+      <path d="m3 17 6-6 4 4 8-8" />
+      <path d="M15 7h6v6" />
+    </>
+  ),
+  "trend-down": (
+    <>
+      <path d="m3 7 6 6 4-4 8 8" />
+      <path d="M15 17h6v-6" />
+    </>
+  ),
+  cloud: <path d="M7 19a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 9.5a4.8 4.8 0 0 1-.5 9.5z" />,
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
+    </>
+  ),
+  storm: (
+    <>
+      <path d="M7 15a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 5.5a4.8 4.8 0 0 1 .5 9.5" />
+      <path d="m12.5 12-2.5 4h4l-2.5 4" />
+    </>
+  ),
+  ban: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m5.6 5.6 12.8 12.8" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M12 15V3.5" />
+      <path d="m7 8 5-4.5L17 8" />
+      <path d="M4 15v4a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-4" />
+    </>
+  ),
+  download: (
+    <>
+      <path d="M12 3.5V15" />
+      <path d="m7 10.5 5 4.5 5-4.5" />
+      <path d="M4 15v4a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 19v-4" />
+    </>
+  ),
+  link: (
+    <>
+      <path d="M10 14a4 4 0 0 0 5.7 0l3.6-3.6a4 4 0 0 0-5.7-5.7L12.5 5.8" />
+      <path d="M14 10a4 4 0 0 0-5.7 0l-3.6 3.6a4 4 0 0 0 5.7 5.7l1.1-1.1" />
+    </>
+  ),
+  clipboard: (
+    <>
+      <rect x="5" y="4.5" width="14" height="17" rx="1.5" />
+      <rect x="9" y="2.5" width="6" height="4" rx="1" />
+      <path d="M8.5 11h7M8.5 15h5" />
+    </>
+  ),
+  hourglass: (
+    <>
+      <path d="M6 2.5h12M6 21.5h12" />
+      <path d="M7 2.5c0 4.5 5 6 5 9.5s-5 5-5 9.5M17 2.5c0 4.5-5 6-5 9.5s5 5 5 9.5" />
+    </>
+  ),
+  printer: (
+    <>
+      <path d="M7 9V3h10v6" />
+      <rect x="3" y="9" width="18" height="8" rx="1.5" />
+      <path d="M7 14h10v7H7z" />
+    </>
+  ),
+  car: (
+    <>
+      <path d="M3 16v-3l2-5.5A1.5 1.5 0 0 1 6.4 6.5h11.2A1.5 1.5 0 0 1 19 7.5l2 5.5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
+      <path d="M3.5 12.5h17" />
+      <circle cx="7" cy="17" r="1.8" />
+      <circle cx="17" cy="17" r="1.8" />
+    </>
+  ),
+  train: (
+    <>
+      <rect x="5" y="3" width="14" height="14" rx="3" />
+      <path d="M5 10h14" />
+      <path d="M9 13.5h.01M15 13.5h.01" />
+      <path d="m8 21 1.5-4M16 21l-1.5-4" />
+    </>
+  ),
+  door: (
+    <>
+      <path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17" />
+      <path d="M3 21h18" />
+      <path d="M15 12h.01" />
+    </>
+  ),
+  "map-pin": (
+    <>
+      <path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" />
+      <circle cx="12" cy="10" r="2.4" />
+    </>
+  ),
+  flag: (
+    <>
+      <path d="M5 21V4" />
+      <path d="M5 4h12l-2.5 4L17 12H5" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z" />
+      <circle cx="7.5" cy="7.5" r="1.3" />
+    </>
+  ),
+  gem: (
+    <>
+      <path d="M6 3.5h12l3.5 5L12 21 2.5 8.5z" />
+      <path d="M2.5 8.5h19" />
+      <path d="m9 3.5-1.5 5L12 21l4.5-12.5-1.5-5" />
+    </>
+  ),
+  help: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.6 2.6 0 0 1 5 1c0 1.8-2.5 2.2-2.5 3.8" />
+      <path d="M12 17.3h.01" />
+    </>
+  ),
+  smile: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.5 14a4.2 4.2 0 0 0 7 0" />
+      <path d="M9 9.5h.01M15 9.5h.01" />
+    </>
+  ),
+  frown: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8.5 16.5a4.2 4.2 0 0 1 7 0" />
+      <path d="M9 9.5h.01M15 9.5h.01" />
+    </>
+  ),
+  thermometer: (
+    <>
+      <path d="M10 4a2 2 0 0 1 4 0v10a4 4 0 1 1-4 0z" />
+      <path d="M12 10v6" />
+    </>
+  ),
+  music: (
+    <>
+      <path d="M9 18V5.5L20 3.5v12" />
+      <circle cx="6.5" cy="18" r="2.5" />
+      <circle cx="17.5" cy="15.5" r="2.5" />
+    </>
+  ),
+  fingerprint: (
+    <>
+      <path d="M7 6.5A7 7 0 0 1 19 11.5v1.5" />
+      <path d="M5 10.5a7 7 0 0 0-.2 1.5v2.5" />
+      <path d="M8.5 20a14 14 0 0 1-1-6v-2a4.5 4.5 0 0 1 9 0v1.5" />
+      <path d="M12 12v2.5a12 12 0 0 0 1.5 6" />
+      <path d="M16.5 17a14 14 0 0 1-.5 3.5" />
+    </>
+  ),
+  headphones: (
+    <>
+      <path d="M4 15v-3a8 8 0 0 1 16 0v3" />
+      <rect x="3" y="14" width="4.5" height="6.5" rx="1.5" />
+      <rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5" />
+    </>
+  ),
+  goggles: (
+    <>
+      <path d="M3 9.5a1.5 1.5 0 0 1 1.5-1.5h15A1.5 1.5 0 0 1 21 9.5v5a2 2 0 0 1-2 2h-3.5L13.5 14h-3l-2 2.5H5a2 2 0 0 1-2-2z" />
+    </>
+  ),
+  snowflake: (
+    <>
+      <path d="M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6" />
+      <path d="m9.5 4 2.5 2 2.5-2M9.5 20l2.5-2 2.5 2" />
+    </>
+  ),
+  battery: (
+    <>
+      <rect x="2.5" y="7" width="16" height="10" rx="2" />
+      <path d="M21.5 10.5v3" />
+      <path d="M6 10.5v3M9.5 10.5v3" />
+    </>
+  ),
+  heart: (
+    <path d="M12 20s-8-4.7-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.3 12 20 12 20z" />
+  ),
+  "heart-pulse": (
+    <>
+      <path d="M12 20s-8-4.7-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.3 12 20 12 20z" />
+      <path d="M4.5 12.5h4l1.5-2.5 2.5 5 1.5-2.5h5.5" />
+    </>
+  ),
+  "git-branch": (
+    <>
+      <circle cx="6" cy="5.5" r="2" />
+      <circle cx="6" cy="18.5" r="2" />
+      <circle cx="18" cy="8" r="2" />
+      <path d="M6 7.5v9" />
+      <path d="M18 10c0 4-6 3.5-11 7" />
+    </>
+  ),
+  tree: (
+    <>
+      <rect x="9" y="3" width="6" height="4" rx="1" />
+      <rect x="3" y="17" width="6" height="4" rx="1" />
+      <rect x="15" y="17" width="6" height="4" rx="1" />
+      <path d="M12 7v5M6 17v-5h12v5" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
+  "arrow-down": (
+    <>
+      <path d="M12 4v16" />
+      <path d="m5 13 7 7 7-7" />
+    </>
+  ),
+  fishhook: (
+    <>
+      <path d="M15 3v10.5a5 5 0 0 1-10 0V12" />
+      <path d="m3 14 2-2 2 2" />
+      <circle cx="15" cy="3" r="0.6" />
+    </>
+  ),
+  ambulance: (
+    <>
+      <path d="M2.5 6.5h11v10h-11z" />
+      <path d="M13.5 9.5H18l3 3.5v3.5h-7.5" />
+      <path d="M8 9v5M5.5 11.5h5" />
+      <circle cx="6.5" cy="17.5" r="1.8" />
+      <circle cx="17" cy="17.5" r="1.8" />
+    </>
+  ),
+  microscope: (
+    <>
+      <path d="M6 21h12" />
+      <path d="M8 18h8" />
+      <path d="m10 3 4 1.2-2.4 8-4-1.2z" />
+      <path d="M9.6 12.5 9 14.5" />
+      <path d="M14.5 9.5a5.5 5.5 0 0 1 1.5 8.5" />
+    </>
+  ),
+  grid: (
+    <>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="1.5" />
+      <path d="M3.5 9.2h17M3.5 14.8h17M9.2 3.5v17M14.8 3.5v17" />
+    </>
+  ),
+  sparkle: <path d="M12 3c.6 4.4 1.9 6 6.5 7-4.6 1-5.9 2.6-6.5 7-.6-4.4-1.9-6-6.5-7 4.6-1 5.9-2.6 6.5-7z" />,
 };
 
 type IconProps = SVGProps<SVGSVGElement> & {

@@ -65,7 +65,7 @@ describe("DigitalSignatureExperience", () => {
 
   it("shows the tampering as its own steps: grab, rewrite (signature untouched), then a hash mismatch", () => {
     renderDeck();
-    click("😈 途中で書き換え");
+    click("途中で書き換え");
     next(4);
     expect(envelope()).toHaveAttribute("data-stop", "attacker");
     expect(envelope()).toHaveAttribute("data-tampered", "false");
@@ -87,7 +87,7 @@ describe("DigitalSignatureExperience", () => {
 
   it("detects impersonation: a signature from another private key fails with the real public key", () => {
     renderDeck();
-    click("🎭 別人がなりすまし");
+    click("別人がなりすまし");
     next(2);
     expect(screen.getByRole("img", { name: "偽者の秘密鍵" })).toHaveAttribute("data-forged", "true");
     toEnd();
@@ -113,7 +113,7 @@ describe("DigitalSignatureExperience", () => {
     expect(screen.getByTestId("ca-token")).toHaveAttribute("data-certified", "true");
     expect(screen.getByTestId("ca-user-verdict")).toHaveTextContent("本物と確認");
 
-    click("🎭 偽者が申請");
+    click("偽者が申請");
     click("1ステップ進む");
     expect(screen.getByTestId("ca-check")).toHaveTextContent("本人確認 ✗");
     click("1ステップ進む");

@@ -9,6 +9,7 @@ import { CaDioramaScene } from "./signature/CaDioramaScene";
 import { SignatureDioramaScene } from "./signature/SignatureDioramaScene";
 import type { SignatureSceneProps } from "./signature/signatureTypes";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「ディジタル署名・認証局(CA)」専用の体験。
@@ -39,7 +40,7 @@ const SCENARIOS: {
 }[] = [
   {
     key: "ok",
-    label: "📮 そのまま届く",
+    label: "そのまま届く",
     senderName: "山田さん",
     doc: "1万円 支払います",
     arrived: "1万円 支払います",
@@ -47,12 +48,12 @@ const SCENARIOS: {
     sealHash: "A4-9F",
     sigFp: "A4-9F",
     docFp: "A4-9F",
-    verdict: "✅ 検証OK！本人が送った・改ざんなし",
+    verdict: "検証OK！本人が送った・改ざんなし",
     why: "署名から取り出した指紋と、文書から計算した指紋がピッタリ一致。安心して受け取れます。",
   },
   {
     key: "tamper",
-    label: "😈 途中で書き換え",
+    label: "途中で書き換え",
     senderName: "山田さん",
     doc: "1万円 支払います",
     arrived: "100万円 支払います",
@@ -60,12 +61,12 @@ const SCENARIOS: {
     sealHash: "A4-9F",
     sigFp: "A4-9F",
     docFp: "7C-21",
-    verdict: "❌ 改ざんを検知！",
+    verdict: "改ざんを検知！",
     why: "文書が1文字でも変わると指紋も変わります。署名の中の指紋（元の文書のもの）と合わないので、書き換えがバレました。",
   },
   {
     key: "fake",
-    label: "🎭 別人がなりすまし",
+    label: "別人がなりすまし",
     senderName: "偽の山田さん",
     doc: "100万円 支払います",
     arrived: "100万円 支払います",
@@ -73,7 +74,7 @@ const SCENARIOS: {
     sealHash: "5E-88",
     sigFp: "??-??",
     docFp: "5E-88",
-    verdict: "❌ なりすましを検知！",
+    verdict: "なりすましを検知！",
     why: "偽者は山田さんの秘密鍵を持っていません。別の鍵で作った署名は、山田さんの公開鍵では正しく開けず、でたらめな指紋になってバレました。",
   },
 ];
@@ -117,7 +118,7 @@ function stepsFor(key: Scenario): LabStep[] {
       title: "文書を書く",
       route: `${s.senderName}の手元`,
       detail: fake ? (
-        <>🎭 偽者が山田さんになりすまし、「{s.doc}」という文書を作りました。</>
+        <>偽者が山田さんになりすまし、「{s.doc}」という文書を作りました。</>
       ) : (
         <>{s.senderName}が「{s.doc}」という文書を書きました。これに<b>署名</b>を付けて送ります。</>
       ),
@@ -157,13 +158,13 @@ function stepsFor(key: Scenario): LabStep[] {
   const channel: LabStep[] = tamper
     ? [
         {
-          title: "😈 第三者が通信の途中で横取り",
+          title: "第三者が通信の途中で横取り",
           route: "通信路 → 第三者の手元",
           detail: <>通信路の途中で、<b>第三者が文書と署名を横取り</b>しました。まだ中身は「{s.doc}」のままです。</>,
           view: { ...base, nodes: { ...idle, attacker: "error" }, laneActive: true, envelope: env("attacker", true, false, "grab") },
         },
         {
-          title: `😈 「${s.doc.split(" ")[0]}」を「${s.arrived.split(" ")[0]}」に書き換える`,
+          title: `「${s.doc.split(" ")[0]}」を「${s.arrived.split(" ")[0]}」に書き換える`,
           route: "第三者が文書だけ書き換え",
           detail: (
             <>
@@ -324,17 +325,17 @@ function SignatureLab() {
 
       {allTried && (
         <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200" data-testid="sig-all-tried">
-          🎉 本物は通し、改ざんもなりすましも見破れた！これがディジタル署名の
+          本物は通し、改ざんもなりすましも見破れた！これがディジタル署名の
           <b>「改ざん検知」＋「なりすまし防止」</b>です。
         </div>
       )}
 
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        📌 しくみ：送信者は文書の指紋（<b>ハッシュ値</b>）を<b>自分の秘密鍵</b>で暗号化して添付＝署名。
+        <InlineIcon name="flag" />しくみ：送信者は文書の指紋（<b>ハッシュ値</b>）を<b>自分の秘密鍵</b>で暗号化して添付＝署名。
         受信者は<b>送信者の公開鍵</b>で署名を開き、自分で計算した指紋と照合します。
       </div>
       <div className="mt-2 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚠️ <b>暗号化とは鍵の使い方が逆</b>。暗号化は「相手の公開鍵で施錠→相手の秘密鍵で開錠」。
+        <InlineIcon name="alert" /><b>暗号化とは鍵の使い方が逆</b>。暗号化は「相手の公開鍵で施錠→相手の秘密鍵で開錠」。
         署名は<b>「自分の秘密鍵で署名→相手が公開鍵で検証」</b>です。
       </div>
     </Panel>
@@ -348,7 +349,7 @@ const CA_STEPS: { title: string; real: CaFlowView; fake: CaFlowView; detail: { r
     fake: { at: "owner", applicant: "fake", check: null, certified: false, userVerdict: null, active: ["owner"] },
     detail: {
       real: <>署名の検証には「山田さんの公開鍵」を使います。でも公開鍵は誰でも作れる。<b>「山田の公開鍵です」と名乗る鍵が本当に山田さんのものか</b>、どう確かめる？</>,
-      fake: <>🎭 偽者が<b>自分で作った鍵</b>に「山田の公開鍵です」と名札を付けました。見た目では本物と区別できません。</>,
+      fake: <>偽者が<b>自分で作った鍵</b>に「山田の公開鍵です」と名札を付けました。見た目では本物と区別できません。</>,
     },
   },
   {
@@ -396,8 +397,8 @@ function CaPanel() {
 
       <div className="mt-3 grid grid-cols-2 gap-1.5">
         {[
-          { v: false, label: "🙋 本人が申請" },
-          { v: true, label: "🎭 偽者が申請" },
+          { v: false, label: "本人が申請" },
+          { v: true, label: "偽者が申請" },
         ].map((o) => (
           <button
             key={String(o.v)}
@@ -449,7 +450,7 @@ function CaPanel() {
         <b className="text-gray-800">電子証明書</b>を発行します。
       </p>
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        📌 公開鍵・認証局・証明書をまとめて支える仕組みを <b>PKI（公開鍵基盤）</b> と呼びます。
+        <InlineIcon name="flag" />公開鍵・認証局・証明書をまとめて支える仕組みを <b>PKI（公開鍵基盤）</b> と呼びます。
         身近な例：<b>https</b> のサイトもこの証明書で本物だと確認しています。
       </div>
     </Panel>
@@ -470,8 +471,8 @@ function CompareTable() {
           <thead>
             <tr className="bg-gray-100 text-gray-600">
               <th className="p-2 font-bold"></th>
-              <th className="p-2 font-bold">🔒 暗号化</th>
-              <th className="p-2 font-bold">✍️ ディジタル署名</th>
+              <th className="p-2 font-bold">暗号化</th>
+              <th className="p-2 font-bold">ディジタル署名</th>
             </tr>
           </thead>
           <tbody>

@@ -5,10 +5,12 @@ import { useInView } from "../scene/useInView";
 import { useReducedMotion } from "../scene/useReducedMotion";
 import { Panel, SectionTitle } from "../ui";
 import styles from "./reliability.module.css";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
-// 稼働率の「基本」4枚。どれも同じ 🟩稼働 90h ／ 🟥修理 10h の時間の帯を使い回す。
+// 稼働率の「基本」4枚。どれも同じ 緑=稼働 90h ／ 赤=修理 10h の時間の帯を使い回す。
 //   ① 意味　：100時間のうち何%動いていた？ → 稼働率＝動いていた時間÷全体の時間
-//   ② 名前　：正常稼働→⚡故障→🔧修理→✅復旧→正常稼働 を時計の針が進み、緑に MTBF・赤に MTTR の名札が付く
+//   ② 名前　：正常稼働→故障→修理→復旧→正常稼働 を時計の針が進み、緑に MTBF・赤に MTTR の名札が付く
 //   ③ 導出　：動いていた÷全体 → 全体＝動いていた＋修理 → ラベルが MTBF / MTTR に置き換わる
 //   ⑤ 1問　：MTBF 90h・MTTR 10h の稼働率（④ の実験は ReliabilityExperience 側）
 
@@ -87,8 +89,8 @@ export function MeaningStage() {
         <TimeBar
           total={100}
           parts={[
-            { kind: "up", hours: RUN, label: "✅ 動いている 90h" },
-            { kind: "down", hours: FIX, label: "🔧" },
+            { kind: "up", hours: RUN, label: "動いている 90h" },
+            { kind: "down", hours: FIX, label: <Icon name="tool" className="mx-auto h-3 w-3" /> },
           ]}
         />
         <div className="relative h-4 text-[10px] font-bold">
@@ -128,7 +130,7 @@ export function MeaningStage() {
 
       {pick !== null && (
         <div className="mt-3 space-y-2" data-testid="meaning-answer">
-          {!correct && <p className="text-xs font-bold text-rose-600">❌ {MEANING_CHOICES.find((c) => c.v === pick)?.why}</p>}
+          {!correct && <p className="text-xs font-bold text-rose-600">{MEANING_CHOICES.find((c) => c.v === pick)?.why}</p>}
           <div className={`rounded-xl bg-gray-50 px-4 py-3 text-center ring-1 ring-gray-200 ${styles.reveal}`}>
             <div className="text-xs text-gray-500">
               稼働率 ＝ <b className="text-emerald-700">動いていた時間</b> ÷ <b className="text-gray-700">全体の時間</b>
@@ -139,7 +141,7 @@ export function MeaningStage() {
             <div className="mt-0.5 text-2xl font-bold text-brand-600">0.9（90%）</div>
           </div>
           <div className="rounded-xl bg-amber-50 px-4 py-2.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-            💡 <b>稼働率＝動いていた時間の割合</b>。帯のうち<b>緑が占める割合</b>です。
+            <InlineIcon name="lightbulb" /><b>稼働率＝動いていた時間の割合</b>。帯のうち<b>緑が占める割合</b>です。
           </div>
         </div>
       )}
@@ -171,11 +173,11 @@ function hourAt(elapsed: number) {
 }
 
 const PHASES = [
-  { key: "run", label: "🟩 正常稼働" },
-  { key: "fail", label: "⚡ 故障" },
-  { key: "fix", label: "🔧 修理" },
-  { key: "back", label: "✅ 復旧" },
-  { key: "again", label: "🟩 正常稼働" },
+  { key: "run", label: "正常稼働" },
+  { key: "fail", label: "故障" },
+  { key: "fix", label: "修理" },
+  { key: "back", label: "復旧" },
+  { key: "again", label: "正常稼働" },
 ] as const;
 
 function phaseIndex(h: number) {
@@ -265,7 +267,7 @@ export function NamingStage() {
           total={NAMING_TOTAL}
           parts={[
             { kind: "up", hours: RUN, label: "動いている 90h" },
-            { kind: "down", hours: FIX, label: "🔧" },
+            { kind: "down", hours: FIX, label: <Icon name="tool" className="mx-auto h-3 w-3" /> },
             { kind: "tail", hours: NAMING_TOTAL - RUN - FIX, label: "また…" },
           ]}
         >
@@ -274,7 +276,7 @@ export function NamingStage() {
           {!done && <div className="absolute inset-y-0 w-0.5 bg-gray-900" style={{ left: pct(h) }} />}
           {h >= RUN - 0.5 && (
             <span className={`absolute -top-0.5 -translate-x-1/2 text-sm ${styles.pop}`} style={{ left: pct(RUN) }} aria-hidden>
-              ⚡
+              <Icon name="zap" className="h-4 w-4 text-amber-500" />
             </span>
           )}
         </TimeBar>
@@ -394,7 +396,7 @@ export function DerivationStage() {
           total={100}
           parts={[
             { kind: "up", hours: RUN, label: <span key={flipKey} className={styles.flip}>{named ? "MTBF 90h" : "動いていた 90h"}</span> },
-            { kind: "down", hours: FIX, label: <span key={flipKey} className={styles.flip}>🔧</span> },
+            { kind: "down", hours: FIX, label: <span key={flipKey} className={styles.flip}><Icon name="tool" className="mx-auto h-3 w-3" /></span> },
           ]}
         />
         <Bracket from={0} to={100} total={100} tone={s >= 1 ? "border-brand-500" : "border-gray-400"}>
@@ -436,7 +438,7 @@ export function DerivationStage() {
 
         {named && (
           <div className={`mt-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200 ${styles.reveal}`}>
-            💡 <b>分子＝緑（MTBF）だけ</b>、<b>分母＝緑＋赤（1サイクル全部）</b>。
+            <InlineIcon name="lightbulb" /><b>分子＝緑（MTBF）だけ</b>、<b>分母＝緑＋赤（1サイクル全部）</b>。
             だから MTBF が上、MTBF＋MTTR が下になります。
           </div>
         )}
@@ -507,13 +509,13 @@ export function BasicCalcStage() {
       {chosen && (
         <div className="mt-3 space-y-2" data-testid="calc-answer">
           <p className={`text-xs font-bold ${chosen.ok ? "text-emerald-700" : "text-rose-600"}`}>
-            {chosen.ok ? "⭕ 正解！" : `❌ ${chosen.why}`}
+            {chosen.ok ? "正解！" : `${chosen.why}`}
           </p>
           <TimeBar
             total={100}
             parts={[
               { kind: "up", hours: RUN, label: "MTBF 90h" },
-              { kind: "down", hours: FIX, label: "🔧" },
+              { kind: "down", hours: FIX, label: <Icon name="tool" className="mx-auto h-3 w-3" /> },
             ]}
           />
           <div className={`rounded-xl bg-gray-50 px-4 py-3 text-sm leading-7 text-gray-700 ring-1 ring-gray-200 ${styles.reveal}`}>

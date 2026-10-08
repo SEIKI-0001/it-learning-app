@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Icon, { type IconName } from "@/components/ui/Icon";
 import type {
   ProcessActor,
   ProcessDemoSpec,
@@ -21,17 +22,17 @@ const OUTCOME_STYLE: Record<
   ok: {
     box: "bg-emerald-50 ring-emerald-200",
     label: "text-emerald-800",
-    mark: "✅ 成功",
+    mark: "成功",
   },
   blocked: {
     box: "bg-rose-50 ring-rose-200",
     label: "text-rose-800",
-    mark: "⛔ 停止",
+    mark: "停止",
   },
   info: {
     box: "bg-sky-50 ring-sky-200",
     label: "text-sky-800",
-    mark: "ℹ️ 結果",
+    mark: "結果",
   },
 };
 
@@ -99,7 +100,7 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
 
       {/* 2. 利用者目線の入口 */}
       <section>
-        <SectionHeading emoji="🙋" title="まずは利用者の目線で" />
+        <SectionHeading icon="user" title="まずは利用者の目線で" />
         <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-100">
           {demo.userScenario}
         </p>
@@ -107,7 +108,7 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
 
       {/* 3. 画面上での操作 */}
       <section>
-        <SectionHeading emoji="🖱️" title="画面で操作してみる" />
+        <SectionHeading icon="monitor" title="画面で操作してみる" />
         <ScreenView
           screen={demo.screen}
           selection={selection}
@@ -120,7 +121,7 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
       {/* 4-5. 裏側の処理ステップ（何がどこに渡るか） */}
       {activeScenario && (
         <section>
-          <SectionHeading emoji="⚙️" title="裏側で動いている処理" />
+          <SectionHeading icon="settings" title="裏側で動いている処理" />
           <p className="mb-3 text-xs font-medium text-gray-500">
             {revealed} / {totalSteps} ステップ
           </p>
@@ -183,14 +184,14 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
       {/* 6. ミニ理解チェック */}
       {demo.miniCheck && (
         <section>
-          <SectionHeading emoji="🧠" title="ミニ理解チェック" />
+          <SectionHeading icon="circle-check" title="ミニ理解チェック" />
           <MiniCheckView check={demo.miniCheck} />
         </section>
       )}
 
       {/* 7. 用語対応 */}
       <section>
-        <SectionHeading emoji="🔤" title="ITパスポート用語との対応" />
+        <SectionHeading icon="link" title="ITパスポート用語との対応" />
         <ul className="space-y-2">
           {demo.termMappings.map((m) => (
             <li
@@ -215,7 +216,7 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
 
       {/* 8. 試験での問われ方 */}
       <section>
-        <SectionHeading emoji="🎯" title="試験で問われるポイント" />
+        <SectionHeading icon="target" title="試験で問われるポイント" />
         <ul className="space-y-2">
           {demo.examPoints.map((p, i) => (
             <li
@@ -234,10 +235,10 @@ export default function ProcessDemoSection({ demo }: { demo: ProcessDemoSpec }) 
   );
 }
 
-function SectionHeading({ emoji, title }: { emoji: string; title: string }) {
+function SectionHeading({ icon, title }: { icon: IconName; title: string }) {
   return (
     <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-gray-800">
-      <span aria-hidden>{emoji}</span>
+      <Icon name={icon} className="h-5 w-5 flex-none text-brand-600" />
       {title}
     </h3>
   );
@@ -262,9 +263,7 @@ function ScreenView({
     <div className="rounded-xl bg-gray-100 p-4 ring-1 ring-gray-200">
       {screen.kind === "browserBar" && (
         <div className="flex items-center gap-2 rounded-full bg-white px-3 py-2.5 ring-1 ring-gray-200">
-          <span aria-hidden className="text-gray-400">
-            🔒
-          </span>
+          <Icon name="lock" className="h-4 w-4 flex-none text-gray-500" />
           <span className="truncate text-sm font-semibold text-gray-700">
             {screen.url}
           </span>
@@ -353,7 +352,7 @@ function StepCard({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-700">
-          {actor?.emoji && <span aria-hidden>{actor.emoji}</span>}
+          {actor?.icon && <Icon name={actor.icon} className="h-3.5 w-3.5 flex-none text-gray-600" />}
           {actor?.label ?? step.actorId}
         </span>
         {step.term && (

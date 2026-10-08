@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「マーケティングと4P分析」専用の体験。
@@ -11,11 +13,11 @@ import { Panel, SectionTitle } from "./ui";
 
 type P = "product" | "price" | "place" | "promotion";
 
-const CARDS: Record<P, { name: string; emoji: string; mean: string; ex: string }> = {
-  product: { name: "Product（製品）", emoji: "🍦", mean: "何を売るか", ex: "" },
-  price: { name: "Price（価格）", emoji: "💴", mean: "いくらで売るか", ex: "" },
-  place: { name: "Place（流通）", emoji: "📍", mean: "どこで届けるか", ex: "" },
-  promotion: { name: "Promotion（販売促進）", emoji: "📣", mean: "どう知らせるか", ex: "" },
+const CARDS: Record<P, { name: string; icon: IconName; mean: string; ex: string }> = {
+  product: { name: "Product（製品）", icon: "package", mean: "何を売るか", ex: "" },
+  price: { name: "Price（価格）", icon: "yen", mean: "いくらで売るか", ex: "" },
+  place: { name: "Place（流通）", icon: "map-pin", mean: "どこで届けるか", ex: "" },
+  promotion: { name: "Promotion（販売促進）", icon: "megaphone", mean: "どう知らせるか", ex: "" },
 };
 
 const ORDER: P[] = ["product", "price", "place", "promotion"];
@@ -70,9 +72,9 @@ function Simulator() {
   const verdict = !allDecided
     ? { text: `あと${DECISIONS.length - decided.length}つ決めると開店できるよ。`, tone: "bg-gray-50 text-gray-500 ring-gray-200" }
     : goodCount === 4
-      ? { text: "🎉 行列ができた！ 4つのPが全部かみ合うと効果は最大。この組み合わせがマーケティングミックス。", tone: "bg-emerald-50 text-emerald-800 ring-emerald-200" }
+      ? { text: "行列ができた！ 4つのPが全部かみ合うと効果は最大。この組み合わせがマーケティングミックス。", tone: "bg-emerald-50 text-emerald-800 ring-emerald-200" }
       : goodCount >= 2
-        ? { text: "そこそこ売れたけど…❌のPがブレーキに。どれか1つでも欠けると、他のPの努力まで薄れちゃう。", tone: "bg-amber-50 text-amber-800 ring-amber-200" }
+        ? { text: "そこそこ売れたけど…ダメな選択のPがブレーキに。どれか1つでも欠けると、他のPの努力まで薄れちゃう。", tone: "bg-amber-50 text-amber-800 ring-amber-200" }
         : { text: "ガラガラ…。いい商品でも、価格・場所・宣伝がダメなら売れない。4つはセットで考えよう。", tone: "bg-rose-50 text-rose-800 ring-rose-200" };
 
   return (
@@ -92,7 +94,7 @@ function Simulator() {
             <div key={d.p}>
               <div className="flex items-baseline gap-1.5 text-xs">
                 <span className="font-bold text-brand-700">
-                  {card.emoji} {card.name}
+                  <span className="inline-flex items-center gap-1"><Icon name={card.icon} className="h-3.5 w-3.5" />{card.name}</span>
                 </span>
                 <span className="text-gray-400">＝ {card.mean}</span>
               </div>
@@ -131,7 +133,15 @@ function Simulator() {
           <span>{allDecided ? `${customers}人` : "開店準備中…"}</span>
         </div>
         <div className="mt-1.5 min-h-[1.75em] text-xl leading-none tracking-tight">
-          {allDecided ? "🙋".repeat(customers) : "🚧"}
+          {allDecided ? (
+            <span className="flex flex-wrap gap-0.5 text-brand-600">
+              {Array.from({ length: customers }, (_, i) => (
+                <Icon key={i} name="user" className="h-5 w-5" />
+              ))}
+            </span>
+          ) : (
+            <Icon name="hourglass" className="h-5 w-5 text-gray-400" />
+          )}
         </div>
       </div>
 
@@ -140,7 +150,7 @@ function Simulator() {
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 <b>「何を・いくらで・どこで・どう知らせて」</b>売るか——頭文字がぜんぶ <b>P</b>。
+        <InlineIcon name="lightbulb" /><b>「何を・いくらで・どこで・どう知らせて」</b>売るか——頭文字がぜんぶ <b>P</b>。
         4つを組み合わせて売り方を決めることを<b>マーケティングミックス</b>と呼びます。
       </div>
     </Panel>
@@ -184,14 +194,14 @@ function Quiz() {
                       onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
                       className={`rounded-lg px-1 py-1.5 text-[11px] font-bold transition active:scale-95 ${tone}`}
                     >
-                      {CARDS[opt].emoji}
+                      <Icon name={CARDS[opt].icon} className="mx-auto h-4 w-4" />
                     </button>
                   );
                 })}
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${CARDS[it.ans].name}。 `}
+                  {correct ? "正解！ " : `正解は ${CARDS[it.ans].name}。 `}
                   {it.why}
                 </p>
               )}
@@ -200,7 +210,7 @@ function Quiz() {
         })}
       </ul>
       <p className="mt-3 text-center text-[11px] text-gray-400">
-        ボタンの絵文字：🍦製品 / 💴価格 / 📍流通 / 📣販売促進
+        ボタンの絵：パッケージ＝製品 / 円＝価格 / 地図のピン＝流通 / メガホン＝販売促進
       </p>
     </Panel>
   );

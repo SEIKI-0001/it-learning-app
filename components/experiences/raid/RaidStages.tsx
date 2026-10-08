@@ -6,6 +6,8 @@ import { LeveledPractice, Note, Replay, Term, type LeveledQuestion } from "../ca
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
 import { DiskArray, Legend, SLOTS, survives, usableDisks, type RaidMode } from "./DiskArray";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // RAID と実効容量。「なぜ RAID5 は1台分、RAID6 は2台分を引くのか」をマスの色で見せる。
 //   ① RAID0・1 ：全部データ（速い・故障に弱い） / 同じものを2つ（容量は半分）
@@ -32,7 +34,7 @@ function useBroken() {
 
 function Verdict({ mode, broken }: { mode: RaidMode; broken: ReadonlySet<number> }) {
   if (broken.size === 0) {
-    return <p className="mt-2 text-center text-[11px] font-bold text-gray-500">💽 をタップすると、そのディスクを故障させられます</p>;
+    return <p className="mt-2 text-center text-[11px] font-bold text-gray-500">ディスクをタップすると、そのディスクを故障させられます</p>;
   }
   const ok = survives(mode, broken);
   const text: Record<RaidMode, [string, string]> = {
@@ -48,7 +50,7 @@ function Verdict({ mode, broken }: { mode: RaidMode; broken: ReadonlySet<number>
       data-ok={ok ? "true" : "false"}
       key={`${broken.size}-${ok}`}
     >
-      {ok ? "✅ データは無事：" : "❌ データが失われる："}
+      {ok ? "データは無事：" : "データが失われる："}
       {ok ? text[mode][0] : text[mode][1]}
     </p>
   );
@@ -109,11 +111,11 @@ export function RaidBasicStage() {
           <Note>
             {mode === "raid0" ? (
               <>
-                💡 <b>RAID0（ストライピング）</b>は4台に分けて同時に書くので<b>速い</b>。容量も全部使えるが、<b>予備が無いので1台壊れると全滅</b>。
+                <InlineIcon name="lightbulb" /><b>RAID0（ストライピング）</b>は4台に分けて同時に書くので<b>速い</b>。容量も全部使えるが、<b>予備が無いので1台壊れると全滅</b>。
               </>
             ) : (
               <>
-                💡 <b>RAID1（ミラーリング）</b>は同じデータを2台に書く。<b>1台壊れても相棒が残る</b>が、容量は<b>半分</b>。2台なら 500GB×2 → 500GB 分。
+                <InlineIcon name="lightbulb" /><b>RAID1（ミラーリング）</b>は同じデータを2台に書く。<b>1台壊れても相棒が残る</b>が、容量は<b>半分</b>。2台なら 500GB×2 → 500GB 分。
               </>
             )}
           </Note>
@@ -148,7 +150,7 @@ export function ParityStage() {
             const lost = i === 1 && lostShown;
             return (
               <div key={i} className={`rounded-lg p-1.5 ring-1 ${lost && !restored ? "bg-rose-50 ring-2 ring-rose-400" : "bg-gray-50 ring-gray-200"}`}>
-                <div className="text-[11px] font-bold text-gray-500">{lost && !restored ? "💥" : "💽"} {i + 1}</div>
+                <div className="text-[11px] font-bold text-gray-500"><Icon name={lost && !restored ? "alert" : "database"} className="inline-block h-3 w-3 align-middle" /> {i + 1}</div>
                 <div
                   key={lost ? (restored ? "back" : "lost") : "v"}
                   className={`mt-1 grid h-9 place-items-center rounded text-lg font-bold ${
@@ -162,7 +164,7 @@ export function ParityStage() {
             );
           })}
           <div className="rounded-lg bg-gray-50 p-1.5 ring-1 ring-gray-200">
-            <div className="text-[11px] font-bold text-gray-500">💽 4</div>
+            <div className="text-[11px] font-bold text-gray-500"><Icon name="database" className="inline-block h-3 w-3 align-middle" /> 4</div>
             {b >= 1 ? (
               <div className={`mt-1 grid h-9 place-items-center rounded bg-amber-400 text-lg font-bold text-amber-950 ${styles.pop}`}>10</div>
             ) : (
@@ -181,7 +183,7 @@ export function ParityStage() {
           </p>
         )}
         {b >= 2 && !restored && (
-          <p className={`mt-1 text-center text-sm font-bold text-rose-600 ${styles.shake}`}>💥 ディスク2が故障！ 「5」が消えた</p>
+          <p className={`mt-1 text-center text-sm font-bold text-rose-600 ${styles.shake}`}>ディスク2が故障！ 「5」が消えた</p>
         )}
         {b >= 3 && (
           <div className={`mt-2 rounded-xl bg-white px-3 py-2 text-center text-lg font-bold ring-1 ring-gray-200 ${styles.reveal}`} data-testid="raid-parity-eq">
@@ -190,7 +192,7 @@ export function ParityStage() {
         )}
         {b >= 5 && (
           <Note>
-            💡 パリティがあれば、<b>残りの数から消えた1つを計算で戻せます</b>。ただし2台同時に消えると「? ＋ ? ＝ 7」となり、1つに決まりません。
+            <InlineIcon name="lightbulb" />パリティがあれば、<b>残りの数から消えた1つを計算で戻せます</b>。ただし2台同時に消えると「? ＋ ? ＝ 7」となり、1つに決まりません。
             <span className="mt-1 block text-[11px] text-amber-800/80">※ 実際はXORという計算を使いますが、「残りから逆算する」考え方は同じです。</span>
           </Note>
         )}
@@ -290,7 +292,7 @@ export function ParityRaidStage({ mode }: { mode: "raid5" | "raid6" }) {
         {done && <Verdict mode={mode} broken={broken} />}
         {done && (
           <Note>
-            💡 パリティは1台にまとめて置かず<b>散らばっている</b>けれど、<b>量は合計{k}台分</b>。だから実効容量は{" "}
+            <InlineIcon name="lightbulb" />パリティは1台にまとめて置かず<b>散らばっている</b>けれど、<b>量は合計{k}台分</b>。だから実効容量は{" "}
             <b>
               1台の容量 ×（台数 − {k}）
             </b>
@@ -484,7 +486,7 @@ export function RaidPractice() {
       testId="raid-practice"
       done={
         <>
-          🎉 ここまで解ければ、本試験のRAIDの問題に対応できます。迷ったら<b>方式を見る → 引く台数 → ×1台の容量</b>。
+          ここまで解ければ、本試験のRAIDの問題に対応できます。迷ったら<b>方式を見る → 引く台数 → ×1台の容量</b>。
         </>
       }
     />

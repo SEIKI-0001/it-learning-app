@@ -5,6 +5,7 @@ import { DivideStage, EfficiencyStage, SolveStage, TimeStage, TransferPractice, 
 import { LanWanDioramaScene, type LanWanDest } from "./lanwan/LanWanDioramaScene";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「LANとWAN」専用の体験。
@@ -24,21 +25,21 @@ const DESTS: {
 }[] = [
   {
     key: "printer",
-    label: "🖨️ 同じ家のプリンタ",
+    label: "同じ家のプリンタ",
     usesWan: false,
     result:
       "家の中のネットワーク（LAN）だけで届いた！ WANは通っていません。近い相手はLAN内で完結するので速い。",
   },
   {
     key: "office",
-    label: "🏢 遠くの会社のサーバ",
+    label: "遠くの会社のサーバ",
     usesWan: true,
     result:
       "家のLANを出て、通信会社の回線（WAN）を通り、会社のLANへ届いた！ 離れたLANどうしを結ぶのがWANです。",
   },
   {
     key: "video",
-    label: "🌍 海外の動画サイト",
+    label: "海外の動画サイト",
     usesWan: true,
     result:
       "インターネット（世界最大のWAN）を通って海外まで届いた！ どんなに遠くても、WANがLANとLANを結んでくれます。",
@@ -96,7 +97,7 @@ function PacketJourney() {
                 d.usesWan ? "bg-sky-100 text-sky-700" : "bg-emerald-100 text-emerald-700"
               }`}
             >
-              {d.usesWan ? "🌐 WANを通った" : "🏠 LAN内で完結（WANは通らない）"}
+              {d.usesWan ? "WANを通った" : "LAN内で完結（WANは通らない）"}
             </span>
           </div>
           <p className="rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200">
@@ -107,13 +108,13 @@ function PacketJourney() {
 
       {triedLan && triedWan && (
         <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-          🎉 気づいた？ <b>近い相手＝LANの中だけ</b>、<b>遠い相手＝WANを通る</b>。
+          気づいた？ <b>近い相手＝LANの中だけ</b>、<b>遠い相手＝WANを通る</b>。
           LAN＝「家の中」、WAN＝「家と家を結ぶ道路網」です。
         </div>
       )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 <b>LAN</b>（Local Area Network）＝家・学校・会社など<b>狭い範囲</b>。自分たちで作る。
+        <InlineIcon name="lightbulb" /><b>LAN</b>（Local Area Network）＝家・学校・会社など<b>狭い範囲</b>。自分たちで作る。
         <b>WAN</b>（Wide Area Network）＝離れたLANどうしを結ぶ<b>広い範囲</b>。通信会社の回線を借りる。
       </div>
     </Panel>
@@ -135,8 +136,8 @@ function CompareTable() {
           <thead>
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-3 py-2 text-left font-bold"> </th>
-              <th className="px-3 py-2 text-center font-bold text-brand-700">🏠 LAN</th>
-              <th className="px-3 py-2 text-center font-bold text-sky-700">🌍 WAN</th>
+              <th className="px-3 py-2 text-center font-bold text-brand-700">LAN</th>
+              <th className="px-3 py-2 text-center font-bold text-sky-700">WAN</th>
             </tr>
           </thead>
           <tbody>
@@ -203,7 +204,7 @@ function SortQuiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
                   {it.why}
                 </p>
               )}

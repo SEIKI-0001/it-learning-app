@@ -1,5 +1,6 @@
 import type { LearningDiagram } from "@/types/content";
 import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「図で理解」カード。1テーマ＝1図解の単位（LearningDiagram）を、
@@ -21,7 +22,7 @@ export default function DiagramCard({
     <article className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       {showHeading && (
         <p className="mb-1 flex items-center gap-1 text-xs font-bold text-brand-500">
-          <span aria-hidden>📊</span> 図で理解
+          <Icon name="chart" className="h-3.5 w-3.5" /> 図で理解
         </p>
       )}
       <h3 className="text-base font-bold text-gray-800">{diagram.title}</h3>
@@ -47,7 +48,7 @@ export default function DiagramCard({
       {/* 重要ポイント */}
       <Block label="重要ポイント">
         {diagram.keyPoints.map((p, i) => (
-          <Item key={i} icon="✓" iconClass="text-brand-500">
+          <Item key={i} icon="check" iconClass="text-brand-500">
             {p}
           </Item>
         ))}
@@ -56,7 +57,7 @@ export default function DiagramCard({
       {/* 試験で問われやすい観点 */}
       <Block label="試験で問われやすい観点">
         {diagram.examPoints.map((p, i) => (
-          <Item key={i} icon="🎯" iconClass="text-gray-400">
+          <Item key={i} icon="target" iconClass="text-gray-500">
             {p}
           </Item>
         ))}
@@ -85,15 +86,13 @@ function Item({
   iconClass,
   children,
 }: {
-  icon: string;
+  icon: IconName;
   iconClass: string;
   children: React.ReactNode;
 }) {
   return (
     <li className="flex gap-2 text-sm leading-snug text-gray-700">
-      <span aria-hidden className={`shrink-0 ${iconClass}`}>
-        {icon}
-      </span>
+      <Icon name={icon} className={`mt-0.5 h-4 w-4 shrink-0 ${iconClass}`} />
       <span>{children}</span>
     </li>
   );

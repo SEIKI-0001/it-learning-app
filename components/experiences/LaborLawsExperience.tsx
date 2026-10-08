@@ -6,6 +6,7 @@ import { OfficeScene, type LaborMode, type Scenario } from "./labor/OfficeScene"
 import { useInView } from "./scene/useInView";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「労働・取引関連法規（派遣と請負）」専用の体験。
@@ -147,7 +148,7 @@ function InstructionOffice() {
               onClick={() => play("gisou")}
               className="flex-1 rounded-xl bg-white py-2.5 text-sm font-bold text-rose-700 ring-2 ring-rose-300 transition active:scale-95"
             >
-              ⚠ 注文主が、作業者へ直接指示する
+              注文主が、作業者へ直接指示する
             </button>
           ) : (
             <button
@@ -169,12 +170,14 @@ function InstructionOffice() {
           </p>
         ) : gisou ? (
           <div className="rounded-xl bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200" data-testid="gisou-warning">
-            <div className="text-sm font-bold text-rose-700">⚠ 指揮命令関係が発生</div>
+            <div className="text-sm font-bold text-rose-700">
+              <InlineIcon name="alert" />指揮命令関係が発生
+            </div>
             <p className="mt-1 text-xs leading-relaxed text-rose-900">
               請負契約なのに注文主が労働者へ直接指示している場合、実態によっては<b>偽装請負</b>と判断される可能性があります。
             </p>
             <p className="mt-1 text-xs leading-relaxed text-rose-900">
-              📝 <b>契約書の名称だけでなく、実際の働かせ方で判断されます。</b>
+              <InlineIcon name="file-text" /><b>契約書の名称だけでなく、実際の働かせ方で判断されます。</b>
             </p>
           </div>
         ) : (
@@ -187,7 +190,7 @@ function InstructionOffice() {
 
       {tried.has("haken") && tried.has("ukeoi") && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          💡 <b>派遣＝作業者へ直接指示</b>／<b>請負＝仕事の完成を会社へ依頼</b>。
+          <InlineIcon name="lightbulb" /><b>派遣＝作業者へ直接指示</b>／<b>請負＝仕事の完成を会社へ依頼</b>。
           試験は「指示の矢印がどこを通るか」を聞いてきます。
         </div>
       )}
@@ -243,14 +246,14 @@ function Quiz() {
                       onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
                       className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-bold transition active:scale-95 ${tone}`}
                     >
-                      {opt === "OK" ? "⭕ 問題なし" : "❌ 問題あり"}
+                      {opt === "OK" ? "問題なし" : "問題あり"}
                     </button>
                   );
                 })}
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans === "OK" ? "問題なし" : "問題あり"}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans === "OK" ? "問題なし" : "問題あり"}」。 `}
                   {q.why}
                 </p>
               )}

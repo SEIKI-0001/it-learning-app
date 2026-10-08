@@ -1,5 +1,7 @@
 import stage from "../scene/stage.module.css";
 import styles from "./requirements.module.css";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「曖昧な要求 → 認識ズレ → 手戻り」と「要件を足すほど認識がそろう」を1つのステージで見せる。
 //   左＝依頼者の頭の中（固定）、右＝開発者の理解（変わる）、上＝完成イメージの一致度。
@@ -160,14 +162,14 @@ export function RequirementsStage({
       {/* 依頼者の頭の中 ⇄ 開発者の理解 */}
       <div className="relative mt-2 grid grid-cols-[1fr_20%_1fr] items-start gap-1">
         <div className="rounded-xl bg-white p-1.5 ring-1 ring-gray-200">
-          <div className="text-center text-[10px] font-bold text-gray-600">🙋 依頼者の頭の中</div>
+          <div className="text-center text-[10px] font-bold text-gray-600"><InlineIcon name="user" />依頼者の頭の中</div>
           <Sketch p={CLIENT} testId="req-client" />
         </div>
         <div className="flex h-full flex-col items-center justify-center text-gray-300" aria-hidden>
           <span className="text-lg">→</span>
         </div>
         <div className="rounded-xl bg-white p-1.5 ring-1 ring-brand-200">
-          <div className="text-center text-[10px] font-bold text-brand-700">🧑‍💻 開発者の理解</div>
+          <div className="text-center text-[10px] font-bold text-brand-700"><InlineIcon name="laptop" />開発者の理解</div>
           <Sketch p={dev} compare={built && vague} testId="req-dev" />
         </div>
 
@@ -190,17 +192,17 @@ export function RequirementsStage({
         {vague && phase === 1 && <LostWords />}
         {vague && phase === 2 && (
           <p className="text-center text-[11px] font-bold leading-relaxed text-gray-700">
-            💭 「使いやすい＝大きな画面かな」「予約だから日時は選べるはず」
+            「使いやすい＝大きな画面かな」「予約だから日時は選べるはず」
             <br />
             <span className="text-gray-500">言葉にされなかった部分は、開発者の想像で埋まる。</span>
             <br />
-            <span className="text-rose-600">⚡ 2人ともズレに気づいていない</span>
+            <span className="text-rose-600"><InlineIcon name="alert" />2人ともズレに気づいていない</span>
           </p>
         )}
         {vague && phase === 3 && (
           <div className="text-center" data-testid="req-verdict">
             <p className="text-[11px] text-gray-500">開発者は理解どおり、真面目に完成させた…</p>
-            <p className="mt-1 text-sm font-bold text-rose-700">🙋😣「これじゃない！」</p>
+            <p className="mt-1 text-sm font-bold text-rose-700">「これじゃない！」</p>
             <p className="mt-1 text-[11px] font-bold text-rose-600">✕ が付いた3か所が、頭の中とズレていた</p>
           </div>
         )}
@@ -282,12 +284,12 @@ function Stacks({ given, done }: { given: readonly (typeof REQS)[number][]; done
         <div className="flex w-14 flex-col items-center pb-1">
           {done ? (
             <div className="text-center" data-testid="req-product">
-              <div className="text-2xl">📱</div>
+              <Icon name="smartphone" className="mx-auto h-7 w-7" />
               <div className="text-[10px] font-bold text-emerald-700">完成物</div>
             </div>
           ) : (
             <div className="text-center text-[10px] text-gray-400">
-              <div className="text-xl opacity-40">📱</div>
+              <Icon name="smartphone" className="mx-auto h-6 w-6 opacity-40" />
               製作前
             </div>
           )}
@@ -296,7 +298,7 @@ function Stacks({ given, done }: { given: readonly (typeof REQS)[number][]; done
       </div>
       {done && (
         <p className="mt-1.5 text-center text-sm font-bold text-emerald-700" data-testid="req-verdict">
-          🙋😊「これこれ！」 手戻りゼロ
+          「これこれ！」 手戻りゼロ
         </p>
       )}
     </div>

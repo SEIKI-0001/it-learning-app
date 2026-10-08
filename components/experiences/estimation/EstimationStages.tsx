@@ -5,6 +5,8 @@ import styles from "../calc/calc.module.css";
 import { Choices, LeveledPractice, Note, Replay, placeAnswer, type Choice, type LeveledQuestion } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 見積り（人月・生産性・手法）。FPカウンターの後ろに足す。
 //   ② 人月は長方形の面積：3人×4か月＝12マス。逆に10マスを2人で並べると横に5列＝5か月
@@ -51,8 +53,8 @@ export function PersonMonthStage() {
             <div className="mt-1.5 flex gap-1">
               <div className="flex flex-col justify-around text-[10px] font-bold text-gray-400">
                 {[1, 2, 3].map((p) => (
-                  <span key={p} className="h-6 leading-6">
-                    👤
+                  <span key={p} className="flex h-6 items-center">
+                    <Icon name="user" className="h-4 w-4 text-gray-400" />
                   </span>
                 ))}
               </div>
@@ -75,8 +77,8 @@ export function PersonMonthStage() {
             <div className="mt-1.5 flex gap-1">
               <div className="flex flex-col justify-around text-[10px] font-bold text-gray-400">
                 {[1, 2].map((p) => (
-                  <span key={p} className="h-6 leading-6">
-                    👤
+                  <span key={p} className="flex h-6 items-center">
+                    <Icon name="user" className="h-4 w-4 text-gray-400" />
                   </span>
                 ))}
               </div>
@@ -101,7 +103,7 @@ export function PersonMonthStage() {
         {b >= 11 && (
           <>
             <Note>
-              💡 <b>工数 ＝ 人数 × 期間</b>（面積）。求めたいのが<b>工数なら掛ける</b>、<b>期間や人数（辺の長さ）なら工数を割る</b>。
+              <InlineIcon name="lightbulb" /><b>工数 ＝ 人数 × 期間</b>（面積）。求めたいのが<b>工数なら掛ける</b>、<b>期間や人数（辺の長さ）なら工数を割る</b>。
             </Note>
             <p className={`mt-2 text-[11px] leading-relaxed text-gray-500 ${styles.reveal}`}>
               ※ 計算上は人を倍にすれば期間は半分ですが、実際は打合せや引き継ぎが増えるので<b>人を増やせば必ず早く終わるわけではありません</b>。
@@ -239,7 +241,7 @@ export function PhaseSumStage() {
         )}
         {b >= 5 && (
           <Note>
-            💡 生産性の数字を<b>先に足したり平均したりしない</b>（60 ÷ (6＋3＋5) は意味のない数）。<b>工程ごとに割る → 足す</b>の順です。
+            <InlineIcon name="lightbulb" />生産性の数字を<b>先に足したり平均したりしない</b>（60 ÷ (6＋3＋5) は意味のない数）。<b>工程ごとに割る → 足す</b>の順です。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -327,7 +329,7 @@ export function StaffChangeStage() {
         </div>
         {b >= 5 && (
           <Note>
-            💡 人数が変わっても<b>仕事の総量（面積）は同じ</b>。<b>総工数 → できた分を引く → 残りの日数で割る</b>。赤い不足分（10人日）が、後ろの緑の2人×5日に移っただけです。
+            <InlineIcon name="lightbulb" />人数が変わっても<b>仕事の総量（面積）は同じ</b>。<b>総工数 → できた分を引く → 残りの日数で割る</b>。赤い不足分（10人日）が、後ろの緑の2人×5日に移っただけです。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -347,11 +349,11 @@ const M = {
   loc: "LOC法",
 };
 
-type Scene = { emoji: string; text: string; choices: Choice[] };
+type Scene = { icon: IconName; text: string; choices: Choice[] };
 
 export const METHOD_SCENES: Scene[] = [
   {
-    emoji: "🗓️",
+    icon: "calendar",
     text: "計画のごく初期。中身はまだ決まっていないが「明日までにざっくり費用を」と言われた。似たシステムを作った実績はある。",
     choices: [
       { label: M.analogy, ok: true },
@@ -361,7 +363,7 @@ export const METHOD_SCENES: Scene[] = [
     ],
   },
   {
-    emoji: "🧩",
+    icon: "puzzle",
     text: "要件定義で「画面12・帳票5・データ4」と機能が出そろった。利用者にも説明しやすい根拠で規模を出したい。",
     choices: [
       { label: M.fp, ok: true },
@@ -371,7 +373,7 @@ export const METHOD_SCENES: Scene[] = [
     ],
   },
   {
-    emoji: "🧱",
+    icon: "layers",
     text: "WBSで作業が細かく洗い出せた。一つひとつの作業の工数を見積もって合計し、精度の高い見積りを作る。",
     choices: [
       { label: M.bottomUp, ok: true },
@@ -381,7 +383,7 @@ export const METHOD_SCENES: Scene[] = [
     ],
   },
   {
-    emoji: "📜",
+    icon: "file-text",
     text: "作るプログラムのおおよその行数（ステップ数）を見込み、生産性で割って工数を出す。",
     choices: [
       { label: M.loc, ok: true },
@@ -412,7 +414,7 @@ export function MethodStage() {
         {METHOD_SCENES.map((s, i) => (
           <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <p className="text-sm font-bold leading-relaxed text-gray-800">
-              <span aria-hidden>{s.emoji} </span>
+              <InlineIcon name={s.icon} className="text-gray-500" />
               {s.text}
             </p>
             <div className="mt-2">
@@ -517,7 +519,7 @@ export function EstimationPractice() {
       testId="est-practice"
       done={
         <>
-          🎉 ここまで解ければ、本試験の見積りの問題に対応できます。計算は<b>工数＝人数×期間（面積）</b>、手法は<b>今何が分かっているか</b>で選ぶ。
+          ここまで解ければ、本試験の見積りの問題に対応できます。計算は<b>工数＝人数×期間（面積）</b>、手法は<b>今何が分かっているか</b>で選ぶ。
         </>
       }
     />

@@ -193,7 +193,7 @@ function MiniSql() {
 
       {/* 元の表（条件に合う行がハイライト） */}
       <div className="mt-4">
-        <div className="mb-1.5 text-sm font-bold text-gray-800">📋 生徒テーブル（条件に合う行が光る）</div>
+        <div className="mb-1.5 text-sm font-bold text-gray-800">生徒テーブル（条件に合う行が光る）</div>
         <div className="overflow-hidden rounded-xl ring-1 ring-gray-300">
           <table className="w-full text-sm">
             <thead>

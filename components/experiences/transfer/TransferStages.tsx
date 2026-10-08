@@ -6,6 +6,7 @@ import styles from "../calc/calc.module.css";
 import { Choices, Note, Replay, StepChips, Term, type Choice } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 通信速度・転送時間。「bps＝1秒に送れるbit数」から本試験の計算（100Mbit/秒・200MByte・効率50% → 32秒）まで。
 //   ④ なぜ割り算？ ：12MB を 1秒に 4MB ずつ運ぶ → 3秒（bit はまだ出さない）
@@ -36,7 +37,7 @@ export function DivideStage() {
 
       <div ref={ref} className="mt-3" data-testid="tr-divide" data-beat={beat}>
         <div className="flex items-baseline justify-between text-xs font-bold">
-          <span className="text-gray-600">⏱ {sec}秒</span>
+          <span className="text-gray-600"><InlineIcon name="clock" />{sec}秒</span>
           <span className="tabular-nums text-brand-700" data-testid="tr-arrived">
             届いた {sec * 4}MB / 12MB
           </span>
@@ -46,8 +47,8 @@ export function DivideStage() {
           <div className="absolute inset-y-0 right-0 w-[27%] border-l border-dashed border-gray-300 bg-emerald-50/60" />
           <div className="absolute inset-x-[27%] top-1/2 h-5 -translate-y-1/2 rounded bg-gray-200" />
           <span className="absolute left-1/2 top-1 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold text-gray-500">1秒に 4MB</span>
-          <span className="absolute bottom-1 left-1 text-[10px] font-bold text-gray-500">📁 送る側</span>
-          <span className="absolute bottom-1 right-1 text-[10px] font-bold text-emerald-700">📥 受け取る側</span>
+          <span className="absolute bottom-1 left-1 text-[10px] font-bold text-gray-500">送る側</span>
+          <span className="absolute bottom-1 right-1 text-[10px] font-bold text-emerald-700">受け取る側</span>
           {Array.from({ length: BLOCKS }, (_, i) => {
             const sent = beat >= i + 1;
             return (
@@ -69,7 +70,7 @@ export function DivideStage() {
         )}
         {beat >= 5 && (
           <Note>
-            💡 <b>全部の量 ÷ 1秒に運べる量 ＝ かかる時間</b>。割り算は「4MBの束がいくつあるか」を数えているのと同じです。
+            <InlineIcon name="lightbulb" /><b>全部の量 ÷ 1秒に運べる量 ＝ かかる時間</b>。割り算は「4MBの束がいくつあるか」を数えているのと同じです。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -96,7 +97,7 @@ export function UnitStage() {
       <div ref={ref} className="mt-3" data-testid="tr-unit" data-beat={b}>
         <div className="grid grid-cols-2 gap-2 text-center">
           <div className={`rounded-xl bg-gray-50 px-2 py-2.5 ring-1 ${warn && !converted ? "ring-2 ring-amber-400" : "ring-gray-200"}`}>
-            <div className="text-[11px] font-bold text-gray-500">📁 ファイル</div>
+            <div className="text-[11px] font-bold text-gray-500">ファイル</div>
             <div className="mt-1 text-base font-bold text-gray-800">
               {converted ? (
                 <Term tone="brand" flipKey="bit" was="200 MByte">
@@ -110,7 +111,7 @@ export function UnitStage() {
             </div>
           </div>
           <div className={`rounded-xl bg-gray-50 px-2 py-2.5 ring-1 ${warn && !converted ? "ring-2 ring-sky-400" : "ring-gray-200"}`}>
-            <div className="text-[11px] font-bold text-gray-500">🌐 通信速度</div>
+            <div className="text-[11px] font-bold text-gray-500">通信速度</div>
             <div className="mt-1 text-base font-bold text-gray-800">
               100 M<span className={warn ? "rounded bg-sky-200 px-0.5 text-sky-900" : ""}>bit</span>/秒
             </div>
@@ -119,7 +120,7 @@ export function UnitStage() {
 
         {warn && !converted && (
           <p className={`mt-2 text-center text-sm font-bold text-rose-600 ${styles.shake}`} data-testid="tr-unit-warn">
-            ⚠ このままでは単位が違う（Byte と bit）
+            <InlineIcon name="alert" />このままでは単位が違う（Byte と bit）
           </p>
         )}
 
@@ -151,7 +152,7 @@ export function UnitStage() {
         {b >= 4 && (
           <>
             <Note>
-              💡 <b>計算する前に単位をそろえる</b>。通信速度が bit なので、ファイルも bit に直してから割ります。
+              <InlineIcon name="lightbulb" /><b>計算する前に単位をそろえる</b>。通信速度が bit なので、ファイルも bit に直してから割ります。
             </Note>
             <p className={`mt-2 text-[11px] leading-relaxed text-gray-500 ${styles.reveal}`}>
               見分け方：<b>B（大文字）＝バイト</b>、<b>b（小文字）＝ビット</b>。bps は bit per second（ビット/秒）。
@@ -225,7 +226,7 @@ export function EfficiencyStage() {
         )}
         {b >= 3 && (
           <Note>
-            💡 <b>実効速度 ＝ 通信速度 × 利用効率</b>。効率50%なら、実際に使える速さは半分の 50Mbps です。
+            <InlineIcon name="lightbulb" /><b>実効速度 ＝ 通信速度 × 利用効率</b>。効率50%なら、実際に使える速さは半分の 50Mbps です。
           </Note>
         )}
 
@@ -306,7 +307,7 @@ export function TimeStage() {
         )}
         {b >= 4 && (
           <Note>
-            💡 答えの単位が<b>秒</b>になれば、割る向きは合っています。逆に 50 ÷ 1,600 にすると 0.03… になり、秒にもなりません。
+            <InlineIcon name="lightbulb" />答えの単位が<b>秒</b>になれば、割る向きは合っています。逆に 50 ÷ 1,600 にすると 0.03… になり、秒にもなりません。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -432,7 +433,7 @@ export function TransferPractice() {
       )}
       {answered && last && (
         <Note tone="emerald">
-          🎉 ここまで解ければ、本試験の転送時間の問題に対応できます。迷ったら<b>そろえる → 実効速度 → 割る</b>。
+          ここまで解ければ、本試験の転送時間の問題に対応できます。迷ったら<b>そろえる → 実効速度 → 割る</b>。
         </Note>
       )}
     </Panel>

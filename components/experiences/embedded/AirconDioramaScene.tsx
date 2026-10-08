@@ -68,7 +68,7 @@ export function AirconDioramaScene({
       dataAttrs={{ "data-phase": phase, "data-fan": fan }}
       corner={
         <span className={styles.remote} data-testid="aircon-target">
-          🎛 リモコン：冷房 設定 <b>25℃</b>
+          リモコン：冷房 設定 <b>25℃</b>
         </span>
       }
       world={

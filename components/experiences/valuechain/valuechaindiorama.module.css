@@ -34,8 +34,10 @@
 }
 
 .productBody {
-  font-size: 18px;
-  line-height: 1.1;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #1f2937;
 }
 
 .blocked {

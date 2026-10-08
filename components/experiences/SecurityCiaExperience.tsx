@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「情報セキュリティの3要素（CIA）」専用の体験。
@@ -12,9 +14,9 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 
 const ELEMS = [
-  { id: "c", emo: "🔒", name: "機密性", en: "Confidentiality", mean: "許可された人だけが見られる", bad: "情報漏えい・のぞき見", incident: "顧客名簿が外部に漏れた！" },
-  { id: "i", emo: "✅", name: "完全性", en: "Integrity", mean: "内容が正しく保たれ、勝手に書きかえられない", bad: "改ざん・書きかえ", incident: "Webサイトが書きかえられた！" },
-  { id: "a", emo: "⚡", name: "可用性", en: "Availability", mean: "使いたいときにきちんと使える（止まらない）", bad: "システム停止・サービス不能", incident: "サーバが落ちて使えない！" },
+  { id: "c", icon: "lock", name: "機密性", en: "Confidentiality", mean: "許可された人だけが見られる", bad: "情報漏えい・のぞき見", incident: "顧客名簿が外部に漏れた！" },
+  { id: "i", icon: "circle-check", name: "完全性", en: "Integrity", mean: "内容が正しく保たれ、勝手に書きかえられない", bad: "改ざん・書きかえ", incident: "Webサイトが書きかえられた！" },
+  { id: "a", icon: "zap", name: "可用性", en: "Availability", mean: "使いたいときにきちんと使える（止まらない）", bad: "システム停止・サービス不能", incident: "サーバが落ちて使えない！" },
 ] as const;
 
 type ElemId = (typeof ELEMS)[number]["id"];
@@ -46,7 +48,7 @@ function PillarDemo() {
                 : "translate-y-3 rotate-3 bg-rose-500 text-white"
           }`}
         >
-          {count === 0 ? "📦 大切な情報（安全）" : count < 3 ? "📦 大切な情報（危険！）" : "📦 情報が守れない！"}
+          {count === 0 ? "大切な情報（安全）" : count < 3 ? "大切な情報（危険！）" : "情報が守れない！"}
         </div>
         <div className="mx-auto mt-1 flex max-w-[280px] justify-between gap-2">
           {ELEMS.map((e) => {
@@ -62,7 +64,7 @@ function PillarDemo() {
                     : "border-brand-300 bg-brand-50 text-brand-700"
                 }`}
               >
-                <span className="text-lg leading-none">{isBroken ? "💥" : e.emo}</span>
+                <Icon name={isBroken ? "alert" : e.icon} className="h-5 w-5" />
                 {e.name}
                 <span className="font-mono text-[10px] font-bold opacity-60">{e.en[0]}</span>
               </button>
@@ -75,13 +77,13 @@ function PillarDemo() {
       <div className="mt-4 min-h-[4em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
         {count === 0 ? (
           <p className="text-sm leading-relaxed text-emerald-700">
-            ✅ 3本すべて立っている＝情報は安全。<b>どれか1本欠けただけで危険</b>になります。柱をタップして確かめてみよう。
+            3本すべて立っている＝情報は安全。<b>どれか1本欠けただけで危険</b>になります。柱をタップして確かめてみよう。
           </p>
         ) : (
           <ul className="space-y-1.5">
             {brokenList.map((e) => (
               <li key={e.id} className="text-sm leading-relaxed text-rose-700">
-                💥 <b>{e.name}</b>が折れた → {e.incident}（{e.bad}）
+                <InlineIcon name="alert" /><b>{e.name}</b>が折れた → {e.incident}（{e.bad}）
               </li>
             ))}
           </ul>
@@ -89,7 +91,7 @@ function PillarDemo() {
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 セキュリティ＝「秘密を守る」だけではありません。<b>書きかえられない</b>（完全性）、
+        <InlineIcon name="lightbulb" />セキュリティ＝「秘密を守る」だけではありません。<b>書きかえられない</b>（完全性）、
         <b>止まらない</b>（可用性）も同じくらい大切。<b>3つセット</b>で考えます。
       </div>
     </Panel>
@@ -150,7 +152,7 @@ function Classifier() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${label(it.ans)}」。 `}
+                  {correct ? "正解！ " : `正解は「${label(it.ans)}」。 `}
                   {it.why}
                 </p>
               )}
@@ -178,7 +180,7 @@ export default function SecurityCiaExperience() {
         <div className="mt-3 grid grid-cols-3 gap-2">
           {ELEMS.map((e) => (
             <div key={e.id} className="rounded-xl bg-brand-50 p-2.5 text-center ring-1 ring-brand-100">
-              <div className="text-lg">{e.emo}</div>
+              <Icon name={e.icon} className="h-5 w-5 text-gray-700" />
               <div className="mt-0.5 text-xs font-bold text-brand-800">{e.name}</div>
               <div className="mt-0.5 text-[10px] leading-tight text-gray-600">{e.mean}</div>
             </div>

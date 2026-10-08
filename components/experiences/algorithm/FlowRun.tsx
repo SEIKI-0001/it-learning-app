@@ -207,7 +207,7 @@ export function FlowRun() {
             <VarBox name="合計" value={cur.total} prev={prev ? prev.total : null} testId="flow-run-var-total" />
             {cur.node === "display-total" || cur.node === "end" ? (
               <span className={styles.screen} data-testid="flow-run-output">
-                🖥 {cur.total}
+                {cur.total}
               </span>
             ) : null}
           </div>

@@ -23,9 +23,9 @@ const dnsDemo: ProcessDemoSpec = {
     buttonLabel: "Webサイトを開く",
   },
   actors: [
-    { id: "browser", label: "ブラウザ", emoji: "🌐" },
-    { id: "dns", label: "DNSサーバー", emoji: "📒" },
-    { id: "web", label: "Webサーバー", emoji: "🖥️" },
+    { id: "browser", label: "ブラウザ", icon: "globe" },
+    { id: "dns", label: "DNSサーバー", icon: "book-open" },
+    { id: "web", label: "Webサーバー", icon: "monitor" },
   ],
   scenarios: [
     {
@@ -158,9 +158,9 @@ const sqlDemo: ProcessDemoSpec = {
     buttonLabel: "検索する",
   },
   actors: [
-    { id: "user", label: "検索画面", emoji: "🔎" },
-    { id: "app", label: "アプリ", emoji: "📱" },
-    { id: "db", label: "データベース", emoji: "🗄️" },
+    { id: "user", label: "検索画面", icon: "search" },
+    { id: "app", label: "アプリ", icon: "smartphone" },
+    { id: "db", label: "データベース", icon: "server" },
   ],
   scenarios: [
     {
@@ -292,9 +292,9 @@ const authDemo: ProcessDemoSpec = {
     buttonLabel: "アクセスする",
   },
   actors: [
-    { id: "browser", label: "ブラウザ", emoji: "🌐" },
-    { id: "server", label: "サーバー", emoji: "🖥️" },
-    { id: "perm", label: "権限テーブル", emoji: "📋" },
+    { id: "browser", label: "ブラウザ", icon: "globe" },
+    { id: "server", label: "サーバー", icon: "monitor" },
+    { id: "perm", label: "権限テーブル", icon: "clipboard" },
   ],
   scenarios: [
     {

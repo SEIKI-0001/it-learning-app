@@ -191,7 +191,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${label(it.ans)}。 `}
+                  {correct ? "正解！ " : `正解は ${label(it.ans)}。 `}
                   {it.why}
                 </p>
               )}

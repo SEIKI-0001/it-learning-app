@@ -50,7 +50,7 @@ describe("OsExperience", () => {
 
   it("'save file' flows App → OS → Storage and OS reports completion", () => {
     renderRelay();
-    click("💾 ファイルを保存");
+    click("ファイルを保存");
     expect(capsule()).toHaveAttribute("data-at", "files");
     next();
     next();
@@ -61,7 +61,7 @@ describe("OsExperience", () => {
 
   it("direct access from the app to hardware is stopped at the OS layer", () => {
     renderRelay();
-    click("🚫 アプリからハードウェアを直接さわってみる");
+    click("アプリからハードウェアを直接さわってみる");
     expect(screen.getByTestId("os-scene")).toHaveAttribute("data-barrier", "true");
     expect(screen.getByTestId("os-denied")).toHaveTextContent("OSを経由してください");
     expect(capsule()).toHaveAttribute("data-tone", "blocked");
