@@ -13,6 +13,7 @@ import {
   getWordsForTopic,
   kaisetsuDescription,
   kaisetsuPath,
+  KAISETSU_COMPARISONS,
   kaisetsuTitle,
   relatedTermHref,
   KAISETSU_FIELD_ORDER,
@@ -97,6 +98,22 @@ describe("public topic explanation pages (/kaisetsu)", () => {
       for (const term of t.relatedTerms ?? []) {
         expect(relatedTermHref(term, t.id)).not.toBe(kaisetsuPath(t.id));
       }
+    }
+  });
+
+  it("titles comparison topics as 「AとBの違い」 only when the body explains every term", () => {
+    expect(kaisetsuTitle(getKaisetsuTopic("tech-http-https")!)).toBe(
+      "HTTPとHTTPSの違いとは？わかりやすく解説【ITパスポート】",
+    );
+    expect(kaisetsuTitle(getKaisetsuTopic("tech-cloud-models")!)).toBe(
+      "SaaS・PaaS・IaaSの違いとは？わかりやすく解説【ITパスポート】",
+    );
+    expect(kaisetsuDescription(getKaisetsuTopic("tech-lan-wan")!).startsWith("LANとWANの違いを")).toBe(true);
+    for (const [id, terms] of Object.entries(KAISETSU_COMPARISONS)) {
+      const t = getKaisetsuTopic(id);
+      expect(t, id).not.toBeNull();
+      const body = JSON.stringify([t!.summary, t!.conceptCard, t!.explanation, t!.examPoint, t!.commonMistakes]);
+      for (const term of terms) expect(body, `${id}: ${term}`).toContain(term);
     }
   });
 });

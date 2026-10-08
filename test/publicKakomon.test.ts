@@ -73,7 +73,11 @@ describe("public acronym pages (/words)", () => {
 
     const zeroTrust = getWord("zerotrust")!;
     expect(isWordLikeEntry(zeroTrust)).toBe(true);
-    expect(wordTitle(zeroTrust)).toContain("Zero Trust（ゼロトラスト）とは？");
+    expect(wordTitle(zeroTrust)).toContain("ゼロトラスト（Zero Trust）とは？");
+
+    // 英単語の見出しどうしの比較は、検索に合わせて日本語名で並べる
+    expect(wordTitle(getWord("deepfake")!)).toBe("ディープフェイク（Deepfake）とは？意味とハルシネーション・GANとの違い");
+    expect(wordDescription(getWord("deepfake")!).startsWith("ディープフェイク（Deepfake）とハルシネーション（Hallucination）の違い。")).toBe(true);
   });
 
   it("names up to two confused terms in the title and leads the description with the difference", () => {

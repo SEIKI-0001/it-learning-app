@@ -22,13 +22,24 @@ export function isWordLikeEntry(w: WordlistEntry): boolean {
 const TITLE_CONFUSED_MAX = 2;
 
 /**
- * 例: "RPO（Recovery Point Objective）とは？意味とRTO・BCPとの違い"、"Zero Trust（ゼロトラスト）とは？…"。
+ * 名前に出す表記。英単語の見出し（Deepfake など）は日本語名で出す。
+ * 検索は「ディープフェイク ハルシネーション 違い」のようにカタカナで打たれるため。
+ */
+function displayName(name: string): string {
+  const entry = getWordByAcronym(name);
+  return entry && isWordLikeEntry(entry) ? entry.japanese : name;
+}
+
+/**
+ * 例: "RPO（Recovery Point Objective）とは？意味とRTO・BCPとの違い"、
+ * "ディープフェイク（Deepfake）とは？意味とハルシネーション・GANとの違い"。
  * 「RPO RTO 違い」のような比較の検索は1ページ目に入りやすいので、似た用語を2つまで名前に出す。
  */
 export function wordTitle(w: WordlistEntry): string {
-  const paren = isWordLikeEntry(w) ? w.japanese : w.fullName;
-  const base = `${w.acronym}（${paren}）とは？意味`;
-  const confused = w.confusedWith.slice(0, TITLE_CONFUSED_MAX);
+  const base = isWordLikeEntry(w)
+    ? `${w.japanese}（${w.acronym}）とは？意味`
+    : `${w.acronym}（${w.fullName}）とは？意味`;
+  const confused = w.confusedWith.slice(0, TITLE_CONFUSED_MAX).map(displayName);
   return confused.length > 0 ? `${base}と${confused.join("・")}との違い` : `${base}と試験のポイント`;
 }
 
@@ -47,7 +58,12 @@ export function wordDescription(w: WordlistEntry): string {
   const other = wordComparisonEntries(w)[0];
   if (other) {
     const axis = w.differenceAxis ? `見分けるポイントは「${w.differenceAxis}」。` : "";
-    return `${w.acronym}は「${w.japanese}」、${other.acronym}は「${other.japanese}」。${axis}${w.oneLine} ITパスポート試験で問われるポイントとあわせて解説します。`;
+    // 英単語の見出しは日本語名が検索語なので、「AはX」と言い換えず日本語名どうしで並べる
+    const pair =
+      isWordLikeEntry(w) && isWordLikeEntry(other)
+        ? `${w.japanese}（${w.acronym}）と${other.japanese}（${other.acronym}）の違い。`
+        : `${w.acronym}は「${w.japanese}」、${other.acronym}は「${other.japanese}」。`;
+    return `${pair}${axis}${w.oneLine} ITパスポート試験で問われるポイントとあわせて解説します。`;
   }
   return `${w.acronym}は「${w.japanese}」。${w.oneLine} ITパスポート試験で問われるポイントと、似た用語との見分け方をまとめています。`;
 }
