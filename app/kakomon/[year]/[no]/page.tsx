@@ -6,6 +6,7 @@ import KakomonList from "@/components/guide/KakomonList";
 import ShareOnX from "@/components/growth/ShareOnX";
 import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { CHOICE_LABELS } from "@/lib/pastExam/questionView";
+import { kakomonJsonLd } from "@/lib/publicPages/structuredData";
 import {
   KAKOMON_BASE_PATH,
   getAdjacentKakomon,
@@ -77,6 +78,7 @@ export default async function KakomonQuestionPage({ params }: Props) {
   return (
     <article className="g-col">
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <JsonLd data={kakomonJsonLd(q)} />
       <Breadcrumb crumbs={crumbs} />
       <h1>{kakomonQuestionTitle(q)}</h1>
       <p className="k-meta">
