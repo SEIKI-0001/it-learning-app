@@ -24,7 +24,7 @@ import { hashHex, toyCipher } from "./toyCrypto";
 import styles from "./membersite.module.css";
 
 // 暗号化とハッシュ化の図解：通販サイトの会員登録を、そのまま模型にする。
-//   左手前：あなたの部屋のスマホ ／ 中央：通販会社のサーバ室（Webサーバ・🔑暗号化装置・ハッシュ関数・DB・鍵の金庫）
+//   左手前：あなたの部屋のスマホ ／ 中央：通販会社のサーバ室（Webサーバ・暗号化装置・ハッシュ関数・DB・鍵の金庫）
 //   右手前：発送倉庫（送り状を印刷する係）／ 右奥：DBを盗み出そうとする攻撃者
 // 同じ登録フォームから来た2つの情報を、使い道に合わせて別々に守る。
 //   住所     … 発送のときに中身が要る → 鍵で暗号化して保存し、倉庫で同じ鍵で復号する（戻せる）
@@ -42,7 +42,7 @@ const up = (p: Vec3, dz: number): Vec3 => ({ ...p, z: (p.z ?? 0) + dz });
 
 const PHONE: Vec3 = { x: 110, y: 350, z: 50 };
 const WEB: Vec3 = { x: 300, y: 170, z: 0 };
-const ENC: Vec3 = { x: 400, y: 110, z: 0 }; // 🔑 暗号化装置
+const ENC: Vec3 = { x: 400, y: 110, z: 0 }; // 暗号化装置
 const HASH: Vec3 = { x: 400, y: 240, z: 0 }; // ハッシュ関数
 const DB: Vec3 = { x: 500, y: 170, z: 0 };
 const SAFE: Vec3 = { x: 540, y: 262, z: 0 };
@@ -242,10 +242,10 @@ export function MemberSiteDioramaScene({
           {(phase === "store" || phase === "leak") && (
             <DioramaLabel at={up(DB, 70)} place={phase === "leak" ? "left" : "above"} pinned>
               <div className={styles.table} data-testid="member-db-row" data-leaked={phase === "leak" ? "true" : "false"}>
-                <span className={styles.tableTitle}>{phase === "leak" ? "😈 盗まれた会員データベース" : "会員データベース（保存される中身）"}</span>
+                <span className={styles.tableTitle}>{phase === "leak" ? "盗まれた会員データベース" : "会員データベース（保存される中身）"}</span>
                 <span className={styles.cell}>
                   <i>住所</i>
-                  <b data-kind="cipher">🔒 {ADDRESS_CIPHER}</b>
+                  <b data-kind="cipher">{ADDRESS_CIPHER}</b>
                 </span>
                 <span className={styles.cell}>
                   <i>パスワード</i>
@@ -259,7 +259,7 @@ export function MemberSiteDioramaScene({
             <>
               <DioramaLabel at={up(ENC, 44)} place="above">
                 <span className={styles.gate} data-kind="enc">
-                  🔑 住所 → 鍵で暗号化
+                  住所 → 鍵で暗号化
                 </span>
               </DioramaLabel>
               <DioramaLabel at={up(HASH, 0)} place="below">
@@ -273,7 +273,7 @@ export function MemberSiteDioramaScene({
           {phase === "ship" && (
             <DioramaLabel at={up(WAREHOUSE, 76)} place="above">
               <div className={styles.label} data-testid="member-ship">
-                <span className={styles.labelHead}>🔑 同じ鍵で復号 → 送り状</span>
+                <span className={styles.labelHead}>同じ鍵で復号 → 送り状</span>
                 <span className={styles.labelBody}>お届け先：{ADDRESS}</span>
               </div>
             </DioramaLabel>

@@ -5,6 +5,7 @@ import styles from "../calc/calc.module.css";
 import { Choices, Note, Replay, StepChips, type Choice } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // PERT・クリティカルパス。本試験の「全体で何日かかるか（最短所要日数）」を自力で解けるようにする。
 //   ④ 一本道       ：A 3日 → B 5日。棒が日数ぶん伸びて 3＋5＝8日
@@ -119,7 +120,7 @@ function Timeline({ bars, finish, testId }: { bars: Bar[]; finish?: number; test
               style={{ left: pct(finish) }}
               data-testid="pert-finish"
             >
-              🏁 {finish}日
+              {finish}日
             </span>
           </div>
         </div>
@@ -162,7 +163,7 @@ export function LineStage() {
         )}
         {b >= 4 && (
           <Note>
-            💡 前の作業が終わらないと次を始められない<b>一本道は、日数をそのまま足す</b>。B は A が終わった3日目から始まります。
+            <InlineIcon name="lightbulb" />前の作業が終わらないと次を始められない<b>一本道は、日数をそのまま足す</b>。B は A が終わった3日目から始まります。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -192,7 +193,7 @@ export function ParallelStage() {
             { id: "A", label: "A", start: 0, days: 3, tone: "brand", on: b >= 1 },
             { id: "B", label: "B", start: 3, days: 5, tone: "sky", on: b >= 2 },
             { id: "C", label: "C", start: 3, days: 2, tone: "emerald", on: b >= 2, wait: { days: 3, on: b >= 2, delayDays: 2 } },
-            { id: "D", label: "D", start: 3, days: 4, tone: "amber", on: false, pending: b >= 2 ? "🔒 B と C の両方を待つ" : undefined },
+            { id: "D", label: "D", start: 3, days: 4, tone: "amber", on: false, pending: b >= 2 ? "B と C の両方を待つ" : undefined },
           ]}
         />
         {b >= 3 && (
@@ -202,7 +203,7 @@ export function ParallelStage() {
         )}
         {b >= 4 && (
           <Note>
-            💡 <b>並行作業は、全部の日数を足すわけではない</b>。同時に進むので、B の5日の間に C の2日は終わっています。
+            <InlineIcon name="lightbulb" /><b>並行作業は、全部の日数を足すわけではない</b>。同時に進むので、B の5日の間に C の2日は終わっています。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -242,7 +243,7 @@ export function TotalStage() {
         )}
         {b >= 3 && (
           <Note>
-            💡 C の2日は足しません（3＋5＋2＋4＝14日 は間違い）。C は <b>B と同時に進んで、B より先に終わっている</b>からです。
+            <InlineIcon name="lightbulb" />C の2日は足しません（3＋5＋2＋4＝14日 は間違い）。C は <b>B と同時に進んで、B より先に終わっている</b>からです。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -420,7 +421,7 @@ export function CriticalStage() {
         {b >= 4 && (
           <>
             <Note>
-              💡 全部の作業が終わるのは、<b>いちばん長い経路が終わったとき</b>。だから全体の日数は12日。クリティカルパス上の作業（A・B・D）が1日遅れると、全体も1日遅れます。
+              <InlineIcon name="lightbulb" />全部の作業が終わるのは、<b>いちばん長い経路が終わったとき</b>。だから全体の日数は12日。クリティカルパス上の作業（A・B・D）が1日遅れると、全体も1日遅れます。
             </Note>
             <p className={`mt-2 text-[11px] leading-relaxed text-gray-500 ${styles.reveal}`}>
               発展：短いほうの経路には 12−9＝3日 の余裕があります（C は3日まで遅れても全体は12日のまま）。まずは「最長の経路＝全体の日数」を確実に。
@@ -467,7 +468,7 @@ export function PertSolveStage() {
               <div className="mt-0.5 text-base font-bold text-gray-800">経路を探す → 日数を足す → 最長を選ぶ</div>
             </div>
             <Note>
-              ⚠ 試験の<b>「最短で何日で終わるか（最短所要日数）」</b>も、答えは<b>最長の経路の日数</b>。全部の作業が終わるには、どう急いでも一番長い経路ぶんはかかるからです。
+              <InlineIcon name="alert" />試験の<b>「最短で何日で終わるか（最短所要日数）」</b>も、答えは<b>最長の経路の日数</b>。全部の作業が終わるには、どう急いでも一番長い経路ぶんはかかるからです。
             </Note>
           </>
         )}
@@ -584,7 +585,7 @@ export function PertPractice() {
       )}
       {answered && last && (
         <Note tone="emerald">
-          🎉 ここまで解ければ、本試験のアローダイアグラムの日数計算に対応できます。迷ったら<b>経路を探す → 日数を足す → 最長を選ぶ</b>。
+          ここまで解ければ、本試験のアローダイアグラムの日数計算に対応できます。迷ったら<b>経路を探す → 日数を足す → 最長を選ぶ</b>。
         </Note>
       )}
     </Panel>

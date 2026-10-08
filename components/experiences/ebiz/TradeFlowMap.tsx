@@ -1,9 +1,10 @@
 import type { CSSProperties } from "react";
 import styles from "./ebiz.module.css";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // 取引マップ：4つの登場人物（企業／取引先企業／個人／個人）と、必要なときだけ現れる中継役
-// （📱スマホ・🌐仲介プラットフォーム）。用語を選ぶと、その取引で「誰から誰へ・何が」流れるかを
-// ①②③の順に1回だけ流す。流れるものは モノ（📦 橙）・お金（💴 緑）・情報（📄 青）で色を分ける。
+// （スマホ・仲介プラットフォーム）。用語を選ぶと、その取引で「誰から誰へ・何が」流れるかを
+// ①②③の順に1回だけ流す。流れるものは モノ（橙）・お金（緑）・情報（青）で色を分ける。
 // 流れ終わったレーンは矢印として残るので、最終状態の図だけでも取引の形が読める。
 
 export type TermKey = "ec" | "edi" | "fintech" | "sharing";
@@ -13,13 +14,13 @@ type NodeKey = "compA" | "compB" | "persA" | "persB" | "phone" | "platform";
 const W = 320;
 const H = 236;
 
-const NODES: Record<NodeKey, { x: number; y: number; emo: string; label: string; via?: boolean }> = {
-  compA: { x: 62, y: 38, emo: "🏢", label: "企業" },
-  compB: { x: 258, y: 38, emo: "🏭", label: "取引先企業" },
-  persA: { x: 62, y: 196, emo: "🙋", label: "個人" },
-  persB: { x: 258, y: 196, emo: "🙆", label: "個人" },
-  phone: { x: 62, y: 117, emo: "📱", label: "スマホ", via: true },
-  platform: { x: 160, y: 130, emo: "🌐", label: "仲介サービス", via: true },
+const NODES: Record<NodeKey, { x: number; y: number; icon: IconName; label: string; via?: boolean }> = {
+  compA: { x: 62, y: 38, icon: "building", label: "企業" },
+  compB: { x: 258, y: 38, icon: "factory", label: "取引先企業" },
+  persA: { x: 62, y: 196, icon: "user", label: "個人" },
+  persB: { x: 258, y: 196, icon: "user", label: "個人" },
+  phone: { x: 62, y: 117, icon: "smartphone", label: "スマホ", via: true },
+  platform: { x: 160, y: 130, icon: "globe", label: "仲介サービス", via: true },
 };
 
 // 用語ごとの呼び名（同じ箱でも役割が変わる）
@@ -30,28 +31,28 @@ const ROLE: Record<TermKey, Partial<Record<NodeKey, string>>> = {
   sharing: { persA: "借りる人", persB: "貸す人" },
 };
 
-export type FlowStep = { path: NodeKey[]; kind: Kind; icon: string; label: string; text: string };
+export type FlowStep = { path: NodeKey[]; kind: Kind; icon: IconName; label: string; text: string };
 
 export const FLOWS: Record<TermKey, FlowStep[]> = {
   ec: [
-    { path: ["persA", "compA"], kind: "info", icon: "📄", label: "注文", text: "顧客 → ショップ：注文を送る" },
-    { path: ["persA", "compA"], kind: "money", icon: "💴", label: "代金", text: "顧客 → ショップ：代金を払う" },
-    { path: ["compA", "persA"], kind: "goods", icon: "📦", label: "商品", text: "ショップ → 顧客：商品が届く" },
+    { path: ["persA", "compA"], kind: "info", icon: "file-text", label: "注文", text: "顧客 → ショップ：注文を送る" },
+    { path: ["persA", "compA"], kind: "money", icon: "yen", label: "代金", text: "顧客 → ショップ：代金を払う" },
+    { path: ["compA", "persA"], kind: "goods", icon: "package", label: "商品", text: "ショップ → 顧客：商品が届く" },
   ],
   edi: [
-    { path: ["compA", "compB"], kind: "info", icon: "📄", label: "発注", text: "企業A → 企業B：発注データ" },
-    { path: ["compB", "compA"], kind: "info", icon: "📄", label: "納品", text: "企業B → 企業A：納品（出荷）データ" },
-    { path: ["compB", "compA"], kind: "info", icon: "📄", label: "請求", text: "企業B → 企業A：請求データ" },
+    { path: ["compA", "compB"], kind: "info", icon: "file-text", label: "発注", text: "企業A → 企業B：発注データ" },
+    { path: ["compB", "compA"], kind: "info", icon: "file-text", label: "納品", text: "企業B → 企業A：納品（出荷）データ" },
+    { path: ["compB", "compA"], kind: "info", icon: "file-text", label: "請求", text: "企業B → 企業A：請求データ" },
   ],
   fintech: [
-    { path: ["persA", "phone"], kind: "info", icon: "👆", label: "指示", text: "利用者 → スマホ：送金・支払いを操作" },
-    { path: ["phone", "compA"], kind: "money", icon: "💴", label: "送金", text: "スマホ → 金融サービス：お金が動く" },
-    { path: ["compA", "phone", "persA"], kind: "info", icon: "📄", label: "完了", text: "金融サービス → 利用者：完了・残高が届く" },
+    { path: ["persA", "phone"], kind: "info", icon: "arrow-right", label: "指示", text: "利用者 → スマホ：送金・支払いを操作" },
+    { path: ["phone", "compA"], kind: "money", icon: "yen", label: "送金", text: "スマホ → 金融サービス：お金が動く" },
+    { path: ["compA", "phone", "persA"], kind: "info", icon: "file-text", label: "完了", text: "金融サービス → 利用者：完了・残高が届く" },
   ],
   sharing: [
-    { path: ["persB", "platform"], kind: "info", icon: "📄", label: "空き", text: "貸す人 → 仲介：空いている車を登録" },
-    { path: ["persA", "platform", "persB"], kind: "money", icon: "💴", label: "利用料", text: "借りる人 → 仲介 → 貸す人：利用料" },
-    { path: ["persB", "persA"], kind: "goods", icon: "🚗", label: "車", text: "貸す人 → 借りる人：車そのものを貸す" },
+    { path: ["persB", "platform"], kind: "info", icon: "file-text", label: "空き", text: "貸す人 → 仲介：空いている車を登録" },
+    { path: ["persA", "platform", "persB"], kind: "money", icon: "yen", label: "利用料", text: "借りる人 → 仲介 → 貸す人：利用料" },
+    { path: ["persB", "persA"], kind: "goods", icon: "car", label: "車", text: "貸す人 → 借りる人：車そのものを貸す" },
   ],
 };
 
@@ -193,9 +194,7 @@ export function TradeFlowMap({ sel, runKey, reducedMotion }: { sel: TermKey | nu
                 stroke={on ? "#6366f1" : "#e5e7eb"}
                 strokeWidth={on ? 2 : 1.5}
               />
-              <text x={n.x} y={n.y - 7} textAnchor="middle" dominantBaseline="central" fontSize={n.via ? 14 : 16}>
-                {n.emo}
-              </text>
+              <Icon name={n.icon} x={n.x - (n.via ? 7 : 8)} y={n.y - 7 - (n.via ? 7 : 8)} width={n.via ? 14 : 16} height={n.via ? 14 : 16} className="text-gray-700" />
               <text x={n.x} y={n.y + 12} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fill="#374151">
                 {label}
               </text>
@@ -222,8 +221,9 @@ export function TradeFlowMap({ sel, runKey, reducedMotion }: { sel: TermKey | nu
             return (
               <g key={`tok-${runKey}-${i}`} className={styles.token} style={style} aria-hidden data-testid="ebiz-token">
                 <rect x={-w / 2} y={-10} width={w} height={20} rx={10} fill={KIND_TONE[s.kind].fill} stroke={KIND_TONE[s.kind].stroke} strokeWidth={1.5} />
-                <text textAnchor="middle" dominantBaseline="central" fontSize={10.5} fontWeight={700} fill="#1f2937">
-                  {s.icon} {s.label}
+                <Icon name={s.icon} x={-w / 2 + 6} y={-6} width={12} height={12} className="text-gray-800" />
+                <text x={-w / 2 + 21} textAnchor="start" dominantBaseline="central" fontSize={10.5} fontWeight={700} fill="#1f2937">
+                  {s.label}
                 </text>
               </g>
             );

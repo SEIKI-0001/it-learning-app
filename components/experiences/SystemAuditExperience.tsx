@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「システム監査と内部統制」専用の体験。
@@ -33,13 +35,13 @@ function WhatIsAudit() {
         <div className="mt-3 text-center">
           {self ? (
             <div>
-              <div className="text-3xl">🙋‍♂️📝</div>
+              <div className="flex justify-center gap-1 text-rose-600"><Icon name="user" className="h-8 w-8" /><Icon name="pen" className="h-8 w-8" /></div>
               <div className="mt-1 text-sm font-bold text-rose-600">自分で自分を採点</div>
               <p className="mt-1 text-xs text-gray-500">甘くなりがち。見落としや隠ぺいも起きうる…</p>
             </div>
           ) : (
             <div>
-              <div className="text-3xl">🧑‍⚖️🔍</div>
+              <div className="flex justify-center gap-1 text-emerald-600"><Icon name="user" className="h-8 w-8" /><Icon name="search" className="h-8 w-8" /></div>
               <div className="mt-1 text-sm font-bold text-emerald-600">独立した第三者が確認</div>
               <p className="mt-1 text-xs text-gray-500">利害がないから客観的。これが監査の姿。</p>
             </div>
@@ -47,7 +49,7 @@ function WhatIsAudit() {
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 監査でいちばん大切なのが<b>独立性</b>。対象から離れた立場でないと、客観的に判断できません。
+        <InlineIcon name="lightbulb" />監査でいちばん大切なのが<b>独立性</b>。対象から離れた立場でないと、客観的に判断できません。
       </div>
     </Panel>
   );
@@ -57,9 +59,9 @@ function WhatIsAudit() {
 // ② 内部統制ラボ: 仕組みをON/OFFすると、不正な経費申請の結末が変わる
 // ---------------------------------------------------------------------------
 const CONTROLS = [
-  { id: "sep", emoji: "🔑", t: "権限の分離", d: "申請する人と承認する人を分ける" },
-  { id: "dbl", emoji: "✌️", t: "ダブルチェック", d: "別の人がもう一度確認する" },
-  { id: "log", emoji: "🧾", t: "監査証跡", d: "誰がいつ何をしたか記録を残す" },
+  { id: "sep", icon: "key", t: "権限の分離", d: "申請する人と承認する人を分ける" },
+  { id: "dbl", icon: "check-double", t: "ダブルチェック", d: "別の人がもう一度確認する" },
+  { id: "log", icon: "file-text", t: "監査証跡", d: "誰がいつ何をしたか記録を残す" },
 ] as const;
 
 type ControlId = (typeof CONTROLS)[number]["id"];
@@ -72,10 +74,10 @@ function ControlLab() {
   const detected = !blocked && on.log; // 通ってしまうが、記録から発覚する
 
   const steps = [
-    { label: "申請", emoji: "🙋‍♂️", note: "社員が架空の経費 10万円 を申請", state: "pass" as const },
+    { label: "申請", icon: "user" as IconName, note: "社員が架空の経費 10万円 を申請", state: "pass" as const },
     {
       label: "承認",
-      emoji: blocked ? "🛑" : "👌",
+      icon: (blocked ? "ban" : "check") as IconName,
       note: blocked
         ? on.sep
           ? "自分では承認できない！ 別の承認者がチェックして却下"
@@ -85,7 +87,7 @@ function ControlLab() {
     },
     {
       label: "支払い",
-      emoji: blocked ? "―" : detected ? "🔍" : "💸",
+      icon: (blocked ? "minus" : detected ? "search" : "yen") as IconName,
       note: blocked
         ? "ここまで来ない（承認で止まった）"
         : detected
@@ -117,7 +119,7 @@ function ControlLab() {
                 active ? "bg-emerald-500 text-white ring-emerald-500" : "bg-gray-50 text-gray-500 ring-gray-200"
               }`}
             >
-              <span className="text-lg leading-none">{c.emoji}</span>
+              <Icon name={c.icon} className="h-5 w-5" />
               <span className="mt-1 text-[11px] font-bold leading-tight">{c.t}</span>
               <span className={`mt-0.5 text-[10px] font-bold ${active ? "text-emerald-100" : "text-gray-400"}`}>
                 {active ? "ON" : "OFF"}
@@ -145,7 +147,7 @@ function ControlLab() {
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className="text-base">{s.emoji}</span>
+                <Icon name={s.icon} className="h-4 w-4 text-gray-600" />
                 <span className="text-xs font-bold text-gray-700">{s.label}</span>
               </div>
               <p className="mt-0.5 text-xs leading-relaxed text-gray-600">{s.note}</p>
@@ -165,14 +167,14 @@ function ControlLab() {
         }`}
       >
         {blocked
-          ? "🛡️ 不正は途中でブロックされた！ 仕組みが「事前に」防いだ。"
+          ? "不正は途中でブロックされた！ 仕組みが「事前に」防いだ。"
           : detected
-            ? "🔍 支払いは通ったが、証跡から「あとで」発覚。記録も大切な統制。"
-            : "😱 不正が成功してしまった… 仕組みがないと誰も気づけない。"}
+            ? "支払いは通ったが、証跡から「あとで」発覚。記録も大切な統制。"
+            : "不正が成功してしまった… 仕組みがないと誰も気づけない。"}
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚠️ 内部統制は「社員を監視するため」だけの仕組みではなく、<b>業務を正しく回すための土台</b>です。
+        <InlineIcon name="alert" />内部統制は「社員を監視するため」だけの仕組みではなく、<b>業務を正しく回すための土台</b>です。
       </div>
     </Panel>
   );
@@ -203,8 +205,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-1.5">
                 {[
-                  { v: true, label: "⭕ 正しい" },
-                  { v: false, label: "❌ ダメ" },
+                  { v: true, label: "正しい" },
+                  { v: false, label: "ダメ" },
                 ].map((o) => {
                   const picked = chosen === o.v;
                   const tone = !has
@@ -229,7 +231,7 @@ function Quiz() {
               </div>
               {has && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

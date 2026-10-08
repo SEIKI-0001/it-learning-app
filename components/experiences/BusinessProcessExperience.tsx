@@ -5,6 +5,8 @@ import { ProcessDioramaScene } from "./process/ProcessDioramaScene";
 import { makespan, queueLengths, schedule, spotsAt } from "./process/processSim";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「業務プロセス改善」専用の体験。
@@ -14,13 +16,13 @@ import { Panel, SectionTitle } from "./ui";
 //   ② そのままシステム化の罠（まず見直す）クイズ
 // ============================================================================
 
-type Step = { name: string; emoji: string; base: number; improved: number; fix: string };
+type Step = { name: string; icon: IconName; base: number; improved: number; fix: string };
 
 const STEPS: Step[] = [
-  { name: "受付", emoji: "📥", base: 5, improved: 5, fix: "" },
-  { name: "手書き転記", emoji: "✍️", base: 30, improved: 5, fix: "手入力をやめてデータ自動連携にする" },
-  { name: "承認待ち", emoji: "⏳", base: 20, improved: 5, fix: "オンライン承認で待ち時間を減らす" },
-  { name: "発送", emoji: "📦", base: 5, improved: 5, fix: "" },
+  { name: "受付", icon: "download", base: 5, improved: 5, fix: "" },
+  { name: "手書き転記", icon: "pen", base: 30, improved: 5, fix: "手入力をやめてデータ自動連携にする" },
+  { name: "承認待ち", icon: "hourglass", base: 20, improved: 5, fix: "オンライン承認で待ち時間を減らす" },
+  { name: "発送", icon: "package", base: 5, improved: 5, fix: "" },
 ];
 
 const BEFORE = STEPS.map((s) => s.base);
@@ -77,13 +79,13 @@ function Flow() {
   const note =
     mode === "before"
       ? pile > 0
-        ? `🚨 「${STEPS[BOTTLENECK].name}」の前に${pile}件が渋滞中。1件${BEFORE[BOTTLENECK]}分かかるので、10分ごとに届く書類をさばけない → ここがボトルネック`
+        ? `「${STEPS[BOTTLENECK].name}」の前に${pile}件が渋滞中。1件${BEFORE[BOTTLENECK]}分かかるので、10分ごとに届く書類をさばけない → ここがボトルネック`
         : t >= end
-          ? `⌛ 6件すべて発送まで ${end}分。「改善後」に切り替えて比べてみよう`
-          : `🚨 ボトルネックは「${STEPS[BOTTLENECK].name}」（1件${BEFORE[BOTTLENECK]}分）。流すとこの前に書類が溜まっていく`
+          ? `6件すべて発送まで ${end}分。「改善後」に切り替えて比べてみよう`
+          : `ボトルネックは「${STEPS[BOTTLENECK].name}」（1件${BEFORE[BOTTLENECK]}分）。流すとこの前に書類が溜まっていく`
       : t >= end
-        ? `✅ 6件すべて発送まで ${end}分（改善前は ${END.before}分）`
-        : "✅ 転記と承認を直したので、どの机の前にも書類が溜まらない";
+        ? `6件すべて発送まで ${end}分（改善前は ${END.before}分）`
+        : "転記と承認を直したので、どの机の前にも書類が溜まらない";
 
   return (
     <Panel>
@@ -129,7 +131,7 @@ function Flow() {
         <ProcessDioramaScene
           stations={STEPS.map((s, i) => ({
             name: s.name,
-            emoji: s.emoji,
+            icon: s.icon,
             minutes: times[i],
             improved: mode === "after" && s.base !== s.improved,
             slow: mode === "before" && s.base !== s.improved,
@@ -198,7 +200,7 @@ function Flow() {
             >
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-gray-700">
-                  {s.emoji} {s.name}
+                  <Icon name={s.icon} className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />{s.name}
                   {slow && <span className="ml-1.5 text-amber-600">← 時間がかかる</span>}
                   {fixed && <span className="ml-1.5 text-emerald-600">✓ 改善</span>}
                 </span>
@@ -213,7 +215,7 @@ function Flow() {
                   style={{ width: `${(times[i] / MAX_MIN) * 100}%` }}
                 />
               </div>
-              {canFix && <p className="mt-1 text-[11px] text-gray-500">{fixed ? `✅ ${s.fix}` : `改善案：${s.fix}`}</p>}
+              {canFix && <p className="mt-1 text-[11px] text-gray-500">{fixed ? `${s.fix}` : `改善案：${s.fix}`}</p>}
             </div>
           );
         })}
@@ -244,7 +246,7 @@ function Flow() {
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="bp-insight">
-        💡 いきなりITを入れるのではなく、まず<b>どこで書類が溜まるか（ボトルネック）</b>を見える化し、その工程を直す。
+        <InlineIcon name="lightbulb" />いきなりITを入れるのではなく、まず<b>どこで書類が溜まるか（ボトルネック）</b>を見える化し、その工程を直す。
         手書き転記と承認待ちを直すと <b>1件 {sum(BEFORE)}分 → {sum(AFTER)}分</b>、6件なら <b>{END.before}分 → {END.after}分</b>。これが業務プロセス改善です。
       </div>
     </Panel>
@@ -273,8 +275,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "⭕ 正しい" },
-                  { v: false, label: "🙅 ちがう" },
+                  { v: true, label: "正しい" },
+                  { v: false, label: "ちがう" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -299,7 +301,7 @@ function Quiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}
@@ -308,7 +310,7 @@ function Quiz() {
         })}
       </ul>
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        📌 業務の流れを根本から見直すのが <b>BPR</b>、継続的に管理・改善するのが <b>BPM</b>。
+        <InlineIcon name="flag" />業務の流れを根本から見直すのが <b>BPR</b>、継続的に管理・改善するのが <b>BPM</b>。
       </div>
     </Panel>
   );

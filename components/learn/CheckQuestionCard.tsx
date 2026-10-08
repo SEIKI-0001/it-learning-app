@@ -118,8 +118,8 @@ export default function CheckQuestionCard({
             }`}
           >
             {isCorrect
-              ? "🎉 正解！"
-              : `🌱 正解は「${shuffled.correctChoice}」でした`}
+              ? "正解！"
+              : `正解は「${shuffled.correctChoice}」でした`}
           </p>
           <p className="text-sm leading-relaxed text-gray-700">
             {q.explanation}

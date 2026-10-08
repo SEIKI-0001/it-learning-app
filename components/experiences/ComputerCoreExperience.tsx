@@ -7,12 +7,14 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon from "@/components/ui/Icon";
 
 // ============================================================================
 // 「CPU・メモリ・ストレージ」専用の体験。
 //   ① 3つの部品の役割（頭脳・作業机・引き出し）
 //   ② データの流れ体験 … PC内部の 2.5D 模型（ストレージ → メモリ ↔ CPU）で
-//      文書を開く→処理→編集→保存 を1歩ずつ。どの段階でも「⚡電源を切る」を押せ、
+//      文書を開く→処理→編集→保存 を1歩ずつ。どの段階でも「電源を切る」を押せ、
 //      保存前に切ると メモリ上の編集だけが消え、ストレージには古い版が残る（揮発性）
 //   ③ メモリ vs ストレージ … 速さ・容量・電源OFFで消えるか（揮発性）の比較
 // ============================================================================
@@ -35,7 +37,7 @@ const STEPS: FlowStep[] = [
     stored: 1,
     doc: { spot: "storage", version: 1, status: "clean" },
     packet: null,
-    detail: <>💾 文書はふだん<b>ストレージ（引き出し）</b>に保管されています。アプリで「開く」を押しました。</>,
+    detail: <>文書はふだん<b>ストレージ（引き出し）</b>に保管されています。アプリで「開く」を押しました。</>,
   },
   {
     title: "メモリへ読み込む",
@@ -46,7 +48,7 @@ const STEPS: FlowStep[] = [
     packet: null,
     detail: (
       <>
-        📤 文書のコピーを<b>メモリ（作業机）</b>に読み込みます。ストレージは遅いので、使うものだけ机に広げます。
+        文書のコピーを<b>メモリ（作業机）</b>に読み込みます。ストレージは遅いので、使うものだけ机に広げます。
         引き出しの中の<b>保存版 v1 はそのまま</b>残っています。
       </>
     ),
@@ -58,7 +60,7 @@ const STEPS: FlowStep[] = [
     stored: 1,
     doc: { spot: "memory", version: 1, status: "clean" },
     packet: { spot: "cpu", text: "読んで表示", kind: "bus" },
-    detail: <>🧠 <b>CPU（頭脳）</b>がメモリ上の文書を読んで処理（表示・計算）。CPUとメモリの間は超高速でやりとりします。</>,
+    detail: <><b>CPU（頭脳）</b>がメモリ上の文書を読んで処理（表示・計算）。CPUとメモリの間は超高速でやりとりします。</>,
   },
   {
     title: "メモリ上で編集",
@@ -69,8 +71,8 @@ const STEPS: FlowStep[] = [
     packet: { spot: "memory", text: "100 → 120 に書き換え", kind: "bus" },
     detail: (
       <>
-        ✏️ あなたが書き直すと、変更はまず<b>メモリの上</b>にあります（だから速い）。
-        机の上は <b>v2</b>、でも引き出しの中は<b>まだ v1</b>。ここで <b>⚡電源を切る</b> を押してみよう。
+        あなたが書き直すと、変更はまず<b>メモリの上</b>にあります（だから速い）。
+        机の上は <b>v2</b>、でも引き出しの中は<b>まだ v1</b>。ここで <b>電源を切る</b> を押してみよう。
       </>
     ),
   },
@@ -81,7 +83,7 @@ const STEPS: FlowStep[] = [
     stored: 2,
     doc: { spot: "memory", version: 2, status: "saved" },
     packet: { spot: "storage", text: "v2 を書き込み", kind: "save" },
-    detail: <>💾 「保存」を押すと、メモリの内容が<b>ストレージに書き込まれ</b>ます。これで電源を切っても残ります。</>,
+    detail: <>「保存」を押すと、メモリの内容が<b>ストレージに書き込まれ</b>ます。これで電源を切っても残ります。</>,
   },
 ];
 
@@ -103,15 +105,15 @@ function powerView(power: Power, idx: number) {
       tone: lost ? ("lost" as const) : ("safe" as const),
       detail: lost ? (
         <>
-          ⚡ 電源OFF。<b>メモリの上にあった編集（{DOC_TEXT[2]}）が消えました！</b>
+          電源OFF。<b>メモリの上にあった編集（{DOC_TEXT[2]}）が消えました！</b>
           引き出し（ストレージ）には古い <b>v1（{DOC_TEXT[1]}）</b>しか残っていません。
         </>
       ) : idx === SAVE_STEP ? (
-        <>⚡ 電源OFF。メモリの中身は消えましたが、<b>保存済み</b>なのでストレージに <b>v2</b> が残っています。</>
+        <>電源OFF。メモリの中身は消えましたが、<b>保存済み</b>なのでストレージに <b>v2</b> が残っています。</>
       ) : inMemory ? (
-        <>⚡ 電源OFF。メモリ上の文書は消えました。でも<b>まだ編集していない</b>ので、ストレージの v1 と同じ＝失ったものはありません。</>
+        <>電源OFF。メモリ上の文書は消えました。でも<b>まだ編集していない</b>ので、ストレージの v1 と同じ＝失ったものはありません。</>
       ) : (
-        <>⚡ 電源OFF。メモリはもともと空。文書はストレージに残っています。</>
+        <>電源OFF。メモリはもともと空。文書はストレージに残っています。</>
       ),
     };
   }
@@ -122,11 +124,11 @@ function powerView(power: Power, idx: number) {
     tone: lost ? ("lost" as const) : ("safe" as const),
     detail: lost ? (
       <>
-        🔌 電源を入れ直して開くと、読み込まれたのは<b>ストレージにあった v1（{DOC_TEXT[1]}）</b>。
+        電源を入れ直して開くと、読み込まれたのは<b>ストレージにあった v1（{DOC_TEXT[1]}）</b>。
         書き直した 120万円 は<b>どこにも残っていません</b>。
       </>
     ) : (
-      <>🔌 電源を入れ直して開くと、ストレージから <b>v{stored}（{DOC_TEXT[stored]}）</b> が読み込まれました。</>
+      <>電源を入れ直して開くと、ストレージから <b>v{stored}（{DOC_TEXT[stored]}）</b> が読み込まれました。</>
     ),
   };
 }
@@ -179,7 +181,7 @@ function DataFlow() {
       <SectionTitle step={2}>データの流れを追う（文書を開く→編集→保存）</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         PCケースの中で、ファイルを開いて書き直して保存するまで、データが<b className="text-gray-800">どこを通るか</b>を1歩ずつ。
-        途中で<b className="text-gray-800">⚡電源を切る</b>こともできます。
+        途中で<b className="text-gray-800">電源を切る</b>こともできます。
       </p>
 
       <div className="mt-3 min-w-0">
@@ -238,12 +240,12 @@ function DataFlow() {
               idx === EDIT_STEP ? "bg-rose-600 text-white" : "bg-white text-rose-700 ring-1 ring-rose-300"
             }`}
           >
-            ⚡ 電源を切る
+            電源を切る
           </button>
         )}
         {power === "off" && (
           <button type="button" onClick={() => setPower("rebooted")} className="flex-1 rounded-full bg-gray-900 px-4 py-2 text-xs font-bold text-white active:scale-95">
-            🔌 電源を入れて文書を開き直す
+            電源を入れて文書を開き直す
           </button>
         )}
         {power !== "on" && (
@@ -260,13 +262,13 @@ function DataFlow() {
         <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="cc-insight">
           {tried.lost && tried.safe ? (
             <>
-              💡 同じ「電源OFF」でも、<b>保存前</b>は編集が消え、<b>保存後</b>は残った。
+              <InlineIcon name="lightbulb" />同じ「電源OFF」でも、<b>保存前</b>は編集が消え、<b>保存後</b>は残った。
               メモリは電気が無いと中身を保てない＝<b>揮発性</b>。だから「保存」でストレージ（<b>不揮発性</b>）へ移すのが大切！
             </>
           ) : tried.lost ? (
-            <>💡 保存前に切ると編集が消えた。次は <b>STEP 5（保存）の後</b>に切って比べてみよう。</>
+            <><InlineIcon name="lightbulb" />保存前に切ると編集が消えた。次は <b>STEP 5（保存）の後</b>に切って比べてみよう。</>
           ) : (
-            <>💡 保存後なら残った。次は <b>STEP 4（保存前）</b>で切って比べてみよう。</>
+            <><InlineIcon name="lightbulb" />保存後なら残った。次は <b>STEP 4（保存前）</b>で切って比べてみよう。</>
           )}
         </div>
       )}
@@ -276,14 +278,14 @@ function DataFlow() {
 
 export default function ComputerCoreExperience() {
   const parts = [
-    { emo: "🧠", name: "CPU", tag: "頭脳", d: "計算や判断をする処理の中心。速さは「クロック周波数（GHz）」で表す。", ex: "人（宿題をする自分）" },
-    { emo: "🗒️", name: "メモリ（主記憶）", tag: "作業机", d: "今すぐ使うデータを一時的に広げる場所。速いが、電源を切ると消える。", ex: "机の広さ（RAM）" },
-    { emo: "🗄️", name: "ストレージ（補助記憶）", tag: "引き出し", d: "写真・アプリ・文書を長く保存する場所。大容量だが遅い。電源を切っても残る。", ex: "本棚・引き出し（SSD/HDD）" },
+    { icon: "lightbulb" as const, name: "CPU", tag: "頭脳", d: "計算や判断をする処理の中心。速さは「クロック周波数（GHz）」で表す。", ex: "人（宿題をする自分）" },
+    { icon: "clipboard" as const, name: "メモリ（主記憶）", tag: "作業机", d: "今すぐ使うデータを一時的に広げる場所。速いが、電源を切ると消える。", ex: "机の広さ（RAM）" },
+    { icon: "server" as const, name: "ストレージ（補助記憶）", tag: "引き出し", d: "写真・アプリ・文書を長く保存する場所。大容量だが遅い。電源を切っても残る。", ex: "本棚・引き出し（SSD/HDD）" },
   ];
 
   const rows = [
     { k: "役割", m: "作業机（一時置き）", s: "引き出し（長期保存）" },
-    { k: "速さ", m: "速い 🚀", s: "遅い 🐢" },
+    { k: "速さ", m: "速い", s: "遅い" },
     { k: "容量", m: "小さめ", s: "大きい" },
     { k: "電源を切ると", m: "消える（揮発性）", s: "残る（不揮発性）" },
     { k: "例", m: "RAM", s: "SSD・HDD" },
@@ -301,8 +303,8 @@ export default function ComputerCoreExperience() {
         <ul className="mt-3 space-y-2.5">
           {parts.map((p) => (
             <li key={p.name} className="flex gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <div className="grid h-12 w-12 flex-none place-items-center rounded-xl bg-white text-2xl ring-1 ring-gray-200">
-                {p.emo}
+              <div className="grid h-12 w-12 flex-none place-items-center rounded-xl bg-white ring-1 ring-gray-200">
+                <Icon name={p.icon} className="h-7 w-7 text-gray-700" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -332,8 +334,8 @@ export default function ComputerCoreExperience() {
             <thead>
               <tr className="bg-gray-100 text-gray-700">
                 <th className="px-3 py-2 text-left font-bold"> </th>
-                <th className="px-3 py-2 text-center font-bold">🗒️ メモリ</th>
-                <th className="px-3 py-2 text-center font-bold">🗄️ ストレージ</th>
+                <th className="px-3 py-2 text-center font-bold">メモリ</th>
+                <th className="px-3 py-2 text-center font-bold">ストレージ</th>
               </tr>
             </thead>
             <tbody>

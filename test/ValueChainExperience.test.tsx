@@ -32,7 +32,7 @@ describe("ValueChainExperience", () => {
     expect(inScene('[data-testid="value-column"]')).toHaveAttribute("data-total", "15");
 
     fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
-    expect(inScene('[data-testid="product"]')).toHaveTextContent("🪑");
+    expect(inScene('[data-testid="product"]')).toHaveTextContent("製品");
     expect(inScene('[data-node="operations"]')).toHaveAttribute("data-state", "active");
     expect(inScene('[data-testid="value-column"]')).toHaveAttribute("data-total", "40");
 

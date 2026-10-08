@@ -161,7 +161,7 @@ export function NormalTables({ stage, priceUp }: { stage: number; priceUp: boole
         const rows = tableRows(table, priceUp);
         return (
           <section key={table.id} className={styles.card} data-table={table.id} aria-label={table.name}>
-            <h4 className={styles.cardTitle}>📋 {table.name}</h4>
+            <h4 className={styles.cardTitle}>{table.name}</h4>
             <div className={styles.scroll}>
               <table className={styles.table} data-wide={table.fields.length > 5 ? "true" : "false"}>
                 <thead>

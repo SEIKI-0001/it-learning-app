@@ -222,7 +222,7 @@ export function HttpsScene({ mode, nodes, laneActive, capsule, eveSees, trail, r
       })}
 
       <span className={styles.modePlate} data-mode={mode} data-testid="https-mode-plate">
-        {mode === "https" ? "https://  🔒" : "http://  ⚠︎"}
+        {mode === "https" ? "https://" : "http://"}
       </span>
 
       {eveSees !== null && (

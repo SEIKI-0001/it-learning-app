@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle, StepNav } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「IoT」専用の体験。
@@ -10,10 +11,10 @@ import { Panel, SectionTitle, StepNav } from "./ui";
 //   ③ 便利さの裏のセキュリティ（安全／あやしい 仕分けクイズ）
 // ============================================================================
 
-const NODES = [
-  { id: "sensor", emoji: "🌡️", name: "センサー付き機器", sub: "エアコン" },
-  { id: "net", emoji: "📡", name: "ネット", sub: "送信" },
-  { id: "cloud", emoji: "☁️", name: "クラウド", sub: "判断" },
+const NODES: { id: string; icon: IconName; name: string; sub: string }[] = [
+  { id: "sensor", icon: "thermometer", name: "センサー付き機器", sub: "エアコン" },
+  { id: "net", icon: "signal", name: "ネット", sub: "送信" },
+  { id: "cloud", icon: "cloud", name: "クラウド", sub: "判断" },
 ];
 
 const STEPS = [
@@ -44,8 +45,8 @@ function Loop() {
                   on ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100" : "border-gray-200 bg-gray-50"
                 }`}
               >
-                {holds && <span className="absolute -top-3 right-1 text-base">📦</span>}
-                <div className="text-2xl leading-none">{n.emoji}</div>
+                {holds && <Icon name="package" className="absolute -top-3 right-1 h-4 w-4 text-amber-600" />}
+                <Icon name={n.icon} className={`mx-auto h-7 w-7 ${on ? "text-emerald-600" : "text-gray-500"}`} />
                 <div className="mt-1 text-[11px] font-bold text-gray-800">{n.name}</div>
                 <div className="text-[10px] leading-tight text-gray-500">{n.sub}</div>
               </div>
@@ -66,17 +67,17 @@ function Loop() {
         onPrev={() => setIdx((i) => Math.max(0, i - 1))}
         onNext={() => setIdx((i) => Math.min(STEPS.length - 1, i + 1))}
         onReset={() => setIdx(0)}
-        doneLabel="自動で完結 🎉"
+        doneLabel="自動で完結"
       />
     </Panel>
   );
 }
 
-const USES = [
-  { emoji: "🏭", t: "工場", d: "機械にセンサーを付け、稼働状況や故障の予兆を遠隔で把握。" },
-  { emoji: "🏠", t: "家", d: "スマート家電を外出先からスマホで操作・確認。" },
-  { emoji: "🚜", t: "農業", d: "畑の温度・湿度を測り、自動で水やり。" },
-  { emoji: "🩺", t: "健康", d: "腕時計が心拍を測り、データを記録・通知。" },
+const USES: { icon: IconName; t: string; d: string }[] = [
+  { icon: "factory", t: "工場", d: "機械にセンサーを付け、稼働状況や故障の予兆を遠隔で把握。" },
+  { icon: "home", t: "家", d: "スマート家電を外出先からスマホで操作・確認。" },
+  { icon: "sprout", t: "農業", d: "畑の温度・湿度を測り、自動で水やり。" },
+  { icon: "heart-pulse", t: "健康", d: "腕時計が心拍を測り、データを記録・通知。" },
 ];
 
 function Uses() {
@@ -87,7 +88,7 @@ function Uses() {
         {USES.map((u) => (
           <div key={u.t} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
-              <span className="text-lg">{u.emoji}</span>
+              <Icon name={u.icon} className="h-5 w-5 text-brand-600" />
               <span className="text-sm font-bold text-gray-800">{u.t}</span>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-gray-600">{u.d}</p>
@@ -123,8 +124,8 @@ function SecurityQuiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-1.5">
                 {[
-                  { v: true, label: "✅ 安全" },
-                  { v: false, label: "⚠️ あやしい" },
+                  { v: true, label: "安全" },
+                  { v: false, label: "あやしい" },
                 ].map((o) => {
                   const picked = chosen === o.v;
                   const tone = !has
@@ -149,7 +150,7 @@ function SecurityQuiz() {
               </div>
               {has && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 逆だよ。 "}
+                  {correct ? "正解！ " : "逆だよ。 "}
                   {it.why}
                 </p>
               )}

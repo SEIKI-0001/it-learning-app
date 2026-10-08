@@ -7,6 +7,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「サイバー攻撃の手口」専用の体験。
@@ -20,7 +22,7 @@ type AttackId = "ddos" | "sqli" | "xss" | "targeted" | "social";
 
 type Attack = {
   id: AttackId;
-  emo: string;
+  icon: IconName;
   name: string;
   target: "機械を攻める" | "人をだます";
   scene: string; // 攻撃者がやること
@@ -30,7 +32,7 @@ type Attack = {
 const ATTACKS: Attack[] = [
   {
     id: "ddos",
-    emo: "🌊",
+    icon: "zap",
     name: "DoS / DDoS 攻撃",
     target: "機械を攻める",
     scene: "世界中の機器から一斉に大量アクセスを送りつける",
@@ -38,7 +40,7 @@ const ATTACKS: Attack[] = [
   },
   {
     id: "sqli",
-    emo: "💉",
+    icon: "database",
     name: "SQLインジェクション",
     target: "機械を攻める",
     scene: "入力欄に「' OR 1=1 --」などDBへの命令文を混ぜて送る",
@@ -46,7 +48,7 @@ const ATTACKS: Attack[] = [
   },
   {
     id: "xss",
-    emo: "🪤",
+    icon: "fishhook",
     name: "クロスサイトスクリプティング(XSS)",
     target: "機械を攻める",
     scene: "掲示板に罠のスクリプトをこっそり書き込んでおく",
@@ -54,7 +56,7 @@ const ATTACKS: Attack[] = [
   },
   {
     id: "targeted",
-    emo: "🎯",
+    icon: "target",
     name: "標的型攻撃",
     target: "人をだます",
     scene: "この会社だけを狙い、取引先を装ったメールで添付を開かせる",
@@ -62,7 +64,7 @@ const ATTACKS: Attack[] = [
   },
   {
     id: "social",
-    emo: "🎭",
+    icon: "users",
     name: "ソーシャルエンジニアリング",
     target: "人をだます",
     scene: "「システム部です」と電話し、パスワードを聞き出す",
@@ -119,7 +121,7 @@ const ROUTES: Record<AttackId, AttackStep[]> = {
         nodes: n({ db: "error", attacker: "active" }),
         lanes: { wd: "leak", iw: "leak", ai: "leak" },
         flood: [],
-        payload: { stop: "attacker", tone: "leak", text: "📄 会員データ" },
+        payload: { stop: "attacker", tone: "leak", text: "会員データ" },
         damage: [{ at: "db", text: "データ流出" }],
       },
     },
@@ -127,15 +129,15 @@ const ROUTES: Record<AttackId, AttackStep[]> = {
   xss: [
     {
       title: "掲示板（Webサーバ）に罠を書き込む",
-      view: { nodes: n({ attacker: "active", web: "sending" }), lanes: { ai: "attack", iw: "attack" }, flood: [], payload: { stop: "web", tone: "attack", text: "🪤 <script>" }, damage: [] },
+      view: { nodes: n({ attacker: "active", web: "sending" }), lanes: { ai: "attack", iw: "attack" }, flood: [], payload: { stop: "web", tone: "attack", text: "<script>" }, damage: [] },
     },
     {
       title: "利用者がそのページを見に来る",
-      view: { nodes: n({ user: "active", web: "sending" }), lanes: { ui: "normal", iw: "normal" }, flood: [], payload: { stop: "web", tone: "attack", text: "🪤 <script>" }, damage: [] },
+      view: { nodes: n({ user: "active", web: "sending" }), lanes: { ui: "normal", iw: "normal" }, flood: [], payload: { stop: "web", tone: "attack", text: "<script>" }, damage: [] },
     },
     {
       title: "利用者のブラウザ上で罠が実行",
-      view: { nodes: n({ user: "error" }), lanes: { iw: "attack", ui: "attack" }, flood: [], payload: { stop: "user", tone: "attack", text: "🪤 実行！" }, damage: [] },
+      view: { nodes: n({ user: "error" }), lanes: { iw: "attack", ui: "attack" }, flood: [], payload: { stop: "user", tone: "attack", text: "実行！" }, damage: [] },
     },
     {
       title: "利用者の情報が攻撃者へ",
@@ -143,7 +145,7 @@ const ROUTES: Record<AttackId, AttackStep[]> = {
         nodes: n({ user: "error", attacker: "active" }),
         lanes: { ui: "leak", ai: "leak" },
         flood: [],
-        payload: { stop: "attacker", tone: "leak", text: "🍪 利用者の情報" },
+        payload: { stop: "attacker", tone: "leak", text: "利用者の情報" },
         damage: [{ at: "user", text: "情報を盗まれた" }],
       },
     },
@@ -151,11 +153,11 @@ const ROUTES: Record<AttackId, AttackStep[]> = {
   targeted: [
     {
       title: "取引先を装ったメールを送る",
-      view: { nodes: n({ attacker: "active", staff: "sending" }), lanes: { ai: "attack", is: "attack" }, flood: [], payload: { stop: "staff", tone: "attack", text: "✉ 請求書.zip" }, damage: [] },
+      view: { nodes: n({ attacker: "active", staff: "sending" }), lanes: { ai: "attack", is: "attack" }, flood: [], payload: { stop: "staff", tone: "attack", text: "請求書.zip" }, damage: [] },
     },
     {
       title: "社員が添付を開封",
-      view: { nodes: n({ staff: "error" }), lanes: { is: "attack" }, flood: [], payload: { stop: "staff", tone: "attack", text: "🐴 ウイルス" }, damage: [{ at: "staff", text: "感染" }] },
+      view: { nodes: n({ staff: "error" }), lanes: { is: "attack" }, flood: [], payload: { stop: "staff", tone: "attack", text: "ウイルス" }, damage: [{ at: "staff", text: "感染" }] },
     },
     {
       title: "社内のサーバ・DBへ侵入",
@@ -163,7 +165,7 @@ const ROUTES: Record<AttackId, AttackStep[]> = {
         nodes: n({ staff: "error", web: "error", db: "error" }),
         lanes: { sw: "attack", wd: "attack" },
         flood: [],
-        payload: { stop: "web", tone: "attack", text: "🐴 侵入" },
+        payload: { stop: "web", tone: "attack", text: "侵入" },
         damage: [
           { at: "staff", text: "感染" },
           { at: "db", text: "侵入" },
@@ -174,11 +176,11 @@ const ROUTES: Record<AttackId, AttackStep[]> = {
   social: [
     {
       title: "「システム部です」と電話",
-      view: { nodes: n({ attacker: "active", staff: "active" }), lanes: { as: "phone" }, flood: [], payload: { stop: "staff", tone: "phone", text: "📞 システム部です" }, damage: [] },
+      view: { nodes: n({ attacker: "active", staff: "active" }), lanes: { as: "phone" }, flood: [], payload: { stop: "staff", tone: "phone", text: "システム部です" }, damage: [] },
     },
     {
       title: "社員が信じてしまう",
-      view: { nodes: n({ staff: "error" }), lanes: { as: "phone" }, flood: [], payload: { stop: "staff", tone: "phone", text: "🔑 パスワードは…" }, damage: [] },
+      view: { nodes: n({ staff: "error" }), lanes: { as: "phone" }, flood: [], payload: { stop: "staff", tone: "phone", text: "パスワードは…" }, damage: [] },
     },
     {
       title: "パスワードが攻撃者へ",
@@ -186,7 +188,7 @@ const ROUTES: Record<AttackId, AttackStep[]> = {
         nodes: n({ staff: "error", attacker: "active" }),
         lanes: { as: "leak" },
         flood: [],
-        payload: { stop: "attacker", tone: "leak", text: "🔑 パスワード" },
+        payload: { stop: "attacker", tone: "leak", text: "パスワード" },
         damage: [{ at: "staff", text: "パスワード流出" }],
       },
     },
@@ -221,7 +223,7 @@ function AttackLab() {
     <Panel>
       <SectionTitle step={1}>攻撃ラボ ― 撃ってみると違いが分かる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        実験用の会社に、攻撃者😈として5つの手口を撃ち込んでみよう。
+        実験用の会社に、攻撃者として5つの手口を撃ち込んでみよう。
         <b className="text-gray-800">どこを通って・どこに被害が出るか</b>が手口ごとに違います。
       </p>
 
@@ -242,7 +244,7 @@ function AttackLab() {
                     : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
               }`}
             >
-              {a.emo} {a.name.replace("クロスサイトスクリプティング", "")}
+              <span className="inline-flex items-center gap-1"><Icon name={a.icon} className="h-3.5 w-3.5" />{a.name.replace("クロスサイトスクリプティング", "")}</span>
               {tried.has(a.id) && !on && " ✓"}
             </button>
           );
@@ -255,7 +257,7 @@ function AttackLab() {
           forward={player.forward}
           previousStop={player.forward && idx > 0 ? (steps[idx - 1]?.view.payload?.stop ?? null) : null}
           caption={{
-            label: cur ? `STEP ${idx + 1} / ${steps.length}　${cur.emo} ${cur.name}` : "🏢 実験用の会社",
+            label: cur ? `STEP ${idx + 1} / ${steps.length}　${cur.name}` : "実験用の会社",
             title: cur ? step.title : "↑ 攻撃を選ぶと、通り道と被害がこの図に出ます",
             badge: cur ? (
               <span
@@ -264,7 +266,7 @@ function AttackLab() {
                 }`}
                 data-testid="cyber-target"
               >
-                狙い：{cur.target === "人をだます" ? "🧑 人" : "💻 機械"}
+                狙い：{cur.target === "人をだます" ? "人" : "機械"}
               </span>
             ) : undefined,
             note: cur?.scene,
@@ -293,7 +295,7 @@ function AttackLab() {
           {atEnd && (
             <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800 ring-1 ring-rose-200" data-testid="cyber-result">
               <b>
-                {cur.emo} {cur.name}
+                <span className="inline-flex items-center gap-1"><Icon name={cur.icon} className="h-3.5 w-3.5" />{cur.name}</span>
               </b>
               ：{cur.result}
             </div>
@@ -305,7 +307,7 @@ function AttackLab() {
 
       {allTried && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200" data-testid="cyber-insight">
-          💡 <b>気づいた？</b>　<b>DoS・SQLインジェクション・XSSは「機械」を攻める</b>ので仕組み（設定や修正）で防ぎ、
+          <InlineIcon name="lightbulb" /><b>気づいた？</b>　<b>DoS・SQLインジェクション・XSSは「機械」を攻める</b>ので仕組み（設定や修正）で防ぎ、
           <b>標的型・ソーシャルエンジニアリングは「人」をだます</b>のでルールと教育で防ぎます。
           狙いがどちらかを見分けるのが第一歩。
         </div>
@@ -386,7 +388,7 @@ function AttackQuiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}
@@ -410,7 +412,7 @@ export default function CyberAttacksExperience() {
       <AttackQuiz />
 
       <Panel>
-        <SectionTitle emoji="🔑">まとめ</SectionTitle>
+        <SectionTitle icon="check">まとめ</SectionTitle>
         <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-gray-700">
           <li>・<b>DoS / DDoS</b>：大量アクセスでサービスを停止させる。</li>
           <li>・<b>SQLインジェクション</b>：入力欄からDBへ不正な命令を送り込む。</li>

@@ -1,5 +1,5 @@
 // 犬・猫の写真8枚を「鼻の長さ × 耳のとがり」の平面に置いた静的な図。
-// 教師あり（最初から🐶🐱の正解付き＋境界線）と教師なし（正解なし→2つのまとまり）で同じ8枚を使い、
+// 教師あり（最初から犬・猫の正解付き＋境界線）と教師なし（正解なし→2つのまとまり）で同じ8枚を使い、
 // 「正解が付いているか」だけが違うことを見せる。
 
 export type Pet = { id: string; kind: "dog" | "cat"; nose: number; ear: number };
@@ -46,7 +46,7 @@ export function DogCatPlot({
   showNew = false,
   testId,
 }: {
-  /** labeled=🐶🐱の正解付き / raw=正解なしの点 / grouped=正解なしのまま2つにまとめた */
+  /** labeled=犬・猫の正解付き / raw=正解なしの点 / grouped=正解なしのまま2つにまとめた */
   mode: "labeled" | "raw" | "grouped";
   boundary?: boolean;
   showNew?: boolean;
@@ -82,9 +82,21 @@ export function DogCatPlot({
 
       {PETS.map((p) =>
         mode === "labeled" ? (
-          <text key={p.id} x={sx(p.nose)} y={sy(p.ear) + 6} textAnchor="middle" fontSize={17}>
-            {p.kind === "dog" ? "🐶" : "🐱"}
-          </text>
+          <g key={p.id}>
+            {p.kind === "dog" ? (
+              <circle cx={sx(p.nose)} cy={sy(p.ear)} r={10} fill={GROUP.dog.color} opacity={0.18} stroke={GROUP.dog.color} />
+            ) : (
+              <polygon
+                points={`${sx(p.nose)},${sy(p.ear) - 11} ${sx(p.nose) - 10},${sy(p.ear) + 8} ${sx(p.nose) + 10},${sy(p.ear) + 8}`}
+                fill={GROUP.cat.color}
+                opacity={0.18}
+                stroke={GROUP.cat.color}
+              />
+            )}
+            <text x={sx(p.nose)} y={sy(p.ear) + 4} textAnchor="middle" fontSize={10} fontWeight="bold" fill={GROUP[p.kind].color}>
+              {p.kind === "dog" ? "犬" : "猫"}
+            </text>
+          </g>
         ) : (
           <circle key={p.id} cx={sx(p.nose)} cy={sy(p.ear)} r={6} fill={mode === "grouped" ? GROUP[p.kind].color : "#6b7280"} />
         ),

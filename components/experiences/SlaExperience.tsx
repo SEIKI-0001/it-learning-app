@@ -2,6 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「サービスマネジメントとSLA」専用の体験。
@@ -19,7 +21,7 @@ function WhatIs() {
       </p>
       <div className="mt-4 flex items-center justify-center gap-2">
         <div className="rounded-xl bg-brand-50 px-3 py-3 text-center ring-1 ring-brand-200">
-          <div className="text-2xl">🏢</div>
+          <Icon name="building" className="mx-auto h-7 w-7 text-brand-700" />
           <div className="mt-1 text-[11px] font-bold text-brand-700">提供者</div>
           <div className="text-[10px] text-gray-500">運用・サポート</div>
         </div>
@@ -29,13 +31,13 @@ function WhatIs() {
           <span className="text-[10px] text-gray-400">サービス提供</span>
         </div>
         <div className="rounded-xl bg-gray-50 px-3 py-3 text-center ring-1 ring-gray-200">
-          <div className="text-2xl">🙋</div>
+          <Icon name="user" className="mx-auto h-7 w-7 text-gray-700" />
           <div className="mt-1 text-[11px] font-bold text-gray-700">利用者</div>
           <div className="text-[10px] text-gray-500">サービスを使う</div>
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 提供者と利用者の間で品質の目標を<b>文書で約束</b>したものが <b>SLA</b>（サービスレベル合意書）。
+        <InlineIcon name="lightbulb" />提供者と利用者の間で品質の目標を<b>文書で約束</b>したものが <b>SLA</b>（サービスレベル合意書）。
       </div>
     </Panel>
   );
@@ -167,8 +169,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-1.5">
                 {[
-                  { v: true, label: "⭕ ふさわしい" },
-                  { v: false, label: "❌ ダメ" },
+                  { v: true, label: "ふさわしい" },
+                  { v: false, label: "ダメ" },
                 ].map((o) => {
                   const picked = chosen === o.v;
                   const tone = !has
@@ -193,7 +195,7 @@ function Quiz() {
               </div>
               {has && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

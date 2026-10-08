@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FormulaReadStage, IfStage, LogicStage, RangeStage, SheetPractice } from "./spreadsheet/SheetStages";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「表計算と相対参照・絶対参照」専用の体験。
@@ -105,7 +106,7 @@ function CopyDemo() {
           disabled={copied}
           className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-bold text-white active:scale-95 disabled:opacity-40"
         >
-          ⬇ 下にコピーして埋める
+          ↓ 下にコピーして埋める
         </button>
         <button
           onClick={() => setCopied(false)}
@@ -127,9 +128,9 @@ function CopyDemo() {
         {!copied ? (
           <>まず参照モードを選び、「下にコピー」を押してみよう。</>
         ) : abs ? (
-          <>✅ <b>絶対参照 $E$1</b>：コピーしても税率の参照が固定され、どの行も正しく ×1.1 になりました。</>
+          <><InlineIcon name="check" className="text-emerald-600" /><b>絶対参照 $E$1</b>：コピーしても税率の参照が固定され、どの行も正しく ×1.1 になりました。</>
         ) : (
-          <>❌ <b>相対参照 E1</b>：コピーで参照が E2・E3 へズレ、<b>空セル(=0)</b>を見て結果が0に。固定したいセルには <b>$</b> が必要！</>
+          <><InlineIcon name="x" className="text-rose-600" /><b>相対参照 E1</b>：コピーで参照が E2・E3 へズレ、<b>空セル(=0)</b>を見て結果が0に。固定したいセルには <b>$</b> が必要！</>
         )}
       </div>
     </Panel>
@@ -155,7 +156,7 @@ function Summary() {
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 「<b>$ が付いた方向は動かない</b>」と覚える。税率や定数など、全行で同じセルを見たいときは絶対参照。
+        <InlineIcon name="lightbulb" />「<b>$ が付いた方向は動かない</b>」と覚える。税率や定数など、全行で同じセルを見たいときは絶対参照。
       </div>
     </Panel>
   );

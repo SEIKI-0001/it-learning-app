@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「成長戦略（コアコンピタンス・M&A・アライアンス・アウトソーシング）」専用の体験。
@@ -12,7 +14,7 @@ import { Panel, SectionTitle } from "./ui";
 
 type Way = {
   key: string;
-  emo: string;
+  icon: IconName;
   name: string;
   tag: string;
   speed: 1 | 2 | 3; // 手に入る速さ
@@ -25,7 +27,7 @@ type Way = {
 const WAYS: Way[] = [
   {
     key: "core",
-    emo: "💪",
+    icon: "tool",
     name: "コアコンピタンス",
     tag: "自前で強みを磨く",
     speed: 1,
@@ -36,7 +38,7 @@ const WAYS: Way[] = [
   },
   {
     key: "alliance",
-    emo: "🤝",
+    icon: "handshake",
     name: "アライアンス",
     tag: "他社と提携・協力",
     speed: 2,
@@ -47,7 +49,7 @@ const WAYS: Way[] = [
   },
   {
     key: "ma",
-    emo: "🏢",
+    icon: "building",
     name: "M&A",
     tag: "他社を買収・合併",
     speed: 3,
@@ -58,7 +60,7 @@ const WAYS: Way[] = [
   },
   {
     key: "out",
-    emo: "📤",
+    icon: "upload",
     name: "アウトソーシング",
     tag: "外部に外注",
     speed: 3,
@@ -70,9 +72,9 @@ const WAYS: Way[] = [
 ];
 
 const METERS: { label: string; get: (w: Way) => number }[] = [
-  { label: "⏱️ 手に入る速さ", get: (w) => w.speed },
-  { label: "💸 費用の安さ", get: (w) => w.cheap },
-  { label: "💪 自社の力になる", get: (w) => w.keep },
+  { label: "手に入る速さ", get: (w) => w.speed },
+  { label: "費用の安さ", get: (w) => w.cheap },
+  { label: "自社の力になる", get: (w) => w.keep },
 ];
 
 function Meter({ label, val }: { label: string; val: number }) {
@@ -107,7 +109,7 @@ function CeoSimulator() {
     <Panel>
       <SectionTitle step={1}>社長になって、成長の手を選ぶ</SectionTitle>
       <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-        🧑‍💼 あなたはおもちゃ会社の社長。次のヒットには<b>AI技術</b>が必要。でも自社にはない！
+        あなたはおもちゃ会社の社長。次のヒットには<b>AI技術</b>が必要。でも自社にはない！
         <b>どうやって手に入れる？</b>
       </div>
 
@@ -123,8 +125,8 @@ function CeoSimulator() {
                 on ? "bg-brand-600 text-white ring-brand-600" : "bg-gray-50 ring-gray-200"
               }`}
             >
-              <div className="text-lg">
-                {w.emo}
+              <div className="flex items-center justify-center text-lg">
+                <Icon name={w.icon} className="h-5 w-5" />
                 {done && !on && <span className="ml-1 text-xs">✓</span>}
               </div>
               <div className={`mt-0.5 text-[13px] font-bold ${on ? "text-white" : "text-gray-800"}`}>
@@ -142,7 +144,7 @@ function CeoSimulator() {
         <div className="mt-3 space-y-2.5">
           <div className="rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
             <div className="text-sm font-bold text-gray-800">
-              {active.emo} {active.name}を選んだ結果…
+              <span className="inline-flex items-center gap-1.5"><Icon name={active.icon} className="h-4 w-4" />{active.name}を選んだ結果…</span>
             </div>
             <p className="mt-1 text-[13px] leading-relaxed text-gray-600">{active.story}</p>
             <div className="mt-3 space-y-1.5">
@@ -152,7 +154,7 @@ function CeoSimulator() {
             </div>
           </div>
           <div className="rounded-xl bg-sky-50 px-4 py-2.5 text-xs leading-relaxed text-sky-900 ring-1 ring-sky-200">
-            📌 {active.point}
+            <InlineIcon name="flag" />{active.point}
           </div>
         </div>
       ) : (
@@ -161,7 +163,7 @@ function CeoSimulator() {
 
       {allTried && (
         <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-          🎉 全部試した！ どの手にも<b>一長一短（トレードオフ）</b>があり、唯一の正解はありません。
+          全部試した！ どの手にも<b>一長一短（トレードオフ）</b>があり、唯一の正解はありません。
           だから試験では「それぞれの特徴」が問われます。
         </div>
       )}
@@ -238,7 +240,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

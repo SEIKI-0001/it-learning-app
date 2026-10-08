@@ -130,7 +130,7 @@ export function ApiDioramaScene({
   const stop = capsule?.stop ?? null;
   const path = stop ? stopPath(stop) : null;
   const shot = bypass ? SHOTS.bypass : stop ? SHOTS[stop] : SHOTS.app;
-  const lastScreen = screen ?? (stop === "appBack" ? "東京 ☀ 25℃" : null);
+  const lastScreen = screen ?? (stop === "appBack" ? "東京 晴れ 25℃" : null);
 
   return (
     <DioramaStage
@@ -227,7 +227,7 @@ export function ApiDioramaScene({
           {bypass && (
             <DioramaLabel at={{ x: 420, y: 380, z: 0 }} place="below">
               <div role="status" data-testid="bypass-denied">
-                <Callout tone="danger" title="⛔ 入口は API だけ" />
+                <Callout tone="danger" title="入口は API だけ" />
               </div>
             </DioramaLabel>
           )}

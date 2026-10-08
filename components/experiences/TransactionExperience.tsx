@@ -6,6 +6,7 @@ import { useReducedMotion } from "./scene/useReducedMotion";
 import { TransactionDioramaScene } from "./transaction/TransactionDioramaScene";
 import type { TransactionSceneProps } from "./transaction/transactionTypes";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「トランザクションとコミット・ロールバック」専用の体験。
@@ -53,7 +54,7 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
         msg: "① A −500 完了。まだ確定していません。次にBへ足します。",
         money: { spot: "engine", state: "pending" },
         lanes: { debit: "active", credit: "idle" }, reverse: false, nodes: n("idle", "active", "idle"),
-        alert: { tone: "warn", title: "⚠ 片方だけ更新された状態" },
+        alert: { tone: "warn", title: "片方だけ更新された状態" },
       };
     case "credited":
       return {
@@ -66,14 +67,14 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
     case "committed":
       return {
         a: START_A - AMOUNT, b: START_B + AMOUNT,
-        msg: "✅ コミット：両方の変更を確定しました。振込成立！",
+        msg: "コミット：両方の変更を確定しました。振込成立！",
         money: { spot: "b", state: "settled" }, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "idle", "idle"),
-        alert: { tone: "ok", title: "✅ COMMIT" },
+        alert: { tone: "ok", title: "COMMIT" },
       };
     case "rolledBack":
       return {
         a: START_A, b: START_B,
-        msg: "↩️ ロールバック：開始前の状態に巻き戻しました。お金は消えも増えもしません。",
+        msg: "↩ ロールバック：開始前の状態に巻き戻しました。お金は消えも増えもしません。",
         money: { spot: "a", state: "returning" },
         lanes: { debit: "active", credit: "active" }, reverse: true, nodes: n("active", "idle", "idle"),
         alert: { tone: "ok", title: "↩ ROLLBACK" },
@@ -83,18 +84,18 @@ function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View 
         a: START_A - AMOUNT, b: crashedFrom === "credited" ? START_B + AMOUNT : START_B,
         msg:
           crashedFrom === "debited"
-            ? "⚡ Aから引いた直後にシステム障害！Bにはまだ届いていません。このまま止まると500円が消えてしまいます。"
-            : "⚡ コミット前にシステム障害！変更はまだ確定していません。",
+            ? "Aから引いた直後にシステム障害！Bにはまだ届いていません。このまま止まると500円が消えてしまいます。"
+            : "コミット前にシステム障害！変更はまだ確定していません。",
         money: { spot: "engine", state: "crashed" }, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "error", "idle"),
-        alert: { tone: "crash", title: "⚡ 障害発生：処理が途中で停止" },
+        alert: { tone: "crash", title: "障害発生：処理が途中で停止" },
       };
     case "recovered":
       return {
         a: START_A, b: START_B,
-        msg: "🔄 再起動時に、確定していなかった変更を自動でロールバック。A=1000 / B=0 に戻り、お金は消えませんでした。",
+        msg: "再起動時に、確定していなかった変更を自動でロールバック。A=1000 / B=0 に戻り、お金は消えませんでした。",
         money: { spot: "a", state: "returning" },
         lanes: { debit: "active", credit: "idle" }, reverse: true, nodes: n("active", "idle", "idle"),
-        alert: { tone: "ok", title: "🔄 自動ロールバック" },
+        alert: { tone: "ok", title: "自動ロールバック" },
       };
   }
 }
@@ -106,7 +107,7 @@ const LOG_LINES: Record<Phase, string | null> = {
   credited: "UPDATE 口座B +500",
   committed: "COMMIT → 確定・ロック解除",
   rolledBack: "ROLLBACK → 開始前へ",
-  crashed: "⚡ 障害で停止（未確定）",
+  crashed: "障害で停止（未確定）",
   recovered: "再起動 → ROLLBACK",
 };
 
@@ -182,7 +183,7 @@ function TransferDemo() {
               ② Bに 500 足す →
             </button>
             <button type="button" onClick={crash} className="flex-none rounded-lg bg-white px-3 py-2 text-sm font-bold text-rose-700 ring-1 ring-rose-300 active:scale-95">
-              ⚡ 障害発生
+              障害発生
             </button>
           </div>
         )}
@@ -190,27 +191,27 @@ function TransferDemo() {
           <>
             <div className="flex gap-2">
               <button type="button" onClick={() => go("committed")} className="flex-1 rounded-lg bg-emerald-500 px-3 py-2 text-sm font-bold text-white active:scale-95">
-                ✅ コミット（確定）
+                コミット（確定）
               </button>
               <button type="button" onClick={() => go("rolledBack")} className="flex-1 rounded-lg bg-rose-500 px-3 py-2 text-sm font-bold text-white active:scale-95">
-                ↩️ ロールバック（取消）
+                ↩ ロールバック（取消）
               </button>
             </div>
             <button type="button" onClick={crash} className="w-full rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-rose-700 ring-1 ring-rose-300 active:scale-95">
-              ⚡ コミット前に障害発生
+              コミット前に障害発生
             </button>
           </>
         )}
         {phase === "crashed" && (
           <button type="button" onClick={() => go("recovered")} className="w-full rounded-lg bg-gray-900 px-4 py-2 text-sm font-bold text-white active:scale-95">
-            🔄 再起動する
+            再起動する
           </button>
         )}
       </div>
 
       {inProgress && (
         <p className="mt-2 text-center text-[11px] font-bold text-amber-600">
-          🔒 処理中：このデータはロックされ、他の人は同時に更新できません（排他制御）
+          <InlineIcon name="lock" />処理中：このデータはロックされ、他の人は同時に更新できません（排他制御）
         </p>
       )}
 
@@ -236,7 +237,7 @@ function TransferDemo() {
       )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 トランザクションは<b>「全部成功」か「全部なし」</b>（原子性＝Atomicity）。確定が<b>コミット</b>、巻き戻しが<b>ロールバック</b>です。
+        <InlineIcon name="lightbulb" />トランザクションは<b>「全部成功」か「全部なし」</b>（原子性＝Atomicity）。確定が<b>コミット</b>、巻き戻しが<b>ロールバック</b>です。
         {seenCrash && <> 障害が起きても、確定前の変更は<b>全部なし</b>に戻ります。</>}
       </div>
     </Panel>
@@ -267,7 +268,7 @@ function Acid() {
         ))}
       </div>
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        📌 頭文字 <b>A・C・I・D</b>。トランザクションが守るべき4つの性質です。
+        <InlineIcon name="flag" />頭文字 <b>A・C・I・D</b>。トランザクションが守るべき4つの性質です。
       </div>
     </Panel>
   );

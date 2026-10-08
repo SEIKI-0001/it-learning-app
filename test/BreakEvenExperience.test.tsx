@@ -51,7 +51,7 @@ describe("BreakEvenExperience (reduced motion = every step shows its final state
     click("解説3");
     expect(screen.getByTestId("be-remaining")).toHaveTextContent("9,400円");
     expect(screen.getByTestId("be-chain")).toHaveTextContent("10,000−200 →9,800−200 →9,600−200 →9,400");
-    click("🛍️ もう1個売る");
+    click("もう1個売る");
     expect(screen.getByTestId("be-remaining")).toHaveTextContent("9,200円");
   });
 

@@ -5,6 +5,7 @@ import styles from "../calc/calc.module.css";
 import { LeveledPractice, Note, Replay, type LeveledQuestion } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 表計算：式・関数を「読む」力。相対/絶対参照（①②）の後ろに足す。
 //   ③ 式を左から読む：B4*(1+B$1) を部品に分け、指しているセルを表で光らせる → 下へ複写
@@ -191,12 +192,12 @@ export function FormulaReadStage() {
             onClick={() => setCopied(true)}
             className={`mt-3 w-full rounded-lg bg-brand-600 px-3 py-2 text-sm font-bold text-white active:scale-95 ${styles.reveal}`}
           >
-            ⬇ C5・C6 へ複写する
+            ↓ C5・C6 へ複写する
           </button>
         )}
         {copied && (
           <Note>
-            💡 もし <b>B1</b>（$なし）だと、C5 では <b>B2</b>、C6 では <b>B3</b> を見てしまう（空欄と見出し）。逆に <b>B$4</b> にすると全行が商品Xの価格になる。<b>動かしたい方に$を付けない</b>のがコツです。
+            <InlineIcon name="lightbulb" />もし <b>B1</b>（$なし）だと、C5 では <b>B2</b>、C6 では <b>B3</b> を見てしまう（空欄と見出し）。逆に <b>B$4</b> にすると全行が商品Xの価格になる。<b>動かしたい方に$を付けない</b>のがコツです。
           </Note>
         )}
         <Replay
@@ -291,7 +292,7 @@ export function IfStage() {
         )}
         {done && (
           <Note>
-            💡 読む順番は<b>① 条件を見る → 成り立てば ② 2番目 → 成り立たなければ ③ 3番目</b>。「≧」は<b>等しいときも含む</b>ので、60点ちょうどは合格です。
+            <InlineIcon name="lightbulb" />読む順番は<b>① 条件を見る → 成り立てば ② 2番目 → 成り立たなければ ③ 3番目</b>。「≧」は<b>等しいときも含む</b>ので、60点ちょうどは合格です。
           </Note>
         )}
         <Replay
@@ -386,7 +387,7 @@ export function LogicStage() {
         </div>
       </div>
       <Note>
-        💡 <b>論理積＝全部</b>成り立つとき TRUE（「かつ」）、<b>論理和＝どれか1つ</b>でも成り立てば TRUE（「又は」）。問題文の<b>「又は」「少なくとも一つ」なら論理和</b>です。
+        <InlineIcon name="lightbulb" /><b>論理積＝全部</b>成り立つとき TRUE（「かつ」）、<b>論理和＝どれか1つ</b>でも成り立てば TRUE（「又は」）。問題文の<b>「又は」「少なくとも一つ」なら論理和</b>です。
       </Note>
     </Panel>
   );
@@ -466,7 +467,7 @@ export function RangeStage() {
         )}
         {b >= 5 && (
           <Note>
-            💡 関数の中に関数があるときは<b>内側を先に1つの数にしてから</b>外側を読む。試験の<b>合計・平均・論理積・論理和</b>は、Excel の SUM・AVERAGE・AND・OR と同じ働きです。
+            <InlineIcon name="lightbulb" />関数の中に関数があるときは<b>内側を先に1つの数にしてから</b>外側を読む。試験の<b>合計・平均・論理積・論理和</b>は、Excel の SUM・AVERAGE・AND・OR と同じ働きです。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -550,7 +551,7 @@ export function SheetPractice() {
       testId="sheet-practice"
       done={
         <>
-          🎉 ここまで読めれば、本試験の表計算の問題に対応できます。<b>参照を読む → 内側から計算 → 条件で分ける</b>。
+          ここまで読めれば、本試験の表計算の問題に対応できます。<b>参照を読む → 内側から計算 → 条件で分ける</b>。
         </>
       }
     />

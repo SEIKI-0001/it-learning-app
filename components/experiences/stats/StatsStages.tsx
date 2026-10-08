@@ -5,6 +5,7 @@ import styles from "../calc/calc.module.css";
 import { Choices, Note, Replay, StepChips, type Choice } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 確率・統計。データ活用（①〜③：BI・活用の流れ）とは別の学習ブロックとして、本試験の計算・判断を解けるようにする。
 //   ④ 確率         ：8枚のカードから赤2枚 → 当たり2 ÷ 全部8 ＝ 1/4
@@ -59,7 +60,7 @@ export function ProbabilityStage() {
                   <span className="text-base font-bold">?</span>
                 ) : (
                   <span key="face" className={styles.flip} style={{ animationDelay: `${i * 60}ms` }}>
-                    {red ? "🔴" : "⚪"}
+                    <span className={`block h-6 w-6 rounded-full ${red ? "bg-rose-500" : "bg-white ring-2 ring-gray-300"}`} />
                   </span>
                 )}
               </div>
@@ -91,7 +92,7 @@ export function ProbabilityStage() {
         )}
         {b >= 5 && (
           <Note>
-            💡 <b>確率 ＝ 欲しい結果の数 ÷ 起こり得る全部の数</b>。分母は「はずれの6枚」ではなく<b>全部の8枚</b>です。
+            <InlineIcon name="lightbulb" /><b>確率 ＝ 欲しい結果の数 ÷ 起こり得る全部の数</b>。分母は「はずれの6枚」ではなく<b>全部の8枚</b>です。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -310,7 +311,7 @@ export function OutlierStage() {
         )}
         {b >= 4 && (
           <Note>
-            💡 <b>平均は外れ値の影響を受けやすく、中央値は受けにくい</b>。1人の335が合計を押し上げても、並べた真ん中（3番目）は50のままです。
+            <InlineIcon name="lightbulb" /><b>平均は外れ値の影響を受けやすく、中央値は受けにくい</b>。1人の335が合計を押し上げても、並べた真ん中（3番目）は50のままです。
           </Note>
         )}
         {done && (
@@ -418,7 +419,7 @@ export function SpreadStage() {
         {b >= 4 && (
           <>
             <Note>
-              💡 <b>分散・標準偏差 ＝ ばらつき（平均からの離れ具合）を数値にしたもの</b>。<b>標準偏差が大きいほど、ばらつきが大きい</b>。平均が同じでも、中身の散らばり方は違います。
+              <InlineIcon name="lightbulb" /><b>分散・標準偏差 ＝ ばらつき（平均からの離れ具合）を数値にしたもの</b>。<b>標準偏差が大きいほど、ばらつきが大きい</b>。平均が同じでも、中身の散らばり方は違います。
             </Note>
             <p className={`mt-2 text-[11px] leading-relaxed text-gray-500 ${styles.reveal}`}>
               参考：分散は「離れ具合を2乗して平均したもの」、標準偏差はその平方根。試験ではまず「大きい＝ばらつきが大きい」の読み取りが問われます。
@@ -556,7 +557,7 @@ export function StatsPractice() {
       )}
       {answered && last && (
         <Note tone="emerald">
-          🎉 ここまで解ければ、本試験の確率・代表値・ばらつきの問題に対応できます。
+          ここまで解ければ、本試験の確率・代表値・ばらつきの問題に対応できます。
         </Note>
       )}
     </Panel>

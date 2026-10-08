@@ -46,10 +46,10 @@ describe("EmailProtocolExperience", () => {
   it("POP moves the mail to the phone, so the PC finds nothing", () => {
     renderDeck();
     click("解説2");
-    click("📱 スマホで受信する");
+    click("スマホで受信する");
     expect(screen.getByTestId("inbox-server")).toHaveAttribute("data-has-mail", "false");
     expect(screen.getByTestId("inbox-phone")).toHaveAttribute("data-has-mail", "true");
-    click("💻 PCでも確認する");
+    click("PCでも確認する");
     expect(screen.getByTestId("inbox-pc")).toHaveAttribute("data-has-mail", "false");
     expect(screen.getByTestId("inbox-pc")).toHaveTextContent("メールがない");
   });
@@ -57,13 +57,13 @@ describe("EmailProtocolExperience", () => {
   it("IMAP keeps the mail on the server and syncs the read state to the PC; both tried shows the insight", () => {
     renderDeck();
     click("解説2");
-    click("📱 スマホで受信する");
-    click("💻 PCでも確認する");
+    click("スマホで受信する");
+    click("PCでも確認する");
     click(/IMAP/);
-    click("📱 スマホで受信する");
+    click("スマホで受信する");
     expect(screen.getByTestId("inbox-server")).toHaveAttribute("data-has-mail", "true");
     expect(screen.getByTestId("inbox-server")).toHaveTextContent("既読");
-    click("💻 PCでも確認する");
+    click("PCでも確認する");
     expect(screen.getByTestId("inbox-pc")).toHaveAttribute("data-has-mail", "true");
     expect(screen.getByTestId("inbox-pc")).toHaveTextContent("既読");
     expect(screen.getByTestId("popimap-insight")).toHaveTextContent("メールの置き場所");

@@ -6,6 +6,7 @@ import { Note, Replay } from "./calc/CalcParts";
 import { useBeats } from "./calc/useBeats";
 import { Arrow, Box, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「技術開発戦略とロードマップ」。時間軸が本質なので、ロードマップだけ段階表示にする。
 //   ① 研究 → 開発 → 事業化：3段階で「何ができあがるか」＋段階の間の壁（静的）
@@ -192,7 +193,7 @@ function RoadmapPanel() {
 
         {beat >= 4 && (
           <Note>
-            💡 長期の「自律保全」のための研究は、<b>短期のうちにもう始まっている</b>。3段を同じ時間軸に重ねると、「いつ何に取りかかるか」が見えます。
+            <InlineIcon name="lightbulb" />長期の「自律保全」のための研究は、<b>短期のうちにもう始まっている</b>。3段を同じ時間軸に重ねると、「いつ何に取りかかるか」が見えます。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -250,11 +251,11 @@ function OpenPatentPanel() {
         <Arrow dir="right" label="出願" />
         <Box tone="brand" className="w-20 flex-none">特許権</Box>
         <div className="flex flex-1 flex-col gap-1">
-          <Box tone="plain" className="!py-1"><span className="text-[12px]">🛡️ まねを防ぐ</span></Box>
-          <Box tone="plain" className="!py-1"><span className="text-[12px]">🤝 ライセンスで収入</span></Box>
+          <Box tone="plain" className="!py-1"><span className="text-[12px]">まねを防ぐ</span></Box>
+          <Box tone="plain" className="!py-1"><span className="text-[12px]">ライセンスで収入</span></Box>
         </div>
       </div>
-      <p className="mt-3 text-[13px] leading-relaxed text-gray-600">💡 特許は「守る」だけでなく、他社に使わせて<b className="text-gray-800">稼ぐ・連携する</b>道具にもなります。</p>
+      <p className="mt-3 text-[13px] leading-relaxed text-gray-600"><InlineIcon name="lightbulb" />特許は「守る」だけでなく、他社に使わせて<b className="text-gray-800">稼ぐ・連携する</b>道具にもなります。</p>
     </Panel>
   );
 }

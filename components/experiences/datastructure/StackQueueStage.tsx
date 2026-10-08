@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import Icon, { type IconName } from "@/components/ui/Icon";
 import styles from "./datastructure.module.css";
 
 // スタック／キューを「物」として動かす小さな 2.5D ステージ。
@@ -8,10 +9,10 @@ import styles from "./datastructure.module.css";
 //   キュー  ：enqueue＝後ろから歩いて列に入る／dequeue＝先頭がレジから抜け、残りが前へ詰める
 // 位置は left / bottom で持ち、並び順が変わると遷移で「詰める」動きになる。
 
-export type Thing = { id: number; icon: string; label: string };
+export type Thing = { id: number; icon: IconName; label: string };
 
-const STACK_ICONS = ["📕", "📗", "📘", "📙", "📓", "📔"];
-const QUEUE_ICONS = ["🧑", "👩", "👨‍🦱", "👧", "🧓", "👦"];
+const STACK_ICONS: IconName[] = ["book-open"];
+const QUEUE_ICONS: IconName[] = ["user"];
 export const MAX_ITEMS = 5;
 const LEAVE_MS = 1300;
 
@@ -28,7 +29,7 @@ function useLeaving(reducedMotion: boolean) {
   return { leaving, leave };
 }
 
-function useThings(icons: string[], initial: number) {
+function useThings(icons: IconName[], initial: number) {
   const next = useRef(initial + 1);
   const [items, setItems] = useState<Thing[]>(() =>
     Array.from({ length: initial }, (_, i) => ({ id: i + 1, icon: icons[i % icons.length], label: String(i + 1) })),
@@ -82,7 +83,7 @@ export function StackStage({ reducedMotion, onOut }: { reducedMotion: boolean; o
   return (
     <div>
       <div className={styles.stackStage} data-reduced-motion={reducedMotion ? "true" : "false"} data-testid="stack-stage" data-count={items.length}>
-        <span className={styles.stackMouth}>⬇ 出入り口は上だけ ⬆</span>
+        <span className={styles.stackMouth}>↓ 出入り口は上だけ ↑</span>
         <div className={styles.stackWell} aria-hidden />
         <div className={styles.tray}>
           <span className={styles.trayLabel}>取り出した</span>
@@ -97,7 +98,7 @@ export function StackStage({ reducedMotion, onOut }: { reducedMotion: boolean; o
               style={{ left: 64, bottom: 14 + i * 30 }}
               aria-label={`${t.label}の箱${i === items.length - 1 ? "（一番上）" : ""}`}
             >
-              <span aria-hidden>{t.icon}</span>
+              <Icon name={t.icon} className="h-4 w-4 text-gray-700" aria-hidden />
               <span className={styles.bookNo}>{t.label}</span>
             </li>
           ))}
@@ -108,7 +109,7 @@ export function StackStage({ reducedMotion, onOut }: { reducedMotion: boolean; o
             className={`${styles.book} ${styles.bookOut}`}
             style={{ "--from": `${14 + items.length * 30}px` } as CSSProperties}
             data-testid="stack-out" aria-label={`取り出した ${leaving.label}`} role="img">
-            <span aria-hidden>{leaving.icon}</span>
+            <Icon name={leaving.icon} className="h-4 w-4 text-gray-700" aria-hidden />
             <span className={styles.bookNo}>{leaving.label}</span>
           </span>
         )}
@@ -161,7 +162,7 @@ export function QueueStage({ reducedMotion, onOut }: { reducedMotion: boolean; o
       <div className={styles.queueStage} data-reduced-motion={reducedMotion ? "true" : "false"} data-testid="queue-stage" data-count={items.length}>
         <div className={styles.queueFloor} aria-hidden />
         <div className={styles.register} aria-hidden>
-          <span>🛒</span>
+          <Icon name="cart" className="h-5 w-5 text-gray-700" aria-hidden />
           <span className={styles.registerLabel}>レジ</span>
         </div>
         <span className={`${styles.queueEnd} ${styles.queueFront}`}>先頭（ここから出る）</span>
@@ -177,7 +178,7 @@ export function QueueStage({ reducedMotion, onOut }: { reducedMotion: boolean; o
               aria-label={`${t.label}番の人${i === 0 ? "（先頭）" : ""}`}
             >
               <span className={styles.personIcon} aria-hidden>
-                {t.icon}
+                <Icon name={t.icon} className="h-5 w-5 text-gray-700" aria-hidden />
               </span>
               <span className={styles.personNo}>{t.label}</span>
             </li>
@@ -186,7 +187,7 @@ export function QueueStage({ reducedMotion, onOut }: { reducedMotion: boolean; o
         {leaving && (
           <span key={leaving.id} className={`${styles.person} ${styles.personOut}`} style={{ left: QUEUE_X(0) }} data-testid="queue-out" role="img" aria-label={`列から出た ${leaving.label}`}>
             <span className={styles.personIcon} aria-hidden>
-              {leaving.icon}
+              <Icon name={leaving.icon} className="h-5 w-5 text-gray-700" aria-hidden />
             </span>
             <span className={styles.personNo}>{leaving.label}</span>
           </span>

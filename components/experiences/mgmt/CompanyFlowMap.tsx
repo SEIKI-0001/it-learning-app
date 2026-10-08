@@ -1,25 +1,26 @@
 import type { CSSProperties } from "react";
 import styles from "./mgmt.module.css";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // 会社全体の流れを1枚の地図にし、選んだシステムの「管理範囲」が広がる。
-//   SCM … 仕入先から顧客までの帯（モノの流れ）が光り、📦 が端から端まで運ばれる
-//   CRM … 販売・サポート・顧客のかたまりが光り、💬 が顧客とのあいだを行き来する
+//   SCM … 仕入先から顧客までの帯（モノの流れ）が光り、荷物（箱）が端から端まで運ばれる
+//   CRM … 販売・サポート・顧客のかたまりが光り、吹き出し（やり取り）が顧客とのあいだを行き来する
 //   ERP … 自社の枠全体が光り、各部門のデータが中央の統合DBへ集まる
 
 export type SysKey = "crm" | "scm" | "erp";
 
 const H = 196;
-type Node = { key: string; label: string; icon: string; x: number; y: number };
+type Node = { key: string; label: string; icon: IconName; x: number; y: number };
 const NODES: Node[] = [
-  { key: "supplier", label: "仕入先", icon: "🏭", x: 8, y: 50 },
-  { key: "procure", label: "調達", icon: "📝", x: 25, y: 50 },
-  { key: "stock", label: "在庫", icon: "📦", x: 42, y: 50 },
-  { key: "make", label: "製造", icon: "⚙️", x: 58.5, y: 50 },
-  { key: "sales", label: "販売", icon: "🛒", x: 75, y: 50 },
-  { key: "customer", label: "顧客", icon: "🙋", x: 92, y: 50 },
-  { key: "acct", label: "会計", icon: "🧾", x: 30, y: 150 },
-  { key: "hr", label: "人事", icon: "👥", x: 50, y: 150 },
-  { key: "support", label: "サポート", icon: "📞", x: 75, y: 150 },
+  { key: "supplier", label: "仕入先", icon: "factory", x: 8, y: 50 },
+  { key: "procure", label: "調達", icon: "file-text", x: 25, y: 50 },
+  { key: "stock", label: "在庫", icon: "package", x: 42, y: 50 },
+  { key: "make", label: "製造", icon: "settings", x: 58.5, y: 50 },
+  { key: "sales", label: "販売", icon: "cart", x: 75, y: 50 },
+  { key: "customer", label: "顧客", icon: "user", x: 92, y: 50 },
+  { key: "acct", label: "会計", icon: "yen", x: 30, y: 150 },
+  { key: "hr", label: "人事", icon: "users", x: 50, y: 150 },
+  { key: "support", label: "サポート", icon: "headphones", x: 75, y: 150 },
 ];
 
 export const COVERS: Record<SysKey, string[]> = {
@@ -58,7 +59,7 @@ export function CompanyFlowMap({ sys, reducedMotion }: { sys: SysKey | null; red
       {/* 自社の枠 */}
       <div className="absolute rounded-xl border border-dashed border-gray-300 bg-white/60" style={{ left: "16.5%", width: "68%", top: 12, height: 172 }} aria-hidden />
       <span className="absolute z-[1] rounded bg-white px-1 text-[10px] font-bold text-gray-500" style={{ left: "18%", top: 4 }}>
-        🏢 自社
+        自社
       </span>
 
       {/* モノの流れの矢印（仕入先 → 顧客） */}
@@ -85,7 +86,7 @@ export function CompanyFlowMap({ sys, reducedMotion }: { sys: SysKey | null; red
             data-testid={`mgmt-node-${n.key}`}
             data-on={on ? "true" : "false"}
           >
-            <div className="text-sm leading-tight">{n.icon}</div>
+            <Icon name={n.icon} className="mx-auto h-4 w-4 text-gray-700" />
             <div className="whitespace-nowrap text-[9px] font-bold leading-tight text-gray-700">{n.label}</div>
           </div>
         );
@@ -94,18 +95,18 @@ export function CompanyFlowMap({ sys, reducedMotion }: { sys: SysKey | null; red
       {/* 一度だけ流れる動き：管理しているものが何かを見せる */}
       {!reducedMotion && sys === "scm" && (
         <span key="scm" className={`${styles.token} ${styles.scmToken} absolute z-[4] text-base`} aria-hidden>
-          📦
+          <Icon name="package" className="h-4 w-4 text-gray-700" />
         </span>
       )}
       {!reducedMotion && sys === "crm" && (
         <span key="crm" className={`${styles.token} ${styles.crmToken} absolute z-[4] text-base`} aria-hidden>
-          💬
+          <Icon name="message" className="h-4 w-4 text-gray-700" />
         </span>
       )}
       {sys === "erp" && (
         <>
           <span key="db" className={`${styles.db} absolute z-[4] -translate-x-1/2 -translate-y-1/2 rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white`} style={{ left: "50%", top: 100 }} data-testid="mgmt-db">
-            🗄️ 統合DB
+            統合DB
           </span>
           {!reducedMotion &&
             NODES.filter((n) => COVERS.erp.includes(n.key)).map((n, i) => (

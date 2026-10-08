@@ -122,8 +122,8 @@ export function TranslateStage({ reducedMotion }: { reducedMotion: boolean }) {
         })}
         {mode === "compiler" && (
           <div className={styles.link} data-on={s.linked ? "true" : "false"} data-testid="trans-linker">
-            <span>翻訳済み＋📦部品</span>
-            <b>🔗 リンカ</b>
+            <span>翻訳済み＋部品</span>
+            <b>リンカ</b>
             <span>→ 実行ファイル</span>
           </div>
         )}

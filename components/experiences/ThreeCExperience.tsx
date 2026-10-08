@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { ThreeCDioramaScene } from "./threec/ThreeCDioramaScene";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「3C分析」専用の体験。
@@ -17,25 +19,25 @@ type C = "customer" | "competitor" | "company";
 
 const CARDS: Record<
   C,
-  { name: string; emoji: string; who: string; q: string; found: string }
+  { name: string; icon: IconName; who: string; q: string; found: string }
 > = {
   customer: {
     name: "Customer（顧客）",
-    emoji: "🙋",
+    icon: "user",
     who: "買ってくれる相手・市場",
     q: "誰が、何を求めてる？",
     found: "放課後の学生が多い。「安くて写真映えするおやつ」を探している！",
   },
   competitor: {
     name: "Competitor（競合）",
-    emoji: "🥊",
+    icon: "users",
     who: "同じお客を狙うライバル",
     q: "ライバルの強み・弱みは？",
     found: "隣のカフェはおしゃれだけど、値段が高くて提供が遅い。",
   },
   company: {
     name: "Company（自社）",
-    emoji: "🏢",
+    icon: "building",
     who: "自分たちの会社",
     q: "自社の強み・弱みは？",
     found: "うちは「早い・安い・トッピング豊富」が売り！",
@@ -75,13 +77,13 @@ function MarketMap() {
         {card ? (
           <>
             <div className="text-sm font-bold text-gray-800">
-              {card.emoji} {card.name} ＝ {card.who}
+              <Icon name={card.icon} className="mr-1.5 inline-block h-4 w-4 align-[-3px] text-brand-600" />{card.name} ＝ {card.who}
             </div>
             <p className="mt-1 text-xs text-gray-500">考えること：{card.q}</p>
-            <p className="mt-1.5 text-sm font-bold leading-relaxed text-gray-800">🔍 {card.found}</p>
+            <p className="mt-1.5 text-sm font-bold leading-relaxed text-gray-800">{card.found}</p>
           </>
         ) : (
-          <span className="text-sm text-gray-400">円の「🔍 調べる」を押すと調査結果が出ます。</span>
+          <span className="text-sm text-gray-400">円の「調べる」を押すと調査結果が出ます。</span>
         )}
       </div>
 
@@ -94,7 +96,7 @@ function MarketMap() {
       >
         {allSeen ? (
           <>
-            ✨ <b>3つの調査がそろって、作戦が見えた！</b>
+            <b>3つの調査がそろって、作戦が見えた！</b>
             <br />
             顧客は「安くて映える」を求め（C1）、競合は「高くて遅い」（C2）、自社は「早い・安い」が強み（C3）
             → <b>「{STRATEGY}」</b>で勝負！
@@ -102,21 +104,21 @@ function MarketMap() {
           </>
         ) : (
           <>
-            🔒 作戦はまだ見えない… （調査 {order.filter((c) => seen[c]).length} / 3）
+            <InlineIcon name="lock" />作戦はまだ見えない… （調査 {order.filter((c) => seen[c]).length} / 3）
             1つの視点だけでは作戦は立てられません。
           </>
         )}
       </div>
 
       <div className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm leading-relaxed text-rose-900 ring-1 ring-rose-200">
-        ⚠️ よくある罠：4つめのCに <b>Cost（費用）</b> を入れてしまう間違い。3Cは
+        <InlineIcon name="alert" />よくある罠：4つめのCに <b>Cost（費用）</b> を入れてしまう間違い。3Cは
         <b>顧客・競合・自社</b>の3つだけ。費用はQCDなど別の話です。
         <button
           type="button"
           onClick={() => setCostTries((n) => n + 1)}
           className="mt-2 block w-full rounded-full bg-white px-3 py-1.5 text-xs font-bold text-rose-700 ring-1 ring-rose-300 transition active:scale-95"
         >
-          💰 「材料費300円」を4つめの円として入れてみる
+          「材料費300円」を4つめの円として入れてみる
         </button>
       </div>
     </Panel>
@@ -130,10 +132,10 @@ const ITEMS: { t: string; ans: C | "trap"; why: string }[] = [
   { t: "材料費が1個300円かかる", ans: "trap", why: "これは費用（Cost）。3Cには含まれません！" },
 ];
 const OPTS: { key: C | "trap"; label: string }[] = [
-  { key: "customer", label: "🙋 顧客" },
-  { key: "competitor", label: "🥊 競合" },
-  { key: "company", label: "🏢 自社" },
-  { key: "trap", label: "💰 費用(罠)" },
+  { key: "customer", label: "顧客" },
+  { key: "competitor", label: "競合" },
+  { key: "company", label: "自社" },
+  { key: "trap", label: "費用(罠)" },
 ];
 
 function Quiz() {
@@ -176,7 +178,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ ちがうよ。 "}
+                  {correct ? "正解！ " : "ちがうよ。 "}
                   {it.why}
                 </p>
               )}

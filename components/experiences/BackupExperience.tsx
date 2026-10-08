@@ -6,6 +6,8 @@ import { Note, Replay } from "./calc/CalcParts";
 import { useBeats } from "./calc/useBeats";
 import { Caption, Lead, PointsPanel, Seg } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon from "@/components/ui/Icon";
 
 // 「バックアップと復旧手順」。日ごとに積み上がる形と、復元の順番は動きで見せる。
 //   ① 取り方：日曜フル → 月・火・水。方式を切り替えると、各日のバックアップに「何が入るか」が1日ずつ積み上がる
@@ -126,15 +128,15 @@ function TakePanel() {
           <Note>
             {mode === "full" ? (
               <>
-                💡 毎日<b>ぜんぶ</b>を保存。取るたびに大きく、時間もかかるが、戻すときは<b>1つで済む</b>。
+                <InlineIcon name="lightbulb" />毎日<b>ぜんぶ</b>を保存。取るたびに大きく、時間もかかるが、戻すときは<b>1つで済む</b>。
               </>
             ) : mode === "diff" ? (
               <>
-                💡 差分は<b>日曜のフル以降の変更をまとめて</b>保存。日がたつほど大きくなる（{sizes.slice(1).join("→")}個）。
+                <InlineIcon name="lightbulb" />差分は<b>日曜のフル以降の変更をまとめて</b>保存。日がたつほど大きくなる（{sizes.slice(1).join("→")}個）。
               </>
             ) : (
               <>
-                💡 増分は<b>前の日のバックアップ以降の変更だけ</b>。毎日小さい（{sizes.slice(1).join("・")}個）が、ばらばらに分かれる。
+                <InlineIcon name="lightbulb" />増分は<b>前の日のバックアップ以降の変更だけ</b>。毎日小さい（{sizes.slice(1).join("・")}個）が、ばらばらに分かれる。
               </>
             )}
           </Note>
@@ -227,14 +229,14 @@ function RestorePanel() {
         {done && (
           <Note tone="emerald">
             {mode === "full" ? (
-              <>✅ 水曜のフル<b>1つだけ</b>で元どおり。</>
+              <>水曜のフル<b>1つだけ</b>で元どおり。</>
             ) : mode === "diff" ? (
               <>
-                ✅ <b>日曜フル → 水曜の差分</b>の2つだけ。水曜の差分に月・火の変更も入っているので、途中の差分はいらない。
+                <b>日曜フル → 水曜の差分</b>の2つだけ。水曜の差分に月・火の変更も入っているので、途中の差分はいらない。
               </>
             ) : (
               <>
-                ✅ <b>日曜フル → 月 → 火 → 水</b>の順に<b>全部</b>重ねる。1つでも抜けたり順番を逆にすると、その日の変更が戻らない。
+                <b>日曜フル → 月 → 火 → 水</b>の順に<b>全部</b>重ねる。1つでも抜けたり順番を逆にすると、その日の変更が戻らない。
               </>
             )}
           </Note>
@@ -261,7 +263,7 @@ function RpoRtoPanel() {
         <text x="60" y="92" textAnchor="middle" fontSize="11" className="fill-brand-800 font-bold">最後の</text>
         <text x="60" y="105" textAnchor="middle" fontSize="11" className="fill-brand-800 font-bold">バックアップ</text>
         {/* 故障 */}
-        <text x="150" y="70" textAnchor="middle" fontSize="18">💥</text>
+        <Icon name="zap" x={139} y={46} width={22} height={22} className="text-rose-600" />
         <text x="150" y="92" textAnchor="middle" fontSize="11" className="fill-rose-700 font-bold">故障</text>
         {/* 復旧 */}
         <circle cx="240" cy="64" r="6" className="fill-emerald-500" />
@@ -313,7 +315,7 @@ function GenerationPanel() {
               </div>
             ))}
           </div>
-          <p className="mt-1 text-[12px] font-bold text-rose-700">❌ 残っているのは削除後の状態だけ。戻せない</p>
+          <p className="mt-1 text-[12px] font-bold text-rose-700">残っているのは削除後の状態だけ。戻せない</p>
         </div>
         <div>
           <Caption className="mb-1">4世代を残す</Caption>
@@ -325,7 +327,7 @@ function GenerationPanel() {
               </div>
             ))}
           </div>
-          <p className="mt-1 text-[12px] font-bold text-emerald-700">✅ 月曜の世代を選んで、削除前に戻せる</p>
+          <p className="mt-1 text-[12px] font-bold text-emerald-700">月曜の世代を選んで、削除前に戻せる</p>
         </div>
       </div>
     </Panel>

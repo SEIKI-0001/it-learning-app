@@ -6,6 +6,8 @@ import { Choices, Note, Replay, StepChips, Term, type Choice } from "../calc/Cal
 import { useBeats } from "../calc/useBeats";
 import { useReducedMotion } from "../scene/useReducedMotion";
 import { Panel, SectionTitle } from "../ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon from "@/components/ui/Icon";
 
 // 損益分岐点の「具体例 → なぜ → 計算 → 一般化」4枚＋売上高への橋渡し＋練習。
 // 例はずっと同じ：売価 500円 / 変動費 300円 / 固定費 10,000円 → 50個（売上 25,000円）
@@ -44,7 +46,7 @@ export function MarginStage() {
       </p>
 
       <div ref={ref} className="mt-4" data-testid="be-margin" data-beat={beat}>
-        <div className="text-xs font-bold text-brand-700">🛍️ 1個売れた</div>
+        <div className="text-xs font-bold text-brand-700">1個売れた</div>
         <div className="relative mt-1 h-24">
           <div className="absolute inset-x-0 top-0 flex h-10">
             <div
@@ -52,7 +54,7 @@ export function MarginStage() {
               style={{ width: "60%", transform: peeled ? "translate(-4px, 48px) scale(0.94)" : "none", opacity: peeled ? 0.8 : 1 }}
               data-testid="be-margin-cost"
             >
-              {peeled && "🏭 仕入れ −300円（変動費）"}
+              {peeled && "仕入れ −300円（変動費）"}
             </div>
             <div
               className={`${styles.move} grid place-items-center rounded-r-md text-[11px] font-bold text-white ${kept ? "rounded-md bg-emerald-500" : "bg-brand-500"}`}
@@ -74,7 +76,7 @@ export function MarginStage() {
         )}
         {sent && (
           <Note>
-            💡 この<b>200円</b>は、すぐに利益になるわけではありません。まず<b>出店料（固定費）の回収</b>に使われます。
+            <InlineIcon name="lightbulb" />この<b>200円</b>は、すぐに利益になるわけではありません。まず<b>出店料（固定費）の回収</b>に使われます。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -132,7 +134,7 @@ export function RecoverStage() {
           <div className="mt-6 flex min-h-7 flex-wrap items-center gap-1 text-lg" aria-label={`売れた数 ${sold}個`}>
             {Array.from({ length: sold }, (_, i) => (
               <span key={i} className={styles.pop} aria-hidden>
-                🛍️
+                <Icon name="cart" className="h-5 w-5 text-brand-600" />
               </span>
             ))}
             {sold === 0 && <span className="text-xs text-gray-400">まだ売れていない</span>}
@@ -151,7 +153,7 @@ export function RecoverStage() {
 
         {showNote && (
           <Note>
-            💡 <b>1個売るたびに、固定費を200円ずつ回収</b>しています。まだ回収しきっていない間は、売れても赤字です。
+            <InlineIcon name="lightbulb" /><b>1個売るたびに、固定費を200円ずつ回収</b>しています。まだ回収しきっていない間は、売れても赤字です。
           </Note>
         )}
 
@@ -162,7 +164,7 @@ export function RecoverStage() {
             disabled={!showNote || sold >= RECOVER_MAX}
             className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white active:scale-95 disabled:opacity-40"
           >
-            🛍️ もう1個売る
+            もう1個売る
           </button>
           {!reducedMotion && (
             <button
@@ -258,7 +260,7 @@ export function CountStage() {
           </div>
           {n >= BEP && (
             <div className={`mt-2 space-y-1 text-sm font-bold ${styles.reveal}`}>
-              <p className="rounded-lg bg-brand-50 px-3 py-1.5 text-brand-900 ring-1 ring-brand-200">🎯 50個で固定費を回収しきった → 利益0円＝<b>損益分岐点</b></p>
+              <p className="rounded-lg bg-brand-50 px-3 py-1.5 text-brand-900 ring-1 ring-brand-200">50個で固定費を回収しきった → 利益0円＝<b>損益分岐点</b></p>
               {n > BEP && <p className={`rounded-lg bg-emerald-50 px-3 py-1.5 text-emerald-900 ring-1 ring-emerald-200 ${styles.reveal}`}>51個目からは、1個ごとに200円が<b>利益</b>として残る</p>}
             </div>
           )}
@@ -316,7 +318,7 @@ export function FormulaStage() {
         )}
         {b >= 4 && (
           <Note>
-            💡 公式を忘れても「<b>1個でいくら残る？</b> → <b>固定費を何個で回収できる？</b>」と考えれば作り直せます。
+            <InlineIcon name="lightbulb" />公式を忘れても「<b>1個でいくら残る？</b> → <b>固定費を何個で回収できる？</b>」と考えれば作り直せます。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} label="↺ もう一度置き換える" />

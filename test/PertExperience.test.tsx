@@ -56,7 +56,7 @@ describe("PERT slides in the WBS/Gantt experience (reduced motion)", () => {
     renderDeck();
     click("解説5");
     expect(inStage("pert-parallel").getByTestId("pert-wait-C")).toHaveTextContent("待機");
-    expect(screen.getByText("🔒 B と C の両方を待つ")).toBeInTheDocument();
+    expect(screen.getByText("B と C の両方を待つ")).toBeInTheDocument();
     expect(screen.getByText("並行作業は、全部の日数を足すわけではない")).toBeInTheDocument();
   });
 

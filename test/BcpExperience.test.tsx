@@ -17,7 +17,7 @@ function renderDeck() {
 
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
 const strikeAndRecover = () => {
-  click("🌋 大地震発生！");
+  click("大地震発生！");
   for (let i = 0; i < 4; i++) click("1ステップ進む");
 };
 
@@ -42,7 +42,7 @@ describe("BcpExperience", () => {
     click(/バックアップ/);
     click(/代替拠点/);
     click(/連絡手順/);
-    click("🌋 大地震発生！");
+    click("大地震発生！");
     expect(screen.getByTestId("bcp-scene")).toHaveAttribute("data-disaster", "true");
     click("1ステップ進む");
     expect(screen.getByTestId("bcp-staff-token")).toHaveTextContent("担当決定");
@@ -57,7 +57,7 @@ describe("BcpExperience", () => {
 
   it("without preparations, no one knows whom to call, there is nowhere to work and data is lost", () => {
     renderDeck();
-    click("🌋 大地震発生！");
+    click("大地震発生！");
     click("1ステップ進む");
     expect(screen.getByTestId("bcp-staff-token")).toHaveAttribute("data-tone", "ng");
     click("1ステップ進む");

@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { HttpsCapsuleStop } from "../HttpsScene";
 import type { LabSceneProps } from "./labTypes";
 import styles from "./isocafe.module.css";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // パターンD：現行の 2.5D（アイソメトリック SVG）の見せ方のまま、舞台と描き込みをアップグレード。
 // 舞台はフリーWi-Fi のカフェ：あなたの席 →（電波）→ 壁のフリーWi-Fi →（インターネット）→ 右上のデータセンター。
@@ -382,7 +383,7 @@ export function IsoCafeScene({ mode, index, step, plain, cipher, reducedMotion }
               <rect x={1} y={1} width={18} height={12.5} fill="#ffffff" />
               <rect x={1} y={1} width={18} height={2.4} fill={https ? "#d1fae5" : "#ffe4e6"} />
               <text x={2} y={2.9} className={styles.screenUrl} data-mode={mode}>
-                {https ? "🔒 https://" : "⚠ http://"}
+                {https ? "https://" : "http://"}
               </text>
               <rect x={3} y={5.5} width={14} height={2.6} rx={0.4} fill="#ffffff" stroke="#9db8ea" strokeWidth={0.35} />
               <text x={3.6} y={7.4} className={styles.screenField}>
@@ -476,7 +477,7 @@ export function IsoCafeScene({ mode, index, step, plain, cipher, reducedMotion }
       </span>
       {radio && (
         <span className={styles.radioChip} data-mode={mode} style={pct({ x: 14, y: 280 })}>
-          📶 電波は周り全部に届く
+          <InlineIcon name="wifi" />電波は周り全部に届く
         </span>
       )}
 
@@ -493,14 +494,14 @@ export function IsoCafeScene({ mode, index, step, plain, cipher, reducedMotion }
 
       {eveSees !== null && (
         <div className={styles.eveScreen} data-mode={mode} role="status" data-testid="isocafe-eve">
-          <span className={styles.eveTitle}>😈 盗聴者の画面</span>
+          <span className={styles.eveTitle}>盗聴者の画面</span>
           <span className={styles.eveBody}>{eveSees}</span>
           <span className={styles.eveVerdict}>{https ? "読めない…" : "読めた！"}</span>
         </div>
       )}
 
       <span className={styles.urlPlate} data-mode={mode}>
-        {https ? "https://  🔒" : "http://  ⚠︎"}
+        {https ? "https://" : "http://"}
       </span>
     </div>
   );

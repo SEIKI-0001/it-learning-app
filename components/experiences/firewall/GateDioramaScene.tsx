@@ -20,6 +20,7 @@ import {
 import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import type { GateSceneProps, PacketStop } from "./firewallTypes";
 import styles from "./firewalldiorama.module.css";
+import Icon from "@/components/ui/Icon";
 
 // ファイアウォール／WAF の図解：社外のPC → インターネット（通信会社のルータ）→ 会社の境界。
 // 会社の敷地はフェンスで囲まれていて、外から入れる口にファイアウォール（赤い機器）が立つ。
@@ -147,7 +148,7 @@ export function GateDioramaScene({
               </span>
               {packet.blocked && (
                 <span className={styles.stop} aria-label="遮断">
-                  ⛔
+                  <Icon name="ban" className="h-5 w-5" />
                 </span>
               )}
             </div>
@@ -165,7 +166,8 @@ export function GateDioramaScene({
                   </span>
                   {verdict && (
                     <span className={styles.verdict} data-state={verdict.state} data-testid={`verdict-${id}`}>
-                      {verdict.state === "pass" ? "✅" : "⛔"} {verdict.text}
+                      <Icon name={verdict.state === "pass" ? "check" : "ban"} className="mr-0.5 inline-block h-3.5 w-3.5 align-middle" />
+                      {verdict.text}
                     </span>
                   )}
                 </div>
@@ -177,7 +179,7 @@ export function GateDioramaScene({
             <NameChip name={sender} tone={attacker ? "danger" : "info"} />
           </DioramaLabel>
           <DioramaLabel at={{ ...APP, x: APP.x + 36, z: 130 }} place="above" optional>
-            <NameChip name="Webアプリ" status={appState === "active" ? "✅ 正常に到達" : undefined} tone="ok" />
+            <NameChip name="Webアプリ" status={appState === "active" ? "正常に到達" : undefined} tone="ok" />
           </DioramaLabel>
         </>
       }

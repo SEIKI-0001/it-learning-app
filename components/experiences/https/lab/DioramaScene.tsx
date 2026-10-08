@@ -18,6 +18,7 @@ import {
 import { EavesdropperStanding, UserFromBehind } from "../../scene/DioramaPeople";
 import type { LabSceneProps } from "./labTypes";
 import styles from "./diorama.module.css";
+import Icon from "@/components/ui/Icon";
 
 // パターンA：リアル 3D ジオラマ。
 // 部屋の模型（奥の壁・床・机）に、あなたのノートPC → ケーブル → サーバラック、途中に盗聴者の机。
@@ -343,7 +344,7 @@ export function DioramaScene({ mode, index, step, plain, cipher, forward, reduce
             <div className={styles.lidScreen}>
               <div className={styles.browser} data-mode={mode}>
                 <div className={styles.browserBar}>
-                  <span className={styles.browserLock}>{https ? "🔒" : "⚠︎"}</span>
+                  <span className={styles.browserLock}><Icon name={https ? "lock" : "alert"} className="inline h-2.5 w-2.5" /></span>
                   <span>{https ? "https://" : "http://"}shop.example/login</span>
                 </div>
                 <div className={styles.browserBody}>
@@ -465,7 +466,13 @@ export function DioramaScene({ mode, index, step, plain, cipher, forward, reduce
             className={styles.packet}
             faceClass={{ top: styles.packetTop }}
             faces={{
-              top: <span className={styles.packetIcon}>{capsule.state === "encrypted" ? "🔒" : capsule.state === "decrypted" ? "✓" : "✉"}</span>,
+              top: <span className={styles.packetIcon}>{capsule.state === "encrypted" ? (
+                  <Icon name="lock" className="h-3.5 w-3.5" />
+                ) : capsule.state === "decrypted" ? (
+                  "✓"
+                ) : (
+                  <Icon name="mail" className="h-3.5 w-3.5" />
+                )}</span>,
             }}
           />
         </div>
@@ -488,7 +495,7 @@ export function DioramaScene({ mode, index, step, plain, cipher, forward, reduce
       {eveSees !== null && (
         <div className={styles.anchor} data-anchor="world" data-wx={334} data-wy={64} data-wz={104}>
           <div className={styles.eveBubble} data-mode={mode} role="status" data-testid="diorama-eve-bubble">
-            <span className={styles.eveBubbleTitle}>😈 盗聴者の画面</span>
+            <span className={styles.eveBubbleTitle}>盗聴者の画面</span>
             <span className={styles.eveBubbleBody}>{eveSees}</span>
             <span className={styles.eveBubbleVerdict}>{https ? "読めない…" : "読めた！"}</span>
           </div>
@@ -519,7 +526,7 @@ export function DioramaScene({ mode, index, step, plain, cipher, forward, reduce
       })}
 
       <span className={styles.urlPlate} data-mode={mode} data-obstacle>
-        {https ? "https://  🔒" : "http://  ⚠︎"}
+        {https ? "https://" : "http://"}
       </span>
       <div className={styles.viewHint} data-obstacle>
         {moved ? (

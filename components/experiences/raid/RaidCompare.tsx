@@ -2,6 +2,7 @@
 
 import { Panel, SectionTitle } from "../ui";
 import { DiskArray, Legend, SLOTS, usableDisks, type RaidMode } from "./DiskArray";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 4方式を1枚に並べる（静的）。同じ「1TB × 4台」で、マスの色（データ／コピー／パリティ）の置き方と
 // 使える容量・何台まで壊れてよいかを横並びで比べる。①〜④で1つずつ見たものの総まとめ。
@@ -45,7 +46,7 @@ export function RaidCompareStage({ step }: { step: number }) {
       </div>
       <Legend kinds={["data", "copy", "p", "q"]} />
       <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
-        💡 <b className="text-gray-800">青（データ）が多いほど容量は大きく、青以外が多いほど故障に強い</b>。容量と安全はトレードオフです。
+        <InlineIcon name="lightbulb" /><b className="text-gray-800">青（データ）が多いほど容量は大きく、青以外が多いほど故障に強い</b>。容量と安全はトレードオフです。
       </p>
     </Panel>
   );

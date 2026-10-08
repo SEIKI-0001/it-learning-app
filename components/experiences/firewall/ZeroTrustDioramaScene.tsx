@@ -20,6 +20,7 @@ import {
 } from "../scene/DioramaParts";
 import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import styles from "./firewalldiorama.module.css";
+import Icon from "@/components/ui/Icon";
 
 // ゼロトラストの図解：会社のオフィスと、在宅勤務の自宅。3人が社内システムのサーバへアクセスする。
 //   ① 自席の社員A（登録済みPC）  ② オフィスに入り込んだ侵入者  ③ 自宅から働く社員B（登録済みPC）
@@ -237,7 +238,8 @@ export function ZeroTrustDioramaScene({ mode, reducedMotion }: { mode: TrustMode
                     </span>
                   )}
                   <span className={styles.verdict} data-state={v.ok && !v.warn ? "pass" : "block"}>
-                    {v.warn ? "⚠" : v.ok ? "✅" : "⛔"} {v.text}
+                    <Icon name={v.warn ? "alert" : v.ok ? "check" : "ban"} className="mr-0.5 inline-block h-3.5 w-3.5 align-middle" />
+                    {v.text}
                   </span>
                 </div>
               </DioramaLabel>

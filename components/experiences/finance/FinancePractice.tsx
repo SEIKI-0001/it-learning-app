@@ -73,7 +73,7 @@ export function FinancePractice({ step = 9 }: { step?: number }) {
       testId="fin-practice"
       done={
         <>
-          🎉 ここまで解ければ、本試験の財務指標の問題に対応できます。<b>使う数字を選ぶ → 割る／引く → 段階をたどる</b>。
+          ここまで解ければ、本試験の財務指標の問題に対応できます。<b>使う数字を選ぶ → 割る／引く → 段階をたどる</b>。
         </>
       }
     />

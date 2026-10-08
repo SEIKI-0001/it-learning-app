@@ -9,6 +9,7 @@
 //
 // 既存の types/index.ts（FE Quest のクエスト用型）には手を加えない。
 // ここはクエストとは独立した、新しいコンテンツ基盤の型を定義する。
+import type { IconName } from "@/components/ui/Icon";
 
 import type { ChoiceKey } from "@/types";
 // 型だけの参照（実行時に読み込まれないので、questionBank.ts との相互参照にはならない）。
@@ -46,7 +47,7 @@ export const FIELD_LABELS: Record<TopicField, string> = {
 export type CardsDiagram = {
   type: "cards";
   title?: string;
-  items: { emoji?: string; title: string; body: string }[];
+  items: { icon?: IconName; title: string; body: string }[];
 };
 
 /** 表で比較する図解（先頭列は項目名、headers の先頭はその列見出し） */
@@ -74,7 +75,7 @@ export type MatrixDiagram = {
   cells: {
     row: string;
     column: string;
-    emoji?: string;
+    icon?: IconName;
     title: string;
     body: string;
   }[];
@@ -84,14 +85,14 @@ export type MatrixDiagram = {
 export type LayerDiagram = {
   type: "layers";
   title?: string;
-  layers: { emoji?: string; title: string; body: string }[];
+  layers: { icon?: IconName; title: string; body: string }[];
 };
 
 /** ノード同士のつながりを見せる図解（例: 主キーと外部キー） */
 export type RelationshipDiagram = {
   type: "relationship";
   title?: string;
-  nodes: { id: string; emoji?: string; label: string; body?: string }[];
+  nodes: { id: string; icon?: IconName; label: string; body?: string }[];
   links: { from: string; to: string; label?: string }[];
 };
 
@@ -268,7 +269,7 @@ export type QuadrantDiagram = {
   title?: string;
   xLabels?: [string, string]; // 列の意味（左, 右）例: ["プラス要因", "マイナス要因"]
   yLabels?: [string, string]; // 行の意味（上, 下）例: ["内部環境", "外部環境"]
-  cells: { title: string; body: string; emoji?: string }[];
+  cells: { title: string; body: string; icon?: IconName }[];
 };
 
 /** 循環する図解（例: PDCA サイクル）。最後のステップから先頭へ戻る。 */
@@ -291,7 +292,7 @@ export type RelationDiagram = {
   type: "relation";
   title?: string;
   center?: { label: string; body?: string };
-  nodes: { label: string; body?: string; emoji?: string }[];
+  nodes: { label: string; body?: string; icon?: IconName }[];
 };
 
 /**
@@ -357,21 +358,21 @@ export type IllustrationSpec = {
   type: "analogyScene";
   title: string;
   caption?: string;
-  items: { emoji?: string; title: string; body: string }[];
+  items: { icon?: IconName; title: string; body: string }[];
 };
 
 export type InteractiveSpec = {
   type: "tapReveal";
   title: string;
   prompt?: string;
-  items: { emoji?: string; label: string; title: string; body: string }[];
+  items: { icon?: IconName; label: string; title: string; body: string }[];
 };
 
 export type AnimationSpec = {
   type: "stepFlow";
   title: string;
   caption?: string;
-  steps: { emoji?: string; label: string; body: string }[];
+  steps: { icon?: IconName; label: string; body: string }[];
 };
 
 export type ClassificationMiniGame = {
@@ -415,7 +416,7 @@ export type VisualLearningSpec = {
 export type ProcessActor = {
   id: string;
   label: string; // 例: "ブラウザ"
-  emoji?: string;
+  icon?: IconName;
 };
 
 /**

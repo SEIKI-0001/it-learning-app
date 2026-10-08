@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「情報セキュリティ関連法規」専用の体験。
@@ -17,8 +19,8 @@ const SCENARIOS = [
   {
     id: "own",
     label: "自分のIDでログイン",
-    emoji: "🔑",
-    door: "🚪✅",
+    icon: "key",
+    door: "door",
     ok: true,
     verdict: "OK（正当な利用）",
     why: "自分の鍵で自分の家に入るのと同じ。何の問題もありません。",
@@ -26,8 +28,8 @@ const SCENARIOS = [
   {
     id: "steal",
     label: "他人のIDで無断ログイン",
-    emoji: "🗝️",
-    door: "🚪🚨",
+    icon: "attacker",
+    door: "alert",
     ok: false,
     verdict: "違法（不正アクセス）",
     why: "他人の鍵を勝手に使って入るのと同じ。中身を見なくても、ログインした時点でアウトです。",
@@ -35,8 +37,8 @@ const SCENARIOS = [
   {
     id: "keep",
     label: "他人のパスワードを入手して保管",
-    emoji: "📋",
-    door: "🏠🗝️",
+    icon: "clipboard",
+    door: "key",
     ok: false,
     verdict: "違法（不正取得・保管）",
     why: "合鍵をこっそり作って持っているのと同じ。ログインしていなくても、不正な取得・保管自体が禁止されています。",
@@ -44,8 +46,8 @@ const SCENARIOS = [
   {
     id: "hole",
     label: "セキュリティの穴を突いて侵入",
-    emoji: "🪟",
-    door: "🪟🚨",
+    icon: "unlock",
+    door: "unlock",
     ok: false,
     verdict: "違法（不正アクセス）",
     why: "鍵を使わず窓から入るのと同じ。認証を回避した侵入も不正アクセスです。",
@@ -75,7 +77,7 @@ function LoginSimulator() {
                 on ? "bg-brand-600 text-white ring-brand-600" : "bg-brand-50 text-brand-800 ring-brand-200"
               }`}
             >
-              <span className="mr-1">{sc.emoji}</span>
+              <Icon name={sc.icon} className="mr-1 inline-block h-4 w-4 align-middle" />
               {sc.label}
             </button>
           );
@@ -97,9 +99,9 @@ function LoginSimulator() {
         ) : (
           <div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl">{s.door}</span>
+              <Icon name={s.door} className={`h-8 w-8 ${s.ok ? "text-emerald-600" : "text-rose-600"}`} />
               <span className={`text-sm font-bold ${s.ok ? "text-emerald-700" : "text-rose-700"}`}>
-                {s.ok ? "⭕" : "🚫"} {s.verdict}
+                <Icon name={s.ok ? "check" : "ban"} className="mr-1 inline-block h-4 w-4 align-middle" />{s.verdict}
               </span>
             </div>
             <p className={`mt-2 text-sm leading-relaxed ${s.ok ? "text-emerald-800" : "text-rose-800"}`}>{s.why}</p>
@@ -108,7 +110,7 @@ function LoginSimulator() {
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 ポイントは<b>「実害がなくてもアウト」</b>。無断ログイン・不正な取得や保管は、
+        <InlineIcon name="lightbulb" />ポイントは<b>「実害がなくてもアウト」</b>。無断ログイン・不正な取得や保管は、
         中身を見たかどうかに関係なく<b>不正アクセス禁止法</b>で禁じられています。
       </div>
     </Panel>
@@ -143,8 +145,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "🚫 あたる" },
-                  { v: false, label: "⭕ あたらない" },
+                  { v: true, label: "あたる" },
+                  { v: false, label: "あたらない" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -169,7 +171,7 @@ function Quiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}
@@ -186,9 +188,9 @@ function Quiz() {
 // ---------------------------------------------------------------------------
 function LawList() {
   const laws = [
-    { emoji: "🔓", scene: "他人のIDで無断ログインされた", name: "不正アクセス禁止法", d: "無断ログイン・不正取得などを禁止" },
-    { emoji: "🪪", scene: "個人情報が勝手に使われた", name: "個人情報保護法", d: "個人情報の適切な取り扱いを定める" },
-    { emoji: "🛡️", scene: "国全体でセキュリティを強くしたい", name: "サイバーセキュリティ基本法", d: "国の対策の基本方針を定める" },
+    { icon: "unlock" as IconName, scene: "他人のIDで無断ログインされた", name: "不正アクセス禁止法", d: "無断ログイン・不正取得などを禁止" },
+    { icon: "user" as IconName, scene: "個人情報が勝手に使われた", name: "個人情報保護法", d: "個人情報の適切な取り扱いを定める" },
+    { icon: "shield" as IconName, scene: "国全体でセキュリティを強くしたい", name: "サイバーセキュリティ基本法", d: "国の対策の基本方針を定める" },
   ];
   return (
     <Panel>
@@ -198,7 +200,7 @@ function LawList() {
           <div key={l.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="text-xs text-gray-500">「{l.scene}」→</div>
             <div className="mt-1 flex items-center gap-2">
-              <span className="text-lg">{l.emoji}</span>
+              <Icon name={l.icon} className="h-5 w-5 text-gray-700" />
               <div>
                 <div className="text-sm font-bold text-gray-800">{l.name}</div>
                 <div className="text-xs text-gray-500">{l.d}</div>
@@ -208,7 +210,7 @@ function LawList() {
         ))}
       </div>
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        📌 「無断ログイン」と聞いたら<b>不正アクセス禁止法</b>、と結びつけて覚えると解きやすい。
+        <InlineIcon name="flag" />「無断ログイン」と聞いたら<b>不正アクセス禁止法</b>、と結びつけて覚えると解きやすい。
       </div>
     </Panel>
   );

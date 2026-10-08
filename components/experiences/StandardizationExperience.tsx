@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「標準化（JIS・ISO・デファクト・バーコード）」専用の体験。
@@ -42,16 +44,16 @@ function WhyStandardize() {
       <div className="mt-3 flex items-center justify-center gap-3 rounded-xl bg-gray-50 px-4 py-5 ring-1 ring-gray-200">
         {std ? (
           <>
-            <span className="text-3xl">🔌</span>
+            <Icon name="plug" className="h-8 w-8 text-gray-700" />
             <span className="text-2xl text-emerald-500">→</span>
-            <span className="text-3xl">🔋</span>
+            <Icon name="battery" className="h-8 w-8 text-gray-700" />
             <span className="text-2xl text-emerald-500">✓</span>
           </>
         ) : (
           <>
-            <span className="text-3xl">🔌</span>
+            <Icon name="plug" className="h-8 w-8 text-gray-700" />
             <span className="text-2xl text-rose-400">→</span>
-            <span className="text-3xl opacity-40">🔋</span>
+            <Icon name="battery" className="h-8 w-8 text-gray-700 opacity-40" />
             <span className="text-2xl text-rose-500">✕</span>
           </>
         )}
@@ -66,12 +68,12 @@ function WhyStandardize() {
       >
         {std ? (
           <>
-            ✅ 規格がそろっていれば、<b>どのメーカーの製品でも組み合わせて使える</b>。
+            <InlineIcon name="check" className="text-emerald-600" />規格がそろっていれば、<b>どのメーカーの製品でも組み合わせて使える</b>。
             交換・修理・大量生産がしやすく、コストも下がる。
           </>
         ) : (
           <>
-            ⚠️ 形やサイズがバラバラだと、<b>組み合わせられず・交換もできない</b>。
+            <InlineIcon name="alert" />形やサイズがバラバラだと、<b>組み合わせられず・交換もできない</b>。
             毎回専用品が必要で不便でコスト高。
           </>
         )}
@@ -84,9 +86,9 @@ function WhyStandardize() {
 }
 
 const KINDS = [
-  { emo: "🇯🇵", name: "JIS", d: "日本の国家規格（日本産業規格）。国内で正式に定められたもの。" },
-  { emo: "🌍", name: "ISO", d: "国際規格。ISO（国際標準化機構）が世界共通として定めたもの。" },
-  { emo: "📈", name: "デファクトスタンダード", d: "公的に決めたわけではないが、広く使われて“事実上の標準”になったもの。" },
+  { icon: "landmark" as IconName, name: "JIS", d: "日本の国家規格（日本産業規格）。国内で正式に定められたもの。" },
+  { icon: "globe" as IconName, name: "ISO", d: "国際規格。ISO（国際標準化機構）が世界共通として定めたもの。" },
+  { icon: "trend-up" as IconName, name: "デファクトスタンダード", d: "公的に決めたわけではないが、広く使われて“事実上の標準”になったもの。" },
 ];
 
 function Kinds() {
@@ -97,7 +99,7 @@ function Kinds() {
         {KINDS.map((k) => (
           <div key={k.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-2">
-              <span className="text-lg">{k.emo}</span>
+              <Icon name={k.icon} className="h-5 w-5 text-brand-600" />
               <span className="text-sm font-bold text-gray-800">{k.name}</span>
             </div>
             <p className="mt-1 text-[12px] leading-relaxed text-gray-600">{k.d}</p>
@@ -105,7 +107,7 @@ function Kinds() {
         ))}
       </div>
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-2.5 text-xs leading-relaxed text-sky-800 ring-1 ring-sky-200">
-        📌 商品管理では <b>バーコード（JANコード）</b>＝横線で数字を表す／
+        <InlineIcon name="flag" />商品管理では <b>バーコード（JANコード）</b>＝横線で数字を表す／
         <b>QRコード</b>＝四角の二次元コードで多くの情報を持てる、もよく出ます。
       </div>
     </Panel>
@@ -170,7 +172,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

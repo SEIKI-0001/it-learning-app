@@ -7,6 +7,8 @@ import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 import { ValueChainDiorama } from "./valuechain/ValueChainDiorama";
 import { STATIONS, type StationId, type StationState, type SupportId } from "./valuechain/valueChainTypes";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「バリューチェーン（価値連鎖）」専用の体験。
@@ -18,11 +20,11 @@ import { STATIONS, type StationId, type StationState, type SupportId } from "./v
 
 // ① 主活動ライン ------------------------------------------------------------
 const MAIN = [
-  { emo: "📥", name: "購買物流", product: "🪵", state: "原材料が届いた", d: "原材料や部品を仕入れ、受け入れる", value: 15 },
-  { emo: "🏭", name: "製造", product: "🪑", state: "製品ができた！", d: "材料を加工して製品をつくる", value: 40 },
-  { emo: "📦", name: "出荷物流", product: "📦", state: "箱詰めして配送", d: "完成した製品を保管・配送する", value: 55 },
-  { emo: "🛒", name: "販売・マーケティング", product: "🏷️", state: "店頭に並んだ", d: "宣伝し、顧客に売る", value: 75 },
-  { emo: "🔧", name: "サービス", product: "😊", state: "顧客が満足！", d: "アフターサポートで価値を保つ", value: 90 },
+  { icon: "package" as IconName, name: "購買物流", product: "原料", state: "原材料が届いた", d: "原材料や部品を仕入れ、受け入れる", value: 15 },
+  { icon: "factory" as IconName, name: "製造", product: "製品", state: "製品ができた！", d: "材料を加工して製品をつくる", value: 40 },
+  { icon: "truck" as IconName, name: "出荷物流", product: "荷物", state: "箱詰めして配送", d: "完成した製品を保管・配送する", value: 55 },
+  { icon: "cart" as IconName, name: "販売・マーケティング", product: "商品", state: "店頭に並んだ", d: "宣伝し、顧客に売る", value: 75 },
+  { icon: "tool" as IconName, name: "サービス", product: "満足", state: "顧客が満足！", d: "アフターサポートで価値を保つ", value: 90 },
 ];
 
 const DELTAS = [15, 25, 15, 20, 15];
@@ -61,7 +63,7 @@ function MainFlow() {
           reducedMotion={reducedMotion}
           forward={player.forward}
           stations={stations}
-          product={{ at: idx, emoji: cur.product, blocked: false }}
+          product={{ at: idx, label: cur.product, blocked: false }}
           supports={ALL_ON}
           value={{ blocks: DELTAS.slice(0, idx + 1), final: atEnd ? { cost: COST, margin: 90 - COST } : null }}
           stationNotes={{}}
@@ -72,16 +74,16 @@ function MainFlow() {
       <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-center ring-1 ring-gray-200" aria-live="polite" data-testid="vc-state">
         {atEnd ? (
           <p className="text-sm leading-relaxed text-emerald-700">
-            🎉 各工程で加わった価値の合計が売値に。<b>コスト（紫）を引いて残った緑がマージン（利益）</b>です。
+            各工程で加わった価値の合計が売値に。<b>コスト（紫）を引いて残った緑がマージン（利益）</b>です。
           </p>
         ) : (
           <>
             <div className="text-sm font-bold text-gray-800">
-              {cur.product} {cur.state}
+              {cur.state}
               <span className="ml-1.5 rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] text-brand-700">価値 +{DELTAS[idx]}</span>
             </div>
             <div className="mt-0.5 text-xs text-gray-500">
-              {cur.emo} {cur.name}：{cur.d}
+              <Icon name={cur.icon} className="mr-1 inline-block h-3.5 w-3.5 align-[-2px]" />{cur.name}：{cur.d}
             </div>
           </>
         )}
@@ -98,7 +100,7 @@ function MainFlow() {
           playLabel="主活動を再生"
           timelineLabel="主活動のタイムライン"
           startCaption="原材料"
-          endCaption="マージン 💰"
+          endCaption="マージン"
           stepTone={(i) => (i === FLOW_STEPS.length - 1 ? "bg-emerald-500" : "bg-brand-600")}
         />
       </div>
@@ -108,17 +110,17 @@ function MainFlow() {
 
 // ② 支援活動 ----------------------------------------------------------------
 const SUPPORT = [
-  { emo: "🏢", name: "全般管理", d: "経営・経理・法務など全体の管理", without: "お金や契約の管理がぐちゃぐちゃに。ライン全体が混乱して止まる" },
-  { emo: "👥", name: "人事・労務管理", d: "採用・教育・働く環境づくり", without: "働く人が足りず育たない。製造も販売も回らなくなる" },
-  { emo: "🔬", name: "技術開発", d: "研究や新技術の開発", without: "製品が古いまま進化しない。ライバルに追い抜かれる" },
-  { emo: "🛍️", name: "調達", d: "設備や資材を買い入れる活動", without: "機械も資材も届かない。ラインがそもそも動かせない" },
+  { icon: "building" as IconName, name: "全般管理", d: "経営・経理・法務など全体の管理", without: "お金や契約の管理がぐちゃぐちゃに。ライン全体が混乱して止まる" },
+  { icon: "users" as IconName, name: "人事・労務管理", d: "採用・教育・働く環境づくり", without: "働く人が足りず育たない。製造も販売も回らなくなる" },
+  { icon: "microscope" as IconName, name: "技術開発", d: "研究や新技術の開発", without: "製品が古いまま進化しない。ライバルに追い抜かれる" },
+  { icon: "cart" as IconName, name: "調達", d: "設備や資材を買い入れる活動", without: "機械も資材も届かない。ラインがそもそも動かせない" },
 ];
 
 type Breakdown = {
   support: SupportId;
   stations: Partial<Record<StationId, StationState>>;
   notes: Partial<Record<StationId, string>>;
-  product: { at: number; emoji: string; blocked: boolean };
+  product: { at: number; label: string; blocked: boolean };
   blocks: number[];
   final: { cost: number; margin: number } | null;
 };
@@ -129,7 +131,7 @@ const BREAKDOWN: Record<SupportId, Breakdown> = {
     support: "procurement",
     stations: { inbound: "error", operations: "error", outbound: "disabled", sales: "disabled", service: "disabled" },
     notes: { inbound: "原材料が届かない", operations: "製造停止" },
-    product: { at: -1, emoji: "🪵", blocked: true },
+    product: { at: -1, label: "原料", blocked: true },
     blocks: [],
     final: null,
   },
@@ -137,7 +139,7 @@ const BREAKDOWN: Record<SupportId, Breakdown> = {
     support: "hr",
     stations: { inbound: "idle", operations: "error", outbound: "disabled", sales: "error", service: "disabled" },
     notes: { operations: "作る人がいない", sales: "売る人もいない" },
-    product: { at: 0, emoji: "🪵", blocked: true },
+    product: { at: 0, label: "原料", blocked: true },
     blocks: [15],
     final: null,
   },
@@ -145,7 +147,7 @@ const BREAKDOWN: Record<SupportId, Breakdown> = {
     support: "tech",
     stations: { operations: "error" },
     notes: { operations: "古い製品のまま" },
-    product: { at: 4, emoji: "😐", blocked: false },
+    product: { at: 4, label: "旧製品", blocked: false },
     blocks: [15, 10, 15, 20, 15],
     final: { cost: COST, margin: 5 },
   },
@@ -153,7 +155,7 @@ const BREAKDOWN: Record<SupportId, Breakdown> = {
     support: "infra",
     stations: { inbound: "error", operations: "error", outbound: "error", sales: "error", service: "error" },
     notes: { outbound: "お金・契約が混乱" },
-    product: { at: 2, emoji: "📦", blocked: true },
+    product: { at: 2, label: "荷物", blocked: true },
     blocks: [15, 25],
     final: null,
   },
@@ -186,7 +188,7 @@ function Support() {
         <ValueChainDiorama
           reducedMotion={reducedMotion}
           stations={stations}
-          product={off ? off.product : { at: 4, emoji: "😊", blocked: false }}
+          product={off ? off.product : { at: 4, label: "満足", blocked: false }}
           supports={supports}
           value={off ? { blocks: off.blocks, final: off.final } : { blocks: DELTAS, final: { cost: COST, margin: 90 - COST } }}
           stationNotes={off?.notes ?? {}}
@@ -207,7 +209,7 @@ function Support() {
               }`}
             >
               <div className="flex items-center gap-1.5">
-                <span className="text-lg">{picked ? "🚫" : s.emo}</span>
+                <Icon name={picked ? "ban" : s.icon} className={`h-5 w-5 ${picked ? "text-rose-600" : "text-gray-600"}`} />
                 <span className={`text-sm font-bold ${picked ? "text-rose-700" : "text-gray-800"}`}>{s.name}</span>
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{picked ? "タップで元に戻す" : `${s.d}（止めてみる）`}</p>
@@ -220,14 +222,14 @@ function Support() {
           <p className="text-sm leading-relaxed text-gray-400">どれかを止めると、無くなったときの影響が図に出ます。</p>
         ) : (
           <p className="text-sm leading-relaxed text-rose-700">
-            🚫 <b>{SUPPORT[sel].name}</b>が無いと… {SUPPORT[sel].without}。
+            <InlineIcon name="ban" /><b>{SUPPORT[sel].name}</b>が無いと… {SUPPORT[sel].without}。
             <span className="text-gray-600">直接は作らないけれど、<b className="text-gray-800">全工程に効いている</b>のが支援活動。</span>
           </p>
         )}
       </div>
       {tried.length === SUPPORT.length && (
         <p className="mt-2 rounded-xl bg-amber-50 px-4 py-2.5 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200" role="status">
-          💡 4つとも、止めると<b>マージン（利益）が減るか消える</b>。支援活動は価値を直接は作らないが、主活動ラインの土台です。
+          <InlineIcon name="lightbulb" />4つとも、止めると<b>マージン（利益）が減るか消える</b>。支援活動は価値を直接は作らないが、主活動ラインの土台です。
         </p>
       )}
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
@@ -283,7 +285,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./cloud/cloud.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「クラウド・SaaS・PaaS・IaaS」専用の体験。
@@ -15,12 +17,12 @@ import { Panel, SectionTitle } from "./ui";
 
 // スタックは上＝完成品に近い、下＝機械に近い。
 // 各モデルは「下から何層を事業者が管理するか」で表す（＝境界線の高さ）。
-const LAYERS = [
-  { name: "アプリ", emoji: "📱", note: "メール・会計ソフトなど完成した機能" },
-  { name: "データ", emoji: "🗂️", note: "アプリで扱う内容・設定" },
-  { name: "開発・実行環境", emoji: "🛠️", note: "ミドルウェア・プログラムを動かす土台" },
-  { name: "OS", emoji: "🪟", note: "Windows・Linux など" },
-  { name: "サーバ・ネットワーク", emoji: "🖥️", note: "機械・回線・置き場所（設備）" },
+const LAYERS: { name: string; icon: IconName; note: string }[] = [
+  { name: "アプリ", icon: "smartphone", note: "メール・会計ソフトなど完成した機能" },
+  { name: "データ", icon: "database", note: "アプリで扱う内容・設定" },
+  { name: "開発・実行環境", icon: "tool", note: "ミドルウェア・プログラムを動かす土台" },
+  { name: "OS", icon: "settings", note: "Windows・Linux など" },
+  { name: "サーバ・ネットワーク", icon: "server", note: "機械・回線・置き場所（設備）" },
 ];
 
 type Model = "オンプレ" | "IaaS" | "PaaS" | "SaaS";
@@ -34,10 +36,10 @@ const PROVIDER_COVERS: Record<Model, number> = {
 };
 
 const MODEL_FOOD: Record<Model, string> = {
-  オンプレ: "🍚 食材も設備も全部自前で、台所から作る",
-  IaaS: "🔪 食材と設備は借り、調理は自分でする",
-  PaaS: "🍳 調理場つきキッチンを借り、料理だけ作る",
-  SaaS: "🍱 完成したお弁当を買ってそのまま食べる",
+  オンプレ: "食材も設備も全部自前で、台所から作る",
+  IaaS: "食材と設備は借り、調理は自分でする",
+  PaaS: "調理場つきキッチンを借り、料理だけ作る",
+  SaaS: "完成したお弁当を買ってそのまま食べる",
 };
 
 const MODELS: Model[] = ["オンプレ", "IaaS", "PaaS", "SaaS"];
@@ -51,14 +53,14 @@ function WhatIsCloud() {
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 text-center ring-1 ring-gray-200">
-          <div className="text-2xl">🏠</div>
+          <Icon name="home" className="mx-auto h-7 w-7 text-gray-700" />
           <div className="mt-1 text-sm font-bold text-gray-700">オンプレミス</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
             機械を<b>自分で買って</b>社内に置く。自由だが手間とお金がかかる。
           </p>
         </div>
         <div className="rounded-xl bg-sky-50 p-3 text-center ring-1 ring-sky-200">
-          <div className="text-2xl">☁️</div>
+          <Icon name="cloud" className="mx-auto h-7 w-7 text-sky-700" />
           <div className="mt-1 text-sm font-bold text-sky-700">クラウド</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             必要な分だけ<b>借りて使う</b>。すぐ始められ、使った分だけ払う（<b>従量課金</b>）。
@@ -66,7 +68,7 @@ function WhatIsCloud() {
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 借りる範囲の広さで <b>IaaS → PaaS → SaaS</b> と呼び名が変わります。次で見てみよう。
+        <InlineIcon name="lightbulb" />借りる範囲の広さで <b>IaaS → PaaS → SaaS</b> と呼び名が変わります。次で見てみよう。
       </div>
     </Panel>
   );
@@ -167,14 +169,14 @@ function Stack() {
           style={{ height: Math.max(0, stackH - providerH - (covers ? 3 : 0)), writingMode: "vertical-rl" }}
           data-testid="cloud-you-band"
         >
-          {covers < n && "🙋 あなた"}
+          {covers < n && "あなた"}
         </div>
         <div
           className={`${styles.region} absolute bottom-0 left-0 flex w-5 items-center justify-center overflow-hidden rounded-md bg-sky-600 text-[10px] font-bold text-white`}
           style={{ height: providerH, writingMode: "vertical-rl" }}
           data-testid="cloud-provider-band"
         >
-          {covers > 0 && "☁️ 事業者"}
+          {covers > 0 && "事業者"}
         </div>
         {/* 所有の境界線 */}
         {covers > 0 && covers < n && (
@@ -198,7 +200,7 @@ function Stack() {
                 data-testid={`cloud-layer-${i}`}
                 data-owner={byProvider ? "provider" : "you"}
               >
-                <span className="text-xl">{layer.emoji}</span>
+                <Icon name={layer.icon} className="h-6 w-6 text-gray-700" />
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-bold leading-tight text-gray-800">{layer.name}</div>
                   <div className="truncate text-[11px] text-gray-500">{layer.note}</div>
@@ -207,7 +209,7 @@ function Stack() {
                   className={`${styles.flip} flex-none rounded-full px-2 py-0.5 text-[11px] font-bold ${byProvider ? "bg-sky-200 text-sky-800" : "bg-brand-200 text-brand-800"}`}
                   style={{ transitionDelay: delay }}
                 >
-                  {byProvider ? "☁️ 事業者" : "🙋 あなた"}
+                  {byProvider ? "事業者" : "あなた"}
                 </span>
               </div>
             );
@@ -275,7 +277,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
                   {it.why}
                 </p>
               )}
@@ -284,7 +286,7 @@ function Quiz() {
         })}
       </ul>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚠️ <b>PaaSとIaaSを逆に覚えがち</b>。<b>P</b>latform＝開発の土台、<b>I</b>nfrastructure＝サーバなどの基盤、と頭文字で覚えよう。
+        <InlineIcon name="alert" /><b>PaaSとIaaSを逆に覚えがち</b>。<b>P</b>latform＝開発の土台、<b>I</b>nfrastructure＝サーバなどの基盤、と頭文字で覚えよう。
       </div>
     </Panel>
   );

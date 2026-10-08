@@ -57,7 +57,7 @@ describe("HttpsExperience", () => {
     renderDeck();
     next();
     next();
-    fireEvent.click(screen.getByRole("button", { name: "HTTPS 🔒（暗号化）" }));
+    fireEvent.click(screen.getByRole("button", { name: "HTTPS（暗号化）" }));
     expect(capsuleState()).toBe("encrypted");
     expect(within(scene()).getByText("ENCRYPTED DATA")).toBeInTheDocument();
     expect(screen.getByTestId("eve-screen")).not.toHaveTextContent("himitsu");
@@ -84,7 +84,7 @@ describe("HttpsExperience", () => {
     renderDeck();
     fireEvent.change(screen.getByLabelText("送る内容："), { target: { value: "card: 1234" } });
     expect(screen.getByTestId("eve-sees")).toHaveTextContent("card: 1234");
-    fireEvent.click(screen.getByRole("button", { name: "HTTPS 🔒（暗号化）" }));
+    fireEvent.click(screen.getByRole("button", { name: "HTTPS（暗号化）" }));
     expect(screen.getByTestId("eve-sees")).not.toHaveTextContent("card");
   });
 

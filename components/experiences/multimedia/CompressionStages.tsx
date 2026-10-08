@@ -5,6 +5,8 @@ import styles from "../calc/calc.module.css";
 import { Choices, LeveledPractice, Note, Replay, type Choice, type LeveledQuestion } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // マルチメディアとデータ圧縮。大きくしすぎず、確認問題に要る範囲だけ。
 //   ① 圧縮とは：AAAAABBBCC（10個）→ A5B3C2（6個）。同じ情報をより小さく持つ
@@ -99,7 +101,7 @@ export function CompressStage() {
         )}
         {b >= 4 && (
           <Note>
-            💡 <b>圧縮＝同じ情報を、より小さいデータ量で持つ</b>こと。画像・音声・動画はとても大きいので、保存や送信の前に圧縮します。
+            <InlineIcon name="lightbulb" /><b>圧縮＝同じ情報を、より小さいデータ量で持つ</b>こと。画像・音声・動画はとても大きいので、保存や送信の前に圧縮します。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -197,18 +199,18 @@ export function LossStage() {
             className={`mt-3 rounded-lg px-3 py-2 text-center text-sm font-bold ${lossless ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"} ${styles.reveal}`}
             data-testid="media-loss-verdict"
           >
-            {lossless ? "✅ 元と完全に一致（1文字も変わらない）" : "≈ ぱっと見は同じ。でも細かい点が消え、元には戻らない"}
+            {lossless ? "元と完全に一致（1文字も変わらない）" : "≈ ぱっと見は同じ。でも細かい点が消え、元には戻らない"}
           </p>
         )}
         {b >= 4 && (
           <Note>
             {lossless ? (
               <>
-                💡 <b>可逆圧縮</b>：展開すると<b>完全に元どおり</b>。文書・プログラムなど<b>1文字でも変わると困るデータ</b>に使う。
+                <InlineIcon name="lightbulb" /><b>可逆圧縮</b>：展開すると<b>完全に元どおり</b>。文書・プログラムなど<b>1文字でも変わると困るデータ</b>に使う。
               </>
             ) : (
               <>
-                💡 <b>非可逆圧縮</b>：人が気づきにくい細部を捨てるので<b>もっと小さくできる</b>が、<b>元には戻せない</b>。写真・音楽・動画に使う。
+                <InlineIcon name="lightbulb" /><b>非可逆圧縮</b>：人が気づきにくい細部を捨てるので<b>もっと小さくできる</b>が、<b>元には戻せない</b>。写真・音楽・動画に使う。
               </>
             )}
           </Note>
@@ -226,9 +228,9 @@ export function LossStage() {
 const FMT = ["PNG", "JPEG", "MP3", "ZIP"];
 const fmt = (ok: string, why: Record<string, string>): Choice[] => FMT.map((f) => (f === ok ? { label: f, ok: true } : { label: f, why: why[f] }));
 
-export const FORMAT_SCENES: { emoji: string; text: string; choices: Choice[] }[] = [
+export const FORMAT_SCENES: { icon: IconName; text: string; choices: Choice[] }[] = [
   {
-    emoji: "📸",
+    icon: "camera",
     text: "旅行の写真を、できるだけ小さく大量に保存したい",
     choices: fmt("JPEG", {
       PNG: "PNGは可逆なので写真だと大きいまま。多少の劣化を許して小さくするならJPEG。",
@@ -237,7 +239,7 @@ export const FORMAT_SCENES: { emoji: string; text: string; choices: Choice[] }[]
     }),
   },
   {
-    emoji: "🏷️",
+    icon: "tag",
     text: "会社のロゴ。文字の輪郭をくっきり保ち、背景を透明にしたい",
     choices: fmt("PNG", {
       JPEG: "JPEGは非可逆で、文字の輪郭がにじみやすく、透過も扱えません。",
@@ -246,7 +248,7 @@ export const FORMAT_SCENES: { emoji: string; text: string; choices: Choice[] }[]
     }),
   },
   {
-    emoji: "🎧",
+    icon: "headphones",
     text: "音楽を小さくしてスマートフォンで持ち歩きたい",
     choices: fmt("MP3", {
       PNG: "PNGは画像の形式です。",
@@ -255,7 +257,7 @@ export const FORMAT_SCENES: { emoji: string; text: string; choices: Choice[] }[]
     }),
   },
   {
-    emoji: "🗂️",
+    icon: "database",
     text: "プログラムのファイル一式をまとめてメールで送る（1文字でも変わると動かない）",
     choices: fmt("ZIP", {
       PNG: "PNGは画像の形式です。",
@@ -285,7 +287,7 @@ export function FormatStage() {
         {FORMAT_SCENES.map((s, i) => (
           <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <p className="text-sm font-bold leading-relaxed text-gray-800">
-              <span aria-hidden>{s.emoji} </span>
+              <Icon name={s.icon} className="mr-1 inline-block h-4 w-4 align-middle text-brand-600" />
               {s.text}
             </p>
             <div className="mt-2">
@@ -380,7 +382,7 @@ export function RatioStage() {
         </span>
       </div>
       <Note>
-        💡 問題文を読み分ける：<b>「元の{rate}%に圧縮」→ {after}MB</b>、<b>「{rate}%削減」→ 元の{100 - rate}%が残る</b>。どちらの意味か、問題文の定義を必ず確かめよう。
+        <InlineIcon name="lightbulb" />問題文を読み分ける：<b>「元の{rate}%に圧縮」→ {after}MB</b>、<b>「{rate}%削減」→ 元の{100 - rate}%が残る</b>。どちらの意味か、問題文の定義を必ず確かめよう。
       </Note>
     </Panel>
   );
@@ -391,9 +393,9 @@ export function RatioStage() {
 // ---------------------------------------------------------------------------
 
 const XR = {
-  VR: { real: false, overlay: "仮想空間に入りこむ", ex: "ゴーグルで仮想の工場を歩いて安全訓練", scene: "🥽 見えるのは全部 仮想の世界" },
-  AR: { real: true, overlay: "現実に情報を重ねる", ex: "カメラに映る道路に矢印を表示", scene: "📱 現実の映像 ＋ 矢印や説明" },
-  MR: { real: true, overlay: "現実と仮想を融合して操作", ex: "机の上に置いた立体模型を手で回す", scene: "🖐️ 現実の机に置いた仮想の模型をつかむ" },
+  VR: { real: false, overlay: "仮想空間に入りこむ", ex: "ゴーグルで仮想の工場を歩いて安全訓練", scene: "見えるのは全部 仮想の世界" },
+  AR: { real: true, overlay: "現実に情報を重ねる", ex: "カメラに映る道路に矢印を表示", scene: "現実の映像 ＋ 矢印や説明" },
+  MR: { real: true, overlay: "現実と仮想を融合して操作", ex: "机の上に置いた立体模型を手で回す", scene: "現実の机に置いた仮想の模型をつかむ" },
 } as const;
 
 export function TermsStage() {
@@ -534,7 +536,7 @@ export function MediaPractice() {
       testId="media-practice"
       done={
         <>
-          🎉 ここまで解ければ、本試験のマルチメディアの問題に対応できます。<b>戻せるか → 用途で選ぶ → 元 × 圧縮率</b>。
+          ここまで解ければ、本試験のマルチメディアの問題に対応できます。<b>戻せるか → 用途で選ぶ → 元 × 圧縮率</b>。
         </>
       }
     />

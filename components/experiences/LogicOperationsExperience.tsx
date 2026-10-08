@@ -5,6 +5,7 @@ import { GateCircuit, H, SWITCH_Y, W, type Op } from "./logic/GateCircuit";
 import styles from "./logic/logic.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「論理演算と真理値表」専用の体験。
@@ -205,7 +206,7 @@ function Playground({ state, set }: { state: State; set: (s: Partial<State>) => 
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 <b>AND</b>＝両方1で点灯（宿題も掃除も終わったらOK）／<b>OR</b>＝どちらか1で点灯（電車かバスどちらか）／
+        <InlineIcon name="lightbulb" /><b>AND</b>＝両方1で点灯（宿題も掃除も終わったらOK）／<b>OR</b>＝どちらか1で点灯（電車かバスどちらか）／
         <b>XOR</b>＝片方だけ1で点灯、両方1だと消える。
       </div>
     </Panel>

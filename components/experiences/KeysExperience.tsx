@@ -39,7 +39,7 @@ const INSERTS: { label: string; row: Student; verdict: "ok" | "dup" | "empty" }[
 ];
 
 const VERDICT_TEXT = {
-  ok: "⭕ 登録OK：S04 はまだ誰も使っていない番号",
+  ok: "登録OK：S04 はまだ誰も使っていない番号",
   dup: "✕ 登録できません：S02 はもう田中さん（2組）が使っている（主キーの重複）",
   empty: "✕ 登録できません：主キーを空っぽにはできない",
 } as const;
@@ -95,7 +95,7 @@ function PrimaryKeyPanel() {
         </table>
       </div>
 
-      <div className="mt-3 text-xs font-bold text-gray-700">🧑‍🏫 DBMS（名簿係の先生）に登録を頼んでみよう</div>
+      <div className="mt-3 text-xs font-bold text-gray-700">DBMS（名簿係の先生）に登録を頼んでみよう</div>
       <div className="mt-1.5 grid grid-cols-3 gap-1.5">
         {INSERTS.map((it, i) => (
           <button
@@ -238,7 +238,7 @@ function LinkExperience() {
         )}
 
         {/* 成績表（外部キーを持つ側） */}
-        <div className="mb-1.5 text-sm font-bold text-gray-800">📋 成績表</div>
+        <div className="mb-1.5 text-sm font-bold text-gray-800">成績表</div>
         <div className="overflow-hidden rounded-xl ring-1 ring-gray-300">
           <table className="w-full text-sm">
             <thead>
@@ -303,7 +303,7 @@ function LinkExperience() {
         </div>
 
         {/* 名簿（主キーを持つ側） */}
-        <div className="mb-1.5 text-sm font-bold text-gray-800">📋 名簿</div>
+        <div className="mb-1.5 text-sm font-bold text-gray-800">名簿</div>
         <div className="overflow-hidden rounded-xl ring-1 ring-gray-300">
           <table ref={rosterRef} className="w-full text-sm">
             <thead>
@@ -423,7 +423,7 @@ function JoinPanel() {
           onClick={() => setJoined(true)}
           className={`rounded-lg px-2 py-1.5 text-xs font-bold transition active:scale-95 ${joined ? "bg-brand-600 text-white" : "text-gray-700 ring-1 ring-gray-300"}`}
         >
-          🔗 名簿とつなぐ
+          名簿とつなぐ
         </button>
       </div>
       {joined && (

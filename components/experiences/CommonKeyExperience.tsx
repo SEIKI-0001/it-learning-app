@@ -7,6 +7,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon from "@/components/ui/Icon";
 
 // ============================================================================
 // 「共通鍵暗号方式」専用の体験。
@@ -32,7 +34,7 @@ function stepsFor(mode: Mode): FlowStep[] {
     {
       phase: 1,
       title: "Aが共通鍵を用意",
-      detail: <>【準備】AさんとBさんは<b>同じ共通鍵🔑</b>で暗号化・復号します。まずAが鍵を1本用意しました。</>,
+      detail: <>【準備】AさんとBさんは<b>同じ共通鍵</b>で暗号化・復号します。まずAが鍵を1本用意しました。</>,
       scene: { nodes: { ...IDLE, a: "active" }, lanes: { key: "idle", data: "idle" }, keys: [aKey()], capsule: null, tap: null, eve: null },
     },
     {
@@ -40,7 +42,7 @@ function stepsFor(mode: Mode): FlowStep[] {
       title: stolen ? "鍵を送る途中で盗まれた！" : "共通鍵をBへ送る",
       detail: stolen ? (
         <>
-          Aが鍵をBへ送る途中、😈盗聴者が<b>鍵そのものをコピー</b>しました。⚠️これが<b>鍵配送問題</b>：共通鍵は相手に渡さないと使えないのに、渡す途中が危ない。
+          Aが鍵をBへ送る途中、盗聴者が<b>鍵そのものをコピー</b>しました。これが<b>鍵配送問題</b>：共通鍵は相手に渡さないと使えないのに、渡す途中が危ない。
         </>
       ) : (
         <>Aが<b>鍵そのもの</b>をBへ送ります。今回は盗まれずに届きました（でも、ここが一番危ない瞬間）。</>
@@ -74,7 +76,7 @@ function stepsFor(mode: Mode): FlowStep[] {
     {
       phase: 2,
       title: "Aが共通鍵で暗号化",
-      detail: <>【通信①】Aさんが<b>共通鍵🔑で暗号化🔒</b>。平文「会議は10時」→ 暗号文に。</>,
+      detail: <>【通信①】Aさんが<b>共通鍵で暗号化</b>。平文「会議は10時」→ 暗号文に。</>,
       scene: {
         nodes: { ...IDLE, a: "active" },
         lanes: { key: "done", data: "idle" },
@@ -109,7 +111,7 @@ function stepsFor(mode: Mode): FlowStep[] {
           【通信③】Bが同じ鍵で復号して「会議は10時」が読めた。でも<b>盗聴者も同じ鍵で復号</b>できてしまう！ 鍵を盗まれたら、その後の暗号文は<b>全部読まれます</b>。
         </>
       ) : (
-        <>【通信③】Bさんが<b>同じ共通鍵🔑で復号</b>。「会議は10時」が読めた！ 盗聴者の手元の暗号文は<b>開かないまま</b>です。</>
+        <>【通信③】Bさんが<b>同じ共通鍵で復号</b>。「会議は10時」が読めた！ 盗聴者の手元の暗号文は<b>開かないまま</b>です。</>
       ),
       scene: {
         nodes: { a: "idle", b: "active", eve: stolen ? "error" : "idle" },
@@ -144,8 +146,8 @@ function Flow() {
       <div className="mt-3 grid grid-cols-2 gap-1.5">
         {(
           [
-            { v: "safe", label: "✅ 正常ケース" },
-            { v: "stolen", label: "😈 鍵を盗まれたケース" },
+            { v: "safe", label: "正常ケース" },
+            { v: "stolen", label: "鍵を盗まれたケース" },
           ] as const
         ).map((o) => (
           <button
@@ -211,7 +213,7 @@ function Flow() {
 
       {tried.size === 2 && (
         <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="ck-insight">
-          💡 ポイント：1本の鍵だから <b>処理が速い</b>。ただし<b>鍵そのものを盗まれると、その後の暗号文はすべて読まれる</b>。
+          <InlineIcon name="lightbulb" />ポイント：1本の鍵だから <b>処理が速い</b>。ただし<b>鍵そのものを盗まれると、その後の暗号文はすべて読まれる</b>。
           だから <b>その鍵を安全に渡すのが課題</b>（鍵配送問題）。
         </div>
       )}
@@ -223,7 +225,7 @@ export default function CommonKeyExperience() {
   const rows = [
     { k: "鍵の数", c: "1本（同じ鍵を共有）", p: "2本ペア（公開鍵＋秘密鍵）" },
     { k: "暗号化／復号", c: "同じ鍵で両方", p: "公開鍵で暗号化→秘密鍵で復号" },
-    { k: "速さ", c: "速い 🚀", p: "遅め" },
+    { k: "速さ", c: "速い", p: "遅め" },
     { k: "鍵を配る悩み", c: "あり（鍵配送問題）", p: "小さい（公開鍵は配ってよい）" },
     { k: "向いている用途", c: "大量データの暗号化", p: "鍵の受け渡し・少量データ" },
   ];
@@ -243,7 +245,7 @@ export default function CommonKeyExperience() {
             <div className="text-[11px] text-gray-500">会議は10時</div>
           </div>
           <div className="text-center">
-            <div className="text-lg">🔑→🔒</div>
+            <div className="flex items-center justify-center gap-0.5 text-gray-700"><Icon name="key" className="h-5 w-5" /><span className="text-lg">→</span><Icon name="lock" className="h-5 w-5" /></div>
             <div className="text-[10px] text-gray-400">共通鍵で暗号化</div>
           </div>
           <div className="rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-brand-200">
@@ -251,7 +253,7 @@ export default function CommonKeyExperience() {
             <div className="text-[11px] text-gray-500">＃＄％‥</div>
           </div>
           <div className="text-center">
-            <div className="text-lg">🔑→🔓</div>
+            <div className="flex items-center justify-center gap-0.5 text-gray-700"><Icon name="key" className="h-5 w-5" /><span className="text-lg">→</span><Icon name="unlock" className="h-5 w-5" /></div>
             <div className="text-[10px] text-gray-400">同じ鍵で復号</div>
           </div>
           <div className="rounded-xl bg-emerald-50 px-3 py-2.5 ring-1 ring-emerald-200">
@@ -290,7 +292,7 @@ export default function CommonKeyExperience() {
           </table>
         </div>
         <p className="mt-2 text-xs leading-relaxed text-gray-500">
-          💡 実際のしくみ（HTTPSなど）は<b>両方のいいとこ取り</b>：<b>共通鍵を公開鍵で安全に届けて</b>、
+          <InlineIcon name="lightbulb" />実際のしくみ（HTTPSなど）は<b>両方のいいとこ取り</b>：<b>共通鍵を公開鍵で安全に届けて</b>、
           そのあとは速い共通鍵でやり取りします（ハイブリッド方式）。
         </p>
       </Panel>

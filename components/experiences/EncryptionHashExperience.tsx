@@ -57,7 +57,7 @@ const MEMBER_STEPS: MemberStep[] = [
     title: "住所は暗号化、パスワードはハッシュ化して保存",
     detail: (
       <>
-        住所は<b>🔑鍵で暗号化</b>、パスワードは<b>ハッシュ関数</b>に通して保存します。データベースに残るのは
+        住所は<b>鍵で暗号化</b>、パスワードは<b>ハッシュ関数</b>に通して保存します。データベースに残るのは
         <b>暗号文とハッシュ値だけ</b>。鍵はデータベースとは別の<b>金庫</b>に保管します。
       </>
     ),
@@ -225,7 +225,7 @@ function Encryption() {
       </div>
 
       <div className="mt-2 flex items-center gap-2 text-sm">
-        <span className="text-gray-500">🔑 鍵：</span>
+        <span className="text-gray-500">鍵：</span>
         {[1, 3, 5].map((k) => (
           <button
             key={k}
@@ -246,7 +246,7 @@ function Encryption() {
             mode === "cipher" ? "bg-brand-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
           }`}
         >
-          🔒 鍵で暗号化
+          鍵で暗号化
         </button>
         <button
           onClick={() => setMode("plain")}
@@ -254,7 +254,7 @@ function Encryption() {
             mode === "plain" ? "bg-emerald-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
           }`}
         >
-          🔑 鍵で復号
+          鍵で復号
         </button>
       </div>
 
@@ -267,7 +267,7 @@ function Encryption() {
         <div className="mt-1 break-all font-mono text-sm text-gray-800">{shown || "（空）"}</div>
       </div>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        🔒↔🔑 を押すと行き来できます。<b>鍵があれば必ず元に戻せる</b>のが暗号化（＝可逆）。通信(HTTPS)やデータ保存の秘匿に使います。
+        「鍵で暗号化」「鍵で復号」を押すと行き来できます。<b>鍵があれば必ず元に戻せる</b>のが暗号化（＝可逆）。通信(HTTPS)やデータ保存の秘匿に使います。
       </p>
     </Panel>
   );
@@ -324,8 +324,8 @@ function Hashing() {
         }`}
       >
         {same
-          ? "✅ 入力が同じ → ハッシュ値も完全に一致！（同じ材料なら必ず同じ味）"
-          : "❌ 入力が1文字でも違うと → まったく別の値（似てさえいない）"}
+          ? "入力が同じ → ハッシュ値も完全に一致！（同じ材料なら必ず同じ味）"
+          : "入力が1文字でも違うと → まったく別の値（似てさえいない）"}
       </div>
 
       <ul className="mt-3 space-y-1.5 text-xs text-gray-600">
@@ -362,8 +362,8 @@ export default function EncryptionHashExperience() {
             <thead>
               <tr className="bg-gray-100 text-gray-700">
                 <th className="px-3 py-2 text-left font-bold"> </th>
-                <th className="px-3 py-2 text-center font-bold text-brand-700">🔒 暗号化</th>
-                <th className="px-3 py-2 text-center font-bold text-emerald-700">🥤 ハッシュ化</th>
+                <th className="px-3 py-2 text-center font-bold text-brand-700">暗号化</th>
+                <th className="px-3 py-2 text-center font-bold text-emerald-700">ハッシュ化</th>
               </tr>
             </thead>
             <tbody>

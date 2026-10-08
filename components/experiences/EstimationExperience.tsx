@@ -10,6 +10,7 @@ import {
   StaffChangeStage,
 } from "./estimation/EstimationStages";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「見積り（FP法・人月）」専用の体験。
@@ -18,11 +19,11 @@ import { Panel, SectionTitle } from "./ui";
 //        → 途中で人数が変わる → 手法の使い分け → 確認5問
 // ============================================================================
 
-const FUNCS = [
-  { key: "input", emo: "⌨️", name: "入力（画面）", w: 4 },
-  { key: "output", emo: "🧾", name: "出力（帳票）", w: 5 },
-  { key: "query", emo: "🔍", name: "照会（検索）", w: 4 },
-  { key: "file", emo: "🗄️", name: "ファイル（データ）", w: 7 },
+const FUNCS: { key: string; icon: IconName; name: string; w: number }[] = [
+  { key: "input", icon: "monitor", name: "入力（画面）", w: 4 },
+  { key: "output", icon: "file-text", name: "出力（帳票）", w: 5 },
+  { key: "query", icon: "search", name: "照会（検索）", w: 4 },
+  { key: "file", icon: "database", name: "ファイル（データ）", w: 7 },
 ];
 
 function FpCounter() {
@@ -52,7 +53,7 @@ function FpCounter() {
             key={f.key}
             className="flex items-center gap-2 rounded-xl bg-gray-50 p-2.5 ring-1 ring-gray-200"
           >
-            <span className="text-lg">{f.emo}</span>
+            <Icon name={f.icon} className="h-5 w-5 text-gray-700" />
             <span className="text-sm font-bold text-gray-800">{f.name}</span>
             <span className="text-[10px] font-bold text-gray-400">×{f.w}点</span>
             <div className="ml-auto flex items-center gap-2">

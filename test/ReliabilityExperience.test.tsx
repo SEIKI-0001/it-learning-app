@@ -93,17 +93,17 @@ describe("ReliabilityExperience", () => {
     slide("MTBF", 180);
     expect(width(screen.getAllByTestId("seg-up")[0])).toBeGreaterThan(up0);
     expect(screen.getByTestId("avail-feedback")).toHaveTextContent("MTBF を 90h → 180h（長く）");
-    expect(screen.getByTestId("avail-feedback")).toHaveTextContent("⬆ 上がった");
+    expect(screen.getByTestId("avail-feedback")).toHaveTextContent("↑ 上がった");
     slide("MTTR", 30);
     expect(width(screen.getAllByTestId("seg-down")[0])).toBeGreaterThan(down0);
-    expect(screen.getByTestId("avail-feedback")).toHaveTextContent("⬇ 下がった");
+    expect(screen.getByTestId("avail-feedback")).toHaveTextContent("↓ 下がった");
     expect(screen.getByTestId("label-mtbf")).toHaveTextContent("MTBF 180h");
     expect(screen.getByTestId("label-mttr")).toHaveTextContent("MTTR 30h");
     expect(screen.getByTestId("avail-meter")).toHaveTextContent("0.857（85.7%）");
     expect(screen.getByTestId("uptime-acc")).toHaveTextContent("85.7%");
     slide("MTTR", 10);
     expect(screen.getByTestId("avail-feedback")).toHaveTextContent("早く直る");
-    expect(screen.getByTestId("avail-feedback")).toHaveTextContent("⬆ 上がった");
+    expect(screen.getByTestId("avail-feedback")).toHaveTextContent("↑ 上がった");
   });
 
   it("scrubbing the clock shows whether the machine is running or under repair", () => {
@@ -131,7 +131,7 @@ describe("ReliabilityExperience", () => {
     expect(screen.getByTestId("calc-answer")).toHaveTextContent("修理で止まっていた割合");
     expect(screen.getByTestId("calc-answer")).toHaveTextContent("90 ÷（90 ＋ 10）＝ 90 ÷ 100");
     click("0.9（90%）");
-    expect(screen.getByTestId("calc-answer")).toHaveTextContent("⭕ 正解！");
+    expect(screen.getByTestId("calc-answer")).toHaveTextContent("正解！");
   });
 
   it("serial/parallel starts from when the system stops, then computes", () => {

@@ -43,7 +43,7 @@ describe("TransactionExperience", () => {
 
     click("② Bに 500 足す →");
     expect(money()).toHaveAttribute("data-spot", "b");
-    click("✅ コミット（確定）");
+    click("コミット（確定）");
     expect(balance("a")).toHaveTextContent("500円");
     expect(balance("b")).toHaveTextContent("500円");
     expect(balance("b")).toHaveAttribute("data-settled", "true");
@@ -57,7 +57,7 @@ describe("TransactionExperience", () => {
     click("▶ 振込を始める");
     click("① Aから 500 引く →");
     click("② Bに 500 足す →");
-    click("↩️ ロールバック（取消）");
+    click("↩ ロールバック（取消）");
     expect(balance("a")).toHaveTextContent("1,000円");
     expect(balance("b")).toHaveTextContent("0円");
     expect(money()).toHaveAttribute("data-spot", "a");
@@ -68,12 +68,12 @@ describe("TransactionExperience", () => {
     renderDeck();
     click("▶ 振込を始める");
     click("① Aから 500 引く →");
-    click("⚡ 障害発生");
+    click("障害発生");
     expect(screen.getByTestId("tx-alert")).toHaveTextContent("障害発生");
     expect(money()).toHaveAttribute("data-money-state", "crashed");
     expect(balance("a")).toHaveTextContent("500円");
 
-    click("🔄 再起動する");
+    click("再起動する");
     expect(balance("a")).toHaveTextContent("1,000円");
     expect(balance("b")).toHaveTextContent("0円");
     expect(screen.getByTestId("tx-without")).toHaveTextContent("500円が消えてしまいます");

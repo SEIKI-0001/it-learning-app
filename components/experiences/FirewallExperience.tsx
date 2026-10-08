@@ -10,6 +10,7 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「ファイアウォール・VPN・ゼロトラスト」専用の体験。
@@ -256,7 +257,7 @@ function Firewall() {
                 <span
                   className={`flex-none rounded-full px-2 py-0.5 text-[11px] font-bold ${!seen ? "bg-gray-200 text-gray-500" : ok ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}
                 >
-                  {!seen ? "未確認" : ok ? "✅ アプリに到達" : t.stoppedAt === "fw" ? "⛔ FWで遮断" : "⛔ WAFで遮断"}
+                  {!seen ? "未確認" : ok ? "アプリに到達" : t.stoppedAt === "fw" ? "FWで遮断" : "WAFで遮断"}
                 </span>
               </div>
               {seen && <p className="mt-0.5 text-xs text-gray-600">{t.result}</p>}
@@ -267,7 +268,7 @@ function Firewall() {
 
       {allSeen && (
         <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" role="status" data-testid="gate-insight">
-          💡 FWとWAFは<b>止める場所も、見るものも違う</b>。FW＝境界で<b>ポート・IP</b>を見る／WAF＝アプリ直前で<b>中身</b>を見る。
+          <InlineIcon name="lightbulb" />FWとWAFは<b>止める場所も、見るものも違う</b>。FW＝境界で<b>ポート・IP</b>を見る／WAF＝アプリ直前で<b>中身</b>を見る。
           並び順は <b>インターネット → FW（境界）→ WAF（アプリ直前）→ アプリ</b>。
         </div>
       )}
@@ -298,8 +299,8 @@ function WafCompare() {
       </p>
 
       <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200">
-        🚪 <b>ファイアウォール</b>＝建物の入口の警備員（<b>どこから来た通信か</b>で通す/止める）<br />
-        🔎 <b>WAF</b>＝Web受付の持ち物検査（<b>リクエストの中身があやしくないか</b>を見る）
+        <InlineIcon name="door" /><b>ファイアウォール</b>＝建物の入口の警備員（<b>どこから来た通信か</b>で通す/止める）<br />
+        <InlineIcon name="search" /><b>WAF</b>＝Web受付の持ち物検査（<b>リクエストの中身があやしくないか</b>を見る）
       </div>
 
       <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-300">
@@ -307,8 +308,8 @@ function WafCompare() {
           <thead>
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-3 py-2 text-left font-bold"> </th>
-              <th className="px-3 py-2 text-center font-bold text-brand-700">🚪 ファイアウォール</th>
-              <th className="px-3 py-2 text-center font-bold text-emerald-700">🔎 WAF</th>
+              <th className="px-3 py-2 text-center font-bold text-brand-700">ファイアウォール</th>
+              <th className="px-3 py-2 text-center font-bold text-emerald-700">WAF</th>
             </tr>
           </thead>
           <tbody>
@@ -358,7 +359,7 @@ function WafCompare() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${it.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${it.ans}」。 `}
                   {it.why}
                 </p>
               )}
@@ -367,7 +368,7 @@ function WafCompare() {
         })}
       </ul>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        💡 役割が違うので<b>両方つかう</b>のがふつう。FWを通った正規の通信(ポート443など)に紛れた攻撃を、WAFが中身で止めます。
+        <InlineIcon name="lightbulb" />役割が違うので<b>両方つかう</b>のがふつう。FWを通った正規の通信(ポート443など)に紛れた攻撃を、WAFが中身で止めます。
       </p>
     </Panel>
   );
@@ -428,7 +429,7 @@ function Vpn() {
           aria-pressed={on}
           className={`rounded-lg py-2 text-sm font-bold transition active:scale-95 ${on ? "bg-emerald-600 text-white" : "text-gray-500 ring-1 ring-gray-300"}`}
         >
-          VPNあり 🔒
+          VPNあり
         </button>
       </div>
 
@@ -442,16 +443,16 @@ function Vpn() {
         disabled={sending}
         className="mt-3 w-full rounded-full bg-gray-900 px-4 py-2 text-xs font-bold text-white transition active:scale-95 disabled:opacity-50"
       >
-        {stop === "office" ? "📤 もう一度送る" : "📤 会議資料を会社へ送る"}
+        {stop === "office" ? "もう一度送る" : "会議資料を会社へ送る"}
       </button>
 
       <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${on ? "bg-emerald-50 ring-emerald-200" : "bg-rose-50 ring-rose-200"}`}>
-        <div className="text-xs font-bold text-gray-500">😈 盗聴者に見える内容（途中の公衆回線）：</div>
+        <div className="text-xs font-bold text-gray-500">盗聴者に見える内容（途中の公衆回線）：</div>
         <div className="mt-1 font-mono text-sm font-bold text-gray-800">
-          {on ? "🔒 暗号化トンネルの中（読めない）" : "会議資料.pdf／パスワード（丸見え）"}
+          {on ? "暗号化トンネルの中（読めない）" : "会議資料.pdf／パスワード（丸見え）"}
         </div>
         <div className={`mt-2 text-sm font-bold ${on ? "text-emerald-700" : "text-rose-700"}`}>
-          {on ? "✅ トンネルで暗号化 → 盗まれても読めない" : "⚠️ そのまま流れる → 公衆Wi-Fiなどで盗まれる危険"}
+          {on ? "トンネルで暗号化 → 盗まれても読めない" : "そのまま流れる → 公衆Wi-Fiなどで盗まれる危険"}
         </div>
       </div>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
@@ -515,14 +516,14 @@ export default function FirewallExperience() {
         <ZeroTrustModel />
         <div className="mt-3 grid grid-cols-1 gap-2">
           <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="text-sm font-bold text-gray-700">🏰 従来（境界防御）</div>
+            <div className="text-sm font-bold text-gray-700">従来（境界防御）</div>
             <p className="mt-1 text-sm text-gray-600">
               「外は危険／中（社内）は安全」とみなす。<b>一度入れば信用</b>される。
               → 中に侵入されると一気に弱い。
             </p>
           </div>
           <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
-            <div className="text-sm font-bold text-brand-700">🚦 ゼロトラスト</div>
+            <div className="text-sm font-bold text-brand-700">ゼロトラスト</div>
             <p className="mt-1 text-sm text-gray-700">
               <b>だれも・何も最初から信じない</b>。社内・社外を問わず、アクセスのたびに
               本人確認（認証）と権限確認（認可）を行う。

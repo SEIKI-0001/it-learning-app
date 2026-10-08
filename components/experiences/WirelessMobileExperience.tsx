@@ -7,6 +7,7 @@ import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 import { MobileDioramaScene, type MobileMode } from "./wireless/MobileDioramaScene";
 import { WifiDioramaScene, type WifiMode, type WifiPhase } from "./wireless/WifiDioramaScene";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「無線LAN・モバイル通信」専用の体験。
@@ -23,9 +24,9 @@ const WIFI_STEPS: { phase: WifiPhase; title: string }[] = [
 ];
 
 const MODES: { v: WifiMode; label: string; on: string }[] = [
-  { v: "open", label: "🔓 暗号化なし", on: "bg-rose-500 text-white" },
-  { v: "wpa", label: "🔒 WPA2/WPA3", on: "bg-emerald-500 text-white" },
-  { v: "wired", label: "🔌 比較：有線", on: "bg-gray-700 text-white" },
+  { v: "open", label: "暗号化なし", on: "bg-rose-500 text-white" },
+  { v: "wpa", label: "WPA2/WPA3", on: "bg-emerald-500 text-white" },
+  { v: "wired", label: "比較：有線", on: "bg-gray-700 text-white" },
 ];
 
 function wifiDetail(mode: WifiMode, phase: WifiPhase): ReactNode {
@@ -134,7 +135,7 @@ function WifiFlow() {
 
       {tried.has("open") && tried.has("wpa") && (
         <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="wifi-insight">
-          💡 電波は<b>誰でも受信できる</b>のが前提。だから守るのは「受信させないこと」ではなく<b>中身を暗号化（WPA2/WPA3）すること</b>。
+          <InlineIcon name="lightbulb" />電波は<b>誰でも受信できる</b>のが前提。だから守るのは「受信させないこと」ではなく<b>中身を暗号化（WPA2/WPA3）すること</b>。
           SSIDはただの名前なので、<b>同じ名前でも暗号化なしのことがある</b>点に注意。
         </div>
       )}
@@ -145,7 +146,7 @@ function WifiFlow() {
 const MOBILE_MODES: { v: MobileMode; label: string; on: string; name: string; d: ReactNode }[] = [
   {
     v: "5g",
-    label: "📶 5G",
+    label: "5G",
     on: "bg-sky-600 text-white",
     name: "5G",
     d: (
@@ -157,7 +158,7 @@ const MOBILE_MODES: { v: MobileMode; label: string; on: string; name: string; d:
   },
   {
     v: "tether",
-    label: "📲 テザリング",
+    label: "テザリング",
     on: "bg-amber-500 text-white",
     name: "テザリング",
     d: (
@@ -169,7 +170,7 @@ const MOBILE_MODES: { v: MobileMode; label: string; on: string; name: string; d:
   },
   {
     v: "mvno",
-    label: "💴 MVNO",
+    label: "MVNO",
     on: "bg-violet-600 text-white",
     name: "MVNO（格安SIM）",
     d: (
@@ -281,7 +282,7 @@ function WifiQuiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
 
 // ============================================================================
 // 「リスク管理」専用の体験。
@@ -20,18 +21,18 @@ function WhatIsRisk() {
       </p>
       <div className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gray-50 p-4 ring-1 ring-gray-200">
         <div className="text-center">
-          <div className="text-2xl">🎒</div>
+          <Icon name="package" className="mx-auto h-7 w-7 text-gray-700" />
           <div className="mt-1 text-[11px] font-bold text-gray-600">遠足の前日</div>
         </div>
         <span className="text-xl text-gray-300">→</span>
         <div className="text-center">
-          <div className="text-2xl">🌧️</div>
+          <Icon name="storm" className="mx-auto h-7 w-7 text-gray-700" />
           <div className="mt-1 text-[11px] font-bold text-gray-600">雨が降るかも</div>
           <div className="text-[10px] text-gray-400">＝リスク</div>
         </div>
         <span className="text-xl text-gray-300">→</span>
         <div className="text-center">
-          <div className="text-2xl">☂️</div>
+          <Icon name="shield" className="mx-auto h-7 w-7 text-gray-700" />
           <div className="mt-1 text-[11px] font-bold text-gray-600">傘を用意</div>
           <div className="text-[10px] text-gray-400">＝備え</div>
         </div>
@@ -188,7 +189,7 @@ function Responses() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
                   {it.why}
                 </p>
               )}

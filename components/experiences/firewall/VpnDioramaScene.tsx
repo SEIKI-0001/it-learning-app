@@ -79,7 +79,7 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
       tokens={{ doc: { at: STOP_AT[stop], path: PATHS[stop] } }}
       corner={
         <span className={styles.plate} data-on={vpn ? "true" : "false"}>
-          {vpn ? "VPN オン 🔒" : "VPN なし"}
+          {vpn ? "VPN オン" : "VPN なし"}
         </span>
       }
       world={
@@ -163,7 +163,7 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
               <div role="status" data-testid="vpn-eve-screen">
                 <Callout
                   tone={vpn ? "muted" : "danger"}
-                  title="😈 盗聴者の画面"
+                  title="盗聴者の画面"
                   body={vpn ? "9F2C 7A1E 04B8…" : "会議資料.pdf／パスワード"}
                 />
               </div>
@@ -173,7 +173,7 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
           {vpn && (
             <DioramaLabel at={{ x: 300, y: 230, z: 30 }} place="above" optional>
               <span data-testid="vpn-badge">
-                <Badge tone="ok">🔒 VPNトンネル</Badge>
+                <Badge tone="ok">VPNトンネル</Badge>
               </span>
             </DioramaLabel>
           )}
