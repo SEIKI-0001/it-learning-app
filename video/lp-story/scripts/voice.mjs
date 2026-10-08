@@ -84,7 +84,20 @@ async function synth(id, line) {
   return Buffer.from(await res.arrayBuffer());
 }
 
+// 読み違える語（例：過去問→カコトイ）はユーザー辞書で正す。台本の文字は変えずに済み、毎回同じ読みになる
+async function registerDictionary(words = []) {
+  const dict = await (await fetch(`${ENGINE}/user_dict`)).json();
+  for (const w of words) {
+    const exists = Object.entries(dict).find(([, d]) => d.surface === w.surface || d.surface === w.surface.normalize("NFKC"));
+    const q = new URLSearchParams({ surface: w.surface, pronunciation: w.pronunciation, accent_type: String(w.accent_type) });
+    const url = exists ? `${ENGINE}/user_dict_word/${exists[0]}?${q}` : `${ENGINE}/user_dict_word?${q}`;
+    const res = await fetch(url, { method: exists ? "PUT" : "POST" });
+    if (!res.ok) throw new Error(`辞書登録に失敗: ${w.surface} ${res.status}`);
+  }
+}
+
 await mkdir(outDir, { recursive: true });
+await registerDictionary(script.dictionary);
 const id = await speakerId(sampleSpeaker ?? script.speaker);
 const lines = sampleSpeaker ? script.lines.filter((l) => ["hook2", "pivot", "cta"].includes(l.id)) : script.lines;
 const manifest = { speaker: sampleSpeaker ?? script.speaker, lines: [] };
