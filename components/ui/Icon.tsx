@@ -43,6 +43,9 @@ export type IconName =
   | "file-text" // 過去問・書類
   | "play" // 動画
   | "camera" // 撮影・画像から読み取る
+  | "mic" // 音声で入力する
+  | "volume" // 読み上げ オン
+  | "volume-off" // 読み上げ オフ
   // ---- /learn テーマ識別アイコン(lib/themeIcons.ts で18テーマに割当) ----
   | "building" // 企業活動
   | "scale" // 法務・標準化
@@ -352,6 +355,24 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <path d="M4 8h3l1.6-2.4h6.8L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
       <circle cx="12" cy="13" r="3.5" />
+    </>
+  ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
+    </>
+  ),
+  volume: (
+    <>
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+      <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+    </>
+  ),
+  "volume-off": (
+    <>
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+      <path d="M16 9.5l5 5M21 9.5l-5 5" />
     </>
   ),
 };

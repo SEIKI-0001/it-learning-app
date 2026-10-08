@@ -39,6 +39,7 @@ import {
   settleMochitReflection,
   subscribeMochitConsult,
 } from "./mochitConsultStore";
+import { useSpeechInput, useSpeechOutput } from "./useMochitVoice";
 
 type Entry = MochitChatMessage & { id: number; intent?: MochitIntent };
 type Failure = { error: string; retry: { message: string; intent?: MochitIntent; source: SendSource } | null };
@@ -86,6 +87,10 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
     displayNameRef.current = displayName;
   });
 
+  const voiceIn = useSpeechInput(setInput);
+  const voiceOut = useSpeechOutput();
+  const spokenIdRef = useRef(0);
+
   const { page, question } = deriveContext(store, pathname);
   const reflectionOffered = store.reflection.status === "offered";
 
@@ -101,6 +106,8 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
     const history = entriesRef.current.map(({ role, text: t }) => ({ role, text: t }));
     const id = nextIdRef.current++;
     sendingRef.current = true;
+    voiceIn.stop();
+    if (voiceOut.enabled) voiceOut.unlock();
     setEntries((prev) => [...prev, { id, role: "user", text }]);
     setInput("");
     setFailure(null);
@@ -183,6 +190,23 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
     [],
   );
 
+  // 読み上げがオンなら、新しく届いたモチットの返事だけを読む（開き直しで過去の返事は読まない）
+  useEffect(() => {
+    const last = entries.at(-1);
+    if (!last || last.role !== "mochit" || last.id <= spokenIdRef.current) return;
+    spokenIdRef.current = last.id;
+    if (voiceOut.enabled && store.open) voiceOut.speak(last.text);
+  }, [entries, voiceOut, store.open]);
+
+  // 閉じたら声もマイクも止める（閉じ方はボタン・Esc・振り返り終了などいくつもある）
+  const { cancel: cancelSpeech } = voiceOut;
+  const { abort: abortListening } = voiceIn;
+  useEffect(() => {
+    if (store.open) return;
+    cancelSpeech();
+    abortListening();
+  }, [store.open, cancelSpeech, abortListening]);
+
   useEffect(() => {
     listRef.current?.scrollTo?.({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [entries.length, sending, failure]);
@@ -258,6 +282,20 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
         <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-2.5">
           <span aria-hidden className="text-base">🐾</span>
           <p className="flex-1 text-sm font-medium text-gray-900">{displayName}</p>
+          {voiceOut.supported && (
+            <button
+              type="button"
+              onClick={voiceOut.toggle}
+              aria-pressed={voiceOut.enabled}
+              aria-label="返事を声で読み上げる"
+              title={voiceOut.enabled ? "読み上げ：オン" : "読み上げ：オフ"}
+              className={`flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100 ${
+                voiceOut.enabled ? "text-brand-700" : "text-gray-400"
+              }`}
+            >
+              <Icon name={voiceOut.enabled ? "volume" : "volume-off"} className="h-5 w-5" aria-hidden />
+            </button>
+          )}
           <button
             type="button"
             onClick={close}
@@ -387,6 +425,14 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
           )}
         </div>
 
+        {(voiceIn.listening || voiceIn.error) && (
+          <p
+            role="status"
+            className={`border-t border-gray-100 px-4 pt-2 text-xs ${voiceIn.error ? "text-accent-700" : "text-brand-700"}`}
+          >
+            {voiceIn.error ?? "聞いてるよ…話し終わったら送信してね"}
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="flex items-end gap-2 border-t border-gray-100 px-3 py-2.5">
           <label htmlFor="mochit-consult-input" className="sr-only">
             {displayName}に聞く
@@ -397,11 +443,30 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
             rows={1}
             value={input}
             maxLength={MOCHIT_CHAT_LIMITS.messageMaxLength}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              if (voiceIn.error) voiceIn.clearError();
+            }}
             onKeyDown={handleInputKeyDown}
             placeholder={`${displayName}に聞いてみる…`}
             className="max-h-24 min-h-10 flex-1 resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-base leading-snug text-gray-900 outline-none placeholder:text-gray-400 focus:border-brand-400 sm:text-sm"
           />
+          {voiceIn.supported && (
+            <button
+              type="button"
+              onClick={() => (voiceIn.listening ? voiceIn.stop() : voiceIn.start(input))}
+              disabled={sending}
+              aria-pressed={voiceIn.listening}
+              aria-label={voiceIn.listening ? "音声入力を止める" : "声で話しかける"}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border disabled:opacity-40 ${
+                voiceIn.listening
+                  ? "animate-pulse border-brand-400 bg-brand-50 text-brand-700"
+                  : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Icon name="mic" className="h-5 w-5" aria-hidden />
+            </button>
+          )}
           <button
             type="submit"
             disabled={sending || input.trim().length === 0}
