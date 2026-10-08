@@ -130,16 +130,55 @@ export function relatedTermHref(term: string, selfTopicId: string): string | nul
 
 // ---- 表示文言 ---------------------------------------------------------------
 
-/** 例: "SWOT分析とは？わかりやすく解説【ITパスポート】"。 */
+/**
+ * 用語どうしの違いそのものが主題のテーマと、比べる用語。
+ * 「httpとhttpsの違い」「フローチャート アルゴリズム 違い」のような比較の検索に合わせて title を「AとBの違い」にする。
+ * 載せるのは、教材の本文が並べた用語をどれも説明しているテーマだけ（2026-10 に本文の出現を確認）。
+ */
+export const KAISETSU_COMPARISONS: Readonly<Record<string, readonly string[]>> = {
+  "tech-http-https": ["HTTP", "HTTPS"],
+  "tech-lan-wan": ["LAN", "WAN"],
+  "tech-algorithm-flowchart": ["アルゴリズム", "フローチャート"],
+  "tech-malware-phishing-ransomware": ["マルウェア", "フィッシング", "ランサムウェア"],
+  "strat-standardization": ["JIS", "ISO"],
+  "mgmt-system-design": ["外部設計", "内部設計"],
+  "strat-management-systems": ["CRM", "SCM", "ERP"],
+  "tech-auth-authz-mfa": ["認証", "認可"],
+  "tech-encryption-hash": ["暗号化", "ハッシュ化"],
+  "tech-ai-ml": ["AI", "機械学習"],
+  "tech-spreadsheet": ["相対参照", "絶対参照"],
+  "tech-cloud-models": ["SaaS", "PaaS", "IaaS"],
+  "strat-labor-laws": ["派遣", "請負"],
+  "tech-keys": ["主キー", "外部キー"],
+  "tech-data-structure": ["スタック", "キュー"],
+  "tech-transaction": ["コミット", "ロールバック"],
+  "tech-reliability-availability": ["MTBF", "MTTR"],
+  "strat-goal-evaluation": ["KGI", "KPI"],
+  "strat-financial-statements": ["貸借対照表", "損益計算書"],
+  "tech-firewall-vpn-zero-trust": ["ファイアウォール", "VPN", "ゼロトラスト"],
+};
+
+/** 例: "HTTPとHTTPSの違い"、"SaaS・PaaS・IaaSの違い"。比較のテーマでなければ null。 */
+export function kaisetsuComparisonLabel(topicId: string): string | null {
+  const terms = KAISETSU_COMPARISONS[topicId];
+  if (!terms) return null;
+  return `${terms.join(terms.length === 2 ? "と" : "・")}の違い`;
+}
+
+/** 例: "SWOT分析とは？わかりやすく解説【ITパスポート】"、"HTTPとHTTPSの違いとは？わかりやすく解説【ITパスポート】"。 */
 export function kaisetsuTitle(t: Topic): string {
-  return `${t.title}とは？わかりやすく解説【ITパスポート】`;
+  return `${kaisetsuComparisonLabel(t.id) ?? t.title}とは？わかりやすく解説【ITパスポート】`;
 }
 
 /** 検索結果に出る説明文。一覧用の要約＋過去問の数。 */
 export function kaisetsuDescription(t: Topic): string {
   const count = getKakomonForTopic(t.id).length + getRelatedKakomonForTopic(t.id).length;
   const kakomon = count > 0 ? `関連する公式過去問${count}問へのリンク付き。` : "";
-  return `${FIELD_LABELS[t.field]}「${t.title}」をITパスポート試験向けに解説。${t.summary}たとえ・試験のポイント・間違えやすい点・確認問題をまとめています。${kakomon}`;
+  const comparison = kaisetsuComparisonLabel(t.id);
+  const lead = comparison
+    ? `${comparison}をITパスポート試験向けに解説（${FIELD_LABELS[t.field]}「${t.title}」）。`
+    : `${FIELD_LABELS[t.field]}「${t.title}」をITパスポート試験向けに解説。`;
+  return `${lead}${t.summary}たとえ・試験のポイント・間違えやすい点・確認問題をまとめています。${kakomon}`;
 }
 
 // ---- 確認問題 ---------------------------------------------------------------
