@@ -270,20 +270,20 @@ export default function LandingPage() {
                 controls
                 playsInline
                 preload="none"
-                poster="/lp/story/story-v2-poster.webp"
+                poster="/lp/story/story-v3-poster.webp"
                 width={1920}
                 height={1080}
                 aria-label="理解する・測る・次を決める：約75秒のサービス紹介動画"
                 aria-describedby="story-note"
               >
-                <source src="/lp/story/story-v2.mp4" type="video/mp4" />
+                <source src="/lp/story/story-v3.mp4" type="video/mp4" />
                 <track
                   kind="captions"
-                  src="/lp/story/story-v2.ja.vtt"
+                  src="/lp/story/story-v3.ja.vtt"
                   srcLang="ja"
                   label="日本語"
                 />
-                <a href="/lp/story/story-v2.mp4">紹介動画を再生する</a>
+                <a href="/lp/story/story-v3.mp4">紹介動画を再生する</a>
               </video>
               <figcaption>
                 <span className="cap-title">約75秒でわかる、新しい勉強の進め方</span>

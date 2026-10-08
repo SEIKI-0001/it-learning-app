@@ -44,7 +44,7 @@
 cd video/lp-story
 npm ci
 npm run studio          # プレビュー（ブラウザで編集しながら確認）
-npm run render          # public/lp/story/story-v2.{mp4,ja.vtt} と story-v2-poster.webp を出力
+npm run render          # public/lp/story/story-v3.{mp4,ja.vtt} と story-v3-poster.webp を出力
 ```
 
 `finalize.sh` のポスター変換はリポジトリ本体の `sharp` を使うので、ルートでも `npm ci` 済みであること。

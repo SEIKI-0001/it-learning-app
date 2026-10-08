@@ -1,5 +1,6 @@
 {
   "speaker": "春日部つむぎ/ノーマル",
+  "dictionary": [{ "surface": "過去問", "pronunciation": "カコモン", "accent_type": 0 }],
   "defaults": { "speedScale": 1.0, "intonationScale": 1.2, "pitchScale": 0.0, "volumeScale": 1.0, "prePhonemeLength": 0.05, "postPhonemeLength": 0.1 },
   "lines": [
     { "id": "hook1", "needOnsets": 2, "scene": "hook", "text": "参考書を読んだ。過去問も、解いた。", "caption": "参考書を読んだ。過去問も、解いた。", "speedScale": 0.96 },

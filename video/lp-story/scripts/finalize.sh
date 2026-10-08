@@ -6,7 +6,7 @@
 set -e
 cd "$(dirname "$0")/.."
 DEST=../../public/lp/story
-NAME=story-v2
+NAME=story-v3
 mkdir -p "$DEST" out
 
 M=$(ffmpeg -hide_banner -nostats -i out/lp-story.mp4 -af loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json -f null - 2>&1 | sed -n '/^{/,/^}/p')
