@@ -7,6 +7,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「BCP（事業継続計画）」専用の体験。
@@ -17,9 +19,9 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 
 const PREPS = [
-  { id: "backup", emoji: "💾", name: "バックアップ", d: "データを別の場所にも保存" },
-  { id: "site", emoji: "🏢", name: "代替拠点", d: "本社がダメでも動ける場所" },
-  { id: "contact", emoji: "📞", name: "連絡手順", d: "誰が・どう連絡し合うか" },
+  { id: "backup", icon: "save", name: "バックアップ", d: "データを別の場所にも保存" },
+  { id: "site", icon: "building", name: "代替拠点", d: "本社がダメでも動ける場所" },
+  { id: "contact", icon: "message", name: "連絡手順", d: "誰が・どう連絡し合うか" },
 ] as const;
 
 type PrepId = (typeof PREPS)[number]["id"];
@@ -60,8 +62,8 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
   return [
     {
       title: "大地震発生：本社とシステムが停止",
-      view: { nodes: { ...base }, disaster: true, lanes: {}, staffToken: { at: "staff", text: "👥 社員", tone: "idle" }, dataToken: null, shake: true },
-      msg: "🌋 本社ビルは立入禁止、システムも停止。ここから先の復旧ルートは、事前の備えで決まります。",
+      view: { nodes: { ...base }, disaster: true, lanes: {}, staffToken: { at: "staff", text: "社員", tone: "idle" }, dataToken: null, shake: true },
+      msg: "本社ビルは立入禁止、システムも停止。ここから先の復旧ルートは、事前の備えで決まります。",
       ok: null,
     },
     {
@@ -70,11 +72,11 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
         nodes: { ...base, staff: on.contact ? "active" : "error" },
         disaster: true,
         lanes: {},
-        staffToken: on.contact ? { at: "staff", text: "📞 安否OK・担当決定", tone: "ok" } : { at: "staff", text: "❓ 誰に連絡？", tone: "ng" },
+        staffToken: on.contact ? { at: "staff", text: "安否OK・担当決定", tone: "ok" } : { at: "staff", text: "誰に連絡？", tone: "ng" },
         dataToken: null,
         shake: false,
       },
-      msg: on.contact ? `✅ ${RESULTS.contact.ok}（${fmtDays(DURATION.contact.on)}）` : `❌ ${RESULTS.contact.ng}（${DURATION.contact.off}日かかった）`,
+      msg: on.contact ? `${RESULTS.contact.ok}（${fmtDays(DURATION.contact.on)}）` : `${RESULTS.contact.ng}（${DURATION.contact.off}日かかった）`,
       ok: on.contact,
     },
     {
@@ -83,11 +85,11 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
         nodes: { ...base, staff: on.site ? "sending" : "error", alt: on.site ? "active" : "disabled" },
         disaster: true,
         lanes: on.site ? { move: "active" } : { move: "blocked" },
-        staffToken: on.site ? { at: "alt", text: "👥 代替拠点へ移動", tone: "ok" } : { at: "staff", text: "🚫 働く場所がない", tone: "ng" },
+        staffToken: on.site ? { at: "alt", text: "代替拠点へ移動", tone: "ok" } : { at: "staff", text: "働く場所がない", tone: "ng" },
         dataToken: null,
         shake: false,
       },
-      msg: on.site ? `✅ ${RESULTS.site.ok}（${fmtDays(DURATION.site.on)}）` : `❌ ${RESULTS.site.ng}。本社の再開を待つしかない（${DURATION.site.off}日）`,
+      msg: on.site ? `${RESULTS.site.ok}（${fmtDays(DURATION.site.on)}）` : `${RESULTS.site.ng}。本社の再開を待つしかない（${DURATION.site.off}日）`,
       ok: on.site,
     },
     {
@@ -96,15 +98,15 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
         nodes: { ...base, alt: on.site ? "active" : "disabled", vault: on.backup ? "sending" : "disabled", staff: on.site ? "idle" : "error" },
         disaster: true,
         lanes: on.backup ? { restore: on.site ? "active" : "blocked", move: on.site ? undefined : "blocked" } : {},
-        staffToken: on.site ? { at: "alt", text: "👥 代替拠点で作業", tone: "ok" } : { at: "staff", text: "🚫 働く場所がない", tone: "ng" },
+        staffToken: on.site ? { at: "alt", text: "代替拠点で作業", tone: "ok" } : { at: "staff", text: "働く場所がない", tone: "ng" },
         dataToken: on.backup
           ? on.site
-            ? { at: "alt", text: "💾 データ復元", tone: "ok" }
-            : { at: "vault", text: "💾 移す先を待つ", tone: "idle" }
-          : { at: "lost", text: "🫥 顧客データ消失", tone: "ng" },
+            ? { at: "alt", text: "データ復元", tone: "ok" }
+            : { at: "vault", text: "移す先を待つ", tone: "idle" }
+          : { at: "lost", text: "顧客データ消失", tone: "ng" },
         shake: false,
       },
-      msg: on.backup ? `✅ ${RESULTS.backup.ok}（${fmtDays(DURATION.backup.on)}）` : `❌ ${RESULTS.backup.ng}。一から作り直し（${DURATION.backup.off}日）`,
+      msg: on.backup ? `${RESULTS.backup.ok}（${fmtDays(DURATION.backup.on)}）` : `${RESULTS.backup.ng}。一から作り直し（${DURATION.backup.off}日）`,
       ok: on.backup,
     },
     {
@@ -113,8 +115,8 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
         nodes: { hq: "error", system: "error", staff: "idle", alt: on.site ? "active" : "disabled", vault: on.backup ? "idle" : "disabled" },
         disaster: true,
         lanes: {},
-        staffToken: on.site ? { at: "alt", text: "🏪 営業再開", tone: "ok" } : { at: "staff", text: "⏳ 再開待ち", tone: "ng" },
-        dataToken: on.backup ? (on.site ? { at: "alt", text: "💾 データOK", tone: "ok" } : { at: "vault", text: "💾 データは無事", tone: "idle" }) : { at: "lost", text: "🫥 顧客データ消失", tone: "ng" },
+        staffToken: on.site ? { at: "alt", text: "営業再開", tone: "ok" } : { at: "staff", text: "再開待ち", tone: "ng" },
+        dataToken: on.backup ? (on.site ? { at: "alt", text: "データOK", tone: "ok" } : { at: "vault", text: "データは無事", tone: "idle" }) : { at: "lost", text: "顧客データ消失", tone: "ng" },
         shake: false,
       },
       msg: "",
@@ -156,7 +158,7 @@ function RecoveryBar({ on, upTo }: { on: Prep; upTo: number }) {
       <div className="mt-1.5 grid grid-cols-3 gap-1 text-[10px] leading-tight">
         {STAGE_ORDER.map((id, i) => (
           <span key={id} className={i < upTo ? (on[id] ? "font-bold text-emerald-700" : "font-bold text-rose-700") : "text-gray-400"}>
-            {PREPS.find((p) => p.id === id)!.emoji} {DURATION[id].stage}
+            <Icon name={PREPS.find((p) => p.id === id)!.icon} className="mr-0.5 inline h-3 w-3 align-[-1px]" />{DURATION[id].stage}
             {i < upTo && `：${fmtDays(daysOf(id, on[id]))}`}
           </span>
         ))}
@@ -200,7 +202,7 @@ function Lab() {
     nodes: { hq: "active", system: "active", staff: "idle", alt: on.site ? "idle" : "disabled", vault: on.backup ? "idle" : "disabled" },
     disaster: false,
     lanes: {},
-    staffToken: { at: "hq", text: "👥 本社で仕事中", tone: "idle" },
+    staffToken: { at: "hq", text: "本社で仕事中", tone: "idle" },
     dataToken: null,
     shake: false,
   };
@@ -231,7 +233,7 @@ function Lab() {
                   active ? "bg-emerald-50 ring-emerald-400" : "bg-gray-50 ring-gray-200"
                 }`}
               >
-                <span className="text-2xl leading-none">{p.emoji}</span>
+                <Icon name={p.icon} className="h-7 w-7 flex-none text-gray-700" />
                 <span className="flex-1">
                   <span className="block text-sm font-bold text-gray-800">{p.name}</span>
                   <span className="block text-[11px] leading-relaxed text-gray-500">{p.d}</span>
@@ -248,7 +250,7 @@ function Lab() {
       {/* 地震発生ボタン */}
       {!struck ? (
         <button onClick={strike} className="mt-4 w-full rounded-xl bg-rose-600 py-3 text-base font-bold text-white transition active:scale-95">
-          🌋 大地震発生！
+          大地震発生！
         </button>
       ) : (
         <div className="mt-3 space-y-2">
@@ -297,9 +299,9 @@ function Lab() {
                         ok ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-rose-50 text-rose-800 ring-rose-200"
                       }`}
                     >
-                      <span className="flex-none">{ok ? "✅" : "❌"}</span>
+                      <Icon name={ok ? "check" : "x"} className={`mt-0.5 h-4 w-4 flex-none ${ok ? "text-emerald-600" : "text-rose-600"}`} />
                       <span>
-                        {p.emoji} {ok ? RESULTS[p.id].ok : RESULTS[p.id].ng}
+                        {ok ? RESULTS[p.id].ok : RESULTS[p.id].ng}
                       </span>
                     </li>
                   );
@@ -320,11 +322,11 @@ function Lab() {
       )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 結末を分けたのは<b>起きる前の備え</b>。これを計画としてまとめたものが
+        <InlineIcon name="lightbulb" />結末を分けたのは<b>起きる前の備え</b>。これを計画としてまとめたものが
         <b>BCP（事業継続計画）</b>です。災害の<b>あと</b>ではなく<b>前</b>に、<b>復旧の経路</b>を用意しておきます。
       </div>
       <div className="mt-2 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        🚃 たとえると、試験当日に電車が止まったときの<b>別ルートを前もって調べておく</b>のと同じです。
+        たとえると、試験当日に電車が止まったときの<b>別ルートを前もって調べておく</b>のと同じです。
       </div>
     </Panel>
   );
@@ -352,8 +354,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "⭕ 正しい" },
-                  { v: false, label: "❌ ちがう" },
+                  { v: true, label: "正しい" },
+                  { v: false, label: "ちがう" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -378,7 +380,7 @@ function Quiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

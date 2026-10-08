@@ -9,6 +9,7 @@ import { A_DESK, B_DESK, EVE_AT, SPOT, TwoOfficesWorld, laneTo } from "../crypto
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
 import type { EnvelopeStop, SigKeySpot, SignatureSceneProps } from "./signatureTypes";
 import styles from "./signature.module.css";
+import Icon from "@/components/ui/Icon";
 
 // ディジタル署名の図解（電子契約）：手前の取引先のオフィス（送信者）⇄ 公衆回線 ⇄ 奥のあなたのオフィス（受信者）。
 // 送信者は契約書から指紋（ハッシュ）を作り、自分の秘密鍵で署名して一緒に送る。
@@ -110,7 +111,7 @@ export function SignatureDioramaScene({
             >
               <span className={styles.envelope}>
                 <span className={styles.docPart}>
-                  <span className={styles.docTag}>📄 契約書</span>
+                  <span className={styles.docTag}>契約書</span>
                   {envelope.rewrite?.phase === "done" && (
                     <span className={styles.oldText} data-testid="rewritten-from">
                       {envelope.rewrite.from}
@@ -121,7 +122,7 @@ export function SignatureDioramaScene({
                   </span>
                   {envelope.rewrite && (
                     <span className={styles.rewriteNote} data-phase={envelope.rewrite.phase} data-testid="rewrite-note">
-                      {envelope.rewrite.phase === "grab" ? "😈 横取り！" : "😈✏️ 書き換えた"}
+                      {envelope.rewrite.phase === "grab" ? "横取り！" : "書き換えた"}
                     </span>
                   )}
                   {senderHash && (
@@ -134,11 +135,11 @@ export function SignatureDioramaScene({
                 {envelope.signed && (
                   <span className={styles.sealPart} data-forged={envelope.forged ? "true" : "false"}>
                     <span className={styles.sealIcon} aria-hidden>
-                      ✍
+                      <Icon name="pen" className="h-3.5 w-3.5" />
                     </span>
                     <span className="flex flex-col leading-none">
                       <span className={styles.sealTag}>署名</span>
-                      <span className={styles.sealHash}>🔒{envelope.sealHash}</span>
+                      <span className={styles.sealHash}><Icon name="lock" className="inline-block h-3 w-3 align-[-1px]" /> {envelope.sealHash}</span>
                     </span>
                     {envelope.rewrite?.phase === "done" && <span className={styles.sealKeep}>署名はそのまま</span>}
                   </span>
@@ -165,7 +166,7 @@ export function SignatureDioramaScene({
                 </div>
                 {verify.verdict ? (
                   <span className={styles.stamp} style={{ "--stamp": verify.verdict === "ok" ? "#059669" : "#E11D48" } as CSSProperties}>
-                    {verify.verdict === "ok" ? "✅" : "❌"} {VERDICT[verify.verdict].stamp}
+                    <Icon name={verify.verdict === "ok" ? "check" : "x"} className="inline-block h-4 w-4 align-[-3px]" /> {VERDICT[verify.verdict].stamp}
                     <span>{VERDICT[verify.verdict].sub}</span>
                   </span>
                 ) : (

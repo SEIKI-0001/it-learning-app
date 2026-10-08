@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Arrow, Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「エンジニアリングシステム」。暗記ではなく「設計データが工程を流れていく」で覚える。静的な図解のみ。
 //   ① 流れ図：CAD（設計）→ CAE（解析、NGなら設計へ戻る）→ CAM（製造）を、CIM（工場全体の統合）の枠が包む
@@ -134,7 +135,7 @@ function FlowPanel() {
       </div>
 
       <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
-        💡 CAEのおかげで、<b className="text-gray-800">試作品を何度も作って壊さなくても</b>弱い所がわかる。直すなら設計（CAD）へ戻ります。
+        <InlineIcon name="lightbulb" />CAEのおかげで、<b className="text-gray-800">試作品を何度も作って壊さなくても</b>弱い所がわかる。直すなら設計（CAD）へ戻ります。
       </p>
     </Panel>
   );
@@ -233,7 +234,7 @@ function ConcurrentPanel() {
         </div>
       </div>
       <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
-        💡 製造の担当が設計の段階から加わるので、「この形は作れない」が<b className="text-gray-800">早く見つかり、手戻りも減る</b>。
+        <InlineIcon name="lightbulb" />製造の担当が設計の段階から加わるので、「この形は作れない」が<b className="text-gray-800">早く見つかり、手戻りも減る</b>。
       </p>
     </Panel>
   );

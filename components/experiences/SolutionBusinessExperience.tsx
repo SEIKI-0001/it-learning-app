@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「ソリューションビジネス」専用の体験。
@@ -15,21 +17,21 @@ type Route = "product" | "solution";
 // 課題解決ルートの段階
 const SOLUTION_STEPS = [
   {
-    emo: "👂",
+    icon: "eye" as IconName,
     label: "課題を聞く",
     customer: "「通学が長くて机に向かう時間がなくて…紙の手帳も続かなかったんです」",
     note: "悩みの正体が見えてきた：①スキマ時間しかない ②紙だと続かない",
   },
   {
-    emo: "🧩",
+    icon: "puzzle" as IconName,
     label: "組み合わせる",
     customer: null,
     note: "スマホの学習アプリ＋通知リマインド＋週1の使い方サポート——ITとサービスを組み合わせて解決策を設計。",
   },
   {
-    emo: "📝",
+    icon: "pen" as IconName,
     label: "提案する",
-    customer: "「電車の中でできて、続く仕組みまで付いてるんですね。それなら解決しそう！😊」",
+    customer: "「電車の中でできて、続く仕組みまで付いてるんですね。それなら解決しそう！」",
     note: "商品ではなく「課題が解けた状態」を届けられた。これがソリューションビジネス。",
   },
 ];
@@ -61,7 +63,7 @@ function SalesLab() {
 
       {/* お客の悩み */}
       <div className="mt-3 flex items-start gap-2">
-        <span className="text-2xl">🙍</span>
+        <Icon name="user" className="h-7 w-7 shrink-0 text-gray-600" />
         <div className="flex-1 rounded-xl rounded-tl-sm bg-gray-100 px-3 py-2.5 text-sm leading-relaxed text-gray-700">
           「うーん…勉強の時間がうまく作れなくて困ってるんです…」
         </div>
@@ -75,7 +77,7 @@ function SalesLab() {
             route === "product" ? "bg-gray-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
           }`}
         >
-          📦 「この人気の手帳、
+          「この人気の手帳、
           <br />
           いかがですか！」{tried.has("product") && " ✓"}
         </button>
@@ -85,7 +87,7 @@ function SalesLab() {
             route === "solution" ? "bg-emerald-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
           }`}
         >
-          👂 「くわしく
+          「くわしく
           <br />
           聞かせてください」{tried.has("solution") && " ✓"}
         </button>
@@ -95,13 +97,13 @@ function SalesLab() {
       {route === "product" && (
         <div className="mt-3 rounded-xl bg-rose-50 p-3 ring-1 ring-rose-200">
           <div className="flex items-start gap-2">
-            <span className="text-2xl">🙍</span>
+            <Icon name="user" className="h-7 w-7 shrink-0 text-gray-600" />
             <div className="flex-1 rounded-xl rounded-tl-sm bg-white px-3 py-2 text-sm leading-relaxed text-gray-700 ring-1 ring-rose-100">
-              「…手帳はもう持ってるんです。紙だと続かなくて。これじゃないんだよなあ…😕」
+              「…手帳はもう持ってるんです。紙だと続かなくて。これじゃないんだよなあ…」
             </div>
           </div>
           <p className="mt-2 text-xs leading-relaxed text-rose-800">
-            ❌ <b>モノ売り（製品販売）</b>：悩みを聞かずに商品単体をすすめたので、外れてしまった。
+            <InlineIcon name="x" className="text-rose-600" /><b>モノ売り（製品販売）</b>：悩みを聞かずに商品単体をすすめたので、外れてしまった。
             製品は渡せても、<b>課題が解けるとは限らない</b>。
           </p>
         </div>
@@ -123,21 +125,21 @@ function SalesLab() {
                       : "bg-white text-gray-400 ring-1 ring-gray-200"
                 }`}
               >
-                {s.emo} {s.label}
+                <Icon name={s.icon} className="mr-1 inline-block h-3 w-3 align-[-2px]" />{s.label}
               </div>
             ))}
           </div>
 
           {SOLUTION_STEPS[step].customer && (
             <div className="mt-2.5 flex items-start gap-2">
-              <span className="text-2xl">{step === SOLUTION_STEPS.length - 1 ? "🙆" : "🙍"}</span>
+              <Icon name="user" className={`h-7 w-7 shrink-0 ${step === SOLUTION_STEPS.length - 1 ? "text-emerald-600" : "text-gray-600"}`} />
               <div className="flex-1 rounded-xl rounded-tl-sm bg-white px-3 py-2 text-sm leading-relaxed text-gray-700 ring-1 ring-emerald-100">
                 {SOLUTION_STEPS[step].customer}
               </div>
             </div>
           )}
           <p className="mt-2 text-xs leading-relaxed text-emerald-900">
-            {SOLUTION_STEPS[step].emo} <b>{SOLUTION_STEPS[step].label}</b>：{SOLUTION_STEPS[step].note}
+            <Icon name={SOLUTION_STEPS[step].icon} className="mr-1 inline-block h-3.5 w-3.5 align-[-2px]" /><b>{SOLUTION_STEPS[step].label}</b>：{SOLUTION_STEPS[step].note}
           </p>
 
           {step < SOLUTION_STEPS.length - 1 ? (
@@ -149,7 +151,7 @@ function SalesLab() {
             </button>
           ) : (
             <div className="mt-2.5 rounded-lg bg-white px-3 py-2 text-center text-sm font-bold text-emerald-700 ring-1 ring-emerald-200">
-              🎉 課題解決！ 聞く → 組み合わせる → 提案する
+              課題解決！ 聞く → 組み合わせる → 提案する
             </div>
           )}
         </div>
@@ -157,7 +159,7 @@ function SalesLab() {
 
       {bothTried && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          💡 <b>気づいた？</b>　同じお客でも、<b>商品から始めると外れ、課題から始めると解決</b>した。
+          <InlineIcon name="lightbulb" /><b>気づいた？</b>　同じお客でも、<b>商品から始めると外れ、課題から始めると解決</b>した。
           顧客の課題をITやサービスを<b>組み合わせて</b>解決するのが<b>ソリューションビジネス</b>です。
         </div>
       )}
@@ -172,7 +174,7 @@ function SalesLab() {
       )}
 
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        📌 システム構築を請け負う <b>SI（システムインテグレーション）</b> や、業務を外部に任せる
+        <InlineIcon name="flag" />システム構築を請け負う <b>SI（システムインテグレーション）</b> や、業務を外部に任せる
         <b>アウトソーシング</b> も、課題解決を支える形態です。
       </div>
     </Panel>
@@ -201,8 +203,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "🧩 らしい" },
-                  { v: false, label: "📦 ちがう" },
+                  { v: true, label: "らしい" },
+                  { v: false, label: "ちがう" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -227,7 +229,7 @@ function Quiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

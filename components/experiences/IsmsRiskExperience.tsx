@@ -1,6 +1,8 @@
 "use client";
 
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「情報セキュリティ管理（ISMS・リスクアセスメント）」専用の解説。どれも操作不要の静的な図。
@@ -91,11 +93,11 @@ function RiskMatrix() {
   );
 }
 
-const TREATMENTS = [
-  { emo: "🚫", name: "回避", mean: "リスクのある活動そのものをやめる", ex: "危険な古いサービスの提供を終了する", fit: "被害が大きすぎて、続ける価値に見合わないとき" },
-  { emo: "🛡️", name: "低減", mean: "対策で起こりやすさ・被害を小さくする", ex: "暗号化・バックアップ・社員教育", fit: "右上（リスク大）への基本の対応" },
-  { emo: "🤝", name: "移転", mean: "損失を他者に肩代わりしてもらう", ex: "サイバー保険に入る・運用を外部に委託する", fit: "起きにくいが、起きると被害が大きいとき" },
-  { emo: "😌", name: "受容", mean: "対策せず、そのまま受け入れる", ex: "表示崩れ程度なら様子を見る", fit: "左下（リスク小）で、対策費が見合わないとき" },
+const TREATMENTS: { icon: IconName; name: string; mean: string; ex: string; fit: string }[] = [
+  { icon: "ban", name: "回避", mean: "リスクのある活動そのものをやめる", ex: "危険な古いサービスの提供を終了する", fit: "被害が大きすぎて、続ける価値に見合わないとき" },
+  { icon: "shield", name: "低減", mean: "対策で起こりやすさ・被害を小さくする", ex: "暗号化・バックアップ・社員教育", fit: "右上（リスク大）への基本の対応" },
+  { icon: "handshake", name: "移転", mean: "損失を他者に肩代わりしてもらう", ex: "サイバー保険に入る・運用を外部に委託する", fit: "起きにくいが、起きると被害が大きいとき" },
+  { icon: "smile", name: "受容", mean: "対策せず、そのまま受け入れる", ex: "表示崩れ程度なら様子を見る", fit: "左下（リスク小）で、対策費が見合わないとき" },
 ];
 
 function Treatments() {
@@ -106,7 +108,7 @@ function Treatments() {
         {TREATMENTS.map((t) => (
           <div key={t.name} className="rounded-xl p-3 ring-1 ring-gray-200" data-treatment={t.name}>
             <p className="flex items-center gap-1.5 text-lg font-bold text-gray-900">
-              <span aria-hidden>{t.emo}</span>
+              <Icon name={t.icon} aria-hidden className="h-5 w-5 text-brand-600" />
               {t.name}
             </p>
             <p className="mt-1 text-[15px] font-bold leading-snug text-gray-800">{t.mean}</p>
@@ -147,7 +149,7 @@ function IsmsPdca() {
         ))}
       </div>
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        📌 ISMSの国際規格は <b>ISO/IEC 27001</b>。組織の方針をまとめた文書が
+        <InlineIcon name="flag" />ISMSの国際規格は <b>ISO/IEC 27001</b>。組織の方針をまとめた文書が
         <b>情報セキュリティポリシー</b>です。
       </div>
     </Panel>

@@ -16,6 +16,7 @@ import type {
   RoleMapDiagram,
   TableRelationDiagram,
 } from "@/types/content";
+import { InlineIcon, Pictogram } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 図解レンダラ。DiagramSpec（構造化データ）を受け取り、type ごとに描画する。
@@ -93,11 +94,7 @@ function CardsView({ spec }: { spec: CardsDiagram }) {
             key={i}
             className="flex items-start gap-3 rounded-xl bg-gray-50 px-3 py-3"
           >
-            {item.emoji && (
-              <span className="text-2xl leading-none" aria-hidden>
-                {item.emoji}
-              </span>
-            )}
+            {item.icon && <Pictogram name={item.icon} />}
             <div>
               <p className="text-sm font-bold text-gray-800">{item.title}</p>
               <p className="mt-0.5 text-sm text-gray-600">{item.body}</p>
@@ -223,11 +220,7 @@ function MatrixView({ spec }: { spec: MatrixDiagram }) {
                     {cell ? (
                       <>
                         <p className="mt-1 text-sm font-bold text-gray-800">
-                          {cell.emoji && (
-                            <span className="mr-1" aria-hidden>
-                              {cell.emoji}
-                            </span>
-                          )}
+                          {cell.icon && <InlineIcon name={cell.icon} className="text-brand-600" />}
                           {cell.title}
                         </p>
                         <p className="mt-1 text-xs leading-relaxed text-gray-600">
@@ -257,11 +250,7 @@ function LayerView({ spec }: { spec: LayerDiagram }) {
           <li key={i}>
             <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
               <p className="text-sm font-bold text-gray-800">
-                {layer.emoji && (
-                  <span className="mr-1.5" aria-hidden>
-                    {layer.emoji}
-                  </span>
-                )}
+                {layer.icon && <InlineIcon name={layer.icon} className="text-brand-600" />}
                 {layer.title}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-gray-600">
@@ -293,11 +282,7 @@ function RelationshipView({ spec }: { spec: RelationshipDiagram }) {
             className="rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-100"
           >
             <p className="text-sm font-bold text-gray-800">
-              {node.emoji && (
-                <span className="mr-1.5" aria-hidden>
-                  {node.emoji}
-                </span>
-              )}
+              {node.icon && <InlineIcon name={node.icon} className="text-brand-600" />}
               {node.label}
             </p>
             {node.body && (
@@ -611,7 +596,7 @@ function QuadrantCell({
   return (
     <div className={`rounded-xl px-2.5 py-2.5 ring-1 ${tone}`}>
       <p className="text-xs font-bold text-gray-800">
-        {cell.emoji && <span aria-hidden>{cell.emoji} </span>}
+        {cell.icon && <InlineIcon name={cell.icon} className="text-brand-600" />}
         {cell.title}
       </p>
       <p className="mt-0.5 text-[11px] leading-snug text-gray-600">
@@ -701,7 +686,7 @@ function RelationView({ spec }: { spec: RelationDiagram }) {
             className="rounded-xl bg-gray-50 px-3 py-2.5 text-center ring-1 ring-gray-200"
           >
             <p className="text-sm font-bold text-gray-800">
-              {node.emoji && <span aria-hidden>{node.emoji} </span>}
+              {node.icon && <InlineIcon name={node.icon} className="text-brand-600" />}
               {node.label}
             </p>
             {node.body && (

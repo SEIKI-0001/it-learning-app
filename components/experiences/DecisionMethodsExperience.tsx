@@ -6,6 +6,8 @@ import { Note, Replay } from "./calc/CalcParts";
 import { useBeats } from "./calc/useBeats";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「意思決定と問題解決の手法」。手法の暗記ではなく「どの役割の道具か」で見分ける。
 //   ① 役割マップ：発散 → 整理 → 重点把握 → 原因分析 の流れ＋別レーンの「意見収束（デルファイ法）」
@@ -196,14 +198,12 @@ function DivergePanel() {
           <svg viewBox="0 0 140 90" className="mt-1 w-full mx-auto max-w-[14rem]" role="img" aria-label="4人が机を囲み、次々に発言している">
             <rect x="45" y="35" width="50" height="22" rx="4" className="fill-gray-200" />
             {[
-              [30, 46, "🙂"],
-              [110, 46, "🙂"],
-              [70, 80, "🙂"],
-              [70, 18, "🙂"],
-            ].map(([x, y, e], i) => (
-              <text key={i} x={x} y={y} textAnchor="middle" fontSize="16">
-                {e}
-              </text>
+              [30, 46],
+              [110, 46],
+              [70, 80],
+              [70, 18],
+            ].map(([x, y], i) => (
+              <Icon key={i} name="smile" x={x - 8} y={y - 13} width={16} height={16} className="text-gray-600" />
             ))}
             {[
               [4, 14, "駐車場!"],
@@ -292,7 +292,7 @@ function AffinityPanel() {
           </div>
         ))}
       </div>
-      {grouped && <Note>💡 数を数えるのではなく、<b>言葉の意味の近さ</b>でまとめるのが親和図法。</Note>}
+      {grouped && <Note><InlineIcon name="lightbulb" />数を数えるのではなく、<b>言葉の意味の近さ</b>でまとめるのが親和図法。</Note>}
       <Replay onClick={replay} hidden={reducedMotion} />
     </Panel>
   );
@@ -390,7 +390,7 @@ function ParetoPanel() {
         </div>
         {beat >= 3 && (
           <Note>
-            💡 上位2項目だけで全体の約7割、3項目で8割超。<b>まず「待ち時間」から手を付ける</b>と一番効く――これがパレート図の使い方（ABC分析にも使う）。
+            <InlineIcon name="lightbulb" />上位2項目だけで全体の約7割、3項目で8割超。<b>まず「待ち時間」から手を付ける</b>と一番効く――これがパレート図の使い方（ABC分析にも使う）。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -465,7 +465,7 @@ function FishbonePanel() {
         </div>
         {beat >= 3 && (
           <Note>
-            💡 パレート図は<b>「どれが多いか」</b>、特性要因図は<b>「なぜ起きるか」</b>。形（棒グラフ／魚の骨）で見分けられます。
+            <InlineIcon name="lightbulb" />パレート図は<b>「どれが多いか」</b>、特性要因図は<b>「なぜ起きるか」</b>。形（棒グラフ／魚の骨）で見分けられます。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -537,7 +537,7 @@ function DelphiPanel() {
         </div>
       </div>
       <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
-        💡 案を<b className="text-gray-800">広げる</b>のではなく、専門家の予測を<b className="text-gray-800">1つにまとめていく</b>手法。匿名なので、声の大きい人に引っぱられません。
+        <InlineIcon name="lightbulb" />案を<b className="text-gray-800">広げる</b>のではなく、専門家の予測を<b className="text-gray-800">1つにまとめていく</b>手法。匿名なので、声の大きい人に引っぱられません。
       </p>
     </Panel>
   );

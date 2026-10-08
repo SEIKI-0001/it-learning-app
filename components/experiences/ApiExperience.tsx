@@ -7,6 +7,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「API」専用の体験。
@@ -26,31 +28,31 @@ function Restaurant() {
 
       <div className="mt-4 flex items-stretch justify-center gap-1.5">
         <div className="flex-1 rounded-xl border-2 border-brand-300 bg-brand-50 px-1 py-3 text-center">
-          <div className="text-2xl">🙋</div>
+          <Icon name="user" className="mx-auto h-7 w-7 text-brand-700" />
           <div className="mt-1 text-xs font-bold text-brand-700">客</div>
           <div className="text-[10px] text-gray-500">あなたのアプリ</div>
         </div>
         <span className="self-center text-lg text-gray-300">→</span>
         <div className="flex-1 rounded-xl border-2 border-emerald-400 bg-emerald-50 px-1 py-3 text-center">
-          <div className="text-2xl">🧑‍🍳</div>
+          <Icon name="clipboard" className="mx-auto h-7 w-7 text-emerald-700" />
           <div className="mt-1 text-xs font-bold text-emerald-700">注文口＝API</div>
           <div className="text-[10px] text-gray-500">決まった頼み方</div>
         </div>
         <span className="self-center text-lg text-gray-300">→</span>
         <div className="flex-1 rounded-xl border-2 border-gray-300 bg-gray-100 px-1 py-3 text-center">
-          <div className="text-2xl">🍳</div>
+          <Icon name="factory" className="mx-auto h-7 w-7 text-gray-700" />
           <div className="mt-1 text-xs font-bold text-gray-700">厨房</div>
           <div className="text-[10px] text-gray-500">サービス内部</div>
         </div>
       </div>
 
       <div className="mt-4 space-y-2 text-sm leading-relaxed text-gray-600">
-        <p>🙋 客（アプリ）は<b className="text-gray-800">厨房の中を知らなくてもいい</b>。注文口に頼むだけ。</p>
-        <p>🧑‍🍳 注文口（API）が<b className="text-gray-800">決まった形式</b>で受け付け、厨房に伝える。</p>
-        <p>🍳 厨房（サービス内部）は<b className="text-gray-800">外から見えない</b>。中身を変えても注文口が同じなら客は困らない。</p>
+        <p>客（アプリ）は<b className="text-gray-800">厨房の中を知らなくてもいい</b>。注文口に頼むだけ。</p>
+        <p>注文口（API）が<b className="text-gray-800">決まった形式</b>で受け付け、厨房に伝える。</p>
+        <p>厨房（サービス内部）は<b className="text-gray-800">外から見えない</b>。中身を変えても注文口が同じなら客は困らない。</p>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 だからAPIは「<b>機能を使うための決まった入口</b>」。内部を全部公開するわけではありません。
+        <InlineIcon name="lightbulb" />だからAPIは「<b>機能を使うための決まった入口</b>」。内部を全部公開するわけではありません。
       </div>
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         次の解説では、この3者を <b>App → API → サービス</b> の模型に置き換えて、実際の頼みごとの流れを追います。
@@ -115,7 +117,7 @@ const FLOW_STEPS: FlowStep[] = [
     nodes: { app: "active", api: "idle", svc: "idle" },
     lanes: { res2: "active" },
     capsule: { stop: "appBack", ...RESPONSE },
-    screen: "東京 ☀ 25℃",
+    screen: "東京 晴れ 25℃",
     detail: <>アプリが受け取った気温を<b>画面に表示</b>。天気機能を自分で作らずに使えた！</>,
   },
 ];
@@ -140,9 +142,9 @@ function Flow() {
       </p>
 
       <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold" aria-label="たとえとの対応">
-        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700 ring-1 ring-brand-200">🙋 客 ＝ App</span>
-        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 ring-1 ring-emerald-200">🧑‍🍳 注文口 ＝ API</span>
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700 ring-1 ring-gray-200">🍳 厨房 ＝ サービス内部</span>
+        <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700 ring-1 ring-brand-200">客 ＝ App</span>
+        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-700 ring-1 ring-emerald-200">注文口 ＝ API</span>
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-gray-700 ring-1 ring-gray-200">厨房 ＝ サービス内部</span>
       </div>
 
       <div className="mt-3 min-w-0">
@@ -209,7 +211,7 @@ function Flow() {
           bypass ? "bg-white text-gray-700 ring-1 ring-gray-300" : "bg-white text-rose-700 ring-1 ring-rose-300"
         }`}
       >
-        {bypass ? "↩ 正しいルート（API経由）に戻す" : "🚫 APIを通さず、内部に直接アクセスしてみる"}
+        {bypass ? "↩ 正しいルート（API経由）に戻す" : "APIを通さず、内部に直接アクセスしてみる"}
       </button>
 
       <div className="mt-3 rounded-xl bg-gray-50 px-4 py-2.5 text-xs leading-relaxed text-gray-500 ring-1 ring-gray-200">
@@ -241,8 +243,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-1.5">
                 {[
-                  { v: true, label: "⭕ 合う" },
-                  { v: false, label: "❌ ちがう" },
+                  { v: true, label: "合う" },
+                  { v: false, label: "ちがう" },
                 ].map((o) => {
                   const picked = chosen === o.v;
                   const tone = !has
@@ -267,7 +269,7 @@ function Quiz() {
               </div>
               {has && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

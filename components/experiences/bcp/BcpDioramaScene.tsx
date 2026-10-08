@@ -137,7 +137,7 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
           {disaster && (
             <DioramaLabel at={{ ...AT.hq, z: 190 }} place="above">
               <span role="status" className={styles.quake}>
-                🌋 大地震
+                大地震
               </span>
             </DioramaLabel>
           )}
@@ -176,7 +176,7 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
           </DioramaLabel>
           <DioramaLabel token="staff" dz={-4} place="below" optional>
             <span className={styles.label} data-present={prep.contact ? "true" : "false"}>
-              社員{prep.contact ? " 📞連絡網あり" : ""}
+              社員{prep.contact ? " ・連絡網あり" : ""}
             </span>
           </DioramaLabel>
         </>

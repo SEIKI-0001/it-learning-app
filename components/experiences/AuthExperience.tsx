@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Icon, { type IconName } from "@/components/ui/Icon";
 import { AuthFlow, PEOPLE, PLACES, type Where, type Who } from "./auth/AuthFlow";
 import styles from "./auth/auth.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「認証・認可・多要素認証」専用の体験。
@@ -56,7 +58,7 @@ function Order() {
             onClick={() => pick(() => setWhere(x.id))}
             className={`rounded-lg px-1 py-1.5 text-[11px] font-bold transition active:scale-95 ${where === x.id ? "bg-gray-900 text-white" : "text-gray-700 ring-1 ring-gray-300"}`}
           >
-            {x.icon} {x.label}
+            <span className="inline-flex items-center justify-center gap-1"><Icon name={x.icon} className="h-3.5 w-3.5" />{x.label}</span>
           </button>
         ))}
       </div>
@@ -138,7 +140,7 @@ function Classifier() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${it.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${it.ans}」。 `}
                   {it.why}
                 </p>
               )}
@@ -152,9 +154,9 @@ function Classifier() {
 
 // ③ 多要素認証 -----------------------------------------------------------
 const FACTORS = [
-  { cat: "知識（記憶）", emo: "🧠", items: [{ id: "pw", label: "パスワード" }, { id: "pin", label: "PIN・暗証番号" }] },
-  { cat: "所持（持ち物）", emo: "📱", items: [{ id: "app", label: "スマホ認証アプリ" }, { id: "ic", label: "ICカード" }] },
-  { cat: "生体（からだ）", emo: "🖐", items: [{ id: "finger", label: "指紋" }, { id: "face", label: "顔" }] },
+  { cat: "知識（記憶）", icon: "lightbulb" as IconName, items: [{ id: "pw", label: "パスワード" }, { id: "pin", label: "PIN・暗証番号" }] },
+  { cat: "所持（持ち物）", icon: "smartphone" as IconName, items: [{ id: "app", label: "スマホ認証アプリ" }, { id: "ic", label: "ICカード" }] },
+  { cat: "生体（からだ）", icon: "fingerprint" as IconName, items: [{ id: "finger", label: "指紋" }, { id: "face", label: "顔" }] },
 ];
 const CAT_OF: Record<string, string> = {};
 FACTORS.forEach((g) => g.items.forEach((it) => (CAT_OF[it.id] = g.cat)));
@@ -181,7 +183,10 @@ function Mfa() {
         {FACTORS.map((g) => (
           <div key={g.cat}>
             <div className="mb-1 text-xs font-bold text-gray-500">
-              {g.emo} {g.cat}
+              <span className="inline-flex items-center gap-1">
+                <Icon name={g.icon} className="h-3.5 w-3.5" />
+                {g.cat}
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {g.items.map((it) => {
@@ -212,7 +217,10 @@ function Mfa() {
             return (
               <div key={g.cat} className="min-h-[64px] p-1.5 text-center" data-testid={`mfa-slot-${g.cat}`} data-count={inSlot.length}>
                 <div className="text-[10px] font-bold text-gray-500">
-                  {g.emo} {g.cat.split("（")[0]}
+                  <span className="inline-flex items-center justify-center gap-1">
+                    <Icon name={g.icon} className="h-3 w-3" />
+                    {g.cat.split("（")[0]}
+                  </span>
                 </div>
                 <div className="mt-1 space-y-0.5">
                   {inSlot.map((id, i) => (
@@ -231,9 +239,9 @@ function Mfa() {
           })}
         </div>
         <div className="relative h-12 overflow-hidden bg-emerald-50">
-          <div className="absolute inset-0 grid place-items-center text-sm font-bold text-emerald-700">🔓 ログインできた</div>
+          <div className="absolute inset-0 grid place-items-center text-sm font-bold text-emerald-700">ログインできた</div>
           <div className={`${styles.doorL} absolute inset-y-0 left-0 grid w-1/2 place-items-center border-r border-gray-400 bg-gray-200 text-xs font-bold text-gray-600`} data-open={isMfa ? "true" : "false"}>
-            🔒 閉じている
+            閉じている
           </div>
           <div className={`${styles.doorR} absolute inset-y-0 right-0 grid w-1/2 place-items-center bg-gray-200 text-xs font-bold text-gray-600`} data-open={isMfa ? "true" : "false"}>
             あと{Math.max(0, 2 - distinct)}種類
@@ -253,14 +261,14 @@ function Mfa() {
         {distinct === 0
           ? "使うものを選んでください。"
           : isMfa
-            ? `✅ 多要素認証！ 異なる種類を ${distinct} 種つかっています（強い）。`
-            : "⚠️ 単要素です。同じ種類だけでは多要素になりません（例：パスワード＋PIN はどちらも『知識』）。"}
+            ? `多要素認証！ 異なる種類を ${distinct} 種つかっています（強い）。`
+            : "単要素です。同じ種類だけでは多要素になりません（例：パスワード＋PIN はどちらも『知識』）。"}
       </div>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
         ※ ポイントは「数」ではなく「<b>種類のちがい</b>」。パスワードを2つ使っても、どちらも知識なので多要素ではありません。
       </p>
       <div className="mt-2 rounded-xl bg-brand-50 px-3 py-2.5 text-xs leading-relaxed text-brand-900 ring-1 ring-brand-200">
-        💡 身近な例：銀行ATMの「<b>キャッシュカード＋暗証番号(PIN)</b>」は、
+        <InlineIcon name="lightbulb" />身近な例：銀行ATMの「<b>キャッシュカード＋暗証番号(PIN)</b>」は、
         <b>カード＝所持</b>・<b>暗証番号＝知識</b>の組み合わせ。つまり<b>それ自体が多要素認証</b>の代表例です。
         （ここでは PIN を“知識”として分類していますが、実際は「カードとセットで使う」点に注目）
       </div>

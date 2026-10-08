@@ -69,7 +69,7 @@ export function Choices({
       {chosen && (
         <div className={`mt-2 space-y-1.5 ${styles.reveal}`} aria-live="polite">
           <p className={`text-xs font-bold leading-relaxed ${chosen.ok ? "text-emerald-700" : "text-rose-600"}`}>
-            {chosen.ok ? "⭕ 正解！" : `❌ ${chosen.why ?? "もう一度考えてみよう。"}`}
+            {chosen.ok ? "正解！" : `${chosen.why ?? "もう一度考えてみよう。"}`}
           </p>
           {steps && !chosen.ok && chosen.step !== undefined && <StepChips steps={steps} failed={chosen.step} />}
         </div>

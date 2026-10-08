@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import type { HttpsCapsuleStop } from "../HttpsScene";
 import type { LabSceneProps } from "./labTypes";
 import styles from "./letter.module.css";
+import Icon from "@/components/ui/Icon";
 
 // パターンC：ハガキと封筒。
 // 冒頭のたとえ（HTTP＝ハガキ／HTTPS＝封筒に入れた手紙）をそのまま街のイラストにする。
@@ -277,19 +278,22 @@ export function LetterScene({ mode, index, step, plain, cipher, forward, reduced
         </div>
         <div className={styles.envelope} aria-hidden={item === "card"}>
           <span className={styles.flap} />
-          <span className={styles.seal}>🔒</span>
-          <span className={styles.envelopeNote}>{item === "opened" ? "🔑 開封（復号）" : "TLS で封"}</span>
+          <span className={styles.seal}>
+            <Icon name="lock" className="h-3 w-3" />
+          </span>
+          <span className={styles.envelopeNote}>{item === "opened" ? "開封（復号）" : "TLS で封"}</span>
         </div>
       </div>
 
       {/* 盗聴者の虫めがね（拡大図） */}
       {peeking && (
         <div className={styles.lens} data-mode={mode} role="status" data-testid="letter-lens">
-          <span className={styles.lensTitle}>😈 盗聴者の目</span>
+          <span className={styles.lensTitle}>盗聴者の目</span>
           {https ? (
             <>
               <span className={styles.lensEnvelope} aria-hidden>
-                ✉︎🔒
+                <Icon name="mail" className="inline h-5 w-5" />
+                <Icon name="lock" className="inline h-5 w-5" />
               </span>
               <span className={styles.lensCipher}>{cipher.slice(0, 19) || "…"}</span>
               <span className={styles.lensVerdict}>読めない…</span>
@@ -304,7 +308,7 @@ export function LetterScene({ mode, index, step, plain, cipher, forward, reduced
       )}
 
       <span className={styles.modePlate} data-mode={mode}>
-        {https ? "HTTPS ＝ 封筒 🔒" : "HTTP ＝ ハガキ"}
+        {https ? "HTTPS ＝ 封筒" : "HTTP ＝ ハガキ"}
       </span>
     </div>
   );

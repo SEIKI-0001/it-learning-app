@@ -7,6 +7,7 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
 
 // ============================================================================
 // 「インターネットとプロトコル」専用の体験。
@@ -17,9 +18,9 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 
 const LANGS = [
-  { id: "ja", label: "日本語", emo: "🇯🇵" },
-  { id: "en", label: "英語", emo: "🇬🇧" },
-  { id: "zh", label: "中国語", emo: "🇨🇳" },
+  { id: "ja", label: "日本語" },
+  { id: "en", label: "英語" },
+  { id: "zh", label: "中国語" },
 ];
 
 function ProtocolRule() {
@@ -35,18 +36,18 @@ function ProtocolRule() {
 
       <div className="mt-4 flex items-center justify-center gap-3">
         <div className="w-24 rounded-xl border-2 border-brand-300 bg-brand-50 py-3 text-center">
-          <div className="text-2xl">🧑</div>
+          <Icon name="user" className="mx-auto h-7 w-7 text-brand-600" />
           <div className="text-xs font-bold text-brand-700">あなた</div>
-          <div className="text-[11px] text-gray-500">🇯🇵 日本語</div>
+          <div className="text-[11px] text-gray-500">日本語</div>
         </div>
         <div className="text-center">
-          <div className={`text-2xl ${ok ? "" : "opacity-40"}`}>{ok ? "🔊" : "❓"}</div>
+          <Icon name={ok ? "volume" : "help"} className={`h-7 w-7 ${ok ? "text-emerald-600" : "text-gray-400 opacity-40"}`} />
         </div>
         <div className="w-24 rounded-xl border-2 border-gray-300 bg-gray-50 py-3 text-center">
-          <div className="text-2xl">🧑‍🦰</div>
+          <Icon name="user" className="mx-auto h-7 w-7 text-gray-600" />
           <div className="text-xs font-bold text-gray-700">相手</div>
           <div className="text-[11px] text-gray-500">
-            {LANGS.find((l) => l.id === other)?.emo} {LANGS.find((l) => l.id === other)?.label}
+            {LANGS.find((l) => l.id === other)?.label}
           </div>
         </div>
       </div>
@@ -60,7 +61,7 @@ function ProtocolRule() {
               other === l.id ? "bg-brand-600 text-white" : "text-gray-500 ring-1 ring-gray-300"
             }`}
           >
-            {l.emo} {l.label}
+            {l.label}
           </button>
         ))}
       </div>
@@ -70,7 +71,7 @@ function ProtocolRule() {
           ok ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-rose-50 text-rose-700 ring-rose-200"
         }`}
       >
-        {ok ? "⭕ 同じ言葉どうし → 通じる！" : "❌ 言葉がちがう → 通じない…"}
+        {ok ? "同じ言葉どうし → 通じる！" : "言葉がちがう → 通じない…"}
       </p>
       <p className="mt-2 text-xs leading-relaxed text-gray-500">
         ネットでも同じ。機器どうしが通信するための<b>共通の“言葉・約束ごと”がプロトコル</b>（HTTPなど）。
@@ -82,7 +83,7 @@ function ProtocolRule() {
 
 function ProtocolTable() {
   const rows = [
-    { k: "HTTP / HTTPS", d: "Webページを見る通信（HTTPSは暗号化されて安全 🔒）" },
+    { k: "HTTP / HTTPS", d: "Webページを見る通信（HTTPSは暗号化されて安全）" },
     { k: "DNS", d: "ドメイン名（example.com）を IPアドレスに変換する" },
     { k: "TCP / IP", d: "インターネットの土台。データを相手まで順番どおり届ける" },
     { k: "SMTP / POP / IMAP", d: "電子メールの送信(SMTP)・受信(POP/IMAP)" },
@@ -260,7 +261,7 @@ function PacketSplit() {
 
       <PacketFlow />
 
-      <p className="mt-4 text-xs font-bold text-gray-700">✍️ 自分のデータでも分けてみよう</p>
+      <p className="mt-4 text-xs font-bold text-gray-700">自分のデータでも分けてみよう</p>
       <div className="mt-2 flex items-center gap-2">
         <span className="text-sm text-gray-500">送るデータ：</span>
         <input

@@ -4,11 +4,12 @@ import { useState } from "react";
 import { CompanyFlowMap, type SysKey } from "./mgmt/CompanyFlowMap";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「経営管理システム（CRM・SCM・ERP）」専用の体験。
 //   ① 会社の地図（仕入先→調達→在庫→製造→販売→顧客＋会計・人事・サポート）でシステムをタップ
-//      → 管理する「範囲」が形を変えて広がり、📦／💬／データの動きで「何を管理するか」が分かる
+//      → 管理する「範囲」が形を変えて広がり、荷物／吹き出し／データの動きで「何を管理するか」が分かる
 //   ② 「このシステムはどれ？」仕分けクイズ
 // ============================================================================
 
@@ -17,7 +18,7 @@ const SYS: {
   abbr: string;
   full: string;
   jp: string;
-  emo: string;
+  icon: IconName;
   target: string;
   d: string;
   ex: string;
@@ -28,7 +29,7 @@ const SYS: {
     abbr: "CRM",
     full: "Customer Relationship Management",
     jp: "顧客関係管理",
-    emo: "🙋",
+    icon: "user",
     target: "お客さんとの関係",
     d: "購入履歴・問い合わせ・好みなど顧客の情報をまとめ、ひとりひとりに合った対応や提案につなげて、長く付き合えるようにする。",
     ex: "例：誕生日にクーポン、過去の購入に合わせたおすすめ",
@@ -39,7 +40,7 @@ const SYS: {
     abbr: "SCM",
     full: "Supply Chain Management",
     jp: "供給連鎖管理",
-    emo: "🚚",
+    icon: "truck",
     target: "仕入れ〜販売の流れ全体",
     d: "原材料の調達から製造・在庫・配送・販売までの“モノの流れ”全体を管理し、ムダな在庫や品切れを減らす。",
     ex: "例：売れ行きに合わせて仕入れと配送を最適化",
@@ -50,7 +51,7 @@ const SYS: {
     abbr: "ERP",
     full: "Enterprise Resource Planning",
     jp: "企業資源計画",
-    emo: "🏢",
+    icon: "building",
     target: "社内の経営資源（ヒト・モノ・カネ・情報）",
     d: "会計・人事・在庫・販売など、バラバラだった社内の情報を1つに統合し、全社の経営資源をまとめて最適に管理する。",
     ex: "例：販売データが会計や在庫に自動で反映",
@@ -96,7 +97,7 @@ function CompanyMap() {
                 picked ? "bg-brand-600 text-white" : "bg-gray-50 text-gray-700 ring-1 ring-gray-300"
               }`}
             >
-              <div className="text-lg">{s.emo}</div>
+              <Icon name={s.icon} className="mx-auto h-5 w-5" />
               <div className="text-sm font-bold">
                 {s.abbr}
                 {tried.has(s.key) && !picked && <span className="ml-0.5 text-[10px]">✓</span>}
@@ -117,7 +118,7 @@ function CompanyMap() {
         <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${active.tone}`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold">
-              {active.emo} {active.abbr}（{active.jp}）
+              <Icon name={active.icon} className="mr-1 inline h-4 w-4 align-text-bottom" />{active.abbr}（{active.jp}）
             </span>
             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${HI[active.key].badge}`}>
               光った範囲＝{active.target}
@@ -131,7 +132,7 @@ function CompanyMap() {
 
       {allTried && (
         <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-          🎉 3つとも光らせた！ <b>CRM＝顧客との関係</b>、<b>SCM＝モノの流れ全体</b>、
+          3つとも光らせた！ <b>CRM＝顧客との関係</b>、<b>SCM＝モノの流れ全体</b>、
           <b>ERP＝社内をまるごと統合</b>。管理する「範囲」が違うだけです。
         </div>
       )}
@@ -203,7 +204,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

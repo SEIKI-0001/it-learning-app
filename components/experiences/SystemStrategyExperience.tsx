@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「システム戦略」専用の体験。
@@ -14,23 +16,23 @@ type Route = "hype" | "goal";
 
 const ROUTES: Record<
   Route,
-  { steps: { emo: string; label: string; text: string }[]; result: { good: boolean; text: string } }
+  { steps: { icon: IconName; label: string; text: string }[]; result: { good: boolean; text: string } }
 > = {
   hype: {
     steps: [
-      { emo: "✨", label: "導入を決定", text: "「最新のAIシステムが話題らしい。うちも入れよう！」——何のためかは、まだ決めていない。" },
-      { emo: "💸", label: "お金を払う", text: "導入費用500万円。現場から「これ…何に使うんですか？」の声。目的がないので答えられない。" },
-      { emo: "🤷", label: "使われない", text: "使い道があいまいなまま放置。効果を測る物差しも決めていないので、役立ったかも分からない。" },
+      { icon: "sparkle", label: "導入を決定", text: "「最新のAIシステムが話題らしい。うちも入れよう！」——何のためかは、まだ決めていない。" },
+      { icon: "yen", label: "お金を払う", text: "導入費用500万円。現場から「これ…何に使うんですか？」の声。目的がないので答えられない。" },
+      { icon: "help", label: "使われない", text: "使い道があいまいなまま放置。効果を測る物差しも決めていないので、役立ったかも分からない。" },
     ],
-    result: { good: false, text: "📉 結末：売上は変わらず、お金だけ減った。「入れること」がゴールになると、こうなりがち。" },
+    result: { good: false, text: "結末：売上は変わらず、お金だけ減った。「入れること」がゴールになると、こうなりがち。" },
   },
   goal: {
     steps: [
-      { emo: "🎯", label: "目的を決める", text: "まず経営の目的から。「常連のお客さんを増やして、売上を伸ばしたい」。" },
-      { emo: "🛠️", label: "手段を選ぶ", text: "目的に合うITを手段として選ぶ。「常連を増やすなら、ポイントが貯まるアプリが合いそうだ」。" },
-      { emo: "📈", label: "効果を測る", text: "導入前に「リピート率」で効果を測ると決めておく。導入後、リピート率+8%——目的に効いたと確認できた。" },
+      { icon: "target", label: "目的を決める", text: "まず経営の目的から。「常連のお客さんを増やして、売上を伸ばしたい」。" },
+      { icon: "tool", label: "手段を選ぶ", text: "目的に合うITを手段として選ぶ。「常連を増やすなら、ポイントが貯まるアプリが合いそうだ」。" },
+      { icon: "trend-up", label: "効果を測る", text: "導入前に「リピート率」で効果を測ると決めておく。導入後、リピート率+8%——目的に効いたと確認できた。" },
     ],
-    result: { good: true, text: "🎉 結末：常連が増えて売上アップ！ 目的 → 手段 → 効果の順で考えたから、ITがちゃんと役立った。" },
+    result: { good: true, text: "結末：常連が増えて売上アップ！ 目的 → 手段 → 効果の順で考えたから、ITがちゃんと役立った。" },
   },
 };
 
@@ -64,7 +66,7 @@ function CeoLab() {
             route === "hype" ? "bg-rose-500 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
           }`}
         >
-          ✨ 話題のAIシステムを
+          話題のAIシステムを
           <br />
           とりあえず導入！{tried.has("hype") && " ✓"}
         </button>
@@ -74,7 +76,7 @@ function CeoLab() {
             route === "goal" ? "bg-emerald-600 text-white" : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
           }`}
         >
-          🎯 まず「何のためか」
+          まず「何のためか」
           <br />
           目的から決める{tried.has("goal") && " ✓"}
         </button>
@@ -103,13 +105,13 @@ function CeoLab() {
                       : "bg-white text-gray-400 ring-1 ring-gray-200"
                 }`}
               >
-                {s.emo} {s.label}
+                <Icon name={s.icon} className="mr-1 inline-block h-3 w-3 align-[-2px]" />{s.label}
               </div>
             ))}
           </div>
 
           <p className="mt-2.5 min-h-[3.5em] rounded-lg bg-white px-3 py-2.5 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-100">
-            {cur.steps[step].emo} <b>{cur.steps[step].label}</b>：{cur.steps[step].text}
+            <Icon name={cur.steps[step].icon} className="mr-1 inline-block h-3.5 w-3.5 align-[-2px]" /><b>{cur.steps[step].label}</b>：{cur.steps[step].text}
           </p>
 
           {!atEnd ? (
@@ -137,13 +139,13 @@ function CeoLab() {
 
       {bothTried && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          💡 <b>気づいた？</b>　同じ「IT導入」でも、<b>目的 → 手段 → 効果</b>の順で考えるかどうかで結末が正反対。
+          <InlineIcon name="lightbulb" /><b>気づいた？</b>　同じ「IT導入」でも、<b>目的 → 手段 → 効果</b>の順で考えるかどうかで結末が正反対。
           ITは<b>目的ではなく手段</b>——この考え方が<b>システム戦略</b>です。ITで会社を変える取り組みは <b>DX</b> とも呼ばれます。
         </div>
       )}
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 勉強アプリを入れること自体がゴールではなく、<b>成績を上げるためにどう使うか</b>を考えるのと同じ。
+        <InlineIcon name="lightbulb" />勉強アプリを入れること自体がゴールではなく、<b>成績を上げるためにどう使うか</b>を考えるのと同じ。
       </div>
     </Panel>
   );
@@ -171,8 +173,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "⭕ 正しい" },
-                  { v: false, label: "🙅 ちがう" },
+                  { v: true, label: "正しい" },
+                  { v: false, label: "ちがう" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -197,7 +199,7 @@ function Quiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

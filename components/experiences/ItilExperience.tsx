@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「ITIL」専用の体験。
@@ -22,20 +24,20 @@ function WhatIs() {
       </p>
       <div className="mt-4 flex items-center justify-center gap-3">
         <div className="rounded-xl bg-gray-50 px-3 py-3 text-center ring-1 ring-gray-200">
-          <div className="text-2xl">📚</div>
+          <Icon name="book-open" className="mx-auto h-7 w-7 text-gray-600" />
           <div className="mt-1 text-[11px] font-bold text-gray-700">ITIL</div>
           <div className="text-[10px] text-gray-500">うまいやり方集</div>
         </div>
         <span className="text-lg text-gray-300">→</span>
         <div className="rounded-xl bg-emerald-50 px-3 py-3 text-center ring-1 ring-emerald-200">
-          <div className="text-2xl">🏢</div>
+          <Icon name="building" className="mx-auto h-7 w-7 text-emerald-600" />
           <div className="mt-1 text-[11px] font-bold text-emerald-700">自社の運用</div>
           <div className="text-[10px] text-gray-500">真似して改善</div>
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 部活運営の「うまいやり方集」のように、困ったときの対応や改善の進め方がまとまっています。
-        ⚠️ プログラミング言語でも、監査そのものでもありません。
+        <InlineIcon name="lightbulb" />部活運営の「うまいやり方集」のように、困ったときの対応や改善の進め方がまとまっています。
+        プログラミング言語でも、監査そのものでもありません。
       </div>
     </Panel>
   );
@@ -49,55 +51,55 @@ const STORY: Record<
   { text: string; tone: "rose" | "amber" | "sky" | "emerald"; choices: { label: string; next: Stage; log: string }[] }
 > = {
   down: {
-    text: "🚨 月曜12:00、メールサーバが停止！「メールが使えない！」と問い合わせが殺到中。あなたが最初にやることは？",
+    text: "月曜12:00、メールサーバが停止！「メールが使えない！」と問い合わせが殺到中。あなたが最初にやることは？",
     tone: "rose",
     choices: [
-      { label: "🔬 まず原因をじっくり調査する", next: "slowStart", log: "🔬 原因調査を開始…" },
-      { label: "🚑 まず予備サーバに切り替えて復旧", next: "restored", log: "🚑 予備に切り替え → 15分で復旧！" },
+      { label: "まず原因をじっくり調査する", next: "slowStart", log: "原因調査を開始…" },
+      { label: "まず予備サーバに切り替えて復旧", next: "restored", log: "予備に切り替え → 15分で復旧！" },
     ],
   },
   slowStart: {
-    text: "😱 調査に3時間…その間サービスは止まりっぱなしで、利用者は大迷惑！ 障害のときは原因究明より先に「まず戻す」＝インシデント管理が先です。",
+    text: "調査に3時間…その間サービスは止まりっぱなしで、利用者は大迷惑！ 障害のときは原因究明より先に「まず戻す」＝インシデント管理が先です。",
     tone: "rose",
-    choices: [{ label: "🚑 予備サーバに切り替えて復旧", next: "restored", log: "🚑 予備に切り替え → やっと復旧" }],
+    choices: [{ label: "予備サーバに切り替えて復旧", next: "restored", log: "予備に切り替え → やっと復旧" }],
   },
   restored: {
-    text: "✅ サービス復旧！これが「まず早く元に戻す」インシデント管理。…でも、なぜ落ちたのかは分からないまま。次はどうする？",
+    text: "サービス復旧！これが「まず早く元に戻す」インシデント管理。…でも、なぜ落ちたのかは分からないまま。次はどうする？",
     tone: "emerald",
     choices: [
-      { label: "🤷 直ったからヨシ！様子を見る", next: "recur", log: "🤷 原因はそのまま様子見…" },
-      { label: "🔬 根本原因を調べる（問題管理）", next: "cause", log: "🔬 根本原因の調査を開始" },
+      { label: "直ったからヨシ！様子を見る", next: "recur", log: "原因はそのまま様子見…" },
+      { label: "根本原因を調べる（問題管理）", next: "cause", log: "根本原因の調査を開始" },
     ],
   },
   recur: {
-    text: "⚡ 3日後、また同じ障害で停止！原因を断たない限り、何度でもくり返します。再発を防ぐのが問題管理の仕事。",
+    text: "3日後、また同じ障害で停止！原因を断たない限り、何度でもくり返します。再発を防ぐのが問題管理の仕事。",
     tone: "rose",
-    choices: [{ label: "🔬 今度こそ根本原因を調べる（問題管理）", next: "cause", log: "⚡ 再発！ → 🔬 調査開始" }],
+    choices: [{ label: "今度こそ根本原因を調べる（問題管理）", next: "cause", log: "再発！ → 調査開始" }],
   },
   cause: {
-    text: "🔍 原因が判明：古い設定のせいでメモリ不足になっていた。対策にはサーバの設定変更が必要。どう変える？",
+    text: "原因が判明：古い設定のせいでメモリ不足になっていた。対策にはサーバの設定変更が必要。どう変える？",
     tone: "sky",
     choices: [
-      { label: "⚡ 今すぐ本番サーバをいじる", next: "risky", log: "⚡ ぶっつけで本番を変更…" },
-      { label: "🔧 影響を審査して計画的に変更（変更管理）", next: "stable", log: "🔧 影響を審査 → 計画的に変更" },
+      { label: "今すぐ本番サーバをいじる", next: "risky", log: "ぶっつけで本番を変更…" },
+      { label: "影響を審査して計画的に変更（変更管理）", next: "stable", log: "影響を審査 → 計画的に変更" },
     ],
   },
   risky: {
-    text: "💥 ぶっつけ変更が別のシステムに影響して、今度はそっちが停止！変更は影響範囲を確認してから安全に行う＝変更管理が必要です。",
+    text: "ぶっつけ変更が別のシステムに影響して、今度はそっちが停止！変更は影響範囲を確認してから安全に行う＝変更管理が必要です。",
     tone: "rose",
-    choices: [{ label: "🔧 影響を審査して計画的に変更（変更管理）", next: "stable", log: "🔧 やり直し → 審査して安全に変更" }],
+    choices: [{ label: "影響を審査して計画的に変更（変更管理）", next: "stable", log: "やり直し → 審査して安全に変更" }],
   },
   stable: {
-    text: "🎉 対策完了！その後、同じ障害は二度と起きませんでした。3つの管理をリレーのようにつなぐのがITIL流です。",
+    text: "対策完了！その後、同じ障害は二度と起きませんでした。3つの管理をリレーのようにつなぐのがITIL流です。",
     tone: "emerald",
     choices: [],
   },
 };
 
-const SUMMARY = [
-  { emoji: "🚑", name: "インシデント管理", desc: "まず早く復旧" },
-  { emoji: "🔬", name: "問題管理", desc: "原因を断ち再発防止" },
-  { emoji: "🔧", name: "変更管理", desc: "影響を審査し安全に変更" },
+const SUMMARY: { icon: IconName; name: string; desc: string }[] = [
+  { icon: "ambulance", name: "インシデント管理", desc: "まず早く復旧" },
+  { icon: "microscope", name: "問題管理", desc: "原因を断ち再発防止" },
+  { icon: "tool", name: "変更管理", desc: "影響を審査し安全に変更" },
 ];
 
 const TONE_BOX: Record<string, string> = {
@@ -109,7 +111,7 @@ const TONE_BOX: Record<string, string> = {
 
 function IncidentSim() {
   const [stage, setStage] = useState<Stage>("down");
-  const [log, setLog] = useState<string[]>(["🚨 メールサーバが停止"]);
+  const [log, setLog] = useState<string[]>(["メールサーバが停止"]);
   const cur = STORY[stage];
   const serviceDown = stage === "down" || stage === "slowStart" || stage === "recur" || stage === "risky";
 
@@ -119,7 +121,7 @@ function IncidentSim() {
   };
   const reset = () => {
     setStage("down");
-    setLog(["🚨 メールサーバが停止"]);
+    setLog(["メールサーバが停止"]);
   };
 
   return (
@@ -131,13 +133,13 @@ function IncidentSim() {
 
       {/* サービス状態 */}
       <div className="mt-4 flex items-center justify-between rounded-xl bg-gray-50 px-4 py-2.5 ring-1 ring-gray-200">
-        <span className="text-xs font-bold text-gray-500">📧 メールサービス</span>
+        <span className="text-xs font-bold text-gray-500">メールサービス</span>
         <span
           className={`rounded-full px-3 py-1 text-xs font-bold ${
             serviceDown ? "bg-rose-500 text-white" : "bg-emerald-500 text-white"
           }`}
         >
-          {serviceDown ? "⛔ 停止中" : "✅ 稼働中"}
+          {serviceDown ? "停止中" : "稼働中"}
         </span>
       </div>
 
@@ -161,7 +163,7 @@ function IncidentSim() {
           <div className="grid grid-cols-3 gap-1.5">
             {SUMMARY.map((s) => (
               <div key={s.name} className="rounded-xl bg-emerald-50 p-2 text-center ring-1 ring-emerald-200">
-                <div className="text-lg leading-none">{s.emoji}</div>
+                <Icon name={s.icon} className="mx-auto h-5 w-5 text-brand-600" />
                 <div className="mt-1 text-[10px] font-bold leading-tight text-emerald-800">{s.name}</div>
                 <div className="mt-0.5 text-[9px] leading-tight text-gray-500">{s.desc}</div>
               </div>
@@ -189,7 +191,7 @@ function IncidentSim() {
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        ⚠️ <b>インシデント管理＝早く復旧</b>、<b>問題管理＝原因を断つ</b>。ここが混同されやすい！
+        <InlineIcon name="alert" /><b>インシデント管理＝早く復旧</b>、<b>問題管理＝原因を断つ</b>。ここが混同されやすい！
       </div>
     </Panel>
   );
@@ -239,7 +241,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
                   {it.why}
                 </p>
               )}

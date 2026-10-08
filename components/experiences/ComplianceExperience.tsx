@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「法務とコンプライアンス」専用の体験。
@@ -12,11 +14,11 @@ import { Panel, SectionTitle } from "./ui";
 
 type Ring = "law" | "rule" | "ethics";
 
-const SHIELDS: { id: Ring; name: string; emoji: string; desc: string; incident: string; damage: number }[] = [
+const SHIELDS: { id: Ring; name: string; icon: IconName; desc: string; incident: string; damage: number }[] = [
   {
     id: "law",
     name: "法律",
-    emoji: "⚖️",
+    icon: "scale",
     desc: "国が定めたルール。破ると罰せられる（個人情報保護法・著作権法など）",
     incident: "個人情報を漏えいさせて書類送検。罰金＋ニュースで大きく報道…",
     damage: 60,
@@ -24,7 +26,7 @@ const SHIELDS: { id: Ring; name: string; emoji: string; desc: string; incident: 
   {
     id: "rule",
     name: "社内ルール",
-    emoji: "📋",
+    icon: "clipboard",
     desc: "会社が決めた約束ごと（情報の持ち出し禁止・SNS投稿のルールなど）",
     incident: "ルール無視の情報持ち出しが事故に。処分＋取引先の信頼を失う…",
     damage: 30,
@@ -32,7 +34,7 @@ const SHIELDS: { id: Ring; name: string; emoji: string; desc: string; incident: 
   {
     id: "ethics",
     name: "社会の約束（倫理）",
-    emoji: "🤝",
+    icon: "handshake",
     desc: "法律になくても守るべき良識・フェアさ（うそをつかない・差別をしない）",
     incident: "法律違反ではないが不誠実な対応が炎上。客離れが止まらない…",
     damage: 40,
@@ -56,7 +58,7 @@ function ShieldDemo() {
       {/* 信用ゲージ */}
       <div className="mt-4 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
         <div className="flex items-center justify-between text-xs font-bold">
-          <span className="text-gray-600">🏢 会社の信用</span>
+          <span className="text-gray-600">会社の信用</span>
           <span className={trust >= 70 ? "text-emerald-600" : trust >= 40 ? "text-amber-600" : "text-rose-600"}>
             {trust}%{trust === 0 && "（倒産の危機…）"}
           </span>
@@ -81,7 +83,7 @@ function ShieldDemo() {
                   : "border-brand-300 bg-brand-50"
               }`}
             >
-              <span className="text-2xl leading-none">{isBroken ? "💥" : s.emoji}</span>
+              <Icon name={isBroken ? "alert" : s.icon} className="h-7 w-7" />
               <span
                 className={`mt-1 text-[11px] font-bold leading-tight ${
                   isBroken ? "text-rose-600" : "text-brand-700"
@@ -98,13 +100,13 @@ function ShieldDemo() {
       <div className="mt-3 min-h-[4em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200">
         {brokenList.length === 0 ? (
           <p className="text-sm leading-relaxed text-emerald-700">
-            ✅ 3つとも守れている＝信用は満タン。<b>どれか1つ破れただけで信用は大きく下がります</b>。盾をタップして確かめてみよう。
+            3つとも守れている＝信用は満タン。<b>どれか1つ破れただけで信用は大きく下がります</b>。盾をタップして確かめてみよう。
           </p>
         ) : (
           <ul className="space-y-1.5">
             {brokenList.map((s) => (
               <li key={s.id} className="text-sm leading-relaxed text-rose-700">
-                💥 <b>{s.name}</b>を破った → {s.incident}
+                <b>{s.name}</b>を破った → {s.incident}
               </li>
             ))}
           </ul>
@@ -115,7 +117,7 @@ function ShieldDemo() {
       <div className="mt-3 space-y-1.5">
         {SHIELDS.map((s) => (
           <div key={s.id} className="flex items-start gap-2 rounded-xl bg-gray-50 px-3 py-2 text-xs leading-relaxed ring-1 ring-gray-200">
-            <span className="text-sm">{s.emoji}</span>
+            <Icon name={s.icon} className="mt-0.5 h-4 w-4 flex-none text-gray-600" />
             <span className="text-gray-600">
               <b className="text-gray-800">{s.name}</b>：{s.desc}
             </span>
@@ -124,7 +126,7 @@ function ShieldDemo() {
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 注目は<b>倫理の盾</b>——法律を破っていなくても、不誠実なら信用は落ちます。
+        <InlineIcon name="lightbulb" />注目は<b>倫理の盾</b>——法律を破っていなくても、不誠実なら信用は落ちます。
         コンプライアンス＝「法令遵守」だけでなく、<b>ルールと良識もセット</b>で守ること。
       </div>
     </Panel>
@@ -153,8 +155,8 @@ function Quiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "⭕ OK" },
-                  { v: false, label: "🚫 NG" },
+                  { v: true, label: "OK" },
+                  { v: false, label: "NG" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -179,7 +181,7 @@ function Quiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

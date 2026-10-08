@@ -99,7 +99,7 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
             glow={on}
             screen={
               <div className={styles.app}>
-                <div className={styles.appBar}>📄 レポート.docx</div>
+                <div className={styles.appBar}>レポート.docx</div>
                 <div className={styles.appBody}>{doc && !vanished ? DOC_TEXT[doc.version] : ""}</div>
               </div>
             }
@@ -158,7 +158,7 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
           {!on && (
             <DioramaLabel at={{ x: 400, y: 196, z: 160 }} place="above" pinned>
               <span className={styles.powerOff} role="status" data-testid="power-off">
-                ⚡ 電源OFF
+                電源OFF
               </span>
             </DioramaLabel>
           )}
@@ -191,7 +191,7 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
                 ) : (
                   <span className={styles.doc}>
                     <span className={styles.docHead}>
-                      📄 レポート <span className={styles.docVer}>v{doc.version}</span>
+                      レポート <span className={styles.docVer}>v{doc.version}</span>
                     </span>
                     <span key={doc.version} className={styles.docBody}>
                       {DOC_TEXT[doc.version]}
@@ -216,7 +216,7 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
             <div className={styles.part} data-part-label="storage" data-state={nodes.storage}>
               <b>ストレージ</b>＝引き出し
               <span key={stored} className={styles.storedChip} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
-                🗄 保存版 v{stored}
+                保存版 v{stored}
                 <br />
                 {DOC_TEXT[stored]}
               </span>

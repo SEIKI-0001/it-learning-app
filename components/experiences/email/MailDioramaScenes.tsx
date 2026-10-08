@@ -19,6 +19,7 @@ import {
 import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import type { Inbox, MailStop, MailTone, RouteSceneProps, RouteSeg, SyncNodeId, SyncSceneProps } from "./mailTypes";
 import styles from "./maildiorama.module.css";
+import Icon from "@/components/ui/Icon";
 
 // 電子メールの図解（2つの模型）。
 // ① 配送：自宅のPC →（SMTP）→ あなたのプロバイダの送信サーバ →（SMTP）→ 相手のメールサーバ →（POP / IMAP）→ 相手の会社のPC。
@@ -32,7 +33,7 @@ function MailTag({ tone, label, testId }: { tone: MailTone; label: string; testI
   return (
     <div className={styles.mail} data-tone={tone} data-testid={testId} role="img" aria-label={label}>
       <span className={styles.mailGlyph} aria-hidden>
-        ✉
+        <Icon name="mail" className="h-3 w-3" />
       </span>
       <span>{label}</span>
     </div>
@@ -170,7 +171,7 @@ export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward
           </DioramaLabel>
           <DioramaLabel at={{ ...ROUTE_AT.mailbox, z: 110 }} place="above" optional>
             <div data-node-label="mailbox">
-              <NameChip name="相手のサーバ" status={inMailbox ? "✉ 1通" : undefined} tone="muted" />
+              <NameChip name="相手のサーバ" status={inMailbox ? "1通" : undefined} tone="muted" />
             </div>
           </DioramaLabel>
           <DioramaLabel at={{ ...ROUTE_AT.friend, y: ROUTE_AT.friend.y + 74 }} place="below" optional>
@@ -216,7 +217,7 @@ function InboxLabel({ id, name, box }: { id: SyncNodeId; name: string; box: Inbo
       <span className={styles.inboxBody}>
         {box.mail ? (
           <>
-            ✉ 会議の件
+            <Icon name="mail" className="mr-0.5 inline-block h-3 w-3 align-middle" />会議の件
             <span className={styles.readChip} data-read={box.read ? "true" : "false"}>
               {box.read ? "既読" : "未読"}
             </span>
@@ -290,10 +291,10 @@ export function MailSyncDiorama({ proto, nodes, lanes, boxes, mail, reducedMotio
             <InboxLabel id="server" name="メールサーバ" box={boxes.server} />
           </DioramaLabel>
           <DioramaLabel at={{ ...SYNC_AT.phone, y: SYNC_AT.phone.y + 30 }} place="below" pinned>
-            <InboxLabel id="phone" name="📱 スマホ" box={boxes.phone} />
+            <InboxLabel id="phone" name="スマホ" box={boxes.phone} />
           </DioramaLabel>
           <DioramaLabel at={{ ...SYNC_AT.pc, y: SYNC_AT.pc.y + 70 }} place="below" pinned>
-            <InboxLabel id="pc" name="💻 PC" box={boxes.pc} />
+            <InboxLabel id="pc" name="PC" box={boxes.pc} />
           </DioramaLabel>
         </>
       }

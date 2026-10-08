@@ -12,6 +12,7 @@ import type {
   MiniGameSpec,
   VisualLearningSpec,
 } from "@/types/content";
+import { InlineIcon, Pictogram } from "@/components/ui/Pictogram";
 
 export default function VisualLearningSection({
   visualLearning,
@@ -81,11 +82,7 @@ function IllustrationView({ spec }: { spec: IllustrationSpec }) {
             key={i}
             className="flex items-start gap-3 rounded-xl bg-sky-50 px-3 py-3 ring-1 ring-sky-100"
           >
-            {item.emoji && (
-              <span className="text-2xl leading-none" aria-hidden>
-                {item.emoji}
-              </span>
-            )}
+            {item.icon && <Pictogram name={item.icon} />}
             <div>
               <p className="text-sm font-bold text-sky-950">
                 {item.title}
@@ -122,11 +119,7 @@ function TapRevealView({ spec }: { spec: InteractiveSpec }) {
                   : "min-h-14 rounded-xl bg-gray-50 px-2 py-2 text-left text-sm font-bold text-gray-700 ring-1 ring-gray-200"
               }
             >
-              {item.emoji && (
-                <span className="mr-1.5" aria-hidden>
-                  {item.emoji}
-                </span>
-              )}
+              {item.icon && <InlineIcon name={item.icon} />}
               {item.label}
             </button>
           );
@@ -160,11 +153,7 @@ function StepFlowView({ spec }: { spec: AnimationSpec }) {
             />
             <div className="flex-1 rounded-xl bg-emerald-50 px-3 py-2.5 ring-1 ring-emerald-100">
               <p className="text-sm font-bold text-emerald-950">
-                {step.emoji && (
-                  <span className="mr-1" aria-hidden>
-                    {step.emoji}
-                  </span>
-                )}
+                {step.icon && <InlineIcon name={step.icon} className="text-emerald-700" />}
                 {step.label}
               </p>
               <p className="mt-0.5 text-xs leading-relaxed text-emerald-900/75">

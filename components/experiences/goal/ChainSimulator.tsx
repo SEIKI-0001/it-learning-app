@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "../scene/useReducedMotion";
 import { Panel, SectionTitle } from "../ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 import { useTweenNumber } from "./useTweenNumber";
 
 // 店長シミュレータ（因果の鎖版）。
@@ -12,7 +14,7 @@ import { useTweenNumber } from "./useTweenNumber";
 
 type Action = {
   id: string;
-  emo: string;
+  icon: IconName;
   t: string;
   kpiUp: number; // リピート率の上昇(pt)
   hitsCsf: boolean;
@@ -21,12 +23,12 @@ type Action = {
 };
 
 export const ACTIONS: Action[] = [
-  { id: "name", emo: "🙋", t: "接客トレーニング（常連さんの名前を覚える）", kpiUp: 3, hitsCsf: true, note: "「自分の店」と感じてもらえてリピート率アップ！" },
-  { id: "point", emo: "🎫", t: "ポイントカードを配る", kpiUp: 4, hitsCsf: true, note: "「また来る理由」ができてリピート率アップ！" },
-  { id: "line", emo: "📱", t: "LINEで新作を知らせる", kpiUp: 4, hitsCsf: true, note: "来たことのある人が戻ってくるきっかけに。リピート率アップ！" },
+  { id: "name", icon: "user", t: "接客トレーニング（常連さんの名前を覚える）", kpiUp: 3, hitsCsf: true, note: "「自分の店」と感じてもらえてリピート率アップ！" },
+  { id: "point", icon: "tag", t: "ポイントカードを配る", kpiUp: 4, hitsCsf: true, note: "「また来る理由」ができてリピート率アップ！" },
+  { id: "line", icon: "smartphone", t: "LINEで新作を知らせる", kpiUp: 4, hitsCsf: true, note: "来たことのある人が戻ってくるきっかけに。リピート率アップ！" },
   {
     id: "ad",
-    emo: "📢",
+    icon: "megaphone",
     t: "とにかく広告で新規客を集める",
     kpiUp: 0,
     hitsCsf: false,
@@ -35,7 +37,7 @@ export const ACTIONS: Action[] = [
   },
   {
     id: "sns",
-    emo: "✨",
+    icon: "sparkle",
     t: "SNSのフォロワー数だけ増やす",
     kpiUp: 0,
     hitsCsf: false,
@@ -153,7 +155,7 @@ export function ChainSimulator() {
       {/* DOM は施策→KGIの順（伝わる順）。見た目は flex-col-reverse で KGI を最上段に置く */}
       <div className="mt-3 flex flex-col-reverse" data-testid="goal-chain" data-stage={shownStage}>
         {/* 施策 */}
-        <Box tag="施策" tagTone="bg-gray-500" title={last ? `${last.emo} ${last.t}` : "下のボタンから施策を選ぶ"} lit={!!last && shownStage >= 0} testId="goal-action" />
+        <Box tag="施策" tagTone="bg-gray-500" title={last ? last.t : "下のボタンから施策を選ぶ"} lit={!!last && shownStage >= 0} testId="goal-action" />
         <Link active={!!last && shownStage >= 1} label={vanity ? `${vanity.label}が増える` : "リピート率が動く"} testId="goal-link-kpi" />
 
         {/* KPI（と、CSFにつながらない「それっぽい数字」） */}
@@ -169,7 +171,7 @@ export function ChainSimulator() {
           </Box>
           {vanity && (
             <div className="rounded-xl bg-rose-50 p-3 ring-1 ring-rose-200" data-testid="goal-vanity">
-              <div className="text-xs font-bold text-rose-800">📈 {vanity.label}</div>
+              <div className="text-xs font-bold text-rose-800"><InlineIcon name="trend-up" />{vanity.label}</div>
               <div className="mt-1 font-mono text-lg font-bold text-rose-700">
                 {Math.round(vanityValue).toLocaleString()}
                 {vanity.unit}
@@ -223,7 +225,7 @@ export function ChainSimulator() {
                 done ? "bg-gray-100 text-gray-400 ring-1 ring-gray-200" : "bg-white text-gray-700 ring-1 ring-gray-300"
               }`}
             >
-              <span className="text-base">{a.emo}</span> {a.t}
+              <Icon name={a.icon} className="mr-1 inline h-4 w-4 align-text-bottom" /> {a.t}
               {done && " ✓"}
             </button>
           );
@@ -238,14 +240,14 @@ export function ChainSimulator() {
           }`}
           data-testid="goal-result"
         >
-          {last.emo} <b>{last.t}</b> → {last.hitsCsf ? `リピート率 +${last.kpiUp}pt。` : "リピート率 ±0。"}
+          <b>{last.t}</b> → {last.hitsCsf ? `リピート率 +${last.kpiUp}pt。` : "リピート率 ±0。"}
           {last.note}
         </div>
       )}
 
       {showInsight && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          💡 <b>気づいた？</b>　KPIは「小さいKGI」ではなく、<b>CSF（カギ）が進んでいるかを測る数字</b>。
+          <InlineIcon name="lightbulb" /><b>気づいた？</b>　KPIは「小さいKGI」ではなく、<b>CSF（カギ）が進んでいるかを測る数字</b>。
           CSFにつながる数字（リピート率）が動くと、KGIがついてくる。フォロワー数のように
           <b>CSFにつながらない数字は、増えてもゴールは近づかない</b>。
           だから<b>KGI（ゴール）→ CSF（カギ）→ KPI（途中の数字）</b>の順で決めるのです。

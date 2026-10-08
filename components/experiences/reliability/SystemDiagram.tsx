@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Icon from "@/components/ui/Icon";
 
 // 直列／並列の小さなシステム図。装置をタップすると故障⇄復旧。
 // 変えるたびに「リクエスト」の点が入口から1回だけ流れる：
@@ -127,7 +128,7 @@ export function SystemDiagram({
             style={{ left: `${(p[0] / 320) * 100}%`, top: `${(p[1] / 150) * 100}%`, width: BOX.w, height: BOX.h }}
             data-testid={`machine-${k}`}
           >
-            {ok ? "⚙️" : "💥"} 装置{k.toUpperCase()}
+            <Icon name={ok ? "settings" : "alert"} className="inline-block h-3.5 w-3.5 align-middle" /> 装置{k.toUpperCase()}
             <br />
             {ok ? "稼働中" : "故障中"}
           </button>

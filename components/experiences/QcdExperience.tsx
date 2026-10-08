@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「プロジェクトとQCD」専用の体験。
@@ -20,20 +22,20 @@ function WhatIsProject() {
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-          <div className="text-sm font-bold text-gray-600">🔁 通常業務</div>
+          <div className="text-sm font-bold text-gray-600"><InlineIcon name="rotate" className="text-gray-600" />通常業務</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
             毎日同じ手順をくり返す。終わりは決まっていない。（例：日々のレジ打ち）
           </p>
         </div>
         <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
-          <div className="text-sm font-bold text-brand-700">🎯 プロジェクト</div>
+          <div className="text-sm font-bold text-brand-700"><InlineIcon name="target" className="text-brand-700" />プロジェクト</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             期限と目標がある一度きり。終わったら解散。（例：文化祭の出し物づくり）
           </p>
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 進め方を管理するのが<b>プロジェクトマネジメント</b>。出来ばえは <b>QCD</b> の3つで見ます。
+        <InlineIcon name="lightbulb" />進め方を管理するのが<b>プロジェクトマネジメント</b>。出来ばえは <b>QCD</b> の3つで見ます。
       </div>
     </Panel>
   );
@@ -41,9 +43,9 @@ function WhatIsProject() {
 
 function QcdCards() {
   const cards = [
-    { k: "Q", emoji: "⭐", name: "Quality（品質）", desc: "求められる出来ばえを満たしているか" },
-    { k: "C", emoji: "💰", name: "Cost（費用）", desc: "決めた予算の中におさまっているか" },
-    { k: "D", emoji: "📅", name: "Delivery（納期）", desc: "決めた期限までに仕上がるか" },
+    { k: "Q", icon: "star" as IconName, name: "Quality（品質）", desc: "求められる出来ばえを満たしているか" },
+    { k: "C", icon: "yen" as IconName, name: "Cost（費用）", desc: "決めた予算の中におさまっているか" },
+    { k: "D", icon: "calendar" as IconName, name: "Delivery（納期）", desc: "決めた期限までに仕上がるか" },
   ];
   return (
     <Panel>
@@ -55,7 +57,7 @@ function QcdCards() {
         {cards.map((c) => (
           <div key={c.k} className="flex items-center gap-3 rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <span className="grid h-9 w-9 flex-none place-items-center rounded-lg bg-white text-lg ring-1 ring-gray-200">
-              {c.emoji}
+              <Icon name={c.icon} className="h-5 w-5 text-gray-700" />
             </span>
             <div>
               <div className="text-sm font-bold text-gray-800">{c.name}</div>
@@ -69,10 +71,10 @@ function QcdCards() {
 }
 
 type Pri = "Q" | "C" | "D" | "balance";
-const PLANS: Record<Pri, { label: string; emoji: string; q: number; c: number; d: number; effect: string }> = {
+const PLANS: Record<Pri, { label: string; icon: IconName; q: number; c: number; d: number; effect: string }> = {
   Q: {
     label: "品質を最優先",
-    emoji: "⭐",
+    icon: "star",
     q: 95,
     c: 30,
     d: 35,
@@ -80,7 +82,7 @@ const PLANS: Record<Pri, { label: string; emoji: string; q: number; c: number; d
   },
   C: {
     label: "費用を最優先",
-    emoji: "💰",
+    icon: "yen",
     q: 35,
     c: 95,
     d: 45,
@@ -88,7 +90,7 @@ const PLANS: Record<Pri, { label: string; emoji: string; q: number; c: number; d
   },
   D: {
     label: "納期を最優先",
-    emoji: "📅",
+    icon: "calendar",
     q: 35,
     c: 45,
     d: 95,
@@ -96,7 +98,7 @@ const PLANS: Record<Pri, { label: string; emoji: string; q: number; c: number; d
   },
   balance: {
     label: "バランス重視",
-    emoji: "⚖️",
+    icon: "scale",
     q: 70,
     c: 70,
     d: 70,
@@ -105,9 +107,9 @@ const PLANS: Record<Pri, { label: string; emoji: string; q: number; c: number; d
 };
 
 const GAUGES = [
-  { key: "q" as const, emoji: "⭐", name: "品質", sub: "出来ばえ" },
-  { key: "c" as const, emoji: "💰", name: "費用", sub: "予算の余裕" },
-  { key: "d" as const, emoji: "📅", name: "納期", sub: "時間の余裕" },
+  { key: "q" as const, icon: "star" as IconName, name: "品質", sub: "出来ばえ" },
+  { key: "c" as const, icon: "yen" as IconName, name: "費用", sub: "予算の余裕" },
+  { key: "d" as const, icon: "calendar" as IconName, name: "納期", sub: "時間の余裕" },
 ];
 
 function Tradeoff() {
@@ -133,7 +135,7 @@ function Tradeoff() {
               pri === k ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
             }`}
           >
-            {PLANS[k].emoji} {PLANS[k].label}
+            <Icon name={PLANS[k].icon} className="mr-1 inline-block h-4 w-4 align-middle" />{PLANS[k].label}
           </button>
         ))}
       </div>
@@ -146,7 +148,7 @@ function Tradeoff() {
             <div key={g.key} className="flex items-center gap-2">
               <div className="w-20 flex-none text-right">
                 <span className="text-sm font-bold text-gray-800">
-                  {g.emoji} {g.name}
+                  <Icon name={g.icon} className="mr-1 inline-block h-3.5 w-3.5 align-middle" />{g.name}
                 </span>
                 <div className="text-[10px] text-gray-400">{g.sub}</div>
               </div>
@@ -175,7 +177,7 @@ function Tradeoff() {
       >
         {plan ? (
           <>
-            <b>{plan.emoji} {plan.label}</b>にすると… {plan.effect}
+            <b><Icon name={plan.icon} className="mr-1 inline-block h-4 w-4 align-middle" />{plan.label}</b>にすると… {plan.effect}
           </>
         ) : (
           <>上の作戦ボタンを押すと、1つを上げたとき他のメーターがどう下がるかが見えます。</>
@@ -183,7 +185,7 @@ function Tradeoff() {
       </div>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 3つ全部を100にはできない。だから<b>どれか1つに偏らず、3つの釣り合い</b>をとって計画・調整するのが基本です。
+        <InlineIcon name="lightbulb" />3つ全部を100にはできない。だから<b>どれか1つに偏らず、3つの釣り合い</b>をとって計画・調整するのが基本です。
       </div>
     </Panel>
   );

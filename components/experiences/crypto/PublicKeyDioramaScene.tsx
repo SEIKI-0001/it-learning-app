@@ -112,7 +112,7 @@ export function PublicKeyDioramaScene({
           {intercepted && (
             <DioramaLabel at={{ ...EVE_AT, z: 124 }} place="above">
               <div className={styles.eveCallout} role="status" data-testid="eve-callout">
-                <span className={styles.calloutTitle}>😈 第三者の手元</span>
+                <span className={styles.calloutTitle}>第三者の手元</span>
                 <CipherCapsule state="failed" label="第三者が取った暗号文のコピー" />
                 <span className={styles.facts}>秘密鍵がないので開けない</span>
               </div>

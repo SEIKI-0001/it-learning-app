@@ -8,6 +8,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「OS・ソフトウェア・ハードウェア」専用の体験。
@@ -20,7 +22,7 @@ import { Panel, SectionTitle } from "./ui";
 const LAYERS = [
   {
     id: "app",
-    emo: "📱",
+    icon: "smartphone" as IconName,
     name: "アプリケーション",
     tag: "応用ソフト",
     color: "border-sky-300 bg-sky-50",
@@ -29,7 +31,7 @@ const LAYERS = [
   },
   {
     id: "os",
-    emo: "⚙️",
+    icon: "settings" as IconName,
     name: "OS（オーエス）",
     tag: "基本ソフト",
     color: "border-brand-300 bg-brand-50",
@@ -38,7 +40,7 @@ const LAYERS = [
   },
   {
     id: "hw",
-    emo: "🖥️",
+    icon: "monitor" as IconName,
     name: "ハードウェア",
     tag: "機械",
     color: "border-gray-300 bg-gray-50",
@@ -69,7 +71,7 @@ function LayerStack() {
                 on ? l.on : l.color
               }`}
             >
-              <span className="text-2xl">{l.emo}</span>
+              <Icon name={l.icon} className="h-7 w-7 text-gray-700" />
               <span className="flex-1">
                 <span className="text-sm font-bold text-gray-800">{l.name}</span>
                 <span className="ml-2 rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-bold text-gray-600">
@@ -99,22 +101,22 @@ const L = (app: NodeState, os: NodeState, hw: NodeState) => ({ app, os, hw });
 
 const SCENARIOS: Record<Scenario, { label: string; app: "music" | "files"; steps: RelayStep[] }> = {
   sound: {
-    label: "🎵 音を再生",
+    label: "音を再生",
     app: "music",
     steps: [
       {
         title: "ユーザーが「再生」を押す",
-        detail: <>🎵 音楽アプリで「▶ 再生」を押しました。でもアプリは<b>スピーカー（機械）を直接さわれません</b>。</>,
+        detail: <>音楽アプリで「▶ 再生」を押しました。でもアプリは<b>スピーカー（機械）を直接さわれません</b>。</>,
         view: { layers: L("active", "idle", "idle"), parts: { music: "active" }, links: [{ from: "user", to: "music", tone: "request" }], capsule: { at: "music", text: "▶ 再生", tone: "request" }, userHears: null },
       },
       {
         title: "アプリ → OS「音を出したい」",
-        detail: <>➡️ アプリはOSに「この曲の<b>音を出したい</b>」とお願いします（どのアプリも同じ“共通の窓口”を使う）。</>,
+        detail: <>アプリはOSに「この曲の<b>音を出したい</b>」とお願いします（どのアプリも同じ“共通の窓口”を使う）。</>,
         view: { layers: L("idle", "active", "idle"), parts: { music: "sending", core: "active" }, links: [{ from: "music", to: "core", tone: "request" }], capsule: { at: "core", text: "音を出したい", tone: "request" }, userHears: null },
       },
       {
         title: "OSがCPU・スピーカーへ指示",
-        detail: <>⚙️ OSが<b>CPUに音データの処理</b>を割り当て、<b>スピーカー</b>の使い方も管理します。アプリは機械の細かい操作を知らなくてOK。</>,
+        detail: <>OSが<b>CPUに音データの処理</b>を割り当て、<b>スピーカー</b>の使い方も管理します。アプリは機械の細かい操作を知らなくてOK。</>,
         view: {
           layers: L("idle", "active", "active"),
           parts: { core: "sending", cpu: "active", speaker: "active" },
@@ -128,12 +130,12 @@ const SCENARIOS: Record<Scenario, { label: string; app: "music" | "files"; steps
       },
       {
         title: "ハードウェアが動く",
-        detail: <>🔊 CPUが処理した音を、<b>スピーカー</b>が実際に鳴らします。</>,
-        view: { layers: L("idle", "idle", "active"), parts: { speaker: "active" }, links: [{ from: "cpu", to: "speaker", tone: "request" }], capsule: { at: "speaker", text: "♪ 出力", tone: "result" }, userHears: null },
+        detail: <>CPUが処理した音を、<b>スピーカー</b>が実際に鳴らします。</>,
+        view: { layers: L("idle", "idle", "active"), parts: { speaker: "active" }, links: [{ from: "cpu", to: "speaker", tone: "request" }], capsule: { at: "speaker", text: "出力", tone: "result" }, userHears: null },
       },
       {
         title: "結果がユーザーへ",
-        detail: <>✅ 音がユーザーに届き、OSはアプリに「再生中」を返します。<b>アプリ → OS → 機械 → 結果</b>の順でした。</>,
+        detail: <>音がユーザーに届き、OSはアプリに「再生中」を返します。<b>アプリ → OS → 機械 → 結果</b>の順でした。</>,
         view: {
           layers: L("active", "active", "idle"),
           parts: { music: "active", core: "active", speaker: "active" },
@@ -141,39 +143,39 @@ const SCENARIOS: Record<Scenario, { label: string; app: "music" | "files"; steps
             { from: "core", to: "music", tone: "result" },
             { from: "user", to: "speaker", tone: "result" },
           ],
-          capsule: { at: "music", text: "再生中 ♪", tone: "result" },
-          userHears: "♪ 聞こえる！",
+          capsule: { at: "music", text: "再生中", tone: "result" },
+          userHears: "聞こえる！",
         },
       },
     ],
   },
   save: {
-    label: "💾 ファイルを保存",
+    label: "ファイルを保存",
     app: "files",
     steps: [
       {
         title: "ユーザーが「保存」を押す",
-        detail: <>📝 メモアプリで「保存」を押しました。でもアプリは機械（ストレージ）を<b>直接さわれません</b>。</>,
-        view: { layers: L("active", "idle", "idle"), parts: { files: "active" }, links: [{ from: "user", to: "files", tone: "request" }], capsule: { at: "files", text: "💾 保存", tone: "request" }, userHears: null },
+        detail: <>メモアプリで「保存」を押しました。でもアプリは機械（ストレージ）を<b>直接さわれません</b>。</>,
+        view: { layers: L("active", "idle", "idle"), parts: { files: "active" }, links: [{ from: "user", to: "files", tone: "request" }], capsule: { at: "files", text: "保存", tone: "request" }, userHears: null },
       },
       {
         title: "アプリ → OS「保存して」",
-        detail: <>➡️ アプリはOSに「このファイルを<b>保存して</b>」とお願いします。</>,
+        detail: <>アプリはOSに「このファイルを<b>保存して</b>」とお願いします。</>,
         view: { layers: L("idle", "active", "idle"), parts: { files: "sending", core: "active" }, links: [{ from: "files", to: "core", tone: "request" }], capsule: { at: "core", text: "保存して", tone: "request" }, userHears: null },
       },
       {
         title: "OSがストレージへ書き込み",
-        detail: <>⚙️ OSがストレージの空き場所を管理し、実際に<b>書き込み</b>ます。</>,
+        detail: <>OSがストレージの空き場所を管理し、実際に<b>書き込み</b>ます。</>,
         view: { layers: L("idle", "active", "active"), parts: { core: "sending", storage: "active" }, links: [{ from: "core", to: "storage", tone: "request" }], capsule: { at: "storage", text: "書き込み", tone: "request" }, userHears: null },
       },
       {
         title: "OS → アプリ「完了」",
-        detail: <>✅ 保存できたら、OSが「完了」をアプリに返します。</>,
+        detail: <>保存できたら、OSが「完了」をアプリに返します。</>,
         view: {
           layers: L("active", "active", "idle"),
           parts: { files: "active", core: "active" },
           links: [{ from: "core", to: "files", tone: "result" }],
-          capsule: { at: "files", text: "✅ 保存完了", tone: "result" },
+          capsule: { at: "files", text: "保存完了", tone: "result" },
           userHears: "保存できた！",
         },
       },
@@ -249,7 +251,7 @@ function Relay() {
       >
         {bypass ? (
           <>
-            ⛔ アプリが{scenario === "sound" ? "スピーカー" : "ストレージ"}を<b>直接</b>操作しようとしても、OSが止めます。
+            <InlineIcon name="ban" />アプリが{scenario === "sound" ? "スピーカー" : "ストレージ"}を<b>直接</b>操作しようとしても、OSが止めます。
             機械を使えるのは<b>OSを通したときだけ</b>。だから勝手なアプリが機械を壊したり、ほかのアプリの邪魔をしたりできません。
           </>
         ) : (
@@ -286,11 +288,11 @@ function Relay() {
           bypass ? "bg-white text-gray-700 ring-1 ring-gray-300" : "bg-white text-rose-700 ring-1 ring-rose-300"
         }`}
       >
-        {bypass ? "↩ OSを通す正しい流れに戻す" : "🚫 アプリからハードウェアを直接さわってみる"}
+        {bypass ? "↩ OSを通す正しい流れに戻す" : "アプリからハードウェアを直接さわってみる"}
       </button>
 
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 OSが間に立つから、<b>どのアプリも同じやり方で機械を使える</b>＝アプリ作りが楽で安全。
+        <InlineIcon name="lightbulb" />OSが間に立つから、<b>どのアプリも同じやり方で機械を使える</b>＝アプリ作りが楽で安全。
         OSは単なる箱ではなく、<b>アプリの要求を機械へ取り次ぎ、機械を管理する</b>存在です。
       </div>
     </Panel>

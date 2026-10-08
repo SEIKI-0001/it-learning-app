@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "../calc/calc.module.css";
+import Icon from "@/components/ui/Icon";
 
 // RAID の解説で共通の「4台のディスク」。1台＝4マス（1マス＝0.25TB）で、マスの色がそのまま使い道。
 //   data＝データ / copy＝RAID1 のコピー / p・q＝RAID5・6 のパリティ
@@ -83,7 +84,7 @@ export function DiskArray({
           <>{d + 1}</>
         ) : (
           <>
-            <span aria-hidden>{down ? "💥" : "💽"}</span> {d + 1}
+            <span aria-hidden><Icon name={down ? "alert" : "database"} className="inline-block h-3 w-3 align-middle" /></span> {d + 1}
           </>
         );
         return (
@@ -126,7 +127,7 @@ export function DiskArray({
             </div>
             {down && placed >= SLOTS && (
               <div className={`mt-1 text-center text-[10px] font-bold leading-tight ${ok ? "text-emerald-700" : "text-rose-600"}`}>
-                {ok ? "♻️ 復元できる" : "✕ 失われる"}
+                {ok ? "復元できる" : "✕ 失われる"}
               </div>
             )}
           </div>

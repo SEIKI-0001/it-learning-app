@@ -9,6 +9,7 @@ import type { Camera } from "../scene/Diorama3D";
 import type { HttpsCapsuleStop } from "./HttpsScene";
 import { FLOW_STEPS, type HttpsSceneInput } from "./httpsFlow";
 import styles from "./httpscafe.module.css";
+import Icon from "@/components/ui/Icon";
 
 // HTTP/HTTPS ① 盗み見くらべの図解：フリーWi-Fi のカフェ（実際に盗聴が起きやすい場面）を CSS 3D で再現する。
 //   あなたの席のノートPC →（電波）→ 壁のフリーWi-Fi →（インターネット）→ データセンターの Webサーバ
@@ -113,7 +114,7 @@ export function HttpsCafeScene({
       }}
       corner={
         <span className={`${styles.urlPlate} ${styles.urlPlateInline}`} data-mode={mode}>
-          {https ? "https://  🔒" : "http://  ⚠︎"}
+          {https ? "https://" : "http://"}
         </span>
       }
       onFrame={
@@ -197,7 +198,7 @@ export function HttpsCafeScene({
               <div className={styles.lidScreen}>
                 <div className={styles.browser} data-mode={mode}>
                   <div className={styles.browserBar}>
-                    <span className={styles.browserLock}>{https ? "🔒" : "⚠︎"}</span>
+                    <span className={styles.browserLock}><Icon name={https ? "lock" : "alert"} className="inline h-2.5 w-2.5" /></span>
                     <span>{https ? "https://" : "http://"}shop.example</span>
                   </div>
                   <div className={styles.browserBody}>
@@ -335,7 +336,7 @@ export function HttpsCafeScene({
           {!withScreens && eveSees !== null && (
             <DioramaLabel token="copy" dz={30}>
               <div className={styles.eveBubble} data-mode={mode} role="status" data-testid="eve-screen">
-                <span className={styles.eveBubbleTitle}>😈 盗聴者の画面</span>
+                <span className={styles.eveBubbleTitle}>盗聴者の画面</span>
                 <span className={styles.eveBubbleBody}>{eveSees}</span>
                 <span className={styles.eveBubbleVerdict}>{https ? "読めない…" : "読めた！"}</span>
               </div>

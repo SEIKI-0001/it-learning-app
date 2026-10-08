@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「個人情報保護」専用の体験。
@@ -35,8 +37,8 @@ function IsPersonalInfo() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "🔒 個人情報" },
-                  { v: false, label: "➖ ちがう" },
+                  { v: true, label: "個人情報" },
+                  { v: false, label: "ちがう" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -61,7 +63,7 @@ function IsPersonalInfo() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}
@@ -74,11 +76,11 @@ function IsPersonalInfo() {
 }
 
 function Rules() {
-  const rules = [
-    { emoji: "🎯", t: "利用目的を明確に", d: "何に使うかをはっきり決めて伝える" },
-    { emoji: "📏", t: "必要な範囲だけ", d: "目的に必要な分だけ集める（取りすぎない）" },
-    { emoji: "🔐", t: "安全に管理", d: "漏えいしないよう適切に守る" },
-    { emoji: "🚪", t: "勝手に渡さない", d: "本人の同意なく第三者へ提供しない" },
+  const rules: { icon: IconName; t: string; d: string }[] = [
+    { icon: "target", t: "利用目的を明確に", d: "何に使うかをはっきり決めて伝える" },
+    { icon: "list", t: "必要な範囲だけ", d: "目的に必要な分だけ集める（取りすぎない）" },
+    { icon: "lock", t: "安全に管理", d: "漏えいしないよう適切に守る" },
+    { icon: "door", t: "勝手に渡さない", d: "本人の同意なく第三者へ提供しない" },
   ];
   return (
     <Panel>
@@ -86,14 +88,14 @@ function Rules() {
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         {rules.map((r) => (
           <div key={r.t} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-            <div className="text-xl">{r.emoji}</div>
+            <Icon name={r.icon} className="h-6 w-6 text-gray-700" />
             <div className="mt-1 text-sm font-bold text-gray-800">{r.t}</div>
             <p className="mt-0.5 text-[11px] leading-relaxed text-gray-500">{r.d}</p>
           </div>
         ))}
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        🤐 友だちの住所や電話番号を、本人に黙って別の人に渡さないのと同じ。集めた情報は<b>何にでも使える訳ではありません</b>。
+        <InlineIcon name="lock" />友だちの住所や電話番号を、本人に黙って別の人に渡さないのと同じ。集めた情報は<b>何にでも使える訳ではありません</b>。
       </div>
     </Panel>
   );
@@ -121,8 +123,8 @@ function HandlingQuiz() {
               <p className="text-sm font-bold text-gray-800">{it.t}</p>
               <div className="mt-2 flex gap-2">
                 {[
-                  { v: true, label: "⭕ 正しい" },
-                  { v: false, label: "🚫 NG" },
+                  { v: true, label: "正しい" },
+                  { v: false, label: "NG" },
                 ].map((opt) => {
                   const picked = chosen === opt.v;
                   const tone = !answered
@@ -147,7 +149,7 @@ function HandlingQuiz() {
               </div>
               {answered && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : "❌ 残念。 "}
+                  {correct ? "正解！ " : "残念。 "}
                   {it.why}
                 </p>
               )}

@@ -135,6 +135,6 @@ describe("RaidExperience", () => {
     expect(failedChip()).toHaveTextContent("② 引く台数");
     click("次の問題へ →");
     click("8TB");
-    expect(screen.getByText("⭕ 正解！")).toBeInTheDocument();
+    expect(screen.getByText("正解！")).toBeInTheDocument();
   });
 });

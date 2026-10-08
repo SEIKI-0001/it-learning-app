@@ -10,6 +10,7 @@ import VisualLearningSection from "@/components/visual-learning/VisualLearningSe
 import ProcessDemoSection from "@/components/learn/ProcessDemoSection";
 import { getTopicExperience } from "@/components/experiences/registry";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
   const processDemo = topic.processDemo;
@@ -55,7 +56,7 @@ export function buildExplanationSlides(topic: Topic): ExplanationSlide[] {
         </p>
         {topic.conceptCard.analogy && (
           <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-800">
-            🪄 たとえると…&nbsp;{topic.conceptCard.analogy}
+            たとえると…&nbsp;{topic.conceptCard.analogy}
           </p>
         )}
         {topic.conceptCard.diagram && (
@@ -125,9 +126,9 @@ export default function TopicContent({
           <h2 className="flex items-start gap-2.5 text-lg font-bold leading-snug text-gray-900 [word-break:auto-phrase]">
             <span
               aria-hidden
-              className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-md bg-gray-900 font-mono text-xs text-white"
+              className="mt-0.5 grid h-6 w-6 flex-none place-items-center rounded-md bg-gray-900 text-white"
             >
-              🤔
+              <Icon name="help" className="h-4 w-4" />
             </span>
             最初に考えてみよう
           </h2>
@@ -142,7 +143,7 @@ export default function TopicContent({
 
       {/* ③ 確認問題（today では完了クイズを別に出すため非表示にできる） */}
       {showCheckQuestions && (
-        <Section emoji="✏️" title="確認問題">
+        <Section icon="pen" title="確認問題">
           <ul className="space-y-4">
             {topic.checkQuestions.map((q, i) => (
               <li key={q.id}>
@@ -171,7 +172,7 @@ export function TopicReviewSections({ topic }: { topic: Topic }) {
   return (
     <div className="space-y-8">
       {/* 復習プロンプト */}
-      <Section emoji="🔁" title="あとで思い出すための復習">
+      <Section icon="rotate" title="あとで思い出すための復習">
         <details className="rounded-xl border border-gray-200 bg-white px-4 py-3">
           <summary className="cursor-pointer text-sm font-bold text-gray-800">
             {topic.reviewPrompt.question}
@@ -190,18 +191,18 @@ export function TopicReviewSections({ topic }: { topic: Topic }) {
 
 /** セクションの見出し＋本体の共通ラッパ */
 function Section({
-  emoji,
+  icon,
   title,
   children,
 }: {
-  emoji: string;
+  icon: IconName;
   title: string;
   children: React.ReactNode;
 }) {
   return (
     <section>
       <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-gray-800">
-        <span aria-hidden>{emoji}</span>
+        <Icon name={icon} className="h-5 w-5 flex-none text-brand-600" />
         {title}
       </h2>
       {children}

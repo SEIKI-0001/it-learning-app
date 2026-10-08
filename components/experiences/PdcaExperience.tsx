@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「PDCA」専用の体験。
@@ -11,10 +13,10 @@ import { Panel, SectionTitle } from "./ui";
 // ============================================================================
 
 const CYCLE = [
-  { k: "P", name: "Plan（計画）", emoji: "🗒️", ex: "テストに向けて勉強計画を立てる", color: "indigo" },
-  { k: "D", name: "Do（実行）", emoji: "✏️", ex: "計画どおりに問題を解く", color: "emerald" },
-  { k: "C", name: "Check（評価）", emoji: "🔍", ex: "点数を見て、できた所・苦手を確認する", color: "amber" },
-  { k: "A", name: "Act（改善）", emoji: "🔧", ex: "苦手に合わせて、次の計画を直す", color: "rose" },
+  { k: "P", name: "Plan（計画）", icon: "clipboard" as IconName, ex: "テストに向けて勉強計画を立てる", color: "indigo" },
+  { k: "D", name: "Do（実行）", icon: "pen" as IconName, ex: "計画どおりに問題を解く", color: "emerald" },
+  { k: "C", name: "Check（評価）", icon: "search" as IconName, ex: "点数を見て、できた所・苦手を確認する", color: "amber" },
+  { k: "A", name: "Act（改善）", icon: "tool" as IconName, ex: "苦手に合わせて、次の計画を直す", color: "rose" },
 ];
 
 const RING: Record<string, { on: string; off: string }> = {
@@ -49,7 +51,7 @@ function Cycle() {
               }`}
             >
               <div>
-                <div className="text-xl leading-none">{c.emoji}</div>
+                <Icon name={c.icon} className="mx-auto h-6 w-6" />
                 <div className="mt-1 text-lg font-bold leading-none">{c.k}</div>
               </div>
             </div>
@@ -60,7 +62,7 @@ function Cycle() {
 
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 ring-1 ring-sky-200">
         <div className="text-sm font-bold text-gray-800">
-          {cur.emoji} {cur.name}
+          <Icon name={cur.icon} className="mr-1 inline-block h-4 w-4 align-middle" />{cur.name}
         </div>
         <p className="mt-1 text-sm leading-relaxed text-gray-700">例：{cur.ex}</p>
       </div>
@@ -93,14 +95,14 @@ function KeyPoint() {
       <SectionTitle step={2}>大事なのは「回し続ける」こと</SectionTitle>
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-gray-50 p-3 text-center ring-1 ring-gray-200">
-          <div className="text-xl">🛑</div>
+          <Icon name="ban" className="mx-auto h-6 w-6" />
           <div className="mt-1 text-xs font-bold text-gray-600">やりがちなミス</div>
           <p className="mt-1 text-[11px] leading-relaxed text-gray-500">
             Check（評価）で「確認した」だけで終わり、次に活かさない。
           </p>
         </div>
         <div className="rounded-xl bg-emerald-50 p-3 text-center ring-1 ring-emerald-200">
-          <div className="text-xl">🔄</div>
+          <Icon name="rotate" className="mx-auto h-6 w-6" />
           <div className="mt-1 text-xs font-bold text-emerald-700">正しい使い方</div>
           <p className="mt-1 text-[11px] leading-relaxed text-gray-600">
             Act（改善）で直し、それを<b>次のPlan</b>に反映してまた回す。
@@ -108,7 +110,7 @@ function KeyPoint() {
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 <b>Check</b> は「評価・確認」、<b>Act</b> は「改善」。やりっぱなしにせず、回すほど良くなります。
+        <InlineIcon name="lightbulb" /><b>Check</b> は「評価・確認」、<b>Act</b> は「改善」。やりっぱなしにせず、回すほど良くなります。
       </div>
     </Panel>
   );
@@ -159,7 +161,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
                   {it.why}
                 </p>
               )}

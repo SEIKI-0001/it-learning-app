@@ -79,7 +79,7 @@ describe("LaborLawsExperience office scene", () => {
     expect(arrow("order")).toHaveAttribute("data-state", "ghost");
     expect(arrow("task")).toHaveAttribute("data-state", "ghost");
     const warning = screen.getByTestId("gisou-warning");
-    expect(warning).toHaveTextContent("⚠ 指揮命令関係が発生");
+    expect(warning).toHaveTextContent("指揮命令関係が発生");
     expect(warning).toHaveTextContent("実態によっては偽装請負と判断される可能性があります");
     expect(warning).toHaveTextContent("契約書の名称だけでなく、実際の働かせ方で判断されます");
     expect(warning).not.toHaveTextContent("違法");

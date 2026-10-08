@@ -5,17 +5,19 @@ import { FLOWS, KindLegend, STEP_MS, TradeFlowMap, kindColor, kindName, type Ter
 import styles from "./ebiz/ebiz.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「e-ビジネス（EC・EDI・フィンテック・シェアリング）」専用の体験。
 //   ① 取引マップ … 用語をタップ→「誰と誰の間で・何が流れるか」を①②③の順に流す
-//      （モノ📦・お金💴・情報📄を色分け。フィンテックはスマホ、シェアリングは仲介サービスを経由）
+//      （モノ・お金・情報を色分け。フィンテックはスマホ、シェアリングは仲介サービスを経由）
 //   ② 「これはどれ？」仕分けクイズ
 // ============================================================================
 
 type Term = {
   key: TermKey;
-  emo: string;
+  icon: IconName;
   name: string;
   who: string;
   flow: string;
@@ -29,7 +31,7 @@ type Term = {
 const TERMS: Term[] = [
   {
     key: "ec",
-    emo: "🛒",
+    icon: "cart",
     name: "EC",
     who: "企業 → 個人",
     flow: "商品を販売",
@@ -41,7 +43,7 @@ const TERMS: Term[] = [
   },
   {
     key: "edi",
-    emo: "🔁",
+    icon: "rotate",
     name: "EDI",
     who: "企業 ⇄ 企業",
     flow: "取引データを交換",
@@ -52,7 +54,7 @@ const TERMS: Term[] = [
   },
   {
     key: "fintech",
-    emo: "📱",
+    icon: "smartphone",
     name: "フィンテック",
     who: "個人 → 企業（お金）",
     flow: "支払い・送金をITで",
@@ -63,7 +65,7 @@ const TERMS: Term[] = [
   },
   {
     key: "sharing",
-    emo: "🤝",
+    icon: "handshake",
     name: "シェアリング",
     who: "個人 ⇄ 個人",
     flow: "モノ・場所を貸し借り",
@@ -112,7 +114,7 @@ function TradeMap() {
               sel === t.key ? t.chip : "bg-gray-50 text-gray-600 ring-1 ring-gray-300"
             }`}
           >
-            <span className="block text-base">{t.emo}</span>
+            <Icon name={t.icon} className="mx-auto mb-0.5 h-4 w-4" />
             {t.name}
           </button>
         ))}
@@ -148,7 +150,7 @@ function TradeMap() {
       {term ? (
         <div key={`def-${runKey}`} className={`mt-3 rounded-xl px-4 py-3 ring-1 ${term.badge} ${fadeClass}`} style={fade(defDelay)}>
           <div className="text-sm font-bold">
-            {term.emo} {term.name} ＝ <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs">{term.who}</span>{" "}
+            <InlineIcon name={term.icon} />{term.name} ＝ <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs">{term.who}</span>{" "}
             {term.flow}
           </div>
           <p className="mt-1.5 text-[13px] leading-relaxed">{term.d}</p>
@@ -163,7 +165,7 @@ function TradeMap() {
 
       {tried.size === TERMS.length && (
         <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-          💡 4つとも「ネットを使った取引」。違いは<b>相手が誰か＋何が流れるか</b>だけ。特に
+          <InlineIcon name="lightbulb" />4つとも「ネットを使った取引」。違いは<b>相手が誰か＋何が流れるか</b>だけ。特に
           <b>EC＝企業→個人の売買／EDI＝企業どうしのデータ交換</b>の混同に注意！
         </div>
       )}
@@ -235,7 +237,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

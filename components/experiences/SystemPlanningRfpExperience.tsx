@@ -2,6 +2,7 @@
 
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「システム企画・RFP・調達管理」。一方向のプロセスなので静的なフロー図で見せる。
 //   ① 調達の流れ（スイムレーン）：左＝発注側、右＝ベンダ。どの工程を誰がするか、書類がどちらへ渡るかを矢印で
@@ -100,7 +101,7 @@ function FlowPanel() {
         )}
       </div>
       <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
-        💡 左の列（発注側）がずっと主役。<b className="text-gray-800">何を作りたいかを決めるのは発注側</b>で、ベンダはそれに答えて提案します。
+        <InlineIcon name="lightbulb" />左の列（発注側）がずっと主役。<b className="text-gray-800">何を作りたいかを決めるのは発注側</b>で、ベンダはそれに答えて提案します。
       </p>
     </Panel>
   );
@@ -212,7 +213,7 @@ function EvaluatePanel() {
         </tbody>
       </table>
       <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
-        💡 最安値のA社は、肝心の<b className="text-gray-800">要件への適合が低い</b>。重みを付けて総合すると<b className="text-gray-800">B社</b>が選ばれます。
+        <InlineIcon name="lightbulb" />最安値のA社は、肝心の<b className="text-gray-800">要件への適合が低い</b>。重みを付けて総合すると<b className="text-gray-800">B社</b>が選ばれます。
       </p>
       <Caption className="mt-2">※ 重み付きの合計 ＝ 各点 × 重み を足したもの（例：B社 5×3＋4×2＋3×2＋4×1 ＝ 33）</Caption>
     </Panel>

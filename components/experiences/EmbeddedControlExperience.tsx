@@ -6,6 +6,7 @@ import { useBeats } from "./calc/useBeats";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { AirconDioramaScene, type FanLevel, type LoopPhase } from "./embedded/AirconDioramaScene";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「組込みシステムと制御」。
 //   ① フィードバック制御の循環：壁掛けエアコンの3D模型（カバー透明）で、吸い込み口の温度センサー → 制御基板のマイコン
@@ -121,7 +122,7 @@ function LoopPanel() {
 
         {done && (
           <Note>
-            💡 結果をもう一度センサーで測り、<b>ずれが小さくなるほどファンを弱める</b>。この「結果を戻して調整する」のが<b>フィードバック制御</b>です。
+            <InlineIcon name="lightbulb" />結果をもう一度センサーで測り、<b>ずれが小さくなるほどファンを弱める</b>。この「結果を戻して調整する」のが<b>フィードバック制御</b>です。
           </Note>
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
@@ -137,8 +138,8 @@ const ty = (t: number) => 18 + (30 - t) * 10;
 // ② 入力と出力
 // ---------------------------------------------------------------------------
 
-const SENSORS = ["🌡️ 温度", "💡 明るさ", "📏 距離", "📳 加速度"];
-const ACTUATORS = ["⚙️ モーター", "🚰 弁（バルブ）", "🔥 ヒーター", "🔊 スピーカー"];
+const SENSORS = ["温度", "明るさ", "距離", "加速度"];
+const ACTUATORS = ["モーター", "弁（バルブ）", "ヒーター", "スピーカー"];
 
 function IoPanel() {
   return (
@@ -223,13 +224,13 @@ function RealtimePanel() {
                 ))}
               </div>
               <p className={`mt-1 text-[12px] font-bold ${ok ? "text-emerald-700" : "text-rose-700"}`}>
-                {ok ? "✅ 5回とも期限内 → リアルタイム制御に使える" : "❌ 4回目が140ms。1回でも遅れたら事故になる"}
+                {ok ? "5回とも期限内 → リアルタイム制御に使える" : "4回目が140ms。1回でも遅れたら事故になる"}
               </p>
             </div>
           );
         })}
       </div>
-      <p className="mt-2 text-[13px] leading-relaxed text-gray-600">💡 大事なのは平均の速さではなく、<b className="text-gray-800">毎回、決められた時間内に応答できること</b>。</p>
+      <p className="mt-2 text-[13px] leading-relaxed text-gray-600"><InlineIcon name="lightbulb" />大事なのは平均の速さではなく、<b className="text-gray-800">毎回、決められた時間内に応答できること</b>。</p>
     </Panel>
   );
 }

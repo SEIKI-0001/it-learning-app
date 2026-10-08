@@ -20,6 +20,7 @@ import {
 } from "../scene/DioramaParts";
 import { DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3 } from "../scene/DioramaStage";
 import styles from "./wifidiorama.module.css";
+import Icon from "@/components/ui/Icon";
 
 // 無線LAN の図解：駅前カフェの2階（本物の公衆Wi-Fiで盗聴が起きる場面）を CSS 3D で再現する。
 //   あなたの席のノートPC →（電波）→ 壁の上のアクセスポイント
@@ -82,7 +83,7 @@ function WifiListScreen({ mode }: { mode: WifiMode }) {
         return (
           <div key={s.name} className={styles.osRow} data-picked={s.ours && mode !== "wired" ? "true" : "false"}>
             <span>{s.name}</span>
-            <span>{lock === "wpa" ? "🔒" : ""}</span>
+            <span>{lock === "wpa" ? <Icon name="lock" className="h-3 w-3" /> : ""}</span>
           </div>
         );
       })}
@@ -136,8 +137,8 @@ export function WifiDioramaScene({
       }}
       corner={
         <span className={styles.ssidPlate} data-lock={mode} data-testid="wifi-ssid">
-          <span className={styles.ssidName}>📶 cafe-wifi-2F</span>
-          <span className={styles.ssidLock}>{mode === "wired" ? "🔌 有線LAN" : encrypted ? "🔒 WPA2/WPA3" : "🔓 暗号化なし"}</span>
+          <span className={styles.ssidName}>cafe-wifi-2F</span>
+          <span className={styles.ssidLock}>{mode === "wired" ? "有線LAN" : encrypted ? <><Icon name="lock" className="mr-0.5 inline-block h-3 w-3 align-[-1px]" />WPA2/WPA3</> : "暗号化なし"}</span>
         </span>
       }
       world={
@@ -248,12 +249,12 @@ export function WifiDioramaScene({
                     <span key={s.name} className={styles.wifiRow} data-picked={picked ? "true" : "false"}>
                       <span className={styles.wifiName}>{s.name}</span>
                       <span className={styles.wifiLock} data-lock={lock}>
-                        {lock === "wpa" ? "🔒 WPA2/3" : "鍵なし"}
+                        {lock === "wpa" ? <><Icon name="lock" className="mr-0.5 inline-block h-3 w-3 align-[-1px]" />WPA2/3</> : "鍵なし"}
                       </span>
                     </span>
                   );
                 })}
-                {mode === "wired" && <span className={styles.wifiWired}>🔌 今回は Wi-Fi を使わず LANケーブル</span>}
+                {mode === "wired" && <span className={styles.wifiWired}>今回は Wi-Fi を使わず LANケーブル</span>}
               </div>
             </DioramaLabel>
           )}
@@ -261,7 +262,7 @@ export function WifiDioramaScene({
           {phase !== "connect" && (
             <DioramaLabel token="packet" dz={14} place={sending ? "above" : "left"}>
               <div className={styles.dataTag} data-tone={tone} role="img" aria-label={encrypted ? "暗号化されたデータ" : `暗号化されていないデータ：${SECRET}`}>
-                <span className={styles.dataTagHead}>{encrypted ? "🔒 WPA2/WPA3 で暗号化" : wireless ? "暗号化なし" : "ケーブルの中"}</span>
+                <span className={styles.dataTagHead}>{encrypted ? <><Icon name="lock" className="mr-0.5 inline-block h-3 w-3 align-[-1px]" />WPA2/WPA3 で暗号化</> : wireless ? "暗号化なし" : "ケーブルの中"}</span>
                 <span className={styles.dataTagBody}>{encrypted ? CIPHER : SECRET}</span>
               </div>
             </DioramaLabel>
@@ -277,7 +278,7 @@ export function WifiDioramaScene({
                 data-mode={mode}
                 role="status"
               >
-                <span className={styles.eveTitle}>😈 盗聴者のノートPC（受信した電波）</span>
+                <span className={styles.eveTitle}>盗聴者のノートPC（受信した電波）</span>
                 {!wireless ? (
                   <span className={styles.eveNothing}>何も届かない（電波が出ていない）</span>
                 ) : encrypted ? (

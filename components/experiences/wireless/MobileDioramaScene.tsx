@@ -88,7 +88,7 @@ export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; 
       tokens={tokensFor(mode)}
       corner={
         <span className={styles.modePlate} data-mode={mode} data-testid="mobile-mode">
-          {is5g ? "📶 5G：高速・大容量／低遅延／多数同時接続" : tether ? "📲 テザリング：スマホが親機" : "💴 MVNO：大手の回線を借りる"}
+          {is5g ? "5G：高速・大容量／低遅延／多数同時接続" : tether ? "テザリング：スマホが親機" : "MVNO：大手の回線を借りる"}
         </span>
       }
       world={

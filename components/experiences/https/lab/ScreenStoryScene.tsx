@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { scramble } from "../httpsFlow";
 import type { LabSceneProps } from "./labTypes";
 import styles from "./screenstory.module.css";
+import Icon from "@/components/ui/Icon";
 
 // パターンB：3つの画面で追う。
 // 「あなたのブラウザ」「通信路（ケーブル）」「盗聴者のパケット盗聴ツール」「Webサーバのログ」を
@@ -35,7 +36,7 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
       {/* ---------- あなたのPC（ブラウザ） ---------- */}
       <section className={styles.device} data-focus={focus === "you"} aria-label="あなたのPCの画面">
         <p className={styles.deviceLabel}>
-          <span aria-hidden>🧑</span> あなたのPC
+          <Icon name="user" aria-hidden className="inline h-3.5 w-3.5 align-text-bottom" /> あなたのPC
           {index === 0 && <span className={styles.chip}>入力中</span>}
           {index === 1 && <span className={styles.chip}>送信</span>}
         </p>
@@ -46,7 +47,9 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
       <section className={styles.wire} data-focus={focus === "wire"} data-active={step.laneActive} aria-label="通信路">
         <p className={styles.wireLabel}>
           インターネット（通信路）
-          {https && <span className={styles.tlsChip}>🔒 TLS で暗号化</span>}
+          {https && <span className={styles.tlsChip}>
+              <Icon name="lock" className="inline h-3 w-3 align-text-bottom" /> TLS で暗号化
+            </span>}
         </p>
         <div className={styles.pipeWrap}>
           <div className={styles.pipe}>
@@ -66,7 +69,7 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
           <div className={styles.tap} data-on={captured ? "true" : "false"} aria-hidden>
             <span className={styles.clip} />
             <span className={styles.tapLine} />
-            {captured && !arrived && <span className={styles.tapCopy}>{https ? "🔒" : "✉"}</span>}
+            {captured && !arrived && <span className={styles.tapCopy}>{https ? <Icon name="lock" className="h-3 w-3" /> : <Icon name="mail" className="h-3 w-3" />}</span>}
           </div>
           {/* 出口 → Webサーバ */}
           <div className={styles.exit} data-on={arrived ? "true" : "false"} aria-hidden>
@@ -79,7 +82,7 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
         {/* ---------- 盗聴者のPC ---------- */}
         <section className={styles.device} data-focus={focus === "eve"} aria-label="盗聴者の画面" data-testid="screenstory-eve">
           <p className={styles.deviceLabel}>
-            <span aria-hidden>😈</span> 盗聴者のPC
+            <Icon name="attacker" aria-hidden className="inline h-3.5 w-3.5 align-text-bottom" /> 盗聴者のPC
             {captured && <span className={styles.chip} data-tone="danger">盗聴中</span>}
           </p>
           <SnifferScreen mode={mode} captured={captured} plain={plain} cipher={cipher} />
@@ -88,7 +91,7 @@ export function ScreenStoryScene({ mode, index, step, plain, cipher, reducedMoti
         {/* ---------- Webサーバ ---------- */}
         <section className={styles.device} data-focus={focus === "server"} aria-label="Webサーバのログ">
           <p className={styles.deviceLabel}>
-            <span aria-hidden>🗄️</span> Webサーバ
+            <Icon name="server" aria-hidden className="inline h-3.5 w-3.5 align-text-bottom" /> Webサーバ
             {arrived && <span className={styles.chip} data-tone="ok">受信</span>}
           </p>
           <ServerLogScreen mode={mode} arrived={arrived} plain={plain} />
@@ -119,7 +122,13 @@ export function BrowserScreen({ mode, index, plain }: { mode: ScreenMode; index:
       </div>
       <div className={styles.urlBar}>
         <span className={styles.urlBadge} data-mode={mode}>
-          {https ? "🔒" : "⚠︎ 保護されていない通信"}
+          {https ? (
+            <Icon name="lock" className="inline h-3 w-3" />
+          ) : (
+            <>
+              <Icon name="alert" className="inline h-3 w-3 align-text-bottom" /> 保護されていない通信
+            </>
+          )}
         </span>
         <span className={styles.urlText}>
           <b data-mode={mode}>{https ? "https://" : "http://"}</b>shop.example/login

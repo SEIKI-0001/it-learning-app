@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import styles from "./stakeholder.module.css";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // 自社を中心にした交換関係の地図。
 //   相手を選ぶ … その相手との2本のレーンだけが動く：まず 相手 → 自社（例：代金）、続いて 自社 → 相手（例：商品）
@@ -8,11 +9,11 @@ import styles from "./stakeholder.module.css";
 
 export type Holder = {
   name: string;
-  emoji: string;
+  icon: IconName;
   give: string; // 会社 → 相手（文章）
   get: string; // 相手 → 会社（文章）
-  inTok: { icon: string; label: string }; // 相手 → 会社 を流れるもの
-  outTok: { icon: string; label: string }; // 会社 → 相手 を流れるもの
+  inTok: { icon: IconName; label: string }; // 相手 → 会社 を流れるもの
+  outTok: { icon: IconName; label: string }; // 会社 → 相手 を流れるもの
 };
 
 const W = 320;
@@ -65,7 +66,7 @@ function Chip({
   testId,
 }: {
   seg: Seg;
-  icon: string;
+  icon: IconName;
   label?: string;
   tone: "in" | "out";
   delay: number;
@@ -75,8 +76,7 @@ function Chip({
   // 送り手の端から受け手の端まで運ばれ、受け手に吸い込まれて消える（中身は下の文章に残る）
   const from = at(seg, 0);
   const to = at(seg, 1);
-  const text = label ? `${icon} ${label}` : icon;
-  const w = label ? 20 + label.length * 10.5 : 18;
+  const w = label ? 32 + label.length * 10.5 : 18;
   const style = {
     "--x1": `${from.x}px`,
     "--y1": `${from.y}px`,
@@ -90,9 +90,16 @@ function Chip({
       {label ? (
         <rect x={-w / 2} y={-9} width={w} height={18} rx={9} className={tone === "in" ? styles.chipIn : styles.chipOut} />
       ) : null}
-      <text textAnchor="middle" dominantBaseline="central" fontSize={label ? 10.5 : 13} className={styles.chipText}>
-        {text}
-      </text>
+      {label ? (
+        <>
+          <Icon name={icon} x={-w / 2 + 5} y={-5.5} width={11} height={11} className="text-gray-700" />
+          <text x={-w / 2 + 19} textAnchor="start" dominantBaseline="central" fontSize={10.5} className={styles.chipText}>
+            {label}
+          </text>
+        </>
+      ) : (
+        <Icon name={icon} x={-6.5} y={-6.5} width={13} height={13} className="text-gray-700" />
+      )}
     </g>
   );
 }
@@ -163,9 +170,7 @@ export function ExchangeMap({
         {/* 自社 */}
         <g key={`hub-${runKey}`} className={all && !reducedMotion ? styles.hubGather : undefined}>
           <circle cx={C.x} cy={C.y} r={HUB_R} fill="#4f46e5" stroke="#e0e7ff" strokeWidth={5} />
-          <text x={C.x} y={C.y - 7} textAnchor="middle" dominantBaseline="central" fontSize={15}>
-            🏢
-          </text>
+          <Icon name="building" x={C.x - 8} y={C.y - 15} width={16} height={16} className="text-white" />
           <text x={C.x} y={C.y + 12} textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700} fill="#fff">
             自社
           </text>
@@ -220,7 +225,7 @@ export function ExchangeMap({
                   : "bg-white text-emerald-800 ring-emerald-200"
             }`}
           >
-            <span className="text-base leading-none">{h.emoji}</span>
+            <Icon name={h.icon} className="h-4 w-4" />
             <span className="mt-0.5 whitespace-nowrap text-[9px] font-bold leading-tight">{h.name}</span>
           </button>
         );

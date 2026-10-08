@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「ファシリティマネジメント（設備・電源・UPS）」専用の体験。
@@ -41,17 +42,17 @@ function UpsToggle() {
 
       <div className="mt-3 rounded-xl bg-gray-50 p-4 ring-1 ring-gray-200">
         <div className="flex items-center justify-center gap-3 text-center">
-          <span className="text-3xl">⚡️</span>
+          <Icon name="zap" className="h-8 w-8 text-gray-700" />
           <span className="text-xs font-bold text-gray-400">停電</span>
           <span className="text-2xl text-gray-300">→</span>
           {ups && (
             <>
-              <span className="text-3xl">🔋</span>
+              <Icon name="battery" className="h-8 w-8 text-emerald-600" />
               <span className="text-[10px] font-bold text-emerald-600">UPS</span>
               <span className="text-2xl text-gray-300">→</span>
             </>
           )}
-          <span className={`text-3xl ${ups ? "" : "opacity-40 grayscale"}`}>🖥️</span>
+          <Icon name="monitor" className={`h-8 w-8 text-gray-700 ${ups ? "" : "opacity-40"}`} />
         </div>
         <div
           className={`mt-3 rounded-lg px-3 py-2.5 text-center text-sm font-bold ${
@@ -59,8 +60,8 @@ function UpsToggle() {
           }`}
         >
           {ups
-            ? "🔋 バッテリで電気が続く → 安全に終了 or 自家発電へ切替"
-            : "💥 いきなり停止 → 作業中のデータが壊れるおそれ"}
+            ? "バッテリで電気が続く → 安全に終了 or 自家発電へ切替"
+            : "いきなり停止 → 作業中のデータが壊れるおそれ"}
         </div>
       </div>
 
@@ -72,11 +73,11 @@ function UpsToggle() {
   );
 }
 
-const FACILITIES = [
-  { emo: "🔌", name: "電源設備", d: "UPSや自家発電で、電気を止めない・守る" },
-  { emo: "❄️", name: "空調", d: "機器が熱で壊れないよう温度・湿度を保つ" },
-  { emo: "🚪", name: "入退室管理", d: "ICカードなどで、関係者だけが入れるようにする" },
-  { emo: "🧯", name: "防災設備", d: "火災・地震に備える（消火・耐震など）" },
+const FACILITIES: { icon: IconName; name: string; d: string }[] = [
+  { icon: "plug", name: "電源設備", d: "UPSや自家発電で、電気を止めない・守る" },
+  { icon: "snowflake", name: "空調", d: "機器が熱で壊れないよう温度・湿度を保つ" },
+  { icon: "door", name: "入退室管理", d: "ICカードなどで、関係者だけが入れるようにする" },
+  { icon: "flame", name: "防災設備", d: "火災・地震に備える（消火・耐震など）" },
 ];
 
 function Facilities() {
@@ -91,7 +92,7 @@ function Facilities() {
         {FACILITIES.map((f) => (
           <div key={f.name} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
             <div className="flex items-center gap-1.5">
-              <span className="text-lg">{f.emo}</span>
+              <Icon name={f.icon} className="h-5 w-5 text-gray-700" />
               <span className="text-sm font-bold text-gray-800">{f.name}</span>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-gray-500">{f.d}</p>
@@ -154,7 +155,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は「${q.ans}」。 `}
+                  {correct ? "正解！ " : `正解は「${q.ans}」。 `}
                   {q.why}
                 </p>
               )}

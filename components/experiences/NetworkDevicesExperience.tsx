@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import Icon from "@/components/ui/Icon";
 
 // 「ネットワーク機器の役割」。対応関係が本質なので静的な図解。
 //   ① OSIの層のはしご：層 → 機器 → 扱う単位（信号／フレーム／パケット／変換）と、見ている宛先
@@ -215,7 +216,7 @@ function MapPanel() {
         <path d="M 30 130 q 8 -8 16 0 M 26 124 q 12 -12 24 0" className="fill-none stroke-sky-500" strokeWidth="1.5" />
 
         {/* 外 */}
-        <text x="150" y="20" textAnchor="middle" fontSize="18">🌐</text>
+        <Icon name="globe" x={141} y={4} width={18} height={18} className="text-gray-600" />
         <text x="176" y="20" fontSize="11" className="fill-gray-600 font-bold">インターネット</text>
 
         <Dev x={150} y={64} name="ルータ" unit="パケット" tone="l3" />
@@ -224,18 +225,18 @@ function MapPanel() {
 
         <Dev x={150} y={160} name="スイッチ" unit="フレーム" tone="l2" />
         <Dev x={56} y={160} w={56} name="AP" unit="フレーム" tone="l2" />
-        <Pc x={38} y={140} label="💻" />
+        <Icon name="laptop" x={30} y={126} width={16} height={16} className="text-gray-700" />
 
-        <Pc x={244} y={165} label="🖥️ PC" />
+        <Pc x={244} y={165} label="PC" />
         <Dev x={150} y={214} name="リピータ" unit="信号" tone="l1" />
-        <Pc x={244} y={219} label="🖥️ 遠くのPC" />
+        <Pc x={244} y={219} label="遠くのPC" />
       </svg>
       <div className="mt-2 space-y-1 text-[12px] leading-snug text-gray-700">
         <p>
           <b>ルータ</b>：社内LANと<b>別のネットワーク（インターネット）</b>の境目。IPアドレスで行き先を選ぶ
         </p>
         <p>
-          <b>スイッチ</b>：<b>同じLANの中</b>で、宛先のPCへ届ける。<b>AP</b>：無線の💻をLANに参加させる入口
+          <b>スイッチ</b>：<b>同じLANの中</b>で、宛先のPCへ届ける。<b>AP</b>：無線のPCをLANに参加させる入口
         </p>
         <p>
           <b>リピータ</b>：長いケーブルで弱った信号を元の強さに戻して延長。<b>ゲートウェイ</b>：通信方式が違う相手と変換してつなぐ

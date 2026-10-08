@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「処理形態とシステム構成」。1枚に詰め込まず、観点（軸）ごとに1枚ずつ分ける。すべて静的。
 //   ① 処理タイミング：バッチ（ためて月末にまとめて）／リアルタイム（来たらすぐ）を時間軸で
@@ -140,7 +141,7 @@ function ConnectionPanel() {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-[13px] leading-relaxed text-gray-600">💡 試験に出やすいのは<b className="text-gray-800">オンラインリアルタイム（座席予約・銀行ATM）</b>と<b className="text-gray-800">バッチ（給与計算）</b>。</p>
+      <p className="mt-3 text-[13px] leading-relaxed text-gray-600"><InlineIcon name="lightbulb" />試験に出やすいのは<b className="text-gray-800">オンラインリアルタイム（座席予約・銀行ATM）</b>と<b className="text-gray-800">バッチ（給与計算）</b>。</p>
     </Panel>
   );
 }

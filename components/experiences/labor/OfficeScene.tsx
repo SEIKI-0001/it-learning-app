@@ -16,11 +16,12 @@ import {
 } from "../network/NetworkSceneBase";
 import { SceneDefs } from "../scene/IsoParts";
 import styles from "./labor.module.css";
+import Icon from "@/components/ui/Icon";
 
 // 派遣／請負の「同じオフィス」の模型。
-//   ・シャツの色＝雇っている会社（作業者はどちらのモードでも 🟧派遣元／請負会社 の社員）
+//   ・シャツの色＝雇っている会社（作業者はどちらのモードでも オレンジ＝派遣元／請負会社 の社員）
 //   ・床の色＝誰の区画か（派遣：作業者は派遣先の職場に座る／請負：請負会社の区画に座る）
-//   ・矢印の色＝指示を出している人（🟦派遣先・注文主／🟧請負会社の責任者／🟥飛び越えた直接指示）
+//   ・矢印の色＝指示を出している人（青＝派遣先・注文主／オレンジ＝請負会社の責任者／赤＝飛び越えた直接指示）
 // 矢印の経路そのものが試験知識：派遣＝派遣先→派遣社員、請負＝注文主→請負会社→社員。
 
 export type LaborMode = "haken" | "ukeoi";
@@ -62,10 +63,10 @@ export const SCRIPTS: Record<Scenario, Beat[]> = {
 };
 
 const ARROWS: Record<ArrowId, { from: Who; to: Who; color: string; lift: number; label: string }> = {
-  cmd: { from: "client", to: "worker", color: INDIGO, lift: 26, label: "📣 仕事の指示" },
-  order: { from: "client", to: "boss", color: INDIGO, lift: 14, label: "📦 仕事の依頼" },
-  task: { from: "boss", to: "worker", color: AMBER, lift: 14, label: "📣 作業指示" },
-  bypass: { from: "client", to: "worker", color: ROSE, lift: 34, label: "⚠ 直接指示" },
+  cmd: { from: "client", to: "worker", color: INDIGO, lift: 26, label: "仕事の指示" },
+  order: { from: "client", to: "boss", color: INDIGO, lift: 14, label: "仕事の依頼" },
+  task: { from: "boss", to: "worker", color: AMBER, lift: 14, label: "作業指示" },
+  bypass: { from: "client", to: "worker", color: ROSE, lift: 34, label: "直接指示" },
 };
 
 /** どの矢印を、どの見た目で出すか（通常の流れ・飛び越え・本来の経路の薄表示） */
@@ -332,9 +333,15 @@ export function OfficeScene({
         {moving && (
           <g ref={capsule} key={`cap-${beat}`} data-testid="instruction-capsule" transform={`translate(-100 -100)`}>
             <rect x={-10} y={-7} width={20} height={14} rx={7} fill={ARROWS[moving].color} stroke="#FFFFFF" strokeWidth={1.5} />
-            <text x={0} y={0.5} textAnchor="middle" dominantBaseline="central" fontSize={8}>
-              {moving === "order" ? "📦" : "📣"}
-            </text>
+            <Icon
+              name={moving === "order" ? "package" : "megaphone"}
+              x={-5}
+              y={-5}
+              width={10}
+              height={10}
+              color="#FFFFFF"
+              className=""
+            />
           </g>
         )}
       </svg>

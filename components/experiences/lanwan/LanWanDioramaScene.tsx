@@ -121,7 +121,7 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
       }}
       corner={
         <span className={styles.plate} data-wan={wan ? "true" : dest ? "false" : "none"} data-testid="lanwan-plate">
-          {!dest ? "宛先を選んでください" : wan ? "🌐 WANを通った" : "🏠 LAN内で完結（WANは通らない）"}
+          {!dest ? "宛先を選んでください" : wan ? "WANを通った" : "LAN内で完結（WANは通らない）"}
         </span>
       }
       world={
@@ -217,13 +217,13 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
         <>
           <DioramaLabel at={{ x: 140, y: 440, z: 0 }} place="below" pinned>
             <span className={styles.area} data-area="lan" data-on={lanOn ? "true" : "false"}>
-              🏠 自宅のLAN（自分で用意）
+              自宅のLAN（自分で用意）
             </span>
           </DioramaLabel>
           {dest !== "printer" && (
             <DioramaLabel at={{ x: 400, y: 250, z: 0 }} place="below" optional>
               <span className={styles.area} data-area="wan" data-on={wan ? "true" : "false"}>
-                🌐 WAN（通信事業者の回線を借りる）
+                WAN（通信事業者の回線を借りる）
               </span>
             </DioramaLabel>
           )}

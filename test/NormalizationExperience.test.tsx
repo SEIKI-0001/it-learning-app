@@ -80,7 +80,7 @@ describe("NormalizationExperience", () => {
   it("shows the update anomaly in 1NF and a single fix in 3NF", () => {
     renderDeck();
     next();
-    fireEvent.click(screen.getByRole("button", { name: "🍎 100円 → 120円に" }));
+    fireEvent.click(screen.getByRole("button", { name: "100円 → 120円に" }));
     expect(column("flat", "price").count("data-conflict")).toBe(2);
     expect(screen.getByTestId("price-result")).toHaveTextContent("食い違う");
 

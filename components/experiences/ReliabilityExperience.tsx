@@ -7,6 +7,7 @@ import { SystemDiagram, systemUp, type Mode } from "./reliability/SystemDiagram"
 import { UptimeTimeline, type Focus } from "./reliability/UptimeTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「稼働率とMTBF・MTTR」専用の体験。公式を先に見せず、時間の帯から組み立てる。
@@ -125,7 +126,7 @@ function AvailabilityCalc() {
         ) : (
           <>
             {change.which} を {change.from}h → {change.to}h（{change.to > change.from ? "長く" : "短く"}）すると、稼働率{" "}
-            {(change.before * 100).toFixed(1)}% → {(change.after * 100).toFixed(1)}%　{up ? "⬆ 上がった 👍" : "⬇ 下がった"}
+            {(change.before * 100).toFixed(1)}% → {(change.after * 100).toFixed(1)}%　{up ? "↑ 上がった" : "↓ 下がった"}
             <div className="mt-0.5 font-medium">
               {change.which === "MTBF"
                 ? up
@@ -212,7 +213,7 @@ function SerialVsParallel() {
   return (
     <Panel>
       <div className="mb-3 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 ring-1 ring-emerald-200">
-        ✅ ここまでで基本はOK。ここからは応用です。
+        ここまでで基本はOK。ここからは応用です。
       </div>
       <SectionTitle step={6}>もう一歩：装置が2台のとき</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
@@ -227,7 +228,7 @@ function SerialVsParallel() {
           aria-pressed={mode === "serial"}
           className={`rounded-lg px-2 py-2 text-sm font-bold transition active:scale-95 ${mode === "serial" ? "bg-rose-500 text-white" : "text-gray-500"}`}
         >
-          ➖ 直列
+          直列
         </button>
         <button
           type="button"
@@ -248,11 +249,11 @@ function SerialVsParallel() {
       >
         {up
           ? broken === 0
-            ? "✅ システム稼働中"
-            : "✅ 1台止まっても、もう1台で継続中"
+            ? "システム稼働中"
+            : "1台止まっても、もう1台で継続中"
           : mode === "serial" && broken === 1
-            ? "🛑 1台止まっただけで、システム全体が停止"
-            : "🛑 システム停止"}
+            ? "1台止まっただけで、システム全体が停止"
+            : "システム停止"}
       </div>
 
       {/* 止まる条件 → 計算 */}
@@ -260,7 +261,7 @@ function SerialVsParallel() {
         <div className="text-xs font-bold text-gray-800">Q. このシステムが止まるのはいつ？</div>
         {!found[mode] ? (
           <div className="mt-1.5 flex items-center justify-between gap-2">
-            <span className="text-xs text-gray-500">👆 {mode === "parallel" && broken === 1 ? "まだ動いている。もう1台も止めてみよう。" : r.hint}</span>
+            <span className="text-xs text-gray-500">{mode === "parallel" && broken === 1 ? "まだ動いている。もう1台も止めてみよう。" : r.hint}</span>
             <button
               type="button"
               onClick={() => setFound((f) => ({ ...f, [mode]: true }))}
@@ -294,7 +295,7 @@ function SerialVsParallel() {
 
       {found.serial && found.parallel && (
         <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-          💡 <b>直列は1台で止まる → 稼働率は下がる（0.81）</b>。<b>並列は両方止まらないと止まらない → 上がる（0.99）</b>。
+          <InlineIcon name="lightbulb" /><b>直列は1台で止まる → 稼働率は下がる（0.81）</b>。<b>並列は両方止まらないと止まらない → 上がる（0.99）</b>。
           並列は「止まる確率」から考えて 1 から引きます。
         </div>
       )}

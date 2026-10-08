@@ -6,6 +6,7 @@ import { BEP, CountStage, FIXED, FormulaStage, MARGIN, MarginStage, PRICE, Pract
 import { useInView } from "./scene/useInView";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「損益分岐点」専用の体験。公式を先に出さず、1個売ったときのお金の動きから組み立てる。
@@ -36,14 +37,14 @@ function FixedVsVariable() {
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2.5">
         <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
-          <div className="text-sm font-bold text-brand-700">🏠 固定費</div>
+          <div className="text-sm font-bold text-brand-700">固定費</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             売れても売れなくても<b>必ずかかる</b>お金。
           </p>
           <p className="mt-2 text-[11px] text-gray-500">例：出店料 {yen(FIXED)}</p>
         </div>
         <div className="rounded-xl bg-emerald-50 p-3 ring-1 ring-emerald-200">
-          <div className="text-sm font-bold text-emerald-700">📦 変動費</div>
+          <div className="text-sm font-bold text-emerald-700">変動費</div>
           <p className="mt-1 text-xs leading-relaxed text-gray-600">
             売れた数に応じて<b>増えていく</b>お金。
           </p>
@@ -54,7 +55,7 @@ function FixedVsVariable() {
         固定費は総額が変わらないので、たくさん売る（作る）ほど<b className="text-gray-700">1個あたりの固定費の負担は小さく</b>なります。
       </p>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        💡 売価は1個 <b>{yen(PRICE)}</b>。まずは<b>1個売ると手元にいくら残るか</b>から見ていこう。
+        <InlineIcon name="lightbulb" />売価は1個 <b>{yen(PRICE)}</b>。まずは<b>1個売ると手元にいくら残るか</b>から見ていこう。
       </div>
     </Panel>
   );
@@ -137,17 +138,17 @@ function GraphStage() {
       >
         {profit > 0 && (
           <>
-            ⭕ <b>黒字</b>：50個より右。売上線が総費用線より上で、1個ごとに200円ずつ利益が増えます。
+            <b>黒字</b>：50個より右。売上線が総費用線より上で、1個ごとに200円ずつ利益が増えます。
           </>
         )}
         {profit < 0 && (
           <>
-            ❌ <b>赤字</b>：50個より左。固定費をまだ回収しきれていません（あと<b>{Math.ceil((cost - sales) / MARGIN)}個</b>）。
+            <b>赤字</b>：50個より左。固定費をまだ回収しきれていません（あと<b>{Math.ceil((cost - sales) / MARGIN)}個</b>）。
           </>
         )}
         {profit === 0 && (
           <>
-            🎯 <b>交点＝損益分岐点</b>（50個・売上 {yen(sales)}）。売上と総費用が同じで、利益は0円。
+            <b>交点＝損益分岐点</b>（50個・売上 {yen(sales)}）。売上と総費用が同じで、利益は0円。
           </>
         )}
       </div>
@@ -162,7 +163,7 @@ function GraphStage() {
             }}
             className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white active:scale-95"
           >
-            🎯 交点（50個）に合わせる
+            交点（50個）に合わせる
           </button>
         )}
         {!reducedMotion && (
@@ -230,7 +231,7 @@ function Quiz() {
               </div>
               {chosen && (
                 <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "⭕ 正解！ " : `❌ 正解は ${it.ans}。 `}
+                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
                   {it.why}
                 </p>
               )}

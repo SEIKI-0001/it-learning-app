@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { Arrow, Box, Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { InlineIcon } from "@/components/ui/Pictogram";
+import Icon from "@/components/ui/Icon";
 
 // 「株式会社のしくみと組織形態」。関係・構造が本質なので静的な図解だけで見せる（動きは付けない）。
 //   ① 所有と経営：株主 → 株主総会 → 取締役会 → 業務執行 の縦の関係図（左帯で「所有／経営」を分ける）
@@ -51,7 +53,7 @@ function OwnershipPanel() {
       <div className="mt-3 grid grid-cols-[2.25rem_1fr] gap-x-2" data-testid="corp-ownership">
         {/* 所有 */}
         <Band tone="own" rows="row-span-3">所有</Band>
-        <Box tone="soft" sub="お金を出した会社の持ち主">👥 株主</Box>
+        <Box tone="soft" sub="お金を出した会社の持ち主">株主</Box>
         <Arrow label="集まって議決する" />
         <Box tone="soft" sub="取締役の選任・定款変更など基本事項を決める">株主総会</Box>
 
@@ -74,7 +76,7 @@ function OwnershipPanel() {
         ✕ 株主が現場へ直接「こうしろ」と指示する線は<b>ありません</b>。株主が口を出せるのは株主総会での議決（取締役を選ぶなど）です。
       </div>
       <p className="mt-2 text-[13px] leading-relaxed text-gray-600">
-        💡 持ち主（所有）と、経営のプロ（経営）を分ける＝<b className="text-gray-800">所有と経営の分離</b>。
+        <InlineIcon name="lightbulb" />持ち主（所有）と、経営のプロ（経営）を分ける＝<b className="text-gray-800">所有と経営の分離</b>。
       </p>
     </Panel>
   );
@@ -129,7 +131,7 @@ function PurposePanel() {
         <span>↑ 変わりにくい・抽象的</span>
         <span>具体的・数字 ↓</span>
       </div>
-      <p className="mt-2 text-[13px] leading-relaxed text-gray-600">💡 「使命・存在意義」なら<b className="text-gray-800">ミッション</b>、「将来こうなりたい姿」なら<b className="text-gray-800">ビジョン</b>。</p>
+      <p className="mt-2 text-[13px] leading-relaxed text-gray-600"><InlineIcon name="lightbulb" />「使命・存在意義」なら<b className="text-gray-800">ミッション</b>、「将来こうなりたい姿」なら<b className="text-gray-800">ビジョン</b>。</p>
     </Panel>
   );
 }
@@ -217,7 +219,7 @@ function Person() {
       <span aria-hidden className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-brand-400" />
       <span aria-hidden className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-accent-400" />
       <span aria-hidden className="relative grid h-5 w-5 place-items-center rounded-full bg-white text-[11px] ring-1 ring-gray-300">
-        👤
+        <Icon name="user" className="h-3 w-3 text-gray-700" />
       </span>
     </div>
   );
@@ -238,8 +240,12 @@ function ProjectChart() {
       </div>
       <div className="rounded border-2 border-dashed border-emerald-400 bg-emerald-50 px-1 py-1 text-center">
         <div className="text-[11px] font-bold text-emerald-900">新製品チーム</div>
-        <div className="text-[11px] text-emerald-800">👤👤👤</div>
-        <div className="text-[11px] font-bold text-emerald-800">⏳ 終われば解散</div>
+        <div className="flex justify-center text-emerald-800">
+          <Icon name="user" className="h-3 w-3" />
+          <Icon name="user" className="h-3 w-3" />
+          <Icon name="user" className="h-3 w-3" />
+        </div>
+        <div className="text-[11px] font-bold text-emerald-800">終われば解散</div>
       </div>
     </div>
   );
@@ -274,7 +280,7 @@ function OrgFormsPanel() {
         ))}
       </div>
       <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
-        💡 マトリックスの 👤 には<b className="text-gray-800">上（職能）と左（事業）の両方から線</b>が来ています。これが「上司が2人」。
+        <InlineIcon name="lightbulb" />マトリックスの交点の人には<b className="text-gray-800">上（職能）と左（事業）の両方から線</b>が来ています。これが「上司が2人」。
       </p>
     </Panel>
   );
