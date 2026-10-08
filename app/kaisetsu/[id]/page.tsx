@@ -21,6 +21,7 @@ import {
   kaisetsuTitle,
   relatedTermHref,
 } from "@/lib/publicPages/kaisetsu";
+import { kaisetsuJsonLd } from "@/lib/publicPages/structuredData";
 import { wordPath } from "@/lib/publicPages/words";
 import { FIELD_LABELS } from "@/types/content";
 
@@ -65,6 +66,14 @@ export default async function KaisetsuTopicPage({ params }: Props) {
   return (
     <article className="g-col">
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <JsonLd
+        data={kaisetsuJsonLd(t, {
+          path: kaisetsuPath(t.id),
+          headline: `${t.title}とは？わかりやすく解説`,
+          description: kaisetsuDescription(t),
+          about: [t.title],
+        })}
+      />
       <Breadcrumb crumbs={crumbs} />
       <h1>{t.title}とは？わかりやすく解説</h1>
       <p className="k-meta">

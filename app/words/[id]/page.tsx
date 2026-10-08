@@ -18,6 +18,7 @@ import {
   wordPath,
   wordTitle,
 } from "@/lib/publicPages/words";
+import { wordJsonLd } from "@/lib/publicPages/structuredData";
 import { getAllWords, getWord, getWordByAcronym } from "@/lib/wordlist";
 import { WORDLIST_CATEGORY_LABELS } from "@/types/wordlist";
 
@@ -61,6 +62,7 @@ export default async function WordPage({ params }: Props) {
   return (
     <article className="g-col">
       <JsonLd data={breadcrumbJsonLd(crumbs)} />
+      <JsonLd data={wordJsonLd(w)} />
       <Breadcrumb crumbs={crumbs} />
       <h1>{wordTitle(w)}</h1>
       <div className="g-lead">
