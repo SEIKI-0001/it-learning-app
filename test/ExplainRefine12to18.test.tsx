@@ -113,7 +113,7 @@ describe("12〜18章：静的な図解に作り直したテーマ", () => {
     expect(screen.getByTestId("latch").querySelector('[data-axis="Hierarchy"]')).toHaveTextContent("1位 木かげ珈琲");
   });
 
-  it("isms: the matrix is filled from the start with both axes, and treatments show meaning + example", () => {
+  it("isms: the matrix is filled from the start with both axes, and treatments are a picture map", () => {
     renderDeck(IsmsRiskExperience);
     const matrix = screen.getByTestId("risk-matrix");
     expect(matrix).toHaveTextContent("影響度");
@@ -122,8 +122,8 @@ describe("12〜18章：静的な図解に作り直したテーマ", () => {
     expect(matrix.querySelector('[data-impact="低"][data-prob="低"]')).toHaveAttribute("data-size", "小");
     expect(screen.getByTestId("risk-flow")).toHaveTextContent("脅威・脆弱性を把握");
     slide(2);
-    const transfer = screen.getByTestId("risk-treatments").querySelector('[data-treatment="移転"]');
-    expect(transfer).toHaveTextContent("損失を他者に肩代わりしてもらう");
+    const transfer = screen.getByTestId("risk-treatments").querySelector('[data-resp="transfer"]');
+    expect(transfer).toHaveTextContent("肩代わり");
     expect(transfer).toHaveTextContent("保険");
   });
 
