@@ -174,7 +174,7 @@ function Playground({ state, set }: { state: State; set: (s: Partial<State>) => 
       <p className="mt-2 text-center text-xs text-gray-500">{OPS.find((o) => o.op === op)!.label}：{OPS.find((o) => o.op === op)!.desc}</p>
 
       {/* 回路 */}
-      <div className="relative mt-2 w-full rounded-xl bg-gray-50 ring-1 ring-gray-200" style={{ aspectRatio: `${W} / ${H}` }}>
+      <div className="relative mx-auto mt-2 w-full max-w-[300px] rounded-xl bg-gray-50 ring-1 ring-gray-200" style={{ aspectRatio: `${W} / ${H}` }}>
         <GateCircuit op={op} a={a} b={b} out={out} runKey={`${op}${a}${b}`} reducedMotion={reducedMotion} />
         <div className="absolute -translate-y-1/2" style={{ left: "3%", top: `${(SWITCH_Y.a / H) * 100}%` }}>
           <Switch value={a} onToggle={() => set({ a: a ? 0 : 1 })} label="A" />
