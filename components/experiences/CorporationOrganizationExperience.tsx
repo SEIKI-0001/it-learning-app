@@ -1,15 +1,15 @@
 "use client";
 
 import type { ReactNode } from "react";
+import OrgFormsPanel from "./corporation/OrgFormsPanel";
 import { Arrow, Box, Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
 import { InlineIcon } from "@/components/ui/Pictogram";
-import Icon from "@/components/ui/Icon";
 
 // 「株式会社のしくみと組織形態」。関係・構造が本質なので静的な図解だけで見せる（動きは付けない）。
 //   ① 所有と経営：株主 → 株主総会 → 取締役会 → 業務執行 の縦の関係図（左帯で「所有／経営」を分ける）
 //   ② 会社の目的を示す言葉：経営理念 → ミッション → ビジョン → 経営目標 の積み上げ
-//   ③ 4つの組織形態：ミニ組織図を 2×2 で横並び比較
+//   ③ 4つの組織形態：同じ4人をタブで組み替え、佐藤さんの上司が誰になるかで比べる（corporation/OrgFormsPanel）
 //   ④ 見分ける順番：期間限定？ → 上司が2人？ → 何で分ける？ の判定フロー
 //   ⑤ 試験ポイント
 
@@ -21,7 +21,7 @@ export default function CorporationOrganizationExperience() {
       </Lead>
       <OwnershipPanel />
       <PurposePanel />
-      <OrgFormsPanel />
+      <OrgFormsPanel step={3} />
       <OrgDecisionPanel />
       <PointsPanel
         step={5}
@@ -132,156 +132,6 @@ function PurposePanel() {
         <span>具体的・数字 ↓</span>
       </div>
       <p className="mt-2 text-[13px] leading-relaxed text-gray-600"><InlineIcon name="lightbulb" />「使命・存在意義」なら<b className="text-gray-800">ミッション</b>、「将来こうなりたい姿」なら<b className="text-gray-800">ビジョン</b>。</p>
-    </Panel>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ③ 4つの組織形態（ミニ組織図）
-// ---------------------------------------------------------------------------
-
-function Top({ children = "社長" }: { children?: ReactNode }) {
-  return <div className="mx-auto w-14 rounded bg-gray-800 py-0.5 text-center text-[11px] font-bold text-white">{children}</div>;
-}
-
-function Stem() {
-  return <div className="mx-auto h-2 w-px bg-gray-400" aria-hidden />;
-}
-
-function Unit({ children, tone = "plain", className = "" }: { children: ReactNode; tone?: "plain" | "func" | "biz" | "pj"; className?: string }) {
-  const t =
-    tone === "func"
-      ? "bg-brand-100 text-brand-900"
-      : tone === "biz"
-        ? "bg-accent-100 text-accent-800"
-        : tone === "pj"
-          ? "bg-emerald-100 text-emerald-900"
-          : "bg-white text-gray-700 ring-1 ring-gray-300";
-  return <div className={`rounded px-0.5 py-0.5 text-center text-[11px] font-bold leading-tight ${t} ${className}`}>{children}</div>;
-}
-
-function FunctionalChart() {
-  return (
-    <div>
-      <Top />
-      <Stem />
-      <div className="grid grid-cols-3 gap-1 border-t border-gray-400 pt-2">
-        <Unit tone="func">営業</Unit>
-        <Unit tone="func">製造</Unit>
-        <Unit tone="func">開発</Unit>
-      </div>
-    </div>
-  );
-}
-
-function DivisionalChart() {
-  return (
-    <div>
-      <Top />
-      <Stem />
-      <div className="grid grid-cols-2 gap-1 border-t border-gray-400 pt-2">
-        {["家電", "車載"].map((d) => (
-          <div key={d} className="rounded bg-accent-50 p-0.5 ring-1 ring-accent-200">
-            <Unit tone="biz">{d}事業部</Unit>
-            <div className="mt-0.5 grid grid-cols-3 gap-px text-center text-[11px] font-bold text-gray-600">
-              <span>営</span>
-              <span>製</span>
-              <span>開</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MatrixChart() {
-  return (
-    <div className="grid grid-cols-[2.3rem_1fr_1fr] gap-x-0 gap-y-0 text-[11px]">
-      <div />
-      <Unit tone="func">営業部</Unit>
-      <Unit tone="func">製造部</Unit>
-      {["家電", "車載"].map((d) => (
-        <div key={d} className="contents">
-          <Unit tone="biz">{d}</Unit>
-          <Person />
-          <Person />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Person() {
-  // 縦線（職能の上司から）と横線（事業の上司から）が交わる所に人がいる＝上司が2人
-  return (
-    <div className="relative grid h-7 place-items-center">
-      <span aria-hidden className="absolute inset-y-0 left-1/2 w-0.5 -translate-x-1/2 bg-brand-400" />
-      <span aria-hidden className="absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 bg-accent-400" />
-      <span aria-hidden className="relative grid h-5 w-5 place-items-center rounded-full bg-white text-[11px] ring-1 ring-gray-300">
-        <Icon name="user" className="h-3 w-3 text-gray-700" />
-      </span>
-    </div>
-  );
-}
-
-function ProjectChart() {
-  return (
-    <div>
-      <div className="grid grid-cols-3 gap-1">
-        <Unit>営業</Unit>
-        <Unit>設計</Unit>
-        <Unit>製造</Unit>
-      </div>
-      <div className="grid grid-cols-3 text-center text-[11px] leading-none text-emerald-600" aria-hidden>
-        <span>↓</span>
-        <span>↓</span>
-        <span>↓</span>
-      </div>
-      <div className="rounded border-2 border-dashed border-emerald-400 bg-emerald-50 px-1 py-1 text-center">
-        <div className="text-[11px] font-bold text-emerald-900">新製品チーム</div>
-        <div className="flex justify-center text-emerald-800">
-          <Icon name="user" className="h-3 w-3" />
-          <Icon name="user" className="h-3 w-3" />
-          <Icon name="user" className="h-3 w-3" />
-        </div>
-        <div className="text-[11px] font-bold text-emerald-800">終われば解散</div>
-      </div>
-    </div>
-  );
-}
-
-const FORMS = [
-  { name: "職能別組織", axis: "仕事の種類で分ける", strong: "専門性が高まる", chart: <FunctionalChart /> },
-  { name: "事業部制組織", axis: "製品・地域で分ける", strong: "事業ごとに素早く判断・利益責任", chart: <DivisionalChart /> },
-  { name: "マトリックス組織", axis: "職能 × 事業の2軸", strong: "上司が2人（指揮系統が2つ）", chart: <MatrixChart /> },
-  { name: "プロジェクト組織", axis: "目的ごとに部門横断", strong: "期間限定。終われば解散", chart: <ProjectChart /> },
-];
-
-function OrgFormsPanel() {
-  return (
-    <Panel>
-      <SectionTitle step={3}>4つの組織形態を並べる</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <span className="rounded bg-brand-100 px-1 font-bold text-brand-900">青＝職能</span>
-        {"　"}
-        <span className="rounded bg-accent-100 px-1 font-bold text-accent-800">橙＝事業</span>
-        {"　"}
-        <span className="rounded bg-emerald-100 px-1 font-bold text-emerald-900">緑＝期間限定</span>
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2" data-testid="corp-forms">
-        {FORMS.map((f) => (
-          <div key={f.name} className="flex flex-col rounded-xl bg-gray-50 p-2 ring-1 ring-gray-200">
-            <div className="text-[13px] font-bold text-gray-800">{f.name}</div>
-            <div className="text-[11px] font-bold text-brand-700">{f.axis}</div>
-            <div className="my-2 flex-1">{f.chart}</div>
-            <div className="border-t border-gray-200 pt-1 text-[11px] leading-snug text-gray-600">{f.strong}</div>
-          </div>
-        ))}
-      </div>
-      <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
-        <InlineIcon name="lightbulb" />マトリックスの交点の人には<b className="text-gray-800">上（職能）と左（事業）の両方から線</b>が来ています。これが「上司が2人」。
-      </p>
     </Panel>
   );
 }
