@@ -33,15 +33,15 @@ function Hierarchy() {
       <ol className="mt-4" data-testid="goal-hierarchy">
         {TIERS.map((t, i) => (
           <li key={t.tag}>
-            <div className={`rounded-xl p-3.5 ring-1 ${t.strong ? "bg-gray-900 text-white ring-gray-900" : "bg-white ring-gray-300"}`} data-testid={`goal-tier-${t.tag}`}>
+            <div className={`rounded-xl p-3.5 ring-1 ${t.strong ? "bg-brand-50 ring-2 ring-brand-400" : "bg-white ring-gray-300"}`} data-testid={`goal-tier-${t.tag}`}>
               <div className="flex flex-wrap items-baseline gap-x-2">
-                <span className="font-mono text-2xl font-bold leading-none">{t.tag}</span>
-                <span className={`text-sm font-bold ${t.strong ? "text-white" : "text-gray-900"}`}>{t.ja}</span>
-                <span className={`text-xs ${t.strong ? "text-gray-300" : "text-gray-500"}`}>{t.full}</span>
+                <span className={`font-mono text-xl font-bold leading-none ${t.strong ? "text-brand-700" : ""}`}>{t.tag}</span>
+                <span className={`text-sm font-bold ${t.strong ? "text-brand-900" : "text-gray-900"}`}>{t.ja}</span>
+                <span className={`text-[11px] ${t.strong ? "text-brand-700/80" : "text-gray-500"}`}>{t.full}</span>
               </div>
-              <p className={`mt-1.5 text-[15px] font-bold leading-snug ${t.strong ? "text-white" : "text-gray-900"}`}>{t.what}</p>
-              <p className={`mt-1.5 text-sm ${t.strong ? "text-gray-200" : "text-gray-700"}`}>
-                <span className={`mr-1.5 rounded px-1.5 py-0.5 text-xs font-bold ${t.strong ? "bg-white/15 text-white" : "bg-brand-50 text-brand-800"}`}>例</span>
+              <p className={`mt-2 text-[15px] font-bold leading-snug text-balance [word-break:auto-phrase] ${t.strong ? "text-brand-900" : "text-gray-900"}`}>{t.what}</p>
+              <p className={`mt-1.5 text-sm ${t.strong ? "text-brand-900/90" : "text-gray-700"}`}>
+                <span className={`mr-1.5 rounded px-1.5 py-0.5 text-xs font-bold ${t.strong ? "bg-white text-brand-800 ring-1 ring-brand-200" : "bg-brand-50 text-brand-800"}`}>例</span>
                 {t.ex}
               </p>
             </div>
