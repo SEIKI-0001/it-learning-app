@@ -19,6 +19,7 @@ import type { MochitQuestionContext } from "@/lib/mochitAi/types";
 
 import { QuestionTimer } from "@/lib/questionTimer";
 import { XP_PER_COMBO } from "@/lib/study";
+import { formatJapaneseExamYear } from "@/lib/pastExam/yearLabel";
 
 const KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
 
@@ -95,7 +96,7 @@ function mochitQuestionContext(
     selectedLabel: selected,
     explanation: q.explanation,
     ...(selectedExplanation ? { selectedChoiceExplanation: selectedExplanation } : {}),
-    ...(q.official ? { sourceLabel: `${q.official.year}年度 公開問題 問${q.official.questionNumber}` } : {}),
+    ...(q.official ? { sourceLabel: `${formatJapaneseExamYear(q.official.year)} 公開問題 問${q.official.questionNumber}` } : {}),
   };
 }
 
@@ -390,7 +391,7 @@ export default function TopicQuiz({
           >
             {q.official && (
               <p className="mb-2 text-xs font-semibold text-brand-600">
-                {q.official.year}年度 公開問題 問{q.official.questionNumber}
+                {formatJapaneseExamYear(q.official.year)} 公開問題 問{q.official.questionNumber}
               </p>
             )}
             <p className={`text-sm font-bold text-gray-800 ${dense ? "mb-2" : "mb-3"}`}>

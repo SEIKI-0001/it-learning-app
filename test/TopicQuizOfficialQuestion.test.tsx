@@ -131,7 +131,7 @@ describe("確認パックの公式問題表示", () => {
       <TopicQuiz topicId="topic-1" onComplete={vi.fn()} questions={[officialQuestion]} />,
     );
 
-    expect(screen.getByText("2026年度 公開問題 問7")).toBeInTheDocument();
+    expect(screen.getByText("令和8年度 公開問題 問7")).toBeInTheDocument();
     expect(
       screen.getByText("出典：令和8年度 ITパスポート試験 公開問題 問7"),
     ).toBeInTheDocument();

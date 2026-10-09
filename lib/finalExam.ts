@@ -5,6 +5,8 @@
 //   - 問題数・難易度配分・既出除外数はCP定義に合わせる。
 //   - 問題が不足しても未学習/範囲外のトピックには広げず、学習を促す。
 //   - 不合格時は間違えたトピックを復習キューへ（呼び出し側の recordFinalExamAttempt）。
+//   - CP5（過去問実戦）だけは確認問題ではなく公式過去問から出す。問題バンクはクライアントへ
+//     載せないので、問題は呼び出し側がサーバから受け取って渡す（lib/pastExam/finalExamSelection）。
 
 import type { AppState, UserAnswer } from "@/types";
 import type { CheckQuestion, Difficulty } from "@/types/content";
@@ -15,6 +17,15 @@ import type {
 } from "@/types/checkpoint";
 import { getAllTopics } from "@/lib/content";
 import { getCheckpoint, usesBookPacedExamScope } from "@/lib/checkpoints";
+import type { OfficialFinalExamQuestion } from "@/lib/pastExam/finalExamSelection";
+
+/** 突破試験を公式過去問から出す CP。 */
+const OFFICIAL_PAST_EXAM_CHECKPOINTS: readonly CheckpointId[] = ["cp5"];
+
+/** その CP の突破試験を公式過去問から出すか。 */
+export function usesOfficialPastExam(checkpointId: CheckpointId): boolean {
+  return OFFICIAL_PAST_EXAM_CHECKPOINTS.includes(checkpointId);
+}
 
 type FinalExamScope = {
   /** このCPで出題してよい中分類。未学習トピックはこの範囲内でも出題しない。 */
@@ -101,6 +112,7 @@ const FINAL_EXAM_SCOPES: Record<Exclude<CheckpointId, "cp0">, FinalExamScope> = 
     difficultyDistribution: { 1: 0.15, 2: 0.5, 3: 0.35 },
     recentQuestionExclusionCount: 24,
   },
+  // CP5 の出題は公式過去問（generateFinalExam の officialQuestions）。この中分類は使わない。
   cp5: {
     eligibleCategories: [
       "基礎理論（情報の表現）",
@@ -187,7 +199,12 @@ function targetCount(
 export function generateFinalExam(
   state: AppState,
   checkpointId: CheckpointId,
-  options: { attemptId?: string; recentQuestionIds?: string[] } = {},
+  options: {
+    attemptId?: string;
+    recentQuestionIds?: string[];
+    /** 公式過去問から出す CP（usesOfficialPastExam）で出題する問題。サーバが選んだ順のまま使う。 */
+    officialQuestions?: OfficialFinalExamQuestion[];
+  } = {},
 ): FinalExam {
   const checkpoint = getCheckpoint(checkpointId);
   if (!checkpoint.finalExam || checkpointId === "cp0") {
@@ -200,6 +217,9 @@ export function generateFinalExam(
   };
   const scope = FINAL_EXAM_SCOPES[checkpointId];
   const attemptId = options.attemptId ?? "final-exam";
+  if (usesOfficialPastExam(checkpointId)) {
+    return officialFinalExam(checkpointId, rule, scope, attemptId, options.officialQuestions ?? []);
+  }
   const completedTopicIds = new Set(state.progress.completedTopics);
   // 参考書順の CP1〜3 は「本で学んだ範囲」の確認: 中分類で絞らず、完了トピック全体から出す。
   const bookPaced = usesBookPacedExamScope(state, checkpointId);
@@ -263,6 +283,37 @@ export function generateFinalExam(
     topicIdByQuestionId,
     topicIds: [...new Set(ordered.map((item) => item.topicId))],
     reusedRecentQuestion: source === candidates && recent.size > 0,
+  };
+}
+
+/** 公式過去問の突破試験。問題の選定はサーバ側（3分野を本試験の比率で・未出題優先）。 */
+function officialFinalExam(
+  checkpointId: CheckpointId,
+  rule: FinalExamRule,
+  scope: FinalExamScope,
+  attemptId: string,
+  officialQuestions: OfficialFinalExamQuestion[],
+): FinalExam {
+  const seen = new Set<string>();
+  const selected = officialQuestions.filter((item) => {
+    if (seen.has(item.question.id)) return false;
+    seen.add(item.question.id);
+    return true;
+  }).slice(0, rule.questionCount);
+  if (selected.length < rule.questionCount) {
+    throw new Error(
+      `Checkpoint ${checkpointId} needs ${rule.questionCount} official past exam questions, but only ${selected.length} are available`,
+    );
+  }
+  return {
+    checkpointId,
+    rule,
+    scope,
+    attemptId,
+    questions: selected.map((item) => item.question),
+    topicIdByQuestionId: Object.fromEntries(selected.map((item) => [item.question.id, item.topicId])),
+    topicIds: [...new Set(selected.map((item) => item.topicId))],
+    reusedRecentQuestion: false,
   };
 }
 
