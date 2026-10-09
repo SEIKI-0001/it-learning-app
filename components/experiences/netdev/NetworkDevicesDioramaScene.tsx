@@ -91,7 +91,7 @@ const SHOTS: Record<NetDevMode | "none", Camera> = {
   switch: { yaw: -10, pitch: 50, zoom: 1.12, fx: 300, fy: 300, fz: 30 },
   router: { yaw: -14, pitch: 52, zoom: 0.95, fx: 280, fy: 200, fz: 40 },
   ap: { yaw: 8, pitch: 52, zoom: 1.05, fx: 180, fy: 330, fz: 40 },
-  repeater: { yaw: -14, pitch: 54, zoom: 0.84, fx: 540, fy: 350, fz: 30 },
+  repeater: { yaw: -12, pitch: 54, zoom: 1.0, fx: 620, fy: 370, fz: 30 },
   gateway: { yaw: -18, pitch: 54, zoom: 0.95, fx: 520, fy: 200, fz: 40 },
 };
 
@@ -280,8 +280,8 @@ export function NetworkDevicesDioramaScene({ mode, runKey, reducedMotion }: { mo
 }
 
 function Labels({ mode }: { mode: NetDevMode | null }) {
-  const pc = (id: PcId, tone: "info" | "ok" | "warn" | "muted", status?: string) => (
-    <DioramaLabel key={id} at={{ ...PCS[id], z: 100 }} place="above" optional>
+  const pc = (id: PcId, tone: "info" | "ok" | "warn" | "muted", status?: string, optional = true) => (
+    <DioramaLabel key={id} at={{ ...PCS[id], z: 100 }} place="above" optional={optional}>
       <NameChip name={`PC-${id}`} tone={tone} status={status} />
     </DioramaLabel>
   );
@@ -308,7 +308,7 @@ function Labels({ mode }: { mode: NetDevMode | null }) {
   if (mode === "hub" || mode === "switch") {
     return (
       <>
-        <DioramaLabel at={up(HUB, 60)} place="right" testId="netdev-center-label">
+        <DioramaLabel at={up(HUB, 60)} place="below" testId="netdev-center-label">
           {mode === "hub" ? (
             <NameChip name="ハブ" status="宛先を見ない" tone="warn" />
           ) : (
@@ -326,8 +326,8 @@ function Labels({ mode }: { mode: NetDevMode | null }) {
         {pc("C", "ok", "宛先")}
         {mode === "hub" ? (
           <>
-            {pc("B", "warn", "関係ないのに届く")}
-            {pc("D", "warn", "関係ないのに届く")}
+            {pc("B", "warn", "関係ないのに届く", false)}
+            {pc("D", "warn", "関係ないのに届く", false)}
           </>
         ) : null}
       </>
@@ -353,7 +353,7 @@ function Labels({ mode }: { mode: NetDevMode | null }) {
   if (mode === "ap") {
     return (
       <>
-        <DioramaLabel at={up(AP, 40)} place="right">
+        <DioramaLabel at={up(AP, 40)} place="above">
           <NameChip name="AP" status="無線→有線" tone="info" />
         </DioramaLabel>
         <DioramaLabel at={up(LAPTOP, 40)} place="below" optional>
@@ -367,13 +367,13 @@ function Labels({ mode }: { mode: NetDevMode | null }) {
   if (mode === "repeater") {
     return (
       <>
-        <DioramaLabel token="t1" place="above">
+        <DioramaLabel token="t1" place="left">
           <DataTag tag="信号" body="弱っている" tone="plain" />
         </DioramaLabel>
         <DioramaLabel token="t2" place="above">
           <DataTag tag="信号" body="元の強さ" tone="ok" />
         </DioramaLabel>
-        <DioramaLabel at={up(REPEATER, 30)} place="below">
+        <DioramaLabel at={REPEATER} place="below">
           <NameChip name="リピータ" status="増幅して延長" tone="info" />
         </DioramaLabel>
       </>
@@ -386,10 +386,10 @@ function Labels({ mode }: { mode: NetDevMode | null }) {
       <DioramaLabel token="t1" place="left">
         <DataTag tag="社内の方式" body="TCP/IP" tone="info" />
       </DioramaLabel>
-      <DioramaLabel token="t2" place="right">
+      <DioramaLabel token="t2" place="above">
         <DataTag tag="工場の方式" body="形式を変換済み" tone="ok" />
       </DioramaLabel>
-      <DioramaLabel at={up(GATEWAY, 60)} place="above">
+      <DioramaLabel at={up(GATEWAY, 30)} place="below">
         <NameChip name="ゲートウェイ" status="変換" tone="info" />
       </DioramaLabel>
     </>
