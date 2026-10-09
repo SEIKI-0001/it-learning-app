@@ -1,32 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import { IotDioramaScene, type IotPhase } from "./iot/IotDioramaScene";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle, StepNav } from "./ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
 
 // ============================================================================
 // 「IoT」専用の体験。
-//   ① IoTの一周（センサーで測る→ネットで送る→クラウドで判断→機器を制御）をStep実演
+//   ① IoTの一周（センサーで測る→ネットで送る→クラウドで判断→機器を制御）を、家とクラウドの3D模型でStep実演
 //   ② 活用例カード
 //   ③ 便利さの裏のセキュリティ（安全／あやしい 仕分けクイズ）
 // ============================================================================
 
-const NODES: { id: string; icon: IconName; name: string; sub: string }[] = [
-  { id: "sensor", icon: "thermometer", name: "センサー付き機器", sub: "エアコン" },
-  { id: "net", icon: "signal", name: "ネット", sub: "送信" },
-  { id: "cloud", icon: "cloud", name: "クラウド", sub: "判断" },
-];
-
-const STEPS = [
-  { active: ["sensor"], holder: "sensor", html: "エアコンの<b>センサー</b>が室温を測る。「いま32℃」とデータを取得。" },
-  { active: ["sensor", "net"], holder: "net", html: "測ったデータを<b>インターネット経由</b>でクラウドへ送る。" },
-  { active: ["net", "cloud"], holder: "cloud", html: "<b>クラウド</b>が判断：「32℃は暑い → 28℃まで冷やそう」。" },
-  { active: ["cloud", "net", "sensor"], holder: "sensor", html: "指示が機器に戻り、エアコンが<b>自動で動く</b>。人が触らなくても完結！" },
+const STEPS: { html: string }[] = [
+  { html: "エアコンの<b>センサー</b>が室温を測る。「いま32℃」とデータを取得。" },
+  { html: "測ったデータを<b>インターネット経由</b>でクラウドへ送る。" },
+  { html: "<b>クラウド</b>が判断：「32℃は暑い → 28℃まで冷やそう」。" },
+  { html: "指示が機器に戻り、エアコンが<b>自動で動く</b>。人が触らなくても完結！" },
 ];
 
 function Loop() {
   const [idx, setIdx] = useState(0);
+  const [forward, setForward] = useState(true);
+  const reducedMotion = useReducedMotion();
   const step = STEPS[idx];
+  const go = (next: number) => {
+    setForward(next > idx);
+    setIdx(next);
+  };
   return (
     <Panel>
       <SectionTitle step={1}>IoTの一周を見る</SectionTitle>
@@ -34,26 +36,8 @@ function Loop() {
         <b className="text-gray-800">モノがネットにつながる</b>と、測る→送る→判断→動く、が自動で回ります。
       </p>
 
-      <div className="mt-4 flex items-stretch justify-center gap-1.5">
-        {NODES.map((n, i) => {
-          const on = step.active.includes(n.id);
-          const holds = step.holder === n.id;
-          return (
-            <div key={n.id} className="flex items-center">
-              <div
-                className={`relative w-[92px] rounded-xl border-2 px-1 py-2.5 text-center transition ${
-                  on ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100" : "border-gray-200 bg-gray-50"
-                }`}
-              >
-                {holds && <Icon name="package" className="absolute -top-3 right-1 h-4 w-4 text-amber-600" />}
-                <Icon name={n.icon} className={`mx-auto h-7 w-7 ${on ? "text-emerald-600" : "text-gray-500"}`} />
-                <div className="mt-1 text-[11px] font-bold text-gray-800">{n.name}</div>
-                <div className="text-[10px] leading-tight text-gray-500">{n.sub}</div>
-              </div>
-              {i < NODES.length - 1 && <span className="px-0.5 text-lg text-gray-300">↔</span>}
-            </div>
-          );
-        })}
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <IotDioramaScene phase={idx as IotPhase} forward={forward} reducedMotion={reducedMotion} />
       </div>
 
       <p
@@ -64,9 +48,9 @@ function Loop() {
       <StepNav
         index={idx}
         total={STEPS.length}
-        onPrev={() => setIdx((i) => Math.max(0, i - 1))}
-        onNext={() => setIdx((i) => Math.min(STEPS.length - 1, i + 1))}
-        onReset={() => setIdx(0)}
+        onPrev={() => go(Math.max(0, idx - 1))}
+        onNext={() => go(Math.min(STEPS.length - 1, idx + 1))}
+        onReset={() => go(0)}
         doneLabel="自動で完結"
       />
     </Panel>

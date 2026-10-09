@@ -1,30 +1,15 @@
-import type { CSSProperties } from "react";
-import styles from "./ebiz.module.css";
-import Icon, { type IconName } from "@/components/ui/Icon";
+import type { IconName } from "@/components/ui/Icon";
 
-// 取引マップ：4つの登場人物（企業／取引先企業／個人／個人）と、必要なときだけ現れる中継役
-// （スマホ・仲介プラットフォーム）。用語を選ぶと、その取引で「誰から誰へ・何が」流れるかを
-// ①②③の順に1回だけ流す。流れるものは モノ（橙）・お金（緑）・情報（青）で色を分ける。
-// 流れ終わったレーンは矢印として残るので、最終状態の図だけでも取引の形が読める。
+// 取引マップのデータ：4つの登場人物（企業／取引先企業／個人／個人）と、必要なときだけ現れる中継役
+// （スマホ・仲介プラットフォーム）。用語ごとに「誰から誰へ・何が」流れるかを①②③の順で持つ。
+// 流れるものは モノ（橙）・お金（緑）・情報（青）で色を分ける。模型は TradeTownScene。
 
 export type TermKey = "ec" | "edi" | "fintech" | "sharing";
-type Kind = "goods" | "money" | "info";
-type NodeKey = "compA" | "compB" | "persA" | "persB" | "phone" | "platform";
-
-const W = 320;
-const H = 236;
-
-const NODES: Record<NodeKey, { x: number; y: number; icon: IconName; label: string; via?: boolean }> = {
-  compA: { x: 62, y: 38, icon: "building", label: "企業" },
-  compB: { x: 258, y: 38, icon: "factory", label: "取引先企業" },
-  persA: { x: 62, y: 196, icon: "user", label: "個人" },
-  persB: { x: 258, y: 196, icon: "user", label: "個人" },
-  phone: { x: 62, y: 117, icon: "smartphone", label: "スマホ", via: true },
-  platform: { x: 160, y: 130, icon: "globe", label: "仲介サービス", via: true },
-};
+export type Kind = "goods" | "money" | "info";
+export type NodeKey = "compA" | "compB" | "persA" | "persB" | "phone" | "platform";
 
 // 用語ごとの呼び名（同じ箱でも役割が変わる）
-const ROLE: Record<TermKey, Partial<Record<NodeKey, string>>> = {
+export const ROLE: Record<TermKey, Partial<Record<NodeKey, string>>> = {
   ec: { compA: "ネットショップ", persA: "顧客" },
   edi: { compA: "企業A", compB: "企業B" },
   fintech: { compA: "金融サービス", persA: "利用者" },
@@ -57,37 +42,6 @@ export const FLOWS: Record<TermKey, FlowStep[]> = {
 };
 
 export const STEP_MS = 1500;
-const LANE_GAP = 9;
-const TRIM = 27;
-
-// 中継ノードを通る折れ線を、ステップごとに少しずつ横にずらしたレーンにする
-function lanePoints(path: NodeKey[], offset: number) {
-  const pts = path.map((k) => NODES[k]);
-  const out: { x: number; y: number }[] = [];
-  for (let i = 0; i < pts.length; i++) {
-    const prev = pts[Math.max(0, i - 1)];
-    const next = pts[Math.min(pts.length - 1, i + 1)];
-    const dx = next.x - prev.x;
-    const dy = next.y - prev.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const nx = (-dy / len) * offset;
-    const ny = (dx / len) * offset;
-    let x = pts[i].x + nx;
-    let y = pts[i].y + ny;
-    // 端点だけ箱の外へ出す（中継ノードは真ん中を通過させる）
-    if (i === 0 || i === pts.length - 1) {
-      const other = i === 0 ? pts[1] : pts[pts.length - 2];
-      const ux = other.x - pts[i].x;
-      const uy = other.y - pts[i].y;
-      const ul = Math.hypot(ux, uy) || 1;
-      x += (ux / ul) * TRIM;
-      y += (uy / ul) * TRIM;
-    }
-    out.push({ x, y });
-  }
-  return out;
-}
-
 const KIND_TONE: Record<Kind, { stroke: string; fill: string; name: string }> = {
   goods: { stroke: "#f59e0b", fill: "#fffbeb", name: "モノ" },
   money: { stroke: "#16a34a", fill: "#f0fdf4", name: "お金" },
@@ -112,123 +66,4 @@ export function kindName(kind: Kind) {
 }
 export function kindColor(kind: Kind) {
   return KIND_TONE[kind].stroke;
-}
-
-export function TradeFlowMap({ sel, runKey, reducedMotion }: { sel: TermKey | null; runKey: number; reducedMotion: boolean }) {
-  const steps = sel ? FLOWS[sel] : [];
-  const used = new Set(steps.flatMap((s) => s.path));
-
-  return (
-    <div
-      className={`relative mx-auto mt-3 w-full max-w-[280px] rounded-xl bg-gray-50 ring-1 ring-gray-200 ${reducedMotion ? styles.reduced : ""}`}
-      style={{ aspectRatio: `${W} / ${H}` }}
-      data-testid="ebiz-map"
-      data-sel={sel ?? "none"}
-    >
-      <svg viewBox={`0 0 ${W} ${H}`} className="absolute inset-0 h-full w-full">
-        <defs>
-          {(Object.keys(KIND_TONE) as Kind[]).map((k) => (
-            <marker key={k} id={`ebiz-arrow-${k}`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill={KIND_TONE[k].stroke} />
-            </marker>
-          ))}
-        </defs>
-
-        {/* 何も選んでいないときの薄い関係線 */}
-        {!sel &&
-          (
-            [
-              ["compA", "compB"],
-              ["compA", "persA"],
-              ["persA", "persB"],
-            ] as NodeKey[][]
-          ).map(([a, b]) => (
-            <line key={a + b} x1={NODES[a].x} y1={NODES[a].y} x2={NODES[b].x} y2={NODES[b].y} stroke="#e5e7eb" strokeWidth={1.2} strokeDasharray="3 3" />
-          ))}
-
-        {/* レーン：流れと同時に引かれ、その後も矢印として残る */}
-        {steps.map((s, i) => {
-          const pts = lanePoints(s.path, (i - (steps.length - 1) / 2) * LANE_GAP);
-          const d = pts.map((p, j) => `${j ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-          return (
-            <path
-              key={`lane-${runKey}-${i}`}
-              d={d}
-              fill="none"
-              stroke={KIND_TONE[s.kind].stroke}
-              strokeWidth={2}
-              strokeLinejoin="round"
-              markerEnd={`url(#ebiz-arrow-${s.kind})`}
-              pathLength={100}
-              className={reducedMotion ? undefined : styles.lane}
-              style={{ animationDelay: `${i * STEP_MS}ms` }}
-              data-testid="ebiz-lane"
-              data-kind={s.kind}
-            />
-          );
-        })}
-
-        {/* 箱（関係する登場人物だけ濃く、中継役は必要なときだけ現れる） */}
-        {(Object.keys(NODES) as NodeKey[]).map((k) => {
-          const n = NODES[k];
-          const on = used.has(k);
-          if (n.via && !on) return null;
-          const label = (sel && ROLE[sel][k]) || n.label;
-          const w = n.via ? 14 + label.length * 10.5 : 70;
-          const h = n.via ? 38 : 44;
-          return (
-            <g
-              key={`${k}-${n.via ? runKey : ""}`}
-              className={`${styles.node} ${n.via && !reducedMotion ? styles.viaIn : ""}`}
-              style={{ opacity: sel && !on ? 0.35 : 1 }}
-              data-testid={`ebiz-node-${k}`}
-              data-on={on ? "true" : "false"}
-            >
-              <rect
-                x={n.x - w / 2}
-                y={n.y - h / 2}
-                width={w}
-                height={h}
-                rx={10}
-                fill={on ? "#eef2ff" : "#fff"}
-                stroke={on ? "#6366f1" : "#e5e7eb"}
-                strokeWidth={on ? 2 : 1.5}
-              />
-              <Icon name={n.icon} x={n.x - (n.via ? 7 : 8)} y={n.y - 7 - (n.via ? 7 : 8)} width={n.via ? 14 : 16} height={n.via ? 14 : 16} className="text-gray-700" />
-              <text x={n.x} y={n.y + 12} textAnchor="middle" dominantBaseline="central" fontSize={10} fontWeight={700} fill="#374151">
-                {label}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* 流れるもの：送り手から受け手へ1回だけ運ばれ、受け手で消える */}
-        {!reducedMotion &&
-          steps.map((s, i) => {
-            const pts = lanePoints(s.path, (i - (steps.length - 1) / 2) * LANE_GAP);
-            const mid = pts.length === 3 ? pts[1] : { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-            const end = pts[pts.length - 1];
-            const w = 22 + s.label.length * 10.5;
-            const style = {
-              "--x1": `${pts[0].x}px`,
-              "--y1": `${pts[0].y}px`,
-              "--xm": `${mid.x}px`,
-              "--ym": `${mid.y}px`,
-              "--x2": `${end.x}px`,
-              "--y2": `${end.y}px`,
-              animationDelay: `${i * STEP_MS}ms`,
-            } as CSSProperties;
-            return (
-              <g key={`tok-${runKey}-${i}`} className={styles.token} style={style} aria-hidden data-testid="ebiz-token">
-                <rect x={-w / 2} y={-10} width={w} height={20} rx={10} fill={KIND_TONE[s.kind].fill} stroke={KIND_TONE[s.kind].stroke} strokeWidth={1.5} />
-                <Icon name={s.icon} x={-w / 2 + 6} y={-6} width={12} height={12} className="text-gray-800" />
-                <text x={-w / 2 + 21} textAnchor="start" dominantBaseline="central" fontSize={10.5} fontWeight={700} fill="#1f2937">
-                  {s.label}
-                </text>
-              </g>
-            );
-          })}
-      </svg>
-    </div>
-  );
 }
