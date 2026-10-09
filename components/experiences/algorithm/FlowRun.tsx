@@ -72,7 +72,7 @@ const LABEL: Record<FlowNodeId, (limit: number) => string> = {
   end: () => "終了",
 };
 
-const LIMITS = [5, 3] as const;
+const LIMITS = [3, 5] as const;
 /** 1歩の間隔。トークンの移動（1.4s）→ 変数の書き換え → 読む間 を1歩に収める */
 const STEP_MS = 2800;
 
@@ -91,19 +91,126 @@ function VarBox({ name, value, prev, testId }: { name: string; value: number | n
   );
 }
 
+/**
+ * フローチャート・実行トークン・変数の箱を描くステージ。FlowRun（見る）と FlowTry（自分で実行）で共用。
+ * pending のときは「このノードに着いたが、まだ実行していない」状態：判定と変数の書き換えを伏せる。
+ */
+export function FlowStage({
+  trace,
+  index,
+  limit,
+  animate,
+  reducedMotion,
+  pending = false,
+  testId = "flow-run",
+}: {
+  trace: TraceStep[];
+  index: number;
+  limit: number;
+  animate: boolean;
+  reducedMotion: boolean;
+  pending?: boolean;
+  testId?: string;
+}) {
+  const cur = trace[index];
+  const prev = index > 0 ? trace[index - 1] : undefined;
+  // 伏せているあいだは、変数の箱を1つ前の値のまま見せる
+  const shown = pending && prev ? { ...cur, i: prev.i, total: prev.total } : cur;
+  const shownPrev = pending ? shown : prev;
+  const visits = new Map<FlowNodeId, number>();
+  for (const s of trace.slice(0, index + 1)) visits.set(s.node, (visits.get(s.node) ?? 0) + 1);
+  const arrived = edgeOf(cur.from, cur.node);
+  const nextEdge = !pending && cur.node === "condition" ? edgeOf("condition", cur.judge ? "add-current" : "display-total") : undefined;
+
+  return (
+    <div className="overflow-x-auto">
+      <div className={styles.stage} data-reduced-motion={reducedMotion ? "true" : "false"} data-testid={testId} data-animate={animate ? "true" : "false"} data-node={cur.node} data-index={index}>
+        <svg className={styles.edges} viewBox="0 0 320 336" aria-hidden>
+          <defs>
+            <marker id={`${testId}-arrow`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" />
+            </marker>
+          </defs>
+          {EDGES.map((e) => {
+            const from = NODES[e.from];
+            const d = [e.from === "increment-current" || e.from === "condition" ? [from.cx, from.cy] : [from.cx, from.cy + from.h / 2], ...e.pts]
+              .map((p, i) => `${i ? "L" : "M"} ${p[0]} ${p[1]}`)
+              .join(" ");
+            const state = e === arrived ? "taken" : e === nextEdge ? "next" : "idle";
+            return <path key={`${e.from}-${e.to}`} d={d} className={styles.edge} data-state={state} data-edge={`${e.from}>${e.to}`} markerEnd={`url(#${testId}-arrow)`} />;
+          })}
+        </svg>
+
+        <span className={`${styles.edgeLabel} ${styles.yes}`} style={{ left: 118, top: 210 }}>はい</span>
+        <span className={`${styles.edgeLabel} ${styles.no}`} style={{ left: 196, top: 166 }}>いいえ</span>
+        <span className={`${styles.edgeLabel} ${styles.loop}`} style={{ left: LOOP_X, top: 232 }}>↺ 条件へ戻る</span>
+
+        {/* 実行トークン：ノードごとに作り直し、前の場所から矢印の上を移動してくる */}
+        <span
+          key={`${testId}-${limit}-${index}`}
+          className={styles.token}
+          data-animate={animate ? "true" : "false"}
+          style={{ offsetPath: `path("${tokenPath(prev, cur, animate)}")` } as CSSProperties}
+          data-testid={`${testId}-token`}
+          aria-hidden
+        />
+
+        {(Object.keys(NODES) as FlowNodeId[]).map((id) => {
+          const n = NODES[id];
+          const count = visits.get(id) ?? 0;
+          return (
+            <div
+              key={id}
+              className={styles.node}
+              data-kind={n.kind}
+              data-active={cur.node === id ? "true" : "false"}
+              data-done={count > 0 && cur.node !== id ? "true" : "false"}
+              data-judge={!pending && cur.node === id && cur.judge !== undefined ? String(cur.judge) : undefined}
+              style={{ left: n.cx, top: n.cy, width: n.w, height: n.h }}
+              data-testid={`${testId}-node-${id}`}
+            >
+              <span className={styles.nodeLabel}>{LABEL[id](limit)}</span>
+              {count > 1 && <span className={styles.visits}>×{count}</span>}
+            </div>
+          );
+        })}
+
+        {!pending && cur.node === "condition" && (
+          <span className={styles.judge} data-judge={String(cur.judge)} style={{ left: 214, top: 198 }} data-testid={`${testId}-judge`}>
+            {cur.i} ≦ {limit} → {cur.judge ? "はい" : "いいえ"}
+          </span>
+        )}
+        {cur.lap > 0 && !(pending && cur.node === "condition") && (
+          <span className={styles.lap} style={{ left: 104, top: 322 }} data-testid={`${testId}-lap`}>
+            くり返し {cur.lap} 周目
+          </span>
+        )}
+
+        {/* 変数の箱 */}
+        <div className={styles.vars} data-testid={`${testId}-vars`}>
+          <span className={styles.varsTitle}>変数の箱</span>
+          <VarBox name="i" value={shown.i} prev={shownPrev ? shownPrev.i : null} testId={`${testId}-var-i`} />
+          <VarBox name="合計" value={shown.total} prev={shownPrev ? shownPrev.total : null} testId={`${testId}-var-total`} />
+          {cur.node === "display-total" || cur.node === "end" ? (
+            <span className={styles.screen} data-testid={`${testId}-output`}>
+              {cur.total}
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FlowRun() {
   const reducedMotion = useReducedMotion();
-  const [limit, setLimit] = useState<(typeof LIMITS)[number]>(5);
+  const [limit, setLimit] = useState<(typeof LIMITS)[number]>(3);
   const trace = buildFlowTrace(limit);
   const player = useStepPlayer(trace.length, reducedMotion, STEP_MS);
   const index = Math.min(player.index, trace.length - 1);
   const cur = trace[index];
   const prev = index > 0 ? trace[index - 1] : undefined;
   const { code, calc } = describeStep(cur, prev, limit);
-  const visits = new Map<FlowNodeId, number>();
-  for (const s of trace.slice(0, index + 1)) visits.set(s.node, (visits.get(s.node) ?? 0) + 1);
-  const arrived = edgeOf(cur.from, cur.node);
-  const nextEdge = cur.node === "condition" ? edgeOf("condition", cur.judge ? "add-current" : "display-total") : undefined;
   const animate = player.forward && !reducedMotion;
   const steps = trace.map((s) => ({ title: `${LABEL[s.node](limit)}${s.judge === undefined ? "" : s.judge ? " → はい" : " → いいえ"}` }));
 
@@ -137,81 +244,8 @@ export function FlowRun() {
         ))}
       </div>
 
-      <div className="mt-3 overflow-x-auto">
-        <div className={styles.stage} data-reduced-motion={reducedMotion ? "true" : "false"} data-testid="flow-run" data-animate={animate ? "true" : "false"} data-node={cur.node} data-index={index}>
-          <svg className={styles.edges} viewBox="0 0 320 336" aria-hidden>
-            <defs>
-              <marker id="flow-run-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                <path d="M 0 0 L 8 4 L 0 8 z" fill="context-stroke" />
-              </marker>
-            </defs>
-            {EDGES.map((e) => {
-              const from = NODES[e.from];
-              const d = [e.from === "increment-current" || e.from === "condition" ? [from.cx, from.cy] : [from.cx, from.cy + from.h / 2], ...e.pts]
-                .map((p, i) => `${i ? "L" : "M"} ${p[0]} ${p[1]}`)
-                .join(" ");
-              const state = e === arrived ? "taken" : e === nextEdge ? "next" : "idle";
-              return <path key={`${e.from}-${e.to}`} d={d} className={styles.edge} data-state={state} data-edge={`${e.from}>${e.to}`} markerEnd="url(#flow-run-arrow)" />;
-            })}
-          </svg>
-
-          <span className={`${styles.edgeLabel} ${styles.yes}`} style={{ left: 118, top: 210 }}>はい</span>
-          <span className={`${styles.edgeLabel} ${styles.no}`} style={{ left: 196, top: 166 }}>いいえ</span>
-          <span className={`${styles.edgeLabel} ${styles.loop}`} style={{ left: LOOP_X, top: 232 }}>↺ 条件へ戻る</span>
-
-          {/* 実行トークン：ノードごとに作り直し、前の場所から矢印の上を移動してくる */}
-          <span
-            key={`${limit}-${index}`}
-            className={styles.token}
-            data-animate={animate ? "true" : "false"}
-            style={{ offsetPath: `path("${tokenPath(prev, cur, animate)}")` } as CSSProperties}
-            data-testid="flow-run-token"
-            aria-hidden
-          />
-
-          {(Object.keys(NODES) as FlowNodeId[]).map((id) => {
-            const n = NODES[id];
-            const count = visits.get(id) ?? 0;
-            return (
-              <div
-                key={id}
-                className={styles.node}
-                data-kind={n.kind}
-                data-active={cur.node === id ? "true" : "false"}
-                data-done={count > 0 && cur.node !== id ? "true" : "false"}
-                data-judge={cur.node === id && cur.judge !== undefined ? String(cur.judge) : undefined}
-                style={{ left: n.cx, top: n.cy, width: n.w, height: n.h }}
-                data-testid={`flow-run-node-${id}`}
-              >
-                <span className={styles.nodeLabel}>{LABEL[id](limit)}</span>
-                {count > 1 && <span className={styles.visits}>×{count}</span>}
-              </div>
-            );
-          })}
-
-          {cur.node === "condition" && (
-            <span className={styles.judge} data-judge={String(cur.judge)} style={{ left: 214, top: 198 }} data-testid="flow-run-judge">
-              {cur.i} ≦ {limit} → {cur.judge ? "はい" : "いいえ"}
-            </span>
-          )}
-          {cur.lap > 0 && (
-            <span className={styles.lap} style={{ left: 104, top: 322 }} data-testid="flow-run-lap">
-              くり返し {cur.lap} 周目
-            </span>
-          )}
-
-          {/* 変数の箱 */}
-          <div className={styles.vars} data-testid="flow-run-vars">
-            <span className={styles.varsTitle}>変数の箱</span>
-            <VarBox name="i" value={cur.i} prev={prev ? prev.i : null} testId="flow-run-var-i" />
-            <VarBox name="合計" value={cur.total} prev={prev ? prev.total : null} testId="flow-run-var-total" />
-            {cur.node === "display-total" || cur.node === "end" ? (
-              <span className={styles.screen} data-testid="flow-run-output">
-                {cur.total}
-              </span>
-            ) : null}
-          </div>
-        </div>
+      <div className="mt-3">
+        <FlowStage trace={trace} index={index} limit={limit} animate={animate} reducedMotion={reducedMotion} />
       </div>
 
       <div className="mt-2 rounded-xl bg-gray-900 px-3 py-2 text-white" aria-live="polite" data-testid="flow-run-now">
