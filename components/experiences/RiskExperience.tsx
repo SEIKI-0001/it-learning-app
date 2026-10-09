@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
 import Icon from "@/components/ui/Icon";
+import { RiskResponseMap } from "./risk/RiskResponseMap";
 
 // ============================================================================
 // 「リスク管理」専用の体験。
 //   ① リスクとは（まだ起きてない・起きるかも・影響する）
 //   ② 発生確率 × 影響度 で優先度（代表的なリスクを最初から配置した静的マトリクス。軸を大きく）
-//   ③ リスク対応の4分類（回避・低減・移転・受容）をカード（名称／一言の意味／具体例）で＋クイズ
+//   ③ リスク対応の4分類（回避・低減・移転・受容）を確率×影響度の2×2に絵で並べた早見表＋クイズ
 // ============================================================================
 
 function WhatIsRisk() {
@@ -120,13 +121,6 @@ function Matrix() {
   );
 }
 
-const RESP = [
-  { name: "回避", alias: "", desc: "リスクの原因そのものをなくす", ex: "危険すぎる機能の開発をやめる" },
-  { name: "低減", alias: "軽減", desc: "起きる確率や、起きたときの影響を小さくする", ex: "毎日バックアップを取る・二重チェックする" },
-  { name: "移転", alias: "転嫁", desc: "損失を他者に肩代わりしてもらう", ex: "保険に入る・専門業者に委託する" },
-  { name: "受容", alias: "保有", desc: "影響が小さいので、対策せずに受け入れる", ex: "起きても困らない範囲はそのままにする" },
-];
-
 const ITEMS: { t: string; ans: string; why: string }[] = [
   { t: "火災に備えて保険に入る", ans: "移転", why: "損失を他者（保険会社）に肩代わり＝移転。" },
   { t: "データ消失に備え毎日バックアップ", ans: "低減", why: "影響を小さくする＝低減。" },
@@ -140,21 +134,12 @@ function Responses() {
   return (
     <Panel>
       <SectionTitle step={3}>リスクへの対応は4種類</SectionTitle>
-      <ul className="mt-3 grid gap-2 sm:grid-cols-2" data-testid="risk-responses">
-        {RESP.map((r) => (
-          <li key={r.name} className="rounded-xl bg-white p-3 ring-1 ring-gray-300">
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg font-bold text-gray-900">{r.name}</span>
-              {r.alias && <span className="text-xs text-gray-500">（{r.alias}ともいう）</span>}
-            </div>
-            <p className="mt-0.5 text-[15px] font-bold leading-snug text-brand-800">{r.desc}</p>
-            <p className="mt-1 text-sm text-gray-700">
-              <span className="mr-1 text-xs font-bold text-gray-500">例</span>
-              {r.ex}
-            </p>
-          </li>
-        ))}
-      </ul>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        ②のマトリクスと同じ並び。<b className="text-gray-800">どこにあるリスクか</b>で、選ぶ対応の目安が決まります。
+      </p>
+      <div className="mt-3">
+        <RiskResponseMap />
+      </div>
 
       <p className="mt-4 text-sm font-bold text-gray-700">これはどの対応？</p>
       <ul className="mt-2 space-y-2.5">

@@ -1,14 +1,14 @@
 "use client";
 
 import { Panel, SectionTitle } from "./ui";
-import Icon, { type IconName } from "@/components/ui/Icon";
+import { RiskResponseMap } from "./risk/RiskResponseMap";
 import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「情報セキュリティ管理（ISMS・リスクアセスメント）」専用の解説。どれも操作不要の静的な図。
 //   ① リスクアセスメントの流れ（資産 → 脅威・脆弱性 → 分析・評価 → 対応）と、
 //      縦＝影響度・横＝発生可能性 のマトリクス。4つのマスに最初から具体的なリスクを置く
-//   ② リスク対応4分類：名称 → 一言 → 具体例 → 向く場面（①のどのマスか）
+//   ② リスク対応4分類：①と同じ向きの2×2に絵で並べた早見表（risk/RiskResponseMap）
 //   ③ ISMS＝PDCAで続けて改善／情報セキュリティポリシー
 // ============================================================================
 
@@ -93,29 +93,15 @@ function RiskMatrix() {
   );
 }
 
-const TREATMENTS: { icon: IconName; name: string; mean: string; ex: string; fit: string }[] = [
-  { icon: "ban", name: "回避", mean: "リスクのある活動そのものをやめる", ex: "危険な古いサービスの提供を終了する", fit: "被害が大きすぎて、続ける価値に見合わないとき" },
-  { icon: "shield", name: "低減", mean: "対策で起こりやすさ・被害を小さくする", ex: "暗号化・バックアップ・社員教育", fit: "右上（リスク大）への基本の対応" },
-  { icon: "handshake", name: "移転", mean: "損失を他者に肩代わりしてもらう", ex: "サイバー保険に入る・運用を外部に委託する", fit: "起きにくいが、起きると被害が大きいとき" },
-  { icon: "smile", name: "受容", mean: "対策せず、そのまま受け入れる", ex: "表示崩れ程度なら様子を見る", fit: "左下（リスク小）で、対策費が見合わないとき" },
-];
-
 function Treatments() {
   return (
     <Panel>
       <SectionTitle step={2}>評価したあとの「対応」4つ</SectionTitle>
-      <div className="mt-4 grid gap-2.5 sm:grid-cols-2" data-testid="risk-treatments">
-        {TREATMENTS.map((t) => (
-          <div key={t.name} className="rounded-xl p-3 ring-1 ring-gray-200" data-treatment={t.name}>
-            <p className="flex items-center gap-1.5 text-lg font-bold text-gray-900">
-              <Icon name={t.icon} aria-hidden className="h-5 w-5 text-brand-600" />
-              {t.name}
-            </p>
-            <p className="mt-1 text-[15px] font-bold leading-snug text-gray-800">{t.mean}</p>
-            <p className="mt-1 text-[13px] leading-relaxed text-gray-700">例：{t.ex}</p>
-            <p className="mt-0.5 text-[12px] leading-relaxed text-gray-500">向く場面：{t.fit}</p>
-          </div>
-        ))}
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        ①と同じく、横が発生可能性・縦が影響度。リスクがどこにあるかで、選ぶ対応の目安が決まります。
+      </p>
+      <div className="mt-3" data-testid="risk-treatments">
+        <RiskResponseMap />
       </div>
     </Panel>
   );
