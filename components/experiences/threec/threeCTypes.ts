@@ -1,4 +1,4 @@
-// 3C分析の図解の型と3つの調べる場所（ThreeCExperience と ThreeCDioramaScene で共有）。
+// 3C分析の図解の型と3つの調べる場所（ThreeCExperience と VennScene で共有）。
 
 export type Spot = "customer" | "competitor" | "company";
 

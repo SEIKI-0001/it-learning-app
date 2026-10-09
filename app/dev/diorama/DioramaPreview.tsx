@@ -19,7 +19,6 @@ const TOPICS: { id: string; name: string }[] = [
   { id: "strat-bcp", name: "BCP" },
   { id: "strat-business-process", name: "業務プロセス" },
   { id: "strat-value-chain", name: "バリューチェーン" },
-  { id: "strat-3c", name: "3C" },
   { id: "tech-computer-core", name: "CPU・メモリ" },
   { id: "tech-os-software-hardware", name: "OS" },
   { id: "tech-email-protocol", name: "メール" },
