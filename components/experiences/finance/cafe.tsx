@@ -168,13 +168,17 @@ export function SrcTag({ s }: { s: "BS" | "PL" }) {
   );
 }
 
+// 色は「部」ごとに分ける（資産＝青／負債＝赤／純資産＝緑）。流動と固定は同じ色の濃淡で分ける。
 const BS_TONE: Record<BsKey, string> = {
-  ca: "bg-brand-200 text-brand-950",
-  fa: "bg-brand-100 text-brand-900",
-  cl: "bg-gray-300 text-gray-900",
-  fl: "bg-gray-200 text-gray-900",
-  eq: "bg-gray-700 text-white",
+  ca: "bg-sky-100 text-sky-950 ring-sky-300",
+  fa: "bg-sky-200 text-sky-950 ring-sky-400",
+  cl: "bg-rose-100 text-rose-950 ring-rose-300",
+  fl: "bg-rose-200 text-rose-950 ring-rose-400",
+  eq: "bg-lime-100 text-lime-950 ring-lime-400",
 };
+
+/** PL の当期純利益の色。BS の「今期の利益」とつなぎの数字にも同じ色を使う */
+export const NET_TONE = "bg-yellow-300 text-yellow-950";
 
 /**
  * カフェの BS。ブロックの高さ＝金額。左右の合計は必ず同じ高さになる。
@@ -201,79 +205,115 @@ export function BsChart({
     const on = highlight?.includes(k);
     const hpx = CAFE.bs[k] * px;
     const roomy = hpx >= 44;
+    const split = equitySplit && k === "eq";
     return (
       <div
         key={k}
-        className={`relative flex flex-col items-center justify-center overflow-hidden rounded-md px-1 text-center transition-opacity duration-300 ${BS_TONE[k]} ${
+        className={`relative flex flex-col items-center justify-center overflow-hidden px-1 text-center ring-1 ring-inset transition-opacity duration-300 ${BS_TONE[k]} ${
           dim ? "opacity-25" : ""
-        } ${on ? "outline outline-2 outline-offset-1 outline-brand-600" : ""}`}
+        } ${on ? "outline outline-2 outline-offset-1 outline-lime-700" : ""}`}
         style={{ height: hpx }}
         data-testid={`${testId}-${k}`}
         data-on={on ? "true" : undefined}
       >
-        {equitySplit && k === "eq" && (
+        {k === "eq" && (
+          <span className="absolute inset-x-0 top-0 h-4 bg-lime-700 text-center text-[10.5px] font-bold leading-4 text-white">
+            純資産の部（返さなくてよい）
+          </span>
+        )}
+        {split && (
           <span
-            className="absolute inset-x-0 top-0 grid place-items-center border-b border-dashed border-white/60 bg-brand-600 text-[10px] font-bold text-white"
+            className={`absolute inset-x-0 top-4 grid place-items-center border-b border-dashed border-yellow-700/50 text-[10px] font-bold ${NET_TONE}`}
             style={{ height: PL.net * px }}
           >
             今期の利益 +{PL.net}
           </span>
         )}
-        <span className={`text-[12px] font-bold leading-tight ${equitySplit && k === "eq" ? "mt-3" : ""}`}>
+        <span className={`text-[12px] font-bold leading-tight ${split ? "mt-8" : k === "eq" ? "mt-3" : ""}`}>
           {BS_META[k].name} <span className="tabular-nums">{CAFE.bs[k]}</span>
         </span>
-        {detail && roomy && <span className="mt-0.5 text-[10.5px] leading-tight opacity-80">{BS_META[k].items}</span>}
+        {detail && roomy && <span className="mt-0.5 text-[10.5px] leading-tight opacity-75">{BS_META[k].items}</span>}
       </div>
     );
   };
+  // 部の見出し帯（参考：資産の部＝青、負債の部＝赤、純資産の部＝緑）
+  const band = (label: string, sub: string, tone: string) => (
+    <div className={`px-1 py-1 text-center text-[11.5px] font-bold leading-tight text-white ${tone}`}>
+      {label}
+      <span className="block text-[10px] font-medium text-white/85">{sub}</span>
+    </div>
+  );
   return (
     <div data-testid={testId}>
-      <div className="grid grid-cols-2 gap-1.5 text-center text-[11px] font-bold text-gray-500">
-        <span>資産＝お金の今の姿</span>
-        <span>負債＋純資産＝お金の出どころ</span>
-      </div>
-      <div className="mt-1 grid grid-cols-2 gap-1.5">
-        <div className="flex flex-col gap-0.5">{(["ca", "fa"] as const).map(block)}</div>
-        <div className="flex flex-col gap-0.5">{(["cl", "fl", "eq"] as const).map(block)}</div>
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="flex flex-col overflow-hidden rounded-md">
+          {band("資産の部", "左：お金の使い道", "bg-sky-700")}
+          {(["ca", "fa"] as const).map(block)}
+        </div>
+        <div className="flex flex-col overflow-hidden rounded-md">
+          {band("負債の部", "右：お金の集め方（いつか返す）", "bg-rose-700")}
+          {(["cl", "fl"] as const).map(block)}
+          {block("eq")}
+        </div>
       </div>
       <div className="mt-1 grid grid-cols-2 gap-1.5 border-t-2 border-gray-800 pt-1 text-center text-[12px] font-bold tabular-nums text-gray-800">
-        <span>計 {TOTAL_ASSETS.toLocaleString()}</span>
-        <span>計 {(CAFE.bs.cl + CAFE.bs.fl + CAFE.bs.eq).toLocaleString()}</span>
+        <span>資産合計 {TOTAL_ASSETS.toLocaleString()}</span>
+        <span>負債・純資産合計 {(CAFE.bs.cl + CAFE.bs.fl + CAFE.bs.eq).toLocaleString()}</span>
       </div>
     </div>
   );
 }
 
+// PL は色を絞る：途中の利益はすべて同じ青、最後の当期純利益だけ黄（BS の「今期の利益」と同じ色）。
+// 引いた分はグレーの点線で、棒のすぐ右に残す。
+const PL_MID = { bar: "bg-sky-500", dash: "border-gray-400", chip: "bg-white text-gray-900 ring-1 ring-gray-200" };
+const PL_TONE: Record<PlKey, { bar: string; dash: string; chip: string }> = {
+  sales: { bar: "bg-gray-400", dash: "border-gray-400", chip: "bg-gray-100 text-gray-900" },
+  gross: PL_MID,
+  op: PL_MID,
+  ordinary: PL_MID,
+  pretax: PL_MID,
+  net: { bar: "bg-yellow-500", dash: "border-gray-400", chip: NET_TONE },
+};
+
 /**
  * カフェの PL。上から順に引いて、段階ごとの利益を出す。
- * 利益の行には「売上のうちどれだけ残ったか」の細い棒をつける。
+ * 棒の長さ＝売上を1としたときの残り。引いた分は点線の箱で見せる。
  */
 export function PlLadder({ testId = "cafe-pl" }: { testId?: string }) {
   return (
-    <ol data-testid={testId} className="space-y-0.5">
-      {PL_ROWS.map((r) => {
+    <ol data-testid={testId} className="space-y-1.5">
+      {PL_ROWS.map((r, i) => {
+        const tone = PL_TONE[r.key];
+        const prev = i === 0 ? r.value : PL_ROWS[i - 1].value;
+        const cut = Math.max(prev - r.value, 0);
         const last = r.key === "net";
         return (
           <li key={r.key} data-testid={`${testId}-${r.key}`}>
             {r.minus && (
-              <div className="flex items-baseline justify-between gap-2 pl-3 text-[11.5px] leading-snug text-gray-500">
+              <div className="flex items-baseline justify-between gap-2 pl-1 text-[11.5px] leading-snug text-gray-500">
                 <span>
+                  <span className={`mr-1 inline-block h-2.5 w-3.5 rounded-sm border-2 border-dashed align-[-1px] ${tone.dash}`} aria-hidden />
                   {r.minus.label}
                   <span className="text-gray-400">（{r.minus.plain}）</span>
                 </span>
                 <span className="flex-none tabular-nums">{r.minus.amount}</span>
               </div>
             )}
-            <div className={`rounded-md px-2 py-1 ${last ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
+            <div className={`rounded-md px-2 py-1.5 ${tone.chip} ${last ? "ring-2 ring-yellow-500" : ""}`}>
               <div className="flex items-baseline justify-between gap-2 text-[13px] font-bold">
                 <span>{r.name}</span>
                 <span className="tabular-nums">{r.value.toLocaleString()}</span>
               </div>
-              {r.key !== "sales" && (
-                <div className={`text-[11.5px] leading-snug ${last ? "text-white/80" : "text-brand-800"}`}>＝ {r.meaning}</div>
-              )}
-              <div className={`mt-1 h-[3px] rounded-full ${last ? "bg-white/20" : "bg-white"}`} aria-hidden>
-                <div className={`h-full rounded-full ${last ? "bg-white" : "bg-brand-500"}`} style={{ width: `${(r.value / CAFE.pl.sales) * 100}%` }} />
+              {r.key !== "sales" && <div className="text-[11.5px] leading-snug opacity-80">＝ {r.meaning}</div>}
+              <div className="mt-1 flex h-2.5 rounded-sm bg-gray-100" aria-hidden>
+                <div className={`h-full rounded-l-sm ${tone.bar}`} style={{ width: `${(r.value / CAFE.pl.sales) * 100}%` }} />
+                {cut > 0 && (
+                  <div
+                    className={`h-full rounded-r-sm border-2 border-dashed ${tone.dash}`}
+                    style={{ width: `${(cut / CAFE.pl.sales) * 100}%` }}
+                  />
+                )}
               </div>
             </div>
           </li>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { TOPIC_EXPERIENCES } from "@/components/experiences/registry";
+import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
 // 3D ジオラマ化の対象（HTTPS は PR #113 で 3D 化済み。比較用に並べる）
 const TOPICS: { id: string; name: string }[] = [
@@ -51,5 +52,12 @@ export default function DioramaPreview({ topicId }: { topicId: string }) {
 
 function Preview({ topicId }: { topicId: string }) {
   const Experience = TOPIC_EXPERIENCES[topicId];
-  return Experience ? <Experience /> : <p>体験が見つかりません：{topicId}</p>;
+  // 本番（TopicContent）と同じく、Panel ごとに横スワイプで切り替える
+  return Experience ? (
+    <ExperienceSlideDeck key={topicId}>
+      <Experience />
+    </ExperienceSlideDeck>
+  ) : (
+    <p>体験が見つかりません：{topicId}</p>
+  );
 }
