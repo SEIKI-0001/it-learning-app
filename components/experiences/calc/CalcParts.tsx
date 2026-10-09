@@ -9,6 +9,7 @@ import styles from "./calc.module.css";
 //   StepChips : 解き方の手順チップ。つまずいた手順だけ赤くする
 //   Replay    : 「↺ もう一度見る」（reduced-motion では出さない）
 //   Note      : 1画面1メッセージの「ひとこと」
+//   ThinkFirst: 問いかけの後、「解説を見る」まで答え（図ごと）を隠して考える時間をとる
 
 export type Choice = {
   label: string;
@@ -113,6 +114,41 @@ export function Replay({ onClick, hidden, label = "↺ もう一度見る" }: { 
     >
       {label}
     </button>
+  );
+}
+
+/**
+ * 問いかけの後、解説を隠して考える時間をとる。「解説を見る」を押すまで children を出さない。
+ * 図そのものが答えを示してしまう場面（例：8行ぶんの枠＝答えの8人）でも使えるよう、図ごと包む。
+ * onReveal で useBeats(…, false) の start() を呼ぶと、押した瞬間からアニメが始まる。
+ */
+export function ThinkFirst({
+  children,
+  onReveal,
+  hint = "答えを予想してから、解説を見てみよう。",
+  testId,
+}: {
+  children: ReactNode;
+  onReveal?: () => void;
+  hint?: ReactNode;
+  testId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  if (open) return <>{children}</>;
+  return (
+    <div className="mt-3 rounded-xl border border-dashed border-gray-300 px-4 py-5 text-center" data-testid={testId}>
+      <p className="text-sm leading-relaxed text-gray-600">{hint}</p>
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(true);
+          onReveal?.();
+        }}
+        className="mt-3 rounded-lg bg-brand-600 px-5 py-2 text-sm font-bold text-white active:scale-95"
+      >
+        解説を見る
+      </button>
+    </div>
   );
 }
 
