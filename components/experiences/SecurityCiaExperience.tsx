@@ -7,6 +7,7 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「情報セキュリティの3要素（CIA）」専用の体験。
+//   ⓪ 3要素ってなに？ … 機密性・完全性・可用性をそれぞれ短く説明（意味・例・守り方）
 //   ① 柱を折ってみる … 3本の柱が「情報」を支える図解。タップで柱が折れ、
 //                        何が起きるか（事件例）を体感する
 //   ② どの要素が損なわれた？ … 事件を3要素に仕分け（試験で頻出）
@@ -14,12 +15,65 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 // ============================================================================
 
 const ELEMS = [
-  { id: "c", icon: "lock", name: "機密性", en: "Confidentiality", mean: "許可された人だけが見られる", bad: "情報漏えい・のぞき見", incident: "顧客名簿が外部に漏れた！" },
-  { id: "i", icon: "circle-check", name: "完全性", en: "Integrity", mean: "内容が正しく保たれ、勝手に書きかえられない", bad: "改ざん・書きかえ", incident: "Webサイトが書きかえられた！" },
-  { id: "a", icon: "zap", name: "可用性", en: "Availability", mean: "使いたいときにきちんと使える（止まらない）", bad: "システム停止・サービス不能", incident: "サーバが落ちて使えない！" },
+  {
+    id: "c", icon: "lock", name: "機密性", en: "Confidentiality", short: "見せない",
+    mean: "許可された人だけが見られる", bad: "情報漏えい・のぞき見", incident: "顧客名簿が外部に漏れた！",
+    detail: "見てよい人だけが情報を見られる状態のこと。関係ない人に見られたら、機密性が損なわれています。",
+    example: "自分の成績は本人と先生だけが見られる",
+    guard: "パスワード・アクセス権の設定・暗号化",
+  },
+  {
+    id: "i", icon: "circle-check", name: "完全性", en: "Integrity", short: "正しく保つ",
+    mean: "内容が正しく保たれ、勝手に書きかえられない", bad: "改ざん・書きかえ", incident: "Webサイトが書きかえられた！",
+    detail: "情報が正しいまま、勝手に書きかえられていない状態のこと。中身が変えられたら、完全性が損なわれています。",
+    example: "銀行の残高が勝手に増えたり減ったりしない",
+    guard: "変更履歴の記録・デジタル署名・ハッシュ値で照合",
+  },
+  {
+    id: "a", icon: "zap", name: "可用性", en: "Availability", short: "止めない",
+    mean: "使いたいときにきちんと使える（止まらない）", bad: "システム停止・サービス不能", incident: "サーバが落ちて使えない！",
+    detail: "使いたいときに、きちんと使える状態のこと。システムが止まって使えなければ、可用性が損なわれています。",
+    example: "ATMや予約サイトがいつでも使える",
+    guard: "バックアップ・予備の機器（二重化）・停電対策",
+  },
 ] as const;
 
 type ElemId = (typeof ELEMS)[number]["id"];
+
+// ---------------------------------------------------------------------------
+// ⓪ 3要素ってなに？: 体験の前に、それぞれの意味を短く押さえる。
+// ---------------------------------------------------------------------------
+function ElementBasics() {
+  return (
+    <Panel>
+      <SectionTitle step={1}>3要素ってなに？</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        情報を「安全に扱えている」と言えるのは、次の<b className="text-gray-800">3つがそろっているとき</b>です。
+      </p>
+      <ul className="mt-3 space-y-2.5">
+        {ELEMS.map((e) => (
+          <li key={e.id} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
+            <div className="flex items-center gap-2">
+              <Icon name={e.icon} className="h-4 w-4 text-brand-700" />
+              <span className="text-sm font-bold text-gray-900">{e.name}</span>
+              <span className="text-xs text-gray-500">{e.en}</span>
+              <span className="ml-auto rounded-full bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700 ring-1 ring-brand-100">
+                {e.short}
+              </span>
+            </div>
+            <p className="mt-1.5 text-sm leading-relaxed text-gray-700">{e.detail}</p>
+            <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs leading-relaxed text-gray-600">
+              <dt className="font-bold text-gray-500">例</dt>
+              <dd>{e.example}</dd>
+              <dt className="font-bold text-gray-500">守り方</dt>
+              <dd>{e.guard}</dd>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // ① 柱を折ってみる: 3本の柱が「情報」の屋根を支える。タップで折る⇄直す。
@@ -31,7 +85,7 @@ function PillarDemo() {
 
   return (
     <Panel>
-      <SectionTitle step={1}>3本の柱が「情報」を支えている</SectionTitle>
+      <SectionTitle step={2}>3本の柱が「情報」を支えている</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         大切な情報は<b className="text-gray-800">3本の柱</b>で支えられています。
         柱をタップして<b className="text-gray-800">折ってみる</b>と、何が起きるか分かります。
@@ -115,7 +169,7 @@ function Classifier() {
 
   return (
     <Panel>
-      <SectionTitle step={2}>どの柱が折れた？</SectionTitle>
+      <SectionTitle step={3}>どの柱が折れた？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         起きた出来事は、3要素の<b className="text-gray-800">どれが損なわれた</b>ケース？
         試験ではこの仕分けがよく問われます。
@@ -172,11 +226,12 @@ export default function SecurityCiaExperience() {
         <b>機密性</b>（見せない）・<b>完全性</b>（正しく保つ）・<b>可用性</b>（止めない）。
       </div>
 
+      <ElementBasics />
       <PillarDemo />
       <Classifier />
 
       <Panel>
-        <SectionTitle step={3}>おさらい</SectionTitle>
+        <SectionTitle step={4}>おさらい</SectionTitle>
         <div className="mt-3 grid grid-cols-3 gap-2">
           {ELEMS.map((e) => (
             <div key={e.id} className="rounded-xl bg-brand-50 p-2.5 text-center ring-1 ring-brand-100">
