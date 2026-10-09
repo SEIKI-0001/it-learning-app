@@ -8,8 +8,8 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 // ============================================================================
 // 「生成AIとDX」専用の体験。
 //   ① AIに聞いてみたラボ … 頼み方を変える→回答の質が変わる＋ハルシネーションを暴く
-//   ② DXと「ただのデジタル化」の違い … 同じパン屋で 売り物・稼ぎ方が変わったか を2列で比較
-//   ③ 補足：デジタル化の中の2つ … デジタイゼーション(情報)とデジタライゼーション(業務の流れ)
+//   ② DXとは … 定義を「使うもの/変えるもの/めざすこと」に分解＋パン屋の定期便の例
+//   ③ DXと似ている2つの違い … 3列比較。売り物・稼ぎ方が変わるのはDXだけ
 //   ④ 生成AIの使い方 適切/不適切クイズ
 // ============================================================================
 
@@ -150,111 +150,114 @@ function AiLab() {
   );
 }
 
-// ② DXと「ただのデジタル化」の違い ― 同じパン屋で、売り物・稼ぎ方が変わったかだけを比べる
-const DX_COMPARE: { row: string; digital: string; dx: string }[] = [
-  {
-    row: "変わるもの",
-    digital: "社内の仕事のやり方",
-    dx: "売り物・稼ぎ方（ビジネスモデル）",
-  },
-  {
-    row: "パン屋なら",
-    digital: "売上ノートをExcelに。注文と支払いをアプリに。",
-    dx: "購入データで好みを分析し、毎月届く「パン定期便」を始めた",
-  },
-  {
-    row: "お客さんから見ると",
-    digital: "買うパンは前と同じ",
-    dx: "今までなかったサービスが受けられる",
-  },
+// ② DXとは ― 定義だけを分解して見せる（他との比較は ③ に分ける）
+const DX_PARTS: { label: string; body: string }[] = [
+  { label: "使うもの", body: "デジタル技術とデータ" },
+  { label: "変えるもの", body: "製品・サービスや稼ぎ方（ビジネスモデル）。あわせて業務・組織・企業文化も" },
+  { label: "めざすこと", body: "お客さんに新しい価値を届け、競争で優位に立つ" },
 ];
 
-function DxVsDigital() {
+const DX_STORY: string[] = [
+  "店頭でパンを売るだけのパン屋が",
+  "購入データからお客さんの好みを分析し",
+  "好みに合わせて毎月届く「パン定期便」を始めた",
+  "店の稼ぎ方が「その日の来店」から「毎月の定額」に変わった",
+];
+
+function DxDefinition() {
   return (
     <Panel>
-      <SectionTitle step={2}>DXと「ただのデジタル化」の違い</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        見分けるポイントは1つだけ。
-        <b className="text-gray-800">売り物や稼ぎ方そのものが変わったか</b>です。
-        同じパン屋で比べてみましょう。
+      <SectionTitle step={2}>DXとは</SectionTitle>
+      <p className="mt-2 text-[15px] font-bold leading-relaxed text-gray-900">
+        DX（デジタルトランスフォーメーション）＝デジタル技術とデータを使って、
+        <span className="text-brand-700">ビジネスのあり方そのものを変える</span>こと。
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-2" data-testid="dx-compare">
-        <div className="rounded-lg bg-gray-100 px-2.5 py-2">
-          <div className="text-sm font-bold text-gray-900">ただのデジタル化</div>
-          <div className="text-[11px] leading-snug text-gray-600">デジタイゼーション／デジタライゼーション</div>
-        </div>
-        <div className="rounded-lg bg-brand-600 px-2.5 py-2 text-white">
-          <div className="text-sm font-bold">DX</div>
-          <div className="text-[11px] leading-snug text-brand-100">デジタルトランスフォーメーション</div>
-        </div>
-        {DX_COMPARE.map((r) => (
-          <div key={r.row} className="col-span-2 grid grid-cols-2 gap-2">
-            <div className="col-span-2 -mb-1 pt-1 text-xs font-bold text-gray-500">{r.row}</div>
-            <div className="rounded-lg px-2.5 py-2 text-sm leading-snug text-gray-800 ring-1 ring-gray-200">
-              {r.digital}
-            </div>
-            <div className="rounded-lg px-2.5 py-2 text-sm font-bold leading-snug text-gray-900 ring-2 ring-brand-300">
-              {r.dx}
-            </div>
+      <dl className="mt-3 space-y-1.5" data-testid="dx-definition">
+        {DX_PARTS.map((x) => (
+          <div key={x.label} className="flex gap-2 rounded-lg bg-gray-50 px-3 py-2 ring-1 ring-gray-200">
+            <dt className="w-[5.5em] shrink-0 text-xs font-bold leading-6 text-gray-500">{x.label}</dt>
+            <dd className="text-sm leading-6 text-gray-900">{x.body}</dd>
           </div>
         ))}
-      </div>
+      </dl>
 
-      <p className="mt-4 text-sm leading-relaxed text-gray-700">
-        Excel化やアプリ化はDXの<b className="text-gray-900">準備（土台）</b>にはなりますが、それだけではDXではありません。
-        「紙をPDFにしただけ」「業務を効率化しただけ」をDXと呼ぶのは定番のひっかけです。
+      <div className="mt-4 text-xs font-bold text-gray-500">パン屋でいうと</div>
+      <ol className="mt-1.5 space-y-1">
+        {DX_STORY.map((t, i) => (
+          <li key={t} className="flex gap-2 text-sm leading-relaxed text-gray-800">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-900 text-[11px] font-bold text-white">
+              {i + 1}
+            </span>
+            <span className={i === DX_STORY.length - 1 ? "font-bold text-gray-900" : ""}>{t}</span>
+          </li>
+        ))}
+      </ol>
+
+      <p className="mt-3 text-sm leading-relaxed text-gray-700">
+        ポイントは最後の一歩。データやアプリを使うだけでなく、
+        <b className="text-gray-900">売り物や稼ぎ方まで変わっている</b>からDXと呼べます。
       </p>
     </Panel>
   );
 }
 
-// ③ 補足：「ただのデジタル化」の中の2つ ― 変える範囲が 情報 か 業務の流れ か
-const DIGITAL_STEPS: { name: string; target: string; def: string; ex: [string, string]; bakery: string }[] = [
-  {
-    name: "デジタイゼーション",
-    target: "情報",
-    def: "紙などアナログの情報をデータにする",
-    ex: ["紙の書類", "PDF"],
-    bakery: "紙の売上ノートを Excel に置き換えた",
-  },
-  {
-    name: "デジタライゼーション",
-    target: "業務の流れ",
-    def: "仕事の手順ごとデジタルで回す",
-    ex: ["紙で回していた申請", "Web申請"],
-    bakery: "電話注文とレジ払いを、アプリで注文〜支払いまで完結にした",
-  },
+// ③ DXと他の2つの比較 ― 最後の行「売り物・稼ぎ方」だけが DX で変わる
+const COMPARE_COLS = ["デジタイゼーション", "デジタライゼーション", "DX"] as const;
+const COMPARE_ROWS: { row: string; cells: [string, string, string]; key?: boolean }[] = [
+  { row: "デジタルにする範囲", cells: ["情報", "業務の流れ", "ビジネスのあり方"] },
+  { row: "例", cells: ["紙の書類→PDF", "紙の申請→Web申請", "店頭販売→データを使った定期便"] },
+  { row: "パン屋なら", cells: ["売上ノートをExcelに", "注文〜支払いをアプリで完結", "パン定期便を始めた"] },
+  { row: "売り物・稼ぎ方", cells: ["変わらない", "変わらない", "変わる"], key: true },
 ];
 
-function DigitalSteps() {
+function DxCompare() {
   return (
     <Panel>
-      <SectionTitle step={3}>補足：デジタル化の中の2つ</SectionTitle>
+      <SectionTitle step={3}>DXと、似ている2つの違い</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        DXではない側の2つは、<b className="text-gray-800">デジタルにする範囲</b>で分かれます。
-        どちらも、お客さんが買うものは変わりません。
+        デジタイゼーションとデジタライゼーションは、今の仕事をデジタルに置き換えるところまで。
+        違いは表の<b className="text-gray-800">いちばん下の行</b>に出ます。
       </p>
 
-      <ol className="mt-3 space-y-2.5" data-testid="dx-levels">
-        {DIGITAL_STEPS.map((l) => (
-          <li key={l.name} className="rounded-xl p-3 ring-1 ring-gray-200">
-            <div className="flex flex-wrap items-baseline gap-x-2">
-              <span className="text-base font-bold text-gray-900">{l.name}</span>
-              <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-bold text-gray-800">範囲：{l.target}</span>
-            </div>
-            <p className="mt-1 text-[15px] font-bold leading-snug text-gray-900">{l.def}</p>
-            <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-gray-700">
-              <span className="text-xs font-bold text-gray-500">例</span>
-              <span className="rounded bg-gray-50 px-1.5 py-0.5 ring-1 ring-gray-200">{l.ex[0]}</span>
-              <span aria-hidden className="font-bold text-gray-900">→</span>
-              <span className="sr-only">から</span>
-              <span className="rounded bg-gray-50 px-1.5 py-0.5 font-bold text-gray-900 ring-1 ring-gray-200">{l.ex[1]}</span>
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-gray-600">パン屋なら：{l.bakery}</p>
-          </li>
+      <div className="mt-3 grid grid-cols-3 gap-1.5 text-[13px] leading-snug" data-testid="dx-compare">
+        {COMPARE_COLS.map((c, i) => (
+          <div
+            key={c}
+            className={`rounded-md px-2 py-1.5 text-center text-[11px] font-bold ${
+              i === 2 ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-900"
+            }`}
+          >
+            {c}
+          </div>
         ))}
-      </ol>
+        {COMPARE_ROWS.map((r) => (
+          <div key={r.row} className="col-span-3 grid grid-cols-3 gap-1.5">
+            <div className={`col-span-3 pt-1.5 text-xs font-bold ${r.key ? "text-brand-700" : "text-gray-500"}`}>{r.row}</div>
+            {r.cells.map((cell, i) => (
+              <div
+                key={i}
+                className={`rounded-md px-2 py-1.5 ${
+                  r.key
+                    ? i === 2
+                      ? "bg-brand-600 text-center font-bold text-white"
+                      : "bg-gray-100 text-center font-bold text-gray-600"
+                    : i === 2
+                      ? "font-bold text-gray-900 ring-2 ring-brand-300"
+                      : "text-gray-800 ring-1 ring-gray-200"
+                }`}
+              >
+                {cell}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-4 text-sm leading-relaxed text-gray-700">
+        PDF化やアプリ化はDXの<b className="text-gray-900">土台</b>にはなりますが、それだけではDXではありません。
+        「紙をPDFにしただけ」「業務を効率化しただけ」をDXと呼ぶのは定番のひっかけです。
+      </p>
     </Panel>
   );
 }
@@ -336,12 +339,12 @@ export default function GenerativeAiDxExperience() {
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
         生成AIは<b>便利だが誤る（ハルシネーション）</b>ので人の確認が必須。
-        DXは<b>デジタルで売り物や稼ぎ方そのものを変える</b>こと。社内のデジタル化だけではDXではない。
+        DXは<b>デジタルで売り物や稼ぎ方そのものを変える</b>こと。
       </div>
 
       <AiLab />
-      <DxVsDigital />
-      <DigitalSteps />
+      <DxDefinition />
+      <DxCompare />
       <Quiz />
     </div>
   );
