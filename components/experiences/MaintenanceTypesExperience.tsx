@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { MaintenanceScene, type MaintKind } from "./maintenance/MaintenanceScenes";
 import { Panel, SectionTitle } from "./ui";
 import { InlineIcon } from "@/components/ui/Pictogram";
@@ -66,9 +66,9 @@ const KINDS: Record<
 };
 
 // 行＝何のため？ 列＝いつ？
-const ROWS: { label: string; sub: string; cells: [MaintKind, MaintKind] }[] = [
-  { label: "不具合を直す", sub: "訂正", cells: ["corrective", "preventive"] },
-  { label: "変える・良くする", sub: "改良", cells: ["adaptive", "perfective"] },
+const ROWS: { label: string; cells: [MaintKind, MaintKind] }[] = [
+  { label: "不具合を直す", cells: ["corrective", "preventive"] },
+  { label: "変える・良くする", cells: ["adaptive", "perfective"] },
 ];
 
 function KindMap() {
@@ -79,45 +79,41 @@ function KindMap() {
     <Panel>
       <SectionTitle step={1}>4つの保守は「いつ」と「何のため」で分かれる</SectionTitle>
 
-      <div className="mt-3" data-testid="maint-map">
-        {/* 列見出し＝いつ？ */}
-        <div className="grid grid-cols-2 gap-2 text-center text-xs font-bold text-gray-500">
-          <span>問題が起きてから</span>
-          <span>起きる前に</span>
-        </div>
+      {/* マトリクス：列＝いつ？ 行＝何のため？（行見出しは左の縦書き） */}
+      <div className="mt-3 grid grid-cols-[auto_1fr_1fr] gap-1.5" data-testid="maint-map">
+        <span aria-hidden />
+        <span className="rounded-lg bg-gray-100 py-1 text-center text-xs font-bold text-gray-700">問題が起きてから</span>
+        <span className="rounded-lg bg-gray-100 py-1 text-center text-xs font-bold text-gray-700">起きる前に</span>
 
         {ROWS.map((row) => (
-          <div key={row.label} className="mt-2">
-            {/* 行見出し＝何のため？ */}
-            <div className="mb-1 flex items-center gap-2 text-xs font-bold text-gray-700">
-              <span className="h-px flex-1 bg-gray-200" />
+          <Fragment key={row.label}>
+            <span
+              className="flex items-center justify-center rounded-lg bg-gray-100 px-1 py-2 text-xs font-bold tracking-wider text-gray-700 [writing-mode:vertical-rl]"
+              data-testid="maint-row-label"
+            >
               {row.label}
-              <span className="font-normal text-gray-400">（{row.sub}）</span>
-              <span className="h-px flex-1 bg-gray-200" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {row.cells.map((kind) => {
-                const c = KINDS[kind];
-                const on = sel === kind;
-                return (
-                  <button
-                    key={kind}
-                    type="button"
-                    onClick={() => setSel(kind)}
-                    aria-pressed={on}
-                    data-testid={`maint-cell-${kind}`}
-                    className={`rounded-xl px-2 pb-2 pt-1 text-center transition active:scale-[0.98] ${c.tone} ${
-                      on ? `${c.bg} ring-2 ${c.ring}` : "bg-white ring-1 ring-gray-200"
-                    }`}
-                  >
-                    <MaintenanceScene kind={kind} />
-                    <span className="block text-sm font-bold text-gray-900">{c.name}</span>
-                    <span className="block text-[11px] font-bold leading-tight">{c.short}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+            </span>
+            {row.cells.map((kind) => {
+              const c = KINDS[kind];
+              const on = sel === kind;
+              return (
+                <button
+                  key={kind}
+                  type="button"
+                  onClick={() => setSel(kind)}
+                  aria-pressed={on}
+                  data-testid={`maint-cell-${kind}`}
+                  className={`rounded-xl px-1.5 pb-2 pt-1 text-center transition active:scale-[0.98] ${c.tone} ${
+                    on ? `${c.bg} ring-2 ${c.ring}` : "bg-white ring-1 ring-gray-200"
+                  }`}
+                >
+                  <MaintenanceScene kind={kind} />
+                  <span className="block text-sm font-bold text-gray-900">{c.name}</span>
+                  <span className="block text-[11px] font-bold leading-tight">{c.short}</span>
+                </button>
+              );
+            })}
+          </Fragment>
         ))}
       </div>
 
