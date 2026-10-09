@@ -57,6 +57,9 @@ describe("EstimationExperience", () => {
     click("解説4");
     expect(screen.getByTestId("est-phase-total")).toHaveTextContent("42人月");
     click("解説5");
+    // 答えは「解説を見る」まで図ごと隠れている（考える時間をとる）
+    expect(screen.queryByTestId("est-staff")).not.toBeInTheDocument();
+    fireEvent.click(within(screen.getByTestId("est-staff-think")).getByRole("button", { name: "解説を見る" }));
     expect(screen.getByTestId("est-staff-rest")).toHaveTextContent("40人日");
     expect(screen.getByTestId("est-staff-answer")).toHaveTextContent("8人");
   });

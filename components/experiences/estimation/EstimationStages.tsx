@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import styles from "../calc/calc.module.css";
-import { Choices, LeveledPractice, Note, Replay, placeAnswer, type Choice, type LeveledQuestion } from "../calc/CalcParts";
+import { Choices, LeveledPractice, Note, Replay, ThinkFirst, placeAnswer, type Choice, type LeveledQuestion } from "../calc/CalcParts";
 import { useBeats } from "../calc/useBeats";
 import { Panel, SectionTitle } from "../ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
@@ -12,7 +12,7 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 //   ② 人月は長方形の面積：3人×4か月＝12マス。逆に10マスを2人で並べると横に5列＝5か月
 //   ③ 生産性：例題 → ①数字の整理 ②6kの束がいくつ入るか ③120÷6＝20人月 → 結論（静的）
 //   ④ 工程ごと：工程ごとに割ってから足す（生産性を先に足さない）
-//   ⑤ 人数が途中で変わる：総工数（面積）は同じ。できた分を引いて、残りの日数で割る
+//   ⑤ 人数が途中で変わる：まず考えてもらい（ThinkFirst）、総工数（面積）は同じ → できた分を引いて、残りの日数で割る
 //   ⑥ 手法の使い分け：その時点で何が分かっているか
 //   ⑦ 確認5問
 
@@ -262,7 +262,7 @@ const AFTER = 8; // 5日目以降に必要な人数
 const STAFF_DELAYS = [1400, 1500, 1500, 1600, 1600];
 
 export function StaffChangeStage() {
-  const { ref, beat: b, reducedMotion, replay } = useBeats(6, STAFF_DELAYS);
+  const { ref, beat: b, reducedMotion, replay, start } = useBeats(6, STAFF_DELAYS, false);
   const shortage = b >= 1;
   const after = b >= 3;
   return (
@@ -273,67 +273,70 @@ export function StaffChangeStage() {
         （1マス＝<b className="text-gray-800">1人日</b>：1人が1日でできる量）
       </p>
 
-      <div ref={ref} className="mt-3" data-testid="est-staff" data-beat={b}>
-        <div className="mx-auto w-fit">
-          <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${DAYS}, auto)` }}>
-            {Array.from({ length: AFTER }, (_, r) =>
-              Array.from({ length: DAYS }, (_, d) => {
-                const planned = r < PLAN;
-                let on = false;
-                let tone: "brand" | "emerald" | "rose" | "amber" = "brand";
-                if (d < EARLY) {
-                  if (!shortage) on = planned;
-                  else if (r < SHORT) on = true;
-                  else if (planned) {
-                    // 足りなかった分。最後まで赤で残し、後ろの緑（増やした分）と見比べる
-                    on = true;
-                    tone = "rose";
+      {/* 図の8行目までの枠が答え（8人）を示してしまうので、図ごと隠して考えてもらう */}
+      <ThinkFirst onReveal={start} hint="何人いればいいか、少し考えてから解説を見てみよう。" testId="est-staff-think">
+        <div ref={ref} className="mt-3" data-testid="est-staff" data-beat={b}>
+          <div className="mx-auto w-fit">
+            <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${DAYS}, auto)` }}>
+              {Array.from({ length: AFTER }, (_, r) =>
+                Array.from({ length: DAYS }, (_, d) => {
+                  const planned = r < PLAN;
+                  let on = false;
+                  let tone: "brand" | "emerald" | "rose" | "amber" = "brand";
+                  if (d < EARLY) {
+                    if (!shortage) on = planned;
+                    else if (r < SHORT) on = true;
+                    else if (planned) {
+                      // 足りなかった分。最後まで赤で残し、後ろの緑（増やした分）と見比べる
+                      on = true;
+                      tone = "rose";
+                    }
+                  } else {
+                    if (!after) on = planned;
+                    else {
+                      on = true;
+                      tone = r < PLAN ? "brand" : "emerald";
+                    }
                   }
-                } else {
-                  if (!after) on = planned;
-                  else {
-                    on = true;
-                    tone = r < PLAN ? "brand" : "emerald";
-                  }
-                }
-                return <Cell key={`${r}-${d}`} on={on} tone={tone} small delay={after && d >= EARLY ? (d - EARLY) * 70 : 0} />;
-              }),
+                  return <Cell key={`${r}-${d}`} on={on} tone={tone} small delay={after && d >= EARLY ? (d - EARLY) * 70 : 0} />;
+                }),
+              )}
+            </div>
+            <div className="mt-1 grid text-center text-[9px] font-bold text-gray-400" style={{ gridTemplateColumns: `${EARLY}fr ${DAYS - EARLY}fr` }}>
+              <span>1〜5日目</span>
+              <span>6〜10日目</span>
+            </div>
+          </div>
+
+          <div className="mt-2 space-y-1 text-center text-sm font-bold">
+            <p className="text-gray-700">
+              計画の総工数：6人 × 10日 ＝ <span className="text-brand-700">60人日</span>
+            </p>
+            {shortage && (
+              <p className={`text-gray-700 ${styles.reveal}`} data-testid="est-staff-done">
+                最初の5日でできた分：4人 × 5日 ＝ 20人日
+                <span className="block text-[11px] text-rose-600">（赤＝足りなかった 2人 × 5日 ＝ 10人日）</span>
+              </p>
+            )}
+            {b >= 2 && (
+              <p className={`text-gray-800 ${styles.reveal}`} data-testid="est-staff-rest">
+                残り：60 − 20 ＝ <span className="text-brand-700">40人日</span>
+              </p>
+            )}
+            {after && (
+              <p className={`rounded-xl bg-white px-3 py-2 text-lg ring-2 ring-emerald-400 ${styles.pop}`} data-testid="est-staff-answer">
+                40 ÷ 5日 ＝ <span className="text-emerald-600">8人</span>
+              </p>
             )}
           </div>
-          <div className="mt-1 grid text-center text-[9px] font-bold text-gray-400" style={{ gridTemplateColumns: `${EARLY}fr ${DAYS - EARLY}fr` }}>
-            <span>1〜5日目</span>
-            <span>6〜10日目</span>
-          </div>
+          {b >= 5 && (
+            <Note>
+              <InlineIcon name="lightbulb" />人数が変わっても<b>仕事の総量（面積）は同じ</b>。<b>総工数 → できた分を引く → 残りの日数で割る</b>。赤い不足分（10人日）が、後ろの緑の2人×5日に移っただけです。
+            </Note>
+          )}
+          <Replay onClick={replay} hidden={reducedMotion} />
         </div>
-
-        <div className="mt-2 space-y-1 text-center text-sm font-bold">
-          <p className="text-gray-700">
-            計画の総工数：6人 × 10日 ＝ <span className="text-brand-700">60人日</span>
-          </p>
-          {shortage && (
-            <p className={`text-gray-700 ${styles.reveal}`} data-testid="est-staff-done">
-              最初の5日でできた分：4人 × 5日 ＝ 20人日
-              <span className="block text-[11px] text-rose-600">（赤＝足りなかった 2人 × 5日 ＝ 10人日）</span>
-            </p>
-          )}
-          {b >= 2 && (
-            <p className={`text-gray-800 ${styles.reveal}`} data-testid="est-staff-rest">
-              残り：60 − 20 ＝ <span className="text-brand-700">40人日</span>
-            </p>
-          )}
-          {after && (
-            <p className={`rounded-xl bg-white px-3 py-2 text-lg ring-2 ring-emerald-400 ${styles.pop}`} data-testid="est-staff-answer">
-              40 ÷ 5日 ＝ <span className="text-emerald-600">8人</span>
-            </p>
-          )}
-        </div>
-        {b >= 5 && (
-          <Note>
-            <InlineIcon name="lightbulb" />人数が変わっても<b>仕事の総量（面積）は同じ</b>。<b>総工数 → できた分を引く → 残りの日数で割る</b>。赤い不足分（10人日）が、後ろの緑の2人×5日に移っただけです。
-          </Note>
-        )}
-        <Replay onClick={replay} hidden={reducedMotion} />
-      </div>
+      </ThinkFirst>
     </Panel>
   );
 }
