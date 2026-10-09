@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useReducedMotion } from "./scene/useReducedMotion";
-import { ThreeCDioramaScene } from "./threec/ThreeCDioramaScene";
+import { VennScene } from "./threec/VennScene";
 import { Panel, SectionTitle } from "./ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { InlineIcon } from "@/components/ui/Pictogram";
@@ -47,7 +46,6 @@ const CARDS: Record<
 const STRATEGY = "ワンコインの映えクレープを、待たせず出す";
 
 function MarketMap() {
-  const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<C | null>(null);
   const [seen, setSeen] = useState<Record<C, boolean>>({ customer: false, competitor: false, company: false });
   const [costTries, setCostTries] = useState(0);
@@ -69,7 +67,7 @@ function MarketMap() {
       </p>
 
       <div className="mt-3">
-        <ThreeCDioramaScene researched={seen} focus={sel} costTries={costTries} strategy={STRATEGY} onResearch={tap} reducedMotion={reducedMotion} />
+        <VennScene researched={seen} focus={sel} costTries={costTries} strategy={STRATEGY} onResearch={tap} />
       </div>
 
       {/* 調査結果 */}

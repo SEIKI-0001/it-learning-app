@@ -1,40 +1,78 @@
-/* 3C分析の 3D 模型（ThreeCDioramaScene）。調べる場所の札・作戦ボード・メモ。 */
+/* 3C分析のベン図（2D）。正方形の中に3つの円を重ね、中央を作戦ボードにする。 */
 
-[data-face][data-face].awning {
-  background: repeating-linear-gradient(90deg, #16a37a 0 10px, #f8fafc 10px 20px);
+.venn {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+  font-size: 11px;
 }
 
-[data-face][data-face].boardFace {
-  border: 3px solid #475569;
-  background: #fbfcfd;
-}
-
-.memo {
+.circle {
   position: absolute;
-  left: 0;
-  top: 0;
-  transform-style: preserve-3d;
+  width: 58%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 7%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--tone) 35%, transparent);
+  transform: translate(-50%, -50%);
+  transition: background 400ms ease, box-shadow 400ms ease;
+}
+
+.circle[data-spot="customer"] {
+  left: 50%;
+  top: 31%;
+}
+
+.circle[data-spot="company"] {
+  left: 32%;
+  top: 63%;
+}
+
+.circle[data-spot="competitor"] {
+  left: 68%;
+  top: 63%;
+}
+
+.circle[data-researched="true"] {
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  box-shadow: inset 0 0 0 2px var(--tone);
+}
+
+.circle[data-focus="true"] {
+  box-shadow: inset 0 0 0 3px var(--tone), 0 0 0 4px color-mix(in srgb, var(--tone) 18%, transparent);
 }
 
 .spotBox {
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 5px 8px 6px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12), 0 0 0 1.5px color-mix(in srgb, var(--tone) 35%, transparent);
+  width: 38%;
+  transform: translate(-50%, -50%);
   text-align: center;
 }
 
-.spotBox[data-focus="true"] {
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.16), 0 0 0 2px var(--tone);
+.spotBox[data-spot="customer"] {
+  left: 50%;
+  top: 14%;
+}
+
+.spotBox[data-spot="company"] {
+  left: 24%;
+  top: 76%;
+}
+
+.spotBox[data-spot="competitor"] {
+  left: 76%;
+  top: 76%;
 }
 
 .spotName {
   color: color-mix(in srgb, var(--tone) 75%, #111827);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 1.1;
 }
@@ -53,7 +91,6 @@
   font-size: 10.5px;
   font-weight: 800;
   line-height: 1.35;
-  white-space: nowrap;
   transition: transform 150ms ease;
 }
 
@@ -73,27 +110,32 @@
   background: #ffffff;
   color: #1f2937;
   box-shadow: inset 0 0 0 1.5px var(--tone);
-  animation: c3d-in 360ms ease-out both;
+  animation: c3-in 360ms ease-out both;
 }
 
 .board {
+  position: absolute;
+  left: 50%;
+  top: 53%;
   display: flex;
-  min-width: 110px;
-  max-width: 200px;
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 6px 8px 7px;
+  width: 32%;
+  padding: 6px 6px 7px;
   border-radius: 12px;
   background: #ffffff;
   box-shadow: 0 0 0 1.5px #cbd5e1, 0 6px 14px rgba(30, 42, 64, 0.12);
+  transform: translate(-50%, -50%);
   text-align: center;
+  transition: box-shadow 400ms ease;
 }
 
 .board[data-complete="true"] {
+  width: 40%;
   background: #fffbeb;
   box-shadow: 0 0 0 2px #f59e0b, 0 8px 18px rgba(245, 158, 11, 0.25);
-  animation: c3d-in 420ms ease-out both;
+  animation: c3-in 420ms ease-out both;
 }
 
 .boardTitle {
@@ -131,7 +173,9 @@
 }
 
 .reject {
-  display: inline-block;
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
   padding: 3px 8px;
   border-radius: 999px;
   background: #ffe4e6;
@@ -140,13 +184,14 @@
   font-size: 10px;
   font-weight: 800;
   white-space: nowrap;
-  animation: c3d-shake 420ms ease both;
+  transform: translateX(-50%);
+  animation: c3-shake 420ms ease both;
 }
 
-@keyframes c3d-in {
+@keyframes c3-in {
   from {
     opacity: 0;
-    scale: 0.92;
+    scale: 0.85;
   }
   to {
     opacity: 1;
@@ -154,33 +199,28 @@
   }
 }
 
-@keyframes c3d-shake {
+@keyframes c3-shake {
   0%,
   100% {
     translate: 0 0;
   }
   25% {
-    translate: -4px 0;
+    translate: -6px 0;
+  }
+  50% {
+    translate: 6px 0;
   }
   75% {
-    translate: 4px 0;
+    translate: -3px 0;
   }
 }
 
-/* 床に描いた 3C の円（調べると色が濃くなる） */
-.zone {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 300px;
-  height: 300px;
-  border: 3px solid color-mix(in srgb, var(--tone) 55%, transparent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--tone) 8%, transparent);
-  transform-origin: 0 0;
-  transition: background 500ms ease;
-}
-
-.zone[data-researched="true"] {
-  background: color-mix(in srgb, var(--tone) 20%, transparent);
+@media (prefers-reduced-motion: reduce) {
+  .fact,
+  .board,
+  .reject,
+  .circle {
+    animation: none;
+    transition: none;
+  }
 }
