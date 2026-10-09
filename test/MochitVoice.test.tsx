@@ -16,12 +16,14 @@ vi.mock("@/lib/mochitAi/client", () => ({
 
 import MochitConsultSheet from "@/components/mochit/MochitConsultSheet";
 import { closeMochitConsult, openMochitConsult, resetMochitConsultStoreForTest } from "@/components/mochit/mochitConsultStore";
-import { resetMochitVoiceForTest, toSpeakableText } from "@/components/mochit/useMochitVoice";
+import { joinTranscripts, resetMochitVoiceForTest, toSpeakableText } from "@/components/mochit/useMochitVoice";
 
 const storage = new Map<string, string>();
 
 class FakeRecognition {
   static last: FakeRecognition | null = null;
+  // iPhone で終わりの合図（onend）が来ないまま止まる状況を再現する
+  static silentEnd = false;
   lang = "";
   interimResults = false;
   continuous = false;
@@ -32,8 +34,12 @@ class FakeRecognition {
   start = vi.fn(() => {
     FakeRecognition.last = this;
   });
-  stop = vi.fn(() => this.onend?.());
-  abort = vi.fn(() => this.onend?.());
+  stop = vi.fn(() => {
+    if (!FakeRecognition.silentEnd) this.onend?.();
+  });
+  abort = vi.fn(() => {
+    if (!FakeRecognition.silentEnd) this.onend?.();
+  });
   hear(transcript: string, isFinal: boolean) {
     const result = Object.assign([{ transcript }], { isFinal });
     this.onresult?.({ resultIndex: 0, results: [result] });
@@ -93,6 +99,8 @@ afterEach(() => {
   delete w.webkitSpeechRecognition;
   delete w.speechSynthesis;
   FakeRecognition.last = null;
+  FakeRecognition.silentEnd = false;
+  vi.useRealTimers();
 });
 
 function openSheet() {
@@ -162,6 +170,55 @@ describe("モチット相談の音声", () => {
     await screen.findByLabelText("モチットに聞く");
     expect(screen.queryByRole("button", { name: "声で話しかける" })).toBeNull();
     expect(screen.queryByRole("button", { name: "返事を声で読み上げる" })).toBeNull();
+  });
+});
+
+describe("iPhone の不安定な音声入力", () => {
+  it("終わりの合図が来なくても、止めたあとは聞き取り中のまま固まらず、もう一度押せる", async () => {
+    FakeRecognition.silentEnd = true;
+    openSheet();
+    fireEvent.click(await screen.findByRole("button", { name: "声で話しかける" }));
+    vi.useFakeTimers();
+    act(() => FakeRecognition.last!.hear("ネットワーク", false));
+    fireEvent.click(screen.getByRole("button", { name: "音声入力を止める" }));
+    act(() => vi.advanceTimersByTime(1_600));
+    const mic = screen.getByRole("button", { name: "声で話しかける" });
+    expect(screen.getByLabelText("モチットに聞く")).toHaveValue("ネットワーク");
+
+    const first = FakeRecognition.last;
+    fireEvent.click(mic);
+    expect(FakeRecognition.last).not.toBe(first);
+    expect(FakeRecognition.last!.start).toHaveBeenCalled();
+  });
+
+  it("話し始めないまま放置しても、上限時間で聞き取りを畳む", async () => {
+    FakeRecognition.silentEnd = true;
+    openSheet();
+    const mic = await screen.findByRole("button", { name: "声で話しかける" });
+    vi.useFakeTimers();
+    fireEvent.click(mic);
+    expect(screen.getByRole("button", { name: "音声入力を止める" })).toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(17_000));
+    expect(screen.getByRole("button", { name: "声で話しかける" })).toBeInTheDocument();
+  });
+
+  it("何も聞き取れずに終わったら、黙って消えずにもう一度話すよう伝える", async () => {
+    openSheet();
+    fireEvent.click(await screen.findByRole("button", { name: "声で話しかける" }));
+    act(() => FakeRecognition.last!.onend?.());
+    expect(screen.getByText(/うまく聞き取れなかったよ/)).toBeInTheDocument();
+  });
+
+  it("聞き取りを始めるときは読み上げを止める（自分の声を拾わない）", async () => {
+    openSheet();
+    synth.cancel.mockClear();
+    fireEvent.click(await screen.findByRole("button", { name: "声で話しかける" }));
+    expect(synth.cancel).toHaveBeenCalled();
+  });
+
+  it("途中までの文を重ねて返されても二重にしない", () => {
+    expect(joinTranscripts(["稼働率", "稼働率の計算"])).toBe("稼働率の計算");
+    expect(joinTranscripts(["稼働率の", "計算"])).toBe("稼働率の計算");
   });
 });
 

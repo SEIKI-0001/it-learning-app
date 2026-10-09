@@ -53,10 +53,31 @@ function useClientValue(read: () => boolean): boolean {
 
 const RECOGNITION_ERRORS: Record<string, string> = {
   "not-allowed": "マイクの使用が許可されていないみたい。ブラウザの設定から許可してね。",
-  "service-not-allowed": "このブラウザでは音声入力が使えないみたい。",
-  "audio-capture": "マイクが見つからなかったよ。",
+  // iPhone は「設定 > 一般 > キーボード > 音声入力」がオフだとこれになる。LINE などのアプリ内ブラウザでも出る
+  "service-not-allowed":
+    "この環境では音声入力が使えないみたい。iPhone は「設定 > 一般 > キーボード > 音声入力」をオンにして、Safari で開いてね。",
+  "audio-capture": "マイクを使えなかったよ。ほかのアプリが使っていないか確認してね。",
   network: "音声の聞き取りに失敗したよ。通信を確認してね。",
 };
+const NOTHING_HEARD = "うまく聞き取れなかったよ。もう一度マイクを押して話してね。";
+
+// 1回の聞き取りの上限。iPhone では終わりの合図（onend）が来ないまま止まることがあるので、必ずここで畳む
+const MAX_LISTEN_MS = 15_000;
+// stop() のあと終わりの合図を待つ時間。来なければこちらで終わらせる
+const STOP_GRACE_MS = 1_500;
+
+/**
+ * 認識結果をつなぐ。iPhone の Safari は、途中までの文を含んだ結果を重ねて返すことがあるので
+ * 「前の結果で始まる結果」は置き換えとして扱い、同じ言葉が二重にならないようにする。
+ */
+export function joinTranscripts(transcripts: string[]): string {
+  let heard = "";
+  for (const t of transcripts) {
+    if (!t) continue;
+    heard = heard && t.startsWith(heard) ? t : heard + t;
+  }
+  return heard;
+}
 
 /**
  * 話した内容を文字にして onText へ渡す。確定前の途中経過も渡すので、入力欄にそのまま流し込める。
@@ -66,55 +87,106 @@ export function useSpeechInput(onText: (text: string) => void) {
   const supported = useClientValue(() => recognitionCtor() !== null);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const recognitionRef = useRef<Recognition | null>(null);
+  const sessionRef = useRef<{
+    recognition: Recognition;
+    heard: boolean;
+    failed: boolean;
+    stoppedByUser: boolean;
+    timers: number[];
+  } | null>(null);
   const onTextRef = useRef(onText);
   useEffect(() => {
     onTextRef.current = onText;
   });
 
-  const stop = useCallback(() => {
-    recognitionRef.current?.stop();
+  // 終わりの合図が来ても来なくても、ここを通って必ず「聞いていない」状態へ戻す
+  const finish = useCallback((recognition: Recognition) => {
+    const session = sessionRef.current;
+    if (!session || session.recognition !== recognition) return;
+    sessionRef.current = null;
+    session.timers.forEach((timer) => window.clearTimeout(timer));
+    recognition.onresult = null;
+    recognition.onerror = null;
+    recognition.onend = null;
+    setListening(false);
+    if (!session.heard && !session.failed && !session.stoppedByUser) setError(NOTHING_HEARD);
   }, []);
 
-  const start = useCallback((prefix: string) => {
-    const Ctor = recognitionCtor();
-    if (!Ctor || recognitionRef.current) return;
-    const recognition = new Ctor();
-    recognition.lang = LANG;
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-    const base = prefix.trim() ? `${prefix.trimEnd()} ` : "";
-    recognition.onresult = (event) => {
-      let heard = "";
-      for (let i = 0; i < event.results.length; i++) heard += event.results[i][0]?.transcript ?? "";
-      onTextRef.current(base + heard);
-    };
-    recognition.onerror = (event) => {
-      // 何も話さずに終わった・自分で止めた場合は黙って終える
-      if (event.error === "no-speech" || event.error === "aborted") return;
-      setError(RECOGNITION_ERRORS[event.error] ?? "うまく聞き取れなかったよ。もう一度試してね。");
-    };
-    recognition.onend = () => {
-      recognitionRef.current = null;
-      setListening(false);
-    };
-    setError(null);
+  const stop = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    session.stoppedByUser = true;
     try {
-      recognition.start();
-      recognitionRef.current = recognition;
-      setListening(true);
+      session.recognition.stop();
     } catch {
-      setError("音声入力を始められなかったよ。");
+      // すでに止まっている
     }
-  }, []);
+    session.timers.push(window.setTimeout(() => finish(session.recognition), STOP_GRACE_MS));
+  }, [finish]);
 
   /** 聞き取り途中の内容も捨てて止める（シートを閉じたとき） */
   const abort = useCallback(() => {
-    recognitionRef.current?.abort();
-  }, []);
+    const session = sessionRef.current;
+    if (!session) return;
+    session.stoppedByUser = true;
+    try {
+      session.recognition.abort();
+    } catch {
+      // すでに止まっている
+    }
+    finish(session.recognition);
+  }, [finish]);
 
-  useEffect(() => () => recognitionRef.current?.abort(), []);
+  // タップの中で同期的に呼ぶこと（iPhone は操作の外で始めるとマイクを開かない）
+  const start = useCallback(
+    (prefix: string) => {
+      const Ctor = recognitionCtor();
+      if (!Ctor) return;
+      // 前回の聞き取りが終わり切っていなければ捨ててから始める（固まって押せなくなるのを防ぐ）
+      abort();
+      // 自分の読み上げを聞き取らない・音声の出入りがぶつからないよう、話している途中なら止める
+      synthesis()?.cancel();
+
+      const recognition = new Ctor();
+      recognition.lang = LANG;
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      recognition.maxAlternatives = 1;
+      const session = { recognition, heard: false, failed: false, stoppedByUser: false, timers: [] as number[] };
+      const base = prefix.trim() ? `${prefix.trimEnd()} ` : "";
+      recognition.onresult = (event) => {
+        const transcripts: string[] = [];
+        for (let i = 0; i < event.results.length; i++) transcripts.push(event.results[i][0]?.transcript ?? "");
+        const heard = joinTranscripts(transcripts);
+        if (!heard) return;
+        session.heard = true;
+        onTextRef.current(base + heard);
+      };
+      recognition.onerror = (event) => {
+        // 何も話さずに終わった・自分で止めた場合は onend 側で扱う
+        if (event.error === "no-speech" || event.error === "aborted") return;
+        session.failed = true;
+        setError(RECOGNITION_ERRORS[event.error] ?? `うまく聞き取れなかったよ。もう一度試してね。（${event.error}）`);
+      };
+      recognition.onend = () => finish(recognition);
+
+      setError(null);
+      sessionRef.current = session;
+      try {
+        recognition.start();
+      } catch {
+        session.failed = true;
+        finish(recognition);
+        setError("音声入力を始められなかったよ。少し待ってからもう一度押してね。");
+        return;
+      }
+      session.timers.push(window.setTimeout(() => stop(), MAX_LISTEN_MS));
+      setListening(true);
+    },
+    [abort, finish, stop],
+  );
+
+  useEffect(() => () => sessionRef.current?.recognition.abort(), []);
 
   return { supported, listening, error, start, stop, abort, clearError: () => setError(null) };
 }
