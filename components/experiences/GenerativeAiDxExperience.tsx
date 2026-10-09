@@ -9,7 +9,7 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 // 「生成AIとDX」専用の体験。
 //   ① AIに聞いてみたラボ … 頼み方を変える→回答の質が変わる＋ハルシネーションを暴く
 //   ② DXとは … 定義を「使うもの/変えるもの/めざすこと」に分解＋パン屋の定期便の例
-//   ③ DXと似ている2つの違い … 3列比較。売り物・稼ぎ方が変わるのはDXだけ
+//   ③ DXと似ている2つの違い … 用語を行に並べた比較。売り物・稼ぎ方が変わるのはDXだけ
 //   ④ 生成AIの使い方 適切/不適切クイズ
 // ============================================================================
 
@@ -202,123 +202,67 @@ function DxDefinition() {
   );
 }
 
-// ③ DXと他の2つの比較 ― 最後の行「売り物・稼ぎ方」だけが DX で変わる
-const COMPARE_COLS = ["デジタイゼーション", "デジタライゼーション", "DX"] as const;
-const COMPARE_ROWS: { row: string; cells: [string, string, string]; key?: boolean }[] = [
-  { row: "デジタルにする範囲", cells: ["情報", "業務の流れ", "ビジネスのあり方"] },
-  { row: "例", cells: ["紙の書類→PDF", "紙の申請→Web申請", "店頭販売→データを使った定期便"] },
-  { row: "パン屋なら", cells: ["売上ノートをExcelに", "注文〜支払いをアプリで完結", "パン定期便を始めた"] },
-  { row: "売り物・稼ぎ方", cells: ["変わらない", "変わらない", "変わる"], key: true },
+// ③ DXと似ている2つの比較 ― 用語を行に並べ、右端「売り物・稼ぎ方」で DX だけが変わる
+const COMPARE: { term: string; scope: string; ex: string; bakery: string; money: string }[] = [
+  { term: "デジタイゼーション", scope: "情報", ex: "紙の書類→PDF", bakery: "売上ノートをExcelに", money: "変わらない" },
+  {
+    term: "デジタライゼーション",
+    scope: "業務の流れ",
+    ex: "紙の申請→Web申請",
+    bakery: "注文〜支払いをアプリで完結",
+    money: "変わらない",
+  },
+  { term: "DX", scope: "ビジネスのあり方", ex: "店頭販売→データを使った定期便", bakery: "パン定期便を始めた", money: "変わる" },
 ];
 
-// B案：用語を行にした向き。窮屈にならないよう列は3つに絞る
-//   用語（＋範囲）｜例（一般の例＋パン屋）｜売り物・稼ぎ方
-function CompareByTermRows() {
-  const [scope, ex, bakery, money] = COMPARE_ROWS;
-  return (
-    <div className="mt-3" data-testid="dx-compare-rows">
-      <div className="grid grid-cols-[minmax(7.5rem,10rem)_1fr_5rem] gap-x-2 px-1 pb-1.5 text-xs font-bold text-gray-500 sm:grid-cols-[11rem_1fr_7rem]">
-        <span>用語・範囲</span>
-        <span>例</span>
-        <span className="text-center text-brand-700">{money.row}</span>
-      </div>
-      <ul className="space-y-2">
-        {COMPARE_COLS.map((term, i) => {
-          const dx = i === 2;
-          return (
-            <li
-              key={term}
-              className={`grid grid-cols-[minmax(7.5rem,10rem)_1fr_5rem] items-center gap-x-2 rounded-xl p-2 sm:grid-cols-[11rem_1fr_7rem] ${
-                dx ? "bg-brand-50 ring-2 ring-brand-300" : "ring-1 ring-gray-200"
-              }`}
-            >
-              <div className="px-1">
-                <div className={`text-sm font-bold leading-snug ${dx ? "text-brand-800" : "text-gray-900"}`}>{term}</div>
-                <div className="mt-0.5 text-xs text-gray-600">範囲：{scope.cells[i]}</div>
-              </div>
-              <div className="px-1">
-                <div className={`text-sm leading-snug ${dx ? "font-bold text-gray-900" : "text-gray-800"}`}>{ex.cells[i]}</div>
-                <div className="mt-0.5 text-xs leading-snug text-gray-600">パン屋：{bakery.cells[i]}</div>
-              </div>
-              <div
-                className={`flex h-full items-center justify-center rounded-lg px-1 text-center text-sm font-bold ${
-                  dx ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-500"
-                }`}
-              >
-                {money.cells[i]}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
+// 窮屈にならないよう列は3つに絞る：用語（＋範囲）｜例（一般の例＋パン屋）｜売り物・稼ぎ方
+const COMPARE_GRID = "grid grid-cols-[minmax(7.5rem,10rem)_1fr_5rem] gap-x-2 sm:grid-cols-[11rem_1fr_7rem]";
 
-// 縦横どちらが読みやすいか比べるための一時スイッチ（決まったら片方を消す）
 function DxCompare() {
-  const [orient, setOrient] = useState<"cols" | "rows">("cols");
   return (
     <Panel>
       <SectionTitle step={3}>DXと、似ている2つの違い</SectionTitle>
-      <div className="mt-2 flex gap-1.5">
-        {(
-          [
-            ["cols", "A：用語が横"],
-            ["rows", "B：用語が縦"],
-          ] as const
-        ).map(([k, label]) => (
-          <button
-            key={k}
-            onClick={() => setOrient(k)}
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
-              orient === k ? "bg-gray-900 text-white" : "text-gray-600 ring-1 ring-gray-300"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         デジタイゼーションとデジタライゼーションは、今の仕事をデジタルに置き換えるところまで。
-        違いは表の<b className="text-gray-800">{orient === "cols" ? "いちばん下の行" : "いちばん右の列"}</b>に出ます。
+        違いは表の<b className="text-gray-800">いちばん右の列</b>に出ます。
       </p>
 
-      {orient === "rows" ? <CompareByTermRows /> : (
-      <div className="mt-3 grid grid-cols-3 gap-1.5 text-[13px] leading-snug" data-testid="dx-compare">
-        {COMPARE_COLS.map((c, i) => (
-          <div
-            key={c}
-            className={`rounded-md px-2 py-1.5 text-center text-[11px] font-bold ${
-              i === 2 ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-900"
-            }`}
-          >
-            {c}
-          </div>
-        ))}
-        {COMPARE_ROWS.map((r) => (
-          <div key={r.row} className="col-span-3 grid grid-cols-3 gap-1.5">
-            <div className={`col-span-3 pt-1.5 text-xs font-bold ${r.key ? "text-brand-700" : "text-gray-500"}`}>{r.row}</div>
-            {r.cells.map((cell, i) => (
-              <div
-                key={i}
-                className={`rounded-md px-2 py-1.5 ${
-                  r.key
-                    ? i === 2
-                      ? "bg-brand-600 text-center font-bold text-white"
-                      : "bg-gray-100 text-center font-bold text-gray-600"
-                    : i === 2
-                      ? "font-bold text-gray-900 ring-2 ring-brand-300"
-                      : "text-gray-800 ring-1 ring-gray-200"
+      <div className="mt-3" data-testid="dx-compare">
+        <div className={`${COMPARE_GRID} px-1 pb-1.5 text-xs font-bold text-gray-500`}>
+          <span>用語・範囲</span>
+          <span>例</span>
+          <span className="text-center text-brand-700">売り物・稼ぎ方</span>
+        </div>
+        <ul className="space-y-2">
+          {COMPARE.map((c) => {
+            const dx = c.term === "DX";
+            return (
+              <li
+                key={c.term}
+                className={`${COMPARE_GRID} items-center rounded-xl p-2 ${
+                  dx ? "bg-brand-50 ring-2 ring-brand-300" : "ring-1 ring-gray-200"
                 }`}
               >
-                {cell}
-              </div>
-            ))}
-          </div>
-        ))}
+                <div className="px-1">
+                  <div className={`text-sm font-bold leading-snug ${dx ? "text-brand-800" : "text-gray-900"}`}>{c.term}</div>
+                  <div className="mt-0.5 text-xs text-gray-600">範囲：{c.scope}</div>
+                </div>
+                <div className="px-1">
+                  <div className={`text-sm leading-snug ${dx ? "font-bold text-gray-900" : "text-gray-800"}`}>{c.ex}</div>
+                  <div className="mt-0.5 text-xs leading-snug text-gray-600">パン屋：{c.bakery}</div>
+                </div>
+                <div
+                  className={`flex h-full items-center justify-center rounded-lg px-1 text-center text-sm font-bold ${
+                    dx ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {c.money}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </div>
-      )}
 
       <p className="mt-4 text-sm leading-relaxed text-gray-700">
         PDF化やアプリ化はDXの<b className="text-gray-900">土台</b>にはなりますが、それだけではDXではありません。
