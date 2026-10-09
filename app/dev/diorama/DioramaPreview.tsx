@@ -22,6 +22,7 @@ const TOPICS: { id: string; name: string }[] = [
   { id: "tech-computer-core", name: "CPU・メモリ" },
   { id: "tech-os-software-hardware", name: "OS" },
   { id: "tech-email-protocol", name: "メール" },
+  { id: "tech-network-devices", name: "ネットワーク機器" },
 ];
 
 export default function DioramaPreview({ topicId }: { topicId: string }) {
