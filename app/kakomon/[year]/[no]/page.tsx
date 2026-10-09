@@ -4,7 +4,7 @@ import QuestionFigures from "@/components/questions/QuestionFigures";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
 import ShareOnX from "@/components/growth/ShareOnX";
-import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
+import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { CHOICE_LABELS } from "@/lib/pastExam/questionView";
 import { kakomonJsonLd } from "@/lib/publicPages/structuredData";
 import {
@@ -65,7 +65,7 @@ export default async function KakomonQuestionPage({ params }: Props) {
   const { view } = q;
   const yearLabel = kakomonYearLabel(view.year);
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "過去問解説", path: KAKOMON_BASE_PATH },
     { name: yearLabel, path: kakomonYearPath(view.year) },
     { name: `問${view.questionNumber}`, path: q.path },

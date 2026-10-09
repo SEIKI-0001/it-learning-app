@@ -5,7 +5,7 @@ import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import ShareOnX from "@/components/growth/ShareOnX";
 import KakomonList from "@/components/guide/KakomonList";
-import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
+import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { CHOICE_LABELS } from "@/lib/pastExam/questionView";
 import {
   KAISETSU_BASE_PATH,
@@ -51,7 +51,7 @@ export default async function KaisetsuTopicPage({ params }: Props) {
   if (!t) notFound();
 
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "テーマ別解説", path: KAISETSU_BASE_PATH },
     { name: t.title, path: kaisetsuPath(t.id) },
   ];

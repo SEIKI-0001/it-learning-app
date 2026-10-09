@@ -1413,3 +1413,10 @@ html.lp-anim .lp .reveal.in {
   opacity: 1;
   translate: 0 0;
 }
+
+/* h1 の中に置いた小見出し（検索語を h1 に含めるため）。見た目は .eyebrow のまま */
+.lp .hero h1 .eyebrow {
+  font-family: var(--body-face);
+  line-height: 1.6;
+  letter-spacing: 0.1em;
+}
