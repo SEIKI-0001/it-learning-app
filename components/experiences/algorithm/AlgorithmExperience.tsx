@@ -2,13 +2,15 @@
 
 import { Panel, SectionTitle } from "../ui";
 import { FlowRun } from "./FlowRun";
+import { FlowTry } from "./FlowTry";
 import { FORMAL_MAPPINGS } from "./learningModel";
 
 // ============================================================================
 // 「アルゴリズムとフローチャート」専用の体験。
-//   ① メイン：コンピュータになって「1〜N を足す」フローチャートを最後まで実行する。
-//      実行トークンが矢印の上を進み、条件で道が分かれ、くり返しで条件へ戻る。横の変数の箱が書き換わる
-//   ② まとめ：いま動かした図の中にある「順次・選択・繰り返し」と、試験の書き方（←）
+//   ① やってみる：学習者がコンピュータ役。要所（条件の答え・合計の値・次の行き先）を自分で選んで最後まで実行する
+//   ② 答え合わせ：同じ図をコンピュータが実行する。実行トークンが矢印の上を進み、
+//      条件で道が分かれ、くり返しで条件へ戻る。横の変数の箱が書き換わる
+//   ③ まとめ：いま動かした図の中にある「順次・選択・繰り返し」と、試験の書き方（←）
 // ============================================================================
 
 const STRUCTURES = [
@@ -41,11 +43,23 @@ export default function AlgorithmExperience() {
       </div>
 
       <Panel>
-        <SectionTitle icon="play">コンピュータになって最後まで実行</SectionTitle>
+        <SectionTitle icon="pen">まず、あなたがコンピュータになって実行</SectionTitle>
         <p className="mt-2 text-sm leading-relaxed text-gray-600">
-          お題は<b className="text-gray-800">「1 から 5 までを足す」</b>。黄色い●が「いま実行している場所」です。
+          お題は<b className="text-gray-800">「1 から 3 までを足す」</b>。黄色い●が「いま実行している場所」です。
+          ●が止まったら、<b className="text-gray-800">コンピュータならどうするか</b>を選んでください。
+          右の変数の箱も手がかりになります。
+        </p>
+        <div className="mt-3">
+          <FlowTry />
+        </div>
+      </Panel>
+
+      <Panel>
+        <SectionTitle icon="play">答え合わせ：コンピュータの正しい流れ</SectionTitle>
+        <p className="mt-2 text-sm leading-relaxed text-gray-600">
+          いま実行した図を、コンピュータが1ステップずつ実行します。
           再生すると●が矢印の上を進み、<b className="text-gray-800">条件の答えで道が変わり</b>、
-          くり返しでは<b className="text-gray-800">条件へ戻り</b>ます。右の変数の箱がどう変わるかも見てみよう。
+          くり返しでは<b className="text-gray-800">条件へ戻り</b>ます。上限を 5 にして、くり返しが増える様子も見てみよう。
         </p>
         <div className="mt-3">
           <FlowRun />
