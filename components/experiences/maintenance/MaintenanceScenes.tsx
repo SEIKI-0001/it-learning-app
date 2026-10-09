@@ -12,7 +12,7 @@ const MUTED = "#d1d5db"; // gray-300
 
 function Frame({ children, label }: { children: ReactNode; label: string }) {
   return (
-    <svg viewBox="0 0 140 84" className="h-auto w-full" role="img" aria-label={label}>
+    <svg viewBox="0 0 140 84" className="mx-auto h-14 w-auto" role="img" aria-label={label}>
       {children}
     </svg>
   );
@@ -38,7 +38,7 @@ function AppWindow({ x = 40, y = 8, lines = true }: { x?: number; y?: number; li
 }
 
 // 足元の台＝動作環境（OS・法律・制度）
-function Ground({ text = "OS・制度", tone }: { text?: string; tone?: boolean }) {
+function Ground({ text, tone }: { text?: string; tone?: boolean }) {
   return (
     <g>
       <rect
@@ -52,9 +52,11 @@ function Ground({ text = "OS・制度", tone }: { text?: string; tone?: boolean 
         stroke={tone ? "currentColor" : MUTED}
         strokeWidth={1.6}
       />
-      <text x={70} y={71.5} textAnchor="middle" fontSize={8.5} fontWeight={700} fill={tone ? "currentColor" : "#6b7280"}>
-        {text}
-      </text>
+      {text && (
+        <text x={70} y={72.5} textAnchor="middle" fontSize={10} fontWeight={700} fill="currentColor">
+          {text}
+        </text>
+      )}
     </g>
   );
 }
@@ -78,9 +80,6 @@ function Corrective() {
         <path d="M58 18l6 9-5 6 7 8-3 9" />
         <path d="M76 24l8 8M84 24l-8 8" strokeWidth={2.4} />
       </g>
-      <text x={80} y={45} textAnchor="middle" fontSize={7.5} fontWeight={700} fill="currentColor">
-        停止
-      </text>
       {/* 稲妻＝障害発生 */}
       <path d="M26 6 18 20h7l-2 11 9-15h-7z" fill="currentColor" fillOpacity={0.18} stroke="currentColor" strokeWidth={1.6} strokeLinejoin="round" />
       <Wrench x={104} y={22} s={1.25} />
@@ -111,9 +110,6 @@ function Adaptive() {
     <Frame label="足元のOSや制度が新しくなったので、アプリをそれに合わせる">
       {/* 古い台（点線）→ 新しい台 */}
       <rect x={8} y={60} width={22} height={16} rx={4} fill="none" stroke={MUTED} strokeWidth={1.4} strokeDasharray="3 2.5" />
-      <text x={19} y={71} textAnchor="middle" fontSize={7} fill="#9ca3af">
-        旧
-      </text>
       <path d="M31 68h3" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" />
       <Ground text="新OS・法改正" tone />
       <AppWindow />
