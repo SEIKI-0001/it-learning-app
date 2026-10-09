@@ -1,5 +1,5 @@
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
-import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
+import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import {
   KAISETSU_BASE_PATH,
   KAISETSU_FIELD_ORDER,
@@ -23,7 +23,7 @@ export const metadata = buildMetadata({
 
 export default function KaisetsuIndexPage() {
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "テーマ別解説", path: KAISETSU_BASE_PATH },
   ];
   return (

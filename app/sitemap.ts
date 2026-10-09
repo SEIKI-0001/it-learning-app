@@ -20,7 +20,7 @@ const url = (path: string) => `${SITE_URL}${path}`;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: url("/lp"), lastModified: "2026-09-26", changeFrequency: "weekly", priority: 1.0 },
+    { url: url("/lp"), lastModified: "2026-10-10", changeFrequency: "weekly", priority: 1.0 },
     {
       url: url(GUIDE_BASE_PATH),
       lastModified: GUIDE_INDEX.dateModified,

@@ -53,7 +53,7 @@ export function buildLlmsTxt(): string {
     "",
     "## Optional",
     "",
-    `- [サービス紹介](${abs("/lp")}): 機能・料金・よくある質問`,
+    `- [ITパスポートの勉強アプリ（サービス紹介）](${abs("/lp")}): 機能・料金・よくある質問`,
     "",
   );
 

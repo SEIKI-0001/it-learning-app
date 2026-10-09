@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LP_LINK_LABEL, LP_PATH } from "@/lib/guide/seo";
 
 // 公開ページ（/guide・/kaisetsu・/kakomon・/words）の共通の外枠。未ログインで閲覧可
 // （lib/auth/publicRoutes の PUBLIC_PREFIXES に登録）。読み物として軽く保つため JS を使わない。
@@ -31,7 +32,7 @@ export default function PublicShell({ children }: { children: ReactNode }) {
       <main className="g-main">{children}</main>
       <footer className="g-foot">
         <div className="g-col">
-          <a href="/lp">ITパスポート学習コーチ</a>
+          <a href={LP_PATH}>{LP_LINK_LABEL}</a>
           {NAV.map((item) => (
             <span key={item.href}>
               {" / "}

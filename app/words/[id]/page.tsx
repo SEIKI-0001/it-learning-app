@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
-import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
+import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import {
   countKakomonAskingWord,
   getAllKakomonQuestions,
@@ -49,7 +49,7 @@ export default async function WordPage({ params }: Props) {
   if (!w) notFound();
 
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "英略語", path: WORDS_BASE_PATH },
     { name: w.acronym, path: wordPath(w.id) },
   ];

@@ -1,5 +1,5 @@
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
-import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
+import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { WORDS_BASE_PATH, wordPath } from "@/lib/publicPages/words";
 import { getAllWords, getWordsByCategory } from "@/lib/wordlist";
 import { WORDLIST_CATEGORY_LABELS, WORDLIST_CATEGORY_ORDER } from "@/types/wordlist";
@@ -17,7 +17,7 @@ export const metadata = buildMetadata({
 
 export default function WordsIndexPage() {
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "英略語", path: WORDS_BASE_PATH },
   ];
   return (

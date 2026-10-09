@@ -43,8 +43,10 @@ const plan = (key: BillingPlanKey) => BILLING_PLANS.find((p) => p.key === key)!;
 const MONTHLY = plan('sub_monthly');
 const LOWEST_PRICE = Math.min(...BILLING_PLANS.map((p) => p.totalJpy));
 
-const LP_TITLE = 'ITパスポート学習コーチ — さわって理解する試験対策アプリ';
-const LP_DESCRIPTION = `参考書が途中で止まってしまう人のためのITパスポート試験対策。全${N.topics}トピックを操作しながら学び、公式過去問${N.official}問で本番に慣れる。試験日から逆算した「今日やること」をアプリが毎日組み立てます。${N.freeDays}日間無料。`;
+// title・description は「ITパスポート 勉強 アプリ」「過去問 アプリ」「学習計画」で探す人に向けて、
+// 検索語を先頭に置く。キャッチコピー（さわって理解）は検索されない言葉なので本文の h1 に任せる。
+const LP_TITLE = `ITパスポートの勉強アプリ｜公式過去問${N.official}問と学習計画、無料で始められる`;
+const LP_DESCRIPTION = `ITパスポート試験の勉強アプリ。IT初心者が独学で続けられるよう、全${N.topics}トピックを操作しながら学び、公式過去問${N.official}問（${N.officialRange}）で本番に慣れます。試験日から逆算した学習計画で「今日やること」を毎日提示。スマホのブラウザで使え、教材と過去問は無料です。`;
 
 // 検索結果・SNS共有（X/LINE/Facebook）のカード表示用。OG画像は public/og/lp.png（1200x630）。
 export const metadata: Metadata = {
@@ -98,9 +100,9 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
     ],
   },
   {
-    q: '過去問は|入っていますか？',
+    q: '過去問アプリ|としても|使えますか？',
     a: [
-      'はい。IPAが公開している',
+      'はい。過去問は入っており、IPAが公開している',
       `${N.officialRange}の公式過去問${N.official}問`,
       `を、年度ごとに本番の並びのまま解けます。解説はアプリが独自に作成したものです。仕上げには本番形式の${N.mock}問模試も使えます。`,
     ],
@@ -129,6 +131,7 @@ const STRUCTURED_DATA = [
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: 'ITパスポート学習コーチ',
+    alternateName: 'ITパスポートの勉強アプリ',
     url: `${SITE_URL}/lp`,
     description: LP_DESCRIPTION,
     applicationCategory: 'EducationalApplication',
@@ -223,8 +226,9 @@ export default function LandingPage() {
         <section className="hero">
           <div className="col hero-grid">
             <div className="hero-txt">
-              <p className="eyebrow">ITパスポート試験の学習アプリ</p>
+              {/* 検索語「ITパスポートの勉強アプリ」を h1 に含める。見た目は従来の小見出しのまま */}
               <h1>
+                <span className="eyebrow">ITパスポートの勉強アプリ</span>
                 <span className="ph">「読んで暗記」から、</span>
                 <br />
                 <span className="ph">
@@ -312,7 +316,7 @@ export default function LandingPage() {
         {/* 困りごと */}
         <section className="wash" id="pain">
           <div className="col reveal">
-            <p className="eyebrow">こんな人のためのアプリです</p>
+            <p className="eyebrow">ITパスポートの独学で、こんな悩みはありませんか</p>
             <h2 className="sec-title">{ph('参考書で|挫折したのは、|あなたのせいでは|ありません。')}</h2>
             <p className="sec-lead">
               ITパスポートは半分以上がカタカナ用語と抽象概念。文章を読むだけで理解するのは、IT未経験者にはそもそも難しい試験です。
@@ -345,7 +349,7 @@ export default function LandingPage() {
         <section id="solve">
           <div className="col">
             <div className="reveal">
-              <p className="eyebrow">アプリができること</p>
+              <p className="eyebrow">ITパスポート勉強アプリでできること</p>
               <h2 className="sec-title">{ph('「理解する」から|「本番で解ける」まで、|この1つで。')}</h2>
             </div>
 
@@ -506,10 +510,13 @@ export default function LandingPage() {
         {/* 比較 */}
         <section className="wash" id="diff">
           <div className="col reveal">
-            <p className="eyebrow">ほかの勉強法との違い</p>
+            <p className="eyebrow">ITパスポートの勉強法・アプリの比較</p>
             <h2 className="sec-title">{ph('「教材」ではなく、|計画と進捗まで持つ|「コーチ」です。')}</h2>
             <p className="sec-lead">
               参考書にも過去問サイトにも良さがあります。違いは、理解のさせ方と、合格までの道のりを誰が管理するかです。
+            </p>
+            <p className="sec-lead">
+              勉強アプリを選ぶときは、<b>用語を自分の言葉で理解できるか</b>・<b>公式過去問を本番の形式で解けるか</b>・<b>試験日までの計画と進み具合を見てくれるか</b>の3点で比べると、合う道具が見つかります。
             </p>
             <CompareTable rows={CMP_ROWS} />
             <p className="tbl-note">

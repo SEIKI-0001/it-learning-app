@@ -8,6 +8,11 @@ import { GUIDE_BASE_PATH, GUIDE_INDEX, guidePath, type GuideArticle } from "@/li
 
 export const SITE_URL = "https://shikaku-mochit.com";
 export const SERVICE_NAME = "ITパスポート学習コーチ";
+
+// 公開ページから LP へ張るリンクの文言。リンク文はリンク先の内容を伝える手がかりになるので、
+// 「トップ」ではなく LP で狙う検索語（ITパスポート 勉強 アプリ）を入れる。
+export const LP_PATH = "/lp";
+export const LP_LINK_LABEL = "ITパスポートの勉強アプリ";
 const OG_IMAGE = { url: "/og/lp.png", width: 1200, height: 630 };
 
 export type PageSeo = { path: string; title: string; description: string; type: "article" | "website" };
@@ -57,9 +62,12 @@ export function buildGuideIndexMetadata(): Metadata {
 
 export type Crumb = { name: string; path: string };
 
+/** パンくずの先頭（LP）。表示と BreadcrumbList の両方に使う。 */
+export const LP_CRUMB: Crumb = { name: LP_LINK_LABEL, path: LP_PATH };
+
 export function guideCrumbs(guide?: GuideArticle): Crumb[] {
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "学習ガイド", path: GUIDE_BASE_PATH },
   ];
   if (guide) crumbs.push({ name: guide.h1, path: guidePath(guide.slug) });

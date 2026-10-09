@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
-import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
+import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import {
   KAKOMON_BASE_PATH,
   getKakomonQuestionsByYear,
@@ -27,7 +27,7 @@ export const metadata = buildMetadata({
 
 export default function KakomonIndexPage() {
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "過去問解説", path: KAKOMON_BASE_PATH },
   ];
   return (

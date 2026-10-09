@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
-import { breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
+import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { OFFICIAL_EXAM_FIELDS } from "@/lib/questionBank/officialExamField";
 import {
   KAKOMON_BASE_PATH,
@@ -45,7 +45,7 @@ export default async function KakomonYearPage({ params }: Props) {
   const label = kakomonYearLabel(year);
   const questions = getKakomonQuestionsByYear(year);
   const crumbs: Crumb[] = [
-    { name: "トップ", path: "/lp" },
+    LP_CRUMB,
     { name: "過去問解説", path: KAKOMON_BASE_PATH },
     { name: label, path: kakomonYearPath(year) },
   ];

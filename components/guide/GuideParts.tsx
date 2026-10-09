@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { GUIDES, guidePath } from "@/lib/guide/guides";
-import { jsonLdString, type Crumb } from "@/lib/guide/seo";
+import { LP_PATH, jsonLdString, type Crumb } from "@/lib/guide/seo";
 
 // 公開ガイドの小さな共通部品（すべて Server Component・JS 不要）。
 // スタイルは app/guide/guide.css（.guide スコープ）。
@@ -72,8 +72,8 @@ export function GuideCTA({
         <a className="g-btn" href="/login">
           無料で始める
         </a>
-        <a className="g-cta-sub" href="/lp">
-          サービスの詳細を見る
+        <a className="g-cta-sub" href={LP_PATH}>
+          勉強アプリの機能と料金を見る
         </a>
       </div>
     </section>
