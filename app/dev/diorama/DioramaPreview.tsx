@@ -28,6 +28,7 @@ const TOPICS: { id: string; name: string }[] = [
   { id: "tech-computer-types", name: "コンピュータの種類" },
   { id: "tech-system-processing-architecture", name: "処理形態" },
   { id: "tech-malware-phishing-ransomware", name: "マルウェア" },
+  { id: "mgmt-pmbok-basics", name: "PMBOK" },
 ];
 
 export default function DioramaPreview({ topicId }: { topicId: string }) {

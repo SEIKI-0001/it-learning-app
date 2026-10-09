@@ -1,183 +1,112 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
 
-// 「PMBOKの基本」。二軸の整理が本質なので静的な図解。
-//   ① 二軸のマトリクス：列＝5つのプロセス群、行＝10の知識エリア。●＝その組み合わせのプロセスがある
-//      行か列をタップすると、その1本だけが強調される（見方の練習。アニメーションはしない）
-//   ② ライフサイクル（フェーズ＝時間の流れ）とプロセス群（各フェーズの中で回す活動）を分けて、設計フェーズの具体例で見せる
+// 「PMBOKの基本」。二軸の整理が本質なので静的な図解。1枚に載せるのは1つの話だけ。
+//   ① 二軸の骨組み：横＝5つのプロセス群、縦＝代表的な知識エリア。交点の例を1つだけ示す
+//      （10×5の●表は試験で問われない細かさなので載せない）
+//   ② ライフサイクル（フェーズ＝時間の流れ）とプロセス群（各フェーズの中で回す活動）を分ける。設計フェーズを拡大して見せる
 //   ③ 知識体系であって手順書ではない（テーラリング）
-//   ④ 試験ポイント
+//   ④ 試験ポイント（②③で扱った誤解は繰り返さない）
 
 export default function PmbokExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        PMBOKは、プロジェクト管理の知恵を<b>2つの軸</b>で整理したガイドです。<b>横＝何のための活動か（プロセス群）</b>、<b>縦＝何を管理するか（知識エリア）</b>。
+        PMBOKは、プロジェクト管理の知恵を<b>2つの軸</b>で整理したガイドです。
       </Lead>
-      <MatrixPanel />
+      <AxesPanel />
       <OverlapPanel />
       <TailoringPanel />
       <PointsPanel
         step={4}
         points={[
           <>プロセス群（5つ）＝立上げ・計画・実行・<b>監視コントロール</b>・終結</>,
-          <>知識エリア＝スコープ・スケジュール・コスト・品質・資源・リスクなど<b>管理する分野</b></>,
-          <>プロセス群は時系列の段階ではなく、<b>重なり・繰り返す</b>活動のまとまり</>,
+          <>知識エリア＝スコープ・コスト・リスクなど<b>管理する分野</b></>,
+          <>プロセス群は一度きりの段階ではなく、<b>重なり・繰り返す</b></>,
         ]}
-        traps={[
-          ["PMBOKはどの案件にもそのまま当てはめる手順書", "案件に合わせて選んで使う知識体系（テーラリング）"],
-          ["プロセス群は順番どおり一度だけ進む", "実行と監視コントロールは並行し、計画にも何度も戻る"],
-          ["スコープ管理・コスト管理はプロセス群", "それらは知識エリア（管理する分野）"],
-        ]}
+        traps={[["スコープ管理・コスト管理はプロセス群", "それらは知識エリア（管理する分野）"]]}
       />
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// ① 二軸のマトリクス
+// ① 二軸の骨組み
 // ---------------------------------------------------------------------------
 
 const GROUPS = ["立上げ", "計画", "実行", "監視", "終結"];
-const GROUP_FULL = ["立上げ", "計画", "実行", "監視コントロール", "終結"];
-// PMBOKガイド第6版の49プロセスの配置（どのプロセス群に、その知識エリアのプロセスがあるか）
-const AREAS: { name: string; cells: boolean[] }[] = [
-  { name: "統合", cells: [true, true, true, true, true] },
-  { name: "スコープ", cells: [false, true, false, true, false] },
-  { name: "スケジュール", cells: [false, true, false, true, false] },
-  { name: "コスト", cells: [false, true, false, true, false] },
-  { name: "品質", cells: [false, true, true, true, false] },
-  { name: "資源", cells: [false, true, true, true, false] },
-  { name: "コミュニケーション", cells: [false, true, true, true, false] },
-  { name: "リスク", cells: [false, true, true, true, false] },
-  { name: "調達", cells: [false, true, true, true, false] },
-  { name: "ステークホルダー", cells: [true, true, true, true, false] },
-];
+// 試験でよく見る6分野だけ。残り4つ（統合・コミュニケーション・調達・ステークホルダー）は「など」に含める
+const MAIN_AREAS = ["スコープ", "スケジュール", "コスト", "品質", "資源", "リスク"];
+// 交点の例：計画 × コスト
+const EX_ROW = 2;
+const EX_COL = 1;
 
-type Focus = { kind: "group"; i: number } | { kind: "area"; i: number } | null;
-
-function MatrixPanel() {
-  const [focus, setFocus] = useState<Focus>(null);
-  const toggle = (f: NonNullable<Focus>) => setFocus((cur) => (cur && cur.kind === f.kind && cur.i === f.i ? null : f));
-  const lit = (r: number, c: number) => !focus || (focus.kind === "group" ? focus.i === c : focus.i === r);
+function AxesPanel() {
   return (
     <Panel>
       <SectionTitle step={1}>2つの軸で整理する</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">横軸＝プロセス群（何のための活動か）× 縦軸＝知識エリア（何を管理するか）</b>の表です。
-        ●は、その組み合わせの管理作業（プロセス）があるところ。列名・行名をタップすると1本だけ強調できます。
-      </p>
-
-      <div className="mt-3" data-testid="pmbok-matrix" data-focus={focus ? `${focus.kind}-${focus.i}` : "none"}>
-        {/* 横軸の見出し：表を見る前に「何×何の表か」を読ませる */}
-        <div className="grid grid-cols-[1.6rem_6.4rem_1fr] gap-x-0.5">
-          <div />
-          <div />
-          <div className="mb-1.5 flex items-center gap-1.5" data-testid="pmbok-axis-groups">
-            <span className="whitespace-nowrap text-[15px] font-bold text-gray-900">プロセス群（5つ）</span>
-            <span className="relative h-[3px] flex-1 bg-gray-900" aria-hidden>
-              <span className="absolute -right-0.5 top-1/2 h-0 w-0 -translate-y-1/2 border-y-[6px] border-l-[9px] border-y-transparent border-l-gray-900" />
-            </span>
+      <div className="mt-3 grid grid-cols-[5.6rem_repeat(5,1fr)] gap-0.5" data-testid="pmbok-axes">
+        <div />
+        {GROUPS.map((g, c) => (
+          <div
+            key={g}
+            className={`rounded-md py-1.5 text-center text-xs font-bold leading-tight text-white ${c === EX_COL ? "bg-brand-700" : "bg-brand-600"}`}
+          >
+            {g}
           </div>
+        ))}
+        {MAIN_AREAS.map((a, r) => (
+          <AreaRow key={a} name={a} r={r} />
+        ))}
+        <div className="col-span-6 flex justify-between px-1.5 pt-1 text-xs text-gray-500">
+          <span>など（全10）</span>
+          <span>監視＝監視コントロール</span>
         </div>
-        <div className="grid grid-cols-[1.6rem_1fr] gap-x-0.5">
-          {/* 縦軸の見出し */}
-          <div className="flex flex-col items-center pt-8" data-testid="pmbok-axis-areas">
-            <span className="text-[15px] font-bold leading-tight tracking-wider text-gray-900 [writing-mode:vertical-rl]">知識エリア（10）</span>
-            <span className="relative mt-1 w-[3px] flex-1 bg-gray-900" aria-hidden>
-              <span className="absolute -bottom-0.5 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[6px] border-t-[9px] border-x-transparent border-t-gray-900" />
-            </span>
-          </div>
-          <div>
-        <div className="mb-1 grid grid-cols-[6.4rem_repeat(5,1fr)] items-end gap-0.5">
-          <div />
-          {GROUPS.map((g, c) => {
-            const on = focus?.kind === "group" && focus.i === c;
-            return (
-              <button
-                key={g}
-                type="button"
-                onClick={() => toggle({ kind: "group", i: c })}
-                aria-pressed={on}
-                aria-label={`プロセス群「${GROUP_FULL[c]}」を強調`}
-                className={`rounded-md px-0 py-1.5 text-xs font-bold leading-tight transition active:scale-95 ${on ? "bg-brand-700 text-white" : "bg-brand-600 text-white"}`}
-              >
-                {g}
-              </button>
-            );
-          })}
-        </div>
-        <div className="space-y-0.5">
-          {AREAS.map((a, r) => {
-            const on = focus?.kind === "area" && focus.i === r;
-            return (
-              <div key={a.name} className="grid grid-cols-[6.4rem_repeat(5,1fr)] gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => toggle({ kind: "area", i: r })}
-                  aria-pressed={on}
-                  aria-label={`知識エリア「${a.name}」を強調`}
-                  className={`rounded-md px-1.5 py-1 text-left text-xs font-bold leading-tight transition active:scale-95 ${on ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}
-                >
-                  {a.name}
-                </button>
-                {a.cells.map((has, c) => (
-                  <div
-                    key={c}
-                    className={`grid place-items-center rounded-md transition-opacity duration-200 ${lit(r, c) ? "opacity-100" : "opacity-20"} ${has ? "bg-gray-100" : "bg-gray-50"}`}
-                    data-has={has ? "true" : undefined}
-                  >
-                    {has ? <span className="h-2.5 w-2.5 rounded-full bg-gray-700" aria-label="あり" /> : <span className="sr-only">なし</span>}
-                  </div>
-                ))}
-              </div>
-            );
-          })}
-        </div>
-          </div>
-        </div>
-        <p className="mt-1 text-[11px] text-gray-500">監視＝監視コントロール。配置はPMBOKガイド第6版のもの。</p>
       </div>
-
-      <FocusNote focus={focus} />
+      <div className="mt-3 space-y-1.5 text-sm leading-relaxed text-gray-800">
+        <p>
+          <b className="text-brand-800">横＝プロセス群</b>：何のための活動か（5つ）
+        </p>
+        <p>
+          <b className="text-gray-900">縦＝知識エリア</b>：何を管理するか
+        </p>
+        <p className="rounded-lg bg-brand-50 px-3 py-2 ring-1 ring-brand-200">
+          交点の例：<b>計画 × コスト</b>＝予算を立てる
+        </p>
+      </div>
     </Panel>
   );
 }
 
-function FocusNote({ focus }: { focus: Focus }) {
-  let text: ReactNode = (
+function AreaRow({ name, r }: { name: string; r: number }) {
+  return (
     <>
-      <b>どの知識エリアも「計画」と「監視コントロール」に●がある</b>。どの分野も、計画を立て、実績と比べて調整するからです。
+      <div className={`rounded-md px-1.5 py-1 text-xs font-bold leading-tight ${r === EX_ROW ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>{name}</div>
+      {GROUPS.map((g, c) => {
+        const hit = r === EX_ROW && c === EX_COL;
+        return (
+          <div
+            key={g}
+            className={`grid min-h-[1.6rem] place-items-center rounded-md ${hit ? "bg-brand-100 ring-2 ring-brand-500" : "bg-gray-50"}`}
+            data-example={hit ? "true" : undefined}
+          >
+            {hit && <span className="text-[11px] font-bold text-brand-800">予算</span>}
+          </div>
+        );
+      })}
     </>
   );
-  if (focus?.kind === "group") {
-    const g = GROUP_FULL[focus.i];
-    const n = AREAS.filter((a) => a.cells[focus.i]).length;
-    text = (
-      <>
-        「{g}」の列：{n}の分野に●。{focus.i === 4 ? "終結は統合だけ＝プロジェクト全体をまとめて閉じる活動です。" : focus.i === 0 ? "立上げは統合（憲章の作成）とステークホルダー（特定）だけ。" : "たくさんの分野にまたがる活動です。"}
-      </>
-    );
-  } else if (focus?.kind === "area") {
-    const a = AREAS[focus.i];
-    const gs = GROUP_FULL.filter((_, c) => a.cells[c]).join("・");
-    text = (
-      <>
-        「{a.name}」の行：{gs} で管理する。<b>知識エリアは「何を管理するか」</b>、プロセス群は「何のための活動か」。
-      </>
-    );
-  }
-  return <div className="mt-3 rounded-xl bg-gray-50 px-4 py-2.5 text-sm leading-relaxed text-gray-800 ring-1 ring-gray-200">{text}</div>;
 }
 
 // ---------------------------------------------------------------------------
-// ② 重なりグラフ
+// ② ライフサイクルとプロセス群（設計フェーズを拡大して中のプロセス群を見せる）
 // ---------------------------------------------------------------------------
 
 const PHASES = ["要件定義", "設計", "開発", "テスト"];
+// 拡大元「設計」の左右の位置（横幅に対する%）。4列等幅の2列目
+const ZOOM_FROM = [25, 50];
 const IN_PHASE: { g: string; ex: string; loop?: boolean }[] = [
   { g: "立上げ", ex: "設計フェーズを始めることを承認する" },
   { g: "計画", ex: "設計の範囲・担当・日程を決める", loop: true },
@@ -206,21 +135,27 @@ function OverlapPanel() {
 
       <h4 className="mt-4 text-base font-bold text-gray-900">プロジェクトのライフサイクル＝時間の流れ</h4>
       <p className="text-xs text-gray-600">フェーズ（段階）は時間の順に進む</p>
-      <ol className="mt-2 flex flex-wrap items-center gap-1.5" data-testid="pmbok-lifecycle">
-        {PHASES.map((p, i) => (
-          <li key={p} className="flex items-center gap-1.5">
-            <span className={`rounded-lg px-3 py-1.5 text-sm font-bold ${p === "設計" ? "bg-gray-900 text-white" : "bg-white text-gray-900 ring-1 ring-gray-300"}`}>
-              {p}フェーズ
+      {/* 列の間に gap を入れない（拡大線の起点＝2列目の端を 25%・50% に合わせるため）。余白は各列の内側で取る */}
+      <ol className="mt-2 grid grid-cols-4" data-testid="pmbok-lifecycle">
+        {PHASES.map((p) => (
+          <li key={p} className="px-[3px]">
+            <span className={`block rounded-lg py-1.5 text-center text-sm font-bold ${p === "設計" ? "bg-gray-900 text-white" : "bg-white text-gray-900 ring-1 ring-gray-300"}`}>
+              {p}
             </span>
-            {i < PHASES.length - 1 && <span className="font-bold text-gray-500" aria-hidden>→</span>}
           </li>
         ))}
       </ol>
 
-      <h4 className="mt-5 text-base font-bold text-gray-900">5つのプロセス群＝各フェーズの中で回す活動</h4>
-      <p className="text-xs text-gray-600">たとえば「設計フェーズ」の中だけでも、5つがそろい、計画〜監視は何度も繰り返す</p>
-      <div className="mt-2 rounded-xl p-3 ring-1 ring-gray-300" data-testid="pmbok-overlap">
-        <div className="text-sm font-bold text-gray-900">設計フェーズの中</div>
+      {/* 拡大線：上の「設計」（2列目＝横幅の25%〜50%）から下の箱いっぱいへ広がる */}
+      <svg viewBox="0 0 100 10" preserveAspectRatio="none" className="block h-8 w-full" aria-hidden data-testid="pmbok-zoom">
+        <polygon points={`${ZOOM_FROM[0]},0 ${ZOOM_FROM[1]},0 100,10 0,10`} className="fill-gray-200" />
+        <line x1={ZOOM_FROM[0]} y1="0" x2="0" y2="10" className="stroke-gray-900" strokeWidth="1.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 3" />
+        <line x1={ZOOM_FROM[1]} y1="0" x2="100" y2="10" className="stroke-gray-900" strokeWidth="1.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 3" />
+      </svg>
+      <div className="rounded-xl p-3 ring-2 ring-gray-900" data-testid="pmbok-overlap">
+        <span className="inline-block rounded-md bg-gray-900 px-2 py-0.5 text-xs font-bold text-white">設計フェーズを拡大</span>
+        <h4 className="mt-2 text-base font-bold text-gray-900">5つのプロセス群＝各フェーズの中で回す活動</h4>
+        <p className="text-xs text-gray-600">設計フェーズの中だけでも、5つがそろい、計画〜監視は何度も繰り返す</p>
         <ol className="mt-2 space-y-1">
           <Row x={IN_PHASE[0]} />
           <li className="ml-1 border-l-[3px] border-brand-600 py-0.5 pl-3">
