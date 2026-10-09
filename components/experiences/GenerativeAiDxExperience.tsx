@@ -211,15 +211,91 @@ const COMPARE_ROWS: { row: string; cells: [string, string, string]; key?: boolea
   { row: "売り物・稼ぎ方", cells: ["変わらない", "変わらない", "変わる"], key: true },
 ];
 
+// B案：用語を行、観点を列にした向き。最後の列「売り物・稼ぎ方」で DX だけが変わる
+function CompareByTermRows() {
+  return (
+    <div className="mt-3 overflow-x-auto" data-testid="dx-compare-rows">
+      <table className="w-full min-w-[34rem] border-separate border-spacing-1 text-left text-[13px] leading-snug">
+        <thead>
+          <tr>
+            <th className="w-[9.5em]" />
+            {COMPARE_ROWS.map((r) => (
+              <th
+                key={r.row}
+                className={`px-2 pb-0.5 text-xs font-bold ${r.key ? "text-brand-700" : "text-gray-500"}`}
+              >
+                {r.row}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {COMPARE_COLS.map((term, ti) => {
+            const dx = ti === 2;
+            return (
+              <tr key={term}>
+                <th
+                  className={`rounded-md px-2 py-1.5 text-xs font-bold ${
+                    dx ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-900"
+                  }`}
+                >
+                  {term}
+                </th>
+                {COMPARE_ROWS.map((r) => (
+                  <td
+                    key={r.row}
+                    className={`rounded-md px-2 py-1.5 ${
+                      r.key
+                        ? dx
+                          ? "bg-brand-600 text-center font-bold text-white"
+                          : "bg-gray-100 text-center font-bold text-gray-600"
+                        : dx
+                          ? "font-bold text-gray-900 ring-2 ring-brand-300"
+                          : "text-gray-800 ring-1 ring-gray-200"
+                    }`}
+                  >
+                    {r.cells[ti]}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// 縦横どちらが読みやすいか比べるための一時スイッチ（決まったら片方を消す）
 function DxCompare() {
+  const [orient, setOrient] = useState<"cols" | "rows">("cols");
   return (
     <Panel>
       <SectionTitle step={3}>DXと、似ている2つの違い</SectionTitle>
+      <div className="mt-2 flex gap-1.5">
+        {(
+          [
+            ["cols", "A：用語が横"],
+            ["rows", "B：用語が縦"],
+          ] as const
+        ).map(([k, label]) => (
+          <button
+            key={k}
+            onClick={() => setOrient(k)}
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              orient === k ? "bg-gray-900 text-white" : "text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         デジタイゼーションとデジタライゼーションは、今の仕事をデジタルに置き換えるところまで。
-        違いは表の<b className="text-gray-800">いちばん下の行</b>に出ます。
+        違いは表の<b className="text-gray-800">{orient === "cols" ? "いちばん下の行" : "いちばん右の列"}</b>に出ます。
       </p>
 
+      {orient === "rows" ? <CompareByTermRows /> : (
       <div className="mt-3 grid grid-cols-3 gap-1.5 text-[13px] leading-snug" data-testid="dx-compare">
         {COMPARE_COLS.map((c, i) => (
           <div
@@ -253,6 +329,7 @@ function DxCompare() {
           </div>
         ))}
       </div>
+      )}
 
       <p className="mt-4 text-sm leading-relaxed text-gray-700">
         PDF化やアプリ化はDXの<b className="text-gray-900">土台</b>にはなりますが、それだけではDXではありません。
