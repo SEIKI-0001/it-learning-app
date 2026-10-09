@@ -13,7 +13,8 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 //   ① 受付→転記→承認→発送の机（2.5D模型）に注文書を流す。上部の「改善前／改善後」で
 //      同じ模型を切り替え、改善前は遅い工程（ボトルネック）の前に書類が山積みになり、
 //      改善後は溜まらずに流れることを見比べる
-//   ② そのままシステム化の罠（まず見直す）クイズ
+//   ② 工程ごとの時間と所要時間を改善前／改善後の表で見比べる
+//   ③ そのままシステム化の罠（まず見直す）クイズ
 // ============================================================================
 
 type Step = { name: string; icon: IconName; base: number; improved: number; fix: string };
@@ -121,9 +122,9 @@ function Flow() {
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         注文書が<b className="text-gray-800">10分ごとに1件</b>届きます。
         {mode === "before" ? (
-          <>流すと、<b className="text-gray-800">時間がかかる工程の前に書類が溜まります</b>。そこが改善のねらい目（ボトルネック）。</>
+          <>遅い工程の前に書類が溜まる所が<b className="text-gray-800">ボトルネック</b>。</>
         ) : (
-          <>手書き転記を<b className="text-gray-800">データ自動連携</b>に、承認を<b className="text-gray-800">オンライン承認</b>に変えた流れです。</>
+          <>転記を<b className="text-gray-800">自動連携</b>、承認を<b className="text-gray-800">オンライン化</b>した流れです。</>
         )}
       </p>
 
@@ -185,61 +186,67 @@ function Flow() {
         </p>
       )}
 
-      <p className="mt-4 text-xs font-bold text-gray-600">工程ごとの時間（{mode === "before" ? "改善前" : "改善後"}）</p>
-      <div className="mt-2 space-y-2" data-testid="bp-steps">
-        {STEPS.map((s, i) => {
-          const canFix = s.base !== s.improved;
-          const slow = mode === "before" && canFix;
-          const fixed = mode === "after" && canFix;
-          return (
-            <div
-              key={s.name}
-              className={`rounded-xl p-2.5 ring-1 ${
-                slow ? "bg-amber-50 ring-amber-300" : fixed ? "bg-emerald-50 ring-emerald-200" : "bg-gray-50 ring-gray-200"
-              }`}
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-gray-700">
-                  <Icon name={s.icon} className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />{s.name}
-                  {slow && <span className="ml-1.5 text-amber-600">← 時間がかかる</span>}
-                  {fixed && <span className="ml-1.5 text-emerald-600">✓ 改善</span>}
-                </span>
-                <span className="text-gray-500">
-                  {fixed && <span className="mr-1 text-gray-400 line-through">{s.base}分</span>}
-                  {times[i]}分
-                </span>
-              </div>
-              <div className="mt-1 h-3 overflow-hidden rounded bg-white/70">
-                <div
-                  className={`h-full transition-all duration-500 ${fixed ? "bg-emerald-400" : slow ? "bg-amber-400" : "bg-gray-300"}`}
-                  style={{ width: `${(times[i] / MAX_MIN) * 100}%` }}
-                />
-              </div>
-              {canFix && <p className="mt-1 text-[11px] text-gray-500">{fixed ? `${s.fix}` : `改善案：${s.fix}`}</p>}
-            </div>
-          );
-        })}
-      </div>
+    </Panel>
+  );
+}
 
-      <div className="mt-4 overflow-hidden rounded-xl ring-1 ring-gray-200" data-testid="lead-time">
-        <table className="w-full text-xs">
+/** 改善前・改善後の工程時間と所要時間を1つの表で見比べる（模型の数字の答え合わせ） */
+function Compare() {
+  const bar = (min: number, tone: string) => (
+    <span className="mt-0.5 block h-1.5 overflow-hidden rounded bg-gray-100">
+      <span className={`block h-full ${tone}`} style={{ width: `${(min / MAX_MIN) * 100}%` }} />
+    </span>
+  );
+  return (
+    <Panel>
+      <SectionTitle step={2}>数字で比べる</SectionTitle>
+      <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-200" data-testid="bp-steps">
+        <table className="w-full table-fixed text-xs">
+          <colgroup>
+            <col />
+            <col className="w-[22%]" />
+            <col className="w-[22%]" />
+          </colgroup>
           <thead>
             <tr className="bg-gray-50 text-gray-500">
-              <th className="px-2.5 py-1.5 text-left font-bold"> </th>
-              <th className={`px-2 py-1.5 font-bold text-rose-700 ${mode === "before" ? "bg-rose-50" : ""}`}>改善前</th>
-              <th className={`px-2 py-1.5 font-bold text-emerald-700 ${mode === "after" ? "bg-emerald-50" : ""}`}>改善後</th>
+              <th className="px-2.5 py-1.5 text-left font-bold">工程</th>
+              <th className="px-2 py-1.5 font-bold text-rose-700">改善前</th>
+              <th className="px-2 py-1.5 font-bold text-emerald-700">改善後</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-t border-gray-100">
+            {STEPS.map((s, i) => {
+              const canFix = s.base !== s.improved;
+              return (
+                <tr key={s.name} className={`border-t border-gray-100 ${canFix ? "bg-amber-50/60" : ""}`}>
+                  <td className="px-2.5 py-1.5">
+                    <span className="font-bold text-gray-700">
+                      <Icon name={s.icon} className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
+                      {s.name}
+                      {i === BOTTLENECK && <span className="ml-1 inline-block whitespace-nowrap text-[10px] text-amber-700">ボトルネック</span>}
+                    </span>
+                    {canFix && <span className="mt-0.5 block text-[10px] leading-snug text-emerald-700">→ {s.fix}</span>}
+                  </td>
+                  <td className="px-2 py-1.5 text-center tabular-nums text-gray-700">
+                    {s.base}分{bar(s.base, canFix ? "bg-amber-400" : "bg-gray-300")}
+                  </td>
+                  <td className="px-2 py-1.5 text-center tabular-nums text-gray-700">
+                    {s.improved}分{bar(s.improved, canFix ? "bg-emerald-400" : "bg-gray-300")}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tbody data-testid="lead-time">
+            <tr className="border-t-2 border-gray-200">
               <td className="px-2.5 py-1.5 font-bold text-gray-700">1件にかかる合計</td>
-              <td className={`px-2 py-1.5 text-center font-bold text-rose-700 ${mode === "before" ? "bg-rose-50" : ""}`}>{sum(BEFORE)}分</td>
-              <td className={`px-2 py-1.5 text-center font-bold text-emerald-700 ${mode === "after" ? "bg-emerald-50" : ""}`}>{sum(AFTER)}分</td>
+              <td className="px-2 py-1.5 text-center font-bold tabular-nums text-rose-700">{sum(BEFORE)}分</td>
+              <td className="px-2 py-1.5 text-center font-bold tabular-nums text-emerald-700">{sum(AFTER)}分</td>
             </tr>
             <tr className="border-t border-gray-100">
               <td className="px-2.5 py-1.5 font-bold text-gray-700">6件すべて終わるまで</td>
-              <td className={`px-2 py-1.5 text-center font-bold text-rose-700 ${mode === "before" ? "bg-rose-50" : ""}`}>{END.before}分</td>
-              <td className={`px-2 py-1.5 text-center font-bold text-emerald-700 ${mode === "after" ? "bg-emerald-50" : ""}`}>{END.after}分</td>
+              <td className="px-2 py-1.5 text-center font-bold tabular-nums text-rose-700">{END.before}分</td>
+              <td className="px-2 py-1.5 text-center font-bold tabular-nums text-emerald-700">{END.after}分</td>
             </tr>
           </tbody>
         </table>
@@ -264,7 +271,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   return (
     <Panel>
-      <SectionTitle step={2}>改善の進め方として正しい？</SectionTitle>
+      <SectionTitle step={3}>改善の進め方として正しい？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {ITEMS.map((it, i) => {
           const chosen = answers[i];
@@ -325,6 +332,7 @@ export default function BusinessProcessExperience() {
       </div>
 
       <Flow />
+      <Compare />
       <Quiz />
     </div>
   );
