@@ -1,0 +1,81 @@
+/* IoT の 3D 模型（IotDioramaScene）。 */
+
+/* 床の色＝室温（--heat 1 で赤っぽい、0 で青っぽい） */
+.heat {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 20%, rgba(239, 68, 68, calc(0.34 * var(--heat))), rgba(239, 68, 68, 0) 75%),
+    radial-gradient(ellipse at 50% 20%, rgba(56, 189, 248, calc(0.3 * (1 - var(--heat)))), rgba(56, 189, 248, 0) 75%);
+  transition: background 900ms ease;
+}
+
+[data-face][data-face].airconFront {
+  background: linear-gradient(180deg, #f8fafc 0 62%, #cbd5e1 62% 66%, #e2e8f0 66%);
+}
+
+/* 吹き出す風：下へ流れる3本の帯 */
+.wind {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100px;
+  height: 0;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.wind span {
+  position: absolute;
+  top: 0;
+  width: 18px;
+  height: 70px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(125, 211, 252, 0.8), rgba(125, 211, 252, 0));
+  transform-origin: top center;
+  transform: rotateX(-60deg);
+  animation: iot-wind 1.4s ease-in infinite;
+}
+
+.wind span:nth-child(1) {
+  left: 10px;
+}
+.wind span:nth-child(2) {
+  left: 42px;
+  animation-delay: 0.45s;
+}
+.wind span:nth-child(3) {
+  left: 74px;
+  animation-delay: 0.9s;
+}
+
+.wind[data-reduced="true"] span {
+  animation: none;
+  opacity: 0.7;
+}
+
+@keyframes iot-wind {
+  0% {
+    opacity: 0;
+    transform: rotateX(-60deg) scaleY(0.3);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotateX(-60deg) scaleY(1.2);
+  }
+}
+
+/* 光回線：データが通るときだけ光る */
+.lineStrip {
+  background-color: color-mix(in srgb, #4a5263 var(--lit), #0a0d13);
+  transition: background-color 400ms ease;
+}
+
+.line[data-on="true"] .lineStrip {
+  background-color: color-mix(in srgb, #0ea5e9 var(--lit), #062a3f);
+  box-shadow: 0 0 6px rgba(14, 165, 233, 0.7);
+}

@@ -1,17 +1,18 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { ArchDioramaScene, type ArchMode } from "./arch/ArchDioramaScene";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
+import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 import { InlineIcon } from "@/components/ui/Pictogram";
 
-// 「処理形態とシステム構成」。1枚に詰め込まず、観点（軸）ごとに1枚ずつ分ける。すべて静的。
+// 「処理形態とシステム構成」。1枚に詰め込まず、観点（軸）ごとに分ける。
 //   ① 処理タイミング：バッチ（ためて月末にまとめて）／リアルタイム（来たらすぐ）を時間軸で
 //   ② 接続形態：オンライン／オフラインは①と別の軸 → 2×2 で組み合わせの例
-//   ③ 処理場所：集中処理／分散処理
-//   ④ 役割分担：クライアントサーバ／三層／P2P のミニ構成図
-//   ⑤ 場面から見分ける：問題文のキーワード → どの軸の、どの方式か
-//   ⑥ 試験ポイント
+//   ③ 処理場所（集中／分散）と役割分担（クライアントサーバ／三層／P2P）：コンビニチェーンの3D模型で方式を切り替える
+//   ④ 場面から見分ける：問題文のキーワード → どの軸の、どの方式か
+//   ⑤ 試験ポイント
 
 export default function ProcessingArchitectureExperience() {
   return (
@@ -21,11 +22,10 @@ export default function ProcessingArchitectureExperience() {
       </Lead>
       <TimingPanel />
       <ConnectionPanel />
-      <PlacePanel />
-      <RolesPanel />
+      <ChainPanel />
       <ScenePanel />
       <PointsPanel
-        step={6}
+        step={5}
         points={[
           <>バッチ／リアルタイム＝<b>いつ</b>処理するか（まとめて後で／制限時間内にすぐ）</>,
           <>オンライン／オフライン＝回線に<b>つなぐか</b>。タイミングと組み合わせられる</>,
@@ -147,142 +147,64 @@ function ConnectionPanel() {
 }
 
 // ---------------------------------------------------------------------------
-// ③ 処理場所
+// ③ どこで処理する？＋役割をどう分ける？（コンビニチェーンの模型）
 // ---------------------------------------------------------------------------
 
-function Node({ x, y, label, main }: { x: number; y: number; label: string; main?: boolean }) {
-  return (
-    <g>
-      <rect x={x - 20} y={y - 11} width="40" height="22" rx="4" className={main ? "fill-brand-600" : "fill-white stroke-gray-400"} />
-      <text x={x} y={y + 4} textAnchor="middle" fontSize="11" className={main ? "fill-white font-bold" : "fill-gray-700 font-bold"}>
-        {label}
-      </text>
-    </g>
-  );
-}
+const MODES: { key: ArchMode; label: string; axis: "処理場所" | "役割分担"; result: ReactNode }[] = [
+  { key: "central", label: "集中処理", axis: "処理場所", result: <>全店のデータが<b>本部の1台</b>に集まって処理されます。管理はしやすいけれど、本部が止まると全店が止まります。</> },
+  { key: "distributed", label: "分散処理", axis: "処理場所", result: <>各店の<b>小さなサーバ</b>がそれぞれ処理し、必要なときだけ連携します。1台止まっても他の店は動きますが、管理は複雑です。</> },
+  { key: "cs", label: "クライアントサーバ", axis: "役割分担", result: <>店の端末（<b>クライアント＝頼む側</b>）が本部の<b>サーバ（応える側）</b>に依頼し、結果が返ってきます。</> },
+  { key: "three", label: "三層", axis: "役割分担", result: <>①<b>表示</b>（店の端末のブラウザ）→ ②<b>業務処理</b>（APサーバ）→ ③<b>データ</b>（DB）の3つの層に分けて往復します。</> },
+  { key: "p2p", label: "P2P", axis: "役割分担", result: <>専用のサーバを使わず、<b>端末どうしが対等</b>に直接やり取りします。どの端末も提供も利用もします。</> },
+];
 
-function PlacePanel() {
-  return (
-    <Panel>
-      <SectionTitle step={3}>どこで処理する？ ― 集中／分散</SectionTitle>
-      <div className="mt-2">
-        <AxisBadge>処理場所</AxisBadge>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2" data-testid="arch-place">
-        <div className="rounded-xl bg-gray-50 p-2 ring-1 ring-gray-200">
-          <div className="text-[13px] font-bold text-gray-800">集中処理</div>
-          <svg viewBox="0 0 140 96" className="mt-1 w-full mx-auto max-w-[14rem]" role="img" aria-label="本部の1台がすべての店の処理をする">
-            {[
-              [22, 16],
-              [118, 16],
-              [22, 80],
-              [118, 80],
-            ].map(([x, y], i) => (
-              <line key={i} x1={x} y1={y} x2="70" y2="48" className="stroke-gray-400" />
-            ))}
-            <Node x={70} y={48} label="本部" main />
-            <Node x={22} y={16} label="店" />
-            <Node x={118} y={16} label="店" />
-            <Node x={22} y={80} label="店" />
-            <Node x={118} y={80} label="店" />
-          </svg>
-          <p className="mt-1 text-[12px] leading-snug text-gray-600">1か所に集めて処理。管理しやすいが、本部が止まると全部止まる。</p>
-        </div>
-        <div className="rounded-xl bg-gray-50 p-2 ring-1 ring-gray-200">
-          <div className="text-[13px] font-bold text-gray-800">分散処理</div>
-          <svg viewBox="0 0 140 96" className="mt-1 w-full mx-auto max-w-[14rem]" role="img" aria-label="各店のコンピュータがそれぞれ処理し、必要なときだけ連携する">
-            <line x1="22" y1="16" x2="118" y2="16" className="stroke-gray-300" strokeDasharray="3 3" />
-            <line x1="22" y1="80" x2="118" y2="80" className="stroke-gray-300" strokeDasharray="3 3" />
-            <line x1="22" y1="16" x2="22" y2="80" className="stroke-gray-300" strokeDasharray="3 3" />
-            <line x1="118" y1="16" x2="118" y2="80" className="stroke-gray-300" strokeDasharray="3 3" />
-            <Node x={22} y={16} label="店" main />
-            <Node x={118} y={16} label="店" main />
-            <Node x={22} y={80} label="店" main />
-            <Node x={118} y={80} label="店" main />
-          </svg>
-          <p className="mt-1 text-[12px] leading-snug text-gray-600">複数に分けて処理。1台止まっても他は動くが、管理は複雑。</p>
-        </div>
-      </div>
-      <p className="mt-2 text-[12px] text-gray-500">青い箱＝処理をしているコンピュータ</p>
-    </Panel>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ④ 役割分担
-// ---------------------------------------------------------------------------
-
-function RoleCard({ name, desc, children }: { name: string; desc: ReactNode; children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 rounded-xl bg-gray-50 p-2 ring-1 ring-gray-200">
-      <div className="w-[7.5rem] flex-none">{children}</div>
-      <div className="min-w-0">
-        <div className="text-[13px] font-bold text-gray-800">{name}</div>
-        <div className="text-[12px] leading-snug text-gray-600">{desc}</div>
+function ChainPanel() {
+  const [mode, setMode] = useState<ArchMode | null>(null);
+  const [runKey, setRunKey] = useState(0);
+  const reducedMotion = useReducedMotion();
+  const m = MODES.find((x) => x.key === mode) ?? null;
+  const pick = (key: ArchMode) => {
+    setMode(key);
+    setRunKey((k) => k + 1);
+  };
+  const group = (axis: "処理場所" | "役割分担") => (
+    <div>
+      <AxisBadge>{axis === "役割分担" ? "役割分担（システム構成）" : axis}</AxisBadge>
+      <div className={`mt-1.5 grid gap-1.5 ${axis === "処理場所" ? "grid-cols-2" : "grid-cols-[1.5fr_1fr_1fr]"}`}>
+        {MODES.filter((x) => x.axis === axis).map((x) => (
+          <button
+            key={x.key}
+            type="button"
+            onClick={() => pick(x.key)}
+            aria-pressed={mode === x.key}
+            className={`rounded-lg px-1 py-2 text-[12px] font-bold leading-tight transition active:scale-95 ${
+              mode === x.key ? "bg-brand-600 text-white" : "text-gray-600 ring-1 ring-gray-300"
+            }`}
+          >
+            {x.label}
+          </button>
+        ))}
       </div>
     </div>
   );
-}
-
-function RolesPanel() {
   return (
     <Panel>
-      <SectionTitle step={4}>役割をどう分ける？</SectionTitle>
-      <div className="mt-2">
-        <AxisBadge>役割分担（システム構成）</AxisBadge>
+      <SectionTitle step={3}>どこで処理する？ 役割をどう分ける？</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        コンビニチェーンの本部と4つの店です。方式を選ぶと、<b className="text-gray-800">どのコンピュータが処理し、データがどう動くか</b>が見えます。
+      </p>
+      <div className="mt-3 space-y-2" data-testid="arch-modes">
+        {group("処理場所")}
+        {group("役割分担")}
       </div>
-      <div className="mt-3 space-y-2" data-testid="arch-roles">
-        <RoleCard name="クライアントサーバ" desc={<>頼む側（クライアント）と、応える側（サーバ）に分ける</>}>
-          <svg viewBox="0 0 120 70" className="w-full" role="img" aria-label="3台のクライアントが1台のサーバに依頼する">
-            {[14, 35, 56].map((y) => (
-              <g key={y}>
-                <line x1="36" y1={y} x2="84" y2="35" className="stroke-gray-400" markerEnd="url(#arch-arrow)" />
-                <rect x="2" y={y - 8} width="34" height="16" rx="3" className="fill-white stroke-gray-400" />
-                <text x="19" y={y + 4} textAnchor="middle" fontSize="11" className="fill-gray-700 font-bold">PC</text>
-              </g>
-            ))}
-            <rect x="84" y="20" width="34" height="30" rx="4" className="fill-brand-600" />
-            <text x="101" y="39" textAnchor="middle" fontSize="11" className="fill-white font-bold">サーバ</text>
-            <defs>
-              <marker id="arch-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
-                <path d="M0 0 L6 3 L0 6 z" className="fill-gray-400" />
-              </marker>
-            </defs>
-          </svg>
-        </RoleCard>
-        <RoleCard name="三層システム" desc={<>表示・業務の処理・データの<b>3つの層</b>に分ける</>}>
-          <div className="space-y-0.5 text-center text-[11px] font-bold">
-            <div className="rounded bg-brand-100 py-0.5 text-brand-900">表示（ブラウザ）</div>
-            <div className="rounded bg-brand-400 py-0.5 text-white">業務処理（AP）</div>
-            <div className="rounded bg-brand-700 py-0.5 text-white">データ（DB）</div>
-          </div>
-        </RoleCard>
-        <RoleCard name="P2P" desc={<>専用サーバなし。どの端末も<b>対等</b>に、提供も利用もする</>}>
-          <svg viewBox="0 0 120 70" className="w-full" role="img" aria-label="4台の端末が互いに直接つながる">
-            {[
-              [20, 14, 100, 14],
-              [20, 56, 100, 56],
-              [20, 14, 20, 56],
-              [100, 14, 100, 56],
-              [20, 14, 100, 56],
-              [100, 14, 20, 56],
-            ].map(([a, b, c, d], i) => (
-              <line key={i} x1={a} y1={b} x2={c} y2={d} className="stroke-brand-300" strokeWidth="1.5" />
-            ))}
-            {[
-              [20, 14],
-              [100, 14],
-              [20, 56],
-              [100, 56],
-            ].map(([x, y], i) => (
-              <g key={i}>
-                <rect x={x - 17} y={y - 8} width="34" height="16" rx="3" className="fill-white stroke-brand-500" />
-                <text x={x} y={y + 4} textAnchor="middle" fontSize="11" className="fill-brand-800 font-bold">PC</text>
-              </g>
-            ))}
-          </svg>
-        </RoleCard>
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <ArchDioramaScene mode={mode} runKey={runKey} reducedMotion={reducedMotion} />
       </div>
+      {m && (
+        <p className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200 [&_b]:text-gray-900" data-testid="arch-result">
+          <b>{m.label}</b>：{m.result}
+        </p>
+      )}
     </Panel>
   );
 }
@@ -301,7 +223,7 @@ const SCENES = [
 function ScenePanel() {
   return (
     <Panel>
-      <SectionTitle step={5}>問題文から見分ける</SectionTitle>
+      <SectionTitle step={4}>問題文から見分ける</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">まず「どの軸の話か」を決めてから、方式を選びます。</p>
       <div className="mt-3 space-y-1.5" data-testid="arch-scenes">
         {SCENES.map((s) => (

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FLOWS, KindLegend, STEP_MS, TradeFlowMap, kindColor, kindName, type TermKey } from "./ebiz/TradeFlowMap";
+import { FLOWS, KindLegend, STEP_MS, kindColor, kindName, type TermKey } from "./ebiz/TradeFlowMap";
+import { TradeTownScene } from "./ebiz/TradeTownScene";
 import styles from "./ebiz/ebiz.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
@@ -10,7 +11,7 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「e-ビジネス（EC・EDI・フィンテック・シェアリング）」専用の体験。
-//   ① 取引マップ … 用語をタップ→「誰と誰の間で・何が流れるか」を①②③の順に流す
+//   ① 取引マップ … 用語をタップ→街の3D模型で「誰と誰の間で・何が流れるか」を①②③の順に運ぶ
 //      （モノ・お金・情報を色分け。フィンテックはスマホ、シェアリングは仲介サービスを経由）
 //   ② 「これはどれ？」仕分けクイズ
 // ============================================================================
@@ -120,7 +121,9 @@ function TradeMap() {
         ))}
       </div>
 
-      <TradeFlowMap sel={sel} runKey={runKey} reducedMotion={reducedMotion} />
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <TradeTownScene sel={sel} runKey={runKey} reducedMotion={reducedMotion} />
+      </div>
       <div className="mt-1.5">
         <KindLegend />
       </div>

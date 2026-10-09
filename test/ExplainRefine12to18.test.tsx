@@ -15,7 +15,8 @@ import MalwareExperience from "@/components/experiences/MalwareExperience";
 import { topics } from "@/data/topics";
 
 // 12〜18章の解説改善で、図解・イラスト中心に作り直したテーマ。
-// どれも「操作しなくても分かる」静的な図なので、描画できて・要点の図があり・押すボタンが無いことを確かめる。
+// 静的な図のテーマは「操作しなくても分かる」ので、描画できて・要点の図があり・押すボタンが無いことを確かめる。
+// コンピュータの種類とランサムウェアの流れは、のちに3D模型（選ぶ・次へ）にしたので別に確かめる。
 
 afterEach(cleanup);
 
@@ -33,13 +34,11 @@ const contentButtons = () =>
   screen.queryAllByRole("button").filter((b) => !/^(解説\d+|前の解説へ|次の解説へ)$/.test(b.getAttribute("aria-label") ?? b.textContent ?? ""));
 
 const STATIC_TOPICS: [string, ComponentType, number][] = [
-  ["tech-computer-types", ComputerTypesExperience, 2],
   ["tech-parallel-systems", ParallelSystemsExperience, 5],
   ["tech-io-devices", IoDevicesExperience, 3],
   ["tech-system-performance", SystemPerformanceExperience, 4],
   ["tech-ui-ux", UiUxExperience, 4],
   ["tech-isms-risk", IsmsRiskExperience, 3],
-  ["tech-malware-phishing-ransomware", MalwareExperience, 4],
 ];
 
 describe("12〜18章：静的な図解に作り直したテーマ", () => {
@@ -56,6 +55,8 @@ describe("12〜18章：静的な図解に作り直したテーマ", () => {
 
   it("computer types: each kind has a picture, its use and an example together", () => {
     renderDeck(ComputerTypesExperience);
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    slide(2);
     const items = within(screen.getByTestId("computer-kinds")).getAllByRole("listitem");
     expect(items.map((li) => li.getAttribute("data-kind"))).toEqual(["PC", "サーバ", "汎用機", "スーパーコンピュータ", "マイコン"]);
     for (const li of items) expect(li.querySelector("svg")).not.toBeNull();
@@ -139,5 +140,39 @@ describe("12〜18章：静的な図解に作り直したテーマ", () => {
     expect(kinds).not.toHaveTextContent("増えない");
     slide(3);
     expect(within(screen.getByTestId("phishing-signs")).getAllByRole("listitem")).toHaveLength(3);
+  });
+});
+
+describe("3D模型で見せるテーマ（コンピュータの種類・ランサムウェア）", () => {
+  it("computer types: picking a kind flies to its place in the town and explains it", () => {
+    renderDeck(ComputerTypesExperience);
+    const scene = screen.getByTestId("comptypes-scene");
+    expect(scene).toHaveAttribute("data-kind", "none");
+    fireEvent.click(screen.getByRole("button", { name: "汎用機" }));
+    expect(scene).toHaveAttribute("data-kind", "mainframe");
+    expect(screen.getByTestId("comptypes-mainframe")).toHaveAttribute("data-state", "error");
+    expect(screen.getByTestId("comptypes-spare")).toHaveAttribute("data-state", "active");
+    expect(screen.getByTestId("comptypes-result")).toHaveTextContent("予備機が引き継いで");
+    fireEvent.click(screen.getByRole("button", { name: "マイコン" }));
+    expect(screen.getByTestId("comptypes-micro")).toHaveAttribute("data-on", "true");
+  });
+
+  it("ransomware: the office goes from infection to encryption, ransom and recovery from the offline backup", () => {
+    renderDeck(MalwareExperience);
+    expect(screen.getByText("1 / 4")).toBeInTheDocument();
+    slide(4);
+    const scene = screen.getByTestId("ransom-scene");
+    const next = () => fireEvent.click(screen.getByRole("button", { name: /次へ →|復旧できた/ }));
+    expect(scene).toHaveAttribute("data-encrypted", "false");
+    expect(screen.getByTestId("ransom-step")).toHaveTextContent("侵入");
+    next();
+    expect(scene).toHaveAttribute("data-encrypted", "true");
+    expect(screen.getByTestId("ransom-pc-b")).toHaveAttribute("data-locked", "true");
+    next();
+    expect(screen.getByTestId("ransom-step")).toHaveTextContent("身代金");
+    next();
+    expect(scene).toHaveAttribute("data-encrypted", "false");
+    expect(screen.getByTestId("ransom-step")).toHaveTextContent("バックアップから復旧");
+    expect(within(screen.getByTestId("ransom-defense")).getAllByRole("listitem")).toHaveLength(3);
   });
 });

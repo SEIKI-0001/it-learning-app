@@ -23,6 +23,11 @@ const TOPICS: { id: string; name: string }[] = [
   { id: "tech-os-software-hardware", name: "OS" },
   { id: "tech-email-protocol", name: "メール" },
   { id: "tech-network-devices", name: "ネットワーク機器" },
+  { id: "tech-iot", name: "IoT" },
+  { id: "strat-ebusiness", name: "e-ビジネス" },
+  { id: "tech-computer-types", name: "コンピュータの種類" },
+  { id: "tech-system-processing-architecture", name: "処理形態" },
+  { id: "tech-malware-phishing-ransomware", name: "マルウェア" },
 ];
 
 export default function DioramaPreview({ topicId }: { topicId: string }) {
