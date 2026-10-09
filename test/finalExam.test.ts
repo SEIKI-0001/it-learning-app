@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { AppState, QuestionExposureMap } from "@/types";
-import { generateFinalExam } from "@/lib/finalExam";
+import { generateFinalExam, usesOfficialPastExam } from "@/lib/finalExam";
+import { getQuestionForDelivery, questionRecordToCheckQuestion } from "@/lib/questionBank";
+import { buildOfficialDrillIndex } from "@/lib/pastExam/officialIndex";
+import { parseOfficialQuestionId } from "@/lib/pastExam/officialHistory";
+import {
+  buildOfficialFinalExamRequest,
+  parseOfficialFinalExamRequest,
+  selectOfficialFinalExamIds,
+} from "@/lib/pastExam/finalExamSelection";
 import { recordFinalExamAttempt } from "@/lib/checkpoints";
 
 const cp1Topics = [
@@ -102,5 +110,82 @@ describe("roadmap final exams", () => {
       expect.objectContaining({ exposureState: "seen", isFirstSeen: false }),
     );
     expect(next.answers).toHaveLength(1);
+  });
+});
+
+describe("CP5 final exam from official past exams", () => {
+  const index = buildOfficialDrillIndex();
+  const toQuestions = (ids: string[]) =>
+    ids.map((id) => {
+      const record = getQuestionForDelivery(id, "official_past_exam")!;
+      return { question: questionRecordToCheckQuestion(record), topicId: record.primaryTopicId };
+    });
+
+  it("is the only checkpoint that uses official past exams", () => {
+    expect(usesOfficialPastExam("cp5")).toBe(true);
+    for (const id of ["cp1", "cp2", "cp3", "cp4", "cp6"] as const) {
+      expect(usesOfficialPastExam(id)).toBe(false);
+    }
+  });
+
+  it("selects 15 official questions in the real exam field ratio", () => {
+    const ids = selectOfficialFinalExamIds(
+      index,
+      buildOfficialFinalExamRequest(state(), 15, "attempt-1"),
+    );
+    expect(ids).toHaveLength(15);
+    expect(new Set(ids).size).toBe(15);
+    const byField = { strategy: 0, management: 0, technology: 0 };
+    for (const id of ids) byField[parseOfficialQuestionId(id)!.field] += 1;
+    expect(byField).toEqual({ strategy: 5, management: 3, technology: 7 });
+  });
+
+  it("prefers official questions the user has not answered yet", () => {
+    const answered = index.slice(0, 400).map((entry) => entry.id);
+    const current = state();
+    current.answers = answered.map((questionId) => ({
+      questionId,
+      selectedChoice: "A" as const,
+      isCorrect: true,
+      answeredAt: "2026-10-01T00:00:00.000Z",
+      tag: "official",
+    }));
+    const ids = selectOfficialFinalExamIds(
+      index,
+      buildOfficialFinalExamRequest(current, 15, "attempt-2"),
+    );
+    expect(ids.some((id) => answered.includes(id))).toBe(false);
+  });
+
+  it("builds the exam from the given official questions instead of check questions", () => {
+    const ids = selectOfficialFinalExamIds(index, buildOfficialFinalExamRequest(state(), 15, "a"));
+    const exam = generateFinalExam(state(), "cp5", {
+      attemptId: "a",
+      officialQuestions: toQuestions(ids),
+    });
+    expect(exam.questions.map((question) => question.id)).toEqual(ids);
+    expect(exam.questions.every((question) => question.origin === "official_past")).toBe(true);
+    expect(exam.questions.every((question) => question.shuffleChoices === false)).toBe(true);
+    for (const question of exam.questions) {
+      expect(exam.topicIdByQuestionId[question.id]).toBe(
+        getQuestionForDelivery(question.id, "official_past_exam")!.primaryTopicId,
+      );
+    }
+  });
+
+  it("does not fall back to check questions when official questions are missing", () => {
+    expect(() => generateFinalExam(state(), "cp5", { officialQuestions: [] })).toThrow(
+      "official past exam questions",
+    );
+  });
+
+  it("rejects malformed selection requests", () => {
+    expect(parseOfficialFinalExamRequest({ count: 15 })).toBeNull();
+    expect(parseOfficialFinalExamRequest({
+      count: 500, answeredIds: [], wrongIds: [], weakTopicIds: [], seed: "s",
+    })).toBeNull();
+    expect(parseOfficialFinalExamRequest({
+      count: 15, answeredIds: [], wrongIds: [], weakTopicIds: [], seed: "s",
+    })).not.toBeNull();
   });
 });

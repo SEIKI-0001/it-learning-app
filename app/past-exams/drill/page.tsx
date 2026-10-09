@@ -4,14 +4,11 @@ import PageHeader from "@/components/ui/PageHeader";
 import OfficialDrillPicker from "@/components/pastExam/OfficialDrillPicker";
 import OfficialDrillRunner from "@/components/pastExam/OfficialDrillRunner";
 import { FIELD_LABELS, type TopicField } from "@/types/content";
-import { getPublishedQuestions, getQuestionForDelivery } from "@/lib/questionBank";
+import { getQuestionForDelivery } from "@/lib/questionBank";
+import { buildOfficialDrillIndex } from "@/lib/pastExam/officialIndex";
 import { isOfficialExamField } from "@/lib/questionBank/officialExamField";
 import { toPastExamQuestionView } from "@/lib/pastExam/viewModel";
-import {
-  clampDrillCount,
-  type DrillIndexEntry,
-  type DrillSelectionStage,
-} from "@/lib/pastExam/drillSelection";
+import { clampDrillCount, type DrillSelectionStage } from "@/lib/pastExam/drillSelection";
 
 // 公式過去問の部分演習（CP5 以降の Today から開く）。
 //
@@ -51,17 +48,6 @@ function stageTitle(stage: DrillSelectionStage, field: TopicField | undefined): 
   if (stage === "mixed") return "3分野の公式問題";
   if (stage === "retry-wrong") return "過去問の誤答を解き直す";
   return "公式問題ランダム演習";
-}
-
-/** 部分演習の出題元（公開済みの公式過去問だけ）。本文は持たない軽い索引。 */
-function buildIndex(): DrillIndexEntry[] {
-  return getPublishedQuestions()
-    .filter((q) => q.origin === "official_past" && q.official)
-    .map((q) => ({
-      id: q.id,
-      field: q.official!.examField as TopicField,
-      topicId: q.primaryTopicId,
-    }));
 }
 
 export default async function PastExamDrillPage({
@@ -116,7 +102,7 @@ export default async function PastExamDrillPage({
             stage={stage}
             field={field}
             count={count}
-            index={buildIndex()}
+            index={buildOfficialDrillIndex()}
             query={Object.fromEntries(
               Object.entries({
                 stage,

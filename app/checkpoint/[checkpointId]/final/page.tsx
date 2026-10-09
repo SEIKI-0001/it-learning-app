@@ -43,9 +43,15 @@ import {
   buildFinalExamAttempt,
   generateFinalExam,
   scoreFinalExam,
+  usesOfficialPastExam,
   type FinalExam,
   type FinalExamResult,
 } from "@/lib/finalExam";
+import {
+  buildOfficialFinalExamRequest,
+  fetchOfficialFinalExamQuestions,
+} from "@/lib/pastExam/finalExamSelection";
+import { isOfficialQuestionId } from "@/lib/pastExam/officialHistory";
 import { emitCelebration } from "@/lib/celebration";
 import { emitMochitEvent } from "@/components/mochit/mochitEventBus";
 import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
@@ -57,6 +63,9 @@ import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
 
 const VALID_IDS = new Set(CHECKPOINTS.map((c) => c.id));
+
+/** 公式過去問の突破試験で、問題をサーバから受け取れなかった。 */
+class OfficialQuestionsUnavailable extends Error {}
 
 type CheckpointFinalizationBase = {
   kind: "checkpoint-final";
@@ -186,6 +195,15 @@ function isValidFinalExam(
     || typeof value.reusedRecentQuestion !== "boolean"
   ) return false;
   const ids = value.questions.map((question) => question.id);
+  if (usesOfficialPastExam(checkpointId)) {
+    // 公式過去問の本文はクライアントに無い（サーバから受け取った）ので、出所と復習先だけ確かめる。
+    return new Set(ids).size === ids.length
+      && Object.keys(value.topicIdByQuestionId).length === ids.length
+      && value.questions.every((question) =>
+        question.origin === "official_past"
+        && isOfficialQuestionId(question.id)
+        && getTopic(value.topicIdByQuestionId[question.id] ?? "") !== undefined);
+  }
   const catalog = new Map(getAllTopics().flatMap((topic) => topic.checkQuestions.map((question) => [
     question.id,
     { question, topicId: topic.id },
@@ -435,7 +453,10 @@ export default function FinalExamPage() {
   const signals = getClientBadgeSignals();
 
   const checkpoint = getCheckpoint(checkpointId);
-  const rangeLabel = "このCPの対象範囲にある、完了済みトピックだけから出題";
+  const officialExam = usesOfficialPastExam(checkpointId);
+  const rangeLabel = officialExam
+    ? "公式過去問（令和4〜8年度）から、3分野を本試験の比率で出題（まだ解いていない問題を優先）"
+    : "このCPの対象範囲にある、完了済みトピックだけから出題";
 
   if (state === undefined || state === null) {
     return <LoadingScreen />;
@@ -475,14 +496,26 @@ export default function FinalExamPage() {
     setExamError(null);
     setPersistenceError(null);
     try {
-      const pending = pendingExamRef.current ?? (() => {
+      const pending = pendingExamRef.current ?? await (async () => {
+        const attemptId = crypto.randomUUID();
         const recentQuestionIds = [...state.answers]
           .sort((a, b) => b.answeredAt.localeCompare(a.answeredAt))
           .map((answer) => answer.questionId);
+        let officialQuestions;
+        if (officialExam) {
+          try {
+            officialQuestions = await fetchOfficialFinalExamQuestions(
+              buildOfficialFinalExamRequest(state, checkpoint.finalExam!.questionCount, attemptId),
+            );
+          } catch {
+            throw new OfficialQuestionsUnavailable();
+          }
+        }
         return {
           exam: generateFinalExam(state, checkpointId, {
-            attemptId: crypto.randomUUID(),
+            attemptId,
             recentQuestionIds,
+            officialQuestions,
           }),
           startedAt: new Date().toISOString(),
         };
@@ -511,7 +544,9 @@ export default function FinalExamPage() {
       emitMochitEvent("encourage");
     } catch (error) {
       setExamError(
-        error instanceof Error
+        error instanceof OfficialQuestionsUnavailable
+          ? "公式過去問を読み込めませんでした。通信状況を確認して、もう一度お試しください。"
+          : error instanceof Error
           ? "この範囲で十分な問題を作れません。対象トピックをもう少し学習してから再挑戦してください。"
           : "問題の準備に失敗しました。",
       );
@@ -745,6 +780,12 @@ export default function FinalExamPage() {
               completeLabel="採点する"
               dense
             />
+            {officialExam && (
+              <p className="mt-3 text-xs leading-relaxed text-gray-500">
+                問題文・選択肢・正答はIPAが公開している原文のままです。解説は本サービスが
+                独自に作成したもので、IPAの公式解説ではありません。
+              </p>
+            )}
           </section>
         ) : gate.finalExamUnlocked ? (
           /* --- 解放済み・未開始 --- */

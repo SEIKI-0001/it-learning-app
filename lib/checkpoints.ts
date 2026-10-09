@@ -110,7 +110,7 @@ export const CHECKPOINTS: CheckpointDef[] = [
     requiredFieldCoverage: ["technology", "management", "strategy"],
     recentAccuracyMin: 0.65,
     finalExam: { questionCount: 15, passThreshold: 11, weakRatio: 0.4 },
-    winConditionLabel: "15問中11問以上の正解で合格です。",
+    winConditionLabel: "公式過去問15問中11問以上の正解で合格です。",
   },
   {
     id: "cp6",
