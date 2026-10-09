@@ -78,7 +78,14 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
       shotKey={`${money?.spot ?? "-"}-${money?.state ?? ""}-${nodes.engine}-${reverse ? "r" : ""}`}
       forward
       reducedMotion={reducedMotion}
-      tokens={{ money: { at: money ? MONEY_AT[money.spot] : null, path: money ? moneyPath(money.spot, reverse, money.state === "crashed") : undefined } }}
+      tokens={{
+        money: {
+          at: money ? MONEY_AT[money.spot] : null,
+          path: money ? moneyPath(money.spot, reverse, money.state === "crashed") : undefined,
+          // 最初に現れるとき（Aから引いた直後）は、口座Aの金庫から勘定系へ運ばれる様子を見せる
+          start: MONEY_AT.a,
+        },
+      }}
       world={
         <>
           <Floor x={0} y={20} w={800} d={410} h={16} material="plain" />
