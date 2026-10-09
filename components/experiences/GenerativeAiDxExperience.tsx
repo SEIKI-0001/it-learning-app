@@ -211,57 +211,46 @@ const COMPARE_ROWS: { row: string; cells: [string, string, string]; key?: boolea
   { row: "売り物・稼ぎ方", cells: ["変わらない", "変わらない", "変わる"], key: true },
 ];
 
-// B案：用語を行、観点を列にした向き。最後の列「売り物・稼ぎ方」で DX だけが変わる
+// B案：用語を行にした向き。窮屈にならないよう列は3つに絞る
+//   用語（＋範囲）｜例（一般の例＋パン屋）｜売り物・稼ぎ方
 function CompareByTermRows() {
+  const [scope, ex, bakery, money] = COMPARE_ROWS;
   return (
-    <div className="mt-3 overflow-x-auto" data-testid="dx-compare-rows">
-      <table className="w-full min-w-[34rem] border-separate border-spacing-1 text-left text-[13px] leading-snug">
-        <thead>
-          <tr>
-            <th className="w-[9.5em]" />
-            {COMPARE_ROWS.map((r) => (
-              <th
-                key={r.row}
-                className={`px-2 pb-0.5 text-xs font-bold ${r.key ? "text-brand-700" : "text-gray-500"}`}
+    <div className="mt-3" data-testid="dx-compare-rows">
+      <div className="grid grid-cols-[minmax(7.5rem,10rem)_1fr_5rem] gap-x-2 px-1 pb-1.5 text-xs font-bold text-gray-500 sm:grid-cols-[11rem_1fr_7rem]">
+        <span>用語・範囲</span>
+        <span>例</span>
+        <span className="text-center text-brand-700">{money.row}</span>
+      </div>
+      <ul className="space-y-2">
+        {COMPARE_COLS.map((term, i) => {
+          const dx = i === 2;
+          return (
+            <li
+              key={term}
+              className={`grid grid-cols-[minmax(7.5rem,10rem)_1fr_5rem] items-center gap-x-2 rounded-xl p-2 sm:grid-cols-[11rem_1fr_7rem] ${
+                dx ? "bg-brand-50 ring-2 ring-brand-300" : "ring-1 ring-gray-200"
+              }`}
+            >
+              <div className="px-1">
+                <div className={`text-sm font-bold leading-snug ${dx ? "text-brand-800" : "text-gray-900"}`}>{term}</div>
+                <div className="mt-0.5 text-xs text-gray-600">範囲：{scope.cells[i]}</div>
+              </div>
+              <div className="px-1">
+                <div className={`text-sm leading-snug ${dx ? "font-bold text-gray-900" : "text-gray-800"}`}>{ex.cells[i]}</div>
+                <div className="mt-0.5 text-xs leading-snug text-gray-600">パン屋：{bakery.cells[i]}</div>
+              </div>
+              <div
+                className={`flex h-full items-center justify-center rounded-lg px-1 text-center text-sm font-bold ${
+                  dx ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-500"
+                }`}
               >
-                {r.row}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {COMPARE_COLS.map((term, ti) => {
-            const dx = ti === 2;
-            return (
-              <tr key={term}>
-                <th
-                  className={`rounded-md px-2 py-1.5 text-xs font-bold ${
-                    dx ? "bg-brand-600 text-white" : "bg-gray-100 text-gray-900"
-                  }`}
-                >
-                  {term}
-                </th>
-                {COMPARE_ROWS.map((r) => (
-                  <td
-                    key={r.row}
-                    className={`rounded-md px-2 py-1.5 ${
-                      r.key
-                        ? dx
-                          ? "bg-brand-600 text-center font-bold text-white"
-                          : "bg-gray-100 text-center font-bold text-gray-600"
-                        : dx
-                          ? "font-bold text-gray-900 ring-2 ring-brand-300"
-                          : "text-gray-800 ring-1 ring-gray-200"
-                    }`}
-                  >
-                    {r.cells[ti]}
-                  </td>
-                ))}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                {money.cells[i]}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
