@@ -88,6 +88,7 @@ import PmbokExperience from "./PmbokExperience";
 import RaciExperience from "./RaciExperience";
 import ProcessingArchitectureExperience from "./ProcessingArchitectureExperience";
 import BackupExperience from "./BackupExperience";
+import FileSystemExperience from "./FileSystemExperience";
 import NetworkDevicesExperience from "./NetworkDevicesExperience";
 import BusinessSystemsExperience from "./BusinessSystemsExperience";
 
@@ -189,6 +190,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "mgmt-pmbok-basics": PmbokExperience,
   "mgmt-project-resource": RaciExperience,
   "tech-system-processing-architecture": ProcessingArchitectureExperience,
+  "tech-file-system": FileSystemExperience,
   "tech-backup": BackupExperience,
   "tech-network-devices": NetworkDevicesExperience,
   "strat-business-systems": BusinessSystemsExperience,
