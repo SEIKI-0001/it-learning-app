@@ -50,6 +50,7 @@ import PrivacyExperience from "./PrivacyExperience";
 import SecurityLawsExperience from "./SecurityLawsExperience";
 import SystemStrategyExperience from "./SystemStrategyExperience";
 import BusinessProcessExperience from "./BusinessProcessExperience";
+import MaintenanceTypesExperience from "./MaintenanceTypesExperience";
 import SolutionBusinessExperience from "./SolutionBusinessExperience";
 import ReliabilityExperience from "./ReliabilityExperience";
 import LogicOperationsExperience from "./LogicOperationsExperience";
@@ -139,6 +140,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "mgmt-itil": ItilExperience,
   "mgmt-system-audit": SystemAuditExperience,
   "mgmt-requirements-definition": RequirementsExperience,
+  "mgmt-operation-maintenance": MaintenanceTypesExperience,
   "strat-accounting-break-even": BreakEvenExperience,
   "strat-swot": SwotExperience,
   "strat-3c": ThreeCExperience,
