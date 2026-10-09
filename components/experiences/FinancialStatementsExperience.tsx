@@ -1,13 +1,13 @@
 "use client";
 
 import { Lead } from "./diagram/DiagramParts";
-import { BsChart, CAFE, INDICATORS, PL, PlLadder, RatioLine, TOTAL_ASSETS, Takeaway } from "./finance/cafe";
+import { BsChart, CAFE, INDICATORS, NET_TONE, PL, PlLadder, RatioLine, TOTAL_ASSETS, Takeaway } from "./finance/cafe";
 import { FinancePractice } from "./finance/FinancePractice";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
 // 「財務諸表（貸借対照表BS・損益計算書PL）」専用の体験。1軒のカフェの同じ1年を通して読む。
-//   ① 2つの表は答える問いが違う（BS＝ある1日の写真／PL＝1年間の成績表）
+//   ① PLもBSも決算書の1つ（BS＝決算日時点の集め方と使い道／PL＝1年間の成績）
 //   ② BS（左右のつり合い・1年ルール） ③ PL（5つの利益）
 //   ④ PLの当期純利益がBSの純資産に積もる／借入れは資産を増やすが、もうけではない
 //   ⑤ 同じ数字で指標（流動比率・自己資本比率・売上高営業利益率・ROE） ⑥ 確認5問
@@ -44,9 +44,13 @@ function Timeline() {
 function QuestionsSlide() {
   return (
     <Panel>
-      <SectionTitle step={1}>2つの表は、答える「問い」が違う</SectionTitle>
+      <SectionTitle step={1}>PLもBSも、決算書の中の1つ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        {CAFE.name}の1年目が終わりました。オーナーが知りたいことは2つあります。
+        会社は1年に1回、その年のお金の状況を<b className="text-gray-800">決算書</b>にまとめます。決算書にはいくつか種類がありますが、
+        いちばん大事なのが<b className="text-gray-800">PL</b>と<b className="text-gray-800">BS</b>の2つです。名前は難しそうですが、知ってしまえば意外とシンプルです。
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        ここからは{CAFE.name}の1年目を例に、最後まで同じ数字で見ていきます。1年目を終えたオーナーが知りたいことは、次の2つです。
       </p>
       <Timeline />
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -54,18 +58,18 @@ function QuestionsSlide() {
           <div className="text-[12px] font-bold text-gray-500">問い①</div>
           <p className="mt-0.5 text-[15px] font-bold leading-snug text-gray-900">「いま、何を持っていて、そのお金はどこから来た？」</p>
           <p className="mt-1.5 text-sm text-gray-700">
-            → <b>貸借対照表（BS）</b>。ある<b>1日</b>を撮った写真
+            → <b>BS（貸借対照表）</b>で分かります。決算日という<b>1日</b>の時点の状態
           </p>
         </div>
         <div className="rounded-xl bg-white p-3 ring-1 ring-brand-300">
           <div className="text-[12px] font-bold text-brand-700">問い②</div>
           <p className="mt-0.5 text-[15px] font-bold leading-snug text-gray-900">「この1年で、いくら稼いで、いくら残った？」</p>
           <p className="mt-1.5 text-sm text-gray-700">
-            → <b>損益計算書（PL）</b>。<b>1年間</b>の成績表
+            → <b>PL（損益計算書）</b>で分かります。<b>1年間</b>の成績
           </p>
         </div>
       </div>
-      <Takeaway>問題文に「○月○日時点」→ BS、「○年間の」→ PL。</Takeaway>
+      <Takeaway>見分け方はかんたん。問題文に「○月○日時点」とあれば BS、「○年間の」とあれば PL です。</Takeaway>
     </Panel>
   );
 }
@@ -73,10 +77,20 @@ function QuestionsSlide() {
 function BsSlide() {
   return (
     <Panel>
-      <SectionTitle step={2}>3/31の写真 ＝ 貸借対照表（BS）</SectionTitle>
+      <SectionTitle step={2}>BS（貸借対照表）とは：お金の「集め方」と「使い道」の表</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        右は<b className="text-gray-800">お金をどこから集めたか</b>、左はそのお金が<b className="text-gray-800">いま何に姿を変えているか</b>。
-        同じお金を2つの向きから見ているので、左右の合計は必ず同じです。
+        正直、BSは分かりにくいと感じる人が多い表です。でも、見るところは左と右の2つだけです。
+      </p>
+      <ul className="mt-2 space-y-1 text-sm leading-relaxed text-gray-600">
+        <li>
+          ・<b className="text-gray-800">右側</b>：お金をどうやって<b className="text-gray-800">集めたか</b>（銀行から借りた／自分で出した）
+        </li>
+        <li>
+          ・<b className="text-gray-800">左側</b>：集めたお金を<b className="text-gray-800">何に使っているか</b>（現金のまま／お店の設備）
+        </li>
+      </ul>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        同じお金を「集め方」と「使い道」の両方から見ているので、左右の合計は必ず同じになります。
       </p>
       <div className="mt-3">
         <BsChart />
@@ -86,7 +100,10 @@ function BsSlide() {
           ・上の段＝<b>流動</b>（1年以内にお金になる／払う）、下の段＝<b>固定</b>（1年より先）。これを<b>1年ルール</b>といいます
         </li>
         <li>
-          ・<b>負債</b>はいつか返すお金、<b>純資産</b>は返さなくてよいお金
+          ・<b>負債</b>はいつか返すお金、<b>純資産</b>は返さなくてよいお金（自分で出したお金と、これまでのもうけ）
+        </li>
+        <li className="text-gray-500">
+          ・簿記の言葉では左側を「借方」、右側を「貸方」といいますが、ITパスポートではまず覚えなくても大丈夫です
         </li>
       </ul>
       <Takeaway>
@@ -99,15 +116,19 @@ function BsSlide() {
 function PlSlide() {
   return (
     <Panel>
-      <SectionTitle step={3}>1年間の成績 ＝ 損益計算書（PL）</SectionTitle>
+      <SectionTitle step={3}>PL（損益計算書）とは：1年間の成績表</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        売上から、<b className="text-gray-800">上から順に</b>費用を引いていきます。途中で出てくる利益にはそれぞれ名前があります。
+        1年間の売上・費用・利益をまとめた表です。黒字か赤字かは、PLを見ればすぐ分かります。
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        いちばん上に売上があり、そこから<b className="text-gray-800">上から順に</b>費用を引いていくだけです。途中に利益が5つ出てきて、名前が似ているので混乱しがちですが、
+        「何を引いたあとか」が違うだけです。
       </p>
       <div className="mt-3">
         <PlLadder />
       </div>
       <Takeaway>
-        売上 {CAFE.pl.sales.toLocaleString()} のうち、最後に残ったのは {PL.net}。売上は利益ではない。
+        売上 {CAFE.pl.sales.toLocaleString()} のうち、最後に残ったのは {PL.net}。売上がそのまま利益になるわけではありません。
       </Takeaway>
     </Panel>
   );
@@ -116,22 +137,25 @@ function PlSlide() {
 function LinkSlide() {
   return (
     <Panel>
-      <SectionTitle step={4}>PLのもうけは、BSの純資産に積もる</SectionTitle>
+      <SectionTitle step={4}>PLは1年ごと、BSはこれまでの積み重ね</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        4/1の純資産は開業資金の {CAFE.openingEquity}。1年で稼いだ当期純利益 {PL.net} がそこに加わり、3/31には {CAFE.bs.eq} になりました。
+        PLは毎年ゼロから数え直しますが、BSには開業してからの経営の結果が積み重なっていきます。つなぎ目は<b className="text-gray-800">純資産</b>です。
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        4/1の純資産は開業資金の {CAFE.openingEquity}。1年で稼いだ当期純利益 {PL.net} がそこに加わって、3/31には {CAFE.bs.eq} になりました。
       </p>
       <div className="mt-3 flex items-center justify-center gap-2 text-center text-[13px] font-bold tabular-nums" data-testid="story-link">
-        <div className="rounded-lg bg-gray-100 px-2.5 py-1.5 text-gray-900">
-          <div className="text-[11px] text-gray-500">4/1 の純資産</div>
+        <div className="rounded-lg bg-lime-100 px-2.5 py-1.5 text-lime-950 ring-1 ring-lime-400">
+          <div className="text-[11px] text-lime-900/80">4/1 の純資産</div>
           {CAFE.openingEquity}
         </div>
         <span className="text-gray-400">＋</span>
-        <div className="rounded-lg bg-brand-600 px-2.5 py-1.5 text-white">
-          <div className="text-[11px] text-white/80">PLの当期純利益</div>
+        <div className={`rounded-lg px-2.5 py-1.5 ${NET_TONE}`}>
+          <div className="text-[11px] opacity-80">PLの当期純利益</div>
           {PL.net}
         </div>
         <span className="text-gray-400">＝</span>
-        <div className="rounded-lg bg-gray-700 px-2.5 py-1.5 text-white">
+        <div className="rounded-lg bg-lime-700 px-2.5 py-1.5 text-white">
           <div className="text-[11px] text-white/80">3/31 の純資産</div>
           {CAFE.bs.eq}
         </div>
@@ -140,7 +164,8 @@ function LinkSlide() {
         <BsChart height={180} detail={false} equitySplit highlight={["eq"]} testId="story-bs" />
       </div>
 
-      <h4 className="mt-5 text-sm font-bold text-gray-900">では、銀行から100借りたら「もうかった」？</h4>
+      <h4 className="mt-5 text-sm font-bold text-gray-900">では、銀行から100借りたら「もうかった」ことになる？</h4>
+      <p className="mt-1 text-sm leading-relaxed text-gray-600">なりません。借りたお金は、現金（左）と借入金（右）が同じだけ増えるだけです。</p>
       <div className="mt-2 grid grid-cols-2 gap-2 text-[13px] leading-relaxed" data-testid="story-borrow">
         <div className="rounded-xl p-3 ring-1 ring-gray-300">
           <div className="font-bold text-gray-900">100借りる</div>
@@ -167,7 +192,7 @@ function LinkSlide() {
           </div>
         </div>
       </div>
-      <Takeaway>資産が増えても、もうかったとは限らない。もうけたときだけ純資産が増える。</Takeaway>
+      <Takeaway>資産が増えても、もうかったとは限りません。純資産が増えるのは、もうけたときです。</Takeaway>
     </Panel>
   );
 }
@@ -175,9 +200,10 @@ function LinkSlide() {
 function CheckupSlide() {
   return (
     <Panel>
-      <SectionTitle step={5}>同じカフェを「健康診断」する</SectionTitle>
+      <SectionTitle step={5}>BSとPLを見ると、会社の体質が分かる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        指標は、ここまでの表から2つの数字を取り出して割るだけ。数字はすべて上のBS・PLと同じです。
+        BSを見ると、借金に頼りすぎていないか、支払いのお金は足りているかが分かります。PLと組み合わせると、どれだけ効率よく稼げているかも分かります。
+        難しそうな名前の指標も、ここまでの表から2つの数字を取り出して割るだけです。数字はすべて上のBS・PLと同じです。
       </p>
       <ul className="mt-3 space-y-2" data-testid="story-indicators">
         {INDICATORS.map((ind) => (
@@ -193,7 +219,7 @@ function CheckupSlide() {
           </li>
         ))}
       </ul>
-      <Takeaway>「安全？」はBSどうし、「もうかる？」はPLが入る。</Takeaway>
+      <Takeaway>「安全か」はBSどうしで、「もうかるか」はPLの数字を使って割ります。</Takeaway>
     </Panel>
   );
 }
@@ -202,8 +228,8 @@ export default function FinancialStatementsExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        1軒のカフェの<b>同じ1年</b>を、最後まで同じ数字で追いかけます。<b>BS＝ある1日の写真</b>、<b>PL＝1年間の成績表</b>。
-        この2つがどうつながり、指標がどこから出てくるかを見ていきます。
+        財務諸表、とくに<b>PL</b>と<b>BS</b>は「何を見ればいいか分からない」という人が多い分野です。ざっくりいうと、
+        <b>PL＝1年間の成績</b>、<b>BS＝決算日時点のお金の集め方と使い道</b>。1軒のカフェの同じ1年を、最後まで同じ数字で見ていきます。
       </Lead>
       <QuestionsSlide />
       <BsSlide />

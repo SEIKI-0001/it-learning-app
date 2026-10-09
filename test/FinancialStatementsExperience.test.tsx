@@ -28,9 +28,9 @@ describe("カフェの決算（全スライド共通の数字）", () => {
 });
 
 describe("FinancialStatementsExperience", () => {
-  it("問い → BS → PL の順で、同じカフェの数字を読む", () => {
+  it("決算書 → BS → PL の順で、同じカフェの数字を読む", () => {
     renderDeck();
-    expect(screen.getByText(/答える「問い」が違う/)).toBeInTheDocument();
+    expect(screen.getByText(/PLもBSも、決算書の中の1つ/)).toBeInTheDocument();
     click("解説2");
     expect(screen.getByText(/資産 1,000 ＝ 負債 600 ＋ 純資産 400/)).toBeInTheDocument();
     expect(screen.getByTestId("cafe-bs-ca")).toHaveTextContent("流動資産 300");
