@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import BusinessProcessExperience from "@/components/experiences/BusinessProcessExperience";
 import { queueLengths, schedule, spotsAt } from "@/components/experiences/process/processSim";
@@ -48,12 +48,16 @@ describe("BusinessProcessExperience", () => {
     scrub(60);
     expect(screen.getByTestId("sim-note")).toHaveTextContent("手書き転記");
     expect(screen.getByTestId("sim-note")).toHaveTextContent("渋滞");
-    expect(screen.getByTestId("bp-steps")).toHaveTextContent("時間がかかる");
+    const bottleneckRow = within(screen.getByTestId("bp-steps")).getAllByRole("row", { hidden: true })
+      .find((row) => row.textContent?.includes("手書き転記"))!;
+    expect(within(bottleneckRow).getAllByRole("cell", { hidden: true }).map((cell) => cell.textContent)).toEqual([
+      expect.stringContaining("手書き転記ボトルネック"), "30分", "5分",
+    ]);
 
     fireEvent.click(screen.getByRole("radio", { name: "改善後" }));
     expect(screen.getByRole("radio", { name: "改善後" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByTestId("bp-scene")).toHaveAttribute("data-mode", "after");
-    expect(screen.getByTestId("bp-steps")).toHaveTextContent("✓ 改善");
+    expect(screen.getByTestId("bp-steps")).toHaveTextContent("手入力をやめてデータ自動連携にする");
     scrub(30);
     expect(screen.getByTestId("sim-note")).not.toHaveTextContent("渋滞");
   });

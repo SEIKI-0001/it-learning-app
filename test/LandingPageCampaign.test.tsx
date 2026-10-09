@@ -25,6 +25,15 @@ afterEach(() => {
 });
 
 describe("landing page", () => {
+  it("renders crawlable app facts and a path to the app selection guide", () => {
+    render(<LandingPage />);
+    const overview = screen.getByRole("region", { name: "ITパスポート学習コーチは無料でどこまで使える？" });
+    expect(overview).toHaveTextContent("学習記録");
+    expect(overview).toHaveTextContent("7日間");
+    expect(overview).toHaveTextContent("インストール不要");
+    expect(screen.getByRole("link", { name: "ITパスポートアプリの選び方と無料範囲の確認方法" })).toHaveAttribute("href", "/guide/it-passport-app");
+  });
+
   it("presents Exam Readiness as an evidence score rather than a probability", () => {
     render(<LandingPage />);
 

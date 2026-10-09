@@ -28,15 +28,25 @@ export type GuideArticle = {
 };
 
 export const GUIDE_INDEX = {
-  title: "ITパスポート学習ガイド｜勉強法・勉強時間・計画・過去問の使い方",
+  title: "ITパスポート学習ガイド｜勉強法・アプリ選び・計画・過去問の使い方",
   h1: "ITパスポート学習ガイド",
   description:
-    "ITパスポート試験の勉強法、勉強時間の見積もり方、試験日から逆算する学習計画、勉強が続かないときの立て直し方、過去問の使い方、2027年度からの新試験の変更点をまとめたガイドです。",
+    "ITパスポート試験のアプリ選び、勉強法、勉強時間の見積もり方、試験日から逆算する学習計画、勉強が続かないときの立て直し方、過去問の使い方、2027年度からの新試験の変更点をまとめたガイドです。",
   datePublished: "2026-09-26",
-  dateModified: "2026-09-30",
+  dateModified: "2026-10-10",
 } as const;
 
 export const GUIDES: GuideArticle[] = [
+  {
+    slug: "it-passport-app",
+    title: "ITパスポートアプリの選び方｜無料範囲・解説・復習を確認",
+    h1: "ITパスポートの勉強アプリはどう選ぶ？無料範囲と使いやすさの確認方法",
+    description: "ITパスポートの勉強アプリを探す人向けに、無料で使える範囲、解説、復習、学習計画の確認項目を整理。初心者と過去問演習中心の人の選び方、登録前に教材を試す手順、アプリだけで勉強するときの注意点を紹介します。",
+    summary: "無料範囲・解説・復習・計画で選ぶ。登録前に教材と過去問を試す手順。",
+    datePublished: "2026-10-10",
+    dateModified: "2026-10-10",
+    related: ["it-passport-study-method", "past-exam-strategy", "study-plan"],
+  },
   {
     slug: "it-passport-study-method",
     title: "ITパスポートの勉強法｜未経験者が何から始めるかを6ステップで解説",

@@ -1420,3 +1420,39 @@ html.lp-anim .lp .reveal.in {
   line-height: 1.6;
   letter-spacing: 0.1em;
 }
+
+/* 機能・無料範囲はアニメーションを待たずに読める概要にする。 */
+.lp .app-overview {
+  background: var(--white);
+}
+.lp .app-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 28px 0;
+}
+.lp .app-facts > div {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.lp .app-facts dt {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.lp .app-facts dd {
+  margin: 0;
+  color: var(--sub);
+  line-height: 1.9;
+}
+.lp .app-facts a,
+.lp .app-guide-link a {
+  color: var(--ai);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .lp .app-facts {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}

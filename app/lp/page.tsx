@@ -13,6 +13,7 @@ import {
 import CompareTable, { type CompareRow } from './CompareTable';
 import Reveal from './Reveal';
 import { ph } from './ph';
+import AppOverview from './AppOverview';
 import './lp.css';
 
 // ============================================================================
@@ -125,7 +126,7 @@ const FAQS: { q: string; a: [string, string, string] }[] = [
   },
 ];
 
-// Google 検索のリッチリザルト用（FAQ・アプリ情報）。本文と同じデータから生成する。
+// 本文と一致するアプリ情報・FAQ。FAQの検索リッチリザルト表示は前提にしない。
 const STRUCTURED_DATA = [
   {
     '@context': 'https://schema.org',
@@ -137,7 +138,7 @@ const STRUCTURED_DATA = [
     applicationCategory: 'EducationalApplication',
     operatingSystem: 'Web',
     inLanguage: 'ja',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY', description: `${N.freeDays}日間無料。以降も教材と公式過去問は無料` },
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY', description: `教材と公式過去問は無料。学習記録の保存は登録から${N.freeDays}日間無料。無料プランのAI採点は1日${N.freeGrading}回` },
   },
   {
     '@context': 'https://schema.org',
@@ -312,6 +313,8 @@ export default function LandingPage() {
             </dl>
           </div>
         </section>
+
+        <AppOverview />
 
         {/* 困りごと */}
         <section className="wash" id="pain">

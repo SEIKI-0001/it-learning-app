@@ -14,9 +14,12 @@ import * as CantContinue from "@/app/guide/cant-continue-studying/page";
 import * as PastExam from "@/app/guide/past-exam-strategy/page";
 import * as ExamChanges2027 from "@/app/guide/exam-changes-2027/page";
 
+import * as AppSelection from "@/app/guide/it-passport-app/page";
+
 type PageModule = { default: ComponentType; metadata: Metadata };
 
 const ARTICLES: Record<string, PageModule> = {
+  "it-passport-app": AppSelection,
   "it-passport-study-method": StudyMethod,
   "study-time": StudyTime,
   "study-plan": StudyPlan,

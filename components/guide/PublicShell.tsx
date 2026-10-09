@@ -6,6 +6,7 @@ import { LP_LINK_LABEL, LP_PATH } from "@/lib/guide/seo";
 // スタイルは app/guide/guide.css（.guide スコープ）。各 layout がその CSS を読み込む。
 
 const NAV = [
+  { href: "/guide/it-passport-app", label: "アプリの選び方" },
   { href: "/guide", label: "学習ガイド" },
   { href: "/kaisetsu", label: "テーマ別解説" },
   { href: "/kakomon", label: "過去問解説" },
