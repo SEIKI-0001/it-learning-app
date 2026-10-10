@@ -20,6 +20,8 @@ const HIDDEN_ROUTE_PREFIXES = [
   // 公開ガイドは読み物。本文に重なる常駐キャラは出さない。
   "/guide",
   "/journal",
+  // 模型を全面に使う試作ページ。常駐キャラが操作の邪魔になる
+  "/netlab",
 ] as const;
 
 function isPathWithin(pathname: string, prefix: string): boolean {
