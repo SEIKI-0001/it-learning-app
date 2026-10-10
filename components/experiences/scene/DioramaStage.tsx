@@ -222,6 +222,7 @@ export function DioramaStage({
   pitchRange = [18, 78],
   onFrame,
   after,
+  pace = 2.6,
 }: {
   /** 今のステップのカメラ */
   shot: Camera;
@@ -250,6 +251,8 @@ export function DioramaStage({
   onFrame?: (ctx: { project: (p: Vec3) => { x: number; y: number }; width: number; height: number }) => void;
   /** ステージの下に置くもの */
   after?: ReactNode;
+  /** トークンが 1px 進むのにかける時間（ms）。広い模型で長い道のりを動かすときは小さくする */
+  pace?: number;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -466,7 +469,7 @@ export function DioramaStage({
       if (!travel) posMap[id] = to;
       else posMap[id] = from;
       const delay = 150 + (t.delay ?? 0);
-      const ms = path ? 900 + pathLength(path) * 2.6 : 0;
+      const ms = path ? 900 + pathLength(path) * pace : 0;
       return { id, to, path, delay, ms };
     });
     // 動かない物（現れる・消える・瞬間移動）は、次のフレームを待たずにすぐ置く

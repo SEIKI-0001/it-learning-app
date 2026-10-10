@@ -10,6 +10,8 @@ export const PUBLIC_PREFIXES = [
   "/kakomon",
   "/kaisetsu",
   "/words",
+  // ネットワーク構築ラボ（試作・noindex）
+  "/netlab",
 ] as const;
 
 export function isPublicPath(pathname: string): boolean {
