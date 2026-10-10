@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import type { Camera, Vec3 } from "@/components/experiences/scene/Diorama3D";
 import { Box } from "@/components/experiences/scene/Diorama3D";
 import {
@@ -40,6 +40,8 @@ import {
   HOP_NAME,
   PLACEABLE,
   linkKey,
+  portLabel,
+  type ConnectCheck,
   type DeviceId,
   type HopId,
   type LabState,
@@ -128,29 +130,80 @@ function PlacedDevice({ kind, at, st }: { kind: PlaceableKind; at: Point; st: Pa
   }
 }
 
+type Drag = { from: DeviceId; sx: number; sy: number; x: number; y: number; over: DeviceId | null };
+
 export default function OfficeScene({
   state,
   sim,
   selected,
-  placing,
-  wiringFrom,
-  wireTargets,
+  highlight,
   trace,
-  onSlot,
-  onDevice,
+  guide,
+  checkWire,
+  onConnect,
+  onSelect,
 }: {
   state: LabState;
   sim: Sim;
   selected: DeviceId | null;
-  placing: PlaceableKind | null;
-  wiringFrom: DeviceId | null;
-  wireTargets: DeviceId[];
+  /** Name tags to pulse ("next, connect this and this") */
+  highlight: DeviceId[];
   trace: Trace | null;
-  onSlot: (slotId: string) => void;
-  onDevice: (id: DeviceId) => void;
+  /** Card showing the next step (desktop: top-right of the model, phone: above the model) */
+  guide?: ReactNode;
+  checkWire: (a: DeviceId, b: DeviceId) => ConnectCheck;
+  onConnect: (a: DeviceId, b: DeviceId) => void;
+  onSelect: (id: DeviceId) => void;
 }) {
   const reducedMotion = useReducedMotion();
   const portrait = usePortrait();
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
+  const cleanup = useRef<(() => void) | null>(null);
+  useEffect(() => () => cleanup.current?.(), []);
+
+  // Drag from one name tag to another = draw a cable. A short press without moving = select.
+  function onChipPointerDown(e: ReactPointerEvent<HTMLButtonElement>, id: DeviceId) {
+    if (e.button !== 0 || !wrapRef.current) return;
+    e.preventDefault();
+    const box = wrapRef.current.getBoundingClientRect();
+    const r = e.currentTarget.getBoundingClientRect();
+    const sx = r.left + r.width / 2 - box.left;
+    const sy = r.top + r.height / 2 - box.top;
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+    let moved = false;
+    let over: DeviceId | null = null;
+    const move = (ev: PointerEvent) => {
+      if (!moved && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 6) return;
+      moved = true;
+      const hit = document.elementFromPoint(ev.clientX, ev.clientY)?.closest<HTMLElement>("[data-chip]");
+      over = hit && hit.dataset.chip !== id ? (hit.dataset.chip as DeviceId) : null;
+      const b = wrapRef.current?.getBoundingClientRect() ?? box;
+      setDrag({ from: id, sx: sx + box.left - b.left, sy: sy + box.top - b.top, x: ev.clientX - b.left, y: ev.clientY - b.top, over });
+    };
+    const stop = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("keydown", esc);
+      cleanup.current = null;
+      setDrag(null);
+    };
+    const up = () => {
+      stop();
+      if (!moved) onSelect(id);
+      else if (over) onConnect(id, over);
+    };
+    const cancel = () => stop();
+    const esc = (ev: KeyboardEvent) => ev.key === "Escape" && stop();
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", cancel);
+    window.addEventListener("keydown", esc);
+    cleanup.current = stop;
+  }
+  const dragCheck = drag?.over ? checkWire(drag.from, drag.over) : null;
   const points = trace ? tracePoints(state, trace.result.path) : [];
   const [shown, setShown] = useState<number | null>(null);
 
@@ -215,12 +268,11 @@ export default function OfficeScene({
 
       {/* 空いている置き場所 */}
       {SLOTS.filter((s) => !occupied.has(s.id)).map((s) => {
-        const can = placing ? s.accepts.includes(placing) : false;
         return (
           <div
             key={s.id}
             className={styles.slotMark}
-            data-on={can ? "true" : "false"}
+            data-on="false"
             data-wall={s.at.z ? "true" : "false"}
             style={{ transform: `translate3d(${s.at.x - 26}px, ${s.at.y - 20}px, ${(s.at.z ?? 0) + 1.5}px)` }}
           />
@@ -327,28 +379,24 @@ export default function OfficeScene({
           />
         </DioramaLabel>
       )}
-      {placing &&
-        SLOTS.filter((s) => !occupied.has(s.id) && s.accepts.includes(placing)).map((s) => (
-          <DioramaLabel key={s.id} at={up(s.at, (s.at.z ?? 0) + 4)} place="above" interactive>
-            <button type="button" className={styles.slotButton} onClick={() => onSlot(s.id)} data-testid={`slot-${s.id}`}>
-              ＋ ここに置く
-            </button>
-          </DioramaLabel>
-        ))}
       {presentDevices.map((id) => {
         const at = deviceAt(id, state.placed)!;
         const lift = id.startsWith("pc-") ? 100 : id === "laptop" ? 70 : id === "onu" ? 60 : id === "ap" ? (at.z ?? 0) + 30 : 90;
-        const target = wiringFrom ? wireTargets.includes(id) : false;
+        const target = drag && drag.from !== id ? checkWire(drag.from, id).ok : false;
         return (
           <DioramaLabel key={id} at={up(at, 0)} dz={lift} place="above" interactive>
             <button
               type="button"
               className={styles.chipButton}
+              data-chip={id}
               data-selected={selected === id ? "true" : "false"}
               data-target={target ? "true" : "false"}
-              data-dim={wiringFrom && !target && wiringFrom !== id ? "true" : "false"}
-              onClick={() => onDevice(id)}
-              aria-label={`${DEVICE_NAME[id]}を選ぶ`}
+              data-hint={!drag && highlight.includes(id) ? "true" : "false"}
+              data-dim={drag && !target && drag.from !== id ? "true" : "false"}
+              onPointerDown={(e) => onChipPointerDown(e, id)}
+              // Keyboard (Enter/Space) only. Pointer handles select/wire in pointerdown
+              onClick={(e) => e.detail === 0 && onSelect(id)}
+              aria-label={`${DEVICE_NAME[id]}を選ぶ（ほかの名札へドラッグするとケーブルをつなぐ）`}
               data-testid={`chip-${id}`}
             >
               {chipFor(id)}
@@ -364,8 +412,39 @@ export default function OfficeScene({
     </>
   );
 
+  const line = drag && (
+    <svg className={styles.dragLayer} aria-hidden>
+      <line
+        x1={drag.sx}
+        y1={drag.sy}
+        x2={drag.x}
+        y2={drag.y}
+        data-state={dragCheck ? (dragCheck.ok ? "ok" : "ng") : "idle"}
+        className={styles.dragLine}
+      />
+      <circle cx={drag.x} cy={drag.y} r={5} className={styles.dragDot} data-state={dragCheck ? (dragCheck.ok ? "ok" : "ng") : "idle"} />
+    </svg>
+  );
+  const dragTip = drag && (
+    <div
+      className={styles.dragTip}
+      data-state={dragCheck ? (dragCheck.ok ? "ok" : "ng") : "idle"}
+      style={{ transform: `translate(${Math.round(drag.x + 14)}px, ${Math.round(drag.y + 14)}px)` }}
+    >
+      {dragCheck
+        ? dragCheck.ok
+          ? `つなぐ：${DEVICE_NAME[drag.from]}（${portLabel(dragCheck.roleA)}）⇔ ${DEVICE_NAME[drag.over!]}（${portLabel(dragCheck.roleB)}）`
+          : dragCheck.reason
+        : "つなぎたい機器の名札の上で離す"}
+    </div>
+  );
+
   return (
+    <div className="space-y-2">
+      {portrait && guide}
+      <div ref={wrapRef} className={styles.wireWrap} data-dragging-wire={drag ? "true" : "false"}>
     <DioramaStage
+      corner={portrait ? undefined : guide}
       shot={portrait ? SHOT_PORTRAIT : SHOT}
       shotKey={`${portrait ? "p" : "l"}-${trace ? `t-${trace.key}` : "idle"}`}
       forward
@@ -383,5 +462,9 @@ export default function OfficeScene({
       pitchRange={[25, 80]}
       pace={PACE}
     />
+        {line}
+        {dragTip}
+      </div>
+    </div>
   );
 }
