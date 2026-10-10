@@ -1,0 +1,214 @@
+/* ネットワーク構築ラボ（/netlab）の模型まわり。パネルは Tailwind で組む。 */
+
+/* ONU：白い箱に緑のランプ */
+[data-face][data-face].onuFront {
+  background:
+    radial-gradient(circle at 50% 22%, #22c55e 0 2.5px, transparent 3px),
+    radial-gradient(circle at 50% 36%, #22c55e 0 2.5px, transparent 3px),
+    linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* 空いている置き場所（床の点線の四角）。置く機器を選んでいる間だけ光る */
+.slotMark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 52px;
+  height: 40px;
+  border: 2px dashed rgba(71, 85, 105, 0.35);
+  border-radius: 6px;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+.slotMark[data-wall="true"] {
+  border-color: rgba(71, 85, 105, 0.25);
+}
+
+.slotMark[data-on="true"] {
+  border-color: #2463d1;
+  background: rgba(36, 99, 209, 0.14);
+  animation: netlab-slot 1.4s ease-in-out infinite;
+}
+
+@keyframes netlab-slot {
+  50% {
+    background: rgba(36, 99, 209, 0.3);
+  }
+}
+
+[data-paused="true"] .slotMark,
+[data-reduced-motion="true"] .slotMark {
+  animation: none;
+}
+
+.slotButton {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #2463d1;
+  box-shadow: 0 4px 12px rgba(36, 99, 209, 0.35);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chipButton {
+  display: block;
+  border-radius: 12px;
+  cursor: grab;
+  /* 指で名札をドラッグしてもページがスクロールしないように */
+  touch-action: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.chipButton:hover {
+  transform: translateY(-1px);
+}
+
+.chipButton:focus-visible {
+  outline: 2px solid #2463d1;
+  outline-offset: 2px;
+}
+
+.chipButton[data-selected="true"] {
+  box-shadow: 0 0 0 2px #16191d;
+}
+
+.chipButton[data-target="true"] {
+  box-shadow: 0 0 0 2px #2463d1, 0 0 14px rgba(36, 99, 209, 0.55);
+}
+
+.chipButton[data-dim="true"] {
+  opacity: 0.35;
+}
+
+/* PC の画面：名前と IP アドレス（Screen の中は約3倍で組んで縮める） */
+.screenText {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #0f172a;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.screenText b {
+  font-size: 18px;
+  color: #475569;
+}
+
+.screenText[data-bad="true"] {
+  color: #fca5a5;
+}
+
+.screenText[data-bad="true"] b {
+  color: #94a3b8;
+}
+
+/* 狭い画面では名札を小さくして重なりを減らす（置き場所の計算は元の大きさで行うので、余白が増えるだけ） */
+@container (max-width: 520px) {
+  .chipButton {
+    transform: scale(0.82);
+    transform-origin: 50% 100%;
+  }
+
+  .chipButton:hover {
+    transform: scale(0.82);
+  }
+}
+
+/* 次にやる操作の名札：やわらかく脈打つ */
+.chipButton[data-hint="true"] {
+  animation: netlab-hint 1.3s ease-in-out infinite;
+}
+
+@keyframes netlab-hint {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(224, 138, 52, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(224, 138, 52, 0.35);
+  }
+}
+
+[data-reduced-motion="true"] .chipButton[data-hint="true"] {
+  animation: none;
+  box-shadow: 0 0 0 2px rgba(224, 138, 52, 0.9);
+}
+
+.wireWrap {
+  position: relative;
+}
+
+.wireWrap[data-dragging-wire="true"],
+.wireWrap[data-dragging-wire="true"] .chipButton {
+  cursor: grabbing;
+}
+
+/* 名札から名札へ引くケーブルの線（模型の上に重ねる SVG） */
+.dragLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dragLine {
+  stroke: #6e747d;
+  stroke-width: 3;
+  stroke-dasharray: 6 5;
+  stroke-linecap: round;
+}
+
+.dragLine[data-state="ok"] {
+  stroke: #2f8f63;
+  stroke-dasharray: none;
+}
+
+.dragLine[data-state="ng"] {
+  stroke: #e11d48;
+}
+
+.dragDot {
+  fill: #6e747d;
+}
+
+.dragDot[data-state="ok"] {
+  fill: #2f8f63;
+}
+
+.dragDot[data-state="ng"] {
+  fill: #e11d48;
+}
+
+.dragTip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 8;
+  max-width: 240px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: #16191d;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.dragTip[data-state="ok"] {
+  background: #22684a;
+}
+
+.dragTip[data-state="ng"] {
+  background: #9f1239;
+}
