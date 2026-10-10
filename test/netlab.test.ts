@@ -9,7 +9,7 @@ import {
   TESTS,
   type LabState,
 } from "@/lib/netlab/engine";
-import { MISSIONS, missionDone } from "@/lib/netlab/missions";
+import { MISSIONS, missionDone, nextCheck, type FocusField } from "@/lib/netlab/missions";
 
 const solveUpTo = (n: number) => MISSIONS.slice(0, n).reduce<LabState>((s, m) => m.solve(s), initialState());
 
@@ -95,5 +95,34 @@ describe("netlab: 配線のルール", () => {
     expect(canConnect(s, "router", "fileServer").ok).toBe(false);
     // ルータの WAN 口はまだ空いている
     expect(canConnect(s, "router", "onu")).toMatchObject({ ok: true, roleA: "wan" });
+  });
+});
+
+// 「開く」で連れていった設定欄で、利用者が選ぶであろう正しい値
+const USER_FIX: Record<FocusField, (s: LabState) => LabState> = {
+  "router.dhcp": (s) => ({ ...s, router: { ...s.router, dhcp: true } }),
+  "router.range": (s) => ({ ...s, router: { ...s.router, dhcpStart: "192.168.1.100", dhcpEnd: "192.168.1.199" } }),
+  "router.dns": (s) => ({ ...s, router: { ...s.router, dns: "router" } }),
+  "router.nat": (s) => ({ ...s, router: { ...s.router, nat: true } }),
+  "file.ip": (s) => ({ ...s, fileServer: { ip: "192.168.1.10" } }),
+  "ap.security": (s) => ({ ...s, ap: { ...s.ap, security: "wpa2" } }),
+  "fw.rules": (s) => ({ ...s, firewall: { outbound: true, inHttps: true, inOther: false } }),
+};
+
+describe("netlab: 「次にやること」だけで最後まで進める", () => {
+  it("どのミッションでも、次の一手が必ずあり、押していけば達成する（行き止まりがない）", () => {
+    let s = initialState();
+    for (const m of MISSIONS) {
+      for (let step = 0; step < 20 && !missionDone(m, s); step++) {
+        const c = nextCheck(m, s)!;
+        // 行動のない確認項目（IP が配られる等）は、その前の手で満たされているはず
+        expect(c.action, `${m.id}: ${c.label}`).toBeDefined();
+        const a = c.action!;
+        if (a.run) s = a.run(s);
+        else if (a.focus) s = USER_FIX[a.focus.field](s);
+        else if (a.test) expect(runTest(s, a.test).ok, `${m.id}: ${a.test}`).toBe(true);
+      }
+      expect(missionDone(m, s), m.id).toBe(true);
+    }
   });
 });

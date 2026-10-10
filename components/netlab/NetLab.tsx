@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Button from "@/components/ui/Button";
 import {
   DEVICE_NAME,
@@ -14,7 +14,6 @@ import {
   initialState,
   kindOf,
   neighbors,
-  place,
   portLabel,
   portRole,
   removeDevice,
@@ -27,50 +26,53 @@ import {
   type TestId,
   type TestResult,
 } from "@/lib/netlab/engine";
-import { SLOTS } from "@/lib/netlab/layout";
-import { MISSIONS, missionDone } from "@/lib/netlab/missions";
+import { MISSIONS, autoPlace, freeSlotFor, missionDone, nextCheck, type CheckAction, type FocusField } from "@/lib/netlab/missions";
 import OfficeScene, { type Trace } from "./OfficeScene";
 
 // ネットワーク構築ラボ（プロトタイプ）。
-// 左：オフィスの模型（置く・つなぐ・テストの小包）。右：ミッション／選んだ機器の設定／テストの記録。
+// 操作の手数を減らす方針：
+//   - 置く：パレットを押すだけ（決まった置き場所へ自動で置く）
+//   - つなぐ：模型の名札から名札へドラッグ（選んだ機器の設定欄からワンタップでも可）
+//   - 次に何をするか：模型の右上の「次にやること」が教え、ボタン1つでそこへ連れていく
+//   - 確かめる：ミッションを達成した瞬間にテストの小包を自動で流す
 // 進み具合はこの端末の localStorage にだけ残す（ログイン不要の試作なので）。
 
 const STORAGE_KEY = "netlab:v1";
 
 const PALETTE_NOTE: Record<PlaceableKind, string> = {
   switch: "LAN の機器をまとめる",
-  router: "LAN とインターネットの出入口",
+  router: "社内と外の出入口",
   fileServer: "社内の共有フォルダ",
   ap: "無線LANの親機",
-  firewall: "通してよい通信だけ通す",
-  webServer: "自社サイトを公開する",
+  firewall: "通す通信を選ぶ",
+  webServer: "自社サイトを公開",
 };
 
 function loadState(): LabState | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as LabState;
-    return { ...initialState(), ...parsed };
+    return { ...initialState(), ...(JSON.parse(raw) as LabState) };
   } catch {
     return null;
   }
 }
 
+const firstOpenMission = (s: LabState) => {
+  const i = MISSIONS.findIndex((m) => !missionDone(m, s));
+  return i < 0 ? MISSIONS.length - 1 : i;
+};
+
 export default function NetLab() {
   // ブラウザでだけ描く（NetLabClient が ssr:false で読む）ので、保存した進み具合を最初から使える
   const [state, setState] = useState<LabState>(() => loadState() ?? initialState());
   const [selected, setSelected] = useState<DeviceId | null>(null);
-  const [placing, setPlacing] = useState<PlaceableKind | null>(null);
-  const [wiringFrom, setWiringFrom] = useState<DeviceId | null>(null);
+  const [focus, setFocus] = useState<FocusField | null>(null);
   const [trace, setTrace] = useState<Trace | null>(null);
   const [log, setLog] = useState<(TestResult & { key: number })[]>([]);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [missionIdx, setMissionIdx] = useState(() => {
-    const firstOpen = MISSIONS.findIndex((m) => !missionDone(m, state));
-    return firstOpen < 0 ? MISSIONS.length - 1 : firstOpen;
-  });
-  const [hintOpen, setHintOpen] = useState(false);
+  const [notice, setNotice] = useState<{ text: string; tone: "info" | "ng" | "ok" } | null>(null);
+  const [missionIdx, setMissionIdx] = useState(() => firstOpenMission(state));
+  const traceKey = useRef(0);
 
   useEffect(() => {
     try {
@@ -83,81 +85,91 @@ export default function NetLab() {
   const sim = useMemo(() => simulate(state), [state]);
   const mission = MISSIONS[missionIdx];
   const checks = mission.checks(state);
+  const next = nextCheck(mission, state);
   const done = MISSIONS.map((m) => missionDone(m, state));
 
-  const present = (id: DeviceId) => FIXED_DEVICES.includes(id) || state.placed[id as PlaceableKind] !== undefined;
-  const allDevices: DeviceId[] = [...FIXED_DEVICES, ...PLACEABLE].filter(present);
-  const wireTargets = wiringFrom ? allDevices.filter((id) => canConnect(state, wiringFrom, id).ok) : [];
-
-  function update(next: LabState) {
-    setState(next);
-    setTrace(null);
-  }
-
-  function choosePalette(kind: PlaceableKind) {
-    setWiringFrom(null);
-    setNotice(null);
-    const free = SLOTS.filter((s) => s.accepts.includes(kind) && !Object.values(state.placed).includes(s.id));
-    if (free.length === 0) {
-      setNotice("置き場所が空いていません。ほかの機器を片付けてください。");
-      return;
-    }
-    setPlacing((cur) => (cur === kind ? null : kind));
-  }
-
-  function onSlot(slotId: string) {
-    if (!placing) return;
-    update(place(state, placing, slotId));
-    setSelected(placing);
-    setNotice(`${DEVICE_NAME[placing]}を置きました。名札を押して、ケーブルをつなぎましょう。`);
-    setPlacing(null);
-  }
-
-  function onDevice(id: DeviceId) {
-    if (wiringFrom) {
-      if (id === wiringFrom) {
-        setWiringFrom(null);
-        return;
-      }
-      const c = canConnect(state, wiringFrom, id);
-      if (!c.ok) {
-        setNotice(c.reason);
-        return;
-      }
-      update(connect(state, wiringFrom, id));
-      setNotice(`${DEVICE_NAME[wiringFrom]}（${portLabel(c.roleA)}）と ${DEVICE_NAME[id]}（${portLabel(c.roleB)}）をつなぎました。`);
-      setWiringFrom(null);
-      return;
-    }
-    setPlacing(null);
-    setSelected(id);
-    setNotice(null);
-  }
-
-  function test(id: TestId) {
-    const result = runTest(state, id, sim);
-    const key = (trace?.key ?? 0) + 1 + log.length;
+  function play(s: LabState, id: TestId) {
+    const result = runTest(s, id);
+    traceKey.current += 1;
+    const key = traceKey.current;
     setTrace({ key, result });
     setLog((l) => [{ ...result, key }, ...l].slice(0, 8));
+  }
+
+  /** state を変える操作はすべてここを通す。ミッションを達成した瞬間は、そのテストを自動で流して見せる */
+  function update(nextState: LabState, message?: string) {
+    const justDone = MISSIONS.findIndex((m, i) => !done[i] && missionDone(m, nextState));
+    setState(nextState);
+    if (justDone >= 0) {
+      const m = MISSIONS[justDone];
+      play(nextState, m.tests[0]);
+      setMissionIdx(justDone);
+      setNotice({ text: `ミッション達成：${m.title.replace(/^\d+\.\s*/, "")}。小包の流れで確かめてみましょう。`, tone: "ok" });
+      return;
+    }
+    setTrace(null);
+    if (message) setNotice({ text: message, tone: "info" });
+  }
+
+  function placeDevice(kind: PlaceableKind) {
+    if (!freeSlotFor(state, kind)) {
+      setNotice({ text: "置き場所が空いていません。ほかの機器を片付けてください。", tone: "ng" });
+      return;
+    }
+    update(autoPlace(state, kind), `${DEVICE_NAME[kind]}を置きました。名札をほかの機器の名札へドラッグすると、ケーブルをつなげます。`);
+    setSelected(kind);
+    setFocus(null);
+  }
+
+  function wire(a: DeviceId, b: DeviceId) {
+    const c = canConnect(state, a, b);
+    if (!c.ok) {
+      setNotice({ text: c.reason, tone: "ng" });
+      return;
+    }
+    update(connect(state, a, b), `${DEVICE_NAME[a]}（${portLabel(c.roleA)}）と ${DEVICE_NAME[b]}（${portLabel(c.roleB)}）をつなぎました。`);
+  }
+
+  function doAction(a: CheckAction) {
+    if (a.run) {
+      const before = new Set(Object.keys(state.placed));
+      const after = a.run(state);
+      const added = (Object.keys(after.placed) as PlaceableKind[]).find((k) => !before.has(k));
+      update(after, added ? `${DEVICE_NAME[added]}を置きました。` : `${a.label.replace(/をつなぐ$/, "をつなぎました").replace(/を外す$/, "を外しました")}。`);
+      if (added) setSelected(added);
+    } else if (a.focus) {
+      setSelected(a.focus.device);
+      setFocus(a.focus.field);
+    } else if (a.test) {
+      play(state, a.test);
+    }
   }
 
   function reset() {
     setState(initialState());
     setSelected(null);
-    setPlacing(null);
-    setWiringFrom(null);
+    setFocus(null);
     setTrace(null);
     setLog([]);
     setMissionIdx(0);
-    setNotice("最初からやり直します。");
+    setNotice({ text: "最初からやり直します。", tone: "info" });
   }
 
   function solve() {
     let s = state;
     for (const m of MISSIONS.slice(0, missionIdx + 1)) s = m.solve(s);
-    update(s);
-    setNotice(`「${mission.title}」の完成形にしました。テストで動きを確かめてみましょう。`);
+    update(s, `「${mission.title}」の完成形にしました。`);
   }
+
+  const guide = (
+    <GuideCard
+      missionIdx={missionIdx}
+      done={done[missionIdx]}
+      next={next}
+      onAction={doAction}
+      onNextMission={() => setMissionIdx(Math.min(MISSIONS.length - 1, missionIdx + 1))}
+    />
+  );
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-6 lg:px-6">
@@ -166,7 +178,7 @@ export default function NetLab() {
           <p className="text-xs font-semibold tracking-wide text-brand-600">プロトタイプ ・ テスト環境</p>
           <h1 className="text-2xl font-bold text-gray-900">オフィスネットワーク構築ラボ</h1>
           <p className="mt-1 text-sm text-gray-600">
-            小さな会社のオフィスに、機器を置いてケーブルでつなぎ、設定して、通信が届くか確かめます。壊しても本物には影響しません。
+            機器を置いて、名札から名札へドラッグしてケーブルをつなぐ。迷ったら「次にやること」のボタンを押すだけで進めます。
           </p>
         </div>
         <Button variant="secondary" size="sm" onClick={reset}>
@@ -174,78 +186,69 @@ export default function NetLab() {
         </Button>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]">
         {/* 右の列を読み進めても、模型（テストの小包）はいつも見えているようにする */}
         <div className="min-w-0 space-y-3 lg:sticky lg:top-4 lg:self-start">
           <OfficeScene
             state={state}
             sim={sim}
             selected={selected}
-            placing={placing}
-            wiringFrom={wiringFrom}
-            wireTargets={wireTargets}
+            highlight={next?.action?.highlight ?? []}
             trace={trace}
-            onSlot={onSlot}
-            onDevice={onDevice}
+            guide={guide}
+            checkWire={(a, b) => canConnect(state, a, b)}
+            onConnect={wire}
+            onSelect={(id) => {
+              setSelected(id);
+              setFocus(null);
+            }}
           />
 
-          {(placing || wiringFrom || notice) && (
+          {notice && (
             <div
-              className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
-                placing || wiringFrom ? "bg-brand-50 text-brand-800" : "bg-gray-100 text-gray-700"
-              }`}
               role="status"
+              className={`rounded-lg px-3 py-2 text-sm ${
+                notice.tone === "ng" ? "bg-rose-50 text-rose-800" : notice.tone === "ok" ? "bg-emerald-50 text-emerald-800" : "bg-gray-100 text-gray-700"
+              }`}
             >
-              <span>
-                {placing
-                  ? `${DEVICE_NAME[placing]}の置き場所を、模型の「＋ ここに置く」から選んでください。`
-                  : wiringFrom
-                    ? `${DEVICE_NAME[wiringFrom]}のつなぎ先を選んでください（青く光る名札）。`
-                    : notice}
-              </span>
-              {(placing || wiringFrom) && (
-                <button
-                  type="button"
-                  className="shrink-0 text-xs font-semibold underline"
-                  onClick={() => {
-                    setPlacing(null);
-                    setWiringFrom(null);
-                  }}
-                >
-                  やめる
-                </button>
-              )}
+              {notice.text}
             </div>
           )}
 
-          <section aria-labelledby="palette-h" className="rounded-xl border border-gray-200 bg-white p-3">
-            <h2 id="palette-h" className="mb-2 text-sm font-semibold text-gray-800">
-              機器を置く
-            </h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-              {PLACEABLE.map((k) => {
-                const isPlaced = !!state.placed[k];
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    disabled={isPlaced}
-                    onClick={() => choosePalette(k)}
-                    data-testid={`palette-${k}`}
-                    className={`rounded-lg border px-3 py-2 text-left transition disabled:cursor-default disabled:opacity-45 ${
-                      placing === k ? "border-brand-500 bg-brand-50" : "border-gray-200 bg-white hover:border-gray-400"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold text-gray-900">{DEVICE_NAME[k]}</span>
-                    <span className="block text-[11px] text-gray-500">{isPlaced ? "設置済み" : PALETTE_NOTE[k]}</span>
-                  </button>
-                );
-              })}
-            </div>
+          <section aria-label="機器を置く" className="grid grid-cols-3 gap-2 xl:grid-cols-6">
+            {PLACEABLE.map((k) => {
+              const isPlaced = !!state.placed[k];
+              const suggested = !isPlaced && next?.action?.run && next.action.label === `${DEVICE_NAME[k]}を置く`;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => {
+                    if (!isPlaced) return placeDevice(k);
+                    setSelected(k);
+                    setFocus(null);
+                  }}
+                  data-testid={`palette-${k}`}
+                  className={`rounded-lg border px-2.5 py-2 text-left transition ${
+                    isPlaced
+                      ? "border-gray-100 bg-gray-50 hover:bg-gray-100"
+                      : suggested
+                        ? "border-accent-400 bg-accent-50 hover:bg-accent-100"
+                        : "border-gray-200 bg-white hover:border-gray-400"
+                  }`}
+                >
+                  <span className={`block text-sm font-semibold ${isPlaced ? "text-gray-400" : "text-gray-900"}`}>
+                    {isPlaced ? "✓ " : "＋ "}
+                    {DEVICE_NAME[k]}
+                  </span>
+                  <span className="block truncate text-[11px] text-gray-500">{isPlaced ? "設置済み（押すと設定）" : PALETTE_NOTE[k]}</span>
+                </button>
+              );
+            })}
           </section>
         </div>
 
-        <aside className="min-w-0 space-y-4">
+        <aside className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:self-start lg:overflow-y-auto lg:pb-2">
           {/* ミッション */}
           <section className="rounded-xl border border-gray-200 bg-white p-4" aria-labelledby="mission-h">
             <div className="mb-3 flex gap-1.5" role="tablist" aria-label="ミッション">
@@ -256,10 +259,7 @@ export default function NetLab() {
                   role="tab"
                   aria-selected={i === missionIdx}
                   aria-label={`${m.title}${done[i] ? "（達成）" : ""}`}
-                  onClick={() => {
-                    setMissionIdx(i);
-                    setHintOpen(false);
-                  }}
+                  onClick={() => setMissionIdx(i)}
                   className={`h-8 flex-1 rounded-md text-xs font-bold transition ${
                     i === missionIdx
                       ? "bg-gray-900 text-white"
@@ -276,98 +276,84 @@ export default function NetLab() {
               {mission.title}
             </h2>
             <p className="mt-1 text-sm leading-relaxed text-gray-700">{mission.story}</p>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {mission.terms.map((t) => (
-                <span key={t} className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600">
-                  {t}
-                </span>
-              ))}
-            </div>
-            <ul className="mt-3 space-y-1.5" data-testid="mission-checks">
-              {checks.map((c) => (
-                <li key={c.label} className="flex gap-2 text-sm">
-                  <span
-                    aria-hidden
-                    className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full text-[10px] font-bold ${
-                      c.ok ? "bg-emerald-500 text-white" : "border border-gray-300 text-transparent"
-                    }`}
-                  >
-                    ✓
-                  </span>
-                  <span className={c.ok ? "text-gray-500 line-through decoration-gray-300" : "text-gray-800"}>
-                    {c.label}
-                    {!c.ok && hintOpen && c.hint && <span className="mt-0.5 block text-xs text-brand-700">{c.hint}</span>}
-                  </span>
-                </li>
-              ))}
+            <ul className="mt-3 space-y-1" data-testid="mission-checks">
+              {checks.map((c) => {
+                const isNext = c === next;
+                return (
+                  <li key={c.label} className={`flex items-start gap-2 rounded-md px-1.5 py-1 text-sm ${isNext ? "bg-accent-50" : ""}`}>
+                    <span
+                      aria-hidden
+                      className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full text-[10px] font-bold ${
+                        c.ok ? "bg-emerald-500 text-white" : isNext ? "border-2 border-accent-500" : "border border-gray-300"
+                      }`}
+                    >
+                      {c.ok ? "✓" : ""}
+                    </span>
+                    <span className={`flex-1 ${c.ok ? "text-gray-400" : "text-gray-800"}`}>{c.label}</span>
+                    {!c.ok && c.action && (
+                      <button
+                        type="button"
+                        className="shrink-0 rounded px-1.5 py-0.5 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+                        onClick={() => doAction(c.action!)}
+                      >
+                        {c.action.test ? "確かめる" : c.action.focus ? "開く" : "やる"}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
-            {done[missionIdx] ? (
-              <div className="mt-3 flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-                <span className="font-semibold">ミッション達成</span>
-                {missionIdx < MISSIONS.length - 1 && (
-                  <button type="button" className="text-xs font-semibold underline" onClick={() => setMissionIdx(missionIdx + 1)}>
-                    次へ進む
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="mt-3 flex gap-3 text-xs">
-                <button type="button" className="font-semibold text-brand-700 underline" onClick={() => setHintOpen((v) => !v)}>
-                  {hintOpen ? "ヒントを隠す" : "ヒントを見る"}
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-gray-100 pt-2 text-xs text-gray-500">
+              <span className="flex flex-wrap gap-1">
+                {mission.terms.map((t) => (
+                  <span key={t} className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px]">
+                    {t}
+                  </span>
+                ))}
+              </span>
+              {!done[missionIdx] && (
+                <button type="button" className="ml-auto underline" onClick={solve}>
+                  答えを見る
                 </button>
-                <button type="button" className="text-gray-500 underline" onClick={solve}>
-                  答えを見る（完成形にする）
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </section>
 
           <Inspector
             state={state}
             sim={sim}
             id={selected}
-            wiring={wiringFrom === selected && selected !== null}
-            wireTargets={wireTargets}
-            onStartWire={() => {
-              setPlacing(null);
-              setWiringFrom(selected);
-            }}
-            onPickTarget={onDevice}
-            onDisconnect={(a, b) => update(disconnect(state, a, b))}
+            focus={focus}
+            onWire={wire}
+            onDisconnect={(a, b) => update(disconnect(state, a, b), `${DEVICE_NAME[a]}と${DEVICE_NAME[b]}のケーブルを外しました。`)}
             onRemove={(k) => {
-              update(removeDevice(state, k));
+              update(removeDevice(state, k), `${DEVICE_NAME[k]}を片付けました。`);
               setSelected(null);
-              setWiringFrom(null);
             }}
-            onChange={update}
+            onChange={(s) => update(s)}
           />
 
-          {/* テスト */}
-          <section className="rounded-xl border border-gray-200 bg-white p-4" aria-labelledby="test-h">
-            <h2 id="test-h" className="text-sm font-semibold text-gray-800">
+          {/* テストの記録（ミッションのテストは「次にやること」・チェックリストから流せる。ここは自由に試す用） */}
+          <details className="rounded-xl border border-gray-200 bg-white p-4" open={log.length > 0}>
+            <summary className="cursor-pointer text-sm font-semibold text-gray-800">
               通信テスト
-            </h2>
-            <p className="mb-2 text-xs text-gray-500">押すと、模型の中を小包が流れます。届かなければ止まった所で理由を表示します。</p>
-            <div className="flex flex-wrap gap-1.5">
-              {TESTS.map((t) => {
-                const focus = mission.tests.includes(t.id);
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => test(t.id)}
-                    data-testid={`test-${t.id}`}
-                    className={`rounded-md border px-2 py-1 text-xs transition ${
-                      focus ? "border-gray-900 bg-gray-900 text-white hover:bg-black" : "border-gray-200 text-gray-700 hover:border-gray-400"
-                    }`}
-                  >
-                    {t.title}
-                  </button>
-                );
-              })}
+              <span className="ml-2 text-xs font-normal text-gray-500">自由に試す・記録を見る</span>
+            </summary>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {TESTS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => play(state, t.id)}
+                  data-testid={`test-${t.id}`}
+                  className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-700 transition hover:border-gray-400"
+                >
+                  {t.title}
+                </button>
+              ))}
             </div>
             {log.length > 0 && (
-              <ol className="mt-3 max-h-80 space-y-2 overflow-y-auto rounded-lg bg-gray-950 p-3 font-mono text-[12px] leading-relaxed text-gray-200" data-testid="test-log">
+              <ol className="mt-3 space-y-2 rounded-lg bg-gray-950 p-3 font-mono text-[12px] leading-relaxed text-gray-200" data-testid="test-log">
                 {log.map((r) => (
                   <li key={r.key} className="border-b border-gray-800 pb-2 last:border-0 last:pb-0">
                     <div className={`font-bold ${r.ok ? "text-emerald-400" : "text-rose-400"}`}>
@@ -383,21 +369,113 @@ export default function NetLab() {
                 ))}
               </ol>
             )}
-          </section>
+          </details>
         </aside>
       </div>
     </div>
   );
 }
 
-function Toggle({ label, on, onChange, note }: { label: string; on: boolean; onChange: (v: boolean) => void; note?: string }) {
+/** 模型の右上（スマホでは上）に出す「次にやること」。ボタン1つでその操作をする／設定を開く／テストを流す */
+function GuideCard({
+  missionIdx,
+  done,
+  next,
+  onAction,
+  onNextMission,
+}: {
+  missionIdx: number;
+  done: boolean;
+  next: ReturnType<typeof nextCheck>;
+  onAction: (a: CheckAction) => void;
+  onNextMission: () => void;
+}) {
+  const last = missionIdx === MISSIONS.length - 1;
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-3 py-1.5">
+    <div
+      className="w-[290px] rounded-xl bg-white/95 p-3 text-left shadow-[0_6px_20px_rgba(15,23,42,0.14)] ring-1 ring-black/5 max-sm:w-full"
+      data-no-drag=""
+      data-testid="guide"
+    >
+      {done ? (
+        <>
+          <p className="text-[11px] font-semibold text-emerald-700">ミッション {missionIdx + 1} 達成</p>
+          <p className="mt-0.5 text-sm font-bold text-gray-900">{last ? "オフィスのネットワークが完成しました" : "次のミッションへ進もう"}</p>
+          {!last && (
+            <button
+              type="button"
+              onClick={onNextMission}
+              className="mt-2 w-full rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black"
+              data-testid="guide-next"
+            >
+              ミッション {missionIdx + 2} へ
+            </button>
+          )}
+        </>
+      ) : next ? (
+        <>
+          <p className="text-[11px] font-semibold text-accent-700">
+            ミッション {missionIdx + 1} ・ 次にやること
+          </p>
+          <p className="mt-0.5 text-sm font-bold leading-snug text-gray-900">{next.label}</p>
+          {next.hint && <p className="mt-1 text-xs leading-relaxed text-gray-600">{next.hint}</p>}
+          {next.action && (
+            <button
+              type="button"
+              onClick={() => onAction(next.action!)}
+              className="mt-2 w-full rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white hover:bg-black"
+              data-testid="guide-action"
+            >
+              {next.action.label}
+            </button>
+          )}
+          {next.action?.highlight && next.action.run && (
+            <p className="mt-1.5 text-[11px] text-gray-500">光っている名札どうしをドラッグしてもつなげます</p>
+          )}
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/** 「開く」で連れてきた設定欄を目立たせ、見える位置までスクロールする */
+function Spot({ on, children }: { on: boolean; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (on) ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [on]);
+  return (
+    <div ref={ref} className={`-mx-2 rounded-lg px-2 transition ${on ? "bg-accent-50 ring-2 ring-accent-400" : ""}`}>
+      {children}
+    </div>
+  );
+}
+
+function Toggle({
+  label,
+  on,
+  onChange,
+  note,
+  testId,
+}: {
+  label: string;
+  on: boolean;
+  onChange: (v: boolean) => void;
+  note?: string;
+  testId?: string;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-3 py-1.5">
       <span className="text-sm text-gray-800">
         {label}
         {note && <span className="block text-[11px] text-gray-500">{note}</span>}
       </span>
-      <input type="checkbox" className="mt-1 h-4 w-4 accent-gray-900" checked={on} onChange={(e) => onChange(e.target.checked)} />
+      {/* 大きめのスイッチ（チェックボックスより押しやすい） */}
+      <span className="relative inline-flex shrink-0">
+        <input type="checkbox" className="peer sr-only" checked={on} onChange={(e) => onChange(e.target.checked)} data-testid={testId} />
+        <span className="h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-emerald-500 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500" />
+        <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
+      </span>
     </label>
   );
 }
@@ -417,14 +495,55 @@ function Field({ label, value, onChange, testId }: { label: string; value: strin
   );
 }
 
+/** 選択肢を横並びのボタンで（プルダウンを開く手間をなくす） */
+function Choice<T extends string>({
+  label,
+  note,
+  value,
+  options,
+  onChange,
+  testId,
+}: {
+  label: string;
+  note?: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+  testId?: string;
+}) {
+  return (
+    <div className="py-1.5" role="radiogroup" aria-label={label} data-testid={testId}>
+      <p className="text-sm text-gray-800">
+        {label}
+        {note && <span className="ml-1 text-[11px] text-gray-500">{note}</span>}
+      </p>
+      <div className="mt-1 flex flex-wrap gap-1">
+        {options.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={value === o.value}
+            onClick={() => onChange(o.value)}
+            data-value={o.value}
+            className={`rounded-md border px-2.5 py-1 text-xs transition ${
+              value === o.value ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-700 hover:border-gray-400"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Inspector({
   state,
   sim,
   id,
-  wiring,
-  wireTargets,
-  onStartWire,
-  onPickTarget,
+  focus,
+  onWire,
   onDisconnect,
   onRemove,
   onChange,
@@ -432,18 +551,21 @@ function Inspector({
   state: LabState;
   sim: ReturnType<typeof simulate>;
   id: DeviceId | null;
-  wiring: boolean;
-  wireTargets: DeviceId[];
-  onStartWire: () => void;
-  onPickTarget: (id: DeviceId) => void;
+  focus: FocusField | null;
+  onWire: (a: DeviceId, b: DeviceId) => void;
   onDisconnect: (a: DeviceId, b: DeviceId) => void;
   onRemove: (k: PlaceableKind) => void;
   onChange: (s: LabState) => void;
 }) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (id) ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [id]);
+
   if (!id) {
     return (
       <section className="rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-500">
-        模型の名札を押すと、その機器の設定とケーブルの状態がここに出ます。
+        模型の名札を押すと、その機器の設定がここに出ます。
       </section>
     );
   }
@@ -453,9 +575,11 @@ function Inspector({
   const removable = (PLACEABLE as string[]).includes(id);
   const r = state.router;
   const setRouter = (patch: Partial<typeof r>) => onChange({ ...state, router: { ...r, ...patch } });
+  const present = (d: DeviceId) => FIXED_DEVICES.includes(d) || state.placed[d as PlaceableKind] !== undefined;
+  const targets = ([...FIXED_DEVICES, ...PLACEABLE] as DeviceId[]).filter((d) => present(d) && canConnect(state, id, d).ok);
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-4" aria-labelledby="inspector-h" data-testid="inspector">
+    <section ref={ref} className="scroll-mt-4 rounded-xl border border-gray-200 bg-white p-4" aria-labelledby="inspector-h" data-testid="inspector">
       <div className="flex items-start justify-between gap-2">
         <h2 id="inspector-h" className="text-base font-bold text-gray-900">
           {DEVICE_NAME[id]}
@@ -474,8 +598,6 @@ function Inspector({
             {h?.ip ?? "なし"}
             {h?.conflict && "（重複）"}
           </dd>
-          <dt className="text-gray-500">取得方法</dt>
-          <dd className="text-gray-900">{h?.source === "dhcp" ? "DHCP（自動）" : h?.source === "static" ? "固定" : h?.source === "public" ? "公開用（DMZ）" : "—"}</dd>
           {h?.source === "dhcp" && (
             <>
               <dt className="text-gray-500">ゲートウェイ</dt>
@@ -490,130 +612,149 @@ function Inspector({
 
       {k === "router" && (
         <div className="mt-2 divide-y divide-gray-100">
-          <Field label="LAN 側 IP アドレス" value={r.lanIp} onChange={(v) => setRouter({ lanIp: v })} testId="router-lanip" />
-          <Toggle label="DHCP サーバ" note="LAN の機器に IP アドレスを自動で配る" on={r.dhcp} onChange={(v) => setRouter({ dhcp: v })} />
-          {r.dhcp && (
-            <>
+          <Spot on={focus === "router.dhcp"}>
+            <Toggle label="DHCP サーバ" note="LAN の機器に IP アドレスを自動で配る" on={r.dhcp} onChange={(v) => setRouter({ dhcp: v })} testId="router-dhcp" />
+          </Spot>
+          <Spot on={focus === "router.dns"}>
+            <Choice<DnsChoice>
+              label="DNS サーバ"
+              note="名前 → IP アドレスに変える先"
+              value={r.dns}
+              onChange={(v) => setRouter({ dns: v })}
+              testId="router-dns"
+              options={[
+                { value: "", label: "未設定" },
+                { value: "router", label: "ルータに任せる" },
+                { value: "isp", label: "プロバイダ" },
+                { value: "public", label: "8.8.8.8" },
+              ]}
+            />
+          </Spot>
+          <Spot on={focus === "router.nat"}>
+            <Toggle label="NAT" note="外へ出るとき、プライベート IP をグローバル IP に付け替える" on={r.nat} onChange={(v) => setRouter({ nat: v })} />
+          </Spot>
+          <Spot on={focus === "router.range"}>
+            <details open={focus === "router.range" || !!sim.dhcpProblem} className="py-1.5">
+              <summary className="cursor-pointer text-xs text-gray-500">アドレスの詳細設定</summary>
+              <Field label="LAN 側 IP アドレス" value={r.lanIp} onChange={(v) => setRouter({ lanIp: v })} testId="router-lanip" />
               <Field label="配布範囲（始め）" value={r.dhcpStart} onChange={(v) => setRouter({ dhcpStart: v })} />
               <Field label="配布範囲（終わり）" value={r.dhcpEnd} onChange={(v) => setRouter({ dhcpEnd: v })} />
               {sim.dhcpProblem && <p className="py-1 text-xs text-rose-600">{sim.dhcpProblem}</p>}
-            </>
-          )}
-          <label className="flex items-center justify-between gap-3 py-1.5">
-            <span className="text-sm text-gray-800">
-              DNS サーバ
-              <span className="block text-[11px] text-gray-500">名前 → IP アドレスに変換する先</span>
-            </span>
-            <select
-              className="rounded-md border border-gray-300 px-2 py-1 text-sm"
-              value={r.dns}
-              onChange={(e) => setRouter({ dns: e.target.value as DnsChoice })}
-              data-testid="router-dns"
-            >
-              <option value="">未設定</option>
-              <option value="router">ルータに任せる</option>
-              <option value="isp">プロバイダの DNS</option>
-              <option value="public">パブリック DNS（8.8.8.8）</option>
-            </select>
-          </label>
-          <Toggle label="NAT" note="社内のプライベート IP を、外に出るときグローバル IP に付け替える" on={r.nat} onChange={(v) => setRouter({ nat: v })} />
-          <p className="pt-2 text-[11px] text-gray-500">サブネットマスクは 255.255.255.0（/24）で固定しています。</p>
+              <p className="pt-1 text-[11px] text-gray-500">サブネットマスクは 255.255.255.0（/24）固定。</p>
+            </details>
+          </Spot>
         </div>
       )}
 
       {k === "fileServer" && (
-        <div className="mt-2">
-          <Field label="固定 IP アドレス" value={state.fileServer.ip} onChange={(v) => onChange({ ...state, fileServer: { ip: v } })} testId="file-ip" />
-          {r.dhcp && (
-            <p className="text-[11px] text-gray-500">
-              参考：DHCP の配布範囲は {r.dhcpStart} 〜 {r.dhcpEnd}
-            </p>
-          )}
-        </div>
+        <Spot on={focus === "file.ip"}>
+          <div className="mt-2">
+            <Field label="固定 IP アドレス" value={state.fileServer.ip} onChange={(v) => onChange({ ...state, fileServer: { ip: v } })} testId="file-ip" />
+            <div className="flex flex-wrap items-center gap-1 pb-1.5">
+              <span className="text-[11px] text-gray-500">候補：</span>
+              {["192.168.1.10", "192.168.1.150", "192.168.2.10"].map((ip) => (
+                <button
+                  key={ip}
+                  type="button"
+                  className="rounded border border-gray-200 px-1.5 py-0.5 font-mono text-[11px] text-gray-700 hover:border-gray-400"
+                  onClick={() => onChange({ ...state, fileServer: { ip } })}
+                  data-testid={`file-ip-${ip}`}
+                >
+                  {ip}
+                </button>
+              ))}
+            </div>
+            {r.dhcp && (
+              <p className="pb-1 text-[11px] text-gray-500">
+                DHCP の配布範囲：{r.dhcpStart} 〜 {r.dhcpEnd}
+              </p>
+            )}
+          </div>
+        </Spot>
       )}
 
       {k === "ap" && (
-        <div className="mt-2 divide-y divide-gray-100">
-          <label className="flex items-center justify-between gap-3 py-1">
-            <span className="text-sm text-gray-800">SSID（ネットワーク名）</span>
-            <input
-              className="w-36 rounded-md border border-gray-300 px-2 py-1 text-sm"
-              value={state.ap.ssid}
-              onChange={(e) => onChange({ ...state, ap: { ...state.ap, ssid: e.target.value } })}
-            />
-          </label>
-          <label className="flex items-center justify-between gap-3 py-1.5">
-            <span className="text-sm text-gray-800">暗号化</span>
-            <select
-              className="rounded-md border border-gray-300 px-2 py-1 text-sm"
-              value={state.ap.security}
-              onChange={(e) => onChange({ ...state, ap: { ...state.ap, security: e.target.value as typeof state.ap.security } })}
-              data-testid="ap-security"
-            >
-              <option value="none">なし（パスワードなし）</option>
-              <option value="wpa2">WPA2</option>
-              <option value="wpa3">WPA3</option>
-            </select>
-          </label>
-        </div>
+        <Spot on={focus === "ap.security"}>
+          <Choice
+            label="暗号化"
+            value={state.ap.security}
+            onChange={(v) => onChange({ ...state, ap: { ...state.ap, security: v } })}
+            testId="ap-security"
+            options={[
+              { value: "none", label: "なし" },
+              { value: "wpa2", label: "WPA2" },
+              { value: "wpa3", label: "WPA3" },
+            ]}
+          />
+        </Spot>
       )}
 
       {k === "firewall" && (
-        <div className="mt-2 divide-y divide-gray-100">
-          <p className="pb-1 text-[11px] text-gray-500">上から順に照らし合わせ、どれにも当たらない通信は拒否します。</p>
-          <Toggle label="社内 → インターネット：許可" on={state.firewall.outbound} onChange={(v) => onChange({ ...state, firewall: { ...state.firewall, outbound: v } })} />
-          <Toggle
-            label="インターネット → DMZ の 443（HTTPS）：許可"
-            on={state.firewall.inHttps}
-            onChange={(v) => onChange({ ...state, firewall: { ...state.firewall, inHttps: v } })}
-          />
-          <Toggle
-            label="インターネット → DMZ の全ポート：許可"
-            note="SSH（22）など管理用の口まで開く"
-            on={state.firewall.inOther}
-            onChange={(v) => onChange({ ...state, firewall: { ...state.firewall, inOther: v } })}
-          />
-          <p className="pt-1.5 text-[11px] text-gray-500">インターネット → 社内 LAN：常に拒否</p>
-        </div>
+        <Spot on={focus === "fw.rules"}>
+          <div className="mt-1 divide-y divide-gray-100">
+            <Toggle
+              label="社内 → インターネット"
+              note="社員が外のサイトを見る"
+              on={state.firewall.outbound}
+              onChange={(v) => onChange({ ...state, firewall: { ...state.firewall, outbound: v } })}
+            />
+            <Toggle
+              label="外 → DMZ の 443（HTTPS）"
+              note="お客さんが自社サイトを見る口"
+              on={state.firewall.inHttps}
+              onChange={(v) => onChange({ ...state, firewall: { ...state.firewall, inHttps: v } })}
+              testId="fw-https"
+            />
+            <Toggle
+              label="外 → DMZ の全ポート"
+              note="SSH（22）など管理用の口まで開く"
+              on={state.firewall.inOther}
+              onChange={(v) => onChange({ ...state, firewall: { ...state.firewall, inOther: v } })}
+            />
+            <p className="py-1.5 text-[11px] text-gray-500">外 → 社内 LAN は常に拒否</p>
+          </div>
+        </Spot>
       )}
 
       {k === "onu" && <p className="mt-2 text-sm text-gray-600">光回線の終端装置。ここから先がプロバイダ（インターネット）です。</p>}
-      {k === "switch" && <p className="mt-2 text-sm text-gray-600">8口。つないだ機器を1つの LAN にまとめ、宛先の機器にだけデータを届けます。</p>}
+      {k === "switch" && <p className="mt-2 text-sm text-gray-600">8口。つないだ機器を1つの LAN にまとめます。</p>}
 
-      {/* ケーブル */}
+      {/* ケーブル：つながっている相手と、ワンタップでつなげる相手 */}
       {k !== "laptop" ? (
         <div className="mt-3 border-t border-gray-100 pt-3">
           <h3 className="mb-1.5 text-xs font-semibold text-gray-500">ケーブル</h3>
-          {ns.length === 0 && <p className="text-sm text-gray-500">まだ何もつながっていません。</p>}
-          <ul className="space-y-1">
-            {ns.map((n) => (
-              <li key={n} className="flex items-center justify-between text-sm">
-                <span>
-                  <span className="mr-1.5 rounded bg-gray-100 px-1 font-mono text-[10px] text-gray-600">{portLabel(portRole(id, n))}</span>
-                  {DEVICE_NAME[n]}
-                </span>
-                <button type="button" className="text-xs text-gray-500 underline" onClick={() => onDisconnect(id, n)}>
-                  外す
-                </button>
-              </li>
-            ))}
-          </ul>
-          {wiring ? (
-            <div className="mt-2">
-              <p className="mb-1 text-xs text-brand-700">つなぎ先（模型の青い名札でも選べます）</p>
-              <div className="flex flex-wrap gap-1">
-                {wireTargets.length === 0 && <span className="text-xs text-gray-500">つなげる相手がありません（ポートが空いていない）。</span>}
-                {wireTargets.map((t) => (
-                  <button key={t} type="button" className="rounded-md border border-brand-300 bg-brand-50 px-2 py-1 text-xs text-brand-800" onClick={() => onPickTarget(t)}>
-                    {DEVICE_NAME[t]}
+          {ns.length > 0 && (
+            <ul className="mb-2 space-y-1">
+              {ns.map((n) => (
+                <li key={n} className="flex items-center justify-between text-sm">
+                  <span>
+                    <span className="mr-1.5 rounded bg-gray-100 px-1 font-mono text-[10px] text-gray-600">{portLabel(portRole(id, n))}</span>
+                    {DEVICE_NAME[n]}
+                  </span>
+                  <button type="button" className="text-xs text-gray-500 underline" onClick={() => onDisconnect(id, n)}>
+                    外す
                   </button>
-                ))}
-              </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {targets.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="text-[11px] text-gray-500">つなぐ：</span>
+              {targets.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className="rounded-md border border-brand-200 bg-brand-50 px-2 py-0.5 text-xs text-brand-800 hover:bg-brand-100"
+                  onClick={() => onWire(id, t)}
+                  data-testid={`wire-${t}`}
+                >
+                  ＋ {DEVICE_NAME[t]}
+                </button>
+              ))}
             </div>
           ) : (
-            <Button variant="soft" size="sm" className="mt-2 w-full" onClick={onStartWire} data-testid="start-wire">
-              ケーブルをつなぐ
-            </Button>
+            <p className="text-xs text-gray-500">つなげる相手がありません（ポートが空いていないか、相手がまだ置かれていない）。</p>
           )}
         </div>
       ) : (

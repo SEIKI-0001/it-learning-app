@@ -56,7 +56,9 @@
 .chipButton {
   display: block;
   border-radius: 12px;
-  cursor: pointer;
+  cursor: grab;
+  /* 指で名札をドラッグしてもページがスクロールしないように */
+  touch-action: none;
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
@@ -118,4 +120,95 @@
   .chipButton:hover {
     transform: scale(0.82);
   }
+}
+
+/* 次にやる操作の名札：やわらかく脈打つ */
+.chipButton[data-hint="true"] {
+  animation: netlab-hint 1.3s ease-in-out infinite;
+}
+
+@keyframes netlab-hint {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(224, 138, 52, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(224, 138, 52, 0.35);
+  }
+}
+
+[data-reduced-motion="true"] .chipButton[data-hint="true"] {
+  animation: none;
+  box-shadow: 0 0 0 2px rgba(224, 138, 52, 0.9);
+}
+
+.wireWrap {
+  position: relative;
+}
+
+.wireWrap[data-dragging-wire="true"],
+.wireWrap[data-dragging-wire="true"] .chipButton {
+  cursor: grabbing;
+}
+
+/* 名札から名札へ引くケーブルの線（模型の上に重ねる SVG） */
+.dragLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.dragLine {
+  stroke: #6e747d;
+  stroke-width: 3;
+  stroke-dasharray: 6 5;
+  stroke-linecap: round;
+}
+
+.dragLine[data-state="ok"] {
+  stroke: #2f8f63;
+  stroke-dasharray: none;
+}
+
+.dragLine[data-state="ng"] {
+  stroke: #e11d48;
+}
+
+.dragDot {
+  fill: #6e747d;
+}
+
+.dragDot[data-state="ok"] {
+  fill: #2f8f63;
+}
+
+.dragDot[data-state="ng"] {
+  fill: #e11d48;
+}
+
+.dragTip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 8;
+  max-width: 240px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: #16191d;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.dragTip[data-state="ok"] {
+  background: #22684a;
+}
+
+.dragTip[data-state="ng"] {
+  background: #9f1239;
 }
