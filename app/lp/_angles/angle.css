@@ -1,0 +1,252 @@
+/* ============================================================================
+   切り口別LP（/lp/15min・/lp/retry）の追加スタイル。lp.css の上に乗せる。
+   lp.css と同じく .lp 配下にスコープし、Tailwind のユーティリティ名と
+   衝突しないよう独自クラスは ag- 接頭辞にする。
+   ========================================================================== */
+
+/* /lp と違いヒーロー直下に収録数グリッドが無いので、下の余白を足す */
+.lp.ag .hero {
+  padding-bottom: 88px;
+}
+@media (max-width: 640px) {
+  .lp.ag .hero {
+    padding-bottom: 48px;
+  }
+}
+.lp .top-in .btn.ag-top-cta {
+  margin-left: auto;
+}
+
+/* ---- 学習量チップ（15min） ---- */
+.lp .ag-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.lp .ag-chips-label {
+  color: var(--sub);
+  font-size: 0.78rem;
+  margin-right: 4px;
+}
+.lp .ag-chip {
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 2px 14px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--body);
+  font-variant-numeric: tabular-nums;
+}
+.lp .ag-chip.on {
+  border-color: var(--ai);
+  background: var(--ai);
+  color: #fff;
+}
+.lp .ag-meter {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+.lp .ag-meter-bar {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ai-soft);
+  overflow: hidden;
+}
+.lp .ag-meter-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--wakaba);
+}
+.lp .ag-meter-txt {
+  font-size: 0.8rem;
+  color: var(--body);
+}
+
+/* ---- 1日の流れ（15min） ---- */
+.lp .ag-scenes {
+  list-style: none;
+  padding: 0;
+  margin: 40px 0 0;
+  display: grid;
+  gap: 14px;
+  max-width: 44em;
+}
+.lp .ag-scenes li {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 18px;
+  align-items: start;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 22px;
+}
+.lp .ag-time {
+  font-family: var(--disp);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--ai);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+.lp .ag-place {
+  font-weight: 700;
+}
+.lp .ag-scene-txt {
+  color: var(--body);
+  font-size: 0.94rem;
+  margin-top: 2px;
+}
+@media (max-width: 520px) {
+  .lp .ag-scenes li {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 16px 18px;
+  }
+  .lp .ag-time {
+    font-size: 1.1rem;
+  }
+}
+
+/* ---- 3つの要点（共通） ---- */
+.lp .ag-points {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 44px;
+}
+@media (max-width: 860px) {
+  .lp .ag-points {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 32px;
+  }
+}
+.lp .ag-point {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 26px 24px 24px;
+}
+.lp .ag-point .no {
+  font-family: var(--disp);
+  color: var(--shu);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+.lp .ag-point h3 {
+  font-size: 1.2rem;
+  margin-top: 6px;
+}
+.lp .ag-point p {
+  color: var(--body);
+  font-size: 0.94rem;
+  margin-top: 10px;
+}
+
+/* ---- 体験への導線（15min） ---- */
+.lp .ag-try .btn {
+  margin-top: 28px;
+}
+
+/* ---- 分野別バー（retry） ---- */
+.lp .ag-bars {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 14px;
+}
+.lp .ag-bars li {
+  display: grid;
+  grid-template-columns: 6.5em 1fr 2.2em;
+  gap: 12px;
+  align-items: center;
+}
+.lp .ag-bar-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.lp .ag-bar {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--wash);
+  overflow: hidden;
+}
+.lp .ag-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ai);
+}
+.lp .ag-bar-num {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lp .ag-bars li.weak .ag-bar > span {
+  background: var(--shu);
+}
+.lp .ag-bars li.weak .ag-bar-num,
+.lp .ag-bars li.weak .ag-bar-label {
+  color: var(--shu);
+}
+.lp .ag-fields .mock-foot b {
+  display: block;
+}
+
+/* ---- 合格基準（retry） ---- */
+.lp .ag-rule {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin: 36px 0 8px;
+  max-width: 44em;
+}
+.lp .ag-rule > div {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.lp .ag-rule-k {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--sub);
+}
+.lp .ag-rule-v {
+  font-size: 1.05rem;
+  margin-top: 4px;
+}
+.lp .ag-rule-v b {
+  font-family: var(--disp);
+  font-size: 1.35rem;
+  color: var(--ink);
+  background-image: linear-gradient(transparent 70%, rgba(217, 68, 44, 0.28) 70%);
+}
+.lp .ag-rule-s {
+  color: var(--sub);
+  font-size: 0.78rem;
+}
+.lp .ag-rule-and {
+  font-family: var(--disp);
+  font-weight: 600;
+  color: var(--shu);
+}
+@media (max-width: 640px) {
+  .lp .ag-rule {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: left;
+  }
+  .lp .ag-rule-and {
+    text-align: center;
+  }
+}
