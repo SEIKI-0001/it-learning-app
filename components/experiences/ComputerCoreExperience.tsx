@@ -371,10 +371,12 @@ function DataFlow() {
   const reducedMotion = useReducedMotion();
   const [power, setPower] = useState<Power>("on");
   const [showDetail, setShowDetail] = useState(false);
+  /** 「停止」を押して止めている（「再開」で続きから） */
+  const [stopped, setStopped] = useState(false);
   const [tried, setTried] = useState<{ lost: boolean; safe: boolean }>({ lost: false, safe: false });
   const player = usePhasePlayer(
     STEPS.map((s) => s.phases.length),
-    showDetail || power !== "on",
+    stopped || showDetail || power !== "on",
   );
   const idx = player.step;
   const step = STEPS[idx];
@@ -382,13 +384,18 @@ function DataFlow() {
 
   function move(next: number) {
     setPower("on");
+    setStopped(false);
     player.move(next);
   }
 
   function replay() {
     setPower("on");
+    setStopped(false);
     player.replay();
   }
+
+  // 再生ボタンは状況で役割が変わる：再生中＝停止 / 停止中＝再開 / 見終わった（または電源OFFの実験中）＝もう一度見る
+  const playState: "playing" | "stopped" | "done" = power !== "on" || player.done ? "done" : stopped ? "stopped" : "playing";
 
   function powerOff() {
     setPower("off");
@@ -409,6 +416,7 @@ function DataFlow() {
         reducedMotion,
         caption: pv.caption,
         epoch: player.run,
+        paused: showDetail,
       }
     : {
         nodes: phase.nodes,
@@ -421,6 +429,7 @@ function DataFlow() {
         reducedMotion,
         caption: phase.caption,
         epoch: player.run,
+        paused: stopped || showDetail,
       };
 
   const navBtn =
@@ -456,8 +465,14 @@ function DataFlow() {
         <button type="button" onClick={() => move(idx - 1)} disabled={idx === 0 && power === "on"} className={`${navBtn} bg-white text-gray-700 ring-1 ring-gray-300`} aria-label="前のSTEPへ">
           ← 戻る
         </button>
-        <button type="button" onClick={replay} className={`${navBtn} bg-white text-gray-700 ring-1 ring-gray-300`}>
-          ↻ もう一度見る
+        <button
+          type="button"
+          onClick={playState === "playing" ? () => setStopped(true) : playState === "stopped" ? () => setStopped(false) : replay}
+          className={`${navBtn} min-w-[8.5rem] bg-white text-gray-700 ring-1 ring-gray-300`}
+          data-testid="cc-play"
+          data-state={playState}
+        >
+          {playState === "playing" ? "⏸ 停止" : playState === "stopped" ? "▶ 再開" : "↻ もう一度見る"}
         </button>
         {/* 場面が残っている間は押せない（途中で押して見逃さないように）。電源OFFの実験中は戻るために押せる */}
         <button

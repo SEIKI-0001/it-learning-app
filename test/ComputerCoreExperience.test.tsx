@@ -102,6 +102,22 @@ describe("ComputerCoreExperience", () => {
     expect(screen.getByTestId("cc-step-title")).toHaveTextContent("ふだんは引き出しに保管");
   });
 
+  it("switches the play button between stop, resume and replay", () => {
+    renderFlow();
+    next();
+    expect(screen.getByTestId("cc-play")).toHaveTextContent("停止");
+    click("⏸ 停止");
+    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(3000));
+    // 止めている間は場面が進まない
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    expect(screen.getByTestId("cc-play")).toHaveTextContent("再開");
+    click("▶ 再開");
+    act(() => vi.advanceTimersByTime(2600));
+    expect(caption()).toHaveTextContent("メモリ（作業机）に広げる");
+    playThrough();
+    expect(screen.getByTestId("cc-play")).toHaveTextContent("もう一度見る");
+  });
+
   it("pauses the phases while the details are open", () => {
     renderFlow();
     next();
