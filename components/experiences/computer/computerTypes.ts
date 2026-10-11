@@ -17,6 +17,17 @@ export type WorkDoc = {
   status: "clean" | "dirty" | "saved" | "vanished";
 };
 
+/** 吹き出しを出す対象（3つの部品＋モニター・キーボード） */
+export type CaptionTarget = PartId | "monitor" | "keyboard";
+
+/** いま起きていることを1つだけ伝える短い吹き出し（35文字以内） */
+export type SceneCaption = {
+  target: CaptionTarget;
+  text: string;
+  /** lost=失った（赤）/ safe=残った（緑）。ふだんは指定しない */
+  tone?: "lost" | "safe";
+};
+
 export type ComputerSceneProps = {
   nodes: Record<PartId, PartState>;
   lanes: Partial<Record<BusId, "active" | "idle">>;
@@ -26,4 +37,8 @@ export type ComputerSceneProps = {
   packet: { spot: PartId; text: string; kind: BusId } | null;
   power: "on" | "off";
   reducedMotion: boolean;
+  /** 対象物の近くに出す短い説明（無ければ出さない） */
+  caption?: SceneCaption | null;
+  /** 「もう一度見る」などで同じ場面を最初から動かし直すための番号 */
+  epoch?: number;
 };

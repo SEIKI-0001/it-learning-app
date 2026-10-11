@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ComputerScene } from "./computer/ComputerScene";
-import { DOC_TEXT, type ComputerSceneProps, type DocVersion } from "./computer/computerTypes";
-import { SceneTimeline } from "./scene/SceneTimeline";
+import { DOC_TEXT, type ComputerSceneProps, type DocVersion, type SceneCaption } from "./computer/computerTypes";
 import { useReducedMotion } from "./scene/useReducedMotion";
-import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 import { InlineIcon } from "@/components/ui/Pictogram";
 import Icon from "@/components/ui/Icon";
@@ -17,106 +15,301 @@ import Icon from "@/components/ui/Icon";
 //      文書を開く→処理→編集→保存 を1歩ずつ。どの段階でも「電源を切る」を押せ、
 //      保存前に切ると メモリ上の編集だけが消え、ストレージには古い版が残る（揮発性）
 //   ③ メモリ vs ストレージ … 速さ・容量・電源OFFで消えるか（揮発性）の比較
+//
+// ② は「文章を読む」より「模型の動きを見る」体験にする。
+//   - 各 STEP は 2〜3 の場面（フェーズ）に分かれ、場面ごとに模型の状態と短い吹き出し（35文字以内）が1つずつ変わる
+//   - STEP に入ると場面が自動で進み、最後の場面で止まる。次の STEP へはユーザーが「次へ」を押したときだけ進む
+//   - 長い説明・試験用語は「詳しく見る」に分け、開いている間は場面の再生を止める
 // ============================================================================
+
+/** 1つの場面を見せる長さ。移動のアニメーション（約1〜1.5秒）を見終えて吹き出しを読める長さにする */
+const PHASE_MS = 2600;
+
+type Phase = Pick<ComputerSceneProps, "nodes" | "lanes" | "doc" | "packet"> & {
+  stored: DocVersion;
+  storedFlash?: boolean;
+  caption: SceneCaption;
+};
 
 type FlowStep = {
   title: string;
-  nodes: ComputerSceneProps["nodes"];
-  lanes: ComputerSceneProps["lanes"];
-  stored: DocVersion;
-  doc: ComputerSceneProps["doc"];
-  packet: ComputerSceneProps["packet"];
+  phases: Phase[];
+  /** 「詳しく見る」の中身（補足・試験で問われる用語） */
   detail: ReactNode;
 };
+
+const IDLE: ComputerSceneProps["nodes"] = { storage: "idle", memory: "idle", cpu: "idle" };
+const at = (over: Partial<ComputerSceneProps["nodes"]>) => ({ ...IDLE, ...over });
+
+const DOC1_STORAGE = { spot: "storage", version: 1, status: "clean" } as const;
+const DOC1_MEMORY = { spot: "memory", version: 1, status: "clean" } as const;
+const DOC2_DIRTY = { spot: "memory", version: 2, status: "dirty" } as const;
+const DOC2_SAVED = { spot: "memory", version: 2, status: "saved" } as const;
 
 const STEPS: FlowStep[] = [
   {
     title: "ふだんは引き出しに保管",
-    nodes: { storage: "active", memory: "idle", cpu: "idle" },
-    lanes: {},
-    stored: 1,
-    doc: { spot: "storage", version: 1, status: "clean" },
-    packet: null,
-    detail: <>文書はふだん<b>ストレージ（引き出し）</b>に保管されています。アプリで「開く」を押しました。</>,
-  },
-  {
-    title: "メモリへ読み込む",
-    nodes: { storage: "sending", memory: "active", cpu: "idle" },
-    lanes: { load: "active" },
-    stored: 1,
-    doc: { spot: "memory", version: 1, status: "clean" },
-    packet: null,
+    phases: [
+      {
+        nodes: at({ storage: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_STORAGE,
+        packet: null,
+        caption: { target: "storage", text: "文書はストレージ（引き出し）に保存されている" },
+      },
+      {
+        nodes: at({ storage: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_STORAGE,
+        packet: null,
+        caption: { target: "monitor", text: "アプリで文書を「開く」を押した" },
+      },
+    ],
     detail: (
       <>
-        文書のコピーを<b>メモリ（作業机）</b>に読み込みます。ストレージは遅いので、使うものだけ机に広げます。
-        引き出しの中の<b>保存版 v1 はそのまま</b>残っています。
+        <p>
+          文書・写真・アプリなどは、ふだん<b>ストレージ（補助記憶装置）</b>に保存されています。SSD や HDD がストレージです。
+          電源を切っても中身が消えない<b>不揮発性</b>の記憶装置です。
+        </p>
+        <Terms items={["補助記憶装置", "SSD / HDD", "不揮発性"]} />
       </>
     ),
   },
   {
-    title: "CPUが処理",
-    nodes: { storage: "idle", memory: "active", cpu: "active" },
-    lanes: { bus: "active" },
-    stored: 1,
-    doc: { spot: "memory", version: 1, status: "clean" },
-    packet: { spot: "cpu", text: "読んで表示", kind: "bus" },
-    detail: <><b>CPU（頭脳）</b>がメモリ上の文書を読んで処理（表示・計算）。CPUとメモリの間は超高速でやりとりします。</>,
+    title: "メモリへ読み込む",
+    phases: [
+      {
+        nodes: at({ storage: "sending" }),
+        lanes: { load: "active" },
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: null,
+        caption: { target: "storage", text: "ストレージから文書のコピーを読み出す" },
+      },
+      {
+        nodes: at({ memory: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: null,
+        caption: { target: "memory", text: "メモリ（作業机）に広げる。ここは読み書きが速い" },
+      },
+      {
+        nodes: at({ storage: "active", memory: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: null,
+        caption: { target: "storage", text: "保存版 v1 は引き出しにそのまま残る" },
+      },
+    ],
+    detail: (
+      <>
+        <p>
+          プログラムやデータは、使うときに<b>メモリ（主記憶装置）</b>へ読み込まれます。ストレージは大容量ですが遅いので、
+          使う分だけ速いメモリに広げて作業します。読み込みは<b>コピー</b>なので、ストレージの保存版はそのままです。
+        </p>
+        <Terms items={["主記憶装置", "RAM", "補助記憶装置より高速・小容量"]} />
+      </>
+    ),
+  },
+  {
+    title: "CPUが読んで表示",
+    phases: [
+      {
+        nodes: at({ memory: "sending" }),
+        lanes: { bus: "active" },
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: { spot: "cpu", text: "読み取り", kind: "bus" },
+        caption: { target: "memory", text: "メモリからCPUへデータを渡す" },
+      },
+      {
+        nodes: at({ memory: "active", cpu: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: { spot: "cpu", text: "処理中", kind: "bus" },
+        caption: { target: "cpu", text: "CPUがデータを読み取り、表示用に処理する" },
+      },
+      {
+        nodes: at({ memory: "active", cpu: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: null,
+        caption: { target: "monitor", text: "処理結果が画面に表示される" },
+      },
+    ],
+    detail: (
+      <>
+        <p>
+          <b>CPU（中央処理装置）</b>はコンピュータの頭脳です。メモリ上のデータや命令を読み取り、計算や判断（処理）をします。
+          CPU が直接やりとりするのはメモリで、CPU とメモリの間は非常に高速です。
+          CPU の速さは<b>クロック周波数（GHz）</b>で表します。
+        </p>
+        <Terms items={["CPU（中央処理装置）", "クロック周波数", "演算・制御"]} />
+      </>
+    ),
   },
   {
     title: "CPUが書き換えを計算",
-    nodes: { storage: "idle", memory: "idle", cpu: "active" },
-    lanes: {},
-    stored: 1,
-    doc: { spot: "memory", version: 1, status: "clean" },
-    packet: { spot: "cpu", text: "「120」と入力 → 計算中", kind: "bus" },
+    phases: [
+      {
+        nodes: IDLE,
+        lanes: {},
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: null,
+        caption: { target: "keyboard", text: "キーボードで「120」と入力した" },
+      },
+      {
+        nodes: at({ cpu: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: { spot: "cpu", text: "計算中", kind: "bus" },
+        caption: { target: "cpu", text: "CPUが入力を受け取り、新しい内容を計算する" },
+      },
+      {
+        nodes: at({ cpu: "active", memory: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: { spot: "cpu", text: "計算中", kind: "bus" },
+        caption: { target: "memory", text: "この時点で、メモリの文書はまだ v1 のまま" },
+      },
+    ],
     detail: (
       <>
-        キーボードで「120」と打ち込むと、まず<b>CPU（頭脳）</b>が入力を受け取り、新しい内容を計算します。
-        この時点では、メモリ上の文書は<b>まだ v1（{DOC_TEXT[1]}）</b>のまま。
+        <p>
+          キーボードなどの<b>入力装置</b>から入ったデータも、まず CPU が受け取って処理します。
+          計算した結果はすぐにはメモリに反映されず、次の場面でメモリへ書き込まれます。
+        </p>
+        <Terms items={["入力装置", "CPU が処理の中心"]} />
       </>
     ),
   },
   {
     title: "メモリ上で編集",
-    nodes: { storage: "idle", memory: "active", cpu: "active" },
-    lanes: { bus: "active" },
-    stored: 1,
-    doc: { spot: "memory", version: 2, status: "dirty" },
-    packet: { spot: "memory", text: "120 をメモリへ書き込み", kind: "bus" },
+    phases: [
+      {
+        nodes: at({ cpu: "sending" }),
+        lanes: { bus: "active" },
+        stored: 1,
+        doc: DOC1_MEMORY,
+        packet: { spot: "memory", text: "書き込み", kind: "bus" },
+        caption: { target: "cpu", text: "計算結果をメモリへ送る" },
+      },
+      {
+        nodes: at({ memory: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC2_DIRTY,
+        packet: null,
+        caption: { target: "memory", text: "メモリ上の文書が v2 に。まだ保存していない" },
+      },
+      {
+        nodes: at({ memory: "active", storage: "active" }),
+        lanes: {},
+        stored: 1,
+        doc: DOC2_DIRTY,
+        packet: null,
+        caption: { target: "storage", text: "引き出しの中はまだ v1。ここで電源を切ると…？" },
+      },
+    ],
     detail: (
       <>
-        CPUが計算した結果は、まず<b>メモリの上</b>に書き込まれます（だから速い）。
-        机の上は <b>v2</b>、でも引き出しの中は<b>まだ v1</b>。ここで <b>電源を切る</b> を押してみよう。
+        <p>
+          編集した内容は、まず<b>メモリの上</b>にあります（だから速い）。ただしメモリは電気が無いと中身を保てない
+          <b>揮発性</b>の記憶装置です。保存する前に電源を切ると、メモリ上の編集は消えてしまいます。
+        </p>
+        <Terms items={["揮発性", "主記憶（メモリ）"]} />
       </>
     ),
   },
   {
     title: "ストレージへ保存",
-    nodes: { storage: "active", memory: "sending", cpu: "idle" },
-    lanes: { save: "active" },
-    stored: 2,
-    doc: { spot: "memory", version: 2, status: "saved" },
-    packet: { spot: "storage", text: "v2 を書き込み", kind: "save" },
-    detail: <>「保存」を押すと、メモリの内容が<b>ストレージに書き込まれ</b>ます。これで電源を切っても残ります。</>,
+    phases: [
+      {
+        nodes: at({ memory: "sending" }),
+        lanes: { save: "active" },
+        stored: 1,
+        doc: DOC2_DIRTY,
+        packet: { spot: "storage", text: "保存", kind: "save" },
+        caption: { target: "memory", text: "「保存」で、メモリの内容をストレージへ書き込む" },
+      },
+      {
+        nodes: at({ storage: "active" }),
+        lanes: {},
+        stored: 2,
+        storedFlash: true,
+        doc: DOC2_SAVED,
+        packet: null,
+        caption: { target: "storage", text: "ストレージに v2 が保存された" },
+      },
+      {
+        nodes: at({ storage: "active" }),
+        lanes: {},
+        stored: 2,
+        doc: DOC2_SAVED,
+        packet: null,
+        caption: { target: "storage", text: "電源を切っても v2 は残る（不揮発性）" },
+      },
+    ],
+    detail: (
+      <>
+        <p>
+          「保存」を押すと、メモリの内容が<b>ストレージに書き込まれ</b>ます。ストレージは<b>不揮発性</b>なので、電源を切っても残ります。
+          こまめに保存するのは、揮発性のメモリから不揮発性のストレージへ移すためです。
+        </p>
+        <Terms items={["不揮発性", "保存＝ストレージへの書き込み"]} />
+      </>
+    ),
   },
 ];
 
+/** 保存前の編集がメモリにだけある STEP（ここで電源を切ると編集が消える） */
 const EDIT_STEP = 4;
 const SAVE_STEP = 5;
+
+function Terms({ items }: { items: string[] }) {
+  return (
+    <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+      <span className="font-bold text-gray-500">試験で問われる用語</span>
+      {items.map((t) => (
+        <span key={t} className="rounded-full bg-white px-2 py-0.5 font-bold text-gray-700 ring-1 ring-gray-200">
+          {t}
+        </span>
+      ))}
+    </p>
+  );
+}
 
 type Power = "on" | "off" | "rebooted";
 
 function powerView(power: Power, idx: number) {
   const step = STEPS[idx];
+  const stored = step.phases[step.phases.length - 1].stored;
   const inMemory = idx >= 1;
   const edited = idx >= EDIT_STEP;
   const lost = idx === EDIT_STEP;
-  const stored = step.stored;
   if (power === "off") {
     return {
       nodes: { storage: "idle", memory: "disabled", cpu: "disabled" } as ComputerSceneProps["nodes"],
       doc: inMemory ? ({ spot: "memory", version: edited ? 2 : 1, status: "vanished" } as const) : ({ spot: "storage", version: stored, status: "clean" } as const),
+      stored,
       tone: lost ? ("lost" as const) : ("safe" as const),
+      title: lost ? "保存前に電源OFF → 編集が消えた" : "電源OFF → 失ったものはない",
+      caption: (lost
+        ? { target: "memory", text: `メモリ上の編集（${DOC_TEXT[2]}）が消えた`, tone: "lost" }
+        : idx === SAVE_STEP
+          ? { target: "storage", text: "保存済みなので、v2 はストレージに残っている", tone: "safe" }
+          : inMemory
+            ? { target: "memory", text: "メモリは空に。でもまだ編集していない", tone: "safe" }
+            : { target: "storage", text: "文書はストレージに残っている", tone: "safe" }) as SceneCaption,
       detail: lost ? (
         <>
           電源OFF。<b>メモリの上にあった編集（{DOC_TEXT[2]}）が消えました！</b>
@@ -135,7 +328,12 @@ function powerView(power: Power, idx: number) {
   return {
     nodes: { storage: "sending", memory: "active", cpu: "idle" } as ComputerSceneProps["nodes"],
     doc: { spot: "memory", version: stored, status: "clean" } as const,
+    stored,
     tone: lost ? ("lost" as const) : ("safe" as const),
+    title: `ストレージから v${stored} を読み込み`,
+    caption: (lost
+      ? { target: "memory", text: `読み込まれたのは v1（${DOC_TEXT[1]}）。120万円は消えた`, tone: "lost" }
+      : { target: "memory", text: `ストレージの v${stored}（${DOC_TEXT[stored]}）が読み込まれた`, tone: "safe" }) as SceneCaption,
     detail: lost ? (
       <>
         電源を入れ直して開くと、読み込まれたのは<b>ストレージにあった v1（{DOC_TEXT[1]}）</b>。
@@ -147,21 +345,52 @@ function powerView(power: Power, idx: number) {
   };
 }
 
+/**
+ * STEP と場面（フェーズ）の再生。STEP に入ると場面が自動で進み、最後の場面で止まる。
+ * 次の STEP へは move を呼んだときだけ進む。paused の間は場面を進めない。
+ * run は「もう一度見る」のたびに増え、模型のアニメーションを最初からやり直す合図にする。
+ */
+function usePhasePlayer(phaseCounts: number[], paused: boolean) {
+  const [pos, setPos] = useState({ step: 0, phase: 0, run: 0 });
+  const lastPhase = phaseCounts[pos.step] - 1;
+  useEffect(() => {
+    if (paused || pos.phase >= lastPhase) return;
+    const timer = window.setTimeout(() => setPos((p) => ({ ...p, phase: p.phase + 1 })), PHASE_MS);
+    return () => window.clearTimeout(timer);
+  }, [pos, paused, lastPhase]);
+  return {
+    ...pos,
+    lastPhase,
+    done: pos.phase >= lastPhase,
+    move: (step: number) => setPos((p) => ({ step: Math.max(0, Math.min(step, phaseCounts.length - 1)), phase: 0, run: p.run + 1 })),
+    replay: () => setPos((p) => ({ ...p, phase: 0, run: p.run + 1 })),
+  };
+}
+
 function DataFlow() {
   const reducedMotion = useReducedMotion();
-  const player = useStepPlayer(STEPS.length, reducedMotion);
   const [power, setPower] = useState<Power>("on");
+  const [showDetail, setShowDetail] = useState(false);
   const [tried, setTried] = useState<{ lost: boolean; safe: boolean }>({ lost: false, safe: false });
-  const idx = player.index;
+  const player = usePhasePlayer(
+    STEPS.map((s) => s.phases.length),
+    showDetail || power !== "on",
+  );
+  const idx = player.step;
   const step = STEPS[idx];
+  const phase = step.phases[player.phase];
 
   function move(next: number) {
     setPower("on");
     player.move(next);
   }
 
+  function replay() {
+    setPower("on");
+    player.replay();
+  }
+
   function powerOff() {
-    if (player.playing) player.togglePlay();
     setPower("off");
     if (idx === EDIT_STEP) setTried((t) => ({ ...t, lost: true }));
     if (idx === SAVE_STEP) setTried((t) => ({ ...t, safe: true }));
@@ -172,80 +401,70 @@ function DataFlow() {
     ? {
         nodes: pv.nodes,
         lanes: power === "rebooted" ? { load: "active" } : {},
-        stored: step.stored,
+        stored: pv.stored,
         storedFlash: false,
         doc: pv.doc,
         packet: null,
         power: power === "off" ? "off" : "on",
         reducedMotion,
+        caption: pv.caption,
+        epoch: player.run,
       }
     : {
-        nodes: step.nodes,
-        lanes: step.lanes,
-        stored: step.stored,
-        storedFlash: idx === SAVE_STEP,
-        doc: step.doc,
-        packet: step.packet,
+        nodes: phase.nodes,
+        lanes: phase.lanes,
+        stored: phase.stored,
+        storedFlash: !!phase.storedFlash,
+        doc: phase.doc,
+        packet: phase.packet,
         power: "on",
         reducedMotion,
+        caption: phase.caption,
+        epoch: player.run,
       };
+
+  const navBtn =
+    "inline-flex h-10 items-center justify-center gap-1 rounded-full px-4 text-xs font-bold transition active:scale-95 disabled:opacity-35 disabled:active:scale-100";
 
   return (
     <Panel>
       <SectionTitle step={2}>データの流れを追う（文書を開く→編集→保存）</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        PCケースの中で、ファイルを開いて書き直して保存するまで、データが<b className="text-gray-800">どこを通るか</b>を1歩ずつ。
-        途中で<b className="text-gray-800">電源を切る</b>こともできます。
-      </p>
 
-      <div className="mt-3 min-w-0">
-        <p className={`text-[11px] font-bold ${power === "on" ? "text-brand-700" : pv?.tone === "lost" ? "text-rose-700" : "text-emerald-700"}`}>
-          {power === "on" ? `STEP ${idx + 1} / ${STEPS.length}` : power === "off" ? "実験：ここで電源を切ったら？" : "実験：電源を入れ直して開くと？"}
-        </p>
-        <p className="mt-0.5 text-sm font-bold text-gray-900" data-testid="cc-step-title">
-          {power === "on"
-            ? step.title
-            : power === "off"
-              ? pv?.tone === "lost"
-                ? "保存前に電源OFF → 編集が消えた"
-                : "電源OFF → 失ったものはない"
-              : `ストレージから v${step.stored} を読み込み`}
-        </p>
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className={`text-[11px] font-bold ${power === "on" ? "text-brand-700" : pv?.tone === "lost" ? "text-rose-700" : "text-emerald-700"}`}>
+            {power === "on" ? `STEP ${idx + 1} / ${STEPS.length}` : power === "off" ? "実験：ここで電源を切ったら？" : "実験：電源を入れ直して開くと？"}
+          </p>
+          <p className="mt-0.5 text-base font-bold text-gray-900" data-testid="cc-step-title">
+            {pv ? pv.title : step.title}
+          </p>
+        </div>
+        {power === "on" && (
+          <div className="flex flex-none items-center gap-1 pb-1" aria-label={`場面 ${player.phase + 1} / ${step.phases.length}`} role="img">
+            {step.phases.map((_, i) => (
+              <span key={i} className={`h-1.5 rounded-full transition-all ${i === player.phase ? "w-4 bg-brand-600" : i < player.phase ? "w-1.5 bg-brand-300" : "w-1.5 bg-gray-300"}`} />
+            ))}
+          </div>
+        )}
       </div>
 
-      <div
-        className={`mt-3 min-h-[5.4em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
-          pv?.tone === "lost" ? "bg-rose-50 ring-rose-200" : pv ? "bg-emerald-50 ring-emerald-200" : "bg-sky-50 ring-sky-200"
-        }`}
-        aria-live="polite"
-        data-testid="cc-detail"
-      >
-        {pv ? pv.detail : step.detail}
+      <div className="-mx-2 mt-2 sm:mx-0">
+        <ComputerScene {...scene} />
       </div>
 
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <ComputerScene {...scene} forward={player.forward} />
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <button type="button" onClick={() => move(idx - 1)} disabled={idx === 0 && power === "on"} className={`${navBtn} bg-white text-gray-700 ring-1 ring-gray-300`} aria-label="前のSTEPへ">
+          ← 戻る
+        </button>
+        <button type="button" onClick={replay} className={`${navBtn} bg-white text-gray-700 ring-1 ring-gray-300`}>
+          ↻ もう一度見る
+        </button>
+        <button type="button" onClick={() => move(idx + 1)} disabled={idx === STEPS.length - 1 && power === "on"} className={`${navBtn} bg-gray-900 text-white`} aria-label="次のSTEPへ">
+          次へ →
+        </button>
       </div>
 
-      <div className="mt-3">
-        <SceneTimeline
-          index={idx}
-          steps={STEPS}
-          playing={player.playing && power === "on"}
-          reducedMotion={reducedMotion}
-          onMove={move}
-          onTogglePlay={() => {
-            setPower("on");
-            player.togglePlay();
-          }}
-          playLabel="データの流れを再生"
-          timelineLabel="データの流れのタイムライン"
-          startCaption="開く"
-          endCaption="保存"
-        />
-      </div>
-
-      <div className="mt-3 flex gap-2">
+      <div className="mt-2 flex gap-2">
         {power === "on" && (
           <button
             type="button"
@@ -269,8 +488,24 @@ function DataFlow() {
         )}
       </div>
       {power === "on" && idx !== EDIT_STEP && !tried.lost && (
-        <p className="mt-2 text-center text-[11px] text-gray-500">ヒント：STEP {EDIT_STEP + 1}（メモリ上で編集）で切ると…？</p>
+        <p className="mt-2 text-center text-[11px] text-gray-500">
+          ヒント：STEP {EDIT_STEP + 1}（メモリ上で編集）で切ると…？
+        </p>
       )}
+
+      <details
+        className="group mt-3 rounded-xl bg-gray-50 ring-1 ring-gray-200 [&_b]:text-gray-900"
+        open={showDetail}
+        onToggle={(e) => setShowDetail((e.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 text-xs font-bold text-gray-700">
+          詳しく見る{showDetail && "（再生を一時停止中）"}
+          <span className="text-gray-400 transition group-open:rotate-180">▾</span>
+        </summary>
+        <div className="space-y-2 px-4 pb-3 text-sm leading-relaxed text-gray-700" data-testid="cc-detail">
+          {pv ? <p>{pv.detail}</p> : step.detail}
+        </div>
+      </details>
 
       {(tried.lost || tried.safe) && (
         <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="cc-insight">

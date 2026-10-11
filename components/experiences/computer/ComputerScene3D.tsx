@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import { DOC_TEXT, type BusId, type ComputerSceneProps, type PartId, type PartState } from "./computerTypes";
+import { DOC_TEXT, type BusId, type CaptionTarget, type ComputerSceneProps, type PartId, type PartState, type SceneCaption } from "./computerTypes";
 import styles from "./computer3d.module.css";
 
 // CPU・メモリ・ストレージの図解の「動く3D」版。Blender で作った机上のオープンフレームPC（public/models/desk-pc.glb）を
@@ -77,12 +77,21 @@ const BUS: Record<BusId, V3[]> = {
 };
 
 type Shot = { pos: V3; look: V3 };
-const SHOT_PART: Record<PartId, Shot> = {
-  storage: { pos: [-0.17, 1.08, -0.05], look: [-0.045, 0.79, -0.385] },
-  memory: { pos: [-0.12, 1.09, -0.04], look: [-0.01, 0.79, -0.395] },
-  cpu: { pos: [-0.07, 1.1, -0.04], look: [0.025, 0.8, -0.395] },
+/**
+ * カメラは2か所だけ。ふだんは基板に寄った位置に止め、モニター・キーボードを説明するときと電源OFFのときだけ
+ * 机全体が入る位置へゆっくり引く（場面ごとに動かすと視線が迷うため）。
+ */
+const SHOT_BOARD: Shot = { pos: [-0.1, 1.1, -0.02], look: [-0.005, 0.79, -0.4] };
+const SHOT_WIDE: Shot = { pos: [-0.05, 1.24, 0.26], look: [0.0, 0.88, -0.5] };
+
+/** 吹き出しが指す点 */
+const CAPTION_AT: Record<CaptionTarget, V3> = {
+  storage: [-0.1, BOARD_Y + 0.006, -0.4],
+  memory: [-0.019, BOARD_Y + 0.04, -0.43],
+  cpu: [0.07, BOARD_Y + 0.006, -0.415],
+  monitor: [0.06, 1.0, -0.785],
+  keyboard: [-0.04, 0.78, -0.19],
 };
-const SHOT_OFF: Shot = { pos: [-0.14, 1.2, 0.08], look: [0.0, 0.83, -0.47] };
 
 const FAN_AXIS = new THREE.Vector3(0, 0, 1);
 /** CPUクーラーを縮める基点（クーラーの土台の中心）と倍率 */
@@ -458,6 +467,7 @@ function Mover({
   path,
   speed = 0.12,
   reducedMotion,
+  epoch = 0,
   objRef,
   children,
 }: {
@@ -466,6 +476,8 @@ function Mover({
   path?: V3[];
   speed?: number;
   reducedMotion: boolean;
+  /** 変わったら、path があれば最初から動かし直す（「もう一度見る」・STEP の移動） */
+  epoch?: number;
   /** 札を追従させるときに、動く入れ物を外から参照する */
   objRef?: RefObject<THREE.Group | null>;
   children: ReactNode;
@@ -473,23 +485,26 @@ function Mover({
   const own = useRef<THREE.Group>(null);
   const ref = objRef ?? own;
   const anim = useRef<{ pts: V3[]; t: number; dur: number } | null>(null);
-  const key = at ? at.join(",") + "|" + (path?.map((p) => p.join(",")).join(";") ?? "") : "none";
+  const key = at ? at.join(",") + "|" + (path?.map((p) => p.join(",")).join(";") ?? "") + "|" + epoch : "none";
   const last = useRef<string>("");
+  const lastEpoch = useRef(epoch);
   useFrame((_, dt) => {
     const g = ref.current;
     if (!g) return;
     if (key !== last.current) {
-      const wasHidden = !g.visible || last.current === "" || last.current === "none";
+      const replay = lastEpoch.current !== epoch;
+      lastEpoch.current = epoch;
+      const wasHidden = !g.visible || last.current === "" || last.current === "none" || (replay && !!path);
       last.current = key;
       if (!at) {
         g.visible = false;
         anim.current = null;
         return;
       }
-      const from: V3 = wasHidden ? (start ?? at) : [g.position.x, g.position.y, g.position.z];
+      const from: V3 = wasHidden ? (start ?? path?.[0] ?? at) : [g.position.x, g.position.y, g.position.z];
       const pts: V3[] = [from, ...(path ?? []), at];
       g.visible = true;
-      if (reducedMotion) {
+      if (reducedMotion || !path) {
         g.position.set(...at);
         anim.current = null;
       } else {
@@ -642,14 +657,104 @@ function Label({ registry, id, at, follow, place = "below", children }: { regist
   );
 }
 
+/** モニター・キーボードを説明するときの、うっすらした光（部品の足元の光と同じ質感） */
+const HALO: Record<"monitor" | "keyboard", { pos: V3; size: [number, number]; rot: V3; color: string }> = {
+  monitor: { pos: [0, 1.076, -0.789], size: [0.66, 0.42], rot: [0, 0, 0], color: "#60a5fa" },
+  keyboard: { pos: [-0.04, 0.7415, -0.17], size: [0.5, 0.22], rot: [-Math.PI / 2, 0, 0], color: "#60a5fa" },
+};
+
+function Halo({ target, active, reducedMotion }: { target: "monitor" | "keyboard"; active: boolean; reducedMotion: boolean }) {
+  const tex = useGlowTexture();
+  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const h = HALO[target];
+  useFrame((s, dt) => {
+    if (!mat.current) return;
+    const pulse = reducedMotion ? 1 : 0.8 + 0.2 * Math.sin(s.clock.elapsedTime * 4);
+    mat.current.opacity = damp(mat.current.opacity, active ? 0.55 * pulse : 0, 6, dt);
+  });
+  return (
+    <mesh position={h.pos} rotation={h.rot}>
+      <planeGeometry args={h.size} />
+      <meshBasicMaterial ref={mat} map={tex} color={h.color} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+    </mesh>
+  );
+}
+
+type CaptionPlace = "band" | "below" | "above";
+const CAPTION_PLACE: Record<CaptionTarget, CaptionPlace> = { storage: "band", memory: "band", cpu: "band", monitor: "below", keyboard: "above" };
+
+/**
+ * 吹き出しの置き場所。指す点が画面の上寄りなら上端の帯、下寄りなら下端の帯に置き、
+ * 横位置は点の真上（画面からはみ出さないよう寄せる）。点までは細い引き出し線でつなぐ。
+ * 帯に置くので、場面が変わっても縦の位置は動かず、視線が迷わない。
+ */
+function CaptionProjector({ at, place, root }: { at: V3 | null; place: CaptionPlace; root: RefObject<HTMLDivElement | null> }) {
+  const v = useRef(new THREE.Vector3());
+  useFrame(({ camera, size }) => {
+    const el = root.current;
+    const bubble = el?.querySelector<HTMLElement>("[data-cap=bubble]");
+    const line = el?.querySelector<SVGLineElement>("[data-cap=line]");
+    const dot = el?.querySelector<SVGCircleElement>("[data-cap=dot]");
+    if (!bubble || !line || !dot) return;
+    if (!at) {
+      bubble.style.visibility = "hidden";
+      line.style.visibility = "hidden";
+      dot.style.visibility = "hidden";
+      return;
+    }
+    const p = v.current;
+    p.set(...at).project(camera);
+    const x = (p.x * 0.5 + 0.5) * size.width;
+    const y = (-p.y * 0.5 + 0.5) * size.height;
+    const w = bubble.offsetWidth;
+    const h = bubble.offsetHeight;
+    const m = 8;
+    const left = Math.min(Math.max(x - w / 2, m), size.width - w - m);
+    // 部品は上端の帯（基板の上の机・スタンドの空き）、モニターは画面のすぐ下、キーボードはすぐ上
+    const gap = 26;
+    const top = Math.min(Math.max(place === "band" ? m : place === "below" ? y + gap : y - gap - h, m), size.height - h - m);
+    bubble.style.transform = `translate(${left.toFixed(1)}px, ${top.toFixed(1)}px)`;
+    bubble.style.visibility = "visible";
+    const ex = Math.min(Math.max(x, left + 12), left + w - 12);
+    const ey = top + h / 2 < y ? top + h : top;
+    line.setAttribute("x1", ex.toFixed(1));
+    line.setAttribute("y1", ey.toFixed(1));
+    line.setAttribute("x2", x.toFixed(1));
+    line.setAttribute("y2", y.toFixed(1));
+    dot.setAttribute("cx", x.toFixed(1));
+    dot.setAttribute("cy", y.toFixed(1));
+    line.style.visibility = "visible";
+    dot.style.visibility = "visible";
+  });
+  return null;
+}
+
+function CaptionBubble({ caption, root }: { caption: SceneCaption | null; root: RefObject<HTMLDivElement | null> }) {
+  return (
+    <div ref={root} className="absolute inset-0">
+      <svg className="absolute inset-0 h-full w-full overflow-visible" aria-hidden>
+        <line data-cap="line" className={styles.captionLine} data-tone={caption?.tone} style={{ visibility: "hidden" }} />
+        <circle data-cap="dot" r={3.5} className={styles.captionDot} data-tone={caption?.tone} style={{ visibility: "hidden" }} />
+      </svg>
+      <div data-cap="bubble" className="absolute left-0 top-0 max-w-[78%]" style={{ visibility: "hidden" }}>
+        {caption && (
+          <p key={caption.text} className={styles.caption} data-tone={caption.tone} data-target={caption.target} data-testid="cc-caption" role="status">
+            {caption.text}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 
-export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc, packet, power, reducedMotion }: ComputerSceneProps & { forward?: boolean }) {
+export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc, packet, power, reducedMotion, caption = null, epoch = 0 }: ComputerSceneProps & { forward?: boolean }) {
   const on = power === "on";
   const vanished = doc?.status === "vanished";
   const safeOff = vanished && !!doc && stored === doc.version;
-  const focus: PartId = packet?.spot ?? (doc?.spot === "memory" ? (lanes.save === "active" ? "storage" : "memory") : "storage");
-  const shot = on ? SHOT_PART[focus] : SHOT_OFF;
+  const wide = !on || caption?.target === "monitor" || caption?.target === "keyboard";
+  const shot = wide ? SHOT_WIDE : SHOT_BOARD;
 
   // 画面外では描画を止める（ファンの回転などで電池を使わない）
   const wrap = useRef<HTMLDivElement>(null);
@@ -663,14 +768,17 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
   }, []);
 
   const registry = useRef(new Map<string, Anchor>());
+  const captionRoot = useRef<HTMLDivElement>(null);
   const docObj = useRef<THREE.Group>(null);
   const packetObj = useRef<THREE.Group>(null);
 
   const lift = (p: V3, dy: number): V3 => [p[0], p[1] + dy, p[2]];
   const docAt: V3 | null = doc?.spot === "memory" && !vanished ? DOC_AT.memory : null;
-  const docPath = doc?.spot === "memory" ? [...BUS.load.map((p) => lift(p, 0.04))] : undefined;
+  // 動かすのは読み込み中（load が光っている場面）だけ。それ以外はその場に置く
+  const docPath = doc?.spot === "memory" && lanes.load === "active" ? [...BUS.load.map((p) => lift(p, 0.04))] : undefined;
   // 配線はメモリ→CPU の向きで持っているので、CPU からメモリへ戻るときは逆にたどる
-  const packetPath = packet ? (packet.kind === "bus" && packet.spot === "memory" ? [...BUS.bus].reverse() : BUS[packet.kind]).map((p) => lift(p, 0.008)) : undefined;
+  const packetPath =
+    packet && lanes[packet.kind] === "active" ? (packet.kind === "bus" && packet.spot === "memory" ? [...BUS.bus].reverse() : BUS[packet.kind]).map((p) => lift(p, 0.008)) : undefined;
   const docLabelAt: V3 | null = doc ? (doc.spot === "memory" ? lift(DOC_AT.memory, 0.012) : lift(DOC_AT.storage, 0.012)) : null;
   // メモリへ運ばれる写しには札も付いていく（消えた・ストレージ上は止まった点に出す）
   const docFollow = !!docAt;
@@ -679,7 +787,7 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
   return (
     <div
       ref={wrap}
-      className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#d9dde3] sm:aspect-[16/11]"
+      className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[#d9dde3] sm:aspect-[16/11]"
       data-testid="computer-scene"
       data-power={power}
       data-scene="3d"
@@ -690,7 +798,7 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
         shadows
         dpr={[1, 1.75]}
         frameloop={visible ? "always" : "never"}
-        camera={{ fov: 38, near: 0.02, far: 20, position: shot.pos }}
+        camera={{ fov: 44, near: 0.02, far: 20, position: shot.pos }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         onCreated={({ gl, scene }) => {
           // 色を濁らせずに明るさだけ整える（ACES は彩度が飛び、AgX は全体がくすむ）
@@ -733,15 +841,19 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
           <PaperMesh stamp={stored === 2 ? "ok" : undefined} />
         </group>
         {/* メモリへ読み込んだ写し */}
-        <Mover at={docAt} start={DOC_AT.storage} path={docPath} speed={0.07} reducedMotion={reducedMotion} objRef={docObj}>
+        <Mover at={docAt} start={DOC_AT.storage} path={docPath} speed={0.07} epoch={epoch} reducedMotion={reducedMotion} objRef={docObj}>
           <PaperMesh stamp={doc?.status === "saved" ? "ok" : doc?.status === "dirty" ? "danger" : undefined} />
         </Mover>
-        <Mover at={packet ? PACKET_AT[packet.spot] : null} path={packetPath} speed={0.05} reducedMotion={reducedMotion} objRef={packetObj}>
+        <Mover at={packet ? PACKET_AT[packet.spot] : null} path={packetPath} speed={0.05} epoch={epoch} reducedMotion={reducedMotion} objRef={packetObj}>
           <ParcelMesh />
         </Mover>
 
+        <Halo target="monitor" active={on && caption?.target === "monitor"} reducedMotion={reducedMotion} />
+        <Halo target="keyboard" active={on && caption?.target === "keyboard"} reducedMotion={reducedMotion} />
+
         <CameraRig shot={shot} reducedMotion={reducedMotion} />
         <LabelProjector registry={registry} />
+        <CaptionProjector at={caption ? CAPTION_AT[caption.target] : null} place={caption ? CAPTION_PLACE[caption.target] : "band"} root={captionRoot} />
       </Canvas>
       <div className="pointer-events-none absolute inset-0">
         {/* ---------- 札 ---------- */}
@@ -815,13 +927,15 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
         </Label>
         {packet && (
           <Label registry={registry} id="packet" at={[0, 0.01, 0]} follow={packetObj} place="above">
-            <span className={styles.packet} data-kind={packet.kind} data-spot={packet.spot} data-testid="bus-packet">
+            {/* 説明は吹き出しが担うので、小包の札は読み上げ用にだけ残す */}
+            <span className="sr-only" data-kind={packet.kind} data-spot={packet.spot} data-testid="bus-packet">
               {packet.text}
             </span>
           </Label>
         )}
+        {/* 吹き出しは札より手前に出す */}
+        <CaptionBubble caption={caption} root={captionRoot} />
       </div>
-
     </div>
   );
 }

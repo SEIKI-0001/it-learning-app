@@ -153,3 +153,71 @@
     color: rgba(255, 255, 255, 0.7);
   }
 }
+
+/* いま起きていることを伝える吹き出し（1つだけ・短く）。札より一段はっきり、でも模型を隠さない大きさ */
+.caption {
+  margin: 0;
+  padding: 6px 11px 7px;
+  border-left: 3px solid #3b82f6;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.45;
+  animation: c3-caption-in 260ms ease-out;
+}
+
+.caption[data-tone="lost"] {
+  border-left-color: #e11d48;
+  color: #881337;
+}
+
+.caption[data-tone="safe"] {
+  border-left-color: #10b981;
+  color: #064e3b;
+}
+
+.captionLine {
+  stroke: rgba(255, 255, 255, 0.85);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.captionDot {
+  fill: #3b82f6;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
+
+.captionLine[data-tone="lost"] {
+  stroke: rgba(254, 205, 211, 0.9);
+}
+
+.captionDot[data-tone="lost"] {
+  fill: #e11d48;
+}
+
+.captionDot[data-tone="safe"] {
+  fill: #10b981;
+}
+
+@keyframes c3-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caption {
+    animation: none;
+  }
+}

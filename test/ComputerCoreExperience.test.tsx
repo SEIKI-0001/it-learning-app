@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ComputerCoreExperience from "@/components/experiences/ComputerCoreExperience";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
-afterEach(cleanup);
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 function renderFlow() {
   render(
@@ -17,7 +23,11 @@ function renderFlow() {
 }
 
 const click = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
-const next = () => click("1ステップ進む");
+const next = () => click("次のSTEPへ");
+const back = () => click("前のSTEPへ");
+/** STEP 内の場面を最後まで再生する */
+const playThrough = () => act(() => vi.advanceTimersByTime(20_000));
+const caption = () => screen.getByTestId("cc-caption");
 const doc = () => screen.getByTestId("work-doc");
 const stored = () => screen.getByTestId("stored-file");
 
@@ -44,6 +54,7 @@ describe("ComputerCoreExperience", () => {
       expect(scene.querySelector(`[data-illustration="${part}"]`)).not.toBeNull();
     }
     expect(doc()).toHaveAttribute("data-spot", "storage");
+    expect(caption()).toHaveAttribute("data-target", "storage");
 
     next();
     expect(doc()).toHaveAttribute("data-spot", "memory");
@@ -51,16 +62,47 @@ describe("ComputerCoreExperience", () => {
     next();
     expect(screen.getByTestId("bus-packet")).toHaveAttribute("data-spot", "cpu");
     next();
-    // CPU が入力を計算している間は、メモリ上の文書はまだ v1
+    // キーボード入力 → CPU が計算。この間、メモリ上の文書はまだ v1
+    expect(caption()).toHaveAttribute("data-target", "keyboard");
+    playThrough();
     expect(screen.getByTestId("bus-packet")).toHaveAttribute("data-spot", "cpu");
     expect(doc()).toHaveAttribute("data-version", "1");
     next();
+    playThrough();
     expect(doc()).toHaveAttribute("data-status", "dirty");
     expect(doc()).toHaveTextContent("売上 120万円");
     expect(stored()).toHaveTextContent("売上 100万円");
     next();
+    playThrough();
     expect(doc()).toHaveAttribute("data-status", "saved");
     expect(stored()).toHaveTextContent("v2");
+  });
+
+  it("plays the phases of a step, stops at the last one, and never advances the step by itself", () => {
+    renderFlow();
+    next();
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    act(() => vi.advanceTimersByTime(2600));
+    expect(caption()).toHaveTextContent("メモリ（作業机）に広げる");
+    playThrough();
+    expect(caption()).toHaveTextContent("保存版 v1 は引き出しにそのまま残る");
+    expect(screen.getByTestId("cc-step-title")).toHaveTextContent("メモリへ読み込む");
+
+    click("↻ もう一度見る");
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    back();
+    expect(screen.getByTestId("cc-step-title")).toHaveTextContent("ふだんは引き出しに保管");
+  });
+
+  it("pauses the phases while the details are open", () => {
+    renderFlow();
+    next();
+    const details = screen.getByText(/詳しく見る/).closest("details")!;
+    details.open = true;
+    fireEvent(details, new Event("toggle"));
+    playThrough();
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    expect(screen.getByTestId("cc-detail")).toHaveTextContent("主記憶装置");
   });
 
   it("power off before saving erases only the memory copy; storage keeps the old version", () => {
