@@ -514,7 +514,8 @@ function Mover({
     }
     const a = anim.current;
     if (a) {
-      a.t = Math.min(1, a.t + dt / a.dur);
+      // 一時停止から戻った直後の大きな dt で飛ばないよう、1フレームの進みを抑える
+      a.t = Math.min(1, a.t + Math.min(dt, 0.05) / a.dur);
       const e = a.t < 0.5 ? 2 * a.t * a.t : 1 - Math.pow(-2 * a.t + 2, 2) / 2;
       pointOn(a.pts, e, g.position);
       if (a.t >= 1) anim.current = null;
@@ -749,7 +750,7 @@ function CaptionBubble({ caption, root }: { caption: SceneCaption | null; root: 
 
 // ---------------------------------------------------------------------------
 
-export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc, packet, power, reducedMotion, caption = null, epoch = 0 }: ComputerSceneProps & { forward?: boolean }) {
+export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc, packet, power, reducedMotion, caption = null, epoch = 0, paused = false }: ComputerSceneProps & { forward?: boolean }) {
   const on = power === "on";
   const vanished = doc?.status === "vanished";
   const safeOff = vanished && !!doc && stored === doc.version;
@@ -797,7 +798,7 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
       <Canvas
         shadows
         dpr={[1, 1.75]}
-        frameloop={visible ? "always" : "never"}
+        frameloop={visible && !paused ? "always" : "never"}
         camera={{ fov: 44, near: 0.02, far: 20, position: shot.pos }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         onCreated={({ gl, scene }) => {

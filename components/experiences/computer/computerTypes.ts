@@ -41,4 +41,6 @@ export type ComputerSceneProps = {
   caption?: SceneCaption | null;
   /** 「もう一度見る」などで同じ場面を最初から動かし直すための番号 */
   epoch?: number;
+  /** 一時停止中（模型の動きもその場で止める） */
+  paused?: boolean;
 };
