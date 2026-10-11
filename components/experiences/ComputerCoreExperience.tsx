@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ComputerScene } from "./computer/ComputerScene";
 import { DOC_TEXT, type ComputerSceneProps, type DocVersion, type SceneCaption } from "./computer/computerTypes";
+import { usePhasePlayer } from "./scene/usePhasePlayer";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 import { InlineIcon } from "@/components/ui/Pictogram";
@@ -21,9 +22,6 @@ import Icon from "@/components/ui/Icon";
 //   - STEP に入ると場面が自動で進み、最後の場面で止まる。次の STEP へはユーザーが「次へ」を押したときだけ進む
 //   - 長い説明・試験用語は「詳しく見る」に分け、開いている間は場面の再生を止める
 // ============================================================================
-
-/** 1つの場面を見せる長さ。移動のアニメーション（約1〜1.5秒）を見終えて吹き出しを読める長さにする */
-const PHASE_MS = 2600;
 
 type Phase = Pick<ComputerSceneProps, "nodes" | "lanes" | "doc" | "packet"> & {
   stored: DocVersion;
@@ -326,28 +324,6 @@ function powerView(power: Power, idx: number) {
     ) : (
       <>電源を入れ直して開くと、ストレージから <b>v{stored}（{DOC_TEXT[stored]}）</b> が読み込まれました。</>
     ),
-  };
-}
-
-/**
- * STEP と場面（フェーズ）の再生。STEP に入ると場面が自動で進み、最後の場面で止まる。
- * 次の STEP へは move を呼んだときだけ進む。paused の間は場面を進めない。
- * run は「もう一度見る」のたびに増え、模型のアニメーションを最初からやり直す合図にする。
- */
-function usePhasePlayer(phaseCounts: number[], paused: boolean) {
-  const [pos, setPos] = useState({ step: 0, phase: 0, run: 0 });
-  const lastPhase = phaseCounts[pos.step] - 1;
-  useEffect(() => {
-    if (paused || pos.phase >= lastPhase) return;
-    const timer = window.setTimeout(() => setPos((p) => ({ ...p, phase: p.phase + 1 })), PHASE_MS);
-    return () => window.clearTimeout(timer);
-  }, [pos, paused, lastPhase]);
-  return {
-    ...pos,
-    lastPhase,
-    done: pos.phase >= lastPhase,
-    move: (step: number) => setPos((p) => ({ step: Math.max(0, Math.min(step, phaseCounts.length - 1)), phase: 0, run: p.run + 1 })),
-    replay: () => setPos((p) => ({ ...p, phase: 0, run: p.run + 1 })),
   };
 }
 
