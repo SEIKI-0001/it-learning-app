@@ -51,6 +51,10 @@ describe("ComputerCoreExperience", () => {
     next();
     expect(screen.getByTestId("bus-packet")).toHaveAttribute("data-spot", "cpu");
     next();
+    // CPU が入力を計算している間は、メモリ上の文書はまだ v1
+    expect(screen.getByTestId("bus-packet")).toHaveAttribute("data-spot", "cpu");
+    expect(doc()).toHaveAttribute("data-version", "1");
+    next();
     expect(doc()).toHaveAttribute("data-status", "dirty");
     expect(doc()).toHaveTextContent("売上 120万円");
     expect(stored()).toHaveTextContent("売上 100万円");
@@ -61,6 +65,7 @@ describe("ComputerCoreExperience", () => {
 
   it("power off before saving erases only the memory copy; storage keeps the old version", () => {
     renderFlow();
+    next();
     next();
     next();
     next();
@@ -77,6 +82,7 @@ describe("ComputerCoreExperience", () => {
 
   it("power off after saving keeps the edit, and comparing both shows the volatility insight", () => {
     renderFlow();
+    next();
     next();
     next();
     next();

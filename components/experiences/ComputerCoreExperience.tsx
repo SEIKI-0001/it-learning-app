@@ -63,15 +63,29 @@ const STEPS: FlowStep[] = [
     detail: <><b>CPU（頭脳）</b>がメモリ上の文書を読んで処理（表示・計算）。CPUとメモリの間は超高速でやりとりします。</>,
   },
   {
+    title: "CPUが書き換えを計算",
+    nodes: { storage: "idle", memory: "idle", cpu: "active" },
+    lanes: {},
+    stored: 1,
+    doc: { spot: "memory", version: 1, status: "clean" },
+    packet: { spot: "cpu", text: "「120」と入力 → 計算中", kind: "bus" },
+    detail: (
+      <>
+        キーボードで「120」と打ち込むと、まず<b>CPU（頭脳）</b>が入力を受け取り、新しい内容を計算します。
+        この時点では、メモリ上の文書は<b>まだ v1（{DOC_TEXT[1]}）</b>のまま。
+      </>
+    ),
+  },
+  {
     title: "メモリ上で編集",
     nodes: { storage: "idle", memory: "active", cpu: "active" },
     lanes: { bus: "active" },
     stored: 1,
     doc: { spot: "memory", version: 2, status: "dirty" },
-    packet: { spot: "memory", text: "100 → 120 に書き換え", kind: "bus" },
+    packet: { spot: "memory", text: "120 をメモリへ書き込み", kind: "bus" },
     detail: (
       <>
-        あなたが書き直すと、変更はまず<b>メモリの上</b>にあります（だから速い）。
+        CPUが計算した結果は、まず<b>メモリの上</b>に書き込まれます（だから速い）。
         机の上は <b>v2</b>、でも引き出しの中は<b>まだ v1</b>。ここで <b>電源を切る</b> を押してみよう。
       </>
     ),
@@ -87,8 +101,8 @@ const STEPS: FlowStep[] = [
   },
 ];
 
-const EDIT_STEP = 3;
-const SAVE_STEP = 4;
+const EDIT_STEP = 4;
+const SAVE_STEP = 5;
 
 type Power = "on" | "off" | "rebooted";
 
@@ -255,7 +269,7 @@ function DataFlow() {
         )}
       </div>
       {power === "on" && idx !== EDIT_STEP && !tried.lost && (
-        <p className="mt-2 text-center text-[11px] text-gray-500">ヒント：STEP 4（メモリ上で編集）で切ると…？</p>
+        <p className="mt-2 text-center text-[11px] text-gray-500">ヒント：STEP {EDIT_STEP + 1}（メモリ上で編集）で切ると…？</p>
       )}
 
       {(tried.lost || tried.safe) && (
@@ -266,9 +280,9 @@ function DataFlow() {
               メモリは電気が無いと中身を保てない＝<b>揮発性</b>。だから「保存」でストレージ（<b>不揮発性</b>）へ移すのが大切！
             </>
           ) : tried.lost ? (
-            <><InlineIcon name="lightbulb" />保存前に切ると編集が消えた。次は <b>STEP 5（保存）の後</b>に切って比べてみよう。</>
+            <><InlineIcon name="lightbulb" />保存前に切ると編集が消えた。次は <b>STEP {SAVE_STEP + 1}（保存）の後</b>に切って比べてみよう。</>
           ) : (
-            <><InlineIcon name="lightbulb" />保存後なら残った。次は <b>STEP 4（保存前）</b>で切って比べてみよう。</>
+            <><InlineIcon name="lightbulb" />保存後なら残った。次は <b>STEP {EDIT_STEP + 1}（保存前）</b>で切って比べてみよう。</>
           )}
         </div>
       )}
