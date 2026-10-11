@@ -14,12 +14,12 @@ const ComputerScene3D = dynamic(() => import("./ComputerScene3D"), {
   loading: () => <Loading />,
 });
 
+// three.js（r163〜）は WebGL2 が必須。WebGL1 しか無い端末は最初から 2.5D にする
 let webglCache: boolean | null = null;
-function hasWebGL() {
+function hasWebGL2() {
   if (webglCache !== null) return webglCache;
   try {
-    const c = document.createElement("canvas");
-    webglCache = !!(c.getContext("webgl2") || c.getContext("webgl"));
+    webglCache = !!document.createElement("canvas").getContext("webgl2");
   } catch {
     webglCache = false;
   }
@@ -35,21 +35,38 @@ function Loading() {
   );
 }
 
+/** 2.5D に切り替えたときは、理由を小さく添える（端末ごとの不具合を調べる手がかり） */
+function FlatWithReason({ reason, children }: { reason: string; children: ReactNode }) {
+  return (
+    <div data-scene-fallback={reason}>
+      {children}
+      <p className="mt-1 text-center text-[10px] text-gray-400" data-testid="scene3d-fallback">
+        簡易表示中（{reason}）
+      </p>
+    </div>
+  );
+}
+
 /** 3D の読み込み・描画で例外が出たら 2.5D に切り替える */
-class Fallback extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
+class Fallback extends Component<{ fallback: ReactNode; children: ReactNode }, { error: string | null }> {
+  state = { error: null as string | null };
+  static getDerivedStateFromError(e: unknown) {
+    return { error: e instanceof Error ? e.message.slice(0, 80) || e.name : String(e).slice(0, 80) };
+  }
+  componentDidCatch(e: unknown) {
+    console.error("[ComputerScene3D] 3D表示に失敗したため 2.5D に切り替え", e);
   }
   render() {
-    return this.state.failed ? this.props.fallback : this.props.children;
+    return this.state.error !== null ? <FlatWithReason reason={`3D読み込み失敗: ${this.state.error}`}>{this.props.fallback}</FlatWithReason> : this.props.children;
   }
 }
 
 export function ComputerScene(props: ComputerSceneProps & { forward?: boolean }) {
-  const webgl = useSyncExternalStore(noop, hasWebGL, () => false);
+  const webgl = useSyncExternalStore(noop, hasWebGL2, () => null);
   const flat = <ComputerDioramaScene {...props} />;
-  if (!webgl) return flat;
+  // サーバー描画中（null）は従来の模型。ブラウザで WebGL2 が無いと分かったら理由を添える
+  if (webgl === null) return flat;
+  if (!webgl) return <FlatWithReason reason="この端末・ブラウザは WebGL2 に未対応">{flat}</FlatWithReason>;
   return (
     <Fallback fallback={flat}>
       <Suspense fallback={<Loading />}>
