@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ComputerDioramaScene } from "./computer/ComputerDioramaScene";
+import { ComputerScene } from "./computer/ComputerScene";
 import { DOC_TEXT, type ComputerSceneProps, type DocVersion } from "./computer/computerTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -13,7 +13,7 @@ import Icon from "@/components/ui/Icon";
 // ============================================================================
 // 「CPU・メモリ・ストレージ」専用の体験。
 //   ① 3つの部品の役割（頭脳・作業机・引き出し）
-//   ② データの流れ体験 … PC内部の 2.5D 模型（ストレージ → メモリ ↔ CPU）で
+//   ② データの流れ体験 … PC内部の模型（WebGLがあれば3D、なければ2.5D）（ストレージ → メモリ ↔ CPU）で
 //      文書を開く→処理→編集→保存 を1歩ずつ。どの段階でも「電源を切る」を押せ、
 //      保存前に切ると メモリ上の編集だけが消え、ストレージには古い版が残る（揮発性）
 //   ③ メモリ vs ストレージ … 速さ・容量・電源OFFで消えるか（揮発性）の比較
@@ -200,7 +200,7 @@ function DataFlow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <ComputerDioramaScene {...scene} forward={player.forward} />
+        <ComputerScene {...scene} forward={player.forward} />
       </div>
 
       <div

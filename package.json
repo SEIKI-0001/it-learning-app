@@ -43,6 +43,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
     "@rive-app/react-canvas": "^4.29.5",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
@@ -50,7 +52,8 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-server-dom-webpack": "19.2.8",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.54.4",
@@ -62,6 +65,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
     "@vinext/cloudflare": "1.0.0-beta.7",
     "@vitejs/plugin-react": "6.1.1",
     "@vitejs/plugin-rsc": "0.5.34",
