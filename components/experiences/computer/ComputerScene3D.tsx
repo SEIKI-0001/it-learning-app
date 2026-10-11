@@ -83,6 +83,9 @@ const SHOT_PART: Record<PartId, Shot> = {
 const SHOT_OFF: Shot = { pos: [-0.14, 1.2, 0.08], look: [0.0, 0.83, -0.47] };
 
 const FAN_AXIS = new THREE.Vector3(0, 0, 1);
+/** CPUクーラーを縮める基点（クーラーの土台の中心）と倍率 */
+const COOLER_PIVOT: V3 = [0.07, 0.7637, -0.415];
+const COOLER_SCALE = 0.7;
 
 const STATE_COLOR: Record<PartState, string | null> = {
   idle: null,
@@ -193,6 +196,13 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
         partMats[id].push(...((Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.MeshStandardMaterial[]));
       });
     }
+    // CPUクーラー（フィン＋ファン）は基板に対して大きすぎるので、土台を中心に縮める
+    const cooler = new THREE.Group();
+    cooler.position.set(...COOLER_PIVOT);
+    root.add(cooler);
+    root.updateMatrixWorld(true);
+    for (const n of ["Part_CPU", "FanRotor"]) if (byName[n]) cooler.attach(byName[n]);
+    cooler.scale.setScalar(COOLER_SCALE);
     // 画面とランプは自前の材質に差し替える
     const screenMat = new THREE.MeshBasicMaterial({ color: "#000000", toneMapped: false });
     byName.Mon_Screen?.traverse((o) => {
