@@ -35,13 +35,14 @@ function Loading() {
   );
 }
 
-/** 2.5D に切り替えたときは、理由を小さく添える（端末ごとの不具合を調べる手がかり） */
+/** 2.5D に切り替えたときは一言添える。理由は data-scene-fallback に残す（端末ごとの不具合を調べる手がかり） */
 function FlatWithReason({ reason, children }: { reason: string; children: ReactNode }) {
   return (
     <div data-scene-fallback={reason}>
       {children}
+      {/* 理由は data 属性とコンソールにだけ残し、画面には一言だけ出す */}
       <p className="mt-1 text-center text-[10px] text-gray-400" data-testid="scene3d-fallback">
-        簡易表示中（{reason}）
+        この端末では簡易表示になっています
       </p>
     </div>
   );
