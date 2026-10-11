@@ -61,9 +61,25 @@ class Fallback extends Component<{ fallback: ReactNode; children: ReactNode }, {
   }
 }
 
+/** 2.5D には吹き出しが無いので、いまの一言を模型の上に出す */
+function FlatCaption({ caption }: { caption: ComputerSceneProps["caption"] }) {
+  if (!caption) return null;
+  const tone = caption.tone === "lost" ? "bg-rose-50 text-rose-800 ring-rose-200" : caption.tone === "safe" ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-sky-50 text-sky-900 ring-sky-200";
+  return (
+    <p className={`mb-2 rounded-lg px-3 py-1.5 text-center text-xs font-bold ring-1 ${tone}`} data-testid="cc-caption" data-target={caption.target}>
+      {caption.text}
+    </p>
+  );
+}
+
 export function ComputerScene(props: ComputerSceneProps & { forward?: boolean }) {
   const webgl = useSyncExternalStore(noop, hasWebGL2, () => null);
-  const flat = <ComputerDioramaScene {...props} />;
+  const flat = (
+    <>
+      <FlatCaption caption={props.caption} />
+      <ComputerDioramaScene {...props} />
+    </>
+  );
   // サーバー描画中（null）は従来の模型。ブラウザで WebGL2 が無いと分かったら理由を添える
   if (webgl === null) return flat;
   if (!webgl) return <FlatWithReason reason="この端末・ブラウザは WebGL2 に未対応">{flat}</FlatWithReason>;
