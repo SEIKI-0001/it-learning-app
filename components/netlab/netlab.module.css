@@ -212,3 +212,84 @@
 .dragTip[data-state="ng"] {
   background: #9f1239;
 }
+
+/* 名札の上に出す「ここをつかんで／ここで離す／ここを押す」 */
+.chipWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chipCue {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #e08a34;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: netlab-cue 1.3s ease-in-out infinite;
+}
+
+.chipCue::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  border: 4px solid transparent;
+  border-top-color: #e08a34;
+  transform: translateX(-50%);
+}
+
+.chipCue[data-role="to"] {
+  background: #2f8f63;
+}
+
+.chipCue[data-role="to"]::after {
+  border-top-color: #2f8f63;
+}
+
+@keyframes netlab-cue {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+[data-reduced-motion="true"] .chipCue {
+  animation: none;
+}
+
+/* ドラッグの見本（つかむ点が名札から名札へ滑る） */
+.demoLine {
+  stroke: #e08a34;
+  stroke-width: 2.5;
+  stroke-dasharray: 5 6;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.demoRing {
+  fill: rgba(224, 138, 52, 0.18);
+  stroke: #e08a34;
+  stroke-width: 2;
+}
+
+.demoDot {
+  fill: #e08a34;
+}
+
+/* 置かれる場所の札 */
+.placeTag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #2463d1;
+  box-shadow: 0 4px 12px rgba(36, 99, 209, 0.35);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+}
