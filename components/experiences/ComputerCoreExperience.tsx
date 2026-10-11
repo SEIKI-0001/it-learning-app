@@ -199,18 +199,18 @@ function DataFlow() {
         </p>
       </div>
 
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <ComputerScene {...scene} forward={player.forward} />
-      </div>
-
       <div
-        className={`mt-3 min-h-[3.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
+        className={`mt-3 min-h-[5.4em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
           pv?.tone === "lost" ? "bg-rose-50 ring-rose-200" : pv ? "bg-emerald-50 ring-emerald-200" : "bg-sky-50 ring-sky-200"
         }`}
         aria-live="polite"
         data-testid="cc-detail"
       >
         {pv ? pv.detail : step.detail}
+      </div>
+
+      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
+        <ComputerScene {...scene} forward={player.forward} />
       </div>
 
       <div className="mt-3">
