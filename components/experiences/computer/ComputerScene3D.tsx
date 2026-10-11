@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer, useGLTF } from "@react-three/drei";
+import { useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { DOC_TEXT, type BusId, type ComputerSceneProps, type PartId, type PartState } from "./computerTypes";
 import styles from "./computerdiorama.module.css";
@@ -13,6 +13,13 @@ import styles from "./computerdiorama.module.css";
 // 座標は glTF（Y上・手前が +Z、単位 m）。Blender の (x, y, z) は (x, z, -y) になる。
 
 const MODEL_URL = "/models/desk-pc.glb";
+// Blender で焼き込んだ色（木目・基板の模様）×陰影（AO）。焼き込み用のUV（TEXCOORD_0）で貼る
+const BAKED_PC_URL = "/models/desk-pc-pc.webp";
+const BAKED_ROOM_URL = "/models/desk-pc-room.webp";
+/** 部屋を PC の位置から写したパノラマ（金属の映り込み用） */
+const ENV_URL = "/models/desk-pc-env.webp";
+const BAKED_PC_NODES = ["Static_PC", "Part_Storage", "Part_Memory", "Part_CPU", "FanRotor"];
+const NO_BAKE = /^(Sleeve|CableBlack|FanBlade|FanFrame)/;
 
 type V3 = [number, number, number];
 
@@ -132,6 +139,13 @@ function useGlowTexture() {
 
 function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | "off"; cpuState: PartState; nodes: ComputerSceneProps["nodes"]; doc: ComputerSceneProps["doc"]; reducedMotion: boolean }) {
   const { scene } = useGLTF(MODEL_URL);
+  const baked = useTexture({ pc: BAKED_PC_URL, room: BAKED_ROOM_URL }, (t) => {
+    for (const tex of Object.values(t)) {
+      tex.flipY = false;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 8;
+    }
+  });
   const on = power === "on";
 
   // 部品ごとに材質を複製（光らせても他の部品・他の模型に影響しない）
@@ -146,6 +160,23 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
       mesh.castShadow = true;
       mesh.receiveShadow = true;
     });
+    // 焼き込んだ色と陰影を貼る（材質の色は白にして、テクスチャの色をそのまま出す）
+    const bake = (name: string, tex: THREE.Texture) =>
+      byName[name]?.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const mats = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((m) => {
+          const c = (m as THREE.MeshStandardMaterial).clone();
+          // 金属は焼き込みの「拡散色」が黒になるので貼らない。ケーブル・ファンは元の色のほうが自然
+          if (c.metalness > 0.5 || NO_BAKE.test(c.name)) return c;
+          c.map = tex;
+          c.color.set("#ffffff");
+          return c;
+        });
+        mesh.material = Array.isArray(mesh.material) ? mats : mats[0];
+      });
+    for (const n of BAKED_PC_NODES) bake(n, baked.pc);
+    bake("Static_Room", baked.room);
     const parts: [PartId, string][] = [
       ["storage", "Part_Storage"],
       ["memory", "Part_Memory"],
@@ -155,9 +186,8 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
       byName[name]?.traverse((o) => {
         const mesh = o as THREE.Mesh;
         if (!mesh.isMesh) return;
-        const mats = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((m) => (m as THREE.MeshStandardMaterial).clone());
-        mesh.material = Array.isArray(mesh.material) ? mats : mats[0];
-        partMats[id].push(...mats);
+        // 焼き込みで既に複製済みの材質を、光らせる対象として集める
+        partMats[id].push(...((Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.MeshStandardMaterial[]));
       });
     }
     // 画面とランプは自前の材質に差し替える
@@ -170,7 +200,7 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
       if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).material = ledMat;
     });
     return { root, partMats, screenMat, ledMat, fan: byName.FanRotor ?? null, screen: byName.Mon_Screen ?? null };
-  }, [scene]);
+  }, [scene, baked]);
 
   // モニターの画面：同じ文書（レポート）を映す。電源OFFは真っ暗
   const screenMat = useRef<THREE.MeshBasicMaterial>(null);
@@ -287,12 +317,12 @@ function PartGlow({ id, state, on, reducedMotion }: { id: PartId; state: PartSta
     if (!mat.current) return;
     const pulse = reducedMotion ? 1 : 0.8 + 0.2 * Math.sin(s.clock.elapsedTime * 4);
     if (col) mat.current.color.set(col);
-    mat.current.opacity = damp(mat.current.opacity, col ? 0.9 * pulse : 0, 6, dt);
+    mat.current.opacity = damp(mat.current.opacity, col ? 0.45 * pulse : 0, 6, dt);
   });
   const [w, d] = GLOW_SIZE[id];
   return (
     <mesh position={[PART_AT[id][0], BOARD_Y + 0.0012, PART_AT[id][2]]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[w * 1.6, d * 1.6]} />
+      <planeGeometry args={[w * 1.3, d * 1.3]} />
       <meshBasicMaterial ref={mat} map={tex} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
     </mesh>
   );
@@ -461,6 +491,15 @@ function ParcelMesh() {
   );
 }
 
+/** 部屋のパノラマを映り込み（scene.environment）に使う */
+function RoomEnvironment() {
+  const env = useTexture(ENV_URL, (t) => {
+    t.mapping = THREE.EquirectangularReflectionMapping;
+    t.colorSpace = THREE.SRGBColorSpace;
+  });
+  return <primitive object={env} attach="environment" />;
+}
+
 /** ショットへカメラを滑らかに寄せる */
 function CameraRig({ shot, reducedMotion }: { shot: Shot; reducedMotion: boolean }) {
   const look = useRef(new THREE.Vector3(...shot.look));
@@ -589,9 +628,17 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
         frameloop={visible ? "always" : "never"}
         camera={{ fov: 38, near: 0.02, far: 20, position: shot.pos }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
+        onCreated={({ gl, scene }) => {
+          // 色を濁らせずに明るさだけ整える（ACES は彩度が飛び、AgX は全体がくすむ）
+          gl.toneMapping = THREE.NeutralToneMapping;
+          gl.toneMappingExposure = 1.0;
+          // パノラマの正面（Blender の +Y＝奥）を three の -Z に合わせる
+          scene.environmentRotation.set(0, -Math.PI / 2, 0);
+          scene.environmentIntensity = 1.1;
+        }}
       >
         <color attach="background" args={["#d9dde3"]} />
-        <hemisphereLight args={["#f3f6ff", "#6b5a48", 0.55]} />
+        <hemisphereLight args={["#f3f6ff", "#6b5a48", 0.7]} />
         <directionalLight
           position={[-1.2, 2.2, 0.9]}
           intensity={2.2}
@@ -606,14 +653,9 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
           shadow-normalBias={0.01}
         />
         <directionalLight position={[1.2, 1.4, 1.2]} intensity={0.5} color="#dfe8ff" />
-        <Environment resolution={128} frames={1}>
-          <Lightformer form="rect" intensity={2.5} position={[-2, 2, 1]} scale={[3, 2, 1]} color="#ffffff" />
-          <Lightformer form="rect" intensity={1.2} position={[2, 1.5, 2]} scale={[2, 2, 1]} color="#ffe9d2" />
-          <Lightformer form="rect" intensity={0.8} position={[0, 3, -1]} rotation-x={Math.PI / 2} scale={[4, 4, 1]} color="#dfe9ff" />
-        </Environment>
+        <RoomEnvironment />
 
         <DeskPC power={power} cpuState={nodes.cpu} nodes={nodes} doc={doc} reducedMotion={reducedMotion} />
-        <ContactShadows position={[0, 0.7405, -0.3]} scale={1.6} blur={2.4} opacity={0.35} far={0.4} frames={1} />
 
         {(Object.keys(PART_AT) as PartId[]).map((id) => (
           <PartGlow key={id} id={id} state={nodes[id]} on={on} reducedMotion={reducedMotion} />
@@ -722,3 +764,4 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
 }
 
 useGLTF.preload(MODEL_URL);
+useTexture.preload([BAKED_PC_URL, BAKED_ROOM_URL, ENV_URL]);
