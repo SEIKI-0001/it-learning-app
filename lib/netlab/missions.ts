@@ -11,18 +11,19 @@ import {
   sameSubnet,
   simulate,
   type DeviceId,
+  type ExternalId,
   type LabState,
   type PlaceableKind,
   type TestId,
 } from "./engine";
 import { SLOTS } from "./layout";
 
-// Missions: build the small company's office in order: LAN → DHCP → Internet → server → Wi-Fi → DMZ.
-// Every check is recomputed from the current state (the panel always shows "is it satisfied right now").
-// Each check carries a "next action" for that step (it does the step, opens the right setting, or runs the test),
-// so the guide can take the user there in one press.
+// ミッション：小さな会社のオフィスを、LAN → DHCP → インターネット → サーバ → Wi-Fi → DMZ の順に作り上げる。
+// 判定は毎回 state から計算し直す（「いま満たしているか」を常に表示する）。
+// 各チェックには「次の一手」（その操作をする・該当の設定を開く・テストを流す）を持たせ、
+// ガイドからボタン1つでそこへ連れていけるようにする。
 
-/** A setting to open (the matching inspector field is highlighted) */
+/** 開く設定欄（設定パネルの該当欄を目立たせる） */
 export type FocusField =
   | "router.dhcp"
   | "router.range"
@@ -33,15 +34,19 @@ export type FocusField =
   | "fw.rules";
 
 export type CheckAction = {
-  /** Button label (e.g. "Place the switch", "Turn on DHCP") */
+  /** ボタンの文言 */
   label: string;
-  /** Do it for the user (place, wire, rewire) */
+  /** 置く：役割カードを開き、確認に正解したら置く */
+  place?: PlaceableKind;
+  /** つなぐ：この2つの名札の間に、模型の上で「ドラッグの見本」を出す（1つ目から2つ目へ） */
+  wire?: [DeviceId, DeviceId];
+  /** その場で実行する（配線・つなぎ直し） */
   run?: (s: LabState) => LabState;
-  /** Select this device and highlight the setting (the user toggles it themselves) */
+  /** この機器を選び、設定欄を目立たせる（切り替えは利用者が自分でする） */
   focus?: { device: DeviceId; field: FocusField };
-  /** Run the test (packet animation) */
+  /** テストを流す（小包のアニメーション） */
   test?: TestId;
-  /** Name tags to make pulse */
+  /** 脈打たせる名札 */
   highlight?: DeviceId[];
 };
 
@@ -50,20 +55,24 @@ export type Check = { label: string; ok: boolean; hint?: string; action?: CheckA
 export type Mission = {
   id: string;
   title: string;
-  /** The request (from the boss) */
+  /** 依頼の文（社長からのお願い） */
   story: string;
-  /** Terms covered (IT Passport syllabus terms) */
+  /** 学べる用語（ITパスポートのシラバス用語） */
   terms: string[];
-  /** Tests that verify this mission */
+  /** このミッションで確かめるテスト（先頭を達成の瞬間に流す。空なら流さない） */
   tests: TestId[];
+  /** このミッションで触る・見る機器（ほかの名札は隠して、見るものを減らす） */
+  focus: DeviceId[];
+  /** 模型の外に出す相手（お客さん・攻撃者など）。関係ないミッションでは出さない */
+  externals: ExternalId[];
   checks: (state: LabState) => Check[];
-  /** "Show answer" completes everything up to this mission */
+  /** 「答えを見る」で、このミッションまでを完成させる */
   solve: (state: LabState) => LabState;
 };
 
 const linkedTo = (state: LabState, a: DeviceId, b: DeviceId) => neighbors(state, a).includes(b);
 
-/** Preferred place for each device (where "place" drops it). Uses the next free slot if taken */
+/** 機器ごとの置き場所の希望順（「置く」で入る場所）。埋まっていれば次の空きへ */
 const PREFERRED_SLOT: Record<PlaceableKind, string[]> = {
   firewall: ["s1", "s2", "s3", "s4", "s5", "s6"],
   router: ["s2", "s1", "s3", "s4", "s5", "s6"],
@@ -78,7 +87,7 @@ export function freeSlotFor(state: LabState, kind: PlaceableKind): string | null
   return PREFERRED_SLOT[kind].find((id) => !used.has(id) && SLOTS.some((s) => s.id === id && s.accepts.includes(kind))) ?? null;
 }
 
-/** Place in the preferred slot (no-op if already placed or no room) */
+/** 希望の置き場所へ置く（置き済み・空きなしなら何もしない） */
 export function autoPlace(state: LabState, kind: PlaceableKind): LabState {
   if (isPresent(state, kind)) return state;
   const slot = freeSlotFor(state, kind);
@@ -86,17 +95,18 @@ export function autoPlace(state: LabState, kind: PlaceableKind): LabState {
 }
 
 const placeAction = (kind: PlaceableKind): CheckAction => ({
-  label: `${DEVICE_NAME[kind]}を置く`,
-  run: (s) => autoPlace(s, kind),
+  label: `${DEVICE_NAME[kind]}の役割を確認して置く`,
+  place: kind,
 });
 
 const wireAction = (a: DeviceId, b: DeviceId): CheckAction => ({
-  label: `${DEVICE_NAME[a]}と${DEVICE_NAME[b]}をつなぐ`,
+  label: `ボタンでつなぐ`,
+  wire: [a, b],
   run: (s) => connect(s, a, b),
   highlight: [a, b],
 });
 
-/** If not placed yet, place it; otherwise wire it */
+/** まだ置いていなければ置く、置いてあればつなぐ */
 const placeThenWire = (s: LabState, kind: PlaceableKind, to: DeviceId): CheckAction =>
   isPresent(s, kind) ? wireAction(kind, to) : placeAction(kind);
 
@@ -106,32 +116,26 @@ export const MISSIONS: Mission[] = [
   {
     id: "lan",
     title: "1. 社員の PC を LAN でつなぐ",
-    story: "4人の社員が、お互いの PC でファイルを渡し合えるようにしてほしい。まずはケーブルでつなごう。",
+    story: "2人の社員が、お互いの PC でファイルを渡し合えるようにしてほしい。まずはケーブルでつなごう。",
     terms: ["LAN", "スイッチ（L2スイッチ）", "スター型"],
-    tests: ["ping-ab"],
-    checks: (s) => {
-      const unwired = PCS.filter((pc) => !linkedTo(s, pc, "switch"));
-      return [
-        {
-          label: "スイッチをサーバ室に置く",
-          ok: isPresent(s, "switch"),
-          hint: "スイッチは、LAN の機器を1か所に集めてつなぐ「たこ足」の役。",
-          action: placeAction("switch"),
-        },
-        {
-          label: "PC 4台をスイッチにつなぐ",
-          ok: unwired.length === 0,
-          hint: "PC の名札からスイッチの名札へドラッグすると1本ずつつなげます。どの PC もスイッチへ1本ずつの「スター型」になります。",
-          action: isPresent(s, "switch")
-            ? {
-                label: unwired.length > 1 ? `残りの PC ${unwired.length}台をまとめてつなぐ` : `${unwired[0]?.toUpperCase()} をつなぐ`,
-                run: (t) => unwired.reduce((acc, pc) => connect(acc, pc, "switch"), t),
-                highlight: [...unwired, "switch"],
-              }
-            : placeAction("switch"),
-        },
-      ];
-    },
+    // つないだだけでは IP がなく ping は届かない（それがミッション2の入口）。達成の演出でわざと失敗を見せない
+    tests: [],
+    focus: ["switch", ...PCS],
+    externals: [],
+    checks: (s) => [
+      {
+        label: "スイッチをサーバ室に置く",
+        ok: isPresent(s, "switch"),
+        hint: "スイッチは、LAN の機器を1か所に集めてつなぐ役。",
+        action: placeAction("switch"),
+      },
+      ...PCS.map((pc) => ({
+        label: `${DEVICE_NAME[pc]} をスイッチにつなぐ`,
+        ok: linkedTo(s, pc, "switch"),
+        hint: "どの PC もスイッチへ1本ずつ。この形を「スター型」といいます。",
+        action: isPresent(s, "switch") ? wireAction(pc, "switch") : placeAction("switch"),
+      })),
+    ],
     solve: (s) => PCS.reduce((acc, pc) => connect(acc, pc, "switch"), autoPlace(s, "switch")),
   },
   {
@@ -139,7 +143,9 @@ export const MISSIONS: Mission[] = [
     title: "2. IP アドレスを自動で配る",
     story: "ケーブルはつながったのに、PC 同士で通信できない。ネットワークの「住所」＝IP アドレスがないからだ。ルータの DHCP で自動で配ろう。",
     terms: ["IP アドレス", "DHCP", "プライベート IP アドレス", "ping"],
-    tests: ["ping-ad"],
+    tests: ["ping-ab"],
+    focus: ["router", "switch", ...PCS],
+    externals: [],
     checks: (s) => {
       const sim = simulate(s);
       return [
@@ -159,11 +165,11 @@ export const MISSIONS: Mission[] = [
             : placeAction("router"),
         },
         {
-          label: "4台すべてに IP アドレスが配られる",
+          label: "2台の PC に IP アドレスが配られる",
           ok: PCS.every((pc) => !!sim.hosts[pc]?.ip && !sim.hosts[pc]?.conflict),
           hint: "PC の画面に 192.168.1.x が出れば配られています。",
         },
-        { label: "テスト：PC-A → PC-D に ping が届く", ok: runTest(s, "ping-ad", sim).ok, action: testAction("ping-ad") },
+        { label: "テスト：PC-A → PC-B に ping が届く", ok: runTest(s, "ping-ab", sim).ok, action: testAction("ping-ab") },
       ];
     },
     solve: (s) => {
@@ -177,6 +183,8 @@ export const MISSIONS: Mission[] = [
     story: "社内はつながった。次は取引先のサイトを見たい。光回線の ONU とルータをつなぎ、名前を IP アドレスに変える DNS も設定しよう。",
     terms: ["ONU", "WAN", "デフォルトゲートウェイ", "NAT", "DNS"],
     tests: ["web-pc"],
+    focus: ["router", "onu", "pc-a"],
+    externals: ["internet"],
     checks: (s) => {
       const sim = simulate(s);
       return [
@@ -211,6 +219,8 @@ export const MISSIONS: Mission[] = [
     story: "共有フォルダ用のファイルサーバを入れた。いつも同じ住所で見つかるよう、IP アドレスは手で決めて（固定して）おこう。",
     terms: ["ファイルサーバ", "固定 IP アドレス", "IP アドレスの重複", "サブネット"],
     tests: ["ping-file"],
+    focus: ["fileServer", "switch", "pc-b"],
+    externals: [],
     checks: (s) => {
       const sim = simulate(s);
       const h = sim.hosts.fileServer;
@@ -236,7 +246,7 @@ export const MISSIONS: Mission[] = [
           hint: `配布範囲は ${s.router.dhcpStart} 〜 ${s.router.dhcpEnd}。範囲の外（例：192.168.1.10）にしないと PC と住所がぶつかります。`,
           action: openIp,
         },
-        { label: "テスト：PC-C からファイルサーバに届く", ok: runTest(s, "ping-file", sim).ok, action: testAction("ping-file") },
+        { label: "テスト：PC-B からファイルサーバに届く", ok: runTest(s, "ping-file", sim).ok, action: testAction("ping-file") },
       ];
     },
     solve: (s) => {
@@ -250,6 +260,8 @@ export const MISSIONS: Mission[] = [
     story: "会議室ではノート PC を無線で使いたい。無線 AP を置こう。ただし、隣のビルの人に勝手に使われないようにすること。",
     terms: ["無線LAN", "アクセスポイント", "SSID", "WPA2 / WPA3"],
     tests: ["web-laptop", "outsider-wifi"],
+    focus: ["ap", "switch", "laptop"],
+    externals: ["internet", "outsider"],
     checks: (s) => {
       const sim = simulate(s);
       return [
@@ -279,23 +291,26 @@ export const MISSIONS: Mission[] = [
     story: "会社の Web サイトを自前のサーバで公開したい。外から見られる場所（DMZ）を作り、社内 LAN は守ったままにしよう。",
     terms: ["ファイアウォール", "DMZ", "ポート番号（443 / 22）", "パケットフィルタリング"],
     tests: ["customer-web", "attack-ssh", "attack-file", "web-pc"],
+    focus: ["firewall", "router", "onu", "webServer", "fileServer"],
+    externals: ["internet", "customer", "attacker"],
     checks: (s) => {
       const sim = simulate(s);
-      // Rewire: place the firewall → unplug router⇔ONU → ONU⇔firewall → firewall⇔router (proceed one step at a time)
+      // つなぎ直し：ファイアウォールを置く → ルータ⇔ONU を外す → ONU⇔FW → FW⇔ルータ（1手ずつ進める）
       const rewire: CheckAction = !isPresent(s, "firewall")
         ? placeAction("firewall")
         : linkedTo(s, "router", "onu")
-          ? { label: "ルータ⇔ONU のケーブルを外す", run: (t) => disconnect(t, "router", "onu"), highlight: ["router", "onu"] }
+          ? { label: "ルータ⇔ONU のケーブルを外す", run: (t) => disconnect(t, "router", "onu"), highlight: ["router"] }
           : !linkedTo(s, "onu", "firewall")
             ? wireAction("onu", "firewall")
             : wireAction("firewall", "router");
       const webWire: CheckAction = !isPresent(s, "webServer")
         ? placeAction("webServer")
-        : {
-            label: "Webサーバを DMZ ポートにつなぐ",
+        : ({
+            label: "ボタンでつなぐ",
+            wire: ["webServer", "firewall"],
             run: (t) => connect({ ...t, links: t.links.filter((l) => l.a !== "webServer" && l.b !== "webServer") }, "firewall", "webServer"),
-            highlight: ["firewall", "webServer"],
-          };
+            highlight: ["webServer", "firewall"],
+          } satisfies CheckAction);
       const rules: CheckAction = { label: "ファイアウォールのルールを開く", focus: { device: "firewall", field: "fw.rules" } };
       return [
         {
@@ -329,7 +344,7 @@ export const MISSIONS: Mission[] = [
     },
     solve: (s) => {
       let t = autoPlace(autoPlace(s, "firewall"), "webServer");
-      // Unplug the direct router⇔ONU link and the web server's LAN-side cable, then rewire
+      // ルータ⇔ONU の直結と、LAN 側に置いていた Web サーバの線は外してからつなぎ直す
       t = disconnect(t, "router", "onu");
       t = { ...t, links: t.links.filter((l) => l.a !== "webServer" && l.b !== "webServer") };
       t = connect(t, "onu", "firewall");
@@ -342,5 +357,5 @@ export const MISSIONS: Mission[] = [
 
 export const missionDone = (m: Mission, s: LabState) => m.checks(s).every((c) => c.ok);
 
-/** The next step to do in the mission (the first unmet check) */
+/** ミッションで次にやること（最初の未達成のチェック） */
 export const nextCheck = (m: Mission, s: LabState) => m.checks(s).find((c) => !c.ok) ?? null;

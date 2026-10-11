@@ -11,12 +11,12 @@
 
 export type DeviceKind = "onu" | "router" | "firewall" | "switch" | "fileServer" | "webServer" | "ap" | "pc" | "laptop";
 export type PlaceableKind = "switch" | "router" | "fileServer" | "ap" | "firewall" | "webServer";
-export type DeviceId = "onu" | "pc-a" | "pc-b" | "pc-c" | "pc-d" | "laptop" | PlaceableKind;
+export type DeviceId = "onu" | "pc-a" | "pc-b" | "laptop" | PlaceableKind;
 /** 建物の外にいる相手（テストの送り手・受け手）。模型の外の点として描く */
 export type ExternalId = "internet" | "customer" | "attacker" | "outsider";
 export type HopId = DeviceId | ExternalId;
 
-export const PCS = ["pc-a", "pc-b", "pc-c", "pc-d"] as const;
+export const PCS = ["pc-a", "pc-b"] as const;
 export const FIXED_DEVICES: DeviceId[] = ["onu", ...PCS, "laptop"];
 export const PLACEABLE: PlaceableKind[] = ["switch", "router", "fileServer", "ap", "firewall", "webServer"];
 
@@ -24,8 +24,6 @@ export const DEVICE_NAME: Record<DeviceId, string> = {
   onu: "ONU（光回線）",
   "pc-a": "PC-A",
   "pc-b": "PC-B",
-  "pc-c": "PC-C",
-  "pc-d": "PC-D",
   laptop: "会議室ノートPC",
   switch: "スイッチ",
   router: "ルータ",
@@ -382,7 +380,6 @@ const join = (...parts: (DeviceId[] | HopId[] | null)[]): HopId[] => {
 
 export type TestId =
   | "ping-ab"
-  | "ping-ad"
   | "ping-file"
   | "web-pc"
   | "web-laptop"
@@ -407,9 +404,8 @@ export type TestResult = {
 
 export const TESTS: { id: TestId; title: string; kind: "reach" | "block" }[] = [
   { id: "ping-ab", title: "PC-A → PC-B（ping）", kind: "reach" },
-  { id: "ping-ad", title: "PC-A → PC-D（ping）", kind: "reach" },
   { id: "web-pc", title: "PC-A → Webサイトを見る", kind: "reach" },
-  { id: "ping-file", title: "PC-C → ファイルサーバ", kind: "reach" },
+  { id: "ping-file", title: "PC-B → ファイルサーバ", kind: "reach" },
   { id: "web-laptop", title: "会議室ノートPC → Webサイト", kind: "reach" },
   { id: "outsider-wifi", title: "近所の人が Wi-Fi に接続", kind: "block" },
   { id: "customer-web", title: "お客さん → 自社Webサイト（HTTPS 443）", kind: "reach" },
@@ -590,10 +586,8 @@ export function runTest(state: LabState, id: TestId, sim = simulate(state)): Tes
   switch (id) {
     case "ping-ab":
       return ping(state, sim, id, title, "pc-a", "pc-b");
-    case "ping-ad":
-      return ping(state, sim, id, title, "pc-a", "pc-d");
     case "ping-file":
-      return ping(state, sim, id, title, "pc-c", "fileServer");
+      return ping(state, sim, id, title, "pc-b", "fileServer");
     case "web-pc":
       return web(state, sim, id, title, "pc-a");
     case "web-laptop":

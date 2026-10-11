@@ -9,7 +9,8 @@ import {
   TESTS,
   type LabState,
 } from "@/lib/netlab/engine";
-import { MISSIONS, missionDone, nextCheck, type FocusField } from "@/lib/netlab/missions";
+import { MISSIONS, autoPlace, missionDone, nextCheck, type FocusField } from "@/lib/netlab/missions";
+import { ROLE_CARDS } from "@/lib/netlab/roles";
 
 const solveUpTo = (n: number) => MISSIONS.slice(0, n).reduce<LabState>((s, m) => m.solve(s), initialState());
 
@@ -118,11 +119,29 @@ describe("netlab: 「次にやること」だけで最後まで進める", () =>
         // 行動のない確認項目（IP が配られる等）は、その前の手で満たされているはず
         expect(c.action, `${m.id}: ${c.label}`).toBeDefined();
         const a = c.action!;
-        if (a.run) s = a.run(s);
+        if (a.place) s = autoPlace(s, a.place);
+        else if (a.run) s = a.run(s);
         else if (a.focus) s = USER_FIX[a.focus.field](s);
         else if (a.test) expect(runTest(s, a.test).ok, `${m.id}: ${a.test}`).toBe(true);
       }
       expect(missionDone(m, s), m.id).toBe(true);
     }
+  });
+});
+
+describe("netlab: 役割カード", () => {
+  it("置ける機器すべてに、正解が1つの確認問題がある", () => {
+    for (const card of Object.values(ROLE_CARDS)) {
+      expect(card.choices.length).toBeGreaterThanOrEqual(2);
+      expect(card.answer).toBeGreaterThanOrEqual(0);
+      expect(card.answer).toBeLessThan(card.choices.length);
+      expect(new Set(card.choices).size).toBe(card.choices.length);
+    }
+  });
+
+  it("配置はガイドの「置く」を経由する（ガイドが直接置かない）", () => {
+    const first = nextCheck(MISSIONS[0], initialState())!;
+    expect(first.action?.place).toBe("switch");
+    expect(first.action?.run).toBeUndefined();
   });
 });
