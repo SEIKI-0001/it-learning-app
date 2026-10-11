@@ -43,7 +43,8 @@ const LABEL_AT: Record<PartId, V3> = {
   storage: [-0.1, BOARD_Y, -0.375],
   // ストレージの札と重ならないよう、メモリの札は右横（CPU との間）に出す
   memory: [-0.008, BOARD_Y + 0.025, -0.36],
-  cpu: [0.085, BOARD_Y, -0.33],
+  // 手前右の黒いチップ（チップセット）と紛れないよう、CPU チップのすぐ右に出す
+  cpu: [0.088, BOARD_Y + 0.006, -0.4],
 };
 /** 文書（紙）を置く点：ストレージの上・メモリの上 */
 const DOC_AT: Record<"storage" | "memory", V3> = {
@@ -54,7 +55,8 @@ const DOC_AT: Record<"storage" | "memory", V3> = {
 const PACKET_AT: Record<PartId, V3> = {
   storage: [-0.085, BOARD_Y + 0.02, -0.37],
   memory: [-0.005, BOARD_Y + 0.05, -0.37],
-  cpu: [0.05, BOARD_Y + 0.03, -0.37],
+  // CPU はクーラーの下のチップ。データは基板の配線を通ってチップに入る
+  cpu: [0.07, BOARD_Y + 0.011, -0.415],
 };
 const T = BOARD_Y + 0.0006;
 /** 基板の上の配線。ストレージ⇄メモリは読み込み（奥）と保存（手前）の2本 */
@@ -70,7 +72,7 @@ const BUS: Record<BusId, V3[]> = {
   ],
   bus: [
     [-0.008, T, -0.4],
-    [0.043, T, -0.4],
+    [0.052, T, -0.4],
   ],
 };
 
@@ -143,6 +145,25 @@ function useGlowTexture() {
 
 // ---------------------------------------------------------------------------
 
+/** CPU チップの金属ふたに入れる刻印（「CPU」） */
+function chipLabelTexture() {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#ffffff";
+  g.fillRect(0, 0, 128, 128);
+  g.fillStyle = "#6b7280";
+  g.font = "bold 34px sans-serif";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  g.fillText("CPU", 64, 58);
+  g.font = "16px sans-serif";
+  g.fillText("4.2GHz", 64, 88);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | "off"; cpuState: PartState; nodes: ComputerSceneProps["nodes"]; doc: ComputerSceneProps["doc"]; reducedMotion: boolean }) {
   const { scene } = useGLTF(MODEL_URL);
   const baked = useTexture({ pc: BAKED_PC_URL, room: BAKED_ROOM_URL }, (t) => {
@@ -186,7 +207,6 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
     const parts: [PartId, string][] = [
       ["storage", "Part_Storage"],
       ["memory", "Part_Memory"],
-      ["cpu", "Part_CPU"],
     ];
     for (const [id, name] of parts) {
       byName[name]?.traverse((o) => {
@@ -203,6 +223,27 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
     root.updateMatrixWorld(true);
     for (const n of ["Part_CPU", "FanRotor"]) if (byName[n]) cooler.attach(byName[n]);
     cooler.scale.setScalar(COOLER_SCALE);
+    // クーラー（ソケット以外）とファンは、CPU が働く間だけ半透明にして下のチップを見せる
+    const coolerMats: THREE.MeshStandardMaterial[] = [];
+    for (const n of ["Part_CPU", "FanRotor"])
+      byName[n]?.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        for (const m of (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.MeshStandardMaterial[]) {
+          if (!m.name.startsWith("HeatsinkGray")) coolerMats.push(m);
+        }
+      });
+    // CPU チップ（ソケットの上・クーラーの真下）。ここが「頭脳」＝データを読んで書き換える場所
+    const chip = new THREE.Group();
+    chip.position.set(COOLER_PIVOT[0], COOLER_PIVOT[1] + 0.0028, COOLER_PIVOT[2]);
+    const substrate = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.0012, 0.03), new THREE.MeshStandardMaterial({ color: "#14532d", roughness: 0.6 }));
+    substrate.position.y = 0.0006;
+    const ihsMat = new THREE.MeshStandardMaterial({ color: "#c7cbd1", metalness: 0.85, roughness: 0.32, map: chipLabelTexture(), emissive: "#3b82f6", emissiveIntensity: 0 });
+    const ihs = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.0016, 0.024), ihsMat);
+    ihs.position.y = 0.002;
+    chip.add(substrate, ihs);
+    root.add(chip);
+    partMats.cpu.push(ihsMat);
     // 画面とランプは自前の材質に差し替える
     const screenMat = new THREE.MeshBasicMaterial({ color: "#000000", toneMapped: false });
     byName.Mon_Screen?.traverse((o) => {
@@ -212,7 +253,7 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
     byName.PowerLED?.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).material = ledMat;
     });
-    return { root, partMats, screenMat, ledMat, fan: byName.FanRotor ?? null, screen: byName.Mon_Screen ?? null };
+    return { root, partMats, coolerMats, screenMat, ledMat, fan: byName.FanRotor ?? null, screen: byName.Mon_Screen ?? null };
   }, [scene, baked]);
 
   // モニターの画面：同じ文書（レポート）を映す。電源OFFは真っ暗
@@ -296,6 +337,12 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
       m3.fan.rotateOnWorldAxis(FAN_AXIS, -m3.fan.userData.speed * dt);
     }
     m3.ledMat.color.set(on ? "#22c55e" : "#1f2937");
+    // CPU が働く間はクーラーを透かして、下のチップで処理しているのを見せる
+    const see = on && cpuState === "active" ? 0.14 : 1;
+    for (const m of m3.coolerMats) {
+      const o = damp(m.opacity, see, 5, dt);
+      m.setValues({ opacity: o, transparent: o < 0.99, depthWrite: o >= 0.99 });
+    }
     // 働いている部品はうっすら光る
     for (const id of Object.keys(m3.partMats) as PartId[]) {
       const col = on ? STATE_COLOR[nodes[id]] : null;
@@ -303,7 +350,9 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
       for (const m of m3.partMats[id]) {
         if (!m.emissive) continue;
         if (col) m.emissive.set(col);
-        m.setValues({ emissiveIntensity: damp(m.emissiveIntensity, col ? 0.08 * pulse : 0, 6, dt) });
+        // チップは小さいので強めに光らせる
+        const k = id === "cpu" ? 0.9 : 0.08;
+        m.setValues({ emissiveIntensity: damp(m.emissiveIntensity, col ? k * pulse : 0, 6, dt) });
       }
     }
   });
@@ -444,7 +493,7 @@ function Mover({
         g.position.set(...at);
         anim.current = null;
       } else {
-        anim.current = { pts, t: 0, dur: Math.max(0.35, polyLength(pts) / speed) };
+        anim.current = { pts, t: 0, dur: Math.max(0.9, polyLength(pts) / speed) };
         g.position.set(...from);
       }
     }
@@ -620,7 +669,8 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
   const lift = (p: V3, dy: number): V3 => [p[0], p[1] + dy, p[2]];
   const docAt: V3 | null = doc?.spot === "memory" && !vanished ? DOC_AT.memory : null;
   const docPath = doc?.spot === "memory" ? [...BUS.load.map((p) => lift(p, 0.04))] : undefined;
-  const packetPath = packet ? BUS[packet.kind].map((p) => lift(p, 0.02)) : undefined;
+  // 配線はメモリ→CPU の向きで持っているので、CPU からメモリへ戻るときは逆にたどる
+  const packetPath = packet ? (packet.kind === "bus" && packet.spot === "memory" ? [...BUS.bus].reverse() : BUS[packet.kind]).map((p) => lift(p, 0.008)) : undefined;
   const docLabelAt: V3 | null = doc ? (doc.spot === "memory" ? lift(DOC_AT.memory, 0.012) : lift(DOC_AT.storage, 0.012)) : null;
   // メモリへ運ばれる写しには札も付いていく（消えた・ストレージ上は止まった点に出す）
   const docFollow = !!docAt;
@@ -683,10 +733,10 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
           <PaperMesh stamp={stored === 2 ? "ok" : undefined} />
         </group>
         {/* メモリへ読み込んだ写し */}
-        <Mover at={docAt} start={DOC_AT.storage} path={docPath} reducedMotion={reducedMotion} objRef={docObj}>
+        <Mover at={docAt} start={DOC_AT.storage} path={docPath} speed={0.07} reducedMotion={reducedMotion} objRef={docObj}>
           <PaperMesh stamp={doc?.status === "saved" ? "ok" : doc?.status === "dirty" ? "danger" : undefined} />
         </Mover>
-        <Mover at={packet ? PACKET_AT[packet.spot] : null} path={packetPath} reducedMotion={reducedMotion} objRef={packetObj}>
+        <Mover at={packet ? PACKET_AT[packet.spot] : null} path={packetPath} speed={0.05} reducedMotion={reducedMotion} objRef={packetObj}>
           <ParcelMesh />
         </Mover>
 
@@ -758,7 +808,7 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
             <b>メモリ</b> 作業机
           </div>
         </Label>
-        <Label registry={registry} id="cpu" at={LABEL_AT.cpu} place="below">
+        <Label registry={registry} id="cpu" at={LABEL_AT.cpu} place="right">
           <div className={styles.tag} data-part-label="cpu" data-state={nodes.cpu}>
             <b>CPU</b> 頭脳
           </div>
