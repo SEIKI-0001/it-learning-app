@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
-import { DOC_TEXT, type BusId, type CaptionTarget, type ComputerSceneProps, type PartId, type PartState, type SceneCaption } from "./computerTypes";
+import { DOC_TEXT, shownPartLabels, type BusId, type CaptionTarget, type ComputerSceneProps, type PartId, type PartState, type SceneCaption } from "./computerTypes";
 import styles from "./computer3d.module.css";
 
 // CPU・メモリ・ストレージの図解の「動く3D」版。Blender で作った机上のオープンフレームPC（public/models/desk-pc.glb）を
@@ -18,8 +18,8 @@ const BAKED_PC_URL = "/models/desk-pc-pc.webp";
 const BAKED_ROOM_URL = "/models/desk-pc-room.webp";
 /** 部屋を PC の位置から写したパノラマ（金属の映り込み用） */
 const ENV_URL = "/models/desk-pc-env.webp";
-const BAKED_PC_NODES = ["Static_PC", "Part_Storage", "Part_Memory", "Part_CPU", "FanRotor"];
-const NO_BAKE = /^(Sleeve|CableBlack|FanBlade|FanFrame)/;
+const BAKED_PC_NODES = ["Static_PC", "Part_Storage", "Part_Memory", "Part_CPU"];
+const NO_BAKE = /^(Sleeve|CableBlack)/;
 
 type V3 = [number, number, number];
 
@@ -93,7 +93,6 @@ const CAPTION_AT: Record<CaptionTarget, V3> = {
   keyboard: [-0.04, 0.78, -0.19],
 };
 
-const FAN_AXIS = new THREE.Vector3(0, 0, 1);
 /** CPUクーラーを縮める基点（クーラーの土台の中心）と倍率 */
 const COOLER_PIVOT: V3 = [0.07, 0.7637, -0.415];
 const COOLER_SCALE = 0.7;
@@ -203,7 +202,7 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
         if (!mesh.isMesh) return;
         const mats = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((m) => {
           const c = (m as THREE.MeshStandardMaterial).clone();
-          // 金属は焼き込みの「拡散色」が黒になるので貼らない。ケーブル・ファンは元の色のほうが自然
+          // 金属は焼き込みの「拡散色」が黒になるので貼らない。ケーブルは元の色のほうが自然
           if (c.metalness > 0.5 || NO_BAKE.test(c.name)) return c;
           c.map = tex;
           c.color.set("#ffffff");
@@ -225,23 +224,23 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
         partMats[id].push(...((Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.MeshStandardMaterial[]));
       });
     }
-    // CPUクーラー（フィン＋ファン）は基板に対して大きすぎるので、土台を中心に縮める
+    // CPUクーラー（フィン）は基板に対して大きすぎるので、土台を中心に縮める。
+    // ファンは「ファンでデータを処理している」ように見えるので模型から外した
     const cooler = new THREE.Group();
     cooler.position.set(...COOLER_PIVOT);
     root.add(cooler);
     root.updateMatrixWorld(true);
-    for (const n of ["Part_CPU", "FanRotor"]) if (byName[n]) cooler.attach(byName[n]);
+    if (byName.Part_CPU) cooler.attach(byName.Part_CPU);
     cooler.scale.setScalar(COOLER_SCALE);
-    // クーラー（ソケット以外）とファンは、CPU が働く間だけ半透明にして下のチップを見せる
+    // クーラー（ソケット以外）は、CPU が働く間だけ半透明にして下のチップを見せる
     const coolerMats: THREE.MeshStandardMaterial[] = [];
-    for (const n of ["Part_CPU", "FanRotor"])
-      byName[n]?.traverse((o) => {
-        const mesh = o as THREE.Mesh;
-        if (!mesh.isMesh) return;
-        for (const m of (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.MeshStandardMaterial[]) {
-          if (!m.name.startsWith("HeatsinkGray")) coolerMats.push(m);
-        }
-      });
+    byName.Part_CPU?.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      for (const m of (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.MeshStandardMaterial[]) {
+        if (!m.name.startsWith("HeatsinkGray")) coolerMats.push(m);
+      }
+    });
     // CPU チップ（ソケットの上・クーラーの真下）。ここが「頭脳」＝データを読んで書き換える場所
     const chip = new THREE.Group();
     chip.position.set(COOLER_PIVOT[0], COOLER_PIVOT[1] + 0.0028, COOLER_PIVOT[2]);
@@ -262,7 +261,7 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
     byName.PowerLED?.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).material = ledMat;
     });
-    return { root, partMats, coolerMats, screenMat, ledMat, fan: byName.FanRotor ?? null, screen: byName.Mon_Screen ?? null };
+    return { root, partMats, coolerMats, screenMat, ledMat, screen: byName.Mon_Screen ?? null };
   }, [scene, baked]);
 
   // モニターの画面：同じ文書（レポート）を映す。電源OFFは真っ暗
@@ -338,13 +337,6 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
     const m3 = live.current;
     if (!m3) return;
     const t = state.clock.elapsedTime;
-    // CPUファン：処理中は速く、待機中はゆっくり、電源OFFで止まる
-    if (m3.fan && !reducedMotion) {
-      const speed = !on ? 0 : cpuState === "active" ? 22 : 5;
-      m3.fan.userData.speed = damp(m3.fan.userData.speed ?? 0, speed, 2.5, dt);
-      // FanRotor の節点は羽根1枚ぶん傾いているので、ファンの軸（前後＝ワールドZ）まわりに回す
-      m3.fan.rotateOnWorldAxis(FAN_AXIS, -m3.fan.userData.speed * dt);
-    }
     m3.ledMat.color.set(on ? "#22c55e" : "#1f2937");
     // CPU が働く間はクーラーを透かして、下のチップで処理しているのを見せる
     const see = on && cpuState === "active" ? 0.14 : 1;
@@ -396,6 +388,29 @@ function PartGlow({ id, state, on, reducedMotion }: { id: PartId; state: PartSta
     <mesh position={[PART_AT[id][0], BOARD_Y + 0.0012, PART_AT[id][2]]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[w * 1.3, d * 1.3]} />
       <meshBasicMaterial ref={mat} map={tex} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+    </mesh>
+  );
+}
+
+/**
+ * CPU が働く間だけ、クーラー下のチップを四角い光の枠で囲む（チップは小さく、クーラー越しだと目立たないため）。
+ * クーラーに隠れないよう奥行き判定を切って手前に描く。
+ */
+function ChipHighlight({ active, reducedMotion }: { active: boolean; reducedMotion: boolean }) {
+  const mat = useRef<THREE.MeshBasicMaterial>(null);
+  const frame = useRef<THREE.Mesh>(null);
+  useFrame((s, dt) => {
+    if (!mat.current || !frame.current) return;
+    const wave = reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(s.clock.elapsedTime * 4);
+    mat.current.opacity = damp(mat.current.opacity, active ? 0.55 + 0.45 * wave : 0, 6, dt);
+    frame.current.visible = mat.current.opacity > 0.01;
+    frame.current.scale.setScalar(1 + (active ? 0.12 * wave : 0));
+  });
+  return (
+    // 正方形の枠＝4分割のリングを45°回したもの。チップ（一辺 0.03）を少し大きめに囲む
+    <mesh ref={frame} position={[COOLER_PIVOT[0], COOLER_PIVOT[1] + 0.006, COOLER_PIVOT[2]]} rotation={[-Math.PI / 2, 0, Math.PI / 4]} renderOrder={10} visible={false}>
+      <ringGeometry args={[0.0255, 0.029, 4, 1]} />
+      <meshBasicMaterial ref={mat} color="#60a5fa" transparent opacity={0} depthTest={false} depthWrite={false} toneMapped={false} />
     </mesh>
   );
 }
@@ -757,7 +772,7 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
   const wide = !on || caption?.target === "monitor" || caption?.target === "keyboard";
   const shot = wide ? SHOT_WIDE : SHOT_BOARD;
 
-  // 画面外では描画を止める（ファンの回転などで電池を使わない）
+  // 画面外では描画を止める（光の点滅などで電池を使わない）
   const wrap = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(true);
   useEffect(() => {
@@ -784,6 +799,7 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
   // メモリへ運ばれる写しには札も付いていく（消えた・ストレージ上は止まった点に出す）
   const docFollow = !!docAt;
   const tone = (id: BusId) => (id === "save" ? "#10b981" : "#3b82f6");
+  const shownParts = shownPartLabels({ nodes, lanes, power, caption });
 
   return (
     <div
@@ -833,6 +849,7 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
         {(Object.keys(PART_AT) as PartId[]).map((id) => (
           <PartGlow key={id} id={id} state={nodes[id]} on={on} reducedMotion={reducedMotion} />
         ))}
+        <ChipHighlight active={on && nodes.cpu === "active"} reducedMotion={reducedMotion} />
         {(Object.keys(BUS) as BusId[]).map((id) => (
           <Trace key={id} id={id} active={on && lanes[id] === "active"} tone={tone(id)} reducedMotion={reducedMotion} />
         ))}
@@ -906,26 +923,33 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
           </Label>
         )}
 
-        <Label registry={registry} id="storage" at={LABEL_AT.storage} place="below">
-          <div className={`${styles.tag} ${styles.part}`} data-part-label="storage" data-state={nodes.storage}>
-            <span>
-              <b>ストレージ</b> 引き出し
-            </span>
-            <span key={stored} className={styles.stored} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
-              保存版 <b>v{stored}</b> {DOC_TEXT[stored]}
-            </span>
-          </div>
-        </Label>
-        <Label registry={registry} id="memory" at={LABEL_AT.memory} place="right">
-          <div className={styles.tag} data-part-label="memory" data-state={nodes.memory}>
-            <b>メモリ</b> 作業机
-          </div>
-        </Label>
-        <Label registry={registry} id="cpu" at={LABEL_AT.cpu} place="right">
-          <div className={styles.tag} data-part-label="cpu" data-state={nodes.cpu}>
-            <b>CPU</b> 頭脳
-          </div>
-        </Label>
+        {/* 部品の札は、その場面で関わる部品にだけ出す */}
+        {shownParts.has("storage") && (
+          <Label registry={registry} id="storage" at={LABEL_AT.storage} place="below">
+            <div className={`${styles.tag} ${styles.part}`} data-part-label="storage" data-state={nodes.storage}>
+              <span>
+                <b>ストレージ</b> 引き出し
+              </span>
+              <span key={stored} className={styles.stored} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
+                保存版 <b>v{stored}</b> {DOC_TEXT[stored]}
+              </span>
+            </div>
+          </Label>
+        )}
+        {shownParts.has("memory") && (
+          <Label registry={registry} id="memory" at={LABEL_AT.memory} place="right">
+            <div className={styles.tag} data-part-label="memory" data-state={nodes.memory}>
+              <b>メモリ</b> 作業机
+            </div>
+          </Label>
+        )}
+        {shownParts.has("cpu") && (
+          <Label registry={registry} id="cpu" at={LABEL_AT.cpu} place="right">
+            <div className={styles.tag} data-part-label="cpu" data-state={nodes.cpu}>
+              <b>CPU</b> 頭脳
+            </div>
+          </Label>
+        )}
         {packet && (
           <Label registry={registry} id="packet" at={[0, 0.01, 0]} follow={packetObj} place="above">
             {/* 説明は吹き出しが担うので、小包の札は読み上げ用にだけ残す */}

@@ -44,3 +44,21 @@ export type ComputerSceneProps = {
   /** 一時停止中（模型の動きもその場で止める） */
   paused?: boolean;
 };
+
+/** 配線の両端の部品（load/save＝ストレージ⇄メモリ、bus＝メモリ⇄CPU） */
+const BUS_ENDS: Record<BusId, PartId[]> = { load: ["storage", "memory"], save: ["storage", "memory"], bus: ["memory", "cpu"] };
+
+/**
+ * いまの場面で部品名の札を出す部品。働いている部品・光っている配線の両端・吹き出しが指す部品だけにし、
+ * 場面に関係ない札は出さない。モニター・キーボードの場面では部品の札を出さない。
+ * 電源OFFの実験はメモリ（消える）とストレージ（残る）を比べるので、その2つを出す。
+ */
+export function shownPartLabels({ nodes, lanes, power, caption }: Pick<ComputerSceneProps, "nodes" | "lanes" | "power" | "caption">): Set<PartId> {
+  if (power === "off") return new Set<PartId>(["storage", "memory"]);
+  if (caption?.target === "monitor" || caption?.target === "keyboard") return new Set();
+  const shown = new Set<PartId>();
+  for (const id of Object.keys(nodes) as PartId[]) if (nodes[id] !== "idle" && nodes[id] !== "disabled") shown.add(id);
+  for (const id of Object.keys(lanes) as BusId[]) if (lanes[id] === "active") BUS_ENDS[id].forEach((p) => shown.add(p));
+  if (caption) shown.add(caption.target);
+  return shown;
+}

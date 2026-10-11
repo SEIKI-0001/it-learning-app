@@ -58,14 +58,6 @@ const STEPS: FlowStep[] = [
         packet: null,
         caption: { target: "storage", text: "文書はストレージ（引き出し）に保存されている" },
       },
-      {
-        nodes: at({ storage: "active" }),
-        lanes: {},
-        stored: 1,
-        doc: DOC1_STORAGE,
-        packet: null,
-        caption: { target: "monitor", text: "アプリで文書を「開く」を押した" },
-      },
     ],
     detail: (
       <>
@@ -81,6 +73,14 @@ const STEPS: FlowStep[] = [
     title: "メモリへ読み込む",
     phases: [
       {
+        nodes: IDLE,
+        lanes: {},
+        stored: 1,
+        doc: DOC1_STORAGE,
+        packet: null,
+        caption: { target: "monitor", text: "アプリで文書を「開く」を押した" },
+      },
+      {
         nodes: at({ storage: "sending" }),
         lanes: { load: "active" },
         stored: 1,
@@ -95,14 +95,6 @@ const STEPS: FlowStep[] = [
         doc: DOC1_MEMORY,
         packet: null,
         caption: { target: "memory", text: "メモリ（作業机）に広げる。ここは読み書きが速い" },
-      },
-      {
-        nodes: at({ storage: "active", memory: "active" }),
-        lanes: {},
-        stored: 1,
-        doc: DOC1_MEMORY,
-        packet: null,
-        caption: { target: "storage", text: "保存版 v1 は引き出しにそのまま残る" },
       },
     ],
     detail: (
@@ -172,14 +164,6 @@ const STEPS: FlowStep[] = [
         doc: DOC1_MEMORY,
         packet: { spot: "cpu", text: "計算中", kind: "bus" },
         caption: { target: "cpu", text: "CPUが入力を受け取り、新しい内容を計算する" },
-      },
-      {
-        nodes: at({ cpu: "active", memory: "active" }),
-        lanes: {},
-        stored: 1,
-        doc: DOC1_MEMORY,
-        packet: { spot: "cpu", text: "計算中", kind: "bus" },
-        caption: { target: "memory", text: "この時点で、メモリの文書はまだ v1 のまま" },
       },
     ],
     detail: (

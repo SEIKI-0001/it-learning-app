@@ -36,6 +36,10 @@ const back = () => click("前のSTEPへ");
 const caption = () => screen.getByTestId("cc-caption");
 const doc = () => screen.getByTestId("work-doc");
 const stored = () => screen.getByTestId("stored-file");
+const partLabels = () =>
+  Array.from(screen.getByTestId("computer-scene").querySelectorAll("[data-part-label]"))
+    .map((el) => el.getAttribute("data-part-label"))
+    .sort();
 
 describe("ComputerCoreExperience", () => {
   it("keeps the three roles and the memory/storage comparison", () => {
@@ -63,8 +67,10 @@ describe("ComputerCoreExperience", () => {
     expect(caption()).toHaveAttribute("data-target", "storage");
 
     next();
+    // STEP 2 は「開く」を押したところから始まる
+    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
+    playThrough();
     expect(doc()).toHaveAttribute("data-spot", "memory");
-    expect(stored()).toHaveTextContent("v1");
     next();
     expect(screen.getByTestId("bus-packet")).toHaveAttribute("data-spot", "cpu");
     next();
@@ -87,17 +93,17 @@ describe("ComputerCoreExperience", () => {
   it("plays the phases of a step, stops at the last one, and never advances the step by itself", () => {
     renderFlow();
     next();
-    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
     act(() => vi.advanceTimersByTime(2600));
-    expect(caption()).toHaveTextContent("メモリ（作業机）に広げる");
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
     playThrough();
-    expect(caption()).toHaveTextContent("保存版 v1 は引き出しにそのまま残る");
+    expect(caption()).toHaveTextContent("メモリ（作業机）に広げる");
     expect(screen.getByTestId("cc-step-title")).toHaveTextContent("メモリへ読み込む");
 
     click("↻ もう一度見る");
     // 再生し直している間は次の STEP へ進めない
     expect(screen.getByRole("button", { name: "次のSTEPへ" })).toBeDisabled();
-    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
     back();
     expect(screen.getByTestId("cc-step-title")).toHaveTextContent("ふだんは引き出しに保管");
   });
@@ -109,11 +115,11 @@ describe("ComputerCoreExperience", () => {
     click("⏸ 停止");
     for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(3000));
     // 止めている間は場面が進まない
-    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
     expect(screen.getByTestId("cc-play")).toHaveTextContent("再開");
     click("▶ 再開");
     act(() => vi.advanceTimersByTime(2600));
-    expect(caption()).toHaveTextContent("メモリ（作業机）に広げる");
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
     playThrough();
     expect(screen.getByTestId("cc-play")).toHaveTextContent("もう一度見る");
   });
@@ -125,8 +131,30 @@ describe("ComputerCoreExperience", () => {
     details.open = true;
     fireEvent(details, new Event("toggle"));
     playThrough();
-    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
     expect(screen.getByTestId("cc-detail")).toHaveTextContent("主記憶装置");
+  });
+
+  it("shows only the part labels that the current scene is about", () => {
+    renderFlow();
+    // STEP 1：引き出しに保存されている → ストレージだけ
+    expect(partLabels()).toEqual(["storage"]);
+    next();
+    // 「開く」を押した（モニター）→ 部品の札は出さない
+    expect(partLabels()).toEqual([]);
+    act(() => vi.advanceTimersByTime(2600));
+    // 読み込み中はストレージとメモリ
+    expect(partLabels()).toEqual(["memory", "storage"]);
+    playThrough();
+    expect(partLabels()).toEqual(["memory"]);
+    next();
+    // メモリ → CPU
+    expect(partLabels()).toEqual(["cpu", "memory"]);
+    next();
+    // キーボード → CPU だけ
+    expect(partLabels()).toEqual([]);
+    playThrough();
+    expect(partLabels()).toEqual(["cpu"]);
   });
 
   it("power off before saving erases only the memory copy; storage keeps the old version", () => {
