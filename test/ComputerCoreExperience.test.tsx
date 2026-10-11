@@ -23,10 +23,16 @@ function renderFlow() {
 }
 
 const click = (name: string) => fireEvent.click(screen.getByRole("button", { name }));
-const next = () => click("次のSTEPへ");
+/** 場面のタイマーは1つずつ張り直されるので、少しずつ時間を進める */
+const playThrough = () => {
+  for (let i = 0; i < 8; i++) act(() => vi.advanceTimersByTime(3000));
+};
+/** STEP の場面を最後まで見てから「次へ」（途中は押せない） */
+const next = () => {
+  playThrough();
+  click("次のSTEPへ");
+};
 const back = () => click("前のSTEPへ");
-/** STEP 内の場面を最後まで再生する */
-const playThrough = () => act(() => vi.advanceTimersByTime(20_000));
 const caption = () => screen.getByTestId("cc-caption");
 const doc = () => screen.getByTestId("work-doc");
 const stored = () => screen.getByTestId("stored-file");
@@ -89,6 +95,8 @@ describe("ComputerCoreExperience", () => {
     expect(screen.getByTestId("cc-step-title")).toHaveTextContent("メモリへ読み込む");
 
     click("↻ もう一度見る");
+    // 再生し直している間は次の STEP へ進めない
+    expect(screen.getByRole("button", { name: "次のSTEPへ" })).toBeDisabled();
     expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
     back();
     expect(screen.getByTestId("cc-step-title")).toHaveTextContent("ふだんは引き出しに保管");
