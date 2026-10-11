@@ -24,6 +24,7 @@ import {
 } from "../scene/DioramaParts";
 import { DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip, pathLength } from "../scene/DioramaStage";
 import styles from "./netdev.module.css";
+import type { NetDevMode } from "./netdevTypes";
 
 // ネットワーク機器の役割：小さな会社の1フロアを模型にし、機器を1つずつ選んでデータの流れを見せる。
 //   ハブ／スイッチ：PC-A から PC-C へ。ハブは B・D にも届き、スイッチは C だけ（真ん中の機器を差し替える）
@@ -32,7 +33,7 @@ import styles from "./netdev.module.css";
 //   リピータ：別棟の倉庫まで長いケーブル。弱った信号を元の強さに戻す
 //   ゲートウェイ：工場の機械（別の通信方式）と、形式を変換してつなぐ
 
-export type NetDevMode = "hub" | "switch" | "router" | "ap" | "repeater" | "gateway";
+export type { NetDevMode };
 
 const up = (p: Vec3, dz: number): Vec3 => ({ ...p, z: (p.z ?? 0) + dz });
 const flat = (p: Vec3, z = 10): Vec3 => ({ x: p.x, y: p.y, z });
