@@ -5,7 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { DOC_TEXT, type BusId, type ComputerSceneProps, type PartId, type PartState } from "./computerTypes";
-import styles from "./computerdiorama.module.css";
+import styles from "./computer3d.module.css";
 
 // CPU・メモリ・ストレージの図解の「動く3D」版。Blender で作った机上のオープンフレームPC（public/models/desk-pc.glb）を
 // three.js で表示し、ComputerDioramaScene（2.5D）と同じ props で動かす。
@@ -41,7 +41,8 @@ const GLOW_SIZE: Record<PartId, [number, number]> = {
 /** 部品名の札を置く点（部品の手前） */
 const LABEL_AT: Record<PartId, V3> = {
   storage: [-0.1, BOARD_Y, -0.375],
-  memory: [-0.019, BOARD_Y, -0.33],
+  // ストレージの札と重ならないよう、メモリの札は右横（CPU との間）に出す
+  memory: [-0.008, BOARD_Y + 0.025, -0.36],
   cpu: [0.085, BOARD_Y, -0.33],
 };
 /** 文書（紙）を置く点：ストレージの上・メモリの上 */
@@ -80,6 +81,8 @@ const SHOT_PART: Record<PartId, Shot> = {
   cpu: { pos: [-0.07, 1.1, -0.04], look: [0.025, 0.8, -0.395] },
 };
 const SHOT_OFF: Shot = { pos: [-0.14, 1.2, 0.08], look: [0.0, 0.83, -0.47] };
+
+const FAN_AXIS = new THREE.Vector3(0, 0, 1);
 
 const STATE_COLOR: Record<PartState, string | null> = {
   idle: null,
@@ -279,7 +282,8 @@ function DeskPC({ power, cpuState, nodes, doc, reducedMotion }: { power: "on" | 
     if (m3.fan && !reducedMotion) {
       const speed = !on ? 0 : cpuState === "active" ? 22 : 5;
       m3.fan.userData.speed = damp(m3.fan.userData.speed ?? 0, speed, 2.5, dt);
-      m3.fan.rotation.z -= m3.fan.userData.speed * dt;
+      // FanRotor の節点は羽根1枚ぶん傾いているので、ファンの軸（前後＝ワールドZ）まわりに回す
+      m3.fan.rotateOnWorldAxis(FAN_AXIS, -m3.fan.userData.speed * dt);
     }
     m3.ledMat.color.set(on ? "#22c55e" : "#1f2937");
     // 働いている部品はうっすら光る
@@ -692,7 +696,6 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
         {doc && docLabelAt && (
           <Label registry={registry} id="doc" at={docFollow ? [0, 0.012, 0] : docLabelAt} follow={docFollow ? docObj : undefined} place="above">
             <div
-              className={styles.docAnchor}
               data-spot={doc.spot}
               data-status={doc.status}
               data-version={doc.version}
@@ -717,13 +720,13 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
               ) : (
                 <span className={styles.doc}>
                   <span className={styles.docHead}>
-                    レポート <span className={styles.docVer}>v{doc.version}</span>
+                    レポート v{doc.version}
                   </span>
                   <span key={doc.version} className={styles.docBody}>
                     {DOC_TEXT[doc.version]}
                   </span>
-                  {doc.status === "dirty" && <span className={styles.docBadge}>未保存</span>}
-                  {doc.status === "saved" && <span className={`${styles.docBadge} ${styles.docBadgeOk}`}>保存済み</span>}
+                  {doc.status === "dirty" && <span className={styles.badge}>未保存</span>}
+                  {doc.status === "saved" && <span className={`${styles.badge} ${styles.badgeOk}`}>保存済み</span>}
                 </span>
               )}
             </div>
@@ -731,27 +734,27 @@ export default function ComputerScene3D({ nodes, lanes, stored, storedFlash, doc
         )}
 
         <Label registry={registry} id="storage" at={LABEL_AT.storage} place="below">
-          <div className={styles.part} data-part-label="storage" data-state={nodes.storage}>
-            <b>ストレージ</b>＝引き出し
-            <span key={stored} className={styles.storedChip} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
-              保存版 v{stored}
-              <br />
-              {DOC_TEXT[stored]}
+          <div className={`${styles.tag} ${styles.part}`} data-part-label="storage" data-state={nodes.storage}>
+            <span>
+              <b>ストレージ</b> 引き出し
+            </span>
+            <span key={stored} className={styles.stored} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
+              保存版 <b>v{stored}</b> {DOC_TEXT[stored]}
             </span>
           </div>
         </Label>
-        <Label registry={registry} id="memory" at={LABEL_AT.memory} place="below">
-          <div className={styles.part} data-part-label="memory" data-state={nodes.memory}>
-            <b>メモリ</b>＝作業机
+        <Label registry={registry} id="memory" at={LABEL_AT.memory} place="right">
+          <div className={styles.tag} data-part-label="memory" data-state={nodes.memory}>
+            <b>メモリ</b> 作業机
           </div>
         </Label>
         <Label registry={registry} id="cpu" at={LABEL_AT.cpu} place="below">
-          <div className={styles.part} data-part-label="cpu" data-state={nodes.cpu}>
-            <b>CPU</b>＝頭脳
+          <div className={styles.tag} data-part-label="cpu" data-state={nodes.cpu}>
+            <b>CPU</b> 頭脳
           </div>
         </Label>
         {packet && (
-          <Label registry={registry} id="packet" at={[0, -0.012, 0]} follow={packetObj} place="below">
+          <Label registry={registry} id="packet" at={[0, 0.01, 0]} follow={packetObj} place="above">
             <span className={styles.packet} data-kind={packet.kind} data-spot={packet.spot} data-testid="bus-packet">
               {packet.text}
             </span>
