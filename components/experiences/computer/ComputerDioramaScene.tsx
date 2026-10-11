@@ -3,7 +3,7 @@
 import { Box, type Camera, type Vec3 } from "../scene/Diorama3D";
 import { Desk, Floor, FloorRoute, Group, Monitor, Paper, Parcel, Person, Plant, Wall, WallWindow, type RouteTone } from "../scene/DioramaParts";
 import { DioramaLabel, DioramaStage, DioramaToken } from "../scene/DioramaStage";
-import { DOC_TEXT, type BusId, type ComputerSceneProps, type PartId } from "./computerTypes";
+import { DOC_TEXT, shownPartLabels, type BusId, type ComputerSceneProps, type PartId } from "./computerTypes";
 import styles from "./computerdiorama.module.css";
 
 // CPU・メモリ・ストレージの図解：机の上のオープンフレームPC（ケースを外してマザーボードが見える組み立て途中のPC）。
@@ -53,8 +53,9 @@ const SHOT_AT: Record<PartId, Camera> = {
 };
 const SHOT_OFF: Camera = { yaw: -12, pitch: 50, zoom: 1.4, fx: 390, fy: 240, fz: 80 };
 
-export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, packet, power, reducedMotion, forward = true }: ComputerSceneProps & { forward?: boolean }) {
+export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, packet, power, reducedMotion, caption = null, forward = true }: ComputerSceneProps & { forward?: boolean }) {
   const on = power === "on";
+  const shownParts = shownPartLabels({ nodes, lanes, power, caption });
   const vanished = doc?.status === "vanished";
   // 保存してから電源を切った：メモリは空になったが、同じ版がストレージに残っているので失ったものはない
   const safeOff = vanished && !!doc && stored === doc.version;
@@ -123,10 +124,10 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
             ))}
           </Group>
 
-          {/* CPU とクーラー（頭脳） */}
+          {/* CPU とクーラー（頭脳）。ファンは付けない（ファンが処理しているように見えるため） */}
           <Group data={{ "data-node": "cpu", "data-state": nodes.cpu, "data-illustration": "cpu" }}>
             <Box x={AT.cpu.x - 20} y={AT.cpu.y - 20} z={TOP} w={40} d={40} h={4} color="#9ca3af" />
-            <Box x={AT.cpu.x - 18} y={AT.cpu.y - 18} z={TOP + 4} w={36} d={36} h={22} color="#cbd5e1" faceClass={{ top: styles.fan, front: styles.fins, left: styles.fins }} faces={{ top: <span className={styles.fanBlade} data-on={on && nodes.cpu === "active" ? "true" : "false"} /> }} />
+            <Box x={AT.cpu.x - 18} y={AT.cpu.y - 18} z={TOP + 4} w={36} d={36} h={22} color="#cbd5e1" faceClass={{ top: styles.fins, front: styles.fins, left: styles.fins }} />
           </Group>
 
           {/* 電源のボタンと LED */}
@@ -212,26 +213,33 @@ export function ComputerDioramaScene({ nodes, lanes, stored, storedFlash, doc, p
             </DioramaLabel>
           )}
 
-          <DioramaLabel at={{ ...AT.storage, y: AT.storage.y + 14, z: TOP }} place="below" pinned>
-            <div className={styles.part} data-part-label="storage" data-state={nodes.storage}>
-              <b>ストレージ</b>＝引き出し
-              <span key={stored} className={styles.storedChip} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
-                保存版 v{stored}
-                <br />
-                {DOC_TEXT[stored]}
-              </span>
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.memory, y: AT.memory.y + 20, z: TOP }} place="below" optional>
-            <div className={styles.part} data-part-label="memory" data-state={nodes.memory}>
-              <b>メモリ</b>＝作業机
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.cpu, y: AT.cpu.y + 24, z: TOP }} place="below" optional>
-            <div className={styles.part} data-part-label="cpu" data-state={nodes.cpu}>
-              <b>CPU</b>＝頭脳
-            </div>
-          </DioramaLabel>
+          {/* 部品の札は、その場面で関わる部品にだけ出す */}
+          {shownParts.has("storage") && (
+            <DioramaLabel at={{ ...AT.storage, y: AT.storage.y + 14, z: TOP }} place="below" pinned>
+              <div className={styles.part} data-part-label="storage" data-state={nodes.storage}>
+                <b>ストレージ</b>＝引き出し
+                <span key={stored} className={styles.storedChip} data-flash={storedFlash ? "true" : "false"} data-testid="stored-file">
+                  保存版 v{stored}
+                  <br />
+                  {DOC_TEXT[stored]}
+                </span>
+              </div>
+            </DioramaLabel>
+          )}
+          {shownParts.has("memory") && (
+            <DioramaLabel at={{ ...AT.memory, y: AT.memory.y + 20, z: TOP }} place="below" optional>
+              <div className={styles.part} data-part-label="memory" data-state={nodes.memory}>
+                <b>メモリ</b>＝作業机
+              </div>
+            </DioramaLabel>
+          )}
+          {shownParts.has("cpu") && (
+            <DioramaLabel at={{ ...AT.cpu, y: AT.cpu.y + 24, z: TOP }} place="below" optional>
+              <div className={styles.part} data-part-label="cpu" data-state={nodes.cpu}>
+                <b>CPU</b>＝頭脳
+              </div>
+            </DioramaLabel>
+          )}
         </>
       }
     />

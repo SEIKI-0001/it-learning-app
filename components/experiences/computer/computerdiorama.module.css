@@ -38,23 +38,6 @@
   background: repeating-linear-gradient(90deg, #cbd5e1 0 2px, #94a3b8 2px 3px);
 }
 
-[data-face][data-face].fan {
-  display: grid;
-  place-items: center;
-  background: #475569;
-}
-
-.fanBlade {
-  width: 80%;
-  height: 80%;
-  border-radius: 50%;
-  background: conic-gradient(#1f2937 0 20deg, #64748b 20deg 72deg, #1f2937 72deg 92deg, #64748b 92deg 144deg, #1f2937 144deg 164deg, #64748b 164deg 216deg, #1f2937 216deg 236deg, #64748b 236deg 288deg, #1f2937 288deg 308deg, #64748b 308deg 360deg);
-}
-
-.fanBlade[data-on="true"] {
-  animation: cc-spin 0.6s linear infinite;
-}
-
 .app {
   display: flex;
   height: 100%;
@@ -206,12 +189,6 @@
 
 .storedChip[data-flash="true"] {
   animation: cc-flash 900ms ease;
-}
-
-@keyframes cc-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @keyframes cc-flash {
