@@ -459,8 +459,15 @@ function DataFlow() {
         <button type="button" onClick={replay} className={`${navBtn} bg-white text-gray-700 ring-1 ring-gray-300`}>
           ↻ もう一度見る
         </button>
-        <button type="button" onClick={() => move(idx + 1)} disabled={idx === STEPS.length - 1 && power === "on"} className={`${navBtn} bg-gray-900 text-white`} aria-label="次のSTEPへ">
-          次へ →
+        {/* 場面が残っている間は押せない（途中で押して見逃さないように）。電源OFFの実験中は戻るために押せる */}
+        <button
+          type="button"
+          onClick={() => move(idx + 1)}
+          disabled={power === "on" && (idx === STEPS.length - 1 || !player.done)}
+          className={`${navBtn} bg-gray-900 text-white`}
+          aria-label="次のSTEPへ"
+        >
+          {power === "on" && !player.done ? "再生中…" : "次へ →"}
         </button>
       </div>
 
