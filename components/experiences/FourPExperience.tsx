@@ -7,8 +7,10 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「マーケティングと4P分析」専用の体験。
-//   ① クレープ屋開店シミュレータ：4つのPを2択で決める→客足が変わる
-//   ② 具体的な決めごとを4Pに振り分けるクイズ
+//   ① 4Pの前に「誰に売るか」：市場を分けて（セグメンテーション）集中する客層を選ぶ（ターゲティング）。
+//      全員に同じ売り方をするマスマーケティングと並べる（静的な図）
+//   ② クレープ屋開店シミュレータ：4つのPを2択で決める→客足が変わる
+//   ③ 具体的な決めごとを4Pに振り分けるクイズ
 // ============================================================================
 
 type P = "product" | "price" | "place" | "promotion";
@@ -62,6 +64,52 @@ const DECISIONS: {
   },
 ];
 
+// 文化祭に来る人を、年齢などの基準で分けたグループ（セグメント）
+const SEGMENTS = [
+  { name: "小学生と家族", note: "親が財布を握る。量より安心感" },
+  { name: "高校生", note: "おこづかいは少なめ。SNSで話題を探す", hit: true },
+  { name: "保護者・地域の大人", note: "食べ歩きより座って休みたい" },
+];
+
+function Targeting() {
+  return (
+    <Panel>
+      <SectionTitle step={1}>4Pの前に、誰に売るかを決める</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        文化祭に来る人はさまざま。<b className="text-gray-800">年齢・家族構成などで客を分け</b>、グループごとの買い方を見て、
+        <b className="text-gray-800">力を注ぐ客層を1つに絞る</b>と、4Pの決め方がはっきりします。
+      </p>
+      <ol className="mt-3 space-y-1.5" data-testid="fourp-segments">
+        {SEGMENTS.map((g) => (
+          <li
+            key={g.name}
+            className={`flex items-baseline justify-between gap-2 rounded-xl px-3 py-2 text-sm ${
+              g.hit ? "bg-amber-50 ring-2 ring-amber-300" : "bg-gray-50 ring-1 ring-gray-200"
+            }`}
+          >
+            <b className="flex-none text-gray-900">{g.name}</b>
+            <span className="text-right text-xs text-gray-600">{g.note}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-xs leading-relaxed text-gray-600">
+        市場を分ける＝<b className="text-gray-800">セグメンテーション（市場細分化）</b>、集中する層を選ぶ＝<b className="text-gray-800">ターゲティング</b>。
+        この進め方が<b className="text-gray-800">セグメントマーケティング</b>です。今回は<b className="text-gray-800">高校生</b>に絞ります。
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs" data-testid="fourp-mass-vs-segment">
+        <div className="rounded-xl p-3 ring-1 ring-gray-200">
+          <p className="text-[13px] font-bold text-gray-900">マスマーケティング</p>
+          <p className="mt-1 leading-snug text-gray-600">市場を分けず、全員に同じ商品・同じ宣伝</p>
+        </div>
+        <div className="rounded-xl p-3 ring-2 ring-gray-900">
+          <p className="text-[13px] font-bold text-gray-900">セグメントマーケティング</p>
+          <p className="mt-1 leading-snug text-gray-600">客を分けて、絞った層に合う売り方</p>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 function Simulator() {
   const [picks, setPicks] = useState<Partial<Record<P, number>>>({});
   const decided = DECISIONS.filter((d) => picks[d.p] !== undefined);
@@ -79,9 +127,9 @@ function Simulator() {
 
   return (
     <Panel>
-      <SectionTitle step={1}>クレープ屋を開店してみる</SectionTitle>
+      <SectionTitle step={2}>クレープ屋を開店してみる</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        文化祭で<b className="text-gray-800">クレープ屋</b>を出店。売り方の決めごとは
+        文化祭で<b className="text-gray-800">クレープ屋</b>を出店。ねらう客は<b className="text-gray-800">高校生</b>。売り方の決めごとは
         <b className="text-gray-800">4つのP</b>に整理できます。選ぶたびに客足が変わるよ。
       </p>
 
@@ -168,7 +216,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, P>>({});
   return (
     <Panel>
-      <SectionTitle step={2}>どのPの決めごと？</SectionTitle>
+      <SectionTitle step={3}>どのPの決めごと？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {ITEMS.map((it, i) => {
           const chosen = answers[i];
@@ -224,6 +272,7 @@ export default function FourPExperience() {
         の4つで売り方を整理する方法。「何を・いくらで・どこで・どう知らせて」売るかです。
       </div>
 
+      <Targeting />
       <Simulator />
       <Quiz />
     </div>

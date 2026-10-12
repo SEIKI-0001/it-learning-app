@@ -37,7 +37,7 @@ describe("algorithm flowchart model", () => {
 describe("AlgorithmExperience", () => {
   it("opens on the learner's own run, then the computer's correct run, then a recap", () => {
     renderDeck();
-    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    expect(screen.getByText("1 / 5")).toBeInTheDocument();
     expect(screen.getByText("まず、あなたがコンピュータになって実行")).toBeInTheDocument();
     expect(screen.getByTestId("flow-try")).toHaveAttribute("data-state", "idle");
     fireEvent.click(screen.getByRole("button", { name: "解説2" }));
@@ -46,6 +46,29 @@ describe("AlgorithmExperience", () => {
     fireEvent.click(screen.getByRole("button", { name: "解説3" }));
     expect(screen.getByText("選択（分岐）")).toBeInTheDocument();
     expect(screen.getByText("合計に今の数字 i を足す")).toBeInTheDocument();
+  });
+
+  it("reads the same flowchart in the exam pseudo-language, node by node", () => {
+    renderDeck(4);
+    expect(screen.getByText("同じ手順を、試験の擬似言語で読む")).toBeInTheDocument();
+    const flow = screen.getByTestId("pseudo-flow");
+    const code = screen.getByTestId("pseudo-while");
+    // フロー図のノードと擬似言語の行に、同じ番号 ①〜⑦ が付いている
+    for (const badge of ["①", "②", "③", "④", "⑤", "⑥", "⑦"]) {
+      expect(flow).toHaveTextContent(badge);
+      expect(code).toHaveTextContent(badge);
+    }
+    expect(code).toHaveTextContent("○整数型: sum(整数型: n)");
+    expect(code).toHaveTextContent("while (i ≦ n)");
+    expect(code).toHaveTextContent("endwhile");
+    expect(code).toHaveTextContent("return 合計");
+
+    fireEvent.click(screen.getByRole("button", { name: "解説5" }));
+    expect(screen.getByTestId("pseudo-for")).toHaveTextContent("for (i を 1 から n まで 1 ずつ増やす)");
+    expect(screen.getByTestId("pseudo-for")).toHaveTextContent("③④⑥");
+    expect(screen.getByTestId("pseudo-if")).toHaveTextContent("elseif (点数 ≧ 60)");
+    expect(screen.getByTestId("pseudo-divmod")).toHaveTextContent("7 ÷ 3 の商→ 2");
+    expect(screen.getByTestId("pseudo-divmod")).toHaveTextContent("7 ÷ 3 の余り→ 1");
   });
 
   it("labels each executed step with its structure: 順次 → 選択 → 繰り返し", () => {
