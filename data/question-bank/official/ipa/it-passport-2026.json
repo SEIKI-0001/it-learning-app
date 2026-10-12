@@ -5041,7 +5041,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "tech-web-internet-basics",
+      "primaryTopicId": "tech-network-address",
       "questionPattern": "knowledge",
       "prompt": "DNSサーバの役割に関する記述として，適切なものはどれか。",
       "choices": [
@@ -5107,7 +5107,7 @@
       "reviewedAt": "2026-07-26T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-59",
+        "itemId": "ipa-60",
         "field": "technology",
         "majorCategory": "技術要素",
         "middleCategory": "ネットワーク"
@@ -7024,7 +7024,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "tech-public-key-crypto",
+      "primaryTopicId": "tech-digital-signature",
       "questionPattern": "knowledge",
       "prompt": "PKI(公開鍵基盤)の特徴として，適切なものはどれか。",
       "choices": [
@@ -7645,7 +7645,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "tech-ai-ml",
+      "primaryTopicId": "strat-generative-ai-dx",
       "questionPattern": "knowledge",
       "prompt": "AIにおけるプロンプトエンジニアリングの説明として，適切なものはどれか。",
       "choices": [
@@ -7712,10 +7712,10 @@
       "reviewedAt": "2026-07-26T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-35",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
+        "itemId": "ipa-20",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
       }
     },
     {

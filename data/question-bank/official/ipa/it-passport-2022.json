@@ -1511,7 +1511,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "tech-binary-data",
+      "primaryTopicId": "strat-standardization",
       "questionPattern": "knowledge",
       "prompt": "あるデータを表現するために，1個のJANコードか1個のQRコードのどちらかの利用を検討する。表現できる最大のデータ量の大きい方を採用する場合，検討結果として，適切なものはどれか。",
       "choices": [
@@ -1578,10 +1578,10 @@
       "reviewedAt": "2026-08-15T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-33",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
+        "itemId": "ipa-08",
+        "field": "strategy",
+        "majorCategory": "企業と法務",
+        "middleCategory": "法務"
       }
     },
     {
@@ -1667,7 +1667,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-business-systems",
+      "primaryTopicId": "strat-management-systems",
       "questionPattern": "knowledge",
       "prompt": "SCMシステムを構築する目的はどれか。",
       "choices": [
@@ -1734,10 +1734,10 @@
       "reviewedAt": "2026-08-15T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-14",
+        "itemId": "ipa-01",
         "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
       }
     },
     {
@@ -2458,7 +2458,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-production-management",
+      "primaryTopicId": "strat-engineering-systems",
       "questionPattern": "diagram",
       "prompt": "コンカレントエンジニアリングを適用した後の業務の流れを表した図として，最も適したものはどれか。ここで，図の中の矢印は業務の流れを示し，その上に各作業名を記述する。",
       "choices": [

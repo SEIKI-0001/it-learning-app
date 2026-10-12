@@ -242,7 +242,9 @@ export const topicCheckPacks: TopicCheckPack[] = [
     quizQuestionIds: quizIds("tech-web-internet-basics"),
     flashcardIds: topicWordIds("tech-web-internet-basics"),
     examLevelQuestionIds: [
-      "ipa-it-passport-2025-q058",
+      // DNS の 2025-q058 は復習先を tech-network-address へ付け直したので、
+      // 教材で扱う TCP/IP の階層を問う問題に差し替え。
+      "ipa-it-passport-2023-q068",
       "tech-web-internet-basics-ex1",
       "tech-web-internet-basics-ex2",
     ],

@@ -1446,7 +1446,7 @@
       },
       "correctChoiceKana": "エ",
       "correctChoice": "D",
-      "primaryTopicId": "tech-web-internet-basics",
+      "primaryTopicId": "tech-network-address",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -2026,7 +2026,7 @@
       },
       "correctChoiceKana": "ウ",
       "correctChoice": "C",
-      "primaryTopicId": "tech-public-key-crypto",
+      "primaryTopicId": "tech-digital-signature",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -2191,7 +2191,7 @@
       },
       "correctChoiceKana": "ウ",
       "correctChoice": "C",
-      "primaryTopicId": "tech-ai-ml",
+      "primaryTopicId": "strat-generative-ai-dx",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [

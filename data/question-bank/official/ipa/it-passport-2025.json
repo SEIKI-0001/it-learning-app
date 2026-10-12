@@ -319,7 +319,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-accounting-break-even",
+      "primaryTopicId": "strat-financial-statements",
       "questionPattern": "application",
       "prompt": "A社ではB商品の仕入れと販売を行っている。ある期のB商品の仕入単価は期首から上昇し続け，期末が最も高くなった。当該期の売上原価を“期首棚卸高＋当期商品仕入高－期末棚卸高”で計算するとき，期末棚卸高の計算に期末の仕入単価を用いると，B商品の期末棚卸高及び売上原価は，期中の仕入単価の平均値を用いる場合に比べてどのようになるか。",
       "choices": [
@@ -2357,7 +2357,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-business-systems",
+      "primaryTopicId": "strat-management-systems",
       "questionPattern": "knowledge",
       "prompt": "ERPシステムの説明として，適切なものはどれか。",
       "choices": [
@@ -2424,10 +2424,10 @@
       "reviewedAt": "2026-08-15T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-14",
+        "itemId": "ipa-01",
         "field": "strategy",
-        "majorCategory": "経営戦略",
-        "middleCategory": "ビジネスインダストリ"
+        "majorCategory": "企業と法務",
+        "middleCategory": "企業活動"
       }
     },
     {
@@ -4474,7 +4474,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "tech-web-internet-basics",
+      "primaryTopicId": "tech-network-address",
       "questionPattern": "knowledge",
       "prompt": "DNSの説明として，適切なものはどれか。",
       "choices": [
@@ -4541,7 +4541,7 @@
       "reviewedAt": "2026-08-15T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-59",
+        "itemId": "ipa-60",
         "field": "technology",
         "majorCategory": "技術要素",
         "middleCategory": "ネットワーク"
@@ -6220,7 +6220,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "tech-ai-ml",
+      "primaryTopicId": "strat-generative-ai-dx",
       "questionPattern": "knowledge",
       "prompt": "AIにおいて，広範囲かつ大量のデータで訓練されたものであり，ファインチューニングなどによって文章生成AIのような様々な用途に適応できる特徴をもつものを何というか。",
       "choices": [
@@ -6287,10 +6287,10 @@
       "reviewedAt": "2026-08-15T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-35",
-        "field": "technology",
-        "majorCategory": "基礎理論",
-        "middleCategory": "基礎理論"
+        "itemId": "ipa-20",
+        "field": "strategy",
+        "majorCategory": "システム戦略",
+        "middleCategory": "システム戦略"
       }
     },
     {
