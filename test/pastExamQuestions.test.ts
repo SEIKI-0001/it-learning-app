@@ -169,11 +169,24 @@ describe("公式原文と分類が PR2-A から不変", () => {
     }
   });
 
-  it("primaryTopicId / syllabusNode / 難易度 / タグが完全一致", () => {
+  // 復習先トピックの付け直し（2026-10 公開過去問→図解解説の導線整備時に、問題内容と
+  // 教材がずれていたものだけ）。syllabusNode は primaryTopicId から引くので一緒に変わる。
+  const RETOPICED: Record<string, string> = {
+    "ipa-it-passport-2026-q065": "tech-network-address", // DNS
+    "ipa-it-passport-2026-q090": "tech-digital-signature", // PKI・認証局
+    "ipa-it-passport-2026-q098": "strat-generative-ai-dx", // プロンプトエンジニアリング
+  };
+
+  it("primaryTopicId / syllabusNode / 難易度 / タグが完全一致（付け直した問題を除く）", () => {
     for (const q of IPA_2026) {
       const before = SNAPSHOT_BY_ID.get(q.id)!;
-      expect(q.primaryTopicId, `${q.id} の primaryTopicId`).toBe(before.primaryTopicId);
-      expect(q.syllabusNode, `${q.id} の syllabusNode`).toEqual(before.syllabusNode);
+      const retopiced = RETOPICED[q.id];
+      expect(q.primaryTopicId, `${q.id} の primaryTopicId`).toBe(
+        retopiced ?? before.primaryTopicId,
+      );
+      if (!retopiced) {
+        expect(q.syllabusNode, `${q.id} の syllabusNode`).toEqual(before.syllabusNode);
+      }
       expect(q.questionPattern, `${q.id} の questionPattern`).toBe(before.questionPattern);
       expect(q.estimatedDifficulty, `${q.id}`).toBe(before.estimatedDifficulty);
       expect(q.tags, `${q.id} の tags`).toEqual(before.tags);

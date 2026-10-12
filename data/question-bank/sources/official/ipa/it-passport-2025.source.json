@@ -110,7 +110,7 @@
       },
       "correctChoiceKana": "ウ",
       "correctChoice": "C",
-      "primaryTopicId": "strat-accounting-break-even",
+      "primaryTopicId": "strat-financial-statements",
       "questionPattern": "application",
       "estimatedDifficulty": 4,
       "tags": [
@@ -670,7 +670,7 @@
       },
       "correctChoiceKana": "イ",
       "correctChoice": "B",
-      "primaryTopicId": "strat-business-systems",
+      "primaryTopicId": "strat-management-systems",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -1252,7 +1252,7 @@
       },
       "correctChoiceKana": "ウ",
       "correctChoice": "C",
-      "primaryTopicId": "tech-web-internet-basics",
+      "primaryTopicId": "tech-network-address",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -1759,7 +1759,7 @@
       },
       "correctChoiceKana": "ウ",
       "correctChoice": "C",
-      "primaryTopicId": "tech-ai-ml",
+      "primaryTopicId": "strat-generative-ai-dx",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [

@@ -251,7 +251,7 @@
       },
       "correctChoiceKana": "イ",
       "correctChoice": "B",
-      "primaryTopicId": "strat-management-systems",
+      "primaryTopicId": "strat-standardization",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -734,7 +734,7 @@
       },
       "correctChoiceKana": "エ",
       "correctChoice": "D",
-      "primaryTopicId": "strat-business-systems",
+      "primaryTopicId": "strat-management-systems",
       "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [
@@ -1572,7 +1572,7 @@
       },
       "correctChoiceKana": "イ",
       "correctChoice": "B",
-      "primaryTopicId": "tech-web-internet-basics",
+      "primaryTopicId": "tech-network-address",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
