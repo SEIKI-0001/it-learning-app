@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { GUIDES, guidePath } from "@/lib/guide/guides";
+import { FUNNEL_PLACEMENTS } from "@/lib/growth/funnel";
 import { LP_PATH, jsonLdString, type Crumb } from "@/lib/guide/seo";
 
 // 公開ガイドの小さな共通部品（すべて Server Component・JS 不要）。
@@ -70,10 +71,10 @@ export function GuideCTA({
       <h2 id="guide-cta">{title}</h2>
       <p>{body}</p>
       <div className="g-cta-actions">
-        <a className="g-btn" href={href}>
+        <a className="g-btn" href={href} data-funnel={FUNNEL_PLACEMENTS.ctaStart}>
           無料で始める
         </a>
-        <a className="g-cta-sub" href={LP_PATH}>
+        <a className="g-cta-sub" href={LP_PATH} data-funnel={FUNNEL_PLACEMENTS.ctaLp}>
           勉強アプリの機能と料金を見る
         </a>
       </div>

@@ -4,6 +4,7 @@ import QuestionFigures from "@/components/questions/QuestionFigures";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
 import ShareOnX from "@/components/growth/ShareOnX";
+import { FUNNEL_PLACEMENTS } from "@/lib/growth/funnel";
 import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import { CHOICE_LABELS } from "@/lib/pastExam/questionView";
 import { kakomonJsonLd } from "@/lib/publicPages/structuredData";
@@ -98,11 +99,22 @@ export default async function KakomonQuestionPage({ params }: Props) {
           ))}
         </ol>
 
-        <details className="k-answer">
+        <details className="k-answer" data-funnel-open="kakomon">
           <summary>正解と解説を見る</summary>
           <div className="k-answer-body">
             <p className="k-correct">正解：{CHOICE_LABELS[view.correctChoice]}</p>
             <p className="k-explanation">{view.explanation}</p>
+            {topic && (
+              <a
+                className="k-deeper"
+                href={kaisetsuPath(topic.id)}
+                data-funnel={FUNNEL_PLACEMENTS.kakomonAnswerKaisetsu}
+              >
+                <span className="k-deeper-lead">文章だけだと分かりにくいときは</span>
+                <span className="k-deeper-title">「{topic.title}」を図解で見る</span>
+                <span className="k-deeper-note">図解と確認問題つき・登録不要</span>
+              </a>
+            )}
           </div>
         </details>
 
@@ -151,7 +163,10 @@ export default async function KakomonQuestionPage({ params }: Props) {
           <h2 id="k-topic">この問題のテーマを基礎から学ぶ</h2>
           <ul className="k-list">
             <li>
-              <a href={kaisetsuPath(topic.id)}>
+              <a
+                href={kaisetsuPath(topic.id)}
+                data-funnel={FUNNEL_PLACEMENTS.kakomonBottomKaisetsu}
+              >
                 <span className="n">解説</span>
                 <span className="t">{topic.title}とは？わかりやすく解説</span>
               </a>
