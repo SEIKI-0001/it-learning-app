@@ -16,14 +16,14 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  // 既にログイン済みならアプリへ。
-  const userId = await getInternalUserId();
-  if (userId) redirect("/");
-
   const sp = await searchParams;
   // オープンリダイレクト防止: アプリ内パスのみ許可。
   const next =
-    sp?.next && sp.next.startsWith("/") && !sp.next.startsWith("//") ? sp.next : "/";
+    sp?.next && sp.next.startsWith("/") && !/^\/[/\\]/.test(sp.next) ? sp.next : "/";
+
+  // 既にログイン済みなら遷移先へ（公開解説の「記録する」からは、そのテーマのレッスンへ）。
+  const userId = await getInternalUserId();
+  if (userId) redirect(next);
   const campaignContinuation = next === AUGUST_2026_CAMPAIGN.path;
 
   const googleEnabled = Boolean(

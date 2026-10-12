@@ -19,6 +19,8 @@ const HIDDEN_ROUTE_PREFIXES = [
   "/dev",
   // 公開ガイドは読み物。本文に重なる常駐キャラは出さない。
   "/guide",
+  // 公開解説は未ログインでも使う教材。ユーザー状態（/api/session/state）を読みに行かない。
+  "/kaisetsu",
   "/journal",
   // 模型を全面に使う試作ページ。常駐キャラが操作の邪魔になる
   "/netlab",

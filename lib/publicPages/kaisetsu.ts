@@ -3,8 +3,9 @@
 // アプリの教材（data/topics のトピック）を、未ログインで読める読み物として出す。
 // 「SWOT分析とは」「公開鍵暗号方式 わかりやすく」のような論点名の検索の入口で、
 // そのテーマの公開過去問（/kakomon）と英略語（/words）へつなぐハブを兼ねる。
-// 教材は無料で公開している（docs/operations/2026-09-first-ten-users.md）ので、本文をそのまま出してよい。
-// 操作できる図解・3D模型はアプリ側にだけあり、ここからはアプリへの導線にする。
+// 教材は無料で公開している（docs/operations/2026-09-first-ten-users.md）。
+// 教材本体（体験教材・図解・確認問題）はアプリのレッスンと同じ部品をページ側で描くので、
+// ここに持つのは公開ページ固有のもの（過去問・英略語との相互リンクと表示文言）だけ。
 
 import { getAllTopics, getTopic } from "@/lib/content";
 import { getAllKakomonQuestions, type KakomonQuestion } from "@/lib/publicPages/kakomon";
@@ -13,7 +14,6 @@ import { wordPath } from "@/lib/publicPages/words";
 import { TOPIC_WORD_LINKS } from "@/data/topicWordLinks";
 import { FIELD_LABELS, type Topic, type TopicField } from "@/types/content";
 import type { WordlistEntry } from "@/types/wordlist";
-import type { ChoiceKey } from "@/types";
 
 export const KAISETSU_BASE_PATH = "/kaisetsu";
 
@@ -179,49 +179,4 @@ export function kaisetsuDescription(t: Topic): string {
     ? `${comparison}をITパスポート試験向けに解説（${FIELD_LABELS[t.field]}「${t.title}」）。`
     : `${FIELD_LABELS[t.field]}「${t.title}」をITパスポート試験向けに解説。`;
   return `${lead}${t.summary}たとえ・試験のポイント・間違えやすい点・確認問題をまとめています。${kakomon}`;
-}
-
-// ---- 確認問題 ---------------------------------------------------------------
-
-export type KaisetsuQuiz = {
-  id: string;
-  prompt: string;
-  /** 表示順に並べ替え済み。key は表示位置（A=ア…）。 */
-  choices: { key: ChoiceKey; text: string }[];
-  correctChoice: ChoiceKey;
-  explanation: string;
-};
-
-const DISPLAY_KEYS: ChoiceKey[] = ["A", "B", "C", "D"];
-
-function stableHash(text: string): number {
-  let value = 2166136261;
-  for (let i = 0; i < text.length; i += 1) {
-    value ^= text.charCodeAt(i);
-    value = Math.imul(value, 16777619);
-  }
-  return value >>> 0;
-}
-
-/**
- * 教材の確認問題（アプリ独自問題のみ）。
- * 教材データは正解が常に先頭（A）なので、そのまま出すと「全部アが正解」になる。
- * 問題 id から決まる位置へ正解を移し、ほかの選択肢は元の順のまま詰める（ビルドごとに変わらない）。
- */
-export function getKaisetsuQuizzes(t: Topic): KaisetsuQuiz[] {
-  return t.checkQuestions
-    .filter((q) => !q.official && q.choices.length === DISPLAY_KEYS.length)
-    .map((q) => {
-      const correct = q.choices.find((c) => c.key === q.correctChoice)!;
-      const others = q.choices.filter((c) => c.key !== q.correctChoice);
-      const at = stableHash(q.id) % DISPLAY_KEYS.length;
-      const ordered = [...others.slice(0, at), correct, ...others.slice(at)];
-      return {
-        id: q.id,
-        prompt: q.prompt,
-        choices: ordered.map((c, i) => ({ key: DISPLAY_KEYS[i], text: c.text })),
-        correctChoice: DISPLAY_KEYS[at],
-        explanation: q.explanation,
-      };
-    });
 }

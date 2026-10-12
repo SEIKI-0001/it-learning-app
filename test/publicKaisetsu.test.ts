@@ -3,7 +3,6 @@ import { TOPIC_WORD_LINKS } from "@/data/topicWordLinks";
 import { getAllTopics } from "@/lib/content";
 import { getAllKakomonQuestions } from "@/lib/publicPages/kakomon";
 import {
-  getKaisetsuQuizzes,
   getKaisetsuTopic,
   getKaisetsuTopics,
   getKaisetsuTopicsByField,
@@ -53,25 +52,6 @@ describe("public topic explanation pages (/kaisetsu)", () => {
     const swot = getKaisetsuTopic("strat-swot")!;
     expect(kaisetsuTitle(swot)).toBe("SWOT分析とは？わかりやすく解説【ITパスポート】");
     expect(kaisetsuDescription(swot)).toContain("ストラテジ系「SWOT分析」");
-  });
-
-  it("shows only original check questions and moves the answer off a fixed position", () => {
-    const positions = new Set<string>();
-    for (const t of getKaisetsuTopics()) {
-      const source = t.checkQuestions.filter((q) => !q.official);
-      const quizzes = getKaisetsuQuizzes(t);
-      expect(quizzes.length).toBe(source.length);
-      quizzes.forEach((quiz, i) => {
-        const original = source[i];
-        const correctText = original.choices.find((c) => c.key === original.correctChoice)!.text;
-        expect(quiz.choices.map((c) => c.key)).toEqual(["A", "B", "C", "D"]);
-        expect(quiz.choices.find((c) => c.key === quiz.correctChoice)!.text).toBe(correctText);
-        expect(quiz.choices.map((c) => c.text).sort()).toEqual(original.choices.map((c) => c.text).sort());
-        positions.add(quiz.correctChoice);
-      });
-    }
-    // 教材データは正解が常に A。公開ページでは4つの位置すべてに散らばる。
-    expect(positions).toEqual(new Set(["A", "B", "C", "D"]));
   });
 
   it("fills the past-question section only for topics with no primary questions", () => {
