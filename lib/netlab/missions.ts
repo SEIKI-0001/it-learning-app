@@ -141,7 +141,7 @@ export const MISSIONS: Mission[] = [
   {
     id: "dhcp",
     title: "2. IP アドレスを自動で配る",
-    story: "ケーブルはつながったのに、PC 同士で通信できない。ネットワークの「住所」＝IP アドレスがないからだ。ルータの DHCP で自動で配ろう。",
+    story: "ケーブルはつながったが、まだ PC 同士で通信できない。ネットワーク上の住所＝IP アドレスが決まっていないからだ。1台ずつ手で決める代わりに、ルータの DHCP で自動で配ろう。",
     terms: ["IP アドレス", "DHCP", "プライベート IP アドレス", "ping"],
     tests: ["ping-ab"],
     focus: ["router", "switch", ...PCS],
@@ -203,6 +203,7 @@ export const MISSIONS: Mission[] = [
         {
           label: "NAT を有効にしておく",
           ok: s.router.nat,
+          hint: "社内のプライベート IP アドレスを、インターネットで使えるグローバル IP アドレスに付け替える仕組み。",
           action: { label: "ルータの設定を開く", focus: { device: "router", field: "router.nat" } },
         },
         { label: "テスト：PC-A で Web サイトが見られる", ok: runTest(s, "web-pc", sim).ok, action: testAction("web-pc") },
@@ -216,7 +217,7 @@ export const MISSIONS: Mission[] = [
   {
     id: "file",
     title: "4. ファイルサーバを置く",
-    story: "共有フォルダ用のファイルサーバを入れた。いつも同じ住所で見つかるよう、IP アドレスは手で決めて（固定して）おこう。",
+    story: "社員みんなで使う共有フォルダ用に、ファイルサーバを置こう。いつも同じ住所で見つかるよう、IP アドレスは手で決めて（固定して）おく。",
     terms: ["ファイルサーバ", "固定 IP アドレス", "IP アドレスの重複", "サブネット"],
     tests: ["ping-file"],
     focus: ["fileServer", "switch", "pc-b"],
@@ -257,7 +258,7 @@ export const MISSIONS: Mission[] = [
   {
     id: "wifi",
     title: "5. 会議室に Wi-Fi を入れる",
-    story: "会議室ではノート PC を無線で使いたい。無線 AP を置こう。ただし、隣のビルの人に勝手に使われないようにすること。",
+    story: "会議室ではノート PC を無線で使いたい。無線 AP を置こう。ただし、建物の外にいる近所の人に勝手に使われないようにすること。",
     terms: ["無線LAN", "アクセスポイント", "SSID", "WPA2 / WPA3"],
     tests: ["web-laptop", "outsider-wifi"],
     focus: ["ap", "switch", "laptop"],
@@ -322,7 +323,7 @@ export const MISSIONS: Mission[] = [
         {
           label: "Web サーバをファイアウォールの DMZ ポートにつなぐ",
           ok: sim.webServerZone === "dmz",
-          hint: "DMZ は、外にも内にも直接つながない「緩衝地帯」。公開するサーバだけを置きます。",
+          hint: "DMZ は、インターネットと社内 LAN の間に設ける区画。ファイアウォールで両側から仕切り、外に公開するサーバだけを置きます。",
           action: isPresent(s, "firewall") ? webWire : placeAction("firewall"),
         },
         { label: "ファイルサーバは社内 LAN に置いたまま", ok: sim.fileServerZone === "lan" },
