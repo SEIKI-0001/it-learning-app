@@ -191,6 +191,6 @@ describe("the pace line", () => {
 
   it("marks a provisional exam date", () => {
     renderPicker(null, pace({ status: "on_pace" }), true);
-    expect(text()).toContain("試験日は仮で3か月後にしています。");
+    expect(text()).toContain("試験日は仮の日付です。");
   });
 });

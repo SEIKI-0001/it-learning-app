@@ -32,7 +32,7 @@ export default function TodayHero({
   onClearMinutes: () => void;
   /** 今日の逆算ペース。試験日が無ければ null。 */
   pace: PaceBudget | null;
-  /** 試験日が仮（「未定」を選んだ人の3か月後）。 */
+  /** 試験日が仮（「未定」を選んだ人。選んだ日の3か月後）。 */
   provisionalExam: boolean;
 }) {
   const total = slots.reduce((sum, slot) => sum + slot.minutes, 0);
@@ -233,7 +233,7 @@ function PaceLine({
       {provisionalExam && (
         <>
           {" "}
-          試験日は仮で3か月後にしています。
+          試験日は仮の日付です。
           <Link href="/settings" className={s.paceLink}>試験日を決める</Link>
         </>
       )}

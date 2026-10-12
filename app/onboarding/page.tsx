@@ -30,6 +30,8 @@ import {
 import { loadReferenceBook, switchReferenceBook } from "@/lib/referenceBook";
 import { persistReferenceBook } from "@/lib/referenceBookSync";
 import { FIRST_RUN_GUIDE_HREF } from "@/lib/firstRunGuide";
+import { resolveExamDateChoice, type ExamDateChoice } from "@/lib/examDateChoice";
+import ExamDateField from "@/components/settings/ExamDateField";
 
 // 初回設定。試験予定日・学習可能時間・理解度・苦手分野・学習スタイル・使用する参考書を取得し、
 // AIプランナー(lib/aiPlanner.ts)が使えるプロフィールとして保存する。
@@ -44,7 +46,8 @@ const STYLES: StudyStyle[] = ["balanced", "weakness", "rush"];
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [examDate, setExamDate] = useState<string>("");
+  // 既定は「未定」（3か月後を仮の試験日に）。選ばなくても逆算できる状態で始める。
+  const [examChoice, setExamChoice] = useState<ExamDateChoice | null>({ kind: "undecided" });
   const [weekdayMinutes, setWeekdayMinutes] = useState<number>(20);
   const [holidayMinutes, setHolidayMinutes] = useState<number>(60);
   const [confidence, setConfidence] = useState<number>(2);
@@ -83,9 +86,10 @@ export default function OnboardingPage() {
   }
 
   function handleStart() {
+    const exam = resolveExamDateChoice(examChoice);
     const full: UserProfile = {
       // 新フィールド
-      examDate: examDate || undefined,
+      examDate: exam.examDate,
       planStartDate: new Date().toISOString().slice(0, 10), // ロードマップの経過日数の基点
       weekdayMinutes,
       holidayMinutes,
@@ -95,7 +99,7 @@ export default function OnboardingPage() {
       // 旧フィールド(互換)
       itExperience: "none",
       dailyMinutes: String(weekdayMinutes),
-      examPlan: examDate ? "decided" : "undecided",
+      examPlan: exam.examPlan,
       ...(bookOrderOffered && followBook ? { studyOrderPreference: "book" as const } : {}),
     };
     const initial = initializeAppState(full);
@@ -138,15 +142,7 @@ export default function OnboardingPage() {
             <legend className="mb-2 text-[15px] font-semibold text-gray-900">
               試験予定日
             </legend>
-            <input
-              type="date"
-              value={examDate}
-              onChange={(e) => setExamDate(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-            />
-            <p className="mt-1.5 text-xs text-gray-500">
-              まだ決まっていなければ空のままでOK。決めると残り日数から逆算します。
-            </p>
+            <ExamDateField choice={examChoice} onChange={setExamChoice} />
           </fieldset>
 
           {/* 学習可能時間 */}
