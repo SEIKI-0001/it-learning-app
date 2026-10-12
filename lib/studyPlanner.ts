@@ -2,11 +2,9 @@ import type { Topic, TopicField } from "@/types/content";
 import { FIELD_LABELS } from "@/types/content";
 import type { AppState, TodayActivity, UserAnswer, UserProfile, UserProgress } from "@/types";
 import type {
-  DelayLevel,
   KakomonStage,
   LearningPlan,
   OnTrackLevel,
-  RescheduleAdvice,
   StudyPhaseDef,
   StudyPhaseId,
   WeeklyGoal,
@@ -798,87 +796,6 @@ function computeReviewPriority(
 // 遅れ調整（リスケジュール）
 // ---------------------------------------------------------------------------
 
-/**
- * 遅れ具合を推定して、前向きな調整方針を返す。
- * 単純な後ろ倒しはせず、遅れが大きいほど頻出・苦手・過去問に絞る。
- */
-export function buildRescheduleAdvice(
-  topics: Topic[],
-  profile: UserProfile | undefined,
-  progress: UserProgress,
-  daysRemaining: number | null,
-): RescheduleAdvice {
-  if (!profile?.examDate || daysRemaining === null) {
-    return {
-      level: "none",
-      headline: "試験日を決めると、遅れの調整もご案内できます。",
-      actions: ["設定から試験予定日を登録しましょう。"],
-    };
-  }
-
-  // 期待進捗: 学習可能時間に対する必要時間の割合で「今どこまで進んでいるべきか」を近似。
-  const available = totalAvailableMinutes(profile, daysRemaining);
-  const required = requiredMinutesEstimate(topics, progress);
-  const cRatio = completedRatio(topics, progress);
-
-  // 残り時間で必要量をこなせるかの余裕度。
-  const slack = available !== null && required > 0 ? available / required : 1;
-
-  let level: DelayLevel;
-  if (slack >= 1.2) level = "none";
-  else if (slack >= 1.0) level = "slight";
-  else if (slack >= 0.7) level = "moderate";
-  else level = "severe";
-
-  // 進捗がほぼ無い直前は severe 寄りに補正。
-  if (daysRemaining <= 7 && cRatio < 0.4 && level !== "severe") {
-    level = level === "none" ? "moderate" : "severe";
-  }
-
-  switch (level) {
-    case "none":
-      return {
-        level,
-        headline: "いまのペースなら計画どおりです。この調子で進めましょう。",
-        actions: [
-          "毎日の1〜3アクションを続ける",
-          "復習は削らずにこなす",
-        ],
-      };
-    case "slight":
-      return {
-        level,
-        headline: "少し前倒しすると安心です。数日で吸収できる範囲です。",
-        actions: [
-          "次の数日で遅れぶんを吸収する",
-          "復習は削らない",
-          "新規学習の量を少しだけ減らす",
-        ],
-      };
-    case "moderate":
-      return {
-        level,
-        headline: "合格可能性を上げるため、頻出・苦手を優先する計画に組み替えます。",
-        actions: [
-          "重要度の低いテーマは後回しにする",
-          "頻出分野・苦手分野・過去問を優先する",
-          "復習は残す",
-        ],
-      };
-    case "severe":
-      return {
-        level,
-        headline:
-          "合格可能性を上げるため、頻出テーマ優先の短期集中プランに切り替えます。",
-        actions: [
-          "低頻度テーマは思い切って削る",
-          "頻出テーマ・過去問・誤答復習に絞る",
-          "1日3アクションに集中する",
-        ],
-      };
-  }
-}
-
 // ---------------------------------------------------------------------------
 // メイン: 学習計画を生成
 // ---------------------------------------------------------------------------
@@ -900,7 +817,6 @@ export function generateLearningPlan(
   const dailyMinutesTarget = declaredDailyMinutes(profile);
   const available = totalAvailableMinutes(profile, daysRemaining);
   const required = requiredMinutesEstimate(topics, progress);
-  const onTrack = computeOnTrack(available, required);
   const summary = computeProgressSummary(topics, progress);
 
   const currentPhase = determineCurrentPhase(
@@ -947,12 +863,6 @@ export function generateLearningPlan(
   const ready = isKakomonReady(topics, progress, answers, daysRemaining);
   const kakomonStart = kakomonStartDate(profile, daysRemaining, ready, now);
   const reviewPriority = computeReviewPriority(progress, daysRemaining, answers);
-  const reschedule = buildRescheduleAdvice(
-    topics,
-    profile,
-    progress,
-    daysRemaining,
-  );
 
   const phaseDef = getPhaseDef(currentPhase);
   let message: string;
@@ -970,7 +880,6 @@ export function generateLearningPlan(
     dailyMinutesTarget,
     totalAvailableMinutes: available,
     requiredMinutesEstimate: required,
-    onTrack,
     currentPhase,
     weeklyGoal,
     weeklyItems,
@@ -979,7 +888,6 @@ export function generateLearningPlan(
     kakomonStartDate: kakomonStart,
     kakomonReady: ready,
     reviewPriority,
-    reschedule,
     completedTopicCount: summary.completedCount,
     totalTopicCount: summary.totalCount,
     message,
