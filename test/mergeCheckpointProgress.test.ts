@@ -77,6 +77,14 @@ function fullCheckpointProgress(): CheckpointProgress {
       pledge: { pledgedAt: "2026-08-15T00:00:00.000Z", examDate: "2026-10-15" },
       mochitName: { value: "もちすけ", updatedAt: "2026-08-18T00:00:00.000Z" },
       studyAmount: { date: "2026-08-20", minutes: 15 },
+      paceBudget: {
+        date: "2026-08-20",
+        basis: "2026-09-20|20|60",
+        minutes: 45,
+        status: "raised",
+        daysRemaining: 31,
+        computedAt: "2026-08-20T00:00:00.000Z",
+      },
     },
     chapterReview: {
       themeExams: {
@@ -533,6 +541,40 @@ describe("personalisation merge", () => {
 
     expect(merge(a, b).gameful?.studyAmount?.minutes).toBe(30);
     expect(merge(b, a).gameful?.studyAmount?.minutes).toBe(30);
+  });
+
+  const pace = (date: string, basis: string, minutes: number, computedAt: string) => ({
+    date,
+    basis,
+    minutes,
+    status: "raised" as const,
+    daysRemaining: 30,
+    computedAt,
+  });
+
+  it("takes the newer day's pace budget", () => {
+    const older = { ...base, gameful: { paceBudget: pace("2026-08-19", "x", 60, "2026-08-19T00:00:00.000Z") } };
+    const newer = { ...base, gameful: { paceBudget: pace("2026-08-20", "x", 30, "2026-08-20T00:00:00.000Z") } };
+
+    expect(merge(older, newer).gameful?.paceBudget?.minutes).toBe(30);
+    expect(merge(newer, older).gameful?.paceBudget?.minutes).toBe(30);
+  });
+
+  it("keeps the larger pace budget for the same day and settings", () => {
+    // 学習が進んでから別端末で計算した少ない値に寄せると、当日のメニューが縮む。
+    const morning = { ...base, gameful: { paceBudget: pace("2026-08-20", "x", 45, "2026-08-20T00:00:00.000Z") } };
+    const evening = { ...base, gameful: { paceBudget: pace("2026-08-20", "x", 30, "2026-08-20T10:00:00.000Z") } };
+
+    expect(merge(morning, evening).gameful?.paceBudget?.minutes).toBe(45);
+    expect(merge(evening, morning).gameful?.paceBudget?.minutes).toBe(45);
+  });
+
+  it("takes the later calculation when the settings changed that day", () => {
+    const before = { ...base, gameful: { paceBudget: pace("2026-08-20", "old", 90, "2026-08-20T00:00:00.000Z") } };
+    const after = { ...base, gameful: { paceBudget: pace("2026-08-20", "new", 30, "2026-08-20T10:00:00.000Z") } };
+
+    expect(merge(before, after).gameful?.paceBudget?.basis).toBe("new");
+    expect(merge(after, before).gameful?.paceBudget?.basis).toBe("new");
   });
 });
 

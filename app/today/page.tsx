@@ -19,6 +19,7 @@ import {
   getSelectedMinutes,
   setStudyAmount,
 } from "@/lib/studyAmount";
+import { resolveTodayPace } from "@/lib/studyPace";
 import {
   getUserId,
   refreshIntegratedStatus,
@@ -75,7 +76,8 @@ import s from "@/components/today/todayView.module.css";
 type TodayTask = TodayRouteTask & { reason: string };
 
 // 今日の役割は「何を、どれくらいで、どこまで終えたか」を見せること。
-// 試験日・合格準備度・ストリーク・CP などの進捗情報は /progress に置き、ここには出さない。
+// 「どれくらい」は試験日から逆算する（lib/studyPace.ts）。ペースは1行だけ出し、
+// 合格準備度・ストリーク・CP などの進捗情報は /progress に置く。
 // 教材本文と確認問題は /learn のレッスンページだけに置く。
 export default function TodayPage() {
   const router = useRouter();
@@ -131,8 +133,24 @@ export default function TodayPage() {
     };
   }, []);
 
-  // 選ばれた学習量があればそれを予算にする。選んでいなければ従来どおり。
+  // 試験日から逆算した今日の量。その日最初の計算結果を固定して保存する（日内でメニューが縮まないように）。
+  const paceResolution = useMemo(
+    () => (state?.profile ? resolveTodayPace(state, topics, new Date()) : null),
+    [state, topics],
+  );
+  const pace = paceResolution?.pace ?? null;
+  useEffect(() => {
+    if (!paceResolution || !state || paceResolution.state === state) return;
+    saveAppState(paceResolution.state);
+    setState(paceResolution.state);
+    const userId = getUserId();
+    if (userId) saveProgressToDb(userId, paceResolution.state.progress);
+  }, [paceResolution, setState, state]);
+
+  // 学習量: 選んだ量 → 逆算した「おまかせ」の量 → 申告した時間（土日は休日の分数）。
   const selectedMinutes = state ? getSelectedMinutes(state, todayLocalDate()) : null;
+  const omakaseMinutes = pace?.minutes ?? defaultDailyMinutes(state?.profile, new Date());
+  const budgetMinutes = selectedMinutes ?? omakaseMinutes;
   // トピック以外のタスク（関連用語・公式過去問）。学習キューへ同じ優先度の物差しで並べる。
   const activities = useMemo(() => {
     if (!state?.profile) return { active: [], done: [], pinned: [] };
@@ -146,13 +164,13 @@ export default function TodayPage() {
       state,
       topics,
       now,
-      budgetMinutes: selectedMinutes ?? defaultDailyMinutes(state.profile),
+      budgetMinutes,
       wordProgress,
       topicStages,
       upcomingTopicIds,
       log: activityLog,
     });
-  }, [activityLog, bookQueue, selectedMinutes, state, topicStages, topics, wordProgress]);
+  }, [activityLog, bookQueue, budgetMinutes, state, topicStages, topics, wordProgress]);
   const plan = useMemo(
     () =>
       state?.profile
@@ -160,12 +178,12 @@ export default function TodayPage() {
           state,
           topics,
           new Date(),
-          selectedMinutes ?? undefined,
+          budgetMinutes,
           activities.active,
           bookQueue ? { book: bookQueue, orderKey } : undefined,
         )
         : null,
-    [activities.active, bookQueue, orderKey, selectedMinutes, state, topics],
+    [activities.active, bookQueue, budgetMinutes, orderKey, state, topics],
   );
   const menu = plan?.todayMenu;
   const learningQueue = useMemo(
@@ -407,9 +425,11 @@ export default function TodayPage() {
         dateLabel={dateLabel}
         slots={slots}
         selectedMinutes={selectedMinutes}
-        defaultMinutes={defaultDailyMinutes(state.profile)}
+        defaultMinutes={omakaseMinutes}
         onSelectMinutes={(minutes) => persistState(setStudyAmount(state, date, minutes))}
         onClearMinutes={() => persistState(clearStudyAmount(state, date))}
+        pace={pace}
+        provisionalExam={state.profile?.examPlan === "provisional"}
       />
 
       <div className={`${s.inner} ${s.body}`}>

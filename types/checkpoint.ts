@@ -201,6 +201,8 @@ export type GamefulState = {
   mochitName?: MochitName;
   /** その日の学習量の選択。未設定ならプロフィールの予算をそのまま使う。 */
   studyAmount?: StudyAmountChoice;
+  /** 試験日から逆算した「おまかせ」の量。その日最初に計算した値を当日中は使う。 */
+  paceBudget?: PaceBudget;
 };
 
 /**
@@ -212,6 +214,25 @@ export type StudyAmountChoice = {
   /** ローカル日付 "YYYY-MM-DD"。日をまたいだら選択は持ち越さない。 */
   date: string;
   minutes: number;
+};
+
+/** 逆算ペースの状態。on_pace=申告した時間で足りる / raised=増やした / over_cap=上限でも足りない。 */
+export type StudyPaceStatus = "on_pace" | "raised" | "over_cap";
+
+/**
+ * その日の逆算ペース（lib/studyPace.ts）。
+ * 学習を進めると残りの必要量が減り、計算し直すと当日のメニューが縮んでしまうため、
+ * その日最初に計算した結果を固定する。試験日や申告時間を変えたら basis が変わり、計算し直す。
+ */
+export type PaceBudget = {
+  /** ローカル日付 "YYYY-MM-DD"。 */
+  date: string;
+  /** 計算の前提（試験日・平日/休日の分数）。変わったら固定を捨てる。 */
+  basis: string;
+  minutes: number;
+  status: StudyPaceStatus;
+  daysRemaining: number;
+  computedAt: string;
 };
 
 /**

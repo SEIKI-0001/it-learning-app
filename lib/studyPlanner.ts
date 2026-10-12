@@ -32,6 +32,11 @@ import {
 } from "@/lib/kakomonAccess";
 import { summarizeOfficialHistory } from "@/lib/pastExam/officialHistory";
 import { KAKOMON_FIELD_DRILL_TARGET } from "@/lib/pastExam/kakomonRules";
+import {
+  declaredDailyMinutes,
+  declaredHolidayMinutes,
+  declaredWeekdayMinutes,
+} from "@/lib/dailyMinutes";
 
 // ============================================================================
 // 学習計画エンジン（studyPlanner）
@@ -176,24 +181,9 @@ export function getPhaseDef(id: StudyPhaseId): StudyPhaseDef {
 // 学習時間の見積り
 // ---------------------------------------------------------------------------
 
-/** 1日の目安学習時間(分)。平日値を基準にする（未設定は旧 dailyMinutes → 既定10分）。 */
-function resolveDailyMinutes(profile?: UserProfile): number {
-  if (!profile) return 10;
-  if (typeof profile.weekdayMinutes === "number" && profile.weekdayMinutes > 0) {
-    return profile.weekdayMinutes;
-  }
-  const parsed = Number.parseInt(profile.dailyMinutes ?? "", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
-}
-
 /** 1週間あたりの学習可能時間(分)。平日5日＋休日2日で見積もる。 */
 function weeklyMinutes(profile?: UserProfile): number {
-  const weekday = resolveDailyMinutes(profile);
-  const holiday =
-    typeof profile?.holidayMinutes === "number" && profile.holidayMinutes > 0
-      ? profile.holidayMinutes
-      : weekday;
-  return weekday * 5 + holiday * 2;
+  return declaredWeekdayMinutes(profile) * 5 + declaredHolidayMinutes(profile) * 2;
 }
 
 /** 試験日までの学習可能総時間(分)。試験日未設定なら null。 */
@@ -206,25 +196,41 @@ export function totalAvailableMinutes(
   return Math.round((perWeek / 7) * daysRemaining);
 }
 
+/** これ以上の習熟度のトピックは、確認問題の回し直しが済んだとみなす。 */
+const MASTERED_SCORE = 70;
+/** 確認問題の回し直し（1トピック 5分×2周）。 */
+const REVIEW_MINUTES_PER_TOPIC = 5 * 2;
+/** 過去問演習の枠（20分×30コマ）。 */
+const KAKOMON_TOTAL_MINUTES = 20 * 30;
+
 /**
- * 必要学習量の目安(分)。
- * 「未完了トピックのインプット + 全トピックの確認問題まわし直し + 過去問演習」を
- * ざっくり積み上げる（広く浅く何度も回す方針を反映）。
+ * 試験までに残っている必要学習量の目安(分)。
+ * インプット（未完了トピック）＋確認問題の回し直し（習熟度70未満のトピック）
+ * ＋過去問演習（公式過去問をまだ解いていないトピックの割合）を積み上げる。
+ * 進めた分だけ減る（以前は回し直しと過去問が固定値で、進めても「厳しい」のままだった）。
+ * まっさらな状態では「全トピックのインプット＋全トピック×10分＋600分」で、
+ * 公開ガイドの見積り（lib/guide/facts.ts）と一致する。
  */
 export function requiredMinutesEstimate(
   topics: Topic[],
   progress: UserProgress,
 ): number {
-  const completed = new Set(progress.completedTopics);
-  const remainingTopics = topics.filter((t) => !completed.has(t.id));
-  const inputMinutes = remainingTopics.reduce(
-    (s, t) => s + t.estimatedMinutes,
-    0,
-  );
-  // 確認問題の回し直し（全トピックを平均5分で2周想定）＋過去問演習の固定枠。
-  const reviewMinutes = topics.length * 5 * 2;
-  const kakomonMinutes = 20 * 30; // 過去問 約30コマ×20分
-  return inputMinutes + reviewMinutes + kakomonMinutes;
+  if (topics.length === 0) return 0;
+  const completed = new Set(progress.completedTopics ?? []);
+  const mastery = progress.topicMastery ?? {};
+  const stats = progress.topicMasteryStats ?? {};
+
+  let input = 0;
+  let review = 0;
+  let withoutPastExam = 0;
+  for (const topic of topics) {
+    if (!completed.has(topic.id)) input += topic.estimatedMinutes;
+    if ((mastery[topic.id] ?? 0) < MASTERED_SCORE) review += REVIEW_MINUTES_PER_TOPIC;
+    const evidence = stats[topic.id]?.recentEvidence ?? [];
+    if (!evidence.some((e) => e.kind === "past_exam")) withoutPastExam += 1;
+  }
+  const kakomon = Math.round((KAKOMON_TOTAL_MINUTES * withoutPastExam) / topics.length);
+  return input + review + kakomon;
 }
 
 // ---------------------------------------------------------------------------
@@ -891,7 +897,7 @@ export function generateLearningPlan(
   const { profile, progress, answers } = state;
 
   const daysRemaining = daysUntilExam(profile, now);
-  const dailyMinutesTarget = resolveDailyMinutes(profile);
+  const dailyMinutesTarget = declaredDailyMinutes(profile);
   const available = totalAvailableMinutes(profile, daysRemaining);
   const required = requiredMinutesEstimate(topics, progress);
   const onTrack = computeOnTrack(available, required);

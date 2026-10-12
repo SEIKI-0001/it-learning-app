@@ -16,6 +16,7 @@ import type {
   FinalExamAttempt,
   GamefulState,
   MochitName,
+  PaceBudget,
   Pledge,
   QuestReroll,
   RewardState,
@@ -107,6 +108,7 @@ function mergeGamefulState(
   const pledge = mergePledge(a.pledge, b.pledge);
   const mochitName = mergeMochitName(a.mochitName, b.mochitName);
   const studyAmount = mergeStudyAmount(a.studyAmount, b.studyAmount);
+  const paceBudget = mergePaceBudget(a.paceBudget, b.paceBudget);
 
   return {
     ...(shownCheckpointIds.length > 0 ? { growthCheck: { shownCheckpointIds } } : {}),
@@ -115,7 +117,24 @@ function mergeGamefulState(
     ...(pledge ? { pledge } : {}),
     ...(mochitName ? { mochitName } : {}),
     ...(studyAmount ? { studyAmount } : {}),
+    ...(paceBudget ? { paceBudget } : {}),
   };
+}
+
+/**
+ * 逆算ペースの固定値のマージ。新しい日を採用する。
+ * 同じ日・同じ前提なら多い方（学習が進んでから別端末で計算した少ない値に寄せない）。
+ * 同じ日で前提が違えば、後から計算した方（＝新しい設定）を採る。
+ */
+function mergePaceBudget(
+  a: PaceBudget | undefined,
+  b: PaceBudget | undefined,
+): PaceBudget | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  if (a.date !== b.date) return a.date > b.date ? a : b;
+  if (a.basis === b.basis) return a.minutes >= b.minutes ? a : b;
+  return a.computedAt >= b.computedAt ? a : b;
 }
 
 /**

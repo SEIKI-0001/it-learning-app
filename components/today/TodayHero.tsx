@@ -2,9 +2,13 @@
 
 // /today のヒーロー。「あと何分で今日のぶんが終わるか」と、分の定規で今日の予定を示す。
 // 区間の長さ＝所要時間、塗り＝完了。学習量（おまかせ／5／15／30分）もここで選ぶ。
-// 試験日・合格準備度・ストリークなどの進捗情報は /progress に任せ、ここには置かない。
+// 試験日から逆算したペース（今日の量で間に合うか）は1行だけここに出す。
+// 合格準備度・ストリークなどの進捗情報は /progress に任せる。
 
+import type { ReactNode } from "react";
+import Link from "next/link";
 import { STUDY_AMOUNT_OPTIONS, type StudyAmountOption } from "@/lib/studyAmount";
+import type { PaceBudget } from "@/types/checkpoint";
 import type { TodaySlot } from "./todaySlots";
 import s from "./todayView.module.css";
 
@@ -15,6 +19,8 @@ export default function TodayHero({
   defaultMinutes,
   onSelectMinutes,
   onClearMinutes,
+  pace,
+  provisionalExam,
 }: {
   dateLabel: string;
   slots: TodaySlot[];
@@ -24,6 +30,10 @@ export default function TodayHero({
   defaultMinutes: number;
   onSelectMinutes: (minutes: StudyAmountOption) => void;
   onClearMinutes: () => void;
+  /** 今日の逆算ペース。試験日が無ければ null。 */
+  pace: PaceBudget | null;
+  /** 試験日が仮（「未定」を選んだ人の3か月後）。 */
+  provisionalExam: boolean;
 }) {
   const total = slots.reduce((sum, slot) => sum + slot.minutes, 0);
   const doneSlots = slots.filter((slot) => slot.state === "done");
@@ -62,6 +72,7 @@ export default function TodayHero({
             </>
           )}
         </p>
+        <PaceLine pace={pace} provisionalExam={provisionalExam} chosenMinutes={selectedMinutes} />
         <p className={s.subline}>
           {hasPlan ? (
             <>
@@ -167,5 +178,65 @@ export default function TodayHero({
         </div>
       </div>
     </header>
+  );
+}
+
+// 責めない・焦らせない（gameful-design-v2）。遅れを数字で責めず、今日の量と次の一手だけを書く。
+function PaceLine({
+  pace,
+  provisionalExam,
+  chosenMinutes,
+}: {
+  pace: PaceBudget | null;
+  provisionalExam: boolean;
+  chosenMinutes: number | null;
+}) {
+  if (!pace) {
+    return (
+      <p className={s.pace}>
+        試験日を決めると、今日の量を逆算します。
+        <Link href="/settings" className={s.paceLink}>試験日を決める</Link>
+      </p>
+    );
+  }
+
+  const days = (
+    <>
+      試験まであと<span className={s.mono}>{pace.daysRemaining}</span>日。
+    </>
+  );
+  let body: ReactNode;
+  if (pace.status === "on_pace") {
+    body = <>このペースで間に合います。</>;
+  } else if (pace.status === "raised" && chosenMinutes === null) {
+    // 分数はメニューの合計（トピック単位で詰めるので少しずれる）と食い違うので書かない。
+    body = <>間に合わせるため、今日は多めにしています。</>;
+  } else if (pace.status === "raised") {
+    body = (
+      <>
+        おまかせなら今日は<span className={s.mono}>{pace.minutes}</span>分です。
+      </>
+    );
+  } else {
+    body = (
+      <>
+        頻出テーマから順に進めています。
+        <Link href="/plan" className={s.paceLink}>計画を見直す</Link>
+      </>
+    );
+  }
+
+  return (
+    <p className={s.pace}>
+      {days}
+      {body}
+      {provisionalExam && (
+        <>
+          {" "}
+          試験日は仮で3か月後にしています。
+          <Link href="/settings" className={s.paceLink}>試験日を決める</Link>
+        </>
+      )}
+    </p>
   );
 }
