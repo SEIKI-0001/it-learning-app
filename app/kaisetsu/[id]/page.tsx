@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Fragment } from "react";
-import DiagramRenderer from "@/components/diagrams/DiagramRenderer";
+import TopicContent from "@/components/learn/TopicContent";
+import PublicTopicQuiz from "@/components/learn/PublicTopicQuiz";
+import { getTopicExperience } from "@/components/experiences/registry";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import ShareOnX from "@/components/growth/ShareOnX";
 import KakomonList from "@/components/guide/KakomonList";
 import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
-import { CHOICE_LABELS } from "@/lib/pastExam/questionView";
+import { getLessonHref } from "@/lib/learningCatalog";
 import {
   KAISETSU_BASE_PATH,
-  getKaisetsuQuizzes,
   getKaisetsuTopic,
   getKaisetsuTopics,
   getKakomonForTopic,
@@ -26,8 +27,9 @@ import { wordPath } from "@/lib/publicPages/words";
 import { FIELD_LABELS } from "@/types/content";
 
 // 公開テーマ別解説（未ログインで閲覧可）。「SWOT分析とは」のような論点名の検索の入口。
-// 本文は教材データ（data/topics）だけから組み立て、そのテーマの公開過去問・英略語へつなぐ。
-// 確認問題の正解と解説は過去問ページと同じく <details> で「タップで開く」。
+// 教材本体と確認問題はアプリのレッスン（app/learn/.../[lessonId]）と同じ部品で描く
+// （TopicContent / TopicQuiz）。公開ページで持つのは、文章でのおさらい・公開過去問・英略語・
+// つながるテーマへの内部リンクと、登録の案内だけ。学習記録は保存しない。
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -58,7 +60,8 @@ export default async function KaisetsuTopicPage({ params }: Props) {
   const kakomon = getKakomonForTopic(t.id);
   const relatedKakomon = getRelatedKakomonForTopic(t.id);
   const words = getWordsForTopic(t.id);
-  const quizzes = getKaisetsuQuizzes(t);
+  const lessonHref = getLessonHref(t.id, { anchor: "lesson-content" });
+  const hasExperience = Boolean(getTopicExperience(t.id));
   const before = getLinkedTopics(t.prerequisites);
   const after = getLinkedTopics(t.nextTopicIds).filter((x) => !before.some((b) => b.id === x.id));
   const { conceptCard, explanation } = t;
@@ -84,56 +87,51 @@ export default async function KaisetsuTopicPage({ params }: Props) {
         <p>{t.summary}</p>
       </div>
 
-      {t.hookQuestion && (
-        <section className="g-points" aria-labelledby="ks-hook">
-          <h2 id="ks-hook">最初に考えてみよう</h2>
-          <p>{t.hookQuestion}</p>
-        </section>
-      )}
+      {/* 教材本体（導入・体験教材・図解・スライド）はアプリのレッスンと同じ TopicContent。
+          アプリ側の教材を直すと、ここにもそのまま反映される。 */}
+      <section className="k-lesson" aria-label="教材">
+        <TopicContent topic={t} showCheckQuestions={false} />
+      </section>
 
-      <div className="g-body">
-        <h2>{conceptCard.heading}</h2>
-        <p>{conceptCard.body}</p>
-        {conceptCard.analogy && (
-          <p>
-            <strong>たとえると：</strong>
-            {conceptCard.analogy}
-          </p>
-        )}
-        {conceptCard.diagram && (
-          <div className="ks-diagram">
-            <DiagramRenderer spec={conceptCard.diagram} />
-          </div>
-        )}
-
-        <h2>理解を固める</h2>
-        <p>{explanation.body}</p>
-        {explanation.keyPoints && explanation.keyPoints.length > 0 && (
+      {/* 文章でのおさらい（公開ページだけ）。検索で読まれる本文と、体験教材に載っていない
+          試験の問われ方・間違えやすい点を文章で残す。体験教材が無いテーマでは
+          TopicContent が「イメージをつかむ」「試験ポイント」を出すので、そこは重ねない。 */}
+      <section className="g-body k-recap" aria-labelledby="ks-recap">
+        <h2 id="ks-recap">文章でおさらい</h2>
+        {hasExperience && (
           <>
-            <h3>押さえどころ</h3>
-            <ul>
-              {explanation.keyPoints.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
+            <h3>{conceptCard.heading}</h3>
+            <p>{conceptCard.body}</p>
+            {conceptCard.analogy && (
+              <p>
+                <strong>たとえると：</strong>
+                {conceptCard.analogy}
+              </p>
+            )}
+            <p>{explanation.body}</p>
+            {explanation.keyPoints && explanation.keyPoints.length > 0 && (
+              <>
+                <h3>押さえどころ</h3>
+                <ul>
+                  {explanation.keyPoints.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+              </>
+            )}
           </>
-        )}
-        {explanation.diagram && (
-          <div className="ks-diagram">
-            <DiagramRenderer spec={explanation.diagram} />
-          </div>
         )}
 
         {t.examPoint && (
           <>
-            <h2>ITパスポート試験での問われ方</h2>
+            <h3>ITパスポート試験での問われ方</h3>
             <p>{t.examPoint}</p>
           </>
         )}
 
         {t.commonMistakes && t.commonMistakes.length > 0 && (
           <>
-            <h2>間違えやすいポイント</h2>
+            <h3>間違えやすいポイント</h3>
             <ul>
               {t.commonMistakes.map((m) => (
                 <li key={m}>{m}</li>
@@ -144,7 +142,7 @@ export default async function KaisetsuTopicPage({ params }: Props) {
 
         {t.relatedTerms && t.relatedTerms.length > 0 && (
           <>
-            <h2>関連用語</h2>
+            <h3>関連用語</h3>
             <p>
               {t.relatedTerms.map((term, i) => {
                 const href = relatedTermHref(term, t.id);
@@ -158,34 +156,22 @@ export default async function KaisetsuTopicPage({ params }: Props) {
             </p>
           </>
         )}
-      </div>
+      </section>
 
-      {quizzes.length > 0 && (
+      {t.checkQuestions.length > 0 && (
         <section className="k-section" aria-labelledby="ks-quiz">
-          <h2 id="ks-quiz">確認問題（{quizzes.length}問）</h2>
-          {quizzes.map((q, i) => (
-            <div key={q.id} className="k-question" aria-label={`確認問題${i + 1}`}>
-              <p className="k-prompt">
-                <strong>Q{i + 1}.</strong> {q.prompt}
-              </p>
-              <ol className="k-choices" aria-label="選択肢">
-                {q.choices.map((c) => (
-                  <li key={c.key}>
-                    <span className="k-key">{CHOICE_LABELS[c.key]}</span>
-                    <span className="k-text">{c.text}</span>
-                  </li>
-                ))}
-              </ol>
-              <details className="k-answer">
-                <summary>正解と解説を見る</summary>
-                <div className="k-answer-body">
-                  <p className="k-correct">正解：{CHOICE_LABELS[q.correctChoice]}</p>
-                  <p className="k-explanation">{q.explanation}</p>
-                </div>
-              </details>
-            </div>
-          ))}
-          <p className="g-note">確認問題は本サービスのオリジナル問題です。</p>
+          <h2 id="ks-quiz">確認問題（{t.checkQuestions.length}問）</h2>
+          {/* アプリと同じ出題・解説。結果は保存しない（PublicTopicQuiz の説明を参照）。 */}
+          <div className="k-lesson">
+            <PublicTopicQuiz
+              topicId={t.id}
+              questions={t.checkQuestions}
+              lessonHref={lessonHref}
+            />
+          </div>
+          <p className="g-note">
+            確認問題は本サービスのオリジナル問題です。ログインなしで解けます（結果は保存されません）。
+          </p>
         </section>
       )}
 
@@ -261,8 +247,9 @@ export default async function KaisetsuTopicPage({ params }: Props) {
       </p>
 
       <GuideCTA
-        title="このテーマをアプリで学ぶ"
-        body={`アプリでは「${t.title}」を図解と確認問題で学び、そのまま公式過去問の演習へ進めます。間違えた問題は復習リストに自動で戻ります。教材と公式過去問は無料、最初の7日間は学習記録も無料です。`}
+        title="学習を記録して、合格まで続ける"
+        body={`教材と確認問題はこのページで全部無料で使えます。登録すると「${t.title}」の結果や習熟度が記録され、苦手分野の復習提案、試験日までの学習計画、合格準備度の見える化が使えます。最初の7日間は学習記録も無料です。`}
+        href={`/login?next=${encodeURIComponent(lessonHref)}`}
       />
     </article>
   );

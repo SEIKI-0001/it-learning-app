@@ -167,6 +167,7 @@ describe("floating mascot", () => {
   it("stays off the reading pages", () => {
     expect(shouldShowFloatingMochit("/guide", true)).toBe(false);
     expect(shouldShowFloatingMochit("/guide/study-time", true)).toBe(false);
+    expect(shouldShowFloatingMochit("/kaisetsu/strat-swot", true)).toBe(false);
     expect(shouldShowFloatingMochit("/today", true)).toBe(true);
   });
 });

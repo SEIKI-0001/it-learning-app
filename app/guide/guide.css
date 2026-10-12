@@ -31,10 +31,10 @@
 .guide *::after {
   box-sizing: border-box;
 }
-.guide a {
+.guide a:where(:not(.k-lesson *)) {
   color: var(--ai);
 }
-.guide :focus-visible {
+.guide :focus-visible:where(:not(.k-lesson *)) {
   outline: 3px solid var(--ai);
   outline-offset: 3px;
   border-radius: 4px;
@@ -118,9 +118,7 @@
   color: var(--sub);
 }
 
-.guide h1,
-.guide h2,
-.guide h3 {
+.guide :is(h1, h2, h3):where(:not(.k-lesson *)) {
   font-family: var(--disp);
   font-weight: 600;
   line-height: 1.55;
@@ -536,7 +534,7 @@
 .guide .k-section {
   margin: 44px 0 0;
 }
-.guide .k-section h2 {
+.guide .k-section h2:where(:not(.k-lesson *)) {
   font-size: 1.2rem;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--line);
@@ -609,7 +607,7 @@
 .guide .k-def dd {
   margin: 0;
 }
-.guide .k-section p {
+.guide .k-section p:where(:not(.k-lesson *)) {
   margin: 12px 0 0;
 }
 .guide .k-section > ul:not([class]) {
@@ -657,4 +655,22 @@
   font-size: 0.92rem;
   font-weight: 600;
   text-decoration: none;
+}
+
+/* ---- 教材本体（アプリと共通の TopicContent / TopicQuiz） ----
+   中身はアプリの Tailwind で組まれている。読み物向けの書体・行間・見出し・リンク色を
+   持ち込まないよう、上の要素セレクタは .k-lesson の中を除外し、継承する値はアプリの本文に戻す。 */
+.guide .k-lesson {
+  margin-top: 28px;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  overflow-wrap: normal;
+}
+.guide .k-section .k-lesson {
+  margin-top: 12px;
+}
+.guide .k-recap {
+  margin-top: 40px;
 }

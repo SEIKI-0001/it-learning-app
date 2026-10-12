@@ -63,13 +63,14 @@ const DEFAULT_CTA = {
 export function GuideCTA({
   title = DEFAULT_CTA.title,
   body = DEFAULT_CTA.body,
-}: { title?: string; body?: string } = {}) {
+  href = "/login",
+}: { title?: string; body?: string; href?: string } = {}) {
   return (
     <section className="g-cta" aria-labelledby="guide-cta">
       <h2 id="guide-cta">{title}</h2>
       <p>{body}</p>
       <div className="g-cta-actions">
-        <a className="g-btn" href="/login">
+        <a className="g-btn" href={href}>
           無料で始める
         </a>
         <a className="g-cta-sub" href={LP_PATH}>

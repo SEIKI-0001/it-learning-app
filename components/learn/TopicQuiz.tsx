@@ -115,6 +115,7 @@ export default function TopicQuiz({
   dense = false,
   timeLimitSeconds,
   xpPerCorrect,
+  askMochit = true,
 }: {
   topicId: string;
   /** 複数トピックを扱う試験では、設問ごとの復習先を指定する。 */
@@ -126,6 +127,8 @@ export default function TopicQuiz({
   timeLimitSeconds?: number; // 指定時のみ制限時間を有効化（確認パック用）
   /** 正解1問あたりのXP。XPが付く画面(/today等)だけ渡す(確認パックでは付かないので渡さない) */
   xpPerCorrect?: number;
+  /** 解答後の「モチットに聞く」（AI相談）。常駐モチットの無い公開ページでは false にする。 */
+  askMochit?: boolean;
 }) {
   const shuffled = useMemo(
     () => new Map(questions.map((q) => [q.id, prepareChoices(q)] as const)),
@@ -471,7 +474,7 @@ export default function TopicQuiz({
                     選んだ選択肢が違う理由：{selectedChoiceExplanation}
                   </p>
                 )}
-                {currentMochitContext && <AskMochitButton context={currentMochitContext} className="mt-3" />}
+                {askMochit && currentMochitContext && <AskMochitButton context={currentMochitContext} className="mt-3" />}
               </div>
             )}
             {/*
