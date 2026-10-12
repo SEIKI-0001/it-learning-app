@@ -150,19 +150,18 @@ function ConnectionPanel() {
 // ③ どこで処理する？＋役割をどう分ける？（コンビニチェーンの模型）
 // ---------------------------------------------------------------------------
 
-const MODES: { key: ArchMode; label: string; axis: "処理場所" | "役割分担"; result: ReactNode }[] = [
-  { key: "central", label: "集中処理", axis: "処理場所", result: <>全店のデータが<b>本部の1台</b>に集まって処理されます。管理はしやすいけれど、本部が止まると全店が止まります。</> },
-  { key: "distributed", label: "分散処理", axis: "処理場所", result: <>各店の<b>小さなサーバ</b>がそれぞれ処理し、必要なときだけ連携します。1台止まっても他の店は動きますが、管理は複雑です。</> },
-  { key: "cs", label: "クライアントサーバ", axis: "役割分担", result: <>店の端末（<b>クライアント＝頼む側</b>）が本部の<b>サーバ（応える側）</b>に依頼し、結果が返ってきます。</> },
-  { key: "three", label: "三層", axis: "役割分担", result: <>①<b>表示</b>（店の端末のブラウザ）→ ②<b>業務処理</b>（APサーバ）→ ③<b>データ</b>（DB）の3つの層に分けて往復します。</> },
-  { key: "p2p", label: "P2P", axis: "役割分担", result: <>専用のサーバを使わず、<b>端末どうしが対等</b>に直接やり取りします。どの端末も提供も利用もします。</> },
+const MODES: { key: ArchMode; label: string; axis: "処理場所" | "役割分担" }[] = [
+  { key: "central", label: "集中処理", axis: "処理場所" },
+  { key: "distributed", label: "分散処理", axis: "処理場所" },
+  { key: "cs", label: "クライアントサーバ", axis: "役割分担" },
+  { key: "three", label: "三層", axis: "役割分担" },
+  { key: "p2p", label: "P2P", axis: "役割分担" },
 ];
 
 function ChainPanel() {
   const [mode, setMode] = useState<ArchMode | null>(null);
   const [runKey, setRunKey] = useState(0);
   const reducedMotion = useReducedMotion();
-  const m = MODES.find((x) => x.key === mode) ?? null;
   const pick = (key: ArchMode) => {
     setMode(key);
     setRunKey((k) => k + 1);
@@ -200,11 +199,6 @@ function ChainPanel() {
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
         <ArchDioramaScene mode={mode} runKey={runKey} reducedMotion={reducedMotion} />
       </div>
-      {m && (
-        <p className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200 [&_b]:text-gray-900" data-testid="arch-result">
-          <b>{m.label}</b>：{m.result}
-        </p>
-      )}
     </Panel>
   );
 }

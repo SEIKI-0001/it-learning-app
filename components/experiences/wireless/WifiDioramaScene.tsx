@@ -18,7 +18,7 @@ import {
   WallWindow,
   WifiRouter,
 } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3 } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3, type StageCaption } from "../scene/DioramaStage";
 import styles from "./wifidiorama.module.css";
 import Icon from "@/components/ui/Icon";
 
@@ -91,6 +91,25 @@ function WifiListScreen({ mode }: { mode: WifiMode }) {
   );
 }
 
+// 一言（40字以内）。mode × phase ごと
+const CAPTION: Record<WifiMode, Record<WifiPhase, StageCaption>> = {
+  open: {
+    connect: { text: <>同じ<b>SSID</b>でも暗号化なしがある。鍵マークで見分ける</>, tone: "info", at: { ...LAPTOP, z: 60 } },
+    send: { text: <>電波は周り全部へ広がり、店の外まで届く。<b>暗号化なし</b></>, tone: "danger", at: { ...LAPTOP, z: 60 } },
+    arrive: { text: <>盗聴者にも同じ電波が届き、<b>ID/PASS</b>が丸見え</>, tone: "danger", at: { ...EVE, z: EVE.z! + 20 } },
+  },
+  wpa: {
+    connect: { text: <><b>SSID</b>は電波の名前。鍵マークは WPA2/WPA3 の暗号化</>, tone: "info", at: { ...LAPTOP, z: 60 } },
+    send: { text: <>電波は店の外まで届くが、送る前に<b>暗号化</b>してある</>, tone: "info", at: { ...LAPTOP, z: 60 } },
+    arrive: { text: <>受信はされても<b>暗号文</b>で読めない。守るのは暗号化</>, tone: "ok", at: { ...EVE, z: EVE.z! + 20 } },
+  },
+  wired: {
+    connect: { text: <>比較のため、PCとアクセスポイントを<b>ケーブル</b>でつなぐ</>, tone: "info", at: { ...LAPTOP, z: 60 } },
+    send: { text: <>データは<b>ケーブルの中だけ</b>を通って向かう</>, tone: "info", at: { ...LAPTOP, z: 60 } },
+    arrive: { text: <>盗聴者には<b>何も届かない</b>。電波が出ていないから</>, tone: "ok", at: { ...AP, z: AP.z! + 20 } },
+  },
+};
+
 export function WifiDioramaScene({
   mode,
   phase,
@@ -130,6 +149,7 @@ export function WifiDioramaScene({
       forward={forward}
       reducedMotion={reducedMotion}
       className={styles.stage}
+      caption={{ ...CAPTION[mode][phase], id: `${mode}-${phase}` }}
       dataAttrs={{ "data-mode": mode, "data-phase": phase }}
       tokens={{
         packet: { at, path: packetPath },
@@ -284,7 +304,6 @@ export function WifiDioramaScene({
                 ) : encrypted ? (
                   <>
                     <span className={styles.eveLine}>{CIPHER}</span>
-                    <span className={styles.eveVerdict} data-tone="ok">受信できた…でも読めない</span>
                   </>
                 ) : (
                   <>
@@ -294,7 +313,6 @@ export function WifiDioramaScene({
                       <br />
                       pass=spring123
                     </span>
-                    <span className={styles.eveVerdict}>そのまま読めた！</span>
                   </>
                 )}
               </div>
@@ -302,14 +320,14 @@ export function WifiDioramaScene({
           )}
 
           <DioramaLabel at={{ x: 130, y: 350, z: 0 }} place="below" optional>
-            <NameChip name="あなた" status={phase === "connect" ? "接続中" : sending ? "送信" : undefined} tone={sending ? "info" : "ok"} />
+            <NameChip name="あなた" tone={sending ? "info" : "ok"} />
           </DioramaLabel>
           <DioramaLabel at={{ ...AP, z: AP.z! + 28 }} place="above" optional>
             <NameChip name="アクセスポイント" />
           </DioramaLabel>
-          {!arrived && (
+          {sending && wireless && (
             <DioramaLabel at={{ x: 646, y: 186, z: 118 }} place="above" optional>
-              <NameChip name="盗聴者" status={radio ? "受信中" : undefined} tone="danger" />
+              <NameChip name="盗聴者" tone="danger" />
             </DioramaLabel>
           )}
         </>

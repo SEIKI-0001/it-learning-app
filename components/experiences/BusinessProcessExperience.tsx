@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ProcessDioramaScene } from "./process/ProcessDioramaScene";
 import { makespan, queueLengths, schedule, spotsAt } from "./process/processSim";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -77,16 +77,18 @@ function Flow() {
     run();
   };
 
-  const note =
+  const slow = STEPS[BOTTLENECK].name;
+  // 一言は場面の種類で出し直す（渋滞の件数が変わるたびには出し直さない）
+  const caption: { id: string; text: ReactNode; tone: "info" | "ok" | "danger"; focus: number } =
     mode === "before"
       ? pile > 0
-        ? `「${STEPS[BOTTLENECK].name}」の前に${pile}件が渋滞中。1件${BEFORE[BOTTLENECK]}分かかるので、10分ごとに届く書類をさばけない → ここがボトルネック`
+        ? { id: "b-pile", tone: "danger", focus: BOTTLENECK, text: <>「{slow}」の前に{pile}件が渋滞。ここが<b>ボトルネック</b></> }
         : t >= end
-          ? `6件すべて発送まで ${end}分。「改善後」に切り替えて比べてみよう`
-          : `ボトルネックは「${STEPS[BOTTLENECK].name}」（1件${BEFORE[BOTTLENECK]}分）。流すとこの前に書類が溜まっていく`
+          ? { id: "b-end", tone: "info", focus: BOTTLENECK, text: <>6件すべて発送まで{end}分。「改善後」と比べよう</> }
+          : { id: "b-start", tone: "info", focus: BOTTLENECK, text: <><b>ボトルネック</b>は「{slow}」（1件{BEFORE[BOTTLENECK]}分）</> }
       : t >= end
-        ? `6件すべて発送まで ${end}分（改善前は ${END.before}分）`
-        : "転記と承認を直したので、どの机の前にも書類が溜まらない";
+        ? { id: "a-end", tone: "ok", focus: BOTTLENECK, text: <>6件すべて発送まで{end}分（改善前は{END.before}分）</> }
+        : { id: "a-flow", tone: "ok", focus: BOTTLENECK, text: <>転記と承認を直したので、書類が溜まらない</> };
 
   return (
     <Panel>
@@ -140,6 +142,7 @@ function Flow() {
             busy: busy[i],
           }))}
           docs={spots}
+          caption={caption}
           reducedMotion={reducedMotion}
         />
       </div>
@@ -167,19 +170,6 @@ function Flow() {
           {t}分
         </span>
       </div>
-      <p
-        className={`mt-2 rounded-lg px-3 py-2 text-xs leading-relaxed ${
-          mode === "before"
-            ? pile > 0
-              ? "bg-rose-600 font-bold text-white"
-              : "bg-rose-50 text-rose-800"
-            : "bg-emerald-50 text-emerald-800"
-        }`}
-        aria-live="polite"
-        data-testid="sim-note"
-      >
-        {note}
-      </p>
       {reducedMotion && (
         <p className="mt-1.5 text-[10px] text-gray-500">
           端末の「視差効果を減らす」設定に合わせ、自動再生は停止しています。スライダーで時間を進められます。

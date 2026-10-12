@@ -5,8 +5,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import type { CaFlowView } from "./signature/signatureTypes";
-import { CaDioramaScene } from "./signature/CaDioramaScene";
-import { SignatureDioramaScene } from "./signature/SignatureDioramaScene";
+import { CaDioramaScene, type CaFocus } from "./signature/CaDioramaScene";
+import { SignatureDioramaScene, type SigFocus } from "./signature/SignatureDioramaScene";
 import type { SignatureSceneProps } from "./signature/signatureTypes";
 import { Panel, SectionTitle } from "./ui";
 import { InlineIcon } from "@/components/ui/Pictogram";
@@ -79,7 +79,15 @@ const SCENARIOS: {
   },
 ];
 
-type LabStep = { title: string; route: string; detail: ReactNode; view: Omit<SignatureSceneProps, "reducedMotion"> };
+type LabStep = {
+  title: string;
+  route: string;
+  /** 模型の中に出す一言（40字以内）・指す物・色味 */
+  caption: ReactNode;
+  focus: SigFocus;
+  tone?: "info" | "ok" | "danger";
+  view: Omit<SignatureSceneProps, "reducedMotion">;
+};
 
 function stepsFor(key: Scenario): LabStep[] {
   const s = SCENARIOS.find((x) => x.key === key)!;
@@ -117,39 +125,31 @@ function stepsFor(key: Scenario): LabStep[] {
     {
       title: "文書を書く",
       route: `${s.senderName}の手元`,
-      detail: fake ? (
-        <>偽者が山田さんになりすまし、「{s.doc}」という文書を作りました。</>
-      ) : (
-        <>{s.senderName}が「{s.doc}」という文書を書きました。これに<b>署名</b>を付けて送ります。</>
-      ),
+      caption: fake ? <>偽者が山田さんになりすまして文書を作る</> : <>山田さんが「{s.doc}」を書く。これに<b>署名</b>を付ける</>,
+      focus: "sender",
+      tone: fake ? "danger" : "info",
       view: { ...base, nodes: { ...idle, sender: senderState }, envelope: env("sender", false, false) },
     },
     {
       title: "ハッシュ関数で文書の指紋をとる",
       route: "文書 → ハッシュ関数 → 指紋",
-      detail: (
-        <>
-          文書をハッシュ関数に通して<b>指紋（ハッシュ値）{s.senderHash}</b> を計算。文書が1文字でも変われば、指紋もまったく別の値になります。
-        </>
-      ),
+      caption: <>文書を<b>ハッシュ関数</b>に通して<b>指紋</b>（{s.senderHash}）を作る</>,
+      focus: "sender",
       view: { ...base, nodes: { ...idle, sender: senderState }, envelope: env("sender", false, false), senderHash: s.senderHash },
     },
     {
       title: fake ? "偽者が自分の秘密鍵で指紋を封じる" : "指紋を自分の秘密鍵で封じる＝署名",
       route: fake ? "偽者の秘密鍵 → 署名" : "山田さんの秘密鍵 → 署名",
-      detail: fake ? (
-        <>偽者は山田さんの秘密鍵を<b>持っていない</b>ので、<b>自分の秘密鍵</b>で指紋を封じ、「山田です」と名乗って署名にします。</>
-      ) : (
-        <>
-          指紋 {s.sealHash} を<b>山田さんの秘密鍵</b>で封じたものが<b>署名</b>。秘密鍵は山田さんしか持っていないので、この署名は<b>山田さんにしか作れません</b>。
-        </>
-      ),
+      caption: fake ? <>偽者は<b>自分の秘密鍵</b>で封じて「山田です」と名乗る</> : <>指紋を<b>山田さんの秘密鍵</b>で封じる＝<b>署名</b></>,
+      focus: "sender",
+      tone: fake ? "danger" : "info",
       view: { ...base, nodes: { ...idle, sender: senderState }, envelope: env("sender", true, false), senderHash: s.senderHash, privateKey: "senderSign" },
     },
     {
       title: "文書と署名をセットで送り出す",
       route: "送信者 → 通信路",
-      detail: <>文書と署名を<b>1つにまとめて</b>送ります。受信者は、この2つを突き合わせて確かめることになります。</>,
+      caption: <>文書と署名を<b>セット</b>で送り出す</>,
+      focus: "doc",
       view: { ...base, nodes: { ...idle, sender: "sending" }, laneActive: true, envelope: env("mid", true, false) },
     },
   ];
@@ -160,24 +160,25 @@ function stepsFor(key: Scenario): LabStep[] {
         {
           title: "第三者が通信の途中で横取り",
           route: "通信路 → 第三者の手元",
-          detail: <>通信路の途中で、<b>第三者が文書と署名を横取り</b>しました。まだ中身は「{s.doc}」のままです。</>,
+          caption: <>通信の途中で、第三者が文書と署名を<b>横取り</b></>,
+          focus: "attacker",
+          tone: "danger",
           view: { ...base, nodes: { ...idle, attacker: "error" }, laneActive: true, envelope: env("attacker", true, false, "grab") },
         },
         {
           title: `「${s.doc.split(" ")[0]}」を「${s.arrived.split(" ")[0]}」に書き換える`,
           route: "第三者が文書だけ書き換え",
-          detail: (
-            <>
-              第三者が文書を<b>「{s.arrived}」</b>に書き換えました。でも<b>署名（封じた指紋 {s.sealHash}）はそのまま</b>。
-              作り直すには山田さんの秘密鍵が必要なので、署名には手が出せません。
-            </>
-          ),
+          caption: <>文書だけ書き換えた。<b>署名</b>は秘密鍵がないと作り直せない</>,
+          focus: "attacker",
+          tone: "danger",
           view: { ...base, nodes: { ...idle, attacker: "error" }, laneActive: true, envelope: env("attacker", true, true, "done") },
         },
         {
           title: "何事もなかったように受信者へ届く",
           route: "第三者 → 通信路 → 受信者",
-          detail: <>書き換えられた文書と、元のままの署名が届きました。<b>見た目だけでは</b>書き換えに気づけません。</>,
+          caption: <>書き換え済みの文書と元の署名が届く。見た目では気づけない</>,
+          focus: "receiver",
+          tone: "danger",
           view: { ...base, nodes: { ...idle, receiver: "active" }, envelope: env("receiver", true, true) },
         },
       ]
@@ -185,7 +186,8 @@ function stepsFor(key: Scenario): LabStep[] {
         {
           title: "受信者に届く",
           route: "通信路 → あなたの手元",
-          detail: <>あなたの手元に「{s.arrived}」＋署名が届きました。<b>見た目だけでは</b>本物かどうか分かりません。</>,
+          caption: <>文書＋署名が届いた。見た目では本物か分からない</>,
+          focus: "receiver",
           view: { ...base, nodes: { ...idle, receiver: "active" }, envelope: env("receiver", true, true) },
         },
       ];
@@ -195,35 +197,25 @@ function stepsFor(key: Scenario): LabStep[] {
     {
       title: "検証①：山田さんの公開鍵で署名を開く",
       route: "山田さんの公開鍵 → 署名の中の指紋",
-      detail: fake ? (
-        <>
-          山田さんの公開鍵で署名を開くと…<b>でたらめな値 {s.sigFp}</b>。署名が<b>山田さんの秘密鍵で作られていない</b>ので、山田さんの公開鍵ではきちんと開けません。
-        </>
-      ) : (
-        <>
-          山田さんの公開鍵で署名を開くと、<b>送る前の文書の指紋 {s.sigFp}</b> が取り出せます。公開鍵で開けた＝<b>山田さんの秘密鍵で作られた署名</b>です。
-        </>
-      ),
+      caption: fake ? <><b>公開鍵</b>で開くと<b>でたらめな値</b>。山田さんの鍵で作られていない</> : <>山田さんの<b>公開鍵</b>で署名を開くと、元の指紋（{s.sigFp}）が出る</>,
+      focus: "receiver",
+      tone: fake ? "danger" : "info",
       view: { ...atReceiver, verify: { sigHash: s.sigFp, docHash: null, verdict: null } },
     },
     {
       title: "検証②：届いた文書から自分で指紋を計算",
       route: "届いた文書 → ハッシュ関数 → 指紋",
-      detail: (
-        <>
-          届いた「{s.arrived}」を同じハッシュ関数に通すと、指紋は <b>{s.docFp}</b>。{tamper && <>文書が書き換えられているので、元の {s.sealHash} とは別の値です。</>}
-        </>
-      ),
+      caption: tamper ? <>届いた文書の指紋は<b>{s.docFp}</b>。元の{s.sealHash}と別の値</> : <>届いた文書から自分で指紋を計算 → <b>{s.docFp}</b></>,
+      focus: "receiver",
+      tone: tamper ? "danger" : "info",
       view: { ...atReceiver, verify: { sigHash: s.sigFp, docHash: s.docFp, verdict: null } },
     },
     {
       title: "検証③：2つの指紋を比べる",
       route: "① 署名の中の指紋 と ② 計算した指紋",
-      detail: (
-        <>
-          <b>{s.verdict}</b> {s.why}
-        </>
-      ),
+      caption: key === "ok" ? <>指紋が<b>一致</b>。本人が送った・改ざんなし</> : key === "tamper" ? <>指紋が<b>不一致</b>。<b>改ざんを検知</b>！</> : <>指紋が<b>不一致</b>。<b>なりすましを検知</b>！</>,
+      focus: "receiver",
+      tone: key === "ok" ? "ok" : "danger",
       view: {
         ...atReceiver,
         nodes: { ...idle, receiver: s.sigFp === s.docFp ? "active" : "error" },
@@ -290,21 +282,12 @@ function SignatureLab() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <SignatureDioramaScene {...step.view} forward={player.forward} reducedMotion={reducedMotion} />
-      </div>
-
-      <div
-        className={`mt-3 min-h-[3.5em] rounded-xl px-4 py-3 text-sm leading-relaxed ring-1 [&_b]:font-bold ${
-          !verified
-            ? "bg-gray-50 text-gray-700 ring-gray-200"
-            : match
-              ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
-              : "bg-rose-50 text-rose-900 ring-rose-200"
-        }`}
-        aria-live="polite"
-        data-testid="sig-detail"
-      >
-        {step.detail}
+        <SignatureDioramaScene
+          {...step.view}
+          forward={player.forward}
+          reducedMotion={reducedMotion}
+          caption={{ id: `${scenario}-${player.index}`, text: step.caption, tone: step.tone ?? "info", focus: step.focus }}
+        />
       </div>
 
       <div className="mt-3">
@@ -330,10 +313,6 @@ function SignatureLab() {
         </div>
       )}
 
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        <InlineIcon name="flag" />しくみ：送信者は文書の指紋（<b>ハッシュ値</b>）を<b>自分の秘密鍵</b>で暗号化して添付＝署名。
-        受信者は<b>送信者の公開鍵</b>で署名を開き、自分で計算した指紋と照合します。
-      </div>
       <div className="mt-2 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         <InlineIcon name="alert" /><b>暗号化とは鍵の使い方が逆</b>。暗号化は「相手の公開鍵で施錠→相手の秘密鍵で開錠」。
         署名は<b>「自分の秘密鍵で署名→相手が公開鍵で検証」</b>です。
@@ -342,42 +321,50 @@ function SignatureLab() {
   );
 }
 
-const CA_STEPS: { title: string; real: CaFlowView; fake: CaFlowView; detail: { real: ReactNode; fake: ReactNode } }[] = [
+const CA_STEPS: { title: string; real: CaFlowView; fake: CaFlowView; caption: { real: ReactNode; fake: ReactNode }; focus: CaFocus; tone?: { fake?: "danger" } }[] = [
   {
     title: "その公開鍵、本物？",
     real: { at: "owner", applicant: "real", check: null, certified: false, userVerdict: null, active: ["owner"] },
     fake: { at: "owner", applicant: "fake", check: null, certified: false, userVerdict: null, active: ["owner"] },
-    detail: {
-      real: <>署名の検証には「山田さんの公開鍵」を使います。でも公開鍵は誰でも作れる。<b>「山田の公開鍵です」と名乗る鍵が本当に山田さんのものか</b>、どう確かめる？</>,
-      fake: <>偽者が<b>自分で作った鍵</b>に「山田の公開鍵です」と名札を付けました。見た目では本物と区別できません。</>,
+    caption: {
+      real: <>この「山田の公開鍵」、<b>本当に山田さんのもの</b>？</>,
+      fake: <>偽者が<b>自作の鍵</b>に「山田の公開鍵」と名札を付けた</>,
     },
+    focus: "owner",
+    tone: { fake: "danger" },
   },
   {
     title: "認証局(CA)が本人確認",
     real: { at: "ca", applicant: "real", check: "pass", certified: false, userVerdict: null, active: ["owner", "ca"] },
     fake: { at: "ca", applicant: "fake", check: "reject", certified: false, userVerdict: null, active: ["ca"] },
-    detail: {
-      real: <>山田さんが公開鍵を<b>信頼できる第三者＝認証局(CA)</b>へ申請。CAは身分証などで<b>本人確認</b>します。</>,
-      fake: <>偽者がCAに申請しても、<b>本人確認で不合格</b>。CAは証明書を発行しません。</>,
+    caption: {
+      real: <>公開鍵を信頼できる<b>認証局(CA)</b>へ申請。<b>本人確認</b>される</>,
+      fake: <>偽者は<b>本人確認で不合格</b>。証明書は発行されない</>,
     },
+    focus: "ca",
+    tone: { fake: "danger" },
   },
   {
     title: "電子証明書を発行",
     real: { at: "cert", applicant: "real", check: "pass", certified: true, userVerdict: null, active: ["ca", "cert"] },
     fake: { at: "cert", applicant: "fake", check: "reject", certified: false, userVerdict: null, active: [] },
-    detail: {
-      real: <>CAが「この公開鍵は確かに山田さんのもの」と保証する<b>電子証明書</b>を発行。公開鍵に<b>CAの印（署名）</b>が付きます。</>,
-      fake: <>偽の鍵には<b>CAの印が付かない</b>まま。証明書のない「自称・山田の公開鍵」です。</>,
+    caption: {
+      real: <>CAが「本人の鍵」と保証する<b>電子証明書</b>を発行（CAの署名つき）</>,
+      fake: <>偽の鍵には<b>CAの印が付かない</b>。証明書のない鍵のまま</>,
     },
+    focus: "cert",
+    tone: { fake: "danger" },
   },
   {
     title: "利用者が証明書を確認",
     real: { at: "user", applicant: "real", check: "pass", certified: true, userVerdict: "trust", active: ["user"] },
     fake: { at: "user", applicant: "fake", check: "reject", certified: false, userVerdict: "reject", active: ["user"] },
-    detail: {
-      real: <>利用者は<b>CAの印</b>を確かめて「山田さんの公開鍵だ」と安心して署名の検証に使えます。</>,
-      fake: <>利用者は<b>証明書（CAの印）がない</b>ので信用しません。偽の鍵で作った署名は通りません。</>,
+    caption: {
+      real: <>利用者は<b>CAの印</b>を確かめ、安心して署名の検証に使える</>,
+      fake: <>利用者は<b>証明書がない</b>ので信用しない</>,
     },
+    focus: "user",
+    tone: { fake: "danger" },
   },
 ];
 
@@ -421,15 +408,17 @@ function CaPanel() {
         STEP {player.index + 1}：{step.title}
       </p>
       <div className="mt-2">
-        <CaDioramaScene view={view} forward={player.forward} reducedMotion={reducedMotion} />
-      </div>
-      <div
-        className={`mt-3 min-h-[3em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
-          fake && player.index > 0 ? "bg-rose-50 ring-rose-200" : "bg-gray-50 ring-gray-200"
-        }`}
-        aria-live="polite"
-      >
-        {fake ? step.detail.fake : step.detail.real}
+        <CaDioramaScene
+          view={view}
+          forward={player.forward}
+          reducedMotion={reducedMotion}
+          caption={{
+            id: `${fake ? "f" : "r"}-${player.index}`,
+            text: fake ? step.caption.fake : step.caption.real,
+            tone: fake ? step.tone?.fake ?? "info" : player.index === CA_STEPS.length - 1 ? "ok" : "info",
+            focus: step.focus,
+          }}
+        />
       </div>
       <div className="mt-3">
         <SceneTimeline
@@ -445,10 +434,6 @@ function CaPanel() {
           endCaption="利用者"
         />
       </div>
-      <p className="mt-3 text-sm leading-relaxed text-gray-600">
-        信頼できる第三者＝<b className="text-gray-800">認証局(CA)</b>が「この公開鍵は確かに本人のもの」と保証し、
-        <b className="text-gray-800">電子証明書</b>を発行します。
-      </p>
       <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
         <InlineIcon name="flag" />公開鍵・認証局・証明書をまとめて支える仕組みを <b>PKI（公開鍵基盤）</b> と呼びます。
         身近な例：<b>https</b> のサイトもこの証明書で本物だと確認しています。

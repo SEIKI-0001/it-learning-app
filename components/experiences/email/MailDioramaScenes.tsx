@@ -16,8 +16,8 @@ import {
   Wall,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import type { Inbox, MailStop, MailTone, RouteSceneProps, RouteSeg, SyncNodeId, SyncSceneProps } from "./mailTypes";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
+import type { Inbox, MailStop, MailTone, RouteNodeId, RouteSceneProps, RouteSeg, SyncNodeId, SyncSceneProps } from "./mailTypes";
 import styles from "./maildiorama.module.css";
 import Icon from "@/components/ui/Icon";
 
@@ -88,8 +88,9 @@ const ROUTE_SHOT: Record<MailStop, Camera> = {
   friend: { yaw: -18, pitch: 52, zoom: 1.0, fx: 560, fy: 260, fz: 50 },
 };
 
-export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward = true }: RouteSceneProps & { forward?: boolean }) {
-  const inMailbox = mail.stop === "mailbox";
+export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward = true, caption = null }: RouteSceneProps & { forward?: boolean; caption?: (Omit<StageCaption, "at"> & { focus: RouteNodeId }) | null }) {
+  // 名札はその場面で関わる物だけ
+  const involved = (id: RouteNodeId) => nodes[id] !== "idle";
   // まとめ（全区間を通り終えた）では、送る側から受け取る側まで道全体を映す
   const summary = (Object.keys(segments) as RouteSeg[]).every((id) => segments[id] === "done");
   const segState = (id: RouteSeg) => segments[id];
@@ -101,13 +102,8 @@ export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward
       shotKey={`${mail.stop}-${mail.tone}-${summary ? "all" : ""}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: { ...ROUTE_AT[caption.focus], z: 70 } }}
       tokens={{ mail: { at: MAIL_AT[mail.stop], path: routePath(mail.stop) } }}
-      corner={
-        <span className={styles.legend}>
-          <span data-proto="smtp">送る＝SMTP</span>
-          <span data-proto="recv">受け取る＝POP/IMAP</span>
-        </span>
-      }
       world={
         <>
           <Floor x={0} y={30} w={800} d={400} h={16} material="plain" />
@@ -149,7 +145,7 @@ export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward
       }
       labels={
         <>
-          <DioramaLabel token="mail" dz={12} place={mail.stop === "you" ? "right" : mail.stop === "friend" ? "left" : "above"}>
+          <DioramaLabel token="mail" dz={12} place={mail.stop === "you" || mail.stop === "mailbox" ? "right" : mail.stop === "friend" ? "left" : "above"}>
             <MailTag tone={mail.tone} label={mail.label} testId="route-mail" />
           </DioramaLabel>
           {(Object.keys(SEG) as RouteSeg[]).map((id) => (
@@ -159,26 +155,34 @@ export function MailRouteDiorama({ nodes, segments, mail, reducedMotion, forward
               </span>
             </DioramaLabel>
           ))}
-          <DioramaLabel at={{ ...ROUTE_AT.you, y: ROUTE_AT.you.y + 74 }} place="below" optional>
-            <div data-node-label="you">
-              <NameChip name="あなた" tone="info" />
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...ROUTE_AT.smtp, z: 110 }} place="above" optional>
-            <div data-node-label="smtp">
-              <NameChip name="送信サーバ" tone="muted" />
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...ROUTE_AT.mailbox, z: 110 }} place="above" optional>
-            <div data-node-label="mailbox">
-              <NameChip name="相手のサーバ" status={inMailbox ? "1通" : undefined} tone="muted" />
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...ROUTE_AT.friend, y: ROUTE_AT.friend.y + 74 }} place="below" optional>
-            <div data-node-label="friend">
-              <NameChip name="相手" tone="info" />
-            </div>
-          </DioramaLabel>
+          {involved("you") && (
+            <DioramaLabel at={{ ...ROUTE_AT.you, y: ROUTE_AT.you.y + 74 }} place="below" optional>
+              <div data-node-label="you">
+                <NameChip name="あなた" tone="info" />
+              </div>
+            </DioramaLabel>
+          )}
+          {involved("smtp") && (
+            <DioramaLabel at={{ ...ROUTE_AT.smtp, z: 110 }} place="above" optional>
+              <div data-node-label="smtp">
+                <NameChip name="送信サーバ" tone="muted" />
+              </div>
+            </DioramaLabel>
+          )}
+          {involved("mailbox") && (
+            <DioramaLabel at={{ ...ROUTE_AT.mailbox, z: 110 }} place="above" optional>
+              <div data-node-label="mailbox">
+                <NameChip name="相手のサーバ" tone="muted" />
+              </div>
+            </DioramaLabel>
+          )}
+          {involved("friend") && (
+            <DioramaLabel at={{ ...ROUTE_AT.friend, y: ROUTE_AT.friend.y + 74 }} place="below" optional>
+              <div data-node-label="friend">
+                <NameChip name="相手" tone="info" />
+              </div>
+            </DioramaLabel>
+          )}
         </>
       }
     />
@@ -230,7 +234,7 @@ function InboxLabel({ id, name, box }: { id: SyncNodeId; name: string; box: Inbo
   );
 }
 
-export function MailSyncDiorama({ proto, nodes, lanes, boxes, mail, reducedMotion, forward = true }: SyncSceneProps & { forward?: boolean }) {
+export function MailSyncDiorama({ proto, nodes, lanes, boxes, mail, reducedMotion, forward = true, caption = null }: SyncSceneProps & { forward?: boolean; caption?: (Omit<StageCaption, "at"> & { focus: SyncNodeId }) | null }) {
   // POP で取り出し済みの後に PC が見に行っても、届く物はない → 途切れた道で見せる
   const laneTone = (id: "phone" | "pc"): RouteTone =>
     lanes[id] === "blocked" || (lanes[id] === "active" && !boxes[id].mail) ? "blocked" : lanes[id] === "active" ? (proto === "POP" ? "amber" : "request") : "idle";
@@ -242,6 +246,7 @@ export function MailSyncDiorama({ proto, nodes, lanes, boxes, mail, reducedMotio
       shotKey={`${mail?.at ?? "-"}-${proto}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: { ...SYNC_AT[caption.focus], z: 70 } }}
       dataAttrs={{ "data-proto": proto }}
       tokens={{ mail: { at: mail ? SYNC_MAIL_AT[mail.at] : null, path: mail && mail.at !== "server" ? [...SYNC_LANE[mail.at].map((p) => ({ ...p, z: 20 })), SYNC_MAIL_AT[mail.at]] : undefined } }}
       corner={

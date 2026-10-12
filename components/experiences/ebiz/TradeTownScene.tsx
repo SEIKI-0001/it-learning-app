@@ -2,7 +2,7 @@
 
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { Building, Coin, Floor, FloorRoute, Group, Paper, Parcel, Person, Phone, Tree, Truck, type BuildingKind, type RouteTone } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip, pathLength } from "../scene/DioramaStage";
+import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip, pathLength, type StageCaption } from "../scene/DioramaStage";
 import { useTimeline } from "../scene/useTimeline";
 import { FLOWS, ROLE, STEP_MS, type Kind, type NodeKey, type TermKey } from "./TradeFlowMap";
 
@@ -66,7 +66,18 @@ function Carry({ kind, car }: { kind: Kind; car: boolean }) {
   return <Parcel tone="warn" size={0.85} />;
 }
 
-export function TradeTownScene({ sel, runKey, reducedMotion }: { sel: TermKey | null; runKey: number; reducedMotion: boolean }) {
+export function TradeTownScene({
+  sel,
+  runKey,
+  reducedMotion,
+  caption = null,
+}: {
+  sel: TermKey | null;
+  runKey: number;
+  reducedMotion: boolean;
+  /** 模型の上端に出す一言。focus を渡すとその登場人物へ点線を引く */
+  caption?: (Omit<StageCaption, "at"> & { focus?: NodeKey }) | null;
+}) {
   const steps = sel ? FLOWS[sel] : [];
   const used = new Set(steps.flatMap((s) => s.path));
   const lanes = steps.map((s, i) => lane(s.path, (i - (steps.length - 1) / 2) * LANE_GAP));
@@ -104,6 +115,7 @@ export function TradeTownScene({ sel, runKey, reducedMotion }: { sel: TermKey | 
       shotKey={`${sel ?? "none"}-${runKey}`}
       forward
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: caption.focus ? { ...NODES[caption.focus].spot, z: 60 } : undefined }}
       dataAttrs={{ "data-sel": sel ?? "none" }}
       tokens={tokens}
       world={

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { MailRouteDiorama, MailSyncDiorama } from "./email/MailDioramaScenes";
-import type { RouteSceneProps, SyncSceneProps } from "./email/mailTypes";
+import type { RouteNodeId, RouteSceneProps, SyncNodeId, SyncSceneProps } from "./email/mailTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -23,7 +23,8 @@ type FlowStep = {
   segments: RouteSceneProps["segments"];
   mail: RouteSceneProps["mail"];
   proto: "SMTP" | "POP / IMAP" | null;
-  detail: ReactNode;
+  caption: ReactNode;
+  focus: RouteNodeId;
 };
 
 const STEPS: FlowStep[] = [
@@ -33,7 +34,8 @@ const STEPS: FlowStep[] = [
     segments: { send: "idle", relay: "idle", fetch: "idle" },
     mail: { stop: "you", tone: "draft", label: "会議の件" },
     proto: null,
-    detail: <>あなたがメールを書いて「送信」を押しました。ここからメールの旅が始まります。</>,
+    caption: <>メールを書いて「送信」。ここから旅が始まる</>,
+    focus: "you",
   },
   {
     title: "あなた → 送信サーバ",
@@ -41,7 +43,8 @@ const STEPS: FlowStep[] = [
     segments: { send: "active", relay: "idle", fetch: "idle" },
     mail: { stop: "smtp", tone: "smtp", label: "会議の件" },
     proto: "SMTP",
-    detail: <>あなたの端末 → 送信サーバ。<b>送るときはSMTP</b>。ポストに投函するイメージ。</>,
+    caption: <>端末から送信サーバへ。<b>送るときはSMTP</b></>,
+    focus: "smtp",
   },
   {
     title: "送信サーバ → 相手のメールサーバ",
@@ -49,7 +52,8 @@ const STEPS: FlowStep[] = [
     segments: { send: "done", relay: "active", fetch: "idle" },
     mail: { stop: "mailbox", tone: "smtp", label: "会議の件" },
     proto: "SMTP",
-    detail: <>送信サーバ → 相手の受信サーバ。<b>サーバ同士もSMTP</b>でバケツリレーして、相手のメールボックス（受信箱）へ。</>,
+    caption: <><b>サーバ同士もSMTP</b>で運び、相手の受信箱へ</>,
+    focus: "mailbox",
   },
   {
     title: "相手が受け取る",
@@ -57,7 +61,8 @@ const STEPS: FlowStep[] = [
     segments: { send: "done", relay: "done", fetch: "active" },
     mail: { stop: "friend", tone: "recv", label: "会議の件" },
     proto: "POP / IMAP",
-    detail: <>相手がメールを読むとき、受信サーバから<b>POP または IMAP</b>で取り出します。ここだけプロトコルが変わる！</>,
+    caption: <>読むときは<b>POP か IMAP</b>で取り出す。ここだけ変わる</>,
+    focus: "friend",
   },
   {
     title: "まとめ：経路で覚える",
@@ -65,11 +70,8 @@ const STEPS: FlowStep[] = [
     segments: { send: "done", relay: "done", fetch: "done" },
     mail: { stop: "friend", tone: "read", label: "会議の件" },
     proto: null,
-    detail: (
-      <>
-        <InlineIcon name="lightbulb" />まとめ：<b>送る＝SMTP（あなた→サーバ→サーバ）、受け取る＝POP / IMAP</b>。「S」MTPのSを<b>Send（送信）</b>と結びつけて覚えよう。
-      </>
-    ),
+    caption: <><b>送る＝SMTP、受け取る＝POP / IMAP</b>。SMTPのSはSend</>,
+    focus: "friend",
   },
 ];
 
@@ -105,12 +107,15 @@ function MailFlow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MailRouteDiorama nodes={s.nodes} segments={s.segments} mail={s.mail} forward={player.forward} reducedMotion={reducedMotion} />
+        <MailRouteDiorama
+          nodes={s.nodes}
+          segments={s.segments}
+          mail={s.mail}
+          forward={player.forward}
+          reducedMotion={reducedMotion}
+          caption={{ id: player.index, text: s.caption, tone: "info", focus: s.focus }}
+        />
       </div>
-
-      <p className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
-        {s.detail}
-      </p>
 
       <div className="mt-3">
         <SceneTimeline
@@ -173,12 +178,26 @@ function syncView(proto: "POP" | "IMAP", phase: SyncPhase): Omit<SyncSceneProps,
       };
 }
 
+type SyncCaption = { id: string; text: ReactNode; tone: "info" | "ok" | "danger"; focus: SyncNodeId };
+
+function syncCaption(proto: "POP" | "IMAP", phase: SyncPhase): SyncCaption {
+  const id = `${proto}-${phase}`;
+  if (phase === "idle") return { id, text: <>メールはまだサーバの中。どの端末も<b>未受信</b></>, tone: "info", focus: "server" };
+  if (proto === "POP") {
+    return phase === "phone"
+      ? { id, text: <><b>POP</b>はスマホへダウンロード。サーバの受信箱は空に</>, tone: "info", focus: "phone" }
+      : { id, text: <>PCには届かない。<b>POP</b>は1台の端末向き</>, tone: "danger", focus: "pc" };
+  }
+  return phase === "phone"
+    ? { id, text: <><b>IMAP</b>はサーバに置いたまま読む。サーバ上も既読に</>, tone: "info", focus: "server" }
+    : { id, text: <>スマホもPCも<b>同じ状態</b>（既読も）。複数端末向き</>, tone: "ok", focus: "pc" };
+}
+
 function PopImap() {
   const reducedMotion = useReducedMotion();
   const [proto, setProto] = useState<"POP" | "IMAP">("POP");
   const [phase, setPhase] = useState<SyncPhase>("idle");
   const [tried, setTried] = useState<Set<string>>(new Set());
-  const pop = proto === "POP";
   const bothTried = tried.has("POP") && tried.has("IMAP");
   const view = syncView(proto, phase);
 
@@ -215,7 +234,7 @@ function PopImap() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MailSyncDiorama proto={proto} {...view} reducedMotion={reducedMotion} />
+        <MailSyncDiorama proto={proto} {...view} reducedMotion={reducedMotion} caption={syncCaption(proto, phase)} />
       </div>
 
       <div className="mt-3 flex gap-2">
@@ -235,38 +254,6 @@ function PopImap() {
           </button>
         )}
       </div>
-
-      {phase !== "idle" && (
-        <div
-          className={`mt-3 rounded-lg px-3 py-2 text-xs leading-relaxed ring-1 ${
-            pop && phase === "pc" ? "bg-rose-50 text-rose-800 ring-rose-200" : pop ? "bg-amber-50 text-amber-900 ring-amber-200" : "bg-emerald-50 text-emerald-800 ring-emerald-200"
-          }`}
-          aria-live="polite"
-          data-testid="popimap-result"
-        >
-          {pop ? (
-            phase === "phone" ? (
-              <>
-                <b>POP</b>＝メールを<b>スマホにダウンロードして手元に保存</b>。サーバの受信箱は<b>空</b>になりました。では PC では…？
-              </>
-            ) : (
-              <>
-                <b>POP</b>＝メールを<b>スマホにダウンロードして手元に保存</b>。サーバから取り出すので、
-                あとからPCで見ても届いていません。1台の決まった端末向き。
-              </>
-            )
-          ) : phase === "phone" ? (
-            <>
-              <b>IMAP</b>＝メールは<b>サーバに置いたまま</b>読みます。スマホで読んだので、サーバ上でも<b>既読</b>に。では PC では…？
-            </>
-          ) : (
-            <>
-              <b>IMAP</b>＝メールは<b>サーバに置いたまま</b>読みます。だからスマホでもPCでも
-              <b>同じ状態（既読も）</b>で見られる。複数端末で使うならこちら。
-            </>
-          )}
-        </div>
-      )}
 
       {bothTried && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200" data-testid="popimap-insight">

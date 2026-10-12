@@ -6,7 +6,6 @@ import { OfficeScene, type LaborMode, type Scenario } from "./labor/OfficeScene"
 import { useInView } from "./scene/useInView";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
-import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「労働・取引関連法規（派遣と請負）」専用の体験。
@@ -73,8 +72,6 @@ function InstructionOffice() {
   const [mode, setMode] = useState<LaborMode>("haken");
   const [scenario, setScenario] = useState<Scenario>("haken");
   const [runKey, setRunKey] = useState(0);
-  const [tried, setTried] = useState<Set<LaborMode>>(new Set(["haken"]));
-  const haken = mode === "haken";
   const gisou = scenario === "gisou";
 
   const play = (next: Scenario) => {
@@ -83,7 +80,6 @@ function InstructionOffice() {
   };
   const choose = (m: LaborMode) => {
     setMode(m);
-    setTried((p) => new Set(p).add(m));
     play(m);
   };
 
@@ -107,7 +103,7 @@ function InstructionOffice() {
               mode === t.mode ? "bg-brand-600 text-white" : "text-gray-500"
             }`}
           >
-            {t.label} {tried.has(t.mode) && mode !== t.mode && "✓"}
+            {t.label}
           </button>
         ))}
       </div>
@@ -116,31 +112,7 @@ function InstructionOffice() {
         <OfficeScene key={`${scenario}-${runKey}`} mode={mode} scenario={scenario} reducedMotion={reducedMotion} active={inView} />
       </div>
 
-      {/* 矢印の通り道（＝覚えること） */}
-      <div className="mt-2 rounded-lg bg-gray-50 px-3 py-2 text-center text-xs font-bold ring-1 ring-gray-200" data-testid="route">
-        {haken ? (
-          <>
-            <span className="text-gray-900">派遣先</span> <span className="text-brand-700">──指示──▶</span>{" "}
-            <span className="text-gray-900">派遣社員</span>
-            <span className="ml-1 font-medium text-gray-500">（直接）</span>
-          </>
-        ) : gisou ? (
-          <>
-            <span className="text-gray-900">注文主</span> <span className="text-rose-600">──直接指示──▶</span>{" "}
-            <span className="text-gray-900">社員</span>
-            <span className="ml-1 font-medium text-rose-600">（責任者を飛び越え）</span>
-            <div className="mt-0.5 text-[10.5px] font-medium text-gray-500">灰色の点線＝本来の経路（注文主 → 責任者 → 社員）</div>
-          </>
-        ) : (
-          <>
-            <span className="text-gray-900">注文主</span> <span className="text-gray-500">─依頼▶</span>{" "}
-            <span className="text-gray-900">請負会社の責任者</span> <span className="text-brand-700">─指示▶</span>{" "}
-            <span className="text-gray-900">社員</span>
-          </>
-        )}
-      </div>
-
-      {!haken && (
+      {mode === "ukeoi" && (
         <div className="mt-2 flex gap-1.5">
           {!gisou ? (
             <button
@@ -159,39 +131,6 @@ function InstructionOffice() {
               ↺ 本来の流れに戻す
             </button>
           )}
-        </div>
-      )}
-
-      {/* 読み取ってほしいこと（短く） */}
-      <div className="mt-2" aria-live="polite">
-        {haken ? (
-          <p className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-800 ring-1 ring-gray-200">
-            <b>派遣</b>では、<b>派遣先が派遣社員へ直接仕事の指示を出せます</b>。雇っているのは派遣元（シャツの色）でも、指示は派遣先から。
-          </p>
-        ) : gisou ? (
-          <div className="rounded-xl bg-rose-50 px-3 py-2.5 ring-1 ring-rose-200" data-testid="gisou-warning">
-            <div className="text-sm font-bold text-rose-700">
-              <InlineIcon name="alert" />指揮命令関係が発生
-            </div>
-            <p className="mt-1 text-xs leading-relaxed text-rose-900">
-              請負契約なのに注文主が労働者へ直接指示している場合、実態によっては<b>偽装請負</b>と判断される可能性があります。
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-rose-900">
-              <InlineIcon name="file-text" /><b>契約書の名称だけでなく、実際の働かせ方で判断されます。</b>
-            </p>
-          </div>
-        ) : (
-          <p className="rounded-xl bg-gray-50 px-3 py-2.5 text-sm leading-relaxed text-gray-800 ring-1 ring-gray-200">
-            <b>請負</b>では、注文主は<b>会社へ「仕事の完成」を依頼</b>します。社員への具体的な指示は<b>請負会社の責任者</b>から。
-            注文主 → 社員 の矢印はありません。
-          </p>
-        )}
-      </div>
-
-      {tried.has("haken") && tried.has("ukeoi") && (
-        <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
-          <InlineIcon name="lightbulb" /><b>派遣＝作業者へ直接指示</b>／<b>請負＝仕事の完成を会社へ依頼</b>。
-          試験は「指示の矢印がどこを通るか」を聞いてきます。
         </div>
       )}
     </Panel>

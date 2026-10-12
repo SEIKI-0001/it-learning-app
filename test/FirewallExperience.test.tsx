@@ -64,8 +64,9 @@ describe("FirewallExperience", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "SQLインジェクション" }));
     fireEvent.click(screen.getByRole("button", { name: "STEP 3：WAFが遮断" }));
-    expect(screen.getByTestId("verdict-fw")).toHaveTextContent("通過（ポート443は許可）");
-    expect(screen.getByTestId("verdict-waf")).toHaveTextContent("遮断（中身が攻撃）");
+    expect(screen.getByTestId("verdict-fw")).toHaveTextContent("通過");
+    expect(screen.getByTestId("verdict-waf")).toHaveTextContent("遮断");
+    expect(screen.getByTestId("gate-scene-caption")).toHaveTextContent("SQLインジェクション");
     expect(packet()).toHaveAttribute("data-stop", "waf");
     expect(packet()).toHaveAttribute("data-blocked", "true");
   });

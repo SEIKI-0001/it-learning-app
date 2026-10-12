@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { NodeState } from "../network/NetworkSceneBase";
 
 // トランザクションの図解の型（TransactionExperience と TransactionDioramaScene で共有）。
@@ -25,6 +26,7 @@ export type TransactionSceneProps = {
   /** 巻き戻し中はレールの向きを逆に見せる */
   reverse: boolean;
   money: { spot: MoneySpot; state: MoneyState } | null;
-  alert: { tone: "warn" | "crash" | "ok"; title: string } | null;
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption: { id: string; text: ReactNode; tone: "info" | "ok" | "danger"; focus: TxNodeId } | null;
   reducedMotion: boolean;
 };

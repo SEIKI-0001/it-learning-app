@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { ADDRESS, MemberSiteDioramaScene, PASSWORD, PASSWORD_HASH, type MemberPhase } from "./encryption/MemberSiteDioramaScene";
+import { MemberSiteDioramaScene, PASSWORD, PASSWORD_HASH, type MemberFocus, type MemberPhase } from "./encryption/MemberSiteDioramaScene";
 import { diffCount, hashHex } from "./encryption/toyCrypto";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -39,70 +39,52 @@ function DiffDigest({ value, base }: { value: string; base: string }) {
 
 const LOGIN_VARIANTS = ["spring124", "Spring123", PASSWORD] as const;
 
-type MemberStep = { phase: MemberPhase; title: string; detail: ReactNode };
+type MemberStep = {
+  phase: MemberPhase;
+  title: string;
+  /** 模型の中に出す一言（40字以内）と、それが指す物 */
+  caption: ReactNode;
+  focus: MemberFocus;
+  tone?: "info" | "ok" | "danger";
+};
 
 const MEMBER_STEPS: MemberStep[] = [
   {
     phase: "register",
     title: "会員登録：住所とパスワードを送る",
-    detail: (
-      <>
-        通販サイトの会員登録。スマホから<b>住所</b>と<b>パスワード</b>を送ります（通信はhttpsで守られている前提）。
-        ここからが本題：<b>届いた2つの情報を、サイトはどんな形で保存するか？</b>
-      </>
-    ),
+    caption: <>スマホから<b>住所</b>と<b>パスワード</b>を送る。どう保存する？</>,
+    focus: "web",
   },
   {
     phase: "store",
     title: "住所は暗号化、パスワードはハッシュ化して保存",
-    detail: (
-      <>
-        住所は<b>鍵で暗号化</b>、パスワードは<b>ハッシュ関数</b>に通して保存します。データベースに残るのは
-        <b>暗号文とハッシュ値だけ</b>。鍵はデータベースとは別の<b>金庫</b>に保管します。
-      </>
-    ),
+    caption: <>住所は<b>暗号化</b>、パスワードは<b>ハッシュ化</b>して保存。鍵は別の金庫</>,
+    focus: "db",
   },
   {
     phase: "ship",
     title: "発送：住所は鍵で元に戻して使う",
-    detail: (
-      <>
-        商品を送るときは住所の<b>中身が必要</b>。倉庫のシステムが<b>同じ鍵で復号</b>すると、暗号文が「{ADDRESS}」に戻り、送り状を印刷できます。
-        鍵があれば戻せる＝<b>暗号化は可逆</b>。だから後で中身を使う情報に向いています。
-      </>
-    ),
+    caption: <>同じ鍵で<b>復号</b>して住所を使う。暗号化は<b>可逆</b></>,
+    focus: "ware",
   },
   {
     phase: "login",
     title: "ログイン：入力をハッシュして比べるだけ",
-    detail: (
-      <>
-        ログインでは、入力された「{PASSWORD}」を<b>同じハッシュ関数</b>に通し、保存してあるハッシュ値と<b>比べるだけ</b>。
-        同じ入力なら必ず同じ値になるので、<b>元のパスワードに戻さなくても本人か確かめられます</b>。
-      </>
-    ),
+    caption: <>入力を<b>ハッシュ</b>して比べるだけ。元に戻さず本人確認</>,
+    focus: "hash",
   },
   {
     phase: "typo",
     title: "1文字だけ違うと…",
-    detail: (
-      <>
-        入力を<b>1文字だけ</b>変えてみよう（下のボタン）。ハッシュ値は<b>まるごと別物</b>になり、ログインできません。
-        この「少しの違いで激変する」性質は、ファイルの<b>改ざん検知</b>にも使われます。
-      </>
-    ),
+    caption: <>1文字違うだけで値が<b>激変</b>。<b>改ざん検知</b>にも使える</>,
+    focus: "hash",
   },
   {
     phase: "leak",
     title: "もしデータベースが盗まれたら",
-    detail: (
-      <>
-        攻撃者が手に入れたのは<b>暗号文とハッシュ値だけ</b>。住所は<b>鍵が金庫にあるので読めない</b>、パスワードは
-        <b>ハッシュ値から元に戻す計算ができない</b>（一方向）。だからお店の人でさえパスワードは分からず、忘れたときは「教えてもらう」ではなく
-        <b>再設定</b>になります。
-        ※ ただし「spring123」のような弱いパスワードは、候補を片っ端からハッシュして一致を探す総当たりで当てられる恐れがあります。長く推測されにくいパスワードが大切です。
-      </>
-    ),
+    caption: <>盗まれても、住所は<b>鍵がなく</b>読めず、パスワードは<b>戻せない</b></>,
+    focus: "db",
+    tone: "ok",
   },
 ];
 
@@ -127,7 +109,17 @@ function MemberSite() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MemberSiteDioramaScene phase={step.phase} loginInput={loginInput} reducedMotion={reducedMotion} />
+        <MemberSiteDioramaScene
+          phase={step.phase}
+          loginInput={loginInput}
+          reducedMotion={reducedMotion}
+          caption={{
+            id: `${step.phase}-${step.phase === "typo" ? (changed ? "x" : "o") : ""}`,
+            text: step.phase === "typo" && !changed ? <>同じ入力なら必ず<b>同じ値</b>。だからログインできる</> : step.caption,
+            tone: step.phase === "typo" && !changed ? "ok" : (step.tone ?? "info"),
+            focus: step.focus,
+          }}
+        />
       </div>
 
       {step.phase === "typo" && (
@@ -171,10 +163,6 @@ function MemberSite() {
         </div>
       )}
 
-      <div className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
-        {step.detail}
-      </div>
-
       <div className="mt-3">
         <SceneTimeline
           index={player.index}
@@ -190,6 +178,11 @@ function MemberSite() {
           stepTone={(i) => (i === 2 ? "bg-emerald-700" : i >= 3 && i <= 4 ? "bg-blue-700" : "bg-brand-600")}
         />
       </div>
+      {step.phase === "leak" && (
+        <p className="mt-2 text-[11px] leading-relaxed text-gray-600">
+          ※ 弱いパスワード（spring123 など）は、候補を片っ端からハッシュして探す総当たりで当てられる恐れがあります。
+        </p>
+      )}
       <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
         ※ 学習用の簡易変換です（本物の暗号・ハッシュではありません）。実際のハッシュ値は SHA-256 なら64桁など、もっと長くなります。
       </p>

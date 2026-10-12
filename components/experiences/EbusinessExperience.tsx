@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { FLOWS, KindLegend, STEP_MS, kindColor, kindName, type TermKey } from "./ebiz/TradeFlowMap";
+import { useState, type ReactNode } from "react";
+import { KindLegend, type NodeKey, type TermKey } from "./ebiz/TradeFlowMap";
 import { TradeTownScene } from "./ebiz/TradeTownScene";
-import styles from "./ebiz/ebiz.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
-import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「e-ビジネス（EC・EDI・フィンテック・シェアリング）」専用の体験。
@@ -20,12 +18,11 @@ type Term = {
   key: TermKey;
   icon: IconName;
   name: string;
-  who: string;
-  flow: string;
-  d: string;
-  ex: string;
   chip: string; // 選択中チップの色
-  badge: string; // 説明バッジの色
+  /** 模型の中に出す一言 */
+  caption: ReactNode;
+  /** 一言が指す登場人物 */
+  focus: NodeKey;
   note?: string;
 };
 
@@ -34,46 +31,34 @@ const TERMS: Term[] = [
     key: "ec",
     icon: "cart",
     name: "EC",
-    who: "企業 → 個人",
-    flow: "商品を販売",
-    d: "インターネット上での売買（電子商取引）。ネット通販など、主に企業が消費者へ売る取引。",
-    ex: "例：ネットショップで服を買う",
+    caption: <><b>EC</b>＝ネット売買。顧客が注文・支払い、店が商品を届ける</>,
+    focus: "compA",
     note: "※ 企業→消費者＝BtoC、企業どうし＝BtoB、フリマアプリのような個人どうしの売買＝CtoC。",
     chip: "bg-brand-600 text-white",
-    badge: "bg-gray-50 text-gray-900 ring-gray-200",
   },
   {
     key: "edi",
     icon: "rotate",
     name: "EDI",
-    who: "企業 ⇄ 企業",
-    flow: "取引データを交換",
-    d: "企業どうしが、注文・納品・請求などのデータを決まった形式で電子的にやり取りするしくみ（電子データ交換）。",
-    ex: "例：取引先へ発注データを自動送信",
+    caption: <><b>EDI</b>＝企業間で発注・納品・請求を<b>データで交換</b></>,
+    focus: "compB",
     chip: "bg-brand-600 text-white",
-    badge: "bg-gray-50 text-gray-900 ring-gray-200",
   },
   {
     key: "fintech",
     icon: "smartphone",
     name: "フィンテック",
-    who: "個人 → 企業（お金）",
-    flow: "支払い・送金をITで",
-    d: "金融（Finance）×IT（Technology）。銀行に行かなくても、スマホで支払い・送金・家計管理ができる。",
-    ex: "例：スマホのQRコード決済で支払う",
+    caption: <><b>フィンテック</b>＝金融×IT。スマホで支払い・送金</>,
+    focus: "phone",
     chip: "bg-brand-600 text-white",
-    badge: "bg-gray-50 text-gray-900 ring-gray-200",
   },
   {
     key: "sharing",
     icon: "handshake",
     name: "シェアリング",
-    who: "個人 ⇄ 個人",
-    flow: "モノ・場所を貸し借り",
-    d: "使っていないモノ・場所・スキルを、個人どうしで貸し借り・共有するしくみ（シェアリングエコノミー）。",
-    ex: "例：空き部屋を旅行者に貸す",
+    caption: <><b>シェアリング</b>＝個人どうしで車などを貸し借り</>,
+    focus: "platform",
     chip: "bg-amber-500 text-white",
-    badge: "bg-amber-50 text-amber-900 ring-amber-200",
   },
 ];
 
@@ -81,20 +66,12 @@ function TradeMap() {
   const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<TermKey | null>(null);
   const [runKey, setRunKey] = useState(0);
-  const [tried, setTried] = useState<Set<TermKey>>(new Set());
   const term = TERMS.find((t) => t.key === sel) ?? null;
-  const steps = sel ? FLOWS[sel] : [];
 
   const pick = (key: TermKey) => {
     setSel(key === sel ? null : key);
     setRunKey((k) => k + 1);
-    setTried((p) => new Set(p).add(key));
   };
-
-  // 定義文は流れを見終わってから出す（先に図から違いをつかむ）
-  const defDelay = reducedMotion ? 0 : steps.length * STEP_MS;
-  const fade = (delay: number) => (reducedMotion ? undefined : { animationDelay: `${delay}ms` });
-  const fadeClass = reducedMotion ? "" : styles.row;
 
   return (
     <Panel>
@@ -122,56 +99,22 @@ function TradeMap() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <TradeTownScene sel={sel} runKey={runKey} reducedMotion={reducedMotion} />
+        <TradeTownScene
+          sel={sel}
+          runKey={runKey}
+          reducedMotion={reducedMotion}
+          caption={
+            term
+              ? { id: `${term.key}-${runKey}`, text: term.caption, tone: "info", focus: term.focus }
+              : { id: "none", text: <>用語を選ぶと、モノ・お金・情報が動き出す</>, tone: "info" }
+          }
+        />
       </div>
       <div className="mt-1.5">
         <KindLegend />
       </div>
 
-      {/* 流れの順番（トークンが出発するタイミングで1行ずつ増える） */}
-      {sel && (
-        <ol key={`steps-${runKey}`} className="mt-2 space-y-1" data-testid="ebiz-steps">
-          {steps.map((s, i) => (
-            <li
-              key={i}
-              className={`flex items-center gap-2 rounded-lg bg-white px-2.5 py-1 text-xs ring-1 ring-gray-200 ${fadeClass}`}
-              style={fade(i * STEP_MS)}
-            >
-              <span className="grid h-4 w-4 flex-none place-items-center rounded-full text-[10px] font-bold text-white" style={{ background: kindColor(s.kind) }}>
-                {i + 1}
-              </span>
-              <span className="flex-none font-bold" style={{ color: kindColor(s.kind) }}>
-                {kindName(s.kind)}
-              </span>
-              <span className="text-gray-700">{s.text}</span>
-            </li>
-          ))}
-        </ol>
-      )}
-
-      {/* 説明 */}
-      {term ? (
-        <div key={`def-${runKey}`} className={`mt-3 rounded-xl px-4 py-3 ring-1 ${term.badge} ${fadeClass}`} style={fade(defDelay)}>
-          <div className="text-sm font-bold">
-            <InlineIcon name={term.icon} />{term.name} ＝ <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs">{term.who}</span>{" "}
-            {term.flow}
-          </div>
-          <p className="mt-1.5 text-[13px] leading-relaxed">{term.d}</p>
-          <p className="mt-1 text-xs opacity-80">{term.ex}</p>
-          {term.note && <p className="mt-1 text-xs opacity-80">{term.note}</p>}
-        </div>
-      ) : (
-        <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-400 ring-1 ring-gray-200">
-          上の用語をタップすると、その取引で流れるものが動きます。
-        </div>
-      )}
-
-      {tried.size === TERMS.length && (
-        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-          <InlineIcon name="lightbulb" />4つとも「ネットを使った取引」。違いは<b>相手が誰か＋何が流れるか</b>だけ。特に
-          <b>EC＝企業→個人の売買／EDI＝企業どうしのデータ交換</b>の混同に注意！
-        </div>
-      )}
+      {term?.note && <p className="mt-2 text-xs leading-relaxed text-gray-500">{term.note}</p>}
     </Panel>
   );
 }

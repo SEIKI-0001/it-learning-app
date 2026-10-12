@@ -46,8 +46,8 @@ describe("BusinessProcessExperience", () => {
   it("piles documents at 手書き転記 before the improvement, and none after switching", () => {
     renderDeck();
     scrub(60);
-    expect(screen.getByTestId("sim-note")).toHaveTextContent("手書き転記");
-    expect(screen.getByTestId("sim-note")).toHaveTextContent("渋滞");
+    expect(screen.getByTestId("process-scene-caption")).toHaveTextContent("手書き転記");
+    expect(screen.getByTestId("process-scene-caption")).toHaveTextContent("渋滞");
     const bottleneckRow = within(screen.getByTestId("bp-steps")).getAllByRole("row", { hidden: true })
       .find((row) => row.textContent?.includes("手書き転記"))!;
     expect(within(bottleneckRow).getAllByRole("cell", { hidden: true }).map((cell) => cell.textContent)).toEqual([
@@ -59,6 +59,6 @@ describe("BusinessProcessExperience", () => {
     expect(screen.getByTestId("bp-scene")).toHaveAttribute("data-mode", "after");
     expect(screen.getByTestId("bp-steps")).toHaveTextContent("手入力をやめてデータ自動連携にする");
     scrub(30);
-    expect(screen.getByTestId("sim-note")).not.toHaveTextContent("渋滞");
+    expect(screen.getByTestId("process-scene-caption")).not.toHaveTextContent("渋滞");
   });
 });

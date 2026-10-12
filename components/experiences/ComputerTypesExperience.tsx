@@ -82,20 +82,10 @@ export default function ComputerTypesExperience() {
   );
 }
 
-// どこで・どう使われているかを模型で見る。動き：サーバ＝依頼が集まる／汎用機＝故障しても予備が引き継ぐ／スパコン＝全ノードが計算
-const SCENE_NOTE: Record<CompKind, string> = {
-  pc: "自宅の机で、1人が1台を使います。文書作成や表計算など、個人の作業のためのコンピュータです。",
-  server: "会社の部屋の4台のPCから、依頼（書類）が1台のサーバに集まります。サーバは多数の利用者へ、ファイルやWebなどの機能を提供します。",
-  mainframe: "銀行の計算センター。汎用機の1台が故障しても、予備機が引き継いで口座の取引は止まりません。大量の取引を止めずに正確に処理するのが役目です。",
-  super: "研究所に、同じ計算ノードのラックがずらりと並び、全部で1つの計算を分担します。気象予測のような膨大な科学技術計算を高速に行います。",
-  micro: "炊飯器のカバーを透明にすると、中に小さなチップ（マイコン）が入っています。温度を見ながら炊き方を制御する、決まった機器専用のコンピュータです。",
-};
-
 function TownPanel() {
   const [kind, setKind] = useState<CompKind | null>(null);
   const [runKey, setRunKey] = useState(0);
   const reducedMotion = useReducedMotion();
-  const k = KINDS.find((x) => x.key === kind) ?? null;
   return (
     <Panel>
       <SectionTitle step={1}>どこで使われている？ ― 街の中のコンピュータ</SectionTitle>
@@ -123,15 +113,6 @@ function TownPanel() {
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
         <ComputerTypesDioramaScene kind={kind} runKey={runKey} reducedMotion={reducedMotion} />
       </div>
-      {k && (
-        <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200" data-testid="comptypes-result">
-          <p className="text-sm font-bold text-gray-900">
-            {k.name}
-            {k.alias && <span className="ml-1 text-xs text-gray-500">（{k.alias}）</span>}：{k.use}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-gray-700">{SCENE_NOTE[k.key]}</p>
-        </div>
-      )}
     </Panel>
   );
 }

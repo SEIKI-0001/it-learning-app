@@ -2,7 +2,7 @@
 
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { KeyGlyph, Parcel } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import { CipherCapsule } from "./CipherCapsule";
 import type { CryptoSceneProps } from "./cryptoTypes";
 import { KeyTag } from "./KeyToken";
@@ -29,6 +29,13 @@ const COPY_AT: Vec3 = SPOT.eveHand;
 /** 第三者が回線からコピーを抜き取る点（②の車線の中ほど） */
 const TAP_AT = laneTo("data", 0.5, 24).at(-1) as Vec3;
 
+export type CryptoFocus = "a" | "b" | "eve";
+const FOCUS_AT: Record<CryptoFocus, Vec3> = {
+  a: { x: A_DESK.x, y: A_DESK.y, z: 80 },
+  b: { x: B_DESK.x, y: B_DESK.y, z: 80 },
+  eve: { x: EVE_AT.x, y: EVE_AT.y, z: 90 },
+};
+
 const SHOTS: Camera[] = [
   { yaw: -16, pitch: 50, zoom: 1.35, fx: 640, fy: 150, fz: 60 },
   { yaw: -20, pitch: 54, zoom: 0.84, fx: 410, fy: 230, fz: 40 },
@@ -54,8 +61,17 @@ export function PublicKeyDioramaScene({
   intercepted,
   reducedMotion,
   forward = true,
-}: CryptoSceneProps & { forward?: boolean }) {
+  caption = null,
+}: CryptoSceneProps & {
+  forward?: boolean;
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption?: (Omit<StageCaption, "at"> & { focus: CryptoFocus }) | null;
+}) {
   const shot = shotOf({ publicKey, capsule });
+  // 名札はその場面で関わる物だけ（最初の場面だけは登場人物を紹介する）
+  const intro = !capsule && publicKey === "bHome";
+  const laneActive = lanes.key === "active" || lanes.data === "active";
+  const involved = (id: "a" | "b") => intro || nodes[id] !== "idle" || laneActive;
   const msgAt = capsule ? (capsule.stop === "aDesk" ? MSG_A : MSG_B) : null;
 
   return (
@@ -66,6 +82,7 @@ export function PublicKeyDioramaScene({
       shotKey={shot}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       tokens={{
         pub: { at: PUB[publicKey], path: publicKey === "aHome" && shot === 1 ? [...laneTo("key", 1, 30), PUB.aHome] : undefined },
         priv: { at: PRIV[privateKey] },
@@ -109,16 +126,6 @@ export function PublicKeyDioramaScene({
             </DioramaLabel>
           )}
 
-          {intercepted && (
-            <DioramaLabel at={{ ...EVE_AT, z: 124 }} place="above">
-              <div className={styles.eveCallout} role="status" data-testid="eve-callout">
-                <span className={styles.calloutTitle}>第三者の手元</span>
-                <CipherCapsule state="failed" label="第三者が取った暗号文のコピー" />
-                <span className={styles.facts}>秘密鍵がないので開けない</span>
-              </div>
-            </DioramaLabel>
-          )}
-
           <DioramaLabel token="pub" dz={12} place={publicKey === "bHome" ? "right" : "above"}>
             <span className={styles.keyLabel} role="img" aria-label="Bの公開鍵" data-key="public" data-spot={publicKey} data-emphasis={publicKey === "aUse" ? "true" : "false"}>
               <KeyTag kind="public" />
@@ -127,38 +134,22 @@ export function PublicKeyDioramaScene({
           <DioramaLabel token="priv" dz={12} place="above">
             <span className={styles.keyLabel} role="img" aria-label="Bの秘密鍵" data-key="private" data-spot={privateKey} data-emphasis={privateKey === "bUse" ? "true" : "false"}>
               <KeyTag kind="private" />
-              {privateKey === "bHome" && (
-                <span className={styles.keyCaption} data-tone="private">
-                  Bだけが保持
-                </span>
-              )}
             </span>
           </DioramaLabel>
 
-          {lanes.key !== "idle" && (
-            <DioramaLabel at={laneTo("key", 0.3, 6).at(-1)} place="above" optional>
-              <span data-rail-caption="key" data-state={lanes.key}>
-                <Badge tone="ok">① 公開鍵 ◀</Badge>
-              </span>
+          {involved("a") && (
+            <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
+              <NameChip name="Aさん" tone="info" />
             </DioramaLabel>
           )}
-          {lanes.data !== "idle" && (
-            <DioramaLabel at={laneTo("data", 0.3, 6).at(-1)} place="below" optional>
-              <span data-rail-caption="data" data-state={lanes.data}>
-                <Badge tone="info">② 暗号文 ▶</Badge>
-              </span>
+          {involved("b") && (
+            <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
+              <NameChip name="Bさん" tone="info" />
             </DioramaLabel>
           )}
-
-          <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Aさん" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Bさん" tone="info" />
-          </DioramaLabel>
-          {!intercepted && (
+          {intercepted && (
             <DioramaLabel at={{ ...EVE_AT, z: 118 }} place="above" optional>
-              <NameChip name="第三者" tone="muted" />
+              <NameChip name="第三者" tone="danger" />
             </DioramaLabel>
           )}
         </>

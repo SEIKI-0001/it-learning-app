@@ -59,7 +59,7 @@ describe("InternetProtocolExperience", () => {
     expect(screen.getByTestId("tray-head")).toHaveTextContent("番号順");
     for (const n of [1, 2, 3, 4]) expect(packet(n)).toHaveAttribute("data-slot", String(n - 1));
     next();
-    expect(screen.getByTestId("packet-restored")).toHaveTextContent("HELLO WORLD");
+    expect(screen.getByTestId("packet-scene-caption")).toHaveTextContent("HELLO WORLD");
   });
 
   it("still lets the learner split their own text", () => {

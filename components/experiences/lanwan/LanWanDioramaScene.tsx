@@ -20,7 +20,7 @@ import {
   WallWindow,
   WifiRouter,
 } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import styles from "./lanwan.module.css";
 
 // LAN と WAN の図解：実際の家から先の配線をそのまま模型にする。
@@ -92,6 +92,13 @@ const SHOTS: Record<LanWanDest | "none", Camera> = {
   video: { yaw: -22, pitch: 56, zoom: 0.8, fx: 470, fy: 200, fz: 40 },
 };
 
+// 宛先ごとの一言（40字以内）と、それが指す物
+const CAPTION: Record<LanWanDest, StageCaption> = {
+  printer: { text: <>ルータ中心のスター型の<b>LAN</b>内で完結。WANは通らない</>, tone: "ok", at: up(PRINTER, 30) },
+  office: { text: <>通信会社の回線(<b>WAN</b>)で、離れた会社のLANへ届く</>, tone: "info", at: up(OFFICE_RACK, 76) },
+  video: { text: <>世界最大の<b>WAN</b>。海底ケーブルを通って海外まで届く</>, tone: "info", at: up(DC, 96) },
+};
+
 export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanWanDest | null; runKey: number; reducedMotion: boolean }) {
   const wan = dest === "office" || dest === "video";
   const route = dest ? ROUTES[dest] : null;
@@ -105,6 +112,7 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
       shotKey={`${dest ?? "none"}-${runKey}`}
       forward
       reducedMotion={reducedMotion}
+      caption={dest ? { ...CAPTION[dest], id: `${dest}-${runKey}` } : null}
       dataAttrs={{
         "data-dest": dest ?? "none",
         "data-wan": wan ? "true" : "false",
@@ -120,9 +128,11 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
           : { at: null },
       }}
       corner={
-        <span className={styles.plate} data-wan={wan ? "true" : dest ? "false" : "none"} data-testid="lanwan-plate">
-          {!dest ? "宛先を選んでください" : wan ? "WANを通った" : "LAN内で完結（WANは通らない）"}
-        </span>
+        dest ? undefined : (
+          <span className={styles.plate} data-wan="none" data-testid="lanwan-plate">
+            宛先を選んでください
+          </span>
+        )
       }
       world={
         <>
@@ -228,21 +238,13 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
             </DioramaLabel>
           )}
 
-          {dest === "printer" && (
-            <DioramaLabel at={up(ROUTER, 60)} place="above">
-              <div data-testid="lanwan-star">
-                <Badge tone="ok">ルータを中心に星形＝スター型</Badge>
-              </div>
-            </DioramaLabel>
-          )}
-
           {/* 名札は、いま通る道の機器だけ */}
           <DioramaLabel at={up(ROUTER, 50)} place="right" optional>
             <NameChip name="Wi-Fiルータ" tone={lanOn ? "info" : "muted"} />
           </DioramaLabel>
           {dest === "printer" && (
             <DioramaLabel at={up(PRINTER, 30)} place="above" optional>
-              <NameChip name="プリンタ" status="印刷" tone="ok" />
+              <NameChip name="プリンタ" tone="ok" />
             </DioramaLabel>
           )}
           {wan && (
@@ -257,17 +259,12 @@ export function LanWanDioramaScene({ dest, runKey, reducedMotion }: { dest: LanW
           )}
           {dest === "office" && (
             <DioramaLabel at={up(OFFICE_RACK, 76)} place="above">
-              <NameChip name="会社のLAN" status="届いた" tone="ok" />
+              <NameChip name="会社のLAN" tone="ok" />
             </DioramaLabel>
           )}
           {dest === "video" && (
             <DioramaLabel at={up(DC, 96)} place="above">
-              <NameChip name="海外の動画サイト" status="届いた" tone="ok" />
-            </DioramaLabel>
-          )}
-          {dest === "video" && (
-            <DioramaLabel at={{ x: 620, y: 100, z: 2 }} place="below" optional>
-              <Badge tone="info">海底ケーブル</Badge>
+              <NameChip name="海外の動画サイト" tone="ok" />
             </DioramaLabel>
           )}
         </>

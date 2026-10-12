@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { CommonKeyDioramaScene } from "./commonkey/CommonKeyDioramaScene";
+import { CommonKeyDioramaScene, type CkFocus } from "./commonkey/CommonKeyDioramaScene";
 import type { CommonKeySceneProps, KeySpot } from "./commonkey/commonKeyTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -20,7 +20,15 @@ import Icon from "@/components/ui/Icon";
 // ============================================================================
 
 type Mode = "safe" | "stolen";
-type FlowStep = { phase: 1 | 2; title: string; detail: ReactNode; scene: Omit<CommonKeySceneProps, "reducedMotion"> };
+type FlowStep = {
+  phase: 1 | 2;
+  title: string;
+  /** 模型の中に出す一言（40字以内）・指す物・色味 */
+  caption: ReactNode;
+  focus: CkFocus;
+  tone?: "info" | "ok" | "danger";
+  scene: Omit<CommonKeySceneProps, "reducedMotion">;
+};
 
 const IDLE = { a: "idle", b: "idle", eve: "idle" } as const;
 
@@ -34,19 +42,16 @@ function stepsFor(mode: Mode): FlowStep[] {
     {
       phase: 1,
       title: "Aが共通鍵を用意",
-      detail: <>【準備】AさんとBさんは<b>同じ共通鍵</b>で暗号化・復号します。まずAが鍵を1本用意しました。</>,
+      caption: <>Aが<b>共通鍵</b>を1本用意。AとBで同じ鍵を使う</>,
+      focus: "a",
       scene: { nodes: { ...IDLE, a: "active" }, lanes: { key: "idle", data: "idle" }, keys: [aKey()], capsule: null, tap: null, eve: null },
     },
     {
       phase: 1,
       title: stolen ? "鍵を送る途中で盗まれた！" : "共通鍵をBへ送る",
-      detail: stolen ? (
-        <>
-          Aが鍵をBへ送る途中、盗聴者が<b>鍵そのものをコピー</b>しました。これが<b>鍵配送問題</b>：共通鍵は相手に渡さないと使えないのに、渡す途中が危ない。
-        </>
-      ) : (
-        <>Aが<b>鍵そのもの</b>をBへ送ります。今回は盗まれずに届きました（でも、ここが一番危ない瞬間）。</>
-      ),
+      caption: stolen ? <>送る途中で<b>鍵をコピー</b>された。これが<b>鍵配送問題</b></> : <>鍵そのものをBへ送る。ここが一番<b>危ない瞬間</b></>,
+      focus: stolen ? "eve" : "transit",
+      tone: stolen ? "danger" : "info",
       scene: {
         nodes: { ...IDLE, a: "sending", eve: stolen ? "error" : "idle" },
         lanes: { key: "active", data: "idle" },
@@ -59,11 +64,9 @@ function stepsFor(mode: Mode): FlowStep[] {
     {
       phase: 1,
       title: stolen ? "同じ鍵が3人の手に" : "AとBが同じ鍵を持つ",
-      detail: stolen ? (
-        <>AもBも同じ鍵を持てた…と思っていますが、<b>盗聴者も同じ鍵</b>を持っています。</>
-      ) : (
-        <>AとBが<b>まったく同じ1本の鍵</b>を持ちました。共通鍵は「同じ鍵を2人が持つ」方式です。</>
-      ),
+      caption: stolen ? <>盗聴者も<b>同じ鍵</b>を持っている！</> : <>AとBが<b>同じ1本の鍵</b>を持った</>,
+      focus: stolen ? "eve" : "b",
+      tone: stolen ? "danger" : "info",
       scene: {
         nodes: { ...IDLE, a: "active", b: "active", eve: stolen ? "error" : "idle" },
         lanes: { key: "done", data: "idle" },
@@ -76,7 +79,8 @@ function stepsFor(mode: Mode): FlowStep[] {
     {
       phase: 2,
       title: "Aが共通鍵で暗号化",
-      detail: <>【通信①】Aさんが<b>共通鍵で暗号化</b>。平文「会議は10時」→ 暗号文に。</>,
+      caption: <>Aが<b>共通鍵で暗号化</b>。「会議は10時」が暗号文に</>,
+      focus: "a",
       scene: {
         nodes: { ...IDLE, a: "active" },
         lanes: { key: "done", data: "idle" },
@@ -89,11 +93,9 @@ function stepsFor(mode: Mode): FlowStep[] {
     {
       phase: 2,
       title: "暗号文をBへ送る",
-      detail: stolen ? (
-        <>【通信②】暗号文を A→B へ送信。盗聴者は<b>暗号文もコピー</b>しました。</>
-      ) : (
-        <>【通信②】暗号文を A→B へ送信。盗聴者は暗号文をコピーしましたが、<b>鍵を持っていない</b>ので開けません。</>
-      ),
+      caption: stolen ? <>暗号文も<b>コピー</b>された。盗聴者は鍵を持っている</> : <>コピーされても、<b>鍵がない</b>ので開けない</>,
+      focus: "eve",
+      tone: stolen ? "danger" : "ok",
       scene: {
         nodes: { ...IDLE, a: "sending", eve: "error" },
         lanes: { key: "done", data: "active" },
@@ -106,13 +108,9 @@ function stepsFor(mode: Mode): FlowStep[] {
     {
       phase: 2,
       title: stolen ? "Bが復号…盗聴者も復号できてしまう" : "Bが同じ共通鍵で復号",
-      detail: stolen ? (
-        <>
-          【通信③】Bが同じ鍵で復号して「会議は10時」が読めた。でも<b>盗聴者も同じ鍵で復号</b>できてしまう！ 鍵を盗まれたら、その後の暗号文は<b>全部読まれます</b>。
-        </>
-      ) : (
-        <>【通信③】Bさんが<b>同じ共通鍵で復号</b>。「会議は10時」が読めた！ 盗聴者の手元の暗号文は<b>開かないまま</b>です。</>
-      ),
+      caption: stolen ? <>盗聴者も<b>同じ鍵で復号</b>。以後の暗号文は全部読まれる</> : <>Bが<b>同じ共通鍵で復号</b>。盗聴者の暗号文は開かない</>,
+      focus: stolen ? "eve" : "b",
+      tone: stolen ? "danger" : "ok",
       scene: {
         nodes: { a: "idle", b: "active", eve: stolen ? "error" : "idle" },
         lanes: { key: "done", data: "done" },
@@ -183,16 +181,12 @@ function Flow() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <CommonKeyDioramaScene {...step.scene} forward={player.forward} reducedMotion={reducedMotion} />
-      </div>
-
-      <div
-        className={`mt-3 min-h-[3.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
-          mode === "stolen" && player.index > 0 ? "bg-rose-50 ring-rose-200" : "bg-sky-50 ring-sky-200"
-        }`}
-        aria-live="polite"
-      >
-        {step.detail}
+        <CommonKeyDioramaScene
+          {...step.scene}
+          forward={player.forward}
+          reducedMotion={reducedMotion}
+          caption={{ id: `${mode}-${player.index}`, text: step.caption, tone: step.tone ?? "info", focus: step.focus }}
+        />
       </div>
 
       <div className="mt-3">

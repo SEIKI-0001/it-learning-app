@@ -3,7 +3,7 @@
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { Box, Cylinder } from "../scene/Diorama3D";
 import { Building, Desk, Floor, FloorRoute, Group, Laptop, Monitor, Paper, Person, Plant, ServerRack, Tree, Wall, WallWindow } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import styles from "./comptypes.module.css";
 
 // コンピュータの種類を、実際に置かれている場所ごと1つの街に並べた模型。
@@ -43,6 +43,15 @@ const SHOTS: Record<CompKind | "none", Camera> = {
   micro: { yaw: -6, pitch: 52, zoom: 2.0, fx: COOKER.x + 30, fy: COOKER.y + 10, fz: 50 },
 };
 
+// 種類を選んだときの一言（40字以内）と、それが指す物
+const CAPTION: Record<CompKind, StageCaption> = {
+  pc: { text: <>自宅の机で、<b>1人が1台</b>を使う。個人の作業用</>, tone: "info", at: { ...HOME, z: 50 } },
+  server: { text: <>4台のPCの依頼が1台の<b>サーバ</b>に集まり、機能を提供</>, tone: "info", at: up(SERVER, 90) },
+  mainframe: { text: <><b>汎用機</b>が故障しても予備機が引き継ぎ、取引は止まらない</>, tone: "ok", at: up(SPARE, 100) },
+  super: { text: <>同じ計算ノードが分担し、膨大な<b>科学技術計算</b>を高速に</>, tone: "info", at: { ...LAB, z: 60 } },
+  micro: { text: <>炊飯器の中の<b>マイコン</b>が、温度を見て炊き方を制御</>, tone: "info", at: COOKER },
+};
+
 export function ComputerTypesDioramaScene({ kind, runKey, reducedMotion }: { kind: CompKind | null; runKey: number; reducedMotion: boolean }) {
   const req = (i: number) => {
     const from = { ...CLIENTS[i], z: 52 };
@@ -59,6 +68,7 @@ export function ComputerTypesDioramaScene({ kind, runKey, reducedMotion }: { kin
       shotKey={`${kind ?? "none"}-${runKey}`}
       forward
       reducedMotion={reducedMotion}
+      caption={kind ? { ...CAPTION[kind], id: `${kind}-${runKey}` } : null}
       dataAttrs={{ "data-kind": kind ?? "none" }}
       tokens={{ r0: req(0), r1: req(1), r2: req(2), r3: req(3) }}
       world={
@@ -217,14 +227,14 @@ function Labels({ kind }: { kind: CompKind | null }) {
   if (kind === "pc") {
     return (
       <DioramaLabel at={{ ...HOME, z: 100 }} place="above">
-        <NameChip name="PC" status="1人で1台" tone="info" />
+        <NameChip name="PC" tone="info" />
       </DioramaLabel>
     );
   }
   if (kind === "server") {
     return (
       <DioramaLabel at={up(SERVER, 110)} place="above">
-        <NameChip name="サーバ" status="多数の依頼に応える" tone="info" />
+        <NameChip name="サーバ" tone="info" />
       </DioramaLabel>
     );
   }
@@ -235,10 +245,7 @@ function Labels({ kind }: { kind: CompKind | null }) {
           <NameChip name="汎用機" status="故障" tone="danger" />
         </DioramaLabel>
         <DioramaLabel at={up(SPARE, 130)} place="right">
-          <NameChip name="予備機" status="引き継いで処理" tone="ok" />
-        </DioramaLabel>
-        <DioramaLabel at={{ x: BANK.x + 10, y: BANK.y + 150, z: 50 }} place="below" optional>
-          <Badge tone="info">口座の取引は止まらない</Badge>
+          <NameChip name="予備機" tone="ok" />
         </DioramaLabel>
       </>
     );
@@ -246,7 +253,7 @@ function Labels({ kind }: { kind: CompKind | null }) {
   if (kind === "super") {
     return (
       <DioramaLabel at={{ ...LAB, z: 100 }} place="above">
-        <NameChip name="スーパーコンピュータ" status="全ノードで計算" tone="info" />
+        <NameChip name="スーパーコンピュータ" tone="info" />
       </DioramaLabel>
     );
   }
@@ -256,7 +263,7 @@ function Labels({ kind }: { kind: CompKind | null }) {
         <NameChip name="炊飯器" tone="info" />
       </DioramaLabel>
       <DioramaLabel at={{ x: COOKER.x, y: COOKER.y + 40, z: COOKER.z - 2 }} place="below" testId="comptypes-micro-label">
-        <NameChip name="中のチップ＝マイコン" status="炊き方を制御" tone="ok" />
+        <NameChip name="中のチップ＝マイコン" tone="ok" />
       </DioramaLabel>
     </>
   );

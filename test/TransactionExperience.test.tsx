@@ -38,7 +38,7 @@ describe("TransactionExperience", () => {
     expect(balance("a")).toHaveTextContent("500円");
     expect(balance("a")).toHaveAttribute("data-pending", "true");
     expect(balance("b")).toHaveTextContent("0円");
-    expect(screen.getByTestId("tx-alert")).toHaveTextContent("片方だけ更新");
+    expect(screen.getByTestId("tx-scene-caption")).toHaveTextContent("片方だけ更新");
     expect(money()).toHaveAttribute("data-spot", "engine");
 
     click("② Bに 500 足す →");
@@ -61,7 +61,7 @@ describe("TransactionExperience", () => {
     expect(balance("a")).toHaveTextContent("1,000円");
     expect(balance("b")).toHaveTextContent("0円");
     expect(money()).toHaveAttribute("data-spot", "a");
-    expect(screen.getByTestId("tx-message")).toHaveTextContent("巻き戻しました");
+    expect(screen.getByTestId("tx-scene-caption")).toHaveTextContent("開始前へ");
   });
 
   it("a crash in the middle is undone on restart (atomicity)", () => {
@@ -69,14 +69,15 @@ describe("TransactionExperience", () => {
     click("▶ 振込を始める");
     click("① Aから 500 引く →");
     click("障害発生");
-    expect(screen.getByTestId("tx-alert")).toHaveTextContent("障害発生");
+    expect(screen.getByTestId("tx-scene-caption")).toHaveTextContent("障害");
     expect(money()).toHaveAttribute("data-money-state", "crashed");
     expect(balance("a")).toHaveTextContent("500円");
+    expect(screen.getByTestId("tx-scene-caption")).toHaveTextContent("500円が消える");
 
     click("再起動する");
     expect(balance("a")).toHaveTextContent("1,000円");
     expect(balance("b")).toHaveTextContent("0円");
-    expect(screen.getByTestId("tx-without")).toHaveTextContent("500円が消えてしまいます");
+    expect(screen.getByTestId("tx-scene-caption")).toHaveTextContent("自動ロールバック");
     expect(screen.getByTestId("tx-log")).toHaveTextContent("再起動 → ROLLBACK");
   });
 });

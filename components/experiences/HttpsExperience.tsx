@@ -90,14 +90,13 @@ function Eavesdrop() {
           cipher={cipher}
           forward={player.forward}
           reducedMotion={reducedMotion}
+          caption={{
+            id: `${mode}-${player.index}`,
+            text: step.caption[mode],
+            tone: player.index < 2 ? "info" : https ? "ok" : "danger",
+            focus: step.focus,
+          }}
         />
-      </div>
-
-      <div
-        className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
-        aria-live="polite"
-      >
-        {step.detail[mode]}
       </div>
 
       <div className="mt-3">
@@ -138,11 +137,6 @@ function Eavesdrop() {
             <dd className="mt-0.5 break-all font-mono text-gray-800">{shown}</dd>
           </div>
         </dl>
-        <div className={`mt-2 text-sm font-bold ${https ? "text-emerald-700" : "text-rose-700"}`}>
-          {https
-            ? "ぐちゃぐちゃで読めない！ → 盗まれても中身は分からない（安全）"
-            : "丸見え！ → パスワードがそのまま盗まれる危険"}
-        </div>
       </div>
     </Panel>
   );

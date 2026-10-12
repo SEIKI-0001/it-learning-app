@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   NetworkSceneBase,
   SCENE_HEIGHT,
@@ -75,6 +75,13 @@ function arrowsFor(scenario: Scenario): ArrowId[] {
   if (scenario === "ukeoi") return ["order", "task"];
   return ["order", "task", "bypass"];
 }
+
+/** 模型の上端に出す一言（40字以内）。指示の通り道＝試験で聞かれること */
+const CAPTIONS: Record<Scenario, { text: ReactNode; tone: "info" | "danger" }> = {
+  haken: { tone: "info", text: <><b>派遣先</b>が派遣社員へ直接指示。雇用は派遣元</> },
+  ukeoi: { tone: "info", text: <>注文主は会社へ依頼。指示は<b>責任者</b>から社員へ</> },
+  gisou: { tone: "danger", text: <>直接指示で<b>指揮命令関係</b>が発生。実態次第で<b>偽装請負</b></> },
+};
 
 const FIGURE_SCALE = 1.3;
 const CHEST = 30;
@@ -241,16 +248,16 @@ export function OfficeScene({
   const haken = mode === "haken";
   const shownArrows = arrowsFor(scenario);
 
-  const names: { who: Who; label: string; sub: string; tone: "indigo" | "amber" }[] = haken
+  const names: { who: Who; label: string; tone: "indigo" | "amber" }[] = haken
     ? [
-        { who: "client", label: "派遣先の担当者", sub: "仕事の指示を出す", tone: "indigo" },
-        { who: "worker", label: "派遣社員", sub: "派遣元に雇用", tone: "amber" },
-        { who: "agency", label: "派遣元会社", sub: "社外", tone: "amber" },
+        { who: "client", label: "派遣先の担当者", tone: "indigo" },
+        { who: "worker", label: "派遣社員", tone: "amber" },
+        { who: "agency", label: "派遣元会社", tone: "amber" },
       ]
     : [
-        { who: "client", label: "注文主", sub: "完成を依頼する", tone: "indigo" },
-        { who: "worker", label: "請負会社の社員", sub: "請負会社に雇用", tone: "amber" },
-        { who: "boss", label: "請負会社の責任者", sub: "社員に指示する", tone: "amber" },
+        { who: "client", label: "注文主", tone: "indigo" },
+        { who: "worker", label: "請負会社の社員", tone: "amber" },
+        { who: "boss", label: "請負会社の責任者", tone: "amber" },
       ];
 
   const nodes: { who: Who; depth: number }[] = (haken ? (["client", "worker", "agency"] as Who[]) : (["client", "worker", "boss"] as Who[]))
@@ -346,6 +353,10 @@ export function OfficeScene({
         )}
       </svg>
 
+      <p className={styles.caption} data-tone={CAPTIONS[scenario].tone} aria-live="polite" data-testid="office-scene-caption">
+        {CAPTIONS[scenario].text}
+      </p>
+
       {/* 床の色の凡例（床の上に置くと人や矢印と重なるので隅にまとめる） */}
       <div className={styles.legend} data-testid="zone-legend">
         {(haken
@@ -366,7 +377,6 @@ export function OfficeScene({
       {names.map((n) => (
         <span key={n.who} className={styles.nameTag} data-tone={n.tone} style={toPercent(iso(POS[n.who]))} data-testid={`name-${n.who}`}>
           <b>{n.label}</b>
-          <span>{n.sub}</span>
         </span>
       ))}
 

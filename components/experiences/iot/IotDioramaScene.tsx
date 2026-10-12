@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { Box, Cylinder } from "../scene/Diorama3D";
 import { Building, Desk, Floor, Group, Parcel, Paper, Person, Phone, Plant, Tree, Wall, WallWindow, WifiRouter } from "../scene/DioramaParts";
-import { Callout, DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip, pathLength } from "../scene/DioramaStage";
+import { DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip, pathLength, type StageCaption } from "../scene/DioramaStage";
 import { useTimeline } from "../scene/useTimeline";
 import styles from "./iot.module.css";
 
@@ -41,7 +41,20 @@ const SHOTS: Record<IotPhase, Camera> = {
   3: { yaw: -14, pitch: 56, zoom: 0.92, fx: 260, fy: 230, fz: 60 },
 };
 
-export function IotDioramaScene({ phase, forward, reducedMotion }: { phase: IotPhase; forward: boolean; reducedMotion: boolean }) {
+/** 一言が指す物（エアコン／クラウド） */
+const FOCUS_AT = { aircon: up(AIRCON, 20), cloud: up(CLOUD, 96) } satisfies Record<string, Vec3>;
+
+export function IotDioramaScene({
+  phase,
+  forward,
+  reducedMotion,
+  caption = null,
+}: {
+  phase: IotPhase;
+  forward: boolean;
+  reducedMotion: boolean;
+  caption?: (Omit<StageCaption, "at"> & { focus: keyof typeof FOCUS_AT }) | null;
+}) {
   // 運んでいる間だけデータの札を出し、着いたら行き先の札（クラウドの判断・エアコン）に切り替える
   const moving = phase === 1 || phase === 3;
   const arrived = useTimeline(phase, moving ? [ARRIVE_MS] : [], !forward || reducedMotion || !moving) > 0;
@@ -56,6 +69,7 @@ export function IotDioramaScene({ phase, forward, reducedMotion }: { phase: IotP
       shotKey={phase}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       dataAttrs={{ "data-phase": String(phase), "data-cooled": cooled ? "true" : "false" }}
       tokens={{
         up: phase === 1 ? { at: UPLINK[UPLINK.length - 1], start: UPLINK[0], path: UPLINK.slice(1) } : phase === 2 ? { at: UPLINK[UPLINK.length - 1] } : { at: null },
@@ -146,11 +160,6 @@ export function IotDioramaScene({ phase, forward, reducedMotion }: { phase: IotP
               <DataTag tag="データ" body="32℃" tone="info" />
             </DioramaLabel>
           )}
-          {phase === 2 && (
-            <DioramaLabel at={up(CLOUD, 110)} place="above">
-              <Callout title="クラウドが判断" body="32℃は暑い → 28℃まで冷やす" tone="info" testId="iot-decision" />
-            </DioramaLabel>
-          )}
           {phase === 3 && !arrived && (
             <DioramaLabel token="down" place="above">
               <DataTag tag="指示" body="冷房ON 28℃" tone="ok" />
@@ -158,10 +167,10 @@ export function IotDioramaScene({ phase, forward, reducedMotion }: { phase: IotP
           )}
           {cooled && (
             <DioramaLabel at={up(AIRCON, 40)} place="above">
-              <NameChip name="エアコン" status="自動で冷房" tone="ok" />
+              <NameChip name="エアコン" tone="ok" />
             </DioramaLabel>
           )}
-          {(phase === 0 || (phase === 1 && arrived)) && (
+          {((phase === 1 && arrived) || phase === 2) && (
             <DioramaLabel at={up(CLOUD, 100)} place="right" optional>
               <NameChip name="クラウド" tone="muted" />
             </DioramaLabel>

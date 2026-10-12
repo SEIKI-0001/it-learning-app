@@ -27,18 +27,17 @@ describe("WirelessMobileExperience", () => {
     renderDeck();
     click("解説2");
     expect(screen.getByTestId("mobile-scene")).toBeInTheDocument();
-    expect(screen.getByTestId("mobile-mode")).toHaveTextContent("多数同時接続");
+    expect(screen.getByTestId("mobile-scene-caption")).toHaveTextContent("多数同時接続");
     const radioOn = () => [...document.querySelectorAll('[data-radio][data-on="true"]')].map((el) => el.getAttribute("data-radio"));
     expect(radioOn()).toHaveLength(4);
     click(/テザリング/);
     expect(radioOn()).toEqual(["phone"]);
-    expect(screen.getByTestId("mobile-mode")).toHaveTextContent("スマホが親機");
+    expect(screen.getByTestId("mobile-scene-caption")).toHaveTextContent("スマホが親機");
     expect(screen.getByTestId("mobile-hotspot")).toBeInTheDocument();
     expect(screen.getByTestId("mobile-tether")).toHaveTextContent("SIMなし");
     click(/MVNO/);
-    expect(screen.getByTestId("mobile-mode")).toHaveTextContent("大手の回線を借りる");
-    expect(screen.getByTestId("mobile-sim")).toHaveTextContent("格安SIM");
-    expect(screen.getByText("MVNO（格安SIM）")).toBeInTheDocument();
+    expect(screen.getByTestId("mobile-scene-caption")).toHaveTextContent("大手(MNO)の回線を借りる");
+    expect(screen.getByTestId("mobile-sim")).toHaveTextContent("格安SIM（MVNO）");
     click("解説3");
     expect(screen.getByText("フリーWi-Fi、安全？危険？")).toBeInTheDocument();
   });
@@ -92,11 +91,13 @@ describe("WirelessMobileExperience", () => {
     expect(screen.getByTestId("wifi-eve")).toHaveAttribute("data-gets", "false");
   });
 
-  it("comparing open and WPA shows the insight", () => {
+  it("the caption in the model carries the point of each step", () => {
     renderDeck();
-    toEnd();
+    expect(screen.getByTestId("wifi-scene-caption")).toHaveTextContent("同じSSIDでも暗号化なし");
+    next();
+    expect(screen.getByTestId("wifi-scene-caption")).toHaveTextContent("暗号化なし");
     click(/WPA2\/WPA3/);
     toEnd();
-    expect(screen.getByTestId("wifi-insight")).toHaveTextContent("SSIDはただの名前");
+    expect(screen.getByTestId("wifi-scene-caption")).toHaveTextContent("暗号文で読めない");
   });
 });

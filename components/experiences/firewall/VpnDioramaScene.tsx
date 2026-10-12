@@ -17,7 +17,7 @@ import {
   WallWindow,
   WifiRouter,
 } from "../scene/DioramaParts";
-import { Badge, Callout, DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { Callout, DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import type { VpnSceneProps, VpnStop } from "./firewallTypes";
 import styles from "./firewalldiorama.module.css";
 
@@ -57,6 +57,24 @@ const SHOTS: Record<VpnStop, Camera> = {
   office: { yaw: -22, pitch: 52, zoom: 1.1, fx: 560, fy: 190, fz: 50 },
 };
 
+/** 場面ごとの一言と、それが指す物 */
+function captionFor(vpn: boolean, stop: VpnStop): StageCaption {
+  const id = `${vpn ? "on" : "off"}-${stop}`;
+  if (stop === "home") {
+    return vpn
+      ? { id, text: <>VPNあり。送ると<b>暗号トンネル</b>を通る</>, at: { x: PC.x + 30, y: PC.y - 20, z: 100 } }
+      : { id, text: <>VPNなし。送ると<b>公衆回線</b>をそのまま通る</>, at: { x: PC.x + 30, y: PC.y - 20, z: 100 } };
+  }
+  if (stop === "mid") {
+    return vpn
+      ? { id, text: <>回線上では<b>暗号化</b>されて、盗聴者には読めない</>, tone: "ok", at: { ...EVE, z: 90 } }
+      : { id, text: <>そのまま流れ、盗聴者に<b>丸見え</b></>, tone: "danger", at: { ...EVE, z: 90 } };
+  }
+  return vpn
+    ? { id, text: <>会社のVPN装置で<b>復号</b>。守るのは通り道だけ</>, tone: "ok", at: { ...GW, z: 90 } }
+    : { id, text: <>届いたが、途中で<b>盗まれる</b>危険があった</>, tone: "danger", at: { ...EVE, z: 90 } };
+}
+
 export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneProps) {
   const intercepted = stop !== "home";
   const capsuleState = !vpn ? "plain" : stop === "office" ? "decrypted" : stop === "mid" ? "encrypted" : "plain";
@@ -75,6 +93,7 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
       shotKey={`${stop}-${vpn ? "v" : ""}`}
       forward={sending}
       reducedMotion={reducedMotion}
+      caption={captionFor(vpn, stop)}
       dataAttrs={{ "data-mode": vpn ? "https" : "http" }}
       tokens={{ doc: { at: STOP_AT[stop], path: PATHS[stop] } }}
       corner={
@@ -170,23 +189,22 @@ export function VpnDioramaScene({ vpn, stop, sending, reducedMotion }: VpnSceneP
             </DioramaLabel>
           )}
 
-          {vpn && (
-            <DioramaLabel at={{ x: 300, y: 230, z: 30 }} place="above" optional>
-              <span data-testid="vpn-badge">
-                <Badge tone="ok">VPNトンネル</Badge>
-              </span>
+          {/* 名札はその場面で関わる物だけ（送る前は主要な物を出す） */}
+          {stop === "home" && (
+            <DioramaLabel at={{ x: PC.x, y: PC.y + 86, z: 0 }} place="below" optional>
+              <NameChip name="自宅" tone="info" />
             </DioramaLabel>
           )}
-
-          <DioramaLabel at={{ x: PC.x, y: PC.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="自宅" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={{ x: 680, y: 30, z: 120 }} place="above" optional>
-            <NameChip name="会社" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={{ x: 330, y: 170, z: 0 }} place="above" optional>
-            <NameChip name="インターネット" tone="muted" />
-          </DioramaLabel>
+          {stop !== "mid" && (
+            <DioramaLabel at={{ x: 680, y: 30, z: 120 }} place="above" optional>
+              <NameChip name="会社" tone="info" />
+            </DioramaLabel>
+          )}
+          {stop !== "office" && (
+            <DioramaLabel at={{ x: 330, y: 170, z: 0 }} place="above" optional>
+              <NameChip name="インターネット" tone="muted" />
+            </DioramaLabel>
+          )}
         </>
       }
     />

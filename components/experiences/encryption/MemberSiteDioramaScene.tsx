@@ -19,7 +19,7 @@ import {
   Wall,
   type CarryTone,
 } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type TokenSpec } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption, type TokenSpec } from "../scene/DioramaStage";
 import { hashHex, toyCipher } from "./toyCrypto";
 import styles from "./membersite.module.css";
 
@@ -58,6 +58,14 @@ const AT = {
   db: up(DB, 66),
   ware: up(WAREHOUSE, 24),
   thief: up(ATTACKER, 64),
+};
+
+export type MemberFocus = "web" | "db" | "ware" | "hash";
+const FOCUS_AT: Record<MemberFocus, Vec3> = {
+  web: up(WEB, 90),
+  db: up(DB, 40),
+  ware: up(WAREHOUSE, 40),
+  hash: up(HASH, 40),
 };
 
 const SHOTS: Record<MemberPhase, Camera> = {
@@ -130,7 +138,10 @@ export function MemberSiteDioramaScene({
   phase,
   loginInput,
   reducedMotion,
+  caption = null,
 }: {
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption?: (Omit<StageCaption, "at"> & { focus: MemberFocus }) | null;
   phase: MemberPhase;
   /** ログインで入力したパスワード（typo のとき1文字変えられる） */
   loginInput: string;
@@ -151,6 +162,7 @@ export function MemberSiteDioramaScene({
       shotKey={`${phase}-${phase === "typo" ? loginInput : ""}`}
       forward
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       dataAttrs={{ "data-phase": phase }}
       tokens={tokensFor(phase)}
       world={

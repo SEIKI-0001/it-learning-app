@@ -3,7 +3,7 @@
 import type { CSSProperties } from "react";
 import { Box, type Camera, type Vec3 } from "../scene/Diorama3D";
 import { Cable, Desk, Floor, GlassSlab, Group, Laptop, Parcel, Person, Screen, type RouteTone } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, type StageCaption } from "../scene/DioramaStage";
 import type { NodeState } from "../network/NetworkSceneBase";
 import type { OsLayer, OsPart, OsSceneProps } from "./osTypes";
 import styles from "./osdiorama.module.css";
@@ -65,7 +65,7 @@ function shotFor(at: OsPart | null): Camera {
 
 const partState = (s: NodeState | undefined) => s ?? "idle";
 
-export function OsDioramaScene({ layers, parts, links, capsule, barrier, userHears, reducedMotion, forward = true }: OsSceneProps & { forward?: boolean }) {
+export function OsDioramaScene({ layers, parts, links, capsule, barrier, userHears, reducedMotion, forward = true, caption = null }: OsSceneProps & { forward?: boolean; caption?: (Omit<StageCaption, "at"> & { focus: OsPart }) | null }) {
   const at = capsule ? partAt(capsule.at) : null;
   return (
     <DioramaStage
@@ -75,6 +75,7 @@ export function OsDioramaScene({ layers, parts, links, capsule, barrier, userHea
       shotKey={`${capsule?.at ?? "-"}-${barrier ? "b" : ""}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: partAt(caption.focus) }}
       aspect="20 / 18"
       aspectMobile="10 / 13"
       dataAttrs={{ "data-barrier": barrier ? "true" : "false" }}
@@ -181,7 +182,8 @@ export function OsDioramaScene({ layers, parts, links, capsule, barrier, userHea
               <Icon name="user" className="mr-1 inline-block h-3.5 w-3.5 align-middle" />{userHears ? ` ${userHears}` : " ユーザー"}
             </span>
           </DioramaLabel>
-          {(Object.keys(PART) as BlockPart[]).map((id) => (
+          {/* 名札はその場面で動いている部品だけ */}
+          {(Object.keys(PART) as BlockPart[]).filter((id) => (parts[id] ?? "idle") !== "idle").map((id) => (
             <DioramaLabel key={id} at={partAt(id)} place={PART[id].x < 400 ? "left" : "right"} optional>
               <span className={styles.partTag} data-part-tag={id} data-state={parts[id] ?? "idle"}>
                 <span aria-hidden><Icon name={PART[id].icon} className="h-3.5 w-3.5" /></span>

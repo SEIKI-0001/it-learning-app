@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { Billboard, Box, Cylinder } from "../scene/Diorama3D";
 import { Desk, Floor, Group, Person, Plant, Wall, WallWindow } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, type StageCaption } from "../scene/DioramaStage";
 import styles from "./aircon.module.css";
 
 // 組込みシステムの図解：リビングの壁掛けエアコンを、カバーを透明にして中の部品が見える模型にする。
@@ -24,6 +24,15 @@ const FAN_LEN = 96;
 const FAN_MID = { x: 310, y: 30, z: 138 } satisfies Vec3;
 const ROOM: Vec3 = { x: 250, y: 250, z: 0 };
 
+/** 一言が指す部品（測る／決める／動かす／部屋） */
+const FOCUS_AT = {
+  sensor: { ...SENSOR, z: SENSOR.z },
+  board: { ...BOARD, z: BOARD.z },
+  fan: { ...FAN_MID, z: FAN_MID.z },
+  room: { ...ROOM, z: 10 },
+} satisfies Record<string, Vec3>;
+export type AirconFocus = keyof typeof FOCUS_AT;
+
 const SHOT: Camera = { yaw: -12, pitch: 62, zoom: 1.75, fx: 266, fy: 90, fz: 130 };
 const SHOT_ROOM: Camera = { yaw: -16, pitch: 56, zoom: 0.9, fx: 260, fy: 190, fz: 80 };
 
@@ -38,6 +47,7 @@ export function AirconDioramaScene({
   roomTemp,
   resultShown,
   reducedMotion,
+  caption = null,
 }: {
   phase: LoopPhase;
   /** センサーが測った値 */
@@ -51,6 +61,8 @@ export function AirconDioramaScene({
   /** 結果（下がった室温）を見せているか */
   resultShown: boolean;
   reducedMotion: boolean;
+  /** 模型の上端に出す一言 */
+  caption?: (Omit<StageCaption, "at"> & { focus: AirconFocus }) | null;
 }) {
   const running = phase !== "idle" || resultShown;
   const heat = Math.max(0, Math.min(1, (roomTemp - 25) / 5));
@@ -64,6 +76,7 @@ export function AirconDioramaScene({
       shotKey={phase === "result" ? "room" : "unit"}
       forward
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       aspectMobile="1 / 1.05"
       dataAttrs={{ "data-phase": phase, "data-fan": fan }}
       corner={

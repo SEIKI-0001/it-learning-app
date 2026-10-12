@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Icon from "@/components/ui/Icon";
 import { Box, type Camera, type Vec3 } from "../scene/Diorama3D";
 import {
@@ -46,7 +47,18 @@ function docAt(spot: DocSpot): Vec3 {
 
 const SHOT: Camera = { yaw: -14, pitch: 54, zoom: 1.0, fx: 400, fy: 200, fz: 50 };
 
-export function ProcessDioramaScene({ stations, docs, reducedMotion }: { stations: StationView[]; docs: DocSpot[]; reducedMotion: boolean }) {
+export function ProcessDioramaScene({
+  stations,
+  docs,
+  caption = null,
+  reducedMotion,
+}: {
+  stations: StationView[];
+  docs: DocSpot[];
+  /** 模型の上端に出す一言と、それが指す机（工程の番号） */
+  caption?: { id: string; text: ReactNode; tone: "info" | "ok" | "danger"; focus: number } | null;
+  reducedMotion: boolean;
+}) {
   return (
     <DioramaStage
       testId="process-scene"
@@ -55,6 +67,7 @@ export function ProcessDioramaScene({ stations, docs, reducedMotion }: { station
       shotKey="process"
       forward={false}
       reducedMotion={reducedMotion}
+      caption={caption && { id: caption.id, text: caption.text, tone: caption.tone, at: { x: STATION_X[caption.focus] - 20, y: DESK_Y + 40, z: 44 } }}
       aspect="20 / 13"
       aspectMobile="10 / 9"
       tokens={Object.fromEntries(docs.map((spot, k) => [`doc${k}`, { at: docAt(spot), jump: true }]))}

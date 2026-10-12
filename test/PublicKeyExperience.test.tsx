@@ -145,8 +145,7 @@ describe("PublicKeyExperience", () => {
     expect(laneState("data")).toBe("active");
     expect(laneState("key")).toBe("done");
     expect(capsuleState()).toBe("encrypted");
-    const eve = screen.getByTestId("eve-callout");
-    expect(eve).toHaveTextContent("秘密鍵がないので開けない");
+    expect(screen.getByTestId("crypto-scene-caption")).toHaveTextContent("秘密鍵もないので読めない");
     expect(keySpot("private")).toBe("bHome");
 
     next();
@@ -154,7 +153,7 @@ describe("PublicKeyExperience", () => {
     expect(capsuleState()).toBe("decrypted");
     expect(keySpot("private")).toBe("bUse");
     expect(within(scene()).getByRole("img", { name: /復号されたメッセージ/ })).toHaveTextContent("会議は10時");
-    expect(screen.queryByTestId("eve-callout")).not.toBeInTheDocument();
+    expect(screen.getByTestId("crypto-scene-caption")).toHaveTextContent("秘密鍵で復号");
     expect(screen.getByRole("button", { name: "1ステップ進む" })).toBeDisabled();
   });
 

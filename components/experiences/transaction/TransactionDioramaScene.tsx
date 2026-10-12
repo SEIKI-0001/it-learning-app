@@ -16,7 +16,7 @@ import {
   WallWindow,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
 import type { MoneySpot, TransactionSceneProps, TxLaneId } from "./transactionTypes";
 import styles from "./transactiondiorama.module.css";
 import Icon from "@/components/ui/Icon";
@@ -30,6 +30,11 @@ const AT: Record<"a" | "engine" | "b", Vec3> = {
   a: { x: 300, y: 200, z: 0 },
   engine: { x: 460, y: 110, z: 0 },
   b: { x: 620, y: 200, z: 0 },
+};
+const FOCUS_AT: Record<"a" | "engine" | "b", Vec3> = {
+  a: { x: AT.a.x, y: AT.a.y + 10, z: 74 },
+  engine: { x: AT.engine.x + 33, y: AT.engine.y + 10, z: 100 },
+  b: { x: AT.b.x, y: AT.b.y + 10, z: 74 },
 };
 const MONEY_AT: Record<MoneySpot, Vec3> = {
   a: { x: AT.a.x, y: AT.a.y + 40, z: 74 },
@@ -64,7 +69,7 @@ const SHOT_ENGINE: Camera = { yaw: -16, pitch: 50, zoom: 1.2, fx: 460, fy: 170, 
 
 const MONEY_WORD = { settled: "確定", crashed: "障害で停止", returning: "巻き戻し", pending: "未確定" } as const;
 
-export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money, alert, reducedMotion }: TransactionSceneProps) {
+export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money, caption, reducedMotion }: TransactionSceneProps) {
   const crashed = nodes.engine === "error";
   const shot = crashed || money?.spot === "engine" ? SHOT_ENGINE : SHOT;
   const laneTone = (id: TxLaneId): RouteTone =>
@@ -78,6 +83,7 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
       shotKey={`${money?.spot ?? "-"}-${money?.state ?? ""}-${nodes.engine}-${reverse ? "r" : ""}`}
       forward
       reducedMotion={reducedMotion}
+      caption={caption && { id: caption.id, text: caption.text, tone: caption.tone, at: FOCUS_AT[caption.focus] }}
       tokens={{
         money: {
           at: money ? MONEY_AT[money.spot] : null,
@@ -158,14 +164,6 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
             </DioramaLabel>
           )}
 
-          {alert && (
-            <DioramaLabel at={{ ...AT.engine, x: AT.engine.x + 33, z: 150 }} place="above">
-              <div role="status" data-testid="tx-alert">
-                <Callout tone={alert.tone === "ok" ? "ok" : "danger"} title={alert.title} />
-              </div>
-            </DioramaLabel>
-          )}
-
           {(["a", "b"] as const).map((id) => {
             const acc = accounts[id];
             return (
@@ -195,14 +193,19 @@ export function TransactionDioramaScene({ nodes, accounts, lanes, reverse, money
             );
           })}
 
-          <DioramaLabel at={{ ...AT.engine, x: AT.engine.x + 33, z: 124 }} place="above" optional>
-            <div data-state={nodes.engine}>
-              <NameChip name="Transaction Engine" tone={crashed ? "danger" : nodes.engine === "idle" ? "muted" : "info"} status={crashed ? "障害" : undefined} />
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ x: 110, y: 400, z: 0 }} place="below" optional>
-            <NameChip name="あなた" tone="info" />
-          </DioramaLabel>
+          {/* 名札は関わる物だけ：待機画面（お金がまだ動いていない）か、勘定系が動いている・止まっているとき */}
+          {(!money || nodes.engine !== "idle") && (
+            <DioramaLabel at={{ ...AT.engine, x: AT.engine.x + 33, z: 124 }} place="above" optional>
+              <div data-state={nodes.engine}>
+                <NameChip name="Transaction Engine" tone={crashed ? "danger" : nodes.engine === "idle" ? "muted" : "info"} status={crashed ? "障害" : undefined} />
+              </div>
+            </DioramaLabel>
+          )}
+          {!money && (
+            <DioramaLabel at={{ x: 110, y: 400, z: 0 }} place="below" optional>
+              <NameChip name="あなた" tone="info" />
+            </DioramaLabel>
+          )}
         </>
       }
     />

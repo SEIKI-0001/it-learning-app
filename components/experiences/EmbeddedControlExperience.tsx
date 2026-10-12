@@ -1,10 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
 import styles from "./calc/calc.module.css";
-import { Note, Replay } from "./calc/CalcParts";
+import { Replay } from "./calc/CalcParts";
 import { useBeats } from "./calc/useBeats";
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
-import { AirconDioramaScene, type FanLevel, type LoopPhase } from "./embedded/AirconDioramaScene";
+import { AirconDioramaScene, type AirconFocus, type FanLevel, type LoopPhase } from "./embedded/AirconDioramaScene";
 import { Panel, SectionTitle } from "./ui";
 import { InlineIcon } from "@/components/ui/Pictogram";
 
@@ -62,6 +63,23 @@ function phaseOf(beat: number): { lap: number; phase: Phase } {
   return { lap: Math.floor(i / 4), phase: (["sense", "decide", "act", "result"] as const)[i % 4] };
 }
 
+/** 模型の中に出す一言（場面ごと） */
+function loopCaption(phase: Phase, done: boolean, fanLevel: FanLevel): { text: ReactNode; focus: AirconFocus; tone: "info" | "ok" } {
+  if (done) return { text: <>結果を測り直して調整＝<b>フィードバック制御</b></>, focus: "room", tone: "ok" };
+  switch (phase) {
+    case "sense":
+      return { text: <><b>センサー</b>が吸い込んだ空気の温度を測る（入力）</>, focus: "sensor", tone: "info" };
+    case "decide":
+      return { text: <>目標と比べ、ずれに合わせて<b>ファンを{fanLevel === "強" ? "強く" : fanLevel === "中" ? "中くらいに" : "弱く"}</b>決める</>, focus: "board", tone: "info" };
+    case "act":
+      return { text: <><b>アクチュエータ</b>のモーターがファンを回して送風（出力）</>, focus: "fan", tone: "info" };
+    case "result":
+      return { text: <>風で室温が下がる。その結果をまた測る</>, focus: "room", tone: "info" };
+    default:
+      return { text: <>目標は25℃。測る→決める→動かす、を繰り返す</>, focus: "board", tone: "info" };
+  }
+}
+
 function LoopPanel() {
   const { ref, beat, done, reducedMotion, replay } = useBeats(LOOP_BEATS, LOOP_DELAYS);
   const { lap, phase } = phaseOf(beat);
@@ -69,6 +87,7 @@ function LoopPanel() {
   const after = TEMPS[lap + 1];
   const diff = before - TARGET;
   const showResult = phase === "result" || done;
+  const cap = loopCaption(phase, done, fan(diff));
   const shownTemp = done ? TEMPS[LAPS] : showResult ? after : before;
   // 何周目の結果までグラフに出すか
   const plotted = done ? LAPS + 1 : phase === "result" ? lap + 2 : lap + 1;
@@ -89,6 +108,7 @@ function LoopPanel() {
             roomTemp={shownTemp}
             resultShown={showResult && beat > 0}
             reducedMotion={reducedMotion}
+            caption={{ id: `${lap}-${phase}-${done ? "d" : ""}`, ...cap }}
           />
         </div>
 
@@ -120,11 +140,6 @@ function LoopPanel() {
           </svg>
         </div>
 
-        {done && (
-          <Note>
-            <InlineIcon name="lightbulb" />結果をもう一度センサーで測り、<b>ずれが小さくなるほどファンを弱める</b>。この「結果を戻して調整する」のが<b>フィードバック制御</b>です。
-          </Note>
-        )}
         <Replay onClick={replay} hidden={reducedMotion} />
       </div>
     </Panel>

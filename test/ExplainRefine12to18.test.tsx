@@ -152,7 +152,7 @@ describe("3D模型で見せるテーマ（コンピュータの種類・ラン�
     expect(scene).toHaveAttribute("data-kind", "mainframe");
     expect(screen.getByTestId("comptypes-mainframe")).toHaveAttribute("data-state", "error");
     expect(screen.getByTestId("comptypes-spare")).toHaveAttribute("data-state", "active");
-    expect(screen.getByTestId("comptypes-result")).toHaveTextContent("予備機が引き継いで");
+    expect(screen.getByTestId("comptypes-scene-caption")).toHaveTextContent("予備機が引き継ぎ");
     fireEvent.click(screen.getByRole("button", { name: "マイコン" }));
     expect(screen.getByTestId("comptypes-micro")).toHaveAttribute("data-on", "true");
   });

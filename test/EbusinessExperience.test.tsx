@@ -26,7 +26,7 @@ describe("EbusinessExperience trade map", () => {
     expect(on("compA")).toBe("true");
     expect(on("persA")).toBe("true");
     expect(on("compB")).toBe("false");
-    expect(screen.getByTestId("ebiz-steps")).toHaveTextContent("顧客 → ショップ：代金を払う");
+    expect(screen.getByTestId("ebiz-map-caption")).toHaveTextContent("顧客が注文・支払い");
     expect(screen.getByText(/CtoC/)).toBeInTheDocument();
   });
 
@@ -50,7 +50,7 @@ describe("EbusinessExperience trade map", () => {
     expect(on("persB")).toBe("true");
     expect(on("compA")).toBe("false");
     expect(kinds()).toContain("goods");
-    expect(screen.getAllByTestId("ebiz-steps")).toHaveLength(1);
+    expect(screen.getAllByTestId("ebiz-map-caption")).toHaveLength(1);
   });
 
   it("keeps the quiz on the second slide", () => {

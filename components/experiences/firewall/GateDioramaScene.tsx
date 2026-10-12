@@ -17,7 +17,7 @@ import {
   Wall,
   slicePath,
 } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import type { GateSceneProps, PacketStop } from "./firewallTypes";
 import styles from "./firewalldiorama.module.css";
 import Icon from "@/components/ui/Icon";
@@ -32,6 +32,13 @@ const ISP: Vec3 = { x: 250, y: 262, z: 0 };
 const FW: Vec3 = { x: 350, y: 262, z: 0 };
 const WAF: Vec3 = { x: 540, y: 262, z: 0 };
 const APP: Vec3 = { x: 712, y: 300, z: 0 };
+
+const FOCUS_AT: Record<PacketStop, Vec3> = {
+  src: { x: SENDER.x, y: SENDER.y, z: 90 },
+  fw: { ...FW, z: 80 },
+  waf: { ...WAF, z: 80 },
+  app: { x: APP.x + 36, y: APP.y - 40, z: 120 },
+};
 
 const G = 3;
 const ROAD: Vec3[] = [
@@ -64,10 +71,13 @@ export function GateDioramaScene({
   roadState,
   reducedMotion,
   forward = true,
-}: GateSceneProps & { forward?: boolean }) {
+  caption = null,
+}: GateSceneProps & { forward?: boolean; caption?: (Omit<StageCaption, "at"> & { focus: PacketStop }) | null }) {
   const path = stopPath(packet.stop, packet.blocked);
   const attacker = packet.kind === "attack";
   const blockedAt = packet.blocked ? packet.stop : null;
+  // 名札は関わる物だけ（最初の待機画面は主要な物を出す）
+  const initial = packet.stop === "src";
 
   return (
     <DioramaStage
@@ -77,6 +87,7 @@ export function GateDioramaScene({
       shotKey={`${packet.stop}-${packet.kind}-${packet.port}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       tokens={{ packet: { at: path[path.length - 1], path } }}
       world={
         <>
@@ -157,13 +168,12 @@ export function GateDioramaScene({
           {(["fw", "waf"] as const).map((id) => {
             const verdict = gates[id].verdict;
             const at = id === "fw" ? FW : WAF;
+            // まだ届いていない門は名札を出さない（待機画面だけ両方出す）
+            if (!verdict && !initial) return null;
             return (
               <DioramaLabel key={id} at={{ ...at, z: 60 }} place="above">
                 <div className={styles.gateLabel} data-gate-label={id} data-verdict={verdict?.state ?? "none"}>
                   <b>{id === "fw" ? "ファイアウォール" : "WAF"}</b>
-                  <span className={styles.looksAt} data-looks={id === "fw" ? "port" : "body"}>
-                    見る：{id === "fw" ? "IP・ポート" : "通信の中身"}
-                  </span>
                   {verdict && (
                     <span className={styles.verdict} data-state={verdict.state} data-testid={`verdict-${id}`}>
                       <Icon name={verdict.state === "pass" ? "check" : "ban"} className="mr-0.5 inline-block h-3.5 w-3.5 align-middle" />
@@ -175,12 +185,16 @@ export function GateDioramaScene({
             );
           })}
 
-          <DioramaLabel at={{ x: SENDER.x, y: SENDER.y + 80, z: 0 }} place="below" optional>
-            <NameChip name={sender} tone={attacker ? "danger" : "info"} />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...APP, x: APP.x + 36, z: 130 }} place="above" optional>
-            <NameChip name="Webアプリ" status={appState === "active" ? "正常に到達" : undefined} tone="ok" />
-          </DioramaLabel>
+          {initial && (
+            <DioramaLabel at={{ x: SENDER.x, y: SENDER.y + 80, z: 0 }} place="below" optional>
+              <NameChip name={sender} tone={attacker ? "danger" : "info"} />
+            </DioramaLabel>
+          )}
+          {(initial || packet.stop === "app") && (
+            <DioramaLabel at={{ ...APP, x: APP.x + 36, z: 130 }} place="above" optional>
+              <NameChip name="Webアプリ" tone="ok" />
+            </DioramaLabel>
+          )}
         </>
       }
     />

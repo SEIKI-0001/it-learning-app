@@ -3,7 +3,7 @@
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { Box } from "../scene/Diorama3D";
 import { Building, Database, Floor, FloorRoute, Group, Monitor, Paper, ServerRack, Tree, type RouteTone } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip, pathLength } from "../scene/DioramaStage";
+import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip, pathLength, type StageCaption } from "../scene/DioramaStage";
 
 // 処理場所（集中／分散）と役割分担（クライアントサーバ／三層／P2P）を、コンビニチェーンの模型1つで見せる。
 //   奥の真ん中に本部（屋根の前にサーバ室を切り出して、APサーバとDBが見える）、四隅に店舗。各店のレジ端末が手前に出ている。
@@ -81,6 +81,15 @@ const SHOTS: Record<ArchMode | "none", Camera> = {
   p2p: { yaw: -10, pitch: 58, zoom: 0.84, fx: 360, fy: 250, fz: 30 },
 };
 
+// 方式ごとの一言（40字以内）と、それが指す物
+const CAPTION: Record<ArchMode, StageCaption> = {
+  central: { text: <>全店のデータが<b>本部の1台</b>に集まる。止まると全店停止</>, tone: "info", at: up(AP, 90) },
+  distributed: { text: <>各店の<b>小さなサーバ</b>が処理。1台止まっても他店は動く</>, tone: "ok", at: up(STORES.a.rack, 70) },
+  cs: { text: <>店の端末(<b>クライアント</b>＝頼む側)が<b>サーバ</b>(応える側)に依頼</>, tone: "info", at: up(AP, 90) },
+  three: { text: <>表示・業務処理・データの<b>3つの層</b>(三層)で往復する</>, tone: "info", at: up(AP, 90) },
+  p2p: { text: <>サーバなしで<b>端末どうし</b>が対等にやり取り。提供も利用も</>, tone: "info", at: { ...HUB, z: 20 } },
+};
+
 export function ArchDioramaScene({ mode, runKey, reducedMotion }: { mode: ArchMode | null; runKey: number; reducedMotion: boolean }) {
   const hqUsed = mode === "central" || mode === "cs" || mode === "three";
   const local = mode === "distributed";
@@ -100,6 +109,7 @@ export function ArchDioramaScene({ mode, runKey, reducedMotion }: { mode: ArchMo
       shotKey={`${mode ?? "none"}-${runKey}`}
       forward
       reducedMotion={reducedMotion}
+      caption={mode ? { ...CAPTION[mode], id: `${mode}-${runKey}` } : null}
       dataAttrs={{ "data-mode": mode ?? "none" }}
       tokens={tokensFor(mode)}
       world={
@@ -191,7 +201,7 @@ function Labels({ mode }: { mode: ArchMode | null }) {
       return (
         <>
           <DioramaLabel at={up(AP, 100)} place="above">
-            <NameChip name="本部のサーバ" status="全店分を処理" tone="info" />
+            <NameChip name="本部のサーバ" tone="info" />
           </DioramaLabel>
           {stores()}
         </>
@@ -201,7 +211,7 @@ function Labels({ mode }: { mode: ArchMode | null }) {
         <>
           {IDS.map((id) => (
             <DioramaLabel key={id} at={up(STORES[id].rack, 64)} place={id === "a" || id === "c" ? "left" : "right"} optional>
-              <NameChip name="店のサーバ" status="自分で処理" tone="ok" />
+              <NameChip name="店のサーバ" tone="ok" />
             </DioramaLabel>
           ))}
         </>
@@ -210,13 +220,13 @@ function Labels({ mode }: { mode: ArchMode | null }) {
       return (
         <>
           <DioramaLabel at={up(AP, 100)} place="above">
-            <NameChip name="サーバ" status="応える側" tone="info" />
+            <NameChip name="サーバ" tone="info" />
           </DioramaLabel>
           <DioramaLabel at={up(STORES.a.term, 60)} place="right">
-            <NameChip name="クライアント" status="頼む側" tone="info" />
+            <NameChip name="クライアント" tone="info" />
           </DioramaLabel>
           <DioramaLabel at={up(STORES.d.term, 60)} place="left" optional>
-            <NameChip name="クライアント" status="頼む側" tone="info" />
+            <NameChip name="クライアント" tone="info" />
           </DioramaLabel>
         </>
       );
@@ -237,10 +247,7 @@ function Labels({ mode }: { mode: ArchMode | null }) {
     default:
       return (
         <>
-          <DioramaLabel at={{ x: 360, y: 250, z: 10 }} place="below">
-            <Badge tone="info">本部のサーバを通らず、端末どうしで直接</Badge>
-          </DioramaLabel>
-          {stores("提供も利用も", "info")}
+          {stores(undefined, "info")}
         </>
       );
   }

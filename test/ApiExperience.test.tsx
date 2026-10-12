@@ -56,9 +56,9 @@ describe("ApiExperience", () => {
     fireEvent.click(screen.getByRole("button", { name: "APIを通さず、内部に直接アクセスしてみる" }));
     expect(screen.getByTestId("api-scene")).toHaveAttribute("data-bypass", "true");
     expect(capsule()).toHaveAttribute("data-stop", "wall");
-    expect(screen.getByTestId("bypass-denied")).toHaveTextContent("入口は API だけ");
+    expect(screen.getByTestId("api-scene-caption")).toHaveTextContent("入口はAPIだけ");
 
     fireEvent.click(screen.getByRole("button", { name: "↩ 正しいルート（API経由）に戻す" }));
-    expect(screen.queryByTestId("bypass-denied")).toBeNull();
+    expect(screen.getByTestId("api-scene-caption")).not.toHaveTextContent("入口はAPIだけ");
   });
 });

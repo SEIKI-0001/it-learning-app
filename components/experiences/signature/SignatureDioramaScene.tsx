@@ -3,7 +3,7 @@
 import type { CSSProperties } from "react";
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { KeyGlyph, Paper } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import { KeyTag } from "../crypto/KeyToken";
 import { A_DESK, B_DESK, EVE_AT, SPOT, TwoOfficesWorld, laneTo } from "../crypto/TwoOfficesWorld";
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
@@ -27,6 +27,14 @@ const KEY_AT: Record<SigKeySpot, Vec3> = {
   senderSign: { x: A_DESK.x + 34, y: A_DESK.y + 18, z: 80 },
   receiverHome: SPOT.bRight,
   receiverVerify: { x: B_DESK.x - 34, y: B_DESK.y + 18, z: 80 },
+};
+
+export type SigFocus = "sender" | "receiver" | "attacker" | "doc";
+const FOCUS_AT: Record<SigFocus, Vec3> = {
+  sender: { x: A_DESK.x, y: A_DESK.y, z: 80 },
+  receiver: { x: B_DESK.x, y: B_DESK.y + 10, z: 40 },
+  attacker: { x: EVE_AT.x, y: EVE_AT.y, z: 90 },
+  doc: { ...DOC_AT.mid, z: 50 },
 };
 
 function docPath(stop: EnvelopeStop): Vec3[] | undefined {
@@ -59,10 +67,19 @@ export function SignatureDioramaScene({
   verify,
   reducedMotion,
   forward = true,
-}: SignatureSceneProps & { forward?: boolean }) {
+  caption = null,
+}: SignatureSceneProps & {
+  forward?: boolean;
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption?: (Omit<StageCaption, "at"> & { focus: SigFocus }) | null;
+}) {
   const shot =
     envelope.stop === "sender" ? SHOT_SENDER : envelope.stop === "attacker" ? SHOT_EVE : envelope.stop === "mid" ? SHOT_WIDE : SHOT_RECEIVER;
   const attacking = nodes.attacker === "error";
+  // 名札はその場面で関わる物だけ（最初の場面だけは登場人物を紹介する）
+  const intro = envelope.stop === "sender" && !envelope.signed && !senderHash;
+  const senderIn = intro || nodes.sender !== "idle";
+  const receiverIn = intro || nodes.receiver !== "idle" || (laneActive && !attacking);
 
   return (
     <DioramaStage
@@ -72,6 +89,7 @@ export function SignatureDioramaScene({
       shotKey={`${envelope.stop}-${envelope.signed ? "s" : ""}-${privateKey}-${publicKey}-${verify?.verdict ?? (verify ? "v" : "")}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       tokens={{
         doc: { at: DOC_AT[envelope.stop], path: docPath(envelope.stop) },
         priv: { at: KEY_AT[privateKey] },
@@ -176,6 +194,7 @@ export function SignatureDioramaScene({
             </DioramaLabel>
           )}
 
+          {(intro || privateKey === "senderSign") && (
           <DioramaLabel token="priv" dz={12} place={privateKey === "senderSign" ? "above" : "left"}>
             <span
               className={cryptoStyles.keyLabel}
@@ -187,11 +206,10 @@ export function SignatureDioramaScene({
               data-forged={forgedSender ? "true" : "false"}
             >
               <KeyTag kind="private" />
-              <span className={cryptoStyles.keyCaption} data-tone="private">
-                {forgedSender ? "偽者の秘密鍵" : "山田さんの秘密鍵"}
-              </span>
             </span>
           </DioramaLabel>
+          )}
+          {(intro || publicKey === "receiverVerify") && (
           <DioramaLabel token="pub" dz={12} place={publicKey === "receiverVerify" ? "above" : "right"}>
             <span
               className={cryptoStyles.keyLabel}
@@ -202,22 +220,24 @@ export function SignatureDioramaScene({
               data-emphasis={publicKey === "receiverVerify" ? "true" : "false"}
             >
               <KeyTag kind="public" />
-              <span className={cryptoStyles.keyCaption} data-tone="public">
-                山田さんの公開鍵
-              </span>
             </span>
           </DioramaLabel>
+          )}
 
-          <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
-            <div data-node-label="sender" data-forged={forgedSender ? "true" : "false"}>
-              <NameChip name={senderName} tone={forgedSender ? "danger" : "info"} />
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
-            <div data-node-label="receiver">
-              <NameChip name="あなた" tone="info" />
-            </div>
-          </DioramaLabel>
+          {senderIn && (
+            <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
+              <div data-node-label="sender" data-forged={forgedSender ? "true" : "false"}>
+                <NameChip name={senderName} tone={forgedSender ? "danger" : "info"} />
+              </div>
+            </DioramaLabel>
+          )}
+          {receiverIn && (
+            <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
+              <div data-node-label="receiver">
+                <NameChip name="あなた" tone="info" />
+              </div>
+            </DioramaLabel>
+          )}
           {attacking && (
             <DioramaLabel at={{ ...EVE_AT, z: 118 }} place="right" optional>
               <div data-node-label="attacker" data-state={nodes.attacker}>

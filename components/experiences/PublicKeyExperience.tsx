@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CipherCapsule, type CapsuleState } from "./crypto/CipherCapsule";
 import type { CryptoLaneId, CryptoLaneState, CryptoNodeId, CryptoSceneProps } from "./crypto/cryptoTypes";
-import { PublicKeyDioramaScene } from "./crypto/PublicKeyDioramaScene";
+import { PublicKeyDioramaScene, type CryptoFocus } from "./crypto/PublicKeyDioramaScene";
 import { KeyGlyph, KeyTag, KeyToken, type KeyKind } from "./crypto/KeyToken";
 import styles from "./crypto/crypto.module.css";
 import type { NodeState } from "./network/NetworkSceneBase";
@@ -163,8 +163,11 @@ type FlowStep = {
   /** 通信の向き・場所。色に頼らず文字でも示す。 */
   route: string;
   scene: Omit<CryptoSceneProps, "reducedMotion">;
-  /** このステップで移動が起きるレーン（軌跡を描く） */
-  detail: ReactNode;
+  /** 模型の中に出す一言（40字以内） */
+  caption: ReactNode;
+  /** 一言が指す物 */
+  focus: CryptoFocus;
+  tone?: "info" | "ok" | "danger";
 };
 
 const nodes = (a: NodeState, b: NodeState, eve: NodeState = "idle"): Record<CryptoNodeId, NodeState> => ({ a, b, eve });
@@ -183,12 +186,8 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: null,
       intercepted: false,
     },
-    detail: (
-      <>
-        Bさんが鍵を <b>2本ペア</b> で作成。<b>公開鍵</b>（PUBLIC）と<b>秘密鍵</b>（PRIVATE）。
-        秘密鍵はBさんにつながれたまま、自分だけが保管します。
-      </>
-    ),
+    caption: <>Bが<b>公開鍵</b>と<b>秘密鍵</b>をペアで作る。秘密鍵は手元に残す</>,
+    focus: "b",
   },
   {
     phase: 1,
@@ -202,12 +201,8 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: null,
       intercepted: false,
     },
-    detail: (
-      <>
-        ①のレーンで <b>公開鍵だけ</b> が Bさん → Aさんへ移動します。公開鍵は誰に見られてもOK。
-        <b>秘密鍵はBさんの手元から動きません</b>。これで事前準備が完了。
-      </>
-    ),
+    caption: <><b>公開鍵だけ</b>をAへ渡す。秘密鍵は動かない</>,
+    focus: "a",
   },
   {
     phase: 2,
@@ -221,11 +216,8 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "plain", stop: "aDesk" },
       intercepted: false,
     },
-    detail: (
-      <>
-        Aさんが送りたいメッセージ「<b>会議は10時</b>」を用意。まだ誰でも読める <b>平文</b>（錠前が開いた状態）です。
-      </>
-    ),
+    caption: <>Aが「会議は10時」を用意。まだ誰でも読める<b>平文</b></>,
+    focus: "a",
   },
   {
     phase: 2,
@@ -239,11 +231,8 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "encrypted", stop: "aDesk" },
       intercepted: false,
     },
-    detail: (
-      <>
-        受け取った <b>Bさんの公開鍵で暗号化</b>。同じカプセルが錠前つきの <b>暗号文</b>（ENCRYPTED DATA）に変わりました。
-      </>
-    ),
+    caption: <>Bの<b>公開鍵で暗号化</b>すると<b>暗号文</b>になる</>,
+    focus: "a",
   },
   {
     phase: 2,
@@ -257,12 +246,9 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "encrypted", stop: "bDesk" },
       intercepted: true,
     },
-    detail: (
-      <>
-        ②のレーンで暗号文が Aさん → Bさんへ。途中で第三者にコピーされても、中身は読めない暗号文。
-        <b>公開鍵では開けられず</b>、秘密鍵も持っていないので平文には戻せません。
-      </>
-    ),
+    caption: <>盗まれても、<b>公開鍵では開かず</b>秘密鍵もないので読めない</>,
+    focus: "eve",
+    tone: "ok",
   },
   {
     phase: 2,
@@ -276,12 +262,9 @@ const FLOW_STEPS: FlowStep[] = [
       capsule: { state: "decrypted", stop: "bDesk" },
       intercepted: false,
     },
-    detail: (
-      <>
-        Bさんが <b>対の秘密鍵で復号</b>。「会議は10時」が元どおり読めた！
-        ①先に公開鍵を配る → ②その鍵で暗号通信。<b>秘密鍵は一度も通信路に出ていません</b>。
-      </>
-    ),
+    caption: <>Bが<b>秘密鍵で復号</b>。秘密鍵は通信路に一度も出ていない</>,
+    focus: "b",
+    tone: "ok",
   },
 ];
 
@@ -357,11 +340,12 @@ function Flow() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <PublicKeyDioramaScene {...step.scene} forward={forward} reducedMotion={reducedMotion} />
-      </div>
-
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
-        {step.detail}
+        <PublicKeyDioramaScene
+          {...step.scene}
+          forward={forward}
+          reducedMotion={reducedMotion}
+          caption={{ id: index, text: step.caption, tone: step.tone ?? "info", focus: step.focus }}
+        />
       </div>
 
       <div className="mt-4 flex items-center gap-2">

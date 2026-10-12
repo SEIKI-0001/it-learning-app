@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { BcpDioramaScene } from "./bcp/BcpDioramaScene";
-import type { BcpSceneProps } from "./bcp/bcpTypes";
+import type { BcpNodeId, BcpSceneProps } from "./bcp/bcpTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 import Icon from "@/components/ui/Icon";
-import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「BCP（事業継続計画）」専用の体験。
@@ -25,12 +24,6 @@ const PREPS = [
 ] as const;
 
 type PrepId = (typeof PREPS)[number]["id"];
-
-const RESULTS: Record<PrepId, { ok: string; ng: string }> = {
-  backup: { ok: "バックアップから即データ復元", ng: "顧客データが消えて復元できない" },
-  site: { ok: "代替拠点とクラウドで営業を再開", ng: "働く場所がなく全業務ストップ" },
-  contact: { ok: "決めた手順どおり全員と連絡・役割分担", ng: "誰に何を頼むか分からず大混乱" },
-};
 
 // 復旧の各段階にかかる日数。備えがあると短く、無いと長く（データは作り直し）なる。
 const DURATION: Record<PrepId, { on: number; off: number; stage: string }> = {
@@ -57,14 +50,15 @@ function fmtDays(d: number) {
 
 type Prep = Record<PrepId, boolean>;
 
-function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reducedMotion" | "prep">; msg: string; ok: boolean | null }[] {
+function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reducedMotion" | "prep">; caption: ReactNode; ok: boolean | null; focus: BcpNodeId }[] {
   const base = { hq: "error", system: "error", staff: "idle", alt: "idle", vault: "idle" } as const;
   return [
     {
       title: "大地震発生：本社とシステムが停止",
-      view: { nodes: { ...base }, disaster: true, lanes: {}, staffToken: { at: "staff", text: "社員", tone: "idle" }, dataToken: null, shake: true },
-      msg: "本社ビルは立入禁止、システムも停止。ここから先の復旧ルートは、事前の備えで決まります。",
+      view: { nodes: { ...base }, disaster: true, lanes: {}, staffToken: { at: "staff", text: "社員", tone: "idle" }, dataToken: null, shake: true, named: ["hq", "system"] },
+      caption: <><b>大地震</b>で本社とシステムが停止。復旧は事前の備えで決まる</>,
       ok: null,
+      focus: "hq",
     },
     {
       title: "① 連絡・役割分担",
@@ -75,9 +69,15 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
         staffToken: on.contact ? { at: "staff", text: "安否OK・担当決定", tone: "ok" } : { at: "staff", text: "誰に連絡？", tone: "ng" },
         dataToken: null,
         shake: false,
+        named: ["staff"],
       },
-      msg: on.contact ? `${RESULTS.contact.ok}（${fmtDays(DURATION.contact.on)}）` : `${RESULTS.contact.ng}（${DURATION.contact.off}日かかった）`,
+      caption: on.contact ? (
+        <><b>連絡手順</b>どおり安否確認と役割分担（{fmtDays(DURATION.contact.on)}）</>
+      ) : (
+        <>連絡手順がなく<b>大混乱</b>。{DURATION.contact.off}日かかった</>
+      ),
       ok: on.contact,
+      focus: "staff",
     },
     {
       title: "② 働く場所を移す",
@@ -88,9 +88,15 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
         staffToken: on.site ? { at: "alt", text: "代替拠点へ移動", tone: "ok" } : { at: "staff", text: "働く場所がない", tone: "ng" },
         dataToken: null,
         shake: false,
+        named: on.site ? ["staff", "alt"] : ["staff"],
       },
-      msg: on.site ? `${RESULTS.site.ok}（${fmtDays(DURATION.site.on)}）` : `${RESULTS.site.ng}。本社の再開を待つしかない（${DURATION.site.off}日）`,
+      caption: on.site ? (
+        <><b>代替拠点</b>へ移って営業を準備（{fmtDays(DURATION.site.on)}）</>
+      ) : (
+        <><b>代替拠点</b>がなく働く場所なし。{DURATION.site.off}日待つだけ</>
+      ),
       ok: on.site,
+      focus: on.site ? "alt" : "staff",
     },
     {
       title: "③ データを復元",
@@ -105,9 +111,17 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
             : { at: "vault", text: "移す先を待つ", tone: "idle" }
           : { at: "lost", text: "顧客データ消失", tone: "ng" },
         shake: false,
+        named: [...(on.site ? ["alt" as const] : ["staff" as const]), ...(on.backup ? ["vault" as const] : ["system" as const])],
       },
-      msg: on.backup ? `${RESULTS.backup.ok}（${fmtDays(DURATION.backup.on)}）` : `${RESULTS.backup.ng}。一から作り直し（${DURATION.backup.off}日）`,
+      caption: !on.backup ? (
+        <><b>バックアップ</b>がなく顧客データが消失。作り直しに{DURATION.backup.off}日</>
+      ) : on.site ? (
+        <><b>バックアップ</b>から代替拠点へデータを復元（{fmtDays(DURATION.backup.on)}）</>
+      ) : (
+        <><b>バックアップ</b>は無事でも、移す先がなく復元できない</>
+      ),
       ok: on.backup,
+      focus: !on.backup ? "system" : on.site ? "alt" : "vault",
     },
     {
       title: "営業再開",
@@ -118,9 +132,15 @@ function stepsFor(on: Prep): { title: string; view: Omit<BcpSceneProps, "reduced
         staffToken: on.site ? { at: "alt", text: "営業再開", tone: "ok" } : { at: "staff", text: "再開待ち", tone: "ng" },
         dataToken: on.backup ? (on.site ? { at: "alt", text: "データOK", tone: "ok" } : { at: "vault", text: "データは無事", tone: "idle" }) : { at: "lost", text: "顧客データ消失", tone: "ng" },
         shake: false,
+        named: [on.site ? "alt" : "staff"],
       },
-      msg: "",
-      ok: null,
+      caption: on.site ? (
+        <>代替拠点で<b>営業再開</b>。結末を分けたのは事前の備え（<b>BCP</b>）</>
+      ) : (
+        <>働く場所がなく再開できない。<b>BCP</b>は災害の前に備える計画</>
+      ),
+      ok: on.site,
+      focus: on.site ? "alt" : "staff",
     },
   ];
 }
@@ -216,7 +236,14 @@ function Lab() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <BcpDioramaScene {...(struck ? step.view : calm)} prep={on} forward={player.forward} reducedMotion={reducedMotion} />
+        <BcpDioramaScene
+          {...(struck ? step.view : calm)}
+          caption={
+            struck
+              ? { id: `${player.index}-${on.backup}${on.site}${on.contact}`, text: step.caption, tone: player.index === 0 ? "danger" : step.ok === null ? "info" : step.ok ? "ok" : "danger", focus: step.focus }
+              : null
+          }
+          prep={on} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
       {/* 備えトグル */}
@@ -262,17 +289,6 @@ function Lab() {
               {step.title}
             </p>
           </div>
-          {step.msg && (
-            <div
-              className={`rounded-lg px-3 py-2 text-sm font-medium ring-1 ${
-                step.ok === null ? "bg-gray-800 text-white ring-gray-800" : step.ok ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-rose-50 text-rose-800 ring-rose-200"
-              }`}
-              aria-live="polite"
-              data-testid="bcp-step-msg"
-            >
-              {step.msg}
-            </div>
-          )}
           <RecoveryBar on={on} upTo={Math.max(0, player.index)} />
           <SceneTimeline
             index={player.index}
@@ -288,25 +304,6 @@ function Lab() {
           />
           {done && (
             <>
-              {/* 備えごとの結末 */}
-              <ul className="space-y-1.5">
-                {PREPS.map((p) => {
-                  const ok = on[p.id];
-                  return (
-                    <li
-                      key={p.id}
-                      className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm font-medium ring-1 ${
-                        ok ? "bg-emerald-50 text-emerald-800 ring-emerald-200" : "bg-rose-50 text-rose-800 ring-rose-200"
-                      }`}
-                    >
-                      <Icon name={ok ? "check" : "x"} className={`mt-0.5 h-4 w-4 flex-none ${ok ? "text-emerald-600" : "text-rose-600"}`} />
-                      <span>
-                        {ok ? RESULTS[p.id].ok : RESULTS[p.id].ng}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
               {/* 総合結果 */}
               <div className={`rounded-xl px-4 py-3 text-center ring-1 ${verdictTone}`} data-testid="bcp-verdict">
                 <div className="text-xs font-bold opacity-70">営業再開まで</div>
@@ -320,14 +317,6 @@ function Lab() {
           </button>
         </div>
       )}
-
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        <InlineIcon name="lightbulb" />結末を分けたのは<b>起きる前の備え</b>。これを計画としてまとめたものが
-        <b>BCP（事業継続計画）</b>です。災害の<b>あと</b>ではなく<b>前</b>に、<b>復旧の経路</b>を用意しておきます。
-      </div>
-      <div className="mt-2 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        たとえると、試験当日に電車が止まったときの<b>別ルートを前もって調べておく</b>のと同じです。
-      </div>
     </Panel>
   );
 }

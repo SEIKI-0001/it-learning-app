@@ -18,7 +18,7 @@ import {
   slicePath,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import styles from "./firewalldiorama.module.css";
 import Icon from "@/components/ui/Icon";
 
@@ -35,7 +35,6 @@ type ActorId = "staff" | "intruder" | "remote";
 type Actor = {
   id: ActorId;
   name: string;
-  sub: string;
   /** 人の足もと（名札の位置） */
   at: Vec3;
   /** アクセスの道：手元 → …… → 確認ゲート → サーバ */
@@ -56,7 +55,6 @@ const ACTORS: Actor[] = [
   {
     id: "staff",
     name: "社員A",
-    sub: "自席・登録済みPC",
     at: { x: 420, y: 300 },
     route: [{ x: 460, y: 280, z: G }, { x: 500, y: 250, z: G }, AT_CHECK, AT_SERVER],
     identity: [true, true],
@@ -65,7 +63,6 @@ const ACTORS: Actor[] = [
   {
     id: "intruder",
     name: "侵入者",
-    sub: "社内に入り込んだ",
     at: { x: 700, y: 330 },
     route: [{ x: 680, y: 300, z: G }, { x: 620, y: 262, z: G }, AT_CHECK, AT_SERVER],
     identity: [false, false],
@@ -74,7 +71,6 @@ const ACTORS: Actor[] = [
   {
     id: "remote",
     name: "社員B",
-    sub: "自宅・登録済みPC",
     at: { x: 120, y: 330 },
     route: [
       { x: 170, y: 306, z: G },
@@ -88,6 +84,8 @@ const ACTORS: Actor[] = [
     inside: false,
   },
 ];
+
+export type TrustFocus = ActorId | "gate";
 
 type Verdict = { ok: boolean; warn: boolean; text: string; stopAt: number };
 
@@ -111,12 +109,27 @@ function accessPath(actor: Actor, v: Verdict): Vec3[] {
   return v.stopAt === actor.route.length - 1 ? pts.map((p) => ({ ...p, z: 14 })) : slicePath(pts, 0.94, 14);
 }
 
+function focusAt(f: TrustFocus): Vec3 {
+  if (f === "gate") return { ...CHECK, z: 70 };
+  const a = ACTORS.find((x) => x.id === f)!;
+  return { ...a.at, z: 60 };
+}
+
 const SHOTS: Record<TrustMode, Camera> = {
   perimeter: { yaw: -20, pitch: 54, zoom: 0.86, fx: 410, fy: 240, fz: 40 },
   zerotrust: { yaw: -22, pitch: 52, zoom: 0.96, fx: 450, fy: 230, fz: 40 },
 };
 
-export function ZeroTrustDioramaScene({ mode, reducedMotion }: { mode: TrustMode; reducedMotion: boolean }) {
+export function ZeroTrustDioramaScene({
+  mode,
+  reducedMotion,
+  caption = null,
+}: {
+  mode: TrustMode;
+  reducedMotion: boolean;
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption?: (Omit<StageCaption, "at"> & { focus: TrustFocus }) | null;
+}) {
   const zt = mode === "zerotrust";
   const tokens = Object.fromEntries(
     ACTORS.map((a, i) => {
@@ -138,6 +151,7 @@ export function ZeroTrustDioramaScene({ mode, reducedMotion }: { mode: TrustMode
       shotKey={mode}
       forward
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: focusAt(caption.focus) }}
       dataAttrs={{ "data-mode": mode }}
       tokens={tokens}
       world={
@@ -223,9 +237,6 @@ export function ZeroTrustDioramaScene({ mode, reducedMotion }: { mode: TrustMode
                 <div className={styles.gateLabel} data-testid={`zt-${a.id}`} data-ok={v.ok ? "true" : "false"}>
                   <span className={styles.ztHead}>
                     <b>{a.name}</b>
-                    <span className={styles.looksAt} data-sub>
-                      {a.sub}
-                    </span>
                   </span>
                   {zt && (
                     <span className={styles.checks}>

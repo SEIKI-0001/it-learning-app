@@ -17,8 +17,8 @@ import {
   type CarryTone,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { Badge, Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
-import type { PacketSceneProps, PacketSpot, RouteId } from "./packetTypes";
+import { Badge, Callout, DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
+import type { PacketFocus, PacketSceneProps, PacketSpot, RouteId } from "./packetTypes";
 import styles from "./packetdiorama.module.css";
 
 // インターネット・パケットの図解：左のオフィスの送信者A → 3台の通信会社のルータ（3本の道）→ 右のオフィスの受信者B。
@@ -53,6 +53,13 @@ const LEGS: Record<RouteId, [Vec3[], Vec3[]]> = {
 const ROUTE_TONE: Record<RouteId, RouteTone> = { top: "request", mid: "violet", bot: "amber" };
 const PACKET_TONE: Record<RouteId, CarryTone> = { top: "info", mid: "muted", bot: "warn" };
 const ROUTER_NODE: Record<RouteId, "rTop" | "rMid" | "rBot"> = { top: "rTop", mid: "rMid", bot: "rBot" };
+
+const FOCUS_AT: Record<PacketFocus, Vec3> = {
+  sender: { x: SENDER.x, y: SENDER.y - 10, z: 100 },
+  router: { ...ROUTER.mid, z: 70 },
+  tray: { x: RECEIVER.x - 40, y: RECEIVER.y + 100, z: 44 },
+  receiver: { x: RECEIVER.x, y: RECEIVER.y - 10, z: 96 },
+};
 
 const Z = G + 1;
 const stackAt = (slot: number): Vec3 => ({ x: SENDER.x + 44, y: SENDER.y - 4, z: 44 + slot * 13 });
@@ -95,8 +102,10 @@ function shotIndex({ whole, packets, trayMode, restored }: Omit<PacketSceneProps
   return 1;
 }
 
-export function PacketDioramaScene(props: PacketSceneProps & { forward?: boolean }) {
-  const { nodes, routes, whole, packets, trayMode, restored, reducedMotion, forward = true } = props;
+export function PacketDioramaScene(
+  props: PacketSceneProps & { forward?: boolean; caption?: (Omit<StageCaption, "at"> & { focus: PacketFocus }) | null },
+) {
+  const { nodes, routes, whole, packets, trayMode, restored, reducedMotion, forward = true, caption = null } = props;
   const shot = shotIndex(props);
 
   const tokens = Object.fromEntries(
@@ -122,6 +131,7 @@ export function PacketDioramaScene(props: PacketSceneProps & { forward?: boolean
       shotKey={shot}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       tokens={tokens}
       world={
         <>
@@ -221,20 +231,17 @@ export function PacketDioramaScene(props: PacketSceneProps & { forward?: boolean
             </DioramaLabel>
           )}
 
-          {restored && (
-            <DioramaLabel at={{ x: RECEIVER.x, y: RECEIVER.y - 10, z: 96 }} place="above">
-              <div role="status" data-testid="packet-restored">
-                <Callout tone="ok" title="元のデータに戻った" body={restored} />
-              </div>
+          {/* 名札は関わる物だけ（送る前は主要な物を出す） */}
+          {(whole || nodes.sender !== "idle") && (
+            <DioramaLabel at={{ x: SENDER.x, y: SENDER.y + 84, z: 0 }} place="below" optional>
+              <NameChip name="送信者A" tone="info" />
             </DioramaLabel>
           )}
-
-          <DioramaLabel at={{ x: SENDER.x, y: SENDER.y + 84, z: 0 }} place="below" optional>
-            <NameChip name="送信者A" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={{ x: RECEIVER.x + 60, y: RECEIVER.y + 40, z: 90 }} place="above" optional>
-            <NameChip name="受信者B" tone="info" />
-          </DioramaLabel>
+          {(whole || nodes.receiver !== "idle") && (
+            <DioramaLabel at={{ x: RECEIVER.x + 60, y: RECEIVER.y + 40, z: 90 }} place="above" optional>
+              <NameChip name="受信者B" tone="info" />
+            </DioramaLabel>
+          )}
         </>
       }
     />

@@ -34,6 +34,13 @@ const SUPPORT_X = [150, 320, 490, 660];
 const SUPPORT_Y = 70;
 const BAND_Y = [150, 166, 182, 198];
 
+/** 一言が指す位置（主活動は現場の建物、支援活動は奥の部門） */
+function focusAt(id: StationId | SupportId): Vec3 {
+  const si = STATIONS.indexOf(id as StationId);
+  if (si >= 0) return { x: X[si], y: ST_Y - 20, z: META[id as StationId].h };
+  return { x: SUPPORT_X[SUPPORTS.indexOf(id as SupportId)], y: SUPPORT_Y, z: 50 };
+}
+
 const productAt = (at: number): Vec3 => (at < 0 ? { x: 20, y: PATH_Y, z: 8 } : { x: X[at], y: PATH_Y, z: 8 });
 
 function shotFor(at: number, wide: boolean): Camera {
@@ -42,7 +49,7 @@ function shotFor(at: number, wide: boolean): Camera {
   return { yaw: -14, pitch: 52, zoom: 1.12, fx: Math.max(200, Math.min(620, x)), fy: 280, fz: 40 };
 }
 
-export function ValueChainDiorama({ stations, product, supports, value, stationNotes, reducedMotion = false, forward = true }: ValueChainDiagramProps & { reducedMotion?: boolean; forward?: boolean }) {
+export function ValueChainDiorama({ stations, product, supports, value, stationNotes, caption = null, reducedMotion = false, forward = true }: ValueChainDiagramProps & { reducedMotion?: boolean; forward?: boolean }) {
   const total = value.blocks.reduce((a, b) => a + b, 0);
   const marginOn = value.final !== null && value.final.margin > 0;
   const anyOff = SUPPORTS.some((id) => supports[id] === "off");
@@ -53,6 +60,8 @@ export function ValueChainDiorama({ stations, product, supports, value, stationN
   return (
     <div className={styles.wrap} data-testid="vc-diagram">
       <DioramaStage
+        testId="vc-scene"
+        caption={caption && { id: caption.id, text: caption.text, tone: caption.tone, at: focusAt(caption.focus) }}
         ariaLabel="家具メーカーの模型。手前に資材倉庫・工場・出荷場・店舗・サービス窓口の5つの現場が一列に並び（主活動）、奥の本社の4つの部門（支援活動）から5つの現場すべての後ろを帯が通っている"
         shot={shotFor(product.at, wide)}
         shotKey={`${product.at}-${wide ? "w" : ""}`}

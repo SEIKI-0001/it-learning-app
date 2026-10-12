@@ -31,6 +31,14 @@ const AT = {
   vault: { x: 720, y: 96, z: 0 },
 } satisfies Record<string, Vec3>;
 
+const FOCUS_AT: Record<keyof typeof AT, Vec3> = {
+  hq: { x: AT.hq.x, y: AT.hq.y + 60, z: 120 },
+  system: { x: AT.system.x + 28, y: AT.system.y, z: 100 },
+  staff: { x: 210, y: 350, z: 80 },
+  alt: { x: AT.alt.x, y: AT.alt.y + 20, z: 100 },
+  vault: { x: AT.vault.x, y: AT.vault.y + 20, z: 84 },
+};
+
 const STAFF_AT: Record<StaffSpot, Vec3> = {
   staff: { x: 210, y: 350, z: 0 },
   alt: { x: 540, y: 410, z: 0 },
@@ -65,8 +73,10 @@ const SHOT_WIDE: Camera = { yaw: -18, pitch: 54, zoom: 0.9, fx: 410, fy: 240, fz
 const SHOT_HQ: Camera = { yaw: -16, pitch: 50, zoom: 1.12, fx: 240, fy: 220, fz: 60 };
 const SHOT_ALT: Camera = { yaw: -20, pitch: 52, zoom: 1.08, fx: 540, fy: 270, fz: 50 };
 
-export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, dataToken, shake, reducedMotion, forward = true }: BcpSceneProps & { forward?: boolean }) {
+export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, dataToken, shake, named, caption = null, reducedMotion, forward = true }: BcpSceneProps & { forward?: boolean }) {
   const shot = !disaster ? SHOT_WIDE : staffToken.at === "alt" || dataToken?.at === "alt" ? SHOT_ALT : shake ? SHOT_HQ : SHOT_WIDE;
+  // 災害後の名札は、その場面で関わる物だけ（平常時の備えの確認では全部出す）
+  const showName = (id: keyof typeof AT) => !disaster || !named || named.includes(id);
   const laneTone = (id: keyof typeof LANE): RouteTone => (lanes[id] === "blocked" ? "blocked" : lanes[id] === "active" ? "response" : "idle");
 
   return (
@@ -77,6 +87,7 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
       shotKey={`${disaster ? "d" : "c"}-${staffToken.at}-${staffToken.text}-${dataToken?.at ?? "-"}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       dataAttrs={{ "data-disaster": disaster ? "true" : "false", "data-shake": shake ? "true" : "false" }}
       tokens={{
         staff: { at: STAFF_AT[staffToken.at], path: staffToken.at === "alt" ? [...LANE.move, STAFF_AT.alt] : undefined },
@@ -134,18 +145,13 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
       }
       labels={
         <>
-          {disaster && (
-            <DioramaLabel at={{ ...AT.hq, z: 190 }} place="above">
-              <span role="status" className={styles.quake}>
-                大地震
+          {showName("staff") && (
+            <DioramaLabel token="staff" dz={96} place="above">
+              <span className={styles.token} data-tone={staffToken.tone} data-at={staffToken.at} data-testid="bcp-staff-token">
+                {staffToken.text}
               </span>
             </DioramaLabel>
           )}
-          <DioramaLabel token="staff" dz={96} place="above">
-            <span className={styles.token} data-tone={staffToken.tone} data-at={staffToken.at} data-testid="bcp-staff-token">
-              {staffToken.text}
-            </span>
-          </DioramaLabel>
           {dataToken && (
             <DioramaLabel token="data" dz={14} place="above">
               <span className={`${styles.token} ${styles.dataToken}`} data-tone={dataToken.tone} data-at={dataToken.at} data-testid="bcp-data-token">
@@ -154,31 +160,41 @@ export function BcpDioramaScene({ nodes, prep, disaster, lanes, staffToken, data
             </DioramaLabel>
           )}
 
-          <DioramaLabel at={{ ...AT.hq, y: AT.hq.y + 60, z: 150 }} place="above">
-            <span className={styles.label} data-state={nodes.hq}>
-              本社{disaster && <b className={styles.ng}>立入禁止</b>}
-            </span>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.system, x: AT.system.x + 28, z: 106 }} place="above" optional>
-            <span className={styles.label} data-state={nodes.system}>
-              システム/データ{disaster && <b className={styles.ng}>停止</b>}
-            </span>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.vault, y: AT.vault.y + 46, z: 0 }} place="below">
-            <span className={styles.label} data-present={prep.backup ? "true" : "false"} data-testid="bcp-vault-label">
-              バックアップ{prep.backup ? "" : "（なし）"}
-            </span>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.alt, y: AT.alt.y + 56, z: 0 }} place="below">
-            <span className={styles.label} data-present={prep.site ? "true" : "false"} data-testid="bcp-alt-label">
-              代替拠点{prep.site ? "" : "（なし）"}
-            </span>
-          </DioramaLabel>
-          <DioramaLabel token="staff" dz={-4} place="below" optional>
-            <span className={styles.label} data-present={prep.contact ? "true" : "false"}>
-              社員{prep.contact ? " ・連絡網あり" : ""}
-            </span>
-          </DioramaLabel>
+          {showName("hq") && (
+            <DioramaLabel at={{ ...AT.hq, y: AT.hq.y + 60, z: 150 }} place="above">
+              <span className={styles.label} data-state={nodes.hq}>
+                本社{disaster && <b className={styles.ng}>立入禁止</b>}
+              </span>
+            </DioramaLabel>
+          )}
+          {showName("system") && (
+            <DioramaLabel at={{ ...AT.system, x: AT.system.x + 28, z: 106 }} place="above" optional>
+              <span className={styles.label} data-state={nodes.system}>
+                システム/データ{disaster && <b className={styles.ng}>停止</b>}
+              </span>
+            </DioramaLabel>
+          )}
+          {showName("vault") && (
+            <DioramaLabel at={{ ...AT.vault, y: AT.vault.y + 46, z: 0 }} place="below">
+              <span className={styles.label} data-present={prep.backup ? "true" : "false"} data-testid="bcp-vault-label">
+                バックアップ{prep.backup ? "" : "（なし）"}
+              </span>
+            </DioramaLabel>
+          )}
+          {showName("alt") && (
+            <DioramaLabel at={{ ...AT.alt, y: AT.alt.y + 56, z: 0 }} place="below">
+              <span className={styles.label} data-present={prep.site ? "true" : "false"} data-testid="bcp-alt-label">
+                代替拠点{prep.site ? "" : "（なし）"}
+              </span>
+            </DioramaLabel>
+          )}
+          {!disaster && (
+            <DioramaLabel token="staff" dz={-4} place="below" optional>
+              <span className={styles.label} data-present={prep.contact ? "true" : "false"}>
+                社員{prep.contact ? " ・連絡網あり" : ""}
+              </span>
+            </DioramaLabel>
+          )}
         </>
       }
     />
