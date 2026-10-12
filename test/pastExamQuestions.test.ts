@@ -12,6 +12,7 @@ import {
   getPlayableOfficialExamYears,
   getPublishedOfficialQuestionsByYear,
   getPublishedQuestions,
+  getQuestionById,
   getQuestionsByOrigin,
   getQuestionsByTopic,
   isPlayableOfficialExamYear,
@@ -384,17 +385,20 @@ describe("既存機能への影響", () => {
     ).toHaveLength(146);
   });
 
-  it("確認パックは67個のままで、公式過去問を1問も取り込んでいない", () => {
+  it("確認パックは67個のままで、公式過去問は共通IDのまま参照する", () => {
     expect(topicCheckPacks).toHaveLength(67);
 
-    const officialIds = new Set(IPA_2026.map((q) => q.id));
+    // 2026-10-12 から第3段階に公式過去問を組み込んだ。複製した別IDではなく、
+    // 年度別演習と同じ共通ID・同じレコードを参照していること（二重登録しない）。
     for (const pack of topicCheckPacks) {
-      for (const id of pack.examLevelQuestionIds) {
-        expect(officialIds.has(id), `${pack.packId} が公式過去問 ${id} を参照`).toBe(false);
-      }
-      // パックが解決する問題は、これまでどおり app_original だけ。
       for (const question of resolvePackExamQuestions(pack)) {
-        expect(officialIds.has(question.id), `${pack.packId}`).toBe(false);
+        const record = getQuestionById(question.id);
+        expect(record, question.id).toBeDefined();
+        if (question.id.startsWith("ipa-it-passport-")) {
+          expect(record!.origin, question.id).toBe("official_past");
+        } else {
+          expect(record!.origin, question.id).toBe("app_original");
+        }
       }
     }
   });

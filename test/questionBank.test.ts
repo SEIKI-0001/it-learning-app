@@ -13,6 +13,7 @@ import {
   getAllQuestions,
   getPublishedQuestions,
   getQuestionById,
+  getQuestionForDelivery,
   getQuestionsByOrigin,
   getQuestionsByTopic,
 } from "@/lib/questionBank/loader";
@@ -250,10 +251,14 @@ describe("既存問題の移行", () => {
 // ---------------------------------------------------------------------------
 
 describe("確認パックの互換性", () => {
-  it("パック数と参照問題数が変わっていない", () => {
-    // 公式過去問を足しても確認パック側は一切触っていないことを、件数でも押さえる。
+  it("パック数と参照問題数（独自・公式の内訳）", () => {
+    // 2026-10-12: 第3段階に公式過去問を組み込んだ（置換29・追加26）。
+    // 件数が動いたら、意図した差し替えかどうかを確認すること。
+    const ids = topicCheckPacks.flatMap((p) => p.examLevelQuestionIds);
     expect(topicCheckPacks).toHaveLength(67);
-    expect(topicCheckPacks.reduce((sum, p) => sum + p.examLevelQuestionIds.length, 0)).toBe(146);
+    expect(ids).toHaveLength(172);
+    expect(ids.filter((id) => id.startsWith("ipa-it-passport-"))).toHaveLength(55);
+    expect(ids.filter((id) => !id.startsWith("ipa-it-passport-"))).toHaveLength(117);
   });
 
   it("すべてのパックが参照する問題IDを解決できる", () => {
@@ -272,7 +277,8 @@ describe("確認パックの互換性", () => {
       const expected = pack.examLevelQuestionIds
         .map((id) => legacyById.get(id))
         .filter((q) => q !== undefined);
-      const actual = resolvePackExamQuestions(pack);
+      // 公式過去問は移行対象ではないので除き、独自問題の並び・正答だけを突き合わせる。
+      const actual = resolvePackExamQuestions(pack).filter((q) => legacyById.has(q.id));
 
       // 出題順・問題数・正答は改訂しても変えない。
       expect(actual.map((q) => q.id)).toEqual(expected.map((q) => q.id));
@@ -804,10 +810,11 @@ describe("令和8年度 ITパスポート 公開問題", () => {
     }
   });
 
-  it("学習画面からはまだ出題されない（確認パックが1問も参照していない）", () => {
+  it("確認パックが参照する令和8年度の問題は、年度別演習と同じレコードで出題できる", () => {
     const packIds = new Set(topicCheckPacks.flatMap((p) => p.examLevelQuestionIds));
-    for (const q of IPA_2026) {
-      expect(packIds.has(q.id), `${q.id} が確認パックから参照されている`).toBe(false);
+    for (const q of IPA_2026.filter((q) => packIds.has(q.id))) {
+      expect(getQuestionForDelivery(q.id, "check_pack"), q.id).toBe(q);
+      expect(getQuestionForDelivery(q.id, "official_past_exam"), q.id).toBe(q);
     }
   });
 });

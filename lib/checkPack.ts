@@ -1,4 +1,4 @@
-import type { CheckQuestion, Topic } from "@/types/content";
+import type { CheckQuestion, Difficulty, Topic } from "@/types/content";
 import type { ExamLevelQuestion, TopicCheckPack } from "@/types/checkPack";
 import { topicCheckPacks } from "@/data/topicCheckPacks";
 import { getQuestionForDelivery } from "@/lib/questionBank/loader";
@@ -76,7 +76,8 @@ export function resolvePackExamQuestions(pack: TopicCheckPack): ExamLevelQuestio
   return pack.examLevelQuestionIds
     .map((id) => getQuestionForDelivery(id, "check_pack"))
     .filter((q) => q !== undefined)
-    .map(questionRecordToExamLevelQuestion);
+    .map(questionRecordToExamLevelQuestion)
+    .map((q) => ({ ...q, difficulty: clampDifficulty(q.difficulty) }));
 }
 
 /** パックの過去問レベル問題を CheckQuestion 形（TopicQuiz 用）で返す。 */
@@ -84,5 +85,14 @@ export function resolvePackExamAsCheckQuestions(pack: TopicCheckPack): CheckQues
   return pack.examLevelQuestionIds
     .map((id) => getQuestionForDelivery(id, "check_pack"))
     .filter((q) => q !== undefined)
-    .map(questionRecordToCheckQuestion);
+    .map(questionRecordToCheckQuestion)
+    .map((q) => ({ ...q, difficulty: clampDifficulty(q.difficulty) }));
+}
+
+/**
+ * 公式過去問の推定難易度は 4〜5 を取りうるが、出題側の Difficulty は 1〜3。
+ * CP5突破試験（/api/past-exams/final-exam）と同じく 3 に丸める。
+ */
+function clampDifficulty(difficulty: number): Difficulty {
+  return Math.min(3, difficulty) as Difficulty;
 }
