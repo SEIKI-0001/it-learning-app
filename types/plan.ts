@@ -83,13 +83,6 @@ export type WeeklyItemView = {
 // ---------------------------------------------------------------------------
 
 /** 遅れの度合い（none=遅れなし〜severe=大きな遅れ） */
-export type DelayLevel = "none" | "slight" | "moderate" | "severe";
-
-export type RescheduleAdvice = {
-  level: DelayLevel;
-  headline: string; // 前向きな見出し（ユーザーを責めない）
-  actions: string[]; // 具体的な調整方針
-};
 
 // ---------------------------------------------------------------------------
 // 学習計画（エンジンの出力）
@@ -101,7 +94,6 @@ export type LearningPlan = {
   dailyMinutesTarget: number; // 1日の目安学習時間(分)
   totalAvailableMinutes: number | null; // 試験日までの学習可能総時間(分)。未設定なら null
   requiredMinutesEstimate: number; // 必要学習量の目安(分)
-  onTrack: OnTrackLevel; // 間に合い度
 
   // フェーズ（内部指標）。ロードマップ表示は lib/checkpoints.ts の CP 進行が唯一の真実。
   currentPhase: StudyPhaseId;
@@ -118,7 +110,6 @@ export type LearningPlan = {
   reviewPriority: "low" | "medium" | "high"; // 復習優先度
 
   // 遅れ調整
-  reschedule: RescheduleAdvice;
 
   // 全体像・進捗
   // メモ: 合格準備度はここでは持たない。共有 ExamReadinessResult が唯一の準備度。

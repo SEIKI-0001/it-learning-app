@@ -141,3 +141,24 @@ export function resolveTodayPace(
     },
   };
 }
+
+/** /progress の「学習ペース」の見出しと一言。Today のペースの1行と同じ判定。 */
+export function paceSummary(
+  pace: { status: StudyPaceStatus; minutes: number } | null,
+): { label: string; note: string; tone: "good" | "neutral" | "warn" } {
+  if (!pace) {
+    return { label: "試験日が未設定", note: "試験日を決めると、毎日の量を逆算します", tone: "neutral" };
+  }
+  switch (pace.status) {
+    case "on_pace":
+      return { label: "間に合うペース", note: "今の学習時間で間に合います", tone: "good" };
+    case "raised":
+      return { label: "多めにすれば間に合う", note: `今日は${pace.minutes}分で間に合うペースです`, tone: "neutral" };
+    case "over_cap":
+      return {
+        label: "頻出から優先",
+        note: `1日${PACE_DAILY_CAP_MINUTES}分でも残りが多いので、頻出テーマから進めます`,
+        tone: "warn",
+      };
+  }
+}

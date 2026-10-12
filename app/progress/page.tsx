@@ -29,6 +29,7 @@ import {
 } from "@/lib/checkpoints";
 import { buildCheckpointDetail } from "@/lib/checkpointDetail";
 import type { CheckpointId } from "@/types/checkpoint";
+import { computeStudyPace, getPinnedPace, paceSummary } from "@/lib/studyPace";
 import { buildBadgeStatuses } from "@/lib/badges";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { getLessonHref } from "@/lib/learningCatalog";
@@ -36,7 +37,6 @@ import {
   primaryImprovementLabel,
   readinessBandLabel,
 } from "@/lib/examReadiness/presentation";
-import { overallStatusLabel, type OverallStatus } from "@/types/integratedStatus";
 import type { ExamReadinessResult } from "@/types/examReadiness";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -54,22 +54,6 @@ import {
 } from "@/components/progress/ProgressDetailCards";
 import t from "@/components/today/todayView.module.css";
 import p from "@/components/progress/progressDashboard.module.css";
-
-const PACE_TONE: Record<OverallStatus, "good" | "neutral" | "warn"> = {
-  on_track: "good",
-  slightly_delayed: "neutral",
-  delayed: "warn",
-  recovery_needed: "warn",
-  consultation_needed: "warn",
-};
-
-function paceNote(delta: number | null): string {
-  if (delta === null) return "試験日を決めると予定と比べます";
-  if (delta > 0) return "予定より先を進んでいます";
-  if (delta === 0) return "ほぼ予定どおりです";
-  if (delta === -1) return "予定より少し後ろです";
-  return "予定より後ろにいます";
-}
 
 /** いちばん伸ばせるところの取り組み先。判定の種類ごとに、既存の学習導線へつなぐ。 */
 function improvementHref(result: ExamReadinessResult): string {
@@ -202,15 +186,15 @@ export default function ProgressPage() {
           : "確認問題に答えると、100点満点で判定が始まります",
     },
     exam: { daysLeft: examDays, dateLabel: examDateLabel },
-    pace: status
-      ? {
-          label: overallStatusLabel(status.overallStatus),
-          note: paceNote(comparison?.delta ?? null),
-          tone: PACE_TONE[status.overallStatus],
-        }
-      : comparison
-        ? { label: paceNote(comparison.delta), note: "チェックポイントの予定と比べて", tone: "neutral" }
-        : null,
+    // 学習ペースは Today と同じ物差し（試験日からの逆算）。総合ステータスは立て直し提案の判定に、
+    // CP予定との差はロードマップに使う。
+    pace: paceSummary(
+      getPinnedPace(state) ??
+        (() => {
+          const computed = computeStudyPace({ profile, progress, topics });
+          return computed ? { status: computed.status, minutes: computed.todayMinutes } : null;
+        })(),
+    ),
     gate: {
       earned: Math.min(gate.earnedRequiredCount, gate.requiredBadgeCount),
       required: gate.requiredBadgeCount,

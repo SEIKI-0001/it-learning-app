@@ -7,6 +7,7 @@ import {
   computeStudyPace,
   getPinnedPace,
   PACE_DAILY_CAP_MINUTES,
+  paceSummary,
   resolveTodayPace,
 } from "@/lib/studyPace";
 import { declaredDailyMinutes } from "@/lib/dailyMinutes";
@@ -181,5 +182,14 @@ describe("resolveTodayPace", () => {
 
     expect(result.pace).toBeNull();
     expect(result.state).toBe(s);
+  });
+});
+
+describe("paceSummary (/progress)", () => {
+  it("uses the same judgement as Today", () => {
+    expect(paceSummary(null).label).toBe("試験日が未設定");
+    expect(paceSummary({ status: "on_pace", minutes: 20 })).toMatchObject({ label: "間に合うペース", tone: "good" });
+    expect(paceSummary({ status: "raised", minutes: 50 }).note).toBe("今日は50分で間に合うペースです");
+    expect(paceSummary({ status: "over_cap", minutes: 120 }).tone).toBe("warn");
   });
 });
