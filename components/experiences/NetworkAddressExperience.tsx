@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { CapsuleKind } from "./network/dnsTypes";
 import { DnsDioramaScene } from "./network/DnsDioramaScene";
 import type {
@@ -23,7 +23,10 @@ type NetworkPhase = {
   nodes: Record<NetworkNodeId, NodeState>;
   lanes: Record<LaneId, LaneState>;
   showBrowser?: boolean;
-  detail: string;
+  /** 模型の中に出す一言（40字以内） */
+  caption: ReactNode;
+  /** 一言が指す物 */
+  focus: NetworkNodeId;
 };
 
 // 0.5倍速: 1ステップを読んで目で追えるだけの間を取る
@@ -46,8 +49,8 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: null,
     nodes: { user: "active", dns: "idle", web: "idle" },
     lanes: IDLE_LANES,
-    detail:
-      "人は覚えやすいドメイン名を入力します。この時点では、接続先のIPアドレスはまだ分かっていません。",
+    caption: <>名前で入力。接続先の<b>IPアドレス</b>はまだ分からない</>,
+    focus: "user",
   },
   {
     eyebrow: "DNS問い合わせ",
@@ -57,8 +60,8 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: { from: "userOut", to: "dnsIn" },
     nodes: { user: "sending", dns: "active", web: "idle" },
     lanes: { ...IDLE_LANES, query: "active" },
-    detail:
-      "ブラウザはDNSへ、ドメイン名に対応するIPアドレスを問い合わせます。DNSはページ本体ではなく「接続先の住所」を返します。",
+    caption: <><b>DNS</b>に「この名前のIPアドレスは？」と問い合わせる</>,
+    focus: "dns",
   },
   {
     eyebrow: "DNS応答",
@@ -68,8 +71,8 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: { from: "dnsOut", to: "userIn" },
     nodes: { user: "active", dns: "sending", web: "idle" },
     lanes: { ...IDLE_LANES, response: "active" },
-    detail:
-      "DNSからIPアドレスが返ります。ここで初めて、ブラウザは接続すべきサーバのネット上の住所を知ります。",
+    caption: <>DNSが返すのは<b>IPアドレス</b>だけ。ページは返さない</>,
+    focus: "user",
   },
   {
     eyebrow: "接続",
@@ -79,8 +82,8 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: { from: "webOut", to: "webIn" },
     nodes: { user: "sending", dns: "idle", web: "active" },
     lanes: { ...IDLE_LANES, web: "active" },
-    detail:
-      "取得したIPアドレスを宛先にして、Webサーバへ向かいます。DNSの出番はここまでです。",
+    caption: <>IPアドレスを宛先に<b>Webサーバ</b>へ。DNSの出番は終わり</>,
+    focus: "web",
   },
   {
     eyebrow: "到達",
@@ -90,8 +93,8 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: null,
     nodes: { user: "idle", dns: "idle", web: "active" },
     lanes: IDLE_LANES,
-    detail:
-      "Webサーバに要求が届きました。サーバは要求されたページのデータ（HTMLや画像）を用意します。",
+    caption: <>Webサーバが要求を受け取り、ページのデータを用意する</>,
+    focus: "web",
   },
   {
     eyebrow: "ページ受信",
@@ -101,8 +104,8 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: { from: "pageOut", to: "pageIn" },
     nodes: { user: "active", dns: "idle", web: "sending" },
     lanes: { ...IDLE_LANES, page: "active" },
-    detail:
-      "Webサーバがページのデータを返します。ページ本体を返すのはDNSではなくWebサーバです。",
+    caption: <>ページ本体を返すのは<b>Webサーバ</b>。DNSではない</>,
+    focus: "user",
   },
   {
     eyebrow: "表示",
@@ -113,8 +116,8 @@ const FLOW_STEPS: NetworkPhase[] = [
     nodes: { user: "active", dns: "idle", web: "idle" },
     lanes: IDLE_LANES,
     showBrowser: true,
-    detail:
-      "ブラウザが受け取ったデータを組み立てて画面に表示します。「名前 → DNS → IP → 接続 → ページ → 表示」が全体の流れです。",
+    caption: <>ブラウザが組み立てて表示。名前→DNS→IP→接続→表示</>,
+    focus: "user",
   },
 ];
 
@@ -126,7 +129,6 @@ const OUTAGE_LANES: Record<LaneId, LaneState> = {
   web: "blocked",
   page: "blocked",
 };
-const OUTAGE_DETAIL = "IPアドレスが返らないため、この先のWebサーバ接続へ進めません。";
 
 function outagePhase(index: number, timedOut: boolean): NetworkPhase {
   if (index === 0) {
@@ -146,7 +148,12 @@ function outagePhase(index: number, timedOut: boolean): NetworkPhase {
     trail: { from: "userOut", to: "dnsBlocked" },
     nodes: { user: "sending", dns: "error", web: "disabled" },
     lanes: { ...OUTAGE_LANES, query: timedOut ? "idle" : "active" },
-    detail: OUTAGE_DETAIL,
+    caption: timedOut ? (
+      <>応答なし→IPアドレス不明→<b>接続先を決められない</b></>
+    ) : (
+      <>DNSに問い合わせたが、応答が返ってこない…</>
+    ),
+    focus: "dns",
   };
 }
 
@@ -386,6 +393,12 @@ function DnsJourney() {
           reducedMotion={reducedMotion}
           inspectOpen={inspectPacket}
           onInspect={() => setInspectPacket((current) => !current)}
+          caption={{
+            id: `${outage ? "x" : "o"}-${index}-${timedOut ? "t" : ""}`,
+            text: phase.caption,
+            tone: outage ? "danger" : "info",
+            focus: phase.focus,
+          }}
         />
       </div>
 
@@ -402,22 +415,8 @@ function DnsJourney() {
               {outage && timedOut ? "DNSの応答：タイムアウト" : phase.capsule.payload}
             </dd>
           </dl>
-          <p className="mt-2 text-[11px] leading-relaxed text-gray-600">{phase.detail}</p>
         </div>
       )}
-
-      <div className="mt-3 rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-200" aria-live="polite">
-        <p className="text-xs leading-relaxed text-gray-700">
-          {outage ? (
-            <>
-              <b className="text-rose-700">DNS応答なし → IPアドレス不明 → 接続先を決められない。</b>
-              ドメイン名でWebサイトへ到達できません。
-            </>
-          ) : (
-            phase.detail
-          )}
-        </p>
-      </div>
 
       <div className="mt-4 flex items-center gap-2">
         <button
@@ -463,11 +462,6 @@ function DnsJourney() {
         <span>{index + 1} / {FLOW_STEPS.length}</span>
         <span>サイト表示</span>
       </div>
-      {outage && (
-        <p className="mt-2 text-[11px] font-bold text-rose-700">
-          DNSが止まっているため、問い合わせより先へは進めません。
-        </p>
-      )}
       {reducedMotion && (
         <p className="mt-2 text-[10px] text-gray-500">
           端末の「視差効果を減らす」設定に合わせ、自動再生は停止しています。矢印またはスライダーで進められます。

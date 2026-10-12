@@ -307,11 +307,118 @@
 
 /* ---------- 固定札 ---------- */
 
-.corner {
+/* 上端の帯：吹き出し（左いっぱい）と固定札（右寄せ）を縦に積む */
+.topBar {
   position: absolute;
+  left: 10px;
   right: 10px;
   top: 10px;
   z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.topBar > * {
+  pointer-events: auto;
+}
+
+.captionSlot {
+  align-self: stretch;
+}
+
+/* いま起きていることの一言。札より一段はっきり、でも模型を隠さない */
+.caption {
+  margin: 0;
+  padding: 6px 11px 7px;
+  border-left: 3px solid #3b82f6;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  animation: stage-caption-in 260ms ease-out;
+}
+
+.caption b {
+  color: #1d4ed8;
+}
+
+.caption[data-tone="danger"] {
+  border-left-color: #e11d48;
+  color: #881337;
+}
+
+.caption[data-tone="danger"] b {
+  color: #be123c;
+}
+
+.caption[data-tone="ok"] {
+  border-left-color: #10b981;
+  color: #064e3b;
+}
+
+.caption[data-tone="ok"] b {
+  color: #047857;
+}
+
+.leader {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.leader line {
+  stroke: #3b82f6;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  opacity: 0.75;
+}
+
+.leader circle {
+  fill: #3b82f6;
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
+
+.leader line[data-tone="danger"] {
+  stroke: #e11d48;
+}
+
+.leader circle[data-tone="danger"] {
+  fill: #e11d48;
+}
+
+.leader line[data-tone="ok"] {
+  stroke: #10b981;
+}
+
+.leader circle[data-tone="ok"] {
+  fill: #10b981;
+}
+
+@keyframes stage-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.corner {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;

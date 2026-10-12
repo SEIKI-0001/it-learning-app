@@ -21,7 +21,7 @@ import {
   type ParcelMark,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import type { CapsuleKind } from "./dnsTypes";
 import type { NodeState } from "./NetworkSceneBase";
 import type { CapsuleStop, LaneId, LaneState, NetworkNodeId } from "./dnsTypes";
@@ -64,6 +64,11 @@ const LANE_PATH: Record<LaneId, Vec3[]> = {
 };
 
 const Z_PARCEL = G + 1;
+const FOCUS_AT: Record<NetworkNodeId, Vec3> = {
+  user: { ...LAPTOP, z: 96 },
+  dns: { ...DNS, z: 112 },
+  web: { ...WEB, z: 112 },
+};
 const INPUT_AT: Vec3 = { x: LAPTOP.x + 2, y: LAPTOP.y - 30, z: 106 };
 
 /** 各停止点：どの車線のどこまで進んだところか */
@@ -96,22 +101,12 @@ const PARCEL: Record<CapsuleKind, { tone: CarryTone; mark: ParcelMark }> = {
 };
 
 const LANE_TONE: Record<LaneId, RouteTone> = { query: "request", response: "response", web: "request", page: "response" };
-const LANE_NAME: Record<LaneId, string> = {
-  query: "① 名前を問い合わせ",
-  response: "② IPアドレスを返す",
-  web: "③ IPを宛先に接続",
-  page: "④ ページを返す",
-};
-
+// 状態の小札は「止まっている」ときだけ（処理中・送信は動きと吹き出しで分かる）
 const STATUS_WORD: Partial<Record<NodeState, string>> = {
-  active: "処理中",
-  sending: "送信",
   error: "応答なし",
   disabled: "未接続",
 };
 const STATUS_TONE: Partial<Record<NodeState, "info" | "ok" | "danger" | "muted">> = {
-  active: "ok",
-  sending: "info",
   error: "danger",
   disabled: "muted",
 };
@@ -170,6 +165,7 @@ export function DnsDioramaScene({
   onInspect,
   showBrowser = false,
   forward,
+  caption = null,
 }: {
   nodes: Record<NetworkNodeId, NodeState>;
   lanes: Record<LaneId, LaneState>;
@@ -181,6 +177,8 @@ export function DnsDioramaScene({
   onInspect: () => void;
   /** 前へ進んだ直後か（戻る・飛ばすときは小包を瞬間移動させる） */
   forward: boolean;
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption?: (Omit<StageCaption, "at"> & { focus: NetworkNodeId }) | null;
 }) {
   const stop = capsule?.stop ?? null;
   // 接続（あなたが送信中）は家からWebまでの道全体、到達はWebサーバへ寄る
@@ -190,6 +188,8 @@ export function DnsDioramaScene({
   const path = stop ? stopPath(stop) : null;
   const parcel = capsule ? PARCEL[capsule.kind] : null;
   const activeLanes = (Object.keys(lanes) as LaneId[]).filter((id) => lanes[id] === "active");
+  // 名札はその場面で関わる物だけ（待機中の物は名前を出さない）
+  const involved = (id: NetworkNodeId) => nodes[id] !== "idle";
   const dnsDown = nodes.dns === "error";
   const webOff = nodes.web === "disabled";
 
@@ -204,6 +204,7 @@ export function DnsDioramaScene({
       shotKey={`${stop ?? "none"}-${showBrowser ? "b" : ""}-${dnsDown ? "x" : ""}-${nodes.user}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       dataAttrs={{ "data-outage": outage ? "true" : "false" }}
       tokens={{
         packet: {
@@ -313,24 +314,21 @@ export function DnsDioramaScene({
             </DioramaLabel>
           )}
 
-          {activeLanes.map((id) => {
-            const mid = LANE_PATH[id][2];
-            return (
-              <DioramaLabel key={id} at={{ ...mid, z: 10 }} place="below" optional>
-                <Badge tone={LANE_TONE[id] === "request" ? "info" : "ok"}>{LANE_NAME[id]}</Badge>
-              </DioramaLabel>
-            );
-          })}
-
-          <DioramaLabel at={{ x: 108, y: 360, z: 0 }} place="below" optional>
-            <NameChip name="あなた" status={STATUS_WORD[nodes.user]} tone={STATUS_TONE[nodes.user]} />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...DNS, z: 118 }} place="above" optional>
-            <NameChip name="DNSサーバ" status={STATUS_WORD[nodes.dns]} tone={STATUS_TONE[nodes.dns]} />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...WEB, z: 124 }} place="above" optional>
-            <NameChip name="Webサーバ" status={STATUS_WORD[nodes.web]} tone={STATUS_TONE[nodes.web]} />
-          </DioramaLabel>
+          {involved("user") && (
+            <DioramaLabel at={{ x: 108, y: 360, z: 0 }} place="below" optional>
+              <NameChip name="あなた" status={STATUS_WORD[nodes.user]} tone={STATUS_TONE[nodes.user]} />
+            </DioramaLabel>
+          )}
+          {involved("dns") && (
+            <DioramaLabel at={{ ...DNS, z: 118 }} place="above" optional>
+              <NameChip name="DNSサーバ" status={STATUS_WORD[nodes.dns]} tone={STATUS_TONE[nodes.dns]} />
+            </DioramaLabel>
+          )}
+          {involved("web") && (
+            <DioramaLabel at={{ ...WEB, z: 124 }} place="above" optional>
+              <NameChip name="Webサーバ" status={STATUS_WORD[nodes.web]} tone={STATUS_TONE[nodes.web]} />
+            </DioramaLabel>
+          )}
         </>
       }
     />

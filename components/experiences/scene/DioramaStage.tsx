@@ -39,6 +39,16 @@ export type TokenSpec = {
 
 export type LabelPlace = "above" | "below" | "left" | "right";
 
+/** 模型の中に出す「いま起きていること」の一言。解説文を模型の下に並べず、ここに短く載せる（40字以内）。 */
+export type StageCaption = {
+  text: ReactNode;
+  tone?: "info" | "ok" | "danger";
+  /** これが変わると吹き出しを出し直す（text が文字列なら省略可） */
+  id?: string | number;
+  /** 指す物の位置。あれば吹き出しから点線を引く */
+  at?: Vec3;
+};
+
 type Rect = { l: number; t: number; r: number; b: number };
 
 export const lerp3 = (a: Vec3, b: Vec3, t: number): Vec3 => ({
@@ -223,6 +233,7 @@ export function DioramaStage({
   onFrame,
   after,
   pace = 2.6,
+  caption,
 }: {
   /** 今のステップのカメラ */
   shot: Camera;
@@ -253,11 +264,15 @@ export function DioramaStage({
   after?: ReactNode;
   /** トークンが 1px 進むのにかける時間（ms）。広い模型で長い道のりを動かすときは小さくする */
   pace?: number;
+  /** 模型の上端に出す一言（いま起きていること）。null なら出さない */
+  caption?: StageCaption | null;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const cameraRef = useRef<HTMLDivElement>(null);
+  const captionRef = useRef<HTMLParagraphElement>(null);
+  const leaderRef = useRef<SVGSVGElement>(null);
   const size = useRef({ w: baseWidth, h: baseWidth * 0.8, fit: 1, perspective: 1400 });
   const drag = useRef({ yaw: 0, pitch: 0 });
   const pointer = useRef<{ id: number; x: number; y: number } | null>(null);
@@ -273,9 +288,9 @@ export function DioramaStage({
 
   const cam = useRef<Camera>(shot);
   // 最新の props を毎フレームの処理から読むための控え（描画のたびに、他の effect より先に更新する）
-  const latest = useRef({ shot, tokens, onFrame });
+  const latest = useRef({ shot, tokens, onFrame, captionAt: caption?.at });
   useLayoutEffect(() => {
-    latest.current = { shot, tokens, onFrame };
+    latest.current = { shot, tokens, onFrame, captionAt: caption?.at };
   });
   const pos = useRef<Record<string, Vec3 | null>>(
     Object.fromEntries(Object.entries(tokens).map(([id, t]) => [id, t.at])),
@@ -402,7 +417,37 @@ export function DioramaStage({
       show(a, true);
       el.style.transform = `translate3d(${chosen.l.toFixed(1)}px, ${chosen.t.toFixed(1)}px, 0)`;
     }
+    drawLeader(toScreen, stageW, stageH);
     latest.current.onFrame?.({ project: toScreen, width: stageW, height: stageH });
+  };
+
+  // 吹き出しから指す物へ点線を引く（指す物が吹き出しより下・画面内にあるときだけ）
+  const drawLeader = (toScreen: (p: Vec3) => { x: number; y: number }, stageW: number, stageH: number) => {
+    const svg = leaderRef.current;
+    if (!svg) return;
+    const at = latest.current.captionAt;
+    const box = captionRef.current;
+    const line = svg.firstElementChild as SVGLineElement | null;
+    const dot = svg.lastElementChild as SVGCircleElement | null;
+    if (!line || !dot) return;
+    let on = false;
+    if (at && box) {
+      const s = toScreen(at);
+      const capL = box.offsetLeft;
+      const capB = box.offsetTop + box.offsetHeight;
+      const capR = capL + box.offsetWidth;
+      if (s.x > 4 && s.x < stageW - 4 && s.y > capB + 14 && s.y < stageH - 4) {
+        const x1 = Math.max(capL + 14, Math.min(capR - 14, s.x));
+        line.setAttribute("x1", x1.toFixed(1));
+        line.setAttribute("y1", capB.toFixed(1));
+        line.setAttribute("x2", s.x.toFixed(1));
+        line.setAttribute("y2", s.y.toFixed(1));
+        dot.setAttribute("cx", s.x.toFixed(1));
+        dot.setAttribute("cy", s.y.toFixed(1));
+        on = true;
+      }
+    }
+    svg.style.visibility = on ? "visible" : "hidden";
   };
 
   useLayoutEffect(() => {
@@ -573,10 +618,32 @@ export function DioramaStage({
             {world}
           </div>
         </div>
+        <svg ref={leaderRef} className={styles.leader} aria-hidden style={{ visibility: "hidden" }}>
+          <line data-tone={caption?.tone ?? "info"} />
+          <circle r={3.5} data-tone={caption?.tone ?? "info"} />
+        </svg>
         {labels}
-        {corner && (
-          <div className={styles.corner} data-obstacle>
-            {corner}
+        {(caption || corner) && (
+          <div className={styles.topBar}>
+            {caption && (
+              <div className={styles.captionSlot} aria-live="polite">
+                <p
+                  key={caption.id ?? (typeof caption.text === "string" ? caption.text : undefined)}
+                  ref={captionRef}
+                  className={styles.caption}
+                  data-tone={caption.tone ?? "info"}
+                  data-obstacle
+                  data-testid={testId ? `${testId}-caption` : undefined}
+                >
+                  {caption.text}
+                </p>
+              </div>
+            )}
+            {corner && (
+              <div className={styles.corner} data-obstacle>
+                {corner}
+              </div>
+            )}
           </div>
         )}
         <div className={styles.viewHint} data-obstacle>
