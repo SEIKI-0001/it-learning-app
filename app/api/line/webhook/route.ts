@@ -13,6 +13,8 @@ import type { UserAnswer, UserProfile, UserProgress } from "@/types";
 import type { ExamReadinessResult } from "@/types/examReadiness";
 import { getAllTopics, getReviewItemsForUser, getTopic } from "@/lib/content";
 import { daysUntilExam, generateTodayMenu } from "@/lib/aiPlanner";
+import { resolveTodayPace } from "@/lib/studyPace";
+import type { PaceBudget } from "@/types/checkpoint";
 import { generateLearningPlan } from "@/lib/studyPlanner";
 import { getCheckpoint, phaseToCheckpointId } from "@/lib/checkpoints";
 import { computeProgressSummary } from "@/lib/progressSummary";
@@ -225,17 +227,21 @@ function todayText(
       withToken(baseUrl, "/today", token),
     ].join("\n");
   }
+  const topics = getAllTopics();
+  // Web の Today と同じ「おまかせ」の量（今日すでに Web で固定していればその値）。
+  const { pace } = resolveTodayPace({ profile, progress, answers }, topics);
   const menu = generateTodayMenu(
     profile,
     progress,
-    getAllTopics(),
+    topics,
     answers,
     undefined,
-    undefined,
+    pace?.minutes,
     undefined,
     bookQueue ? { book: bookQueue } : undefined,
   );
   const lines = [`📖 今日のテーマ：${menu.theme}`, `⏱️ 目安 ${menu.totalMinutes}分`];
+  if (pace) lines.push(paceText(pace));
   const learn = menu.items.filter((i) => i.kind === "learn");
   if (learn.length > 0) {
     lines.push("やること：" + learn.map((i) => i.title).join("、"));
@@ -245,6 +251,14 @@ function todayText(
   }
   lines.push("Webで続ける👇", withToken(baseUrl, "/today", token));
   return lines.join("\n");
+}
+
+/** 逆算ペースの1行（Web の Today と同じ言い方。責めない・焦らせない）。 */
+function paceText(pace: PaceBudget): string {
+  const days = `試験まであと${pace.daysRemaining}日。`;
+  if (pace.status === "on_pace") return `${days}このペースで間に合います。`;
+  if (pace.status === "raised") return `${days}間に合わせるため、今日は多めにしています。`;
+  return `${days}頻出テーマから順に進めています。`;
 }
 
 /** 「進捗」: 共有の合格準備度・次の一歩・学習量を返す。 */

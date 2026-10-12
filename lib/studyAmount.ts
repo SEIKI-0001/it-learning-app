@@ -11,20 +11,19 @@ import type { AppState, UserProfile } from "@/types";
 import type { StudyAmountChoice } from "@/types/checkpoint";
 import { INITIAL_CHECKPOINT_PROGRESS } from "@/types/checkpoint";
 import { getCheckpointProgress } from "@/lib/checkpoints";
+import { declaredDailyMinutes } from "@/lib/dailyMinutes";
 
 /** 選べる学習量。どれも同格に扱い、長い方を既定にも推奨にもしない。 */
 export const STUDY_AMOUNT_OPTIONS = [5, 15, 30] as const;
 
 export type StudyAmountOption = (typeof STUDY_AMOUNT_OPTIONS)[number];
 
-/** プロフィール由来の既定予算（「おまかせ」で使われる分量）。 */
-export function defaultDailyMinutes(profile: UserProfile | undefined): number {
-  if (!profile) return 10;
-  if (typeof profile.weekdayMinutes === "number" && profile.weekdayMinutes > 0) {
-    return profile.weekdayMinutes;
-  }
-  const parsed = Number.parseInt(profile.dailyMinutes ?? "", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+/**
+ * プロフィール由来の既定予算（申告した時間）。day を渡すと土日は休日の分数。
+ * 試験日から逆算した「おまかせ」の量は lib/studyPace.ts が決める。
+ */
+export function defaultDailyMinutes(profile: UserProfile | undefined, day?: Date): number {
+  return declaredDailyMinutes(profile, day);
 }
 
 /** その日に選ばれている学習量。選んでいなければ undefined（＝おまかせ）。 */

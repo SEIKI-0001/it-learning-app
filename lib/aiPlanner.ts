@@ -20,6 +20,7 @@ import {
 import { buildTodaysLearningQueue } from "@/lib/learningLoop";
 import { BOOK_NEW_SHARE, type BookQueueOptions } from "@/lib/bookStudyPlan";
 import { daysUntilExamDate } from "@/lib/planningInputs";
+import { declaredDailyMinutes } from "@/lib/dailyMinutes";
 
 // ============================================================================
 // AIプランナー抽象層
@@ -37,16 +38,6 @@ import { daysUntilExamDate } from "@/lib/planningInputs";
 // ============================================================================
 
 const ALL_FIELDS: TopicField[] = ["technology", "management", "strategy"];
-
-/** プロフィールから1日の目安学習時間(分)を求める。 */
-function resolveDailyMinutes(profile?: UserProfile): number {
-  if (!profile) return 10;
-  if (typeof profile.weekdayMinutes === "number" && profile.weekdayMinutes > 0) {
-    return profile.weekdayMinutes;
-  }
-  const parsed = Number.parseInt(profile.dailyMinutes ?? "", 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
-}
 
 /** 試験日までの残り日数(未設定なら null)。 */
 export function daysUntilExam(
@@ -79,7 +70,7 @@ export function generateStudyPlan(
   topics: Topic[] = getAllTopics(),
 ): StudyPlan {
   const remaining = daysUntilExam(profile);
-  const dailyMinutesTarget = resolveDailyMinutes(profile);
+  const dailyMinutesTarget = declaredDailyMinutes(profile);
   const fieldFocus = computeFieldFocus(profile);
 
   const recommended = getRecommendedTopicsForUser({
@@ -144,7 +135,7 @@ export function generateTodayMenu(
   const budget =
     typeof dailyMinutesOverride === "number" && dailyMinutesOverride > 0
       ? dailyMinutesOverride
-      : resolveDailyMinutes(profile);
+      : declaredDailyMinutes(profile, now);
   const remaining = daysUntilExam(profile, now);
 
   // 直近の解答で間違いが多いほど、復習を厚くする(解答履歴の活用)。
