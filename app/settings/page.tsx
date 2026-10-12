@@ -15,6 +15,12 @@ import {
   saveProgressToDb,
 } from "@/lib/userSession";
 import {
+  examDateChoiceFromProfile,
+  resolveExamDateChoice,
+  type ExamDateChoice,
+} from "@/lib/examDateChoice";
+import ExamDateField from "@/components/settings/ExamDateField";
+import {
   havePlanningInputsChanged,
   planningInputsFromProfile,
 } from "@/lib/planningInputs";
@@ -81,7 +87,9 @@ function SettingsForm({
   // 参考書順なら、引き直す週の計画も本の順で選ぶ（アプリ順なら従来どおり）。
   const { bookQueue } = useStudyContext(state);
   const profile = state.profile!;
-  const [examDate, setExamDate] = useState<string>(profile.examDate ?? "");
+  const [examChoice, setExamChoice] = useState<ExamDateChoice | null>(
+    () => examDateChoiceFromProfile(profile),
+  );
   const [weekdayMinutes, setWeekdayMinutes] = useState<number>(
     profile.weekdayMinutes ?? 20,
   );
@@ -107,9 +115,10 @@ function SettingsForm({
 
   async function handleSave() {
     if (saving || saved) return;
+    const exam = resolveExamDateChoice(examChoice, new Date(), profile);
     const updated: UserProfile = {
       ...profile,
-      examDate: examDate || undefined,
+      examDate: exam.examDate,
       weekdayMinutes,
       holidayMinutes,
       confidence,
@@ -117,7 +126,7 @@ function SettingsForm({
       studyStyle,
       // 旧フィールド(互換)も現在値に追従させる。
       dailyMinutes: String(weekdayMinutes),
-      examPlan: examDate ? "decided" : "undecided",
+      examPlan: exam.examPlan,
     };
     const planningChanged = havePlanningInputsChanged(
       planningInputsFromProfile(profile),
@@ -186,26 +195,7 @@ function SettingsForm({
             <legend className="mb-2 flex items-center gap-2 text-base font-semibold text-gray-900">
               <Icon name="calendar" className="h-4 w-4 text-gray-500" />試験予定日
             </legend>
-            <input
-              type="date"
-              value={examDate}
-              onChange={(e) => setExamDate(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-800 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-            />
-            <div className="mt-1.5 flex items-center justify-between">
-              <p className="text-xs text-gray-500">
-                まだ決まっていなければ空のままでOK。決めると残り日数から逆算します。
-              </p>
-              {examDate && (
-                <button
-                  type="button"
-                  onClick={() => setExamDate("")}
-                  className="shrink-0 text-xs font-semibold text-gray-500 underline underline-offset-2"
-                >
-                  クリア
-                </button>
-              )}
-            </div>
+            <ExamDateField choice={examChoice} onChange={setExamChoice} current={profile} />
           </fieldset>
 
           {/* 学習可能時間 */}

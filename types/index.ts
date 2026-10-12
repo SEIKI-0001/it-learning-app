@@ -29,7 +29,8 @@ export type UserProfile = {
   // --- 旧版からの互換フィールド ---
   itExperience: string;
   dailyMinutes: string; // 旧: 1日の目安(分)を表す文字列。互換のため保持。
-  examPlan: string; // 旧: 受験予定の有無。互換のため保持。
+  /** "decided" | "undecided" | "provisional"（未定を選んだ人の仮の試験日。lib/examDateChoice.ts）。 */
+  examPlan: string;
   confidence: number; // 現在の理解度(0〜5)
 
   // --- ITパスポート学習コーチの新フィールド ---
