@@ -510,6 +510,34 @@
   margin: 8px 0 0;
   white-space: pre-wrap;
 }
+.guide .k-deeper {
+  display: block;
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #cdd5f3;
+  border-radius: 10px;
+  background: var(--white);
+  text-decoration: none;
+  line-height: 1.6;
+}
+.guide .k-deeper:hover {
+  border-color: var(--ai);
+}
+.guide .k-deeper-lead,
+.guide .k-deeper-note {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--sub);
+}
+.guide .k-deeper-title {
+  display: block;
+  margin: 2px 0;
+  font-weight: 700;
+  color: var(--ai);
+}
+.guide .k-deeper-title::after {
+  content: " →";
+}
 .guide .k-source {
   margin: 14px 0 0;
   font-size: 0.8rem;

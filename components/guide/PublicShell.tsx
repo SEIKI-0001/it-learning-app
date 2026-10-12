@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
+import FunnelTracker from "@/components/growth/FunnelTracker";
 import { LP_LINK_LABEL, LP_PATH } from "@/lib/guide/seo";
 
 // 公開ページ（/guide・/kaisetsu・/kakomon・/words）の共通の外枠。未ログインで閲覧可
-// （lib/auth/publicRoutes の PUBLIC_PREFIXES に登録）。読み物として軽く保つため JS を使わない。
+// （lib/auth/publicRoutes の PUBLIC_PREFIXES に登録）。読み物として軽く保つため JS を使わない
+// （回遊計測の FunnelTracker だけは例外。描画はせず、イベントを送るだけ）。
 // スタイルは app/guide/guide.css（.guide スコープ）。各 layout がその CSS を読み込む。
 
 const NAV = [
@@ -16,6 +18,7 @@ const NAV = [
 export default function PublicShell({ children }: { children: ReactNode }) {
   return (
     <div className="guide">
+      <FunnelTracker />
       <header className="g-top">
         <div className="g-col g-top-in">
           <a className="g-logo" href="/lp">
