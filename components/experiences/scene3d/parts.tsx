@@ -257,7 +257,8 @@ export function CaptionBubble({
   root,
   testId,
 }: {
-  caption: { text: string; tone?: CaptionTone; target: string } | null;
+  /** text が文字列でないとき（太字入りなど）は id で出し直しを決める */
+  caption: { text: ReactNode; id?: string | number; tone?: CaptionTone; target: string } | null;
   root: RefObject<HTMLDivElement | null>;
   testId: string;
 }) {
@@ -269,7 +270,7 @@ export function CaptionBubble({
       </svg>
       <div data-cap="bubble" className="absolute left-0 top-0 max-w-[78%]" style={{ visibility: "hidden" }}>
         {caption && (
-          <p key={caption.text} className={styles.caption} data-tone={caption.tone} data-target={caption.target} data-testid={testId} role="status">
+          <p key={caption.id ?? String(caption.text)} className={styles.caption} data-tone={caption.tone} data-target={caption.target} data-testid={testId} role="status">
             {caption.text}
           </p>
         )}

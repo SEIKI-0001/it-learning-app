@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import type { CapsuleKind } from "./network/dnsTypes";
-import { DnsDioramaScene } from "./network/DnsDioramaScene";
+import { DnsScene } from "./network/DnsScene";
 import type {
   CapsuleStop,
   LaneId,
@@ -383,7 +383,7 @@ function DnsJourney() {
       </div>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <DnsDioramaScene
+        <DnsScene
           nodes={phase.nodes}
           lanes={phase.lanes}
           capsule={phase.capsule}
