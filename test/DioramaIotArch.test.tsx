@@ -31,7 +31,7 @@ describe("IoT の一周（家とクラウドの模型）", () => {
     expect(scene).toHaveTextContent("室温 32℃");
     next();
     next();
-    expect(screen.getByTestId("iot-decision")).toHaveTextContent("28℃まで冷やす");
+    expect(screen.getByTestId("iot-scene-caption")).toHaveTextContent("28℃まで冷やす");
     next();
     // 指示を運んでいる間はまだ冷えない。エアコンに着いてから冷房が動く
     expect(scene).toHaveAttribute("data-cooled", "false");
@@ -39,7 +39,7 @@ describe("IoT の一周（家とクラウドの模型）", () => {
       vi.advanceTimersByTime(4000);
     });
     expect(scene).toHaveAttribute("data-cooled", "true");
-    expect(scene).toHaveTextContent("自動で冷房");
+    expect(screen.getByTestId("iot-scene-caption")).toHaveTextContent("自動で");
   });
 });
 
@@ -55,7 +55,7 @@ describe("処理形態（コンビニチェーンの模型）", () => {
     expect(screen.getByTestId("arch-hq-servers")).toHaveAttribute("data-on", "false");
     expect(screen.getByTestId("arch-peer")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "三層" }));
-    expect(screen.getByTestId("arch-result")).toHaveTextContent("3つの層");
+    expect(screen.getByTestId("arch-scene-caption")).toHaveTextContent("3つの層");
     expect(scene).toHaveTextContent("③データ（DB）");
   });
 });

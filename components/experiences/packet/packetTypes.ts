@@ -4,6 +4,9 @@ import type { NodeState } from "../network/NetworkSceneBase";
 
 export type PacketNodeId = "sender" | "rTop" | "rMid" | "rBot" | "receiver";
 
+/** 一言の吹き出しが指す物 */
+export type PacketFocus = "sender" | "router" | "tray" | "receiver";
+
 export type RouteId = "top" | "mid" | "bot";
 
 /** パケットの居場所：送信側の積み場 / 経路の途中（道・区間・進み具合）/ 受信側のトレイ（何段目か） */

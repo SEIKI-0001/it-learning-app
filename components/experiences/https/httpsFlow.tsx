@@ -21,6 +21,9 @@ export type FlowStep = {
   intercepted: boolean;
   moves: boolean;
   detail: Record<HttpsMode, ReactNode>;
+  /** 模型の中に出す一言（40字以内）と、それが指す物 */
+  caption: Record<HttpsMode, ReactNode>;
+  focus: "user" | "eve" | "web";
 };
 
 export const FLOW_STEPS: FlowStep[] = [
@@ -35,6 +38,11 @@ export const FLOW_STEPS: FlowStep[] = [
       http: <>ログイン画面にパスワードを入力。まだ<b>あなたのPCの中</b>にあるので、誰にも見えていません。</>,
       https: <>ログイン画面にパスワードを入力。まだ<b>あなたのPCの中</b>。ここまでは HTTP と同じです。</>,
     },
+    caption: {
+      http: <>パスワードを入力。まだ<b>PCの中</b>で誰にも見えない</>,
+      https: <>パスワードを入力。まだ<b>PCの中</b>で誰にも見えない</>,
+    },
+    focus: "user",
   },
   {
     title: "通信路へ送り出す",
@@ -47,6 +55,11 @@ export const FLOW_STEPS: FlowStep[] = [
       http: <>HTTP は<b>そのまま</b>送り出します。カプセルの中身は入力した文字のまま＝<b>平文</b>。</>,
       https: <>HTTPS は送り出す直前に<b>SSL/TLSで暗号化</b>。同じカプセルが <b>ENCRYPTED DATA</b> に変わり、通信路は暗号のトンネルに包まれます。</>,
     },
+    caption: {
+      http: <>HTTPは<b>そのまま</b>送り出す。中身は<b>平文</b></>,
+      https: <>送る直前に<b>SSL/TLS</b>で暗号化。通信路がトンネルに</>,
+    },
+    focus: "user",
   },
   {
     title: "途中で盗み見される",
@@ -59,6 +72,11 @@ export const FLOW_STEPS: FlowStep[] = [
       http: <>通信路の途中で盗聴者がデータをコピー。<b>パスワードがそのまま読めてしまいます</b>。</>,
       https: <>盗聴者はコピーを取れても、中身は<b>ぐちゃぐちゃの暗号文</b>。鍵がないので読めません。</>,
     },
+    caption: {
+      http: <>盗聴者がコピー。パスワードが<b>そのまま読める</b></>,
+      https: <>盗聴者のコピーは<b>暗号文</b>。鍵がなく読めない</>,
+    },
+    focus: "eve",
   },
   {
     title: "サーバに届く",
@@ -76,6 +94,11 @@ export const FLOW_STEPS: FlowStep[] = [
         </>
       ),
     },
+    caption: {
+      http: <>サーバに届いたが、盗聴者にも<b>同じ内容</b>が渡った</>,
+      https: <>サーバだけが<b>復号</b>できる。守るのは通信路の途中だけ</>,
+    },
+    focus: "web",
   },
 ];
 

@@ -73,7 +73,9 @@ type GateStep = {
   stop: PacketStop;
   inspect: Inspect;
   blocked: boolean;
-  detail: ReactNode;
+  /** 模型の中に出す一言（40字以内） */
+  caption: ReactNode;
+  tone: "info" | "ok" | "danger";
 };
 
 function stepsFor(t: Traffic): GateStep[] {
@@ -83,11 +85,12 @@ function stepsFor(t: Traffic): GateStep[] {
       stop: "src",
       inspect: null,
       blocked: false,
-      detail: (
+      caption: (
         <>
-          {t.sender}からの通信。<b>宛先ポート {t.port}</b> と <b>中身「{t.body}」</b> を持っています。
+          {t.sender}から。<b>ポート{t.port}</b>・中身「{t.body}」
         </>
       ),
+      tone: "info",
     },
   ];
   const fwBlocks = t.stoppedAt === "fw";
@@ -96,11 +99,12 @@ function stepsFor(t: Traffic): GateStep[] {
     stop: "fw",
     inspect: "port",
     blocked: fwBlocks,
-    detail: fwBlocks ? (
-      <>FWは<b>送信元・宛先・ポート番号</b>を見る門番。ポート{t.port}は許可リストにないので<b>入口で遮断</b>。</>
+    caption: fwBlocks ? (
+      <><b>FW</b>はポート番号を見る門番。{t.port}は許可外なので入口で<b>遮断</b></>
     ) : (
-      <>FWが見るのは<b>ポート番号</b>だけ。ポート{t.port}は許可されているので<b>通過</b>。中身はまだ見ていません。</>
+      <><b>FW</b>はポート番号だけ見る。{t.port}は許可なので<b>通過</b></>
     ),
+    tone: fwBlocks ? "danger" : "info",
   });
   if (fwBlocks) return steps;
   const wafBlocks = t.stoppedAt === "waf";
@@ -109,11 +113,12 @@ function stepsFor(t: Traffic): GateStep[] {
     stop: "waf",
     inspect: "body",
     blocked: wafBlocks,
-    detail: wafBlocks ? (
-      <>WAFは<b>リクエストの中身</b>を検査。「{t.body}」はSQLインジェクションの形なので<b>アプリ直前で遮断</b>。FWを通った正規ポートの通信に紛れた攻撃です。</>
+    caption: wafBlocks ? (
+      <><b>WAF</b>が中身を検査。SQLインジェクションなので<b>遮断</b></>
     ) : (
-      <>WAFが<b>中身</b>を検査。普通の商品一覧の取得なので<b>通過</b>。</>
+      <><b>WAF</b>が中身を検査。普通の取得なので<b>通過</b></>
     ),
+    tone: wafBlocks ? "danger" : "info",
   });
   if (wafBlocks) return steps;
   steps.push({
@@ -121,7 +126,8 @@ function stepsFor(t: Traffic): GateStep[] {
     stop: "app",
     inspect: null,
     blocked: false,
-    detail: <>FWもWAFも通過して、Webアプリに正常に届きました。</>,
+    caption: <>FWもWAFも通過して、Webアプリに正常に届いた</>,
+    tone: "ok",
   });
   return steps;
 }
@@ -130,9 +136,10 @@ function gateView(t: Traffic, steps: GateStep[], index: number, gate: GateId) {
   const at = steps.findIndex((s) => s.stop === gate);
   if (at < 0 || index < at) return { state: "idle" as NodeState, verdict: null };
   const step = steps[at];
+  // 理由は吹き出しが言うので、門の札は結果だけ
   const verdict = step.blocked
-    ? { state: "block" as const, text: gate === "fw" ? `遮断（ポート${t.port}は許可外）` : "遮断（中身が攻撃）" }
-    : { state: "pass" as const, text: gate === "fw" ? `通過（ポート${t.port}は許可）` : "通過（中身は正常）" };
+    ? { state: "block" as const, text: "遮断" }
+    : { state: "pass" as const, text: "通過" };
   const state: NodeState = step.blocked ? "error" : index === at ? "active" : "idle";
   return { state, verdict };
 }
@@ -176,13 +183,8 @@ function GateFlow({ traffic, onFinish }: { traffic: Traffic; onFinish: (id: Traf
           appState={step.stop === "app" ? "active" : "idle"}
           roadState={step.blocked ? "blocked" : player.index > 0 ? "active" : "idle"}
           reducedMotion={reducedMotion}
+          caption={{ id: `${traffic.id}-${player.index}`, text: step.caption, tone: step.tone, focus: step.stop }}
         />
-      </div>
-      <div
-        className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900"
-        aria-live="polite"
-      >
-        {step.detail}
       </div>
       <div className="mt-3">
         <SceneTimeline
@@ -445,20 +447,6 @@ function Vpn() {
       >
         {stop === "office" ? "もう一度送る" : "会議資料を会社へ送る"}
       </button>
-
-      <div className={`mt-3 rounded-xl px-4 py-3 ring-1 ${on ? "bg-emerald-50 ring-emerald-200" : "bg-rose-50 ring-rose-200"}`}>
-        <div className="text-xs font-bold text-gray-500">盗聴者に見える内容（途中の公衆回線）：</div>
-        <div className="mt-1 font-mono text-sm font-bold text-gray-800">
-          {on ? "暗号化トンネルの中（読めない）" : "会議資料.pdf／パスワード（丸見え）"}
-        </div>
-        <div className={`mt-2 text-sm font-bold ${on ? "text-emerald-700" : "text-rose-700"}`}>
-          {on ? "トンネルで暗号化 → 盗まれても読めない" : "そのまま流れる → 公衆Wi-Fiなどで盗まれる危険"}
-        </div>
-      </div>
-      <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        ※ よくある勘違い：「VPNならすべて安全」ではありません。VPNが守るのは<b>通り道</b>。
-        つなぐ先が危険なサイトなら別問題です。
-      </p>
     </Panel>
   );
 }
@@ -488,7 +476,15 @@ function ZeroTrustModel() {
         ))}
       </div>
       <div className="-mx-2 mt-2 sm:mx-auto sm:max-w-xl">
-        <ZeroTrustDioramaScene mode={mode} reducedMotion={reducedMotion} />
+        <ZeroTrustDioramaScene
+          mode={mode}
+          reducedMotion={reducedMotion}
+          caption={
+            mode === "perimeter"
+              ? { id: mode, text: <><b>壁の内側</b>なら信用。侵入者は通れ、社員Bは止まる</>, tone: "danger", focus: "intruder" }
+              : { id: mode, text: <>アクセスのたび<b>本人と端末</b>を確認。侵入者は拒否</>, tone: "ok", focus: "gate" }
+          }
+        />
       </div>
     </div>
   );

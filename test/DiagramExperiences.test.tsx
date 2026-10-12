@@ -150,7 +150,7 @@ describe("embedded control", () => {
     expect(screen.getByTestId("loop-decide")).toHaveTextContent("+5.0℃");
     for (let i = 0; i < 12; i++) act(() => vi.advanceTimersByTime(1500));
     expect(screen.getByTestId("loop-result")).toHaveTextContent("25.2℃");
-    expect(screen.getByText(/結果を戻して調整する/)).toBeInTheDocument();
+    expect(screen.getByTestId("aircon-scene-caption")).toHaveTextContent("フィードバック制御");
   });
 });
 

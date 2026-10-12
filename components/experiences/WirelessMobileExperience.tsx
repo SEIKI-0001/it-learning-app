@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 import { MobileDioramaScene, type MobileMode } from "./wireless/MobileDioramaScene";
 import { WifiDioramaScene, type WifiMode, type WifiPhase } from "./wireless/WifiDioramaScene";
-import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「無線LAN・モバイル通信」専用の体験。
@@ -28,40 +27,6 @@ const MODES: { v: WifiMode; label: string; on: string }[] = [
   { v: "wpa", label: "WPA2/WPA3", on: "bg-emerald-500 text-white" },
   { v: "wired", label: "比較：有線", on: "bg-gray-700 text-white" },
 ];
-
-function wifiDetail(mode: WifiMode, phase: WifiPhase): ReactNode {
-  if (phase === "connect") {
-    return mode === "wired" ? (
-      <>比較のため、ノートPCとアクセスポイントを<b>ケーブル</b>でつないだ場合も見てみます。</>
-    ) : (
-      <>
-        一覧から <b>SSID「cafe-wifi-2F」</b>を選んでつなぎます。SSIDは<b>電波の名前</b>にすぎません。
-        暗号化されているかどうかは、名前の横の<b>鍵マーク（{mode === "wpa" ? "WPA2/WPA3" : "なし"}）</b>で分かります（決めているのはアクセスポイントの設定）。
-      </>
-    );
-  }
-  if (phase === "send") {
-    return mode === "wired" ? (
-      <>データは<b>ケーブルの中だけ</b>を通ってアクセスポイントへ向かいます。</>
-    ) : (
-      <>
-        データは<b>電波</b>になってノートPCから<b>周り全部へ広がります</b>。ガラスや壁も越えて、店の外まで届きます。アクセスポイントだけを狙って届くわけではありません。
-        {mode === "wpa" ? "ただし送る前に暗号化してあります。" : "しかも暗号化されていません。"}
-      </>
-    );
-  }
-  if (mode === "wired") return <>アクセスポイントには届き、盗聴者には<b>何も届きません</b>。電波が出ていないからです。</>;
-  return mode === "wpa" ? (
-    <>
-      盗聴者も<b>電波の受信自体はできました</b>。でも中身は<b>暗号文で読めません</b>。正しい鍵を持つアクセスポイントだけが復号できます。
-    </>
-  ) : (
-    <>
-      アクセスポイントにも盗聴者にも<b>同じ電波</b>が届き、盗聴者の画面には <b>ID / PASSWORD がそのまま</b>。暗号化なしのWi-Fiは入力内容を盗み見られます。
-      （サイト自体が https なら中身はさらにTLSで守られますが、Wi-Fiの暗号化とは別のしくみです）
-    </>
-  );
-}
 
 function WifiFlow() {
   const reducedMotion = useReducedMotion();
@@ -109,15 +74,6 @@ function WifiFlow() {
         <WifiDioramaScene mode={mode} phase={step.phase} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
-      <div
-        className={`mt-3 min-h-[3.5em] rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${
-          last && mode === "open" ? "bg-rose-50 ring-rose-200" : last && mode === "wpa" ? "bg-emerald-50 ring-emerald-200" : "bg-sky-50 ring-sky-200"
-        }`}
-        aria-live="polite"
-      >
-        {wifiDetail(mode, step.phase)}
-      </div>
-
       <div className="mt-3">
         <SceneTimeline
           index={player.index}
@@ -133,59 +89,19 @@ function WifiFlow() {
         />
       </div>
 
-      {tried.has("open") && tried.has("wpa") && (
-        <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200" data-testid="wifi-insight">
-          <InlineIcon name="lightbulb" />電波は<b>誰でも受信できる</b>のが前提。だから守るのは「受信させないこと」ではなく<b>中身を暗号化（WPA2/WPA3）すること</b>。
-          SSIDはただの名前なので、<b>同じ名前でも暗号化なしのことがある</b>点に注意。
-        </div>
-      )}
     </Panel>
   );
 }
 
-const MOBILE_MODES: { v: MobileMode; label: string; on: string; name: string; d: ReactNode }[] = [
-  {
-    v: "5g",
-    label: "5G",
-    on: "bg-sky-600 text-white",
-    name: "5G",
-    d: (
-      <>
-        1つの基地局が、スマホだけでなく<b>車・監視カメラ・歩く人のスマホ</b>へ同時に電波を届けます。
-        5Gの特徴は<b>高速・大容量</b>／<b>低遅延</b>（遅れが少ない＝車や遠隔操作にも使える）／<b>多数同時接続</b>（街じゅうのIoT機器もつなげる）。4G（LTE）の次の世代です。
-      </>
-    ),
-  },
-  {
-    v: "tether",
-    label: "テザリング",
-    on: "bg-amber-500 text-white",
-    name: "テザリング",
-    d: (
-      <>
-        ベンチのノートPCには<b>SIMが入っていない</b>ので、自分では基地局とつながれません。そこで
-        <b>スマホを親機（アクセスポイント）</b>にして、ノートPC →（Wi-Fi）→ スマホ →（モバイル回線）→ 基地局 とつなぎます。これがテザリングです。
-      </>
-    ),
-  },
-  {
-    v: "mvno",
-    label: "MVNO",
-    on: "bg-violet-600 text-white",
-    name: "MVNO（格安SIM）",
-    d: (
-      <>
-        格安SIMのスマホも、電波は<b>大手キャリア（MNO）の基地局・交換局</b>を通ります。右手前の格安SIMの会社は
-        <b>基地局を持たず、大手の回線を借りて</b>自社ブランドで安く売っています。これがMVNO（仮想移動体通信事業者）です。
-      </>
-    ),
-  },
+const MOBILE_MODES: { v: MobileMode; label: string; on: string }[] = [
+  { v: "5g", label: "5G", on: "bg-sky-600 text-white" },
+  { v: "tether", label: "テザリング", on: "bg-amber-500 text-white" },
+  { v: "mvno", label: "MVNO", on: "bg-violet-600 text-white" },
 ];
 
 function MobileTerms() {
   const reducedMotion = useReducedMotion();
   const [mode, setMode] = useState<MobileMode>("5g");
-  const current = MOBILE_MODES.find((m) => m.v === mode)!;
   return (
     <Panel>
       <SectionTitle step={2}>モバイル通信を街の模型で見る</SectionTitle>
@@ -210,14 +126,6 @@ function MobileTerms() {
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
         <MobileDioramaScene mode={mode} reducedMotion={reducedMotion} />
       </div>
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
-        <p className="text-sm font-bold text-gray-900">{current.name}</p>
-        <p className="mt-1">{current.d}</p>
-      </div>
-      <p className="mt-3 text-xs leading-relaxed text-gray-500">
-        ※ 覚え方：<b>5G＝速い・遅延少・多数接続</b>／<b>テザリング＝スマホ経由でネット共有</b>／
-        <b>MVNO＝回線を借りる格安SIM</b>。
-      </p>
     </Panel>
   );
 }

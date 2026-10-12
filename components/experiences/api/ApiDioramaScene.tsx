@@ -19,7 +19,7 @@ import {
   slicePath,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { Callout, DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { Callout, DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import type { NodeState } from "../network/NetworkSceneBase";
 import type { ApiLaneId, ApiSceneProps, ApiStop } from "./apiTypes";
 import styles from "./apidiorama.module.css";
@@ -33,6 +33,14 @@ const PHONE: Vec3 = { x: 170, y: 318, z: 50 };
 const GATE: Vec3 = { x: 318, y: 250, z: 0 };
 const SVC: Vec3 = { x: 540, y: 196, z: 0 };
 const DB: Vec3 = { x: 660, y: 318, z: 0 };
+
+export type ApiFocus = "app" | "api" | "svc" | "wall";
+const FOCUS_AT: Record<ApiFocus, Vec3> = {
+  app: { x: PHONE.x, y: PHONE.y, z: 104 },
+  api: { ...GATE, z: 100 },
+  svc: { x: SVC.x + 36, y: SVC.y, z: 118 },
+  wall: { x: 300, y: 318, z: 90 },
+};
 
 const G = 3; // 車線の高さ
 const TO_GATE: Vec3[] = [
@@ -85,9 +93,8 @@ const LANE_TONE: Record<ApiLaneId, RouteTone> = {
   direct: "danger",
 };
 
+// 状態の小札は止められたときだけ
 const STATUS: Partial<Record<NodeState, { word: string; tone: "info" | "ok" | "danger" }>> = {
-  active: { word: "処理中", tone: "ok" },
-  sending: { word: "送信", tone: "info" },
   error: { word: "侵入を拒否", tone: "danger" },
 };
 
@@ -126,10 +133,14 @@ export function ApiDioramaScene({
   bypass,
   reducedMotion,
   forward = true,
-}: ApiSceneProps & { forward?: boolean }) {
+  caption = null,
+}: ApiSceneProps & { forward?: boolean; caption?: (Omit<StageCaption, "at"> & { focus: ApiFocus }) | null }) {
   const stop = capsule?.stop ?? null;
   const path = stop ? stopPath(stop) : null;
   const shot = bypass ? SHOTS.bypass : stop ? SHOTS[stop] : SHOTS.app;
+  // 名札はその場面で関わる物だけ（最初の待機画面は主要な物を出す）
+  const initial = stop === "app" && !bypass;
+  const involved = (id: "app" | "api" | "svc") => initial || nodes[id] !== "idle" || (bypass && id === "api");
   const lastScreen = screen ?? (stop === "appBack" ? "東京 晴れ 25℃" : null);
 
   return (
@@ -140,6 +151,7 @@ export function ApiDioramaScene({
       shotKey={`${stop ?? "none"}-${bypass ? "b" : ""}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       dataAttrs={{ "data-bypass": bypass ? "true" : "false" }}
       tokens={{ req: { at: path ? path[path.length - 1] : null, path: path ?? undefined } }}
       world={
@@ -224,14 +236,6 @@ export function ApiDioramaScene({
             </DioramaLabel>
           )}
 
-          {bypass && (
-            <DioramaLabel at={{ x: 420, y: 380, z: 0 }} place="below">
-              <div role="status" data-testid="bypass-denied">
-                <Callout tone="danger" title="入口は API だけ" />
-              </div>
-            </DioramaLabel>
-          )}
-
           {screen && (
             <DioramaLabel at={{ x: PHONE.x - 30, y: PHONE.y, z: 90 }} place="left">
               <div role="status" data-testid="app-screen">
@@ -240,15 +244,21 @@ export function ApiDioramaScene({
             </DioramaLabel>
           )}
 
-          <DioramaLabel at={{ x: PHONE.x, y: PHONE.y + 60, z: 0 }} place="below" optional>
-            <NameChip name="天気アプリ" status={STATUS[nodes.app]?.word} tone={STATUS[nodes.app]?.tone} />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...GATE, z: 96 }} place="above" optional>
-            <NameChip name="API Gateway" status={STATUS[nodes.api]?.word} tone={STATUS[nodes.api]?.tone} />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...SVC, x: SVC.x + 36, z: 126 }} place="above" optional>
-            <NameChip name="天気サービス" status={STATUS[nodes.svc]?.word} tone={STATUS[nodes.svc]?.tone} />
-          </DioramaLabel>
+          {involved("app") && (
+            <DioramaLabel at={{ x: PHONE.x, y: PHONE.y + 60, z: 0 }} place="below" optional>
+              <NameChip name="天気アプリ" status={STATUS[nodes.app]?.word} tone={STATUS[nodes.app]?.tone} />
+            </DioramaLabel>
+          )}
+          {involved("api") && (
+            <DioramaLabel at={{ ...GATE, z: 96 }} place="above" optional>
+              <NameChip name="API Gateway" status={STATUS[nodes.api]?.word} tone={STATUS[nodes.api]?.tone} />
+            </DioramaLabel>
+          )}
+          {involved("svc") && (
+            <DioramaLabel at={{ ...SVC, x: SVC.x + 36, z: 126 }} place="above" optional>
+              <NameChip name="天気サービス" status={STATUS[nodes.svc]?.word} tone={STATUS[nodes.svc]?.tone} />
+            </DioramaLabel>
+          )}
           {bypass && (
             <DioramaLabel at={{ ...DB, y: DB.y + 24, z: 0 }} place="below" optional>
               <NameChip name="天気DB" tone="muted" />

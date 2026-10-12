@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -8,7 +8,6 @@ import { Panel, SectionTitle } from "./ui";
 import { ValueChainDiorama } from "./valuechain/ValueChainDiorama";
 import { STATIONS, type StationId, type StationState, type SupportId } from "./valuechain/valueChainTypes";
 import Icon, { type IconName } from "@/components/ui/Icon";
-import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「バリューチェーン（価値連鎖）」専用の体験。
@@ -67,26 +66,12 @@ function MainFlow() {
           supports={ALL_ON}
           value={{ blocks: DELTAS.slice(0, idx + 1), final: atEnd ? { cost: COST, margin: 90 - COST } : null }}
           stationNotes={{}}
+          caption={
+            atEnd
+              ? { id: "end", tone: "ok", focus: "service", text: <>合計が売値。コストを引いた残りが<b>マージン（利益）</b></> }
+              : { id: `m${idx}`, tone: "info", focus: STATIONS[idx], text: <><b>{cur.name}</b>：{cur.d}。価値 +{DELTAS[idx]}</> }
+          }
         />
-      </div>
-
-      {/* 製品の今 */}
-      <div className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-center ring-1 ring-gray-200" aria-live="polite" data-testid="vc-state">
-        {atEnd ? (
-          <p className="text-sm leading-relaxed text-emerald-700">
-            各工程で加わった価値の合計が売値に。<b>コスト（紫）を引いて残った緑がマージン（利益）</b>です。
-          </p>
-        ) : (
-          <>
-            <div className="text-sm font-bold text-gray-800">
-              {cur.state}
-              <span className="ml-1.5 rounded-full bg-brand-50 px-1.5 py-0.5 text-[11px] text-brand-700">価値 +{DELTAS[idx]}</span>
-            </div>
-            <div className="mt-0.5 text-xs text-gray-500">
-              <Icon name={cur.icon} className="mr-1 inline-block h-3.5 w-3.5 align-[-2px]" />{cur.name}：{cur.d}
-            </div>
-          </>
-        )}
       </div>
 
       <div className="mt-3">
@@ -161,19 +146,25 @@ const BREAKDOWN: Record<SupportId, Breakdown> = {
   },
 };
 
+// 止めたときの一言（支援活動であること＋何が起きるか）
+const SUPPORT_CAPTION: ReactNode[] = [
+  <><b>全般管理</b>（支援活動）が無いと、管理が混乱し全工程が止まる</>,
+  <><b>人事・労務管理</b>（支援活動）が無いと、働く人が足りず回らない</>,
+  <><b>技術開発</b>（支援活動）が無いと、製品が古く利益が減る</>,
+  <><b>調達</b>（支援活動）が無いと、資材が届かず製造できない</>,
+];
+
 const SUPPORT_ID: SupportId[] = ["infra", "hr", "tech", "procurement"];
 
 function Support() {
   const reducedMotion = useReducedMotion();
   const [sel, setSel] = useState<number | null>(null);
-  const [tried, setTried] = useState<number[]>([]);
   const off = sel === null ? null : BREAKDOWN[SUPPORT_ID[sel]];
   const stations = { ...idleStations(), ...(off?.stations ?? {}) };
   const supports = { ...ALL_ON, ...(off ? { [off.support]: "off" as const } : {}) };
 
   function pick(i: number) {
     setSel((cur) => (cur === i ? null : i));
-    setTried((cur) => (cur.includes(i) ? cur : [...cur, i]));
   }
 
   return (
@@ -192,6 +183,7 @@ function Support() {
           supports={supports}
           value={off ? { blocks: off.blocks, final: off.final } : { blocks: DELTAS, final: { cost: COST, margin: 90 - COST } }}
           stationNotes={off?.notes ?? {}}
+          caption={sel === null ? null : { id: `s${sel}`, tone: "danger", focus: SUPPORT_ID[sel], text: SUPPORT_CAPTION[sel] }}
         />
       </div>
 
@@ -217,25 +209,6 @@ function Support() {
           );
         })}
       </div>
-      <div className="mt-3 min-h-[3.5em] rounded-xl bg-gray-50 px-4 py-3 ring-1 ring-gray-200" aria-live="polite" data-testid="support-result">
-        {sel === null ? (
-          <p className="text-sm leading-relaxed text-gray-400">どれかを止めると、無くなったときの影響が図に出ます。</p>
-        ) : (
-          <p className="text-sm leading-relaxed text-rose-700">
-            <InlineIcon name="ban" /><b>{SUPPORT[sel].name}</b>が無いと… {SUPPORT[sel].without}。
-            <span className="text-gray-600">直接は作らないけれど、<b className="text-gray-800">全工程に効いている</b>のが支援活動。</span>
-          </p>
-        )}
-      </div>
-      {tried.length === SUPPORT.length && (
-        <p className="mt-2 rounded-xl bg-amber-50 px-4 py-2.5 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200" role="status">
-          <InlineIcon name="lightbulb" />4つとも、止めると<b>マージン（利益）が減るか消える</b>。支援活動は価値を直接は作らないが、主活動ラインの土台です。
-        </p>
-      )}
-      <p className="mt-3 text-xs leading-relaxed text-gray-500">
-        ※ 人事・技術開発・調達は「価値を直接生む流れ」ではなく、それを<b>支える</b>側＝支援活動。
-        ここが主活動とよく取り違えられます。
-      </p>
     </Panel>
   );
 }

@@ -14,7 +14,7 @@ import {
   Tree,
   type RouteTone,
 } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import { CA_STATIONS, type CaFlowView, type CaStation } from "./signatureTypes";
 import styles from "./cadiorama.module.css";
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
@@ -35,6 +35,13 @@ const TOKEN_AT: Record<CaStation, Vec3> = {
   ca: { x: AT.ca.x, y: AT.ca.y + 28, z: 62 },
   cert: { x: AT.cert.x, y: AT.cert.y + 6, z: 64 },
   user: { x: AT.user.x - 36, y: AT.user.y + 12, z: 60 },
+};
+export type CaFocus = CaStation;
+const FOCUS_AT: Record<CaFocus, Vec3> = {
+  owner: { x: AT.owner.x, y: AT.owner.y, z: 90 },
+  ca: { x: AT.ca.x, y: AT.ca.y, z: 100 },
+  cert: { x: AT.cert.x, y: AT.cert.y, z: 70 },
+  user: { x: AT.user.x, y: AT.user.y, z: 80 },
 };
 const G = 3;
 const ROAD: Vec3[] = [
@@ -60,10 +67,24 @@ const SHOTS: Record<CaStation, Camera> = {
   user: { yaw: -18, pitch: 50, zoom: 1.12, fx: 620, fy: 230, fz: 50 },
 };
 
-export function CaDioramaScene({ view, reducedMotion, forward = true }: { view: CaFlowView; reducedMotion: boolean; forward?: boolean }) {
+export function CaDioramaScene({
+  view,
+  reducedMotion,
+  forward = true,
+  caption = null,
+}: {
+  view: CaFlowView;
+  reducedMotion: boolean;
+  forward?: boolean;
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption?: (Omit<StageCaption, "at"> & { focus: CaFocus }) | null;
+}) {
   const fake = view.applicant === "fake";
   const rejectedAtCa = view.check === "reject";
   const reached = CA_STATIONS.indexOf(view.at);
+  // 名札はその場面で関わる物だけ（最初の場面だけは登場人物を紹介する）
+  const intro = view.at === "owner" && view.check === null;
+  const involved = (st: CaStation) => intro || view.active.includes(st) || view.at === st || (st === "owner" && view.at === "ca");
   const roadTone: RouteTone = rejectedAtCa ? "blocked" : view.certified ? "response" : "request";
 
   return (
@@ -74,6 +95,7 @@ export function CaDioramaScene({ view, reducedMotion, forward = true }: { view: 
       shotKey={`${view.at}-${view.applicant}-${view.check ?? ""}-${view.userVerdict ?? ""}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       dataAttrs={{ "data-applicant": view.applicant }}
       tokens={{ key: { at: TOKEN_AT[view.at], path: pathTo(view.at).slice(ROAD_AT[CA_STATIONS[Math.max(0, reached - 1)]]) } }}
       world={
@@ -157,18 +179,26 @@ export function CaDioramaScene({ view, reducedMotion, forward = true }: { view: 
             </DioramaLabel>
           )}
 
-          <DioramaLabel at={{ ...AT.owner, y: AT.owner.y + 80 }} place="below" optional>
-            <NameChip name={fake ? "偽者" : "本人（山田さん）"} tone={fake ? "danger" : "info"} />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.ca, y: AT.ca.y - 76, z: 124 }} place="above" optional>
-            <NameChip name="認証局(CA)" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.cert, y: AT.cert.y + 20, z: 0 }} place="below" optional>
-            <NameChip name="電子証明書" tone="muted" />
-          </DioramaLabel>
-          <DioramaLabel at={{ ...AT.user, y: AT.user.y + 80 }} place="below" optional>
-            <NameChip name="利用者（あなた）" tone="info" />
-          </DioramaLabel>
+          {involved("owner") && (
+            <DioramaLabel at={{ ...AT.owner, y: AT.owner.y + 80 }} place="below" optional>
+              <NameChip name={fake ? "偽者" : "本人（山田さん）"} tone={fake ? "danger" : "info"} />
+            </DioramaLabel>
+          )}
+          {involved("ca") && (
+            <DioramaLabel at={{ ...AT.ca, y: AT.ca.y - 76, z: 124 }} place="above" optional>
+              <NameChip name="認証局(CA)" tone="info" />
+            </DioramaLabel>
+          )}
+          {involved("cert") && (
+            <DioramaLabel at={{ ...AT.cert, y: AT.cert.y + 20, z: 0 }} place="below" optional>
+              <NameChip name="電子証明書" tone="muted" />
+            </DioramaLabel>
+          )}
+          {involved("user") && (
+            <DioramaLabel at={{ ...AT.user, y: AT.user.y + 80 }} place="below" optional>
+              <NameChip name="利用者（あなた）" tone="info" />
+            </DioramaLabel>
+          )}
         </>
       }
     />

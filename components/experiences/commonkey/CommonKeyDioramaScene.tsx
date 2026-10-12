@@ -2,7 +2,7 @@
 
 import type { Camera, Vec3 } from "../scene/Diorama3D";
 import { KeyGlyph, Parcel } from "../scene/DioramaParts";
-import { Badge, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import { CipherCapsule } from "../crypto/CipherCapsule";
 import { A_DESK, B_DESK, EVE_AT, JUNCTION, SPOT, TwoOfficesWorld, laneTo } from "../crypto/TwoOfficesWorld";
 import cryptoStyles from "../crypto/cryptodiorama.module.css";
@@ -22,6 +22,13 @@ const KEY_AT: Record<KeySpot, Vec3> = {
   aUse: { ...SPOT.aScreen, x: SPOT.aScreen.x + 26, z: SPOT.aScreen.z + 22 },
   bUse: { ...SPOT.bScreen, x: SPOT.bScreen.x - 26, z: SPOT.bScreen.z + 22 },
   eveUse: { ...SPOT.eveHand, z: SPOT.eveHand.z + 26 },
+};
+export type CkFocus = "a" | "b" | "eve" | "transit";
+const FOCUS_AT: Record<CkFocus, Vec3> = {
+  a: { x: A_DESK.x, y: A_DESK.y, z: 80 },
+  b: { x: B_DESK.x, y: B_DESK.y, z: 80 },
+  eve: { x: EVE_AT.x, y: EVE_AT.y, z: 90 },
+  transit: { ...JUNCTION, z: 40 },
 };
 const MSG_AT: Record<CapsuleStop, Vec3> = {
   aDesk: { x: A_DESK.x + 2, y: A_DESK.y + 16, z: 60 },
@@ -55,8 +62,18 @@ function shotOf({ keys, capsule, eve }: CommonKeySceneProps): Camera {
   return SHOT_A;
 }
 
-export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: boolean }) {
-  const { nodes, lanes, keys, capsule, tap, eve, reducedMotion, forward = true } = props;
+export function CommonKeyDioramaScene(
+  props: CommonKeySceneProps & {
+    forward?: boolean;
+    /** 模型の上端に出す一言と、それが指す物 */
+    caption?: (Omit<StageCaption, "at"> & { focus: CkFocus }) | null;
+  },
+) {
+  const { nodes, lanes, keys, capsule, tap, eve, reducedMotion, forward = true, caption = null } = props;
+  // 名札はその場面で関わる物だけ（最初の場面だけは登場人物を紹介する）
+  const intro = !capsule && keys.length === 1 && lanes.key === "idle";
+  const laneActive = lanes.key === "active" || lanes.data === "active";
+  const involved = (id: "a" | "b") => intro || nodes[id] !== "idle" || laneActive;
   const shot = shotOf(props);
   const owners = ["A", "B", "盗聴者"] as const;
 
@@ -85,6 +102,7 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
       shotKey={`${keys.map((k) => `${k.owner}:${k.spot}`).join(",")}|${capsule?.stop ?? "-"}|${eve?.reads ? "r" : ""}`}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       tokens={tokens}
       world={
         <>
@@ -147,37 +165,23 @@ export function CommonKeyDioramaScene(props: CommonKeySceneProps & { forward?: b
                 data-stolen={k.owner === "盗聴者" ? "true" : "false"}
               >
                 <span className={styles.keyTag}>COMMON</span>
-                <span className={cryptoStyles.keyCaption} data-tone={k.owner === "盗聴者" ? "danger" : "common"}>
-                  {k.owner === "盗聴者" ? "盗まれたコピー" : `${k.owner}の共通鍵`}
-                </span>
+                {k.owner === "盗聴者" && (
+                  <span className={cryptoStyles.keyCaption} data-tone="danger">
+                    盗まれたコピー
+                  </span>
+                )}
               </span>
             </DioramaLabel>
           ))}
 
-          {lanes.key !== "idle" && (
-            <DioramaLabel at={laneTo("key", 0.3, 6, "toB").at(-1)} place="above" optional>
-              <span data-state={lanes.key}>
-                <Badge tone="warn">① 共通鍵 ▶</Badge>
-              </span>
+          {involved("a") && (
+            <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
+              <NameChip name="Aさん" tone="info" />
             </DioramaLabel>
           )}
-          {lanes.data !== "idle" && (
-            <DioramaLabel at={laneTo("data", 0.3, 6).at(-1)} place="below" optional>
-              <span data-state={lanes.data}>
-                <Badge tone="info">② 暗号文 ▶</Badge>
-              </span>
-            </DioramaLabel>
-          )}
-
-          <DioramaLabel at={{ x: A_DESK.x, y: A_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Aさん" tone="info" />
-          </DioramaLabel>
-          <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
-            <NameChip name="Bさん" tone="info" />
-          </DioramaLabel>
-          {!eve && (
-            <DioramaLabel at={{ ...EVE_AT, z: 118 }} place="above" optional>
-              <NameChip name="盗聴者" tone="muted" />
+          {involved("b") && (
+            <DioramaLabel at={{ x: B_DESK.x, y: B_DESK.y + 86, z: 0 }} place="below" optional>
+              <NameChip name="Bさん" tone="info" />
             </DioramaLabel>
           )}
         </>

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { PacketDioramaScene } from "./packet/PacketDioramaScene";
-import type { PacketSceneProps, PacketSpot, RouteId } from "./packet/packetTypes";
+import type { PacketFocus, PacketSceneProps, PacketSpot, RouteId } from "./packet/packetTypes";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -133,19 +133,24 @@ const ROAD: Record<number, PacketSpot> = {
   4: { kind: "road", route: "top", leg: 0, t: 0.45 },
 };
 
-const PACKET_STEPS: { title: string; detail: ReactNode; view: Omit<PacketSceneProps, "reducedMotion"> }[] = [
+const PACKET_STEPS: {
+  title: string;
+  /** 模型の中に出す一言（40字以内） */
+  caption: ReactNode;
+  tone?: "info" | "ok" | "danger";
+  focus: PacketFocus;
+  view: Omit<PacketSceneProps, "reducedMotion">;
+}[] = [
   {
     title: "送りたいデータ",
-    detail: <>送信者が「{MESSAGE}」を受信者Bへ送ります。このまま大きな塊では送りません。</>,
+    caption: <>送信者Aが「{MESSAGE}」を送る。大きな塊のままでは送らない</>,
+    focus: "sender",
     view: { nodes: { ...IDLE_NODES, sender: "active" }, routes: {}, whole: MESSAGE, packets: [], trayMode: null, restored: null },
   },
   {
     title: "パケットに分割",
-    detail: (
-      <>
-        データを<b>小さな箱（パケット）</b>に分けます。各パケットには<b>番号</b>・<b>宛先（B）</b>・<b>データ</b>が付きます。
-      </>
-    ),
+    caption: <>データを<b>パケット</b>に分割。<b>番号・宛先・データ</b>が付く</>,
+    focus: "sender",
     view: {
       nodes: { ...IDLE_NODES, sender: "active" },
       routes: {},
@@ -157,7 +162,8 @@ const PACKET_STEPS: { title: string; detail: ReactNode; view: Omit<PacketScenePr
   },
   {
     title: "それぞれ別の経路でネットワークへ",
-    detail: <>パケットは<b>ばらばらの道</b>を通ってかまいません。ルータが宛先を見て、空いている道へ次々に転送します。</>,
+    caption: <>パケットは<b>ばらばらの道</b>へ。ルータが宛先を見て転送</>,
+    focus: "router",
     view: {
       nodes: { sender: "sending", rTop: "active", rMid: "active", rBot: "active", receiver: "idle" },
       routes: { top: "active", mid: "active", bot: "active" },
@@ -169,11 +175,9 @@ const PACKET_STEPS: { title: string; detail: ReactNode; view: Omit<PacketScenePr
   },
   {
     title: "届く順番はバラバラ",
-    detail: (
-      <>
-        下の道が混んでいて<b>2番が遅れ</b>、届いた順は <b>1 → 3 → 2 → 4</b>。このままつなげると「HELWORLO LD」になってしまいます。
-      </>
-    ),
+    caption: <>2番が遅れ、届く順は<b>1→3→2→4</b>。このままでは崩れる</>,
+    tone: "danger",
+    focus: "tray",
     view: {
       nodes: { ...IDLE_NODES, receiver: "active" },
       routes: {},
@@ -185,7 +189,8 @@ const PACKET_STEPS: { title: string; detail: ReactNode; view: Omit<PacketScenePr
   },
   {
     title: "番号を見て並べ直す",
-    detail: <>受信側はパケットの<b>番号</b>を見て <b>1 → 2 → 3 → 4</b> に並べ直します。</>,
+    caption: <>受信側は<b>番号</b>を見て 1→2→3→4 に並べ直す</>,
+    focus: "tray",
     view: {
       nodes: { ...IDLE_NODES, receiver: "active" },
       routes: {},
@@ -197,7 +202,9 @@ const PACKET_STEPS: { title: string; detail: ReactNode; view: Omit<PacketScenePr
   },
   {
     title: "元のデータに復元",
-    detail: <>つなげると「{MESSAGE}」に元通り！ 大きなデータは<b>パケットに分けて運び、受信側で再構築</b>しています。</>,
+    caption: <>つなげて「{MESSAGE}」に<b>復元</b>。受信側で再構築する</>,
+    tone: "ok",
+    focus: "receiver",
     view: {
       nodes: { ...IDLE_NODES, receiver: "active" },
       routes: {},
@@ -222,11 +229,13 @@ function PacketFlow() {
         {step.title}
       </p>
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <PacketDioramaScene {...step.view} forward={player.forward} reducedMotion={reducedMotion} />
+        <PacketDioramaScene
+          {...step.view}
+          forward={player.forward}
+          reducedMotion={reducedMotion}
+          caption={{ id: `s${player.index}`, text: step.caption, tone: step.tone ?? "info", focus: step.focus }}
+        />
       </div>
-      <p className="mt-3 min-h-[3.5em] rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-sky-200 [&_b]:text-gray-900" aria-live="polite">
-        {step.detail}
-      </p>
       <div className="mt-3">
         <SceneTimeline
           index={player.index}

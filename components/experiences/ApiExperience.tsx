@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { ApiDioramaScene } from "./api/ApiDioramaScene";
 import type { ApiSceneProps } from "./api/apiTypes";
+import type { ApiFocus } from "./api/ApiDioramaScene";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -68,7 +69,8 @@ type FlowStep = {
   lanes: ApiSceneProps["lanes"];
   capsule: ApiSceneProps["capsule"];
   screen: string | null;
-  detail: ReactNode;
+  caption: ReactNode;
+  focus: ApiFocus;
 };
 
 const REQUEST = { kind: "request" as const, tag: "リクエスト", payload: "GET /weather" };
@@ -82,7 +84,8 @@ const FLOW_STEPS: FlowStep[] = [
     lanes: {},
     capsule: { stop: "app", ...REQUEST },
     screen: "東京 --℃",
-    detail: <>天気アプリは気温を表示したい。でも天気データは<b>自分では持っていません</b>。決まった形式の頼みごと（リクエスト）を用意します。</>,
+    caption: <>気温を表示したいが、データは持たない。<b>リクエスト</b>を用意</>,
+    focus: "app",
   },
   {
     title: "APIへリクエスト",
@@ -91,7 +94,8 @@ const FLOW_STEPS: FlowStep[] = [
     lanes: { req1: "active" },
     capsule: { stop: "apiIn", ...REQUEST },
     screen: null,
-    detail: <>アプリは天気APIの窓口に<b>リクエスト</b>「GET /weather」を送る。サービスの中には入らず、<b>決められた入口</b>に頼むだけ。</>,
+    caption: <><b>Web API</b>の決められた入口へ<b>リクエスト</b>を送る</>,
+    focus: "api",
   },
   {
     title: "サービスが処理",
@@ -100,7 +104,8 @@ const FLOW_STEPS: FlowStep[] = [
     lanes: { req2: "active" },
     capsule: { stop: "svc", ...REQUEST },
     screen: null,
-    detail: <>APIが中の天気サービスへ取り次ぎ、サーバとDBで処理。<b>内部のしくみはアプリから見えません</b>。</>,
+    caption: <>APIが天気サービスへ取り次ぐ。内部は<b>外から見えない</b></>,
+    focus: "svc",
   },
   {
     title: "レスポンスを返す",
@@ -109,7 +114,8 @@ const FLOW_STEPS: FlowStep[] = [
     lanes: { res1: "active" },
     capsule: { stop: "apiOut", ...RESPONSE },
     screen: null,
-    detail: <>結果を<b>レスポンス</b>「{"{ temperature: 25 }"}」として返す。形式（JSON）が決まっているので扱いやすい。</>,
+    caption: <>結果を<b>レスポンス</b>で返す。形式は<b>JSON</b>など</>,
+    focus: "api",
   },
   {
     title: "アプリが表示",
@@ -118,7 +124,8 @@ const FLOW_STEPS: FlowStep[] = [
     lanes: { res2: "active" },
     capsule: { stop: "appBack", ...RESPONSE },
     screen: "東京 晴れ 25℃",
-    detail: <>アプリが受け取った気温を<b>画面に表示</b>。天気機能を自分で作らずに使えた！</>,
+    caption: <>気温を<b>画面に表示</b>。機能を自分で作らずに使えた</>,
+    focus: "app",
   },
 ];
 
@@ -168,21 +175,12 @@ function Flow() {
           screen={bypass ? null : step.screen}
           bypass={bypass}
           reducedMotion={reducedMotion}
+          caption={
+            bypass
+              ? { id: "bypass", text: <>中（DB）へ<b>直接</b>は入れない。入口は<b>API</b>だけ</>, tone: "danger", focus: "wall" }
+              : { id: `s${player.index}`, text: step.caption, tone: player.index === 4 ? "ok" : "info", focus: step.focus }
+          }
         />
-      </div>
-
-      <div
-        className={`mt-3 rounded-xl px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 [&_b]:text-gray-900 ${bypass ? "bg-rose-50 ring-rose-200" : "bg-emerald-50 ring-emerald-200"}`}
-        aria-live="polite"
-      >
-        {bypass ? (
-          <>
-            アプリがサービスの<b>中（DB）に直接</b>入ろうとしても、外からは届きません。
-            使えるのは<b>APIという決められた入口</b>だけ。だから内部の作りを変えても、入口が同じならアプリは困りません。
-          </>
-        ) : (
-          step.detail
-        )}
       </div>
 
       <div className="mt-3">
@@ -213,10 +211,6 @@ function Flow() {
       >
         {bypass ? "↩ 正しいルート（API経由）に戻す" : "APIを通さず、内部に直接アクセスしてみる"}
       </button>
-
-      <div className="mt-3 rounded-xl bg-gray-50 px-4 py-2.5 text-xs leading-relaxed text-gray-500 ring-1 ring-gray-200">
-        頼む側＝<b>リクエスト</b>、返す側＝<b>レスポンス</b>。Webで使うAPIは <b>Web API</b> と呼ばれ、データは <b>JSON</b> などの形式でやり取りされます。
-      </div>
     </Panel>
   );
 }

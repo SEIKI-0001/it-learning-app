@@ -4,7 +4,7 @@ import { useRef, type ReactNode } from "react";
 import { Billboard, Box, CablePulses, Cylinder, FloorShadow, type Vec3 } from "../scene/Diorama3D";
 import { Parcel } from "../scene/DioramaParts";
 import { EavesdropperStanding, UserFromBehind } from "../scene/DioramaPeople";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3 } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, lerp3, type StageCaption } from "../scene/DioramaStage";
 import type { Camera } from "../scene/Diorama3D";
 import type { HttpsCapsuleStop } from "./HttpsScene";
 import { FLOW_STEPS, type HttpsSceneInput } from "./httpsFlow";
@@ -31,6 +31,11 @@ const ROUTE: Vec3[] = [
   { ...S, z: (S.z ?? 0) + 6 },
 ];
 const ROUTE_INDEX: Record<HttpsCapsuleStop, number> = { desk: 0, out: 1, middle: 2, arrived: 4 };
+const FOCUS_AT = {
+  user: { x: 143, y: 250, z: 104 },
+  eve: { x: 375, y: 206, z: 112 },
+  web: { x: 690, y: 150, z: 150 },
+} satisfies Record<string, Vec3>;
 const COPY_AT: Vec3 = { ...A, z: 92 };
 
 const SHOTS: Camera[] = [
@@ -47,12 +52,19 @@ const LABELS: { id: string; at: Vec3; place: "above" | "below"; name: string }[]
   { id: "web", at: { x: 690, y: 150, z: 132 }, place: "above", name: "Webサーバ" },
 ];
 
+// 状態の小札は場面の要点（盗聴中）だけ。入力中・送信・受信は動きと吹き出しで分かる
 const STATUS: Record<string, Partial<Record<string, string>>> = {
-  user: { active: "入力中", sending: "送信" },
-  web: { active: "受信" },
   eve: { error: "盗聴中" },
 };
-const STATUS_TONE: Partial<Record<string, "info" | "ok" | "danger">> = { active: "ok", sending: "info", error: "danger" };
+const STATUS_TONE: Partial<Record<string, "info" | "ok" | "danger">> = { error: "danger" };
+
+/** その場面で関わる物の名札だけ出す（最初の待機画面は主要な物を出す） */
+const INVOLVED: Record<string, (index: number) => boolean> = {
+  user: (i) => i <= 1,
+  ap: (i) => i === 0 || i === 1 || i === 2,
+  eve: (i) => i === 0 || i >= 2,
+  web: (i) => i === 0 || i === 3,
+};
 
 /** zoom を渡したとき、ステップごとに拡大パネルとつなぐ機器（3D の中の点） */
 const ZOOM_AT: Vec3[] = [L, L, A, S];
@@ -66,7 +78,12 @@ export function HttpsCafeScene({
   forward,
   reducedMotion,
   zoom,
-}: HttpsSceneInput & { zoom?: ReactNode }) {
+  caption = null,
+}: HttpsSceneInput & {
+  zoom?: ReactNode;
+  /** 模型の上端に出す一言と、それが指す物 */
+  caption?: (Omit<StageCaption, "at"> & { focus: keyof typeof FOCUS_AT }) | null;
+}) {
   const https = mode === "https";
   const withScreens = zoom !== undefined;
   const panelRef = useRef<HTMLDivElement>(null);
@@ -105,6 +122,7 @@ export function HttpsCafeScene({
       shotKey={index}
       forward={forward}
       reducedMotion={reducedMotion}
+      caption={caption && { ...caption, at: FOCUS_AT[caption.focus] }}
       dataAttrs={{ "data-mode": mode, "data-intercepted": step.intercepted ? "true" : "false" }}
       className={styles.cafeStage}
       tokens={{
@@ -343,13 +361,13 @@ export function HttpsCafeScene({
             </DioramaLabel>
           )}
 
-          {https && index > 0 && (
+          {withScreens && https && index > 0 && (
             <DioramaLabel at={{ ...lerp3(R, S, 0.5), z: 124 }} place="above">
               <span className={styles.tlsBadge}>TLS 暗号化トンネル</span>
             </DioramaLabel>
           )}
 
-          {LABELS.filter((label) => !(label.id === "eve" && eveSees !== null && !withScreens)).map((label) => {
+          {LABELS.filter((label) => !(label.id === "eve" && eveSees !== null && !withScreens) && (withScreens || INVOLVED[label.id](index))).map((label) => {
             const state = label.id === "ap" ? (radio ? "sending" : "idle") : step.nodes[label.id as keyof typeof step.nodes];
             const status = STATUS[label.id]?.[state];
             return (

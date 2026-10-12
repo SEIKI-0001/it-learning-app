@@ -50,7 +50,7 @@ describe("LaborLawsExperience office scene", () => {
     expect(arrow("order")).toBeNull();
     expect(arrow("bypass")).toBeNull();
     expect(screen.getByTestId("name-agency")).toHaveTextContent("派遣元会社");
-    expect(screen.getByTestId("route")).toHaveTextContent("派遣先 ──指示──▶ 派遣社員（直接）");
+    expect(screen.getByTestId("office-scene-caption")).toHaveTextContent("派遣先が派遣社員へ直接指示");
   });
 
   it("請負: order goes to the contractor, the contractor instructs its own worker, no direct arrow", () => {
@@ -64,11 +64,10 @@ describe("LaborLawsExperience office scene", () => {
     expect(arrow("cmd")).toBeNull();
     expect(arrow("bypass")).toBeNull();
     expect(screen.getByTestId("name-boss")).toHaveTextContent("請負会社の責任者");
-    expect(screen.getByTestId("route")).toHaveTextContent("注文主 ─依頼▶ 請負会社の責任者 ─指示▶ 社員");
-    expect(screen.getByText(/派遣＝作業者へ直接指示/)).toBeInTheDocument();
+    expect(screen.getByTestId("office-scene-caption")).toHaveTextContent("注文主は会社へ依頼。指示は責任者から社員へ");
   });
 
-  it("direct instruction in 請負 draws a red bypass arrow with a careful warning", () => {
+  it("direct instruction in 請負 draws a red bypass arrow with a careful caption", () => {
     reduceMotion();
     renderDeck();
     fireEvent.click(screen.getByRole("button", { name: "解説2" }));
@@ -78,11 +77,10 @@ describe("LaborLawsExperience office scene", () => {
     expect(arrow("bypass")).toHaveAttribute("data-state", "on");
     expect(arrow("order")).toHaveAttribute("data-state", "ghost");
     expect(arrow("task")).toHaveAttribute("data-state", "ghost");
-    const warning = screen.getByTestId("gisou-warning");
-    expect(warning).toHaveTextContent("指揮命令関係が発生");
-    expect(warning).toHaveTextContent("実態によっては偽装請負と判断される可能性があります");
-    expect(warning).toHaveTextContent("契約書の名称だけでなく、実際の働かせ方で判断されます");
-    expect(warning).not.toHaveTextContent("違法");
+    const caption = screen.getByTestId("office-scene-caption");
+    expect(caption).toHaveTextContent("指揮命令関係が発生");
+    expect(caption).toHaveTextContent("実態次第で偽装請負");
+    expect(caption).not.toHaveTextContent("違法");
 
     fireEvent.click(screen.getByRole("button", { name: /本来の流れに戻す/ }));
     expect(arrow("bypass")).toBeNull();

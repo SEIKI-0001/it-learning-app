@@ -5,7 +5,6 @@ import { DivideStage, EfficiencyStage, SolveStage, TimeStage, TransferPractice, 
 import { LanWanDioramaScene, type LanWanDest } from "./lanwan/LanWanDioramaScene";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
-import { InlineIcon } from "@/components/ui/Pictogram";
 
 // ============================================================================
 // 「LANとWAN」専用の体験。
@@ -17,48 +16,20 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 
 type Dest = LanWanDest;
 
-const DESTS: {
-  key: Dest;
-  label: string;
-  usesWan: boolean;
-  result: string;
-}[] = [
-  {
-    key: "printer",
-    label: "同じ家のプリンタ",
-    usesWan: false,
-    result:
-      "家の中のネットワーク（LAN）だけで届いた！ WANは通っていません。近い相手はLAN内で完結するので速い。",
-  },
-  {
-    key: "office",
-    label: "遠くの会社のサーバ",
-    usesWan: true,
-    result:
-      "家のLANを出て、通信会社の回線（WAN）を通り、会社のLANへ届いた！ 離れたLANどうしを結ぶのがWANです。",
-  },
-  {
-    key: "video",
-    label: "海外の動画サイト",
-    usesWan: true,
-    result:
-      "インターネット（世界最大のWAN）を通って海外まで届いた！ どんなに遠くても、WANがLANとLANを結んでくれます。",
-  },
+const DESTS: { key: Dest; label: string }[] = [
+  { key: "printer", label: "同じ家のプリンタ" },
+  { key: "office", label: "遠くの会社のサーバ" },
+  { key: "video", label: "海外の動画サイト" },
 ];
 
 function PacketJourney() {
   const [dest, setDest] = useState<Dest | null>(null);
-  const [tried, setTried] = useState<Set<Dest>>(new Set());
-  const d = DESTS.find((x) => x.key === dest) ?? null;
-  const triedLan = [...tried].some((k) => !DESTS.find((x) => x.key === k)!.usesWan);
-  const triedWan = [...tried].some((k) => DESTS.find((x) => x.key === k)!.usesWan);
 
   const reducedMotion = useReducedMotion();
   const [runKey, setRunKey] = useState(0);
   const send = (key: Dest) => {
     setDest(key);
     setRunKey((k) => k + 1);
-    setTried((prev) => new Set(prev).add(key));
   };
 
   return (
@@ -88,35 +59,6 @@ function PacketJourney() {
         <LanWanDioramaScene dest={dest} runKey={runKey} reducedMotion={reducedMotion} />
       </div>
 
-      {/* 結果 */}
-      {d && (
-        <div className="mt-3 space-y-2">
-          <div className="flex justify-center">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                d.usesWan ? "bg-sky-100 text-sky-700" : "bg-emerald-100 text-emerald-700"
-              }`}
-            >
-              {d.usesWan ? "WANを通った" : "LAN内で完結（WANは通らない）"}
-            </span>
-          </div>
-          <p className="rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200">
-            {d.result}
-          </p>
-        </div>
-      )}
-
-      {triedLan && triedWan && (
-        <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900 ring-1 ring-emerald-200">
-          気づいた？ <b>近い相手＝LANの中だけ</b>、<b>遠い相手＝WANを通る</b>。
-          LAN＝「家の中」、WAN＝「家と家を結ぶ道路網」です。
-        </div>
-      )}
-
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        <InlineIcon name="lightbulb" /><b>LAN</b>（Local Area Network）＝家・学校・会社など<b>狭い範囲</b>。自分たちで作る。
-        <b>WAN</b>（Wide Area Network）＝離れたLANどうしを結ぶ<b>広い範囲</b>。通信会社の回線を借りる。
-      </div>
     </Panel>
   );
 }
@@ -136,8 +78,8 @@ function CompareTable() {
           <thead>
             <tr className="bg-gray-100 text-gray-700">
               <th className="px-3 py-2 text-left font-bold"> </th>
-              <th className="px-3 py-2 text-center font-bold text-brand-700">LAN</th>
-              <th className="px-3 py-2 text-center font-bold text-sky-700">WAN</th>
+              <th className="px-3 py-2 text-center font-bold text-brand-700">LAN<span className="block text-[10px] font-normal text-gray-500">Local Area Network</span></th>
+              <th className="px-3 py-2 text-center font-bold text-sky-700">WAN<span className="block text-[10px] font-normal text-gray-500">Wide Area Network</span></th>
             </tr>
           </thead>
           <tbody>

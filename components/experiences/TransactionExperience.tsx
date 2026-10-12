@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { NodeState } from "./network/NetworkSceneBase";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { TransactionDioramaScene } from "./transaction/TransactionDioramaScene";
@@ -27,75 +27,78 @@ type Phase = "idle" | "begun" | "debited" | "credited" | "committed" | "rolledBa
 type View = {
   a: number;
   b: number;
-  msg: string;
   money: TransactionSceneProps["money"];
   lanes: TransactionSceneProps["lanes"];
   reverse: boolean;
   nodes: TransactionSceneProps["nodes"];
-  alert: TransactionSceneProps["alert"];
+  caption: TransactionSceneProps["caption"];
 };
 
 const n = (a: NodeState, engine: NodeState, b: NodeState) => ({ a, engine, b });
 const IDLE_LANES = { debit: "idle", credit: "idle" } as const;
 
+function cap(id: string, text: ReactNode, focus: "a" | "engine" | "b", tone: "info" | "ok" | "danger" = "info"): View["caption"] {
+  return { id, text, tone, focus };
+}
+
 function viewOf(phase: Phase, crashedFrom: "debited" | "credited" | null): View {
   switch (phase) {
     case "idle":
-      return { a: START_A, b: START_B, msg: "「振込を始める」を押してね。", money: null, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "idle", "idle"), alert: null };
+      return { a: START_A, b: START_B, money: null, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "idle", "idle"), caption: null };
     case "begun":
       return {
         a: START_A, b: START_B,
-        msg: "トランザクション開始：AとBの口座をロック。Aの口座から500円を引きます…",
-        money: null, lanes: IDLE_LANES, reverse: false, nodes: n("active", "active", "idle"), alert: null,
+        money: null, lanes: IDLE_LANES, reverse: false, nodes: n("active", "active", "idle"),
+        caption: cap("begun", <>A・Bの口座を<b>ロック</b>（排他制御）してから振込開始</>, "engine"),
       };
     case "debited":
       return {
         a: START_A - AMOUNT, b: START_B,
-        msg: "① A −500 完了。まだ確定していません。次にBへ足します。",
         money: { spot: "engine", state: "pending" },
         lanes: { debit: "active", credit: "idle" }, reverse: false, nodes: n("idle", "active", "idle"),
-        alert: { tone: "warn", title: "片方だけ更新された状態" },
+        caption: cap("debited", <><b>片方だけ更新</b>された状態。まだ確定していない</>, "engine"),
       };
     case "credited":
       return {
         a: START_A - AMOUNT, b: START_B + AMOUNT,
-        msg: "② B +500 完了。確定（コミット）か、取り消し（ロールバック）を選んでください。",
         money: { spot: "b", state: "pending" },
         lanes: { debit: "idle", credit: "active" }, reverse: false, nodes: n("idle", "active", "active"),
-        alert: { tone: "warn", title: "両方更新・まだ未確定" },
+        caption: cap("credited", <>両方更新したが未確定。<b>コミット</b>か<b>ロールバック</b>を選ぶ</>, "b"),
       };
     case "committed":
       return {
         a: START_A - AMOUNT, b: START_B + AMOUNT,
-        msg: "コミット：両方の変更を確定しました。振込成立！",
         money: { spot: "b", state: "settled" }, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "idle", "idle"),
-        alert: { tone: "ok", title: "COMMIT" },
+        caption: cap("committed", <><b>コミット</b>で両方を確定。全部成功＝原子性</>, "b", "ok"),
       };
     case "rolledBack":
       return {
         a: START_A, b: START_B,
-        msg: "↩ ロールバック：開始前の状態に巻き戻しました。お金は消えも増えもしません。",
         money: { spot: "a", state: "returning" },
         lanes: { debit: "active", credit: "active" }, reverse: true, nodes: n("active", "idle", "idle"),
-        alert: { tone: "ok", title: "↩ ROLLBACK" },
+        caption: cap("rolledBack", <><b>ロールバック</b>で開始前へ。お金は消えも増えもしない</>, "a", "ok"),
       };
     case "crashed":
       return {
         a: START_A - AMOUNT, b: crashedFrom === "credited" ? START_B + AMOUNT : START_B,
-        msg:
-          crashedFrom === "debited"
-            ? "Aから引いた直後にシステム障害！Bにはまだ届いていません。このまま止まると500円が消えてしまいます。"
-            : "コミット前にシステム障害！変更はまだ確定していません。",
         money: { spot: "engine", state: "crashed" }, lanes: IDLE_LANES, reverse: false, nodes: n("idle", "error", "idle"),
-        alert: { tone: "crash", title: "障害発生：処理が途中で停止" },
+        caption: cap(
+          `crashed-${crashedFrom}`,
+          crashedFrom === "debited" ? (
+            <>引いた直後に<b>障害</b>。このままだと500円が消える</>
+          ) : (
+            <>コミット前に<b>障害</b>。変更はまだ確定していない</>
+          ),
+          "engine",
+          "danger",
+        ),
       };
     case "recovered":
       return {
         a: START_A, b: START_B,
-        msg: "再起動時に、確定していなかった変更を自動でロールバック。A=1000 / B=0 に戻り、お金は消えませんでした。",
         money: { spot: "a", state: "returning" },
         lanes: { debit: "active", credit: "idle" }, reverse: true, nodes: n("active", "idle", "idle"),
-        alert: { tone: "ok", title: "自動ロールバック" },
+        caption: cap("recovered", <>再起動で未確定分を自動<b>ロールバック</b>。お金は消えない</>, "a", "ok"),
       };
   }
 }
@@ -116,7 +119,6 @@ function TransferDemo() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [crashedFrom, setCrashedFrom] = useState<"debited" | "credited" | null>(null);
   const [log, setLog] = useState<Phase[]>([]);
-  const [seenCrash, setSeenCrash] = useState(false);
 
   const go = (next: Phase) => {
     setPhase(next);
@@ -124,7 +126,6 @@ function TransferDemo() {
   };
   const crash = () => {
     setCrashedFrom(phase === "credited" ? "credited" : "debited");
-    setSeenCrash(true);
     go("crashed");
   };
 
@@ -151,18 +152,9 @@ function TransferDemo() {
           lanes={view.lanes}
           reverse={view.reverse}
           money={view.money}
-          alert={view.alert}
+          caption={view.caption}
           reducedMotion={reducedMotion}
         />
-      </div>
-
-      {/* 状態メッセージ */}
-      <div
-        className="mt-3 min-h-[3em] rounded-xl bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-200"
-        aria-live="polite"
-        data-testid="tx-message"
-      >
-        {view.msg}
       </div>
 
       {/* 操作 */}
@@ -209,12 +201,6 @@ function TransferDemo() {
         )}
       </div>
 
-      {inProgress && (
-        <p className="mt-2 text-center text-[11px] font-bold text-amber-600">
-          <InlineIcon name="lock" />処理中：このデータはロックされ、他の人は同時に更新できません（排他制御）
-        </p>
-      )}
-
       {log.length > 0 && (
         <div className="mt-3 rounded-xl bg-slate-900 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-slate-200" data-testid="tx-log">
           <p className="text-[10px] font-bold text-slate-400">トランザクションログ</p>
@@ -227,19 +213,6 @@ function TransferDemo() {
           </ol>
         </div>
       )}
-
-      {phase === "recovered" && (
-        <div className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm leading-relaxed text-rose-900 ring-1 ring-rose-200" data-testid="tx-without">
-          もし<b>トランザクションで囲んでいなかったら</b>… 障害の時点の
-          <b> A=500 / B={crashedFrom === "credited" ? 500 : 0}</b> がそのまま残り、
-          {crashedFrom === "credited" ? "確定の手続きが無いまま中途半端な記録が残ります。" : "500円が消えてしまいます。"}
-        </div>
-      )}
-
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        <InlineIcon name="lightbulb" />トランザクションは<b>「全部成功」か「全部なし」</b>（原子性＝Atomicity）。確定が<b>コミット</b>、巻き戻しが<b>ロールバック</b>です。
-        {seenCrash && <> 障害が起きても、確定前の変更は<b>全部なし</b>に戻ります。</>}
-      </div>
     </Panel>
   );
 }

@@ -116,7 +116,7 @@
 .legend {
   position: absolute;
   z-index: 2;
-  top: 6px;
+  bottom: 6px;
   left: 6px;
   display: flex;
   flex-direction: column;
@@ -234,6 +234,60 @@
   .arrow[data-state="drawing"] .arrowHead,
   .arrowTag,
   .bubble {
+    animation: none;
+  }
+}
+
+/* ---------- 模型の上端の一言（DioramaStage の caption と同じ見た目） ---------- */
+
+.caption {
+  position: absolute;
+  z-index: 8;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  margin: 0;
+  padding: 6px 11px 7px;
+  border-left: 3px solid #3b82f6;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: auto-phrase;
+  animation: labor-caption-in 260ms ease-out;
+}
+
+.caption b {
+  color: #1d4ed8;
+}
+
+.caption[data-tone="danger"] {
+  border-left-color: #e11d48;
+  color: #881337;
+}
+
+.caption[data-tone="danger"] b {
+  color: #be123c;
+}
+
+@keyframes labor-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caption {
     animation: none;
   }
 }

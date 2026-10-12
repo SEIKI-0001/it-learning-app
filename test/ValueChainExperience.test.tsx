@@ -39,7 +39,7 @@ describe("ValueChainExperience", () => {
     fireEvent.click(screen.getByRole("button", { name: "STEP 6：マージン" }));
     expect(inScene('[data-testid="value-column"]')).toHaveAttribute("data-total", "90");
     expect(inScene('[data-testid="margin-block"]')).toHaveTextContent("マージン 20");
-    expect(screen.getByTestId("vc-state")).toHaveTextContent("マージン（利益）");
+    expect(inScene('[data-testid="vc-scene-caption"]')).toHaveTextContent("マージン（利益）");
   });
 
   it("stopping procurement stops raw materials and manufacturing", () => {
@@ -52,7 +52,7 @@ describe("ValueChainExperience", () => {
     expect(inScene('[data-testid="note-inbound"]')).toHaveTextContent("原材料が届かない");
     expect(inScene('[data-testid="note-operations"]')).toHaveTextContent("製造停止");
     expect(inScene('[data-testid="product"]')).toHaveAttribute("data-blocked", "true");
-    expect(screen.getByTestId("support-result")).toHaveTextContent("ラインがそもそも動かせない");
+    expect(inScene('[data-testid="vc-scene-caption"]')).toHaveTextContent("資材が届かず製造できない");
   });
 
   it("stopping tech development shrinks the margin", () => {
