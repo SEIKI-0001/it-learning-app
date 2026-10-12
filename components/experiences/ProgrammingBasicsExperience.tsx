@@ -15,7 +15,7 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 //   ③ 分岐   … ①の条件の部分。はい／いいえ で片方だけ実行（＋試験形式 a ≧ 5）
 //   ④ 反復   … 条件へ戻る矢印。i と 合計 の表で1周ずつ追う（1＋2＋3＝6）
 //   ⑤ 関数   … まとめて名前をつけ、呼び出す → 中で処理 → 返す。関数なし／ありの比較
-//   ⑥ 翻訳   … コンパイラ／インタプリタ／アセンブラ（アニメは「何を見るか」を先に大きく書く）
+//   ⑥ 翻訳   … コンパイラ／インタプリタ／アセンブラ（アニメは「何を見るか」を先に大きく書く）。表の下に JavaScript
 //   ⑦ データの書き方 … JSON／XML／HTML／CSV
 //   ①〜⑤は動かない図。フロー図が先、対応するコードはその横（スマホでは下）。
 // ============================================================================
@@ -500,6 +500,10 @@ export default function ProgrammingBasicsExperience() {
             </tbody>
           </table>
         </div>
+        <p className="mt-3 text-sm leading-relaxed text-gray-700 [&_b]:font-bold [&_b]:text-gray-900" data-testid="trans-javascript">
+          <b>JavaScript</b> は、Webブラウザの上で動いてWebページに動き（ボタンを押すと表示が変わる、など）を付ける<b>スクリプト言語</b>です。
+          事前にコンパイルせず、ブラウザが読みながら実行します。名前は似ていますが、<b>Java とは別の言語</b>です。
+        </p>
       </Panel>
 
       <Panel>

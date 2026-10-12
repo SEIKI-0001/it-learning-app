@@ -394,7 +394,7 @@ export default function TopicQuiz({
                 {formatJapaneseExamYear(q.official.year)} 公開問題 問{q.official.questionNumber}
               </p>
             )}
-            <p className={`text-sm font-bold text-gray-800 ${dense ? "mb-2" : "mb-3"}`}>
+            <p className={`whitespace-pre-wrap text-sm font-bold text-gray-800 ${dense ? "mb-2" : "mb-3"}`}>
               Q{currentIndex + 1}. {q.prompt}
             </p>
             {/* 図表は問題文と選択肢の間に出す(公式問題冊子と同じ並び)。 */}

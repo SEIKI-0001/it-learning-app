@@ -519,7 +519,7 @@ export default function ComputerCoreExperience() {
     { k: "速さ", m: "速い", s: "遅い" },
     { k: "容量", m: "小さめ", s: "大きい" },
     { k: "電源を切ると", m: "消える（揮発性）", s: "残る（不揮発性）" },
-    { k: "例", m: "RAM", s: "SSD・HDD" },
+    { k: "例", m: "DRAM（PCのメモリ）", s: "SSD・USBメモリ（フラッシュメモリ）・HDD" },
   ];
 
   return (
@@ -580,6 +580,10 @@ export default function ComputerCoreExperience() {
             </tbody>
           </table>
         </div>
+        <p className="mt-3 text-xs leading-relaxed text-gray-600" data-testid="core-nonvolatile-note">
+          電源を切っても消えないものは、ほかに読出し専用の <b className="text-gray-800">ROM</b> や、光ディスクの DVD-RAM。
+          名前に「RAM」が付いていても DVD-RAM は消えません。消えるのは<b className="text-gray-800">メモリの DRAM</b> です。
+        </p>
       </Panel>
     </div>
   );

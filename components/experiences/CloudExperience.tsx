@@ -13,6 +13,7 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 //   ② 提供範囲スタック：モデルを選ぶと「自分が管理／事業者が管理」の境界線が上下し、
 //      線が通過した層から順に持ち主が変わる（オンプレ→IaaS→PaaS→SaaS の順送り再生つき）
 //   ③ これはどれ？ 仕分けクイズ（SaaS/PaaS/IaaSを見分ける）
+//   ④ 借りる前に安全な事業者か確かめる（ISMS認証／ISMSクラウドセキュリティ認証／プライバシーマーク）
 // ============================================================================
 
 // スタックは上＝完成品に近い、下＝機械に近い。
@@ -292,6 +293,50 @@ function Quiz() {
   );
 }
 
+// 借りる前に確かめる「安全な事業者か」。似た名前の制度を「何を対象に・何を保証するか」で並べる。
+const CERTS = [
+  { name: "ISMS認証", target: "組織", what: "情報セキュリティを管理する仕組みが整っている" },
+  {
+    name: "ISMSクラウドセキュリティ認証",
+    target: "クラウドサービス",
+    what: "ISMS認証に加えて、クラウド固有の管理策（ISO/IEC 27017）が実施されている",
+    hit: true,
+  },
+  { name: "プライバシーマーク", target: "事業者", what: "個人情報を適切に保護する体制が整っている" },
+];
+
+function Certification() {
+  return (
+    <Panel>
+      <SectionTitle step={4}>借りる前に、安全な事業者か確かめる</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        クラウドに預けたデータは事業者のサーバに置かれます。安全対策を外から確かめる手がかりが<b className="text-gray-800">第三者の認証</b>です。
+        名前が似ているので、<b className="text-gray-800">何を対象に、何を保証するか</b>で見分けます。
+      </p>
+      <div className="mt-3 overflow-hidden rounded-xl ring-1 ring-gray-200" data-testid="cloud-certs">
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="bg-gray-50 text-gray-500">
+              <th className="px-2.5 py-1.5 font-bold">制度</th>
+              <th className="px-2 py-1.5 font-bold">対象</th>
+              <th className="px-2 py-1.5 font-bold">保証すること</th>
+            </tr>
+          </thead>
+          <tbody>
+            {CERTS.map((c) => (
+              <tr key={c.name} className={`border-t border-gray-100 ${c.hit ? "bg-amber-50" : ""}`}>
+                <td className="px-2.5 py-1.5 font-bold text-gray-800">{c.name}</td>
+                <td className="whitespace-nowrap px-2 py-1.5 text-gray-700">{c.target}</td>
+                <td className="px-2 py-1.5 text-gray-600">{c.what}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
+
 export default function CloudExperience() {
   return (
     <div className="space-y-5">
@@ -303,6 +348,7 @@ export default function CloudExperience() {
       <WhatIsCloud />
       <Stack />
       <Quiz />
+      <Certification />
     </div>
   );
 }

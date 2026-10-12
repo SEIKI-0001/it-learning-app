@@ -191,22 +191,38 @@ export function FlowDiagram({
   );
 }
 
-/** フロー図の横（スマホでは下）に置く疑似コード。note は行末の灰色の注記。 */
+/**
+ * フロー図の横（スマホでは下）に置く疑似コード。note は行末の灰色の注記。
+ * indent は true で1段、数値で段数。badge はフロー図のノードに付けた番号（①〜）と対応させるときに使う。
+ */
 export function CodeLines({
   lines,
   testId,
 }: {
-  lines: { code: string; indent?: boolean; note?: string; focus?: boolean }[];
+  lines: { code: string; indent?: boolean | number; note?: string; focus?: boolean; badge?: string }[];
   testId?: string;
 }) {
+  const hasBadge = lines.some((l) => l.badge);
   return (
     <pre className="overflow-x-auto rounded-xl bg-gray-50 px-3 py-2.5 font-mono text-[12.5px] leading-[1.9] text-gray-900 ring-1 ring-gray-200" data-testid={testId}>
-      {lines.map((l, i) => (
-        <div key={i} className={`${l.indent ? "pl-5" : ""} ${l.focus ? "-mx-1 rounded bg-amber-100 px-1" : ""}`}>
-          <span className="font-bold">{l.code}</span>
-          {l.note && <span className="ml-2 font-sans text-[11px] font-medium text-gray-500">{l.note}</span>}
-        </div>
-      ))}
+      {lines.map((l, i) => {
+        const level = l.indent === true ? 1 : l.indent || 0;
+        return (
+          <div key={i} className={`flex items-center ${l.focus ? "-mx-1 rounded bg-amber-100 px-1" : ""}`}>
+            {hasBadge && (
+              <span className="mr-2 inline-flex w-10 flex-none justify-end">
+                {l.badge && (
+                  <span className="rounded-full bg-gray-900 px-1.5 font-sans text-[10px] font-bold leading-[1.6] text-white">{l.badge}</span>
+                )}
+              </span>
+            )}
+            <span style={{ paddingLeft: `${level * 1.25}rem` }} className="font-bold">
+              {l.code}
+            </span>
+            {l.note && <span className="ml-2 font-sans text-[11px] font-medium text-gray-500">{l.note}</span>}
+          </div>
+        );
+      })}
     </pre>
   );
 }

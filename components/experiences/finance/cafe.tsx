@@ -21,7 +21,8 @@ export const CAFE = {
     sga: 450,
     nonOpIncome: 10,
     nonOpExpense: 20,
-    extraLoss: 40,
+    extraGain: 20,
+    extraLoss: 60,
     tax: 30,
   },
 } as const;
@@ -57,7 +58,7 @@ const p = CAFE.pl;
 const gross = p.sales - p.cogs;
 const op = gross - p.sga;
 const ordinary = op + p.nonOpIncome - p.nonOpExpense;
-const pretax = ordinary - p.extraLoss;
+const pretax = ordinary + p.extraGain - p.extraLoss;
 const net = pretax - p.tax;
 
 export const PL_ROWS: PlRow[] = [
@@ -85,7 +86,11 @@ export const PL_ROWS: PlRow[] = [
   },
   {
     key: "pretax",
-    minus: { label: "特別損失", amount: `−${p.extraLoss}`, plain: "台風で看板が壊れた（その年だけ）" },
+    minus: {
+      label: "特別利益・特別損失",
+      amount: `＋${p.extraGain} −${p.extraLoss}`,
+      plain: "その年だけの臨時の損益：古い焙煎機が売れた／台風で看板が壊れた",
+    },
     name: "税引前当期純利益",
     value: pretax,
     meaning: "臨時の損益までふくめた、税金の前",

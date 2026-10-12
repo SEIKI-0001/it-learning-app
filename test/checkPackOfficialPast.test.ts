@@ -51,6 +51,8 @@ const REPLACED_ORIGINAL_IDS = [
   "strat-financial-statements-ex2",
   "strat-intellectual-property-ex1",
   "tech-keys-ex2",
+  // 2026-10-12 後続: アルゴリズム単元に擬似言語の読み方を足してから置き換えた。
+  "tech-algorithm-flowchart-ex2",
 ];
 
 /** 独自問題の方が一段深いもの: 公式（定義の確認）→ 独自（深い確認）の順に並べる。 */
@@ -135,6 +137,26 @@ describe("公式で定義を確認してから、独自で深く確認する", (
       expect(pack, original).toBeDefined();
       const ids = pack!.examLevelQuestionIds;
       expect(ids.indexOf(official), original).toBe(ids.indexOf(original) - 1);
+    }
+  });
+});
+
+/** 第1段階の確認問題と、第3段階の公式問題が同じ問いになっていた組（重なる論点は公式に任せる）。 */
+const QUIZ_OVERLAPPING_OFFICIAL: [quiz: string, official: string][] = [
+  ["tech-public-key-crypto-q2", "ipa-it-passport-2022-q060"],
+  ["tech-public-key-crypto-q3", "ipa-it-passport-2022-q060"],
+  ["tech-email-protocol-q3", "ipa-it-passport-2022-q087"],
+  ["mgmt-pm-qcd-q3", "ipa-it-passport-2023-q045"],
+  ["mgmt-itil-q2", "ipa-it-passport-2022-q044"],
+];
+
+describe("第1段階（基礎確認）と第3段階で同じ問いを重ねない", () => {
+  it("公式問題を載せたパックの第1段階から、同じ問いの確認問題を外している", () => {
+    for (const [quiz, official] of QUIZ_OVERLAPPING_OFFICIAL) {
+      const pack = topicCheckPacks.find((p) => p.examLevelQuestionIds.includes(official));
+      expect(pack, official).toBeDefined();
+      expect(pack!.quizQuestionIds, pack!.packId).not.toContain(quiz);
+      expect(pack!.quizQuestionIds, pack!.packId).toHaveLength(4);
     }
   });
 });

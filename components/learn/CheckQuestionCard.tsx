@@ -86,7 +86,7 @@ export default function CheckQuestionCard({
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-2.5 sm:p-3">
-      <p className="mb-2 text-sm font-bold text-gray-800">
+      <p className="mb-2 whitespace-pre-wrap text-sm font-bold text-gray-800">
         Q{number}. {q.prompt}
       </p>
 

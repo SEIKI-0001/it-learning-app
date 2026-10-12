@@ -30,6 +30,8 @@ function quizIds(topicId: string, n = 4): string[] {
  * 出題する確認問題を番号で選ぶ（確認問題が5問以上あるトピック用）。
  * 先頭4問に用語の言い換えだけの易しい問題や、第3段階（過去問レベル）と同じ問いが
  * 含まれるトピックでは、計算・応用の問題を優先して選ぶ（2026-10-12 監査）。
+ * 第3段階の公式過去問と同じ問いになる確認問題は外し、その論点は公式問題に任せる
+ * （公開鍵暗号・メール・QCD・ITIL。外した分は易しい確認問題を足して4問に保つ）。
  */
 function pickQuizIds(topicId: string, numbers: number[]): string[] {
   return numbers.map((n) => `${topicId}-q${n}`);
@@ -299,7 +301,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-public-key-crypto",
     topicId: "tech-public-key-crypto",
-    quizQuestionIds: quizIds("tech-public-key-crypto"),
+    quizQuestionIds: pickQuizIds("tech-public-key-crypto", [1, 4, 5, 6]),
     flashcardIds: topicWordIds("tech-public-key-crypto"),
     examLevelQuestionIds: [
       "tech-public-key-crypto-ex1",
@@ -313,7 +315,10 @@ export const topicCheckPacks: TopicCheckPack[] = [
     topicId: "tech-algorithm-flowchart",
     quizQuestionIds: quizIds("tech-algorithm-flowchart"),
     flashcardIds: topicWordIds("tech-algorithm-flowchart"),
-    examLevelQuestionIds: examIds("tech-algorithm-flowchart"),
+    examLevelQuestionIds: [
+      "tech-algorithm-flowchart-ex1",
+      "ipa-it-passport-2025-q078",
+    ],
     recommendedTiming: "after_learning",
     difficulty: 2,
   },
@@ -425,7 +430,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-email-protocol",
     topicId: "tech-email-protocol",
-    quizQuestionIds: quizIds("tech-email-protocol"),
+    quizQuestionIds: pickQuizIds("tech-email-protocol", [1, 2, 4, 5]),
     flashcardIds: topicWordIds("tech-email-protocol"),
     examLevelQuestionIds: [
       "tech-email-protocol-ex1",
@@ -437,7 +442,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-mgmt-pm-qcd",
     topicId: "mgmt-pm-qcd",
-    quizQuestionIds: quizIds("mgmt-pm-qcd"),
+    quizQuestionIds: pickQuizIds("mgmt-pm-qcd", [1, 2, 4, 5]),
     flashcardIds: topicWordIds("mgmt-pm-qcd"),
     examLevelQuestionIds: [
       "ipa-it-passport-2023-q045",
@@ -529,7 +534,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-mgmt-itil",
     topicId: "mgmt-itil",
-    quizQuestionIds: quizIds("mgmt-itil"),
+    quizQuestionIds: pickQuizIds("mgmt-itil", [1, 3, 4, 5]),
     flashcardIds: topicWordIds("mgmt-itil"),
     examLevelQuestionIds: [
       "ipa-it-passport-2022-q044",

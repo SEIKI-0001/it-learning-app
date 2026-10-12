@@ -4,6 +4,7 @@ import { Panel, SectionTitle } from "../ui";
 import { FlowRun } from "./FlowRun";
 import { FlowTry } from "./FlowTry";
 import { FORMAL_MAPPINGS } from "./learningModel";
+import { PseudoCodePanel, PseudoSyntaxPanel } from "./PseudoCodePanel";
 
 // ============================================================================
 // 「アルゴリズムとフローチャート」専用の体験。
@@ -11,6 +12,8 @@ import { FORMAL_MAPPINGS } from "./learningModel";
 //   ② 答え合わせ：同じ図をコンピュータが実行する。実行トークンが矢印の上を進み、
 //      条件で道が分かれ、くり返しで条件へ戻る。横の変数の箱が書き換わる
 //   ③ まとめ：いま動かした図の中にある「順次・選択・繰り返し」と、試験の書き方（←）
+//   ④ 擬似言語：同じ手順を試験の擬似言語で読む（ノードと行を番号で対応させた静的図）
+//   ⑤ 擬似言語の書き方：for（③④⑥が1行に）・if〜elseif〜else〜endif・÷ の商／余り
 // ============================================================================
 
 const STRUCTURES = [
@@ -90,6 +93,9 @@ export default function AlgorithmExperience() {
           ))}
         </dl>
       </Panel>
+
+      <PseudoCodePanel />
+      <PseudoSyntaxPanel />
     </div>
   );
 }
