@@ -5,13 +5,16 @@ import {
   planAdjustmentRowToProposal,
   type PlanAdjustmentRow,
 } from "@/lib/dbMappers";
+import { isRecoveryFocusActive } from "@/lib/recoveryFocus";
+import type { WeakTopic } from "@/types/integratedStatus";
 
 export const runtime = "nodejs";
 
 // POST /api/plan-adjustment/latest
 // 最新の有効な立て直し提案（proposed または accepted）を返す。
 // body: { userId? }
-// 返却: { ok, proposal | null }
+// 返却: { ok, proposal | null, focusTopicIds }
+//   focusTopicIds: 採用から7日以内の案なら、元にした統合進捗の弱点トピック（Today のメニューの上位に出す）。
 //
 // Supabase 未設定: 503 / userId なし: 401 / 無し: { ok:true, proposal:null }
 export async function POST(request: Request) {
@@ -52,5 +55,16 @@ export async function POST(request: Request) {
     ? planAdjustmentRowToProposal(data as PlanAdjustmentRow)
     : null;
 
-  return NextResponse.json({ ok: true, proposal });
+  let focusTopicIds: string[] = [];
+  if (proposal && isRecoveryFocusActive(proposal) && proposal.sourceStatusId) {
+    const { data: statusRow } = await supabase
+      .from("integrated_learning_status")
+      .select("weak_topics")
+      .eq("id", proposal.sourceStatusId)
+      .maybeSingle();
+    const weak = (statusRow as { weak_topics: WeakTopic[] | null } | null)?.weak_topics ?? [];
+    focusTopicIds = weak.map((w) => w.topicId).filter(Boolean);
+  }
+
+  return NextResponse.json({ ok: true, proposal, focusTopicIds });
 }
