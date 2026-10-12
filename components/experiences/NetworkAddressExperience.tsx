@@ -27,11 +27,15 @@ type NetworkPhase = {
   caption: ReactNode;
   /** 一言が指す物 */
   focus: NetworkNodeId;
+  /** DNSが対応表を引いて名前をIPアドレスに変換する場面 */
+  lookup?: boolean;
 };
 
 // 0.5倍速: 1ステップを読んで目で追えるだけの間を取る
 const AUTOPLAY_INTERVAL_MS = 3000;
 const DNS_TIMEOUT_MS = 2600;
+// 対応表を探す間を見せてから、名前をIPアドレスに変える（自動再生の1ステップ内に収める）
+const DNS_LOOKUP_MS = 1300;
 
 const IDLE_LANES: Record<LaneId, LaneState> = {
   query: "idle",
@@ -60,8 +64,21 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: { from: "userOut", to: "dnsIn" },
     nodes: { user: "sending", dns: "active", web: "idle" },
     lanes: { ...IDLE_LANES, query: "active" },
-    caption: <><b>DNS</b>に「この名前のIPアドレスは？」と問い合わせる</>,
+    caption: <><b>DNS</b>に「example.com のIPアドレスは？」と問い合わせる</>,
     focus: "dns",
+  },
+  {
+    eyebrow: "変換",
+    title: "DNSが名前をIPアドレスに変換する",
+    route: "DNSの中（対応表を引く）",
+    // 札の中身は DnsJourney が「探す → 見つけた」で差し替える（lookupCapsule）
+    capsule: { kind: "query", tag: "受け取った名前", payload: "example.com", stop: "dnsIn" },
+    trail: null,
+    nodes: { user: "idle", dns: "active", web: "idle" },
+    lanes: IDLE_LANES,
+    caption: <>DNSが対応表から <b>example.com</b> を探す</>,
+    focus: "dns",
+    lookup: true,
   },
   {
     eyebrow: "DNS応答",
@@ -71,7 +88,7 @@ const FLOW_STEPS: NetworkPhase[] = [
     trail: { from: "dnsOut", to: "userIn" },
     nodes: { user: "active", dns: "sending", web: "idle" },
     lanes: { ...IDLE_LANES, response: "active" },
-    caption: <>DNSが返すのは<b>IPアドレス</b>だけ。ページは返さない</>,
+    caption: <>変換した<b>IPアドレス</b>を返す。ページは返さない</>,
     focus: "user",
   },
   {
@@ -120,6 +137,12 @@ const FLOW_STEPS: NetworkPhase[] = [
     focus: "user",
   },
 ];
+
+/** 変換の場面で、対応表の行を見つけた後の札と一言 */
+const LOOKUP_FOUND: Pick<NetworkPhase, "capsule" | "caption"> = {
+  capsule: { kind: "response", tag: "変換結果", payload: "93.184.216.34", stop: "dnsIn" },
+  caption: <>名前 → <b>IPアドレス</b>に変換。これがDNSの役割</>,
+};
 
 // DNS停止中は「問い合わせ」までしか進めない。応答・接続・ページのレーンは最初から塞がっている。
 const OUTAGE_LAST_INDEX = 1;
@@ -293,13 +316,18 @@ function DnsJourney() {
   const [playing, setPlaying] = useState(false);
   const [outage, setOutage] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+  const [converted, setConverted] = useState(false);
   const [inspectPacket, setInspectPacket] = useState(false);
   const [forward, setForward] = useState(true);
   const reducedMotion = useReducedMotion();
 
   const lastIndex = outage ? OUTAGE_LAST_INDEX : FLOW_STEPS.length - 1;
-  const phase = outage ? outagePhase(index, timedOut) : FLOW_STEPS[index];
+  const step = outage ? outagePhase(index, timedOut) : FLOW_STEPS[index];
+  // 視差効果を減らす設定では、探す間を挟まず変換後を見せる
+  const found = converted || reducedMotion;
+  const phase = step.lookup && found ? { ...step, ...LOOKUP_FOUND } : step;
   const waitingForDns = outage && index === OUTAGE_LAST_INDEX && !timedOut;
+  const lookingUp = !!step.lookup && !found;
 
   useEffect(() => {
     if (!playing || reducedMotion || index >= lastIndex) return;
@@ -320,10 +348,18 @@ function DnsJourney() {
     return () => window.clearTimeout(timer);
   }, [reducedMotion, waitingForDns]);
 
+  // 対応表で名前を探してから、IPアドレスに変換する。
+  useEffect(() => {
+    if (!lookingUp) return;
+    const timer = window.setTimeout(() => setConverted(true), DNS_LOOKUP_MS);
+    return () => window.clearTimeout(timer);
+  }, [lookingUp]);
+
   function goTo(next: number, limit = lastIndex) {
     const clamped = Math.max(0, Math.min(next, limit));
     setForward(clamped >= index);
     setTimedOut(false);
+    setConverted(false);
     setIndex(clamped);
   }
 
@@ -394,11 +430,12 @@ function DnsJourney() {
           inspectOpen={inspectPacket}
           onInspect={() => setInspectPacket((current) => !current)}
           caption={{
-            id: `${outage ? "x" : "o"}-${index}-${timedOut ? "t" : ""}`,
+            id: `${outage ? "x" : "o"}-${index}-${timedOut ? "t" : ""}${found ? "c" : ""}`,
             text: phase.caption,
             tone: outage ? "danger" : "info",
             focus: phase.focus,
           }}
+          lookup={step.lookup ? (found ? "found" : "searching") : null}
         />
       </div>
 

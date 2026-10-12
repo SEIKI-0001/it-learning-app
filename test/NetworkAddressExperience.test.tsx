@@ -87,6 +87,7 @@ describe("NetworkAddressExperience", () => {
     expect(stateOf('[data-node="dns"]')).toBe("active");
 
     fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
+    fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
     expect(packet).toHaveTextContent("DNS応答");
     expect(packet).toHaveTextContent("93.184.216.34");
     expect(screen.getByTestId("network-route")).toHaveTextContent("DNS → あなた");
@@ -99,10 +100,39 @@ describe("NetworkAddressExperience", () => {
     expect(stateOf('[data-node="web"]')).toBe("active");
   });
 
+  it("shows the DNS turning the name into an IP address with its lookup table", () => {
+    vi.useFakeTimers();
+    renderJourney();
+    const forward = screen.getByRole("button", { name: "1ステップ進む" });
+    fireEvent.click(forward);
+    expect(screen.queryByTestId("dns-lookup")).not.toBeInTheDocument();
+
+    fireEvent.click(forward);
+    const packet = screen.getByRole("button", { name: "流れているデータの中身を見る" });
+    expect(screen.getByTestId("network-route")).toHaveTextContent("DNSの中（対応表を引く）");
+    expect(screen.getByTestId("dns-lookup")).toHaveAttribute("data-state", "searching");
+    expect(packet).toHaveTextContent("example.com");
+    expect(capsuleKind()).toBe("query");
+
+    act(() => {
+      vi.advanceTimersByTime(1400);
+    });
+    expect(screen.getByTestId("dns-lookup")).toHaveAttribute("data-state", "found");
+    expect(packet).toHaveTextContent("変換結果");
+    expect(packet).toHaveTextContent("93.184.216.34");
+    expect(capsuleKind()).toBe("response");
+    expect(screen.getByTestId("network-scene-caption")).toHaveTextContent("これがDNSの役割");
+
+    // 戻ってからもう一度来ると、探すところからやり直す
+    fireEvent.click(screen.getByRole("button", { name: "1ステップ戻る" }));
+    fireEvent.click(forward);
+    expect(screen.getByTestId("dns-lookup")).toHaveAttribute("data-state", "searching");
+  });
+
   it("continues past the web server until the page is displayed", () => {
     renderJourney();
     const forward = screen.getByRole("button", { name: "1ステップ進む" });
-    for (let i = 0; i < 5; i += 1) fireEvent.click(forward);
+    for (let i = 0; i < 6; i += 1) fireEvent.click(forward);
 
     expect(screen.getByTestId("network-route")).toHaveTextContent("Webサーバ → あなた");
     expect(capsuleKind()).toBe("page");
@@ -110,7 +140,7 @@ describe("NetworkAddressExperience", () => {
     expect(screen.queryByTestId("browser-window")).not.toBeInTheDocument();
 
     fireEvent.click(forward);
-    expect(screen.getByText("7 / 7")).toBeInTheDocument();
+    expect(screen.getByText("8 / 8")).toBeInTheDocument();
     expect(screen.getByTestId("browser-window")).toHaveTextContent("example.com");
     expect(forward).toBeDisabled();
   });
@@ -187,6 +217,9 @@ describe("NetworkAddressExperience", () => {
     expect(screen.getByRole("button", { name: "名前解決を再生" })).toBeDisabled();
 
     fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
+    fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
+    // 視差効果を減らす設定では、対応表は最初から「見つけた」状態
+    expect(screen.getByTestId("dns-lookup")).toHaveAttribute("data-state", "found");
     fireEvent.click(screen.getByRole("button", { name: "1ステップ進む" }));
     expect(capsuleKind()).toBe("response");
     expect(stateOf('[data-lane="response"]')).toBe("active");

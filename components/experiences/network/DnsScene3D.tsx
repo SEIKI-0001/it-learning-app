@@ -8,6 +8,7 @@ import { damp, lift, pointOn, type V3 } from "../scene3d/math";
 import { CameraRig, CaptionBubble, CaptionProjector, Label, LabelProjector, Mover, useGlowTexture, useInView, useLabelRegistry, type Shot } from "../scene3d/parts";
 import type { NodeState } from "./NetworkSceneBase";
 import type { CapsuleKind, CapsuleStop, DnsSceneProps, LaneId, LaneState, NetworkNodeId } from "./dnsTypes";
+import { DnsLookupTable } from "./DnsLookupTable";
 import styles from "./dnsdiorama.module.css";
 import tagStyles from "../netdev/netdev3d.module.css";
 
@@ -469,8 +470,10 @@ function FitView({ reducedMotion }: { reducedMotion: boolean }) {
 // ---------------------------------------------------------------------------
 
 /** データの札の向き。吹き出しが指す物（着いた先）を隠さないよう、横へずらす */
-function capsulePlace(stop: CapsuleStop | null) {
+function capsulePlace(stop: CapsuleStop | null, lookup: boolean) {
   if (stop === "webIn") return "left" as const;
+  // 名札（左）と吹き出し（上）を避けて下へ
+  if (lookup) return "below" as const;
   if (stop === "dnsBlocked") return "below" as const;
   return "right" as const;
 }
@@ -479,7 +482,7 @@ const NAME: Record<NetworkNodeId, string> = { user: "あなた", dns: "DNSサー
 // 状態の小札は「止まっている」ときだけ（処理中・送信は動きと吹き出しで分かる）
 const STATUS_WORD: Partial<Record<NodeState, string>> = { error: "応答なし", disabled: "未接続" };
 
-export default function DnsScene3D({ nodes, lanes, capsule, showBrowser = false, outage, reducedMotion, inspectOpen, onInspect, forward, caption = null }: DnsSceneProps) {
+export default function DnsScene3D({ nodes, lanes, capsule, showBrowser = false, outage, reducedMotion, inspectOpen, onInspect, forward, caption = null, lookup = null }: DnsSceneProps) {
   const wrap = useRef<HTMLDivElement>(null);
   const visible = useInView(wrap);
   const registry = useLabelRegistry();
@@ -573,7 +576,7 @@ export default function DnsScene3D({ nodes, lanes, capsule, showBrowser = false,
         ))}
         {/* 流れているデータの札。押すと中身を見られる */}
         {capsule && (
-          <Label registry={registry} id="capsule" at={[0, 0.025, 0]} follow={parcelRef as RefObject<THREE.Object3D | null>} place={capsulePlace(stop)}>
+          <Label registry={registry} id="capsule" at={[0, 0.025, 0]} follow={parcelRef as RefObject<THREE.Object3D | null>} place={capsulePlace(stop, !!lookup)}>
             <button
               type="button"
               onClick={onInspect}
@@ -586,6 +589,12 @@ export default function DnsScene3D({ nodes, lanes, capsule, showBrowser = false,
               <span className={styles.capsulePayload}>{capsule.payload}</span>
             </button>
           </Label>
+        )}
+        {/* DNSの対応表。ラックの横はスマホ幅で吹き出しと重なり右へはみ出すので、空いている右下の隅に出す */}
+        {lookup && (
+          <div className="absolute bottom-2 right-2">
+            <DnsLookupTable state={lookup} />
+          </div>
         )}
         {/* 模型の PC の画面は小さいので、表示されたページは右下の隅に大きく出す */}
         {showBrowser && (
