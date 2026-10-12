@@ -702,7 +702,12 @@ export function buildWeeklyChecklist(
  *   - book     … 本の順序（effective mode が book のときだけ）
  *   - orderKey … 今の学習順の前提（lib/studyContext の studyOrderKey）。週の計画の作り直しの判定に使う
  */
-export type PlanBookOptions = { book?: BookQueueOptions | null; orderKey?: string };
+export type PlanBookOptions = {
+  book?: BookQueueOptions | null;
+  orderKey?: string;
+  /** 立て直し提案で採用した弱点トピック（今日のメニューにだけ効く）。 */
+  focusTopicIds?: string[];
+};
 
 /** 参考書順のときの「今日これをやる理由」。主な理由は本の順であること。 */
 export function buildBookTodayReasons(
@@ -846,7 +851,12 @@ export function generateLearningPlan(
     now,
     dailyMinutesOverride,
     activities,
-    options?.book ? { book: options.book } : undefined,
+    options?.book || options?.focusTopicIds?.length
+      ? {
+        ...(options.book ? { book: options.book } : {}),
+        ...(options.focusTopicIds?.length ? { focusTopicIds: options.focusTopicIds } : {}),
+      }
+      : undefined,
   );
   const primaryItem = todayMenu.items.find((i) => i.kind === "learn");
   const primary = primaryItem ? getTopic(primaryItem.topicId) : undefined;

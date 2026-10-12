@@ -14,6 +14,7 @@ import type {
 import type { Topic } from "@/types/content";
 import { assessTopicForCheckpoint, buildCheckpointNeeds } from "@/lib/checkpointNeeds";
 import { localDateKey, type BookQueueOptions } from "@/lib/bookStudyPlan";
+import { RECOVERY_FOCUS_PRIORITY, RECOVERY_FOCUS_REASON } from "@/lib/recoveryFocus";
 
 const DAY_MS = 86_400_000;
 export const LEARNING_LOOP_CONFIG = {
@@ -375,6 +376,11 @@ export function buildTodaysLearningQueue(input: {
    * 省略時（アプリ順）は従来と完全に同じキューになる。
    */
   book?: BookQueueOptions | null;
+  /**
+   * 立て直し提案で採用した弱点トピック（lib/recoveryFocus.ts）。期限切れの復習の次、
+   * 総まとめ試験の誤答より先に出す。省略時は従来と同じキュー。
+   */
+  focusTopicIds?: string[];
 }): TodaysLearningQueueItem[] {
   const now = input.now ?? new Date();
   const book = input.book ?? null;
@@ -419,6 +425,10 @@ export function buildTodaysLearningQueue(input: {
 
   for (const review of getDueReviewTopics(input.progress.reviewQueue, now)) {
     addTopic(review.topicId, "overdue_review", 600, review.reason);
+  }
+
+  for (const topicId of input.focusTopicIds ?? []) {
+    addTopic(topicId, "low_mastery", RECOVERY_FOCUS_PRIORITY, RECOVERY_FOCUS_REASON);
   }
 
   const weak = getWeakTopics(input.progress.topicMasteryStats ?? {});

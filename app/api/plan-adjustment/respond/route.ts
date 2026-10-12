@@ -2,14 +2,12 @@ import { NextResponse } from "next/server";
 import { getServiceSupabase } from "@/lib/supabaseServer";
 import { getRequestUserId } from "@/lib/apiUser";
 import {
-  dailyStudyTaskToRow,
   planAdjustmentRowToProposal,
   type PlanAdjustmentRow,
 } from "@/lib/dbMappers";
 import { OPTION_ID, type RecoveryPlanOption } from "@/types/planAdjustment";
 import type { WeakTopic } from "@/types/integratedStatus";
 import type { WeeklyPlan } from "@/types";
-import type { DailyStudyTaskInput } from "@/types/studyProgress";
 
 export const runtime = "nodejs";
 
@@ -18,8 +16,9 @@ export const runtime = "nodejs";
 // body: { userId?, proposalId, action: "accept" | "reject", selectedOptionId? }
 // 返却: { ok, proposal }
 //
-// - accept: proposal を accepted にし、選択案に応じて user_progress.weekly_plan を補正、
-//   必要なら daily_study_tasks に source='recovery' のタスクを追加する（過去データは変更しない）。
+// - accept: proposal を accepted にし、選択案に応じて user_progress.weekly_plan を補正する
+//   （過去データは変更しない）。弱点トピックは採用から7日間、Today のメニューの上位に出る
+//   （/api/plan-adjustment/latest の focusTopicIds → lib/recoveryFocus.ts）。
 // - reject: proposal を rejected にする（計画は変更しない）。
 // - postpone_exam が選ばれても user_profiles.exam_date は自動変更しない
 //   （selected_option_id に記録し、設定画面での手動変更に委ねる）。
@@ -50,41 +49,6 @@ function adjustWeeklyPlan(
   // 弱点トピックを復習リストの先頭に寄せ、重複は除く。
   const reviewIds = Array.from(new Set([...weakIds, ...base.reviewIds]));
   return { ...base, reviewIds };
-}
-
-/** 選択案に応じた recovery タスクを組み立てる。 */
-function buildRecoveryTasks(
-  option: RecoveryPlanOption,
-  weak: WeakTopic[],
-): DailyStudyTaskInput[] {
-  const tasks: DailyStudyTaskInput[] = [];
-  const firstWeak = weak[0];
-
-  // 復習を厚くする案では弱点復習タスクを優先で入れる。
-  if (option.focus.review >= option.focus.examPractice || option.optionId === OPTION_ID.weakFocus) {
-    tasks.push({
-      taskType: "review",
-      topicId: firstWeak?.topicId ?? "",
-      title: firstWeak
-        ? `弱点復習：${firstWeak.title}`
-        : "弱点・要復習トピックの復習",
-      reason: `立て直し提案「${option.title}」で選んだ復習タスクです`,
-      source: "recovery",
-    });
-  }
-
-  // 本番対応を含む案では過去問レベル演習タスクを入れる。
-  if (option.focus.examPractice >= 25) {
-    tasks.push({
-      taskType: "exam_level",
-      topicId: firstWeak?.topicId ?? "",
-      title: "過去問レベル問題を解く",
-      reason: `立て直し提案「${option.title}」で選んだ本番対応タスクです`,
-      source: "recovery",
-    });
-  }
-
-  return tasks;
 }
 
 export async function POST(request: Request) {
@@ -181,7 +145,7 @@ export async function POST(request: Request) {
     .single();
 
   // postpone_exam は exam_date を自動変更しない（設定画面での手動変更に委ねる）。
-  // それ以外の案は weekly_plan を補正し、recovery タスクを追加する。
+  // それ以外の案は weekly_plan を補正する。
   if (selectedOptionId !== OPTION_ID.postponeExam) {
     // 元にした統合進捗から弱点トピックを取得（無ければ空で続行）。
     let weak: WeakTopic[] = [];
@@ -210,21 +174,6 @@ export async function POST(request: Request) {
       .from("user_progress")
       .update({ weekly_plan: nextPlan, updated_at: nowIso })
       .eq("user_id", userId);
-
-    // recovery タスクを今日分に追加（既存は上書きしない）。
-    const date = new Date().toISOString().slice(0, 10);
-    const taskInputs = buildRecoveryTasks(option, weak);
-    const taskRows = taskInputs
-      .filter((t) => (t.title ?? "").trim())
-      .map((t) => dailyStudyTaskToRow(userId, date, t));
-    if (taskRows.length > 0) {
-      await supabase
-        .from("daily_study_tasks")
-        .upsert(taskRows, {
-          onConflict: "user_id,date,task_type,topic_id,title",
-          ignoreDuplicates: true,
-        });
-    }
   }
 
   return NextResponse.json({

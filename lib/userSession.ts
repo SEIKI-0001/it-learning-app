@@ -1193,6 +1193,27 @@ export async function fetchLatestPlanAdjustment(
 }
 
 /**
+ * 採用した立て直し案の弱点トピック（採用から7日間）。Today のメニューの上位に出す。
+ * 未ログイン・失敗・該当なしは空配列（Today はそのまま動く）。
+ */
+export async function fetchRecoveryFocusTopicIds(userId: string): Promise<string[]> {
+  try {
+    const res = await fetch("/api/plan-adjustment/latest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { ok: boolean; focusTopicIds?: unknown };
+    return data.ok && Array.isArray(data.focusTopicIds)
+      ? data.focusTopicIds.filter((id): id is string => typeof id === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
  * 立て直し提案に応答する（承認 / 見送り）。
  * 承認時のみサーバー側で計画を補正する。更新後の提案を返す（失敗なら null）。
  */

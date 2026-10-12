@@ -21,6 +21,7 @@ import {
 } from "@/lib/studyAmount";
 import { resolveTodayPace } from "@/lib/studyPace";
 import {
+  fetchRecoveryFocusTopicIds,
   getUserId,
   refreshIntegratedStatus,
   saveDailyTasksToDb,
@@ -97,6 +98,20 @@ export default function TodayPage() {
     if (userId) void refreshIntegratedStatus(userId);
   }, []);
 
+  // 立て直し提案で採用した弱点トピック（採用から7日間）。取れなければ空で従来どおり。
+  const [focusTopicIds, setFocusTopicIds] = useState<string[]>([]);
+  useEffect(() => {
+    const userId = getUserId();
+    if (!userId) return;
+    let cancelled = false;
+    void fetchRecoveryFocusTopicIds(userId).then((ids) => {
+      if (!cancelled && ids.length > 0) setFocusTopicIds(ids);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // 単語帳の進捗（端末＋DB同期）と、確認パックのトピック別ステージ。
   // どちらも Today の「関連用語を4択で確認」タスクを決める材料で、取れなければ出さないだけ。
   const [wordProgress, setWordProgress] = useState(() => getWordProgressMap());
@@ -156,7 +171,8 @@ export default function TodayPage() {
     if (!state?.profile) return { active: [], done: [], pinned: [] };
     const now = new Date();
     const upcomingTopicIds = buildTodaysLearningQueue({
-      state, progress: state.progress, topics, now, ...(bookQueue ? { book: bookQueue } : {}),
+      state, progress: state.progress, topics, now, focusTopicIds,
+      ...(bookQueue ? { book: bookQueue } : {}),
     })
       .flatMap((item) => (item.topicId ? [item.topicId] : []))
       .slice(0, 5);
@@ -170,7 +186,7 @@ export default function TodayPage() {
       upcomingTopicIds,
       log: activityLog,
     });
-  }, [activityLog, bookQueue, budgetMinutes, state, topicStages, topics, wordProgress]);
+  }, [activityLog, bookQueue, budgetMinutes, focusTopicIds, state, topicStages, topics, wordProgress]);
   const plan = useMemo(
     () =>
       state?.profile
@@ -180,10 +196,10 @@ export default function TodayPage() {
           new Date(),
           budgetMinutes,
           activities.active,
-          bookQueue ? { book: bookQueue, orderKey } : undefined,
+          { ...(bookQueue ? { book: bookQueue, orderKey } : {}), focusTopicIds },
         )
         : null,
-    [activities.active, bookQueue, budgetMinutes, orderKey, state, topics],
+    [activities.active, bookQueue, budgetMinutes, focusTopicIds, orderKey, state, topics],
   );
   const menu = plan?.todayMenu;
   const learningQueue = useMemo(
@@ -193,10 +209,11 @@ export default function TodayPage() {
         progress: state.progress,
         topics,
         activities: activities.active,
+        focusTopicIds,
         ...(bookQueue ? { book: bookQueue } : {}),
       })
       : []),
-    [activities.active, bookQueue, state, topics],
+    [activities.active, bookQueue, focusTopicIds, state, topics],
   );
 
   // 今日のメニューに初めて載ったタスクを保存し、その日のうちは中身（対象の単語・問題）を固定する。

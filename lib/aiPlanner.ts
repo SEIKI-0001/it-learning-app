@@ -129,7 +129,7 @@ export function generateTodayMenu(
    * 学習量の BOOK_NEW_SHARE 以上を新規に残す（復習が溜まっても新規が止まらない）。
    * 省略時は従来と完全に同じメニューになる。
    */
-  options?: { book?: BookQueueOptions | null },
+  options?: { book?: BookQueueOptions | null; focusTopicIds?: string[] },
 ): TodayMenu {
   const book = options?.book ?? null;
   const budget =
@@ -146,6 +146,7 @@ export function generateTodayMenu(
   const ranked = buildTodaysLearningQueue({
     state: { profile, progress, answers }, progress, topics, now, activities,
     ...(book ? { book } : {}),
+    ...(options?.focusTopicIds?.length ? { focusTopicIds: options.focusTopicIds } : {}),
   });
   const reviewAll = ranked
     .filter((item) =>
