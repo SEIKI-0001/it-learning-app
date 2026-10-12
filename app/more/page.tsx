@@ -41,6 +41,12 @@ const GROUPS: readonly {
       { href: "/glossary", icon: "layers", title: "単語帳", description: "頻出用語を覚える" },
       { href: "/ai-grading", icon: "pen", title: "AI採点", description: "説明できる理解を試す" },
       { href: "/syllabus", icon: "list", title: "シラバス対応表", description: "学習範囲を確認" },
+      {
+        href: "/netlab",
+        icon: "server",
+        title: "ネットワーク構築ラボ（β）",
+        description: "オフィスに機器を置いてつなぎ、通信を確かめる",
+      },
     ],
   },
   {

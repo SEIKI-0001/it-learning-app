@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
 import Button from "@/components/ui/Button";
 import {
   DEVICE_NAME,
@@ -124,6 +125,8 @@ export default function NetLab() {
   const [missionIdx, setMissionIdx] = useState(() => firstOpenMission(state));
   const traceKey = useRef(0);
 
+  // 「その他」から来たとき、前のページのスクロール位置のまま開かないよう先頭に戻す（模型は後から読み込むので Next の自動スクロールが効かない）
+  useEffect(() => window.scrollTo(0, 0), []);
   useEffect(() => writeJson(STORAGE_KEY, state), [state]);
   useEffect(() => writeJson(LEARNED_KEY, learned), [learned]);
 
@@ -267,7 +270,10 @@ export default function NetLab() {
     <div className="mx-auto max-w-[1400px] px-4 pb-16 pt-6 lg:px-6">
       <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-wide text-brand-600">プロトタイプ ・ テスト環境</p>
+          <Link href="/more" className="text-xs font-semibold text-gray-500 hover:text-gray-700">
+            ← その他へ戻る
+          </Link>
+          <p className="mt-2 text-xs font-semibold tracking-wide text-brand-600">β版 ・ ネットワークを作って学ぶ</p>
           <h1 className="text-2xl font-bold text-gray-900">オフィスネットワーク構築ラボ</h1>
         </div>
         <Button variant="secondary" size="sm" onClick={reset}>
