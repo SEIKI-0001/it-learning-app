@@ -12,6 +12,7 @@ import {
   type TopicProgressRow,
 } from "@/lib/dbMappers";
 import { judgeRates, decidePackStage } from "@/lib/checkPackJudge";
+import { getCheckPack, resolvePackFlashcards } from "@/lib/checkPack";
 import { recalculateExamReadiness } from "@/lib/examReadiness/service";
 import { isStrictOffsetIsoTimestamp } from "@/lib/strictIsoTimestamp";
 
@@ -100,7 +101,10 @@ export async function POST(request: Request) {
     ? topicProgressRowToProgress(existingRow as TopicProgressRow)
     : null;
 
-  const judgement = judgeRates(rates);
+  // 用語の無いパックは、用語のステップを判定に含めない（画面側と同じ基準）。
+  const pack = getCheckPack(packId);
+  const hasTerms = pack ? resolvePackFlashcards(pack).length > 0 : true;
+  const judgement = judgeRates(rates, { hasTerms });
   const decision = decidePackStage(judgement, prev?.consecutiveFailedCount ?? 0);
 
   // 1) パック結果を保存。

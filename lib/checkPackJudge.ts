@@ -36,10 +36,20 @@ export type PackJudgement = {
   complete: boolean;
 };
 
+export type JudgeOptions = {
+  /**
+   * パックに関連用語があるか（既定 true）。
+   * 英略語の無いトピック（2進数・表計算など）のパックは用語のステップ自体が無いので、
+   * 用語を「未実施・未達」と数えると、全問正解でも本番対応OKに届かなくなる。
+   */
+  hasTerms?: boolean;
+};
+
 /** 正答率としきい値から各セクションの合否を求める。 */
-export function judgeRates(rates: PackRates): PackJudgement {
+export function judgeRates(rates: PackRates, options: JudgeOptions = {}): PackJudgement {
+  const termsRequired = options.hasTerms ?? true;
   const quizAttempted = rates.quizRate != null;
-  const termsAttempted = rates.flashcardRate != null;
+  const termsAttempted = !termsRequired || rates.flashcardRate != null;
   const examAttempted = rates.examLevelRate != null;
   return {
     quizAttempted,
@@ -47,7 +57,8 @@ export function judgeRates(rates: PackRates): PackJudgement {
     examAttempted,
     quizOk: quizAttempted && (rates.quizRate as number) >= QUIZ_PASS_RATE,
     termsOk:
-      termsAttempted && (rates.flashcardRate as number) >= FLASHCARD_PASS_RATE,
+      !termsRequired ||
+      (termsAttempted && (rates.flashcardRate as number) >= FLASHCARD_PASS_RATE),
     examOk:
       examAttempted && (rates.examLevelRate as number) >= EXAM_LEVEL_PASS_RATE,
     complete: quizAttempted && termsAttempted && examAttempted,

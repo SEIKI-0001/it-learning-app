@@ -146,28 +146,28 @@ describe("Today の単語タスク: 選び方", () => {
   });
 
   it("複数の今日のトピックから関連語を集める（upcomingTopicIds の順・重複なし）", () => {
-    // NETWORK: nat/dns/dhcp, HTTP: http/https/tcp, LAN: lan/wan/vpn, CLOUD: saas/paas/iaas
-    // tech-web-internet-basics（tcp/udp/http）は tcp・http が HTTP と重複する
+    // NETWORK: nat/dns/dhcp, HTTP: http/https/tls, LAN: lan/wan/vpn, CLOUD: saas/paas/iaas
+    // tech-web-internet-basics（tcp/udp/http）は http が HTTP と重複する
     const task = build({ cp: 2, upcoming: [NETWORK, HTTP, "tech-web-internet-basics", LAN, CLOUD] })!;
     expect(task.spec).toEqual({
       kind: "vocab",
       variant: "related",
-      wordIds: ["nat", "dns", "dhcp", "http", "https", "tcp", "udp", "lan", "wan", "vpn", "saas", "paas", "iaas"],
+      wordIds: ["nat", "dns", "dhcp", "http", "https", "tls", "tcp", "udp", "lan", "wan", "vpn", "saas", "paas", "iaas"],
       topicId: NETWORK,
     });
     expect(task).toMatchObject({
       title: "関連用語を4択で確認", // 1トピックだけの語ではないので「○○の関連用語」にしない
-      countLabel: "13語",
+      countLabel: "14語",
       estimatedMinutes: 4,
       anchorTopicId: NETWORK,
     });
-    expect(task.detail).toBe("NAT / DNS / DHCP / HTTP / HTTPS / TCP ほか7語");
+    expect(task.detail).toBe("NAT / DNS / DHCP / HTTP / HTTPS / TLS ほか8語");
   });
 
   it("学習済みの語は除き、最初に未学習語を持つトピックを元トピックにする", () => {
     const learned = { nat: word("nat"), dns: word("dns"), dhcp: word("dhcp"), https: word("https") };
     expect(selectVocabSpec(input({ cp: 3, words: learned, upcoming: [NETWORK, HTTP] }))).toEqual({
-      kind: "vocab", variant: "related", wordIds: ["http", "tcp"], topicId: HTTP,
+      kind: "vocab", variant: "related", wordIds: ["http", "tls"], topicId: HTTP,
     });
   });
 
@@ -299,7 +299,7 @@ describe("Today の単語タスク: terms_stabilizing", () => {
       "dns", "dhcp", // 対象トピック（定着済みの NAT は除く）
       ...byOrder(["sla", "tcp"]), // 期限
       "waf", // 苦手
-      "http", "https", "lan", "wan", "vpn", // 他の今日のトピックの未学習語（tcp は重複・NETWORK は既出）
+      "http", "https", "tls", "lan", "wan", "vpn", // 他の今日のトピックの未学習語（NETWORK は既出）
     ]);
     const task = build({ cp: 3, words, stages: { [NETWORK]: "terms_stabilizing" }, upcoming: [HTTP, NETWORK, LAN] })!;
     // 他の語が混ざるので「○○の関連用語」とは名乗らない

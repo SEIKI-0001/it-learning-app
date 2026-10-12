@@ -18,6 +18,15 @@ function quizIds(topicId: string, n = 4): string[] {
   return Array.from({ length: n }, (_, i) => `${topicId}-q${i + 1}`);
 }
 
+/**
+ * 出題する確認問題を番号で選ぶ（確認問題が5問以上あるトピック用）。
+ * 先頭4問に用語の言い換えだけの易しい問題や、第3段階（過去問レベル）と同じ問いが
+ * 含まれるトピックでは、計算・応用の問題を優先して選ぶ（2026-10-12 監査）。
+ */
+function pickQuizIds(topicId: string, numbers: number[]): string[] {
+  return numbers.map((n) => `${topicId}-q${n}`);
+}
+
 function examIds(topicId: string, n = 2): string[] {
   return Array.from({ length: n }, (_, i) => `${topicId}-ex${i + 1}`);
 }
@@ -136,7 +145,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-binary-data",
     topicId: "tech-binary-data",
-    quizQuestionIds: quizIds("tech-binary-data"),
+    quizQuestionIds: pickQuizIds("tech-binary-data", [1, 2, 3, 5]),
     flashcardIds: topicWordIds("tech-binary-data"),
     examLevelQuestionIds: examIds("tech-binary-data"),
     recommendedTiming: "after_learning",
@@ -154,7 +163,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-os-software-hardware",
     topicId: "tech-os-software-hardware",
-    quizQuestionIds: quizIds("tech-os-software-hardware"),
+    quizQuestionIds: pickQuizIds("tech-os-software-hardware", [1, 2, 4, 6]),
     flashcardIds: topicWordIds("tech-os-software-hardware"),
     examLevelQuestionIds: examIds("tech-os-software-hardware"),
     recommendedTiming: "after_learning",
@@ -244,7 +253,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-spreadsheet",
     topicId: "tech-spreadsheet",
-    quizQuestionIds: quizIds("tech-spreadsheet"),
+    quizQuestionIds: pickQuizIds("tech-spreadsheet", [1, 2, 4, 5]),
     flashcardIds: topicWordIds("tech-spreadsheet"),
     examLevelQuestionIds: examIds("tech-spreadsheet"),
     recommendedTiming: "exam_prep",
@@ -325,7 +334,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-mgmt-wbs-gantt",
     topicId: "mgmt-wbs-gantt",
-    quizQuestionIds: quizIds("mgmt-wbs-gantt"),
+    quizQuestionIds: pickQuizIds("mgmt-wbs-gantt", [2, 3, 4, 5]),
     flashcardIds: topicWordIds("mgmt-wbs-gantt"),
     examLevelQuestionIds: examIds("mgmt-wbs-gantt"),
     recommendedTiming: "after_learning",
@@ -415,7 +424,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-strat-accounting-break-even",
     topicId: "strat-accounting-break-even",
-    quizQuestionIds: quizIds("strat-accounting-break-even"),
+    quizQuestionIds: pickQuizIds("strat-accounting-break-even", [2, 3, 4, 5]),
     flashcardIds: topicWordIds("strat-accounting-break-even"),
     examLevelQuestionIds: examIds("strat-accounting-break-even"),
     recommendedTiming: "exam_prep",
@@ -460,7 +469,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-strat-system-strategy",
     topicId: "strat-system-strategy",
-    quizQuestionIds: quizIds("strat-system-strategy"),
+    quizQuestionIds: pickQuizIds("strat-system-strategy", [2, 3, 4, 5]),
     flashcardIds: topicWordIds("strat-system-strategy"),
     examLevelQuestionIds: examIds("strat-system-strategy"),
     recommendedTiming: "after_learning",
@@ -469,7 +478,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-strat-business-process",
     topicId: "strat-business-process",
-    quizQuestionIds: quizIds("strat-business-process"),
+    quizQuestionIds: pickQuizIds("strat-business-process", [2, 3, 4, 5]),
     flashcardIds: topicWordIds("strat-business-process"),
     examLevelQuestionIds: examIds("strat-business-process"),
     recommendedTiming: "after_learning",
@@ -514,7 +523,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-strat-financial-statements",
     topicId: "strat-financial-statements",
-    quizQuestionIds: quizIds("strat-financial-statements"),
+    quizQuestionIds: pickQuizIds("strat-financial-statements", [1, 2, 4, 6]),
     flashcardIds: topicWordIds("strat-financial-statements"),
     examLevelQuestionIds: examIds("strat-financial-statements"),
     recommendedTiming: "exam_prep",
@@ -561,7 +570,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-lan-wan",
     topicId: "tech-lan-wan",
-    quizQuestionIds: quizIds("tech-lan-wan"),
+    quizQuestionIds: pickQuizIds("tech-lan-wan", [2, 3, 5, 6]),
     flashcardIds: topicWordIds("tech-lan-wan"),
     examLevelQuestionIds: examIds("tech-lan-wan"),
     recommendedTiming: "after_learning",
@@ -579,7 +588,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-programming-basics",
     topicId: "tech-programming-basics",
-    quizQuestionIds: quizIds("tech-programming-basics"),
+    quizQuestionIds: pickQuizIds("tech-programming-basics", [2, 3, 4, 5]),
     flashcardIds: topicWordIds("tech-programming-basics"),
     examLevelQuestionIds: examIds("tech-programming-basics"),
     recommendedTiming: "review_day",
@@ -588,7 +597,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-tech-data-utilization",
     topicId: "tech-data-utilization",
-    quizQuestionIds: quizIds("tech-data-utilization"),
+    quizQuestionIds: pickQuizIds("tech-data-utilization", [2, 4, 5, 6]),
     flashcardIds: topicWordIds("tech-data-utilization"),
     examLevelQuestionIds: examIds("tech-data-utilization"),
     recommendedTiming: "after_learning",
@@ -615,7 +624,7 @@ export const topicCheckPacks: TopicCheckPack[] = [
   {
     packId: "pack-mgmt-estimation",
     topicId: "mgmt-estimation",
-    quizQuestionIds: quizIds("mgmt-estimation"),
+    quizQuestionIds: pickQuizIds("mgmt-estimation", [1, 2, 4, 5]),
     flashcardIds: topicWordIds("mgmt-estimation"),
     examLevelQuestionIds: examIds("mgmt-estimation"),
     recommendedTiming: "exam_prep",
