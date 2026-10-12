@@ -23,9 +23,9 @@ describe("トピック ↔ 関連単語（Single Source of Truth）", () => {
       expect(pack.flashcardIds).toEqual(topicWordIds(pack.topicId));
       expect(resolvePackFlashcards(pack).map((w) => w.id)).toEqual(pack.flashcardIds);
     }
-    // 移行前の値の抜き取り確認
+    // 抜き取り確認（2026-10-12 監査でトピックと無関係な語を外した後の値）
     const byTopic = new Map(topicCheckPacks.map((p) => [p.topicId, p.flashcardIds]));
-    expect(byTopic.get("tech-security-cia")).toEqual(["isms", "mfa", "sso"]);
+    expect(byTopic.get("tech-security-cia")).toEqual(["isms"]);
     expect(byTopic.get("tech-network-address")).toEqual(["nat", "dns", "dhcp"]);
     expect(byTopic.get("tech-firewall-vpn-zero-trust")).toEqual(["vpn", "waf", "zerotrust"]);
   });

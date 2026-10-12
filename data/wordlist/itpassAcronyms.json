@@ -353,18 +353,22 @@
         "meaning": "目標"
       }
     ],
-    "oneLine": "サービス品質に関する目標値。SLAの中で定義される。",
+    "oneLine": "サービスの品質について定める目標値。SLAの中で、稼働率や応答時間などの目標として定める。",
     "examKeywords": [
+      "SLO",
       "目標値",
-      "目標",
-      "品質"
+      "稼働率",
+      "応答時間",
+      "可用性"
     ],
     "confusedWith": [
-      "SLA"
+      "SLA",
+      "SLI"
     ],
-    "differenceAxis": "合意文書か目標値か",
+    "differenceAxis": "約束か目標か測定指標か",
     "trapExplanations": {
-      "SLA": "SLAは合意文書で、SLOはその中で規定される品質目標値。"
+      "SLA": "SLAはサービス提供者と利用者間で合意されたサービス品質の約束。",
+      "SLI": "SLIはサービス品質を測定する具体的な指標。"
     },
     "questionTypes": [
       "acronym_to_meaning",
@@ -4116,50 +4120,6 @@
     ]
   },
   {
-    "id": "slo",
-    "acronym": "SLO",
-    "fullName": "Service Level Objective",
-    "japanese": "サービスレベル目標",
-    "category": "management",
-    "words": [
-      {
-        "word": "Service",
-        "meaning": "サービス"
-      },
-      {
-        "word": "Level",
-        "meaning": "水準"
-      },
-      {
-        "word": "Objective",
-        "meaning": "目標"
-      }
-    ],
-    "oneLine": "サービスレベルの目標値を定める指標であり、SLAを満たすための基準となる。",
-    "examKeywords": [
-      "SLO",
-      "目標値",
-      "稼働率",
-      "応答時間",
-      "可用性"
-    ],
-    "confusedWith": [
-      "SLA",
-      "SLI"
-    ],
-    "differenceAxis": "約束か目標か測定指標か",
-    "trapExplanations": {
-      "SLA": "SLAはサービス提供者と利用者間で合意されたサービス品質の約束。",
-      "SLI": "SLIはサービス品質を測定する具体的な指標。"
-    },
-    "questionTypes": [
-      "acronym_to_meaning",
-      "meaning_to_acronym",
-      "word_part",
-      "confusion"
-    ]
-  },
-  {
     "id": "sli",
     "acronym": "SLI",
     "fullName": "Service Level Indicator",
@@ -4700,6 +4660,1766 @@
     "trapExplanations": {
       "AR": "ARは現実の風景にデジタル情報を重ねる技術で、仮想空間に入り込むわけではない。",
       "MR": "MRは現実と仮想を融合させる技術。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "tls",
+    "acronym": "TLS",
+    "fullName": "Transport Layer Security",
+    "japanese": "トランスポート層セキュリティ",
+    "category": "security",
+    "words": [
+      {
+        "word": "Transport",
+        "meaning": "輸送"
+      },
+      {
+        "word": "Layer",
+        "meaning": "層"
+      },
+      {
+        "word": "Security",
+        "meaning": "安全"
+      }
+    ],
+    "oneLine": "インターネット上の通信を暗号化し、改ざんの検知と通信相手の認証を行うプロトコル。SSLの後継にあたる。",
+    "examKeywords": [
+      "HTTPS",
+      "暗号化通信",
+      "サーバ証明書",
+      "SSLの後継"
+    ],
+    "confusedWith": [
+      "HTTPS",
+      "VPN"
+    ],
+    "differenceAxis": "通信を守る仕組みそのものか、それを使った通信や通信路か",
+    "trapExplanations": {
+      "HTTPS": "HTTPSはHTTPの通信をTLSで保護したもの。TLSは保護の仕組みそのもの。",
+      "VPN": "VPNは拠点や端末の間に仮想的な専用の通信路を作る仕組み。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ca",
+    "acronym": "CA",
+    "fullName": "Certificate Authority",
+    "japanese": "認証局",
+    "category": "security",
+    "words": [
+      {
+        "word": "Certificate",
+        "meaning": "証明書"
+      },
+      {
+        "word": "Authority",
+        "meaning": "機関"
+      }
+    ],
+    "oneLine": "公開鍵とその持ち主の対応を保証し、電子証明書（ディジタル証明書）を発行する第三者機関。",
+    "examKeywords": [
+      "電子証明書",
+      "公開鍵の正当性",
+      "PKI"
+    ],
+    "confusedWith": [
+      "PKI",
+      "CSIRT"
+    ],
+    "differenceAxis": "証明書を発行する機関か、仕組み全体か",
+    "trapExplanations": {
+      "PKI": "PKIは認証局を含む、公開鍵を安全に使うための仕組み全体。",
+      "CSIRT": "CSIRTはセキュリティ事故に対応する組織内のチーム。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "pki",
+    "acronym": "PKI",
+    "fullName": "Public Key Infrastructure",
+    "japanese": "公開鍵基盤",
+    "category": "security",
+    "words": [
+      {
+        "word": "Public",
+        "meaning": "公開"
+      },
+      {
+        "word": "Key",
+        "meaning": "鍵"
+      },
+      {
+        "word": "Infrastructure",
+        "meaning": "基盤"
+      }
+    ],
+    "oneLine": "認証局が発行する電子証明書によって公開鍵が本人のものであることを保証し、暗号化や署名を安全に使えるようにする仕組み。",
+    "examKeywords": [
+      "認証局",
+      "電子証明書",
+      "ディジタル署名"
+    ],
+    "confusedWith": [
+      "CA",
+      "TLS"
+    ],
+    "differenceAxis": "仕組み全体か、それを構成する機関か",
+    "trapExplanations": {
+      "CA": "CAは証明書を発行する機関で、PKIを構成する要素の一つ。",
+      "TLS": "TLSは通信を暗号化するプロトコルで、PKIの証明書を利用する側。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "aes",
+    "acronym": "AES",
+    "fullName": "Advanced Encryption Standard",
+    "japanese": "高度暗号化標準",
+    "category": "security",
+    "words": [
+      {
+        "word": "Advanced",
+        "meaning": "高度な"
+      },
+      {
+        "word": "Encryption",
+        "meaning": "暗号化"
+      },
+      {
+        "word": "Standard",
+        "meaning": "標準"
+      }
+    ],
+    "oneLine": "米国政府が標準として採用した、共通鍵暗号方式の代表的な暗号方式。処理が速く、無線LANやHTTPSの暗号化に広く使われる。",
+    "examKeywords": [
+      "共通鍵暗号方式",
+      "暗号化アルゴリズム",
+      "無線LAN"
+    ],
+    "confusedWith": [
+      "SHA",
+      "RSA"
+    ],
+    "differenceAxis": "共通鍵暗号か、公開鍵暗号か、ハッシュ関数か",
+    "trapExplanations": {
+      "SHA": "SHAはハッシュ関数で、元に戻せない要約値を作る。AESは鍵があれば元に戻せる暗号。",
+      "RSA": "RSAは公開鍵暗号方式の代表的な方式。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "sha",
+    "acronym": "SHA",
+    "fullName": "Secure Hash Algorithm",
+    "japanese": "セキュアハッシュアルゴリズム",
+    "category": "security",
+    "words": [
+      {
+        "word": "Secure",
+        "meaning": "安全な"
+      },
+      {
+        "word": "Hash",
+        "meaning": "ハッシュ（要約）"
+      },
+      {
+        "word": "Algorithm",
+        "meaning": "計算手順"
+      }
+    ],
+    "oneLine": "データから決まった長さの要約値（ハッシュ値）を作るハッシュ関数の規格群。256ビットの値を出す方式などがあり、改ざんの検知やディジタル署名に使われる。",
+    "examKeywords": [
+      "ハッシュ関数",
+      "ハッシュ値",
+      "改ざん検知"
+    ],
+    "confusedWith": [
+      "AES"
+    ],
+    "differenceAxis": "元に戻せる暗号化か、戻せない要約か",
+    "trapExplanations": {
+      "AES": "AESは共通鍵暗号方式で、鍵があれば元に戻せる。ハッシュ値からは元のデータに戻せない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "smtp",
+    "acronym": "SMTP",
+    "fullName": "Simple Mail Transfer Protocol",
+    "japanese": "簡易メール転送プロトコル",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Simple",
+        "meaning": "簡易な"
+      },
+      {
+        "word": "Mail",
+        "meaning": "メール"
+      },
+      {
+        "word": "Transfer",
+        "meaning": "転送"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "通信規約"
+      }
+    ],
+    "oneLine": "電子メールを送信し、メールサーバの間で転送するためのプロトコル。",
+    "examKeywords": [
+      "メール送信",
+      "メールサーバ間の転送"
+    ],
+    "confusedWith": [
+      "POP",
+      "IMAP"
+    ],
+    "differenceAxis": "送るためか、受け取るためか",
+    "trapExplanations": {
+      "POP": "POPはメールサーバに届いたメールを端末へ取り出す受信用のプロトコル。",
+      "IMAP": "IMAPはメールをサーバに置いたまま読む受信用のプロトコル。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "pop",
+    "acronym": "POP",
+    "fullName": "Post Office Protocol",
+    "japanese": "ポストオフィスプロトコル",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Post Office",
+        "meaning": "郵便局"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "通信規約"
+      }
+    ],
+    "oneLine": "メールサーバに届いたメールを端末にダウンロードして受信するプロトコル。現在は第3版が使われる。",
+    "examKeywords": [
+      "メール受信",
+      "端末へダウンロード",
+      "POP3"
+    ],
+    "confusedWith": [
+      "IMAP",
+      "SMTP"
+    ],
+    "differenceAxis": "端末へ取り込むか、サーバに置いたままか",
+    "trapExplanations": {
+      "IMAP": "IMAPはメールをサーバ上に置いたまま扱い、複数の端末で同じ状態を共有できる。",
+      "SMTP": "SMTPはメールを送信・転送するためのプロトコル。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "imap",
+    "acronym": "IMAP",
+    "fullName": "Internet Message Access Protocol",
+    "japanese": "インターネットメッセージアクセスプロトコル",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Internet",
+        "meaning": "インターネット"
+      },
+      {
+        "word": "Message",
+        "meaning": "メッセージ"
+      },
+      {
+        "word": "Access",
+        "meaning": "接続"
+      },
+      {
+        "word": "Protocol",
+        "meaning": "通信規約"
+      }
+    ],
+    "oneLine": "メールをサーバに置いたまま閲覧・管理する受信用のプロトコル。複数の端末で既読や振り分けの状態を共有できる。",
+    "examKeywords": [
+      "メール受信",
+      "サーバ上で管理",
+      "複数端末"
+    ],
+    "confusedWith": [
+      "POP",
+      "SMTP"
+    ],
+    "differenceAxis": "サーバに置いたままか、端末へ取り込むか",
+    "trapExplanations": {
+      "POP": "POPはメールを端末にダウンロードして扱うため、端末ごとに状態が分かれやすい。",
+      "SMTP": "SMTPはメールを送信・転送するためのプロトコル。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "mtbf",
+    "acronym": "MTBF",
+    "fullName": "Mean Time Between Failures",
+    "japanese": "平均故障間隔",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Mean",
+        "meaning": "平均"
+      },
+      {
+        "word": "Time",
+        "meaning": "時間"
+      },
+      {
+        "word": "Between",
+        "meaning": "〜の間"
+      },
+      {
+        "word": "Failures",
+        "meaning": "故障"
+      }
+    ],
+    "oneLine": "故障が直ってから次に故障するまでの平均時間。長いほど故障しにくく、信頼性が高い。",
+    "examKeywords": [
+      "信頼性",
+      "稼働率の計算",
+      "平均故障間隔"
+    ],
+    "confusedWith": [
+      "MTTR"
+    ],
+    "differenceAxis": "動いている時間か、直している時間か",
+    "trapExplanations": {
+      "MTTR": "MTTRは故障してから修理を終えるまでの平均時間で、短いほど良い。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "mttr",
+    "acronym": "MTTR",
+    "fullName": "Mean Time To Repair",
+    "japanese": "平均修理時間",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Mean",
+        "meaning": "平均"
+      },
+      {
+        "word": "Time",
+        "meaning": "時間"
+      },
+      {
+        "word": "To Repair",
+        "meaning": "修理までの"
+      }
+    ],
+    "oneLine": "故障が起きてから修理を終えて復旧するまでの平均時間。短いほど保守性が高い。",
+    "examKeywords": [
+      "保守性",
+      "稼働率の計算",
+      "平均修理時間"
+    ],
+    "confusedWith": [
+      "MTBF",
+      "RTO"
+    ],
+    "differenceAxis": "直している時間か、動いている時間か",
+    "trapExplanations": {
+      "MTBF": "MTBFは故障が直ってから次の故障までの平均時間で、長いほど良い。",
+      "RTO": "RTOは業務を再開させるまでの目標時間で、実績の平均ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "cpu",
+    "acronym": "CPU",
+    "fullName": "Central Processing Unit",
+    "japanese": "中央処理装置",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Central",
+        "meaning": "中央の"
+      },
+      {
+        "word": "Processing",
+        "meaning": "処理"
+      },
+      {
+        "word": "Unit",
+        "meaning": "装置"
+      }
+    ],
+    "oneLine": "プログラムの命令を読み取って解釈し、計算や各装置の制御を行う、コンピュータの中心となる装置。",
+    "examKeywords": [
+      "演算装置",
+      "制御装置",
+      "クロック周波数",
+      "コア"
+    ],
+    "confusedWith": [
+      "GPU"
+    ],
+    "differenceAxis": "全体の制御と計算か、並列計算が得意な補助か",
+    "trapExplanations": {
+      "GPU": "GPUは画像処理など大量の単純な計算を並列で行うのが得意な装置。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "gpu",
+    "acronym": "GPU",
+    "fullName": "Graphics Processing Unit",
+    "japanese": "画像処理装置",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Graphics",
+        "meaning": "画像"
+      },
+      {
+        "word": "Processing",
+        "meaning": "処理"
+      },
+      {
+        "word": "Unit",
+        "meaning": "装置"
+      }
+    ],
+    "oneLine": "画像の描画など大量の単純な計算を並列で高速に行う装置。AIの学習にも使われる。",
+    "examKeywords": [
+      "並列処理",
+      "画像処理",
+      "AIの学習"
+    ],
+    "confusedWith": [
+      "CPU"
+    ],
+    "differenceAxis": "並列計算が得意な補助か、全体の制御と計算か",
+    "trapExplanations": {
+      "CPU": "CPUは命令を解釈して計算と制御を行う、コンピュータの中心となる装置。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ssd",
+    "acronym": "SSD",
+    "fullName": "Solid State Drive",
+    "japanese": "ソリッドステートドライブ",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Solid State",
+        "meaning": "半導体による"
+      },
+      {
+        "word": "Drive",
+        "meaning": "記憶装置"
+      }
+    ],
+    "oneLine": "フラッシュメモリを使った補助記憶装置。電源を切っても内容が残り、HDDより読み書きが速く衝撃に強い。",
+    "examKeywords": [
+      "補助記憶装置",
+      "フラッシュメモリ",
+      "不揮発性"
+    ],
+    "confusedWith": [
+      "HDD"
+    ],
+    "differenceAxis": "半導体のメモリか、回転する磁気ディスクか",
+    "trapExplanations": {
+      "HDD": "HDDは磁気ディスクを回転させて読み書きする補助記憶装置で、SSDより読み書きが遅い。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "os",
+    "acronym": "OS",
+    "fullName": "Operating System",
+    "japanese": "オペレーティングシステム（基本ソフトウェア）",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Operating",
+        "meaning": "操作・運用する"
+      },
+      {
+        "word": "System",
+        "meaning": "仕組み"
+      }
+    ],
+    "oneLine": "ハードウェアの資源を管理し、アプリケーションが共通して使う機能を提供する基本ソフトウェア。",
+    "examKeywords": [
+      "基本ソフトウェア",
+      "タスク管理",
+      "メモリ管理",
+      "ファイル管理"
+    ],
+    "confusedWith": [
+      "OSS",
+      "API"
+    ],
+    "differenceAxis": "資源を管理する基本ソフトか、公開の形態や呼び出し口か",
+    "trapExplanations": {
+      "OSS": "OSSはソースコードが公開され、改変や再配布が認められたソフトウェアのこと。",
+      "API": "APIはソフトウェアの機能を外部から呼び出すための窓口。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "oss",
+    "acronym": "OSS",
+    "fullName": "Open Source Software",
+    "japanese": "オープンソースソフトウェア",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Open",
+        "meaning": "公開された"
+      },
+      {
+        "word": "Source",
+        "meaning": "ソースコード"
+      },
+      {
+        "word": "Software",
+        "meaning": "ソフトウェア"
+      }
+    ],
+    "oneLine": "ソースコードが公開され、ライセンスの条件の範囲で利用・改変・再配布ができるソフトウェア。",
+    "examKeywords": [
+      "ソースコード公開",
+      "ライセンス",
+      "GPL",
+      "コピーレフト"
+    ],
+    "confusedWith": [
+      "OS",
+      "SaaS"
+    ],
+    "differenceAxis": "ソースコードを公開する形態か、ソフトの種類や提供形態か",
+    "trapExplanations": {
+      "OS": "OSはハードウェアを管理する基本ソフトウェアで、ソースコードの公開の有無とは別の分類。",
+      "SaaS": "SaaSはソフトウェアをインターネット経由のサービスとして利用する形態。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ddos",
+    "acronym": "DDoS",
+    "fullName": "Distributed Denial of Service",
+    "japanese": "分散型サービス妨害",
+    "category": "security",
+    "words": [
+      {
+        "word": "Distributed",
+        "meaning": "分散した"
+      },
+      {
+        "word": "Denial of",
+        "meaning": "〜の妨害"
+      },
+      {
+        "word": "Service",
+        "meaning": "サービス"
+      }
+    ],
+    "oneLine": "多数の機器から一斉に大量の通信を送りつけ、サーバやネットワークを使えない状態にする攻撃。",
+    "examKeywords": [
+      "サービス妨害",
+      "可用性の侵害",
+      "ボットネット"
+    ],
+    "confusedWith": [
+      "DoS",
+      "XSS"
+    ],
+    "differenceAxis": "多数の機器から送るか、少数から送るか、スクリプトを使うか",
+    "trapExplanations": {
+      "DoS": "DoSは限られた送信元から行うサービス妨害攻撃。DDoSは多数の機器から分散して行う。",
+      "XSS": "XSSはWebページに仕込んだスクリプトを閲覧者のブラウザで実行させる攻撃。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "xss",
+    "acronym": "XSS",
+    "fullName": "Cross-Site Scripting",
+    "japanese": "クロスサイトスクリプティング",
+    "category": "security",
+    "words": [
+      {
+        "word": "Cross-Site",
+        "meaning": "サイトをまたぐ"
+      },
+      {
+        "word": "Scripting",
+        "meaning": "スクリプトの実行"
+      }
+    ],
+    "oneLine": "Webページに不正なスクリプトを埋め込み、閲覧した利用者のブラウザで実行させて情報を盗むなどする攻撃。",
+    "examKeywords": [
+      "スクリプト",
+      "ブラウザ",
+      "Cookieの窃取",
+      "入力値のエスケープ"
+    ],
+    "confusedWith": [
+      "DDoS",
+      "WAF"
+    ],
+    "differenceAxis": "ブラウザでスクリプトを動かす攻撃か、大量の通信か、防御側か",
+    "trapExplanations": {
+      "DDoS": "DDoSは大量の通信を送りつけてサービスを止める攻撃。",
+      "WAF": "WAFはXSSなどWebアプリケーションへの攻撃を防ぐための防御の仕組み。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "otp",
+    "acronym": "OTP",
+    "fullName": "One-Time Password",
+    "japanese": "ワンタイムパスワード",
+    "category": "security",
+    "words": [
+      {
+        "word": "One-Time",
+        "meaning": "一度だけの"
+      },
+      {
+        "word": "Password",
+        "meaning": "パスワード"
+      }
+    ],
+    "oneLine": "一度しか使えず、その都度変わるパスワード。盗まれても再利用されにくい。",
+    "examKeywords": [
+      "使い捨て",
+      "所持情報",
+      "二要素認証"
+    ],
+    "confusedWith": [
+      "MFA",
+      "SSO"
+    ],
+    "differenceAxis": "使い捨てのパスワードか、認証の方式か",
+    "trapExplanations": {
+      "MFA": "MFAは種類の異なる認証要素を組み合わせる方式。OTPはその要素として使われることが多い。",
+      "SSO": "SSOは一度の認証で複数のサービスを使えるようにする仕組み。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "lpwa",
+    "acronym": "LPWA",
+    "fullName": "Low Power Wide Area",
+    "japanese": "省電力広域無線通信",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Low",
+        "meaning": "低い"
+      },
+      {
+        "word": "Power",
+        "meaning": "電力"
+      },
+      {
+        "word": "Wide",
+        "meaning": "広い"
+      },
+      {
+        "word": "Area",
+        "meaning": "範囲"
+      }
+    ],
+    "oneLine": "消費電力を抑えながら、数kmから数十kmの広い範囲で少量のデータを送る無線通信。IoT機器のセンサー通信に向く。",
+    "examKeywords": [
+      "IoT",
+      "省電力",
+      "広域",
+      "低速"
+    ],
+    "confusedWith": [
+      "NFC",
+      "M2M"
+    ],
+    "differenceAxis": "省電力で遠くへ届く通信か、近距離の通信か、通信の形態か",
+    "trapExplanations": {
+      "NFC": "NFCは数cm程度の近距離で使う無線通信。",
+      "M2M": "M2Mは機器どうしが人を介さずに通信すること自体を指す。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ssid",
+    "acronym": "SSID",
+    "fullName": "Service Set Identifier",
+    "japanese": "無線LANのネットワーク識別名",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Service Set",
+        "meaning": "サービスの集まり"
+      },
+      {
+        "word": "Identifier",
+        "meaning": "識別子"
+      }
+    ],
+    "oneLine": "無線LANのアクセスポイント（ネットワーク）を識別するための名前。",
+    "examKeywords": [
+      "無線LAN",
+      "アクセスポイント",
+      "ネットワーク名",
+      "ESSID"
+    ],
+    "confusedWith": [
+      "WPA"
+    ],
+    "differenceAxis": "ネットワークの名前か、暗号化の規格か",
+    "trapExplanations": {
+      "WPA": "WPAは無線LANの通信を暗号化するための規格で、ネットワークの名前ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "wpa",
+    "acronym": "WPA",
+    "fullName": "Wi-Fi Protected Access",
+    "japanese": "Wi-Fi保護アクセス",
+    "category": "security",
+    "words": [
+      {
+        "word": "Wi-Fi",
+        "meaning": "無線LAN"
+      },
+      {
+        "word": "Protected",
+        "meaning": "保護された"
+      },
+      {
+        "word": "Access",
+        "meaning": "接続"
+      }
+    ],
+    "oneLine": "無線LANの通信を暗号化し、接続する端末を認証するためのセキュリティ規格。第2版・第3版が使われている。",
+    "examKeywords": [
+      "無線LANの暗号化",
+      "WPA2",
+      "WPA3"
+    ],
+    "confusedWith": [
+      "SSID"
+    ],
+    "differenceAxis": "暗号化の規格か、ネットワークの名前か",
+    "trapExplanations": {
+      "SSID": "SSIDは無線LANのネットワーク名で、暗号化の仕組みではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "mvno",
+    "acronym": "MVNO",
+    "fullName": "Mobile Virtual Network Operator",
+    "japanese": "仮想移動体通信事業者",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Mobile",
+        "meaning": "移動体"
+      },
+      {
+        "word": "Virtual",
+        "meaning": "仮想の"
+      },
+      {
+        "word": "Network",
+        "meaning": "通信網"
+      },
+      {
+        "word": "Operator",
+        "meaning": "事業者"
+      }
+    ],
+    "oneLine": "大手の通信事業者から回線を借りて、自社のブランドで携帯電話などの通信サービスを提供する事業者。いわゆる格安SIMの提供元。",
+    "examKeywords": [
+      "格安SIM",
+      "回線を借りる",
+      "通信事業者"
+    ],
+    "confusedWith": [
+      "MNO"
+    ],
+    "differenceAxis": "回線を借りて提供するか、自ら回線を持つか",
+    "trapExplanations": {
+      "MNO": "MNOは自ら通信設備（回線）を持って通信サービスを提供する事業者。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "acid",
+    "acronym": "ACID",
+    "fullName": "Atomicity, Consistency, Isolation, Durability",
+    "japanese": "ACID特性（トランザクションの4つの性質）",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Atomicity",
+        "meaning": "原子性"
+      },
+      {
+        "word": "Consistency",
+        "meaning": "一貫性"
+      },
+      {
+        "word": "Isolation",
+        "meaning": "独立性"
+      },
+      {
+        "word": "Durability",
+        "meaning": "耐久性"
+      }
+    ],
+    "oneLine": "トランザクションが満たすべき、原子性・一貫性・独立性・耐久性の4つの性質。",
+    "examKeywords": [
+      "トランザクション",
+      "原子性",
+      "コミット",
+      "ロールバック"
+    ],
+    "confusedWith": [
+      "DBMS"
+    ],
+    "differenceAxis": "守るべき性質か、それを守るソフトウェアか",
+    "trapExplanations": {
+      "DBMS": "DBMSはデータベースを管理するソフトウェアで、ACID特性を保証する側。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "qcd",
+    "acronym": "QCD",
+    "fullName": "Quality, Cost, Delivery",
+    "japanese": "品質・費用・納期",
+    "category": "management",
+    "words": [
+      {
+        "word": "Quality",
+        "meaning": "品質"
+      },
+      {
+        "word": "Cost",
+        "meaning": "費用"
+      },
+      {
+        "word": "Delivery",
+        "meaning": "納期"
+      }
+    ],
+    "oneLine": "プロジェクトや生産の管理で重視する、品質・費用・納期の3つの観点。互いにトレードオフの関係にある。",
+    "examKeywords": [
+      "品質",
+      "コスト",
+      "納期",
+      "トレードオフ"
+    ],
+    "confusedWith": [
+      "PDCA",
+      "KPI"
+    ],
+    "differenceAxis": "管理の観点か、進め方のサイクルか、測る指標か",
+    "trapExplanations": {
+      "PDCA": "PDCAは計画・実行・評価・改善を繰り返す管理のサイクル。",
+      "KPI": "KPIは目標への進み具合を測る指標。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "pdca",
+    "acronym": "PDCA",
+    "fullName": "Plan, Do, Check, Act",
+    "japanese": "計画・実行・評価・改善のサイクル",
+    "category": "management",
+    "words": [
+      {
+        "word": "Plan",
+        "meaning": "計画"
+      },
+      {
+        "word": "Do",
+        "meaning": "実行"
+      },
+      {
+        "word": "Check",
+        "meaning": "評価"
+      },
+      {
+        "word": "Act",
+        "meaning": "改善"
+      }
+    ],
+    "oneLine": "計画・実行・評価・改善の4段階を繰り返し、業務を継続的に改善していく考え方。",
+    "examKeywords": [
+      "継続的改善",
+      "ISMS",
+      "品質管理"
+    ],
+    "confusedWith": [
+      "QCD",
+      "BPR"
+    ],
+    "differenceAxis": "繰り返し改善するサイクルか、管理の観点や一度の改革か",
+    "trapExplanations": {
+      "QCD": "QCDは品質・費用・納期という管理の観点。",
+      "BPR": "BPRは業務プロセスを根本から作り直す抜本的な改革。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "itil",
+    "acronym": "ITIL",
+    "fullName": "Information Technology Infrastructure Library",
+    "japanese": "ITサービスマネジメントの知識体系",
+    "category": "management",
+    "words": [
+      {
+        "word": "Information Technology",
+        "meaning": "情報技術"
+      },
+      {
+        "word": "Infrastructure",
+        "meaning": "基盤"
+      },
+      {
+        "word": "Library",
+        "meaning": "書籍群"
+      }
+    ],
+    "oneLine": "ITサービスを安定して提供し改善するための、ベストプラクティス（成功事例）をまとめた書籍群。",
+    "examKeywords": [
+      "ITサービスマネジメント",
+      "インシデント管理",
+      "問題管理",
+      "変更管理"
+    ],
+    "confusedWith": [
+      "PMBOK",
+      "SLA"
+    ],
+    "differenceAxis": "サービス運用の知識体系か、プロジェクト管理の知識体系か",
+    "trapExplanations": {
+      "PMBOK": "PMBOKはプロジェクトマネジメントの知識体系。",
+      "SLA": "SLAはサービスの提供者と利用者が合意するサービスの水準。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "ups",
+    "acronym": "UPS",
+    "fullName": "Uninterruptible Power Supply",
+    "japanese": "無停電電源装置",
+    "category": "management",
+    "words": [
+      {
+        "word": "Uninterruptible",
+        "meaning": "途切れない"
+      },
+      {
+        "word": "Power",
+        "meaning": "電力"
+      },
+      {
+        "word": "Supply",
+        "meaning": "供給"
+      }
+    ],
+    "oneLine": "停電や電圧の変動が起きたとき、内蔵の蓄電池から一時的に電力を供給する装置。その間に機器を安全に停止させたり、自家発電装置へ切り替えたりする。",
+    "examKeywords": [
+      "停電対策",
+      "蓄電池",
+      "自家発電装置",
+      "ファシリティマネジメント"
+    ],
+    "confusedWith": [
+      "BCP"
+    ],
+    "differenceAxis": "電力を供給する装置か、事業を続けるための計画か",
+    "trapExplanations": {
+      "BCP": "BCPは災害などが起きても重要な業務を続けるための計画で、装置ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "fp",
+    "acronym": "FP",
+    "fullName": "Function Point",
+    "japanese": "ファンクションポイント",
+    "category": "management",
+    "words": [
+      {
+        "word": "Function",
+        "meaning": "機能"
+      },
+      {
+        "word": "Point",
+        "meaning": "点数"
+      }
+    ],
+    "oneLine": "画面・帳票・ファイルなど利用者から見た機能の数と複雑さを点数にし、ソフトウェアの規模を見積もる方法（ファンクションポイント法）の単位。",
+    "examKeywords": [
+      "規模の見積り",
+      "機能の数",
+      "複雑さ"
+    ],
+    "confusedWith": [
+      "WBS"
+    ],
+    "differenceAxis": "機能から規模を測るか、作業を分解するか",
+    "trapExplanations": {
+      "WBS": "WBSは作業を階層的に分解した構成図で、規模を点数にする方法ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "wbs",
+    "acronym": "WBS",
+    "fullName": "Work Breakdown Structure",
+    "japanese": "作業分解構成図",
+    "category": "management",
+    "words": [
+      {
+        "word": "Work",
+        "meaning": "作業"
+      },
+      {
+        "word": "Breakdown",
+        "meaning": "分解"
+      },
+      {
+        "word": "Structure",
+        "meaning": "構造"
+      }
+    ],
+    "oneLine": "プロジェクトの作業を成果物や工程ごとに段階的に細かく分解し、階層構造で表したもの。",
+    "examKeywords": [
+      "作業の分解",
+      "階層構造",
+      "漏れの防止",
+      "ワークパッケージ"
+    ],
+    "confusedWith": [
+      "PMBOK",
+      "FP"
+    ],
+    "differenceAxis": "作業を分解した図か、知識体系や見積り方法か",
+    "trapExplanations": {
+      "PMBOK": "PMBOKはプロジェクトマネジメントの知識体系。",
+      "FP": "FPは機能の数と複雑さからソフトウェアの規模を見積もる方法。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "csf",
+    "acronym": "CSF",
+    "fullName": "Critical Success Factor",
+    "japanese": "重要成功要因",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Critical",
+        "meaning": "重大な"
+      },
+      {
+        "word": "Success",
+        "meaning": "成功"
+      },
+      {
+        "word": "Factor",
+        "meaning": "要因"
+      }
+    ],
+    "oneLine": "目標を達成するうえで特に重要となり、力を集中すべき要因。",
+    "examKeywords": [
+      "KGI",
+      "KPI",
+      "戦略目標"
+    ],
+    "confusedWith": [
+      "KPI",
+      "KGI"
+    ],
+    "differenceAxis": "注力すべき要因か、それを測る指標か、最終目標か",
+    "trapExplanations": {
+      "KPI": "KPIはCSFがどれだけ達成できているかを測る数値の指標。",
+      "KGI": "KGIは最終的に達成したい目標を表す指標。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "bsc",
+    "acronym": "BSC",
+    "fullName": "Balanced Scorecard",
+    "japanese": "バランススコアカード",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Balanced",
+        "meaning": "均衡のとれた"
+      },
+      {
+        "word": "Scorecard",
+        "meaning": "評価表"
+      }
+    ],
+    "oneLine": "財務・顧客・業務プロセス・学習と成長の4つの視点から、戦略の実行状況を評価する手法。",
+    "examKeywords": [
+      "4つの視点",
+      "財務",
+      "顧客",
+      "業務プロセス",
+      "学習と成長"
+    ],
+    "confusedWith": [
+      "KPI",
+      "SWOT"
+    ],
+    "differenceAxis": "4つの視点で評価する手法か、個々の指標や環境分析か",
+    "trapExplanations": {
+      "KPI": "KPIは目標への進み具合を測る個々の指標で、BSCの各視点で設定される。",
+      "SWOT": "SWOTは強み・弱み・機会・脅威で環境を整理する分析手法。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "roe",
+    "acronym": "ROE",
+    "fullName": "Return on Equity",
+    "japanese": "自己資本利益率",
+    "category": "finance",
+    "words": [
+      {
+        "word": "Return",
+        "meaning": "利益"
+      },
+      {
+        "word": "on",
+        "meaning": "〜に対する"
+      },
+      {
+        "word": "Equity",
+        "meaning": "自己資本"
+      }
+    ],
+    "oneLine": "株主が出した自己資本に対して、どれだけの当期純利益を上げたかを表す指標。当期純利益÷自己資本で求める。",
+    "examKeywords": [
+      "自己資本",
+      "当期純利益",
+      "収益性"
+    ],
+    "confusedWith": [
+      "ROI"
+    ],
+    "differenceAxis": "自己資本に対する利益か、投資額に対する利益か",
+    "trapExplanations": {
+      "ROI": "ROIは投資額に対してどれだけの利益を得たかを表す、投資判断の指標。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "tob",
+    "acronym": "TOB",
+    "fullName": "Take-Over Bid",
+    "japanese": "株式公開買付け",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Take-Over",
+        "meaning": "買収"
+      },
+      {
+        "word": "Bid",
+        "meaning": "買付けの申込み"
+      }
+    ],
+    "oneLine": "買付けの期間・価格・株数を公告し、証券取引所を通さずに不特定多数の株主から株式を買い集める方法。",
+    "examKeywords": [
+      "株式の買付け",
+      "M&A",
+      "経営権の取得"
+    ],
+    "confusedWith": [
+      "M&A",
+      "MBO"
+    ],
+    "differenceAxis": "株式の買い集め方か、合併・買収の総称か、経営陣による買収か",
+    "trapExplanations": {
+      "M&A": "M&Aは合併・買収の総称で、TOBはその手段の一つ。",
+      "MBO": "MBOは経営陣が自ら出資して自社を買収すること。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "json",
+    "acronym": "JSON",
+    "fullName": "JavaScript Object Notation",
+    "japanese": "JavaScriptオブジェクト記法",
+    "category": "technology",
+    "words": [
+      {
+        "word": "JavaScript",
+        "meaning": "プログラム言語の名前"
+      },
+      {
+        "word": "Object",
+        "meaning": "オブジェクト"
+      },
+      {
+        "word": "Notation",
+        "meaning": "記法"
+      }
+    ],
+    "oneLine": "データをキーと値の組で表す、軽量なテキストのデータ記述形式。Web APIのデータ交換に広く使われる。",
+    "examKeywords": [
+      "キーと値",
+      "Web API",
+      "データ交換"
+    ],
+    "confusedWith": [
+      "API",
+      "XML"
+    ],
+    "differenceAxis": "データの書き方か、呼び出し口か",
+    "trapExplanations": {
+      "API": "APIは機能を呼び出すための窓口で、データの書式ではない。",
+      "XML": "XMLはタグで囲んでデータの意味や構造を表す記述言語。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "bi",
+    "acronym": "BI",
+    "fullName": "Business Intelligence",
+    "japanese": "ビジネスインテリジェンス",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Business",
+        "meaning": "事業"
+      },
+      {
+        "word": "Intelligence",
+        "meaning": "情報の活用"
+      }
+    ],
+    "oneLine": "社内に蓄積したデータを集計・分析・可視化し、経営や業務の意思決定に役立てる手法やツール。",
+    "examKeywords": [
+      "データ分析",
+      "ダッシュボード",
+      "意思決定支援"
+    ],
+    "confusedWith": [
+      "ERP",
+      "DWH"
+    ],
+    "differenceAxis": "分析して意思決定に使うか、業務を回すか、データをためるか",
+    "trapExplanations": {
+      "ERP": "ERPは会計・人事・生産などの基幹業務を統合して管理するシステム。",
+      "DWH": "DWHは分析のために大量のデータを時系列で蓄積しておく保管庫。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "dwh",
+    "acronym": "DWH",
+    "fullName": "Data Warehouse",
+    "japanese": "データウェアハウス",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Data",
+        "meaning": "データ"
+      },
+      {
+        "word": "Warehouse",
+        "meaning": "倉庫"
+      }
+    ],
+    "oneLine": "業務システムから集めたデータを、分析しやすい形で時系列に蓄積しておく大規模なデータベース。",
+    "examKeywords": [
+      "データの蓄積",
+      "分析用",
+      "データマイニング"
+    ],
+    "confusedWith": [
+      "BI",
+      "DBMS"
+    ],
+    "differenceAxis": "分析用にためる倉庫か、分析する道具か、管理ソフトか",
+    "trapExplanations": {
+      "BI": "BIは蓄積されたデータを分析・可視化して意思決定に役立てる手法やツール。",
+      "DBMS": "DBMSはデータベースを管理するソフトウェア全般。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "jis",
+    "acronym": "JIS",
+    "fullName": "Japanese Industrial Standards",
+    "japanese": "日本産業規格",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Japanese",
+        "meaning": "日本の"
+      },
+      {
+        "word": "Industrial",
+        "meaning": "産業"
+      },
+      {
+        "word": "Standards",
+        "meaning": "規格"
+      }
+    ],
+    "oneLine": "日本の国家規格。工業製品のほか、データやサービスなどの規格も定める。",
+    "examKeywords": [
+      "国家規格",
+      "日本",
+      "標準化"
+    ],
+    "confusedWith": [
+      "ISO",
+      "IEEE"
+    ],
+    "differenceAxis": "日本の国家規格か、国際規格か、学会の規格か",
+    "trapExplanations": {
+      "ISO": "ISOは国際標準化機構で、国際規格を定める。",
+      "IEEE": "IEEEは米国に本部を置く電気・電子分野の学会で、無線LANなどの規格を定める。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "iso",
+    "acronym": "ISO",
+    "fullName": "International Organization for Standardization",
+    "japanese": "国際標準化機構",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "International",
+        "meaning": "国際的な"
+      },
+      {
+        "word": "Organization",
+        "meaning": "機構"
+      },
+      {
+        "word": "Standardization",
+        "meaning": "標準化"
+      }
+    ],
+    "oneLine": "工業製品や品質・環境・情報セキュリティのマネジメントなど、幅広い分野の国際規格を定める機関。",
+    "examKeywords": [
+      "国際規格",
+      "品質マネジメント",
+      "環境マネジメント"
+    ],
+    "confusedWith": [
+      "JIS",
+      "IEEE"
+    ],
+    "differenceAxis": "国際規格の機関か、国家規格か、学会か",
+    "trapExplanations": {
+      "JIS": "JISは日本の国家規格。",
+      "IEEE": "IEEEは電気・電子分野の学会で、無線LANなどの規格を定める。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "qr",
+    "acronym": "QR",
+    "fullName": "Quick Response",
+    "japanese": "QRコード（二次元コード）",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Quick",
+        "meaning": "素早い"
+      },
+      {
+        "word": "Response",
+        "meaning": "読み取り（応答）"
+      }
+    ],
+    "oneLine": "縦と横の二方向に情報を持つ二次元コード。バーコードより多くの情報を記録でき、汚れや欠けにも強い。",
+    "examKeywords": [
+      "二次元コード",
+      "バーコード",
+      "決済"
+    ],
+    "confusedWith": [
+      "JAN",
+      "NFC"
+    ],
+    "differenceAxis": "二次元のコードか、一次元のバーコードか、無線通信か",
+    "trapExplanations": {
+      "JAN": "JANコードは商品を識別するための一次元のバーコードで、横方向だけに情報を持つ。",
+      "NFC": "NFCは数cm程度の近距離で行う無線通信で、コードを読み取る方式ではない。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "lifo",
+    "acronym": "LIFO",
+    "fullName": "Last In First Out",
+    "japanese": "後入れ先出し",
+    "category": "technology",
+    "words": [
+      {
+        "word": "Last In",
+        "meaning": "最後に入れたものを"
+      },
+      {
+        "word": "First Out",
+        "meaning": "最初に出す"
+      }
+    ],
+    "oneLine": "最後に入れたデータを最初に取り出す方式。スタックの性質。",
+    "examKeywords": [
+      "スタック",
+      "後入れ先出し"
+    ],
+    "confusedWith": [
+      "FIFO"
+    ],
+    "differenceAxis": "最後に入れたものを先に出すか、最初に入れたものを先に出すか",
+    "trapExplanations": {
+      "FIFO": "FIFOは最初に入れたデータを最初に取り出す方式で、キューの性質。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "fifo",
+    "acronym": "FIFO",
+    "fullName": "First In First Out",
+    "japanese": "先入れ先出し",
+    "category": "technology",
+    "words": [
+      {
+        "word": "First In",
+        "meaning": "最初に入れたものを"
+      },
+      {
+        "word": "First Out",
+        "meaning": "最初に出す"
+      }
+    ],
+    "oneLine": "最初に入れたデータを最初に取り出す方式。キューの性質。",
+    "examKeywords": [
+      "キュー",
+      "先入れ先出し",
+      "待ち行列"
+    ],
+    "confusedWith": [
+      "LIFO"
+    ],
+    "differenceAxis": "最初に入れたものを先に出すか、最後に入れたものを先に出すか",
+    "trapExplanations": {
+      "LIFO": "LIFOは最後に入れたデータを最初に取り出す方式で、スタックの性質。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "bpm",
+    "acronym": "BPM",
+    "fullName": "Business Process Management",
+    "japanese": "ビジネスプロセスマネジメント",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "Business",
+        "meaning": "業務"
+      },
+      {
+        "word": "Process",
+        "meaning": "手順・流れ"
+      },
+      {
+        "word": "Management",
+        "meaning": "管理"
+      }
+    ],
+    "oneLine": "業務プロセスを分析・設計・実行・評価し、継続的に改善し続けていく管理手法。",
+    "examKeywords": [
+      "業務プロセス",
+      "継続的改善",
+      "PDCA"
+    ],
+    "confusedWith": [
+      "BPR",
+      "BPMN"
+    ],
+    "differenceAxis": "継続的に改善する管理か、一度の抜本改革か、図の表記法か",
+    "trapExplanations": {
+      "BPR": "BPRは業務プロセスを根本から作り直す抜本的な改革。",
+      "BPMN": "BPMNは業務プロセスを図で表すための表記法。"
+    },
+    "questionTypes": [
+      "acronym_to_meaning",
+      "meaning_to_acronym",
+      "word_part",
+      "confusion"
+    ]
+  },
+  {
+    "id": "gdpr",
+    "acronym": "GDPR",
+    "fullName": "General Data Protection Regulation",
+    "japanese": "EU一般データ保護規則",
+    "category": "strategy",
+    "words": [
+      {
+        "word": "General",
+        "meaning": "一般"
+      },
+      {
+        "word": "Data",
+        "meaning": "データ"
+      },
+      {
+        "word": "Protection",
+        "meaning": "保護"
+      },
+      {
+        "word": "Regulation",
+        "meaning": "規則"
+      }
+    ],
+    "oneLine": "EU域内の個人データの保護を定めた規則。EU域内の人の個人データを扱えば、域外の企業にも適用される。",
+    "examKeywords": [
+      "個人データ",
+      "EU",
+      "域外適用"
+    ],
+    "confusedWith": [
+      "ISMS"
+    ],
+    "differenceAxis": "法規則か、組織の管理の仕組みか",
+    "trapExplanations": {
+      "ISMS": "ISMSは組織の情報セキュリティを管理する仕組みで、個人データ保護の法規則ではない。"
     },
     "questionTypes": [
       "acronym_to_meaning",

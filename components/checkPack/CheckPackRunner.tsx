@@ -269,7 +269,7 @@ export default function CheckPackRunner({
   ) {
     // Today が「関連用語を固める」を出すかの参考に、端末にも判定を残す（サーバ結果で上書き）。
     const localDecision = decidePackStage(
-      judgeRates({ quizRate: q, flashcardRate: f, examLevelRate: e }),
+      judgeRates({ quizRate: q, flashcardRate: f, examLevelRate: e }, { hasTerms: hasFlashcards }),
       0,
     );
     if (localDecision.resultStatus !== "incomplete") rememberTopicStage(topicId, localDecision.stage);
@@ -402,7 +402,7 @@ export default function CheckPackRunner({
 
   // result
   const rates = { quizRate, flashcardRate, examLevelRate };
-  const local = decidePackStage(judgeRates(rates), 0);
+  const local = decidePackStage(judgeRates(rates, { hasTerms: hasFlashcards }), 0);
   const resultStatus = serverStatus?.resultStatus ?? local.resultStatus;
   const nextAction = serverStatus?.nextAction ?? local.nextAction;
 
@@ -417,9 +417,9 @@ export default function CheckPackRunner({
         <p className="mt-1 text-2xl font-bold">{STATUS_LABEL[resultStatus]}</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className={`grid gap-3 ${hasFlashcards ? "grid-cols-3" : "grid-cols-2"}`}>
         <RateCard label="確認問題" rate={quizRate} passRate={75} />
-        <RateCard label="関連用語" rate={flashcardRate} passRate={80} />
+        {hasFlashcards && <RateCard label="関連用語" rate={flashcardRate} passRate={80} />}
         <RateCard label="過去問レベル" rate={examLevelRate} passRate={70} />
       </div>
 
@@ -503,7 +503,7 @@ function IntroCard({
         「{topicTitle}」の確認パック
       </h2>
       <p className="mt-1 text-sm text-gray-600">
-        3つのチェックで、いまの到達度と「本番対応OK」かどうかを確かめます。
+        {flashcardCount > 0 ? "3つ" : "2つ"}のチェックで、いまの到達度と「本番対応OK」かどうかを確かめます。
       </p>
       <ul className="mt-4 space-y-2 text-sm">
         {quizCarriedCount > 0 && quizCount === 0 ? (
@@ -511,8 +511,16 @@ function IntroCard({
         ) : (
           <StepLine n={1} label="基礎確認問題" count={quizCount} unit="問" hint={quizHint} />
         )}
-        <StepLine n={2} label="関連用語の確認" count={flashcardCount} unit="語" hint="用語定着" />
-        <StepLine n={3} label="過去問レベル問題" count={examCount} unit="問" hint="本番対応力" />
+        {flashcardCount > 0 && (
+          <StepLine n={2} label="関連用語の確認" count={flashcardCount} unit="語" hint="用語定着" />
+        )}
+        <StepLine
+          n={flashcardCount > 0 ? 3 : 2}
+          label="過去問レベル問題"
+          count={examCount}
+          unit="問"
+          hint="本番対応力"
+        />
       </ul>
     </div>
   );
