@@ -21,7 +21,7 @@
 - **見た目は LP と地続き**：白地・明朝の見出し・藍の強調・朱の手書き線（LP ヒーローの赤丸と同じ表現）。色と書体は `src/theme.ts`（`app/lp/lp.css` の値）。
 - **スマホで見ても読める**大きさにする。見出しは 84px 以上、注記でも 24px 以上（LP では幅 360px 前後で再生される）。
 - **字幕は焼き込まない**。各場面の大きな見出しが語りの要点を担い、字幕は `<track>` の WebVTT で出し分ける（焼き込みと VTT の二重表示を避ける）。
-- **尺は語りに合わせる**。音声を伸び縮みさせて尺に押し込まない。シーンの長さは `src/voice-manifest.json` の秒数から決まり（`src/timelineCore.ts`）、文字や強調は語の区切り（onsets）に合わせて出る。
+- **尺は語りに合わせる**。音声を伸び縮みさせて尺に押し込まない。配信用ファイルだけは全体を `DELIVERY_SPEED`（`src/timelineCore.ts`、1.5倍）で速める（Remotion 上は等速のまま作る）。シーンの長さは `src/voice-manifest.json` の秒数から決まり（`src/timelineCore.ts`）、文字や強調は語の区切り（onsets）に合わせて出る。
 - 実画面は撮影用の学習データで撮る（個人の学習履歴は使わない）。画面の場面には「撮影用の学習データ」と注記する。合格準備度の数値を動かすなど、効果を約束する演出はしない。
 
 ## 構成
@@ -36,7 +36,7 @@
 | `public/shots/` | 実画面（`scripts/capture.mjs` でスマホ幅 3 倍密度／図解は PC 幅 2 倍密度） |
 | `public/photo/student.png` | 冒頭の学習者の写真。画像生成で作った架空の人物（実在の利用者・体験談ではない） |
 | `scripts/synth-audio.mjs` | BGM と効果音をコードで合成（外部素材なし）。曲の切り替わりはタイムラインから計算 |
-| `scripts/finalize.sh` | 配信用に仕上げて `public/lp/story/` へ（-16 LUFS／-1.5 dBTP の 2 パス正規化・H.264・faststart、字幕 VTT、ポスター） |
+| `scripts/finalize.sh` | 配信用に仕上げて `public/lp/story/` へ（`DELIVERY_SPEED` 倍速・-16 LUFS／-1.5 dBTP の 2 パス正規化・H.264・faststart、字幕 VTT、ポスター） |
 
 ## 作り直す
 
@@ -44,12 +44,12 @@
 cd video/lp-story
 npm ci
 npm run studio          # プレビュー（ブラウザで編集しながら確認）
-npm run render          # public/lp/story/story-v4.{mp4,ja.vtt} と story-v4-poster.webp を出力
+npm run render          # public/lp/story/story-v5.{mp4,ja.vtt} と story-v5-poster.webp を出力
 ```
 
 `finalize.sh` のポスター変換はリポジトリ本体の `sharp` を使うので、ルートでも `npm ci` 済みであること。
 字幕・BGM 生成は Node の TypeScript 実行を使うので Node 23.6 以上が必要。
-ファイル名の `v4` は再訪ユーザーのブラウザキャッシュを避けるため、中身を変えたら上げる（`app/lp/page.tsx` も合わせる）。
+ファイル名の `v5` は再訪ユーザーのブラウザキャッシュを避けるため、中身を変えたら上げる（`app/lp/page.tsx` も合わせる）。
 
 ### ナレーションを変えるとき
 

@@ -4,6 +4,8 @@
 export const FPS = 30;
 /** 場面転換で前後のシーンが重なるフレーム数 */
 export const XF = 14;
+/** 配信用ファイルの再生速度。Remotion は等速で書き出し、finalize.sh で映像・音声をこの倍率に速める（字幕も同じ倍率で縮める） */
+export const DELIVERY_SPEED = 1.5;
 
 export type ManifestLine = { id: string; scene: string; caption: string; seconds: number; onsets: number[] };
 

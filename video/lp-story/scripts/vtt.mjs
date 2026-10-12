@@ -1,16 +1,16 @@
-// 動画と同じタイムライン計算（src/timelineCore.ts）から字幕 WebVTT を書き出す。
+// 動画と同じタイムライン計算（src/timelineCore.ts）から字幕 WebVTT を書き出す。配信用の再生速度（DELIVERY_SPEED）に合わせて時刻を縮める。
 //   node scripts/vtt.mjs <出力パス>
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { FPS, buildScenes } from "../src/timelineCore.ts";
+import { DELIVERY_SPEED, FPS, buildScenes } from "../src/timelineCore.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const out = process.argv[2] ?? path.join(ROOT, "out/lp-story.vtt");
 const manifest = JSON.parse(await readFile(path.join(ROOT, "src/voice-manifest.json"), "utf8"));
 
 const stamp = (frames) => {
-  const ms = Math.round((frames / FPS) * 1000);
+  const ms = Math.round((frames / FPS / DELIVERY_SPEED) * 1000);
   const h = String(Math.floor(ms / 3600000)).padStart(2, "0");
   const m = String(Math.floor(ms / 60000) % 60).padStart(2, "0");
   const s = String(Math.floor(ms / 1000) % 60).padStart(2, "0");

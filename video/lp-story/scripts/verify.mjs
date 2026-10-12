@@ -5,13 +5,13 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { FPS, buildScenes } from "../src/timelineCore.ts";
+import { DELIVERY_SPEED, FPS, buildScenes } from "../src/timelineCore.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const BASE = process.env.VERIFY_BASE ?? "http://localhost:3107";
 const manifest = JSON.parse(await readFile(path.join(ROOT, "src/voice-manifest.json"), "utf8"));
 const scenes = buildScenes(manifest.lines);
-const seconds = scenes.reduce((n, s) => n + s.frames, 0) / FPS;
+const seconds = scenes.reduce((n, s) => n + s.frames, 0) / FPS / DELIVERY_SPEED;
 const cueCount = manifest.lines.length;
 
 const browser = await chromium.launch();
