@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { IotDioramaScene, type IotPhase } from "./iot/IotDioramaScene";
+import type { IotPhase } from "./iot/IotDioramaScene";
+import { IotScene } from "./iot/IotScene";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle, StepNav } from "./ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
@@ -9,6 +10,7 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 // ============================================================================
 // 「IoT」専用の体験。
 //   ① IoTの一周（センサーで測る→ネットで送る→クラウドで判断→機器を制御）を、家とクラウドの3D模型でStep実演
+//      （WebGL2 の端末は Blender 製の動く3D、それ以外は 2.5D 模型。iot/IotScene）
 //   ② 活用例カード
 //   ③ 便利さの裏のセキュリティ（安全／あやしい 仕分けクイズ）
 // ============================================================================
@@ -37,7 +39,7 @@ function Loop() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <IotDioramaScene
+        <IotScene
           phase={idx as IotPhase}
           forward={forward}
           reducedMotion={reducedMotion}

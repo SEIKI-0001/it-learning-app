@@ -1,0 +1,87 @@
+/* IoT の動く3D模型（IotScene3D）の札。模型に馴染むよう小さく・半透明に。 */
+
+.tag {
+  display: inline-block;
+  padding: 2px 7px 3px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.58);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+/* 役割（センサー・アクチュエータ）と中身を1枚に。役割は小さい見出し、中身は大きめ */
+.role {
+  display: inline-grid;
+  gap: 0;
+  padding: 3px 8px 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.18);
+  border-left: 3px solid #e11d48;
+  color: #0f172a;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.role[data-tone="ok"] {
+  border-left-color: #10b981;
+}
+
+.role > span {
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.role > b {
+  font-size: 11.5px;
+  font-weight: 900;
+}
+
+/* 運ぶ物（データ・指示）の札。動く物に付いていく */
+.payload {
+  display: inline-block;
+  padding: 1px 8px 2px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.9);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.payload[data-kind="down"] {
+  background: rgba(5, 150, 105, 0.92);
+}
+
+/* 室温の札（左下の隅に固定）。暑い＝赤、冷えた＝青 */
+.temp {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 9px 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.16);
+  color: #475569;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.temp > b {
+  color: #e11d48;
+  font-size: 14px;
+  font-weight: 900;
+  transition: color 400ms ease;
+}
+
+.temp[data-cooled="true"] > b {
+  color: #2563eb;
+}
