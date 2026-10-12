@@ -20,6 +20,9 @@ export type CapsuleStop =
 
 export type CapsuleKind = "input" | "query" | "response" | "connect" | "connected" | "page" | "timeout";
 
+/** DNSが対応表を引いている途中か、IPアドレスを見つけたか */
+export type DnsLookup = "searching" | "found";
+
 /** 模型の中に出す一言と、それが指す物 */
 export type DnsCaption = { id: string; text: import("react").ReactNode; tone?: "info" | "ok" | "danger"; focus: NetworkNodeId };
 
@@ -36,4 +39,6 @@ export type DnsSceneProps = {
   /** 前へ進んだ直後か（戻る・飛ばすときは小包を瞬間移動させる） */
   forward: boolean;
   caption?: DnsCaption | null;
+  /** DNSの横に対応表を出す（名前 → IPアドレスの変換を見せる場面） */
+  lookup?: DnsLookup | null;
 };

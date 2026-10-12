@@ -24,7 +24,8 @@ import {
 import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption } from "../scene/DioramaStage";
 import type { CapsuleKind } from "./dnsTypes";
 import type { NodeState } from "./NetworkSceneBase";
-import type { CapsuleStop, LaneId, LaneState, NetworkNodeId } from "./dnsTypes";
+import type { CapsuleStop, DnsLookup, LaneId, LaneState, NetworkNodeId } from "./dnsTypes";
+import { DnsLookupTable } from "./DnsLookupTable";
 import styles from "./dnsdiorama.module.css";
 
 // IPアドレス・DNS の図解：自宅の部屋のノートPC → Wi-Fiルータ → インターネット（通信会社）→ DNSサーバ／Webサーバ。
@@ -166,6 +167,7 @@ export function DnsDioramaScene({
   showBrowser = false,
   forward,
   caption = null,
+  lookup = null,
 }: {
   nodes: Record<NetworkNodeId, NodeState>;
   lanes: Record<LaneId, LaneState>;
@@ -179,6 +181,8 @@ export function DnsDioramaScene({
   forward: boolean;
   /** 模型の上端に出す一言と、それが指す物 */
   caption?: (Omit<StageCaption, "at"> & { focus: NetworkNodeId }) | null;
+  /** DNSの横に対応表を出す */
+  lookup?: DnsLookup | null;
 }) {
   const stop = capsule?.stop ?? null;
   // 接続（あなたが送信中）は家からWebまでの道全体、到達はWebサーバへ寄る
@@ -311,6 +315,12 @@ export function DnsDioramaScene({
                 <span className={styles.capsuleTag}>{capsule.tag}</span>
                 <span className={styles.capsulePayload}>{capsule.payload}</span>
               </button>
+            </DioramaLabel>
+          )}
+
+          {lookup && (
+            <DioramaLabel at={{ ...DNS, x: DNS.x + 30, z: 90 }} place="right">
+              <DnsLookupTable state={lookup} />
             </DioramaLabel>
           )}
 
