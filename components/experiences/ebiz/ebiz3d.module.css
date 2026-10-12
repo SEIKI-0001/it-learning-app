@@ -1,0 +1,36 @@
+/* e-ビジネスの動く3D模型（TradeScene3D）の札。模型に馴染むよう小さく・半透明に。 */
+
+.tag {
+  display: inline-block;
+  padding: 2px 7px 3px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 7px;
+  background: rgba(15, 23, 42, 0.62);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+/* 運ぶ物（情報・お金・モノ）の札。動く物に付いていく。色は凡例（KindLegend）と同じ */
+.payload {
+  display: inline-block;
+  padding: 1px 8px 2px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.92);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.payload[data-kind="money"] {
+  background: rgba(22, 163, 74, 0.94);
+}
+
+.payload[data-kind="goods"] {
+  background: rgba(217, 119, 6, 0.95);
+}
