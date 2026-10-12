@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import LogicOperationsExperience from "@/components/experiences/LogicOperationsExperience";
+import ComputerCoreExperience from "@/components/experiences/ComputerCoreExperience";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
-const TITLE = "AND・ORをスイッチで体験｜登録不要・無料｜資格もちっと";
-const DESCRIPTION = "ANDとORの違いを、スイッチと光る回路で体験。ITパスポートの教材を登録なしで体験できます。スマホ対応・インストール不要。";
+const TITLE = "CPU・メモリ・ストレージを模型で体験｜登録不要・無料｜資格もちっと";
+const DESCRIPTION = "CPU・メモリ・ストレージの役割を、パソコン内部の模型でデータの流れを追って体験。ITパスポートの教材を登録なしで体験できます。スマホ対応・インストール不要。";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -29,11 +29,11 @@ export default function TrialPage() {
         </a>
         <header className="mb-6 mt-4">
           <p className="text-sm font-bold text-brand-700">登録不要・無料の教材体験</p>
-          <h1 className="mt-2 text-2xl font-bold leading-snug sm:text-3xl">ANDとOR、<br />スイッチで違いを見てみよう。</h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">アプリの教材を、そのままお試し。まずは入力Bをタップして「1」に。出力ランプが光ったら、Aを「0」にしてみましょう。</p>
+          <h1 className="mt-2 text-2xl font-bold leading-snug sm:text-3xl">CPU・メモリ・ストレージ、<br />データの流れで違いを見てみよう。</h1>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">アプリの教材を、そのままお試し。文書を開いて編集し、保存する前に「電源を切る」を押すと何が消えるか、模型で確かめてみましょう。</p>
         </header>
 
-        <ExperienceSlideDeck><LogicOperationsExperience /></ExperienceSlideDeck>
+        <ExperienceSlideDeck><ComputerCoreExperience /></ExperienceSlideDeck>
 
         <section aria-labelledby="start-learning" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-slate-200 sm:p-6">
           <h2 id="start-learning" className="text-xl font-bold">こんなふうに、ほかのテーマも。</h2>
