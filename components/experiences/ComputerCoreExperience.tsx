@@ -13,13 +13,14 @@ import Icon from "@/components/ui/Icon";
 // 「CPU・メモリ・ストレージ」専用の体験。
 //   ① 3つの部品の役割（頭脳・作業机・引き出し）
 //   ② データの流れ体験 … PC内部の模型（WebGLがあれば3D、なければ2.5D）（ストレージ → メモリ ↔ CPU）で
-//      文書を開く→処理→編集→保存 を1歩ずつ。どの段階でも「電源を切る」を押せ、
+//      文書を開く→書き換える→保存 の3 STEP。どの段階でも「電源を切る」を押せ、
 //      保存前に切ると メモリ上の編集だけが消え、ストレージには古い版が残る（揮発性）
 //   ③ メモリ vs ストレージ … 速さ・容量・電源OFFで消えるか（揮発性）の比較
 //
 // ② は「文章を読む」より「模型の動きを見る」体験にする。
-//   - 各 STEP は 2〜3 の場面（フェーズ）に分かれ、場面ごとに模型の状態と短い吹き出し（35文字以内）が1つずつ変わる
+//   - 各 STEP は数個の場面（フェーズ）に分かれ、場面ごとに模型の状態と短い吹き出し（35文字以内）が1つずつ変わる
 //   - STEP に入ると場面が自動で進み、最後の場面で止まる。次の STEP へはユーザーが「次へ」を押したときだけ進む
+//   - 「開く」を押す・「100」を「120」に書き換える場面は利用者に操作してもらい、操作するまで先へ進めない
 //   - 長い説明・試験用語は「詳しく見る」に分け、開いている間は場面の再生を止める
 // ============================================================================
 
@@ -27,6 +28,8 @@ type Phase = Pick<ComputerSceneProps, "nodes" | "lanes" | "doc" | "packet"> & {
   stored: DocVersion;
   storedFlash?: boolean;
   caption: SceneCaption;
+  /** 利用者の操作を待つ場面（open=「開く」を押す / type=金額を書き換える）。操作するまで次の場面へ進まない */
+  action?: "open" | "type";
 };
 
 type FlowStep = {
@@ -46,7 +49,7 @@ const DOC2_SAVED = { spot: "memory", version: 2, status: "saved" } as const;
 
 const STEPS: FlowStep[] = [
   {
-    title: "ふだんは引き出しに保管",
+    title: "文書を開く",
     phases: [
       {
         nodes: at({ storage: "active" }),
@@ -55,28 +58,7 @@ const STEPS: FlowStep[] = [
         doc: DOC1_STORAGE,
         packet: null,
         caption: { target: "storage", text: "文書はストレージ（引き出し）に保存されている" },
-      },
-    ],
-    detail: (
-      <>
-        <p>
-          文書・写真・アプリなどは、ふだん<b>ストレージ（補助記憶装置）</b>に保存されています。SSD や HDD がストレージです。
-          電源を切っても中身が消えない<b>不揮発性</b>の記憶装置です。
-        </p>
-        <Terms items={["補助記憶装置", "SSD / HDD", "不揮発性"]} />
-      </>
-    ),
-  },
-  {
-    title: "メモリへ読み込む",
-    phases: [
-      {
-        nodes: IDLE,
-        lanes: {},
-        stored: 1,
-        doc: DOC1_STORAGE,
-        packet: null,
-        caption: { target: "monitor", text: "アプリで文書を「開く」を押した" },
+        action: "open",
       },
       {
         nodes: at({ storage: "sending" }),
@@ -94,35 +76,13 @@ const STEPS: FlowStep[] = [
         packet: null,
         caption: { target: "memory", text: "メモリ（作業机）に広げる。ここは読み書きが速い" },
       },
-    ],
-    detail: (
-      <>
-        <p>
-          プログラムやデータは、使うときに<b>メモリ（主記憶装置）</b>へ読み込まれます。ストレージは大容量ですが遅いので、
-          使う分だけ速いメモリに広げて作業します。読み込みは<b>コピー</b>なので、ストレージの保存版はそのままです。
-        </p>
-        <Terms items={["主記憶装置", "RAM", "補助記憶装置より高速・小容量"]} />
-      </>
-    ),
-  },
-  {
-    title: "CPUが読んで表示",
-    phases: [
       {
-        nodes: at({ memory: "sending" }),
+        nodes: at({ memory: "sending", cpu: "active" }),
         lanes: { bus: "active" },
         stored: 1,
         doc: DOC1_MEMORY,
         packet: { spot: "cpu", text: "読み取り", kind: "bus" },
-        caption: { target: "memory", text: "メモリからCPUへデータを渡す" },
-      },
-      {
-        nodes: at({ memory: "active", cpu: "active" }),
-        lanes: {},
-        stored: 1,
-        doc: DOC1_MEMORY,
-        packet: { spot: "cpu", text: "処理中", kind: "bus" },
-        caption: { target: "cpu", text: "CPUがデータを読み取り、表示用に処理する" },
+        caption: { target: "cpu", text: "CPUがメモリから読み取り、表示用に処理する" },
       },
       {
         nodes: at({ memory: "active", cpu: "active" }),
@@ -136,24 +96,32 @@ const STEPS: FlowStep[] = [
     detail: (
       <>
         <p>
-          <b>CPU（中央処理装置）</b>はコンピュータの頭脳です。メモリ上のデータや命令を読み取り、計算や判断（処理）をします。
-          CPU が直接やりとりするのはメモリで、CPU とメモリの間は非常に高速です。
+          文書・写真・アプリなどは、ふだん<b>ストレージ（補助記憶装置）</b>に保存されています。SSD や HDD がストレージで、
+          電源を切っても中身が消えない<b>不揮発性</b>の記憶装置です。
+        </p>
+        <p>
+          開くと、文書は<b>メモリ（主記憶装置）</b>へ読み込まれます。ストレージは大容量ですが遅いので、使う分だけ速いメモリに広げて作業します。
+          読み込みは<b>コピー</b>なので、ストレージの保存版はそのままです。
+        </p>
+        <p>
+          <b>CPU（中央処理装置）</b>はメモリ上のデータを読み取り、計算や判断（処理）をします。CPU が直接やりとりするのはメモリです。
           CPU の速さは<b>クロック周波数（GHz）</b>で表します。
         </p>
-        <Terms items={["CPU（中央処理装置）", "クロック周波数", "演算・制御"]} />
+        <Terms items={["補助記憶装置", "主記憶装置", "不揮発性", "クロック周波数"]} />
       </>
     ),
   },
   {
-    title: "CPUが書き換えを計算",
+    title: "メモリ上で書き換える",
     phases: [
       {
-        nodes: IDLE,
+        nodes: at({ memory: "active" }),
         lanes: {},
         stored: 1,
         doc: DOC1_MEMORY,
         packet: null,
-        caption: { target: "keyboard", text: "キーボードで「120」と入力した" },
+        caption: { target: "keyboard", text: "キーボードから入力する" },
+        action: "type",
       },
       {
         nodes: at({ cpu: "active" }),
@@ -163,35 +131,13 @@ const STEPS: FlowStep[] = [
         packet: { spot: "cpu", text: "計算中", kind: "bus" },
         caption: { target: "cpu", text: "CPUが入力を受け取り、新しい内容を計算する" },
       },
-    ],
-    detail: (
-      <>
-        <p>
-          キーボードなどの<b>入力装置</b>から入ったデータも、まず CPU が受け取って処理します。
-          計算した結果はすぐにはメモリに反映されず、次の場面でメモリへ書き込まれます。
-        </p>
-        <Terms items={["入力装置", "CPU が処理の中心"]} />
-      </>
-    ),
-  },
-  {
-    title: "メモリ上で編集",
-    phases: [
       {
         nodes: at({ cpu: "sending" }),
         lanes: { bus: "active" },
         stored: 1,
         doc: DOC1_MEMORY,
         packet: { spot: "memory", text: "書き込み", kind: "bus" },
-        caption: { target: "cpu", text: "計算結果をメモリへ送る" },
-      },
-      {
-        nodes: at({ memory: "active" }),
-        lanes: {},
-        stored: 1,
-        doc: DOC2_DIRTY,
-        packet: null,
-        caption: { target: "memory", text: "メモリ上の文書が v2 に。まだ保存していない" },
+        caption: { target: "cpu", text: "計算結果をメモリへ書き込む" },
       },
       {
         nodes: at({ memory: "active", storage: "active" }),
@@ -199,16 +145,19 @@ const STEPS: FlowStep[] = [
         stored: 1,
         doc: DOC2_DIRTY,
         packet: null,
-        caption: { target: "storage", text: "引き出しの中はまだ v1。ここで電源を切ると…？" },
+        caption: { target: "memory", text: "メモリ上は v2。引き出しはまだ v1。いま電源を切ると…？" },
       },
     ],
     detail: (
       <>
         <p>
-          編集した内容は、まず<b>メモリの上</b>にあります（だから速い）。ただしメモリは電気が無いと中身を保てない
-          <b>揮発性</b>の記憶装置です。保存する前に電源を切ると、メモリ上の編集は消えてしまいます。
+          キーボードなどの<b>入力装置</b>から入ったデータも、まず CPU が受け取って処理し、結果をメモリへ書き込みます。
+          編集した内容はまず<b>メモリの上</b>にあります（だから速い）。
         </p>
-        <Terms items={["揮発性", "主記憶（メモリ）"]} />
+        <p>
+          ただしメモリは電気が無いと中身を保てない<b>揮発性</b>の記憶装置です。保存する前に電源を切ると、メモリ上の編集は消えてしまいます。
+        </p>
+        <Terms items={["入力装置", "揮発性", "主記憶（メモリ）"]} />
       </>
     ),
   },
@@ -230,15 +179,7 @@ const STEPS: FlowStep[] = [
         storedFlash: true,
         doc: DOC2_SAVED,
         packet: null,
-        caption: { target: "storage", text: "ストレージに v2 が保存された" },
-      },
-      {
-        nodes: at({ storage: "active" }),
-        lanes: {},
-        stored: 2,
-        doc: DOC2_SAVED,
-        packet: null,
-        caption: { target: "storage", text: "電源を切っても v2 は残る（不揮発性）" },
+        caption: { target: "storage", text: "ストレージに v2 が保存された。電源を切っても残る" },
       },
     ],
     detail: (
@@ -254,8 +195,8 @@ const STEPS: FlowStep[] = [
 ];
 
 /** 保存前の編集がメモリにだけある STEP（ここで電源を切ると編集が消える） */
-const EDIT_STEP = 4;
-const SAVE_STEP = 5;
+const EDIT_STEP = 1;
+const SAVE_STEP = 2;
 
 function Terms({ items }: { items: string[] }) {
   return (
@@ -272,12 +213,12 @@ function Terms({ items }: { items: string[] }) {
 
 type Power = "on" | "off" | "rebooted";
 
-function powerView(power: Power, idx: number) {
-  const step = STEPS[idx];
-  const stored = step.phases[step.phases.length - 1].stored;
-  const inMemory = idx >= 1;
-  const edited = idx >= EDIT_STEP;
-  const lost = idx === EDIT_STEP;
+function powerView(power: Power, phase: Phase) {
+  const stored = phase.stored;
+  const inMemory = phase.doc?.spot === "memory";
+  const edited = phase.doc?.version === 2;
+  // メモリにだけ新しい版がある（まだストレージに書き込まれていない）
+  const lost = edited && stored === 1;
   if (power === "off") {
     return {
       nodes: { storage: "idle", memory: "disabled", cpu: "disabled" } as ComputerSceneProps["nodes"],
@@ -287,7 +228,7 @@ function powerView(power: Power, idx: number) {
       title: lost ? "保存前に電源OFF → 編集が消えた" : "電源OFF → 失ったものはない",
       caption: (lost
         ? { target: "memory", text: `メモリ上の編集（${DOC_TEXT[2]}）が消えた`, tone: "lost" }
-        : idx === SAVE_STEP
+        : edited
           ? { target: "storage", text: "保存済みなので、v2 はストレージに残っている", tone: "safe" }
           : inMemory
             ? { target: "memory", text: "メモリは空に。でもまだ編集していない", tone: "safe" }
@@ -297,7 +238,7 @@ function powerView(power: Power, idx: number) {
           電源OFF。<b>メモリの上にあった編集（{DOC_TEXT[2]}）が消えました！</b>
           引き出し（ストレージ）には古い <b>v1（{DOC_TEXT[1]}）</b>しか残っていません。
         </>
-      ) : idx === SAVE_STEP ? (
+      ) : edited ? (
         <>電源OFF。メモリの中身は消えましたが、<b>保存済み</b>なのでストレージに <b>v2</b> が残っています。</>
       ) : inMemory ? (
         <>電源OFF。メモリ上の文書は消えました。でも<b>まだ編集していない</b>ので、ストレージの v1 と同じ＝失ったものはありません。</>
@@ -327,6 +268,57 @@ function powerView(power: Power, idx: number) {
   };
 }
 
+/** 利用者に操作してもらう場面の小窓（アプリで「開く」を押す / 金額を 100 → 120 に書き換える） */
+function ActionCard({ action, onDone }: { action: "open" | "type"; onDone: () => void }) {
+  const [value, setValue] = useState("100");
+  if (action === "open") {
+    return (
+      <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 ring-1 ring-brand-200" data-testid="cc-action">
+        <p className="text-xs font-bold text-brand-800">あなたの番：アプリで文書を開いてみよう</p>
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200">
+          <span className="min-w-0 truncate text-sm text-gray-700">レポート.docx</span>
+          <button type="button" onClick={onDone} className="flex-none rounded-full bg-brand-600 px-5 py-1.5 text-xs font-bold text-white active:scale-95">
+            開く
+          </button>
+        </div>
+      </div>
+    );
+  }
+  // 全角数字でも受け付ける
+  const typed = value.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)).trim();
+  return (
+    <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 ring-1 ring-brand-200" data-testid="cc-action">
+      <p className="text-xs font-bold text-brand-800">あなたの番：「100」を「120」に書き換えてみよう</p>
+      <form
+        className="mt-2 flex items-center gap-2 rounded-lg bg-white px-3 py-2 ring-1 ring-gray-200"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (typed === "120") onDone();
+        }}
+      >
+        <label className="flex min-w-0 flex-1 items-center gap-1.5 text-sm text-gray-700">
+          売上
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            inputMode="numeric"
+            aria-label="売上（万円）"
+            className="w-16 rounded-md border border-gray-300 px-2 py-1 text-right text-base font-bold text-gray-900 focus:border-brand-500 focus:outline-none"
+          />
+          万円
+        </label>
+        <button
+          type="submit"
+          disabled={typed !== "120"}
+          className="flex-none rounded-full bg-brand-600 px-5 py-1.5 text-xs font-bold text-white active:scale-95 disabled:bg-gray-300"
+        >
+          確定
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function DataFlow() {
   const reducedMotion = useReducedMotion();
   const [power, setPower] = useState<Power>("on");
@@ -337,6 +329,8 @@ function DataFlow() {
   const player = usePhasePlayer(
     STEPS.map((s) => s.phases.length),
     stopped || showDetail || power !== "on",
+    undefined,
+    (st, ph) => !!STEPS[st].phases[ph].action,
   );
   const idx = player.step;
   const step = STEPS[idx];
@@ -355,15 +349,16 @@ function DataFlow() {
   }
 
   // 再生ボタンは状況で役割が変わる：再生中＝停止 / 停止中＝再開 / 見終わった（または電源OFFの実験中）＝もう一度見る
-  const playState: "playing" | "stopped" | "done" = power !== "on" || player.done ? "done" : stopped ? "stopped" : "playing";
+  // 利用者の操作待ちの間は止める・再開するものが無いので押せない
+  const playState: "playing" | "stopped" | "done" | "waiting" =
+    power !== "on" || player.done ? "done" : player.waiting ? "waiting" : stopped ? "stopped" : "playing";
 
   function powerOff() {
     setPower("off");
-    if (idx === EDIT_STEP) setTried((t) => ({ ...t, lost: true }));
-    if (idx === SAVE_STEP) setTried((t) => ({ ...t, safe: true }));
+    if (phase.doc?.version === 2) setTried((t) => (phase.stored === 1 ? { ...t, lost: true } : { ...t, safe: true }));
   }
 
-  const pv = power === "on" ? null : powerView(power, idx);
+  const pv = power === "on" ? null : powerView(power, phase);
   const scene: ComputerSceneProps = pv
     ? {
         nodes: pv.nodes,
@@ -421,6 +416,8 @@ function DataFlow() {
         <ComputerScene {...scene} />
       </div>
 
+      {power === "on" && phase.action && <ActionCard key={`${idx}-${player.run}`} action={phase.action} onDone={player.advance} />}
+
       <div className="mt-3 flex items-center justify-between gap-2">
         <button type="button" onClick={() => move(idx - 1)} disabled={idx === 0 && power === "on"} className={`${navBtn} bg-white text-gray-700 ring-1 ring-gray-300`} aria-label="前のSTEPへ">
           ← 戻る
@@ -428,11 +425,12 @@ function DataFlow() {
         <button
           type="button"
           onClick={playState === "playing" ? () => setStopped(true) : playState === "stopped" ? () => setStopped(false) : replay}
+          disabled={playState === "waiting"}
           className={`${navBtn} min-w-[8.5rem] bg-white text-gray-700 ring-1 ring-gray-300`}
           data-testid="cc-play"
           data-state={playState}
         >
-          {playState === "playing" ? "⏸ 停止" : playState === "stopped" ? "▶ 再開" : "↻ もう一度見る"}
+          {playState === "playing" ? "⏸ 停止" : playState === "stopped" ? "▶ 再開" : playState === "waiting" ? "操作を待っています" : "↻ もう一度見る"}
         </button>
         {/* 場面が残っている間は押せない（途中で押して見逃さないように）。電源OFFの実験中は戻るために押せる */}
         <button
@@ -442,7 +440,7 @@ function DataFlow() {
           className={`${navBtn} bg-gray-900 text-white`}
           aria-label="次のSTEPへ"
         >
-          {power === "on" && !player.done ? "再生中…" : "次へ →"}
+          {power === "on" && !player.done ? (player.waiting ? "操作してね" : "再生中…") : "次へ →"}
         </button>
       </div>
 
@@ -452,7 +450,7 @@ function DataFlow() {
             type="button"
             onClick={powerOff}
             className={`flex-1 rounded-full px-4 py-2 text-xs font-bold transition active:scale-95 ${
-              idx === EDIT_STEP ? "bg-rose-600 text-white" : "bg-white text-rose-700 ring-1 ring-rose-300"
+              idx === EDIT_STEP && player.done ? "bg-rose-600 text-white" : "bg-white text-rose-700 ring-1 ring-rose-300"
             }`}
           >
             電源を切る
@@ -471,7 +469,7 @@ function DataFlow() {
       </div>
       {power === "on" && idx !== EDIT_STEP && !tried.lost && (
         <p className="mt-2 text-center text-[11px] text-gray-500">
-          ヒント：STEP {EDIT_STEP + 1}（メモリ上で編集）で切ると…？
+          ヒント：STEP {EDIT_STEP + 1}（メモリ上で書き換える）の最後で切ると…？
         </p>
       )}
 
@@ -499,7 +497,7 @@ function DataFlow() {
           ) : tried.lost ? (
             <><InlineIcon name="lightbulb" />保存前に切ると編集が消えた。次は <b>STEP {SAVE_STEP + 1}（保存）の後</b>に切って比べてみよう。</>
           ) : (
-            <><InlineIcon name="lightbulb" />保存後なら残った。次は <b>STEP {EDIT_STEP + 1}（保存前）</b>で切って比べてみよう。</>
+            <><InlineIcon name="lightbulb" />保存後なら残った。次は <b>STEP {EDIT_STEP + 1}（保存前）</b>の最後で切って比べてみよう。</>
           )}
         </div>
       )}

@@ -33,6 +33,19 @@ const next = () => {
   click("次のSTEPへ");
 };
 const back = () => click("前のSTEPへ");
+/** 利用者の操作：アプリで「開く」を押す / 金額を書き換えて確定 */
+const openDoc = () => click("開く");
+const typeAmount = (v: string) => {
+  fireEvent.change(screen.getByLabelText("売上（万円）"), { target: { value: v } });
+  click("確定");
+};
+/** STEP 2 の最後（メモリ上だけが v2）まで進める */
+const toUnsavedEdit = () => {
+  openDoc();
+  next();
+  typeAmount("120");
+  playThrough();
+};
 const caption = () => screen.getByTestId("cc-caption");
 const doc = () => screen.getByTestId("work-doc");
 const stored = () => screen.getByTestId("stored-file");
@@ -63,23 +76,20 @@ describe("ComputerCoreExperience", () => {
     for (const part of ["storage", "memory", "cpu"]) {
       expect(scene.querySelector(`[data-illustration="${part}"]`)).not.toBeNull();
     }
+    expect(screen.getByText("STEP 1 / 3")).toBeInTheDocument();
     expect(doc()).toHaveAttribute("data-spot", "storage");
     expect(caption()).toHaveAttribute("data-target", "storage");
 
-    next();
-    // STEP 2 は「開く」を押したところから始まる
-    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
+    openDoc();
     playThrough();
     expect(doc()).toHaveAttribute("data-spot", "memory");
+    expect(caption()).toHaveAttribute("data-target", "monitor");
     next();
-    expect(screen.getByTestId("bus-packet")).toHaveAttribute("data-spot", "cpu");
-    next();
-    // キーボード入力 → CPU が計算。この間、メモリ上の文書はまだ v1
+    // 書き換えるまではメモリ上の文書は v1 のまま
     expect(caption()).toHaveAttribute("data-target", "keyboard");
-    playThrough();
+    typeAmount("120");
     expect(screen.getByTestId("bus-packet")).toHaveAttribute("data-spot", "cpu");
     expect(doc()).toHaveAttribute("data-version", "1");
-    next();
     playThrough();
     expect(doc()).toHaveAttribute("data-status", "dirty");
     expect(doc()).toHaveTextContent("売上 120万円");
@@ -90,79 +100,98 @@ describe("ComputerCoreExperience", () => {
     expect(stored()).toHaveTextContent("v2");
   });
 
+  it("waits for the user to press 開く and to type 120 before going on", () => {
+    renderFlow();
+    playThrough();
+    // 「開く」を押すまで進まない
+    expect(doc()).toHaveAttribute("data-spot", "storage");
+    expect(screen.getByRole("button", { name: "次のSTEPへ" })).toBeDisabled();
+    expect(screen.getByTestId("cc-play")).toBeDisabled();
+    openDoc();
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    next();
+
+    playThrough();
+    expect(caption()).toHaveTextContent("キーボードから入力する");
+    // 120 以外では確定できない
+    fireEvent.change(screen.getByLabelText("売上（万円）"), { target: { value: "110" } });
+    expect(screen.getByRole("button", { name: "確定" })).toBeDisabled();
+    // 全角でも受け付ける
+    typeAmount("１２０");
+    expect(caption()).toHaveTextContent("CPUが入力を受け取り");
+  });
+
   it("plays the phases of a step, stops at the last one, and never advances the step by itself", () => {
     renderFlow();
-    next();
-    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
-    act(() => vi.advanceTimersByTime(2600));
+    openDoc();
     expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
     playThrough();
-    expect(caption()).toHaveTextContent("メモリ（作業机）に広げる");
-    expect(screen.getByTestId("cc-step-title")).toHaveTextContent("メモリへ読み込む");
+    expect(caption()).toHaveTextContent("処理結果が画面に表示される");
+    expect(screen.getByTestId("cc-step-title")).toHaveTextContent("文書を開く");
 
     click("↻ もう一度見る");
-    // 再生し直している間は次の STEP へ進めない
+    // もう一度見るときも「開く」から
     expect(screen.getByRole("button", { name: "次のSTEPへ" })).toBeDisabled();
-    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
+    expect(screen.getByRole("button", { name: "開く" })).toBeInTheDocument();
+    openDoc();
+    next();
+    expect(screen.getByTestId("cc-step-title")).toHaveTextContent("メモリ上で書き換える");
     back();
-    expect(screen.getByTestId("cc-step-title")).toHaveTextContent("ふだんは引き出しに保管");
+    expect(screen.getByTestId("cc-step-title")).toHaveTextContent("文書を開く");
   });
 
   it("switches the play button between stop, resume and replay", () => {
     renderFlow();
-    next();
+    openDoc();
     expect(screen.getByTestId("cc-play")).toHaveTextContent("停止");
     click("⏸ 停止");
     for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(3000));
     // 止めている間は場面が進まない
-    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
     expect(screen.getByTestId("cc-play")).toHaveTextContent("再開");
     click("▶ 再開");
     act(() => vi.advanceTimersByTime(2600));
-    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
+    expect(caption()).toHaveTextContent("メモリ（作業机）に広げる");
     playThrough();
     expect(screen.getByTestId("cc-play")).toHaveTextContent("もう一度見る");
   });
 
   it("pauses the phases while the details are open", () => {
     renderFlow();
-    next();
+    openDoc();
     const details = screen.getByText(/詳しく見る/).closest("details")!;
     details.open = true;
     fireEvent(details, new Event("toggle"));
     playThrough();
-    expect(caption()).toHaveTextContent("アプリで文書を「開く」を押した");
+    expect(caption()).toHaveTextContent("ストレージから文書のコピーを読み出す");
     expect(screen.getByTestId("cc-detail")).toHaveTextContent("主記憶装置");
   });
 
   it("shows only the part labels that the current scene is about", () => {
     renderFlow();
-    // STEP 1：引き出しに保存されている → ストレージだけ
+    // 引き出しに保存されている → ストレージだけ
     expect(partLabels()).toEqual(["storage"]);
-    next();
-    // 「開く」を押した（モニター）→ 部品の札は出さない
-    expect(partLabels()).toEqual([]);
-    act(() => vi.advanceTimersByTime(2600));
+    openDoc();
     // 読み込み中はストレージとメモリ
     expect(partLabels()).toEqual(["memory", "storage"]);
-    playThrough();
+    act(() => vi.advanceTimersByTime(2600));
     expect(partLabels()).toEqual(["memory"]);
-    next();
+    act(() => vi.advanceTimersByTime(2600));
     // メモリ → CPU
     expect(partLabels()).toEqual(["cpu", "memory"]);
-    next();
-    // キーボード → CPU だけ
+    act(() => vi.advanceTimersByTime(2600));
+    // 画面に表示 → 部品の札は出さない
     expect(partLabels()).toEqual([]);
-    playThrough();
+    next();
+    // キーボード入力の場面も出さない
+    expect(partLabels()).toEqual([]);
+    typeAmount("120");
     expect(partLabels()).toEqual(["cpu"]);
   });
 
   it("power off before saving erases only the memory copy; storage keeps the old version", () => {
     renderFlow();
-    next();
-    next();
-    next();
-    next();
+    toUnsavedEdit();
     click("電源を切る");
     expect(screen.getByTestId("computer-scene")).toHaveAttribute("data-power", "off");
     expect(doc()).toHaveAttribute("data-status", "vanished");
@@ -176,13 +205,11 @@ describe("ComputerCoreExperience", () => {
 
   it("power off after saving keeps the edit, and comparing both shows the volatility insight", () => {
     renderFlow();
-    next();
-    next();
-    next();
-    next();
+    toUnsavedEdit();
     click("電源を切る");
     click("↩ 電源OFFの前に戻る");
     next();
+    playThrough();
     click("電源を切る");
     expect(stored()).toHaveTextContent("v2");
     expect(screen.getByTestId("cc-insight")).toHaveTextContent("揮発性");
