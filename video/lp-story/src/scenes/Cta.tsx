@@ -1,4 +1,4 @@
-// 9. 呼びかけ：サービス名・無料で始められること・URL。音声クレジット（VOICEVOX 規約で必須）もここに出す。
+// 9. 呼びかけ：サービス名・無料で始められること・URL。音声生成モデルのクレジットもここに出す。
 import { AbsoluteFill, useCurrentFrame } from "remotion";
 import { Mochit } from "../parts/Mochit";
 import { Paper, Rise, easeOutExpo, progress } from "../parts/motion";
@@ -37,7 +37,7 @@ export function Cta({ scene }: { scene: Scene }) {
         </div>
       </div>
       <div style={{ position: "absolute", left: 0, right: 0, bottom: 34, textAlign: "center", fontFamily: BODY, fontSize: 24, color: C.sub, opacity: credit, letterSpacing: "0.05em" }}>
-        音声：VOICEVOX:春日部つむぎ
+        音声：Gemini 3.8 Flash TTS
       </div>
     </AbsoluteFill>
   );

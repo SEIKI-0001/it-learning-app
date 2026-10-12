@@ -176,8 +176,8 @@ export function Next({ scene }: { scene: Scene }) {
   const enter = progress(frame, 0, 26);
   const cam = useCam([
     [0, WIDE],
-    [l1.onsets[2] - 6, focus(READINESS.x + 70, READINESS.y + 10, 1.55)],
-    [l1.onsets[3] - 4, focus(ROAD.x, ROAD.y, 1.3)],
+    [l1.onsets[1] - 6, focus(READINESS.x + 70, READINESS.y + 10, 1.55)],
+    [l1.onsets[2] - 4, focus(ROAD.x, ROAD.y, 1.3)],
     [swap - 6, focus(ROAD.x, ROAD.y, 1.25)],
     [swap + 10, WIDE],
     [l2.onsets[0] + 8, focus(TODAY_HEAD.x, TODAY_HEAD.y + 10, 1.5)],
@@ -195,8 +195,8 @@ export function Next({ scene }: { scene: Scene }) {
           <div style={{ position: "relative", marginTop: 36, height: HEAD * 0.82 * 1.32 + HEAD * 1.32 * 3 + 20 }}>
             <div style={{ position: "absolute", left: 0, top: 0 }}>
               <Rise runs="その結果から、" at={l1.onsets[0]} size={HEAD * 0.82} color={C.sub} exit={textOut} />
-              <Rise runs="今の実力と、" at={l1.onsets[2]} size={HEAD} exit={textOut} />
-              <Rise runs="足りないところが" at={l1.onsets[3]} size={HEAD} exit={textOut + 2} />
+              <Rise runs="今の実力と、" at={l1.onsets[1]} size={HEAD} exit={textOut} />
+              <Rise runs="足りないところが" at={l1.onsets[2]} size={HEAD} exit={textOut + 2} />
               <Rise runs={[{ t: "見える", color: C.ai }, { t: "。" }]} at={l1.onsets[3] + 14} size={HEAD} exit={textOut + 4} />
             </div>
             <div style={{ position: "absolute", left: 0, top: 0 }}>
@@ -221,7 +221,7 @@ export function Next({ scene }: { scene: Scene }) {
               <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
                 <Img src={staticFile("shots/progress.png")} style={{ position: "absolute", left: -sw * 390 * 0.35, top: 0, width: 390, opacity: 1 - sw * 0.6 }} />
                 <Img src={staticFile("shots/today.png")} style={{ position: "absolute", left: (1 - sw) * 390, top: 0, width: 390, boxShadow: "-10px 0 30px rgba(0,0,0,0.12)" }} />
-                {frame < swap && <PenCircle w={190} h={96} at={l1.onsets[2] + 8} stroke={4} style={{ left: READINESS.x - 95 + 6, top: READINESS.y - 48 }} />}
+                {frame < swap && <PenCircle w={190} h={96} at={l1.onsets[1] + 8} stroke={4} style={{ left: READINESS.x - 95 + 6, top: READINESS.y - 48 }} />}
               </div>
             </Phone>
           </div>

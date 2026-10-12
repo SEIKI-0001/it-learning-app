@@ -45,7 +45,7 @@ const CUES: Record<SceneId, (s: Scene) => Cue[]> = {
   },
   next: (s) => [
     { at: 0, sfx: "whoosh", volume: 0.2 },
-    { at: s.lines[0].onsets[2] + 8, sfx: "mark", volume: 0.28 },
+    { at: s.lines[0].onsets[1] + 8, sfx: "mark", volume: 0.28 },
     { at: s.lines[1].from - 12, sfx: "whoosh", volume: 0.16 },
   ],
   cycle: (s) => [

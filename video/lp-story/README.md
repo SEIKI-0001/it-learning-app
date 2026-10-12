@@ -1,6 +1,6 @@
 # LP紹介動画（/lp）
 
-`/lp` のヒーロー直下で再生する紹介動画（約75秒・1920×1080・30fps）を、コードから作り直せるようにした Remotion プロジェクト。
+`/lp` のヒーロー直下で再生する紹介動画（音声に合わせた尺・1920×1080・30fps）を、コードから作り直せるようにした Remotion プロジェクト。
 アプリ本体のビルド・lint・typecheck の対象外（独自の package.json。構成は `video/tutorial/` と同じ）。
 
 ## 伝えること
@@ -28,8 +28,8 @@
 
 | パス | 中身 |
 |---|---|
-| `voice/script.json` | ナレーション台本（行ごとの話速・抑揚、シーンが使う語の区切りの数 `needOnsets`） |
-| `public/voice/*.wav` | VOICEVOX で生成済みの音声（-20 LUFS にそろえ済み。エンジンが無くても再レンダーできるようコミット） |
+| `voice/script.json` | ナレーション台本（声・読み方・語句の区切り、シーンが使う語の区切りの数 `needOnsets`） |
+| `public/voice/*.wav` | Gemini 3.8 Flash TTS（Kore）で生成済みの音声（-20 LUFS にそろえ済み。APIキーが無くても再レンダーできるようコミット） |
 | `src/voice-manifest.json` | 各行の秒数と語の区切り（秒）。シーンの尺と文字の出るタイミングはここから決まる |
 | `src/scenes/*.tsx` | 9場面（Hook / Term / Lost / Pivot / Steps(Learn・Measure・Next) / Cycle / Cta） |
 | `src/LpStory.tsx` | 場面転換・ナレーション・BGM の自動ダッキング・効果音 |
@@ -44,24 +44,34 @@
 cd video/lp-story
 npm ci
 npm run studio          # プレビュー（ブラウザで編集しながら確認）
-npm run render          # public/lp/story/story-v3.{mp4,ja.vtt} と story-v3-poster.webp を出力
+npm run render          # public/lp/story/story-v4.{mp4,ja.vtt} と story-v4-poster.webp を出力
 ```
 
 `finalize.sh` のポスター変換はリポジトリ本体の `sharp` を使うので、ルートでも `npm ci` 済みであること。
 字幕・BGM 生成は Node の TypeScript 実行を使うので Node 23.6 以上が必要。
-ファイル名の `v2` は再訪ユーザーのブラウザキャッシュを避けるため、中身を変えたら上げる（`app/lp/page.tsx` も合わせる）。
+ファイル名の `v4` は再訪ユーザーのブラウザキャッシュを避けるため、中身を変えたら上げる（`app/lp/page.tsx` も合わせる）。
 
 ### ナレーションを変えるとき
 
-VOICEVOX エンジンを `http://127.0.0.1:50021` で起動してから（macOS 版は GitHub の VOICEVOX/voicevox_engine リリースの `.vvpp` を unzip して `./run`）:
+[Gemini 3.8 Flash TTS](https://ai.google.dev/gemini-api/docs/generate-content/speech-generation) を使う。APIキーは `GEMINI_API_KEY` としてローカルの秘密ファイルに保存し、コミットしない。
 
 ```sh
-npm run voice
+node --env-file=/path/to/private.env scripts/voice.mjs
+npm run render
 ```
 
-話者は春日部つむぎ（ノーマル）。VOICEVOX の利用規約により、動画の最後と LP の動画下に
-「VOICEVOX:春日部つむぎ」のクレジットを表記している。話者を変えたら両方を直す。
-台本の読点を減らすと語の区切りが取れなくなり、`needOnsets` のチェックで止まる（演出のずれを防ぐため）。
+モデルは `gemini-3.8-flash-tts`、声は Kore。台本の `style` は `speech_metadata.style` で渡し、読み上げる本文と分ける。
+`segments` は本文を語句ごとに分けた配列で、結合すると `text` と一致することを検証する。
+語句ごとに生成した音声の前後の無音を整え、0.30秒の間でつなぐ。話速を伸縮せず、実際の長さから `onsets` と各行の尺を計算する。
+API呼び出しは7秒以上の間隔を空け、一時的な429・5xxは最大4回再試行する。生成済みの語句は `out/voice-cache` に保存され、再実行で再利用する。
+全行の生成・検証が済んでから音声とマニフェストを更新するため、途中で失敗しても既存の音声を残す。
+
+```sh
+node --env-file=/path/to/private.env scripts/voice.mjs --sample Kore --out /tmp/lp-voice-sample
+node --test scripts/gemini-tts.test.mjs
+```
+
+音声モデルの表記は動画末尾と LP の動画下にある。配信用ファイルを変更したらバージョンを上げて、古い動画のキャッシュを避ける。
 
 ### 実画面を撮り直すとき
 

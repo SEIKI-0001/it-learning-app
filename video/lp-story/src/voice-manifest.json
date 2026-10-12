@@ -1,150 +1,148 @@
 {
-  "speaker": "春日部つむぎ/ノーマル",
+  "model": "gemini-3.8-flash-tts",
+  "speaker": "Kore",
   "lines": [
     {
       "id": "hook1",
       "scene": "hook",
       "caption": "参考書を読んだ。過去問も、解いた。",
-      "seconds": 3.328,
+      "seconds": 3.881,
       "onsets": [
         0,
-        1.69,
-        2.774
+        1.848
       ]
     },
     {
       "id": "hook2",
       "scene": "hook",
       "caption": "でも、本当に理解できていますか？",
-      "seconds": 3.744,
+      "seconds": 3.878,
       "onsets": [
         0,
-        0.956,
-        2.142
+        0.88,
+        2.158
       ]
     },
     {
       "id": "term1",
       "scene": "term",
       "caption": "TCP/IP。正規化。公開鍵暗号。",
-      "seconds": 4.053,
+      "seconds": 5.287,
       "onsets": [
         0,
-        1.739,
-        2.822
+        2.393,
+        3.596
       ]
     },
     {
       "id": "term2",
       "scene": "term",
       "caption": "文字だけでは仕組みが浮かばず、丸暗記になりがちです。",
-      "seconds": 3.669,
+      "seconds": 5.136,
       "onsets": [
         0,
-        2.175
+        3.025
       ]
     },
     {
       "id": "lost1",
       "scene": "lost",
       "caption": "それに、次に何をすればいいのかも分からない。",
-      "seconds": 3.755,
+      "seconds": 4.517,
       "onsets": [
         0,
-        0.941,
-        3.015
+        0.949,
+        3.548
       ]
     },
     {
       "id": "lost2",
       "scene": "lost",
       "caption": "復習か、過去問か。このペースで間に合うのか。",
-      "seconds": 4.384,
+      "seconds": 6.22,
       "onsets": [
         0,
-        1.242,
-        2.341,
-        3.519
+        1.95,
+        3.792,
+        5.006
       ]
     },
     {
       "id": "pivot",
       "scene": "pivot",
       "caption": "ITパスポート学習コーチは、「分からない」と「迷う」をまとめて解決します。",
-      "seconds": 6.069,
+      "seconds": 7.477,
       "onsets": [
         0,
-        2.526,
-        3.732,
-        4.662
+        3.074,
+        4.45,
+        5.609
       ]
     },
     {
       "id": "learn",
       "scene": "learn",
       "caption": "動く図解で、仕組みから理解する。",
-      "seconds": 2.635,
+      "seconds": 3.482,
       "onsets": [
         0,
-        1.331
+        1.637
       ]
     },
     {
       "id": "measure",
       "scene": "measure",
       "caption": "確認問題で、本当に分かったかを確かめる。",
-      "seconds": 3.509,
+      "seconds": 4.227,
       "onsets": [
         0,
-        1.628
+        1.705
       ]
     },
     {
       "id": "next1",
       "scene": "next",
       "caption": "その結果から、今の実力と足りないところが見えて、",
-      "seconds": 4.245,
+      "seconds": 6.254,
       "onsets": [
         0,
-        0.567,
-        1.407,
-        2.893
+        1.654,
+        3.621,
+        5.308
       ]
     },
     {
       "id": "next2",
       "scene": "next",
       "caption": "試験日から逆算した「今日やること」が決まります。",
-      "seconds": 3.413,
+      "seconds": 4.484,
       "onsets": [
         0,
-        1.922
+        2.495
       ]
     },
     {
       "id": "cycle",
       "scene": "cycle",
       "caption": "理解する。測る。次を決める。このサイクルを、合格の日まで。",
-      "seconds": 5.749,
+      "seconds": 7.047,
       "onsets": [
         0,
-        1.143,
-        2.042,
-        3.28,
-        4.62
+        1.289,
+        2.323,
+        4,
+        5.51
       ]
     },
     {
       "id": "cta",
       "scene": "cta",
       "caption": "教材と公式過去問は無料。今日の一歩を、ここから始めましょう。",
-      "seconds": 5.685,
+      "seconds": 6.082,
       "onsets": [
         0,
-        2.184,
-        3.043,
-        3.658,
-        4.347
+        3.01,
+        4.507
       ]
     }
   ]
