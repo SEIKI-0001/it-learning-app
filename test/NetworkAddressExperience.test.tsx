@@ -135,7 +135,7 @@ describe("NetworkAddressExperience", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "DNSを止める" }));
     expect(screen.getByRole("button", { name: "正常に戻す" })).toBeInTheDocument();
-    expect(screen.getByText(/DNS応答なし → IPアドレス不明 → 接続先を決められない/)).toBeInTheDocument();
+    expect(screen.getByTestId("network-scene-caption")).toHaveTextContent("応答が返ってこない");
 
     // 問い合わせはDNSまで届くが、応答は返らない
     expect(stateOf('[data-node="dns"]')).toBe("error");
@@ -153,6 +153,7 @@ describe("NetworkAddressExperience", () => {
     expect(capsuleKind()).toBe("timeout");
     expect(screen.getByText("DNS 停止中")).toBeInTheDocument();
     expect(screen.getByText("応答なし")).toBeInTheDocument();
+    expect(screen.getByTestId("network-scene-caption")).toHaveTextContent("IPアドレス不明→接続先を決められない");
 
     // 先へ進もうとしても Webサーバへの接続は発生しない
     const forward = screen.getByRole("button", { name: "1ステップ進む" });
