@@ -6,7 +6,8 @@ import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
 import { MobileDioramaScene, type MobileMode } from "./wireless/MobileDioramaScene";
-import { WifiDioramaScene, type WifiMode, type WifiPhase } from "./wireless/WifiDioramaScene";
+import { WifiScene } from "./wireless/WifiScene";
+import type { WifiMode, WifiPhase } from "./wireless/wifiStory";
 
 // ============================================================================
 // 「無線LAN・モバイル通信」専用の体験。
@@ -71,7 +72,7 @@ function WifiFlow() {
       </p>
 
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <WifiDioramaScene mode={mode} phase={step.phase} forward={player.forward} reducedMotion={reducedMotion} />
+        <WifiScene mode={mode} phase={step.phase} forward={player.forward} reducedMotion={reducedMotion} />
       </div>
 
       <div className="mt-3">
