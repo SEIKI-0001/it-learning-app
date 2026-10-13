@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "source": "original/exam-level-additions",
+  "questions": [
+    {
+      "id": "strat-innovation-management-ex1",
+      "version": 1,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-innovation-management",
+      "questionPattern": "application",
+      "prompt": "ある新技術がメディアで大きく取り上げられ、多くの企業が実証実験を始めた。しかし、期待したほどの成果が出ない事例が相次ぎ、世の中の関心が急速に薄れている。ハイプサイクルにおいて、この技術が位置する段階として、最も適切なものはどれか。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "幻滅期"
+        },
+        {
+          "key": "B",
+          "text": "「過度な期待」のピーク期"
+        },
+        {
+          "key": "C",
+          "text": "啓発期"
+        },
+        {
+          "key": "D",
+          "text": "生産性の安定期"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "ハイプサイクルは、新技術への期待が黎明期から急に高まって「過度な期待」のピーク期を迎え、成果が期待に届かないことが分かると幻滅期に落ち込み、その後、使いどころが理解される啓発期を経て、生産性の安定期に定着するという推移を表す。期待した成果が出ない事例が相次いで関心が急速に薄れている状況は幻滅期にあたる。ピーク期は話題が集まり期待が最も高い段階、啓発期は適した使い方が分かり再び評価が上がり始める段階、生産性の安定期は実用として広く定着した段階である。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "ハイプサイクル",
+        "技術動向"
+      ],
+      "contentHash": "sha256:6b6778f2f42c5019f6f435811de89228ba84bc3f04b06f1c1b8249a83f6710bb",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-13",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "技術戦略マネジメント"
+      },
+      "choiceExplanations": {
+        "A": "成果が期待に届かず、関心が急速に薄れる段階。",
+        "B": "話題が集まり、期待が最も高まっている段階。関心が薄れている状況とは逆。",
+        "C": "適した使い方が理解され、評価が再び上がり始める段階。",
+        "D": "実用として広く定着した段階。"
+      }
+    },
+    {
+      "id": "strat-innovation-management-ex2",
+      "version": 2,
+      "origin": "app_original",
+      "status": "draft",
+      "primaryTopicId": "strat-innovation-management",
+      "questionPattern": "application",
+      "prompt": "イノベーションに関する記述a〜cのうち、プロセスイノベーションに当たるものだけを全て挙げたものはどれか。\n\na 工場の組立工程に産業用ロボットを導入し、同じ製品をより短い時間で生産できるようにした。\nb 画面を折り畳める新しいスマートフォンを開発し、発売した。\nc 受注から出荷までの業務の流れを見直し、注文から商品が届くまでの日数を半分に短縮した。",
+      "choices": [
+        {
+          "key": "A",
+          "text": "a, c"
+        },
+        {
+          "key": "B",
+          "text": "a"
+        },
+        {
+          "key": "C",
+          "text": "a, b"
+        },
+        {
+          "key": "D",
+          "text": "b, c"
+        }
+      ],
+      "correctChoice": "A",
+      "explanation": "プロセスイノベーションは、製造方法や業務の進め方を革新して、品質や効率を高めることである。aは組立工程の作り方を変えて生産時間を短くしているので、プロセスイノベーションにあたる。cも受注から出荷までの業務の進め方を変えて納期を短縮しているので、プロセスイノベーションにあたる。bは新しい製品そのものを生み出しているので、プロダクトイノベーションである。したがって、記述aと記述cの2つを挙げた組合せを選ぶ。",
+      "estimatedDifficulty": 3,
+      "tags": [
+        "プロセスイノベーション",
+        "プロダクトイノベーション"
+      ],
+      "contentHash": "sha256:9650b7fc319201313131d0ed11752e033cfe7f465f57e404b8bceb822c6db043",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "syllabusNode": {
+        "itemId": "ipa-13",
+        "field": "strategy",
+        "majorCategory": "経営戦略",
+        "middleCategory": "技術戦略マネジメント"
+      },
+      "choiceExplanations": {
+        "A": "aは作り方、cは業務の進め方の革新で、どちらもプロセスイノベーション。",
+        "B": "cも業務の進め方を変えて納期を短縮しており、プロセスイノベーションにあたる。",
+        "C": "bは新しい製品を生み出すプロダクトイノベーション。",
+        "D": "bは新しい製品を生み出すプロダクトイノベーション。"
+      }
+    }
+  ]
+}

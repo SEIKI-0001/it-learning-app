@@ -48,7 +48,7 @@ function renderDeck(Experience: ComponentType) {
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
 
 const TOPICS: [string, ComponentType, string[]][] = [
-  ["strat-corporation-management-organization", CorporationOrganizationExperience, ["corp-ownership", "corp-purpose", "corp-forms", "corp-decision"]],
+  ["strat-corporation-management-organization", CorporationOrganizationExperience, ["corp-ownership", "corp-cxo", "corp-purpose", "corp-forms", "corp-decision"]],
   ["strat-decision-problem-solving", DecisionMethodsExperience, ["decision-rolemap", "decision-diverge", "decision-affinity", "decision-pareto", "decision-fishbone", "decision-delphi"]],
   ["strat-technology-development-strategy", TechRoadmapExperience, ["roadmap-stages", "roadmap-chart", "roadmap-open", "roadmap-patent"]],
   ["strat-engineering-systems", EngineeringSystemsExperience, ["eng-flow", "eng-letters", "eng-concurrent"]],

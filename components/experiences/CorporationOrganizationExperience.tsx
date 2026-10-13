@@ -8,10 +8,11 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 
 // 「株式会社のしくみと組織形態」。関係・構造が本質なので静的な図解だけで見せる（動きは付けない）。
 //   ① 所有と経営：株主 → 株主総会 → 取締役会 → 業務執行 の縦の関係図（左帯で「所有／経営」を分ける）
-//   ② 会社の目的を示す言葉：経営理念 → ミッション → ビジョン → 経営目標 の積み上げ
-//   ③ 4つの組織形態：同じ4人をタブで組み替え、佐藤さんの上司が誰になるかで比べる（corporation/OrgFormsPanel）
-//   ④ 見分ける順番：期間限定？ → 上司が2人？ → 何で分ける？ の判定フロー
-//   ⑤ 試験ポイント
+//   ② 経営陣の役割（CxO）：CEO・COO・CFO・CIO・CTO が何に責任をもつか（静的な表）
+//   ③ 会社の目的を示す言葉：経営理念 → ミッション → ビジョン → 経営目標 の積み上げ
+//   ④ 4つの組織形態：同じ4人をタブで組み替え、佐藤さんの上司が誰になるかで比べる（corporation/OrgFormsPanel）
+//   ⑤ 見分ける順番：期間限定？ → 上司が2人？ → 何で分ける？ の判定フロー
+//   ⑥ 試験ポイント
 
 export default function CorporationOrganizationExperience() {
   return (
@@ -20,19 +21,22 @@ export default function CorporationOrganizationExperience() {
         会社の<b>「持ち主」と「動かす人」は別</b>です。まず上から下への関係を見て、そのあと部署の分け方（組織形態）を並べて比べます。
       </Lead>
       <OwnershipPanel />
+      <CxoPanel />
       <PurposePanel />
-      <OrgFormsPanel step={3} />
+      <OrgFormsPanel step={4} />
       <OrgDecisionPanel />
       <PointsPanel
-        step={5}
+        step={6}
         points={[
           <>取締役を<b>選ぶ</b>のは株主総会、経営の重要事項を<b>決めて監督</b>するのは取締役会</>,
           <>所有（株主）と経営（取締役・経営者）を分ける＝<b>所有と経営の分離</b></>,
+          <>CIO＝<b>情報（IT）</b>戦略、CTO＝<b>技術</b>戦略、CFO＝<b>財務</b>の責任者。真ん中の1文字で見分ける</>,
           <>2つの軸が交差＝<b>マトリックス</b>、目的のための期間限定チーム＝<b>プロジェクト</b></>,
         ]}
         traps={[
           ["株主が日々の業務を直接指揮する", "株主は株主総会で取締役を選ぶ。業務は経営者が執行する"],
           ["取締役会が取締役を選任する", "取締役を選任するのは株主総会"],
+          ["情報システム戦略の責任者はCTO", "情報（Information）＝CIO。CTOは技術（Technology）戦略の責任者"],
           ["マトリックス組織とプロジェクト組織は同じ", "マトリックス＝上司2人の常設組織／プロジェクト＝期間限定チーム"],
         ]}
       />
@@ -95,7 +99,47 @@ function Band({ children, tone, rows }: { children: ReactNode; tone: "own" | "ru
 }
 
 // ---------------------------------------------------------------------------
-// ② 経営理念・ミッション・ビジョン
+// ② 経営陣の役割（CxO）
+// ---------------------------------------------------------------------------
+
+const CXO = [
+  { code: "CEO", key: "Executive", name: "最高経営責任者", role: "経営全体の最終責任者" },
+  { code: "COO", key: "Operating", name: "最高執行責任者", role: "日々の業務の執行を統括" },
+  { code: "CFO", key: "Financial", name: "最高財務責任者", role: "財務・資金調達・会計" },
+  { code: "CIO", key: "Information", name: "最高情報責任者", role: "経営戦略に沿った情報システム戦略・IT投資" },
+  { code: "CTO", key: "Technology", name: "最高技術責任者", role: "技術戦略・研究開発（技術経営）" },
+];
+
+function CxoPanel() {
+  return (
+    <Panel>
+      <SectionTitle step={2}>経営陣の役割 ― CEO・CIO・CTO…</SectionTitle>
+      <p className="mt-2 text-sm leading-relaxed text-gray-600">
+        経営者の中で、担当分野ごとに最高責任者を置きます。<b className="text-gray-800">C○O の真ん中の1文字</b>が担当分野です。
+      </p>
+      <div className="mt-3 space-y-1.5" data-testid="corp-cxo">
+        {CXO.map((c) => (
+          <div key={c.code} className="flex items-stretch gap-2">
+            <span className="grid w-14 flex-none place-items-center rounded-lg bg-brand-600 text-sm font-bold text-white">{c.code}</span>
+            <div className="flex-1 rounded-lg bg-white px-2.5 py-1.5 ring-1 ring-gray-200">
+              <div className="text-[13px] font-bold text-gray-800">
+                {c.name}
+                <span className="ml-1.5 text-[11px] font-normal text-gray-500">Chief <b className="font-bold text-brand-700">{c.key}</b> Officer</span>
+              </div>
+              <div className="text-[12px] text-gray-600">{c.role}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[13px] leading-relaxed text-gray-600">
+        <InlineIcon name="lightbulb" />取り違えやすいのは <b className="text-gray-800">CIO（情報）</b> と <b className="text-gray-800">CTO（技術）</b>。IT投資や情報システムならCIO、製品の技術や研究開発ならCTOです。
+      </p>
+    </Panel>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ③ 経営理念・ミッション・ビジョン
 // ---------------------------------------------------------------------------
 
 const PURPOSE = [
@@ -108,7 +152,7 @@ const PURPOSE = [
 function PurposePanel() {
   return (
     <Panel>
-      <SectionTitle step={2}>会社の「目的」を示す言葉</SectionTitle>
+      <SectionTitle step={3}>会社の「目的」を示す言葉</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">パン屋を例に、<b className="text-gray-800">土台（考え方）から具体（数字）へ</b>積み上げます。</p>
       <div className="mt-3 space-y-1" data-testid="corp-purpose">
         {PURPOSE.map((p, i) => (
@@ -137,7 +181,7 @@ function PurposePanel() {
 }
 
 // ---------------------------------------------------------------------------
-// ④ 見分ける順番
+// ⑤ 見分ける順番
 // ---------------------------------------------------------------------------
 
 function Question({ children }: { children: ReactNode }) {
@@ -158,7 +202,7 @@ function Yes({ children }: { children: ReactNode }) {
 function OrgDecisionPanel() {
   return (
     <Panel>
-      <SectionTitle step={4}>問題文から見分ける順番</SectionTitle>
+      <SectionTitle step={5}>問題文から見分ける順番</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">上から順に3つ聞けば、どの形態かが1つに決まります。</p>
       <div className="mt-3 space-y-1.5" data-testid="corp-decision">
         <Question>① 目的のための<b>期間限定</b>チーム？</Question>

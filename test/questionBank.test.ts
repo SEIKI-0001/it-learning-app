@@ -7,6 +7,7 @@ import { examLevelQuestions } from "@/data/examLevelQuestions";
 import { topicCheckPacks } from "@/data/topicCheckPacks";
 import { getAllTopics } from "@/lib/content";
 import manifest from "@/data/question-bank/manifests/original-exam-level.json";
+import examLevelAdditions from "@/data/question-bank/original/exam-level-additions.json";
 import ipa2026Manifest from "@/data/question-bank/manifests/official-ipa-it-passport-2026.json";
 import ipa2026Source from "@/data/question-bank/sources/official/ipa/it-passport-2026.source.json";
 import {
@@ -50,12 +51,17 @@ const isRevised = (id: string) => (getQuestionById(id)?.version ?? 1) > 1;
 
 /** 出所ごとの束。既存問題と新規収録分を混ぜて検証しないために分けておく。 */
 //
-// app_original には2つの束がある。移行の同一性を見たいのは前者だけなので分ける。
+// app_original には3つの束がある。移行の同一性を見たいのは exam-level だけなので分ける。
 //   exam-level  … 確認パックの過去問レベル問題（移行元 data/examLevelQuestions.ts がある）
 //   theme-exam  … テーマ別 高難易度試験（移行元は無く、圧縮ソースから生成される）
+//   exam-level-additions … 移行後に足したトピックの確認パック用（移行元は無い）
 const ALL_APP_ORIGINAL = getQuestionsByOrigin("app_original");
-const APP_ORIGINAL = ALL_APP_ORIGINAL.filter((q) => !q.id.startsWith("theme-exam-"));
+const ADDITION_IDS = new Set(examLevelAdditions.questions.map((q) => q.id));
+const APP_ORIGINAL = ALL_APP_ORIGINAL.filter(
+  (q) => !q.id.startsWith("theme-exam-") && !ADDITION_IDS.has(q.id),
+);
 const THEME_EXAM = ALL_APP_ORIGINAL.filter((q) => q.id.startsWith("theme-exam-"));
+const EXAM_LEVEL_ADDITIONS = ALL_APP_ORIGINAL.filter((q) => ADDITION_IDS.has(q.id));
 const OFFICIAL_PAST = getQuestionsByOrigin("official_past");
 
 /** 令和8年度 ITパスポート 公開問題の収録内容。 */
@@ -145,7 +151,10 @@ describe("問題バンクの整合性", () => {
     // テーマ別試験は増えていく想定なので件数は固定しない。
     // 「1テーマ10問ちょうど」であることだけを守る（構成の崩れをここで気づけるようにする）。
     expect(THEME_EXAM.length % 10).toBe(0);
-    expect(ALL.length).toBe(APP_ORIGINAL.length + THEME_EXAM.length + OFFICIAL_PAST.length);
+    // 移行後に足した過去問レベル問題（exam-level-additions）は、確認パックの必要に応じて増える。
+    expect(ALL.length).toBe(
+      APP_ORIGINAL.length + EXAM_LEVEL_ADDITIONS.length + THEME_EXAM.length + OFFICIAL_PAST.length,
+    );
   });
 });
 
@@ -239,7 +248,7 @@ describe("既存問題の移行", () => {
     for (const [topicId, count] of legacyByTopic) {
       // テーマ別試験も同じトピックに載るため、移行元と対応する束だけに絞る。
       const migrated = getQuestionsByTopic(topicId).filter(
-        (q) => q.origin === "app_original" && !q.id.startsWith("theme-exam-"),
+        (q) => q.origin === "app_original" && !q.id.startsWith("theme-exam-") && !ADDITION_IDS.has(q.id),
       );
       expect(migrated.length, `トピック "${topicId}"`).toBe(count);
     }
@@ -250,17 +259,49 @@ describe("既存問題の移行", () => {
 // 3. 確認パックの互換性
 // ---------------------------------------------------------------------------
 
+describe("過去問レベル問題の追加分（exam-level-additions）", () => {
+  // 移行した146問は増減させない。後から作ったトピックの確認パックに足す独自問題はこちらに置く。
+  it("ID は <トピックID>-exN の形で、実在するトピックを復習先にもつ", () => {
+    expect(EXAM_LEVEL_ADDITIONS.length).toBeGreaterThan(0);
+    const topicIds = new Set(getAllTopics().map((t) => t.id));
+    for (const q of EXAM_LEVEL_ADDITIONS) {
+      expect(q.id, q.id).toBe(`${q.primaryTopicId}-ex${q.id.split("-ex").pop()}`);
+      expect(topicIds.has(q.primaryTopicId), q.id).toBe(true);
+    }
+  });
+
+  it("移行した問題とIDが重ならず、draft の独自問題として扱われる", () => {
+    const legacy = new Set(examLevelQuestions.map((q) => q.id));
+    for (const q of EXAM_LEVEL_ADDITIONS) {
+      expect(legacy.has(q.id), q.id).toBe(false);
+      expect(q.origin).toBe("app_original");
+      expect(q.status).toBe("draft");
+      expect(q.official).toBeUndefined();
+      expect(q.contentHash, q.id).toBe(computeContentHash(q));
+    }
+  });
+
+  it("どれかの確認パックの第3段階から、同じトピックとして参照される", () => {
+    for (const q of EXAM_LEVEL_ADDITIONS) {
+      const pack = topicCheckPacks.find((p) => p.examLevelQuestionIds.includes(q.id));
+      expect(pack, q.id).toBeDefined();
+      expect(pack!.topicId, q.id).toBe(q.primaryTopicId);
+    }
+  });
+});
+
 describe("確認パックの互換性", () => {
   it("パック数と参照問題数（独自・公式の内訳）", () => {
     // 2026-10-12: 第3段階に公式過去問を組み込んだ（置換29・追加26）。
     // 同日後続: 擬似言語を単元に足したうえで、アルゴリズムの ex2 を公式 2025-q078 に置換（置換30）。
     // 2026-10-14: 新設5トピックのパックを追加（公式8・テーマ別試験の独自3）。
+    // 同日後続: イノベーションのパックに独自問題2問（exam-level-additions）を追加。
     // 件数が動いたら、意図した差し替えかどうかを確認すること。
     const ids = topicCheckPacks.flatMap((p) => p.examLevelQuestionIds);
     expect(topicCheckPacks).toHaveLength(72);
-    expect(ids).toHaveLength(183);
+    expect(ids).toHaveLength(185);
     expect(ids.filter((id) => id.startsWith("ipa-it-passport-"))).toHaveLength(64);
-    expect(ids.filter((id) => !id.startsWith("ipa-it-passport-"))).toHaveLength(119);
+    expect(ids.filter((id) => !id.startsWith("ipa-it-passport-"))).toHaveLength(121);
   });
 
   it("すべてのパックが参照する問題IDを解決できる", () => {

@@ -1,5 +1,6 @@
 import type { QuestionBankFile } from "@/types/questionBank";
 import examLevel from "./original/exam-level.json";
+import examLevelAdditions from "./original/exam-level-additions.json";
 import themeExam from "./original/theme-exam.json";
 import ipaItPassport2022 from "./official/ipa/it-passport-2022.json";
 import ipaItPassport2023 from "./official/ipa/it-passport-2023.json";
@@ -11,6 +12,8 @@ import ipaItPassport2026 from "./official/ipa/it-passport-2026.json";
 // 問題バンクのファイル束ね。ここに JSON を1行足すだけで問題が増える構成にする。
 // ----------------------------------------------------------------------------
 // - original/ : アプリ独自問題（origin: "app_original"）
+//               exam-level.json は移行分（増減させない）。移行後に足す確認パックの問題は
+//               exam-level-additions.json（npm run questions:build:exam-level-additions で生成）
 // - official/ : 公式公開の過去問（origin: "official_past" / "modified_official"）
 //               例: official/ipa/it-passport-2023.json
 // - manifests/: 生成時の件数・ID一覧。移行や再生成でのドリフト検知に使う。
@@ -22,6 +25,7 @@ import ipaItPassport2026 from "./official/ipa/it-passport-2026.json";
 
 export const questionBankFiles: QuestionBankFile[] = [
   examLevel as unknown as QuestionBankFile,
+  examLevelAdditions as unknown as QuestionBankFile,
   themeExam as unknown as QuestionBankFile,
   ipaItPassport2022 as unknown as QuestionBankFile,
   ipaItPassport2023 as unknown as QuestionBankFile,

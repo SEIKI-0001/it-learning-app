@@ -4,6 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 import explanationFile from "@/data/question-bank/explanations/official/ipa/it-passport-2026.json";
+import examLevelAdditions from "@/data/question-bank/original/exam-level-additions.json";
 import pr2aSnapshot from "@/test/fixtures/ipa-it-passport-2026-pr2a-snapshot.json";
 import { topicCheckPacks } from "@/data/topicCheckPacks";
 import { resolvePackExamQuestions } from "@/lib/checkPack";
@@ -37,6 +38,11 @@ import type { QuestionRecord } from "@/types/questionBank";
 // ============================================================================
 
 const IPA_2026 = getPublishedOfficialQuestionsByYear(2026);
+
+/** data/examLevelQuestions.ts から移行した過去問レベル問題（146問）か。テーマ別試験と移行後の追加分を除く。 */
+const ADDITION_IDS = new Set(examLevelAdditions.questions.map((q) => q.id));
+const isMigratedExamLevel = (q: QuestionRecord) =>
+  !q.id.startsWith("theme-exam-") && !ADDITION_IDS.has(q.id);
 /** 収録済みの年度（西暦）。年度を足したらここに1行足す。 */
 const RECORDED_YEARS = [2022, 2023, 2024, 2025, 2026];
 const SNAPSHOT_BY_ID = new Map(pr2aSnapshot.questions.map((q) => [q.id, q]));
@@ -371,11 +377,9 @@ describe("既存機能への影響", () => {
     expect(published).toHaveLength(100 * RECORDED_YEARS.length);
     expect(published.every((q) => q.origin === "official_past")).toBe(true);
 
-    // app_original には過去問レベル問題（146問）とテーマ別試験の2つの束がある。
-    // ここで見たいのは前者が draft のままであることなので、IDの接頭辞で分ける。
-    const appOriginal = getQuestionsByOrigin("app_original").filter(
-      (q) => !q.id.startsWith("theme-exam-"),
-    );
+    // app_original には過去問レベル問題（146問）・その追加分・テーマ別試験の3つの束がある。
+    // ここで見たいのは移行した146問が draft のままであることなので、それ以外を除く。
+    const appOriginal = getQuestionsByOrigin("app_original").filter(isMigratedExamLevel);
     expect(appOriginal).toHaveLength(146);
     expect(appOriginal.every((q) => q.status === "draft")).toBe(true);
 
@@ -399,7 +403,7 @@ describe("既存機能への影響", () => {
       100 * RECORDED_YEARS.length,
     );
     expect(
-      all.filter((q) => q.origin === "app_original" && !q.id.startsWith("theme-exam-")),
+      all.filter((q) => q.origin === "app_original" && isMigratedExamLevel(q)),
     ).toHaveLength(146);
   });
 
