@@ -1,0 +1,10 @@
+/* 無線LAN の動く3D模型（WifiScene3D）。札の見た目は 2.5D と共通（wifidiorama.module.css）で、ここは置き場所だけ。 */
+
+/* 右下の隅の SSID の札。模型の上に浮くので白いふちで背景から分ける */
+.corner {
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
