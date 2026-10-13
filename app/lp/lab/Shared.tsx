@@ -1,153 +1,270 @@
-import Link from "next/link";
-import { FREE_RECORDING_DAYS } from "@/lib/billing/constants";
-import s from "./experiment.module.css";
+import Link from 'next/link';
+import { GUIDE_FACTS, toHours } from '@/lib/guide/facts';
+import { getWordlistCount } from '@/lib/wordlist';
+import { MOCK_EXAM_RULE } from '@/lib/mockExam';
+import { BILLING_PLANS, DAILY_LIMITS, FREE_RECORDING_DAYS } from '@/lib/billing/constants';
+import { ph } from '../ph';
 
-export function Arrow() {
-  return <span aria-hidden="true">↗</span>;
+// ============================================================================
+// 切り口別LP（/lp/lab・/lp/lab/fifteen・/lp/lab/retry）の共通部品。
+// 見た目は /lp と同じ lp.css に乗せ、足りない部品だけ lab.css（.lp スコープ・lb- 接頭辞）に置く。
+// 数字は /lp と同じく教材データと課金定数から読む（ベタ書きしない）。
+// ============================================================================
+
+export type Campaign = 'fifteen' | 'retry';
+
+export const N = {
+  topics: GUIDE_FACTS.topicCount,
+  checkQuestions: GUIDE_FACTS.checkQuestionCount,
+  official: GUIDE_FACTS.officialQuestionCount,
+  officialRange: GUIDE_FACTS.officialYearRange,
+  words: getWordlistCount(),
+  mock: MOCK_EXAM_RULE.questionCount,
+  freeDays: FREE_RECORDING_DAYS,
+  freeGrading: DAILY_LIMITS.free,
+  proGrading: DAILY_LIMITS.pro,
+  lowestPrice: Math.min(...BILLING_PLANS.map((p) => p.totalJpy)),
+  requiredHours: toHours(GUIDE_FACTS.plannerRequiredMinutes),
+  /** 再受験・あと一歩（インプット済みで、確認問題の回し直しと過去問だけが残る場合）の上限。 */
+  retryHours: toHours(GUIDE_FACTS.reviewMinutes + GUIDE_FACTS.kakomonMinutes),
+  studyAmounts: GUIDE_FACTS.studyAmountOptions,
+  comebackDays: GUIDE_FACTS.comebackDaysAway,
+  comebackMinutes: GUIDE_FACTS.comebackMinutes,
+  reviewIntervals: GUIDE_FACTS.reviewIntervalDays,
+  fieldDrill: GUIDE_FACTS.fieldDrillTarget,
+};
+
+export const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
+
+// 流入元の記録はフル遷移時にルートで拾うので、Link ではなく <a> で UTM を付けて渡す。
+const utm = (c: Campaign) => `utm_source=lp_lab&utm_medium=landing&utm_campaign=${c}`;
+export const tryHref = (c: Campaign) => `/lp/try?${utm(c)}`;
+export const startHref = (c: Campaign) => `/login?${utm(c)}`;
+
+export function Check() {
+  return (
+    <svg className="ck" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3.5 8.5l3 3 6-7" />
+    </svg>
+  );
 }
 
-export function Header({ retry = false }: { retry?: boolean }) {
+export function Marked({ children }: { children: React.ReactNode }) {
   return (
-    <header className={s.header}>
-      <Link href="/lp" className={s.brand}>
-        <span className={s.brandMark} aria-hidden="true">
-          m.
-        </span>
-        <span>
-          資格もちっと<small>ITパスポート学習コーチ</small>
-        </span>
-      </Link>
-      <nav aria-label="ページ内メニュー">
-        <a href="#how">{retry ? "再挑戦の進め方" : "15分の使い方"}</a>
-        <a href="#start" className={s.navCta}>
-          無料で体験 <Arrow />
+    <span className="marked">
+      {children}
+      <svg viewBox="0 0 100 40" aria-hidden="true" preserveAspectRatio="none">
+        <ellipse cx="50" cy="20" rx="48" ry="17" pathLength="100" />
+      </svg>
+    </span>
+  );
+}
+
+export function LabHeader({
+  campaign,
+  nav,
+}: {
+  campaign?: Campaign;
+  nav?: { href: string; label: string }[];
+}) {
+  return (
+    <header className="top">
+      <div className="col top-in">
+        <a className="logo" href="/lp">
+          ITパスポート学習コーチ
         </a>
-      </nav>
+        {nav && (
+          <nav className="top-nav" aria-label="ページ内">
+            {nav.map((n) => (
+              <a key={n.href} href={n.href}>
+                {n.label}
+              </a>
+            ))}
+          </nav>
+        )}
+        <a className="btn small lb-top-cta" href={campaign ? startHref(campaign) : '/login'}>
+          無料で始める
+        </a>
+      </div>
     </header>
   );
 }
 
-export function TrialLink({
-  retry = false,
-  children,
-}: {
-  retry?: boolean;
-  children?: React.ReactNode;
-}) {
-  // Full navigation lets the root attribution capture observe the campaign query.
+export function LabFooter() {
   return (
-    <a
-      className={s.button}
-      href={`/lp/try?utm_source=lp_lab&utm_medium=landing&utm_campaign=${retry ? "retry" : "fifteen"}`}
-    >
-      {children ??
-        (retry ? "もう一度、1問から始める" : "まずは、無料で体験してみる")}
-      <Arrow />
-    </a>
-  );
-}
-
-export function Footer() {
-  return (
-    <footer className={s.footer}>
-      <div>
-        <strong>資格もちっと</strong>
-        <p>今日の「わかった」を、明日の自信に。</p>
+    <footer>
+      <div className="col foot-in">
+        <div className="foot-brand">
+          <p className="logo">ITパスポート学習コーチ</p>
+          <p>さわって理解する、ITパスポート試験の学習アプリ。</p>
+        </div>
+        <nav className="foot-nav" aria-label="無料で読める解説">
+          <p className="foot-h">無料で読める解説</p>
+          <a href="/guide">ITパスポート学習ガイド</a>
+          <Link href="/kaisetsu">テーマ別解説</Link>
+          <Link href="/kakomon">過去問解説</Link>
+          <Link href="/words">英略語一覧</Link>
+        </nav>
+        <nav className="foot-nav" aria-label="サービス">
+          <p className="foot-h">サービス</p>
+          <a href="/lp">サービス紹介</a>
+          <a href="/lp/lab">ほかの始め方</a>
+          <a href="/login">ログイン / 無料登録</a>
+          <a href="/legal/tokusho">{ph('特定商取引法に|基づく表示')}</a>
+          <a href="/privacy">プライバシーポリシー</a>
+        </nav>
       </div>
-      <div className={s.footerLinks}>
-        <Link href="/lp#price">料金・無料で使える範囲</Link>
-        <Link href="/privacy">プライバシー</Link>
-        <Link href="/legal/tokusho">特定商取引法に基づく表示</Link>
-        <Link href="/lp/lab">ほかの始め方</Link>
-      </div>
-      <small>© 資格もちっと</small>
     </footer>
   );
 }
 
-export function StartSection({ retry = false }: { retry?: boolean }) {
+/** /lp と同じ収録数グリッド。 */
+export function Stats() {
+  const items = [
+    { value: N.topics, unit: 'トピック', label: '操作して学ぶ教材' },
+    { value: N.official, unit: '問', label: `公式過去問|（${N.officialRange}）` },
+    { value: N.checkQuestions, unit: '問', label: 'トピックごとの|確認問題' },
+    { value: N.words, unit: '語', label: '英略語の単語帳' },
+  ];
   return (
-    <section id="start" className={s.start} aria-labelledby="start-heading">
-      <p className={s.eyebrow}>
-        {retry ? "YOUR NEXT CHAPTER" : "A LITTLE TIME, A NEW START"}
-      </p>
-      <h2 id="start-heading">
-        {retry ? (
-          <>
-            次の一歩は、
-            <br />
-            小さくていい。
-          </>
-        ) : (
-          <>
-            今日の15分が、
-            <br />
-            明日の自分につながる。
-          </>
-        )}
-      </h2>
-      <p>
-        {retry
-          ? "前回の結果はいったん置いて。今日はひとつ、わかるを増やそう。"
-          : "まとまった時間ができるのを待たずに。まずはひとつ、さわってみよう。"}
-      </p>
-      <TrialLink retry={retry} />
-      <p className={s.micro}>登録不要・クレジットカード不要の教材体験</p>
-      <div className={s.freeNote}>
-        教材と公式過去問は無料。登録後の学習記録の保存は最初の
-        {FREE_RECORDING_DAYS}日間無料です。
-        <br />
-        その後も記録を保存し続ける場合は、有料プランを選べます。
-        <Link href="/lp#price">料金を見る ↗</Link>
+    <div className="col">
+      <dl className="stats" aria-label="収録内容">
+        {items.map((s) => (
+          <div key={s.label}>
+            <dt>{ph(s.label)}</dt>
+            <dd>
+              {s.value.toLocaleString('ja-JP')}
+              <small>{s.unit}</small>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/** 料金の要点（無料／Pro の2段）。プランごとの価格は /lp#price に任せる。 */
+export function PriceBrief({ title }: { title: string }) {
+  return (
+    <section id="price">
+      <div className="col reveal">
+        <p className="eyebrow">料金と、無料で使える範囲</p>
+        <h2 className="sec-title">{ph(title)}</h2>
+        <div className="tiers">
+          <div className="tier">
+            <p className="tier-name">無料のまま使えるもの</p>
+            <p className="tier-price">
+              ¥0<small>・カード登録不要</small>
+            </p>
+            <ul>
+              <li>
+                <Check />
+                <span>{ph(`全${N.topics}トピックの|体験教材と解説`)}</span>
+              </li>
+              <li>
+                <Check />
+                <span>{ph(`公式過去問${N.official}問|（独自解説付き）`)}</span>
+              </li>
+              <li>
+                <Check />
+                AI採点 1日{N.freeGrading}回
+              </li>
+              <li>
+                <Check />
+                <span>
+                  <span className="ph">学習記録の保存は</span>
+                  <b className="ph">登録から{N.freeDays}日間</b>
+                </span>
+              </li>
+            </ul>
+          </div>
+          <div className="tier pro">
+            <p className="tier-name">Proで増えること</p>
+            <p className="tier-price">
+              {yen(N.lowestPrice)}
+              <small>から</small>
+            </p>
+            <ul>
+              <li>
+                <Check />
+                学習記録を期間中ずっと保存
+              </li>
+              <li>
+                <Check />
+                <span>{ph('記録が合格準備度と|毎日の計画に|反映され続ける')}</span>
+              </li>
+              <li>
+                <Check />
+                <span>{ph(`AI採点が高精度の|Pro採点に|（1日${N.proGrading}回）`)}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <p className="pay-note">
+          <b>買い切りプランに自動更新はありません。</b>
+          期間が終わると無料の状態に戻るだけです。プランごとの価格は
+          <a href="/lp#price">料金ページ</a>で確認できます。
+        </p>
       </div>
     </section>
   );
 }
 
-export function Faq({ retry = false }: { retry?: boolean }) {
-  const items = retry
-    ? [
-        [
-          "前回の勉強を、最初からやり直す必要はありますか？",
-          "すべてを同じ量でやり直す必要はありません。過去問で今の理解を確かめ、迷ったテーマの教材を見直すところから始められます。",
-        ],
-        [
-          "試験日がまだ決まっていなくても体験できますか？",
-          "はい。この教材体験は試験日を決めずに、登録なしで使えます。まずは学び方が合うか、試してみてください。",
-        ],
-        [
-          "このアプリを使えば次は合格できますか？",
-          "合格を保証するものではありません。必要な学習時間は理解度や試験日によって変わります。理解の確認、復習、演習を重ねるための道具として使ってください。",
-        ],
-      ]
-    : [
-        [
-          "1日15分だけで合格できますか？",
-          "15分は学習を始めるための目安です。合格までに必要な時間は、今の理解度や試験日によって異なります。試験日から計画を立て、必要に応じて学習量を調整しましょう。",
-        ],
-        [
-          "疲れていて、15分もできない日は？",
-          "そんな日は1問だけでも。アプリでは、その日の学習時間を短くしたり、遅れた計画を立て直したりできます。翌日からまた始めましょう。",
-        ],
-        [
-          "スマホだけで使えますか？",
-          "はい。スマホのブラウザでそのまま使えるので、インストールは不要です。教材体験は登録せずに始められます。",
-        ],
-      ];
+/** FAQ。a は [前半, 太字, 後半]、q の「|」は折り返し位置。 */
+export function LabFaq({ items }: { items: { q: string; a: [string, string, string] }[] }) {
   return (
-    <section className={s.faq} aria-labelledby="faq-heading">
-      <p className={s.eyebrow}>BEFORE YOU START</p>
-      <h2 id="faq-heading">気になっていること。</h2>
-      <div>
-        {items.map(([q, a]) => (
-          <details key={q}>
-            <summary>
-              {q}
-              <span aria-hidden="true">＋</span>
-            </summary>
-            <p>{a}</p>
-          </details>
-        ))}
+    <section className="wash" id="faq">
+      <div className="narrow reveal">
+        <p className="eyebrow">よくある質問</p>
+        <h2 className="sec-title">{ph('はじめる前に、|気になっていること。')}</h2>
+        <div className="faq">
+          {items.map(({ q, a: [before, bold, after] }) => (
+            <details key={q}>
+              <summary>
+                <span>{ph(q)}</span>
+              </summary>
+              <p className="a">
+                {before}
+                <b>{bold}</b>
+                {after}
+              </p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function LastPanel({
+  campaign,
+  title,
+  lead,
+  tryLabel,
+}: {
+  campaign: Campaign;
+  title: string;
+  lead: string;
+  tryLabel: string;
+}) {
+  return (
+    <section className="last">
+      <div className="col">
+        <div className="last-panel reveal">
+          <h2>{ph(title)}</h2>
+          <p>{ph(lead)}</p>
+          <div className="last-cta">
+            <a className="btn on-dark" href={tryHref(campaign)}>
+              {tryLabel}
+            </a>
+            <a className="btn line" href={startHref(campaign)}>
+              {N.freeDays}日間無料で始める
+            </a>
+          </div>
+          <span className="last-note">
+            {ph('教材体験は登録不要・|クレジットカード不要・|GoogleかLINEで登録')}
+          </span>
+        </div>
       </div>
     </section>
   );
