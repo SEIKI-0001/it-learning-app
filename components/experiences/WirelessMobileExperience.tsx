@@ -5,7 +5,8 @@ import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
 import { Panel, SectionTitle } from "./ui";
-import { MobileDioramaScene, type MobileMode } from "./wireless/MobileDioramaScene";
+import { MobileScene } from "./wireless/MobileScene";
+import type { MobileMode } from "./wireless/mobileStory";
 import { WifiScene } from "./wireless/WifiScene";
 import type { WifiMode, WifiPhase } from "./wireless/wifiStory";
 
@@ -125,7 +126,7 @@ function MobileTerms() {
         ))}
       </div>
       <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <MobileDioramaScene mode={mode} reducedMotion={reducedMotion} />
+        <MobileScene mode={mode} reducedMotion={reducedMotion} />
       </div>
     </Panel>
   );

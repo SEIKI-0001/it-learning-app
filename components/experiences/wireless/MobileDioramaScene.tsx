@@ -16,8 +16,9 @@ import {
   Truck,
   type CarryTone,
 } from "../scene/DioramaParts";
-import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type StageCaption, type TokenSpec } from "../scene/DioramaStage";
+import { DioramaLabel, DioramaStage, DioramaToken, NameChip, type TokenSpec } from "../scene/DioramaStage";
 import styles from "./mobilediorama.module.css";
+import { MOBILE_CAPTION, MOBILE_DEVICES, radioOn, type MobileDevice, type MobileFocus, type MobileMode, type MobileSceneProps } from "./mobileStory";
 
 // モバイル通信の図解：街角の模型。
 //   奥のビルの屋上に大手キャリア（MNO）の基地局、その奥に交換局（ここからインターネットへ）。
@@ -27,7 +28,7 @@ import styles from "./mobilediorama.module.css";
 //     テザリング … ノートPC →（Wi-Fi）→ スマホ →（モバイル回線）→ 基地局。スマホが親機になる
 //     MVNO     … 格安SIMのスマホも、電波は大手の基地局・交換局を通る。MVNOは設備を「借りて」売る
 
-export type MobileMode = "5g" | "tether" | "mvno";
+export type { MobileMode } from "./mobileStory";
 
 const TOWER: Vec3 = { x: 300, y: 110, z: 178 }; // 基地局のアンテナ
 const CORE: Vec3 = { x: 560, y: 70, z: 84 }; // 交換局（屋上）
@@ -36,12 +37,13 @@ const LAPTOP: Vec3 = { x: 128, y: 334, z: 34 };
 const MVNO: Vec3 = { x: 700, y: 300, z: 0 };
 
 // 5G で同時につながる機器（電波の届く先）
-const DEVICES: { id: string; at: Vec3; name: string }[] = [
-  { id: "phone", at: { ...PHONE, z: 66 }, name: "スマホ" },
-  { id: "car", at: { x: 452, y: 318, z: 44 }, name: "車" },
-  { id: "cam", at: { x: 560, y: 222, z: 104 }, name: "監視カメラ" },
-  { id: "phone2", at: { x: 380, y: 224, z: 96 }, name: "歩く人のスマホ" },
-];
+const DEVICE_AT: Record<MobileDevice, Vec3> = {
+  phone: { ...PHONE, z: 66 },
+  car: { x: 452, y: 318, z: 44 },
+  cam: { x: 560, y: 222, z: 104 },
+  phone2: { x: 380, y: 224, z: 96 },
+};
+const DEVICES = MOBILE_DEVICES.map((d) => ({ ...d, at: DEVICE_AT[d.id] }));
 
 const SHOTS: Record<MobileMode, Camera> = {
   "5g": { yaw: -18, pitch: 54, zoom: 0.86, fx: 380, fy: 210, fz: 70 },
@@ -67,20 +69,17 @@ function tokensFor(mode: MobileMode): Record<string, TokenSpec> {
   return out;
 }
 
-// モードごとの一言（40字以内）と、それが指す物
-const CAPTION: Record<MobileMode, StageCaption> = {
-  "5g": { text: <><b>5G</b>は高速大容量・低遅延・多数同時接続。車もカメラも</>, tone: "info", at: TOWER },
-  tether: { text: <>スマホが親機になり、SIMなしのPCをつなぐ（<b>テザリング</b>）</>, tone: "info", at: up(PHONE, 40) },
-  mvno: { text: <><b>MVNO</b>は基地局を持たず、大手(MNO)の回線を借りる</>, tone: "info", at: up(MVNO, 60) },
-};
+/** 一言が指す点 */
+const FOCUS_AT: Record<MobileFocus, Vec3> = { tower: TOWER, phone: up(PHONE, 40), mvno: up(MVNO, 60) };
 
 const PARCEL_TONE: Record<MobileMode, CarryTone> = { "5g": "info", tether: "warn", mvno: "ok" };
 
-export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; reducedMotion: boolean }) {
+export function MobileDioramaScene({ mode, reducedMotion }: MobileSceneProps) {
   const tether = mode === "tether";
   const mvno = mode === "mvno";
   const is5g = mode === "5g";
-  const lit = (id: string) => is5g || ((tether || mvno) && id === "phone");
+  const lit = (id: MobileDevice) => radioOn(mode, id);
+  const cap = MOBILE_CAPTION[mode];
 
   return (
     <DioramaStage
@@ -91,7 +90,7 @@ export function MobileDioramaScene({ mode, reducedMotion }: { mode: MobileMode; 
       forward
       reducedMotion={reducedMotion}
       className={styles.stage}
-      caption={{ ...CAPTION[mode], id: mode }}
+      caption={{ text: cap.text, tone: cap.tone, at: FOCUS_AT[cap.focus], id: mode }}
       dataAttrs={{ "data-mode": mode }}
       tokens={tokensFor(mode)}
       world={
