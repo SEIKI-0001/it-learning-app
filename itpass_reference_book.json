@@ -455,7 +455,8 @@
                 "keywords": [],
                 "topicIds": [
                   "tech-algorithm-flowchart",
-                  "tech-data-structure"
+                  "tech-data-structure",
+                  "tech-data-structure-list-tree"
                 ]
               },
               {
@@ -695,7 +696,9 @@
                 "title": "10-07 技術戦略",
                 "keywords": [],
                 "topicIds": [
-                  "strat-technology-development-strategy"
+                  "strat-technology-development-strategy",
+                  "strat-innovation-management",
+                  "strat-new-business-development"
                 ]
               },
               {
@@ -714,7 +717,8 @@
                 "topicIds": [
                   "strat-business-systems",
                   "strat-engineering-systems",
-                  "strat-production-management"
+                  "strat-production-management",
+                  "strat-production-methods"
                 ]
               },
               {
@@ -722,7 +726,8 @@
                 "title": "10-10 e-ビジネス",
                 "keywords": [],
                 "topicIds": [
-                  "strat-ebusiness"
+                  "strat-ebusiness",
+                  "strat-internet-business"
                 ]
               }
             ]
@@ -1583,7 +1588,8 @@
                   "スタック"
                 ],
                 "topicIds": [
-                  "tech-data-structure"
+                  "tech-data-structure",
+                  "tech-data-structure-list-tree"
                 ]
               },
               {
@@ -1713,6 +1719,7 @@
                 ],
                 "topicIds": [
                   "strat-ebusiness",
+                  "strat-internet-business",
                   "strat-business-systems"
                 ]
               },
@@ -3112,7 +3119,8 @@
                 "keywords": [],
                 "topicIds": [
                   "tech-algorithm-flowchart",
-                  "tech-data-structure"
+                  "tech-data-structure",
+                  "tech-data-structure-list-tree"
                 ]
               },
               {
@@ -3352,7 +3360,9 @@
                 "title": "10-07 技術戦略",
                 "keywords": [],
                 "topicIds": [
-                  "strat-technology-development-strategy"
+                  "strat-technology-development-strategy",
+                  "strat-innovation-management",
+                  "strat-new-business-development"
                 ]
               },
               {
@@ -3371,7 +3381,8 @@
                 "topicIds": [
                   "strat-business-systems",
                   "strat-engineering-systems",
-                  "strat-production-management"
+                  "strat-production-management",
+                  "strat-production-methods"
                 ]
               },
               {
@@ -3379,7 +3390,8 @@
                 "title": "10-10 e-ビジネス",
                 "keywords": [],
                 "topicIds": [
-                  "strat-ebusiness"
+                  "strat-ebusiness",
+                  "strat-internet-business"
                 ]
               }
             ]
@@ -3464,6 +3476,8 @@
                 "topicIds": [
                   "strat-swot",
                   "strat-technology-development-strategy",
+                  "strat-innovation-management",
+                  "strat-new-business-development",
                   "strat-3c",
                   "strat-marketing-4p",
                   "strat-ppm",
@@ -3481,8 +3495,10 @@
                   "strat-business-systems",
                   "strat-engineering-systems",
                   "strat-production-management",
+                  "strat-production-methods",
                   "strat-embedded-systems",
-                  "strat-ebusiness"
+                  "strat-ebusiness",
+                  "strat-internet-business"
                 ]
               }
             ]
@@ -3783,7 +3799,8 @@
                 "topicIds": [
                   "tech-algorithm-flowchart",
                   "tech-programming-basics",
-                  "tech-data-structure"
+                  "tech-data-structure",
+                  "tech-data-structure-list-tree"
                 ]
               },
               {

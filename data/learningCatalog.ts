@@ -56,8 +56,9 @@ export const learningThemes: LearningTheme[] = [
     order: 4,
     sections: [
       { id: "business-analysis-frameworks", slug: "analysis-frameworks", title: "分析フレームワーク", description: "SWOT・3C・4Pを学びます。", order: 1, lessonIds: ["strat-swot", "strat-3c", "strat-marketing-4p"] },
-      { id: "corporate-strategy", slug: "corporate-strategy", title: "企業戦略", description: "PPM・バリューチェーン・成長戦略を学びます。", order: 2, lessonIds: ["strat-ppm", "strat-value-chain", "strat-corporate-strategy", "strat-technology-development-strategy"] },
-      { id: "strategy-evaluation", slug: "strategy-evaluation", title: "目標と評価", description: "KPIなどの目標管理を学びます。", order: 3, lessonIds: ["strat-goal-evaluation"] },
+      { id: "corporate-strategy", slug: "corporate-strategy", title: "企業戦略", description: "PPM・バリューチェーン・成長戦略を学びます。", order: 2, lessonIds: ["strat-ppm", "strat-value-chain", "strat-corporate-strategy"] },
+      { id: "technology-strategy", slug: "technology-strategy", title: "技術戦略", description: "技術ロードマップ・MOT・イノベーション・新事業の進め方を学びます。", order: 3, lessonIds: ["strat-technology-development-strategy", "strat-innovation-management", "strat-new-business-development"] },
+      { id: "strategy-evaluation", slug: "strategy-evaluation", title: "目標と評価", description: "KPIなどの目標管理を学びます。", order: 4, lessonIds: ["strat-goal-evaluation"] },
     ],
   },
   {
@@ -70,7 +71,8 @@ export const learningThemes: LearningTheme[] = [
     icon: "🛒",
     order: 5,
     sections: [
-      { id: "ebusiness", slug: "ebusiness", title: "eビジネス", description: "EC・EDI・フィンテックを学びます。", order: 1, lessonIds: ["strat-business-systems", "strat-engineering-systems", "strat-production-management", "strat-ebusiness", "strat-embedded-systems"] },
+      { id: "ebusiness", slug: "ebusiness", title: "eビジネス", description: "身近なビジネスシステム・EC・EDI・ロングテールなどネットの売り方を学びます。", order: 1, lessonIds: ["strat-business-systems", "strat-ebusiness", "strat-internet-business"] },
+      { id: "manufacturing", slug: "manufacturing", title: "ものづくりと生産", description: "CAD/CAM・生産管理・生産方式・組込みシステムを学びます。", order: 2, lessonIds: ["strat-engineering-systems", "strat-production-management", "strat-production-methods", "strat-embedded-systems"] },
     ],
   },
   {
@@ -166,7 +168,7 @@ export const learningThemes: LearningTheme[] = [
     icon: "🧩",
     order: 12,
     sections: [
-      { id: "algorithms", slug: "algorithms", title: "アルゴリズム", description: "フローチャートとデータ構造を学びます。", order: 1, lessonIds: ["tech-algorithm-flowchart", "tech-data-structure"] },
+      { id: "algorithms", slug: "algorithms", title: "アルゴリズム", description: "フローチャートとデータ構造を学びます。", order: 1, lessonIds: ["tech-algorithm-flowchart", "tech-data-structure", "tech-data-structure-list-tree"] },
       { id: "programming", slug: "programming", title: "プログラミング", description: "プログラミングの基本を学びます。", order: 2, lessonIds: ["tech-programming-basics"] },
     ],
   },

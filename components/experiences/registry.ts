@@ -91,6 +91,11 @@ import BackupExperience from "./BackupExperience";
 import FileSystemExperience from "./FileSystemExperience";
 import NetworkDevicesExperience from "./NetworkDevicesExperience";
 import BusinessSystemsExperience from "./BusinessSystemsExperience";
+import DataStructureListTreeExperience from "./DataStructureListTreeExperience";
+import InnovationExperience from "./InnovationExperience";
+import InternetBusinessExperience from "./InternetBusinessExperience";
+import NewBusinessExperience from "./NewBusinessExperience";
+import ProductionMethodsExperience from "./ProductionMethodsExperience";
 
 // ============================================================================
 // トピックごとの「専用学習体験」レジストリ。
@@ -194,6 +199,11 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-backup": BackupExperience,
   "tech-network-devices": NetworkDevicesExperience,
   "strat-business-systems": BusinessSystemsExperience,
+  "strat-innovation-management": InnovationExperience,
+  "strat-new-business-development": NewBusinessExperience,
+  "strat-production-methods": ProductionMethodsExperience,
+  "strat-internet-business": InternetBusinessExperience,
+  "tech-data-structure-list-tree": DataStructureListTreeExperience,
 };
 
 export function getTopicExperience(id: string): ComponentType | undefined {
