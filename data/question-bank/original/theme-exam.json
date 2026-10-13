@@ -2058,7 +2058,7 @@
       "version": 3,
       "origin": "app_original",
       "status": "draft",
-      "primaryTopicId": "strat-production-management",
+      "primaryTopicId": "strat-production-methods",
       "questionPattern": "application",
       "prompt": "生産の方式について述べたもののうち、正しいものはどれか。",
       "choices": [
@@ -2458,7 +2458,7 @@
       "version": 1,
       "origin": "app_original",
       "status": "draft",
-      "primaryTopicId": "strat-ebusiness",
+      "primaryTopicId": "strat-internet-business",
       "questionPattern": "application",
       "prompt": "オンラインの販売で用いる仕組みのうち、「利用者の閲覧や購入の履歴をもとに、関連する商品を提示する」ものはどれか。",
       "choices": [
@@ -5558,7 +5558,7 @@
       "version": 2,
       "origin": "app_original",
       "status": "draft",
-      "primaryTopicId": "tech-data-structure",
+      "primaryTopicId": "tech-data-structure-list-tree",
       "questionPattern": "application",
       "prompt": "配列とリスト（連結リスト）の性質を比べた説明のうち、適切なものはどれか。",
       "choices": [
@@ -5708,7 +5708,7 @@
       "version": 2,
       "origin": "app_original",
       "status": "draft",
-      "primaryTopicId": "tech-data-structure",
+      "primaryTopicId": "tech-data-structure-list-tree",
       "questionPattern": "application",
       "prompt": "木構造のうち「2分木」の説明として、適切なものはどれか。",
       "choices": [

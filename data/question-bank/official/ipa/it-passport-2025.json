@@ -475,7 +475,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-technology-development-strategy",
+      "primaryTopicId": "strat-new-business-development",
       "questionPattern": "knowledge",
       "prompt": "新しい概念やアイディアの実証を目的とした，開発の前段階における検証を表す用語はどれか。",
       "choices": [
@@ -631,7 +631,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-technology-development-strategy",
+      "primaryTopicId": "strat-new-business-development",
       "questionPattern": "knowledge",
       "prompt": "ハッカソンに関する記述として，最も適切なものはどれか。",
       "choices": [

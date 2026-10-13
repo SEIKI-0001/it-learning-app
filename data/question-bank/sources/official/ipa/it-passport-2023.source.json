@@ -26,7 +26,7 @@
       },
       "correctChoiceKana": "エ",
       "correctChoice": "D",
-      "primaryTopicId": "strat-corporate-strategy",
+      "primaryTopicId": "strat-new-business-development",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 3,
       "tags": [
@@ -566,7 +566,7 @@
       },
       "correctChoiceKana": "イ",
       "correctChoice": "B",
-      "primaryTopicId": "strat-production-management",
+      "primaryTopicId": "strat-production-methods",
       "questionPattern": "application",
       "estimatedDifficulty": 3,
       "tags": [

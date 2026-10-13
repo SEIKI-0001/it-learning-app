@@ -254,12 +254,13 @@ describe("確認パックの互換性", () => {
   it("パック数と参照問題数（独自・公式の内訳）", () => {
     // 2026-10-12: 第3段階に公式過去問を組み込んだ（置換29・追加26）。
     // 同日後続: 擬似言語を単元に足したうえで、アルゴリズムの ex2 を公式 2025-q078 に置換（置換30）。
+    // 2026-10-14: 新設5トピックのパックを追加（公式8・テーマ別試験の独自3）。
     // 件数が動いたら、意図した差し替えかどうかを確認すること。
     const ids = topicCheckPacks.flatMap((p) => p.examLevelQuestionIds);
-    expect(topicCheckPacks).toHaveLength(67);
-    expect(ids).toHaveLength(172);
-    expect(ids.filter((id) => id.startsWith("ipa-it-passport-"))).toHaveLength(56);
-    expect(ids.filter((id) => !id.startsWith("ipa-it-passport-"))).toHaveLength(116);
+    expect(topicCheckPacks).toHaveLength(72);
+    expect(ids).toHaveLength(183);
+    expect(ids.filter((id) => id.startsWith("ipa-it-passport-"))).toHaveLength(64);
+    expect(ids.filter((id) => !id.startsWith("ipa-it-passport-"))).toHaveLength(119);
   });
 
   it("すべてのパックが参照する問題IDを解決できる", () => {

@@ -1110,7 +1110,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-production-management",
+      "primaryTopicId": "strat-production-methods",
       "questionPattern": "knowledge",
       "prompt": "必要な時期に必要な量の原材料や部品を調達することによって，工程間の在庫をできるだけもたないようにする生産方式はどれか。",
       "choices": [
