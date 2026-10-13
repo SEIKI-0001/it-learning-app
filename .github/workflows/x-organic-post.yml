@@ -1,0 +1,54 @@
+name: X organic educational post
+on:
+  schedule:
+    - cron: '0 22 * * *' # 07:00 JST, previous UTC date
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Generate, validate and save without posting to X
+        type: boolean
+        default: true
+      fixture:
+        description: Offline fixture simulation (requires dry_run)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: x-organic-posting
+  cancel-in-progress: false
+jobs:
+  post:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.X_POST_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      X_POST_ENABLED: ${{ vars.X_POST_ENABLED || 'false' }}
+      X_POST_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.dry_run && 'true' || 'false') || vars.X_POST_DRY_RUN || 'true' }}
+      X_POST_EVENT_SCHEDULE: ${{ github.event.schedule }}
+      X_POST_TIMES_JST: ${{ vars.X_POST_TIMES_JST || '07:00' }}
+      X_POST_DAILY_LIMIT: ${{ vars.X_POST_DAILY_LIMIT || '1' }}
+      X_POST_MONTHLY_AI_LIMIT: ${{ vars.X_POST_MONTHLY_AI_LIMIT || '31' }}
+      X_POST_ACCOUNT_ID: ${{ vars.X_POST_ACCOUNT_ID }}
+      X_POST_SITE_ORIGIN: ${{ vars.X_POST_SITE_ORIGIN || 'https://shikaku-mochit.com' }}
+      X_POST_AI_MODEL: ${{ vars.X_POST_AI_MODEL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      X_POST_SUPABASE_URL: ${{ secrets.X_POST_SUPABASE_URL }}
+      X_POST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.X_POST_SUPABASE_SERVICE_ROLE_KEY }}
+      X_API_KEY: ${{ secrets.X_API_KEY }}
+      X_API_SECRET: ${{ secrets.X_API_SECRET }}
+      X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+      X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Offline fixture dry run
+        if: github.event_name == 'workflow_dispatch' && inputs.fixture
+        run: npm run x:post -- run --fixture --output "$RUNNER_TEMP/x-dry-run.json"
+      - name: Generate and optionally publish
+        if: github.event_name != 'workflow_dispatch' || !inputs.fixture
+        run: npm run x:post -- run

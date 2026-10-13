@@ -97,3 +97,11 @@ export function splitReferrer(
     return { refPath: null, referrerHost: null };
   }
 }
+
+/** Entry-only post attribution; preserve existing first-touch signup cookie semantics. */
+export function xPostEntryPlacement(search: string): string | null {
+  const params = new URLSearchParams(search);
+  const id = params.get("utm_content");
+  if (params.get("utm_source") !== "x" || params.get("utm_medium") !== "social" || params.get("utm_campaign") !== "organic_x" || !id || !/^x-[a-z0-9-]{1,60}$/.test(id)) return null;
+  return id;
+}

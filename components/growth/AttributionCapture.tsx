@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { xPostEntryPlacement } from "@/lib/growth/funnel";
 import {
   ATTRIBUTION_COOKIE,
   ATTRIBUTION_MAX_AGE_SECONDS,
@@ -9,7 +10,7 @@ import {
 
 /**
  * 初回訪問時の流入元（utm_* / ref / 外部 referrer のホスト名）を Cookie に保存する。
- * 既に Cookie があれば何もしない（最初の接点を残す）。招待リンク（?ref=）だけは上書きする。
+ * 既に Cookie があれば何もしない（最初の接点を残す）。招待リンク（?ref=）だけは上書きする。X投稿識別子のrefは招待扱いしない。
  * 画面には何も描画しない。
  */
 export default function AttributionCapture() {
@@ -20,7 +21,9 @@ export default function AttributionCapture() {
       const hasCookie = document.cookie
         .split(";")
         .some((c) => c.trim().startsWith(`${ATTRIBUTION_COOKIE}=`));
-      const hasRef = new URLSearchParams(window.location.search).has("ref");
+      const params = new URLSearchParams(window.location.search);
+      // Organic X post IDs reuse ref for storage, but are not invitation overrides.
+      const hasRef = params.has("ref") && params.get("ref") !== xPostEntryPlacement(window.location.search);
       if (hasCookie && !hasRef) return;
       const value = buildAttributionCookieValue({
         search: window.location.search,

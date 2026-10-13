@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { FUNNEL_VISITOR_KEY, splitReferrer, type FunnelEvent } from "@/lib/growth/funnel";
+import { FUNNEL_VISITOR_KEY, splitReferrer, xPostEntryPlacement, type FunnelEvent } from "@/lib/growth/funnel";
 
 /**
  * 公開ページの回遊を /api/funnel へ送る（lib/growth/funnel.ts）。画面には何も描画しない。
@@ -31,7 +31,7 @@ export default function FunnelTracker() {
     const viewKey = `${location.pathname}@${performance.timeOrigin}`;
     if (lastViewKey !== viewKey) {
       lastViewKey = viewKey;
-      send("view", splitReferrer(document.referrer, location.hostname));
+      send("view", { ...splitReferrer(document.referrer, location.hostname), placement: xPostEntryPlacement(location.search) });
     }
 
     const onClick = (e: MouseEvent) => {
