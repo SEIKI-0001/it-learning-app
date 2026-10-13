@@ -1,0 +1,528 @@
+/* ============================================================================
+   切り口別LP（/lp/lab 配下）の追加スタイル。lp.css の上に乗せる。
+   lp.css と同じく .lp 配下にスコープし、Tailwind のユーティリティ名と
+   衝突しないよう独自クラスは lb- 接頭辞にする。
+   ========================================================================== */
+
+/* ナビの無いヘッダー（/lp/lab）では、ボタンを右端へ */
+.lp .top-in .logo + .lb-top-cta {
+  margin-left: auto;
+}
+
+/* ---- ヒーロー右のモック ---- */
+.lp .lb-hero-mock {
+  max-width: 480px;
+  justify-self: center;
+  width: 100%;
+}
+.lp .lb-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.lp .lb-chips-label {
+  color: var(--sub);
+  font-size: 0.78rem;
+  margin-right: 4px;
+}
+.lp .lb-chip {
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 2px 14px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--body);
+  font-variant-numeric: tabular-nums;
+}
+.lp .lb-chip.on {
+  border-color: var(--ai);
+  background: var(--ai);
+  color: #fff;
+}
+.lp .lb-meter {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+}
+.lp .lb-meter-bar {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ai-soft);
+  overflow: hidden;
+}
+.lp .lb-meter-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--wakaba);
+}
+.lp .lb-meter-txt {
+  font-size: 0.8rem;
+  color: var(--body);
+}
+
+/* ---- 分野別バー（retry ヒーロー） ---- */
+.lp .lb-fields {
+  max-width: 480px;
+  justify-self: center;
+  width: 100%;
+}
+.lp .lb-bars {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 14px;
+}
+.lp .lb-bars li {
+  display: grid;
+  grid-template-columns: 6.5em 1fr 2.2em;
+  gap: 12px;
+  align-items: center;
+}
+.lp .lb-bar-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.lp .lb-bar {
+  display: block;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--wash);
+  overflow: hidden;
+}
+.lp .lb-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ai);
+}
+.lp .lb-bar-num {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.lp .lb-bars li.weak .lb-bar > span {
+  background: var(--shu);
+}
+.lp .lb-bars li.weak .lb-bar-num,
+.lp .lb-bars li.weak .lb-bar-label {
+  color: var(--shu);
+}
+.lp .lb-fields .mock-foot b {
+  display: block;
+}
+
+/* ---- 左に説明・右に中身の2カラム ---- */
+.lp .lb-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 56px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .lp .lb-split {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+/* ---- 15分の流れ（fifteen） ---- */
+.lp .lb-toggle,
+.lp .lb-hurdle-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lp .lb-toggle button,
+.lp .lb-hurdle-list button {
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--body);
+  background: var(--white);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.lp .lb-toggle button:hover,
+.lp .lb-hurdle-list button:hover {
+  border-color: var(--ai);
+  color: var(--ai);
+}
+.lp .lb-toggle button[aria-pressed="true"] {
+  background: var(--ai);
+  border-color: var(--ai);
+  color: #fff;
+}
+.lp .lb-routine-card {
+  margin-top: 16px;
+}
+.lp .lb-routine-card .mock-head {
+  align-items: center;
+}
+.lp .lb-clock {
+  font-family: var(--disp);
+  font-size: 1.15rem;
+  color: var(--ai);
+  font-variant-numeric: tabular-nums;
+  margin-right: 10px;
+}
+.lp .lb-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.lp .lb-timeline li {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.lp .lb-timeline li:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+.lp .lb-min {
+  font-family: var(--disp);
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.lp .lb-min small {
+  font-family: var(--body-face);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--body);
+  margin-left: 2px;
+}
+.lp .lb-step {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--shu);
+}
+.lp .lb-timeline h3 {
+  font-size: 1.05rem;
+  margin-top: 2px;
+}
+.lp .lb-timeline p:not(.lb-step) {
+  color: var(--body);
+  font-size: 0.88rem;
+  margin-top: 4px;
+}
+.lp .lb-routine .pain-note {
+  margin-top: 12px;
+}
+
+/* ---- 要点カード（fifteen は4つ・retry は3つ） ---- */
+.lp .lb-points {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 44px;
+}
+.lp .lb-points.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 860px) {
+  .lp .lb-points,
+  .lp .lb-points.three {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 32px;
+  }
+}
+.lp .lb-point {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 26px 24px 24px;
+}
+.lp .lb-point .no {
+  font-family: var(--disp);
+  color: var(--shu);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+.lp .lb-point h3 {
+  font-size: 1.2rem;
+  margin-top: 6px;
+}
+.lp .lb-point p {
+  color: var(--body);
+  font-size: 0.94rem;
+  margin-top: 10px;
+}
+
+/* ---- 期間・量の見積もり ---- */
+.lp .lb-paces {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 36px 0 8px;
+  max-width: 44em;
+}
+@media (max-width: 640px) {
+  .lp .lb-paces {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 28px;
+  }
+}
+.lp .lb-pace {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.lp .lb-pace.on {
+  border: 1.5px solid var(--ai);
+  box-shadow: var(--shadow);
+}
+.lp .lb-pace-k {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--body);
+}
+.lp .lb-pace-v {
+  font-size: 1rem;
+  margin-top: 2px;
+}
+.lp .lb-pace-v b {
+  font-family: var(--disp);
+  font-size: 2.1rem;
+  font-weight: 600;
+  margin: 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+.lp .lb-pace.on .lb-pace-v b {
+  color: var(--ai);
+}
+.lp .lb-pace-s {
+  color: var(--sub);
+  font-size: 0.78rem;
+}
+
+/* ---- 合格基準（retry） ---- */
+.lp .lb-rule {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin: 36px 0 8px;
+  max-width: 44em;
+}
+.lp .lb-rule > div {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+}
+.lp .lb-rule-k {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--sub);
+}
+.lp .lb-rule-v {
+  font-size: 1.05rem;
+  margin-top: 4px;
+}
+.lp .lb-rule-v b {
+  font-family: var(--disp);
+  font-size: 1.35rem;
+  color: var(--ink);
+  background-image: linear-gradient(transparent 70%, rgba(217, 68, 44, 0.28) 70%);
+}
+.lp .lb-rule-s {
+  color: var(--sub);
+  font-size: 0.78rem;
+}
+.lp .lb-rule-and {
+  font-family: var(--disp);
+  font-weight: 600;
+  color: var(--shu);
+}
+@media (max-width: 640px) {
+  .lp .lb-rule {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .lp .lb-rule-and {
+    text-align: center;
+  }
+}
+.lp .lb-check {
+  margin-top: 32px;
+  max-width: 44em;
+  background: var(--wash);
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+.lp .lb-check-h {
+  font-weight: 700;
+}
+.lp .lb-check ol {
+  margin: 10px 0 0;
+  padding-left: 1.4em;
+  display: grid;
+  gap: 10px;
+}
+.lp .lb-check li b {
+  display: block;
+}
+.lp .lb-check li span {
+  color: var(--body);
+  font-size: 0.92rem;
+}
+
+/* ---- つまずき別（retry） ---- */
+.lp .lb-hurdles {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 24px;
+  margin-top: 36px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .lp .lb-hurdles {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 28px;
+  }
+}
+.lp .lb-hurdle-list {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+.lp .lb-hurdle-list button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+.lp .lb-hurdle-list button .no {
+  font-family: var(--disp);
+  font-weight: 600;
+  color: var(--sub);
+}
+.lp .lb-hurdle-list button[aria-pressed="true"] {
+  border-color: var(--ai);
+  background: var(--ai-soft);
+  color: var(--ai-dark);
+}
+.lp .lb-hurdle-list button[aria-pressed="true"] .no {
+  color: var(--ai);
+}
+.lp .lb-hurdle-answer h3 {
+  font-size: 1.25rem;
+  margin-top: 4px;
+}
+.lp .lb-hurdle-answer > p:not(.lb-tag):not(.lb-action) {
+  color: var(--body);
+  margin-top: 8px;
+  font-size: 0.94rem;
+}
+.lp .lb-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--shu);
+}
+.lp .lb-action {
+  margin-top: 16px;
+  font-weight: 700;
+}
+.lp .lb-hurdle-answer .more {
+  margin-top: 6px;
+}
+
+/* ---- 一言（retry） ---- */
+.lp .lb-quote {
+  text-align: center;
+  padding: 72px 0;
+}
+.lp .lb-quote blockquote {
+  margin: 0;
+  font-family: var(--disp);
+  font-size: clamp(1.3rem, 2.8vw, 1.75rem);
+  line-height: 1.7;
+}
+.lp .lb-quote blockquote b {
+  font-weight: 600;
+  background-image: linear-gradient(transparent 70%, rgba(217, 68, 44, 0.28) 70%);
+}
+.lp .lb-quote figcaption {
+  margin-top: 12px;
+  color: var(--sub);
+  font-size: 0.86rem;
+}
+@media (max-width: 640px) {
+  .lp .lb-quote {
+    padding: 48px 0;
+  }
+}
+
+/* ---- 入口（/lp/lab） ---- */
+.lp .lb-index {
+  padding-bottom: 96px;
+}
+.lp .lb-entries {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin: 40px 0 24px;
+}
+@media (max-width: 760px) {
+  .lp .lb-entries {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .lp .lb-index {
+    padding-bottom: 56px;
+  }
+}
+.lp .lb-entry {
+  display: block;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 28px 26px;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.lp .lb-entry:hover {
+  border-color: var(--ai);
+}
+.lp .lb-entry-k {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--shu);
+}
+.lp .lb-entry h2 {
+  font-size: 1.45rem;
+  margin-top: 6px;
+}
+.lp .lb-entry p {
+  color: var(--body);
+  font-size: 0.94rem;
+  margin-top: 10px;
+}
+.lp .lb-entry .more {
+  color: var(--ai);
+}
