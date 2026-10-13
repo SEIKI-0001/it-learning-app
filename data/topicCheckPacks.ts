@@ -855,4 +855,75 @@ export const topicCheckPacks: TopicCheckPack[] = [
     recommendedTiming: "review_day",
     difficulty: 3,
   },
+
+  // ---- 2026-10-14 競合参考書との差分で足したトピック ----
+  // 過去問レベルは、新トピックへ付け直した公式過去問と、テーマ別試験の独自問題で組む
+  // （このトピック向けの独自 exN は無い）。確認問題は第3段階と同じ論点を外して選ぶ。
+  {
+    packId: "pack-strat-innovation-management",
+    topicId: "strat-innovation-management",
+    // q4（キャズム）は第3段階の 2026-q015 と同じ論点なので外す。q1（MOTの定義）は用語で確認する
+    quizQuestionIds: pickQuizIds("strat-innovation-management", [2, 3, 5, 6]),
+    flashcardIds: topicWordIds("strat-innovation-management"),
+    // このトピックの公式過去問は5年分でキャズムの1問だけ。
+    examLevelQuestionIds: ["ipa-it-passport-2026-q015"],
+    recommendedTiming: "after_learning",
+    difficulty: 2,
+  },
+  {
+    packId: "pack-strat-new-business-development",
+    topicId: "strat-new-business-development",
+    // リーンスタートアップ・PoC・ハッカソン（q1・q3・q4）は第3段階の公式過去問に任せる
+    quizQuestionIds: pickQuizIds("strat-new-business-development", [2, 5, 6, 7]),
+    flashcardIds: topicWordIds("strat-new-business-development"),
+    examLevelQuestionIds: [
+      "ipa-it-passport-2023-q001",
+      "ipa-it-passport-2022-q035",
+      "ipa-it-passport-2025-q009",
+    ],
+    recommendedTiming: "after_learning",
+    difficulty: 2,
+  },
+  {
+    packId: "pack-strat-production-methods",
+    topicId: "strat-production-methods",
+    // JIT（q1）とムダ（q6）は第3段階の公式過去問に任せる。
+    // 2023-q026 はかんばん方式と連携させるシステムを問う応用で、q2（かんばんの定義）とは論点が違う
+    quizQuestionIds: pickQuizIds("strat-production-methods", [2, 3, 4, 5]),
+    flashcardIds: topicWordIds("strat-production-methods"),
+    examLevelQuestionIds: [
+      "ipa-it-passport-2024-q015",
+      "ipa-it-passport-2023-q026",
+      "ipa-it-passport-2026-q031",
+    ],
+    recommendedTiming: "after_learning",
+    difficulty: 2,
+  },
+  {
+    packId: "pack-strat-internet-business",
+    topicId: "strat-internet-business",
+    // レコメンデーション（q6）は第3段階の theme-exam-business-industry-10 に任せる
+    quizQuestionIds: pickQuizIds("strat-internet-business", [1, 2, 3, 5]),
+    flashcardIds: topicWordIds("strat-internet-business"),
+    examLevelQuestionIds: [
+      "ipa-it-passport-2026-q023",
+      "theme-exam-business-industry-10",
+    ],
+    recommendedTiming: "after_learning",
+    difficulty: 2,
+  },
+  {
+    packId: "pack-tech-data-structure-list-tree",
+    topicId: "tech-data-structure-list-tree",
+    // 公式過去問は無い（2022-q090 の木構造はファイルシステムの問題として tech-file-system に置く）。
+    // 配列とリストの比較（q1・q2・q6）と2分木（q5）は第3段階のテーマ別試験の問題に任せる
+    quizQuestionIds: pickQuizIds("tech-data-structure-list-tree", [3, 4, 7, 8]),
+    flashcardIds: topicWordIds("tech-data-structure-list-tree"),
+    examLevelQuestionIds: [
+      "theme-exam-algorithm-programming-02",
+      "theme-exam-algorithm-programming-05",
+    ],
+    recommendedTiming: "after_learning",
+    difficulty: 2,
+  },
 ];

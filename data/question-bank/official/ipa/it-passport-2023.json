@@ -7,7 +7,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-corporate-strategy",
+      "primaryTopicId": "strat-new-business-development",
       "questionPattern": "knowledge",
       "prompt": "新しいビジネスモデルや製品を開発する際に，仮説に基づいて実用に向けた最小限のサービスや製品を作り，短期に顧客価値の検証を繰り返すことによって，新規事業などを成功させる可能性を高める手法を示す用語はどれか。",
       "choices": [
@@ -74,10 +74,10 @@
       "reviewedAt": "2026-08-15T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-09",
+        "itemId": "ipa-13",
         "field": "strategy",
         "majorCategory": "経営戦略",
-        "middleCategory": "経営戦略マネジメント"
+        "middleCategory": "技術戦略マネジメント"
       }
     },
     {
@@ -1968,7 +1968,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-production-management",
+      "primaryTopicId": "strat-production-methods",
       "questionPattern": "application",
       "prompt": "組立製造販売業A社では経営効率化の戦略として，部品在庫を極限まで削減するためにかんばん方式を導入することにした。この戦略実現のために，A社が在庫管理システムとオンラインで連携させる情報システムとして，最も適切なものはどれか。\nなお，A社では在庫管理システムで部品在庫も管理している。また，現在は他のどのシステムも在庫管理システムと連携していないものとする。",
       "choices": [

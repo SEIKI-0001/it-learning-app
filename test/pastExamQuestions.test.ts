@@ -175,6 +175,11 @@ describe("公式原文と分類が PR2-A から不変", () => {
     "ipa-it-passport-2026-q065": "tech-network-address", // DNS
     "ipa-it-passport-2026-q090": "tech-digital-signature", // PKI・認証局
     "ipa-it-passport-2026-q098": "strat-generative-ai-dx", // プロンプトエンジニアリング
+    // 2026-10-14 教えているトピックを新設したので付け直した
+    "ipa-it-passport-2026-q004": "strat-new-business-development", // ハッカソン
+    "ipa-it-passport-2026-q015": "strat-innovation-management", // イノベーター理論・キャズム
+    "ipa-it-passport-2026-q023": "strat-internet-business", // リスティング広告
+    "ipa-it-passport-2026-q031": "strat-production-methods", // リーン生産方式のムダ
   };
 
   it("primaryTopicId / syllabusNode / 難易度 / タグが完全一致（付け直した問題を除く）", () => {
@@ -398,8 +403,8 @@ describe("既存機能への影響", () => {
     ).toHaveLength(146);
   });
 
-  it("確認パックは67個のままで、公式過去問は共通IDのまま参照する", () => {
-    expect(topicCheckPacks).toHaveLength(67);
+  it("確認パックは72個（2026-10-14 に新設5トピック分を追加）で、公式過去問は共通IDのまま参照する", () => {
+    expect(topicCheckPacks).toHaveLength(72);
 
     // 2026-10-12 から第3段階に公式過去問を組み込んだ。複製した別IDではなく、
     // 年度別演習と同じ共通ID・同じレコードを参照していること（二重登録しない）。

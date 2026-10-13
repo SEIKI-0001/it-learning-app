@@ -26,7 +26,7 @@ export default function InnovationExperience() {
       <PointsPanel
         step={6}
         points={[
-          <>MOT＝<b>技術を製品・サービスや利益につなげる</b>経営の考え方</>,
+          <>MOT＝<b>技術を製品・サービスや利益につなげる</b>経営の考え方。責任者は<b>CTO</b></>,
           <>プロダクトイノベーション＝<b>新しい製品</b>／プロセスイノベーション＝<b>新しい作り方・進め方</b></>,
           <>研究→開発＝<b>魔の川</b>、開発→事業化＝<b>死の谷</b>、事業化→産業化＝<b>ダーウィンの海</b></>,
           <>キャズム＝<b>アーリーアダプター</b>と<b>アーリーマジョリティ</b>の間の溝</>,
@@ -52,7 +52,7 @@ function MotPanel() {
       <SectionTitle step={1}>MOT と2種類のイノベーション</SectionTitle>
       <div className="mt-3 rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-brand-200">
         <div className="text-[13px] font-bold text-brand-800">MOT（Management of Technology：技術経営）</div>
-        <p className="mt-0.5 text-[13px] leading-relaxed text-brand-900">どの技術に投資し、どう製品にして、どう稼ぐかまでを考える経営。研究開発だけで終わらせない。</p>
+        <p className="mt-0.5 text-[13px] leading-relaxed text-brand-900">どの技術に投資し、どう製品にして、どう稼ぐかまでを考える経営。研究開発だけで終わらせない。技術経営の責任者は<b>CTO（最高技術責任者）</b>。</p>
       </div>
       <p className="mt-4 text-sm leading-relaxed text-gray-600">イノベーション（革新）は、<b className="text-gray-800">何が新しくなるか</b>で2つに分けます。</p>
       <div className="mt-2 grid grid-cols-2 gap-2" data-testid="inv-types">

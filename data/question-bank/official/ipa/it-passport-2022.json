@@ -2692,7 +2692,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-technology-development-strategy",
+      "primaryTopicId": "strat-new-business-development",
       "questionPattern": "knowledge",
       "prompt": "あるコールセンタでは，AIを活用した業務改革の検討を進めて，導入するシステムを絞り込んだ。しかし，想定している効果が得られるかなど不明点が多いので，試行して実現性の検証を行うことにした。このような検証を何というか。",
       "choices": [

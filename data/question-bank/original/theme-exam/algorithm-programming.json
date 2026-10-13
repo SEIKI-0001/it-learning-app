@@ -26,7 +26,7 @@
       ]
     },
     {
-      "topicId": "tech-data-structure",
+      "topicId": "tech-data-structure-list-tree",
       "difficulty": 4,
       "prompt": "配列とリスト（連結リスト）の性質を比べた説明のうち、適切なものはどれか。",
       "choices": [
@@ -96,7 +96,7 @@
       ]
     },
     {
-      "topicId": "tech-data-structure",
+      "topicId": "tech-data-structure-list-tree",
       "difficulty": 4,
       "prompt": "木構造のうち「2分木」の説明として、適切なものはどれか。",
       "choices": [

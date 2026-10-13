@@ -103,7 +103,7 @@
       },
       "correctChoiceKana": "イ",
       "correctChoice": "B",
-      "primaryTopicId": "strat-technology-development-strategy",
+      "primaryTopicId": "strat-new-business-development",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -329,7 +329,7 @@
       },
       "correctChoiceKana": "イ",
       "correctChoice": "B",
-      "primaryTopicId": "strat-marketing-4p",
+      "primaryTopicId": "strat-innovation-management",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -493,7 +493,7 @@
       },
       "correctChoiceKana": "イ",
       "correctChoice": "B",
-      "primaryTopicId": "strat-ebusiness",
+      "primaryTopicId": "strat-internet-business",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [
@@ -673,7 +673,7 @@
       },
       "correctChoiceKana": "ウ",
       "correctChoice": "C",
-      "primaryTopicId": "strat-production-management",
+      "primaryTopicId": "strat-production-methods",
       "questionPattern": "knowledge",
       "estimatedDifficulty": 2,
       "tags": [

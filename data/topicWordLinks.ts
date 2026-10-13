@@ -78,6 +78,11 @@ export const TOPIC_WORD_LINKS: Readonly<Record<string, readonly string[]>> = {
   "strat-production-management": ["mrp"], // 新規収録
   "strat-enterprise-activities": ["csr"], // 新規収録
   "strat-system-planning-rfp": ["rfp", "rfi", "rfq"], // RFP/RFI=既存語の未リンク / RFQ=新規収録
+  // ---- 2026-10-14 競合参考書との差分で足したトピック ----
+  // 生産方式・配列/リスト/木構造は単語帳に該当する略語が無いので書かない（JIT・BTOは未収録）。
+  "strat-innovation-management": ["cto"], // MOT（技術経営）の責任者
+  "strat-new-business-development": ["poc"],
+  "strat-internet-business": ["o2o", "seo"],
 };
 
 /** トピックの関連単語 id（関連語が無いトピックは空配列）。 */

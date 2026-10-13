@@ -251,7 +251,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-technology-development-strategy",
+      "primaryTopicId": "strat-new-business-development",
       "questionPattern": "knowledge",
       "prompt": "特定の目的の達成や課題の解決をテーマとして，ソフトウェアの開発者や企画者などが短期集中的にアイディアを出し合い，ソフトウェアの開発などの共同作業を行い，成果を競い合うイベントはどれか。",
       "choices": [
@@ -1104,7 +1104,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-marketing-4p",
+      "primaryTopicId": "strat-innovation-management",
       "questionPattern": "knowledge",
       "prompt": "マーケティングにおけるイノベーター理論では，新しい製品やサービスが普及していく過程に沿って，消費者を，イノベーター，アーリーアダプター，アーリーマジョリティ，レイトマジョリティ，ラガードという五つのグループに分ける。このとき，アーリーアダプターからアーリーマジョリティへの普及において生じる，越えることが困難な隔たりを表す用語として，最も適切なものはどれか。",
       "choices": [
@@ -1171,10 +1171,10 @@
       "reviewedAt": "2026-07-26T00:00:00.000Z",
       "reviewedBy": "claude-code:two-pass-explanation-review",
       "syllabusNode": {
-        "itemId": "ipa-10",
+        "itemId": "ipa-13",
         "field": "strategy",
         "majorCategory": "経営戦略",
-        "middleCategory": "経営戦略マネジメント"
+        "middleCategory": "技術戦略マネジメント"
       }
     },
     {
@@ -1724,7 +1724,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-ebusiness",
+      "primaryTopicId": "strat-internet-business",
       "questionPattern": "knowledge",
       "prompt": "インターネット広告の手法の一つである，リスティング広告に関する記述として，最も適切なものはどれか。",
       "choices": [
@@ -2356,7 +2356,7 @@
       "version": 2,
       "origin": "official_past",
       "status": "published",
-      "primaryTopicId": "strat-production-management",
+      "primaryTopicId": "strat-production-methods",
       "questionPattern": "knowledge",
       "prompt": "リーン生産方式による業務改善の観点であるムリ，ムラ，ムダのうち，ムダに当たるものとして，最も適切なものはどれか。",
       "choices": [
