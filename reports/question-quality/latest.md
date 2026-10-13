@@ -6,9 +6,9 @@
 
 | 指標 | 件数 |
 | --- | ---: |
-| 問題数 | 826 |
+| 問題数 | 828 |
 | blocker | 0 |
-| warning | 206 |
+| warning | 207 |
 | うち新規 warning（ベースライン外） | 0 |
 
 ### 出所別
@@ -16,7 +16,7 @@
 | origin | 件数 |
 | --- | ---: |
 | official_past | 500 |
-| app_original | 326 |
+| app_original | 328 |
 | ai_generated | 0 |
 | modified_official | 0 |
 
@@ -24,7 +24,7 @@
 
 | status | 件数 |
 | --- | ---: |
-| draft | 326 |
+| draft | 328 |
 | content_verified | 0 |
 | explanation_verified | 0 |
 | published | 500 |
@@ -52,8 +52,8 @@
 
 | rule | 件数 |
 | --- | ---: |
-| review-self-review | 133 |
-| choice-near-duplicate | 34 |
+| review-self-review | 136 |
+| choice-near-duplicate | 32 |
 | absolute-word-hint | 20 |
 | pattern-calculation-candidate | 6 |
 | correct-choice-specificity | 4 |
@@ -135,7 +135,7 @@
 | ipa-it-passport-2026-q094 | similarity-official-notice | 公式過去問どうしが酷似しています（公開は阻害しません）。最類似: "ipa-it-passport-2025-q088"（official_past） / 代表スコア 1.000 / prompt 1.000 / 全体 0.328 / 正答本文 0.000 | ipa-it-passport-2025-q088 | 1.000 |
 | mgmt-development-process-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-development-process-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
-| mgmt-estimation-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
+| mgmt-estimation-ex1 | review-self-review | 作成者（claude-code:check-pack-accuracy-2026-10）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-estimation-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-facility-management-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-facility-management-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
@@ -144,7 +144,7 @@
 | mgmt-pdca-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-pdca-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-pm-qcd-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
-| mgmt-requirements-definition-ex1 | choice-near-duplicate | 選択肢 A と B の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。 | - | - |
+| mgmt-requirements-definition-ex1 | review-self-review | 作成者（claude-code:check-pack-accuracy-2026-10）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-requirements-definition-ex2 | choice-near-duplicate | 選択肢 A と B の本文がほとんど同じです（類似度 0.857）。言い換えただけで実質同じことを述べていないか確認してください。 | - | - |
 | mgmt-risk-management-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-risk-management-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
@@ -158,6 +158,7 @@
 | mgmt-wbs-gantt-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | mgmt-wbs-gantt-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-3c-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
+| strat-3c-ex2 | review-self-review | 作成者（claude-code:check-pack-accuracy-2026-10）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-accounting-break-even-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-bcp-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-bcp-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
@@ -166,7 +167,7 @@
 | strat-corporate-strategy-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-ebusiness-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-ebusiness-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
-| strat-financial-statements-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
+| strat-financial-statements-ex1 | review-self-review | 作成者（claude-code:check-pack-accuracy-2026-10）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-financial-statements-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-generative-ai-dx-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-generative-ai-dx-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
@@ -188,7 +189,7 @@
 | strat-security-laws-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-security-laws-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-standardization-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
-| strat-standardization-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
+| strat-standardization-ex2 | review-self-review | 作成者（claude-code:check-pack-accuracy-2026-10）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-swot-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-swot-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | strat-swot-ex3 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
@@ -242,7 +243,7 @@
 | tech-isms-risk-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | tech-keys-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | tech-keys-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
-| tech-lan-wan-ex1 | choice-near-duplicate | 選択肢 A と B の本文がほとんど同じです（類似度 0.875）。言い換えただけで実質同じことを述べていないか確認してください。 | - | - |
+| tech-lan-wan-ex1 | review-self-review | 作成者（claude-code:check-pack-accuracy-2026-10）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | tech-logic-operations-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | tech-logic-operations-ex2 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |
 | tech-malware-phishing-ransomware-ex1 | review-self-review | 作成者（claude-code:exam-level-quality-2026-08）とレビュー者が同一です。可能なら別の人に確認してもらってください。 | - | - |

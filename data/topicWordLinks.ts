@@ -80,6 +80,7 @@ export const TOPIC_WORD_LINKS: Readonly<Record<string, readonly string[]>> = {
   "strat-system-planning-rfp": ["rfp", "rfi", "rfq"], // RFP/RFI=既存語の未リンク / RFQ=新規収録
   // ---- 2026-10-14 競合参考書との差分で足したトピック ----
   // 生産方式・配列/リスト/木構造は単語帳に該当する略語が無いので書かない（JIT・BTOは未収録）。
+  "strat-corporation-management-organization": ["ceo", "cfo", "cio", "cto"], // 経営陣の役割（2026-10-14 単元に追記）
   "strat-innovation-management": ["cto"], // MOT（技術経営）の責任者
   "strat-new-business-development": ["poc"],
   "strat-internet-business": ["o2o", "seo"],

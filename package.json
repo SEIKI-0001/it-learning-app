@@ -32,6 +32,7 @@
     "richmenu:setup": "node scripts/richmenu/setup-richmenu.mjs",
     "questions:apply-revision": "node scripts/question-bank/apply-revision.mjs",
     "questions:build:theme-exam": "node scripts/question-bank/build-theme-exam.mjs",
+    "questions:build:exam-level-additions": "node scripts/question-bank/build-exam-level-additions.mjs",
     "generate:figure-manifest": "node scripts/cloudflare/generate-figure-size-manifest.mjs",
     "dev:vinext": "vinext dev",
     "prebuild:vinext": "npm run generate:figure-manifest",

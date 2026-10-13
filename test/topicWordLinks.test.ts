@@ -40,7 +40,7 @@ describe("トピック ↔ 関連単語（Single Source of Truth）", () => {
   });
 
   it("関連語を持たないトピックは空配列（無理に割り当てない）", () => {
-    for (const id of ["tech-file-system", "tech-computer-types", "strat-corporation-management-organization"]) {
+    for (const id of ["tech-file-system", "tech-computer-types", "strat-production-methods"]) {
       expect(topicWordIds(id)).toEqual([]);
       expect(relatedWordIdsForTopic(id)).toEqual([]);
     }

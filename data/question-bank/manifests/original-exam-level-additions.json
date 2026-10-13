@@ -1,0 +1,9 @@
+{
+  "file": "data/question-bank/original/exam-level-additions.json",
+  "generatedFrom": "data/question-bank/original/exam-level-additions/questions.json",
+  "questionCount": 2,
+  "questionIds": [
+    "strat-innovation-management-ex1",
+    "strat-innovation-management-ex2"
+  ]
+}

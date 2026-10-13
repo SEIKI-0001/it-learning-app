@@ -857,16 +857,20 @@ export const topicCheckPacks: TopicCheckPack[] = [
   },
 
   // ---- 2026-10-14 競合参考書との差分で足したトピック ----
-  // 過去問レベルは、新トピックへ付け直した公式過去問と、テーマ別試験の独自問題で組む
-  // （このトピック向けの独自 exN は無い）。確認問題は第3段階と同じ論点を外して選ぶ。
+  // 過去問レベルは、新トピックへ付け直した公式過去問と、テーマ別試験の独自問題で組む。
+  // 足りないトピックだけ独自 exN を exam-level-additions に足す。確認問題は第3段階と同じ論点を外して選ぶ。
   {
     packId: "pack-strat-innovation-management",
     topicId: "strat-innovation-management",
-    // q4（キャズム）は第3段階の 2026-q015 と同じ論点なので外す。q1（MOTの定義）は用語で確認する
-    quizQuestionIds: pickQuizIds("strat-innovation-management", [2, 3, 5, 6]),
+    // キャズム（q4）・プロセスイノベーション（q2）・ハイプサイクル（q6）は第3段階に任せる
+    quizQuestionIds: pickQuizIds("strat-innovation-management", [1, 3, 5, 7]),
     flashcardIds: topicWordIds("strat-innovation-management"),
-    // このトピックの公式過去問は5年分でキャズムの1問だけ。
-    examLevelQuestionIds: ["ipa-it-passport-2026-q015"],
+    // 公式過去問は5年分でキャズムの1問だけなので、独自問題2問（exam-level-additions）を足す。
+    examLevelQuestionIds: [
+      "ipa-it-passport-2026-q015",
+      "strat-innovation-management-ex1",
+      "strat-innovation-management-ex2",
+    ],
     recommendedTiming: "after_learning",
     difficulty: 2,
   },
