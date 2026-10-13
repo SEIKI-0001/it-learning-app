@@ -11,7 +11,7 @@ export function Takeaway({ children }: { children: ReactNode }) {
 }
 
 export function Term({ children }: { children: ReactNode }) {
-  return <b className="whitespace-nowrap rounded bg-gray-900 px-1 py-px text-[0.92em] font-bold text-white">{children}</b>;
+  return <b data-term className="whitespace-nowrap rounded bg-gray-900 px-1 py-px text-[0.92em] font-bold text-white">{children}</b>;
 }
 
 export function Chip({ children, tone = "plain" }: { children: ReactNode; tone?: "plain" | "brand" | "ok" | "ng" }) {
