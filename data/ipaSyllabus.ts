@@ -90,8 +90,8 @@ export const ipaSyllabusItems = [
   {
     id: "ipa-13", number: 13, field: "strategy", majorCategory: "経営戦略", middleCategory: "技術戦略マネジメント",
     item: "技術開発戦略の立案・技術開発計画",
-    topicIds: ["strat-technology-development-strategy"], coverage: "new",
-    note: "技術ポートフォリオ、技術ロードマップ、研究開発テーマの選択と評価を学ぶ。",
+    topicIds: ["strat-technology-development-strategy", "strat-innovation-management", "strat-new-business-development"], coverage: "new",
+    note: "技術ロードマップ、MOT、イノベーションの種類と普及の壁（死の谷・キャズム）、デザイン思考・リーンスタートアップ・PoCを学ぶ。",
   },
   {
     id: "ipa-14", number: 14, field: "strategy", majorCategory: "経営戦略", middleCategory: "ビジネスインダストリ",
@@ -101,13 +101,13 @@ export const ipaSyllabusItems = [
   {
     id: "ipa-15", number: 15, field: "strategy", majorCategory: "経営戦略", middleCategory: "ビジネスインダストリ",
     item: "エンジニアリングシステム",
-    topicIds: ["strat-engineering-systems", "strat-production-management"], coverage: "new",
-    note: "CAD・CAM・CAE・コンカレントエンジニアリングと、MRP・在庫・発注量の計算を学ぶ。",
+    topicIds: ["strat-engineering-systems", "strat-production-management", "strat-production-methods"], coverage: "new",
+    note: "CAD・CAM・CAE・コンカレントエンジニアリング、MRP・在庫・発注量の計算、セル生産・JIT・かんばん方式・BTOなどの生産方式を学ぶ。",
   },
   {
     id: "ipa-16", number: 16, field: "strategy", majorCategory: "経営戦略", middleCategory: "ビジネスインダストリ",
-    item: "e-ビジネス", topicIds: ["strat-ebusiness"], coverage: "covered",
-    note: "EC・EDI、BtoB・BtoC・CtoC、フィンテック、シェアリングエコノミーを学ぶ。",
+    item: "e-ビジネス", topicIds: ["strat-ebusiness", "strat-internet-business"], coverage: "covered",
+    note: "EC・EDI、BtoB・BtoC・CtoC、フィンテック、シェアリングエコノミー、ロングテール、O2O・オムニチャネル、SEO・アフィリエイトを学ぶ。",
   },
   {
     id: "ipa-17", number: 17, field: "strategy", majorCategory: "経営戦略", middleCategory: "ビジネスインダストリ",
@@ -216,7 +216,7 @@ export const ipaSyllabusItems = [
   },
   {
     id: "ipa-36", number: 36, field: "technology", majorCategory: "基礎理論", middleCategory: "アルゴリズムとプログラミング",
-    item: "データ構造", topicIds: ["tech-data-structure"], coverage: "covered",
+    item: "データ構造", topicIds: ["tech-data-structure", "tech-data-structure-list-tree"], coverage: "covered",
     note: "配列、リスト、スタック、キュー、木構造などデータの持ち方と操作を学ぶ。",
   },
   {

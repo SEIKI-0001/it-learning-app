@@ -20,10 +20,10 @@
 | 10 <!-- ipa-10 --> | ストラテジ | 経営戦略 | 経営戦略マネジメント | マーケティング | `strat-marketing-4p` | covered | 市場調査、セグメンテーション、ターゲティング、ポジショニング、4Pを学ぶ。 |
 | 11 <!-- ipa-11 --> | ストラテジ | 経営戦略 | 経営戦略マネジメント | ビジネス戦略と目標・評価 | `strat-corporate-strategy`, `strat-goal-evaluation` | covered | 競争優位を作る戦略と、KGI・CSF・KPI・BSCによる目標設定と評価を学ぶ。 |
 | 12 <!-- ipa-12 --> | ストラテジ | 経営戦略 | 経営戦略マネジメント | 経営管理システム | `strat-management-systems` | expanded | ヒト・モノ・カネ・情報の経営資源と、CRM・SCM・ERPの役割を学ぶ。 |
-| 13 <!-- ipa-13 --> | ストラテジ | 経営戦略 | 技術戦略マネジメント | 技術開発戦略の立案・技術開発計画 | `strat-technology-development-strategy` | new | 技術ポートフォリオ、技術ロードマップ、研究開発テーマの選択と評価を学ぶ。 |
+| 13 <!-- ipa-13 --> | ストラテジ | 経営戦略 | 技術戦略マネジメント | 技術開発戦略の立案・技術開発計画 | `strat-technology-development-strategy`, `strat-innovation-management`, `strat-new-business-development` | new | 技術ロードマップ、MOT、イノベーションの種類と普及の壁（死の谷・キャズム）、デザイン思考・リーンスタートアップ・PoCを学ぶ。 |
 | 14 <!-- ipa-14 --> | ストラテジ | 経営戦略 | ビジネスインダストリ | ビジネスシステム | `strat-business-systems` | new | POS、ICカード、GPSなど、店舗・交通・物流を支える情報システムを学ぶ。 |
-| 15 <!-- ipa-15 --> | ストラテジ | 経営戦略 | ビジネスインダストリ | エンジニアリングシステム | `strat-engineering-systems`, `strat-production-management` | new | CAD・CAM・CAE・コンカレントエンジニアリングと、MRP・在庫・発注量の計算を学ぶ。 |
-| 16 <!-- ipa-16 --> | ストラテジ | 経営戦略 | ビジネスインダストリ | e-ビジネス | `strat-ebusiness` | covered | EC・EDI、BtoB・BtoC・CtoC、フィンテック、シェアリングエコノミーを学ぶ。 |
+| 15 <!-- ipa-15 --> | ストラテジ | 経営戦略 | ビジネスインダストリ | エンジニアリングシステム | `strat-engineering-systems`, `strat-production-management`, `strat-production-methods` | new | CAD・CAM・CAE・コンカレントエンジニアリング、MRP・在庫・発注量の計算、セル生産・JIT・かんばん方式・BTOなどの生産方式を学ぶ。 |
+| 16 <!-- ipa-16 --> | ストラテジ | 経営戦略 | ビジネスインダストリ | e-ビジネス | `strat-ebusiness`, `strat-internet-business` | covered | EC・EDI、BtoB・BtoC・CtoC、フィンテック、シェアリングエコノミー、ロングテール、O2O・オムニチャネル、SEO・アフィリエイトを学ぶ。 |
 | 17 <!-- ipa-17 --> | ストラテジ | 経営戦略 | ビジネスインダストリ | IoTシステム・組込みシステム | `tech-iot`, `strat-embedded-systems` | new | IoTの通信・データ活用と、組込み機器のリアルタイム制御・センサー・アクチュエータを分けて学ぶ。 |
 | 18 <!-- ipa-18 --> | ストラテジ | システム戦略 | システム戦略 | 情報システム戦略 | `strat-system-strategy` | expanded | 経営戦略と整合した情報システム戦略、全体最適化、導入方針を学ぶ。 |
 | 19 <!-- ipa-19 --> | ストラテジ | システム戦略 | システム戦略 | 業務プロセス | `strat-business-process` | expanded | BPR・BPM、業務フロー、業務計画、ボトルネック分析による改善を学ぶ。 |
@@ -43,7 +43,7 @@
 | 33 <!-- ipa-33 --> | テクノロジ | 基礎理論 | 基礎理論 | 離散数学 | `tech-binary-data`, `tech-logic-operations` | covered | 2進数などの基数変換、集合・論理演算、真理値表の基礎を学ぶ。 |
 | 34 <!-- ipa-34 --> | テクノロジ | 基礎理論 | 基礎理論 | 応用数学 | `tech-data-utilization` | expanded | 確率の基本と、平均・中央値・最頻値、分散・標準偏差からデータの中心とばらつきを読み取る。 |
 | 35 <!-- ipa-35 --> | テクノロジ | 基礎理論 | 基礎理論 | 情報に関する理論 | `tech-binary-data`, `tech-multimedia-compression`, `tech-ai-ml` | covered | 情報量とデータ量の単位、符号化・圧縮の考え方、AIと機械学習の基本を学ぶ。 |
-| 36 <!-- ipa-36 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | データ構造 | `tech-data-structure` | covered | 配列、リスト、スタック、キュー、木構造などデータの持ち方と操作を学ぶ。 |
+| 36 <!-- ipa-36 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | データ構造 | `tech-data-structure`, `tech-data-structure-list-tree` | covered | 配列、リスト、スタック、キュー、木構造などデータの持ち方と操作を学ぶ。 |
 | 37 <!-- ipa-37 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | アルゴリズムとプログラミング | `tech-algorithm-flowchart` | covered | 順次・分岐・反復、フローチャート、探索・整列など処理手順の表現を学ぶ。 |
 | 38 <!-- ipa-38 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | プログラム言語 | `tech-programming-basics` | expanded | 機械語、アセンブリ言語、高水準言語と、コンパイラ・インタプリタの違いを学ぶ。 |
 | 39 <!-- ipa-39 --> | テクノロジ | 基礎理論 | アルゴリズムとプログラミング | その他の言語 | `tech-programming-basics` | expanded | HTML・XML・JSONなど、Web表示やデータ記述・交換に使う言語形式を学ぶ。 |
