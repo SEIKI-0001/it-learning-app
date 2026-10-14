@@ -189,6 +189,12 @@ export default function AdminPage() {
         </p>
         <nav className="mb-6 flex flex-wrap gap-2 text-sm">
           <Link
+            href="/admin/acquisition"
+            className="rounded-md border border-gray-300 bg-white px-3 py-1 font-medium text-gray-700"
+          >
+            集客分析
+          </Link>
+          <Link
             href="/admin/opinions"
             className="rounded-md border border-gray-300 bg-white px-3 py-1 font-medium text-gray-700"
           >
