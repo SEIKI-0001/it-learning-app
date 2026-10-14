@@ -388,6 +388,7 @@ export default function TopicQuiz({
         return (
           <div
             key={q.id}
+            data-funnel-question
             className={`rounded-xl border border-gray-200 bg-white ${dense ? "p-3" : "p-4"}${
               revealed && isCorrect && streak >= 5 ? " animate-glow-ring" : ""
             }`}

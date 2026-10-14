@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import ComputerCoreExperience from "@/components/experiences/ComputerCoreExperience";
-import { ExperienceSlideDeck } from "@/components/experiences/ui";
+import { GUIDE_FACTS } from "@/lib/guide/facts";
+import { FREE_RECORDING_DAYS } from "@/lib/billing/constants";
+import TrialFlow from "./TrialFlow";
 
 const TITLE = "CPU・メモリ・ストレージを模型で体験｜登録不要・無料｜資格もちっと";
 const DESCRIPTION = "CPU・メモリ・ストレージの役割を、パソコン内部の模型でデータの流れを追って体験。ITパスポートの教材を登録なしで体験できます。スマホ対応・インストール不要。";
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function TrialPage() {
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 sm:py-10">
+    <main className="min-h-screen bg-slate-50 px-4 pb-24 pt-6 sm:pb-10 text-slate-900 sm:py-10">
       <div className="mx-auto max-w-2xl">
         <a href="/lp" className="inline-flex min-h-11 items-center text-sm font-semibold text-brand-700 underline underline-offset-4">
           資格もちっと · ITパスポート学習コーチ
@@ -33,17 +34,11 @@ export default function TrialPage() {
           <p className="mt-3 text-sm leading-relaxed text-slate-600">アプリの教材を、そのままお試し。文書を開いて編集し、保存する前に「電源を切る」を押すと何が消えるか、模型で確かめてみましょう。</p>
         </header>
 
-        <ExperienceSlideDeck><ComputerCoreExperience /></ExperienceSlideDeck>
-
-        <section aria-labelledby="start-learning" className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-slate-200 sm:p-6">
-          <h2 id="start-learning" className="text-xl font-bold">こんなふうに、ほかのテーマも。</h2>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">SQLやネットワークなどの教材と公式過去問も、無料で学習できます。GoogleまたはLINEで登録すると、自分の試験日に合わせた学習を始められます。</p>
-          <a href="/login?next=/onboarding" className="mt-5 flex min-h-12 items-center justify-center rounded-xl bg-brand-600 px-4 py-3 text-center font-bold text-white transition hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-600">
-            無料登録して学習を始める
-          </a>
-          <p className="mt-3 text-xs leading-relaxed text-slate-500">クレジットカード不要。この体験の操作は学習記録に保存されません。登録後の学習記録の保存は最初の7日間無料です。以降も教材と公式過去問は無料で使えます。</p>
-          <a href="/lp#price" className="mt-3 inline-flex min-h-11 items-center text-sm text-brand-700 underline underline-offset-4">無料で使える範囲と料金を見る</a>
-        </section>
+        <TrialFlow
+          topics={GUIDE_FACTS.topicCount}
+          official={GUIDE_FACTS.officialQuestionCount}
+          freeDays={FREE_RECORDING_DAYS}
+        />
         <footer className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
           <a className="inline-flex min-h-11 items-center underline" href="/privacy">プライバシーポリシー</a>
           <a className="inline-flex min-h-11 items-center underline" href="/legal/tokusho">特定商取引法に基づく表示</a>

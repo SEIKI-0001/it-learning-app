@@ -4,6 +4,8 @@ import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 import Mochit from "@/components/mochit/Mochit";
 import { getInternalUserId } from "@/lib/auth/currentUser";
 import { AUGUST_2026_CAMPAIGN } from "@/lib/campaign/august2026";
+import FunnelTracker from "@/components/growth/FunnelTracker";
+import { FUNNEL_PLACEMENTS } from "@/lib/growth/funnel";
 
 // 初回登録・ログインページ。未ログインで Web を開くと proxy がここへ誘導する。
 // - 初回は LINE 公式アカウント登録を推奨（初回導線・通知チャネル）。
@@ -14,7 +16,7 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; from?: string }>;
 }) {
   const sp = await searchParams;
   // オープンリダイレクト防止: アプリ内パスのみ許可。
@@ -25,6 +27,9 @@ export default async function LoginPage({
   const userId = await getInternalUserId();
   if (userId) redirect(next);
   const campaignContinuation = next === AUGUST_2026_CAMPAIGN.path;
+  // 無料体験（/lp/try）の「登録」から来た人。スマホでもログインボタンが最初の画面に入るよう、
+  // 紹介パネルを短い「この後の流れ」に置き換える。
+  const fromTrial = sp?.from === "trial";
 
   const googleEnabled = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -37,8 +42,20 @@ export default async function LoginPage({
 
   return (
     <main className="min-h-screen bg-white px-4 py-6 text-gray-900 md:py-12">
+      <FunnelTracker />
       <div className="mx-auto flex w-full max-w-md flex-col items-center text-center">
-        {/* /today・/progress と同じ淡い青のパネルに、名前と説明をまとめる */}
+        {fromTrial ? (
+          <div className="w-full rounded-2xl bg-brand-50 px-5 py-5 text-left">
+            <p className="text-xs font-bold text-brand-700">体験の続きから</p>
+            <h1 className="mt-1 text-xl font-bold leading-snug">登録して、学習を続けましょう</h1>
+            <ol className="mt-3 space-y-1 text-sm leading-relaxed text-gray-700">
+              <li>1. GoogleまたはLINEで登録（無料・クレジットカード不要）</li>
+              <li>2. 試験日などの初回設定（約1分）</li>
+              <li>3. 今日の学習へ。解説と確認問題から始まります</li>
+            </ol>
+          </div>
+        ) : (
+        // /today・/progress と同じ淡い青のパネルに、名前と説明をまとめる
         <div className="flex w-full flex-col items-center rounded-2xl bg-brand-50 px-6 pb-7 pt-6">
         <span className="mb-4 inline-block rounded bg-white px-2.5 py-1 text-xs font-medium text-gray-600">
           ITパスポート合格支援
@@ -52,6 +69,7 @@ export default async function LoginPage({
           やさしい言葉と図解・体験で少しずつ進められます。AI採点で「説明できる理解」も確認できます。
         </p>
         </div>
+        )}
 
         {campaignContinuation && (
           <div className="mt-4 w-full rounded-xl bg-brand-50 px-4 py-4 text-left">
@@ -75,6 +93,8 @@ export default async function LoginPage({
           {lineUrl ? (
             <a
               href={lineUrl}
+              data-funnel-event="login_start"
+              data-funnel={FUNNEL_PLACEMENTS.loginLine}
               className={lineActionClassName}
             >
               LINE公式アカウントから始める

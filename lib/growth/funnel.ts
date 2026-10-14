@@ -9,8 +9,35 @@
  * 値は英数と . _ - / だけに正規化し、長さも制限する。ブラウザとサーバーの両方から使う純粋関数。
  */
 
-export const FUNNEL_EVENTS = ["view", "answer_open", "click"] as const;
+export const FUNNEL_EVENTS = [
+  "view",
+  "answer_open",
+  "click",
+  // 無料体験（/lp/try）
+  "trial_start", // 体験の教材を初めて操作した
+  "trial_complete", // 体験の最後のスライドまで進んだ
+  // 登録（/login）。view と click は上の汎用イベントで数える
+  "login_start", // Google / LINE のボタンを押した（placement で区別）
+  // 登録後、最初の学習問題まで（この端末で初回設定を開いた人だけ。lib/growth/firstRunFunnel.ts）
+  "onboarding_view",
+  "onboarding_complete",
+  "today_view",
+  "lesson_open",
+  "first_question_view",
+  "first_answer",
+] as const;
 export type FunnelEvent = (typeof FUNNEL_EVENTS)[number];
+
+/** 登録後の到達段階（並び順＝通る順）。各段階は端末ごとに1回だけ送る。 */
+export const FIRST_RUN_STEPS = [
+  "onboarding_view",
+  "onboarding_complete",
+  "today_view",
+  "lesson_open",
+  "first_question_view",
+  "first_answer",
+] as const satisfies readonly FunnelEvent[];
+export type FirstRunStep = (typeof FIRST_RUN_STEPS)[number];
 
 /** リンクの置き場所（data-funnel 属性）。どの位置のリンクが押されたかを比べるのに使う。 */
 export const FUNNEL_PLACEMENTS = {
@@ -22,6 +49,16 @@ export const FUNNEL_PLACEMENTS = {
   ctaStart: "cta_start",
   /** GuideCTA の「勉強アプリの機能と料金を見る」 */
   ctaLp: "cta_lp",
+  /** /lp/try 体験完了後のカードの登録ボタン */
+  trialDoneSignup: "trial_done_signup",
+  /** /lp/try 体験完了後にスマホ画面下へ出る登録ボタン */
+  trialStickySignup: "trial_sticky_signup",
+  /** /lp/try 体験を終える前の、ページ下部の登録ボタン */
+  trialBottomSignup: "trial_bottom_signup",
+  /** /login の Google ボタン */
+  loginGoogle: "login_google",
+  /** /login の LINE ボタン */
+  loginLine: "login_line",
 } as const;
 
 export const FUNNEL_VISITOR_KEY = "fq_vid";

@@ -5,6 +5,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -26,9 +27,19 @@ type Deck = {
 const DeckContext = createContext<Deck | null>(null);
 const SWIPE_THRESHOLD = 56;
 
-export function ExperienceSlideDeck({ children }: { children: ReactNode }) {
+export function ExperienceSlideDeck({
+  children,
+  onActiveChange,
+}: {
+  children: ReactNode;
+  /** 表示中のスライドが変わったとき（体験ページの完了計測用。教材の動きには使わない）。 */
+  onActiveChange?: (active: number, total: number) => void;
+}) {
   const [ids, setIds] = useState<string[]>([]);
   const [active, setActive] = useState(0);
+  useEffect(() => {
+    if (ids.length > 0) onActiveChange?.(active, ids.length);
+  }, [active, ids.length, onActiveChange]);
   const touchStartX = useRef<number | null>(null);
   const panels = useRef(new Map<string, HTMLElement>());
   const register = useCallback(

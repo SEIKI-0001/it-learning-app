@@ -21,7 +21,12 @@ describe("public learning trial", () => {
     expect(screen.getByTestId("work-doc")).toHaveAttribute("data-spot", "memory");
     fireEvent.click(screen.getByRole("button", { name: "電源を切る" }));
     expect(screen.getByTestId("stored-file")).toHaveTextContent("売上 100万円");
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: /無料登録して学習を始める/ })).toHaveAttribute("href", "/login?next=/onboarding");
+    // 学習記録は保存しない。送るのは体験の開始・完了の計測（/api/funnel）だけ。
+    const sentTo = fetchSpy.mock.calls.map(([url]) => String(url));
+    expect(sentTo.filter((url) => url !== "/api/funnel")).toEqual([]);
+    expect(screen.getByRole("link", { name: /無料登録して学習を始める/ })).toHaveAttribute(
+      "href",
+      "/login?next=/onboarding&from=trial",
+    );
   });
 });
