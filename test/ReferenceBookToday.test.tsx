@@ -36,6 +36,7 @@ vi.mock("@/lib/userSession", () => ({
   reportDailyProgress,
   readTokenFromUrl: () => null,
   resolveToken: vi.fn(),
+  restoreFromSessionOnce: vi.fn(async () => null),
   saveProfileToDb: vi.fn(),
   saveProgressToDb: vi.fn(),
   setUserId: vi.fn(),

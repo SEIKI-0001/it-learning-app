@@ -150,6 +150,10 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
       </PageHeader>
 
       <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6">
+        <Link href="/netlab/quest" className="flex items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
+          <div><p className="text-xs font-semibold text-emerald-700">登録不要・1回約3分</p><h2 className="mt-1 font-bold">ネットワーク冒険ラボ</h2><p className="mt-1 text-sm">つないで、試して、5つのミッションで基礎を学ぼう。</p></div>
+          <Icon name="arrow-right" className="h-5 w-5 shrink-0" />
+        </Link>
         {continueLesson && continueLocation && (
           <Link
             href={getLessonHref(continueLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}

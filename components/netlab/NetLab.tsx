@@ -273,6 +273,7 @@ export default function NetLab() {
           <Link href="/more" className="text-xs font-semibold text-gray-500 hover:text-gray-700">
             ← その他へ戻る
           </Link>
+          <Link href="/netlab/quest" className="ml-4 text-xs font-semibold text-emerald-700 underline underline-offset-4">初めての方は冒険ラボへ</Link>
           <p className="mt-2 text-xs font-semibold tracking-wide text-brand-600">β版 ・ ネットワークを作って学ぶ</p>
           <h1 className="text-2xl font-bold text-gray-900">オフィスネットワーク構築ラボ</h1>
         </div>
