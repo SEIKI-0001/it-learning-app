@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import SyllabusPage, { SYLLABUS, validateSyllabus } from "@/app/syllabus/page";
+import SyllabusPage from "@/app/syllabus/page";
+import { SYLLABUS, validateSyllabus } from "@/lib/syllabus";
 import { getAllTopics } from "@/lib/content";
 
 vi.mock("next/navigation", () => ({

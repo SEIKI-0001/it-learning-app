@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 /** 制定日・改定日。本文を変えたら更新し、sitemap の lastModified も合わせる。 */
-export const TERMS_EFFECTIVE_DATE = "2026年10月4日";
+const TERMS_EFFECTIVE_DATE = "2026年10月4日";
 
 type Article = {
   heading: string;

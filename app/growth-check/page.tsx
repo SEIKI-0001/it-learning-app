@@ -57,7 +57,7 @@ export type GrowthCheckView = {
  * 表示内容を組み立てる（純関数）。
  * 材料が十分なら出題しない。足りないときだけ任意ミニチャレンジを添える。
  */
-export function buildGrowthCheckView(state: AppState): GrowthCheckView {
+function buildGrowthCheckView(state: AppState): GrowthCheckView {
   const gate = buildCheckpointGate(state, getCheckpointProgress(state).currentCheckpointId);
   const evidence = buildGrowthEvidence({ state, gate });
   const challenge = hasSufficientEvidence(evidence) ? [] : buildGrowthChallenge({ state });
