@@ -10,6 +10,7 @@ vi.mock("@/lib/supabaseServer", () => ({
 
 import { GET as summaryRoute } from "@/app/api/admin/summary/route";
 import { GET as webhooksRoute } from "@/app/api/admin/billing-webhooks/route";
+import { GET as acquisitionRoute } from "@/app/api/admin/acquisition/route";
 import { POST as retryRoute } from "@/app/api/admin/billing-webhooks/[eventId]/retry/route";
 
 const ORIGIN = "https://example.test";
@@ -33,6 +34,8 @@ describe("管理 API はハンドラ単体でも Basic 認証する", () => {
   it.each([
     ["summary", () => summaryRoute(new Request(`${ORIGIN}/api/admin/summary`))],
     ["billing-webhooks", () => webhooksRoute(new Request(`${ORIGIN}/api/admin/billing-webhooks`))],
+    ["acquisition", () => acquisitionRoute(new Request(`${ORIGIN}/api/admin/acquisition`))],
+    ["acquisition csv", () => acquisitionRoute(new Request(`${ORIGIN}/api/admin/acquisition?format=csv`))],
   ])("%s は資格情報なしを 401 で拒否し DB に触れない", async (_name, call) => {
     const response = await call();
 
