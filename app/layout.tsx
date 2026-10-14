@@ -4,6 +4,7 @@ import { appFontVariables } from '@/lib/fonts';
 import CelebrationHost from '@/components/celebration/CelebrationHost';
 import FloatingMochitGate from '@/components/mochit/FloatingMochitGate';
 import AttributionCapture from '@/components/growth/AttributionCapture';
+import FirstRunFunnel from '@/components/growth/FirstRunFunnel';
 
 export const metadata: Metadata = {
   title: 'ITパスポート学習コーチ',
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <FloatingMochitGate />
         <CelebrationHost />
         <AttributionCapture />
+        <FirstRunFunnel />
       </body>
     </html>
   );

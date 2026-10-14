@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+import { FUNNEL_PLACEMENTS } from "@/lib/growth/funnel";
 
 /**
  * Google ログインボタン。Supabase Auth の signInWithOAuth で Google 認可へ遷移する。
@@ -40,6 +41,9 @@ export default function GoogleLoginButton({ next = "/" }: { next?: string }) {
       <button
         type="button"
         onClick={handleClick}
+        // 計測は FunnelTracker がある画面（/login）でだけ送られる。
+        data-funnel-event="login_start"
+        data-funnel={FUNNEL_PLACEMENTS.loginGoogle}
         disabled={loading}
         className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-6 py-4 text-center text-base font-semibold text-gray-700 transition hover:bg-gray-50 active:scale-[0.98] disabled:opacity-60"
       >

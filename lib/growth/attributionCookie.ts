@@ -79,6 +79,17 @@ export function parseAttributionCookie(raw: string | null | undefined): Attribut
 }
 
 /**
+ * ログインの往復で通るだけのホスト（Google 認可・Supabase Auth・LINE ログイン）。
+ * 認証から戻った直後のページは referrer がこれらになるが、流入元ではないので記録しない
+ * （/auth/callback が Cookie を消した直後に「accounts.google.com から来た」と上書きされるのを防ぐ）。
+ */
+const AUTH_HOST_RE = /(^|\.)(accounts\.google\.com|accounts\.google\.co\.jp|supabase\.co|access\.line\.me)$/;
+
+export function isAuthRedirectHost(hostname: string): boolean {
+  return AUTH_HOST_RE.test(hostname.toLowerCase());
+}
+
+/**
  * ブラウザ側で Cookie に入れる値を作る（純粋関数。テスト可能にするため分離）。
  * 記録すべき手がかり（utm / ref / 外部 referrer）が無ければ null。
  */
@@ -94,7 +105,7 @@ export function buildAttributionCookieValue(input: {
   if (input.referrer) {
     try {
       const h = new URL(input.referrer).hostname.toLowerCase();
-      if (h && h !== input.currentHost.toLowerCase()) referrerHost = host(h);
+      if (h && h !== input.currentHost.toLowerCase() && !isAuthRedirectHost(h)) referrerHost = host(h);
     } catch {
       referrerHost = null;
     }

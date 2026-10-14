@@ -1,20 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { StudyStyle, UserProfile } from "@/types";
 import { STUDY_STYLE_LABELS } from "@/types";
 import type { TopicField } from "@/types/content";
 import { FIELD_LABELS } from "@/types/content";
-import { initializeAppState, saveAppState } from "@/lib/storage";
-import {
-  getUserId,
-  readTokenFromUrl,
-  resolveToken,
-  saveProfileToDb,
-  saveProgressToDb,
-  setUserId,
-} from "@/lib/userSession";
+import { initializeAppState } from "@/lib/storage";
+import { getUserId, saveProfileToDb, saveProgressToDb } from "@/lib/userSession";
+import { useAppState } from "@/lib/useAppState";
+import { reachFirstRunStep } from "@/lib/growth/funnelClient";
 import Icon from "@/components/ui/Icon";
 import ReferenceBookPicker from "@/components/reference/ReferenceBookPicker";
 import { bookOrderFlag } from "@/lib/bookOrderFlag";
@@ -65,19 +60,16 @@ export default function OnboardingPage() {
     }).eligible;
   })();
 
-  // LINE 経由(?t=トークン)ならユーザーを解決。設定済みならダッシュボードへ。
+  // 設定済みのユーザーはダッシュボードへ（LINE 経由の ?t=トークンも useAppState が解決する）。
+  // ログイン済みの人が体験ページの「登録」から来ても、既存のプランを作り直させない。
+  const [appState] = useAppState();
+  const startingRef = useRef(false);
   useEffect(() => {
-    const token = readTokenFromUrl();
-    if (!token) return;
-    void resolveToken(token).then((resolved) => {
-      if (!resolved?.userId) return;
-      setUserId(resolved.userId);
-      if (resolved.appState?.profile) {
-        saveAppState(resolved.appState);
-        router.replace("/");
-      }
-    });
-  }, [router]);
+    if (startingRef.current) return;
+    if (appState?.profile) router.replace("/today");
+    // 設定がまだ無い人にフォームを出した時点から、最初の学習問題までを数える。
+    else if (appState === null) reachFirstRunStep("onboarding_view");
+  }, [router, appState]);
 
   function toggleField(field: TopicField) {
     setWeakFields((prev) =>
@@ -86,6 +78,7 @@ export default function OnboardingPage() {
   }
 
   function handleStart() {
+    startingRef.current = true;
     const exam = resolveExamDateChoice(examChoice);
     const full: UserProfile = {
       // 新フィールド
@@ -120,6 +113,7 @@ export default function OnboardingPage() {
       shareReferenceBookChoice(bookChoice, saved);
     }
 
+    reachFirstRunStep("onboarding_complete");
     // 設定直後の Today で、実画面の上に初回操作ガイドを重ねる。
     router.push(FIRST_RUN_GUIDE_HREF);
   }
