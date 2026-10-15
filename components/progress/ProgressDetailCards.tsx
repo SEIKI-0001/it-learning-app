@@ -7,10 +7,11 @@
 //   - 次の解放（ランク・モチットの成長）
 // 数値の計算は既存の判定（ExamReadiness / IntegratedLearningStatus / answers）をそのまま使う。
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import { EXAM_READINESS_CONFIG } from "@/lib/examReadiness/config";
+import type { ReferenceReadingOverview } from "@/lib/referenceBook";
 import type { ExamReadinessResult } from "@/types/examReadiness";
 import type { IntegratedLearningStatus } from "@/types/integratedStatus";
 import type { UserAnswer } from "@/types";
@@ -146,26 +147,111 @@ export function PendingBreakdownCard({
   );
 }
 
-// ───────────────────────── トピックの到達度 ─────────────────────────
+// ───────────────────────── 参考書の読了状況 ─────────────────────────
 
-/** 参考書インプットの内訳（参考書未設定なら null で出さない）。 */
-export type ReferenceInputSummary = {
-  percent: number;
-  doneChapters: number;
-  totalChapters: number;
-};
+const READING_STATE_LABEL = { read: "読了", reading: "読みかけ", unread: "未読" } as const;
+
+function monthDay(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+/** 参考書の読了状況（参考書が未設定なら出さない）。数え方は /plan・学習ペース判定と同じ節単位。 */
+export function ReadingStatusCard({
+  bookTitle,
+  overview,
+  className,
+}: {
+  bookTitle: string;
+  overview: ReferenceReadingOverview;
+  className?: string;
+}) {
+  const { progress, chapters, lastReadAt, nextChapterId } = overview;
+  const percent = Math.round(progress.ratio * 100);
+  return (
+    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="reading-status-heading">
+      <div className={t.sheetHead}>
+        <h2 id="reading-status-heading" className={t.sectionTitle}>
+          参考書の読了状況
+        </h2>
+      </div>
+      <p className={p.readingBook}>{bookTitle}</p>
+
+      <div className={p.readingSummary}>
+        <p className={p.readingPercent}>
+          <span className={`${t.mono} ${p.mono}`}>{percent}</span>
+          <span className={p.readingPercentUnit}>%</span>
+        </p>
+        <p className={p.readingCounts}>
+          節 <span className={t.mono}>{`${progress.done}/${progress.total}`}</span> 読了
+          <span className={p.readingSep}>・</span>
+          章 <span className={t.mono}>{`${progress.doneChapters}/${progress.totalChapters}`}</span>
+          <br />
+          {lastReadAt ? (
+            <>
+              最後の記録 <span className={t.mono}>{monthDay(lastReadAt)}</span>
+            </>
+          ) : (
+            "まだ読了の記録がありません"
+          )}
+        </p>
+      </div>
+      <span className={`${p.fieldBar} ${p.readingBar}`} aria-hidden>
+        <span className={p.fieldFill} style={{ width: `${percent}%` }} />
+      </span>
+
+      {/* PC の2列は上から下へ読む順に並べる */}
+      <ol
+        className={p.readingChapters}
+        style={{ "--reading-rows": Math.ceil(chapters.length / 2) } as CSSProperties}
+      >
+        {chapters.map((chapter) => (
+          <li
+            key={chapter.id}
+            className={`${p.readingChapter} ${chapter.id === nextChapterId ? p.readingNext : ""}`}
+          >
+            <span className={p.readingMark} data-state={chapter.state} aria-hidden />
+            <span className={p.readingTitle}>{chapter.title}</span>
+            <span className={p.readingCount}>
+              {chapter.state === "read" ? (
+                "読了"
+              ) : chapter.total > 1 ? (
+                <>
+                  <span className={t.mono}>{`${chapter.done}/${chapter.total}`}</span>節
+                </>
+              ) : (
+                READING_STATE_LABEL[chapter.state]
+              )}
+              {chapter.id === nextChapterId && <span className={p.readingNextTag}>次に読む</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      <div className={p.readingFoot}>
+        <p className={p.readingNote}>
+          今日の学習の「参考書でどこまで読みましたか？」で「全部」を選ぶと、その節が読了になります。合格準備度は問題の結果だけで判定し、読了は学習ペース（順調・遅れ）の判定に使います。
+        </p>
+        <Link href="/settings/reference-book" className={p.textLink}>
+          まとめて読了・修正
+          <Icon name="chevron-right" className={p.chev} />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+// ───────────────────────── トピックの到達度 ─────────────────────────
 
 export function TopicReachCard({
   status,
   totalTopicCount,
   loading,
-  referenceInput = null,
   className,
 }: {
   status: IntegratedLearningStatus | null;
   totalTopicCount: number;
   loading: boolean;
-  referenceInput?: ReferenceInputSummary | null;
   className?: string;
 }) {
   return (
@@ -185,17 +271,6 @@ export function TopicReachCard({
         </p>
       ) : (
         <TopicReachBody status={status} totalTopicCount={totalTopicCount} />
-      )}
-      {/* インプット進捗の内訳。主役は到達度なので、1行の補足にとどめる */}
-      {referenceInput && (
-        <Link href="/plan" className={p.referenceInput}>
-          <span>参考書インプット</span>
-          <span className={p.referenceInputValue}>
-            <span className={t.mono}>{referenceInput.percent}%</span>
-            （<span className={t.mono}>{referenceInput.doneChapters}</span>/
-            <span className={t.mono}>{referenceInput.totalChapters}</span>章読了）
-          </span>
-        </Link>
       )}
     </section>
   );

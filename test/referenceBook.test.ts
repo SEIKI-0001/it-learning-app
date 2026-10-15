@@ -11,6 +11,7 @@ import {
   pickNewerReferenceBook,
   referenceBookProgress,
   referenceBookRatioFromRow,
+  referenceReadingOverview,
   referenceTargetsForTopics,
   resolveReferenceGuide,
   setChapterRead,
@@ -312,6 +313,41 @@ describe("参考書の進捗", () => {
     const read = applyReadingLevel(book(), [{ chapterId: "ch1", sectionId: "s1" }], "all", NOW);
     const roundTrip = normalizeReferenceBook(JSON.parse(JSON.stringify(read)));
     expect(roundTrip.chapters[0].sections![0]).toMatchObject({ done: true, completedAt: NOW });
+  });
+});
+
+describe("参考書の読了状況（章ごと）", () => {
+  it("章ごとに 読了 / 読みかけ / 未読 と節の数を出す", () => {
+    let b = applyReadingLevel(book(), [{ chapterId: "ch1", sectionId: "s1" }], "all", NOW);
+    b = applyReadingLevel(b, [{ chapterId: "ch2", sectionId: "s3" }], "little", LATER);
+    const overview = referenceReadingOverview(b)!;
+    expect(overview.chapters).toEqual([
+      { id: "ch1", title: "第1章 ネットワーク", done: 1, total: 2, state: "reading" },
+      { id: "ch2", title: "第2章 セキュリティ", done: 0, total: 1, state: "reading" },
+      { id: "ch3", title: "第3章 経営", done: 0, total: 1, state: "unread" },
+    ]);
+    expect(overview.progress).toEqual(referenceBookProgress(b));
+    expect(overview.lastReadAt).toBe(LATER);
+    expect(overview.nextChapterId).toBe("ch1");
+  });
+
+  it("全部読み終えたら次の章は無い・記録が無ければ最終日は null", () => {
+    expect(referenceReadingOverview(book())!.lastReadAt).toBeNull();
+    const all = applyReadingLevel(
+      book(),
+      [
+        { chapterId: "ch1", sectionId: "s1" },
+        { chapterId: "ch1", sectionId: "s2" },
+        { chapterId: "ch2", sectionId: "s3" },
+        { chapterId: "ch3" },
+      ],
+      "all",
+      NOW,
+    );
+    const overview = referenceReadingOverview(all)!;
+    expect(overview.chapters.every((c) => c.state === "read")).toBe(true);
+    expect(overview.nextChapterId).toBeNull();
+    expect(referenceReadingOverview(null)).toBeNull();
   });
 });
 

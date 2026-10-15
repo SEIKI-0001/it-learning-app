@@ -12,7 +12,7 @@ import {
   type ProgressBootstrapCache,
 } from "@/lib/userSession";
 import { getAllTopics } from "@/lib/content";
-import { hasUsableReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import { hasUsableReferenceBook, referenceReadingOverview } from "@/lib/referenceBook";
 import { useReferenceBook } from "@/lib/useReferenceBook";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { getStreakMeta } from "@/lib/streak";
@@ -46,6 +46,7 @@ import CheckpointDetailSheet from "@/components/progress/CheckpointDetailSheet";
 import FirstRunGuide from "@/components/guide/FirstRunGuide";
 import {
   PendingBreakdownCard,
+  ReadingStatusCard,
   ReadinessBreakdownCard,
   RowListCard,
   StudyDaysCard,
@@ -236,22 +237,14 @@ export default function ProgressPage() {
     { id: "plan", title: "ロードマップ", detail: "チェックポイントの条件を見る", href: "/plan" },
   ];
 
-  // 参考書インプットの内訳（未設定なら出さない）。
-  const bookProgress =
+  // 参考書の読了状況（未設定なら出さない）。
+  const reading =
     referenceBook && hasUsableReferenceBook(referenceBook)
-      ? referenceBookProgress(referenceBook)
+      ? referenceReadingOverview(referenceBook)
       : null;
-  const referenceInput = bookProgress
-    ? {
-        percent: Math.round(bookProgress.ratio * 100),
-        doneChapters: bookProgress.doneChapters,
-        totalChapters: bookProgress.totalChapters,
-      }
-    : null;
 
-  // 内訳（分野別・トピック別）がどちらも出せない状態。参考書の内訳があるときは到達度カードを残す。
-  const breakdownPending =
-    !bootstrapLoading && !readiness && !status && !improvement && !referenceInput;
+  // 内訳（分野別・トピック別）がどちらも出せない状態。
+  const breakdownPending = !bootstrapLoading && !readiness && !status && !improvement;
 
   const openDetail = openCheckpointId
     ? buildCheckpointDetail(state, openCheckpointId, badgeSignals)
@@ -299,7 +292,6 @@ export default function ProgressPage() {
               status={status}
               totalTopicCount={topics.length}
               loading={bootstrapLoading}
-              referenceInput={referenceInput}
               className={p.spanTopics}
             />
           </>
@@ -310,6 +302,14 @@ export default function ProgressPage() {
           longestStreak={Math.max(getStreakMeta(progress).longestStreak, progress.streakCount)}
           className={breakdownPending ? p.spanFull : p.spanHistory}
         />
+
+        {reading && referenceBook && (
+          <ReadingStatusCard
+            bookTitle={referenceBook.title}
+            overview={reading}
+            className={p.spanFull}
+          />
+        )}
 
         <RowListCard title="モチットの成長" rows={unlocks} className={p.spanUnlocks} />
         <RowListCard title="くわしく見る" rows={links} grid className={p.spanLinks} guide="progress-links" />
