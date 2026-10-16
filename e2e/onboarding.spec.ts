@@ -1,18 +1,21 @@
 import { expect, test } from "@playwright/test";
 
 test("a new learner can complete onboarding and open today's learning", async ({ page }) => {
+  // ログイン直後の「/」は紹介を挟まず初回設定へ進む。
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "ITパスポート学習コーチ" })).toBeVisible({
-    timeout: 15_000,
-  });
+  await expect(page).toHaveURL(/\/onboarding$/, { timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "試験はいつ受けますか？" })).toBeVisible();
 
-  await expect(page.getByRole("heading", { name: "まず、勉強の進め方を知ろう" })).toBeVisible();
-  await page.getByRole("link", { name: "1分で使い方を見る ▶" }).click();
-  await expect(page.getByRole("heading", { name: "勉強の進め方を知ろう" })).toBeVisible();
-  await page.getByRole("link", { name: "スキップして設定を始める" }).click();
-  await expect(
-    page.getByRole("heading", { name: "あなたに合わせて学習プランを作ります" }),
-  ).toBeVisible();
+  // 1画面1問。既定値のまま最後まで進める。
+  for (const heading of [
+    "1日にどれくらい勉強できますか？",
+    "今のITの知識はどのくらいですか？",
+    "どう進めたいですか？",
+    "使っている参考書はありますか？",
+  ]) {
+    await page.getByRole("button", { name: "次へ" }).click();
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+  }
 
   // 初回設定後は今日の学習に移動し、初回操作ガイドが開く。
   await page.getByRole("button", { name: /この内容でプランを作る/ }).click();

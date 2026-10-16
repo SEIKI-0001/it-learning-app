@@ -77,7 +77,7 @@ test("体験を最後まで進めると、続きのメリットと押しやす�
 
   // 体験から来たことと、この後の流れを示し、ログイン手段を最初の画面に入れる。
   await expect(page.getByRole("heading", { name: "登録して、学習を続けましょう" })).toBeVisible();
-  await expectInViewport(page, page.getByText(/Google ログインは現在準備中|Google でログイン/).first());
+  await expectInViewport(page, page.getByText(/Google ログインは現在準備中|Google で続ける/).first());
   await expect.poll(() => sent.some((s) => s.event === "view" && s.path === "/login")).toBe(true);
   await page.screenshot({ path: "test-results/login-from-trial-mobile.png" });
 
@@ -116,12 +116,13 @@ test("登録後、初回設定から最初の確認問題に答えるまでの�
 }) => {
   const sent = await captureFunnel(page);
   await page.goto("/onboarding");
-  await expect(page.getByRole("heading", { name: "あなたに合わせて学習プランを作ります" })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "試験はいつ受けますか？" })).toBeVisible({
     timeout: 30_000,
   });
   await expect.poll(() => events(sent)).toContain("onboarding_view");
 
-  await page.getByRole("button", { name: /この内容でプランを作る/ }).click();
+  // 途中の質問は既定値のまま「おまかせ」で完了できる。
+  await page.getByRole("button", { name: "残りはおまかせで始める" }).click();
   await expect(page).toHaveURL(/\/today\?guide=1$/);
   const guide = page.getByRole("dialog", { name: "ようこそ！ここが毎日のスタート地点です" });
   await guide.getByRole("button", { name: "スキップ", exact: true }).click();

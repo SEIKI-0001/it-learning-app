@@ -254,9 +254,15 @@ describe("TodayReferenceGuide", () => {
   });
 });
 
+// 初回設定は1画面1問。参考書は最後の質問なので「次へ」で送ってから選ぶ。
+function goToBookStep() {
+  for (let i = 0; i < 4; i++) fireEvent.click(screen.getByRole("button", { name: "次へ" }));
+}
+
 describe("オンボーディングの参考書選択", () => {
   it("「あとで設定する」のままでも完了でき、参考書は保存しない", () => {
     render(<OnboardingPage />);
+    goToBookStep();
     expect(screen.getByRole("radio", { name: "あとで設定する" })).toHaveAttribute(
       "aria-checked",
       "true",
@@ -271,6 +277,7 @@ describe("オンボーディングの参考書選択", () => {
   it("プリセットを選ぶと章・節構成つきで保存する（プロフィールには持たない）", () => {
     const preset = referenceBookFromPreset(KITAMI)!;
     render(<OnboardingPage />);
+    goToBookStep();
 
     fireEvent.click(screen.getByRole("radio", { name: new RegExp(preset.title.slice(0, 10)) }));
     fireEvent.click(screen.getByRole("button", { name: "この内容でプランを作る" }));
