@@ -30,6 +30,7 @@ import ExamDateField from "@/components/settings/ExamDateField";
 
 // 初回設定。試験予定日・学習可能時間・理解度・苦手分野・学習スタイル・使用する参考書を取得し、
 // AIプランナー(lib/aiPlanner.ts)が使えるプロフィールとして保存する。
+// 1画面1問のステップ形式。どの問いも既定値があるので「残りはおまかせで始める」で途中からでも完了できる。
 // 保存後はすぐ今日の学習へ進む。
 // 参考書は UserProfile に持たず、既存の ReferenceBook（localStorage＋user_reference_books）を正とする。
 // 「あとで設定する」でも完了できる（未設定でも referenceHints のキーワード案内で学習できる）。
@@ -118,178 +119,244 @@ export default function OnboardingPage() {
     router.push(FIRST_RUN_GUIDE_HREF);
   }
 
+  // 1画面1問で進める。どの問いも既定値が入っているので「次へ」は常に押せる。
+  const [step, setStep] = useState(0);
+  const last = ONBOARDING_STEPS.length - 1;
+  const current = ONBOARDING_STEPS[step];
+  function go(next: number) {
+    setStep(next);
+    window.scrollTo({ top: 0 });
+  }
+
   return (
-    <main className="min-h-screen px-5 py-8">
-      <div className="mx-auto w-full max-w-3xl">
-        {/* 2/2（アバター選択）は Mochit 導入時に廃止したので、段数は表示しない。 */}
-        <p className="text-xs font-medium text-gray-500">初回設定</p>
-        <h1 className="mt-1 text-xl font-bold tracking-tight text-gray-900">
-          あなたに合わせて学習プランを作ります
-        </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          あとから変更できます。気軽に選んでください。
-        </p>
-
-        <div className="mt-8 space-y-8">
-          {/* 試験予定日 */}
-          <fieldset>
-            <legend className="mb-2 text-[15px] font-semibold text-gray-900">
-              試験予定日
-            </legend>
-            <ExamDateField choice={examChoice} onChange={setExamChoice} />
-          </fieldset>
-
-          {/* 学習可能時間 */}
-          <fieldset>
-            <legend className="mb-3 text-[15px] font-semibold text-gray-900">
-              1日の学習可能時間
-            </legend>
-            <p className="mb-1.5 text-sm text-gray-600">平日</p>
-            <div className="grid grid-cols-4 gap-2">
-              {WEEKDAY_OPTIONS.map((m) => (
-                <MinuteButton
-                  key={m}
-                  active={weekdayMinutes === m}
-                  onClick={() => setWeekdayMinutes(m)}
-                  label={`${m}分`}
-                />
-              ))}
-            </div>
-            <p className="mb-1.5 mt-3 text-sm text-gray-600">休日</p>
-            <div className="grid grid-cols-4 gap-2">
-              {HOLIDAY_OPTIONS.map((m) => (
-                <MinuteButton
-                  key={m}
-                  active={holidayMinutes === m}
-                  onClick={() => setHolidayMinutes(m)}
-                  label={`${m}分`}
-                />
-              ))}
-            </div>
-          </fieldset>
-
-          {/* 現在の理解度 */}
-          <fieldset>
-            <legend className="mb-3 text-[15px] font-semibold text-gray-900">
-              今の理解度は？（0〜5）
-            </legend>
-            <div className="flex justify-between gap-2">
-              {[0, 1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setConfidence(n)}
-                  className={`h-12 flex-1 rounded-lg border text-base tabular-nums transition active:scale-[0.98] ${
-                    confidence === n
-                      ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
-                      : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          {/* 苦手分野 */}
-          <fieldset>
-            <legend className="mb-1 text-[15px] font-semibold text-gray-900">
-              苦手・不安な分野は？
-            </legend>
-            <p className="mb-3 text-xs text-gray-500">複数選べます（なくてもOK）</p>
-            <div className="grid grid-cols-1 gap-2.5">
-              {FIELDS.map((field) => {
-                const active = weakFields.includes(field);
-                return (
-                  <button
-                    key={field}
-                    type="button"
-                    onClick={() => toggleField(field)}
-                    aria-pressed={active}
-                    className={`flex items-center justify-between rounded-lg border px-4 py-3.5 text-left text-[15px] transition active:scale-[0.99] ${
-                      active
-                        ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {FIELD_LABELS[field]}
-                    {active && (
-                      <Icon name="check" className="h-4 w-4 text-brand-700" strokeWidth={2.2} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-
-          {/* 学習スタイル */}
-          <fieldset>
-            <legend className="mb-3 text-[15px] font-semibold text-gray-900">
-              学習スタイルの希望
-            </legend>
-            <div className="grid grid-cols-1 gap-2.5">
-              {STYLES.map((style) => {
-                const active = studyStyle === style;
-                return (
-                  <button
-                    key={style}
-                    type="button"
-                    onClick={() => setStudyStyle(style)}
-                    aria-pressed={active}
-                    className={`flex items-center justify-between rounded-lg border px-4 py-3.5 text-left text-[15px] transition active:scale-[0.99] ${
-                      active
-                        ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {STUDY_STYLE_LABELS[style]}
-                    {active && (
-                      <Icon name="check" className="h-4 w-4 text-brand-700" strokeWidth={2.2} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-
-          {/* 使用する参考書 */}
-          <fieldset>
-            <legend className="mb-1 text-[15px] font-semibold text-gray-900">
-              使用する参考書
-            </legend>
-            <p className="mb-3 text-xs text-gray-500">
-              選ぶと、毎日「参考書のどこを読むか」を案内します。
-              {bookOrderFlag() === "off" && "学習の順番はアプリが決めます。"}
-            </p>
-            <ReferenceBookPicker value={bookChoice} onChange={setBookChoice} allowLater />
-            {bookOrderOffered && (
-              <label className="mt-3 flex items-start gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900">
-                <input
-                  type="checkbox"
-                  checked={followBook}
-                  onChange={(e) => setFollowBook(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 shrink-0"
-                />
-                <span>
-                  この参考書の章・節の順に学ぶ（おすすめ）
-                  <span className="mt-0.5 block text-xs text-gray-600">
-                    新しく学ぶテーマを本の順に出します。復習や本に無い試験範囲の補足はアプリが組み込みます。あとで設定から変えられます。
-                  </span>
-                </span>
-              </label>
-            )}
-          </fieldset>
+    <main className="flex min-h-screen flex-col bg-white">
+      <header className="sticky top-0 z-10 border-b border-gray-100 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-12 w-full max-w-xl items-center gap-3 px-4">
+          {step > 0 ? (
+            <button
+              type="button"
+              onClick={() => go(step - 1)}
+              aria-label="前の質問へ"
+              className="-ml-1.5 rounded p-1.5 text-gray-500 hover:text-gray-900"
+            >
+              <Icon name="chevron-left" className="h-5 w-5" />
+            </button>
+          ) : (
+            <span className="text-sm font-semibold text-gray-900">初回設定</span>
+          )}
+          <div
+            className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100"
+            role="progressbar"
+            aria-label="初回設定の進み具合"
+            aria-valuemin={1}
+            aria-valuemax={ONBOARDING_STEPS.length}
+            aria-valuenow={step + 1}
+          >
+            <div
+              className="h-full rounded-full bg-gray-900 transition-[width] duration-300"
+              style={{ width: `${((step + 1) / ONBOARDING_STEPS.length) * 100}%` }}
+            />
+          </div>
+          <span className="text-xs tabular-nums text-gray-500">
+            {step + 1}/{ONBOARDING_STEPS.length}
+          </span>
         </div>
+      </header>
 
-        <button
-          type="button"
-          onClick={handleStart}
-          className="mt-9 w-full rounded-lg bg-gray-900 px-6 py-4 text-base font-semibold text-white transition hover:bg-black active:scale-[0.99]"
-        >
-          この内容でプランを作る
-        </button>
+      <div className="mx-auto w-full max-w-xl flex-1 px-4 pb-8 pt-6">
+        {step === 0 && (
+          <div className="mb-6 rounded-xl bg-brand-50 px-4 py-3.5">
+            <p className="text-sm font-semibold text-gray-900">登録ありがとうございます</p>
+            <p className="mt-0.5 text-sm leading-relaxed text-gray-600">
+              {ONBOARDING_STEPS.length}つの質問に答えると、試験日から逆算した学習プランを作ります。どれもあとから変えられます。
+            </p>
+          </div>
+        )}
+        <h1 className="text-xl font-bold leading-snug tracking-tight text-gray-900">
+          {current.title}
+        </h1>
+        {current.lead && <p className="mt-1.5 text-sm text-gray-600">{current.lead}</p>}
+
+        <div className="mt-6">
+          {current.id === "exam" && (
+            <ExamDateField choice={examChoice} onChange={setExamChoice} />
+          )}
+
+          {current.id === "time" && (
+            <div className="space-y-5">
+              <div>
+                <p className="mb-2 text-sm font-medium text-gray-700">平日</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {WEEKDAY_OPTIONS.map((m) => (
+                    <MinuteButton
+                      key={m}
+                      active={weekdayMinutes === m}
+                      onClick={() => setWeekdayMinutes(m)}
+                      label={`${m}分`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-medium text-gray-700">休日</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {HOLIDAY_OPTIONS.map((m) => (
+                    <MinuteButton
+                      key={m}
+                      active={holidayMinutes === m}
+                      onClick={() => setHolidayMinutes(m)}
+                      label={`${m}分`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {current.id === "level" && (
+            <div className="grid grid-cols-1 gap-2">
+              {CONFIDENCE_OPTIONS.map((option) => (
+                <ChoiceRow
+                  key={option.value}
+                  active={confidence === option.value}
+                  onClick={() => setConfidence(option.value)}
+                  label={option.label}
+                />
+              ))}
+            </div>
+          )}
+
+          {current.id === "focus" && (
+            <div className="space-y-6">
+              <div>
+                <p className="mb-2 text-sm font-medium text-gray-700">
+                  苦手・不安な分野
+                  <span className="ml-1.5 font-normal text-gray-500">複数可・なくてもOK</span>
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  {FIELDS.map((field) => (
+                    <ChoiceRow
+                      key={field}
+                      active={weakFields.includes(field)}
+                      onClick={() => toggleField(field)}
+                      label={FIELD_LABELS[field]}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-medium text-gray-700">進め方</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {STYLES.map((style) => (
+                    <ChoiceRow
+                      key={style}
+                      active={studyStyle === style}
+                      onClick={() => setStudyStyle(style)}
+                      label={STUDY_STYLE_LABELS[style]}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {current.id === "book" && (
+            <>
+              {bookOrderFlag() === "off" && (
+                <p className="-mt-3 mb-4 text-sm text-gray-600">学習の順番はアプリが決めます。</p>
+              )}
+              <ReferenceBookPicker value={bookChoice} onChange={setBookChoice} allowLater />
+              {bookOrderOffered && (
+                <label className="mt-3 flex items-start gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900">
+                  <input
+                    type="checkbox"
+                    checked={followBook}
+                    onChange={(e) => setFollowBook(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                  />
+                  <span>
+                    この参考書の章・節の順に学ぶ（おすすめ）
+                    <span className="mt-0.5 block text-xs text-gray-600">
+                      新しく学ぶテーマを本の順に出します。復習や本に無い試験範囲の補足はアプリが組み込みます。あとで設定から変えられます。
+                    </span>
+                  </span>
+                </label>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 操作ボタンは画面下に固定し、長い選択肢（参考書）でも探さずに押せるようにする */}
+      <div className="sticky bottom-0 border-t border-gray-100 bg-white/95 backdrop-blur">
+        <div className="mx-auto w-full max-w-xl px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
+          <button
+            type="button"
+            onClick={() => (step === last ? handleStart() : go(step + 1))}
+            className="w-full rounded-lg bg-gray-900 px-6 py-4 text-base font-semibold text-white transition hover:bg-black active:scale-[0.99]"
+          >
+            {step === last ? "この内容でプランを作る" : "次へ"}
+          </button>
+          {step < last && (
+            <button
+              type="button"
+              onClick={handleStart}
+              className="mt-1 w-full py-2 text-center text-sm text-gray-500 underline-offset-4 hover:text-gray-800 hover:underline"
+            >
+              残りはおまかせで始める
+            </button>
+          )}
+        </div>
       </div>
     </main>
+  );
+}
+
+const ONBOARDING_STEPS = [
+  { id: "exam", title: "試験はいつ受けますか？", lead: "決まっていなくても大丈夫です。" },
+  { id: "time", title: "1日にどれくらい勉強できますか？", lead: "毎日の学習量をこの時間に合わせます。" },
+  { id: "level", title: "今のITの知識はどのくらいですか？", lead: "近いものを1つ選んでください。" },
+  { id: "focus", title: "どう進めたいですか？", lead: "" },
+  {
+    id: "book",
+    title: "使っている参考書はありますか？",
+    lead: "選ぶと、毎日「参考書のどこを読むか」を案内します。なければ、そのままプランを作れます。",
+  },
+] as const;
+
+// 理解度は 0〜5 で保存する（UserProfile.confidence）。数字だけでは選びにくいので言葉で聞く。
+const CONFIDENCE_OPTIONS = [
+  { value: 0, label: "ITの用語はほとんど知らない" },
+  { value: 1, label: "聞いたことがある用語が少しある" },
+  { value: 2, label: "基本的な用語ならなんとなく分かる" },
+  { value: 3, label: "半分くらいは説明できる" },
+  { value: 4, label: "過去問をそこそこ解ける" },
+  { value: 5, label: "合格ラインに近い" },
+] as const;
+
+function ChoiceRow({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`flex items-center justify-between rounded-lg border px-4 py-3.5 text-left text-[15px] transition active:scale-[0.99] ${
+        active
+          ? "border-brand-600 bg-brand-50 font-semibold text-brand-800"
+          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+      }`}
+    >
+      {label}
+      {active && <Icon name="check" className="h-4 w-4 shrink-0 text-brand-700" strokeWidth={2.2} />}
+    </button>
   );
 }
 

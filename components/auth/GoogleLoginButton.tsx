@@ -9,7 +9,13 @@ import { FUNNEL_PLACEMENTS } from "@/lib/growth/funnel";
  * 認可後は /auth/callback に戻り、内部ユーザーへ写像される。
  * Supabase 未設定（NEXT_PUBLIC_* 無し）の環境では無効表示にする。
  */
-export default function GoogleLoginButton({ next = "/" }: { next?: string }) {
+export default function GoogleLoginButton({
+  next = "/",
+  label = "Google でログイン",
+}: {
+  next?: string;
+  label?: string;
+}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +54,7 @@ export default function GoogleLoginButton({ next = "/" }: { next?: string }) {
         className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-6 py-4 text-center text-base font-semibold text-gray-700 transition hover:bg-gray-50 active:scale-[0.98] disabled:opacity-60"
       >
         <GoogleMark />
-        {loading ? "Google に移動中…" : "Google でログイン"}
+        {loading ? "Google に移動中…" : label}
       </button>
       {error && (
         <p className="mt-2 text-center text-sm font-semibold text-rose-700">{error}</p>

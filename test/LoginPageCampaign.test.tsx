@@ -40,7 +40,7 @@ describe("campaign login continuation", () => {
       "/campaign/august-2026",
     );
     const lineLink = screen.getByRole("link", {
-      name: "LINE公式アカウントから始める",
+      name: "LINE で続ける",
     });
     expect(lineLink).toHaveClass("bg-white", "text-gray-900");
     expect(lineLink).not.toHaveClass("bg-[#06C755]");
@@ -50,7 +50,7 @@ describe("campaign login continuation", () => {
     render(await LoginPage({ searchParams: Promise.resolve({}) }));
     expect(screen.queryByText("ログイン後、購入ページへ戻ります")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "LINE公式アカウントから始める" }),
+      screen.getByRole("link", { name: "LINE で続ける" }),
     ).toHaveClass("bg-[#06C755]", "text-white");
   });
 
@@ -63,7 +63,7 @@ describe("campaign login continuation", () => {
       }),
     );
     expect(
-      screen.getByRole("link", { name: "LINE公式アカウントから始める" }),
+      screen.getByRole("link", { name: "LINE で続ける" }),
     ).toHaveClass("bg-[#06C755]", "text-white");
   });
 
