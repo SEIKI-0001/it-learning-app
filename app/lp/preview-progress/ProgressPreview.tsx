@@ -56,14 +56,21 @@ function seed(): void {
   const known = new Set(getAllTopics().map((t) => t.id));
   const learned = book.chapters.slice(0, 2).flatMap(chapterTopicIds).filter((id) => known.has(id));
   const now = Date.now();
-  const answers: UserAnswer[] = learned.flatMap((topicId, i) =>
-    [0, 1, 2].map((q) => ({
-      questionId: `${topicId}-preview-${q}`,
-      topicId,
-      isCorrect: (i + q) % 4 !== 0,
-      answeredAt: new Date(now - (i % 14) * DAY - q * 60_000).toISOString(),
-      tag: topicId,
-    })),
+  // 週を追うごとに解く量が増えていく8週間（今週がいちばん多い）。
+  const perWeek = [6, 9, 0, 12, 15, 14, 20, 26];
+  const answers: UserAnswer[] = perWeek.flatMap((count, w) =>
+    Array.from({ length: count }, (_, k) => {
+      const daysAgo = (7 - w) * 7 - (k % 6);
+      const topicId = learned[(w * 7 + k) % Math.max(1, learned.length)] ?? "preview";
+      return {
+        questionId: `${topicId}-preview-${w}-${k}`,
+        topicId,
+        // 正答率も少しずつ上がる
+        isCorrect: (k * 7 + w) % 10 < 5 + Math.floor(w / 2),
+        answeredAt: new Date(now - Math.max(0, daysAgo) * DAY - k * 60_000).toISOString(),
+        tag: topicId,
+      };
+    }),
   );
   const examDate = new Date(now + 45 * DAY).toISOString().slice(0, 10);
   const state = initializeAppState({
@@ -100,23 +107,34 @@ function seed(): void {
   });
   // ?pending を付けると「判定前」の表示になる。
   const pending = new URLSearchParams(window.location.search).has("pending");
+  // 8週間の推移（理解したトピック・合格準備度が少しずつ伸びる）。
+  const progressHistory = Array.from({ length: 9 }, (_, i) => {
+    const date = new Date(now - (8 - i) * 7 * DAY).toISOString().slice(0, 10);
+    return {
+      date,
+      readiness: pending || i < 3 ? null : [0, 0, 0, 41, 45, 49, 52, 57, 63][i],
+      understood: Math.round((status.basicUnderstoodTopicCount * (i + 1)) / 9),
+      examReady: Math.round((status.examReadyTopicCount * i) / 8),
+    };
+  });
   saveCachedProgressBootstrap(null, {
     integratedStatus: status,
     examReadiness: pending ? null : sampleReadiness(new Date(now)),
     planAdjustmentProposal: null,
+    progressHistory,
   });
 }
 
 function sampleReadiness(now: Date): ExamReadinessResult {
   const gate = { evaluated: true, cap: null, reasonCode: null };
   return {
-    score: 58,
+    score: 63,
     band: "approaching",
     confidence: { score: 55, level: "medium", reasons: [] },
     fields: [
-      { fieldId: "strategy", label: "ストラテジ", score: 64, evidenceSufficiency: 70, scoreGate: gate },
+      { fieldId: "strategy", label: "ストラテジ", score: 78, evidenceSufficiency: 70, scoreGate: gate },
       { fieldId: "management", label: "マネジメント", score: 47, evidenceSufficiency: 60, scoreGate: gate },
-      { fieldId: "technology", label: "テクノロジ", score: 58, evidenceSufficiency: 70, scoreGate: gate },
+      { fieldId: "technology", label: "テクノロジ", score: 64, evidenceSufficiency: 70, scoreGate: gate },
     ],
     components: { firstPerformance: 62, summativePerformance: null, topicMastery: 55, retention: 60, assessmentCoverage: 40 },
     calculation: { baseScore: 60, weakTopicPenalty: 2, preGateScore: 58, appliedCaps: [] },

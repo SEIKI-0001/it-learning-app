@@ -41,22 +41,17 @@ import LoadingScreen from "@/components/LoadingScreen";
 import type { OverviewKpis } from "@/components/progress/ProgressOverview";
 import CheckpointDetailSheet from "@/components/progress/CheckpointDetailSheet";
 import FirstRunGuide from "@/components/guide/FirstRunGuide";
+import { StudyDaysCard } from "@/components/progress/ProgressDetailCards";
 import {
-  ReadingDetailCard,
-  recentStudySummary,
-  StudyDaysCard,
-  TopicReachCard,
-} from "@/components/progress/ProgressDetailCards";
-import {
+  GrowthCard,
+  HeroCard,
   LinkRow,
-  MetricTiles,
-  MiniBar,
-  MiniStack,
   RoadCard,
-  SummaryCard,
-  WeekDots,
-  type MetricTile,
+  StatusCard,
+  type NextAction,
 } from "@/components/progress/ProgressCompact";
+import { badgeActionHref } from "@/components/badges/BadgeList";
+import { nextMilestone, progressTrend, weeklyAnswerBuckets } from "@/lib/progressGrowth";
 import c from "@/components/progress/progressCompact.module.css";
 import t from "@/components/today/todayView.module.css";
 
@@ -116,6 +111,7 @@ export default function ProgressPage() {
             integratedStatus: data.integratedStatus,
             examReadiness: data.examReadiness,
             planAdjustmentProposal: data.planAdjustmentProposal,
+            progressHistory: data.progressHistory,
           });
         }
         if (data?.userId) bootstrappedKeyRef.current = data.userId;
@@ -230,84 +226,31 @@ export default function ProgressPage() {
   const now = new Date();
   const dateLabel = `${now.getMonth() + 1}/${now.getDate()} 時点`;
 
-  // ── 指標タイル（押すと下に詳細を開く） ──
-  const study = recentStudySummary(state.answers, now);
-  const totalTopics = topics.length;
-  const share = (n: number) => (totalTopics > 0 ? (n / totalTopics) * 100 : 0);
-  const tiles: MetricTile[] = [
-    {
-      id: "topics",
-      label: "理解したトピック",
-      value: status ? (
-        <>
-          {status.basicUnderstoodTopicCount}
-          <small>/{totalTopics}</small>
-        </>
-      ) : (
-        "—"
-      ),
-      sub:
-        status && status.weakTopicCount > 0 ? (
-          <span className={c.tileWarn}>苦手 {status.weakTopicCount}件</span>
-        ) : status ? (
-          `本番対応OK ${status.examReadyTopicCount}`
-        ) : (
-          "問題に答えると出ます"
-        ),
-      visual: status ? (
-        <MiniStack
-          parts={[
-            { value: share(status.examReadyTopicCount), tone: "ready" },
-            {
-              value: share(Math.max(0, status.basicUnderstoodTopicCount - status.examReadyTopicCount)),
-              tone: "basic",
-            },
-            { value: share(status.reviewNeededTopicCount + status.weakTopicCount), tone: "work" },
-          ]}
-        />
-      ) : null,
-      detail: <TopicReachCard status={status} totalTopicCount={totalTopics} loading={bootstrapLoading} />,
-    },
-    {
-      id: "days",
-      label: "学習した日",
-      value: (
-        <>
-          {study.studyDays}
-          <small>日</small>
-        </>
-      ),
-      sub: progress.streakCount > 0 ? `${progress.streakCount}日連続` : "直近8週",
-      visual: <WeekDots days={study.last7} />,
-      detail: (
-        <StudyDaysCard
-          answers={state.answers}
-          streak={progress.streakCount}
-          longestStreak={Math.max(getStreakMeta(progress).longestStreak, progress.streakCount)}
-        />
-      ),
-    },
-    ...(reading && referenceBook
-      ? [
-          {
-            id: "book",
-            label: "参考書",
-            value: (
-              <>
-                {Math.round(reading.progress.ratio * 100)}
-                <small>%</small>
-              </>
-            ),
-            sub: (() => {
-              const next = reading.chapters.find((ch) => ch.id === reading.nextChapterId);
-              return next ? `次 ${next.title}` : "読了";
-            })(),
-            visual: <MiniBar percent={Math.round(reading.progress.ratio * 100)} />,
-            detail: <ReadingDetailCard bookTitle={referenceBook.title} overview={reading} />,
-          },
-        ]
-      : []),
-  ];
+  // ── 次にやること（1つだけ） ──
+  const firstMissing = gate.missingBadges.find((b) => !conditionMetIds.has(b.id)) ?? null;
+  const nextAction: NextAction =
+    gate.finalExamUnlocked && !gate.finalExamPassed
+      ? {
+          label: `CP${current.order}の突破試験に挑戦する`,
+          sub: current.finalExam
+            ? `${current.finalExam.questionCount}問中${current.finalExam.passThreshold}問以上で合格`
+            : null,
+          href: `/checkpoint/${current.id}/final`,
+        }
+      : improvement
+        ? { label: improvement.label, sub: "合格準備度がいちばん伸びるところ", href: improvement.href }
+        : firstMissing
+          ? { label: firstMissing.label, sub: firstMissing.conditionLabel, href: badgeActionHref(firstMissing) }
+          : { label: "今日の学習を進める", sub: null, href: "/today" };
+
+  // ── 成長 ──
+  const history = bootstrap?.progressHistory ?? [];
+  const trend = progressTrend(history, now, {
+    readiness: readiness?.score ?? null,
+    understood: status?.basicUnderstoodTopicCount ?? null,
+  });
+  const weeks = weeklyAnswerBuckets(state.answers, now);
+  const longestStreak = Math.max(getStreakMeta(progress).longestStreak, progress.streakCount);
 
   const compactLinks = [
     { id: "journal", title: "学習の記録", href: "/journal" },
@@ -321,17 +264,13 @@ export default function ProgressPage() {
     <main className={t.view}>
       <div className={`${t.inner} ${c.layout}`}>
         <h1 className="sr-only">進捗</h1>
-        <SummaryCard
+        <HeroCard
           dateLabel={dateLabel}
           readiness={readiness}
-          readinessNote={
-            readiness?.score != null ? kpis.readiness.bandLabel : "問題に答えると判定が始まります"
-          }
-          improvement={improvement}
-          exam={kpis.exam}
-          pace={kpis.pace}
-          proposalHref={kpis.proposalHref}
-          className={c.spanSummary}
+          weekDelta={trend.readinessWeekDelta}
+          series={trend.readinessSeries.map((point) => point.value)}
+          nextAction={nextAction}
+          className={c.spanHero}
         />
         <RoadCard
           checkpoints={CHECKPOINTS}
@@ -340,14 +279,33 @@ export default function ProgressPage() {
           gate={gate}
           earnedBadges={earnedRequired}
           conditionMetIds={conditionMetIds}
-          examDateLabel={profile?.examDate ? (() => {
+          examDateShort={profile?.examDate ? (() => {
             const d = new Date(`${profile.examDate}T00:00:00`);
             return `${d.getMonth() + 1}/${d.getDate()}`;
           })() : null}
+          exam={kpis.exam}
+          pace={kpis.pace}
+          proposalHref={kpis.proposalHref}
           onSelectCheckpoint={setOpenCheckpointId}
           className={c.spanRoad}
         />
-        <MetricTiles tiles={tiles} className={c.spanFull} />
+        <StatusCard
+          readiness={readiness}
+          status={status}
+          totalTopicCount={topics.length}
+          reading={reading}
+          bookTitle={referenceBook?.title ?? null}
+          className={c.spanStatus}
+        />
+        <GrowthCard
+          weeks={weeks}
+          streak={progress.streakCount}
+          longestStreak={longestStreak}
+          understoodGrowth={trend.understoodGrowth}
+          milestone={status ? nextMilestone(status.basicUnderstoodTopicCount) : null}
+          days={<StudyDaysCard answers={state.answers} streak={progress.streakCount} longestStreak={longestStreak} />}
+          className={c.spanGrowth}
+        />
         <LinkRow links={compactLinks} className={c.spanFull} />
       </div>
       {openDetail && (

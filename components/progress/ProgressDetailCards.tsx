@@ -226,7 +226,7 @@ export function ReadingStatusCard({
   );
 }
 
-function ReadingDetailBody({
+export function ReadingDetailBody({
   bookTitle,
   overview,
 }: {
