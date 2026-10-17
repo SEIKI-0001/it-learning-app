@@ -91,7 +91,7 @@ export function RetryChoices({ topics, intervals, tryHref }: { topics: number; i
       title: '「覚えた」を、「説明できる」に。',
       body: '用語の暗記だけでは、聞かれ方が変わると迷います。動かせる教材で仕組みを確かめてから、問題に戻ってみましょう。',
       app: `全${topics}トピックが「操作する→画面の変化で気づく」の順。AI採点で、自分の言葉で説明できるかも試せます。`,
-      action: 'まずはCPU・メモリ・ストレージを、模型で体験。',
+      action: 'まずはIPアドレスとDNSを、模型で体験。',
     },
     {
       label: '苦手な分野が残っていた',

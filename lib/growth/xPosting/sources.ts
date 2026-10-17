@@ -34,7 +34,7 @@ export function availableSources(theme: Theme, slot: string): Source[] {
     sources = acronyms.map(w => ({ id: `${theme}-${w.id}`, theme, text: `${theme === "challenge" ? "週末チャレンジ：意味を思い出せますか？\n" : ""}${w.acronym}（${w.japanese}）\n${w.oneLine}`, evidence: `data/wordlist/itpassAcronyms.json#${w.id}`, path: theme === "challenge" ? "/kakomon" : "/words", rights: "app_original" }));
   } else if (theme === "service") {
     // The LP currently offers a free public lesson, not an anonymous readiness diagnosis.
-    sources = [{ id: "service-trial-core", theme, text: "CPU・メモリ・ストレージの違いを、模型で確かめてみませんか。資格もちっとの教材を登録不要で無料体験できます。", evidence: "app/lp/try/page.tsx", path: "/lp/try", rights: "app_original" }, { id: "service-learning", theme, text: "ITパスポートの学習に。資格もちっとでは、教材と公式過去問で学べます。無料で使える範囲と料金はサービス紹介ページで確認できます。", evidence: "app/lp/page.tsx", path: "/lp", rights: "app_original" }];
+    sources = [{ id: "service-trial-core", theme, text: "DNSがなぜ必要か、URLを入力してからページが出るまでを模型で確かめてみませんか。資格もちっとの教材を登録不要で無料体験できます。", evidence: "app/lp/try/page.tsx", path: "/lp/try", rights: "app_original" }, { id: "service-learning", theme, text: "ITパスポートの学習に。資格もちっとでは、教材と公式過去問で学べます。無料で使える範囲と料金はサービス紹介ページで確認できます。", evidence: "app/lp/page.tsx", path: "/lp", rights: "app_original" }];
   } else {
     // Saturday uses learning know-how, without generating unverified latest exam news.
     sources = studyTips.map((text, i) => ({ id: `${theme}-tip-${i}`, theme, text, evidence: "app/guide/it-passport-study-method/page.tsx", path: "/guide/it-passport-study-method", rights: "app_original" }));

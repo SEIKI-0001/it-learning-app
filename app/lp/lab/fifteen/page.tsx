@@ -169,7 +169,7 @@ export default function FifteenPage() {
                 </div>
                 <div className="task">
                   <span className="box" />
-                  <span className="t">体験でまなぶ「CPU・メモリ・ストレージ」</span>
+                  <span className="t">体験でまなぶ「IPアドレスとDNS」</span>
                   <span className="min">8分</span>
                 </div>
                 <div className="task">
