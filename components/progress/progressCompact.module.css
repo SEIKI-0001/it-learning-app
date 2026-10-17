@@ -1,6 +1,55 @@
-/* /progress ダッシュボード。色トークンは todayView.module.css の .view が定義する。
+/* /progress ダッシュボード。色トークンは todayView.module.css の .view が定義し、
+   この画面では .theme（アイスブルー）で上書きする。ダークは <html data-surface="dark">（lib/colorScheme）。
    色は状態にだけ使う: 得意・達成=緑 / まずまず・現在地=青 / 要強化・苦手=橙 / これから=灰。
+   状態3色はライト・ダークとも色覚の違いで区別できることを検証済み（橙は文字ラベルを必ず併記）。
    面の装飾（影・グラデーション）はしない。 */
+
+main.theme {
+  --canvas: #fcfeff;
+  --wash: #e4eff8;
+  --wash-line: #d9e5ee;
+  --line: #d9e5ee;
+  --line-strong: #aabfcf;
+  --ink: #152c40;
+  --ink-2: #425d72;
+  --ink-3: #586f82;
+  --blue: #175cd3;
+  --blue-700: #184ca4;
+  --blue-soft: #dfebff;
+  --green: #0e8a6a;
+  --vocab: #0e8a6a;
+  --vocab-700: #07513f;
+  --vocab-soft: #ddf2e9;
+  --orange: #d78b17;
+  --orange-700: #8d5109;
+  --orange-soft: #fff0d5;
+  --color-brand-600: #175cd3;
+  --color-brand-700: #184ca4;
+  color: var(--ink);
+}
+
+:global(html[data-surface="dark"]) main.theme {
+  --canvas: #172231;
+  --wash: #1e2b3d;
+  --wash-line: #2a3a4f;
+  --line: #2a3a4f;
+  --line-strong: #4a5d75;
+  --ink: #eef3fa;
+  --ink-2: #b8c6d8;
+  --ink-3: #8fa1b8;
+  --blue: #5b80ee;
+  --blue-700: #a9c0ff;
+  --blue-soft: #22355a;
+  --green: #2a9d7e;
+  --vocab: #2a9d7e;
+  --vocab-700: #7fdcc0;
+  --vocab-soft: #183a34;
+  --orange: #c9792e;
+  --orange-700: #f2b67a;
+  --orange-soft: #3b2a1c;
+  --color-brand-600: #3d6be0;
+  --color-brand-700: #2f59c4;
+}
 
 .layout {
   display: grid;
@@ -987,6 +1036,48 @@ a.todoRow:hover .todoTitle {
 
 .link:last-child:nth-child(odd) {
   grid-column: 1 / -1;
+}
+
+/* ───────── 画面の色の切り替え ───────── */
+
+/* 右下は浮いているモチットと重なるので、左に寄せる */
+.scheme {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.schemeOptions {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--canvas);
+}
+
+.schemeOption {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.schemeOption[aria-checked="true"] {
+  background: var(--blue-soft);
+  color: var(--blue-700);
+  font-weight: 600;
+}
+
+.schemeOption:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
 }
 
 /* ───────── PC ───────── */

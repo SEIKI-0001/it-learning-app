@@ -72,7 +72,7 @@
 
 .pill[data-stage="cleared"] {
   background: color-mix(in srgb, var(--green) 16%, var(--canvas));
-  color: #047857;
+  color: var(--vocab-700, #047857);
 }
 
 .title {

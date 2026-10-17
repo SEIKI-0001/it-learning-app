@@ -75,6 +75,63 @@
     "Noto Sans CJK JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
+/* 画面の色（lib/colorScheme）。対応画面（いまは /progress）が表示中だけ html に data-surface を付ける。
+   値は components/progress/progressCompact.module.css の .theme（アイスブルー）と揃える。 */
+html[data-surface="light"] {
+  --background: #edf5fa;
+}
+
+html[data-surface="dark"] {
+  --background: #0f1722;
+  --foreground: #eef3fa;
+  color-scheme: dark;
+}
+
+/* ナビ（スマホの下部バー / PC の左サイドバー）のダーク */
+html[data-surface="dark"] nav[data-app-nav] {
+  border-color: #2a3a4f;
+  background: rgb(15 23 34 / 0.95);
+}
+
+html[data-surface="dark"] nav[data-app-nav] > div {
+  color: #eef3fa;
+}
+
+html[data-surface="dark"] nav[data-app-nav] > div > span:first-child {
+  background: #eef3fa;
+  color: #0f1722;
+}
+
+html[data-surface="dark"] nav[data-app-nav] a {
+  color: #b8c6d8;
+}
+
+html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] {
+  color: #eef3fa;
+}
+
+html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] > span {
+  background: #22355a;
+}
+
+@media (min-width: 1024px) {
+  html[data-surface="dark"] nav[data-app-nav] {
+    background: #121c29;
+  }
+
+  html[data-surface="dark"] nav[data-app-nav] a:hover {
+    background: #1e2b3d;
+  }
+
+  html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] {
+    background: #22355a;
+  }
+
+  html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] > span {
+    background: transparent;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

@@ -47,11 +47,13 @@ import {
   HeroCard,
   LinkRow,
   RoadCard,
+  SchemeToggle,
   StatusCard,
   type NextAction,
 } from "@/components/progress/ProgressCompact";
 import { badgeActionHref } from "@/components/badges/BadgeList";
 import { nextMilestone, progressTrend, weeklyAnswerBuckets } from "@/lib/progressGrowth";
+import { useColorScheme, useColorSchemeSurface } from "@/lib/colorScheme";
 import c from "@/components/progress/progressCompact.module.css";
 import t from "@/components/today/todayView.module.css";
 
@@ -82,6 +84,8 @@ export default function ProgressPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
   const { book: referenceBook } = useReferenceBook();
+  const { preference: schemePreference, scheme } = useColorScheme();
+  useColorSchemeSurface(scheme);
   // 前回のサーバー応答があれば即表示し（スケルトンを出さない）、最新値は背景で差し替える。
   // 初回描画は LoadingScreen（state===undefined）のため、遅延初期化でも hydration は一致する。
   const [bootstrap, setBootstrap] = useState<ProgressBootstrapCache | null>(() =>
@@ -261,7 +265,7 @@ export default function ProgressPage() {
   ];
 
   return (
-    <main className={t.view}>
+    <main className={`${t.view} ${c.theme}`}>
       <div className={`${t.inner} ${c.layout}`}>
         <h1 className="sr-only">進捗</h1>
         <HeroCard
@@ -303,10 +307,11 @@ export default function ProgressPage() {
           longestStreak={longestStreak}
           understoodGrowth={trend.understoodGrowth}
           milestone={status ? nextMilestone(status.basicUnderstoodTopicCount) : null}
-          days={<StudyDaysCard answers={state.answers} streak={progress.streakCount} longestStreak={longestStreak} />}
+          days={<StudyDaysCard stacked answers={state.answers} streak={progress.streakCount} longestStreak={longestStreak} />}
           className={c.spanGrowth}
         />
         <LinkRow links={compactLinks} className={c.spanFull} />
+        <SchemeToggle preference={schemePreference} className={c.spanFull} />
       </div>
       {openDetail && (
         <CheckpointDetailSheet

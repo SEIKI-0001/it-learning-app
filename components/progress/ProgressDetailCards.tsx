@@ -483,11 +483,14 @@ export function StudyDaysCard({
   answers,
   streak,
   longestStreak,
+  stacked = false,
   className,
 }: {
   answers: UserAnswer[];
   streak: number;
   longestStreak: number;
+  /** 狭い枠に入れるとき、カレンダーと数字を縦に積む */
+  stacked?: boolean;
   className?: string;
 }) {
   const [picked, setPicked] = useState<NonNullable<HeatDay> | null>(null);
@@ -514,7 +517,7 @@ export function StudyDaysCard({
           直近{HEAT_WEEKS}週で <span className={t.mono}>{studyDays}</span>日
         </span>
       </div>
-      <div className={p.history}>
+      <div className={`${p.history} ${stacked ? p.historyStacked : ""}`}>
         <div className={p.heatBlock}>
           <div
             className={p.heat}
