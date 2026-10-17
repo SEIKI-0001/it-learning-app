@@ -140,7 +140,7 @@ function CeoLab() {
       {bothTried && (
         <div className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-sm leading-relaxed text-brand-900 ring-1 ring-brand-200">
           <InlineIcon name="lightbulb" /><b>気づいた？</b>　同じ「IT導入」でも、<b>目的 → 手段 → 効果</b>の順で考えるかどうかで結末が正反対。
-          ITは<b>目的ではなく手段</b>——この考え方が<b>システム戦略</b>です。ITで会社を変える取り組みは <b>DX</b> とも呼ばれます。
+          ITは<b>目的ではなく手段</b>——この考え方が<b>システム戦略</b>です。経営戦略に合わせて、ITをどう使うかの全体像を先に決めます。
           会社では、経営戦略に合わせて情報システム戦略を立てる責任者を <b>CIO（最高情報責任者）</b>といい、経営層の一員が務めます。
         </div>
       )}

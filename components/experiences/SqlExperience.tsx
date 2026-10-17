@@ -330,7 +330,7 @@ export default function SqlExperience() {
           ))}
         </ul>
         <p className="mt-2 text-xs leading-relaxed text-gray-500">
-          ※ 行＝レコード（1件分）、列＝フィールド（項目）。試験では SELECT がいちばんよく出ます。
+          ※ 行＝レコード（1件分）、列＝フィールド（項目）。試験ではSQLの書き方より、行を取り出す（選択）・列を取り出す（射影）といった表の操作の意味がよく問われます。
         </p>
       </Panel>
     </div>

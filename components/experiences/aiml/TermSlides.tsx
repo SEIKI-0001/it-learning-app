@@ -39,7 +39,7 @@ export function TermMap({ step }: { step: number }) {
           </NestBox>
         </NestBox>
       </div>
-      <Takeaway>AI ⊃ 機械学習 ⊃ ディープラーニング ⊃ 生成AI。ルールどおりに動くだけのAIは機械学習の外</Takeaway>
+      <Takeaway>AI ⊃ 機械学習 ⊃ ディープラーニング。いまの生成AIの多くはディープラーニングで作られている。ルールどおりに動くだけのAIは機械学習の外</Takeaway>
     </Panel>
   );
 }
