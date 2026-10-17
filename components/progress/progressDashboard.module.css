@@ -1459,6 +1459,12 @@ button.textLink {
   padding: 0 18px 16px;
 }
 
+.readingDetailBare .readingBook {
+  margin-top: 8px;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .readingBook {
   margin: 0;
   padding-top: 12px;

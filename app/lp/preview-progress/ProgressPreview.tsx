@@ -10,6 +10,7 @@ import { initializeAppState, saveAppState } from "@/lib/storage";
 import { saveCachedProgressBootstrap } from "@/lib/userSession";
 import type { ReferenceBook, ReferenceReadTarget } from "@/types/referenceBook";
 import type { UserAnswer } from "@/types";
+import type { ExamReadinessResult } from "@/types/examReadiness";
 
 // サンプル: かやのき先生の本を前から読み進め、2章読了・3章は途中。
 // 読んだ章のトピックは学習済み・確認問題に回答済み、という「ふつうに使っている人」の状態を作る。
@@ -81,7 +82,7 @@ function seed(): void {
   state.answers = answers;
   saveAppState(state);
 
-  // 統合進捗（トピック到達度）。合格準備度は判定材料不足の扱い（null）にする。
+  // 統合進捗（トピック到達度）と合格準備度のサンプル。
   const topics = getAllTopics().map((t) => ({ id: t.id, field: t.field, title: t.title }));
   const stages = ["basic_understood", "exam_ready", "review_needed", "basic_understood", "weak"] as const;
   const status = computeIntegratedStatus({
@@ -97,11 +98,38 @@ function seed(): void {
     referenceBookRatio: null,
     examReadiness: null,
   });
+  // ?pending を付けると「判定前」の表示になる。
+  const pending = new URLSearchParams(window.location.search).has("pending");
   saveCachedProgressBootstrap(null, {
     integratedStatus: status,
-    examReadiness: null,
+    examReadiness: pending ? null : sampleReadiness(new Date(now)),
     planAdjustmentProposal: null,
   });
+}
+
+function sampleReadiness(now: Date): ExamReadinessResult {
+  const gate = { evaluated: true, cap: null, reasonCode: null };
+  return {
+    score: 58,
+    band: "approaching",
+    confidence: { score: 55, level: "medium", reasons: [] },
+    fields: [
+      { fieldId: "strategy", label: "ストラテジ", score: 64, evidenceSufficiency: 70, scoreGate: gate },
+      { fieldId: "management", label: "マネジメント", score: 47, evidenceSufficiency: 60, scoreGate: gate },
+      { fieldId: "technology", label: "テクノロジ", score: 58, evidenceSufficiency: 70, scoreGate: gate },
+    ],
+    components: { firstPerformance: 62, summativePerformance: null, topicMastery: 55, retention: 60, assessmentCoverage: 40 },
+    calculation: { baseScore: 60, weakTopicPenalty: 2, preGateScore: 58, appliedCaps: [] },
+    evidence: { uniqueQuestionCount: 60, weightedEvidenceUnits: 80, summativeSessionCount: 1, summativeSessionIds: [], evidenceRevision: 1 },
+    weakTopics: [],
+    primaryImprovement: { code: "improve_field", fieldId: "management" },
+    modelVersion: "preview",
+    examSchemeVersion: "ip-3field-2026",
+    calculationReferenceTime: now.toISOString(),
+    calculatedAt: now.toISOString(),
+    validUntil: null,
+    snapshotDate: now.toISOString().slice(0, 10),
+  };
 }
 
 export default function ProgressPreview() {

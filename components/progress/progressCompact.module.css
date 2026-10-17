@@ -1,0 +1,650 @@
+/* /progress 簡潔版。色トークンは todayView.module.css の .view が定義する。
+   色は「現在地・進行=青 / 達成=緑 / 注意=橙」だけに使い、面の装飾はしない。 */
+
+.layout {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--canvas);
+}
+
+.label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.date {
+  font-weight: 400;
+}
+
+.chev {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.chevOpen {
+  transform: rotate(180deg);
+}
+
+.bar {
+  position: relative;
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--blue);
+}
+
+/* ───────── 1. 要約 ───────── */
+
+.summary {
+  display: grid;
+  gap: 16px;
+}
+
+.score {
+  margin: 6px 0 0;
+  font-family: var(--num);
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.scoreUnit {
+  margin-left: 4px;
+  color: var(--ink-3);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.scorePending {
+  margin: 8px 0 0;
+  color: var(--ink-2);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.scoreNote {
+  margin: 6px 0 0;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.fields {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 6.5em minmax(0, 1fr) 2em;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.fieldName {
+  color: var(--ink-2);
+}
+
+.fieldScore {
+  text-align: right;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid var(--line);
+}
+
+.stat {
+  min-width: 0;
+  padding: 12px 0 0;
+}
+
+.stat + .stat {
+  padding-left: 16px;
+  border-left: 1px solid var(--line);
+}
+
+.stat dt {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.stat dd {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  margin: 4px 0 0;
+  font-family: var(--num);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.statUnit {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.statSub {
+  margin-left: 8px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.stat dd.statWord {
+  font-family: var(--sans);
+  font-size: 14px;
+}
+
+.statWord[data-tone="good"] {
+  color: var(--vocab);
+}
+
+.statWord[data-tone="warn"] {
+  color: var(--orange-700);
+}
+
+.statLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--blue-700);
+  font-family: var(--sans);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.improve {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 -18px -18px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.improve:hover {
+  background: var(--wash);
+}
+
+.improveLabel {
+  flex-shrink: 0;
+  color: var(--blue-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.improveText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ───────── 2. 道のり＋いまの目標 ───────── */
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.headMeta {
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.goal {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.goalCode {
+  color: var(--blue-700);
+  font-family: var(--num);
+  font-size: 14px;
+}
+
+.road {
+  display: grid;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stop {
+  position: relative;
+  min-width: 0;
+}
+
+/* 点と点を結ぶ線（自分の点から右隣の点まで） */
+.stop:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--line);
+}
+
+.stop[data-state="done"]::after {
+  background: var(--green);
+}
+
+.stopButton {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+span.stopButton {
+  cursor: default;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--canvas);
+}
+
+.stop[data-state="done"] .dot {
+  border-color: var(--green);
+  background: var(--green);
+}
+
+.stop[data-state="now"] .dot {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-soft);
+}
+
+.stop[data-state="exam"] .dot {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.stopCode {
+  color: var(--ink-3);
+  font-family: var(--num);
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+
+.stop[data-state="now"] .stopCode {
+  color: var(--blue-700);
+  font-weight: 600;
+}
+
+.stopButton:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.todo {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.todoRow {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto 14px;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+li:last-child > .todoRow,
+.todoRow:last-child {
+  border-bottom: 0;
+}
+
+a.todoRow:hover .todoTitle {
+  color: var(--blue-700);
+}
+
+.todoRow[data-done] {
+  grid-template-columns: 16px minmax(0, 1fr);
+  color: var(--ink-3);
+}
+
+.check {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+}
+
+.todoRow[data-done] .check {
+  border-color: var(--green);
+  background: var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 10.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat;
+}
+
+.todoTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todoSub {
+  max-width: 14em;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.challenge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--color-brand-600);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ───────── 3. 指標タイル ───────── */
+
+.tilesWrap {
+  display: grid;
+  gap: 12px;
+}
+
+.tiles {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--line);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  padding: 14px;
+  border: 0;
+  background: var(--canvas);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tile:hover {
+  background: #fbfcfe;
+}
+
+.tile[data-selected] {
+  background: var(--wash);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.tileLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.tileValue {
+  margin-top: 4px;
+  font-family: var(--num);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.tileValue small {
+  margin-left: 2px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tileSub {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tileWarn {
+  color: var(--orange-700);
+}
+
+.miniStack {
+  display: flex;
+  width: 100%;
+  height: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.miniStack [data-tone="ready"] {
+  background: var(--green);
+}
+
+.miniStack [data-tone="basic"] {
+  background: var(--blue);
+}
+
+.miniStack [data-tone="work"] {
+  background: var(--orange);
+}
+
+.weekDots {
+  display: flex;
+  gap: 3px;
+  margin-top: 8px;
+}
+
+.weekDots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.weekDots [data-on] {
+  background: var(--blue);
+}
+
+.tileBar {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.detail {
+  min-width: 0;
+}
+
+/* ───────── 4. くわしく見る ───────── */
+
+.links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--line);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--blue-700);
+}
+
+.link > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkMeta {
+  margin-left: auto;
+  color: var(--ink-3);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.link .chev {
+  margin-left: auto;
+  color: var(--ink-3);
+}
+
+.linkMeta + .chev {
+  margin-left: 0;
+}
+
+/* 奇数個のときは最後を横いっぱいに */
+.link:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+/* ───────── PC ───────── */
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+    padding-top: 32px;
+  }
+
+  .card {
+    padding: 22px 24px;
+  }
+
+  .improve {
+    margin: 0 -24px -22px;
+    padding: 12px 24px;
+  }
+
+  .spanSummary {
+    grid-column: span 5;
+  }
+
+  .spanRoad {
+    grid-column: span 7;
+  }
+
+  .spanFull {
+    grid-column: 1 / -1;
+  }
+
+  .tile {
+    padding: 16px 18px;
+  }
+
+  .tileValue {
+    font-size: 28px;
+  }
+
+  .stopCode {
+    font-size: 11.5px;
+  }
+
+  .links {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .link:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}

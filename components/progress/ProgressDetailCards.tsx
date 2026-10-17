@@ -170,7 +170,7 @@ export function ReadingStatusCard({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const { progress, chapters, lastReadAt, nextChapterId } = overview;
+  const { progress, chapters, nextChapterId } = overview;
   const percent = Math.round(progress.ratio * 100);
   const next = chapters.find((c) => c.id === nextChapterId) ?? null;
   return (
@@ -219,57 +219,115 @@ export function ReadingStatusCard({
 
       {open && (
         <div id="reading-status-detail" className={p.readingDetail}>
-          <p className={p.readingBook}>
-            {bookTitle}
-            <span className={p.readingSep}>・</span>
-            節 <span className={t.mono}>{`${progress.done}/${progress.total}`}</span> 読了
-            {lastReadAt && (
-              <>
-                <span className={p.readingSep}>・</span>
-                最後の記録 <span className={t.mono}>{monthDay(lastReadAt)}</span>
-              </>
-            )}
-          </p>
-          {/* PC の2列は上から下へ読む順に並べる */}
-          <ol
-            className={p.readingChapters}
-            style={{ "--reading-rows": Math.ceil(chapters.length / 2) } as CSSProperties}
-          >
-            {chapters.map((chapter) => (
-              <li
-                key={chapter.id}
-                className={`${p.readingChapter} ${chapter.id === nextChapterId ? p.readingNext : ""}`}
-              >
-                <span className={p.readingMark} data-state={chapter.state} aria-hidden />
-                <span className={p.readingTitle}>{chapter.title}</span>
-                <span className={p.readingCount}>
-                  {chapter.state === "read" ? (
-                    "読了"
-                  ) : chapter.total > 1 ? (
-                    <>
-                      <span className={t.mono}>{`${chapter.done}/${chapter.total}`}</span>節
-                    </>
-                  ) : (
-                    READING_STATE_LABEL[chapter.state]
-                  )}
-                  {chapter.id === nextChapterId && <span className={p.readingNextTag}>次に読む</span>}
-                </span>
-              </li>
-            ))}
-          </ol>
-          <div className={p.readingFoot}>
-            <p className={p.readingNote}>
-              今日の学習の「参考書でどこまで読みましたか？」で「全部」を選ぶと、その節が読了になります。合格準備度は問題の結果だけで判定し、読了は学習ペース（順調・遅れ）の判定に使います。
-            </p>
-            <Link href="/settings/reference-book" className={p.textLink}>
-              まとめて読了・修正
-              <Icon name="chevron-right" className={p.chev} />
-            </Link>
-          </div>
+          <ReadingDetailBody bookTitle={bookTitle} overview={overview} />
         </div>
       )}
     </section>
   );
+}
+
+function ReadingDetailBody({
+  bookTitle,
+  overview,
+}: {
+  bookTitle: string;
+  overview: ReferenceReadingOverview;
+}) {
+  const { progress, chapters, lastReadAt, nextChapterId } = overview;
+  return (
+    <>
+      <p className={p.readingBook}>
+        {bookTitle}
+        <span className={p.readingSep}>・</span>
+        節 <span className={t.mono}>{`${progress.done}/${progress.total}`}</span> 読了
+        {lastReadAt && (
+          <>
+            <span className={p.readingSep}>・</span>
+            最後の記録 <span className={t.mono}>{monthDay(lastReadAt)}</span>
+          </>
+        )}
+      </p>
+      {/* PC の2列は上から下へ読む順に並べる */}
+      <ol
+        className={p.readingChapters}
+        style={{ "--reading-rows": Math.ceil(chapters.length / 2) } as CSSProperties}
+      >
+        {chapters.map((chapter) => (
+          <li
+            key={chapter.id}
+            className={`${p.readingChapter} ${chapter.id === nextChapterId ? p.readingNext : ""}`}
+          >
+            <span className={p.readingMark} data-state={chapter.state} aria-hidden />
+            <span className={p.readingTitle}>{chapter.title}</span>
+            <span className={p.readingCount}>
+              {chapter.state === "read" ? (
+                "読了"
+              ) : chapter.total > 1 ? (
+                <>
+                  <span className={t.mono}>{`${chapter.done}/${chapter.total}`}</span>節
+                </>
+              ) : (
+                READING_STATE_LABEL[chapter.state]
+              )}
+              {chapter.id === nextChapterId && <span className={p.readingNextTag}>次に読む</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <div className={p.readingFoot}>
+        <p className={p.readingNote}>
+          今日の学習の「参考書でどこまで読みましたか？」で「全部」を選ぶと、その節が読了になります。合格準備度は問題の結果だけで判定し、読了は学習ペース（順調・遅れ）の判定に使います。
+        </p>
+        <Link href="/settings/reference-book" className={p.textLink}>
+          まとめて読了・修正
+          <Icon name="chevron-right" className={p.chev} />
+        </Link>
+      </div>
+    </>
+  );
+}
+
+/** 参考書の読了状況の詳細だけのカード（/progress の指標タイルから開く）。 */
+export function ReadingDetailCard({
+  bookTitle,
+  overview,
+  className,
+}: {
+  bookTitle: string;
+  overview: ReferenceReadingOverview;
+  className?: string;
+}) {
+  return (
+    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="reading-detail-heading">
+      <div className={t.sheetHead}>
+        <h2 id="reading-detail-heading" className={t.sectionTitle}>
+          参考書の読了状況
+        </h2>
+        <span className={t.sectionMeta}>
+          <span className={t.mono}>{Math.round(overview.progress.ratio * 100)}</span>%
+        </span>
+      </div>
+      <div className={p.readingDetailBare}>
+        <ReadingDetailBody bookTitle={bookTitle} overview={overview} />
+      </div>
+    </section>
+  );
+}
+
+/** 直近8週の学習の要約（/progress の指標タイル用）。数え方は StudyDaysCard と同じ。 */
+export function recentStudySummary(answers: UserAnswer[], today: Date) {
+  const days = buildHeatWeeks(answers, today)
+    .flat()
+    .filter((day): day is NonNullable<HeatDay> => day !== null);
+  const totalAnswers = days.reduce((sum, day) => sum + day.answers, 0);
+  const totalCorrect = days.reduce((sum, day) => sum + day.correct, 0);
+  return {
+    studyDays: days.filter((day) => day.answers > 0).length,
+    totalAnswers,
+    accuracy: totalAnswers > 0 ? Math.round((totalCorrect / totalAnswers) * 100) : null,
+    /** 古い順の直近7日（今日が最後） */
+    last7: days.slice(-7).map((day) => day.answers > 0),
+  };
 }
 
 // ───────────────────────── トピックの到達度 ─────────────────────────
