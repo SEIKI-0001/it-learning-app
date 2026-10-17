@@ -65,6 +65,8 @@ export function AirconDioramaScene({
   caption?: (Omit<StageCaption, "at"> & { focus: AirconFocus }) | null;
 }) {
   const running = phase !== "idle" || resultShown;
+  // 再生前（まだ何も測っていない）。最後のまとめ（idle＋結果あり）とは分ける
+  const idle = phase === "idle" && !resultShown;
   const heat = Math.max(0, Math.min(1, (roomTemp - 25) / 5));
   const blowing = phase === "act" || phase === "result";
 
@@ -163,39 +165,54 @@ export function AirconDioramaScene({
       }
       labels={
         <>
-          <DioramaLabel at={{ ...SENSOR, z: SENSOR.z + 10 }} place="above">
-            <div className={styles.node} data-active={phase === "sense" ? "true" : "false"} data-testid="loop-sense">
-              <span className={styles.nodeHead}>① 温度センサー（入力）</span>
-              <span className={styles.nodeBody}>
-                測る：<b>{measured.toFixed(1)}℃</b>
-              </span>
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...BOARD, z: BOARD.z - 18 }} place="below">
-            <div className={styles.node} data-active={phase === "decide" ? "true" : "false"} data-testid="loop-decide">
-              <span className={styles.nodeHead}>② 制御部（マイコン）</span>
-              <span className={styles.nodeBody}>
-                目標より<b>+{diff.toFixed(1)}℃</b> → ファン「{fan}」
-              </span>
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...FAN_MID, z: FAN_MID.z + 30 }} place="above">
-            <div className={styles.node} data-active={phase === "act" ? "true" : "false"} data-testid="loop-act">
-              <span className={styles.nodeHead}>③ アクチュエータ（出力）</span>
-              <span className={styles.nodeBody}>
-                モーターでファンを「<b>{fan}</b>」
-              </span>
-            </div>
-          </DioramaLabel>
-          <DioramaLabel at={{ ...ROOM, z: 8 }} place="below">
-            <div className={styles.node} data-active={phase === "result" ? "true" : "false"} data-testid="loop-result">
-              <span className={styles.nodeHead}>④ 結果（部屋の温度）</span>
-              <span className={styles.nodeBody}>
-                <b>{roomTemp.toFixed(1)}℃</b>
-                {resultShown && phase !== "idle" ? " に下がる → また①で測る" : resultShown ? " に下がる" : ""}
-              </span>
-            </div>
-          </DioramaLabel>
+          {/* 名札は「いま働いている部品」の1枚だけ。待機中は①②③の部品名だけ（数値は測る前なので出さない） */}
+          {(idle || phase === "sense") && (
+            <DioramaLabel at={{ ...SENSOR, z: SENSOR.z + 10 }} place="above">
+              <div className={styles.node} data-active={phase === "sense" ? "true" : "false"} data-testid="loop-sense">
+                <span className={styles.nodeHead}>① 温度センサー（入力）</span>
+                {!idle && (
+                  <span className={styles.nodeBody}>
+                    測る：<b>{measured.toFixed(1)}℃</b>
+                  </span>
+                )}
+              </div>
+            </DioramaLabel>
+          )}
+          {(idle || phase === "decide") && (
+            <DioramaLabel at={{ ...BOARD, z: BOARD.z - 18 }} place="below">
+              <div className={styles.node} data-active={phase === "decide" ? "true" : "false"} data-testid="loop-decide">
+                <span className={styles.nodeHead}>② 制御部（マイコン）</span>
+                {!idle && (
+                  <span className={styles.nodeBody}>
+                    目標より<b>+{diff.toFixed(1)}℃</b> → ファン「{fan}」
+                  </span>
+                )}
+              </div>
+            </DioramaLabel>
+          )}
+          {(idle || phase === "act") && (
+            <DioramaLabel at={{ ...FAN_MID, z: FAN_MID.z + 30 }} place="above">
+              <div className={styles.node} data-active={phase === "act" ? "true" : "false"} data-testid="loop-act">
+                <span className={styles.nodeHead}>③ アクチュエータ（出力）</span>
+                {!idle && (
+                  <span className={styles.nodeBody}>
+                    モーターでファンを「<b>{fan}</b>」
+                  </span>
+                )}
+              </div>
+            </DioramaLabel>
+          )}
+          {resultShown && (
+            <DioramaLabel at={{ ...ROOM, z: 8 }} place="below">
+              <div className={styles.node} data-active={phase === "result" ? "true" : "false"} data-testid="loop-result">
+                <span className={styles.nodeHead}>④ 結果（部屋の温度）</span>
+                <span className={styles.nodeBody}>
+                  <b>{roomTemp.toFixed(1)}℃</b>
+                  {phase !== "idle" ? " に下がる → また①で測る" : " に下がる"}
+                </span>
+              </div>
+            </DioramaLabel>
+          )}
         </>
       }
     />
