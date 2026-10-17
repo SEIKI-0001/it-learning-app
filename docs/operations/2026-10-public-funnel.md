@@ -58,3 +58,29 @@ group by landing_path order by count desc;
 
 母数が少ないうちは割合より人数そのものを見る。Search Console のクリック数（過去問ページ）と
 `kakomon_viewers` が大きくずれていたら、計測漏れ（ブロッカー等）を疑う。
+
+## 英略語ページ（/words）→「1問で確認」→ 登録（2026-10-17 追加）
+
+/words/[id] の定義表の下に4択1問（components/guide/WordMiniQuiz.tsx）を置いた。答えると
+`answer_open`（placement=`words_quiz`）、答えたあとの登録ボタンは `click`（`words_quiz_cta`）、
+LP ボタンは `click`（`words_quiz_lp`）。placement は自由トークンなので migration は不要。
+
+```sql
+with e as (
+  select * from public_funnel_events
+  where created_at > now() - interval '28 days' and path like '/words/%'
+)
+select
+  count(distinct visitor_id) filter (where event = 'view') as word_viewers,
+  count(distinct visitor_id) filter (where event = 'answer_open' and placement = 'words_quiz') as quiz_answerers,
+  count(distinct visitor_id) filter (where event = 'click' and placement = 'words_quiz_cta') as quiz_signup_clicks,
+  count(distinct visitor_id) filter (where event = 'click' and placement = 'words_quiz_lp') as quiz_lp_clicks,
+  count(distinct visitor_id) filter (where event = 'click' and placement in ('cta_start', 'cta_lp')) as bottom_cta_clicks
+from e;
+```
+
+基準値（変更前）:
+- 回遊計測 10/4〜10/17 の14日で /words を見たのは3人（運営者の確認を含む可能性が高い）
+- GSC 7日（10/8〜10/14）: /words/seo 表示51・平均60位、rfq 32・32位、rfi 31・53位、クリック0
+- 取りにいく検索語の順位: 「rfp rfq」9.7位・「rfqとは」19位・「rfp rfi 違い」11〜100位
+- 「seo 略」（50位）のような単体略語は大手用語辞典が強いので順位は追わない

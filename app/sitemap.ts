@@ -19,7 +19,7 @@ import { getAllWords } from "@/lib/wordlist";
 // 本文の構成）を変えた日を下の定数に持つ。作りを変えたら日付を上げる。
 // 付けていなかった間、Google は 10/8 の title/説明文の変更後も旧版を検索結果に出し続けていた（2026-10-17 確認）。
 const KAKOMON_PAGES_MODIFIED = "2026-10-12";
-const WORD_PAGES_MODIFIED = "2026-10-10";
+const WORD_PAGES_MODIFIED = "2026-10-17";
 const KAISETSU_PAGES_MODIFIED = "2026-10-12";
 
 const url = (path: string) => `${SITE_URL}${path}`;

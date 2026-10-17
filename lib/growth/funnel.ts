@@ -55,6 +55,12 @@ export const FUNNEL_PLACEMENTS = {
   trialStickySignup: "trial_sticky_signup",
   /** /lp/try 体験を終える前の、ページ下部の登録ボタン */
   trialBottomSignup: "trial_bottom_signup",
+  /** 英略語ページ（/words）の「1問で確認」に答えた（event は answer_open） */
+  wordsQuiz: "words_quiz",
+  /** 「1問で確認」に答えたあとの登録ボタン */
+  wordsQuizCta: "words_quiz_cta",
+  /** 「1問で確認」に答えたあとの LP へのボタン */
+  wordsQuizLp: "words_quiz_lp",
   /** /login の Google ボタン */
   loginGoogle: "login_google",
   /** /login の LINE ボタン */

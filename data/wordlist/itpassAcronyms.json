@@ -404,11 +404,13 @@
       "調達"
     ],
     "confusedWith": [
-      "RFP"
+      "RFP",
+      "RFQ"
     ],
-    "differenceAxis": "提案依頼か情報提供依頼か",
+    "differenceAxis": "情報・提案・見積りのどれを求めるか（RF＝Request For の後の1文字）",
     "trapExplanations": {
-      "RFP": "RFPは提案依頼書で、具体的な提案を求める文書。RFIは情報収集が目的。"
+      "RFP": "RFPは提案依頼書で、要件を示して実現方法や体制・価格の具体的な提案を求める文書。RFIは情報収集が目的。",
+      "RFQ": "RFQは見積依頼書で、仕様がほぼ決まってから価格や納期の見積りを求める文書。RFIは企画の初めに製品や技術の情報を集める。"
     },
     "questionTypes": [
       "acronym_to_meaning",
@@ -444,11 +446,13 @@
       "見積"
     ],
     "confusedWith": [
-      "RFI"
+      "RFI",
+      "RFQ"
     ],
-    "differenceAxis": "提案依頼か情報提供依頼か",
+    "differenceAxis": "情報・提案・見積りのどれを求めるか（RF＝Request For の後の1文字）",
     "trapExplanations": {
-      "RFI": "RFIは情報提供依頼書で、提案前に情報を収集する文書。"
+      "RFI": "RFIは情報提供依頼書で、提案前に製品や技術の情報を収集する文書。",
+      "RFQ": "RFQは見積依頼書で、仕様がほぼ決まってから価格や納期の見積りを求める文書。RFPは実現方法を含めた提案を求める。"
     },
     "questionTypes": [
       "acronym_to_meaning",
@@ -857,9 +861,13 @@
       "順位",
       "最適化"
     ],
-    "confusedWith": [],
-    "differenceAxis": "",
-    "trapExplanations": {},
+    "confusedWith": [
+      "リスティング広告"
+    ],
+    "differenceAxis": "通常の検索結果で上位を目指すか、検索結果の広告枠に費用を払って出すか",
+    "trapExplanations": {
+      "リスティング広告": "リスティング広告は、利用者が検索したキーワードに連動して検索結果に表示する広告（検索連動型広告）。SEOは広告枠ではなく、通常の検索結果での順位を上げる施策。"
+    },
     "questionTypes": [
       "acronym_to_meaning",
       "meaning_to_acronym",
@@ -4322,7 +4330,7 @@
       "RFP",
       "RFI"
     ],
-    "differenceAxis": "見積りを求めるか、提案を求めるか、情報を求めるか",
+    "differenceAxis": "情報・提案・見積りのどれを求めるか（RF＝Request For の後の1文字）",
     "trapExplanations": {
       "RFP": "RFPは導入するシステムの提案を求める提案依頼書。",
       "RFI": "RFIは提案の前に、製品や技術の情報提供を求める情報提供依頼書。"

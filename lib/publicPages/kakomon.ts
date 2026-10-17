@@ -130,6 +130,11 @@ export function getKakomonForWord(wordId: string): KakomonQuestion[] {
   return getWordIndex().byWord.get(wordId) ?? [];
 }
 
+/** 問題文か選択肢に出てくるか（解説だけで触れている問題は含めない）。 */
+function isAskedIn(q: KakomonQuestion, re: RegExp): boolean {
+  return re.test([q.view.prompt, ...q.view.choices.map((c) => c.text)].join("\n"));
+}
+
 /**
  * その英略語が問題文か選択肢に出てくる公開過去問の数。
  * getKakomonForWord は本サービスの解説文も含めて探すので、「試験に出た」と言える数はこちらで数える。
@@ -138,9 +143,24 @@ export function countKakomonAskingWord(wordId: string): number {
   const word = getAllWords().find((w) => w.id === wordId);
   if (!word) return 0;
   const re = acronymPattern(word.acronym);
-  return getKakomonForWord(wordId).filter((q) =>
-    re.test([q.view.prompt, ...q.view.choices.map((c) => c.text)].join("\n")),
-  ).length;
+  return getKakomonForWord(wordId).filter((q) => isAskedIn(q, re)).length;
+}
+
+/**
+ * 英略語ページに並べる過去問。略語が問題文か選択肢に出てくる問題（＝試験で直接問われた問題）を先に、
+ * 解説で触れているだけの問題を後ろにする。それぞれの中は getKakomonForWord の順（新しい年度から）。
+ */
+export function getKakomonForWordAskedFirst(wordId: string): KakomonQuestion[] {
+  const word = getAllWords().find((w) => w.id === wordId);
+  const list = getKakomonForWord(wordId);
+  if (!word) return list;
+  const re = acronymPattern(word.acronym);
+  return [...list.filter((q) => isAskedIn(q, re)), ...list.filter((q) => !isAskedIn(q, re))];
+}
+
+/** 論点ラベル（tags）にその語を含む公開過去問（新しい年度から）。英略語に無い用語（リスティング広告など）用。 */
+export function getKakomonByTag(tag: string): KakomonQuestion[] {
+  return getAllKakomonQuestions().filter((q) => q.tags.includes(tag));
 }
 
 /** 例: "令和4〜8年度"。 */

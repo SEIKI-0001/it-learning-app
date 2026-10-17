@@ -635,6 +635,174 @@
 .guide .k-def dd {
   margin: 0;
 }
+/* 英略語ページ（/words）の「1問で確認」。定義表のすぐ下で、読んだ直後に1問解いてもらう */
+.guide .w-quiz {
+  margin: 28px 0 0;
+  padding: 18px 18px 20px;
+  border-radius: 14px;
+  background: var(--wash);
+}
+.guide .w-quiz-label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ai);
+  letter-spacing: 0.06em;
+}
+.guide .w-quiz-prompt {
+  margin: 4px 0 0;
+  font-weight: 700;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+.guide .w-quiz-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.guide .w-quiz-choices button {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+.guide .w-quiz-choices button:hover:not(:disabled) {
+  border-color: var(--ai);
+}
+.guide .w-quiz-choices button:disabled {
+  cursor: default;
+}
+.guide .w-quiz-choices button.is-correct {
+  border-color: #1f8a5b;
+  background: #e8f6ee;
+  font-weight: 700;
+}
+.guide .w-quiz-choices button.is-wrong {
+  border-color: var(--shu);
+  background: #fdeeea;
+}
+.guide .w-quiz-choices button.is-muted {
+  opacity: 0.55;
+}
+.guide .w-quiz-result p {
+  margin: 10px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.8;
+}
+.guide .w-quiz-result .w-quiz-verdict {
+  margin-top: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.guide .w-quiz-verdict.ok {
+  color: #1f8a5b;
+}
+.guide .w-quiz-verdict.ng {
+  color: var(--shu);
+}
+.guide .w-quiz-next {
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.guide .w-quiz-next p {
+  margin: 0;
+  color: var(--sub);
+  text-align: left;
+}
+.guide .w-quiz-next .g-cta-actions {
+  margin-top: 14px;
+}
+@media (max-width: 480px) {
+  .guide .w-quiz-choices {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 英略語ページの「流れで覚える」（RFI→RFP→RFQ など）。いま見ている語の段を強調する */
+.guide .w-flow {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+.guide .w-flow li {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 0 0 16px;
+}
+.guide .w-flow li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 32px;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+.guide .w-flow-n {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--sub);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.guide .w-flow li.is-current .w-flow-n {
+  border-color: var(--ai);
+  background: var(--ai);
+  color: var(--white);
+}
+.guide .w-flow li > div {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0 0;
+}
+.guide .k-section .w-flow p {
+  margin: 0;
+}
+.guide .w-flow-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 1.02rem;
+}
+.guide .w-flow-name a,
+.guide .w-flow-name strong {
+  font-weight: 700;
+}
+.guide .w-flow-when {
+  font-size: 0.8rem;
+  color: var(--sub);
+}
+.guide .k-section .w-flow .w-flow-ask {
+  margin-top: 2px;
+  font-size: 0.9rem;
+  color: var(--sub);
+  line-height: 1.7;
+}
+.guide .w-flow li.is-current .w-flow-ask {
+  color: var(--ink);
+}
+
 .guide .k-section p:where(:not(.k-lesson *)) {
   margin: 12px 0 0;
 }
