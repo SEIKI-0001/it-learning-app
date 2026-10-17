@@ -123,6 +123,7 @@ test("登録後、初回設定から最初の確認問題に答えるまでの�
 
   // 途中の質問は既定値のまま「おまかせ」で完了できる。
   await page.getByRole("button", { name: "残りはおまかせで始める" }).click();
+  await page.getByRole("button", { name: "今日の学習をはじめる" }).click();
   await expect(page).toHaveURL(/\/today\?guide=1$/);
   const guide = page.getByRole("dialog", { name: "ようこそ！ここが毎日のスタート地点です" });
   await guide.getByRole("button", { name: "スキップ", exact: true }).click();
