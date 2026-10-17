@@ -70,6 +70,17 @@ describe("public SEO surface", () => {
     for (const w of getAllWords()) expect(urls.has(`${SITE}${WORDS_BASE_PATH}/${w.id}`)).toBe(true);
   });
 
+  it("gives every sitemap entry for a content page a real, non-future lastmod so Google re-reads changed pages", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const contentPage = /\/(kakomon\/\d+\/\d+|words\/[^/]+|kaisetsu\/[^/]+)$/;
+    const entries = sitemap().filter((e) => contentPage.test(e.url));
+    expect(entries.length).toBeGreaterThan(500);
+    for (const e of entries) {
+      expect(String(e.lastModified)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(String(e.lastModified) <= today).toBe(true);
+    }
+  });
+
   it("lists the topic explanation index and every topic page in the sitemap", () => {
     const urls = new Set(sitemapUrls());
 
