@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ProgressPage from "@/app/progress/page";
+import PaletteSwitcher from "./PaletteSwitcher";
 import { getAllTopics } from "@/lib/content";
 import { computeIntegratedStatus } from "@/lib/integratedStatus";
 import { applyReadingLevel, chapterTopicIds, saveReferenceBook } from "@/lib/referenceBook";
@@ -157,5 +158,10 @@ export default function ProgressPreview() {
     if (typeof window !== "undefined") seed();
     return true;
   });
-  return <ProgressPage />;
+  return (
+    <>
+      <PaletteSwitcher />
+      <ProgressPage />
+    </>
+  );
 }
