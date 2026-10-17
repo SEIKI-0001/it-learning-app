@@ -213,8 +213,9 @@ export default function IntellectualPropertyExperience() {
   return (
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
-        <b>知的財産権</b>は、人の創作やアイデアを守る権利の総称。
+        <b>知的財産権</b>は、発明・作品・商品名など、知的な活動から生まれたものを守る権利の総称。
         <b>著作権＝作品</b>、<b>特許権＝発明</b>、<b>商標権＝名前・ロゴ</b>、と「何を守るか」で分かれます。
+        著作権が守るのは作品の<b>表現</b>で、アイデアやアルゴリズムそのものは守りません。
       </div>
 
       <CopycatLab />

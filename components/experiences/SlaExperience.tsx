@@ -95,13 +95,18 @@ function Availability() {
       </div>
 
       <div className="mt-3 space-y-1" data-testid="sla-calc" data-rate={cur.rate}>
-        <CalcStep n={1} label="全サービス時間" note="365日 × 24時間 × 60分" value="525,600分" />
+        <CalcStep n={1} label="約束したサービス時間（1年中）" note="365日 × 24時間 × 60分" value="525,600分" />
         <CalcStep n={2} label="停止時間" note="止まっていた時間" value={`${cur.downMin.toLocaleString()}分`} />
         <CalcStep n={3} label="実際に稼働していた時間" note="① − ②" value={`${workMin.toLocaleString()}分`} />
-        <CalcStep n={4} label="稼働時間 ÷ 全サービス時間" note={`${workMin.toLocaleString()} ÷ 525,600`} value={ratio.toFixed(4)} />
+        <CalcStep n={4} label="稼働時間 ÷ 約束したサービス時間" note={`${workMin.toLocaleString()} ÷ 525,600`} value={ratio.toFixed(4)} />
         <CalcStep n={5} label="稼働率(%)" note="④ × 100" value={`${ratePercent}%`} highlight />
       </div>
-      <p className="mt-2 text-center text-[13px] font-bold text-gray-600">全体の時間のうち、実際に使えた割合</p>
+      <p className="mt-2 text-center text-[13px] font-bold text-gray-600">約束した時間のうち、実際に使えた割合</p>
+      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
+        分母は「1年じゅう」とは限りません。<b>SLAで決めた提供時間</b>が分母です。
+        例：平日（月〜金）の7時〜22時に提供し、稼働率98%で合意したなら、1週間は 5日 × 15時間 ＝ 75時間。
+        止まってよいのは 75時間 × 2% ＝ <b>1.5時間</b>です。
+      </div>
       <p className="mt-3 text-center text-xs text-gray-400">高い稼働率ほど安心だが、設備や費用も増える</p>
     </Panel>
   );
