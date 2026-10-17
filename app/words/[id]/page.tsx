@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
 import KakomonList from "@/components/guide/KakomonList";
+import WordMiniQuiz from "@/components/guide/WordMiniQuiz";
 import { LP_CRUMB, breadcrumbJsonLd, buildMetadata, type Crumb } from "@/lib/guide/seo";
 import {
   countKakomonAskingWord,
   getAllKakomonQuestions,
-  getKakomonForWord,
+  getKakomonByTag,
+  getKakomonForWordAskedFirst,
   kakomonYearRangeLabel,
 } from "@/lib/publicPages/kakomon";
 import { getTopicsForWord, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
@@ -15,9 +17,11 @@ import {
   isWordLikeEntry,
   wordComparisonEntries,
   wordDescription,
+  wordMiniQuiz,
   wordPath,
   wordTitle,
 } from "@/lib/publicPages/words";
+import { getWordFamily } from "@/lib/publicPages/wordFamilies";
 import { wordJsonLd } from "@/lib/publicPages/structuredData";
 import { getAllWords, getWord, getWordByAcronym } from "@/lib/wordlist";
 import { WORDLIST_CATEGORY_LABELS } from "@/types/wordlist";
@@ -53,11 +57,19 @@ export default async function WordPage({ params }: Props) {
     { name: "英略語", path: WORDS_BASE_PATH },
     { name: w.acronym, path: wordPath(w.id) },
   ];
-  const questions = getKakomonForWord(w.id);
+  const questions = getKakomonForWordAskedFirst(w.id);
   const traps = Object.entries(w.trapExplanations);
   const topics = getTopicsForWord(w.id);
   const compared = wordComparisonEntries(w);
   const asked = countKakomonAskingWord(w.id);
+  const family = getWordFamily(w.id);
+  // 単語帳に無い似た用語（リスティング広告など）が論点の過去問。略語の検索では拾えないので論点ラベルで探す。
+  const neighborQuestions = w.confusedWith
+    .filter((name) => !getWordByAcronym(name))
+    .map((name) => ({ name, questions: getKakomonByTag(name) }))
+    .filter((x) => x.questions.length > 0);
+  const wordCount = getAllWords().length;
+  const mainTopic = topics[0];
 
   return (
     <article className="g-col">
@@ -106,6 +118,8 @@ export default async function WordPage({ params }: Props) {
           </div>
         )}
       </dl>
+
+      <WordMiniQuiz quiz={wordMiniQuiz(w)} wordCount={wordCount} />
 
       {(w.confusedWith.length > 0 || traps.length > 0) && (
         <section className="k-section" aria-labelledby="w-diff">
@@ -177,6 +191,44 @@ export default async function WordPage({ params }: Props) {
         </section>
       )}
 
+      {family && (
+        <section className="k-section" aria-labelledby="w-flow">
+          <h2 id="w-flow">
+            {family.name}の流れで覚える：{family.steps.map((s) => getWord(s.wordId)?.acronym).join("→")}
+          </h2>
+          <p>{family.lead}</p>
+          <ol className="w-flow">
+            {family.steps.map((step, i) => {
+              const sw = getWord(step.wordId);
+              if (!sw) return null;
+              const current = sw.id === w.id;
+              return (
+                <li key={sw.id} className={current ? "is-current" : undefined} aria-current={current ? "step" : undefined}>
+                  <span className="w-flow-n">{i + 1}</span>
+                  <div>
+                    <p className="w-flow-name">
+                      {current ? <strong>{sw.acronym}</strong> : <a href={wordPath(sw.id)}>{sw.acronym}</a>}
+                      <span>{sw.japanese}</span>
+                      <span className="w-flow-when">{step.when}</span>
+                    </p>
+                    <p className="w-flow-ask">
+                      「{step.ask}」→ {step.back}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          <p>
+            公式過去問（{kakomonYearRangeLabel()}）で問題文・選択肢に出てくる回数は、
+            {family.steps
+              .map((s) => `${getWord(s.wordId)?.acronym} ${countKakomonAskingWord(s.wordId)}問`)
+              .join("・")}
+            です。{family.examNote}
+          </p>
+        </section>
+      )}
+
       {topics.length > 0 && (
         <section className="k-section" aria-labelledby="w-topics">
           <h2 id="w-topics">{w.acronym}が出てくるテーマの解説</h2>
@@ -207,9 +259,25 @@ export default async function WordPage({ params }: Props) {
         </section>
       )}
 
+      {neighborQuestions.map(({ name, questions: nq }) => (
+        <section key={name} className="k-section" aria-labelledby={`w-nq-${name}`}>
+          <h2 id={`w-nq-${name}`}>{name}が問われた過去問（{nq.length}問）</h2>
+          <p>
+            {w.acronym}と並んで出る{name}は、試験では次の問題で問われています。
+          </p>
+          <KakomonList questions={nq.slice(0, MAX_QUESTIONS)} withYear />
+        </section>
+      ))}
+
       <GuideCTA
-        title="英略語はカードで毎日少しずつ覚える"
-        body={`アプリの英略語カードは、${getAllWords().length}語を「意味→略語」「似た用語との違い」など複数の角度から確認できます。最初の7日間は学習記録も無料です。`}
+        title={
+          mainTopic ? `${w.acronym}は「${mainTopic.title}」の範囲でまとめて覚える` : "英略語はカードで毎日少しずつ覚える"
+        }
+        body={
+          mainTopic
+            ? `アプリでは「${mainTopic.title}」の図解解説→確認問題→英略語カード（${wordCount}語）の順に、試験日から逆算した今日の分を毎日組み立てます。最初の7日間は学習記録も無料です。`
+            : `アプリの英略語カードは、${wordCount}語を「意味→略語」「似た用語との違い」など複数の角度から確認できます。最初の7日間は学習記録も無料です。`
+        }
       />
     </article>
   );

@@ -1,7 +1,8 @@
 // 公開英略語ページ（/words）のパスと表示文言。
 // データは lib/wordlist（data/wordlist/itpassAcronyms.json が唯一の正）から読む。
 
-import { getWordByAcronym } from "@/lib/wordlist";
+import { buildQuizQuestion, getAllWords, getWordByAcronym } from "@/lib/wordlist";
+import type { ChoiceKey } from "@/types";
 import type { WordlistEntry } from "@/types/wordlist";
 
 export const WORDS_BASE_PATH = "/words";
@@ -66,4 +67,63 @@ export function wordDescription(w: WordlistEntry): string {
     return `${pair}${axis}${w.oneLine} ITパスポート試験で問われるポイントとあわせて解説します。`;
   }
   return `${w.acronym}は「${w.japanese}」。${w.oneLine} ITパスポート試験で問われるポイントと、似た用語との見分け方をまとめています。`;
+}
+
+// ---- 1問で確認（WordMiniQuiz） -----------------------------------------------
+
+export type WordMiniQuizChoice = {
+  key: ChoiceKey;
+  text: string;
+  /** 選んだときに出す一言（誤答なら「それは何か」、正答なら意味）。 */
+  note: string;
+};
+
+export type WordMiniQuizData = {
+  prompt: string;
+  choices: WordMiniQuizChoice[];
+  correctKey: ChoiceKey;
+  /** 正誤のあとに必ず出す一言。 */
+  takeaway: string;
+};
+
+/** 語ごとに決まった並びにする（サーバーとブラウザで選択肢の順番がずれないように乱数は使わない）。 */
+function seededRng(seed: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
+  return () => {
+    h = (h + 0x6d2b79f5) | 0;
+    let t = Math.imul(h ^ (h >>> 15), 1 | h);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** 選択肢の文言（略語 or 日本語名）から、それが何かの一言を作る。 */
+function choiceNote(w: WordlistEntry, text: string): string {
+  if (text === w.acronym || text === w.japanese) return `${w.acronym}＝${w.japanese}。${w.oneLine}`;
+  const trap = w.trapExplanations[text];
+  if (trap) return trap;
+  const other = getWordByAcronym(text) ?? getAllWords().find((x) => x.japanese === text);
+  return other ? `${other.japanese}（${other.acronym}）。${other.oneLine}` : "";
+}
+
+/**
+ * ページの最初に出す4択1問。似た用語がある語は「説明 → 略語」で似た用語と見分けさせ、
+ * ない語は「略語 → 意味」を問う。選択肢づくりは単語帳アプリと同じ buildQuizQuestion を使う。
+ */
+export function wordMiniQuiz(w: WordlistEntry): WordMiniQuizData {
+  const type = w.confusedWith.length > 0 ? "confusion" : "acronym_to_meaning";
+  const q = buildQuizQuestion(w, type, seededRng(w.id));
+  // 英単語の見出し（Hallucination）や単語帳に無い似た用語（リスティング広告）が並ぶときは「略語」と呼べない
+  const allAcronyms = !isWordLikeEntry(w) && w.confusedWith.every((name) => getWordByAcronym(name));
+  return {
+    prompt: allAcronyms ? q.prompt : q.prompt.replace("略語は？", "用語は？"),
+    choices: q.choices.map((c) => ({ ...c, note: choiceNote(w, c.text) })),
+    correctKey: q.correctKey,
+    takeaway: w.differenceAxis
+      ? `見分けるポイントは「${w.differenceAxis}」。`
+      : !isWordLikeEntry(w) && w.words.length > 0
+        ? `${w.acronym}は ${w.words.map((p) => `${p.word}（${p.meaning}）`).join("・")} の頭文字です。`
+        : `${w.acronym}は日本語で「${w.japanese}」です。`,
+  };
 }
