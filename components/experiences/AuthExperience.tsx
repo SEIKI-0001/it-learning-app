@@ -156,7 +156,7 @@ function Classifier() {
 const FACTORS = [
   { cat: "知識（記憶）", icon: "lightbulb" as IconName, items: [{ id: "pw", label: "パスワード" }, { id: "pin", label: "PIN・暗証番号" }] },
   { cat: "所持（持ち物）", icon: "smartphone" as IconName, items: [{ id: "app", label: "スマホ認証アプリ" }, { id: "ic", label: "ICカード" }] },
-  { cat: "生体（からだ）", icon: "fingerprint" as IconName, items: [{ id: "finger", label: "指紋" }, { id: "face", label: "顔" }] },
+  { cat: "生体（体の特徴・動作のくせ）", icon: "fingerprint" as IconName, items: [{ id: "finger", label: "指紋" }, { id: "face", label: "顔" }, { id: "sign", label: "筆跡・筆圧" }] },
 ];
 const CAT_OF: Record<string, string> = {};
 FACTORS.forEach((g) => g.items.forEach((it) => (CAT_OF[it.id] = g.cat)));
@@ -177,6 +177,7 @@ function Mfa() {
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         認証の方法は<b className="text-gray-800">3種類</b>（知識・所持・生体）。
         <b className="text-gray-800">異なる種類を2つ以上</b>組み合わせると多要素認証になり、安全性が上がります。使うものを選んでみよう。
+        生体には、指紋や顔のような<b className="text-gray-800">体の特徴</b>だけでなく、筆跡・筆圧・キー入力のリズムのような<b className="text-gray-800">動作のくせ（行動的特徴）</b>も入ります。
       </p>
 
       <div className="mt-3 space-y-3">

@@ -24,7 +24,7 @@ function IsPersonalInfo() {
     <Panel>
       <SectionTitle step={1}>これは「個人情報」？</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        個人情報のポイントは<b className="text-gray-800">「特定の個人を識別できるか」</b>。
+        個人情報は<b className="text-gray-800">生きている人</b>の情報で、ポイントは<b className="text-gray-800">「特定の個人を識別できるか」</b>。
         名前そのものがなくても、組み合わせで分かれば個人情報です。
       </p>
       <ul className="mt-3 space-y-2.5">
@@ -80,7 +80,7 @@ function Rules() {
     { icon: "target", t: "利用目的を明確に", d: "何に使うかをはっきり決めて伝える" },
     { icon: "list", t: "必要な範囲だけ", d: "目的に必要な分だけ集める（取りすぎない）" },
     { icon: "lock", t: "安全に管理", d: "漏えいしないよう適切に守る" },
-    { icon: "door", t: "勝手に渡さない", d: "本人の同意なく第三者へ提供しない" },
+    { icon: "door", t: "勝手に渡さない", d: "第三者へ渡すのは原則、本人の同意を得てから（法令に基づく場合などは例外）" },
   ];
   return (
     <Panel>

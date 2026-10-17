@@ -7,7 +7,7 @@ import { RiskResponseScene, type RiskResp } from "./RiskResponseScenes";
 
 export const RISK_RESPONSES: Record<RiskResp, { name: string; alias?: string; short: string; tone: string; bg: string; ring: string; example: string }> = {
   avoid: { name: "回避", short: "危ないことはやめる", tone: "text-rose-600", bg: "bg-rose-50", ring: "ring-rose-200", example: "危険な新サービスの開始をやめる" },
-  transfer: { name: "移転", alias: "転嫁", short: "損は他者に肩代わり", tone: "text-sky-600", bg: "bg-sky-50", ring: "ring-sky-200", example: "保険に入る・外部に委託する" },
+  transfer: { name: "移転", alias: "共有・転嫁", short: "損は他者に肩代わり", tone: "text-sky-600", bg: "bg-sky-50", ring: "ring-sky-200", example: "保険に入る・外部に委託する" },
   mitigate: { name: "低減", alias: "軽減", short: "備えて小さくする", tone: "text-amber-600", bg: "bg-amber-50", ring: "ring-amber-200", example: "バックアップ・ウイルス対策" },
   accept: { name: "受容", alias: "保有", short: "小さいので受け入れる", tone: "text-emerald-600", bg: "bg-emerald-50", ring: "ring-emerald-200", example: "軽い表示崩れは様子を見る" },
 };
