@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; from?: string }>;
+  searchParams: Promise<{ next?: string; from?: string; preview?: string }>;
 }) {
   const sp = await searchParams;
   // オープンリダイレクト防止: アプリ内パスのみ許可。
@@ -27,7 +27,9 @@ export default async function LoginPage({
 
   // 既にログイン済みなら遷移先へ（公開解説の「記録する」からは、そのテーマのレッスンへ）。
   const userId = await getInternalUserId();
-  if (userId) redirect(next);
+  // ?preview=1 はログイン済みの人がこの画面を確かめるための表示（遷移先へ飛ばさない）。
+  const preview = sp?.preview === "1";
+  if (userId && !preview) redirect(next);
   const campaignContinuation = next === AUGUST_2026_CAMPAIGN.path;
   // 無料体験（/lp/try）の「登録」から来た人。見出しと戻り先だけを体験の続きに合わせる。
   const fromTrial = sp?.from === "trial";
@@ -63,6 +65,14 @@ export default async function LoginPage({
       </header>
 
       <div className="mx-auto w-full max-w-md px-4 pb-12 pt-7 md:pt-12">
+        {preview && userId && (
+          <p className="mb-5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            確認用の表示です（ログイン済みのまま、初めての人が見る画面を表示しています）。
+            <a href="/onboarding?preview=1" className="ml-1 underline underline-offset-2">
+              初回設定の確認へ
+            </a>
+          </p>
+        )}
         <p className="text-xs font-semibold text-brand-700">
           {fromTrial ? "体験の続きから" : "無料ではじめる"}
         </p>
