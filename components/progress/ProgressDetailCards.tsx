@@ -156,7 +156,10 @@ function monthDay(iso: string): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-/** 参考書の読了状況（参考書が未設定なら出さない）。数え方は /plan・学習ペース判定と同じ節単位。 */
+/**
+ * 参考書の読了状況（参考書が未設定なら出さない）。数え方は /plan・学習ペース判定と同じ節単位。
+ * ふだんは読了率と次に読む章だけの1枚にし、押すと章ごとの内訳を開く。
+ */
 export function ReadingStatusCard({
   bookTitle,
   overview,
@@ -166,77 +169,105 @@ export function ReadingStatusCard({
   overview: ReferenceReadingOverview;
   className?: string;
 }) {
+  const [open, setOpen] = useState(false);
   const { progress, chapters, lastReadAt, nextChapterId } = overview;
   const percent = Math.round(progress.ratio * 100);
+  const next = chapters.find((c) => c.id === nextChapterId) ?? null;
   return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="reading-status-heading">
-      <div className={t.sheetHead}>
-        <h2 id="reading-status-heading" className={t.sectionTitle}>
-          参考書の読了状況
-        </h2>
-      </div>
-      <p className={p.readingBook}>{bookTitle}</p>
-
-      <div className={p.readingSummary}>
-        <p className={p.readingPercent}>
-          <span className={`${t.mono} ${p.mono}`}>{percent}</span>
-          <span className={p.readingPercentUnit}>%</span>
-        </p>
-        <p className={p.readingCounts}>
-          節 <span className={t.mono}>{`${progress.done}/${progress.total}`}</span> 読了
-          <span className={p.readingSep}>・</span>
-          章 <span className={t.mono}>{`${progress.doneChapters}/${progress.totalChapters}`}</span>
-          <br />
-          {lastReadAt ? (
+    <section className={`${p.card} ${p.readingCard} ${className ?? ""}`} aria-labelledby="reading-status-heading">
+      <button
+        type="button"
+        className={p.readingToggle}
+        aria-expanded={open}
+        aria-controls="reading-status-detail"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className={p.readingHead}>
+          <span id="reading-status-heading" className={t.sectionTitle}>
+            参考書の読了状況
+          </span>
+          <span className={p.readingMore}>
+            {open ? "閉じる" : "章ごとに見る"}
+            <Icon name="chevron-down" className={`${p.chev} ${open ? p.readingChevOpen : ""}`} />
+          </span>
+        </span>
+        <span className={p.readingRow}>
+          <span className={p.readingPercent}>
+            <span className={`${t.mono} ${p.mono}`}>{percent}</span>
+            <span className={p.readingPercentUnit}>%</span>
+          </span>
+          <span className={`${p.fieldBar} ${p.readingBar}`} aria-hidden>
+            <span className={p.fieldFill} style={{ width: `${percent}%` }} />
+          </span>
+          <span className={p.readingCounts}>
+            章 <span className={t.mono}>{`${progress.doneChapters}/${progress.totalChapters}`}</span>
+          </span>
+        </span>
+        <span className={p.readingLine}>
+          {next ? (
             <>
-              最後の記録 <span className={t.mono}>{monthDay(lastReadAt)}</span>
+              次に読む <span className={p.readingLineStrong}>{next.title}</span>
+              {next.total > 1 && (
+                <span className={t.mono}>{`（${next.done}/${next.total}節）`}</span>
+              )}
             </>
           ) : (
-            "まだ読了の記録がありません"
+            "すべての章を読み終えました"
           )}
-        </p>
-      </div>
-      <span className={`${p.fieldBar} ${p.readingBar}`} aria-hidden>
-        <span className={p.fieldFill} style={{ width: `${percent}%` }} />
-      </span>
+        </span>
+      </button>
 
-      {/* PC の2列は上から下へ読む順に並べる */}
-      <ol
-        className={p.readingChapters}
-        style={{ "--reading-rows": Math.ceil(chapters.length / 2) } as CSSProperties}
-      >
-        {chapters.map((chapter) => (
-          <li
-            key={chapter.id}
-            className={`${p.readingChapter} ${chapter.id === nextChapterId ? p.readingNext : ""}`}
+      {open && (
+        <div id="reading-status-detail" className={p.readingDetail}>
+          <p className={p.readingBook}>
+            {bookTitle}
+            <span className={p.readingSep}>・</span>
+            節 <span className={t.mono}>{`${progress.done}/${progress.total}`}</span> 読了
+            {lastReadAt && (
+              <>
+                <span className={p.readingSep}>・</span>
+                最後の記録 <span className={t.mono}>{monthDay(lastReadAt)}</span>
+              </>
+            )}
+          </p>
+          {/* PC の2列は上から下へ読む順に並べる */}
+          <ol
+            className={p.readingChapters}
+            style={{ "--reading-rows": Math.ceil(chapters.length / 2) } as CSSProperties}
           >
-            <span className={p.readingMark} data-state={chapter.state} aria-hidden />
-            <span className={p.readingTitle}>{chapter.title}</span>
-            <span className={p.readingCount}>
-              {chapter.state === "read" ? (
-                "読了"
-              ) : chapter.total > 1 ? (
-                <>
-                  <span className={t.mono}>{`${chapter.done}/${chapter.total}`}</span>節
-                </>
-              ) : (
-                READING_STATE_LABEL[chapter.state]
-              )}
-              {chapter.id === nextChapterId && <span className={p.readingNextTag}>次に読む</span>}
-            </span>
-          </li>
-        ))}
-      </ol>
-
-      <div className={p.readingFoot}>
-        <p className={p.readingNote}>
-          今日の学習の「参考書でどこまで読みましたか？」で「全部」を選ぶと、その節が読了になります。合格準備度は問題の結果だけで判定し、読了は学習ペース（順調・遅れ）の判定に使います。
-        </p>
-        <Link href="/settings/reference-book" className={p.textLink}>
-          まとめて読了・修正
-          <Icon name="chevron-right" className={p.chev} />
-        </Link>
-      </div>
+            {chapters.map((chapter) => (
+              <li
+                key={chapter.id}
+                className={`${p.readingChapter} ${chapter.id === nextChapterId ? p.readingNext : ""}`}
+              >
+                <span className={p.readingMark} data-state={chapter.state} aria-hidden />
+                <span className={p.readingTitle}>{chapter.title}</span>
+                <span className={p.readingCount}>
+                  {chapter.state === "read" ? (
+                    "読了"
+                  ) : chapter.total > 1 ? (
+                    <>
+                      <span className={t.mono}>{`${chapter.done}/${chapter.total}`}</span>節
+                    </>
+                  ) : (
+                    READING_STATE_LABEL[chapter.state]
+                  )}
+                  {chapter.id === nextChapterId && <span className={p.readingNextTag}>次に読む</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+          <div className={p.readingFoot}>
+            <p className={p.readingNote}>
+              今日の学習の「参考書でどこまで読みましたか？」で「全部」を選ぶと、その節が読了になります。合格準備度は問題の結果だけで判定し、読了は学習ペース（順調・遅れ）の判定に使います。
+            </p>
+            <Link href="/settings/reference-book" className={p.textLink}>
+              まとめて読了・修正
+              <Icon name="chevron-right" className={p.chev} />
+            </Link>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
