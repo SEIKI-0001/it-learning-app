@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import type { StudyStyle, UserProfile } from "@/types";
 import { STUDY_STYLE_LABELS } from "@/types";
@@ -65,12 +65,14 @@ export default function OnboardingPage() {
   // ログイン済みの人が体験ページの「登録」から来ても、既存のプランを作り直させない。
   const [appState] = useAppState();
   const startingRef = useRef(false);
+  // ?preview=1 は設定済みの人が画面を確かめるための表示専用モード（何も保存しない・計測しない）。
+  const preview = useSyncExternalStore(noopSubscribe, isPreviewMode, () => false);
   useEffect(() => {
-    if (startingRef.current) return;
+    if (startingRef.current || preview) return;
     if (appState?.profile) router.replace("/today");
     // 設定がまだ無い人にフォームを出した時点から、最初の学習問題までを数える。
     else if (appState === null) reachFirstRunStep("onboarding_view");
-  }, [router, appState]);
+  }, [router, appState, preview]);
 
   function toggleField(field: TopicField) {
     setWeakFields((prev) =>
@@ -80,6 +82,11 @@ export default function OnboardingPage() {
 
   function handleStart() {
     startingRef.current = true;
+    // 確認用の表示では、既存のプラン・進捗を上書きしない（再設定で進捗が初期化される事故があった）。
+    if (isPreviewMode()) {
+      router.push(FIRST_RUN_GUIDE_HREF);
+      return;
+    }
     const exam = resolveExamDateChoice(examChoice);
     const full: UserProfile = {
       // 新フィールド
@@ -164,6 +171,11 @@ export default function OnboardingPage() {
       </header>
 
       <div className="mx-auto w-full max-w-xl flex-1 px-4 pb-8 pt-6">
+        {preview && (
+          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            確認用の表示です。ここで選んだ内容は保存されず、今のプランはそのままです。
+          </p>
+        )}
         {step === 0 && (
           <div className="mb-6 rounded-xl bg-brand-50 px-4 py-3.5">
             <p className="text-sm font-semibold text-gray-900">登録ありがとうございます</p>
@@ -310,6 +322,12 @@ export default function OnboardingPage() {
       </div>
     </main>
   );
+}
+
+const noopSubscribe = () => () => {};
+
+function isPreviewMode(): boolean {
+  return new URLSearchParams(window.location.search).get("preview") === "1";
 }
 
 const ONBOARDING_STEPS = [
