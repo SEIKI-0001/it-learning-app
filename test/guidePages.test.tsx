@@ -13,6 +13,7 @@ import * as StudyPlan from "@/app/guide/study-plan/page";
 import * as CantContinue from "@/app/guide/cant-continue-studying/page";
 import * as PastExam from "@/app/guide/past-exam-strategy/page";
 import * as ExamChanges2027 from "@/app/guide/exam-changes-2027/page";
+import * as PassRate from "@/app/guide/pass-rate/page";
 
 import * as AppSelection from "@/app/guide/it-passport-app/page";
 
@@ -26,6 +27,7 @@ const ARTICLES: Record<string, PageModule> = {
   "cant-continue-studying": CantContinue,
   "past-exam-strategy": PastExam,
   "exam-changes-2027": ExamChanges2027,
+  "pass-rate": PassRate,
 };
 
 const PAGES: { path: string; mod: PageModule }[] = [
@@ -160,6 +162,13 @@ describe("guide facts stay in sync with app data", () => {
     // 100日計画なら「開始日」がそのまま経過%になる。本文の表（10/45/65/80/95%）と一致すること。
     const starts = expectedPhaseSpans(100).map((s) => s.fromDay - 1);
     expect(starts).toEqual([0, 10, 45, 65, 80, 95]);
+  });
+});
+
+describe("/guide/pass-rate", () => {
+  it("renders the pass rates IPA published for each year", () => {
+    const markup = html(PassRate);
+    for (const rate of ["52.7%", "51.6%", "50.3%", "49.1%", "48.6%"]) expect(markup).toContain(rate);
   });
 });
 

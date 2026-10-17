@@ -31,9 +31,9 @@ export const GUIDE_INDEX = {
   title: "ITパスポート学習ガイド｜勉強法・アプリ選び・計画・過去問の使い方",
   h1: "ITパスポート学習ガイド",
   description:
-    "ITパスポート試験のアプリ選び、勉強法、勉強時間の見積もり方、試験日から逆算する学習計画、勉強が続かないときの立て直し方、過去問の使い方、2027年度からの新試験の変更点をまとめたガイドです。",
+    "ITパスポート試験のアプリ選び、勉強法、合格率と合格基準、勉強時間の見積もり方、試験日から逆算する学習計画、勉強が続かないときの立て直し方、過去問の使い方、2027年度からの新試験の変更点をまとめたガイドです。",
   datePublished: "2026-09-26",
-  dateModified: "2026-10-10",
+  dateModified: "2026-10-17",
 } as const;
 
 export const GUIDES: GuideArticle[] = [
@@ -57,6 +57,17 @@ export const GUIDES: GuideArticle[] = [
     datePublished: "2026-09-26",
     dateModified: "2026-09-26",
     related: ["study-plan", "past-exam-strategy", "study-time"],
+  },
+  {
+    slug: "pass-rate",
+    title: "ITパスポートの合格率は50%？年度別の推移と落ちる人に多いパターン",
+    h1: "ITパスポートの合格率は約50%。半分が落ちるのは難しいから？",
+    description:
+      "ITパスポートの合格率は近年50%前後で、令和7年度は48.6%でした。IPAの公表値をもとに年度別の推移、社会人と学生の違い、合格率50%の読み方、総合評価点と分野別評価点の合格基準（足切り）、落ちる人に多いパターンと受験前の確認方法を解説します。",
+    summary: "年度別の合格率の推移、50%の読み方、分野別の足切り、落ちる人に多いパターン。",
+    datePublished: "2026-10-17",
+    dateModified: "2026-10-17",
+    related: ["past-exam-strategy", "study-time", "it-passport-study-method"],
   },
   {
     slug: "study-time",
