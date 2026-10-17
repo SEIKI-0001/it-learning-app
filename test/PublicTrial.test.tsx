@@ -15,12 +15,14 @@ describe("public learning trial", () => {
     expect(isPublicPath("/lp/try")).toBe(true);
     expect(isPublicPath("/learn")).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "解説2" }));
-    expect(screen.getByTestId("work-doc")).toHaveAttribute("data-spot", "storage");
-    fireEvent.click(screen.getByRole("button", { name: "開く" }));
-    for (let i = 0; i < 8; i++) act(() => vi.advanceTimersByTime(3000));
-    expect(screen.getByTestId("work-doc")).toHaveAttribute("data-spot", "memory");
-    fireEvent.click(screen.getByRole("button", { name: "電源を切る" }));
-    expect(screen.getByTestId("stored-file")).toHaveTextContent("売上 100万円");
+    const forward = screen.getByRole("button", { name: "1ステップ進む" });
+    fireEvent.click(forward);
+    fireEvent.click(forward);
+    expect(screen.getByTestId("dns-lookup")).toHaveAttribute("data-state", "searching");
+    act(() => vi.advanceTimersByTime(1400));
+    expect(screen.getByTestId("dns-lookup")).toHaveAttribute("data-state", "found");
+    fireEvent.click(screen.getByRole("button", { name: "DNSを止める" }));
+    expect(screen.getByTestId("network-scene-caption")).toHaveTextContent("応答が返ってこない");
     // 学習記録は保存しない。送るのは体験の開始・完了の計測（/api/funnel）だけ。
     const sentTo = fetchSpy.mock.calls.map(([url]) => String(url));
     expect(sentTo.filter((url) => url !== "/api/funnel")).toEqual([]);

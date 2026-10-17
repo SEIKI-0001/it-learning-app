@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import ComputerCoreExperience from "@/components/experiences/ComputerCoreExperience";
+import NetworkAddressExperience from "@/components/experiences/NetworkAddressExperience";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import { FUNNEL_PLACEMENTS } from "@/lib/growth/funnel";
 import { sendFunnelEvent } from "@/lib/growth/funnelClient";
 
-// 体験の教材（ComputerCoreExperience）はそのまま使い、外側で「開始・完了」を数えて、
+// 体験の教材（NetworkAddressExperience）はそのまま使い、外側で「開始・完了」を数えて、
 // 最後のスライドまで進んだ人にだけ、登録すると何が続くかを見せる。登録しなくても体験は最後まで使える。
 const SIGNUP_HREF = "/login?next=/onboarding&from=trial";
 
@@ -59,7 +59,7 @@ export default function TrialFlow({
     <>
       <div onPointerDownCapture={start} onKeyDownCapture={start}>
         <ExperienceSlideDeck onActiveChange={onActiveChange}>
-          <ComputerCoreExperience />
+          <NetworkAddressExperience />
         </ExperienceSlideDeck>
       </div>
 
@@ -104,7 +104,7 @@ export default function TrialFlow({
         ) : (
           <>
             <h2 id="start-learning" className="text-xl font-bold">こんなふうに、ほかのテーマも。</h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-600">SQLやネットワークなどの教材と公式過去問も、無料で学習できます。GoogleまたはLINEで登録すると、自分の試験日に合わせた学習を始められます。</p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600">SQLやセキュリティなどの教材と公式過去問も、無料で学習できます。GoogleまたはLINEで登録すると、自分の試験日に合わせた学習を始められます。</p>
             <a
               href={SIGNUP_HREF}
               data-funnel={FUNNEL_PLACEMENTS.trialBottomSignup}

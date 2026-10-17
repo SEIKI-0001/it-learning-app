@@ -19,7 +19,7 @@ export default function AppOverview() {
           <div><dt>無料の教材</dt><dd>全{GUIDE_FACTS.topicCount}トピックの体験教材・解説と、公式過去問{GUIDE_FACTS.officialQuestionCount}問（{GUIDE_FACTS.officialYearRange}、独自解説付き）。</dd></div>
           <div><dt>学習記録・AI採点</dt><dd>学習記録の保存は登録から{FREE_RECORDING_DAYS}日間無料。無料プランのAI採点は1日{DAILY_LIMITS.free}回です。</dd></div>
           <div><dt>Proの料金と違い</dt><dd>月額{monthly.totalJpy.toLocaleString('ja-JP')}円。期間中の学習記録保存と1日{DAILY_LIMITS.pro}回のPro採点が使えます。期間を選ぶ買い切りプランもあります。<a href="#price">料金の詳細を見る</a></dd></div>
-          <div><dt>使える端末・始め方</dt><dd>スマホ・PCのブラウザで利用でき、インストール不要。<Link href="/lp/try">CPU・メモリ・ストレージの教材体験</Link>と<Link href="/kakomon">公開過去問の解説</Link>は登録なしで確認できます。</dd></div>
+          <div><dt>使える端末・始め方</dt><dd>スマホ・PCのブラウザで利用でき、インストール不要。<Link href="/lp/try">IPアドレスとDNSの教材体験</Link>と<Link href="/kakomon">公開過去問の解説</Link>は登録なしで確認できます。</dd></div>
         </dl>
         <p className="app-guide-link">
           自分に合う勉強アプリを探している方へ：<Link href="/guide/it-passport-app">ITパスポートアプリの選び方と無料範囲の確認方法</Link>
