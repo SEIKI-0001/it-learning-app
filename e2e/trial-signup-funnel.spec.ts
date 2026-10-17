@@ -76,7 +76,7 @@ test("体験を最後まで進めると、続きのメリットと押しやす�
   );
 
   // 体験から来たことと、この後の流れを示し、ログイン手段を最初の画面に入れる。
-  await expect(page.getByRole("heading", { name: "登録して、学習を続けましょう" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /この続きを、.*合格プラン.*で。/ })).toBeVisible();
   await expectInViewport(page, page.getByText(/Google ログインは現在準備中|Google で続ける/).first());
   await expect.poll(() => sent.some((s) => s.event === "view" && s.path === "/login")).toBe(true);
   await page.screenshot({ path: "test-results/login-from-trial-mobile.png" });

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 import Icon from "@/components/ui/Icon";
+import PlanPreview from "./PlanPreview";
+import "./login.css";
 import { FREE_RECORDING_DAYS } from "@/lib/billing/constants";
 import { getInternalUserId } from "@/lib/auth/currentUser";
 import { AUGUST_2026_CAMPAIGN } from "@/lib/campaign/august2026";
@@ -64,7 +66,7 @@ export default async function LoginPage({
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-md px-4 pb-12 pt-7 md:pt-12">
+      <div className="mx-auto w-full max-w-md px-4 pb-12 pt-6 md:pt-12">
         {preview && userId && (
           <p className="mb-5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
             確認用の表示です（ログイン済みのまま、初めての人が見る画面を表示しています）。
@@ -73,40 +75,28 @@ export default async function LoginPage({
             </a>
           </p>
         )}
-        <p className="text-xs font-semibold text-brand-700">
-          {fromTrial ? "体験の続きから" : "無料ではじめる"}
-        </p>
-        <h1 className="mt-1.5 text-[22px] font-bold leading-snug tracking-tight">
-          {fromTrial ? "登録して、学習を続けましょう" : "登録して、今日の学習をはじめましょう"}
+        {/* LP と同じ明朝の見出しと朱の手描き丸で「さっきの続き」に見せ、
+            説明の代わりに「登録した1分後の自分の画面」を見せる */}
+        <h1 className="lg-title">
+          {fromTrial ? "この続きを、" : "1分後には、"}
+          <br />
+          あなた専用の
+          <span className="lg-marked">
+            合格プラン
+            <svg viewBox="0 0 100 40" aria-hidden="true" preserveAspectRatio="none">
+              <ellipse cx="50" cy="20" rx="48" ry="17" pathLength="100" />
+            </svg>
+          </span>
+          {fromTrial ? "で。" : "が。"}
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-gray-600">
-          登録は無料・クレジットカード不要。教材と公式過去問はずっと無料で、学習記録も最初の{freeDays}日間は無料です。
-        </p>
 
-        {/* この後の流れ。今いる段（登録）だけを濃くする */}
-        <ol className="mt-5 grid grid-cols-3 gap-1.5" aria-label="はじめるまでの流れ">
-          {STEPS.map((step, i) => (
-            <li
-              key={step.title}
-              aria-current={i === 0 ? "step" : undefined}
-              className={`rounded-lg px-2.5 py-2 ${
-                i === 0 ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-600"
-              }`}
-            >
-              <span
-                className={`block text-[11px] tabular-nums ${i === 0 ? "text-gray-300" : "text-gray-400"}`}
-              >
-                STEP {i + 1}
-              </span>
-              <span className="block text-[13px] font-semibold leading-tight">{step.title}</span>
-              <span
-                className={`mt-0.5 block text-[11px] ${i === 0 ? "text-gray-300" : "text-gray-500"}`}
-              >
-                {step.note}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <PlanPreview />
+
+        <p className="mt-5 text-center text-sm font-medium text-gray-700">
+          登録は無料・クレジットカード不要
+          <span className="mx-1.5 text-gray-300">|</span>
+          記録も{freeDays}日間無料
+        </p>
 
         {campaignContinuation && (
           <div className="mt-5 rounded-xl bg-brand-50 px-4 py-4 text-left">
@@ -118,7 +108,7 @@ export default async function LoginPage({
         )}
 
         {/* ログイン手段。新規も既存も同じボタンで、アカウントが無ければそのまま作られる */}
-        <div className="mt-6 space-y-3">
+        <div className="mt-4 space-y-3">
           {googleEnabled ? (
             <GoogleLoginButton next={next} label="Google で続ける" />
           ) : (
@@ -181,12 +171,6 @@ export default async function LoginPage({
     </main>
   );
 }
-
-const STEPS = [
-  { title: "登録", note: "30秒" },
-  { title: "初回設定", note: "約1分" },
-  { title: "今日の学習", note: "解説と問題" },
-] as const;
 
 function LineMark() {
   return (
