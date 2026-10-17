@@ -110,7 +110,14 @@ export function resetAppState(): void {
 
 /** 初回設定（プロフィール）から初期 AppState を作る。 */
 export function initializeAppState(profile: UserProfile): AppState {
-  const state: AppState = {
+  const state = buildInitialAppState(profile);
+  saveAppState(state);
+  return state;
+}
+
+/** 初回設定直後の AppState を作る（保存はしない）。初回設定の確認表示（?preview=1）でも使う。 */
+export function buildInitialAppState(profile: UserProfile): AppState {
+  return {
     profile,
     progress: {
       level: 1,
@@ -133,6 +140,4 @@ export function initializeAppState(profile: UserProfile): AppState {
     },
     answers: [],
   };
-  saveAppState(state);
-  return state;
 }

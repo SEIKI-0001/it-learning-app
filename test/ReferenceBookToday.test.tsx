@@ -260,7 +260,7 @@ function goToBookStep() {
 }
 
 describe("オンボーディングの参考書選択", () => {
-  it("「あとで設定する」のままでも完了でき、参考書は保存しない", () => {
+  it("「あとで設定する」のままでも完了でき、参考書は保存しない", async () => {
     render(<OnboardingPage />);
     goToBookStep();
     expect(screen.getByRole("radio", { name: "あとで設定する" })).toHaveAttribute(
@@ -269,6 +269,11 @@ describe("オンボーディングの参考書選択", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "この内容でプランを作る" }));
+    // 保存は押した時点で済み、「プランができました」のボタンで今日の学習へ進む。
+    expect(window.localStorage.getItem("fequest:appstate")).not.toBeNull();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "今日の学習をはじめる" }, { timeout: 5000 }),
+    );
 
     expect(push).toHaveBeenCalledWith("/today?guide=1");
     expect(storedBook()).toBeNull();

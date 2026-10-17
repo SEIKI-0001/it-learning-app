@@ -19,6 +19,9 @@ test("a new learner can complete onboarding and open today's learning", async ({
 
   // 初回設定後は今日の学習に移動し、初回操作ガイドが開く。
   await page.getByRole("button", { name: /この内容でプランを作る/ }).click();
+  // 「プランを作っています」→「プランができました」を経て、今日の学習へ。
+  await expect(page.getByRole("heading", { name: "プランができました！" })).toBeVisible();
+  await page.getByRole("button", { name: "今日の学習をはじめる" }).click();
   await expect(page).toHaveURL(/\/today\?guide=1$/);
   const guide = page.getByRole("dialog", {
     name: "ようこそ！ここが毎日のスタート地点です",
