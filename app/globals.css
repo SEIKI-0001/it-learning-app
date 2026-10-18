@@ -2,8 +2,9 @@
 
 /*
  * デザイントークン（2026-10 アイスブルーに更新。/progress の配色を全画面へ）。
- * - 地は白。氷色 #EDF5FA の地はカードで組んだ /progress だけ（html[data-surface="light"]）。
- *   他の画面は白地の上の淡い面（brand-50 / gray-50）で区切る設計なので、地を色にすると面が沈む。
+ * - 地は氷色 #EDF5FA、まとまりは白いカード（/progress と同じ組み方）。
+ *   地の上に直接置く淡い面（brand-50 / gray-50）は沈むので使わず、白いカードにする。
+ *   淡い面はカードの中の「選択中・強調・小さな札」にだけ使う。
  * - brand: 青 #175CD3（600）。新規・現在地・進捗バー・リンク・主ボタン。テキストは 700 以上。
  * - accent: 琥珀 #D78B17（500）。復習・注意・受取可能な報酬。テキストは 700 以上。
  * - emerald: 青緑 #0C8064（600）。完了・正解・獲得済み。
@@ -68,7 +69,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #edf5fa;
   --foreground: #0f172a;
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   /* 和文は palt が効く OS 書体（lib/fonts.ts の説明を参照） */
@@ -77,11 +78,7 @@
 }
 
 /* 画面の色（lib/colorScheme）。/progress が表示中だけ html に data-surface（light / dark）を付ける。
-   light は /progress の氷色の地、dark は progressCompact.module.css のダークと揃える。 */
-html[data-surface="light"] {
-  --background: #edf5fa;
-}
-
+   dark は progressCompact.module.css のダークと揃える。 */
 html[data-surface="dark"] {
   --background: #0f1722;
   --foreground: #eef3fa;

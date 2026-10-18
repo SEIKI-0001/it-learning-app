@@ -84,11 +84,13 @@
 
 /* ───────── hero panel ───────── */
 
+/* 氷色の地に白いカード（/progress と同じ組み方） */
 .hero {
   margin-top: 12px;
   padding: 22px 18px 24px;
+  border: 1px solid var(--line);
   border-radius: 14px;
-  background: var(--wash);
+  background: var(--canvas);
 }
 
 .eyebrow {
@@ -405,7 +407,11 @@
 }
 
 .sheet {
-  padding: 20px 6px 0;
+  margin-top: 20px;
+  padding: 20px 14px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--canvas);
 }
 
 .missions {
@@ -413,6 +419,7 @@
   padding: 20px 18px;
   border: 1px solid var(--line);
   border-radius: 12px;
+  background: var(--canvas);
 }
 
 .sheetHead {
@@ -923,6 +930,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
 }
 
 .mochitFigure {
@@ -932,6 +940,7 @@
 
 .bubble {
   position: relative;
+  min-width: 0;
   margin: 0;
   padding: 12px 14px;
   border-radius: 12px;
@@ -1005,7 +1014,7 @@
   }
 
   .sheet {
-    padding: 28px 8px 0;
+    padding: 24px 20px 12px;
   }
 
   .missions {
@@ -1147,7 +1156,8 @@
   }
 
   .sheet {
-    padding: 32px 0 0;
+    margin-top: 0;
+    padding: 24px 22px 12px;
   }
 
   /* 右列: ミッションと参考書の進み具合をまとめて追従させる */
@@ -1198,13 +1208,16 @@
     font-size: 20px;
   }
 
+}
+
+/* 吹き出しとボタンを横に並べるのは、左列に十分な幅があるときだけ（狭いと吹き出しが縦に潰れる） */
+@media (min-width: 1280px) {
   .nowPanel {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
     gap: 24px;
   }
-
 
   .nowActions {
     flex-direction: column;
