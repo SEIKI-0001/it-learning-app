@@ -5,6 +5,7 @@ import { ProcessDioramaScene } from "./process/ProcessDioramaScene";
 import { makespan, queueLengths, schedule, spotsAt } from "./process/processSim";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle } from "./ui";
+import { ProcessNotations, RpaPanel } from "./process/ProcessPanels";
 import { InlineIcon } from "@/components/ui/Pictogram";
 import Icon, { type IconName } from "@/components/ui/Icon";
 
@@ -15,6 +16,9 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 //      改善後は溜まらずに流れることを見比べる
 //   ② 工程ごとの時間と所要時間を改善前／改善後の表で見比べる
 //   ③ そのままシステム化の罠（まず見直す）クイズ
+//   ④ RPA（向く作業・向かない作業、導入の3段階、BPO・EUC・FAとの違い）
+//   ⑤ 業務の流れを描く図（DFD・アクティビティ図・BPMN・WFA）とプロセスマイニング
+//   ④⑤は過去問の出題に合わせた静的な図（process/ProcessPanels）
 // ============================================================================
 
 type Step = { name: string; icon: IconName; base: number; improved: number; fix: string };
@@ -318,12 +322,14 @@ export default function BusinessProcessExperience() {
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
         <b>業務プロセス改善</b>は、仕事の流れを<b>見える化</b>して、時間のかかる所やミスの起きる所を見つけ、
-        手順の見直しやIT化でよくする活動です。
+        手順の見直しやIT化でよくする活動です。試験では、定型作業を自動化する<b>RPA</b>と、業務の流れを描く<b>図の表記法</b>がよく問われます。
       </div>
 
       <Flow />
       <Compare />
       <Quiz />
+      <RpaPanel step={4} />
+      <ProcessNotations step={5} />
     </div>
   );
 }

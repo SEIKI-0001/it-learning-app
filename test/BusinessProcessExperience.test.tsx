@@ -43,6 +43,22 @@ describe("BusinessProcessExperience", () => {
     expect(screen.getByText(/BPR/)).toBeInTheDocument();
   });
 
+  it("covers what past exams ask: RPA fit and phases, and the notations for business processes", () => {
+    renderDeck();
+    expect(screen.getByText("1 / 5")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "解説4" }));
+    const fit = screen.getByTestId("rpa-fit");
+    expect(fit.querySelector('[data-ok="true"]')).toHaveTextContent("精算伝票");
+    expect(Array.from(fit.querySelectorAll('[data-ok="false"]')).map((e) => e.textContent).join()).toContain("産業用ロボット");
+    expect(screen.getByTestId("rpa-phases")).toHaveTextContent(/計画策定.*概念検証.*先行導入.*本格導入/);
+    fireEvent.click(screen.getByRole("button", { name: "解説5" }));
+    expect(screen.getByTestId("activity-lanes")).toHaveTextContent(/申請者.*上司.*経理/);
+    const notations = screen.getByTestId("process-notations");
+    expect(notations.querySelector('[data-notation="アクティビティ図"]')).toHaveTextContent("人の役割");
+    expect(notations.querySelector('[data-notation="BPMN"]')).toHaveTextContent("ISO/IEC 19510");
+    expect(screen.getByText(/プロセスマイニング/)).toBeInTheDocument();
+  });
+
   it("piles documents at 手書き転記 before the improvement, and none after switching", () => {
     renderDeck();
     scrub(60);
