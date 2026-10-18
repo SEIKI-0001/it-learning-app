@@ -36,7 +36,7 @@ import PdcaExperience from "./PdcaExperience";
 import RiskExperience from "./RiskExperience";
 import SlaExperience from "./SlaExperience";
 import ItilStoryExperience from "./itil/ItilStoryExperience";
-import SystemAuditExperience from "./SystemAuditExperience";
+import AuditStoryExperience from "./audit/AuditStoryExperience";
 import RequirementsExperience from "./RequirementsExperience";
 import BreakEvenExperience from "./BreakEvenExperience";
 import SwotExperience from "./SwotExperience";
@@ -144,7 +144,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "mgmt-risk-management": RiskExperience,
   "mgmt-service-sla": SlaExperience,
   "mgmt-itil": ItilStoryExperience,
-  "mgmt-system-audit": SystemAuditExperience,
+  "mgmt-system-audit": AuditStoryExperience,
   "mgmt-requirements-definition": RequirementsExperience,
   "mgmt-operation-maintenance": MaintenanceTypesExperience,
   "strat-accounting-break-even": BreakEvenExperience,
