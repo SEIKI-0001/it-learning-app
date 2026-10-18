@@ -21,8 +21,25 @@ export const PREVIEW_SCREENS = [
 
 export default function PreviewShell({ screen, children }: { screen: string; children: ReactNode }) {
   // 子ページの effect が localStorage を読む前に書き込む。
+  // 書くのはこのタブで1回だけ（毎回書き直すと、ランクアップ等の演出が画面を開くたびに出るため）。
+  // ?reseed を付けると書き直す。
   useState(() => {
-    if (typeof window !== "undefined") seedPreviewData();
+    if (typeof window === "undefined") return true;
+    const force = new URLSearchParams(window.location.search).has("reseed");
+    let seeded = false;
+    try {
+      seeded = window.sessionStorage.getItem("fequest:previewSeeded") === "1";
+    } catch {
+      /* 読めなければ毎回書く */
+    }
+    if (force || !seeded) {
+      seedPreviewData();
+      try {
+        window.sessionStorage.setItem("fequest:previewSeeded", "1");
+      } catch {
+        /* 書けなくても表示は続ける */
+      }
+    }
     return true;
   });
   return (
