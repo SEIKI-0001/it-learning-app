@@ -53,7 +53,7 @@ import {
 } from "@/components/progress/ProgressCompact";
 import { badgeActionHref } from "@/components/badges/BadgeList";
 import { nextMilestone, progressTrend, weeklyAnswerBuckets } from "@/lib/progressGrowth";
-import { useColorScheme, useColorSchemeSurface } from "@/lib/colorScheme";
+import { useDarkSurface, useThemePreference } from "@/lib/useTheme";
 import c from "@/components/progress/progressCompact.module.css";
 import t from "@/components/today/todayView.module.css";
 
@@ -84,8 +84,8 @@ export default function ProgressPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
   const { book: referenceBook } = useReferenceBook();
-  const { preference: schemePreference, scheme } = useColorScheme();
-  useColorSchemeSurface(scheme);
+  const themePreference = useThemePreference();
+  useDarkSurface(themePreference === "dark");
   // 前回のサーバー応答があれば即表示し（スケルトンを出さない）、最新値は背景で差し替える。
   // 初回描画は LoadingScreen（state===undefined）のため、遅延初期化でも hydration は一致する。
   const [bootstrap, setBootstrap] = useState<ProgressBootstrapCache | null>(() =>
@@ -311,7 +311,7 @@ export default function ProgressPage() {
           className={c.spanGrowth}
         />
         <LinkRow links={compactLinks} className={c.spanFull} />
-        <SchemeToggle preference={schemePreference} className={c.spanFull} />
+        <SchemeToggle preference={themePreference} className={c.spanFull} />
       </div>
       {openDetail && (
         <CheckpointDetailSheet

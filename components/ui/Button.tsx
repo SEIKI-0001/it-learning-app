@@ -15,7 +15,7 @@ const BASE =
   "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700",
+  primary: "bg-cta text-white hover:bg-cta-hover",
   secondary:
     "border border-gray-300 bg-white text-gray-800 hover:bg-gray-50",
   soft: "bg-brand-50 text-brand-700 hover:bg-brand-100",

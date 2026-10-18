@@ -591,7 +591,7 @@ function RoleDialog({
             type="button"
             disabled={!correct}
             onClick={onPlace}
-            className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:bg-gray-200 disabled:text-gray-400"
+            className="flex-1 rounded-lg bg-cta px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cta-hover disabled:bg-gray-200 disabled:text-gray-400"
             data-testid="role-place"
           >
             {correct ? `${where}に置く` : "正解すると置けます"}
@@ -689,7 +689,7 @@ function GuideCard({
             <button
               type="button"
               onClick={onNextMission}
-              className="mt-2 w-full rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+              className="mt-2 w-full rounded-lg bg-cta px-3 py-2 text-sm font-semibold text-white hover:bg-cta-hover"
               data-testid="guide-next"
             >
               ミッション {missionIdx + 2} へ
@@ -706,7 +706,7 @@ function GuideCard({
             <button
               type="button"
               onClick={() => onAction(a)}
-              className="mt-2 w-full rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+              className="mt-2 w-full rounded-lg bg-cta px-3 py-2 text-sm font-semibold text-white hover:bg-cta-hover"
               data-testid="guide-action"
             >
               {primary}

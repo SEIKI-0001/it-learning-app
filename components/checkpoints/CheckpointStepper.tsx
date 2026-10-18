@@ -40,7 +40,7 @@ export default function CheckpointStepper({
                 {isCleared ? <Icon name="check" className="h-3.5 w-3.5" /> : cp.order}
               </span>
               <span
-                className={`mt-0.5 text-[9px] font-bold ${
+                className={`mt-1 text-[10px] font-bold ${
                   isCurrent
                     ? "text-brand-600"
                     : isCleared

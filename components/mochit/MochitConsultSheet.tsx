@@ -322,7 +322,7 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
                 <button
                   type="button"
                   onClick={startReflection}
-                  className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-medium text-white hover:bg-brand-700"
+                  className="rounded-lg bg-cta px-3 py-2 text-xs font-medium text-white hover:bg-cta-hover"
                 >
                   30秒だけ振り返る
                 </button>
@@ -471,7 +471,7 @@ export default function MochitConsultSheet({ displayName }: { displayName: strin
             type="submit"
             disabled={sending || input.trim().length === 0}
             aria-label="送信"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white hover:bg-brand-700 disabled:bg-gray-300"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cta text-white hover:bg-cta-hover disabled:bg-gray-300"
           >
             <Icon name="arrow-right" className="h-4 w-4 -rotate-90" aria-hidden />
           </button>

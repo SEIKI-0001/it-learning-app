@@ -12,7 +12,7 @@ import Link from "next/link";
 import Icon from "@/components/ui/Icon";
 import { badgeActionHref } from "@/components/badges/BadgeList";
 import { STAGE_LABELS } from "@/lib/checkpointDetail";
-import { saveColorSchemePreference, type ColorSchemePreference } from "@/lib/colorScheme";
+import { saveThemePreference, THEME_OPTIONS, type ThemePreference } from "@/lib/theme";
 import type { CheckpointStage } from "@/lib/checkpoints";
 import type { WeekBucket } from "@/lib/progressGrowth";
 import type { ReferenceReadingOverview } from "@/lib/referenceBook";
@@ -586,34 +586,28 @@ export function LinkRow({
   );
 }
 
-// ───────────────────────── 画面の色 ─────────────────────────
+// ───────────────────────── 画面の配色 ─────────────────────────
 
-const SCHEME_OPTIONS: { value: ColorSchemePreference; label: string }[] = [
-  { value: "system", label: "自動" },
-  { value: "light", label: "ライト" },
-  { value: "dark", label: "ダーク" },
-];
-
-/** ライト / ダーク / 端末に合わせる の切り替え（この端末に保存）。 */
+/** アイス / クラシック / ダーク の切り替え（この端末に保存。設定画面と同じ値）。 */
 export function SchemeToggle({
   preference,
   className,
 }: {
-  preference: ColorSchemePreference;
+  preference: ThemePreference;
   className?: string;
 }) {
   return (
     <div className={`${c.scheme} ${className ?? ""}`}>
-      <span id="scheme-label">画面の色</span>
+      <span id="scheme-label">画面の配色</span>
       <div role="radiogroup" aria-labelledby="scheme-label" className={c.schemeOptions}>
-        {SCHEME_OPTIONS.map((option) => (
+        {THEME_OPTIONS.map((option) => (
           <button
             key={option.value}
             type="button"
             role="radio"
             aria-checked={preference === option.value}
             className={c.schemeOption}
-            onClick={() => saveColorSchemePreference(option.value)}
+            onClick={() => saveThemePreference(option.value)}
           >
             {option.label}
           </button>

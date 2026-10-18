@@ -318,7 +318,7 @@ function ScreenView({
       <button
         type="button"
         onClick={onRun}
-        className="mt-3 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white active:scale-[0.99]"
+        className="mt-3 w-full rounded-xl bg-cta px-4 py-3 text-sm font-bold text-white active:scale-[0.99]"
       >
         {running ? "もう一度実行する" : screen.buttonLabel}
       </button>

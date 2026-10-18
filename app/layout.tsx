@@ -5,6 +5,8 @@ import CelebrationHost from '@/components/celebration/CelebrationHost';
 import FloatingMochitGate from '@/components/mochit/FloatingMochitGate';
 import AttributionCapture from '@/components/growth/AttributionCapture';
 import FirstRunFunnel from '@/components/growth/FirstRunFunnel';
+import ThemeSync from '@/components/theme/ThemeSync';
+import { themeBootScript } from '@/lib/theme';
 
 export const metadata: Metadata = {
   title: 'ITパスポート学習コーチ',
@@ -18,14 +20,20 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#edf5fa',
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className={`antialiased ${appFontVariables}`}>
-      {/* 背景色は globals.css の --background(#ffffff) に一元化する */}
+    // data-theme は描画前のスクリプトが付けるので、サーバーの HTML とずれる警告は抑える
+    <html lang="ja" className={`antialiased ${appFontVariables}`} suppressHydrationWarning>
+      <head>
+        {/* 配色テーマ（lib/theme）を最初の描画前に決める。後からの切り替えは ThemeSync */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
+      </head>
+      {/* 背景色は globals.css の --background に一元化する（テーマで変わる） */}
       <body className="min-h-screen">
+        <ThemeSync />
         {children}
         <FloatingMochitGate />
         <CelebrationHost />

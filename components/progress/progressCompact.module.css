@@ -1,10 +1,10 @@
 /* /progress ダッシュボード。色トークンは todayView.module.css の .view が定義し、
-   この画面では .theme（アイスブルー）で上書きする。ダークは <html data-surface="dark">（lib/colorScheme）。
+   アイスでは .theme で上書きする（クラシックは .view のまま）。ダークは <html data-surface="dark">（lib/theme）。
    色は状態にだけ使う: 得意・達成=緑 / まずまず・現在地=青 / 要強化・苦手=橙 / これから=灰。
    状態3色はライト・ダークとも色覚の違いで区別できることを検証済み（橙は文字ラベルを必ず併記）。
    面の装飾（影・グラデーション）はしない。 */
 
-main.theme {
+:global(html[data-theme="ice"]) main.theme {
   --canvas: #fcfeff;
   --wash: #e4eff8;
   --wash-line: #d9e5ee;
@@ -23,8 +23,6 @@ main.theme {
   --orange: #d78b17;
   --orange-700: #8d5109;
   --orange-soft: #fff0d5;
-  --color-brand-600: #175cd3;
-  --color-brand-700: #184ca4;
   color: var(--ink);
 }
 
@@ -47,8 +45,9 @@ main.theme {
   --orange: #c9792e;
   --orange-700: #f2b67a;
   --orange-soft: #3b2a1c;
-  --color-brand-600: #3d6be0;
-  --color-brand-700: #2f59c4;
+  --color-cta: #3d6be0;
+  --color-cta-hover: #2f59c4;
+  color: var(--ink);
 }
 
 .layout {
@@ -332,14 +331,14 @@ main.theme {
   margin-top: auto;
   padding: 14px 16px;
   border-radius: 12px;
-  background: var(--color-brand-600);
+  background: var(--color-cta);
   color: #fff;
   text-decoration: none;
   transition: background-color 0.15s var(--ease);
 }
 
 .next:hover {
-  background: var(--color-brand-700);
+  background: var(--color-cta-hover);
 }
 
 .nextBody {

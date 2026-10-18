@@ -24,8 +24,8 @@
   --exam: var(--color-brand-900);
   --exam-700: var(--color-brand-900);
   --exam-soft: var(--color-brand-50);
-  --cta: var(--color-brand-600);
-  --cta-hover: var(--color-brand-700);
+  --cta: var(--color-cta);
+  --cta-hover: var(--color-cta-hover);
   --sans: var(--font-app-num), var(--font-app-sans), system-ui, sans-serif;
   --num: var(--font-app-num), "Helvetica Neue", Arial, sans-serif;
   --mono: var(--font-app-mono), ui-monospace, "SF Mono", Menlo, monospace;
@@ -84,13 +84,13 @@
 
 /* ───────── hero panel ───────── */
 
-/* 氷色の地に白いカード（/progress と同じ組み方） */
+/* 面の色はテーマで変わる（globals.css の --panel-* / --card-*。アイス=白いカード、クラシック=淡い面） */
 .hero {
   margin-top: 12px;
   padding: 22px 18px 24px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--panel-border);
   border-radius: 14px;
-  background: var(--canvas);
+  background: var(--panel-bg);
 }
 
 .eyebrow {
@@ -409,9 +409,9 @@
 .sheet {
   margin-top: 20px;
   padding: 20px 14px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
-  background: var(--canvas);
+  background: var(--card-bg);
 }
 
 .missions {
@@ -419,7 +419,7 @@
   padding: 20px 18px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--canvas);
+  background: var(--card-bg);
 }
 
 .sheetHead {

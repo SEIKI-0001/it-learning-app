@@ -284,7 +284,7 @@ export default function OnboardingPage() {
         <button
           type="button"
           onClick={handleStart}
-          className="mt-9 w-full rounded-lg bg-brand-600 px-6 py-4 text-base font-semibold text-white transition hover:bg-brand-700 active:scale-[0.99]"
+          className="mt-9 w-full rounded-lg bg-cta px-6 py-4 text-base font-semibold text-white transition hover:bg-cta-hover active:scale-[0.99]"
         >
           この内容でプランを作る
         </button>
