@@ -24,8 +24,8 @@
   --exam: var(--color-brand-900);
   --exam-700: var(--color-brand-900);
   --exam-soft: var(--color-brand-50);
-  --cta: var(--color-gray-900);
-  --cta-hover: #000000;
+  --cta: var(--color-brand-600);
+  --cta-hover: var(--color-brand-700);
   --sans: var(--font-app-num), var(--font-app-sans), system-ui, sans-serif;
   --num: var(--font-app-num), "Helvetica Neue", Arial, sans-serif;
   --mono: var(--font-app-mono), ui-monospace, "SF Mono", Menlo, monospace;

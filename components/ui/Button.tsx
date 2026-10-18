@@ -4,7 +4,7 @@
 import type { ButtonHTMLAttributes } from "react";
 
 export type ButtonVariant =
-  | "primary" // 画面の主CTA（1画面1つが原則）。墨色の塗り
+  | "primary" // 画面の主CTA（1画面1つが原則）。青（brand-600）の塗り
   | "secondary" // 主CTAの隣に置く同格未満の行動
   | "soft" // カード内の補助行動（薄い塗り）
   | "warn"; // 復習・リベンジ系の行動（淡い琥珀）
@@ -15,7 +15,7 @@ const BASE =
   "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50";
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-gray-900 text-white hover:bg-black",
+  primary: "bg-brand-600 text-white hover:bg-brand-700",
   secondary:
     "border border-gray-300 bg-white text-gray-800 hover:bg-gray-50",
   soft: "bg-brand-50 text-brand-700 hover:bg-brand-100",

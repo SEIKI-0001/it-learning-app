@@ -168,7 +168,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             gate.finalExamUnlocked
               ? gate.finalExamPassed
                 ? "bg-emerald-50 ring-1 ring-emerald-200"
-                : "animate-sheen bg-gray-900 text-white"
+                : "animate-sheen bg-brand-600 text-white"
               : "bg-gray-50"
           }`}
         >

@@ -1,61 +1,61 @@
 @import "tailwindcss";
 
 /*
- * デザイントークン（2026-09 刷新: /today・/progress の「クリア」配色に統一）。
- * - 地は白。色の付いた面は brand-50（淡い青）だけにし、区切りは線より余白で取る。
- * - brand: 明るい青 #2F6FDB。新規・現在地・進捗バー・リンク。テキストは 700 以上。
- * - accent: 琥珀 #E08A34。復習・注意・受取可能な報酬。テキストは 700 以上。
- * - emerald: 緑 #2F8F63。完了・正解・獲得済み。
- * - gray: 墨色系の無彩色。主CTAは gray-900（墨）の塗り。
- * - 書体: 英数字 Geist ＋ 和文 Zen Kaku Gothic New。太さは 400 / 500 を基本にする
- *   （semibold / bold も 500 に寄せ、太字で強調しない）。
+ * デザイントークン（2026-10 アイスブルーに更新。/progress の配色を全画面へ）。
+ * - 地は氷色 #EDF5FA（--background）、カードは白。区切り線は少し青みのある灰。
+ * - brand: 青 #175CD3（600）。新規・現在地・進捗バー・リンク・主ボタン。テキストは 700 以上。
+ * - accent: 琥珀 #D78B17（500）。復習・注意・受取可能な報酬。テキストは 700 以上。
+ * - emerald: 青緑 #0C8064（600）。完了・正解・獲得済み。
+ * - gray: 紺寄りの灰（900 = #152C40）。
+ * - 各段は旧ランプの明度を保って色相だけ取り直した（文字のコントラストは旧版と同等以上）。
+ * - 書体: 英数字 Geist ＋ 和文は OS 書体。
  * - 装飾目的の多色使いはしない。
  */
 @theme {
-  --color-brand-50: #f2f6fc;
-  --color-brand-100: #dce7fa;
-  --color-brand-200: #c3d5f4;
-  --color-brand-300: #97b6ec;
-  --color-brand-400: #5f8fe3;
-  --color-brand-500: #2f6fdb;
-  --color-brand-600: #2463d1;
-  --color-brand-700: #2257b0;
-  --color-brand-800: #1d4892;
-  --color-brand-900: #183a73;
-  --color-brand-950: #10264b;
+  --color-brand-50: #f2f6fd;
+  --color-brand-100: #dfebff;
+  --color-brand-200: #c1d5f6;
+  --color-brand-300: #94b6f0;
+  --color-brand-400: #5b8ee9;
+  --color-brand-500: #2b6de2;
+  --color-brand-600: #175cd3;
+  --color-brand-700: #184ca4;
+  --color-brand-800: #194797;
+  --color-brand-900: #163977;
+  --color-brand-950: #0f254e;
 
   --color-accent-50: #fdf5ec;
-  --color-accent-100: #f9e5d0;
-  --color-accent-200: #f2cda6;
-  --color-accent-300: #eab07a;
-  --color-accent-400: #e59c55;
-  --color-accent-500: #e08a34;
-  --color-accent-600: #b35c12;
-  --color-accent-700: #9a5a18;
-  --color-accent-800: #7a4512;
+  --color-accent-100: #fff0d5;
+  --color-accent-200: #f2cda4;
+  --color-accent-300: #e7b275;
+  --color-accent-400: #e19f4c;
+  --color-accent-500: #d78b17;
+  --color-accent-600: #a46804;
+  --color-accent-700: #8d5109;
+  --color-accent-800: #754902;
 
-  --color-emerald-50: #ebf6f0;
-  --color-emerald-100: #d3ecdf;
-  --color-emerald-200: #b0dcc6;
-  --color-emerald-300: #82c7a5;
-  --color-emerald-400: #4fab80;
-  --color-emerald-500: #2f8f63;
-  --color-emerald-600: #287a55;
-  --color-emerald-700: #22684a;
-  --color-emerald-800: #1c553d;
-  --color-emerald-900: #164330;
+  --color-emerald-50: #ddf2e9;
+  --color-emerald-100: #cfede1;
+  --color-emerald-200: #a9dec9;
+  --color-emerald-300: #73c9ab;
+  --color-emerald-400: #2dae89;
+  --color-emerald-500: #12a07c;
+  --color-emerald-600: #0c8064;
+  --color-emerald-700: #066950;
+  --color-emerald-800: #07513f;
+  --color-emerald-900: #044433;
 
-  --color-gray-50: #f7f8fa;
-  --color-gray-100: #f1f3f6;
-  --color-gray-200: #eceef2;
-  --color-gray-300: #cdd2d9;
-  --color-gray-400: #9aa1ab;
-  --color-gray-500: #6e747d;
-  --color-gray-600: #4d535c;
-  --color-gray-700: #3a3f46;
-  --color-gray-800: #25292e;
-  --color-gray-900: #16191d;
-  --color-gray-950: #0d0f12;
+  --color-gray-50: #f2f9ff;
+  --color-gray-100: #eaf5fd;
+  --color-gray-200: #d9e5ee;
+  --color-gray-300: #aabfcf;
+  --color-gray-400: #92a3b1;
+  --color-gray-500: #586f82;
+  --color-gray-600: #425d72;
+  --color-gray-700: #2c4152;
+  --color-gray-800: #213648;
+  --color-gray-900: #152c40;
+  --color-gray-950: #0b1a28;
 
   /* 見出しの階層は太さでも立てる（OS和文は 600 で W6 相当になる） */
   --font-weight-semibold: 600;
@@ -67,7 +67,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #edf5fa;
   --foreground: #16191d;
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   /* 和文は palt が効く OS 書体（lib/fonts.ts の説明を参照） */
@@ -75,12 +75,8 @@
     "Noto Sans CJK JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
-/* 画面の色（lib/colorScheme）。対応画面（いまは /progress）が表示中だけ html に data-surface を付ける。
-   値は components/progress/progressCompact.module.css の .theme（アイスブルー）と揃える。 */
-html[data-surface="light"] {
-  --background: #edf5fa;
-}
-
+/* 画面の色（lib/colorScheme）。ダーク対応画面（いまは /progress）が表示中だけ html に data-surface を付ける。
+   値は components/progress/progressCompact.module.css のダークと揃える。 */
 html[data-surface="dark"] {
   --background: #0f1722;
   --foreground: #eef3fa;

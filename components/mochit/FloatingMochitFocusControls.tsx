@@ -32,7 +32,7 @@ const minutesOf = (ms: number) => Math.round(ms / 60_000);
 const secondaryClass =
   "inline-flex min-h-9 flex-1 items-center justify-center rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-gray-800 ring-1 ring-gray-200 hover:bg-gray-50 active:bg-gray-100";
 const primaryClass =
-  "inline-flex min-h-9 flex-1 items-center justify-center rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-black";
+  "inline-flex min-h-9 flex-1 items-center justify-center rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-700";
 
 export default function FloatingMochitFocusControls({ session, displayName, onDone }: Props) {
   const remainingMs = useFocusRemainingMs(session);
