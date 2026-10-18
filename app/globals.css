@@ -2,11 +2,12 @@
 
 /*
  * デザイントークン（2026-10 アイスブルーに更新。/progress の配色を全画面へ）。
- * - 地は氷色 #EDF5FA（--background）、カードは白。区切り線は少し青みのある灰。
+ * - 地は白。氷色 #EDF5FA の地はカードで組んだ /progress だけ（html[data-surface="light"]）。
+ *   他の画面は白地の上の淡い面（brand-50 / gray-50）で区切る設計なので、地を色にすると面が沈む。
  * - brand: 青 #175CD3（600）。新規・現在地・進捗バー・リンク・主ボタン。テキストは 700 以上。
  * - accent: 琥珀 #D78B17（500）。復習・注意・受取可能な報酬。テキストは 700 以上。
  * - emerald: 青緑 #0C8064（600）。完了・正解・獲得済み。
- * - gray: 紺寄りの灰（900 = #152C40）。
+ * - gray: ほぼ無彩色の寒色グレー（slate 系。青みが強いと画面全体が一色に見えるため）。
  * - 各段は旧ランプの明度を保って色相だけ取り直した（文字のコントラストは旧版と同等以上）。
  * - 書体: 英数字 Geist ＋ 和文は OS 書体。
  * - 装飾目的の多色使いはしない。
@@ -45,17 +46,17 @@
   --color-emerald-800: #07513f;
   --color-emerald-900: #044433;
 
-  --color-gray-50: #f2f9ff;
-  --color-gray-100: #eaf5fd;
-  --color-gray-200: #d9e5ee;
-  --color-gray-300: #aabfcf;
-  --color-gray-400: #92a3b1;
-  --color-gray-500: #586f82;
-  --color-gray-600: #425d72;
-  --color-gray-700: #2c4152;
-  --color-gray-800: #213648;
-  --color-gray-900: #152c40;
-  --color-gray-950: #0b1a28;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #5b6b80;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-gray-950: #020617;
 
   /* 見出しの階層は太さでも立てる（OS和文は 600 で W6 相当になる） */
   --font-weight-semibold: 600;
@@ -67,16 +68,20 @@
 }
 
 :root {
-  --background: #edf5fa;
-  --foreground: #16191d;
+  --background: #ffffff;
+  --foreground: #0f172a;
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
   /* 和文は palt が効く OS 書体（lib/fonts.ts の説明を参照） */
   --font-app-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
     "Noto Sans CJK JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
 }
 
-/* 画面の色（lib/colorScheme）。ダーク対応画面（いまは /progress）が表示中だけ html に data-surface を付ける。
-   値は components/progress/progressCompact.module.css のダークと揃える。 */
+/* 画面の色（lib/colorScheme）。/progress が表示中だけ html に data-surface（light / dark）を付ける。
+   light は /progress の氷色の地、dark は progressCompact.module.css のダークと揃える。 */
+html[data-surface="light"] {
+  --background: #edf5fa;
+}
+
 html[data-surface="dark"] {
   --background: #0f1722;
   --foreground: #eef3fa;
