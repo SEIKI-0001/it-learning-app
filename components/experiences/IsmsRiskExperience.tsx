@@ -2,17 +2,18 @@
 
 import { Panel, SectionTitle } from "./ui";
 import { RiskResponseMap } from "./risk/RiskResponseMap";
-import { InlineIcon } from "@/components/ui/Pictogram";
+import { IsmsControls, IsmsIncidentPhrases, IsmsPdcaExam, IsmsPolicy, IsmsTerms } from "./isms/IsmsPanels";
 
 // ============================================================================
 // 「情報セキュリティ管理（ISMS・リスクアセスメント）」専用の解説。どれも操作不要の静的な図。
-//   ① リスクアセスメントの流れ（資産 → 脅威・脆弱性 → 分析・評価 → 対応）と、
-//      縦＝影響度・横＝発生可能性 のマトリクス。4つのマスに最初から具体的なリスクを置く
-//   ② リスク対応4分類：①と同じ向きの2×2に絵で並べた早見表（risk/RiskResponseMap）
-//   ③ ISMS＝PDCAで続けて改善／情報セキュリティポリシー
+//   ① 脅威・脆弱性・リスクの定義と、アセスメント3段階（特定・分析・評価）
+//   ② 縦＝影響度・横＝発生可能性 のマトリクス。4つのマスに最初から具体的なリスクを置く
+//   ③ リスク対応4分類：②と同じ向きの2×2に絵で並べた早見表（risk/RiskResponseMap）
+//   ④〜⑦ 過去問の出題に合わせた図（isms/IsmsPanels）：PDCAと内部監査、ポリシー3層、
+//      対策3分類と廃棄、インシデント管理と言い回し→用語
 // ============================================================================
 
-const FLOW = ["守る資産を洗い出す", "脅威・脆弱性を把握", "リスクを分析・評価", "対応を決める"];
+const FLOW = ["リスク特定", "リスク分析", "リスク評価", "リスク対応"];
 
 type Cell = { impact: "高" | "低"; prob: "高" | "低"; size: "大" | "中" | "小"; ex: string; verdict: string };
 
@@ -33,7 +34,7 @@ const SIZE_TONE: Record<Cell["size"], string> = {
 function RiskMatrix() {
   return (
     <Panel>
-      <SectionTitle step={1}>リスクの大きさ ＝ 発生可能性 × 影響度</SectionTitle>
+      <SectionTitle step={2}>リスクの大きさ ＝ 発生可能性 × 影響度</SectionTitle>
 
       <ol className="mt-3 flex flex-wrap items-center gap-x-1 gap-y-1.5 text-[12.5px] font-bold text-gray-800" data-testid="risk-flow">
         {FLOW.map((f, i) => (
@@ -96,47 +97,16 @@ function RiskMatrix() {
 function Treatments() {
   return (
     <Panel>
-      <SectionTitle step={2}>評価したあとの「対応」4つ</SectionTitle>
+      <SectionTitle step={3}>評価したあとの「対応」4つ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ①と同じく、横が発生可能性・縦が影響度。リスクがどこにあるかで、選ぶ対応の目安が決まります。
+        ②と同じく、横が発生可能性・縦が影響度。リスクがどこにあるかで、選ぶ対応の目安が決まります。
+      </p>
+      <p className="mt-1 text-sm leading-relaxed text-gray-600">
+        4つは<b className="text-gray-800">順番に進める手順ではなく、リスクごとに選ぶ選択肢</b>です。
+        試験では「回避・共有・低減・保有」と書かれることも多く、共有＝移転、保有＝受容です。
       </p>
       <div className="mt-3" data-testid="risk-treatments">
         <RiskResponseMap />
-      </div>
-    </Panel>
-  );
-}
-
-function IsmsPdca() {
-  const items = [
-    { k: "P", t: "計画", d: "守る情報を決め、方針（ポリシー）と対策を立てる" },
-    { k: "D", t: "実行", d: "対策を導入し、ルールどおりに運用する" },
-    { k: "C", t: "点検", d: "うまくいっているか監査・チェックする" },
-    { k: "A", t: "改善", d: "見つかった弱点を直し、次の計画へ反映する" },
-  ];
-  return (
-    <Panel>
-      <SectionTitle step={3}>ISMS＝続けて改善するしくみ</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        <b className="text-gray-800">ISMS（情報セキュリティマネジメントシステム）</b>は、組織として情報を守る仕組み。
-        一度作って終わりではなく、<b className="text-gray-800">PDCAで回し続けて</b>改善します。
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {items.map((it) => (
-          <div key={it.k} className="rounded-xl p-3 ring-1 ring-gray-200">
-            <div className="flex items-center gap-1.5">
-              <span className="grid h-6 w-6 place-items-center rounded bg-brand-100 font-mono text-xs font-bold text-brand-700">
-                {it.k}
-              </span>
-              <span className="text-base font-bold text-gray-900">{it.t}</span>
-            </div>
-            <p className="mt-1 text-[13px] leading-relaxed text-gray-700">{it.d}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        <InlineIcon name="flag" />ISMSの国際規格は <b>ISO/IEC 27001</b>。組織の方針をまとめた文書が
-        <b>情報セキュリティポリシー</b>です。
       </div>
     </Panel>
   );
@@ -150,9 +120,13 @@ export default function IsmsRiskExperience() {
         リスクを<b>見積もって（アセスメント）→対応を選び→PDCAで回し続ける</b>のが ISMS です。
       </div>
 
+      <IsmsTerms step={1} />
       <RiskMatrix />
       <Treatments />
-      <IsmsPdca />
+      <IsmsPdcaExam step={4} />
+      <IsmsPolicy step={5} />
+      <IsmsControls step={6} />
+      <IsmsIncidentPhrases step={7} />
     </div>
   );
 }

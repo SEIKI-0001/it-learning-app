@@ -38,7 +38,7 @@ const STATIC_TOPICS: [string, ComponentType, number][] = [
   ["tech-io-devices", IoDevicesExperience, 3],
   ["tech-system-performance", SystemPerformanceExperience, 4],
   ["tech-ui-ux", UiUxExperience, 4],
-  ["tech-isms-risk", IsmsRiskExperience, 3],
+  ["tech-isms-risk", IsmsRiskExperience, 7],
 ];
 
 describe("12〜18章：静的な図解に作り直したテーマ", () => {
@@ -120,11 +120,38 @@ describe("12〜18章：静的な図解に作り直したテーマ", () => {
     expect(matrix).toHaveTextContent("発生可能性");
     expect(matrix.querySelector('[data-impact="高"][data-prob="高"]')).toHaveAttribute("data-size", "大");
     expect(matrix.querySelector('[data-impact="低"][data-prob="低"]')).toHaveAttribute("data-size", "小");
-    expect(screen.getByTestId("risk-flow")).toHaveTextContent("脅威・脆弱性を把握");
-    slide(2);
+    expect(screen.getByTestId("risk-flow")).toHaveTextContent(/リスク特定.*リスク分析.*リスク評価.*リスク対応/);
+    slide(3);
     const transfer = screen.getByTestId("risk-treatments").querySelector('[data-resp="transfer"]');
     expect(transfer).toHaveTextContent("肩代わり");
     expect(transfer).toHaveTextContent("保険");
+  });
+
+  it("isms: covers what past exams ask — definitions, PDCA in exam words, policy layers, controls, disposal, incidents", () => {
+    renderDeck(IsmsRiskExperience);
+    const terms = screen.getByTestId("isms-terms");
+    expect(terms.querySelector('[data-term="脅威"]')).toHaveTextContent("損害を与える原因");
+    expect(terms.querySelector('[data-term="脆弱性"]')).toHaveTextContent("弱点");
+    expect(screen.getByTestId("isms-assessment")).toHaveTextContent(/リスク分析.*レベル.*リスク評価.*受容基準/);
+    slide(4);
+    expect(screen.getByText(/ISMSの適用範囲の決定/)).toBeInTheDocument();
+    const pdca = screen.getByTestId("isms-pdca");
+    expect(pdca.querySelector('[data-phase="C"]')).toHaveTextContent(/第三者が客観的に評価.*内部監査/);
+    expect(pdca.querySelector('[data-phase="A"]')).toHaveTextContent("是正処置");
+    slide(5);
+    const layers = Array.from(screen.getByTestId("isms-policy").querySelectorAll<HTMLElement>("[data-layer]")).map((e) => e.dataset.layer);
+    expect(layers).toEqual(["基本方針", "対策基準", "実施手順"]);
+    expect(screen.getByTestId("isms-policy-order")).toHaveTextContent(/責任者.*基本方針.*情報資産.*リスクを分析/);
+    slide(6);
+    const physical = screen.getByTestId("isms-controls").querySelector('[data-kind="物理的"]');
+    expect(physical).toHaveTextContent("入退室");
+    expect(physical).toHaveTextContent("遠隔地");
+    const dispose = screen.getByTestId("isms-dispose");
+    expect(dispose.querySelector('[data-ok="false"]')).toHaveTextContent(/削除/);
+    expect(dispose).toHaveTextContent("Secure Erase");
+    slide(7);
+    expect(screen.getByTestId("isms-incident")).toHaveTextContent("連絡経路");
+    expect(screen.getByTestId("isms-phrases")).toHaveTextContent(/CSIRT.*デジタルフォレンジックス.*PCI DSS/);
   });
 
   it("malware: every term leads with its meaning, and phishing / ransomware show their flow", () => {
