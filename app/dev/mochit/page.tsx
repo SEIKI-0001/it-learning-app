@@ -4,6 +4,7 @@
 // 本番ビルドでは notFound を返す。.riv 完成前でも
 // フォールバック表示・セマンティックイベント・優先度制御の確認に使える。
 
+import { MOCHIT_PERSONALITY_LABELS, type MochitFieldLevel, type MochitGrowthLook, type MochitPersonality } from "@/lib/mochit";
 import { notFound } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Mochit from "@/components/mochit/Mochit";
@@ -25,7 +26,7 @@ const isSleepControlEvent = (event: Event) =>
 
 const STATES: MochitState[] = ["normal", "happy", "thinking", "cheering"];
 const SIZES: MochitSize[] = ["small", "medium", "large"];
-const STAGES: MochitGrowthStage[] = [1, 2, 3];
+const STAGES: MochitGrowthStage[] = [1, 2, 3, 4, 5];
 const EMOTIONS: MochitEmotion[] = ["neutral", "happy", "curious", "thinking", "sleepy"];
 const ATTENTIONS: MochitAttention[] = ["random", "user", "content", "result"];
 // content/result の確認用プリセット（正規化座標 0〜1）
@@ -37,7 +38,7 @@ const ATTENTION_POINTS: Array<{ label: string; point: MochitAttentionPoint }> = 
   { label: "右下", point: { x: 0.85, y: 0.8 } },
 ];
 // idleBehavior の確認用。auto は自動 Macro Idle のみ（明示再生なし）
-const IDLE_BEHAVIORS: Array<"auto" | MochitMacroIdleBehavior> = ["auto", "lookAround", "curious", "stretch"];
+const IDLE_BEHAVIORS: Array<"auto" | MochitMacroIdleBehavior> = ["auto", "lookAround", "curious", "stretch", "hop", "turn"];
 const CONTEXTS: MochitScreenContext[] = ["other", "today", "progress", "avatar", "quizResult", "checkpoint", "rank"];
 const EVENTS: MochitEvent[] = [
   "checkpointClear",
@@ -61,6 +62,9 @@ export default function MochitDevPreviewPage() {
   const [rendererMode, setRendererMode] = useState<RendererMode>("auto");
   const [reducedMotion, setReducedMotion] = useState(false);
   const [stage, setStage] = useState<MochitGrowthStage>(1);
+  const [fieldLevels, setFieldLevels] = useState<[MochitFieldLevel, MochitFieldLevel, MochitFieldLevel]>([4, 4, 4]);
+  const [personality, setPersonality] = useState<MochitPersonality>("undecided");
+  const devLook: MochitGrowthLook = { stage, fieldLevels, personality };
   const [screenContext, setScreenContext] = useState<MochitScreenContext>("other");
   const [mood, setMood] = useState(0);
   const [emotion, setEmotion] = useState<MochitEmotion>("neutral");
@@ -244,6 +248,36 @@ export default function MochitDevPreviewPage() {
                 ))}
               </select>
             </label>
+            {(["ストラテジ", "マネジメント", "テクノロジ"] as const).map((label, index) => (
+              <label key={label} className="flex items-center gap-2">
+                {label}Lv:
+                <select
+                  className="rounded-lg border border-gray-200 px-2 py-1"
+                  value={fieldLevels[index]}
+                  onChange={(e) => {
+                    const next = [...fieldLevels] as [MochitFieldLevel, MochitFieldLevel, MochitFieldLevel];
+                    next[index] = Number(e.target.value) as MochitFieldLevel;
+                    setFieldLevels(next);
+                  }}
+                >
+                  {[0, 1, 2, 3, 4].map((lv) => (
+                    <option key={lv} value={lv}>{lv}</option>
+                  ))}
+                </select>
+              </label>
+            ))}
+            <label className="flex items-center gap-2">
+              個性:
+              <select
+                className="rounded-lg border border-gray-200 px-2 py-1"
+                value={personality}
+                onChange={(e) => setPersonality(e.target.value as MochitPersonality)}
+              >
+                {(Object.keys(MOCHIT_PERSONALITY_LABELS) as MochitPersonality[]).map((p) => (
+                  <option key={p} value={p}>{MOCHIT_PERSONALITY_LABELS[p]}</option>
+                ))}
+              </select>
+            </label>
             <label className="flex items-center gap-2">
               screenContext:
               <select
@@ -359,7 +393,7 @@ export default function MochitDevPreviewPage() {
                 state="normal"
                 size="small"
                 compact
-                growthStage={stage}
+                growthLook={devLook}
                 event={signal}
                 macroIdleRequest={macroIdleRequest}
                 message="イベントボタンで反応を確認"
@@ -372,7 +406,7 @@ export default function MochitDevPreviewPage() {
                 state="normal"
                 size="floating"
                 reactionProfile="floating"
-                growthStage={stage}
+                growthLook={devLook}
                 event={signal}
                 macroIdleRequest={macroIdleRequest}
               />
@@ -384,7 +418,7 @@ export default function MochitDevPreviewPage() {
                 state="normal"
                 size="large"
                 compact={false}
-                growthStage={stage}
+                growthLook={devLook}
                 event={signal}
                 macroIdleRequest={macroIdleRequest}
                 message="イベントボタンで反応を確認"
@@ -541,7 +575,7 @@ export default function MochitDevPreviewPage() {
                       {...shared}
                       state={state}
                       size={size}
-                      growthStage={stage}
+                      growthLook={devLook}
                       animation={state === "cheering" ? "celebrate" : state === "happy" ? "bounce" : state === "thinking" ? "tilt" : "idle"}
                     />
                     <p className="mt-1 text-xs text-gray-400">{size}</p>
@@ -554,11 +588,11 @@ export default function MochitDevPreviewPage() {
 
         {/* 成長段階 */}
         <section className="rounded-xl bg-white p-5 border border-gray-200">
-          <h2 className="text-base font-bold text-gray-800">成長段階（1〜3）</h2>
+          <h2 className="text-base font-bold text-gray-800">成長段階（1〜5）</h2>
           <div className="mt-3 flex flex-wrap items-end gap-6">
             {STAGES.map((s) => (
               <div key={s} className="text-center">
-                <Mochit {...shared} state="normal" size="medium" growthStage={s} />
+                <Mochit {...shared} state="normal" size="medium" growthLook={{ ...devLook, stage: s }} />
                 <p className="mt-1 text-xs text-gray-400">stage {s}</p>
               </div>
             ))}
@@ -573,11 +607,11 @@ export default function MochitDevPreviewPage() {
           </p>
           <div className="mt-3 flex flex-wrap items-end gap-6">
             <div className="text-center">
-              <Mochit {...shared} state="normal" size="small" growthStage={stage} compact message="コンパクト" />
+              <Mochit {...shared} state="normal" size="small" growthLook={devLook} compact message="コンパクト" />
               <p className="mt-1 text-xs text-gray-400">compact</p>
             </div>
             <div className="text-center">
-              <Mochit {...shared} state="normal" size="medium" growthStage={stage} compact={false} message="primary候補" />
+              <Mochit {...shared} state="normal" size="medium" growthLook={devLook} compact={false} message="primary候補" />
               <p className="mt-1 text-xs text-gray-400">full</p>
             </div>
           </div>

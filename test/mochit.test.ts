@@ -34,14 +34,16 @@ function stateWithClears(clearedCheckpointIds: string[]): AppState {
 describe("Mochit growth", () => {
   it("keeps the highest growth stage from cleared checkpoints", () => {
     expect(getMochitGrowthStage(stateWithClears([]))).toBe(1);
-    expect(getMochitGrowthStage(stateWithClears(["cp1", "cp2"]))).toBe(2);
-    expect(getMochitGrowthStage(stateWithClears(["cp1", "cp2", "cp3", "cp4"]))).toBe(3);
+    expect(getMochitGrowthStage(stateWithClears(["cp1"]))).toBe(2);
+    expect(getMochitGrowthStage(stateWithClears(["cp1", "cp2"]))).toBe(3);
+    expect(getMochitGrowthStage(stateWithClears(["cp1", "cp2", "cp3", "cp4"]))).toBe(4);
+    expect(getMochitGrowthStage(stateWithClears(["cp1", "cp2", "cp3", "cp4", "cp5", "cp6"]))).toBe(5);
   });
 
   it("describes the next checkpoint-only growth condition", () => {
     expect(nextMochitGrowthStageInfo(stateWithClears([]))).toMatchObject({
       stage: 2,
-      conditionLabel: "チェックポイントを2回クリア",
+      conditionLabel: "トピックを5つ学ぶか、チェックポイントを1回クリア",
     });
   });
 });

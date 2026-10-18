@@ -9,6 +9,7 @@
 // 「どの画面で完了したかでバッジ付与・ドロップ有無が変わる」不整合をなくす。
 // useBadgeSync は取りこぼしを拾う冪等な catch-up として残す（主経路はここ）。
 
+import { ensureMochitMilestoneBaseline, recordMochitMilestones } from "@/lib/mochitMilestones";
 import type { AppState, QuestionExposureMap, UserAnswer } from "@/types";
 import type { BadgeSignals } from "@/lib/badges";
 import { completeTopicStudy, studyXpReward } from "@/lib/study";
@@ -58,7 +59,8 @@ export function completeStudySession(
     .map((answer) => `${answer.questionId}\u001f${evidenceKind}\u001f${answer.answeredAt}`)
     .sort();
 
-  const studied = completeTopicStudy(state, topicId, answers, exposures, now);
+  // 学習前に到達済みの節目は「以前から」にしておき、この学習で届いた節目だけに日付を付ける。
+  const studied = completeTopicStudy(ensureMochitMilestoneBaseline(state), topicId, answers, exposures, now);
   // ストリーク節目のXP・おまもり付与（受領済みはスキップされる冪等処理）。
   const milestoned = applyStreakMilestones(studied);
   // 今日の3ミッションへ成果を反映（報酬の受け取りは /today のカードから行う）。
@@ -82,6 +84,7 @@ export function completeStudySession(
     finalState = dropped.state;
     dropLabel = `${dropped.drop.emoji} ${dropped.drop.label}`;
   }
+  finalState = recordMochitMilestones(finalState, now).state;
 
   return {
     state: finalState,

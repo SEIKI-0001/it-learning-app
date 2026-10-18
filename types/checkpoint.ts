@@ -302,6 +302,11 @@ export type RewardState = {
   equippedTitleId?: string;
 };
 
+/** モチットの成長アルバム。キーは lib/mochitMilestones.ts の MochitMilestoneId。 */
+export type MochitGrowthRecord = {
+  milestones: Record<string, string | null>;
+};
+
 /** ロードマップ進行状態。UserProgress に格納し、localStorage / マージで保全する。 */
 export type CheckpointProgress = {
   currentCheckpointId: CheckpointId;
@@ -319,6 +324,11 @@ export type CheckpointProgress = {
   gameful?: GamefulState;
   /** 章の総まとめ試験とAI理解チェックの記録。未使用なら undefined（旧データ互換）。 */
   chapterReview?: ChapterReviewState;
+  /**
+   * モチットの成長アルバム（節目に初めて届いた日時）。null は「記録を始める前から到達済み」。
+   * 見た目の記録だけで、進行・合否の判定には使わない。未使用なら undefined（旧データ互換）。
+   */
+  mochitGrowth?: MochitGrowthRecord;
   /**
    * 新規学習を参考書の順で進めているか（"book"）。未設定はアプリ順。
    * 正は lib/studyContext の resolveStudyContext で、画面・サーバーの読み込み時に

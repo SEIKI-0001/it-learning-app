@@ -46,6 +46,17 @@ import { MOCHIT_TRIGGER_EVENTS } from "./mochitEvents";
 import type { MochitRiveTriggerInput } from "./mochitTypes";
 import type { MochitReactionProfile } from "./mochitTypes";
 import type { MochitAttention, MochitEmotion } from "./mochitBehavior";
+import type { MochitPersonality } from "@/lib/mochit";
+import {
+  buildGrowthAntennaMarkup,
+  buildGrowthCircuitMarkup,
+  buildGrowthHaloMarkup,
+  coreBarStyle,
+  GROWTH_DECOR_ATTR,
+  GROWTH_PULSE_ATTR,
+  MOCHIT_GROWTH_PALETTES,
+  parseFieldLevels,
+} from "./mochitGrowthDecor";
 import {
   ACTIVITY_LIFT_TIMING,
   nextActivityGaze,
@@ -150,6 +161,13 @@ type Props = {
    * Macro Idle は Activity 中は再生しない。
    */
   activity?: MochitActivity;
+  /**
+   * 分野ごとの育ち（"0,2,4" 形式＝左からストラテジ・マネジメント・テクノロジの Lv0〜4）。
+   * 胸のコアの3本のバーの長さに出る。省略時は原画どおり。
+   */
+  growthFields?: string;
+  /** 個性（回路と花の色）。省略時は原画の色。 */
+  growthPersonality?: MochitPersonality;
 };
 
 export type MochitMacroIdleRequest = { behavior: MochitMacroIdleBehavior; id: number };
@@ -894,6 +912,8 @@ export default function MochitSvg({
   macroIdleRequest,
   sleeping = false,
   activity = "idle",
+  growthFields,
+  growthPersonality = "undecided",
 }: Props) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [inViewport, setInViewport] = useState(true);
@@ -933,6 +953,51 @@ export default function MochitSvg({
     }
   }, [forceFailure]);
 
+  // ---- 成長の見た目 ----
+  // 描き足した要素は Anim_Antenna / Anim_Breathe の子として置き、芽や体と一緒に動かす。
+  // 既存ノードを作り直さないので、走っている Idle・リアクションは止まらない。
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || failed) return;
+    const antenna = svg.querySelector<SVGGElement>("#Anim_Antenna");
+    const antennaBase = svg.querySelector("#Antenna_Base");
+    const circuitL = svg.querySelector("#Circuit_L");
+    if (!antenna || !antennaBase || !circuitL?.parentNode) return;
+    const stage = Math.max(1, Math.min(5, Math.trunc(growthStage) || 1)) as 1 | 2 | 3 | 4 | 5;
+    const palette = MOCHIT_GROWTH_PALETTES[growthPersonality] ?? MOCHIT_GROWTH_PALETTES.undecided;
+
+    svg.querySelectorAll(`[${GROWTH_DECOR_ATTR}]`).forEach((node) => node.remove());
+    const insert = (markup: string, parent: Node, before: Node) => {
+      if (!markup) return;
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.setAttribute(GROWTH_DECOR_ATTR, "");
+      group.innerHTML = markup;
+      parent.insertBefore(group, before);
+    };
+    insert(buildGrowthHaloMarkup(stage) + buildGrowthAntennaMarkup(stage, palette), antenna, antennaBase);
+    insert(buildGrowthCircuitMarkup(stage, palette), circuitL.parentNode, circuitL);
+
+    const circuitColor = growthPersonality === "undecided" ? "" : palette.circuit;
+    for (const id of ["#Circuit_L", "#Circuit_R"]) {
+      const node = svg.querySelector<SVGGElement>(id);
+      if (node) node.style.stroke = circuitColor;
+    }
+  }, [failed, growthStage, growthPersonality]);
+
+  // 胸のコアの3本のバー＝分野ごとの育ち
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || failed) return;
+    const levels = parseFieldLevels(growthFields);
+    ([0, 1, 2] as const).forEach((index) => {
+      const bar = svg.querySelector<SVGElement>(`#Core_Bar_${index + 1}`);
+      if (!bar) return;
+      const style = levels ? coreBarStyle(index, levels[index]) : { transform: "", opacity: "" };
+      bar.style.transform = style.transform;
+      bar.style.opacity = style.opacity;
+    });
+  }, [failed, growthFields]);
+
   // ビューポート外での停止
   useEffect(() => {
     const el = svgRef.current;
@@ -953,6 +1018,25 @@ export default function MochitSvg({
   }, []);
 
   const active = !failed && !reducedMotion && inViewport && !documentHidden;
+
+  // 段階4以上: 回路の先端がゆっくり明滅する（動きを減らす設定・画面外では止める）
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !active || growthStage < 4) return;
+    const animations: Animation[] = [];
+    svg.querySelectorAll<SVGElement>(`[${GROWTH_PULSE_ATTR}]`).forEach((node, i) => {
+      if (typeof node.animate !== "function") return;
+      animations.push(
+        node.animate([{ opacity: 1 }, { opacity: 0.35 }, { opacity: 1 }], {
+          duration: 3400,
+          delay: i * 430,
+          iterations: Infinity,
+          easing: "ease-in-out",
+        }),
+      );
+    });
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [active, growthStage, growthPersonality]);
   // 84px の常時表示版。視線の振幅・身体連動・Macro Idle の頻度/振幅だけを強める（compact が優先）
   const floating = reactionProfile === "floating" && !compact;
 
@@ -1167,8 +1251,9 @@ export default function MochitSvg({
       floating,
       lively,
       activity,
+      growthStage,
     });
-  }, [active, reducedMotion, compact, attention, sleeping, floating, lively, activity, failed]);
+  }, [active, reducedMotion, compact, attention, sleeping, floating, lively, activity, failed, growthStage]);
   // マウント時点で既にある要求は再生しない（再マウントで古い要求が再生されないように）
   const macroRequestId = macroIdleRequest?.id;
   const macroRequestBehavior = macroIdleRequest?.behavior;
@@ -1363,7 +1448,8 @@ export default function MochitSvg({
       role="img"
       aria-label={ariaLabel}
       style={{ overflow: "visible", transformOrigin: MOCHIT_BODY_TRANSFORM_ORIGIN }}
-      className={`h-full w-full mochit-growth-${growthStage} ${className}`}
+      className={`h-full w-full ${className}`}
+      data-growth-stage={growthStage}
     />
     // 子要素（キャラクター本体のマークアップ）はマウント時effectで一度だけ注入する
   );

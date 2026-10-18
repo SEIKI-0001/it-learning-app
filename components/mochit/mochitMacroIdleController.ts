@@ -20,6 +20,7 @@ import {
   macroIdleDurationMs,
   nextMacroIdleDelayMs,
   pickMacroIdleBehavior,
+  withGrowthMacroIdleWeights,
   type MacroIdleConditions,
   type MochitMacroIdleBehavior,
 } from "./mochitMacroIdle";
@@ -114,7 +115,11 @@ export function createMacroIdleController(deps: MacroIdleControllerDeps): MacroI
   function onTimer() {
     timer = null;
     if (disposed || playing || !isMacroIdleAutoEnabled(conditions)) return;
-    const choice = pickMacroIdleBehavior(lastBehavior, rng, getMacroIdleTuning(conditions.floating === true, conditions.lively).weights);
+    const choice = pickMacroIdleBehavior(
+      lastBehavior,
+      rng,
+      withGrowthMacroIdleWeights(getMacroIdleTuning(conditions.floating === true, conditions.lively).weights, conditions.growthStage),
+    );
     // normal は何もせず次回まで待つ
     if (choice === "normal" || !start(choice)) scheduleFresh();
   }

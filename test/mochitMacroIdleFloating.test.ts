@@ -36,7 +36,7 @@ function peakAt(keys: Keyframe[], f: (t: unknown) => number): number {
 describe("floating の頻度", () => {
   it("重みは normal30 / lookAround35 / curious22 / stretch13（合計1）", () => {
     const w = FLOATING_MACRO_IDLE_TUNING.weights;
-    expect(w).toEqual({ normal: 0.3, lookAround: 0.35, curious: 0.22, stretch: 0.13 });
+    expect(w).toEqual({ normal: 0.3, lookAround: 0.35, curious: 0.22, stretch: 0.13, hop: 0, turn: 0 });
     expect(Object.values(w).reduce((a, b) => a + b, 0)).toBeCloseTo(1, 10);
   });
 
@@ -48,7 +48,7 @@ describe("floating の頻度", () => {
 
   it("既定（full）の値は変えない", () => {
     expect(getMacroIdleTuning(false)).toBe(DEFAULT_MACRO_IDLE_TUNING);
-    expect(DEFAULT_MACRO_IDLE_TUNING.weights).toEqual({ normal: 0.55, lookAround: 0.25, curious: 0.12, stretch: 0.08 });
+    expect(DEFAULT_MACRO_IDLE_TUNING.weights).toEqual({ normal: 0.55, lookAround: 0.25, curious: 0.12, stretch: 0.08, hop: 0, turn: 0 });
     expect(pickMacroIdleBehavior(null, fixed(0.5))).toBe("normal");
     // floating では同じ乱数でも可視 Behavior が選ばれる
     expect(pickMacroIdleBehavior(null, fixed(0.5), FLOATING_MACRO_IDLE_TUNING.weights)).toBe("lookAround");

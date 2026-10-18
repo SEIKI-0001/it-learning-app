@@ -12,6 +12,8 @@ import { subscribeCelebration } from "@/lib/celebration";
 import { RANKS } from "@/lib/rank";
 import { getCheckpoint } from "@/lib/checkpoints";
 import ConfettiBurst from "@/components/celebration/ConfettiBurst";
+import Mochit from "@/components/mochit/Mochit";
+import { MOCHIT_GROWTH_STAGE_CHANGES, type MochitGrowthStage } from "@/lib/mochit";
 
 // 全画面演出の優先度（同時発火時はランクアップを最初に見せる）。
 // 同時発火時はランクアップを最初に、次に CP突破 → モチットの成長段階、
@@ -30,7 +32,7 @@ type MiniItem = { id: number; celebration: Celebration };
 /** 全画面オーバーレイに出す見出し・本文を組み立てる。 */
 function fullContent(
   c: Celebration,
-): { emoji: string; heading: string; title: string; sub: string } | null {
+): { emoji: string; heading: string; title: string; sub: string; mochitStage?: MochitGrowthStage } | null {
   switch (c.kind) {
     case "levelUp":
       return {
@@ -64,7 +66,8 @@ function fullContent(
         emoji: "🌱",
         heading: "モチットが成長した！",
         title: c.label,
-        sub: `第${c.from}段階 → 第${c.to}段階`,
+        sub: `${MOCHIT_GROWTH_STAGE_CHANGES[c.to as MochitGrowthStage] ?? ""}（第${c.from}段階 → 第${c.to}段階）`,
+        mochitStage: c.to as MochitGrowthStage,
       };
     default:
       return null;
@@ -147,9 +150,15 @@ export default function CelebrationHost() {
         >
           <div className="animate-pop-in relative w-full max-w-sm rounded-xl bg-white px-6 py-10 text-center shadow-2xl">
             <ConfettiBurst />
-            <p className="text-5xl" aria-hidden>
-              {full.emoji}
-            </p>
+            {full.mochitStage ? (
+              <div className="flex justify-center" aria-hidden>
+                <Mochit state="cheering" size="medium" animation="celebrate" growthStage={full.mochitStage} />
+              </div>
+            ) : (
+              <p className="text-5xl" aria-hidden>
+                {full.emoji}
+              </p>
+            )}
             <p className="mt-3 text-sm font-bold tracking-widest text-brand-500">
               {full.heading}
             </p>

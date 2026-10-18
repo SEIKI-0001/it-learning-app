@@ -5,7 +5,7 @@
 export type MochitState = "normal" | "happy" | "thinking" | "cheering";
 export type MochitSize = "xs" | "floating" | "small" | "medium" | "large";
 export type MochitAnimation = "idle" | "bounce" | "tilt" | "celebrate" | "none";
-export type MochitGrowthStage = 1 | 2 | 3;
+export type MochitGrowthStage = 1 | 2 | 3 | 4 | 5;
 export type MochitReactionProfile = "full" | "compact" | "floating";
 
 export type MochitScreenContext =
@@ -129,7 +129,8 @@ export function buildMochitRiveInputValues(props: MochitRiveInputSyncProps): Moc
           : props.compact
             ? 0.4
             : 0.7),
-      growthStage: props.growthStage,
+      // .riv の growthStage 入力は 1〜3 の契約。段階4・5はSVG側だけで表現する。
+      growthStage: Math.min(3, props.growthStage),
       attentionX: props.attentionX ?? 0.5,
       attentionY: props.attentionY ?? 0.5,
       screenContext: MOCHIT_SCREEN_CONTEXT_CODES[props.screenContext],

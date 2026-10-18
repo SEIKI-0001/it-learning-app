@@ -11,6 +11,7 @@ import {
   saveProgressToDb,
 } from "@/lib/userSession";
 import { badgeEarnedCelebrations, emitCelebration } from "@/lib/celebration";
+import { recordMochitMilestones } from "@/lib/mochitMilestones";
 
 /**
  * バッジ確定付与の「取りこぼしを拾う」冪等な catch-up フック。
@@ -32,13 +33,16 @@ export function useBadgeSync(
       const readiness = await fetchCurrentExamReadiness();
       if (!active) return;
       const signals = getClientBadgeSignals(readiness);
-      const { state: next, newlyEarnedIds } = applyBadgeProgress(state, signals);
-      if (newlyEarnedIds.length === 0) return;
+      const { state: badged, newlyEarnedIds } = applyBadgeProgress(state, signals);
+      // モチットの成長アルバムも同じ経路で拾う（突破試験の後など）。
+      const { state: next, newlyReached } = recordMochitMilestones(badged);
+      const albumChanged = next.progress.checkpointProgress?.mochitGrowth !== state.progress.checkpointProgress?.mochitGrowth;
+      if (newlyEarnedIds.length === 0 && newlyReached.length === 0 && !albumChanged) return;
       saveAppState(next);
       setState(next);
       // catch-up 経路は画面内の演出を持たないため、バッジ名も含めて通知する。
       // バッジXPでのレベル/ランクアップもこの経路で取りこぼさない。
-      emitCelebration(state, next, badgeEarnedCelebrations(newlyEarnedIds));
+      if (newlyEarnedIds.length > 0) emitCelebration(state, next, badgeEarnedCelebrations(newlyEarnedIds));
       const uid = getUserId();
       if (uid) saveProgressToDb(uid, next.progress);
     })();
