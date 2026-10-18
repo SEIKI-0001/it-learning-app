@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { InlineIcon } from "@/components/ui/Pictogram";
+import { CopyrightCheck, GenAiCopyright, IpMap, IpQuiz, PatentStrategy } from "./ip/IpPanels";
 
 // ============================================================================
 // 「知的財産権と著作権」専用の体験。
 //   ① ヒット商品の「仕組み／名前ロゴ／イラスト」をマネしてみる→どの権利の侵害かが出る
-//   ② この成果物はどの権利？ 振り分けクイズ
+//   ②〜⑥ 過去問の出題に合わせた図（ip/IpPanels）：権利の地図（産業財産権4種・不正競争防止法・パブリシティ権）、
+//      著作権で守られる？、特許とライセンス、生成AIと著作権、どの権利・法律？クイズ
 // ============================================================================
 
 type Right = "copyright" | "patent" | "trademark";
@@ -150,65 +152,6 @@ function CopycatLab() {
   );
 }
 
-const ITEMS: { t: string; ans: Right; why: string }[] = [
-  { t: "自分で描いたイラスト", ans: "copyright", why: "作品＝著作権。描いた瞬間に発生。" },
-  { t: "新しい掃除ロボットの仕組み", ans: "patent", why: "技術・発明＝特許権。出願が必要。" },
-  { t: "お店のロゴマークと商品名", ans: "trademark", why: "名前・ロゴ＝商標権。登録して守る。" },
-  { t: "作曲したオリジナル曲", ans: "copyright", why: "音楽の作品＝著作権。" },
-];
-
-function Quiz() {
-  const [answers, setAnswers] = useState<Record<number, Right>>({});
-  return (
-    <Panel>
-      <SectionTitle step={2}>どの権利で守る？</SectionTitle>
-      <ul className="mt-3 space-y-2.5">
-        {ITEMS.map((it, i) => {
-          const chosen = answers[i];
-          const correct = chosen === it.ans;
-          return (
-            <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <p className="text-sm font-bold text-gray-800">{it.t}</p>
-              <div className="mt-2 grid grid-cols-3 gap-1.5">
-                {ORDER.map((opt) => {
-                  const picked = chosen === opt;
-                  const tone = !chosen
-                    ? "text-gray-600 ring-1 ring-gray-300"
-                    : picked
-                      ? opt === it.ans
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                      : opt === it.ans
-                        ? "ring-2 ring-emerald-400 text-emerald-700"
-                        : "text-gray-400 ring-1 ring-gray-200";
-                  return (
-                    <button
-                      key={opt}
-                      onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
-                      className={`rounded-lg px-1 py-1.5 text-[11px] font-bold transition active:scale-95 ${tone}`}
-                    >
-                      <Icon name={RIGHTS[opt].icon} className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />{RIGHTS[opt].name}
-                    </button>
-                  );
-                })}
-              </div>
-              {chosen && (
-                <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "正解！ " : `正解は ${RIGHTS[it.ans].name}。 `}
-                  {it.why}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-      <div className="mt-3 rounded-xl bg-sky-50 px-4 py-3 text-sm leading-relaxed text-sky-900 ring-1 ring-sky-200">
-        <InlineIcon name="alert" />ネットで見つけた画像や音楽も<b>誰かの著作物</b>。勝手に使うのは著作権の侵害になりえます。
-      </div>
-    </Panel>
-  );
-}
-
 export default function IntellectualPropertyExperience() {
   return (
     <div className="space-y-5">
@@ -219,7 +162,11 @@ export default function IntellectualPropertyExperience() {
       </div>
 
       <CopycatLab />
-      <Quiz />
+      <IpMap step={2} />
+      <CopyrightCheck step={3} />
+      <PatentStrategy step={4} />
+      <GenAiCopyright step={5} />
+      <IpQuiz step={6} />
     </div>
   );
 }
