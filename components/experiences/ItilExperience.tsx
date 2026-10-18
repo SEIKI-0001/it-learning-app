@@ -4,40 +4,42 @@ import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { InlineIcon } from "@/components/ui/Pictogram";
+import { DeskAutomation, ItilProcesses, ItilQuiz, ReductionRate, ServiceDesk } from "./itil/ItilPanels";
 
 // ============================================================================
 // 「ITIL」専用の体験。
-//   ① ITIL = ITサービス管理の「うまいやり方集」（ベストプラクティス)
+//   ① ITサービスマネジメントの定義と、ITIL＝ベストプラクティス集
 //   ② 障害対応シミュレータ：選択によって結末が分岐し、
 //      インシデント管理(まず復旧)/問題管理(原因を断つ)/変更管理(安全に変える)の
 //      役割の違いを体感する
-//   ③ どの管理？ 仕分けクイズ
+//   ③〜⑦ 過去問の出題に合わせた図（itil/ItilPanels）：サービスデスクとKPI、
+//      FAQ・チャットボット・支援AIの効果、削減率の計算、管理プロセスの見分け方、どの管理？クイズ
 // ============================================================================
 
 function WhatIs() {
   return (
     <Panel>
-      <SectionTitle step={1}>ITILってなに？</SectionTitle>
+      <SectionTitle step={1}>ITサービスマネジメントとITIL</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        ITILは、ITサービスを<b className="text-gray-800">うまく運用・改善するやり方をまとめた知識集</b>。
-        各社がゼロから悩まず、先人の<b className="text-gray-800">成功パターン（ベストプラクティス）</b>を真似できます。
+        <b className="text-gray-800">ITサービスマネジメント</b>は、提供しているITサービスが事業のニーズを満たし続けるように、
+        <b className="text-gray-800">人材・プロセス・技術</b>を組み合わせ、<b className="text-gray-800">継続的に改善</b>して管理する活動です。
       </p>
       <div className="mt-4 flex items-center justify-center gap-3">
         <div className="rounded-xl bg-gray-50 px-3 py-3 text-center ring-1 ring-gray-200">
           <Icon name="book-open" className="mx-auto h-7 w-7 text-gray-600" />
           <div className="mt-1 text-[11px] font-bold text-gray-700">ITIL</div>
-          <div className="text-[10px] text-gray-500">うまいやり方集</div>
+          <div className="text-[10px] text-gray-500">成功事例の知識集</div>
         </div>
         <span className="text-lg text-gray-300">→</span>
         <div className="rounded-xl bg-emerald-50 px-3 py-3 text-center ring-1 ring-emerald-200">
           <Icon name="building" className="mx-auto h-7 w-7 text-emerald-600" />
           <div className="mt-1 text-[11px] font-bold text-emerald-700">自社の運用</div>
-          <div className="text-[10px] text-gray-500">真似して改善</div>
+          <div className="text-[10px] text-gray-500">参考にして改善</div>
         </div>
       </div>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        <InlineIcon name="lightbulb" />部活運営の「うまいやり方集」のように、困ったときの対応や改善の進め方がまとまっています。
-        プログラミング言語でも、監査そのものでもありません。
+        <InlineIcon name="lightbulb" /><b>ITIL</b>は、ITサービスマネジメントで広く使われている成功事例（ベストプラクティス）を集めたもの。
+        障害対応・変更・窓口の運営などの進め方がまとまっています。
       </div>
     </Panel>
   );
@@ -90,7 +92,7 @@ const STORY: Record<
     choices: [{ label: "影響を審査して計画的に変更（変更管理）", next: "stable", log: "やり直し → 審査して安全に変更" }],
   },
   stable: {
-    text: "対策完了！その後、同じ障害は二度と起きませんでした。3つの管理をリレーのようにつなぐのがITIL流です。",
+    text: "対策完了！その後、同じ障害は二度と起きませんでした。まず戻す・原因を断つ・安全に変える、と目的の違う管理が連携して働きます。",
     tone: "emerald",
     choices: [],
   },
@@ -197,73 +199,21 @@ function IncidentSim() {
   );
 }
 
-const ITEMS: { t: string; ans: string; why: string }[] = [
-  { t: "サービス停止中。まず使えるよう急いで戻す", ans: "インシデント管理", why: "復旧優先＝インシデント管理。" },
-  { t: "同じ障害が再発しないよう根本原因を除く", ans: "問題管理", why: "根本対策＝問題管理。" },
-  { t: "サーバ更新の影響を審査し安全に変える", ans: "変更管理", why: "変更を安全に＝変更管理。" },
-];
-const OPTS = ["インシデント管理", "問題管理", "変更管理"];
-
-function Quiz() {
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  return (
-    <Panel>
-      <SectionTitle step={3}>これはどの管理？</SectionTitle>
-      <ul className="mt-3 space-y-2.5">
-        {ITEMS.map((it, i) => {
-          const chosen = answers[i];
-          const correct = chosen === it.ans;
-          return (
-            <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <p className="text-sm font-bold text-gray-800">{it.t}</p>
-              <div className="mt-2 flex gap-1.5">
-                {OPTS.map((opt) => {
-                  const picked = chosen === opt;
-                  const tone = !chosen
-                    ? "text-gray-600 ring-1 ring-gray-300"
-                    : picked
-                      ? opt === it.ans
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                      : opt === it.ans
-                        ? "ring-2 ring-emerald-400 text-emerald-700"
-                        : "text-gray-400 ring-1 ring-gray-200";
-                  return (
-                    <button
-                      key={opt}
-                      onClick={() => setAnswers((p) => ({ ...p, [i]: opt }))}
-                      className={`flex-1 rounded-lg px-1 py-1.5 text-[11px] font-bold transition active:scale-95 ${tone}`}
-                    >
-                      {opt.replace("管理", "")}
-                    </button>
-                  );
-                })}
-              </div>
-              {chosen && (
-                <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "正解！ " : `正解は ${it.ans}。 `}
-                  {it.why}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </Panel>
-  );
-}
-
 export default function ItilExperience() {
   return (
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
-        <b>ITIL</b>は、ITサービス管理の<b>ベストプラクティス（うまいやり方）をまとめた知識体系</b>。
-        障害対応・変更・改善などの進め方が整理されています。
+        <b>ITIL</b>は、ITサービスマネジメントの<b>ベストプラクティス（成功事例）をまとめた知識体系</b>。
+        障害対応・変更・利用者の窓口などの進め方が整理されています。
       </div>
 
       <WhatIs />
       <IncidentSim />
-      <Quiz />
+      <ServiceDesk step={3} />
+      <DeskAutomation step={4} />
+      <ReductionRate step={5} />
+      <ItilProcesses step={6} />
+      <ItilQuiz step={7} />
     </div>
   );
 }
