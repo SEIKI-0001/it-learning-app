@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CyberAttacksExperience from "@/components/experiences/CyberAttacksExperience";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
@@ -46,16 +46,29 @@ const payload = () => screen.getByTestId("cyber-payload");
 const bubble = () => screen.getByTestId("cyber-bubble");
 
 describe("CyberAttacksExperience", () => {
-  it("keeps the lab, the quiz and the summary", () => {
+  it("keeps the lab and adds the exam terms by what they target, then a quiz with past-exam scenes", () => {
     renderDeck();
-    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    expect(screen.getByText("1 / 5")).toBeInTheDocument();
     for (const id of ["attacker", "internet", "web", "db", "user", "staff"]) {
       expect(scene().querySelector(`[data-node="${id}"]`)).not.toBeNull();
     }
     click("解説2");
-    expect(screen.getByText("これはどの攻撃？")).toBeInTheDocument();
+    const t1 = screen.getByTestId("cyber-terms-1");
+    expect(t1.querySelector('[data-term="パスワードリスト攻撃"]')).toHaveTextContent("流用");
+    expect(t1.querySelector('[data-term="バッファオーバーフロー"]')).toHaveTextContent("セキュリティパッチ");
+    expect(t1.querySelector('[data-term="ゼロデイ攻撃"]')).toHaveTextContent("修正プログラムが出るまで");
     click("解説3");
-    expect(screen.getByText("まとめ")).toBeInTheDocument();
+    const t2 = screen.getByTestId("cyber-terms-2");
+    expect(t2.querySelector('[data-term="SQLインジェクション"]')).toHaveTextContent("サニタイジング");
+    expect(t2).toHaveTextContent(/ドライブバイダウンロード.*DNSキャッシュポイズニング.*バックドア.*APT攻撃/);
+    click("解説4");
+    expect(screen.getByTestId("cyber-social")).toHaveTextContent("物理的に破壊");
+    expect(screen.getByTestId("cyber-big-picture")).toHaveTextContent(/サイバーキルチェーン.*ダークウェブ/);
+    click("解説5");
+    expect(screen.getByText("これはどの攻撃？")).toBeInTheDocument();
+    const item = within(screen.getByTestId("cyber-quiz")).getAllByRole("listitem")[0];
+    fireEvent.click(within(item).getByRole("button", { name: "ブルートフォース攻撃" }));
+    expect(item).toHaveTextContent("正解は「パスワードリスト攻撃」");
   });
 
   it("plays the scenes of a STEP automatically and waits for the user before the next STEP", () => {
