@@ -25,7 +25,7 @@ const toEnd = () => {
 describe("WirelessMobileExperience", () => {
   it("mobile slide: 5G / tethering / MVNO switch the route on the street model, and the quiz is kept", () => {
     renderDeck();
-    click("解説2");
+    click("解説4");
     expect(screen.getByTestId("mobile-scene")).toBeInTheDocument();
     expect(screen.getByTestId("mobile-scene-caption")).toHaveTextContent("多数同時接続");
     const radioOn = () => [...document.querySelectorAll('[data-radio][data-on="true"]')].map((el) => el.getAttribute("data-radio"));
@@ -40,6 +40,24 @@ describe("WirelessMobileExperience", () => {
     expect(screen.getByTestId("mobile-sim")).toHaveTextContent("格安SIM（MVNO）");
     click("解説3");
     expect(screen.getByText("フリーWi-Fi、安全？危険？")).toBeInTheDocument();
+  });
+
+  it("covers what past exams ask: Wi-Fi settings, short-range radio and mobile radio terms", () => {
+    renderDeck();
+    expect(screen.getByText("1 / 6")).toBeInTheDocument();
+    click("解説2");
+    const settings = screen.getByTestId("wifi-settings");
+    expect(settings.querySelector('[data-setting="ESSIDステルス"]')).toHaveTextContent("暗号化や認証はしない");
+    expect(settings.querySelector('[data-setting="ゲストSSID"]')).toHaveTextContent("インターネットにだけ");
+    expect(settings.querySelector('[data-setting="PSK（事前共有鍵）"]')).toHaveTextContent("暗号鍵");
+    click("解説5");
+    const short = screen.getByTestId("short-range");
+    expect(short.querySelector('[data-tech="BLE"]')).toHaveTextContent("Bluetooth 4.0");
+    expect(short.querySelector('[data-tech="LPWA"]')).toHaveTextContent(/範囲が広く.*消費電力が少ない/);
+    expect(screen.getByTestId("short-others")).toHaveTextContent("準天頂衛星");
+    click("解説6");
+    expect(screen.getByTestId("platinum-band")).toHaveTextContent(/周波数が低いほど回り込みやすく.*MHz/);
+    expect(screen.getByTestId("mobile-phrases")).toHaveTextContent("キャリアアグリゲーション");
   });
 
   it("step 1 shows the laptop's Wi-Fi list: SSID names and lock marks are separate", () => {
