@@ -1,11 +1,12 @@
 @import "tailwindcss";
+@import "./theme-dark.css";
 
 /*
  * デザイントークン。配色は2つのテーマから選べる（lib/theme.ts。端末ごとに保存）。
  *   - クラシック（ここの @theme が基準値）: 白地に淡い面（brand-50）、主ボタンは墨。2026-09 の配色。
  *   - アイス（html[data-theme="ice"] で上書き・既定）: 氷色の地 #EDF5FA に白いカード、主ボタンは青。
  *     /progress の配色を全画面に広げたもの。灰は slate 系、青 #175CD3・琥珀 #D78B17・青緑 #0C8064。
- *   - ダーク（いまは /progress とナビだけ。html[data-surface="dark"]）。他の画面はアイスで表示する。
+ *   - ダーク（html[data-theme="dark"]）: 色ランプを暗い地用に差し替える。中身は theme-dark.css（生成物）。
  * 公開ページ（LP・ガイド・解説など）は常にクラシック。
  * テーマで変わる面は CSS 変数（--panel-* / --card-* / --emph-* / --color-cta）で持ち、部品はそれを参照する。
  * - brand: 新規・現在地・進捗バー・リンク。テキストは 700 以上。
@@ -154,55 +155,47 @@ html[data-theme="ice"] {
   --emph-bar: 4px;
 }
 
-/* ダーク（lib/theme）。/progress が表示中だけ html に data-surface="dark" を付ける。
-   値は progressCompact.module.css のダークと揃える。 */
-html[data-surface="dark"] {
-  --background: #0f1722;
-  --foreground: #eef3fa;
-  color-scheme: dark;
-}
-
 /* ナビ（スマホの下部バー / PC の左サイドバー）のダーク */
-html[data-surface="dark"] nav[data-app-nav] {
+html[data-theme="dark"] nav[data-app-nav] {
   border-color: #2a3a4f;
   background: rgb(15 23 34 / 0.95);
 }
 
-html[data-surface="dark"] nav[data-app-nav] > div {
+html[data-theme="dark"] nav[data-app-nav] > div {
   color: #eef3fa;
 }
 
-html[data-surface="dark"] nav[data-app-nav] > div > span:first-child {
+html[data-theme="dark"] nav[data-app-nav] > div > span:first-child {
   background: #eef3fa;
   color: #0f1722;
 }
 
-html[data-surface="dark"] nav[data-app-nav] a {
+html[data-theme="dark"] nav[data-app-nav] a {
   color: #b8c6d8;
 }
 
-html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] {
+html[data-theme="dark"] nav[data-app-nav] a[aria-current="page"] {
   color: #eef3fa;
 }
 
-html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] > span {
+html[data-theme="dark"] nav[data-app-nav] a[aria-current="page"] > span {
   background: #22355a;
 }
 
 @media (min-width: 1024px) {
-  html[data-surface="dark"] nav[data-app-nav] {
+  html[data-theme="dark"] nav[data-app-nav] {
     background: #121c29;
   }
 
-  html[data-surface="dark"] nav[data-app-nav] a:hover {
+  html[data-theme="dark"] nav[data-app-nav] a:hover {
     background: #1e2b3d;
   }
 
-  html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] {
+  html[data-theme="dark"] nav[data-app-nav] a[aria-current="page"] {
     background: #22355a;
   }
 
-  html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] > span {
+  html[data-theme="dark"] nav[data-app-nav] a[aria-current="page"] > span {
     background: transparent;
   }
 }

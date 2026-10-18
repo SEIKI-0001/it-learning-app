@@ -35,6 +35,27 @@
   color: var(--ink);
 }
 
+/* ダーク（lib/theme）。値は progressCompact.module.css のダークと揃える */
+:global(html[data-theme="dark"]) .view {
+  --canvas: #172231;
+  --wash: #1e2b3d;
+  --wash-line: #2a3a4f;
+  --blue: #5b80ee;
+  --blue-700: #a9c0ff;
+  --blue-soft: #22355a;
+  --orange: #c9792e;
+  --orange-700: #f2b67a;
+  --orange-soft: #3b2a1c;
+  --green: #2a9d7e;
+  --vocab: #2a9d7e;
+  --vocab-700: #7fdcc0;
+  --vocab-soft: #183a34;
+  --exam: #3d6be0;
+  --exam-700: #a9c0ff;
+  --exam-soft: #22355a;
+  --claimed-soft: #183a34;
+}
+
 @media (min-width: 1024px) {
   .view {
     padding-bottom: 72px;
@@ -902,7 +923,7 @@
 }
 
 .reward[data-state="claimed"] {
-  background: #e6efe9;
+  background: var(--claimed-soft, #e6efe9);
   color: var(--green);
   font-weight: 500;
 }

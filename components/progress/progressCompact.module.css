@@ -1,5 +1,5 @@
 /* /progress ダッシュボード。色トークンは todayView.module.css の .view が定義し、
-   アイスでは .theme で上書きする（クラシックは .view のまま）。ダークは <html data-surface="dark">（lib/theme）。
+   アイスでは .theme で上書きする（クラシックは .view のまま）。ダークは <html data-theme="dark">（lib/theme）。
    色は状態にだけ使う: 得意・達成=緑 / まずまず・現在地=青 / 要強化・苦手=橙 / これから=灰。
    状態3色はライト・ダークとも色覚の違いで区別できることを検証済み（橙は文字ラベルを必ず併記）。
    面の装飾（影・グラデーション）はしない。 */
@@ -26,7 +26,7 @@
   color: var(--ink);
 }
 
-:global(html[data-surface="dark"]) main.theme {
+:global(html[data-theme="dark"]) main.theme {
   --canvas: #172231;
   --wash: #1e2b3d;
   --wash-line: #2a3a4f;
