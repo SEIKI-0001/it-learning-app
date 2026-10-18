@@ -6,6 +6,8 @@
 //   それ以外・ロード失敗時は従来のWebPフォールバックを表示する
 // - どちらの描画でも外形寸法とセリフ表示は同一（レイアウトシフトなし）
 
+import type { MochitGrowthLook } from "@/lib/mochit";
+import { fieldLevelsKey } from "./mochitGrowthDecor";
 import dynamic from "next/dynamic";
 import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import MochitFallback, { MOCHIT_STATE_META } from "./MochitFallback";
@@ -121,6 +123,11 @@ type Props = {
   message?: string;
   animation?: MochitAnimation;
   growthStage?: MochitGrowthStage;
+  /**
+   * 学習から導いた成長の見た目一式（段階・分野ごとの育ち・個性）。
+   * 指定すると growthStage より優先し、コアのバーと回路・花の色にも反映する。
+   */
+  growthLook?: MochitGrowthLook;
   className?: string;
   // ---- セマンティックprops（Rive移行用・省略可） ----
   /** -1〜1。省略時は state から導出 */
@@ -173,7 +180,8 @@ export default function Mochit({
   size = "medium",
   message,
   animation = "idle",
-  growthStage = 1,
+  growthStage: growthStageProp = 1,
+  growthLook,
   className = "",
   mood,
   event = null,
@@ -192,6 +200,8 @@ export default function Mochit({
   forceSvgFailure,
 }: Props) {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const growthStage = growthLook?.stage ?? growthStageProp;
+  const growthFields = growthLook ? fieldLevelsKey(growthLook.fieldLevels) : undefined;
   const effectiveReducedMotion = reducedMotion ?? prefersReducedMotion;
   const sizeCompact = compact ?? (size === "small" || size === "xs");
   const effectiveReactionProfile =
@@ -289,6 +299,8 @@ export default function Mochit({
                 macroIdleRequest={macroIdleRequest}
                 sleeping={sleeping}
                 activity={activity}
+                growthFields={growthFields}
+                growthPersonality={growthLook?.personality}
                 onReady={() => setSvgReady(true)}
                 onLoadFailed={() => {
                   setSvgReady(false);

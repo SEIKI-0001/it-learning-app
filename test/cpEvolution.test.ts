@@ -49,13 +49,12 @@ describe("the growth step is detected, not invented", () => {
   });
 
   it("reports the step when a checkpoint pushes the stage up", () => {
-    const change = getMochitStageChange(state(["cp1"]), state(["cp1", "cp2"]));
-
-    expect(change).toEqual({ from: 1, to: 2 });
+    expect(getMochitStageChange(state([]), state(["cp1"]))).toEqual({ from: 1, to: 2 });
+    expect(getMochitStageChange(state(["cp1"]), state(["cp1", "cp2"]))).toEqual({ from: 2, to: 3 });
   });
 
   it("reports nothing for a checkpoint that does not change the stage", () => {
-    // cp3 を足しても段階2のまま（段階3は4クリアから）。
+    // cp3 を足しても段階3のまま（段階4は4クリアから）。
     expect(getMochitStageChange(state(["cp1", "cp2"]), state(["cp1", "cp2", "cp3"]))).toBeNull();
   });
 

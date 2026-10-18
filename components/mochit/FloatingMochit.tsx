@@ -38,6 +38,7 @@ import {
 } from "./floatingMochitPreferences";
 import { getMochitDisplayName } from "@/lib/mochitName";
 import { loadAppState } from "@/lib/storage";
+import { useMochitGrowthLook } from "./useMochitGrowthLook";
 import {
   buildMochitMessage,
   type FloatingMochitMessage,
@@ -159,6 +160,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   // 表示名は保存済みの AppState から一度だけ読む（このコンポーネントは
   // 進捗を持たないため、購読せずマウント時のスナップショットで足りる）。
   const [displayName] = useState(() => getMochitDisplayName(loadAppState()));
+  const growthLook = useMochitGrowthLook();
   const gestureRef = useRef<ActiveGesture | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -293,7 +295,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
   };
 
   const showBubbleForEvent = (signal: MochitEventSignal) => {
-    const message = buildMochitMessage(signal, previousBubbleTextRef.current);
+    const message = buildMochitMessage(signal, previousBubbleTextRef.current, Math.random, growthLook ?? undefined);
     if (message) showBubble(message);
   };
 
@@ -578,6 +580,7 @@ export default function FloatingMochit({ reducedMotion, presentation }: Props) {
           behavior={behavior}
           attentionPoint={attentionPoint}
           activity={activity}
+          growthLook={growthLook ?? undefined}
           event={reactionSignal}
           onEventAccepted={handleEventAccepted}
           className="pointer-events-none justify-center"

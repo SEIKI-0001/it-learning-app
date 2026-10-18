@@ -14,6 +14,7 @@ import {
   MOCHIT_MACRO_IDLE_BEHAVIORS,
   nextMacroIdleDelayMs,
   pickMacroIdleBehavior,
+  withGrowthMacroIdleWeights,
   type MacroIdleConditions,
   type MochitMacroIdleBehavior,
   type MochitMacroIdleChoice,
@@ -46,7 +47,7 @@ describe("nextMacroIdleDelayMs", () => {
 
 describe("pickMacroIdleBehavior", () => {
   it("初期確率は normal55 / lookAround25 / curious12 / stretch8", () => {
-    expect(MACRO_IDLE_WEIGHTS).toEqual({ normal: 0.55, lookAround: 0.25, curious: 0.12, stretch: 0.08 });
+    expect(MACRO_IDLE_WEIGHTS).toEqual({ normal: 0.55, lookAround: 0.25, curious: 0.12, stretch: 0.08, hop: 0, turn: 0 });
     const w = macroIdleWeights(null);
     expect(w.normal).toBeCloseTo(0.55);
     expect(w.stretch).toBeCloseTo(0.08);
@@ -64,7 +65,8 @@ describe("pickMacroIdleBehavior", () => {
   });
 
   it("直前と同じ特殊 Behavior は選ばれにくい（0 にはしない）", () => {
-    for (const prev of MOCHIT_MACRO_IDLE_BEHAVIORS) {
+    // hop / turn は成長で解放されるまで重み0（抽選されない）なので対象外
+    for (const prev of MOCHIT_MACRO_IDLE_BEHAVIORS.filter((b) => macroIdleWeights(null)[b] > 0)) {
       const w = macroIdleWeights(prev);
       const total = Object.values(w).reduce((a, b) => a + b, 0);
       expect(total).toBeCloseTo(1);
@@ -81,7 +83,7 @@ describe("pickMacroIdleBehavior", () => {
     let prev: MochitMacroIdleBehavior | null = null;
     let repeats = 0;
     let specials = 0;
-    const counts: Record<MochitMacroIdleChoice, number> = { normal: 0, lookAround: 0, curious: 0, stretch: 0 };
+    const counts: Record<MochitMacroIdleChoice, number> = { normal: 0, lookAround: 0, curious: 0, stretch: 0, hop: 0, turn: 0 };
     const N = 20000;
     for (let i = 0; i < N; i++) {
       const c = pickMacroIdleBehavior(prev, rng);
@@ -228,5 +230,50 @@ describe("自動発火の条件", () => {
       // 明示再生は attention を問わない
       expect(canPlayMacroIdle({ ...ok, attention })).toBe(true);
     }
+  });
+});
+
+describe("成長で解放されるしぐさ（hop / turn）", () => {
+  it("hop は段階3から、turn は段階5からだけ重みを持つ", () => {
+    for (const stage of [1, 2]) {
+      const w = withGrowthMacroIdleWeights(MACRO_IDLE_WEIGHTS, stage);
+      expect(w.hop).toBe(0);
+      expect(w.turn).toBe(0);
+    }
+    for (const stage of [3, 4]) {
+      const w = withGrowthMacroIdleWeights(MACRO_IDLE_WEIGHTS, stage);
+      expect(w.hop).toBeGreaterThan(0);
+      expect(w.turn).toBe(0);
+    }
+    const w5 = withGrowthMacroIdleWeights(MACRO_IDLE_WEIGHTS, 5);
+    expect(w5.hop).toBeGreaterThan(0);
+    expect(w5.turn).toBeGreaterThan(0);
+  });
+
+  it("元の重みは書き換えず、既存の重みは保つ", () => {
+    withGrowthMacroIdleWeights(MACRO_IDLE_WEIGHTS, 5);
+    expect(MACRO_IDLE_WEIGHTS.hop).toBe(0);
+    expect(MACRO_IDLE_WEIGHTS.turn).toBe(0);
+    expect(withGrowthMacroIdleWeights(MACRO_IDLE_WEIGHTS, 5).normal).toBe(MACRO_IDLE_WEIGHTS.normal);
+  });
+
+  it("成長済みの重みなら hop / turn が抽選され、未成長では出ない", () => {
+    const grown = withGrowthMacroIdleWeights(MACRO_IDLE_WEIGHTS, 5);
+    const rng = seeded(11);
+    const picked = new Set<MochitMacroIdleChoice>();
+    for (let i = 0; i < 2000; i++) picked.add(pickMacroIdleBehavior(null, rng, grown));
+    expect(picked.has("hop")).toBe(true);
+    expect(picked.has("turn")).toBe(true);
+
+    const base = new Set<MochitMacroIdleChoice>();
+    const rng2 = seeded(11);
+    for (let i = 0; i < 2000; i++) base.add(pickMacroIdleBehavior(null, rng2, withGrowthMacroIdleWeights(MACRO_IDLE_WEIGHTS, 2)));
+    expect(base.has("hop")).toBe(false);
+    expect(base.has("turn")).toBe(false);
+  });
+
+  it("hop / turn は MOCHIT_MACRO_IDLE_BEHAVIORS に入り、恒等契約ループの対象になる", () => {
+    expect(MOCHIT_MACRO_IDLE_BEHAVIORS).toContain("hop");
+    expect(MOCHIT_MACRO_IDLE_BEHAVIORS).toContain("turn");
   });
 });

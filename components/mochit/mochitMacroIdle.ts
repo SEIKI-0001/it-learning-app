@@ -16,13 +16,19 @@ import { offsetTransform, randRange, rotateAbout, type GazeOffset, type RNG } fr
 import type { ReactionTrack } from "./mochitReactionAnimation";
 import { activityAllowsMacroIdle, type MochitActivity } from "./mochitActivity";
 
-/** 実際に動きを伴う Macro Idle（sleepy は次Step） */
-export type MochitMacroIdleBehavior = Extract<MochitIdleBehavior, "lookAround" | "curious" | "stretch">;
+/**
+ * 実際に動きを伴う Macro Idle。hop（小さく跳ねる）と turn（くるっと振り向く）は
+ * 成長で解放されるしぐさで、Behavior State の idleBehavior には持たない。
+ */
+export type MochitMacroIdleBehavior =
+  | Extract<MochitIdleBehavior, "lookAround" | "curious" | "stretch">
+  | "hop"
+  | "turn";
 
 /** 抽選対象。normal は「何もしないで次回まで待つ」 */
 export type MochitMacroIdleChoice = "normal" | MochitMacroIdleBehavior;
 
-export const MOCHIT_MACRO_IDLE_BEHAVIORS: readonly MochitMacroIdleBehavior[] = ["lookAround", "curious", "stretch"];
+export const MOCHIT_MACRO_IDLE_BEHAVIORS: readonly MochitMacroIdleBehavior[] = ["lookAround", "curious", "stretch", "hop", "turn"];
 
 export function isMochitMacroIdleBehavior(value: unknown): value is MochitMacroIdleBehavior {
   return (MOCHIT_MACRO_IDLE_BEHAVIORS as readonly unknown[]).includes(value);
@@ -45,12 +51,35 @@ export const MACRO_IDLE_WEIGHTS: Readonly<Record<MochitMacroIdleChoice, number>>
   lookAround: 0.25,
   curious: 0.12,
   stretch: 0.08,
+  hop: 0,
+  turn: 0,
 });
+
+// ---- 成長で解放されるしぐさ ----
+
+/** hop を解放する成長段階と、解放後に足す重み（合計は正規化されるので比率で効く）。 */
+export const MACRO_IDLE_HOP_STAGE = 3;
+export const MACRO_IDLE_HOP_WEIGHT = 0.1;
+/** turn を解放する成長段階と重み。 */
+export const MACRO_IDLE_TURN_STAGE = 5;
+export const MACRO_IDLE_TURN_WEIGHT = 0.08;
+
+/** 成長段階に応じて hop / turn の重みを足す。段階未満なら 0 のまま（＝抽選されない）。 */
+export function withGrowthMacroIdleWeights(
+  base: Readonly<Record<MochitMacroIdleChoice, number>>,
+  growthStage = 1,
+): Record<MochitMacroIdleChoice, number> {
+  return {
+    ...base,
+    hop: growthStage >= MACRO_IDLE_HOP_STAGE ? base.hop + MACRO_IDLE_HOP_WEIGHT : 0,
+    turn: growthStage >= MACRO_IDLE_TURN_STAGE ? base.turn + MACRO_IDLE_TURN_WEIGHT : 0,
+  };
+}
 
 /** 直前に再生した特殊 Behavior の重みに掛ける係数（連続しにくくする。0 にはしない） */
 export const MACRO_IDLE_REPEAT_PENALTY = 0.2;
 
-const CHOICE_ORDER: readonly MochitMacroIdleChoice[] = ["normal", "lookAround", "curious", "stretch"];
+const CHOICE_ORDER: readonly MochitMacroIdleChoice[] = ["normal", "lookAround", "curious", "stretch", "hop", "turn"];
 
 /** 直前の特殊 Behavior を考慮した抽選重み（合計 1 に正規化済み） */
 export function macroIdleWeights(
@@ -91,6 +120,8 @@ export const MACRO_IDLE_DURATION_RANGE_MS: Readonly<Record<MochitMacroIdleBehavi
     lookAround: [1200, 1800],
     curious: [900, 1400],
     stretch: [1200, 1800],
+    hop: [900, 1100],
+    turn: [1100, 1300],
   });
 
 export function macroIdleDurationMs(
@@ -124,19 +155,21 @@ export const DEFAULT_MACRO_IDLE_TUNING: MacroIdleTuning = Object.freeze({
  * curious は「目→体→アンテナ」の時間差を見せるため少し長い。
  */
 export const FLOATING_MACRO_IDLE_TUNING: MacroIdleTuning = Object.freeze({
-  weights: Object.freeze({ normal: 0.3, lookAround: 0.35, curious: 0.22, stretch: 0.13 }),
+  weights: Object.freeze({ normal: 0.3, lookAround: 0.35, curious: 0.22, stretch: 0.13, hop: 0, turn: 0 }),
   minDelayMs: 7000,
   maxDelayMs: 15000,
   durations: Object.freeze({
     lookAround: [1400, 1900] as const,
     curious: [1300, 1700] as const,
     stretch: [1300, 1800] as const,
+    hop: [1000, 1200] as const,
+    turn: [1200, 1400] as const,
   }),
 });
 
 export const LIVELY_MACRO_IDLE_TUNING: MacroIdleTuning = Object.freeze({
   ...FLOATING_MACRO_IDLE_TUNING,
-  weights: Object.freeze({ normal: 0.08, lookAround: 0.38, curious: 0.34, stretch: 0.2 }),
+  weights: Object.freeze({ normal: 0.08, lookAround: 0.38, curious: 0.34, stretch: 0.2, hop: 0, turn: 0 }),
   minDelayMs: 2500,
   maxDelayMs: 6000,
 });
@@ -428,6 +461,75 @@ function stretchTracks(floating = false): ReactionTrack[] {
   ];
 }
 
+/**
+ * hop: 沈む → ぴょんと跳ねる（腕を開き、アンテナが遅れてしなる）→ 着地でつぶれる → 戻る。
+ * 成長段階3で解放。「元気が出てきた」ことを見せる。
+ */
+function hopTracks(floating = false): ReactionTrack[] {
+  const k = floating
+    ? { up: -7, squashX: 1.05, squashY: 0.93, reachX: 0.97, reachY: 1.05, arm: 14, antenna: 7 }
+    : { up: -4, squashX: 1.03, squashY: 0.955, reachX: 0.98, reachY: 1.03, arm: 8, antenna: 4 };
+  const armKeys = (side: "L" | "R") => [
+    arm(0, side, 0, EASE),
+    arm(0.18, side, -2, "ease-out"),
+    arm(0.4, side, k.arm, "ease-in"),
+    arm(0.66, side, 2, EASE),
+    arm(1, side, 0),
+  ];
+  return [
+    {
+      target: "body",
+      keyframes: [
+        body(0, {}, EASE),
+        body(0.18, { sx: k.squashX, sy: k.squashY }, "ease-out"),
+        body(0.4, { y: k.up, sx: k.reachX, sy: k.reachY }, "ease-in"),
+        body(0.62, { sx: k.squashX, sy: k.squashY }, EASE),
+        body(0.82, { sx: 0.995, sy: 1.006 }, EASE),
+        body(1, {}),
+      ],
+    },
+    { target: "armL", keyframes: armKeys("L") },
+    { target: "armR", keyframes: armKeys("R") },
+    {
+      target: "antenna",
+      composite: "add",
+      keyframes: [
+        antenna(0, 0, EASE),
+        antenna(0.42, k.antenna, EASE),
+        antenna(0.66, -k.antenna * 0.7, EASE),
+        antenna(0.86, k.antenna * 0.25, EASE),
+        antenna(1, 0),
+      ],
+    },
+  ];
+}
+
+/**
+ * turn: 横幅が細くなって裏返り、もう一度細くなって正面へ戻る（くるっと一回転して見える）。
+ * 成長段階5で解放。視線は動かさない（裏返っている間は左右反転で十分読める）。
+ */
+function turnTracks(floating = false): ReactionTrack[] {
+  const lift = floating ? -2.5 : -1.5;
+  return [
+    {
+      target: "body",
+      keyframes: [
+        body(0, {}, "ease-in"),
+        body(0.25, { y: lift, sx: 0.06 }, "ease-out"),
+        body(0.5, { y: lift, sx: -1 }, "ease-in"),
+        body(0.75, { y: lift, sx: -0.06 }, "ease-out"),
+        body(0.9, { sx: 1.02, sy: 0.985 }, EASE),
+        body(1, {}),
+      ],
+    },
+    {
+      target: "antenna",
+      composite: "add",
+      keyframes: [antenna(0, 0, EASE), antenna(0.3, -5, EASE), antenna(0.6, 5, EASE), antenna(0.9, -1.5, EASE), antenna(1, 0)],
+    },
+  ];
+}
+
 export function buildMacroIdleSpec(behavior: MochitMacroIdleBehavior, options: MacroIdleSpecOptions): MacroIdleSpec {
   const rng = options.rng ?? Math.random;
   const base = options.gazeBase ?? { x: 0, y: 0 };
@@ -441,7 +543,11 @@ export function buildMacroIdleSpec(behavior: MochitMacroIdleBehavior, options: M
         ? floating
           ? floatingCuriousTracks(rng)
           : curiousTracks(rng)
-        : stretchTracks(floating);
+        : behavior === "hop"
+          ? hopTracks(floating)
+          : behavior === "turn"
+            ? turnTracks(floating)
+            : stretchTracks(floating);
   return { behavior, totalMs: options.durationMs, tracks };
 }
 
@@ -468,6 +574,8 @@ export type MacroIdleConditions = {
   lively?: boolean;
   /** Activity（studying / resting）中は再生しない。一緒に集中・休憩している間に割り込ませない */
   activity?: MochitActivity;
+  /** モチットの成長段階（1〜5）。段階で hop / turn が抽選に加わる。省略時 1 */
+  growthStage?: number;
 };
 
 /** Macro Idle を再生できる状態か（明示再生を含む）。attention は問わない */

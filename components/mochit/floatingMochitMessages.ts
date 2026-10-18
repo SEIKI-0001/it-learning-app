@@ -1,3 +1,4 @@
+import type { MochitGrowthStage, MochitPersonality } from "@/lib/mochit";
 import type { MochitContext, MochitEvent, MochitEventSignal } from "./mochitEvents";
 
 export type FloatingMochitMessage = {
@@ -59,18 +60,75 @@ const FLOATING_MOCHIT_MESSAGE_DEFINITIONS: Partial<
   },
 };
 
+// ---------------------------------------------------------------------------
+// 成長で増えるセリフ（既存の候補に混ぜる。置き換えない）
+// ---------------------------------------------------------------------------
+//
+// 段階が上がるほど打ち解けた口調になり、個性が決まると得意分野にちなんだ一言が加わる。
+// 学習の判定には使わない見た目だけの要素なので、事実の主張（何問正解など）は入れない。
+
+export type MochitMessageGrowth = {
+  stage: MochitGrowthStage;
+  personality: MochitPersonality;
+};
+
+const STAGE_MESSAGE_ADDITIONS: Partial<
+  Record<MochitEvent, ReadonlyArray<{ minStage: MochitGrowthStage; texts: readonly string[] }>>
+> = {
+  correct: [
+    { minStage: 3, texts: ["わかってきたね！", "コアがあったかい！"] },
+    { minStage: 5, texts: ["もう余裕だね", "さすが相棒！"] },
+  ],
+  incorrect: [
+    { minStage: 3, texts: ["大丈夫、ここで育つよ"] },
+    { minStage: 5, texts: ["ここは一緒に見直そう"] },
+  ],
+  correctStreak: [{ minStage: 4, texts: ["回路がつながってきた！"] }],
+  taskComplete: [
+    { minStage: 2, texts: ["芽がまたのびた気がする！"] },
+    { minStage: 4, texts: ["つぼみがふくらんできたよ"] },
+    { minStage: 5, texts: ["花がよろこんでる！"] },
+  ],
+};
+
+const PERSONALITY_MESSAGES: Partial<Record<MochitPersonality, string>> = {
+  strategy: "戦略家の勘がさえてる！",
+  management: "段取りばっちり！",
+  technology: "回路がビリっときた！",
+  balanced: "どの分野もいい感じ！",
+};
+
+/** 個性の一言を混ぜるイベントと、混ぜ始める段階。 */
+const PERSONALITY_EVENTS: ReadonlySet<MochitEvent> = new Set(["correct", "taskComplete"]);
+const PERSONALITY_MIN_STAGE: MochitGrowthStage = 3;
+
+export function getGrowthMessageCandidates(
+  event: MochitEvent,
+  growth: MochitMessageGrowth | undefined,
+): string[] {
+  if (!growth) return [];
+  const texts: string[] = [];
+  for (const addition of STAGE_MESSAGE_ADDITIONS[event] ?? []) {
+    if (growth.stage >= addition.minStage) texts.push(...addition.texts);
+  }
+  const personalityText = PERSONALITY_MESSAGES[growth.personality];
+  if (personalityText && growth.stage >= PERSONALITY_MIN_STAGE && PERSONALITY_EVENTS.has(event)) {
+    texts.push(personalityText);
+  }
+  return texts;
+}
+
 export function getFloatingMochitMessage(
   event: MochitEvent,
   previousText: string | null,
   random: () => number = Math.random,
+  growth?: MochitMessageGrowth,
 ): FloatingMochitMessage | null {
   const definition = FLOATING_MOCHIT_MESSAGE_DEFINITIONS[event];
   if (!definition) return null;
 
-  const candidates =
-    definition.candidates.length > 1
-      ? definition.candidates.filter((text) => text !== previousText)
-      : definition.candidates;
+  const all = [...definition.candidates, ...getGrowthMessageCandidates(event, growth)];
+  const candidates = all.length > 1 ? all.filter((text) => text !== previousText) : all;
   const index = Math.min(
     candidates.length - 1,
     Math.floor(Math.max(0, random()) * candidates.length),
@@ -161,8 +219,9 @@ export function buildMochitMessage(
   signal: MochitEventSignal,
   previousText: string | null,
   random: () => number = Math.random,
+  growth?: MochitMessageGrowth,
 ): FloatingMochitMessage | null {
   const contextual = getContextualMochitMessage(signal.type, signal.context);
   if (contextual && contextual.text !== previousText) return contextual;
-  return getFloatingMochitMessage(signal.type, previousText, random);
+  return getFloatingMochitMessage(signal.type, previousText, random, growth);
 }

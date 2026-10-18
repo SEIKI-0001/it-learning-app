@@ -7,7 +7,6 @@ import type { AppState } from "@/types";
 import type { PendingChoiceOption } from "@/types/checkpoint";
 import { useAppState } from "@/lib/useAppState";
 import { useBadgeSync } from "@/lib/useBadgeSync";
-import { getMochitGrowthStage, MOCHIT_GROWTH_STAGE_LABELS, nextMochitGrowthStageInfo } from "@/lib/mochit";
 import { getClientBadgeSignals } from "@/lib/badgeSignals";
 import { buildBadgeStatuses } from "@/lib/badges";
 import { badgeIcon } from "@/lib/badgeIcons";
@@ -17,7 +16,7 @@ import {
   ALL_TITLES, equipTitle, exchangeTitle, fragmentLabel, getEquippedTitle,
   getFragments, getUnlockedTitleIds, listTitleAvailability,
 } from "@/lib/rewardInventory";
-import Mochit from "@/components/mochit/Mochit";
+import MochitGrowthPanel from "@/components/mochit/MochitGrowthPanel";
 import MochitNameForm from "@/components/mochit/MochitNameForm";
 import { getMochitDisplayName } from "@/lib/mochitName";
 import { saveAppState } from "@/lib/storage";
@@ -42,8 +41,6 @@ export default function AvatarPage() {
   );
   if (!state) return <LoadingScreen />;
 
-  const stage = getMochitGrowthStage(state);
-  const nextStage = nextMochitGrowthStageInfo(state);
   const rank = getRankStatus(state.progress.exp);
   const equipped = getEquippedTitle(state);
   const unlocked = new Set(getUnlockedTitleIds(state));
@@ -73,15 +70,13 @@ export default function AvatarPage() {
         </p>
         <MochitNameForm state={state} onChange={persist} />
 
-        <section id="growth" className="rounded-xl bg-brand-50 p-5 text-center">
-          <div className="flex justify-center">
-            <Mochit state="normal" size="large" animation="idle" growthStage={stage} />
-          </div>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-gray-900">{displayName} Lv.{rank.level}</p>
-          <p className="mt-1 text-sm font-semibold text-brand-700">モチットランク：{rank.current.name}</p>
-          <p className="mt-1 text-sm text-gray-700">装備中の称号：{equipped?.label ?? "なし"}</p>
-          <p className="mt-3 text-xs text-gray-600">見た目：{MOCHIT_GROWTH_STAGE_LABELS[stage]}{nextStage ? ` · 次は${nextStage.conditionLabel}` : " · すべて解放済み"}</p>
-        </section>
+        <MochitGrowthPanel
+          state={state}
+          displayName={displayName}
+          level={rank.level}
+          rankName={rank.current.name}
+          titleLabel={equipped?.label ?? null}
+        />
 
         <section className="rounded-xl border border-gray-200 bg-white p-4">
           <h2 className="text-base font-semibold text-gray-900">次のランクまで</h2>

@@ -61,7 +61,7 @@ describe("a checkpoint breakthrough reads as a step change", () => {
     emitCelebration(state(["cp1"]), state(["cp1", "cp2"]));
 
     const growth = received.find((c) => c.kind === "mochitGrowth");
-    expect(growth).toMatchObject({ from: 1, to: 2, label: "成長期" });
+    expect(growth).toMatchObject({ from: 2, to: 3, label: "成長期" });
   });
 
   it("stays quiet when the breakthrough does not change the stage", () => {

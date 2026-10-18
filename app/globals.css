@@ -299,8 +299,11 @@ p, li, dd {
 .mochit-bounce { animation: mochit-bounce 480ms ease-out 1; }
 .mochit-tilt { animation: mochit-tilt 680ms ease-in-out 1; }
 .mochit-celebrate { animation: mochit-celebrate 620ms ease-out 1; }
-.mochit-growth-2 { filter: drop-shadow(0 0 5px rgba(34, 211, 238, .35)); }
-.mochit-growth-3 { filter: drop-shadow(0 0 8px rgba(34, 211, 238, .55)) drop-shadow(0 0 0 rgba(34, 211, 238, .45)); outline: 1px solid rgba(34, 211, 238, .35); outline-offset: 2px; border-radius: 50%; }
+/* WebPフォールバック専用（SVG描画は芽・回路・コアのバーで成長を描く） */
+.mochit-growth-2 { filter: drop-shadow(0 0 4px rgba(34, 211, 238, .3)); }
+.mochit-growth-3 { filter: drop-shadow(0 0 6px rgba(34, 211, 238, .4)); }
+.mochit-growth-4 { filter: drop-shadow(0 0 8px rgba(34, 211, 238, .5)); }
+.mochit-growth-5 { filter: drop-shadow(0 0 8px rgba(34, 211, 238, .5)) drop-shadow(0 0 14px rgba(250, 204, 21, .35)); }
 
 @keyframes floating-mochit-rebound {
   0% { transform: translateY(4px) scaleX(1.12) scaleY(.86); }
