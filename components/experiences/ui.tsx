@@ -103,6 +103,7 @@ export function ExperienceSlideDeck({
     <DeckContext.Provider value={deck}>
       <div
         data-testid="experience-slides-viewport"
+        data-light-island
         tabIndex={ids.length > 1 ? 0 : undefined}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}

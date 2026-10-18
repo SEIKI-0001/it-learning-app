@@ -9,3 +9,21 @@
 @media(min-width:600px){.page{padding-top:40px}.frame{padding:32px 30px 40px}.subtitle{font-size:16px}.english{font-size:13px}.filters button{font-size:15px;min-height:48px}.entry{padding-left:40px;margin-bottom:22px}.card{padding:20px 24px}.cardHeading{font-size:20px;gap:12px}.badge{font-size:13px}.comment{font-size:16px}.metric dt{font-size:12px}.metric dd,.weekly .metric dd{font-size:25px}.unit{font-size:13px}.reflectionTitle{font-size:14px}.cardFooter{font-size:13px}}
 @media(max-width:359px){.page{padding-left:9px;padding-right:9px}.frame{padding-left:11px;padding-right:11px}.english{font-size:8px}.card{padding:14px 10px}.cardHeading{font-size:14px}.badge{font-size:10px}.entry{padding-left:25px}.weekly .metric dt{font-size:9px}.metric svg{display:none}.weekly .metric dd{font-size:16px}.subtitle{font-size:12px}.filters button{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.reveal{animation:none}.card{transition:none}.card:hover,.card:active{transform:none}}
+
+/* ダーク（lib/theme）: 夜の手帳。金の線と飾りはそのまま、紙だけ濃紺にする */
+:global(html[data-theme="dark"]) .page{--ink:#ebe4d3;--line:#4a4130;background-color:#111821;background-image:radial-gradient(ellipse at 80% 0%,#3a301f55,transparent 55%)}
+:global(html[data-theme="dark"]) .frame:before,:global(html[data-theme="dark"]) .frame:after{background:#111821}
+:global(html[data-theme="dark"]) .english,:global(html[data-theme="dark"]) .invitation,:global(html[data-theme="dark"]) .reflectionTitle,:global(html[data-theme="dark"]) .comparison,:global(html[data-theme="dark"]) .cardFooter,:global(html[data-theme="dark"]) .new,:global(html[data-theme="dark"]) .textLink{color:#dcb978}
+:global(html[data-theme="dark"]) .month{background:#18212d;border-color:#8a7350;box-shadow:none}
+:global(html[data-theme="dark"]) .month select{color-scheme:dark}
+:global(html[data-theme="dark"]) .filters{background:#ffffff08}
+:global(html[data-theme="dark"]) .marker{box-shadow:0 0 0 2px #111821}
+:global(html[data-theme="dark"]) .card{background:linear-gradient(120deg,#1a2330,#17202b);border-color:#4a4130;box-shadow:none}
+:global(html[data-theme="dark"]) .card:hover{box-shadow:0 7px 15px #0006}
+:global(html[data-theme="dark"]) .unread .card{background:linear-gradient(110deg,#1f2734,#1c2430);border-color:#bc9755}
+:global(html[data-theme="dark"]) .badge{background:#22303f;border-color:#3d5269;color:#b9cde0}
+:global(html[data-theme="dark"]) .weekly .badge{background:#3a2c24;border-color:#6b5242;color:#e3c3ae}
+:global(html[data-theme="dark"]) .metric{border-color:#3d3628}
+:global(html[data-theme="dark"]) .metric dt,:global(html[data-theme="dark"]) .comparison small,:global(html[data-theme="dark"]) .meta,:global(html[data-theme="dark"]) .empty,:global(html[data-theme="dark"]) .bottomNote{color:#b3aa9a}
+:global(html[data-theme="dark"]) .metric svg{color:#c9a46b}
+:global(html[data-theme="dark"]) .reflection,:global(html[data-theme="dark"]) .notice{background:#ffffff08;border-color:#3d3628}

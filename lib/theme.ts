@@ -1,17 +1,16 @@
 // 画面の配色テーマ。端末ごとに localStorage へ保存する（既定=アイス）。
 //   - ice:     氷色の地に白いカード、主ボタンは青（/progress の配色を全画面へ）
 //   - classic: 白地に淡い面、主ボタンは墨（2026-09 の配色）
-//   - dark:    いまは /progress とナビだけ。他の画面はアイスで表示する
-// <html data-theme> に ice / classic を付け、globals.css がそれで色の変数を切り替える。
+//   - dark:    暗い地に暗いカード。図解（模型・アニメ）だけは明るい紙面のまま（app/theme-dark.css）
+// <html data-theme> に ice / classic / dark を付け、globals.css・theme-dark.css がそれで色の変数を切り替える。
 // 公開ページ（LP・ガイド・解説など）は常に classic（別にデザインしているため）。
-// ダークは /progress が表示中だけ <html data-surface="dark"> を付ける（lib/useTheme の useDarkSurface）。
 // このファイルはサーバーからも読む（layout の themeBootScript）ので React に依存させない。
 // 最初の描画前に付けるため、同じ判定を themeBootScript でも行う（app/layout.tsx）。
 
 import { PUBLIC_PREFIXES } from "@/lib/auth/publicRoutes";
 
 export type ThemePreference = "ice" | "classic" | "dark";
-export type DocumentTheme = "ice" | "classic";
+export type DocumentTheme = ThemePreference;
 
 export const THEME_STORAGE_KEY = "fequest:theme";
 /** 旧版（/progress のライト・ダーク切り替え）の保存先。ダークを選んでいた人は引き継ぐ */
@@ -23,7 +22,7 @@ const APP_PREVIEW_PREFIX = "/lp/preview";
 export const THEME_OPTIONS: { value: ThemePreference; label: string; note: string }[] = [
   { value: "ice", label: "アイス", note: "氷色の地に白いカード" },
   { value: "classic", label: "クラシック", note: "白地に淡い青の面" },
-  { value: "dark", label: "ダーク", note: "いまは進捗画面だけ" },
+  { value: "dark", label: "ダーク", note: "暗い地に暗いカード" },
 ];
 
 function parsePreference(stored: string | null, legacy: string | null): ThemePreference {
@@ -60,7 +59,7 @@ export function isPublicThemePath(pathname: string): boolean {
 /** <html data-theme> に付ける値。 */
 export function documentThemeFor(preference: ThemePreference, pathname: string): DocumentTheme {
   if (isPublicThemePath(pathname)) return "classic";
-  return preference === "classic" ? "classic" : "ice";
+  return preference;
 }
 
 /** 配色の変更（この画面での保存・他のタブでの保存）を購読する。 */
@@ -79,5 +78,5 @@ export function subscribeTheme(onChange: () => void): () => void {
  */
 export function themeBootScript(): string {
   const prefixes = JSON.stringify(PUBLIC_PREFIXES);
-  return `(function(){var d=document.documentElement,p=location.pathname,pre=${prefixes},pv=${JSON.stringify(APP_PREVIEW_PREFIX)};var pub=!(p===pv||p.indexOf(pv+"/")===0)&&pre.some(function(x){return p===x||p.indexOf(x+"/")===0});var t="ice";try{var s=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(s==="classic")t="classic";}catch(e){}d.setAttribute("data-theme",pub?"classic":t);})();`;
+  return `(function(){var d=document.documentElement,p=location.pathname,pre=${prefixes},pv=${JSON.stringify(APP_PREVIEW_PREFIX)};var pub=!(p===pv||p.indexOf(pv+"/")===0)&&pre.some(function(x){return p===x||p.indexOf(x+"/")===0});var t="ice";try{var s=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(s==="classic"||s==="dark")t=s;else if(!s&&localStorage.getItem(${JSON.stringify(LEGACY_SCHEME_KEY)})==="dark")t="dark";}catch(e){}d.setAttribute("data-theme",pub?"classic":t);})();`;
 }
