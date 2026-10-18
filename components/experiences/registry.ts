@@ -59,7 +59,7 @@ import DataStructureExperience from "./DataStructureExperience";
 import TransactionExperience from "./TransactionExperience";
 import CyberAttacksExperience from "./CyberAttacksExperience";
 import DigitalSignatureExperience from "./DigitalSignatureExperience";
-import IsmsRiskExperience from "./IsmsRiskExperience";
+import IsmsStoryExperience from "./isms/IsmsStoryExperience";
 import WirelessMobileExperience from "./WirelessMobileExperience";
 import EmailProtocolExperience from "./EmailProtocolExperience";
 import PpmExperience from "./PpmExperience";
@@ -167,7 +167,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "tech-transaction": TransactionExperience,
   "tech-cyber-attacks": CyberAttacksExperience,
   "tech-digital-signature": DigitalSignatureExperience,
-  "tech-isms-risk": IsmsRiskExperience,
+  "tech-isms-risk": IsmsStoryExperience,
   "tech-wireless-mobile": WirelessMobileExperience,
   "tech-email-protocol": EmailProtocolExperience,
   "strat-ppm": PpmExperience,
