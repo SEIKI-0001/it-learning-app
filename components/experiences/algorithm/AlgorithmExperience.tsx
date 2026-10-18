@@ -1,6 +1,7 @@
 "use client";
 
 import { Panel, SectionTitle } from "../ui";
+import { AlgorithmQuiz, ArrayTracePanel, CountConditionPanel, NumberPatternsPanel, SearchPanel, SortPanel } from "./ArrayPanels";
 import { FlowRun } from "./FlowRun";
 import { FlowTry } from "./FlowTry";
 import { FORMAL_MAPPINGS } from "./learningModel";
@@ -14,6 +15,7 @@ import { PseudoCodePanel, PseudoSyntaxPanel } from "./PseudoCodePanel";
 //   ③ まとめ：いま動かした図の中にある「順次・選択・繰り返し」と、試験の書き方（←）
 //   ④ 擬似言語：同じ手順を試験の擬似言語で読む（ノードと行を番号で対応させた静的図）
 //   ⑤ 擬似言語の書き方：for（③④⑥が1行に）・if〜elseif〜else〜endif・÷ の商／余り
+//   ⑥〜⑪ 過去問の出題に合わせた型（ArrayPanels）：配列とトレース表・並べ替え・探索・数の型・回数と条件・確認
 // ============================================================================
 
 const STRUCTURES = [
@@ -96,6 +98,12 @@ export default function AlgorithmExperience() {
 
       <PseudoCodePanel />
       <PseudoSyntaxPanel />
+      <ArrayTracePanel />
+      <SortPanel />
+      <SearchPanel />
+      <NumberPatternsPanel />
+      <CountConditionPanel />
+      <AlgorithmQuiz />
     </div>
   );
 }

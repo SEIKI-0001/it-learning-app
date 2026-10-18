@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AlgorithmExperience from "@/components/experiences/AlgorithmExperience";
 import { buildFlowTrace } from "@/components/experiences/algorithm/flowTrace";
 import { askAt } from "@/components/experiences/algorithm/FlowTry";
 import { FLOWCHART } from "@/components/experiences/algorithm/learningModel";
+import { binaryProbes, bubbleSteps, linearProbes, selectionSteps } from "@/components/experiences/algorithm/sortTrace";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
 afterEach(() => {
@@ -37,7 +38,7 @@ describe("algorithm flowchart model", () => {
 describe("AlgorithmExperience", () => {
   it("opens on the learner's own run, then the computer's correct run, then a recap", () => {
     renderDeck();
-    expect(screen.getByText("1 / 5")).toBeInTheDocument();
+    expect(screen.getByText("1 / 11")).toBeInTheDocument();
     expect(screen.getByText("まず、あなたがコンピュータになって実行")).toBeInTheDocument();
     expect(screen.getByTestId("flow-try")).toHaveAttribute("data-state", "idle");
     fireEvent.click(screen.getByRole("button", { name: "解説2" }));
@@ -194,5 +195,94 @@ describe("learner runs the flowchart first (FlowTry)", () => {
     expect(tryRun()).toHaveAttribute("data-state", "done");
     expect(screen.getByTestId("flow-try-stage-output")).toHaveTextContent("6");
     expect(screen.getByTestId("flow-try-done")).toHaveTextContent("まちがえた所は 1 回");
+  });
+});
+
+describe("過去問の型：配列・並べ替え・探索（sortTrace）", () => {
+  it("bubble sort compares neighbours and carries the largest to the end of each pass", () => {
+    const steps = bubbleSteps([40, 10, 30, 20]);
+    expect(steps).toHaveLength(6); // 3 + 2 + 1 回の比較
+    expect(steps.filter((s) => s.n === 1).at(-1)?.after).toEqual([10, 30, 20, 40]);
+    expect(steps.at(-1)?.after).toEqual([10, 20, 30, 40]);
+    // 試験と同じ書き方で {2,4,1,3} を並べると 1,2,3,4 になる
+    expect(bubbleSteps([2, 4, 1, 3]).at(-1)?.after).toEqual([1, 2, 3, 4]);
+  });
+
+  it("selection sort brings the remaining minimum to position j", () => {
+    const steps = selectionSteps([30, 50, 20, 40, 10]);
+    expect(steps.map((s) => s.minIndex)).toEqual([5, 3, 5, 4]);
+    expect(steps[2].after).toEqual([10, 20, 30, 40, 50]);
+    expect(selectionSteps([3, 5, 1, 2, 4])[2].after).toEqual([1, 2, 3, 5, 4]);
+  });
+
+  it("linear search counts grow with position; binary search halves but is not always fewer", () => {
+    const a = [3, 8, 12, 17, 21, 26, 30];
+    expect(linearProbes(a, 30)).toHaveLength(7);
+    expect(binaryProbes(a, 30)).toEqual([4, 6, 7]);
+    expect(linearProbes(a, 3)).toEqual([1]);
+    expect(binaryProbes(a, 3)).toEqual([4, 2, 1]);
+  });
+});
+
+describe("過去問の型のスライド（解説6〜11）", () => {
+  it("traces an array with a table and appends characters to the end of a string", () => {
+    renderDeck(6);
+    expect(screen.getByTestId("array-scores")).toHaveAttribute("data-values", "7,3,9,4");
+    const trace = screen.getByTestId("array-trace");
+    expect(trace.querySelector('[data-row="4"]')).toHaveTextContent('"○×○×"');
+  });
+
+  it("steps through bubble sort and selection sort one move at a time", () => {
+    renderDeck(7);
+    const stage = () => screen.getByTestId("sort-stage");
+    const array = () => screen.getByTestId("sort-array");
+    expect(array()).toHaveAttribute("data-values", "40,10,30,20");
+    fireEvent.click(screen.getByRole("button", { name: /次の比較へ/ }));
+    expect(screen.getByTestId("sort-log")).toHaveTextContent("40 ＞ 10 ？ → はい。入れ替えた");
+    expect(array()).toHaveAttribute("data-values", "10,40,30,20");
+    fireEvent.click(screen.getByRole("button", { name: /次の比較へ/ }));
+    fireEvent.click(screen.getByRole("button", { name: /次の比較へ/ }));
+    expect(array()).toHaveAttribute("data-values", "10,30,20,40");
+    expect(screen.getByTestId("sort-log")).toHaveTextContent("右端から1個が確定");
+
+    fireEvent.click(screen.getByRole("tab", { name: /選択ソート/ }));
+    expect(stage()).toHaveAttribute("data-step", "0");
+    expect(array()).toHaveAttribute("data-values", "30,50,20,40,10");
+    fireEvent.click(screen.getByRole("button", { name: /次の j へ/ }));
+    expect(screen.getByTestId("sort-log")).toHaveTextContent("最小は 10（要素番号5）");
+    expect(array()).toHaveAttribute("data-values", "10,50,20,40,30");
+  });
+
+  it("compares how many probes linear and binary search need", () => {
+    renderDeck(8);
+    expect(screen.getByTestId("search-linear")).toHaveAttribute("data-count", "7");
+    expect(screen.getByTestId("search-binary")).toHaveAttribute("data-count", "3");
+    fireEvent.click(screen.getByRole("button", { name: "3 を探す" }));
+    expect(screen.getByTestId("search-linear")).toHaveAttribute("data-count", "1");
+    expect(screen.getByTestId("search-binary")).toHaveAttribute("data-count", "3");
+    expect(screen.getByTestId("search-compare")).toHaveTextContent("要素数に比例");
+    expect(screen.getByTestId("search-compare")).toHaveTextContent("昇順か降順に整列済み");
+  });
+
+  it("shows the number patterns and loop counts the exam asks about", () => {
+    renderDeck(9);
+    expect(screen.getByTestId("pattern-binary")).toHaveTextContent("2 の（i − 1）乗");
+    expect(screen.getByTestId("pattern-binary")).toHaveTextContent("＝ 13");
+    expect(screen.getByTestId("pattern-digits")).toHaveTextContent("47 − 10 × 4 ＝ 7");
+    expect(screen.getByTestId("pattern-gcd")).toHaveTextContent("(12, 12) → 12");
+    fireEvent.click(screen.getByRole("button", { name: "解説10" }));
+    const counts = within(screen.getByTestId("count-patterns")).getAllByRole("listitem");
+    expect(counts.map((li) => li.getAttribute("data-count"))).toEqual(["6", "6", "3"]);
+    expect(screen.getByTestId("pattern-polygon")).toHaveTextContent("360 ÷ 5 ＝ 72 度");
+    expect(screen.getByTestId("pattern-prime")).toHaveTextContent("return false");
+  });
+
+  it("checks with trace questions laid out three choices per row", () => {
+    renderDeck(11);
+    const quiz = screen.getByTestId("algorithm-quiz");
+    fireEvent.click(within(quiz).getByRole("button", { name: "2, 1, 3" }));
+    expect(quiz).toHaveTextContent("正解！");
+    fireEvent.click(within(quiz).getByRole("button", { name: "4回" }));
+    expect(quiz).toHaveTextContent("正解は「5回」");
   });
 });
