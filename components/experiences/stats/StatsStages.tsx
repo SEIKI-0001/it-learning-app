@@ -97,6 +97,13 @@ export function ProbabilityStage() {
         )}
         <Replay onClick={replay} hidden={reducedMotion} />
       </div>
+      <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-gray-700 ring-1 ring-gray-200" data-testid="st-complement">
+        <p className="font-bold text-gray-900">「1回も出ない」「少なくとも1回」は、くり返しのかけ算で</p>
+        <p className="mt-0.5">
+          サイコロを2回投げて<b>6が1回も出ない</b>確率は、毎回「6以外」が続くので 5/6 × 5/6 ＝ <b>25/36</b>。
+          <b>少なくとも1回は6が出る</b>確率は、その残り 1 − 25/36 ＝ <b>11/36</b>（余事象）。
+        </p>
+      </div>
     </Panel>
   );
 }
@@ -448,7 +455,7 @@ export function StatsSummaryStage() {
   const { ref, beat: b, reducedMotion, replay } = useBeats(4, SUMMARY_DELAYS);
   return (
     <Panel>
-      <SectionTitle step={8}>まとめ：4つの考え方</SectionTitle>
+      <SectionTitle step={9}>まとめ：4つの考え方</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">確認問題は、この4つのどれを使うかを選べば解けます。</p>
       <div ref={ref} className="mt-3 space-y-2" data-testid="st-summary" data-beat={b}>
         {SUMMARY_ROWS.map(
@@ -526,7 +533,7 @@ export function StatsPractice() {
   const last = index === STATS_QUESTIONS.length - 1;
   return (
     <Panel>
-      <SectionTitle step={9}>確認問題：4段階で本試験レベルへ</SectionTitle>
+      <SectionTitle step={10}>確認問題：4段階で本試験レベルへ</SectionTitle>
       <div className="mt-3">
         <StepChips steps={STATS_STEPS} />
       </div>
