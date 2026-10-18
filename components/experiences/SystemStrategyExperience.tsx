@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import { EaPanel, LookAlikeTerms } from "./sysstrat/SystemStrategyPanels";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { InlineIcon } from "@/components/ui/Pictogram";
 
@@ -9,7 +10,10 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 // 「システム戦略」専用の体験。
 //   ① 社長シミュレータ … 「とりあえずIT導入」と「目的から決める」の
 //      2つの進め方を選んで進めると、会社の結末が変わる
-//   ② システム戦略の考え方として適切か クイズ（責任者＝CIO も1問）
+//   ② EA：4つの階層で現状と理想像を描き、移行計画にする／IT基本計画で明確にすること
+//   ③ BYOD（許可を得た私物端末）と、EA・BI・SOA・MOT・CIO の見分け方
+//      ②③は過去問の出題に合わせた静的な図（sysstrat/SystemStrategyPanels）
+//   ④ システム戦略の考え方として適切か クイズ（責任者＝CIO も1問）
 // ============================================================================
 
 type Route = "hype" | "goal";
@@ -168,7 +172,7 @@ function Quiz() {
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   return (
     <Panel>
-      <SectionTitle step={2}>システム戦略の考え方として正しい？</SectionTitle>
+      <SectionTitle step={4}>システム戦略の考え方として正しい？</SectionTitle>
       <ul className="mt-3 space-y-2.5">
         {ITEMS.map((it, i) => {
           const chosen = answers[i];
@@ -226,6 +230,8 @@ export default function SystemStrategyExperience() {
       </div>
 
       <CeoLab />
+      <EaPanel step={2} />
+      <LookAlikeTerms step={3} />
       <Quiz />
     </div>
   );
