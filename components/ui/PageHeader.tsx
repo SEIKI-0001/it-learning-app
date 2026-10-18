@@ -31,7 +31,7 @@ export default function PageHeader({
   return (
     <header className="pt-3 md:pt-6 lg:pt-8">
       <div className={`mx-auto w-full ${widthClass} px-3 md:px-4`}>
-        <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
+        <div className="rounded-[14px] border border-gray-200 bg-white px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           {back && (
             <Link
               href={back.href}
