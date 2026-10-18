@@ -21,6 +21,8 @@ const LOOK: Record<Who, { bg: string; shirt: string; collar: string; hair: strin
   boss: { bg: "#F3EAD9", shirt: "#4B5563", collar: "#FFFFFF", hair: "#A3A8B2" },
   // 宮本さん（内部監査室）：肩までの髪、緑のジャケット
   auditor: { bg: "#E3F1EA", shirt: "#2F7D62", collar: "#FFFFFF", hair: "#2B2522" },
+  // 大川さん（弁理士）：ショートの髪、紫のジャケットに金のバッジ
+  expert: { bg: "#EEE8F7", shirt: "#6D4C9F", collar: "#FFFFFF", hair: "#5B4A42" },
 };
 
 function Hair({ who, color }: { who: Who; color: string }) {
@@ -35,6 +37,13 @@ function Hair({ who, color }: { who: Who; color: string }) {
     return (
       <path
         d="M14.6 22.4 Q14 12.6 24 12.2 Q34 12.6 33.4 22.4 Q32.8 17.6 30.4 16.6 Q27 15.2 24 15.8 Q21 15.2 17.6 16.6 Q15.2 17.6 14.6 22.4 Z"
+        fill={color}
+      />
+    );
+  if (who === "expert")
+    return (
+      <path
+        d="M13.4 30.4 Q11.4 10.2 24 10 Q36.6 10.2 34.6 30.4 Q33.6 31.6 32.4 30.6 Q33 20.4 31 16.6 Q27.4 18.8 22.6 16.2 Q18.8 18.8 16.8 17.4 Q15 20.6 15.6 30.6 Q14.4 31.6 13.4 30.4 Z"
         fill={color}
       />
     );
@@ -137,6 +146,16 @@ export function Face({ who, mood = "normal", size = 40 }: { who: Who; mood?: Moo
           // ネクタイ
           <path d="M23 37.4 L25 37.4 L25.9 44.6 L24 47.4 L22.1 44.6 Z" fill="#C0392B" />
         )}
+        {who === "expert" && (
+          // 襟と弁理士のバッジ
+          <>
+            <path d="M19.4 36.8 L22.6 45 L17.6 40.2 Z M28.6 36.8 L25.4 45 L30.4 40.2 Z" fill="#583C82" />
+            <circle cx={16.6} cy={43} r={1.2} fill="#E8B931" />
+            {/* イヤリング */}
+            <circle cx={14.6} cy={26.6} r={0.9} fill="#E8B931" />
+            <circle cx={33.4} cy={26.6} r={0.9} fill="#E8B931" />
+          </>
+        )}
         {who === "auditor" && (
           // 襟とバッジ
           <>
@@ -151,6 +170,14 @@ export function Face({ who, mood = "normal", size = 40 }: { who: Who; mood?: Moo
         <Hair who={who} color={c.hair} />
         <Brows mood={mood} />
         <Eyes mood={mood} />
+        {who === "expert" && (
+          // 丸い細縁の眼鏡（高木さんの四角い眼鏡と見分ける）
+          <g fill="none" stroke="#7A5C3E" strokeWidth={0.7}>
+            <circle cx={20.2} cy={23.4} r={2.7} />
+            <circle cx={27.8} cy={23.4} r={2.7} />
+            <path d="M22.9 23.2 L25.1 23.2" />
+          </g>
+        )}
         {who === "takagi" && (
           <g fill="none" stroke={INK} strokeWidth={0.8}>
             <rect x={17.2} y={20.9} width={6} height={4.8} rx={1.8} />
