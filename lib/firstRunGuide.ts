@@ -121,13 +121,13 @@ const PROGRESS_GUIDE_STEPS: readonly FirstRunGuideStep[] = [
     id: "road",
     target: '[data-guide="progress-road"]',
     title: "合格までの道のり",
-    body: "CP（チェックポイント）を順に突破すると試験本番です。モチットの位置がいまの場所。CPを押すと完了条件を確認できます。",
+    body: "CP（チェックポイント）を順に突破すると試験本番です。青い点がいまの場所。点を押すと完了条件を確認できます。",
   },
   {
     id: "kpis",
     target: '[data-guide="progress-kpis"]',
     title: "試験日とペースをひと目で",
-    body: "試験までの日数、予定と比べたペース、いまのCPの達成条件の数です。",
+    body: "試験までの日数と、予定と比べた学習ペースです。",
   },
   {
     id: "gate",

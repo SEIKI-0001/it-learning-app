@@ -12,16 +12,14 @@ import {
   type ProgressBootstrapCache,
 } from "@/lib/userSession";
 import { getAllTopics } from "@/lib/content";
-import { hasUsableReferenceBook, referenceBookProgress } from "@/lib/referenceBook";
+import { hasUsableReferenceBook, referenceReadingOverview } from "@/lib/referenceBook";
 import { useReferenceBook } from "@/lib/useReferenceBook";
 import { daysUntilExam } from "@/lib/aiPlanner";
 import { getStreakMeta } from "@/lib/streak";
 import { getRankStatus } from "@/lib/rank";
 import {
-  buildCheckpointComparison,
   buildCheckpointGate,
   CHECKPOINTS,
-  gateCompletionRatio,
   getCheckpoint,
   getCheckpointProgress,
   getCheckpointStage,
@@ -40,20 +38,31 @@ import {
 import type { ExamReadinessResult } from "@/types/examReadiness";
 import BottomNav from "@/components/BottomNav";
 import LoadingScreen from "@/components/LoadingScreen";
-import ProgressOverview, { type OverviewKpis } from "@/components/progress/ProgressOverview";
-import ProgressGateCard from "@/components/progress/ProgressGateCard";
 import CheckpointDetailSheet from "@/components/progress/CheckpointDetailSheet";
 import FirstRunGuide from "@/components/guide/FirstRunGuide";
+import { StudyDaysCard } from "@/components/progress/ProgressDetailCards";
 import {
-  PendingBreakdownCard,
-  ReadinessBreakdownCard,
-  RowListCard,
-  StudyDaysCard,
-  TopicReachCard,
-  type UnlockRow,
-} from "@/components/progress/ProgressDetailCards";
+  GrowthCard,
+  HeroCard,
+  LinkRow,
+  RoadCard,
+  SchemeToggle,
+  StatusCard,
+  type NextAction,
+} from "@/components/progress/ProgressCompact";
+import { badgeActionHref } from "@/components/badges/BadgeList";
+import { nextMilestone, progressTrend, weeklyAnswerBuckets } from "@/lib/progressGrowth";
+import { useDarkSurface, useThemePreference } from "@/lib/useTheme";
+import c from "@/components/progress/progressCompact.module.css";
 import t from "@/components/today/todayView.module.css";
-import p from "@/components/progress/progressDashboard.module.css";
+
+type OverviewKpis = {
+  readiness: { score: number | null; bandLabel: string };
+  exam: { daysLeft: number | null; dateLabel: string | null };
+  pace: { label: string; note: string; tone: "good" | "neutral" | "warn" } | null;
+  gate: { earned: number; required: number; checkpointOrder: number };
+  proposalHref: string | null;
+};
 
 /** いちばん伸ばせるところの取り組み先。判定の種類ごとに、既存の学習導線へつなぐ。 */
 function improvementHref(result: ExamReadinessResult): string {
@@ -82,6 +91,8 @@ export default function ProgressPage() {
   const router = useRouter();
   const [state, setState] = useAppState();
   const { book: referenceBook } = useReferenceBook();
+  const themePreference = useThemePreference();
+  useDarkSurface(themePreference === "dark");
   // 前回のサーバー応答があれば即表示し（スケルトンを出さない）、最新値は背景で差し替える。
   // 初回描画は LoadingScreen（state===undefined）のため、遅延初期化でも hydration は一致する。
   const [bootstrap, setBootstrap] = useState<ProgressBootstrapCache | null>(() =>
@@ -111,6 +122,7 @@ export default function ProgressPage() {
             integratedStatus: data.integratedStatus,
             examReadiness: data.examReadiness,
             planAdjustmentProposal: data.planAdjustmentProposal,
+            progressHistory: data.progressHistory,
           });
         }
         if (data?.userId) bootstrappedKeyRef.current = data.userId;
@@ -150,13 +162,9 @@ export default function ProgressPage() {
   const cpProgress = getCheckpointProgress(state);
   const current = getCheckpoint(cpProgress.currentCheckpointId);
   const gate = buildCheckpointGate(state, current.id);
-  const comparison = buildCheckpointComparison(state);
-  const expectedOrder = comparison ? getCheckpoint(comparison.expectedId).order : null;
-  const gateRatio = gateCompletionRatio(gate);
   const stages = Object.fromEntries(
     CHECKPOINTS.map((cp) => [cp.id, getCheckpointStage(cpProgress, cp.id)]),
   ) as Record<CheckpointId, CheckpointStage>;
-  const nextCheckpoint = CHECKPOINTS.find((cp) => cp.order === current.order + 1) ?? null;
 
   const badgeSignals = getClientBadgeSignals();
   const badgeStatuses = buildBadgeStatuses(state, badgeSignals, current.id);
@@ -214,44 +222,12 @@ export default function ProgressPage() {
 
   // ── 次の解放・くわしく見る ──
   const rank = getRankStatus(progress.exp);
-  const unlocks: UnlockRow[] = [{
-    id: "mochit",
-    title: `モチット Lv.${rank.level} · ${rank.current.name}`,
-    detail: rank.next
-      ? `次はLv.${rank.next.minLevel}「${rank.next.name}」 · あと${rank.remaining} XP`
-      : "最高ランクに到達しました。Lvはこれからも上がります",
-    ratio: rank.ratio,
-    href: "/avatar#growth",
-  }];
-  const links: UnlockRow[] = [
-    { id: "journal", title: "学習の記録", detail: "日々の学び・週次の振り返り・突破の歩み", href: "/journal" },
-    { id: "mock", title: "本番形式 100問模試", detail: "3分野の実力をまとめて確かめる", href: "/mock-exam" },
-    { id: "report", title: "週間レポート", detail: "直近7日の積み上げを見る", href: "/report" },
-    {
-      id: "conditions",
-      title: "CP達成条件",
-      detail: "次の突破試験に必要な学習を見る",
-      href: "/badges",
-    },
-    { id: "plan", title: "ロードマップ", detail: "チェックポイントの条件を見る", href: "/plan" },
-  ];
 
-  // 参考書インプットの内訳（未設定なら出さない）。
-  const bookProgress =
+  // 参考書の読了状況（未設定なら出さない）。
+  const reading =
     referenceBook && hasUsableReferenceBook(referenceBook)
-      ? referenceBookProgress(referenceBook)
+      ? referenceReadingOverview(referenceBook)
       : null;
-  const referenceInput = bookProgress
-    ? {
-        percent: Math.round(bookProgress.ratio * 100),
-        doneChapters: bookProgress.doneChapters,
-        totalChapters: bookProgress.totalChapters,
-      }
-    : null;
-
-  // 内訳（分野別・トピック別）がどちらも出せない状態。参考書の内訳があるときは到達度カードを残す。
-  const breakdownPending =
-    !bootstrapLoading && !readiness && !status && !improvement && !referenceInput;
 
   const openDetail = openCheckpointId
     ? buildCheckpointDetail(state, openCheckpointId, badgeSignals)
@@ -259,60 +235,90 @@ export default function ProgressPage() {
   const openIndex = openCheckpointId ? CHECKPOINTS.findIndex((cp) => cp.id === openCheckpointId) : -1;
 
   const now = new Date();
-  const dateLabel = `${now.getMonth() + 1}月${now.getDate()}日（${"日月火水木金土"[now.getDay()]}）`;
+  const dateLabel = `${now.getMonth() + 1}/${now.getDate()} 時点`;
+
+  // ── 次にやること（1つだけ） ──
+  const firstMissing = gate.missingBadges.find((b) => !conditionMetIds.has(b.id)) ?? null;
+  const nextAction: NextAction =
+    gate.finalExamUnlocked && !gate.finalExamPassed
+      ? {
+          label: `CP${current.order}の突破試験に挑戦する`,
+          sub: current.finalExam
+            ? `${current.finalExam.questionCount}問中${current.finalExam.passThreshold}問以上で合格`
+            : null,
+          href: `/checkpoint/${current.id}/final`,
+        }
+      : improvement
+        ? { label: improvement.label, sub: "合格準備度がいちばん伸びるところ", href: improvement.href }
+        : firstMissing
+          ? { label: firstMissing.label, sub: firstMissing.conditionLabel, href: badgeActionHref(firstMissing) }
+          : { label: "今日の学習を進める", sub: null, href: "/today" };
+
+  // ── 成長 ──
+  const history = bootstrap?.progressHistory ?? [];
+  const trend = progressTrend(history, now, {
+    readiness: readiness?.score ?? null,
+    understood: status?.basicUnderstoodTopicCount ?? null,
+  });
+  const weeks = weeklyAnswerBuckets(state.answers, now);
+  const longestStreak = Math.max(getStreakMeta(progress).longestStreak, progress.streakCount);
+
+  const compactLinks = [
+    { id: "journal", title: "学習の記録", href: "/journal" },
+    { id: "report", title: "週間レポート", href: "/report" },
+    { id: "mock", title: "100問模試", href: "/mock-exam" },
+    { id: "plan", title: "ロードマップ", href: "/plan" },
+    { id: "mochit", title: "モチット", meta: `Lv.${rank.level}`, href: "/avatar#growth" },
+  ];
 
   return (
-    <main className={t.view}>
-      <div className={`${t.inner} ${p.dashboard}`}>
-        <ProgressOverview
+    <main className={`${t.view} ${c.theme}`}>
+      <div className={`${t.inner} ${c.layout}`}>
+        <h1 className="sr-only">進捗</h1>
+        <HeroCard
           dateLabel={dateLabel}
+          readiness={readiness}
+          weekDelta={trend.readinessWeekDelta}
+          series={trend.readinessSeries.map((point) => point.value)}
+          nextAction={nextAction}
+          className={c.spanHero}
+        />
+        <RoadCard
           checkpoints={CHECKPOINTS}
           stages={stages}
-          currentId={current.id}
-          onSelectCheckpoint={setOpenCheckpointId}
-          gateRatio={gateRatio}
-          expectedOrder={expectedOrder}
-          examDateLabel={examDateLabel}
-          kpis={kpis}
-        />
-
-        <ProgressGateCard
+          current={current}
           gate={gate}
           earnedBadges={earnedRequired}
           conditionMetIds={conditionMetIds}
-          nextCheckpointTitle={nextCheckpoint?.title ?? null}
-          onShowDetail={() => setOpenCheckpointId(current.id)}
-          className={p.spanGate}
+          examDateShort={profile?.examDate ? (() => {
+            const d = new Date(`${profile.examDate}T00:00:00`);
+            return `${d.getMonth() + 1}/${d.getDate()}`;
+          })() : null}
+          exam={kpis.exam}
+          pace={kpis.pace}
+          proposalHref={kpis.proposalHref}
+          onSelectCheckpoint={setOpenCheckpointId}
+          className={c.spanRoad}
         />
-        {breakdownPending ? (
-          // 判定材料がまだ無いときは、空の内訳カードを2枚並べず1枚にまとめる
-          <PendingBreakdownCard totalTopicCount={topics.length} className={p.spanReadiness} />
-        ) : (
-          <>
-            <ReadinessBreakdownCard
-              result={readiness}
-              loading={bootstrapLoading}
-              improvement={improvement}
-              className={p.spanReadiness}
-            />
-            <TopicReachCard
-              status={status}
-              totalTopicCount={topics.length}
-              loading={bootstrapLoading}
-              referenceInput={referenceInput}
-              className={p.spanTopics}
-            />
-          </>
-        )}
-        <StudyDaysCard
-          answers={state.answers}
+        <StatusCard
+          readiness={readiness}
+          status={status}
+          totalTopicCount={topics.length}
+          reading={reading}
+          bookTitle={referenceBook?.title ?? null}
+          className={c.spanStatus}
+        />
+        <GrowthCard
+          weeks={weeks}
           streak={progress.streakCount}
-          longestStreak={Math.max(getStreakMeta(progress).longestStreak, progress.streakCount)}
-          className={breakdownPending ? p.spanFull : p.spanHistory}
+          longestStreak={longestStreak}
+          understoodGrowth={trend.understoodGrowth}
+          milestone={status ? nextMilestone(status.basicUnderstoodTopicCount) : null}
+          days={<StudyDaysCard stacked answers={state.answers} streak={progress.streakCount} longestStreak={longestStreak} />}
+          className={c.spanGrowth}
         />
-
-        <RowListCard title="モチットの成長" rows={unlocks} className={p.spanUnlocks} />
-        <RowListCard title="くわしく見る" rows={links} grid className={p.spanLinks} guide="progress-links" />
+        <LinkRow links={compactLinks} className={c.spanFull} />
+        <SchemeToggle preference={themePreference} className={c.spanFull} />
       </div>
       {openDetail && (
         <CheckpointDetailSheet

@@ -139,7 +139,7 @@ export default function PlanPage() {
     <main className="min-h-screen pb-24">
       <header className="pt-3 md:pt-6 lg:pt-8">
         <div className="mx-auto w-full max-w-3xl px-3 md:px-4">
-          <div className="rounded-[14px] bg-brand-50 px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
+          <div className="rounded-[14px] border border-[var(--panel-border)] bg-[var(--panel-bg)] px-[18px] py-5 md:rounded-2xl md:px-7 md:py-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-medium leading-snug tracking-[-0.015em] text-gray-900 md:text-[30px]">学習計画</h1>
             <Link

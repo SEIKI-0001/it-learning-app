@@ -1,14 +1,16 @@
 @import "tailwindcss";
 
 /*
- * デザイントークン（2026-09 刷新: /today・/progress の「クリア」配色に統一）。
- * - 地は白。色の付いた面は brand-50（淡い青）だけにし、区切りは線より余白で取る。
- * - brand: 明るい青 #2F6FDB。新規・現在地・進捗バー・リンク。テキストは 700 以上。
- * - accent: 琥珀 #E08A34。復習・注意・受取可能な報酬。テキストは 700 以上。
- * - emerald: 緑 #2F8F63。完了・正解・獲得済み。
- * - gray: 墨色系の無彩色。主CTAは gray-900（墨）の塗り。
- * - 書体: 英数字 Geist ＋ 和文 Zen Kaku Gothic New。太さは 400 / 500 を基本にする
- *   （semibold / bold も 500 に寄せ、太字で強調しない）。
+ * デザイントークン。配色は2つのテーマから選べる（lib/theme.ts。端末ごとに保存）。
+ *   - クラシック（ここの @theme が基準値）: 白地に淡い面（brand-50）、主ボタンは墨。2026-09 の配色。
+ *   - アイス（html[data-theme="ice"] で上書き・既定）: 氷色の地 #EDF5FA に白いカード、主ボタンは青。
+ *     /progress の配色を全画面に広げたもの。灰は slate 系、青 #175CD3・琥珀 #D78B17・青緑 #0C8064。
+ *   - ダーク（いまは /progress とナビだけ。html[data-surface="dark"]）。他の画面はアイスで表示する。
+ * 公開ページ（LP・ガイド・解説など）は常にクラシック。
+ * テーマで変わる面は CSS 変数（--panel-* / --card-* / --emph-* / --color-cta）で持ち、部品はそれを参照する。
+ * - brand: 新規・現在地・進捗バー・リンク。テキストは 700 以上。
+ * - accent: 復習・注意・受取可能な報酬。テキストは 700 以上。
+ * - emerald: 完了・正解・獲得済み。
  * - 装飾目的の多色使いはしない。
  */
 @theme {
@@ -57,6 +59,10 @@
   --color-gray-900: #16191d;
   --color-gray-950: #0d0f12;
 
+  /* 主ボタンの塗り（クラシック=墨 / アイス=青。html[data-theme] で切り替える） */
+  --color-cta: #16191d;
+  --color-cta-hover: #000000;
+
   /* 見出しの階層は太さでも立てる（OS和文は 600 で W6 相当になる） */
   --font-weight-semibold: 600;
   --font-weight-bold: 600;
@@ -73,6 +79,132 @@
   /* 和文は palt が効く OS 書体（lib/fonts.ts の説明を参照） */
   --font-app-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
     "Noto Sans CJK JP", "Yu Gothic UI", "Yu Gothic", "Meiryo", sans-serif;
+}
+
+/* クラシック（基準）でのテーマ変数 */
+:root {
+  --panel-bg: var(--color-brand-50); /* 画面見出し・今日の上部 */
+  --panel-border: transparent;
+  --card-bg: transparent; /* 今日の順番など、地に直接置いていたまとまり */
+  --card-border: transparent;
+  --emph-bg: var(--color-brand-50); /* 前回の続き・今日の復習などの強調ブロック */
+  --emph-hover: var(--color-brand-100);
+  --emph-bg-accent: var(--color-accent-50);
+  --emph-hover-accent: var(--color-accent-100);
+  --emph-border: transparent;
+  --emph-bar: 0px;
+}
+
+/* アイス: 氷色の地に白いカード。淡い面はカードの中の選択中・強調・札にだけ使う */
+html[data-theme="ice"] {
+  --color-brand-50: #f2f6fd;
+  --color-brand-100: #dfebff;
+  --color-brand-200: #c1d5f6;
+  --color-brand-300: #94b6f0;
+  --color-brand-400: #5b8ee9;
+  --color-brand-500: #2b6de2;
+  --color-brand-600: #175cd3;
+  --color-brand-700: #184ca4;
+  --color-brand-800: #194797;
+  --color-brand-900: #163977;
+  --color-brand-950: #0f254e;
+  --color-accent-50: #fdf5ec;
+  --color-accent-100: #fff0d5;
+  --color-accent-200: #f2cda4;
+  --color-accent-300: #e7b275;
+  --color-accent-400: #e19f4c;
+  --color-accent-500: #d78b17;
+  --color-accent-600: #a46804;
+  --color-accent-700: #8d5109;
+  --color-accent-800: #754902;
+  --color-emerald-50: #ddf2e9;
+  --color-emerald-100: #cfede1;
+  --color-emerald-200: #a9dec9;
+  --color-emerald-300: #73c9ab;
+  --color-emerald-400: #2dae89;
+  --color-emerald-500: #12a07c;
+  --color-emerald-600: #0c8064;
+  --color-emerald-700: #066950;
+  --color-emerald-800: #07513f;
+  --color-emerald-900: #044433;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #5b6b80;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-gray-950: #020617;
+  --color-cta: #175cd3;
+  --color-cta-hover: #184ca4;
+  --background: #edf5fa;
+  --foreground: #0f172a;
+  --panel-bg: #ffffff;
+  --panel-border: var(--color-gray-200);
+  --card-bg: #ffffff;
+  --card-border: var(--color-gray-200);
+  --emph-bg: #ffffff;
+  --emph-hover: var(--color-brand-50);
+  --emph-bg-accent: #ffffff;
+  --emph-hover-accent: var(--color-accent-50);
+  --emph-border: var(--color-gray-200);
+  --emph-bar: 4px;
+}
+
+/* ダーク（lib/theme）。/progress が表示中だけ html に data-surface="dark" を付ける。
+   値は progressCompact.module.css のダークと揃える。 */
+html[data-surface="dark"] {
+  --background: #0f1722;
+  --foreground: #eef3fa;
+  color-scheme: dark;
+}
+
+/* ナビ（スマホの下部バー / PC の左サイドバー）のダーク */
+html[data-surface="dark"] nav[data-app-nav] {
+  border-color: #2a3a4f;
+  background: rgb(15 23 34 / 0.95);
+}
+
+html[data-surface="dark"] nav[data-app-nav] > div {
+  color: #eef3fa;
+}
+
+html[data-surface="dark"] nav[data-app-nav] > div > span:first-child {
+  background: #eef3fa;
+  color: #0f1722;
+}
+
+html[data-surface="dark"] nav[data-app-nav] a {
+  color: #b8c6d8;
+}
+
+html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] {
+  color: #eef3fa;
+}
+
+html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] > span {
+  background: #22355a;
+}
+
+@media (min-width: 1024px) {
+  html[data-surface="dark"] nav[data-app-nav] {
+    background: #121c29;
+  }
+
+  html[data-surface="dark"] nav[data-app-nav] a:hover {
+    background: #1e2b3d;
+  }
+
+  html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] {
+    background: #22355a;
+  }
+
+  html[data-surface="dark"] nav[data-app-nav] a[aria-current="page"] > span {
+    background: transparent;
+  }
 }
 
 body {

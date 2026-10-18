@@ -23,7 +23,7 @@ export default function GateRequirementList({
   });
 
   return (
-    <ul className="space-y-1.5">
+    <ul className="space-y-2.5">
       {rows.map((r) => {
         const detail = r.count ? `いま ${r.count.current} / ${r.count.required}` : r.detail;
         return (
@@ -47,7 +47,7 @@ export default function GateRequirementList({
                 {r.label}
               </span>
               {detail && !r.met && (
-                <span className="block text-[11px] text-gray-500">{detail}</span>
+                <span className="block text-xs text-gray-600">{detail}</span>
               )}
             </span>
             {r.met && (

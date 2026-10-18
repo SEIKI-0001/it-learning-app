@@ -69,7 +69,7 @@ export default function WordlistHubPage() {
         {dueCount > 0 ? (
           <Link
             href="/glossary/study?mode=today"
-            className="group block rounded-xl bg-accent-50 p-4 transition hover:bg-accent-100 active:scale-[0.99]"
+            className="group block rounded-xl border border-[var(--emph-border)] border-l-[length:var(--emph-bar)] border-l-accent-500 bg-[var(--emph-bg-accent)] hover:bg-[var(--emph-hover-accent)] p-4 transition active:scale-[0.99]"
           >
             <p className="text-xs font-semibold text-accent-700">今日の復習対象</p>
             <p className="mt-1 flex items-center justify-between gap-3">
@@ -91,7 +91,7 @@ export default function WordlistHubPage() {
         ) : (
           <Link
             href="/glossary/study?mode=all"
-            className="group block rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100 active:scale-[0.99]"
+            className="group block rounded-xl border border-[var(--emph-border)] border-l-[length:var(--emph-bar)] border-l-brand-500 bg-[var(--emph-bg)] hover:bg-[var(--emph-hover)] p-4 transition active:scale-[0.99]"
           >
             <p className="text-xs font-semibold text-brand-700">今日の復習はありません</p>
             <p className="mt-1 text-[15px] font-semibold leading-snug text-gray-900">

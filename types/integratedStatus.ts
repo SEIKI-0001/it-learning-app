@@ -169,3 +169,11 @@ export function focusHintMessage(focus: RecommendedFocus): string {
   }
   return "今日は新しい範囲のインプットを進めましょう。";
 }
+
+/** /progress の「成長」表示用の日次の推移（integrated_learning_status の日次スナップショットから）。 */
+export type ProgressHistoryPoint = {
+  date: string; // "YYYY-MM-DD"
+  readiness: number | null;
+  understood: number;
+  examReady: number;
+};

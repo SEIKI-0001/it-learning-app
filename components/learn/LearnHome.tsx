@@ -157,7 +157,7 @@ export default function LearnHome({ themeExams = [] }: { themeExams?: ThemeExamS
         {continueLesson && continueLocation && (
           <Link
             href={getLessonHref(continueLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-            className="flex items-center justify-between gap-3 rounded-xl bg-brand-50 p-4 transition hover:bg-brand-100"
+            className="flex items-center justify-between gap-3 rounded-xl border border-[var(--emph-border)] border-l-[length:var(--emph-bar)] border-l-brand-500 bg-[var(--emph-bg)] hover:bg-[var(--emph-hover)] p-4 transition"
             data-guide="learn-continue"
           >
             <div className="min-w-0">

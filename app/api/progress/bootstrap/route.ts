@@ -6,6 +6,7 @@ import {
   generatePlanAdjustmentForUser,
   getLatestOrRefreshIntegratedStatus,
   getLatestPlanAdjustmentProposal,
+  getProgressHistory,
   getProgressBootstrapExamReadiness,
 } from "@/lib/progressBootstrap";
 
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
       integratedStatus: null,
       examReadiness: null,
       planAdjustmentProposal: null,
+      progressHistory: [],
       fallback: "supabase_not_configured",
     });
   }
@@ -73,6 +75,9 @@ export async function POST(request: Request) {
         )
       : null);
 
+  // 当日分は上の統合進捗で upsert 済みなので、その後に読むと今日の点まで入る。
+  const progressHistory = await getProgressHistory(supabase, userId, now);
+
   return NextResponse.json({
     ok: true,
     userId,
@@ -80,5 +85,6 @@ export async function POST(request: Request) {
     integratedStatus: integrated.status,
     examReadiness,
     planAdjustmentProposal,
+    progressHistory,
   });
 }

@@ -20,7 +20,7 @@ import {
   type IntegratedStatusRow,
   type PlanAdjustmentRow,
 } from "@/lib/dbMappers";
-import type { IntegratedLearningStatus } from "@/types/integratedStatus";
+import type { IntegratedLearningStatus, ProgressHistoryPoint } from "@/types/integratedStatus";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import type { TopicStage } from "@/types/studyProgress";
 import { getCurrentReadiness } from "@/lib/examReadiness/service";
@@ -57,6 +57,52 @@ function isIsoDate(v: unknown): v is string {
 
 function todayKey(now: Date): string {
   return now.toISOString().slice(0, 10);
+}
+
+/** 成長表示に使う日数（8週＋比較用の余白）。 */
+const PROGRESS_HISTORY_DAYS = 63;
+
+/**
+ * 直近の統合進捗スナップショットを古い順に返す（/progress の成長表示用）。
+ * 取得に失敗しても空配列（表示側は成長欄を回答履歴だけで組む）。
+ */
+export async function getProgressHistory(
+  supabase: SupabaseClient,
+  userId: string,
+  now = new Date(),
+): Promise<ProgressHistoryPoint[]> {
+  const since = new Date(now.getTime() - PROGRESS_HISTORY_DAYS * 24 * 60 * 60_000)
+    .toISOString()
+    .slice(0, 10);
+  let data: unknown[] | null = null;
+  try {
+    const res = await supabase
+      .from("integrated_learning_status")
+      .select("status_date, readiness_score, basic_understood_topic_count, exam_ready_topic_count")
+      .eq("user_id", userId)
+      .gte("status_date", since)
+      .order("status_date", { ascending: true });
+    if (res.error) return [];
+    data = res.data;
+  } catch (error) {
+    // 推移は補助表示なので、失敗しても初期表示は止めない。
+    console.error("progress bootstrap history failed", error);
+    return [];
+  }
+  if (!data) return [];
+  return (
+    data as {
+      status_date: string;
+      readiness_score: number | null;
+      basic_understood_topic_count: number | null;
+      exam_ready_topic_count: number | null;
+    }[]
+  ).map((row) => ({
+    date: row.status_date,
+    readiness: row.readiness_score ?? null,
+    understood: row.basic_understood_topic_count ?? 0,
+    examReady: row.exam_ready_topic_count ?? 0,
+  }));
 }
 
 export async function getLatestIntegratedStatusRow(

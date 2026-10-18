@@ -19,7 +19,7 @@ import type {
   ProgressReason,
 } from "@/types/studyProgress";
 import type { NotificationPreference } from "@/types/notification";
-import type { IntegratedLearningStatus } from "@/types/integratedStatus";
+import type { IntegratedLearningStatus, ProgressHistoryPoint } from "@/types/integratedStatus";
 import type { PlanAdjustmentProposal } from "@/types/planAdjustment";
 import type { AiGradingBootstrapResult } from "@/types/aiGrading";
 import type { ExamReadinessResult } from "@/types/examReadiness";
@@ -102,6 +102,7 @@ export type ProgressBootstrapResult = ResolveResult & {
   integratedStatus: IntegratedLearningStatus | null;
   examReadiness: ExamReadinessResult | null;
   planAdjustmentProposal: PlanAdjustmentProposal | null;
+  progressHistory: ProgressHistoryPoint[];
 };
 
 /** トークンを検証し、user_id と（あれば）DB上の AppState を取得する。 */
@@ -220,6 +221,8 @@ export type ProgressBootstrapCache = {
   integratedStatus: IntegratedLearningStatus | null;
   examReadiness: ExamReadinessResult | null;
   planAdjustmentProposal: PlanAdjustmentProposal | null;
+  /** 旧キャッシュには無い */
+  progressHistory?: ProgressHistoryPoint[];
 };
 
 export function loadCachedProgressBootstrap(): ProgressBootstrapCache | null {
@@ -284,12 +287,14 @@ export async function fetchProgressBootstrap(
       integratedStatus: data.integratedStatus ?? null,
       examReadiness: data.examReadiness ?? null,
       planAdjustmentProposal: data.planAdjustmentProposal ?? null,
+      progressHistory: Array.isArray(data.progressHistory) ? data.progressHistory : [],
     };
     // 次回の /progress 初期表示を即時にするためキャッシュを更新する。
     saveCachedProgressBootstrap(data.userId, {
       integratedStatus: result.integratedStatus,
       examReadiness: result.examReadiness,
       planAdjustmentProposal: result.planAdjustmentProposal,
+      progressHistory: result.progressHistory,
     });
     return result;
   } catch {

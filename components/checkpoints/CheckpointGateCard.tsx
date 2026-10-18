@@ -109,12 +109,12 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             CP{checkpoint.order} {checkpoint.title}
           </p>
           {next && (
-            <p className="text-xs text-gray-600">
+            <p className="text-[13px] text-gray-600">
               次は CP{next.order} {next.title}
             </p>
           )}
         </div>
-        <p className="mt-1 text-xs text-gray-600">{checkpoint.summary}</p>
+        <p className="mt-1 text-[13px] text-gray-700">{checkpoint.summary}</p>
       </div>
 
       <div className="p-5">
@@ -125,18 +125,18 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
         />
 
         {/* 次に進むための条件（達成/未達を一目で） */}
-        <div className="mt-5 rounded-lg border border-gray-200 px-3.5 py-3">
-          <p className="text-xs font-semibold text-gray-600">
+        <div className="mt-5 border-t border-gray-200 pt-4">
+          <p className="text-[13px] font-semibold text-gray-900">
             次のチェックポイントに進む条件
           </p>
-          <div className="mt-2">
+          <div className="mt-2.5">
             <GateRequirementList state={state} gate={gate} />
           </div>
         </div>
 
         {/* 達成条件の進捗 */}
-        <div className="mt-3 rounded-lg border border-gray-200 px-3 py-3">
-          <div className="flex items-center justify-between text-sm font-semibold text-gray-900">
+        <div className="mt-5 border-t border-gray-200 pt-4">
+          <div className="flex items-center justify-between text-[13px] font-semibold text-gray-900">
             <span>CP達成条件</span>
             <span>
               {gate.earnedRequiredCount} / {gate.requiredBadgeCount}
@@ -148,7 +148,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
               style={{ width: `${badgePct}%` }}
             />
           </div>
-          <p className="mt-1.5 text-xs text-gray-600">
+          <p className="mt-1.5 text-[13px] text-gray-600">
             {remaining > 0
               ? `残り ${remaining} 個で突破試験が解放`
               : "CP達成条件はすべて満たしました"}
@@ -157,7 +157,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
 
         {/* 不足バッジ一覧（最終問題ロック画面と共通部品） */}
         {gate.missingBadges.length > 0 && (
-          <div className="mt-3">
+          <div className="mt-4">
             <MissingBadgeList badges={gate.missingBadges} />
           </div>
         )}
@@ -168,7 +168,7 @@ export default function CheckpointGateCard({ state }: { state: AppState }) {
             gate.finalExamUnlocked
               ? gate.finalExamPassed
                 ? "bg-emerald-50 ring-1 ring-emerald-200"
-                : "animate-sheen bg-gray-900 text-white"
+                : "animate-sheen bg-cta text-white"
               : "bg-gray-50"
           }`}
         >

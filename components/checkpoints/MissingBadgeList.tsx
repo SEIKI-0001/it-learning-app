@@ -19,7 +19,7 @@ export default function MissingBadgeList({
   if (badges.length === 0) return null;
   return (
     <div>
-      <p className="text-xs font-bold text-gray-500">{heading}</p>
+      <p className="text-[13px] font-semibold text-gray-900">{heading}</p>
       <ul className="mt-2 space-y-2">
         {badges.map((b) => (
           <li
@@ -33,13 +33,13 @@ export default function MissingBadgeList({
               <span className="block text-sm font-bold text-gray-800">
                 {b.label}
               </span>
-              <span className="block text-[11px] text-gray-500">
+              <span className="block text-xs text-gray-600">
                 {b.conditionLabel}
               </span>
             </span>
             <Link
               href={badgeActionHref(b)}
-              className="shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1 text-[11px] font-semibold text-gray-900 transition hover:border-gray-400"
+              className="shrink-0 rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-900 transition hover:border-gray-400"
             >
               挑戦
             </Link>

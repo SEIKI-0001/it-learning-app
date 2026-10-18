@@ -365,6 +365,68 @@ export function referenceBookProgress(
   return referenceChaptersProgress(book.chapters);
 }
 
+/** 章ごとの読了状況（/progress の「参考書の読了状況」用）。 */
+export type ReferenceChapterReading = {
+  id: string;
+  title: string;
+  /** 読了した節の数（節のない章は 0/1） */
+  done: number;
+  total: number;
+  state: "read" | "reading" | "unread";
+};
+
+export type ReferenceReadingOverview = {
+  progress: ReferenceBookProgress;
+  chapters: ReferenceChapterReading[];
+  /** 最後に読了・読み始めを記録した日時(ISO)。記録が無ければ null */
+  lastReadAt: string | null;
+  /** 次に読む章（最初の読了でない章）。すべて読了なら null */
+  nextChapterId: string | null;
+};
+
+/**
+ * 参考書の読了状況を章ごとにまとめる。章が無ければ null。
+ * 数え方は referenceChaptersProgress と同じ（節単位・旧データの章 done は全節読了）。
+ * 「読みかけ」は節の一部読了、または読み始めの印（startedAt）がある章。
+ */
+export function referenceReadingOverview(
+  book: ReferenceBook | null,
+): ReferenceReadingOverview | null {
+  if (!book) return null;
+  const progress = referenceChaptersProgress(book.chapters);
+  if (!progress) return null;
+  let lastReadAt: string | null = null;
+  const touch = (iso: string | undefined) => {
+    if (iso && (lastReadAt === null || iso > lastReadAt)) lastReadAt = iso;
+  };
+  const chapters = book.chapters.map((chapter): ReferenceChapterReading => {
+    const sections = chapter.sections ?? [];
+    touch(chapter.completedAt);
+    for (const s of sections) {
+      touch(s.completedAt);
+      touch(s.startedAt);
+    }
+    const total = sections.length === 0 ? 1 : sections.length;
+    const done =
+      sections.length === 0
+        ? chapter.done === true ? 1 : 0
+        : sections.filter((s) => isSectionRead(chapter, s)).length;
+    const started = sections.some((s) => Boolean(s.startedAt));
+    const state = isChapterRead(chapter) || (sections.length === 0 && done === 1)
+      ? "read"
+      : done > 0 || started
+        ? "reading"
+        : "unread";
+    return { id: chapter.id, title: chapter.title, done, total, state };
+  });
+  return {
+    progress,
+    chapters,
+    lastReadAt,
+    nextChapterId: chapters.find((c) => c.state !== "read")?.id ?? null,
+  };
+}
+
 /**
  * DB の user_reference_books 行（jsonb の chapters）から進捗率（0〜100）を求める。
  * 参考書が未登録・使用中でない・章が0件のときは null（指標に含めない）。
