@@ -4,6 +4,8 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { saveThemePreference, THEME_OPTIONS } from "@/lib/theme";
+import { useThemePreference } from "@/lib/useTheme";
 import { seedPreviewData } from "./seed";
 
 export const PREVIEW_SCREENS = [
@@ -20,6 +22,7 @@ export const PREVIEW_SCREENS = [
 ] as const;
 
 export default function PreviewShell({ screen, children }: { screen: string; children: ReactNode }) {
+  const theme = useThemePreference();
   // 子ページの effect が localStorage を読む前に書き込む。
   // 書くのはこのタブで1回だけ（毎回書き直すと、ランクアップ等の演出が画面を開くたびに出るため）。
   // ?reseed を付けると書き直す。
@@ -76,6 +79,26 @@ export default function PreviewShell({ screen, children }: { screen: string; chi
           >
             {s.label}
           </Link>
+        ))}
+        <span style={{ width: 1, margin: "2px 4px", background: "rgba(255,255,255,0.3)" }} aria-hidden />
+        {THEME_OPTIONS.map((o) => (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => saveThemePreference(o.value)}
+            style={{
+              padding: "3px 7px",
+              border: 0,
+              borderRadius: 7,
+              background: theme === o.value ? "#7fb2ff" : "transparent",
+              color: theme === o.value ? "#0b1a28" : "#fff",
+              font: "inherit",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            {o.label}
+          </button>
         ))}
       </nav>
       {children}
