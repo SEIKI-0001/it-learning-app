@@ -35,6 +35,7 @@ import AccountLinkSettings from "@/components/settings/AccountLinkSettings";
 import FloatingMochitVisibilityControl from "@/components/mochit/FloatingMochitVisibilityControl";
 import NotificationSettings from "@/components/settings/NotificationSettings";
 import ReferenceBookSummary from "@/components/settings/ReferenceBookSummary";
+import ThemePicker from "@/components/theme/ThemePicker";
 
 // 設定変更。オンボーディングで入力した試験予定日・学習可能時間・理解度・苦手分野・
 // 学習スタイルを、あとから何度でも変更できるようにする。現在値をプリセットして編集し保存する。
@@ -290,6 +291,15 @@ function SettingsForm({
           <NotificationSettings />
 
           <FloatingMochitVisibilityControl />
+
+          {/* 画面の配色（lib/theme。選んだ時点でこの端末に保存し、保存ボタンとは別に反映する） */}
+          <fieldset>
+            <legend className="mb-1 flex items-center gap-2 text-base font-semibold text-gray-900">
+              <Icon name="palette" className="h-4 w-4 text-gray-500" />画面の配色
+            </legend>
+            <p className="mb-3 text-xs text-gray-500">選ぶとすぐに切り替わり、この端末に保存されます。</p>
+            <ThemePicker />
+          </fieldset>
 
           {/* 学習スタイル */}
           <fieldset>

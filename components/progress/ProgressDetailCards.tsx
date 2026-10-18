@@ -1,262 +1,92 @@
 "use client";
 
-// /progress の内訳・詳細タイル。
-//   - 合格準備度の内訳（分野別と、いちばん伸ばせるところ）
-//   - トピックの到達度（全トピックの内訳と、いちばん大きなリスク）
+// /progress で開く詳細（components/progress/ProgressCompact から使う）。
+//   - 参考書の読了状況（章ごと）
 //   - 学習した日（直近8週をカレンダーと同じ並びで。解答数の濃淡）
-//   - 次の解放（ランク・モチットの成長）
-// 数値の計算は既存の判定（ExamReadiness / IntegratedLearningStatus / answers）をそのまま使う。
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Icon from "@/components/ui/Icon";
-import { EXAM_READINESS_CONFIG } from "@/lib/examReadiness/config";
-import type { ExamReadinessResult } from "@/types/examReadiness";
-import type { IntegratedLearningStatus } from "@/types/integratedStatus";
+import type { ReferenceReadingOverview } from "@/lib/referenceBook";
 import type { UserAnswer } from "@/types";
 import t from "@/components/today/todayView.module.css";
 import p from "./progressDashboard.module.css";
 
-/** 段階の境界。lib/examReadiness/calculator.ts と同じ（安定は信頼度も必要なので分野では 85 以上を目安にする）。 */
-const BAND_EDGES = [60, 75, 85] as const;
-const SCORED_QUESTIONS = 92;
+// ───────────────────────── 参考書の読了状況 ─────────────────────────
 
-function fieldBandLabel(score: number | null): string {
-  if (score === null) return "測定中";
-  if (score >= 85) return "安定";
-  if (score >= 75) return "準備良好";
-  if (score >= 60) return "あと一歩";
-  return "要強化";
+const READING_STATE_LABEL = { read: "読了", reading: "読みかけ", unread: "未読" } as const;
+
+function monthDay(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-// ───────────────────────── 合格準備度の内訳 ─────────────────────────
-
-export function ReadinessBreakdownCard({
-  result,
-  loading,
-  improvement,
-  className,
+/**
+ * 参考書の読了状況（参考書が未設定なら出さない）。数え方は /plan・学習ペース判定と同じ節単位。
+ * ふだんは読了率と次に読む章だけの1枚にし、押すと章ごとの内訳を開く。
+ */
+export function ReadingDetailBody({
+  bookTitle,
+  overview,
 }: {
-  result: ExamReadinessResult | null;
-  loading: boolean;
-  /** いちばん伸ばせるところ（文言と取り組み先）。判定できなければ null。 */
-  improvement: { label: string; href: string } | null;
-  className?: string;
+  bookTitle: string;
+  overview: ReferenceReadingOverview;
 }) {
-  const questionsFor = (fieldId: string) => {
-    const ratio = EXAM_READINESS_CONFIG.fields.find((f) => f.fieldId === fieldId)?.scoredQuestionRatio;
-    return ratio ? Math.round(ratio * SCORED_QUESTIONS) : null;
-  };
-
-  return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="readiness-heading" data-guide="progress-breakdown">
-      <div className={t.sheetHead}>
-        <h2 id="readiness-heading" className={t.sectionTitle}>
-          合格準備度の内訳
-        </h2>
-        <span className={t.sectionMeta}>実際の回答と定着から判定</span>
-      </div>
-
-      {!result ? (
-        <p className={p.emptyNote}>
-          {loading ? "合格準備度を読み込んでいます" : "判定材料を集めています。問題に答えると分野ごとの準備度が出ます。"}
-        </p>
-      ) : (
-        <ul className={p.fieldList}>
-          {result.fields.map((field) => {
-            const questions = questionsFor(field.fieldId);
-            return (
-              <li key={field.fieldId} className={p.field}>
-                <span className={p.fieldName}>
-                  {field.label}
-                  {questions !== null && (
-                    <span className={p.fieldMeta}>
-                      出題 <span className={t.mono}>{questions}</span>問
-                    </span>
-                  )}
-                </span>
-                <span className={p.fieldBar} aria-hidden>
-                  <span className={p.fieldFill} style={{ width: `${field.score ?? 0}%` }} />
-                  {BAND_EDGES.map((edge) => (
-                    <span key={edge} className={p.fieldEdge} style={{ left: `${edge}%` }} />
-                  ))}
-                </span>
-                <span className={p.fieldScore}>
-                  <span className={`${t.mono} ${p.mono}`}>{field.score ?? "—"}</span>
-                  <span className={p.fieldBand}>{fieldBandLabel(field.score)}</span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {improvement && (
-        <div className={p.improve}>
-          <div className={p.improveText}>
-            <p className={p.improveLabel}>いちばん伸ばせるところ</p>
-            <p className={p.improveMain}>{improvement.label}</p>
-          </div>
-          <Link href={improvement.href} className={p.textLink}>
-            取り組む
-            <Icon name="chevron-right" className={p.chev} />
-          </Link>
-        </div>
-      )}
-    </section>
-  );
-}
-
-// ───────────────────────── 内訳（判定前） ─────────────────────────
-
-/** 分野別・トピック別の内訳がまだ出せないときに、2枚の空カードの代わりに置く1枚。 */
-export function PendingBreakdownCard({
-  totalTopicCount,
-  className,
-}: {
-  totalTopicCount: number;
-  className?: string;
-}) {
-  const rows = [
-    { label: "分野ごとの合格準備度", meta: "ストラテジ・マネジメント・テクノロジ" },
-    { label: "トピックごとの到達度", meta: `全${totalTopicCount}トピック` },
-  ];
-  return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="pending-heading" data-guide="progress-breakdown">
-      <div className={t.sheetHead}>
-        <h2 id="pending-heading" className={t.sectionTitle}>
-          内訳
-        </h2>
-      </div>
-      <ul className={p.pendingList}>
-        {rows.map((row) => (
-          <li key={row.label} className={p.pendingRow}>
-            <span className={p.pendingLabel}>{row.label}</span>
-            <span className={p.pendingMeta}>{row.meta}</span>
-            <span className={p.pendingBar} aria-hidden />
-          </li>
-        ))}
-      </ul>
-      <p className={p.pendingNote}>確認問題に答えると、ここに内訳が出ます。</p>
-      <Link href="/today" className={p.textLink}>
-        今日の学習へ
-        <Icon name="chevron-right" className={p.chev} />
-      </Link>
-    </section>
-  );
-}
-
-// ───────────────────────── トピックの到達度 ─────────────────────────
-
-/** 参考書インプットの内訳（参考書未設定なら null で出さない）。 */
-export type ReferenceInputSummary = {
-  percent: number;
-  doneChapters: number;
-  totalChapters: number;
-};
-
-export function TopicReachCard({
-  status,
-  totalTopicCount,
-  loading,
-  referenceInput = null,
-  className,
-}: {
-  status: IntegratedLearningStatus | null;
-  totalTopicCount: number;
-  loading: boolean;
-  referenceInput?: ReferenceInputSummary | null;
-  className?: string;
-}) {
-  return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby="topics-heading">
-      <div className={t.sheetHead}>
-        <h2 id="topics-heading" className={t.sectionTitle}>
-          トピックの到達度
-        </h2>
-        <span className={t.sectionMeta}>
-          全<span className={t.mono}>{totalTopicCount}</span>トピック
-        </span>
-      </div>
-
-      {!status ? (
-        <p className={p.emptyNote}>
-          {loading ? "到達度を読み込んでいます" : "確認問題に答えると、トピックごとの到達度が出ます。"}
-        </p>
-      ) : (
-        <TopicReachBody status={status} totalTopicCount={totalTopicCount} />
-      )}
-      {/* インプット進捗の内訳。主役は到達度なので、1行の補足にとどめる */}
-      {referenceInput && (
-        <Link href="/plan" className={p.referenceInput}>
-          <span>参考書インプット</span>
-          <span className={p.referenceInputValue}>
-            <span className={t.mono}>{referenceInput.percent}%</span>
-            （<span className={t.mono}>{referenceInput.doneChapters}</span>/
-            <span className={t.mono}>{referenceInput.totalChapters}</span>章読了）
-          </span>
-        </Link>
-      )}
-    </section>
-  );
-}
-
-function TopicReachBody({
-  status,
-  totalTopicCount,
-}: {
-  status: IntegratedLearningStatus;
-  totalTopicCount: number;
-}) {
-  // 全トピックを重複なく4区分に分ける（basicUnderstood は exam_ready を含むため差し引く）。
-  const examReady = status.examReadyTopicCount;
-  const basicOnly = Math.max(0, status.basicUnderstoodTopicCount - examReady);
-  const needsWork = status.reviewNeededTopicCount + status.weakTopicCount;
-  const notStarted = Math.max(0, totalTopicCount - examReady - basicOnly - needsWork);
-  const share = (n: number) => `${totalTopicCount > 0 ? (n / totalTopicCount) * 100 : 0}%`;
-  const topRisk = status.mainRisks[0] ?? null;
-
+  const { progress, chapters, lastReadAt, nextChapterId } = overview;
   return (
     <>
-      <div className={p.stack} aria-hidden>
-        <span data-tone="ready" style={{ width: share(examReady) }} />
-        <span data-tone="basic" style={{ width: share(basicOnly) }} />
-        <span data-tone="work" style={{ width: share(needsWork) }} />
-      </div>
-      <dl className={p.legend}>
-        {[
-          { tone: "ready", label: "本番対応OK", value: examReady },
-          { tone: "basic", label: "基礎理解OK", value: basicOnly },
-          { tone: "work", label: "要復習", value: needsWork },
-          { tone: "rest", label: "これから", value: notStarted },
-        ].map((item) => (
-          <div key={item.tone} className={p.legendItem} data-tone={item.tone}>
-            <dt>{item.label}</dt>
-            <dd className={p.legendNum}>{item.value}</dd>
-          </div>
+      <p className={p.readingBook}>
+        {bookTitle}
+        <span className={p.readingSep}>・</span>
+        節 <span className={t.mono}>{`${progress.done}/${progress.total}`}</span> 読了
+        {lastReadAt && (
+          <>
+            <span className={p.readingSep}>・</span>
+            最後の記録 <span className={t.mono}>{monthDay(lastReadAt)}</span>
+          </>
+        )}
+      </p>
+      {/* PC の2列は上から下へ読む順に並べる */}
+      <ol
+        className={p.readingChapters}
+        style={{ "--reading-rows": Math.ceil(chapters.length / 2) } as CSSProperties}
+      >
+        {chapters.map((chapter) => (
+          <li
+            key={chapter.id}
+            className={`${p.readingChapter} ${chapter.id === nextChapterId ? p.readingNext : ""}`}
+          >
+            <span className={p.readingMark} data-state={chapter.state} aria-hidden />
+            <span className={p.readingTitle}>{chapter.title}</span>
+            <span className={p.readingCount}>
+              {chapter.state === "read" ? (
+                "読了"
+              ) : chapter.total > 1 ? (
+                <>
+                  <span className={t.mono}>{`${chapter.done}/${chapter.total}`}</span>節
+                </>
+              ) : (
+                READING_STATE_LABEL[chapter.state]
+              )}
+              {chapter.id === nextChapterId && <span className={p.readingNextTag}>次に読む</span>}
+            </span>
+          </li>
         ))}
-      </dl>
-      {topRisk && (
-        <Link href="/review" className={p.risk}>
-          <Icon name="alert" className={p.riskIcon} />
-          <span className={p.riskText}>
-            {topRisk.label}
-            {typeof topRisk.count === "number" && (
-              <>
-                （<span className={t.mono}>{topRisk.count}</span>件）
-              </>
-            )}
-          </span>
-          <span className={p.riskAction}>
-            復習する
-            <Icon name="chevron-right" className={p.chev} />
-          </span>
+      </ol>
+      <div className={p.readingFoot}>
+        <p className={p.readingNote}>
+          今日の学習の「参考書でどこまで読みましたか？」で「全部」を選ぶと、その節が読了になります。合格準備度は問題の結果だけで判定し、読了は学習ペース（順調・遅れ）の判定に使います。
+        </p>
+        <Link href="/settings/reference-book" className={p.textLink}>
+          まとめて読了・修正
+          <Icon name="chevron-right" className={p.chev} />
         </Link>
-      )}
+      </div>
     </>
   );
 }
 
+/** 参考書の読了状況の詳細だけのカード（/progress の指標タイルから開く）。 */
 // ───────────────────────── 学習した日 ─────────────────────────
 
 const WEEKDAYS = ["月", "火", "水", "木", "金", "土", "日"];
@@ -319,11 +149,14 @@ export function StudyDaysCard({
   answers,
   streak,
   longestStreak,
+  stacked = false,
   className,
 }: {
   answers: UserAnswer[];
   streak: number;
   longestStreak: number;
+  /** 狭い枠に入れるとき、カレンダーと数字を縦に積む */
+  stacked?: boolean;
   className?: string;
 }) {
   const [picked, setPicked] = useState<NonNullable<HeatDay> | null>(null);
@@ -350,7 +183,7 @@ export function StudyDaysCard({
           直近{HEAT_WEEKS}週で <span className={t.mono}>{studyDays}</span>日
         </span>
       </div>
-      <div className={p.history}>
+      <div className={`${p.history} ${stacked ? p.historyStacked : ""}`}>
         <div className={p.heatBlock}>
           <div
             className={p.heat}
@@ -441,54 +274,6 @@ export function StudyDaysCard({
           </div>
         </dl>
       </div>
-    </section>
-  );
-}
-
-// ───────────────────────── 次の解放・くわしく見る ─────────────────────────
-
-export type UnlockRow = { id: string; title: string; detail: string; ratio?: number; href: string };
-
-export function RowListCard({
-  title,
-  rows,
-  grid = false,
-  className,
-  guide,
-}: {
-  title: string;
-  rows: UnlockRow[];
-  grid?: boolean;
-  className?: string;
-  /** 操作ガイドで照らすときの目印（data-guide） */
-  guide?: string;
-}) {
-  const headingId = `${title}-heading`;
-  return (
-    <section className={`${p.card} ${className ?? ""}`} aria-labelledby={headingId} data-guide={guide}>
-      <div className={t.sheetHead}>
-        <h2 id={headingId} className={t.sectionTitle}>
-          {title}
-        </h2>
-      </div>
-      <ul className={`${p.rows} ${grid ? p.linkGrid : ""}`}>
-        {rows.map((row) => (
-          <li key={row.id}>
-            <Link href={row.href} className={p.row}>
-              <span className={p.rowBody}>
-                <span className={p.rowTitle}>{row.title}</span>
-                <span className={p.rowDetail}>{row.detail}</span>
-                {row.ratio !== undefined && (
-                  <span className={p.rowBar} aria-hidden>
-                    <span style={{ width: `${Math.min(1, Math.max(0, row.ratio)) * 100}%` }} />
-                  </span>
-                )}
-              </span>
-              <Icon name="chevron-right" className={p.chev} />
-            </Link>
-          </li>
-        ))}
-      </ul>
     </section>
   );
 }

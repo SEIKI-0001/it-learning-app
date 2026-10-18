@@ -66,7 +66,7 @@ export default function ThemeDetail({ themeSlug }: { themeSlug: string }) {
           {nextLesson && (
             <Link
               href={getLessonHref(nextLesson.id, { from: "learn", activity: "learn", anchor: "lesson-content" })}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-cta px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cta-hover"
             >
               続きから学ぶ：{nextLesson.title}
             </Link>

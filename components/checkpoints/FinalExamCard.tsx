@@ -28,7 +28,7 @@ export default function FinalExamCard({
           gate.finalExamPassed
             ? "bg-emerald-600 text-white"
             : unlockedActive
-              ? "animate-sheen bg-gray-900 text-white"
+              ? "animate-sheen bg-cta text-white"
               : "bg-gray-100 text-gray-600"
         }`}
       >

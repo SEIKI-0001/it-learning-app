@@ -345,7 +345,7 @@ export default function OnboardingPage() {
           <button
             type="button"
             onClick={() => (step === last ? handleStart() : go(step + 1))}
-            className="w-full rounded-lg bg-gray-900 px-6 py-4 text-base font-semibold text-white transition hover:bg-black active:scale-[0.99]"
+            className="w-full rounded-lg bg-cta px-6 py-4 text-base font-semibold text-white transition hover:bg-cta-hover active:scale-[0.99]"
           >
             {step === last ? "この内容でプランを作る" : "次へ"}
           </button>
