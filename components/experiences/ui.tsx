@@ -25,6 +25,13 @@ type Deck = {
   unregister: (id: string, panel: HTMLElement) => void;
 };
 const DeckContext = createContext<Deck | null>(null);
+// Panel の中から「このスライドが表示中か」を知るための文脈（デッキの外では常に true）。
+const SlideVisibleContext = createContext(true);
+
+/** 自分を含む Panel が表示中か。自動再生を「見ているスライドだけ」進めるのに使う。 */
+export function useSlideVisible() {
+  return useContext(SlideVisibleContext);
+}
 const SWIPE_THRESHOLD = 56;
 
 export function ExperienceSlideDeck({
@@ -176,7 +183,7 @@ export function Panel({ children }: { children: ReactNode }) {
             "pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden"
       }`}
     >
-      {children}
+      <SlideVisibleContext.Provider value={visible}>{children}</SlideVisibleContext.Provider>
     </section>
   );
 }

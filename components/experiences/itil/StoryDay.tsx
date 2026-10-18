@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Choices, placeAnswer, type Choice } from "../calc/CalcParts";
+import { useSlideVisible } from "../ui";
 import { Face } from "./Faces";
 import { CAST, WEEK, type Beat } from "./week";
 import styles from "./story.module.css";
@@ -21,22 +22,6 @@ export function readMs(beat: Beat, afterAnswer = false): number {
 }
 
 const TYPING_MS = 700;
-
-/** このスライドが表示中か（ExperienceSlideDeck の非表示パネルは aria-hidden="true"）。デッキの外では常に true。 */
-function useSlideActive<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
-  const [active, setActive] = useState(true);
-  useEffect(() => {
-    const section = ref.current?.closest("section[data-experience-slide-id]");
-    if (!section) return;
-    const update = () => setActive(section.getAttribute("aria-hidden") !== "true");
-    update();
-    const mo = new MutationObserver(update);
-    mo.observe(section, { attributes: true, attributeFilter: ["aria-hidden"] });
-    return () => mo.disconnect();
-  }, []);
-  return [ref, active] as const;
-}
 
 export function WeekStrip({ day }: { day: number }) {
   return (
@@ -191,7 +176,7 @@ export function StoryDay({
   /** 使用量メーターの最初の値（出さない日は省略） */
   gaugeFrom?: number;
 }) {
-  const [rootRef, active] = useSlideActive<HTMLDivElement>();
+  const active = useSlideVisible();
   const [shown, setShown] = useState(1);
   const [answered, setAnswered] = useState<Record<number, boolean>>({});
   const [paused, setPaused] = useState(false);
@@ -244,7 +229,7 @@ export function StoryDay({
   };
 
   return (
-    <div ref={rootRef} key={run}>
+    <div key={run}>
       {gauge !== undefined && <DiskGauge value={gauge} />}
       <ol className="mt-3 space-y-3" aria-live="polite" data-testid="itil-story">
         {visible.map((b, i) =>
