@@ -90,6 +90,16 @@ describe("public kaisetsu page uses the app lesson", () => {
     expect(recap.textContent).toContain(topic.conceptCard.body);
     if (topic.examPoint) expect(recap.textContent).toContain(topic.examPoint);
   });
+
+  it("体験教材のテーマでは、図解の言い直しの文章は畳み、試験の補足は開いたまま出す", async () => {
+    const topic = getTopic("strat-swot")!;
+    const { container } = await renderPage(topic.id);
+    const more = container.querySelector(".k-recap details.k-more")!;
+    expect(more.hasAttribute("open")).toBe(false);
+    expect(more.textContent).toContain(topic.conceptCard.body);
+    expect(more.textContent).toContain(topic.explanation.body);
+    if (topic.examPoint) expect(more.textContent).not.toContain(topic.examPoint);
+  });
 });
 
 describe("PublicTopicQuiz", () => {

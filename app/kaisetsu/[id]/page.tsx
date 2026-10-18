@@ -28,7 +28,7 @@ import { FIELD_LABELS } from "@/types/content";
 
 // 公開テーマ別解説（未ログインで閲覧可）。「SWOT分析とは」のような論点名の検索の入口。
 // 教材本体と確認問題はアプリのレッスン（app/learn/.../[lessonId]）と同じ部品で描く
-// （TopicContent / TopicQuiz）。公開ページで持つのは、文章でのおさらい・公開過去問・英略語・
+// （TopicContent / TopicQuiz）。公開ページで持つのは、試験のポイントと（畳んだ）文章でのおさらい・公開過去問・英略語・
 // つながるテーマへの内部リンクと、登録の案内だけ。学習記録は保存しない。
 
 type Props = { params: Promise<{ id: string }> };
@@ -93,35 +93,13 @@ export default async function KaisetsuTopicPage({ params }: Props) {
         <TopicContent topic={t} showCheckQuestions={false} />
       </section>
 
-      {/* 文章でのおさらい（公開ページだけ）。検索で読まれる本文と、体験教材に載っていない
-          試験の問われ方・間違えやすい点を文章で残す。体験教材が無いテーマでは
-          TopicContent が「イメージをつかむ」「試験ポイント」を出すので、そこは重ねない。 */}
+      {/* 試験対策と文章でのおさらい（公開ページだけ）。
+          体験教材（図解）があるテーマでは、概念・解説本文は図解と同じ内容の言い直しなので
+          <details> に畳む（HTML には最初から含まれるので検索エンジンも読める）。
+          試験の問われ方・間違えやすい点は図解に載っていない補足なので開いたまま出す。
+          体験教材が無いテーマでは TopicContent が「イメージをつかむ」を出すので、そこは重ねない。 */}
       <section className="g-body k-recap" aria-labelledby="ks-recap">
-        <h2 id="ks-recap">文章でおさらい</h2>
-        {hasExperience && (
-          <>
-            <h3>{conceptCard.heading}</h3>
-            <p>{conceptCard.body}</p>
-            {conceptCard.analogy && (
-              <p>
-                <strong>たとえると：</strong>
-                {conceptCard.analogy}
-              </p>
-            )}
-            <p>{explanation.body}</p>
-            {explanation.keyPoints && explanation.keyPoints.length > 0 && (
-              <>
-                <h3>押さえどころ</h3>
-                <ul>
-                  {explanation.keyPoints.map((point) => (
-                    <li key={point}>{point}</li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </>
-        )}
-
+        <h2 id="ks-recap">試験のポイント</h2>
         {t.examPoint && (
           <>
             <h3>ITパスポート試験での問われ方</h3>
@@ -155,6 +133,33 @@ export default async function KaisetsuTopicPage({ params }: Props) {
               })}
             </p>
           </>
+        )}
+
+        {hasExperience && (
+          <details className="k-more">
+            <summary>図解の内容を文章で読む</summary>
+            <div className="k-more-body">
+              <h3>{conceptCard.heading}</h3>
+              <p>{conceptCard.body}</p>
+              {conceptCard.analogy && (
+                <p>
+                  <strong>たとえると：</strong>
+                  {conceptCard.analogy}
+                </p>
+              )}
+              <p>{explanation.body}</p>
+              {explanation.keyPoints && explanation.keyPoints.length > 0 && (
+                <>
+                  <h3>押さえどころ</h3>
+                  <ul>
+                    {explanation.keyPoints.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          </details>
         )}
       </section>
 
