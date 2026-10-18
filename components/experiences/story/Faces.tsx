@@ -1,11 +1,11 @@
 import { useId } from "react";
-import type { Who } from "./week";
+import type { Mood, Who } from "./cast";
+
+export type { Mood };
 
 // ストーリー解説の登場人物の顔（胸から上）。ほかの解説の人物イラスト
 // （crypto/CryptoPeopleIllustration）と同じ肌色・塗りのタッチにそろえる。
 // 表情は台本の mood で切り替える：normal / smile / worried / surprised。
-
-export type Mood = "normal" | "smile" | "worried" | "surprised";
 
 const SKIN = "#F6D3B8";
 const INK = "#2B3140";
@@ -17,6 +17,10 @@ const LOOK: Record<Who, { bg: string; shirt: string; collar: string; hair: strin
   takagi: { bg: "#E5E7EB", shirt: "#273449", collar: "#FFFFFF", hair: "#1F2430" },
   // 利用者（社員）：お団子の髪、灰色のカーディガン
   user: { bg: "#F1F1EE", shirt: "#8A8F99", collar: "#E9EAEE", hair: "#5A3A22" },
+  // 社長：白髪まじりの短髪、灰色のスーツに赤いネクタイ
+  boss: { bg: "#F3EAD9", shirt: "#4B5563", collar: "#FFFFFF", hair: "#A3A8B2" },
+  // 宮本さん（内部監査室）：肩までの髪、緑のジャケット
+  auditor: { bg: "#E3F1EA", shirt: "#2F7D62", collar: "#FFFFFF", hair: "#2B2522" },
 };
 
 function Hair({ who, color }: { who: Who; color: string }) {
@@ -24,6 +28,20 @@ function Hair({ who, color }: { who: Who; color: string }) {
     return (
       <path
         d="M13.2 28.4 Q10.8 9.8 24 9.6 Q37.2 9.8 34.8 28.4 Q33.6 30.2 31.8 29 Q32.6 21.4 30.8 16 Q26.4 18 22 15.6 Q20.4 17.4 17.4 16.4 Q15.4 20.6 16.2 29 Q14.4 30.2 13.2 28.4 Z"
+        fill={color}
+      />
+    );
+  if (who === "boss")
+    return (
+      <path
+        d="M14.6 22.4 Q14 12.6 24 12.2 Q34 12.6 33.4 22.4 Q32.8 17.6 30.4 16.6 Q27 15.2 24 15.8 Q21 15.2 17.6 16.6 Q15.2 17.6 14.6 22.4 Z"
+        fill={color}
+      />
+    );
+  if (who === "auditor")
+    return (
+      <path
+        d="M12.8 35.4 Q10.4 9.8 24 9.6 Q37.6 9.8 35.2 35.4 L31.8 35.4 Q33 22 30.8 16.4 Q25 15.4 20.2 17.8 Q16.6 16.8 16.2 22.4 Q15.4 30 16.2 35.4 Z"
         fill={color}
       />
     );
@@ -115,6 +133,17 @@ export function Face({ who, mood = "normal", size = 40 }: { who: Who; mood?: Moo
           <path d="M19.4 36.8 L22.4 46 L17 40 Z M28.6 36.8 L25.6 46 L31 40 Z" fill="#1A2333" />
         )}
         {who === "user" && <circle cx={24} cy={44.6} r={0.9} fill="#E9EAEE" />}
+        {who === "boss" && (
+          // ネクタイ
+          <path d="M23 37.4 L25 37.4 L25.9 44.6 L24 47.4 L22.1 44.6 Z" fill="#C0392B" />
+        )}
+        {who === "auditor" && (
+          // 襟とバッジ
+          <>
+            <path d="M19.4 36.8 L22.6 45 L17.6 40.2 Z M28.6 36.8 L25.4 45 L30.4 40.2 Z" fill="#256650" />
+            <circle cx={31.6} cy={43} r={1.1} fill="#F5C542" />
+          </>
+        )}
         {/* 頭 */}
         <circle cx={14.8} cy={24} r={2} fill={SKIN} />
         <circle cx={33.2} cy={24} r={2} fill={SKIN} />

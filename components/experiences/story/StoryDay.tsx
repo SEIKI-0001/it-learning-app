@@ -4,15 +4,15 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Choices, placeAnswer, type Choice } from "../calc/CalcParts";
 import { useSlideVisible } from "../ui";
 import { Face } from "./Faces";
-import { CAST, WEEK, type Beat } from "./week";
+import { CAST, type Beat, type StoryState } from "./cast";
 import styles from "./story.module.css";
 
-// ITIL のストーリー解説の部品。
-//   WeekStrip : 月〜金の帯。いまの曜日と、通り過ぎた曜日が分かる（物語の現在地）
-//   StoryDay  : 1日の出来事を、読む時間に合わせて1行ずつ自動で出す。
-//               スライドが表示されている間だけ進み、選ぶ場面では答えるまで止まる。
-//               次に話す人の「…」を少し先に出して、会話が続いていることを見せる。
-//   DiskGauge : 共有ディスクの使用量（火曜・水曜の出来事と連動）
+// ストーリー解説（ITIL・ISMS など）の共通部品。
+//   StoryTimeline : 曜日や月の帯。いまの場面と、通り過ぎた場面が分かる（物語の現在地）
+//   StoryDay      : 1場面の出来事を、読む時間に合わせて1行ずつ自動で出す。
+//                   スライドが表示されている間だけ進み、選ぶ場面では答えるまで止まる。
+//                   次に話す人の「…」を少し先に出して、会話が続いていることを見せる。
+//                   台本の state で、話と一緒に変わる表示（メーター・台帳）を差し込める。
 
 /** 1行を読み終えるまでの目安（ms）。文字数に比例させ、用語カードがあればその分も足す。 */
 export function readMs(beat: Beat, afterAnswer = false): number {
@@ -23,17 +23,31 @@ export function readMs(beat: Beat, afterAnswer = false): number {
 
 const TYPING_MS = 700;
 
-export function WeekStrip({ day }: { day: number }) {
+export function StoryTimeline({
+  items,
+  current,
+  label,
+}: {
+  items: readonly { key: string; label: string; short: string }[];
+  /** いまの場面の番号（-1 なら全部これから） */
+  current: number;
+  label: string;
+}) {
   return (
-    <ol className="mt-3 grid grid-cols-5 gap-1" aria-label="森さんの1週間">
-      {WEEK.map((d, i) => (
+    <ol
+      className="mt-3 grid gap-1"
+      style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      aria-label={label}
+      data-testid="story-timeline"
+    >
+      {items.map((d, i) => (
         <li
           key={d.key}
-          aria-current={i === day ? "step" : undefined}
-          className={`rounded-lg px-1 py-1.5 text-center ${
-            i === day
+          aria-current={i === current ? "step" : undefined}
+          className={`rounded-lg px-0.5 py-1.5 text-center ${
+            i === current
               ? "bg-gray-900 text-white"
-              : i < day
+              : i < current
                 ? "bg-gray-100 text-gray-500"
                 : "bg-white text-gray-400 ring-1 ring-gray-200"
           }`}
@@ -48,29 +62,12 @@ export function WeekStrip({ day }: { day: number }) {
 
 export function TermCard({ name, def }: { name: string; def: ReactNode }) {
   return (
-    <div className={`mt-2 rounded-xl bg-white px-3 py-2.5 ring-2 ring-gray-900 ${styles.enter}`} data-testid="itil-term">
+    <div className={`mt-2 rounded-xl bg-white px-3 py-2.5 ring-2 ring-gray-900 ${styles.enter}`} data-testid="story-term">
       <div className="flex items-center gap-2">
         <span className="rounded bg-gray-900 px-1.5 py-0.5 text-[10px] font-bold text-white">用語</span>
         <b className="text-[15px] text-gray-900">{name}</b>
       </div>
       <p className="mt-1 text-[13px] leading-relaxed text-gray-700">{def}</p>
-    </div>
-  );
-}
-
-export function DiskGauge({ value }: { value: number }) {
-  const tone = value >= 100 ? "bg-rose-500" : value >= 80 ? "bg-amber-500" : "bg-emerald-500";
-  return (
-    <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200" data-testid="itil-disk">
-      <div className="flex items-baseline justify-between text-[11px] font-bold text-gray-500">
-        <span>共有ディスクの使用量</span>
-        <span className={`tabular-nums ${value >= 100 ? "text-rose-600" : "text-gray-700"}`}>
-          {value}%{value >= 100 && "（満杯）"}
-        </span>
-      </div>
-      <div className="mt-1 h-2 overflow-hidden rounded-full bg-gray-200">
-        <div className={`h-full rounded-full transition-[width] duration-700 ${tone}`} style={{ width: `${Math.min(value, 100)}%` }} />
-      </div>
     </div>
   );
 }
@@ -141,7 +138,7 @@ function ChoiceBeat({
           </p>
         </div>
         <div className="mt-2">
-          <Choices choices={choices} cols={1} onAnswer={onAnswered} testId="itil-ask" />
+          <Choices choices={choices} cols={1} onAnswer={onAnswered} testId="story-ask" />
         </div>
       </div>
       {answered && ask.then && (
@@ -154,7 +151,7 @@ function ChoiceBeat({
 
 function Typing({ who }: { who: NonNullable<Beat["who"]> }) {
   return (
-    <li className={`flex items-center gap-2.5 ${styles.enter}`} aria-hidden data-testid="itil-typing">
+    <li className={`flex items-center gap-2.5 ${styles.enter}`} aria-hidden data-testid="story-typing">
       <Face who={who} size={44} />
       <span className="flex gap-1 rounded-xl rounded-tl-sm bg-gray-50 px-3 py-3 ring-1 ring-gray-200">
         {[0, 1, 2].map((i) => (
@@ -168,13 +165,19 @@ function Typing({ who }: { who: NonNullable<Beat["who"]> }) {
 export function StoryDay({
   beats,
   summary,
-  gaugeFrom,
+  initialState,
+  renderState,
+  unit = "日",
 }: {
   beats: Beat[];
-  /** 最後の1行まで進んだら出す「この日のまとめ」 */
+  /** 最後の1行まで進んだら出す「まとめ」 */
   summary: ReactNode;
-  /** 使用量メーターの最初の値（出さない日は省略） */
-  gaugeFrom?: number;
+  /** 話と一緒に変わる表示の最初の値 */
+  initialState?: StoryState;
+  /** 話と一緒に変わる表示（メーター・台帳）。会話の上に出す */
+  renderState?: (state: StoryState) => ReactNode;
+  /** 1場面の単位（「この日のまとめ」「この月のまとめ」） */
+  unit?: string;
 }) {
   const active = useSlideVisible();
   const [shown, setShown] = useState(1);
@@ -190,10 +193,10 @@ export function StoryDay({
   const done = shown >= beats.length && !waiting;
   const playing = active && !paused && !waiting && !done;
   const nextWho = beats[shown]?.who;
-  // 選ぶ場面のメーターは、答えたあとに動かす（答えより先に結果を見せない）
-  const gauge = visible.reduce<number | undefined>(
-    (g, b, i) => (b.ask && !answered[i] ? g : (b.gauge ?? g)),
-    gaugeFrom,
+  // 選ぶ場面の表示は、答えたあとに変える（答えより先に結果を見せない）
+  const state = visible.reduce<StoryState>(
+    (acc, b, i) => (b.ask && !answered[i] ? acc : { ...acc, ...b.state }),
+    initialState ?? {},
   );
 
   // 読む時間が経ったら次の行へ。次が会話なら、少し前から「…」を出す
@@ -230,8 +233,8 @@ export function StoryDay({
 
   return (
     <div key={run}>
-      {gauge !== undefined && <DiskGauge value={gauge} />}
-      <ol className="mt-3 space-y-3" aria-live="polite" data-testid="itil-story">
+      {renderState?.(state)}
+      <ol className="mt-3 space-y-3" aria-live="polite" data-testid="story-story">
         {visible.map((b, i) =>
           b.ask ? (
             <ChoiceBeat
@@ -252,9 +255,9 @@ export function StoryDay({
           <>
             <div
               className={`mt-4 rounded-xl bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-950 ring-1 ring-amber-200 [&_b]:font-bold ${styles.enter}`}
-              data-testid="itil-summary"
+              data-testid="story-summary"
             >
-              <div className="mb-1 text-[11px] font-bold text-amber-700">この日のまとめ</div>
+              <div className="mb-1 text-[11px] font-bold text-amber-700">この{unit}のまとめ</div>
               {summary}
             </div>
             <button
@@ -262,7 +265,7 @@ export function StoryDay({
               onClick={restart}
               className="mt-2 rounded-lg px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-brand-700"
             >
-              ↺ この日を最初から
+              ↺ この{unit}を最初から
             </button>
           </>
         ) : (
@@ -273,7 +276,7 @@ export function StoryDay({
                 type="button"
                 onClick={() => setPaused((p) => !p)}
                 className="rounded-full px-3 py-1 text-gray-600 ring-1 ring-gray-300 hover:text-brand-700"
-                data-testid="itil-pause"
+                data-testid="story-pause"
               >
                 {paused ? "▶ 再開" : "❚❚ 一時停止"}
               </button>

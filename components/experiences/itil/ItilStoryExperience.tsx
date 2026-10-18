@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Panel, SectionTitle } from "../ui";
 import { Choices, placeAnswer, ThinkFirst, type Choice } from "../calc/CalcParts";
-import { StoryDay, WeekStrip } from "./StoryDay";
-import { Face } from "./Faces";
+import { StoryDay, StoryTimeline } from "../story/StoryDay";
+import { Face } from "../story/Faces";
+import type { StoryState } from "../story/cast";
 import { FRIDAY_KPI, FRIDAY_TOOLS, MONDAY, THURSDAY, TUESDAY, WEDNESDAY, WEEK } from "./week";
 
 // 「ITIL」をストーリーで学ぶ体験。
@@ -74,6 +75,30 @@ function Intro() {
     </Panel>
   );
 }
+
+function WeekStrip({ day }: { day: number }) {
+  return <StoryTimeline items={WEEK} current={day} label="森さんの1週間" />;
+}
+
+// 共有ディスクの使用量（火曜・水曜の出来事と連動）
+function DiskGauge({ state }: { state: StoryState }) {
+  const value = Number(state.disk);
+  const tone = value >= 100 ? "bg-rose-500" : value >= 80 ? "bg-amber-500" : "bg-emerald-500";
+  return (
+    <div className="mt-3 rounded-xl bg-gray-50 px-3 py-2 ring-1 ring-gray-200" data-testid="itil-disk">
+      <div className="flex items-baseline justify-between text-[11px] font-bold text-gray-500">
+        <span>共有ディスクの使用量</span>
+        <span className={`tabular-nums ${value >= 100 ? "text-rose-600" : "text-gray-700"}`}>
+          {value}%{value >= 100 && "（満杯）"}
+        </span>
+      </div>
+      <div className="mt-1 h-2 overflow-hidden rounded-full bg-gray-200">
+        <div className={`h-full rounded-full transition-[width] duration-700 ${tone}`} style={{ width: `${Math.min(value, 100)}%` }} />
+      </div>
+    </div>
+  );
+}
+const diskGauge = (state: StoryState) => <DiskGauge state={state} />;
 
 function DayPanel({
   step,
@@ -317,7 +342,8 @@ export default function ItilStoryExperience() {
       <DayPanel step={3} day={1} title={`火曜：${WEEK[1].title}`}>
         <StoryDay
           beats={TUESDAY}
-          gaugeFrom={95}
+          initialState={{ disk: 95 }}
+          renderState={diskGauge}
           summary={
             <>
               同じ出来事でも、<b>何をするかで管理の名前が変わります。</b>
@@ -331,7 +357,8 @@ export default function ItilStoryExperience() {
       <DayPanel step={4} day={2} title={`水曜：${WEEK[2].title}`}>
         <StoryDay
           beats={WEDNESDAY}
-          gaugeFrom={88}
+          initialState={{ disk: 88 }}
+          renderState={diskGauge}
           summary={
             <>
               決める＝<b>変更管理</b> → 入れる＝<b>リリース及び展開管理</b> → 記録する＝<b>構成管理</b>

@@ -1,19 +1,10 @@
-import type { Choice } from "../calc/CalcParts";
-import type { Mood } from "./Faces";
+import type { Beat } from "../story/cast";
 
 // ITIL のストーリー解説の台本。
 // 社内IT部のサービスデスクに配属された新人・森さんの1週間。
 // 火曜の「共有ディスクが満杯」という1つの出来事を、水曜（対策を入れる）・木曜（約束を見直す）・
 // 金曜（窓口を良くする）まで引き継ぎ、前の日の出来事が次の日の理由になるようにしている。
 // 用語は公式過去問（令和4〜8年度）で問われた言い方にそろえる。
-
-export type Who = "mori" | "takagi" | "user";
-
-export const CAST: Record<Who, { name: string; mark?: string; tone: string }> = {
-  mori: { name: "森さん（新人）", mark: "森", tone: "bg-brand-600 text-white" },
-  takagi: { name: "高木さん（先輩）", mark: "高", tone: "bg-gray-900 text-white" },
-  user: { name: "社員（利用者）", tone: "bg-gray-200 text-gray-600" },
-};
 
 export const WEEK = [
   { key: "mon", label: "月", short: "窓口", title: "サービスデスクに立つ" },
@@ -22,21 +13,6 @@ export const WEEK = [
   { key: "thu", label: "木", short: "約束", title: "SLAの約束を見直す" },
   { key: "fri", label: "金", short: "改善", title: "窓口を良くする" },
 ] as const;
-
-export type Beat = {
-  time?: string;
-  /** 話している人。省略すると地の文 */
-  who?: Who;
-  /** 話している人の表情（省略すると normal） */
-  mood?: Mood;
-  text?: string;
-  /** この行で出てくる用語（この行が最新のときだけカードで出す） */
-  term?: { name: string; def: string };
-  /** 共有ディスクの使用量（%）。この行まで進むとメーターが変わる */
-  gauge?: number;
-  /** 選ぶ場面。答えるまで「続き」は押せない */
-  ask?: { q: string; choices: Choice[]; then?: string; at?: number };
-};
 
 export const MONDAY: Beat[] = [
   {
@@ -89,7 +65,7 @@ export const TUESDAY: Beat[] = [
     who: "user",
     mood: "worried",
     text: "共有フォルダに保存できません！ 午後の会議の資料なのに…",
-    gauge: 100,
+    state: { disk: 100 },
   },
   {
     text: "同じ電話が次々に来ます。共有ディスクの使用量が上限に達していました。",
@@ -104,7 +80,7 @@ export const TUESDAY: Beat[] = [
       then: "10:40、空きができて保存できるようになりました。原因はまだ分かりませんが、仕事は再開できます。",
       at: 0,
     },
-    gauge: 88,
+    state: { disk: 88 },
     term: {
       name: "インシデント管理",
       def: "止まったサービスを、できるだけ早く元に戻す（回復させる）こと。原因を調べるより先に行う。",
@@ -139,7 +115,7 @@ export const WEDNESDAY: Beat[] = [
   {
     time: "水曜 9:00",
     text: "昨日の問題管理で決めた対策は2つ。ディスクを増やすことと、使用量を見張るツールを入れることです。",
-    gauge: 88,
+    state: { disk: 88 },
   },
   { who: "mori", mood: "surprised", text: "今すぐ本番に入れちゃいましょう！" },
   {
@@ -160,7 +136,7 @@ export const WEDNESDAY: Beat[] = [
   {
     time: "22:00",
     text: "社員が少ない夜に、承認された手順どおり、本番のサーバに入れました。",
-    gauge: 44,
+    state: { disk: 44 },
     term: {
       name: "リリース及び展開管理",
       def: "承認された変更を、実際に本番の環境へ入れる（実装する）こと。",
