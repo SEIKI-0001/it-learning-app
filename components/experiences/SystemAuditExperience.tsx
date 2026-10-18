@@ -4,56 +4,19 @@ import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { InlineIcon } from "@/components/ui/Pictogram";
+import { AuditFlow, AuditIndependence, AuditKinds, AuditQuiz, InternalControlElements, ItGovernance } from "./audit/AuditPanels";
 
 // ============================================================================
 // 「システム監査と内部統制」専用の体験。
-//   ① システム監査 = 第三者の目で客観的に確認（独立性）
-//   ② 内部統制 = 仕組みをON/OFFして、不正な申請が防げるか実験する
-//   ③ 監査人としてOK?NG? 仕分けクイズ（独立性・役割の理解）
+//   ① 監査人の独立性（外観上・精神上。社内の独立部門でもよい）
+//   ② 監査の4種類（会計・業務・情報セキュリティ・システム）
+//   ③ 監査の流れと監査人の役割（指示はしない・フォローアップする）
+//   ④ 内部統制ラボ：仕組みをON/OFFして、不正な申請が防げるか実験する
+//   ⑤ 内部統制の6要素と組織間のけん制
+//   ⑥ ITガバナンス（評価・指示・モニター、ルールを決める側）
+//   ⑦ 過去問の論点で 正しい？ダメ？
+//   ①〜③・⑤〜⑦は audit/AuditPanels
 // ============================================================================
-
-function WhatIsAudit() {
-  const [self, setSelf] = useState(false);
-  return (
-    <Panel>
-      <SectionTitle step={1}>監査は「第三者の目」で見る</SectionTitle>
-      <p className="mt-2 text-sm leading-relaxed text-gray-600">
-        システム監査は、システムが<b className="text-gray-800">ルール通り安全・有効に使われているか</b>を、
-        利害のない立場の人が<b className="text-gray-800">客観的に確認</b>する活動です。
-      </p>
-
-      <div className="mt-4 rounded-xl bg-gray-50 p-4 ring-1 ring-gray-200">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-gray-700">だれが採点する？</span>
-          <button
-            onClick={() => setSelf((s) => !s)}
-            className="rounded-lg bg-brand-600 px-3 py-1 text-xs font-bold text-white active:scale-95"
-          >
-            切り替え
-          </button>
-        </div>
-        <div className="mt-3 text-center">
-          {self ? (
-            <div>
-              <div className="flex justify-center gap-1 text-rose-600"><Icon name="user" className="h-8 w-8" /><Icon name="pen" className="h-8 w-8" /></div>
-              <div className="mt-1 text-sm font-bold text-rose-600">自分で自分を採点</div>
-              <p className="mt-1 text-xs text-gray-500">甘くなりがち。見落としや隠ぺいも起きうる…</p>
-            </div>
-          ) : (
-            <div>
-              <div className="flex justify-center gap-1 text-emerald-600"><Icon name="user" className="h-8 w-8" /><Icon name="search" className="h-8 w-8" /></div>
-              <div className="mt-1 text-sm font-bold text-emerald-600">独立した第三者が確認</div>
-              <p className="mt-1 text-xs text-gray-500">利害がないから客観的。これが監査の姿。</p>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
-        <InlineIcon name="lightbulb" />監査でいちばん大切なのが<b>独立性</b>。対象から離れた立場でないと、客観的に判断できません。
-      </div>
-    </Panel>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // ② 内部統制ラボ: 仕組みをON/OFFすると、不正な経費申請の結末が変わる
@@ -99,7 +62,7 @@ function ControlLab() {
 
   return (
     <Panel>
-      <SectionTitle step={2}>内部統制ラボ：不正を防げるか実験</SectionTitle>
+      <SectionTitle step={4}>内部統制ラボ：不正を防げるか実験</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         <b className="text-gray-800">内部統制</b>＝ミスや不正を防ぐ社内の仕組み。
         シナリオは「<b className="text-gray-800">社員が架空の経費を申請して、自分で承認しようとする</b>」。
@@ -180,80 +143,21 @@ function ControlLab() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// ③ 仕分けクイズ
-// ---------------------------------------------------------------------------
-const ITEMS: { t: string; ok: boolean; why: string }[] = [
-  { t: "監査人は対象部門から独立した立場で確認する", ok: true, why: "独立性が監査の基本。" },
-  { t: "監査人が見つけた問題は改善を勧告する", ok: true, why: "監査は気づきを伝え改善を促す（助言する）役割。" },
-  { t: "監査人が自分でシステムの修理・改修を担当する", ok: false, why: "実務を担うと独立性が崩れる。監査人は確認・勧告まで。" },
-  { t: "監査される部門が、自分で都合よく結果を決める", ok: false, why: "自己採点では客観性がない。第三者が確認すべき。" },
-];
-
-function Quiz() {
-  const [answers, setAnswers] = useState<Record<number, boolean>>({});
-  return (
-    <Panel>
-      <SectionTitle step={3}>監査として正しい？</SectionTitle>
-      <ul className="mt-3 space-y-2.5">
-        {ITEMS.map((it, i) => {
-          const chosen = answers[i];
-          const has = chosen !== undefined;
-          const correct = chosen === it.ok;
-          return (
-            <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <p className="text-sm font-bold text-gray-800">{it.t}</p>
-              <div className="mt-2 flex gap-1.5">
-                {[
-                  { v: true, label: "正しい" },
-                  { v: false, label: "ダメ" },
-                ].map((o) => {
-                  const picked = chosen === o.v;
-                  const tone = !has
-                    ? "text-gray-600 ring-1 ring-gray-300"
-                    : picked
-                      ? o.v === it.ok
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                      : o.v === it.ok
-                        ? "ring-2 ring-emerald-400 text-emerald-700"
-                        : "text-gray-400 ring-1 ring-gray-200";
-                  return (
-                    <button
-                      key={String(o.v)}
-                      onClick={() => setAnswers((p) => ({ ...p, [i]: o.v }))}
-                      className={`flex-1 rounded-lg px-2 py-1.5 text-sm font-bold transition active:scale-95 ${tone}`}
-                    >
-                      {o.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {has && (
-                <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "正解！ " : "残念。 "}
-                  {it.why}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </Panel>
-  );
-}
-
 export default function SystemAuditExperience() {
   return (
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
-        <b>システム監査</b>は、システムが正しく安全に使われているかを<b>独立した第三者</b>が客観的に確認する活動。
-        <b>内部統制</b>は、ミスや不正を防ぐ社内の仕組みです。テストを先生が採点基準で確認するイメージ。
+        <b>システム監査</b>は、システムが正しく安全に使われているかを、対象から<b>独立した監査人</b>が客観的に評価する活動。
+        <b>内部統制</b>はミスや不正を防ぐ社内の仕組み、<b>ITガバナンス</b>は経営陣がITを方向づける取組みです。
       </div>
 
-      <WhatIsAudit />
+      <AuditIndependence step={1} />
+      <AuditKinds step={2} />
+      <AuditFlow step={3} />
       <ControlLab />
-      <Quiz />
+      <InternalControlElements step={5} />
+      <ItGovernance step={6} />
+      <AuditQuiz step={7} />
     </div>
   );
 }
