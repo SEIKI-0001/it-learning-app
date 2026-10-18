@@ -9,13 +9,18 @@ import { MobileScene } from "./wireless/MobileScene";
 import type { MobileMode } from "./wireless/mobileStory";
 import { WifiScene } from "./wireless/WifiScene";
 import type { WifiMode, WifiPhase } from "./wireless/wifiStory";
+import { MobileRadio, ShortRange, WifiSettings } from "./wireless/WirelessPanels";
 
 // ============================================================================
 // 「無線LAN・モバイル通信」専用の体験。
 //   ① 無線LAN：SSID＝電波の名前。駅前カフェ2階の3D模型で、ノートPCの電波がガラスも越えて店の外の盗聴者にも届く様子を見せ、
 //      暗号化なし（ID/PASSが読める）／WPA2・WPA3（受信はされるが読めない）／有線（比較）を切り替えて比べる。
-//   ② モバイル通信：街角の3D模型で 5G / テザリング / MVNO のデータの通り道を切り替えて見る。
+//   ② 無線LANを守る設定の見分け方（WPA2・PSK・ESSIDステルス・MACアドレスフィルタリング・ゲストSSID）
 //   ③ フリーWi-Fiの安全/危険 仕分けクイズ。
+//   ④ モバイル通信：街角の3D模型で 5G / テザリング / MVNO のデータの通り道を切り替えて見る。
+//   ⑤ 近距離・省電力の通信（NFC・BLE・LPWA）と準天頂衛星
+//   ⑥ プラチナバンドと、問題文の言い回し→用語
+//   ②⑤⑥は過去問の出題に合わせた静的な図（wireless/WirelessPanels）
 // ============================================================================
 
 const WIFI_STEPS: { phase: WifiPhase; title: string }[] = [
@@ -106,7 +111,7 @@ function MobileTerms() {
   const [mode, setMode] = useState<MobileMode>("5g");
   return (
     <Panel>
-      <SectionTitle step={2}>モバイル通信を街の模型で見る</SectionTitle>
+      <SectionTitle step={4}>モバイル通信を街の模型で見る</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         スマホの電波は、街のビルの屋上にある<b className="text-gray-800">基地局</b>へ飛びます。ボタンを切り替えて、データの通り道を比べよう。
       </p>
@@ -208,13 +213,16 @@ export default function WirelessMobileExperience() {
   return (
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
-        無線LANは電波が飛ぶぶん<b>暗号化が大切</b>。モバイルは<b>5G・テザリング・MVNO</b>の
-        意味をセットで覚えましょう。
+        無線LANは電波が飛ぶぶん<b>暗号化が大切</b>。試験では、無線LANを守る設定の違いと、
+        <b>BLE・LPWA・NFC</b>など用途別の無線通信がよく問われます。
       </div>
 
       <WifiFlow />
-      <MobileTerms />
+      <WifiSettings step={2} />
       <WifiQuiz />
+      <MobileTerms />
+      <ShortRange step={5} />
+      <MobileRadio step={6} />
     </div>
   );
 }
