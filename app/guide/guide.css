@@ -870,3 +870,18 @@
 .guide .k-recap {
   margin-top: 40px;
 }
+/* 図解と同じ内容の文章版は畳んでおく（kaisetsu の k-recap 内） */
+.guide .k-more {
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.guide .k-more > summary {
+  cursor: pointer;
+  padding: 12px 16px;
+  font-weight: 700;
+  color: var(--ai);
+}
+.guide .k-more-body {
+  padding: 0 16px 8px;
+}
