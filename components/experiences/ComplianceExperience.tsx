@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Panel, SectionTitle } from "./ui";
+import { ContractsAndAi, LawCases, LawQuiz } from "./compliance/CompliancePanels";
 import { InlineIcon } from "@/components/ui/Pictogram";
 import Icon, { type IconName } from "@/components/ui/Icon";
 
@@ -9,7 +10,10 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 // 「法務とコンプライアンス」専用の体験。
 //   ① 3つの盾を破ってみる … 法律・社内ルール・倫理の盾が「会社の信用」を守る図。
 //      タップで盾が割れ、事件例が出て信用ゲージが下がる（法律だけ守ってもダメ）
-//   ② 行動がコンプライアンス的にOK/NGかを判定するクイズ
+//   ② 事例でつかむ法律（景品表示法・特定電子メール法・資金決済法・AML・情報公開法・官民データ活用推進基本法）
+//   ③ 契約・社内ルール（NDA・ソーシャルメディアポリシー）と、AIを使うときの注意
+//   ④ この行為・仕組みはどの法律？クイズ
+//   ②〜④は過去問の出題に合わせた図（compliance/CompliancePanels）
 // ============================================================================
 
 type Ring = "law" | "rule" | "ethics";
@@ -133,76 +137,18 @@ function ShieldDemo() {
   );
 }
 
-const ITEMS: { t: string; ok: boolean; why: string }[] = [
-  { t: "仕事で知った顧客の住所を友だちに教える", ok: false, why: "個人情報の漏えい。法律にも社内ルールにも反する。" },
-  { t: "ネットの画像を出典も確認せず広告に使う", ok: false, why: "著作権の侵害になりうる。許可や確認が必要。" },
-  { t: "社内ルールに従って情報を適切に管理する", ok: true, why: "ルールを守る＝コンプライアンスの基本。" },
-  { t: "ミスを隠さず正直に報告する", ok: true, why: "正直さ・誠実さ（倫理）もコンプライアンスに含まれる。" },
-];
-
-function Quiz() {
-  const [answers, setAnswers] = useState<Record<number, boolean>>({});
-  return (
-    <Panel>
-      <SectionTitle step={2}>この行動、コンプライアンス的にOK？</SectionTitle>
-      <ul className="mt-3 space-y-2.5">
-        {ITEMS.map((it, i) => {
-          const chosen = answers[i];
-          const answered = chosen !== undefined;
-          const correct = chosen === it.ok;
-          return (
-            <li key={i} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
-              <p className="text-sm font-bold text-gray-800">{it.t}</p>
-              <div className="mt-2 flex gap-2">
-                {[
-                  { v: true, label: "OK" },
-                  { v: false, label: "NG" },
-                ].map((opt) => {
-                  const picked = chosen === opt.v;
-                  const tone = !answered
-                    ? "text-gray-600 ring-1 ring-gray-300"
-                    : picked
-                      ? opt.v === it.ok
-                        ? "bg-emerald-500 text-white"
-                        : "bg-rose-500 text-white"
-                      : opt.v === it.ok
-                        ? "ring-2 ring-emerald-400 text-emerald-700"
-                        : "text-gray-400 ring-1 ring-gray-200";
-                  return (
-                    <button
-                      key={String(opt.v)}
-                      onClick={() => setAnswers((p) => ({ ...p, [i]: opt.v }))}
-                      className={`flex-1 rounded-lg px-2 py-1.5 text-sm font-bold transition active:scale-95 ${tone}`}
-                    >
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {answered && (
-                <p className={`mt-2 text-xs font-medium ${correct ? "text-emerald-700" : "text-rose-600"}`}>
-                  {correct ? "正解！ " : "残念。 "}
-                  {it.why}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ul>
-    </Panel>
-  );
-}
-
 export default function ComplianceExperience() {
   return (
     <div className="space-y-5">
       <div className="border-l-[3px] border-gray-900 py-0.5 pl-4 text-[15px] leading-[1.8] text-gray-700 [&_b]:font-bold [&_b]:text-gray-900">
         <b>コンプライアンス</b>は、<b>法律・社内ルール・社会の約束</b>を守ること。
-        ITでは個人情報・著作権・不正アクセスなど、情報の扱いがよく問われます。
+        試験では「この事例はどの法律で問題になるか」が問われるので、法律ごとに<b>典型的な事例</b>で覚えます。
       </div>
 
       <ShieldDemo />
-      <Quiz />
+      <LawCases step={2} />
+      <ContractsAndAi step={3} />
+      <LawQuiz step={4} />
     </div>
   );
 }
