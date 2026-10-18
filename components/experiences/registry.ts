@@ -42,7 +42,7 @@ import BreakEvenExperience from "./BreakEvenExperience";
 import SwotExperience from "./SwotExperience";
 import ThreeCExperience from "./ThreeCExperience";
 import FourPExperience from "./FourPExperience";
-import IntellectualPropertyExperience from "./IntellectualPropertyExperience";
+import IpStoryExperience from "./ip/IpStoryExperience";
 import BcpExperience from "./BcpExperience";
 import EnterpriseActivitiesExperience from "./EnterpriseActivitiesExperience";
 import ComplianceExperience from "./ComplianceExperience";
@@ -151,7 +151,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "strat-swot": SwotExperience,
   "strat-3c": ThreeCExperience,
   "strat-marketing-4p": FourPExperience,
-  "strat-intellectual-property": IntellectualPropertyExperience,
+  "strat-intellectual-property": IpStoryExperience,
   "strat-bcp": BcpExperience,
   "strat-enterprise-activities": EnterpriseActivitiesExperience,
   "strat-legal-compliance": ComplianceExperience,
