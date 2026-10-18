@@ -1,0 +1,67 @@
+"use client";
+
+// 確認用ページの外枠（テスト環境専用）。最初の描画でサンプルデータを書き、画面を切り替えるバーを出す。
+
+import { useState, type ReactNode } from "react";
+import Link from "next/link";
+import { seedPreviewData } from "./seed";
+
+export const PREVIEW_SCREENS = [
+  { id: "today", label: "今日" },
+  { id: "learn", label: "学ぶ" },
+  { id: "review", label: "復習" },
+  { id: "progress", label: "進捗" },
+  { id: "more", label: "その他" },
+  { id: "plan", label: "ロードマップ" },
+  { id: "glossary", label: "単語帳" },
+  { id: "badges", label: "CP条件" },
+  { id: "report", label: "週間レポート" },
+  { id: "settings", label: "設定" },
+] as const;
+
+export default function PreviewShell({ screen, children }: { screen: string; children: ReactNode }) {
+  // 子ページの effect が localStorage を読む前に書き込む。
+  useState(() => {
+    if (typeof window !== "undefined") seedPreviewData();
+    return true;
+  });
+  return (
+    <>
+      <nav
+        aria-label="確認用の画面切り替え"
+        style={{
+          position: "fixed",
+          top: 8,
+          right: 8,
+          zIndex: 60,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 2,
+          maxWidth: "min(560px, calc(100vw - 16px))",
+          padding: 4,
+          borderRadius: 10,
+          background: "rgba(17,17,17,0.85)",
+          fontSize: 11,
+        }}
+      >
+        {PREVIEW_SCREENS.map((s) => (
+          <Link
+            key={s.id}
+            href={`/lp/preview/${s.id}`}
+            style={{
+              padding: "3px 7px",
+              borderRadius: 7,
+              background: s.id === screen ? "#fff" : "transparent",
+              color: s.id === screen ? "#111" : "#fff",
+              textDecoration: "none",
+              fontWeight: 600,
+            }}
+          >
+            {s.label}
+          </Link>
+        ))}
+      </nav>
+      {children}
+    </>
+  );
+}
