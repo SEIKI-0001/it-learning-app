@@ -82,7 +82,7 @@ describe("probability and statistics block in the data utilization experience (r
   it("⑨ four staged questions return the idea that went wrong", () => {
     reduceMotion();
     const { container } = renderDeck();
-    click("解説9");
+    click("解説10");
 
     click("3/7");
     expect(failedChip(container)).toHaveTextContent("確率");

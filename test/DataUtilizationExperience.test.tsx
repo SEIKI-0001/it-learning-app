@@ -23,12 +23,24 @@ const toEnd = () => {
 };
 
 describe("DataUtilizationExperience", () => {
-  it("keeps the contrast slide (BI etc.) and the quiz", () => {
+  it("covers what past exams ask: analysis methods, big data terms, scales, the complement rule and deviation scores", () => {
     renderDeck();
+    expect(screen.getByText("1 / 10")).toBeInTheDocument();
     click("解説2");
-    expect(screen.getByText("BI")).toBeInTheDocument();
+    const methods = screen.getByTestId("du-methods");
+    expect(methods.querySelector('[data-term="A/Bテスト"]')).toHaveTextContent("並行");
+    expect(methods.querySelector('[data-term="主成分分析"]')).toHaveTextContent("少数の指標");
+    expect(screen.getByTestId("du-bubble")).toHaveTextContent("円の大きさ");
     click("解説3");
-    expect(screen.getByText("どっちが正しい使い方？")).toBeInTheDocument();
+    expect(screen.getByTestId("du-bigdata").querySelector('[data-term="3V"]')).toHaveTextContent(/大容量.*頻繁な更新.*多種多様/);
+    expect(screen.getByTestId("du-scales").querySelector('[data-scale="間隔尺度"]')).toHaveTextContent("時刻");
+    expect(screen.getByTestId("du-scales").querySelector('[data-scale="比例尺度"]')).toHaveTextContent("睡眠時間");
+    click("解説4");
+    expect(screen.getByTestId("st-complement")).toHaveTextContent(/25\/36.*11\/36/);
+    click("解説8");
+    const deviation = screen.getByTestId("du-deviation");
+    expect(deviation.querySelector('[data-subject="国語"]')).toHaveTextContent("61");
+    expect(deviation.querySelector('[data-subject="数学"]')).toHaveTextContent("70");
   });
 
   it("raw numbers move into a bar chart, 数学 is highlighted, an action is generated and 数学 rises next time", () => {
