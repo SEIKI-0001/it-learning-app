@@ -56,7 +56,7 @@ const TOPICS: [string, ComponentType, string[]][] = [
   ["strat-embedded-systems", EmbeddedControlExperience, ["embedded-loop", "embedded-io", "embedded-realtime"]],
   ["strat-system-planning-rfp", SystemPlanningRfpExperience, ["rfp-flow", "rfp-docs", "rfp-eval"]],
   ["mgmt-system-design", SystemDesignExperience, ["design-flow", "design-boundary", "design-sort"]],
-  ["mgmt-pmbok-basics", PmbokExperience, ["pmbok-axes", "pmbok-overlap", "pmbok-tailoring"]],
+  ["mgmt-pmbok-basics", PmbokExperience, ["pmbok-axes", "pmbok-overlap", "pmbok-is-project", "pmbok-docs", "pmbok-stakeholders", "pmbok-scope", "pmbok-change", "pmbok-tailoring"]],
   ["mgmt-project-resource", RaciExperience, ["raci-roles", "raci-table", "raci-bad", "raci-staffing"]],
   ["tech-system-processing-architecture", ProcessingArchitectureExperience, ["arch-timing", "arch-grid", "arch-modes", "arch-scene", "arch-scenes"]],
   ["tech-backup", BackupExperience, ["backup-take", "backup-restore", "backup-rpo", "backup-generations"]],
