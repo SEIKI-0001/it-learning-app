@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getTopicExperience } from "@/components/experiences/registry";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 import ItilStoryExperience from "@/components/experiences/itil/ItilStoryExperience";
-import { readMs } from "@/components/experiences/itil/StoryDay";
+import { readMs } from "@/components/experiences/story/StoryDay";
 import { FRIDAY_KPI, FRIDAY_TOOLS, MONDAY, THURSDAY, TUESDAY, WEDNESDAY } from "@/components/experiences/itil/week";
 
 afterEach(cleanup);
@@ -27,7 +27,7 @@ function renderDeck() {
 
 const slide = (n: number) => fireEvent.click(screen.getByRole("button", { name: `解説${n}` }));
 const activeSlide = () => document.querySelector<HTMLElement>('section[aria-hidden="false"]')!;
-const lines = () => activeSlide().querySelectorAll('[data-testid="itil-story"] > li:not([data-testid="itil-typing"])').length;
+const lines = () => activeSlide().querySelectorAll('[data-testid="story-story"] > li:not([data-testid="story-typing"])').length;
 
 describe("ITIL ストーリーの台本", () => {
   it("選ぶ場面は正解がちょうど1つ・誤答には理由がある", () => {
@@ -88,11 +88,11 @@ describe("ItilStoryExperience", () => {
     // 4行目（9:30 の選ぶ場面）で止まっている
     expect(lines()).toBe(4);
     expect(within(activeSlide()).getByText("選ぶと続きが始まります")).toBeInTheDocument();
-    const ask = within(activeSlide()).getByTestId("itil-ask");
+    const ask = within(activeSlide()).getByTestId("story-ask");
     fireEvent.click(within(ask).getByRole("button", { name: "経費精算システムが全社で開かない" }));
     advance(30000);
     expect(lines()).toBe(MONDAY.length);
-    expect(within(activeSlide()).getByTestId("itil-summary")).toHaveTextContent("サービスデスク");
+    expect(within(activeSlide()).getByTestId("story-summary")).toHaveTextContent("サービスデスク");
   });
 
   it("表示していない日は進まず、一時停止もできる", () => {
@@ -103,10 +103,10 @@ describe("ItilStoryExperience", () => {
     slide(4);
     expect(lines()).toBe(1);
 
-    fireEvent.click(within(activeSlide()).getByTestId("itil-pause"));
+    fireEvent.click(within(activeSlide()).getByTestId("story-pause"));
     advance(20000);
     expect(lines()).toBe(1);
-    fireEvent.click(within(activeSlide()).getByTestId("itil-pause"));
+    fireEvent.click(within(activeSlide()).getByTestId("story-pause"));
     advance(readMs(WEDNESDAY[0]) + 200);
     expect(lines()).toBe(2);
   });
@@ -117,7 +117,7 @@ describe("ItilStoryExperience", () => {
     advance(readMs(TUESDAY[0]) + readMs(TUESDAY[1]) + 400);
     expect(within(activeSlide()).getByTestId("itil-disk")).toHaveTextContent("100%");
     fireEvent.click(
-      within(within(activeSlide()).getByTestId("itil-ask")).getByRole("button", {
+      within(within(activeSlide()).getByTestId("story-ask")).getByRole("button", {
         name: "使っていない大きなファイルを、別の場所へ一時的に移す",
       }),
     );
