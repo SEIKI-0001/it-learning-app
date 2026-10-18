@@ -1,4 +1,5 @@
 import type { Choice } from "../calc/CalcParts";
+import type { Mood } from "./Faces";
 
 // ITIL のストーリー解説の台本。
 // 社内IT部のサービスデスクに配属された新人・森さんの1週間。
@@ -26,6 +27,8 @@ export type Beat = {
   time?: string;
   /** 話している人。省略すると地の文 */
   who?: Who;
+  /** 話している人の表情（省略すると normal） */
+  mood?: Mood;
   text?: string;
   /** この行で出てくる用語（この行が最新のときだけカードで出す） */
   term?: { name: string; def: string };
@@ -39,9 +42,10 @@ export const MONDAY: Beat[] = [
   {
     time: "月曜 9:00",
     who: "takagi",
+    mood: "smile",
     text: "ここがサービスデスク。システムが動き出したあと、社員からの問い合わせを受ける窓口だよ。",
   },
-  { who: "mori", text: "パスワードも、故障も、使い方の質問も、全部ここで受けるんですか？" },
+  { who: "mori", mood: "surprised", text: "パスワードも、故障も、使い方の質問も、全部ここで受けるんですか？" },
   {
     who: "takagi",
     text: "そう。窓口を1つにまとめて、社員がどこに聞けばいいか迷わないようにしているんだ。",
@@ -66,7 +70,7 @@ export const MONDAY: Beat[] = [
   {
     time: "10:00",
     who: "takagi",
-    text: "すぐに直せないときは、まず回避策を伝えよう。「今はスマホ版から申請できます」のようにね。",
+        text: "すぐに直せないときは、まず回避策を伝えよう。「今はスマホ版から申請できます」のようにね。",
   },
   {
     time: "17:00",
@@ -82,8 +86,13 @@ export const MONDAY: Beat[] = [
 export const TUESDAY: Beat[] = [
   {
     time: "火曜 10:00",
-    text: "「共有フォルダに保存できません！」という電話が次々に来ます。共有ディスクの使用量が上限に達していました。",
+    who: "user",
+    mood: "worried",
+    text: "共有フォルダに保存できません！ 午後の会議の資料なのに…",
     gauge: 100,
+  },
+  {
+    text: "同じ電話が次々に来ます。共有ディスクの使用量が上限に達していました。",
   },
   {
     ask: {
@@ -101,7 +110,7 @@ export const TUESDAY: Beat[] = [
       def: "止まったサービスを、できるだけ早く元に戻す（回復させる）こと。原因を調べるより先に行う。",
     },
   },
-  { time: "14:00", who: "mori", text: "でも、このままだと、また満杯になりますよね。" },
+  { time: "14:00", who: "mori", mood: "worried", text: "でも、このままだと、また満杯になりますよね。" },
   {
     who: "takagi",
     text: "そう。なぜ上限に達したのか、根本の原因を突き止めて、二度と起きない手を考えよう。",
@@ -117,6 +126,7 @@ export const TUESDAY: Beat[] = [
   {
     time: "17:00",
     who: "takagi",
+    mood: "smile",
     text: "使用量をいつでも見られるようにして、満杯になりそうな兆しを早めに知らせる仕組みに変えよう。",
     term: {
       name: "サービスマネジメントシステムの改善",
@@ -131,7 +141,7 @@ export const WEDNESDAY: Beat[] = [
     text: "昨日の問題管理で決めた対策は2つ。ディスクを増やすことと、使用量を見張るツールを入れることです。",
     gauge: 88,
   },
-  { who: "mori", text: "今すぐ本番に入れちゃいましょう！" },
+  { who: "mori", mood: "surprised", text: "今すぐ本番に入れちゃいましょう！" },
   {
     ask: {
       q: "高木さんは何と答えた？",
@@ -159,6 +169,7 @@ export const WEDNESDAY: Beat[] = [
   {
     time: "22:30",
     who: "takagi",
+    mood: "smile",
     text: "最後に台帳も直そう。ディスクの容量も、新しく入れたツールも、全部記録しておく。",
     term: {
       name: "構成管理",
@@ -217,10 +228,12 @@ export const FRIDAY_TOOLS: Beat[] = [
   {
     time: "金曜 9:00",
     who: "mori",
+    mood: "worried",
     text: "火曜は同じ問い合わせが何十件も来て、電話がつながりにくくなりました。",
   },
   {
     who: "takagi",
+    mood: "smile",
     text: "過去のインシデントとその答えを、FAQにまとめよう。最初に受けた窓口で答えられる問い合わせが増えるよ。",
     term: {
       name: "FAQ",
@@ -257,13 +270,14 @@ export const FRIDAY_KPI: Beat[] = [
   {
     time: "金曜 14:00",
     who: "takagi",
+    mood: "smile",
     text: "窓口が良くなったかは、数字で確かめる。その成績表の数字がKPIだよ。",
     term: {
       name: "KPI（重要業績評価指標）",
       def: "目標にどこまで近づいたかを測る数字。サービスデスクでは、待ち時間や解決できた割合などを使う。",
     },
   },
-  { who: "mori", text: "数字は大きいほど良いんですか？" },
+  { who: "mori", mood: "surprised", text: "数字は大きいほど良いんですか？" },
   {
     who: "takagi",
     text: "項目によって逆なんだ。社員の満足につながるのはどっちの向きか、考えてみて。",

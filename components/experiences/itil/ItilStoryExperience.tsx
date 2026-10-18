@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Panel, SectionTitle } from "../ui";
 import { Choices, placeAnswer, ThinkFirst, type Choice } from "../calc/CalcParts";
 import { StoryDay, WeekStrip } from "./StoryDay";
+import { Face } from "./Faces";
 import { FRIDAY_KPI, FRIDAY_TOOLS, MONDAY, THURSDAY, TUESDAY, WEDNESDAY, WEEK } from "./week";
 
 // 「ITIL」をストーリーで学ぶ体験。
@@ -47,6 +48,20 @@ function Intro() {
         </span>
         社内IT部のサービスデスクに配属された新人・<b className="text-gray-900">森さんの1週間</b>で、この順番を追いかけます。
         火曜に起きた1つの障害が、金曜まで続いていきます。
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2" data-testid="itil-cast">
+        {[
+          { who: "mori" as const, name: "森さん", role: "サービスデスクの新人" },
+          { who: "takagi" as const, name: "高木さん", role: "運用10年目の先輩" },
+        ].map((c) => (
+          <div key={c.who} className="flex items-center gap-2 rounded-xl bg-gray-50 px-2.5 py-2 ring-1 ring-gray-200">
+            <Face who={c.who} mood="smile" size={44} />
+            <div className="min-w-0">
+              <div className="text-[13px] font-bold text-gray-900">{c.name}</div>
+              <div className="text-[11px] text-gray-500">{c.role}</div>
+            </div>
+          </div>
+        ))}
       </div>
       <WeekStrip day={-1} />
       <ul className="mt-2 space-y-1 text-[12px] text-gray-600">

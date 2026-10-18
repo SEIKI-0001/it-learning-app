@@ -1,0 +1,39 @@
+/* ストーリー解説：新しい行がふわっと出る／「…」が弾む。視差を減らす設定では動かさない。 */
+.enter {
+  animation: storyEnter 360ms ease-out both;
+}
+
+.dot {
+  animation: storyDot 1s ease-in-out infinite;
+}
+
+@keyframes storyEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes storyDot {
+  0%,
+  60%,
+  100% {
+    transform: none;
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter,
+  .dot {
+    animation: none;
+  }
+}
