@@ -2,13 +2,17 @@
 
 import { Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
+import { ProjectBasics, ScopeAndChange } from "./mgmt/PmbokExamPanels";
 
 // 「PMBOKの基本」。二軸の整理が本質なので静的な図解。1枚に載せるのは1つの話だけ。
 //   ① 二軸の骨組み：横＝5つのプロセス群、縦＝代表的な知識エリア。交点の例を1つだけ示す
 //      （10×5の●表は試験で問われない細かさなので載せない）
 //   ② ライフサイクル（フェーズ＝時間の流れ）とプロセス群（各フェーズの中で回す活動）を分ける。設計フェーズを拡大して見せる
-//   ③ 知識体系であって手順書ではない（テーラリング）
-//   ④ 試験ポイント（②③で扱った誤解は繰り返さない）
+//   ③ プロジェクトとは（有期性・独自性）、プロジェクト憲章などの文書、ステークホルダ
+//   ④ スコープに入るもの・入らないもの、変更要求 → 変更管理委員会 → WBS更新 の流れ、終結時の教訓
+//      ③④は過去問の出題に合わせて足した図（mgmt/PmbokExamPanels）
+//   ⑤ 知識体系であって手順書ではない（テーラリング）
+//   ⑥ 試験ポイント（②〜⑤で扱った誤解は繰り返さない）
 
 export default function PmbokExperience() {
   return (
@@ -18,15 +22,21 @@ export default function PmbokExperience() {
       </Lead>
       <AxesPanel />
       <OverlapPanel />
+      <ProjectBasics step={3} />
+      <ScopeAndChange step={4} />
       <TailoringPanel />
       <PointsPanel
-        step={4}
+        step={6}
         points={[
           <>プロセス群（5つ）＝立上げ・計画・実行・<b>監視コントロール</b>・終結</>,
           <>知識エリア＝スコープ・コスト・リスクなど<b>管理する分野</b></>,
           <>プロセス群は一度きりの段階ではなく、<b>重なり・繰り返す</b></>,
         ]}
-        traps={[["スコープ管理・コスト管理はプロセス群", "それらは知識エリア（管理する分野）"]]}
+        traps={[
+          ["スコープ管理・コスト管理はプロセス群", "それらは知識エリア（管理する分野）"],
+          ["使うツールや顧客の要求文書もスコープ", "スコープは作る成果物とその作業"],
+          ["変更管理委員会はコスト増を理由に却下できない", "却下してよい。認可後にWBSを更新する"],
+        ]}
       />
     </div>
   );
@@ -194,7 +204,7 @@ function OverlapPanel() {
 function TailoringPanel() {
   return (
     <Panel>
-      <SectionTitle step={3}>手順書ではなく「知識の棚」</SectionTitle>
+      <SectionTitle step={5}>手順書ではなく「知識の棚」</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         PMBOKは全部をそのまま実行する手順書ではありません。案件に合わせて<b className="text-gray-800">必要なものを選んで調整</b>します（テーラリング）。
       </p>
