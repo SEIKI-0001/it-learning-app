@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AuthExperience from "@/components/experiences/AuthExperience";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
@@ -77,5 +77,52 @@ describe("AuthExperience", () => {
     renderDeck();
     click("解説2");
     expect(screen.getByText("どっち？（認証 or 認可）")).toBeInTheDocument();
+  });
+});
+
+describe("過去問の出題に合わせた4枚（解説4〜7）", () => {
+  it("sorts examples into knowledge / possession / biometrics and judges two-factor additions", () => {
+    renderDeck();
+    expect(screen.getByText("1 / 7")).toBeInTheDocument();
+    click("解説4");
+    const ex = screen.getByTestId("factor-examples");
+    expect(within(ex).getByText("スマホに届くSMSのコード").closest("li")).toHaveAttribute("data-factor", "所持");
+    expect(within(ex).getByText("筆跡・筆圧・キー入力のタイミング").closest("li")).toHaveAttribute("data-factor", "生体");
+    const two = screen.getByTestId("two-factor");
+    expect(within(two).getByText("秘密の質問に答える").closest("li")).toHaveAttribute("data-ok", "false");
+    expect(within(two).getByText("ICカードを読み取る").closest("li")).toHaveAttribute("data-ok", "true");
+  });
+
+  it("stricter matching lowers false acceptance but raises false rejection", () => {
+    renderDeck();
+    click("解説5");
+    const far = () => Number(screen.getByTestId("bio-far").getAttribute("data-value"));
+    const frr = () => Number(screen.getByTestId("bio-frr").getAttribute("data-value"));
+    click("厳しく照合");
+    expect(far()).toBeLessThan(frr());
+    expect(screen.getByTestId("bio-focus")).toHaveTextContent("安全性を重視");
+    click("ゆるく照合");
+    expect(far()).toBeGreaterThan(frr());
+    expect(screen.getByTestId("bio-focus")).toHaveTextContent("利便性を重視");
+    expect(screen.getByTestId("bio-rule")).toHaveTextContent("本人拒否率を低く抑える利便性を重視");
+  });
+
+  it("names risk-based and challenge-response authentication and their look-alikes", () => {
+    renderDeck();
+    click("解説6");
+    const terms = screen.getByTestId("auth-terms");
+    expect(terms.querySelector('[data-term="リスクベース認証"]')).toHaveTextContent("危険が高いときだけ");
+    expect(terms.querySelector('[data-term="CAPTCHA"]')).toHaveTextContent("バイオメトリクス認証ではない");
+    expect(screen.getByTestId("riskbased-not")).toHaveTextContent("アカウントロック");
+  });
+
+  it("checks with three choices per question", () => {
+    renderDeck();
+    click("解説7");
+    const quiz = screen.getByTestId("auth-quiz");
+    fireEvent.click(within(quiz).getByRole("button", { name: "利便性" }));
+    expect(quiz).toHaveTextContent("正解！");
+    fireEvent.click(within(quiz).getAllByRole("button", { name: "知識" })[0]);
+    expect(quiz).toHaveTextContent("正解は「所持」");
   });
 });

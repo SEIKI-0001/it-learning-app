@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Icon, { type IconName } from "@/components/ui/Icon";
 import { AuthFlow, PEOPLE, PLACES, type Where, type Who } from "./auth/AuthFlow";
+import { AuthQuiz, AuthTermsPanel, BiometricRatePanel, FactorSortPanel } from "./auth/AuthPanels";
 import styles from "./auth/auth.module.css";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
@@ -15,6 +16,8 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 //      本人確認に成功しても、権限のない画面の手前（認可）で止まる
 //   ② どっち？クイズ（認証／認可の仕分け）
 //   ③ 多要素認証 … 3要素（知識・所持・生体）から選ぶと錠の穴に入り、異なる2種以上で扉が開く
+//   ④〜⑦ 過去問の出題に合わせた4枚（auth/AuthPanels）：3要素の仕分けと二要素認証・
+//      他人受入率と本人拒否率・リスクベース認証などの言葉・どれ？
 // ============================================================================
 
 // ① 認証 → 認可 の順番 -----------------------------------------------------
@@ -288,6 +291,10 @@ export default function AuthExperience() {
       <Order />
       <Classifier />
       <Mfa />
+      <FactorSortPanel step={4} />
+      <BiometricRatePanel step={5} />
+      <AuthTermsPanel step={6} />
+      <AuthQuiz step={7} />
     </div>
   );
 }
