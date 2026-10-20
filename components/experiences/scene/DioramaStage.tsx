@@ -602,6 +602,7 @@ export function DioramaStage({
         className={`${styles.stage} ${className ?? ""}`}
         style={{ "--aspect": aspect, "--aspect-mobile": aspectMobile } as CSSProperties}
         data-testid={testId}
+        data-diorama-stage=""
         data-dragging={dragging ? "true" : "false"}
         data-reduced-motion={reducedMotion ? "true" : "false"}
         data-paused={visible ? "false" : "true"}
