@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 import ComplianceStoryExperience from "@/components/experiences/compliance/ComplianceStoryExperience";
 import { readMs } from "@/components/experiences/story/StoryDay";
+import { getTopicExperience } from "@/components/experiences/registry";
 import { AD, AI, GOV, MAIL, PARTNER, PAY } from "@/components/experiences/compliance/sale";
 
 afterEach(cleanup);
@@ -55,6 +56,7 @@ describe("ComplianceStoryExperience", () => {
   afterEach(() => vi.useRealTimers());
 
   it("大枠＋6場面＋ふりかえりの8枚・法務の石田さんが登場", () => {
+    expect(getTopicExperience("strat-legal-compliance")).toBe(ComplianceStoryExperience);
     render(
       <ExperienceSlideDeck>
         <ComplianceStoryExperience />
