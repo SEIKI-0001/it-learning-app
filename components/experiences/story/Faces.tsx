@@ -23,6 +23,8 @@ const LOOK: Record<Who, { bg: string; shirt: string; collar: string; hair: strin
   auditor: { bg: "#E3F1EA", shirt: "#2F7D62", collar: "#FFFFFF", hair: "#2B2522" },
   // 大川さん（弁理士）：ショートの髪、紫のジャケットに金のバッジ
   expert: { bg: "#EEE8F7", shirt: "#6D4C9F", collar: "#FFFFFF", hair: "#5B4A42" },
+  // 石田さん（法務）：七三分けの短髪、青緑のベストに胸ポケットのペン
+  legal: { bg: "#DFF1EF", shirt: "#0F766E", collar: "#FFFFFF", hair: "#2A211C" },
 };
 
 function Hair({ who, color }: { who: Who; color: string }) {
@@ -44,6 +46,13 @@ function Hair({ who, color }: { who: Who; color: string }) {
     return (
       <path
         d="M13.4 30.4 Q11.4 10.2 24 10 Q36.6 10.2 34.6 30.4 Q33.6 31.6 32.4 30.6 Q33 20.4 31 16.6 Q27.4 18.8 22.6 16.2 Q18.8 18.8 16.8 17.4 Q15 20.6 15.6 30.6 Q14.4 31.6 13.4 30.4 Z"
+        fill={color}
+      />
+    );
+  if (who === "legal")
+    return (
+      <path
+        d="M14.4 23.4 Q13.4 10.4 24 10.2 Q34.6 10.4 33.6 23.4 Q33.2 17.4 31.2 15.8 Q25.4 14.6 19.8 18.6 Q18.6 16.4 17 17.2 Q15 19 14.4 23.4 Z"
         fill={color}
       />
     );
@@ -154,6 +163,14 @@ export function Face({ who, mood = "normal", size = 40 }: { who: Who; mood?: Moo
             {/* イヤリング */}
             <circle cx={14.6} cy={26.6} r={0.9} fill="#E8B931" />
             <circle cx={33.4} cy={26.6} r={0.9} fill="#E8B931" />
+          </>
+        )}
+        {who === "legal" && (
+          // ベストの前合わせと胸ポケットのペン
+          <>
+            <path d="M19.4 36.8 L24 46 L18.2 41.4 Z M28.6 36.8 L24 46 L29.8 41.4 Z" fill="#0B5A54" />
+            <path d="M30.6 40.4 L30.6 44.6" stroke="#1F2937" strokeWidth={1} strokeLinecap="round" />
+            <path d="M29.2 43.6 L32.4 43.6" stroke="#0B5A54" strokeWidth={1.2} />
           </>
         )}
         {who === "auditor" && (

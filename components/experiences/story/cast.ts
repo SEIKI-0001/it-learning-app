@@ -4,7 +4,7 @@ import type { Choice } from "../calc/CalcParts";
 // どのトピックの話も同じ会社（社内IT部のある会社）の出来事にして、人物を使い回す。
 // 同じ人・同じ会社で通すと、トピックをまたいでも話がつながって覚えやすい。
 
-export type Who = "mori" | "takagi" | "user" | "boss" | "auditor" | "expert";
+export type Who = "mori" | "takagi" | "user" | "boss" | "auditor" | "expert" | "legal";
 
 export type Mood = "normal" | "smile" | "worried" | "surprised";
 
@@ -15,6 +15,7 @@ export const CAST: Record<Who, { name: string }> = {
   boss: { name: "社長" },
   auditor: { name: "宮本さん（内部監査室）" },
   expert: { name: "大川さん（弁理士）" },
+  legal: { name: "石田さん（法務）" },
 };
 
 /** 話と一緒に変わる表示（メーターや台帳）の値。キーごとに上書きしていく */
