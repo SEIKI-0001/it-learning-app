@@ -28,15 +28,66 @@ export type GuideArticle = {
 };
 
 export const GUIDE_INDEX = {
-  title: "ITパスポート学習ガイド｜勉強法・アプリ選び・計画・過去問の使い方",
+  title: "ITパスポートガイド｜資格比較・申し込み・勉強法・試験当日",
   h1: "ITパスポート学習ガイド",
   description:
-    "ITパスポート試験のアプリ選び、勉強法、合格率と合格基準、勉強時間の見積もり方、試験日から逆算する学習計画、勉強が続かないときの立て直し方、過去問の使い方、2027年度からの新試験の変更点をまとめたガイドです。",
+    "ITパスポートを取る意味、基本情報との違い、申し込み方法、試験当日の持ち物から、勉強法・勉強時間・計算問題・過去問対策まで。受験を迷っている人から直前の準備をする人まで、疑問別に読めるガイドです。",
   datePublished: "2026-09-26",
-  dateModified: "2026-10-17",
+  dateModified: "2026-10-20",
 } as const;
 
 export const GUIDES: GuideArticle[] = [
+  {
+    slug: "it-passport-worth",
+    title: "ITパスポートは意味ない？取得するメリットと役立つ場面",
+    h1: "ITパスポートは意味ない？取るべき人と優先度が低い人",
+    description: "ITパスポートが「意味ない」と言われる理由を、学べる知識と資格だけでは証明できない実務能力に分けて解説。学生・社会人・エンジニア志望別のメリット、就職や履歴書での伝え方、受験するか迷ったときの判断方法を紹介します。",
+    summary: "就職・仕事で何に役立つか。資格の強みと限界、目的別の受験判断。",
+    datePublished: "2026-10-20",
+    dateModified: "2026-10-20",
+    related: ["it-passport-vs-fe", "it-passport-study-method", "study-time"],
+  },
+  {
+    slug: "it-passport-vs-fe",
+    title: "ITパスポートと基本情報の違い｜どっちから受けるべき？",
+    h1: "ITパスポートと基本情報技術者の違いは？どっちを先に受けるか",
+    description: "ITパスポートと基本情報技術者試験の違いを、対象者・試験時間・問題形式・学習内容で比較。IT未経験者、非IT職、エンジニア志望別にどちらから受けるかを整理し、ITパスポートを飛ばす場合や合格後の学習の進め方も解説します。",
+    summary: "対象者・試験形式・学習内容を比較。未経験者とエンジニア志望の選び方。",
+    datePublished: "2026-10-20",
+    dateModified: "2026-10-20",
+    related: ["it-passport-worth", "it-passport-study-method", "past-exam-strategy"],
+  },
+  {
+    slug: "it-passport-application",
+    title: "ITパスポートの申し込み方法｜試験日・受験料・会場の選び方",
+    h1: "ITパスポートの申し込み方法は？試験日・受験料・会場選びを解説",
+    description: "ITパスポートの申し込みを、利用者ID登録から会場・試験日の選択、受験料7,500円の支払い、確認票の準備まで順番に解説。変更期限、空席がないときの探し方、2026年12月28日以降の試験休止予定も確認できます。",
+    summary: "申し込みの手順と受験料、変更期限。2026年末の試験休止予定にも注意。",
+    datePublished: "2026-10-20",
+    dateModified: "2026-10-20",
+    related: ["it-passport-exam-day", "study-plan", "exam-changes-2027"],
+  },
+  {
+    slug: "it-passport-calculation",
+    title: "ITパスポートの計算問題は捨てていい？公式と例題で解説",
+    h1: "ITパスポートの計算問題は捨てていい？覚えたい公式と解き方",
+    description: "ITパスポートの計算問題を全部捨てる前に、割合・損益分岐点・稼働率・通信時間・2進数の基本を確認。公式だけでなく途中式つきのオリジナル例題で解き方を解説し、苦手な人の学習順序と本番で後回しにする判断も紹介します。",
+    summary: "割合・損益分岐点・稼働率・通信時間・2進数を、途中式つきの例題で確認。",
+    datePublished: "2026-10-20",
+    dateModified: "2026-10-20",
+    related: ["past-exam-strategy", "pass-rate", "it-passport-exam-day"],
+  },
+  {
+    slug: "it-passport-exam-day",
+    title: "ITパスポート試験当日の持ち物と流れ｜到着時間・注意点",
+    h1: "ITパスポート試験当日の持ち物は？受付から試験終了までの流れ",
+    description: "ITパスポート試験当日に必要な本人確認書類・確認票の情報をチェックリストで整理。印刷できない場合、到着時間の考え方、時計・電卓の扱い、CBTの操作確認、120分の時間配分、試験結果の確認まで順番に解説します。",
+    summary: "本人確認書類と確認票の準備、会場での流れ、時計・電卓や時間配分の注意点。",
+    datePublished: "2026-10-20",
+    dateModified: "2026-10-20",
+    related: ["it-passport-application", "it-passport-calculation", "pass-rate"],
+  },
+
   {
     slug: "it-passport-app",
     title: "ITパスポートアプリの選び方｜無料範囲・解説・復習を確認",
@@ -56,7 +107,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "何から始めるか。全体像→理解→確認問題→過去問→苦手復習→本番形式の回し方。",
     datePublished: "2026-09-26",
     dateModified: "2026-09-26",
-    related: ["study-plan", "past-exam-strategy", "study-time"],
+    related: ["it-passport-vs-fe", "past-exam-strategy", "study-time"],
   },
   {
     slug: "pass-rate",
@@ -67,7 +118,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "年度別の合格率の推移、50%の読み方、分野別の足切り、落ちる人に多いパターン。",
     datePublished: "2026-10-17",
     dateModified: "2026-10-17",
-    related: ["past-exam-strategy", "study-time", "it-passport-study-method"],
+    related: ["it-passport-calculation", "it-passport-exam-day", "it-passport-worth"],
   },
   {
     slug: "study-time",
@@ -89,7 +140,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "試験まで30日・60日の配分例と、遅れたときの計画の引き直し方。",
     datePublished: "2026-09-26",
     dateModified: "2026-09-26",
-    related: ["study-time", "past-exam-strategy", "cant-continue-studying"],
+    related: ["it-passport-application", "past-exam-strategy", "cant-continue-studying"],
   },
   {
     slug: "cant-continue-studying",

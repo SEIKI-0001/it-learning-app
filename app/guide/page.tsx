@@ -13,7 +13,7 @@ export default function GuideIndexPage() {
       <h1>{GUIDE_INDEX.h1}</h1>
       <div className="g-lead">
         <p>
-          ITパスポート試験の勉強を「何から・どれだけ・どの順で」進めるかをまとめたガイドです。IT未経験の人が、参考書で止まらずに本番形式の問題まで進めることを目標にしています。
+          ITパスポートを取る意味、基本情報との違い、申し込み方法から、勉強法・計算問題・試験当日の準備まで。今の疑問に合わせて、必要な記事から読めるガイドです。
         </p>
       </div>
       <section className="g-related" aria-labelledby="guide-list">

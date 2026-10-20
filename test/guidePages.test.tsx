@@ -17,9 +17,21 @@ import * as PassRate from "@/app/guide/pass-rate/page";
 
 import * as AppSelection from "@/app/guide/it-passport-app/page";
 
+import * as Worth from "@/app/guide/it-passport-worth/page";
+import * as Comparison from "@/app/guide/it-passport-vs-fe/page";
+import * as Application from "@/app/guide/it-passport-application/page";
+import * as Calculation from "@/app/guide/it-passport-calculation/page";
+import * as ExamDay from "@/app/guide/it-passport-exam-day/page";
+
 type PageModule = { default: ComponentType; metadata: Metadata };
 
 const ARTICLES: Record<string, PageModule> = {
+  "it-passport-worth": Worth,
+  "it-passport-vs-fe": Comparison,
+  "it-passport-application": Application,
+  "it-passport-calculation": Calculation,
+  "it-passport-exam-day": ExamDay,
+
   "it-passport-app": AppSelection,
   "it-passport-study-method": StudyMethod,
   "study-time": StudyTime,
