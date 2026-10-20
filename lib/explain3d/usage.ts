@@ -5,7 +5,8 @@ import "server-only";
 
 import { getServiceSupabase } from "@/lib/supabaseServer";
 
-export type Explain3dEvent = "explain3d_answered" | "explain3d_error";
+// requested … AI を呼ぶ直前に1回（回数の上限はこれで数える）。answered / error は結果の計測用
+export type Explain3dEvent = "explain3d_requested" | "explain3d_answered" | "explain3d_error";
 
 /** 1ユーザーの1日あたりの上限。EXPLAIN3D_DAILY_LIMIT で上書きできる。 */
 export function getExplain3dDailyLimit(): number {
@@ -26,7 +27,10 @@ export async function logExplain3dEvent(entry: { userId: string; event: Explain3
   if (error) console.error("[explain3d] event log failed:", error.message);
 }
 
-/** since 以降に答えた回数。数えられないときは 0（機能を止めない）。 */
+/**
+ * since 以降に AI を呼んだ回数。断った質問（学習と無関係）・失敗した回も含めて数える。
+ * 数えられないときは 0（機能を止めない）。
+ */
 export async function countExplain3dSince(userId: string, since: Date): Promise<number> {
   const supabase = getServiceSupabase();
   if (!supabase) return 0;
@@ -34,7 +38,7 @@ export async function countExplain3dSince(userId: string, since: Date): Promise<
     .from("mochit_ai_events")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("event", "explain3d_answered")
+    .eq("event", "explain3d_requested")
     .gte("created_at", since.toISOString());
   if (error) {
     console.error("[explain3d] usage count failed:", error.message);
