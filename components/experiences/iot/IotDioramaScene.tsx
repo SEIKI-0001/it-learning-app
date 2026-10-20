@@ -152,7 +152,7 @@ export function IotDioramaScene({
         <>
           {phase === 0 && (
             <DioramaLabel at={up(AIRCON, 40)} place="above">
-              <DataTag tag="センサーで測る" body="室温 32℃" tone="danger" />
+              <DataTag tag="センサー＝測る" body="室温 32℃" tone="danger" />
             </DioramaLabel>
           )}
           {phase === 1 && !arrived && (
@@ -167,7 +167,8 @@ export function IotDioramaScene({
           )}
           {cooled && (
             <DioramaLabel at={up(AIRCON, 40)} place="above">
-              <NameChip name="エアコン" tone="ok" />
+              {/* 3D 版と同じく、センサーと対にして「動かす部品」を名指しする */}
+              <DataTag tag="アクチュエータ＝動かす" body="風を送る" tone="ok" />
             </DioramaLabel>
           )}
           {((phase === 1 && arrived) || phase === 2) && (

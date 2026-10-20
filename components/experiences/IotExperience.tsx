@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import type { IotPhase } from "./iot/IotDioramaScene";
+import { EdgePanel, IotNetworkPowerPanel, IotProtectPanel, IotSystemsPanel, IotTermsQuiz, SensorActuatorPanel } from "./iot/IotPanels";
 import { IotScene } from "./iot/IotScene";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { Panel, SectionTitle, StepNav } from "./ui";
@@ -11,8 +12,11 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 // 「IoT」専用の体験。
 //   ① IoTの一周（センサーで測る→ネットで送る→クラウドで判断→機器を制御）を、家とクラウドの3D模型でStep実演
 //      （WebGL2 の端末は Blender 製の動く3D、それ以外は 2.5D 模型。iot/IotScene）
-//   ② 活用例カード
-//   ③ 便利さの裏のセキュリティ（安全／あやしい 仕分けクイズ）
+//   ② センサーとアクチュエータ ③ エッジコンピューティング（iot/IotPanels）
+//   ④ 活用例カード
+//   ⑤ IoTを使った仕組みの言葉 ⑥ 通信と電源 ⑦ 耐タンパ性・セキュアブート（iot/IotPanels）
+//   ⑧ 便利さの裏のセキュリティ（安全／あやしい 仕分けクイズ）
+//   ⑨ どの言葉？
 // ============================================================================
 
 const STEPS: { caption: ReactNode; focus: "aircon" | "cloud" }[] = [
@@ -66,10 +70,10 @@ const USES: { icon: IconName; t: string; d: string }[] = [
   { icon: "heart-pulse", t: "健康", d: "腕時計が心拍を測り、データを記録・通知。" },
 ];
 
-function Uses() {
+function Uses({ step }: { step: number }) {
   return (
     <Panel>
-      <SectionTitle step={2}>身近な活用例</SectionTitle>
+      <SectionTitle step={step}>身近な活用例</SectionTitle>
       <div className="mt-3 grid grid-cols-2 gap-2.5">
         {USES.map((u) => (
           <div key={u.t} className="rounded-xl bg-gray-50 p-3 ring-1 ring-gray-200">
@@ -92,11 +96,11 @@ const ITEMS: { t: string; safe: boolean; why: string }[] = [
   { t: "ネットにつなげばセキュリティ対策は不要と考える", safe: false, why: "つながる機器ほど対策が必要。便利さと対策はセット。" },
 ];
 
-function SecurityQuiz() {
+function SecurityQuiz({ step }: { step: number }) {
   const [answers, setAnswers] = useState<Record<number, boolean>>({});
   return (
     <Panel>
-      <SectionTitle step={3}>便利さの裏のセキュリティ</SectionTitle>
+      <SectionTitle step={step}>便利さの裏のセキュリティ</SectionTitle>
       <p className="mt-2 text-sm leading-relaxed text-gray-600">
         IoTは便利だけど、ネットにつながる＝<b className="text-gray-800">狙われる入口が増える</b>こと。安全な行動はどっち？
       </p>
@@ -157,8 +161,14 @@ export default function IotExperience() {
       </div>
 
       <Loop />
-      <Uses />
-      <SecurityQuiz />
+      <SensorActuatorPanel step={2} />
+      <EdgePanel step={3} />
+      <Uses step={4} />
+      <IotSystemsPanel step={5} />
+      <IotNetworkPowerPanel step={6} />
+      <IotProtectPanel step={7} />
+      <SecurityQuiz step={8} />
+      <IotTermsQuiz step={9} />
     </div>
   );
 }
