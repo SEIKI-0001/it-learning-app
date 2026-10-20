@@ -59,6 +59,9 @@ export async function POST(request: Request) {
     return fail(429, "rate_limited", `3D模型の解説は1日${limit}回までです。続きはまた明日どうぞ。`);
   }
 
+  // AI を呼ぶ前に記録する。答えの後に記録すると、断られた質問・失敗・同時に送った分が上限に数えられない
+  await logExplain3dEvent({ userId, event: "explain3d_requested" });
+
   const topics = getAllTopics().map((t) => ({ id: t.id, title: t.title }));
   const system = buildExplainSystemPrompt({
     models: EXISTING_MODELS.map((m) => ({ ...m, title: topicTitle(m.topicId) })),

@@ -67,6 +67,21 @@ describe("POST /api/explain", () => {
     expect(data.result.relatedTopicId).toBe("tech-http-https");
   });
 
+  it("AI を呼ぶ前に回数を記録する（断った質問・失敗も上限に数える）", async () => {
+    mocks.generateExplainPlan.mockImplementation(async () => {
+      expect(mocks.logExplain3dEvent).toHaveBeenCalledWith(expect.objectContaining({ userId: "user-1", event: "explain3d_requested" }));
+      return { output: { mode: "off_topic" }, model: "m" };
+    });
+    expect((await POST(request({ question: "今日の晩ごはん" }))).status).toBe(400);
+    expect(mocks.generateExplainPlan).toHaveBeenCalledTimes(1);
+  });
+
+  it("上限に達していたら記録もしない", async () => {
+    mocks.countExplain3dSince.mockResolvedValue(10);
+    await POST(request({ question: "DNSの仕組み" }));
+    expect(mocks.logExplain3dEvent).not.toHaveBeenCalled();
+  });
+
   it("学習と無関係なら 400 off_topic", async () => {
     mocks.generateExplainPlan.mockResolvedValue({ output: { mode: "off_topic" }, model: "m" });
     const res = await POST(request({ question: "今日の晩ごはん" }));
