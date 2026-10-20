@@ -42,6 +42,12 @@ const GROUPS: readonly {
       { href: "/ai-grading", icon: "pen", title: "AI採点", description: "説明できる理解を試す" },
       { href: "/syllabus", icon: "list", title: "シラバス対応表", description: "学習範囲を確認" },
       {
+        href: "/explain",
+        icon: "layers",
+        title: "3D模型で解説（β）",
+        description: "知りたい仕組みを入力すると模型で見せる",
+      },
+      {
         href: "/netlab",
         icon: "server",
         title: "ネットワーク構築ラボ（β）",

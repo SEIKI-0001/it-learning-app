@@ -20,7 +20,7 @@ const noop = () => () => {};
 
 export function Scene3DLoading() {
   return (
-    <div className="grid aspect-[4/3] w-full place-items-center rounded-2xl bg-[#d9dde3] text-xs font-bold text-gray-500 sm:aspect-[16/11]" role="status">
+    <div className="grid aspect-[4/3] w-full place-items-center rounded-2xl bg-[#d9dde3] text-xs font-bold text-gray-500 sm:aspect-[16/11]" role="status" data-scene3d-loading="">
       3D模型を読み込み中…
     </div>
   );
