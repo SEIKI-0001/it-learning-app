@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AfterBuildPanel, AgileMethodsPanel, DevModelsPanel, DevOpsPanel, DevTermsQuiz } from "./devprocess/DevProcessPanels";
 import { Panel, SectionTitle } from "./ui";
 
 // ============================================================================
@@ -10,6 +11,8 @@ import { Panel, SectionTitle } from "./ui";
 //      （後で気づくほど、前工程の成果物までさかのぼって直す）
 //   ③ くらべて整理（ウォーターフォール／アジャイル）
 //   ④ これはどっち？ クイズ
+//   ⑤〜⑨ 過去問の出題に合わせて足した5枚（devprocess/DevProcessPanels）：
+//      開発モデル4つ・XPとスクラム・DevOps・リバースエンジニアリングとソフトウェア導入・どの言葉？
 // 旧「仕様変更シミュレータ」（2本の時間軸を再生して比べる）は、操作・再生しないと要点が見えなかったため廃止。
 // ============================================================================
 
@@ -215,6 +218,11 @@ export default function DevProcessExperience() {
       <ChangeRipple />
       <Compare />
       <Quiz />
+      <DevModelsPanel step={5} />
+      <AgileMethodsPanel step={6} />
+      <DevOpsPanel step={7} />
+      <AfterBuildPanel step={8} />
+      <DevTermsQuiz step={9} />
     </div>
   );
 }
