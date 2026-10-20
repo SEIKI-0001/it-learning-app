@@ -132,7 +132,7 @@ function ChoiceBeat({
       <div className="rounded-xl bg-brand-50 px-3 py-2.5 ring-1 ring-brand-200">
         <div className="flex items-start gap-2.5">
           <Face who="mori" mood={answered ? "normal" : "worried"} size={36} />
-          <p className="min-w-0 flex-1 text-[14px] font-bold leading-relaxed text-gray-900">
+          <p className="min-w-0 flex-1 whitespace-pre-line text-[14px] font-bold leading-relaxed text-gray-900">
             <span className="mr-1.5 rounded bg-brand-600 px-1.5 py-0.5 text-[10px] font-bold text-white">あなたなら</span>
             {ask.q}
           </p>
