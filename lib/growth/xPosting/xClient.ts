@@ -9,12 +9,18 @@ export function signOAuth(c: XCredentials, nonce = randomBytes(16).toString("hex
   params.oauth_signature = createHmac("sha1", `${encode(c.consumerSecret)}&${encode(c.accessSecret)}`).update(`${method}&${encode(endpoint)}&${encode(normalized)}`).digest("base64");
   return "OAuth " + Object.entries(params).sort(([a], [b]) => a.localeCompare(b)).map(([k,v]) => `${encode(k)}="${encode(v)}"`).join(", ");
 }
-export async function verifyXIdentity(account: string, creds: XCredentials, fetcher: typeof fetch = fetch): Promise<void> {
+/** Read-only credential check; never creates a Post or accesses AI/DB. */
+export async function readXIdentity(creds: XCredentials, fetcher: typeof fetch = fetch): Promise<{ id: string; username: string }> {
   const endpoint = "https://api.x.com/2/users/me";
-  const res = await fetcher(endpoint, { headers: { Authorization: signOAuth(creds, undefined, undefined, endpoint, "GET") }, signal: AbortSignal.timeout(15000), redirect: "error" });
-  if (!res.ok) throw new Error("x_identity_failed");
+  const res = await fetcher(endpoint, { method: "GET", headers: { Authorization: signOAuth(creds, undefined, undefined, endpoint, "GET") }, signal: AbortSignal.timeout(15000), redirect: "error" });
+  if (!res.ok) throw new Error(`x_identity_http_${res.status}`);
   const body = await res.json();
-  if (body?.data?.id !== account) throw new Error("x_identity_mismatch");
+  if (typeof body?.data?.id !== "string" || !/^\d{1,25}$/.test(body.data.id) || typeof body.data.username !== "string" || !/^[A-Za-z0-9_]{1,15}$/.test(body.data.username)) throw new Error("x_identity_invalid_response");
+  return { id: body.data.id, username: body.data.username };
+}
+export async function verifyXIdentity(account: string, creds: XCredentials, fetcher: typeof fetch = fetch): Promise<void> {
+  const identity = await readXIdentity(creds, fetcher);
+  if (identity.id !== account) throw new Error("x_identity_mismatch");
 }
 /** One request only. Any ambiguous result must remain blocked for human reconciliation. */
 export async function createXPost(text: string, creds: XCredentials, fetcher: typeof fetch = fetch): Promise<XResult> {

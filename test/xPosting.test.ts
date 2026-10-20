@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { resolveSlot, themeForSlot, buildPostUrl, contentKeys, similar, validateGenerated, compose, type Source } from "@/lib/growth/xPosting/core";
-import { createXPost, signOAuth, verifyXIdentity } from "@/lib/growth/xPosting/xClient";
+import { createXPost, signOAuth, verifyXIdentity, readXIdentity } from "@/lib/growth/xPosting/xClient";
 
 const source: Source = { id: "term-test", theme: "terms", text: "DNSはドメイン名とIPアドレスを対応付ける仕組みです。", evidence: "data/wordlist/itpassAcronyms.json", path: "/words", rights: "app_original" };
 const url = buildPostUrl("/words", "x-123", "https://example.test");
@@ -46,7 +46,7 @@ describe("direct X transport", () => {
     expect(h).not.toContain("secret2");
   });
   it("returns the created ID", async () => {
-    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { id: "123" } }), { status: 201 }));
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { id: "123", username: "itpassportsup" } }), { status: 201 }));
     expect(await createXPost("test", creds, fetcher)).toEqual({ state: "published", id: "123" });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
@@ -84,8 +84,27 @@ it("aborts a hanging X request after the timeout without resending", async () =>
 });
 
  it("verifies the user-context identity before posting", async () => {
-   const wrong = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { id: "999" } })));
+   const wrong = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { id: "999", username: "wronguser" } })));
    await expect(verifyXIdentity("123", creds, wrong)).rejects.toThrow("x_identity_mismatch");
-   const right = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { id: "123" } })));
+   const right = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: { id: "123", username: "itpassportsup" } })));
    await expect(verifyXIdentity("123", creds, right)).resolves.toBeUndefined();
  });
+
+describe("X credential preflight", () => {
+  it("returns only the authenticated public ID and username using GET", async () => {
+    const fetcher: typeof fetch = async (url, init) => {
+      expect(url).toBe("https://api.x.com/2/users/me");
+      expect(init?.method ?? "GET").toBe("GET");
+      expect(init?.body).toBeUndefined();
+      expect(init?.redirect).toBe("error");
+      return new Response(JSON.stringify({ data: { id: "868384833575067648", username: "itpassportsup", name: "Public display name" } }));
+    };
+    expect(await readXIdentity(creds, fetcher)).toEqual({ id: "868384833575067648", username: "itpassportsup" });
+  });
+  it.each([{ id: "", username: "itpassportsup" }, { id: "123", username: "invalid user" }, { id: 123, username: "itpassportsup" }, {}])("rejects malformed identity %j", async data => {
+    await expect(readXIdentity(creds, async () => new Response(JSON.stringify({ data })))).rejects.toThrow("x_identity_invalid_response");
+  });
+  it("reports a safe HTTP status without exposing response details", async () => {
+    await expect(readXIdentity(creds, async () => new Response("private details", { status: 401 }))).rejects.toThrow("x_identity_http_401");
+  });
+});

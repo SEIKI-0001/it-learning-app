@@ -91,9 +91,24 @@ supabase db push --linked
 表示された適用対象を確認する。未適用のbaselineや無関係なmigrationが出たら、そのままpushしない。
 本番では本番refへlinkし直し、同じ確認と適用を行う。baselineのDDLを既存本番へ再実行しない。
 `scripts/generate-supabase-schema.sh`は使い捨てDBを全active migrationsから作り直した場合だけ使う。
-GitHub登録済みSecretsは既存LINE用のみで、投稿用・AI用のSecretsとVariablesは未登録だった。
-今回の作業では本番/検証の接続先を認証済みCLIから確認できず、リモートDBへの適用は行っていない。
+初回実装時（2026-10-14）は投稿用Secrets未登録・リモートDB未適用だった。
+2026-10-18に運用者の承認を受け、本番fe-questへ投稿用migrationを適用し、サービスロールの専用Secretsを登録した。
+2026-10-21時点でXの4 SecretsとANTHROPIC_API_KEYの登録、XアプリのRead/Write権限とクレジット残高を確認した。
+投稿有効化は本人確認とDRY_RUNの結果を確認してから行う。
 投稿CLIは専用の`X_POST_SUPABASE_*`を必須にし、本番と検証を暗黙に混用しない。
+
+## X認証の事前確認
+
+XのRead/Writeトークンを作成後、4つのX Secretsを登録する。
+Actionsの手動実行で `verify_identity=true` を選ぶと、`dry_run` / `fixture` の値によらず、
+X本人確認GETだけを1回実行する。AI・DB・投稿POSTは呼ばず、アカウントIDとハンドルだけをログに出す。
+Xの読取API料金は発生する。想定ハンドル `itpassportsup` と異なる場合は失敗する。
+成功時の `accountId` をRepository Variable `X_POST_ACCOUNT_ID` に設定してからDRY_RUNへ進む。
+これは通常のDRY_RUNとは別の診断操作で、スケジュール起動には影響しない。
+
+```bash
+npm run x:post -- identity --username itpassportsup
+```
 
 ## DRY_RUN
 

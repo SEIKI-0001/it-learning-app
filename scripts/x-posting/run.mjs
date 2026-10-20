@@ -10,8 +10,8 @@ const { postingModel, generatePost } = await import("@/lib/growth/xPosting/gener
 const { monthlyUsage } = await import("@/lib/growth/xPosting/usage");
 const { SupabasePostStore } = await import("@/lib/growth/xPosting/store");
 const { fixtureStore } = await import("@/lib/growth/xPosting/fixtureStore");
-const { createXPost, verifyXIdentity } = await import("@/lib/growth/xPosting/xClient");
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" } } });
+const { createXPost, verifyXIdentity, readXIdentity } = await import("@/lib/growth/xPosting/xClient");
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" } } });
 const command = positionals[0] ?? "run";
 const env = process.env;
 const bool = (name, fallback = false) => {
@@ -21,10 +21,20 @@ const bool = (name, fallback = false) => {
   return value === "true";
 };
 const limit = (name, fallback, max) => { const n = Number(env[name] || fallback); if (!Number.isInteger(n) || n < 1 || n > max) throw new Error(`invalid_${name}`); return n; };
+const creds = () => {
+  const c = { consumerKey: env.X_API_KEY, consumerSecret: env.X_API_SECRET, accessToken: env.X_ACCESS_TOKEN, accessSecret: env.X_ACCESS_TOKEN_SECRET };
+  if (Object.values(c).some(v => !v?.trim())) throw new Error("x_credentials_missing");
+  return c;
+};
 let cleanup;
 try {
   const times = parseTimes((env.X_POST_TIMES_JST || "07:00").split(","));
-  if (command === "schedule") {
+  if (command === "identity") {
+    if (!values.username || !/^[A-Za-z0-9_]{1,15}$/.test(values.username)) throw new Error("identity_requires_username");
+    const identity = await readXIdentity(creds());
+    if (identity.username.toLowerCase() !== values.username.toLowerCase()) throw new Error("x_identity_mismatch");
+    console.log(JSON.stringify({ state: "verified", accountId: identity.id, username: identity.username }));
+  } else if (command === "schedule") {
     console.log(JSON.stringify(times.map(t => { const [h,m] = t.split(":").map(Number); return { cron: `${m} ${(h+15)%24} * * *`, jst: t }; }), null, 2));
   } else if (command === "run") {
     const enabled = bool("X_POST_ENABLED");
@@ -42,11 +52,6 @@ try {
       let store;
       if (values.fixture) { const f = await fixtureStore(values.output || "/private/tmp/it-learning-x-dry-run.json"); store=f.store; cleanup=f.close; }
       else { store = new SupabasePostStore(env.X_POST_SUPABASE_URL, env.X_POST_SUPABASE_SERVICE_ROLE_KEY); }
-      const creds = () => {
-        const c = { consumerKey: env.X_API_KEY, consumerSecret: env.X_API_SECRET, accessToken: env.X_ACCESS_TOKEN, accessSecret: env.X_ACCESS_TOKEN_SECRET };
-        if (Object.values(c).some(v => !v?.trim())) throw new Error("x_credentials_missing");
-        return c;
-      };
       const result = await runPosting(config, {
         store, sources: availableSources,
         generate: values.fixture ? async (sources, _history, theme, url) => ({ text: compose("知っていますか？", sources[0], url), theme, contentId: sources[0].id, destinationUrl: url, evidence: [sources[0].evidence], quality: { passed: true, reasons: ["explicit_offline_fixture"] } }) : generatePost,
