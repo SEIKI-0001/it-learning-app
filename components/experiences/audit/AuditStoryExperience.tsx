@@ -143,7 +143,7 @@ function DayPanel({ step, at, children }: { step: number; at: number; children: 
   );
 }
 
-const FLOW: { name: string; what: string; who: string }[] = [
+export const FLOW: { name: string; what: string; who: string }[] = [
   { name: "監査計画", what: "手続の種類・時期・範囲を決める", who: "監査人" },
   { name: "予備調査", what: "資料を集めて概要をつかむ", who: "監査人" },
   { name: "本調査", what: "閲覧・ヒアリング・監査技法で証拠を集める", who: "監査人" },
@@ -153,7 +153,7 @@ const FLOW: { name: string; what: string; who: string }[] = [
   { name: "フォローアップ", what: "改善の実施状況を確かめる", who: "監査人" },
 ];
 
-const SORT: { t: string; choices: Choice[] }[] = [
+export const SORT: { t: string; choices: Choice[] }[] = [
   {
     t: "社内で開発・運用している経理システムの内部監査。監査人にふさわしいのは？",
     choices: [
