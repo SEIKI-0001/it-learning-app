@@ -11,6 +11,7 @@ const { monthlyUsage } = await import("@/lib/growth/xPosting/usage");
 const { SupabasePostStore } = await import("@/lib/growth/xPosting/store");
 const { fixtureStore } = await import("@/lib/growth/xPosting/fixtureStore");
 const { createXPost, verifyXIdentity, readXIdentity } = await import("@/lib/growth/xPosting/xClient");
+const { checkPostingAi } = await import("@/lib/growth/xPosting/aiDiagnostics");
 const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" } } });
 const command = positionals[0] ?? "run";
 const env = process.env;
@@ -29,7 +30,9 @@ const creds = () => {
 let cleanup;
 try {
   const times = parseTimes((env.X_POST_TIMES_JST || "07:00").split(","));
-  if (command === "identity") {
+  if (command === "ai-check") {
+    console.log(JSON.stringify(await checkPostingAi(postingModel())));
+  } else if (command === "identity") {
     if (!values.username || !/^[A-Za-z0-9_]{1,15}$/.test(values.username)) throw new Error("identity_requires_username");
     const identity = await readXIdentity(creds());
     if (identity.username.toLowerCase() !== values.username.toLowerCase()) throw new Error("x_identity_mismatch");

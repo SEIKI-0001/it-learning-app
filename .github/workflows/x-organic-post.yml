@@ -8,6 +8,10 @@ on:
         description: Generate, validate and save without posting to X
         type: boolean
         default: true
+      verify_ai:
+        description: Check Anthropic authentication and model without generating text
+        type: boolean
+        default: false
       verify_identity:
         description: Read-only X credential check for @itpassportsup (no AI, DB or posting)
         type: boolean
@@ -50,12 +54,15 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Verify AI configuration without generating
+        if: github.event_name == 'workflow_dispatch' && inputs.verify_ai
+        run: npm run x:post -- ai-check
       - name: Verify X credentials without posting
-        if: github.event_name == 'workflow_dispatch' && inputs.verify_identity
+        if: github.event_name == 'workflow_dispatch' && inputs.verify_identity && !inputs.verify_ai
         run: npm run x:post -- identity --username itpassportsup
       - name: Offline fixture dry run
-        if: github.event_name == 'workflow_dispatch' && inputs.fixture && !inputs.verify_identity
+        if: github.event_name == 'workflow_dispatch' && inputs.fixture && !inputs.verify_identity && !inputs.verify_ai
         run: npm run x:post -- run --fixture --output "$RUNNER_TEMP/x-dry-run.json"
       - name: Generate and optionally publish
-        if: github.event_name != 'workflow_dispatch' || (!inputs.fixture && !inputs.verify_identity)
+        if: github.event_name != 'workflow_dispatch' || (!inputs.fixture && !inputs.verify_identity && !inputs.verify_ai)
         run: npm run x:post -- run

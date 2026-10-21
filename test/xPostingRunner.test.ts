@@ -69,3 +69,12 @@ describe("posting orchestrator", () => {
     expect(t.generate).toHaveBeenCalledTimes(1); expect(t.publish).toHaveBeenCalledTimes(1);
   });
 });
+
+it("persists only allowlisted AI diagnostics and suppresses arbitrary errors", async () => {
+  for (const [message, expected] of [["anthropic_credit_balance_low", "anthropic_credit_balance_low"], ["private-api-key", "content_generation_failed"]]) {
+    const store = { claim: async () => ({ id: "post", utm_content: "x-post", status: "draft" }), history: async () => [], prepare: async () => true, begin: async () => true, finish: async () => true, fail: vi.fn() };
+    const result = await runPosting({ enabled: false, dryRun: true, fixture: false, account: "123", origin: "https://example.test", slot: "2026-10-20T22:00:00Z", dailyLimit: 1, monthlyLimit: 31, model: "test" }, { store, sources: () => [{ id: "term", theme: "terms", text: "DNS", evidence: "test", path: "/words", rights: "app_original" }], generate: async () => { throw new Error(message); }, publish: async () => { throw new Error("must_not_publish"); }, verifyIdentity: async () => { throw new Error("must_not_read_x"); }, checkDestination: async () => {} });
+    expect(result).toMatchObject({ state: "failed", error: expected });
+    expect(store.fail).toHaveBeenCalledWith("post", expected);
+  }
+});

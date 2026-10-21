@@ -36,7 +36,8 @@ export async function runPosting(config: Config, deps: Dependencies): Promise<Ru
     await deps.verifyIdentity();
     phase = "destination_unavailable";
     if (generated.destinationUrl) await deps.checkDestination(generated.destinationUrl);
-  } catch {
+  } catch (error) {
+    if (phase === "content_generation_failed" && error instanceof Error && /^(anthropic_(not_configured|credit_balance_low|request_failed|http_[45]\d{2})|incomplete_ai_output)$/.test(error.message)) phase = error.message;
     await deps.store.fail(row.id, phase);
     return { state: "failed", id: row.id, error: phase };
   }

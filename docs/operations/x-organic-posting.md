@@ -97,6 +97,15 @@ supabase db push --linked
 投稿有効化は本人確認とDRY_RUNの結果を確認してから行う。
 投稿CLIは専用の`X_POST_SUPABASE_*`を必須にし、本番と検証を暗黙に混用しない。
 
+## AI認証・モデルの診断
+
+手動実行の `verify_ai=true` は他の入力より優先され、モデル情報取得とトークン数計算だけを実行する。
+文章生成・DB操作・X操作・生成枠の再取得は行わない。`npm run x:post -- ai-check` でも実行できる。
+API認証・モデル確認が成功しても、文章生成に使える残高までは保証しない。
+生成時のエラーは `anthropic_http_401` 等のHTTP状態タグ、`anthropic_credit_balance_low`、
+`anthropic_request_failed` で記録する。SDKのメッセージ・キー・レスポンス本文をログに出さない。
+生成に失敗した予定枠は取得済みのまま残し、自動で再生成しない。
+
 ## X認証の事前確認
 
 XのRead/Writeトークンを作成後、4つのX Secretsを登録する。
