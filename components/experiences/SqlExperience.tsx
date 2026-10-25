@@ -4,6 +4,7 @@ import { useState } from "react";
 import { SceneTimeline } from "./scene/SceneTimeline";
 import { useReducedMotion } from "./scene/useReducedMotion";
 import { useStepPlayer } from "./scene/useStepPlayer";
+import { KeyAndDbmsPanel, LikePanel, RelationalOpsPanel, SqlQuiz } from "./sql/SqlExamPanels";
 import { SQL_SCENARIOS, SqlStatement, SqlTable } from "./sql/SqlStage";
 import { Panel, SectionTitle } from "./ui";
 
@@ -14,6 +15,8 @@ import { Panel, SectionTitle } from "./ui";
 //                  SELECT=列がしぼむ／WHERE=行が抜けて詰まる／ORDER BY=行が並び替わる／組み合わせ
 //   ③ ミニSQL   … 列(SELECT)と条件(WHERE)を選ぶと、結果の表が変わる
 //   ④ おさらい  … 代表的な命令
+//   ⑤〜⑧ 過去問の出題に合わせた4枚（sql/SqlExamPanels）：部品と選択・射影・結合／主キーとDBMSの言葉／
+//      あいまい検索（% と _）／どれ？
 // 表計算より「欲しいデータを言葉で取り出す」感覚を、操作でつかむ。
 // ============================================================================
 
@@ -333,6 +336,11 @@ export default function SqlExperience() {
           ※ 行＝レコード（1件分）、列＝フィールド（項目）。試験ではSQLの書き方より、行を取り出す（選択）・列を取り出す（射影）といった表の操作の意味がよく問われます。
         </p>
       </Panel>
+
+      <RelationalOpsPanel step={5} />
+      <KeyAndDbmsPanel step={6} />
+      <LikePanel step={7} />
+      <SqlQuiz step={8} />
     </div>
   );
 }
