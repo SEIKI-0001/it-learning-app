@@ -45,7 +45,7 @@ import FourPExperience from "./FourPExperience";
 import IpStoryExperience from "./ip/IpStoryExperience";
 import BcpExperience from "./BcpExperience";
 import EnterpriseActivitiesExperience from "./EnterpriseActivitiesExperience";
-import ComplianceStoryExperience from "./compliance/ComplianceStoryExperience";
+import ComplianceMysteryExperience from "./compliance/ComplianceMysteryExperience";
 import PrivacyExperience from "./PrivacyExperience";
 import SecurityLawsExperience from "./SecurityLawsExperience";
 import SystemStrategyExperience from "./SystemStrategyExperience";
@@ -154,7 +154,7 @@ export const TOPIC_EXPERIENCES: Record<string, ComponentType> = {
   "strat-intellectual-property": IpStoryExperience,
   "strat-bcp": BcpExperience,
   "strat-enterprise-activities": EnterpriseActivitiesExperience,
-  "strat-legal-compliance": ComplianceStoryExperience,
+  "strat-legal-compliance": ComplianceMysteryExperience,
   "strat-privacy-law": PrivacyExperience,
   "strat-security-laws": SecurityLawsExperience,
   "strat-system-strategy": SystemStrategyExperience,
