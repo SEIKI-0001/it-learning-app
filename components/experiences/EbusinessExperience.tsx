@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { EbizQuiz, FintechTechPanel, FundingEscrowPanel, PricingAdsPanel } from "./ebiz/EbizExamPanels";
 import { KindLegend, type NodeKey, type TermKey } from "./ebiz/TradeFlowMap";
 import { TradeScene } from "./ebiz/TradeScene";
 import { useReducedMotion } from "./scene/useReducedMotion";
@@ -12,6 +13,7 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 //   ① 取引マップ … 用語をタップ→街の模型（Blender製の動く3D／使えない端末は2.5D）で「誰と誰の間で・何が流れるか」を①②③の順に運ぶ
 //      （モノ・お金・情報を色分け。フィンテックはスマホ、シェアリングは仲介サービスを経由）
 //   ② 「これはどれ？」仕分けクイズ
+//   ③〜⑥ 過去問で問われる周辺の言葉（クラウドファンディング・エスクロー・フリーミアム・オープンAPI・ブロックチェーン等。ebiz/EbizExamPanels）
 // ============================================================================
 
 type Term = {
@@ -205,6 +207,10 @@ export default function EbusinessExperience() {
 
       <TradeMap />
       <Quiz />
+      <FundingEscrowPanel step={3} />
+      <PricingAdsPanel step={4} />
+      <FintechTechPanel step={5} />
+      <EbizQuiz step={6} />
     </div>
   );
 }
