@@ -33,10 +33,61 @@ export const GUIDE_INDEX = {
   description:
     "ITパスポートを取る意味、基本情報との違い、申し込み方法、試験当日の持ち物から、勉強法・勉強時間・計算問題・過去問対策まで。受験を迷っている人から直前の準備をする人まで、疑問別に読めるガイドです。",
   datePublished: "2026-09-26",
-  dateModified: "2026-10-20",
+  dateModified: "2026-10-25",
 } as const;
 
 export const GUIDES: GuideArticle[] = [
+  {
+    slug: "it-passport-one-week",
+    title: "ITパスポートは1週間で間に合う？直前7日間の勉強法と一夜漬けの注意点",
+    h1: "ITパスポートは1週間で間に合う？直前7日間の勉強法と一夜漬けの注意点",
+    description: "ITパスポートの試験まであと1週間。初学者と復習段階の人を分け、残り7日間で優先する内容を日別に整理します。過去問での現在地の確認、苦手分野の復習、時間配分、前日の準備、一夜漬けを避けるための判断まで解説します。",
+    summary: "あと7日で何をするか。現在地別の優先順位と、直前1週間の具体的な配分例。",
+    datePublished: "2026-10-25",
+    dateModified: "2026-10-25",
+    related: ["study-time", "it-passport-calculation", "it-passport-exam-day"],
+  },
+  {
+    slug: "it-passport-retake",
+    title: "ITパスポートに落ちたら？再受験前に確認する点数と勉強法",
+    h1: "ITパスポートに落ちたら？再受験前に確認する点数と勉強法",
+    description: "ITパスポートに落ちた後、何からやり直すかを解説。総合評価点と分野別評価点の読み方、点数パターン別の復習方針、再受験日を決める手順、問題の丸暗記を避ける復習メモの作り方をまとめます。",
+    summary: "不合格後の立て直し。評価点の見方と、原因別に変える再受験の準備。",
+    datePublished: "2026-10-25",
+    dateModified: "2026-10-25",
+    related: ["pass-rate", "it-passport-one-week", "it-passport-application"],
+  },
+  {
+    slug: "it-passport-acronyms",
+    title: "ITパスポートの英略語が覚えられない？意味とセットで覚える勉強法",
+    h1: "ITパスポートの英略語が覚えられない？意味とセットで覚える勉強法",
+    description: "ITパスポートの英略語・アルファベット用語が覚えられない人向けに、正式名称・日本語の意味・具体例を結び付ける覚え方を解説。KPIとKGI、CRMとSCM、SaaS・PaaS・IaaSなどの違いを表と確認問題で整理します。",
+    summary: "アルファベットの丸暗記を減らす。似た略語の比較表と、短い確認問題つき。",
+    datePublished: "2026-10-25",
+    dateModified: "2026-10-25",
+    related: ["it-passport-study-method", "it-passport-one-week", "it-passport-retake"],
+  },
+  {
+    slug: "it-passport-pseudocode",
+    title: "ITパスポートの擬似言語・アルゴリズム問題の解き方｜例題でトレース",
+    h1: "ITパスポートの擬似言語・アルゴリズム問題の解き方｜例題でトレース",
+    description: "ITパスポートの擬似言語やプログラミング問題が苦手な人向けに、代入・条件分岐・繰返しを解説。オリジナル例題と変数の追跡表で、トレースの手順、whileの終了条件、配列の添字の注意点を確認できます。",
+    summary: "代入・if・whileを、オリジナル例題と変数の追跡表で一行ずつ確認。",
+    datePublished: "2026-10-25",
+    dateModified: "2026-10-25",
+    related: ["it-passport-calculation", "it-passport-one-week", "past-exam-strategy"],
+  },
+  {
+    slug: "it-passport-vs-sg",
+    title: "ITパスポートと情報セキュリティマネジメントの違い｜どっちが先？",
+    h1: "ITパスポートと情報セキュリティマネジメントの違い｜どっちが先？",
+    description: "ITパスポートと情報セキュリティマネジメント試験を、対象者・学習内容・試験時間・問題数で比較。IT未経験者や社内の情報管理を担う人の選び方、両方取る意味、ITパスポート合格後に学ぶことを整理します。",
+    summary: "広いITの基礎と、組織の情報を守る知識。目的から選ぶ2試験の比較。",
+    datePublished: "2026-10-25",
+    dateModified: "2026-10-25",
+    related: ["it-passport-worth", "it-passport-vs-fe", "it-passport-study-method"],
+  },
+
   {
     slug: "it-passport-worth",
     title: "ITパスポートは意味ない？取得するメリットと役立つ場面",
@@ -55,7 +106,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "対象者・試験形式・学習内容を比較。未経験者とエンジニア志望の選び方。",
     datePublished: "2026-10-20",
     dateModified: "2026-10-20",
-    related: ["it-passport-worth", "it-passport-study-method", "past-exam-strategy"],
+    related: ["it-passport-worth", "it-passport-vs-sg", "past-exam-strategy"],
   },
   {
     slug: "it-passport-application",
@@ -75,7 +126,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "割合・損益分岐点・稼働率・通信時間・2進数を、途中式つきの例題で確認。",
     datePublished: "2026-10-20",
     dateModified: "2026-10-20",
-    related: ["past-exam-strategy", "pass-rate", "it-passport-exam-day"],
+    related: ["past-exam-strategy", "it-passport-pseudocode", "it-passport-exam-day"],
   },
   {
     slug: "it-passport-exam-day",
@@ -107,7 +158,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "何から始めるか。全体像→理解→確認問題→過去問→苦手復習→本番形式の回し方。",
     datePublished: "2026-09-26",
     dateModified: "2026-09-26",
-    related: ["it-passport-vs-fe", "past-exam-strategy", "study-time"],
+    related: ["it-passport-acronyms", "past-exam-strategy", "study-time"],
   },
   {
     slug: "pass-rate",
@@ -118,7 +169,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "年度別の合格率の推移、50%の読み方、分野別の足切り、落ちる人に多いパターン。",
     datePublished: "2026-10-17",
     dateModified: "2026-10-17",
-    related: ["it-passport-calculation", "it-passport-exam-day", "it-passport-worth"],
+    related: ["it-passport-retake", "it-passport-exam-day", "it-passport-worth"],
   },
   {
     slug: "study-time",
@@ -129,7 +180,7 @@ export const GUIDES: GuideArticle[] = [
     summary: "何時間・何ヶ月かかるか。ケース別の見積もり方と、1日の時間から期間を出す計算。",
     datePublished: "2026-09-26",
     dateModified: "2026-09-26",
-    related: ["study-plan", "it-passport-study-method", "cant-continue-studying"],
+    related: ["it-passport-one-week", "it-passport-study-method", "cant-continue-studying"],
   },
   {
     slug: "study-plan",
