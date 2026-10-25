@@ -7,10 +7,9 @@ import { CaseMeter, CaseSheet, ChapterTrack, Deduce, MysteryCase, MysteryDay, St
 import { Face } from "../story/Faces";
 import type { StoryState, Who } from "../story/cast";
 import Icon from "@/components/ui/Icon";
-import { FLOW, SORT } from "./AuditStoryExperience";
-import { AUDIT_MONTH, AUDIT_STEPS, DAY1, DAY10, DAY12, DAY20, DAY28, DAY3, DAY5, FINDINGS, NEXT_MONTH } from "./month";
+import { AUDIT_MONTH, AUDIT_STEPS, DAY1, DAY10, DAY12, DAY20, DAY28, DAY3, DAY5, FINDINGS, FLOW, NEXT_MONTH, SORT } from "./month";
 
-// 「システム監査と内部統制」を謎解きゲーム風に見せる体験（AuditStoryExperience と同じ台本）。
+// 「システム監査と内部統制」を謎解きゲーム風に見せる体験。台本は month.ts（ストーリー版から引き継いだもの）。
 //   ① 事件ファイルの表紙：依頼・ミッション・登場人物、捜査の前に知っておくこと
 //   ②〜⑨ 第1〜8章。上の「捜査ボード」に、監査の段階と、見つかった謎（指摘）が書き込まれていく
 //   ⑩ 事件解決：真相・探偵ランク・捜査の流れ・最終推理
