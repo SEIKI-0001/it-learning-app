@@ -23,9 +23,21 @@ import * as Application from "@/app/guide/it-passport-application/page";
 import * as Calculation from "@/app/guide/it-passport-calculation/page";
 import * as ExamDay from "@/app/guide/it-passport-exam-day/page";
 
+import * as OneWeek from "@/app/guide/it-passport-one-week/page";
+import * as Retake from "@/app/guide/it-passport-retake/page";
+import * as Acronyms from "@/app/guide/it-passport-acronyms/page";
+import * as Pseudocode from "@/app/guide/it-passport-pseudocode/page";
+import * as SecurityComparison from "@/app/guide/it-passport-vs-sg/page";
+
 type PageModule = { default: ComponentType; metadata: Metadata };
 
 const ARTICLES: Record<string, PageModule> = {
+  "it-passport-one-week": OneWeek,
+  "it-passport-retake": Retake,
+  "it-passport-acronyms": Acronyms,
+  "it-passport-pseudocode": Pseudocode,
+  "it-passport-vs-sg": SecurityComparison,
+
   "it-passport-worth": Worth,
   "it-passport-vs-fe": Comparison,
   "it-passport-application": Application,
