@@ -2,11 +2,11 @@
 
 import type { ReactNode } from "react";
 import { Panel, SectionTitle } from "../ui";
-import { Choices, placeAnswer, type Choice } from "../calc/CalcParts";
+import { Choices, placeAnswer } from "../calc/CalcParts";
 import { StoryDay, StoryTimeline } from "../story/StoryDay";
 import { Face } from "../story/Faces";
 import type { StoryState, Who } from "../story/cast";
-import { AD, AI, CHECKS, GOV, MAIL, PARTNER, PAY, SALE } from "./sale";
+import { AD, AI, CHECKS, GOV, MAIL, MAP, PARTNER, PAY, SALE, SORT } from "./sale";
 
 // 「法務・コンプライアンス」をストーリーで学ぶ体験。
 //   ① 大枠：コンプライアンス＝法律・社内ルール・倫理を守ること、と登場人物（知的財産権の話の続き）
@@ -131,61 +131,6 @@ function ScenePanel({ step, at, children }: { step: number; at: number; children
     </Panel>
   );
 }
-
-// 法律の早見表
-const MAP: { law: string; what: string; ex: string }[] = [
-  { law: "景品表示法", what: "うそ・大げさな表示、行き過ぎた景品", ex: "ステマ・原産国のタグ" },
-  { law: "特定電子メール法", what: "宣伝メールは事前の同意（オプトイン）", ex: "配信停止だけでは不可" },
-  { law: "資金決済法", what: "前払式支払手段・暗号資産など", ex: "使用期限のない回数券" },
-  { law: "犯罪収益移転防止法（AML）", what: "マネーロンダリング対策", ex: "口座開設時の本人確認" },
-  { law: "NDA（契約）", what: "秘密情報を特定し、管理を約束", ex: "運送会社との共同開発" },
-  { law: "ソーシャルメディアポリシー", what: "社員が公私を問わずSNSを使うルール", ex: "試作品の写真を投稿" },
-  { law: "AIの利活用（倫理）", what: "危害・差別・プライバシーの侵害に注意", ex: "顔認証で開くふた" },
-  { law: "官民データ活用推進基本法", what: "国・自治体・事業者のデータの活用", ex: "市・大学・電力会社と" },
-  { law: "情報公開法", what: "行政機関の行政文書をだれでも請求", ex: "国が調べた置き配の資料" },
-];
-
-const SORT: { t: string; choices: Choice[] }[] = [
-  {
-    t: "誰でも応募できるクイズに答えた人から、抽選で現金10万円が当たるキャンペーン。景品表示法では？",
-    choices: [
-      { label: "問題にならない（オープン懸賞）", ok: true },
-      { label: "問題になる（景品の上限を超える）", why: "商品を買わなくても応募できるオープン懸賞は、景品の規制の対象外です（宣伝の場面）。" },
-    ],
-  },
-  {
-    t: "人気サイトが、依頼された商品をほめる記事を、広告と書かずにふつうの記事として載せた。問題になる法律は？",
-    choices: [
-      { label: "景品表示法", ok: true },
-      { label: "特定電子メール法", why: "メールの話ではありません。広告であることを隠した宣伝（ステマ）です。" },
-      { label: "資金決済法", why: "支払いの話ではありません。" },
-    ],
-  },
-  {
-    t: "買い物でおまけにもらい、次の買い物に使えるポイント。資金決済法の前払式支払手段にあたる？",
-    choices: [
-      { label: "あたらない", ok: true },
-      { label: "あたる", why: "お金を先に払っていないので、前払式支払手段ではありません（支払の場面）。" },
-    ],
-  },
-  {
-    t: "犯罪で得た資金を、正当に得たように見せかける行為を防ぐ取組は？",
-    choices: [
-      { label: "AML", ok: true },
-      { label: "インサイダー取引規制", why: "会社の内部情報を使った株の売買を禁じるものです。" },
-      { label: "スキミング", why: "カードの情報を盗み取る犯罪です。" },
-      { label: "フィッシング", why: "偽のサイトやメールで情報をだまし取る攻撃です。" },
-    ],
-  },
-  {
-    t: "情報公開法で公開を請求できるのは？",
-    choices: [
-      { label: "行政機関の行政文書", ok: true },
-      { label: "上場企業の社内文書", why: "民間企業の文書は対象外です（行政の場面）。" },
-      { label: "裁判所の司法文書", why: "裁判所は行政機関ではありません。" },
-    ],
-  },
-];
 
 function RecapPanel() {
   return (

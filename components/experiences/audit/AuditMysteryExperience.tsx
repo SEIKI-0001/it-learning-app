@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Panel } from "../ui";
 import { placeAnswer } from "../calc/CalcParts";
-import { CaseMeter, CaseSheet, ChapterTrack, Deduce, MysteryCase, MysteryDay, Stamp, detectiveRank, useCaseRecord } from "../story/MysteryDay";
+import { CaseHeading, CaseMeter, CaseSheet, CaseVerdict, ChapterTrack, Deduce, MysteryCase, MysteryDay, Stamp } from "../story/MysteryDay";
 import { Face } from "../story/Faces";
 import type { StoryState, Who } from "../story/cast";
 import Icon from "@/components/ui/Icon";
@@ -21,15 +21,6 @@ function Track({ at }: { at: number }) {
   return <ChapterTrack items={TRACK} current={at} label="事件ファイルの章" />;
 }
 
-function Heading({ kicker, children }: { kicker: string; children: ReactNode }) {
-  return (
-    <div>
-      <div className="font-mono text-[10.5px] font-bold tracking-[0.25em] text-amber-400/80">{kicker}</div>
-      <h3 className="mt-0.5 text-lg font-bold leading-snug text-white [word-break:auto-phrase]">{children}</h3>
-    </div>
-  );
-}
-
 function Cover() {
   const cast: { who: Who; name: string; role: string }[] = [
     { who: "auditor", name: "宮本さん", role: "探偵役（監査人）" },
@@ -40,7 +31,7 @@ function Cover() {
   return (
     <Panel>
       <CaseSheet>
-        <Heading kicker="CASE FILE No.03">経理システムに潜む、2つのすきま</Heading>
+        <CaseHeading kicker="CASE FILE No.03">経理システムに潜む、2つのすきま</CaseHeading>
         <div className="mt-3 rounded-lg bg-[#f3ead6] px-3.5 py-3 text-[13px] leading-relaxed text-stone-800 shadow-lg shadow-black/30">
           <div className="text-[10.5px] font-black tracking-wider text-stone-500">依頼状</div>
           <p className="mt-1">
@@ -166,9 +157,9 @@ function ChapterPanel({ n, summary }: { n: number; summary: ReactNode }) {
   return (
     <Panel>
       <CaseSheet>
-        <Heading kicker={`CHAPTER ${n} ／ ${d.label}`}>
+        <CaseHeading kicker={`CHAPTER ${n} ／ ${d.label}`}>
           第{n}章　{d.title}
-        </Heading>
+        </CaseHeading>
         <Track at={n - 1} />
         <MysteryDay
           chapter={n}
@@ -182,39 +173,11 @@ function ChapterPanel({ n, summary }: { n: number; summary: ReactNode }) {
   );
 }
 
-function Verdict() {
-  const record = useCaseRecord();
-  const answered = record ? Object.keys(record.solved).length : 0;
-  const stars = record ? Object.values(record.solved).filter(Boolean).length : 0;
-  const total = record?.totalAsks ?? 0;
-  if (answered < total)
-    return (
-      <div className="mt-3 rounded-lg bg-white/5 px-3 py-2.5 text-[12.5px] leading-relaxed text-slate-300 ring-1 ring-white/10" data-testid="mystery-rank">
-        まだ推理していない場面が {total - answered} 個あります（{answered}/{total}）。全部の章を終えると、探偵ランクが決まります。
-      </div>
-    );
-  const { rank, note } = detectiveRank(stars, total);
-  return (
-    <div className="mt-3 flex items-center gap-3 rounded-lg bg-amber-400/10 px-3 py-3 ring-1 ring-amber-400/50" data-testid="mystery-rank" data-rank={rank}>
-      <span className="grid h-14 w-14 flex-none place-items-center rounded-full border-4 border-amber-400 font-mono text-3xl font-black text-amber-300">
-        {rank}
-      </span>
-      <div className="min-w-0 text-[12.5px] leading-relaxed text-slate-200">
-        <div className="text-[10.5px] font-black tracking-[0.2em] text-amber-300">探偵ランク</div>
-        {note}
-        <div className="text-slate-400">
-          一発正解 {stars}/{total}・手がかり {record?.clues.length}/{record?.totalClues}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Solved() {
   return (
     <Panel>
       <CaseSheet>
-        <Heading kicker="CASE CLOSED">事件解決：2つのすきまの真相</Heading>
+        <CaseHeading kicker="CASE CLOSED">事件解決：2つのすきまの真相</CaseHeading>
         <div className="mt-3 flex justify-center">
           <Stamp tone="emerald">解決済</Stamp>
         </div>
@@ -232,7 +195,7 @@ function Solved() {
             </li>
           ))}
         </ul>
-        <Verdict />
+        <CaseVerdict />
         <div className="mt-5 text-[12px] font-bold text-slate-400">捜査の流れと、誰がやるか</div>
         <ol className="mt-1.5 space-y-1" data-testid="audit-flow-recap">
           {FLOW.map((f, i) => (

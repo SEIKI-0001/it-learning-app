@@ -71,6 +71,45 @@ export function CaseSheet({ children }: { children: ReactNode }) {
   return <div className="-m-5 rounded-xl bg-[#151a24] p-5 text-slate-100">{children}</div>;
 }
 
+/** 謎解き版のパネルの見出し（英字の小見出し＋題） */
+export function CaseHeading({ kicker, children }: { kicker: string; children: ReactNode }) {
+  return (
+    <div>
+      <div className="font-mono text-[10.5px] font-bold tracking-[0.25em] text-amber-400/80">{kicker}</div>
+      <h3 className="mt-0.5 text-lg font-bold leading-snug text-white [word-break:auto-phrase]">{children}</h3>
+    </div>
+  );
+}
+
+/** 事件解決の画面に出す探偵ランク。全部の推理を終えるまでは残りの数を出す */
+export function CaseVerdict() {
+  const record = useCaseRecord();
+  const answered = record ? Object.keys(record.solved).length : 0;
+  const stars = record ? Object.values(record.solved).filter(Boolean).length : 0;
+  const total = record?.totalAsks ?? 0;
+  if (answered < total)
+    return (
+      <div className="mt-3 rounded-lg bg-white/5 px-3 py-2.5 text-[12.5px] leading-relaxed text-slate-300 ring-1 ring-white/10" data-testid="mystery-rank">
+        まだ推理していない場面が {total - answered} 個あります（{answered}/{total}）。全部の章を終えると、探偵ランクが決まります。
+      </div>
+    );
+  const { rank, note } = detectiveRank(stars, total);
+  return (
+    <div className="mt-3 flex items-center gap-3 rounded-lg bg-amber-400/10 px-3 py-3 ring-1 ring-amber-400/50" data-testid="mystery-rank" data-rank={rank}>
+      <span className="grid h-14 w-14 flex-none place-items-center rounded-full border-4 border-amber-400 font-mono text-3xl font-black text-amber-300">
+        {rank}
+      </span>
+      <div className="min-w-0 text-[12.5px] leading-relaxed text-slate-200">
+        <div className="text-[10.5px] font-black tracking-[0.2em] text-amber-300">探偵ランク</div>
+        {note}
+        <div className="text-slate-400">
+          一発正解 {stars}/{total}・手がかり {record?.clues.length}/{record?.totalClues}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Stamp({ children, tone = "rose" }: { children: ReactNode; tone?: "rose" | "emerald" | "amber" }) {
   const c =
     tone === "emerald"
