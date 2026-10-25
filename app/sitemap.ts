@@ -10,17 +10,15 @@ import {
 import { KAISETSU_BASE_PATH, getKaisetsuTopics, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
 import { WORDS_BASE_PATH, wordPath } from "@/lib/publicPages/words";
 import { getAllWords } from "@/lib/wordlist";
+import { pageLastmod } from "@/lib/seo/pageLastmod";
 
 // /sitemap.xml。未ログインで読める公開ページだけを載せる（アプリ画面はログイン必須なので載せない）。
 // テーマ別解説・公開過去問・英略語はデータから組み立てるので、問題や用語を足せば自動で載る。
 // lastModified は内容の更新日が分かるページにだけ付ける。ビルド日時を入れると
 // 「毎回更新された」と誤って伝えるため使わない。
-// データ由来のページ（過去問・英略語・解説）は、全ページ共通の作り（title/説明文・構造化データ・
-// 本文の構成）を変えた日を下の定数に持つ。作りを変えたら日付を上げる。
-// 付けていなかった間、Google は 10/8 の title/説明文の変更後も旧版を検索結果に出し続けていた（2026-10-17 確認）。
-const KAKOMON_PAGES_MODIFIED = "2026-10-12";
-const WORD_PAGES_MODIFIED = "2026-10-17";
-const KAISETSU_PAGES_MODIFIED = "2026-10-12";
+// データ由来のページ（過去問・英略語・解説）は、そのページの本体が実際に変わった日を
+// lib/seo/pageLastmod から引く。全ページに同じ日付を付けると「何も変わっていないのに全部更新」と
+// 伝えてしまうため、共通の作りを変えただけでは日付を動かさない。
 
 const url = (path: string) => `${SITE_URL}${path}`;
 
@@ -42,7 +40,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: url(KAISETSU_BASE_PATH), changeFrequency: "monthly", priority: 0.8 },
     ...getKaisetsuTopics().map((t) => ({
       url: url(kaisetsuPath(t.id)),
-      lastModified: KAISETSU_PAGES_MODIFIED,
+      lastModified: pageLastmod(kaisetsuPath(t.id)),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
@@ -54,14 +52,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
     ...getAllKakomonQuestions().map((q) => ({
       url: url(q.path),
-      lastModified: KAKOMON_PAGES_MODIFIED,
+      lastModified: pageLastmod(q.path),
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),
     { url: url(WORDS_BASE_PATH), changeFrequency: "monthly", priority: 0.7 },
     ...getAllWords().map((w) => ({
       url: url(wordPath(w.id)),
-      lastModified: WORD_PAGES_MODIFIED,
+      lastModified: pageLastmod(wordPath(w.id)),
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),

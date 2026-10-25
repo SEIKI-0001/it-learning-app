@@ -14,6 +14,7 @@
     "pretypecheck": "next typegen",
     "typecheck": "tsc --noEmit --project tsconfig.typecheck.json",
     "test": "vitest run",
+    "seo:lastmod": "SEO_LASTMOD_UPDATE=1 vitest run test/seoPageLastmod.test.ts",
     "validate:syllabus": "vitest run test/syllabus.test.ts",
     "validate:questions": "vitest run test/questionBank.test.ts test/pastExamQuestions.test.ts test/pastExamAttempts.test.ts test/questionQuality.test.ts test/questionQualityMetrics.test.ts test/checkPackOfficialQuestions.test.ts test/questionVersionDiff.test.ts test/questionBlueprint.test.ts test/questionAttemptSanitize.test.ts test/questionAttemptsDuplicateSave.test.ts test/questionAttemptsSchema.test.ts test/TopicQuizOfficialQuestion.test.tsx",
     "validate:question-versions": "node scripts/question-bank/validate-version-bump.mjs",
