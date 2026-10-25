@@ -1,0 +1,314 @@
+{
+  "mgmt-development-process-3": {
+    "src": "/kakomon/slides/mgmt-development-process-3-e2b7a4cd.webp",
+    "width": 760,
+    "height": 778,
+    "caption": "ウォーターフォールとアジャイルをくらべる"
+  },
+  "mgmt-development-process-5": {
+    "src": "/kakomon/slides/mgmt-development-process-5-550f86b8.webp",
+    "width": 760,
+    "height": 1326,
+    "caption": "開発モデル4つと、向いている場面"
+  },
+  "mgmt-facility-management-2": {
+    "src": "/kakomon/slides/mgmt-facility-management-2-7c9ed0e1.webp",
+    "width": 760,
+    "height": 620,
+    "caption": "システムを支える「設備」たち"
+  },
+  "mgmt-itil-1": {
+    "src": "/kakomon/slides/mgmt-itil-1-b38a803c.webp",
+    "width": 760,
+    "height": 1432,
+    "caption": "ITILは、ITサービスを守って良くし続ける「やり方集」"
+  },
+  "mgmt-pmbok-basics-3": {
+    "src": "/kakomon/slides/mgmt-pmbok-basics-3-812a5ad5.webp",
+    "width": 760,
+    "height": 1142,
+    "caption": "プロジェクトとは、始めるときの文書、関係者"
+  },
+  "mgmt-pmbok-basics-4": {
+    "src": "/kakomon/slides/mgmt-pmbok-basics-4-43eecd8d.webp",
+    "width": 760,
+    "height": 1136,
+    "caption": "スコープと、変更が出たときの流れ"
+  },
+  "mgmt-project-communication-1": {
+    "src": "/kakomon/slides/mgmt-project-communication-1-af1d7579.webp",
+    "width": 760,
+    "height": 1326,
+    "caption": "プロジェクトのコミュニケーション管理をイメージでつかむ"
+  },
+  "mgmt-project-resource-3": {
+    "src": "/kakomon/slides/mgmt-project-resource-3-2eca4dbd.webp",
+    "width": 760,
+    "height": 690,
+    "caption": "要員計画 ― 人数だけでは足りない"
+  },
+  "mgmt-requirements-definition-1": {
+    "src": "/kakomon/slides/mgmt-requirements-definition-1-607a15f2.webp",
+    "width": 760,
+    "height": 656,
+    "caption": "要件定義ってなに？"
+  },
+  "mgmt-service-sla-1": {
+    "src": "/kakomon/slides/mgmt-service-sla-1-6d245121.webp",
+    "width": 760,
+    "height": 610,
+    "caption": "サービスマネジメントとは"
+  },
+  "strat-business-process-4": {
+    "src": "/kakomon/slides/strat-business-process-4-8093f7d0.webp",
+    "width": 760,
+    "height": 1174,
+    "caption": "RPA ― 定型の事務作業をソフトのロボットに"
+  },
+  "strat-business-process-5": {
+    "src": "/kakomon/slides/strat-business-process-5-a117471a.webp",
+    "width": 760,
+    "height": 1148,
+    "caption": "業務の流れを描く図"
+  },
+  "strat-corporation-management-organization-1": {
+    "src": "/kakomon/slides/strat-corporation-management-organization-1-27dc277b.webp",
+    "width": 760,
+    "height": 1198,
+    "caption": "所有と経営 ― 誰が誰を選ぶ？"
+  },
+  "strat-decision-problem-solving-2": {
+    "src": "/kakomon/slides/strat-decision-problem-solving-2-3f4059e5.webp",
+    "width": 760,
+    "height": 610,
+    "caption": "発散 ― 話して出す／書いて回す"
+  },
+  "strat-engineering-systems-3": {
+    "src": "/kakomon/slides/strat-engineering-systems-3-1d694b01.webp",
+    "width": 760,
+    "height": 840,
+    "caption": "コンカレントエンジニアリング"
+  },
+  "strat-enterprise-activities-3": {
+    "src": "/kakomon/slides/strat-enterprise-activities-3-44c23ea9.webp",
+    "width": 760,
+    "height": 502,
+    "caption": "利益と社会的責任を両立する"
+  },
+  "strat-financial-statements-5": {
+    "src": "/kakomon/slides/strat-financial-statements-5-1e4a5f07.webp",
+    "width": 760,
+    "height": 1626,
+    "caption": "BSとPLを見ると、会社の体質が分かる"
+  },
+  "strat-generative-ai-dx-2": {
+    "src": "/kakomon/slides/strat-generative-ai-dx-2-7a8a455e.webp",
+    "width": 760,
+    "height": 1122,
+    "caption": "DXとは"
+  },
+  "strat-innovation-management-3": {
+    "src": "/kakomon/slides/strat-innovation-management-3-66b76fdc.webp",
+    "width": 760,
+    "height": 1000,
+    "caption": "イノベーター理論とキャズム"
+  },
+  "strat-intellectual-property-1": {
+    "src": "/kakomon/slides/strat-intellectual-property-1-7d86882e.webp",
+    "width": 760,
+    "height": 1206,
+    "caption": "知的財産権は、頭で生み出したものを守る権利"
+  },
+  "strat-internet-business-3": {
+    "src": "/kakomon/slides/strat-internet-business-3-1f811c46.webp",
+    "width": 760,
+    "height": 1182,
+    "caption": "ネットで客を集める4つのしくみ"
+  },
+  "strat-labor-laws-1": {
+    "src": "/kakomon/slides/strat-labor-laws-1-737ea970.webp",
+    "width": 760,
+    "height": 1884,
+    "caption": "派遣と請負：3者の関係"
+  },
+  "strat-new-business-development-3": {
+    "src": "/kakomon/slides/strat-new-business-development-3-07a03762.webp",
+    "width": 760,
+    "height": 780,
+    "caption": "小さく確かめる・短く作る"
+  },
+  "strat-production-methods-4": {
+    "src": "/kakomon/slides/strat-production-methods-4-bf76d58e.webp",
+    "width": 760,
+    "height": 856,
+    "caption": "リーン生産方式 ― ムリ・ムラ・ムダをなくす"
+  },
+  "strat-security-laws-3": {
+    "src": "/kakomon/slides/strat-security-laws-3-5c1e7cb7.webp",
+    "width": 760,
+    "height": 832,
+    "caption": "場面から法律を引く"
+  },
+  "strat-system-planning-rfp-2": {
+    "src": "/kakomon/slides/strat-system-planning-rfp-2-6d05dd90.webp",
+    "width": 760,
+    "height": 826,
+    "caption": "3つの依頼書 ― 何を返してもらう？"
+  },
+  "strat-system-strategy-2": {
+    "src": "/kakomon/slides/strat-system-strategy-2-e136ef5e.webp",
+    "width": 760,
+    "height": 1110,
+    "caption": "EA ― 現状と理想を4つの階層で描く"
+  },
+  "strat-system-strategy-3": {
+    "src": "/kakomon/slides/strat-system-strategy-3-64f42978.webp",
+    "width": 760,
+    "height": 906,
+    "caption": "BYODと、似た言葉の見分け方"
+  },
+  "tech-ai-ml-3": {
+    "src": "/kakomon/slides/tech-ai-ml-3-58d704cc.webp",
+    "width": 760,
+    "height": 1778,
+    "caption": "教師あり学習：正解付きのデータで学ぶ"
+  },
+  "tech-ai-ml-6": {
+    "src": "/kakomon/slides/tech-ai-ml-6-2e7669ee.webp",
+    "width": 760,
+    "height": 1952,
+    "caption": "問題文の「言い回し → 用語」"
+  },
+  "tech-auth-authz-mfa-5": {
+    "src": "/kakomon/slides/tech-auth-authz-mfa-5-935d3e7a.webp",
+    "width": 760,
+    "height": 1048,
+    "caption": "バイオメトリクス認証：2つの誤りはシーソー"
+  },
+  "tech-auth-authz-mfa-6": {
+    "src": "/kakomon/slides/tech-auth-authz-mfa-6-ba965916.webp",
+    "width": 760,
+    "height": 1208,
+    "caption": "認証のしくみの言葉"
+  },
+  "tech-cyber-attacks-3": {
+    "src": "/kakomon/slides/tech-cyber-attacks-3-475cf3e0.webp",
+    "width": 760,
+    "height": 1074,
+    "caption": "Web・DNS・侵入後を狙う攻撃"
+  },
+  "tech-data-utilization-3": {
+    "src": "/kakomon/slides/tech-data-utilization-3-2e455179.webp",
+    "width": 760,
+    "height": 1224,
+    "caption": "ビッグデータの用語と、データの尺度"
+  },
+  "tech-digital-signature-2": {
+    "src": "/kakomon/slides/tech-digital-signature-2-bd5ed13f.webp",
+    "width": 760,
+    "height": 1614,
+    "caption": "その公開鍵、本物？＝認証局(CA)"
+  },
+  "tech-email-protocol-3": {
+    "src": "/kakomon/slides/tech-email-protocol-3-53bf50b6.webp",
+    "width": 760,
+    "height": 1082,
+    "caption": "To / CC / BCC を使い分け"
+  },
+  "tech-encryption-hash-3": {
+    "src": "/kakomon/slides/tech-encryption-hash-3-406cd7df.webp",
+    "width": 760,
+    "height": 1064,
+    "caption": "ハッシュ化（戻せない＝一方向）"
+  },
+  "tech-firewall-vpn-zero-trust-4": {
+    "src": "/kakomon/slides/tech-firewall-vpn-zero-trust-4-f8d191c7.webp",
+    "width": 760,
+    "height": 1626,
+    "caption": "ゼロトラスト（何も信じず、毎回確認）"
+  },
+  "tech-io-devices-1": {
+    "src": "/kakomon/slides/tech-io-devices-1-8e1dafbb.webp",
+    "width": 760,
+    "height": 1638,
+    "caption": "情報は「入力 → コンピュータ → 出力」の一方向に流れる"
+  },
+  "tech-iot-2": {
+    "src": "/kakomon/slides/tech-iot-2-aefc3559.webp",
+    "width": 760,
+    "height": 1266,
+    "caption": "測るのがセンサー、動かすのがアクチュエータ"
+  },
+  "tech-iot-4": {
+    "src": "/kakomon/slides/tech-iot-4-1300cd42.webp",
+    "width": 760,
+    "height": 564,
+    "caption": "身近な活用例"
+  },
+  "tech-iot-6": {
+    "src": "/kakomon/slides/tech-iot-6-1f487740.webp",
+    "width": 760,
+    "height": 1004,
+    "caption": "IoTの通信と電源"
+  },
+  "tech-isms-risk-1": {
+    "src": "/kakomon/slides/tech-isms-risk-1-37a01fcd.webp",
+    "width": 760,
+    "height": 1228,
+    "caption": "ISMSは、セキュリティを「組織のしくみ」で回し続けること"
+  },
+  "tech-keys-2": {
+    "src": "/kakomon/slides/tech-keys-2-c03986e9.webp",
+    "width": 760,
+    "height": 1400,
+    "caption": "外部キーでつながる（タップして辿る）"
+  },
+  "tech-network-address-3": {
+    "src": "/kakomon/slides/tech-network-address-3-d28db9c9.webp",
+    "width": 760,
+    "height": 1346,
+    "caption": "試験では「誰が何を返すか」で見分ける"
+  },
+  "tech-normalization-2": {
+    "src": "/kakomon/slides/tech-normalization-2-52b0f4b5.webp",
+    "width": 760,
+    "height": 474,
+    "caption": "3行で覚える正規形"
+  },
+  "tech-security-cia-1": {
+    "src": "/kakomon/slides/tech-security-cia-1-e41140ae.webp",
+    "width": 760,
+    "height": 1250,
+    "caption": "3要素ってなに？"
+  },
+  "tech-spreadsheet-4": {
+    "src": "/kakomon/slides/tech-spreadsheet-4-9bfe235e.webp",
+    "width": 760,
+    "height": 948,
+    "caption": "IF ― 条件で2つに分かれる"
+  },
+  "tech-system-performance-3": {
+    "src": "/kakomon/slides/tech-system-performance-3-c6c193eb.webp",
+    "width": 760,
+    "height": 1172,
+    "caption": "ボトルネック ＝ 全体の速さを決める、いちばん遅い部分"
+  },
+  "tech-wireless-mobile-2": {
+    "src": "/kakomon/slides/tech-wireless-mobile-2-7d7998e7.webp",
+    "width": 760,
+    "height": 1142,
+    "caption": "無線LANを守る設定の見分け方"
+  },
+  "tech-wireless-mobile-5": {
+    "src": "/kakomon/slides/tech-wireless-mobile-5-bca61072.webp",
+    "width": 760,
+    "height": 926,
+    "caption": "近距離・省電力の通信と、位置を測る衛星"
+  },
+  "tech-wireless-mobile-6": {
+    "src": "/kakomon/slides/tech-wireless-mobile-6-cff9658d.webp",
+    "width": 760,
+    "height": 840,
+    "caption": "携帯電話の電波と、問題文の言い回し"
+  }
+}

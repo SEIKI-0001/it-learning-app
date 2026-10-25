@@ -1,0 +1,236 @@
+{
+  "2026": {
+    "2": [
+      "strat-system-strategy",
+      3
+    ],
+    "4": [
+      "strat-new-business-development",
+      3
+    ],
+    "6": [
+      "strat-generative-ai-dx",
+      2
+    ],
+    "8": [
+      "tech-iot",
+      4
+    ],
+    "10": [
+      "strat-decision-problem-solving",
+      2
+    ],
+    "11": [
+      "strat-intellectual-property",
+      1
+    ],
+    "12": [
+      "strat-business-process",
+      5
+    ],
+    "14": [
+      "strat-enterprise-activities",
+      3
+    ],
+    "15": [
+      "strat-innovation-management",
+      3
+    ],
+    "16": [
+      "tech-ai-ml",
+      3
+    ],
+    "18": [
+      "strat-engineering-systems",
+      3
+    ],
+    "20": [
+      "strat-system-planning-rfp",
+      2
+    ],
+    "21": [
+      "strat-security-laws",
+      3
+    ],
+    "22": [
+      "strat-business-process",
+      4
+    ],
+    "23": [
+      "strat-internet-business",
+      3
+    ],
+    "24": [
+      "strat-corporation-management-organization",
+      1
+    ],
+    "25": [
+      "tech-data-utilization",
+      3
+    ],
+    "26": [
+      "strat-financial-statements",
+      5
+    ],
+    "29": [
+      "strat-labor-laws",
+      1
+    ],
+    "31": [
+      "strat-production-methods",
+      4
+    ],
+    "34": [
+      "strat-system-strategy",
+      2
+    ],
+    "36": [
+      "mgmt-pmbok-basics",
+      4
+    ],
+    "38": [
+      "mgmt-development-process",
+      5
+    ],
+    "42": [
+      "mgmt-itil",
+      1
+    ],
+    "43": [
+      "mgmt-development-process",
+      3
+    ],
+    "45": [
+      "mgmt-pmbok-basics",
+      3
+    ],
+    "46": [
+      "mgmt-itil",
+      1
+    ],
+    "48": [
+      "mgmt-itil",
+      1
+    ],
+    "49": [
+      "mgmt-project-communication",
+      1
+    ],
+    "50": [
+      "mgmt-project-resource",
+      3
+    ],
+    "52": [
+      "mgmt-requirements-definition",
+      1
+    ],
+    "53": [
+      "mgmt-service-sla",
+      1
+    ],
+    "54": [
+      "mgmt-facility-management",
+      2
+    ],
+    "57": [
+      "tech-keys",
+      2
+    ],
+    "59": [
+      "tech-wireless-mobile",
+      2
+    ],
+    "62": [
+      "tech-system-performance",
+      3
+    ],
+    "64": [
+      "tech-wireless-mobile",
+      6
+    ],
+    "65": [
+      "tech-network-address",
+      3
+    ],
+    "69": [
+      "tech-normalization",
+      2
+    ],
+    "70": [
+      "tech-isms-risk",
+      1
+    ],
+    "71": [
+      "tech-auth-authz-mfa",
+      6
+    ],
+    "72": [
+      "tech-keys",
+      2
+    ],
+    "74": [
+      "tech-spreadsheet",
+      4
+    ],
+    "75": [
+      "tech-email-protocol",
+      3
+    ],
+    "76": [
+      "tech-iot",
+      6
+    ],
+    "77": [
+      "tech-security-cia",
+      1
+    ],
+    "78": [
+      "tech-iot",
+      2
+    ],
+    "80": [
+      "tech-auth-authz-mfa",
+      5
+    ],
+    "81": [
+      "tech-wireless-mobile",
+      5
+    ],
+    "82": [
+      "tech-ai-ml",
+      6
+    ],
+    "90": [
+      "tech-digital-signature",
+      2
+    ],
+    "91": [
+      "tech-encryption-hash",
+      3
+    ],
+    "92": [
+      "tech-firewall-vpn-zero-trust",
+      4
+    ],
+    "93": [
+      "tech-isms-risk",
+      1
+    ],
+    "95": [
+      "tech-cyber-attacks",
+      3
+    ],
+    "98": [
+      "tech-ai-ml",
+      6
+    ],
+    "99": [
+      "tech-io-devices",
+      1
+    ],
+    "100": [
+      "tech-isms-risk",
+      1
+    ]
+  }
+}
