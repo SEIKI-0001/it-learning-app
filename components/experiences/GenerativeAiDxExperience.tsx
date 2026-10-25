@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AiPrinciplesPanel, DigitalTermsPanel, GenAiMechanismPanel, GenAiQuiz } from "./genai/GenAiExamPanels";
 import { Panel, SectionTitle } from "./ui";
 import Icon from "@/components/ui/Icon";
 import { InlineIcon } from "@/components/ui/Pictogram";
@@ -11,6 +12,8 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 //   ② DXとは … 定義を「使うもの/変えるもの/めざすこと」に分解＋パン屋の定期便の例
 //   ③ DXと似ている2つの違い … 用語を行に並べた比較。売り物・稼ぎ方が変わるのはDXだけ
 //   ④ 生成AIの使い方 適切/不適切クイズ
+//   ⑤〜⑧ 過去問の出題に合わせた4枚（genai/GenAiExamPanels）：生成AIのしくみと言葉・人間中心のAI社会原則・
+//      「デジタル○○」の見分け方・どれ？
 // ============================================================================
 
 type Prompt = {
@@ -356,6 +359,10 @@ export default function GenerativeAiDxExperience() {
       <DxDefinition />
       <DxCompare />
       <Quiz />
+      <GenAiMechanismPanel step={5} />
+      <AiPrinciplesPanel step={6} />
+      <DigitalTermsPanel step={7} />
+      <GenAiQuiz step={8} />
     </div>
   );
 }
