@@ -59,3 +59,45 @@ describe("EbusinessExperience trade map", () => {
     expect(screen.getByRole("heading", { name: /これはどれ？/ })).toBeInTheDocument();
   });
 });
+
+describe("EbusinessExperience exam terms", () => {
+  it("adds four slides after the quiz", () => {
+    renderDeck();
+    expect(screen.getByText("1 / 6")).toBeInTheDocument();
+  });
+
+  it("sorts crowdfunding by what the backer receives and explains escrow", () => {
+    renderDeck();
+    click("解説3");
+    const types = screen.getByTestId("crowdfunding-types");
+    expect(types.querySelectorAll("[data-term]")).toHaveLength(4);
+    expect(types.querySelector('[data-term="投資型"]')).toHaveTextContent("匿名組合契約");
+    expect(screen.getByTestId("escrow")).toHaveTextContent("代金を払ったのに商品が届かない");
+  });
+
+  it("separates freemium from subscription, the other free words and ad types", () => {
+    renderDeck();
+    click("解説4");
+    expect(screen.getByTestId("pricing-models").querySelector('[data-term="フリーミアム"]')).toHaveTextContent("追加の機能やサービスを有料");
+    expect(screen.getByTestId("pricing-models").querySelector('[data-term="サブスクリプション"]')).toHaveTextContent("定額の料金");
+    expect(screen.getByTestId("free-words").querySelectorAll("[data-term]")).toHaveLength(3);
+    expect(screen.getByTestId("ad-types").querySelector('[data-term="リスティング広告"]')).toHaveTextContent("キーワードに連動");
+  });
+
+  it("covers fintech, open API and blockchain", () => {
+    renderDeck();
+    click("解説5");
+    expect(screen.getByText(/接続仕様（API）を外部に公開/)).toBeInTheDocument();
+    expect(screen.getByText(/改ざんや不整合を防げる/)).toBeInTheDocument();
+    expect(screen.getByText(/ベンチャー企業と組む/)).toBeInTheDocument();
+  });
+
+  it("checks the last quiz", () => {
+    renderDeck();
+    click("解説6");
+    click("エスクロー");
+    expect(screen.getByText(/仲介者が代金を預かる/)).toBeInTheDocument();
+    click("フリーライド");
+    expect(screen.getByText(/正解は「フリーミアム」/)).toBeInTheDocument();
+  });
+});
