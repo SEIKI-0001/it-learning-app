@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import QuestionFigures from "@/components/questions/QuestionFigures";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
@@ -23,6 +24,7 @@ import {
   type KakomonQuestion,
 } from "@/lib/publicPages/kakomon";
 import { getKaisetsuTopic, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
+import { getKakomonChoiceNotes, getKakomonSlideFigure } from "@/lib/publicPages/kakomonEnrich";
 import { wordPath } from "@/lib/publicPages/words";
 import { FIELD_LABELS } from "@/types/content";
 
@@ -75,6 +77,8 @@ export default async function KakomonQuestionPage({ params }: Props) {
   const related = getRelatedKakomon(q);
   const words = getWordsInKakomon(q);
   const topic = getKaisetsuTopic(view.topicId);
+  const notes = getKakomonChoiceNotes(view.year, view.questionNumber, view.correctChoice);
+  const figure = getKakomonSlideFigure(view.year, view.questionNumber);
 
   return (
     <article className="g-col">
@@ -103,7 +107,41 @@ export default async function KakomonQuestionPage({ params }: Props) {
           <summary>正解と解説を見る</summary>
           <div className="k-answer-body">
             <p className="k-correct">正解：{CHOICE_LABELS[view.correctChoice]}</p>
-            <p className="k-explanation">{view.explanation}</p>
+            {notes ? (
+              <>
+                <p className="k-point">{notes.point}</p>
+                <h2 className="k-notes-title">
+                  {notes.kind === "choices" ? "選択肢ごとの解説" : "記述ごとの解説"}
+                </h2>
+                <dl className="k-notes">
+                  {notes.items.map((item) => (
+                    <div key={item.label} className={item.correct ? "is-correct" : undefined}>
+                      <dt>
+                        {item.label}
+                        {item.correct && <span className="k-notes-badge">正解</span>}
+                      </dt>
+                      <dd>{item.text}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            ) : (
+              <p className="k-explanation">{view.explanation}</p>
+            )}
+            {figure && (
+              <figure className="k-slide">
+                <Image
+                  src={figure.src}
+                  alt={`解説スライド「${figure.caption}」`}
+                  width={figure.width}
+                  height={figure.height}
+                  sizes="(max-width: 768px) 100vw, 680px"
+                />
+                <figcaption>
+                  {topic ? `「${topic.title}」の解説より` : "テーマ別解説より"}：{figure.caption}
+                </figcaption>
+              </figure>
+            )}
             {topic && (
               <a
                 className="k-deeper"

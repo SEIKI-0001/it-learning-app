@@ -510,6 +510,73 @@
   margin: 8px 0 0;
   white-space: pre-wrap;
 }
+/* 要点1文＋選択肢（記述）ごとの解説。正解の行だけ藍で縁取る */
+.guide .k-point {
+  margin: 8px 0 0;
+  font-weight: 600;
+}
+.guide .k-answer-body .k-notes-title {
+  margin: 18px 0 0;
+  font-size: 0.86rem;
+  color: var(--sub);
+  border: 0;
+  padding: 0;
+}
+.guide .k-notes {
+  margin: 8px 0 0;
+  display: grid;
+  gap: 6px;
+}
+.guide .k-notes > div {
+  display: grid;
+  grid-template-columns: 2.6em 1fr;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+}
+.guide .k-notes > div.is-correct {
+  border-color: var(--ai);
+  box-shadow: inset 3px 0 0 var(--ai);
+}
+.guide .k-notes dt {
+  font-weight: 700;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.guide .k-notes-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--white);
+  background: var(--ai);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}
+.guide .k-notes dd {
+  margin: 0;
+  line-height: 1.75;
+}
+/* 解説スライドの静止画（テーマ別解説から撮影） */
+.guide .k-slide {
+  margin: 18px auto 0;
+  max-width: 420px; /* スマホ幅で撮った絵なので、PCでも引き伸ばさない */
+}
+.guide .k-slide img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.guide .k-slide figcaption {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--sub);
+}
 .guide .k-deeper {
   display: block;
   margin: 16px 0 0;

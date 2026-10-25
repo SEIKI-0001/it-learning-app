@@ -6,7 +6,7 @@
 //   指紋が未記録（hash が空）の行は日付を変えずに指紋だけ埋める（初期値の取り込み用）。
 //
 // 指紋に入れるもの（共通の枠＝CTA・ナビ・パンくず・構造化データ・title の書式は入れない）:
-// - 過去問: 問題・選択肢・正解・解説・図表・論点タグ
+// - 過去問: 問題・選択肢・正解・解説・図表・論点タグ・選択肢ごとの解説・解説スライドの静止画
 // - 英略語: 用語データ1件
 // - 解説: トピックのデータと、そのトピック専用の解説コンポーネント（components/experiences 配下で、
 //   他の解説から使われていないファイルだけ）のソース
@@ -16,6 +16,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { getTopic } from "@/lib/content";
 import { getAllKakomonQuestions } from "@/lib/publicPages/kakomon";
+import { getKakomonChoiceNotes, getKakomonSlideFigure } from "@/lib/publicPages/kakomonEnrich";
 import { getKaisetsuTopics, kaisetsuPath } from "@/lib/publicPages/kaisetsu";
 import { wordPath } from "@/lib/publicPages/words";
 import type { PageLastmodManifest } from "@/lib/seo/pageLastmod";
@@ -105,7 +106,22 @@ function experienceSourcesByTopic(): Map<string, string> {
 function currentFingerprints(): Map<string, string> {
   const fp = new Map<string, string>();
   for (const q of getAllKakomonQuestions()) {
-    fp.set(q.path, sha(JSON.stringify({ view: q.view, topicLabel: q.topicLabel, tags: q.tags })));
+    const { year, questionNumber, correctChoice } = q.view;
+    const notes = getKakomonChoiceNotes(year, questionNumber, correctChoice);
+    const figure = getKakomonSlideFigure(year, questionNumber);
+    fp.set(
+      q.path,
+      sha(
+        JSON.stringify({
+          view: q.view,
+          topicLabel: q.topicLabel,
+          tags: q.tags,
+          // 足した中身は、あるときだけ指紋に入れる（無い問題の指紋＝日付を動かさない）
+          ...(notes && { notes }),
+          ...(figure && { figure }),
+        }),
+      ),
+    );
   }
   for (const w of getAllWords()) fp.set(wordPath(w.id), sha(JSON.stringify(w)));
   const sources = experienceSourcesByTopic();

@@ -53,7 +53,7 @@
   },
   "/kaisetsu/mgmt-system-audit": {
     "date": "2026-10-25",
-    "hash": "bd1367fec4860cb0"
+    "hash": "18e71374ada64456"
   },
   "/kaisetsu/mgmt-system-design": {
     "date": "2026-09-27",
@@ -120,8 +120,8 @@
     "hash": "49634fdf8ed98646"
   },
   "/kaisetsu/strat-generative-ai-dx": {
-    "date": "2026-10-09",
-    "hash": "b07cb2bba7501534"
+    "date": "2026-10-25",
+    "hash": "83197fd00d51b2e8"
   },
   "/kaisetsu/strat-goal-evaluation": {
     "date": "2026-10-09",
@@ -144,8 +144,8 @@
     "hash": "a808fd2f73270ced"
   },
   "/kaisetsu/strat-legal-compliance": {
-    "date": "2026-10-21",
-    "hash": "3fda1ae680e6c0c3"
+    "date": "2026-10-25",
+    "hash": "6e1a750d2c723bab"
   },
   "/kaisetsu/strat-management-systems": {
     "date": "2026-10-09",
@@ -1992,404 +1992,404 @@
     "hash": "9750505d09f9df03"
   },
   "/kakomon/2026/1": {
-    "date": "2026-07-26",
-    "hash": "e7d70687ac8f0b07"
+    "date": "2026-10-25",
+    "hash": "1c05bd9c60d7a489"
   },
   "/kakomon/2026/10": {
-    "date": "2026-07-26",
-    "hash": "3f54f58e5531fd29"
+    "date": "2026-10-25",
+    "hash": "d2bf51318216b84b"
   },
   "/kakomon/2026/100": {
-    "date": "2026-07-26",
-    "hash": "737aea32d0b72829"
+    "date": "2026-10-25",
+    "hash": "158b75b36460ceaf"
   },
   "/kakomon/2026/11": {
-    "date": "2026-07-26",
-    "hash": "a8463b3427def97d"
+    "date": "2026-10-25",
+    "hash": "84295376cbe1d16b"
   },
   "/kakomon/2026/12": {
-    "date": "2026-07-26",
-    "hash": "e8877bb223b1919e"
+    "date": "2026-10-25",
+    "hash": "d83cb0a810e61c3b"
   },
   "/kakomon/2026/13": {
-    "date": "2026-07-26",
-    "hash": "5bfc3b1ad9a77d4c"
+    "date": "2026-10-25",
+    "hash": "1271336cc8c8189e"
   },
   "/kakomon/2026/14": {
-    "date": "2026-07-26",
-    "hash": "98225b5cb9734993"
+    "date": "2026-10-25",
+    "hash": "9d9ec1fa370a8345"
   },
   "/kakomon/2026/15": {
-    "date": "2026-10-14",
-    "hash": "f56525f2ea1433a3"
+    "date": "2026-10-25",
+    "hash": "16e12f90045c6f05"
   },
   "/kakomon/2026/16": {
-    "date": "2026-07-26",
-    "hash": "3c82869d502764ff"
+    "date": "2026-10-25",
+    "hash": "656821c85f61d90e"
   },
   "/kakomon/2026/17": {
-    "date": "2026-07-26",
-    "hash": "26168bfa67fb38b9"
+    "date": "2026-10-25",
+    "hash": "91cc962ebfff0eed"
   },
   "/kakomon/2026/18": {
-    "date": "2026-07-26",
-    "hash": "5d5574b1b1599c6c"
+    "date": "2026-10-25",
+    "hash": "db5262843103245c"
   },
   "/kakomon/2026/19": {
-    "date": "2026-07-26",
-    "hash": "8b5dffe0bd4e0d0e"
+    "date": "2026-10-25",
+    "hash": "87f4458466e17ca2"
   },
   "/kakomon/2026/2": {
-    "date": "2026-07-26",
-    "hash": "cff4d142cf59fbce"
+    "date": "2026-10-25",
+    "hash": "ee8bb164ab41477b"
   },
   "/kakomon/2026/20": {
-    "date": "2026-07-26",
-    "hash": "fdbafbe2f205246f"
+    "date": "2026-10-25",
+    "hash": "b4f1ba609caa07a0"
   },
   "/kakomon/2026/21": {
-    "date": "2026-07-26",
-    "hash": "983094436665a7cb"
+    "date": "2026-10-25",
+    "hash": "046fdb979929819a"
   },
   "/kakomon/2026/22": {
-    "date": "2026-07-26",
-    "hash": "2d4e950525c10c73"
+    "date": "2026-10-25",
+    "hash": "f4cfd2acb37eaf89"
   },
   "/kakomon/2026/23": {
-    "date": "2026-10-14",
-    "hash": "fa329bc2c47bf135"
+    "date": "2026-10-25",
+    "hash": "03c8bfb0338e555b"
   },
   "/kakomon/2026/24": {
-    "date": "2026-07-26",
-    "hash": "055b1e8432241c48"
+    "date": "2026-10-25",
+    "hash": "d0734bee0592f1ad"
   },
   "/kakomon/2026/25": {
-    "date": "2026-07-26",
-    "hash": "96ca1ca3544a24a3"
+    "date": "2026-10-25",
+    "hash": "c80e7b959969692c"
   },
   "/kakomon/2026/26": {
-    "date": "2026-07-26",
-    "hash": "a30d9da2b57d65f9"
+    "date": "2026-10-25",
+    "hash": "8dfe498eb37bde8e"
   },
   "/kakomon/2026/27": {
-    "date": "2026-07-26",
-    "hash": "1ba8f8d904e83f3b"
+    "date": "2026-10-25",
+    "hash": "fbcbedb7be3127f7"
   },
   "/kakomon/2026/28": {
-    "date": "2026-07-26",
-    "hash": "09f12c302c17c013"
+    "date": "2026-10-25",
+    "hash": "f05697f3834ff153"
   },
   "/kakomon/2026/29": {
-    "date": "2026-07-26",
-    "hash": "d9adf3fb1e58ded5"
+    "date": "2026-10-25",
+    "hash": "caa0170801ab0698"
   },
   "/kakomon/2026/3": {
-    "date": "2026-07-26",
-    "hash": "40073a964d5534e6"
+    "date": "2026-10-25",
+    "hash": "6d6a7b6634257b28"
   },
   "/kakomon/2026/30": {
-    "date": "2026-07-26",
-    "hash": "99a98deed9d35623"
+    "date": "2026-10-25",
+    "hash": "6d0f7dcce04a928b"
   },
   "/kakomon/2026/31": {
-    "date": "2026-10-14",
-    "hash": "acc9f4b4c3fee7cc"
+    "date": "2026-10-25",
+    "hash": "b0c109594311c43a"
   },
   "/kakomon/2026/32": {
-    "date": "2026-07-26",
-    "hash": "3bbb3f95599e8bef"
+    "date": "2026-10-25",
+    "hash": "b093c5efe7a29819"
   },
   "/kakomon/2026/33": {
-    "date": "2026-07-26",
-    "hash": "bb3001a120777d60"
+    "date": "2026-10-25",
+    "hash": "61dec018482b9356"
   },
   "/kakomon/2026/34": {
-    "date": "2026-07-26",
-    "hash": "dea585f3ad432f71"
+    "date": "2026-10-25",
+    "hash": "fb2aa01f04b8ce7b"
   },
   "/kakomon/2026/35": {
-    "date": "2026-07-26",
-    "hash": "be7b8c6ecfe2080c"
+    "date": "2026-10-25",
+    "hash": "906089e77394a798"
   },
   "/kakomon/2026/36": {
-    "date": "2026-07-26",
-    "hash": "3f37ed0453701b89"
+    "date": "2026-10-25",
+    "hash": "9093925d44c617cf"
   },
   "/kakomon/2026/37": {
-    "date": "2026-07-26",
-    "hash": "dd3f79260399eb6d"
+    "date": "2026-10-25",
+    "hash": "e4427f0867e7cfc0"
   },
   "/kakomon/2026/38": {
-    "date": "2026-07-26",
-    "hash": "135ca87ad6e7d1ab"
+    "date": "2026-10-25",
+    "hash": "74fd716f953870cd"
   },
   "/kakomon/2026/39": {
-    "date": "2026-07-26",
-    "hash": "fc6b6e9bfe7a59b1"
+    "date": "2026-10-25",
+    "hash": "da5498d448016527"
   },
   "/kakomon/2026/4": {
-    "date": "2026-10-14",
-    "hash": "61900be2cae6fc58"
+    "date": "2026-10-25",
+    "hash": "15e908bd7af5842b"
   },
   "/kakomon/2026/40": {
-    "date": "2026-07-26",
-    "hash": "973180e3c287bff9"
+    "date": "2026-10-25",
+    "hash": "e462b05fe10ec972"
   },
   "/kakomon/2026/41": {
-    "date": "2026-07-26",
-    "hash": "3ac289784389e27b"
+    "date": "2026-10-25",
+    "hash": "0bb4db734f1679fe"
   },
   "/kakomon/2026/42": {
-    "date": "2026-07-26",
-    "hash": "f7dbc1a5c449468e"
+    "date": "2026-10-25",
+    "hash": "4fde1186d087c76d"
   },
   "/kakomon/2026/43": {
-    "date": "2026-07-26",
-    "hash": "78d848fd53c2b486"
+    "date": "2026-10-25",
+    "hash": "c5862d14c7dd9b58"
   },
   "/kakomon/2026/44": {
-    "date": "2026-07-26",
-    "hash": "d689f27ed9f6580d"
+    "date": "2026-10-25",
+    "hash": "dbff4d2237ee2315"
   },
   "/kakomon/2026/45": {
-    "date": "2026-07-26",
-    "hash": "80739db959d5d120"
+    "date": "2026-10-25",
+    "hash": "4ed702b80d66bd02"
   },
   "/kakomon/2026/46": {
-    "date": "2026-07-26",
-    "hash": "12a4baf2d9b80fe4"
+    "date": "2026-10-25",
+    "hash": "d1723392afb5e124"
   },
   "/kakomon/2026/47": {
-    "date": "2026-07-26",
-    "hash": "81222f990a49257e"
+    "date": "2026-10-25",
+    "hash": "08863a944d3df6fc"
   },
   "/kakomon/2026/48": {
-    "date": "2026-07-26",
-    "hash": "39a75c588f707996"
+    "date": "2026-10-25",
+    "hash": "73a3ee53d7d337cc"
   },
   "/kakomon/2026/49": {
-    "date": "2026-07-26",
-    "hash": "c987c9c10cdcebce"
+    "date": "2026-10-25",
+    "hash": "86e0984b24aac2dc"
   },
   "/kakomon/2026/5": {
-    "date": "2026-07-26",
-    "hash": "cc2d6e9e93e46499"
+    "date": "2026-10-25",
+    "hash": "0789703fd46089a5"
   },
   "/kakomon/2026/50": {
-    "date": "2026-07-26",
-    "hash": "8783a0e322e752d4"
+    "date": "2026-10-25",
+    "hash": "fa5dc4f0f68c9941"
   },
   "/kakomon/2026/51": {
-    "date": "2026-07-26",
-    "hash": "b61a8cbbac125e4d"
+    "date": "2026-10-25",
+    "hash": "8be41358e49ba3f6"
   },
   "/kakomon/2026/52": {
-    "date": "2026-07-26",
-    "hash": "800543b16c32badb"
+    "date": "2026-10-25",
+    "hash": "1d12cb495d9a7c5b"
   },
   "/kakomon/2026/53": {
-    "date": "2026-07-26",
-    "hash": "3a0d8e4d2a2304fa"
+    "date": "2026-10-25",
+    "hash": "d71048676989308a"
   },
   "/kakomon/2026/54": {
-    "date": "2026-07-26",
-    "hash": "45a30b427373f38b"
+    "date": "2026-10-25",
+    "hash": "08b8eae1ba60018c"
   },
   "/kakomon/2026/55": {
-    "date": "2026-07-26",
-    "hash": "bb5360117dd19907"
+    "date": "2026-10-25",
+    "hash": "73629913e47422db"
   },
   "/kakomon/2026/56": {
-    "date": "2026-07-26",
-    "hash": "5c4a3a4a69920627"
+    "date": "2026-10-25",
+    "hash": "843551615e1bd583"
   },
   "/kakomon/2026/57": {
-    "date": "2026-07-26",
-    "hash": "61df4757f83d0578"
+    "date": "2026-10-25",
+    "hash": "00e1afa457cc0079"
   },
   "/kakomon/2026/58": {
-    "date": "2026-07-26",
-    "hash": "c02d87f235ddaf88"
+    "date": "2026-10-25",
+    "hash": "c3a3c8cd474ee8ce"
   },
   "/kakomon/2026/59": {
-    "date": "2026-07-26",
-    "hash": "71921ba2c5b4e5d2"
+    "date": "2026-10-25",
+    "hash": "2c9bdee992588218"
   },
   "/kakomon/2026/6": {
-    "date": "2026-07-26",
-    "hash": "4fd23a2b19c5568b"
+    "date": "2026-10-25",
+    "hash": "fd5aee16522bf6e6"
   },
   "/kakomon/2026/60": {
-    "date": "2026-07-26",
-    "hash": "b05e913d104a71f0"
+    "date": "2026-10-25",
+    "hash": "384711c771758c0f"
   },
   "/kakomon/2026/61": {
-    "date": "2026-07-26",
-    "hash": "d1a1d307b5c4f9e8"
+    "date": "2026-10-25",
+    "hash": "0df2ed947d0e3933"
   },
   "/kakomon/2026/62": {
-    "date": "2026-07-26",
-    "hash": "7243ac5620d42a6d"
+    "date": "2026-10-25",
+    "hash": "361f361b77cd23d9"
   },
   "/kakomon/2026/63": {
-    "date": "2026-07-26",
-    "hash": "fa3289971f2295d9"
+    "date": "2026-10-25",
+    "hash": "eafc1f8bef59703b"
   },
   "/kakomon/2026/64": {
-    "date": "2026-07-26",
-    "hash": "e2652c2101198ea9"
+    "date": "2026-10-25",
+    "hash": "a0442e6545963d1e"
   },
   "/kakomon/2026/65": {
-    "date": "2026-10-13",
-    "hash": "a13928af40b551fb"
+    "date": "2026-10-25",
+    "hash": "5328dc3a6e0615cf"
   },
   "/kakomon/2026/66": {
-    "date": "2026-07-26",
-    "hash": "0e0222b80c733f0a"
+    "date": "2026-10-25",
+    "hash": "1a4b94b21ca839ac"
   },
   "/kakomon/2026/67": {
-    "date": "2026-07-26",
-    "hash": "b40998871bb9c49f"
+    "date": "2026-10-25",
+    "hash": "07cd4c8f674a84dd"
   },
   "/kakomon/2026/68": {
-    "date": "2026-07-26",
-    "hash": "b79e752161b32e8e"
+    "date": "2026-10-25",
+    "hash": "84e496d073367759"
   },
   "/kakomon/2026/69": {
-    "date": "2026-07-26",
-    "hash": "2a3c60ef8cf05b96"
+    "date": "2026-10-25",
+    "hash": "d4c09e72f0e233f5"
   },
   "/kakomon/2026/7": {
-    "date": "2026-07-26",
-    "hash": "2264a2c2f855c170"
+    "date": "2026-10-25",
+    "hash": "a53db84c90361488"
   },
   "/kakomon/2026/70": {
-    "date": "2026-07-26",
-    "hash": "c0670886a323a228"
+    "date": "2026-10-25",
+    "hash": "9437480b35644407"
   },
   "/kakomon/2026/71": {
-    "date": "2026-07-26",
-    "hash": "4506cf3e7495639e"
+    "date": "2026-10-25",
+    "hash": "e734cd02c4bd59ea"
   },
   "/kakomon/2026/72": {
-    "date": "2026-07-26",
-    "hash": "56f8acdd6df2d953"
+    "date": "2026-10-25",
+    "hash": "c2e3c01341d56e8c"
   },
   "/kakomon/2026/73": {
-    "date": "2026-07-26",
-    "hash": "0278b63fc5cabf7c"
+    "date": "2026-10-25",
+    "hash": "4450697724daa4e4"
   },
   "/kakomon/2026/74": {
-    "date": "2026-07-26",
-    "hash": "f35ab7dc55b73413"
+    "date": "2026-10-25",
+    "hash": "28eef69cfeec8a14"
   },
   "/kakomon/2026/75": {
-    "date": "2026-07-26",
-    "hash": "73930fd6afdddd80"
+    "date": "2026-10-25",
+    "hash": "1ce278746429ef68"
   },
   "/kakomon/2026/76": {
-    "date": "2026-07-26",
-    "hash": "948636297b766b52"
+    "date": "2026-10-25",
+    "hash": "018b6efce387d630"
   },
   "/kakomon/2026/77": {
-    "date": "2026-07-26",
-    "hash": "9d999e07f761b696"
+    "date": "2026-10-25",
+    "hash": "7aa435f06f8902a3"
   },
   "/kakomon/2026/78": {
-    "date": "2026-07-26",
-    "hash": "024e0bfcd3cc5056"
+    "date": "2026-10-25",
+    "hash": "d69873f9eeb5ca65"
   },
   "/kakomon/2026/79": {
-    "date": "2026-07-26",
-    "hash": "ead9267bfeb802bb"
+    "date": "2026-10-25",
+    "hash": "c2a074bd65756bba"
   },
   "/kakomon/2026/8": {
-    "date": "2026-07-26",
-    "hash": "0f6fc9333dfa6d20"
+    "date": "2026-10-25",
+    "hash": "a903ab1ce68eda2a"
   },
   "/kakomon/2026/80": {
-    "date": "2026-07-26",
-    "hash": "8a86d5751deb3290"
+    "date": "2026-10-25",
+    "hash": "5532c632b57f8ee5"
   },
   "/kakomon/2026/81": {
-    "date": "2026-07-26",
-    "hash": "d2a6d80d95e44083"
+    "date": "2026-10-25",
+    "hash": "3d0ea18e51b456d3"
   },
   "/kakomon/2026/82": {
-    "date": "2026-07-26",
-    "hash": "11eb14f86bd23c36"
+    "date": "2026-10-25",
+    "hash": "68d5b1e780def256"
   },
   "/kakomon/2026/83": {
-    "date": "2026-07-26",
-    "hash": "1b43e2e935cadb36"
+    "date": "2026-10-25",
+    "hash": "bbb5697f91b228d1"
   },
   "/kakomon/2026/84": {
-    "date": "2026-07-26",
-    "hash": "7240bfd0c52d2149"
+    "date": "2026-10-25",
+    "hash": "bb861248322ddf6c"
   },
   "/kakomon/2026/85": {
-    "date": "2026-07-26",
-    "hash": "f1ab50df4ef0ba9e"
+    "date": "2026-10-25",
+    "hash": "a754f3c8d51e7085"
   },
   "/kakomon/2026/86": {
-    "date": "2026-07-26",
-    "hash": "950a586a6e78e353"
+    "date": "2026-10-25",
+    "hash": "2fb3053aa97e5fd1"
   },
   "/kakomon/2026/87": {
-    "date": "2026-07-26",
-    "hash": "6dfe244c72691748"
+    "date": "2026-10-25",
+    "hash": "ff179588f4432906"
   },
   "/kakomon/2026/88": {
-    "date": "2026-07-26",
-    "hash": "5a1fdc8643803c89"
+    "date": "2026-10-25",
+    "hash": "40ead24de71f98b8"
   },
   "/kakomon/2026/89": {
-    "date": "2026-07-26",
-    "hash": "9e9cbc84c0e59d3e"
+    "date": "2026-10-25",
+    "hash": "123ea4eb0bc2e95b"
   },
   "/kakomon/2026/9": {
-    "date": "2026-07-26",
-    "hash": "55a6f8c8f91ef08f"
+    "date": "2026-10-25",
+    "hash": "02db6349cdc2d2bd"
   },
   "/kakomon/2026/90": {
-    "date": "2026-10-13",
-    "hash": "0489e55b7556ad77"
+    "date": "2026-10-25",
+    "hash": "379e0017f6fa0d55"
   },
   "/kakomon/2026/91": {
-    "date": "2026-07-26",
-    "hash": "b3ae37d2adb1e81d"
+    "date": "2026-10-25",
+    "hash": "e2b7740c76574316"
   },
   "/kakomon/2026/92": {
-    "date": "2026-07-26",
-    "hash": "3712ea4e26206cec"
+    "date": "2026-10-25",
+    "hash": "67dde7b0964e557f"
   },
   "/kakomon/2026/93": {
-    "date": "2026-07-26",
-    "hash": "4cf502c5685b578e"
+    "date": "2026-10-25",
+    "hash": "0cb9d6cb91f017ad"
   },
   "/kakomon/2026/94": {
-    "date": "2026-07-26",
-    "hash": "d62d9bcda6a7cb88"
+    "date": "2026-10-25",
+    "hash": "67ef2f48f561ba36"
   },
   "/kakomon/2026/95": {
-    "date": "2026-07-26",
-    "hash": "c18a03bd49e033ac"
+    "date": "2026-10-25",
+    "hash": "ebd84838564bee43"
   },
   "/kakomon/2026/96": {
-    "date": "2026-07-26",
-    "hash": "95311e5c222c123d"
+    "date": "2026-10-25",
+    "hash": "f779dbdf10308162"
   },
   "/kakomon/2026/97": {
-    "date": "2026-07-26",
-    "hash": "9fc538e09dda8b6c"
+    "date": "2026-10-25",
+    "hash": "603d1941742f071b"
   },
   "/kakomon/2026/98": {
-    "date": "2026-10-13",
-    "hash": "f0401512482e50c3"
+    "date": "2026-10-25",
+    "hash": "9a0afa01b9171440"
   },
   "/kakomon/2026/99": {
-    "date": "2026-07-26",
-    "hash": "3f7db7a7c2f8211f"
+    "date": "2026-10-25",
+    "hash": "8df525fee2b7c2c3"
   },
   "/words/acid": {
     "date": "2026-10-12",
