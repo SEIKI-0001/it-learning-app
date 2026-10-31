@@ -15,13 +15,16 @@ import {
   SsdIcon,
   TouchPanelIcon,
 } from "./hardware/HwIcons";
+import { PrintStorePanel, ReadTouchPanel } from "./hardware/IoExamPanels";
 import { Panel, SectionTitle } from "./ui";
 
 // 「入出力装置と各種デバイス」。
 //   ① 人・現実世界 → 入力装置 → コンピュータ → 出力装置 → 人 の一方向の流れ（スマホは縦、PCは横）
 //      両方を担うタッチパネルと、入出力ではない補助記憶（SSD・USBメモリ）は流れの下に分けて置く
 //   ② 接続インタフェース：有線（USB・HDMI）／無線（Bluetooth・NFC）を「何を運ぶか・届く距離」で
-//   ③ 試験ポイント
+//   ③ 紙を読み取る・画面に触れる（スキャナ→OCR・dpi・タッチパネルの方式）／④ 印刷する・しまう（プリンタ方式・DVD・NAS）
+//      … 過去問の出題に合わせて追加（hardware/IoExamPanels）
+//   ⑤ 試験ポイント
 
 type Dev = { name: string; Icon: ComponentType<{ className?: string }>; what: string };
 
@@ -156,12 +159,16 @@ export default function IoDevicesExperience() {
       </Lead>
       <FlowPanel />
       <InterfacePanel />
+      <ReadTouchPanel step={3} />
+      <PrintStorePanel step={4} />
       <PointsPanel
-        step={3}
+        step={5}
         points={[
           <>コンピュータ<b>へ</b>渡す＝入力装置、コンピュータ<b>から</b>返す＝出力装置</>,
           <>USB・HDMIは<b>有線</b>、Bluetooth・NFCは<b>近距離無線</b>（NFCはかざす距離）</>,
-          <>SSD・USBメモリは<b>補助記憶装置</b></>,
+          <>SSD・USBメモリは<b>補助記憶装置</b>。ネットワークに直接つなぐ外部記憶装置は<b>NAS</b></>,
+          <>紙→スキャナ（細かさは<b>dpi</b>）→画像→<b>OCR</b>→テキストデータ</>,
+          <>スマホのタッチパネルは<b>静電容量方式</b>、読出し専用のDVDは<b>DVD-ROM</b></>,
         ]}
         traps={[
           ["スキャナは紙を扱うから出力装置", "紙の内容をコンピュータへ取り込むので入力装置"],
