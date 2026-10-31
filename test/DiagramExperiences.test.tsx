@@ -48,7 +48,7 @@ function renderDeck(Experience: ComponentType) {
 const click = (name: string | RegExp) => fireEvent.click(screen.getByRole("button", { name }));
 
 const TOPICS: [string, ComponentType, string[]][] = [
-  ["strat-corporation-management-organization", CorporationOrganizationExperience, ["corp-ownership", "corp-cxo", "corp-purpose", "corp-forms", "corp-decision"]],
+  ["strat-corporation-management-organization", CorporationOrganizationExperience, ["corp-ownership", "corp-cxo", "corp-purpose", "corp-forms", "corp-decision", "governance-measures", "division-example", "company-system", "people-it"]],
   ["strat-decision-problem-solving", DecisionMethodsExperience, ["decision-rolemap", "decision-diverge", "decision-affinity", "decision-pareto", "decision-fishbone", "decision-delphi"]],
   ["strat-technology-development-strategy", TechRoadmapExperience, ["roadmap-stages", "roadmap-chart", "roadmap-open", "roadmap-patent"]],
   ["strat-engineering-systems", EngineeringSystemsExperience, ["eng-flow", "eng-letters", "eng-concurrent"]],
@@ -176,5 +176,19 @@ describe("other figures", () => {
     const examples = screen.getByTestId("pmbok-axes").querySelectorAll("[data-example]");
     expect(examples).toHaveLength(1);
     expect(examples[0]).toHaveTextContent("予算");
+  });
+});
+
+describe("corporation: exam additions", () => {
+  it("governance is about watching the managers, and the company system means independent profit and loss", () => {
+    reduceMotion();
+    renderDeck(CorporationOrganizationExperience);
+    expect(screen.getByText("1 / 8")).toBeInTheDocument();
+    const measures = screen.getByTestId("governance-measures");
+    expect(measures.querySelector('[data-kind="strong"]')).toHaveTextContent("社外取締役");
+    expect(measures.querySelector('[data-kind="strong"]')).toHaveTextContent("執行役員制度");
+    expect(measures.querySelector('[data-kind="not"]')).toHaveTextContent("株式公開買付け");
+    expect(screen.getByTestId("company-system")).toHaveTextContent("独立採算");
+    expect(screen.getByTestId("people-it").querySelector('[data-term="アダプティブラーニング"]')).toHaveTextContent("理解度");
   });
 });

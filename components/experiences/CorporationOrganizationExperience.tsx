@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { DivisionCompanyPanel, GovernancePanel } from "./corporation/CorpExamPanels";
 import OrgFormsPanel from "./corporation/OrgFormsPanel";
 import { Arrow, Box, Caption, Lead, PointsPanel } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
@@ -12,7 +13,8 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 //   ③ 会社の目的を示す言葉：経営理念 → ミッション → ビジョン → 経営目標 の積み上げ
 //   ④ 4つの組織形態：同じ4人をタブで組み替え、佐藤さんの上司が誰になるかで比べる（corporation/OrgFormsPanel）
 //   ⑤ 見分ける順番：期間限定？ → 上司が2人？ → 何で分ける？ の判定フロー
-//   ⑥ 試験ポイント
+//   ⑥ コーポレートガバナンス／⑦ 事業部制の具体とカンパニー制・人材のIT … 過去問の出題に合わせて追加（corporation/CorpExamPanels）
+//   ⑧ 試験ポイント
 
 export default function CorporationOrganizationExperience() {
   return (
@@ -25,13 +27,16 @@ export default function CorporationOrganizationExperience() {
       <PurposePanel />
       <OrgFormsPanel step={4} />
       <OrgDecisionPanel />
+      <GovernancePanel step={6} />
+      <DivisionCompanyPanel step={7} />
       <PointsPanel
-        step={6}
+        step={8}
         points={[
           <>取締役を<b>選ぶ</b>のは株主総会、経営の重要事項を<b>決めて監督</b>するのは取締役会</>,
           <>所有（株主）と経営（取締役・経営者）を分ける＝<b>所有と経営の分離</b></>,
           <>CIO＝<b>情報（IT）</b>戦略、CTO＝<b>技術</b>戦略、CFO＝<b>財務</b>の責任者。真ん中の1文字で見分ける</>,
           <>2つの軸が交差＝<b>マトリックス</b>、目的のための期間限定チーム＝<b>プロジェクト</b></>,
+          <>独立採算の社内会社＝<b>カンパニー制</b>、経営者への監視・監督＝<b>ガバナンス</b></>,
         ]}
         traps={[
           ["株主が日々の業務を直接指揮する", "株主は株主総会で取締役を選ぶ。業務は経営者が執行する"],
