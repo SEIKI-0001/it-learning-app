@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Panel, SectionTitle } from "./ui";
+import { ServiceValuePanel, SlaQuiz, SlmPanel } from "./sla/SlaExamPanels";
 import Icon from "@/components/ui/Icon";
 import { InlineIcon } from "@/components/ui/Pictogram";
 
@@ -10,6 +11,7 @@ import { InlineIcon } from "@/components/ui/Pictogram";
 //   ① サービスマネジメント = ITサービスを安定して届ける運用管理
 //   ② SLA = 提供者と利用者で決める「品質の約束」（稼働率を体験）
 //   ③ SLAに書く / 書かない？ 仕分けクイズ
+//   ④〜⑥ 過去問で問われる周辺（SLA/SLMと紛らわしい文書、サービスの保証・可用性・MTBSI。sla/SlaExamPanels）
 // ============================================================================
 
 function WhatIs() {
@@ -101,11 +103,11 @@ function Availability() {
         <CalcStep n={4} label="稼働時間 ÷ 約束したサービス時間" note={`${workMin.toLocaleString()} ÷ 525,600`} value={ratio.toFixed(4)} />
         <CalcStep n={5} label="稼働率(%)" note="④ × 100" value={`${ratePercent}%`} highlight />
       </div>
-      <p className="mt-2 text-center text-[13px] font-bold text-gray-600">約束した時間のうち、実際に使えた割合</p>
+      <p className="mt-2 text-center text-[13px] font-bold text-gray-600">約束した時間のうち、実際に使えた割合＝<span className="text-brand-700">可用性</span></p>
       <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900 ring-1 ring-amber-200">
         分母は「1年じゅう」とは限りません。<b>SLAで決めた提供時間</b>が分母です。
-        例：平日（月〜金）の7時〜22時に提供し、稼働率98%で合意したなら、1週間は 5日 × 15時間 ＝ 75時間。
-        止まってよいのは 75時間 × 2% ＝ <b>1.5時間</b>です。
+        例：月〜土の8時〜20時に提供し、稼働率99%で合意したなら、1週間は 6日 × 12時間 ＝ 72時間。
+        止まってよいのは 72時間 × 1% ＝ <b>0.72時間（約43分）</b>です。
       </div>
       <p className="mt-3 text-center text-xs text-gray-400">高い稼働率ほど安心だが、設備や費用も増える</p>
     </Panel>
@@ -223,6 +225,9 @@ export default function SlaExperience() {
       <WhatIs />
       <Availability />
       <Quiz />
+      <SlmPanel step={4} />
+      <ServiceValuePanel step={5} />
+      <SlaQuiz step={6} />
     </div>
   );
 }
