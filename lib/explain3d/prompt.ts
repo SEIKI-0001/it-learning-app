@@ -2,7 +2,7 @@
 // AI の役目は「既存の模型を選ぶ」か「決まった部品で場面を組む」かを決めて JSON で返すことだけ。
 // 座標・色・カメラはアプリが決めるので、AI には書かせない。
 
-import { ACTOR_KINDS, EXPLAIN3D_LIMITS as L, ITEM_KINDS } from "./types";
+import { ACTOR_KINDS, EXPLAIN3D_LIMITS as L, ITEM_KINDS, PLACES, SCREEN_KINDS } from "./types";
 import type { ExistingModel } from "./catalog";
 
 const ACTOR_NOTE: Record<(typeof ACTOR_KINDS)[number], string> = {
@@ -35,6 +35,15 @@ const ITEM_NOTE: Record<(typeof ITEM_KINDS)[number], string> = {
   coin: "お金",
 };
 
+const PLACE_NOTE: Record<(typeof PLACES)[number], string> = {
+  home: "自宅の部屋",
+  office: "会社のオフィス",
+  datacenter: "データセンター・サーバ室",
+  internet: "インターネット（通信会社の回線・ルータ）",
+  town: "町（お店・銀行・工場・建物が並ぶ通り）",
+  outside: "攻撃者の部屋（外部の悪意ある場所）",
+};
+
 export function buildExplainSystemPrompt(input: {
   models: readonly (ExistingModel & { title: string })[];
   topics: readonly { id: string; title: string }[];
@@ -54,11 +63,15 @@ export function buildExplainSystemPrompt(input: {
     `- 置く物は ${L.actorsMin}〜${L.actorsMax} 個。kind は次から選ぶ：`,
     ...ACTOR_KINDS.map((k) => `  - ${k}: ${ACTOR_NOTE[k]}`),
     "- 置く物は、左から右へ流れの順に並べる（最初に動き出す物を先に書く）。id は半角英字の短い名前。",
+    `- 各物には place（現実に置かれている場所）を付ける。場所は最大${L.placesMax}つ。次から選ぶ：`,
+    ...PLACES.map((p) => `  - ${p}: ${PLACE_NOTE[p]}`),
+    "- 現実の配置にする（例：あなたのPCは home、会社のサーバは datacenter、途中の回線は internet、お店や銀行の建物は town）。",
     `- name は${L.actorNameMaxLength}文字以内（例：「あなたのPC」「Webサーバ」）。`,
     "- 各コマで動く物は1つまで（move）。item は次から選ぶ：",
     ...ITEM_KINDS.map((k) => `  - ${k}: ${ITEM_NOTE[k]}`),
     `- move.tag は${L.tagMaxLength}文字以内（例：「リクエスト」）、move.body は${L.bodyMaxLength}文字以内の中身の例（無くてよい）。暗号化されていれば locked=true。`,
     `- caption はそのコマで起きていることを${L.captionMaxLength}文字以内の1文で。title は${L.stepTitleMaxLength}文字以内。`,
+    `- 画面のある物（${SCREEN_KINDS.join("・")}）は、そのコマで画面に出ている内容を screen に書ける（${L.screenTextMaxLength}文字以内。例：{"actor":"pc","text":"ログイン画面"}）。無いコマは null。`,
     "- tone は info（ふつう）・ok（うまくいった）・danger（攻撃・失敗・拒否）。active は光らせる物、alert は赤くする物の id。",
     "- 最後のコマで、結果（何が分かるか）を一言で締める。",
     "- 試験で使う正しい用語で書く。不確かな数字・製品名・規格の細部は書かない。",
@@ -71,7 +84,7 @@ export function buildExplainSystemPrompt(input: {
     "## 返す JSON（この形だけ。前後に文章を書かない）",
     '{"mode":"existing","topicId":"…","reason":"この模型で分かること（40文字以内）"}',
     "または",
-    '{"mode":"generated","relatedTopicId":"…","scene":{"title":"…","summary":"全体の要点（80文字以内）","actors":[{"id":"pc","kind":"pc","name":"あなたのPC"}],"steps":[{"title":"…","caption":"…","tone":"info","active":["pc"],"alert":[],"move":{"from":"pc","to":"web","item":"parcel","tag":"…","body":"…","locked":false}}]}}',
+    '{"mode":"generated","relatedTopicId":"…","scene":{"title":"…","summary":"全体の要点（80文字以内）","actors":[{"id":"pc","kind":"pc","name":"あなたのPC","place":"home"},{"id":"web","kind":"server","name":"Webサーバ","place":"datacenter"}],"steps":[{"title":"…","caption":"…","tone":"info","active":["pc"],"alert":[],"move":{"from":"pc","to":"web","item":"parcel","tag":"…","body":"…","locked":false},"screen":{"actor":"pc","text":"…"}}]}}',
     "または",
     '{"mode":"off_topic"}',
   ].join("\n");

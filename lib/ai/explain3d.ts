@@ -4,6 +4,7 @@
 
 import { getGeminiModel } from "@/lib/ai/gradingCore";
 import { matchExistingModel } from "@/lib/explain3d/catalog";
+import { FIXTURE_WEB, pickFixture } from "./explain3dFixtures";
 
 const TIMEOUT_MS = 25_000;
 const MAX_OUTPUT_TOKENS = 2_000;
@@ -23,28 +24,8 @@ export function getExplain3dModel(): string {
   return process.env.EXPLAIN3D_AI_MODEL?.trim() || getGeminiModel();
 }
 
-/** 開発用の固定の場面（キーが無いときに画面と再生部品を確かめる） */
-export const DEV_STUB_OUTPUT = {
-  mode: "generated",
-  relatedTopicId: "tech-http-https",
-  scene: {
-    title: "（開発用）Webページが表示される仕組み",
-    summary: "GEMINI_API_KEY が未設定なので、AI の代わりに固定の場面を表示しています。",
-    actors: [
-      { id: "user", kind: "person", name: "あなた" },
-      { id: "pc", kind: "laptop", name: "ノートPC" },
-      { id: "router", kind: "wifi", name: "Wi-Fiルータ" },
-      { id: "web", kind: "server", name: "Webサーバ" },
-    ],
-    steps: [
-      { title: "URLを入力", caption: "ブラウザにURLを入れて開く", tone: "info", active: ["user", "pc"], alert: [], move: null },
-      { title: "リクエスト", caption: "PCがWebサーバへページを頼む", tone: "info", active: ["pc"], alert: [], move: { from: "pc", to: "router", item: "parcel", tag: "リクエスト", body: "GET /index.html" } },
-      { title: "インターネットへ", caption: "ルータを通ってWebサーバへ届く", tone: "info", active: ["router"], alert: [], move: { from: "router", to: "web", item: "parcel", tag: "リクエスト", body: "GET /index.html" } },
-      { title: "レスポンス", caption: "Webサーバがページのデータを返す", tone: "ok", active: ["web"], alert: [], move: { from: "web", to: "pc", item: "parcel", tag: "レスポンス", body: "HTML" } },
-      { title: "表示", caption: "受け取ったHTMLをブラウザが表示する", tone: "ok", active: ["pc", "user"], alert: [], move: null },
-    ],
-  },
-} as const;
+/** 開発用の固定の場面（キーが無いときに画面と再生部品を確かめる）。中身は explain3dFixtures.ts */
+export const DEV_STUB_OUTPUT = FIXTURE_WEB;
 
 export async function generateExplainPlan(input: {
   system: string;
@@ -57,7 +38,7 @@ export async function generateExplainPlan(input: {
     if (process.env.NODE_ENV !== "production") {
       const matched = matchExistingModel(input.question);
       return {
-        output: matched ? { mode: "existing", topicId: matched.topicId, reason: "（開発用）キーワードで選んだ模型です" } : DEV_STUB_OUTPUT,
+        output: matched ? { mode: "existing", topicId: matched.topicId, reason: "（開発用）キーワードで選んだ模型です" } : pickFixture(input.question),
         model: "dev-stub",
       };
     }

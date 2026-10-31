@@ -3,13 +3,18 @@
 
 import {
   ACTOR_KINDS,
+  DEFAULT_PLACE,
   EXPLAIN3D_LIMITS as L,
   ITEM_KINDS,
+  PLACES,
+  SCREEN_KINDS,
   STEP_TONES,
   type ActorKind,
   type GeneratedScene,
   type ItemKind,
+  type Place,
   type SceneActor,
+  type SceneScreen,
   type SceneMove,
   type SceneStep,
   type StepTone,
@@ -18,6 +23,8 @@ import {
 const ACTOR_SET = new Set<string>(ACTOR_KINDS);
 const ITEM_SET = new Set<string>(ITEM_KINDS);
 const TONE_SET = new Set<string>(STEP_TONES);
+const PLACE_SET = new Set<string>(PLACES);
+const SCREEN_SET = new Set<string>(SCREEN_KINDS);
 
 /** 画面に出す1行の文。改行・山括弧・バッククォートを落として切り詰める */
 export function cleanText(value: unknown, max: number): string {
@@ -41,7 +48,8 @@ function parseActors(value: unknown): SceneActor[] {
     const name = cleanText(r.name, L.actorNameMaxLength);
     if (!id || !kind || !name || seen.has(id)) continue;
     seen.add(id);
-    actors.push({ id, kind, name });
+    const place = typeof r.place === "string" && PLACE_SET.has(r.place) ? (r.place as Place) : DEFAULT_PLACE[kind];
+    actors.push({ id, kind, name, place });
     if (actors.length >= L.actorsMax) break;
   }
   return actors;
@@ -59,10 +67,31 @@ function parseMove(value: unknown, ids: Set<string>): SceneMove | null {
   return { from, to, item, tag, ...(body ? { body } : {}), ...(r.locked === true ? { locked: true } : {}) };
 }
 
+/** 場所は流れの順に最大 placesMax 個。あふれた物は、その種類の決まった場所（無ければ最初の場所）へ移す */
+function limitPlaces(actors: SceneActor[]): SceneActor[] {
+  const kept: Place[] = [];
+  for (const a of actors) if (!kept.includes(a.place) && kept.length < L.placesMax) kept.push(a.place);
+  return actors.map((a) => {
+    if (kept.includes(a.place)) return a;
+    const fallback = DEFAULT_PLACE[a.kind];
+    return { ...a, place: kept.includes(fallback) ? fallback : kept[0] };
+  });
+}
+
+function parseScreen(value: unknown, actors: ReadonlyMap<string, SceneActor>): SceneScreen | null {
+  if (!value || typeof value !== "object") return null;
+  const r = value as Record<string, unknown>;
+  const actor = actors.get(cleanId(r.actor));
+  const text = cleanText(r.text, L.screenTextMaxLength);
+  if (!actor || !SCREEN_SET.has(actor.kind) || !text) return null;
+  return { actor: actor.id, text };
+}
+
 const idList = (value: unknown, ids: Set<string>) =>
   Array.isArray(value) ? [...new Set(value.map(cleanId).filter((id) => ids.has(id)))] : [];
 
-function parseSteps(value: unknown, ids: Set<string>): SceneStep[] {
+function parseSteps(value: unknown, actors: ReadonlyMap<string, SceneActor>): SceneStep[] {
+  const ids = new Set(actors.keys());
   if (!Array.isArray(value)) return [];
   const steps: SceneStep[] = [];
   for (const raw of value) {
@@ -76,7 +105,7 @@ function parseSteps(value: unknown, ids: Set<string>): SceneStep[] {
     const active = idList(r.active, ids);
     // 動きがあるのに光らせる物が無いときは、受け取る側を光らせる
     if (move && active.length === 0) active.push(move.to);
-    steps.push({ title, caption, tone, active, alert: idList(r.alert, ids), move });
+    steps.push({ title, caption, tone, active, alert: idList(r.alert, ids), move, screen: parseScreen(r.screen, actors) });
     if (steps.length >= L.stepsMax) break;
   }
   return steps;
@@ -87,12 +116,13 @@ export function parseGeneratedScene(value: unknown): GeneratedScene | null {
   const r = value as Record<string, unknown>;
   const actors = parseActors(r.actors);
   if (actors.length < L.actorsMin) return null;
-  const ids = new Set(actors.map((a) => a.id));
-  const steps = parseSteps(r.steps, ids);
+  const steps = parseSteps(r.steps, new Map(actors.map((a) => [a.id, a])));
   if (steps.length < L.stepsMin) return null;
   // 一度も出番の無い物は置かない（模型が散らからないように）
-  const used = new Set(steps.flatMap((s) => [...s.active, ...s.alert, ...(s.move ? [s.move.from, s.move.to] : [])]));
-  const placed = actors.filter((a) => used.has(a.id));
+  const used = new Set(
+    steps.flatMap((s) => [...s.active, ...s.alert, ...(s.move ? [s.move.from, s.move.to] : []), ...(s.screen ? [s.screen.actor] : [])]),
+  );
+  const placed = limitPlaces(actors.filter((a) => used.has(a.id)));
   if (placed.length < L.actorsMin) return null;
   const title = cleanText(r.title, L.titleMaxLength);
   if (!title) return null;
