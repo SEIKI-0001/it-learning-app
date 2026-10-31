@@ -34,7 +34,7 @@ const contentButtons = () =>
 
 const STATIC_TOPICS: [string, ComponentType, number][] = [
   ["tech-parallel-systems", ParallelSystemsExperience, 5],
-  ["tech-io-devices", IoDevicesExperience, 3],
+  ["tech-io-devices", IoDevicesExperience, 5],
   ["tech-system-performance", SystemPerformanceExperience, 4],
   ["tech-ui-ux", UiUxExperience, 4],
 ];
@@ -83,6 +83,14 @@ describe("12〜18章：静的な図解に作り直したテーマ", () => {
     expect(screen.getByTestId("io-outputs")).toHaveTextContent("プリンタ");
     expect(screen.getByTestId("io-special")).toHaveTextContent("タッチパネル ＝ 入力と出力の両方");
     expect(screen.getByTestId("io-special")).toHaveTextContent("補助記憶装置");
+    slide(3);
+    expect(screen.getByTestId("ocr-flow").textContent).toMatch(/イメージスキャナー.*OCR.*テキストデータ/);
+    expect(screen.getByTestId("ocr-terms").querySelector('[data-term="dpi"]')).toHaveTextContent("bps");
+    expect(screen.getByTestId("touch-methods").querySelector('[data-term="静電容量方式"]')).toHaveTextContent("指が表面に近づいた");
+    slide(4);
+    expect(screen.getByTestId("printer-methods").querySelector('[data-term="インクジェット"]')).toHaveTextContent("微細な粒子");
+    expect(screen.getByTestId("dvd-types").querySelector('[data-term="DVD-ROM"]')).toHaveTextContent("読出し専用");
+    expect(screen.getByTestId("nas")).toHaveTextContent("ネットワークに直接接続");
   });
 
   it("performance: meaning → how → example → answer for each metric", () => {
