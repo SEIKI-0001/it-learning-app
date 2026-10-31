@@ -27,9 +27,6 @@ import {
   type RouteTone,
 } from "@/components/experiences/scene/DioramaParts";
 import { DataTag, DioramaLabel, DioramaStage, DioramaToken, NameChip } from "@/components/experiences/scene/DioramaStage";
-import { SceneTimeline } from "@/components/experiences/scene/SceneTimeline";
-import { useReducedMotion } from "@/components/experiences/scene/useReducedMotion";
-import { useStepPlayer } from "@/components/experiences/scene/useStepPlayer";
 import {
   OVERVIEW,
   WORLD,
@@ -42,7 +39,7 @@ import {
 } from "@/lib/explain3d/layout";
 import type { GeneratedScene, SceneMove, StepTone } from "@/lib/explain3d/types";
 
-// AI が決まった部品と動きだけで組んだ場面を、共通の舞台（DioramaStage）で再生する。
+// AI が決まった部品と動きだけで組んだ場面を、共通の舞台（DioramaStage）で再生する（WebGL が無い端末向け）。
 // 置き方・道・カメラは lib/explain3d/layout が決める。AI の文は名札・札・吹き出しの文字としてだけ使う。
 
 const TONE_CARRY: Record<StepTone, CarryTone> = { info: "info", ok: "ok", danger: "danger" };
@@ -120,10 +117,19 @@ function Carry({ move, tone }: { move: SceneMove; tone: StepTone }) {
   }
 }
 
-export default function GeneratedDiorama({ scene }: { scene: GeneratedScene }) {
-  const reducedMotion = useReducedMotion();
-  const player = useStepPlayer(scene.steps.length, reducedMotion);
-  const step = scene.steps[player.index];
+/** WebGL が使えない端末向けの模型（CSS 3D）。コマの状態は ExplainPlayer が持つ */
+export default function GeneratedDiorama({
+  scene,
+  index,
+  forward,
+  reducedMotion,
+}: {
+  scene: GeneratedScene;
+  index: number;
+  forward: boolean;
+  reducedMotion: boolean;
+}) {
+  const step = scene.steps[index];
   const placed = placeActors(scene);
   const path = step.move ? movePath(step.move, placed) : [];
   const focus = stepFocus(step, placed);
@@ -131,75 +137,62 @@ export default function GeneratedDiorama({ scene }: { scene: GeneratedScene }) {
   const actorNames = scene.actors.map((a) => a.name).join("・");
 
   return (
-    <div data-testid="explain-generated" data-step={player.index}>
-      <div className="min-w-0">
-        <p className="text-[11px] font-bold text-brand-700">
-          STEP {player.index + 1} / {scene.steps.length}
-        </p>
-        <p className="mt-0.5 text-sm font-bold text-gray-900" data-testid="explain-step-title">
-          {step.title}
-        </p>
-      </div>
-
-      <div className="-mx-2 mt-3 sm:mx-auto sm:max-w-xl">
-        <DioramaStage
-          testId="explain-scene"
-          ariaLabel={`${scene.title}の模型。${actorNames}が並んでいる`}
-          // 最初のコマは全体（登場する物をひととおり見せる）、あとは動きの両端か主役へ寄る
-          shot={player.index === 0 ? OVERVIEW : stepCamera(step, placed)}
-          shotKey={player.index}
-          forward={player.forward}
-          reducedMotion={reducedMotion}
-          caption={{ id: player.index, text: step.caption, tone: step.tone, ...(focus ? { at: focus } : {}) }}
-          tokens={{ carry: { at: path.length ? path[path.length - 1] : null, path: path.length ? path : undefined } }}
-          world={
-            <>
-              <Floor x={0} y={-10} w={WORLD.w} d={WORLD.d} h={16} material="plain" />
-              {path.length > 1 && step.move && (
-                <FloorRoute points={path} width={7} z={4.8} tone={step.move.locked ? "secure" : TONE_ROUTE[step.tone]} active />
-              )}
-              {placed.map((a) => (
-                <Group key={a.id} data={{ "data-actor": a.id, "data-kind": a.kind, "data-state": stateOf(a.id) }}>
-                  <Actor actor={a} state={stateOf(a.id)} />
-                </Group>
-              ))}
-              <DioramaToken id="carry">{step.move && <Carry move={step.move} tone={step.tone} />}</DioramaToken>
-            </>
-          }
-          labels={
-            <>
-              {step.move && (
-                <DioramaLabel token="carry" dz={14} place="above">
-                  <div data-testid="explain-carry">
-                    <DataTag tag={step.move.tag} body={step.move.body} tone={step.move.locked ? "secure" : TONE_TAG[step.tone]} />
-                  </div>
-                </DioramaLabel>
-              )}
-              {placed.map((a) => {
-                const state = stateOf(a.id);
-                return (
-                  <DioramaLabel key={a.id} at={{ x: a.at.x, y: a.at.y, z: actorTop(a.kind) + 6 }} place="above" optional={state === "idle"}>
-                    <NameChip name={a.name} tone={state === "error" ? "danger" : state === "active" ? "info" : "muted"} />
-                  </DioramaLabel>
-                );
-              })}
-            </>
-          }
-        />
-      </div>
-
-      <div className="mt-3">
-        <SceneTimeline
-          index={player.index}
-          steps={scene.steps}
-          playing={player.playing}
-          reducedMotion={reducedMotion}
-          onMove={player.move}
-          onTogglePlay={player.togglePlay}
-          playLabel={`${scene.title}を再生`}
-          timelineLabel={`${scene.title}のタイムライン`}
-        />
-      </div>
-    </div>
+    <DioramaStage
+      testId="explain-scene"
+      dataAttrs={{ "data-scene": "flat", "data-step": String(index) }}
+      ariaLabel={`${scene.title}の模型。${actorNames}が並んでいる`}
+      // 最初のコマは全体（登場する物をひととおり見せる）、あとは動きの両端か主役へ寄る
+      shot={index === 0 ? OVERVIEW : stepCamera(step, placed)}
+      shotKey={index}
+      forward={forward}
+      reducedMotion={reducedMotion}
+      caption={{ id: index, text: step.caption, tone: step.tone, ...(focus ? { at: focus } : {}) }}
+      tokens={{ carry: { at: path.length ? path[path.length - 1] : null, path: path.length ? path : undefined } }}
+      world={
+        <>
+          <Floor x={0} y={-10} w={WORLD.w} d={WORLD.d} h={16} material="plain" />
+          {path.length > 1 && step.move && (
+            <FloorRoute points={path} width={7} z={4.8} tone={step.move.locked ? "secure" : TONE_ROUTE[step.tone]} active />
+          )}
+          {placed.map((a) => (
+            <Group key={a.id} data={{ "data-actor": a.id, "data-kind": a.kind, "data-state": stateOf(a.id) }}>
+              <Actor actor={a} state={stateOf(a.id)} />
+            </Group>
+          ))}
+          <DioramaToken id="carry">{step.move && <Carry move={step.move} tone={step.tone} />}</DioramaToken>
+        </>
+      }
+      labels={
+        <>
+          {step.move && (
+            <DioramaLabel token="carry" dz={14} place="above">
+              <div data-testid="explain-carry">
+                <DataTag tag={step.move.tag} body={step.move.body} tone={step.move.locked ? "secure" : TONE_TAG[step.tone]} />
+              </div>
+            </DioramaLabel>
+          )}
+          {step.screen && (
+            <DioramaLabel at={focusOf(step.screen.actor, placed)} place="right" dz={10}>
+              <div data-testid="explain-screen">
+                <DataTag tag="画面" body={step.screen.text} tone="plain" />
+              </div>
+            </DioramaLabel>
+          )}
+          {placed.map((a) => {
+            const state = stateOf(a.id);
+            return (
+              <DioramaLabel key={a.id} at={{ x: a.at.x, y: a.at.y, z: actorTop(a.kind) + 6 }} place="above" optional={state === "idle"}>
+                <NameChip name={a.name} tone={state === "error" ? "danger" : state === "active" ? "info" : "muted"} />
+              </DioramaLabel>
+            );
+          })}
+        </>
+      }
+    />
   );
+}
+
+function focusOf(id: string, placed: readonly PlacedActor[]) {
+  const a = placed.find((x) => x.id === id);
+  return a ? { x: a.at.x, y: a.at.y, z: actorTop(a.kind) * 0.7 } : { x: 0, y: 0, z: 0 };
 }

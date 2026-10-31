@@ -9,7 +9,7 @@ import { cardClass } from "@/components/ui/Card";
 import { ExperienceSlideDeck } from "@/components/experiences/ui";
 import { getUserId, todayLocalDate } from "@/lib/userSession";
 import { EXPLAIN3D_LIMITS, type ExplainRequest, type ExplainResponse, type ExplainResult } from "@/lib/explain3d/types";
-import GeneratedDiorama from "./GeneratedDiorama";
+import ExplainPlayer from "./ExplainPlayer";
 import { EXISTING_MODEL_VIEWS } from "./existingModels";
 
 // 「〜の仕組みを解説して」と入力すると、3D模型で解説する（β）。
@@ -103,7 +103,7 @@ function GeneratedResult({ result }: { result: Extract<ExplainResult, { kind: "g
       <h2 className="mt-0.5 text-base font-bold text-gray-900">{scene.title}</h2>
       {scene.summary && <p className="mt-1 text-sm leading-relaxed text-gray-600">{scene.summary}</p>}
       <div className="mt-3">
-        <GeneratedDiorama scene={scene} />
+        <ExplainPlayer scene={scene} />
       </div>
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
         この模型は質問に合わせてAIがその場で組み立てたものです。用語や細かい点は、レッスンの解説で確かめてください。
