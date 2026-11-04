@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import QuestionFigures from "@/components/questions/QuestionFigures";
 import { Breadcrumb, GuideCTA, JsonLd } from "@/components/guide/GuideParts";
@@ -107,9 +108,10 @@ export default async function KakomonQuestionPage({ params }: Props) {
           <summary>正解と解説を見る</summary>
           <div className="k-answer-body">
             <p className="k-correct">正解：{CHOICE_LABELS[view.correctChoice]}</p>
-            {notes ? (
+            {/* 段落の解説は常に出す。選択肢ごとの解説はその補足として下に併記する。 */}
+            <p className="k-explanation">{view.explanation}</p>
+            {notes && (
               <>
-                <p className="k-point">{notes.point}</p>
                 <h2 className="k-notes-title">
                   {notes.kind === "choices" ? "選択肢ごとの解説" : "記述ごとの解説"}
                 </h2>
@@ -120,13 +122,21 @@ export default async function KakomonQuestionPage({ params }: Props) {
                         {item.label}
                         {item.correct && <span className="k-notes-badge">正解</span>}
                       </dt>
-                      <dd>{item.text}</dd>
+                      <dd>
+                        {item.segments.map((seg, i) =>
+                          seg.href ? (
+                            <a key={i} href={seg.href}>
+                              {seg.text}
+                            </a>
+                          ) : (
+                            <Fragment key={i}>{seg.text}</Fragment>
+                          ),
+                        )}
+                      </dd>
                     </div>
                   ))}
                 </dl>
               </>
-            ) : (
-              <p className="k-explanation">{view.explanation}</p>
             )}
             {figure && (
               <figure className="k-slide">

@@ -71,7 +71,8 @@ describe("public SEO surface", () => {
   });
 
   it("gives every sitemap entry for a content page a real, non-future lastmod so Google re-reads changed pages", () => {
-    const today = new Date().toISOString().slice(0, 10);
+    // 日付は `npm run seo:lastmod` と同じく日本時間で付けるので、比べる「今日」も日本時間にする
+    const today = new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
     const contentPage = /\/(kakomon\/\d+\/\d+|words\/[^/]+|kaisetsu\/[^/]+)$/;
     const entries = sitemap().filter((e) => contentPage.test(e.url));
     expect(entries.length).toBeGreaterThan(500);

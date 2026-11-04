@@ -81,11 +81,38 @@ export function getAdjacentKakomon(q: KakomonQuestion): {
   return { prev: list[i - 1] ?? null, next: list[i + 1] ?? null };
 }
 
-/** 同じトピックの他年度・他の問（新しい年度から最大 limit 件）。 */
+/**
+ * 関連リンクの新しい選び方（論点タグ優先・他年度優先・英略語は日本語名でも探す）を試している年度。
+ * 2026-11 の品質改善の試行。効果と作業の流れを確かめてから他の年度へ広げる。
+ */
+export const RELATED_V2_YEARS: ReadonlySet<number> = new Set([2025]);
+
+/** 同じトピックの他年度・他の問（新しい年度から最大 limit 件）。試行中の年度は getRelatedKakomonV2。 */
 export function getRelatedKakomon(q: KakomonQuestion, limit = 5): KakomonQuestion[] {
+  if (RELATED_V2_YEARS.has(q.view.year)) return getRelatedKakomonV2(q, limit);
   return getAllKakomonQuestions()
     .filter((x) => x.view.topicId === q.view.topicId && x.view.id !== q.view.id)
     .slice(0, limit);
+}
+
+/**
+ * 論点タグが重なる問題を優先し、同点なら別の年度を先に出す。
+ * 同じトピックの問題を新しい順に並べるだけだと、同じトピックのページすべてに同じ5問が並ぶため。
+ * 点数: 共有するタグ1つにつき2点、同じトピックなら1点。0点の問題は出さない。
+ */
+export function getRelatedKakomonV2(q: KakomonQuestion, limit = 5): KakomonQuestion[] {
+  const tags = new Set(q.tags);
+  return getAllKakomonQuestions()
+    .filter((x) => x.view.id !== q.view.id)
+    .map((x, order) => {
+      const shared = x.tags.filter((t) => tags.has(t)).length;
+      const score = shared * 2 + (x.view.topicId === q.view.topicId ? 1 : 0);
+      return { x, score, otherYear: x.view.year !== q.view.year ? 1 : 0, order };
+    })
+    .filter((c) => c.score > 0)
+    .sort((a, b) => b.score - a.score || b.otherYear - a.otherYear || a.order - b.order)
+    .slice(0, limit)
+    .map((c) => c.x);
 }
 
 // ---- 英略語との相互リンク ----------------------------------------------------
@@ -120,9 +147,20 @@ function getWordIndex() {
   return wordIndex;
 }
 
-/** 問題文・選択肢・解説に出てくる英略語。 */
+/** 問題文・選択肢・解説に出てくる英略語。試行中の年度は、論点タグと日本語名の一致も足す。 */
 export function getWordsInKakomon(q: KakomonQuestion): WordlistEntry[] {
-  return getWordIndex().byQuestion.get(q.view.id) ?? [];
+  const found = getWordIndex().byQuestion.get(q.view.id) ?? [];
+  if (!RELATED_V2_YEARS.has(q.view.year)) return found;
+  const asked = [q.view.prompt, ...q.view.choices.map((c) => c.text)].join("\n");
+  const extra = getAllWords().filter(
+    (w) =>
+      !found.some((f) => f.id === w.id) &&
+      (q.tags.includes(w.acronym) ||
+        q.tags.includes(w.japanese) ||
+        // 短い日本語名（"監査" など）は別の語の一部に当たりやすいので4文字以上に限る
+        (w.japanese.length >= 4 && asked.includes(w.japanese))),
+  );
+  return [...found, ...extra];
 }
 
 /** その英略語が出てくる公開過去問（新しい年度・問番号順）。 */

@@ -510,11 +510,7 @@
   margin: 8px 0 0;
   white-space: pre-wrap;
 }
-/* 要点1文＋選択肢（記述）ごとの解説。正解の行だけ藍で縁取る */
-.guide .k-point {
-  margin: 8px 0 0;
-  font-weight: 600;
-}
+/* 段落の解説の下に併記する、選択肢（記述）ごとの解説。正解の行だけ藍で縁取る */
 .guide .k-answer-body .k-notes-title {
   margin: 18px 0 0;
   font-size: 0.86rem;
