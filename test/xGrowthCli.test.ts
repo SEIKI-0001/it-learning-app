@@ -71,8 +71,19 @@ describe("scheduled workflow safety defaults", () => {
   });
   it("cannot post: read-only permissions, no AI key, only the read CLI is run", () => {
     expect(wf).toContain("permissions:\n  contents: read");
-    expect(wf).not.toMatch(/ANTHROPIC|x:post|X_POST_ENABLED|X_POST_DRY_RUN/);
-    expect(wf.match(/run: npm run [^\n]+/g)).toEqual(["run: npm run x:growth -- collect --fixture", "run: npm run x:growth -- collect"]);
+    expect(wf).not.toMatch(/ANTHROPIC|x:post -- (run|recover|reconcile)|X_POST_ENABLED|X_POST_DRY_RUN/);
+    expect(wf.match(/run: npm run [^\n]+/g)).toEqual(["run: npm run x:post -- metrics --owned --diagnose --ids \"$VERIFY_POST_ID\"", "run: npm run x:growth -- collect --fixture", "run: npm run x:growth -- collect"]);
     expect(wf).toContain("cancel-in-progress: false");
+  });
+  it("collects every 6 hours so each 24h/72h window gets more than one run", () => {
+    expect(wf.match(/- cron: '([^']+)'/g)).toEqual(["- cron: '15 */6 * * *'"]);
+  });
+  it("the one-off live read is manual only, capped at one id, passes the id via env, and touches no DB", () => {
+    const step = wf.slice(wf.indexOf("- name: One approved live read"), wf.indexOf("- name: Offline fixture collection"));
+    expect(step).toContain("if: github.event_name == 'workflow_dispatch' && inputs.verify_post_id != ''");
+    expect(step).toContain("X_METRICS_MAX_READS: '1'");
+    expect(step).toContain("VERIFY_POST_ID: ${{ inputs.verify_post_id }}");
+    expect(step).not.toMatch(/SUPABASE|ANTHROPIC/);
+    expect(step).not.toMatch(/run:[^\n]*\$\{\{/); // no expression injection into the shell
   });
 });

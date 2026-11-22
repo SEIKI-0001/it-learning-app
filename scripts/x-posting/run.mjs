@@ -14,7 +14,7 @@ const { createXPost, verifyXIdentity, readXIdentity } = await import("@/lib/grow
 const { checkPostingAi } = await import("@/lib/growth/xPosting/aiDiagnostics");
 const { fetchPostMetrics, estimateReadCostUsd, validateIds, METRICS_ENDPOINT } = await import("@/lib/growth/xPosting/metricsClient");
 const { readFile } = await import("node:fs/promises");
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" }, ids: { type: "string" }, "fixture-file": { type: "string" }, owned: { type: "boolean" } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" }, ids: { type: "string" }, "fixture-file": { type: "string" }, owned: { type: "boolean" }, diagnose: { type: "boolean" } } });
 const command = positionals[0] ?? "run";
 const env = process.env;
 const bool = (name, fallback = false) => {
@@ -59,7 +59,25 @@ try {
       if (!values.ids) throw new Error("metrics_requires_ids");
       const ids = validateIds(values.ids.split(","));
       if (ids.length > limit("X_METRICS_MAX_READS", 10, 100)) throw new Error("x_metrics_read_cap_exceeded");
-      console.log(JSON.stringify({ fixture: false, estimatedUsd: estimateReadCostUsd(ids.length), ...(await fetchPostMetrics({ ids, ownedMetrics: values.owned === true }, creds())) }, null, 2));
+      const expectedAuthorId = env.X_POST_ACCOUNT_ID && /^\d{1,25}$/.test(env.X_POST_ACCOUNT_ID) ? env.X_POST_ACCOUNT_ID : undefined;
+      // --diagnose: report which fields/permissions X actually returned (names and HTTP/rate-limit headers only,
+      // never post text, provider error details or credentials). Still exactly one GET.
+      let responseShape;
+      const fetcher = values.diagnose ? async (url, init) => {
+        const res = await fetch(url, init);
+        const keys = o => o && typeof o === "object" && !Array.isArray(o) ? Object.keys(o).sort() : null;
+        let body = null; try { body = await res.clone().json(); } catch { /* shape stays null */ }
+        responseShape = {
+          httpStatus: res.status,
+          rateLimit: { limit: res.headers.get("x-rate-limit-limit"), remaining: res.headers.get("x-rate-limit-remaining"), reset: res.headers.get("x-rate-limit-reset") },
+          data: Array.isArray(body?.data) ? body.data.map(d => ({ id: d?.id, fields: keys(d), authorMatchesAccount: expectedAuthorId ? d?.author_id === expectedAuthorId : null, public_metrics: keys(d?.public_metrics), non_public_metrics: keys(d?.non_public_metrics), organic_metrics: keys(d?.organic_metrics) })) : null,
+          errors: Array.isArray(body?.errors) ? body.errors.map(e => ({ type: typeof e?.type === "string" ? e.type : null, title: typeof e?.title === "string" ? e.title.slice(0, 80) : null, resource_id: e?.resource_id ?? null })) : null,
+        };
+        return res;
+      } : undefined;
+      const result = await fetchPostMetrics({ ids, ownedMetrics: values.owned === true, expectedAuthorId }, creds(), { fetcher });
+      console.log(JSON.stringify({ fixture: false, estimatedUsd: estimateReadCostUsd(ids.length), ...result, ...(values.diagnose ? { responseShape } : {}) }, null, 2));
+      if (result.requestStatus !== "ok") process.exitCode = 1;
     }
   } else if (command === "run") {
     const enabled = bool("X_POST_ENABLED");
