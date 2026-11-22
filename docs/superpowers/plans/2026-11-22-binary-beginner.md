@@ -7,10 +7,16 @@
 - [x] 操作で0/1と合計が連動すること、誤答後に再挑戦できること、単位換算の向き、スライド往復時の状態保持をテストし、変更前に失敗を確認。
 - [x] BinaryExperienceとbinary内の部品で導入・位取り・数の組立・ビット/バイト・単位換算・振り返りを実装。色に加えて数字と文言で状態を示す。
 - [x] technology.tsの当該トピックの本文を教材と揃える。問題バンクは変更しない。
-- [ ] typecheck/lint/全テスト/buildを実行。スマホ幅・キーボード操作・既存スライド内の動作を確認。
-- [ ] 既存のCloudflareテスト環境に公開し、URLと配信状態を確認。本番反映範囲はユーザーの回答に従う。
+- [x] typecheck/lint/全テスト/buildを実行。スマホ幅・キーボード操作・既存スライド内の動作を確認。
+- [x] Cloudflareのテスト用Version URLに公開し、URLと配信状態を確認。本番反映範囲はユーザーの回答に従う。
 
 確認重点: 0と15、誤答から正答、8bitの256通りと最大255の区別、1,000と1,024の区別、狭い画面で8桁を折り返さないこと。
 
 公開範囲: ユーザーが「今回はテスト環境のみ」を選択。本タスクではmainへマージしない。
 レビュー: 独立レビューで指摘されたスライダー操作とスライドのスワイプの干渉を修正し、失敗を再現した回帰テストを追加。320px・375pxのブラウザーで図の幅と操作を確認した。
+
+検証結果: Node 22.18.0で358ファイル・3,943テスト成功。typecheck成功、lintは既存警告2件（MemberSiteDioramaScene/AccountLinkSettings）でエラーなし。vinext build成功。
+配信したアプリのコミット: d345e29。Version: eb254144-b327-4e83-b6b7-e96686484c77。
+確認URL: https://binary-beginner-it-learning-app-vinext-pilot.kobayasiseiki.workers.dev/kaisetsu/tech-binary-data
+公開先でHTTP 200と「0101 → 4 + 1 = 5」の操作を確認。本番Deployment 7139336e-1b04-4e0e-bfd9-e013a8aa2c55は公開前後で不変。
+Version URLは既存Workerのリソースを利用する。検証はログイン不要の教材のみで行い、認証・決済・保存は操作していない。
