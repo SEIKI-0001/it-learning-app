@@ -148,7 +148,7 @@
 
 ### 状態（この時点）
 - **本番DB `fe-quest`: P1 migration 適用済み**（version `20261122160000 x_growth_engine`、sha256 `7183c114…`。#263 の修正込み）
-- **収集: dry-run のみ有効**（`X_METRICS_ENABLED=true` / `X_METRICS_DRY_RUN=true` / `X_METRICS_LIVE_READ=false`）。**課金を伴う定期読み取りは運用者の判断で保留**（「数日 dry-run の計画出力を見てから」）
+- **収集: 課金読み取りを有効化済み**（2026-11-23 07:44 JST、運用者の指示「turn on it」で `X_METRICS_DRY_RUN=false` / `X_METRICS_LIVE_READ=true`。`X_METRICS_ENABLED=true`）。いったん dry-run で確認してから切り替えた
 - 予算の変数: 日10・月120・1回10・再試行2・`X_METRICS_OWNED=true`。投稿側の変数（`X_POST_*`）は変えていない
 
 ### 1. Preflight
@@ -189,3 +189,9 @@
 - 窓の目安（投稿は 10:30〜13:30 JST ごろ）: 24h の窓は翌日 08:30〜翌々日 03:30 ごろ → 15:15 / 21:15 / 03:15 の実行で取る。72h の窓は3日後 08:30〜4日後 03:30 ごろ → 同じく 15:15 / 21:15 / 03:15
 - 有効にしたら確認すること: 最初の ok 行の `impressions`・`age_hours`・`organic`、`x_growth_metric_runs` の予約件数と `estimated_usd`、`rate_limited` / `permission_error` が無いこと、日次・月次の上限の消費
 - `supabase/schema.sql`（生成物）は未更新のまま（X テーブルは P0 以前から未収録）
+
+### 7. 課金読み取りの有効化（2026-11-23 07:44 JST）
+- 運用者の指示で `X_METRICS_DRY_RUN=false` / `X_METRICS_LIVE_READ=true` に変更した
+- 直後に手動で実行（run 45079357015）→ `{"state":"nothing_due","missedRecorded":10}`。この時点で対象の段階は無く、**X への読み取りは0件・$0**
+- 本番DB: 窓を過ぎた10段階（24h ×6・72h ×4）が `unavailable / x_metrics_window_missed`、attempt 0、値はすべて NULL で記録された。`x_growth_metric_runs` は0件（予約なし）
+- **最初の実際の計測（まだ起きていない）**: 11/20 11:47 JST の投稿の 72h 窓（11/23 09:47〜11/24 03:47 JST）→ 11/23 15:15 JST の定期実行で1件読む見込み（約$0.005）。11/21 の投稿の 72h は 11/24 15:15 JST ごろ。11/23 以降の投稿の 24h は、翌日 15:15 JST ごろから
