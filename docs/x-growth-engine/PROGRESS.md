@@ -143,3 +143,55 @@
 - `supabase/schema.sql`（生成物）は更新していない。再生成にはローカルの Supabase（Docker）が必要で、既存の X テーブル（P0以前）もこの snapshot に入っていない。
 - GitHub の schedule は default branch（main）でしか動かない。マージしても `X_METRICS_ENABLED` を設定しない限り起動しない。
 - PGlite での検証は単一接続なので、本当の並行実行の競合は advisory lock の設計に頼っている（Supabase本番と同じSQL）。
+
+## P1 本番有効化（2026-11-23 JST）
+
+### 状態（この時点）
+- **本番DB `fe-quest`: P1 migration 適用済み**（version `20261122160000 x_growth_engine`、sha256 `7183c114…`。#263 の修正込み）
+- **収集: 課金読み取りを有効化済み**（2026-11-23 07:44 JST、運用者の指示「turn on it」で `X_METRICS_DRY_RUN=false` / `X_METRICS_LIVE_READ=true`。`X_METRICS_ENABLED=true`）。いったん dry-run で確認してから切り替えた
+- 予算の変数: 日10・月120・1回10・再試行2・`X_METRICS_OWNED=true`。投稿側の変数（`X_POST_*`）は変えていない
+
+### 1. Preflight
+- 本番 = `fe-quest`（kebebakugaxdidehzjnh）。投稿ジョブの結果と `x_social_posts` の行が一致することで確認
+- staging: Supabase のブランチは **Pro プラン限定で作れない**（`PaymentRequiredException`）。無料枠の2プロジェクトは使い切っている。`it-learning-app-2` は Cloudflare pilot（live Stripe）用なので staging として使わない → **ローカルの Supabase（CLI 2.121.0 / Postgres 17.11、colima）** を staging にした（運用者が承認）
+- Secrets: `X_API_*` 4つと `X_POST_SUPABASE_*` 2つがあることを名前で確認（値は見ていない）
+- 発見した問題: 実際の投稿時刻は 10:30〜13:30 JST（投稿ジョブの開始が遅れる）。収集が1日2回だと各窓に1回しか入らない → **#262 で6時間ごとに変更**（マージ済み）
+
+### 2. Staging（ローカル Supabase）
+- 前提の再現: repo の migration で作った posting 関数7つの定義の md5 が**本番と完全一致**。funnel / signup / accounts テーブルの列も一致
+- **発見した問題: Supabase の default privileges により、service_role に DELETE/TRUNCATE が残っていた**（PostgREST の DELETE が 204）。本番の `pg_default_acl` も同じ設定 → **#263 で migration を修正**（本番適用前・マージ済み）。PGlite でも default privileges を再現する回帰テストを追加
+- 修正後: 新しい4テーブルは anon の select 401 / service_role の select 200 / service_role の DELETE 403。RPC 6つは anon で 401（予約行も作られない）
+- 実際の CLI（PostgREST 経由・X は偽物）: disabled → dry_run → live_read_disabled → live（GET 1回、ok / NULL / not found、他アカウント・未公開は対象外）→ 2回目は nothing_due（X への通信0）→ report（サイト帰属 5/3/1）
+- 既存の投稿RPC（claim / 同じ枠 / prepare / begin ×2 / finish / recover）は正常に動く
+- rollback SQL を staging で実行 → 新しいテーブルだけ消え、既存の行と関数は変わらない → 再適用できる
+
+### 3. 実 X API の確認（承認済みの1回だけ・$0.005）
+- workflow run 45078532892（`verify_post_id=2123974232505798744`、2026-11-21 11:58 JST の自社投稿）
+- `GET /2/tweets?ids=…&tweet.fields=author_id,created_at,public_metrics,non_public_metrics,organic_metrics` → **HTTP 200、errors なし、author_id が一致**
+- 返ってきたフィールド: public_metrics = bookmark/impression/like/quote/reply/**retweet**_count、non_public_metrics = engagements/impression_count/user_profile_clicks、organic_metrics = impression/like/reply/retweet_count/user_profile_clicks（`url_link_clicks` はリンクなし投稿なので返らない）
+- 値: 43.6h で impressions 12（public / organic / non_public すべて12）、反応は0
+- レート制限: limit 5000 / remaining 4999。**owned metrics は今の権限で取れる**（`X_METRICS_OWNED=true` のままでよい）
+
+### 4. 本番 migration
+- 適用前: posts 30（published 21）、funnel 719、signups 2、x_growth テーブル 0、posting 関数の md5 は7つとも staging と一致
+- 投稿ジョブが動いていないことを確認してから、ファイルの内容を1トランザクション（lock_timeout 5s）で実行し、`supabase_migrations.schema_migrations` に記録
+- 適用後: 行数は変わらず、追加列は30行すべて NULL/false、posting 関数の md5 は変わらず、4テーブルとも RLS 有効、権限は service_role の INSERT/SELECT/UPDATE だけ、RPC 6つは SECURITY INVOKER・anon 不可・service_role 可
+- Security Advisor: 新しいテーブルは「RLS enabled no policy」（INFO）だけで、既存の service_role 専用テーブル44個と同じ（意図どおり）
+
+### 5. 収集の有効化（dry-run）
+- 緊急停止: `X_METRICS_ENABLED=false` で手動実行 → `{"state":"disabled"}`
+- `X_METRICS_ENABLED=true`（dry-run）で手動実行 → `{"state":"dry_run","plan":{"dueStages":0,"reads":0,"missedStages":10,"estimatedUsd":0}}`。本番DBへの書き込みは0（metric rows 0 / runs 0）
+- `x_growth_post_report()` は本番で7日分6投稿を返す（スナップショットはまだ無いので NULL、サイト帰属は実数0）
+
+### 6. これから観察すること（**まだ起きていない**）
+- dry-run は6時間ごとに動き、各回の `plan` に対象の段階と概算費用を出す（書き込み・X通信なし）
+- 課金読み取りを始めるときは `X_METRICS_DRY_RUN=false` と `X_METRICS_LIVE_READ=true`（**運用者の承認が必要**）。最初の実行で、窓を過ぎた10段階が missed として記録される（読み取りなし）
+- 窓の目安（投稿は 10:30〜13:30 JST ごろ）: 24h の窓は翌日 08:30〜翌々日 03:30 ごろ → 15:15 / 21:15 / 03:15 の実行で取る。72h の窓は3日後 08:30〜4日後 03:30 ごろ → 同じく 15:15 / 21:15 / 03:15
+- 有効にしたら確認すること: 最初の ok 行の `impressions`・`age_hours`・`organic`、`x_growth_metric_runs` の予約件数と `estimated_usd`、`rate_limited` / `permission_error` が無いこと、日次・月次の上限の消費
+- `supabase/schema.sql`（生成物）は未更新のまま（X テーブルは P0 以前から未収録）
+
+### 7. 課金読み取りの有効化（2026-11-23 07:44 JST）
+- 運用者の指示で `X_METRICS_DRY_RUN=false` / `X_METRICS_LIVE_READ=true` に変更した
+- 直後に手動で実行（run 45079357015）→ `{"state":"nothing_due","missedRecorded":10}`。この時点で対象の段階は無く、**X への読み取りは0件・$0**
+- 本番DB: 窓を過ぎた10段階（24h ×6・72h ×4）が `unavailable / x_metrics_window_missed`、attempt 0、値はすべて NULL で記録された。`x_growth_metric_runs` は0件（予約なし）
+- **最初の実際の計測（まだ起きていない）**: 11/20 11:47 JST の投稿の 72h 窓（11/23 09:47〜11/24 03:47 JST）→ 11/23 15:15 JST の定期実行で1件読む見込み（約$0.005）。11/21 の投稿の 72h は 11/24 15:15 JST ごろ。11/23 以降の投稿の 24h は、翌日 15:15 JST ごろから
