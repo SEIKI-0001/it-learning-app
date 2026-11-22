@@ -6,8 +6,10 @@ name: X metrics snapshot (read-only)
 #   X_METRICS_LIVE_READ=true   default false: no billable X request
 on:
   schedule:
-    - cron: '15 23 * * *' # 08:15 JST: posts from 07:00 the previous days are ~25h / ~73h old
-    - cron: '15 11 * * *' # 20:15 JST: catch-up for retryable failures inside the windows
+    # Every 6 hours (03:15/09:15/15:15/21:15 JST). Posts actually go out around 10:30-13:30 JST
+    # (scheduled posting runs start late), so twice a day left only one run inside each window and
+    # no chance to retry. Runs with nothing due make no X request.
+    - cron: '15 */6 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -18,6 +20,10 @@ on:
         description: Offline fixture run (in-memory DB, no secrets, no network)
         type: boolean
         default: false
+      verify_post_id:
+        description: 'ONE live X read of this post id (billable, about $0.005). Public + owned metrics, no DB access. Run only with operator approval.'
+        type: string
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -35,11 +41,23 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: One approved live read (no DB)
+        if: github.event_name == 'workflow_dispatch' && inputs.verify_post_id != ''
+        env:
+          VERIFY_POST_ID: ${{ inputs.verify_post_id }}
+          X_METRICS_LIVE_READ: 'true'
+          X_METRICS_MAX_READS: '1'
+          X_POST_ACCOUNT_ID: ${{ vars.X_POST_ACCOUNT_ID }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: npm run x:post -- metrics --owned --diagnose --ids "$VERIFY_POST_ID"
       - name: Offline fixture collection
-        if: github.event_name == 'workflow_dispatch' && inputs.fixture
+        if: github.event_name == 'workflow_dispatch' && inputs.fixture && inputs.verify_post_id == ''
         run: npm run x:growth -- collect --fixture
       - name: Collect metrics snapshots
-        if: github.event_name != 'workflow_dispatch' || !inputs.fixture
+        if: github.event_name != 'workflow_dispatch' || (!inputs.fixture && inputs.verify_post_id == '')
         env:
           X_METRICS_ENABLED: ${{ vars.X_METRICS_ENABLED || 'false' }}
           X_METRICS_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.dry_run && 'true' || 'false') || vars.X_METRICS_DRY_RUN || 'true' }}

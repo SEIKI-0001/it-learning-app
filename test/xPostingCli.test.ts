@@ -72,3 +72,29 @@ describe("read-only metrics CLI", () => {
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 });
+
+it("--diagnose reports field names and permissions only, with exactly one GET", () => {
+  const dir = mkdtempSync(join(tmpdir(), "x-diagnose-test-"));
+  const preload = join(dir, "fetch.mjs");
+  const log = join(dir, "calls.log");
+  writeFileSync(preload, `import { appendFileSync } from "node:fs";
+globalThis.fetch = async (url, init) => {
+  appendFileSync(${JSON.stringify(log)}, init.method + " " + url + "\\n");
+  if (init.method !== "GET" || init.body) throw new Error("unexpected_write");
+  return new Response(JSON.stringify({ data: [{ id: "1990000000000000001", author_id: "868384833575067648", text: "SECRET-POST-TEXT", created_at: "2026-11-21T03:00:00.000Z", public_metrics: { impression_count: 9, like_count: 1, retweet_count: 0, reply_count: 0, quote_count: 0, bookmark_count: 0 }, non_public_metrics: { impression_count: 9, user_profile_clicks: 1 } }] }), { status: 200, headers: { "x-rate-limit-limit": "900", "x-rate-limit-remaining": "899", "x-rate-limit-reset": "1795000000" } });
+};`);
+  const credentials = { ...env, X_API_KEY: "k", X_API_SECRET: "s", X_ACCESS_TOKEN: "t", X_ACCESS_TOKEN_SECRET: "ts-secret", X_METRICS_LIVE_READ: "true", X_METRICS_MAX_READS: "1", X_POST_ACCOUNT_ID: "868384833575067648" };
+  try {
+    const r = spawnSync(process.execPath, ["--experimental-strip-types", "--import", preload, cli, "metrics", "--owned", "--diagnose", "--ids", "1990000000000000001"], { env: credentials, encoding: "utf8" });
+    expect(r.status, r.stderr).toBe(0);
+    const out = JSON.parse(r.stdout);
+    expect(out.posts[0]).toMatchObject({ collectionStatus: "ok", impressions: 9 });
+    expect(out.responseShape).toEqual({ httpStatus: 200, rateLimit: { limit: "900", remaining: "899", reset: "1795000000" }, errors: null, data: [{ id: "1990000000000000001", fields: ["author_id", "created_at", "id", "non_public_metrics", "public_metrics", "text"], authorMatchesAccount: true, public_metrics: ["bookmark_count", "impression_count", "like_count", "quote_count", "reply_count", "retweet_count"], non_public_metrics: ["impression_count", "user_profile_clicks"], organic_metrics: null }] });
+    expect(r.stdout).not.toContain("SECRET-POST-TEXT"); expect(r.stdout).not.toContain("ts-secret");
+    const calls = readFileSync(log, "utf8").trim().split("\n");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatch(/^GET https:\/\/api\.x\.com\/2\/tweets\?ids=1990000000000000001&tweet\.fields=author_id%2Ccreated_at%2Cpublic_metrics%2Cnon_public_metrics%2Corganic_metrics$/);
+    const two = spawnSync(process.execPath, ["--experimental-strip-types", "--import", preload, cli, "metrics", "--ids", "1990000000000000001,1990000000000000002"], { env: credentials, encoding: "utf8" });
+    expect(two.stderr).toContain("x_metrics_read_cap_exceeded");
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

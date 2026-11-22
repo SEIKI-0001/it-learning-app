@@ -224,7 +224,7 @@ X_METRICS_LIVE_READ=true npm run x:post -- metrics --ids <X投稿ID,...>   # 実
 
 ## Xメトリクスの定期収集（P1・読み取り専用）
 
-`.github/workflows/x-metrics-collect.yml` が毎日 08:15 / 20:15 JST に `npm run x:growth -- collect` を実行する。投稿・返信・いいね・リポスト・フォローは一切しない。**既定では何もしない**。
+`.github/workflows/x-metrics-collect.yml` が6時間ごと（03:15 / 09:15 / 15:15 / 21:15 JST）に `npm run x:growth -- collect` を実行する。実際の投稿は 10:30〜13:30 JST ごろ（投稿ジョブの開始が遅れるため）なので、1日2回の実行では各窓に1回しか入らず、再試行の機会が無かった（2026-11-23 に変更）。対象が無い実行ではXへ通信しない。投稿・返信・いいね・リポスト・フォローは一切しない。**既定では何もしない**。
 
 | Variable | 既定 | 意味 |
 |---|---|---|
@@ -256,7 +256,7 @@ npm run x:growth -- report --days 14    # 投稿ごとの 24h/72h と サイト�
 本番で使い始める手順（**それぞれ運用者の承認が必要**）:
 1. migration `20261122160000_x_growth_engine.sql` をまず検証用DB（Supabaseブランチ等）に適用し、`collect --dry-run` で確認する。
 2. 本番DBに適用する（このPRでは適用していない）。
-3. P0の `X_METRICS_LIVE_READ=true npm run x:post -- metrics --owned --ids <直近の公開投稿1件>` で、実際に取れるフィールドを1件（約$0.005）で確認する。
+3. Actions の「X metrics snapshot (read-only)」を手動実行し、`verify_post_id` に直近の公開投稿IDを1件入れる（約$0.005・GETは1回・DBには触れない）。出力の `responseShape` で、返ってきたフィールド名・author_idの一致・権限エラーの有無・レート制限ヘッダーを確認する。
 4. Variables を `X_METRICS_ENABLED=true` にする（dry-runのまま数日様子を見る）→ `X_METRICS_DRY_RUN=false` → `X_METRICS_LIVE_READ=true` の順に進める。止めるときは `X_METRICS_ENABLED=false`。
 
 ## 検証と制約
