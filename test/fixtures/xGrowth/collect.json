@@ -1,0 +1,38 @@
+{
+  "fixture": true,
+  "note": "Offline P1 collection scenario. Synthetic account, ids and values (not real data). Response shape: GET /2/tweets (docs.x.com, checked 2026-11-22).",
+  "now": "2026-11-22T23:15:00.000Z",
+  "account": "1234567890",
+  "posts": [
+    { "id": "00000000-0000-4000-8000-000000000101", "xPostId": "1990000000000000101", "hoursAgo": 25.25, "visits": 5, "visitors": 3, "signups": 1 },
+    { "id": "00000000-0000-4000-8000-000000000102", "xPostId": "1990000000000000102", "hoursAgo": 73.25 },
+    { "id": "00000000-0000-4000-8000-000000000103", "xPostId": "1990000000000000103", "hoursAgo": 49.25 },
+    { "id": "00000000-0000-4000-8000-000000000104", "xPostId": "1990000000000000104", "hoursAgo": 41.25 },
+    { "id": "00000000-0000-4000-8000-000000000105", "xPostId": "1990000000000000105", "hoursAgo": 25.25, "account": "999999" },
+    { "id": "00000000-0000-4000-8000-000000000106", "xPostId": null, "hoursAgo": 25.5, "status": "failed" },
+    { "id": "00000000-0000-4000-8000-000000000107", "xPostId": "1990000000000000107", "hoursAgo": 26.25 },
+    { "id": "00000000-0000-4000-8000-000000000108", "xPostId": "1990000000000000108", "hoursAgo": 27.25 },
+    { "id": "00000000-0000-4000-8000-000000000109", "xPostId": "1990000000000000109", "hoursAgo": 200 }
+  ],
+  "response": {
+    "data": [
+      {
+        "id": "1990000000000000101", "author_id": "1234567890", "text": "synthetic", "created_at": "2026-11-21T22:00:00.000Z",
+        "public_metrics": { "retweet_count": 1, "reply_count": 0, "like_count": 3, "quote_count": 0, "bookmark_count": 1, "impression_count": 148 },
+        "non_public_metrics": { "impression_count": 148, "user_profile_clicks": 2, "url_link_clicks": 0, "engagements": 7 },
+        "organic_metrics": { "impression_count": 148, "like_count": 3, "reply_count": 0, "retweet_count": 1, "user_profile_clicks": 2 }
+      },
+      {
+        "id": "1990000000000000102", "author_id": "1234567890", "text": "synthetic", "created_at": "2026-11-19T22:00:00.000Z",
+        "public_metrics": { "retweet_count": 0, "reply_count": 0, "like_count": 2, "quote_count": 0, "bookmark_count": 0 }
+      },
+      {
+        "id": "1990000000000000108", "author_id": "999", "text": "synthetic", "created_at": "2026-11-21T20:00:00.000Z",
+        "public_metrics": { "retweet_count": 0, "reply_count": 0, "like_count": 0, "quote_count": 0, "bookmark_count": 0, "impression_count": 10 }
+      }
+    ],
+    "errors": [
+      { "resource_id": "1990000000000000107", "parameter": "ids", "resource_type": "tweet", "title": "Not Found Error", "detail": "synthetic", "type": "https://api.twitter.com/2/problems/resource-not-found", "value": "1990000000000000107" }
+    ]
+  }
+}

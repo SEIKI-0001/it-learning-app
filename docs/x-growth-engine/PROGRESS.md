@@ -92,3 +92,54 @@
 - 過去の `content_generation_failed` 5件の原因（ログに残っていない）。今後は `ai_output_not_json` 等で区別できる。
 - 10-25 の `ready` 行の扱い（運用者が判断）。
 - 本番ワークフローへの反映: このPRのマージ後、次の日曜（11-29）は terms に切り替わって投稿される想定。本番の有効/無効の設定は変えていない。
+
+## P1: 永続化 + スナップショット収集（2026-11-22 JST）
+
+ブランチ: `feat/x-growth-p1`（P0マージ後の `origin/main` 75eaf44 から、専用worktreeで作業）。本番DBへのデータ・スキーマの変更 0件（`information_schema` を読んで名前の衝突が無いことだけ確認）、本番Secrets/Variablesの変更なし、X APIへの実リクエスト 0件、投稿 0件。
+
+### 実装
+
+| 内容 | ファイル |
+|---|---|
+| add-only migration: `x_growth_experiments`、`x_growth_metric_runs`（予算台帳）、`x_growth_post_metrics`、`x_growth_reviews`、`x_social_posts` に null許容の6列を追加。RLS有効・anon/authenticatedは権限なし・service_roleには select/insert/update だけ（deleteなし）・RPCはすべて SECURITY INVOKER | `supabase/migrations/20261122160000_x_growth_engine.sql` |
+| 収集の本体: 緊急停止 → 対象の段階 → 件数と費用の見積り → dry-run → missedの記録 → live-readの確認 → 予算の原子的な予約 → GETを1回 → 冪等な保存 | `lib/growth/xGrowth/collector.ts` |
+| DB adapter（Supabase rpc／PGliteの両方が同じSQLを通る） | `lib/growth/xGrowth/store.ts` |
+| オフライン用のPostgres（PGlite＋本物のmigration）と seed | `lib/growth/xGrowth/fixtureDb.ts`、`test/fixtures/xGrowth/collect.json` |
+| CLI `npm run x:growth -- collect / report`（`--fixture`、`--dry-run`） | `scripts/x-growth/run.mjs`、`package.json` |
+| 定期実行 workflow（08:15 / 20:15 JST。既定では起動しない） | `.github/workflows/x-metrics-collect.yml` |
+| P0クライアント: `author_id` を要求し、他人の投稿は `x_metrics_not_own_post`（数値を保存しない） | `lib/growth/xPosting/metricsClient.ts` |
+| ランブック・DATA_MODEL・TASKS の更新 | `docs/operations/x-organic-posting.md` ほか |
+
+設計で決めたこと:
+- **段階の窓**: 24h=[22,40)時間、72h=[70,88)時間。08:15 JST の実行で、07:00の投稿は約25h / 73h。遅れて実行されても窓の中なら測り、実際の経過時間（`age_hours`）と時刻（`measured_at`）を保存する。窓を過ぎたら `x_metrics_window_missed` として1回だけ記録し、違う経過時間の値で埋めない。
+- **冪等性**: `UNIQUE(post_id, snapshot_stage)`。確定状態（ok / unavailable / permission_error）は上書きしない。`rate_limited` / `failed` だけを、窓の中で `attempt_count < X_METRICS_MAX_ATTEMPTS`（既定2）の間、次回の実行で再試行する。同じ実行の中では再試行しない。
+- **費用**: X に送る前にDBで予約する（advisory lockでアカウントごとに直列化）。日次・月次の予算（JST）、同時に開いている実行は1つだけ、429のreset時刻まで待つ、30分放置された予約は interrupted。予約した件数は失敗しても数える（少なく見積もらない）。
+- **帰属**: 保存時に既存の `x_post_performance()` をSQL内で呼び、投稿IDごとの visits / visitors / signups を行に保存する。読めなければ NULL。`x_growth_post_report()` は 24h/72h と現時点の帰属を投稿ごとに結合して返す。学習アプリ本体のコードは変えていない。
+- **対象**: `account_id = X_POST_ACCOUNT_ID`、`status='published'`、`x_post_id` あり、公開から7日以内。さらにXの応答の `author_id` が一致しなければ数値を保存しない（二重の確認）。
+
+### 費用の見積り
+- 公式単価 "Posts: Read" $0.005/件（P0で確認済み）。1日1投稿×2段階 ≒ 月60件 ≒ **月$0.30**。既定の上限: 日10件・月120件（$0.60）・1回10件。
+- dry-run と `collect --fixture` は費用0（Xに通信しない）。実行のたびに `plan.estimatedUsd` を出力する。
+
+### テスト結果（すべて実行済み）
+
+| コマンド | 結果 |
+|---|---|
+| `npx vitest run test/xGrowthDatabase.test.ts`（PGlite = PG17。本物のmigrationを適用） | 14 passed |
+| `npx vitest run test/xGrowthCollector.test.ts`（PGlite＋本物のP0クライアント＋偽のfetch） | 11 passed |
+| `npx vitest run test/xGrowthCli.test.ts`（別プロセスでCLIを実行・通信を記録＋workflowの既定値） | 7 passed |
+| `npx vitest run test/xPosting test/xGrowth` | **14 files / 116 tests passed** |
+| `npm run typecheck` | exit 0 |
+| `npm run lint` | exit 0（errors 0。warnings 2件はX以外の既存ファイル） |
+| 全体テスト（Node 22.18.0 = `.nvmrc`/CI と同じ。`npx -p node@22.18.0 -- node node_modules/vitest/vitest.mjs run`） | **363 files / 4004 tests passed** |
+| `npm run x:growth -- collect --fixture` | partial（ok 1 / unavailable 2 / permission_error 1、missed 3、reads 4、$0.02）、exit 0 |
+| `npm run x:growth -- collect`（環境変数なし） | `{"state":"disabled"}` |
+
+テストで確認したこと: 2回収集しても重複しない（2回目はXへの通信0・行数そのまま）／確定行は上書きしない／再試行は上限まで／429でreset時刻まで待つ／403は確定し job は失敗／5xx・通信断・JSON不正は failed（NULLで保存）／全項目が取れない応答は全部NULL／他アカウント・未公開・7日超・他人の投稿は対象外／遅れて実行しても窓の中なら測り、窓を過ぎたら missed／日次・月次の予算・同時実行・中断／DB書き込み失敗があればXを再呼び出しせず job 失敗／緊急停止ではDBにもXにも触らない／dry-runでは書き込み0／有効にしても既定（dry-run）ならXへ通信0で、service key は出力されない／既存の投稿RPC（claim → prepare → begin → finish）は migration 適用後も動き、追加列は NULL/false／新しいテーブル・関数は anon/authenticated から使えず、SECURITY DEFINER も無い。
+
+### 未確認・ブロッカー
+- **本番への適用は未実施**（指示どおり）。手順は、検証用DB（Supabaseブランチ等）に適用して `collect --dry-run` → 承認を得て本番に適用。ランブックの「本番で使い始める手順」を参照。
+- **実APIでの確認は未実施**（課金のため承認が必要）。特に、`X_METRICS_OWNED=true`（non_public / organic を要求）で現在のアプリ権限がリクエスト全体を 403 にしないかが未確認。403 なら全段階が permission_error で確定してしまうため、最初は P0 の `x:post metrics --owned --ids <1件>`（約$0.005）で確かめる。だめなら `X_METRICS_OWNED=false`。
+- `supabase/schema.sql`（生成物）は更新していない。再生成にはローカルの Supabase（Docker）が必要で、既存の X テーブル（P0以前）もこの snapshot に入っていない。
+- GitHub の schedule は default branch（main）でしか動かない。マージしても `X_METRICS_ENABLED` を設定しない限り起動しない。
+- PGlite での検証は単一接続なので、本当の並行実行の競合は advisory lock の設計に頼っている（Supabase本番と同じSQL）。

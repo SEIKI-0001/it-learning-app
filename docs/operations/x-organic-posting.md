@@ -222,6 +222,43 @@ X_METRICS_LIVE_READ=true npm run x:post -- metrics --ids <X投稿ID,...>   # 実
 - 取得できなかった値は `null`。`collectionStatus` は `ok/unavailable/permission_error/rate_limited/failed`、`errorCode` は固定タグで、Xの本文メッセージは出さない。
 - 詳細・出典は `docs/x-growth-engine/PROGRESS.md`。
 
+## Xメトリクスの定期収集（P1・読み取り専用）
+
+`.github/workflows/x-metrics-collect.yml` が毎日 08:15 / 20:15 JST に `npm run x:growth -- collect` を実行する。投稿・返信・いいね・リポスト・フォローは一切しない。**既定では何もしない**。
+
+| Variable | 既定 | 意味 |
+|---|---|---|
+| `X_METRICS_ENABLED` | `false` | 緊急停止スイッチ。`true` 以外なら定期ジョブ自体が起動せず、手動実行でも `{"state":"disabled"}` で止まる（DBにもXにも触れない） |
+| `X_METRICS_DRY_RUN` | `true` | 計測対象と概算費用を出すだけ。DBにもXにも書き込まない（手動実行では `dry_run` 入力が優先、既定 true） |
+| `X_METRICS_LIVE_READ` | `false` | `true` のときだけXへ読み取りリクエストを送る（従量課金） |
+| `X_METRICS_DAILY_READ_BUDGET` / `X_METRICS_MONTHLY_READ_BUDGET` | `10` / `120` | 読み取り件数の上限（JSTの日・月）。失敗した要求も予約分を数える |
+| `X_METRICS_MAX_READS` | `10` | 1回のリクエストで読む最大件数（最大100） |
+| `X_METRICS_MAX_ATTEMPTS` | `2` | 同じ段階を再試行してよい回数（rate_limited / failed のみ） |
+| `X_METRICS_OWNED` | `true` | 自分の投稿だけの指標（organic / non_public）も要求する。権限エラーが続くなら `false` |
+
+Secrets は既存の `X_POST_SUPABASE_URL` / `X_POST_SUPABASE_SERVICE_ROLE_KEY` / `X_API_*` を使う。Anthropicキーは使わない。
+
+処理の流れ: 緊急停止 → 計測対象の段階をDBから取得（自社・公開済み・7日以内、24h=[22,40)時間 / 72h=[70,88)時間）→ 件数と概算費用 → dry-runならここで終了 → 窓を過ぎた段階を missed として記録 → live-readの確認 → **予算をDBで原子的に予約** → `GET /2/tweets` を1回 → 投稿ごとに冪等に保存。
+
+- 同じ投稿・同じ段階の行は1つだけ（UNIQUE）。`ok` / `unavailable` / `permission_error` は確定で、再取得しない。`rate_limited` / `failed` だけを窓の中で `X_METRICS_MAX_ATTEMPTS` 回まで再試行する（次回の実行時。同じ実行の中では再試行しない）。
+- 429 を受けたら reset 時刻まで次の実行は `rate_limit_wait` で止まる。実行中の予約が残っていれば `run_in_progress`。30分放置された予約は `interrupted` として扱う。
+- 取れなかった値は NULL。0 は本当に0のときだけ。他人の投稿が返ってきた場合（author_id が違う）は `x_metrics_not_own_post` として数値を保存しない。
+- 各行には計測時点の `x_post_performance()`（入口view・匿名visitor・登録）も保存する。
+
+```bash
+npm run x:growth -- collect --fixture   # オフライン（メモリ上のPostgres＋本物のmigration）。秘密情報・通信不要
+npm run x:growth -- collect --dry-run   # 本番DBを読むだけ（計測対象と概算費用）
+npm run x:growth -- report --days 14    # 投稿ごとの 24h/72h と サイト流入・登録（読み取りのみ）
+```
+
+費用の目安: 1日1投稿×2段階 ≒ 月60件の読み取り × $0.005 ≒ **月$0.30**。既定の月間上限120件 = $0.60。
+
+本番で使い始める手順（**それぞれ運用者の承認が必要**）:
+1. migration `20261122160000_x_growth_engine.sql` をまず検証用DB（Supabaseブランチ等）に適用し、`collect --dry-run` で確認する。
+2. 本番DBに適用する（このPRでは適用していない）。
+3. P0の `X_METRICS_LIVE_READ=true npm run x:post -- metrics --owned --ids <直近の公開投稿1件>` で、実際に取れるフィールドを1件（約$0.005）で確認する。
+4. Variables を `X_METRICS_ENABLED=true` にする（dry-runのまま数日様子を見る）→ `X_METRICS_DRY_RUN=false` → `X_METRICS_LIVE_READ=true` の順に進める。止めるときは `X_METRICS_ENABLED=false`。
+
 ## 検証と制約
 
 `npm run typecheck` / `npm run lint` / `npm test`で検証する。外部APIはモックし、DBはPGliteでSQLを実行する。
