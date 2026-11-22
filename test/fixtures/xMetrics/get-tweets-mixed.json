@@ -1,0 +1,33 @@
+{
+  "fixture": true,
+  "note": "Offline GET /2/tweets response shape (docs.x.com get-posts-by-ids, checked 2026-11-22). Synthetic values, not real account data.",
+  "requestedIds": ["1990000000000000001", "1990000000000000002", "1990000000000000003", "1990000000000000004", "1990000000000000005"],
+  "response": {
+    "data": [
+      {
+        "id": "1990000000000000001",
+        "text": "synthetic",
+        "created_at": "2026-11-19T22:00:05.000Z",
+        "public_metrics": { "retweet_count": 1, "reply_count": 0, "like_count": 4, "quote_count": 0, "bookmark_count": 2, "impression_count": 312 },
+        "non_public_metrics": { "impression_count": 312, "user_profile_clicks": 3, "url_link_clicks": 0, "engagements": 11 },
+        "organic_metrics": { "impression_count": 312, "like_count": 4, "reply_count": 0, "retweet_count": 1, "user_profile_clicks": 3 }
+      },
+      {
+        "id": "1990000000000000002",
+        "text": "synthetic",
+        "created_at": "2026-11-20T22:00:04.000Z",
+        "public_metrics": { "repost_count": 0, "reply_count": 0, "like_count": 0, "quote_count": 0, "bookmark_count": 0, "impression_count": 0 }
+      },
+      {
+        "id": "1990000000000000003",
+        "text": "synthetic",
+        "created_at": "2026-10-01T22:00:04.000Z",
+        "public_metrics": { "retweet_count": 2, "reply_count": 1, "like_count": "7", "quote_count": 0, "bookmark_count": -1 }
+      }
+    ],
+    "errors": [
+      { "resource_id": "1990000000000000004", "parameter": "ids", "resource_type": "tweet", "title": "Not Found Error", "detail": "synthetic", "type": "https://api.twitter.com/2/problems/resource-not-found", "value": "1990000000000000004" },
+      { "resource_id": "1990000000000000005", "parameter": "ids", "resource_type": "tweet", "title": "Authorization Error", "detail": "synthetic", "type": "https://api.twitter.com/2/problems/not-authorized-for-resource", "value": "1990000000000000005" }
+    ]
+  }
+}

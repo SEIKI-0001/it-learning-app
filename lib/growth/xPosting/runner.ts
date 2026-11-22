@@ -1,4 +1,4 @@
-import { buildPostUrl, contentKeys, textHash, themeForSlot, validateGenerated, type Generated, type Source, type Theme } from "@/lib/growth/xPosting/core";
+import { approvedCandidates, buildPostUrl, contentKeys, textHash, themeForSlot, validateGenerated, type Generated, type Source, type Theme } from "@/lib/growth/xPosting/core";
 import type { XResult } from "@/lib/growth/xPosting/xClient";
 export type PostRow = { id: string; utm_content: string; status: string; generation?: Generated };
 export type Config = { enabled: boolean; dryRun: boolean; fixture: boolean; account: string; origin: string; slot: string; dailyLimit: number; monthlyLimit: number; model: string };
@@ -10,7 +10,7 @@ export interface Store {
   finish(id: string, result: XResult): Promise<boolean>;
   fail(id: string, error: string): Promise<void>;
 }
-export type Dependencies = { store: Store; sources(theme: Theme, slot: string): Source[]; generate(sources: Source[], history: string[], theme: Theme, url: string, slot: string): Promise<unknown>; publish(text: string): Promise<XResult>; verifyIdentity(): Promise<void>; checkDestination(url: string): Promise<void> };
+export type Dependencies = { store: Store; sources(theme: Theme, slot: string, history?: string[]): Source[]; generate(sources: Source[], history: string[], theme: Theme, url: string, slot: string): Promise<unknown>; publish(text: string): Promise<XResult>; verifyIdentity(): Promise<void>; checkDestination(url: string): Promise<void> };
 export type RunResult = { state: string; id?: string; xPostId?: string; persisted?: boolean; error?: string; text?: string };
 export async function runPosting(config: Config, deps: Dependencies): Promise<RunResult> {
   if (config.fixture && !config.dryRun) throw new Error("fixture_requires_dry_run");
@@ -21,10 +21,14 @@ export async function runPosting(config: Config, deps: Dependencies): Promise<Ru
   let phase = "content_generation_failed";
   try {
     const requested = themeForSlot(config.slot);
-    const sources = deps.sources(requested, config.slot);
-    if (!sources.length) throw new Error("no_approved_content");
-    const theme = sources[0].theme;
     const history = await deps.store.history(config.account);
+    // Only sources with at least one acceptable, unused text. An exhausted theme (e.g. the two
+    // Sunday "service" posts) falls back to approved terms instead of failing every week.
+    const usable = (t: Theme) => deps.sources(t, config.slot, history).filter(s => approvedCandidates([s], history, x => buildPostUrl(x.path, row.utm_content, config.origin)).length > 0);
+    let sources = usable(requested);
+    if (!sources.length && requested !== "terms") sources = usable("terms");
+    if (!sources.length) throw new Error("no_unused_content");
+    const theme = sources[0].theme;
     const url = buildPostUrl(sources[0].path, row.utm_content, config.origin);
     const raw = await deps.generate(sources, history, theme, url, config.slot);
     phase = "quality_check_failed";
@@ -37,7 +41,9 @@ export async function runPosting(config: Config, deps: Dependencies): Promise<Ru
     phase = "destination_unavailable";
     if (generated.destinationUrl) await deps.checkDestination(generated.destinationUrl);
   } catch (error) {
-    if (phase === "content_generation_failed" && error instanceof Error && /^(anthropic_(not_configured|credit_balance_low|request_failed|http_[45]\d{2})|incomplete_ai_output)$/.test(error.message)) phase = error.message;
+    if (phase === "content_generation_failed" && error instanceof Error && /^(anthropic_(not_configured|credit_balance_low|request_failed|http_[45]\d{2})|incomplete_ai_output|ai_output_not_json|no_unused_content)$/.test(error.message)) phase = error.message;
+    // Keep the stable prefix, add only the validator's fixed reason tag (never free text).
+    else if (phase === "quality_check_failed" && error instanceof Error && /^(invalid_schema|unsupported_content|invalid_length|duplicate_content)$/.test(error.message)) phase = `quality_check_failed_${error.message}`;
     await deps.store.fail(row.id, phase);
     return { state: "failed", id: row.id, error: phase };
   }

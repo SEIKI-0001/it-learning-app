@@ -54,6 +54,17 @@ export function similar(a: string[], b: string[]): boolean {
 }
 export function textHash(text: string): string { return createHash("sha256").update(contentKeys(text).join("\n")).digest("hex"); }
 export function validLength(text: string): boolean { return twitterText.parseTweet(text).valid; }
+export type Candidate = { text: string; theme: Theme; contentId: string; destinationUrl: string | null; evidence: [string] };
+/**
+ * Every exact text validateGenerated() would accept, minus over-length and already-used ones.
+ * Offering the AI a candidate that the validator must reject made a whole theme fail daily
+ * (2026-11-08/15/22: both Sunday "service" sources were already in history).
+ */
+export function approvedCandidates(sources: Source[], history: string[], urlFor: (s: Source) => string): Candidate[] {
+  const used = history.map(contentKeys);
+  return sources.flatMap(s => HOOKS.flatMap(h => [null, urlFor(s)].map(destinationUrl => ({ text: compose(h, s, destinationUrl), theme: s.theme, contentId: s.id, destinationUrl, evidence: [s.evidence] as [string] }))))
+    .filter(c => validLength(c.text) && !used.some(keys => similar(keys, contentKeys(c.text))));
+}
 function object(raw: unknown): Record<string, unknown> {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("invalid_schema");
   return raw as Record<string, unknown>;
