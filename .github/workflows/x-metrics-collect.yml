@@ -1,0 +1,59 @@
+name: X metrics snapshot (read-only)
+# P1 of docs/x-growth-engine. Reads X post metrics ~24h/72h after publishing and stores them in Supabase.
+# Never posts, replies, likes, reposts or follows. Inert unless the repository variables say otherwise:
+#   X_METRICS_ENABLED=true     emergency switch (default false: the scheduled job does not even start)
+#   X_METRICS_DRY_RUN=false    default true: only plans and estimates cost, writes nothing
+#   X_METRICS_LIVE_READ=true   default false: no billable X request
+on:
+  schedule:
+    - cron: '15 23 * * *' # 08:15 JST: posts from 07:00 the previous days are ~25h / ~73h old
+    - cron: '15 11 * * *' # 20:15 JST: catch-up for retryable failures inside the windows
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Plan and estimate cost only (no DB writes, no X request)
+        type: boolean
+        default: true
+      fixture:
+        description: Offline fixture run (in-memory DB, no secrets, no network)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: x-metrics-collect
+  cancel-in-progress: false
+jobs:
+  collect:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.X_METRICS_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Offline fixture collection
+        if: github.event_name == 'workflow_dispatch' && inputs.fixture
+        run: npm run x:growth -- collect --fixture
+      - name: Collect metrics snapshots
+        if: github.event_name != 'workflow_dispatch' || !inputs.fixture
+        env:
+          X_METRICS_ENABLED: ${{ vars.X_METRICS_ENABLED || 'false' }}
+          X_METRICS_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (inputs.dry_run && 'true' || 'false') || vars.X_METRICS_DRY_RUN || 'true' }}
+          X_METRICS_LIVE_READ: ${{ vars.X_METRICS_LIVE_READ || 'false' }}
+          X_METRICS_OWNED: ${{ vars.X_METRICS_OWNED || 'true' }}
+          X_METRICS_DAILY_READ_BUDGET: ${{ vars.X_METRICS_DAILY_READ_BUDGET || '10' }}
+          X_METRICS_MONTHLY_READ_BUDGET: ${{ vars.X_METRICS_MONTHLY_READ_BUDGET || '120' }}
+          X_METRICS_MAX_READS: ${{ vars.X_METRICS_MAX_READS || '10' }}
+          X_METRICS_MAX_ATTEMPTS: ${{ vars.X_METRICS_MAX_ATTEMPTS || '2' }}
+          X_POST_ACCOUNT_ID: ${{ vars.X_POST_ACCOUNT_ID }}
+          X_POST_SUPABASE_URL: ${{ secrets.X_POST_SUPABASE_URL }}
+          X_POST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.X_POST_SUPABASE_SERVICE_ROLE_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: npm run x:growth -- collect

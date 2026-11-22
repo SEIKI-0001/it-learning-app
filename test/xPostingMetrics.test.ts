@@ -29,7 +29,7 @@ describe("OAuth 1.0a signing", () => {
     expect(a.oauth_signature).not.toBe(b.oauth_signature);
     expect(a.oauth_signature).not.toBe(bare.oauth_signature);
     expect(Object.keys(a).every(k => k.startsWith("oauth_"))).toBe(true);
-    const params = "ids=1%2C2&oauth_consumer_key=ck&oauth_nonce=n&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1&oauth_token=at&oauth_version=1.0&tweet.fields=created_at%2Cpublic_metrics";
+    const params = "ids=1%2C2&oauth_consumer_key=ck&oauth_nonce=n&oauth_signature_method=HMAC-SHA1&oauth_timestamp=1&oauth_token=at&oauth_version=1.0&tweet.fields=author_id%2Ccreated_at%2Cpublic_metrics";
     const expected = createHmac("sha1", "cs&as").update(`GET&${encodeURIComponent("https://api.x.com/2/tweets")}&${encodeURIComponent(params)}`).digest("base64");
     expect(a.oauth_signature).toBe(expected);
   });
@@ -64,6 +64,12 @@ describe("metrics parsing (offline fixture)", () => {
     expect(r).toEqual([expect.objectContaining({ xPostId: "1", collectionStatus: "unavailable", errorCode: "x_metrics_missing", impressions: null })]);
     expect(parseMetricsResponse("garbage", ["1"], at)[0]).toMatchObject({ collectionStatus: "failed", errorCode: "x_metrics_invalid_response" });
   });
+  it("refuses to measure a post by another author when the expected author is given", () => {
+    const body = { data: [{ id: "1", author_id: "999", public_metrics: { impression_count: 5 } }, { id: "2", author_id: "123", public_metrics: { impression_count: 7 } }] };
+    const r = parseMetricsResponse(body, ["1", "2"], at, "123");
+    expect(r[0]).toMatchObject({ collectionStatus: "permission_error", errorCode: "x_metrics_not_own_post", impressions: null });
+    expect(r[1]).toMatchObject({ collectionStatus: "ok", impressions: 7 });
+  });
   it("validates ids: 1..100 numeric, deduplicated", () => {
     expect(validateIds(["1", "1", "2"])).toEqual(["1", "2"]);
     for (const bad of [[], ["abc"], ["1".repeat(20)], Array.from({ length: 101 }, (_, i) => String(i + 1))]) expect(() => validateIds(bad)).toThrow("x_metrics_invalid_ids");
@@ -81,14 +87,14 @@ describe("read-only metrics transport", () => {
     const u = new URL(String(url));
     expect(u.origin + u.pathname).toBe("https://api.x.com/2/tweets");
     expect(u.searchParams.get("ids")).toBe(ids.join(","));
-    expect(u.searchParams.get("tweet.fields")).toBe("created_at,public_metrics");
+    expect(u.searchParams.get("tweet.fields")).toBe("author_id,created_at,public_metrics");
     expect(init?.method).toBe("GET"); expect(init?.body).toBeUndefined(); expect(init?.redirect).toBe("error");
     expect(String((init?.headers as Record<string, string>).Authorization)).toMatch(/^OAuth .*oauth_signature="/);
   });
   it("requests owned-only metric groups only when asked", async () => {
     const fetcher = ok({ data: [] });
     await fetchPostMetrics({ ids: ["1"], ownedMetrics: true }, creds, { fetcher });
-    expect(new URL(String(fetcher.mock.calls[0][0])).searchParams.get("tweet.fields")).toBe("created_at,public_metrics,non_public_metrics,organic_metrics");
+    expect(new URL(String(fetcher.mock.calls[0][0])).searchParams.get("tweet.fields")).toBe("author_id,created_at,public_metrics,non_public_metrics,organic_metrics");
   });
   it.each([[401, "permission_error"], [403, "permission_error"], [500, "failed"], [503, "failed"]] as const)("HTTP %s → %s for every id, no retry, no provider text", async (status, expected) => {
     const fetcher = ok({ detail: "secret provider message" }, { status });

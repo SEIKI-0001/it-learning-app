@@ -43,7 +43,8 @@
     "cf:typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "verify:cloudflare": "node scripts/cloudflare/verify-pilot.mjs",
     "x:post": "node --experimental-strip-types scripts/x-posting/run.mjs",
-    "x:post:dry-run": "node --experimental-strip-types scripts/x-posting/run.mjs run --dry-run"
+    "x:post:dry-run": "node --experimental-strip-types scripts/x-posting/run.mjs run --dry-run",
+    "x:growth": "node --experimental-strip-types scripts/x-growth/run.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",

@@ -32,7 +32,8 @@ export type PostMetrics = {
   organic: Record<string, number> | null;
   metricSource: "x_api_v2_get_tweets";
 };
-export type MetricsRequest = { ids: string[]; ownedMetrics?: boolean };
+/** expectedAuthorId: when set, a returned post by any other author is not measured (x_metrics_not_own_post). */
+export type MetricsRequest = { ids: string[]; ownedMetrics?: boolean; expectedAuthorId?: string };
 export type MetricsResult = { requestStatus: CollectionStatus; errorCode: string | null; rateLimitResetAt: string | null; posts: PostMetrics[] };
 export type MetricsOptions = { fetcher?: typeof fetch; now?: () => Date; nonce?: string; timeoutMs?: number };
 
@@ -45,7 +46,7 @@ export function validateIds(ids: string[]): string[] {
 export function buildMetricsUrl(ids: string[], ownedMetrics = false): string {
   const url = new URL(METRICS_ENDPOINT);
   url.searchParams.set("ids", validateIds(ids).join(","));
-  url.searchParams.set("tweet.fields", ["created_at", "public_metrics", ...(ownedMetrics ? ["non_public_metrics", "organic_metrics"] : [])].join(","));
+  url.searchParams.set("tweet.fields", ["author_id", "created_at", "public_metrics", ...(ownedMetrics ? ["non_public_metrics", "organic_metrics"] : [])].join(","));
   return url.toString();
 }
 
@@ -66,7 +67,7 @@ function classifyProblem(problem: Record<string, unknown>): { status: Collection
 }
 
 /** Pure parser for a GET /2/tweets 200 body; usable on offline fixtures. */
-export function parseMetricsResponse(body: unknown, ids: string[], measuredAt: Date): PostMetrics[] {
+export function parseMetricsResponse(body: unknown, ids: string[], measuredAt: Date, expectedAuthorId?: string): PostMetrics[] {
   const requested = validateIds(ids);
   const at = measuredAt.toISOString();
   const root = record(body);
@@ -76,6 +77,7 @@ export function parseMetricsResponse(body: unknown, ids: string[], measuredAt: D
     const post = record(raw);
     const id = typeof post?.id === "string" ? post.id : null;
     if (!post || !id || !requested.includes(id) || byId.has(id)) continue;
+    if (expectedAuthorId !== undefined && post.author_id !== expectedAuthorId) { byId.set(id, emptyMetrics(id, at, "permission_error", "x_metrics_not_own_post")); continue; }
     const pub = record(post.public_metrics) ?? {};
     const created = typeof post.created_at === "string" && Number.isFinite(Date.parse(post.created_at)) ? new Date(post.created_at).toISOString() : null;
     const organic: Record<string, number> = {};
@@ -130,7 +132,7 @@ export async function fetchPostMetrics(request: MetricsRequest, creds: XCredenti
   if (res.status !== 200) { await res.body?.cancel(); return whole("failed", `x_metrics_http_${res.status >= 100 && res.status <= 599 ? res.status : "unknown"}`); }
   let body: unknown;
   try { body = await res.json(); } catch { return whole("failed", "x_metrics_invalid_response"); }
-  const posts = parseMetricsResponse(body, ids, now());
+  const posts = parseMetricsResponse(body, ids, now(), request.expectedAuthorId);
   return { requestStatus: "ok", errorCode: null, rateLimitResetAt: null, posts };
 }
 
