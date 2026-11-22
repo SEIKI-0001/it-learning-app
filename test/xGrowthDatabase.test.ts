@@ -30,7 +30,11 @@ describe("x growth migration: additive and private", () => {
       expect((await db.query(`select relrowsecurity as rls from pg_class where oid = 'public.${t}'::regclass`)).rows).toEqual([{ rls: true }]);
       for (const role of ["anon", "authenticated"]) for (const priv of ["select", "insert", "update", "delete"])
         expect((await db.query<{ ok: boolean }>(`select has_table_privilege('${role}', 'public.${t}', '${priv}') as ok`)).rows[0].ok).toBe(false);
-      expect((await db.query<{ ok: boolean }>(`select has_table_privilege('service_role', 'public.${t}', 'delete') as ok`)).rows[0].ok).toBe(false);
+      // Regression (found on local Supabase staging 2026-11-23): default privileges must not leave DELETE/TRUNCATE.
+      for (const priv of ["delete", "truncate", "references", "trigger"])
+        expect((await db.query<{ ok: boolean }>(`select has_table_privilege('service_role', 'public.${t}', '${priv}') as ok`)).rows[0].ok, `${t} ${priv}`).toBe(false);
+      for (const priv of ["select", "insert", "update"])
+        expect((await db.query<{ ok: boolean }>(`select has_table_privilege('service_role', 'public.${t}', '${priv}') as ok`)).rows[0].ok).toBe(true);
     }
     for (const fn of ["x_metrics_due(text,timestamptz,integer)", "reserve_x_metrics_reads(text,integer,integer,integer,numeric)", "record_x_metrics_snapshot(uuid,uuid,text,jsonb,integer)", "mark_x_metrics_missed(text,timestamptz)", "finish_x_metrics_run(uuid,text,text,timestamptz,jsonb)", "x_growth_post_report(text,timestamptz)"]) {
       for (const role of ["anon", "authenticated"]) expect((await db.query<{ ok: boolean }>(`select has_function_privilege('${role}', 'public.${fn}', 'execute') as ok`)).rows[0].ok).toBe(false);

@@ -16,7 +16,11 @@ export async function createFixtureDatabase(root: string): Promise<PGlite> {
   const { PGlite } = await import("@electric-sql/pglite");
   const db = new PGlite();
   // Minimal stand-ins for the roles and the two attribution tables x_post_performance() reads.
+  // Mirror Supabase's default privileges (verified identical on production 2026-11-23): new public
+  // tables/functions get ALL/EXECUTE for anon, authenticated and service_role unless revoked.
   await db.exec(`create role anon; create role authenticated; create role service_role;
+    alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+    alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
     create table public.public_funnel_events(event text, placement text, visitor_id text, created_at timestamptz default now());
     create table public.signup_attributions(ref text, utm_source text, utm_medium text, utm_campaign text);`);
   const dir = join(root, "supabase/migrations");

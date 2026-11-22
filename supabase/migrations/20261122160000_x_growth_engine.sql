@@ -94,7 +94,9 @@ alter table public.x_growth_experiments enable row level security;
 alter table public.x_growth_metric_runs enable row level security;
 alter table public.x_growth_post_metrics enable row level security;
 alter table public.x_growth_reviews enable row level security;
-revoke all on public.x_growth_experiments, public.x_growth_metric_runs, public.x_growth_post_metrics, public.x_growth_reviews from public, anon, authenticated;
+-- Supabase default privileges grant ALL (incl. DELETE/TRUNCATE) on new public tables to anon,
+-- authenticated AND service_role, so revoke from service_role too before granting only what is used.
+revoke all on public.x_growth_experiments, public.x_growth_metric_runs, public.x_growth_post_metrics, public.x_growth_reviews from public, anon, authenticated, service_role;
 grant select, insert, update on public.x_growth_experiments, public.x_growth_metric_runs, public.x_growth_post_metrics, public.x_growth_reviews to service_role;
 
 -- Snapshot windows (hours after published_at): 24h = [22,40), 72h = [70,88).
