@@ -12,7 +12,9 @@ const { SupabasePostStore } = await import("@/lib/growth/xPosting/store");
 const { fixtureStore } = await import("@/lib/growth/xPosting/fixtureStore");
 const { createXPost, verifyXIdentity, readXIdentity } = await import("@/lib/growth/xPosting/xClient");
 const { checkPostingAi } = await import("@/lib/growth/xPosting/aiDiagnostics");
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" } } });
+const { fetchPostMetrics, estimateReadCostUsd, validateIds, METRICS_ENDPOINT } = await import("@/lib/growth/xPosting/metricsClient");
+const { readFile } = await import("node:fs/promises");
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" }, ids: { type: "string" }, "fixture-file": { type: "string" }, owned: { type: "boolean" } } });
 const command = positionals[0] ?? "run";
 const env = process.env;
 const bool = (name, fallback = false) => {
@@ -39,6 +41,26 @@ try {
     console.log(JSON.stringify({ state: "verified", accountId: identity.id, username: identity.username }));
   } else if (command === "schedule") {
     console.log(JSON.stringify(times.map(t => { const [h,m] = t.split(":").map(Number); return { cron: `${m} ${(h+15)%24} * * *`, jst: t }; }), null, 2));
+  } else if (command === "metrics") {
+    // READ-ONLY. No DB access. Fixture mode never touches the network; live mode needs an explicit opt-in.
+    if (values.fixture) {
+      const file = values["fixture-file"] || fileURLToPath(new URL("../../test/fixtures/xMetrics/get-tweets-mixed.json", import.meta.url));
+      const fixture = JSON.parse(await readFile(file, "utf8"));
+      if (fixture?.fixture !== true || !Array.isArray(fixture.requestedIds)) throw new Error("invalid_fixture_file");
+      const ids = validateIds(values.ids ? values.ids.split(",") : fixture.requestedIds);
+      const offline = async (url, options) => {
+        if (!String(url).startsWith(`${METRICS_ENDPOINT}?`) || options?.method !== "GET" || options.body) throw new Error("unexpected_network_request");
+        return new Response(JSON.stringify(fixture.response), { status: fixture.status ?? 200 });
+      };
+      const fake = { consumerKey: "fixture", consumerSecret: "fixture", accessToken: "fixture", accessSecret: "fixture" };
+      console.log(JSON.stringify({ fixture: true, estimatedUsdIfLive: estimateReadCostUsd(ids.length), ...(await fetchPostMetrics({ ids, ownedMetrics: values.owned === true }, fake, { fetcher: offline, now: () => new Date("2026-11-22T22:00:00Z") })) }, null, 2));
+    } else {
+      if (env.X_METRICS_LIVE_READ !== "true") throw new Error("x_metrics_live_read_not_enabled");
+      if (!values.ids) throw new Error("metrics_requires_ids");
+      const ids = validateIds(values.ids.split(","));
+      if (ids.length > limit("X_METRICS_MAX_READS", 10, 100)) throw new Error("x_metrics_read_cap_exceeded");
+      console.log(JSON.stringify({ fixture: false, estimatedUsd: estimateReadCostUsd(ids.length), ...(await fetchPostMetrics({ ids, ownedMetrics: values.owned === true }, creds())) }, null, 2));
+    }
   } else if (command === "run") {
     const enabled = bool("X_POST_ENABLED");
     const dryRun = values["dry-run"] === true || bool("X_POST_DRY_RUN", true);

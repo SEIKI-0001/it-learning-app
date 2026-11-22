@@ -1,6 +1,6 @@
 import acronyms from "@/data/wordlist/itpassAcronyms.json";
 import { getPublishedQuestions, isContentHashValid } from "@/lib/questionBank";
-import { compose, HOOKS, validLength, type Source, type Theme } from "@/lib/growth/xPosting/core";
+import { compose, contentKeys, HOOKS, similar, validLength, type Source, type Theme } from "@/lib/growth/xPosting/core";
 import type { QuestionRecord } from "@/types/questionBank";
 
 // Only educational IPA text with attribution, or owned application material.
@@ -23,10 +23,13 @@ const studyTips = [
   "今日は新しい範囲に進む前に、前回間違えた問題をもう一度解いてみましょう。",
   "長い学習時間を取れない日は、一つのテーマを決めて問題と解説を確認してみましょう。",
 ];
-export function availableSources(theme: Theme, slot: string): Source[] {
+/** history: already posted texts. Used sources are dropped before the 10-item window is cut. */
+export function availableSources(theme: Theme, slot: string, history: string[] = []): Source[] {
+  const used = history.map(contentKeys);
+  const unused = (s: Source) => !used.some(keys => similar(keys, contentKeys(compose(HOOKS[0], s, null))));
   let sources: Source[];
   if (theme === "question" || theme === "trick") {
-    sources = getPublishedQuestions().map(q => questionSource(q, theme as "question" | "trick")).filter((s): s is Source => s !== null);
+    sources = getPublishedQuestions().map(q => questionSource(q, theme as "question" | "trick")).filter((s): s is Source => s !== null && unused(s));
     if (sources.length) return rotate(sources, slot).slice(0, 10);
     theme = "terms"; // Current full questions cannot fit; never silently shorten their facts.
   }
@@ -39,7 +42,7 @@ export function availableSources(theme: Theme, slot: string): Source[] {
     // Saturday uses learning know-how, without generating unverified latest exam news.
     sources = studyTips.map((text, i) => ({ id: `${theme}-tip-${i}`, theme, text, evidence: "app/guide/it-passport-study-method/page.tsx", path: "/guide/it-passport-study-method", rights: "app_original" }));
   }
-  return rotate(sources.filter(s => validLength(compose(HOOKS[0], s, "https://example.com"))), slot).slice(0, 10);
+  return rotate(sources.filter(s => unused(s) && validLength(compose(HOOKS[0], s, "https://example.com"))), slot).slice(0, 10);
 }
 function rotate<T>(sources: T[], slot: string): T[] {
   const offset = Math.floor(Date.parse(slot) / 86400000) % Math.max(sources.length, 1);

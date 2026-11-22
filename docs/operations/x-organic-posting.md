@@ -181,6 +181,13 @@ npm run x:post -- reconcile --id <内部UUID> --x-post-id <確認済みX投稿ID
 取消しても予定枠とAI予約上限は解放しない。古い枠を書き換えたり行を削除したりして再送しない。
 誤ったX投稿IDで確定しないこと。reconcileは運用者の確認を前提にし、X分析APIを自動取得しない。
 
+### 失敗理由（error_summary）の読み方（2026-11-22追記）
+
+- `no_unused_content`: その曜日のテーマも代替の`terms`も、未使用の承認済み本文が残っていない。教材(承認済みsource)の追加が必要。品質基準は下げない。
+- `quality_check_failed_<理由>`: AI出力が検証で落ちた。理由は固定タグ `invalid_schema` / `unsupported_content` / `invalid_length` / `duplicate_content` のみ（AIの文面は保存しない）。
+- `ai_output_not_json`: AI応答がJSONとして読めない（単一のコードフェンスは許容）。
+- 過去行の`quality_check_failed`（理由なし）は旧形式。2026-11-08/15/22（日曜）の3件は、日曜テーマ`service`の本文2件がどちらも履歴にあり重複判定で落ちたもの。現在は使用済み本文をAIに渡さず、テーマが尽きたら`terms`へ切り替える。
+
 ## 集客・コストレポート
 
 `npm run x:post -- report`は投稿予定日・テーマ・状態・投稿ID・エラー概要、流入・登録数、テーマ別成果、月次API予約数と投稿料金概算をJSONで返す。
@@ -200,6 +207,20 @@ visitsは入口view数、visitorsは投稿別の匿名visitor_idのユニーク�
 月次X概算は要求開始を基に算出するため未送信の途中停止も含み得る。本人確認GET・AIトークン料金は含めない。
 1要求の生成上限は1200 output tokens、月次既定31回。入力には公開候補と直近40投稿までを使う。
 正確な請求額はAnthropic ConsoleとX Developer Consoleで確認する。
+
+## Xメトリクスの読み取り（P0・読み取り専用）
+
+`lib/growth/xPosting/metricsClient.ts` が `GET /2/tweets` を1回だけ呼ぶ（POST/DB書き込み/再試行なし）。
+
+```bash
+npm run x:post -- metrics --fixture                 # オフラインfixture。認証情報・通信・DBなし
+X_METRICS_LIVE_READ=true npm run x:post -- metrics --ids <X投稿ID,...>   # 実API（従量課金）。運用者の明示承認後のみ
+```
+
+- 実API読み取りは `X_METRICS_LIVE_READ=true` が無いと通信前に `x_metrics_live_read_not_enabled` で止まる。1回の上限は `X_METRICS_MAX_READS`（既定10・最大100）。出力に `estimatedUsd`（0.005ドル/投稿の概算）を出す。
+- `--owned` で `non_public_metrics` / `organic_metrics` も要求する（自分の投稿・作成30日以内・ユーザーコンテキストのみ）。
+- 取得できなかった値は `null`。`collectionStatus` は `ok/unavailable/permission_error/rate_limited/failed`、`errorCode` は固定タグで、Xの本文メッセージは出さない。
+- 詳細・出典は `docs/x-growth-engine/PROGRESS.md`。
 
 ## 検証と制約
 

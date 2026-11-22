@@ -41,3 +41,34 @@ it("checks credentials without AI or DB and refuses an unexpected account", () =
     expect(wrong.stdout).toBe("");
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+describe("read-only metrics CLI", () => {
+  const noNetwork = () => {
+    const dir = mkdtempSync(join(tmpdir(), "x-metrics-test-"));
+    const preload = join(dir, "fetch.mjs");
+    writeFileSync(preload, `globalThis.fetch = async () => { throw new Error("unexpected_network_request"); };`);
+    return { dir, preload };
+  };
+  it("fixture mode parses offline data with no credentials, network or DB", () => {
+    const { dir, preload } = noNetwork();
+    try {
+      const r = spawnSync(process.execPath, ["--experimental-strip-types", "--import", preload, cli, "metrics", "--fixture"], { env, encoding: "utf8" });
+      expect(r.status, r.stderr).toBe(0);
+      const out = JSON.parse(r.stdout);
+      expect(out).toMatchObject({ fixture: true, requestStatus: "ok", estimatedUsdIfLive: 0.025 });
+      expect(out.posts.map((p: { collectionStatus: string }) => p.collectionStatus)).toEqual(["ok", "ok", "unavailable", "unavailable", "permission_error"]);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+  it("live reads are refused without X_METRICS_LIVE_READ=true, before any request", () => {
+    const { dir, preload } = noNetwork();
+    try {
+      const credentials = { ...env, X_API_KEY: "k", X_API_SECRET: "s", X_ACCESS_TOKEN: "t", X_ACCESS_TOKEN_SECRET: "ts" };
+      const r = spawnSync(process.execPath, ["--experimental-strip-types", "--import", preload, cli, "metrics", "--ids", "1990000000000000001"], { env: credentials, encoding: "utf8" });
+      expect(r.status).toBe(1);
+      expect(r.stderr).toContain("x_metrics_live_read_not_enabled");
+      expect(r.stderr).not.toContain("unexpected_network_request");
+      const capped = spawnSync(process.execPath, ["--experimental-strip-types", "--import", preload, cli, "metrics", "--ids", Array.from({ length: 11 }, (_, i) => String(i + 1)).join(",")], { env: { ...credentials, X_METRICS_LIVE_READ: "true" }, encoding: "utf8" });
+      expect(capped.stderr).toContain("x_metrics_read_cap_exceeded");
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+});
