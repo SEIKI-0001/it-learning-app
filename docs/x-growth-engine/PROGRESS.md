@@ -220,3 +220,40 @@
 - `test/xGrowthExperiment.test.ts` 20件: すべての型の全レンダリング（500件以上）が承認済みの文字列を含む／対照群が本番の terms 投稿と一字一句同じ／28日で 14:14・各曜日が週ごとに A↔B／同じ入力なら同じ結果・seed で反転／トピックが variant に依存しない／不正な実験設定を拒否／**4つの組み合わせで28日分の候補**（glossary 系は各28件、analogy は draft ライブラリで11件）でメタデータ完全・トピックの重複なし／不正な内容（事実の改変・合格率の主張・variant/型/topic の改ざん・LLM 版の文字列・URL・出典・重複・停止中の実験・本番での draft の analogy）を拒否／runner: 依存なしなら従来どおり、実験ありなら LLM なし・タグ付け後に prepare、失敗時は理由つきで従来経路、タグ付け失敗なら止める
 - `test/xGrowthExperimentDb.test.ts` 6件（PGlite・本物の migration）: running は1つ、variant は2つ、期間内だけ取得、タグ付けの一致・二重拒否・期間外/停止中の拒否、権限、CLI（fixture の投稿にメタデータが保存される）、preview（28件・14:14）
 - X関連: 16 files / 145 tests passed、typecheck exit 0、eslint 指摘なし
+
+## P3: 定期 PDCA 評価エンジン（2026-11-23 JST）
+
+本番への適用・保存・AI 呼び出しは0件（すべてオフラインの fixture と PGlite）。
+
+### 実装
+| 内容 | ファイル |
+|---|---|
+| 分析: 各群の割付・公開・失敗・**計測待ち（72h の窓 [70,88) がまだ閉じていない）**・有効・欠損（理由の内訳）・欠損率、72h/24h の分布（中央値・四分位・最小/最大・幾何平均・**実数の0**・log 尺度の外れ値）、反応数と反応率、サイトの訪問/訪問者/登録、曜日・投稿時刻・題材の分野 | `lib/growth/xGrowth/analysis.ts` |
+| 効果: B/A の中央値の比を、seed つき bootstrap（2000回）の 95%CI で見る。外れ値を除いたものも同時に計算する | 同上 |
+| 判定（ルールだけ）: 欠損率 > 30% → `data_quality_issue`／有効な標本 < 最低数 → `insufficient_data`／曜日・時刻・題材の偏り → `biased`／CI が1をまたぐ → `no_clear_difference`／外れ値を除くと結論が変わる → `outlier_sensitive`／それ以外 → `exploratory_lead`（1回の実験は探索的なだけ）。別の実験で同じ仮説・同じ向きなら `validated_lead`。対応は continue / pause / repeat / replace / propose_adoption（**採用は提案だけ**） | 同上 |
+| 仮説（最大3つ、ルールで作る）: 計測の修正・再現・延長・やり直し・探索。180日以内に `no_effect` だった仮説は出さない（偏りや外れ値でのやり直しは理由を記録すれば可）。未比較の型があれば探索の枠を1つ残す | `lib/growth/xGrowth/hypotheses.ts` |
+| AI による解釈（任意、既定はオフ）: 計算結果の JSON だけを渡す。**文章中の数値がすべて計算結果にあること**、「勝者・有意・確定」などの断定が無いこと（validated の場合を除く）を確認し、満たさなければ文章を捨てて理由を記録する | `lib/growth/xGrowth/aiAnalysis.ts` |
+| 日本語の週次レポート（まとめ・健全性・実験の表・効果と CI・偏り・副次指標・判断・次の仮説・注意） | `lib/growth/xGrowth/weeklyReport.ts` |
+| 保存（冪等）: 期間×実験ごとに1行（NULL は期間全体の行で仮説を持つ）。2回目は作らず既存の id を返す。仮説は新規作成時だけ入れる。期間が終わった実験の判定で、同じ key の未決の仮説に outcome を付ける | `lib/growth/xGrowth/weekly.ts`、migration `20261123120000_x_growth_pdca.sql`（本番未適用） |
+| 合成 fixture: realistic / empty / incomplete / biased / outlier / lead / high_missing（決定論的・実データではない） | `lib/growth/xGrowth/weeklyFixtures.ts` |
+| CLI `npm run x:growth -- weekly [--fixture --scenario … --fake-ai …] [--output file.md]`、週次 workflow `x-growth-weekly.yml`（月曜 09:15 JST。既定で起動しない・保存しない・AI なし） | `scripts/x-growth/run.mjs`、`.github/workflows/x-growth-weekly.yml` |
+| 投稿 workflow に `X_GROWTH_EXPERIMENTS_ENABLED`（既定 false）を渡すだけ。スケジュール・上限は変えていない | `.github/workflows/x-organic-post.yml` |
+
+### 途中で見つけて直したこと
+- high_missing のデータが「標本不足」と判定されていた → 欠損率を先に判定するように変更（収集が壊れているときの本当の原因は欠損）。
+- fixture: 72h の窓が開く前の投稿にも 72h の値が入っていた → 経過時間に応じて NULL にした（計測待ちを正しく再現）。外れ値の日が B 群に当たらないことがあった → 15日目以降の最初の B の日に入れるように修正。
+
+### テスト（実行済み）
+`test/xGrowthWeekly.test.ts` 24件:
+- 6つのシナリオの判定と対応（realistic → 標本不足・やり直し、incomplete → 継続、biased → 偏り、outlier → 差なし、lead → 探索的、high_missing → 計測を直す）
+- ルールが有望と判定しない限り leader を出さない／1回の強い実験は「探索的」止まりでレポートに「勝者・有意」と書かない／同じ向きで再現すれば validated で、採用は提案だけ（逆向きの履歴なら validated にしない）
+- 5000の外れ値でも有望にならない（平均は中央値の5倍以上にぶれるが、ルールは使わない）
+- 空のデータでも安全に出力できる／決定論的／実数の0は有効で、欠損は理由つきで数える／窓が開いている投稿は計測待ち
+- 仮説は3つ以内・探索の枠あり・no_effect の再提案なし・やり直しの理由
+- AI ガード（計算に無い数値・断定・失敗を拒否、正しい文章は通す）／期間（月曜 00:00 JST 区切り）
+- PGlite での保存: 2回目は何も作らず変えない、判断と対応、履歴、outcome の更新、DB でも仮説は3つまで
+- CLI: 既定は disabled、全シナリオがオフラインで動く、偽 AI の数値は拒否
+
+`test/xGrowthWorkflows.test.ts` 4件（週次は既定で停止・保存しない・AI キーは AI が有効なときだけ渡す・X の認証情報なし・式の展開による注入なし／投稿 workflow の実験は既定でオフ・スケジュールと上限は変えていない）。
+
+X関連: 18 files / 173 tests passed、typecheck exit 0、eslint 指摘なし。
