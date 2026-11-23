@@ -1,83 +1,109 @@
 // @vitest-environment jsdom
-
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import BinaryExperience from "@/components/experiences/BinaryExperience";
-import { getTopicById } from "@/lib/content";
+import { ExperienceSlideDeck } from "@/components/experiences/ui";
 
 afterEach(cleanup);
+const click = (name: string) =>
+  fireEvent.click(screen.getByRole("button", { name }));
 
-describe("BinaryExperience", () => {
-  it("each bit box shows its weight with 2ⁿ on the right, doubling to the left", () => {
-    render(<BinaryExperience />);
-    const boxes = within(screen.getByTestId("binary-weights")).getByTestId("bit-boxes");
-    const items = boxes.querySelectorAll("li");
-    expect(items).toHaveLength(6);
-    expect(items[0]).toHaveTextContent("32(25)1");
-    expect(items[5]).toHaveTextContent("1(20)0");
-    expect(screen.getByText("← 左へ行くほど 2倍")).toBeInTheDocument();
+describe("beginner binary lesson", () => {
+  it("keeps the units slide open when a photo slider drag bubbles through the deck", () => {
+    render(
+      <ExperienceSlideDeck>
+        <BinaryExperience />
+      </ExperienceSlideDeck>,
+    );
+    for (let i = 0; i < 4; i++) click("次の解説へ");
+    const slider = screen.getByLabelText("写真の枚数");
+    fireEvent.touchStart(slider, { touches: [{ clientX: 100 }] });
+    fireEvent.change(slider, { target: { value: "500" } });
+    fireEvent.touchEnd(slider, { changedTouches: [{ clientX: 300 }] });
+    expect(screen.getByRole("slider", { name: "写真の枚数" })).toBeVisible();
+    expect(
+      screen.getByRole("status", { name: "写真のデータ量" }),
+    ).toHaveTextContent("2,000 MB = 2 GB");
   });
-
-  it("binary → decimal adds only the weights of the 1 boxes: 101100 = 32 + 8 + 4 = 44", () => {
+  it("connects one switch to a bit and allows turning it back off", () => {
     render(<BinaryExperience />);
-    const picked = within(screen.getByTestId("binary-read"))
-      .getAllByTestId("bit-picked")
-      .map((el) => el.textContent);
-    expect(picked).toEqual(["↓32", "↓8", "↓4"]);
-    expect(screen.getByText(/1 の「個数」（3個）ではなく/)).toBeInTheDocument();
+    const toggle = screen.getByRole("button", { name: "1ビットのスイッチ" });
+    expect(toggle).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-pressed", "true");
+    expect(toggle).toHaveTextContent("1");
+    fireEvent.click(toggle);
+    expect(toggle).toHaveTextContent("0");
   });
-
-  it("decimal → binary divides by 2 and puts each remainder into the box from the right (1, 2, 4 …)", () => {
+  it("adds place values, handles zero and all four bits, and resets the exercise", () => {
     render(<BinaryExperience />);
-    const division = screen.getByTestId("binary-division");
-    expect(within(division).getAllByTestId("binary-remainder").map((el) => el.textContent)).toEqual(["0", "0", "1", "1", "0", "1"]);
-    expect(within(division).getAllByTestId("binary-remainder-box").map((el) => el.textContent)).toEqual([
-      "→ 1(20)の箱",
-      "→ 2(21)の箱",
-      "→ 4(22)の箱",
-      "→ 8(23)の箱",
-      "→ 16(24)の箱",
-      "→ 32(25)の箱",
-    ]);
-    expect(screen.getByText(/余りを下から読む/)).toBeInTheDocument();
+    const lab = screen.getByRole("group", { name: "2進数を作る練習" });
+    const bit = (weight: number) =>
+      within(lab).getByRole("button", { name: `${weight}の位` });
+    expect(within(lab).getByRole("status")).toHaveTextContent("0000");
+    fireEvent.click(bit(4));
+    fireEvent.click(bit(1));
+    expect(within(lab).getByRole("status")).toHaveTextContent("0101");
+    expect(within(lab).getByRole("status")).toHaveTextContent("4 + 1 = 5");
+    fireEvent.click(bit(8));
+    fireEvent.click(bit(2));
+    expect(within(lab).getByRole("status")).toHaveTextContent(
+      "8 + 4 + 2 + 1 = 15",
+    );
+    click("全部0に戻す");
+    expect(within(lab).getByRole("status")).toHaveTextContent("0000");
   });
-
-  it("octal groups 3 bits and hex groups 4 bits from the right (zero-padding the left)", () => {
+  it("explains a wrong answer and lets the learner correct it", () => {
     render(<BinaryExperience />);
-    const oct = within(screen.getByTestId("binary-oct")).getAllByTestId("bit-group");
-    expect(oct.map((g) => [g.dataset.bits, g.dataset.value])).toEqual([
-      ["101", "5"],
-      ["100", "4"],
-    ]);
-    expect(screen.getByTestId("binary-oct")).toHaveTextContent("54(8)");
-    const hex = within(screen.getByTestId("binary-hex")).getAllByTestId("bit-group");
-    expect(hex.map((g) => [g.dataset.bits, g.dataset.value])).toEqual([
-      ["0010", "2"],
-      ["1100", "C"],
-    ]);
-    expect(screen.getByTestId("binary-hex")).toHaveTextContent("2C(16)");
-    expect(screen.getByTestId("binary-hex-letters")).toHaveTextContent("A10B11C12D13E14F15");
+    click("2個だから2");
+    expect(
+      screen.getByRole("status", { name: "読み方の答え合わせ" }),
+    ).toHaveTextContent("1の個数");
+    click("8 + 2で10");
+    expect(
+      screen.getByRole("status", { name: "読み方の答え合わせ" }),
+    ).toHaveTextContent("正解");
   });
-
-  it("keeps the exam-style addition and 8bit = 1Byte", () => {
+  it("converts MB in both directions and distinguishes bit from Byte", () => {
     render(<BinaryExperience />);
-    expect(screen.getByTestId("binary-exam")).toHaveTextContent("13 ＋ 11 ＝ 24");
-    expect(screen.getByTestId("binary-units")).toHaveTextContent("8ビット");
-    expect(screen.getByRole("link", { name: /転送時間の計算/ })).toHaveAttribute("href", "/topics/tech-lan-wan");
+    const amount = screen.getByLabelText("写真の枚数");
+    fireEvent.change(amount, { target: { value: "500" } });
+    expect(
+      screen.getByRole("status", { name: "写真のデータ量" }),
+    ).toHaveTextContent("2,000 MB = 2 GB");
+    fireEvent.change(amount, { target: { value: "1" } });
+    expect(
+      screen.getByRole("status", { name: "写真のデータ量" }),
+    ).toHaveTextContent("4 MB = 0.004 GB");
+    click("16ビット");
+    expect(
+      screen.getByRole("status", { name: "単位の答え合わせ" }),
+    ).toHaveTextContent("正解");
   });
-});
-
-describe("tech-binary-data check questions", () => {
-  it("checks binary reading, conversion, the meaning of 8bit, and adding two binary numbers", () => {
-    const topic = getTopicById("tech-binary-data");
-
-    expect(topic?.checkQuestions).toHaveLength(5);
-    expect(topic?.checkQuestions.map((question) => question.prompt)).toEqual([
-      expect.stringContaining("0101"),
-      expect.stringContaining("9を2進数"),
-      expect.stringContaining("8ビット"),
-      expect.stringContaining("1バイト"),
-      expect.stringContaining("1010"),
-    ]);
+  it("preserves state when moving through the existing slide deck", () => {
+    render(
+      <ExperienceSlideDeck>
+        <BinaryExperience />
+      </ExperienceSlideDeck>,
+    );
+    click("1ビットのスイッチ");
+    click("次の解説へ");
+    expect(
+      screen.queryByRole("button", { name: "1ビットのスイッチ" }),
+    ).not.toBeInTheDocument();
+    click("前の解説へ");
+    expect(
+      screen.getByRole("button", { name: "1ビットのスイッチ" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    for (let i = 0; i < 5; i++) click("次の解説へ");
+    expect(
+      screen.getByRole("heading", { name: /覚えるのは、この3つ/ }),
+    ).toBeInTheDocument();
   });
 });
