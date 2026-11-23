@@ -3,6 +3,7 @@ import type { Experiment } from "@/lib/growth/xGrowth/experiment";
 import { generateHypotheses, type Hypothesis, type HypothesisOutcome, type StylePairTested } from "@/lib/growth/xGrowth/hypotheses";
 import { STYLES } from "@/lib/growth/xGrowth/styles";
 import { healthAlerts, type Alert, type Budgets, type OpsSummary } from "@/lib/growth/xGrowth/health";
+import type { DraftPlan } from "@/lib/growth/xGrowth/drafts";
 
 export const REPORT_VERSION = "xg-weekly-v1";
 export type WeeklyInput = {
@@ -12,6 +13,7 @@ export type WeeklyInput = {
 export type WeeklyData = {
   version: string; generatedAt: string; periodStart: string; periodEnd: string; reliability: Reliability; baseline: Dist;
   experiments: ExperimentResult[]; hypotheses: Hypothesis[]; notes: string[]; alerts: Alert[];
+  draft?: { reason: string; plan: DraftPlan | null; created: boolean | null; experimentId: string | null };
 };
 export type WeeklyReport = { data: WeeklyData; markdown: string; aiText?: string | null; aiRejected?: string | null };
 
@@ -25,6 +27,8 @@ const FLAG_JA: Record<string, string> = { weekday_imbalance: "曜日の偏り", 
 const fmt = (x: number | null | undefined, unit = "") => (x === null || x === undefined ? "—" : `${x}${unit}`);
 const pct = (x: number | null) => (x === null ? "—" : `${Math.round(x * 1000) / 10}%`);
 const style = (s: string) => STYLES[s]?.label ?? s;
+const variantLabel = (v: { contentStyle: string; withLink?: boolean; postTimeJst?: string }) => `${style(v.contentStyle)}${v.withLink ? "・リンクあり" : ""}${v.postTimeJst ? `・${v.postTimeJst}投稿` : ""}`;
+const DRAFT_REASON_JA: Record<string, string> = { draft_already_waiting: "承認待ちの下書きがすでにある", current_experiment_not_ending_soon: "今の実験がまだ2週間以上続く", current_experiment_has_no_end: "今の実験に終了日が無い", no_style_hypothesis: "下書きにできる型の比較の仮説が無い", hypothesis_already_open: "同じ仮説の実験がすでにある" };
 
 function armRow(a: ArmStats): string {
   const d = a.impressions72h;
@@ -77,7 +81,18 @@ export function renderMarkdown(d: WeeklyData, ai?: { text: string | null; reject
   }
   L.push("## 4. 次の仮説（最大3つ・提案のみ。実施には承認が必要）");
   if (!d.hypotheses.length) L.push("（なし）");
-  d.hypotheses.forEach((h, i) => L.push(`${i + 1}. ${h.statement}`, `   - 根拠: ${h.rationale}`, ...(h.justification ? [`   - 再実施の理由: ${h.justification}`] : []), ...(h.proposedExperiment ? [`   - 比較案: A=${style(h.proposedExperiment.variants[0].contentStyle)} / B=${style(h.proposedExperiment.variants[1].contentStyle)}（各群${h.proposedExperiment.minPostsPerVariant}件以上）`] : [])));
+  d.hypotheses.forEach((h, i) => L.push(`${i + 1}. ${h.statement}`, `   - 根拠: ${h.rationale}`, ...(h.justification ? [`   - 再実施の理由: ${h.justification}`] : []), ...(h.proposedExperiment ? [`   - 比較案: A=${variantLabel(h.proposedExperiment.variants[0])} / B=${variantLabel(h.proposedExperiment.variants[1])}（各群${h.proposedExperiment.minPostsPerVariant}件以上）`] : [])));
+  if (d.draft) {
+    L.push("", "## 次の実験の下書き");
+    const p = d.draft.plan;
+    const jstDate = (iso: string) => new Date(Date.parse(iso) + 9 * 3600000).toISOString().slice(0, 10);
+    if (!p) L.push(`- 今回は作りません（${DRAFT_REASON_JA[d.draft.reason] ?? d.draft.reason}）。`);
+    else {
+      L.push(`- ${p.name}: A=${variantLabel(p.variants[0])} / B=${variantLabel(p.variants[1])}、${jstDate(p.startAt)} 〜 ${jstDate(new Date(Date.parse(p.endAt) - 1).toISOString())}（事前の確認で候補 ${p.previewCandidates} 件）`);
+      if (d.draft.experimentId) L.push(`- ${d.draft.created ? "下書きを作成しました" : "同じ下書きがすでにあります"}（id: \`${d.draft.experimentId}\`）。**まだ投稿には使われません。** 始めるには Actions の「X growth experiment approval」を experiment_id を入れて手動実行してください。`);
+      else L.push("- 自動作成はオフです（X_GROWTH_AUTO_DRAFT=true かつ保存が有効のときだけ作成）。");
+    }
+  }
   L.push("", "## 5. 注意");
   L.push("- 少ない標本では勝ち負けを決めません。「探索的な傾向」は1回の実験の結果で、別の期間・題材で再現するまで確定しません。", "- 欠損（取れなかった値）は0として扱いません。0は実際に0だった投稿だけです。", "- サイトの流入はリンク付きの投稿にしか個別に帰属できません。リンクなしの投稿の流入が0でも、プロフィール経由の流入まで0とは限りません。");
   for (const n of d.notes) L.push(`- ${n}`);

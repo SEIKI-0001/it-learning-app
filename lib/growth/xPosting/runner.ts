@@ -1,6 +1,6 @@
 import { approvedCandidates, buildPostUrl, contentKeys, textHash, themeForSlot, validateGenerated, type Generated, type Source, type Theme } from "@/lib/growth/xPosting/core";
 import type { XResult } from "@/lib/growth/xPosting/xClient";
-import { buildExperimentPost, validateExperimentPost, type Experiment, type ExperimentMeta } from "@/lib/growth/xGrowth/experiment";
+import { buildExperimentPost, slotMatchesAssignedTime, validateExperimentPost, type Experiment, type ExperimentMeta } from "@/lib/growth/xGrowth/experiment";
 import type { StyleContext } from "@/lib/growth/xGrowth/styles";
 export type PostRow = { id: string; utm_content: string; status: string; generation?: Generated };
 export type Config = { enabled: boolean; dryRun: boolean; fixture: boolean; account: string; origin: string; slot: string; dailyLimit: number; monthlyLimit: number; model: string };
@@ -21,6 +21,14 @@ export type RunResult = { state: string; id?: string; xPostId?: string; persiste
 export async function runPosting(config: Config, deps: Dependencies): Promise<RunResult> {
   if (config.fixture && !config.dryRun) throw new Error("fixture_requires_dry_run");
   if (!config.enabled && !config.dryRun) return { state: "disabled" };
+  // Time experiments: the arm assigned to this day is posted only from its own slot time. Check
+  // BEFORE claiming so the other slot of the same day can still claim it (daily limit unchanged).
+  if (deps.experiment) {
+    try {
+      const exp = await deps.experiment.active(config.slot);
+      if (exp && !slotMatchesAssignedTime(exp, config.slot, themeForSlot(config.slot))) return { state: "skipped", error: "experiment_other_time_slot" };
+    } catch { /* lookup problems are handled (fallback) after claiming */ }
+  }
   const row = await deps.store.claim(config);
   if (!row) return { state: "skipped" };
   let generated!: Generated;
@@ -37,8 +45,9 @@ export async function runPosting(config: Config, deps: Dependencies): Promise<Ru
       try {
         const exp = await deps.experiment.active(config.slot);
         if (exp) {
-          const post = buildExperimentPost(exp, config.slot, requested, history, deps.experiment.ctx);
-          generated = validateExperimentPost(post, exp, config.slot, requested, history, deps.experiment.ctx);
+          const ctx = { ...deps.experiment.ctx, origin: config.origin, utmContent: row.utm_content };
+          const post = buildExperimentPost(exp, config.slot, requested, history, ctx);
+          generated = validateExperimentPost(post, exp, config.slot, requested, history, ctx);
           experimentMeta = post.experiment;
         }
       } catch (error) {

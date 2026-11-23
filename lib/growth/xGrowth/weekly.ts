@@ -1,9 +1,11 @@
 import type { AnalysisRow, HistoryEntry } from "@/lib/growth/xGrowth/analysis";
 import { interpret, type Complete } from "@/lib/growth/xGrowth/aiAnalysis";
-import { parseExperiment, type Experiment } from "@/lib/growth/xGrowth/experiment";
+import { experimentFactor, parseExperiment, type Experiment } from "@/lib/growth/xGrowth/experiment";
 import type { HypothesisOutcome } from "@/lib/growth/xGrowth/hypotheses";
 import type { Rpc } from "@/lib/growth/xGrowth/store";
 import { parseOps, type Budgets, type OpsSummary } from "@/lib/growth/xGrowth/health";
+import { planNextDraft, type DraftPlan } from "@/lib/growth/xGrowth/drafts";
+import { previewExperiment } from "@/lib/growth/xGrowth/preview";
 import { buildWeeklyReport, renderMarkdown, REPORT_VERSION, type WeeklyReport } from "@/lib/growth/xGrowth/weeklyReport";
 
 /** Reads analysis inputs and persists reviews through the P3 RPCs (Supabase or PGlite). */
@@ -14,8 +16,10 @@ const rowsOf = (v: unknown) => (Array.isArray(v) ? (v as Record<string, unknown>
 export class GrowthStore {
   private readonly rpc: Rpc;
   constructor(rpc: Rpc) { this.rpc = rpc; }
-  async experiments(): Promise<Experiment[]> {
-    return rowsOf(await this.rpc("x_growth_list_experiments", {})).filter(r => r.status !== "draft").flatMap(r => {
+  async experiments(): Promise<Experiment[]> { return (await this.allExperiments()).filter(e => e.status !== "draft"); }
+  /** Including drafts (for draft planning and approval). */
+  async allExperiments(): Promise<Experiment[]> {
+    return rowsOf(await this.rpc("x_growth_list_experiments", {})).flatMap(r => {
       try { return [parseExperiment({ ...r, start_at: iso(r.start_at), end_at: iso(r.end_at) })]; } catch { return []; } // malformed rows are skipped, not guessed
     });
   }
@@ -29,6 +33,23 @@ export class GrowthStore {
       site: r.site_visits === null || r.site_visits === undefined ? null : { visits: Number(r.site_visits), visitors: Number(r.site_visitors), signups: Number(r.site_signups) },
     }));
   }
+  async createDraft(p: DraftPlan): Promise<{ experimentId: string; created: boolean }> {
+    const r = rowsOf(await this.rpc("create_x_experiment_draft", { p_name: p.name, p_hypothesis: p.hypothesis, p_hypothesis_key: p.hypothesisKey, p_start: p.startAt, p_end: p.endAt, p_min_posts: p.minPostsPerVariant, p_variants: p.variants, p_seed: p.allocationSeed, p_config: p.config }))[0];
+    if (!r?.experiment_id) throw new Error("growth_db_draft_failed");
+    return { experimentId: String(r.experiment_id), created: r.created === true };
+  }
+  /** Operator action: re-validates the draft offline, then draft → running. */
+  async approve(id: string): Promise<{ result: string; candidates?: Record<string, number> }> {
+    const e = (await this.allExperiments()).find(x => x.id === id);
+    if (!e) return { result: "not_found" };
+    if (e.status !== "draft") return { result: "not_draft" };
+    const days = Math.max(1, Math.round((Date.parse(e.endAt ?? e.startAt) - Date.parse(e.startAt)) / 86400000));
+    const rows = previewExperiment({ ...e, status: "running" }, days, { allowDraftLibrary: false });
+    const candidates = Object.fromEntries(e.variants.map(v => [v.id, rows.filter(r => r.state === "candidate" && r.variantId === v.id).length]));
+    if (Object.values(candidates).some(c => c < e.minPostsPerVariant)) return { result: "not_enough_valid_candidates", candidates };
+    return { result: String(await this.rpc("approve_x_experiment", { p_id: id })), candidates };
+  }
+  async pause(id: string): Promise<string> { return String(await this.rpc("pause_x_experiment", { p_id: id })); }
   async ops(account: string, now: Date): Promise<OpsSummary | null> { return parseOps(await this.rpc("x_growth_ops_summary", { p_account: account, p_now: now.toISOString() })); }
   async history(since: Date): Promise<HistoryEntry[]> {
     return rowsOf(await this.rpc("x_growth_review_history", { p_since: since.toISOString() })).map(r => ({ hypothesisKey: (r.hypothesis_key as string) ?? null, status: r.status as HistoryEntry["status"], leaderStyle: (r.leader_style as string) ?? null, otherStyle: (r.other_style as string) ?? null, periodEnd: iso(r.period_end)! }));
@@ -54,7 +75,7 @@ export class GrowthStore {
   }
 }
 
-export type WeeklyOptions = { account: string; now: Date; save: boolean; complete?: Complete; budgets?: Budgets };
+export type WeeklyOptions = { account: string; now: Date; save: boolean; complete?: Complete; budgets?: Budgets; autoDraft?: boolean };
 /** Period = the 7 JST days ending at the most recent Monday 00:00 JST. */
 export function weeklyPeriod(now: Date): { start: Date; end: Date } {
   const jst = new Date(now.getTime() + 9 * 3600000);
@@ -65,11 +86,20 @@ export function weeklyPeriod(now: Date): { start: Date; end: Date } {
 
 export async function runWeekly(store: GrowthStore, o: WeeklyOptions): Promise<{ report: WeeklyReport; saved: Awaited<ReturnType<GrowthStore["save"]>> | null }> {
   const { start, end } = weeklyPeriod(o.now);
-  const experiments = await store.experiments();
+  const all = await store.allExperiments();
+  const experiments = all.filter(e => e.status !== "draft");
   const since = new Date(Math.min(start.getTime(), ...experiments.map(e => Date.parse(e.startAt))) - 86400000);
   const [rows, history, outcomes, ops] = await Promise.all([store.rows(o.account, since, end), store.history(new Date(o.now.getTime() - 365 * 86400000)), store.outcomes(new Date(o.now.getTime() - 365 * 86400000)), store.ops(o.account, o.now)]);
-  const tested = experiments.map(e => ({ a: e.variants[0].contentStyle, b: e.variants[1].contentStyle }));
+  const tested = experiments.map(e => ({ a: e.variants[0].contentStyle, b: e.variants[1].contentStyle, factor: experimentFactor(e) }));
   const report = buildWeeklyReport({ now: o.now, periodStart: start, periodEnd: end, experiments, rows, history, outcomes, tested, ops, budgets: o.budgets });
+  // Next experiment draft (never activated here). Created only when auto-draft AND save are on.
+  const decision = planNextDraft(report.data.hypotheses, all, o.now);
+  report.data.draft = { reason: decision.reason, plan: decision.plan, created: null, experimentId: null };
+  if (decision.plan && o.autoDraft && o.save) {
+    const d = await store.createDraft(decision.plan);
+    report.data.draft = { ...report.data.draft, created: d.created, experimentId: d.experimentId };
+  }
+  report.markdown = renderMarkdown(report.data);
   if (o.complete) {
     const ai = await interpret(report, o.complete);
     report.aiText = ai.text; report.aiRejected = ai.rejected;

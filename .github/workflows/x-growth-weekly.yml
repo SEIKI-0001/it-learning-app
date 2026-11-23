@@ -4,6 +4,7 @@ name: X growth weekly review (PDCA)
 #   X_GROWTH_WEEKLY_ENABLED=true   emergency switch (default false: the scheduled job does not start)
 #   X_GROWTH_WEEKLY_SAVE=true      default false: do not write reviews/hypotheses to the DB
 #   X_GROWTH_AI_ANALYSIS=true      default false: optional AI prose (1 call/week), numbers verified
+#   X_GROWTH_AUTO_DRAFT=true       default false: also create the next experiment as a DRAFT (never running)
 on:
   schedule:
     - cron: '15 0 * * 1' # Monday 09:15 JST: reviews the previous Mon–Sun (JST)
@@ -46,6 +47,7 @@ jobs:
           X_GROWTH_WEEKLY_ENABLED: ${{ vars.X_GROWTH_WEEKLY_ENABLED || 'false' }}
           X_GROWTH_WEEKLY_SAVE: ${{ github.event_name == 'workflow_dispatch' && (inputs.save && 'true' || 'false') || vars.X_GROWTH_WEEKLY_SAVE || 'false' }}
           X_GROWTH_AI_ANALYSIS: ${{ vars.X_GROWTH_AI_ANALYSIS || 'false' }}
+          X_GROWTH_AUTO_DRAFT: ${{ vars.X_GROWTH_AUTO_DRAFT || 'false' }}
           X_GROWTH_AI_MODEL: ${{ vars.X_GROWTH_AI_MODEL }}
           ANTHROPIC_API_KEY: ${{ vars.X_GROWTH_AI_ANALYSIS == 'true' && secrets.ANTHROPIC_API_KEY || '' }}
           X_METRICS_MONTHLY_READ_BUDGET: ${{ vars.X_METRICS_MONTHLY_READ_BUDGET || '120' }}

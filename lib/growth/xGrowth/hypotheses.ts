@@ -8,19 +8,20 @@ import { STYLES } from "@/lib/growth/xGrowth/styles";
  * - One slot is kept for exploring an untested style whenever one exists.
  * Proposals are always status "proposed": nothing is activated automatically.
  */
-export type ProposedExperiment = { variants: [{ id: "A"; contentStyle: string }, { id: "B"; contentStyle: string }]; minPostsPerVariant: number };
+export type ProposedVariant = { id: "A" | "B"; contentStyle: string; withLink?: boolean; postTimeJst?: string };
+export type ProposedExperiment = { variants: [ProposedVariant, ProposedVariant]; minPostsPerVariant: number };
 export type Hypothesis = {
   key: string; kind: "measurement" | "replicate" | "extend" | "rerun" | "explore"; statement: string; rationale: string;
   evidence: Record<string, unknown>; proposedExperiment: ProposedExperiment | null; justification: string | null;
 };
 export type HypothesisOutcome = { key: string; outcome: "no_effect" | "inconclusive" | "lead" | "validated" | null; decidedAt: string };
-export type StylePairTested = { a: string; b: string };
+export type StylePairTested = { a: string; b: string; factor?: string };
 
 const label = (s: string) => STYLES[s]?.label ?? s;
 const pair = (a: string, b: string, n: number): ProposedExperiment => ({ variants: [{ id: "A", contentStyle: a }, { id: "B", contentStyle: b }], minPostsPerVariant: n });
 const CONTROL = "definition_first";
 // Styles whose content needs an approved library are explored only when the library is approved.
-const EXPLORABLE = ["question_first", "mini_quiz", "misconception"];
+const EXPLORABLE = ["question_first", "mini_quiz", "misconception", "true_false", "word_parts", "keyword_hint"];
 
 export function generateHypotheses(results: ExperimentResult[], tested: StylePairTested[], outcomes: HypothesisOutcome[], now: Date, minPosts = 14): Hypothesis[] {
   const out: Hypothesis[] = [];
@@ -43,11 +44,15 @@ export function generateHypotheses(results: ExperimentResult[], tested: StylePai
   }
   const testedKey = (x: string, y: string) => [x, y].sort().join("|");
   const testedSet = new Set([...tested.map(t => testedKey(t.a, t.b)), ...results.map(r => testedKey(r.arms[0].contentStyle, r.arms[1].contentStyle))]);
-  const explore = EXPLORABLE.filter(s => !testedSet.has(testedKey(CONTROL, s))).map(s => ({
+  const explore: Hypothesis[] = EXPLORABLE.filter(s => !testedSet.has(testedKey(CONTROL, s))).map(s => ({
     key: `style_${s}_vs_${CONTROL}`, kind: "explore" as const,
     statement: `「${label(s)}」の投稿は、「${label(CONTROL)}」の投稿より72時間の表示回数が多い`,
     rationale: "まだ比較していない表現の型。冒頭の伝え方だけを変え、時刻・頻度・題材の基準・リンクなしは固定する", evidence: { untestedPair: [CONTROL, s] }, proposedExperiment: pair(CONTROL, s, minPosts), justification: null,
   })).filter(h => !recentNoEffect(h.key));
+  // Beyond wording: one factor at a time, proposed after the style comparisons (link posts cost more on X).
+  const factorTested = (k: string) => tested.some(t => t.factor === k) || results.some(r => r.factor === k);
+  if (!factorTested("withLink")) explore.push({ key: "link_vs_no_link", kind: "explore", statement: "単語帳ページへのリンクを付けた投稿は、付けない投稿よりサイトへの訪問と登録が多い（表示回数が減らないかも確かめる）", rationale: "リンクの有無だけを変える。リンク付きは X の投稿費用が1件 $0.20（リンクなしは $0.015）になるため、実施前に費用の承認が必要", evidence: { factor: "withLink" }, proposedExperiment: { variants: [{ id: "A", contentStyle: CONTROL }, { id: "B", contentStyle: CONTROL, withLink: true }], minPostsPerVariant: minPosts }, justification: null });
+  if (!factorTested("postTime")) explore.push({ key: "post_time_1900_vs_0700", kind: "explore", statement: "19:00 JST の投稿は、07:00 JST の投稿より72時間の表示回数が多い", rationale: "投稿時刻だけを変える。実施には X_POST_TIMES_JST に 19:00 を足し、投稿 workflow に 19:00 の実行を加える必要がある（1日1件の上限は変えない）", evidence: { factor: "postTime" }, proposedExperiment: { variants: [{ id: "A", contentStyle: CONTROL, postTimeJst: "07:00" }, { id: "B", contentStyle: CONTROL, postTimeJst: "19:00" }], minPostsPerVariant: minPosts }, justification: null });
   const ordered = [...out.filter(h => h.kind === "measurement"), ...out.filter(h => h.kind !== "measurement")].filter((h, i, all) => all.findIndex(x => x.key === h.key) === i)
     .filter(h => !recentNoEffect(h.key) || h.justification);
   const picked = ordered.slice(0, explore.length ? 2 : 3);

@@ -59,6 +59,22 @@ export const STYLES: Record<string, ContentStyle> = {
       return [end(`ミニクイズ：「${f.japanese}」を表す英略語は？\n${ordered.map((o, i) => `${LETTERS[i]} ${o}`).join("\n")}\n\n正解：${letter} ${f.acronym}\n${f.oneLine}`)];
     },
   },
+  word_parts: {
+    id: "word_parts", label: "英語の意味から分解する", kind: "text",
+    supports: f => f.words.length >= 2 && !!f.fullName,
+    render: f => [end(`${f.acronym}を英語に分解すると\n${f.words.map(w => `${w.word}（${w.meaning}）`).join("\n")}\n↓\n${factBlock(f)}`)],
+  },
+  true_false: {
+    id: "true_false", label: "○×クイズ（答えと理由つき）", kind: "text",
+    supports: f => f.confusions.length > 0,
+    // The false statement pairs the acronym with an approved confusable term's Japanese name.
+    render: f => f.confusions.map(c => end(`○か×か？\n「${f.acronym}は${c.japanese}のこと」\n\n答え：×\n${factBlock(f)}\n${c.trap}`)),
+  },
+  keyword_hint: {
+    id: "keyword_hint", label: "試験のキーワードから当てる", kind: "text",
+    supports: f => f.examKeywords.length >= 2,
+    render: f => [end(`押さえたいキーワード：${f.examKeywords.slice(0, 3).join("・")}\nこのキーワードに関係する英略語は？\n\n答え：${factBlock(f)}`)],
+  },
   analogy: {
     id: "analogy", label: "身近なたとえで説明する", kind: "text",
     supports: (f, ctx) => !!analogyFor(f, ctx),
