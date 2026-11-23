@@ -3,6 +3,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { BitGroups, HexLetters, Pow, WeightBoxes } from "./binary/BitBoxes";
+import { SwitchPlay } from "./binary/SwitchPlay";
+import { ThinkFirst } from "./calc/CalcParts";
 import { Lead } from "./diagram/DiagramParts";
 import { Panel, SectionTitle } from "./ui";
 
@@ -11,7 +13,7 @@ import { Panel, SectionTitle } from "./ui";
 //   すべての変換を「同じ数 44（101100）」で行い、表し方が違うだけで同じ数だと分かるようにする。
 //   1枚＝見出し＋大きな図＋答え1行（黒帯）＋小さな補足1行。手順リストや長文は置かない。
 //   桁の重みは「32(2⁵)」のように、数字の右に小さく 2ⁿ を添える。
-//   ① 1・2・4・8…の箱に 0か1を入れる
+//   ① 1・2・4・8…の箱（スイッチ）を押して、お題の数（5→44→全部）を作る遊び
 //   ② 2進数 → 10進数：1 の箱の数字だけ足す
 //   ③ 10進数 → 2進数：÷2 を1行ずつ、余りが入る箱（1の箱から順）を横に書く
 //   ④ 8進数・16進数：右から3桁・4桁ずつ区切る（足りない左は0）
@@ -52,14 +54,10 @@ function WeightsPanel() {
   return (
     <Panel>
       <SectionTitle step={1}>2進数は「1・2・4・8…の箱」に 0か1を入れる</SectionTitle>
-      <div className="mt-5" data-testid="binary-weights">
-        <WeightBoxes bits={BIN} />
+      <p className="mt-1 text-sm font-bold text-gray-700">← 左へ行くほど 2倍。箱を押して、お題の数ちょうどにしよう。</p>
+      <div className="mt-4" data-testid="binary-weights">
+        <SwitchPlay />
       </div>
-      <p className="mt-2 text-center text-sm font-bold text-gray-700">← 左へ行くほど 2倍</p>
-      <Answer>
-        1 の箱を足すと 32＋8＋4＝<span className="text-brand-300">44</span>
-      </Answer>
-      <Hint>（ ）は「2を何回かけたか」。1＝2⁰、2＝2¹、4＝2²…</Hint>
     </Panel>
   );
 }
@@ -143,6 +141,10 @@ function DecToBinPanel() {
         <Num v={DEC} base={10} /> ＝ <Num v={BIN} base={2} />
       </Answer>
       <Hint>最初の余りが一番右（1の箱）。筆算で「余りを下から読む」のと同じこと。</Hint>
+      <p className="mt-3 rounded-lg bg-gray-50 px-3 py-2 text-center text-xs leading-relaxed text-gray-700 ring-1 ring-gray-200" data-testid="binary-greedy">
+        ①のスイッチ遊びのやり方でもOK：大きい箱から引く
+        <span className="mt-0.5 block font-mono text-sm font-bold text-gray-900">44−32＝12 → 12−8＝4 → 4−4＝0</span>
+      </p>
     </Panel>
   );
 }
@@ -189,15 +191,17 @@ function ExamPanel() {
         「倉庫Aに2進数で <b className="font-mono text-gray-800">1101</b> 個、倉庫Bに <b className="font-mono text-gray-800">1011</b> 個。合わせて何個？」のように出ます。
         <b className="text-gray-800">まず10進数に直す</b>のがコツ。
       </p>
-      <ol className="mt-3 space-y-1 font-mono text-sm tabular-nums text-gray-800" data-testid="binary-exam">
-        <li>1101 → 8 ＋ 4 ＋ 1 ＝ 13</li>
-        <li>1011 → 8 ＋ 2 ＋ 1 ＝ 11</li>
-        <li className="font-bold text-gray-900">13 ＋ 11 ＝ 24</li>
-        <li>2進数で答えるなら：24 ＝ 16 ＋ 8 → 11000</li>
-      </ol>
-      <p className="mt-3 text-xs leading-relaxed text-gray-600">
-        2進数のまま足すときは、1の桁で <b className="font-mono">1 ＋ 1 ＝ 10</b>（2 になったら上の桁へ繰り上がる）。
-      </p>
+      <ThinkFirst hint="合わせて何個？ 10進数で予想してから見てみよう。" testId="binary-exam-think">
+        <ol className="mt-3 space-y-1 font-mono text-sm tabular-nums text-gray-800" data-testid="binary-exam">
+          <li>1101 → 8 ＋ 4 ＋ 1 ＝ 13</li>
+          <li>1011 → 8 ＋ 2 ＋ 1 ＝ 11</li>
+          <li className="font-bold text-gray-900">13 ＋ 11 ＝ 24</li>
+          <li>2進数で答えるなら：24 ＝ 16 ＋ 8 → 11000</li>
+        </ol>
+        <p className="mt-3 text-xs leading-relaxed text-gray-600">
+          2進数のまま足すときは、1の桁で <b className="font-mono">1 ＋ 1 ＝ 10</b>（2 になったら上の桁へ繰り上がる）。
+        </p>
+      </ThinkFirst>
     </Panel>
   );
 }
@@ -218,7 +222,8 @@ function BytePanel() {
         <div className="grid grid-cols-[6.5rem_1fr] gap-2 py-2">
           <dt className="font-bold text-gray-900">1バイト（Byte）</dt>
           <dd className="text-gray-700">
-            <b className="text-gray-900">8ビット</b>。0/1 の箱8個ひとまとまり。<Pow n={8} />＝<b className="text-gray-900">256通り</b>を表せる
+            <b className="text-gray-900">8ビット</b>。0/1 の箱8個ひとまとまり。<Pow n={8} />＝<b className="text-gray-900">256通り</b>（0〜255）を表せる
+            <span className="mt-0.5 block text-xs text-gray-500">画面の色の明るさが「0〜255」なのは、1色を1バイトで表しているから</span>
           </dd>
         </div>
         <div className="grid grid-cols-[6.5rem_1fr] gap-2 py-2">
@@ -240,7 +245,8 @@ export default function BinaryExperience() {
   return (
     <div className="space-y-5">
       <Lead>
-        2進数は<b>1・2・4・8…の箱</b>で読みます。例はずっと<b>同じ数 44</b>。
+        指を立てる＝1、折る＝0 にすると、片手5本で <b>0〜31</b> まで数えられます。これが<b>2進数</b>。
+        箱は<b>1・2・4・8…</b>、例はずっと<b>同じ数 44</b>。
       </Lead>
       <WeightsPanel />
       <BinToDecPanel />
