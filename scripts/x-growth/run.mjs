@@ -12,8 +12,10 @@ registerTsAlias(root);
 const { collectMetrics, exitCodeFor } = await import("@/lib/growth/xGrowth/collector");
 const { RpcMetricsStore, supabaseRpc } = await import("@/lib/growth/xGrowth/store");
 const { fetchPostMetrics, METRICS_ENDPOINT } = await import("@/lib/growth/xPosting/metricsClient");
+const { parseExperiment } = await import("@/lib/growth/xGrowth/experiment");
+const { previewExperiment } = await import("@/lib/growth/xGrowth/preview");
 
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { fixture: { type: "boolean" }, "fixture-file": { type: "string" }, "dry-run": { type: "boolean" }, days: { type: "string" } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { fixture: { type: "boolean" }, "fixture-file": { type: "string" }, "dry-run": { type: "boolean" }, days: { type: "string" }, "experiment-file": { type: "string" }, "allow-draft-library": { type: "boolean" } } });
 const command = positionals[0] ?? "collect";
 const env = process.env;
 const bool = (name, fallback) => {
@@ -32,8 +34,16 @@ const creds = () => {
 
 let db;
 try {
-  if (!["collect", "report"].includes(command)) throw new Error("unknown_command");
-  if (values.fixture) {
+  if (!["collect", "report", "preview"].includes(command)) throw new Error("unknown_command");
+  if (command === "preview") {
+    // Offline only: experiment file + approved data → assignments and exact candidate texts.
+    const exp = parseExperiment(JSON.parse(await readFile(values["experiment-file"] || `${root}/test/fixtures/xGrowth/experiment.json`, "utf8")));
+    const days = Number(values.days || 14);
+    if (!Number.isInteger(days) || days < 1 || days > 120) throw new Error("invalid_days");
+    const rows = previewExperiment(exp, days, { allowDraftLibrary: values["allow-draft-library"] === true });
+    const count = s => rows.filter(r => r.state === "candidate" && r.variantId === s).length;
+    console.log(JSON.stringify({ fixture: true, experiment: { id: exp.id, name: exp.name, variants: exp.variants }, summary: { days, candidates: rows.filter(r => r.state === "candidate").length, perVariant: Object.fromEntries(exp.variants.map(v => [v.id, count(v.id)])), fallbacks: rows.filter(r => r.state === "fallback").length, notEligible: rows.filter(r => r.state === "not_eligible").length }, rows }, null, 2));
+  } else if (values.fixture) {
     const { createFixtureDatabase, seedFixture, pgliteRpc } = await import("@/lib/growth/xGrowth/fixtureDb");
     const fixture = JSON.parse(await readFile(values["fixture-file"] || `${root}/test/fixtures/xGrowth/collect.json`, "utf8"));
     if (fixture?.fixture !== true || !/^\d{1,25}$/.test(fixture.account ?? "")) throw new Error("invalid_fixture_file");

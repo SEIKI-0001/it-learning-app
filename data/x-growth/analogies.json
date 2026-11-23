@@ -1,0 +1,17 @@
+{
+  "note": "「たとえ」ライブラリ。事実ではなく理解の補助。approved=true かつ reviewedBy / reviewedAt が入った項目だけ本番の投稿に使える。以下は Claude が下書きした未承認の draft（オフラインのプレビュー・テスト専用）。正確さを人が確認してから承認すること。",
+  "entries": [
+    { "topicId": "acronym:dns", "analogy": "インターネットの電話帳。名前（ドメイン名）から番号（IPアドレス）を調べる役目", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:vpn", "analogy": "人通りの多い道の中に、外から中が見えない専用の通路をつくるイメージ", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:cpu", "analogy": "指示書を読んで、計算や周りへの指示を出す司令塔", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:dhcp", "analogy": "来た人に空いている席番号を自動で割り当てる受付係", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:lan", "analogy": "同じ建物の中だけでつながる社内の連絡網", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:wan", "analogy": "離れた都市の支店どうしを結ぶ長距離の連絡網", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:api", "analogy": "お店の注文窓口。中の厨房を知らなくても、決まった頼み方で料理を受け取れる", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:bcp", "analogy": "停電や災害の日でも店を開け続けるための、前もって決めておく段取り表", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:kpi", "analogy": "マラソンの途中にある距離表示。ゴールまでの進み具合を確かめる目印", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:sla", "analogy": "宅配の「何時までに届けます」という約束を、サービスの品質について文書で決めたもの", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:ssd", "analogy": "電源を切っても中身が残る、読み書きの速いノート", "approved": false, "reviewedBy": null, "reviewedAt": null },
+    { "topicId": "acronym:pos", "analogy": "レジを通った瞬間に「何がいつ売れたか」を書き留める記録係", "approved": false, "reviewedBy": null, "reviewedAt": null }
+  ]
+}

@@ -26,6 +26,7 @@ export async function fixtureStore(file: string): Promise<{ store: Store; close(
     async history(account) { return rows.filter(r => r.account === account && r.generation).map(r => r.generation!.text); },
     async prepare(id: string, generation: Generated, model: string) { Object.assign(find(id), { generation, model, status: "ready" }); await save(); return true; },
     async fail(id, error) { Object.assign(find(id), { status: "failed", error }); await save(); },
+    async tagExperiment(id, meta) { const r = find(id); if (r.status !== "draft" || (r as FixtureRow & { experiment?: unknown }).experiment) return false; Object.assign(r, { experiment: meta }); await save(); return true; },
     async begin() { throw new Error("fixture_cannot_publish"); },
     async finish() { throw new Error("fixture_cannot_publish"); },
   };

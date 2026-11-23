@@ -1,0 +1,15 @@
+{
+  "id": "6f1c2b0e-3a4d-4c8e-9b1a-5d7e2f9a0c11",
+  "name": "冒頭の伝え方：定義型 vs 質問型（オフライン fixture）",
+  "hypothesis_key": "hook_question_vs_definition",
+  "hypothesis": "定義から始める投稿より、問いかけから始める投稿の方が72時間の表示回数が多い",
+  "status": "running",
+  "primary_metric": "impressions_72h",
+  "start_at": "2026-11-30T15:00:00.000Z",
+  "end_at": "2026-12-28T15:00:00.000Z",
+  "min_posts_per_variant": 14,
+  "variants": [{ "id": "A", "contentStyle": "definition_first" }, { "id": "B", "contentStyle": "question_first" }],
+  "allocation_seed": "fixture-seed-2026-12",
+  "experiment_version": "v1",
+  "config": { "eligibleThemes": ["service", "question", "terms", "trick", "study", "challenge", "knowhow"] }
+}

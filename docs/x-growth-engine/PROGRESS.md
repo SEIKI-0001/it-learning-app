@@ -195,3 +195,28 @@
 - 直後に手動で実行（run 45079357015）→ `{"state":"nothing_due","missedRecorded":10}`。この時点で対象の段階は無く、**X への読み取りは0件・$0**
 - 本番DB: 窓を過ぎた10段階（24h ×6・72h ×4）が `unavailable / x_metrics_window_missed`、attempt 0、値はすべて NULL で記録された。`x_growth_metric_runs` は0件（予約なし）
 - **最初の実際の計測（まだ起きていない）**: 11/20 11:47 JST の投稿の 72h 窓（11/23 09:47〜11/24 03:47 JST）→ 11/23 15:15 JST の定期実行で1件読む見込み（約$0.005）。11/21 の投稿の 72h は 11/24 15:15 JST ごろ。11/23 以降の投稿の 24h は、翌日 15:15 JST ごろから
+
+## P2: 投稿表現の実験基盤（2026-11-23 JST）
+
+ブランチ `feat/x-growth-p2-p4`（main 2ec3f00 から）。計画は `PLAN_P2_P4.md`。本番への適用・投稿・課金リクエストは0件。P1 の本番収集は触っていない。
+
+### 実装
+| 内容 | ファイル |
+|---|---|
+| 承認済みの英略語データ（157語）→ トピックの事実。文字列は一字一句コピーし、使用済みかどうかは見出しで判定する | `lib/growth/xGrowth/topics.ts` |
+| 型のレジストリ: `definition_first`（今の形・対照群）、`question_first`、`misconception`（`trapExplanations` / `differenceAxis`）、`mini_quiz`（選択肢は `confusedWith`、正解と一行説明つき）、`analogy`（承認済みのライブラリだけ）。`kind: text｜image` で画像の型を後から足せる | `lib/growth/xGrowth/styles.ts`、`data/x-growth/analogies.json`（12件はすべて draft で本番では使えない） |
+| 実験モデル: variant は2つだけ、決定論的に割り付ける、トピックは両方の型が使える共通部分から variant と関係なく選ぶ、候補を作る、LLM と独立に検証する | `lib/growth/xGrowth/experiment.ts` |
+| runner への組み込み: `experiment` 依存は任意。割付はコード → 下書きの行にタグ付け → prepare の順。実験の経路では LLM を呼ばない。候補が作れなければ既存の経路に戻して理由を記録し、タグ付けに失敗したら投稿を止める | `lib/growth/xPosting/runner.ts`、`store.ts`、`fixtureStore.ts` |
+| migration（本番未適用）: `hypothesis_key` / `config` を追加、running の実験は1つだけ、running なら variant は2つ、`active_x_experiment()`、`tag_x_post_experiment()`（draft の行にだけ・実験と一致する値だけ受け付ける）。SECURITY INVOKER・service_role 専用 | `supabase/migrations/20261123090000_x_growth_experiments.sql` |
+| プレビュー: `npm run x:growth -- preview --days 28 [--experiment-file …] [--allow-draft-library]`（オフライン）。`x:post run --fixture --dry-run --experiment-file …` | `lib/growth/xGrowth/preview.ts`、`scripts/x-growth/run.mjs`、`scripts/x-posting/run.mjs` |
+
+### 決めたこと
+- **事実は承認済みデータからだけ。** 検証では、主張された topic と型からもう一度テンプレートを作り直し、本文が完全一致することを求める。加えて、文字数・重複（見出し＋bigram）・禁止表現（合格率、100%、最新、@、URL、いいね/リポストの誘導など）・メタデータ（実験/variant/型/版）・URLなし・出典の一致を確認する。
+- **実験の経路で LLM を使わない。** 候補はすべてテンプレート由来なので、LLM が variant や表現を選ぶ余地を残さない。AI の生成は既存の経路（実験の対象外・失敗時の戻り先）にそのまま残る。
+- **割付** = `((d mod 7) + floor(d/7) + seedBit) mod 2`。最初の式 `(d + floor(d/7))` では週の切れ目で反転せず、28日で 12/16 に偏った。テスト中に見つけて直した。
+- **既存の動作を変えない。** `X_GROWTH_EXPERIMENTS_ENABLED=true` と、DB 上で running の実験が両方そろわない限り、今の投稿経路と同じ。投稿頻度・時刻・上限は変えていない。
+
+### テスト（実行済み）
+- `test/xGrowthExperiment.test.ts` 20件: すべての型の全レンダリング（500件以上）が承認済みの文字列を含む／対照群が本番の terms 投稿と一字一句同じ／28日で 14:14・各曜日が週ごとに A↔B／同じ入力なら同じ結果・seed で反転／トピックが variant に依存しない／不正な実験設定を拒否／**4つの組み合わせで28日分の候補**（glossary 系は各28件、analogy は draft ライブラリで11件）でメタデータ完全・トピックの重複なし／不正な内容（事実の改変・合格率の主張・variant/型/topic の改ざん・LLM 版の文字列・URL・出典・重複・停止中の実験・本番での draft の analogy）を拒否／runner: 依存なしなら従来どおり、実験ありなら LLM なし・タグ付け後に prepare、失敗時は理由つきで従来経路、タグ付け失敗なら止める
+- `test/xGrowthExperimentDb.test.ts` 6件（PGlite・本物の migration）: running は1つ、variant は2つ、期間内だけ取得、タグ付けの一致・二重拒否・期間外/停止中の拒否、権限、CLI（fixture の投稿にメタデータが保存される）、preview（28件・14:14）
+- X関連: 16 files / 145 tests passed、typecheck exit 0、eslint 指摘なし

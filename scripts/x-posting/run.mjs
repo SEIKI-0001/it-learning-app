@@ -12,9 +12,10 @@ const { SupabasePostStore } = await import("@/lib/growth/xPosting/store");
 const { fixtureStore } = await import("@/lib/growth/xPosting/fixtureStore");
 const { createXPost, verifyXIdentity, readXIdentity } = await import("@/lib/growth/xPosting/xClient");
 const { checkPostingAi } = await import("@/lib/growth/xPosting/aiDiagnostics");
+const { parseExperiment } = await import("@/lib/growth/xGrowth/experiment");
 const { fetchPostMetrics, estimateReadCostUsd, validateIds, METRICS_ENDPOINT } = await import("@/lib/growth/xPosting/metricsClient");
 const { readFile } = await import("node:fs/promises");
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" }, ids: { type: "string" }, "fixture-file": { type: "string" }, owned: { type: "boolean" }, diagnose: { type: "boolean" } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { "dry-run": { type: "boolean" }, fixture: { type: "boolean" }, slot: { type: "string" }, output: { type: "string" }, id: { type: "string" }, "x-post-id": { type: "string" }, note: { type: "string" }, username: { type: "string" }, ids: { type: "string" }, "fixture-file": { type: "string" }, "experiment-file": { type: "string" }, owned: { type: "boolean" }, diagnose: { type: "boolean" } } });
 const command = positionals[0] ?? "run";
 const env = process.env;
 const bool = (name, fallback = false) => {
@@ -95,8 +96,17 @@ try {
       let store;
       if (values.fixture) { const f = await fixtureStore(values.output || "/private/tmp/it-learning-x-dry-run.json"); store=f.store; cleanup=f.close; }
       else { store = new SupabasePostStore(env.X_POST_SUPABASE_URL, env.X_POST_SUPABASE_SERVICE_ROLE_KEY); }
+      // P2 experiments are OFF unless X_GROWTH_EXPERIMENTS_ENABLED=true (fixture: --experiment-file).
+      // The running experiment itself must also be approved/started in the DB by an operator.
+      let experiment;
+      if (values.fixture && values["experiment-file"]) {
+        const exp = parseExperiment(JSON.parse(await readFile(values["experiment-file"], "utf8")));
+        experiment = { active: async () => exp, ctx: { allowDraftLibrary: true } };
+      } else if (!values.fixture && bool("X_GROWTH_EXPERIMENTS_ENABLED")) {
+        experiment = { active: slotIso => store.activeExperiment(slotIso), ctx: { allowDraftLibrary: false } };
+      }
       const result = await runPosting(config, {
-        store, sources: availableSources,
+        store, sources: availableSources, experiment,
         generate: values.fixture ? async (sources, _history, theme, url) => ({ text: compose("知っていますか？", sources[0], url), theme, contentId: sources[0].id, destinationUrl: url, evidence: [sources[0].evidence], quality: { passed: true, reasons: ["explicit_offline_fixture"] } }) : generatePost,
         publish: text => createXPost(text, creds()),
         verifyIdentity: () => verifyXIdentity(config.account, creds()),
