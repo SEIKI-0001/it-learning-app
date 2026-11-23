@@ -18,6 +18,7 @@ const { buildWeeklyReport, renderMarkdown } = await import("@/lib/growth/xGrowth
 const { scenarioData, SCENARIOS } = await import("@/lib/growth/xGrowth/weeklyFixtures");
 const { GrowthStore, runWeekly } = await import("@/lib/growth/xGrowth/weekly");
 const { interpret, anthropicComplete } = await import("@/lib/growth/xGrowth/aiAnalysis");
+const { hasCritical } = await import("@/lib/growth/xGrowth/health");
 const { writeFile, appendFile } = await import("node:fs/promises");
 
 const { values, positionals } = parseArgs({ allowPositionals: true, options: { fixture: { type: "boolean" }, "fixture-file": { type: "string" }, "dry-run": { type: "boolean" }, days: { type: "string" }, "experiment-file": { type: "string" }, "allow-draft-library": { type: "boolean" }, scenario: { type: "string" }, output: { type: "string" }, "fake-ai": { type: "string" } } });
@@ -59,9 +60,12 @@ try {
       const store = new GrowthStore(await supabaseRpc(env.X_POST_SUPABASE_URL, env.X_POST_SUPABASE_SERVICE_ROLE_KEY));
       // AI is optional (1 call/week) and only interprets computed numbers; saving is a separate switch.
       const complete = bool("X_GROWTH_AI_ANALYSIS", false) ? await anthropicComplete(env.X_GROWTH_AI_MODEL || "claude-sonnet-5-5", env.ANTHROPIC_API_KEY) : undefined;
-      const { report: r, saved } = await runWeekly(store, { account, now: new Date(), save: bool("X_GROWTH_WEEKLY_SAVE", false), complete });
+      const budgets = { monthlyReads: int("X_METRICS_MONTHLY_READ_BUDGET", 120, 100000), dailyReads: int("X_METRICS_DAILY_READ_BUDGET", 10, 10000) };
+      const { report: r, saved } = await runWeekly(store, { account, now: new Date(), save: bool("X_GROWTH_WEEKLY_SAVE", false), complete, budgets });
       report = r;
       console.log(JSON.stringify({ fixture: false, saved, data: r.data, aiRejected: r.aiRejected ?? null }, null, 2));
+      // Critical operational alerts fail the job so GitHub notifies the owner (the report is still written).
+      if (hasCritical(r.data.alerts)) process.exitCode = 2;
     }
     if (report) {
       if (values.output) await writeFile(values.output, report.markdown, { mode: 0o600 });

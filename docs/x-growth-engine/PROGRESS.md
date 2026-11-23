@@ -257,3 +257,42 @@
 `test/xGrowthWorkflows.test.ts` 4件（週次は既定で停止・保存しない・AI キーは AI が有効なときだけ渡す・X の認証情報なし・式の展開による注入なし／投稿 workflow の実験は既定でオフ・スケジュールと上限は変えていない）。
 
 X関連: 18 files / 173 tests passed、typecheck exit 0、eslint 指摘なし。
+
+## P4: 本番導入の準備（2026-11-23 JST）
+
+本番への適用・変数の変更・投稿・課金リクエスト・AI 呼び出しは0件。P1 の本番収集は触っていない。
+
+### 実装
+| 内容 | ファイル |
+|---|---|
+| **オフラインの E2E**: PGlite に本物の migration を適用し、偽の X・偽の投稿で通す。実験（running）→ 28枠の投稿（候補 → 検証 → タグ付け → prepare → begin → publish → finish）→ 6時間ごとの収集（24h/72h）→ 週次の分析と保存 → 次の仮説。各段階をもう一度実行して冪等性も確かめる | `test/xGrowthE2E.test.ts` |
+| 運用アラート: 結果不明・20分以上 publishing のまま（要対応）、1日以上 ready のまま、メトリクスの権限エラー（要対応）、失敗・中断・レート制限、今月の読み取りが上限の80%、欠損率 > 30%、失敗した投稿。それぞれに次の対応を書く。「要対応」があれば週次のジョブを exit 2 にして GitHub から通知させる | `lib/growth/xGrowth/health.ts`、`x_growth_ops_summary()`（P3 の migration に追加）、`weeklyReport.ts` |
+| 運用ドキュメント: 切り替え・安全策・判定・コマンド・環境の分け方（開発=PGlite / staging=ローカル Supabase / 本番=fe-quest）・費用・P2/P3 のロールバック SQL・**有効化のチェックリスト** | `docs/operations/x-organic-posting.md` |
+
+### E2E の結果（`test/xGrowthE2E.test.ts` 3件・実行済み）
+- 28枠: published 27・uncertain 1（publish の通信断）。**同じ枠の再実行はすべて skipped**、publish は合計28回（uncertain は再送しない）、**LLM は1回も呼ばれない**、28行すべてタグ付き・metrics_eligible、A:B = 14:14、content_hash に重複なし。
+- 収集: 6時間ごとに130回以上実行し、published の27件それぞれに 24h ok・72h ok がちょうど1つずつ。経過時間は 24h が [22,40)・72h が [70,88) の中。最後にもう一度実行しても nothing_due で、X への通信は増えない。GET だけで本文なし。
+- 週次: 有効な標本 13/14、B が A の約3倍でも判定は **exploratory_lead**（1回の実験では勝者にしない）、対応は repeat、uncertain の投稿について **要対応のアラート**、1番目の仮説は再現（`hook_question_vs_definition_replication`）。2回目の保存は created=false で、行は増えない。新しい実験は作られない（自動で有効化しない）。
+
+### staging（ローカル Supabase、CLI 2.121.0 / Postgres 17.11、費用0）
+- 前提: repo の migration で本番と同じ状態を作り、P1 まで適用 → P2（sha256 a011df3b…）と P3（e5eb8fde…）を適用。既存の posting 関数7つの md5 は**本番と一致したまま**。
+- PostgREST: `x_growth_hypotheses` は anon の select 401・service_role の select 200・service_role の DELETE 403。新しい RPC 8つはすべて anon で 401（anon の保存でレビュー行は作られない）。
+- **実際の投稿 CLI**（`x:post run`、dry-run、`X_GROWTH_EXPERIMENTS_ENABLED=true`、Anthropic キーなし・X の認証情報なし）→ `ready`、本文は question_first（DDoS）、DB の `variant_id=B / content_style / topic_id / generation_version / metrics_eligible=true`、generation の JSON にも同じメタデータ。同じ枠の2回目は `skipped`。キーが無いのに成功した＝実験の経路で LLM を使っていない。
+- **実際の週次 CLI**（`x:growth weekly`、保存 ON）を2回 → 1回目は created=true、2回目は created=false（同じ id）。レビュー2行・仮説2件・すべて proposed のまま・実験は1件のまま。
+- ロールバック SQL（runbook のもの）を実行 → P2/P3 のテーブル・関数・列だけが消え、P1 のテーブル4つと既存の投稿は残る → 再適用できる。
+- 終了後に staging と colima を止めた（作業前の状態に戻した）。
+
+### テスト（実行済み）
+- X関連: **20 files / 181 tests passed**（P2〜P4 で62件追加: 実験 20・実験 DB 6・週次 24・workflow 4・健全性 5・E2E 3）
+- `npm run typecheck`: exit 0（途中、テストの BigInt リテラルで失敗したので文字列に直した）
+- `npm run lint`: errors 0（warnings は X 以外の既存ファイル2件。自分のコードの未使用変数1件は直した）
+- 全体テスト（Node 22.18.0）: 下の最終確認を参照
+
+### 承認が必要な残り（本番）
+docs/operations/x-organic-posting.md の「有効化のチェックリスト」のとおり:
+1. P2/P3 の migration を本番に適用する
+2. 週次の分析を有効にする（最初は保存しない）→ 保存を有効にする
+3. 最初の実験を draft で作り、preview で確認して running にする
+4. `X_GROWTH_EXPERIMENTS_ENABLED=true`
+5. （任意）AI による解釈、analogy の承認
+- 全体テスト（Node 22.18.0 = `.nvmrc`/CI と同じ、P4 の最終状態で実行）: **369 files / 4069 tests passed**（開始時は 363 / 4007）

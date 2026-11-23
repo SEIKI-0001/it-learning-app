@@ -48,6 +48,8 @@ jobs:
           X_GROWTH_AI_ANALYSIS: ${{ vars.X_GROWTH_AI_ANALYSIS || 'false' }}
           X_GROWTH_AI_MODEL: ${{ vars.X_GROWTH_AI_MODEL }}
           ANTHROPIC_API_KEY: ${{ vars.X_GROWTH_AI_ANALYSIS == 'true' && secrets.ANTHROPIC_API_KEY || '' }}
+          X_METRICS_MONTHLY_READ_BUDGET: ${{ vars.X_METRICS_MONTHLY_READ_BUDGET || '120' }}
+          X_METRICS_DAILY_READ_BUDGET: ${{ vars.X_METRICS_DAILY_READ_BUDGET || '10' }}
           X_POST_ACCOUNT_ID: ${{ vars.X_POST_ACCOUNT_ID }}
           X_POST_SUPABASE_URL: ${{ secrets.X_POST_SUPABASE_URL }}
           X_POST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.X_POST_SUPABASE_SERVICE_ROLE_KEY }}

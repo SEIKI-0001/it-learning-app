@@ -3,6 +3,7 @@ import { interpret, type Complete } from "@/lib/growth/xGrowth/aiAnalysis";
 import { parseExperiment, type Experiment } from "@/lib/growth/xGrowth/experiment";
 import type { HypothesisOutcome } from "@/lib/growth/xGrowth/hypotheses";
 import type { Rpc } from "@/lib/growth/xGrowth/store";
+import { parseOps, type Budgets, type OpsSummary } from "@/lib/growth/xGrowth/health";
 import { buildWeeklyReport, renderMarkdown, REPORT_VERSION, type WeeklyReport } from "@/lib/growth/xGrowth/weeklyReport";
 
 /** Reads analysis inputs and persists reviews through the P3 RPCs (Supabase or PGlite). */
@@ -28,6 +29,7 @@ export class GrowthStore {
       site: r.site_visits === null || r.site_visits === undefined ? null : { visits: Number(r.site_visits), visitors: Number(r.site_visitors), signups: Number(r.site_signups) },
     }));
   }
+  async ops(account: string, now: Date): Promise<OpsSummary | null> { return parseOps(await this.rpc("x_growth_ops_summary", { p_account: account, p_now: now.toISOString() })); }
   async history(since: Date): Promise<HistoryEntry[]> {
     return rowsOf(await this.rpc("x_growth_review_history", { p_since: since.toISOString() })).map(r => ({ hypothesisKey: (r.hypothesis_key as string) ?? null, status: r.status as HistoryEntry["status"], leaderStyle: (r.leader_style as string) ?? null, otherStyle: (r.other_style as string) ?? null, periodEnd: iso(r.period_end)! }));
   }
@@ -52,7 +54,7 @@ export class GrowthStore {
   }
 }
 
-export type WeeklyOptions = { account: string; now: Date; save: boolean; complete?: Complete };
+export type WeeklyOptions = { account: string; now: Date; save: boolean; complete?: Complete; budgets?: Budgets };
 /** Period = the 7 JST days ending at the most recent Monday 00:00 JST. */
 export function weeklyPeriod(now: Date): { start: Date; end: Date } {
   const jst = new Date(now.getTime() + 9 * 3600000);
@@ -65,9 +67,9 @@ export async function runWeekly(store: GrowthStore, o: WeeklyOptions): Promise<{
   const { start, end } = weeklyPeriod(o.now);
   const experiments = await store.experiments();
   const since = new Date(Math.min(start.getTime(), ...experiments.map(e => Date.parse(e.startAt))) - 86400000);
-  const [rows, history, outcomes] = await Promise.all([store.rows(o.account, since, end), store.history(new Date(o.now.getTime() - 365 * 86400000)), store.outcomes(new Date(o.now.getTime() - 365 * 86400000))]);
+  const [rows, history, outcomes, ops] = await Promise.all([store.rows(o.account, since, end), store.history(new Date(o.now.getTime() - 365 * 86400000)), store.outcomes(new Date(o.now.getTime() - 365 * 86400000)), store.ops(o.account, o.now)]);
   const tested = experiments.map(e => ({ a: e.variants[0].contentStyle, b: e.variants[1].contentStyle }));
-  const report = buildWeeklyReport({ now: o.now, periodStart: start, periodEnd: end, experiments, rows, history, outcomes, tested });
+  const report = buildWeeklyReport({ now: o.now, periodStart: start, periodEnd: end, experiments, rows, history, outcomes, tested, ops, budgets: o.budgets });
   if (o.complete) {
     const ai = await interpret(report, o.complete);
     report.aiText = ai.text; report.aiRejected = ai.rejected;

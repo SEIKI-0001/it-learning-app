@@ -2,15 +2,16 @@ import { analyzeExperiment, baseline, reliability, type AnalysisRow, type ArmSta
 import type { Experiment } from "@/lib/growth/xGrowth/experiment";
 import { generateHypotheses, type Hypothesis, type HypothesisOutcome, type StylePairTested } from "@/lib/growth/xGrowth/hypotheses";
 import { STYLES } from "@/lib/growth/xGrowth/styles";
+import { healthAlerts, type Alert, type Budgets, type OpsSummary } from "@/lib/growth/xGrowth/health";
 
 export const REPORT_VERSION = "xg-weekly-v1";
 export type WeeklyInput = {
   now: Date; periodStart: Date; periodEnd: Date; experiments: Experiment[]; rows: AnalysisRow[];
-  history?: HistoryEntry[]; outcomes?: HypothesisOutcome[]; tested?: StylePairTested[];
+  history?: HistoryEntry[]; outcomes?: HypothesisOutcome[]; tested?: StylePairTested[]; ops?: OpsSummary | null; budgets?: Budgets;
 };
 export type WeeklyData = {
   version: string; generatedAt: string; periodStart: string; periodEnd: string; reliability: Reliability; baseline: Dist;
-  experiments: ExperimentResult[]; hypotheses: Hypothesis[]; notes: string[];
+  experiments: ExperimentResult[]; hypotheses: Hypothesis[]; notes: string[]; alerts: Alert[];
 };
 export type WeeklyReport = { data: WeeklyData; markdown: string; aiText?: string | null; aiRejected?: string | null };
 
@@ -39,7 +40,8 @@ export function buildWeeklyReport(input: WeeklyInput): WeeklyReport {
   if (!input.rows.length) notes.push("対象期間の投稿データがありません。");
   if (!experiments.length) notes.push("実行中・完了した実験はありません（実験外の投稿だけを集計しています）。");
   if (rel.metricsMissingRate !== null && rel.metricsMissingRate > 0.3) notes.push("72時間の計測の欠損が30%を超えています。収集の設定やエラーを確認してください。");
-  const data: WeeklyData = { version: REPORT_VERSION, generatedAt: input.now.toISOString(), periodStart: input.periodStart.toISOString(), periodEnd: input.periodEnd.toISOString(), reliability: rel, baseline: baseline(inPeriod), experiments, hypotheses, notes };
+  const alerts = healthAlerts(input.ops ?? null, rel, input.budgets ?? { monthlyReads: null, dailyReads: null });
+  const data: WeeklyData = { version: REPORT_VERSION, generatedAt: input.now.toISOString(), periodStart: input.periodStart.toISOString(), periodEnd: input.periodEnd.toISOString(), reliability: rel, baseline: baseline(inPeriod), experiments, hypotheses, notes, alerts };
   return { data, markdown: renderMarkdown(data) };
 }
 
@@ -52,6 +54,12 @@ export function renderMarkdown(d: WeeklyData, ai?: { text: string | null; reject
   for (const e of d.experiments) L.push(`- **${e.name}**: ${STATUS_JA[e.status]} → 次の対応: ${ACTION_JA[e.action]}`);
   L.push(`- 投稿の成功率: ${pct(d.reliability.successRate)}（公開 ${d.reliability.published} / 失敗 ${d.reliability.failed} / 結果不明 ${d.reliability.uncertain}）`);
   L.push(`- 72時間の計測: 窓が閉じた ${d.reliability.metricsClosed} 件中 ${d.reliability.metricsOk} 件取得（欠損率 ${pct(d.reliability.metricsMissingRate)}）`, "");
+  if (d.alerts.length) {
+    L.push("## 運用アラート");
+    const icon = { critical: "【要対応】", warning: "【注意】", info: "【参考】" } as const;
+    for (const al of d.alerts) L.push(`- ${icon[al.level]} ${al.message}`, `  - 対応: ${al.action}`);
+    L.push("");
+  }
   L.push("## 2. 投稿と計測の健全性");
   const reasons = Object.entries(d.reliability.failureReasons);
   L.push(reasons.length ? reasons.map(([k, v]) => `- 失敗の理由 \`${k}\`: ${v}件`).join("\n") : "- 失敗・結果不明の投稿はありません。");

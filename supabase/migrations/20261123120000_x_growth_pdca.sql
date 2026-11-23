@@ -78,6 +78,23 @@ language sql stable security invoker set search_path = pg_catalog, public as $$
   where h.outcome is not null and h.decided_at >= p_since;
 $$;
 
+-- Operational summary for alerts (counts only; no post text, no user data).
+create function public.x_growth_ops_summary(p_account text, p_now timestamptz)
+returns jsonb
+language sql stable security invoker set search_path = pg_catalog, public as $$
+  select jsonb_build_object(
+    'uncertain', (select count(*) from public.x_social_posts where account_id = p_account and status = 'uncertain'),
+    'staleReady', (select count(*) from public.x_social_posts where account_id = p_account and status = 'ready' and updated_at < p_now - interval '1 day'),
+    'stalePublishing', (select count(*) from public.x_social_posts where account_id = p_account and status = 'publishing' and updated_at < p_now - interval '20 minutes'),
+    'readsToday', (select coalesce(sum(reserved_reads), 0) from public.x_growth_metric_runs where account_id = p_account and (started_at at time zone 'Asia/Tokyo')::date = (p_now at time zone 'Asia/Tokyo')::date),
+    'readsMonth', (select coalesce(sum(reserved_reads), 0) from public.x_growth_metric_runs where account_id = p_account and date_trunc('month', started_at at time zone 'Asia/Tokyo') = date_trunc('month', p_now at time zone 'Asia/Tokyo')),
+    'estimatedUsdMonth', (select coalesce(sum(estimated_usd), 0) from public.x_growth_metric_runs where account_id = p_account and date_trunc('month', started_at at time zone 'Asia/Tokyo') = date_trunc('month', p_now at time zone 'Asia/Tokyo')),
+    'runs7d', (select coalesce(jsonb_object_agg(status, n), '{}'::jsonb) from (select status, count(*) n from public.x_growth_metric_runs where account_id = p_account and started_at >= p_now - interval '7 days' group by status) x),
+    'runErrors7d', (select coalesce(jsonb_object_agg(error_code, n), '{}'::jsonb) from (select error_code, count(*) n from public.x_growth_metric_runs where account_id = p_account and started_at >= p_now - interval '7 days' and error_code is not null group by error_code) x),
+    'runningExperiments', (select count(*) from public.x_growth_experiments where status = 'running')
+  );
+$$;
+
 -- Idempotent save. An existing review for the same period/experiment is never overwritten; its id
 -- is returned with created=false. Hypotheses are inserted only with a newly created review.
 -- When an ended experiment is classified, open hypotheses with its key get the outcome.
@@ -110,8 +127,8 @@ begin
   return query select v_id, true;
 end $$;
 
-revoke all on function public.x_growth_analysis_rows(text,timestamptz,timestamptz), public.x_growth_list_experiments(), public.x_growth_review_history(timestamptz),
+revoke all on function public.x_growth_ops_summary(text,timestamptz), public.x_growth_analysis_rows(text,timestamptz,timestamptz), public.x_growth_list_experiments(), public.x_growth_review_history(timestamptz),
   public.x_growth_hypothesis_outcomes(timestamptz), public.save_x_growth_review(timestamptz,timestamptz,uuid,jsonb,text,text,text,text,jsonb) from public, anon, authenticated;
-grant execute on function public.x_growth_analysis_rows(text,timestamptz,timestamptz), public.x_growth_list_experiments(), public.x_growth_review_history(timestamptz),
+grant execute on function public.x_growth_ops_summary(text,timestamptz), public.x_growth_analysis_rows(text,timestamptz,timestamptz), public.x_growth_list_experiments(), public.x_growth_review_history(timestamptz),
   public.x_growth_hypothesis_outcomes(timestamptz), public.save_x_growth_review(timestamptz,timestamptz,uuid,jsonb,text,text,text,text,jsonb) to service_role;
 commit;

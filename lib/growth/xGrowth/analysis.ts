@@ -131,7 +131,7 @@ export type HistoryEntry = { hypothesisKey: string | null; status: ExperimentSta
 export function analyzeExperiment(exp: Experiment, rows: AnalysisRow[], now: Date, history: HistoryEntry[] = []): ExperimentResult {
   const mine = rows.filter(r => r.experimentId === exp.id);
   const [ra, rb] = exp.variants.map(v => armStats(mine, v.id, v.contentStyle, now));
-  const strip = ({ values: _v, ...s }: ArmStats & { values: number[] }): ArmStats => s;
+  const strip = (x: ArmStats & { values: number[] }): ArmStats => { const s: Partial<ArmStats & { values: number[] }> = { ...x }; delete s.values; return s as ArmStats; };
   const ended = exp.status === "completed" || (exp.endAt !== null && now.getTime() >= Date.parse(exp.endAt));
   const reasons: string[] = [];
   const boot = bootstrapLogRatio(ra.values, rb.values, exp.id);
