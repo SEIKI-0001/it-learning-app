@@ -40,6 +40,8 @@ jobs:
       X_POST_ACCOUNT_ID: ${{ vars.X_POST_ACCOUNT_ID }}
       X_POST_SITE_ORIGIN: ${{ vars.X_POST_SITE_ORIGIN || 'https://shikaku-mochit.com' }}
       X_POST_AI_MODEL: ${{ vars.X_POST_AI_MODEL }}
+      # P2 experiments: off unless explicitly enabled AND a running experiment exists in the DB.
+      X_GROWTH_EXPERIMENTS_ENABLED: ${{ vars.X_GROWTH_EXPERIMENTS_ENABLED || 'false' }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       X_POST_SUPABASE_URL: ${{ secrets.X_POST_SUPABASE_URL }}
       X_POST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.X_POST_SUPABASE_SERVICE_ROLE_KEY }}

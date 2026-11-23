@@ -1,5 +1,7 @@
 import { approvedCandidates, buildPostUrl, contentKeys, textHash, themeForSlot, validateGenerated, type Generated, type Source, type Theme } from "@/lib/growth/xPosting/core";
 import type { XResult } from "@/lib/growth/xPosting/xClient";
+import { buildExperimentPost, validateExperimentPost, type Experiment, type ExperimentMeta } from "@/lib/growth/xGrowth/experiment";
+import type { StyleContext } from "@/lib/growth/xGrowth/styles";
 export type PostRow = { id: string; utm_content: string; status: string; generation?: Generated };
 export type Config = { enabled: boolean; dryRun: boolean; fixture: boolean; account: string; origin: string; slot: string; dailyLimit: number; monthlyLimit: number; model: string };
 export interface Store {
@@ -9,19 +11,44 @@ export interface Store {
   begin(id: string, daily: number): Promise<boolean>;
   finish(id: string, result: XResult): Promise<boolean>;
   fail(id: string, error: string): Promise<void>;
+  /** P2: writes experiment metadata onto the still-draft row BEFORE prepare/publish. */
+  tagExperiment?(id: string, meta: ExperimentMeta): Promise<boolean>;
 }
-export type Dependencies = { store: Store; sources(theme: Theme, slot: string, history?: string[]): Source[]; generate(sources: Source[], history: string[], theme: Theme, url: string, slot: string): Promise<unknown>; publish(text: string): Promise<XResult>; verifyIdentity(): Promise<void>; checkDestination(url: string): Promise<void> };
-export type RunResult = { state: string; id?: string; xPostId?: string; persisted?: boolean; error?: string; text?: string };
+/** P2 (optional): absent → behaviour is exactly the pre-experiment pipeline. */
+export type ExperimentDeps = { active(slot: string): Promise<Experiment | null>; ctx: StyleContext };
+export type Dependencies = { store: Store; sources(theme: Theme, slot: string, history?: string[]): Source[]; generate(sources: Source[], history: string[], theme: Theme, url: string, slot: string): Promise<unknown>; publish(text: string): Promise<XResult>; verifyIdentity(): Promise<void>; checkDestination(url: string): Promise<void>; experiment?: ExperimentDeps };
+export type RunResult = { state: string; id?: string; xPostId?: string; persisted?: boolean; error?: string; text?: string; experiment?: ExperimentMeta; experimentFallback?: string };
 export async function runPosting(config: Config, deps: Dependencies): Promise<RunResult> {
   if (config.fixture && !config.dryRun) throw new Error("fixture_requires_dry_run");
   if (!config.enabled && !config.dryRun) return { state: "disabled" };
   const row = await deps.store.claim(config);
   if (!row) return { state: "skipped" };
-  let generated: Generated;
+  let generated!: Generated;
   let phase = "content_generation_failed";
   try {
     const requested = themeForSlot(config.slot);
     const history = await deps.store.history(config.account);
+    // P2: the arm is assigned by code (slot date + seed); the LLM is not involved on this path.
+    // Any problem building/validating the experiment post falls back to the normal pipeline and
+    // that post is not counted as a sample (reason recorded). Tagging failure fails closed.
+    let experimentMeta: ExperimentMeta | undefined;
+    let fallback: string | undefined;
+    if (deps.experiment) {
+      try {
+        const exp = await deps.experiment.active(config.slot);
+        if (exp) {
+          const post = buildExperimentPost(exp, config.slot, requested, history, deps.experiment.ctx);
+          generated = validateExperimentPost(post, exp, config.slot, requested, history, deps.experiment.ctx);
+          experimentMeta = post.experiment;
+        }
+      } catch (error) {
+        fallback = error instanceof Error && /^[a-z0-9_]{1,60}$/.test(error.message) ? error.message : "experiment_unexpected_error";
+      }
+    }
+    if (experimentMeta) {
+      phase = "experiment_tag_failed";
+      if (!deps.store.tagExperiment || !await deps.store.tagExperiment(row.id, experimentMeta)) throw new Error("experiment_tag_failed");
+    } else {
     // Only sources with at least one acceptable, unused text. An exhausted theme (e.g. the two
     // Sunday "service" posts) falls back to approved terms instead of failing every week.
     const usable = (t: Theme) => deps.sources(t, config.slot, history).filter(s => approvedCandidates([s], history, x => buildPostUrl(x.path, row.utm_content, config.origin)).length > 0);
@@ -33,9 +60,11 @@ export async function runPosting(config: Config, deps: Dependencies): Promise<Ru
     const raw = await deps.generate(sources, history, theme, url, config.slot);
     phase = "quality_check_failed";
     generated = validateGenerated(raw, sources, history, theme, url);
+    if (fallback) generated = { ...generated, quality: { ...generated.quality, reasons: [...generated.quality.reasons, `experiment_fallback:${fallback}`] } };
+    }
     phase = "prepare_failed";
     if (!await deps.store.prepare(row.id, generated, config.model)) return { state: "cancelled", id: row.id };
-    if (config.dryRun) return { state: "ready", id: row.id, text: generated.text };
+    if (config.dryRun) return { state: "ready", id: row.id, text: generated.text, ...(experimentMeta ? { experiment: experimentMeta } : fallback ? { experimentFallback: fallback } : {}) };
     phase = "x_identity_failed";
     await deps.verifyIdentity();
     phase = "destination_unavailable";

@@ -259,6 +259,80 @@ npm run x:growth -- report --days 14    # 投稿ごとの 24h/72h と サイト�
 3. Actions の「X metrics snapshot (read-only)」を手動実行し、`verify_post_id` に直近の公開投稿IDを1件入れる（約$0.005・GETは1回・DBには触れない）。出力の `responseShape` で、返ってきたフィールド名・author_idの一致・権限エラーの有無・レート制限ヘッダーを確認する。
 4. Variables を `X_METRICS_ENABLED=true` にする（dry-runのまま数日様子を見る）→ `X_METRICS_DRY_RUN=false` → `X_METRICS_LIVE_READ=true` の順に進める。止めるときは `X_METRICS_ENABLED=false`。
 
+## X Growth Engine P2〜P4（表現の実験・週次 PDCA）
+
+### 全体の流れ
+仮説 → 実験（2群）→ 投稿（既存の投稿 workflow）→ 計測（P1 の収集）→ 週次の分析（ルール）→ 次の仮説（提案だけ）。
+**本番で動かすには、下の「有効化のチェックリスト」の各段階で運用者の承認が必要。** マージしただけでは何も変わらない。
+
+### 切り替え（すべて既定はオフ）
+| 変数 | 既定 | 効果 |
+|---|---|---|
+| `X_GROWTH_EXPERIMENTS_ENABLED` | `false` | `true` かつ DB に running の実験があるときだけ、投稿 workflow が実験の経路を使う。止めると次の投稿から従来の経路に戻る |
+| `x_growth_experiments.status` | `draft` | `running` は同時に1つだけ。`paused` / `completed` にすれば、その場で実験の割付が止まる |
+| `X_GROWTH_WEEKLY_ENABLED` | `false` | 週次の分析 workflow（月曜 09:15 JST）の緊急停止スイッチ |
+| `X_GROWTH_WEEKLY_SAVE` | `false` | レビューと仮説を DB に保存するか（保存しなくてもレポートは Actions の Summary と artifact に出る） |
+| `X_GROWTH_AI_ANALYSIS` | `false` | AI による解釈の文章（週1回・Anthropic）。数値は計算結果と照合し、合わなければ捨てる |
+| P1 の `X_METRICS_*` | — | 変えない（今の値のまま収集が続く） |
+
+### 実験の経路での安全策
+- 割付はコード（`((d mod 7) + 週 + seed) mod 2`）で決める。LLM は実験の経路では呼ばない。
+- 本文は承認済みの英略語データからテンプレートで作り、検証でもう一度作り直して完全一致を確かめる。加えて、文字数・重複・禁止表現（合格率・100%・最新・URL・@・いいね/リポストの誘導など）・メタデータを確認する。
+- `analogy`（たとえ）は `data/x-growth/analogies.json` の承認済みの項目だけを使う。今ある12件はすべて draft で、本番では使われない。
+- 候補が作れなければ従来の経路で投稿し、標本には数えない（`quality.reasons` に `experiment_fallback:<理由>` を残す）。タグ付けに失敗したら投稿しない。
+- 1日の投稿数・時刻・予約・二重投稿の防止・結果不明のときに再送しない動作は、既存の投稿 workflow のまま。
+
+### 週次の判定（ルール）
+欠損率 > 30% → 計測を直す（pause）／有効な標本 < 最低数 → 続ける・延長する／曜日・時刻・題材の偏り → やり直す／95%CI が1をまたぐ → 差なし／外れ値を除くと結論が変わる → やり直す／それ以外 → 「探索的な傾向」（1回の実験では確定しない）。別の実験で同じ向きなら「再現を確認」。それでも**採用は提案だけで、自動では変えない**。
+運用アラートに「要対応」（結果不明の投稿・20分以上 publishing のまま・メトリクスの権限エラー）があると、週次のジョブを失敗（exit 2）にして GitHub から通知が届く。
+
+### コマンド
+```bash
+npm run x:growth -- preview --days 28                     # 実験の割付と本文をオフラインで確認（fixture の実験）
+npm run x:post -- run --fixture --dry-run --experiment-file test/fixtures/xGrowth/experiment.json --slot 2026-12-05T22:00:00.000Z
+npm run x:growth -- weekly --fixture --scenario realistic   # 週次レポートをオフラインで（realistic/empty/incomplete/biased/outlier/lead/high_missing）
+npm run x:growth -- weekly                                  # 本番の DB を読む（X_GROWTH_WEEKLY_ENABLED=true が必要。保存は X_GROWTH_WEEKLY_SAVE=true のときだけ）
+```
+
+### 環境の分け方
+- **開発**: PGlite（メモリ上の Postgres に本物の migration を適用）＋偽の X・偽の AI。`npm test` と `--fixture` の各コマンド。
+- **staging**: ローカルの Supabase（colima＋Supabase CLI。費用なし）。Supabase のブランチは Pro プランが必要で使えない。`it-learning-app-2` は Cloudflare pilot なので使わない。
+- **本番**: `fe-quest`。migration の適用・変数の変更・実験の開始は、それぞれ運用者の承認のあとだけ。
+
+### 費用
+- 実験の経路: AI を呼ばない（従来の経路より AI 費用が減る）。X の投稿費用は今と同じ（1日1件・リンクなし $0.015）。
+- 計測: P1 のまま（月 $0.30 前後、上限 月 $0.60）。
+- 週次の分析: DB の読み取りだけ。AI による解釈を有効にすると週1回（約1,000トークン程度）。
+
+### ロールバック（P2/P3 の migration）
+新しいテーブル・列・関数だけを消す。既存の投稿の行や P1 のテーブルは変わらない。
+```sql
+begin;
+drop function if exists public.save_x_growth_review(timestamptz,timestamptz,uuid,jsonb,text,text,text,text,jsonb), public.x_growth_ops_summary(text,timestamptz),
+  public.x_growth_hypothesis_outcomes(timestamptz), public.x_growth_review_history(timestamptz), public.x_growth_list_experiments(), public.x_growth_analysis_rows(text,timestamptz,timestamptz);
+drop table if exists public.x_growth_hypotheses;
+drop index if exists public.x_growth_reviews_period_experiment;
+alter table public.x_growth_reviews drop column if exists action, drop column if exists report_version;
+drop function if exists public.tag_x_post_experiment(uuid,uuid,text,text,text,text), public.active_x_experiment(timestamptz);
+drop index if exists public.x_growth_experiments_one_running;
+alter table public.x_growth_experiments drop constraint if exists x_growth_experiments_two_variants, drop constraint if exists x_growth_experiments_running_has_period,
+  drop column if exists hypothesis_key, drop column if exists config;
+delete from supabase_migrations.schema_migrations where version in ('20261123090000', '20261123120000');
+commit;
+```
+すぐに止めたいだけなら、ロールバックは不要。`X_GROWTH_EXPERIMENTS_ENABLED=false` にするか、実験を `paused` にする。
+
+### 有効化のチェックリスト（上から順に。各段階に承認が必要）
+1. PR をマージする（マージだけでは何も変わらない）。
+2. staging（ローカル Supabase）で P2/P3 の migration を確認する（このPRで実施済み。PROGRESS.md を参照）。
+3. **本番に P2/P3 の migration を適用する**（承認が必要）。適用後に表・関数・RLS・権限・既存の投稿 RPC を確認する。
+4. 週次の分析を dry-run で有効にする: `X_GROWTH_WEEKLY_ENABLED=true`（保存しない）。最初のレポートを確認する。
+5. 保存を有効にする: `X_GROWTH_WEEKLY_SAVE=true`（承認が必要）。
+6. 最初の実験を DB に `draft` で作り、内容を確認したら `running` にする（**承認が必要**）。`x:growth preview` で28日分の本文を事前に確認する。
+7. `X_GROWTH_EXPERIMENTS_ENABLED=true` にする（**承認が必要**）。最初の数日は、毎日の投稿の本文・タグ（`variant_id` など）・P1 の計測を確認する。
+8. （任意）`X_GROWTH_AI_ANALYSIS=true`（週1回の AI 費用。承認が必要）。
+9. （任意）analogy を使うなら、`data/x-growth/analogies.json` の各項目を人が確認し、`approved: true`・`reviewedBy`・`reviewedAt` を入れる。
+
 ## 検証と制約
 
 `npm run typecheck` / `npm run lint` / `npm test`で検証する。外部APIはモックし、DBはPGliteでSQLを実行する。

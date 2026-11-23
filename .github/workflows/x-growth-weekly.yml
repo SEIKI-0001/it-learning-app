@@ -1,0 +1,64 @@
+name: X growth weekly review (PDCA)
+# P3 of docs/x-growth-engine. Reads posts, snapshots and attribution, applies fixed rules, writes a
+# Japanese report to the job summary. Never posts and never activates an experiment.
+#   X_GROWTH_WEEKLY_ENABLED=true   emergency switch (default false: the scheduled job does not start)
+#   X_GROWTH_WEEKLY_SAVE=true      default false: do not write reviews/hypotheses to the DB
+#   X_GROWTH_AI_ANALYSIS=true      default false: optional AI prose (1 call/week), numbers verified
+on:
+  schedule:
+    - cron: '15 0 * * 1' # Monday 09:15 JST: reviews the previous Mon–Sun (JST)
+  workflow_dispatch:
+    inputs:
+      save:
+        description: Save the review and hypotheses to the DB (otherwise report only)
+        type: boolean
+        default: false
+      fixture:
+        description: Offline synthetic scenario (no secrets, no network)
+        type: choice
+        default: none
+        options: [none, realistic, empty, incomplete, biased, outlier, lead, high_missing]
+permissions:
+  contents: read
+concurrency:
+  group: x-growth-weekly
+  cancel-in-progress: false
+jobs:
+  weekly:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || vars.X_GROWTH_WEEKLY_ENABLED == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Offline fixture report
+        if: github.event_name == 'workflow_dispatch' && inputs.fixture != 'none'
+        env:
+          SCENARIO: ${{ inputs.fixture }}
+        run: npm run x:growth -- weekly --fixture --scenario "$SCENARIO" --output "$RUNNER_TEMP/x-growth-weekly.md"
+      - name: Weekly review
+        if: github.event_name != 'workflow_dispatch' || inputs.fixture == 'none'
+        env:
+          X_GROWTH_WEEKLY_ENABLED: ${{ vars.X_GROWTH_WEEKLY_ENABLED || 'false' }}
+          X_GROWTH_WEEKLY_SAVE: ${{ github.event_name == 'workflow_dispatch' && (inputs.save && 'true' || 'false') || vars.X_GROWTH_WEEKLY_SAVE || 'false' }}
+          X_GROWTH_AI_ANALYSIS: ${{ vars.X_GROWTH_AI_ANALYSIS || 'false' }}
+          X_GROWTH_AI_MODEL: ${{ vars.X_GROWTH_AI_MODEL }}
+          ANTHROPIC_API_KEY: ${{ vars.X_GROWTH_AI_ANALYSIS == 'true' && secrets.ANTHROPIC_API_KEY || '' }}
+          X_METRICS_MONTHLY_READ_BUDGET: ${{ vars.X_METRICS_MONTHLY_READ_BUDGET || '120' }}
+          X_METRICS_DAILY_READ_BUDGET: ${{ vars.X_METRICS_DAILY_READ_BUDGET || '10' }}
+          X_POST_ACCOUNT_ID: ${{ vars.X_POST_ACCOUNT_ID }}
+          X_POST_SUPABASE_URL: ${{ secrets.X_POST_SUPABASE_URL }}
+          X_POST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.X_POST_SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run x:growth -- weekly --output "$RUNNER_TEMP/x-growth-weekly.md"
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-growth-weekly
+          path: ${{ runner.temp }}/x-growth-weekly.md
+          if-no-files-found: ignore
+          retention-days: 90

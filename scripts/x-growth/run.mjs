@@ -12,8 +12,16 @@ registerTsAlias(root);
 const { collectMetrics, exitCodeFor } = await import("@/lib/growth/xGrowth/collector");
 const { RpcMetricsStore, supabaseRpc } = await import("@/lib/growth/xGrowth/store");
 const { fetchPostMetrics, METRICS_ENDPOINT } = await import("@/lib/growth/xPosting/metricsClient");
+const { parseExperiment } = await import("@/lib/growth/xGrowth/experiment");
+const { previewExperiment } = await import("@/lib/growth/xGrowth/preview");
+const { buildWeeklyReport, renderMarkdown } = await import("@/lib/growth/xGrowth/weeklyReport");
+const { scenarioData, SCENARIOS } = await import("@/lib/growth/xGrowth/weeklyFixtures");
+const { GrowthStore, runWeekly } = await import("@/lib/growth/xGrowth/weekly");
+const { interpret, anthropicComplete } = await import("@/lib/growth/xGrowth/aiAnalysis");
+const { hasCritical } = await import("@/lib/growth/xGrowth/health");
+const { writeFile, appendFile } = await import("node:fs/promises");
 
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { fixture: { type: "boolean" }, "fixture-file": { type: "string" }, "dry-run": { type: "boolean" }, days: { type: "string" } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { fixture: { type: "boolean" }, "fixture-file": { type: "string" }, "dry-run": { type: "boolean" }, days: { type: "string" }, "experiment-file": { type: "string" }, "allow-draft-library": { type: "boolean" }, scenario: { type: "string" }, output: { type: "string" }, "fake-ai": { type: "string" } } });
 const command = positionals[0] ?? "collect";
 const env = process.env;
 const bool = (name, fallback) => {
@@ -32,8 +40,46 @@ const creds = () => {
 
 let db;
 try {
-  if (!["collect", "report"].includes(command)) throw new Error("unknown_command");
-  if (values.fixture) {
+  if (!["collect", "report", "preview", "weekly"].includes(command)) throw new Error("unknown_command");
+  if (command === "weekly") {
+    let report;
+    if (values.fixture) {
+      // Offline: synthetic scenario → rules → Markdown. --fake-ai "<text>" exercises the AI guard without a provider.
+      const scenario = values.scenario || "realistic";
+      if (!SCENARIOS.includes(scenario)) throw new Error("unknown_scenario");
+      const exp = parseExperiment(JSON.parse(await readFile(values["experiment-file"] || `${root}/test/fixtures/xGrowth/experiment.json`, "utf8")));
+      const d = scenarioData(scenario, exp);
+      report = buildWeeklyReport({ now: d.now, periodStart: new Date(d.now.getTime() - 7 * 86400000), periodEnd: d.now, experiments: d.experiments, rows: d.rows });
+      if (values["fake-ai"] !== undefined) { const ai = await interpret(report, async () => values["fake-ai"]); report.aiText = ai.text; report.aiRejected = ai.rejected; report.markdown = renderMarkdown(report.data, ai); }
+      console.log(JSON.stringify({ fixture: true, scenario, saved: null, data: report.data, aiRejected: report.aiRejected ?? null }, null, 2));
+    } else if (!bool("X_GROWTH_WEEKLY_ENABLED", false)) {
+      console.log(JSON.stringify({ state: "disabled" }));
+    } else {
+      const account = env.X_POST_ACCOUNT_ID || "";
+      if (!/^\d{1,25}$/.test(account)) throw new Error("invalid_account_id");
+      const store = new GrowthStore(await supabaseRpc(env.X_POST_SUPABASE_URL, env.X_POST_SUPABASE_SERVICE_ROLE_KEY));
+      // AI is optional (1 call/week) and only interprets computed numbers; saving is a separate switch.
+      const complete = bool("X_GROWTH_AI_ANALYSIS", false) ? await anthropicComplete(env.X_GROWTH_AI_MODEL || "claude-sonnet-5-5", env.ANTHROPIC_API_KEY) : undefined;
+      const budgets = { monthlyReads: int("X_METRICS_MONTHLY_READ_BUDGET", 120, 100000), dailyReads: int("X_METRICS_DAILY_READ_BUDGET", 10, 10000) };
+      const { report: r, saved } = await runWeekly(store, { account, now: new Date(), save: bool("X_GROWTH_WEEKLY_SAVE", false), complete, budgets });
+      report = r;
+      console.log(JSON.stringify({ fixture: false, saved, data: r.data, aiRejected: r.aiRejected ?? null }, null, 2));
+      // Critical operational alerts fail the job so GitHub notifies the owner (the report is still written).
+      if (hasCritical(r.data.alerts)) process.exitCode = 2;
+    }
+    if (report) {
+      if (values.output) await writeFile(values.output, report.markdown, { mode: 0o600 });
+      if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, report.markdown);
+    }
+  } else if (command === "preview") {
+    // Offline only: experiment file + approved data → assignments and exact candidate texts.
+    const exp = parseExperiment(JSON.parse(await readFile(values["experiment-file"] || `${root}/test/fixtures/xGrowth/experiment.json`, "utf8")));
+    const days = Number(values.days || 14);
+    if (!Number.isInteger(days) || days < 1 || days > 120) throw new Error("invalid_days");
+    const rows = previewExperiment(exp, days, { allowDraftLibrary: values["allow-draft-library"] === true });
+    const count = s => rows.filter(r => r.state === "candidate" && r.variantId === s).length;
+    console.log(JSON.stringify({ fixture: true, experiment: { id: exp.id, name: exp.name, variants: exp.variants }, summary: { days, candidates: rows.filter(r => r.state === "candidate").length, perVariant: Object.fromEntries(exp.variants.map(v => [v.id, count(v.id)])), fallbacks: rows.filter(r => r.state === "fallback").length, notEligible: rows.filter(r => r.state === "not_eligible").length }, rows }, null, 2));
+  } else if (values.fixture) {
     const { createFixtureDatabase, seedFixture, pgliteRpc } = await import("@/lib/growth/xGrowth/fixtureDb");
     const fixture = JSON.parse(await readFile(values["fixture-file"] || `${root}/test/fixtures/xGrowth/collect.json`, "utf8"));
     if (fixture?.fixture !== true || !/^\d{1,25}$/.test(fixture.account ?? "")) throw new Error("invalid_fixture_file");

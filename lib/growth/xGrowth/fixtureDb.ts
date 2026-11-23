@@ -10,7 +10,7 @@ import type { Rpc } from "@/lib/growth/xGrowth/store";
 export type FixturePost = { id: string; xPostId: string | null; hoursAgo: number; status?: string; account?: string; theme?: string; visits?: number; visitors?: number; signups?: number };
 export type GrowthFixture = { fixture: true; note?: string; now: string; account: string; posts: FixturePost[]; response: unknown; status?: number };
 
-const MIGRATIONS = ["_x_organic_posts.sql", "_x_growth_engine.sql"];
+const MIGRATIONS = ["_x_organic_posts.sql", "_x_growth_engine.sql", "_x_growth_experiments.sql", "_x_growth_pdca.sql"];
 
 export async function createFixtureDatabase(root: string): Promise<PGlite> {
   const { PGlite } = await import("@electric-sql/pglite");

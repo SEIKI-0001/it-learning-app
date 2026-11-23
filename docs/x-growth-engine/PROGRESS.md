@@ -195,3 +195,104 @@
 - 直後に手動で実行（run 45079357015）→ `{"state":"nothing_due","missedRecorded":10}`。この時点で対象の段階は無く、**X への読み取りは0件・$0**
 - 本番DB: 窓を過ぎた10段階（24h ×6・72h ×4）が `unavailable / x_metrics_window_missed`、attempt 0、値はすべて NULL で記録された。`x_growth_metric_runs` は0件（予約なし）
 - **最初の実際の計測（まだ起きていない）**: 11/20 11:47 JST の投稿の 72h 窓（11/23 09:47〜11/24 03:47 JST）→ 11/23 15:15 JST の定期実行で1件読む見込み（約$0.005）。11/21 の投稿の 72h は 11/24 15:15 JST ごろ。11/23 以降の投稿の 24h は、翌日 15:15 JST ごろから
+
+## P2: 投稿表現の実験基盤（2026-11-23 JST）
+
+ブランチ `feat/x-growth-p2-p4`（main 2ec3f00 から）。計画は `PLAN_P2_P4.md`。本番への適用・投稿・課金リクエストは0件。P1 の本番収集は触っていない。
+
+### 実装
+| 内容 | ファイル |
+|---|---|
+| 承認済みの英略語データ（157語）→ トピックの事実。文字列は一字一句コピーし、使用済みかどうかは見出しで判定する | `lib/growth/xGrowth/topics.ts` |
+| 型のレジストリ: `definition_first`（今の形・対照群）、`question_first`、`misconception`（`trapExplanations` / `differenceAxis`）、`mini_quiz`（選択肢は `confusedWith`、正解と一行説明つき）、`analogy`（承認済みのライブラリだけ）。`kind: text｜image` で画像の型を後から足せる | `lib/growth/xGrowth/styles.ts`、`data/x-growth/analogies.json`（12件はすべて draft で本番では使えない） |
+| 実験モデル: variant は2つだけ、決定論的に割り付ける、トピックは両方の型が使える共通部分から variant と関係なく選ぶ、候補を作る、LLM と独立に検証する | `lib/growth/xGrowth/experiment.ts` |
+| runner への組み込み: `experiment` 依存は任意。割付はコード → 下書きの行にタグ付け → prepare の順。実験の経路では LLM を呼ばない。候補が作れなければ既存の経路に戻して理由を記録し、タグ付けに失敗したら投稿を止める | `lib/growth/xPosting/runner.ts`、`store.ts`、`fixtureStore.ts` |
+| migration（本番未適用）: `hypothesis_key` / `config` を追加、running の実験は1つだけ、running なら variant は2つ、`active_x_experiment()`、`tag_x_post_experiment()`（draft の行にだけ・実験と一致する値だけ受け付ける）。SECURITY INVOKER・service_role 専用 | `supabase/migrations/20261123090000_x_growth_experiments.sql` |
+| プレビュー: `npm run x:growth -- preview --days 28 [--experiment-file …] [--allow-draft-library]`（オフライン）。`x:post run --fixture --dry-run --experiment-file …` | `lib/growth/xGrowth/preview.ts`、`scripts/x-growth/run.mjs`、`scripts/x-posting/run.mjs` |
+
+### 決めたこと
+- **事実は承認済みデータからだけ。** 検証では、主張された topic と型からもう一度テンプレートを作り直し、本文が完全一致することを求める。加えて、文字数・重複（見出し＋bigram）・禁止表現（合格率、100%、最新、@、URL、いいね/リポストの誘導など）・メタデータ（実験/variant/型/版）・URLなし・出典の一致を確認する。
+- **実験の経路で LLM を使わない。** 候補はすべてテンプレート由来なので、LLM が variant や表現を選ぶ余地を残さない。AI の生成は既存の経路（実験の対象外・失敗時の戻り先）にそのまま残る。
+- **割付** = `((d mod 7) + floor(d/7) + seedBit) mod 2`。最初の式 `(d + floor(d/7))` では週の切れ目で反転せず、28日で 12/16 に偏った。テスト中に見つけて直した。
+- **既存の動作を変えない。** `X_GROWTH_EXPERIMENTS_ENABLED=true` と、DB 上で running の実験が両方そろわない限り、今の投稿経路と同じ。投稿頻度・時刻・上限は変えていない。
+
+### テスト（実行済み）
+- `test/xGrowthExperiment.test.ts` 20件: すべての型の全レンダリング（500件以上）が承認済みの文字列を含む／対照群が本番の terms 投稿と一字一句同じ／28日で 14:14・各曜日が週ごとに A↔B／同じ入力なら同じ結果・seed で反転／トピックが variant に依存しない／不正な実験設定を拒否／**4つの組み合わせで28日分の候補**（glossary 系は各28件、analogy は draft ライブラリで11件）でメタデータ完全・トピックの重複なし／不正な内容（事実の改変・合格率の主張・variant/型/topic の改ざん・LLM 版の文字列・URL・出典・重複・停止中の実験・本番での draft の analogy）を拒否／runner: 依存なしなら従来どおり、実験ありなら LLM なし・タグ付け後に prepare、失敗時は理由つきで従来経路、タグ付け失敗なら止める
+- `test/xGrowthExperimentDb.test.ts` 6件（PGlite・本物の migration）: running は1つ、variant は2つ、期間内だけ取得、タグ付けの一致・二重拒否・期間外/停止中の拒否、権限、CLI（fixture の投稿にメタデータが保存される）、preview（28件・14:14）
+- X関連: 16 files / 145 tests passed、typecheck exit 0、eslint 指摘なし
+
+## P3: 定期 PDCA 評価エンジン（2026-11-23 JST）
+
+本番への適用・保存・AI 呼び出しは0件（すべてオフラインの fixture と PGlite）。
+
+### 実装
+| 内容 | ファイル |
+|---|---|
+| 分析: 各群の割付・公開・失敗・**計測待ち（72h の窓 [70,88) がまだ閉じていない）**・有効・欠損（理由の内訳）・欠損率、72h/24h の分布（中央値・四分位・最小/最大・幾何平均・**実数の0**・log 尺度の外れ値）、反応数と反応率、サイトの訪問/訪問者/登録、曜日・投稿時刻・題材の分野 | `lib/growth/xGrowth/analysis.ts` |
+| 効果: B/A の中央値の比を、seed つき bootstrap（2000回）の 95%CI で見る。外れ値を除いたものも同時に計算する | 同上 |
+| 判定（ルールだけ）: 欠損率 > 30% → `data_quality_issue`／有効な標本 < 最低数 → `insufficient_data`／曜日・時刻・題材の偏り → `biased`／CI が1をまたぐ → `no_clear_difference`／外れ値を除くと結論が変わる → `outlier_sensitive`／それ以外 → `exploratory_lead`（1回の実験は探索的なだけ）。別の実験で同じ仮説・同じ向きなら `validated_lead`。対応は continue / pause / repeat / replace / propose_adoption（**採用は提案だけ**） | 同上 |
+| 仮説（最大3つ、ルールで作る）: 計測の修正・再現・延長・やり直し・探索。180日以内に `no_effect` だった仮説は出さない（偏りや外れ値でのやり直しは理由を記録すれば可）。未比較の型があれば探索の枠を1つ残す | `lib/growth/xGrowth/hypotheses.ts` |
+| AI による解釈（任意、既定はオフ）: 計算結果の JSON だけを渡す。**文章中の数値がすべて計算結果にあること**、「勝者・有意・確定」などの断定が無いこと（validated の場合を除く）を確認し、満たさなければ文章を捨てて理由を記録する | `lib/growth/xGrowth/aiAnalysis.ts` |
+| 日本語の週次レポート（まとめ・健全性・実験の表・効果と CI・偏り・副次指標・判断・次の仮説・注意） | `lib/growth/xGrowth/weeklyReport.ts` |
+| 保存（冪等）: 期間×実験ごとに1行（NULL は期間全体の行で仮説を持つ）。2回目は作らず既存の id を返す。仮説は新規作成時だけ入れる。期間が終わった実験の判定で、同じ key の未決の仮説に outcome を付ける | `lib/growth/xGrowth/weekly.ts`、migration `20261123120000_x_growth_pdca.sql`（本番未適用） |
+| 合成 fixture: realistic / empty / incomplete / biased / outlier / lead / high_missing（決定論的・実データではない） | `lib/growth/xGrowth/weeklyFixtures.ts` |
+| CLI `npm run x:growth -- weekly [--fixture --scenario … --fake-ai …] [--output file.md]`、週次 workflow `x-growth-weekly.yml`（月曜 09:15 JST。既定で起動しない・保存しない・AI なし） | `scripts/x-growth/run.mjs`、`.github/workflows/x-growth-weekly.yml` |
+| 投稿 workflow に `X_GROWTH_EXPERIMENTS_ENABLED`（既定 false）を渡すだけ。スケジュール・上限は変えていない | `.github/workflows/x-organic-post.yml` |
+
+### 途中で見つけて直したこと
+- high_missing のデータが「標本不足」と判定されていた → 欠損率を先に判定するように変更（収集が壊れているときの本当の原因は欠損）。
+- fixture: 72h の窓が開く前の投稿にも 72h の値が入っていた → 経過時間に応じて NULL にした（計測待ちを正しく再現）。外れ値の日が B 群に当たらないことがあった → 15日目以降の最初の B の日に入れるように修正。
+
+### テスト（実行済み）
+`test/xGrowthWeekly.test.ts` 24件:
+- 6つのシナリオの判定と対応（realistic → 標本不足・やり直し、incomplete → 継続、biased → 偏り、outlier → 差なし、lead → 探索的、high_missing → 計測を直す）
+- ルールが有望と判定しない限り leader を出さない／1回の強い実験は「探索的」止まりでレポートに「勝者・有意」と書かない／同じ向きで再現すれば validated で、採用は提案だけ（逆向きの履歴なら validated にしない）
+- 5000の外れ値でも有望にならない（平均は中央値の5倍以上にぶれるが、ルールは使わない）
+- 空のデータでも安全に出力できる／決定論的／実数の0は有効で、欠損は理由つきで数える／窓が開いている投稿は計測待ち
+- 仮説は3つ以内・探索の枠あり・no_effect の再提案なし・やり直しの理由
+- AI ガード（計算に無い数値・断定・失敗を拒否、正しい文章は通す）／期間（月曜 00:00 JST 区切り）
+- PGlite での保存: 2回目は何も作らず変えない、判断と対応、履歴、outcome の更新、DB でも仮説は3つまで
+- CLI: 既定は disabled、全シナリオがオフラインで動く、偽 AI の数値は拒否
+
+`test/xGrowthWorkflows.test.ts` 4件（週次は既定で停止・保存しない・AI キーは AI が有効なときだけ渡す・X の認証情報なし・式の展開による注入なし／投稿 workflow の実験は既定でオフ・スケジュールと上限は変えていない）。
+
+X関連: 18 files / 173 tests passed、typecheck exit 0、eslint 指摘なし。
+
+## P4: 本番導入の準備（2026-11-23 JST）
+
+本番への適用・変数の変更・投稿・課金リクエスト・AI 呼び出しは0件。P1 の本番収集は触っていない。
+
+### 実装
+| 内容 | ファイル |
+|---|---|
+| **オフラインの E2E**: PGlite に本物の migration を適用し、偽の X・偽の投稿で通す。実験（running）→ 28枠の投稿（候補 → 検証 → タグ付け → prepare → begin → publish → finish）→ 6時間ごとの収集（24h/72h）→ 週次の分析と保存 → 次の仮説。各段階をもう一度実行して冪等性も確かめる | `test/xGrowthE2E.test.ts` |
+| 運用アラート: 結果不明・20分以上 publishing のまま（要対応）、1日以上 ready のまま、メトリクスの権限エラー（要対応）、失敗・中断・レート制限、今月の読み取りが上限の80%、欠損率 > 30%、失敗した投稿。それぞれに次の対応を書く。「要対応」があれば週次のジョブを exit 2 にして GitHub から通知させる | `lib/growth/xGrowth/health.ts`、`x_growth_ops_summary()`（P3 の migration に追加）、`weeklyReport.ts` |
+| 運用ドキュメント: 切り替え・安全策・判定・コマンド・環境の分け方（開発=PGlite / staging=ローカル Supabase / 本番=fe-quest）・費用・P2/P3 のロールバック SQL・**有効化のチェックリスト** | `docs/operations/x-organic-posting.md` |
+
+### E2E の結果（`test/xGrowthE2E.test.ts` 3件・実行済み）
+- 28枠: published 27・uncertain 1（publish の通信断）。**同じ枠の再実行はすべて skipped**、publish は合計28回（uncertain は再送しない）、**LLM は1回も呼ばれない**、28行すべてタグ付き・metrics_eligible、A:B = 14:14、content_hash に重複なし。
+- 収集: 6時間ごとに130回以上実行し、published の27件それぞれに 24h ok・72h ok がちょうど1つずつ。経過時間は 24h が [22,40)・72h が [70,88) の中。最後にもう一度実行しても nothing_due で、X への通信は増えない。GET だけで本文なし。
+- 週次: 有効な標本 13/14、B が A の約3倍でも判定は **exploratory_lead**（1回の実験では勝者にしない）、対応は repeat、uncertain の投稿について **要対応のアラート**、1番目の仮説は再現（`hook_question_vs_definition_replication`）。2回目の保存は created=false で、行は増えない。新しい実験は作られない（自動で有効化しない）。
+
+### staging（ローカル Supabase、CLI 2.121.0 / Postgres 17.11、費用0）
+- 前提: repo の migration で本番と同じ状態を作り、P1 まで適用 → P2（sha256 a011df3b…）と P3（e5eb8fde…）を適用。既存の posting 関数7つの md5 は**本番と一致したまま**。
+- PostgREST: `x_growth_hypotheses` は anon の select 401・service_role の select 200・service_role の DELETE 403。新しい RPC 8つはすべて anon で 401（anon の保存でレビュー行は作られない）。
+- **実際の投稿 CLI**（`x:post run`、dry-run、`X_GROWTH_EXPERIMENTS_ENABLED=true`、Anthropic キーなし・X の認証情報なし）→ `ready`、本文は question_first（DDoS）、DB の `variant_id=B / content_style / topic_id / generation_version / metrics_eligible=true`、generation の JSON にも同じメタデータ。同じ枠の2回目は `skipped`。キーが無いのに成功した＝実験の経路で LLM を使っていない。
+- **実際の週次 CLI**（`x:growth weekly`、保存 ON）を2回 → 1回目は created=true、2回目は created=false（同じ id）。レビュー2行・仮説2件・すべて proposed のまま・実験は1件のまま。
+- ロールバック SQL（runbook のもの）を実行 → P2/P3 のテーブル・関数・列だけが消え、P1 のテーブル4つと既存の投稿は残る → 再適用できる。
+- 終了後に staging と colima を止めた（作業前の状態に戻した）。
+
+### テスト（実行済み）
+- X関連: **20 files / 181 tests passed**（P2〜P4 で62件追加: 実験 20・実験 DB 6・週次 24・workflow 4・健全性 5・E2E 3）
+- `npm run typecheck`: exit 0（途中、テストの BigInt リテラルで失敗したので文字列に直した）
+- `npm run lint`: errors 0（warnings は X 以外の既存ファイル2件。自分のコードの未使用変数1件は直した）
+- 全体テスト（Node 22.18.0）: 下の最終確認を参照
+
+### 承認が必要な残り（本番）
+docs/operations/x-organic-posting.md の「有効化のチェックリスト」のとおり:
+1. P2/P3 の migration を本番に適用する
+2. 週次の分析を有効にする（最初は保存しない）→ 保存を有効にする
+3. 最初の実験を draft で作り、preview で確認して running にする
+4. `X_GROWTH_EXPERIMENTS_ENABLED=true`
+5. （任意）AI による解釈、analogy の承認
+- 全体テスト（Node 22.18.0 = `.nvmrc`/CI と同じ、P4 の最終状態で実行）: **369 files / 4069 tests passed**（開始時は 363 / 4007）

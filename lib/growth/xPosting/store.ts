@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { generatedStorageFields, type Config, type PostRow, type Store } from "@/lib/growth/xPosting/runner";
 import type { Generated } from "@/lib/growth/xPosting/core";
 import type { XResult } from "@/lib/growth/xPosting/xClient";
+import { parseExperiment, type Experiment, type ExperimentMeta } from "@/lib/growth/xGrowth/experiment";
 export class SupabasePostStore implements Store {
   readonly client: SupabaseClient;
   constructor(url: string, key: string) {
@@ -25,5 +26,13 @@ export class SupabasePostStore implements Store {
   async fail(id: string, error: string): Promise<void> {
     const result = await this.client.from("x_social_posts").update({ status: "failed", error_summary: error, updated_at: new Date().toISOString() }).eq("id", id).in("status", ["draft", "ready"]);
     if (result.error) throw new Error("posting_db_fail_failed");
+  }
+  async tagExperiment(id: string, m: ExperimentMeta): Promise<boolean> {
+    return (await this.rpc("tag_x_post_experiment", { p_id: id, p_experiment: m.experimentId, p_variant: m.variantId, p_style: m.contentStyle, p_topic: m.topicId, p_version: m.generationVersion })) === true;
+  }
+  /** The single running experiment covering the slot, validated; null when none. */
+  async activeExperiment(slot: string): Promise<Experiment | null> {
+    const rows = await this.rpc("active_x_experiment", { p_slot: slot });
+    return Array.isArray(rows) && rows[0] ? parseExperiment(rows[0]) : null;
   }
 }
