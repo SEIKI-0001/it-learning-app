@@ -103,7 +103,11 @@ try {
         const exp = parseExperiment(JSON.parse(await readFile(values["experiment-file"], "utf8")));
         experiment = { active: async () => exp, ctx: { allowDraftLibrary: true } };
       } else if (!values.fixture && bool("X_GROWTH_EXPERIMENTS_ENABLED")) {
-        experiment = { active: slotIso => store.activeExperiment(slotIso), ctx: { allowDraftLibrary: false } };
+        // Link arms: X_GROWTH_LINK_MONTHLY_USD_LIMIT (default 0 = never). One more link post must fit under it.
+        const linkLimit = Number(env.X_GROWTH_LINK_MONTHLY_USD_LIMIT || 0);
+        if (!Number.isFinite(linkLimit) || linkLimit < 0 || linkLimit > 50) throw new Error("invalid_X_GROWTH_LINK_MONTHLY_USD_LIMIT");
+        const linkAllowed = async () => linkLimit > 0 && (await store.monthlyLinkSpendUsd(config.account)) + 0.2 <= linkLimit;
+        experiment = { active: slotIso => store.activeExperiment(slotIso), ctx: { allowDraftLibrary: false }, linkAllowed };
       }
       const result = await runPosting(config, {
         store, sources: availableSources, experiment,

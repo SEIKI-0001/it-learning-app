@@ -324,3 +324,14 @@ docs/operations/x-organic-posting.md の「有効化のチェックリスト」�
 3. 時刻の実験を行うなら: `X_POST_TIMES_JST` と投稿 workflow の cron を追加する
 4. リンクの実験を行うなら: 費用の増加を承認する
 - 全体テスト（Node 22.18.0、最終状態）: **370 files / 4088 tests passed**
+
+## リンク付き投稿の費用の了承と上限（2026-11-23 JST）
+
+- **運用者の判断（2026-11-23）**: リンクの実験の費用（リンク付きは X の投稿が1件 $0.20、8週間・各群16件で約 $3 の増加）を了承。実施は「型をひと通り試した後」（今の自動下書きの順番のまま）。
+- 実装:
+  - `planNextDraft(..., { allowLinkDrafts })`: `X_GROWTH_LINK_COST_APPROVED=true` のときだけ、リンクの比較（型は同じ・リンクだけ違う）を下書きにする。時刻の比較は引き続き下書きにしない。
+  - runner: リンクの群は `linkAllowed()` が true のときだけ投稿する。無い、または上限を超える場合は、リンクなしの従来の経路に戻して標本に数えない（`link_budget_exceeded`）。
+  - `SupabasePostStore.monthlyLinkSpendUsd()`: 今月（JST）の、リンク付きで X への送信を始めた投稿 × $0.20（少なく見積もらないよう、送信の試行で数える）。
+  - 月の上限 `X_GROWTH_LINK_MONTHLY_USD_LIMIT`（既定 0 = 投稿しない、最大 50）を投稿 workflow に、`X_GROWTH_LINK_COST_APPROVED` を週次 workflow に渡す。
+- テスト: 上限を超える／上限が無い → リンクなしに戻り、タグ付けしない／了承後だけリンクの比較を下書きにする／workflow の既定値。X関連 **203 tests passed**、typecheck・eslint 問題なし。
+- 全体テスト（Node 22.18.0）: **370 files / 4091 tests passed**

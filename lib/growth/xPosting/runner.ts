@@ -1,6 +1,6 @@
 import { approvedCandidates, buildPostUrl, contentKeys, textHash, themeForSlot, validateGenerated, type Generated, type Source, type Theme } from "@/lib/growth/xPosting/core";
 import type { XResult } from "@/lib/growth/xPosting/xClient";
-import { buildExperimentPost, slotMatchesAssignedTime, validateExperimentPost, type Experiment, type ExperimentMeta } from "@/lib/growth/xGrowth/experiment";
+import { assignVariant, buildExperimentPost, slotMatchesAssignedTime, validateExperimentPost, type Experiment, type ExperimentMeta } from "@/lib/growth/xGrowth/experiment";
 import type { StyleContext } from "@/lib/growth/xGrowth/styles";
 export type PostRow = { id: string; utm_content: string; status: string; generation?: Generated };
 export type Config = { enabled: boolean; dryRun: boolean; fixture: boolean; account: string; origin: string; slot: string; dailyLimit: number; monthlyLimit: number; model: string };
@@ -15,7 +15,8 @@ export interface Store {
   tagExperiment?(id: string, meta: ExperimentMeta): Promise<boolean>;
 }
 /** P2 (optional): absent → behaviour is exactly the pre-experiment pipeline. */
-export type ExperimentDeps = { active(slot: string): Promise<Experiment | null>; ctx: StyleContext };
+/** linkAllowed: monthly spend cap for link posts ($0.20 each on X). Absent → link arms always fall back. */
+export type ExperimentDeps = { active(slot: string): Promise<Experiment | null>; ctx: StyleContext; linkAllowed?: () => Promise<boolean> };
 export type Dependencies = { store: Store; sources(theme: Theme, slot: string, history?: string[]): Source[]; generate(sources: Source[], history: string[], theme: Theme, url: string, slot: string): Promise<unknown>; publish(text: string): Promise<XResult>; verifyIdentity(): Promise<void>; checkDestination(url: string): Promise<void>; experiment?: ExperimentDeps };
 export type RunResult = { state: string; id?: string; xPostId?: string; persisted?: boolean; error?: string; text?: string; experiment?: ExperimentMeta; experimentFallback?: string };
 export async function runPosting(config: Config, deps: Dependencies): Promise<RunResult> {
@@ -45,6 +46,8 @@ export async function runPosting(config: Config, deps: Dependencies): Promise<Ru
       try {
         const exp = await deps.experiment.active(config.slot);
         if (exp) {
+          // Link arms cost $0.20 per post: only within the operator's monthly cap, else fall back (not a sample).
+          if (assignVariant(exp, config.slot)?.variant.withLink && !(deps.experiment.linkAllowed && await deps.experiment.linkAllowed())) throw new Error("link_budget_exceeded");
           const ctx = { ...deps.experiment.ctx, origin: config.origin, utmContent: row.utm_content };
           const post = buildExperimentPost(exp, config.slot, requested, history, ctx);
           generated = validateExperimentPost(post, exp, config.slot, requested, history, ctx);

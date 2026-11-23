@@ -75,7 +75,7 @@ export class GrowthStore {
   }
 }
 
-export type WeeklyOptions = { account: string; now: Date; save: boolean; complete?: Complete; budgets?: Budgets; autoDraft?: boolean };
+export type WeeklyOptions = { account: string; now: Date; save: boolean; complete?: Complete; budgets?: Budgets; autoDraft?: boolean; allowLinkDrafts?: boolean };
 /** Period = the 7 JST days ending at the most recent Monday 00:00 JST. */
 export function weeklyPeriod(now: Date): { start: Date; end: Date } {
   const jst = new Date(now.getTime() + 9 * 3600000);
@@ -93,7 +93,7 @@ export async function runWeekly(store: GrowthStore, o: WeeklyOptions): Promise<{
   const tested = experiments.map(e => ({ a: e.variants[0].contentStyle, b: e.variants[1].contentStyle, factor: experimentFactor(e) }));
   const report = buildWeeklyReport({ now: o.now, periodStart: start, periodEnd: end, experiments, rows, history, outcomes, tested, ops, budgets: o.budgets });
   // Next experiment draft (never activated here). Created only when auto-draft AND save are on.
-  const decision = planNextDraft(report.data.hypotheses, all, o.now);
+  const decision = planNextDraft(report.data.hypotheses, all, o.now, 8, { allowLinkDrafts: o.allowLinkDrafts === true });
   report.data.draft = { reason: decision.reason, plan: decision.plan, created: null, experimentId: null };
   if (decision.plan && o.autoDraft && o.save) {
     const d = await store.createDraft(decision.plan);

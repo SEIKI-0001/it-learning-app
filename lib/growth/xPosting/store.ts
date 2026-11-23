@@ -30,6 +30,14 @@ export class SupabasePostStore implements Store {
   async tagExperiment(id: string, m: ExperimentMeta): Promise<boolean> {
     return (await this.rpc("tag_x_post_experiment", { p_id: id, p_experiment: m.experimentId, p_variant: m.variantId, p_style: m.contentStyle, p_topic: m.topicId, p_version: m.generationVersion })) === true;
   }
+  /** Posts with a link whose X request started this JST month ($0.20 each). Conservative: counts attempts. */
+  async monthlyLinkSpendUsd(account: string, now = new Date()): Promise<number> {
+    const jst = new Date(now.getTime() + 9 * 3600000);
+    const monthStart = new Date(Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), 1) - 9 * 3600000).toISOString();
+    const { count, error } = await this.client.from("x_social_posts").select("id", { count: "exact", head: true }).eq("account_id", account).not("destination_url", "is", null).gte("publish_attempt_at", monthStart);
+    if (error) throw new Error("posting_db_link_spend_failed");
+    return Math.round((count ?? 0) * 0.2 * 1000) / 1000;
+  }
   /** The single running experiment covering the slot, validated; null when none. */
   async activeExperiment(slot: string): Promise<Experiment | null> {
     const rows = await this.rpc("active_x_experiment", { p_slot: slot });
