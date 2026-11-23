@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import BinaryExperience from "@/components/experiences/BinaryExperience";
 import { getTopicById } from "@/lib/content";
@@ -8,14 +8,32 @@ import { getTopicById } from "@/lib/content";
 afterEach(cleanup);
 
 describe("BinaryExperience", () => {
-  it("each bit box shows its weight with 2ⁿ on the right, doubling to the left", () => {
+  it("switch play: tapping the 1・2・4… boxes adds their weights, missions go 5 → 44 → all on", () => {
     render(<BinaryExperience />);
-    const boxes = within(screen.getByTestId("binary-weights")).getByTestId("bit-boxes");
-    const items = boxes.querySelectorAll("li");
-    expect(items).toHaveLength(6);
-    expect(items[0]).toHaveTextContent("32(25)1");
-    expect(items[5]).toHaveTextContent("1(20)0");
-    expect(screen.getByText("← 左へ行くほど 2倍")).toBeInTheDocument();
+    const play = screen.getByTestId("binary-switch-play");
+    const sw = (w: number) => within(play).getByRole("button", { name: `${w} のスイッチ` });
+    expect(play.querySelectorAll("li")[0]).toHaveTextContent("32(25)0");
+    expect(screen.getByTestId("binary-mission")).toHaveTextContent("5 を作ろう");
+
+    fireEvent.click(sw(4));
+    fireEvent.click(sw(2));
+    expect(play.dataset.total).toBe("6");
+    expect(screen.getByText(/多すぎ/)).toBeInTheDocument();
+    fireEvent.click(sw(2));
+    fireEvent.click(sw(1));
+    expect(play.dataset.bits).toBe("000101");
+    expect(screen.getByTestId("binary-switch-clear")).toHaveTextContent("2進数で 101");
+
+    fireEvent.click(screen.getByRole("button", { name: "次のお題 →" }));
+    expect(play.dataset.total).toBe("0");
+    [32, 8, 4].forEach((w) => fireEvent.click(sw(w)));
+    expect(screen.getByTestId("binary-switch-total")).toHaveTextContent("32＋8＋4 ＝ 44");
+    expect(screen.getByTestId("binary-switch-clear")).toHaveTextContent("101100");
+
+    fireEvent.click(screen.getByRole("button", { name: "次のお題 →" }));
+    [32, 16, 8, 4, 2, 1].forEach((w) => fireEvent.click(sw(w)));
+    expect(screen.getByTestId("binary-switch-clear")).toHaveTextContent("63");
+    expect(screen.queryByRole("button", { name: "次のお題 →" })).not.toBeInTheDocument();
   });
 
   it("binary → decimal adds only the weights of the 1 boxes: 101100 = 32 + 8 + 4 = 44", () => {
@@ -40,6 +58,7 @@ describe("BinaryExperience", () => {
       "→ 32(25)の箱",
     ]);
     expect(screen.getByText(/余りを下から読む/)).toBeInTheDocument();
+    expect(screen.getByTestId("binary-greedy")).toHaveTextContent("44−32＝12 → 12−8＝4 → 4−4＝0");
   });
 
   it("octal groups 3 bits and hex groups 4 bits from the right (zero-padding the left)", () => {
@@ -61,6 +80,8 @@ describe("BinaryExperience", () => {
 
   it("keeps the exam-style addition and 8bit = 1Byte", () => {
     render(<BinaryExperience />);
+    expect(screen.queryByTestId("binary-exam")).not.toBeInTheDocument();
+    fireEvent.click(within(screen.getByTestId("binary-exam-think")).getByRole("button", { name: "解説を見る" }));
     expect(screen.getByTestId("binary-exam")).toHaveTextContent("13 ＋ 11 ＝ 24");
     expect(screen.getByTestId("binary-units")).toHaveTextContent("8ビット");
     expect(screen.getByRole("link", { name: /転送時間の計算/ })).toHaveAttribute("href", "/topics/tech-lan-wan");
