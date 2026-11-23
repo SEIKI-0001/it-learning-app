@@ -42,6 +42,8 @@ jobs:
       X_POST_AI_MODEL: ${{ vars.X_POST_AI_MODEL }}
       # P2 experiments: off unless explicitly enabled AND a running experiment exists in the DB.
       X_GROWTH_EXPERIMENTS_ENABLED: ${{ vars.X_GROWTH_EXPERIMENTS_ENABLED || 'false' }}
+      # Monthly cap for link posts in link experiments ($0.20 each). 0 = never post links.
+      X_GROWTH_LINK_MONTHLY_USD_LIMIT: ${{ vars.X_GROWTH_LINK_MONTHLY_USD_LIMIT || '0' }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       X_POST_SUPABASE_URL: ${{ secrets.X_POST_SUPABASE_URL }}
       X_POST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.X_POST_SUPABASE_SERVICE_ROLE_KEY }}

@@ -68,7 +68,7 @@ try {
       // AI is optional (1 call/week) and only interprets computed numbers; saving is a separate switch.
       const complete = bool("X_GROWTH_AI_ANALYSIS", false) ? await anthropicComplete(env.X_GROWTH_AI_MODEL || "claude-sonnet-5-5", env.ANTHROPIC_API_KEY) : undefined;
       const budgets = { monthlyReads: int("X_METRICS_MONTHLY_READ_BUDGET", 120, 100000), dailyReads: int("X_METRICS_DAILY_READ_BUDGET", 10, 10000) };
-      const { report: r, saved } = await runWeekly(store, { account, now: new Date(), save: bool("X_GROWTH_WEEKLY_SAVE", false), complete, budgets, autoDraft: bool("X_GROWTH_AUTO_DRAFT", false) });
+      const { report: r, saved } = await runWeekly(store, { account, now: new Date(), save: bool("X_GROWTH_WEEKLY_SAVE", false), complete, budgets, autoDraft: bool("X_GROWTH_AUTO_DRAFT", false), allowLinkDrafts: bool("X_GROWTH_LINK_COST_APPROVED", false) });
       report = r;
       console.log(JSON.stringify({ fixture: false, saved, data: r.data, aiRejected: r.aiRejected ?? null }, null, 2));
       // Critical operational alerts fail the job so GitHub notifies the owner (the report is still written).

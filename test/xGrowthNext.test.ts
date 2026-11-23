@@ -81,12 +81,29 @@ describe("link experiments", () => {
     const row: PostRow = { id: "row", utm_content: "x-row", status: "draft" };
     const store: Store = { claim: async () => row, history: async () => [], prepare: async () => true, begin: async () => true, finish: async () => true, fail: vi.fn(), tagExperiment: async () => true };
     const checkDestination = vi.fn<(url: string) => Promise<void>>(async () => {}); const publish = vi.fn<(text: string) => Promise<{ state: "published"; id: string }>>(async () => ({ state: "published", id: "1" }));
-    const deps: Dependencies = { store, sources: () => [], generate: vi.fn(), publish, verifyIdentity: async () => {}, checkDestination, experiment: { active: async () => e, ctx: live } };
+    const deps: Dependencies = { store, sources: () => [], generate: vi.fn(), publish, verifyIdentity: async () => {}, checkDestination, experiment: { active: async () => e, ctx: live, linkAllowed: async () => true } };
     const r = await runPosting({ enabled: true, dryRun: false, fixture: false, account: "1", origin: "https://shikaku-mochit.com", slot: slotOf(dB), dailyLimit: 1, monthlyLimit: 31, model: "m" }, deps);
     expect(r.state).toBe("published");
     const url = checkDestination.mock.calls[0][0];
     expect(url).toMatch(/^https:\/\/shikaku-mochit\.com\/words\/[a-z0-9-]+\?utm_source=x&.*utm_content=x-row/);
     expect(publish.mock.calls[0][0]).toContain(url);
+  });
+});
+
+describe("link spend cap", () => {
+  const e = exp([{ id: "A", contentStyle: "definition_first" }, { id: "B", contentStyle: "definition_first", withLink: true }]);
+  const dB = Array.from({ length: 14 }, (_, i) => i).find(i => assignVariant(e, slotOf(i))!.variant.id === "B")!;
+  it.each([["over the monthly cap", async () => false], ["no cap configured", undefined]] as const)("link arm falls back to the normal (link-free) pipeline when %s, not counted as a sample", async (_label, linkAllowed) => {
+    const row: PostRow = { id: "row", utm_content: "x-row", status: "draft" };
+    const tag = vi.fn(async () => true);
+    const store: Store = { claim: async () => row, history: async () => [], prepare: async (_i, g) => { row.generation = g; return true; }, begin: async () => true, finish: async () => true, fail: vi.fn(), tagExperiment: tag };
+    const generate = vi.fn<Dependencies["generate"]>(async (sources, _h, theme) => ({ text: `知っていますか？\n${sources[0].text}\n#ITパスポート`, theme, contentId: sources[0].id, destinationUrl: null, evidence: [sources[0].evidence], quality: { passed: true, reasons: [] } }));
+    const f = acronymFacts()[0];
+    const deps: Dependencies = { store, sources: () => [{ id: `terms-${f.id}`, theme: "terms", text: factBlock(f), evidence: "e", path: "/words", rights: "app_original" }], generate, publish: vi.fn(), verifyIdentity: async () => {}, checkDestination: async () => {}, experiment: { active: async () => e, ctx: live, ...(linkAllowed ? { linkAllowed } : {}) } };
+    const r = await runPosting({ enabled: true, dryRun: true, fixture: false, account: "1", origin: "https://x.test", slot: slotOf(dB), dailyLimit: 1, monthlyLimit: 31, model: "m" }, deps);
+    expect(r).toMatchObject({ state: "ready", experimentFallback: "link_budget_exceeded" });
+    expect(tag).not.toHaveBeenCalled();
+    expect(row.generation!.destinationUrl).toBeNull();
   });
 });
 
@@ -146,6 +163,15 @@ describe("auto-drafting the next experiment", () => {
     expect(planNextDraft(hyps(now).filter(h => h.key.startsWith("link") || h.key.startsWith("post_time")), [], now).reason).toBe("no_style_hypothesis");
     expect(() => planNextDraft(hyps(now), [], now, 7)).toThrow("draft_weeks_must_be_even");
   });
+  it("link comparisons are drafted only after the link cost was approved; time comparisons never", () => {
+    const all = ["question_first", "mini_quiz", "misconception", "true_false", "word_parts", "keyword_hint"].map(b => ({ a: "definition_first", b }));
+    const next = generateHypotheses([], all, [], now);
+    expect(planNextDraft(next, [], now).reason).toBe("no_style_hypothesis");
+    const d = planNextDraft(next, [], now, 8, { allowLinkDrafts: true });
+    expect(d.plan).toMatchObject({ hypothesisKey: "link_vs_no_link", variants: [{ id: "A", contentStyle: "definition_first" }, { id: "B", contentStyle: "definition_first", withLink: true }] });
+    expect(d.plan!.name).toContain("リンクあり");
+    expect(planNextDraft(next.filter(h => h.key.startsWith("post_time")), [], now, 8, { allowLinkDrafts: true }).reason).toBe("no_style_hypothesis");
+  });
 });
 
 describe("drafts, approval and pause in the database (PGlite)", () => {
@@ -202,7 +228,9 @@ describe("workflows", () => {
     expect(approve).not.toMatch(/run:[^\n]*\$\{\{/);
     expect(approve).toContain("permissions:\n  contents: read");
   });
-  it("auto-draft defaults to off in the weekly workflow", () => {
+  it("auto-draft, link drafts and link spending default to off", () => {
     expect(weekly).toContain("X_GROWTH_AUTO_DRAFT: ${{ vars.X_GROWTH_AUTO_DRAFT || 'false' }}");
+    expect(weekly).toContain("X_GROWTH_LINK_COST_APPROVED: ${{ vars.X_GROWTH_LINK_COST_APPROVED || 'false' }}");
+    expect(readFileSync(".github/workflows/x-organic-post.yml", "utf8")).toContain("X_GROWTH_LINK_MONTHLY_USD_LIMIT: ${{ vars.X_GROWTH_LINK_MONTHLY_USD_LIMIT || '0' }}");
   });
 });

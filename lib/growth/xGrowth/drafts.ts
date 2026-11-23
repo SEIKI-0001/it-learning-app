@@ -6,7 +6,8 @@ import { STYLES } from "@/lib/growth/xGrowth/styles";
 
 /**
  * Turns the top hypothesis into the NEXT experiment draft. Rules:
- * - only style comparisons are auto-drafted (link posts cost more; time tests need a schedule change);
+ * - style comparisons are auto-drafted; link comparisons only when the operator approved the link cost
+ *   (allowLinkDrafts); posting-time tests never (they need a schedule change);
  * - only when nothing is drafted/approved and the running experiment (if any) ends within 14 days;
  * - starts on the Monday (00:00 JST) after the running one ends, runs an EVEN number of weeks
  *   (the allocation balances every weekday over 2 weeks);
@@ -26,13 +27,19 @@ function nextMondayJst(after: number): number {
   return Date.UTC(jst.getUTCFullYear(), jst.getUTCMonth(), jst.getUTCDate() + days) - 9 * 3600000;
 }
 
-export function planNextDraft(hypotheses: Hypothesis[], experiments: Experiment[], now: Date, weeks = 8): DraftDecision {
+export function planNextDraft(hypotheses: Hypothesis[], experiments: Experiment[], now: Date, weeks = 8, opts: { allowLinkDrafts?: boolean } = {}): DraftDecision {
   if (weeks % 2 !== 0 || weeks < 2) throw new Error("draft_weeks_must_be_even");
   if (experiments.some(e => e.status === "draft" || e.status === "approved")) return { plan: null, reason: "draft_already_waiting" };
   const running = experiments.find(e => e.status === "running");
   if (running && running.endAt && Date.parse(running.endAt) - now.getTime() > 14 * 86400000) return { plan: null, reason: "current_experiment_not_ending_soon" };
   if (running && !running.endAt) return { plan: null, reason: "current_experiment_has_no_end" };
-  const h = hypotheses.find(x => x.proposedExperiment && x.kind !== "measurement" && x.proposedExperiment.variants.every(v => !v.withLink && !v.postTimeJst) && x.proposedExperiment.variants[0].contentStyle !== x.proposedExperiment.variants[1].contentStyle);
+  const draftable = (x: Hypothesis) => {
+    const v = x.proposedExperiment?.variants;
+    if (!v || x.kind === "measurement" || v.some(a => a.postTimeJst)) return false;
+    const styleDiff = v[0].contentStyle !== v[1].contentStyle, linkDiff = !!v[0].withLink !== !!v[1].withLink;
+    return (styleDiff && !v.some(a => a.withLink)) || (linkDiff && !styleDiff && opts.allowLinkDrafts === true);
+  };
+  const h = hypotheses.find(draftable);
   if (!h || !h.proposedExperiment) return { plan: null, reason: "no_style_hypothesis" };
   if (experiments.some(e => e.hypothesisKey === h.key && (e.status === "running" || e.status === "draft" || e.status === "approved"))) return { plan: null, reason: "hypothesis_already_open" };
   const start = nextMondayJst(Math.max(now.getTime(), running?.endAt ? Date.parse(running.endAt) - 1 : 0));
@@ -41,9 +48,9 @@ export function planNextDraft(hypotheses: Hypothesis[], experiments: Experiment[
   const [va, vb] = h.proposedExperiment.variants;
   const eligibleThemes = running ? (running.eligibleThemes as Theme[]) : TERM_DAYS;
   const plan: DraftPlan = {
-    hypothesisKey: h.key, name: `${STYLES[va.contentStyle]?.label ?? va.contentStyle} vs ${STYLES[vb.contentStyle]?.label ?? vb.contentStyle}（自動下書き）`,
+    hypothesisKey: h.key, name: `${STYLES[va.contentStyle]?.label ?? va.contentStyle}${va.withLink ? "・リンクあり" : ""} vs ${STYLES[vb.contentStyle]?.label ?? vb.contentStyle}${vb.withLink ? "・リンクあり" : ""}（自動下書き）`,
     hypothesis: h.statement, startAt: new Date(start).toISOString(), endAt: new Date(end).toISOString(), minPostsPerVariant: h.proposedExperiment.minPostsPerVariant,
-    variants: [{ id: "A", contentStyle: va.contentStyle }, { id: "B", contentStyle: vb.contentStyle }], allocationSeed: `${h.key}-${startDate}`,
+    variants: [{ id: "A", contentStyle: va.contentStyle, ...(va.withLink ? { withLink: true } : {}) }, { id: "B", contentStyle: vb.contentStyle, ...(vb.withLink ? { withLink: true } : {}) }], allocationSeed: `${h.key}-${startDate}`,
     config: { eligibleThemes }, previewCandidates: 0,
   };
   // Offline check with approved content only (draft analogies excluded), as the live run would.

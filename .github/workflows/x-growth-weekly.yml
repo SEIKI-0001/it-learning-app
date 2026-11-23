@@ -48,6 +48,7 @@ jobs:
           X_GROWTH_WEEKLY_SAVE: ${{ github.event_name == 'workflow_dispatch' && (inputs.save && 'true' || 'false') || vars.X_GROWTH_WEEKLY_SAVE || 'false' }}
           X_GROWTH_AI_ANALYSIS: ${{ vars.X_GROWTH_AI_ANALYSIS || 'false' }}
           X_GROWTH_AUTO_DRAFT: ${{ vars.X_GROWTH_AUTO_DRAFT || 'false' }}
+          X_GROWTH_LINK_COST_APPROVED: ${{ vars.X_GROWTH_LINK_COST_APPROVED || 'false' }}
           X_GROWTH_AI_MODEL: ${{ vars.X_GROWTH_AI_MODEL }}
           ANTHROPIC_API_KEY: ${{ vars.X_GROWTH_AI_ANALYSIS == 'true' && secrets.ANTHROPIC_API_KEY || '' }}
           X_METRICS_MONTHLY_READ_BUDGET: ${{ vars.X_METRICS_MONTHLY_READ_BUDGET || '120' }}
