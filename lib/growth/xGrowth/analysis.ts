@@ -1,5 +1,5 @@
 import { hash32, factById } from "@/lib/growth/xGrowth/topics";
-import type { Experiment } from "@/lib/growth/xGrowth/experiment";
+import { experimentFactor, type Experiment } from "@/lib/growth/xGrowth/experiment";
 
 /**
  * P3 analysis. Pure and deterministic (seeded bootstrap). Rules decide; nothing here calls an LLM.
@@ -32,7 +32,7 @@ export type ArmStats = {
 export type ExperimentStatus = "insufficient_data" | "data_quality_issue" | "biased" | "no_clear_difference" | "outlier_sensitive" | "exploratory_lead" | "validated_lead";
 export type Action = "continue" | "pause" | "repeat" | "replace" | "propose_adoption";
 export type ExperimentResult = {
-  experimentId: string; name: string; hypothesisKey: string | null; experimentStatus: Experiment["status"]; ended: boolean; arms: [ArmStats, ArmStats];
+  experimentId: string; name: string; hypothesisKey: string | null; experimentStatus: Experiment["status"]; ended: boolean; factor: string; arms: [ArmStats, ArmStats];
   effect: { metric: "log_ratio_median_impressions_72h"; ratio: number | null; ci95: [number, number] | null; ratioExcludingOutliers: number | null; ci95ExcludingOutliers: [number, number] | null; leader: string | null };
   biasFlags: string[]; status: ExperimentStatus; action: Action; dbDecision: "continue" | "inconclusive" | "propose_change" | "stop"; reasons: string[];
 };
@@ -111,14 +111,15 @@ function armStats(rows: AnalysisRow[], variantId: string, contentStyle: string, 
   };
 }
 
-function biasFlags(a: ArmStats, b: ArmStats, minN: number): string[] {
+function biasFlags(a: ArmStats, b: ArmStats, minN: number, factor: string): string[] {
   const flags: string[] = [];
   if (a.published >= Math.min(7, minN) && b.published >= Math.min(7, minN)) {
     const share = (x: ArmStats) => x.weekdays.map(w => w / Math.max(x.published, 1));
     const sa = share(a), sb = share(b);
     if (sa.some((v, i) => Math.abs(v - sb[i]) > POLICY.weekdayImbalance)) flags.push("weekday_imbalance");
   }
-  if (a.publishHourMedian !== null && b.publishHourMedian !== null && Math.abs(a.publishHourMedian - b.publishHourMedian) >= POLICY.hourGapHours) flags.push("publish_time_gap");
+  // In a posting-time experiment the time gap IS the treatment, not a bias.
+  if (factor !== "postTime" && a.publishHourMedian !== null && b.publishHourMedian !== null && Math.abs(a.publishHourMedian - b.publishHourMedian) >= POLICY.hourGapHours) flags.push("publish_time_gap");
   const cats = new Set([...Object.keys(a.categories), ...Object.keys(b.categories)]);
   const tvd = [...cats].reduce((s, c) => s + Math.abs((a.categories[c] ?? 0) / Math.max(a.published, 1) - (b.categories[c] ?? 0) / Math.max(b.published, 1)), 0) / 2;
   if (a.published && b.published && tvd > POLICY.categoryTvd) flags.push("topic_mix_imbalance");
@@ -138,7 +139,7 @@ export function analyzeExperiment(exp: Experiment, rows: AnalysisRow[], now: Dat
   const ma = outlierMask(ra.values), mb = outlierMask(rb.values);
   const bootTrim = bootstrapLogRatio(ra.values.filter((_, i) => !ma[i]), rb.values.filter((_, i) => !mb[i]), `${exp.id}:trim`);
   const sig = (x: { ci: [number, number] } | null) => (x ? (x.ci[0] > 0 ? 1 : x.ci[1] < 0 ? -1 : 0) : 0);
-  const flags = biasFlags(ra, rb, exp.minPostsPerVariant);
+  const flags = biasFlags(ra, rb, exp.minPostsPerVariant, experimentFactor(exp));
   let status: ExperimentStatus;
   // Missing data first: when collection is broken, "too few samples" is a symptom, not the cause.
   if ((ra.missingRate ?? 0) > POLICY.maxMissingRate || (rb.missingRate ?? 0) > POLICY.maxMissingRate) { status = "data_quality_issue"; reasons.push("missing_rate_above_limit"); }
@@ -164,7 +165,7 @@ export function analyzeExperiment(exp: Experiment, rows: AnalysisRow[], now: Dat
   const ratio = (x: { point: number } | null) => (x ? round(Math.exp(x.point), 3) : null);
   const ci = (x: { ci: [number, number] } | null): [number, number] | null => (x ? [round(Math.exp(x.ci[0]), 3)!, round(Math.exp(x.ci[1]), 3)!] : null);
   return {
-    experimentId: exp.id, name: exp.name, hypothesisKey: exp.hypothesisKey, experimentStatus: exp.status, ended, arms: [strip(ra), strip(rb)],
+    experimentId: exp.id, name: exp.name, hypothesisKey: exp.hypothesisKey, experimentStatus: exp.status, ended, factor: experimentFactor(exp), arms: [strip(ra), strip(rb)],
     effect: { metric: "log_ratio_median_impressions_72h", ratio: ratio(boot), ci95: ci(boot), ratioExcludingOutliers: ratio(bootTrim), ci95ExcludingOutliers: ci(bootTrim), leader },
     biasFlags: flags, status, action, dbDecision, reasons,
   };

@@ -1,0 +1,40 @@
+name: X growth experiment approval
+# Operator-only: start (draft → running) or pause an experiment by id. Nothing runs on a schedule.
+# approve re-checks the draft offline with approved content only before switching it on, and refuses
+# when another experiment is running. Posts follow it only while X_GROWTH_EXPERIMENTS_ENABLED=true.
+on:
+  workflow_dispatch:
+    inputs:
+      experiment_id:
+        description: Experiment id (from the weekly report)
+        type: string
+        required: true
+      action:
+        description: approve = start the draft / pause = stop a running experiment
+        type: choice
+        default: approve
+        options: [approve, pause]
+permissions:
+  contents: read
+concurrency:
+  group: x-growth-approve
+  cancel-in-progress: false
+jobs:
+  change:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Approve or pause
+        env:
+          EXPERIMENT_ID: ${{ inputs.experiment_id }}
+          ACTION: ${{ inputs.action }}
+          X_POST_SUPABASE_URL: ${{ secrets.X_POST_SUPABASE_URL }}
+          X_POST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.X_POST_SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run x:growth -- "$ACTION" --id "$EXPERIMENT_ID"

@@ -21,7 +21,7 @@ const { interpret, anthropicComplete } = await import("@/lib/growth/xGrowth/aiAn
 const { hasCritical } = await import("@/lib/growth/xGrowth/health");
 const { writeFile, appendFile } = await import("node:fs/promises");
 
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { fixture: { type: "boolean" }, "fixture-file": { type: "string" }, "dry-run": { type: "boolean" }, days: { type: "string" }, "experiment-file": { type: "string" }, "allow-draft-library": { type: "boolean" }, scenario: { type: "string" }, output: { type: "string" }, "fake-ai": { type: "string" } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { fixture: { type: "boolean" }, "fixture-file": { type: "string" }, "dry-run": { type: "boolean" }, days: { type: "string" }, "experiment-file": { type: "string" }, "allow-draft-library": { type: "boolean" }, scenario: { type: "string" }, id: { type: "string" }, output: { type: "string" }, "fake-ai": { type: "string" } } });
 const command = positionals[0] ?? "collect";
 const env = process.env;
 const bool = (name, fallback) => {
@@ -40,8 +40,15 @@ const creds = () => {
 
 let db;
 try {
-  if (!["collect", "report", "preview", "weekly"].includes(command)) throw new Error("unknown_command");
-  if (command === "weekly") {
+  if (!["collect", "report", "preview", "weekly", "approve", "pause"].includes(command)) throw new Error("unknown_command");
+  if (command === "approve" || command === "pause") {
+    // Operator actions (manual workflow). approve re-validates the draft with approved content only.
+    if (!/^[0-9a-f-]{36}$/i.test(values.id ?? "")) throw new Error("invalid_experiment_id");
+    const store = new GrowthStore(await supabaseRpc(env.X_POST_SUPABASE_URL, env.X_POST_SUPABASE_SERVICE_ROLE_KEY));
+    const out = command === "approve" ? await store.approve(values.id) : { result: await store.pause(values.id) };
+    console.log(JSON.stringify({ command, id: values.id, ...out }, null, 2));
+    if (!["running", "paused"].includes(out.result)) process.exitCode = 1;
+  } else if (command === "weekly") {
     let report;
     if (values.fixture) {
       // Offline: synthetic scenario → rules → Markdown. --fake-ai "<text>" exercises the AI guard without a provider.
@@ -61,7 +68,7 @@ try {
       // AI is optional (1 call/week) and only interprets computed numbers; saving is a separate switch.
       const complete = bool("X_GROWTH_AI_ANALYSIS", false) ? await anthropicComplete(env.X_GROWTH_AI_MODEL || "claude-sonnet-5-5", env.ANTHROPIC_API_KEY) : undefined;
       const budgets = { monthlyReads: int("X_METRICS_MONTHLY_READ_BUDGET", 120, 100000), dailyReads: int("X_METRICS_DAILY_READ_BUDGET", 10, 10000) };
-      const { report: r, saved } = await runWeekly(store, { account, now: new Date(), save: bool("X_GROWTH_WEEKLY_SAVE", false), complete, budgets });
+      const { report: r, saved } = await runWeekly(store, { account, now: new Date(), save: bool("X_GROWTH_WEEKLY_SAVE", false), complete, budgets, autoDraft: bool("X_GROWTH_AUTO_DRAFT", false) });
       report = r;
       console.log(JSON.stringify({ fixture: false, saved, data: r.data, aiRejected: r.aiRejected ?? null }, null, 2));
       // Critical operational alerts fail the job so GitHub notifies the owner (the report is still written).

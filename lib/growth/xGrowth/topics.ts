@@ -15,9 +15,14 @@ export type TopicFact = {
   /** Approved confusable acronyms that exist in the glossary, with their approved trap text. */
   confusions: { acronym: string; japanese: string; trap: string }[];
   differenceAxis: string | null;
+  fullName: string | null;
+  /** Approved English word → Japanese meaning breakdown of the acronym. */
+  words: { word: string; meaning: string }[];
+  /** Approved exam keywords for the term. */
+  examKeywords: string[];
 };
 
-type Raw = { id: string; acronym: string; japanese: string; oneLine: string; category: string; confusedWith?: string[]; trapExplanations?: Record<string, string>; differenceAxis?: string };
+type Raw = { id: string; acronym: string; japanese: string; oneLine: string; category: string; confusedWith?: string[]; trapExplanations?: Record<string, string>; differenceAxis?: string; fullName?: string; words?: { word: string; meaning: string }[]; examKeywords?: string[] };
 
 let cache: TopicFact[] | null = null;
 export function acronymFacts(): TopicFact[] {
@@ -38,6 +43,9 @@ export function acronymFacts(): TopicFact[] {
       return other && trap && other.japanese !== a.japanese ? [{ acronym: other.acronym, japanese: other.japanese, trap }] : [];
     }),
     differenceAxis: a.differenceAxis ?? null,
+    fullName: a.fullName ?? null,
+    words: (a.words ?? []).filter(w => w && w.word && w.meaning),
+    examKeywords: (a.examKeywords ?? []).filter(k => typeof k === "string" && k.length > 0),
   }));
   return cache;
 }

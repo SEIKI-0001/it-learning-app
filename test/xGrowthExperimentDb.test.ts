@@ -27,7 +27,9 @@ describe("P2 migration", () => {
     await insertExperiment();
     await expect(insertExperiment({ id: "6f1c2b0e-3a4d-4c8e-9b1a-5d7e2f9a0c12" })).rejects.toThrow();
     await expect(insertExperiment({ id: "6f1c2b0e-3a4d-4c8e-9b1a-5d7e2f9a0c13", status: "approved", variants: [raw.variants[0]] })).rejects.toThrow();
-    await insertExperiment({ id: "6f1c2b0e-3a4d-4c8e-9b1a-5d7e2f9a0c14", status: "draft", variants: [] });
+    // Same hypothesis can have only one open experiment (draft/approved/running).
+    await expect(insertExperiment({ id: "6f1c2b0e-3a4d-4c8e-9b1a-5d7e2f9a0c15", status: "draft", variants: [] })).rejects.toThrow();
+    await insertExperiment({ id: "6f1c2b0e-3a4d-4c8e-9b1a-5d7e2f9a0c14", status: "draft", variants: [], hypothesis_key: "another_hypothesis" });
   });
   it("active_x_experiment returns the running experiment only inside its period, and it parses", async () => {
     await insertExperiment();

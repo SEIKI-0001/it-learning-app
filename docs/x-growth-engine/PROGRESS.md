@@ -296,3 +296,31 @@ docs/operations/x-organic-posting.md の「有効化のチェックリスト」�
 4. `X_GROWTH_EXPERIMENTS_ENABLED=true`
 5. （任意）AI による解釈、analogy の承認
 - 全体テスト（Node 22.18.0 = `.nvmrc`/CI と同じ、P4 の最終状態で実行）: **369 files / 4069 tests passed**（開始時は 363 / 4007）
+
+## 型の追加・リンク/時刻の実験・次の実験の自動下書き（2026-11-23 JST）
+
+ユーザーの依頼:「閲覧が伸びなければ、題材だけでなく型もどんどん変えていけるように」。今できる範囲で 1) 次の実験の自動下書きとワンクリック承認、2) 型の追加、3) 時刻・リンクの実験 を実装した。画像つき投稿は、X へのメディアのアップロードと画像の生成・権利確認が必要なため未実装（P5 に残す）。
+
+### 実装
+| 内容 | ファイル |
+|---|---|
+| 型を3つ追加: `word_parts`（英語の分解: `words`/`fullName`）、`true_false`（○×: `confusedWith` の日本語名で誤った文を作り、答え×と `trapExplanations` を付ける）、`keyword_hint`（`examKeywords` から当てる）。使える題材は 154 / 126 / 156 件 | `lib/growth/xGrowth/styles.ts`、`topics.ts` |
+| variant に `withLink` / `postTimeJst` を追加。**2群の違いは1つだけ**（型・リンク・時刻）。リンクは `/words/<id>` に UTM を付け、検証ではその URL だけを許す。時刻は、割り当てと違う枠を claim の前に skip する | `lib/growth/xGrowth/experiment.ts`、`lib/growth/xPosting/runner.ts`、`preview.ts` |
+| 分析: 時刻の実験では時刻の差を偏りにしない。結果に `factor` を出す | `analysis.ts` |
+| 仮説: 新しい型を探索の対象に追加。型をひと通り試した後に、リンクと時刻の比較を提案する（費用と設定変更の注意つき） | `hypotheses.ts` |
+| 次の実験の自動下書き: 型の比較だけ・承認待ちが無いとき・今の実験の残りが14日以内・次の月曜から8週間・承認済みの内容で事前確認。週次レポートに表示する | `drafts.ts`、`weekly.ts`、`weeklyReport.ts` |
+| 承認と停止: `x:growth approve|pause --id`。Actions の「X growth experiment approval」（手動だけ・main だけ・X の認証情報なし） | `scripts/x-growth/run.mjs`、`.github/workflows/x-growth-approve.yml` |
+| migration（本番未適用）: `created_by`/`approved_at`、同じ仮説で開いている実験は1つまで、`create_x_experiment_draft()`（冪等）、`approve_x_experiment()`（ほかに running があれば拒否）、`pause_x_experiment()` | `supabase/migrations/20261124090000_x_growth_drafts.sql` |
+
+### テスト（実行済み）
+- `test/xGrowthNext.test.ts` 19件: 新しい型の文字列はすべて英略語データどおり（400件以上）／各型で28日・14:14・題材の重複なし／1つの要因だけの実験（6つの不正な組み合わせを拒否）／リンク（URL の形と位置、別の URL・リンクなし・余計なリンクの拒否、runner で行き先の確認と本文）／時刻（割り当てと違う枠は claim の前に skip、割り当ての時刻なら投稿、対象外の曜日は skip しない、時刻の差を偏りにしない）／仮説（新しい型から探索し、その後にリンクと時刻）／自動下書き（開始日・期間・事前確認・待機中・残りが長い・型の比較が無い・奇数週を拒否）／PGlite（週次の自動下書きは1回だけ・draft のまま・approve で running・2回目の approve は拒否・pause、自動下書きは既定でオフ、ほかに running があれば拒否、未承認のたとえは承認時の確認で拒否）／workflow（承認は手動だけ・既定でオフ）
+- 既存のテストの変更: 実験 DB のテストで、同じ仮説の draft を2つ作れないことを確認するように書き換えた（新しい制約どおり）
+- X関連: **21 files / 200 tests passed**、typecheck exit 0、eslint 指摘なし
+- 全体テスト（Node 22.18.0）: 下の最終確認を参照
+
+### 承認が必要な残り
+1. migration `20261124090000` を本番に適用する
+2. `X_GROWTH_AUTO_DRAFT=true` にする（作られるのは下書きだけ）
+3. 時刻の実験を行うなら: `X_POST_TIMES_JST` と投稿 workflow の cron を追加する
+4. リンクの実験を行うなら: 費用の増加を承認する
+- 全体テスト（Node 22.18.0、最終状態）: **370 files / 4088 tests passed**
